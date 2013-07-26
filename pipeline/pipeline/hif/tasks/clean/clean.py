@@ -1,299 +1,100 @@
-from __future__ import absolute_import
-import re
-import types
+import os
+import shutil
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
-from .iterativeboxworker import IterativeBoxWorker
-from .calibratorboxworker import CalibratorBoxWorker
-from .manualboxworker import ManualBoxWorker
-from .cleanworker import CleanWorker
-from pipeline.hif.heuristics import clean
-from pipeline.hif.heuristics import makecleanlist
+from .basicboxworker import BasicBoxWorker
+from .iterboxworker import IterBoxWorker
+from . import cleanbase
+
+from pipeline.hif.heuristics import cleanbox as cbheuristic
 
 LOG = infrastructure.get_logger(__name__)
 
 
-class CleanInputs(basetask.StandardInputs):
+class CleanInputs(cleanbase.CleanBaseInputs):
 
-    def __init__(self, context, output_dir=None, vis=None, 
-      imagename=None, intent=None, field=None, spw=None,
-      uvrange=None, mode=None, imagermode=None, outframe=None, nchan=None,
-      start=None, width=None, imsize=None, cell=None, phasecenter=None,
-      weighting=None, robust=None, restoringbeam=None, noise=None,
-      npixels=None, hm_cleanboxing=None, cleanboxing=None, mask=None,
-      threshold=None, maxthreshiter=None):
-        self._init_properties(vars())
 
-        # instantiate the heuristics classes needed, some sorting out needed
-        # here to remove duplicated code
-        self.heuristics = makecleanlist.MakeCleanListHeuristics(
-          context=context, vislist=self.vis, spw=self.spw)
+    def __init__(self, context, output_dir=None, vis=None, imagename=None,
+       intent=None, field=None, spw=None, uvrange=None, mode=None,
+       imagermode=None, outframe=None, imsize=None, cell=None,
+       phasecenter=None, nchan=None, start=None, width=None,
+       weighting=None, robust=None, noise=None, npixels=None,
+       restoringbeam=None, iter=None, mask=None, niter=None, threshold=None,
+       hm_masking=None, hm_cleaning=None, tlimit=None, masklimit=None,
+       maxncleans=None):
 
-    @property
-    def cell(self):
-        if self._cell is None:
-            return []
-        return self._cell
+       super(CleanInputs, self ).__init__( context,
+           output_dir=output_dir, vis=vis, imagename=imagename, intent=intent,
+           field=field, spw=spw, uvrange=uvrange, mode=mode,
+           imagermode=imagermode, outframe=outframe, imsize=imsize, cell=cell,
+           phasecenter=phasecenter, nchan=nchan, start=start, width=width,
+           weighting=weighting, robust=robust, noise=noise, npixels=npixels,
+           restoringbeam=restoringbeam, iter=iter, mask=mask, niter=niter,
+           threshold=threshold, result=None)
 
-    @cell.setter
-    def cell(self, value):
-        self._cell = value
+       # Define addon properties here
 
-    @property
-    def field(self):
-        if self._field is None:
-            return ''
-        return self._field
+       self.hm_masking = hm_masking
+       self.hm_cleaning = hm_cleaning
+       self.tlimit = tlimit
+       self.masklimit = masklimit
+       self.maxncleans = maxncleans
 
-    @field.setter
-    def field(self, value):
-        self._field = value
+    # Add extra getters and setters here
 
     @property
-    def field_id(self):
-        return self.heuristics.field(self.intent, self.field)
+    def hm_masking(self):
+        if self._hm_masking is None:
+            return 'none'
+        return self._hm_masking
 
-    @field_id.setter
-    def field_id(self, value):
-        print 'field_id setter being called, rethink required'
-
-    @property
-    def imagermode(self):
-        if self._imagermode is None:
-            return self.heuristics.imagermode(self._intent, self._field)
-        return self._imagermode
-
-    @imagermode.setter
-    def imagermode(self, value):
-         self._imagermode = value
+    @hm_masking.setter
+    def hm_masking(self, value):
+         self._hm_masking = value
 
     @property
-    def imsize(self):
-        if self._imsize is None:
-            return []
-        return self._imsize
+    def hm_cleaning(self):
+        if self._hm_cleaning is None:
+            return 'psf'
+        return self._hm_cleaning
 
-    @imsize.setter
-    def imsize(self, value):
-         self._imsize = value
-
-    @property
-    def imagename(self):
-        if self._imagename is None:
-            return self.heuristics.imagename(intent=self.intent,
-              field=self.field, spwspec=self.spw)
-        return self._imagename
-
-    @imagename.setter
-    def imagename(self, value):
-         self._imagename = value
+    @hm_cleaning.setter
+    def hm_cleaning(self, value):
+         self._hm_cleaning = value
 
     @property
-    def intent(self):
-        if self._intent is None:
-            return ''
-        return self._intent
+    def tlimit(self):
+        if self._tlimit is None:
+            return 2.0
+        return self._tlimit
 
-    @intent.setter
-    def intent(self, value):
-        self._intent = value
-
-    @property
-    def mode(self):
-        if self._mode is None:
-            if 'TARGET' in self.intent:
-                return 'frequency'
-            else:
-                return 'mfs'
-        return self._mode
-  
-    @mode.setter
-    def mode(self, value):
-        self._mode = value
+    @tlimit.setter
+    def tlimit(self, value):
+         self._tlimit = value
 
     @property
-    def nchan(self):
-        if self._nchan is None:
-            return -1
-        return self._nchan
+    def masklimit(self):
+        if self._masklimit is None:
+            return 2.0
+        return self._masklimit
 
-    @nchan.setter
-    def nchan(self, value):
-         self._nchan = value
-
-    @property
-    def outframe(self):
-        if self._outframe is None:
-            return 'LSRK'
-        return self._outframe
-
-    @outframe.setter
-    def outframe(self, value):
-         self._outframe = value
+    @masklimit.setter
+    def masklimit(self, value):
+         self._masklimit = value
 
     @property
-    def phasecenter(self):
-        if self._phasecenter is None:
-            return self.heuristics.phasecenter(self.field_id)
-        return self._phasecenter
+    def maxncleans(self):
+        if self._maxncleans is None:
+            return 1
+        return self._maxncleans
 
-    @phasecenter.setter
-    def phasecenter(self, value):
-        self._phasecenter = value
-
-    @property
-    def start(self):
-        if self._start is None:
-            return ''
-        return self._start
-
-    @start.setter
-    def start(self, value):
-         self._start = value
-
-    @property
-    def spw(self):
-        if self._spw is None:
-            mslist = self._context.observing_run.measurement_sets
-            spws = mslist[0].get_spectral_windows()
-            spwids = [spw.id for spw in spws]
-            return ','.join(spwids)
-        return self._spw
-
-    @spw.setter
-    def spw(self, value):
-        self._spw = value
-
-    @property
-    def weighting(self):
-        if self._weighting is None:
-            return 'natural'
-        return self._weighting
-
-    @weighting.setter
-    def weighting(self, value):
-         self._weighting = value
-
-    @property
-    def robust(self):
-        if self._robust is None:
-            return 0.0
-        return self._robust
-
-    @robust.setter
-    def robust(self, value):
-         self._robust = value
-
-    @property
-    def noise(self):
-        if self._noise is None:
-            return '1.0Jy'
-        return self._noise
-
-    @noise.setter
-    def noise(self, value):
-        self._noise = value
-
-    @property
-    def npixels(self):
-        if self._npixels is None:
-            return 0
-        return self._npixels
-
-    @npixels.setter
-    def npixels(self, value):
-        self._npixels = value
-
-    @property
-    def restoringbeam(self):
-        if self._restoringbeam is None:
-            return ''
-        return self._restoringbeam
-
-    @restoringbeam.setter
-    def restoringbeam(self, value):
-        self._restoringbeam = value
-
-    @property
-    def uvrange(self):
-        if self._uvrange is None:
-            return ''
-        return self._uvrange
-
-    @uvrange.setter
-    def uvrange(self, value):
-        self._uvrange = value
-
-    @property
-    def width(self):
-        if self._width is None:
-            return ''
-        return self._width
-
-    @width.setter
-    def width(self, value):
-         self._width = value
-
-    @property
-    def hm_cleanboxing(self):
-        if self._hm_cleanboxing is None:
-            return 'automatic'
-        return self._hm_cleanboxing
-
-    @hm_cleanboxing.setter
-    def hm_cleanboxing(self, value):
-         self._hm_cleanboxing = value
-
-    @property
-    def cleanboxing(self):
-        if self.hm_cleanboxing == 'automatic':
-            if self.intent == 'TARGET':
-                return 'iterative'
-            else:
-                return 'calibrator'
-        else:
-            if self._cleanboxing is None:
-                return 'iterative'
-        return self._cleanboxing
-
-    @cleanboxing.setter
-    def cleanboxing(self, value):
-         self._cleanboxing = value
-
-    @property
-    def mask(self):
-        if self._mask is None:
-            return ''
-        return self._mask
-
-    @mask.setter
-    def mask(self, value):
-         self._mask = value
-
-    @property
-    def threshold(self):
-        if self._threshold is None:
-            return '0.0Jy'
-        return self._threshold
-
-    @threshold.setter
-    def threshold(self, value):
-        self._threshold = value
-
-    @property
-    def maxthreshiter(self):
-        if self._maxthreshiter is None:
-            return 10
-        return self._maxthreshiter
-
-    @maxthreshiter.setter
-    def maxthreshiter(self, value):
-         self._maxthreshiter = value
+    @maxncleans.setter
+    def maxncleans(self, value):
+         self._maxncleans = value
 
 
-class Clean(basetask.StandardTaskTemplate):
+class Clean(cleanbase.CleanBase):
     Inputs = CleanInputs
 
     def is_multi_vis_task(self):
@@ -301,133 +102,369 @@ class Clean(basetask.StandardTaskTemplate):
 
     def prepare(self):
         inputs = self.inputs
+       
+        LOG.info('')
+        LOG.info("Cleaning for intent '%s', field %s, spw %s" %
+            (inputs.intent, inputs.field, inputs.spw))
+        LOG.info('')
 
-        # make sure inputs.vis is a list, even it is one that contains a
-        # single measurement set
-        if type(inputs.vis) is not types.ListType:
-            inputs.vis = [inputs.vis]
+	try:
 
-        # this python class will produce one data product; a clean image using
-        # all the data input to it.
-
-        # get specs of field to be cleaned
-        intent = inputs.intent
-        field = inputs.field
-        spw = inputs.spw
-
-	if inputs.width == '':
-	    if inputs.mode != 'mfs':
-                width = inputs.heuristics.width(int(spw))
-	    else:
-	        width = inputs.width 
-	else:
-	    width = inputs.width
-
-        # use scanids to select data with the specified intent
-        scanidlist = []
-        # construct regex for string matching - escape likely problem
-        # chars
-        re_field = field.replace('*', '.*')
-        re_field = re_field.replace('[', '\[')
-        re_field = re_field.replace(']', '\]')
-        re_field = re_field.replace('(', '\(')
-        re_field = re_field.replace(')', '\)')
-        re_field = re_field.replace('+', '\+')
-
-        for vis in inputs.vis:
-            ms = inputs.context.observing_run.get_ms(name=vis)
-            scanids = [scan.id for scan in ms.scans if
-              intent in scan.intents and
-              re.search(pattern=re_field, string=str(scan.fields))]
-            scanids = str(scanids)
-            scanids = scanids.replace('[', '')
-            scanids = scanids.replace(']', '')
-            scanidlist.append(scanids)
-
-        # if imsize not set then use heuristic code to calculate the
-        # centers for each field/spwspec
-        imsize = inputs.imsize
-        cell = inputs.cell
-        if imsize == [] or cell ==[]:
-            # the heuristic cell is always the same for x and y as
-            # the value derives from a single value returned by
-            # imager.advise
-            cell, beam = inputs.heuristics.cell(
-              field_intent_list=[(field, intent)], spwspec=spw)
-            if inputs.cell == []:
-                inputs.cell = cell
-                LOG.info('heuristic cell: %s' % cell)
-
-            field_ids = inputs.heuristics.field(intent, field)
-            imsize = inputs.heuristics.imsize(fields=field_ids,
-              cell=inputs.cell, beam=beam)
-            if inputs.imsize == []:
-                inputs.imsize = imsize
-                LOG.info('heuristic imsize: %s', imsize)
-
-        # create the boxing/thresholding object
-        LOG.info("cleanboxing method is: '%s'" % inputs.cleanboxing)
-        if inputs.cleanboxing == 'iterative':
-            boxinputs = IterativeBoxWorker.Inputs(context=inputs._context,
-              output_dir=inputs.output_dir, vis=None,
-              maxthreshiter=inputs.maxthreshiter)
-            boxtask = IterativeBoxWorker(boxinputs)
-        elif inputs.cleanboxing == 'calibrator':
-            boxinputs = CalibratorBoxWorker.Inputs(context=inputs._context,
-              output_dir=inputs.output_dir, vis=None)
-            boxtask = CalibratorBoxWorker(boxinputs)
-        elif inputs.cleanboxing == 'user':
-            boxinputs = ManualBoxWorker.Inputs(context=inputs._context,
-              output_dir=inputs.output_dir, vis=None, mask=inputs.mask,
-              threshold=inputs.threshold)
-            boxtask = ManualBoxWorker(boxinputs)
-        else:
-            raise Exception, 'bad value for hm_cleanboxing: %s' % \
-              inputs.hm_cleanboxing
-
-        LOG.info('#')
-        LOG.info("# Reduction for intent '%s', field %s, SpW %s" % (intent,
-          field, spw))
-        LOG.info('#')
-        
-        datainputs = CleanWorker.Inputs(context=inputs.context, 
-          output_dir=inputs.output_dir, vis=inputs.vis,
-          mode=inputs.mode, imagermode=inputs.imagermode,
-          imagename=inputs.imagename,
-          intent=inputs.intent, field_id=inputs.field_id, 
-          field=inputs.field,
-          spw=spw, scan=scanidlist,
-          phasecenter=inputs.phasecenter, cell=inputs.cell,
-          imsize=inputs.imsize, outframe=inputs.outframe,
-          #nchan=inputs.nchan, start=inputs.start, width=inputs.width,
-          nchan=inputs.nchan, start=inputs.start, width=width,
-          weighting=inputs.weighting,
-          robust=inputs.robust,
-          noise=inputs.noise,
-          npixels=inputs.npixels,
-          restoringbeam=inputs.restoringbeam,
-          uvrange=inputs.uvrange,
-          cleanboxtask=boxtask)
-        datatask = CleanWorker(datainputs)
-
-        try:
+            # Remove rows in POINTING table - bug workaround.
+	    #    May no longer be necesssary
             if inputs.imagermode == 'mosaic':
-                # remove rows in POINTING table - bug workaround.
                 self._empty_pointing_table()
 
-            # do the clean
-            result = self._executor.execute(datatask)
+            # Get an empirical noise estimate by generating Q image.
+	    #    Currently relies on presence of XX and YY correlations
+	    #    Currently relies on source being unpolarized
+	    #    Make this code more efficient (use MS) / intelligent at some point.
+	    #    Make changes when sensitity function is working.
+	    model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
+	        residual_min, rms2d, image_max = \
+		self._do_noise_estimate (iter=0)
+	    bestrms = non_cleaned_rms
+	    LOG.info('Best rms estimate from Q image is %s' * bestrms)
 
-        finally:
+            # Compute the dirty image.
+	    result = self._do_clean (iter=0, stokes='I', cleanmask='', niter=0,
+	        threshold='0.0mJy', result=None) 
+
+	    # Return dirty image if cleaning is disabled.
+            if inputs.maxncleans == 0:
+	        return result
+
+	    # Choose between simple cleaning and iterative cleaning.
+	    #   More code cleanup needed here.
+	    if inputs.hm_masking == 'psfiter':
+	        result = self._do_iterative_imaging(bestrms=bestrms, result=result)
+	    else:
+	        result = self._do_simple_imaging(bestrms=bestrms, result=result)
+
+	finally:
             if inputs.imagermode == 'mosaic':
                 # restore POINTING table to input state
                 self._restore_pointing_table()
 
-        return result
+	return result
 
     def analyse(self, result):
         return result
 
+    def _do_iterative_imaging (self, bestrms, result):
+        inputs = self.inputs
+
+	try:
+
+	    # Create the box worker.
+	    boxworker = IterBoxWorker(maxncleans=inputs.maxncleans)
+
+	    # Determine iteration status
+	    model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
+	        residual_min, rms2d, image_max = \
+	        boxworker.iteration_result(iter=0, \
+	        psf=result.psf, model= result.model, \
+	        restored=result.image, \
+	        residual=result.residual, fluxscale=result.flux, \
+	        cleanmask=None, threshold=None)
+
+	    LOG.info('Dirty image stats')
+	    LOG.info('    Rms %s', non_cleaned_rms)
+	    LOG.info('    Residual max %s', residual_max)
+	    LOG.info('    Residual min %s', residual_min)
+	    if not bestrms:
+	        LOG.info('Rms estimate from dirty image is %s' * bestrms)
+	        bestrms = non_cleaned_rms
+
+	    iterating = True; iter = 1
+	    while iterating and iter <= inputs.maxncleans:
+
+		# Create the clean mask from the root of the previous
+		# residual image.
+		rootname, ext = os.path.splitext(result.residual)
+		rootname, ext = os.path.splitext(rootname)
+	        new_cleanmask = '%s.iter%s.cleanmask' % (rootname, iter)
+		try:
+		    shutil.rmtree (new_cleanmask)
+		except:
+		    pass
+		boxworker.new_cleanmask(new_cleanmask)
+
+		# perform an interation.
+		box_result = boxworker.iteration()
+
+		# Check the iteration status.
+		iterating = boxworker.iterating()
+		if not iterating:
+		    break
+
+		# Determine the cleaning threshold
+		#    Note this is different than the masking threshold
+		threshold = self._do_threshold(iter=iter, bestrms=bestrms,
+		    hm_cleaning=inputs.hm_cleaning)
+
+	        LOG.info('Clean control parameters')
+	        LOG.info('    Mask %s', new_cleanmask)
+	        LOG.info('    Mask threshold %s', box_result.threshold)
+	        LOG.info('    Iter %s', iter)
+	        LOG.info('    Threshold %s', threshold)
+	        LOG.info('    Niter %s', inputs.niter)
+
+		# Clean
+		#    Note do not use the boxworker value of niter
+		#    Note do not use the boxworker value of threshold
+	        result = self._do_clean (iter=iter, stokes='I', cleanmask=new_cleanmask,
+		    niter=inputs.niter, threshold=threshold, result=result) 
+
+	        # Determine iteration status
+	        model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
+	            residual_min, rms2d, image_max = \
+		    boxworker.iteration_result(iter=iter, \
+		    psf=result.psf, model= result.model, restored=result.image, residual= \
+		    result.residual, fluxscale=result.flux, cleanmask=new_cleanmask, \
+		    threshold=box_result.threshold)
+		best_rms = cleaned_rms
+
+	        LOG.info('Clean image iter %s stats' % iter)
+	        LOG.info('    Clean rms %s', cleaned_rms)
+	        LOG.info('    Nonclean rms %s', non_cleaned_rms)
+	        LOG.info('    Residual max %s', residual_max)
+	        LOG.info('    Residual min %s', residual_min)
+
+		# Up the iteration counter
+		iter = iter + 1
+
+        finally:
+	    pass
+
+        return result
+
+    # Do non iterative cleaning, i.e. simple cleaning.
+    #    Clean iteration hooks have been left in place
+    #    but are not used.
+    def _do_simple_imaging (self, bestrms, result):
+        inputs = self.inputs
+
+	try:
+
+	    # Create the box worker.
+	    boxworker = BasicBoxWorker()
+
+	    # Determine iteration status
+	    model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
+	        residual_min, rms2d, image_max = \
+	        boxworker.iteration_result(iter=0, \
+	        psf=result.psf, model= result.model, \
+	        restored=result.image, \
+	        residual=result.residual, fluxscale=result.flux, \
+	        cleanmask=None)
+
+	    LOG.info('Dirty image stats')
+	    LOG.info('    Rms %s', non_cleaned_rms)
+	    LOG.info('    Residual max %s', residual_max)
+	    LOG.info('    Residual min %s', residual_min)
+	    if not bestrms:
+	        LOG.info('Rms estimate from dirty image is %s' * bestrms)
+	        bestrms = non_cleaned_rms
+
+	    iterating = True; iter = 1
+	    while iterating and iter <= inputs.maxncleans:
+
+		# Create the clean mask from the root of the previous
+		# residual image.
+		rootname, ext = os.path.splitext(result.residual)
+		rootname, ext = os.path.splitext(rootname)
+	        new_cleanmask = '%s.iter%s.cleanmask' % (rootname, iter)
+		try:
+		    shutil.rmtree (new_cleanmask)
+		except:
+		    pass
+
+		iterating = boxworker.iterating()
+		if not iterating:
+		    break
+
+		# Create the mask
+		#    The niter return is temporary until the controller is
+		#    fully refactored
+		niter  = self._do_mask(psf=result.psf, image=result.residual, \
+                    cleanmask=new_cleanmask, usermask=inputs.mask,
+		    hm_mask=inputs.hm_masking)
+
+		# Determine the cleaning threshold
+		threshold = self._do_threshold(iter=iter, bestrms=bestrms,
+		    hm_cleaning=inputs.hm_cleaning)
+
+	        LOG.info('Clean control parameters')
+	        LOG.info('    Mask %s', new_cleanmask)
+	        LOG.info('    Iter %s', iter)
+	        LOG.info('    Threshold %s', threshold)
+	        LOG.info('    Niter %s', niter)
+
+		# Clean
+	        result = self._do_clean (iter=iter, stokes='I', cleanmask=new_cleanmask,
+		    niter=niter, threshold=threshold, result=result) 
+
+	        # Determine iteration status
+	        model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
+	            residual_min, rms2d, image_max = \
+		    boxworker.iteration_result(iter=iter, \
+		    psf=result.psf, model= result.model, restored=result.image, residual= \
+		    result.residual, fluxscale=result.flux, cleanmask=new_cleanmask)
+		best_rms = cleaned_rms
+
+	        LOG.info('Clean image iter %s stats' % iter)
+	        LOG.info('    Clean rms %s', cleaned_rms)
+	        LOG.info('    Nonclean rms %s', non_cleaned_rms)
+	        LOG.info('    Residual max %s', residual_max)
+	        LOG.info('    Residual min %s', residual_min)
+
+		# Up the iteration counter
+		iter = iter + 1
+
+        finally:
+	    pass
+
+        return result
+
+    # Compute a noise estimage from the Q image
+    def _do_noise_estimate (self, iter=0):
+
+        model_sum = None,
+        cleaned_rms = None
+        non_cleaned_rms = None
+        residual_max = None
+        residual_min = None
+        rms2d = None
+        image_mask = None
+
+        # Compute the dirty Q image.
+        result = self._do_clean (iter=0, stokes='Q', cleanmask='', niter=0,
+            threshold='0.0mJy', result=None) 
+
+	# Create the box worker.
+	boxworker = BasicBoxWorker()
+
+        # Determine iteration status
+        model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
+            residual_min, rms2d, image_max = boxworker.iteration_result(iter=0, \
+	    psf=result.psf, model= result.model, restored=result.image, \
+	    residual=result.residual, fluxscale=result.flux, cleanmask=None)
+
+        LOG.info('Noise image stats')
+        LOG.info('    Rms %s', non_cleaned_rms)
+        LOG.info('    Residual max %s', residual_max)
+        LOG.info('    Residual min %s', residual_min)
+
+        return model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
+	    residual_min, rms2d, image_max 
+
+    # Create the mask for simple imaging.
+    def _do_mask(self, psf, image, cleanmask, usermask, hm_mask='none'):
+
+        inputs = self.inputs
+	niter = inputs.niter
+	island_threshold = None
+	island_peaks = None
+
+	# Make new clean mask
+	if hm_mask == 'none':
+
+	    cm  = casatools.image.newimagefromimage( infile=image,
+	        outfile=cleanmask, overwrite=True)
+	    cm.set(pixels='1')
+	    cm.done()
+
+	elif hm_mask == 'centralquarter':
+
+	    cm  = casatools.image.newimagefromimage( infile=image,
+	        outfile=cleanmask, overwrite=True)
+	    cm.set(pixels='0')
+	    shape = cm.shape()
+	    rg = casatools.regionmanager
+	    region = rg.box([shape[0]/4, shape[1]/4],
+	        [shape[0]-shape[0]/4, shape[1]-shape[1]/4])
+	    cm.set(pixels='1', region=region)
+	    rg.done()
+	    cm.done()
+
+	elif hm_mask == 'psf':
+	    niter = cbheuristic.niter_and_mask(psf=psf,
+	        residual=image, new_mask=cleanmask)
+
+	elif hm_mask == 'manual':
+	     if os.path.exists(usermask):
+	        cm  = casatools.image.newimagefromimage( infile=usermask,
+	              outfile=cleanmask, overwrite=True)
+	        cm.done()
+	     else:
+	        cm  = casatools.image.newimagefromimage( infile=image,
+	              outfile=cleanmask, overwrite=True)
+	        cm.set(pixels='1')
+	        cm.done()
+	else:
+	    cm  = casatools.image.newimagefromimage( infile=image,
+	      outfile=cleanmask, overwrite=True)
+	    cm.set(pixels='1')
+	    cm.done()
+
+	# temporary untils controller is working.
+        return niter
+
+    # Compute clean threshold.
+    def _do_threshold (self, iter, bestrms, hm_cleaning='manual'):
+        inputs = self.inputs
+	if hm_cleaning == 'manual':
+	    threshold = inputs.threshold
+	elif hm_cleaning == 'sensitivity':
+	    # Alias to rms option for now
+	    threshold = '%sJy' % (inputs.tlimit * bestrms)
+	    #threshold = inputs.threshold
+	elif hm_cleaning == 'rms':
+	    threshold = '%sJy' % (inputs.tlimit * bestrms)
+	elif hm_cleaning == 'timesmask':
+	    threshold = '0.0mJy'
+	else:
+	    threshold = inputs.threshold
+
+	return threshold
+
+    # Do basic cleaning.
+    def _do_clean(self, iter, stokes, cleanmask, niter, threshold, result):
+        inputs = self.inputs
+	clean_inputs = cleanbase.CleanBase.Inputs(inputs.context,
+	    output_dir=inputs.output_dir,
+	    vis=inputs.vis,
+	    imagename=inputs.imagename,
+	    intent=inputs.intent,
+	    field=inputs.field,
+	    spw=inputs.spw,
+	    uvrange=inputs.uvrange,
+	    mode=inputs.mode,
+	    imagermode=inputs.imagermode,
+	    outframe=inputs.outframe,
+	    imsize=inputs.imsize,
+	    cell=inputs.cell,
+	    phasecenter=inputs.phasecenter,
+	    nchan=inputs.nchan,
+	    start=inputs.start,
+	    width=inputs.width,
+	    stokes=stokes,
+	    weighting=inputs.weighting,
+	    robust=inputs.robust,
+	    noise=inputs.noise,
+	    npixels=inputs.npixels,
+	    restoringbeam=inputs.restoringbeam,
+	    iter=iter,
+	    mask=cleanmask,
+	    niter=niter,
+	    threshold=threshold,
+	    result=result)
+	clean_task = cleanbase.CleanBase(clean_inputs)
+
+	return self._executor.execute (clean_task)
+
+    # Remove pointing table.
     def _empty_pointing_table(self):
         # Concerned that simply renaming things directly 
         # will corrupt the table cache, so do things using only the
@@ -436,17 +473,18 @@ class Clean(basetask.StandardTaskTemplate):
             with casatools.TableReader(
               '%s/POINTING' % vis, nomodify=False) as table:
                 # make a copy of the table
-                LOG.debug('making copy of POINTING table')
+                LOG.debug('Making copy of POINTING table')
                 copy = table.copy('%s/POINTING_COPY' % vis, valuecopy=True)
-                LOG.debug('removing all POINTING table rows')
+                LOG.debug('Removing all POINTING table rows')
                 table.removerows(range(table.nrows()))
                 copy.done()    
 
+    # Restore pointing table
     def _restore_pointing_table(self):
         for vis in self.inputs.vis:
             # restore the copy of the POINTING table
             with casatools.TableReader(
               '%s/POINTING_COPY' % vis, nomodify=False) as table:
-                LOG.debug('copying back into POINTING table')
+                LOG.debug('Copying back into POINTING table')
                 original = table.copy('%s/POINTING' % vis, valuecopy=True)
                 original.done()
