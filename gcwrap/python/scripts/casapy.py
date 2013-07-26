@@ -705,6 +705,15 @@ def update_params(func, printtext=True, ipython_globals=None):
         xmlfile=pathname+'/'+myf['taskname']+'.xml'
         if(os.path.exists(xmlfile)) :
             cu.setconstraints('file://'+xmlfile);
+        else:
+            #
+            # SRankin: quick fix for CAS-5381 - needs review.
+            # The task is not a CASA internal task.  Extract the path from task_location.
+            # This may not be robust.  I have not tracked down all the code that could update task_location.
+            task_path=task_location[taskname]
+            xmlfile=task_path+'/'+myf['taskname']+'.xml'
+            if(os.path.exists(xmlfile)) :
+                cu.setconstraints('file://'+xmlfile);
 
     a=myf[myf['taskname']].defaults("paramkeys",myf)
     itsdef=myf[myf['taskname']].defaults
