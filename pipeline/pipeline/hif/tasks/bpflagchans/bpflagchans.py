@@ -22,7 +22,8 @@ class BandpassflagchansInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None, caltable=None, 
       flag_edges=None, edge_limit=None, flag_sharps=None, sharps_limit=None,
       flag_sharps2=None, sharps2_limit=None, flag_diffmad=None,
-      diffmad_limit=None, flag_tmf=None, tmf_limit=None, niter=None):
+      diffmad_limit=None, flag_tmf=None, tmf_frac_limit=None, 
+      tmf_nchan_limit=None, niter=None):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -134,7 +135,7 @@ class BandpassflagchansInputs(basetask.StandardInputs):
     @property
     def diffmad_limit(self):
         if self._diffmad_limit is None:
-            return 10
+            return 7
         return self._diffmad_limit
 
     @diffmad_limit.setter
@@ -152,14 +153,24 @@ class BandpassflagchansInputs(basetask.StandardInputs):
         self._flag_tmf = value
 
     @property
-    def tmf_limit(self):
-        if self._tmf_limit is None:
-            return 0.1
-        return self._tmf_limit
+    def tmf_frac_limit(self):
+        if self._tmf_frac_limit is None:
+            return 0.05
+        return self._tmf_frac_limit
 
-    @tmf_limit.setter
-    def tmf_limit(self, value):
-        self._tmf_limit = value
+    @tmf_frac_limit.setter
+    def tmf_frac_limit(self, value):
+        self._tmf_frac_limit = value
+
+    @property
+    def tmf_nchan_limit(self):
+        if self._tmf_nchan_limit is None:
+            return 4
+        return self._tmf_nchan_limit
+
+    @tmf_nchan_limit.setter
+    def tmf_nchan_limit(self, value):
+        self._tmf_nchan_limit = value
 
     @property
     def niter(self):
@@ -199,7 +210,8 @@ class Bandpassflagchans(basetask.StandardTaskTemplate):
           flag_sharps=inputs.flag_sharps, sharps_limit=inputs.sharps_limit,
           flag_sharps2=inputs.flag_sharps2, sharps2_limit=inputs.sharps2_limit,
           flag_diffmad=inputs.flag_diffmad, diffmad_limit=inputs.diffmad_limit,
-          flag_tmf=inputs.flag_tmf, tmf_limit=inputs.tmf_limit)
+          flag_tmf=inputs.flag_tmf, tmf_frac_limit=inputs.tmf_frac_limit,
+          tmf_nchan_limit=inputs.tmf_nchan_limit)
         flagger = viewflaggers.VectorFlagger
  
         # Construct the flagger task around the data view task  and the
