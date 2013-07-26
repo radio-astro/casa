@@ -18,16 +18,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-casa_add_library( mstransform 
- MSTransform/MSTransformDataHandler.cc 
+casa_add_library( mstransform  
  MSTransform/MSTransform.cc
+ MSTransform/MSTransformManager.cc
+ MSTransform/MSTransformDataHandler.cc
 )
 
 install (FILES
+    	MSTransform/MSTransform.h
+	MSTransform/MSTransformManager.h
 	MSTransform/MSTransformDataHandler.h
-    MSTransform/MSTransform.h
 	DESTINATION include/casacode/mstransform/MSTransform
 	)
 
-casa_add_test( mstransform MSTransform/test/tMSTransformDataHandler.cc )
-casa_add_executable( mstransform tmstransform MSTransform/test/tMSTransformDataHandler.cc )

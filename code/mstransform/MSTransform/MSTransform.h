@@ -34,7 +34,7 @@
 #include <casacore/casa/Arrays/Vector.h>
 #include <casacore/casa/Containers/Record.h>
 #include <casacore/casa/Quanta/Quantum.h>
-#include <mstransform/MSTransform/MSTransformDataHandler.h>
+#include <mstransform/MSTransform/MSTransformManager.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -48,7 +48,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class="MSTransformDataHandler:description">MSTransformDataHandler</linkto>
+//   <li> <linkto class="MSTransformManager:description">MSTransformManager</linkto>
 // </prerequisite>
 //
 // <synopsis>
@@ -107,7 +107,7 @@ protected:
 
 	LogIO log_p;
 
-	// variables used to initialize the MSTransformDataHandler
+	// variables used to initialize the MSTransformManager
 	String msname_p;
 	String outputms_p;
 
@@ -132,7 +132,7 @@ protected:
 
 
 	// variables for initAgents
-	MSTransformDataHandler *mdh_p;
+	MSTransformManager *mdh_p;
 
 public:  
 	// default constructor
