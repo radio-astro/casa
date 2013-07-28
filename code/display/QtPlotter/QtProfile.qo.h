@@ -159,6 +159,8 @@ namespace casa {
 		void imageCollapsed(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img);
 		void setPosition( const QList<double>& xValues, const QList<double>& yValues );
 		void processTrackRecord( const String& dataName, const String& positionInfo );
+		typedef std::pair<QString, ImageInterface<float>* > OverplotInterface;
+		typedef pair<QString,ImageAnalysis*> OverplotAnalysis;
 	public slots:
 		void zoomIn();
 		void zoomOut();
@@ -205,7 +207,7 @@ namespace casa {
 		void plotMainCurve();
 		void setCollapseRange(double xmin, double xmax);
 
-		void overplot(QHash<QString, ImageInterface<float>*>);
+		void overplot(QList<OverplotInterface>);
 
 		void newRegion( int, const QString &shape, const QString &name,
 		                const QList<double> &world_x, const QList<double> &world_y,
@@ -303,9 +305,7 @@ namespace casa {
 				bool allowVelocity=true );
 		double getUnitsPerChannel( ImageAnalysis* analysis, bool* ok, const QString& matchUnits );
 
-
-
-		QHash<QString, ImageAnalysis*> *over;
+		QList<OverplotAnalysis> *over;
 		const String WORLD_COORDINATES;
 		String coordinate;
 		String coordinateType;

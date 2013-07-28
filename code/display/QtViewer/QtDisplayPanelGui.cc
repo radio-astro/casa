@@ -2078,7 +2078,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void QtDisplayPanelGui::showImageProfile() {
 
-		QHash<QString, ImageInterface<float>*> overlap;
+		QList<OverplotInterface> overlays;
 		bool profileVisible = false;
 		if ( profile_ && profile_->isVisible()) {
 			profileVisible = true;
@@ -2104,11 +2104,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							connect( profile_, SIGNAL(hideProfile()), SLOT(hideImageProfile()));
 							connect( qdp_, SIGNAL(registrationChange()), SLOT(refreshImageProfile()));
 							connect( pdd, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
-							         profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
+									profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
 							connect( pdd, SIGNAL(spectrumChanged(String, String, String )),
-							         profile_, SLOT(changeSpectrum(String, String, String )));
+									profile_, SLOT(changeSpectrum(String, String, String )));
 							connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool, ImageInterface<Float>*)),
-							        this, SLOT(addDD(String, String, String, Bool, Bool, ImageInterface<Float>*)));
+									this, SLOT(addDD(String, String, String, Bool, Bool, ImageInterface<Float>*)));
 							connect(profile_, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
 							connect( this, SIGNAL(frameChanged(int)), profile_, SLOT(frameChanged(int)));
 							connect( profile_, SIGNAL(movieChannel(int,int)), this, SLOT(movieChannels(int, int)));
@@ -2118,14 +2118,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 								// [Re-]orient pre-existing profiler to pdd
 								profile_->resetProfile(img, pdd->name().c_str());
 								disconnect( profileDD_, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
-													profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
+										profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
 								disconnect( profileDD_, SIGNAL(spectrumChanged(String, String, String )),
-																		            profile_, SLOT(changeSpectrum(String, String, String )));
+										profile_, SLOT(changeSpectrum(String, String, String )));
 								profileDD_ = pdd;
 								connect( profileDD_, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
-																		         profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
+										profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
 								connect( profileDD_, SIGNAL(spectrumChanged(String, String, String )),
-																		         profile_, SLOT(changeSpectrum(String, String, String )));
+										profile_, SLOT(changeSpectrum(String, String, String )));
 							} else {
 								pdd->checkAxis();
 							}
@@ -2142,17 +2142,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 						//break;
 					} else {
-						if (pdd->getAxisIndex(String("Spectral")) != -1)
-							overlap[pdd->name().c_str()] = img;
+						if (pdd->getAxisIndex(String("Spectral")) != -1){
+							OverplotInterface overlap( pdd->name().c_str(), img );
+							overlays.append( overlap );
+						}
 					}
 				}
 			}
 		}
 
 		if (profile_) {
-			connect( this, SIGNAL(overlay(QHash<QString, ImageInterface<float>*>)),
-			         profile_, SLOT(overplot(QHash<QString, ImageInterface<float>*>)));
-			emit overlay(overlap);
+			connect( this, SIGNAL(overlay(QList<OverplotInterface>)),
+					profile_, SLOT(overplot(QList<OverplotInterface>)));
+			emit overlay(overlays);
 		}
 
 		PanelDisplay* ppd = qdp_->panelDisplay();

@@ -273,6 +273,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// display cursor information for the specified point (in world coordinates)
 		void updateCursorInfo( WorldCanvas *wc, Quantity x, Quantity y );
+		typedef std::pair<QString, ImageInterface<float>* > OverplotInterface;
 
 	public slots:
 
@@ -371,6 +372,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void unlinkCursorTracking(QtDisplayPanelGui*);
 		void linkCursorTracking(QtDisplayPanelGui*,QColor);
 
+
 	signals:
 
 		void regionChange( viewer::Region *, std::string );
@@ -382,7 +384,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//Notification that the frame has changed.
 		void frameChanged( int );
 
-		void overlay(QHash<QString, ImageInterface<float>*>);
+		//Profile Overplots
+		void overlay(QList<OverplotInterface>);
 
 		void createDDFailed(String errMsg, String path, String dataType,
 		                    String displayType);

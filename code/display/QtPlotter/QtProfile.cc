@@ -580,7 +580,7 @@ namespace casa {
 		if (over) {
 			delete over;
 			over = 0;
-			over = new QHash<QString, ImageAnalysis*>();
+			over = new QList<OverplotAnalysis>();
 		}
 
 		// adjust the error box
@@ -1019,11 +1019,11 @@ namespace casa {
 		ImageAnalysis* maxChannelAnalysis = analysis;
 		int maxChannelCount = getChannelCount( analysis );
 		if ( over ){
-			QHashIterator<QString, ImageAnalysis*> i(*over);
+			QListIterator<OverplotAnalysis> i(*over);
 			while (i.hasNext() && stateMProf) {
-				i.next();
-				QString ky = i.key();
-				ImageAnalysis* ana = i.value();
+				OverplotAnalysis overplot = i.next();
+				QString ky = overplot.first;
+				ImageAnalysis* ana = overplot.second;
 				int channelCount = getChannelCount( ana );
 				if ( channelCount > maxChannelCount ){
 					maxChannelAnalysis = ana;
@@ -1055,7 +1055,6 @@ namespace casa {
 			bool ok=maxChannelAnalysis->getFreqProfile( lastWX, lastWY, xValues, yValues,
 						                             WORLD_COORDINATES, coordinateType, 0, 0, 0, cTypeUnit, spcRefFrame,
 						                             (Int)QtProfile::MEAN, 0, cSysRval);
-			qDebug() << "QtProfile: Change top axis get frequency profile ok="<<ok;
 			if ( ok ){
 				//Check to see if the top axis ordering is ascending in x
 				bool topAxisAscendingX = isAxisAscending(xValues);
@@ -1137,20 +1136,21 @@ namespace casa {
 		lineOverlaysHolder->setRange( xmin, xmax, xaxisUnit );
 	}
 
-	void QtProfile::overplot(QHash<QString, ImageInterface<float>*> hash) {
+	void QtProfile::overplot(QList<OverplotInterface> hash) {
 		// re-set the images that are overplotted
 		if (over) {
 			delete over;
 			over = 0;
 		}
 
-		over = new QHash<QString, ImageAnalysis*>();
-		QHashIterator<QString, ImageInterface<float>*> i(hash);
+		over = new QList<OverplotAnalysis>();
+		QListIterator<OverplotInterface> i(hash);
 		while (i.hasNext()) {
-			i.next();
-			QString ky = i.key();
-			ImageAnalysis* ana = new ImageAnalysis(i.value());
-			(*over)[ky] = ana;
+			OverplotInterface overplot = i.next();
+			QString ky = overplot.first;
+			ImageAnalysis* ana = new ImageAnalysis(overplot.second);
+			OverplotAnalysis overlay( ky, ana );
+			(*over).append( overlay );
 		}
 		newOverplots = true;
 	}
@@ -1268,7 +1268,6 @@ namespace casa {
 
 		if (!isVisible()) return;
 		if (!analysis) return;
-		qDebug() << "QtProfile:: Update region type="<<type;
 		if ( type == viewer::region::RegionChangeDelete ) {
 			SpectraInfoMap::iterator it = spectra_info_map.find(id_);
 			if ( it != spectra_info_map.end() ) {
@@ -2019,7 +2018,6 @@ namespace casa {
 		                               xytype, specaxis, whichStokes, whichTabular, whichLinear, xunits, specFrame,
 		                               combineType, whichQuality, restValue,
 		                               beamChannel);
-		qDebug() << "QtProfile::getFrequProfile wrapper";
 		if ( itsPlotType == QtProfile::PFLUX ) {
 			//Post a warning that flux was calculated using a given channel
 			//and the resulting calculation was only an approximation.
@@ -2067,7 +2065,6 @@ namespace casa {
 			                             (Int)QtProfile::MEAN, 0, cSysRval);
 			break;
 		}
-		qDebug() << "QtProfile::assignFrequency Profile";
 
 		if (!ok) {
 			// change to notify user of error...
@@ -2150,7 +2147,7 @@ namespace casa {
 				z_eval.resize(0);
 			break;
 		}
-		qDebug() << "QtProfile::error plotting";
+
 		if ( ! ok ) {
 			// change to notify user of error...
 			*itsLog << LogIO::WARN << "Can not generate the frequency error profile!" << LogIO::POST;
@@ -2283,12 +2280,11 @@ namespace casa {
 	                                       Int ordersOfM ) {
 		bool ok = true;
 		if ( over != NULL ) {
-			QHashIterator<QString, ImageAnalysis*> i(*over);
-
+			QListIterator<OverplotAnalysis> i(*over);
 			while (i.hasNext() && stateMProf) {
-				i.next();
-				QString ky = i.key();
-				ImageAnalysis* ana = i.value();
+				OverplotAnalysis overplot = i.next();
+				QString ky = overplot.first;
+				ImageAnalysis* ana = overplot.second;
 				Vector<Float> xval(100);
 				Vector<Float> yval(100);
 
@@ -2325,7 +2321,6 @@ namespace casa {
 					break;
 				}
 
-				qDebug() << "QtProfile addImageAnalysis graph";
 				if (ok) {
 					if(ordersOfM!=0) {
 						// correct display y axis values
@@ -2421,7 +2416,6 @@ namespace casa {
 				unitPerChannel = qAbs(xval[0] - xval[1]) / z_xval.size();
 			}
 		}
-		qDebug() << "QtProfile: units per channel";
 		return unitPerChannel;
 	}
 
@@ -2449,11 +2443,11 @@ namespace casa {
 			//Compare that with the frequency per channel of the overplots
 			if ( over != NULL){
 				const float ERROR_TOL = 0.00001f;
-				QHashIterator<QString, ImageAnalysis*> i(*over);
+				QListIterator<OverplotAnalysis> i(*over);
 				while (i.hasNext() && stateMProf) {
-					i.next();
-					QString ky = i.key();
-					ImageAnalysis* ana = i.value();
+					OverplotAnalysis overplot = i.next();
+					QString ky = overplot.first;
+					ImageAnalysis* ana = overplot.second;
 					double overUnitsPerChannel = getUnitsPerChannel( ana, &unitsAvailable, matchUnits );
 					if ( !unitsAvailable ){
 						unitsMatch = false;
@@ -2621,12 +2615,12 @@ namespace casa {
 	const ImageInterface<Float>* QtProfile::getImage( const QString& imageName ) const {
 		//First look for a specific image with the name
 		if ( imageName.length() > 0 && over ) {
-			QHashIterator<QString, ImageAnalysis*> i( *over );
+			QListIterator<OverplotAnalysis> i( *over );
 			while (i.hasNext()) {
-				i.next();
-				QString ky = i.key();
+				OverplotAnalysis overplot = i.next();
+				QString ky = overplot.first;
 				if ( ky == imageName ) {
-					ImageAnalysis* analysis = i.value();
+					ImageAnalysis* analysis = overplot.second;
 					const ImageInterface<Float>* imageInterface = analysis->getImage();
 					return imageInterface;
 				}
