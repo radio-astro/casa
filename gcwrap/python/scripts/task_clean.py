@@ -6,7 +6,7 @@ from cleanhelper import *
 im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi,fn,imd=gentools()
 
 def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
-          uvrange, antenna, scan, observation, mode, resmooth, gridmode,
+          uvrange, antenna, scan, observation, intent, mode, resmooth,gridmode,
           wprojplanes, facets, cfcache, rotpainc, painc, aterm, psterm, mterm, wbawp, conjbeams,
           epjtable, interpolation,
           niter, gain, threshold, psfmode, imagermode, ftmachine, mosweight,
@@ -32,7 +32,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
     #
     #######################################################################  
     #paralist=[vis, imagename,outlierfile, field, spw, selectdata, \
-    #         timerange, uvrange, antenna, scan, observation, mode, gridmode, \
+    #         timerange, uvrange, antenna, scan, observation, intent, mode, gridmode, \
     #         wprojplanes, facets, cfcache, painc, epjtable, \
     #         interpolation, niter, gain, threshold, psfmode, \
     #         imagermode, ftmachine, mosweight, scaletype, multiscale, \
@@ -125,7 +125,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                     os.system('rm -rf '+imname+'*')
                     clean(vis=vis,imagename=imname,outlierfile=outlierfile,field=field,
                           spw=spw,selectdata=selectdata,timerange=timerange,uvrange=uvrange,
-                          antenna=antenna,scan=scan, observation=str(observation),
+                          antenna=antenna,scan=scan, observation=str(observation),intent=intent,
                           mode=mode,gridmode=gridmode, 
                           wprojplanes=wprojplanes,facets=facets,cfcache=cfcache,rotpainc=rotpainc, painc=painc,
                           psterm=psterm,aterm=aterm,mterm=mterm,wbawp=wbaw,conjbeams=conjbeams,
@@ -199,6 +199,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         antenna=''
         scan=''
         observation = ''
+        intent=''
 
     try:
         # Create a new imager tool
@@ -258,7 +259,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         # make a template cube for interactive chanter=T
         if dochaniter:
             imset.makeTemplateCubes(imagename,outlierfile, field, spw, selectdata,
-                                    timerange, uvrange, antenna, scan, str(observation),
+                                    timerange, uvrange, antenna, scan, str(observation),intent,
                                     mode, facets, cfcache, 
                                     interpolation, imagermode, localFTMachine, mosweight, 
                                     localnchan, localstart, localwidth, outframe, veltype,
@@ -496,7 +497,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             imset.datsel(field=field, spw=spw,
                          timerange=timerange, uvrange=uvrange,
                          antenna=antenna,
-                         scan=scan, observation=str(observation),
+                         scan=scan, observation=str(observation),intent=intent,
                          usescratch=usescratch, nchan=visnchan,
                          start=visstart, width=1)
 
