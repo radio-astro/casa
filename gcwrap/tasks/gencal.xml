@@ -139,10 +139,7 @@
      lookup of the antenna position corrections is enabled when antenna is 
      unspecified (antenna='') for this caltype. Note that this requires 
      internet connection to access the EVLA antenna position correction 
-     site. If no corrections are found, it will throw an exception 
-     with the message, "no offsets found. no caltable created". The task
-     may terminate with a SEVERE error message and may sound alarming, but 
-     it simply means that it cannot produce the caltable.
+     site. 
      For VLA position corrections in the VLA-centric frame, use 
      caltype='antposvla', and gencal will rotate them to ITRF before 
      storing them in the output caltable.
