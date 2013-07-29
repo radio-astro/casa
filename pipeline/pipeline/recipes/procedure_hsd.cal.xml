@@ -21,6 +21,10 @@
     <ProcessingCommand>
         <Command xmlns="">hsd_calsky</Command>
         <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">calmode</Keyword>
+                <Value xmlns="">otfraster</Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
