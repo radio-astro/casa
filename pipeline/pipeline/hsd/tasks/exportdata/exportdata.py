@@ -25,8 +25,7 @@ import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
-#from pipeline.hsd.tasks.common import SDDataProductName as SDDataProductName
-from pipeline.hsd.tasks.reduce import SDDataProductName as SDDataProductName
+import pipeline.infrastructure.sdfilenamer as filenamer
 
 # the logger for this module
 LOG = infrastructure.get_logger(__name__)
@@ -261,13 +260,12 @@ class SDExportData(basetask.StandardTaskTemplate):
             splitwith_dot = [name.split('.')for name in asdm_uidxx]
             
             #identifier setting
-            identif =[]
-            identif = SDDataProductName.productIdentifier()
-            identif_splitted = identif.split('.')
-             
+            identif_sky_tsys_bl =['skycal','tsyscal','bl']
+            
             #selection
             Xasap_outX =[splitwith_dot[i] for i in range(len(splitwith_dot))
-                if identif_splitted[0] == splitwith_dot[i][-2] and identif_splitted[1] == splitwith_dot[i][-1]]
+                if identif_sky_tsys_bl[0] == splitwith_dot[i][-1] or  identif_sky_tsys_bl[1] == splitwith_dot[i][-1] or  identif_sky_tsys_bl[2] == splitwith_dot[i][-1]]
+                #if identif_splitted[0] == splitwith_dot[i][-2] and identif_splitted[1] == splitwith_dot[i][-1]]
             
             # create tar name
             outname = []
@@ -290,11 +288,11 @@ class SDExportData(basetask.StandardTaskTemplate):
                 Xasap_outX[i] = ".".join(Xasap_outX[i])
                 
             #tar
-            tar_filename = ["".join(outname[i]) + "." + SDDataProductName.productIdentifier() + ".tar.gz" for i in range(len(snum2))]
+            tar_filename = ["".join(outname[i]) + "." + "skycal_tsyscal_bl" + ".tar.gz" for i in range(len(snum2))]
             list_of_tarname=[]
             if not self._executor._dry_run and len(Xasap_outX)!=0:
                 for i in range(len(snum2)):
-                    LOG.info ('FLAG_BL: Copying final tar file in %s ' % os.path.join (products_dir,tar_filename[i]))
+                    LOG.info ('CAL_FLAG_BL: Copying final tar file in %s ' % os.path.join (products_dir,tar_filename[i]))
                     tar = tarfile.open (os.path.join(products_dir, tar_filename[i]), "w:gz")
                     for num in snum2[i]:
                         tar.add (Xasap_outX[num])
@@ -303,16 +301,16 @@ class SDExportData(basetask.StandardTaskTemplate):
             elif self._executor._dry_run and len(Xasap_outX)!=0:
                 for i in range(len(snum2)):
                     for num in snum2[i]:
-                        LOG.info('FLAG_BL: Target Flag_BL is %s' % Xasap_outX[num])
-                    LOG.info('FLAG_BL: Saving final tar file is %s ' % os.path.join (products_dir,tar_filename[i]))
+                        LOG.info('CAL_FLAG_BL: Target Calibrated and Flag_BL is %s' % Xasap_outX[num])
+                    LOG.info('CAL_FLAG_BL: Saving final tar file is %s ' % os.path.join (products_dir,tar_filename[i]))
                     list_of_tarname.append(tar_filename[i])
-                LOG.info('FLAG_BL: identifier is %s' % SDDataProductName.productIdentifier())
+                LOG.info('CAL_FLAG_BL: identifier is %s' % "product.tbl")
             elif len(Xasap_outX)==0:
-                LOG.info('FLAG_BL: There are no flag_bl_coeff(product.tbl) in output_dir')
+                LOG.info('CAL_FLAG_BL: There are no Cal_Flag_bl_coeff(*.skycal/*.tsyscal/*.bl) in output_dir')
         else:
-            LOG.info('FLAG_BL: There are no target files here')
+            LOG.info('CAL_FLAG_BL: There are no target files here')
         return list_of_tarname
-      
+    
     def _export_weblog (self, context, products_dir):
         """
         Save the processing web log to a tarfile
@@ -366,7 +364,7 @@ class SDExportData(basetask.StandardTaskTemplate):
                     f.write(listname_txt)
                     for i in range(len(inputlist)):
                         for ln in inputlist[i]:
-                            if fnmatch.fnmatch(ln,"*" + SDDataProductName.productIdentifier() + "*"):
+                            if fnmatch.fnmatch(ln,"*" + "product.tbl" + "*"):
                                 output_txt = " %s \n" % os.path.basename(ln)
                                 f.write(output_txt)
                 if fnmatch.fnmatch(n, "weblog"):
