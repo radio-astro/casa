@@ -50,8 +50,8 @@ class PhcorBandpass(bandpassworker.BandpassWorker):
 	if inputs.maxchannels <= 0:
             result = self._do_bandpass()
 	else:
-            result = self._do_fixed_bandpass()
-            #result = self._do_smoothed_bandpass()
+            #result = self._do_fixed_bandpass()
+            result = self._do_smoothed_bandpass()
         
         # Attach the preparatory result to the final result so we have a
         # complete log of all the executed tasks. 
