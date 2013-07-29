@@ -261,7 +261,7 @@ namespace casa {
 		                                 Vector<double> &pyv, Vector<double> &wxv, Vector<double> &wyv) const;
 		void setPositionStatus(const Vector<double> &pxv, const Vector<double> &pyv,
 		                       const Vector<double> &wxv, const Vector<double> &wyv );
-		bool getFrequencyProfileWrapper( const Vector<double> &wxv, const Vector<double> &wyv,
+		bool getFrequencyProfileWrapper( ImageAnalysis* analysis, const Vector<double> &wxv, const Vector<double> &wyv,
 		                                 Vector<Float> &z_xval, Vector<Float> &z_yval,
 		                                 const String& xytype, const String& specaxis,
 		                                 const Int& whichStokes, const Int& whichTabular,

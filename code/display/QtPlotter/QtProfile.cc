@@ -1294,6 +1294,10 @@ namespace casa {
 		else if ( type == viewer::region::RegionChangeFocus ) {
 			return;
 		}
+		//Added because profiler is just getting bogged down in too many updates.
+		else if ( type == viewer::region::RegionChangeUpdate ){
+			return;
+		}
 
 		else if ( type == viewer::region::RegionChangeNewChannel ) {
 			return;						// viewer moving to new channel
@@ -1608,60 +1612,64 @@ namespace casa {
 			return false;
 		QTextStream ts(&file);
 
-		//There should be a space separating the ra from the dec.
-		int coordinateCount = lastWX.size();
-		QList<QString> cornerCoordinatesWorld;
-		QList<QString> cornerCoordinatesPixel;
-		for ( int i = 0; i < coordinateCount; i++ ) {
-			QString raDecStr = getRaDec( lastWX[i], lastWY[i]);
-			int decIndex = raDecStr.indexOf("+");
-			if ( decIndex == -1 ) {
-				decIndex = raDecStr.indexOf( "-");
-			}
-			raDecStr.insert(decIndex, ", ");
-			cornerCoordinatesWorld.append("["+raDecStr+"]");
-			cornerCoordinatesPixel.append("["+ QString::number(lastPX[i])+
-			                              ", "+QString::number(lastPY[i])+"]");
-		}
-
-		ts << "#title: Spectral profile - " << fileName << "\n";
-		ts << "#region (world): "<< region << "[";
-		for ( int i = 0; i < coordinateCount; i++ ) {
-			ts << cornerCoordinatesWorld[i];
-			if ( i != coordinateCount - 1 ) {
-				ts << ", ";
-			}
-		}
-		ts << "]\n";
-		ts << "#region (pixel): "<< region << "[";
-		for ( int i = 0; i < coordinateCount; i++ ) {
-			ts << cornerCoordinatesPixel[i];
-			if ( i != coordinateCount - 1 ) {
-				ts << ", ";
-			}
-		}
-		ts << "]\n";
-		ts << "#coordinate: " << QString(coordinate.chars()) << "\n";
-		ts << "#xLabel: " << QString(ctypeUnit.chars()) << "\n";
-		ts << "#yLabel: " << "[" << yUnit << "] "<< plotMode->currentText() << "\n";
-		if (z_eval.size() > 0)
-			ts << "#eLabel: " << "[" << yUnit << "] " << errorMode->currentText() << "\n";
 
 		// get the scale factor
 		Float scaleFactor=pow(10.,-ordersOfM_);
-
 		ts.setRealNumberNotation(QTextStream::ScientificNotation);
 		ts.setRealNumberPrecision(12);
 
-		if (z_eval.size() > 0) {
-			for (uInt i = 0; i < z_xval.size(); i++) {
-				ts << z_xval(i) << "    " << scaleFactor*z_yval(i) << "    "  << scaleFactor*z_eval(i) << "\n";
+		//There should be a space separating the ra from the dec.
+			int coordinateCount = lastWX.size();
+			QList<QString> cornerCoordinatesWorld;
+			QList<QString> cornerCoordinatesPixel;
+			for ( int i = 0; i < coordinateCount; i++ ) {
+				QString raDecStr = getRaDec( lastWX[i], lastWY[i]);
+				int decIndex = raDecStr.indexOf("+");
+				if ( decIndex == -1 ) {
+					decIndex = raDecStr.indexOf( "-");
+				}
+				raDecStr.insert(decIndex, ", ");
+				cornerCoordinatesWorld.append("["+raDecStr+"]");
+				cornerCoordinatesPixel.append("["+ QString::number(lastPX[i])+
+				                              ", "+QString::number(lastPY[i])+"]");
 			}
-		} else {
-			for (uInt i = 0; i < z_xval.size(); i++) {
-				ts << z_xval(i) << "    " << scaleFactor*z_yval(i) << "\n";
+
+			ts << "#title: Spectral profile - " << fileName << "\n";
+			ts << "#region (world): "<< region << "[";
+			for ( int i = 0; i < coordinateCount; i++ ) {
+				ts << cornerCoordinatesWorld[i];
+				if ( i != coordinateCount - 1 ) {
+					ts << ", ";
+				}
 			}
-		}
+			ts << "]\n";
+			ts << "#region (pixel): "<< region << "[";
+			for ( int i = 0; i < coordinateCount; i++ ) {
+				ts << cornerCoordinatesPixel[i];
+				if ( i != coordinateCount - 1 ) {
+					ts << ", ";
+				}
+			}
+			ts << "]\n";
+			ts << "#coordinate: " << QString(coordinate.chars()) << "\n";
+			ts << "#xLabel: " << QString(ctypeUnit.chars()) << "\n";
+			ts << "#yLabel: " << "[" << yUnit << "] "<< plotMode->currentText() << "\n";
+			if (z_eval.size() > 0)
+				ts << "#eLabel: " << "[" << yUnit << "] " << errorMode->currentText() << "\n";
+
+
+
+
+			if (z_eval.size() > 0) {
+				for (uInt i = 0; i < z_xval.size(); i++) {
+					ts << z_xval(i) << "    " << scaleFactor*z_yval(i) << "    "  << scaleFactor*z_eval(i) << "\n";
+				}
+			} else {
+				for (uInt i = 0; i < z_xval.size(); i++) {
+					ts << z_xval(i) << "    " << scaleFactor*z_yval(i) << "\n";
+				}
+			}
+
 
 		int i = pixelCanvas->getLineCount();
 		for (int k = 1; k < i; k++) {
@@ -1673,7 +1681,6 @@ namespace casa {
 				ts << data[2 * m] << " " << scaleFactor*data[2 * m + 1] << "\n";
 			}
 		}
-
 		return true;
 	}
 
@@ -2000,7 +2007,7 @@ namespace casa {
 		profileStatus->showMessage(position);
 	}
 
-	bool QtProfile::getFrequencyProfileWrapper( const Vector<double> &wxv, const Vector<double> &wyv,
+	bool QtProfile::getFrequencyProfileWrapper( ImageAnalysis* analysis, const Vector<double> &wxv, const Vector<double> &wyv,
 	        Vector<Float> &z_xval, Vector<Float> &z_yval,
 	        const String& xytype, const String& specaxis,
 	        const Int& whichStokes, const Int& whichTabular,
@@ -2012,8 +2019,8 @@ namespace casa {
 
 		Int beamChannel = 0;
 
-		// might want to introduce more fancy selection of the beamChannel here but using channel 0 is a good choice already
-
+		// might want to introduce more fancy selection of the
+		//beamChannel here but using channel 0 is a good choice already
 		ok = analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 		                               xytype, specaxis, whichStokes, whichTabular, whichLinear, xunits, specFrame,
 		                               combineType, whichQuality, restValue,
@@ -2050,7 +2057,7 @@ namespace casa {
 			                             (Int)QtProfile::SUM, 0, cSysRval );
 			break;
 		case QtProfile::PFLUX:
-			ok=getFrequencyProfileWrapper( wxv, wyv, z_xval, z_yval,
+			ok=getFrequencyProfileWrapper( analysis, wxv, wyv, z_xval, z_yval,
 			                               WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 			                               (Int)QtProfile::FLUX, 0, cSysRval);
 			break;
@@ -2131,7 +2138,7 @@ namespace casa {
 					                             (Int)QtProfile::SQRTSUM, 1, cSysRval);
 					break;
 				case QtProfile::PFLUX:
-					ok=getFrequencyProfileWrapper( wxv, wyv, z_xval, z_eval,
+					ok=getFrequencyProfileWrapper( analysis, wxv, wyv, z_xval, z_eval,
 					                               WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 					                               (Int)QtProfile::EFLUX, 1, cSysRval);
 					break;
@@ -2276,8 +2283,8 @@ namespace casa {
 
 
 
-	void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv,
-	                                       Int ordersOfM ) {
+	void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv,
+			const Vector<double> &wyv, Int ordersOfM ) {
 		bool ok = true;
 		if ( over != NULL ) {
 			QListIterator<OverplotAnalysis> i(*over);
@@ -2305,15 +2312,11 @@ namespace casa {
 					                        (Int)QtProfile::PSUM, 0);
 					break;
 				case QtProfile::PFLUX:
-					ok=getFrequencyProfileWrapper( wxv, wyv, xval, yval,
+					ok=getFrequencyProfileWrapper( ana, wxv, wyv, xval, yval,
 					                               WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 					                               (Int)QtProfile::PFLUX, 0, "");
 					break;
-					//case QtProfile::PVRMSE:
-					//	ok=ana->getFreqProfile( wxv, wyv, xval, yval,
-					//			WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-					//			(Int)QtProfile::RMSE, 0);
-					// break;
+
 				default:
 					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 					                        WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
@@ -2562,8 +2565,8 @@ namespace casa {
 		}
 	}
 
-	void QtProfile::addCanvasMainCurve( const Vector<Float>& xVals, const Vector<Float>& yVals,
-	                                    const QString& label ) {
+	void QtProfile::addCanvasMainCurve( const Vector<Float>& xVals,
+			const Vector<Float>& yVals, const QString& label ) {
 		specFitSettingsWidget->addCurveName( label );
 		pixelCanvas->addPolyLine(xVals, yVals, label );
 		adjustTopAxisSettings();
