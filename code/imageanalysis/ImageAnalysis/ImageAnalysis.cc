@@ -1219,58 +1219,6 @@ ImageInterface<Float>* ImageAnalysis::continuumsub(
 	return rstat;
 }
 
-/*
-Quantity ImageAnalysis::convertflux(
-	Bool& fakeBeam, const Quantity& value,
-	const Quantity& majorAxis, const Quantity& minorAxis,
-	const String& type, const Bool toPeak,
-	const Bool suppressNoBeamWarnings, const Int channel,
-    const Int polarization
-) const {
-	*_log << LogOrigin(className(), __FUNCTION__);
-	fakeBeam = False;
-	const Unit& brightnessUnit = _image->units();
-	const ImageInfo& info = _image->imageInfo();
-	const CoordinateSystem& cSys = _image->coordinates();
-	GaussianBeam beam = info.restoringBeam(channel, polarization);
-	if (majorAxis.getValue() > 0.0 && minorAxis.getValue() > 0.0) {
-		Unit rad("rad");
-		if (
-			! (majorAxis.getFullUnit() == rad)
-			|| !(minorAxis.getFullUnit() == rad)
-		) {
-			*_log << "The major and minor axes must be angular"
-				<< LogIO::EXCEPTION;
-		}
-	}
-	else {
-		*_log << "The major and minor axes must both be positive"
-			<< LogIO::EXCEPTION;
-	}
-	if (! cSys.hasDirectionCoordinate()) {
-		*_log << "Image does not have a direction coordinate. "
-			<< "Cannot convert flux density" << LogIO::EXCEPTION;
-	}
-	const DirectionCoordinate& dirCoord = cSys.directionCoordinate();
-	ComponentType::Shape shape = ComponentType::shape(type);
-	if (brightnessUnit.getName().contains("/beam") && beam.isNull()) {
-		beam = ImageUtilities::makeFakeBeam(*_log, cSys, suppressNoBeamWarnings);
-		fakeBeam = True;
-	}
-	SkyCompRep skyComp;
-	Quantum<Double> valueOut = (toPeak)
-		? skyComp.integralToPeakFlux(
-			dirCoord, shape, value,
-			brightnessUnit, majorAxis, minorAxis, beam
-		)
-		: skyComp.peakToIntegralFlux(
-			dirCoord, shape, value,
-			majorAxis, minorAxis, beam
-		);
-	return valueOut;
-}
-*/
-
 ImageInterface<Float>* ImageAnalysis::convolve2d(
 	const String& outFile, const Vector<Int>& axes,
 	const String& kernel, const Quantity& majorKernel,
@@ -2516,51 +2464,6 @@ Bool ImageAnalysis::makecomplex(const String& outFile, const String& imagFile,
 	PagedImage<Complex> outImage(realShape, cSysReal, outFile);
 	outImage.copyData(expr);
 	ImageUtilities::copyMiscellaneous(outImage, *_image);
-	return True;
-}
-
-Bool ImageAnalysis::makeFloat(const String& outFile, const String& compFile,
-			      LogIO& os, const String& operation,
-			      const Bool overwrite) {
-
-	os << LogOrigin("ImageAnalysis", "makeFloat");
-
-	String myOp = operation;
-	myOp.downcase();
-
-	// Check output file
-	if (!overwrite && !outFile.empty()) {
-		NewFile validfile;
-		String errmsg;
-		if (!validfile.valueOK(outFile, errmsg)) {
-			os << errmsg << LogIO::EXCEPTION;
-		}
-	}
-
-	// Open image
-	PagedImage<Complex> compImage(compFile);
-	CoordinateSystem cSysComp = compImage.coordinates();
-
-	// LEL node
-	LatticeExprNode node(abs(compImage));
-	if(myOp=="arg"){
-	  node = arg(compImage);
-	}
-	else if(myOp=="real"){
-	  node = real(compImage);
-	}
-	else if(myOp=="imag"){
-	  node = imag(compImage);
-	}
-	else if(myOp=="square"){
-	  node = abs(compImage)^2;
-	}
-
-	LatticeExpr<Float> expr(node);
-	//
-	PagedImage<Float> outImage(compImage.shape(), cSysComp, outFile);
-	outImage.copyData(expr);
-	ImageUtilities::copyMiscellaneous(outImage, compImage);
 	return True;
 }
 
@@ -3925,28 +3828,6 @@ ImageInterface<Float>* ImageAnalysis::rotate(
 				<< LogIO::EXCEPTION;
 	}
 
-	// Get Linear Transform
-	//const Coordinate& coord = cSysTo.coordinate(coordInd);
-	/*
-	Matrix<Double> xf = coord.linearTransform();
-
-	// Generate rotation matrix components
-	Double angleRad = pa.getValue(Unit("rad"));
-	Matrix<Double> rotm(2, 2);
-	Double s = sin(-angleRad);
-	Double c = cos(-angleRad);
-	rotm(0, 0) = c;
-	rotm(0, 1) = s;
-	rotm(1, 0) = -s;
-	rotm(1, 1) = c;
-
-	// Create new linear transform matrix
-	Matrix<Double> xform(2, 2);
-	xform(0, 0) = rotm(0, 0) * xf(0, 0) + rotm(0, 1) * xf(1, 0);
-	xform(0, 1) = rotm(0, 0) * xf(0, 1) + rotm(0, 1) * xf(1, 1);
-	xform(1, 0) = rotm(1, 0) * xf(0, 0) + rotm(1, 1) * xf(1, 0);
-	xform(1, 1) = rotm(1, 0) * xf(0, 1) + rotm(1, 1) * xf(1, 1);
-*/
 	// Apply new linear transform matrix to coordinate
 	if (cSysTo.type(coordInd) == Coordinate::DIRECTION) {
 		std::auto_ptr<DirectionCoordinate> c(
@@ -4571,58 +4452,6 @@ Bool ImageAnalysis::twopointcorrelation(
 	return True;
 }
 
-/*
-ImageInterface<Float>* ImageAnalysis::subimage(
-	const String& outfile, Record& Region,
-	const String& mask, const Bool dropDegenerateAxes,
-	const Bool overwrite, const Bool list, const Bool extendMask
-) {
-	*_log << LogOrigin(className(), __FUNCTION__);
-	// Copy a portion of the image
-	// Verify output file
-	if (!overwrite && !outfile.empty()) {
-		NewFile validfile;
-		String errmsg;
-		if (!validfile.valueOK(outfile, errmsg)) {
-			*_log << errmsg << LogIO::EXCEPTION;
-		}
-	}
-	AxesSpecifier axesSpecifier(! dropDegenerateAxes);
-	std::auto_ptr<SubImage<Float> >subImage(
-		new SubImage<Float>(
-			SubImageFactory<Float>::createSubImage(
-				*_image,
-				*(ImageRegion::tweakedRegionRecord(&Region)),
-				mask, list ? _log.get() : 0, True, axesSpecifier, extendMask
-			)
-		)
-	);
-
-	if (outfile.empty()) {
-		return subImage.release();
-	}
-	// Make the output image
-	if (list) {
-		*_log << LogIO::NORMAL << "Creating image '" << outfile
-			<< "' of shape " << subImage->shape() << LogIO::POST;
-	}
-	std::auto_ptr<PagedImage<Float> > outImage(
-		new PagedImage<Float> (
-			subImage->shape(),
-			subImage->coordinates(), outfile
-		)
-	);
-	ImageUtilities::copyMiscellaneous(*outImage, *_image);
-	// Make output mask if required
-	if (subImage->isMasked()) {
-		String maskName("");
-		ImageMaskAttacher<Float>::makeMask(*outImage, maskName, False, True, *_log, list);
-	}
-	LatticeUtilities::copyDataAndMask(*_log, *outImage, *subImage);
-	return outImage.release();
-}
-*/
-
 Record ImageAnalysis::summary(
 	const String& doppler, const Bool list,
 	const Bool pixelorder, const Bool verbose
@@ -4848,15 +4677,6 @@ Bool ImageAnalysis::toASCII(
 
 Vector<Double> ImageAnalysis::topixel(Record&) {
 
-	/*  std::vector<double> rstat;
-	 *_log << LogOrigin("ImageAnalysis", "topixel");
-
-	 CoordinateSystem cSys = _image->coordinates();
-	 ::casac::coordsys mycoords;
-	 mycoords.setcoordsys(cSys);
-	 rstat = mycoords.topixel(value);
-
-	 */
 	//getting bored now....
 	//This need to be implemented when coordsys::topixel is
 	//refactored into the casa
@@ -4905,39 +4725,6 @@ Bool ImageAnalysis::deleteHist() {
 	}
 	return rstat;
 }
-
-/*
-Bool ImageAnalysis::ImageMaskAttacher<Float>::makeMask(ImageInterface<Float>& out, String& maskName,
-		Bool init, Bool makeDefault, LogIO& os, Bool list) {
-	os << LogOrigin("ImageAnalysis", __FUNCTION__);
-	if (out.canDefineRegion()) {
-
-		// Generate mask name if not given
-		if (maskName.empty())
-			maskName = out.makeUniqueRegionName(String("mask"), 0);
-
-		// Make the mask if it does not exist
-		if (!out.hasRegion(maskName, RegionHandler::Masks)) {
-			out.ImageMaskAttacher<Float>::makeMask(maskName, True, makeDefault, init, True);
-			if (list) {
-				if (init) {
-					os << LogIO::NORMAL << "Created and initialized mask `"
-							<< maskName << "'" << LogIO::POST;
-				} else {
-					os << LogIO::NORMAL << "Created mask `" << maskName << "'"
-							<< LogIO::POST;
-				}
-			}
-		}
-		return True;
-	} else {
-		os << LogIO::WARN
-				<< "Cannot make requested mask for this type of image" << endl;
-		return False;
-	}
-}
-*/
-
 
 void ImageAnalysis::makeRegionBlock(PtrBlock<const ImageRegion*>& regions,
 		const Record& Regions, LogIO& ) {
