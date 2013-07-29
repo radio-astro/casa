@@ -33,6 +33,7 @@
 #include <images/Images/ImageSummary.h>
 #include <images/Images/ImageStatistics.h>
 #include <measures/Measures/MeasureHolder.h>
+#include <casa/Utilities/DataType.h>
 
 #include <stdcasa/StdCasa/CasacSupport.h>
 #include <stdcasa/variant.h>
@@ -97,7 +98,7 @@ template<class T> Record ImageMetaData<T>::_makeHeader() const {
 			header.define(_EQUINOX, _getEquinox());
 			header.define(_PROJECTION, _getProjection());
 		}
-		header.define(_OBSDATE, MVTime(_getObsDate().getValue()).string(MVTime::YMD));
+		header.define(_OBSDATE, _getEpochString());
 		header.define(MASKS, _getMasks());
 		header.define(_OBSERVER, _getObserver());
 		header.define(_SHAPE, _getShape().asVector());
@@ -254,7 +255,7 @@ template<class T> casac::variant ImageMetaData<T>::getFITSValue(const String& ke
 		return _getObject();
 	}
 	else if (c == _OBSDATE || c == _EPOCH) {
-		return MVTime(_getObsDate().getValue()).string(MVTime::YMD);
+		return _getEpochString();
 	}
 	else if (c == _OBSERVER) {
 		return _getObserver();
@@ -310,15 +311,41 @@ template<class T> casac::variant ImageMetaData<T>::getFITSValue(const String& ke
 			return casac::variant(x.asArrayInt(c).tovector());
 		}
 	}
-	else if (_getImage()->miscInfo().isDefined(key)) {
-		return _getImage()->miscInfo().asString(key);
-	}
-	else if (_getImage()->miscInfo().isDefined(c)) {
-		return _getImage()->miscInfo().asString(c);
+	else if (
+		_getImage()->miscInfo().isDefined(key)
+		|| _getImage()->miscInfo().isDefined(c)
+	) {
+		TableRecord info = _getImage()->miscInfo();
+		String x = info.isDefined(key) ? key : c;
+		switch (info.type(info.fieldNumber(x))) {
+		case TpString:
+			return casac::variant(info.asString(x));
+		case TpInt:
+			return casac::variant(info.asInt(x));
+		case TpDouble:
+			return casac::variant(info.asDouble(x));
+		case TpRecord:
+			// allow fall through
+		case TpQuantity: {
+			std::auto_ptr<casac::record> rec(fromRecord(info.asRecord(x)));
+			return casac::variant(*rec);
+		}
+		default:
+			_log << _ORIGINB << "Unhandled data type "
+				<< info.type(info.fieldNumber(x)) << " for "
+				<< "user defined type. Send us a bug report."
+				<< LogIO::EXCEPTION;
+			break;
+		}
 	}
 	_log << _ORIGINB << "Unknown keyword " << c << LogIO::EXCEPTION;
 	return casac::variant();
 }
+
+template<class T> String ImageMetaData<T>::_getEpochString() const {
+	return MVTime(_getObsDate().getValue()).string(MVTime::YMD);
+}
+
 
 template<class T> Vector<String> ImageMetaData<T>::_getAxisNames() const {
 	if (_axisNames.size() == 0) {

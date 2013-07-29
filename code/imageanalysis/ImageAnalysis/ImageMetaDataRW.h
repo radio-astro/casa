@@ -31,6 +31,8 @@
 #include <imageanalysis/ImageAnalysis/ImageMetaData.h>
 #include <casa/aips.h>
 
+class casac::variant;
+
 namespace casa {
 
 // <summary>
@@ -88,6 +90,8 @@ public:
 	Bool removeMask(const String& maskName);
 
 	virtual Record toRecord(Bool verbose) const;
+
+	Bool add(const String& key, const casac::variant& value);
 
 
 protected:

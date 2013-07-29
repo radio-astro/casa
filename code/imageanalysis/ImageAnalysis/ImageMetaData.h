@@ -166,6 +166,8 @@ protected:
 
 	virtual MEpoch _getObsDate() const;
 
+	String _getEpochString() const;
+
 	virtual String _getObserver() const;
 
 	virtual String _getProjection() const;
