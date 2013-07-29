@@ -93,7 +93,7 @@
 #  cd /lustre/naasc/thunter/evla/AB1346/g19.36
 #  au.plotbandpass('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.27 2013/06/30 17:14:54 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.28 2013/07/29 20:42:46 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -4125,7 +4125,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                 mytimeTest = mytime==mymatch
             if ((overlayAntennas==False and overlayTimes==False)
                 # either it is the last time of any, or the last time in the list of times to plot
-                or (overlayAntennas==False and (mytime+1==nUniqueTimes or mytime == timerangeList[-1] or mytimeTest)) 
+                or (overlayAntennas==False and (mytime+1==nUniqueTimes or mytime == timerangeList[-1])) # or mytimeTest)) # removed on July 25, 2013 because it prevents all times from showing up overlaid on lower right plot
                 or (xant==antennasToPlot[-1] and overlayAntennas==True and overlayTimes==False)  
                 # Following case is needed to make subplot=11 to work for: try to support overlay='antenna,time'
                 or (xframe == lastFrame and overlayTimes and overlayAntennas and
