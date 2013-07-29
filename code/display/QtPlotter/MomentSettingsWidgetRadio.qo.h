@@ -62,6 +62,7 @@ namespace casa {
 	private:
 		String outputFileName;
 		bool temporary;
+
 		ImageInterface<Float>* image;
 	};
 
@@ -93,7 +94,7 @@ namespace casa {
 		             const Double peaksnr, const Double stddev,
 		             const String& doppler = "RADIO", const String& baseName = "");
 		void run();
-
+		void halt();
 		//Methods from the ImageMomentsProgressMonitor interface
 		void setStepCount( int count );
 		void setStepsCompleted( int count );
@@ -128,6 +129,7 @@ namespace casa {
 		std::vector<CollapseResult> collapseResults;
 		String errorMsg;
 		bool collapseError;
+		bool stopImmediately;
 	};
 
 //Note: ProfileTaskFacilitator abstracts out some of the common functionality
@@ -162,6 +164,7 @@ namespace casa {
 		void graphicalThreshold();
 		void symmetricThresholdChanged( int checkedState );
 		void thresholdTextChanged( const QString& text );
+		void stopMoments();
 
 	private:
 		enum SummationIndex {MEAN, INTEGRATED, WEIGHTED_MEAN, DISPERSION, MEDIAN,

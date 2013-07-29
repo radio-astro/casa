@@ -67,6 +67,10 @@ namespace casa {
 		emit stepCountChanged( adjustedCount );
 	}
 
+	void MomentCollapseThreadRadio::halt() {
+		stopImmediately = true;
+	}
+
 	void MomentCollapseThreadRadio::setStepsCompleted( int count ) {
 		if ( count % stepSize == 0 ) {
 			int adjustedCount = count / stepSize;
@@ -153,7 +157,12 @@ namespace casa {
 	void MomentCollapseThreadRadio::run() {
 		try {
 			//casa::utilj::ThreadTimes t1;
+			stopImmediately = false;
 			for ( int i = 0; i < static_cast<int>(moments.size()); i++ ) {
+				if ( stopImmediately ){
+					collapseError = true;
+					break;
+				}
 				Vector<int> whichMoments(1);
 				whichMoments[0] = moments[i];
 
@@ -191,16 +200,19 @@ namespace casa {
 
 	MomentSettingsWidgetRadio::MomentSettingsWidgetRadio(QWidget *parent)
 		: QWidget(parent), imageAnalysis( NULL ), collapseThread( NULL ),
-		  thresholdingBinDialog( NULL ), progressBar( this ) {
+		  thresholdingBinDialog( NULL ), progressBar( parent ) {
 		ui.setupUi(this);
 
 		//Initialize the progress bar
+		progressBar.setWindowModality( Qt::ApplicationModal );
+		Qt::WindowFlags flags = Qt::Dialog;
+		flags |= Qt::FramelessWindowHint;
+		progressBar.setWindowFlags( flags);
 		progressBar.setWindowTitle( "Collapse/Moments");
 		progressBar.setLabelText( "Calculating moments...");
-		progressBar.setWindowModality( Qt::WindowModal );
-		progressBar.setCancelButton( 0 );
 		connect( this, SIGNAL( updateProgress(int)), &progressBar, SLOT( setValue( int )));
 		connect( this, SIGNAL( momentsFinished()), &progressBar, SLOT(cancel()));
+		connect( &progressBar, SIGNAL(canceled()), this, SLOT(stopMoments()));
 
 		momentOptions << "(-1) Mean Value, Mean Intensity" <<
 		              "(0) Integrated Value, Sum" <<
@@ -456,6 +468,12 @@ namespace casa {
 		collapseThread->setChannelStr( channelStr );
 		previousCount = 0;
 		cycleCount = 0;
+		if ( moments.size() == 1 ){
+			progressBar.setCancelButtonText( QString() );
+		}
+		else {
+			progressBar.setCancelButtonText( "Cancel");
+		}
 		progressBar.show();
 //#warning "Revert to THREADING"
 		collapseThread->start();
@@ -710,7 +728,11 @@ namespace casa {
 		emit updateProgress( taskCount );
 	}
 
-
+	void MomentSettingsWidgetRadio::stopMoments(){
+		if ( collapseThread != NULL && collapseThread->isRunning()){
+			collapseThread->halt();
+		}
+	}
 
 	MomentSettingsWidgetRadio::~MomentSettingsWidgetRadio() {
 		if ( imageAnalysis != NULL ) {

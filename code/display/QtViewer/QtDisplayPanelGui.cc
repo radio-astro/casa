@@ -2876,7 +2876,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void QtDisplayPanelGui::ddClose(QtDisplayData*& ddRemove ) {
 		if ( ddRemove != NULL ) {
-			removeDD(ddRemove);
+			emit removeDD(ddRemove);
 		}
 	}
 
