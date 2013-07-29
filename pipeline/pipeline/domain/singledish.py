@@ -299,7 +299,7 @@ class Frequencies(spectralwindow.SpectralWindow,SingleDishBase):
             chan_freqs = [[refval + refpix * increment * ichan] for ichan in xrange(nchan)]
         else:
             chan_freqs = None
-        super(Frequencies,self).__init__(id, bandwidth, freq_min, chan_widths, chan_freqs, name, sideband, baseband)
+        spectralwindow.SpectralWindow.__init__(self, id, bandwidth, freq_min, chan_widths, chan_freqs, name, sideband, baseband)
         self._init_properties(vars(),kw_ignore=['self','bandwidth'])
         intents = self.intent.split(':')
         for intent in intents:
