@@ -81,8 +81,7 @@ class CalibrationTableDataFiller(object):
             # not be visible from the current path, such as when the context 
             # working directory is set. This makes the assumption that the
             # caltable is in the same directory as the measurement set.
-            return os.path.join(os.path.dirname(caltable),
-                                vis)
+            return os.path.join(os.path.dirname(caltable), vis)
 
     @staticmethod
     def _read_table(caltable, columns):
@@ -95,9 +94,15 @@ class CalibrationTableDataFiller(object):
             coldata = []
             for colname in columns:
                 if colname in ['FPARAM', 'CPARAM', 'PARAMERR', 'FLAG', 'SNR']:
-                    temp = table.getcol(colname)
-                    nrows = np.shape(temp)[-1]
-                    temp = np.array_split(temp, nrows, -1)
+                    if table.isvarcol(colname):
+                        coldict = table.getvarcol(colname)
+                        temp = []
+                        for k in range(len(coldict)):
+                            temp.append(coldict['r%s' % (k+1)])
+                    else:
+                        temp = table.getcol(colname)
+                        nrows = np.shape(temp)[-1]
+                        temp = np.array_split(temp, nrows, -1)
                     coldata.append(temp)
                 else:
                     coldata.append(table.getcol(colname))
