@@ -127,7 +127,7 @@ class SDCalSky(common.SingleDishTaskTemplate):
             # create SDCalFrom object
             calfrom = callibrary.SDCalFrom(gaintable=args['outfile'],
                                            interp='',
-                                           caltype='sky')
+                                           caltype=args['calmode'])
 
             # create SDCalApplication object
             calapp = callibrary.SDCalApplication(calto, calfrom)

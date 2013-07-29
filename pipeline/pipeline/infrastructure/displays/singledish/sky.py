@@ -2,6 +2,7 @@ import os
 import numpy
 import pylab as pl
 import string
+from math import sqrt
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
@@ -54,6 +55,7 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
     MATPLOTLIB_FIGURE_ID = 8909
 
     def __init__(self, inputs):
+        LOG.debug('instantiate...')
         super(SDSkyDisplay, self).__init__(inputs)
 
     def doplot(self, result, stage_dir):
@@ -70,6 +72,7 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
         caltable = result.outcome.applytable
         frequencies = os.path.join(caltable, 'FREQUENCIES')
         calto = result.outcome.calto
+        calfrom = result.outcome.calfrom[0]
 
         # get base frame
         with utils.open_table(frequencies) as tb:
@@ -123,84 +126,95 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
         else:
             off_source = 99
         with utils.open_table(scantable.name) as tb:
-            tsel = tb.query('SRCTYPE==%s && IFNO==%s && POLNO==%s'%(off_source,spwlist[0],pollist[0]))
-            time_list = tsel.getcol('TIME') * 86400.0
-            direction_list = tsel.getcol('DIRECTION')
-            mean_interval = tsel.getcol('INTERVAL').mean()
-            tsel.close()
-            delta_time = time_list[1:] - time_list[:-1]
-            time_gap = numpy.where(delta_time > mean_interval * 1.1)[0] + 1
-
-            time_stamps = [time_list[:time_gap[0]].mean()]
-            ref_directions = [direction_list[:,:time_gap[0]].mean(axis=1)]
-            for i in xrange(len(time_gap)-1):
-                time_stamps.append(time_list[time_gap[i]:time_gap[i+1]].mean())
-                ref_directions.append(direction_list[:,time_gap[i]:time_gap[i+1]].mean(axis=1))
-            time_stamps.append(time_list[time_gap[-1:]].mean())
-            ref_directions.append(direction_list[:,time_gap[-1:]].mean(axis=1))
-            time_stamps = numpy.array(time_stamps)
-            ref_directions = numpy.array(ref_directions)
-            
-            tsel = tb.query('SRCTYPE==%s'%(on_source))
-            tmp_direction = tsel.getcol('DIRECTION')
-            ra_min = min(tmp_direction[0])
-            ra_max = max(tmp_direction[0])
-            dec_min = min(tmp_direction[1])
-            dec_max = max(tmp_direction[1])
-            tsel.close()
-            ra_allowance = (ra_max - ra_min) * 0.1
-            dec_allowance = (dec_max - dec_min) * 0.1
-
-            # grouping
-            direction_group = []
-            for i in xrange(len(time_stamps)):
-                group_id = -1
-                for j in xrange(len(direction_group)):
-                    index_list = direction_group[j]+[i]
-                    ra_list = ref_directions[:,0].take(index_list)
-                    dec_list = ref_directions[:,1].take(index_list)
-                    if max(ra_list) - min(ra_list) < ra_allowance \
-                       and max(dec_list) - min(dec_list) < dec_allowance:
-                        direction_group[j] = index_list
-                        group_id = j
-                if group_id < 0:
-                    direction_group.append([i])
-            mean_direction = [ref_directions.take(members,axis=0).mean(axis=0)
-                              for members in direction_group]
-            direction_group_dict = {}
-            for i in xrange(len(direction_group)):
-                for v in direction_group[i]:
-                    direction_group_dict[v] = i
+            if calfrom.caltype == 'ps':
+                tsel = tb.query('SRCTYPE==%s'%(off_source))
+                if tsel.nrows() == 0:
+                    time_stamps = tb.getcol('TIME')
+                    direction_list = tb.getcol('DIRECTION')
+                else:
+                    time_stamps = tsel.getcol('TIME')
+                    direction_list = tsel.getcol('DIRECTION')
+                tsel.close()
+            else:
+                time_stamps = tb.getcol('TIME')
+                direction_list = tb.getcol('DIRECTION')
             
         # generate plots
         plots = []
+        qa = casatools.quanta
         with utils.open_table(caltable) as tb:
             for spw in spwlist:
+                beam_size = scantable.beam_size[spw]
+                beam_size_rad = qa.convert(beam_size, 'rad')['value']
+                allowance = beam_size_rad * 0.1
+                #LOG.debug('spw%s: allowance=%srad'%(spw, allowance))
                 for pol in pollist:
                     tsel = tb.query('IFNO==%s && POLNO==%s'%(spw,pol))
                     freq_id = tsel.getcell('FREQ_ID', 0)
                     spectra = tsel.getcol('SPECTRA')
-                    time_list = tsel.getcol('TIME') * 86400.0
+                    time_list = tsel.getcol('TIME')
                     tsel.close()
 
                     if nchans[freq_id] == 1:
                         LOG.debug('Skip channel averaged spw %s'%(spw))
                         continue
 
-                    nearest_time_index = [numpy.argmin(abs(time_stamps - t))
-                                          for t in time_list]
-                    direction_group_index = numpy.array([direction_group_dict[i]
-                                                         for i in nearest_time_index])
+                    nearest_time_index = numpy.array([numpy.argmin(abs(time_stamps - t))
+                                                      for t in time_list])
+
+                    
+                    # grouping
+                    direction_group = []
+                    for i in xrange(len(time_list)):
+                        group_id = -1
+                        for j in xrange(len(direction_group)):
+                            index_list = nearest_time_index.take(direction_group[j] + [i])
+                            ra_list = direction_list[0].take(index_list)
+                            dec_list = direction_list[1].take(index_list)
+                            wra = max(ra_list) - min(ra_list)
+                            wdec = max(dec_list) - min(dec_list)
+                            distance = sqrt(wra*wra + wdec*wdec)
+                            if distance < allowance:
+                                direction_group[j].append(i)
+                                group_id = j
+                        if group_id < 0:
+                            direction_group.append([i])
+
+                    #LOG.debug('direction_group=%s'%(direction_group))
+                    
+                    mean_direction = [direction_list.take(members,axis=1).mean(axis=1)
+                                      for members in direction_group]
+
+                    #LOG.debug('mean_direction=%s'%(mean_direction))
+                    
+                    direction_group_dict = {}
                     for i in xrange(len(direction_group)):
-                        index_list = numpy.where(direction_group_index == i)[0]
+                        for v in direction_group[i]:
+                            direction_group_dict[v] = i
+
+                            
+                    for i in xrange(len(direction_group)):
+                        index_list = direction_group[i]
                         if len(index_list) > 0:
                             sky_level = spectra.take(index_list,axis=1).mean(axis=1)
+                            base_freq = base_freqs[freq_id] * 1.0e-6
 
-                            lines = pl.plot(base_freqs[freq_id] * 1.0e-6, sky_level, '.-')
-                            qa = casatools.quanta
+                            lines = pl.plot(base_freq, sky_level, '.-')
                             dirstring = 'J2000 %s %s'%(qa.formxxx('%srad'%(mean_direction[i][0]), 'hms'),qa.formxxx('%srad'%(mean_direction[i][1]), 'dms'))
                             title = '%s (spw %s pol %s)\n%s'%(os.path.basename(caltable), spw, pol, dirstring)
                             pl.title(title)
+                            xmin = min(base_freq)
+                            xmax = max(base_freq)
+                            dx = (xmax - xmin) * 0.1
+                            xmin -= dx
+                            xmax += dx
+                            ymin = min(sky_level)
+                            ymax = max(sky_level)
+                            dy = (ymax - ymin) * 0.1
+                            ymin -= dy
+                            ymax += dy
+                            axes.set_xlim(xmin, xmax)
+                            axes.set_ylim(ymin, ymax)
                             plotfile='%s_spw%s_pol%s_%s.png'%(os.path.basename(caltable),spw,pol,i)
                             LOG.debug('created %s'%(plotfile))
                             plotfile = os.path.join(stage_dir, plotfile)

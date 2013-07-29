@@ -869,7 +869,10 @@ class SDCalFrom(CalFrom):
     CALTYPES = {
         'unknown'      : 0,
         'sky'          : 1,
-        'tsys'         : 2
+        'tsys'         : 2,
+        'ps'           : 1,
+        'otfraster'    : 1,
+        'otf'          : 1
     }
     
     def __init__(self, gaintable, gainfield=None, interp=None, spwmap=None,
