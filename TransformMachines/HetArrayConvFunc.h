@@ -89,7 +89,7 @@ namespace casa{
     //----------------------------------------------
 
     private:
-      
+   void applyGradientToYLine(const Int iy, Complex*& convFunctions, Complex*& convWeights, const Double pixXdir, const Double pixYdir, Int convSize, const Int ndishpair);
       Int factorial(Int n);
       // the return value are -1 or False for not in cache yet but pointing direction 
       //seems to be inside image
