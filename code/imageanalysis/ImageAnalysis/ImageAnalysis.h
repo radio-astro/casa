@@ -275,11 +275,6 @@ class ImageAnalysis
     Bool makecomplex(const String& outfile, const String& imag, Record& region,
                      const Bool overwrite = False);
 
-    // create a float image from a complex image,
-    // possible operations are "abs", "arg", "real", "imag", "square"
-    static Bool makeFloat(const String& outFile, const String& compFile, LogIO& os,
-			  const String& operation="abs", Bool overwrite = False);
-
     Vector<String> maskhandler(const String& op,const Vector<String>& nam);
 
     Record miscinfo();
