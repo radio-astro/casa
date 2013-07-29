@@ -1,5 +1,5 @@
 //# HetArrayConvFunc.cc: Implementation for HetArrayConvFunc
-//# Copyright (C) 2008
+//# Copyright (C) 2008-2013
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -235,7 +235,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       weightConvFunc.reference(weightConvFunc_p);
       convsize=*convSizes_p[actualConvIndex_p];
       convSupport=convSupport_p;
-      return;
+       return;
     }
     else if(isCached ==2){
       convFunc.resize();
@@ -262,8 +262,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // Make this a nice composite number, to speed up FFTs
       CompositeNumber cn(uInt(convSize_p*2.0));    
       convSize_p  = cn.nextLargerEven(Int(convSize_p));
-      //cout << "convSize : " << convSize_p << endl;
-
+   
     }
     
     
@@ -411,33 +410,67 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     (*convSupportBlock_p[actualConvIndex_p])=convSupport_p;
     convSizes_p[actualConvIndex_p]=new Vector<Int> (ndishpair);
     
-    convFunctions_p[actualConvIndex_p]->resize(convSize_p, convSize_p, ndishpair);
+    /*    convFunctions_p[actualConvIndex_p]->resize(convSize_p, convSize_p, ndishpair);
     *(convFunctions_p[actualConvIndex_p])=convSave_p; 
     convWeights_p[actualConvIndex_p]->resize(convSize_p, convSize_p, ndishpair);
     *(convWeights_p[actualConvIndex_p])=weightSave_p;
+    */
 
+    convFunc_p.resize(convSize_p, convSize_p, ndishpair);
+    convFunc_p=convSave_p;
+    weightConvFunc_p.resize(convSize_p, convSize_p, ndishpair);
+    weightConvFunc_p=weightSave_p;
+    Bool delc; Bool delw;
+    Double dirX=pixFieldDir(0);
+    Double dirY=pixFieldDir(1);
+    Complex *convstor=convFunc_p.getStorage(delc);
+    Complex *weightstor=weightConvFunc_p.getStorage(delw);
+    Int elconvsize=convSize_p;
 
+#pragma omp parallel default(none) firstprivate(convstor, weightstor, dirX, dirY, elconvsize, ndishpair)
+    {
+    #pragma omp for
+      for(Int iy=0; iy<elconvsize; ++iy){
+	applyGradientToYLine(iy,  convstor, weightstor, dirX, dirY, elconvsize, ndishpair);
+	
+      }
+    }///End of pragma
+
+    convFunc_p.putStorage(convstor, delc);
+    weightConvFunc_p.putStorage(weightstor, delw);
+
+    /*
     //Apply the shift phase gradient
 
-    for (Int iy=0;iy<convSize_p;iy++) { 
-      Complex phy(cos(Double(iy-convSize_p/2)*pixFieldDir(1)),sin(Double(iy-convSize_p/2)*pixFieldDir(1))) ;
+    for (Int iy=0;iy<convSize_p;iy++) {
+      Double cy, sy;
+      //sincos(Double(iy-convSize_p/2)*pixFieldDir(1), &sy, &cy);
+      cy=cos(Double(iy-convSize_p/2)*pixFieldDir(1));
+      sy=sin(Double(iy-convSize_p/2)*pixFieldDir(1));
+      Complex phy(cy,sy) ;
       for (Int ix=0;ix<convSize_p;ix++) {
-	Complex phx(cos(Double(ix-convSize_p/2)*pixFieldDir(0)),sin(Double(ix-convSize_p/2)*pixFieldDir(0))) ;
+	Double cx, sx;
+	//sincos(Double(ix-convSize_p/2)*pixFieldDir(0), &sx, &cx);
+	cx=cos(Double(ix-convSize_p/2)*pixFieldDir(0));
+	sx=sin(Double(ix-convSize_p/2)*pixFieldDir(0));
+	Complex phx(cx,sx) ;
 	for(Int iz=0; iz <ndishpair; ++iz){
 	  (*(convFunctions_p[actualConvIndex_p]))(ix,iy,iz)= (*(convFunctions_p[actualConvIndex_p]))(ix,iy,iz)*phx*phy;
 	  (*(convWeights_p[actualConvIndex_p]))(ix,iy,iz)= (*(convWeights_p[actualConvIndex_p]))(ix,iy,iz)*phx*phy;
 	}
       }
     }
-    
+    */
+
+
     //For now all have the same size convsize;
     convSizes_p[actualConvIndex_p]->set(convSize_p);
     
     //We have to get the references right now
-    convFunc_p.resize();
-    convFunc_p.reference(*convFunctions_p[actualConvIndex_p]);
-    weightConvFunc_p.resize();
-    weightConvFunc_p.reference(*convWeights_p[actualConvIndex_p]);
+    //    convFunc_p.resize();
+    //convFunc_p.reference(*convFunctions_p[actualConvIndex_p]);
+    //weightConvFunc_p.resize();
+    //weightConvFunc_p.reference(*convWeights_p[actualConvIndex_p]);
 
     convFunc.reference(convFunc_p);
     weightConvFunc.reference(weightConvFunc_p);
@@ -445,6 +478,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     convSupport=convSupport_p;
 
 
+  }
+
+  void HetArrayConvFunc::applyGradientToYLine(const Int iy, Complex*& convFunctions, Complex*& convWeights, const Double pixXdir, const Double pixYdir, Int convSize, const Int ndishpair){
+    Double cy, sy;
+    sincos(Double(iy-convSize/2)*pixYdir, &sy, &cy);
+    Complex phy(cy,sy) ;
+    for (Int ix=0;ix<convSize;ix++) {
+      Double cx, sx;
+      sincos(Double(ix-convSize/2)*pixXdir, &sx, &cx);
+      Complex phx(cx,sx) ;
+      for(Int iz=0; iz <ndishpair; ++iz){
+	Int index=(iz*convSize+iy)*convSize+ix;
+	convFunctions[index]= convFunctions[index]*phx*phy;
+	convWeights[index]= convWeights[index]*phx*phy;
+      }
+    }
+    
   }
 
    Bool HetArrayConvFunc::toRecord(RecordInterface& rec){
@@ -459,6 +509,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 rec.define("convsizes"+String::toString(k), *(convSizes_p[k]));
 	 rec.define("convsupportblock"+String::toString(k), *(convSupportBlock_p[k]));
        }
+       rec.define("donemainconv", doneMainConv_p);
+       rec.define("convsave", convSave_p);
+       rec.define("weightsave", weightSave_p);
+       rec.define("convsupport", convSupport_p);
        rec.define("pbclass", Int(pbClass_p));
        
     }
@@ -493,6 +547,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	rec.get("convsizes"+String::toString(k), *(convSizes_p[k]));
 	rec.get("convsupportblock"+String::toString(k), *(convSupportBlock_p[k]));
       }
+      //Now that we are calculating all phase gradients on the fly ..
+      ///we should clean up some and get rid of the cached variables
+      convSize_p=(*(convSizes_p[0]))[0];
+      convSave_p.resize();
+      rec.get("convsave", convSave_p);
+      weightSave_p.resize();
+      rec.get("weightsave", weightSave_p);
+      rec.get("donemainconv", doneMainConv_p);
+      convSupport_p.resize();
+      rec.get("convsupport", convSupport_p);
       pbClass_p=static_cast<PBMathInterface::PBClass>(rec.asInt("pbclass"));
       calcFluxScale_p=calcfluxscale;
     }
@@ -529,7 +593,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  // if it drops by more than 2 magnitudes per pixel
 	  trial=( (10*convSampling) < convSize_p) ? 5*convSampling : (convSize_p/2 - 4*convSampling);
 	}
-	//cerr << "trial1 " << trial << endl;
+       
 				 
 	if(found) {
 	  if(trial < 5*convSampling) 
@@ -628,7 +692,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	nDefined_p=0;
       }
     }
-    String mapid=msid+String("_")+pointingid;
+    //String mapid=msid+String("_")+pointingid;
     /*
     if(convFunctionMap_p.ndefined() == 0){
       convFunctionMap_p.define(mapid, 0);    
@@ -659,11 +723,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(convFunctionMap_p[pixdepoint[1]*nx_p+pixdepoint[0]] <0){
       actualConvIndex_p=nDefined_p;
       convFunctionMap_p[pixdepoint[1]*nx_p+pixdepoint[0]]=nDefined_p;
-      ++nDefined_p;
+      // ++nDefined_p;
+      nDefined_p=1;
       return -1;
     }
     else{
-
+      /*
       actualConvIndex_p=convFunctionMap_p[pixdepoint[1]*nx_p+pixdepoint[0]]; 
       convFunc_p.resize(); // break any reference
       weightConvFunc_p.resize(); 
@@ -678,6 +743,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       convSupport_p=(*convSupportBlock_p[actualConvIndex_p]);
       convSize_p=(*convSizes_p[actualConvIndex_p])[0];
       makerowmap(vb, rowMap);
+      */
+      actualConvIndex_p=0;
+      return -1;
     }
 
     return 1;
