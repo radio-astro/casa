@@ -53,6 +53,33 @@ immd.done()
 
 </description>
 
+<method type="function" name="add">
+    <shortdescription>Add a key-value pair if possible.</shortdescription>
+    <input>
+        <param type="string" name="key">
+            <description>The name of the FITS or other keyword.</description>
+            <value/>
+        </param>
+        <param type="any" name="value">
+            <any type="variant"/>
+            <description>Associated value to add.</description>
+            <value/>
+        </param>
+    </input>
+    <returns type="bool"/>
+    <description>
+        Add a key-value pair if possible.
+    </description>
+    <example>
+imd.open("myim.im")
+# add a keyword "test" with value "first"
+if add("test", "first"):
+    print "test=first has been added"
+else:
+    print "Unable to add key test"
+imd.done()
+    </example>
+</method>
 <method type="function" name="close">
     <shortdescription>Close the image metadata tool. Synonym for done().</shortdescription>
    
@@ -163,7 +190,8 @@ immd.done()
             <description>The name of the FITS or other keyword.</description>
             <value/>
         </param>
-        <param type="string" name="value">
+        <param type="any" name="value">
+            <any type="variant"/>
             <description>Value to remove if the key is multi-valued. Only used in the case of key="masks".</description>
             <value/>
         </param>

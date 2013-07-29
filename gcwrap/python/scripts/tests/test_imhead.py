@@ -1130,8 +1130,108 @@ class imhead_test(unittest.TestCase):
         self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="jj"))
         self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="jj"))
 
+    def test_add(self):
+        myia = iatool()
+        imagename = "xx1d_add.im"
+        shape = [1, 1, 6]
+        myia.fromshape(imagename, shape)
+        major = {'value': 4, 'unit': "arcsec"}
+        minor = {'value': 2, 'unit': "arcsec"}
+        pa = {'value': 30, 'unit': "deg"}
+        myia.setrestoringbeam(major=major, minor=minor, pa=pa)
+        bunit = "Jy/beam"
+        myia.setbrightnessunit(bunit)
+        myia.addnoise()
+        myia.calcmask(imagename + "<= 0")
+        stats = myia.statistics()
+        myia.done()
         
+        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="bunit", hdvalue="K"))
+        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="bunit"))
+        self.assertTrue(imhead(imagename=imagename, mode="add", hdkey="bunit", hdvalue="K"))
+        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey="bunit") == "K")
+
+        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="cdelt1", hdvalue=0.5))
+        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="crpix1", hdvalue=2))
+        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="crval1", hdvalue=0.22))
+        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="cunit1", hdvalue="km/s"))
+        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="ctype1", hdvalue="Linear"))
         
+        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="equinox", hdvalue='b1900'))
+
+        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="imtype", hdvalue='rm'))
+
+        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="masks", hdvalue="xx"))
+
+        key = "object"
+        value = "sgrb2"
+        self.assertTrue(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == value)
+        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+
+        epoch = imhead(imagename=imagename, mode="get", hdkey="epoch")
+        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="epoch", hdvalue=epoch))
+
+        key = "observer"
+        value = "Edwin Hubble"
+        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey=key))
+        self.assertTrue(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == value)
+        
+        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="projection", hdvalue='sin'))
+
+        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="reffreqtype", hdvalue='lsrk'))
+        
+        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="restfreq", hdvalue='10GHz'))
+
+        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="shape", hdvalue='10GHz'))
+
+        key = "telescope"
+        value = "bima"
+        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey=key))
+        self.assertTrue(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == value)
+
+        key = "bmaj"
+        value = 4
+        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey=key))
+        key = "bpa"
+        value = 4
+        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+        key = "bmaj"
+        value = 4
+        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+        value = "4m"
+        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+        value = "4arcmin"
+        self.assertTrue(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == qa.quantity(value))
+        key = "bmin"
+        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == qa.quantity(value))
+        key = "bpa"
+        value = "0deg"
+        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == qa.quantity(value))
+
+        for key in [
+            "datamin", "datamax", "maxpos", "minpos",
+            "maxpixpos", "minpixpos"
+        ]: 
+            self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=4))
+            
+        
+        key = "user-specified"
+        for value in ["test-val", 6, qa.quantity("4km/s")]:
+            self.assertTrue(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+            self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == value)
+            self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+            self.assertTrue(imhead(imagename=imagename, mode="del", hdkey=key, hdvalue=value))
+
+
+
+
     def test_CAS4355(self):
         """ verify puthead can take sesigimal values where appropriate (CAS-4355)"""
         myia = iatool()

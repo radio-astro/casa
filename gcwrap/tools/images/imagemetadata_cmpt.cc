@@ -41,6 +41,18 @@ bool imagemetadata::close() {
 	}
 }
 
+bool imagemetadata::add(const string& key, const variant& value) {
+	try {
+		_exceptIfDetached();
+		return _header->add(key, value);
+	}
+	catch (const AipsError& x) {
+		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+			<< LogIO::POST;
+		RETHROW(x);
+	}
+}
+
 bool imagemetadata::done() {
 	return close();
 }
@@ -88,11 +100,11 @@ bool imagemetadata::open(const std::string& infile) {
 	}
 }
 
-bool imagemetadata::remove(const string& key, const std::string& value) {
+bool imagemetadata::remove(const string& key, const variant& value) {
 	try {
 		_exceptIfDetached();
 		if (String(key) == ImageMetaData<Float>::MASKS) {
-			return _header->removeMask(value);
+			return _header->removeMask(value.toString());
 		}
 		else {
 			return _header->remove(key);
