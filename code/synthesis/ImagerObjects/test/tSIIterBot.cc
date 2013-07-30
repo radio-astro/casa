@@ -34,7 +34,7 @@
 #include <casadbus/interfaces/SynthImager.proxy.h>
 
 // Include file for the SIIterBot Class
-#include<synthesis/MeasurementEquations/SIIterBot.h>
+#include<synthesis/ImagerObjects/SIIterBot.h>
 #include <sys/wait.h>
 
 class SIIterBotTest;
@@ -918,6 +918,9 @@ protected:
    if arguments are included then we spawn a Controller process for testing
 */
 int main(int argc, char** argv){
+  using namespace casa;
+
+
   if (argc == 1) {
     /* Main Program */
     SIIterBotTest siIterBotTest;
@@ -929,7 +932,8 @@ int main(int argc, char** argv){
        arg[2]: If true, respond to interactive requests
        arg[3]: If true, check the details after the interactive request
     */
-    
+    std::cout << "Not running SITestController test" << std::endl;
+    /*    
     SITestController controller("SITestService",
                                 !strcmp(argv[1], "true"),
                                 !strcmp(argv[2], "true"),
@@ -937,6 +941,6 @@ int main(int argc, char** argv){
 
     int exitCondition = controller.serviceLoop();
     exit(exitCondition);
-
+    */
   }
 }
