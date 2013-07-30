@@ -322,11 +322,11 @@ class TsysflagchansWorker(basetask.StandardTaskTemplate):
         fieldids  -- view will be calculated using data for all field_ids in
                      this list.
         metric    -- the name of the view metric:
-                        'shape' gives an image where each pixel is a measure 
-                        of the departure of the shape for that antenna/scan 
-                        from the median. 
-                        'median' gives an image where each pixel is the
-                        tsys median for that antenna/scan.  
+                        'median' gives median Tsys spectra for each spw.
+                        'antenna_median' gives median Tsys spectra for each
+                        spw/antenna.
+                        'antenna_diff' gives difference spectra between
+                        the antenna median spectra and spw median.
         """
         if metric == 'median':
             self.calculate_median_tsys(tsystable, spwid, intent,
@@ -336,6 +336,9 @@ class TsysflagchansWorker(basetask.StandardTaskTemplate):
               fieldids)
         elif metric == 'channel_time':
             self.calculate_channel_time_image(tsystable, spwid, intent,
+              fieldids)
+        elif metric == 'antenna_diff':
+            self.calculate_antenna_diff_tsys(tsystable, spwid, intent,
               fieldids)
 
     def calculate_median_tsys(self, tsystable, spwid, intent, fieldids):
@@ -480,21 +483,21 @@ class TsysflagchansWorker(basetask.StandardTaskTemplate):
                     times.update([row.get('TIME')])
 
         # get median Tsys in this spw
-        spw_spectrumstack = None
+#        spw_spectrumstack = None
         ant_spectrumstack = {}
         ant_flagstack = {}
 
         # accumulate results
         for description in tsysspectra.descriptions():
             tsysspectrum = tsysspectra.last(description)
-            if spw_spectrumstack is None:
-                spw_spectrumstack = tsysspectrum.data
-                spw_flagstack = tsysspectrum.flag
-            else:
-                spw_spectrumstack = np.vstack((tsysspectrum.data,
-                  spw_spectrumstack))
-                spw_flagstack = np.vstack((tsysspectrum.flag,
-                  spw_flagstack))
+#            if spw_spectrumstack is None:
+#                spw_spectrumstack = tsysspectrum.data
+#                spw_flagstack = tsysspectrum.flag
+#            else:
+#                spw_spectrumstack = np.vstack((tsysspectrum.data,
+#                  spw_spectrumstack))
+#                spw_flagstack = np.vstack((tsysspectrum.flag,
+#                  spw_flagstack))
 
             for antenna_id in antenna_ids:
                 if tsysspectrum.ant[0] != antenna_id:
@@ -530,15 +533,136 @@ class TsysflagchansWorker(basetask.StandardTaskTemplate):
                 # add the view result to the class result structure
                 self.result.addview(viewresult.description, viewresult)
 
+#        # calculate median for spw
+#        if spw_spectrumstack is not None:
+#            stackmedian = np.zeros(np.shape(spw_spectrumstack)[1])
+#            stackmedianflag = np.ones(np.shape(spw_spectrumstack)[1], np.bool)
+#            for j in range(np.shape(spw_spectrumstack)[1]):
+#                valid_data = spw_spectrumstack[:,j][np.logical_not(spw_flagstack[:,j])]
+#                if len(valid_data):
+#                    stackmedian[j] = np.median(valid_data)
+#                    stackmedianflag[j] = False
+
+    def calculate_antenna_diff_tsys(self, tsystable, spwid, intent, fieldids):
+        """
+        tsystable -- CalibrationTableData object giving access to the tsys
+                     caltable.
+        spwid     -- view will be calculated using data for this spw id.
+        fieldids  -- view will be calculated using data for all field_ids in
+                     this list.
+
+        Data of the specified spwid, intent and range of fieldids are
+        read from the given tsystable object. From all this a series
+        of 'views' are created, one for each antenna. Each 'view'
+        is the difference spectrum resulting from the subtraction
+        of the 'spw median' Tsys spectrum from the 'antenna/spw median'
+        spectrum.
+        """
+
+        ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
+        antenna_ids = [antenna.id for antenna in ms.antennas]
+        antenna_ids.sort()
+        antenna_name = {}
+        for antenna_id in antenna_ids:
+            antenna_name[antenna_id] = [antenna.name for antenna in ms.antennas
+              if antenna.id==antenna_id][0]
+
+        times = set()
+
+        # dict of results for each pol, defaultdict ia preferred to simple {}
+        # because it initialises a new (key,value) automatically if it is not
+        # already present when demanded.
+        tsysspectra = TsysflagResults()
+
+        pols = []
+        for row in tsystable.rows:
+            if row.get('SPECTRAL_WINDOW_ID') == spwid and \
+              row.get('FIELD_ID') in fieldids:
+
+                # The Tsys array has 2 values for each result,
+                # presumably 1 number for each polarization.
+                # Assume this for now and check later. Pol IDs are
+                # unknown so store as '0' and '1'.
+                pols = range(np.shape(row.get('FPARAM'))[0])
+                for pol in pols:
+                    tsysspectrum = commonresultobjects.SpectrumResult(
+                      data=row.get('FPARAM')[pol,:,0],
+                      flag=row.get('FLAG')[pol,:,0],
+                      datatype='Normalised Tsys', filename=tsystable.name,
+                      field_id=row.get('FIELD_ID'),
+                      spw=row.get('SPECTRAL_WINDOW_ID'),
+                      ant=(row.get('ANTENNA1'),
+                      antenna_name[row.get('ANTENNA1')]), pol=pol,
+                      time=row.get('TIME'), normalise=True)
+
+                    tsysspectra.addview(tsysspectrum.description,
+                      tsysspectrum)
+                    times.update([row.get('TIME')])
+
+        # get median Tsys in this spw
+        spw_spectrumstack = None
+        ant_spectrumstack = {}
+        ant_flagstack = {}
+
+        # accumulate results
+        for description in tsysspectra.descriptions():
+            tsysspectrum = tsysspectra.last(description)
+            if spw_spectrumstack is None:
+                spw_spectrumstack = tsysspectrum.data
+                spw_flagstack = tsysspectrum.flag
+            else:
+                spw_spectrumstack = np.vstack((tsysspectrum.data,
+                  spw_spectrumstack))
+                spw_flagstack = np.vstack((tsysspectrum.flag,
+                  spw_flagstack))
+
+            for antenna_id in antenna_ids:
+                if tsysspectrum.ant[0] != antenna_id:
+                    continue
+
+                if antenna_id not in ant_spectrumstack.keys():
+                    ant_spectrumstack[antenna_id] = tsysspectrum.data
+                    ant_flagstack[antenna_id] = tsysspectrum.flag
+                else:
+                    ant_spectrumstack[antenna_id] = np.vstack((tsysspectrum.data,
+                      ant_spectrumstack[antenna_id]))
+                    ant_flagstack[antenna_id] = np.vstack((tsysspectrum.flag,
+                      ant_flagstack[antenna_id]))
+
         # calculate median for spw
         if spw_spectrumstack is not None:
-            stackmedian = np.zeros(np.shape(spw_spectrumstack)[1])
-            stackmedianflag = np.ones(np.shape(spw_spectrumstack)[1], np.bool)
+            spw_median = np.zeros(np.shape(spw_spectrumstack)[1])
+            spw_medianflag = np.ones(np.shape(spw_spectrumstack)[1], np.bool)
             for j in range(np.shape(spw_spectrumstack)[1]):
                 valid_data = spw_spectrumstack[:,j][np.logical_not(spw_flagstack[:,j])]
                 if len(valid_data):
-                    stackmedian[j] = np.median(valid_data)
-                    stackmedianflag[j] = False
+                    spw_median[j] = np.median(valid_data)
+                    spw_medianflag[j] = False
+
+        # calculate diff between median for spw/antenna and median for spw
+        for antenna_id in antenna_ids:
+            if ant_spectrumstack[antenna_id] is not None:
+                ant_median = np.zeros(np.shape(ant_spectrumstack[antenna_id])[1])
+                ant_medianflag = np.ones(np.shape(ant_spectrumstack[antenna_id])[1], np.bool)
+                for j in range(np.shape(ant_spectrumstack[antenna_id])[1]):
+                    valid_data = ant_spectrumstack[antenna_id][:,j][np.logical_not(ant_flagstack[antenna_id][:,j])]
+                    if len(valid_data):
+                        ant_median[j] = np.median(valid_data)
+                        ant_medianflag[j] = False
+
+                # subtract spw median from antenna median
+                ant_median -= spw_median
+                ant_medianflag = (ant_medianflag | spw_medianflag)
+            
+                viewresult = commonresultobjects.SpectrumResult(
+                  data=ant_median, flag=ant_medianflag,
+                  datatype='Normalised Tsys Difference',
+                  filename=tsystable.name, spw=spwid,
+                  intent=intent,
+                  ant=(antenna_id, antenna_name[antenna_id]))
+
+                # add the view result to the class result structure
+                self.result.addview(viewresult.description, viewresult)
 
     def calculate_channel_time_image(self, tsystable, spwid, intent, fieldids):
         """
