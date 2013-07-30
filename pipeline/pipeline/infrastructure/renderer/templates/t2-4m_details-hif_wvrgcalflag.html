@@ -20,7 +20,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 	<tbody>
 % for r in result:
 		<tr>
-			<td>${r.vis}</td>
+			<td>${os.path.basename(r.vis)}</td>
 		  	<td>'${', '.join(r.wvrflag)}'</td>
 		</tr>
 % endfor		
