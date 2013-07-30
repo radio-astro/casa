@@ -23,6 +23,7 @@ Flag deviant channels in system temperature measurements.
             <value>median</value>
             <value>antenna_median</value>
             <value>channel_time</value>
+            <value>antenna_diff</value>
         </allowed>
     </param>
 
@@ -157,6 +158,11 @@ metric -- Metric to use in calculating the flagging views of the Tsys data.
     'antenna_median' - A flagging view is generated for each 
                SpW/intentgroup/antenna. Each view is the median spectrum
                from all the member spectra.
+
+    'antenna_diff' - A flagging view is generated for each 
+               SpW/intentgroup/antenna. Each view is the difference 
+               between the median of spectra for the antenna/SpW
+               and the median for the SpW as a whole.
  
     default: 'median'
 
@@ -250,9 +256,9 @@ Examples:
 
 3. Flag antenna-based 'glitches':
 
-   hif_tsysflagchans(metric='antenna_median', flag_edges=False, flag_sharps2=True)
+   hif_tsysflagchans(metric='antenna_diff', flag_edges=False, flag_sharps2=True)
        equivalent to:
-   hif_tsysflagchans(metric='antenna_median', flag_edges=False, flag_sharps2=True, sharps2_limit=0.05)
+   hif_tsysflagchans(metric='antenna_diff', flag_edges=False, flag_sharps2=True, sharps2_limit=0.05)
 
 </example> 
 
