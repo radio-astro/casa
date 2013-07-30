@@ -57,14 +57,14 @@ def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
 
 	freqtol -- Frequency shift tolerance for considering data to be in the same
 		   spwid.  The number of channels must also be the same.
-		default: ''  do not combine unless frequencies are equal
+		default: '' == 1 Hz
 		example: freqtol='10MHz' will not combine spwid unless they are
 		   within 10 MHz.
-		Note: This option is useful to conbine spectral windows with very slight
+		Note: This option is useful to combine spectral windows with very slight
 		   frequency differences caused by Doppler tracking, for example.
 
 	dirtol -- Direction shift tolerance for considering data as the same field
-		default: '' means always combine.
+		default: '' == 1 mas (milliarcsec)
 		example: dirtol='1.arcsec' will not combine data for a field unless
 		   their phase center differ by less than 1 arcsec.  If the field names
 		   are different in the input data sets, the name in the output data
