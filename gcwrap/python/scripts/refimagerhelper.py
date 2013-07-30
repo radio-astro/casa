@@ -156,6 +156,17 @@ class PySynthesisImager:
          return stopflag
 
 #############################################
+    def makePSF(self):
+
+        self.makePSFCore()
+
+        ### Gather PSFs (if needed) and normalize by weight
+        for immod in range(0,self.NF):
+            self.PStools[immod].gatherpsfweight() 
+            self.PStools[immod].dividepsfbyweight()
+
+#############################################
+
     def runMajorCycle(self):
         for immod in range(0,self.NF):
             self.PStools[immod].scattermodel() 
@@ -167,14 +178,21 @@ class PySynthesisImager:
         ### Gather residuals (if needed) and normalize by weight
         for immod in range(0,self.NF):
             self.PStools[immod].gatherresidual() 
+            self.PStools[immod].divideresidualbyweight()
+
 
 #############################################
+## Overloaded for parallel runs
+    def makePSFCore(self):
+        for node in range(0,self.NN):
+             self.SItools[node].makepsf()
 
+#############################################
+## Overloaded for parallel runs
     def runMajorCycleCore(self):
         ### Run major cycle
         for node in range(0,self.NN):
              self.SItools[node].executemajorcycle(controls={})
-
 #############################################
 
     def runMinorCycle(self):
@@ -258,7 +276,7 @@ class PyParallelContSynthesisImager(PySynthesisImager):
 
     def __init__(self,params=None,clusterdef=''):
 
-         PySynthesisImager.__init__(self,params,iterpars)
+         PySynthesisImager.__init__(self,params)
 
          self.PH = PyParallelImagerHelper( clusterdef )
          self.NN = self.PH.NN
@@ -289,6 +307,15 @@ class PyParallelContSynthesisImager(PySynthesisImager):
          self.PH.takedownCluster()
     
 #############################################
+    def makePSFCore(self):
+        ### Make PSFs
+        joblist=[]
+        for node in range(0,self.PH.NN):
+             joblist.append( self.PH.runcmd("toolsi.makepsf()",node) )
+        self.PH.checkJobs( joblist ) # this call blocks until all are done.
+
+#############################################
+
     def runMajorCycleCore(self):
         ### Run major cycle
         joblist=[]
@@ -304,7 +331,7 @@ class PyParallelDeconvolver(PySynthesisImager):
 
     def __init__(self,params,clusterdef=''):
 
-        PySynthesisImager.__init__(self,params,iterpars)
+        PySynthesisImager.__init__(self,params)
 
         self.PH = PyParallelImagerHelper( clusterdef )
         self.NN = self.PH.NN
@@ -386,16 +413,23 @@ class PyParallelImagerHelper():
               self.NN = 1
 
 #############################################
+## Very rudimentary partitioning - only for tests. The actual code needs to go here.
     def partitionDataSelection(self,oneselpars={}):
         allselpars = {}
         for node in range(0,self.NN):
             allselpars[str(node)]  = copy.deepcopy(oneselpars['0']) 
             ### Temp modification. Put actual split-chan-range info here.
-            if not allselpars[str(node)].has_key('spw'):
-                allselpars[str(node)]['spw']=str(node)
+#            if not allselpars[str(node)].has_key('spw'):
+#            allselpars[str(node)]['spw']=str(node)
+#            elif allselpars[str(node)]['spw']=='':
+#                allselpars[str(node)]['spw']=str(node)
+
+            ######## WARNING : Very special case for SPW 0 of points_2spw.ms
+            if node==0:
+                allselpars[str(node)]['spw'][0] = allselpars[str(node)]['spw'][0] + ':0~9'
             else:
-                allselpars[str(node)]['spw'] = allselpars[str(node)]['spw'] + ':' + str(node)
-        print 'Selection : ', allselpars
+                allselpars[str(node)]['spw'][0] = allselpars[str(node)]['spw'][0] + ':10~19'
+        print 'Partitioned Selection : ', allselpars
         return allselpars
 
 #############################################
@@ -562,7 +596,8 @@ class ImagerParameters():
                  vis='',field='',spw='',usescratch=True,
                  outlierfile='',
                  imagename='', nchan=1, imsize=[1,1],
-                 ftmachine='ft', startmodel='',
+                 cellsize=[10.0,10.0],phasecenter='19:59:28.500 +40.44.01.50',
+                 ftmachine='ft', startmodel='', weighting='natural',
                  algo='test',
                  niter=0, cycleniter=0, cyclefactor=1.0,
                  minpsffraction=0.1,maxpsffraction=0.8,
@@ -573,15 +608,15 @@ class ImagerParameters():
 
         self.allselpars = {'vis':vis, 'field':field, 'spw':spw, 'usescratch':usescratch}
         self.outlierfile = outlierfile
-        self.allimpars = { '0' :{'imagename':imagename, 'nchan':nchan, 'imsize':imsize } }
-        self.allgridpars = { '0' : {'ftmachine':ftmachine, 'startmodel':startmodel } }
+        self.allimpars = { '0' :{'imagename':imagename, 'nchan':nchan, 'imsize':imsize, 'cellsize':cellsize, 'phasecenter':phasecenter} }
+        self.allgridpars = { '0' : {'ftmachine':ftmachine, 'startmodel':startmodel, 'weighting':weighting } }
         self.alldecpars = { '0' : { 'id':0, 'algo':algo } }
         self.iterpars = { 'niter':niter, 'cycleniter':cycleniter, 'threshold':threshold, 'loopgain':loopgain, 'interactive':interactive }  # Ignoring cyclefactor, minpsffraction, maxpsffraction for now.
 
         ## List of supported parameters in outlier files.
         ## All other parameters will default to the global values.
-        self.outimparlist = ['imagename','nchan','imsize']
-        self.outgridparlist=['ftmachine','startmodel']
+        self.outimparlist = ['imagename','nchan','imsize','cellsize','phasecenter']
+        self.outgridparlist=['ftmachine','startmodel','weighting']
         self.outdecparlist=['algo','startmodel']
 
 

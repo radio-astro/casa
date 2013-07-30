@@ -99,7 +99,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }//end of setupParSync
 
 
-  void SynthesisParSync::gatherResidual()
+  void SynthesisParSync::gatherImages(Bool dopsf, Bool doresidual)
   {
 
     Bool needToGatherImages = setupImagesOnDisk();
@@ -113,17 +113,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	AlwaysAssert( itsPartImages.nelements()>0 , AipsError );
 	
 	// Add intelligence to modify all only the first time, but later, only residual;
-	itsImages->resetImages( /*psf*/True, /*residual*/True, /*weight*/True ); 
+	itsImages->resetImages( /*psf*/dopsf, /*residual*/doresidual, /*weight*/dopsf ); 
 	
 	for( uInt part=0;part<itsPartImages.nelements();part++)
 	  {
-	    itsImages->addImages( itsPartImages[part], /*psf*/True, /*residual*/True, /*weight*/True );
+	    itsImages->addImages( itsPartImages[part], /*psf*/dopsf, /*residual*/doresidual, /*weight*/dopsf );
 	  }
 
       }// end of image gathering.
     
     // Normalize by the weight image.
-    divideResidualByWeight();
+    //    divideResidualByWeight();
 
   }// end of gatherImages
 
@@ -153,11 +153,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisParSync", "divideResidualByWeight",WHERE) );
 
-    // If Weight image is not specified, treat it as though it were filled with ones. 
-    // ( i.e.  itsWeight = NULL )
+    itsImages->divideResidualByWeight(/* weightlimit */);
 
-    itsImages->divideResidualByWeight( 0.1 );
-    itsImages->dividePSFByWeight( 0.1 );
+  }
+
+  void SynthesisParSync::dividePSFByWeight()
+  {
+    LogIO os( LogOrigin("SynthesisParSync", "dividePSFByWeight",WHERE) );
+
+    itsImages->dividePSFByWeight(/* weightlimit */);
 
   }
 

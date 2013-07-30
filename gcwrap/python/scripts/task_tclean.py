@@ -35,7 +35,8 @@ def tclean(vis='', field='', spw='',
                                      vis=vis,field=field,spw=spw,usescratch=usescratch,\
                                      outlierfile=outlierfile,\
                                      imagename=imagename,nchan=nchan,imsize=imsize,\
-                                     ftmachine=ftmachine,startmodel=startmodel,\
+                                     cellsize=[10.0,10.0], phasecenter='19:59:28.500 +40.44.01.50',\
+                                     ftmachine=ftmachine,startmodel=startmodel,weighting='natural',\
                                      algo=algo,\
                                      niter=niter,cycleniter=cycleniter,cyclefactor=cyclefactor,\
                                      minpsffraction=minpsffraction, maxpsffraction=maxpsffraction,\

@@ -33,7 +33,6 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
 
-#
 #include <casa/Logging.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogMessage.h>
@@ -69,6 +68,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsResidual=NULL;
     itsWeight=NULL;
     itsImage=NULL;
+
+    itsPsfNormed=False;
+    itsResNormed=False;
 
     itsImageName=String("");
     itsImageShape=IPosition();
@@ -160,7 +162,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
     itsValidity = True;
-  }// end of Constructor 1
+
+    // UUU Check if this is needed here, or check from the images.... somehow..
+    itsPsfNormed=False;
+    itsResNormed=False;
+  
+
+}// end of Constructor 1
 
 
   SIImageStore::SIImageStore(String imagename, 
@@ -218,6 +226,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsResidual=imPtr[1]; itsWeight=imPtr[2]; itsPsf=imPtr[3]; itsImage=imPtr[4];
     itsWeight->set(1.0);
     itsPsf->set(1.0);
+    
+    // UUU Check if this is the right place for this.
+    itsPsfNormed=False;
+    itsResNormed=False;
+
+    /*
     if( itsImageShape[0]==3 && itsImageShape[1]==3 )
       {
 	// Make a PSF with 1 in the center pixel.
@@ -228,6 +242,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      itsPsf->putAt( 1.0, IPosition(4,1,1,i,j) );
 	    }
       }
+    */
 
     os << LogIO::POST;
     
@@ -486,15 +501,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     else
       {
-	os << "Dividing " << itsImageName+String(".residual") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
-	
-	///cout << " Dividing : " << itsResidual->getAt( IPosition(4,0,0,0,0) ) << " by " << itsWeight->getAt( IPosition(4,0,0,0,0) ) << endl;
-	
-	LatticeExpr<Float> mask( iif( (*itsWeight) > weightlimit , 1.0, 0.0 ) );
-	LatticeExpr<Float> maskinv( iif( (*itsWeight) > weightlimit , 0.0, 1.0 ) );
-	
-	LatticeExpr<Float> ratio( ( (*itsResidual) * mask ) / ( (*itsWeight) + maskinv) );
-	itsResidual->copyData(ratio);
+	if( itsResNormed==False )
+	  {
+	    os << "Dividing " << itsImageName+String(".residual") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
+	    
+	    ///cout << " Dividing : " << itsResidual->getAt( IPosition(4,0,0,0,0) ) << " by " << itsWeight->getAt( IPosition(4,0,0,0,0) ) << endl;
+	    
+	    LatticeExpr<Float> mask( iif( (*itsWeight) > weightlimit , 1.0, 0.0 ) );
+	    LatticeExpr<Float> maskinv( iif( (*itsWeight) > weightlimit , 0.0, 1.0 ) );
+	    
+	    LatticeExpr<Float> ratio( ( (*itsResidual) * mask ) / ( (*itsWeight) + maskinv) );
+	    itsResidual->copyData(ratio);
+	    itsResNormed=True;
+	  }
+	else
+	  {
+	    os << itsImageName+String(".residual") << " is already normalized." << LogIO::POST;
+	  }
       }
     // createMask
   }
@@ -509,15 +532,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     else
       {
-	os << "Dividing " << itsImageName+String(".psf") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
-	
-	///cout << " Dividing : " << itsResidual->getAt( IPosition(4,0,0,0,0) ) << " by " << itsWeight->getAt( IPosition(4,0,0,0,0) ) << endl;
-	cerr << "weight limit " <<  weightlimit << endl;
-	LatticeExpr<Float> mask( iif( (*itsWeight) > weightlimit , 1.0, 0.0 ) );
-	LatticeExpr<Float> maskinv( iif( (*itsWeight) > weightlimit , 0.0, 1.0 ) );
-	
-	LatticeExpr<Float> ratio( ( (*itsPsf) * mask ) / ( (*itsWeight) + maskinv) );
-	itsPsf->copyData(ratio);
+	if ( itsPsfNormed==False )
+	  {
+	    os << "Dividing " << itsImageName+String(".psf") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
+	    
+	    ///cout << " Dividing : " << itsResidual->getAt( IPosition(4,0,0,0,0) ) << " by " << itsWeight->getAt( IPosition(4,0,0,0,0) ) << endl;
+	    cerr << "weight limit " <<  weightlimit << endl;
+	    LatticeExpr<Float> mask( iif( (*itsWeight) > weightlimit , 1.0, 0.0 ) );
+	    LatticeExpr<Float> maskinv( iif( (*itsWeight) > weightlimit , 0.0, 1.0 ) );
+	    
+	    LatticeExpr<Float> ratio( ( (*itsPsf) * mask ) / ( (*itsWeight) + maskinv) );
+	    itsPsf->copyData(ratio);
+	    itsPsfNormed=True;
+	  }
+	else
+	  {
+	    os << itsImageName+String(".psf") << " is already normalized." << LogIO::POST;
+	  }
+
       }
     // createMask
   }

@@ -122,6 +122,7 @@ class SynthesisImager
 protected:
  
   /////////////// Internal Functions
+  MDirection tmpStringToMDir(String phasecenter);
   CountedPtr<CoordinateSystem> buildImageCoordinateSystem(String phasecenter, 
 							  Double cellx, Double celly, 
 							  uInt imx, uInt imy,

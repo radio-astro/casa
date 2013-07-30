@@ -294,7 +294,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    os << "MS : " << mslist[sel];
 	    os << "   Selection : spw='" << spwlist[sel] << "'";
 	    os << " field='" << fieldlist[sel] << "'" << LogIO::POST;
-	    selectData(mslist[sel], spwlist[sel], "", "", MFrequency::LSRK, fieldlist[sel],""/*taql*/,  ""/*antenna*/, ""/*uvdist*/, ""/*scan*/, ""/*obs*/, ""/*timestr*/, useScratch, False);
+	    selectData(mslist[sel], spwlist[sel], "", "", MFrequency::LSRK, fieldlist[sel],""/*taql*/,  ""/*antenna*/, ""/*uvdist*/, ""/*scan*/, ""/*obs*/, ""/*timestr*/, useScratch, /*readonly*/True);
 	  }
 	
 	
@@ -378,8 +378,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     uInt nchan=1,npol=1; 
     //imx=1,imy=1;
     Vector<Int> imsize(2);
-    String phasecenter =  "19:59:28.500 +40.44.01.50";
-    Double cellx=10.0,celly=10.0;
+    MDirection phasecenter; //("19:59:28.500 +40.44.01.50");
+    Quantity cellx,celly;
 
     String imagename("");
     try {
@@ -407,6 +407,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       else
 	{throw( AipsError("imsize not specified")); }
 
+      if( impars.isDefined("cellsize") ) // An array with 2 integers
+	{ 
+	  Vector<Double> cellsize(2);
+          impars.get( RecordFieldId("cellsize") , cellsize );
+	  if(cellsize.nelements() != 2) 
+	    {
+	      throw( AipsError("cellsize must be an array of two Doubles") );
+	    }
+	  cellx = Quantity( cellsize[0], "arcsec" );
+	  celly = Quantity( cellsize[1], "arcsec" );
+        }
+      else
+	{throw( AipsError("cellsize not specified")); }
+
+
+      if( impars.isDefined("phasecenter") )  // A single string
+	{ 
+	  String pcenter = impars.asString( RecordFieldId("phasecenter"));
+	  phasecenter = tmpStringToMDir(pcenter);
+	}
+      else
+	{throw( AipsError("phasecenter not specified")); }
+
+
+
       // Read and interpret input parameters.
     } catch(AipsError &x)
       {
@@ -417,11 +442,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     try
       {
-	
-	CountedPtr<CoordinateSystem> coordsys = buildImageCoordinateSystem(phasecenter, 
-									   cellx, celly, (uInt)imsize[0], (uInt)imsize[1], npol, nchan );
-        IPosition imageshape(4,(uInt)imsize[0],(uInt)imsize[1],npol,nchan);
-	itsCurrentImages = new SIImageStore(imagename, *coordsys, imageshape);
+
+	String stokes="I";
+	Quantity freqStart(1.0,"GHz");
+	Quantity freqStep(1.0,"GHz");
+	Vector<Quantity> restFreq(1,Quantity(1.0, "GHz"));
+
+	defineImage(imagename, imsize[0], imsize[1], cellx, celly, stokes, phasecenter, 
+		    nchan, freqStart, freqStep, restFreq, 1);
 
       }
     catch(AipsError &x)
@@ -449,8 +477,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisImager","setupImaging",WHERE) );
 
-    String ftmname("");
+    String ftmname("ft");
     String startmodel("");
+    String weighting("natural");
     try
       {
 	// TODO : Parse FT-machine-related parameters.
@@ -460,6 +489,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if( gridpars.isDefined("startmodel") )  // A single string
 	  { startmodel = gridpars.asString( RecordFieldId("startmodel")); }
 
+	if( gridpars.isDefined("weight") ) // A single string
+	  { weighting = gridpars.asString( RecordFieldId("weight") ); }
 
       }
     catch(AipsError &x)
@@ -471,13 +502,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     try
       {
-	// Set the model image for prediction
+
+	weight( weighting );
+
+	// Set the model image for prediction -- Call an SIImageStore function that does the REGRIDDING.
+	/*
 	if( startmodel.length()>0 && !itsCurrentImages.null() )
 	  {
 	    os << "Setting " << startmodel << " as starting model for prediction " << LogIO::POST;
 	    itsCurrentImages->setModelImage( startmodel );
 	  }
-
+	*/
 	// TODO : Set up the FT-Machine. Send in parameters here...
 	//itsCurrentFTMachine = createFTMachine(/* parameters */);
 
@@ -486,7 +521,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     catch(AipsError &x)
       {
-	throw( AipsError("Error in constructing FTMachine : "+x.getMesg()) );
+	throw( AipsError("Error in setting up Imaging : "+x.getMesg()) );
       }
     
   }// end of setupImaging
@@ -574,18 +609,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	throw( AipsError("Error in running Major Cycle : "+x.getMesg()) );
       }    
 
-    os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
-
   }// end of runMajorCycle
   //////////////////////////////////////////////
   /////////////////////////////////////////////
 
   void SynthesisImager::makePSF(const Bool useViVb2)
     {
-      LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
+      LogIO os( LogOrigin("SynthesisImager","makePSF",WHERE) );
 
       os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
-
+    
       try
       {
     	  runMajorCycle(True, useViVb2);
@@ -614,8 +647,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
     	  throw( AipsError("Error in making PSF : "+x.getMesg()) );
       }
-
-      os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
 
     }
   //////////////////////
@@ -978,7 +1009,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   ////////////////////////////////////////////
   //////////////////////////////////////////////
-  
+
+  MDirection SynthesisImager::tmpStringToMDir(String phasecenter)
+  {
+    MDirection mDir;
+    String tmpA,tmpB,tmpC;
+    std::istringstream iss(phasecenter);
+    iss >> tmpA >> tmpB >> tmpC;
+    casa::Quantity tmpQA, tmpQB;
+    casa::Quantity::read(tmpQA, tmpA);
+    casa::Quantity::read(tmpQB, tmpB);
+    if(tmpC.length() > 0){
+      casa::MDirection::Types theRF;
+      casa::MDirection::getType(theRF, tmpC);
+      mDir = casa::MDirection (tmpQA, tmpQB, theRF);
+    } else {
+      mDir = casa::MDirection (tmpQA, tmpQB);
+    }
+
+    return mDir;
+  }
+
   // Build the Image coordinate system.  TODO : Replace with Imager2::imagecoordinates2()
   CountedPtr<CoordinateSystem> SynthesisImager::buildImageCoordinateSystem(String phasecenter, 
                                                                            Double cellx, Double celly, 

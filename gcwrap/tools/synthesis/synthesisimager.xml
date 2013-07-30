@@ -150,6 +150,18 @@ Image and imaging(gridding) parameters should be a list, one element per field/c
 <!-- ===================================== -->
 
 
+   <method type="function" name="makepsf">
+   <shortdescription>Make the psf</shortdescription>
+
+<description>
+</description>
+<input/>
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
+
    <method type="function" name="executemajorcycle">
    <shortdescription>Run a major cycle</shortdescription>
 

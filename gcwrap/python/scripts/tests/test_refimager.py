@@ -16,6 +16,19 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False):
      # Interaction ON or OFF
      interactive=False
 
+     if(testnum==5):  ## 1 image-field, one chan --- Real Imaging.
+          
+          paramList = ImagerParameters(casalog=casalog,\
+                                       vis='point_twospws.ms', field='0',spw='0', usescratch=True,\
+                                       imagename='mytest0', nchan=1, imsize=[100,100],\
+                                       cellsize=[8.0,8.0], phasecenter="19:59:28.500 +40.44.01.50",\
+                                       ftmachine='ft', startmodel='', weighting='natural',\
+                                       algo='hogbom',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
+     
+
      if(testnum==4): ## 2 image fields, each with multiple channels
 
           write_file('out4.txt', 'imagename=mytest1\nnchan=2\nimsize=[1,1]\nstartmodel=startingmodel1')
@@ -112,6 +125,7 @@ def doClean( params = [None,"",False,False] , doplot=True ):
     imager.initializeIterationControl()
 
     ### Run it.
+    imager.makePSF()
     imager.runMajorMinorLoops()
 
     imager.restoreImages()
@@ -143,6 +157,7 @@ def doMajor( params = [None,"",False,False] , doplot=True ):
     imager.initializeParallelSync()
 
     ### Run it.
+    imager.makePSF()
     imager.runMajorCycle()
 
     imager.deleteTools()
@@ -221,6 +236,9 @@ def doParCubeClean( params = [None,"",False,False] , doplot=True ):
     PH.runcmdcheck( cmd )
 
     ### Run it.
+    cmd = "imager.makePSF()"
+    PH.runcmdcheck( cmd )
+
     cmd = "imager.runMajorMinorLoops()"
     PH.runcmdcheck( cmd )
 
