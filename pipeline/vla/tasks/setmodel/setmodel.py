@@ -198,7 +198,7 @@ class SetModel(basetask.StandardTaskTemplate):
         for i, fields in enumerate(standard_source_fields):
             for myfield in fields:
                 spws = field_spws[myfield]
-                spws = [1,2,3]
+                #spws = [1,2,3]
                 for myspw in spws:
                     reference_frequency = center_frequencies[myspw]
                     EVLA_band = vlautils.find_EVLA_band(reference_frequency)
