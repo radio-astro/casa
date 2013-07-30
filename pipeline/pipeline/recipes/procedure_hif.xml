@@ -120,7 +120,6 @@
         </ParameterSet>
     </ProcessingCommand>
 
-
     <ProcessingCommand>
         <Command xmlns="">hif_bandpass</Command>
         <ParameterSet>
