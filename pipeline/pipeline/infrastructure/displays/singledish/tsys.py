@@ -102,6 +102,9 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
 
     def __init__(self, inputs):
         super(SDTsysDisplay, self).__init__(inputs)
+        self.color_cycle = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+        if pl.rcParams.has_key('axes.color_cycle'):
+            self.color_cycle = pl.rcParams['axes.color_cycle']
 
     def doplot(self, result, stage_dir):
         
@@ -216,9 +219,11 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
             spwlist = numpy.unique(tb.getcol('IFNO'))
             pollist = numpy.unique(tb.getcol('POLNO'))
             
-            timelist = numpy.unique(tb.getcol('TIME'))
+            timelist = utils.mjd_to_plotval(numpy.unique(tb.getcol('TIME')))
             if len(timelist) < 2:
-                axes_manager.init()
+                start_time = timelist[0] - 0.0104
+                end_time = timelist[0] + 0.0104
+                axes_manager.init(start_time, end_time)
             else:
                 interval = timelist[1:]-timelist[:-1]
                 mean_interval = numpy.abs(timelist[1:] - timelist[:-1]).mean()
@@ -237,7 +242,7 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
                 for pol in pollist:
                     tsel = tb.query('IFNO==%s && POLNO==%s'%(spw,pol), sortlist='ELEVATION')
                     tsys = tsel.getcol('TSYS')
-                    time = tsel.getcol('TIME')
+                    time = utils.mjd_to_plotval(tsel.getcol('TIME'))
                     tsel.close()
                     atsys = tsys.mean(axis=0)
                     etsys = common.drop_edge(tsys)
@@ -247,6 +252,7 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
                         pl.plot(time, atsys, '.-', label='spw=%s, pol=%s'%(spw,pol))
                     )
             pl.title(title)
+            axes.set_xlim(start_time, end_time)
             axes.legend(loc='best', numpoints=1, prop={'size':'small'})
             plotfile='tsys_vs_time_%s.png'%(os.path.basename(table))
             plotfile=os.path.join(stage_dir, plotfile)
@@ -265,7 +271,7 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
                 line.remove()
 
             # reset colormap
-            axes.set_color_cycle(pl.rcParams['axes.color_cycle'])
+            axes.set_color_cycle(self.color_cycle)
 
             title = 'Tsys vs Elevation (Average Excluding Edge)'
             lines = []
