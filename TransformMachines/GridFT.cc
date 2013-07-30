@@ -160,6 +160,7 @@ GridFT& GridFT::operator=(const GridFT& other)
     cachesize=other.cachesize;
     tilesize=other.tilesize;
     convType=other.convType;
+    convType.upcase();
     uvScale.resize();
     uvOffset.resize();
     uvScale.assign(other.uvScale);
@@ -251,6 +252,7 @@ void GridFT::init() {
 
   // Now set up the gridder. The possibilities are BOX and SF
   if(gridder) delete gridder; gridder=0;
+  convType.upcase();
   gridder = new ConvolveGridder<Double, Complex>(IPosition(2, nx, ny),
 						 uvScale, uvOffset,
 						 convType);
@@ -263,7 +265,7 @@ void GridFT::init() {
 
   if(isTiled) {
     Float tileOverlap=0.5;
-    if(convType=="box") {
+    if(convType=="BOX") {
       tileOverlap=0.0;
     }
     else {
@@ -905,6 +907,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
     {
       //cerr << "numthreads " << omp_get_num_threads() << endl;
 #pragma omp for
+
       for(icounter=0; icounter < ixsub*iysub; ++icounter){
 	//cerr << "thread id " << omp_get_thread_num() << endl;
 	ix= (icounter+1)-((icounter)/ixsub)*ixsub;
@@ -1021,6 +1024,7 @@ void GridFT::get(VisBuffer& vb, Int row)
   Cube<Int> flags;
   getInterpolateArrays(vb, data, flags);
 
+  //cerr << "max min data " << max(griddedData) << " " << min(griddedData) << "  flags  " << max(flags) << "    " << min(flags) << endl;  
 
   //    IPosition s(data.shape());
   Int nvp=data.shape()(0);
@@ -1086,6 +1090,7 @@ void GridFT::get(VisBuffer& vb, Int row)
   Vector<Int> rowFlags(vb.nRow());
   rowFlags=0;
   rowFlags(vb.flagRow())=True;
+  //cerr << "rowFlags " << rowFlags << endl;
   if(!usezero_p) {
     for (Int rownr=startRow; rownr<=endRow; rownr++) {
       if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
