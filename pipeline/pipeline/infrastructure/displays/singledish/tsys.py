@@ -258,6 +258,7 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
             plotfile=os.path.join(stage_dir, plotfile)
             if common.ShowPlot: pl.draw()
             pl.savefig(plotfile)
+            LOG.debug('created %s'%(plotfile))
             parameters = parameters_base.copy()
             parameters['type'] = 'full channel'
             plot = logger.Plot(plotfile,
@@ -283,10 +284,12 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
             if len(lines) > 0:
                 pl.title(title)
                 axes.legend(loc='best', numpoints=1, prop={'size':'small'})
+                axes.set_xlim(start_time, end_time)
                 plotfile='tsys_vs_time_%s_noedge.png'%(os.path.basename(table))
                 plotfile=os.path.join(stage_dir, plotfile)
                 if common.ShowPlot: pl.draw()
                 pl.savefig(plotfile)
+                LOG.debug('created %s'%(plotfile))
                 parameters = parameters_base.copy()
                 parameters['type'] = 'without edge'
                 plot = logger.Plot(plotfile,
