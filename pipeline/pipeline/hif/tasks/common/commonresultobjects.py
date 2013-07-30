@@ -112,9 +112,6 @@ class SpectrumResult(ResultBase):
         else:
             self.median = 0
 
-        if self.median < 0:
-            print self.median, self.description
-
         if normalise and self.median > 0:
             self.data = data / self.median
         else:
