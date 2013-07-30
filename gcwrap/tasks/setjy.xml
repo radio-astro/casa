@@ -106,12 +106,12 @@
 			</allowed>
 		</param>
 
-                <!-- Deprecated parameter, only 'hidden' for now for backward compatibility (2013.07.02)-->
-		<param type="string" name="modimage" subparam="true" visibility="hidden">
+		<param type="string" name="model" subparam="true">
 			<description>File location for field model</description>
 			<value></value>
 		</param>
-		<param type="string" name="model" subparam="true">
+                <!-- Deprecated parameter, only 'hidden' for now for backward compatibility (2013.07.02)-->
+		<param type="string" name="modimage" subparam="true" visibility="hidden">
 			<description>File location for field model</description>
 			<value></value>
 		</param>
