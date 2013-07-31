@@ -15,4 +15,5 @@ from .priorcals import Priorcals
 from .testBPdcals import testBPdcals
 from .semiFinalBPdcals import semiFinalBPdcals
 from .fluxscale import Solint
+from .fluxscale import Testgains
 from .hanning import Hanning

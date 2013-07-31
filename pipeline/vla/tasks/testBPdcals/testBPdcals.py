@@ -375,11 +375,15 @@ class testBPdcals(basetask.StandardTaskTemplate):
     def _do_applycal(self, context=None):
         """Run CASA task applycal"""
         
+        m = context.observing_run.measurement_sets[0]
+        testgainscans = context.evla['msinfo'][m.name].testgainscans
+        
         applycal_inputs = applycal.Applycal.Inputs(context,
             vis = self.inputs.vis,
             field = '',
             spw = '',
             intent = '',
+            scan = testgainscans,
             flagbackup = False,
             calwt = False,
             gaincurve = False)

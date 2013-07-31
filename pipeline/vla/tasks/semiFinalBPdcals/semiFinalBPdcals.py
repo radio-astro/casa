@@ -71,16 +71,18 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
             calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='linear,linear', calwt=True)
             context.callibrary._remove(calto, calfrom, context.callibrary._active)
                 
-            ktype_delaycal_result = self._do_ktype_delaycal(caltable=ktypecaltable, addcaltable=gtypecaltable)
+            ktype_delaycal_result = self._do_ktype_delaycal(caltable=ktypecaltable, addcaltable=gtypecaltable, context=context)
             flaggedSolnResult = getCalFlaggedSoln(ktype_delaycal_result.__dict__['inputs']['caltable'])
             fracFlaggedSolns = self._check_flagSolns(flaggedSolnResult)
 
             try:
                 calto = callibrary.CalTo(self.inputs.vis)
                 calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='linear,linear', calwt=True)
-                context.callibrary._remove(calto, calfrom, self.inputs.context.callibrary._active)
+                context.callibrary._remove(calto, calfrom, context.callibrary._active)
             except:
                 LOG.info(ktypecaltable + " does not exist in the context callibrary, and does not need to be removed.")
+
+        LOG.info("Delay calibration complete")
 
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='linear,linear', calwt=True)
@@ -92,8 +94,13 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         gain_solint1 = context.evla['msinfo'][m.name].gain_solint1
         gtype_gaincal_result = self._do_gtype_bpdgains(tablebase + table_suffix[0], addcaltable=ktypecaltable, solint=gain_solint1, context=context)
         
+        #Remove temporary caltables
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[0], interp='linear,linear', calwt=True)
+        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+        
+        calto = callibrary.CalTo(self.inputs.vis)
+        calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='linear,linear', calwt=True)
         context.callibrary._remove(calto, calfrom, context.callibrary._active)
         
         context = self.inputs.context
@@ -109,6 +116,20 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         context.callibrary.add(calto, calfrom)
 
         bandpass_result = self._do_bandpass(bpcaltable, context=context)
+        
+        calto = callibrary.CalTo(self.inputs.vis)
+        calfrom = callibrary.CalFrom(gaintable=bpdgain_touse, interp='linear,linear', calwt=True)
+        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+
+        #context = self.inputs.context
+        
+        #calto = callibrary.CalTo(self.inputs.vis)
+        #calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='linear,linear', calwt=True)
+        #context.callibrary.add(calto, calfrom)
+        
+        #calto = callibrary.CalTo(self.inputs.vis)
+        #calfrom = callibrary.CalFrom(gaintable=bpcaltable, interp='linear,linear', calwt=True)
+        #context.callibrary.add(calto, calfrom)
 
         applycal_result = self._do_applycal(context=context)
 
@@ -228,7 +249,6 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
             solint   = solint,
             calmode  = 'p',
             minsnr   = 3.0,
-            preavg   = -1.0,
             minblperant = minBL_for_cal,
             solnorm = False,
             combine = 'scan',
@@ -271,10 +291,14 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
     def _do_applycal(self, context=None):
         """Run CASA task applycal"""
         
+        m = context.observing_run.measurement_sets[0]
+        calibrator_scan_select_string = context.evla['msinfo'][m.name].calibrator_scan_select_string
+        
         applycal_inputs = applycal.Applycal.Inputs(context,
             vis = self.inputs.vis,
             field = '',
             spw = '',
+            scan = calibrator_scan_select_string,
             intent = '',
             flagbackup = False,
             calwt = False,

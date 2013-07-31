@@ -38,7 +38,7 @@ class SolintResults(basetask.Results):
     def merge_with_context(self, context):    
         m = context.observing_run.measurement_sets[0]
         context.evla['msinfo'][m.name].gain_solint2 = self.gain_solint2
-        context.evla['msinfo'][m.name].longsolint = longsolint
+        context.evla['msinfo'][m.name].longsolint = self.longsolint
 
 class Solint(basetask.StandardTaskTemplate):
     Inputs = SolintInputs
