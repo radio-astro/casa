@@ -68,6 +68,18 @@
 #include <synthesis/TransformMachines/PBMath1DNumeric.h>
 #include <synthesis/TransformMachines/PBMath2DImage.h>
 #include <synthesis/TransformMachines/HetArrayConvFunc.h>
+
+#include <wcslib/wcsconfig.h>  /** HAVE_SINCOS **/
+
+#if HAVE_SINCOS
+#define SINCOS(a,s,c) sincos(a,&s,&c)
+#else
+#define SINCOS(a,s,c)                   \
+     s = sin(a);                        \
+     c = cos(a)
+#endif
+
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   HetArrayConvFunc::HetArrayConvFunc() : convFunctionMap_p(0), nDefined_p(0), antDiam2IndexMap_p(-1),msId_p(-1), actualConvIndex_p(-1)
@@ -482,11 +494,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void HetArrayConvFunc::applyGradientToYLine(const Int iy, Complex*& convFunctions, Complex*& convWeights, const Double pixXdir, const Double pixYdir, Int convSize, const Int ndishpair){
     Double cy, sy;
-    sincos(Double(iy-convSize/2)*pixYdir, &sy, &cy);
+    SINCOS(Double(iy-convSize/2)*pixYdir, sy, cy);
     Complex phy(cy,sy) ;
     for (Int ix=0;ix<convSize;ix++) {
       Double cx, sx;
-      sincos(Double(ix-convSize/2)*pixXdir, &sx, &cx);
+      SINCOS(Double(ix-convSize/2)*pixXdir, sx, cx);
       Complex phx(cx,sx) ;
       for(Int iz=0; iz <ndishpair; ++iz){
 	Int index=(iz*convSize+iy)*convSize+ix;
