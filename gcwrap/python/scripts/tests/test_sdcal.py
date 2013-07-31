@@ -16,6 +16,7 @@ import inspect
 g = sys._getframe(len(inspect.stack())-1).f_globals
 g['__rethrow_casa_exceptions'] = True
 from sdcal_cli import sdcal_cli as sdcal
+from sdstat_cli import sdstat_cli as sdstat
 #from sdcal import sdcal
 import asap as sd
 
@@ -746,7 +747,6 @@ class sdcal_test7(sdcal_avetest_base,unittest.TestCase):
         self._compare(outname,self.reffiles[9])
         
 
-
 ###
 # Test mixed operation (cal+average,time+pol average,...)
 ###
@@ -1021,6 +1021,163 @@ class sdcal_test_edgemarker_raster(sdcal_edgemarker_base,unittest.TestCase):
         self._checkfile( outname ) 
         self._checkmarker( outname, refdir )
 
+
+###
+# Averaging of flagged data
+###
+class sdcal_test_flag(sdcal_avetest_base,unittest.TestCase):
+    """
+    Test Averaging of flagged data.
+
+    Data varies with tests
+    """
+    # Input and output names
+    prefix=sdcal_unittest_base.taskname+'Test7'
+    filelist = []
+
+    def setUp(self):
+        self.res=None
+        self.filelist = []
+        default(sdcal)
+
+    def tearDown(self):
+        for name in self.filelist:
+            self._remove(name)
+
+    def _remove(self, name):
+        # remove file/directory if exists
+        if os.path.isdir(name):
+            shutil.rmtree(name)
+        elif os.path.exists(name):
+            os.remove(name)
+
+    def _mark_to_delete(self, name):
+        self.filelist.append(name)
+
+    def _copy(self, source, dest):
+        # copy source directory to dest
+        self.assertTrue(os.path.exists(source),
+                        msg="Could not find a source file '%s'" % source)
+        if os.path.exists(dest):
+            shutil.rmtree(dest)
+        shutil.copytree(source, dest)
+
+    def _copyInputs(self, inputs):
+        if type(inputs)==str:
+            inputs = [inputs]
+
+        for inname in inputs:
+            inname = inname.rstrip('/')
+            outname = os.path.basename(inname)
+            self._copy(inname, outname)
+            self._mark_to_delete(outname)
+
+
+    def _comp_stat(self, data, refstat):
+        if type(data)==str:
+            data = sdstat(infile=data)
+        elif type(data)!=dict:
+            self.fail(msg="Internal Error: invalid data given to calculate statistics.")
+        for key, refvals in refstat.items():
+            refvals = self._to_list(refvals)
+            testvals = self._to_list(data[key])
+            for idx in range(len(refvals)):
+                rdiff = (testvals[idx] - refvals[idx])/refvals[idx]
+                self.assertAlmostEqual(rdiff, 0., 4, msg="Verification of '%s' (idx=%d) failed: %f (expected: %f)" % (key, idx, testvals[idx], refvals[idx]))
+
+    def _to_list(self, indata):
+        try: len(indata)
+        except TypeError: return [indata]
+        return list(indata)
+
+
+    def testFlag01(self):
+        """TestFlag01: test time average of row flagged data set"""
+        outname=self.prefix+self.postfix
+        self._mark_to_delete(outname)
+        # Prepare input
+        inname = 'flatspec_rowflag.asap'
+        self.rawfile = self.datapath+inname
+        self._copyInputs(self.rawfile)
+        self._remove(outname)
+
+        # run task
+        self.res=sdcal(infile=inname,scanaverage=False,timeaverage=True,
+                       tweight='tint',outfile=outname,outform='ASAP')
+        # verification
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during time averaging')
+        refstat = {'max': 1.5, 'min': 1.5, 'sum': 12288.0}
+        self._comp_stat(outname, refstat)
+
+    def testFlag02(self):
+        """TestFlag02: test time average of channel flagged data set"""
+        outname=self.prefix+self.postfix
+        self._mark_to_delete(outname)
+        # Prepare input
+        inname = 'flatspec_chanflag0.asap'
+        self.rawfile = self.datapath+inname
+        self._copyInputs(self.rawfile)
+        self._remove(outname)
+
+        # run task
+        self.res=sdcal(infile=inname,scanaverage=False,timeaverage=True,
+                       tweight='tint',outfile=outname,outform='ASAP')
+        # verification
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during time averaging')
+        refedge = {'max': 1.5, 'min': 1.5, 'sum': 9286.5}
+        refinner = {'max': 2.0, 'min': 2.0, 'sum': 4002.0}
+        outstat = sdstat(outname, masklist=[3000, 5000])
+        self._comp_stat(outstat, refinner)
+        outstat = sdstat(outname, masklist=[[0, 2999], [5001, 8192]])        
+        self._comp_stat(outstat, refedge)
+
+    def testFlag03(self):
+        """TestFlag03: test polarization average of row flagged data set"""
+        outname=self.prefix+self.postfix
+        self._mark_to_delete(outname)
+        # Prepare input
+        inname = 'flatspec_2pol_rowflag.asap'
+        self.rawfile = self.datapath+inname
+        self._copyInputs(self.rawfile)
+        self._remove(outname)
+
+        # run task
+        self.res=sdcal(infile=inname,scanaverage=False,timeaverage=False,
+                       polaverage=True,pweight='tsys',
+                       outfile=outname,outform='ASAP')
+        # verification
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during time averaging')
+        refstat = {'max': 1.5, 'min': 1.5, 'sum': 12288.0}
+        self._comp_stat(outname, refstat)
+
+    def testFlag04(self):
+        """TestFlag04: test polarization average of channel flagged data set"""
+        outname=self.prefix+self.postfix
+        self._mark_to_delete(outname)
+        # Prepare input
+        inname = 'flatspec_2pol_chanflag0.asap'
+        self.rawfile = self.datapath+inname
+        self._copyInputs(self.rawfile)
+        self._remove(outname)
+
+        # run task
+        self.res=sdcal(infile=inname,scanaverage=False,timeaverage=False,
+                       polaverage=True,pweight='tsys',
+                       outfile=outname,outform='ASAP')
+        # verification
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during time averaging')
+        refedge = {'max': 1.5, 'min': 1.5, 'sum': 9286.5}
+        refinner = {'max': 2.0, 'min': 2.0, 'sum': 4002.0}
+        outstat = sdstat(outname, masklist=[3000, 5000])
+        self._comp_stat(outstat, refinner)
+        outstat = sdstat(outname, masklist=[[0, 2999], [5001, 8192]])        
+        self._comp_stat(outstat, refedge)
+
+
 def suite():
     return [sdcal_test0, sdcal_test1,
             sdcal_test2, sdcal_test3,
@@ -1028,4 +1185,5 @@ def suite():
             sdcal_test6, sdcal_test7,
             sdcal_test8, sdcal_test9,
             sdcal_test_edgemarker_generic,
-            sdcal_test_edgemarker_raster]
+            sdcal_test_edgemarker_raster,
+            sdcal_test_flag]
