@@ -109,7 +109,10 @@ def setjy_core(vis=None, field=None, spw=None,
       else:
         raise Exception, 'Visibility data set not found - please verify the name'
 
-      # 
+      if modimage==None:  # defined as 'hidden' with default '' in the xml
+	                  # but the default value does not seem to set so deal
+			  # with it here...
+	 modimage=''
       if model:
          modimage=model
       elif not model and modimage:
