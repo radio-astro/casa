@@ -35,8 +35,10 @@ class PySynthesisImager:
         self.allgridpars = params.getGridPars()
         self.iterpars = params.getIterPars() ## Or just params.iterpars
 
+        ## Number of fields ( main + outliers )
         self.NF = len(self.allimpars.keys())
-        self.NN = len(self.allselpars.keys())
+        ## Number of nodes. This gets set for parallel runs
+        self.NN = 1 
 
         isvalid = self.checkParameters()
         if isvalid==False:
@@ -616,7 +618,7 @@ class ImagerParameters():
         ## List of supported parameters in outlier files.
         ## All other parameters will default to the global values.
         self.outimparlist = ['imagename','nchan','imsize','cellsize','phasecenter']
-        self.outgridparlist=['ftmachine','startmodel','weighting']
+        self.outgridparlist=['ftmachine','startmodel']
         self.outdecparlist=['algo','startmodel']
 
 
