@@ -57,7 +57,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   bool SIMinorCycleController::majorCycleRequired(Float currentPeakResidual){
     if (itsCycleIterDone >= itsCycleNiter ||
-        currentPeakResidual <= itsCycleThreshold)
+        fabs(currentPeakResidual) <= itsCycleThreshold)
       return true;
 
     /* Otherwise */
