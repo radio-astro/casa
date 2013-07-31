@@ -127,7 +127,9 @@ class AntennaArray(object):
         ant_y = qa.getvalue(antenna.position['m1'])[0]
         ant_z = qa.getvalue(antenna.position['m2'])[0]
 
-        xs, ys = s.itrf2loc((ant_x,), (ant_y,), (ant_z,), cx, cy, cz)
+        # As of CASA 4.2, itrf2loc also returns the elevation offset, but we
+        # discard it.
+        xs, ys, _ = s.itrf2loc((ant_x,), (ant_y,), (ant_z,), cx, cy, cz)
 
         x_offset = measures.Distance(xs[0], measures.DistanceUnits.METRE)
         y_offset = measures.Distance(ys[0], measures.DistanceUnits.METRE)
