@@ -90,6 +90,7 @@ import string
 
 import numpy
 import scipy
+import scipy.stats.mstats
 import matplotlib.pyplot as pl
 
 try:
@@ -365,6 +366,10 @@ def bpcal( in_table, out_dir, logobj='PYTHON' ):
 #               spw_in input parameter removed.  The ca tool now has the
 #               capability of parsing inputs, so that code has been removed
 #               from this function.
+# 2013        - Dirk Muders, MPIfR
+#               Added AMPLITUDE_SN.
+# 2013 Jul 23 - Dirk Muders, MPIfR
+#               Added AMPLITUDE.
 
 # ------------------------------------------------------------------------------
 
@@ -443,22 +448,36 @@ def bpcal_calc( in_table, logger='' ):
 		raise Exception( err.args[0] )
 
 
-        # Calculate signal-to-noise ratios
-        bpcal_stats['AMPLITUDE_SN'] = dict()
+        # Get the amplitudes and phases and calculate signal-to-noise ratios
+        bpcal_stats['AMPLITUDE'] = dict()
+	bpcal_stats['AMPLITUDE_SN'] = dict()
+        bpcal_stats['PHASE'] = dict()
 
 	try:
             for s in range( len(spwList) ):
                 chanRange = bpcal_chanRangeList( numchanList[s] )
                 if chanRange == []: continue
                 spw = bpcal_spwChanString( spwList[s], chanRange )
+                bpcal_stats['AMPLITUDE'][str(s)] = dict()
+                bpcal_stats['AMPLITUDE'][str(s)]['spw'] = int( spwList[s] )
+                bpcal_stats['AMPLITUDE'][str(s)]['chanRange'] = chanRange
+                bpcal_stats['PHASE'][str(s)] = dict()
+                bpcal_stats['PHASE'][str(s)]['spw'] = int( spwList[s] )
+                bpcal_stats['PHASE'][str(s)]['chanRange'] = chanRange
                 bpcal_stats['AMPLITUDE_SN'][str(s)] = dict()
                 bpcal_stats['AMPLITUDE_SN'][str(s)]['spw'] = int( spwList[s] )
                 bpcal_stats['AMPLITUDE_SN'][str(s)]['chanRange'] = chanRange
+                # Amplitude
                 bp_data = caLoc.get(spw = spw)
                 for pol in bp_data.iterkeys():
-                    amp_mean = numpy.average(bp_data[pol]['value'][chanRange[0]:chanRange[1]])
+                    bpcal_stats['AMPLITUDE'][str(s)][pol] = bp_data[pol]['value'][chanRange[0]:chanRange[1]]
+                    amp_mean = numpy.average(bpcal_stats['AMPLITUDE'][str(s)][pol])
                     amp_rms = rms(bp_data[pol]['value'][chanRange[0]:chanRange[1]]-amp_mean)
                     bpcal_stats['AMPLITUDE_SN'][str(s)][pol] = amp_mean / amp_rms
+                # Phase
+                bp_data = caLoc.get(spw = spw, ap='PHASE')
+                for pol in bp_data.iterkeys():
+                    bpcal_stats['PHASE'][str(s)][pol] = bp_data[pol]['value'][chanRange[0]:chanRange[1]]
 	except Exception, err:
 		origin = 'bpcal.bpcal_calc'
 		if logger != '': logger.error( err.args[0], origin=origin )
@@ -1092,11 +1111,17 @@ def bpcal_spwChanString( spw, sschan ):
 #                           scores.
 # 'AMPLITUDE_SCORE_RMS'   - The python dictionary containing the amplitude RMS
 #                           scores.
+# 'AMPLITUDE_SCORE_SN'    - The python dictionary containing the amplitude signal
+#                           to noise scores.
+# 'AMPLITUDE_SCORE_SHAPE' - The python dictionary containing the amplitude shape
+#                           scores.
 # 'AMPLITUDE_SCORE_TOTAL' - The python dictionary containing the amplitude total
 #                           (flag plus RMS) scores.
 # 'PHASE_SCORE_FLAG'      - The python dictionary containing the phase flag
 #                           scores.
 # 'PHASE_SCORE_RMS'       - The python dictionary containing the phase RMS
+#                           scores.
+# 'PHASE_SCORE_SHAPE'     - The python dictionary containing the phase shape
 #                           scores.
 # 'PHASE_SCORE_DELAY'     - The python dictionary containing the phase delay
 #                           scores.
@@ -1120,6 +1145,10 @@ def bpcal_spwChanString( spw, sschan ):
 # 2012 Jul 13 - Nick Elias, NRAO
 #               Calls to score functions added and results saved to score
 #               dictionary.
+# 2013        - Dirk Muders, MPIfR
+#               Added amplitude signal to noise scoring
+# 2013 Jul 22 - Dirk Muders, MPIfR
+#               Added amplitude shape scoring
 
 # ------------------------------------------------------------------------------
 
@@ -1132,10 +1161,12 @@ def bpcal_score( bpcal_stats ):
 	bpcal_scores['AMPLITUDE_SCORE_FLAG'] = dict()
 	bpcal_scores['AMPLITUDE_SCORE_RMS'] = dict()
 	bpcal_scores['AMPLITUDE_SCORE_SN'] = dict()
+	bpcal_scores['AMPLITUDE_SCORE_SHAPE'] = dict()
 	bpcal_scores['AMPLITUDE_SCORE_TOTAL'] = dict()
 
 	bpcal_scores['PHASE_SCORE_FLAG'] = dict()
 	bpcal_scores['PHASE_SCORE_RMS'] = dict()
+	bpcal_scores['PHASE_SCORE_SHAPE'] = dict()
 	bpcal_scores['PHASE_SCORE_DELAY'] = dict()
 	bpcal_scores['PHASE_SCORE_TOTAL'] = dict()
 
@@ -1160,6 +1191,7 @@ def bpcal_score( bpcal_stats ):
 		bpcal_scores['AMPLITUDE_SCORE_FLAG'][s] = dict()
 		bpcal_scores['AMPLITUDE_SCORE_RMS'][s] = dict()
 		bpcal_scores['AMPLITUDE_SCORE_SN'][s] = dict()
+		bpcal_scores['AMPLITUDE_SCORE_SHAPE'][s] = dict()
 		bpcal_scores['AMPLITUDE_SCORE_TOTAL'][s] = dict()
 
 		for k in keys:
@@ -1175,6 +1207,9 @@ def bpcal_score( bpcal_stats ):
 
                         bpcal_scores['AMPLITUDE_SCORE_SN'][s][k] = \
                             bpcal_score_SN( bpcal_stats['AMPLITUDE_SN'][s][k] )
+
+                        bpcal_scores['AMPLITUDE_SCORE_SHAPE'][s][k] = \
+                            bpcal_score_shape( bpcal_stats['AMPLITUDE'][s][k] )
 
 			bpcal_scores['AMPLITUDE_SCORE_TOTAL'][s][k] = \
 			    bpcal_scores['AMPLITUDE_SCORE_FLAG'][s][k] \
@@ -1200,6 +1235,7 @@ def bpcal_score( bpcal_stats ):
 
 		bpcal_scores['PHASE_SCORE_FLAG'][s] = dict()
 		bpcal_scores['PHASE_SCORE_RMS'][s] = dict()
+		bpcal_scores['PHASE_SCORE_SHAPE'][s] = dict()
 		bpcal_scores['PHASE_SCORE_DELAY'][s] = dict()
 		bpcal_scores['PHASE_SCORE_TOTAL'][s] = dict()
 
@@ -1212,7 +1248,10 @@ def bpcal_score( bpcal_stats ):
 
 			bpcal_scores['PHASE_SCORE_RMS'][s][k] = \
 			    bpcal_score_RMS( math.sqrt(phase[s][k]['resVar']),
-			    0.2 )
+			    0.05 )
+
+                        bpcal_scores['PHASE_SCORE_SHAPE'][s][k] = \
+                            bpcal_score_shape( bpcal_stats['PHASE'][s][k]-min(bpcal_stats['PHASE'][s][k]) )
 
 			bpcal_scores['PHASE_SCORE_DELAY'][s][k] = \
 			    bpcal_score_delay(
@@ -1324,7 +1363,36 @@ def bpcal_score_RMS( RMS, RMSMax ):
 	else:
 		RMSTemp = RMSMax
 
-	score = 1.0 - (RMSTemp/RMSMax)
+        if (RMSTemp == 0.0):
+            score = 1.0
+        else:
+            try:
+	        score = scipy.special.erf( RMSMax / RMSTemp / math.sqrt(2.0) )
+                return score
+            except FloatingPointError as e:
+                # work around scipy bug triggered with certain values, such as when
+                # SN=37.5922006575. The bug is supposed to be fixed in scipy 0.12.0,
+                # so detect which version of scipy we're running under and try the
+                # operation again if this version is known to be affected.
+                #
+                # We can safely ignore the exception as it is only thrown when the
+                # error function return value is so close to -1 or 1 that the lack of
+                # precision makes no practical difference.
+                (_, minor_version, _) = string.split(scipy.version.short_version, '.')
+                if int(minor_version) < 12:
+                        under_orig = scipy.geterr()['under']
+                        try:
+                                scipy.seterr(under='warn')
+                                score = scipy.special.erf( RMSMax / RMSTemp / math.sqrt(2.0) )
+                                return score
+                        except FloatingPointError as e:
+                                msg = 'Error calling scipy.special.erf(%s/math.sqrt(2.0))' % (RMSMax / RMSTemp)
+                                raise FloatingPointError(msg)
+                        finally:
+                                scipy.seterr(under=under_orig)
+                else:
+                        msg = 'Error calling scipy.special.erf(%s/math.sqrt(2.0))' % (RMSMax / RMSTemp)
+                        raise FloatingPointError(msg)
 
 	return score
 
@@ -1375,6 +1443,60 @@ def bpcal_score_SN( SN ):
 		else:
 			msg = 'Error calling scipy.special.erf(%s/math.sqrt(2.0))' % SN
 			raise FloatingPointError(msg)
+
+# ------------------------------------------------------------------------------
+
+# bpcal_score_shape
+
+# Description:
+# ------------
+# This function calculates the amplitude shape score.
+
+# Algorithm:
+# ----------
+# * Calculate the Wiener Entropy of amplitude values vs. frequency
+# * A result of 1.0 means the shape is perfectly flat
+# * Determine score by evaluating the deviation of the Wiener
+#   Entropy from 1.0
+
+# Inputs:
+# -------
+# amps    - Amplitudes
+
+# Outputs:
+# --------
+# The python float containing the shape score.
+
+# Modification history:
+# ---------------------
+# 2013 Jul 22 - Dirk Muders, MPIfR
+#               Initial version.
+
+def bpcal_score_shape( amps ):
+
+    # Need to avoid zero mean
+    if (numpy.mean(amps) == 0.0):
+        if ((amps == 0.0).all()):
+            wEntropy = 1.0
+        else:
+            wEntropy = 1.0e10
+    else:
+        # Geometrical mean can not be calculated for vectors <= 0.0 for all
+        # elements.
+        if ((amps <= 0.0).all()):
+            wEntropy = 1.0e10
+        else:
+            wEntropy = scipy.stats.mstats.gmean(amps)/numpy.mean(amps)
+
+    if (wEntropy > 1.0):
+        shapeScore = 1.0 / wEntropy
+    elif (wEntropy <= 0.0):
+        shapeScore = 0.0
+    else:
+        shapeScore = wEntropy
+
+    return shapeScore
+
 
 # ------------------------------------------------------------------------------
 
