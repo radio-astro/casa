@@ -351,7 +351,7 @@ class FlagDeterALMA( flagdeterbase.FlagDeterBase ):
                     return 'mode=manual autocorr=True'
 	        else:
                     #return 'mode=manual antenna=*&&& spw=>0'
-                    return 'mode=manual autocorr=True spw=>0'
+                    return 'mode=manual autocorr=True'
 
         def _get_edgespw_cmds(self):
                 """
