@@ -366,7 +366,7 @@ void AnnotationBase::_checkAndConvertFrequencies() {
 		Quantity qFreq = i == 0 ? _beginFreq : _endFreq;
 		String unit = qFreq.getUnit();
 		if (qFreq.isConform("pix")) {
-			Int spectralAxisNumber = getCsys().spectralAxisNumber(True);
+			Int spectralAxisNumber = csys.spectralAxisNumber(True);
 			String unit = csys.worldAxisUnits()[spectralAxisNumber];
 			Double world;
 			if (! spcoord.toWorld(world, qFreq.getValue())) {
@@ -429,8 +429,8 @@ void AnnotationBase::_checkAndConvertFrequencies() {
 			);
 		}
 		if (_freqRefFrame != cFrameType) {
-			Vector<Double> refDirection = getCsys().directionCoordinate().referenceValue();
-			Vector<String> directionUnits = getCsys().directionCoordinate().worldAxisUnits();
+			Vector<Double> refDirection = csys.directionCoordinate().referenceValue();
+			Vector<String> directionUnits = csys.directionCoordinate().worldAxisUnits();
 			MDirection refDir(
 				Quantity(refDirection[0], directionUnits[0]),
 				Quantity(refDirection[1], directionUnits[1]),
