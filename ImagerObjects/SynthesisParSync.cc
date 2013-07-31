@@ -108,7 +108,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	LogIO os( LogOrigin("SynthesisParSync", "gatherImages",WHERE) );
 	
-	os << "Gather residual, psf, weight images : " << itsPartImageNames << " onto :" << itsImageName << LogIO::POST;
+	os << "Gather "<< (doresidual?"residual":"") << ( (dopsf&&doresidual)?",":"")  << (dopsf?"psf, weight":"") << " images : " << itsPartImageNames << " onto :" << itsImageName << LogIO::POST;
 	
 	AlwaysAssert( itsPartImages.nelements()>0 , AipsError );
 	
