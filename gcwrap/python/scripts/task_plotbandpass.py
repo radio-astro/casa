@@ -93,7 +93,7 @@
 #  cd /lustre/naasc/thunter/evla/AB1346/g19.36
 #  au.plotbandpass('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.28 2013/07/29 20:42:46 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.29 2013/07/31 15:32:51 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -4137,11 +4137,13 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                     )):
               DrawBottomLegendPageCoords(msName, uniqueTimes[mytime], mysize)
   
-              if (len(figfile) > 0):
-                    plotfiles.append(makeplot(figfile,msFound,msAnt,
-                                              overlayAntennas,pages,pagectr,
-                                              density,interactive,antennasToPlot,
-                                              spwsToPlot,overlayTimes,4,debug))
+              # added len(pages)>0 on July 30, 2013 to prevent crash when called with single
+              # antenna and subplot=11 and all solutions flagged.
+              if (len(figfile) > 0 and len(pages)>0):
+                  plotfiles.append(makeplot(figfile,msFound,msAnt,
+                                            overlayAntennas,pages,pagectr,
+                                            density,interactive,antennasToPlot,
+                                            spwsToPlot,overlayTimes,4,debug))
               myinput = ''
               donetime = timeUtilities.time()
               if (interactive):
