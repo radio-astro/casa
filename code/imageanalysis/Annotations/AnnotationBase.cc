@@ -104,6 +104,11 @@ AnnotationBase::AnnotationBase(
   _printGlobals(False), _labelOff(DEFAULT_LABELOFF) {
 	String preamble = _class + ": " + String(__FUNCTION__) + ": ";
 	if (!csys.hasDirectionCoordinate()) {
+		cout << __FUNCTION__ << endl;
+		cout << "*** ncoords " << csys.nCoordinates() << endl;
+		cout << "*** npixelaxis " << csys.nPixelAxes() << endl;
+		cout << __FUNCTION__ << endl;
+
 		throw AipsError(
 			preamble + "Coordinate system has no direction coordinate"
 		);
@@ -352,20 +357,24 @@ Vector<Stokes::StokesTypes> AnnotationBase::getStokes() const {
 }
 
 void AnnotationBase::_checkAndConvertFrequencies() {
-    MFrequency::Types cFrameType = getCsys().spectralCoordinate().frequencySystem(False);
-	MDoppler::Types cDopplerType = getCsys().spectralCoordinate().velocityDoppler();
+	const CoordinateSystem& csys = getCsys();
+	const SpectralCoordinate spcoord = csys.spectralCoordinate();
+    MFrequency::Types cFrameType = spcoord.frequencySystem(False);
+	MDoppler::Types cDopplerType = spcoord.velocityDoppler();
 	_convertedFreqLimits.resize(2);
     for (Int i=0; i<2; i++) {
 		Quantity qFreq = i == 0 ? _beginFreq : _endFreq;
 		String unit = qFreq.getUnit();
-
 		if (qFreq.isConform("pix")) {
-			Int spectralAxisNumber = getCsys().spectralAxisNumber();
-			Vector<Double> pixel = getCsys().referencePixel();
-			pixel[spectralAxisNumber] = qFreq.getValue();
-			Vector<Double> world;
-			getCsys().toWorld(world, pixel);
-			String unit = getCsys().worldAxisUnits()[spectralAxisNumber];
+			Int spectralAxisNumber = getCsys().spectralAxisNumber(True);
+			String unit = csys.worldAxisUnits()[spectralAxisNumber];
+			Double world;
+			if (! spcoord.toWorld(world, qFreq.getValue())) {
+				ostringstream os;
+				os << String(__FUNCTION__) << ": Unable to convert pixel to world value "
+					<< "for spectral coordinate";
+				throw AipsError(os.str());
+			}
 			if (_freqRefFrame != cFrameType) {
 				LogIO log;
 				log << LogOrigin(String(__FUNCTION__)) << LogIO::WARN
@@ -389,7 +398,7 @@ void AnnotationBase::_checkAndConvertFrequencies() {
 			_freqRefFrame = cFrameType;
 			_dopplerType = cDopplerType;
 			_convertedFreqLimits[i] = MFrequency(
-				Quantity(world[spectralAxisNumber], unit),
+				Quantity(world, unit),
 				_freqRefFrame
 			);
 		}

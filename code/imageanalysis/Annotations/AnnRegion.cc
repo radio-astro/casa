@@ -33,8 +33,7 @@ AnnRegion::AnnRegion(
 	_isDifference(False), _constructing(True), _imShape(imShape),
 	_spectralPixelRange(vector<Double>(0)) {
 	_init();
-
-	// right before returning
+	// just before returning
 	_constructing = False;
 }
 
@@ -47,7 +46,7 @@ AnnRegion::AnnRegion(
 	_isDifference(False), _constructing(True), _imShape(imShape),
 	_spectralPixelRange(vector<Double>(0)) {
 	_init();
-	// right before returning
+	// just before returning
 	_constructing = False;
 }
 
@@ -174,8 +173,19 @@ void AnnRegion::_extend() {
 	Vector<Quantity> freqRange;
 	uInt nBoxes = 0;
 	Vector<MFrequency> freqLimits = getFrequencyLimits();
-    if (getCsys().hasSpectralAxis() && freqLimits.size() == 2) {
-		SpectralCoordinate spcoord = getCsys().spectralCoordinate();
+	const CoordinateSystem& csys = getCsys();
+    if (csys.hasSpectralAxis() && freqLimits.size() == 2) {
+		SpectralCoordinate spcoord = csys.spectralCoordinate();
+		spectralAxis = csys.spectralAxisNumber();
+
+		if (spectralAxis < 0) {
+			throw AipsError(
+				String(__FUNCTION__) + ": A spectral range was specified "
+				+ "but the spectral pixel axis in the supplied coordinate "
+				+ "system is not present."
+			);
+		}
+
 		String unit = spcoord.worldAxisUnits()[0];
 		_spectralPixelRange.resize(2);
 		spcoord.toPixel(_spectralPixelRange[0], freqLimits[0]);
@@ -187,14 +197,13 @@ void AnnRegion::_extend() {
 			std::swap(_spectralPixelRange[0], _spectralPixelRange[1]);
 			std::swap(freqRange[0], freqRange[1]);
 		}
-		spectralAxis = getCsys().spectralAxisNumber();
 		nBoxes = 1;
 	}
 	vector<Stokes::StokesTypes> stokesRanges;
 	Vector<Stokes::StokesTypes> stokes = getStokes();
 	if (
-		getCsys().hasPolarizationCoordinate() && stokes.size() > 0
-		&& (stokesAxis = getCsys().polarizationAxisNumber()) >= 0
+		csys.hasPolarizationCoordinate() && stokes.size() > 0
+		&& (stokesAxis = csys.polarizationAxisNumber()) >= 0
 	) {
 		vector<uInt> stokesNumbers(2*stokes.size());
 		for (uInt i=0; i<stokes.size(); i++) {
@@ -250,7 +259,7 @@ void AnnRegion::_extend() {
 		}
 	}
 	try {
-		_imageRegion.asWCRegionPtr()->toLCRegion(getCsys(), _imShape);
+		_imageRegion.asWCRegionPtr()->toLCRegion(csys, _imShape);
 	}
 	catch (const AipsError& x) {
 		throw (ToLCRegionConversionError(x.getMesg()));
