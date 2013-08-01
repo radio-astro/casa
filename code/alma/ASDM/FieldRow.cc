@@ -294,8 +294,10 @@ namespace asdm {
 		
 	 	
 			
-		x->ephemerisId = ephemerisId.toIDLTag();
-			
+				
+		x->ephemerisId = ephemerisId;
+ 				
+ 			
 	 	 		
   	
 
@@ -518,8 +520,10 @@ namespace asdm {
 		
 	 	
 			
-		x.ephemerisId = ephemerisId.toIDLTag();
-			
+				
+		x.ephemerisId = ephemerisId;
+ 				
+ 			
 	 	 		
   	
 
@@ -752,8 +756,8 @@ namespace asdm {
 		
 		
 			
-		setEphemerisId(Tag (x.ephemerisId));
-			
+		setEphemerisId(x.ephemerisId);
+  			
  		
 		
 		}
@@ -1096,7 +1100,7 @@ namespace asdm {
   		
         if (row.isStr("<ephemerisId>")) {
 			
-	  		setEphemerisId(Parser::getTag("ephemerisId","Field",rowDoc));
+	  		setEphemerisId(Parser::getInteger("ephemerisId","Field",rowDoc));
 			
 		}
  		
@@ -1250,7 +1254,9 @@ namespace asdm {
 	
 	
 		
-	ephemerisId.toBin(eoss);
+						
+			eoss.writeInt(ephemerisId);
+				
 		
 	
 
@@ -1448,9 +1454,11 @@ void FieldRow::ephemerisIdFromBin(EndianIStream& eis) {
 	if (ephemerisIdExists) {
 		
 	
+	
 		
-		
-		ephemerisId =  Tag::fromBin(eis);
+			
+		ephemerisId =  eis.readInt();
+			
 		
 	
 
@@ -1611,11 +1619,11 @@ void FieldRow::assocFieldIdFromBin(EndianIStream& eis) {
 	}
 	
 	
-	// Convert a string into an Tag 
+	// Convert a string into an int 
 	void FieldRow::ephemerisIdFromText(const string & s) {
 		ephemerisIdExists = true;
 		 
-		ephemerisId = ASDMValuesParser::parse<Tag>(s);
+		ephemerisId = ASDMValuesParser::parse<int>(s);
 		
 	}
 	
@@ -2146,10 +2154,10 @@ void FieldRow::assocFieldIdFromBin(EndianIStream& eis) {
 	
  	/**
  	 * Get ephemerisId, which is optional.
- 	 * @return ephemerisId as Tag
+ 	 * @return ephemerisId as int
  	 * @throw IllegalAccessException If ephemerisId does not exist.
  	 */
- 	Tag FieldRow::getEphemerisId() const  {
+ 	int FieldRow::getEphemerisId() const  {
 		if (!ephemerisIdExists) {
 			throw IllegalAccessException("ephemerisId", "Field");
 		}
@@ -2158,12 +2166,12 @@ void FieldRow::assocFieldIdFromBin(EndianIStream& eis) {
  	}
 
  	/**
- 	 * Set ephemerisId with the specified Tag.
- 	 * @param ephemerisId The Tag value to which ephemerisId is to be set.
+ 	 * Set ephemerisId with the specified int.
+ 	 * @param ephemerisId The int value to which ephemerisId is to be set.
  	 
  	
  	 */
- 	void FieldRow::setEphemerisId (Tag ephemerisId) {
+ 	void FieldRow::setEphemerisId (int ephemerisId) {
 	
  		this->ephemerisId = ephemerisId;
 	
@@ -2236,23 +2244,7 @@ void FieldRow::assocFieldIdFromBin(EndianIStream& eis) {
 	
 	
 		
-
-	/**
-	 * Returns the pointer to the row in the Ephemeris table having Ephemeris.ephemerisId == ephemerisId
-	 * @return a EphemerisRow*
-	 * 
-	 
-	 * throws IllegalAccessException
-	 
-	 */
-	 EphemerisRow* FieldRow::getEphemerisUsingEphemerisId() {
-	 
-	 	if (!ephemerisIdExists)
-	 		throw IllegalAccessException();	 		 
-	 
-	 	return table.getContainer().getEphemeris().getRowByKey(ephemerisId);
-	 }
-	 
+	
 
 	
 

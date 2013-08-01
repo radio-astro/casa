@@ -111,7 +111,7 @@ class FieldRow;
  * The field position for each source.
  * <BR>
  
- * Generated from model's revision "1.64", branch "HEAD"
+ * Generated from model's revision "-1", branch ""
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Field </CAPTION>
@@ -208,9 +208,9 @@ class FieldRow;
 	
  * <TR>
  * <TD> ephemerisId </TD> 
- * <TD> Tag </TD>
+ * <TD> int </TD>
  * <TD>  &nbsp; </TD>
- * <TD>&nbsp; refers to a unique row in EphemerisTable. </TD>
+ * <TD>&nbsp; refers to a collection of rows in the EphemerisTable. </TD>
  * </TR>
 	
  * <TR>
