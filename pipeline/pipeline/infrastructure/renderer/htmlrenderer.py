@@ -1387,6 +1387,52 @@ class T2_4MDetailsImportDataRenderer(T2_4MDetailsDefaultRenderer):
         return ctx
 
 
+class T2_4MDetailsLowgainFlagRenderer(T2_4MDetailsDefaultRenderer):
+    '''
+    Renders detailed HTML output for the Lowgainflag task.
+    '''
+    def __init__(self, template='t2-4m_details-hif_lowgainflag.html',
+            always_rerender=False):
+        super(T2_4MDetailsLowgainFlagRenderer, self).__init__(template,
+                always_rerender)
+
+    def get_display_context(self, context, results):
+        super_cls = super(T2_4MDetailsLowgainFlagRenderer, self)
+        ctx = super_cls.get_display_context(context, results)
+
+        htmlreports = self.get_htmlreports(context, results)
+        
+        ctx.update({'htmlreports' : htmlreports})
+        return ctx
+
+    def get_htmlreports(self, context, results):
+        report_dir = context.report_dir
+        weblog_dir = os.path.join(report_dir,
+                                  'stage%s' % results.stage_number)
+
+        htmlreports = {}
+        for result in results:
+            if not hasattr(result, 'flagcmdfile'):
+                continue
+
+            flagcmd_abspath = self.write_flagcmd_to_disk(weblog_dir, result)
+            flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
+            table_basename = os.path.basename(result.table)
+            htmlreports[table_basename] = (flagcmd_relpath,)
+
+        return htmlreports
+
+    def write_flagcmd_to_disk(self, weblog_dir, result):
+        tablename = os.path.basename(result.table)
+        filename = os.path.join(weblog_dir, '%s.html' % tablename)
+        if os.path.exists(filename):
+            return filename
+
+        reason = result.reason
+        rendererutils.renderflagcmds(result.flagcmdfile, filename, reason)
+        return filename
+
+
 class T2_4MDetailsTsyscalFlagchansRenderer(T2_4MDetailsDefaultRenderer):
     '''
     Renders detailed HTML output for the Tsysflag task.
@@ -2158,7 +2204,7 @@ renderer_map = {
         hif.tasks.GcorFluxscale  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_gfluxscale.html'),
         hif.tasks.ImportData     : T2_4MDetailsImportDataRenderer(),
         hif.tasks.AgentFlagger   : T2_4MDetailsAgentFlaggerRenderer(),
-        hif.tasks.Lowgainflag    : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_lowgainflag.html'),
+        hif.tasks.Lowgainflag    : T2_4MDetailsLowgainFlagRenderer(),
         hif.tasks.MakeCleanList  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_makecleanlist.html'),
         hif.tasks.NormaliseFlux  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_normflux.html'),
         hif.tasks.RefAnt         : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_refant.html'),
