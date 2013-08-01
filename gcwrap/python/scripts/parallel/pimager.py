@@ -338,24 +338,63 @@ class pimager():
         return spwsel, startsel, retchan
 
     @staticmethod
-    def findtimerange(msname='',spwids=[], field='', numpartition=1, begintime=0.0, endtime=1e12,continuum=True):
-	numproc=numpartition
-	timesel=[]
-	for k in range(numproc):
-		timesel.append([])
-	ms.open(msname)
-	staql = {'field':field,'time':''}
-	ms.msselect(staql)
-	tt = ms.getdata('time')
-	time_step = (tt['time'].max() - tt['time'].min())/numproc
-	for k in xrange(0,numproc):
-		time0 = qa.time(qa.quantity(tt['time'].min()+k*time_step,'s'),form="ymd")
-		time1 = qa.time(qa.quantity(tt['time'].min()+(k+1)*time_step,'s'),form="ymd")
-		time0=str(time0).split('\'')[1]
-    		time1=str(time1).split('\'')[1]
-		timesel[k] = '"'+time0+'~'+time1+'"'	
-	return timesel
+    def findtimerange(msname='',spwids=[], field='*', numpartition=1, begintime=0.0, endtime=1e12,continuum=True):
+        numproc=numpartition
+        timesel=[]
+        for k in range(numproc):
+                timesel.append([])
+        ms.open(msname)
+        obs = ms.msseltoindex(vis=msname,observation='>=0')
+        if(obs['obsids'].shape[0]==0):
+                staql = {'field':field,'time':''}
+                ms.mssselect(staql)
+                tt = ms.getdata('time')
+                time_step = (tt['time'].max() - tt['time'].min())/numproc
+                for k in xrange(0,numproc):
+                        time0 = qa.time(qa.quantity(tt['time'].min()+k*time_step,'s'),form="ymd")
+                        time1 = qa.time(qa.quantity(tt['time'].min()+(k+1)*time_step,'s'),form="ymd")
+                        time0=str(time0).split('\'')[1]
+                        time1=str(time1).split('\'')[1]
+                        timesel[k] = str(time0+'~'+time1);
+		ms.close()
+        else:
+		for i in xrange(0,obs['obsids'].shape[0]):
+                        staql = {'field':field,'time':'','observation':str(i)};
+			print "Processing observation id %d",i ;
+			ms.open(msname);
+                        ms.msselect(staql)
+                        tt =ms.getdata('time')
+                        time_step = (tt['time'].max() - tt['time'].min())/(numproc/obs['obsids'].shape[0]);
+			print "The time step is %f",time_step;
+			print numproc/obs['obsids'].shape[0]
+                        for k in xrange(0,(numproc/obs['obsids'].shape[0])):
+				time0 = qa.time(qa.quantity(tt['time'].min()+k*time_step,'s'),form="ymd")
+                                time1 = qa.time(qa.quantity(tt['time'].min()+(k+1)*time_step,'s'),form="ymd")
+                                time0=str(time0).split('\'')[1]
+                                time1=str(time1).split('\'')[1]
+                                timesel[(i*(numproc/obs['obsids'].shape[0])+k)] = str(time0+'~'+time1);
+				print timesel[(i*(numproc/obs['obsids'].shape[0])+k)];
+			ms.close()
+        return timesel;
 
+	
+	
+    @staticmethod
+    def flagratio(msname='',spw='*',timerange='',field='*',obsid=''):
+        flag_summary=flagdata(vis=msname,mode='summary',field=field,timerange=timerange,spw=spw,observation=obsid)
+        print "percentage data flagged in time range"+timerange+"is",((100*flag_summary['flagged'])/flag_summary['total']);
+
+
+
+    # def flagratio(msname='',spw=[],timerange='',field='*',obsid='*'):
+    #     global flagdata;
+    #     if(len(spw)==0):
+    #     	flag_summary=flagdata(vis=msname,mode='summary',field=field,timerange=timerange,spw='',observation=obsid)
+    #     	print "Percentage data flagged in time range"+timerange+"is",((100*flag_summary['flagged'])/flag_summary['total']);
+    #     else:
+    #     	for i in range (len(spw)) :
+    #     		flag_summary=flagdata(vis=msname,mode='summary',field=field,timerange=timerange,spw=spw[i],observation=obsid)
+    #     		print "Percentage data flagged in spw"+spw[i]+"in time range is",((100*flag_summary['spw'][spw[i]]['flagged'])/flag_summary['spw'][spw[i]]['total'])
 	
 	
     @staticmethod	
@@ -765,7 +804,7 @@ class pimager():
 		    if(ptime==False):
                     	runcomm='a.imagecont(msname='+'"'+msname+'", field="'+str(field)+'", spw="'+str(spwsel[k])+'", freq='+freq+', band='+band+', imname='+imnam+', nterms='+str(nterms)+')';
 		    else:
-			runcomm='a.imagecont(msname='+'"'+msname+'", field="'+str(field)+'", spw="'+str(spw)+'", freq='+freq+', band='+band+', imname='+imnam+', nterms='+str(nterms)+',timerange='+timerange[k]+')';
+			runcomm='a.imagecont(msname='+'"'+msname+'", field="'+str(field)+'", spw="'+str(spw)+'", freq='+freq+', band='+band+', imname='+imnam+', nterms='+str(nterms)+',timerange='+'"'+timerange[k]+'"'+')';
 
 
                     print 'command is ', runcomm
