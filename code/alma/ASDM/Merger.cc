@@ -713,7 +713,7 @@ namespace asdm {
 				
 				
 					
-			row1->setEphemerisId(getTag(row1->getEphemerisId(), 0));
+			row1->setEphemerisId(getId("Ephemeris", row1->getEphemerisId(), 0));
 					
 				
 			}
@@ -1500,6 +1500,17 @@ namespace asdm {
 			Tag antennaIdTag = getTag(row->getAntennaId(), mergeAntennaPtr);
 			row->setAntennaId(antennaIdTag);
 				
+			
+		
+			
+				
+			vector<Tag> inputAntennaId2 = rows2.at(i)->getInputAntennaId();
+			vector<Tag> inputAntennaId1;
+			for (unsigned int j = 0; j < inputAntennaId2.size(); j++)
+				
+				inputAntennaId1.push_back(getTag(inputAntennaId2.at(j), mergeAntennaPtr));
+				
+			row->setInputAntennaId(	inputAntennaId1);
 			
 		
 			
