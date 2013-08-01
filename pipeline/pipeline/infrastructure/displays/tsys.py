@@ -48,9 +48,15 @@ class TsysSummaryChart(object):
                             'tsys-summary.png')
 
     def get_plot_wrapper(self, spw):
-        # get the Tsys spw for this science spw
-        tsys_spw = self.result.final[0].spwmap[spw.id]
-        
+        try:
+            # Get the Tsys spw for this science spw. Not all science spws
+            # have a matching Tsys window. As a result, spwmap may be shorter
+            # than the index of the science spw we're trying to plot,
+            # raising an IndexError.
+            tsys_spw = self.result.final[0].spwmap[spw.id]
+        except IndexError:
+            return None
+
         figfile = self.get_figfile()
 
         # plotbandpass injects spw ID and t0 into every plot filename
@@ -118,10 +124,17 @@ class TsysPerAntennaChart(object):
                             'tsys.png')
 
     def get_plot_wrapper(self, spw, antenna):
-        figfile = self.get_figfile()
-
         # get the Tsys spw for this science spw
-        tsys_spw = self.result.final[0].spwmap[spw.id]
+        try:
+            # Get the Tsys spw for this science spw. Not all science spws
+            # have a matching Tsys window. As a result, spwmap may be shorter
+            # than the index of the science spw we're trying to plot,
+            # raising an IndexError.
+            tsys_spw = self.result.final[0].spwmap[spw.id]
+        except IndexError:
+            return None
+
+        figfile = self.get_figfile()
 
         # plotbandpass injects antenna name and spw ID into every plot filename
         root, ext = os.path.splitext(figfile)
