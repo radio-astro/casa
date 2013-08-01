@@ -35,6 +35,7 @@ $(document).ready(function() {
     </h4>
     <ul class="thumbnails">
         % for plot in summary_plots[ms]:
+            % if os.path.exists(plot.thumbnail):
             <li class="span3">
                 <div class="thumbnail">
                     <a href="${os.path.relpath(os.path.join(dirname, 'tsys_%s.html' % ms), pcontext.report_dir)}"
@@ -57,6 +58,7 @@ $(document).ready(function() {
                     </div>
                 </div>
             </li>
+            % endif
         % endfor
     </ul>
 %endfor
