@@ -30,19 +30,7 @@ try:
         os.mkdir(plots_dir)
 
     plots = []
-    htmlreports = {}
     for r in result:
-        if hasattr(r, 'flagcmdfile'):
-            reason = r.reason
-
-#            flagcmdhtml = os.path.join(plots_dir, '%s.html' % os.path.basename(
-#              r.flagcmdfile))
-            flagcmdhtml = os.path.join(plots_dir, '%s.html' % os.path.basename(
-              r.table))
-            hrutils.renderflagcmds(r.flagcmdfile, flagcmdhtml, reason)
-            htmlreports[os.path.basename(r.table)] = os.path.basename(
-              flagcmdhtml)
-
         if r.view:
             # display the view first
             # plot() returns the list of Plots it has generated
@@ -86,9 +74,9 @@ except Exception, e:
     	</tr>
     </thead>
     <tbody>
-	    % for file,report in htmlreports.items():
+	    % for file,reports in htmlreports.items():
 	    <tr>
-	        <td><a class="replace-pre" href=${report}>${file}</a></td>
+	        <td><a class="replace-pre" href=${reports[0]}>${file}</a></td>
 	    </tr>
 	    % endfor
 	</tbody>
