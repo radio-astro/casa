@@ -41,11 +41,37 @@
 
 
 	
-#include <Tag.h>
+#include <ArrayTime.h>
+	
+
+	
+#include <ArrayTimeInterval.h>
 	
 
 
 
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
 
 	
 
@@ -78,10 +104,10 @@ class EphemerisRow;
  * <BR>
  * 
  * \par Role
- * At the present time, this table is not defined.
+ * 
  * <BR>
  
- * Generated from model's revision "1.64", branch "HEAD"
+ * Generated from model's revision "-1", branch ""
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Ephemeris </CAPTION>
@@ -91,15 +117,122 @@ class EphemerisRow;
 	
  * <TR>
  		
- * <TD><I> ephemerisId </I></TD>
+ * <TD> timeInterval </TD>
  		 
- * <TD> Tag</TD>
+ * <TD> ArrayTimeInterval</TD>
  * <TD> &nbsp; </TD>
- * <TD> &nbsp;identifies a unique row in the table. </TD>
+ * <TD> &nbsp;interval of time during which the data are relevant.  </TD>
+ * </TR>
+	
+ * <TR>
+ 		
+ * <TD> ephemerisId </TD>
+ 		 
+ * <TD> int</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies a collection of rows in the table.  </TD>
  * </TR>
 	
 
 
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandatory) </TH></TR>
+	
+ * <TR>
+ * <TD> observerLocation </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  3 </TD> 
+ * <TD> &nbsp;a triple of double precision values defining the observer location. This triple contains in that order the longitude, the latitude and the altitude of the observer :
+<ul>
+<li> the longitude is expressed in radian. An east (resp. west) longitude is denoted as a positive (resp. negative) quantity.</li>
+<li> the latitude is expressed in radian. A north (resp. south) latitude is denoted as a positive (resp. negative) quantity. </li>
+<li> the altitude is expressed in meter. It's the altitude above the reference ellipsoid. </li>
+</ul>
+A triple with all its elements equal to 0.0 will mean that a geocentric coordinate system is in use instead of a topocentric one. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> equinoxEquator </TD> 
+ * <TD> double </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;epoch at which equator and equinox were calculated for ephemeris. Expresses a year as a decimal value (J2000 would be represented as 2000.0). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numPolyDir </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of coefficients of the polynomial stored in phaseDir. It has to be \f$ \ge 1 \f$.  </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> dir </TD> 
+ * <TD> vector<vector<double > > </TD>
+ * <TD>  numPolyDir, 2 </TD> 
+ * <TD> &nbsp;the ephemeris direction expressed in radian. The nominal entry in the phaseDir, delayDir, or ReferenceDir in the Field table serves as additional offset to the direction described by "dir". The actual direction is obtained by composition, e.g. actual phase direction = [phasDir value from Field table] + [dir].
+
+The direction described by dir  is the result of the sum
+
+\f[ dir_{0,i} + dir_{1,i}*dt + dir_{2,i}*dt^2 + ... + dir_{numPolyDir-1,i}*dt^{numPolyDir-1}, \forall i \in \{0,1\} \f]
+
+where
+
+\f[ dt = t - timeOrigin \f] 
+ </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numPolyDist </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the number of coefficients of the polynomial stored in distance. It has to be \f$ \ge 1 \f$.  </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> distance </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numPolyDist </TD> 
+ * <TD> &nbsp;the coefficiens of the polynomial used to calculate the distance, expressed in meter,  to the object from the position of the antenna along the given direction. This distance is the result of the sum :
+
+\f[ distance_0 + distance_1*dt + distance_2*dt^2 + ... + distance_{numPolyDist-1}*dt^{numPolyDist-1} \f]
+
+where
+
+\f[ dt = t - timeOrigin \f].
+ </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> timeOrigin </TD> 
+ * <TD> ArrayTime </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the time origin used in the evaluation of the polynomial expressions.  </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> origin </TD> 
+ * <TD> string </TD>
+ * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;the origin of the ephemeris information. </TD>
+ * </TR>
+	
+
+
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
+	
+ * <TR>
+ * <TD> numPolyRadVel </TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the number of coefficients of the polynomial stored in radVel . It has to be \f$ \ge 1 \f$.  </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> radVel </TD> 
+ * <TD> vector<double > </TD>
+ * <TD>  numPolyRadVel  </TD>
+ * <TD>&nbsp;  the coefficients of a polynomial expressing a radial velocity as a function of the time expressed in m/s. The time origin used to tabulate the polynomial is stored in timeOrigin.   </TD>
+ * </TR>
+	
 
  * </TABLE>
  */
@@ -231,6 +364,34 @@ public:
 	 */
 	EphemerisRow *newRow();
 	
+	
+	/**
+	 * Create a new row initialized to the specified values.
+	 * @return a pointer on the created and initialized row.
+	
+ 	 * @param timeInterval
+	
+ 	 * @param ephemerisId
+	
+ 	 * @param observerLocation
+	
+ 	 * @param equinoxEquator
+	
+ 	 * @param numPolyDir
+	
+ 	 * @param dir
+	
+ 	 * @param numPolyDist
+	
+ 	 * @param distance
+	
+ 	 * @param timeOrigin
+	
+ 	 * @param origin
+	
+     */
+	EphemerisRow *newRow(ArrayTimeInterval timeInterval, int ephemerisId, vector<double > observerLocation, double equinoxEquator, int numPolyDir, vector<vector<double > > dir, int numPolyDist, vector<double > distance, ArrayTime timeOrigin, string origin);
+	
 
 
 	/**
@@ -250,20 +411,27 @@ public:
 	//
 	// ====> Append a row to its table.
 	//
-
+ 
 	
-	
-	
-	/** 
+	/**
 	 * Add a row.
-	 * If there table contains a row whose key's fields are equal
-	 * to x's ones then return a pointer on this row (i.e. no actual insertion is performed) 
-	 * otherwise add x to the table and return x.
-	 * @param x . A pointer on the row to be added.
- 	 * @returns a pointer to a EphemerisRow.	 
-	 */	 
-	 
- 	 EphemerisRow* add(EphemerisRow* x) ;
+	 * @param x a pointer to the EphemerisRow to be added.
+	 *
+	 * @return a pointer to a EphemerisRow. If the table contains a EphemerisRow whose attributes (key and mandatory values) are equal to x ones
+	 * then returns a pointer on that EphemerisRow, otherwise returns x.
+	 *
+	 * @throw DuplicateKey { thrown when the table contains a EphemerisRow with a key equal to the x one but having
+	 * and a value section different from x one }
+	 *
+	
+	 * @note The row is inserted in the table in such a way that all the rows having the same value of
+	 * ( ephemerisId ) are stored by ascending time.
+	 * @see method getByContext.
+	
+	 */
+	EphemerisRow* add(EphemerisRow* x) ; 
+
+ 
 
 
 
@@ -287,6 +455,19 @@ public:
 	 const std::vector<EphemerisRow *>& get() const ;
 	
 
+	/**
+	 * Returns all the rows sorted by ascending startTime for a given context. 
+	 * The context is defined by a value of ( ephemerisId ).
+	 *
+	 * @return a pointer on a vector<EphemerisRow *>. A null returned value means that the table contains
+	 * no EphemerisRow for the given ( ephemerisId ).
+	 *
+	 * @throws IllegalAccessException when a call is done to this method when it's called while the dataset has been imported with the 
+	 * option checkRowUniqueness set to false.
+	 */
+	 std::vector <EphemerisRow*> *getByContext(int ephemerisId);
+	 
+
 
  
 	
@@ -295,15 +476,46 @@ public:
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
+	 * @param timeInterval
+	
 	 * @param ephemerisId
 	
  	 *
 	 */
- 	EphemerisRow* getRowByKey(Tag ephemerisId);
+ 	EphemerisRow* getRowByKey(ArrayTimeInterval timeInterval, int ephemerisId);
 
  	 	
 
 
+
+	/**
+ 	 * Look up the table for a row whose all attributes 
+ 	 * are equal to the corresponding parameters of the method.
+ 	 * @return a pointer on this row if any, null otherwise.
+ 	 *
+			
+ 	 * @param timeInterval
+ 	 		
+ 	 * @param ephemerisId
+ 	 		
+ 	 * @param observerLocation
+ 	 		
+ 	 * @param equinoxEquator
+ 	 		
+ 	 * @param numPolyDir
+ 	 		
+ 	 * @param dir
+ 	 		
+ 	 * @param numPolyDist
+ 	 		
+ 	 * @param distance
+ 	 		
+ 	 * @param timeOrigin
+ 	 		
+ 	 * @param origin
+ 	 		 
+ 	 */
+	EphemerisRow* lookup(ArrayTimeInterval timeInterval, int ephemerisId, vector<double > observerLocation, double equinoxEquator, int numPolyDir, vector<vector<double > > dir, int numPolyDist, vector<double > distance, ArrayTime timeOrigin, string origin); 
 
 
 	void setUnknownAttributeBinaryReader(const std::string& attributeName, BinaryAttributeReaderFunctor* barFctr);
@@ -331,18 +543,12 @@ private:
 	Entity entity;
 	
 
-	// A map for the autoincrementation algorithm
-	std::map<std::string,int>  noAutoIncIds;
-	void autoIncrement(std::string key, EphemerisRow* x);
-
 
 	/**
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
 	 * @throws DuplicateKey
-	 
-	 * @throws UniquenessViolationException
 	 
 	 */
 	EphemerisRow* checkAndAdd(EphemerisRow* x, bool skipCheckUniqueness=false) ;
@@ -364,6 +570,18 @@ private:
 	 
 
 
+	
+	
+	/**
+	 * Insert a EphemerisRow* in a vector of EphemerisRow* so that it's ordered by ascending time.
+	 *
+	 * @param EphemerisRow* x . The pointer to be inserted.
+	 * @param vector <EphemerisRow*>& row . A reference to the vector where to insert x.
+	 *
+	 */
+	 EphemerisRow * insertByStartTime(EphemerisRow* x, std::vector<EphemerisRow* >& row);
+	  
+
 
 // A data structure to store the pointers on the table's rows.
 
@@ -371,8 +589,31 @@ private:
    std::vector<EphemerisRow * > privateRows;
    
 
-			
-	std::vector<EphemerisRow *> row;
+	
+
+	
+	
+		
+				
+	typedef std::vector <EphemerisRow* > TIME_ROWS;
+	std::map<std::string, TIME_ROWS > context;
+		
+	/** 
+	 * Returns a string built by concatenating the ascii representation of the
+	 * parameters values suffixed with a "_" character.
+	 */
+	 std::string Key(int ephemerisId) ;
+		 
+		
+	
+	
+	/**
+	 * Fills the vector vout (passed by reference) with pointers on elements of vin 
+	 * whose attributes are equal to the corresponding parameters of the method.
+	 *
+	 */
+	void getByKeyNoAutoIncNoTime(std::vector <EphemerisRow*>& vin, std::vector <EphemerisRow*>& vout,  int ephemerisId);
+	
 
 	
 	void error() ; //throw(ConversionException);
