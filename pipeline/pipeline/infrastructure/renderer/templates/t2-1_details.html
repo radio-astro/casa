@@ -52,9 +52,9 @@ $(document).ready(function(){
 			<ul class="thumbnails">
 				<li class="span6">
 				  	<div class="thumbnail">
-						<a href="${os.path.join(dirname, intent_vs_time.basename)}" 
+						<a href="${os.path.relpath(intent_vs_time.abspath, pcontext.report_dir)}"
 						   class="fancybox">
-							<img src="${os.path.join(dirname, intent_vs_time.thumbnail)}"
+							<img src="${os.path.relpath(intent_vs_time.thumbnail, pcontext.report_dir)}"
 								 title="Intent vs. Time for ${ms.basename}"
 								 alt="Intent vs. Time for ${ms.basename}" />
 					    </a>
@@ -67,9 +67,9 @@ $(document).ready(function(){
 			
 				<li class="span6">		
 				  	<div class="thumbnail">
-						<a href="${os.path.join(dirname, field_vs_time.basename)}" 
+						<a href="${os.path.relpath(field_vs_time.abspath, pcontext.report_dir)}"
 						   class="fancybox">
-							<img src="${os.path.join(dirname, field_vs_time.thumbnail)}"
+							<img src="${os.path.relpath(field_vs_time.thumbnail, pcontext.report_dir)}"
 								 title="Field vs. Time for ${ms.basename}"
 								 alt="Field vs. Time for ${ms.basename}" />
 					    </a>
