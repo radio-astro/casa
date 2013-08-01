@@ -529,6 +529,14 @@ class MosaicChart(object):
                                      sourceid=self.source.id,
                                      coord='rel',
                                      figfile=self.figfile)
+
+            # plotMosaic does not close the plot! work around that
+            # here rather than editing the code as we might lose the fix
+            try:
+                pylab.close()
+            except Exception:
+                pass
+
         except:
             LOG.debug('Could not create mosaic plot')
             return None
@@ -566,6 +574,7 @@ class PlotAntsChart2(object):
         self.draw_pad_map_in_subplot(subpl1, self.ms.antennas)
         pylab.title('Antenna Positions for %s' % self.ms.basename)
         pylab.savefig(self.figfile, format='png', density=108)
+        pylab.close()
 
         return self._get_plot_object()
 
