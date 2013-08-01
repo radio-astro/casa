@@ -29,10 +29,14 @@ class PySynthesisImager:
         self.initDefaults()
 
         # Check all input parameters, after partitioning setup.
+        # Default to only 1 node, indexed by '0'. 
+        # For parallel runs, this dict is extended in PyParallelImagerHelper::partitionDataSelection()
         self.allselpars = { '0' : params.getSelPars() }
+        # Imaging/Deconvolution parameters. Same for serial and parallel runs
         self.alldecpars = params.getDecPars()
         self.allimpars = params.getImagePars()
         self.allgridpars = params.getGridPars()
+        # Iteration parameters
         self.iterpars = params.getIterPars() ## Or just params.iterpars
 
         ## Number of fields ( main + outliers )
@@ -427,10 +431,20 @@ class PyParallelImagerHelper():
 #                allselpars[str(node)]['spw']=str(node)
 
             ######## WARNING : Very special case for SPW 0 of points_2spw.ms
-            if node==0:
-                allselpars[str(node)]['spw'][0] = allselpars[str(node)]['spw'][0] + ':0~9'
-            else:
-                allselpars[str(node)]['spw'][0] = allselpars[str(node)]['spw'][0] + ':10~19'
+            if allselpars[str(node)]['vis'][0] == "DataTest/point_twospws.ms":
+                if node==0:
+                    allselpars[str(node)]['spw'][0] = allselpars[str(node)]['spw'][0] + ':0~9'
+                else:
+                    allselpars[str(node)]['spw'][0] = allselpars[str(node)]['spw'][0] + ':10~19'
+
+            ######## WARNING : Very special case for twopoints_twochan.ms
+            if allselpars[str(node)]['vis'][0] == "DataTest/twopoints_twochan.ms":
+                if node==0:
+                    allselpars[str(node)]['spw'][0] = allselpars[str(node)]['spw'][0] + ':0'
+                else:
+                    allselpars[str(node)]['spw'][0] = allselpars[str(node)]['spw'][0] + ':1'
+
+
         print 'Partitioned Selection : ', allselpars
         return allselpars
 
@@ -608,11 +622,21 @@ class ImagerParameters():
 
         self.casalog = casalog
 
+        ## Selection params. For multiple MSs, all are lists.
+        ## For multiple nodes, the selection parameters are modified inside PySynthesisImager
         self.allselpars = {'vis':vis, 'field':field, 'spw':spw, 'usescratch':usescratch}
+
+        ## Imaging/deconvolution parameters
+        ## The outermost dictionary index is image field. 
+        ## The '0' or main field's parameters come from the task parameters
+        ## The outlier '1', '2', ....  parameters come from the outlier file
         self.outlierfile = outlierfile
+        ## Initialize the parameter lists with the 'main' or '0' field's parameters
         self.allimpars = { '0' :{'imagename':imagename, 'nchan':nchan, 'imsize':imsize, 'cellsize':cellsize, 'phasecenter':phasecenter} }
         self.allgridpars = { '0' : {'ftmachine':ftmachine, 'startmodel':startmodel, 'weighting':weighting } }
         self.alldecpars = { '0' : { 'id':0, 'algo':algo } }
+
+        ## Iteration control. 
         self.iterpars = { 'niter':niter, 'cycleniter':cycleniter, 'threshold':threshold, 'loopgain':loopgain, 'interactive':interactive }  # Ignoring cyclefactor, minpsffraction, maxpsffraction for now.
 
         ## List of supported parameters in outlier files.
@@ -751,6 +775,28 @@ class ImagerParameters():
                     errs = errs + 'imsize must be a single integer, or a list of 2 integers'
             else:
                 errs = errs + 'imsize is not specified for field ' + eachimdef['imagename'] + '\n'
+
+
+            ## Check/fix cellsize : Must be an array with 2 integers
+            if eachimdef.has_key('cellsize'):
+                tmpcellsize = eachimdef['cellsize']
+                if type(tmpcellsize) == str:
+                    try:
+                        tmpcellsize = eval( eachimdef['cellsize'] )
+                    except:
+                        errs = errs + 'cellsize must be a single integer, or a list of 2 integers'
+
+                if type(tmpcellsize) == list:
+                    if len(tmpcellsize) == 2:
+                        eachimdef['cellsize'] = tmpcellsize;  # not checking that elements are ints...
+                    else:
+                        errs = errs + 'cellsize must be a single integer, or a list of 2 integers'
+                elif type(tmpcellsize) == int:
+                    eachimdef['cellsize'] = [tmpcellsize, tmpcellsize] 
+                else:
+                    errs = errs + 'cellsize must be a single integer, or a list of 2 integers'
+            else:
+                errs = errs + 'cellsize is not specified for field ' + eachimdef['imagename'] + '\n'
             
         #print 'AFTER : ', self.listofimagedefinitions
 
@@ -784,9 +830,11 @@ class ImagerParameters():
         tempgridpar={}
         tempdecpar={}
         for oneline in thelines:
-            aline = oneline.replace(' ','').replace('\n','')
+            aline = oneline.replace('\n','')
+#            aline = oneline.replace(' ','').replace('\n','')
             if len(aline)>0 and aline.find('#')!=0:
                 parpair = aline.split("=")  
+                parpair[0] = parpair[0].replace(' ','')
                 #print parpair
                 if len(parpair) != 2:
                     errs += 'Error in line containing : ' + oneline + '\n'

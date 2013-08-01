@@ -16,10 +16,25 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False):
      # Interaction ON or OFF
      interactive=False
 
+
+     if(testnum==6):  ## 2 image-fields, one chan --- Real Imaging.
+          
+          write_file('out6.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0,8.0]\nphasecenter=19:58:40.895 +40.55.58.543')
+          paramList = ImagerParameters(casalog=casalog,\
+                                       vis='DataTest/twopoints_twochan.ms', field='0',spw='0', usescratch=True,\
+                                       outlierfile='out6.txt',\
+                                       imagename='mytest0', nchan=1, imsize=[100,100],\
+                                       cellsize=[8.0,8.0], phasecenter="19:59:28.500 +40.44.01.50",\
+                                       ftmachine='ft', startmodel='', weighting='natural',\
+                                       algo='hogbom',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
+     
      if(testnum==5):  ## 1 image-field, one chan --- Real Imaging.
           
           paramList = ImagerParameters(casalog=casalog,\
-                                       vis='point_twospws.ms', field='0',spw='0', usescratch=True,\
+                                       vis='DataTest/point_twospws.ms', field='0',spw='0', usescratch=True,\
                                        imagename='mytest0', nchan=1, imsize=[100,100],\
                                        cellsize=[8.0,8.0], phasecenter="19:59:28.500 +40.44.01.50",\
                                        ftmachine='ft', startmodel='', weighting='natural',\
@@ -286,11 +301,16 @@ def toolTestMajorCycle( testnum=1 ):
      PStool.setupparsync( syncpars )
 
      PStool.scattermodel()
+     SItool.makepsf()
      SItool.executemajorcycle()
-     istore = SItool.getimstore(0)
+#     istore = SItool.getimstore(0)
+#     PStool.setimstore(istore)
 
-     PStool.setimstore(istore)
+     PStool.gatherpsfweight( )
      PStool.gatherresidual( )
+     
+     PStool.dividepsfbyweight()
+     PStool.divideresidualbyweight()
 
      SItool.done()
      PStool.done()
