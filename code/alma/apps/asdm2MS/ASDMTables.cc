@@ -6326,9 +6326,31 @@ ASDM_EPHEMERIS::ASDM_EPHEMERIS() {
   name_ = "ASDM_EPHEMERIS";
   tableDesc_.comment() = "The verbatim copy of the ASDM's dataset Ephemeris table";
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("ephemerisId", "blabla"));
+  tableDesc_.addColumn(ArrayColumnDesc<double>("timeInterval", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("ephemerisId", "blabla"));
   		
   		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("observerLocation", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("equinoxEquator", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numPolyDir", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("dir", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numPolyDist", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("distance", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("timeOrigin", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("origin", "blabla"));
+  		
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numPolyRadVel", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("radVel", "blabla"));
   		  		
 }
 
@@ -6345,25 +6367,115 @@ const TableDesc& ASDM_EPHEMERIS::tableDesc() const {
 		
 			
 		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
 	
 void ASDM_EPHEMERIS::fill(const ASDM& asdm) {
 	vector<EphemerisRow*> rows = asdm.getEphemeris().get();
 	unsigned int rowIndex = table_p_->nrow();
 	table_p_->addRow(rows.size());
   		
-    ScalarColumn<String> ephemerisId(*table_p_, "ephemerisId");             
+    ArrayColumn<double> timeInterval(*table_p_, "timeInterval");             
+  		
+    ScalarColumn<int> ephemerisId(*table_p_, "ephemerisId");             
   		
   		
+    ArrayColumn<double> observerLocation(*table_p_, "observerLocation");             
+  		
+    ScalarColumn<double> equinoxEquator(*table_p_, "equinoxEquator");             
+  		
+    ScalarColumn<int> numPolyDir(*table_p_, "numPolyDir");             
+  		
+    ArrayColumn<double> dir(*table_p_, "dir");             
+  		
+    ScalarColumn<int> numPolyDist(*table_p_, "numPolyDist");             
+  		
+    ArrayColumn<double> distance(*table_p_, "distance");             
+  		
+    ScalarColumn<double> timeOrigin(*table_p_, "timeOrigin");             
+  		
+    ScalarColumn<String> origin(*table_p_, "origin");             
+  		
+  		
+    ScalarColumn<int> numPolyRadVel(*table_p_, "numPolyRadVel");             
+  		
+    ArrayColumn<double> radVel(*table_p_, "radVel");             
   		  	
 
 	for (unsigned int i = 0; i < rows.size(); i++) {
 		
 	
-	ephemerisId.put(rowIndex, rows.at(i)->getEphemerisId().toString());
+	timeInterval.put(rowIndex, ati2CASA1D<double>(rows.at(i)->getTimeInterval()));
+	
+
+	
+	ephemerisId.put(rowIndex, rows.at(i)->getEphemerisId());
 	
 
 		
+	
+	observerLocation.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getObserverLocation()));
+	
+
+	
+	equinoxEquator.put(rowIndex, rows.at(i)->getEquinoxEquator());
+	
+
+	
+	numPolyDir.put(rowIndex, rows.at(i)->getNumPolyDir());
+	
+
+	
+	dir.put(rowIndex, basic2CASA2D<double,double>(rows.at(i)->getDir()));
+	
+
+	
+	numPolyDist.put(rowIndex, rows.at(i)->getNumPolyDist());
+	
+
+	
+	distance.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getDistance()));
+	
+
+	
+	timeOrigin.put(rowIndex, rows.at(i)->getTimeOrigin().get()/(1.0e9));
+	
+
+	
+	origin.put(rowIndex, rows.at(i)->getOrigin());
+	
+
 		
+	
+	if (rows.at(i)->isNumPolyRadVelExists())
+		numPolyRadVel.put(rowIndex, rows.at(i)->getNumPolyRadVel());
+	
+
+	
+	if (rows.at(i)->isRadVelExists())
+		radVel.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getRadVel()));
+	
+
 		rowIndex++;		
 	}
 	table_p_->flush();
@@ -6902,7 +7014,7 @@ ASDM_FIELD::ASDM_FIELD() {
   		
   tableDesc_.addColumn(ScalarColumnDesc<String>("assocNature", "blabla"));
   		
-  tableDesc_.addColumn(ScalarColumnDesc<String>("ephemerisId", "blabla"));
+  tableDesc_.addColumn(ScalarColumnDesc<int>("ephemerisId", "blabla"));
   		
   tableDesc_.addColumn(ScalarColumnDesc<int>("sourceId", "blabla"));
   		
@@ -6975,7 +7087,7 @@ void ASDM_FIELD::fill(const ASDM& asdm) {
   		
     ScalarColumn<String> assocNature(*table_p_, "assocNature");             
   		
-    ScalarColumn<String> ephemerisId(*table_p_, "ephemerisId");             
+    ScalarColumn<int> ephemerisId(*table_p_, "ephemerisId");             
   		
     ScalarColumn<int> sourceId(*table_p_, "sourceId");             
   		
@@ -7037,7 +7149,7 @@ void ASDM_FIELD::fill(const ASDM& asdm) {
 
 	
 	if (rows.at(i)->isEphemerisIdExists())
-		ephemerisId.put(rowIndex, rows.at(i)->getEphemerisId().toString());
+		ephemerisId.put(rowIndex, rows.at(i)->getEphemerisId());
 	
 
 	
