@@ -1881,6 +1881,7 @@ namespace casa {
 	os << LogIO::WARN << "Undefined source id " << sId << " in MS field table row " << irow << LogIO::POST;
       }
 
+      /*
       if(!field().ephemerisId().isNull()){
 	Int eid = field().ephemerisId()(irow);
 	if(asdmEphemerisId_p.isDefined(eid)){
@@ -1890,7 +1891,7 @@ namespace casa {
 	  os << LogIO::WARN << "Undefined ephemeris id " << eid << " in MS field table row " << irow << LogIO::POST;
 	}
       }
-
+      */
       // add the row to the table
       asdm::FieldRow* tR2 = 0;
       tR2 = tT.add(tR);
