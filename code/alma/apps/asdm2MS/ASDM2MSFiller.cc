@@ -26,6 +26,7 @@ extern	void	ftime( struct timeb * );	/* this is the funtion */
 
 #endif
 
+#include <boost/foreach.hpp>
 
 void	timer( double *cpu_time ,		/* cpu timer */
 	       double *real_time ,		/* real timer */
@@ -266,7 +267,14 @@ ASDM2MSFiller::~ASDM2MSFiller() {
   ;
 }
 
-int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCompression, const string& telescopeName, int maxNumCorr, int maxNumChan, bool withCorrectedData, bool useAsdmStMan4DATA) {
+int ASDM2MSFiller::createMS(const string& msName,
+			    bool complexData,
+			    bool withCompression,
+			    const string& telescopeName,
+			    int maxNumCorr,
+			    int maxNumChan,
+			    bool withCorrectedData,
+			    bool useAsdmStMan4DATA) {
 
   String aName(msName);
 
@@ -278,8 +286,6 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
 
 
   //cout << "Entering createMS : measurement set = "<< aName <<"\n";
-
-
 
 
   const Int tileSizeKBytes = 1024;
@@ -339,6 +345,11 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
   // Field
   // modified by TT : updated Field table
   // cout<<"update field table"<<endl;
+  // And also add an Ephemeris column.
+  
+  const String& ephemerisId = MSField::columnName(MSField::EPHEMERIS_ID);
+  itsMS->field().addColumn(ScalarColumnDesc<Int>(ephemerisId, "Ephemeris id, pointer to EPHEMERIS table"), False);
+
   {
     //TableDesc td = MSField::requiredTableDesc();
     //td.removeColumn("DELAY_DIR");
@@ -389,13 +400,6 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
     itsMS->field().removeColumn("PHASE_DIR");
     itsMS->field().removeColumn("REFERENCE_DIR");
     itsMS->field().addColumn(td,fldStMan);
-    
-    //SetupNewTable tabSetup(itsMS->fieldTableName(),
-    //			   td,
-    //			   Table::New);
-
-    //itsMS->rwKeywordSet().defineTable(MS::keywordName(MS::FIELD),
-    //				      Table(tabSetup));
   }
 
 
@@ -1294,7 +1298,7 @@ void ASDM2MSFiller::addField(const string&		name_,
 			     const string&		direction_code_,
 			     int                        source_id_) {
   uInt							crow;
-  // cout << "\naddField : entering";
+  //cout << "\naddField : entering";
   Vector<MDirection>					delayDir(num_poly_);
   Vector<MDirection>					referenceDir(num_poly_);
   Vector<MDirection>					phaseDir(num_poly_);
@@ -1312,7 +1316,7 @@ void ASDM2MSFiller::addField(const string&		name_,
 
   String s(direction_code_);
   if(s==""){
-    //cout << "directionCode doesn't exist or is empty. Will try to determine it based on name." << endl;
+    // cout << "directionCode doesn't exist or is empty. Will try to determine it based on name." << endl;
     s=name_;
   }
 
@@ -1336,15 +1340,27 @@ void ASDM2MSFiller::addField(const string&		name_,
   msfieldCol.phaseDirMeasCol().put(crow, phaseDir);
   
   msfieldCol.sourceId().put(crow, source_id_);
-  /*
-    msfieldCol.sourceId().put(crow, -1);
-  */
+
+  msfieldCol.ephemerisId().put(crow, -1);
+
   msfieldCol.flagRow().put(crow, False);
-  // cout << "\naddField : exiting";
+  //cout << "\naddField : exiting";
   msfield.flush();
-  // cout << "\n";
 }
-	       
+
+
+void ASDM2MSFiller::updateEphemerisIdInField(vector<pair<int, int> >& idxEphemerisId_v) {
+  MSField msfield = itsMS -> field();
+  MSFieldColumns msfieldCol(msfield);
+
+  typedef pair<int, int> pairOfInt_t;
+
+  BOOST_FOREACH (pairOfInt_t p, idxEphemerisId_v) {
+    msfieldCol.ephemerisId().put(p.first, p.second);
+  }
+
+  msfield.flush();
+}	       
 
 // Add a record in the table FLAG_CMD;
 void ASDM2MSFiller::addFlagCmd(double		time_,
