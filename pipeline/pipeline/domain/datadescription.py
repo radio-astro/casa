@@ -20,43 +20,22 @@ class DataDescription(object):
     def polarizations(self):
         all_corrs = ''.join(self.corr_axis)
 
-        RL_regex = re.compile('[RL]')
-        if RL_regex.match(all_corrs):
-            reg = re.compile('.*[R].*')
-            match = reg.match(all_corrs)
-            if match:
-                return ['R','L']
-            else:
-                return ['L','R']
-        else:
-            reg = re.compile('.*[X].*')
-            match = reg.match(all_corrs)
-            if match:
-                return ['X','Y']
-            else:
-                return ['Y','X']
+        pols = []
+
+        # I have no doubt that this is wrong! We should revisit this when we
+        # know all possible polarisation mappings and whether they should be
+        # used instead of corr_axis.
+        if 'R' in all_corrs:
+            pols.append('R')
+        if 'L' in all_corrs:
+            pols.append('L')
+        if 'X' in all_corrs:
+            pols.append('X')
+        if 'Y' in all_corrs:
+            pols.append('Y')
+
+        return pols
 
     @property
     def num_polarizations(self):
-        all_corrs = ''.join(self.corr_axis)
-        pols = self.polarizations
-                    
-        if pols == ['R','L']:
-            reg2 = re.compile('.*[L].*')                        
-            if reg2.match(all_corrs):
-                return 2
-            else:
-                return 1
-
-        if pols == ['L','R']:
-            return 1
-
-        if pols == ['X','Y']:
-            reg2 = re.compile('.*[Y].*')
-            if reg2.match(all_corrs):
-                return 2
-            else:
-                return 1
-        if pols == ['Y', 'X']:
-            return 1
-        
+        return len(self.polarizations)
