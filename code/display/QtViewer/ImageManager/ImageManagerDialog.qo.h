@@ -84,6 +84,7 @@ namespace casa {
 		//Emitted when a new master image for setting the coordinate system has been
 		//selected.
 		void masterCoordinateChanged( QtDisplayData* oldMaster, QtDisplayData* newMaster );
+		void animateToImage( int index );
 
 	public slots:
 		//The ImageView has changed types (raster, contour, vector, etc)

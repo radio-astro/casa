@@ -28,7 +28,10 @@
 
 #include <QtGui/QFrame>
 #include <casa/BasicSL/String.h>
+#include <casa/Containers/Record.h>
 #include <display/QtViewer/ImageManager/ImageView.ui.h>
+
+class QSpacerItem;
 
 namespace casa {
 
@@ -55,6 +58,7 @@ namespace casa {
 		bool isMasterHue() const;
 		bool isMasterSaturation() const;
 		bool isMasterCoordinate() const;
+		bool isEmpty() const;
 		QColor getDisplayedColor() const;
 
 		//Setters
@@ -67,6 +71,7 @@ namespace casa {
 		//on the animator.
 		void setViewedImage( bool viewed );
 		void setDisplayedColor( QColor color );
+		void setData( QtDisplayData* other );
 
 		//Returns whether or not the data is eligible to set the
 		//coordinate system for the display.
@@ -94,10 +99,13 @@ namespace casa {
 		void masterSaturationImageSelected( ImageView* imageView );
 		//There will be no master coordinate image.
 		void masterCoordinateImageClear();
+		//An image has been selected to view on the image animator.
+		void viewImage( ImageView* imageToView );
 
 	protected:
 		//Implemented to support drag and drop.
 		virtual void mouseMoveEvent( QMouseEvent* event );
+
 
 	private slots:
 		//Minimize/maximize the display
@@ -140,6 +148,10 @@ namespace casa {
 		void minimizeDisplay();
 		void maximizeDisplay();
 
+		//Snapshots
+		void saveSnapshot();
+		void restoreSnapshot();
+
 		//Drag and drop
 		QImage* makeDragImage();
 		void makeDrag( QMouseEvent* event );
@@ -153,11 +165,14 @@ namespace casa {
 		DisplayType storedDisplay;
 
 		//Available context menu choices
+		QAction viewAction;
 		QAction closeAction;
 		QAction masterCoordinateSystemAction;
 		QAction masterCoordinateSystemUndoAction;
 		QAction masterHueAction;
 		QAction masterSaturationAction;
+		QAction rasterAction;
+		QAction contourAction;
 
 		//Regular background or master coordinate image background
 		QColor normalColor;
@@ -171,9 +186,13 @@ namespace casa {
 		DisplayLabel* coordinateMasterLabel;
 		DisplayLabel* hueMasterLabel;
 		DisplayLabel* saturationMasterLabel;
+		QSpacerItem* spacerFirst;
+		QSpacerItem* spacerLast;
 
 		//Method used to combine images using colors.
 		ColorCombinationMode colorMode;
+		Record displayOptionsSnapshot;
+		bool empty;
 
 		//Rest frequency
 		QStringList frequencyUnits;
@@ -186,6 +205,9 @@ namespace casa {
 		const int SIZE_COLLAPSED;
 		const int SIZE_EXPANDED;
 
+		const int VIEWED_BORDER_SIZE;
+		const int NOT_VIEWED_BORDER_SIZE;
+		bool isViewed() const;
 		Ui::ImageViewClass ui;
 	};
 

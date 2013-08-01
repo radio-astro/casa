@@ -38,9 +38,19 @@ DisplayLabel::DisplayLabel(int characterCount, QWidget *parent)
 	setBackgroundColor();
 	setReadOnly( true );
 	setFixedHeight( 18 );
-	setFixedWidth( 15 );
+	if ( characterCount == 1 ){
+		setFixedWidth( 15 );
+	}
+	else if ( characterCount == 2 ){
+		setFixedWidth( 30 );
+	}
+	else {
+		qDebug() << "DisplayLabel::unrecognized character count="<<characterCount;
+	}
 	setSizePolicy( QSizePolicy::Fixed, QSizePolicy::Fixed );
 }
+
+
 
 void DisplayLabel::setBackgroundColor( ){
 	QPalette pal = palette();

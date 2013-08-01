@@ -1302,6 +1302,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	}
 
+	void QtDisplayPanelGui::setAnimatedImage( int index ){
+		if ( qdp_->modeZ() ){
+			qdp_->setMode( false );
+		}
+		qdp_->goTo( index );
+	}
+
 	void QtDisplayPanelGui::doSelectChannel( int channelNumber ) {
 		//Make sure the channel number is not outside the min/max bounds
 		//of the animator.
@@ -3107,6 +3114,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					this, SLOT(unregisterDD(QtDisplayData*)));
 			connect( imageManagerDialog, SIGNAL(masterCoordinateChanged(QtDisplayData*, QtDisplayData*)),
 					this, SLOT(replaceControllingDD(QtDisplayData*, QtDisplayData*)));
+			connect( imageManagerDialog, SIGNAL(animateToImage(int)),
+					this, SLOT(setAnimatedImage(int)));
 			updateViewedImage();
 
 		}

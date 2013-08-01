@@ -76,6 +76,7 @@ namespace casa {
 		//the selection downward to the ImageView so it can be displayed.
 		void setMasterCoordinateImage( QString masterCoordinateImageName );
 
+
 		//ImageManipulation
 		void closeImages();
 		void addImageView( QtDisplayData* displayData, bool registered,
@@ -102,6 +103,7 @@ namespace casa {
 		void showDataDisplayOptions( QtDisplayData* imageName );
 		//Either register/unregister occured for the ImageView.
 		void registrationChange( ImageView* imageView );
+		void animateToImage( int index );
 
 	protected:
 		void dragEnterEvent( QDragEnterEvent* enterEvent );
@@ -123,6 +125,7 @@ namespace casa {
 		void hueImageChanged( ImageView* imageData );
 		//The master image used to determine color saturation has changed.
 		void saturationImageChanged( ImageView* imageData );
+		void viewImage( ImageView* imageView );
 
 	private:
 		ImageScroll( const ImageScroll& other );
@@ -136,7 +139,8 @@ namespace casa {
 		void addImage( ImageView* imageView, int dropIndex = -1 );
 
 		//Returns the index of a particular image.
-		int findImageView( QString name );
+		int findImageView( QString name, bool exactMatch = true );
+		QString removeSuffixes( QString name ) const;
 
 		//Drag and drop
 		int getDropIndex( int dropY );

@@ -177,6 +177,8 @@ namespace casa {
 			this, SLOT( saturationImageChanged( ImageView*)));
 		disconnect( imageView, SIGNAL( showDataDisplayOptions( QtDisplayData*)),
 			this, SIGNAL( showDataDisplayOptions( QtDisplayData*)));
+		disconnect( imageView, SIGNAL( viewImage( ImageView*)),
+				this, SLOT( viewImage(ImageView*)));
 		QtDisplayData* dd = imageView->getData();
 		emit displayDataRemoved( dd, masterCoordinate );
 		if ( deleteImage ) {
@@ -188,9 +190,11 @@ namespace casa {
 				int dropIndex, bool masterCoordinate,
 				bool masterSaturation, bool masterHue, QColor rgbColor ){
 		ImageView* view = NULL;
-		int index = findImageView( data->name().c_str() );
+		String dataName = data->name();
+		int index = findImageView( dataName.c_str(), false );
 		if ( index >= 0 ){
 			view = images[index];
+			view->setData( data );
 		}
 		if ( view == NULL ){
 			view = new ImageView( data );
@@ -220,8 +224,6 @@ namespace casa {
 		QString newName = viewerImage->getName();
 		int index = findImageView( newName );
 		if ( index < 0 ){
-
-			//Signal slot
 			connect( viewerImage, SIGNAL( displayTypeChanged( ImageView* )),
 				 this, SIGNAL(displayTypeChanged(ImageView*)));
 			connect( viewerImage, SIGNAL( close(ImageView*)),
@@ -238,8 +240,8 @@ namespace casa {
 					this, SIGNAL( showDataDisplayOptions( QtDisplayData*)));
 			connect( viewerImage, SIGNAL( imageSelected(ImageView*)),
 					this, SIGNAL(registrationChange(ImageView*)));
-
-
+			connect( viewerImage, SIGNAL( viewImage(ImageView*)),
+					this, SLOT( viewImage(ImageView*)));
 
 			//Add to GUI
 			QLayout* scrollLayout = scrollWidget->layout();
@@ -271,10 +273,13 @@ namespace casa {
 	//--------------------------------------------------------------
 
 	void ImageScroll::resetMasterCoordinate( ImageView* newMaster ){
-		for ( QList<ImageView*>::iterator iter = images.begin();
+		if ( newMaster != NULL ){
+			QString masterName = newMaster->getName();
+			for ( QList<ImageView*>::iterator iter = images.begin();
 					iter != images.end(); iter++ ) {
-			if ( newMaster != (*iter) ){
-				(*iter)->setMasterCoordinateImage( false );
+				if ( (*iter) != NULL && masterName != (*iter)->getName() ){
+					(*iter)->setMasterCoordinateImage( false );
+				}
 			}
 		}
 	}
@@ -310,8 +315,8 @@ namespace casa {
 		int masterIndex = findImageView( coordinateImageName );
 		if ( masterIndex >= 0 ){
 			images[masterIndex]->setMasterCoordinateImage( true );
+			resetMasterCoordinate( images[masterIndex] );
 		}
-		resetMasterCoordinate( images[masterIndex] );
 	}
 
 
@@ -346,6 +351,12 @@ namespace casa {
 			}
 			(*iter)->setViewedImage( currentlyViewed );
 		}
+	}
+
+	void ImageScroll::viewImage( ImageView* imageView ){
+		int dropIndex = this->getIndex( imageView );
+		int registrationIndex = this->getRegisteredIndex( dropIndex );
+		emit animateToImage( registrationIndex );
 	}
 
 
@@ -491,7 +502,7 @@ namespace casa {
 	//                  Utility
 	//-------------------------------------------------------------------------
 
-	int ImageScroll::findImageView( QString targetName ) {
+	int ImageScroll::findImageView( QString targetName, bool exactMatch ) {
 		int index = 0;
 		int targetIndex = -1;
 		for ( QList<ImageView*>::iterator iter =images.begin();
@@ -503,7 +514,40 @@ namespace casa {
 			}
 			index++;
 		}
+		//The data could have just changed type.  Look for a view
+		//with no data
+		if ( targetIndex == - 1 && !exactMatch ){
+			QString prefix = removeSuffixes( targetName );
+			index = 0;
+			for ( QList<ImageView*>::iterator iter =images.begin();
+							iter != images.end(); iter++ ) {
+				QString imagePrefix = removeSuffixes( (*iter)->getName() );
+				if ( prefix == imagePrefix && (*iter)->isEmpty()){
+					targetIndex = index;
+					break;
+				}
+				index++;
+			}
+		}
 		return targetIndex;
+	}
+
+	QString ImageScroll::removeSuffixes( QString name ) const {
+		QString cleaned = name;
+
+		//Raster images have the word raster appended to their names
+		//while other types of images do not.
+		const QString RASTER( "-raster");
+		cleaned = cleaned.remove(RASTER );
+
+		//When duplicate images of the same name are loaded they get
+		//a suffix of the form <n>.
+		int dupIndex = cleaned.indexOf( "<");
+		cleaned = cleaned.right( dupIndex );
+
+		//extra space
+		cleaned = cleaned.trimmed();
+		return cleaned;
 	}
 
 

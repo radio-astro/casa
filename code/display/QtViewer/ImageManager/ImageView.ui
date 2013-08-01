@@ -167,7 +167,7 @@
        </property>
        <property name="sizeHint" stdset="0">
         <size>
-         <width>40</width>
+         <width>5</width>
          <height>20</height>
         </size>
        </property>
@@ -176,7 +176,7 @@
      <item>
       <widget class="QCheckBox" name="selectCheckBox">
        <property name="toolTip">
-        <string>Check/uncheck to register/unregister the image.</string>
+        <string>Register/unregister the image.</string>
        </property>
        <property name="text">
         <string/>

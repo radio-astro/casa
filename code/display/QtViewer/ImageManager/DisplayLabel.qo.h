@@ -42,15 +42,19 @@ class DisplayLabel : public QTextEdit {
 
 public:
     DisplayLabel(int characterCount, QWidget *parent = 0);
+
     /**
      * Sets the background color that will be used when no
      * text is displayed.
      */
     void setEmptyColor( QColor color );
+
     /**
      * Returns whether or not the contents contains text.
      */
     bool isEmpty() const;
+
+
     ~DisplayLabel();
 
 private:

@@ -67,6 +67,9 @@ namespace casa {
 		connect( ui.colorMasterImageRadio, SIGNAL(clicked()), this, SLOT(colorRestrictionsChanged()));
 		connect( ui.applyButton, SIGNAL(clicked()), this, SLOT(applyColorChanges()));
 
+		layout()->removeWidget( ui.colorRestrictionsGroupBox );
+		ui.colorRestrictionsGroupBox->setParent( NULL );
+
 		connect( ui.closeDialogButton, SIGNAL( clicked()), this, SLOT(accept()));
 	}
 
@@ -84,6 +87,8 @@ namespace casa {
 				 this, SLOT( showDataDisplayOptions( QtDisplayData* )));
 		connect( imageScroll, SIGNAL(registrationChange(ImageView*)),
 				this, SLOT(registrationChange(ImageView*)));
+		connect( imageScroll, SIGNAL(animateToImage(int)),
+				this, SIGNAL(animateToImage(int)));
 		QHBoxLayout* holderLayout = new QHBoxLayout();
 		holderLayout->setContentsMargins(0,0,0,0);
 		holderLayout->addWidget( imageScroll );
@@ -207,7 +212,9 @@ namespace casa {
 				String displayType( displayTypeName.toLower().toStdString());
 
 				//Close the dd
-				imageScroll->removeImageView( imageData );
+				//imageScroll->removeImageView( imageData );
+				QtDisplayData* dd = imageView->getData();
+				emit closeImage( dd, masterCoordinate );
 
 				//Reopen it with the new specifications
 				emit ddOpened( path, ddType, displayType,
@@ -589,5 +596,6 @@ namespace casa {
 	ImageManagerDialog::~ImageManagerDialog() {
 		delete allImages;
 		delete displayedImages;
+		delete ui.colorRestrictionsGroupBox;
 	}
 }

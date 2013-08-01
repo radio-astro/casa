@@ -24,6 +24,7 @@
 //#
 #include "ImageView.qo.h"
 #include <casa/BasicSL/String.h>
+#include <casa/Containers/ValueHolder.h>
 #include <display/QtViewer/ImageManager/ImageView.qo.h>
 #include <display/QtViewer/ImageManager/DisplayLabel.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
@@ -40,22 +41,28 @@ namespace casa {
 	const QString ImageView::DROP_ID = "Image Name";
 	ImageView::ImageView(QtDisplayData* data, QWidget *parent)
 		: QFrame(parent),
+		  viewAction( "View", this ),
 		  closeAction( "Close", this ),
 		  masterCoordinateSystemAction( "Coordinate System Master", this ),
 		  masterCoordinateSystemUndoAction( "Clear Coordinate System Master", this ),
-		  masterHueAction( "Hue Master", this ),
-		  masterSaturationAction( "Saturation Master", this ),
-		  normalColor("#D3D3D3"),
+		  masterHueAction( "Hue Image", this ),
+		  masterSaturationAction( "Saturation Image", this ),
+		  rasterAction( "Raster", this ),
+		  contourAction( "Contour", this ),
+		  normalColor("#F0F0F0"),
 		  masterCoordinateColor("#BABABA" ),
 		  imageData( NULL ),
 		  REST_FREQUENCY_KEY("axislabelrestvalue"),
 		  VALUE_KEY( "value"),
-		  SIZE_COLLAPSED( 50 ), SIZE_EXPANDED( 200 ){
+		  SIZE_COLLAPSED( 50 ), SIZE_EXPANDED( 200 ),
+		  VIEWED_BORDER_SIZE(5), NOT_VIEWED_BORDER_SIZE(2){
 
 		ui.setupUi(this);
 		initDisplayLabels();
 		minimumSize = SIZE_COLLAPSED;
-		setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Fixed );
+		spacerFirst = new QSpacerItem( 1, 1, QSizePolicy::MinimumExpanding );
+		spacerLast = new QSpacerItem( 1, 1, QSizePolicy::MinimumExpanding );
+		setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Fixed );
 
 		//Context Menu
 		setContextMenuPolicy( Qt::CustomContextMenu );
@@ -63,6 +70,10 @@ namespace casa {
 
 		if ( data != NULL ) {
 			imageData = data;
+			empty = false;
+		}
+		else {
+			empty = true;
 		}
 
 		//Rest frequency/wavelength information
@@ -90,6 +101,10 @@ namespace casa {
 		//Open close the image view.
 		minimizeDisplay();
 		connect( ui.openCloseButton, SIGNAL(clicked()), this, SLOT(openCloseDisplay()));
+
+		layout()->removeWidget( ui.colorGroupBox );
+		ui.colorGroupBox->setParent( NULL );
+
 	}
 
 	void ImageView::setTitle(){
@@ -101,6 +116,9 @@ namespace casa {
 		else {
 			String imageName = imageData->name();
 			name = imageName.c_str();
+		}
+		if ( isMasterCoordinate( ) ){
+			name = "<b>"+name+"</b>";
 		}
 		ui.imageNameLabel->setText( name );
 	}
@@ -122,13 +140,15 @@ namespace casa {
 		connect( ui.otherRadio, SIGNAL(clicked()), this, SLOT(otherColorChanged()));
 		connect( ui.colorButton, SIGNAL(clicked()), this, SLOT(showColorDialog()));
 		otherColorChanged();
+
+		layout()->removeWidget( ui.colorLabel );
+		ui.colorLabel->setParent( NULL );
 	}
 
 	void ImageView::initDisplayLabel( QWidget* holder, DisplayLabel* label ){
 		QVBoxLayout* verticalLayout = new QVBoxLayout();
 		verticalLayout->setContentsMargins( 0, 0, 0, 3 );
 		verticalLayout->addWidget( label, Qt::AlignTop | Qt::AlignCenter );
-		//verticalLayout->addStretch( 1 );
 		holder->setLayout( verticalLayout );
 	}
 
@@ -136,14 +156,20 @@ namespace casa {
 		displayTypeLabel = new DisplayLabel( 1, this );
 		initDisplayLabel( ui.displayTypeHolder, displayTypeLabel );
 
-		coordinateMasterLabel = new DisplayLabel( 1, this );
+		coordinateMasterLabel = new DisplayLabel( 2, this );
 		initDisplayLabel( ui.coordinateMasterHolder, coordinateMasterLabel );
 
-		hueMasterLabel = new DisplayLabel( 1, this );
+		/*hueMasterLabel = new DisplayLabel( 1, this );
 		initDisplayLabel( ui.hueMasterHolder, hueMasterLabel );
 
 		saturationMasterLabel = new DisplayLabel( 1, this );
-		initDisplayLabel( ui.saturationMasterHolder, saturationMasterLabel );
+		initDisplayLabel( ui.saturationMasterHolder, saturationMasterLabel );*/
+		hueMasterLabel = NULL;
+		saturationMasterLabel = NULL;
+		layout()->removeWidget( ui.hueMasterHolder );
+		layout()->removeWidget( ui.saturationMasterHolder);
+		ui.hueMasterHolder->setParent( NULL );
+		ui.saturationMasterHolder->setParent( NULL );
 	}
 
 	void ImageView::initDisplayType() {
@@ -227,9 +253,23 @@ namespace casa {
 		return masterSaturation;
 	}
 
+	bool ImageView::isEmpty() const {
+
+		return empty;
+	}
+
 	bool ImageView::isMasterCoordinate() const {
 		bool masterCoordinate = !coordinateMasterLabel->isEmpty();
 		return masterCoordinate;
+	}
+
+	bool ImageView::isViewed() const {
+		bool imageViewed = false;
+		int borderWidth = lineWidth();
+		if ( borderWidth == VIEWED_BORDER_SIZE ){
+			imageViewed = true;
+		}
+		return imageViewed;
 	}
 
 	QString ImageView::getName() const {
@@ -316,16 +356,17 @@ namespace casa {
 	void ImageView::setMasterCoordinateImage( bool masterImage ){
 		if ( masterImage ){
 			setBackgroundColor( masterCoordinateColor );
-			coordinateMasterLabel->setText( "C");
+			coordinateMasterLabel->setText( "MC");
 		}
 		else {
 			setBackgroundColor( normalColor );
 			coordinateMasterLabel->setText( "");
 		}
+		setTitle();
 	}
 
 	void ImageView::setMasterHueImage( bool masterImage ){
-		if ( masterImage ){
+		if ( masterImage && hueMasterLabel != NULL ){
 			hueMasterLabel->setText( "H");
 		}
 		else {
@@ -333,7 +374,7 @@ namespace casa {
 		}
 	}
 	void ImageView::setMasterSaturationImage( bool masterImage ){
-		if ( masterImage ){
+		if ( masterImage && saturationMasterLabel != NULL ){
 			saturationMasterLabel->setText( "S");
 		}
 		else {
@@ -352,12 +393,19 @@ namespace casa {
 	void ImageView::setViewedImage( bool viewed ){
 		if ( viewed ){
 			setFrameStyle( QFrame::Box | QFrame::Sunken );
-			setLineWidth( 5 );
+			setLineWidth( VIEWED_BORDER_SIZE );
 		}
 		else {
 			setFrameStyle( QFrame::Plain );
-			setLineWidth( 2 );
+			setLineWidth( NOT_VIEWED_BORDER_SIZE );
 		}
+	}
+
+	void ImageView::setData( QtDisplayData* other ){
+		empty = false;
+		imageData = other;
+		setTitle();
+		restoreSnapshot();
 	}
 
 
@@ -377,11 +425,20 @@ namespace casa {
 		else if (masterCoordinateImage ){
 			contextMenu.addAction( &masterCoordinateSystemUndoAction );
 		}
-		if ( !isMasterHue() ){
+		/*if ( !isMasterHue() ){
 			contextMenu.addAction( &masterHueAction );
 		}
 		if ( !isMasterSaturation() ){
 			contextMenu.addAction( &masterSaturationAction );
+		}*/
+		if ( !ui.rasterRadio->isChecked() ){
+			contextMenu.addAction( &rasterAction );
+		}
+		if ( !ui.contourRadio->isChecked() ){
+			contextMenu.addAction( &contourAction );
+		}
+		if ( !isViewed() && ui.rasterRadio->isChecked() ){
+			contextMenu.addAction( &viewAction );
 		}
 		contextMenu.addAction( &closeAction );
 
@@ -389,6 +446,9 @@ namespace casa {
 		QAction* selectedAction = contextMenu.exec( showLocation );
 		if ( selectedAction == &closeAction ){
 			emit close( this );
+		}
+		else if ( selectedAction == &viewAction ){
+			emit viewImage( this );
 		}
 		else if ( selectedAction == &masterCoordinateSystemAction ){
 			setMasterCoordinateImage( true );
@@ -398,14 +458,22 @@ namespace casa {
 			setMasterCoordinateImage( false );
 			emit masterCoordinateImageClear();
 		}
-		else if ( selectedAction == &masterHueAction ){
+		else if ( selectedAction == &rasterAction ){
+			ui.rasterRadio->setChecked( true );
+			displayTypeChanged();
+		}
+		else if ( selectedAction == &contourAction ){
+			ui.contourRadio->setChecked( true );
+			displayTypeChanged();
+		}
+		/*else if ( selectedAction == &masterHueAction ){
 			setMasterHueImage( true );
 			emit masterHueImageSelected( this );
 		}
 		else if ( selectedAction == &masterSaturationAction ){
 			setMasterSaturationImage( true );
 			emit masterSaturationImageSelected( this );
-		}
+		}*/
 	}
 
 
@@ -418,9 +486,15 @@ namespace casa {
 		pal.setColor( QPalette::Background, color );
 		setPalette( pal );
 		displayTypeLabel->setEmptyColor( color );
-		coordinateMasterLabel->setEmptyColor( color );
-		hueMasterLabel->setEmptyColor( color );
-		saturationMasterLabel->setEmptyColor( color );
+		if ( coordinateMasterLabel != NULL ){
+			coordinateMasterLabel->setEmptyColor( color );
+		}
+		if ( hueMasterLabel != NULL ){
+			hueMasterLabel->setEmptyColor( color );
+		}
+		if ( saturationMasterLabel != NULL ){
+			saturationMasterLabel->setEmptyColor( color );
+		}
 	}
 
 	QColor ImageView::getBackgroundColor() const {
@@ -515,9 +589,50 @@ namespace casa {
 			//Update the quick-look label
 			displayTypeLabel->setText( displayTypeMap[guiDisplay] );
 
+			saveSnapshot();
+			empty = true;
+
 			//Change the underlying data type
 			emit displayTypeChanged( this );
 		}
+	}
+
+	void ImageView::saveSnapshot(){
+		//Store a snapshot of the display options.
+		Record displayOptions = imageData->getOptions();
+		displayOptionsSnapshot.merge( displayOptions, RecordInterface::OverwriteDuplicates );
+	}
+
+	void ImageView::restoreSnapshot(){
+		//Get the image data
+		Record imageOptions = imageData->getOptions();
+
+		//Overwrite any fields we may have stored in the snapshot.
+		int fieldCount = imageOptions.nfields();
+		for ( int i = 0; i < fieldCount; i++ ){
+			String fieldName = imageOptions.name( i );
+			int snapIndex = displayOptionsSnapshot.fieldNumber( fieldName );
+			if ( snapIndex >= 0 ){
+				ValueHolder fieldRecord = displayOptionsSnapshot.asValueHolder( snapIndex );
+				imageOptions.defineFromValueHolder( i, fieldRecord );
+			}
+		}
+
+		//Remove region and mask records because they cause an
+		//exception and have nothing to do with display options.
+		bool regionDefined = imageOptions.isDefined( "region" );
+		if ( regionDefined ){
+			int fieldId = imageOptions.fieldNumber( "region");
+			imageOptions.removeField( fieldId );
+		}
+		bool maskDefined = imageOptions.isDefined( "mask" );
+		if ( maskDefined ){
+			int fieldId = imageOptions.fieldNumber( "mask" );
+			imageOptions.removeField( fieldId );
+		}
+
+		//Put the update options back in.
+		imageData->setOptions( imageOptions );
 	}
 
 	void ImageView::imageRegistrationChanged( bool /*selected*/ ) {
@@ -530,13 +645,15 @@ namespace casa {
 	}
 
 
+
+
 	//-----------------------------------------------------------------------------
 	//                 Opening/Closing
 	//-----------------------------------------------------------------------------
 
 	QSize ImageView::minimumSizeHint() const {
 		QSize frameSize = QFrame::size();
-		QSize hint ( /*frameSize.width()*/700, minimumSize );
+		QSize hint ( 200, minimumSize );
 		return hint;
 	}
 
@@ -554,6 +671,8 @@ namespace casa {
 		ui.widgetLayout->removeWidget( ui.displayGroupBox );
 		ui.widgetLayout->removeWidget( ui.colorGroupBox);
 		ui.widgetLayout->removeWidget( ui.restGroupBox );
+		ui.widgetLayout->removeItem( spacerFirst );
+		ui.widgetLayout->removeItem( spacerLast );
 		ui.displayOptionsLayout->removeWidget( ui.dataOptionsButton );
 
 		ui.displayGroupBox->setParent( NULL );
@@ -567,9 +686,11 @@ namespace casa {
 	}
 
 	void ImageView::maximizeDisplay() {
+		ui.widgetLayout->addSpacerItem( spacerFirst );
 		ui.widgetLayout->addWidget( ui.displayGroupBox );
 		ui.widgetLayout->addWidget( ui.restGroupBox );
-		ui.widgetLayout->addWidget( ui.colorGroupBox );
+		//ui.widgetLayout->addWidget( ui.colorGroupBox );
+		ui.widgetLayout->addSpacerItem( spacerLast );
 		ui.displayOptionsLayout->insertWidget( 1, ui.dataOptionsButton );
 		minimumSize = SIZE_EXPANDED;
 		QIcon closeIcon( ":/icons/imageMinimize.png");
@@ -628,5 +749,20 @@ namespace casa {
 	}
 
 	ImageView::~ImageView() {
+		delete ui.colorGroupBox;
+		delete ui.hueMasterHolder;
+		delete ui.saturationMasterHolder;
+		delete ui.colorLabel;
+
+		//If we are minimized, we have to delete the orphaned
+		//widgets ourselves.
+		if ( minimumSize == SIZE_COLLAPSED ){
+			delete ui.displayGroupBox;
+			delete ui.restGroupBox;
+			delete ui.dataOptionsButton;
+			delete spacerFirst;
+			delete spacerLast;
+		}
+
 	}
 }

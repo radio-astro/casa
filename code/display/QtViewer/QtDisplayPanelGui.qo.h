@@ -700,6 +700,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// used to manage generation of the updateAxes( ) signal...
 		void replaceControllingDD( QtDisplayData* oldControllingDD, QtDisplayData* newControllingDD);
 
+		//Change the image that is being viewed in the blink
+		//animator.
+		void setAnimatedImage( int index );
 
 	public:
 
