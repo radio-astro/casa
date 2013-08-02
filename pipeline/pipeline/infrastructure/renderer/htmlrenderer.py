@@ -2191,7 +2191,7 @@ class LogCopier(object):
 renderer_map = {
     T2_3MDetailsRenderer : {
         hif.tasks.Wvrgcalflag    : T2_3MDetailsWvrgcalflagRenderer(),
-        hif.tasks.Bandpass       : T2_3MDetailsBandpassRenderer(),
+        # hif.tasks.Bandpass       : T2_3MDetailsBandpassRenderer(),
     },
     T2_4MDetailsRenderer : {
         hif.tasks.Atmflag        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_atmflag.html'),
