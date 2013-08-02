@@ -35,11 +35,11 @@ class CleanSummary(object):
 
             # psf map
             plot_wrappers.append(displays.SkyDisplay().plot(self.context, r.psf,
-              reportdir=stage_dir))
+              reportdir=stage_dir, intent=r.intent))
 
             # flux map
             plot_wrappers.append(displays.SkyDisplay().plot(self.context,
-              r.flux, reportdir=stage_dir))
+              r.flux, reportdir=stage_dir, intent=r.intent))
 
             # image iterations
             iterations = r.iterations.keys()
@@ -47,11 +47,11 @@ class CleanSummary(object):
             for i in iterations:
                 # image for this iteration
                 plot_wrappers.append(displays.SkyDisplay().plot(self.context,
-                  r.iterations[i]['image'], reportdir=stage_dir))
+                  r.iterations[i]['image'], reportdir=stage_dir, intent=r.intent))
 
                 # residual for this iteration
                 plot_wrappers.append(displays.SkyDisplay().plot(self.context,
-                  r.iterations[i]['residual'], reportdir=stage_dir))
+                  r.iterations[i]['residual'], reportdir=stage_dir, intent=r.intent))
 
                 # model for this iteration (currently only last but
                 # allow for others in future)
@@ -59,12 +59,12 @@ class CleanSummary(object):
                   os.path.exists(r.iterations[i]['model']):
                     plot_wrappers.append(displays.SkyDisplay().plot(
                       self.context, r.iterations[i]['model'],
-                      reportdir=stage_dir))
+                      reportdir=stage_dir, intent=r.intent))
 
                 # cleanmask for this iteration - not for iter 0
                 if i > 0:
                     plot_wrappers.append(displays.SkyDisplay().plot(
                       self.context, r.iterations[i]['cleanmask'],
-                      reportdir=stage_dir))
+                      reportdir=stage_dir, intent=r.intent))
 
         return [p for p in plot_wrappers if p is not None]

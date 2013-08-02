@@ -58,12 +58,18 @@ def plotfilename(image, reportdir):
 class SkyDisplay(object):
     """Class to plot sky images."""
 
-    def plot(self, context, result, reportdir):
+    def plot(self, context, result, reportdir, intent=None):
 
         if not result:
             return []
 
         plotfile, coord_names, field = self._plot_panel(reportdir, result)
+
+        # field names may not be unique, which leads to incorrectly merged
+        # plots in the weblog output. As a temporary fix, change to field +
+        # intent - which is better but again, not guaranteed unique.
+        if intent:
+            field = '%s (%s)' % (field, intent)
 
         with casatools.ImageReader(result) as image:
             info = image.miscinfo()
