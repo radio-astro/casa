@@ -51,6 +51,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   } while (0)
 
 
+// The Assert macro is an alias to the standard assert macro when NDEBUG is defined.  When
+// NDEBUG is not defined (release build) then a throw is used to report the error.
+
+#ifdef NDEBUG
+#define AssertCc(c) {assert (c)}
+#else
+#define AssertCc(c) { utilj::throwIf (! (c), "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }
+#endif
+
+#define AssertAlways(c) { throwIf (! (c), "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }
+
+#if defined (NDEBUG)
+#    define ThrowCc(m) \
+    { AipsError anAipsError ((m), __FILE__, __LINE__);\
+      toStdError (anAipsError.what());\
+      throw anAipsError; }
+#else
+#    define ThrowCc(m) throw AipsError ((m), __FILE__, __LINE__)
+#endif
+
+#define ThrowIf(c,m) {if (c) {casa::AipsError::throwIf ((c), (m), __FILE__, __LINE__, __PRETTY_FUNCTION__);}}
+
+#define ThrowIfError(c,m) {if (c) {casa::AipsError::throwIfError ((c), (m), __FILE__, __LINE__, __PRETTY_FUNCTION__);}}
+
+#define Rethrow(e,m) {throw casa::AipsError::repackageAipsError ((e),(m),__FILE__,__LINE__, __PRETTY_FUNCTION__);}
+
+
+
 // <summary>Base class for all AIPS++ library errors</summary>
 // <use visibility=export>
 //
@@ -134,6 +162,15 @@ public:
   static void clearLastInfo ();
   static String noMessage ();
   static String noStackTrace ();
+
+  static AipsError repackageAipsError (AipsError & error, const String & message, const String & file,
+                              Int line, const String & func);
+
+  static void throwIf (Bool condition, const String & message, const String & file,
+                       Int line, const String & func = String());
+  static void throwIfError (Int errorCode, const String & prefix, const String & file,
+                            Int line, const String & func = String());
+
 
 protected:
 
