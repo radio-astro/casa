@@ -236,6 +236,9 @@ public:
     // Weight for each channel. To be used instead of WEIGHT if present.<BR>
     // Float(Nf).
     WEIGHT_SPECTRUM,
+    // Corrected Weight for each channel.  If present can be used with corrected_data<BR>
+    // Float(Nf).
+    CORRECTED_WEIGHT_SPECTRUM,
     //
     // Not a column, but just a final enum specifying the number of enums.
     NUMBER_PREDEFINED_COLUMNS=WEIGHT_SPECTRUM
