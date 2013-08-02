@@ -8,5 +8,8 @@ class SIImageStore;
 class LogIO;
 };
 
+namespace casac {
 class synthesisparsync;
 class synthesisimager;
+};
+
