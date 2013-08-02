@@ -19,9 +19,9 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 			<ul class="thumbnails">
 				<li class="span3">
 				  	<div class="thumbnail">
-						<a href="${os.path.join(dirname, plot_ants.basename)}" 
+						<a href="${os.path.relpath(plot_ants.abspath, pcontext.report_dir)}"
 						   class="fancybox">
-							<img src="${os.path.join(dirname, plot_ants.thumbnail)}"
+							<img src="${os.path.relpath(plot_ants.thumbnail, pcontext.report_dir)}"
 								 title="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"
   							     alt="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"/>
 					    </a>

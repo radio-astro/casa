@@ -9,9 +9,9 @@ import os
 % if azel_plot:
 	<li class="span3">
 	  	<div class="thumbnail">
-			<a href="${os.path.join(dirname, azel_plot.basename)}" 
+			<a href="${os.path.relpath(azel_plot.abspath, pcontext.report_dir)}"
 			   class="fancybox">
-				<img src="${os.path.join(dirname, azel_plot.thumbnail)}"
+				<img src="${os.path.relpath(azel_plot.thumbnail, pcontext.report_dir)}"
 					 title="Elevation vs. Azimuth for ${ms.basename}"
 					 alt="Elevation vs. Azimuth for ${ms.basename}" />
 		    </a>
@@ -25,9 +25,9 @@ import os
 % if el_vs_time_plot:
 	<li class="span3">
 	  	<div class="thumbnail">
-			<a href="${os.path.join(dirname, el_vs_time_plot.basename)}" 
+			<a href="${os.path.relpath(el_vs_time_plot.abspath, pcontext.report_dir)}"
 			   class="fancybox">
-				<img src="${os.path.join(dirname, el_vs_time_plot.thumbnail)}"
+				<img src="${os.path.relpath(el_vs_time.thumbnail, pcontext.report_dir)}"
 					 title="Elevation vs. Time for ${ms.basename}"
 					 alt="Elevation vs. Time for ${ms.basename}" />
 		    </a>
