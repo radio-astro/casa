@@ -319,15 +319,11 @@ def simalma(
         task_param['overwrite'] = overwrite
         #task_param['async'] = False
 
-#         taskstr = "simobserve(project='"+project+"', skymodel='"+skymodel+"', inbright='"+inbright+"', indirection='"+indirection+"', incell='"+incell+"', incenter='"+incenter+"', inwidth='"+inwidth+"', complist='"+complist+"', compwidth='"+compwidth+"', setpointings="+str(setpointings)+", ptgfile='"+ptgfile+"', integration='"+integration+"', direction='"+str(direction)+"', mapsize="+str(mapsize_bl)+", maptype='"+maptype_bl+"', pointingspacing='"+pointingspacing+"', caldirection='"+caldirection+"', calflux='"+calflux+"',  obsmode='"+obsmode_int+"', hourangle='"+hourangle+"', totaltime='"+totaltime+"', antennalist='"+antennalist+"', sdantlist='', sdant="+str(0)+", thermalnoise='"+thermalnoise+"', user_pwv="+str(pwv)+", t_ground="+str(t_ground)+", leakage="+str(leakage)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
         msg("Executing: "+get_taskstr('simobserve', task_param), origin="simalma", priority=v_priority)
 
         try:
             simobserve(**task_param)
             del task_param
-#             simobserve(project=project, skymodel=skymodel, inbright=inbright, indirection=indirection, incell=incell, incenter=incenter, inwidth=inwidth, complist=complist, compwidth=compwidth, setpointings=setpointings, ptgfile=ptgfile, integration=integration, direction=direction, mapsize=mapsize_bl, maptype=maptype_bl, pointingspacing=pointingspacing, caldirection=caldirection, calflux=calflux, obsmode=obsmode_int, #refdate=refdate,
-#                        hourangle=hourangle, totaltime=totaltime, antennalist=antennalist, sdantlist="", sdant=0, thermalnoise=thermalnoise, user_pwv=pwv, t_ground=t_ground, #t_sky=t_sky, tau0=tau0, seed=seed,
-#                        leakage=leakage, graphics=graphics, verbose=verbose, overwrite=overwrite)#,async=False)
         except:
             raise Exception, simobserr
         finally:
@@ -396,16 +392,11 @@ def simalma(
             task_param['overwrite'] = overwrite
             #task_param['async'] = False
 
-#             taskstr = "simobserve(project='"+project+"', skymodel='"+skymodel+"', inbright='"+inbright+"', indirection='"+indirection+"', incell='"+incell+"', incenter='"+incenter+"', inwidth='"+inwidth+"', complist='"+complist+"', compwidth='"+compwidth+"', setpointings="+str(setpointings)+", ptgfile='"+ptgfile+"', integration='"+integration+"', direction='"+str(direction)+"', mapsize="+str(mapsize_bl)+", maptype='"+maptype_aca+"', pointingspacing='"+pointingspacing+"', caldirection='"+caldirection+"', calflux='"+calflux+"',  obsmode='"+obsmode_int+"',  hourangle='"+hourangle+"', totaltime='"+tottime_aca+"', antennalist='"+antlist_aca+"', sdantlist='', sdant="+str(0)+", thermalnoise='"+thermalnoise+"', user_pwv="+str(pwv)+", t_ground="+str(t_ground)+", leakage="+str(leakage)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
             msg("Executing: "+get_taskstr('simobserve', task_param), origin="simalma", priority=v_priority)
 
             try:
                 simobserve(**task_param)
                 del task_param
-#                 simobserve(project=project, skymodel=skymodel, inbright=inbright, indirection=indirection, incell=incell, incenter=incenter, inwidth=inwidth, complist=complist, compwidth=compwidth, #setpointings=False, ptgfile=ptgfile_aca,
-#                            setpointings=setpointings, ptgfile=ptgfile, integration=integration, direction=direction, mapsize=mapsize_bl, maptype=maptype_aca, pointingspacing=pointingspacing, caldirection=caldirection, calflux=calflux,  obsmode=obsmode_int, #refdate=refdate,
-#                            hourangle=hourangle, totaltime=tottime_aca, antennalist=antlist_aca, sdantlist="", sdant=0, thermalnoise=thermalnoise, user_pwv=pwv, t_ground=t_ground, #t_sky=t_sky, tau0=tau0, seed=seed,
-#                            leakage=leakage, graphics=graphics, verbose=verbose, overwrite=overwrite)#,async=False)
             except:
                 raise Exception, simobserr
             finally:
@@ -555,15 +546,11 @@ def simalma(
             task_param['overwrite'] = overwrite
             #task_param['async'] = False
 
-#             taskstr = "simobserve(project='"+project+"', skymodel='"+skymodel+"', inbright='"+inbright+"', indirection='"+indirection+"', incell='"+incell+"', incenter='"+incenter+"', inwidth='"+inwidth+"', complist='"+complist+"', compwidth='"+compwidth+"', setpointings="+str(True)+", ptgfile='$project.ptg.txt', integration='"+integration_tp+"', direction='"+str(dir_tp)+"', mapsize="+str(mapsize_tp)+", maptype='"+maptype_tp+"', pointingspacing='"+ptgspacing_tp+"', caldirection='"+caldirection+"', calflux='"+calflux+"',  obsmode='"+obsmode_sd+"', hourangle='"+hourangle+"', totaltime='"+tottime_tp+"', antennalist='', sdantlist='"+antlist_tp+"', sdant="+str(tpantid)+", thermalnoise='"+thermalnoise+"', user_pwv="+str(pwv)+", t_ground="+str(t_ground)+", leakage="+str(leakage)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
             msg("Executing: "+get_taskstr('simobserve', task_param), origin="simalma", priority=v_priority)
 
             try:
                 simobserve(**task_param)
                 del task_param
-#                 simobserve(project=project, skymodel=skymodel, inbright=inbright, indirection=indirection, incell=incell, incenter=incenter, inwidth=inwidth, complist=complist, compwidth=compwidth, setpointings=True, ptgfile='$project.ptg.txt', integration=integration_tp, direction=dir_tp, mapsize=mapsize_tp, maptype=maptype_tp, pointingspacing=ptgspacing_tp, caldirection=caldirection, calflux=calflux, obsmode=obsmode_sd, #refdate=refdate,
-#                            hourangle=hourangle, totaltime=tottime_tp, antennalist="", sdantlist=antlist_tp, sdant=tpantid, thermalnoise=thermalnoise, user_pwv=pwv, t_ground=t_ground, #t_sky=t_sky, tau0=tau0, seed=seed,
-#                            leakage=leakage, graphics=graphics, verbose=verbose, overwrite=overwrite)#,async=False)
             except:
                 raise Exception, simobserr
             finally:
@@ -798,7 +785,6 @@ def simalma(
 
 
                 msg("Analyzing TP image.", origin="simalma", priority=v_priority)
-                #taskstr = "simanalyze(project='"+project+"', image="+str(image)+", vis='"+vis_tp+"', modelimage='', cell='"+str(cell_tp)+"', imsize="+str(imsize_tp)+", imdirection='"+imdirection+"', niter="+str(niter)+", threshold='"+threshold+"', weighting='"+weighting+"', mask="+str([])+", outertaper="+str([])+", stokes='I', analyze="+str(True)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
                 vis_tp = fileroot+"/"+vis_tp
 
                 task_param = {}
@@ -812,14 +798,12 @@ def simalma(
                 task_param['graphics'] = graphics
                 task_param['verbose'] = verbose
                 task_param['overwrite'] = overwrite
-#                 taskstr = "simanalyze(project="+project+", image=False, imagename='"+fileroot+"/"+imagename_tp+"', analyze=True, showuv=False, showpsf=False, showconvolved=True, graphics="+str(graphics)+", verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
+
                 msg("Executing: "+get_taskstr('simanalyze', task_param), origin="simalma", priority=v_priority)
 
                 try:
                     simanalyze(**task_param)
                     del task_param
-#                     # simanalyze(project=project, image=image, vis=vis_tp, modelimage="", cell=cell_tp, imsize=imsize_tp, imdirection=imdirection, niter=niter, threshold=threshold, weighting=weighting, mask=[], outertaper=[], stokes='I', analyze=True, graphics=graphics, verbose=verbose, overwrite=overwrite)
-#                     simanalyze(project=project, image=False, imagename=fileroot+"/"+imagename_tp, analyze=True, showuv=False,showpsf=False,showconvolved=True, graphics=graphics, verbose=verbose, overwrite=overwrite)
                 except:
                     raise Exception, simanaerr
                 finally:
@@ -902,13 +886,12 @@ def simalma(
             task_param['graphics'] = graphics
             task_param['verbose'] = verbose
             task_param['overwrite'] = overwrite
-#             taskstr = "simanalyze(project='"+ project+"', image="+str(image)+", vis='"+ vis_int+"', modelimage='', cell='"+str(cell)+"', imsize="+str(imsize)+", imdirection='"+ imdirection+"', niter="+str(niter)+", threshold='"+ threshold+"', weighting='"+ weighting+"', mask="+str([])+", outertaper="+str([])+", stokes='I', analyze="+str(True)+", graphics='"+ graphics+"', verbose="+str(verbose)+", overwrite="+ str(overwrite)+")"
+
             msg("Executing: "+get_taskstr('simanalyze', task_param), origin="simalma", priority=v_priority)
 
             try:
                 simanalyze(**task_param)
                 del task_param
-#                 simanalyze(project=project, image=image, vis=vis_int, modelimage="", cell=cell, imsize=imsize, imdirection=imdirection, niter=niter, threshold=threshold, weighting=weighting, mask=[], outertaper=[], stokes='I', analyze=True, graphics=graphics, verbose=verbose, overwrite=overwrite)
             except:
                 raise Exception, simanaerr
             finally:
@@ -980,7 +963,7 @@ def simalma(
                 task_param['imagename'] = outimage0
                 task_param['highres'] = highimage
                 task_param['lowres'] = lowimage
-#                 taskstr = ("feather(imagename='%s', highres='%s',lowres='%s')" % (outimage0, highimage, lowimage))
+
                 msg("Executing: "+get_taskstr('feather', task_param), origin="simalma", priority=v_priority)
                 try:
                     saveinputs('feather',
@@ -988,7 +971,7 @@ def simalma(
                                myparams=task_param)
                     feather(**task_param)
                     del task_param
-#                     feather(imagename=outimage0, highres=highimage, lowres=lowimage)
+
                     # transfer mask - feather should really do this
                     ia.open(outimage0)
                     ia.maskhandler('copy',[highimage+":mask0",'mask0'])
