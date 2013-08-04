@@ -202,7 +202,7 @@ class SDExportData(basetask.StandardTaskTemplate):
             self._export_list_txt(inputs.context,inputs.products_dir,newlist,list_of_locallists)
             #LOG.info('contents of product direoctory is %s' % os.listdir(inputs.products_dir))
         else:
-            LOG.info('There is no product direoctory')
+            LOG.info('There is no product direoctory, please input !mkdir products')
          
         return SDExportDataResults(jobs=[])
      
