@@ -20,7 +20,8 @@ from __future__ import absolute_import
 import os
 import tarfile
 import fnmatch
-
+import shutil
+import string
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
@@ -54,15 +55,15 @@ class SDExportDataInputs(basetask.StandardInputs):
     target images. If defined overrides the list of target images in
     the context.
     
-    .. py:attribute:: flag_bl_coeff
+    .. py:attribute:: skytsyscal_bl
     the list of flag and bl coefficient to be saved.  Defaults to all
     target flag and bl coefficient. If defined overrides the list of 
     flag and bl coefficient in the context.
     
     """
     
-    def __init__(self, context, output_dir=None,products_dir=None,
-                 targetimages=None,flag_bl_coeff=None):
+    def __init__(self, context, output_dir=None,pprfile=None,
+                 targetimages=None,skytsyscal_bl=None,products_dir=None):
         """
         Initialise the Inputs, initialising any property values to those given
         here.
@@ -71,12 +72,14 @@ class SDExportDataInputs(basetask.StandardInputs):
         :type context: :class:`~pipeline.infrastructure.launcher.Context`
         :param output_dir: the working directory for pipeline data
         :type output_dir: string
-        :param products_dir: the data products directory for pipeline data
-        :type products_dir: string
+        :param pprfile: the pipeline processing request
+        :type pprfile: a string
         :param targetimages: the list of target images to be saved
         :type targetimages: a list
-        :param flag_bl_coeff: the list of flag_bl_coeff to be saved
-        :type flag_bl_coeff: a list
+        :param skytsyscal_bl: the list of skytsyscal_bl to be saved
+        :type skytsyscal_bl: a list
+        :param products_dir: the data products directory for pipeline data
+        :type products_dir: string
         """        
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -84,13 +87,35 @@ class SDExportDataInputs(basetask.StandardInputs):
     @property
     def products_dir(self):
         if self._products_dir is None:
-            self._products_dir = os.path.abspath('./')
+            if self.context.products_dir is None:
+                self._products_dir = os.path.abspath('./')
+            else:
+                self._products_dir = self.context.products_dir
+                try:
+                    LOG.trace('Creating products directory \'%s\'' % self._products_dir)
+                    os.makedirs(self.products_dir)
+                except OSError as exc:
+                    if exc.errno == errno.EEXIST:
+                        pass
+                    else: 
+                        raise
+                return self._products_dir
         return self._products_dir
      
     @products_dir.setter
     def products_dir(self, value):
         self._products_dir = value
      
+    @property
+    def pprfile(self):
+        if self._pprfile is None:
+            self._pprfile = ''
+        return self._pprfile
+    
+    @pprfile.setter
+    def pprfile(self, value):
+        self._pprfile = value
+    
     @property
     def targetimages(self):
         if self._targetimages is None:
@@ -102,14 +127,14 @@ class SDExportDataInputs(basetask.StandardInputs):
         self._targetimages = value
      
     @property
-    def flag_bl_coeff(self):
-        if self._flag_bl_coeff is None:
-            self._flag_bl_coeff = []
-        return self._flag_bl_coeff
+    def skytsyscal_bl(self):
+        if self._skytsyscal_bl is None:
+            self._skytsyscal_bl = []
+        return self._skytsyscal_bl
      
-    @flag_bl_coeff.setter
-    def flag_bl_coeff(self, value):
-        self._flag_bl_coeff = value
+    @skytsyscal_bl.setter
+    def skytsyscal_bl(self, value):
+        self._skytsyscal_bl = value
  
 class SDExportDataResults(basetask.Results):
     def __init__(self, jobs=[]):
@@ -130,6 +155,7 @@ class SDExportData(basetask.StandardTaskTemplate):
     SDExportData is the base class for exporting data to the products
     subdirectory. It performs the following operations:
     
+    - Saves the pipeline processing request in an XML file
     - Saves the images in FITS cubes one per target and spectral window
     - Saves the final flags and bl coefficient per ASDM in a compressed / tarred CASA flag
       versions file
@@ -157,13 +183,20 @@ class SDExportData(basetask.StandardTaskTemplate):
         if os.path.exists(inputs.products_dir):
             # Create fits files from CASA images
             fitsfiles = self._export_images (inputs.context, inputs.products_dir, inputs.targetimages)
-            # Export a tar file of flag_bl(products.tbl) which is created by asap
-            flag_bl = self._export_flag_bl(inputs.context, inputs.products_dir, inputs.flag_bl_coeff)
+            # Export a tar file of skycal , tsyscal and bl-subtracted which is created by asap
+            skytsyscal_bl = self._export_skytsyscal_bl(inputs.context, inputs.products_dir, inputs.skytsyscal_bl)
             # Export a tar file of the web log
             weblog = self._export_weblog (inputs.context, inputs.products_dir)
             
+            # Locate and copy the pipeline processing request.
+            pprfiles = self._export_pprfile (inputs.context,inputs.products_dir, inputs.pprfile)
+        
+            # Export the processing log independently of the web log
+            casa_commands_file = self._export_casa_commands_log (inputs.context,
+            'casa_commands.log', inputs.products_dir)
+    
             # Export a text format list of files whithin a products directory
-            newlist = [fitsfiles,flag_bl,weblog]
+            newlist = [fitsfiles,skytsyscal_bl,weblog,pprfiles,casa_commands_file]
             list_of_locallists = [key for key,value in locals().iteritems()
                                 if type(value) == list]
             self._export_list_txt(inputs.context,inputs.products_dir,newlist,list_of_locallists)
@@ -183,6 +216,63 @@ class SDExportData(basetask.StandardTaskTemplate):
         """
         return results
      
+    def _export_pprfile (self, context, products_dir, pprfile):
+        """
+        Export the pipeline processing request to the output products directory as is.
+        """
+        os.chdir(context.output_dir)
+        # Prepare the search template for the pipeline processing request file.
+        if pprfile == '':
+            ps = context.project_structure
+            if ps is None:
+                pprtemplate = 'PPR_*.xml'
+            elif ps.ppr_file == '':
+                pprtemplate = 'PPR_*.xml'
+            else:
+                pprtemplate = os.path.basename(ps.ppr_file)
+        else:
+            pprtemplate = os.path.basename(pprfile)
+        
+        # Locate the pipeline processing request(s) and  generate a list
+        # to be copied to the data products directory. Normally there
+        # should be only one match but if there are more copy them all.
+        pprmatches = []
+        for file in os.listdir(context.output_dir):
+            if fnmatch.fnmatch (file, pprtemplate):
+                LOG.debug('Located pipeline processing request(PPR) xmlfile %s' % (file))
+                pprmatches.append (os.path.join(context.output_dir, file))
+        
+        # Copy the pipeline processing request files.
+        for file in pprmatches: 
+            LOG.info('Copying pipeline processing request(PPR) xmlfile %s to %s' % \
+                (os.path.basename(file), products_dir))
+            if not self._executor._dry_run:
+                shutil.copy (file, products_dir)
+        return pprmatches
+
+    def _export_casa_commands_log (self, context, casalog_name, products_dir):
+        """
+        Save the CASA commands file.
+        """
+        ps = context.project_structure
+        if ps is None:
+            casalog_file = os.path.join (context.report_dir, casalog_name)
+            out_casalog_file = os.path.join (products_dir, casalog_name) 
+        elif ps.ousstatus_entity_id == 'unknown':
+            casalog_file = os.path.join (context.report_dir, casalog_name)
+            out_casalog_file = os.path.join (products_dir, casalog_name) 
+        else:
+            ousid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__'))
+            casalog_file = os.path.join (context.report_dir, casalog_name)
+            out_casalog_file = os.path.join (products_dir, ousid + '.' + casalog_name)
+        
+        LOG.info('Copying casa commands log %s to %s' % \
+                (casalog_file, out_casalog_file))
+        if not self._executor._dry_run:
+            shutil.copy (casalog_file, out_casalog_file)
+        
+        return os.path.basename(out_casalog_file)
+    
     def _export_images (self, context, products_dir, images):
         #cwd = os.getcwd()
         os.chdir(context.output_dir)
@@ -239,7 +329,7 @@ class SDExportData(basetask.StandardTaskTemplate):
             LOG.info('FITS: There are no CASA image files here')
         return fits_list
      
-    def _export_flag_bl (self, context, products_dir, flag_bl_coeff):
+    def _export_skytsyscal_bl (self, context, products_dir, skytsyscal_bl):
         """
         Save flag_bl / Antenna are to be tar file
         """
@@ -248,11 +338,11 @@ class SDExportData(basetask.StandardTaskTemplate):
         producted_filename = 'uid___*_*_*.*'
         
         asdm_uidxx = []
-        if len(flag_bl_coeff) == 0:
+        if len(skytsyscal_bl) == 0:
             asdm_uidxx = [ fname for fname in os.listdir(context.output_dir)
                 if fnmatch.fnmatch(fname, producted_filename)]
-        elif len(flag_bl_coeff) != 0 :
-            asdm_uidxx = flag_bl_coeff
+        elif len(skytsyscal_bl) != 0 :
+            asdm_uidxx = skytsyscal_bl
             
         list_of_tarname=[]
         tar_filename=[]
