@@ -6,7 +6,7 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hsd_exportdata(products_dir=None,targetimages=None, flag_bl_coeff=None, 
+def hsd_exportdata(pprfile=None,targetimages=None, skytsyscal_bl=None, products_dir=None,
     pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
