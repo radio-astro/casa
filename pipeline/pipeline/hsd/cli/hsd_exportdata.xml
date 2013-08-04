@@ -9,19 +9,24 @@
 <description>
 </description>
 <input>
-    <param type="string" name="products_dir" subparam="true">
-	<description>The data products directory</description>
-	<value></value>
+    <param type="string" name="pprfile" subparam="true">
+    <description>The pipeline processing request(PPR) file to be exported</description>
+    <value></value>
     </param>
-
+    
     <param type="stringArray" name="targetimages" subparam="true">
 	<description>List of target CASA images to be exported</description>
 	<value></value>
     </param>
     
-    <param type="stringArray" name="flag_bl_coeff" subparam="true">
-	<description>List of flag,bl coefficient to be exported</description>
+    <param type="stringArray" name="skytsyscal_bl" subparam="true">
+	<description>List of skycal , tsyscal and bl-subtracted to be exported</description>
 	<value></value>
+    </param>
+
+    <param type="string" name="products_dir" subparam="true">
+    <description>The data products directory</description>
+    <value></value>
     </param>
 
     <param type="string" name="pipelinemode">
@@ -49,16 +54,18 @@
 	    <equals type="string" value="automatic">
 	    </equals>
 	    <equals type="string" value="interactive">
-		<default param="products_dir"><value type="string"></value></default>
+		<default param="pprfile"><value type="string"></value></default>
 		<default param="targetimages"><value type="stringArray"></value></default>
-		<default param="flag_bl_coeff"><value type="stringArray"></value></default>
+		<default param="skytsyscal_bl"><value type="stringArray"></value></default>
+        <default param="products_dir"><value type="string"></value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
-		<default param="products_dir"><value type="string"></value></default>
+		<default param="pprfile"><value type="string"></value></default>
 		<default param="targetimages"><value type="stringArray"></value></default>
-		<default param="flag_bl_coeff"><value type="stringArray"></value></default>
+		<default param="skytsyscal_bl"><value type="stringArray"></value></default>
+        <default param="products_dir"><value type="string"></value></default>
 	    </equals>
 	</when>
     </constraints>
@@ -94,19 +101,25 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 ---- pipeline context defined parameter argument which can be set only in
 'interactive mode'
 
-products_dir -- Name of the data products subdirectory. Defaults to './'
-   default: ''
-   example: products_dir='../products'
+pprfile -- Name of the pipeline processing request to be exported. Defaults
+   to a file matching the template 'PPR_*.xml'.
+   default: []
+   example: pprfile=['PPR_GRB021004.xml']
 
 targetimages -- List of science target images to be exported. Defaults to all
    science target images recorded in the pipeline context.
    default: []
    example: targetimages=['r_aqr.CM02.spw5.line0.XXYY.sd.im', 'r_aqr.CM02.spw5.XXYY.sd.cont.im']
 
-flag_bl_coeff -- List of flag and bl coefficient to be exported. Defaults to all
+skytsyscal_bl -- List of skycal ,tsyscal and bl-subtracted to be exported. Defaults to all
    flag and bl coefficient recorded in the pipeline context.
    default: []
-   example: flag_bl_coeff=['uid___A002_X3178c7_X31.ms.CM02.asap_out.product.tbl', 'uid___A002_X3178c7_X31.ms.CM03.asap_out.product.tbl']
+   example: skytsyscal_bl=['uid___A002_X3178c7_X31.ms.CM02.skycal', 'uid___A002_X3178c7_X31.ms.CM03.skycal']
+
+products_dir -- Name of the data products subdirectory. Defaults to './'
+   default: ''
+   example: products_dir='../products'
+
 
 --- pipeline task execution modes
 
