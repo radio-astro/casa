@@ -37,9 +37,24 @@ synthesisimager::~synthesisimager()
 }
 
 
-  // This function should read in a variant, and convert it to a list of MSs and selpars for itsImager
+// This function should read in a variant, and convert it to a list of MSs and selpars for itsImager
 bool
-synthesisimager::selectdata(const casac::record& selpars)
+synthesisimager::selectdata(const std::string& msname, 
+			    const std::string& spw,
+			    const std::string& freqbeg, 
+			    const std::string& freqend, 
+			    const std::string& freqframe,
+			    const std::string& field, 
+			    const std::string& antenna,
+			    const std::string& timestr,
+			    const std::string& scan,
+			    const std::string& obs,
+			    const std::string& state,
+			    const std::string& uvdist,
+			    const std::string& taql,
+			    const bool usescratch,
+			    const bool readonly,
+			    const bool incrmodel)
 {
   Bool rstat(False);
 
@@ -48,8 +63,13 @@ synthesisimager::selectdata(const casac::record& selpars)
 
       if( ! itsImager ) itsImager = new SynthesisImager();
 
-      casa::Record rec = *toRecord( selpars );
-      itsImager->selectData( rec );
+      casa::MFrequency::Types freqframetype;
+      if( !casa::MFrequency::getType(freqframetype, freqframe) )
+	throw(AipsError("Invalid Frequency Frame " + freqframe));
+
+      itsImager->selectData( msname, spw, freqbeg, freqend, freqframetype,
+			     field, antenna, timestr, scan, obs, state, uvdist, taql,
+			     usescratch, readonly, incrmodel );
     } 
   catch  (AipsError x) 
     {
@@ -60,95 +80,148 @@ synthesisimager::selectdata(const casac::record& selpars)
 }
 
 bool
-synthesisimager::defineimage(const casac::record& impars)
+synthesisimager::defineimage(const std::string& imagename,
+			     const int nx, 
+			     const int ny,			
+			     const ::casac::variant& cellx, 
+			     const ::casac::variant& celly,
+			     const std::string& stokes,
+			     const ::casac::variant& phasecenter,
+			     const int nchan,
+			     const ::casac::variant& freqstart,
+			     const ::casac::variant& freqstep,
+			     const ::casac::variant& restfreq,
+			     const int facets,
+			     const std::string& ftmachine,
+			     const int ntaylorterms,
+			     const ::casac::variant& reffreq,
+			     const std::string& projection,
+			     const ::casac::variant& distance,
+			     const std::string& freqframe, 
+			     const bool tracksource,
+			     const ::casac::variant& trackdir,
+			     const bool overwrite,
+			     const float padding,
+			     const bool useautocorr,
+			     const bool usedoubleprec,
+			     const int wprojplanes,
+			     const std::string& convfunc,
+			     const std::string& startmodel)
 {
   Bool rstat(False);
 
   try 
     {
 
-      if( ! itsImager ) itsImager = new SynthesisImager();
+      if( ! itsImager ) itsImager = new SynthesisImager();   // any more here ?
 
-      casa::Record rec = *toRecord( impars );
-      itsImager->defineImage( rec );
-    } 
-  catch  (AipsError x) 
-    {
-      RETHROW(x);
-    }
-  
-  return rstat;
-}
+      // Check nx, ny
+      Int nX, nY;
+      nX=nx;
+      nY=ny;
+      if(nY < 1)
+	nY=nx;
 
-  bool synthesisimager::setupimaging(const casac::record& gridpars)
-{
-  Bool rstat(False);
+      // Convert cellx, celly
+      casa::Quantity cellX=casaQuantity(cellx);
+      if(cellX.getValue()==0.0)
+	cellX=casa::Quantity(1.0, "arcsec");
+      casa::Quantity cellY;
+      if(toCasaString(celly) == String("")){
+	cellY=cellX;
+      }
+      else{
+	cellY=casaQuantity(celly);
+      }
 
-  try 
-    {
-
-      if( ! itsImager ) itsImager = new SynthesisImager();
-
-      casa::Record rec = *toRecord( gridpars );
-      itsImager->setupImaging( rec );
-    } 
-  catch  (AipsError x) 
-    {
-      RETHROW(x);
-    }
-  
-  return rstat;
-}
-
-
-bool synthesisimager::initmapper()
-{
-  Bool rstat(False);
-
-  try 
-    {
-
-      if( ! itsImager ) itsImager = new SynthesisImager();
-
-      itsImager->initMapper( );
-    } 
-  catch  (AipsError x) 
-    {
-      RETHROW(x);
-    }
-  
-  return rstat;
-}
-
-bool synthesisimager::initializemajorcycle(const casac::record& selpars, const casac::record& allimpars,const casac::record& allgridpars )
-{
-  Bool rstat(False);
-
-  try 
-    {
-
-      casa::Record selrec = *toRecord( selpars );
-      casa::Record allimrec = *toRecord( allimpars );
-      casa::Record allgridrec = *toRecord( allgridpars );
-      Int nfields = allimrec.nfields();
-      if(nfields != (Int)allgridrec.nfields())
-	{
-	  throw(AipsError("image and grid parameters must represent the same number of fields"));
+      // Convert phasecenter ( If it is an integer, it's a field, id, connect to last MS.... )
+      casa::MDirection  phaseCenter;
+      Int fieldid=-1;
+      //If phasecenter is a simple numeric value then its taken as a fieldid 
+      //otherwise its converted to a MDirection
+      if(phasecenter.type()==::casac::variant::DOUBLEVEC 
+	 || phasecenter.type()==::casac::variant::DOUBLE
+	 || phasecenter.type()==::casac::variant::INTVEC
+	 || phasecenter.type()==::casac::variant::INT){
+	fieldid=phasecenter.toInt();
+      }
+      else{
+	if(toCasaString(phasecenter)==String("")){
+	  fieldid=0;
 	}
-
-      // Read Parameters
-
-      if( ! itsImager ) itsImager = new SynthesisImager();
-
-      itsImager->selectData( selrec );
-
-      for( Int fd=0; fd<nfields; fd++ )
-	{
-	  itsImager->defineImage( allimrec.asRecord( RecordFieldId(String::toString(fd)) ) );
-	  itsImager->setupImaging( allgridrec.asRecord( RecordFieldId(String::toString(fd)) ) );
-	  //	  itsImager->initMapper();
+	else{
+	  if(!casaMDirection(phasecenter, phaseCenter)){
+	    throw(AipsError("cmpt : Could not interprete phasecenter parameter"));
+	  }
 	}
+      }
+
+
+      // Convert freqstart, freqstep, restfreq - whatever units.
+      casa::Quantity freqStart, freqStep, refFreq;
+      freqStart = casaQuantity(freqstart);
+      freqStep = casaQuantity(freqstep);
+      refFreq = casaQuantity(reffreq);
       
+      casa::Vector<casa::Quantity> restFreq;
+      toCasaVectorQuantity( restfreq, restFreq );
+
+
+      // Convert projection.
+      casa::String projectionStr = toCasaString( projection );
+      casa::Projection imageprojection = Projection::type( projectionStr );
+
+      // Convert distance
+      casa::Quantity cdistance = casaQuantity( distance );
+
+      // Convert freqframe
+      casa::MFrequency::Types freqframetype;
+      if( !casa::MFrequency::getType(freqframetype, freqframe) )
+	throw(AipsError("cmpt : Invalid Frequency Frame " + freqframe));
+
+      // Convert trackDir
+      casa::MDirection  trackDir;
+      if( toCasaString(trackdir) != casa::String("")){
+	  if(!casaMDirection(trackdir, trackDir)){
+	    throw(AipsError("cmpt : Could not interprete trackdir parameter"));
+	  }
+	}
+
+      itsImager->defineImage( imagename, nX, nY, cellX, cellY, stokes, phaseCenter,
+			      nchan, freqStart, freqStep, restFreq, facets, ftmachine, 
+			      ntaylorterms, refFreq, 
+			      imageprojection, cdistance, freqframetype, tracksource, trackDir, overwrite,
+			      padding, useautocorr, usedoubleprec, 
+			       wprojplanes, convfunc, startmodel);
+    } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+  
+  return rstat;
+}
+
+bool synthesisimager::setweighting(const std::string& type,
+				   const std::string& rmode,
+				   const ::casac::variant& noise,
+				   const double robust,
+				   const ::casac::variant& fieldofview,
+				   const int npixels,
+				   const bool multifield)
+{
+  Bool rstat(False);
+
+  try 
+    {
+
+      if( ! itsImager ) itsImager = new SynthesisImager(); // More here ? Check that defineImage has been called
+
+      casa::Quantity cnoise = casaQuantity( noise );
+      casa::Quantity cfov = casaQuantity( fieldofview );
+
+      itsImager->weight( type, rmode, cnoise, robust, cfov, npixels, multifield );
+
     } 
   catch  (AipsError x) 
     {
@@ -167,6 +240,22 @@ bool synthesisimager::initializemajorcycle(const casac::record& selpars, const c
       if( ! itsImager ) itsImager = new SynthesisImager();
       
       itsImager->makePSF();
+      
+    } catch  (AipsError x) {
+      RETHROW(x);
+    }
+    return rstat;
+  }
+
+  bool synthesisimager::predictmodel()
+  {
+    Bool rstat(False);
+    
+    try {
+      
+      if( ! itsImager ) itsImager = new SynthesisImager();
+      
+      itsImager->predictModel();
       
     } catch  (AipsError x) {
       RETHROW(x);
@@ -229,6 +318,18 @@ synthesisimager::done()
   return rstat;
 }
 
+
+  /* PRIVATE HELPER FUNCTIONS */
+
+casa::String checkStr(std::string instr)
+{
+  casa::String cstr = toCasaString( instr );
+  if( cstr == String("-1") )
+    {
+      cstr = "";
+    }
+  return cstr;
+}
 
 
 /*

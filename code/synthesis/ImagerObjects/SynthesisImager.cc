@@ -81,7 +81,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SynthesisImager::SynthesisImager() : itsMappers(SIMapperCollection()), 
 				       itsCurrentFTMachine(NULL), 
 				       itsCurrentImages(NULL),
-				        mss_p(0),mss4vi_p(0), vi_p(0), writeAccess_p(True)
+				       mss_p(0),vi_p(0), writeAccess_p(True), mss4vi_p(0)
   {
 
 
@@ -92,6 +92,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      wvi_p=0;
      rvi_p=0;
 
+     ftmParams_p.define("ftmachine","GridFT");
      ftmParams_p.define("wprojplanes", Int(1));
      ftmParams_p.define("padding", Float(1.0));
      ftmParams_p.define("useautocorr", False);
@@ -118,10 +119,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  Bool SynthesisImager::selectData(const String& msname, const String& spw, const String& freqBeg, const String& freqEnd, const MFrequency::Types freqframe, const String& field, const String& taql,
-		  const String& antenna, const String& uvdist, const String& scan, const String& obs, const String& timestr,
-		  const Bool usescratch, const Bool readonly, const Bool incrModel){
+  Bool SynthesisImager::selectData(const String& msname, 
+				   const String& spw, 
+				   const String& freqBeg, 
+				   const String& freqEnd, 
+				   const MFrequency::Types freqframe, 
+				   const String& field, 
+				   const String& antenna, 
+				   const String& timestr,
+				   const String& scan, 
+				   const String& obs, 
+				   const String& state,
+				   const String& uvdist, 
+				   const String& taql,
+				   const Bool usescratch, 
+				   const Bool readonly, 
+				   const Bool incrModel){
     LogIO os( LogOrigin("SynthesisImager","selectData",WHERE) );
+
+    try
+      {
+
     //Respect the readonly flag...necessary for multi-process access
     MeasurementSet thisms(msname, TableLock(TableLock::AutoNoReadLocking),
 				readonly ? Table::Old : Table::Update);
@@ -134,43 +152,50 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     if(!incrModel && !usescratch && !readonly)
     	VisModelData::clearModel(thisms, field, spw);
+
+    os << "MS : " << msname << " | ";
+
     //Some MSSelection 
     MSSelection thisSelection;
     if(field != ""){
       thisSelection.setFieldExpr(field);
-      os << "Selecting on fields : " << field << LogIO::POST;
+      os << "Selecting on fields : " << field << " | " ;//LogIO::POST;
     }
     if(spw != ""){
 	thisSelection.setSpwExpr(spw);
-	os << "Selecting on spectral windows expression :"<< spw  << LogIO::POST;
+	os << "Selecting on spectral windows expression :"<< spw  << " | " ;//LogIO::POST;
     }
     
     if(antenna != ""){
       Vector<String> antNames(1, antenna);
       // thisSelection.setAntennaExpr(MSSelection::nameExprStr( antNames));
       thisSelection.setAntennaExpr(antenna);
-      os << "Selecting on antenna names : " << antenna << LogIO::POST;
+      os << "Selecting on antenna names : " << antenna << " | " ;//LogIO::POST;
 	
     }            
     if(timestr != ""){
 	thisSelection.setTimeExpr(timestr);
-	os << "Selecting on time range : " << timestr << LogIO::POST;	
+	os << "Selecting on time range : " << timestr << " | " ;//LogIO::POST;	
       }
     if(uvdist != ""){
       thisSelection.setUvDistExpr(uvdist);
-      os << "Selecting on uvdist : " << uvdist << LogIO::POST;	
+      os << "Selecting on uvdist : " << uvdist << " | " ;//LogIO::POST;	
     }
     if(scan != ""){
       thisSelection.setScanExpr(scan);
-      os << "Selecting on scan : " << scan << LogIO::POST;	
+      os << "Selecting on scan : " << scan << " | " ;//LogIO::POST;	
     }
     if(obs != ""){
       thisSelection.setObservationExpr(obs);
-      os << "Selecting on Observation Expr : " << obs << LogIO::POST;	
+      os << "Selecting on Observation Expr : " << obs << " | " ;//LogIO::POST;	
+    }
+    if(state != ""){
+      thisSelection.setStateExpr(state);
+      os << "Selecting on Scan Intent/State : " << state << " | " ;//LogIO::POST;	
     }
     if(taql != ""){
 	thisSelection.setTaQLExpr(taql);
-	os << "Selecting via TaQL : " << taql << LogIO::POST;	
+	os << "Selecting via TaQL : " << taql << " | " ;//LogIO::POST;	
     }
     TableExprNode exprNode=thisSelection.toTableExprNode(&thisms);
     if(!(exprNode.isNull())){
@@ -262,62 +287,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     writeAccess_p=writeAccess_p && !readonly;
     createVisSet(writeAccess_p);
+
+
+      }
+    catch(AipsError &x)
+      {
+	throw( AipsError("Error in selectData() : "+x.getMesg()) );
+      }
+
     return True;
 
   }
 
  
-
-
-  // Make this read in a list of MS's and selection pars....
-  void  SynthesisImager::selectData(Record selpars)
-  {
-    LogIO os( LogOrigin("SynthesisImager","selectData",WHERE) );
-    
-    Vector<String> mslist(0),fieldlist(0),spwlist(0);
-    Bool useScratch=False;
-
-    try
-      {
-	// TODO : If critical params are unspecified, throw exceptions.
-	if( selpars.isDefined("vis") ) { selpars.get( RecordFieldId("vis") , mslist ); }
-	if( selpars.isDefined("field") ) { selpars.get( RecordFieldId("field") , fieldlist ); }
-	if( selpars.isDefined("spw") ) { selpars.get( RecordFieldId("spw") , spwlist ); }
-	
-	
-	uInt nms = mslist.nelements();
-	if(fieldlist.nelements() != nms){os << LogIO::EXCEPTION << "Need " << nms << " field selection strings, one for each specified MS" << LogIO::POST; }
-	if(spwlist.nelements() != nms){os << LogIO::EXCEPTION << "Need " << nms << " spw selection strings, one for each specified MS" << LogIO::POST; }
-	if( selpars.isDefined("usescratch") ) { selpars.get( RecordFieldId("usescratch"), useScratch ); }
-	for(uInt sel=0; sel<nms; sel++)
-	  {
-	    os << "MS : " << mslist[sel];
-	    os << "   Selection : spw='" << spwlist[sel] << "'";
-	    os << " field='" << fieldlist[sel] << "'" << LogIO::POST;
-	    selectData(mslist[sel], spwlist[sel], "", "", MFrequency::LSRK, fieldlist[sel],""/*taql*/,  ""/*antenna*/, ""/*uvdist*/, ""/*scan*/, ""/*obs*/, ""/*timestr*/, useScratch, /*readonly*/True);
-	  }
-	
-	
-	
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in reading selection parameter record : "+x.getMesg()) );
-      }
-
-    // Set up Visibility Iterator here.
-    try
-      {
-	os << "Do MS-Selection and Setup vi/vb" << LogIO::POST;
-	//itsVisSet = createVisSet(/* parameters */);
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in creating SkyEquation : "+x.getMesg()) );
-      }
-    
-  }// end of selectData()
-
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -330,20 +312,81 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    const Quantity& freqStep, 
 				    const Vector<Quantity>& restFreq,
 				    const Int facets,
-				    const String& ftmachine, 
+				    const String ftmachine, 
+				    const Int nTaylorTerms,
+				    const Quantity& refFreq,
 				    const Projection& projection,
 				    const Quantity& distance,
 				    const MFrequency::Types& freqFrame,
-				    const Bool trackSource, const MDirection& 
-				    trackDir, const Bool overwrite){
-    LogIO os( LogOrigin("SynthesisImager","selectData",WHERE) );
+				    const Bool trackSource, 
+				    const MDirection& trackDir, 
+				    const Bool overwrite,
+				     const Float padding, 
+				     const Bool useAutocorr, 
+				     const Bool useDoublePrec, 
+				     const Int wprojplanes, 
+				     const String convFunc, 
+				    const String startmodel)
+{
+    LogIO os( LogOrigin("SynthesisImager","defineImage",WHERE) );
     if(mss_p.nelements() ==0)
       throw(AipsError("SelectData has to be run before defineImage"));
 
-    CoordinateSystem csys=buildCoordSys(phaseCenter, cellx, celly, nx, ny, stokes, projection, nchan,
-    		freqStart, freqStep, restFreq, freqFrame);
-    appendToMapperList(imagename,  csys,  ftmachine, distance, facets, overwrite);
-    imageDefined_p=True;
+    CoordinateSystem csys;
+
+    try
+      {
+
+	csys=buildCoordSys(phaseCenter, cellx, celly, nx, ny, stokes, projection, nchan,freqStart, freqStep, restFreq, freqFrame);
+	
+	//	appendToMapperList(imagename,  csys,  ftmParams_p.asString("ftmachine"), distance, facets, overwrite);
+	//	imageDefined_p=True;
+	
+      }
+    catch(AipsError &x)
+      {
+	throw( AipsError("Error in building Coordinate System() : "+x.getMesg()) );
+      }
+
+
+    /// Accumulate FTM parameters, to get used in createFTMachine..... 
+    /// why not just send them into appendToMapperList
+    
+    ftmParams_p.define("ftmachine",ftmachine);
+    ftmParams_p.define("wprojplanes", wprojplanes);
+    ftmParams_p.define("padding", padding );
+    ftmParams_p.define("useautocorr", useAutocorr);
+    ftmParams_p.define("usedoubleprec", useDoublePrec);
+    ftmParams_p.define("gridfunc", convFunc);
+
+
+
+    try
+      {
+
+	os << "Adding " << imagename << " to imager list " << LogIO::POST;
+
+	appendToMapperList(imagename,  csys,  ftmParams_p.asString("ftmachine"), distance, facets, overwrite);
+	imageDefined_p=True;
+	
+      }
+    catch(AipsError &x)
+      {
+	throw( AipsError("Error in adding Mapper : "+x.getMesg()) );
+      }
+
+
+    // Set the model image for prediction -- Call an SIImageStore function that does the REGRIDDING.
+    /*
+      if( startmodel.length()>0 && !itsCurrentImages.null() )
+      {
+      os << "Setting " << startmodel << " as starting model for prediction " << LogIO::POST;
+      itsCurrentImages->setModelImage( startmodel );
+      }
+    */
+ 
+
+    
     return True;
   }
  
@@ -369,97 +412,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 return True;
   }
 
-  // Construct Image Coordinates
-  void  SynthesisImager::defineImage(Record impars)
-  {
-    LogIO os( LogOrigin("SynthesisImager","defineImage",WHERE) );
-    
-    /* Use the image name to create a unique service name */
-    uInt nchan=1,npol=1; 
-    //imx=1,imy=1;
-    Vector<Int> imsize(2);
-    MDirection phasecenter; //("19:59:28.500 +40.44.01.50");
-    Quantity cellx,celly;
-
-    String imagename("");
-    try {
-      // TODO : If critical params are unspecified, throw exceptions.
-      // TODO : If they're the wrong data type, throw exceptions.
-
-      if( impars.isDefined("imagename") )  // A single string
-	{ imagename = impars.asString( RecordFieldId("imagename")); }
-      else
-	{throw( AipsError("imagename not specified")); }
-
-      if( impars.isDefined("nchan") ) // A single integer
-	{ impars.get( RecordFieldId("nchan") , nchan ); }
-      else
-	{throw( AipsError("nchan not specified")); }
-
-      if( impars.isDefined("imsize") ) // An array with 2 integers
-	{ 
-          impars.get( RecordFieldId("imsize") , imsize );
-	  if(imsize.nelements() != 2) 
-	    {
-	      throw( AipsError("imsize must be an array of two integers") );
-	    }
-        }
-      else
-	{throw( AipsError("imsize not specified")); }
-
-      if( impars.isDefined("cellsize") ) // An array with 2 integers
-	{ 
-	  Vector<Double> cellsize(2);
-          impars.get( RecordFieldId("cellsize") , cellsize );
-	  if(cellsize.nelements() != 2) 
-	    {
-	      throw( AipsError("cellsize must be an array of two Doubles") );
-	    }
-	  cellx = Quantity( cellsize[0], "arcsec" );
-	  celly = Quantity( cellsize[1], "arcsec" );
-        }
-      else
-	{throw( AipsError("cellsize not specified")); }
-
-
-      if( impars.isDefined("phasecenter") )  // A single string
-	{ 
-	  String pcenter = impars.asString( RecordFieldId("phasecenter"));
-	  phasecenter = tmpStringToMDir(pcenter);
-	}
-      else
-	{throw( AipsError("phasecenter not specified")); }
-
-
-
-      // Read and interpret input parameters.
-    } catch(AipsError &x)
-      {
-	throw( AipsError("Error in reading input image-parameters: "+x.getMesg()) );
-      }
-
-    os << "Define Image Coordinates and allocate Memory for : " << imagename<< LogIO::POST;
-
-    try
-      {
-
-	String stokes="I";
-	Quantity freqStart(1.0,"GHz");
-	Quantity freqStep(1.0,"GHz");
-	Vector<Quantity> restFreq(1,Quantity(1.0, "GHz"));
-
-	defineImage(imagename, imsize[0], imsize[1], cellx, celly, stokes, phasecenter, 
-		    nchan, freqStart, freqStep, restFreq, 1);
-
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in constructing image coordinate system and allocating memory : "+x.getMesg()) );
-      }
-    
-    imageDefined_p=True;
-  }// end of defineImage
-  ///////////////////////////////////////////////////////////////////////////////////////////
+   ///////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////
   void SynthesisImager::setComponentList(const ComponentList& cl, Bool sdgrid){
 	  String cft="SimpleComponentFTMachine";
@@ -472,72 +425,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  void  SynthesisImager::setupImaging(Record gridpars)
-  {
-    LogIO os( LogOrigin("SynthesisImager","setupImaging",WHERE) );
-
-    String ftmname("ft");
-    String startmodel("");
-    String weighting("natural");
-    try
-      {
-	// TODO : Parse FT-machine-related parameters.
-	if( gridpars.isDefined("ftmachine") )  // A single string
-	  { ftmname = gridpars.asString( RecordFieldId("ftmachine")); }
-	
-	if( gridpars.isDefined("startmodel") )  // A single string
-	  { startmodel = gridpars.asString( RecordFieldId("startmodel")); }
-
-	if( gridpars.isDefined("weight") ) // A single string
-	  { weighting = gridpars.asString( RecordFieldId("weight") ); }
-
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in reading Imaging Parameters : "+x.getMesg()) );
-      }
-    
-    os << "Set Imaging Options. Construct FTMachine of type " << ftmname << LogIO::POST;
-    
-    try
-      {
-
-	weight( weighting );
-
-	// Set the model image for prediction -- Call an SIImageStore function that does the REGRIDDING.
-	/*
-	if( startmodel.length()>0 && !itsCurrentImages.null() )
-	  {
-	    os << "Setting " << startmodel << " as starting model for prediction " << LogIO::POST;
-	    itsCurrentImages->setModelImage( startmodel );
-	  }
-	*/
-	// TODO : Set up the FT-Machine. Send in parameters here...
-	//itsCurrentFTMachine = createFTMachine(/* parameters */);
-
-
-
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in setting up Imaging : "+x.getMesg()) );
-      }
-    
-  }// end of setupImaging
-  ///////////////////////////////////
-  /////////////////////////////////
-  void SynthesisImager::setupImaging(const Float padding, const Bool useAutocorr, const Bool useDoublePrec, const Int wprojplanes, const String convFunc){
-	  ftmParams_p.define("wprojplanes", wprojplanes);
-	  ftmParams_p.define("padding", padding );
-	  ftmParams_p.define("useautocorr", useAutocorr);
-	  ftmParams_p.define("usedoubleprec", useDoublePrec);
-	  ftmParams_p.define("gridfunc", convFunc);
-
-
-  }
-  ///////////////////////////////
-  ///////////////////////////////
 
   //////////////////////Reset the Mapper
   ////////////////////
@@ -565,31 +452,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  void SynthesisImager::initMapper()
-  {
-    LogIO os( LogOrigin("SynthesisImager","initMapper", WHERE) );
-    os << "Construct mapper " << itsMappers.nMappers() 
-       << " for image : " << itsCurrentImages->getName();
-    os << " and ftm : " << "FTMNAME"; // itsCurrentFTMachine->name() 
-    os << LogIO::POST;
-    try
-      {
-
-	itsMappers.addMapper( String("basetype"), itsCurrentImages, itsCurrentFTMachine);
-
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in constructing Mapper : "+x.getMesg()) );
-      }
-    
-    
-  }//end of initMapper
-  
-
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   void SynthesisImager::executeMajorCycle(Record& /*controlRecord*/, const Bool useViVb2)
   {
@@ -684,7 +546,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	      		for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
 	      		{
-	      			cerr << "nRows "<< vb->nRow() << "   " << max(vb->visCube()) <<  endl;
+			  //			  cerr << "nRows "<< vb->nRow() << "   " << max(vb->visCube()) <<  endl;
 	      			//if !usescratch ...just save
 	      			vb->setModelVisCube(Complex(0.0, 0.0));
 	      			itsMappers.degrid(*vb, useScratch_p);
@@ -707,7 +569,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os(LogOrigin("SynthesisImager", "weight()", WHERE));
 
-    try {
+       try {
     	//Int nx=itsMaxShape[0];
     	//Int ny=itsMaxShape[1];
     	Quantity cellx=Quantity(itsMaxCoordSys.increment()[0], itsMaxCoordSys.worldAxisUnits()[0]);
@@ -810,14 +672,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
       return True;
-    } catch (AipsError x) {
+ 
+      }
+    catch(AipsError &x)
+      {
+	throw( AipsError("Error in Weighting : "+x.getMesg()) );
+      }
 
-      os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-         << LogIO::EXCEPTION;
-      return False;
-    }
 
-    return True;
+   return True;
   }
   
   
@@ -884,8 +747,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   CoordinateSystem SynthesisImager::buildCoordSys(const MDirection& phasecenter, const Quantity& cellx,
 		  const Quantity& celly, const Int nx, const Int ny,
 		  const String& stokes, const Projection& projection, const Int nchan,
-		  const Quantity& freqStart, const Quantity& freqStep, const Vector<Quantity>& restFreq, const MFrequency::Types freqFrame){
+		  const Quantity& freqStart, const Quantity& freqStep, const Vector<Quantity>& restFreq, const MFrequency::Types freqFrame)
+  {
     LogIO os( LogOrigin("SynthesisImager","build",WHERE) );
+
     // At this stage one ms at least should have been assigned
     ROMSColumns msc(*mss_p[0]);
     phaseCenter_p=phasecenter;
@@ -1250,7 +1115,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     		for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
     		{
-    			cerr << "nRows "<< vb->nRow() << "   " << max(vb->visCube()) <<  endl;
+		  //		  cerr << "nRows "<< vb->nRow() << "   " << max(vb->visCube()) <<  endl;
     			if(!dopsf) {
     				vb->setModelVisCube(Complex(0.0, 0.0));
     				itsMappers.degrid(*vb, useScratch_p);

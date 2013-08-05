@@ -57,10 +57,86 @@ multiple MSs.
 </description>
 <input>
 
-     <param type="record" name="selpars">
-     <description>All parameters for data selections</description>
-     <value type="record"></value>
+     <param type="string" name="msname">
+     <description>Name of one measurement set</description>
+     <value type="string"></value>
      </param>
+
+     <param type="string" name="spw">
+     <description>Spectral Window / Channel / Frequency selection</description>
+     <value type="string"></value>
+     </param>
+
+     <param type="string" name="freqbeg">
+     <description>Starting frequency/velocity/channel as a string with units. If spw is also supplied, the intersection will be used </description>
+     <value type="string"></value>
+     </param>
+
+     <param type="string" name="freqend">
+     <description>End frequency/velocity/channel as a string with units.</description>
+     <value type="string"></value>
+     </param>
+
+     <param type="string" name="freqframe">
+     <description>Frequency frame in which freqbeg and freqend are specified.</description>
+     <value type="string">LSRK</value>
+     </param>
+
+     <param type="string" name="field">
+     <description>Field selection</description>
+     <value type="string"></value>
+     </param>
+
+     <param type="string" name="antenna">
+     <description>Antenna / Baseline selection</description>
+     <value type="string"></value>
+     </param>
+
+     <param type="string" name="timestr">
+     <description>Time range selection</description>
+     <value type="string"></value>
+     </param>
+
+     <param type="string" name="scan">
+     <description>Scan selection</description>
+     <value type="string"></value>
+     </param>
+
+     <param type="string" name="obs">
+     <description>Observation id selection</description>
+     <value type="string"></value>
+     </param>
+
+     <param type="string" name="state">
+     <description>Scan Intent or State selection</description>
+     <value type="string"></value>
+     </param>
+
+     <param type="string" name="uvdist">
+     <description>UV range selection</description>
+     <value type="string"></value>
+     </param>
+
+     <param type="string" name="taql">
+     <description>Generic taql selection</description>
+     <value type="string"></value>
+     </param>
+
+     <param type="bool" name="usescratch">
+     <description>Use scratch column (True) or virtual records (False) for model data</description>
+     <value type="bool">false</value>
+     </param>
+
+     <param type="bool" name="readonly">
+     <description>Open the MS in readonly mode. No model data will be written.</description>
+     <value type="bool">false</value>
+     </param>
+
+     <param type="bool" name="incrmodel">
+     <description>Subtract existing model data and start with residuals</description>
+     <value type="bool">false</value>
+     </param>
+
 
 </input>
 <returns type="bool"/>
@@ -72,14 +148,163 @@ multiple MSs.
    <shortdescription>Define the image coordinate systems and types</shortdescription>
 
 <description>
-Define the image coordinate systems, image shapes and the number of images (multi-field, multi-term, etc)
+Define the image coordinate systems and shapes.
 </description>
 <input>
 
-     <param type="record" name="impars">
-     <description>All parameters for image coordinate system</description>
-     <value type="record"></value>
+     <param type="string" name="imagename">
+     <description>Base image name</description>
+     <value></value>
      </param>
+
+     <param type="int" name="nx">
+     <description>Total number of spatial pixels in x</description>
+     <value>128</value>
+     </param>
+
+     <param type="int" name="ny">
+     <description>Total number of spatial pixels in y</description>
+     <value>-1</value>
+     </param>
+
+     <param type="any" name="cellx">
+     <description>Cellsize in x (e.g. '1arcsec')</description>
+     <any type="variant" />
+     <value>1.0</value>
+     </param>
+
+     <param type="any" name="celly">
+     <description>Cellsize in y (e.g. '1arcsec')</description>
+     <any type="variant" />
+     <value></value>
+     </param>
+
+     <param type="string" name="stokes">
+     <description>Stokes parameters to image (e.g. 'IQUV')</description>
+     <value>IV</value>
+     <value>IQU</value>
+     <value>IQUV</value>
+     <value>I</value>
+     </param>
+
+
+     <param type="any" name="phasecenter">
+     <description>Direction of phase center as a diretion measure or a field id 
+     </description>
+     <any type="variant" />
+     <value>0</value>
+     </param>
+
+
+     <param type="int" name="nchan">
+     <description>Number of channels; a -1 (default) means all the channels 
+      as selected in selectvis and combined into one continuum channel
+     </description>
+     <value>-1</value>
+     </param>
+
+     <param type="any" name="freqstart">
+     <description>Start channel; A 0-relative channel number of the spwid  or a frequency quantity      or a velocity quantity or radial velocity measure</description>
+     <any type="variant"/>
+     <value>0</value>
+     </param>
+
+     <param type="any" name="freqstep">
+     <description>Step in channel; integer for number of channels or frequency quantity or velocity quantity or radial velocity measure </description>
+     <any type="variant"/>
+     <value>1</value>
+     </param>
+
+     <param type="any" name="restfreq">
+     <description>rest frequency to use; default => use the one available in ms
+     </description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
+     <param type="int" name="facets">
+     <description>Number of facets on each axis</description>
+     <value>1</value>
+     </param>
+
+     <param type="string" name="ftmachine">
+     <description>FT-Machine type</description>
+     <value type="string">GridFT</value>
+     </param>
+
+     <param type="int" name="ntaylorterms">
+     <description>Number of terms for a spectral Taylor expansion</description>
+     <value>1</value>
+     </param>
+
+     <param type="any" name="reffreq">
+     <description>Reference Frequency of the image. Also used in the Taylor expansion. </description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
+     <param type="string" name="projection">
+     <description>Image coordinate system projection</description>
+     <value type="string">SIN</value>
+     </param>
+
+     <param type="any" name="distance">
+     <description>Distance to object: usually ignore this! (m)</description>
+     <any type="variant" />
+     <value>0.0</value>
+     </param>
+
+     <param type="string" name="freqframe">
+     <description>Frequency frame in which freqstart and freqstep are specified.</description>
+     <value type="string">LSRK</value>
+     </param>
+
+     <param type="bool" name="tracksource">
+     <description>Track a source. </description>
+     <value type="bool">false</value>
+     </param>
+
+     <param type="any" name="trackdir">
+     <description>Name of moving source, e.g planet or moon, to keep fixed in image</description>
+     <any type="variant" />
+     <value></value>
+     </param>
+
+     <param type="bool" name="overwrite">
+     <description>Overwrite the image if it exists (true)</description>
+     <value type="bool">true</value>
+     </param>
+
+     <param type="float" name="padding">
+     <description>FFT padding</description>
+     <value type="float">1.0</value>
+     </param>
+
+     <param type="bool" name="useautocorr">
+     <description>Use auto correlations</description>
+     <value type="bool">false</value>
+     </param>
+
+     <param type="bool" name="usedoubleprec">
+     <description>Double Precision gridding or not</description>
+     <value>true</value>
+     </param>
+
+     <param type="int" name="wprojplanes">
+     <description>Number of w-projection planes</description>
+     <value>1</value>
+     </param>
+
+     <param type="string" name="convfunc">
+     <description>Name of convolution function</description>
+     <value>SF</value>
+     </param>
+
+     <param type="string" name="startmodel">
+     <description>Starting model ( image name or component list name )</description>
+     <value></value>
+     </param>
+
 
 </input>
 <returns type="bool"/>
@@ -88,60 +313,50 @@ Define the image coordinate systems, image shapes and the number of images (mult
 <!-- ===================================== -->
 
 
-   <method type="function" name="setupimaging">
-   <shortdescription>Set parameters to control gridding and imaging</shortdescription>
+   <method type="function" name="setweighting">
+   <shortdescription>Set parameters to control weighting during imaging</shortdescription>
 
 <description>
 </description>
 <input>
 
-     <param type="record" name="gridpars">
-     <description>All parameters for imaging/gridding</description>
-     <value type="record"></value>
+     <param type="string" name="type">
+     <description>Data weighting scheme</description>
+     <value>natural</value>
      </param>
 
-</input>
-<returns type="bool"/>
-</method>
-
-<!-- ===================================== -->
-
-
-   <method type="function" name="initmapper">
-   <shortdescription>Construct ftmachine, deconvolver, and allocate image-memory</shortdescription>
-
-<description>
-</description>
-<input>
-
-</input>
-<returns type="bool"/>
-</method>
-
-<!-- ===================================== -->
-   <method type="function" name="initializemajorcycle">
-   <shortdescription>Set parameters to control gridding and imaging for all fields.</shortdescription>
-
-<description>
-This function is a combination of .selectdata, .defineimage, setupimaging, and initmapper.
-Image and imaging(gridding) parameters should be a list, one element per field/chunk.
-</description>
-<input>
-
-     <param type="record" name="selpars">
-     <description>All parameters for data selections</description>
-     <value type="record"></value>
-     </param>
- 
-     <param type="record" name="allimpars">
-     <description>All parameters for image coordinate system</description>
-     <value type="record"></value>
+     <param type="string" name="rmode">
+     <description>rmode</description>
+     <value>norm</value>
      </param>
 
-     <param type="record" name="allgridpars">
-     <description>All parameters for imaging/gridding</description>
-     <value type="record"></value>
+     <param type="any" name="noise">
+     <description>Noise level</description>
+     <any type="variant" />
+     <value></value>
      </param>
+
+     <param type="double" name="robust">
+     <description>Robustness weighting factor</description>
+     <value>0.0</value>
+     </param>
+
+     <param type="any" name="fieldofview">
+     <description>Field of view</description>
+     <any type="variant" />
+     <value></value>
+     </param>
+
+     <param type="int" name="npixels">
+     <description>NPixels</description>
+     <value>0</value>
+     </param>
+
+     <param type="bool" name="multifield">
+     <description>Multifield</description>
+     <value>false</value>
+     </param>
+
 
 </input>
 <returns type="bool"/>
@@ -152,6 +367,18 @@ Image and imaging(gridding) parameters should be a list, one element per field/c
 
    <method type="function" name="makepsf">
    <shortdescription>Make the psf</shortdescription>
+
+<description>
+</description>
+<input/>
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
+
+   <method type="function" name="predictmodel">
+   <shortdescription>Predict model visibilities.</shortdescription>
 
 <description>
 </description>
@@ -207,180 +434,7 @@ Image and imaging(gridding) parameters should be a list, one element per field/c
 <returns type="bool"/>
 </method>
 
-
-<!-- ====================================
-
-   <method type="function" name="setupdeconvolution">
-   <shortdescription>Set parameters to control minor cycle algorithms</shortdescription>
-
-<description>
-</description>
-<input>
-
-     <param type="record" name="decpars">
-     <description>All parameters for deconvolution (minor cycle)</description>
-     <value type="record"></value>
-     </param>
-
-</input>
-<returns type="bool"/>
-</method>
-
-
-   <method type="function" name="setupiteration">
-   <shortdescription>Set parameters to control iteration mechanisms</shortdescription>
-
-<description>
-</description>
-<input>
-
-     <param type="record" name="iterpars">
-     <description>All parameters that control iterations</description>
-     <value type="record"></value>
-     </param>
-
-</input>
-<returns type="record"/>
-</method>
-
-
-   <method type="function" name="cleanComplete">
-   <shortdescription>Return true when we have completed this clean</shortdescription>
-
-<description>
-</description>
-<input>
-
-</input>
-<returns type="bool"/>
-</method>
-
-
-   <method type="function" name="initloops">
-   <shortdescription>Initializing loops</shortdescription>
-
-<description>
-</description>
-<input>
-
-</input>
-<returns type="record"/>
-</method>
-
-
-   <method type="function" name="endloops">
-   <shortdescription>End loops and restore images</shortdescription>
-
-<description>
-</description>
-<input/>
-<returns type="record"/>
-</method>
-
-
-   <method type="function" name="runmajorcycle">
-   <shortdescription>Run a major cycle</shortdescription>
-
-<description>
-</description>
-<input/>
-<returns type="bool"/>
-</method>
-
-
-   <method type="function" name="getmajorcyclecontrols">
-   <shortdescription>Get parameters controlling major cycle</shortdescription>
-
-<description>
-</description>
-<input/>
-<returns type="record"/>
-</method>
-
-   <method type="function" name="endmajorcycle">
-   <shortdescription>Record the end of a major cycle</shortdescription>
-
-<description>
-</description>
-<input/>
-<returns type="bool"/>
-</method>
-
-
-   <method type="function" name="runminorcycle">
-   <shortdescription>Run a minor cycle</shortdescription>
-
-<description>
-</description>
-<input/>
-<returns type="bool"/>
-</method>
-
-
-   <method type="function" name="getsubiterbot">
-   <shortdescription>Get the controller for a minor cycle</shortdescription>
-
-<description>
-</description>
-<input/>
-<returns type="record"/>
-</method>
-
-
-   <method type="function" name="executeminorcycle">
-   <shortdescription>Run a minor cycle</shortdescription>
-
-<description>
-</description>
-<input>
-     <param type="record" name="iterbotrecord">
-     <description>All parameters that control major cycle</description>
-     <value type="record"></value>
-     </param>
-</input>
-
-<returns type="record"/>
-</method>
-
-
-   <method type="function" name="endminorcycle">
-   <shortdescription>End of minor cycle</shortdescription>
-
-<description>
-</description>
-<input>
-     <param type="record" name="iterbotrecord">
-     <description>All parameters that control major cycle</description>
-     <value type="record"></value>
-     </param>
-</input>
-<returns type="bool"/>
-</method>
-
-
-
-
-   <method type="function" name="getiterationdetails">
-   <shortdescription>Return a record with the details of the iteration</shortdescription>
-
-<description>
-</description>
-<input/>
-<returns type="record"/>
-</method>
-
-
-
-   <method type="function" name="getiterationsummary">
-   <shortdescription>Return a record with a summary of the iteration</shortdescription>
-
-<description>
-</description>
-<input/>
-<returns type="record"/>
-</method>
-
-- ===================================== -->
+<!-- ===================================== -->
 
 
 </tool>

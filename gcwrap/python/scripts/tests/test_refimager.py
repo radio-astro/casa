@@ -16,28 +16,52 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False):
      # Interaction ON or OFF
      interactive=False
 
-
-     if(testnum==6):  ## 2 image-fields, one chan --- Real Imaging.
+     if(testnum==7):  ## 2 image-fields, mfs --- Real Imaging.
           
-          write_file('out6.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0,8.0]\nphasecenter=19:58:40.895 +40.55.58.543')
+          write_file('out7.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=19:58:40.895 +40.55.58.543')
           paramList = ImagerParameters(casalog=casalog,\
-                                       vis='DataTest/twopoints_twochan.ms', field='0',spw='0', usescratch=True,\
-                                       outlierfile='out6.txt',\
-                                       imagename='mytest0', nchan=1, imsize=[100,100],\
-                                       cellsize=[8.0,8.0], phasecenter="19:59:28.500 +40.44.01.50",\
-                                       ftmachine='ft', startmodel='', weighting='natural',\
+                                       msname='DataTest/twopoints_twochan.ms',\
+                                       field='0',spw='0',\
+                                       usescratch=True,readonly=True,\
+                                       outlierfile='out7.txt',\
+                                       imagename='mytest0', nchan=1, freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       imsize=[100,100],\
+                                       cellsize=['8.0arcsec','8.0arcsec'], 
+                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
+                                       ftmachine='GridFT', startmodel='', weighting='natural',\
                                        algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
      
-     if(testnum==5):  ## 1 image-field, one chan --- Real Imaging.
+
+     if(testnum==6):  ## 1 image-field, mfs, multiple input MSs --- Real Imaging.
           
           paramList = ImagerParameters(casalog=casalog,\
-                                       vis='DataTest/point_twospws.ms', field='0',spw='0', usescratch=True,\
-                                       imagename='mytest0', nchan=1, imsize=[100,100],\
-                                       cellsize=[8.0,8.0], phasecenter="19:59:28.500 +40.44.01.50",\
-                                       ftmachine='ft', startmodel='', weighting='natural',\
+                                       msname=['DataTest/point_onespw0.ms','DataTest/point_onespw1.ms'],\
+                                       field='0',spw=['0','0'],\
+                                       usescratch=True,readonly=True,\
+                                       imagename='mytest0', nchan=1,  freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       imsize=[100,100],\
+                                       cellsize=['8.0arcsec','8.0arcsec'], 
+                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
+                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       algo='hogbom',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
+
+
+     if(testnum==5):  ## 1 image-field, mfs --- Real Imaging.
+          
+          paramList = ImagerParameters(casalog=casalog,\
+                                       msname='DataTest/point_twospws.ms', field='0',spw='0',\
+                                       usescratch=True,readonly=True,\
+                                       imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       imsize=[100,100],\
+                                       cellsize=['8.0arcsec','8.0arcsec'],\
+                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
+                                       ftmachine='GridFT', startmodel='', weighting='natural',\
                                        algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
@@ -48,7 +72,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False):
 
           write_file('out4.txt', 'imagename=mytest1\nnchan=2\nimsize=[1,1]\nstartmodel=startingmodel1')
           paramList = ImagerParameters(casalog=casalog,\
-                                       vis='point_twospws.ms', field='0',spw='0,1', usescratch=True,\
+                                       msname='point_twospws.ms', field='0',spw='0,1', usescratch=True,\
                                        outlierfile='out4.txt',\
                                        imagename='mytest0', nchan=5, imsize=[3,3],\
                                        ftmachine='ft', startmodel='',\
@@ -61,7 +85,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False):
 
           write_file('out3.txt', 'imagename=mytest1\nnchan=1\nimsize=[1,1]')
           paramList = ImagerParameters(casalog=casalog,\
-                                       vis='point_twospws.ms', field='0',spw='0,1', usescratch=True,\
+                                       msname='point_twospws.ms', field='0',spw='0,1', usescratch=True,\
                                        outlierfile='out3.txt',\
                                        imagename='mytest0', nchan=1, imsize=[3,3],\
                                        ftmachine='ft', startmodel='',\
@@ -73,7 +97,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False):
      if(testnum==2):  ## 1 image-field, multiple channels
 
           paramList = ImagerParameters(casalog=casalog,\
-                                       vis='point_twospws.ms', field='0',spw='0,1', usescratch=True,\
+                                       msname='point_twospws.ms', field='0',spw='0,1', usescratch=True,\
                                        imagename='mytest0', nchan=5, imsize=[3,3],\
                                        ftmachine='ft', startmodel='',\
                                        algo='test',\
@@ -84,7 +108,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False):
      if(testnum==1):  ## 1 image-field, one chan
           
           paramList = ImagerParameters(casalog=casalog,\
-                                       vis='point_twospws.ms', field='0',spw='0,1', usescratch=True,\
+                                       msname='point_twospws.ms', field='0',spw='0,1', usescratch=True,\
                                        imagename='mytest0', nchan=1, imsize=[3,3],\
                                        ftmachine='ft', startmodel='',\
                                        algo='test',\
@@ -318,4 +342,87 @@ def toolTestMajorCycle( testnum=1 ):
 
 ###################################################
 
+## Test function for parameter-list interface for the major cycle.
+def toolTestMajorCycle2( testnum=1 ):
 
+     os.system('rm -rf mytest*')
+
+     params = getparams( testnum=testnum )[0]
+     allselpars = params.getSelPars()
+     allimagepars = params.getImagePars()
+     allgridpars = params.getGridPars()
+
+     SItool = casac.synthesisimager()
+
+     for mss in sorted(allselpars.keys()):
+          SItool.selectdata( **(allselpars[ mss ] ) )
+
+     for fld in sorted(allimagepars.keys()):
+          print 'Setup imaging and image for field ' + str(fld)
+          SItool.defineimage( **(allimagepars[fld]) )
+
+     SItool.setweighting( **allgridpars )
+
+     PStools = []
+     nfld = len( allimagepars.keys() )
+     for fld in range(0, nfld ):
+          PStool.append(casac.synthesisparsync())
+          syncpars = {'imagename':allimagepars[ (allimagepars.keys())[fld] ]['imagename']}
+          PStool.setupparsync( syncpars )
+
+     for fld in range(0, nfld):
+          PStool[fld].scattermodel()
+
+     SItool.makepsf()
+     SItool.executemajorcycle()
+
+     for fld in range(0, nfld):
+          PStool[fld].gatherpsfweight( )
+          PStool[fld].gatherresidual( )
+     
+          PStool[fld].dividepsfbyweight()
+          PStool[fld].divideresidualbyweight()
+          
+     SItool.done()
+
+     for fld in range(0, nfld):
+          PStool[fld].done()
+
+
+###################################################
+
+
+def checkDataPartitioningCode():
+
+     # Make parameter lists.
+#     paramList = ImagerParameters(casalog=casalog, msname=['x1.ms','x2.ms'], field='0',spw=['0','2'], usescratch=True)
+
+     params = getparams( testnum=5 ,parallelmajor=True )
+
+     paramList = params[0]
+
+     # Sync input lists to the same size.
+#     paramList.checkParameters()
+
+     # The '0' is for single node. This is done in PySynthesisImager __init__
+     selpars = { '0' : paramList.getSelPars() }
+
+     print 'Selpars : ', selpars
+     
+     # For parallel runs, make this from a config file.
+     ppar = PyParallelImagerHelper(clusterdef=params[1])
+     
+     # This is the function that does the data partitioning.
+     newselpars = ppar.partitionDataSelection( selpars )
+
+     print 'NewSelPars : ', newselpars
+
+     # The output dictionary should be indexed as follows ( for 2 nodes, and 2 MSs )
+     #{ '0' : { 'ms0' : { 'msname':xxx1, 'spw':yyy1 } ,
+     #            'ms1' : { 'msname':xxx2, 'spw':yyy1 } 
+     #         }
+     #  '1' : { 'ms0' : { 'msname':xxx1, 'spw':yyy2 } ,
+     #            'ms1' : { 'msname':xxx2, 'spw':yyy2 } 
+     #        }
+     # }
+     #
