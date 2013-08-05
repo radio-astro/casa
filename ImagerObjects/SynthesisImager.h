@@ -64,14 +64,23 @@ class SynthesisImager
   //Imager& operator=(const Imager&);
 
   // make all pure-inputs const
-  void selectData(Record selpars);
-  virtual Bool selectData(const String& msname, const String& spw="*", const String& freqBeg="", const String& freqEnd="",
-		  const MFrequency::Types freqFrame=MFrequency::LSRK, const String& field="*", const String& taql="",
-		  const String& antenna="",  const String& uvdist="", const String& scan="", const String& obs="",
-		  const String& timestr="", const Bool usescratch=False, const Bool readonly=False, const Bool incrementModel=False);
-  void setupImaging(Record gridpars);
-  void setupImaging(const Float padding=1.0, const Bool useAutocorr=False, const bool useDoublePrec=True, const Int wprojplanes=1, const String convFunc="SF");
-  void defineImage(Record impars);
+  virtual Bool selectData(const String& msname, 
+			  const String& spw="*", 
+			  const String& freqBeg="", 
+			  const String& freqEnd="",
+			  const MFrequency::Types freqFrame=MFrequency::LSRK, 
+			  const String& field="*", 
+			  const String& antenna="",  
+			  const String& timestr="", 
+			  const String& scan="", 
+			  const String& obs="",
+			  const String& state="",
+			  const String& uvdist="", 
+			  const String& taql="",
+			  const Bool usescratch=False, 
+			  const Bool readonly=False, 
+			  const Bool incrementModel=False);
+
   //When having a facetted image ...call with (facets > 1)  first and  once only ..
   //Easier to keep track of the imstores that way
   ////CAREFUL: make sure you donot overwrite if you want to predict the model or subtract it to make residual
@@ -84,24 +93,35 @@ class SynthesisImager
 			   const Quantity& freqStep, 
 			   const Vector<Quantity>& restFreq,
 			   const Int facets=1,
-			   const String& ftmachine="GridFT", 
+			   const String ftmachine="GridFT",
+			   const Int nTaylorTerms=1,
+			   const Quantity& refFreq = Quantity(0,"Hz"),
 			   const Projection& projection=Projection::SIN,
 			   const Quantity& distance=Quantity(0,"m"),
 			   const MFrequency::Types& freqFrame=MFrequency::LSRK,
-			   const Bool trackSource=False, const MDirection& 
-			   trackDir=MDirection(Quantity(0.0, "deg"), 
-					       Quantity(90.0, "deg")), const Bool overwrite=False);
+			   const Bool trackSource=False, 
+			   const MDirection& trackDir=MDirection(Quantity(0.0, "deg"), Quantity(90.0, "deg")), 
+			   const Bool overwrite=False,
+			   const Float padding=1.0, 
+			   const Bool useAutocorr=False, 
+			   const bool useDoublePrec=True, 
+			   const Int wprojplanes=1, 
+			   const String convFunc="SF", 
+			   const String startmodel="");
   //Define image via a predefine SIImageStore object
   virtual Bool defineImage(CountedPtr<SIImageStore> imstor, const String& ftmachine);
   //Defining componentlist to use while degriding
   //This should be called once...if multiple lists are used..they can be merged in one
   //if sdgrid=True then image plane degridding is done
   virtual void setComponentList(const ComponentList& cl, Bool sdgrid=False);
-  Bool weight(const String& type="natural", const String& rmode="norm",
-                     const Quantity& noise=Quantity(0.0, "Jy"), const Double robust=0.0,
-                     const Quantity& fieldofview=Quantity(0.0, "arcsec"),
-    		    const Int npixels=0, const Bool multiField=False);
-  void initMapper();
+  Bool weight(const String& type="natural", 
+	      const String& rmode="norm",
+	      const Quantity& noise=Quantity(0.0, "Jy"), 
+	      const Double robust=0.0,
+	      const Quantity& fieldofview=Quantity(0.0, "arcsec"),
+	      const Int npixels=0, 
+	      const Bool multiField=False);
+
   //the following get rid of the mappers in this object
   void resetMappers();
 
