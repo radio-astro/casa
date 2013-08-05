@@ -251,17 +251,21 @@ def simalma(
             model_nchan = 1
             del compdirs, coffs, xc, yc, cmax
 
+        ###########################
         # Calculate 12-m PB
         Dant = 12.
-        pbval = 0.2997924 / qa.convert(qa.quantity(model_center),'GHz')['value'] \
-                / Dant * 3600. * 180 / numpy.pi # (wave length)/D_ant in arcsec
-        PB12 = qa.quantity(pbval*1.175, "arcsec")
-        PB12ot = PB12   ###qa.quantity(pbval, "arcsec")
+        wave_length = 0.2997924 \
+                      / qa.convert(qa.quantity(model_center),'GHz')['value']
+        # (wave length)/D_ant in arcsec
+        lambda_D = wave_length / Dant * 3600. * 180 / numpy.pi
+        PB12 = qa.quantity(lambda_D*1.175, "arcsec")
+        # Correction factor for PB in simulation
+        # (PSF of simulated image is somehow smaller than PB12)
         PB12sim = qa.mul(PB12, simpb_factor)
         msg("PB size: %s" % (qa.tos(PB12)), origin="simalma", priority='DEBUG2')
         # Pointing spacing of observations
         pointingspacing = str(nyquist)+"PB"
-        #ptgspacing_tp = str(pbgridratio_tp*PB12ot['value']/PB12['value'])+"PB"
+        #ptgspacing_tp = str(pbgridratio_tp*PB12['value']/PB12['value'])+"PB"
         ptgspacing_tp = qa.tos(qa.mul(PB12sim, pbgridratio_tp)) #str(pbgridratio_tp*PB12sim['value']/PB12['value'])+"PB"
 
         ############################################################
@@ -274,8 +278,8 @@ def simalma(
         obsmode_int = 'int'
         # BL mapsize should be 1 PB smaller than skymodel when using ACA
         #if acaratio > 0 and rectmode and fullsize:
-        #    mapx = qa.sub(model_size[0], PB12ot)
-        #    mapy = qa.sub(model_size[1], PB12ot)
+        #    mapx = qa.sub(model_size[0], PB12)
+        #    mapy = qa.sub(model_size[1], PB12)
         #    mapsize_bl = [qa.tos(mapx), qa.tos(mapy)]
         #else:
         #    mapsize_bl = mapsize
@@ -414,14 +418,14 @@ def simalma(
             if rectmode:
                 # Add 1PB to mapsize
                 if fullsize:
-                    mapx = qa.add(PB12ot,model_size[0])   # in the unit same as PB
-                    mapy = qa.add(PB12ot,model_size[1])   # in the unit same as PB
+                    mapx = qa.add(PB12,model_size[0])   # in the unit same as PB
+                    mapy = qa.add(PB12,model_size[1])   # in the unit same as PB
                     mapsize_tp = [qa.tos(mapx), qa.tos(mapy)]
                     msg("Full skymodel mapped by ALMA 12-m and ACA 7-m arrays. The total power antenna observes 1PB larger extent.", origin="simalma", priority='warn')
                 else:
                     # mapsize is defined. Add 1 PB to mapsize.
-                    mapx = qa.add(qa.quantity(mapsize[0]), PB12ot)
-                    mapy = qa.add(qa.quantity(mapsize[1]), PB12ot)
+                    mapx = qa.add(qa.quantity(mapsize[0]), PB12)
+                    mapy = qa.add(qa.quantity(mapsize[1]), PB12)
                     mapsize_tp = [qa.tos(mapx), qa.tos(mapy)]
                     msg("A part of skymodel mapped by ALMA 12-m and ACA 7-m arrays. The total power antenna observes 1PB larger extent.", origin="simalma", priority='warn')
             else:
@@ -432,14 +436,14 @@ def simalma(
                 qx = qa.quantity(max(offsets[0])-min(offsets[0]),"deg")
                 qy = qa.quantity(max(offsets[1])-min(offsets[1]),"deg")
                 # map extent to cover all pointings + 2PB 
-                mapx = qa.add(qa.mul(PB12ot,2.),qx)   # in the unit same as PB
-                mapy = qa.add(qa.mul(PB12ot,2.),qy)   # in the unit same as PB
+                mapx = qa.add(qa.mul(PB12,2.),qx)   # in the unit same as PB
+                mapy = qa.add(qa.mul(PB12,2.),qy)   # in the unit same as PB
                 mapsize_tp = [qa.tos(mapx), qa.tos(mapy)]
                 # number of pointings to map vicinity of each pointings
                 #npts_multi = npts * int(2./pbgridratio_tp)**2
                 qptgspc_tp = qa.quantity(ptgspacing_tp)
                 dirs_multi_tp = myutil.calc_pointings2(qptgspc_tp,
-                                                       qa.tos(qa.mul(PB12ot,2.)),
+                                                       qa.tos(qa.mul(PB12,2.)),
                                                        "square", pointings[0])
                 npts_multi = npts * len(dirs_multi_tp)
 
@@ -449,9 +453,9 @@ def simalma(
             # back-up imsize for TP image generation
             qimgsize_tp = [mapx, mapy]
 
-            #qgrid_tp = qa.mul(PB12ot, pbgridratio_tp)
+            #qgrid_tp = qa.mul(PB12, pbgridratio_tp)
             qptgspc_tp = qa.quantity(ptgspacing_tp)
-            pbunit = PB12ot['unit']
+            pbunit = PB12['unit']
             # number of pointings to map pointing region
             npts_rect = int(qa.convert(mapx, pbunit)['value'] \
                             / qa.convert(qptgspc_tp, pbunit)['value']) \
@@ -468,7 +472,7 @@ def simalma(
                     # Map +-1PB extent of each direction
                     # need to get a list of pointings
                     dir_tp = []
-                    locsize = qa.mul(2, PB12ot)
+                    locsize = qa.mul(2, PB12)
                     for dir in pointings:
                         dir_tp += myutil.calc_pointings2(qa.tos(qptgspc_tp),
                                                          qa.tos(locsize),
