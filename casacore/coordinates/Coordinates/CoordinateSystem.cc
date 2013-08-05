@@ -860,22 +860,22 @@ Bool CoordinateSystem::replaceCoordinate(const Coordinate &newCoordinate, uInt w
 
 Int CoordinateSystem::findCoordinate(Coordinate::Type type, Int afterCoord) const
 {
-    if (afterCoord < -1) {
-	afterCoord = -1;
-    }
-    Int n = nCoordinates();
-    Bool found = False;
-    while (++afterCoord < n) {
-	if (coordinates_p[afterCoord]->type() == type) {
-	    found = True;
-	    break;
+	if (afterCoord < -1) {
+		afterCoord = -1;
 	}
-    }
-    if (found) {
-	return afterCoord;
-    } else {
-	return -1;
-    }
+	Int n = nCoordinates();
+	Bool found = False;
+	while (++afterCoord < n) {
+		if (coordinates_p[afterCoord]->type() == type) {
+			found = True;
+			break;
+		}
+	}
+	if (found) {
+		return afterCoord;
+	} else {
+		return -1;
+	}
 }
 
 void CoordinateSystem::findWorldAxis(Int &coordinate, Int &axisInCoordinate, 
@@ -4450,12 +4450,17 @@ Int CoordinateSystem::spectralCoordinateNumber() const {
     return findCoordinate(Coordinate::SPECTRAL);
 }
 
-Int CoordinateSystem::spectralAxisNumber() const {
+Int CoordinateSystem::spectralAxisNumber(Bool doWorld) const {
     if (! hasSpectralAxis()) {
         return -1;
     }
     Int specIndex = findCoordinate(Coordinate::SPECTRAL);
-    return pixelAxes(specIndex)[0];
+    if (doWorld) {
+    	return worldAxes(specIndex)[0];
+    }
+    else {
+    	return pixelAxes(specIndex)[0];
+    }
 }
 
 
@@ -4472,11 +4477,16 @@ Int CoordinateSystem::polarizationCoordinateNumber() const {
     return findCoordinate(Coordinate::STOKES);
 }
 
-Int CoordinateSystem::polarizationAxisNumber() const {
+Int CoordinateSystem::polarizationAxisNumber(Bool doWorld) const {
     if (! hasPolarizationCoordinate()) {
         return -1;
     }
-    return pixelAxes(polarizationCoordinateNumber())[0];
+    if (doWorld) {
+    	return worldAxes(polarizationCoordinateNumber())[0];
+    }
+    else {
+    	return pixelAxes(polarizationCoordinateNumber())[0];
+    }
 }
 
 Bool CoordinateSystem::hasQualityAxis() const {

@@ -181,6 +181,8 @@ AipsError::clearLastInfo ()
     lastStackTrace = noStackTrace ();
 }
 
+
+
 String
 AipsError::noMessage ()
 {
@@ -192,6 +194,48 @@ AipsError::noStackTrace ()
 {
     return "*no-stack-trace*";
 }
+
+void
+AipsError::throwIf (bool condition, const String & message, const String & file, Int line, const String & func)
+{
+
+	// If the condition is met then throw an AipsError
+
+	if (condition) {
+	    String m = func + ": " + message;
+	    AipsError e (m.c_str(), file.c_str(), line);
+
+	    throw e;
+	}
+}
+
+void
+AipsError::throwIfError (int errorCode, const String & prefix, const String & file, Int line, const String & func)
+{
+	// If the provided error code is not equal to success (0) then
+	// throw an AipsError using the provided suffix and then details
+	// of the error.
+
+	if (errorCode != 0) {
+		AipsError e (String::format ("%s: %s (errno=%d):%s", func.c_str(), prefix.c_str(),
+		                             errorCode, strerror (errorCode)), file.c_str(), line);
+
+	    throw e;
+	}
+}
+
+AipsError
+AipsError::repackageAipsError (AipsError & error, const String & message, const String & file, Int line, const String & func)
+{
+    ostringstream os;
+
+    AipsError tmp (message, file, line);
+    os << func << ": " << tmp.what() << "\n   " << error.what();
+
+    return AipsError (os.str());
+}
+
+
 
 AllocError::~AllocError() throw()
 {}

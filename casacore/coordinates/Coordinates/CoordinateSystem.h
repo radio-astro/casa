@@ -762,8 +762,10 @@ public:
    // Does this coordinate system have a spectral axis?
    Bool hasSpectralAxis() const;
 
-   // what number is the spectral axis? Returns -1 if no spectral axis exists.
-   Int spectralAxisNumber() const;
+   // what number is the spectral axis? If doWorld=True, the world axis number is
+   // returned, if False, the pixel axis number is returned. Returns -1 if no spectral axis exists or if
+   // doWorld = False and the spectral pixel axis has been removed.
+   Int spectralAxisNumber(Bool doWorld=False) const;
 
    // what number is the spectral coordinate? Returns -1 if no spectral coordinate exists.
    Int spectralCoordinateNumber() const;
@@ -782,8 +784,10 @@ public:
    Int polarizationCoordinateNumber() const;
 
    // what is the number of the polarization/stokes axis?
-   // Returns -1 if no stokes axis exists.
-   Int polarizationAxisNumber() const;
+   // If doWorld=True, the world axis number is
+   // returned, if False, the pixel axis number is returned. Returns -1 if no stokes coordinate exists or if
+   // doWorld = False and the stokes pixel axis has been removed.
+   Int polarizationAxisNumber(Bool doWorld=False) const;
 
    // Does this coordinate system have a quality axis?
    Bool hasQualityAxis() const;
