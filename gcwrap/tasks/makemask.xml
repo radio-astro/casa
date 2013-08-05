@@ -222,7 +222,7 @@ output : Name of output image.
         In the makemask task, since the most common use case of output image mask is to use as
         an input mask in clean, when it converts an internal mask to the image mask,
         the 'masked' region (where the pixels are masked and have the Boolean values 'False') 
-        of the internal mask is translated to the pixels with value of 1(=True) in output image mask.  
+        of the internal mask is translated to the pixels with value of 0 in output image mask.  
 
 overwrite : overwrite the mask specified in output? (see also the output rules above)
             default: False

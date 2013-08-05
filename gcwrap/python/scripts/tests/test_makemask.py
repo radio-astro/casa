@@ -66,6 +66,7 @@ class test_copy(makemaskTestBase):
     def tearDown(self):
         if not debug:
             for img in [self.inimage,self.inimage2,self.outimage1,self.outimage2,self.outimage3]:
+                #pass
                 if os.path.isdir(img):
                     shutil.rmtree(img)
         else:
@@ -83,7 +84,7 @@ class test_copy(makemaskTestBase):
         self.assertTrue(self.compareimpix(self.inimage,self.outimage1))           
          
     def test2_copyimagemask(self):
-        """ (copy mode) testcopy2: copying an image mask (1/0 mask) to a new in-image mask"""
+        """ (copy mode) testcopy2: copying an image mask (1/0 mask) to a new in-image(T/F) mask"""
         try:
             makemask(mode='copy',inpimage=self.inimage,inpmask=self.inimage,output=self.outimage2+":masknew")
         except Exception, e:
@@ -91,11 +92,13 @@ class test_copy(makemaskTestBase):
             raise e
          
         self.assertTrue(os.path.exists(self.outimage2))
+        # check by converting the output back to a 1/0 mask to see if it 
+        # is indentical to the input 1/0 mask.
         if os.path.exists(self.outimage2):
             ia.open(self.outimage2)
             masknames=ia.maskhandler('get')
             if masknames.count('masknew')==1:
-                pixelmask2cleanmask(self.outimage2,'masknew','_tmp_im',True)
+                pixelmask2cleanmask(self.outimage2,'masknew','_tmp_im',False)
                 self.assertTrue(self.compareimpix(self.inimage,'_tmp_im')) 
                 shutil.rmtree('_tmp_im')
             ia.done()
@@ -137,6 +140,7 @@ class test_merge(makemaskTestBase):
     def tearDown(self):
         if not debug:
             for img in [self.inimage,self.inimage2,self.inimage3,self.outimage1,self.outimage2, self.infile1]:
+                #pass
                 if os.path.isdir(img):
                     shutil.rmtree(img)
         else:
@@ -156,7 +160,7 @@ class test_merge(makemaskTestBase):
         #shutil.rmtree(self.outimage1)
 
     def test2_mergemasks(self):
-        """ (copy mode) mergetest2 :merging two image mask (1/0 mask) with different chan width to a new T/F mask"""
+        """ (copy mode) mergetest2 :merging two image mask (1/0 mask) with different chan width and a  T/F mask to create a 1/0 mask"""
         try:
             #shutil.copytree(self.inimage,self.outimage1)
             makemask(mode='copy',inpimage=self.inimage,inpmask=[self.inimage, self.inimage3, self.inimage2+':maskoo'], output=self.outimage1)
