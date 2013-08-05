@@ -592,7 +592,11 @@ class VLAUtils(basetask.StandardTaskTemplate):
         #This will be needed later in the pipeline
         self.gain_solint1 = 'int'
         self.gain_solint2 = 'int'
+        self.shortsol1 = 0.0
+        self.shortsol2 = 0.0
         self.longsolint = 0.0
+        self.short_solint = 0.0
+        self.new_gain_solint1 = '1.0s'
         
         return int_time
         

@@ -26,7 +26,7 @@ class testBPdcalsInputs(basetask.StandardInputs):
         self.gain_solint2 = 'int'
 
 class testBPdcalsResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[], gain_solint1=None):
+    def __init__(self, final=[], pool=[], preceding=[], gain_solint1=None, shortsol1=None):
         super(testBPdcalsResults, self).__init__()
 
         self.vis = None
@@ -35,10 +35,12 @@ class testBPdcalsResults(basetask.Results):
         self.preceding = preceding[:]
         self.error = set()
         self.gain_solint1 = gain_solint1
+        self.shortsol1 = shortsol1
         
     def merge_with_context(self, context):    
         m = context.observing_run.measurement_sets[0]
         context.evla['msinfo'][m.name].gain_solint1 = self.gain_solint1
+        context.evla['msinfo'][m.name].shortsol1 = self.shortsol1
     
         
 class testBPdcals(basetask.StandardTaskTemplate):
@@ -137,62 +139,61 @@ class testBPdcals(basetask.StandardTaskTemplate):
             soltime = soltimes[1]
             solint = solints[1]
 
-
-        context = self.inputs.context
-        print context.callibrary.active
-        gtype_gaincal_result = self._do_gtype_bpdgains(tablebase + table_suffix[1], addcaltable=ktypecaltable, solint=solint, context=context)
-        flaggedSolnResult3 = getCalFlaggedSoln(tablebase + table_suffix[1])
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[1], interp='linear,linear', calwt=True)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+            context = self.inputs.context
+            
+            gtype_gaincal_result = self._do_gtype_bpdgains(tablebase + table_suffix[1], addcaltable=ktypecaltable, solint=solint, context=context)
+            flaggedSolnResult3 = getCalFlaggedSoln(tablebase + table_suffix[1])
+            calto = callibrary.CalTo(self.inputs.vis)
+            calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[1], interp='linear,linear', calwt=True)
+            context.callibrary._remove(calto, calfrom, context.callibrary._active)
         
-        calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='linear,linear', calwt=True)
-        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+            calto = callibrary.CalTo(self.inputs.vis)
+            calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='linear,linear', calwt=True)
+            context.callibrary._remove(calto, calfrom, context.callibrary._active)
 
-        if (flaggedSolnResult3['all']['total'] > 0):
-            fracFlaggedSolns3=flaggedSolnResult3['antmedian']['fraction']
-        else:
-            fracFlaggedSolns3=1.0
+            if (flaggedSolnResult3['all']['total'] > 0):
+                fracFlaggedSolns3=flaggedSolnResult3['antmedian']['fraction']
+            else:
+                fracFlaggedSolns3=1.0
 
-        if (fracFlaggedSolns3 < fracFlaggedSolns1):
-            gain_solint1 = solint
-            shortsol1 = soltime
+            if (fracFlaggedSolns3 < fracFlaggedSolns1):
+                gain_solint1 = solint
+                shortsol1 = soltime
             
-            bpdgain_touse = tablebase + table_suffix[1]
+                bpdgain_touse = tablebase + table_suffix[1]
             
-            if (fracFlaggedSolns3 > 0.05):
-                soltime = soltimes[2]
-                solint = solints[2]
+                if (fracFlaggedSolns3 > 0.05):
+                    soltime = soltimes[2]
+                    solint = solints[2]
 
-                context = self.inputs.context
-                print context.callibrary.active
-                gtype_gaincal_result = self._do_gtype_bpdgains(tablebase + table_suffix[2], addcaltable=ktypecaltable, solint=solint, context=context)
-                flaggedSolnResult10 = getCalFlaggedSoln(tablebase + table_suffix[2])
-                calto = callibrary.CalTo(self.inputs.vis)
-                calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[2], interp='linear,linear', calwt=True)
-                context.callibrary._remove(calto, calfrom, context.callibrary._active)
+                    context = self.inputs.context
                 
-                calto = callibrary.CalTo(self.inputs.vis)
-                calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='linear,linear', calwt=True)
-                context.callibrary._remove(calto, calfrom, context.callibrary._active)
+                    gtype_gaincal_result = self._do_gtype_bpdgains(tablebase + table_suffix[2], addcaltable=ktypecaltable, solint=solint, context=context)
+                    flaggedSolnResult10 = getCalFlaggedSoln(tablebase + table_suffix[2])
+                    calto = callibrary.CalTo(self.inputs.vis)
+                    calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[2], interp='linear,linear', calwt=True)
+                    context.callibrary._remove(calto, calfrom, context.callibrary._active)
+                
+                    calto = callibrary.CalTo(self.inputs.vis)
+                    calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='linear,linear', calwt=True)
+                    context.callibrary._remove(calto, calfrom, context.callibrary._active)
                 
 
-                if (flaggedSolnResult10['all']['total'] > 0):
-                    fracFlaggedSolns10 = flaggedSolnResult10['antmedian']['fraction']
-                else:
-                    fracFlaggedSolns10 = 1.0
+                    if (flaggedSolnResult10['all']['total'] > 0):
+                        fracFlaggedSolns10 = flaggedSolnResult10['antmedian']['fraction']
+                    else:
+                        fracFlaggedSolns10 = 1.0
 
-                if (fracFlaggedSolns10 < fracFlaggedSolns3):
-                    gain_solint1=solint
-                    shortsol1=soltime
-                    bpdgain_touse = tablebase + table_suffix[2]
+                    if (fracFlaggedSolns10 < fracFlaggedSolns3):
+                        gain_solint1=solint
+                        shortsol1=soltime
+                        bpdgain_touse = tablebase + table_suffix[2]
 
-                    if (fracFlaggedSolns > 0.05):
-                        LOG.warn("There is a large fraction of flagged solutions, there might be something wrong with your data.")
+                        if (fracFlaggedSolns > 0.05):
+                            LOG.warn("There is a large fraction of flagged solutions, there might be something wrong with your data.")
 
         context = self.inputs.context
-        print "Before final step", context.callibrary.active
+        
         #Add appropriate temporary tables to the callibrary
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='linear,linear', calwt=True)
@@ -206,12 +207,9 @@ class testBPdcals(basetask.StandardTaskTemplate):
         bandpass_result = self._do_bandpass(bpcaltable, context=context)
         
         applycal_result = self._do_applycal(context=context)
-        
-        
+
                         
-        print context.callibrary.active
-                        
-        return testBPdcalsResults(gain_solint1=gain_solint1)                        
+        return testBPdcalsResults(gain_solint1=gain_solint1, shortsol1=shortsol1)                        
 
     def analyse(self, results):
 	return results

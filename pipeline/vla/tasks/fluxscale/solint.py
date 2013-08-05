@@ -45,7 +45,8 @@ class Solint(basetask.StandardTaskTemplate):
     
     def prepare(self):
     
-        self._do_split()
+        calMs = 'calibrators.ms'
+        split_result = self._do_split(calMs)
         
         (longsolint, gain_solint2) = self._do_determine_solint()
         
@@ -54,14 +55,14 @@ class Solint(basetask.StandardTaskTemplate):
     def analyse(self, results):
 	return results
     
-    def _do_split(self):
+    def _do_split(self, calMs):
         
         m = self.inputs.context.observing_run.measurement_sets[0]
         channels = self.inputs.context.evla['msinfo'][m.name].channels
         calibrator_scan_select_string = self.inputs.context.evla['msinfo'][m.name].calibrator_scan_select_string
     
-        task_args = {'vis'          : self.inputs.vis,
-                     'outputvis'    : 'calibrators.ms',
+        task_args = {'vis'          : m.name,
+                     'outputvis'    : calMs,
                      'datacolumn'   : 'corrected',
                      'field'        : '',
                      'spw'          : '',

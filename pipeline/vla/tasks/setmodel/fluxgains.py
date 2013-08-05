@@ -1,106 +1,41 @@
-"""
-B. Kent, NRAO, June 2013
-
-Example task class session:
-
-import pipeline
-
-files=['vla_m81.avg.raw']
-dry_run=False
-
-context = pipeline.Pipeline().context
-inputs = pipeline.vla.tasks.VLAImportData.Inputs(context, files=files)
-task = pipeline.vla.tasks.VLAImportData(inputs)
-results = task.execute(dry_run=dry_run)
-results.accept(context)
-
-inputs = pipeline.vla.tasks.SetModel.Inputs(context)
-
-task = pipeline.tasks.SetModel(inputs)
-results = task.execute(dry_run=dry_run)
-"""
 from __future__ import absolute_import
 import types
 import math
 
-import pipeline.infrastructure.casatools as casatools
-import numpy
-
-
-from pipeline.hif.heuristics import fieldnames
-import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+from pipeline.infrastructure import casa_tasks
+import pipeline.infrastructure.casatools as casatools
+import pipeline.domain.measures as measures
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.utils as utils
 from pipeline.hif.tasks.common import commonfluxresults
+from pipeline.hif.heuristics import fieldnames
+
+import itertools
+import numpy
+
+from pipeline.hif.tasks import gaincal
+from pipeline.hif.tasks import bandpass
+from pipeline.hif.tasks import applycal
+from pipeline.vla.heuristics import getCalFlaggedSoln, getBCalStatistics
+from pipeline.vla.tasks.setmodel.setmodel import find_standards, standard_sources
 from . import setjy
+
 
 from pipeline.vla.tasks.vlautils import VLAUtils
 
+
+
+
 LOG = infrastructure.get_logger(__name__)
 
-def find_standards(positions):
-    """Function for finding standards from the original scripted EVLA pipeline
-    """
-    # set the max separation as ~1'
-    MAX_SEPARATION = 60*2.0e-5
-    position_3C48 = casatools.measures.direction('j2000', '1h37m41.299', '33d9m35.133')
-    fields_3C48 = []
-    position_3C138 = casatools.measures.direction('j2000', '5h21m9.886', '16d38m22.051')
-    fields_3C138 = []
-    position_3C147 = casatools.measures.direction('j2000', '5h42m36.138', '49d51m7.234')
-    fields_3C147 = []
-    position_3C286 = casatools.measures.direction('j2000', '13h31m8.288', '30d30m23.959')
-    fields_3C286 = []
-
-    for ii in range(0,len(positions)):
-        position = casatools.measures.direction('j2000', str(positions[ii][0])+'rad', str(positions[ii][1])+'rad')
-        separation = casatools.measures.separation(position,position_3C48)['value'] * math.pi/180.0
-        if (separation < MAX_SEPARATION):
-            fields_3C48.append(ii)
-        else:
-            separation = casatools.measures.separation(position,position_3C138)['value'] * math.pi/180.0
-            if (separation < MAX_SEPARATION):
-                fields_3C138.append(ii)
-            else:
-                separation = casatools.measures.separation(position,position_3C147)['value'] * math.pi/180.0
-                if (separation < MAX_SEPARATION):
-                    fields_3C147.append(ii)
-                else:
-                    separation = casatools.measures.separation(position,position_3C286)['value'] * math.pi/180.0
-                    if (separation < MAX_SEPARATION):
-                        fields_3C286.append(ii)
-
-    fields = [ fields_3C48, fields_3C138, fields_3C147, fields_3C286 ]
-    
-    return fields
-
-
-def standard_sources(vis):
-    """Get standard source names, fields, and positions - convenience function from
-       the original EVLA scripted pipeline
-    """
-
-    with casatools.TableReader(vis+'/FIELD') as table:
-        field_positions = table.getcol('PHASE_DIR')
-        
-    positions = []
-
-    for ii in range(0,len(field_positions[0][0])):
-        positions.append([field_positions[0][0][ii], field_positions[1][0][ii]])
-
-    standard_source_names = [ '3C48', '3C138', '3C147', '3C286' ]
-    standard_source_fields = find_standards(positions)
-
-    return standard_source_names, standard_source_fields
-
-
-
-class SetModelInputs(basetask.StandardInputs):
+class FluxgainsInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None, reference=None, 
                  refintent=None, transfer=None, scalebychan=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
-
+        
     @property
     def reference(self):
         if not callable(self._reference):
@@ -171,14 +106,15 @@ class SetModelInputs(basetask.StandardInputs):
         raise NotImplementedError
 
 
-class SetModel(basetask.StandardTaskTemplate):
-    Inputs = SetModelInputs
+class Fluxgains(basetask.StandardTaskTemplate):
+    Inputs = FluxgainsInputs
 
-    def prepare(self, **parameters):
-        standard_source_names, standard_source_fields = standard_sources(self.inputs.vis)
+    def prepare(self):
 
-        result = commonfluxresults.FluxCalibrationResults(self.inputs.vis)
-        
+        calMs = 'calibrators.ms'
+
+        standard_source_names, standard_source_fields = standard_sources(calMs)
+
         context = self.inputs.context
         m = context.observing_run.measurement_sets[0]
         field_spws = context.evla['msinfo'][m.name].field_spws
@@ -207,22 +143,77 @@ class SetModel(basetask.StandardTaskTemplate):
                     #Double check, but the fluxdensity=-1 should not matter since
                     #  the model image take precedence
                     try:
-                        setjy_result = self._do_setjy(str(myfield), str(myspw), model_image, -1)
-                        result.measurements.update(setjy_result.measurements)
+                        setjy_result = self._do_setjy(calMs, str(myfield), str(myspw), model_image, -1)
+                        #result.measurements.update(setjy_result.measurements)
                     except Exception, e:
                         # something has gone wrong, return an empty result
                         LOG.error('Unable to complete flux scaling operation')
                         LOG.exception(e)
-                        return result
+                        return setjy_result
        
-        return result
+        gaincal_result = _do_gaincal(context, calMs, 'fluxphaseshortgaincal.g', 'p', [''], solint=new_gain_solint1, minsnr=3.0)
+        
+        gaincal_result = _do_gaincal(context, calMs, 'fluxgaincal.g', 'ap', ['fluxphaseshortgaincal.g'], solint=gain_solint2, minsnr=5.0)
 
     def analyse(self, result):
         return result
-
-    def _do_setjy(self, field, spw, modimage, fluxdensity):
+    
+    def _do_setjy(self, calMs, field, spw, modimage, fluxdensity):
         
-        setjyinputs = setjy.Setjy.Inputs(self.inputs.context,
-             field=field, spw=spw, modimage=modimage, fluxdensity=fluxdensity)
-        setjytask = setjy.Setjy(setjyinputs)
-        return self._executor.execute(setjytask, True)
+        task_args = {'vis'            : calMs,
+                     'field'          : field,
+                     'spw'            : spw,
+                     'selectdata'     : False,
+                     'modimage'       : model_image,
+                     'listmodeimages' : False,
+                     'scalebychan'    : True,
+                     'fluxdensity'    : -1,
+                     'standard'       : 'Perley-Butler 2010',
+                     'usescratch'     : False,
+                     'async'          : False}
+        
+        job = casa_tasks.setjy(**task_args)
+            
+        return self._executor.execute(job)
+    
+    
+    def _do_gaincal(self, context, calMs, caltable, calmode, gaintablelist, solint='int', minsnr=3.0):
+        
+        m = context.observing_run.measurement_sets[0]
+        minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
+        
+        #Do this to get the reference antenna string
+        temp_inputs = gaincal.GTypeGaincal.Inputs(context)
+        refant = temp_inputs.refant.lower()
+        
+        task_args = {'vis'            : calMs,
+                     'caltable'       : caltable,
+                     'field'          : '',
+                     'spw'            : '',
+                     'intent'         : '',
+                     'selectdata'     : False,
+                     'solint'         : solint,
+                     'combine'        : 'scan',
+                     'preavg'         : -1.0,
+                     'refant'         : refant,
+                     'minblperant'    : minBL_for_cal,
+                     'minsnr'         : minsnr,
+                     'solnorm'        : False,
+                     'gaintype'       : 'G',
+                     'smodel'         : [],
+                     'calmode'        : calmode,
+                     'append'         : False,
+                     'gaintable'      : gaintablelist,
+                     'gainfield'      : [''],
+                     'interp'         : [''],
+                     'spwmap'         : [],
+                     'gaincurve'      : False,
+                     'opacity'        : [],
+                     'parang'         : False,
+                     'async'          : False}
+        
+        job = casa_tasks.setjy(**task_args)
+            
+        return self._executor.execute(job)
+        
+        
