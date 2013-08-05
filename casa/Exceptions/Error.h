@@ -65,7 +65,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #if defined (NDEBUG)
 #    define ThrowCc(m) \
     { AipsError anAipsError ((m), __FILE__, __LINE__);\
-      toStdError (anAipsError.what());\
       throw anAipsError; }
 #else
 #    define ThrowCc(m) throw AipsError ((m), __FILE__, __LINE__)
