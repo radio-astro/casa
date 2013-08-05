@@ -58,6 +58,10 @@ namespace casa {
 
 		void dismiss( );
 
+		//Overriden because if the cursor tracker was not shown, images were loaded,
+		//and then the cursor tracker was shown, it was not resizing properly.
+		void setVisible( bool visible );
+
 	protected:
 		void closeEvent ( QCloseEvent * event );
 

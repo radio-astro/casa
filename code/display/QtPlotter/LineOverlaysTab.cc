@@ -60,6 +60,10 @@ namespace casa {
 		int lineCount = searchResults.getLineCount();
 		if ( lineCount > 0 ) {
 			searchResults.show();
+			//Added because the search results were apparently
+			//coming up behind other windows on the MAC
+			searchResults.raise();
+			searchResults.activateWindow();
 		}
 	}
 

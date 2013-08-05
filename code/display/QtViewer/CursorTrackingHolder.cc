@@ -42,6 +42,7 @@ namespace casa {
 	}
 
     void CursorTrackingHolder::arrangeTrackBoxes( ) {
+
 		// Reacts to QDP registration change signal.  If necessary, changes
 		// the set of cursor position tracking boxes being displayed in
 		// container (creating new TrackBoxes as necessary).  A TrackBox
@@ -152,7 +153,9 @@ namespace casa {
 		panel_->putrc( "visible.cursor_tracking", "false" );
 	}
 
-    void CursorTrackingHolder::handle_folding( bool /*visible*/, QtDisplayData */*dd*/ ) { update_size( ); }
+    void CursorTrackingHolder::handle_folding( bool /*visible*/, QtDisplayData */*dd*/ ) {
+    	update_size( );
+    }
 
 	void CursorTrackingHolder::handle_visibility( bool visible ) {
 		if ( visible && dismissed ) {
@@ -176,6 +179,13 @@ namespace casa {
             }
         }
         return result;
+    }
+
+    void CursorTrackingHolder::setVisible( bool visible ){
+    	QDockWidget::setVisible(visible);
+    	if( visible ){
+    		update_size();
+    	}
     }
 
     void CursorTrackingHolder::update_size( ) {
