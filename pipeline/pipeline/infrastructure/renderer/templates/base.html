@@ -34,10 +34,13 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 <script src="${self.attr.rsc_path}resources/js/purl-2.2.1.js"></script>
 </%block>
 
-<title><%block name="title">Untitled Pipeline Weblog Page</%block></title>
+<title>
+% if pcontext.project_summary.proposal_code != '':
+${pcontext.project_summary.proposal_code} -
+% endif
+<%block name="title">Untitled Page</%block></title>
 </head>
 <body>
-
 
 <%block name="header">
 <div class='navbar navbar-fixed-top'>
