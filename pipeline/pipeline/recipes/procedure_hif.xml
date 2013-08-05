@@ -72,8 +72,8 @@
                 <Value xmlns="">fieldshape</Value>
             </Parameter>
             <Parameter>
-                <Keyword xmlns="">intentgroups</Keyword>
-                <Value xmlns="">['*AMPLITUDE*+*BANDPASS*+*PHASE*+*TARGET*']</Value>
+                <Keyword xmlns="">refintent</Keyword>
+                <Value xmlns="">BANDPASS</Value>
             </Parameter>
             <Parameter>
                 <Keyword xmlns="">flag_maxabs</Keyword>
@@ -81,7 +81,7 @@
             </Parameter>
             <Parameter>
                 <Keyword xmlns="">fmax_limit</Keyword>
-                <Value xmlns="">20</Value>
+                <Value xmlns="">5</Value>
             </Parameter>
             <Parameter>
                 <Keyword xmlns="">flag_tmf1</Keyword>
@@ -100,6 +100,28 @@
                 <Value xmlns="">False</Value>
             </Parameter>
         </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_tsysflagchans</Command>
+            <ParameterSet>
+              <Parameter>
+                  <Keyword xmlns="">metric</Keyword>
+                  <Value xmlns="">antenna_diff</Value>
+              </Parameter>
+              <Parameter>
+                  <Keyword xmlns="">flag_edges</Keyword>
+                  <Value xmlns="">False</Value>
+              </Parameter>
+              <Parameter>
+                  <Keyword xmlns="">flag_sharps2</Keyword>
+                  <Value xmlns="">True</Value>
+              </Parameter>
+              <Parameter>
+                  <Keyword xmlns="">sharps2_limit</Keyword>
+                  <Value xmlns="">0.1</Value>
+              </Parameter>
+           </ParameterSet>
     </ProcessingCommand>
 
     <ProcessingCommand>
@@ -147,6 +169,10 @@
     <ProcessingCommand>
         <Command xmlns="">hif_makecleanlist</Command>
         <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">intent</Keyword>
+                <Value xmlns="">PHASE,BANDPASS,AMPLITUDE</Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
@@ -159,10 +185,6 @@
     <ProcessingCommand>
         <Command xmlns="">hif_makecleanlist</Command>
         <ParameterSet>
-            <Parameter>
-                <Keyword xmlns="">intent</Keyword>
-                <Value xmlns="">PHASE,BANDPASS,AMPLITUDE</Value>
-            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
