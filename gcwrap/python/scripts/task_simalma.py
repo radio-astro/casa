@@ -91,7 +91,8 @@ def simalma(
         if verbose: myutil.verbose = True
         msg = myutil.msg
 
-        # Preset parameters in simalma
+        ###########################
+        # Predefined parameters in simalma
         nyquist = 0.48113 ## Nyquist
         maptype_bl = 'ALMA'
         maptype_aca = 'ALMA'
@@ -112,12 +113,15 @@ def simalma(
         leakage = 0.
         weighting = "briggs"
 
+
+        ###########################
         # format mapsize
         if not is_array_type(mapsize):
             mapsize = [mapsize, mapsize]
         elif len(mapsize) < 2:
             mapsize = [mapsize[0], mapsize[0]]
 
+        ###########################
         # Operation flags
         addnoise = (thermalnoise != '')
         # Rectangle setup mode
@@ -137,6 +141,7 @@ def simalma(
         else:
             msg("Cycle 2 or Full Science ALMA simulation", origin="simalma", priority="warn")
 
+        ###########################
         # antennalist of ACA and TP
         antlist_tp = "aca.tp.cfg"
 
@@ -158,6 +163,7 @@ def simalma(
         else:
             antlist_aca = "aca_cycle1.cfg"
 
+        ###########################
         # Resolve prefixes of simulation data (as defined in 
         # simobserve and simanalyze)
 #         noise_str = ""
@@ -206,6 +212,7 @@ def simalma(
 
         simana_file = project+".simanalyze.last"
 
+        ###########################
         # Either skymodel or complist should exists
         if is_array_type(skymodel):
             skymodel = skymodel[0]
@@ -219,6 +226,7 @@ def simalma(
 
         ###########################
         # Get model_size and model_center
+        # TODO: check if outmodel==inmodel works (just collect info)
         if os.path.exists(skymodel):
             outmodel = fileroot+"/"+project+"temp.skymodel"
             model_vals = myutil.modifymodel(skymodel, outmodel, inbright,
@@ -414,7 +422,22 @@ def simalma(
             msg("="*60, origin="simalma", priority="warn")
             obsmode_sd = "sd"
 
-            # Resolve mapsize of TP. Add 1 PB to pointing extent of BL
+            ###########################
+            # Resolve pointing directions of ACA-TP.
+            #
+            # Pointing directions of TP simulation is defined as follows:
+            #
+            # [I] if ALMA-12m maps a rectangle region (rectmode=T),
+            # TP maps slightly larger region than ALMA-12m by adding 1 PB to
+            # mapsize (pointing extent of ALMA-12m).
+            #
+            # [II] if a list of pointing deirections are specified for the 
+            # ALMA-12m observation (multiptg=T), TP pointings are defined as
+            # rectangle areas of 2PB x 2PB centered at each pointing direction
+            # of ALMA-12m. However, in some cases, it is more efficient to
+            # just map a rectangle region that covers all ALMA-12m pointings.
+            # In such case, ACA-TP maps a rectangle region whose extent is 2PB
+            # larger than the extent of all ALMA-12m pointings.
             if rectmode:
                 # Add 1PB to mapsize
                 if fullsize:
@@ -440,7 +463,6 @@ def simalma(
                 mapy = qa.add(qa.mul(PB12,2.),qy)   # in the unit same as PB
                 mapsize_tp = [qa.tos(mapx), qa.tos(mapy)]
                 # number of pointings to map vicinity of each pointings
-                #npts_multi = npts * int(2./pbgridratio_tp)**2
                 qptgspc_tp = qa.quantity(ptgspacing_tp)
                 dirs_multi_tp = myutil.calc_pointings2(qptgspc_tp,
                                                        qa.tos(qa.mul(PB12,2.)),
@@ -457,6 +479,7 @@ def simalma(
             qptgspc_tp = qa.quantity(ptgspacing_tp)
             pbunit = PB12['unit']
             # number of pointings to map pointing region
+            # TODO: use calc pointings for consistent calculation
             npts_rect = int(qa.convert(mapx, pbunit)['value'] \
                             / qa.convert(qptgspc_tp, pbunit)['value']) \
                         * int(qa.convert(mapy, pbunit)['value'] \
@@ -469,7 +492,7 @@ def simalma(
                 msg("Rectangle mode: The total power antenna observes 1PB larger region compared to ALMA 12-m and ACA 7-m arrays", origin="simalma", priority='warn')
             else:
                 if npts_multi < npts_rect:
-                    # Map +-1PB extent of each direction
+                    # Map 2PB x 2PB extent centered at each pointing direction
                     # need to get a list of pointings
                     dir_tp = []
                     locsize = qa.mul(2, PB12)
