@@ -189,6 +189,9 @@ def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
 
 		if(os.path.exists(concatvis)):
 			casalog.post('Will be concatenating into the existing ms '+concatvis , 'WARN')
+			if doweightscale and not existingconcatvis:
+				visweightscale = [1.]+visweightscale # set the weight for this existing MS to 1.
+				casalog.post('The weights for this existing MS will be left unchanged.' , 'WARN')
 		else:
 			if(len(vis) >0): # (note: in case len is 1, we only copy, essentially)
 				casalog.post('copying '+vis[0]+' to '+theconcatvis , 'INFO')
