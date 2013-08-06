@@ -211,5 +211,34 @@ else:
 imd.done()
     </example>
 </method>
+
+<method type="function" name="set">
+    <shortdescription>Set a keyword to the specified value if possible.</shortdescription>
+    <input>
+        <param type="string" name="key">
+            <description>The name of the FITS or other keyword.</description>
+            <value/>
+        </param>
+        <param type="any" name="value">
+            <any type="variant"/>
+            <description>Associated value to set.</description>
+            <value/>
+        </param>
+    </input>
+    <returns type="bool"/>
+    <description>
+        Set a key-value pair if possible.
+    </description>
+    <example>
+imd.open("myim.im")
+# Set keyword "telescope" with value "Argus Array"
+if set("telescope", "Argus Array"):
+    print "telescope has been updated"
+else:
+    print "Unable to update telescope."
+imd.done()
+    </example>
+</method>
+
 </tool>
 </casaxml>

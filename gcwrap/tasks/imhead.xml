@@ -65,11 +65,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="mode" >
-	<description>imhead options: add, del, get, history, list, put, summary </description>
+	<description>Mode of operation: add, del, get, history, list, put, or summary </description>
 	<allowed kind="enum">
 	    <value>list</value>
-            <value>fits</value>
-            <value>history</value>
+        <value>history</value>
 	    <value>get</value>
 	    <value>put</value>
 	    <value>add</value>
@@ -79,37 +78,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value>summary</value>
     </param>
     <param type="string" name="hdkey" subparam="yes">
-    	<description>The FITS keyword</description>
+    	<description>The associated keyword for modes add, del, get, or put. </description>
         <value></value>
         <example>hdkey'telescope'</example>
     </param>
 
     <param type="any" name="hdvalue" subparam="yes">
 	<any type="variant"/>
-    	<description>Value of keyword</description>
+    	<description>Value of keyword for modes add or put.</description>
         <value type="string"></value>
         <example>hdvalue='VLA'</example>
     </param>
-
-    <param type="string" name="hdtype" subparam="yes">
-    	<description>Data type of the header keyword.</description>
-	<allowed kind="enum">
-	    <value>bool</value>
-            <value>int</value>
-            <value>string</value>
-	    <value>double</value>
-	    <value>complex</value>
-            <value></value>
-    	</allowed>
-        <value></value>
-        <example>hdkey='telescope'</example>
-    </param>
-
-    <param type="string" name="hdcomment" subparam="yes">
-    	<description>Comment associated with the header keyword</description>
-        <value type="string"></value>
-        <example>hdvalue='VLA'</example>
-    </param>
+    
     <param type="bool"  name="verbose" subparam="yes">
         <description>Give a full listing of beams or just a short summary? Only used when the image has multiple beams and mode="summary".</description>
         <value>False</value>
@@ -122,19 +102,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </equals>
   	    <equals value="list"/>
   	    <equals value="history"/>
-  	    <equals value="fits"/>
 
 	    <equals value="put">
 		<default param="hdkey"><value type="string"></value></default>
 		<default param="hdvalue"><value type="string"></value></default>
-		<default param="hdtype"><value type="string"></value></default>
-		<default param="hdcomment"><value type="string"></value></default>	    </equals>
-
+        </equals>
 	    <equals value="add">
 		<default param="hdkey"><value type="string"></value></default>
 		<default param="hdvalue"><value type="string"></value></default>
-		<default param="hdtype"><value type="string"></value></default>
-		<default param="hdcomment"><value type="string"></value></default>
 	    </equals>
 
 	    <equals value="get">
@@ -148,28 +123,38 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </constraints>
 </input>
 
-<returns type="variant" limittypes="string double void" />
+<returns type="variant" />
 
 <example>
+    
+PARAMETER SUMMARY
 
+imagename   Input image name. example: imagename='ngc5921_task.image'
+mode        Mode of operation. Supoorted values: 'list', 'summary', 'history',
+            'get', 'put', 'add',  'del'.
+            NOTE:  'add', 'del', and 'put' should be used with caution.
+hdkey       Keyword to use with get, put, add, or del. example: hdkey='telescope'
+hdvalue     keyword value used for modes "put" and "add". Also used for mode="del" when
+            hdvalue="masks. example: hdvalue='VLA'
+        
 This task allows the user to manipulate metadata associated with an
 image.  The supported mode values are:
 
 add       Add a new metadata value to the image.
 del       Delete a key or reset its value to a fidicual value if possible.
           Ignores all but imagename, mode, and hdkey parameters.
-get  -    Return the specified keyword value. Ignores all but imagename, mode, and hdkey parameters.
+get       Return the specified keyword value. Ignores all but imagename, mode, and hdkey parameters.
 history   Log image history. Ignores all but imagename and mode parameters.
 list      Show supported keywords and their values. Ignores all but imagename and mode parameters.
 put       Modify the specified value associated with the keyword.
-summary   Log a summary of the image. 
+summary   Log a summary of the image. Ignores all but imagename and mode parameters.
 
 See below for details about how these modes act for specific keywords.
 
 NOTE: Only limited checking is implemented to ensure modifying a specific value
-will leave the image in a consistent state, so, if one is not careful, one could
+will leave the image metadata in a consistent state, so, if one is not careful, one could
 end up with an image that has an inconsistent set of metadata and is therefore,
-nonsensical and unusable. That is, PROCEED AT YOUR OWN RISK.
+nonsensical and useless That is, PROCEED AT YOUR OWN RISK when using modes add, del, or put.
 
 NOTE: For measurement sets, the task vishead should be used.
 
@@ -178,11 +163,12 @@ Supported keywords can be listed using mode = 'list'
 beammajor/bmaj	Major axis of the clean beam
 beamminor/bmin  Minor axis of the clean beam
 beampa/bpa      Position angle of the clean beam
-    NOTE: If the image contains multiple beams, use mode="summary" to list them.
+                NOTE: If the image contains multiple beams, use mode="summary" to list them
+                with verbose=True.
 bunit	        Image units (K, Jy/beam, etc)
 cdeltn	        Pixel size, nth axis. n is one-based.
-crpixn	        Reference pixel of nth axis. n is one-based.
-crvaln	        Reference value of nth axis. n is one-based.
+crpixn	        The pixel designated as the reference location, nth axis  n is one-based.
+crvaln	        World coordinate value of the reference pixel for the nth axis. n is one-based.
 ctypen	        Name of nth axis. n is one-based.
 cunitn	        Units of nth axis. n is one based.
 datamax         Maximum pixel value.
@@ -202,23 +188,15 @@ restfreq        Rest Frequency.
 shape           Number of pixels along each axis.
 telescope	    Telescope name.
 
-PARAMETER SUMMARY
 
-imagename   Input image name. example: imagename='ngc5921_task.image'
-mode        Mode of operation. Supoorted values: 'list', 'summary', 'history',
-            'get', 'put', 'add',  'del'.
-            NOTE:  'add', 'del', and put should be used with caution.
-hdkey       Keyword to use with get, put, add, or del. example: hdkey='telescope'
-hdvalue     keyword value used for modes "put" and "add". Also used for mode="del" when
-            hdvalue="masks. example: hdvalue='VLA'
-hdcomment   Comment to be stored with the keyword for mode='put' or mode='add'
-        
 NOTES on mode="add"
 
 The behavior of mode="add" depends on the keyword. Below is a summary of the per keyword
 behavior of this mode. In general, the return value will be True if the operation succeeds,
-or False if it fails or is not supported. If unsuccessful or not supported, a warning message
-is normally logged which describes the failure.
+or False if it fails or is not supported. If unsuccessful or not supported, a message
+is normally logged which describes the failure. In most cases, you probably want to use
+mode='put' rather than mode='add'. We continue to support mode='add' mainly for backward
+compatibility.
 
 Keyword                Behavior for mode="del"
 
@@ -246,7 +224,7 @@ cunit*                 No effect. Addition of coordinate system parameters is no
                        False. Use the cs tool to add coordinates.
 datamax                No effect. Addition of statistical parameters is not supported.
 datamin                No effect. Addition of statistical parameters is not supported.
-date-obs               No effect.
+date-obs or epoch      No effect.
 equinox                No effect.
 imtype                 If image type does not exist, add the type specified in hdvalue. hdvalue must be one of
                        "Undefined", "Intensity", "Beam", "Column Density", "Depolarization Ratio",
@@ -288,7 +266,7 @@ ctype*                 No effect. Deletion of coordinate system parameters is no
 cunit*                 No effect. Deletion of coordinate system parameters is not supported.
 datamax                No effect. Deletion of statistical parameters is not supported.
 datamin                No effect. Deletion of statistical parameters is not supported.
-date-obs               No effect.
+date-obs or epoch      No effect.
 equinox                No effect.
 imtype                 No effect.
 masks                  Deletes the single mask specified in hdvalue, or if hdvalue="", deletes all masks.
@@ -327,7 +305,7 @@ ctype*                 string
 cunit*                 string
 datamax                image pixel data type
 datamin                image pixel data type
-date-obs               string (YYYY/MM/DD/hh:mm:ss format)
+date-obs or epoch      string (YYYY/MM/DD/hh:mm:ss format)
 equinox                string
 imtype                 string
 masks                  string array
@@ -344,52 +322,99 @@ shape                  integer array
 telescope              string
 any user defined key   string
 
+NOTES on mode='put'
+In general, mode='put' will modify the specified key to the specified value, with
+the following examples. True is returned if the metadatum was successfully modified,
+False otherwise. Normally, a diagnostic message is logged if there is a failure. Only the
+parameter specified is modified; eg, no modification of reference direction occurs to implicitly
+account for precession to a new reference frame. The following are the exceptional cases for mode='put'.
+
+beammajor or bmaj      Will always fail if image has multiple beams. Use ia.setrestoringbeam()
+                       in this case. If image has no beam(s), a single, global, circular beam of diameter
+                       specified in hdvalue is added. hdvalue must be a valid angular quantity (string
+                       or dictionary) or the operation will fail and False will be returned.
+                       If the image has a single beam, the value of the major axis will be modified,
+                       unless the specified value is smaller than the minor axis of the existing beam,
+                       in which case nothing is modified and False is returned.
+                       Examples of acceptable values of hdvalue are "4arcsec", qa.quantity("4arcsec"),
+                       {'unit': 'arcsec', 'value': 4.0}.
+beamminor or bmin      Behavior is the same for bmaj, although of course if the image already has
+                       a single beam, the specified value must be less than the existing major
+                       axis value, or nothing is modified and False is returned.
+beampa or bpa          If the image does not already have a single beam, nothing is modified and
+                       False is returned. Angular units are required.
+bunit                  Fails if hdvalue is not a supported CASA unit.
+cdelt*                 One-based axis must be less than or equal to the number of axes in the image.
+                       hdvalue type must be a number (in which case the unit of the corresponding axis
+                       is assumed) or a quantity (string or dictionary). If a quantity, the unit must
+                       conform to the existing axis unit.
+crpix*                 One-based axis must be less than or equal to the number of axes in the image.
+                       hdvalue type must be a number.
+crval*                 One-based axis must be less than or equal to the number of axes in the image.
+                       hdvalue type must be a number (in which case the unit of the corresponding axis
+                       is assumed), a quantity (string or dictionary), or a valid measure format (such
+                       as a sexigesimal direction axis specification). If a quantity, the unit must
+                       conform to the existing axis unit.
+ctype*                 One-based axis must be less than or equal to the number of axes in the image.
+                       hdvalue type must be a string.
+cunit*                 One-based axis must be less than or equal to the number of axes in the image. Specified
+                       unit must conform to the existing axis unit.
+datamax                This cannot be modified. False is always returned.
+datamin                This cannot be modified. False is always returned.
+date-obs or epoch      A valid time specification must be given.
+equinox                A valid direction reference frame specification string must be given.
+imtype                 A CASA-supported image type string must be given or the image type will
+                       be set to 'Intensity'
+masks                  Masks may not be modified. False is always returned.
+maxpos                 This cannot be modified.
+maxpixpos              This cannot be modified.
+minpos                 This cannot be modified.
+minpixpos              This cannot be modified.
+object                 hdvalue must be a string.
+observer               hdvalue must be a string.
+projection             hdvalue must be a string representing a supported CASA projection specification.
+reffreqtype            hdvalue must be a string representing a supported CASA velocity reference frame
+                       specification.
+restfreq               hdvalue can be a number (in which case frequency axis units are assumed) or a valid
+                       quantity string or quantity dictionary in which case the unit must conform to Hz.
+                       Only the active rest frequency may be modified. For more functionality, see
+                       cs.setrestfrequency().
+shape                  This cannot be modified.
+telescope              hdvalue must be a string.
+any user defined key   hdvalue can be practically any supported input parameter type.
+
 EXAMPLES
-		  hdkey='date-obs';hdvalue='2007/06/20/00:00:00'
-		  hdkey='beammajor';hdvalue='55arcsec'
-                  hdkey='beampa'';hdvalue='0deg'
-		  hdkey='restfrequency';hdvalue='1.421GHz'
-		  hdkey='restfrequency';hdvalue='1.421GHz, 115.272GHz'
-		  hdkey='projection';hdvalue='TAN'
-		  hdkey='cdelt4';hdvalue=24415.05
-		  hdkey='cdelt1';hdvalue='7.75e-5deg'
-		  hdkey='crval1';hdvalue=qa.quantity( '763180', 'arsec')
-		  hdkey='crval1';hdvalue='14:07:58'
-		  hdkey='crval4';hdvalue='6250000Hz'
 
-        hdtype    --- Used only with 'add' mode.  It is the data type that
-                           is used to store the hdkey.  It can not be used to
-                           change the data type of an exiting keyword.
-                      options: bool, int, string, doubple, complex
-                      default: none; example hdtype='double'
+# mode='get'. Image has direction and spectral coordinates
+epoch = imhead(imagename=imagename, mode="get", hdkey="date-obs")
+observer = imhead(imagename=imagename, mode="get", hdkey="observer")
+projection = imhead(imagename=imagename, mode="get", hdkey="projection")
+restfreq = imhead(imagename=imagename, mode="get", hdkey="restfreq")
 
+# mode='add'
+if imhead(imagename=imagename, mode="add", hdkey="mykey", hdvalue="myvalue"):
+    print "mykey added".
+else:
+    print "addition of mykey failed".
+    
+# mode="del"
+if imhead(imagename=imagename, mode="del", hdkey="mykey"):
+    print "mykey deleted".
+else:
+    print "deletion of mykey failed".
+    
+# mode="put"
+# change the reference RA value
+imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="3:00:00")
+# or equivalently
+imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="45deg")
 
-        Note that hdvalue will contain numbers, strings as well as units.
-        
-        If mode="summary", verbose=True and the image contains multiple beams, the output,
-        will contain information on every beam in the dataset. If mode="summary",
-        verbose=False and the image has multiple beams, only a brief summary of
-        beams for each polarization is listed. In this
-        case, the beams with the maximum area, the minimum area, and the median area for
-        each polarization are listed. If mode is not "summary" and/or the image does not
-        have multiple beams, verbose is not used.
-        
-        Examples:
+# change the direction reference frame (NOTE, no precession of the existing
+# reference values is done!)
+imhead(imagename=imagename, mode="put", hdkey="equinox", hdvalue="GALACTIC")
 
-        1)  get the clean beam from one image and put it in a second image
-
-           Get the clean beam from image1 into hdvalue
-                imagename = 'image1.im'; mode = 'get'; hdkey = 'beam'
-                hdvalue = imhead()
-                print hdvalue   #  to see values
-
-
-
-        2)  The use of put is a bit more straight-forward
-
-               mode = 'put'; hdkey = 'crpix1'; hdvalue = '200'; imhead()
-        
-
+# change the object
+imhead(imagename=imagename, mode="put", hdkey="object", hdvalue="Milliways, also known as The Restaraunt at the End of the Universe")
 
 </example>
 

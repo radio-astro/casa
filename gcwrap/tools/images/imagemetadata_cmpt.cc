@@ -8,8 +8,6 @@
 
 using namespace std;
 
-#define _ORIGIN LogOrigin(_class, __FUNCTION__, WHERE)
-
 namespace casac {
 
 const String imagemetadata::_class = "imagemetadata";
@@ -17,7 +15,6 @@ const String imagemetadata::_class = "imagemetadata";
 imagemetadata::imagemetadata() :
 _log(new LogIO()), _header(0) {
 try {
-    *_log << _ORIGIN;
 	} catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
@@ -29,7 +26,6 @@ imagemetadata::~imagemetadata() {}
 
 bool imagemetadata::close() {
 	try {
-		*_log << _ORIGIN;
 		_header.reset(0);
 		_image.reset(0);
 		return True;
@@ -63,8 +59,8 @@ variant* imagemetadata::get(const string& key) {
 		return new variant(_header->getFITSValue(key));
 	}
 	catch (const AipsError& x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
+		*_log << LogIO::SEVERE << "Exception Reported: "
+			<< x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -75,8 +71,8 @@ record* imagemetadata::list(bool verbose) {
 		return fromRecord(_header->toRecord(verbose));
 	}
 	catch (const AipsError& x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
+		*_log << LogIO::SEVERE << "Exception Reported: "
+			<< x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -90,12 +86,11 @@ bool imagemetadata::open(const std::string& infile) {
 		ImageUtilities::openImage(x, infile, *_log);
 		_image.reset(x);
 		_header.reset(new ImageMetaDataRW<Float>(x));
-		*_log << _ORIGIN;
 		return True;
 
 	} catch (const AipsError& x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
+		*_log << LogIO::SEVERE << "Exception Reported: "
+			<< x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -111,8 +106,21 @@ bool imagemetadata::remove(const string& key, const variant& value) {
 		}
 	}
 	catch (const AipsError& x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
+		*_log << LogIO::SEVERE << "Exception Reported: "
+			<< x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+}
+
+
+bool imagemetadata::set(const string& key, const variant& value) {
+	try {
+		_exceptIfDetached();
+		return _header->set(key, value);
+	}
+	catch (const AipsError& x) {
+		*_log << LogIO::SEVERE << "Exception Reported: "
+			<< x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
