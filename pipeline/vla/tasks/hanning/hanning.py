@@ -13,6 +13,11 @@ from pipeline.hif.tasks import gaincal
 from pipeline.hif.tasks import bandpass
 from pipeline.hif.tasks import applycal
 
+
+
+
+LOG = infrastructure.get_logger(__name__)
+
 class HanningInputs(basetask.StandardInputs):
     def __init__(self, context, vis=None):
         # set the properties to the values given as input arguments
@@ -35,10 +40,11 @@ class HanningResults(basetask.Results):
 
 
 class Hanning(basetask.StandardTaskTemplate):
+    Inputs = HanningInputs
     
     def prepare(self):
         
-        result = _do_hanningsmooth()
+        result = self._do_hanningsmooth()
         
         return HanningResults()
     

@@ -318,15 +318,7 @@ class VLAImportData(basetask.StandardTaskTemplate):
             
         
             
-    def _do_hanningsmooth(self, asdm):
-        vis = self._asdm_to_vis_filename(asdm)
 
-        task = casa_tasks.hanningsmooth(vis=vis, 
-                                        datacolumn='data',
-                                        outputvis='',
-                                        async=False)
-
-        self._executor.execute(task)
 
 
 def get_setjy_results(mses):

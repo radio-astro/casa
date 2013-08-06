@@ -50,6 +50,7 @@ class Testgains(basetask.StandardTaskTemplate):
 
     def prepare(self):
 
+        context = self.inputs.context
         tablebase = 'testgaincal'
         table_suffix = ['.g','3.g','10.g']
         soltimes = [1.0,3.0,10.0] 
@@ -62,10 +63,10 @@ class Testgains(basetask.StandardTaskTemplate):
         shortsol1 = context.evla['msinfo'][m.name].shortsol1
         combtime = 'scan'
 
-        context = self.inputs.context
+        
 
         bpdgain_touse = tablebase + table_suffix[0]
-        testgains_result = _do_gtype_testgains('calibrators.ms', 'testgaincal.g', solint=solint, context=context, combtime=combtime)
+        testgains_result = self._do_gtype_testgains('calibrators.ms', 'testgaincal.g', solint=solint, context=context, combtime=combtime)
 
         flaggedSolnResult1 = getCalFlaggedSoln('testgaincal.g')
 
@@ -81,7 +82,7 @@ class Testgains(basetask.StandardTaskTemplate):
             soltime = soltimes[1]
             solint = solints[1]
 
-            testgains_result = _do_gtype_testgains('calibrators.ms', 'testgaincal3.g', solint=solint, context=context, combtime=combtime)
+            testgains_result = self._do_gtype_testgains('calibrators.ms', 'testgaincal3.g', solint=solint, context=context, combtime=combtime)
             flaggedSolnResult3 = getCalFlaggedSoln('testgaincal3.g')
 
             if (flaggedSolnResult3['all']['total'] > 0):
@@ -97,7 +98,7 @@ class Testgains(basetask.StandardTaskTemplate):
                     soltime = soltimes[2]
                     solint = solints[2]
 
-                    testgains_result = _do_gtype_testgains('calibrators.ms', 'testgaincal10.g', solint=solint, context=context, combtime=combtime)
+                    testgains_result = self._do_gtype_testgains('calibrators.ms', 'testgaincal10.g', solint=solint, context=context, combtime=combtime)
                     flaggedSolnResult10 = getCalFlaggedSoln(tablebase + table_suffix[2])
 
                     if (flaggedSolnResult10['all']['total'] > 0):
@@ -112,7 +113,7 @@ class Testgains(basetask.StandardTaskTemplate):
                         if (fracFlaggedSolns10 > 0.05):
                             solint='inf'
                             combtime=''
-                            testgains_result = _do_gtype_testgains('calibrators.ms', 'testgaincalscan.g', solint=solint, context=context, combtime=combtime)
+                            testgains_result = self._do_gtype_testgains('calibrators.ms', 'testgaincalscan.g', solint=solint, context=context, combtime=combtime)
                             flaggedSolnResultScan = getCalFlaggedSoln('testgaincalscan.g')
                             
                             if (flaggedSolnResultScan['all']['total'] > 0):

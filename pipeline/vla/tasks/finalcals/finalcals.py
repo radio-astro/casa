@@ -9,6 +9,7 @@ import pipeline.infrastructure.callibrary as callibrary
 
 import itertools
 import numpy as np
+import math
 import scipy as scp
 import scipy.optimize as scpo
 
@@ -439,13 +440,28 @@ class Finalcals(basetask.StandardTaskTemplate):
         vlainputs = VLAUtils.Inputs(context)
         vlautils = VLAUtils(vlainputs)
         
+        m = context.observing_run.measurement_sets[0]
+        field_spws = context.evla['msinfo'][m.name].field_spws
+        sources = context.evla['msinfo'][m.name].fluxscale_sources
+        flux_densities = context.evla['msinfo'][m.name].fluxscale_flux_densities
+        spws = context.evla['msinfo'][m.name].fluxscale_spws
+
+        #Look in spectral window domain object as this information already exists!
+        with casatools.TableReader(self.inputs.vis+'/SPECTRAL_WINDOW') as table:
+            channels = table.getcol('NUM_CHAN')
+            originalBBClist = table.getcol('BBC_NO')
+            spw_bandwidths = table.getcol('TOTAL_BANDWIDTH')
+            reference_frequencies = table.getcol('REF_FREQUENCY')
+    
+        center_frequencies = map(lambda rf, spwbw: rf + spwbw/2, reference_frequencies, spw_bandwidths)
+        
         fitfunc = lambda p, x: p[0] + p[1] * x
         errfunc = lambda p, x, y, err: (y - fitfunc(p, x)) / err
         
-        try:
-            ff = open(fluxscale_output, 'r')
-        except IOError as err:
-            LOG.error(fluxscale_output+" doesn't exist, error: "+err.filename)
+        ##try:
+        ##    ff = open(fluxscale_output, 'r')
+        ##except IOError as err:
+        ##    LOG.error(fluxscale_output+" doesn't exist, error: "+err.filename)
             
         # looking for lines like:
         #2012-03-09 21:30:23     INFO    fluxscale::::    Flux density for J1717-3342 in SpW=3 is: 1.94158 +/- 0.0123058 (SNR = 157.777, N= 34)
@@ -453,17 +469,17 @@ class Finalcals(basetask.StandardTaskTemplate):
         #2012-03-09 21:30:23     INFO    fluxscale::::    Flux density for J1717-3342 in SpW=0 is:  INSUFFICIENT DATA
         # so watch for that.
         
-        sources = []
-        flux_densities = []
-        spws = []
+        ##sources = []
+        ##flux_densities = []
+        ##spws = []
         
-        for line in ff:
-            if 'Flux density for' in line:
-                fields = line[:-1].split()
-                if (fields[11] != 'INSUFFICIENT'):
-                    sources.append(fields[7])
-                    flux_densities.append([float(fields[11]), float(fields[13])])
-                    spws.append(int(fields[9].split('=')[1]))
+        ##for line in ff:
+        ##    if 'Flux density for' in line:
+        ##        fields = line[:-1].split()
+        ##        if (fields[11] != 'INSUFFICIENT'):
+        ##            sources.append(fields[7])
+        ##            flux_densities.append([float(fields[11]), float(fields[13])])
+        ##            spws.append(int(fields[9].split('=')[1]))
         
         ii = 0
 	unique_sources = list(np.unique(sources))
@@ -484,22 +500,22 @@ class Finalcals(basetask.StandardTaskTemplate):
 		uspws = []
 		for ii in range(len(indices)):
 		    if find_EVLA_band(center_frequencies[spws[indices[ii]]]) == band:
-			lfreqs.append(log10(center_frequencies[spws[indices[ii]]]))
-			lfds.append(log10(flux_densities[indices[ii]][0]))
+			lfreqs.append(math.log10(center_frequencies[spws[indices[ii]]]))
+			lfds.append(math.log10(flux_densities[indices[ii]][0]))
 			lerrs.append((flux_densities[indices[ii]][1])/(flux_densities[indices[ii]][0])/2.303)
 			uspws.append(spws[indices[ii]])
 
 		if len(lfds) < 2:
-		pfinal = [lfds[0], 0.0]
-		covar = [0.0,0.0]
+		    pfinal = [lfds[0], 0.0]
+		    covar = [0.0,0.0]
 		else:
-		alfds = scp.array(lfds)
-		alerrs = scp.array(lerrs)
-		alfreqs = scp.array(lfreqs)
-		pinit = [0.0, 0.0]
-		fit_out = scpo.leastsq(errfunc, pinit, args=(alfreqs, alfds, alerrs), full_output=1)
-		pfinal = fit_out[0]
-		covar = fit_out[1]
+		    alfds = scp.array(lfds)
+		    alerrs = scp.array(lerrs)
+		    alfreqs = scp.array(lfreqs)
+		    pinit = [0.0, 0.0]
+		    fit_out = scpo.leastsq(errfunc, pinit, args=(alfreqs, alfds, alerrs), full_output=1)
+		    pfinal = fit_out[0]
+		    covar = fit_out[1]
 		aa = pfinal[0]
 		bb = pfinal[1]
 		reffreq = 10.0**lfreqs[0]/1.0e9
@@ -529,8 +545,8 @@ class Finalcals(basetask.StandardTaskTemplate):
                              'listmodeimages' : False,
                              'scalebychan'    : True,
                              'fluxdensity'    : [ result[2], 0, 0, 0 ],
-                             'spix'           : result[3]
-                             'reffreq'        : str(result[4])+'GHz'
+                             'spix'           : result[3],
+                             'reffreq'        : str(result[4])+'GHz',
                              'standard'       : 'Perley-Butler 2010',
                              'usescratch'     : False,
                              'async'          : False}

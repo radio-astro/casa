@@ -598,6 +598,10 @@ class VLAUtils(basetask.StandardTaskTemplate):
         self.short_solint = 0.0
         self.new_gain_solint1 = '1.0s'
         
+        self.fluxscale_sources = []
+        self.fluxscale_flux_densities = []
+        self.fluxscale_spws = []
+        
         return int_time
         
     def quackingScans(self):

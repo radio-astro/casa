@@ -118,7 +118,7 @@ class Solint(basetask.StandardTaskTemplate):
               
               
         longsolint = (np.max(durations))*1.01
-        gain_solint2=str(longsolint)+'s'  
+        gain_solint2=str(longsolint)+'s'
                    
         return (longsolint, gain_solint2)
 
