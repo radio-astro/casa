@@ -35,6 +35,10 @@ class TsysFreqAxesManager(object):
         self._axes = None
         self._baseframe = baseframe
         self._xlabel = string.Template('${frame} Frequency [MHz]')
+        if pl.rcParams.has_key('axes.color_cycle'):
+            self.color_cycle = pl.rcParams['axes.color_cycle']
+        else:
+            self.color_cycle = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
         if common.ShowPlot:
             pl.ion()
         else:
@@ -61,6 +65,15 @@ class TsysFreqAxesManager(object):
             self._axes = self.__axes()
         return self._axes
 
+    def reset_color_cycle(self):
+        if self._axes is None:
+            return
+
+        if hasattr(self._axes._get_lines, 'count'):
+            self._axes._get_lines.count = 0
+        else:
+            self._axes.set_color_cycle(self.color_cycle)
+
     def __axes(self):
         a = pl.subplot(111)
         a.set_xlabel(self._xlabel.safe_substitute(frame=self.baseframe))
@@ -72,12 +85,25 @@ class TsysTimeAxesManager(common.TimeAxesManager):
     def __init__(self):
         super(TsysTimeAxesManager, self).__init__()
         self._axes = None
+        if pl.rcParams.has_key('axes.color_cycle'):
+            self.color_cycle = pl.rcParams['axes.color_cycle']
+        else:
+            self.color_cycle = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
 
     @property
     def axes(self):
         if self._axes is None:
             self._axes = self.__axes()
         return self._axes
+
+    def reset_color_cycle(self):
+        if self._axes is None:
+            return
+
+        if hasattr(self._axes._get_lines, 'count'):
+            self._axes._get_lines.count = 0
+        else:
+            self._axes.set_color_cycle(self.color_cycle)
 
     def __axes(self):
         a = pl.subplot(111)
@@ -102,9 +128,6 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
 
     def __init__(self, inputs):
         super(SDTsysDisplay, self).__init__(inputs)
-        self.color_cycle = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
-        if pl.rcParams.has_key('axes.color_cycle'):
-            self.color_cycle = pl.rcParams['axes.color_cycle']
 
     def doplot(self, result, stage_dir):
         
@@ -193,6 +216,9 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
 
                 for line in lines:
                     line.remove()
+
+                axes_manager.reset_color_cycle()
+                
             tsel.close()
         return plots 
 
@@ -234,13 +260,13 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
             if common.ShowPlot: pl.ioff()
             pl.clf()
             axes = axes_manager.axes
-            title = 'Tsys vs Elevation (Averaged Full Channel)'
+            title = 'Tsys vs Time (Averaged Full Channel)'
             lines = []
             noedge_data = {}
             for spw in spwlist:
                 noedge_data[spw] = {}
                 for pol in pollist:
-                    tsel = tb.query('IFNO==%s && POLNO==%s'%(spw,pol), sortlist='ELEVATION')
+                    tsel = tb.query('IFNO==%s && POLNO==%s'%(spw,pol), sortlist='TIME')
                     tsys = tsel.getcol('TSYS')
                     time = utils.mjd_to_plotval(tsel.getcol('TIME'))
                     tsel.close()
@@ -272,9 +298,9 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
                 line.remove()
 
             # reset colormap
-            axes.set_color_cycle(self.color_cycle)
+            axes_manager.reset_color_cycle()
 
-            title = 'Tsys vs Elevation (Average Excluding Edge)'
+            title = 'Tsys vs Time (Average Excluding Edge)'
             lines = []
             for (spw, values) in noedge_data.items():
                 for (pol, data) in values.items():

@@ -17,6 +17,10 @@ class SDSkyAxesManager(object):
         self._axes = None
         self._baseframe = baseframe
         self._xlabel = string.Template('${frame} Frequency [MHz]')
+        if pl.rcParams.has_key('axes.color_cycle'):
+            self.color_cycle = pl.rcParams['axes.color_cycle']
+        else:
+            self.color_cycle = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
         if common.ShowPlot:
             pl.ion()
         else:
@@ -42,6 +46,15 @@ class SDSkyAxesManager(object):
         if self._axes is None:
             self._axes = self.__axes()
         return self._axes
+
+    def reset_color_cycle(self):
+        if self._axes is None:
+            return
+
+        if hasattr(self._axes._get_lines, 'count'):
+            self._axes._get_lines.count = 0
+        else:
+            self._axes.set_color_cycle(self.color_cycle)
 
     def __axes(self):
         a = pl.subplot(111)
@@ -236,7 +249,8 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
                             for line in lines:
                                 line.remove()
 
-                            axes.set_color_cycle(pl.rcParams['axes.color_cycle'])
+                            #axes.set_color_cycle(pl.rcParams['axes.color_cycle'])
+                            axes_manager.reset_color_cycle()
                         
                                     
         return plots
