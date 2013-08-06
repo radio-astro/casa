@@ -1417,7 +1417,7 @@ FlagAgentBase::setAgentParameters(Record config)
 				<< LogIO::POST;
 		if (flagDataHandler_p->flagAutoCorrelations_p) {
 			filterRows_p=true;
-			*logger_p << logLevel_p << "Will only flag auto-correlations from non-radiometer data"
+			*logger_p << logLevel_p << "Will only apply auto-correlation flagging to data with processor==CORRELATOR"
 					<< LogIO::POST;
 		}
 	}
@@ -1514,13 +1514,13 @@ FlagAgentBase::generateRowsIndex(uInt nRows)
 				// Only for MSs, not for cal tables
 				if (flagDataHandler_p->tableTye_p == FlagDataHandler::MEASUREMENT_SET){
 
-					// CAS-5286: do not flag auto-corrs when processor TYPE is RADIOMETER
+					// CAS-5286: only flag auto-corrs when processor TYPE is CORRELATOR
 					int proc_id = visibilityBuffer_p->processorId()[row_i];
-					if (proc_id >= 0 and flagDataHandler_p->processorTableExist_p == true){
 
-						String proc_type = flagDataHandler_p->typeCol_p.asString(proc_id);
-						if (proc_type.compare("RADIOMETER") == 0) continue;
-
+					if (flagDataHandler_p->processorTableExist_p == true and
+							flagDataHandler_p->isCorrelatorType_p.get(proc_id) == false){
+						// skip non-CORRELATOR data
+						continue;
 					}
 				}
 
