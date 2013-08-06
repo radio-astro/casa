@@ -2183,14 +2183,25 @@ Bool CoordinateSystem::setWorldAxisNames(const Vector<String> &names)
     return ok;
 }
 
-Bool CoordinateSystem::setWorldAxisUnits(const Vector<String> &units)
-{
+Bool CoordinateSystem::setWorldAxisUnits(const Vector<String> &units) {
+	return setWorldAxisUnits(units, False);
+}
+
+
+Bool CoordinateSystem::setWorldAxisUnits(
+	const Vector<String> &units, Bool throwException
+) {
     Bool ok = (units.nelements()==nWorldAxes());
     if (!ok) {
-      set_error("units vector must be of length nWorldAxes()");
-      return False;
+    	String error = "units vector must be of length nWorldAxes()";
+    	if (throwException) {
+    		throw AipsError(error);
+    	}
+    	else {
+    		set_error(error);
+    		return False;
+    	}
     }
-//
     const uInt nc = nCoordinates();
     for (uInt i=0; i<nc; i++) {
         Vector<String> tmp(coordinates_p[i]->worldAxisUnits().copy());
@@ -2200,12 +2211,18 @@ Bool CoordinateSystem::setWorldAxisUnits(const Vector<String> &units)
            if (which >= 0) tmp[j] = units[which];
         }
 
-// Set new units
-
         ok = (coordinates_p[i]->setWorldAxisUnits(tmp) && ok);
-        if (!ok) set_error (coordinates_p[i]->errorMessage());
+        if (!ok) {
+        	String error = coordinates_p[i]->errorMessage();
+        	if (throwException) {
+        		throw AipsError(error);
+        	}
+        	else {
+        		set_error(error);
+        		return False;
+        	}
+        }
     }
-//    
     return ok;
 }
 

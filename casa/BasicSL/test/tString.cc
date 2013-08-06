@@ -35,6 +35,8 @@
 #include <casa/iostream.h>
 #include <casa/sstream.h>
 
+#include <math.h>
+
 #include <casa/namespace.h>
 // Generally used variables
 String X = "Hello";
@@ -367,20 +369,48 @@ void toDouble() {
     String x = "1.5";
     Double y = String::toDouble(x);
     AlwaysAssertExit(y == 1.5);
+    Bool success;
+    y = String::toDouble(success, x);
+    AlwaysAssertExit(success && y == 1.5);
     x = "frodo";
     y = String::toDouble(x);
     // should be 0, but account for finite machine precision
-    AlwaysAssertExit(y < 1e-316 && y > -1e-316);
+    AlwaysAssertExit(y < fabs(1e-316));
+    y = String::toDouble(success, x);
+    AlwaysAssertExit(! success && y < fabs(1e-316));
+
+    // and 0
+    x = "0.0e0";
+    y = String::toDouble(x);
+    // should be 0, but account for finite machine precision
+    AlwaysAssertExit(y < fabs(y) < 1e-316);
+    y = String::toDouble(success, x);
+    AlwaysAssertExit(success && fabs(y) < 1e-316);
 }
 
 void toFloat() {
     String x = "1.5";
     Float y = String::toFloat(x);
     AlwaysAssertExit(y == 1.5);
+    Bool success;
+    y = String::toFloat(success, x);
+    AlwaysAssertExit(success && y == 1.5);
+
     x = "frodo";
     y = String::toFloat(x);
     // should be 0, but account for finite machine precision
-    AlwaysAssertExit(y < 1e-316 && y > -1e-316);
+    AlwaysAssertExit(fabs(y) < 1e-316);
+    y = String::toFloat(success, x);
+    AlwaysAssertExit(! success && fabs(y) < 1e-316);
+
+    // and 0
+    x = "0.0e0";
+    y = String::toFloat(x);
+    // should be 0, but account for finite machine precision
+    AlwaysAssertExit(y < fabs(y) < 1e-316);
+    y = String::toFloat(success, x);
+    AlwaysAssertExit(success && fabs(y) < 1e-316);
+
 }
 
 void toInt() {
