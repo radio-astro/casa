@@ -182,59 +182,30 @@ template<class T> casac::variant ImageMetaData<T>::getFITSValue(const String& ke
 		|| c.startsWith(_CRVAL) ||  c.startsWith(_CTYPE)
 		||  c.startsWith(_CUNIT)
 	) {
-		String prefix;
-		if (c.startsWith(_CDELT)) {
-			prefix = _CDELT;
+		String prefix = c.substr(0, 5);
+		uInt n = _getAxisNumber(c);
+		if (prefix == _CDELT) {
+			return casac::variant(
+				fromRecord(
+					QuantumHolder(_getIncrements()[n-1]).toRecord()
+				)
+			);
 		}
-		else if (c.startsWith(_CRPIX)) {
-			prefix = _CRPIX;
+		else if (prefix == _CRPIX) {
+			return _getRefPixel()[n-1];
 		}
-		else if (c.startsWith(_CRVAL)) {
-			prefix = _CRVAL;
+		else if (prefix == _CRVAL) {
+			return casac::variant(
+				fromRecord(
+					QuantumHolder(_getRefValue()[n-1]).toRecord()
+				)
+			);
 		}
-		else if (c.startsWith(_CTYPE)) {
-			prefix = _CTYPE;
+		else if (prefix == _CTYPE) {
+			return _getAxisNames()[n-1];
 		}
-		else if (c.startsWith(_CUNIT)) {
-			prefix = _CUNIT;
-		}
-		if (key == prefix + "0") {
-			_log << _ORIGINB << "FITS convention is that axes are 1-based, so " << key
-				<< " is not a valid axis specification" << LogIO::EXCEPTION;
-		}
-		string sre = prefix + "[0-9]+";
-		boost::regex re;
-		re.assign(sre, boost::regex_constants::icase);
-		if (boost::regex_match(key, re)) {
-			uInt n = String::toInt(key.substr(prefix.length()));
-			uInt naxes = _getImage()->ndim();
-			if (n > naxes) {
-				_log << _ORIGINB << "This image only has " << naxes
-					<< " axes." << LogIO::EXCEPTION;
-			}
-			if (prefix == _CDELT) {
-				return casac::variant(
-					fromRecord(
-						QuantumHolder(_getIncrements()[n-1]).toRecord()
-					)
-				);
-			}
-			else if (prefix == _CRPIX) {
-				return _getRefPixel()[n-1];
-			}
-			else if (prefix == _CRVAL) {
-				return casac::variant(
-					fromRecord(
-						QuantumHolder(_getRefValue()[n-1]).toRecord()
-					)
-				);
-			}
-			else if (prefix == _CTYPE) {
-				return _getAxisNames()[n-1];
-			}
-			else if (prefix == _CUNIT) {
-				return _getAxisUnits()[n-1];
-			}
+		else if (prefix == _CUNIT) {
+			return _getAxisUnits()[n-1];
 		}
 	}
 	else if (c == _EQUINOX) {
@@ -341,6 +312,33 @@ template<class T> casac::variant ImageMetaData<T>::getFITSValue(const String& ke
 	_log << _ORIGINB << "Unknown keyword " << c << LogIO::EXCEPTION;
 	return casac::variant();
 }
+
+template<class T> uInt ImageMetaData<T>::_getAxisNumber(
+	const String& key
+) const {
+	uInt n = 0;
+	string sre = key.substr(0, 5) + "[0-9]+";
+	boost::regex re;
+	re.assign(sre, boost::regex_constants::icase);
+	if (boost::regex_match(key, re)) {
+		n = String::toInt(key.substr(5));
+		uInt naxes = _getImage()->ndim();
+		if (n == 0) {
+			_log << _ORIGINB << "The FITS convention is that axes "
+				<< "are 1-based. Therefore, " << key << " is not a valid "
+				<< "FITS keyword specification" << LogIO::EXCEPTION;
+		}
+		else if (n > naxes) {
+			_log << _ORIGINB << "This image only has " << naxes
+				<< " axes." << LogIO::EXCEPTION;
+		}
+	}
+	else {
+		_log << "Unsupported key " << key << LogIO::EXCEPTION;
+	}
+	return n;
+}
+
 
 template<class T> String ImageMetaData<T>::_getEpochString() const {
 	return MVTime(_getObsDate().getValue()).string(MVTime::YMD);
@@ -468,7 +466,9 @@ template<class T> Vector<Quantity> ImageMetaData<T>::_getRefValue() const {
 
 template<class T> String ImageMetaData<T>::_getRefFreqType() const {
 	if (_reffreqtype.empty() && _getCoords().hasSpectralAxis()) {
-		_reffreqtype = MFrequency::showType(_getCoords().spectralCoordinate().type());
+		_reffreqtype = MFrequency::showType(
+			_getCoords().spectralCoordinate().frequencySystem(False)
+		);
 	}
 	return _reffreqtype;
 }

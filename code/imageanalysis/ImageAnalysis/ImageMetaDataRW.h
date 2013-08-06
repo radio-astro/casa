@@ -91,7 +91,11 @@ public:
 
 	virtual Record toRecord(Bool verbose) const;
 
+	// add a key-value pair
 	Bool add(const String& key, const casac::variant& value);
+
+	// set (update) the value associated with the key.
+	Bool set(const String& key, const casac::variant& value);
 
 
 protected:
@@ -157,6 +161,12 @@ private:
 	mutable Record _header;
 
 	ImageMetaDataRW() : _image(0) {}
+
+	void _setCoordinateValue(const String& key, const casac::variant& value);
+
+	void  _checkString(const String& key, const casac::variant& v) const;
+
+	void _setUserDefined(const String& key, const casac::variant& v);
 
 };
 

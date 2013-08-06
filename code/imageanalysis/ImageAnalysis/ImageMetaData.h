@@ -190,6 +190,8 @@ protected:
 
 	void _toLog(const Record& header) const;
 
+	uInt _getAxisNumber(const String& key) const;
+
 private:
 
 	// I really would like this to be a shared pointer, but that

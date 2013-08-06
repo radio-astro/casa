@@ -33,7 +33,8 @@
 
 #include <casa/aips.h>
 
-#define _ORIGINA LogOrigin("ImageMetaDataRW<T>", __FUNCTION__, WHERE)
+#define _LOCATEA "ImageMetaDataRW<T>" << __FUNCTION__ << " "
+#define _ORIGINA LogOrigin("ImageMetaDataRW<T>", __FUNCTION__)
 
 namespace casa {
 
@@ -54,341 +55,145 @@ template<class T> Record ImageMetaDataRW<T>::toRecord(Bool verbose) const {
 
 template<class T> Bool ImageMetaDataRW<T>::add(const String& key, const casac::variant& value) {
 	String c = key;
-	LogIO log = this->_getLog();
-	log << _ORIGINA;
 	c.downcase();
-	if (c == ImageMetaData<T>::_BUNIT) {
-		if (_getImage()->units().getName().empty()) {
-			String v = value.toString();
-			if (_getImage()->setUnits(Unit(v))) {
-				_bunit = v;
-				log << LogIO::NORMAL << "Setting " << key << " to " << v << LogIO::POST;
-			}
-			else {
-				log << LogIO::WARN << "Unable to set " << key << LogIO::POST;
-				return False;
-			}
-		}
-		else {
-			log << LogIO::WARN << key << " is already present and has value "
-				<< _getBrightnessUnit() << ". It may be modified but not added."
-				<< LogIO::POST;
-			return False;
-		}
-	}
-	else if (
+	ThrowIf(
 		c.startsWith(ImageMetaData<T>::_CDELT)
 		|| c.startsWith(ImageMetaData<T>::_CRPIX)
 		|| c.startsWith(ImageMetaData<T>::_CRVAL)
 		||  c.startsWith(ImageMetaData<T>::_CTYPE)
-		||  c.startsWith(ImageMetaData<T>::_CUNIT)
-	) {
-		log << LogIO::WARN << key << " pertains to a "
-			<< "coordinate system axis attribute. It may be "
-			<< "modified if it exists, but it may not be added."
-			<< LogIO::POST;
-		return False;
-	}
-	else if (c == ImageMetaData<T>::_EQUINOX) {
-		if (_getCoords().hasDirectionCoordinate()) {
-			log << LogIO::WARN << "The direction reference frame ("
-			<< key << "="
-			<< _getEquinox()
-			<< ") already exists. It may be modified but not added." << LogIO::POST;
-		}
-		else {
-			log << LogIO::WARN << "This image does not have a direction "
-				<< "coordinate and so a direction reference frame cannot be added."
-				<< LogIO::POST;
-		}
-		return False;
+		||  c.startsWith(ImageMetaData<T>::_CUNIT),
+		key + " pertains to a "
+		+ "coordinate system axis attribute. It may be "
+		+ "modified if it exists, but it may not be added."
+	);
+	ThrowIf(
+		c == ImageMetaData<T>::_EQUINOX,
+		"The direction reference frame ("
+		+ key + "=" + _getEquinox()
+		+") already exists. It may be modified but not added."
+	);
+	ThrowIf(
+		c == ImageMetaData<T>::MASKS,
+		"This application does not support adding masks."
+	);
+	ThrowIf(
+		c == ImageMetaData<T>::_OBSDATE || c == ImageMetaData<T>::_EPOCH,
+		"The epoch (" + key + "=" + this->_getEpochString()
+		+ ") already exists. It may be modified but not added."
+	);
+	ThrowIf(
+		c == ImageMetaData<T>::_PROJECTION,
+		"The projection ("
+		+ key + "=" + _getProjection()
+		+") already exists. It may be modified but not added."
+	);
+	ThrowIf(
+		c == ImageMetaData<T>::_REFFREQTYPE,
+		"The velocity reference frame ("
+		+ key + "=" + _getProjection()
+		+") already exists. It may be modified but not added."
+	);
+	ThrowIf(
+		c == ImageMetaData<T>::_SHAPE,
+		"The shape is intrinsic to the image and may "
+		"not be added."
+	);
+	ThrowIf(
+		c == ImageMetaData<T>::_BEAMPA || c == ImageMetaData<T>::_BPA,
+		"Cannot add a beam position "
+		"angle. Add the major or minor axis and then "
+		"modify the other and the position angle."
+	);
+	ThrowIf(
+		c == ImageMetaData<T>::_DATAMIN
+		|| c == ImageMetaData<T>::_DATAMAX
+		|| c == ImageMetaData<T>::_MINPIXPOS
+		|| c == ImageMetaData<T>::_MAXPIXPOS
+		|| c == ImageMetaData<T>::_MINPOS
+		|| c == ImageMetaData<T>::_MAXPOS,
+		key + " is is a statistic of the image and may "
+		"not be added."
+	);
+	if (c == ImageMetaData<T>::_BUNIT) {
+		ThrowIf(
+			! _getBrightnessUnit().empty(),
+			key + " is already present and has value "
+			+ _getBrightnessUnit() + ". It may be modified but not added."
+		);
+		String v = value.toString();
+		ThrowIf(
+			! _getImage()->setUnits(Unit(v)),
+			"Unable to set " + key
+		);
+		_bunit = v;
 	}
 	else if (c == ImageMetaData<T>::_IMTYPE) {
 		String imtype = _getImType();
-		if (imtype.empty()) {
-			ImageInfo info = _getImage()->imageInfo();
-			String v = value.toString();
-			info.setImageType(ImageInfo::imageType(v));
-			_getImage()->setImageInfo(info);
-			String newType = ImageInfo::imageType(info.imageType());
-			_imtype = newType;
-			log << LogIO::POST << "Set image type to " << newType << LogIO::POST;
-		}
-		else {
-			log << LogIO::WARN << "The image type ("
-				<< key << "=" << ImageInfo::imageType(imtype)
-			<< ") already exists. It may be modified but be added." << LogIO::POST;
-			return False;
-		}
-	}
-	else if (c == ImageMetaData<T>::MASKS) {
-		log << "This application does not support adding masks." << LogIO::WARN;
-		return False;
+		ThrowIf(
+			! imtype.empty(),
+			"The image type ("
+			+ key + "=" + ImageInfo::imageType(imtype)
+		    + ") already exists. It may be modified but be added."
+		);
+		set(c, value);
 	}
 	else if (c == ImageMetaData<T>::_OBJECT) {
 		String object = _getObject();
-		if (object.empty()) {
-			ImageInfo info = _getInfo();
-			String v = value.toString();
-			info.setObjectName(v);
-			_getImage()->setImageInfo(info);
-			_object = v;
-			log << LogIO::NORMAL << "Set " << key << " to " << v << LogIO::POST;
-		}
-		else {
-			log << LogIO::WARN << key << " is already present and has value "
-				<< object << ". It may be modified but not added." << LogIO::POST;
-			return False;
-		}
-	}
-	else if (c == ImageMetaData<T>::_OBSDATE || c == ImageMetaData<T>::_EPOCH) {
-		log << LogIO::WARN << "The epoch ("
-			<< key << "="
-			<< this->_getEpochString()
-			<< ") already exists. It may be modified but not added." << LogIO::POST;
-		return False;
+		ThrowIf(
+			! object.empty(),
+			key + " is already present and has value "
+			+ object + ". It may be modified but not added."
+		);
+		set(c, value);
 	}
 	else if (c == ImageMetaData<T>::_OBSERVER) {
 		String observer = _getObserver();
-		if (observer.empty()) {
-			CoordinateSystem csys = _getCoords();
-			ObsInfo info = csys.obsInfo();
-			String v = value.toString();
-			info.setObserver(v);
-			csys.setObsInfo(info);
-			_getImage()->setCoordinateInfo(csys);
-			_observer = v;
-			log << LogIO::NORMAL << "Set " << key << " to " << v << LogIO::POST;
-		}
-		else {
-			log << LogIO::WARN << key << " is already present and has value "
-						<< observer << ". It may be modified but not added." << LogIO::POST;
-			return False;
-		}
-	}
-	else if (c == ImageMetaData<T>::_PROJECTION) {
-		if (_getCoords().hasDirectionCoordinate()) {
-			log << LogIO::WARN << "The direction projection type ("
-				<< key << "=" << _getProjection()
-				<< ") already exists. It may be modified but not added." << LogIO::POST;
-		}
-		else {
-			log << LogIO::WARN << "This image does not have a direction "
-				<< "coordinate and so a direction projection cannot be added."
-				<< LogIO::POST;
-		}
-		return False;
-	}
-	else if (c == ImageMetaData<T>::_REFFREQTYPE) {
-		if (_getCoords().hasSpectralAxis()) {
-			log << LogIO::WARN << "The spectral reference frame ("
-				<< key << "=" << _getRefFreqType()
-				<< ") already exists. It may be modified but not added." << LogIO::POST;
-			}
-		else {
-			log << LogIO::WARN << "This image does not have a spectral "
-				<< "coordinate and so a velocity reference frame cannot be added."
-				<< LogIO::POST;
-			}
-		return False;
+		ThrowIf(
+			! observer.empty(),
+			key + " is already present and has value "
+			+ observer + ".  It may be modified but not added."
+		);
+		set(c, value);
 	}
 	else if (c == ImageMetaData<T>::_RESTFREQ) {
-		if (_getCoords().hasSpectralAxis()) {
-			if (_getRestFrequency().getValue() == 0) {
-				Quantity rf = casaQuantity(value);
-				if (rf.getValue() == 0) {
-					log << LogIO::WARN << "Unable to set rest frequency to "
-						<< value.toString() << LogIO::POST;
-					return False;
-				}
-				else if (! rf.getUnit().empty() && ! rf.isConform("Hz")) {
-					log << LogIO::WARN << "Unable to set rest frequency to "
-						<< value.toString() << " because units do not conform to Hz"
-						<< LogIO::POST;
-					return False;
-				}
-				else {
-					CoordinateSystem csys = _getCoords();
-					SpectralCoordinate sp = csys.spectralCoordinate();
-					Double v = 0;
-					if (
-						value.type() == casac::variant::DOUBLE
-						|| value.type() == casac::variant::INT
-						|| value.type() == casac::variant::LONG
-					) {
-						v = value.toDouble();
-					}
-					else {
-						v = rf.getValue(sp.worldAxisUnits()[0]);
-					}
-					sp.setRestFrequency(v);
-					_restFreq = rf;
-					log << LogIO::POST << "Set rest frequency to " << v << LogIO::POST;
-				}
-			}
-			else {
-				log << LogIO::WARN << "The rest frequency ("
-					<< key << "=" << _getRestFrequency().getValue()
-					<< _getRestFrequency().getUnit()
-					<< ") already exists. It may be modified but not added "
-					<< "by this application. If you wish to append a rest frequency "
-					<< "to an already existing list, use cs.setrestfrequency()."
-					<< LogIO::POST;
-				return False;
-			}
-		}
-		else {
-			log << LogIO::WARN << "This image does not have a spectral "
-				<< "coordinate and so a rest frequency cannot be added."
-				<< LogIO::POST;
-			return False;
-		}
-
-	}
-	else if (c == ImageMetaData<T>::_SHAPE) {
-		log << LogIO::WARN << "The shape is intrinsic to the image and may "
-			"not be added." << LogIO::POST;
-		return False;
+		ThrowIf(
+			_getRestFrequency().getValue() > 0,
+			"The rest frequency ("
+			+ key + "=" + String::toString(_getRestFrequency().getValue())
+			+ _getRestFrequency().getUnit()
+			+ ") already exists. It may be modified but not added "
+			+ "by this application. If you wish to append a rest frequency "
+			+ "to an already existing list, use cs.setrestfrequency()."
+		);
+		set(c, value);
 	}
 	else if (c == ImageMetaData<T>::_TELESCOPE) {
 		String telescope = _getTelescope();
-		if (telescope.empty()) {
-			CoordinateSystem csys = _getCoords();
-			ObsInfo info = csys.obsInfo();
-			String v = value.toString();
-			info.setTelescope(v);
-			csys.setObsInfo(info);
-			_getImage()->setCoordinateInfo(csys);
-			_telescope = v;
-			log << LogIO::NORMAL << "Set " << key << " to " << v << LogIO::POST;
-		}
-		else {
-			log << LogIO::WARN << key << " is already present and has value "
-				<< telescope << ". It may be modified but not added." << LogIO::POST;
-			return False;
-		}
+		ThrowIf(
+			! telescope.empty(),
+			key + " is already present and has value "
+			+ telescope + ". It may be modified but not added."
+		);
+		set(c, value);
 	}
 	else if (
 		c == ImageMetaData<T>::_BEAMMAJOR
 		|| c == ImageMetaData<T>::_BEAMMINOR
-		|| c == ImageMetaData<T>::_BEAMPA
 		|| c == ImageMetaData<T>::_BMAJ
 		|| c == ImageMetaData<T>::_BMIN
-		|| c == ImageMetaData<T>::_BPA
 	) {
 		ImageInfo info = _getInfo();
-		if (info.hasBeam()) {
-			log << LogIO::WARN << "This image already has a beam(s). Cannot add one."
-				<< LogIO::POST;
-			return False;
-		}
-		else if (c == ImageMetaData<T>::_BEAMPA || c == ImageMetaData<T>::_BPA) {
-			log << LogIO::WARN << "Cannot add a beam position "
-				<< "angle. Add the major or minor axis and then "
-				<< "modify the other and the position angle with put"
-				<< LogIO::POST;
-			return False;
-		}
-		else {
-			Quantity axis = casaQuantity(value);
-			if (axis.getUnit().empty()) {
-				log << LogIO::WARN << "A quantity with a known unit "
-					<< "is required" << LogIO::POST;
-				return False;
-			}
-			else if (! axis.isConform(("arcsec"))) {
-				log << LogIO::WARN << "Unit must be an angular measure."
-					<< LogIO::POST;
-				return False;
-			}
-			else {
-				GaussianBeam beam(axis, axis, Quantity(0, "deg"));
-				ImageInfo info = _getInfo();
-				info.setRestoringBeam(beam);
-				_getImage()->setImageInfo(info);
-				_beam = beam;
-				log << LogIO::NORMAL << "Adding single beam " << beam
-					<< " to image." << LogIO::POST;
-			}
-		}
-	}
-	else if (
-		c == ImageMetaData<T>::_DATAMIN
-		|| c == ImageMetaData<T>::_DATAMAX
-		|| c == ImageMetaData<T>::_MINPIXPOS
-        || c == ImageMetaData<T>::_MAXPIXPOS
-        || c == ImageMetaData<T>::_MINPOS
-        || c == ImageMetaData<T>::_MAXPOS
-    ) {
-		log << LogIO::WARN << key << " is is a statistic of the image and may "
-			<< "not be added." << LogIO::POST;
-		return False;
+		ThrowIf(
+			info.hasBeam(),
+			"This image already has a beam(s). Cannot add one."
+		);
+		set(c, value);
 	}
 	else if (_image->miscInfo().isDefined(key) || _image->miscInfo().isDefined(c)) {
-		log << LogIO::WARN << "Keyword " << c << " already exists so cannot be added."
-			<< LogIO::POST;
-		return False;
+		ThrowCc("Keyword " + key + " already exists so cannot be added.");
 	}
 	else {
-		TableRecord info = _getImage()->miscInfo();
-		switch(value.type()) {
-		case casac::variant::BOOL:
-			info.define(key, value.getBool());
-			break;
-		case casac::variant::BOOLVEC:
-			info.define(key, Vector<Bool>(value.getBoolVec()));
-			break;
-		case casac::variant::COMPLEX:
-			info.define(key, value.getComplex());
-			break;
-		case casac::variant::DOUBLE:
-			info.define(key, value.getDouble());
-			break;
-		case casac::variant::DOUBLEVEC:
-			info.define(key, Vector<Double>(value.getDoubleVec()));
-			break;
-		case casac::variant::INT:
-			info.define(key, value.getInt());
-			break;
-		case casac::variant::INTVEC:
-			info.define(key, Vector<Int>(value.getIntVec()));
-			break;
-		case casac::variant::LONG:
-			info.define(key, value.getLong());
-			break;
-		case casac::variant::LONGVEC:
-			info.define(key, Vector<Int64>(value.getLongVec()));
-			break;
-		case casac::variant::RECORD: {
-			casac::record m = value.getRecord();
-			Record *k = casa::toRecord(m);
-			auto_ptr<Record> r(k);
-			info.defineRecord(key, *r);
-			break;
-		}
-		case casac::variant::STRING:
-			info.define(key, value.getString());
-			break;
-		case casac::variant::STRINGVEC: {
-			vector<std::string> v = value.getStringVec();
-			Vector<String> x(v.size());
-			Vector<String>::iterator iter = x.begin();
-			Vector<String>::const_iterator end = x.end();
-
-			vector<std::string>::const_iterator viter = v.begin();
-			while (iter != end) {
-				*iter = *viter;
-				iter++;
-				viter++;
-			}
-			info.define(key, x);
-			break;
-		}
-		default:
-			log << "Unhandled value type." << LogIO::EXCEPTION;
-			break;
-		}
-		_getImage()->setMiscInfo(info);
+		_setUserDefined(key, value);
 	}
 	_header.assign(Record());
 	return True;
@@ -399,41 +204,72 @@ template<class T> Bool ImageMetaDataRW<T>::remove(const String& key) {
 	LogIO log = this->_getLog();
 	log << _ORIGINA;
 	c.downcase();
-	if (c == ImageMetaData<T>::_BUNIT) {
-		if (_getImage()->setUnits(Unit(""))) {
-			_bunit = "";
-			log << LogIO::NORMAL << "Setting " << key << " to empty string" << LogIO::POST;
-		}
-		else {
-			log << LogIO::WARN << "Unable to clear BUNIT" << LogIO::POST;
-			return False;
-		}
-	}
-	else if (
+	ThrowIf(
 		c.startsWith(ImageMetaData<T>::_CDELT)
 		|| c.startsWith(ImageMetaData<T>::_CRPIX)
 		|| c.startsWith(ImageMetaData<T>::_CRVAL)
 		||  c.startsWith(ImageMetaData<T>::_CTYPE)
-		||  c.startsWith(ImageMetaData<T>::_CUNIT)
-	) {
-		log << LogIO::WARN << key << " pertains to a "
-			<< "coordinate system axis attribute. It may be "
-			<< "modified, but it may not be removed."
-			<< LogIO::POST;
-		return False;
-	}
-	else if (c == ImageMetaData<T>::_EQUINOX) {
-		log << LogIO::WARN << "Although the direction reference frame ("
-			<< key << ") may be modified, it may not be removed." << LogIO::POST;
-		return False;
-	}
-	else if (c == ImageMetaData<T>::_IMTYPE) {
-		log << LogIO::WARN << "Although the image type ("
-			<< key << ") may be modified, it may not be removed." << LogIO::POST;
-		return False;
-	}
-	else if (c == ImageMetaData<T>::MASKS) {
-		log << "Logic Error: removeMask() should be called instead" << LogIO::EXCEPTION;
+		||  c.startsWith(ImageMetaData<T>::_CUNIT),
+		key + " pertains to a "
+		"coordinate system axis attribute. It may be "
+		"modified, but it may not be removed."
+	);
+	ThrowIf(
+		c == ImageMetaData<T>::_EQUINOX,
+		"Although the direction reference frame ("
+		+ key + ") may be modified, it may not be removed."
+	);
+	ThrowIf(
+		c == ImageMetaData<T>::_IMTYPE,
+		"Although the image type ("
+		+ key + ") may be modified, it may not be removed."
+	);
+	ThrowIf(
+		c == ImageMetaData<T>::MASKS,
+		"Logic Error: removeMask() should be called instead"
+	);
+	ThrowIf(
+		c == ImageMetaData<T>::_OBSDATE || c == ImageMetaData<T>::_EPOCH,
+		"Although the epoch (" + key
+		+ ") may be modified, it cannot be removed."
+	);
+	ThrowIf(
+		c == ImageMetaData<T>::_PROJECTION,
+		"Although the projection (" + key
+		+ ") may be modified, it cannot be removed."
+	);
+	ThrowIf(
+		c == ImageMetaData<T>::_REFFREQTYPE,
+		"Although the velocity reference frame (" + key
+		+ ") may be modified, it cannot be removed."
+	);
+	ThrowIf(
+		c == ImageMetaData<T>::_RESTFREQ,
+		"Although the rest frequency (" + key
+		+ ") may be modified, it cannot be removed."
+	);
+	ThrowIf(
+		c == ImageMetaData<T>::_SHAPE,
+		"The shape is intrinsic to the image and may "
+		"not be modified nor removed."
+	);
+	ThrowIf(
+		c == ImageMetaData<T>::_DATAMIN
+		|| c == ImageMetaData<T>::_DATAMAX
+		|| c == ImageMetaData<T>::_MINPIXPOS
+		|| c == ImageMetaData<T>::_MAXPIXPOS
+		|| c == ImageMetaData<T>::_MINPOS
+		|| c == ImageMetaData<T>::_MAXPOS,
+		key + " is is a statistic of the image and may "
+		+ "not be modified nor removed by this application."
+	);
+	if (c == ImageMetaData<T>::_BUNIT) {
+		ThrowIf(
+			! _getImage()->setUnits(Unit("")),
+			"Unable to clear " + key
+		);
+		_bunit = "";
+		log << LogIO::NORMAL << "Setting " << key << " to empty string" << LogIO::POST;
 	}
 	else if (c == ImageMetaData<T>::_OBJECT) {
 		ImageInfo info = _getInfo();
@@ -441,11 +277,6 @@ template<class T> Bool ImageMetaDataRW<T>::remove(const String& key) {
 		_image->setImageInfo(info);
 		log << LogIO::NORMAL << "Setting " << key << " to empty string" << LogIO::POST;
 		_object = "";
-	}
-	else if (c == ImageMetaData<T>::_OBSDATE || c == ImageMetaData<T>::_EPOCH) {
-		log << LogIO::WARN << "Although the epoch (" << key
-			<< ") may be modified, it cannot be removed." << LogIO::POST;
-		return False;
 	}
 	else if (c == ImageMetaData<T>::_OBSERVER) {
 		CoordinateSystem csys = _getCoords();
@@ -455,26 +286,6 @@ template<class T> Bool ImageMetaDataRW<T>::remove(const String& key) {
 		_image->setCoordinateInfo(csys);
 		log << LogIO::NORMAL << "Setting " << key << " to empty string" << LogIO::POST;
 		_observer = "";
-	}
-	else if (c == ImageMetaData<T>::_PROJECTION) {
-		log << LogIO::WARN << "Although the projection (" << key
-			<< ") may be modified, it cannot be removed." << LogIO::POST;
-		return False;
-	}
-	else if (c == ImageMetaData<T>::_REFFREQTYPE) {
-		log << LogIO::WARN << "Although the velocity reference frame (" << key
-			<< ") may be modified, it cannot be removed." << LogIO::POST;
-		return False;
-	}
-	else if (c == ImageMetaData<T>::_RESTFREQ) {
-		log << LogIO::WARN << "Although the rest frequency (" << key
-			<< ") may be modified, it cannot be removed." << LogIO::POST;
-		return False;
-	}
-	else if (c == ImageMetaData<T>::_SHAPE) {
-		log << LogIO::WARN << "The shape is intrinsic to the image and may "
-			"not be modified nor removed." << LogIO::POST;
-		return False;
 	}
 	else if (c == ImageMetaData<T>::_TELESCOPE) {
 		CoordinateSystem csys = _getCoords();
@@ -512,32 +323,20 @@ template<class T> Bool ImageMetaDataRW<T>::remove(const String& key) {
 			return False;
 		}
 	}
-	else if (
-		c == ImageMetaData<T>::_DATAMIN
-		|| c == ImageMetaData<T>::_DATAMAX
-		|| c == ImageMetaData<T>::_MINPIXPOS
-        || c == ImageMetaData<T>::_MAXPIXPOS
-        || c == ImageMetaData<T>::_MINPOS
-        || c == ImageMetaData<T>::_MAXPOS
-    ) {
-		log << LogIO::WARN << key << " is is a statistic of the image and may "
-			<< "not be modified nor removed by this application." << LogIO::POST;
-		return False;
-	}
 	else if (_image->miscInfo().isDefined(key)) {
 		TableRecord info = _image->miscInfo();
 		info.removeField(key);
 		_image->setMiscInfo(info);
-		log << LogIO::POST << "Removed user-defined keyword " << key << endl;
+		log << LogIO::NORMAL << "Removed user-defined keyword " << key << LogIO::POST;
 	}
 	else if (_image->miscInfo().isDefined(c)) {
 		TableRecord info = _image->miscInfo();
 		info.removeField(c);
 		_image->setMiscInfo(info);
-		log << LogIO::POST << "Removed user-defined keyword " << c << endl;
+		log << LogIO::NORMAL << "Removed user-defined keyword " << c << LogIO::POST;
 	}
 	else {
-		log << "Unknown keyword " << c << LogIO::EXCEPTION;
+		ThrowCc("Unknown keyword " + c);
 	}
 	_header.assign(Record());
 	return True;
@@ -568,26 +367,450 @@ template<class T> Bool ImageMetaDataRW<T>::removeMask(const String& maskName) {
 		}
 	}
 	else {
-		if (image->hasRegion(maskName, RegionHandler::Masks)) {
-			image->removeRegion(maskName, RegionHandler::Masks);
-			if (image->hasRegion(maskName, RegionHandler::Masks)) {
-				log << LogIO::WARN << "Unable to remove mask "
-					<< maskName << LogIO::POST;
-				return False;
+		ThrowIf(
+			! image->hasRegion(maskName, RegionHandler::Masks),
+			"No mask named " + maskName + " found"
+		);
+		image->removeRegion(maskName, RegionHandler::Masks);
+		ThrowIf(
+			image->hasRegion(maskName, RegionHandler::Masks),
+			"Unable to remove mask " + maskName
+		);
+		_masks.resize(0);
+		log << LogIO::NORMAL << "Removed mask named " << maskName << endl;
+		_header.assign(Record());
+		return True;
+	}
+}
+
+template<class T> Bool ImageMetaDataRW<T>::set(
+	const String& key, const casac::variant& value
+) {
+	String c = key;
+	c.downcase();
+	if (c == ImageMetaData<T>::_BUNIT) {
+		_checkString(key, value);
+		String v = value.toString();
+		if (_getImage()->setUnits(Unit(v))) {
+			_bunit = v;
+		}
+		else {
+			ThrowCc("Unable to set " + key);
+		}
+	}
+	else if (
+		c.startsWith(ImageMetaData<T>::_CDELT) || c.startsWith(ImageMetaData<T>::_CRPIX)
+		|| c.startsWith(ImageMetaData<T>::_CRVAL) ||  c.startsWith(ImageMetaData<T>::_CTYPE)
+		||  c.startsWith(ImageMetaData<T>::_CUNIT)
+	) {
+		_setCoordinateValue(c, value);
+	}
+	else if (c == ImageMetaData<T>::_EQUINOX) {
+		ThrowIf(
+			! _getCoords().hasDirectionCoordinate(),
+			"This image does not have a direction "
+			"coordinate and so a direction projection cannot be added."
+		);
+		_checkString(key, value);
+		String v = value.toString();
+		v.upcase();
+		MDirection::Types type;
+		ThrowIf(
+			!MDirection::getType(type, v),
+			"Unknown direction reference frame specification"
+		);
+		CoordinateSystem csys = _getCoords();
+		DirectionCoordinate dircoord = csys.directionCoordinate();
+		if (dircoord.directionType(False) == type) {
+			// nothing to do
+			return True;
+		}
+		dircoord.setReferenceFrame(type);
+		csys.replaceCoordinate(dircoord, csys.directionCoordinateNumber());
+		_getImage()->setCoordinateInfo(csys);
+		_equinox = v;
+	}
+	else if (c == ImageMetaData<T>::_IMTYPE) {
+		_checkString(key, value);
+		String imtype = _getImType();
+		ImageInfo info = _getImage()->imageInfo();
+		String v = value.toString();
+		info.setImageType(ImageInfo::imageType(v));
+		_getImage()->setImageInfo(info);
+		String newType = ImageInfo::imageType(info.imageType());
+		_imtype = newType;
+	}
+	else if (c == ImageMetaData<T>::MASKS) {
+		ThrowCc("This application does not support modifying masks.");
+	}
+	else if (c == ImageMetaData<T>::_OBJECT) {
+		_checkString(key, value);
+		String object = _getObject();
+		ImageInfo info = _getInfo();
+		String v = value.toString();
+		info.setObjectName(v);
+		_getImage()->setImageInfo(info);
+		_object = v;
+	}
+	else if (c == ImageMetaData<T>::_OBSDATE || c == ImageMetaData<T>::_EPOCH) {
+		ThrowIf(
+			value.type() == casac::variant::STRING && value.toString().empty(),
+			key + " value not specified"
+		);
+		Quantity qval = casaQuantity(value);
+		if (! qval.isConform("s")) {
+			ostringstream os;
+			os << _LOCATEA << key
+				<< " value must have units of time or be in a supported time format";
+			throw AipsError(os.str());
+			//ThrowCc( " value must have units of time or be in a supported time format");
+
+		}
+		MEpoch epoch(qval);
+		CoordinateSystem csys = _getCoords();
+		ObsInfo info = csys.obsInfo();
+		info.setObsDate(epoch);
+		csys.setObsInfo(info);
+		_getImage()->setCoordinateInfo(csys);
+		_obsdate = epoch;
+	}
+	else if (c == ImageMetaData<T>::_OBSERVER) {
+		_checkString(key, value);
+		CoordinateSystem csys = _getCoords();
+		ObsInfo info = csys.obsInfo();
+		String v = value.toString();
+		info.setObserver(v);
+		csys.setObsInfo(info);
+		_getImage()->setCoordinateInfo(csys);
+		_observer = v;
+	}
+	else if (c == ImageMetaData<T>::_PROJECTION) {
+		_checkString(key, value);
+		ThrowIf(
+			! _getCoords().hasDirectionCoordinate(),
+			"This image does not have a direction "
+			"coordinate and so a direction projection cannot be added."
+		);
+		String v = value.toString();
+		v.upcase();
+		Projection::Type ptype = Projection::type(v);
+		ThrowIf(
+			ptype == Projection::N_PROJ,
+			"Unknown projection specification " + v
+		);
+		CoordinateSystem csys = _getCoords();
+		DirectionCoordinate dircoord = csys.directionCoordinate();
+		Projection curProj = dircoord.projection();
+		if (curProj.type() == ptype) {
+			// nothing to do
+			return True;
+		}
+		Vector<Double> curParms = curProj.parameters();
+		Projection projection(ptype, curParms);
+		dircoord.setProjection(projection);
+		csys.replaceCoordinate(dircoord, csys.directionCoordinateNumber());
+		_getImage()->setCoordinateInfo(csys);
+		_projection = Projection::name(ptype);
+	}
+	else if (c == ImageMetaData<T>::_REFFREQTYPE) {
+		_checkString(key, value);
+		ThrowIf(
+			! _getCoords().hasSpectralAxis(),
+			"This image does not have a spectral coordinate"
+			"and so a velocity reference frame cannot be added."
+		);
+		String v = value.toString();
+		v.upcase();
+		MFrequency::Types type;
+		ThrowIf(
+			! MFrequency::getType(type, v),
+			"Unknown velocity reference frame specification " + v
+		);
+		CoordinateSystem csys = _getCoords();
+		SpectralCoordinate spcoord = csys.spectralCoordinate();
+		if (spcoord.frequencySystem(False) == type) {
+			return True;
+		}
+		spcoord.setFrequencySystem(type);
+		cout << "sp coord now is type " << MFrequency::showType(spcoord.frequencySystem(False)) << endl;
+		csys.replaceCoordinate(spcoord, csys.spectralCoordinateNumber());
+		_getImage()->setCoordinateInfo(csys);
+		_reffreqtype = v;
+	}
+	else if (c == ImageMetaData<T>::_RESTFREQ) {
+		ThrowIf(
+			! _getCoords().hasSpectralAxis(),
+			"This image does not have a spectral coordinate"
+			"and so a velocity reference frame cannot be added."
+		);
+		Quantity rf = casaQuantity(value);
+		ThrowIf(
+			rf.getValue() <= 0,
+			"Unable to set rest frequency to "
+			+ value.toString()
+		);
+		ThrowIf(
+			! rf.getUnit().empty() && ! rf.isConform("Hz"),
+			"Unable to set rest frequency to "
+			+ value.toString() + " because units do not conform to Hz"
+		);
+		CoordinateSystem csys = _getCoords();
+		SpectralCoordinate sp = csys.spectralCoordinate();
+		Double v = 0;
+		if (
+			value.type() == casac::variant::DOUBLE
+			|| value.type() == casac::variant::INT
+			|| value.type() == casac::variant::LONG
+		) {
+			v = value.toDouble();
+		}
+		else {
+			v = rf.getValue(sp.worldAxisUnits()[0]);
+		}
+		sp.setRestFrequency(v);
+		csys.replaceCoordinate(sp, csys.spectralCoordinateNumber());
+		_getImage()->setCoordinateInfo(csys);
+		_restFreq = rf;
+	}
+	else if (c == ImageMetaData<T>::_SHAPE) {
+		ThrowCc(
+			"The shape is intrinsic to the image and may "
+			"not be modified."
+		);
+	}
+	else if (c == ImageMetaData<T>::_TELESCOPE) {
+		_checkString(key, value);
+		CoordinateSystem csys = _getCoords();
+		ObsInfo info = csys.obsInfo();
+		String v = value.toString();
+		info.setTelescope(v);
+		csys.setObsInfo(info);
+		_getImage()->setCoordinateInfo(csys);
+		_telescope = v;
+	}
+	else if (
+		c == ImageMetaData<T>::_BEAMMAJOR
+		|| c == ImageMetaData<T>::_BEAMMINOR
+		|| c == ImageMetaData<T>::_BEAMPA
+		|| c == ImageMetaData<T>::_BMAJ
+		|| c == ImageMetaData<T>::_BMIN
+		|| c == ImageMetaData<T>::_BPA
+	) {
+		ImageInfo info = _getInfo();
+		ThrowIf(
+			info.hasMultipleBeams(),
+			"This image has multiple beams. "
+			"This application cannot modify beams in such an image."
+		)
+		Quantity v = casaQuantity(value);
+		GaussianBeam beam;
+		if (c == ImageMetaData<T>::_BEAMPA || c == ImageMetaData<T>::_BPA) {
+			ThrowIf(
+				! info.hasBeam(),
+				"This image has no beam. This application annot add a beam position "
+				"angle to an image with no beam. Add the major or minor axis and then "
+				"modify the other and the position angle with put."
+			);
+			beam = info.getBeamSet()(0, 0);
+			beam.setPA(v);
+		}
+		else if (info.hasBeam()) {
+			beam = info.getBeamSet()(0, 0);
+			if (
+				c == ImageMetaData<T>::_BEAMMAJOR
+				|| c == ImageMetaData<T>::_BMAJ
+			) {
+				beam.setMajorMinor(v, beam.getMinor());
 			}
 			else {
-				_masks.resize(0);
-				log << LogIO::NORMAL << "Removed mask named " << maskName << endl;
-				_header.assign(Record());
-				return True;
+				beam.setMajorMinor(beam.getMajor(), v);
 			}
 		}
 		else {
-			log << LogIO::WARN << "No mask named " << maskName << " found" << LogIO::POST;
-			return False;
+			beam = GaussianBeam(v, v, Quantity(0, "deg"));
+		}
+		info.setRestoringBeam(beam);
+		_getImage()->setImageInfo(info);
+		_beam = beam;
+		this->_getLog() << LogIO::NORMAL << "Updated single beam " << beam
+			<< " in image." << LogIO::POST;
+	}
+	else if (
+		c == ImageMetaData<T>::_DATAMIN
+		|| c == ImageMetaData<T>::_DATAMAX
+		|| c == ImageMetaData<T>::_MINPIXPOS
+        || c == ImageMetaData<T>::_MAXPIXPOS
+        || c == ImageMetaData<T>::_MINPOS
+        || c == ImageMetaData<T>::_MAXPOS
+    ) {
+		ThrowCc(
+			key + " is is a statistic of the image and may "
+			"not be added or modified."
+		);
+	}
+	else {
+		_setUserDefined(key, value);
+	}
+	_header.assign(Record());
+	return True;
+}
+
+template<class T> void ImageMetaDataRW<T>::_setUserDefined(
+	const String& key, const casac::variant& value
+) {
+	TableRecord info = _getImage()->miscInfo();
+	switch(value.type()) {
+	case casac::variant::BOOL:
+		info.define(key, value.getBool());
+		break;
+	case casac::variant::BOOLVEC:
+		info.define(key, Vector<Bool>(value.getBoolVec()));
+		break;
+	case casac::variant::COMPLEX:
+		info.define(key, value.getComplex());
+		break;
+	case casac::variant::DOUBLE:
+		info.define(key, value.getDouble());
+		break;
+	case casac::variant::DOUBLEVEC:
+		info.define(key, Vector<Double>(value.getDoubleVec()));
+		break;
+	case casac::variant::INT:
+		info.define(key, value.getInt());
+		break;
+	case casac::variant::INTVEC:
+		info.define(key, Vector<Int>(value.getIntVec()));
+		break;
+	case casac::variant::LONG:
+		info.define(key, value.getLong());
+		break;
+	case casac::variant::LONGVEC:
+		info.define(key, Vector<Int64>(value.getLongVec()));
+		break;
+	case casac::variant::RECORD: {
+		casac::record m = value.getRecord();
+		Record *k = casa::toRecord(m);
+		auto_ptr<Record> r(k);
+		info.defineRecord(key, *r);
+		break;
+	}
+	case casac::variant::STRING:
+		info.define(key, value.getString());
+		break;
+	case casac::variant::STRINGVEC: {
+		vector<std::string> v = value.getStringVec();
+		Vector<String> x(v.size());
+		Vector<String>::iterator iter = x.begin();
+		Vector<String>::const_iterator end = x.end();
+		vector<std::string>::const_iterator viter = v.begin();
+		while (iter != end) {
+			*iter = *viter;
+			iter++;
+			viter++;
+		}
+		info.define(key, x);
+		break;
+	}
+	default:
+		ThrowCc("Unhandled variant value type.");
+		break;
+	}
+	_getImage()->setMiscInfo(info);
+}
+
+
+template<class T> void ImageMetaDataRW<T>::_setCoordinateValue(
+	const String& key, const casac::variant& value
+) {
+	LogIO log = this->_getLog();
+	String prefix = key.substr(0, 5);
+	CoordinateSystem csys = _getCoords();
+	uInt n = this->_getAxisNumber(key);
+	if (prefix == ImageMetaData<T>::_CDELT) {
+		Quantity qinc = casaQuantity(value);
+		Vector<Double> increments = csys.increment();
+		if (qinc.getFullUnit().empty()) {
+			qinc.setUnit(_getAxisUnits()[n-1]);
+		}
+		increments[n-1] = qinc.getValue(_getAxisUnits()[n-1]);
+		csys.setIncrement(increments);
+		if (! _increment.empty() > 0) {
+			_increment[n-1] = qinc;
 		}
 	}
+	else if (prefix == ImageMetaData<T>::_CRPIX) {
+		casac::variant::TYPE t = value.type();
+		Bool stringIsDouble = False;
+		if (t == casac::variant::STRING) {
+			String::toDouble(stringIsDouble, value.toString());
+		}
+		if (
+			stringIsDouble
+			|| t == casac::variant::INT
+			|| t == casac::variant::LONG
+			|| t == casac::variant::DOUBLE
+		) {
+			Vector<Double> refpix = _getRefPixel();
+			refpix[n-1] = value.toDouble();
+			csys.setReferencePixel(refpix);
+			if (! _refPixel.empty()) {
+				_refPixel[n-1] = refpix[n-1];
+			}
+		}
+		else {
+			ThrowCc("For crpix, value must be numeric");
+		}
+	}
+	else if (prefix == ImageMetaData<T>::_CRVAL) {
+		ThrowIf(
+			value.type() == casac::variant::STRING && value.toString().empty(),
+			key + " value not specified"
+		);
+		Vector<Double> refval = csys.referenceValue();
+		Quantity qval = casaQuantity(value);
+		if (qval.getUnit().empty()) {
+			qval.setUnit(_getAxisUnits()[n-1]);
+		}
+		refval[n-1] = qval.getValue(_getAxisUnits()[n-1]);
+		csys.setReferenceValue(refval);
+		if (! _refVal.empty()) {
+			_refVal[n-1] = qval;
+		}
+	}
+	else if (prefix == ImageMetaData<T>::_CTYPE) {
+		_checkString(key, value);
+		Vector<String> names = _getAxisNames();
+		names[n-1] = value.toString();
+		csys.setWorldAxisNames(names);
+		if (! _axisNames.empty()) {
+			_axisNames[n-1] = names[n-1];
+		}
+	}
+	else if (prefix == ImageMetaData<T>::_CUNIT) {
+		_checkString(key, value);
+		String u = value.toString();
+		// Test to see if CASA supports this string as a Unit
+		Unit x = Unit(u);
+		Vector<String> units = _getAxisUnits();
+		units[n-1] = u;
+		csys.setWorldAxisUnits(units, True);
+		if (! _axisUnits.empty()) {
+			_axisUnits[n-1] = units[n-1];
+		}
+	}
+	_getImage()->setCoordinateInfo(csys);
 }
+
+
+template<class T> void ImageMetaDataRW<T>::_checkString(
+	const String& key, const casac::variant& v
+) const {
+	ThrowIf(
+		v.type() != casac::variant::STRING,
+		key + " value must be a string"
+	);
+}
+
 
 template<class T> Vector<String> ImageMetaDataRW<T>::_getAxisNames() const {
 	if (_axisNames.size() == 0) {
@@ -712,9 +935,12 @@ template<class T> Vector<Quantity> ImageMetaDataRW<T>::_getRefValue() const {
 
 template<class T> String ImageMetaDataRW<T>::_getRefFreqType() const {
 	const CoordinateSystem& csys = _getCoords();
+	cout << "*** reffreqtype in get before " + _reffreqtype << endl;
+
 	if (_reffreqtype.empty() && csys.hasSpectralAxis()) {
-		_reffreqtype = MFrequency::showType(csys.spectralCoordinate().type());
+		_reffreqtype = MFrequency::showType(csys.spectralCoordinate().frequencySystem(False));
 	}
+	cout << "*** reffreqtype in get " + _reffreqtype << endl;
 	return _reffreqtype;
 }
 
