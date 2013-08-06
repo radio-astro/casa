@@ -185,7 +185,7 @@ def setjy_core(vis=None, field=None, spw=None,
             instandard="Perley-Butler 2010" # default standard when fluxdensity=-1 or 1
         else:
             instandard=standard
-        if type(spix)==[]:
+        if spix==[]: # handle the default 
             spix=0.0
         # need to modify imager to accept double array for spix
         myim.setjy(field=field, spw=spw, modimage=modimage,
