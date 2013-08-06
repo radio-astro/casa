@@ -129,30 +129,28 @@ void GaussianBeam::setMajorMinor(
 	const Quantity& majAx, const Quantity& minAx
 ) {
 	static ostringstream oss;
-	oss.str("");
-	oss << className() << "::" << __FUNCTION__;
-	if (majAx.getValue() < 0) {
-		oss << ": Major axis cannot be less than zero.";
-		throw AipsError(oss.str());
-	}
-	if (minAx.getValue() < 0) {
-		oss << ": Minor axis cannot be less than zero.";
-		throw AipsError(oss.str());
-	}
-	if (! majAx.isConform("rad")) {
-		oss << ": Major axis must have angular units ("
-			<< majAx.getUnit() << " is not).";
-		throw AipsError(oss.str());
-	}
-	if (! minAx.isConform("rad")) {
-		oss << ": Minor axis must have angular units ("
-			<< minAx.getUnit() << " is not).";
-		throw AipsError(oss.str());
-	}
-	if (majAx < minAx) {
-		oss << "Major axis must be greater or equal to minor axis";
-		throw AipsError(oss.str());
-	}
+	ThrowIf(
+		majAx.getValue() < 0,
+		"Major axis cannot be less than zero."
+	);
+	ThrowIf(
+		minAx.getValue() < 0,
+		"Minor axis cannot be less than zero."
+	);
+	ThrowIf (
+		! majAx.isConform("rad"),
+		"Major axis must have angular units ("
+		+ majAx.getUnit() + " is not)."
+	);
+	ThrowIf (
+		! minAx.isConform("rad"),
+		"Major axis must have angular units ("
+		+ minAx.getUnit() + " is not)."
+	);
+	ThrowIf(
+		majAx < minAx,
+		"Major axis must be greater or equal to minor axis"
+	);
 	_major = majAx;
 	_minor = minAx;
 }

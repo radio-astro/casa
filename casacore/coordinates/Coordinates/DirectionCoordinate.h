@@ -588,6 +588,12 @@ public:
     	Quantity& angle, MDirection::Types directionType
     ) const;
 
+    void setProjection(const Projection p);
+
+    // set the base (as opposed to conversion) reference frame
+    void setReferenceFrame(const MDirection::Types rf);
+
+
 private:
     // Direction type
     MDirection::Types type_p, conversionType_p;
