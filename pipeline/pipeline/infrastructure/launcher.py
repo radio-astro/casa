@@ -23,7 +23,7 @@ LOG = logging.get_logger(__name__)
 
 
 # minimum allowed CASA revision. Set to 0 or None to disable
-MIN_CASA_REVISION = 24028
+MIN_CASA_REVISION = 25701
 # maximum allowed CASA revision. Set to 0 or None to disable
 MAX_CASA_REVISION = None
 
@@ -233,7 +233,7 @@ class Pipeline(object):
         :param casa_version_check: enable (True) or bypass (False) the CASA
             version check. Default is True.
         :type ignore_casa_version: boolean
-        """
+        """        
         # configure logging with the preferred log level
         logging.set_logging_level(loglevel)
 
