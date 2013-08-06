@@ -51,11 +51,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <value></value>
   </param>
 
-  <param type="bool" name="createmms">
-    <description>Should this create a multi-MS output</description>
-    <value>False</value>
-  </param>
-
 </input>
 <example>
 
@@ -141,9 +136,6 @@ visweightscale -- The weights of the individual MSs will be scaled in the concat
 	factors. See the cookbook for more details.
 	example: [1.,3.,3.] - scale the weights of the second and third MS by a factor 3.
 	default: [] (empty list) - no scaling
-
-createmms -- disabled. Please use task virtualconcat.
-	 default: False
 
 </example> 
 

@@ -1439,11 +1439,60 @@ class test_concat(unittest.TestCase):
         self.assertTrue(retValue['success'])
 
     def test14(self):
-        '''Concat 14: 2 parts of same MS split in time,  use of ephemerides only in first part'''
+        '''Concat 14: 2 parts of same MS split in time,  use of ephemerides, first ephemeris covers both MS time ranges, not chronologically ordered'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
-        self.res = concat(vis=['xy2-jup-ur.ms','xy1-noephem.ms'],concatvis=msname, copypointing=False)
+        
+        self.res = concat(vis=['xy2.ms', 'xy1.ms'],concatvis=msname, copypointing=False)
         self.assertEqual(self.res,True)
         
+        print myname, ": Now checking output ..."
+        mscomponents = set(["table.dat",
+                            "table.f1",
+                            "table.f2",
+                            "table.f3",
+                            "table.f4",
+                            "table.f5",
+                            "table.f6",
+                            "table.f7",
+                            "table.f8",
+                            "ANTENNA/table.dat",
+                            "DATA_DESCRIPTION/table.dat",
+                            "FEED/table.dat",
+                            "FIELD/table.dat",
+                            "FLAG_CMD/table.dat",
+                            "HISTORY/table.dat",
+                            "OBSERVATION/table.dat",
+                            "POINTING/table.dat",
+                            "POLARIZATION/table.dat",
+                            "PROCESSOR/table.dat",
+                            "SOURCE/table.dat",
+                            "SPECTRAL_WINDOW/table.dat",
+                            "STATE/table.dat",
+                            "ANTENNA/table.f0",
+                            "DATA_DESCRIPTION/table.f0",
+                            "FEED/table.f0",
+                            "FIELD/table.f0",
+                            "FIELD/EPHEM0_Uranus_54708-55437dUTC.tab",
+                            "FIELD/EPHEM1_Jupiter_54708-55437dUTC.tab",
+                            "FLAG_CMD/table.f0",
+                            "HISTORY/table.f0",
+                            "OBSERVATION/table.f0",
+                            "POINTING/table.f0",
+                            "POLARIZATION/table.f0",
+                            "PROCESSOR/table.f0",
+                            "SOURCE/table.f0",
+                            "SPECTRAL_WINDOW/table.f0",
+                            "STATE/table.f0"
+                            ])
+        for name in mscomponents:
+            if not os.access(msname+"/"+name, os.F_OK):
+                print myname, ": Error  ", msname+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        self.assertTrue(retValue['success'])
+        print myname, ": MS exists. All tables present. Try opening as MS ..."
         try:
             ms.open(msname)
         except:
@@ -1457,15 +1506,21 @@ class test_concat(unittest.TestCase):
             shutil.copytree(msname,'test14.ms')
             print myname, ": OK. Checking tables in detail ..."
             tb.open('test14.ms/FIELD')
-            a = tb.getcol('EPHEMERIS_ID')
+            a = list(tb.getcol('NAME'))
+            tb.close()
+            tb.open('xy1.ms/FIELD')
+            compa = list(tb.getcol('NAME'))
+            compa.append('jupiter') # jupiter should occur a second time because in xy1.ms it is an ephemeris object, in xy2 it is not
             tb.close()
             retValue['success']=True
-            for i in range(0,15):
-                if(a[i]!=-1 and i!=1):
-                    print "Only field 1 should have ephemeneris id > -1."
-                    retValue['success']=False
+            if not (len(a)==len(compa) and a==compa):
+                print "FIELD table of test14.ms has unexpected NAME column:"
+                print "           ", a
+                print " expected: ", compa
+                retValue['success']=False
 
         self.assertTrue(retValue['success'])
+
 
     def test15(self):
         '''Concat 15: 2 parts of same MS split in time,  use of ephemerides, first ephemeris does not cover both MS time ranges'''
