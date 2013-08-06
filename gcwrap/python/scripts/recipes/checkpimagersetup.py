@@ -10,4 +10,4 @@ def checkpimagersetup(msname, npartition, spw='*', timerange='', field='*', obsi
     print tlist;
     n=len(tlist)
     for i in range(n):
-        pimager.flagratio(msname=MSNAME, field=field, spw=spw,timerange=tlist[i]);
+        flagratio(msname=MSNAME, field=field, spw=spw,timerange=tlist[i]);
