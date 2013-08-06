@@ -72,6 +72,10 @@ FileLoader::FileLoader(QWidget *parent)
 	/*ui.lowResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/featherMultiPlane/n4826_bima.im" );
 	ui.highResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/featherMultiPlane/n4826_t12m_regrid.im");
 	*/
+
+	/*ui.lowResolutionLineEdit->setText("/lustre/aoc/users/jott/susan/gbt43.im_stokes" );
+	ui.highResolutionLineEdit->setText("/lustre/aoc/users/jott/susan/vla43.im_stokes");
+	ui.dirtyImageLineEdit->setText("/lustre/aoc/users/jott/susan/vla43.im_stokes");*/
 }
 
 void FileLoader::keyPressEvent( QKeyEvent* event ){
