@@ -573,11 +573,21 @@ class String : public string {
 
   // Convert a string to a Double. If the specified string does not represent
   // a Double, 0 is returned.
+  // The second version sets success to False if the conversion was not successful,
+  // therefore eliminating the ambiguity if the input string is indeed a valid representation
+  // of 0.
   static Double toDouble(const String& string);
+  static Double toDouble(Bool& success, const String& string);
 
+  // <group>
   // Convert a string to a Float. If the specified string does not represent
   // a Float, 0 is returned.
+  // The second version sets success to False if the conversion was not successful,
+  // therefore eliminating the ambiguity if the input string is indeed a valid representation
+  // of 0.
   static Float toFloat(const String& string);
+  static Float toFloat(Bool& success, const String& string);
+
 
   // Convert a string to an Int. If the specified string does not represent
   // an Int, 0 is returned.

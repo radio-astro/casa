@@ -690,6 +690,16 @@ void doit (CoordinateSystem& cSys, uInt nCoords, const Vector<Int>& types,
         throw(AipsError("Failed axis units set/recovery test"));
      }
    }
+   Vector<String> bogus = worldAxisUnits.copy();
+   bogus.resize(worldAxisUnits.size() - 1);
+   AlwaysAssert(! cSys.setWorldAxisUnits(bogus), AipsError);
+   try {
+	   cSys.setWorldAxisUnits(bogus, True);
+	   // this should have thrown an exception, if not, its a failure
+	   AlwaysAssert(False, AipsError);
+   }
+   catch (const AipsError& x) {}
+
 //
 //
 // Now check the pixel axis descriptors

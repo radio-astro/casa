@@ -617,9 +617,11 @@ public:
     // reference value by the ratio of the old and new units. This implies that
     // the units must be known <linkto class=Unit>Unit</linkto> strings, and
     // that they must be compatible, e.g. they can't change from time to
-    // length.
+    // length. If <src>throwException=True</src>, throw an exception rather than
+    // returning False on failure.
     // <group>
     virtual Bool setWorldAxisUnits(const Vector<String> &units);
+    virtual Bool setWorldAxisUnits(const Vector<String> &units, Bool throwException);
     virtual Vector<String> worldAxisUnits() const;
     // </group>
 

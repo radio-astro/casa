@@ -76,25 +76,33 @@ Int String::freq(const Char *s) const {
 }
 
 Double String::toDouble(const String& string) {
+	Bool x;
+	return String::toDouble(x, string);
+}
+
+
+Double String::toDouble(Bool& success, const String& string) {
     istringstream instr(string);
     Double var;
     instr >> var;
-    if (instr.fail()) {
-      var = 0.0;
-    }
-    return var;
+    success = ! instr.fail();
+    return (success ? var : 0.0);
 }
 
 Float String::toFloat(const String& string) {
-    istringstream instr(string);
+    Bool x;
+    return String::toFloat(x, string);
+}
+
+Float String::toFloat(Bool& success, const String& string) {
+	istringstream instr(string);
     Float var;
     // Initialize in case the string is empty or non-numeric.
     instr >> var;
-    if (instr.fail()) {
-      var = 0.0;
-    }
-    return var;
+    success = ! instr.fail();
+    return (success ? var : 0.0);
 }
+
 
 Int String::toInt(const String& string) {
     istringstream instr(string);

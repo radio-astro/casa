@@ -202,7 +202,7 @@ AipsError::throwIf (bool condition, const String & message, const String & file,
 	// If the condition is met then throw an AipsError
 
 	if (condition) {
-	    String m = func + ": " + message;
+	    String m = String::format ("Exception: %s.\n... thrown by %s", message.c_str(), func.c_str());
 	    AipsError e (m.c_str(), file.c_str(), line);
 
 	    throw e;
@@ -217,8 +217,9 @@ AipsError::throwIfError (int errorCode, const String & prefix, const String & fi
 	// of the error.
 
 	if (errorCode != 0) {
-		AipsError e (String::format ("%s: %s (errno=%d):%s", func.c_str(), prefix.c_str(),
-		                             errorCode, strerror (errorCode)), file.c_str(), line);
+		AipsError e (String::format ("Exception: %s.\n...Thrown by %s\n...(errno=%d): %s", prefix.c_str(),
+		                             func.c_str(), errorCode, strerror (errorCode)),
+		             file.c_str(), line);
 
 	    throw e;
 	}
@@ -230,7 +231,8 @@ AipsError::repackageAipsError (AipsError & error, const String & message, const 
     ostringstream os;
 
     AipsError tmp (message, file, line);
-    os << func << ": " << tmp.what() << "\n   " << error.what();
+    os << "+++Exception: " << tmp.what() << ".\n...Thrown by " << func << ": "
+       << "\n...Lower level exception: " << error.what() << "\n--- end exception\n";
 
     return AipsError (os.str());
 }
