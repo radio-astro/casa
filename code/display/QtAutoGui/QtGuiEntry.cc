@@ -448,6 +448,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void QtLineEditor::leaveEvent( QEvent *ev ) {
+		lineEdit->clearFocus( );
 		QWidget::leaveEvent(ev);
 		validateAndEmit(lineEdit->text( ));
 	}
