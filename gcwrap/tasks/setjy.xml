@@ -61,13 +61,13 @@
                 </param>
     
                 <param type="any" name="timerange" subparam="true">
-                  <description>Time range to operate on</description>
+                  <description>Time range to operate on (for usescratch=T)</description>
                   <any type="variant" limittypes="string stringArray"/>
                   <value type="string"></value>
                 </param>
 
                 <param type="any" name="scan" subparam="true">
-                  <description>Scan number range</description>
+                  <description>Scan number range (for usescaratch=T)</description>
                   <any type="variant" limittypes="string stringArray"/>
                   <value type="string"></value>
                 </param>
@@ -78,7 +78,7 @@
                 </param>
     
                 <param type="any" name="observation" subparam="true">
-                  <description>Observation ID range</description>
+                  <description>Observation ID range (for usescratch=T)</description>
                   <any type="variant" limittypes="string int"/>
                   <value type="string"></value>
                 </param>
@@ -123,7 +123,7 @@
 
 		<param type="any" name="fluxdensity" subparam="true">
 			<any type="variant" limittypes="int intArray doubleArray"/>
-			<description>Specified flux density [I,Q,U,V]; (-1 will lookup values, deprecated?)</description>
+			<description>Specified flux density [I,Q,U,V]; (-1 will lookup values)</description>
 			<value type="int">-1</value>
 		</param>
                 <param type="any" name="spix" subparam="true">
@@ -230,7 +230,7 @@
                            <value>1</value><value>0</value><value>0</value><value>0</value>
                            </value></default>
                       <default param="spix"><value type="doubleArray"></value></default>
-                      <default param="reffreq"><value type="string"></value></default> 
+                      <default param="reffreq"><value type="string">1GHz</value></default> 
                       <!-- comment out until polarization fraction is implemented...
                       <default param="polindex"><value type="doubleArray"></value></default>
                       <default param="polangle"><value type="doubleArray"></value></default>
@@ -285,9 +285,7 @@
     obtained from the 'field' parameter. Recognized objects are listed
     below, under 'standard'.
 
-    *** need to update here** Note that standard='manual' to show the fluxdensity
-    parameter and only work for point source calibrators. **************
-    Note that fluxdensity, modimage, and standard interact in a possibly
+    <!--Note that fluxdensity, modimage, and standard interact in a possibly
     confusing way!  Generally, if fluxdensity[0] (Stokes I) is &lt;= 0, it
     will be ignored.  If it is &lt; 0, standard (which has a default) will
     be used to calculate flux density as a function of frequency, even if
@@ -295,7 +293,12 @@
     brightness of the model image will be used as is.  If fluxdensity([0])
     is &gt; 0, it will be used.  The latter two options come at the price of
     disabling frequency scaling, i.e. the same fluxdensity will be used for
-    all frequencies.
+    all frequencies.-->
+   
+    With standard='manual', flux densities and spectral index can be manually
+    specified. As in the previous CASA versions, if fluxdensity[0] (Stokes I) 
+    is &lt; 0, the default standard will be used to calculate flux density as 
+    a function of frequency. 
 
     Keyword arguments:
     vis -- Name of input visibility file
@@ -324,8 +327,10 @@
 
   &gt;&gt;&gt; selectdata=True expandable parameters
                See help par.selectdata for more on these.
-
-               timerange  -- Select data based on time range:
+               Note: for usescratch=False, timerange, scan, and observation 
+               are ignored (i.e. time-specific virtual model is not possible.).
+ 
+               timerange  -- Select data based on time range (when usescratch=T):
                    default: '' (all); examples,
                    timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
                    Note: if YYYY/MM/DD is missing date defaults to first 
@@ -341,14 +346,14 @@
                    timerange=['09:14:0~09:54:0','&gt;10:24:00']
                    timerange='09:14:0~09:54:0''; apply the same timerange for
                                                  all input MSes
-               scan -- Scan number range.
+               scan -- Scan number range (when usescratch=T).
                    default: '' (all)
                    example: scan='1~5'
                    For multiple MS input, a list of scan strings can be used:
                    scan=['0~100','10~200']
                    scan='0~100; scan ids 0-100 for all input MSes
                    Check 'go listobs' to insure the scan numbers are in order.
-               observation -- Observation ID range.
+               observation -- Observation ID range (when usescratch=T).
                    default: '' (all)
                    example: observation='1~5'
                intent -- observation intent.
@@ -466,21 +471,21 @@
 
        &gt;&gt;&gt; standard="Perley-Butler 2010" or "Perley-Butler 2013 expandable parameter
             model -- Model image (I only) for setting the model visibilities.
-                 ***************************************************************
-                 * Previously, this parameter is called modimage, now modimage *
-                 * is deprecated. The setjy still accepts modimage but will be *
-                 * removed in future release. Please use the parameter, 'model'*
-                 *  instead.                                                   *  
-                 ***************************************************************
-		 model can be a cube, and its channels do not have to exactly
+                 *****************************************************************
+                 * Previously, this parameter is called 'modimage', now modimage *
+                 * is deprecated. The setjy still accepts modimage but will be   *
+                 * removed in future releases. Please use the parameter, 'model' *
+                 * instead.                                                      *  
+                 *****************************************************************
+		 The model can be a cube, and its channels do not have to exactly
 		 match those of vis.  It is recommended to use modimage for
 		 sources that are resolved by the observation, but the
 		 Butler-JPL-Horizons standard supplies a basic model of what
 		 several Solar System objects look like.  default: '': do not use
 		 a model image.
 	  
-	         Each field must be done separately when using a model image.  The
-		 flux density of the image will be scaled from the frequency in
+	         Each field must be done separately when using a model image.  
+                 <!--The flux density of the image will be scaled from the frequency in
 		 the model to that actually used (ignoring fluxdensity), unless
 		 fluxdensity &gt;= 0 (or fluxdensity[0] &gt;= 0).  If
 		 fluxdensity([0]) is 0.0, the image's flux density will be used.
@@ -488,6 +493,7 @@
 		 reffreq if modimage is not a cube).  Since the spectral index
 		 usually varies with direction, applying a single spectral index
 		 to a 2D modimage is typically not as good as using a cube.
+                 -->
 
 		 Both the amplitude and phase are calculated.  At the AOC or CV,
 		 the models are located in casa['dirs']['data']
@@ -495,15 +501,15 @@
 		 /usr/lib/casapy/data/nrao/VLA/CalModels/3C286_L.im
 		      lib64
 
-		 If modimage does not start with '/', setjy will look for a match
+		 If model does not start with '/', setjy will look for a match
 		 in '.', './CalModels', and any CalModels directories within
 		 the casa['dirs']['data'] tree (excluding certain branches).
 
-		 Note that modimage should be deconvolved, i.e. a set of clean
+		 Note that model should be deconvolved, i.e. a set of clean
 		 components instead of an image that has been convolved with a
 		 clean beam.
 
-            listmodels -- If True, do nothing but list candidates for modimage
+            listmodels -- If True, do nothing but list candidates for model
                 (for extragalactic calibrators) that are present on the system.  
 		It looks for *.im* *.mod* in ., CalModels, and CalModels directories 
 		in the casa['dirs']['data'] tree.  It does not check whether they are 
@@ -578,6 +584,7 @@
         usescratch=F will not remove the existing MODEL_DATA but in subsequent process
         the virtual model with matching field and spw combination will be used if it exists
         regardless of the presence of the MODEL_DATA column.
+
          
         default: False        
 </example>
