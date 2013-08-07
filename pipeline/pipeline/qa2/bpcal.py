@@ -450,7 +450,7 @@ def bpcal_calc( in_table, logger='' ):
 
         # Get the amplitudes and phases and calculate signal-to-noise ratios
         bpcal_stats['AMPLITUDE'] = dict()
-	bpcal_stats['AMPLITUDE_SN'] = dict()
+	bpcal_stats['AMPLITUDE_SNR'] = dict()
         bpcal_stats['PHASE'] = dict()
 
 	try:
@@ -464,16 +464,16 @@ def bpcal_calc( in_table, logger='' ):
                 bpcal_stats['PHASE'][str(s)] = dict()
                 bpcal_stats['PHASE'][str(s)]['spw'] = int( spwList[s] )
                 bpcal_stats['PHASE'][str(s)]['chanRange'] = chanRange
-                bpcal_stats['AMPLITUDE_SN'][str(s)] = dict()
-                bpcal_stats['AMPLITUDE_SN'][str(s)]['spw'] = int( spwList[s] )
-                bpcal_stats['AMPLITUDE_SN'][str(s)]['chanRange'] = chanRange
+                bpcal_stats['AMPLITUDE_SNR'][str(s)] = dict()
+                bpcal_stats['AMPLITUDE_SNR'][str(s)]['spw'] = int( spwList[s] )
+                bpcal_stats['AMPLITUDE_SNR'][str(s)]['chanRange'] = chanRange
                 # Amplitude
                 bp_data = caLoc.get(spw = spw)
                 for pol in bp_data.iterkeys():
                     bpcal_stats['AMPLITUDE'][str(s)][pol] = bp_data[pol]['value'][chanRange[0]:chanRange[1]]
                     amp_mean = numpy.average(bpcal_stats['AMPLITUDE'][str(s)][pol])
                     amp_rms = rms(bp_data[pol]['value'][chanRange[0]:chanRange[1]]-amp_mean)
-                    bpcal_stats['AMPLITUDE_SN'][str(s)][pol] = amp_mean / amp_rms
+                    bpcal_stats['AMPLITUDE_SNR'][str(s)][pol] = amp_mean / amp_rms
                 # Phase
                 bp_data = caLoc.get(spw = spw, ap='PHASE')
                 for pol in bp_data.iterkeys():
@@ -567,7 +567,7 @@ def bpcal_write( bpcal_stats, out_table ):
 
 	for st in subtables:
 
-            # Cannot write AMPLITUDE_SN data yet.
+            # Cannot write AMPLITUDE_SNR data yet.
             if (st.find('FIT') != -1):
 		out_subtable = out_table + '/' + st.upper()
 		tbLoc.open( out_subtable, nomodify=False )
@@ -1111,18 +1111,22 @@ def bpcal_spwChanString( spw, sschan ):
 #                           scores.
 # 'AMPLITUDE_SCORE_RMS'   - The python dictionary containing the amplitude RMS
 #                           scores.
-# 'AMPLITUDE_SCORE_SN'    - The python dictionary containing the amplitude signal
+# 'AMPLITUDE_SCORE_SNR'   - The python dictionary containing the amplitude signal
 #                           to noise scores.
-# 'AMPLITUDE_SCORE_SHAPE' - The python dictionary containing the amplitude shape
+# 'AMPLITUDE_SCORE_FN'    - The python dictionary containing the amplitude flatness
 #                           scores.
+# 'AMPLITUDE_SCORE_DD'    - The python dictionary containing the amplitude derivative
+#                           deviation scores.
 # 'AMPLITUDE_SCORE_TOTAL' - The python dictionary containing the amplitude total
 #                           (flag plus RMS) scores.
 # 'PHASE_SCORE_FLAG'      - The python dictionary containing the phase flag
 #                           scores.
 # 'PHASE_SCORE_RMS'       - The python dictionary containing the phase RMS
 #                           scores.
-# 'PHASE_SCORE_SHAPE'     - The python dictionary containing the phase shape
+# 'PHASE_SCORE_FN'        - The python dictionary containing the phase flatness
 #                           scores.
+# 'PHASE_SCORE_DD'        - The python dictionary containing the phase derivative
+#                           deviation scores.
 # 'PHASE_SCORE_DELAY'     - The python dictionary containing the phase delay
 #                           scores.
 # 'PHASE_SCORE_TOTAL'     - The python dictionary containing the phase total
@@ -1149,6 +1153,9 @@ def bpcal_spwChanString( spw, sschan ):
 #               Added amplitude signal to noise scoring
 # 2013 Jul 22 - Dirk Muders, MPIfR
 #               Added amplitude shape scoring
+# 2013 Aug 06 - Dirk Muders, MPIfR
+#               Renamed SHAPE to FLATNESS (FN)
+#               Added derivative deviation scoring
 
 # ------------------------------------------------------------------------------
 
@@ -1160,13 +1167,15 @@ def bpcal_score( bpcal_stats ):
 
 	bpcal_scores['AMPLITUDE_SCORE_FLAG'] = dict()
 	bpcal_scores['AMPLITUDE_SCORE_RMS'] = dict()
-	bpcal_scores['AMPLITUDE_SCORE_SN'] = dict()
-	bpcal_scores['AMPLITUDE_SCORE_SHAPE'] = dict()
+	bpcal_scores['AMPLITUDE_SCORE_SNR'] = dict()
+	bpcal_scores['AMPLITUDE_SCORE_FN'] = dict()
+	bpcal_scores['AMPLITUDE_SCORE_DD'] = dict()
 	bpcal_scores['AMPLITUDE_SCORE_TOTAL'] = dict()
 
 	bpcal_scores['PHASE_SCORE_FLAG'] = dict()
 	bpcal_scores['PHASE_SCORE_RMS'] = dict()
-	bpcal_scores['PHASE_SCORE_SHAPE'] = dict()
+	bpcal_scores['PHASE_SCORE_FN'] = dict()
+	bpcal_scores['PHASE_SCORE_DD'] = dict()
 	bpcal_scores['PHASE_SCORE_DELAY'] = dict()
 	bpcal_scores['PHASE_SCORE_TOTAL'] = dict()
 
@@ -1190,8 +1199,9 @@ def bpcal_score( bpcal_stats ):
 
 		bpcal_scores['AMPLITUDE_SCORE_FLAG'][s] = dict()
 		bpcal_scores['AMPLITUDE_SCORE_RMS'][s] = dict()
-		bpcal_scores['AMPLITUDE_SCORE_SN'][s] = dict()
-		bpcal_scores['AMPLITUDE_SCORE_SHAPE'][s] = dict()
+		bpcal_scores['AMPLITUDE_SCORE_SNR'][s] = dict()
+		bpcal_scores['AMPLITUDE_SCORE_FN'][s] = dict()
+		bpcal_scores['AMPLITUDE_SCORE_DD'][s] = dict()
 		bpcal_scores['AMPLITUDE_SCORE_TOTAL'][s] = dict()
 
 		for k in keys:
@@ -1205,11 +1215,14 @@ def bpcal_score( bpcal_stats ):
 			    bpcal_score_RMS( math.sqrt(amp[s][k]['resVar']),
 			    0.1 )
 
-                        bpcal_scores['AMPLITUDE_SCORE_SN'][s][k] = \
-                            bpcal_score_SN( bpcal_stats['AMPLITUDE_SN'][s][k] )
+                        bpcal_scores['AMPLITUDE_SCORE_SNR'][s][k] = \
+                            bpcal_score_SNR( bpcal_stats['AMPLITUDE_SNR'][s][k] )
 
-                        bpcal_scores['AMPLITUDE_SCORE_SHAPE'][s][k] = \
-                            bpcal_score_shape( bpcal_stats['AMPLITUDE'][s][k] )
+                        bpcal_scores['AMPLITUDE_SCORE_FN'][s][k] = \
+                            bpcal_score_flatness( bpcal_stats['AMPLITUDE'][s][k] )
+
+                        bpcal_scores['AMPLITUDE_SCORE_DD'][s][k] = \
+                            bpcal_score_derivative_deviation( bpcal_stats['AMPLITUDE'][s][k] )
 
 			bpcal_scores['AMPLITUDE_SCORE_TOTAL'][s][k] = \
 			    bpcal_scores['AMPLITUDE_SCORE_FLAG'][s][k] \
@@ -1235,7 +1248,8 @@ def bpcal_score( bpcal_stats ):
 
 		bpcal_scores['PHASE_SCORE_FLAG'][s] = dict()
 		bpcal_scores['PHASE_SCORE_RMS'][s] = dict()
-		bpcal_scores['PHASE_SCORE_SHAPE'][s] = dict()
+		bpcal_scores['PHASE_SCORE_FN'][s] = dict()
+		bpcal_scores['PHASE_SCORE_DD'][s] = dict()
 		bpcal_scores['PHASE_SCORE_DELAY'][s] = dict()
 		bpcal_scores['PHASE_SCORE_TOTAL'][s] = dict()
 
@@ -1250,8 +1264,11 @@ def bpcal_score( bpcal_stats ):
 			    bpcal_score_RMS( math.sqrt(phase[s][k]['resVar']),
 			    0.05 )
 
-                        bpcal_scores['PHASE_SCORE_SHAPE'][s][k] = \
-                            bpcal_score_shape( bpcal_stats['PHASE'][s][k]-min(bpcal_stats['PHASE'][s][k]) )
+                        bpcal_scores['PHASE_SCORE_FN'][s][k] = \
+                            bpcal_score_flatness( bpcal_stats['PHASE'][s][k]+45./180.*math.pi )
+
+                        bpcal_scores['PHASE_SCORE_DD'][s][k] = \
+                            bpcal_score_derivative_deviation( bpcal_stats['PHASE'][s][k] )
 
 			bpcal_scores['PHASE_SCORE_DELAY'][s][k] = \
 			    bpcal_score_delay(
@@ -1267,7 +1284,7 @@ def bpcal_score( bpcal_stats ):
 
         # Calculate grand total score
         bpcal_scores['TOTAL'] = \
-            numpy.median([numpy.median(bpcal_scores['AMPLITUDE_SCORE_SN'][s].values()) for s in bpcal_scores['AMPLITUDE_SCORE_SN'].iterkeys()])
+            numpy.median([numpy.median(bpcal_scores['AMPLITUDE_SCORE_SNR'][s].values()) for s in bpcal_scores['AMPLITUDE_SCORE_SNR'].iterkeys()])
 
 	# Return the bandpass score dictionary
 
@@ -1368,10 +1385,9 @@ def bpcal_score_RMS( RMS, RMSMax ):
         else:
             try:
 	        score = scipy.special.erf( RMSMax / RMSTemp / math.sqrt(2.0) )
-                return score
             except FloatingPointError as e:
                 # work around scipy bug triggered with certain values, such as when
-                # SN=37.5922006575. The bug is supposed to be fixed in scipy 0.12.0,
+                # SNR=37.5922006575. The bug is supposed to be fixed in scipy 0.12.0,
                 # so detect which version of scipy we're running under and try the
                 # operation again if this version is known to be affected.
                 #
@@ -1384,7 +1400,6 @@ def bpcal_score_RMS( RMS, RMSMax ):
                         try:
                                 scipy.seterr(under='warn')
                                 score = scipy.special.erf( RMSMax / RMSTemp / math.sqrt(2.0) )
-                                return score
                         except FloatingPointError as e:
                                 msg = 'Error calling scipy.special.erf(%s/math.sqrt(2.0))' % (RMSMax / RMSTemp)
                                 raise FloatingPointError(msg)
@@ -1398,7 +1413,7 @@ def bpcal_score_RMS( RMS, RMSMax ):
 
 # ------------------------------------------------------------------------------
 
-# bpcal_score_SN
+# bpcal_score_SNR
 
 # Description:
 # ------------
@@ -1415,13 +1430,12 @@ def bpcal_score_RMS( RMS, RMSMax ):
 
 # ------------------------------------------------------------------------------
 
-def bpcal_score_SN( SN ):
+def bpcal_score_SNR( SNR ):
 	try:
-		score = scipy.special.erf( SN / math.sqrt(2.0) )
-		return score
+		score = scipy.special.erf( SNR / math.sqrt(2.0) )
 	except FloatingPointError as e:
 		# work around scipy bug triggered with certain values, such as when
-		# SN=37.5922006575. The bug is supposed to be fixed in scipy 0.12.0,
+		# SNR=37.5922006575. The bug is supposed to be fixed in scipy 0.12.0,
 		# so detect which version of scipy we're running under and try the
 		# operation again if this version is known to be affected.
 		#
@@ -1433,24 +1447,25 @@ def bpcal_score_SN( SN ):
 			under_orig = scipy.geterr()['under']
 			try:
 				scipy.seterr(under='warn')
-				score = scipy.special.erf( SN / math.sqrt(2.0) )
-				return score
+				score = scipy.special.erf( SNR / math.sqrt(2.0) )
 			except FloatingPointError as e:
-				msg = 'Error calling scipy.special.erf(%s/math.sqrt(2.0))' % SN
+				msg = 'Error calling scipy.special.erf(%s/math.sqrt(2.0))' % SNR
 				raise FloatingPointError(msg)
 			finally:
 				scipy.seterr(under=under_orig)				
 		else:
-			msg = 'Error calling scipy.special.erf(%s/math.sqrt(2.0))' % SN
+			msg = 'Error calling scipy.special.erf(%s/math.sqrt(2.0))' % SNR
 			raise FloatingPointError(msg)
+
+	return score
 
 # ------------------------------------------------------------------------------
 
-# bpcal_score_shape
+# bpcal_score_flatness
 
 # Description:
 # ------------
-# This function calculates the amplitude shape score.
+# This function calculates the flatness score.
 
 # Algorithm:
 # ----------
@@ -1461,41 +1476,168 @@ def bpcal_score_SN( SN ):
 
 # Inputs:
 # -------
-# amps    - Amplitudes
+# values    - Values
 
 # Outputs:
 # --------
-# The python float containing the shape score.
+# The python float containing the flatness score.
 
 # Modification history:
 # ---------------------
 # 2013 Jul 22 - Dirk Muders, MPIfR
 #               Initial version.
+# 2013 Aug 05 - Dirk Muders, MPIfR
+#               Weight Wiener entropy with error function
+#               to create sharper fall-off.
 
-def bpcal_score_shape( amps ):
+def bpcal_score_flatness( values ):
 
     # Need to avoid zero mean
-    if (numpy.mean(amps) == 0.0):
-        if ((amps == 0.0).all()):
+    if (numpy.mean(values) == 0.0):
+        if ((values == 0.0).all()):
             wEntropy = 1.0
         else:
             wEntropy = 1.0e10
     else:
         # Geometrical mean can not be calculated for vectors <= 0.0 for all
         # elements.
-        if ((amps <= 0.0).all()):
+        if ((values <= 0.0).all()):
             wEntropy = 1.0e10
         else:
-            wEntropy = scipy.stats.mstats.gmean(amps)/numpy.mean(amps)
+            wEntropy = scipy.stats.mstats.gmean(values)/numpy.mean(values)
 
-    if (wEntropy > 1.0):
-        shapeScore = 1.0 / wEntropy
-    elif (wEntropy <= 0.0):
-        shapeScore = 0.0
+    if (wEntropy == 1.0):
+        flatnessScore = 1.0
     else:
-        shapeScore = wEntropy
+        try:
+            flatnessScore = scipy.special.erf(0.001 / abs(1.0 - wEntropy) / math.sqrt(2.0))
+        except FloatingPointError as e:
+            # work around scipy bug triggered with certain values, such as when
+            # SNR=37.5922006575. The bug is supposed to be fixed in scipy 0.12.0,
+            # so detect which version of scipy we're running under and try the
+            # operation again if this version is known to be affected.
+            #
+            # We can safely ignore the exception as it is only thrown when the
+            # error function return value is so close to -1 or 1 that the lack of
+            # precision makes no practical difference.
+            (_, minor_version, _) = string.split(scipy.version.short_version, '.')
+            if int(minor_version) < 12:
+                under_orig = scipy.geterr()['under']
+                try:
+                    scipy.seterr(under='warn')
+                    flatnessScore = scipy.special.erf(0.001 / abs(1.0 - wEntropy) / math.sqrt(2.0))
+                except FloatingPointError as e:
+                    msg = 'Error calling scipy.special.erf(%s/math.sqrt(2.0))' % (0.001 / abs(1.0 - wEntropy))
+                    raise FloatingPointError(msg)
+                finally:
+                    scipy.seterr(under=under_orig)
+            else:
+                msg = 'Error calling scipy.special.erf(%s/math.sqrt(2.0))' % (0.001 / abs(1.0 - wEntropy))
+                raise FloatingPointError(msg)
 
-    return shapeScore
+    return flatnessScore
+
+
+# ------------------------------------------------------------------------------
+# TODO: Use usual MAD function from pipeline.
+
+import numpy.ma as ma
+
+def MAD(a, c=0.6745, axis=None):
+    """
+    Median Absolute Deviation along given axis of an array:
+
+    median(abs(a - median(a))) / c
+
+    c = 0.6745 is the constant to convert from MAD to std; it is used by
+    default
+
+    """
+
+    a = ma.masked_where(a!=a, a)
+    if a.ndim == 1:
+        d = ma.median(a)
+        m = ma.median(ma.fabs(a - d) / c)
+    else:
+        d = ma.median(a, axis=axis)
+        # I don't want the array to change so I have to copy it?
+        if axis > 0:
+            aswp = ma.swapaxes(a,0,axis)
+        else:
+            aswp = a
+        m = ma.median(ma.fabs(aswp - d) / c, axis=0)
+
+    return m
+
+def nanmedian(arr, **kwargs):
+    """
+    Returns median ignoring NAN
+    """
+    return ma.median( ma.masked_where(arr!=arr, arr), **kwargs )
+
+# ------------------------------------------------------------------------------
+
+# bpcal_score_derivative_deviation
+
+# Description:
+# ------------
+# This function calculates the derivative deviation score.
+
+# Algorithm:
+# ----------
+# * Calculate the 1-channel derivative of the values and determine
+#   the fraction of channels whose absolute value deviates by more
+#   than 5*MAD. Score this fraction against the tolerated fraction
+#   using the error function.
+
+# Inputs:
+# -------
+# values    - Values
+
+# Outputs:
+# --------
+# The python float containing the derivative deviation score.
+
+# Modification history:
+# ---------------------
+# 2013 Aug 06 - Dirk Muders, MPIfR
+#               Initial version.
+
+def bpcal_score_derivative_deviation( values ):
+
+    # Avoid scoring numerical inaccuracies for the reference antenna phase
+    if (numpy.sum(numpy.abs(values)) < 1e-4):
+        ddScore = 1.0
+    else:
+        derivative = values[:-1]-values[1:]
+        derivativeMAD = MAD(derivative)
+        numOutliers = len(numpy.where(derivative > 5.0 * derivativeMAD)[0])
+
+        if (numOutliers == 0):
+            ddScore = 1.0
+        else:
+            outliersFraction = float(numOutliers) / float(len(values))
+            toleratedFraction = 0.01
+            fractionRatio = 3.0 * toleratedFraction / outliersFraction
+            try:
+                ddScore = scipy.special.erf(fractionRatio / math.sqrt(2.0))
+            except FloatingPointError as e:
+                (_, minor_version, _) = string.split(scipy.version.short_version, '.')
+                if int(minor_version) < 12:
+                    under_orig = scipy.geterr()['under']
+                    try:
+                        scipy.seterr(under='warn')
+                        ddScore = scipy.special.erf(fractionRatio / math.sqrt(2.0))
+                    except FloatingPointError as e:
+                        msg = 'Error calling scipy.special.erf(%s/math.sqrt(2.0))' % (fractionRatio)
+                        raise FloatingPointError(msg)
+                    finally:
+                        scipy.seterr(under=under_orig)
+                else:
+                    msg = 'Error calling scipy.special.erf(%s/math.sqrt(2.0))' % (fractionRatio)
+                    raise FloatingPointError(msg)
+
+    return ddScore
 
 
 # ------------------------------------------------------------------------------
