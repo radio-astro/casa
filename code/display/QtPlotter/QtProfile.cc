@@ -262,11 +262,11 @@ namespace casa {
 		   "frequency [Hz]" << "frequency [MHz]" << "frequency [GHz]" <<
 		   "wavelength [mm]" << "wavelength [um]" << "wavelength [nm]" << "wavelength [Angstrom]" <<
 		   "air wavelength [mm]" << "air wavelength [um]" << "air wavelength [nm]"<<"air wavelength [Angstrom]"<<
-		   "channel");
+		   CHANNEL);
 		for ( int i = 0; i < xUnitsList.size(); i++ ){
 			bottomAxisCType->addItem( xUnitsList[i]);
 		}
-		restrictTopAxisOptions( false );
+		restrictTopAxisOptions( false, bottomAxisCType->currentText() );
 	}
 
 	void QtProfile::setUnitsText( String unitStr ) {
@@ -526,6 +526,10 @@ namespace casa {
 
 		setUnitsText( xaxisUnit );
 
+		//In the case of multiple images loaded we want to disable/enable
+		//top axis settings based on whether the images match or not.
+		adjustTopAxisSettings();
+
 		pixelCanvas->setPlotSettings(QtPlotSettings());
 		pixelCanvas -> setToolTipXUnit(xaxisUnit.c_str() );
 		updateXAxisLabel( text, QtPlotSettings::xBottom );
@@ -576,7 +580,7 @@ namespace casa {
 		if (over) {
 			delete over;
 			over = 0;
-			over = new QHash<QString, ImageAnalysis*>();
+			over = new QList<OverplotAnalysis>();
 		}
 
 		// adjust the error box
@@ -1015,11 +1019,11 @@ namespace casa {
 		ImageAnalysis* maxChannelAnalysis = analysis;
 		int maxChannelCount = getChannelCount( analysis );
 		if ( over ){
-			QHashIterator<QString, ImageAnalysis*> i(*over);
+			QListIterator<OverplotAnalysis> i(*over);
 			while (i.hasNext() && stateMProf) {
-				i.next();
-				QString ky = i.key();
-				ImageAnalysis* ana = i.value();
+				OverplotAnalysis overplot = i.next();
+				QString ky = overplot.first;
+				ImageAnalysis* ana = overplot.second;
 				int channelCount = getChannelCount( ana );
 				if ( channelCount > maxChannelCount ){
 					maxChannelAnalysis = ana;
@@ -1132,20 +1136,21 @@ namespace casa {
 		lineOverlaysHolder->setRange( xmin, xmax, xaxisUnit );
 	}
 
-	void QtProfile::overplot(QHash<QString, ImageInterface<float>*> hash) {
+	void QtProfile::overplot(QList<OverplotInterface> hash) {
 		// re-set the images that are overplotted
 		if (over) {
 			delete over;
 			over = 0;
 		}
 
-		over = new QHash<QString, ImageAnalysis*>();
-		QHashIterator<QString, ImageInterface<float>*> i(hash);
+		over = new QList<OverplotAnalysis>();
+		QListIterator<OverplotInterface> i(hash);
 		while (i.hasNext()) {
-			i.next();
-			QString ky = i.key();
-			ImageAnalysis* ana = new ImageAnalysis(i.value());
-			(*over)[ky] = ana;
+			OverplotInterface overplot = i.next();
+			QString ky = overplot.first;
+			ImageAnalysis* ana = new ImageAnalysis(overplot.second);
+			OverplotAnalysis overlay( ky, ana );
+			(*over).append( overlay );
 		}
 		newOverplots = true;
 	}
@@ -1288,7 +1293,13 @@ namespace casa {
 
 		else if ( type == viewer::region::RegionChangeFocus ) {
 			return;
-		} else if ( type == viewer::region::RegionChangeNewChannel ) {
+		}
+		//Added because profiler is just getting bogged down in too many updates.
+		else if ( type == viewer::region::RegionChangeUpdate ){
+			return;
+		}
+
+		else if ( type == viewer::region::RegionChangeNewChannel ) {
 			return;						// viewer moving to new channel
 		} else if ( id_ != current_region_id ) {
 			return;						// some other region
@@ -1601,60 +1612,64 @@ namespace casa {
 			return false;
 		QTextStream ts(&file);
 
-		//There should be a space separating the ra from the dec.
-		int coordinateCount = lastWX.size();
-		QList<QString> cornerCoordinatesWorld;
-		QList<QString> cornerCoordinatesPixel;
-		for ( int i = 0; i < coordinateCount; i++ ) {
-			QString raDecStr = getRaDec( lastWX[i], lastWY[i]);
-			int decIndex = raDecStr.indexOf("+");
-			if ( decIndex == -1 ) {
-				decIndex = raDecStr.indexOf( "-");
-			}
-			raDecStr.insert(decIndex, ", ");
-			cornerCoordinatesWorld.append("["+raDecStr+"]");
-			cornerCoordinatesPixel.append("["+ QString::number(lastPX[i])+
-			                              ", "+QString::number(lastPY[i])+"]");
-		}
-
-		ts << "#title: Spectral profile - " << fileName << "\n";
-		ts << "#region (world): "<< region << "[";
-		for ( int i = 0; i < coordinateCount; i++ ) {
-			ts << cornerCoordinatesWorld[i];
-			if ( i != coordinateCount - 1 ) {
-				ts << ", ";
-			}
-		}
-		ts << "]\n";
-		ts << "#region (pixel): "<< region << "[";
-		for ( int i = 0; i < coordinateCount; i++ ) {
-			ts << cornerCoordinatesPixel[i];
-			if ( i != coordinateCount - 1 ) {
-				ts << ", ";
-			}
-		}
-		ts << "]\n";
-		ts << "#coordinate: " << QString(coordinate.chars()) << "\n";
-		ts << "#xLabel: " << QString(ctypeUnit.chars()) << "\n";
-		ts << "#yLabel: " << "[" << yUnit << "] "<< plotMode->currentText() << "\n";
-		if (z_eval.size() > 0)
-			ts << "#eLabel: " << "[" << yUnit << "] " << errorMode->currentText() << "\n";
 
 		// get the scale factor
 		Float scaleFactor=pow(10.,-ordersOfM_);
-
 		ts.setRealNumberNotation(QTextStream::ScientificNotation);
 		ts.setRealNumberPrecision(12);
 
-		if (z_eval.size() > 0) {
-			for (uInt i = 0; i < z_xval.size(); i++) {
-				ts << z_xval(i) << "    " << scaleFactor*z_yval(i) << "    "  << scaleFactor*z_eval(i) << "\n";
+		//There should be a space separating the ra from the dec.
+			int coordinateCount = lastWX.size();
+			QList<QString> cornerCoordinatesWorld;
+			QList<QString> cornerCoordinatesPixel;
+			for ( int i = 0; i < coordinateCount; i++ ) {
+				QString raDecStr = getRaDec( lastWX[i], lastWY[i]);
+				int decIndex = raDecStr.indexOf("+");
+				if ( decIndex == -1 ) {
+					decIndex = raDecStr.indexOf( "-");
+				}
+				raDecStr.insert(decIndex, ", ");
+				cornerCoordinatesWorld.append("["+raDecStr+"]");
+				cornerCoordinatesPixel.append("["+ QString::number(lastPX[i])+
+				                              ", "+QString::number(lastPY[i])+"]");
 			}
-		} else {
-			for (uInt i = 0; i < z_xval.size(); i++) {
-				ts << z_xval(i) << "    " << scaleFactor*z_yval(i) << "\n";
+
+			ts << "#title: Spectral profile - " << fileName << "\n";
+			ts << "#region (world): "<< region << "[";
+			for ( int i = 0; i < coordinateCount; i++ ) {
+				ts << cornerCoordinatesWorld[i];
+				if ( i != coordinateCount - 1 ) {
+					ts << ", ";
+				}
 			}
-		}
+			ts << "]\n";
+			ts << "#region (pixel): "<< region << "[";
+			for ( int i = 0; i < coordinateCount; i++ ) {
+				ts << cornerCoordinatesPixel[i];
+				if ( i != coordinateCount - 1 ) {
+					ts << ", ";
+				}
+			}
+			ts << "]\n";
+			ts << "#coordinate: " << QString(coordinate.chars()) << "\n";
+			ts << "#xLabel: " << QString(ctypeUnit.chars()) << "\n";
+			ts << "#yLabel: " << "[" << yUnit << "] "<< plotMode->currentText() << "\n";
+			if (z_eval.size() > 0)
+				ts << "#eLabel: " << "[" << yUnit << "] " << errorMode->currentText() << "\n";
+
+
+
+
+			if (z_eval.size() > 0) {
+				for (uInt i = 0; i < z_xval.size(); i++) {
+					ts << z_xval(i) << "    " << scaleFactor*z_yval(i) << "    "  << scaleFactor*z_eval(i) << "\n";
+				}
+			} else {
+				for (uInt i = 0; i < z_xval.size(); i++) {
+					ts << z_xval(i) << "    " << scaleFactor*z_yval(i) << "\n";
+				}
+			}
+
 
 		int i = pixelCanvas->getLineCount();
 		for (int k = 1; k < i; k++) {
@@ -1666,7 +1681,6 @@ namespace casa {
 				ts << data[2 * m] << " " << scaleFactor*data[2 * m + 1] << "\n";
 			}
 		}
-
 		return true;
 	}
 
@@ -1816,7 +1830,7 @@ namespace casa {
 		else if (ctypeUnitStr.contains("frequency"))
 			cTypeStr = String("frequency");
 		else
-			cTypeStr = String("channel");
+			cTypeStr = String( CHANNEL.toStdString() );
 
 		// determine the unit
 		if (ctypeUnitStr.contains("[Hz]"))
@@ -1993,7 +2007,7 @@ namespace casa {
 		profileStatus->showMessage(position);
 	}
 
-	bool QtProfile::getFrequencyProfileWrapper( const Vector<double> &wxv, const Vector<double> &wyv,
+	bool QtProfile::getFrequencyProfileWrapper( ImageAnalysis* analysis, const Vector<double> &wxv, const Vector<double> &wyv,
 	        Vector<Float> &z_xval, Vector<Float> &z_yval,
 	        const String& xytype, const String& specaxis,
 	        const Int& whichStokes, const Int& whichTabular,
@@ -2005,13 +2019,12 @@ namespace casa {
 
 		Int beamChannel = 0;
 
-		// might want to introduce more fancy selection of the beamChannel here but using channel 0 is a good choice already
-
+		// might want to introduce more fancy selection of the
+		//beamChannel here but using channel 0 is a good choice already
 		ok = analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 		                               xytype, specaxis, whichStokes, whichTabular, whichLinear, xunits, specFrame,
 		                               combineType, whichQuality, restValue,
 		                               beamChannel);
-
 		if ( itsPlotType == QtProfile::PFLUX ) {
 			//Post a warning that flux was calculated using a given channel
 			//and the resulting calculation was only an approximation.
@@ -2044,7 +2057,7 @@ namespace casa {
 			                             (Int)QtProfile::SUM, 0, cSysRval );
 			break;
 		case QtProfile::PFLUX:
-			ok=getFrequencyProfileWrapper( wxv, wyv, z_xval, z_yval,
+			ok=getFrequencyProfileWrapper( analysis, wxv, wyv, z_xval, z_yval,
 			                               WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 			                               (Int)QtProfile::FLUX, 0, cSysRval);
 			break;
@@ -2125,7 +2138,7 @@ namespace casa {
 					                             (Int)QtProfile::SQRTSUM, 1, cSysRval);
 					break;
 				case QtProfile::PFLUX:
-					ok=getFrequencyProfileWrapper( wxv, wyv, z_xval, z_eval,
+					ok=getFrequencyProfileWrapper( analysis, wxv, wyv, z_xval, z_eval,
 					                               WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 					                               (Int)QtProfile::EFLUX, 1, cSysRval);
 					break;
@@ -2270,16 +2283,15 @@ namespace casa {
 
 
 
-	void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv,
-	                                       Int ordersOfM ) {
+	void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv,
+			const Vector<double> &wyv, Int ordersOfM ) {
 		bool ok = true;
 		if ( over != NULL ) {
-			QHashIterator<QString, ImageAnalysis*> i(*over);
-
+			QListIterator<OverplotAnalysis> i(*over);
 			while (i.hasNext() && stateMProf) {
-				i.next();
-				QString ky = i.key();
-				ImageAnalysis* ana = i.value();
+				OverplotAnalysis overplot = i.next();
+				QString ky = overplot.first;
+				ImageAnalysis* ana = overplot.second;
 				Vector<Float> xval(100);
 				Vector<Float> yval(100);
 
@@ -2300,15 +2312,11 @@ namespace casa {
 					                        (Int)QtProfile::PSUM, 0);
 					break;
 				case QtProfile::PFLUX:
-					ok=getFrequencyProfileWrapper( wxv, wyv, xval, yval,
+					ok=getFrequencyProfileWrapper( ana, wxv, wyv, xval, yval,
 					                               WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 					                               (Int)QtProfile::PFLUX, 0, "");
 					break;
-					//case QtProfile::PVRMSE:
-					//	ok=ana->getFreqProfile( wxv, wyv, xval, yval,
-					//			WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-					//			(Int)QtProfile::RMSE, 0);
-					// break;
+
 				default:
 					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 					                        WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
@@ -2438,11 +2446,11 @@ namespace casa {
 			//Compare that with the frequency per channel of the overplots
 			if ( over != NULL){
 				const float ERROR_TOL = 0.00001f;
-				QHashIterator<QString, ImageAnalysis*> i(*over);
+				QListIterator<OverplotAnalysis> i(*over);
 				while (i.hasNext() && stateMProf) {
-					i.next();
-					QString ky = i.key();
-					ImageAnalysis* ana = i.value();
+					OverplotAnalysis overplot = i.next();
+					QString ky = overplot.first;
+					ImageAnalysis* ana = overplot.second;
 					double overUnitsPerChannel = getUnitsPerChannel( ana, &unitsAvailable, matchUnits );
 					if ( !unitsAvailable ){
 						unitsMatch = false;
@@ -2459,27 +2467,75 @@ namespace casa {
 	}
 
 
-	void QtProfile::restrictTopAxisOptions( bool restrictOptions, bool allowFrequency, bool allowVelocity ){
+	void QtProfile::restrictTopAxisOptions( bool restrictOptions, const QString& bottomUnits,
+			bool allowFrequency, bool allowVelocity ){
 		topAxisCType->clear();
+
 		for ( int i = 0; i < xUnitsList.size(); i++ ){
-			int frequencyIndex = xUnitsList[i].indexOf( FREQUENCY);
-			int radioVelocityIndex = xUnitsList[i].indexOf( RADIO_VELOCITY);
-			int wavelengthIndex = xUnitsList[i].indexOf( "wavelength");
+			bool bottomVelocity = isVelocityUnit( bottomUnits );
+			bool bottomWavelength = isWavelengthUnit( bottomUnits );
+			bool bottomFrequency = isFrequencyUnit( bottomUnits );
+
+			//Allow a top axis of frequency if the bottom axis is already displaying
+			//frequency or the images are compatible in channel/frequency.
+			bool freqVisible = isFrequencyUnit( xUnitsList[i])  && (allowFrequency || bottomFrequency);
+			bool waveVisible = isWavelengthUnit(xUnitsList[i])  && (allowFrequency || bottomWavelength);
+			bool velocityVisible = isVelocityUnit( xUnitsList[i]) && (allowVelocity || bottomVelocity );
+
+			//We enable channels if the units on the bottom axis are compatible in
+			//channels.
+			bool channelVisible = false;
+			int channelIndex = xUnitsList[i].indexOf( CHANNEL );
+			if ( channelIndex >= 0 ){
+				if ( bottomVelocity && allowVelocity ){
+					channelVisible = true;
+				}
+				else if ( (bottomWavelength || bottomFrequency ) && allowFrequency ){
+					channelVisible = true;
+				}
+			}
+
 			if ( !restrictOptions ||
-				(allowFrequency &&  frequencyIndex>=0) ||
-				(allowVelocity && radioVelocityIndex >= 0 ) ||
-				(allowFrequency && wavelengthIndex==0) ||
-				xUnitsList[i].indexOf( CHANNEL) >= 0){
+				channelVisible || freqVisible || velocityVisible || waveVisible ){
 				topAxisCType->addItem( xUnitsList[i]);
 			}
 		}
 	}
 
+	bool QtProfile::isFrequencyUnit( const QString& unit ) const {
+		bool frequencyUnit = false;
+		int frequencyIndex = unit.indexOf( FREQUENCY );
+		if ( frequencyIndex >= 0 ){
+			frequencyUnit = true;
+		}
+		return frequencyUnit;
+	}
+
+	bool QtProfile::isVelocityUnit( const QString& unit ) const {
+			bool velocityUnit = false;
+			int velocityIndex = unit.indexOf( RADIO_VELOCITY );
+			if ( velocityIndex >= 0 ){
+				velocityUnit = true;
+			}
+			return velocityUnit;
+		}
+
+	bool QtProfile::isWavelengthUnit( const QString& unit ) const {
+			bool waveUnit = false;
+			int waveIndex = unit.indexOf( "wavelength" );
+			if ( waveIndex == 0 ){
+				waveUnit = true;
+			}
+			return waveUnit;
+		}
+
+
 	void QtProfile::adjustTopAxisSettings() {
 		int mainCurveCount = pixelCanvas->getLineCount();
 		//If the user does not want us to show a top axis
 		//we don't.
-		restrictTopAxisOptions( false );
+		QString bottomAxisUnits = bottomAxisCType->currentText();
+		restrictTopAxisOptions( false, bottomAxisUnits );
 		if ( !pixelCanvas->getShowTopAxis() ){
 			topAxisCType->setEnabled( false );
 		}
@@ -2491,12 +2547,15 @@ namespace casa {
 		//the min/max of a single image.  We also need to check that the
 		//frequency units/channel are the same on all images.
 		else if ( mainCurveCount > 1 ) {
+
+
 			bool frequencyMatch = isFrequencyMatch();
 			bool velocityMatch = isVelocityMatch();
 			bool enableTopAxis = frequencyMatch || velocityMatch;
 			topAxisCType->setEnabled( enableTopAxis );
 			if ( enableTopAxis ){
-				restrictTopAxisOptions( true, frequencyMatch, velocityMatch );
+
+				restrictTopAxisOptions( true, bottomAxisUnits, frequencyMatch, velocityMatch );
 			}
 			pixelCanvas->setTopAxisCompatible( enableTopAxis );
 		//If there is only one curve, we show the top axis assuming
@@ -2506,8 +2565,8 @@ namespace casa {
 		}
 	}
 
-	void QtProfile::addCanvasMainCurve( const Vector<Float>& xVals, const Vector<Float>& yVals,
-	                                    const QString& label ) {
+	void QtProfile::addCanvasMainCurve( const Vector<Float>& xVals,
+			const Vector<Float>& yVals, const QString& label ) {
 		specFitSettingsWidget->addCurveName( label );
 		pixelCanvas->addPolyLine(xVals, yVals, label );
 		adjustTopAxisSettings();
@@ -2559,12 +2618,12 @@ namespace casa {
 	const ImageInterface<Float>* QtProfile::getImage( const QString& imageName ) const {
 		//First look for a specific image with the name
 		if ( imageName.length() > 0 && over ) {
-			QHashIterator<QString, ImageAnalysis*> i( *over );
+			QListIterator<OverplotAnalysis> i( *over );
 			while (i.hasNext()) {
-				i.next();
-				QString ky = i.key();
+				OverplotAnalysis overplot = i.next();
+				QString ky = overplot.first;
 				if ( ky == imageName ) {
-					ImageAnalysis* analysis = i.value();
+					ImageAnalysis* analysis = overplot.second;
 					const ImageInterface<Float>* imageInterface = analysis->getImage();
 					return imageInterface;
 				}

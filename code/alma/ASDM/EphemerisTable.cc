@@ -75,9 +75,31 @@ namespace asdm {
 	//
 	static string attributesNamesOfEphemeris_a[] = {
 		
+			"timeInterval"
+		,
 			"ephemerisId"
 		
+		
+			, "observerLocation"
+		
+			, "equinoxEquator"
+		
+			, "numPolyDir"
+		
+			, "dir"
+		
+			, "numPolyDist"
+		
+			, "distance"
+		
+			, "timeOrigin"
+		
+			, "origin"
 				
+		
+			, "numPolyRadVel"
+		
+			, "radVel"
 				
 	};
 	
@@ -91,9 +113,9 @@ namespace asdm {
 	//	
 	static string attributesNamesInBinOfEphemeris_a[] = {
     
-    	 "ephemerisId" 
+    	 "timeInterval" , "ephemerisId" , "observerLocation" , "equinoxEquator" , "numPolyDir" , "dir" , "numPolyDist" , "distance" , "timeOrigin" , "origin" 
     	,
-    	
+    	 "numPolyRadVel" , "radVel" 
     
 	};
 	        			
@@ -106,6 +128,8 @@ namespace asdm {
 	//
 	string keyOfEphemeris_a[] = {
 	
+		"timeInterval"
+	,
 		"ephemerisId"
 		 
 	};
@@ -220,6 +244,58 @@ namespace asdm {
 	}
 	
 
+	/**
+	 * Create a new row initialized to the specified values.
+	 * @return a pointer on the created and initialized row.
+	
+ 	 * @param timeInterval 
+	
+ 	 * @param ephemerisId 
+	
+ 	 * @param observerLocation 
+	
+ 	 * @param equinoxEquator 
+	
+ 	 * @param numPolyDir 
+	
+ 	 * @param dir 
+	
+ 	 * @param numPolyDist 
+	
+ 	 * @param distance 
+	
+ 	 * @param timeOrigin 
+	
+ 	 * @param origin 
+	
+     */
+	EphemerisRow* EphemerisTable::newRow(ArrayTimeInterval timeInterval, int ephemerisId, vector<double > observerLocation, double equinoxEquator, int numPolyDir, vector<vector<double > > dir, int numPolyDist, vector<double > distance, ArrayTime timeOrigin, string origin){
+		EphemerisRow *row = new EphemerisRow(*this);
+			
+		row->setTimeInterval(timeInterval);
+			
+		row->setEphemerisId(ephemerisId);
+			
+		row->setObserverLocation(observerLocation);
+			
+		row->setEquinoxEquator(equinoxEquator);
+			
+		row->setNumPolyDir(numPolyDir);
+			
+		row->setDir(dir);
+			
+		row->setNumPolyDist(numPolyDist);
+			
+		row->setDistance(distance);
+			
+		row->setTimeOrigin(timeOrigin);
+			
+		row->setOrigin(origin);
+	
+		return row;		
+	}	
+	
+
 
 EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 	return new EphemerisRow(*this, *row);
@@ -230,43 +306,55 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 	//
 
 	
-	 
 	
+		
+		
 	/** 
- 	 * Look up the table for a row whose noautoincrementable attributes are matching their
- 	 * homologues in *x.  If a row is found  this row else autoincrement  *x.ephemerisId, 
- 	 * add x to its table and returns x.
- 	 *  
- 	 * @returns a pointer on a EphemerisRow.
- 	 * @param x. A pointer on the row to be added.
- 	 */ 
- 		
+	 * Returns a string built by concatenating the ascii representation of the
+	 * parameters values suffixed with a "_" character.
+	 */
+	 string EphemerisTable::Key(int ephemerisId) {
+	 	ostringstream ostrstr;
+	 		ostrstr  
+			
+				<<   ephemerisId  << "_"
+			
+			;
+		return ostrstr.str();	 	
+	 }
+	 
+			
 			
 	EphemerisRow* EphemerisTable::add(EphemerisRow* x) {
-			
+		ArrayTime startTime = x->getTimeInterval().getStart();
 
+		/*
+	 	 * Is there already a context for this combination of not temporal 
+	 	 * attributes ?
+	 	 */
+		string k = Key(
+						x->getEphemerisId()
+					   );
+ 
+		if (context.find(k) == context.end()) { 
+			// There is not yet a context ...
+			// Create and initialize an entry in the context map for this combination....
+			TIME_ROWS v;
+			context[k] = v;			
+		}
+		
+		return insertByStartTime(x, context[k]);
+	}	
 			
-		// Autoincrement ephemerisId
-		x->setEphemerisId(Tag(size(), TagType::Ephemeris));
-						
-		row.push_back(x);
-		privateRows.push_back(x);
-		x->isAdded(true);
-		return x;
-	}
 		
 	
 		
 	void EphemerisTable::addWithoutCheckingUnique(EphemerisRow * x) {
-		if (getRowByKey(
-						x->getEphemerisId()
-						) != (EphemerisRow *) 0) 
-			throw DuplicateKey("Dupicate key exception in ", "EphemerisTable");
-		row.push_back(x);
-		privateRows.push_back(x);
-		x->isAdded(true);
+		EphemerisRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
+		                                           // by passing true in the second parameter
+		                                           // whose value by default is false.
 	}
-
+	
 
 
 
@@ -276,35 +364,28 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 	//
 
 	
-	/**
-	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
-	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
-	 * Append x to its table.
-	 * @param x a pointer on the row to be appended.
-	 * @returns a pointer on x.
-	 * @throws DuplicateKey
-	 
-	 * @throws UniquenessViolationException
-	 
-	 */
-	EphemerisRow*  EphemerisTable::checkAndAdd(EphemerisRow* x, bool skipCheckUniqueness)  {
-		if (!skipCheckUniqueness) { 
-	 
+	
 		
 		
+			
+			
+			
+			
+	EphemerisRow*  EphemerisTable::checkAndAdd(EphemerisRow* x, bool skipCheckUniqueness) {
+		string keystr = Key( 
+						x->getEphemerisId() 
+					   ); 
+		if (context.find(keystr) == context.end()) {
+			vector<EphemerisRow *> v;
+			context[keystr] = v;
 		}
 		
-		if (getRowByKey(
-	
-			x->getEphemerisId()
+		vector<EphemerisRow*>& found = context.find(keystr)->second;
+		return insertByStartTime(x, found);			
+	}
 			
-		)) throw DuplicateKey("Duplicate key exception in ", "EphemerisTable");
+					
 		
-		row.push_back(x);
-		privateRows.push_back(x);
-		x->isAdded(true);
-		return x;	
-	}	
 
 
 
@@ -338,31 +419,98 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 	
 
 	
+	
+		
+	 vector<EphemerisRow *> *EphemerisTable::getByContext(int ephemerisId) {
+	 	//if (getContainer().checkRowUniqueness() == false)
+	 		//throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "EphemerisTable");
+
+	 	checkPresenceInMemory();
+	  	string k = Key(ephemerisId);
+ 
+	    if (context.find(k) == context.end()) return 0;
+ 	   else return &(context[k]);		
+	}		
+		
+	
+
+
+	
+		
+		
+			
+			
+			
 /*
  ** Returns a EphemerisRow* given a key.
  ** @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  ** no row exists for that key.
  **
  */
- 	EphemerisRow* EphemerisTable::getRowByKey(Tag ephemerisId)  {
- 	checkPresenceInMemory();
-	EphemerisRow* aRow = 0;
-	for (unsigned int i = 0; i < privateRows.size(); i++) {
-		aRow = row.at(i);
-		
+ 				
+				
+	EphemerisRow* EphemerisTable::getRowByKey(ArrayTimeInterval timeInterval, int ephemerisId)  {
+		checkPresenceInMemory();
+ 		string keystr = Key(ephemerisId);
+ 		vector<EphemerisRow *> row;
+ 		
+ 		if ( context.find(keystr)  == context.end()) return 0;
+ 		
+ 		row = context[keystr];
+ 		
+ 		// Is the vector empty...impossible in principle !
+ 		if (row.size() == 0) return 0;
+ 		
+ 		// Only one element in the vector
+ 		if (row.size() == 1) {
+ 			EphemerisRow* r = row.at(0);
+ 			if ( r->getTimeInterval().contains(timeInterval.getStart()))
+ 				return r;
+ 			else
+ 				return 0;
+ 		}
+ 		
+ 		// Optimizations
+ 		EphemerisRow* last = row.at(row.size()-1);
+ 		if (timeInterval.getStart().get() >= (last->getTimeInterval().getStart().get()+last->getTimeInterval().getDuration().get())) return 0;
+ 		
+ 		EphemerisRow* first = row.at(0);
+ 		if (timeInterval.getStart().get() < first->getTimeInterval().getStart().get()) return 0;
+ 		
+ 		
+ 		// More than one row 
+ 		// Let's use a dichotomy method for the general case..	
+ 		int k0 = 0;
+ 		int k1 = row.size() - 1;
+ 		EphemerisRow* r = 0;
+ 		while (k0!=k1) {
+ 		
+ 			// Is the start time contained in the time interval of row #k0
+ 			r = row.at(k0);
+ 			if (r->getTimeInterval().contains(timeInterval.getStart())) return r;
+ 			
+ 			// Is the start contained in the time interval of row #k1
+ 			r = row.at(k1);
+			if (r->getTimeInterval().contains(timeInterval.getStart())) return r;
 			
-				if (aRow->ephemerisId != ephemerisId) continue;
+			// Are the rows #k0 and #k1 consecutive
+			// Then we know for sure that there is no row containing the start of timeInterval
+			if (k1==(k0+1)) return 0;
 			
-		
-		return aRow;
+			// Proceed to the next step of dichotomy.
+			r = row.at((k0+k1)/2);
+			if ( timeInterval.getStart().get() <= r->getTimeInterval().getStart().get())
+				k1 = (k0 + k1) / 2;
+			else
+				k0 = (k0 + k1) / 2;
+		}
+		return 0;	
 	}
-	return 0;		
-}
-	
-
-	
- 	 	
-
+							
+			
+		
+		
+		
 	
 
 
@@ -413,7 +561,7 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<EphemerisTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ephmrs=\"http://Alma/XASDM/EphemerisTable\" xsi:schemaLocation=\"http://Alma/XASDM/EphemerisTable http://almaobservatory.org/XML/XASDM/3/EphemerisTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n");
+		buf.append("<EphemerisTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ephmrs=\"http://Alma/XASDM/EphemerisTable\" xsi:schemaLocation=\"http://Alma/XASDM/EphemerisTable http://almaobservatory.org/XML/XASDM/3/EphemerisTable.xsd\" schemaVersion=\"3\" schemaRevision=\"-1\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -535,14 +683,25 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<EphemerisTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ephmrs=\"http://Alma/XASDM/EphemerisTable\" xsi:schemaLocation=\"http://Alma/XASDM/EphemerisTable http://almaobservatory.org/XML/XASDM/3/EphemerisTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n";
+		oss << "<EphemerisTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:ephmrs=\"http://Alma/XASDM/EphemerisTable\" xsi:schemaLocation=\"http://Alma/XASDM/EphemerisTable http://almaobservatory.org/XML/XASDM/3/EphemerisTable.xsd\" schemaVersion=\"3\" schemaRevision=\"-1\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='EphemerisTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
 		oss << "<Attributes>\n";
 
+		oss << "<timeInterval/>\n"; 
 		oss << "<ephemerisId/>\n"; 
+		oss << "<observerLocation/>\n"; 
+		oss << "<equinoxEquator/>\n"; 
+		oss << "<numPolyDir/>\n"; 
+		oss << "<dir/>\n"; 
+		oss << "<numPolyDist/>\n"; 
+		oss << "<distance/>\n"; 
+		oss << "<timeOrigin/>\n"; 
+		oss << "<origin/>\n"; 
 
+		oss << "<numPolyRadVel/>\n"; 
+		oss << "<radVel/>\n"; 
 		oss << "</Attributes>\n";		
 		oss << "</EphemerisTable>\n";
 
@@ -658,8 +817,30 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
     //
     
     	 
+    attributesSeq.push_back("timeInterval") ; 
+    	 
     attributesSeq.push_back("ephemerisId") ; 
+    	 
+    attributesSeq.push_back("observerLocation") ; 
+    	 
+    attributesSeq.push_back("equinoxEquator") ; 
+    	 
+    attributesSeq.push_back("numPolyDir") ; 
+    	 
+    attributesSeq.push_back("dir") ; 
+    	 
+    attributesSeq.push_back("numPolyDist") ; 
+    	 
+    attributesSeq.push_back("distance") ; 
+    	 
+    attributesSeq.push_back("timeOrigin") ; 
+    	 
+    attributesSeq.push_back("origin") ; 
     	
+    	 
+    attributesSeq.push_back("numPolyRadVel") ; 
+    	 
+    attributesSeq.push_back("radVel") ; 
     	
      
     
@@ -1026,32 +1207,111 @@ void EphemerisTable::setFromXMLFile(const string& directory) {
 
 			
 	
+		
+		
+	/**
+	 * Insert a EphemerisRow* in a vector of EphemerisRow* so that it's ordered by ascending start time.
+	 *
+	 * @param EphemerisRow* x . The pointer to be inserted.
+	 * @param vector <EphemerisRow*>& row. A reference to the vector where to insert x.
+	 *
+	 */
+	 EphemerisRow* EphemerisTable::insertByStartTime(EphemerisRow* x, vector<EphemerisRow*>& row) {
+				
+		vector <EphemerisRow*>::iterator theIterator;
+		
+		ArrayTime start = x->timeInterval.getStart();
+
+    	// Is the row vector empty ?
+    	if (row.size() == 0) {
+    		row.push_back(x);
+    		privateRows.push_back(x);
+    		x->isAdded(true);
+    		return x;
+    	}
+    	
+    	// Optimization for the case of insertion by ascending time.
+    	EphemerisRow* last = *(row.end()-1);
+        
+    	if ( start > last->timeInterval.getStart() ) {
+ 	    	//
+	    	// Modify the duration of last if and only if the start time of x
+	    	// is located strictly before the end time of last.
+	    	//
+	  		if ( start < (last->timeInterval.getStart() + last->timeInterval.getDuration()))   		
+    			last->timeInterval.setDuration(start - last->timeInterval.getStart());
+    		row.push_back(x);
+    		privateRows.push_back(x);
+    		x->isAdded(true);
+    		return x;
+    	}
+    	
+    	// Optimization for the case of insertion by descending time.
+    	EphemerisRow* first = *(row.begin());
+        
+    	if ( start < first->timeInterval.getStart() ) {
+			//
+	  		// Modify the duration of x if and only if the start time of first
+	  		// is located strictly before the end time of x.
+	  		//
+	  		if ( first->timeInterval.getStart() < (start + x->timeInterval.getDuration()) )	  		
+    			x->timeInterval.setDuration(first->timeInterval.getStart() - start);
+    		row.insert(row.begin(), x);
+    		privateRows.push_back(x);
+    		x->isAdded(true);
+    		return x;
+    	}
+    	
+    	// Case where x has to be inserted inside row; let's use a dichotomy
+    	// method to find the insertion index.
+		unsigned int k0 = 0;
+		unsigned int k1 = row.size() - 1;
+	
+		while (k0 != (k1 - 1)) {
+			if (start == row[k0]->timeInterval.getStart()) {
+				if (row[k0]->equalByRequiredValue(x))
+					return row[k0];
+				else
+					throw DuplicateKey("DuplicateKey exception in ", "EphemerisTable");	
+			}
+			else if (start == row[k1]->timeInterval.getStart()) {
+				if (row[k1]->equalByRequiredValue(x))
+					return row[k1];
+				else
+					throw DuplicateKey("DuplicateKey exception in ", "EphemerisTable");	
+			}
+			else {
+				if (start <= row[(k0+k1)/2]->timeInterval.getStart())
+					k1 = (k0 + k1) / 2;
+				else
+					k0 = (k0 + k1) / 2;				
+			} 	
+		}
+
+		if (start == row[k0]->timeInterval.getStart()) {
+			if (row[k0]->equalByRequiredValue(x))
+				return row[k0];
+			else
+				throw DuplicateKey("DuplicateKey exception in ", "EphemerisTable");	
+		}
+		else if (start == row[k1]->timeInterval.getStart()) {
+			if (row[k1]->equalByRequiredValue(x))
+				return row[k1];
+			else
+				throw DuplicateKey("DuplicateKey exception in ", "EphemerisTable");	
+		}	
+
+		row[k0]->timeInterval.setDuration(start-row[k0]->timeInterval.getStart());
+		x->timeInterval.setDuration(row[k0+1]->timeInterval.getStart() - start);
+		row.insert(row.begin()+(k0+1), x);
+		privateRows.push_back(x);
+   		x->isAdded(true);
+		return x;   
+    } 
+    	
+	
 	
 
-	
-	void EphemerisTable::autoIncrement(string key, EphemerisRow* x) {
-		map<string, int>::iterator iter;
-		if ((iter=noAutoIncIds.find(key)) == noAutoIncIds.end()) {
-			// There is not yet a combination of the non autoinc attributes values in the hashtable
-			
-			// Initialize  ephemerisId to Tag(0).
-			x->setEphemerisId(Tag(0,  TagType::Ephemeris));
-			
-			// Record it in the map.		
-			noAutoIncIds.insert(make_pair(key, 0));			
-		} 
-		else {
-			// There is already a combination of the non autoinc attributes values in the hashtable
-			// Increment its value.
-			int n = iter->second + 1; 
-			
-			// Initialize  ephemerisId to Tag(n).
-			x->setEphemerisId(Tag(n, TagType::Ephemeris));
-			
-			// Record it in the map.		
-			noAutoIncIds.insert(make_pair(key, n));				
-		}		
-	}
 	
 } // End namespace asdm
  

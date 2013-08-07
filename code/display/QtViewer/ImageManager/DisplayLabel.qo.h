@@ -22,48 +22,46 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+#ifndef DISPLAYLABEL_QO_H
+#define DISPLAYLABEL_QO_H
 
-#ifndef IMAGETRACKER_H_
-#define IMAGETRACKER_H_
+#include <QTextEdit>
+#include <QWidget>
 
 namespace casa {
 
-	class QtDisplayData;
+/**
+ * Provides a quick view of a particular display property that has
+ * been set.  For example, the data display type could be raster,
+ * contour, or vector.  The DisplayLabel corresponding to
+ * the display type will show 'R', 'C', or 'V'.
+ */
 
-	/**
-	 * Interface class designed to reduce the coupling between the GUI class,
-	 * ImageManager and the DisplayDataHolder.  Provides a mechanism for the DisplayDataHolder
-	 * to update the GUI, when its QtDisplayData changes methods invoked by other classes.
-	 */
+class DisplayLabel : public QTextEdit {
+    Q_OBJECT
 
-	class ImageTracker {
-	public:
-		virtual void imageAdded( QtDisplayData* image, int position,
-				bool autoRegister, bool masterCoordinate,
-				bool masterSaturation, bool masterHue) = 0;
-		virtual void masterImageSelected( QtDisplayData* image ) =0;
-		ImageTracker() {}
-		virtual ~ImageTracker() {}
+public:
+    DisplayLabel(int characterCount, QWidget *parent = 0);
 
-	};
+    /**
+     * Sets the background color that will be used when no
+     * text is displayed.
+     */
+    void setEmptyColor( QColor color );
 
-	/**
-	 * Interface implemented by QtDisplayPanel that can add/remove
-	 * registered DDs and set the controlling QtDisplayData's.
-	 *
-	 * Methods are called by the DisplayDataHolder to make changes through the
-	 * existing infrastructure.
-	 */
-	class ImageDisplayer {
-	public:
-		ImageDisplayer() {}
-		virtual ~ImageDisplayer() {}
-		virtual void setControllingDD( QtDisplayData* controlDD ) = 0;
-		virtual void registerDD( QtDisplayData* dd, int position = -1) = 0;
-		virtual void unregisterDD( QtDisplayData* dd ) = 0;
-	};
+    /**
+     * Returns whether or not the contents contains text.
+     */
+    bool isEmpty() const;
 
 
+    ~DisplayLabel();
+
+private:
+    void setBackgroundColor( );
+    QColor bgColor;
+};
 
 }
-#endif /* IMAGETRACKER_H_ */
+
+#endif // DISPLAYLABEL_QO_H

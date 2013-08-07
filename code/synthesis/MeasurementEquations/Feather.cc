@@ -578,6 +578,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     }
     else{
+    	meanval.resize( tmpval.size());
       meanval=tmpval;
     }
     yamp.resize();

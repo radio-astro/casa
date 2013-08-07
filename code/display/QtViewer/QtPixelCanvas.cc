@@ -44,6 +44,7 @@
 #  include <QCursor>
 #  include <QMouseEvent>
 #  include <QPoint>
+#  include <QDebug>
 #include <graphics/X11/X_exit.h>
 
 namespace casa {
@@ -581,7 +582,6 @@ namespace casa {
 
 	void QtPixelCanvas::drawImage(const Int &xs, const Int &ys,
 	                              const Matrix<uInt> &data, const Matrix<Bool> &mask, Bool opaqueMask) {
-
 		QRgb maskout = opaqueMask?
 		               p_.background().color().rgba() :	// opaque
 		               qRgba(0, 0, 0, 0);			// transparent

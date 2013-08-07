@@ -88,6 +88,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool PSPixelCanvasColorTable::installRGBColors(const Vector<Float> & r,
 	        const Vector<Float> & g,
 	        const Vector<Float> & b,
+	        const Vector<Float> & /*alpha*/,
 	        uInt offset) {
 		if (offset + r.nelements() > nColors_)
 			throw(AipsError("PSPixelCanvasColorTable::installRGBColors: offset + vector length > nColors in"));

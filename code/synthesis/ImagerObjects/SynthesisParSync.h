@@ -62,7 +62,7 @@ class SynthesisParSync
   void setupParSync(Record syncpars);
 
   // Gather all part images to the 'full' one
-  void gatherResidual();
+  void gatherImages(Bool dopsf=True, Bool doresidual=True);
 
   // Copy out model to all pieces. Currently a No-Op.
   void scatterModel();
@@ -70,10 +70,12 @@ class SynthesisParSync
   CountedPtr<SIImageStore> getImageStore();
   void setImageStore( SIImageStore* imstore );
 
+  void divideResidualByWeight();
+  void dividePSFByWeight();
+
 protected:
 
  // Normalize. This can later change to be more general, i.e. used for PB-correction too...
-  void divideResidualByWeight();
   void divideModelByWeight();
  // Check if images exist on disk and are all the same shape
   Bool setupImagesOnDisk();

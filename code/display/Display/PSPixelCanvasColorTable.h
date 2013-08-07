@@ -131,7 +131,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //<thrown><li> AipsError </thrown>
 		virtual Bool installRGBColors(const Vector<Float> & r,
 		                              const Vector<Float> & g,
-		                              const Vector<Float> & b, uInt offset = 0);
+		                              const Vector<Float> & b,
+		                              const Vector<Float> & alpha,
+		                              uInt offset = 0);
 
 		// Return the number of RW colors in the colormap.
 		virtual uInt nColors() const;

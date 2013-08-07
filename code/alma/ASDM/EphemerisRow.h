@@ -48,11 +48,37 @@
 
 
 	 
-#include <Tag.h>
+#include <ArrayTime.h>
+	
+
+	 
+#include <ArrayTimeInterval.h>
 	
 
 
 
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
 
 	
 
@@ -66,7 +92,7 @@
 //#include <TableStreamReader.h>
 
 /*\file Ephemeris.h
-    \brief Generated from model's revision "1.64", branch "HEAD"
+    \brief Generated from model's revision "-1", branch ""
 */
 
 namespace asdm {
@@ -82,7 +108,7 @@ typedef void (EphemerisRow::*EphemerisAttributeFromText) (const string& s);
 /**
  * The EphemerisRow class is a row of a EphemerisTable.
  * 
- * Generated from model's revision "1.64", branch "HEAD"
+ * Generated from model's revision "-1", branch ""
  *
  */
 class EphemerisRow {
@@ -110,6 +136,38 @@ public:
 	////////////////////////////////
 	
 	
+	// ===> Attribute timeInterval
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get timeInterval.
+ 	 * @return timeInterval as ArrayTimeInterval
+ 	 */
+ 	ArrayTimeInterval getTimeInterval() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set timeInterval with the specified ArrayTimeInterval.
+ 	 * @param timeInterval The ArrayTimeInterval value to which timeInterval is to be set.
+ 	 
+ 		
+ 			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
+ 	 */
+ 	void setTimeInterval (ArrayTimeInterval timeInterval);
+  		
+	
+	
+	
+
+
+	
 	// ===> Attribute ephemerisId
 	
 	
@@ -118,14 +176,348 @@ public:
 	
  	/**
  	 * Get ephemerisId.
- 	 * @return ephemerisId as Tag
+ 	 * @return ephemerisId as int
  	 */
- 	Tag getEphemerisId() const;
+ 	int getEphemerisId() const;
 	
  
  	
  	
+ 	/**
+ 	 * Set ephemerisId with the specified int.
+ 	 * @param ephemerisId The int value to which ephemerisId is to be set.
+ 	 
+ 		
+ 			
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 		
+ 	 */
+ 	void setEphemerisId (int ephemerisId);
+  		
 	
+	
+	
+
+
+	
+	// ===> Attribute observerLocation
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get observerLocation.
+ 	 * @return observerLocation as vector<double >
+ 	 */
+ 	vector<double > getObserverLocation() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set observerLocation with the specified vector<double >.
+ 	 * @param observerLocation The vector<double > value to which observerLocation is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setObserverLocation (vector<double > observerLocation);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute equinoxEquator
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get equinoxEquator.
+ 	 * @return equinoxEquator as double
+ 	 */
+ 	double getEquinoxEquator() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set equinoxEquator with the specified double.
+ 	 * @param equinoxEquator The double value to which equinoxEquator is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setEquinoxEquator (double equinoxEquator);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute numPolyDir
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numPolyDir.
+ 	 * @return numPolyDir as int
+ 	 */
+ 	int getNumPolyDir() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numPolyDir with the specified int.
+ 	 * @param numPolyDir The int value to which numPolyDir is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setNumPolyDir (int numPolyDir);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute dir
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get dir.
+ 	 * @return dir as vector<vector<double > >
+ 	 */
+ 	vector<vector<double > > getDir() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set dir with the specified vector<vector<double > >.
+ 	 * @param dir The vector<vector<double > > value to which dir is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setDir (vector<vector<double > > dir);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute numPolyDist
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get numPolyDist.
+ 	 * @return numPolyDist as int
+ 	 */
+ 	int getNumPolyDist() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numPolyDist with the specified int.
+ 	 * @param numPolyDist The int value to which numPolyDist is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setNumPolyDist (int numPolyDist);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute distance
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get distance.
+ 	 * @return distance as vector<double >
+ 	 */
+ 	vector<double > getDistance() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set distance with the specified vector<double >.
+ 	 * @param distance The vector<double > value to which distance is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setDistance (vector<double > distance);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute timeOrigin
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get timeOrigin.
+ 	 * @return timeOrigin as ArrayTime
+ 	 */
+ 	ArrayTime getTimeOrigin() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set timeOrigin with the specified ArrayTime.
+ 	 * @param timeOrigin The ArrayTime value to which timeOrigin is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setTimeOrigin (ArrayTime timeOrigin);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute origin
+	
+	
+	
+
+	
+ 	/**
+ 	 * Get origin.
+ 	 * @return origin as string
+ 	 */
+ 	string getOrigin() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set origin with the specified string.
+ 	 * @param origin The string value to which origin is to be set.
+ 	 
+ 		
+ 			
+ 	 */
+ 	void setOrigin (string origin);
+  		
+	
+	
+	
+
+
+	
+	// ===> Attribute numPolyRadVel, which is optional
+	
+	
+	
+	/**
+	 * The attribute numPolyRadVel is optional. Return true if this attribute exists.
+	 * @return true if and only if the numPolyRadVel attribute exists. 
+	 */
+	bool isNumPolyRadVelExists() const;
+	
+
+	
+ 	/**
+ 	 * Get numPolyRadVel, which is optional.
+ 	 * @return numPolyRadVel as int
+ 	 * @throws IllegalAccessException If numPolyRadVel does not exist.
+ 	 */
+ 	int getNumPolyRadVel() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set numPolyRadVel with the specified int.
+ 	 * @param numPolyRadVel The int value to which numPolyRadVel is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setNumPolyRadVel (int numPolyRadVel);
+		
+	
+	
+	
+	/**
+	 * Mark numPolyRadVel, which is an optional field, as non-existent.
+	 */
+	void clearNumPolyRadVel ();
+	
+
+
+	
+	// ===> Attribute radVel, which is optional
+	
+	
+	
+	/**
+	 * The attribute radVel is optional. Return true if this attribute exists.
+	 * @return true if and only if the radVel attribute exists. 
+	 */
+	bool isRadVelExists() const;
+	
+
+	
+ 	/**
+ 	 * Get radVel, which is optional.
+ 	 * @return radVel as vector<double >
+ 	 * @throws IllegalAccessException If radVel does not exist.
+ 	 */
+ 	vector<double > getRadVel() const;
+	
+ 
+ 	
+ 	
+ 	/**
+ 	 * Set radVel with the specified vector<double >.
+ 	 * @param radVel The vector<double > value to which radVel is to be set.
+ 	 
+ 		
+ 	 */
+ 	void setRadVel (vector<double > radVel);
+		
+	
+	
+	
+	/**
+	 * Mark radVel, which is an optional field, as non-existent.
+	 */
+	void clearRadVel ();
 	
 
 
@@ -140,7 +532,58 @@ public:
 	
 	
 	
+	/**
+	 * Compare each mandatory attribute except the autoincrementable one of this EphemerisRow with 
+	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param timeInterval
+	    
+	 * @param ephemerisId
+	    
+	 * @param observerLocation
+	    
+	 * @param equinoxEquator
+	    
+	 * @param numPolyDir
+	    
+	 * @param dir
+	    
+	 * @param numPolyDist
+	    
+	 * @param distance
+	    
+	 * @param timeOrigin
+	    
+	 * @param origin
+	    
+	 */ 
+	bool compareNoAutoInc(ArrayTimeInterval timeInterval, int ephemerisId, vector<double > observerLocation, double equinoxEquator, int numPolyDir, vector<vector<double > > dir, int numPolyDist, vector<double > distance, ArrayTime timeOrigin, string origin);
+	
+	
 
+	
+	/**
+	 * Compare each mandatory value (i.e. not in the key) attribute  with 
+	 * the corresponding parameters and return true if there is a match and false otherwise.
+	 	
+	 * @param observerLocation
+	    
+	 * @param equinoxEquator
+	    
+	 * @param numPolyDir
+	    
+	 * @param dir
+	    
+	 * @param numPolyDist
+	    
+	 * @param distance
+	    
+	 * @param timeOrigin
+	    
+	 * @param origin
+	    
+	 */ 
+	bool compareRequiredValue(vector<double > observerLocation, double equinoxEquator, int numPolyDir, vector<vector<double > > dir, int numPolyDist, vector<double > distance, ArrayTime timeOrigin, string origin); 
 		 
 	
 	/**
@@ -199,9 +642,20 @@ public:
 	////////////////////////////////////////////////////////////
 
 	std::map<std::string, EphemerisAttributeFromBin> fromBinMethods;
+void timeIntervalFromBin( EndianIStream& eis);
 void ephemerisIdFromBin( EndianIStream& eis);
+void observerLocationFromBin( EndianIStream& eis);
+void equinoxEquatorFromBin( EndianIStream& eis);
+void numPolyDirFromBin( EndianIStream& eis);
+void dirFromBin( EndianIStream& eis);
+void numPolyDistFromBin( EndianIStream& eis);
+void distanceFromBin( EndianIStream& eis);
+void timeOriginFromBin( EndianIStream& eis);
+void originFromBin( EndianIStream& eis);
 
-	
+void numPolyRadVelFromBin( EndianIStream& eis);
+void radVelFromBin( EndianIStream& eis);
+
 
 	 /**
 	  * Deserialize a stream of bytes read from an EndianIStream to build a PointingRow.
@@ -269,27 +723,140 @@ private:
 	////////////////////////////////
 	
 	
-	// ===> Attribute ephemerisId
+	// ===> Attribute timeInterval
 	
 	
 
-	Tag ephemerisId;
+	ArrayTimeInterval timeInterval;
 
 	
 	
  	
- 	/**
- 	 * Set ephemerisId with the specified Tag value.
- 	 * @param ephemerisId The Tag value to which ephemerisId is to be set.
-		
- 		
-			
- 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
- 	 		
- 	 */
- 	void setEphemerisId (Tag ephemerisId);
-  		
+
 	
+	// ===> Attribute ephemerisId
+	
+	
+
+	int ephemerisId;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute observerLocation
+	
+	
+
+	vector<double > observerLocation;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute equinoxEquator
+	
+	
+
+	double equinoxEquator;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numPolyDir
+	
+	
+
+	int numPolyDir;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute dir
+	
+	
+
+	vector<vector<double > > dir;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numPolyDist
+	
+	
+
+	int numPolyDist;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute distance
+	
+	
+
+	vector<double > distance;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute timeOrigin
+	
+	
+
+	ArrayTime timeOrigin;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute origin
+	
+	
+
+	string origin;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute numPolyRadVel, which is optional
+	
+	
+	bool numPolyRadVelExists;
+	
+
+	int numPolyRadVel;
+
+	
+	
+ 	
+
+	
+	// ===> Attribute radVel, which is optional
+	
+	
+	bool radVelExists;
+	
+
+	vector<double > radVel;
+
+	
+	
+ 	
 
 	////////////////////////////////
 	// Extrinsic Table Attributes //
@@ -305,9 +872,20 @@ private:
 	// binary-deserialization material from an EndianIStream  //
 	////////////////////////////////////////////////////////////
 	std::map<std::string, EphemerisAttributeFromBin> fromBinMethods;
+void timeIntervalFromBin( EndianIStream& eis);
 void ephemerisIdFromBin( EndianIStream& eis);
+void observerLocationFromBin( EndianIStream& eis);
+void equinoxEquatorFromBin( EndianIStream& eis);
+void numPolyDirFromBin( EndianIStream& eis);
+void dirFromBin( EndianIStream& eis);
+void numPolyDistFromBin( EndianIStream& eis);
+void distanceFromBin( EndianIStream& eis);
+void timeOriginFromBin( EndianIStream& eis);
+void originFromBin( EndianIStream& eis);
 
-	
+void numPolyRadVelFromBin( EndianIStream& eis);
+void radVelFromBin( EndianIStream& eis);
+
 */
 	
 	///////////////////////////////////
@@ -315,10 +893,43 @@ void ephemerisIdFromBin( EndianIStream& eis);
 	///////////////////////////////////
 	std::map<std::string, EphemerisAttributeFromText> fromTextMethods;
 	
+void timeIntervalFromText (const string & s);
+	
+	
 void ephemerisIdFromText (const string & s);
 	
+	
+void observerLocationFromText (const string & s);
+	
+	
+void equinoxEquatorFromText (const string & s);
+	
+	
+void numPolyDirFromText (const string & s);
+	
+	
+void dirFromText (const string & s);
+	
+	
+void numPolyDistFromText (const string & s);
+	
+	
+void distanceFromText (const string & s);
+	
+	
+void timeOriginFromText (const string & s);
+	
+	
+void originFromText (const string & s);
+	
 
-		
+	
+void numPolyRadVelFromText (const string & s);
+	
+	
+void radVelFromText (const string & s);
+	
+	
 	
 	/**
 	 * Serialize this into a stream of bytes written to an EndianOSStream.

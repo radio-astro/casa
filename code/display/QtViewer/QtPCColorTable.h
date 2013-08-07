@@ -80,6 +80,7 @@ namespace casa {
 		virtual Bool installRGBColors(const Vector<Float> & r,
 		                              const Vector<Float> & g,
 		                              const Vector<Float> & b,
+		                              const Vector<Float> & alpha,
 		                              uInt offset = 0);
 
 		// Translate Array of colormap indices into graphics platform's colors.

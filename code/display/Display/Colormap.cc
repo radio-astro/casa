@@ -43,6 +43,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsName("mono"),
 		itsIsRigid(False),
 		itsRigidSize(0),
+		itsAlpha(1),
 		itsBrightness(0.5),
 		itsBrightnessScale(0.0),
 		itsContrast(0.5),
@@ -61,6 +62,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsName(name),
 		itsIsRigid(False),
 		itsRigidSize(0),
+		itsAlpha(1),
 		itsBrightness(0.5),
 		itsBrightnessScale(0.0),
 		itsContrast(0.5),
@@ -78,13 +80,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool Colormap::calcRGBMaps(uInt reqSize,
 	                           Vector<Float> & redMap,
 	                           Vector<Float> & greenMap,
-	                           Vector<Float> & blueMap) const {
+	                           Vector<Float> & blueMap,
+	                           Vector<Float> & alphaMap) const {
 		if (rigid() && itsRigidSize != reqSize)
 			return False;
 
 		redMap.resize(reqSize);
 		greenMap.resize(reqSize);
 		blueMap.resize(reqSize);
+		alphaMap.resize( reqSize );
 
 		Double lenpme = reqSize-1 + 0.00001;
 
@@ -101,6 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			                            itsContrastScale + 0.5f));
 			blueMap(i) = max(0.0f, min(1.0f, (blueMap(i) - 0.5f) *
 			                           itsContrastScale + 0.5f));
+			alphaMap(i) = itsAlpha;
 
 			// apply inversions
 			if (itsInvertRed) {
@@ -184,6 +189,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
+	void Colormap::setAlpha(const Float &alpha, const Bool &doReinstall) {
+		itsAlpha = max(0.0f, min(1.0f, alpha));
+		if (doReinstall) {
+			reinstall();
+		}
+	}
+
 	void Colormap::setContrast(const Float &contrast, const Bool &doReinstall) {
 		itsContrast = max(0.0f, min(1.0f, contrast));
 		itsContrastScale = pow(10.0, itsContrast / 0.5 - 1.0);
@@ -254,17 +266,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Vector<Float> redMap;
 		Vector<Float> greenMap;
 		Vector<Float> blueMap;
+		Vector<Float> alphaMap;
 
 		uInt sz = (c.itsIsRigid) ? c.itsRigidSize : 20;
 
 		os << "values for size of " << sz << ":";
 
-		c.calcRGBMaps(sz, redMap, greenMap, blueMap);
+		c.calcRGBMaps(sz, redMap, greenMap, blueMap, alphaMap );
 		for (uInt i = 0; i < sz; i++) {
 			uInt r = (uInt) (redMap(i) * 255.0);
 			uInt g = (uInt) (greenMap(i) * 255.0);
 			uInt b = (uInt) (blueMap(i) * 255.0);
-			os << "<" << r << "," << g << "," << b << ">";
+			uInt alpha = (uInt)(alphaMap(i) * 255.0);
+			os << "<" << r << "," << g << "," << b << "," << alpha<<">";
 		}
 
 		os << "]";

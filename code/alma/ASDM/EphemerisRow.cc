@@ -95,7 +95,166 @@ namespace asdm {
 		
 		
 			
-		x->ephemerisId = ephemerisId.toIDLTag();
+		x->timeInterval = timeInterval.toIDLArrayTimeInterval();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->ephemerisId = ephemerisId;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->observerLocation.length(observerLocation.size());
+		for (unsigned int i = 0; i < observerLocation.size(); ++i) {
+			
+				
+			x->observerLocation[i] = observerLocation.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->equinoxEquator = equinoxEquator;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->numPolyDir = numPolyDir;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->dir.length(dir.size());
+		for (unsigned int i = 0; i < dir.size(); i++) {
+			x->dir[i].length(dir.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < dir.size() ; i++)
+			for (unsigned int j = 0; j < dir.at(i).size(); j++)
+					
+						
+				x->dir[i][j] = dir.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->numPolyDist = numPolyDist;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->distance.length(distance.size());
+		for (unsigned int i = 0; i < distance.size(); ++i) {
+			
+				
+			x->distance[i] = distance.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x->timeOrigin = timeOrigin.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x->origin = CORBA::string_dup(origin.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		x->numPolyRadVelExists = numPolyRadVelExists;
+		
+		
+			
+				
+		x->numPolyRadVel = numPolyRadVel;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x->radVelExists = radVelExists;
+		
+		
+			
+		x->radVel.length(radVel.size());
+		for (unsigned int i = 0; i < radVel.size(); ++i) {
+			
+				
+			x->radVel[i] = radVel.at(i);
+	 			
+	 		
+	 	}
 			
 		
 	
@@ -117,7 +276,166 @@ namespace asdm {
 		
 		
 			
-		x.ephemerisId = ephemerisId.toIDLTag();
+		x.timeInterval = timeInterval.toIDLArrayTimeInterval();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.ephemerisId = ephemerisId;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.observerLocation.length(observerLocation.size());
+		for (unsigned int i = 0; i < observerLocation.size(); ++i) {
+			
+				
+			x.observerLocation[i] = observerLocation.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.equinoxEquator = equinoxEquator;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numPolyDir = numPolyDir;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.dir.length(dir.size());
+		for (unsigned int i = 0; i < dir.size(); i++) {
+			x.dir[i].length(dir.at(i).size());			 		
+		}
+		
+		for (unsigned int i = 0; i < dir.size() ; i++)
+			for (unsigned int j = 0; j < dir.at(i).size(); j++)
+					
+						
+				x.dir[i][j] = dir.at(i).at(j);
+		 				
+			 						
+		
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.numPolyDist = numPolyDist;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.distance.length(distance.size());
+		for (unsigned int i = 0; i < distance.size(); ++i) {
+			
+				
+			x.distance[i] = distance.at(i);
+	 			
+	 		
+	 	}
+			
+		
+	
+
+	
+  		
+		
+		
+			
+		x.timeOrigin = timeOrigin.toIDLArrayTime();
+			
+		
+	
+
+	
+  		
+		
+		
+			
+				
+		x.origin = CORBA::string_dup(origin.c_str());
+				
+ 			
+		
+	
+
+	
+  		
+		
+		x.numPolyRadVelExists = numPolyRadVelExists;
+		
+		
+			
+				
+		x.numPolyRadVel = numPolyRadVel;
+ 				
+ 			
+		
+	
+
+	
+  		
+		
+		x.radVelExists = radVelExists;
+		
+		
+			
+		x.radVel.length(radVel.size());
+		for (unsigned int i = 0; i < radVel.size(); ++i) {
+			
+				
+			x.radVel[i] = radVel.at(i);
+	 			
+	 		
+	 	}
 			
 		
 	
@@ -144,9 +462,154 @@ namespace asdm {
 		
 		
 			
-		setEphemerisId(Tag (x.ephemerisId));
+		setTimeInterval(ArrayTimeInterval (x.timeInterval));
 			
  		
+		
+	
+
+	
+		
+		
+			
+		setEphemerisId(x.ephemerisId);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		observerLocation .clear();
+		for (unsigned int i = 0; i <x.observerLocation.length(); ++i) {
+			
+			observerLocation.push_back(x.observerLocation[i]);
+  			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		setEquinoxEquator(x.equinoxEquator);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setNumPolyDir(x.numPolyDir);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		dir .clear();
+		vector<double> v_aux_dir;
+		for (unsigned int i = 0; i < x.dir.length(); ++i) {
+			v_aux_dir.clear();
+			for (unsigned int j = 0; j < x.dir[0].length(); ++j) {
+				
+				v_aux_dir.push_back(x.dir[i][j]);
+	  			
+  			}
+  			dir.push_back(v_aux_dir);			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		setNumPolyDist(x.numPolyDist);
+  			
+ 		
+		
+	
+
+	
+		
+		
+			
+		distance .clear();
+		for (unsigned int i = 0; i <x.distance.length(); ++i) {
+			
+			distance.push_back(x.distance[i]);
+  			
+		}
+			
+  		
+		
+	
+
+	
+		
+		
+			
+		setTimeOrigin(ArrayTime (x.timeOrigin));
+			
+ 		
+		
+	
+
+	
+		
+		
+			
+		setOrigin(string (x.origin));
+			
+ 		
+		
+	
+
+	
+		
+		numPolyRadVelExists = x.numPolyRadVelExists;
+		if (x.numPolyRadVelExists) {
+		
+		
+			
+		setNumPolyRadVel(x.numPolyRadVel);
+  			
+ 		
+		
+		}
+		
+	
+
+	
+		
+		radVelExists = x.radVelExists;
+		if (x.radVelExists) {
+		
+		
+			
+		radVel .clear();
+		for (unsigned int i = 0; i <x.radVel.length(); ++i) {
+			
+			radVel.push_back(x.radVel[i]);
+  			
+		}
+			
+  		
+		
+		}
 		
 	
 
@@ -172,8 +635,104 @@ namespace asdm {
   	
  		
 		
+		Parser::toXML(timeInterval, "timeInterval", buf);
+		
+		
+	
+
+  	
+ 		
+		
 		Parser::toXML(ephemerisId, "ephemerisId", buf);
 		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(observerLocation, "observerLocation", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(equinoxEquator, "equinoxEquator", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(numPolyDir, "numPolyDir", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(dir, "dir", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(numPolyDist, "numPolyDist", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(distance, "distance", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(timeOrigin, "timeOrigin", buf);
+		
+		
+	
+
+  	
+ 		
+		
+		Parser::toXML(origin, "origin", buf);
+		
+		
+	
+
+  	
+ 		
+		if (numPolyRadVelExists) {
+		
+		
+		Parser::toXML(numPolyRadVel, "numPolyRadVel", buf);
+		
+		
+		}
+		
+	
+
+  	
+ 		
+		if (radVelExists) {
+		
+		
+		Parser::toXML(radVel, "radVel", buf);
+		
+		
+		}
 		
 	
 
@@ -199,9 +758,109 @@ namespace asdm {
 	
   		
 			
-	  	setEphemerisId(Parser::getTag("ephemerisId","Ephemeris",rowDoc));
+	  	setTimeInterval(Parser::getArrayTimeInterval("timeInterval","Ephemeris",rowDoc));
 			
 		
+	
+
+	
+  		
+			
+	  	setEphemerisId(Parser::getInteger("ephemerisId","Ephemeris",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+					
+	  	setObserverLocation(Parser::get1DDouble("observerLocation","Ephemeris",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+	  	setEquinoxEquator(Parser::getDouble("equinoxEquator","Ephemeris",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setNumPolyDir(Parser::getInteger("numPolyDir","Ephemeris",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+					
+	  	setDir(Parser::get2DDouble("dir","Ephemeris",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+	  	setNumPolyDist(Parser::getInteger("numPolyDist","Ephemeris",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+					
+	  	setDistance(Parser::get1DDouble("distance","Ephemeris",rowDoc));
+	  			
+	  		
+		
+	
+
+	
+  		
+			
+	  	setTimeOrigin(Parser::getArrayTime("timeOrigin","Ephemeris",rowDoc));
+			
+		
+	
+
+	
+  		
+			
+	  	setOrigin(Parser::getString("origin","Ephemeris",rowDoc));
+			
+		
+	
+
+	
+  		
+        if (row.isStr("<numPolyRadVel>")) {
+			
+	  		setNumPolyRadVel(Parser::getInteger("numPolyRadVel","Ephemeris",rowDoc));
+			
+		}
+ 		
+	
+
+	
+  		
+        if (row.isStr("<radVel>")) {
+			
+								
+	  		setRadVel(Parser::get1DDouble("radVel","Ephemeris",rowDoc));
+	  			
+	  		
+		}
+ 		
 	
 
 	
@@ -218,27 +877,339 @@ namespace asdm {
 	
 	
 		
-	ephemerisId.toBin(eoss);
+	timeInterval.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(ephemerisId);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) observerLocation.size());
+		for (unsigned int i = 0; i < observerLocation.size(); i++)
+				
+			eoss.writeDouble(observerLocation.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+						
+			eoss.writeDouble(equinoxEquator);
+				
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numPolyDir);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) dir.size());
+		eoss.writeInt((int) dir.at(0).size());
+		for (unsigned int i = 0; i < dir.size(); i++) 
+			for (unsigned int j = 0;  j < dir.at(0).size(); j++) 
+							 
+				eoss.writeDouble(dir.at(i).at(j));
+				
+	
+						
+		
+	
+
+	
+	
+		
+						
+			eoss.writeInt(numPolyDist);
+				
+		
+	
+
+	
+	
+		
+		
+			
+		eoss.writeInt((int) distance.size());
+		for (unsigned int i = 0; i < distance.size(); i++)
+				
+			eoss.writeDouble(distance.at(i));
+				
+				
+						
+		
+	
+
+	
+	
+		
+	timeOrigin.toBin(eoss);
+		
+	
+
+	
+	
+		
+						
+			eoss.writeString(origin);
+				
 		
 	
 
 
 	
 	
+	eoss.writeBoolean(numPolyRadVelExists);
+	if (numPolyRadVelExists) {
+	
+	
+	
+		
+						
+			eoss.writeInt(numPolyRadVel);
+				
+		
+	
+
+	}
+
+	eoss.writeBoolean(radVelExists);
+	if (radVelExists) {
+	
+	
+	
+		
+		
+			
+		eoss.writeInt((int) radVel.size());
+		for (unsigned int i = 0; i < radVel.size(); i++)
+				
+			eoss.writeDouble(radVel.at(i));
+				
+				
+						
+		
+	
+
+	}
+
 	}
 	
+void EphemerisRow::timeIntervalFromBin(EndianIStream& eis) {
+		
+	
+		
+		
+		timeInterval =  ArrayTimeInterval::fromBin(eis);
+		
+	
+	
+}
 void EphemerisRow::ephemerisIdFromBin(EndianIStream& eis) {
 		
 	
+	
+		
+			
+		ephemerisId =  eis.readInt();
+			
+		
+	
+	
+}
+void EphemerisRow::observerLocationFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+	
+		observerLocation.clear();
+		
+		unsigned int observerLocationDim1 = eis.readInt();
+		for (unsigned int  i = 0 ; i < observerLocationDim1; i++)
+			
+			observerLocation.push_back(eis.readDouble());
+			
+	
+
+		
+	
+	
+}
+void EphemerisRow::equinoxEquatorFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		equinoxEquator =  eis.readDouble();
+			
+		
+	
+	
+}
+void EphemerisRow::numPolyDirFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numPolyDir =  eis.readInt();
+			
+		
+	
+	
+}
+void EphemerisRow::dirFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+	
+		dir.clear();
+		
+		unsigned int dirDim1 = eis.readInt();
+		unsigned int dirDim2 = eis.readInt();
+		vector <double> dirAux1;
+		for (unsigned int i = 0; i < dirDim1; i++) {
+			dirAux1.clear();
+			for (unsigned int j = 0; j < dirDim2 ; j++)			
+			
+			dirAux1.push_back(eis.readDouble());
+			
+			dir.push_back(dirAux1);
+		}
+	
+	
+
+		
+	
+	
+}
+void EphemerisRow::numPolyDistFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		numPolyDist =  eis.readInt();
+			
+		
+	
+	
+}
+void EphemerisRow::distanceFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+	
+		distance.clear();
+		
+		unsigned int distanceDim1 = eis.readInt();
+		for (unsigned int  i = 0 ; i < distanceDim1; i++)
+			
+			distance.push_back(eis.readDouble());
+			
+	
+
+		
+	
+	
+}
+void EphemerisRow::timeOriginFromBin(EndianIStream& eis) {
+		
+	
 		
 		
-		ephemerisId =  Tag::fromBin(eis);
+		timeOrigin =  ArrayTime::fromBin(eis);
+		
+	
+	
+}
+void EphemerisRow::originFromBin(EndianIStream& eis) {
+		
+	
+	
+		
+			
+		origin =  eis.readString();
+			
 		
 	
 	
 }
 
+void EphemerisRow::numPolyRadVelFromBin(EndianIStream& eis) {
 		
+	numPolyRadVelExists = eis.readBoolean();
+	if (numPolyRadVelExists) {
+		
+	
+	
+		
+			
+		numPolyRadVel =  eis.readInt();
+			
+		
+	
+
+	}
+	
+}
+void EphemerisRow::radVelFromBin(EndianIStream& eis) {
+		
+	radVelExists = eis.readBoolean();
+	if (radVelExists) {
+		
+	
+	
+		
+			
+	
+		radVel.clear();
+		
+		unsigned int radVelDim1 = eis.readInt();
+		for (unsigned int  i = 0 ; i < radVelDim1; i++)
+			
+			radVel.push_back(eis.readDouble());
+			
+	
+
+		
+	
+
+	}
+	
+}
+	
 	
 	EphemerisRow* EphemerisRow::fromBin(EndianIStream& eis, EphemerisTable& table, const vector<string>& attributesSeq) {
 		EphemerisRow* row = new  EphemerisRow(table);
@@ -266,15 +1237,105 @@ void EphemerisRow::ephemerisIdFromBin(EndianIStream& eis) {
 	// of one row.
 	//
 	
-	// Convert a string into an Tag 
+	// Convert a string into an ArrayTimeInterval 
+	void EphemerisRow::timeIntervalFromText(const string & s) {
+		 
+		timeInterval = ASDMValuesParser::parse<ArrayTimeInterval>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
 	void EphemerisRow::ephemerisIdFromText(const string & s) {
 		 
-		ephemerisId = ASDMValuesParser::parse<Tag>(s);
+		ephemerisId = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void EphemerisRow::observerLocationFromText(const string & s) {
+		 
+		observerLocation = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void EphemerisRow::equinoxEquatorFromText(const string & s) {
+		 
+		equinoxEquator = ASDMValuesParser::parse<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void EphemerisRow::numPolyDirFromText(const string & s) {
+		 
+		numPolyDir = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void EphemerisRow::dirFromText(const string & s) {
+		 
+		dir = ASDMValuesParser::parse2D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an int 
+	void EphemerisRow::numPolyDistFromText(const string & s) {
+		 
+		numPolyDist = ASDMValuesParser::parse<int>(s);
+		
+	}
+	
+	
+	// Convert a string into an double 
+	void EphemerisRow::distanceFromText(const string & s) {
+		 
+		distance = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
+	// Convert a string into an ArrayTime 
+	void EphemerisRow::timeOriginFromText(const string & s) {
+		 
+		timeOrigin = ASDMValuesParser::parse<ArrayTime>(s);
+		
+	}
+	
+	
+	// Convert a string into an String 
+	void EphemerisRow::originFromText(const string & s) {
+		 
+		origin = ASDMValuesParser::parse<string>(s);
 		
 	}
 	
 
+	
+	// Convert a string into an int 
+	void EphemerisRow::numPolyRadVelFromText(const string & s) {
+		numPolyRadVelExists = true;
+		 
+		numPolyRadVel = ASDMValuesParser::parse<int>(s);
 		
+	}
+	
+	
+	// Convert a string into an double 
+	void EphemerisRow::radVelFromText(const string & s) {
+		radVelExists = true;
+		 
+		radVel = ASDMValuesParser::parse1D<double>(s);
+		
+	}
+	
+	
 	
 	void EphemerisRow::fromText(const std::string& attributeName, const std::string&  t) {
 		map<string, EphemerisAttributeFromText>::iterator iter;
@@ -291,24 +1352,60 @@ void EphemerisRow::ephemerisIdFromBin(EndianIStream& eis) {
 
 	
  	/**
- 	 * Get ephemerisId.
- 	 * @return ephemerisId as Tag
+ 	 * Get timeInterval.
+ 	 * @return timeInterval as ArrayTimeInterval
  	 */
- 	Tag EphemerisRow::getEphemerisId() const {
+ 	ArrayTimeInterval EphemerisRow::getTimeInterval() const {
 	
-  		return ephemerisId;
+  		return timeInterval;
  	}
 
  	/**
- 	 * Set ephemerisId with the specified Tag.
- 	 * @param ephemerisId The Tag value to which ephemerisId is to be set.
+ 	 * Set timeInterval with the specified ArrayTimeInterval.
+ 	 * @param timeInterval The ArrayTimeInterval value to which timeInterval is to be set.
  	 
  	
  		
  	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
  	 	
  	 */
- 	void EphemerisRow::setEphemerisId (Tag ephemerisId)  {
+ 	void EphemerisRow::setTimeInterval (ArrayTimeInterval timeInterval)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+			throw IllegalAccessException("timeInterval", "Ephemeris");
+		
+  		}
+  	
+ 		this->timeInterval = timeInterval;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get ephemerisId.
+ 	 * @return ephemerisId as int
+ 	 */
+ 	int EphemerisRow::getEphemerisId() const {
+	
+  		return ephemerisId;
+ 	}
+
+ 	/**
+ 	 * Set ephemerisId with the specified int.
+ 	 * @param ephemerisId The int value to which ephemerisId is to be set.
+ 	 
+ 	
+ 		
+ 	 * @throw IllegalAccessException If an attempt is made to change this field after is has been added to the table.
+ 	 	
+ 	 */
+ 	void EphemerisRow::setEphemerisId (int ephemerisId)  {
   	
   	
   		if (hasBeenAdded) {
@@ -321,6 +1418,356 @@ void EphemerisRow::ephemerisIdFromBin(EndianIStream& eis) {
 	
  	}
 	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get observerLocation.
+ 	 * @return observerLocation as vector<double >
+ 	 */
+ 	vector<double > EphemerisRow::getObserverLocation() const {
+	
+  		return observerLocation;
+ 	}
+
+ 	/**
+ 	 * Set observerLocation with the specified vector<double >.
+ 	 * @param observerLocation The vector<double > value to which observerLocation is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void EphemerisRow::setObserverLocation (vector<double > observerLocation)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->observerLocation = observerLocation;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get equinoxEquator.
+ 	 * @return equinoxEquator as double
+ 	 */
+ 	double EphemerisRow::getEquinoxEquator() const {
+	
+  		return equinoxEquator;
+ 	}
+
+ 	/**
+ 	 * Set equinoxEquator with the specified double.
+ 	 * @param equinoxEquator The double value to which equinoxEquator is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void EphemerisRow::setEquinoxEquator (double equinoxEquator)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->equinoxEquator = equinoxEquator;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numPolyDir.
+ 	 * @return numPolyDir as int
+ 	 */
+ 	int EphemerisRow::getNumPolyDir() const {
+	
+  		return numPolyDir;
+ 	}
+
+ 	/**
+ 	 * Set numPolyDir with the specified int.
+ 	 * @param numPolyDir The int value to which numPolyDir is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void EphemerisRow::setNumPolyDir (int numPolyDir)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numPolyDir = numPolyDir;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get dir.
+ 	 * @return dir as vector<vector<double > >
+ 	 */
+ 	vector<vector<double > > EphemerisRow::getDir() const {
+	
+  		return dir;
+ 	}
+
+ 	/**
+ 	 * Set dir with the specified vector<vector<double > >.
+ 	 * @param dir The vector<vector<double > > value to which dir is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void EphemerisRow::setDir (vector<vector<double > > dir)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->dir = dir;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get numPolyDist.
+ 	 * @return numPolyDist as int
+ 	 */
+ 	int EphemerisRow::getNumPolyDist() const {
+	
+  		return numPolyDist;
+ 	}
+
+ 	/**
+ 	 * Set numPolyDist with the specified int.
+ 	 * @param numPolyDist The int value to which numPolyDist is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void EphemerisRow::setNumPolyDist (int numPolyDist)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->numPolyDist = numPolyDist;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get distance.
+ 	 * @return distance as vector<double >
+ 	 */
+ 	vector<double > EphemerisRow::getDistance() const {
+	
+  		return distance;
+ 	}
+
+ 	/**
+ 	 * Set distance with the specified vector<double >.
+ 	 * @param distance The vector<double > value to which distance is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void EphemerisRow::setDistance (vector<double > distance)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->distance = distance;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get timeOrigin.
+ 	 * @return timeOrigin as ArrayTime
+ 	 */
+ 	ArrayTime EphemerisRow::getTimeOrigin() const {
+	
+  		return timeOrigin;
+ 	}
+
+ 	/**
+ 	 * Set timeOrigin with the specified ArrayTime.
+ 	 * @param timeOrigin The ArrayTime value to which timeOrigin is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void EphemerisRow::setTimeOrigin (ArrayTime timeOrigin)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->timeOrigin = timeOrigin;
+	
+ 	}
+	
+	
+
+	
+
+	
+ 	/**
+ 	 * Get origin.
+ 	 * @return origin as string
+ 	 */
+ 	string EphemerisRow::getOrigin() const {
+	
+  		return origin;
+ 	}
+
+ 	/**
+ 	 * Set origin with the specified string.
+ 	 * @param origin The string value to which origin is to be set.
+ 	 
+ 	
+ 		
+ 	 */
+ 	void EphemerisRow::setOrigin (string origin)  {
+  	
+  	
+  		if (hasBeenAdded) {
+ 		
+  		}
+  	
+ 		this->origin = origin;
+	
+ 	}
+	
+	
+
+	
+	/**
+	 * The attribute numPolyRadVel is optional. Return true if this attribute exists.
+	 * @return true if and only if the numPolyRadVel attribute exists. 
+	 */
+	bool EphemerisRow::isNumPolyRadVelExists() const {
+		return numPolyRadVelExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get numPolyRadVel, which is optional.
+ 	 * @return numPolyRadVel as int
+ 	 * @throw IllegalAccessException If numPolyRadVel does not exist.
+ 	 */
+ 	int EphemerisRow::getNumPolyRadVel() const  {
+		if (!numPolyRadVelExists) {
+			throw IllegalAccessException("numPolyRadVel", "Ephemeris");
+		}
+	
+  		return numPolyRadVel;
+ 	}
+
+ 	/**
+ 	 * Set numPolyRadVel with the specified int.
+ 	 * @param numPolyRadVel The int value to which numPolyRadVel is to be set.
+ 	 
+ 	
+ 	 */
+ 	void EphemerisRow::setNumPolyRadVel (int numPolyRadVel) {
+	
+ 		this->numPolyRadVel = numPolyRadVel;
+	
+		numPolyRadVelExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark numPolyRadVel, which is an optional field, as non-existent.
+	 */
+	void EphemerisRow::clearNumPolyRadVel () {
+		numPolyRadVelExists = false;
+	}
+	
+
+	
+	/**
+	 * The attribute radVel is optional. Return true if this attribute exists.
+	 * @return true if and only if the radVel attribute exists. 
+	 */
+	bool EphemerisRow::isRadVelExists() const {
+		return radVelExists;
+	}
+	
+
+	
+ 	/**
+ 	 * Get radVel, which is optional.
+ 	 * @return radVel as vector<double >
+ 	 * @throw IllegalAccessException If radVel does not exist.
+ 	 */
+ 	vector<double > EphemerisRow::getRadVel() const  {
+		if (!radVelExists) {
+			throw IllegalAccessException("radVel", "Ephemeris");
+		}
+	
+  		return radVel;
+ 	}
+
+ 	/**
+ 	 * Set radVel with the specified vector<double >.
+ 	 * @param radVel The vector<double > value to which radVel is to be set.
+ 	 
+ 	
+ 	 */
+ 	void EphemerisRow::setRadVel (vector<double > radVel) {
+	
+ 		this->radVel = radVel;
+	
+		radVelExists = true;
+	
+ 	}
+	
+	
+	/**
+	 * Mark radVel, which is an optional field, as non-existent.
+	 */
+	void EphemerisRow::clearRadVel () {
+		radVelExists = false;
+	}
 	
 
 	
@@ -349,25 +1796,128 @@ void EphemerisRow::ephemerisIdFromBin(EndianIStream& eis) {
 	
 
 	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+		numPolyRadVelExists = false;
+	
+
+	
+		radVelExists = false;
+	
+
+	
 	
 	
 	
 	
 
 	
+
 	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+	
+	 fromBinMethods["timeInterval"] = &EphemerisRow::timeIntervalFromBin; 
 	 fromBinMethods["ephemerisId"] = &EphemerisRow::ephemerisIdFromBin; 
+	 fromBinMethods["observerLocation"] = &EphemerisRow::observerLocationFromBin; 
+	 fromBinMethods["equinoxEquator"] = &EphemerisRow::equinoxEquatorFromBin; 
+	 fromBinMethods["numPolyDir"] = &EphemerisRow::numPolyDirFromBin; 
+	 fromBinMethods["dir"] = &EphemerisRow::dirFromBin; 
+	 fromBinMethods["numPolyDist"] = &EphemerisRow::numPolyDistFromBin; 
+	 fromBinMethods["distance"] = &EphemerisRow::distanceFromBin; 
+	 fromBinMethods["timeOrigin"] = &EphemerisRow::timeOriginFromBin; 
+	 fromBinMethods["origin"] = &EphemerisRow::originFromBin; 
 		
 	
+	 fromBinMethods["numPolyRadVel"] = &EphemerisRow::numPolyRadVelFromBin; 
+	 fromBinMethods["radVel"] = &EphemerisRow::radVelFromBin; 
 	
 	
 	
 	
 				 
+	fromTextMethods["timeInterval"] = &EphemerisRow::timeIntervalFromText;
+		 
+	
+				 
 	fromTextMethods["ephemerisId"] = &EphemerisRow::ephemerisIdFromText;
 		 
 	
+				 
+	fromTextMethods["observerLocation"] = &EphemerisRow::observerLocationFromText;
+		 
+	
+				 
+	fromTextMethods["equinoxEquator"] = &EphemerisRow::equinoxEquatorFromText;
+		 
+	
+				 
+	fromTextMethods["numPolyDir"] = &EphemerisRow::numPolyDirFromText;
+		 
+	
+				 
+	fromTextMethods["dir"] = &EphemerisRow::dirFromText;
+		 
+	
+				 
+	fromTextMethods["numPolyDist"] = &EphemerisRow::numPolyDistFromText;
+		 
+	
+				 
+	fromTextMethods["distance"] = &EphemerisRow::distanceFromText;
+		 
+	
+				 
+	fromTextMethods["timeOrigin"] = &EphemerisRow::timeOriginFromText;
+		 
+	
+				 
+	fromTextMethods["origin"] = &EphemerisRow::originFromText;
+		 
+	
 
+	 
+				
+	fromTextMethods["numPolyRadVel"] = &EphemerisRow::numPolyRadVelFromText;
+		 	
+	 
+				
+	fromTextMethods["radVel"] = &EphemerisRow::radVelFromText;
+		 	
 		
 	}
 	
@@ -379,29 +1929,214 @@ void EphemerisRow::ephemerisIdFromBin(EndianIStream& eis) {
 	
 	
 
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+		numPolyRadVelExists = false;
+	
+
+	
+		radVelExists = false;
+	
+
 			
 		}
 		else {
 	
+		
+			timeInterval = row.timeInterval;
 		
 			ephemerisId = row.ephemerisId;
 		
 		
 		
 		
+			observerLocation = row.observerLocation;
+		
+			equinoxEquator = row.equinoxEquator;
+		
+			numPolyDir = row.numPolyDir;
+		
+			dir = row.dir;
+		
+			numPolyDist = row.numPolyDist;
+		
+			distance = row.distance;
+		
+			timeOrigin = row.timeOrigin;
+		
+			origin = row.origin;
 		
 		
+		
+		
+		if (row.numPolyRadVelExists) {
+			numPolyRadVel = row.numPolyRadVel;		
+			numPolyRadVelExists = true;
+		}
+		else
+			numPolyRadVelExists = false;
+		
+		if (row.radVelExists) {
+			radVel = row.radVel;		
+			radVelExists = true;
+		}
+		else
+			radVelExists = false;
 		
 		}
 		
+		 fromBinMethods["timeInterval"] = &EphemerisRow::timeIntervalFromBin; 
 		 fromBinMethods["ephemerisId"] = &EphemerisRow::ephemerisIdFromBin; 
+		 fromBinMethods["observerLocation"] = &EphemerisRow::observerLocationFromBin; 
+		 fromBinMethods["equinoxEquator"] = &EphemerisRow::equinoxEquatorFromBin; 
+		 fromBinMethods["numPolyDir"] = &EphemerisRow::numPolyDirFromBin; 
+		 fromBinMethods["dir"] = &EphemerisRow::dirFromBin; 
+		 fromBinMethods["numPolyDist"] = &EphemerisRow::numPolyDistFromBin; 
+		 fromBinMethods["distance"] = &EphemerisRow::distanceFromBin; 
+		 fromBinMethods["timeOrigin"] = &EphemerisRow::timeOriginFromBin; 
+		 fromBinMethods["origin"] = &EphemerisRow::originFromBin; 
 			
 	
+		 fromBinMethods["numPolyRadVel"] = &EphemerisRow::numPolyRadVelFromBin; 
+		 fromBinMethods["radVel"] = &EphemerisRow::radVelFromBin; 
 			
 	}
 
 	
+	bool EphemerisRow::compareNoAutoInc(ArrayTimeInterval timeInterval, int ephemerisId, vector<double > observerLocation, double equinoxEquator, int numPolyDir, vector<vector<double > > dir, int numPolyDist, vector<double > distance, ArrayTime timeOrigin, string origin) {
+		bool result;
+		result = true;
+		
 	
+		
+		result = result && (this->timeInterval.overlaps(timeInterval));
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->ephemerisId == ephemerisId);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->observerLocation == observerLocation);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->equinoxEquator == equinoxEquator);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numPolyDir == numPolyDir);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->dir == dir);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->numPolyDist == numPolyDist);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->distance == distance);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->timeOrigin == timeOrigin);
+		
+		if (!result) return false;
+	
+
+	
+		
+		result = result && (this->origin == origin);
+		
+		if (!result) return false;
+	
+
+		return result;
+	}	
+	
+	
+	
+	bool EphemerisRow::compareRequiredValue(vector<double > observerLocation, double equinoxEquator, int numPolyDir, vector<vector<double > > dir, int numPolyDist, vector<double > distance, ArrayTime timeOrigin, string origin) {
+		bool result;
+		result = true;
+		
+	
+		if (!(this->observerLocation == observerLocation)) return false;
+	
+
+	
+		if (!(this->equinoxEquator == equinoxEquator)) return false;
+	
+
+	
+		if (!(this->numPolyDir == numPolyDir)) return false;
+	
+
+	
+		if (!(this->dir == dir)) return false;
+	
+
+	
+		if (!(this->numPolyDist == numPolyDist)) return false;
+	
+
+	
+		if (!(this->distance == distance)) return false;
+	
+
+	
+		if (!(this->timeOrigin == timeOrigin)) return false;
+	
+
+	
+		if (!(this->origin == origin)) return false;
+	
+
+		return result;
+	}
 	
 	
 	/**
@@ -414,6 +2149,24 @@ void EphemerisRow::ephemerisIdFromBin(EndianIStream& eis) {
 	 */
 	bool EphemerisRow::equalByRequiredValue(EphemerisRow* x) {
 		
+			
+		if (this->observerLocation != x->observerLocation) return false;
+			
+		if (this->equinoxEquator != x->equinoxEquator) return false;
+			
+		if (this->numPolyDir != x->numPolyDir) return false;
+			
+		if (this->dir != x->dir) return false;
+			
+		if (this->numPolyDist != x->numPolyDist) return false;
+			
+		if (this->distance != x->distance) return false;
+			
+		if (this->timeOrigin != x->timeOrigin) return false;
+			
+		if (this->origin != x->origin) return false;
+			
+		
 		return true;
 	}	
 	
@@ -421,9 +2174,20 @@ void EphemerisRow::ephemerisIdFromBin(EndianIStream& eis) {
 	 map<string, EphemerisAttributeFromBin> EphemerisRow::initFromBinMethods() {
 		map<string, EphemerisAttributeFromBin> result;
 		
+		result["timeInterval"] = &EphemerisRow::timeIntervalFromBin;
 		result["ephemerisId"] = &EphemerisRow::ephemerisIdFromBin;
+		result["observerLocation"] = &EphemerisRow::observerLocationFromBin;
+		result["equinoxEquator"] = &EphemerisRow::equinoxEquatorFromBin;
+		result["numPolyDir"] = &EphemerisRow::numPolyDirFromBin;
+		result["dir"] = &EphemerisRow::dirFromBin;
+		result["numPolyDist"] = &EphemerisRow::numPolyDistFromBin;
+		result["distance"] = &EphemerisRow::distanceFromBin;
+		result["timeOrigin"] = &EphemerisRow::timeOriginFromBin;
+		result["origin"] = &EphemerisRow::originFromBin;
 		
 		
+		result["numPolyRadVel"] = &EphemerisRow::numPolyRadVelFromBin;
+		result["radVel"] = &EphemerisRow::radVelFromBin;
 			
 		
 		return result;	

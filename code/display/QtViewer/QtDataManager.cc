@@ -968,7 +968,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				ddo.insert( "slice", "none" );
 		}
 
-		panel_->createDD( path, datatype, displaytype, True, ddo, image_properties );
+		panel_->createDD( path, datatype, displaytype, True, -1,
+				false, false, false, ddo, image_properties );
 
 		if(!leaveOpen_->isChecked()) close();  // (will hide dialog for now).
 	}

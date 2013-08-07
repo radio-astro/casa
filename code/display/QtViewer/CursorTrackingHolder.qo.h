@@ -48,7 +48,7 @@ namespace casa {
 		~CursorTrackingHolder( );
 
         void arrangeTrackBoxes( );
-        TrackBox *addTrackBox( QtDisplayData * );
+        TrackBox *addTrackBox( QtDisplayData *, int position = -1 );
         void removeTrackBox( QtDisplayData * );
         void display( const Record &trackingRec );
         void cursorUpdate( const std::vector<double> &, QtDisplayData * );
@@ -57,6 +57,10 @@ namespace casa {
         QSize minimumSizeHint( ) const { return find_size( ); }
 
 		void dismiss( );
+
+		//Overriden because if the cursor tracker was not shown, images were loaded,
+		//and then the cursor tracker was shown, it was not resizing properly.
+		void setVisible( bool visible );
 
 	protected:
 		void closeEvent ( QCloseEvent * event );

@@ -115,6 +115,8 @@ IPosition tileShape();
   CountedPtr<ImageInterface<Complex> > itsForwardGrid, itsBackwardGrid;
   Bool itsWeightExists;
 
+  Bool itsPsfNormed, itsResNormed;
+
   Bool itsValidity;
 
 };

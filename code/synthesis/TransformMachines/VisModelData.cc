@@ -565,7 +565,6 @@ Bool VisModelData::isModelDefined(const Int fieldId, const MeasurementSet& thems
       for (uInt k=0; k < fieldIds.nelements();  ++k){
 	mss.rwKeywordSet().define("definedmodel_field_"+String::toString(fieldIds[k]), elkey);
       }
-      VisModelData::listModel(theMS);
       return True;
       
     }

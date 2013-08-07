@@ -91,7 +91,7 @@ MSTransform::done()
 
 // ---------------------------------------------------------------------
 // MSTransform::configure
-// Configure the MSTransformDataHandler and the parameters.
+// Configure the MSTransformManager and the parameters.
 // The config Record is mandatory and needs to have at least
 // the parameters for the input and output MSs.
 // This method may be called again to add or change parameters.
@@ -130,8 +130,8 @@ MSTransform::configure(Record config)
 
 		if(mdh_p) delete mdh_p;
 
-		// Create an object for the MSTransformDataHandler
-		mdh_p = new MSTransformDataHandler();
+		// Create an object for the MSTransformManager
+		mdh_p = new MSTransformManager();
 	}
 
 	config_p = config;
@@ -147,7 +147,7 @@ MSTransform::configure(Record config)
 		config_p.define("datacolumn", datacolumn_p);
 	}
 
-	// Configure the MSTransformDataHandler object
+	// Configure the MSTransformManager object
 	mdh_p->configure(config_p);
 	isconfigured_p = true;
 

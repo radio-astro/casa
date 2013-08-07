@@ -853,15 +853,34 @@ FlagMSHandler::processorTable()
 {
 	MSProcessor msSubtable = selectedMeasurementSet_p->processor();
 
+	// The rows in the PROCESSOR table correspond to the PROCESSOR_ID column
+	// in main table
 	if (msSubtable.nrow() == 0){
 		*logger_p << LogIO::WARN << "PROCESSOR sub-table is empty. Assuming CORRELATOR type."
-					<< LogIO::POST;
+				<< LogIO::POST;
 		processorTableExist_p = false;
 	}
 	else {
 		MSProcessorColumns tableCols(msSubtable);
-		typeCol_p = tableCols.type();
+		ScalarColumn<String> typeCol = tableCols.type();
 		processorTableExist_p = true;
+
+		/* Create a look-up boolean column to tell if a row is of type CORRELATOR.
+		   isCorrelatorType_p = True when PROCESSOR_ID is of TYPE CORRELATOR
+		 */
+		isCorrelatorType_p = tableCols.flagRow();
+
+		// Assign True to row in look-up table that have TYPE==CORRELATOR
+		for (uInt pid=0; pid<msSubtable.nrow(); pid++){
+
+			String proc_type = typeCol.asString(pid);
+			if (proc_type.compare("CORRELATOR") == 0){
+				isCorrelatorType_p.put(pid, 1);
+			}
+			else
+				isCorrelatorType_p.put(pid, 0);
+
+		}
 	}
 
 	return true;

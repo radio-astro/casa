@@ -927,8 +927,8 @@ public:
 	uShort tableTye_p;
 	Bool flagAutoCorrelations_p;
 
-	// TYPE column in PROCESSOR sub-table
-	ScalarColumn<String> typeCol_p;
+	// PROCESSOR sub-table section
+	ScalarColumn<Bool> isCorrelatorType_p;
 	bool processorTableExist_p;
 
 

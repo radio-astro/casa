@@ -103,10 +103,11 @@ qt4_wrap_cpp( outfiles_qoh
   QtViewer/QtViewer.qo.h
   QtViewer/Preferences.qo.h
   QtViewer/ColorTransferWidget.qo.h
-  QtViewer/ImageManager/ImageScrollWidget.qo.h
   QtViewer/ImageManager/ImageManagerDialog.qo.h
+  QtViewer/ImageManager/DisplayOptionsDialog.h
   QtViewer/ImageManager/ImageScroll.qo.h
   QtViewer/ImageManager/ImageView.qo.h
+  QtViewer/ImageManager/DisplayLabel.qo.h
   QtViewer/SlicerGen.qo.h
   Fit/FindSourcesDialog.qo.h
   Fit/ResidualHistogramDialog.qo.h
@@ -161,7 +162,6 @@ casa_qt4_wrap_ui( outfiles_ui
   QtViewer/QtDataMgrMsSelect.ui
   QtViewer/Preferences.ui
   QtViewer/ColorTransferWidget.ui
-  QtViewer/ImageManager/ImageScrollWidget.ui
   QtViewer/ImageManager/ImageManagerDialog.ui
   QtViewer/ImageManager/ImageScroll.ui
   QtViewer/ImageManager/ImageView.ui
@@ -541,9 +541,10 @@ casa_add_library( display
   QtViewer/ColorTransferWidget.cc
   QtViewer/DisplayDataHolder.cc
   QtViewer/ImageManager/ImageScroll.cc
-  QtViewer/ImageManager/ImageScrollWidget.cc
   QtViewer/ImageManager/ImageManagerDialog.cc
   QtViewer/ImageManager/ImageView.cc
+  QtViewer/ImageManager/DisplayLabel.cc
+  QtViewer/ImageManager/DisplayOptionsDialog.cc
   QtViewer/SlicerGen.cc
   RegionShapes/DS9FileReader.cc
   RegionShapes/DS9FileWriter.cc

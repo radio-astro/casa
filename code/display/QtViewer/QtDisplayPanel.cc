@@ -136,12 +136,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-		connect( panel_, SIGNAL(ddCreated(QtDisplayData*, Bool)),
-		         SLOT(ddCreated_(QtDisplayData*, Bool)) );
+		connect( panel_, SIGNAL(ddCreated(QtDisplayData*, Bool, int)),
+		         SLOT(ddCreated_(QtDisplayData*, Bool, int)) );
 
-		connect( panel_, SIGNAL(ddRemoved(QtDisplayData*)),
+		/*connect( panel_, SIGNAL(ddRemoved(QtDisplayData*)),
 		         SLOT(ddRemoved_(QtDisplayData*)) );
-
+*/
 		connect( panel_, SIGNAL(colorBarOrientationChange()),
 		         SLOT(reorientColorBars_()) );
 
@@ -729,11 +729,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // REGISTRATION METHODS / SLOTS
 
 
-	void QtDisplayPanel::ddCreated_(QtDisplayData* qdd, Bool autoRegister) {
+	void QtDisplayPanel::ddCreated_(QtDisplayData* qdd, Bool autoRegister,
+			int position ) {
 		// DP actions to take when viewer signals new DD creation.
 
 		if(autoRegister) {
-			registerDD_(qdd);
+			registerDD_(qdd, position );
 			emit newRegisteredDD(qdd);
 		}
 
@@ -770,11 +771,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Internal method, called by public register method above,
 		// or in reaction to new DD creation (ddCreated_() slot).
 		// Precondition: isUnregistered(qdd) should be True before this is called.
-
-		displayDataHolder->addDD( qdd, position );
-
+		displayDataHolder->addDD( qdd, position, true );
 		DisplayData* dd = qdd->dd();
-
 
 		hold();
 
@@ -787,7 +785,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		pd_->addDisplayData(*dd, position);
 		// Maintain registration relation between the
 		// wrapped classes.
-
 
 		// Reset animator in accordance with new set of registered DDs
 		// (This code comes mostly from GTkPD::add()).
@@ -805,7 +802,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		setAnimator_(animrec);
 
-
 		connect( qdd, SIGNAL(optionsChanged(Record)),
 		         SLOT(setAnimatorOptions_(Record)) );
 		// (Allows dd to change animator settings itself, e.g.,
@@ -821,7 +817,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// have the name of the latest handy
 		rgnImgPath_ = qdd->path();
 		qdd->registerNotice(this);	// Let QDD know.
-
 		release();
 	}
 
@@ -888,6 +883,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void QtDisplayPanel::setControllingDD( QtDisplayData* controllingDD ) {
 		if ( controllingDD != NULL ) {
 			pd_->setCSmaster( controllingDD->dd());
+		}
+		else {
+			pd_->setCSmaster( NULL );
 		}
 	}
 

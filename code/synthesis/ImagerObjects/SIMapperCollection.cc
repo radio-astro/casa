@@ -206,7 +206,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  if(col==FTMachine::CORRECTED){
 		  if(ROMSColumns((vb.getVi())->ms()).correctedData().isNull()){
 			  col=FTMachine::OBSERVED;
-			  cerr << "Max of visCube" << max(vb.visCube()) << " model " << max(vb.visCubeModel())<< endl;
+			  //			  cerr << "Max of visCube" << max(vb.visCube()) << " model " << max(vb.visCubeModel())<< endl;
 			  vb.setVisCube(vb.visCube()- vb.visCubeModel());
 		  }
 		  else{
@@ -226,7 +226,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  if(col==FTMachine::CORRECTED){
 		  if(vb.msColumns().correctedData().isNull()){
 			  col=FTMachine::OBSERVED;
-			  cerr << "Max of visCube" << max(vb.visCube()) << " model " << max(vb.modelVisCube())<< endl;
+			  //			  cerr << "Max of visCube" << max(vb.visCube()) << " model " << max(vb.modelVisCube())<< endl;
 			  vb.visCube()-=vb.modelVisCube();
 		  }
 		  else{

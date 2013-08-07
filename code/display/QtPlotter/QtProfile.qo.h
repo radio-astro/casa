@@ -159,6 +159,8 @@ namespace casa {
 		void imageCollapsed(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img);
 		void setPosition( const QList<double>& xValues, const QList<double>& yValues );
 		void processTrackRecord( const String& dataName, const String& positionInfo );
+		typedef std::pair<QString, ImageInterface<float>* > OverplotInterface;
+		typedef pair<QString,ImageAnalysis*> OverplotAnalysis;
 	public slots:
 		void zoomIn();
 		void zoomOut();
@@ -205,7 +207,7 @@ namespace casa {
 		void plotMainCurve();
 		void setCollapseRange(double xmin, double xmax);
 
-		void overplot(QHash<QString, ImageInterface<float>*>);
+		void overplot(QList<OverplotInterface>);
 
 		void newRegion( int, const QString &shape, const QString &name,
 		                const QList<double> &world_x, const QList<double> &world_y,
@@ -243,7 +245,9 @@ namespace casa {
 		 * vector value; otherwise returns true.
 		 */
 		bool isAxisAscending(const Vector<Float>& axisValues ) const;
-
+		bool isVelocityUnit( const QString& unit ) const;
+		bool isFrequencyUnit( const QString& unit ) const;
+		bool isWavelengthUnit( const QString& unit ) const;
 		void setTitle( const QString& shape );
 		void copyToLastEvent( const String& c, const Vector<Double> &px,
 		                      const Vector<Double> &py,
@@ -257,7 +261,7 @@ namespace casa {
 		                                 Vector<double> &pyv, Vector<double> &wxv, Vector<double> &wyv) const;
 		void setPositionStatus(const Vector<double> &pxv, const Vector<double> &pyv,
 		                       const Vector<double> &wxv, const Vector<double> &wyv );
-		bool getFrequencyProfileWrapper( const Vector<double> &wxv, const Vector<double> &wyv,
+		bool getFrequencyProfileWrapper( ImageAnalysis* analysis, const Vector<double> &wxv, const Vector<double> &wyv,
 		                                 Vector<Float> &z_xval, Vector<Float> &z_yval,
 		                                 const String& xytype, const String& specaxis,
 		                                 const Int& whichStokes, const Int& whichTabular,
@@ -297,12 +301,11 @@ namespace casa {
 		bool isVelocityMatch();
 		int getChannelCount( ImageAnalysis* analysis );
 		ImageAnalysis* findImageWithMaximumChannels();
-		void restrictTopAxisOptions( bool restrictOptions, bool allowFrequency = true, bool allowVelocity=true );
+		void restrictTopAxisOptions( bool restrictOptions, const QString& bottomUnits, bool allowFrequency = true,
+				bool allowVelocity=true );
 		double getUnitsPerChannel( ImageAnalysis* analysis, bool* ok, const QString& matchUnits );
 
-
-
-		QHash<QString, ImageAnalysis*> *over;
+		QList<OverplotAnalysis> *over;
 		const String WORLD_COORDINATES;
 		String coordinate;
 		String coordinateType;

@@ -159,20 +159,7 @@ class ImageAnalysis
                                          const String& pol = "", 
                                          const Int fitorder = 0, 
                                          const Bool overwrite = false);
-/*
-    // the output <src>fakeBeam</src> indicates if there was no beam in the header and a fake one
-    // was assumed to do the conversion. <src>channel</src> and <src>polarization</src> are
-    // used only in the case the image has per plane beams.
-    Quantity convertflux(
-    	Bool& fakeBeam, const Quantity& value, const Quantity& major,
-        const Quantity& minor,
-        const String& type = "Gaussian",
-        const Bool topeak = True,
-        const Bool supressNoBeamWarnings = False,
-        const Int channel=-1,
-        const Int polarization=-1
-    ) const;
-*/
+
     ImageInterface<Float>* convolve2d(
     		const String& outfile, const Vector<Int>& axes,
             const String& type, const Quantity& major,
@@ -287,11 +274,6 @@ class ImageAnalysis
 
     Bool makecomplex(const String& outfile, const String& imag, Record& region,
                      const Bool overwrite = False);
-
-    // create a float image from a complex image,
-    // possible operations are "abs", "arg", "real", "imag", "square"
-    static Bool makeFloat(const String& outFile, const String& compFile, LogIO& os,
-			  const String& operation="abs", Bool overwrite = False);
 
     Vector<String> maskhandler(const String& op,const Vector<String>& nam);
 
@@ -442,13 +424,6 @@ class ImageAnalysis
         const Bool overwrite=False, const Bool stretch=False
     );
 
-    /*
-    ImageInterface<Float> * subimage(const String& outfile, Record& region, 
-                                     const String& mask, 
-                                     const Bool dropdeg = False, 
-                                     const Bool overwrite = False, 
-                                     const Bool list = True, const Bool extendMask=False);
-*/
     Record summary(
     	const String& doppler = "RADIO",
     	const Bool list = True,

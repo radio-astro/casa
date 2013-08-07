@@ -150,6 +150,11 @@ void UvwCoords::uvw_bl( const vector<Tag>& v_antennaId, unsigned int nrep, bool 
   Vector<casa::Double> uvw; uvw.resize(3);
   Vector<casa::Double> uvw_i, uvw_j;
 
+  if (getenv ("ASDM_DEBUG")) { 
+    cout << "Entering UvwCoords::uvw_bl" << endl;
+    cout << "reverse = " << reverse << endl;
+  }
+
   v_uvw.clear();
   unsigned int k=nrep*(v_antennaId.size()*(v_antennaId.size()-1))/2;
   v_uvw.resize(k);
@@ -183,6 +188,9 @@ void UvwCoords::uvw_bl( const vector<Tag>& v_antennaId, unsigned int nrep, bool 
       it_j++;
       uvw_i = m_antUVW_.find(*it_i)->second;
       for(; it_j!=ite; ++it_j){
+	if (getenv ("ASDM_DEBUG")) {
+	  cout << "antenna_i = " << it_i->getTagValue() << ", antenna_j = " << it_j->getTagValue() << endl;  
+	}
 	uvw_j = m_antUVW_.find(*it_j)->second;
 	for(unsigned int n=0; n<3; n++)
 	  uvw[n] = uvw_j[n]-uvw_i[n];
@@ -190,6 +198,9 @@ void UvwCoords::uvw_bl( const vector<Tag>& v_antennaId, unsigned int nrep, bool 
       }
     }
   }
+  
+  if (getenv ("ASDM_DEBUG")) 
+    cout << "Exiting UvwCoords::uvw_bl" << endl; 
   return;
 }
 

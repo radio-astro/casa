@@ -112,9 +112,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsDisplayList.insert(iter,dData);
 		}
 
-		if(worldCanvas()->csMaster()==0) {
+		//Block below was taken out, because we now have a mode where there
+		//can be NO CSMaster.
+		/*if(worldCanvas()->csMaster()==0) {
 			executeSizeControl(worldCanvas());
-		}
+		}*/
 		// If the new DD can assume the CS master role, let it set up
 		// WC state immediately, since there is no master at present.
 		worldCanvas()->release();
@@ -124,14 +126,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		worldCanvas()->hold();
 		std::list <DisplayData*>::iterator pos = find( itsDisplayList.begin(), itsDisplayList.end(), &dData );
 		if ( pos != itsDisplayList.end() ) {
-			if(worldCanvas()->isCSmaster(&dData)) worldCanvas()->csMaster() = 0;		// CS master removed.
+			//Line below was taken out because we can now have a CS master that is not
+			//in the display list.
+			//if(worldCanvas()->isCSmaster(&dData)) worldCanvas()->csMaster() = 0;
 
 			itsDisplayList.erase(pos);
 			// Notify DisplayData
 			dData.notifyUnregister(*this, ignoreRefresh);
 		}
-		if ( itsDisplayList.size() == 0 ){
-			controllingDD = NULL;
+
+		//If there is nothing to display, and no master image has been
+		//designated, tell the canvas there is no CS master.
+		if ( itsDisplayList.size() == 0 && controllingDD == NULL){
+			worldCanvas()->csMaster() = NULL;
 		}
 
 		if(csMaster()==0) executeSizeControl(worldCanvas());
@@ -378,6 +385,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				acceptedPosition = executeSizeControl( worldCanvas());
 				worldCanvas()->release();
 			}
+		}
+		else if ( dd == NULL ){
+
+			controllingDD = NULL;
+			clearCSMasterSettings( worldCanvas());
 		}
 		return acceptedPosition;
 	}
@@ -640,6 +652,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if ( controllingDD->isDisplayable()) {
 				String titleDDName = getTitleDDName( conforms );
 				controllingDD->setSubstituteTitleText( titleDDName );
+			}
+		}
+		else {
+			//No controlling DD so we are going to use a fake one.
+			DisplayData* titleDD = NULL;
+			if ( blinkMode ){
+				titleDD = getTitleDDBlink( conforms );
+			}
+			else {
+				titleDD = getTitleDDNormal( conforms );
+			}
+
+			if ( titleDD != NULL ){
+				worldCanvas()->csMaster() = titleDD;
+				executeSizeControl(worldCanvas());
 			}
 		}
 	}

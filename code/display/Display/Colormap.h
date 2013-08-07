@@ -136,7 +136,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual Bool calcRGBMaps(uInt reqSize,
 		                         Vector<Float> & redMap,
 		                         Vector<Float> & greenMap,
-		                         Vector<Float> & blueMap) const;
+		                         Vector<Float> & blueMap,
+		                         Vector<Float> & alphaMap) const;
 
 		// return the name of the map
 		const String & name() const {
@@ -157,6 +158,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void setBrightness(const Float &brightness, const Bool &doReinstall = True);
 		Float getBrightness() const {
 			return itsBrightness;
+		};
+		// </group>
+
+		// set/get the colormap alpha level in range 0 to 1
+		// <group>
+		void setAlpha(const Float &brightness, const Bool &doReinstall = True);
+		Float getAlpha() const {
+			return itsAlpha;
 		};
 		// </group>
 
@@ -226,6 +235,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// what is its rigid size?
 		uInt itsRigidSize;
+		//Transparency
+		Float itsAlpha;
 
 		// levels
 		Float itsBrightness, itsBrightnessScale;

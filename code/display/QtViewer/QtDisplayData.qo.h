@@ -86,7 +86,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void setName(const std::string& name) {
 			name_ = name;
 		}
-
+		const std::string DISPLAY_RASTER;
+		const std::string DISPLAY_CONTOUR;
+		const std::string DISPLAY_VECTOR;
+		const std::string DISPLAY_MARKER;
 		virtual std::string dataType() const {
 			return dataType_;
 		}
@@ -244,6 +247,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return colorBar_;
 		}
 
+		Colormap* getColorMap() const;
+
 
 		// Does this DD currently own a colormap?
 		virtual Bool hasColormap() const {
@@ -253,6 +258,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// thus this is non-static and specific to a display data
 		virtual bool isValidColormap( const QString &name ) const;
 		void setColorMap( Colormap* colorMap );
+		//Set the transparence of the color map for overlaying images.
+		Bool setColormapAlpha( uInt alpha );
 		void removeColorMap( const String& name );
 
 		// Get/set colormap shift/slope ('fiddle') and brightness/contrast
@@ -445,10 +452,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		QtDisplayPanelGui *panel_;
 		std::string path_, dataType_, displayType_;
-		const std::string DISPLAY_RASTER;
-		const std::string DISPLAY_CONTOUR;
-		const std::string DISPLAY_VECTOR;
-		const std::string DISPLAY_MARKER;
+
 		const std::string TYPE_IMAGE;
 		const std::string SKY_CATALOG;
 		const std::string MS;

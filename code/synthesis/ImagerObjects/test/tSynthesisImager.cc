@@ -129,10 +129,14 @@ int main(int argc, char **argv)
 		  ny = 300;
 
 		  ///64 projplanes
-		  imgr->setupImaging(1.0, False, True, 64, "SF");
+		  ////		  imgr->setupImaging(1.0, False, True, 64, "SF");
 		  imgr->defineImage(/*imagename*/"test_widefield_image", nx, ny, cellx, celly,
 				  stokes,phasecenter, nchan,
-				  freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 1, "WProjectFT");
+				    freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 1, 
+				    "WProjectFT",1, Quantity(1.420, "GHz"), Projection::SIN, Quantity(0,"m"), 
+				    MFrequency::LSRK, False,  
+				    MDirection(Quantity(0.0, "deg"), Quantity(90.0, "deg")), False, 
+				    1.0, False True, 64, "SF" );
 	  }
 	  else if(imtype==String("facet")){
 		  nx = 300;

@@ -23,897 +23,282 @@
 #ifndef MSTransformDataHandler_H_
 #define MSTransformDataHandler_H_
 
-// To handle configuration records
-#include <casacore/casa/Containers/Record.h>
-
-// To handle variant parameters
-#include <stdcasa/StdCasa/CasacSupport.h>
+// Measurement Set
+#include <ms/MeasurementSets.h>
 
 // Measurement Set Selection
 #include <ms/MeasurementSets/MSSelection.h>
 
-// To use Sub-Ms class
-#include <synthesis/MSVis/SubMS.h>
+// Needed by setupMS
+#include <tables/Tables.h>
+#include <ms/MeasurementSets/MSTileLayout.h>
+#include <asdmstman/AsdmStMan.h>
 
-// VisibityIterator / VisibilityBuffer framework
-#include <synthesis/MSVis/VisibilityIterator2.h>
-#include <synthesis/MSVis/VisBuffer2.h>
-#include <synthesis/MSVis/ViFrequencySelection.h>
+// Needed by copyTable
+#include <tables/Tables/PlainTable.h>
 
-// TVI framework
-#include <synthesis/MSVis/AveragingVi2Factory.h>
+// OS methods needed by fillSubTables
+#include <casa/OS/Timer.h>
+#include <casa/OS/Path.h>
+#include <casa/OS/Directory.h>
 
-// To get observatory position from observatory name
-#include <measures/Measures/MeasTable.h>
-
-// To post formatted msgs via ostringstream
-#include <iomanip>
-
-// To apply hanning smooth
-#include <scimath/Mathematics/Smooth.h>
-
-// To apply fft shift
-#include <scimath/Mathematics/FFTServer.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-
-// MS Transform Framework utilities
-namespace MSTransformations
-{
-	// Returns 1/sqrt(wt) or -1, depending on whether wt is positive..
-	Double wtToSigma(Double wt);
-}
-
-// Forward declarations
-struct spwInfo;
-struct channelContribution;
-
-// Map definition
-typedef map<MS::PredefinedColumns,MS::PredefinedColumns> dataColMap;
-typedef map< pair< pair<Int,Int> , pair<Int,Int> >,vector<uInt> > baselineMap;
-typedef map<Int,map<uInt, uInt > > inputSpwChanMap;
-typedef map<Int,vector < channelContribution > >  inputOutputChanFactorMap;
-typedef map<Int,pair < spwInfo, spwInfo > > inputOutputSpwMap;
-
-// Struct definition
-struct channelInfo {
-
-	Int SPW_id;
-	uInt inpChannel;
-	uInt outChannel;
-	Double CHAN_FREQ;
-	Double CHAN_WIDTH;
-	Double EFFECTIVE_BW;
-	Double RESOLUTION;
-
-	channelInfo()
-	{
-		SPW_id = -1;
-		inpChannel = 0;
-		outChannel = 0;
-
-		CHAN_FREQ = -1;
-		CHAN_WIDTH = -1;
-		EFFECTIVE_BW = -1;
-		RESOLUTION = -1;
-	}
-
-	bool operator<(const channelInfo& right_operand) const
-	{
-		if (CHAN_FREQ<right_operand.CHAN_FREQ)
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-
-	Double upperBound() const
-	{
-		return CHAN_FREQ+0.5*CHAN_WIDTH;
-	}
-
-	Double lowerBound() const
-	{
-		return CHAN_FREQ-0.5*CHAN_WIDTH;
-	}
-
-	Double overlap(const channelInfo& other) const
-	{
-
-		// The other channel completely covers this channel
-		if ((lowerBound() <= other.lowerBound()) and (upperBound() >= other.upperBound()))
-		{
-			return 1.0;
-		}
-		// The other channel is completely covered by this channel
-		else if ((lowerBound() >= other.lowerBound()) and (upperBound() <= other.upperBound()))
-		{
-			return CHAN_WIDTH/other.CHAN_WIDTH;
-		}
-		// Lower end of this channel is overlapping with the other channel
-		else if (lowerBound() < other.lowerBound() && other.lowerBound() < upperBound() && upperBound() < other.upperBound())
-		{
-			return (upperBound()-other.lowerBound())/other.CHAN_WIDTH;
-		}
-		// Upper end of this channel is overlapping with the other channel
-		else if (other.lowerBound() < lowerBound() && lowerBound() < other.upperBound() && other.upperBound() < upperBound())
-		{
-			return (other.upperBound()-lowerBound())/other.CHAN_WIDTH;
-		}
-		else
-		{
-			return 0.0;
-		}
-
-	}
-};
-
-struct channelContribution {
-
-	Int inpSpw;
-	uInt inpChannel;
-	uInt outChannel;
-	Double weight;
-	Bool flag;
-
-	channelContribution()
-	{
-		inpSpw = 0;
-		inpChannel = 0;
-		outChannel = 0;
-		weight = 0;
-		flag = False;
-	}
-
-	channelContribution(Int inputSpw, uInt inputChannel, uInt outputChannel,Double fraction)
-	{
-		inpSpw = inputSpw;
-		inpChannel = inputChannel;
-		outChannel = outputChannel;
-		weight = fraction;
-		flag = True;
-	}
-};
-
-struct spwInfo {
-
-	spwInfo()
-	{
-		initialize(0);
-	}
-
-	spwInfo(uInt nChannels)
-	{
-		initialize(nChannels);
-	}
-
-	spwInfo(Vector<Double> &chanFreq,Vector<Double> &chanWidth)
-	{
-		reset(chanFreq,chanWidth);
-	}
-
-	void reset(Vector<Double> &chanFreq,Vector<Double> &chanWidth)
-	{
-		initialize(chanFreq.size());
-		CHAN_FREQ = chanFreq;
-		CHAN_WIDTH = chanWidth;
-		update();
-	}
-
-	void initialize(uInt nChannels)
-	{
-		NUM_CHAN = nChannels;
-		CHAN_FREQ.resize(nChannels,False);
-		CHAN_WIDTH.resize(nChannels,False);
-		EFFECTIVE_BW.resize(nChannels,False);
-		RESOLUTION.resize(nChannels,False);
-		CHAN_FREQ_aux.resize(nChannels,False);
-		TOTAL_BANDWIDTH = 0;
-		REF_FREQUENCY = 0;
-		upperBound = 0;
-		lowerBound = 0;
-	}
-
-	void update()
-	{
-		upperBound = CHAN_FREQ(NUM_CHAN-1)+0.5*CHAN_WIDTH(NUM_CHAN-1);
-		lowerBound = CHAN_FREQ(0)-0.5*CHAN_WIDTH(0);
-		TOTAL_BANDWIDTH = upperBound - lowerBound;
-		REF_FREQUENCY = CHAN_FREQ(0);
-
-		CHAN_FREQ_aux = CHAN_FREQ;
-		EFFECTIVE_BW = CHAN_WIDTH;
-		RESOLUTION = CHAN_WIDTH;
-	}
-
-	uInt NUM_CHAN;
-	Vector<Double> CHAN_FREQ;
-	Vector<Double> CHAN_WIDTH;
-	Vector<Double> EFFECTIVE_BW;
-	Vector<Double> RESOLUTION;
-	Vector<Double> CHAN_FREQ_aux;
-	Double TOTAL_BANDWIDTH;
-	Double REF_FREQUENCY;
-	Double upperBound;
-	Double lowerBound;
-};
 
 //  MSTransformDataHandler definition
 class MSTransformDataHandler
 {
 
+ // Allow MSTransformManager to access protected methods and members of this class
+friend class MSTransformManager;
+
 public:
 
-	MSTransformDataHandler();
-	MSTransformDataHandler(Record configuration);
+	enum asdmStManUseAlternatives
+	{
+		DONT,
+		USE_FOR_DATA,
+		USE_FOR_DATA_WEIGHT_SIGMA_FLAG
+	};
 
+	MSTransformDataHandler(String& theMS, Table::TableOption option);
+	MSTransformDataHandler(MeasurementSet& ms);
 	~MSTransformDataHandler();
 
-	void initialize();
-	void configure(Record &configuration);
+	// Declared static because it's used in setupMS().
+	// colNameList is internally up-cased, so it is not const or passed by reference.
+	static const Vector<MS::PredefinedColumns>& parseColumnNames(String colNameList);
 
-	void open();
-	void setup();
-	void close();
+	// This version uses the MeasurementSet to check what columns are present,
+	// i.e. it makes col=="all" smarter, and it is not necessary to call
+	// verifyColumns() after calling this.  Unlike the other version, it knows
+	// about FLOAT_DATA and LAG_DATA.  It throws an exception if a
+	// _specifically_ requested column is absent.
+	static const Vector<MS::PredefinedColumns>& parseColumnNames(String colNameList, const MeasurementSet& ms);
 
-	vi::VisibilityIterator2 * getVisIter() {return visibilityIterator_p;}
+	// Helper function for parseColumnNames().  Converts col to a list of
+	// MS::PredefinedColumnss, and returns the # of recognized data columns.
+	// static because parseColumnNames() is static.
+	static uInt dataColStrToEnums(const String& col,Vector<MS::PredefinedColumns>& colvec);
 
-	void fillOutputMs(vi::VisBuffer2 *vb);
+	// Selection method using msselection syntax. Time is not handled by this method.
+	Bool setmsselect(	const String& spw = "", const String& field = "",
+						const String& baseline = "", const String& scan = "",
+						const String& uvrange = "", const String& taql = "",
+						const Vector<Int>& step = Vector<Int> (1, 1),
+						const String& subarray = "", const String& correlation = "",
+						const String& intent = "", const String& obs = "");
 
-	// To consolidate several SPW subtables
+	// Select source or field
+	Bool selectSource(const Vector<Int>& fieldid);
+
+	// Select spw and channels for each spw.
+	Bool selectSpw(const String& spwstr, const Vector<Int>& steps);
+
+	// Returns the set (possibly empty) of spectral windows that are
+	// in SPW but not listed in ms's DATA_DESCRIPTION sub-table.
+	// (This happens with certain calibration/hardware setups.)
+	static std::set<Int> findBadSpws(MeasurementSet& ms, Vector<Int> spwv);
+
+	// Select Antennas to split out
+	void selectAntenna(const Vector<Int>& antennaids,const Vector<String>& antennaSel);
+
+	// Helper function for selectAntenna()
+	static Bool pickAntennas(	Vector<Int>& selected_antennaids,
+								Vector<String>& selected_antenna_strs,
+								const Vector<Int>& antennaids,
+								const Vector<String>& antennaSel);
+
+	// Select array IDs to use.
+	void selectArray(const String& subarray);
+
+	// Setup polarization selection (for now, only from available correlations - no Stokes transformations.)
+	Bool selectCorrelations(const String& corrstr);
+
+	// Fills outToIn[pol] with a map from output correlation index to input
+	// correlation index, for each input polID pol.
+	// It does not yet check the appropriateness of the correlation selection
+	// string, so ignore the return value for now.  outToIn[pol] defaults to
+	// an empty Vector if no correlations are selected for pol.
+	// That is not the same as the default "select everything in ms".
+	static Bool getCorrMaps(	MSSelection& mssel,
+								const MeasurementSet& ms,
+								Vector<Vector<Int> >& outToIn,
+								const Bool areSelecting = false);
+
+	// Select time parameters
+	void selectTime(Double timeBin=-1.0, String timerng="");
+
+	//Method to make the subMS
+	//
+	//TileShape of size 1 can have 2 values [0], and [1] ...these are used in to
+	//determine the tileshape by using MSTileLayout. Otherwise it has to be a
+	//vector size 3 e.g [4, 15, 351] => a tile shape of 4 stokes, 15 channels 351
+	//rows.
+	//
+	// combine sets combine_p.  (Columns to ignore while time averaging.)
+	//
+	Bool makeSubMS(	String& submsname,
+					String& whichDataCol,
+					const Vector<Int>& tileShape = Vector<Int> (1, 0),
+					const String& combine = "");
+
+	Bool isAllColumns(const Vector<MS::PredefinedColumns>& colNames);
+
+	// Method that returns the selected ms (?! - but it's Boolean - RR)
+	Bool makeSelection();
+
+	// This sets up a default new ms
+	// Declared static as it can be (and is) called directly outside of SubMS.
+	// Therefore it is not dependent on any member variable.
+	static MeasurementSet* setupMS(	const String& msname, const Int nchan,
+									const Int npol, const String& telescop,
+									const Vector<MS::PredefinedColumns>& colNamesTok,
+									const Int obstype = 0, const Bool compress = False,
+									const asdmStManUseAlternatives asdmStManUse = DONT);
+
+	// Same as above except allowing manual tileshapes
+	static MeasurementSet* setupMS(	const String& msname, const Int nchan,
+									const Int npol, const Vector<MS::PredefinedColumns>& colNamesTok,
+									const Vector<Int>& tileShape = Vector<Int> (1, 0),
+									const Bool compress = False,
+									const asdmStManUseAlternatives asdmStManUse = DONT);
+
+
+	// The output MS must have (at least?) 1 of DATA, FLOAT_DATA, or LAG_DATA.
+	// MODEL_DATA or CORRECTED_DATA will be converted to DATA if necessary.
+	// jagonzal (CAS-5327): The implementation has to go here because a member function cannot have static linkage
+	static Bool mustConvertToData(	const uInt nTok,const Vector<MS::PredefinedColumns>& datacols)
+	{
+		return (nTok == 1) && (datacols[0] != MS::FLOAT_DATA) && (datacols[0] != MS::LAG_DATA);
+	}
+
+	// A customized version of MS::createDefaultSubtables().
+	static void createSubtables(MeasurementSet& ms, Table::TableOption option);
+
+	// Sub-table fillers.
+	Bool fillSubTables(const Vector<MS::PredefinedColumns>& colNames);
+	Bool fillFieldTable();
+	Bool fillDDTables(); // Includes spw and pol
+
+	// Add optional columns to outTab if present in inTab and possColNames.
+	// beLazy should only be true if outTab is in its default state.
+	// Returns the number of added columns.
+	static uInt addOptionalColumns(const Table& inTab, Table& outTab,const Bool beLazy=false);
+
+	// Sets up sourceRelabel_p for mapping input SourceIDs (if any) to output
+	// ones.  Must be called after fieldid_p is set and before calling
+	// fillFieldTable() or copySource().
+	void relabelSources();
+
+	// Adds and copies inTab to msOut_p without any filtering.
+	// tabName is the table "type", i.e. POINTING or SYSPOWER
+	// without the preceding path.
+	//
+	// If noRows is True, the structure will be setup but no
+	// rows will be copied  (useful for filtering).
+	void copySubtable(const String& tabName, const Table& inTab,const Bool noRows = False);
+
+	// Sets mapper to to a map from the distinct values of inv,
+	// in increasing order, to 0, 1, 2, ..., mapper.size() - 1.
+	static void make_map(std::map<Int, Int>& mapper, const Vector<Int>& inv);
+
+	Bool copyPointing();
+	// Sets up the stub of a POINTING, enough to create an MSColumns.
+	void setupNewPointing();
+
+	Bool copySource();
+	Bool copyAntenna();
+	Bool copyFeed();
+	Bool copyFlag_Cmd();
+	Bool copyHistory();
+	Bool copyObservation();
+	Bool copyProcessor();
+	Bool copyState();
+	Bool copySyscal();
+	Bool copyWeather();
+
+	// This falls between copyGenericSubtables() and the copiers for standard
+	// sub-tables like copyFeed().  It is for optional sub-tables like CALDEVICE
+	// and SYSPOWER which can be watched for by name and may need their
+	// ANTENNA_ID and SPECTRAL_WINDOW_ID columns re-mapped.
+	// (Technically FEED_ID, too, if split ever starts re-mapping feeds.)
+	//
+	// It must be called BEFORE copyGenericSubtables()!
+	//
+	Bool filterOptSubtable(const String& subtabname);
+
+	Bool copyGenericSubtables();
+
+	// To consolidate several SPW sub-tables
 	static Bool mergeSpwSubTables(Vector<String> filenames);
 	static Bool mergeDDISubTables(Vector<String> filenames);
 
 
 protected:
 
-	void parseMsSpecParams(Record &configuration);
-	void parseDataSelParams(Record &configuration);
-	void parseFreqTransParams(Record &configuration);
-	void parseChanAvgParams(Record &configuration);
-	void parseRefFrameTransParams(Record &configuration);
-	void parseFreqSpecParams(Record &configuration);
-	void parseTimeAvgParams(Record &configuration);
-
-	// From input MS
-	void initDataSelectionParams();
-	void getInputNumberOfChannels();
-
-	// To re-grid SPW subtable
-	void initRefFrameTransParams();
-	void regridSpwSubTable();
-	void regridAndCombineSpwSubtable();
-	void regridSpwAux(	Int spwId,
-						Vector<Double> &inputCHAN_FREQ,
-						Vector<Double> &inputCHAN_WIDTH,
-						Vector<Double> &originalCHAN_FREQ,
-						Vector<Double> &originalCHAN_WIDTH,
-						Vector<Double> &regriddedCHAN_FREQ,
-						Vector<Double> &regriddedCHAN_WIDTH,
-						string msg);
-	void reindexColumn(ScalarColumn<Int> &inputCol, Int value);
-	void reindexSourceSubTable();
-	void reindexDDISubTable();
-	void reindexFeedSubTable();
-	void reindexSysCalSubTable();
-	void reindexFreqOffsetSubTable();
-	void separateSpwSubtable();
-
-	// Setter for the weight-based average
-	void setWeightBasedTransformations(uInt mode);
-
-	// Drop channels with non-uniform width when doing channel average
-	void dropNonUniformWidthChannels();
-
-	// From output MS
-	void getOutputNumberOfChannels();
-
-	// For channel averaging and selection
-	void calculateIntermediateFrequencies(	Int spwId,
-											Vector<Double> &inputChanFreq,
-											Vector<Double> &inputChanWidth,
-											Vector<Double> &intermediateChanFreq,
-											Vector<Double> &intermediateChanWidth);
-	void calculateWeightAndSigmaFactors();
-
-	// From selected MS
-	void checkFillFlagCategory();
-	void checkFillWeightSpectrum();
-
-	// Iterator set-up
-	void checkDataColumnsToFill();
-	void setIterationApproach();
-	void generateIterator();
-
-	void initFrequencyTransGrid(vi::VisBuffer2 *vb);
-	void fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef);
-	void fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef);
-
-	template <class T> void fillAndReindexScalar(	T inputScalar,
-													Vector<T> &outputVector,
-													map<Int,Int> &inputOutputIndexMap);
-	template <class T> void mapAndReindexVector(	const Vector<T> &inputVector,
-													Vector<T> &outputVector,
-													map<Int,Int> &inputOutputIndexMap,
-													Bool constant=False);
-	template <class T> void reindexVector(	const Vector<T> &inputVector,
-											Vector<T> &outputVector,
-											map<Int,Int> &inputOutputIndexMap,
-											Bool constant=False);
-
-	template <class T> void mapVector(const Vector<T> &inputVector, Vector<T> &outputVector);
-	template <class T> void mapMatrix(const Matrix<T> &inputMatrix, Matrix<T> &outputMatrix);
-	template <class T> void mapAndAverageVector(	const Vector<T> &inputVector,
-													Vector<T> &outputVector,
-													Bool convolveFlags=False,
-													vi::VisBuffer2 *vb=NULL);
-	template <class T> void mapAndAverageMatrix(	const Matrix<T> &inputMatrix,
-													Matrix<T> &outputMatrix,
-													Bool convolveFlags=False,
-													vi::VisBuffer2 *vb=NULL);
-	template <class T> void mapScaleAndAverageMatrix(	const Matrix<T> &inputMatrix,
-														Matrix<T> &outputMatrix,
-														map<Int,T> scaleMap,
-														Vector<Int> spws);
-
-	template <class T> void writeVector(	const Vector<T> &inputVector,
-											ScalarColumn<T> &outputCol,
-											RefRows &rowRef,
-											uInt nBlocks);
-	template <class T> void writeRollingVector(	Vector<T> &inputVector,
-												ScalarColumn<T> &outputCol,
-												RefRows &rowRef,
-												uInt nBlocks);
-	template <class T> void writeVectorBlock(	const Vector<T> &inputVector,
-												ScalarColumn<T> &outputCol,
-												RefRows &rowRef,
-												uInt offset);
-	template <class T> void writeMatrix(	const Matrix<T> &inputMatrix,
-											ArrayColumn<T> &outputCol,
-											RefRows &rowRef,
-											uInt nBlocks);
-	template <class T> void writeCube(	const Cube<T> &inputCube,
-										ArrayColumn<T> &outputCol,
-										RefRows &rowRef);
-
-	void transformCubeOfData(	vi::VisBuffer2 *vb,
-								RefRows &rowRef,
-								const Cube<Complex> &inputDataCube,
-								ArrayColumn<Complex> &outputDataCol,
-								ArrayColumn<Bool> *outputFlagCol);
-	void transformCubeOfData(	vi::VisBuffer2 *vb,
-								RefRows &rowRef,
-								const Cube<Float> &inputDataCube,
-								ArrayColumn<Float> &outputDataCol,
-								ArrayColumn<Bool> *outputFlagCol);
-	void (casa::MSTransformDataHandler::*transformCubeOfDataComplex_p)(	vi::VisBuffer2 *vb,
-																		RefRows &rowRef,
-																		const Cube<Complex> &inputDataCube,
-																		ArrayColumn<Complex> &outputDataCol,
-																		ArrayColumn<Bool> *outputFlagCol);
-	void (casa::MSTransformDataHandler::*transformCubeOfDataFloat_p)(	vi::VisBuffer2 *vb,
-																		RefRows &rowRef,
-																		const Cube<Float> &inputDataCube,
-																		ArrayColumn<Float> &outputDataCol,
-																		ArrayColumn<Bool> *outputFlagCol);
-
-	template <class T> void copyCubeOfData(	vi::VisBuffer2 *vb,
-											RefRows &rowRef,
-											const Cube<T> &inputDataCube,
-											ArrayColumn<T> &outputDataCol,
-											ArrayColumn<Bool> *outputFlagCol);
-
-	template <class T> void combineCubeOfData(	vi::VisBuffer2 *vb,
-												RefRows &rowRef,
-												const Cube<T> &inputDataCube,
-												ArrayColumn<T> &outputDataCol,
-												ArrayColumn<Bool> *outputFlagCol);
-
-	void addWeightSpectrumContribution(	Double &weight,
-										uInt &pol,
-										uInt &inputChannel,
-										uInt &row,
-										Cube<Float> &inputWeightsCube);
-	void dontAddWeightSpectrumContribution(	Double &weight,
-											uInt &pol,
-											uInt &inputChannel,
-											uInt &row,
-											Cube<Float> &inputWeightsCube);
-	void (casa::MSTransformDataHandler::*addWeightSpectrumContribution_p)(	Double &weight,
-																			uInt &pol,
-																			uInt &inputChannel,
-																			uInt &row,
-																			Cube<Float> &inputWeightsCube);
-
-
-	void fillWeightsPlane(	uInt pol,
-							uInt inputChannel,
-							uInt outputChannel,
-							uInt inputRow,
-							const Cube<Float> &inputWeightsCube,
-							Matrix<Float> &inputWeightsPlane,
-							Double weight);
-	void dontfillWeightsPlane(	uInt pol,
-								uInt inputChannel,
-								uInt outputChannel,
-								uInt inputRow,
-								const Cube<Float> &inputWeightsCube,
-								Matrix<Float> &inputWeightsPlane,
-								Double weight) {return;}
-	void (casa::MSTransformDataHandler::*fillWeightsPlane_p)(	uInt pol,
-																uInt inputChannel,
-																uInt outputChannel,
-																uInt inputRow,
-																const Cube<Float> &inputWeightsCube,
-																Matrix<Float> &inputWeightsPlane,
-																Double weight);
-
-	void normalizeWeightsPlane(	uInt pol,
-								uInt outputChannel,
-								Matrix<Float> &inputPlaneWeights,
-								Matrix<Double> &normalizingFactorPlane);
-	void dontNormalizeWeightsPlane(	uInt pol,
-									uInt outputChannel,
-									Matrix<Float> &inputPlaneWeights,
-									Matrix<Double> &normalizingFactorPlane) {return;}
-	void (casa::MSTransformDataHandler::*normalizeWeightsPlane_p)(	uInt pol,
-																	uInt outputChannel,
-																	Matrix<Float> &inputPlaneWeights,
-																	Matrix<Double> &normalizingFactorPlane);
-
-	template <class T> void averageCubeOfData(	vi::VisBuffer2 *vb,
-												RefRows &rowRef,
-												const Cube<T> &inputDataCube,
-												ArrayColumn<T> &outputDataCol,
-												ArrayColumn<Bool> *outputFlagCol);
-	template <class T> void smoothCubeOfData(	vi::VisBuffer2 *vb,
-												RefRows &rowRef,
-												const Cube<T> &inputDataCube,
-												ArrayColumn<T> &outputDataCol,
-												ArrayColumn<Bool> *outputFlagCol);
-	template <class T> void regridCubeOfData(	vi::VisBuffer2 *vb,
-												RefRows &rowRef,
-												const Cube<T> &inputDataCube,
-												ArrayColumn<T> &outputDataCol,
-												ArrayColumn<Bool> *outputFlagCol);
-	template <class T> void separateCubeOfData(	vi::VisBuffer2 *vb,
-												RefRows &rowRef,
-												const Cube<T> &inputDataCube,
-												ArrayColumn<T> &outputDataCol,
-												ArrayColumn<Bool> *outputFlagCol);
-
-	template <class T> void transformAndWriteCubeOfData(	Int inputSpw,
-															RefRows &rowRef,
-															const Cube<T> &inputDataCube,
-															const Cube<Bool> &inputFlagsCube,
-															const Cube<Float> &inputWeightsCube,
-															IPosition &outputPlaneShape,
-															ArrayColumn<T> &outputDataCol,
-															ArrayColumn<Bool> *outputFlagCol);
-
-
-	void setWeightsPlaneByReference(	uInt inputRow,
-										const Cube<Float> &inputWeightsCube,
-										Matrix<Float> &inputWeightsPlane);
-	void dontsetWeightsPlaneByReference(	uInt inputRow,
-											const Cube<Float> &inputWeightsCube,
-											Matrix<Float> &inputWeightsPlane) {return;}
-	void (casa::MSTransformDataHandler::*setWeightsPlaneByReference_p)(	uInt inputRow,
-																		const Cube<Float> &inputWeightsCube,
-																		Matrix<Float> &inputWeightsPlane);
-
-	template <class T> void transformAndWritePlaneOfData(	Int inputSpw,
-															uInt row,
-															Matrix<T> &inputDataPlane,
-															Matrix<Bool> &inputFlagsPlane,
-															Matrix<Float> &inputWeightsPlane,
-															Matrix<T> &outputDataPlane,
-															Matrix<Bool> &outputFlagsPlane,
-															ArrayColumn<T> &outputDataCol,
-															ArrayColumn<Bool> *outputFlagCol);
-	void setWeightStripeByReference(	uInt corrIndex,
-										Matrix<Float> &inputWeightsPlane,
-										Vector<Float> &inputWeightsStripe);
-	void dontSetWeightStripeByReference(	uInt corrIndex,
-											Matrix<Float> &inputWeightsPlane,
-											Vector<Float> &inputWeightsStripe) {return;}
-	void (casa::MSTransformDataHandler::*setWeightStripeByReference_p)(	uInt corrIndex,
-																		Matrix<Float> &inputWeightsPlane,
-																		Vector<Float> &inputWeightsStripe);
-
-	void writeOutputPlanes(	uInt row,
-							Matrix<Complex> &outputDataPlane,
-							Matrix<Bool> &outputFlagsPlane,
-							ArrayColumn<Complex> &outputDataCol,
-							ArrayColumn<Bool> &outputFlagCol);
-	void writeOutputPlanes(	uInt row,
-							Matrix<Float> &outputDataPlane,
-							Matrix<Bool> &outputFlagsPlane,
-							ArrayColumn<Float> &outputDataCol,
-							ArrayColumn<Bool> &outputFlagCol);
-	void (casa::MSTransformDataHandler::*writeOutputPlanesComplex_p)(	uInt row,
-																		Matrix<Complex> &outputDataPlane,
-																		Matrix<Bool> &outputFlagsPlane,
-																		ArrayColumn<Complex> &outputDataCol,
-																		ArrayColumn<Bool> &outputFlagCol);
-	void (casa::MSTransformDataHandler::*writeOutputPlanesFloat_p)(	uInt row,
-																	Matrix<Float> &outputDataPlane,
-																	Matrix<Bool> &outputFlagsPlane,
-																	ArrayColumn<Float> &outputDataCol,
-																	ArrayColumn<Bool> &outputFlagCol);
-
-	template <class T> void writeOutputPlanesInBlock(	uInt row,
-														Matrix<T> &outputDataPlane,
-														Matrix<Bool> &outputFlagsPlane,
-														ArrayColumn<T> &outputDataCol,
-														ArrayColumn<Bool> &outputFlagCol);
-	void (casa::MSTransformDataHandler::*writeOutputFlagsPlane_p)(	Matrix<Bool> &outputPlane,
-																	ArrayColumn<Bool> &outputCol,
-																	IPosition &outputPlaneShape,
-																	uInt &outputRow);
-	void writeOutputFlagsPlane(	Matrix<Bool> &outputPlane,
-								ArrayColumn<Bool> &outputCol,
-								IPosition &outputPlaneShape,
-								uInt &outputRow);
-	void dontWriteOutputFlagsPlane(	Matrix<Bool> &outputPlane,
-									ArrayColumn<Bool> &outputCol,
-									IPosition &outputPlaneShape,
-									uInt &outputRow) {return;}
-
-	template <class T> void writeOutputPlanesInSlices(	uInt row,
-														Matrix<T> &outputDataPlane,
-														Matrix<Bool> &outputFlagsPlane,
-														ArrayColumn<T> &outputDataCol,
-														ArrayColumn<Bool> &outputFlagCol);
-	template <class T> void writeOutputPlaneSlices(	Matrix<T> &outputPlane,
-													ArrayColumn<T> &outputDataCol,
-													Slice &sliceX,
-													Slice &sliceY,
-													IPosition &outputPlaneShape,
-													uInt &outputRow);
-	template <class T> void writeOutputPlaneReshapedSlices(	Matrix<T> &outputPlane,
-															ArrayColumn<T> &outputDataCol,
-															Slice &sliceX,
-															Slice &sliceY,
-															IPosition &outputPlaneShape,
-															uInt &outputRow);
-	void (casa::MSTransformDataHandler::*writeOutputFlagsPlaneSlices_p)(	Matrix<Bool> &outputPlane,
-																			ArrayColumn<Bool> &outputCol,
-																			Slice &sliceX,
-																			Slice &sliceY,
-																			IPosition &outputPlaneShape,
-																			uInt &outputRow);
-	void writeOutputFlagsPlaneSlices(	Matrix<Bool> &outputPlane,
-										ArrayColumn<Bool> &outputCol,
-										Slice &sliceX,
-										Slice &sliceY,
-										IPosition &outputPlaneShape,
-										uInt &outputRow);
-	void dontWriteOutputFlagsPlaneSlices(	Matrix<Bool> &outputPlane,
-											ArrayColumn<Bool> &outputDataCol,
-											Slice &sliceX,
-											Slice &sliceY,
-											IPosition &outputPlaneShape,
-											uInt &outputRow) {return;}
-	void (casa::MSTransformDataHandler::*writeOutputFlagsPlaneReshapedSlices_p)(	Matrix<Bool> &outputPlane,
-																					ArrayColumn<Bool> &outputCol,
-																					Slice &sliceX,
-																					Slice &sliceY,
-																					IPosition &outputPlaneShape,
-																					uInt &outputRow);
-	void writeOutputFlagsPlaneReshapedSlices(	Matrix<Bool> &outputPlane,
-												ArrayColumn<Bool> &outputCol,
-												Slice &sliceX,
-												Slice &sliceY,
-												IPosition &outputPlaneShape,
-												uInt &outputRow);
-	void dontWriteOutputPlaneReshapedSlices(	Matrix<Bool> &outputPlane,
-												ArrayColumn<Bool> &outputDataCol,
-												Slice &sliceX,
-												Slice &sliceY,
-												IPosition &outputPlaneShape,
-												uInt &outputRow) {return;}
-
-	void transformStripeOfData(	Int inputSpw,
-								Vector<Complex> &inputDataStripe,
-								Vector<Bool> &inputFlagsStripe,
-								Vector<Float> &inputWeightsStripe,
-								Vector<Complex> &outputDataStripe,
-								Vector<Bool> &outputFlagsStripe);
-	void transformStripeOfData(	Int inputSpw,
-								Vector<Float> &inputDataStripe,
-								Vector<Bool> &inputFlagsStripe,
-								Vector<Float> &inputWeightsStripe,
-								Vector<Float> &outputDataStripe,
-								Vector<Bool> &outputFlagsStripe);
-	void (casa::MSTransformDataHandler::*transformStripeOfDataComplex_p)(	Int inputSpw,
-																			Vector<Complex> &inputDataStripe,
-																			Vector<Bool> &inputFlagsStripe,
-																			Vector<Float> &inputWeightsStripe,
-																			Vector<Complex> &outputDataStripe,
-																			Vector<Bool> &outputFlagsStripe);
-	void (casa::MSTransformDataHandler::*transformStripeOfDataFloat_p)(	Int inputSpw,
-																		Vector<Float> &inputDataStripe,
-																		Vector<Bool> &inputFlagsStripe,
-																		Vector<Float> &inputWeightsStripe,
-																		Vector<Float> &outputDataStripe,
-																		Vector<Bool> &outputFlagsStripe);
-
-	template <class T> void average(	Int inputSpw,
-										Vector<T> &inputDataStripe,
-										Vector<Bool> &inputFlagsStripe,
-										Vector<Float> &inputWeightsStripe,
-										Vector<T> &outputDataStripe,
-										Vector<Bool> &outputFlagsStripe);
-	template <class T> void simpleAverage(	uInt width,
-											Vector<T> &inputData,
-											Vector<T> &outputData);
-	void averageKernel(	Vector<Complex> &inputData,
-						Vector<Bool> &inputFlags,
-						Vector<Float> &inputWeights,
-						Vector<Complex> &outputData,
-						Vector<Bool> &outputFlags,
-						uInt startInputPos,
-						uInt outputPos,
-						uInt width);
-	void averageKernel(	Vector<Float> &inputData,
-						Vector<Bool> &inputFlags,
-						Vector<Float> &inputWeights,
-						Vector<Float> &outputData,
-						Vector<Bool> &outputFlags,
-						uInt startInputPos,
-						uInt outputPos,
-						uInt width);
-	void (casa::MSTransformDataHandler::*averageKernelComplex_p)(	Vector<Complex> &inputData,
-																	Vector<Bool> &inputFlags,
-																	Vector<Float> &inputWeights,
-																	Vector<Complex> &outputData,
-																	Vector<Bool> &outputFlags,
-																	uInt startInputPos,
-																	uInt outputPos,
-																	uInt width);
-	void (casa::MSTransformDataHandler::*averageKernelFloat_p)(		Vector<Float> &inputData,
-																	Vector<Bool> &inputFlags,
-																	Vector<Float> &inputWeights,
-																	Vector<Float> &outputData,
-																	Vector<Bool> &outputFlags,
-																	uInt startInputPos,
-																	uInt outputPos,
-																	uInt width);
-	template <class T> void simpleAverageKernel(	Vector<T> &inputData,
-													Vector<Bool> &inputFlags,
-													Vector<Float> &inputWeights,
-													Vector<T> &outputData,
-													Vector<Bool> &outputFlags,
-													uInt startInputPos,
-													uInt outputPos,
-													uInt width);
-	template <class T> void flagAverageKernel(	Vector<T> &inputData,
-												Vector<Bool> &inputFlags,
-												Vector<Float> &inputWeights,
-												Vector<T> &outputData,
-												Vector<Bool> &outputFlags,
-												uInt startInputPos,
-												uInt outputPos,
-												uInt width);
-	template <class T> void weightAverageKernel(	Vector<T> &inputData,
-													Vector<Bool> &inputFlags,
-													Vector<Float> &inputWeights,
-													Vector<T> &outputData,
-													Vector<Bool> &outputFlags,
-													uInt startInputPos,
-													uInt outputPos,
-													uInt width);
-
-	template <class T> void smooth(	Int inputSpw,
-									Vector<T> &inputDataStripe,
-									Vector<Bool> &inputFlagsStripe,
-									Vector<Float> &inputWeightsStripe,
-									Vector<T> &outputDataStripe,
-									Vector<Bool> &outputFlagsStripe);
-
-	template <class T> void regrid(	Int inputSpw,
-									Vector<T> &inputDataStripe,
-									Vector<Bool> &inputFlagsStripe,
-									Vector<Float> &inputWeightsStripe,
-									Vector<T> &outputDataStripe,
-									Vector<Bool> &outputFlagsStripe);
-
-	void regridCore(	Int inputSpw,
-						Vector<Complex> &inputDataStripe,
-						Vector<Bool> &inputFlagsStripe,
-						Vector<Float> &inputWeightsStripe,
-						Vector<Complex> &outputDataStripe,
-						Vector<Bool> &outputFlagsStripe);
-	void regridCore(	Int inputSpw,
-						Vector<Float> &inputDataStripe,
-						Vector<Bool> &inputFlagsStripe,
-						Vector<Float> &inputWeightsStripe,
-						Vector<Float> &outputDataStripe,
-						Vector<Bool> &outputFlagsStripe);
-
-	void (casa::MSTransformDataHandler::*regridCoreComplex_p)(		Int inputSpw,
-																	Vector<Complex> &inputDataStripe,
-																	Vector<Bool> &inputFlagsStripe,
-																	Vector<Float> &inputWeightsStripe,
-																	Vector<Complex> &outputDataStripe,
-																	Vector<Bool> &outputFlagsStripe);
-	void (casa::MSTransformDataHandler::*regridCoreFloat_p)(	Int inputSpw,
-																Vector<Float> &inputDataStripe,
-																Vector<Bool> &inputFlagsStripe,
-																Vector<Float> &inputWeightsStripe,
-																Vector<Float> &outputDataStripe,
-																Vector<Bool> &outputFlagsStripe);
-
-	void fftshift(	Int inputSpw,
-					Vector<Complex> &inputDataStripe,
-					Vector<Bool> &inputFlagsStripe,
-					Vector<Float> &inputWeightsStripe,
-					Vector<Complex> &outputDataStripe,
-					Vector<Bool> &outputFlagsStripe);
-	void fftshift(	Int inputSpw,
-					Vector<Float> &inputDataStripe,
-					Vector<Bool> &inputFlagsStripe,
-					Vector<Float> &inputWeightsStripe,
-					Vector<Float> &outputDataStripe,
-					Vector<Bool> &outputFlagsStripe);
-
-	template <class T> void interpol1D(	Int inputSpw,
-										Vector<T> &inputDataStripe,
-										Vector<Bool> &inputFlagsStripe,
-										Vector<Float> &inputWeightsStripe,
-										Vector<T> &outputDataStripe,
-										Vector<Bool> &outputFlagsStripe);
-
-	template <class T> void interpol1Dfftshift(	Int inputSpw,
-												Vector<T> &inputDataStripe,
-												Vector<Bool> &inputFlagsStripe,
-												Vector<Float> &inputWeightsStripe,
-												Vector<T> &outputDataStripe,
-												Vector<Bool> &outputFlagsStripe);
-
-	template <class T> void averageSmooth(	Int inputSpw,
-											Vector<T> &inputDataStripe,
-											Vector<Bool> &inputFlagsStripe,
-											Vector<Float> &inputWeightsStripe,
-											Vector<T> &outputDataStripe,
-											Vector<Bool> &outputFlagsStripe);
-	template <class T> void averageRegrid(	Int inputSpw,
-											Vector<T> &inputDataStripe,
-											Vector<Bool> &inputFlagsStripe,
-											Vector<Float> &inputWeightsStripe,
-											Vector<T> &outputDataStripe,
-											Vector<Bool> &outputFlagsStripe);
-	template <class T> void smoothRegrid(	Int inputSpw,
-											Vector<T> &inputDataStripe,
-											Vector<Bool> &inputFlagsStripe,
-											Vector<Float> &inputWeightsStripe,
-											Vector<T> &outputDataStripe,
-											Vector<Bool> &outputFlagsStripe);
-	template <class T> void averageSmoothRegrid(	Int inputSpw,
-													Vector<T> &inputDataStripe,
-													Vector<Bool> &inputFlagsStripe,
-													Vector<Float> &inputWeightsStripe,
-													Vector<T> &outputDataStripe,
-													Vector<Bool> &outputFlagsStripe);
-
-	// MS specification parameters
-	String inpMsName_p;
-	String outMsName_p;
-	String datacolumn_p;
-	Bool realmodelcol_p;
-	Vector<Int> tileShape_p;
-
-	// Data selection parameters
-	String arraySelection_p;
-	String fieldSelection_p;
-	String scanSelection_p;
-	String timeSelection_p;
-	String spwSelection_p;
-	String baselineSelection_p;
-	String uvwSelection_p;
-	String polarizationSelection_p;
-	String scanIntentSelection_p;
-	String observationSelection_p;
-
-	// Input-Output index maps
-	map<Int,Int> inputOutputObservationIndexMap_p;
-	map<Int,Int> inputOutputArrayIndexMap_p;
-	map<Int,Int> inputOutputScanIndexMap_p;
-	map<Int,Int> inputOutputScanIntentIndexMap_p;
-	map<Int,Int> inputOutputFieldIndexMap_p;
-	map<Int,Int> inputOutputSPWIndexMap_p;
-	map<Int,Int> inputOutputAntennaIndexMap_p;
-	map<Int,Int> outputInputSPWIndexMap_p;
-
-	// Frequency transformation parameters
-	Int nspws_p;
-	Int ddiStart_p;
-	Bool combinespws_p;
-	Bool channelAverage_p;
-	Bool hanningSmooth_p;
-	Bool refFrameTransformation_p;
-	Vector<Int> freqbin_p;
-	String useweights_p;
-	uInt weightmode_p;
-	String interpolationMethodPar_p;
-	casac::variant *phaseCenterPar_p;
-	String restFrequency_p;
-	String outputReferenceFramePar_p;
-
-	// Frequency specification parameters
-	String mode_p;
-	String start_p;
-	String width_p;
-	int nChan_p;
-	String velocityType_p;
-
-	// Time transformation parameters
-	Bool timeAverage_p;
+	// Initialized* by ctors.  (Maintain order both here and in ctors.)
+	//  * not necessarily to anything useful.
+	MeasurementSet ms_p, mssel_p;
+	MSColumns * msc_p; // columns of msOut_p
+	ROMSColumns * mscIn_p;
+	Bool keepShape_p, // Iff true, each output array has the
+			// same shape as the corresponding input one.
+			// sameShape_p,             // Iff true, the shapes of the arrays do not
+			//  			// vary with row number.
+			antennaSel_p; // Selecting by antenna?
 	Double timeBin_p;
-	String timespan_p;
+	String scanString_p, // Selects scans by #number#.  Historically named.
+			intentString_p, // Selects scans by string.  scanString_p was taken.
+			obsString_p, // String for observationID selection.
+			uvrangeString_p, taqlString_p;
+	String timeRange_p, arrayExpr_p, corrString_p;
+	String combine_p; // Should time averaging not split bins by
+	// scan #, observation, and/or state ID?
+	// Must be lowercase at all times.
+	Int fitorder_p; // The polynomial order for continuum fitting.
+	// If < 0 (default), continuum subtraction is
+	// not done.
+	String fitspw_p; // Selection string for line-free channels.
+	String fitoutspw_p; // Selection string for output channels if doing
+	// continuum subtraction.
 
-	// MS-related members
-	SubMS *splitter_p;
-	MeasurementSet *inputMs_p;
-	MeasurementSet *selectedInputMs_p;
-	MeasurementSet *outputMs_p;
-	ROMSColumns *selectedInputMsCols_p;
-	MSColumns *outputMsCols_p;
+	// Uninitialized by ctors.
+	MeasurementSet msOut_p;
+	Vector<Int> spw_p, // The input spw corresponding to each output spw.
+			spw_uniq_p, // Uniquified version of spw_p.
+			 nchan_p, // The # of output channels for each range.
+			totnchan_p, // The # of output channels for each output spw.
+			chanStart_p, // 1st input channel index in a selection.
+			chanEnd_p, // last input channel index in a selection.
+			chanStep_p, // Increment between input chans, i.e. if 3, only every third
+			// input channel will be used.
+			widths_p, // # of input chans per output chan for each range.
+			ncorr_p, // The # of output correlations for each DDID.
+			inNumChan_p, // The # of input channels for each spw.
+			inNumCorr_p; // The # of input correlations for each DDID.
+	Vector<Int> fieldid_p;
+	Vector<Int> spwRelabel_p, fieldRelabel_p, sourceRelabel_p;
+	Vector<Int> oldDDSpwMatch_p;
+	Vector<String> antennaSelStr_p;
+	Vector<Int> antennaId_p;
+	Vector<Int> antIndexer_p;
+	Vector<Int> antNewIndex_p;
 
-	// VI/VB related members
-	Block<Int> sortColumns_p;
-	vi::VisibilityIterator2 *visibilityIterator_p;
-	vi::FrequencySelectionUsingChannels *channelSelector_p;
+	Vector<Int> selObsId_p; // List of selected OBSERVATION_IDs.
+	Vector<Int> polID_p; // Map from input DDID to input polID, filled in fillDDTables().
+	Vector<uInt> spw2ddid_p;
 
-	// Output MS structure related members
-	Bool fillFlagCategory_p;
-	Bool correctedToData_p;
-	dataColMap dataColMap_p;
-	MSMainEnums::PredefinedColumns mainColumn_p;
+	// inCorrInd = outPolCorrToInCorrMap_p[polID_p[ddID]][outCorrInd]
+	Vector<Vector<Int> > inPolOutCorrToInCorrMap_p;
 
-	// Frequency transformation members
-	uInt chansPerOutputSpw_p;
-	uInt tailOfChansforLastSpw_p;
-	uInt interpolationMethod_p;
-	baselineMap baselineMap_p;
-	vector<uInt> rowIndex_p;
-	inputSpwChanMap spwChannelMap_p;
-	inputOutputSpwMap inputOutputSpwMap_p;
-	inputOutputChanFactorMap inputOutputChanFactorMap_p;
-	map<Int,Int> freqbinMap_p;
-	map<Int,Int> numOfInpChanMap_p;
-	map<Int,Int> numOfSelChanMap_p;
-	map<Int,Int> numOfOutChanMap_p;
-	map<Int,Int> numOfCombInputChanMap_p;
-	map<Int,Int> numOfCombInterChanMap_p;
-	map<Int,Float> weightFactorMap_p;
-	map<Int,Float> sigmaFactorMap_p;
+	std::map<Int, Int> stateRemapper_p;
 
-	// Reference Frame Transformation members
-	MFrequency::Types inputReferenceFrame_p;
-	MFrequency::Types outputReferenceFrame_p;
-	MPosition observatoryPosition_p;
-	MEpoch referenceTime_p;
-	MDirection phaseCenter_p;
-	Bool userPhaseCenter_p;
-	MFrequency::Convert freqTransEngine_p;
-	MFrequency::Convert refTimeFreqTransEngine_p;
-    FFTServer<Float, Complex> fFFTServer_p;
-    Bool fftShiftEnabled_p;
-	Double fftShift_p;
-	ROScalarMeasColumn<MEpoch> timeMeas_p;
+	Vector<Vector<Slice> > chanSlices_p; // Used by VisIterator::selectChannel()
+	Vector<Slice> corrSlice_p;
+	Vector<Vector<Slice> > corrSlices_p; // Used by VisIterator::selectCorrelation()
+	Matrix<Double> selTimeRanges_p;
 
-	// Weight Spectrum handling members
-	Bool inputWeightSpectrumAvailable_p;
-	Bool combinationOfSPWsWithDifferentExposure_p;
-	Cube<Float> weightSpectrumCube_p;
-
-	// Logging
-	LogIO logger_p;
 };
 
 } //# NAMESPACE CASA - END
