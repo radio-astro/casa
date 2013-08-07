@@ -288,8 +288,9 @@ def nselrows(vis, field='', spw='', obs='', timerange='', scan='', intent='', us
       if timerange: datasels.append('timerange')
       if scan: datasels.append('scan') 
       if obs: datasels.append('observation') 
-      warnstr+=str(datasels)+' will be ignored for usescartch=T'
-      casalog.post(warnstr,'WARN')
+      if len(datasels):
+          warnstr+=str(datasels)+' will be ignored for usescartch=T'
+          casalog.post(warnstr,'WARN')
  
   # ms.msseltoindex only goes by the subtables - it does NOT check
   # whether the main table has any rows matching the selection.

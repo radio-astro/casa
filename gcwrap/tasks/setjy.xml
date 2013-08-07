@@ -358,8 +358,9 @@
                    example: observation='1~5'
                intent -- observation intent.
                    default: '' (all)
-                   example: intent="PHASE*"
-
+                   example: using wildcard characters, 
+                            intent="*CALIBRATE_AMPLI*"
+                            will match field(s) contains CALIBRATE_AMPLI in a list of intents
 
     scalebychan -- This determines whether the fluxdensity set in the model is
             calculated on a per channel basis. If False then it only one
