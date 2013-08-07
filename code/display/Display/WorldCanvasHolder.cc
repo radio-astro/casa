@@ -288,14 +288,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Give current CS master (if any) the chance to remain master
 		// (it will probably do so).
 		DisplayData* csMasterDD = worldCanvas()->csMaster();
-		Bool masterFound = csMasterDD !=0 &&
-		                   csMasterDD->sizeControl(*this, sizeControlAtts);
+		Bool masterFound = false;
+		if ( csMasterDD != NULL ){
+			masterFound = csMasterDD->sizeControl(*this, sizeControlAtts);
+		}
 
 		// Even if master role is already taken, all sizeControl routines are still
 		// executed, to give give the DDs a chance to do minor adjustments (to
 		// maximum zoom extents, for example).  (At present (6/04), no non-master
 		// DD is making any such adjustments, however).
-
 		for ( std::list<DisplayData*>::iterator iter = itsDisplayList.begin();
 		        iter != itsDisplayList.end(); ++iter ) {
 			if ( ! (*iter)->isDisplayable( ) ) {
@@ -387,7 +388,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 		else if ( dd == NULL ){
-
 			controllingDD = NULL;
 			clearCSMasterSettings( worldCanvas());
 		}
@@ -459,22 +459,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// will not be requested to draw.
 
 		Int dd;
-		Vector<Bool> conforms(itsDisplayList.size());
-
-		dd = 0;
-		for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
-			iter != itsDisplayList.end(); ++iter,++dd ) {
-			if ( ! (*iter)->isDisplayable( ) ) {
-				conforms[dd] = False;
-			} else {
-				conforms[dd] = (*iter)->conformsTo( wc );
-
-			}
-
-		}
-
+		Vector<Bool> conforms = getConformance();
 		clearSubstituteTitles();
 		setControllingTitle( conforms );
+		//We have to redo the conforms vector here because we may have changed
+		//the world canvas controlling dd.
+		//conforms = getConformance();
 
 		// iteration one - do  rasters:
 		dd = 0;
@@ -554,6 +544,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// disable the clip window
 		pc->disable(Display::ClipWindow);
 
+	}
+
+
+	Vector<Bool> WorldCanvasHolder::getConformance() const {
+		Vector<Bool> conforms(itsDisplayList.size());
+		WorldCanvas* wc = this->worldCanvas();
+		Int dd = 0;
+		for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+			iter != itsDisplayList.end(); ++iter,++dd ) {
+			if ( ! (*iter)->isDisplayable( ) ) {
+				conforms[dd] = False;
+			}
+			else {
+				conforms[dd] = (*iter)->conformsTo( wc );
+			}
+		}
+		return conforms;
 	}
 
 	void WorldCanvasHolder::labelAxesNormal( const Vector<Bool>& conforms,
@@ -666,7 +673,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			if ( titleDD != NULL ){
 				worldCanvas()->csMaster() = titleDD;
-				executeSizeControl(worldCanvas());
+				//Preserve the zoom when there is no CS Master
+				itsLastCSmaster=titleDD;
+				executeSizeControl(worldCanvas() );
+
 			}
 		}
 	}
@@ -715,11 +725,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DisplayData* WorldCanvasHolder::getTitleDDBlink( const Vector<Bool> & conforms ) const {
 		DisplayData* titleDD = NULL;
+		//WorldCanvas* wc = this->worldCanvas();
 		int dd = 0;
 		for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
 				iter != itsDisplayList.end(); ++iter, ++dd ) {
-			if ( conforms[dd] ) {
-				if ( (*iter)->classType() == Display::Raster ) {
+			if ( (*iter)->classType() == Display::Raster ) {
+				if ( conforms[dd] ){
 					if ( (*iter)->canLabelAxes()) {
 						titleDD = (*iter);
 						break;
@@ -730,6 +741,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		//We could not find a raster to label the axes so we just take the first one
 		//that works.
+		dd = 0;
 		if ( titleDD == NULL ) {
 			for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
 											iter != itsDisplayList.end(); ++iter, ++dd ) {
@@ -764,11 +776,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	String WorldCanvasHolder::getTitle( DisplayData* dd ) const {
-		Record record = dd->getOptions(  );
 		String title;
-		if ( record.isDefined(  WCAxisLabeller::PLOT_TITLE)){
-			Record rangeRecord = record.subRecord( WCAxisLabeller::PLOT_TITLE );
-			title = rangeRecord.asString( "value");
+		if ( dd != NULL ){
+			Record record = dd->getOptions(  );
+
+			if ( record.isDefined(  WCAxisLabeller::PLOT_TITLE)){
+				Record rangeRecord = record.subRecord( WCAxisLabeller::PLOT_TITLE );
+				title = rangeRecord.asString( "value");
+			}
 		}
 		return title;
 	}
