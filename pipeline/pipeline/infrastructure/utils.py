@@ -7,13 +7,19 @@ import decimal
 import itertools
 import math
 import operator
+import os
+import platform
 import re
+import sys
+import StringIO
 import types
 
 import pipeline.extern.pyparsing as pyparsing
+import pipeline.extern.ps_mem as ps_mem
 
 from . import casatools
 from . import logging
+from . import jobrequest
 
 LOG = logging.get_logger(__name__)
 
@@ -214,3 +220,41 @@ def truncate_floats(s, precision=3):
     # during replacement.
     pattern = '(\d+\.\d{%s})\d+' % precision
     return re.sub(pattern, '\\1', s)
+
+def enable_memstats():
+    if platform.system() == 'Darwin':
+        LOG.error('Cannot measure memory on OS X.')
+        return
+    
+    def get_hook_fn(msg):
+        pid = os.getpid()
+    
+        def log_mem_usage(jobrequest):
+            oldstdout = sys.stdout
+            mystdout = StringIO.StringIO()
+
+            try:
+                sys.stdout = mystdout
+                sorted_cmds, shareds, count, total = ps_mem.get_memory_usage([pid,], False, True)
+                ps_mem.print_memory_usage(sorted_cmds, shareds, count, total)
+                        
+                vm_accuracy = ps_mem.shared_val_accuracy()
+                if vm_accuracy == -1:
+                    sys.stdout.write("Warning: Shared memory is not reported by this system.\n")
+                    sys.stdout.write("Values reported will be too large, and totals are not reported\n")
+                elif vm_accuracy == 0:
+                    sys.stdout.write("Warning: Shared memory is not reported accurately by this system.\n")
+                    sys.stdout.write("Values reported could be too large, and totals are not reported\n")
+                elif vm_accuracy == 1:
+                    sys.stdout.write("Warning: Shared memory is slightly over-estimated by this system\n"
+                                     "for each program, so totals are not reported.\n")
+                
+                LOG.info('Memory usage %s %s:\n%s' % (msg, jobrequest.fn.__name__, mystdout.getvalue()))
+            finally:                
+                sys.stdout = oldstdout
+                
+        return log_mem_usage
+
+    jobrequest.PREHOOKS.append(get_hook_fn('before'))
+    jobrequest.POSTHOOKS.append(get_hook_fn('after'))
+    
