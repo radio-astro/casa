@@ -112,19 +112,20 @@ class Clean(cleanbase.CleanBase):
 
             # Remove rows in POINTING table - bug workaround.
 	    #    May no longer be necesssary
+	    bestrms = None
             if inputs.imagermode == 'mosaic':
                 self._empty_pointing_table()
-
-            # Get an empirical noise estimate by generating Q image.
-	    #    Currently relies on presence of XX and YY correlations
-	    #    Currently relies on source being unpolarized
-	    #    Make this code more efficient (use MS) / intelligent at some point.
-	    #    Make changes when sensitity function is working.
-	    model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
-	        residual_min, rms2d, image_max = \
-		self._do_noise_estimate (iter=0)
-	    bestrms = non_cleaned_rms
-	    LOG.info('Best rms estimate from Q image is %s' * bestrms)
+	    else:
+                # Get an empirical noise estimate by generating Q image.
+	        #    Currently relies on presence of XX and YY correlations
+	        #    Currently relies on source being unpolarized
+	        #    Make this code more efficient (use MS) / intelligent at some point.
+	        #    Make changes when sensitity function is working.
+	        model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
+	            residual_min, rms2d, image_max = \
+		    self._do_noise_estimate (iter=0)
+	        bestrms = non_cleaned_rms
+	        LOG.info('Best rms estimate from Q image is %s' * bestrms)
 
             # Compute the dirty image.
 	    result = self._do_clean (iter=0, stokes='I', cleanmask='', niter=0,
@@ -136,6 +137,7 @@ class Clean(cleanbase.CleanBase):
 
 	    # Choose between simple cleaning and iterative cleaning.
 	    #   More code cleanup needed here.
+	    #   Not good if bestrms not defined but ...
 	    if inputs.hm_masking == 'psfiter':
 	        result = self._do_iterative_imaging(bestrms=bestrms, result=result)
 	    else:
@@ -174,6 +176,7 @@ class Clean(cleanbase.CleanBase):
 	    LOG.info('    Residual min %s', residual_min)
 	    if not bestrms:
 	        LOG.info('Rms estimate from dirty image is %s' * bestrms)
+	        LOG.info('    This is a ver poor estimage')
 	        bestrms = non_cleaned_rms
 
 	    iterating = True; iter = 1
@@ -207,14 +210,15 @@ class Clean(cleanbase.CleanBase):
 	        LOG.info('    Mask %s', new_cleanmask)
 	        LOG.info('    Mask threshold %s', box_result.threshold)
 	        LOG.info('    Iter %s', iter)
-	        LOG.info('    Threshold %s', threshold)
+	        #LOG.info('    Threshold %s', threshold)
+	        LOG.info('    Threshold %s', box_result.threshold)
 	        LOG.info('    Niter %s', inputs.niter)
 
 		# Clean
 		#    Note do not use the boxworker value of niter
 		#    Note do not use the boxworker value of threshold
 	        result = self._do_clean (iter=iter, stokes='I', cleanmask=new_cleanmask,
-		    niter=inputs.niter, threshold=threshold, result=result) 
+		    niter=inputs.niter, threshold=box_result.threshold, result=result) 
 
 	        # Determine iteration status
 	        model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
