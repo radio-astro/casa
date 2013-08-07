@@ -461,10 +461,12 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 	log << LogIO::WARN << "Will continue with uninitialized obsid and scans information" << LogIO::POST;
 	distinctObsIdSet.resize(0);
 	minScan.resize(0);
+	maxScan.resize(0);
 	maxScanThis=0;
       }
       //cout << "distinctObsIdSet " << Vector<Int>(distinctObsIdSet) << endl;
       //cout << "minScan " << Vector<Int>(minScan) << endl;
+      //cout << "maxScan " << Vector<Int>(maxScan) << endl;
       //cout << "maxScanThis " << maxScanThis << endl;
     }
     else{
@@ -505,8 +507,8 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     
         
     // set the offset added to scan numbers in each observation
+    Int minScanOther = min(otherScan);
     {
-      Int minScanOther = min(otherScan);
       defaultScanOffset = maxScanThis + 1 - minScanOther;
       if(defaultScanOffset<0){
 	defaultScanOffset=0;
@@ -518,7 +520,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
       if(otherObsIdsWithCounterpart_p.isDefined(distinctObsIdSet[i]) && i!=0){
 	// This observation is present in both this and the other MS.
 	// Need to set the scanOffset based on previous observation
-	scanOffset = maxScan[i-1] + 1 - minScan[i];
+	scanOffset = maxScan[i-1] + 1 - minScanOther;
       }
       else{
 	scanOffset = minScan[i] - 1; // assume scan numbers originally start at 1
@@ -1173,7 +1175,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   
   // SCAN NUMBER
   // find the distinct ObsIds in use in this MS
-  // and the maximum scan ID in each of them
+  // and the maximum scan and minimum scan ID in each of them
   SimpleOrderedMap <Int, Int> scanOffsetForOid(-1);
   SimpleOrderedMap <Int, Int> encountered(-1);
   vector<Int> distinctObsIdSet;
@@ -1211,9 +1213,10 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   // set the offset added to scan numbers in each observation
 
   Int defaultScanOffset=0;
+  Int minScanOther = 0;
   {
     ROTableVector<Int> ScanTabVectOther(otherScan);
-    Int minScanOther = min(ScanTabVectOther);
+    minScanOther = min(ScanTabVectOther);
     defaultScanOffset = maxScanThis + 1 - minScanOther;
     if(defaultScanOffset<0){
       defaultScanOffset=0;
@@ -1225,7 +1228,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     if(otherObsIdsWithCounterpart_p.isDefined(distinctObsIdSet[i]) && i!=0){
       // This observation is present in both this and the other MS.
       // Need to set the scanOffset based on previous observation
-      scanOffset = maxScan[i-1] + 1 - minScan[i];
+      scanOffset = maxScan[i-1] + 1 - minScanOther;
     }
     else{
       scanOffset = minScan[i] - 1; // assume scan numbers originally start at 1
