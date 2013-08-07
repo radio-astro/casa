@@ -87,7 +87,7 @@ def setjy_core(vis=None, field=None, spw=None,
       myim = imtool()
 
       if type(vis) == str and os.path.isdir(vis):
-        n_selected_rows = nselrows(vis, field, spw, observation, timerange, scan, intent)
+        n_selected_rows = nselrows(vis, field, spw, observation, timerange, scan, intent, usescratch)
         # jagonzal: When  usescratch=True, creating the MODEL column only on a sub-set of
         # Sub-MSs causes problems because ms::open requires all the tables in ConCatTable 
         # to have the same description (MODEL data column must exist in all Sub-MSs)
@@ -264,7 +264,7 @@ def findCalModels(target='CalModels',
   return retset             
 
 
-def nselrows(vis, field='', spw='', obs='', timerange='', scan='', intent=''):
+def nselrows(vis, field='', spw='', obs='', timerange='', scan='', intent='', usescratch=None):
 
   retval = 0
   myms = mstool()
@@ -274,13 +274,23 @@ def nselrows(vis, field='', spw='', obs='', timerange='', scan='', intent=''):
     msselargs['field'] = field
   if spw:
     msselargs['spw'] = spw
-  if obs:
-    msselargs['observation'] = obs
-  if timerange:
-    msselargs['time'] = timerange
-  if scan:
-    msselargs['scan'] = scan
-
+  # only applicable for usescratch=T
+  if usescratch:
+      if obs:
+          msselargs['observation'] = obs
+      if timerange:
+          msselargs['time'] = timerange
+      if scan:
+         msselargs['scan'] = scan
+  else:
+      warnstr='Data selection by '
+      datasels=[]
+      if timerange: datasels.append('timerange')
+      if scan: datasels.append('scan') 
+      if obs: datasels.append('observation') 
+      warnstr+=str(datasels)+' will be ignored for usescartch=T'
+      casalog.post(warnstr,'WARN')
+ 
   # ms.msseltoindex only goes by the subtables - it does NOT check
   # whether the main table has any rows matching the selection.
   try:
@@ -293,13 +303,13 @@ def nselrows(vis, field='', spw='', obs='', timerange='', scan='', intent=''):
     query.append("FIELD_ID in " + str(selindices['field'].tolist()))
   if spw:
     query.append("DATA_DESC_ID in " + str(selindices['spw'].tolist()))
-  if obs:
+  if obs and usescratch:
     query.append("OBSERVATION_ID in " + str(selindices['obsids'].tolist()))
 
   # I don't know why ms.msseltoindex takes a time argument 
   # - It doesn't seem to appear in the output.
     
-  if scan:
+  if scan and usescratch:
     query.append("SCAN_NUMBER in " + str(selindices['scan'].tolist()))
 
   # for intent (OBS_MODE in STATE subtable), need a subquery part...
