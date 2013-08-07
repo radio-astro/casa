@@ -20,6 +20,7 @@ namespace vi {
 
 AveragingParameters::AveragingParameters ()
 : averagingInterval_p (0),
+  averagingOptions_p (AveragingOptions ()),
   chunkInterval_p (0),
   sortColumns_p (SortColumns ()),
   weightScaling_p (0)
@@ -28,21 +29,34 @@ AveragingParameters::AveragingParameters ()
 AveragingParameters::AveragingParameters (Double averagingInterval,
                                           Double chunkInterval,
                                           const SortColumns & sortColumns,
+                                          const AveragingOptions & options,
                                           WeightScaling * weightScalingForAveraging)
 : averagingInterval_p (averagingInterval),
+  averagingOptions_p (options),
   chunkInterval_p (chunkInterval),
   sortColumns_p (sortColumns),
   weightScaling_p (weightScalingForAveraging)
 {
     Assert (averagingInterval > 0);
-    Assert (chunkInterval > 0);
-    Assert (chunkInterval >= averagingInterval);
+    Assert (chunkInterval >= 0);
+    Assert (chunkInterval == 0 || chunkInterval >= averagingInterval);
+
+    validateOptions (); // Throws if error
+}
+
+VisBufferComponents2
+AveragingParameters::allDataColumns () const
+{
+    return VisBufferComponents2::these (VisibilityModel,
+                                        VisibilityObserved,
+                                        VisibilityCorrected,
+                                        Unknown);
 }
 
 Double
 AveragingParameters::getChunkInterval () const
 {
-    Assert (chunkInterval_p > 0);
+    Assert (chunkInterval_p >= 0);
 
     return chunkInterval_p;
 }
@@ -55,6 +69,12 @@ AveragingParameters::getAveragingInterval () const
     return averagingInterval_p;
 }
 
+const AveragingOptions &
+AveragingParameters::getOptions () const
+{
+    return averagingOptions_p;
+}
+
 const SortColumns &
 AveragingParameters::getSortColumns () const
 {
@@ -65,6 +85,38 @@ WeightScaling *
 AveragingParameters::getWeightScaling () const
 {
     return weightScaling_p;
+}
+
+void
+AveragingParameters::validateOptions ()
+{
+    Int bits  = AveragingOptions::CorrectedUseCorrectedWeights |
+                AveragingOptions::CorrectedUseNoWeights |
+                AveragingOptions::CorrectedUseWeights;
+
+    Int nSet = averagingOptions_p.nSet (bits);
+
+    ThrowIf (nSet > 1,
+             "Inconsistent corrected weights options provided");
+
+    if (nSet == 0){
+        averagingOptions_p |= AveragingOptions::CorrectedUseCorrectedWeights;
+    }
+
+    bits  = AveragingOptions::ModelUseCorrectedWeights |
+            AveragingOptions::ModelUseNoWeights |
+            AveragingOptions::ModelUseWeights;
+
+    nSet = averagingOptions_p.nSet (bits);
+
+    ThrowIf (nSet > 1,
+             "Inconsistent model weights options provided");
+
+    if (nSet == 0){
+        averagingOptions_p |= AveragingOptions::ModelUseNoWeights;
+    }
+
+
 }
 
 AveragingVi2Factory::AveragingVi2Factory (const AveragingParameters & parameters,
@@ -154,7 +206,8 @@ AveragingVi2Factory::createVi (VisibilityIterator2 * vi2) const
 
     vii2->setWeightScaling (parameters_p.getWeightScaling());
 
-    AveragingTvi2 * averagingTvi2 = new AveragingTvi2 (vi2, vii2, parameters_p.getAveragingInterval ());
+    AveragingTvi2 * averagingTvi2 = new AveragingTvi2 (vi2, vii2, parameters_p.getAveragingInterval (),
+                                                       parameters_p.getOptions());
 
     return averagingTvi2;
 }

@@ -1,5 +1,6 @@
 #include <synthesis/MSVis/ViFrequencySelection.h>
 #include <synthesis/MSVis/UtilJ.h>
+#include <ms/MeasurementSets/MSSelection.h>
 
 #include <utility>
 
@@ -95,6 +96,28 @@ FrequencySelectionUsingChannels::add (Int spectralWindow, Int firstChannel,
 
     elements_p.push_back (Element (spectralWindow, firstChannel, nChannels, increment));
 }
+
+void
+FrequencySelectionUsingChannels::add (const MSSelection & msSelection)
+{
+    // Meanings of columns in the "matrix" (actually used as a parallel array)
+
+    enum {SpectralWindowId, FirstChannel, StopChannel, Step};
+
+    Matrix<Int> channelList = const_cast <MSSelection &> (msSelection).getChanList();
+
+    for (Int row = 0; row < (Int) channelList.nrow(); row ++){
+
+        Int nChannels = channelList (row, StopChannel) - channelList (row, Step);
+        nChannels = nChannels / channelList (row, Step) + 1;
+
+        add (channelList (row, SpectralWindowId),
+             channelList (row, FirstChannel),
+             nChannels,
+             channelList (row, Step));
+    }
+}
+
 
 FrequencySelectionUsingChannels::const_iterator
 FrequencySelectionUsingChannels::begin () const
@@ -247,6 +270,30 @@ FrequencySelectionUsingFrame::end () const
 {
     return filtered_p.end();
 }
+
+//Int
+//FrequencySelectionUsingFrame::getNChannels (Int spectralWindowId) const
+//{
+//
+//    Int result = 0;
+//
+//    if (elements_p.empty()){
+//
+//    }
+//    else {
+//
+//        for (Elements::const_iterator i = elements_p.begin();
+//                i != elements_p.end();
+//                i ++){
+//
+//            if (i->spectralWindow_p == spectralWindowId){
+//                result += i->nChannels_p;
+//            }
+//        }
+//    }
+//    return result;
+//}
+
 
 set<int>
 FrequencySelectionUsingFrame::getSelectedWindows () const

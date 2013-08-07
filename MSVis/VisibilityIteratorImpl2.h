@@ -425,8 +425,15 @@ public:
     // Determine whether WEIGHT_SPECTRUM exists.
     Bool weightSpectrumExists () const;
 
+    // Determine whether WEIGHT_SPECTRUM exists.
+    Bool weightSpectrumCorrectedExists () const;
+
     // Return weightspectrum (a weight for each channel)
     virtual void weightSpectrum (Cube<Float> & wtsp) const;
+
+    // Return weightspectrumCorrected (a weight for each channel)
+    virtual void weightSpectrumCorrected (Cube<Float> & wtsp) const;
+
 
     virtual void setWeightScaling (CountedPtr<WeightScaling> weightscaling);
     virtual CountedPtr<WeightScaling> getWeightScaling () const;
@@ -555,6 +562,9 @@ public:
 
     // Write/modify the weightSpectrum
     virtual void writeWeightSpectrum (const Cube<Float> & wtsp);
+
+    // Write/modify the weightSpectrum
+    virtual void writeWeightSpectrumCorrected (const Cube<Float> & wtsp);
 
     // Write/modify the Sigma
     virtual void writeSigma (const Matrix<Float> & sig);
@@ -821,8 +831,9 @@ protected:
         Double             hourang_p;
         Double             hourangTime_p;
         Matrix<Float>      imagingWeight_p;
-        Bool               msHasFC_p;   // Does the current MS have a valid FLAG_CATEGORY?
-        Bool               msHasWtSp_p; // Does the current MS have a valid WEIGHT_SPECTRUM?
+        Bool               msHasFlagCategory_p;   // Does the current MS have a valid FLAG_CATEGORY?
+        Bool               msHasWeightSpectrum_p; // Does the current MS have a valid WEIGHT_SPECTRUM?
+        Bool               msHasWeightSpectrumCorrected_p; // Does the current MS have a valid WEIGHT_SPECTRUM?
         Float              parang0_p;
         Double             parang0Time_p;
         Vector<Float>      parang_p;

@@ -315,6 +315,7 @@ public:
     virtual Int msId() const = 0;
     virtual String msName (Bool stripPath = False) const = 0;
     virtual Subchunk getSubchunk () const = 0;
+    virtual Bool modelDataIsVirtual () const = 0;
 
     //////////////////////////////////////////////////////////////////////
     //
@@ -395,10 +396,12 @@ public:
     virtual void setWeight (const Matrix <Float>& value) = 0; // [nC, nR]
     //virtual const Matrix<Float> & weightMat () const = 0; // [nC,nR]
     //virtual void setWeightMat (const Matrix<Float>& value) = 0; // [nC,nR]
+
     virtual const Cube<Float> & weightSpectrum () const = 0; // [nC,nF,nR]
     virtual void setWeightSpectrum (const Cube<Float>& value) = 0; // [nC,nF,nR]
 
-
+    virtual const Cube<Float> & weightSpectrumCorrected () const = 0; // [nC,nF,nR]
+    virtual void setWeightSpectrumCorrected (const Cube<Float>& value) = 0; // [nC,nF,nR]
 
     // --------------------------------------------------------------
     // Visibility data accessors in order of observed, corrected,
@@ -428,6 +431,7 @@ public:
     virtual Float getWeightScaled (Int row) const = 0;
     virtual Float getWeightScaled (Int correlation, Int row) const = 0;
     virtual Float getWeightScaled (Int correlation, Int channel, Int row) const = 0;
+    virtual Float getWeightCorrectedScaled (Int correlation, Int channel, Int row) const = 0;
 
     //--------------------------------------------------------
     //

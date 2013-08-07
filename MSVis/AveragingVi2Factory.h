@@ -16,6 +16,89 @@ class MeasurementSet2;
 
 namespace vi {
 
+// AveragingOptions
+//
+// A container for the options that can be specified when creating
+// an AveragingTvi2 based VI.  The user can specify which of the
+// data cubes (observed, model and corrected) are to be averaged.
+// The source of the weights applied to each cube can also be specified.
+// See enum Options below for the symbols to use; the symbols are usually
+// combined using bitwise-and ("|") in the constructor.
+
+class AveragingOptions {
+
+public:
+
+    enum Options {Nothing = 0,
+                  AverageObserved = 1 << 0,  // Average the observed data
+                  AverageModel = 1 << 1,     // Average the model data
+                  AverageCorrected = 1 << 2, // Average the corrected data
+                  ObservedUseNoWeights = 1 << 3, // Use no weights when averaging observed data
+                  ModelUseWeights = 1 << 4, // Use normal weights when averaging model data
+                  ModelUseCorrectedWeights = 1 << 5, // Use corrected weights when averaging model data
+                  ModelUseNoWeights = 1 << 6, // Use no weights when averaging model data
+                  CorrectedUseNoWeights = 1 << 7, // Use no weights when averaging corrected data
+                  CorrectedUseWeights = 1 << 8, // Use normal weights when averaging corrected data
+                  CorrectedUseCorrectedWeights = 1 << 9, // Use corrected weights when averaging corrected data
+                  MarksLast
+    };
+
+    AveragingOptions () : options_p (AverageObserved) {}
+    AveragingOptions (Int options) : options_p ((Options) options) {}
+    explicit AveragingOptions (Options o) : options_p (o) {}
+
+    AveragingOptions operator& (const AveragingOptions & other) const
+    {
+        return AveragingOptions (other.options_p & options_p);
+    }
+
+    AveragingOptions operator| (const AveragingOptions & other) const
+    {
+        return AveragingOptions (other.options_p | options_p);
+    }
+
+    AveragingOptions & operator|= (const AveragingOptions & other)
+    {
+        * this = AveragingOptions (options_p | other.options_p);
+
+        return * this;
+    }
+
+    AveragingOptions & operator|= (Options options)
+    {
+        * this = AveragingOptions (options_p | options);
+
+        return * this;
+    }
+
+    AveragingOptions operator~ () const
+    {
+        return AveragingOptions (~ options_p);
+    }
+
+    Bool contains (Options o) const { return (o & options_p) != 0; }
+
+    Int
+    nSet (Int o) const
+    {
+        Int result = o & options_p;
+        Int nSet = 0;
+
+        for (Int mask = 1; mask < MarksLast; mask = mask << 1){
+
+            nSet += (result & mask) != 0 ? 1 : 0;
+
+        }
+
+        return nSet;
+    }
+
+private:
+
+
+    Options options_p;
+};
+
 class AveragingParameters {
 
 public:
@@ -25,19 +108,27 @@ public:
     AveragingParameters (Double averagingInterval,
                          Double chunkInterval,
                          const SortColumns & sortColumns = SortColumns (),
+                         const AveragingOptions & options = AveragingOptions (),
                          WeightScaling * weightScalingForAveraging = 0);
 
-    Double getChunkInterval () const;
     Double getAveragingInterval () const;
+    Double getChunkInterval () const;
+    const AveragingOptions & getOptions() const;
     const SortColumns & getSortColumns () const;
     WeightScaling * getWeightScaling () const;
 
 private:
 
+    void validateOptions ();
+
     Double averagingInterval_p;
+    AveragingOptions averagingOptions_p;
     Double chunkInterval_p;
     SortColumns sortColumns_p;
     WeightScaling * weightScaling_p;
+
+    VisBufferComponents2 allDataColumns () const;
+
 };
 
 // The AveragingVi2Factory is used to initialize a VisibilityIterator2 so that

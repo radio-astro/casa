@@ -1,5 +1,6 @@
 #include <casa/BasicSL.h>
 #include <casa/string.h>
+#include <casa/Logging.h>
 #include <ms/MeasurementSets.h>
 #include <synthesis/MSVis/VisBuffer2.h>
 #include <synthesis/MSVis/VisibilityIterator2.h>
@@ -1099,7 +1100,14 @@ protected:
                                                lastRow, nRowsInPartialAverage));
 
 
-        AveragingParameters parameters (interval * averagingFactor, chunkInterval);
+        AveragingParameters parameters (interval * averagingFactor,
+                                        chunkInterval,
+                                        SortColumns (),
+                                        AveragingOptions (AveragingOptions::AverageObserved |
+                                                          AveragingOptions::AverageModel |
+                                                          AveragingOptions::AverageCorrected |
+                                                          AveragingOptions::ModelUseWeights |
+                                                          AveragingOptions::CorrectedUseWeights));
         VisibilityIterator2 vi (AveragingVi2Factory (parameters, ms));
         vi.setWeightScaling (WeightScaling::generateUnityWeightScaling());
 
@@ -1302,7 +1310,15 @@ protected:
                                                endBoundaryConditions));
 
 
-        AveragingParameters parameters (interval * averagingFactor, chunkInterval);
+        AveragingParameters parameters (interval * averagingFactor,
+                                        chunkInterval,
+                                        SortColumns (),
+                                        AveragingOptions (AveragingOptions::AverageObserved |
+                                                          AveragingOptions::AverageModel |
+                                                          AveragingOptions::AverageCorrected |
+                                                          AveragingOptions::ModelUseWeights |
+                                                          AveragingOptions::CorrectedUseWeights));
+
         VisibilityIterator2 vi (AveragingVi2Factory (parameters, ms));
         vi.setWeightScaling (WeightScaling::generateUnityWeightScaling());
 
@@ -1403,7 +1419,14 @@ protected:
 
         addCubeChecker (new FlagRowRampChecker (averagingFactor, "FlagRowRampChecker"));
 
-        AveragingParameters parameters (interval * averagingFactor, chunkInterval);
+        AveragingParameters parameters (interval * averagingFactor,
+                                        chunkInterval,
+                                        SortColumns (),
+                                        AveragingOptions (AveragingOptions::AverageObserved |
+                                                          AveragingOptions::AverageModel |
+                                                          AveragingOptions::AverageCorrected |
+                                                          AveragingOptions::ModelUseWeights |
+                                                          AveragingOptions::CorrectedUseWeights));
         VisibilityIterator2 vi (AveragingVi2Factory (parameters, ms));
 
         checkMs (& vi);
@@ -1503,7 +1526,14 @@ protected:
 
         addRowChecker (generateConstantRowChecker (False, & VisBuffer2::flagRow, String ("FlagRow")));
 
-        AveragingParameters parameters (interval * averagingFactor, chunkInterval);
+        AveragingParameters parameters (interval * averagingFactor,
+                                        chunkInterval,
+                                        SortColumns (),
+                                        AveragingOptions (AveragingOptions::AverageObserved |
+                                                          AveragingOptions::AverageModel |
+                                                          AveragingOptions::AverageCorrected |
+                                                          AveragingOptions::ModelUseWeights |
+                                                          AveragingOptions::CorrectedUseWeights));
         VisibilityIterator2 vi (AveragingVi2Factory (parameters, ms));
 
         checkMs (& vi);
@@ -1619,7 +1649,14 @@ protected:
         CountedPtr <WeightScaling> weightScaling = useDoubler ? generateWeightScaling (doubler)
                                                               : WeightScaling::generateIdentityWeightScaling();
 
-        AveragingParameters parameters (interval * averagingFactor, chunkInterval);
+        AveragingParameters parameters (interval * averagingFactor,
+                                        chunkInterval,
+                                        SortColumns (),
+                                        AveragingOptions (AveragingOptions::AverageObserved |
+                                                          AveragingOptions::AverageModel |
+                                                          AveragingOptions::AverageCorrected |
+                                                          AveragingOptions::ModelUseWeights |
+                                                          AveragingOptions::CorrectedUseWeights));
         VisibilityIterator2 vi (AveragingVi2Factory (parameters, ms));
         vi.setWeightScaling (weightScaling);
 
@@ -1635,6 +1672,229 @@ private:
     Int nRows_p;
 
 };
+
+class WeightSelectionTests : public TestSuite {
+
+public:
+
+    WeightSelectionTests (const Environment & environment,
+                 const Arguments & arguments,
+                 Tester & tester)
+
+    : TestSuite (environment, arguments, tester),
+      interval_p (1)
+    {}
+
+    void execute ()
+    {
+
+        // The simple tests check averaging of different intervals
+        // on a single spectral window.
+
+        printf ("+++ Starting WeightSelectionTests ...\n");
+
+        String msName (getParameter ("msName", "AveragingTvi2.ms"));
+        auto_ptr<MeasurementSet> ms;
+
+        {
+
+            printf ("... +++ Starting test using normal weight spectrum");
+
+            MeasurementSet * msTmp;
+            boost::tie (msTmp, nRows_p) = createMs (msName, 1.0f, 1000.0f);
+            ms.reset (msTmp);
+
+            doWeightedTest (ms.get(), interval_p, 10, 1); // interval, chunkInterval, factor
+
+            doWeightedTest (ms.get(), interval_p, 10, 2);
+
+            doWeightedTest (ms.get(), interval_p, 12, 3);
+
+            printf ("... --- Completed test using normal weight spectrum");
+        }
+
+        {
+
+            printf ("... +++ Starting test using corrected weight spectrum");
+
+            MeasurementSet * msTmp;
+            boost::tie (msTmp, nRows_p) = createMs (msName, 1000.0f, 1.0f);
+            ms.reset (msTmp);
+
+            doCorrectedWeightingTest (ms.get(), interval_p, 10, 1); // interval, chunkInterval, factor
+
+            doCorrectedWeightingTest (ms.get(), interval_p, 10, 2);
+
+            doCorrectedWeightingTest (ms.get(), interval_p, 12, 3);
+
+            printf ("... --- Completed test using corrected weight spectrum");
+        }
+
+        printf ("--- ... completed WeightSelectionTests\n");
+    }
+
+    static String getName () { return "WeightSelectionTests";}
+
+protected:
+
+    pair<MeasurementSet *,Int>
+    createMs (const String & msName, float weightSpectrum, float correctedWeightSpectrum)
+    {
+        system (String::format ("rm -r %s", msName.c_str()).c_str());
+
+        MsFactory * msFactory = new MsFactory (msName);
+
+        nAntennas_p = 4;
+        nBaselines_p = ((nAntennas_p - 1) * nAntennas_p) / 2;
+        msFactory->setTimeInfo (0, 120, interval_p);
+        msFactory->addSpectralWindows(1); // only on spw for now
+        msFactory->addAntennas(nAntennas_p);
+        msFactory->addFeeds (10); // needs antennas and spws to be setup first
+
+        for (Int i = 0; i < 10; i++){
+            msFactory->addField (String::format ("field%d", i), MDirection());
+        }
+
+        msFactory->addWeightSpectrum (true);
+        msFactory->addCorrectedWeightSpectrum(true);
+
+        // For many of the columns, simply put in a distinct constant to see if
+        // the correct data is being processed as well as averaged properly.
+
+        msFactory->setDataGenerator (MSMainEnums::SCAN_NUMBER,
+                                     new GenerateConstant<Int> (10));
+        msFactory->setDataGenerator (MSMainEnums::OBSERVATION_ID,
+                                     new GenerateConstant<Int> (11));
+        msFactory->setDataGenerator (MSMainEnums::ARRAY_ID,
+                                     new GenerateConstant<Int> (12));
+        msFactory->setDataGenerator (MSMainEnums::FEED1,
+                                     new GenerateConstant<Int> (9));
+        msFactory->setDataGenerator (MSMainEnums::FEED2,
+                                     new GenerateConstant<Int> (8));
+        msFactory->setDataGenerator (MSMainEnums::FIELD_ID,
+                                     new GenerateConstant<Int> (7));
+        msFactory->setDataGenerator (MSMainEnums::STATE_ID,
+                                     new GenerateConstant<Int> (17));
+        msFactory->setDataGenerator (MSMainEnums::PROCESSOR_ID,
+                                     new GenerateConstant<Int> (18));
+        msFactory->setDataGenerator (MSMainEnums::EXPOSURE,
+                                     new GenerateConstant<Double> (interval_p));
+        msFactory->setDataGenerator (MSMainEnums::INTERVAL,
+                                     new GenerateConstant<Double> (interval_p));
+        msFactory->setDataGenerator (MSMainEnums::SIGMA,
+                                     new GenerateConstant<Float> (1.0f));
+        msFactory->setDataGenerator (MSMainEnums::WEIGHT,
+                                     new GenerateConstant<Float> (1000.0f));
+
+        // For the data cubes fill it with a ramp.  The real part of the ramp will
+        // be multiplied by the factor supplied in the constructor to check that
+        // there's no "crosstalk" between the columns.
+
+        msFactory->setDataGenerator(MSMainEnums::DATA, new GenerateRamp());
+
+        msFactory->setDataGenerator(MSMainEnums::CORRECTED_DATA, new GenerateRamp(2));
+
+        msFactory->setDataGenerator(MSMainEnums::MODEL_DATA, new GenerateRamp(3));
+
+        msFactory->setDataGenerator(MSMainEnums::WEIGHT_SPECTRUM,
+                                    new GenerateConstant<Float> (weightSpectrum));
+        msFactory->setDataGenerator(MSMainEnums::CORRECTED_WEIGHT_SPECTRUM,
+                                    new GenerateConstant<Float> (correctedWeightSpectrum));
+
+        // Set all of the data to be unflagged.
+
+        msFactory->setDataGenerator(MSMainEnums::FLAG, new GenerateConstant<Bool> (False));
+        msFactory->setDataGenerator(MSMainEnums::FLAG_ROW, new GenerateConstant<Bool> (False));
+
+        // Set the time centroid to be the middle of the sample interval.
+
+        msFactory->setDataGenerator(MSMainEnums::TIME_CENTROID, new GenerateTimeCentroid ());
+
+        pair<MeasurementSet *, Int> p = msFactory->createMs ();
+
+        return make_pair (p.first, p.second);
+    }
+
+
+    void
+    doCorrectedWeightingTest (MeasurementSet * ms, Double interval, Int chunkInterval, Int averagingFactor)
+    {
+        printf ("\nStarting averaging of %d samples ...\n", averagingFactor);
+
+        clearCheckers();
+
+        Int lastRow = nRows_p / averagingFactor; // ID of first row of last averaged VB
+        Int nRowsInPartialAverage = (nRows_p % averagingFactor) / nBaselines_p;
+            // remaining
+
+        addCubeChecker (new ComplexCubeRampChecker (averagingFactor, "Corrected",
+                                                    & VisBuffer2::visCubeCorrected,
+                                                    lastRow, nRowsInPartialAverage, 2));
+        addCubeChecker (new ComplexCubeRampChecker (averagingFactor, "Model",
+                                                    & VisBuffer2::visCubeModel,
+                                                    lastRow, nRowsInPartialAverage, 3));
+
+        AveragingParameters parameters (interval * averagingFactor,
+                                        chunkInterval,
+                                        SortColumns (),
+                                        AveragingOptions (AveragingOptions::AverageObserved |
+                                                          AveragingOptions::AverageModel |
+                                                          AveragingOptions::AverageCorrected |
+                                                          AveragingOptions::ModelUseCorrectedWeights |
+                                                          AveragingOptions::CorrectedUseCorrectedWeights));
+        VisibilityIterator2 vi (AveragingVi2Factory (parameters, ms));
+        vi.setWeightScaling (WeightScaling::generateUnityWeightScaling());
+
+        checkMs (& vi);
+
+        printf ("\n...completed averaging of %d samples ...\n", averagingFactor);
+    }
+
+    void
+    doWeightedTest (MeasurementSet * ms, Double interval, Int chunkInterval, Int averagingFactor)
+    {
+        printf ("\nStarting averaging of %d samples ...\n", averagingFactor);
+
+        clearCheckers();
+
+        Int lastRow = nRows_p / averagingFactor; // ID of first row of last averaged VB
+        Int nRowsInPartialAverage = (nRows_p % averagingFactor) / nBaselines_p;
+            // remaining
+
+        addCubeChecker (new ComplexCubeRampChecker (averagingFactor, "Observed", & VisBuffer2::visCube,
+                                                    lastRow, nRowsInPartialAverage));
+        addCubeChecker (new ComplexCubeRampChecker (averagingFactor, "Corrected",
+                                                    & VisBuffer2::visCubeCorrected,
+                                                    lastRow, nRowsInPartialAverage, 2));
+        addCubeChecker (new ComplexCubeRampChecker (averagingFactor, "Model",
+                                                    & VisBuffer2::visCubeModel,
+                                                    lastRow, nRowsInPartialAverage, 3));
+
+        AveragingParameters parameters (interval * averagingFactor,
+                                        chunkInterval,
+                                        SortColumns (),
+                                        AveragingOptions (AveragingOptions::AverageObserved |
+                                                          AveragingOptions::AverageModel |
+                                                          AveragingOptions::AverageCorrected |
+                                                          AveragingOptions::ModelUseWeights |
+                                                          AveragingOptions::CorrectedUseWeights));
+        VisibilityIterator2 vi (AveragingVi2Factory (parameters, ms));
+        vi.setWeightScaling (WeightScaling::generateUnityWeightScaling());
+
+        checkMs (& vi);
+
+        printf ("\n...completed averaging of %d samples ...\n", averagingFactor);
+    }
+
+private:
+
+    Int nAntennas_p;
+    Int nBaselines_p;
+    Double interval_p; // Time for each sample
+    Int nRows_p;
+
+};
+
 
 
 
@@ -1777,6 +2037,8 @@ Tester::doTests (Int nArgs, char * args [])
         doTest <CubeFlaggingTests> (environment, arguments);
 
         doTest <SimpleTestsNWindows<2> > (environment, arguments);
+
+        doTest <WeightSelectionTests> (environment, arguments);
 
         if (nTestsAttempted_p == nTestsPassed_p){
 
@@ -1953,13 +2215,22 @@ Tester::checkRows (VisBuffer2 * vb, VisibilityIterator2 * vi, Int subchunk,
 }
 
 
+
+
+
 } // end namespace test
 } // end namespace vi
 } // end namespace casa
 
+using namespace casa;
+
 int
 main (int nArgs, char * args [])
 {
+    LogSink::globalSink().filter (LogFilter (LogMessage::WARN));
+
+    LogIO os;
+
     casa::vi::test::Tester tester;
 
     casa::Bool ok = tester.doTests (nArgs, args);
