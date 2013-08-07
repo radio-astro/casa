@@ -311,14 +311,22 @@ Bool
 VisibilityIterator2::existsFlagCategory() const
 {
   CheckImplementationPointerR ();
-  return impl_p->flagCategoryExists();
+  return impl_p->existsColumn (FlagCategory);
 }
+
 
 Bool
 VisibilityIterator2::existsWeightSpectrum () const
 {
     CheckImplementationPointerR ();
-    return impl_p->weightSpectrumExists ();
+    return impl_p->existsColumn (WeightSpectrum);
+}
+
+Bool
+VisibilityIterator2::existsWeightSpectrumCorrected () const
+{
+    CheckImplementationPointerR ();
+    return impl_p->existsColumn (WeightSpectrumCorrected);
 }
 
 void
@@ -1006,6 +1014,14 @@ VisibilityIterator2::weight (Matrix<Float>& wt) const
 
 void
 VisibilityIterator2::weightSpectrum (Cube<Float>& wtsp) const
+{
+    CheckImplementationPointerR ();
+    impl_p->weightSpectrum (wtsp);
+}
+
+//void
+void
+VisibilityIterator2::weightSpectrumCorrected (Cube<Float>& wtsp) const
 {
     CheckImplementationPointerR ();
     impl_p->weightSpectrum (wtsp);

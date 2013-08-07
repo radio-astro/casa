@@ -4,10 +4,13 @@
 #include <casa/aips.h>
 #include <synthesis/MSVis/TransformingVi2.h>
 #include <synthesis/MSVis/VisibilityIterator2.h>
+#include <synthesis/MSVis/AveragingVi2Factory.h>
 
 namespace casa {
 
 namespace vi {
+
+class AveragingOptions;
 
 namespace avg {
 
@@ -19,7 +22,8 @@ class AveragingTvi2 : public TransformingVi2 {
 
 public:
 
-    AveragingTvi2 (VisibilityIterator2 * vi, ViImplementation2 * inputVii, Double averagingInterval);
+    AveragingTvi2 (VisibilityIterator2 * vi, ViImplementation2 * inputVii,
+                   Double averagingInterval, const AveragingOptions & averagingOptions);
     ~AveragingTvi2 ();
 
     /////////////////////////////////////////////////////////////////////////
@@ -68,6 +72,7 @@ protected:
 private:
 
     const Double averagingInterval_p; // averaging interval in seconds
+    AveragingOptions averagingOptions_p;
     Int ddidLastUsed_p; // ddId last used to produce a subchunk.
     Bool inputViiAdvanced_p; // true if input VII was advanced but data not used
     Subchunk subchunk_p;

@@ -208,7 +208,6 @@ BaselineIndex::configure (Int nAntennas, Int nSpw, const VisBuffer2 * vb)
     }
 }
 
-
 void
 BaselineIndex::destroy ()
 {
@@ -235,15 +234,14 @@ BaselineIndex::getSpwIndex (Int spw)
     return spwIndex;
 }
 
-
-
-
 class VbAvg : public VisBufferImpl2 {
 
 public:
 
     VbAvg (Double averagingInterval, Bool doingCorrectedData,
-           Bool doingModelData, Bool doingWeightSpectrum);
+           Bool doingModelData, Bool doingObservedData, Bool doingWeightSpectrum,
+           Bool doingWeightSpectrumCorrected,
+           const AveragingOptions & averagingOptions);
 
     void accumulate (const VisBuffer2 * vb, const Subchunk & subchunk);
     Bool empty () const;
@@ -299,17 +297,21 @@ protected:
 private:
 
     Double averagingInterval_p;
+    AveragingOptions averagingOptions_p;
     mutable BaselineIndex baselineIndex_p; // map of antenna1,antenna2 to row number in this VB.
     Bool complete_p; // average is complete
     Cube<Int> counts_p; // number of items summed together for each correlation, channel, baseline item.
     Vector<Int> countsBaseline_p; // number of items summed together for each baseline.
     Bool doingCorrectedData_p;
     Bool doingModelData_p;
+    Bool doingObservedData_p;
     Bool doingWeightSpectrum_p;
+    Bool doingWeightSpectrumCorrected_p;
     Bool empty_p; // true when buffer hasn't seen any data
     Double sampleInterval_p;
     Double startTime_p; // time of the first sample in average
     Cube<Float> weightSum_p; // accumulation of weights for weighted averaging
+    Cube<Float> weightCorrectedSum_p; // accumulation of weights for weighted averaging
 };
 
 ///////////////////////////////////////////////////////////
@@ -321,7 +323,7 @@ class VbSet {
 
 public:
 
-    VbSet (Double averagingInterval);
+    VbSet (Double averagingInterval, const AveragingOptions & averagingOptions);
     ~VbSet ();
 
     void accumulate (const VisBuffer2 *, const Subchunk & subchunk);
@@ -345,20 +347,28 @@ private:
     typedef map<Int, VbAvg *> Averagers;
 
     const Double averagingInterval_p;
+    AveragingOptions averagingOptions_p;
     Bool doingCorrectedData_p;
     Bool doingModelData_p;
+    Bool doingObservedData_p;
     Bool doingWeightSpectrum_p;
+    Bool doingWeightSpectrumCorrected_p;
     Averagers vbAveragers_p;
 };
 
 VbAvg::VbAvg (Double averagingInterval, Bool doingCorrectedData,
-              Bool doingModelData, Bool doingWeightSpectrum)
+              Bool doingModelData, Bool doingObservedData,
+              Bool doingWeightSpectrum, Bool doingWeightSpectrumCorrected,
+              const AveragingOptions & averagingOptions)
 : VisBufferImpl2 (VbRekeyable),
   averagingInterval_p (averagingInterval),
+  averagingOptions_p (averagingOptions),
   complete_p (False),
   doingCorrectedData_p (doingCorrectedData),
   doingModelData_p (doingModelData),
+  doingObservedData_p (doingObservedData),
   doingWeightSpectrum_p (doingWeightSpectrum),
+  doingWeightSpectrumCorrected_p (doingWeightSpectrumCorrected),
   empty_p (True)
 {}
 
@@ -543,19 +553,76 @@ VbAvg::accumulateElementForCubes (const VisBuffer2 * input, Int baselineIndex, I
     weightSum_p (correlation, channel, row) =
         zeroAccumulation ? weight : (weightSum_p (correlation, channel, row) + weight);
 
+    Float weightCorrected =  1.0f;
+
+    if (doingWeightSpectrumCorrected_p){
+
+        weightCorrected =  input->getWeightCorrectedScaled (correlation, channel, row);
+        weightCorrectedSum_p (correlation, channel, row) =
+            zeroAccumulation ? weightCorrected : (weightCorrectedSum_p (correlation, channel, row)
+            + weightCorrected);
+    }
+
     // Update the sum for the three visibility cubes (corrected and model cubes only if present)
 
-    accumulateElementForCube (True, baselineIndex, zeroAccumulation,
-                              correlation, channel, row, weight, input,
+    if (doingObservedData_p){
+
+        float w;
+
+        if (averagingOptions_p.contains (AveragingOptions::ObservedUseNoWeights)){
+            w = 1.0f;
+        }
+        else{
+            w = weight;
+        }
+
+        accumulateElementForCube (doingObservedData_p, baselineIndex, zeroAccumulation,
+                              correlation, channel, row, w, input,
                               & VisBuffer2::visCube, & VbAvg::visCubeRef);
 
-    accumulateElementForCube (doingCorrectedData_p, baselineIndex, zeroAccumulation,
-                              correlation, channel, row, weight, input,
-                              & VisBuffer2::visCubeCorrected, & VbAvg::visCubeCorrectedRef);
+    }
 
-    accumulateElementForCube (doingModelData_p, baselineIndex, zeroAccumulation,
-                              correlation, channel, row, weight, input,
-                              & VisBuffer2::visCubeModel, & VbAvg::visCubeModelRef);
+    if (doingCorrectedData_p){
+
+        float w;
+
+        if (averagingOptions_p.contains (AveragingOptions::CorrectedUseCorrectedWeights)){
+            w = weightCorrected;
+        }
+        else if (averagingOptions_p.contains (AveragingOptions::CorrectedUseWeights)){
+            w = weight;
+        }
+        else{
+            w = 1.0f;
+        }
+
+        accumulateElementForCube (doingCorrectedData_p, baselineIndex, zeroAccumulation,
+                                  correlation, channel, row, w, input,
+                                  & VisBuffer2::visCubeCorrected, & VbAvg::visCubeCorrectedRef);
+
+    }
+
+    if (doingModelData_p){
+
+        float w;
+
+        if (averagingOptions_p.contains (AveragingOptions::ModelUseCorrectedWeights)){
+            w = weightCorrected;
+        }
+        else if (averagingOptions_p.contains (AveragingOptions::ModelUseWeights)){
+            w = weight;
+        }
+        else{
+            w = 1.0f;
+        }
+
+
+        accumulateElementForCube (doingModelData_p, baselineIndex, zeroAccumulation,
+                                  correlation, channel, row, w, input,
+                                  & VisBuffer2::visCubeModel, & VbAvg::visCubeModelRef);
+
+    }
+
 
     // The result of averaging for the weight spectrum is to sum up the weights rather
     // than average them.  The sum is over the raw weights (i.e., rather than optionally
@@ -564,8 +631,12 @@ VbAvg::accumulateElementForCubes (const VisBuffer2 * input, Int baselineIndex, I
     accumulateElementForCube (doingWeightSpectrum_p, baselineIndex, zeroAccumulation,
                               correlation, channel, row, 1.0f, input,
                               & VisBuffer2::weightSpectrum, & VbAvg::weightSpectrumRef);
-}
 
+    accumulateElementForCube (doingWeightSpectrumCorrected_p, baselineIndex, zeroAccumulation,
+                              correlation, channel, row, 1.0f, input,
+                              & VisBuffer2::weightSpectrumCorrected,
+                              & VbAvg::weightSpectrumCorrectedRef);
+}
 
 void
 VbAvg::accumulateExposure (const VisBuffer2 * input)
@@ -722,18 +793,50 @@ VbAvg::finalizeAverage ()
 void
 VbAvg::finalizeCubeData ()
 {
-    // Divide each of the data cubes in use by the sum of the weights.
+    // Divide each of the data cubes in use by the sum of the appopriate weights.
 
     typedef Divides <Complex, Float, Complex> DivideOp;
     DivideOp op;
-    arrayTransformInPlace<Complex, Float, DivideOp > (visCubeRef(), weightSum_p, op);
+
+    if (doingObservedData_p){
+        if (! averagingOptions_p.contains (AveragingOptions::ObservedUseNoWeights)){
+            arrayTransformInPlace<Complex, Float, DivideOp > (visCubeRef(),
+                                                              weightSum_p, op);
+        }
+        else{
+            arrayTransformInPlace<Complex, Int, DivideOp > (visCubeRef(),
+                                                            counts_p, op);
+        }
+    }
 
     if (doingCorrectedData_p){
-        arrayTransformInPlace<Complex, Float, DivideOp > (visCubeCorrectedRef(), weightSum_p, op);
+        if (averagingOptions_p.contains (AveragingOptions::ModelUseWeights)){
+            arrayTransformInPlace<Complex, Float, DivideOp > (visCubeCorrectedRef(),
+                                                              weightSum_p, op);
+        }
+        else if (averagingOptions_p.contains (AveragingOptions::ModelUseCorrectedWeights)){
+            arrayTransformInPlace<Complex, Float, DivideOp > (visCubeCorrectedRef(),
+                                                              weightCorrectedSum_p, op);
+        }
+        else{
+            arrayTransformInPlace<Complex, Int, DivideOp > (visCubeCorrectedRef(),
+                                                            counts_p, op);
+        }
     }
 
     if (doingModelData_p){
-        arrayTransformInPlace<Complex, Float, DivideOp > (visCubeModelRef (), weightSum_p, op);
+        if (averagingOptions_p.contains (AveragingOptions::ModelUseWeights)){
+            arrayTransformInPlace<Complex, Float, DivideOp > (visCubeModelRef (),
+                                                              weightSum_p, op);
+        }
+        else if (averagingOptions_p.contains (AveragingOptions::ModelUseCorrectedWeights)){
+            arrayTransformInPlace<Complex, Float, DivideOp > (visCubeModelRef (),
+                                                              weightCorrectedSum_p, op);
+        }
+        else{
+            arrayTransformInPlace<Complex, Int, DivideOp > (visCubeModelRef (),
+                                                            counts_p, op);
+        }
     }
 }
 
@@ -825,6 +928,9 @@ VbAvg::prepareForFirstData (const VisBuffer2 * vb, const Subchunk & subchunk)
     countsBaseline_p = Vector<Int> (nBaselines, 0);
     counts_p = Cube<Int> (vb->nCorrelations(), vb->nChannels(), nBaselines, 0);
     weightSum_p = Cube<Float> (vb->nCorrelations(), vb->nChannels(), nBaselines, 0);
+    if (doingWeightSpectrumCorrected_p){
+        weightCorrectedSum_p = Cube<Float> (vb->nCorrelations(), vb->nChannels(), nBaselines, 0);
+    }
 
     baselineIndex_p.configure (nAntennas, nSpw, vb);
 
@@ -1009,11 +1115,15 @@ VbAvg::vbPastAveragingInterval (const VisBuffer2 * vb) const
     return isPast;
 }
 
-VbSet::VbSet (Double averagingInterval)
+VbSet::VbSet (Double averagingInterval,
+              const AveragingOptions & averagingOptions)
 : averagingInterval_p (averagingInterval),
+  averagingOptions_p (averagingOptions),
   doingCorrectedData_p (False),
   doingModelData_p (False),
+  doingObservedData_p (False),
   doingWeightSpectrum_p (False),
+  doingWeightSpectrumCorrected_p (False),
   vbAveragers_p ()
 {}
 
@@ -1043,7 +1153,10 @@ VbSet::add (Int ddId)
     VbAvg * newAverager =  new VbAvg (averagingInterval_p,
                                       doingCorrectedData_p,
                                       doingModelData_p,
-                                      doingWeightSpectrum_p);
+                                      doingObservedData_p,
+                                      doingWeightSpectrum_p,
+                                      doingWeightSpectrumCorrected_p,
+                                      averagingOptions_p);
 
     vbAveragers_p [ddId] = newAverager;
 
@@ -1121,9 +1234,28 @@ VbSet::seeIfCubeColumnsExist (ViImplementation2 * vi)
 
         // See if the new MS has corrected and/or model data columns
 
-        doingCorrectedData_p = vi->existsColumn (VisibilityCubeCorrected);
-        doingModelData_p = vi->existsColumn (VisibilityCubeModel);
+        doingObservedData_p = averagingOptions_p.contains (AveragingOptions::AverageObserved);
+        doingCorrectedData_p = vi->existsColumn (VisibilityCubeCorrected) &&
+                               averagingOptions_p.contains (AveragingOptions::AverageCorrected);
+        doingModelData_p = vi->existsColumn (VisibilityCubeModel) &&
+                               averagingOptions_p.contains (AveragingOptions::AverageModel);
         doingWeightSpectrum_p = vi->existsColumn (WeightSpectrum);
+
+        // If the use of corrected weights were specified for one of the averages, it's an
+        // error if the column does not exist.  Also set the doing flag for corrected weights
+        // if it's being used in some way.
+
+        Bool needCorrectedWeights =
+            averagingOptions_p.contains (AveragingOptions::ModelUseCorrectedWeights) ||
+            averagingOptions_p.contains (AveragingOptions::CorrectedUseCorrectedWeights);
+
+        Bool correctedWeightsMissing = needCorrectedWeights &&
+                                       ! vi->existsColumn (WeightSpectrumCorrected);
+
+        ThrowIf (correctedWeightsMissing,
+                 "Corrected_weight_spectrum not present but required by provided averaging options");
+
+        doingWeightSpectrumCorrected_p = needCorrectedWeights;
     }
 }
 
@@ -1198,12 +1330,16 @@ VbSet::zero ()
 
 using namespace avg;
 
-AveragingTvi2::AveragingTvi2 (VisibilityIterator2 * vi, ViImplementation2 * inputVi, Double averagingInterval)
+AveragingTvi2::AveragingTvi2 (VisibilityIterator2 * vi,
+                              ViImplementation2 * inputVi,
+                              Double averagingInterval,
+                              const AveragingOptions & averagingOptions)
 : TransformingVi2 (vi, inputVi),
   averagingInterval_p (averagingInterval),
+  averagingOptions_p (averagingOptions),
   ddidLastUsed_p (-1),
   inputViiAdvanced_p (False),
-  vbSet_p (new VbSet (averagingInterval))
+  vbSet_p (new VbSet (averagingInterval, averagingOptions))
 {
     validateInputVi (inputVi);
 

@@ -29,17 +29,6 @@
 #include <set>
 #include <vector>
 
-// The Assert macro is an alias to the standard assert macro when NDEBUG is defined.  When
-// NDEBUG is not defined (release build) then a throw is used to report the error.
-
-#ifdef NDEBUG
-#define Assert(c) assert (c)
-#else
-#define Assert(c) { utilj::throwIf (! (c), "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }
-#endif
-
-#define AssertAlways(c) { throwIf (! (c), "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }
-
 #ifdef __GNUC__
 #define DEPRECATED(func) func __attribute__ ((deprecated))
 #elif defined(_MSC_VER)
@@ -56,21 +45,34 @@
 #define DEPRECATED_METHOD(comment)
 #endif
 
+#define Assert AssertCc
+#define Throw ThrowCc
 
-#if defined (NDEBUG)
-#    define Throw(m) \
-    { AipsError anAipsError ((m), __FILE__, __LINE__);\
-      toStdError (anAipsError.what());\
-      throw anAipsError; }
-#else
-#    define Throw(m) throw AipsError ((m), __FILE__, __LINE__)
-#endif
+// The Assert macro is an alias to the standard assert macro when NDEBUG is defined.  When
+// NDEBUG is not defined (release build) then a throw is used to report the error.
 
-#define ThrowIf(c,m) {if (c) {casa::utilj::throwIf ((c), (m), __FILE__, __LINE__, __PRETTY_FUNCTION__);}}
+//#ifdef NDEBUG
+//#define Assert(c) {assert (c)}
+//#else
+//#define Assert(c) { utilj::throwIf (! (c), "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }
+//#endif
+//
+//#define AssertAlways(c) { throwIf (! (c), "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }
+//
+//#if defined (NDEBUG)
+//#    define Throw(m) \
+//    { AipsError anAipsError ((m), __FILE__, __LINE__);\
+//      toStdError (anAipsError.what());\
+//      throw anAipsError; }
+//#else
+//#    define Throw(m) throw AipsError ((m), __FILE__, __LINE__)
+//#endif
 
-#define ThrowIfError(c,m) {if (c) {casa::utilj::throwIfError ((c), (m), __FILE__, __LINE__, __PRETTY_FUNCTION__);}}
-
-#define Rethrow(e,m) {throw casa::utilj::repackageAipsError ((e),(m),__FILE__,__LINE__, __PRETTY_FUNCTION__);}
+//#define ThrowIf(c,m) {if (c) {casa::utilj::throwIf ((c), (m), __FILE__, __LINE__, __PRETTY_FUNCTION__);}}
+//
+//#define ThrowIfError(c,m) {if (c) {casa::utilj::throwIfError ((c), (m), __FILE__, __LINE__, __PRETTY_FUNCTION__);}}
+//
+//#define Rethrow(e,m) {throw casa::utilj::repackageAipsError ((e),(m),__FILE__,__LINE__, __PRETTY_FUNCTION__);}
 
 namespace casa {
 

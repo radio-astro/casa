@@ -606,6 +606,10 @@ public:
 
   const SortColumns & getSortColumns() const;
 
+  // Returns true if the specified column exists.
+
+  bool existsColumn (VisBufferComponent2 id) const;
+
   // Returns the VisBuffer permanently attached to this VisibilityIterator.
 
   VisBuffer2 * getVisBuffer ();
@@ -1013,9 +1017,17 @@ protected:
 
   Bool existsWeightSpectrum() const;
 
+  // Determine whether WEIGHT_SPECTRUM exists.
+
+  Bool existsWeightSpectrumCorrected() const;
+
   // Return weightspectrum (a weight for each channel)
 
   virtual void weightSpectrum(Cube<Float>& wtsp) const;
+
+  // Return weightspectrumCorrected (a weight for each channel)
+
+  virtual void weightSpectrumCorrected(Cube<Float>& wtsp) const;
 
   // Returns a vector of the correlation types that were selected
   // into the current subchunk's data.  If Vector<Int> c = vi.getCorrelations();
@@ -1079,8 +1091,6 @@ protected:
   void getFreqInSpwRange(Double& freqStart,
                          Double& freqEnd,
                          MFrequency::Types freqframe = MFrequency::LSRK);
-
-  bool existsColumn (VisBufferComponent2 id) const;
 
   // advance the iteration
 

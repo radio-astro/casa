@@ -281,6 +281,19 @@ public:
     }
 };
 
+class GenerateWeightSpectrumCorrected : public Generator<Float> {
+
+public:
+
+    Float
+    operator () (const FillState & fillState, Int channel, Int correlation) const {
+
+        Float r = fillState.rowNumber_p * 1000 + fillState.spectralWindow_p * 100 +
+                  channel * 10 + correlation + 2;
+        return r;
+    }
+};
+
 
 class MsFactory {
 
@@ -296,6 +309,7 @@ public:
 
     //// void addColumn (MSMainEnums::PredefinedColumns columnId);
     void addWeightSpectrum (Bool addIt);
+    void addCorrectedWeightSpectrum (Bool addIt);
 
     void addCubeColumn (MSMainEnums::PredefinedColumns columnId,
                         const String & dataStorageMangerName);
@@ -349,6 +363,7 @@ protected:
     void fillSigma (FillState & fillState);
     void fillUvw (FillState & fillState);
     void fillWeightSpectrumCube (FillState & fillState);
+    void fillWeightSpectrumCorrectedCube (FillState & fillState);
     void fillFlagCube (FillState & fillState);
     void fillFlagCategories (const FillState & fillState);
 
@@ -387,6 +402,7 @@ private:
         ArrayColumn<Double>  uvw_p;
         ArrayColumn<Complex> vis_p;
         ArrayColumn<Float>   weightSpectrum_p;
+        ArrayColumn<Float>   weightSpectrumCorrected_p;
         ArrayColumn<Float>   weight_p;
 
     };
@@ -443,7 +459,8 @@ private:
         {
             GeneratorMap::const_iterator i = generatorMap_p.find (key);
 
-            ThrowIf (i == generatorMap_p.end(), "No such key");
+            ThrowIf (i == generatorMap_p.end(),
+                     String::format ("No such key: %d", key));
 
             return i->second;
         }
@@ -469,6 +486,7 @@ private:
 
     };
 
+    Bool addCorrectedWeightSpectrum_p;
     Bool addWeightSpectrum_p;
     Columns columns_p;
     ColumnIds columnIds_p;

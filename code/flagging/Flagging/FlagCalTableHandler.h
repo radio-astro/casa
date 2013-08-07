@@ -142,6 +142,9 @@ public:
     virtual void setWeightMat (const Matrix<Float>& value) {}
     virtual const Cube<Float> & weightSpectrum () const {Cube<Float> dummy; return dummy;}
     virtual void setWeightSpectrum (const Cube<Float>& value) {}
+    virtual const Cube<float>& weightSpectrumCorrected() const {Cube<Float> dummy; return dummy;}
+    virtual void setWeightSpectrumCorrected(const Cube<float>&) {}
+    virtual Float getWeightCorrectedScaled(Int, Int, Int) const { return 0.0f;};
 
     virtual const Cube<Complex> & visCube () const {Cube<Complex> dummy; return dummy;}
     virtual void setVisCube(const Complex & c) {}
@@ -182,6 +185,8 @@ public:
 	virtual Int spectralWindow () const {Int dummy; return dummy;}
 	virtual const Vector<Int> & spectralWindows () const {Vector<Int> dummy; return dummy;}
         virtual void setSpectralWindows (const Vector<Int> & /*spectralWindows*/) {}
+        virtual Bool modelDataIsVirtual () const { return false;}
+
 
     virtual void setFillable (Bool isFillable) {}
     virtual const Vector<Int> & dataDescriptionIds () const {Vector<Int> dummy; return dummy;}

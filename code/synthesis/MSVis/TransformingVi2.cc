@@ -649,8 +649,20 @@ TransformingVi2::weightSpectrum (Cube<Float> & wtsp)  const
      getVii()->weightSpectrum (wtsp);
 }
 
+void
+TransformingVi2::weightSpectrumCorrected (Cube<Float> & wtsp)  const
+{
+     getVii()->weightSpectrum (wtsp);
+}
+
 Bool
 TransformingVi2::weightSpectrumExists ()  const
+{
+    return getVii()->weightSpectrumExists ();
+}
+
+Bool
+TransformingVi2::weightSpectrumCorrectedExists ()  const
 {
     return getVii()->weightSpectrumExists ();
 }
@@ -754,6 +766,12 @@ TransformingVi2::writeWeight (const Matrix<Float> & /*wt*/)
 
 void
 TransformingVi2::writeWeightSpectrum (const Cube<Float> & /*wtsp*/)
+{
+    Tvi2NotImplemented ();
+}
+
+void
+TransformingVi2::writeWeightSpectrumCorrected (const Cube<Float> & /*wtsp*/)
 {
     Tvi2NotImplemented ();
 }
