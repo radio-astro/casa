@@ -29,6 +29,21 @@
 	<value>-1</value>
     </param>
     
+    <param type="intArray" name="linewindow">
+        <description>Pre-defined line window</description>
+	<value></value>
+    </param>
+
+    <param type="intArray" name="edge">
+        <description>Edge channels to be dropped</description>
+	<value></value>
+    </param>
+
+    <param type="bool" name="broadline">
+        <description>Try to detect broad component of the line</description>
+	<value>True</value>
+    </param>
+
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
 	<value>automatic</value>
@@ -54,21 +69,6 @@
         <value></value>
     </param>
 
-    <param type="intArray" name="linewindow" subparam="true">
-        <description>Pre-defined line window</description>
-	<value></value>
-    </param>
-
-    <param type="intArray" name="edge" subparam="true">
-        <description>Edge channels to be dropped</description>
-	<value></value>
-    </param>
-
-    <param type="bool" name="broadline" subparam="true">
-        <description>Try to detect broad component of the line</description>
-	<value>True</value>
-    </param>
-
     <param type="bool" name="dryrun" subparam="true">
 	<description>Run the task (False) or display task command (True)</description>
 	<value>False</value>
@@ -87,9 +87,6 @@
                 <default param="infiles"><value type="stringArray"></value></default>
                 <default param="iflist"><value type="intArray"></value></default>
                 <default param="pollist"><value type="intArray"></value></default>
-		<default param="linewindow"><value type="intArray"></value></default>
-		<default param="edge"><value type="intArray"></value></default>
-		<default param="broadline"><value type="bool">True</value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
@@ -97,9 +94,6 @@
                 <default param="infiles"><value type="stringArray"></value></default>
                 <default param="iflist"><value type="intArray"></value></default>
                 <default param="pollist"><value type="intArray"></value></default>
-		<default param="linewindow"><value type="intArray"></value></default>
-		<default param="edge"><value type="intArray"></value></default>
-		<default param="broadline"><value type="bool">True</value></default>
 	    </equals>
 	</when>
     </constraints>
@@ -141,6 +135,21 @@ fitorder -- Fitting order for polynomial. For cubic spline, it is used
    to determine the order automatically.
    default: -1 (auto determination)
 
+linewindow -- Pre-defined line window. If this is set, line detection and
+   validation is skipped and specified line windows are used for baseline
+   subtraction.
+   default: [] (do line detection and validation)
+   example:
+
+edge -- number of edge channels to be dropped from baseline subtraction.
+   the value must be a list with length of 2, whose values specifies
+   left and right edge channels respectively.
+   default: [] ([0,0])
+   example: [10,10]
+
+broadline -- Try to detect broad component of spectral line if True.
+   default: True
+
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the 
    pipeline determines the values of all context defined pipeline inputs
    automatically.  In 'interactive' mode the user can set the pipeline
@@ -160,21 +169,10 @@ infiles -- List of data files. These must be a name of Scantables that
 iflist -- Data selection by spw.
    default: [] (all spws)
    example: [3,4] (generate caltable for spw 3 and 4)
+
 pollist -- Data selection by pol.
    default: [] (all polarizations)
    example: [0] (generate caltable for pol 0)
-linewindow -- Pre-defined line window. If this is set, line detection and
-   validation is skipped and specified line windows are used for baseline
-   subtraction.
-   default: [] (do line detection and validation)
-   example:
-edge -- number of edge channels to be dropped from baseline subtraction.
-   the value must be a list with length of 2, whose values specifies
-   left and right edge channels respectively.
-   default: [] ([0,0])
-   example: [10,10]
-broadline -- Try to detect broad component of spectral line if True.
-   default: True
 
 --- pipeline task execution modes
 

@@ -3,8 +3,8 @@ import sys
 import pipeline.h.cli.utils as utils
 
 def hsd_baseline(fitfunc=None, fitorder=None,
-                 pipelinemode=None, infiles=None, iflist=None, pollist=None,
                  linewindow=None, edge=None, broadline=None, 
+                 pipelinemode=None, infiles=None, iflist=None, pollist=None,
                  dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
