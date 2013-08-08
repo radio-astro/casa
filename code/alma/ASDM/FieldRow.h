@@ -96,7 +96,7 @@
 //#include <TableStreamReader.h>
 
 /*\file Field.h
-    \brief Generated from model's revision "1.64", branch "HEAD"
+    \brief Generated from model's revision "-1", branch ""
 */
 
 namespace asdm {
@@ -121,7 +121,7 @@ typedef void (FieldRow::*FieldAttributeFromText) (const string& s);
 /**
  * The FieldRow class is a row of a FieldTable.
  * 
- * Generated from model's revision "1.64", branch "HEAD"
+ * Generated from model's revision "-1", branch ""
  *
  */
 class FieldRow {
@@ -583,21 +583,21 @@ public:
 	
  	/**
  	 * Get ephemerisId, which is optional.
- 	 * @return ephemerisId as Tag
+ 	 * @return ephemerisId as int
  	 * @throws IllegalAccessException If ephemerisId does not exist.
  	 */
- 	Tag getEphemerisId() const;
+ 	int getEphemerisId() const;
 	
  
  	
  	
  	/**
- 	 * Set ephemerisId with the specified Tag.
- 	 * @param ephemerisId The Tag value to which ephemerisId is to be set.
+ 	 * Set ephemerisId with the specified int.
+ 	 * @param ephemerisId The int value to which ephemerisId is to be set.
  	 
  		
  	 */
- 	void setEphemerisId (Tag ephemerisId);
+ 	void setEphemerisId (int ephemerisId);
 		
 	
 	
@@ -658,16 +658,16 @@ public:
 
 	
 		
+	// ===> Slice link from a row of Field table to a collection of row of Ephemeris table.
+	
 	/**
-	 * ephemerisId pointer to the row in the Ephemeris table having Ephemeris.ephemerisId == ephemerisId
-	 * @return a EphemerisRow*
+	 * Get the collection of row in the Ephemeris table having ephemerisId == this.ephemerisId
 	 * 
-	 
-	 * throws IllegalAccessException
-	 
+	 * @return a vector of EphemerisRow *
 	 */
-	 EphemerisRow* getEphemerisUsingEphemerisId();
-	 
+	vector <EphemerisRow *> getEphemeriss();
+	
+	
 
 	
 
@@ -1051,7 +1051,7 @@ private:
 	bool ephemerisIdExists;
 	
 
-	Tag ephemerisId;
+	int ephemerisId;
 
 	
 	
@@ -1077,7 +1077,6 @@ private:
 	
 		
 
-	 
 
 	
 

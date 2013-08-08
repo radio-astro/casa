@@ -331,6 +331,8 @@ class ASDM2MSFiller
 		 const string&			direction_code_,
 		 int				source_id_);
 
+  void updateEphemerisIdInField(vector<pair<int, int> >& idxEphemerisId_v);
+
   void addFlagCmd(double	time_,
 		  double	interval_,
 		  const string& type_,
