@@ -20,3 +20,4 @@ from .hanning import Hanning
 from .finalcals import Finalcals
 from .fluxscale import Fluxboot
 from .setmodel import Fluxgains
+from .finalcals import Applycals
