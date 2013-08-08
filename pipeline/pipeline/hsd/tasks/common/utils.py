@@ -1,6 +1,7 @@
 from __future__ import absolute_import 
 
 import sys
+import numpy
 
 LogLevelMap = {'critical': 0,
                'error': 0,
@@ -95,3 +96,44 @@ def mjd_to_datestring( t, unit='sec' ):
     dtsec=mjd-(float(dtd.days)*86400.0+float(dtd.seconds)+float(dtd.microseconds)*1.0e-6)
     mjdstr=time.asctime(time.gmtime(dtsec))+' UTC'
     return mjdstr 
+
+
+def to_list(s):
+    if s is None:
+        return None
+    elif isinstance(s, list) or isinstance(s, numpy.ndarray):
+        return s
+    elif isinstance(s, str):
+        if s.startswith('['):
+            if s.lstrip('[')[0].isdigit():
+                return eval(s)
+            else:
+                # maybe string list
+                return eval(s.replace('[','[\'').replace(']','\']').replace(',','\',\''))
+        else:
+            try:
+                return [float(s)]
+            except:
+                return [s]
+    else:
+        return [s]
+
+def to_bool(s):
+    if s is None:
+        return None
+    else:
+        if s.upper() == 'FALSE' or s == 'F':
+            return False
+        elif s.upper() == 'TRUE' or s == 'T':
+            return True
+        else:
+            return s
+
+def to_numeric(s):
+    if s is None:
+        return None
+    else:
+        try:
+            return float(s)
+        except:
+            return s

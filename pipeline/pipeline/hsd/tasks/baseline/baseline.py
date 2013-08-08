@@ -24,6 +24,9 @@ class SDBaselineInputs(common.SingleDishInputs):
                  linewindow=None, edge=None, broadline=None, fitorder=None,
                  fitfunc=None):
         self._init_properties(vars())
+        self._to_list(['infiles', 'iflist', 'pollist', 'edge', 'linewindow'])
+        self._to_bool('broadline')
+        self._to_numeric('fitorder')
 
     @property
     def antennalist(self):

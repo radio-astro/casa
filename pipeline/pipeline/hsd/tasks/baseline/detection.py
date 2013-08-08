@@ -47,6 +47,9 @@ class DetectLine(object):
         # Set edge mask region
         (EdgeL, EdgeR) = common.parseEdge(edge)
         Nedge = EdgeR + EdgeL
+        LOG.info('edge=%s'%(list(edge)))
+        LOG.info('EdgeL, EdgeR=%s, %s'%(EdgeL, EdgeR))
+        LOG.info('Nedge=%s'%(Nedge))
         if Nedge >= nchan:
             LOG.error('Error: Edge masked region too large...')
             return False

@@ -5,6 +5,7 @@ import os
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from pipeline.domain.datatable import DataTableImpl as DataTable
+from . import utils
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -43,7 +44,13 @@ class SingleDishInputs(basetask.StandardInputs):
             for v in value:
                 self.context.observing_run.st_names.index(v)
         elif isinstance(value, str):
-            self.context.observing_run.st_names.index(value)
+            if value.startswith('['):
+                # may be PPR input (string list as string)
+                _value = utils.to_list(value)
+                for v in _value:
+                    self.context.observing_run.st_names.index(v)
+            else:
+                self.context.observing_run.st_names.index(value)
             
         LOG.debug('Setting Input._infiles to %s'%(value))
         self._infiles = value
@@ -63,6 +70,34 @@ class SingleDishInputs(basetask.StandardInputs):
     @property
     def vis(self):
         return None
+
+    def _to_list(self, attributes):
+        if isinstance(attributes, str):
+            new_value = utils.to_list(getattr(self, attributes))
+            setattr(self, attributes, new_value)
+        else:
+            for attr in attributes:
+                new_value = utils.to_list(getattr(self, attr))
+                setattr(self, attr, new_value)
+
+    def _to_bool(self, attributes):
+        if isinstance(attributes, str):
+            new_value = utils.to_bool(getattr(self, attributes))
+            setattr(self, attributes, new_value)
+        else:
+            for attr in attributes:
+                new_value = utils.to_bool(getattr(self, attr))
+                setattr(self, attr, new_value)
+
+    def _to_numeric(self, attributes):
+        if isinstance(attributes, str):
+            new_value = utils.to_numeric(getattr(self, attributes))
+            setattr(self, attributes, new_value)
+        else:
+            for attr in attributes:
+                new_value = utils.to_numeric(getattr(self, attr))
+                setattr(self, attr, new_value)
+        
 
 class SingleDishResults(basetask.Results):
     def __init__(self, task=None, success=None, outcome=None):
