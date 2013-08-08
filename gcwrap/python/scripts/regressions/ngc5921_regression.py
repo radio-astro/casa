@@ -353,7 +353,10 @@ field = '1331+305*'
 # This is 1.4GHz D-config and 1331+305 is sufficiently unresolved
 # that we do not need a model image.  For higher frequencies
 # (particularly in A and B config) you would want to use one.
-modimage = ''
+#
+# Note: modimage/model is moved to a sub-parameter for Perley-Butler 2010
+# and Perley-Butler 2013 per CAS-5157
+#modimage = ''
 
 # Setjy knows about this source so we don't need anything more
 standard='Perley-Taylor 99'  # enforce older standard

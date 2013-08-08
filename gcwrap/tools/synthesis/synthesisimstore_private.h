@@ -2,13 +2,11 @@
 friend class synthesisparsync;
 friend class synthesisimager;
 
-public:
-
-synthesisimstore(casa::SIImageStore* imstore);
-casa::SIImageStore* getImStore();
 
 protected:
 
+synthesisimstore(casa::SIImageStore* imstore);
+casa::SIImageStore* getImStore();
 
 private:
 

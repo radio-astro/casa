@@ -215,10 +215,11 @@ if(mystep in thesteps):
 
     # Create flagcmd input list
     flagcmd = ["mode='manual' antenna='CM01'",
-              "mode='manual' intent='*POINTING*'",
-              "mode='manual' intent='*ATMOSPHERE*'",
-              "mode='shadow'",
-              "mode='manual' autocorr=True"] 
+               "mode='manual' intent='*POINTING*'",
+               "mode='manual' intent='*ATMOSPHERE*'",
+               "mode='shadow'",
+               "mode='manual' autocorr=True spw='>0'" # do not flag the WVR data
+               ] 
                   
     for name in basename:
 
@@ -987,9 +988,12 @@ if(mystep in thesteps):
     exprmsr18746 = [0.000527012278326, 0.000579607207328] # note worse RMS
     #expectation values set 17 Sept  2012 based on analysis using CASA active r21038
     # (change was due to a modification of the fluxscale task in r21037)
-    exppeak = [1.11501789093, 1.08849704266]
-    exprms = [0.000528678297997, 0.000582209031563]
-
+    exppeak21037 = [1.11501789093, 1.08849704266]
+    exprms21037 = [0.000528678297997, 0.000582209031563]
+    #expectation values set 17 April 2013 based on analysis using CASA trunk r23890
+    # (change was due to use of Butler-JPL-Horizons 2012 in the setjy task in stead of the 2010 standard)
+    exppeak = [1.18009662628,1.15104115009]
+    exprms = [0.000589906820096, 0.000633491261397]
 
     for name in basename:
 
@@ -1016,7 +1020,9 @@ if(mystep in thesteps):
     #expectation values set 17 Sept 2012 based on analysis using CASA active r21038
     exppeakm = 0.164736732841
     exprmsm = 0.00830688327551
-    
+    #expectation values set 17 April 2013 based on analysis using CASA active r23890
+    exppeakm = 0.180228888988 
+    exprmsm = 0.00912253372371 
 
     calstat=imstat(imagename='test-M100line.image', region='', box='42,115,65,134')
     resrmsm=(calstat['rms'][0])

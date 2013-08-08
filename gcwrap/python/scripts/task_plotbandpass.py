@@ -93,7 +93,7 @@
 #  cd /lustre/naasc/thunter/evla/AB1346/g19.36
 #  au.plotbandpass('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.27 2013/06/30 17:14:54 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.29 2013/07/31 15:32:51 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -4125,7 +4125,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                 mytimeTest = mytime==mymatch
             if ((overlayAntennas==False and overlayTimes==False)
                 # either it is the last time of any, or the last time in the list of times to plot
-                or (overlayAntennas==False and (mytime+1==nUniqueTimes or mytime == timerangeList[-1] or mytimeTest)) 
+                or (overlayAntennas==False and (mytime+1==nUniqueTimes or mytime == timerangeList[-1])) # or mytimeTest)) # removed on July 25, 2013 because it prevents all times from showing up overlaid on lower right plot
                 or (xant==antennasToPlot[-1] and overlayAntennas==True and overlayTimes==False)  
                 # Following case is needed to make subplot=11 to work for: try to support overlay='antenna,time'
                 or (xframe == lastFrame and overlayTimes and overlayAntennas and
@@ -4137,11 +4137,13 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                     )):
               DrawBottomLegendPageCoords(msName, uniqueTimes[mytime], mysize)
   
-              if (len(figfile) > 0):
-                    plotfiles.append(makeplot(figfile,msFound,msAnt,
-                                              overlayAntennas,pages,pagectr,
-                                              density,interactive,antennasToPlot,
-                                              spwsToPlot,overlayTimes,4,debug))
+              # added len(pages)>0 on July 30, 2013 to prevent crash when called with single
+              # antenna and subplot=11 and all solutions flagged.
+              if (len(figfile) > 0 and len(pages)>0):
+                  plotfiles.append(makeplot(figfile,msFound,msAnt,
+                                            overlayAntennas,pages,pagectr,
+                                            density,interactive,antennasToPlot,
+                                            spwsToPlot,overlayTimes,4,debug))
               myinput = ''
               donetime = timeUtilities.time()
               if (interactive):

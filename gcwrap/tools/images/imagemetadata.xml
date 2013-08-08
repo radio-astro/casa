@@ -53,6 +53,33 @@ immd.done()
 
 </description>
 
+<method type="function" name="add">
+    <shortdescription>Add a key-value pair if possible.</shortdescription>
+    <input>
+        <param type="string" name="key">
+            <description>The name of the FITS or other keyword.</description>
+            <value/>
+        </param>
+        <param type="any" name="value">
+            <any type="variant"/>
+            <description>Associated value to add.</description>
+            <value/>
+        </param>
+    </input>
+    <returns type="bool"/>
+    <description>
+        Add a key-value pair if possible.
+    </description>
+    <example>
+imd.open("myim.im")
+# add a keyword "test" with value "first"
+if add("test", "first"):
+    print "test=first has been added"
+else:
+    print "Unable to add key test"
+imd.done()
+    </example>
+</method>
 <method type="function" name="close">
     <shortdescription>Close the image metadata tool. Synonym for done().</shortdescription>
    
@@ -97,7 +124,7 @@ imd.done()
     <shortdescription>Get the value associated with the specified, case-insensitive FITS keyword.</shortdescription>
     <input>
         <param type="string" name="key">
-            <description>The name of the FITS keyword.</description>
+            <description>The name of the FITS or other keyword.</description>
             <value/>
         </param>
     </input>
@@ -153,6 +180,63 @@ immd.open("myim.im")
 # do stuff with the tool and then close it.
 immd.done()
 
+    </example>
+</method>
+
+<method type="function" name="remove">
+    <shortdescription>Remove or clear the value of a keyword if possible.</shortdescription>
+    <input>
+        <param type="string" name="key">
+            <description>The name of the FITS or other keyword.</description>
+            <value/>
+        </param>
+        <param type="any" name="value">
+            <any type="variant"/>
+            <description>Value to remove if the key is multi-valued. Only used in the case of key="masks".</description>
+            <value/>
+        </param>
+    </input>
+    <returns type="bool"/>
+    <description>
+        Remove or clear the value of a keyword if possible. If key="masks", a value specifying the mask
+        to remove may be specified. If no value is specified, all masks are removed.
+    </description>
+    <example>
+imd.open("myim.im")
+# clear the brightness unit
+if imd.remove("bunit"):
+    print "bunit has been cleared"
+else:
+    print "Unable to clear bunit"
+imd.done()
+    </example>
+</method>
+
+<method type="function" name="set">
+    <shortdescription>Set a keyword to the specified value if possible.</shortdescription>
+    <input>
+        <param type="string" name="key">
+            <description>The name of the FITS or other keyword.</description>
+            <value/>
+        </param>
+        <param type="any" name="value">
+            <any type="variant"/>
+            <description>Associated value to set.</description>
+            <value/>
+        </param>
+    </input>
+    <returns type="bool"/>
+    <description>
+        Set a key-value pair if possible.
+    </description>
+    <example>
+imd.open("myim.im")
+# Set keyword "telescope" with value "Argus Array"
+if set("telescope", "Argus Array"):
+    print "telescope has been updated"
+else:
+    print "Unable to update telescope."
+imd.done()
     </example>
 </method>
 

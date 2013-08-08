@@ -91,7 +91,8 @@ def simalma(
         if verbose: myutil.verbose = True
         msg = myutil.msg
 
-        # Preset parameters in simalma
+        ###########################
+        # Predefined parameters in simalma
         nyquist = 0.48113 ## Nyquist
         maptype_bl = 'ALMA'
         maptype_aca = 'ALMA'
@@ -112,12 +113,15 @@ def simalma(
         leakage = 0.
         weighting = "briggs"
 
+
+        ###########################
         # format mapsize
         if not is_array_type(mapsize):
             mapsize = [mapsize, mapsize]
         elif len(mapsize) < 2:
             mapsize = [mapsize[0], mapsize[0]]
 
+        ###########################
         # Operation flags
         addnoise = (thermalnoise != '')
         # Rectangle setup mode
@@ -137,6 +141,7 @@ def simalma(
         else:
             msg("Cycle 2 or Full Science ALMA simulation", origin="simalma", priority="warn")
 
+        ###########################
         # antennalist of ACA and TP
         antlist_tp = "aca.tp.cfg"
 
@@ -158,8 +163,32 @@ def simalma(
         else:
             antlist_aca = "aca_cycle1.cfg"
 
+        ###########################
         # Resolve prefixes of simulation data (as defined in 
         # simobserve and simanalyze)
+#         noise_str = ""
+#         if addnoise: noise_str = "noisy"
+#         namer_bl = sim_filenamer(project=project, config=antennalist,
+#                                  noise=noise_str)
+#         namer_aca = sim_filenamer(project=project, config=antlist_aca,
+#                                   noise=noise_str)
+#         namer_tp = sim_filenamer(project=project, config=antlist_tp,
+#                                  noise=noise_str, singledish=True)
+#         pref_bl = namer_bl.get_short_prefix()
+#         pref_aca = namer_aca.get_short_prefix()
+#         pref_tp = namer_tp.get_short_prefix()
+#         print("Prefixes: BL='%s', ACA='%s', TP='%s'" % (pref_bl, pref_aca, pref_tp))
+#         # Resolve output names (as defined in simobserve and simanalyze)
+#         ptgfile_bl = fileroot+"/"+namer_bl.get_pointing()
+#         msname_bl = namer_bl.get_ms()
+#         msname_aca = namer_aca.get_ms()
+#         msname_tp = namer_tp.get_ms()
+#         #imagename_aca = pref_aca+".noisy.image"
+#         imagename_tp = namer_tp.get_image()
+#         imagename_int = namer_bl.get_image_concat()
+#         combimage = namer_bl.get_image_feather()
+#         msname_concat = namer_bl.get_ms_concat()
+        
         pref_bl = get_data_prefix(antennalist, project)
         pref_aca = get_data_prefix(antlist_aca, project)
         pref_tp = get_data_prefix(antlist_tp, project)
@@ -183,6 +212,7 @@ def simalma(
 
         simana_file = project+".simanalyze.last"
 
+        ###########################
         # Either skymodel or complist should exists
         if is_array_type(skymodel):
             skymodel = skymodel[0]
@@ -196,6 +226,7 @@ def simalma(
 
         ###########################
         # Get model_size and model_center
+        # TODO: check if outmodel==inmodel works (just collect info)
         if os.path.exists(skymodel):
             outmodel = fileroot+"/"+project+"temp.skymodel"
             model_vals = myutil.modifymodel(skymodel, outmodel, inbright,
@@ -228,17 +259,21 @@ def simalma(
             model_nchan = 1
             del compdirs, coffs, xc, yc, cmax
 
+        ###########################
         # Calculate 12-m PB
         Dant = 12.
-        pbval = 0.2997924 / qa.convert(qa.quantity(model_center),'GHz')['value'] \
-                / Dant * 3600. * 180 / numpy.pi # (wave length)/D_ant in arcsec
-        PB12 = qa.quantity(pbval*1.175, "arcsec")
-        PB12ot = PB12   ###qa.quantity(pbval, "arcsec")
+        wave_length = 0.2997924 \
+                      / qa.convert(qa.quantity(model_center),'GHz')['value']
+        # (wave length)/D_ant in arcsec
+        lambda_D = wave_length / Dant * 3600. * 180 / numpy.pi
+        PB12 = qa.quantity(lambda_D*1.175, "arcsec")
+        # Correction factor for PB in simulation
+        # (PSF of simulated image is somehow smaller than PB12)
         PB12sim = qa.mul(PB12, simpb_factor)
         msg("PB size: %s" % (qa.tos(PB12)), origin="simalma", priority='DEBUG2')
         # Pointing spacing of observations
         pointingspacing = str(nyquist)+"PB"
-        #ptgspacing_tp = str(pbgridratio_tp*PB12ot['value']/PB12['value'])+"PB"
+        #ptgspacing_tp = str(pbgridratio_tp*PB12['value']/PB12['value'])+"PB"
         ptgspacing_tp = qa.tos(qa.mul(PB12sim, pbgridratio_tp)) #str(pbgridratio_tp*PB12sim['value']/PB12['value'])+"PB"
 
         ############################################################
@@ -251,36 +286,56 @@ def simalma(
         obsmode_int = 'int'
         # BL mapsize should be 1 PB smaller than skymodel when using ACA
         #if acaratio > 0 and rectmode and fullsize:
-        #    mapx = qa.sub(model_size[0], PB12ot)
-        #    mapy = qa.sub(model_size[1], PB12ot)
+        #    mapx = qa.sub(model_size[0], PB12)
+        #    mapy = qa.sub(model_size[1], PB12)
         #    mapsize_bl = [qa.tos(mapx), qa.tos(mapy)]
         #else:
         #    mapsize_bl = mapsize
         mapsize_bl = mapsize
 
-        taskstr = "simobserve(project='"+project+"', skymodel='"+skymodel+"', inbright='"+inbright+"', indirection='"+indirection+"', incell='"+incell+"', incenter='"+incenter+"', inwidth='"+inwidth+"', complist='"+complist+"', compwidth='"+compwidth+"', setpointings="+str(setpointings)+", ptgfile='"+ptgfile+"', integration='"+integration+"', direction='"+str(direction)+"', mapsize="+str(mapsize_bl)+", maptype='"+maptype_bl+"', pointingspacing='"+pointingspacing+"', caldirection='"+caldirection+"', calflux='"+calflux+"',  obsmode='"+obsmode_int+"', hourangle='"+hourangle+"', totaltime='"+totaltime+"', antennalist='"+antennalist+"', sdantlist='', sdant="+str(0)+", thermalnoise='"+thermalnoise+"', user_pwv="+str(pwv)+", t_ground="+str(t_ground)+", leakage="+str(leakage)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
-        msg("Executing: "+taskstr, origin="simalma", priority=v_priority)
+        task_param = {}
+        task_param['project'] = project
+        task_param['skymodel'] = skymodel
+        task_param['inbright'] = inbright
+        task_param['indirection'] = indirection
+        task_param['incell'] = incell
+        task_param['incenter'] = incenter
+        task_param['inwidth'] = inwidth
+        task_param['complist'] = complist
+        task_param['compwidth'] = compwidth
+        task_param['setpointings'] = setpointings
+        task_param['ptgfile'] = ptgfile
+        task_param['integration'] = integration
+        task_param['direction'] = direction
+        task_param['mapsize'] = mapsize_bl
+        task_param['maptype'] = maptype_bl
+        task_param['pointingspacing'] = pointingspacing
+        task_param['caldirection'] = caldirection
+        task_param['calflux'] = calflux
+        task_param['obsmode'] = obsmode_int
+        #task_param['refdate'] = refdate
+        task_param['hourangle'] = hourangle
+        task_param['totaltime'] = totaltime
+        task_param['antennalist'] = antennalist
+        task_param['sdantlist'] = ""
+        task_param['sdant'] = 0
+        task_param['thermalnoise'] = thermalnoise
+        task_param['user_pwv'] = pwv
+        task_param['t_ground'] = t_ground
+        #task_param't_sky'] = t_sky
+        #task_param['tau0'] = tau0
+        #task_param['seed'] = seed
+        task_param['leakage'] = leakage
+        task_param['graphics'] = graphics
+        task_param['verbose'] = verbose
+        task_param['overwrite'] = overwrite
+        #task_param['async'] = False
+
+        msg("Executing: "+get_taskstr('simobserve', task_param), origin="simalma", priority=v_priority)
 
         try:
-            simobserve(project=project,
-                       skymodel=skymodel, inbright=inbright,
-                       indirection=indirection, incell=incell,
-                       incenter=incenter, inwidth=inwidth,
-                       complist=complist, compwidth=compwidth,
-                       setpointings=setpointings, ptgfile=ptgfile,
-                       integration=integration,
-                       direction=direction, mapsize=mapsize_bl,
-                       maptype=maptype_bl, pointingspacing=pointingspacing,
-                       caldirection=caldirection, calflux=calflux, 
-                       obsmode=obsmode_int, #refdate=refdate,
-                       hourangle=hourangle, totaltime=totaltime,
-                       antennalist=antennalist,
-                       sdantlist="", sdant=0,
-                       thermalnoise=thermalnoise, user_pwv=pwv,
-                       t_ground=t_ground, #t_sky=t_sky, tau0=tau0, seed=seed,
-                       leakage=leakage,
-                       graphics=graphics, verbose=verbose, overwrite=overwrite)#,
-                       #async=False)
+            simobserve(**task_param)
+            del task_param
         except:
             raise Exception, simobserr
         finally:
@@ -311,30 +366,49 @@ def simalma(
             # Same pointings as BL
             #ptgfile_aca = ptgfile_bl
 
-            taskstr = "simobserve(project='"+project+"', skymodel='"+skymodel+"', inbright='"+inbright+"', indirection='"+indirection+"', incell='"+incell+"', incenter='"+incenter+"', inwidth='"+inwidth+"', complist='"+complist+"', compwidth='"+compwidth+"', setpointings="+str(setpointings)+", ptgfile='"+ptgfile+"', integration='"+integration+"', direction='"+str(direction)+"', mapsize="+str(mapsize_bl)+", maptype='"+maptype_aca+"', pointingspacing='"+pointingspacing+"', caldirection='"+caldirection+"', calflux='"+calflux+"',  obsmode='"+obsmode_int+"',  hourangle='"+hourangle+"', totaltime='"+tottime_aca+"', antennalist='"+antlist_aca+"', sdantlist='', sdant="+str(0)+", thermalnoise='"+thermalnoise+"', user_pwv="+str(pwv)+", t_ground="+str(t_ground)+", leakage="+str(leakage)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
-            msg("Executing: "+taskstr, origin="simalma", priority=v_priority)
+            task_param = {}
+            task_param['project'] = project
+            task_param['skymodel'] = skymodel
+            task_param['inbright'] = inbright
+            task_param['indirection'] = indirection
+            task_param['incell'] = incell
+            task_param['incenter'] = incenter
+            task_param['inwidth'] = inwidth
+            task_param['complist'] = complist
+            task_param['compwidth'] = compwidth
+            task_param['setpointings'] = setpointings
+            task_param['ptgfile'] = ptgfile
+            task_param['integration'] = integration
+            task_param['direction'] = direction
+            task_param['mapsize'] = mapsize_bl
+            task_param['maptype'] = maptype_aca
+            task_param['pointingspacing'] = pointingspacing
+            task_param['caldirection'] = caldirection
+            task_param['calflux'] = calflux
+            task_param['obsmode'] = obsmode_int
+            #task_param['refdate'] = refdate
+            task_param['hourangle'] = hourangle
+            task_param['totaltime'] = tottime_aca
+            task_param['antennalist'] = antlist_aca
+            task_param['sdantlist'] = ""
+            task_param['sdant'] = 0
+            task_param['thermalnoise'] = thermalnoise
+            task_param['user_pwv'] = pwv
+            task_param['t_ground'] = t_ground
+            #task_param['t_sky'] = t_sky
+            #task_param['tau0'] = tau0
+            #task_param['seed'] = seed
+            task_param['leakage'] = leakage
+            task_param['graphics'] = graphics
+            task_param['verbose'] = verbose
+            task_param['overwrite'] = overwrite
+            #task_param['async'] = False
+
+            msg("Executing: "+get_taskstr('simobserve', task_param), origin="simalma", priority=v_priority)
 
             try:
-                simobserve(project=project,
-                           skymodel=skymodel, inbright=inbright,
-                           indirection=indirection, incell=incell,
-                           incenter=incenter, inwidth=inwidth,
-                           complist=complist, compwidth=compwidth,
-                           #setpointings=False, ptgfile=ptgfile_aca,
-                           setpointings=setpointings, ptgfile=ptgfile,
-                           integration=integration,
-                           direction=direction, mapsize=mapsize_bl,
-                           maptype=maptype_aca, pointingspacing=pointingspacing,
-                           caldirection=caldirection, calflux=calflux, 
-                           obsmode=obsmode_int, #refdate=refdate,
-                           hourangle=hourangle, totaltime=tottime_aca,
-                           antennalist=antlist_aca,
-                           sdantlist="", sdant=0,
-                           thermalnoise=thermalnoise, user_pwv=pwv,
-                           t_ground=t_ground, #t_sky=t_sky, tau0=tau0, seed=seed,
-                           leakage=leakage,
-                           graphics=graphics, verbose=verbose, overwrite=overwrite)#,
-                           #async=False)
+                simobserve(**task_param)
+                del task_param
             except:
                 raise Exception, simobserr
             finally:
@@ -348,18 +422,33 @@ def simalma(
             msg("="*60, origin="simalma", priority="warn")
             obsmode_sd = "sd"
 
-            # Resolve mapsize of TP. Add 1 PB to pointing extent of BL
+            ###########################
+            # Resolve pointing directions of ACA-TP.
+            #
+            # Pointing directions of TP simulation is defined as follows:
+            #
+            # [I] if ALMA-12m maps a rectangle region (rectmode=T),
+            # TP maps slightly larger region than ALMA-12m by adding 1 PB to
+            # mapsize (pointing extent of ALMA-12m).
+            #
+            # [II] if a list of pointing deirections are specified for the 
+            # ALMA-12m observation (multiptg=T), TP pointings are defined as
+            # rectangle areas of 2PB x 2PB centered at each pointing direction
+            # of ALMA-12m. However, in some cases, it is more efficient to
+            # just map a rectangle region that covers all ALMA-12m pointings.
+            # In such case, ACA-TP maps a rectangle region whose extent is 2PB
+            # larger than the extent of all ALMA-12m pointings.
             if rectmode:
                 # Add 1PB to mapsize
                 if fullsize:
-                    mapx = qa.add(PB12ot,model_size[0])   # in the unit same as PB
-                    mapy = qa.add(PB12ot,model_size[1])   # in the unit same as PB
+                    mapx = qa.add(PB12,model_size[0])   # in the unit same as PB
+                    mapy = qa.add(PB12,model_size[1])   # in the unit same as PB
                     mapsize_tp = [qa.tos(mapx), qa.tos(mapy)]
                     msg("Full skymodel mapped by ALMA 12-m and ACA 7-m arrays. The total power antenna observes 1PB larger extent.", origin="simalma", priority='warn')
                 else:
                     # mapsize is defined. Add 1 PB to mapsize.
-                    mapx = qa.add(qa.quantity(mapsize[0]), PB12ot)
-                    mapy = qa.add(qa.quantity(mapsize[1]), PB12ot)
+                    mapx = qa.add(qa.quantity(mapsize[0]), PB12)
+                    mapy = qa.add(qa.quantity(mapsize[1]), PB12)
                     mapsize_tp = [qa.tos(mapx), qa.tos(mapy)]
                     msg("A part of skymodel mapped by ALMA 12-m and ACA 7-m arrays. The total power antenna observes 1PB larger extent.", origin="simalma", priority='warn')
             else:
@@ -370,14 +459,13 @@ def simalma(
                 qx = qa.quantity(max(offsets[0])-min(offsets[0]),"deg")
                 qy = qa.quantity(max(offsets[1])-min(offsets[1]),"deg")
                 # map extent to cover all pointings + 2PB 
-                mapx = qa.add(qa.mul(PB12ot,2.),qx)   # in the unit same as PB
-                mapy = qa.add(qa.mul(PB12ot,2.),qy)   # in the unit same as PB
+                mapx = qa.add(qa.mul(PB12,2.),qx)   # in the unit same as PB
+                mapy = qa.add(qa.mul(PB12,2.),qy)   # in the unit same as PB
                 mapsize_tp = [qa.tos(mapx), qa.tos(mapy)]
                 # number of pointings to map vicinity of each pointings
-                #npts_multi = npts * int(2./pbgridratio_tp)**2
                 qptgspc_tp = qa.quantity(ptgspacing_tp)
                 dirs_multi_tp = myutil.calc_pointings2(qptgspc_tp,
-                                                       qa.tos(qa.mul(PB12ot,2.)),
+                                                       qa.tos(qa.mul(PB12,2.)),
                                                        "square", pointings[0])
                 npts_multi = npts * len(dirs_multi_tp)
 
@@ -387,10 +475,11 @@ def simalma(
             # back-up imsize for TP image generation
             qimgsize_tp = [mapx, mapy]
 
-            #qgrid_tp = qa.mul(PB12ot, pbgridratio_tp)
+            #qgrid_tp = qa.mul(PB12, pbgridratio_tp)
             qptgspc_tp = qa.quantity(ptgspacing_tp)
-            pbunit = PB12ot['unit']
+            pbunit = PB12['unit']
             # number of pointings to map pointing region
+            # TODO: use calc pointings for consistent calculation
             npts_rect = int(qa.convert(mapx, pbunit)['value'] \
                             / qa.convert(qptgspc_tp, pbunit)['value']) \
                         * int(qa.convert(mapy, pbunit)['value'] \
@@ -403,10 +492,10 @@ def simalma(
                 msg("Rectangle mode: The total power antenna observes 1PB larger region compared to ALMA 12-m and ACA 7-m arrays", origin="simalma", priority='warn')
             else:
                 if npts_multi < npts_rect:
-                    # Map +-1PB extent of each direction
+                    # Map 2PB x 2PB extent centered at each pointing direction
                     # need to get a list of pointings
                     dir_tp = []
-                    locsize = qa.mul(2, PB12ot)
+                    locsize = qa.mul(2, PB12)
                     for dir in pointings:
                         dir_tp += myutil.calc_pointings2(qa.tos(qptgspc_tp),
                                                          qa.tos(locsize),
@@ -446,28 +535,49 @@ def simalma(
                 ##tottime_tp = qa.tos(qa.convert(qa.quantity(totsec, "s"), iunit))
                 #tottime_tp = qa.tos(qa.quantity(totsec, "s"))
 
-            taskstr = "simobserve(project='"+project+"', skymodel='"+skymodel+"', inbright='"+inbright+"', indirection='"+indirection+"', incell='"+incell+"', incenter='"+incenter+"', inwidth='"+inwidth+"', complist='"+complist+"', compwidth='"+compwidth+"', setpointings="+str(True)+", ptgfile='$project.ptg.txt', integration='"+integration_tp+"', direction='"+str(dir_tp)+"', mapsize="+str(mapsize_tp)+", maptype='"+maptype_tp+"', pointingspacing='"+ptgspacing_tp+"', caldirection='"+caldirection+"', calflux='"+calflux+"',  obsmode='"+obsmode_sd+"', hourangle='"+hourangle+"', totaltime='"+tottime_tp+"', antennalist='', sdantlist='"+antlist_tp+"', sdant="+str(tpantid)+", thermalnoise='"+thermalnoise+"', user_pwv="+str(pwv)+", t_ground="+str(t_ground)+", leakage="+str(leakage)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
-            msg("Executing: "+taskstr, origin="simalma", priority=v_priority)
+            task_param = {}
+            task_param['project'] = project
+            task_param['skymodel'] = skymodel
+            task_param['inbright'] = inbright
+            task_param['indirection'] = indirection
+            task_param['incell'] = incell
+            task_param['incenter'] = incenter
+            task_param['inwidth'] = inwidth
+            task_param['complist'] = complist
+            task_param['compwidth'] = compwidth
+            task_param['setpointings'] = True
+            task_param['ptgfile'] = '$project.ptg.txt'
+            task_param['integration'] = integration_tp
+            task_param['direction'] = dir_tp
+            task_param['mapsize'] = mapsize_tp
+            task_param['maptype'] = maptype_tp
+            task_param['pointingspacing'] = ptgspacing_tp
+            task_param['caldirection'] = caldirection
+            task_param['calflux'] = calflux
+            task_param['obsmode'] = obsmode_sd
+            #task_param['refdate'] = refdate
+            task_param['hourangle'] = hourangle
+            task_param['totaltime'] = tottime_tp
+            task_param['antennalist'] = ""
+            task_param['sdantlist'] = antlist_tp
+            task_param['sdant'] = tpantid
+            task_param['thermalnoise'] = thermalnoise
+            task_param['user_pwv'] = pwv
+            task_param['t_ground'] = t_ground
+            #task_param['t_sky'] = t_sky
+            #task_param['tau0'] = tau0
+            #task_param['seed'] = seed
+            task_param['leakage'] = leakage
+            task_param['graphics'] = graphics
+            task_param['verbose'] = verbose
+            task_param['overwrite'] = overwrite
+            #task_param['async'] = False
+
+            msg("Executing: "+get_taskstr('simobserve', task_param), origin="simalma", priority=v_priority)
 
             try:
-                simobserve(project=project,
-                           skymodel=skymodel, inbright=inbright,
-                           indirection=indirection, incell=incell,
-                           incenter=incenter, inwidth=inwidth,
-                           complist=complist, compwidth=compwidth,
-                           setpointings=True, ptgfile='$project.ptg.txt',
-                           integration=integration_tp,
-                           direction=dir_tp, mapsize=mapsize_tp,
-                           maptype=maptype_tp, pointingspacing=ptgspacing_tp,
-                           caldirection=caldirection, calflux=calflux, 
-                           obsmode=obsmode_sd, #refdate=refdate,
-                           hourangle=hourangle, totaltime=tottime_tp,
-                           antennalist="", sdantlist=antlist_tp, sdant=tpantid,
-                           thermalnoise=thermalnoise, user_pwv=pwv,
-                           t_ground=t_ground, #t_sky=t_sky, tau0=tau0, seed=seed,
-                           leakage=leakage,
-                           graphics=graphics, verbose=verbose, overwrite=overwrite)#,
-                           #async=False)
+                simobserve(**task_param)
+                del task_param
             except:
                 raise Exception, simobserr
             finally:
@@ -637,13 +747,8 @@ def simalma(
                 saveinputs('sdimaging',
                            fileroot+"/"+project+".sd.sdimaging.last",
                            myparams=task_param)
-                #sdimaging(infile=fileroot+"/"+vis_tp,
-                #          gridfunction='gjinc', gwidth=gwidth, jwidth=jwidth,
-                #          outfile=fileroot+"/"+imagename_tp,
-                #          imsize=imsize_tp, cell=cell_tp,
-                #          phasecenter=model_refdir,
-                #          dochannelmap=True, nchan=model_nchan)
                 sdimaging(**task_param)
+                del task_param
                 # TODO: scale TP image
                 
                 # Set restoring beam
@@ -707,27 +812,25 @@ def simalma(
 
 
                 msg("Analyzing TP image.", origin="simalma", priority=v_priority)
-                #taskstr = "simanalyze(project='"+project+"', image="+str(image)+", vis='"+vis_tp+"', modelimage='', cell='"+str(cell_tp)+"', imsize="+str(imsize_tp)+", imdirection='"+imdirection+"', niter="+str(niter)+", threshold='"+threshold+"', weighting='"+weighting+"', mask="+str([])+", outertaper="+str([])+", stokes='I', analyze="+str(True)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
                 vis_tp = fileroot+"/"+vis_tp
-                taskstr = "simanalyze(project="+project+", image=False, imagename='"+fileroot+"/"+imagename_tp+"', analyze=True, showuv=False, showpsf=False, showconvolved=True, graphics="+str(graphics)+", verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
-                msg("Executing: "+taskstr, origin="simalma", priority=v_priority)
+
+                task_param = {}
+                task_param['project'] = project
+                task_param['image'] = False
+                task_param['imagename'] = fileroot+"/"+imagename_tp
+                task_param['analyze'] = True
+                task_param['showuv'] = False
+                task_param['showpsf'] = False
+                task_param['showconvolved'] = True
+                task_param['graphics'] = graphics
+                task_param['verbose'] = verbose
+                task_param['overwrite'] = overwrite
+
+                msg("Executing: "+get_taskstr('simanalyze', task_param), origin="simalma", priority=v_priority)
 
                 try:
-                    #simanalyze(project=project, image=image,
-                    #           vis=vis_tp, modelimage="",
-                    #           cell=cell_tp, imsize=imsize_tp,
-                    #           imdirection=imdirection, niter=niter,
-                    #           threshold=threshold, weighting=weighting,
-                    #           mask=[], outertaper=[], stokes='I',
-                    #           analyze=True,
-                    #           graphics=graphics, verbose=verbose,
-                    #           overwrite=overwrite)
-                    simanalyze(project=project, image=False,
-                               imagename=fileroot+"/"+imagename_tp,
-                               analyze=True,
-                               showuv=False,showpsf=False,showconvolved=True,
-                               graphics=graphics, verbose=verbose,
-                               overwrite=overwrite)
+                    simanalyze(**task_param)
+                    del task_param
                 except:
                     raise Exception, simanaerr
                 finally:
@@ -778,31 +881,44 @@ def simalma(
                        visweightscale=visweightscale)
 
             # TMP fix: get correct skymodel file so that simanalyze picks it
-            if os.path.exists(tpskymodel):
-                shutil.move(tpskymodel,tpskymodel+".save")
-            else:
-                msg("TP skymodel '%s' is not found" \
+            if acaratio > 0:
+                if os.path.exists(tpskymodel):
+                    shutil.move(tpskymodel,tpskymodel+".save")
+                else:
+                    msg("TP skymodel '%s' is not found" \
                         % tpskymodel, origin="simalma", priority="error")
 
-            if os.path.exists(acaskymodel+".save"):
-                shutil.move(acaskymodel+".save",acaskymodel)
-            else:
-                msg("ACA skymodel '%s' is not found" \
+                if os.path.exists(acaskymodel+".save"):
+                    shutil.move(acaskymodel+".save",acaskymodel)
+                else:
+                    msg("ACA skymodel '%s' is not found" \
                         % acaskymodel+".save", origin="simalma", priority="error")
 
 
-            taskstr = "simanalyze(project='"+ project+"', image="+str(image)+", vis='"+ vis_int+"', modelimage='', cell='"+str(cell)+"', imsize="+str(imsize)+", imdirection='"+ imdirection+"', niter="+str(niter)+", threshold='"+ threshold+"', weighting='"+ weighting+"', mask="+str([])+", outertaper="+str([])+", stokes='I', analyze="+str(True)+", graphics='"+ graphics+"', verbose="+str(verbose)+", overwrite="+ str(overwrite)+")"
-            msg("Executing: "+taskstr, origin="simalma", priority=v_priority)
+            task_param = {}
+            task_param['project'] = project
+            task_param['image'] = image
+            task_param['vis'] = vis_int
+            task_param['modelimage'] = ""
+            task_param['cell'] = cell
+            task_param['imsize'] = imsize
+            task_param['imdirection'] = imdirection
+            task_param['niter'] = niter
+            task_param['threshold'] = threshold
+            task_param['weighting'] = weighting
+            task_param['mask'] = []
+            task_param['outertaper'] = []
+            task_param['stokes'] = 'I'
+            task_param['analyze'] = True
+            task_param['graphics'] = graphics
+            task_param['verbose'] = verbose
+            task_param['overwrite'] = overwrite
+
+            msg("Executing: "+get_taskstr('simanalyze', task_param), origin="simalma", priority=v_priority)
 
             try:
-                simanalyze(project=project, image=image,
-                           vis=vis_int, modelimage="",
-                           cell=cell, imsize=imsize, imdirection=imdirection,
-                           niter=niter, threshold=threshold, weighting=weighting,
-                           mask=[], outertaper=[], stokes='I',
-                           analyze=True,
-                           graphics=graphics, verbose=verbose,
-                           overwrite=overwrite)
+                simanalyze(**task_param)
+                del task_param
             except:
                 raise Exception, simanaerr
             finally:
@@ -870,11 +986,19 @@ def simalma(
                 ia.close()
 
                 # Feathering
-                taskstr = ("feather(imagename='%s', highres='%s',lowres='%s'" \
-                           % (outimage0, highimage, lowimage))
-                msg("Executing: "+taskstr, origin="simalma", priority=v_priority)
+                task_param = {}
+                task_param['imagename'] = outimage0
+                task_param['highres'] = highimage
+                task_param['lowres'] = lowimage
+
+                msg("Executing: "+get_taskstr('feather', task_param), origin="simalma", priority=v_priority)
                 try:
-                    feather(imagename=outimage0, highres=highimage, lowres=lowimage)
+                    saveinputs('feather',
+                               fileroot+"/"+project+".feather.last",
+                               myparams=task_param)
+                    feather(**task_param)
+                    del task_param
+
                     # transfer mask - feather should really do this
                     ia.open(outimage0)
                     ia.maskhandler('copy',[highimage+":mask0",'mask0'])
@@ -1051,3 +1175,16 @@ def calc_imsize(mapsize=None, cell=None):
 
     return [npixx, npixy]
 
+
+def get_taskstr(taskname, params):
+    out = ("%s(" % taskname)
+    for key, val in params.items():
+        out += (key + "=" + _get_str(val) + ", ")
+
+    return ( out.rstrip(", ") + ")" )
+
+def _get_str(paramval):
+    if type(paramval) == str:
+        return ("'%s'" % paramval)
+    # else
+    return str(paramval)

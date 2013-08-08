@@ -6,7 +6,7 @@ from taskinit import *
 from parallel.parallel_task_helper import ParallelTaskHelper
 
 def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
-	   visweightscale,createmms):
+	   visweightscale):
 	"""concatenate visibility datasets
 	The list of data sets given in the vis argument are concatenated into an output
 	data set in concatvis.  If concatvis already exists (e.g., it is the same as the
@@ -57,14 +57,14 @@ def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
 
 	freqtol -- Frequency shift tolerance for considering data to be in the same
 		   spwid.  The number of channels must also be the same.
-		default: ''  do not combine unless frequencies are equal
+		default: '' == 1 Hz
 		example: freqtol='10MHz' will not combine spwid unless they are
 		   within 10 MHz.
-		Note: This option is useful to conbine spectral windows with very slight
+		Note: This option is useful to combine spectral windows with very slight
 		   frequency differences caused by Doppler tracking, for example.
 
 	dirtol -- Direction shift tolerance for considering data as the same field
-		default: '' means always combine.
+		default: '' == 1 mas (milliarcsec)
 		example: dirtol='1.arcsec' will not combine data for a field unless
 		   their phase center differ by less than 1 arcsec.  If the field names
 		   are different in the input data sets, the name in the output data
@@ -90,9 +90,6 @@ def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
 		factors. See the cookbook for more details.
 		example: [1.,3.,3.] - scale the weights of the second and third MS by a factor 3.
 		default: [] (empty list) - no scaling
-
-	createmms -- disabled. Please use task virtualconcat.
-		 default: False
 
 	"""
 
@@ -139,22 +136,69 @@ def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
 				elif factor!=1.:
 					doweightscale=True
 
-		if(createmms):
-			raise Exception, 'createmms disabled. Please use task virtualconcat from now on.'
-			
+		# process the input MSs in chronological order
+		sortedvis = []
+		sortedvisweightscale = []
+		namestuples = []
+		for name in vis:
+			t.open(name)
+			times = t.getcol('TIME')
+			t.close()
+			times.sort()
+			if doweightscale:
+				namestuples.append( (times[0], name, visweightscale[vis.index(name)]) )
+			else:
+				namestuples.append( (times[0], name, 0) )
+
+		sorted_namestuples = sorted(namestuples, key=lambda msname: msname[0]) 
+    
+		for i in range(0,len(vis)):
+			sortedvis.append(sorted_namestuples[i][1])
+			sortedvisweightscale.append(sorted_namestuples[i][2])
+
+
 		if((type(concatvis)!=str) or (len(concatvis.split()) < 1)):
-			raise Exception, 'parameter concatvis is invalid'
+			raise Exception, 'parameter concatvis is invalid'				
+
+		existingconcatvis = False
 		if(vis.count(concatvis) > 0):
-			vis.remove(concatvis)
+			existingconcatvis = True
+			cvisindex =  sortedvis.index(concatvis)
+			if not sorted_namestuples[cvisindex][0] == sorted_namestuples[0][0]:
+				raise Exception, 'If concatvis is set to the name of an existing MS in vis, it must be the chronologically first.'+\
+				      '\n I.e. in this case you should set concatvis to '+sortedvis[0]
+			sortedvis.pop(cvisindex)
+			if doweightscale:
+				vwscale = sortedvisweightscale[cvisindex]
+				sortedvisweightscale.pop(cvisindex)
+				sortedvisweightscale = [vwscale] + sortedvisweightscale # move the corresponding weight to the front
+
+		if not vis == sortedvis:
+			casalog.post('The list of input MSs is not in chronological order and will need to be sorted.' , 'INFO')
+			casalog.post('The chronological order in which the concatenation will take place is:' , 'INFO')
+			if existingconcatvis:
+				casalog.post('   MJD '+str(qa.splitdate(qa.quantity(sorted_namestuples[0][0],'s'))['mjd'])+': '+concatvis, 'INFO')
+			for name in sortedvis:
+				casalog.post('   MJD '+str(qa.splitdate(qa.quantity(sorted_namestuples[sortedvis.index(name)][0],'s'))['mjd'])+': '+name, 'INFO')
+			if doweightscale:
+				casalog.post('In this new order, the weights are:'+str(sortedvisweightscale) , 'INFO')
+
+		# replace the original vis and visweightscale by the sorted ones (with concatvis removed if it exists)
+		vis = sortedvis
+		visweightscale = sortedvisweightscale
 
 		if(os.path.exists(concatvis)):
 			casalog.post('Will be concatenating into the existing ms '+concatvis , 'WARN')
+			if doweightscale and not existingconcatvis:
+				visweightscale = [1.]+visweightscale # set the weight for this existing MS to 1.
+				casalog.post('The weights for this existing MS will be left unchanged.' , 'WARN')
 		else:
 			if(len(vis) >0): # (note: in case len is 1, we only copy, essentially)
 				casalog.post('copying '+vis[0]+' to '+theconcatvis , 'INFO')
 				shutil.copytree(vis[0], theconcatvis)
 				# note that the resulting copy is writable even if the original was read-only
-				vis.remove(vis[0])
+				vis.pop(0)
+				# don't need to pop visweightscale here!
 
 		if not copypointing: # remove the rows from the POINTING table of the first MS
 			casalog.post('*** copypointing==False: resulting MS will have empty POINTING table.', 'INFO')

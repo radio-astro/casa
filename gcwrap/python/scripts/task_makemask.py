@@ -310,10 +310,11 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                 # prepare working input image (tmp_maskiamge)
 		if inpmask!='': # inpmask is either image mask or T/F mask now
 		  # need to extract the mask and put in tmp_maskimage
+                  # Note: changed usemasked=F, so that True (unmasked) part to be used. CAS- 
                   # ==> tmp_maskiamge is an input mask image
                     (parentimage,bmask)=extractmaskname(inpmask)
                     if bmask!='':
-		        pixelmask2cleanmask(imagename=parentimage, maskname=bmask, maskimage=tmp_maskimage, usemasked=True)    
+		        pixelmask2cleanmask(imagename=parentimage, maskname=bmask, maskimage=tmp_maskimage, usemasked=False)    
 		        #ia.open(tmp_maskimage)
                     else:
                         #print "parentimage=",parentimage, " exist?=",os.path.isdir(parentimage)
@@ -508,7 +509,9 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 		    #convert the image mask to T/F mask
 		    casalog.post("Convert the image mask to T/F mask",'INFO')
 		    #ia.calcmask(mask='%s<0.5' % tmp_outmaskimage,name=outmask,asdefault=True)
-		    ia.calcmask(mask='%s=0.0' % tmp_outmaskimage,name=outbmask,asdefault=True)
+		    #ia.calcmask(mask='%s=0.0' % tmp_outmaskimage,name=outbmask,asdefault=True)
+                    # regions will be masked if == 0.0
+		    ia.calcmask(mask='%s!=0.0' % tmp_outmaskimage,name=outbmask,asdefault=True)
 
                 if storeinmask:
                     ia.open(outparentim)
@@ -636,7 +639,8 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 			if not inmasks.count(mskname):
 			    raise TypeError, mskname+" does not exist in "+imname+" -available masks:"+str(inmasks)
 			# move T/F mask to image mask
-			pixelmask2cleanmask(imname, mskname, tmp_inmask, True)    
+                        # changed to usemasked=False as of CAS-5443  
+			pixelmask2cleanmask(imname, mskname, tmp_inmask, False)    
 			regridmask(tmp_inmask,sum_tmp_outfile,'__tmp_fromTFmask')
 			addimagemask(sum_tmp_outfile,'__tmp_fromTFmask')
                         usedbmasks.append(msk)
@@ -736,7 +740,9 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 		    ia.open(sum_tmp_outfile)
 		    #ia.calcmask(mask='%s<0.5' % sum_tmp_outfile,name=outmask,asdefault=True)
                     # mask only pixel != 0.0 
-		    ia.calcmask(mask='%s==0.0' % sum_tmp_outfile,name=outbmask,asdefault=True)
+		    #ia.calcmask(mask='%s==0.0' % sum_tmp_outfile,name=outbmask,asdefault=True)
+                    # mask only pixel == 0.0 
+		    ia.calcmask(mask='%s!=0.0' % sum_tmp_outfile,name=outbmask,asdefault=True)
 		    ia.done()
 	        # if outfile exists initially outfile is copied to sum_tmp_outfile
 		# if outfile does not exist initially sum_tmp_outfile is a copy of inpimage
@@ -865,7 +871,11 @@ def addimagemask(sumimage, imagetoadd, threshold=0.0):
     #print "addimagemask: sumimage=",sumimage," imagetoadd=",imagetoadd
     ia.open(sumimage)
     ia.calc('iif ('+imagetoadd+'>'+str(threshold)+',('+sumimage+'+'+imagetoadd+')/('+sumimage+'+'+imagetoadd+'),'+sumimage+')')
+    # actually should be AND?
+    #ia.calc('iif ('+imagetoadd+'>'+str(threshold)+','+sumimage+'*'+imagetoadd+','+sumimage+')')
+    #ia.calc('iif ('+imagetoadd+'>'+str(threshold)+',('+sumimage+'*'+imagetoadd+')/('+sumimage+'*'+imagetoadd+'),'+sumimage+')')
     ia.close()  
+    
 
 def expandchanmask(inimage,inchans,outimage,outchans):
     """

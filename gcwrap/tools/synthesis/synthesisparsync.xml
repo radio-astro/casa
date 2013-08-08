@@ -63,8 +63,44 @@ This is used to construct {\tt synthesisparsync} tool.
 
 <!-- ===================================== -->
 
+   <method type="function" name="gatherpsfweight">
+   <shortdescription>Gather PSFs if needed</shortdescription>
+
+<description>
+</description>
+<input/>
+
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
    <method type="function" name="gatherresidual">
-   <shortdescription>Gather images if needed</shortdescription>
+   <shortdescription>Gather Residual Imaged if needed</shortdescription>
+
+<description>
+</description>
+<input/>
+
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
+   <method type="function" name="dividepsfbyweight">
+   <shortdescription>Divide psf by weight</shortdescription>
+
+<description>
+</description>
+<input/>
+
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
+   <method type="function" name="divideresidualbyweight">
+   <shortdescription>Divide residual by weight</shortdescription>
 
 <description>
 </description>

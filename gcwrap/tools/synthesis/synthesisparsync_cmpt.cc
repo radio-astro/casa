@@ -82,11 +82,11 @@ synthesisimstore* synthesisparsync::getimstore()
 
 
 
-bool synthesisparsync::gatherresidual()
+bool synthesisparsync::gatherpsfweight()
 {
   Bool rstat(False);
   try {
-    itsParSync->gatherResidual( );
+    itsParSync->gatherImages( /*dopsf*/True, /*doresidual*/False );
     rstat=True;
   } catch  (AipsError x) {
     RETHROW(x);
@@ -94,6 +94,41 @@ bool synthesisparsync::gatherresidual()
   return rstat;
 }
 
+bool synthesisparsync::gatherresidual()
+{
+  Bool rstat(False);
+  try {
+    itsParSync->gatherImages( /*dopsf*/False, /*doresidual*/True );
+    rstat=True;
+  } catch  (AipsError x) {
+    RETHROW(x);
+  }
+  return rstat;
+}
+
+  bool synthesisparsync::dividepsfbyweight()
+{
+  Bool rstat(False);
+  try {
+	itsParSync->dividePSFByWeight( );
+	rstat=True;
+  } catch  (AipsError x) {
+    RETHROW(x);
+  }
+  return rstat;
+}
+
+  bool synthesisparsync::divideresidualbyweight()
+{
+  Bool rstat(False);
+  try {
+	itsParSync->divideResidualByWeight( );
+	rstat=True;
+  } catch  (AipsError x) {
+    RETHROW(x);
+  }
+  return rstat;
+}
 
 bool synthesisparsync::scattermodel()
 {

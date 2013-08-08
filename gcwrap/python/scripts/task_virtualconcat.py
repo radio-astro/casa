@@ -72,6 +72,47 @@ def virtualconcat(vislist,concatvis,freqtol,dirtol,respectname,
 					raise Exception, 'parameter visweightscale must only contain positive numbers'
 				elif factor!=1.:
 					doweightscale=True
+					
+		if((type(concatvis)!=str) or (len(concatvis.split()) < 1)):
+			raise Exception, 'Parameter concatvis is invalid.'
+
+		if(vis.count(concatvis) > 0):
+			raise Exception, 'Parameter concatvis must not be equal to one of the members of parameter vis.'
+
+		if(os.path.exists(concatvis)):
+			raise Exception, 'The output MMS must not yet exist.'
+
+		# process the input MSs in chronological order
+		sortedvis = []
+		sortedvisweightscale = []
+		namestuples = []
+		for name in vis:
+			t.open(name)
+			times = t.getcol('TIME')
+			t.close()
+			times.sort()
+			if doweightscale:
+				namestuples.append( (times[0], name, visweightscale[vis.index(name)]) )
+			else:
+				namestuples.append( (times[0], name, 0) )
+
+		sorted_namestuples = sorted(namestuples, key=lambda msname: msname[0]) 
+    
+		for i in range(0,len(vis)):
+			sortedvis.append(sorted_namestuples[i][1])
+			sortedvisweightscale.append(sorted_namestuples[i][2])
+
+		if not vis == sortedvis:
+			casalog.post('The list of input MSs is not in chronological order and will need to be sorted.' , 'INFO')
+			casalog.post('The chronological order in which the concatenation will take place is:' , 'INFO')
+			for name in sortedvis:
+				casalog.post('   MJD '+str(qa.splitdate(qa.quantity(sorted_namestuples[sortedvis.index(name)][0],'s'))['mjd'])+': '+name, 'INFO')
+			if doweightscale:
+				casalog.post('In this new order, the weights are:'+str(sortedvisweightscale) , 'INFO')
+
+		# replace the original vis and visweightscale by the sorted ones (with concatvis removed if it exists)
+		vis = sortedvis
+		visweightscale = sortedvisweightscale
 
 		# if there are MMSs among the input, make their constituents the new input
 		mmslist = []
@@ -114,21 +155,16 @@ def virtualconcat(vislist,concatvis,freqtol,dirtol,respectname,
 				i += 1
 
 
-		if((type(concatvis)!=str) or (len(concatvis.split()) < 1)):
-			raise Exception, 'parameter concatvis is invalid'
-
-		if(vis.count(concatvis) > 0):
-			vis.remove(concatvis)
-
-		if(os.path.exists(concatvis)):
-			raise Exception, 'The output MMS must not yet exist.'
 
 		if keepcopy:
+			casalog.post('*** keepcopy==True: creating copy of input MSs to keep ...' , 'INFO')
 			tempdir = 'concat_tmp_'+str(time.time())
 			os.mkdir(tempdir)
 			for elvis in originalvis:
 				shutil.move(elvis,tempdir) # keep timestamps and permissions
 				shutil.copytree(tempdir+'/'+elvis, elvis, True) # symlinks=True
+
+		casalog.post('Concatenating ...' , 'INFO')
 
 		if not copypointing: # delete the rows of all pointing tables
 			casalog.post('*** copypointing==False: resulting MMS will have empty POINTING table.', 'INFO')

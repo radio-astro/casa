@@ -2518,6 +2518,18 @@ class test_float_column(test_base):
         res = flagdata(vis=self.vis, mode='summary')
         # It only shows that it runs without problems
         self.assertEqual(res['flagged'],264)
+        
+    def test_float_autocorr(self):
+        '''flagdata: CAS-5286, autocorr=True should not flag single-dish data'''
+        flagdata(vis=self.vis, mode='manual', autocorr=True, 
+                 flagbackup=False)
+        
+        # The PROCESSOR TYPE of this dataset is unset, therefore it should not be
+        # flagged
+        res = flagdata(vis=self.vis, mode='summary', basecnt=True)
+        self.assertEqual(res['flagged'],0)
+        self.assertEqual(res['baseline']['PM04&&PM04']['flagged'],0)
+
 
 # Cleanup class 
 class cleanup(test_base):
@@ -2535,7 +2547,7 @@ class cleanup(test_base):
         os.system('rm -rf X7ef.tsys* ap314.gcal*')
         os.system('rm -rf list*txt')
         os.system('rm -rf fourrows*')
-        os.system('rm -rf SDtest*')
+        os.system('rm -rf SDFloatColumn*')
 
     def test_runTest(self):
         '''flagdata: Cleanup'''

@@ -1019,7 +1019,7 @@ class cleanhelper:
 
     
     # split version of datselweightfilter
-    def datsel(self, field, spw, timerange, uvrange, antenna, scan, observation,
+    def datsel(self, field, spw, timerange, uvrange, antenna, scan, observation,intent,
                            usescratch, nchan=-1, start=0, width=1):
         """
         Make selections in visibility data 
@@ -1031,7 +1031,7 @@ class cleanhelper:
         #nvislist=range(len(self.vis))
         vislist=self.sortedvisindx
         self.paramlist={'field':field,'spw':spw,'timerange':timerange,'antenna':antenna,
-                        'scan':scan, 'observation': observation, 'uvrange':uvrange}
+                        'scan':scan, 'observation': observation, 'intent':intent, 'uvrange':uvrange}
         for i in vislist:
           selectedparams=self._selectlistinputs(len(vislist),i,self.paramlist)
           tempfield=selectedparams['field']
@@ -1061,19 +1061,21 @@ class cleanhelper:
           inantenna=selectedparams['antenna'] 
           inscan=selectedparams['scan']
           inobs = selectedparams['observation']
+          inintent = selectedparams['intent']
           inuvrange=selectedparams['uvrange'] 
 
           if len(self.vis)==1:
             #print "single ms case"
             self.im.selectvis(nchan=nchan,start=start,step=width,field=field,
                               spw=inspw,time=intimerange, baseline=inantenna,
-                              scan=inscan, observation=inobs, uvrange=inuvrange,
+                              scan=inscan, observation=inobs, intent=inintent, uvrange=inuvrange,
                               usescratch=usescratch)
           else:
             #print "multims case: selectvis for vis[",i,"]: spw,field=", inspw, self.fieldindex[i]
             self.im.selectvis(vis=self.vis[i],nchan=nchan,start=start,step=width,
                               field=self.fieldindex[i], spw=inspw,time=intimerange,
                               baseline=inantenna, scan=inscan,
+                              observation=inobs, intent=inintent,
                               uvrange=inuvrange, usescratch=usescratch)
 
     # private function for datsel and datweightfilter
@@ -2719,7 +2721,7 @@ class cleanhelper:
 
 
     def makeTemplateCubes(self, imagename,outlierfile, field, spw, selectdata, timerange,
-          uvrange, antenna, scan, observation, mode, facets, cfcache, interpolation, 
+          uvrange, antenna, scan, observation, intent, mode, facets, cfcache, interpolation, 
           imagermode, localFTMachine, mosweight, locnchan, locstart, locwidth, outframe,
           veltype, imsize, cell, phasecenter, restfreq, stokes, weighting,
           robust, uvtaper, outertaper, innertaper, modelimage, restoringbeam,
@@ -2793,7 +2795,8 @@ class cleanhelper:
         self.imageids=imageids
         # readoutlier need to be run first....
         self.datsel(field=field, spw=spw, timerange=timerange, uvrange=uvrange, 
-                    antenna=antenna,scan=scan, observation=observation, usescratch=usescratch,
+                    antenna=antenna,scan=scan, observation=observation, intent=intent, 
+                    usescratch=usescratch,
                     nchan=-1, start=0, width=1)
 
         self.definemultiimages(rootname=rootname,imsizes=imsizes,cell=cell,
