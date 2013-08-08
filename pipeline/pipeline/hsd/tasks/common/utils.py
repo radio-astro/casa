@@ -121,19 +121,25 @@ def to_list(s):
 def to_bool(s):
     if s is None:
         return None
-    else:
+    elif isinstance(s, bool):
+        return s
+    elif isinstance(s, str):
         if s.upper() == 'FALSE' or s == 'F':
             return False
         elif s.upper() == 'TRUE' or s == 'T':
             return True
         else:
             return s
+    else:
+        return bool(s)
 
 def to_numeric(s):
     if s is None:
         return None
-    else:
+    elif isinstance(s, str):
         try:
             return float(s)
         except:
             return s
+    else:
+        return s
