@@ -225,18 +225,18 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
     # Create flagcmd input list
-    flagcmd = ["mode='manual' antenna='CM01'",
-               "mode='manual' intent='*POINTING*'",
-               "mode='manual' intent='*ATMOSPHERE*'",
-               "mode='shadow'",
-               "mode='manual' autocorr=True spw='>0'" # do not flag the WVR data
-               ]
+    myflagcmd = ["mode='manual' antenna='CM01'",
+                 "mode='manual' intent='*POINTING*'",
+                 "mode='manual' intent='*ATMOSPHERE*'",
+                 "mode='shadow'",
+                 "mode='manual' autocorr=True" 
+                 ]
                   
     for name in basename:
 
         flagmanager(vis=name+'.ms', mode='restore', versionname='Original')
         
-        tflagdata(vis=name + '.ms', mode='list', inpfile=flagcmd, flagbackup=False)
+        flagdata(vis=name + '.ms', mode='list', inpfile=myflagcmd, flagbackup=False)
 
 	if(makeplots):
 		# Plot amplitude vs time
@@ -330,7 +330,7 @@ mystep = 9
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
-    # Create flagcmd input list (could also call tflagdata twice alternatively)
+    # Create flagcmd input list (could also call flagdata twice alternatively)
     flagcmd = ["mode='manual' field='' spw='0~3:0~10;3800~3839'",
     		  "mode='manual' field='' spw='0~3:239;447~448;720~721;2847~2848'"]
               
@@ -339,23 +339,23 @@ if(mystep in thesteps):
         flagmanager(vis=name + '-line.ms', mode='restore',
                     versionname='apriori')
         
-        tflagdata(vis=name + '-line.ms', mode='list', inpfile=flagcmd, flagbackup=False)
+        flagdata(vis=name + '-line.ms', mode='list', inpfile=flagcmd, flagbackup=False)
 
     # some integrations are off
-    tflagdata(vis='X220-line.ms', mode='manual',
-              timerange='19:52:55~19:53:04', flagbackup=False)
+    flagdata(vis='X220-line.ms', mode='manual',
+             timerange='19:52:55~19:53:04', flagbackup=False)
 
-    tflagdata(vis='X54-line.ms',
-              antenna='PM01',
-              timerange='19:03:35~19:03:42',
-              mode='manual',
-              flagbackup=False)
+    flagdata(vis='X54-line.ms',
+             antenna='PM01',
+             timerange='19:03:35~19:03:42',
+             mode='manual',
+             flagbackup=False)
 
-    tflagdata(vis='X54-line.ms',
-              antenna='DV04',
-              timerange='19:38:45~19:38:55',
-              mode='manual',
-              flagbackup=False)
+    flagdata(vis='X54-line.ms',
+             antenna='DV04',
+             timerange='19:38:45~19:38:55',
+             mode='manual',
+             flagbackup=False)
 
     timing()
 
@@ -449,19 +449,19 @@ if(mystep in thesteps):
     for name in basename:
         flagmanager(vis=name+'-line-vs.ms', mode='restore', versionname='apriori')
 
-        tflagdata(vis=name + '-line-vs.ms',
-                  field='Titan',
-                  mode='manual',
-                  uvrange='0~40',
-                  spw='',
-                  flagbackup=False)
+        flagdata(vis=name + '-line-vs.ms',
+                 field='Titan',
+                 mode='manual',
+                 uvrange='0~40',
+                 spw='',
+                 flagbackup=False)
         
-        tflagdata(vis=name + '-line-vs.ms',
-                  field='Titan',
-                  mode='manual',
-                  uvrange='',
-                  spw='0:200~479',
-                  flagbackup=False)
+        flagdata(vis=name + '-line-vs.ms',
+                 field='Titan',
+                 mode='manual',
+                 uvrange='',
+                 spw='0:200~479',
+                 flagbackup=False)
  
 	setjy(vis=name+'-line-vs.ms',
               field='Titan',
