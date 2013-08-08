@@ -226,35 +226,39 @@ def enable_memstats():
         LOG.error('Cannot measure memory on OS X.')
         return
     
+    import pipeline.domain.measures as measures
     def get_hook_fn(msg):
         pid = os.getpid()
     
         def log_mem_usage(jobrequest):
-            oldstdout = sys.stdout
-            mystdout = StringIO.StringIO()
+            sorted_cmds, shareds, _, _ = ps_mem.get_memory_usage([pid,], False, True)
+            for cmd in sorted_cmds:
+                private = measures.FileSize(cmd[1]-shareds[cmd[0]], 
+                                            measures.FileSizeUnits.KILOBYTES)
+                shared = measures.FileSize(shareds[cmd[0]], 
+                                           measures.FileSizeUnits.KILOBYTES)
+                total = measures.FileSize(cmd[1], measures.FileSizeUnits.KILOBYTES)
 
-            try:
-                sys.stdout = mystdout
-                sorted_cmds, shareds, count, total = ps_mem.get_memory_usage([pid,], False, True)
-                ps_mem.print_memory_usage(sorted_cmds, shareds, count, total)
-                        
-                vm_accuracy = ps_mem.shared_val_accuracy()
-                if vm_accuracy == -1:
-                    sys.stdout.write("Warning: Shared memory is not reported by this system.\n")
-                    sys.stdout.write("Values reported will be too large, and totals are not reported\n")
-                elif vm_accuracy == 0:
-                    sys.stdout.write("Warning: Shared memory is not reported accurately by this system.\n")
-                    sys.stdout.write("Values reported could be too large, and totals are not reported\n")
-                elif vm_accuracy == 1:
-                    sys.stdout.write("Warning: Shared memory is slightly over-estimated by this system\n"
-                                     "for each program, so totals are not reported.\n")
-                
-                LOG.info('Memory usage %s %s:\n%s' % (msg, jobrequest.fn.__name__, mystdout.getvalue()))
-            finally:                
-                sys.stdout = oldstdout
+                LOG.info('%s%s: private=%s shared=%s total=%s' % (
+                        msg, jobrequest.fn.__name__, str(private),
+                        str(shared), str(total)))
+                    
+            vm_accuracy = ps_mem.shared_val_accuracy()
+            if vm_accuracy is -1:
+                LOG.warning("Shared memory is not reported by this system. "
+                            "Values reported will be too large, and totals "
+                            "are not reported")
+            elif vm_accuracy is 0:
+                LOG.warning("Shared memory is not reported accurately by "
+                            "this system. Values reported could be too "
+                            "large, and totals are not reported.")
+            elif vm_accuracy is 1:
+                LOG.warning("Shared memory is slightly over-estimated by "
+                            "this system for each program, so totals are "
+                            "not reported.")
                 
         return log_mem_usage
 
-    jobrequest.PREHOOKS.append(get_hook_fn('before'))
-    jobrequest.POSTHOOKS.append(get_hook_fn('after'))
+    jobrequest.PREHOOKS.append(get_hook_fn('Memory usage before '))
+    jobrequest.POSTHOOKS.append(get_hook_fn('Memory usage after '))
     
