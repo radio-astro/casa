@@ -23,6 +23,8 @@ class TsyscalResults(basetask.Results):
             return
 
         for calapp in self.final:
+	    ms = context.observing_run.get_ms(name=calapp.vis)
+	    ms.tsys_spwmap = calapp.calfrom[-1].spwmap
             LOG.debug('Adding calibration to callibrary:\n'
                       '%s\n%s' % (calapp.calto, calapp.calfrom))
             context.callibrary.add(calapp.calto, calapp.calfrom)

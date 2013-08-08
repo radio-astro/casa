@@ -13,7 +13,8 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class TsyscalInputs(basetask.StandardInputs):
-    def __init__(self, context, output_dir=None, vis=None, caltable=None):
+    def __init__(self, context, output_dir=None, vis=None, caltable=None,
+        chantol=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 
@@ -41,7 +42,17 @@ class TsyscalInputs(basetask.StandardInputs):
     @property
     def caltype(self):
         return 'tsys'
+
+    @property
+    def chantol(self):
+        if self._chantol is None:
+            return 1
+        return self._chantol
     
+    @chantol.setter
+    def chantol(self, value):
+        self._chantol = value
+
     # Avoids circular dependency on caltable.
     def _get_partial_task_args(self):
         return {'vis'     : self.vis, 
@@ -74,7 +85,8 @@ class Tsyscal(basetask.StandardTaskTemplate):
 
         LOG.todo('tsysspwmap heuristic re-reads measurement set!')
         LOG.todo('tsysspwmap heuristic won\'t handle missing file')
-        spwmap = tsysspwmap(vis=inputs.vis, tsystable=gencal_args['caltable'])
+        spwmap = tsysspwmap(vis=inputs.vis, tsystable=gencal_args['caltable'],
+	    tsysChanTol=inputs.chantol)
 
         callist = []
         calto = callibrary.CalTo(vis=inputs.vis)
