@@ -17,7 +17,8 @@ namespace test {
 
 
 MsFactory::MsFactory (const String & msName)
- : addWeightSpectrum_p (True),
+ : addCorrectedWeightSpectrum_p (False),
+   addWeightSpectrum_p (True),
    includeAutocorrelations_p (False),
    simulator_p (new NewMSSimulator (msName)),
    timeStart_p (-1)
@@ -217,12 +218,21 @@ MsFactory::addWeightSpectrum (Bool addIt)
     addWeightSpectrum_p = addIt;
 }
 
+void
+MsFactory::addCorrectedWeightSpectrum (Bool addIt)
+{
+    addCorrectedWeightSpectrum_p = addIt;
+}
+
 
 void
 MsFactory::addColumns ()
 {
     if (addWeightSpectrum_p){
         addCubeColumn (MS::WEIGHT_SPECTRUM, "WeightSpectrumTiled");
+    }
+    if (addCorrectedWeightSpectrum_p){
+        addCubeColumn (MS::CORRECTED_WEIGHT_SPECTRUM, "CorrectedWeightSpectrumTiled");
     }
 }
 
@@ -295,6 +305,11 @@ MsFactory::attachColumns ()
     if (cds.isDefined ("WEIGHT_SPECTRUM")) {
         columns_p.weightSpectrum_p.attach (* ms_p, "WEIGHT_SPECTRUM");
     }
+
+    if (cds.isDefined ("CORRECTED_WEIGHT_SPECTRUM")) {
+        columns_p.weightSpectrumCorrected_p.attach (* ms_p, "CORRECTED_WEIGHT_SPECTRUM");
+    }
+
 }
 
 pair<MeasurementSet *, Int>
@@ -453,6 +468,7 @@ MsFactory::fillCubes (FillState & fillState)
     fillVisCubeObserved (fillState);
 
     fillWeightSpectrumCube (fillState);
+    fillWeightSpectrumCorrectedCube (fillState);
     fillFlagCube (fillState);
 }
 
@@ -518,6 +534,15 @@ MsFactory::fillWeightSpectrumCube (FillState & fillState)
     if (! columns_p.weightSpectrum_p.isNull()){
 
         fillCube (columns_p.weightSpectrum_p, fillState, generators_p.get(MSMainEnums::WEIGHT_SPECTRUM));
+    }
+}
+
+void
+MsFactory::fillWeightSpectrumCorrectedCube (FillState & fillState)
+{
+    if (! columns_p.weightSpectrumCorrected_p.isNull()){
+
+        fillCube (columns_p.weightSpectrumCorrected_p, fillState, generators_p.get(MSMainEnums::CORRECTED_WEIGHT_SPECTRUM));
     }
 }
 

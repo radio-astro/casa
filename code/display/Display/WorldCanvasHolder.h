@@ -297,6 +297,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void labelAxesNormal( const Vector<Bool>& conforms, const WCRefreshEvent & ev );
 		void setControllingTitle( const Vector<Bool>& conforms );
 		void clearSubstituteTitles( );
+		Vector<Bool> getConformance() const;
 		std::string error_string;
 	};
 

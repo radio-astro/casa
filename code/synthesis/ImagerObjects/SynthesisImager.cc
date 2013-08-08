@@ -156,15 +156,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << "MS : " << msname << " | ";
 
     //Some MSSelection 
+    //If everything is empty (which is valid) it will throw an exception..below
+    //So make sure the main defaults are not empy i.e field and spw
     MSSelection thisSelection;
     if(field != ""){
       thisSelection.setFieldExpr(field);
       os << "Selecting on fields : " << field << " | " ;//LogIO::POST;
-    }
+    }else
+      thisSelection.setFieldExpr("*");
     if(spw != ""){
 	thisSelection.setSpwExpr(spw);
 	os << "Selecting on spectral windows expression :"<< spw  << " | " ;//LogIO::POST;
-    }
+    }else
+      thisSelection.setSpwExpr("*");
     
     if(antenna != ""){
       Vector<String> antNames(1, antenna);
@@ -234,7 +238,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if(freqBeg==""){
     	  vi::FrequencySelectionUsingChannels channelSelector;
     	  //////////This is not implemented
-    	  //channelSelector.add(thisSelection);
+    	  channelSelector.add(thisSelection);
     	  /////So this gymnastic is needed
     	  for(uInt k=0; k < nSelections; ++k)
     	  {
@@ -246,15 +250,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     		  chanEnd = chanlist(k,2);
     		  chanStep = chanlist(k,3);
     		  nchan = chanEnd-chanStart+1;
-    		  channelSelector.add (spw, chanStart, nchan,chanStep);
+    		  //channelSelector.add (spw, chanStart, nchan,chanStep);
     		  ///////////////Temporary revert to using Vi/vb
     		  blockNChan_p[msin][k]=nchan;
     		  blockStart_p[msin][k]=chanStart;
     		  blockStep_p[msin][k]=chanStep;
     		  blockSpw_p[msin][k]=spw;
     		  /////////////////////////////////////////
-    		  fselections_p.add(channelSelector);
+
     	  }
+    	  fselections_p.add(channelSelector);
       }
       else{
     	  vi::FrequencySelectionUsingFrame channelSelector(freqframe);

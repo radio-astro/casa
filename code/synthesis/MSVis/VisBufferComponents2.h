@@ -55,6 +55,7 @@ typedef enum {
     Weight,
     WeightScaled,
     WeightSpectrum,
+    WeightSpectrumCorrected,
     WeightSpectrumScaled,
     Uvw,
     VisibilityCorrected,

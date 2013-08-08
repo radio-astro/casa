@@ -650,6 +650,7 @@ public:
     VbCacheItemArray <Matrix<Float> > weight_p;
     //VbCacheItemArray <Matrix<Float> > weightMat_p;
     VbCacheItemArray <Cube<Float> > weightSpectrum_p;
+    VbCacheItemArray <Cube<Float> > weightSpectrumCorrected_p;
 
     CacheRegistry registry_p;
 
@@ -841,6 +842,8 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     weight_p.initialize (this, vb, &VisBufferImpl2::fillWeight, Weight, NcNr, False);
     weightSpectrum_p.initialize (this, vb, &VisBufferImpl2::fillWeightSpectrum,
                                  WeightSpectrum, NcNfNr, False);
+    weightSpectrumCorrected_p.initialize (this, vb, &VisBufferImpl2::fillWeightSpectrumCorrected,
+                                          WeightSpectrumCorrected, NcNfNr, False);
 
 }
 
@@ -2527,6 +2530,27 @@ VisBufferImpl2::setWeightSpectrum (const Cube<Float>& value)
     cache_p->weightSpectrum_p.set (value);
 }
 
+const Cube<Float> &
+VisBufferImpl2::weightSpectrumCorrected () const
+{
+    return cache_p->weightSpectrumCorrected_p.get ();
+}
+
+Cube<Float> &
+VisBufferImpl2::weightSpectrumCorrectedRef ()
+{
+    return cache_p->weightSpectrumCorrected_p.getRef();
+}
+
+
+void
+VisBufferImpl2::setWeightSpectrumCorrected (const Cube<Float>& value)
+{
+    cache_p->weightSpectrumCorrected_p.set (value);
+}
+
+
+
 //      +-----------+
 //      |           |
 //      |  Fillers  |
@@ -2575,6 +2599,16 @@ VisBufferImpl2::fillCubeCorrected (Cube <Complex> & value) const
     getViP()->visibilityCorrected (value);
 }
 
+Bool
+VisBufferImpl2::modelDataIsVirtual () const
+{
+    String modelkey=String("definedmodel_field_")+String::toString(fieldId());
+    Bool hasmodkey=getViP()->ms().keywordSet().isDefined(modelkey);
+
+    Bool isVirtual = hasmodkey || !(getViP()->ms().tableDesc().isColumn("MODEL_DATA"));
+
+    return isVirtual;
+}
 
 void
 VisBufferImpl2::fillCubeModel (Cube <Complex> & value) const
@@ -2584,7 +2618,7 @@ VisBufferImpl2::fillCubeModel (Cube <Complex> & value) const
     String modelkey=String("definedmodel_field_")+String::toString(fieldId());
     Bool hasmodkey=getViP()->ms().keywordSet().isDefined(modelkey);
 
-    if (hasmodkey || !(getViP()->ms().tableDesc().isColumn("MODEL_DATA"))){
+    if (modelDataIsVirtual ()){
 
         //cerr << "HASMOD " << state_p->visModelData_p.hasModel(msId(), fieldId(), spectralWindow()) << endl;
 
@@ -3131,6 +3165,14 @@ VisBufferImpl2::fillWeightSpectrum (Cube<Float>& value) const
   getViP()->weightSpectrum (value);
 }
 
+void
+VisBufferImpl2::fillWeightSpectrumCorrected (Cube<Float>& value) const
+{
+  CheckVisIter ();
+
+  getViP()->weightSpectrumCorrected (value);
+}
+
 Float
 VisBufferImpl2::getWeightScaled (Int row) const
 {
@@ -3193,6 +3235,26 @@ VisBufferImpl2::getWeightScaled (Int correlation, Int channel, Int row) const
     else{
         theWeight = weight () (correlation, row);
     }
+
+    // If there is a scaling function, the apply that to the weight
+
+    if (! state_p->weightScaling_p.null()){
+        theWeight = (* state_p->weightScaling_p) (theWeight);
+    }
+
+    return theWeight;
+}
+
+Float
+VisBufferImpl2::getWeightCorrectedScaled (Int correlation, Int channel, Int row) const
+{
+    // Get the weight from the weightSpectrumCorrected.
+
+    ///////Assert (cache_p->weightSpectrumCorrected_p.isPresent());
+
+    Float theWeight = 0;
+
+    theWeight = weightSpectrumCorrected () (correlation, channel, row);
 
     // If there is a scaling function, the apply that to the weight
 

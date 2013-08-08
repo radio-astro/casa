@@ -183,7 +183,7 @@ namespace casa {
 
 	void DisplayDataHolder::removeDDAll() {
 		dataList.resize(0);
-		//controlling_dd = NULL;
+		controlling_dd = NULL;
 	}
 
 	bool DisplayDataHolder::removeDD(QtDisplayData* qdd) {

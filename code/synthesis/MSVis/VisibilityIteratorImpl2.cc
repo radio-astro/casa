@@ -879,8 +879,8 @@ VisibilityIteratorImpl2::Cache::Cache()
   feedpaTime_p (-1),
   hourang_p (0),
   hourangTime_p (-1),
-  msHasFC_p(False),
-  msHasWtSp_p (False),
+  msHasFlagCategory_p(False),
+  msHasWeightSpectrum_p (False),
   parang0_p (0),
   parang0Time_p (-1),
   parangTime_p (-1)
@@ -1206,18 +1206,15 @@ VisibilityIteratorImpl2::existsColumn (VisBufferComponent2 id) const
         result = ! (columns_p.vis_p.isNull() && columns_p.floatVis_p.isNull());
         break;
 
-    // RR: I can't tell if the other columns should checked for here or not.
-    //     It's not true that all the other columns are required.
-    //     existsFlagCategory uses caching anyway.
-    // case FlagCategory:
-    //   result = False;
-    //   if(!columns_p.flagCategory().isNull() &&
-    //      columns_p.flagCategory().isDefined(0)){
-    //     IPosition fcshape(columns_p.flagCategory().shape(0));
-    //     IPosition fshape(columns_p.flag().shape(0));
+    case WeightSpectrum:
 
-    //     result = fcshape(0) == fshape(0) && fcshape(1) == fshape(1);
-    //   }
+        result = ! columns_p.weightSpectrum_p.isNull();
+        break;
+
+    case WeightSpectrumCorrected:
+
+        result = ! columns_p.weightSpectrumCorrected_p.isNull();
+        break;
 
     default:
         result = True; // required columns
@@ -1262,7 +1259,8 @@ VisibilityIteratorImpl2::allSpectralWindowsSelected (Vector<Int> & selectedWindo
     }
     else {
 
-        set<Int> windows = selection->getSelectedWindows();
+        const FrequencySelection & frequencySelection = frequencySelections_p->get (msId());
+        set<Int> windows = frequencySelection.getSelectedWindows();
 
         selectedWindows.resize (windows.size());
         nChannels.resize (windows.size());
@@ -1620,10 +1618,10 @@ VisibilityIteratorImpl2::determineChannelSelection (Double time)
 
 vi::ChannelSelector *
 VisibilityIteratorImpl2::makeChannelSelectorC (const FrequencySelection & selectionIn,
-                                                   Double time,
-                                                   Int msId,
-                                                   Int spectralWindowId,
-                                                   Int polarizationId)
+                                               Double time,
+                                               Int msId,
+                                               Int spectralWindowId,
+                                               Int polarizationId)
 {
     const FrequencySelectionUsingChannels & selection =
         dynamic_cast<const FrequencySelectionUsingChannels &> (selectionIn);
@@ -2077,6 +2075,9 @@ VisibilityIteratorImpl2::usesTiledDataManager (const String & columnName,
     noData = noData ||
              (columnName == MS::columnName (MS::WEIGHT_SPECTRUM) && ! weightSpectrumExists ());
 
+    noData = noData ||
+             (columnName == "CORRECTED_WEIGHT_SPECTRUM" && ! weightSpectrumCorrectedExists ());
+
     // Check to see if the column exist and have valid data
 
     noData = noData ||
@@ -2267,14 +2268,9 @@ Bool
 VisibilityIteratorImpl2::flagCategoryExists() const
 {
   if(msIter_p->newMS()){ // Cache to avoid testing unnecessarily.
-    try{
-      cache_p.msHasFC_p = columns_p.flagCategory_p.hasContent();
-    }
-    catch (AipsError &){
-      cache_p.msHasFC_p = False;
-    }
+      cache_p.msHasFlagCategory_p = columns_p.flagCategory_p.hasContent();
   }
-  return cache_p.msHasFC_p;
+  return cache_p.msHasFlagCategory_p;
 }
 
 void
@@ -2555,26 +2551,24 @@ Bool
 VisibilityIteratorImpl2::weightSpectrumExists () const
 {
     if (msIter_p->newMS ()) { // Cache to avoid testing unnecessarily.
-        try {
-            cache_p.msHasWtSp_p = columns_p.weightSpectrum_p.hasContent ();
-            // Comparing columns_p.weightSpectrum_p.shape (0) to
-            // IPosition (2, nPolarizations_p, channelGroupSize ()) is too strict
-            // when channel averaging might have changed
-            // channelGroupSize () or weightSpectrum () out of sync.  Unfortunately the
-            // right answer might not get cached soon enough.
-            //
-            //       columns_p.weightSpectrum_p.shape (0).isEqual (IPosition (2, nPolarizations_p,
-            //                                                    channelGroupSize ())));
-            // if (!msHasWtSp_p){
-            //   cerr << "columns_p.weightSpectrum_p.shape (0): " << columns_p.weightSpectrum_p.shape (0) << endl;
-            //   cerr << "(nPolarizations_p, channelGroupSize ()): " << nPolarizations_p
-            //        << ", " << channelGroupSize () << endl;
-            // }
-        } catch (AipsError x) {
-            cache_p.msHasWtSp_p = False;
-        }
+
+        cache_p.msHasWeightSpectrum_p = columns_p.weightSpectrum_p.hasContent ();
+
     }
-    return cache_p.msHasWtSp_p;
+
+    return cache_p.msHasWeightSpectrum_p;
+}
+
+Bool
+VisibilityIteratorImpl2::weightSpectrumCorrectedExists () const
+{
+    if (msIter_p->newMS ()) { // Cache to avoid testing unnecessarily.
+
+        cache_p.msHasWeightSpectrumCorrected_p = columns_p.weightSpectrumCorrected_p.hasContent ();
+
+    }
+
+    return cache_p.msHasWeightSpectrum_p;
 }
 
 void
@@ -2583,6 +2577,19 @@ VisibilityIteratorImpl2::weightSpectrum (Cube<Float> & spectrum) const
     if (weightSpectrumExists ()) {
 
         getColumnRows (columns_p.weightSpectrum_p, spectrum);
+
+    }
+    else {
+        spectrum.resize (0, 0, 0);
+    }
+}
+
+void
+VisibilityIteratorImpl2::weightSpectrumCorrected (Cube<Float> & spectrum) const
+{
+    if (weightSpectrumCorrectedExists ()) {
+
+        getColumnRows (columns_p.weightSpectrumCorrected_p, spectrum);
 
     }
     else {
@@ -2945,6 +2952,16 @@ VisibilityIteratorImpl2::writeWeightSpectrum (const Cube<Float> & weightSpectrum
 
     if (! columns_p.weightSpectrum_p.isNull ()) {
         putColumnRows (columns_p.weightSpectrum_p, weightSpectrum);
+    }
+}
+
+void
+VisibilityIteratorImpl2::writeWeightSpectrumCorrected (const Cube<Float> & weightSpectrumCorrected)
+{
+    ThrowIf (! isWritable (), "This visibility iterator is not writable");
+
+    if (! columns_p.weightSpectrumCorrected_p.isNull ()) {
+        putColumnRows (columns_p.weightSpectrumCorrected_p, weightSpectrumCorrected);
     }
 }
 

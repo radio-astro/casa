@@ -1118,6 +1118,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		removeAllDDs();
 		delete displayDataHolder;
+		displayDataHolder = NULL;
+
 		delete qdp_;	// (probably unnecessary because of Qt parenting...)
 		// (possibly wrong, for same reason?...).
 		// (indeed was wrong as the last deletion [at least] because the display panel also reference the qsm_)
@@ -1410,9 +1412,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			removeDDs.append( qdd );
 			iter++;
 		}
-		//Remove them all from the master list
-		displayDataHolder->removeDDAll();
-
 
 		//Clean up for each one.
 		for ( int i = 0; i < removeDDs.size(); i++ ) {
@@ -1423,6 +1422,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			removeDD( removeDDs[i] );
 			removeDDs[i] = NULL;
 		}
+		//Remove them all from the master list
+		displayDataHolder->removeDDAll();
 
 		//Tell other widgets to update.
 		if ( regionDock_ ) {
@@ -1528,6 +1529,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	QtDisplayData* QtDisplayPanelGui::dd(const std::string& name) {
 		// retrieve DD with given name (0 if none).
+
 		QtDisplayData* qdd = displayDataHolder->getDD(name);
 		/*for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
 			if( (qdd=qdds.getRight())->name() == name ) return qdd;  }

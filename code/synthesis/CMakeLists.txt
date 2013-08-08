@@ -713,6 +713,7 @@ install (FILES
 	Utilities/AppRC.h
 	Utilities/FixVis.h
 	Utilities/ThreadCoordinator.h
+        Utilities/SpectralImageUtil.h
 	DESTINATION include/casacode/synthesis/Utilities
 	)
 casa_add_executable( synthesis casasplit apps/casasplit/casasplit.cc )

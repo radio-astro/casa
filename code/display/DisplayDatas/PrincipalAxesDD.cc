@@ -670,7 +670,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// allowed to change WC CS or axis codes.  We _would_ be allowed to alter
 		// maximum zoom extents or, e.g., tweak the zoom window to align on pixel
 		// boundaries, but this derivation does not.
-
 		if(!isCSmaster(&wch)) return False;
 
 		// If the CSmaster has no nondegenerate, nondisplayed axes, assume that the
@@ -678,7 +677,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// axes are degenerate). Check to see if any other registered display datas
 		// have nondegenerate, nondisplayed axes. If one is found, allow it to
 		// become the CSmaster (by returning False)...
-		Vector<int> shape = dataShape( ).asVector( );
+
+		// The check below was removed, because there is a requirement that if
+		// no CSMaster is set by the user then ANY display data can be the cs master
+		// regardless of whether or not it has nonsingleton nondisplayed axes.
+		/*Vector<int> shape = dataShape( ).asVector( );
 		if ( has_nonsingleton_nondegenerate_nondisplayed_axis(*this) == false ) {
 			const std::list<DisplayData*> &dl = wch.displaylist( );
 			for ( std::list<DisplayData*>::const_iterator iter = dl.begin( );
@@ -687,11 +690,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				// Leaving out the 'dataType( )' check breaks "region in file" which using WCUnions to
 				// draw region boxes... e.g. things with 'dataType( ) == "composite [rectangle]"...
 				if ( dd->dataType() == "image" && has_nonsingleton_nondegenerate_nondisplayed_axis(*dd) ) {
+					cout << "PrincipalAxesDD returning false because of nondegenerate axis"<<endl;
 					return False;
 				}
 			}
 		}
-
+		cout << "Past axes check"<<endl;*/
 
 		// CS master is on offer; we will accept that role by returning True.
 		// This means taking charge of setting the WC CS (and its 'axis codes'),

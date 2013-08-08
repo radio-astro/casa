@@ -332,10 +332,12 @@ public:
     // Determine whether WEIGHT_SPECTRUM exists.
 
     virtual Bool weightSpectrumExists () const;
+    virtual Bool weightSpectrumCorrectedExists () const;
 
     // Return weightspectrum (a weight for each channel)
 
     virtual void weightSpectrum (Cube<Float> & wtsp) const;
+    virtual void weightSpectrumCorrected (Cube<Float> & wtsp) const;
 
     // Return the number of sub-intervals in the current chunk
 
@@ -525,6 +527,7 @@ public:
 
     // Write/modify the weightSpectrum
     virtual void writeWeightSpectrum (const Cube<Float> & wtsp);
+    virtual void writeWeightSpectrumCorrected (const Cube<Float> & wtsp);
 
     // Write/modify the Sigma
     virtual void writeSigma (const Matrix<Float> & sig);
