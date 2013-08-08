@@ -74,8 +74,8 @@ int main(int argc, char **argv)
 		  useViVb2=((String(argv[3])==String("vi2"))) ? True: False;
 	  }
 	  SynthesisImager* imgr = new SynthesisImager();
-	  imgr->selectData(msname, /*spw=*/"0",/*freqBeg*/"", /*freqEnd*/"", /*freqFrame*/MFrequency::LSRK, /*field=*/"0", /*taql=*/"", /*antenna=*/"",  /*uvdist*/"", /*scan*/"", /*obs*/"",
-    		/*timestr*/"", /*usescratch*/False, /*readonly*/False);
+	  imgr->selectData(msname, /*spw=*/"0",/*freqBeg*/"", /*freqEnd*/"", /*freqFrame*/MFrequency::LSRK, /*field=*/"0",  /*antenna=*/"",  /*timestr*/"", /*scan*/"", /*obs*/"", /*state*/"",/*uvdist*/"", 
+    		/*taql*/"", /*usescratch*/False, /*readonly*/False);
 	  cout <<"--Imager created for MeasurementSet object. " << endl;
 	  MeasurementSet tab(msname);
 	  MDirection phasecenter=MSFieldColumns(tab.field()).phaseDirMeas(0,0.0);
@@ -132,11 +132,13 @@ int main(int argc, char **argv)
 		  ////		  imgr->setupImaging(1.0, False, True, 64, "SF");
 		  imgr->defineImage(/*imagename*/"test_widefield_image", nx, ny, cellx, celly,
 				  stokes,phasecenter, nchan,
-				    freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 1, 
-				    "WProjectFT",1, Quantity(1.420, "GHz"), Projection::SIN, Quantity(0,"m"), 
-				    MFrequency::LSRK, False,  
+				    freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")),
+
+				    /*facets*/1, 
+				    "WProjectFT",/*ntaylor*/ 1,freqBeg, Projection::SIN, Quantity(0,"m"), 
+				    MFrequency::LSRK, /*tracksource*/ False,  
 				    MDirection(Quantity(0.0, "deg"), Quantity(90.0, "deg")), False, 
-				    1.0, False True, 64, "SF" );
+				    1.0, /*useauto*/False,  /*doubleprec*/True, 64, "SF" );
 	  }
 	  else if(imtype==String("facet")){
 		  nx = 300;
