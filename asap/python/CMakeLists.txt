@@ -34,7 +34,7 @@ set( PYTHON_MODULES
      ${PYTHONDIR}/logging.py
      ${PYTHONDIR}/opacity.py
      ${PYTHONDIR}/parameters.py
-#     ${PYTHONDIR}/plotter2.py
+     ${PYTHONDIR}/plotter2.py
      ${PYTHONDIR}/sbseparator.py
      ${PYTHONDIR}/scantable.py
      ${PYTHONDIR}/selector.py

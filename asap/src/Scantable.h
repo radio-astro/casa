@@ -520,7 +520,7 @@ public:
   void regridChannel( int nchan, double dnu, double fmin, int irow ) ;
   void regridSpecChannel( double dnu, int nchan=-1 ) ;
 
-  bool getFlagtraFast(casa::uInt whichrow);
+  bool isAllChannelsFlagged(casa::uInt whichrow);
 
   std::vector<std::string> applyBaselineTable(const std::string& bltable, 
 					      const bool returnfitresult, 

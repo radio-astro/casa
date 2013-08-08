@@ -53,7 +53,8 @@ from opacity import skydip
 from opacity import model as opacity_model
 from asapgrid import asapgrid, asapgrid2
 from edgemarker import edgemarker
-#from plotter2 import plotter2
+if is_casapy():
+    from plotter2 import plotter2
 from sbseparator import sbseparator
 from _asap import srctype
 

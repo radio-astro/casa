@@ -41,9 +41,6 @@ public:
   explicit STSideBandSep(const vector<ScantableWrapper> &tables);
   virtual ~STSideBandSep();
 
-  ///////////// temp functions //////////////////////
-  //void cpprfft(std::vector<float> invec);
-  //////////////////////////////////////////////////
 
   /**
    * Separate side bands
@@ -182,8 +179,6 @@ private:
   CountedPtr<Scantable> imgTab_p, sigTab_p;
   Table::TableType tp_;
   FFTServer<Float, Complex> fftsf, fftsi;
-  // TEMPORAL member
-  CountedPtr<Scantable> st0_;
 
 }; // class
 

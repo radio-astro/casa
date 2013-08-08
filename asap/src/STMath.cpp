@@ -127,6 +127,7 @@ STMath::average( const std::vector<CountedPtr<Scantable> >& in,
   ScalarColumn<Double> intColOut(tout,"INTERVAL");
   ScalarColumn<uInt> cycColOut(tout,"CYCLENO");
   ScalarColumn<uInt> scanColOut(tout,"SCANNO");
+  ScalarColumn<uInt> flagRowColOut(tout,"FLAGROW");
 
   // set up the output table rows. These are based on the structure of the
   // FIRST scantable in the vector
@@ -140,6 +141,7 @@ STMath::average( const std::vector<CountedPtr<Scantable> >& in,
   ROArrayColumn<uChar> flagCol;
   ROScalarColumn<Double> mjdCol, intCol;
   ROScalarColumn<Int> scanIDCol;
+  ROScalarColumn<uInt> flagRowCol;
 
   //Vector<uInt> rowstodelete;
   Block<uInt> rowstodelB( in[0]->nrow() ) ;
@@ -239,15 +241,21 @@ STMath::average( const std::vector<CountedPtr<Scantable> >& in,
     tsysCol.attach(baset,"TSYS");
     intCol.attach(baset,"INTERVAL");
     mjdCol.attach(baset,"TIME");
+    flagRowCol.attach(baset,"FLAGROW");
     Vector<Float> spec,tsys;
     Vector<uChar> flag;
     Double inter,time;
+    uInt flagRow;
 
     for (uInt l = 0; l < rows.nelements(); ++l ) {
       uInt k = rows[l] ;
       flagCol.get(k, flag);
       Vector<Bool> bflag(flag.shape());
-      convertArray(bflag, flag);
+      flagRowCol.get(k, flagRow);
+      if (flagRow > 0)
+	bflag = true;
+      else
+	convertArray(bflag, flag);
       /*                                                                                                   
         if ( allEQ(bflag, True) ) {                                                                          
         continue;//don't accumulate                                                                          
@@ -333,10 +341,15 @@ STMath::average( const std::vector<CountedPtr<Scantable> >& in,
       tsysCol.attach(subt,"TSYS");
       intCol.attach(subt,"INTERVAL");
       mjdCol.attach(subt,"TIME");
+      flagRowCol.attach(subt,"FLAGROW");
       for (uInt k = 0; k < subt.nrow(); ++k ) {
         flagCol.get(k, flag);
         Vector<Bool> bflag(flag.shape());
-        convertArray(bflag, flag);
+	flagRowCol.get(k, flagRow);
+	if (flagRow > 0)
+	  bflag = true;
+	else
+	  convertArray(bflag, flag);
 	/*
         if ( allEQ(bflag, True) ) {
 	continue;//don't accumulate
@@ -386,6 +399,8 @@ STMath::average( const std::vector<CountedPtr<Scantable> >& in,
       // frequency switched data has different CYCLENO for different IFNO
       // which requires resetting this value
       cycColOut.put(i, uInt(0));
+      // completely flagged rows are removed anyway
+      flagRowColOut.put(i, uInt(0));
     } else {
       os << "For output row="<<i<<", all input rows of data are flagged. no averaging" << LogIO::POST;
     }

@@ -2484,8 +2484,12 @@ std::vector<float> Scantable::getWeather(int whichrow) const
   return out;
 }
 
-bool Scantable::getFlagtraFast(uInt whichrow)
+bool Scantable::isAllChannelsFlagged(uInt whichrow)
 {
+  uInt rflag;
+  flagrowCol_.get(whichrow, rflag);
+  if (rflag > 0)
+    return true;
   uChar flag;
   Vector<uChar> flags;
   flagsCol_.get(whichrow, flags);
@@ -2493,7 +2497,8 @@ bool Scantable::getFlagtraFast(uInt whichrow)
   for (uInt i = 1; i < flags.size(); ++i) {
     flag &= flags[i];
   }
-  return ((flag >> 7) == 1);
+  //  return ((flag >> 7) == 1);
+  return (flag > 0);
 }
 
 std::vector<std::string> Scantable::applyBaselineTable(const std::string& bltable, const bool returnfitresult, const std::string& outbltable, const bool outbltableexists, const bool overwrite)

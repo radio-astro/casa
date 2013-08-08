@@ -161,7 +161,7 @@ void python_Scantable() {
     .def("get_rms", &ScantableWrapper::getRms)
     .def("format_blparams_row", &ScantableWrapper::formatBaselineParams)
     .def("format_piecewise_blparams_row", &ScantableWrapper::formatPiecewiseBaselineParams)
-    .def("_getflagtrafast", &ScantableWrapper::getFlagtraFast,
+    .def("_is_all_chan_flagged", &ScantableWrapper::isAllChannelsFlagged,
 	 (boost::python::arg("whichrow")=0) )
     .def("_fft", &ScantableWrapper::execFFT)
     //.def("_sspline_baseline", &ScantableWrapper::smoothingSplineBaseline)

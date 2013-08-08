@@ -326,8 +326,8 @@ public:
   std::string formatPiecewiseBaselineParams(const std::vector<int>& ranges, const std::vector<float>& params, const std::vector<bool>& fixed, float rms, const std::string& masklist, int whichrow, bool verbose=false, bool csvformat=false)
   { return table_->formatPiecewiseBaselineParams(ranges, params, fixed, rms, -1, masklist, whichrow, verbose, csvformat); }
 
-  bool getFlagtraFast(int whichrow=0) const
-  { return table_->getFlagtraFast(casa::uInt(whichrow)); }
+  bool isAllChannelsFlagged(int whichrow=0) const
+  { return table_->isAllChannelsFlagged(casa::uInt(whichrow)); }
 
   std::vector<float> execFFT(int whichrow, const std::vector<bool>& mask, bool getRealImag=false, bool getAmplitudeOnly=false)
   { return table_->execFFT(whichrow, mask, getRealImag, getAmplitudeOnly); }

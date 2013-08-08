@@ -35,7 +35,6 @@ void python_STSideBandSep() {
     .def( "set_lo1root", &STSideBandSep::setLO1Root )
     .def( "separate", &STSideBandSep::separate )
     //// temporal methods
-    //.def( "_cpprfft", &STSideBandSep::cpprfft )
     //.def( "solve_imgfreq", &STSideBandSep::solveImageFreqency )
     //.def( "_get_asistb_from_scantb", &STSideBandSep::setScanTb0 )
   ;

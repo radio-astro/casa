@@ -285,11 +285,21 @@ void STSideBandSep::separate(string outname)
     // Solve signal sideband
     sigSpec = solve(specMat, tabIdvec, true);
     sigTab_p->setSpectrum(sigSpec, irow);
+    if (sigTab_p->isAllChannelsFlagged(irow)){
+      // unflag the spectrum since there should be some valid data
+      sigTab_p->flagRow(vector<uInt>(irow), true);
+      sigTab_p->flag(irow, vector<bool>(), true);
+    }
 
     // Solve image sideband
     if (doboth_) {
       imgSpec = solve(specMat, tabIdvec, false);
       imgTab_p->setSpectrum(imgSpec, irow);
+      if (imgTab_p->isAllChannelsFlagged(irow)){
+	// unflag the spectrum since there should be some valid data
+	imgTab_p->flagRow(vector<uInt>(irow), true);
+	imgTab_p->flag(irow, vector<bool>(), true);
+      }
     }
   } // end of row loop
 
@@ -540,14 +550,15 @@ ScantableWrapper STSideBandSep::gridTable()
   STGrid2 gridder = STGrid2(stab0);
   gridder.setIF(sigIfno_);
   gridder.defineImage(nx, ny, scellx, scelly, scenter);
-  gridder.setFunc("box", 1);
+  //  gridder.setFunc("box", 1); // convsupport=1 fails
+  gridder.setFunc("box");
   gridder.setWeight("uniform");
 #ifdef KS_DEBUG
   cout << "Grid parameter summary: " << endl;
   cout << "- IF = " << sigIfno_ << endl;
-  cout << "- center = " << scenter << ")\n"
+  cout << "- center = " << scenter << "\n"
        << "- npix = (" << nx << ", " << ny << ")\n"
-       << "- cell = (" << scellx << ", " << scelly << endl;
+       << "- cell = (" << scellx << ", " << scelly << ")" << endl;
 #endif
   gridder.grid();
   const int itp = (tp_ == Table::Memory ? 0 : 1);
@@ -640,8 +651,8 @@ bool STSideBandSep::getSpectraToSolve(const int polId, const int beamId,
     sel2.setRows(selrow);
     seltab_p->setSelection(sel2);
     CountedPtr<Scantable> avetab_p;
-    vector<bool> mask;
     if (seltab_p->nrow() > 1) {
+      // STMath::average also merges FLAGTRA and FLAGROW
       avetab_p = stm.average(vector< CountedPtr<Scantable> >(1, seltab_p),
 			     vector<bool>(), "TINTSYS", "NONE");
 #ifdef KS_DEBUG
@@ -653,13 +664,27 @@ bool STSideBandSep::getSpectraToSolve(const int polId, const int beamId,
     } else {
       avetab_p = seltab_p;
     }
+    // Check FLAGTRA and FLAGROW if there's any valid channel in the spectrum
+    if (avetab_p->getFlagRow(0) || avetab_p->isAllChannelsFlagged(0)) {
+#ifdef KS_DEBUG
+      cout << "Table " << itab << " - All data are flagged. skipping the table."
+	   << endl;
+#endif
+      continue;
+    }
+    // Interpolate flagged channels of the spectrum.
+    Vector<Float> tmpSpec = avetab_p->getSpectrum(0);
+    vector<bool> mask = avetab_p->getMask(0);
+    mathutil::doZeroOrderInterpolation(tmpSpec, mask);
     spec.reference(specMat.column(nspec));
-    spec = avetab_p->getSpectrum(0);
+    spec = tmpSpec;
     tabIdvec.push_back((uInt) itab);
     nspec++;
   } // end of table loop
+  // Check the number of selected spectra and resize matrix.
   if (nspec != nshift_){
     //shiftSpecmat.resize(nchan_, nspec, true);
+    specMat.resize(nchan_, nspec, true);
 #ifdef KS_DEBUG
       cout << "Could not find corresponding rows in some tables."
 	   << endl;
@@ -706,7 +731,7 @@ vector<float> STSideBandSep::solve(const Matrix<float> &specmat,
   } else {
     // (solve signal && solveother = F) OR (solve image && solveother = T)
     thisShift =  &sigShift_;
-    otherShift = &imgShift_; 
+    otherShift = &imgShift_;
 #ifdef KS_DEBUG
     cout << "Signal sideband will be deconvolved." << endl;
 #endif
@@ -716,9 +741,11 @@ vector<float> STSideBandSep::solve(const Matrix<float> &specmat,
   Matrix<float> shiftSpecmat(nchan_, nspec, 0.);
   double tempshift;
   Vector<float> shiftspvec;
+  uInt shiftId;
   for (uInt i = 0 ; i < nspec; i++) {
-    spshift[i] = otherShift->at(i) - thisShift->at(i);
-    tempshift = - thisShift->at(i);
+    shiftId = tabIdvec[i];
+    spshift[i] = otherShift->at(shiftId) - thisShift->at(shiftId);
+    tempshift = - thisShift->at(shiftId);
     shiftspvec.reference(shiftSpecmat.column(i));
     shiftSpectrum(specmat.column(i), tempshift, shiftspvec);
   }
@@ -799,7 +826,9 @@ void STSideBandSep::deconvolve(Matrix<float> &specmat,
   if (specmat.ncolumn() != shiftvec.size())
     throw(AipsError("Internal error. The number of input shifts and spectrum  differs."));
 
+#ifdef KS_DEBUG
   float minval, maxval;
+#endif
 #ifdef KS_DEBUG
   minMax(minval, maxval, specmat);
   cout << "Max/Min of input Matrix = (max: " << maxval << ", min: " << minval << ")" << endl;
@@ -912,39 +941,6 @@ void STSideBandSep::deconvolve(Matrix<float> &specmat,
 
   os << "Threshold = " << threshold << ", Rejected channels = " << nreject << endl;
 };
-
-////////////////////////////////////////////////////////////////////
-// void STSideBandSep::cpprfft(std::vector<float> invec)
-// {
-//   cout << "c++ method cpprfft" << endl;
-//   const unsigned int len = invec.size();
-//   Vector<Complex> carr(len/2+1, 0.);
-//   Vector<float> inarr = Vector<float>(invec);
-//   Vector <float> outarr(len, 0.);
-//   FFTServer<Float, Complex> fftsf, fftsi;
-//   fftsf.resize(IPosition(1, len), FFTEnums::REALTOCOMPLEX);
-//   fftsi.resize(IPosition(1, invec.size()), FFTEnums::COMPLEXTOREAL);
-//   cout << "Input float array (length = " << len << "):" << endl;
-//   for (uInt i = 0 ; i < len ; i++){
-//     cout << (i == 0 ? "( " : " ") << inarr[i] << (i == len-1 ? ")" : ",");
-//   }
-//   cout << endl;
-//   cout << "R->C transform" << endl;
-//   fftsf.fft0(carr, inarr, true);
-//   cout << "FFTed complex array (length = " << carr.size() << "):" << endl;
-//   for (uInt i = 0 ; i < carr.size() ; i++){
-//     cout << (i == 0 ? "( " : " ") << carr[i] << ( (i == carr.size()-1) ? ")" : "," );
-//   }
-//   cout << endl;
-//   cout << "C->R transform" << endl;
-//   fftsi.fft0(outarr, carr, false);
-//   cout << "invFFTed float array (length = " << outarr.size() << "):" << endl;
-//   for (uInt i = 0 ; i < outarr.size() ; i++){
-//     cout << (i == 0 ? "( " : " ") << outarr[i] << ( (i == outarr.size()-1) ? ")" : "," );
-//   }
-//   cout << endl;
-// };
-////////////////////////////////////////////////////////////////////
 
 
 void STSideBandSep::aggregateMat(Matrix<float> &inmat,
@@ -1239,10 +1235,10 @@ Bool STSideBandSep::checkFile(const string name, string type)
 };
 
 bool STSideBandSep::getLo1FromAsdm(const string asdmname,
-				   const double refval,
-				   const double refpix,
-				   const double increment,
-				   const int nChan)
+				   const double /*refval*/,
+				   const double /*refpix*/,
+				   const double /*increment*/,
+				   const int /*nChan*/)
 {
   // Check for relevant tables.
   string spwname = asdmname + "/SpectralWindow.xml";

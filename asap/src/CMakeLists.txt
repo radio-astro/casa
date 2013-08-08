@@ -6,13 +6,9 @@
 set( ASAPROOT ${ASAP_SOURCE_DIR} )
 set( SRCDIR ${ASAPROOT}/src )
 
-# include QT_USE_FILE
-include( ${QT_USE_FILE} )
-
 # include path
 include_directories( ${SRCDIR} 
                      ${Boost_INCLUDE_DIR}
-                     ${QT4_INCLUDE_DIRS}
                      ${ASAPROOT}/external-alma 
                      ${ASAPROOT}/external/libpyrap/pyrap-0.3.2 )
 
@@ -24,7 +20,6 @@ add_definitions( -DHAVE_LIBPYRAP )
 
 # source files for libpyrap
 set( ASAP_SRCS
-#     ${SRCDIR}/Plotter2.cpp
      ${SRCDIR}/concurrent.cpp
      ${SRCDIR}/MathUtils.cpp
      ${SRCDIR}/TableTraverse.cpp
@@ -83,8 +78,13 @@ set( ASAP_SRCS
      ${SRCDIR}/STBaselineTable.cpp
      ${SRCDIR}/CalibrationManager.cpp )
 
+if ( NOT STANDALONE )
+set( ASAP_SRCS
+     ${ASAP_SRCS}
+     ${SRCDIR}/Plotter2.cpp )
+endif()
+
 set( ASAP_PYSRCS
-#     ${SRCDIR}/python_Plotter2.cpp
      ${SRCDIR}/python_Scantable.cpp
      ${SRCDIR}/python_STFiller.cpp
      ${SRCDIR}/python_STSelector.cpp
@@ -109,6 +109,12 @@ set( ASAP_PYSRCS
      ${SRCDIR}/python_CalibrationManager.cpp
      ${SRCDIR}/python_asap.cpp )
 
+if ( NOT STANDALONE )
+set( ASAP_PYSRCS
+     ${ASAP_PYSRCS}
+     ${SRCDIR}/python_Plotter2.cpp )
+endif()
+
 add_library( ${ASAPLIB} SHARED ${ASAP_SRCS} )
 add_library( ${ASAPPYLIB} SHARED ${ASAP_PYSRCS} )
 
@@ -120,7 +126,8 @@ set_target_properties( ${ASAPPYLIB}
 
 target_link_libraries( ${ASAPLIB} 
                        #${Boost_LIBRARIES}
-                       ${QT4_LIBRARIES} 
+                       ${X11_LIBRARIES} 
+                       ${PGPLOT_LIBRARIES} 
                        ${PYRAPLIB} 
                        ${ATNFLIB} 
                        #${CASACORE_LIBRARIES} 

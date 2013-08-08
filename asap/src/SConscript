@@ -6,9 +6,11 @@ myenv = env.Clone()
 
 # gather cpp files
 cpps = env.SGlob("*.cpp")
+cpps.remove("Plotter2.cpp")
 pycpps = env.SGlob("python_*.cpp")
 for pf in pycpps:
     cpps.remove(pf)
+pycpps.remove("python_Plotter2.cpp")
 
 # location of libcasav.a
 myenv.Prepend( LIBPATH = ['#/build'] )
