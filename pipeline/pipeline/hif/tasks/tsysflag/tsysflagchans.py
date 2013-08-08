@@ -256,7 +256,13 @@ class TsysflagchansWorker(basetask.StandardTaskTemplate):
         # Construct a callibrary entry for the results that are to be
         # merged back into the context.
         calto = callibrary.CalTo(vis=tsystable.vis)
-        spwmap = tsysspwmap(vis=tsystable.vis, tsystable=name)
+	if not ms.tsys_spwmap: 
+	    spwmap = tsysspwmap(vis=tsystable.vis, tsystable=name,
+	        tsysChanTol=1)
+	else:
+	    spwmap = ms.tsys_spwmap
+	    LOG.info('Retrieving tsys spwmap %s for %s from context' % \
+	        (spwmap, tsystable.vis))
         calfrom = callibrary.CalFrom(name, caltype='tsys', spwmap=spwmap)
         calapp = callibrary.CalApplication(calto, calfrom)
         final.append(calapp)
