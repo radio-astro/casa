@@ -18,7 +18,8 @@ class SDCalTsysInputs(common.SingleDishInputs):
     def __init__(self, context, output_dir=None,
                  infiles=None, outfile=None, calmode=None, iflist=None,
                  scanlist=None, pollist=None):
-        self._init_properties(vars())            
+        self._init_properties(vars())
+        self._to_list(['infiles', 'iflist', 'pollist', 'scanlist'])
 
     def to_casa_args(self):
         args = super(SDCalTsysInputs,self).to_casa_args()
