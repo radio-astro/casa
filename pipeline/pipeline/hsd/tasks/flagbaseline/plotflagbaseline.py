@@ -21,6 +21,7 @@ class SDPlotFlagBaselineInputs(common.SingleDishInputs):
     def __init__(self, context, infiles=None, iflist=None, pollist=None,
                  linewindow=None):
         self._init_properties(vars())
+        self._to_list(['infiles', 'iflist', 'pollist'])
 
     @property
     def antennalist(self):
