@@ -146,7 +146,7 @@ class GriddingBase(object):
                 _counter = 1
                 _index = ants[i]
         num_spectra_per_data.append(num_spectra - sum(num_spectra_per_data))
-        LOG.debug('num_spectra_per_data=%s'%(num_spectra_per_data))
+        LOG.trace('num_spectra_per_data=%s'%(num_spectra_per_data))
         SpStorage = numpy.zeros((num_spectra, self.nchan), dtype=numpy.float32)
 
         LOG.info('Processing %d spectra...' % num_spectra)

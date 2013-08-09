@@ -12,6 +12,7 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.basetask as basetask
 from .. import common
+from ..baseline import baseline
 from .gridding import gridding_factory
 from .imagegenerator import SDImageGenerator
 
@@ -61,6 +62,20 @@ class SDImaging(common.SingleDishTaskTemplate):
         st_names = context.observing_run.st_names
         file_index = [st_names.index(infile) for infile in infiles]
 
+        # search results and retrieve edge parameter from the most
+        # recent SDBaselineResults if it exists
+        results = [r.read() for r in context.results]
+        baseline_stage = -1
+        for stage in xrange(len(results)-1, -1, -1):
+            if isinstance(results[stage], baseline.SDBaselineResults):
+                baseline_stage = stage
+        if baseline_stage > 0:
+            edge = list(results[baseline_stage].outcome['edge'])
+            LOG.info('Retrieved edge information from SDBaselineResults: %s'%(edge))
+        else:
+            LOG.info('No SDBaselineResults available. Set edge as [0,0]')
+            edge = [0,0]
+        
         # task returns ResultsList
         results = basetask.ResultsList()
 
@@ -137,7 +152,7 @@ class SDImaging(common.SingleDishTaskTemplate):
                 # do imaging
                 self._do_imaging(imagename, datatable, st, source_name,
                                  name, indices, filenames, spwid, pols,
-                                 validsps, rmss)
+                                 edge, validsps, rmss)
 
                 
                 
@@ -151,6 +166,7 @@ class SDImaging(common.SingleDishTaskTemplate):
                     outcome['image'] = image_item
                     outcome['validsp'] = numpy.array(validsps)
                     outcome['rms'] = numpy.array(rmss)
+                    outcome['edge'] = edge
                     result = SDImagingResults(task = self.__class__,
                                               success = True, 
                                               outcome = outcome)
@@ -169,7 +185,7 @@ class SDImaging(common.SingleDishTaskTemplate):
 
         return results
 
-    def _do_imaging(self, imagename, datatable, reference_data, source_name, antenna_name, antenna_indices, antenna_files, spwid, polids, num_validsp_array, rms_array):
+    def _do_imaging(self, imagename, datatable, reference_data, source_name, antenna_name, antenna_indices, antenna_files, spwid, polids, edge, num_validsp_array, rms_array):
         # spectral window
         spw = reference_data.spectral_window[spwid]
         refpix = spw.refpix
@@ -201,13 +217,11 @@ class SDImaging(common.SingleDishTaskTemplate):
             rms_array.append([r[8] for r in grid_table])
 
         # imaging
-        LOG.todo('How to set edge parameter? Is it local? or global?')
-        edge = []
         image_generator = SDImageGenerator(data_array, edge)
         antenna = reference_data.ms.antenna_array.name
         observer = reference_data.observer
         obs_date = reference_data.start_time
-        image_generator.define_image(grid_table, 
+        image_generator.define_image(grid_table,
                                      freq_refpix=refpix, freq_refval=refval,
                                      freq_increment=increment,
                                      freq_frame=freq_frame,

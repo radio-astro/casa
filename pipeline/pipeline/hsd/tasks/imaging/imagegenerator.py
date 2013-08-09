@@ -30,6 +30,7 @@ class SDImageGenerator(object):
 
     def __init__(self, spectral_data, edge=[]):
         self.data = numpy.array(spectral_data) #(npol,nrow,nchan)
+        self.reshaped_data = None
         self._imagename = None
         self.edge = list(common.parseEdge(edge))
 
@@ -78,16 +79,18 @@ class SDImageGenerator(object):
         if len(self.data.shape) < 4:
             # let's reshape self.data
             (npol,nrow,nchan) = self.data.shape
-            self.data = self.data.transpose(0,2,1)
-            self.data = self.data.reshape((npol,nchan,self.ny,self.nx))
-            self.data = self.data.transpose() # (nx,ny,nchan,npol)
-            self.data = numpy.flipud(self.data) # flip x-axis
-
+            self.reshaped_data = self.data.transpose(0,2,1)
+            self.reshaped_data = self.reshaped_data.reshape((npol,nchan,self.ny,self.nx))
+            self.reshaped_data = self.reshaped_data.transpose() # (nx,ny,nchan,npol)
+            self.reshaped_data = numpy.flipud(self.reshaped_data) # flip x-axis
+        else:
+            self.reshaped_data = self.data
+            
     def _drop_channels(self):
         if self.isaveraged or len(self.edge) == 0 or self.edge == [0,0]:
-            return self.data
+            return self.reshaped_data
         else:
-            return self.data[:,:,self.edge[0]:self.nchan-self.edge[1],:]
+            return self.reshaped_data[:,:,self.edge[0]:self.nchan-self.edge[1],:]
         
     def _create_image(self, imagename, imagedata, coordsys, nodata=None):
         casatools.image.fromarray(outfile=imagename, pixels=imagedata, overwrite=True)
@@ -127,6 +130,12 @@ class SDImageGenerator(object):
         #self.center = [casatools.quanta.quantity(x,'deg'),
         #               casatools.quanta.quantity(y,'deg')]
         self.center = ['%sdeg'%(x), '%sdeg'%(y)]
+
+        # shift refval according to the edge
+        if not self.isaveraged:
+            #freq_refpix = freq_refpix - self.edge[0]
+            freq_refval = freq_refval + self.edge[0] * freq_increment
+        
         self.coords_rec = self._configure_coords(self.nx, self.ny, self.cellx, self.celly, self.center, freq_refpix, freq_refval, freq_increment, freq_frame, rest_frequency, antenna, observer, obs_date, stokes)
         
     def _configure_coords(self, nx, ny, cellx, celly, center, freq_refpix, freq_refval, freq_increment, freq_frame='LSRK', rest_frequency=None, antenna='', observer='', obs_date=0.0, stokes='XX YY'):
