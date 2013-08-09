@@ -82,7 +82,7 @@ class SDFlagDataInputs(common.SingleDishInputs):
             elif b == True:
                 self.activateFlagRule( k )
                 for i in xrange(len(p)):
-                    self.FlagRuleDictionary[k][keys[i]] = p[i]
+                    if p[i] is not None: self.FlagRuleDictionary[k][keys[i]] = p[i]
             elif b == False:
                 self.deactivateFlagRule( k )
 
