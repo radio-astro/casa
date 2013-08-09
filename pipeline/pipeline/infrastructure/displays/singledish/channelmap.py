@@ -225,9 +225,10 @@ class SDChannelMapDisplay(SDImageDisplay):
         
         # loop over detected lines
         ValidCluster = 0
-        for line_window in line_list:            
-            ChanC = int(line_window[0] + 0.5)
-            if float(ChanC) == line_window[0]:
+        for line_window in line_list:
+            # shift channel according to the edge parameter
+            ChanC = int(line_window[0] + 0.5 - self.inputs.edge[0])
+            if float(ChanC) == line_window[0] - self.inputs.edge[0]:
                 VelC = self.velocity[ChanC]
             else:
                  VelC = 0.5 * ( self.velocity[ChanC] + self.velocity[ChanC-1] )

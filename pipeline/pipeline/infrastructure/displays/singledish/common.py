@@ -155,6 +155,10 @@ class SDImageDisplayInputs(SingleDishDisplayInputs):
     def rms(self):
         return self.__reshape2d(self.result.outcome['rms'])
 
+    @property
+    def edge(self):
+        return self.result.outcome['edge']
+
     def __reshape2d(self, array2d):
         array3d = array2d.reshape((self.npol,self.ny,self.nx)).transpose()
         return numpy.flipud(array3d)
