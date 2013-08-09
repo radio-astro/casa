@@ -1,17 +1,17 @@
 #################################
 ## Tool level test script for the refactored imager framework
 #################################
-from refimagerhelper import PySynthesisImager, PyParallelContSynthesisImager, PyParallelDeconvolver, PyParallelImagerHelper,ImagerParameters
+from refimagerhelper import PySynthesisImager, PyParallelContSynthesisImager,PyParallelCubeSynthesisImager, PyParallelDeconvolver, PyParallelImagerHelper,ImagerParameters
 
 import commands
 #### Specify parameters.
-def getparams(testnum=1,parallelmajor=False,parallelminor=False):
+def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=False):
 
      # Iteration parameters - common to all tests below
      niter=100
-     cycleniter=100
+     cycleniter=20
      threshold=0.001
-     loopgain=0.2
+     loopgain=0.1
 
      # Interaction ON or OFF
      interactive=False
@@ -19,8 +19,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False):
      if(testnum==7):  ## 2 image-fields, mfs --- Real Imaging.
           
           write_file('out7.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=19:58:40.895 +40.55.58.543')
-          paramList = ImagerParameters(casalog=casalog,\
-                                       msname='DataTest/twopoints_twochan.ms',\
+          paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',\
                                        field='0',spw='0',\
                                        usescratch=True,readonly=True,\
                                        outlierfile='out7.txt',\
@@ -37,8 +36,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False):
 
      if(testnum==6):  ## 1 image-field, mfs, multiple input MSs --- Real Imaging.
           
-          paramList = ImagerParameters(casalog=casalog,\
-                                       msname=['DataTest/point_onespw0.ms','DataTest/point_onespw1.ms'],\
+          paramList = ImagerParameters(msname=['DataTest/point_onespw0.ms','DataTest/point_onespw1.ms'],\
                                        field='0',spw=['0','0'],\
                                        usescratch=True,readonly=True,\
                                        imagename='mytest0', nchan=1,  freqstart='1.0GHz', freqstep='4.0GHz',\
@@ -54,8 +52,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False):
 
      if(testnum==5):  ## 1 image-field, mfs --- Real Imaging.
           
-          paramList = ImagerParameters(casalog=casalog,\
-                                       msname='DataTest/point_twospws.ms', field='0',spw='0',\
+          paramList = ImagerParameters(msname='DataTest/point_twospws.ms', field='0',spw='0',\
                                        usescratch=True,readonly=True,\
                                        imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
                                        imsize=[100,100],\
@@ -66,59 +63,41 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False):
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
-     
 
-     if(testnum==4): ## 2 image fields, each with multiple channels
-
-          write_file('out4.txt', 'imagename=mytest1\nnchan=2\nimsize=[1,1]\nstartmodel=startingmodel1')
-          paramList = ImagerParameters(casalog=casalog,\
-                                       msname='point_twospws.ms', field='0',spw='0,1', usescratch=True,\
-                                       outlierfile='out4.txt',\
-                                       imagename='mytest0', nchan=5, imsize=[3,3],\
-                                       ftmachine='ft', startmodel='',\
-                                       algo='test',\
-                                       niter=niter,cycleniter=cycleniter,\
-                                       threshold=threshold,loopgain=loopgain,\
-                                       interactive=interactive)
-
-     if(testnum==3):  ## 2 image-fields, each with one channel
-
-          write_file('out3.txt', 'imagename=mytest1\nnchan=1\nimsize=[1,1]')
-          paramList = ImagerParameters(casalog=casalog,\
-                                       msname='point_twospws.ms', field='0',spw='0,1', usescratch=True,\
-                                       outlierfile='out3.txt',\
-                                       imagename='mytest0', nchan=1, imsize=[3,3],\
-                                       ftmachine='ft', startmodel='',\
-                                       algo='test',\
-                                       niter=niter,cycleniter=cycleniter,\
-                                       threshold=threshold,loopgain=loopgain,\
-                                       interactive=interactive)
-        
-     if(testnum==2):  ## 1 image-field, multiple channels
-
-          paramList = ImagerParameters(casalog=casalog,\
-                                       msname='point_twospws.ms', field='0',spw='0,1', usescratch=True,\
-                                       imagename='mytest0', nchan=5, imsize=[3,3],\
-                                       ftmachine='ft', startmodel='',\
-                                       algo='test',\
-                                       niter=niter,cycleniter=cycleniter,\
-                                       threshold=threshold,loopgain=loopgain,\
-                                       interactive=interactive)
-              
-     if(testnum==1):  ## 1 image-field, one chan
+     if(testnum==4):  ## 2 image-fields, one cube, one mfs --- Real Imaging.
           
-          paramList = ImagerParameters(casalog=casalog,\
-                                       msname='point_twospws.ms', field='0',spw='0,1', usescratch=True,\
-                                       imagename='mytest0', nchan=1, imsize=[3,3],\
-                                       ftmachine='ft', startmodel='',\
-                                       algo='test',\
+          write_file('out4.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=19:58:40.895 +40.55.58.543\nfreqstep=4.0GHz')
+          paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',\
+                                       field='0',spw='0',\
+                                       usescratch=True,readonly=True,\
+                                       outlierfile='out4.txt',\
+                                       imagename='mytest0', nchan=2, freqstart='1.0GHz', freqstep='1.0GHz',\
+                                       imsize=[100,100],\
+                                       cellsize=['8.0arcsec','8.0arcsec'], 
+                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
+                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       algo='hogbom',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
+     
+     if(testnum==3):  ## 1 image-field, cube --- Real Imaging.
+          
+          paramList = ImagerParameters(msname='DataTest/point_twospws.ms', field='0',spw='0',\
+                                       usescratch=True,readonly=True,\
+                                       imagename='mytest0', nchan=10,freqstart='1.0GHz', freqstep='40MHz',\
+                                       imsize=[100,100],\
+                                       cellsize=['8.0arcsec','8.0arcsec'],\
+                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
+                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
      
 
      ### Make a cluster def file if a parallel test is to run.
-     if parallelmajor==True or parallelminor==True:
+     if parallelmajor==True or parallelminor==True or parallelcube==True:
         clusterdef = 'cfgfile.txt'
         defstr = 'vega, 2,'+os.getcwd() +'/aatest'
         # remove file first
@@ -134,11 +113,11 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False):
 
      ### Check input parameters, and parse outlier files.
      if paramList.checkParameters() == False:
-        return [None, "", False, False]
+        return [None, "", False, False,False]
 
      paramList.printParameters()
 
-     return [ paramList , clusterdef, parallelmajor, parallelminor ]
+     return [ paramList , clusterdef, parallelmajor, parallelminor, parallelcube ]
 
 #####################################################
 
@@ -146,16 +125,22 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False):
 #######################################
 ###    Function to run the Imaging.
 #######################################
-def doClean( params = [None,"",False,False] , doplot=True ):
+def doClean( params = [None,"",False,False,False] , doplot=True ):
 
     os.system('rm -rf mytest*')
 
-    pmajor=params[2]
+    pmajor = params[2]
+    pcube = params[4]
 
-    if pmajor==False:
+    if pmajor==False and pcube==False:
          imager = PySynthesisImager(params[0])
-    else:
+    elif pmajor==True:
          imager = PyParallelContSynthesisImager(params[0],params[1])
+    elif pcube==True:
+         imager = PyParallelCubeSynthesisImager(params[0],params[1])
+    else:
+         print 'Invalid parallel combination in doClean.'
+         return
 
     ### Set up Imagers, Deconvolvers, IterControl, and ParallelSync.
     imager.initializeImagers()
@@ -170,7 +155,7 @@ def doClean( params = [None,"",False,False] , doplot=True ):
     imager.restoreImages()
 
     if( doplot == True ):
-        imager.plotReport(imager.getSummary());
+         imager.getSummary();
 
     imager.deleteTools()
 ########################################
@@ -180,16 +165,23 @@ def doClean( params = [None,"",False,False] , doplot=True ):
 ########################################
 #  Run only Major Cycle
 ########################################
-def doMajor( params = [None,"",False,False] , doplot=True ):
+def doMajor( params = [None,"",False,False,False] , doplot=True ):
 
     os.system('rm -rf mytest*')
 
     pmajor=params[2]
+    pcube = params[4]
 
-    if pmajor==False:
+    if pmajor==False and pcube==False:
          imager = PySynthesisImager(params[0])
-    else:
+    elif pmajor==True:
          imager = PyParallelContSynthesisImager(params[0],params[1])
+    elif pcube==True:
+         imager = PyParallelCubeSynthesisImager(params[0],params[1])
+    else:
+         print 'Invalid parallel combination in doClean.'
+         return
+
 
     ### Set up Imagers and ParallelSync.
     imager.initializeImagers()
@@ -205,7 +197,7 @@ def doMajor( params = [None,"",False,False] , doplot=True ):
 ########################################
 ###   Run only the minor cycle....
 ########################################
-def doMinor( params = [None,"",False,False] , doplot=True ):
+def doMinor( params = [None,"",False,False,False] , doplot=True ):
 
 ##    os.system('rm -rf mytest*')
 
@@ -227,75 +219,10 @@ def doMinor( params = [None,"",False,False] , doplot=True ):
     imager.restoreImages()
 
     if( doplot == True ):
-        imager.plotReport(imager.getSummary());
+         imager.getSummary();
 
     imager.deleteTools()
 ########################################
-
-
-
-#######################################
-def doParCubeClean( params = [None,"",False,False] , doplot=True ):
-
-    #### THIS MAY NOT WORK RIGHT NOW. 
-
-    os.system('rm -rf mytest*')
-
-    pmajor=params[2]
-    pminor=params[3]
-    clusterdef = params[1]
-
-    allselpars = params[0].getSelPars()
-    allimpars = params[0].getImagePars()
-
-    PH = PyParallelImagerHelper( clusterdef )
-    NN = PH.NN
-    allselpars = PH.partitionDataSelection(allselpars)
-    allimpars = PH.partitionCubeDeconvolution(allimpars)
-
-    cmd = (commands.getoutput('echo $CASAPATH')).split()[0] + '/gcwrap/python/scripts/tests/test_refimager.py'
-    cmd = "execfile('"+cmd+"')"
-    #cmd = "execfile('/home/vega/rurvashi/TestCASA/ImagerRefactor/Runs/test_refimager.py')"
-    PH.runcmdcheck( cmd )
-
-    joblist=[]
-    for node in range(0,NN):
-         params[0].setSelPars(allselpars[str(node)])
-         params[0].setImagePars(allimpars[str(node)])
-
-         # Push the param object in.
-         PH.CL.push( paramList=params[0] )
-
-         joblist.append( PH.runcmd("imager = PySynthesisImager(params=paramList)", node) )
-####         joblist.append( PH.runcmd("imager = PySynthesisImager("+str(allselpars[str(node)])+","+str(allimpars[str(node)])+","+str(params[2])+","+str(params[3])+","+str(params[4])+")", node) )
-    PH.checkJobs( joblist )
-
-    ### Set up Imagers, Deconvolvers, IterControl, and ParallelSync.
-    cmd = "imager.initializeImagers();imager.initializeDeconvolvers();imager.initializeParallelSync();imager.initializeIterationControl()"
-    PH.runcmdcheck( cmd )
-
-    ### Run it.
-    cmd = "imager.makePSF()"
-    PH.runcmdcheck( cmd )
-
-    cmd = "imager.runMajorMinorLoops()"
-    PH.runcmdcheck( cmd )
-
-    cmd = "imager.restoreImages()"
-    PH.runcmdcheck( cmd )
-
-    if( doplot == True ):
-         cmd = "summvar = imager.getSummary()"
-         PH.runcmdcheck( cmd )
-         for node in range(0,NN):
-              summvar = PH.pullval( "summvar", node)
-              summplot1(summvar[node],node+1);
-
-    cmd = "imager.deleteTools()"
-    PH.runcmdcheck( cmd )
-
-########################################
-
 
 def write_file(filename,str_text):
     '''Save the string in a text file'''
@@ -394,25 +321,25 @@ def toolTestMajorCycle2( testnum=1 ):
 
 def checkDataPartitioningCode():
 
-     # Make parameter lists.
-#     paramList = ImagerParameters(casalog=casalog, msname=['x1.ms','x2.ms'], field='0',spw=['0','2'], usescratch=True)
+     ## Make parameter lists.
+     #paramList = ImagerParameters(casalog=casalog, msname=['x1.ms','x2.ms'], field='0',spw=['0','2'], usescratch=True)
+     ## Sync input lists to the same size.
+     #paramList.checkParameters()
 
      params = getparams( testnum=5 ,parallelmajor=True )
 
      paramList = params[0]
 
-     # Sync input lists to the same size.
-#     paramList.checkParameters()
-
-     # The '0' is for single node. This is done in PySynthesisImager __init__
-     selpars = { '0' : paramList.getSelPars() }
+     # Selection parameters
+     selpars = paramList.getSelPars()
 
      print 'Selpars : ', selpars
      
      # For parallel runs, make this from a config file.
      ppar = PyParallelImagerHelper(clusterdef=params[1])
      
-     # This is the function that does the data partitioning.
+     # This is the function that does the data partitioning and put the selpars
+     # into a dictionary indexed by node 'id'.
      newselpars = ppar.partitionDataSelection( selpars )
 
      print 'NewSelPars : ', newselpars
