@@ -18,7 +18,8 @@ class SDApplyCalInputs(common.SingleDishInputs):
     def __init__(self, context, output_dir=None,
                  infiles=None, outfile=None, field=None, iflist=None,
                  scanlist=None, pollist=None):
-        self._init_properties(vars())            
+        self._init_properties(vars())
+        self._to_list(['infiles', 'iflist', 'pollist'])
 
     @property
     def calto(self):
