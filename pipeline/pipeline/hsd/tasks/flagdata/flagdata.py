@@ -78,7 +78,7 @@ class SDFlagDataInputs(common.SingleDishInputs):
             if b is None:
                 # Don't touch operation flag but need to update thresholds.
                 for i in xrange(len(p)):
-                    self.FlagRuleDictionary[k][keys[i]] = p[i] 
+                    if p[i] is not None: self.FlagRuleDictionary[k][keys[i]] = p[i] 
             elif b == True:
                 self.activateFlagRule( k )
                 for i in xrange(len(p)):
