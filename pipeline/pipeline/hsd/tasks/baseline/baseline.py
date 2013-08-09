@@ -27,6 +27,8 @@ class SDBaselineInputs(common.SingleDishInputs):
         self._to_list(['infiles', 'iflist', 'pollist', 'edge', 'linewindow'])
         self._to_bool('broadline')
         self._to_numeric('fitorder')
+        if isinstance(self.fitorder, float):
+            self.fitorder = int(self.fitorder)
 
     @property
     def antennalist(self):
