@@ -157,7 +157,7 @@ FlagDataHandler::FlagDataHandler(string tablename, uShort iterationApproach, Dou
 	// Initialize FlagDataHanler-FlagAgents state
 	flushFlags_p = false;
 	flushFlagRow_p = false;
-	flagAutoCorrelations_p = false;
+	loadProcessorTable_p = false;
 
 	return;
 }

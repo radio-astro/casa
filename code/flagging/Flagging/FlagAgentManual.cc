@@ -27,7 +27,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 FlagAgentManual::FlagAgentManual(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube, Bool flag):
 		FlagAgentBase(dh,config,ROWS,writePrivateFlagCube,flag)
 {
-	initialize();
+	initialize(config);
 }
 
 FlagAgentManual::~FlagAgentManual()
@@ -36,11 +36,22 @@ FlagAgentManual::~FlagAgentManual()
 }
 
 void
-FlagAgentManual::initialize()
+FlagAgentManual::initialize(Record config)
 {
+
+	int exists;
+	bool autocorr = false;
+
+	exists = config.fieldNumber ("autocorr");
+	if (exists >= 0)
+		autocorr = config.asBool("autocorr");
+
 	// For the auto-correlation flagging
-	if (flagDataHandler_p->tableTye_p == FlagDataHandler::MEASUREMENT_SET)
+	if (flagDataHandler_p->tableTye_p == FlagDataHandler::MEASUREMENT_SET
+			and autocorr){
 		flagDataHandler_p->preLoadColumn(vi::ProcessorId);
+		flagDataHandler_p->loadProcessorTable_p = true;
+	}
 
 }
 

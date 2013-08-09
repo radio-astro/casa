@@ -39,7 +39,7 @@ FlagMSHandler::FlagMSHandler(string tablename, uShort iterationApproach, Double 
 	originalMeasurementSet_p = NULL;
 	visibilityIterator_p = NULL;
 	tableTye_p = MEASUREMENT_SET;
-	processorTableExist_p = true;
+	processorTableExist_p = false;
 }
 
 
@@ -461,8 +461,10 @@ FlagMSHandler::generateIterator()
 		visibilityBuffer_p = visibilityIterator_p->getVisBuffer();
 
 		// Get the TYPE column of the PROCESSOR sub-table
-		if (flagAutoCorrelations_p)
+		if (loadProcessorTable_p){
 			processorTable();
+			loadProcessorTable_p = false;
+		}
 
 		iteratorGenerated_p = true;
 		chunksInitialized_p = false;
@@ -886,38 +888,6 @@ FlagMSHandler::processorTable()
 	return true;
 
 }
-
-/*
-// -----------------------------------------------------------------------
-// Get the WEIGHT_SPECTRUM visCube as a Complex
-// -----------------------------------------------------------------------
-Cube<Complex>&
-FlagMSHandler::weightVisCube()
-{
-
-	Cube<Float> tmp = visibilityBuffer_p->weightSpectrum();
-
-	// Transform Cube<Float> into Cube<Complex>
-//	Cube<Complex> tmpTrans(tmp.shape());
-	weight_spectrum_p(tmp.shape());
-	for (uInt idx1=0;idx1<tmp.shape()[0];idx1++)
-	{
-		for (uInt idx2=0;idx2<tmp.shape()[1];idx2++)
-		{
-			for (uInt idx3=0;idx3<tmp.shape()[2];idx3++)
-			{
-				weight_spectrum_p(idx1,idx2,idx3) = Complex(tmp(idx1,idx2,idx3),0);
-			}
-		}
-	}
-
-//	weight_spectrum_p.resize(tmpTrans.shape(),False);
-//	weight_spectrum_p = tmpTrans;
-
-	return weight_spectrum_p;
-}
-*/
-
 
 } //# NAMESPACE CASA - END
 

@@ -925,7 +925,7 @@ public:
 	uShort summaryThreshold_p;
 	bool printChunkSummary_p;
 	uShort tableTye_p;
-	Bool flagAutoCorrelations_p;
+	Bool loadProcessorTable_p;
 
 	// PROCESSOR sub-table section
 	ScalarColumn<Bool> isCorrelatorType_p;

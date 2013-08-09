@@ -1118,6 +1118,29 @@ class test_selections_alma(test_base):
         self.assertEqual(res['spw']['4']['flagged'], 0)
         self.assertEqual(res['spw']['0']['flagged'], 276480)
 
+    def test_autocorr_wvr_list(self):
+        '''flagdata: CAS-5485 flag autocorrs in list mode'''
+        mycmd = ["mode='manual' antenna='DV01'",
+                 "mode='manual autocorr=True"]
+        
+        # The first cmd only flags cross-correlations of DV01
+        # The second cmd only flags auto-corrs of all antennas
+        # that have processor type=CORRELATOR. The radiometer
+        # data should not be flagged, which is in spw=4
+        res = flagdata(vis=self.vis, mode='list', inpfile=mycmd, flagbackup=False)
+        res = flagdata(vis=self.vis, mode='summary',basecnt=True)
+        
+        # These are the auto-correlations not flagged in the list flagging.
+        # Verify that the non-flagged points are those from the WVR data
+        wvr1 = res['baseline']['DV01&&DV01']['total'] - res['baseline']['DV01&&DV01']['flagged']
+        wvr2 = res['baseline']['DV02&&DV02']['total'] - res['baseline']['DV02&&DV02']['flagged']
+        wvr3 = res['baseline']['PM03&&PM03']['total'] - res['baseline']['PM03&&PM03']['flagged']
+        wvrspw= res['spw']['4']['total']
+        
+        self.assertEqual(wvrspw, wvr1+wvr2+wvr3, 'Auto-corr of WVR data should not be flagged')
+        self.assertEqual(res['antenna']['DV01']['flagged'],565920)
+        self.assertEqual(res['antenna']['DV01']['total'],573504)
+        self.assertEqual(res['spw']['4']['flagged'], 0)
 
 class test_selections2(test_base):
     '''Test other selections'''
