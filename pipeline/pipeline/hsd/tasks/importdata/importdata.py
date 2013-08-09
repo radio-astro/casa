@@ -13,6 +13,7 @@ import pipeline.infrastructure.callibrary as callibrary
 import pipeline.domain as domain
 from pipeline.infrastructure import casa_tasks, sdtablereader
 from ... import heuristics
+from ..common import utils
 
 import asap as sd
 
@@ -32,6 +33,8 @@ class SDImportDataInputs(basetask.StandardInputs):
     def overwrite(self, value):
         if value is None:
             value = False
+        else:
+            value = utils.to_bool(value)
         self._overwrite = value
 
     @property
