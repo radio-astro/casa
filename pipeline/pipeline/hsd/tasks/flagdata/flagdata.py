@@ -30,6 +30,19 @@ class SDFlagDataInputs(common.SingleDishInputs):
                  infiles=None, #field=None,
                  iflist=None, pollist=None):#, scanlist=None):
         self._init_properties(vars())
+        self._to_numeric(['iteration', 'tsys_thresh', 'weath_thresh',
+                          'prfre_thresh', 'pofre_thresh', 'prfr_thresh',
+                          'pofr_thresh', 'prfrm_thresh', 'prfrm_nmean',
+                          'pofrm_thresh', 'pofrm_nmean', 'user_thresh'])
+        for attr in ['iteration', 'prfrm_nmean', 'pofrm_nmean']:
+            value = getattr(self, attr)
+            if value is not None:
+                setattr(self, attr, int(value))
+        self._to_list(['edge', 'infiles', 'iflist', 'pollist'])
+        self._to_bool(['flag_tsys', 'flag_weath', 'flag_prfre',
+                       'flag_pofre', 'flag_prfr', 'flag_pofr',
+                       'flag_prfrm', 'flag_pofrm', 'flag_user',
+                       'plotflag'])
         ### Default Flag rule
         #import SDFlagRule
         from . import SDFlagRule
