@@ -19,7 +19,15 @@ class SDCalSkyInputs(common.SingleDishInputs):
                  width=None, elongated=None, output_dir=None,
                  infiles=None, outfile=None, iflist=None,
                  scanlist=None, pollist=None):
-        self._init_properties(vars())            
+        self._init_properties(vars())
+        self._to_list(['infiles', 'iflist', 'scanlist', 'pollist'])
+        self._to_bool(['elongated'])
+        if isinstance(self.fraction, str) and self.fraction.endswith('%'):
+            self._to_numeric(['noff', 'width'])
+        else:
+            self._to_numeric(['fraction', 'noff', 'width'])
+        if isinstance(self.noff, float):
+            self.noff = int(self.noff)
 
     def to_casa_args(self):
         args = super(SDCalSkyInputs,self).to_casa_args()
