@@ -922,19 +922,33 @@ namespace casa{
     LatticeFFT::cfft2d(c1_lat);
   }
 
+
   Double SynthesisUtils::nearestValue(const Vector<Double>& list, const Double& val, Int& index)
   {
-    // The algorithm below has a N*log(N) cost.
     Vector<Double> diff = fabs(list - val);
-    Bool dummy;
-    Sort sorter(diff.getStorage(dummy), sizeof(Double));
-    sorter.sortKey((uInt)0,TpDouble);
-    Int nch=list.nelements();
-    Vector<uInt> sortIndx;
-    sorter.sort(sortIndx, nch);
-    
-    index=sortIndx(0);
+    Double minVal=1e20; 
+    Int i=0;
+
+    for (index=0;index<diff.nelements();index++)
+      if (diff[index] < minVal) {minVal=diff[index];i=index;}
+    index=i;
     return list(index);
+
+    // The algorithm below has a N*log(N) cost.
+    //
+    // Bool dummy;
+    // Sort sorter(diff.getStorage(dummy), sizeof(Double));
+    // sorter.sortKey((uInt)0,TpDouble);
+    // Int nch=list.nelements();
+    // Vector<uInt> sortIndx;
+    // sorter.sort(sortIndx, nch);
+    
+    // index=sortIndx(0);
+    // return list(index);
+
+
+    // Works only for regularly samplied list
+    //
     // Int ndx=min(freqValues_p.nelements()-1,max(0,SynthesisUtils::nint((freqVal-freqValues_p[0])/freqValIncr_p)));
     // return ndx;
   }

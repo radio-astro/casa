@@ -69,19 +69,29 @@ namespace casa{
 			IPosition& skyShape, 
 			TempImage<Complex>& uvGrid, 
 			const VisBuffer& vb,
-			Bool doSquint=True,Int bandID=-1, Double freqVal=-1);
+			Bool doSquint=True,Int bandID=-1, Double freqVal=-1.0);
     void regridAperture(CoordinateSystem& skyCS,
 			IPosition& skyShape,
 			TempImage<Complex>& uvGrid,
 			const VisBuffer &vb,
 			const Vector<Float>& paList,
 			Bool doSquint, Int bandID);
+    void regridApertureEngine(ApertureCalcParams& ap,
+			      const Int& inStokes);
+    void setApertureParams(ApertureCalcParams& ap,
+			   const Float& Freq, const Float& pa, 
+			   const Int& bandID,
+			   const Int& inStokes,
+			   const IPosition& skyShape,
+			   const Vector<Double>& uvIncr);
+
+
     void applyPB(ImageInterface<Float>& pbImage, const VisBuffer& vb, 
 		 const Vector<Float>& paList, Int bandID, Bool doSquint=False);
     void applyPB(ImageInterface<Float>& pbImage, const VisBuffer& vb, Int bandID=-1, 
-		 Bool doSquint=False, Double freqVal=-1);
+		 Bool doSquint=False, Double freqVal=-1.0);
     void applyPB(ImageInterface<Complex>& pbImage, const VisBuffer& vb, Int bandID=-1, 
-		 Bool doSquint=True, Double freqVal=-1);
+		 Bool doSquint=True, Double freqVal=-1.0);
     void applyPBSq(ImageInterface<Float>& pbImage, const VisBuffer& vb, 
 		   const Vector<Float>& paList, Int bandID, Bool doSquint=False);
     void applyPBSq(ImageInterface<Float>& pbImage, const VisBuffer& vb, Int bandID=-1, 
@@ -89,6 +99,8 @@ namespace casa{
     void applyPBSq(ImageInterface<Complex>& pbImage, const VisBuffer& vb, Int bandID=-1, 
 		   Bool doSquint=True);
     void skyMuller(ImageInterface<Complex>& skyJones);
+    void skyMuller(Array<Complex>& skyJones, const IPosition& shape, const Int& inStokes);
+
     Bool findSupport(Array<Complex>& /*func*/, Float& /*threshold*/,Int& /*origin*/, Int& /*R*/)
     {throw(AipsError("VLACalcIlluminationConvFunc::findSupport() not implemented"));};
     virtual Bool makeAverageResponse(const VisBuffer& /*vb*/,

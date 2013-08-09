@@ -387,6 +387,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected);
     void makeWBCFWt(CFStore2& cfs,const Double imRefFreq);
 
+    CFBStruct cfbst_pub;
   protected:
     
     Int nint(Double val) {return Int(floor(val+0.5));};
@@ -510,7 +511,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			      const Cube<Complex>& visData,
 			      const Matrix<Double>& uvw,
 			      const Cube<Int>& flagCube,
-			      const Vector<Double>& dphase);
+			      const Vector<Double>& dphase,
+			      const Bool& doPSF);
 
     //    AWVisResampler visResampler_p;
     CountedPtr<VisibilityResamplerBase> visResampler_p;

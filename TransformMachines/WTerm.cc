@@ -60,8 +60,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Double rsq=l*l+msq;
 		if(rsq<1.0) 
 		  {
-		    Double phase=twoPiW*(sqrt(1.0-rsq)-1.0);
-		    screen(ix+convSize/2,iy+convSize/2)*=Complex(cos(phase),sin(phase));
+		    Double phase=twoPiW*(sqrt(1.0-rsq)-1.0), sp, cp;
+		    sincos(phase, &sp, &cp);
+		    screen(ix+convSize/2,iy+convSize/2)*=Complex(cp, sp);
 		  }
 	      }
     }

@@ -70,13 +70,30 @@
 //
 // </motivation>
 //
+
 namespace casa { //# NAMESPACE CASA - BEGIN
+  typedef Complex TT;
+
+  struct  CFCStruct{
+    TT * CFCStorage;
+    Int shape[2];
+    Float sampling;
+    Int xSupport, ySupport;
+  };
+
   using namespace CFDefs;
   using namespace std;
   //  template <class T>
-  typedef Complex TT;
   class CFCell
   {
+  void initCFCStruct(CFCStruct& cfcSt) 
+  {
+    cfcSt.CFCStorage=NULL;
+    cfcSt.xSupport = cfcSt.ySupport=0;
+    cfcSt.sampling=0.0;
+    cfcSt.shape[0]=cfcSt.shape[1]=0;
+  }
+
   public:
     //
     //========================= Administrative Parts ==========================
@@ -93,6 +110,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     ~CFCell() {};
 
+    void getAsStruct(CFCStruct& cfst) 
+    {
+      Bool dummy;
+      cfst.CFCStorage = getStorage()->getStorage(dummy);
+      cfst.shape[0]=cfShape_p[0];
+      cfst.shape[1]=cfShape_p[1];
+      cfst.sampling=sampling_p;
+      cfst.xSupport=xSupport_p;
+      cfst.ySupport=ySupport_p;
+    }
     CountedPtr<Array<TT> >& getStorage() {return storage_p;}
     void makePersistent(const char *dir);
     CountedPtr<CFCell> clone();
