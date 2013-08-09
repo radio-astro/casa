@@ -100,6 +100,10 @@ class Calibrater
   Bool setapply (const String& type, 
 		 const Record& applypar);
 
+  // Set up apply-able calibration via a Cal Library
+  Bool setcallib(Record callib);
+  Bool validatecallib(Record callib);
+
   Bool setmodel(const String& modelImage);
   Bool setModel(const Vector<Double>& stokes);
 

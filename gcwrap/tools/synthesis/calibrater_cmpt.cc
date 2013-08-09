@@ -252,6 +252,64 @@ calibrater::setapply(const std::string& type,
 }
 
 
+
+
+bool
+calibrater::setcallib(const ::casac::record& callib) {
+
+  if (! itsMS) {
+    *itsLog << LogIO::SEVERE << "Must first open a MeasurementSet."
+            << endl << LogIO::POST;
+    return false;
+  }
+  try {
+
+    LogIO os(LogOrigin("calibrater", "setcallib"));
+    os << "Beginning setcallib---------" << LogIO::POST;
+
+    Record callibrec = *toRecord(callib);
+
+    cout << "callibrec.isFixed() = " << boolalpha << callibrec.isFixed() << endl;
+
+    // Forward to the Calibrater object
+    itsCalibrater->setcallib(callibrec);
+
+  } catch(AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  return true;
+}
+
+bool
+calibrater::validatecallib(const ::casac::record& callib) {
+
+  /*  this currently isn't needed...
+  if (! itsMS) {
+    *itsLog << LogIO::SEVERE << "Must first open a MeasurementSet."
+            << endl << LogIO::POST;
+    return false;
+  }
+  */
+  try {
+
+    LogIO os(LogOrigin("calibrater", "validatecallib"));
+    os << "Beginning setcallib---------" << LogIO::POST;
+
+    Record callibrec = *toRecord(callib);
+
+    // Forward to the Calibrater object
+    if (itsCalibrater->validatecallib(callibrec)) 
+      *itsLog << LogIO::NORMAL << "Cal library ok." << LogIO::POST;
+
+  } catch(AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  return true;
+}
+
+
 bool 
 calibrater::setsolve(const std::string& type, 
 		     const ::casac::variant& t,

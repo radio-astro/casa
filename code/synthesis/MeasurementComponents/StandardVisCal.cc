@@ -958,9 +958,12 @@ void BJones::fillChanGapArray(Array<Complex>& sol,
 
 void BJones::syncWtScale() {
 
-  //  VisJones::syncWtScale();
-  //  cout << "currWtScale().shape() = " << currWtScale().shape() << endl;
-  //  cout << "currWtScale() = " << currWtScale() << endl;
+  if (cpp_) {
+    VisJones::syncWtScale();
+    //cout << "currWtScale().shape() = " << currWtScale().shape() << endl;
+    //    cout << "currWtScale() = " << currWtScale() << endl;
+    return;
+  }
 
   Cube<Float> amps;
   amps=Cube<Float>(ci_->tresultF(currObs(),currField(),currSpw()))(Slice(0,2,2),Slice(),Slice());
@@ -997,6 +1000,7 @@ void BJones::syncWtScale() {
 
   // Assign to currWtScale
   currWtScale().assign(newWtSc);
+
 
 }
 
