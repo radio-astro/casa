@@ -20,6 +20,7 @@ class SDInspectDataInputs(common.SingleDishInputs):
     """
     def __init__(self, context, infiles=None):
         self._init_properties(vars())
+        self._to_list(['infiles'])
         
 
 class SDInspectDataResults(common.SingleDishResults):
