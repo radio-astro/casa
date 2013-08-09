@@ -113,7 +113,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     if(rvi_p) delete rvi_p;
     cerr << "IN DESTR"<< endl;
-    VisModelData::listModel(mss4vi_p[0]);
+    //    VisModelData::listModel(mss4vi_p[0]);
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -342,10 +342,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     try
       {
 
+	os << "Adding " << imagename << " (nchan : " << nchan << ", freqstart:" << freqStart.getValue() << freqStart.getUnit() <<  ", nx:" << nx << ",ny:" << ny << ", cellx:" << cellx.getValue() << cellx.getUnit() << ", celly:" << celly.getValue() << celly.getUnit() << " ) to imager list " << LogIO::POST;
+
 	csys=buildCoordSys(phaseCenter, cellx, celly, nx, ny, stokes, projection, nchan,freqStart, freqStep, restFreq, freqFrame);
-	
-	//	appendToMapperList(imagename,  csys,  ftmParams_p.asString("ftmachine"), distance, facets, overwrite);
-	//	imageDefined_p=True;
 	
       }
     catch(AipsError &x)
@@ -354,9 +353,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
 
+    try
+      {
+
     /// Accumulate FTM parameters, to get used in createFTMachine..... 
-    /// why not just send them into appendToMapperList
-    
     ftmParams_p.define("ftmachine",ftmachine);
     ftmParams_p.define("wprojplanes", wprojplanes);
     ftmParams_p.define("padding", padding );
@@ -364,12 +364,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ftmParams_p.define("usedoubleprec", useDoublePrec);
     ftmParams_p.define("gridfunc", convFunc);
 
+    // NOTE to Kumar : If possible, can 'createFTMachine()' be called directly from here, 
+    //                      with a full list of parameters, instead of passing them through appendToMapperList ? 
+    // The other defineimage() already does this...... and can be augmented with the full FTM parameter list too.
 
+      }
+    catch(AipsError &x)
+      {
+	throw( AipsError("Error in setting up FTMachine() : "+x.getMesg()) );
+      }
 
     try
       {
-
-	os << "Adding " << imagename << " to imager list " << LogIO::POST;
 
 	appendToMapperList(imagename,  csys,  ftmParams_p.asString("ftmachine"), distance, facets, overwrite);
 	imageDefined_p=True;
@@ -580,7 +586,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	Quantity cellx=Quantity(itsMaxCoordSys.increment()[0], itsMaxCoordSys.worldAxisUnits()[0]);
     	Quantity celly=Quantity(itsMaxCoordSys.increment()[1], itsMaxCoordSys.worldAxisUnits()[1]);
       os << LogIO::NORMAL // Loglevel INFO
-         << "Weighting MS: Imaging weights will be changed" << LogIO::POST;
+         << "Imaging weights : " ; //<< LogIO::POST;
 
       if (type=="natural") {
         os << LogIO::NORMAL // Loglevel INFO
@@ -876,110 +882,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
     return whichStokes;
   }
-
-  ////////////////////////////////////////////
-  //////////////////////////////////////////////
-
-  MDirection SynthesisImager::tmpStringToMDir(String phasecenter)
-  {
-    MDirection mDir;
-    String tmpA,tmpB,tmpC;
-    std::istringstream iss(phasecenter);
-    iss >> tmpA >> tmpB >> tmpC;
-    casa::Quantity tmpQA, tmpQB;
-    casa::Quantity::read(tmpQA, tmpA);
-    casa::Quantity::read(tmpQB, tmpB);
-    if(tmpC.length() > 0){
-      casa::MDirection::Types theRF;
-      casa::MDirection::getType(theRF, tmpC);
-      mDir = casa::MDirection (tmpQA, tmpQB, theRF);
-    } else {
-      mDir = casa::MDirection (tmpQA, tmpQB);
-    }
-
-    return mDir;
-  }
-
-  // Build the Image coordinate system.  TODO : Replace with Imager2::imagecoordinates2()
-  CountedPtr<CoordinateSystem> SynthesisImager::buildImageCoordinateSystem(String phasecenter, 
-                                                                           Double cellx, Double celly, 
-                                                                           uInt imx, uInt imy,
-                                                                           uInt npol, uInt nchan)
-  {
-    
-    // Cell Size
-    Vector<Double> deltas(2);
-    deltas(0) = -1* cellx / 3600.0 * 3.14158 / 180.0; // 10 arcsec in radians
-    deltas(1) = celly / 3600.0 * 3.14158 / 180.0; // 10 arcsec in radians
-
-    // Direction of Image Center
-    MDirection mDir;
-    String tmpA,tmpB,tmpC;
-    std::istringstream iss(phasecenter);
-    iss >> tmpA >> tmpB >> tmpC;
-    casa::Quantity tmpQA, tmpQB;
-    casa::Quantity::read(tmpQA, tmpA);
-    casa::Quantity::read(tmpQB, tmpB);
-    if(tmpC.length() > 0){
-      casa::MDirection::Types theRF;
-      casa::MDirection::getType(theRF, tmpC);
-      mDir = casa::MDirection (tmpQA, tmpQB, theRF);
-    } else {
-      mDir = casa::MDirection (tmpQA, tmpQB);
-    }
-
-    Vector<Double> refCoord(2);
-    refCoord(0) = mDir.getAngle().getValue()(0);
-    refCoord(1) = mDir.getAngle().getValue()(1);
-
-    // Reference pixel
-    Vector<Double> refPixel(2); 
-    refPixel(0) = Double(imx / 2);
-    refPixel(1) = Double(imy / 2);
-
-    // Projection
-    Projection projection(Projection::SIN);
-
-    // Not sure....
-    Matrix<Double> xform(2,2);
-    xform=0.0;
-    xform.diagonal()=1.0;
-
-    // Set up direction coordinate
-    DirectionCoordinate myRaDec(MDirection::Types(mDir.getRefPtr()->getType()),
-                                projection,
-                                refCoord(0), refCoord(1),
-                                deltas(0), deltas(1),
-                                xform,
-                                refPixel(0), refPixel(1));
-
-
-    // Set up Stokes Coordinate
-    Vector<Int> whichStokes(npol);
-    whichStokes[0] = Stokes::I;
-    if(npol>1) whichStokes[1] = Stokes::V;
-    StokesCoordinate myStokes(whichStokes);
-    
-    // Set up Spectral Coordinate
-    MFrequency::Types imfreqref=MFrequency::REST;
-    Vector<Double> chanFreq( nchan );
-    for(uInt ch=0;ch<nchan;ch++)
-      {
-        chanFreq[ch] = 1.0e+09 + (Double)ch * 1.0e+06;
-      }
-    Double restFreq = 1.0e+09;
-    SpectralCoordinate mySpectral(imfreqref, chanFreq, restFreq);
-    
-
-    CountedPtr<CoordinateSystem> coordSys;
-    coordSys = new CoordinateSystem();
-    coordSys->addCoordinate(myRaDec);
-    coordSys->addCoordinate(myStokes);
-    coordSys->addCoordinate(mySpectral);
-
-    return coordSys;
-  }// end of buildImageCoordinateSystem
-
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
