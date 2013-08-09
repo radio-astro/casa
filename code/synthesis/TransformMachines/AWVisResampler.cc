@@ -362,11 +362,17 @@ namespace casa{
 	for(Int ix=0;ix<nx;ix++)
 	  {
 	    grad = (ix-convOrigin[0])*pointingOffset[0];
-	    phx = Complex(cos(grad),sin(grad));
+	    Double sx,cx;
+	    sincos(grad,&sx,&cx);
+	    //	    phx = Complex(cos(grad),sin(grad));
+	    phx = Complex(cx,sx);
 	    for(Int iy=0;iy<ny;iy++)
 	      {
 		grad = (iy-convOrigin[1])*pointingOffset[1];
-		phy = Complex(cos(grad),sin(grad));
+		Double sy,cy;
+		sincos(grad,&sy,&cy);
+		//		phy = Complex(cos(grad),sin(grad));
+		phy = Complex(cy,sy);
 		cached_phaseGrad_p(ix,iy)=phx*phy;
 	      }
 	  }
@@ -442,6 +448,22 @@ namespace casa{
     Vector<Double> wVals, fVals; PolMapType mVals, mNdx, conjMVals, conjMNdx;
     Double fIncr, wIncr;
     CFBuffer& cfb = *vbRow2CFBMap_p(0);
+    // CFBStruct cfbst;
+    // cfb.getAsStruct(cfbst);
+    // for(int ii=0;ii<vbs.cfBSt_p.shape[0];ii++)
+    //   for(int jj=0;jj<vbs.cfBSt_p.shape[1];jj++)
+    // 	for(int kk=0;kk<vbs.cfBSt_p.shape[2];kk++)
+    // 	  {
+    // 	    CFCStruct cfcst=vbs.cfBSt_p.getCFB(ii,jj,kk);
+    // 	    cerr << "[" << ii << "," << jj << "," << kk << "]:" 
+    // 		 << cfcst.sampling << " "
+    // 		 << cfcst.xSupport << " "
+    // 		 << cfcst.ySupport 
+    // 		 << endl;
+    // 	  }
+
+
+
     cfb.getCoordList(fVals,wVals,mNdx, mVals, conjMNdx, conjMVals, fIncr, wIncr);
     Vector<Double> pointingOffset(cfb.getPointingOffset());
     runTimeG1_p += timer_p.real();
@@ -508,6 +530,8 @@ namespace casa{
 		      Int cfFreqNdx;
 		      if (vbs.conjBeams_p) cfFreqNdx = cfb.nearestFreqNdx(vbSpw,ichan,True);// Get the conj. freq. index
 		      else  cfFreqNdx = cfb.nearestFreqNdx(vbSpw,ichan);
+
+		      //		      cerr << "G: " << cfFreqNdx << " " << wndx << " " << ichan << " " << vbSpw << " " << freq[ichan] << endl;
 
 		      runTimeG3_p += timer_p.real();
 		      
@@ -600,6 +624,7 @@ timer_p.mark();
 					  // 			   support,sampling,
 					  // 			   off, convOrigin, cfShape, loc, igrdpos,
 					  // 			   sinDPA, cosDPA,finitePointingOffsets,psfOnly);
+// cerr << vbs.vb_p->spectralWindow() << " " << vbs.vb_p->rowIds()(irow) << " " << irow << " " << ichan << " " << ipol << " " << mRow << endl;
 #include <synthesis/TransformMachines/FortranizedLoopsToGrid.cc>
 runTimeG7_p += timer_p.real();
 					}
@@ -705,6 +730,8 @@ runTimeG7_p += timer_p.real();
 	    Int wndx = cfb.nearestWNdx(abs(dataWVal)*freq[ichan]/C::c);
 	    //Int fndx = cfb.nearestFreqNdx(freq[ichan]);
 	    Int fndx = cfb.nearestFreqNdx(vbSpw,ichan);
+
+	    //	    cerr << "DG: " << fndx << " " << wndx << " " << ichan << " " << vbSpw << " " << freq[ichan] << endl;
 	    
 	    //	    cerr << "Grid: " << ichan << " " << freq[ichan] << " " << fndx << endl;
 	    
@@ -867,7 +894,10 @@ void AWVisResampler::sgrid(Vector<Double>& pos, Vector<Int>& loc,
   if (dphase != 0.0)
     {
       phase=-2.0*C::pi*dphase*freq/C::c;
-      phasor=Complex(cos(phase), sin(phase));
+      Double sp,cp;
+      sincos(phase,&sp,&cp);
+      //      phasor=Complex(cos(phase), sin(phase));
+      phasor=Complex(cp,sp);
     }
   else
     phasor=Complex(1.0);

@@ -146,6 +146,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     cfs2_p = new CFStore2;
     cfwts2_p = new CFStore2;
     pop_p->init();
+    CFBuffer::initCFBStruct(cfbst_pub);
     //    rotatedConvFunc_p.data=new Array<Complex>();    
   }
   //
@@ -204,6 +205,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     pop_p->init();
     useDoubleGrid_p=doublePrecGrid;
     //    rotatedConvFunc_p.data=new Array<Complex>();
+    CFBuffer::initCFBStruct(cfbst_pub);
   }
   //
   //---------------------------------------------------------------
@@ -329,7 +331,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	sensitivityPatternQualifierStr_p = other.sensitivityPatternQualifierStr_p;
 	visResampler_p=other.visResampler_p; // Copy the counted pointer
 	//	visResampler_p=other.visResampler_p->clone();
-	*visResampler_p = *other.visResampler_p; // Call the appropriate operator=()
+	//	*visResampler_p = *other.visResampler_p; // Call the appropriate operator=()
+
 	rotatedConvFunc_p = other.rotatedConvFunc_p;
 	cfs2_p = other.cfs2_p;
 	cfwts2_p = other.cfwts2_p;
@@ -904,7 +907,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				     const Vector<Int> cfPolMap, 
 				     Vector<Int>& conjPolMap)
   {
+    if (conjPolMap.nelements() > 0) return;
+
     LogIO log_l(LogOrigin("AWProjectFT", "makConjPolMap[R&D]"));
+
     //
     // All the Natak (Drama) below with slicers etc. is to extract the
     // Poln. info. for the first IF only (not much "information
@@ -912,7 +918,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Extract the shape of the array to be sliced.
     //
-    Array<Int> stokesForAllIFs = vb.msColumns().polarization().corrType().getColumn();
+    //    Array<Int> stokesForAllIFs = vb.msColumns().polarization().corrType().getColumn();
+    cerr << "############....temp code!!!!!!!!!! "
+	 << SynthesisUtils::mapSpwIDToPolID(vb,selectedSpw_p(0))
+	 <<endl;
+    Vector<Int> polIDs=SynthesisUtils::mapSpwIDToPolID(vb,selectedSpw_p(0));
+    if (polIDs.nelements()==0)
+      log_l << "Internal Error: Selected SPW did not map to any pol!" << LogIO::EXCEPTION;
+    //
+    // Use the first selected Spw to determine the pol. mapping in the
+    // VB.  This implies that the code assumes that all selected SPWs
+    // have the same pol. setup.
+    //
+    Int polID=polIDs(0);
+    Array<Int> stokesForAllIFs = vb.msColumns().polarization().corrType().get(polID);
     IPosition stokesShape(stokesForAllIFs.shape());
     IPosition firstIFStart(stokesShape),firstIFLength(stokesShape);
     //
@@ -1095,7 +1114,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	convFuncCtor_p->setSpwFreqSelection(spwFreqSel_p);
 
 	// USEFUL DEBUG MESSAGE
-	//	cerr << "Freq. selection: " << expandedSpwFreqSel_p << endl << expandedSpwConjFreqSel_p << endl;
+	//cerr << "Freq. selection: " << expandedSpwFreqSel_p << endl << expandedSpwConjFreqSel_p << endl;
 
 	convFuncCtor_p->makeConvFunction(image,vb,wConvSize, 
 					 pop_p, pa, dPA, uvScale, uvOffset,spwFreqSel_p,
@@ -1638,7 +1657,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
     VBStore vbs;
-    setupVBStore(vbs,vb, elWeight,data,uvw,flags, dphase);
+    setupVBStore(vbs,vb, elWeight,data,uvw,flags, dphase,dopsf);
 
     if (useDoubleGrid_p)
       resampleDataToGrid(griddedData2, vbs, vb, dopsf);//, *imagingweight, *data, uvw,flags,dphase,dopsf);
@@ -1660,6 +1679,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO log_l(LogOrigin("AWProjectFT", "resampleDataToGrid[R&D]"));
     visResampler_p->DataToGrid(griddedData_l, vbs, sumWeight, dopsf); 
+    cerr << "SumWt: " << sumWeight << endl;
   }
   //
   //-------------------------------------------------------------------------
@@ -1667,8 +1687,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::resampleDataToGrid(Array<DComplex>& griddedData_l, VBStore& vbs, 
 				       const VisBuffer& /*vb*/, Bool& dopsf)
   {
+    //    static int count=0;
     LogIO log_l(LogOrigin("AWProjectFT", "resampleDataToGridD[R&D]"));
+    //    cerr << count++ << " ";
     visResampler_p->DataToGrid(griddedData_l, vbs, sumWeight, dopsf); 
+    cerr << "SumWt: " << sumWeight << endl;
   }
   //
   //---------------------------------------------------------------
@@ -1748,8 +1771,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     getInterpolateArrays(vb, data, flags);
 
     VBStore vbs;
-    //    setupVBStore(vbs,vb, vb.imagingWeight(),vb.modelVisCube(),uvw,flags, dphase);
-    setupVBStore(vbs,vb, vb.imagingWeight(),data,uvw,flags, dphase);
+    //    setupVBStore(vbs,vb, vb.imagingWeight(),vb.modelVisCube(),uvw,flags, dphase, dopsf);
+    Bool tmpDoPSF=False;
+    setupVBStore(vbs,vb, vb.imagingWeight(),data,uvw,flags, dphase,tmpDoPSF);
 
       // visResampler_p->setParams(uvScale,uvOffset,dphase);
       // visResampler_p->setMaps(chanMap, polMap);
@@ -2216,7 +2240,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				 const Cube<Complex>& visData,
 				 const Matrix<Double>& uvw,
 				 const Cube<Int>& flagCube,
-				 const Vector<Double>& dphase)
+				 const Vector<Double>& dphase,
+				 const Bool& dopsf)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "setupVBStore[R&D]"));
 
@@ -2238,6 +2263,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     vbs.beginRow_p = 0;
     vbs.endRow_p = vbs.nRow_p;
     vbs.spwID_p = vb.spectralWindow();
+    vbs.nDataPol_p  = flagCube.shape()[0];
+    vbs.nDataChan_p = flagCube.shape()[1];
 
     vbs.antenna1_p.reference(vb.antenna1());
     vbs.antenna2_p.reference(vb.antenna2());
@@ -2278,6 +2305,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // For AzElApertures, this rotates the CFs.
     //
     convFuncCtor_p->prepareConvFunction(vb,theMap);
+
+
+    //    CFBStruct cfbst_pub;
+    theMap[0]->getAsStruct(cfbst_pub);
+    vbs.cfBSt_p=cfbst_pub;
+    vbs.accumCFs_p=((vbs.uvw_p.nelements() == 0) && dopsf);
+
+
+    // for(int ii=0;ii<cfbst_pub.shape[0];ii++)
+    //   for(int jj=0;jj<cfbst_pub.shape[1];jj++)
+    // 	for(int kk=0;kk<cfbst_pub.shape[2];kk++)
+    // 	  {
+    // 	    CFCStruct cfcst=cfbst_pub.getCFB(ii,jj,kk);
+    // 	    cerr << "[" << ii << "," << jj << "," << kk << "]:" 
+    // 		 << cfcst.sampling << " "
+    // 		 << cfcst.xSupport << " "
+    // 		 << cfcst.ySupport 
+    // 		 << endl;
+    // 	  }
+
     runTime1_p += timer_p.real();
     //    visResampler_p->setConvFunc(cfs_p);
   }

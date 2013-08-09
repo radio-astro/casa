@@ -435,6 +435,91 @@ namespace casa{
 
   }
 
+  void CFBuffer::getFreqNdxMaps(Vector<Vector<Int> >& freqNdx, Vector<Vector<Int> >& conjFreqNdx)
+  {
+    Int nspw, nchan;
+    nspw=freqNdxMap_p.nelements();
+    freqNdx.resize(nspw);
+    for (Int s=0;s<nspw;s++)
+      freqNdx[s].assign(freqNdxMap_p[s]);
+
+    nspw=conjFreqNdxMap_p.nelements();
+    conjFreqNdx.resize(nspw);
+    for (Int s=0;s<nspw;s++)
+      conjFreqNdx[s].assign(conjFreqNdxMap_p[s]);
+  }
+
+  void CFBuffer::ASSIGNVVofI(Int** &target,Vector<Vector<Int> >& source, Bool& doAlloc)
+  {
+    // cerr << "Source: " << target << " " << source << endl;
+
+    Int nx,ny;					
+    Bool b=(doAlloc||(target==NULL));
+    nx=source.nelements();
+    if (b) target=(int **)malloc(nx*sizeof(int*));
+    for (int i=0;i<nx;i++)
+      {
+	ny = source[i].nelements();
+	if (b) (target[i]) = (int *)malloc(ny*sizeof(int));
+	for (int j=0;j<ny;j++)
+	  (target)[i][j]=source[i][j];
+      }
+
+    // cerr << "Target: ";
+    // for (int ii=0;ii<source.nelements();ii++)
+    //   {
+    // 	Int ny=source[ii].nelements();
+    // 	for(Int jj=0;jj<ny;jj++)
+    // 	  cerr << target[ii][jj] << " ";
+    // 	cerr << endl;
+    //   }
+  }
+
+  void CFBuffer::getAsStruct(CFBStruct& st)
+  {
+    Vector<Int> shp=cfCells_p.shape().asVector();
+
+    Bool doAlloc=(st.CFBStorage == NULL);
+
+    st.shape[0]=shp[0];
+    st.shape[1]=shp[1];
+    st.shape[2]=shp[2];
+    st.fIncr = freqValIncr_p; st.wIncr = wValIncr_p;
+
+
+    Bool dummy;
+    Int n=cfCells_p.nelements();
+    if (doAlloc) st.CFBStorage = (CFCStruct *)malloc(n*sizeof(CFCStruct));
+    CountedPtr<CFCell> *cfstore=cfCells_p.getStorage(dummy);
+    for (int i=0;i<n;i++)
+      {
+	//	  st.CFBStorage[i]=(CFCStruct *)malloc(sizeof(CFCStruct));
+	(cfstore[i]).operator->()->getAsStruct(st.CFBStorage[i]);
+      }
+    //	st.CFBStorage[i] = (cfstore[i]).operator->()->getStorage()->getStorage(dummy);
+    
+    if (doAlloc) st.pointingOffset=(Double *)malloc(pointingOffset_p.nelements());
+    for (int i=0;i<pointingOffset_p.nelements();i++) st.pointingOffset[i]=pointingOffset_p[i];
+
+    if (doAlloc) st.freqValues=(Double *)malloc(freqValues_p.nelements());
+    for (int i=0;i<freqValues_p.nelements();i++) st.freqValues[i]=freqValues_p[i];
+
+    if (doAlloc) st.wValues=(Double *)malloc(wValues_p.nelements());
+    for (int i=0;i<wValues_p.nelements();i++) st.wValues[i]=wValues_p[i];
+
+    ASSIGNVVofI(st.muellerElements, muellerElements_p, doAlloc);
+    ASSIGNVVofI(st.muellerElementsIndex, muellerElementsIndex_p,doAlloc);
+    ASSIGNVVofI(st.conjMuellerElements, conjMuellerElements_p,doAlloc);
+    ASSIGNVVofI(st.conjMuellerElementsIndex, conjMuellerElementsIndex_p,doAlloc);
+
+    st.nMueller = muellerElements_p.nelements();
+    
+    Vector<Vector<Int> > freqNdx, conjFreqNdx;
+    getFreqNdxMaps(freqNdx, conjFreqNdx);
+    ASSIGNVVofI(st.freqNdxMap, freqNdx, doAlloc);
+    ASSIGNVVofI(st.conjFreqNdxMap, conjFreqNdx, doAlloc);
+  }
+  
 } // end casa namespace
 
 

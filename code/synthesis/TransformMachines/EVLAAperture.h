@@ -57,12 +57,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  const VisBuffer& vb, 
 			  const Bool doSquint=True,
 			  const Int& cfKey=0,
-			  const Double freqVal=-1);
+			  const Double freqVal=-1.0);
     virtual void applySky(ImageInterface<Complex>& outputImages,
 			  const VisBuffer& vb, 
 			  const Bool doSquint=True,
 			  const Int& cfKey=0,
-			  const Double freqVal=-1);
+			  const Double freqVal=-1.0);
 
     virtual Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb, Int& nUnique)
     {Vector<Int> tmp; tmp.resize(vb.nRow()); tmp=0; nUnique=1; return tmp;}
