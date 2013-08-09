@@ -55,7 +55,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // NDEBUG is not defined (release build) then a throw is used to report the error.
 
 #ifdef NDEBUG
-#define AssertCc(c) {assert (c)}
+#define AssertCc(c) {assert (c); }
 #else
 #define AssertCc(c) { utilj::throwIf (! (c), "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }
 #endif
