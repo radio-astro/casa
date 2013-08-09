@@ -114,7 +114,8 @@ def main(thislist, parallel=False):
         SDMMS = './unittest_mms/listvis/'
     
         partition(vis=SDPATH+'OrionS_rawACSmod', outputvis=SDMMS+'OrionS_rawACSmod.mms', 
-                  datacolumn='float_data', createmms=True, parallel=parallel)
+                  datacolumn='float_data', createmms=True, flagbackup=False,
+                  parallel=parallel)
 
     if 'split' in thislist:
         # some additional MMSs
@@ -125,7 +126,8 @@ def main(thislist, parallel=False):
         for myms in specialcase:
             shutil.rmtree(SPLITMMSPATH+os.path.basename(myms), ignore_errors=True)
             partition(vis=DATAPATH+myms, outputvis=SPLITMMSPATH+os.path.basename(myms), 
-                      datacolumn='all', parallel=parallel)
+                      datacolumn='all', flagbackup=False,
+                      parallel=parallel)
 
         # workaround for a partition shortcoming: column keywords not copied
         tb.open(SPLITMMSPATH+'hasfc.mms/SUBMSS/hasfc.0000.ms/', nomodify=False)
@@ -146,7 +148,7 @@ def main(thislist, parallel=False):
             print d
             if  os.path.splitext(d)[1]=='.ms':
                 partition(vis=WVRGCALPATH+d, outputvis=d, datacolumn='all', numsubms=5,
-                          parallel=parallel)
+                          flagbackup=False, parallel=parallel)
             else:
                 os.symlink(WVRGCALPATH+d, d)
         os.chdir(origwd)
@@ -164,7 +166,7 @@ def main(thislist, parallel=False):
             print d
             if os.path.splitext(d)[1]=='.ms':
                 partition(vis=CONCATPATH+d, outputvis=d, datacolumn='all', numsubms=6,
-                          parallel=parallel)
+                          flagbackup=False, parallel=parallel)
             else:
                 os.symlink(CONCATPATH+d, d)
         os.chdir(origwd)
