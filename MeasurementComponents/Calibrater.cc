@@ -44,6 +44,7 @@
 #include <casa/iostream.h>
 #include <casa/sstream.h>
 #include <synthesis/MeasurementComponents/Calibrater.h>
+#include <synthesis/CalTables/CLPatchPanel.h>
 #include <synthesis/MeasurementComponents/VisCalSolver.h>
 #include <synthesis/MeasurementComponents/UVMod.h>
 #include <synthesis/MSVis/VisSetUtil.h>
@@ -524,6 +525,128 @@ Bool Calibrater::setapply (const String& type,
     return False;
   } 
   return False;
+}
+
+
+// Validate a Cal Library record
+Bool Calibrater::validatecallib(Record callib) {
+
+  uInt ntab=callib.nfields();
+  for (uInt itab=0;itab<ntab;++itab) {
+
+    String tabname=callib.name(itab);
+    Record thistabrec=callib.asRecord(itab);
+    uInt ncl=thistabrec.nfields();
+
+    for (uInt icl=0;icl<ncl;++icl) {
+
+      Record thisicl=thistabrec.asRecord(icl);
+      try {
+	CalLibSlice::validateCLS(thisicl);
+      }
+      catch ( AipsError x) {
+	logSink() << LogIO::SEVERE
+		  << "Caltable " << tabname 
+		  << " is missing the following fields: " 
+		  << x.getMesg() 
+		  << LogIO::POST;
+      }
+    }
+  }
+  return True;
+}
+// Set up apply-able calibration via a Cal Library
+Bool Calibrater::setcallib(Record callib) {
+
+  logSink() << LogOrigin("Calibrater", "setcallib(callib)");
+
+  //  cout << "Calibrater::setcallib: callib.isFixed() = " << boolalpha << callib.isFixed() << endl;
+
+  uInt ntab=callib.nfields();
+
+  //  cout << "callib.nfields() = " << ntab << endl;
+
+  // Do some preliminary per-table verification
+  for (uInt itab=0;itab<ntab;++itab) {
+
+    String tabname=callib.name(itab);
+
+    // Insist that the table exists on disk
+    if (!Table::isReadable(tabname))
+      throw(AipsError("Caltable "+tabname+" does not exist."));
+
+  }
+
+  // Tables exist, so deploy them...
+
+  for (uInt itab=0;itab<ntab;++itab) {
+
+    String tabname=callib.name(itab);
+
+    // Get the type from the table
+    String upType=calTableType(tabname);
+    upType.upcase();
+
+    // Add table name to the record
+    Record thistabrec=callib.asrwRecord(itab);
+    thistabrec.define("tablename",tabname);
+
+    // First try to create the requested VisCal object
+    VisCal *vc(NULL);
+
+    try {
+
+      if(!ok()) 
+	throw(AipsError("Calibrater not prepared for setapply."));
+      
+      logSink() << LogIO::NORMAL 
+		<< "Arranging to APPLY:"
+		<< LogIO::POST;
+      
+      // Add a new VisCal to the apply list
+      vc = createVisCal(upType,*vs_p);  
+
+      // ingest this table according to its callib
+      vc->setCallib(thistabrec);
+
+      logSink() << LogIO::NORMAL << ".   "
+		<< " *** NEED TO UPDATE vc->applyinfo for CL *** "
+		<< vc->applyinfo()
+		<< LogIO::POST;
+      
+    } catch (AipsError x) {
+      logSink() << LogIO::SEVERE << x.getMesg() 
+		<< " Check inputs and try again."
+		<< LogIO::POST;
+      if (vc) delete vc;
+      throw(AipsError("Error in Calibrater::setapply."));
+      return False;
+    }
+
+    // Creation apparently successful, so add to the apply list
+    // TBD: consolidate with above?
+    try {
+      
+      uInt napp=vc_p.nelements();
+      vc_p.resize(napp+1,False,True);      
+      vc_p[napp] = vc;
+      vc=NULL;
+   
+      // Maintain sort of apply list
+      ve_p->setapply(vc_p);
+      
+    } catch (AipsError x) {
+      logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
+		<< LogIO::POST;
+      if (vc) delete vc;
+      throw(AipsError("Error in Calibrater::setapply."));
+      return False;
+    } 
+  }
+
+  // All ok, if we get this far!
+  return True;
+
 }
 
 Bool Calibrater::setmodel(const String& modelImage)

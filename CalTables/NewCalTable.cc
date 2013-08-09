@@ -527,19 +527,19 @@ void NewCalTable::writeToDisk(const String& outTableName)
   sorted.deepCopy(outTableName,Table::New);
 };
 
-Complex NewCalTable::NCTtestvalueC(Int iant,Int ispw,Int ich,Double time,Double refTime,Double tint) {
+Complex NewCalTable::NCTtestvalueC(Int iant,Int ispw,Double ich,Double time,Double refTime,Double tint) {
 
-  Double a=1.0 + Double(iant)/10.0 + Double(ispw)/100.0 +Double(ich)/10000.0;
+  Double a=1.0 + Double(iant)/10.0 + Double(ispw)/100.0 + ich/10000.0;
   Double dt=(time-refTime)/tint;
-  Double p=dt+Double(ich)/100.0; 
+  Double p=dt+ich/100.0; 
   return Complex(Float(a*cos(p)),Float(a*sin(p)));
 
 }
 
-Float NewCalTable::NCTtestvalueF(Int iant,Int ispw,Int ich,Double time,Double refTime,Double tint) {
+Float NewCalTable::NCTtestvalueF(Int iant,Int ispw,Double ich,Double time,Double refTime,Double tint) {
 
   Double dt=(time-refTime)/tint;
-  Double a=dt + Double(iant)/10.0 + Double(ispw)/100.0 +Double(ich)/10000.0;
+  Double a=dt + Double(iant)/10.0 + Double(ispw)/100.0 + ich/10000.0;
   return Float(a);
 
 }

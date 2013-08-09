@@ -162,6 +162,7 @@ casa_add_library( synthesis
   CalTables/CalTable.cc
   CalTables/CalTableDesc2.cc
   CalTables/CalTableDesc.cc
+  CalTables/CLPatchPanel.cc
   CalTables/CTColumns.cc
   CalTables/CTDesc.cc
   CalTables/CTEnums.cc
@@ -345,6 +346,7 @@ install (FILES
 	CalTables/BJonesMCol.h
 	CalTables/BJonesMRec.h
 	CalTables/BJonesTable.h
+	CalTables/CLPatchPanel.h
 	CalTables/CTColumns.h
 	CalTables/CTDesc.h
 	CalTables/CTEnums.h
@@ -760,6 +762,7 @@ casa_add_assay( synthesis CalTables/test/tCalIntpMatch.cc )
 casa_add_assay( synthesis CalTables/test/tNewCalTable.cc )
 casa_add_assay( synthesis CalTables/test/tCTIter.cc )
 casa_add_assay( synthesis CalTables/test/tRIorAPArray.cc )
+casa_add_assay( synthesis CalTables/test/tCLPatchPanel.cc )
 casa_add_assay( synthesis CalTables/test/tCTTimeInterp1.cc )
 casa_add_assay( synthesis CalTables/test/tCTPatchedInterp.cc )
 casa_add_assay( synthesis CalTables/test/tCTSelection.cc )

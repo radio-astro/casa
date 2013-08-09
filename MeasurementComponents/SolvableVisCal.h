@@ -39,6 +39,7 @@
 #include <synthesis/MeasurementComponents/VisVector.h>
 #include <synthesis/TransformMachines/SynthesisError.h>
 #include <synthesis/CalTables/NewCalTable.h>
+#include <synthesis/CalTables/CLPatchPanel.h>
 #include <synthesis/CalTables/CTPatchedInterp.h>
 #include <synthesis/CalTables/CalSetMetaInfo.h>
 #include <synthesis/CalTables/VisCalEnum.h>
@@ -152,6 +153,8 @@ public:
   // Set the application parameters 
   virtual void setApply();
   virtual void setApply(const Record& apply);
+  virtual void setCallib(const Record& callib);
+
   virtual void setModel(const String& )
   {throw(SynthesisError("Internal error: setModel() not yet supported for non EPJones type."));};
 
@@ -397,6 +400,7 @@ protected:
 
   // Calculate parameters by some means (e.g., interpolation from a CalSet)
   virtual void calcPar();
+  virtual void calcParByCLPP();
 
   // Synchronize the differentiated calibration 
   virtual void syncDiffMat()=0;
@@ -422,6 +426,7 @@ protected:
   // New CalTable 
   NewCalTable *ct_;
   CTPatchedInterp *ci_;
+  CLPatchPanel *cpp_;
   Vector<Bool> spwOK_;
 
   CalSetMetaInfo csmi;
