@@ -95,7 +95,7 @@ Compute a clean map.
   <param type="any" name="start" subparam="true">
     <description>Start of output spectral dimension</description>
     <any type="variant"/>
-    <value type="int">0</value>
+    <value type="string"></value>
   </param>
 
   <param type="any" name="width">
@@ -169,7 +169,7 @@ Compute a clean map.
 
   <param type="int" name="niter" subparam="true">
     <description>Maximum number of clean iterations</description>
-    <value>10</value>
+    <value>500</value>
   </param>
 
   <param type="double" name="threshold" units="mJy" subparam="true">
@@ -270,16 +270,16 @@ Compute a clean map.
 
     <when param="hm_cleaning">
       <equals value="manual">
-        <default param="niter"><value type="int">1000</value></default>
+        <default param="niter"><value type="int">500</value></default>
         <default param="threshold"><value type="double" units="mJy">0.0</value></default>
       </equals>
       <equals value="sensitivity">
         <default param="tlimit"><value type="double">2.0</value></default>
-        <default param="niter"><value type="int">1000</value></default>
+        <default param="niter"><value type="int">500</value></default>
       </equals>
       <equals value="rms">
         <default param="tlimit"><value type="double">2.0</value></default>
-        <default param="niter"><value type="int">1000</value></default>
+        <default param="niter"><value type="int">500</value></default>
       </equals>
       <equals value="mask">
         <default param="masklimit"><value type="int">4</value></default>
@@ -288,6 +288,8 @@ Compute a clean map.
     </when>
 
     <when param="mode">
+      <equals type="string" value="">
+      </equals>
       <equals type="string" value="mfs">
       </equals>
       <equals value="frequency">
@@ -467,8 +469,8 @@ mask -- Image mask for hm_masking manual mode. User responsible for
     example: 'mymask.mask'
 
 niter -- Maximum number of iterations per clean call
-    default: 1000
-    example: 500
+    default: 500
+    example: 100
 
 threshold -- Threshold for cleaning
     default: '0.0'

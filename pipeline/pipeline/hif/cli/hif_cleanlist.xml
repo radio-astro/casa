@@ -52,23 +52,24 @@ Compute clean results from a list of specified targets.
 
   <param type="string" name="hm_masking">
      <description>Pipeline heuristics masking option</description>
-       <value>none</value>
+       <value></value>
        <allowed kind="enum">
+         <value></value>
          <value>none</value>
          <value>centralquarter</value>
          <value>psf</value>
          <value>psfiter</value>
-         <value></value>
        </allowed>
   </param>
 
   <param type="string" name="hm_cleaning">
      <description>Pipeline cleaning mode </description>
-       <value>automatic</value>
+       <value></value>
        <allowed kind="enum">
+         <value></value>
+         <value>rms</value>
          <value>sensitivity</value>
          <value>timesmask</value>
-         <value>rms</value>
        </allowed>
   </param>
 
@@ -125,6 +126,8 @@ Compute clean results from a list of specified targets.
     </when>
 
     <when param="hm_masking">
+      <equals value="">
+      </equals>
       <equals value="none">
       </equals>
       <equals value="centralquarter">
@@ -134,22 +137,19 @@ Compute clean results from a list of specified targets.
       <equals value="psfiter">
         <default param="maxncleans"><value type="int">10</value></default>
       </equals>
-      <equals value="">
-      </equals>
     </when>
 
     <when param="hm_cleaning">
-      <equals value="sensitivity">
-        <default param="tlimit"><value type="double">2.0</value></default>
-        <default param="niter"><value type="int">1000</value></default>
+      <equals value="">
       </equals>
       <equals value="rms">
         <default param="tlimit"><value type="double">2.0</value></default>
-        <default param="niter"><value type="int">1000</value></default>
       </equals>
-      <equals value="mask">
+      <equals value="sensitivity">
+        <default param="tlimit"><value type="double">2.0</value></default>
+      </equals>
+      <equals value="timesmask">
         <default param="masklimit"><value type="int">4</value></default>
-        <default param="threshold"><value type="double" units="mJy">0.0</value></default>
       </equals>
     </when>
 
