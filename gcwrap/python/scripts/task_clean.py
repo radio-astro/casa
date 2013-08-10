@@ -754,15 +754,23 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         presdir=os.path.realpath('.')
         for k in xrange(len(imset.imagelist)):
             newimage=imset.imagelist[k]
+
             if(imset.imagelist[k].count('/') > 0):
                 newimage=os.path.basename(imset.imagelist[k])
                 os.chdir(os.path.dirname(imset.imagelist[k]))
             result          = '\'' + newimage + '.image' + '\'';
             fluxscale_image = '\'' + newimage + '.flux'  + '\'';
+            # model also need to do freqframe conversion
+            model           = newimage + '.model'
+            
             pbcov_image=fluxscale_image
             # convert .flux image, which may not be correct outframe if 
             # it was made from im tool, to correct outframe
-            imset.convertImageFreqFrame([fluxscale_image.replace('\'','')])
+            # do if for model
+            #imset.convertImageFreqFrame([model])
+
+            imset.convertImageFreqFrame([fluxscale_image.replace('\'',''),model])
+            #imset.convertImageFreqFrame([fluxscale_image.replace('\'','')])
             if(localFTMachine=='mosaic'):
                 pbcov_image = '\'' + newimage + '.flux.pbcoverage'  + '\'';
             residim         = '\'' + newimage + '.residual'  + '\'';
