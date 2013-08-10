@@ -182,6 +182,37 @@ class CleanList(basetask.StandardTaskTemplate):
             # build the task to do the cleaning and execute it
             datainputs = Clean.Inputs(context=inputs.context,
               **full_image_target)
+#            datainputs = Clean.Inputs(context=inputs.context,
+#	        output_dir=full_image_target['output_dir'],
+#	        vis=full_image_target['vis'],
+#	        imagename=full_image_target['imagename'],
+#	        intent=full_image_target['intent'],
+#	        field=full_image_target['field'],
+#	        spw=full_image_target['spw'],
+#	        uvrange=full_image_target['uvrange'],
+#	        mode=full_image_target['mode'],
+#	        imsize=full_image_target['imsize'],
+#	        cell=full_image_target['cell'],
+#	        phasecenter=full_image_target['phasecenter'],
+#	        nchan=full_image_target['nchan'],
+#	        start=full_image_target['start'],
+#	        width=full_image_target['width'],
+#	        weighting=full_image_target['weighting'],
+#	        robust=full_image_target['robust'],
+#	        noise=full_image_target['noise'],
+#	        npixels=full_image_target['npixels'],
+#	        hm_masking=full_image_target['hm_masking'],
+#	        hm_cleaning=full_image_target['hm_cleaning'],
+#	        tlimit=full_image_target['tlimit'],
+#	        masklimit=full_image_target['masklimit'],
+#	        maxncleans=full_image_target['maxncleans'],
+#		imagermode=None,
+#		outframe=None,
+#		restoringbeam=None,
+#		iter=None, 
+#		mask=None,
+#		niter=None,
+#		threshold=None)
             datatask = Clean(datainputs)
 
             try:
