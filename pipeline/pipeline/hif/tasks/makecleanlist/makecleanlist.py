@@ -183,6 +183,10 @@ class MakeCleanList(basetask.StandardTaskTemplate):
             spwids = [spw.id for spw in spws]
             spw = ','.join("'%s'" % (spwid) for spwid in spwids)
             spw = '[%s]' % spw
+	else:
+	    spwids = spw.split(',')
+            spw = ','.join("'%s'" % (spwid) for spwid in spwids)
+            spw = '[%s]' % spw
         #print 'after', spw, inputs.spw
 
         spwlist = spw.replace('[','').replace(']','')
