@@ -22,12 +22,12 @@ def clean_more(loop, threshold_list, new_threshold, sum, residual_max,
     # clean diverging?
     if loop > 0:
         diverging_halt = casatools.quanta.gt(new_threshold, threshold_list[-1])
-        LOG.info('diverging     : halt=%s enabled=True threshold(old,new)=(%s, %s)' % (
+        LOG.info('Diverging     : halt=%s enabled=True threshold(old,new)=(%s, %s)' % (
           diverging_halt, threshold_list[-1], new_threshold)) 
         LOG.info('                halt = new threshold > old')
     else:
         diverging_halt = False
-        LOG.info('diverging     : halt=%s enabled=True not enough iterations' % (
+        LOG.info('Diverging     : halt=%s enabled=True not enough iterations' % (
           diverging_halt)) 
 
     # is the flux increase for last threshold iteration below the limit set?
@@ -36,13 +36,13 @@ def clean_more(loop, threshold_list, new_threshold, sum, residual_max,
         flux_change = (flux_array[-1] - flux_array[-2])
         flux = flux_array[-1]
         flux_change_halt = (flux_change / flux) < flux_change_limit
-        LOG.info('flux change   : halt=%s enabled=%s change=%.3g flux=%.3g' % (
+        LOG.info('Flux change   : halt=%s enabled=%s change=%.3g flux=%.3g' % (
           flux_change_halt, flux_change_enable, flux_change, flux)) 
         LOG.info('                halt = (cleaned flux change / cleaned flux) < %.3g' %
           flux_change_limit)
     else:
         flux_change_halt = False
-        LOG.info('flux change   : halt=%s enabled=%s not enough iterations' % (
+        LOG.info('Flux change   : halt=%s enabled=%s not enough iterations' % (
           flux_change_halt, flux_change_enable)) 
 
     # is the threshold lower than the 1.5 * uncleaned residual rms and
@@ -55,18 +55,18 @@ def clean_more(loop, threshold_list, new_threshold, sum, residual_max,
 
             low_threshold_halt = (new_threshold_v < low_threshold_limit * non_cleaned_rms) and \
               (abs(residual_max) < 1.3 * abs(residual_min))              
-            LOG.info('threshold~rms : halt=%s enabled=%s threshold=%s rms=%.3g abs(resid.min)=%.3g abs(resid.max)=%.3g' % (
+            LOG.info('Threshold~rms : halt=%s enabled=%s threshold=%s rms=%.3g abs(resid.min)=%.3g abs(resid.max)=%.3g' % (
               low_threshold_halt, low_threshold_enable, new_threshold, non_cleaned_rms,
               abs(residual_max), abs(residual_min)))
             LOG.info('                halt = new threshold < %.3g * rms and abs(resid.max) < 1.3 * abs(resid.min)' % 
               low_threshold_limit)
         else: 
             low_threshold_halt = False
-            LOG.info('threshold~rms : halt=False enabled=%s no measure of non-cleaned rms' %
+            LOG.info('Threshold~rms : halt=False enabled=%s no measure of non-cleaned rms' %
               low_threshold_enable)
     else:
         low_threshold_halt = False
-        LOG.info('threshold~rms : halt=%s enabled=%s not enough iterations' % (
+        LOG.info('Threshold~rms : halt=%s enabled=%s not enough iterations' % (
           low_threshold_halt, low_threshold_enable))
 
     # are the new islands the tops of noise peaks?                      
@@ -77,12 +77,12 @@ def clean_more(loop, threshold_list, new_threshold, sum, residual_max,
     # method 1, are there lots of peaks with similar peak values?
     if loop > 0:
         noisepeaks1_halt = (len(peaks) == 30 and max_peak < 1.2 * min_peak)
-        LOG.info('noise peaks 1 : halt=%s enabled=%s npeaks=%s peak(min,max)=(%.3g, %.3g)' % (
+        LOG.info('Noise peaks 1 : halt=%s enabled=%s npeaks=%s peak(min,max)=(%.3g, %.3g)' % (
           noisepeaks1_halt, noisepeaks1_enable, len(peaks), min_peak, max_peak))
         LOG.info('                halt = 30 peaks and max peak < 1.2 * min peak')
     else:
         noisepeaks1_halt = False
-        LOG.info('noise peaks 1 : halt=%s enabled=%s peak(min,max)=(%.3g, %.3g) not enough iterations' % (
+        LOG.info('Noise peaks 1 : halt=%s enabled=%s peak(min,max)=(%.3g, %.3g) not enough iterations' % (
           noisepeaks1_halt, noisepeaks1_enable, min_peak, max_peak))
 
     # method2, is there a big overlap between the range of peak values
@@ -101,7 +101,7 @@ def clean_more(loop, threshold_list, new_threshold, sum, residual_max,
         noisepeaks2_halt = (max_peak < 2 * min_peak) and \
           (overlap / (overall_max - overall_min) > 0.3)
         LOG.info(
-          'noise peaks 2 : halt=%s enabled=%s peak(min,max)=(%.3g, %.3g) overlap=%.3g overall range=(%.3g)' % (
+          'Noise peaks 2 : halt=%s enabled=%s peak(min,max)=(%.3g, %.3g) overlap=%.3g overall range=(%.3g)' % (
           noisepeaks2_halt, noisepeaks2_enable, min_peak, max_peak, 
           overlap, overall_max-overall_min))
         LOG.info(
@@ -109,7 +109,7 @@ def clean_more(loop, threshold_list, new_threshold, sum, residual_max,
     else:
         noisepeaks2_halt = False
         LOG.info(
-          'noise peaks 2 : halt=%s enabled=%s not enough iterations' % (
+          'Noise peaks 2 : halt=%s enabled=%s not enough iterations' % (
           noisepeaks2_halt, noisepeaks2_enable))
 
     # clean further unless any enabled rules are True
@@ -119,9 +119,9 @@ def clean_more(loop, threshold_list, new_threshold, sum, residual_max,
       not(noisepeaks1_enable and noisepeaks1_halt) and \
       not(noisepeaks2_enable and noisepeaks2_halt)
     if clean_more:
-        LOG.info('continue cleaning!')
+        LOG.info('Continue cleaning')
     else:
-        LOG.info('stop cleaning!')
+        LOG.info('Stop cleaning')
 
     return clean_more
 
@@ -226,13 +226,15 @@ def niter_and_mask(psf, residual, new_mask):
         if len(island_pix) != 1:
             raise Exception, 'mask has more than 1 plane'
         if len(island_pix[0]) > 1:
-            LOG.warning('calibrator mask has more than 1 island, check result')
+            LOG.warning('Calibrator mask has more than 1 island, check result')
 
         # According to Eric Villard's recipe niter = 4 * number of pixels in
         # island
         niter = 4 * len(island_pix[0][0])
 
         # free the searchmask and collapsed image
+	searchmask.close()
+	collapsed.close()
         searchmask.done(remove=True)
         collapsed.done(remove=True)
 
@@ -250,7 +252,7 @@ def niter_and_mask(psf, residual, new_mask):
         nm.close()
         nm.done()
 
-    LOG.debug('niter: %s' % niter)
+    LOG.debug('Niter: %s' % niter)
     return niter
 
 def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
@@ -372,6 +374,7 @@ def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
                 plane_threshold[plane] = 0.0
 
         # free the searchmask
+	searchmask.close()
         searchmask.done(remove=True)
 
         # threshold is global to all planes, select the maximum found as this
@@ -458,7 +461,7 @@ def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
         nm.close()
         nm.done()
 
-    LOG.debug('new threshold is: %s' % threshold)
+    LOG.debug('New threshold is: %s' % threshold)
     LOG.debug('%s %s' % (threshold, island_tree_peaks))
     return threshold, island_tree_peaks
 
@@ -551,16 +554,16 @@ def psf_sidelobe_ratio(psf, island_threshold=0.1, peak_threshold=0.1):
         # first sidelobe
         if len(islandpeak.keys()) > 1:
             sidelobe_ratio = islandpeak[1] / islandpeak[0]
-            LOG.info('psf peak:%s first sidelobe:%s sidelobe ratio:%s' % (
+            LOG.info('Psf peak:%s first sidelobe:%s sidelobe ratio:%s' % (
               islandpeak[0], islandpeak[1], sidelobe_ratio))
             if sidelobe_ratio > 0.7:
                 # too high a value leads to problems with small clean
                 # islands and slow convergence
                 sidelobe_ratio = 0.7
-                LOG.warning('sidelobe ratio too high, reset to 0.7')
+                LOG.warning('Sidelobe ratio too high, reset to 0.7')
         else:
             sidelobe_ratio = 0.5
-            LOG.warning('psf analysis failure, sidelobe ratio set to 0.5')
+            LOG.warning('Psf analysis failure, sidelobe ratio set to 0.5')
 
     return sidelobe_ratio
 
@@ -680,9 +683,9 @@ def analyse_clean_result(model, restored, residual, fluxscale, cleanmask):
         with casatools.ImageReader(model) as image:
             model_stats = image.statistics(robust=False)
             model_sum = model_stats['sum'][0]
-            LOG.debug('sum of model: %s' % model_sum)
+            LOG.debug('Sum of model: %s' % model_sum)
 
-        LOG.debug('fixing coordsys of fluxscale and cleanmask')
+        LOG.debug('Fixing coordsys of fluxscale and cleanmask')
         with casatools.ImageReader(residual) as image:
             csys = image.coordsys()
         if fluxscale is not None:
@@ -694,7 +697,7 @@ def analyse_clean_result(model, restored, residual, fluxscale, cleanmask):
 
         with casatools.ImageReader(residual) as image:
             # get the rms of the residual image inside the cleaned area
-            LOG.todo('cannot use dirname in mask')
+            LOG.todo('Cannot use dirname in mask')
             clean_rms = None
             if cleanmask is not None and os.path.exists(cleanmask):
                 if fluxscale is not None and os.path.exists(fluxscale):
@@ -706,7 +709,7 @@ def analyse_clean_result(model, restored, residual, fluxscale, cleanmask):
                   robust=False)
                 try:
                     clean_rms = resid_clean_stats['rms'][0]
-                    LOG.info('residual rms inside cleaned area: %s' %
+                    LOG.info('Residual rms inside cleaned area: %s' %
                       clean_rms)
                 except:
                     pass
@@ -728,10 +731,10 @@ def analyse_clean_result(model, restored, residual, fluxscale, cleanmask):
             try:
                 non_clean_rms = resid_stats['rms'][0]
                 if cleanmask is not None:
-                    LOG.info('residual rms outside cleaned area: %s' % 
+                    LOG.info('Residual rms outside cleaned area: %s' % 
                       non_clean_rms)
                 else:
-                    LOG.info('residual rms: %s' %  non_clean_rms)
+                    LOG.info('Residual rms: %s' %  non_clean_rms)
             except:
                 pass
 
@@ -749,7 +752,7 @@ def analyse_clean_result(model, restored, residual, fluxscale, cleanmask):
             except:
                 residual_max = None
                 residual_min = None
-            LOG.info('residual max:%s min:%s' % (residual_max, residual_min))
+            LOG.info('Residual max:%s min:%s' % (residual_max, residual_min))
 
             # get 2d rms of residual
             pixels = image.getregion(axes=[3])
@@ -760,7 +763,7 @@ def analyse_clean_result(model, restored, residual, fluxscale, cleanmask):
         with casatools.ImageReader(restored) as image:
             clean_stats = image.statistics()
             image_max = clean_stats['max'][0]
-            LOG.debug('clean image max: %s' % image_max)
+            LOG.debug('Clean image max: %s' % image_max)
 
         return model_sum, clean_rms, non_clean_rms, residual_max,\
           residual_min, rms2d, image_max

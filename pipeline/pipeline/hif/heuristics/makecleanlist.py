@@ -144,7 +144,7 @@ class MakeCleanListHeuristics(object):
                           field=field_intent[0], spw=spwids, scan=scanids,
                           usescratch=False)
                     except:
-                        LOG.warning('%s: failed selection on field %s' %
+                        LOG.warning('Vis %s: failed selection on field %s' %
                           (os.path.basename(vis), field_intent[0]))
                 casatools.imager.weight(type='natural')
 
@@ -161,7 +161,7 @@ class MakeCleanListHeuristics(object):
                 cellu = rtn[2]['unit']
                 cellv /= oversample
                 cellvs.append(cellv)
-                LOG.debug('cell (oversample %s) for %s/%s spw %s: %s' % (
+                LOG.debug('Cell (oversample %s) for %s/%s spw %s: %s' % (
                   oversample, field_intent[0], field_intent[1], spwspec, cellv))
                     
             cell = '%.3f%s' % (min(cellvs), cellu)
@@ -203,7 +203,7 @@ class MakeCleanListHeuristics(object):
         if not self._mosaic:
             for mdirection in mdirections:
                 if mdirection != mdirections[0]:
-                    LOG.warning('separation between field centres: %s' % (
+                    LOG.warning('Separation between field centres: %s' % (
                       casatools.measures.separation(mdirection, mdirections[0])))
 #                    raise Exception, \
 #                      'non-identical field centers in single field image' 

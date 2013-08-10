@@ -197,7 +197,7 @@ class CleanHeuristics(object):
         if not self._mosaic:
             for mdirection in mdirections:
                 if mdirection != mdirections[0]:
-                    LOG.warning('separation between field centres: %s' % (
+                    LOG.warning('Separation between field centres: %s' % (
                       casatools.measures.separation(mdirection, mdirections[0])))
 #                    raise Exception, \
 #                      'non-identical field centers in single field image' 
@@ -267,7 +267,7 @@ class CleanHeuristics(object):
         # increase width slightly to try to avoid the error:
         # WARN SubMS::convertGridPars *** Requested new channel width is
         # smaller than smallest original channel width.
-        width = decimal.Decimal('1.001') * width
+        width = decimal.Decimal('1.000') * width
         width = str(width)
         return width
 
