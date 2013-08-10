@@ -210,15 +210,19 @@ class Clean(cleanbase.CleanBase):
 	        LOG.info('    Mask %s', new_cleanmask)
 	        LOG.info('    Mask threshold %s', box_result.threshold)
 	        LOG.info('    Iter %s', iter)
-	        #LOG.info('    Threshold %s', threshold)
-	        LOG.info('    Threshold %s', box_result.threshold)
+	        LOG.info('    Clean threshold %s', threshold)
+	        #LOG.info('    Threshold %s', box_result.threshold)
 	        LOG.info('    Niter %s', inputs.niter)
 
 		# Clean
-		#    Note do not use the boxworker value of niter
-		#    Note do not use the boxworker value of threshold
+		#    First time through use cleaning threshold based on RMS.    
+		#    
+		if iter == 1:
+		    clthreshold = min (box_result.threshold, threshold)
+		else:
+		    clthreshold = box_result.threshold
 	        result = self._do_clean (iter=iter, stokes='I', cleanmask=new_cleanmask,
-		    niter=inputs.niter, threshold=box_result.threshold, result=result) 
+		    niter=inputs.niter, threshold=clthreshold, result=result) 
 
 	        # Determine iteration status
 	        model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
@@ -226,7 +230,7 @@ class Clean(cleanbase.CleanBase):
 		    boxworker.iteration_result(iter=iter, \
 		    psf=result.psf, model= result.model, restored=result.image, residual= \
 		    result.residual, fluxscale=result.flux, cleanmask=new_cleanmask, \
-		    threshold=box_result.threshold)
+		    threshold=clthreshold)
 		best_rms = cleaned_rms
 
 	        LOG.info('Clean image iter %s stats' % iter)

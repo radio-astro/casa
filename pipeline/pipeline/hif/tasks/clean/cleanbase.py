@@ -256,7 +256,7 @@ class CleanBaseInputs(basetask.StandardInputs):
     @property
     def niter(self):
         if self._niter is None:
-            return 1000
+            return 500
         return self._niter
 
     @niter.setter
@@ -317,6 +317,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         if inputs.width == '':
             if inputs.mode != 'mfs':
                 width = clheuristics.width(int(spw))
+                #width = inputs.width
             else:
                 width = inputs.width
         else:
@@ -357,14 +358,14 @@ class CleanBase(basetask.StandardTaskTemplate):
                 field_intent_list=[(field, intent)], spwspec=spw)
             if inputs.cell == []:
                 inputs.cell = cell
-                LOG.info('heuristic cell: %s' % cell)
+                LOG.info('Heuristic cell: %s' % cell)
 
             field_ids = clheuristics.field(intent, field)
             imsize = clheuristics.imsize(fields=field_ids,
               cell=inputs.cell, beam=beam)
             if inputs.imsize == []:
                 inputs.imsize = imsize
-                LOG.info('heuristic imsize: %s', imsize)
+                LOG.info('Heuristic imsize: %s', imsize)
 
         # Initialize imaging results structure
 	if not inputs.result: 
@@ -392,8 +393,8 @@ class CleanBase(basetask.StandardTaskTemplate):
 
 	inputs = self.inputs
 
-        LOG.info('iter %s threshold %s' % (iter, inputs.threshold))
-        LOG.info('iter %s niter %s' % (iter, inputs.niter))
+        LOG.info('Iteration %s threshold %s' % (iter, inputs.threshold))
+        LOG.info('Iteration %s niter %s' % (iter, inputs.niter))
 
         # Derive names of clean products for this iteration, remove
         # old clean products with the name name,
@@ -477,7 +478,7 @@ class CleanBase(basetask.StandardTaskTemplate):
 	# Set up dirty image job.
         job = casa_tasks.clean(vis=inputs.vis,
             imagename='%s.iter%s' % (inputs.imagename, iter),
-            spw=inputs.spw, selectdata=True, scan=scanidlist,
+            field=inputs.field, spw=inputs.spw, selectdata=True, scan=scanidlist,
             mode=inputs.mode, niter=0, threshold='0.0mJy',
             imagermode=inputs.imagermode, interactive=False,
             outframe=inputs.outframe, nchan=inputs.nchan, start=inputs.start,
