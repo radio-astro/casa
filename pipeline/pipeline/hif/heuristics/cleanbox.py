@@ -233,8 +233,6 @@ def niter_and_mask(psf, residual, new_mask):
         niter = 4 * len(island_pix[0][0])
 
         # free the searchmask and collapsed image
-	searchmask.close()
-	collapsed.close()
         searchmask.done(remove=True)
         collapsed.done(remove=True)
 
@@ -374,7 +372,6 @@ def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
                 plane_threshold[plane] = 0.0
 
         # free the searchmask
-	searchmask.close()
         searchmask.done(remove=True)
 
         # threshold is global to all planes, select the maximum found as this

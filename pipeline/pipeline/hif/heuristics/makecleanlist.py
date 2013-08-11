@@ -396,7 +396,7 @@ class MakeCleanListHeuristics(object):
         # increase width slightly to try to avoid the error:
         # WARN SubMS::convertGridPars *** Requested new channel width is
         # smaller than smallest original channel width.
-        width = decimal.Decimal('1.001') * width
+        width = decimal.Decimal('1.0001') * width
         width = str(width)
         return width
 
