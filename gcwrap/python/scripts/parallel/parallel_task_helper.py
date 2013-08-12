@@ -135,23 +135,23 @@ class ParallelTaskHelper:
                     retval = False
                 index += 1
             return retval
-        elif isinstance(ret_list.values()[0],dict) and self._consolidateOutput:
+        elif any(isinstance(v,dict) for v in ret_list.itervalues()) and self._consolidateOutput:
             ret_dict = {}
             for subMs in ret_list:
                 dict_i = ret_list[subMs]
-                # jagonzal (CAS-4119): Neglectable NullSelection errors may cause flagdata to return None
+                # (CAS-4119): Neglectable NullSelection errors may cause flagdata to return None
                 if isinstance(dict_i,dict):
                     try:
                         ret_dict = self.sum_dictionaries(dict_i,ret_dict)
                     except Exception, instance:
                         casalog.post("Error post processing MMS results %s: %s" % (subMs,instance),"WARN","postExecution")
             return ret_dict     
-        elif (ret_list.values()[0]==None) and self._consolidateOutput:
-             return None      
+        elif all(v==None for v in ret_list.itervalues()) and self.consolidateOutput:         
+            return None      
         else:
             return ret_list
         
-    # jagonzal (CAS-4376): Consolidate list of return variables from the different engines into one single value 
+    # (CAS-4376): Consolidate list of return variables from the different engines into one single value 
     def sum_dictionaries(self,dict_list,ret_dict):
         for key in dict_list:
             item = dict_list[key]
