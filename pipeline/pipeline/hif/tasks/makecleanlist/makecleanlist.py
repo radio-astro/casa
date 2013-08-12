@@ -5,7 +5,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from .resultobjects import MakeCleanListResult
 from pipeline.hif.heuristics import makecleanlist 
-from pipeline.hif.heuristics import clean
+#from pipeline.hif.heuristics import clean
 
 LOG = infrastructure.get_logger(__name__)
 
