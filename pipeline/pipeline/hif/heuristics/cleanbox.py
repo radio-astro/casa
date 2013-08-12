@@ -372,7 +372,7 @@ def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
                 plane_threshold[plane] = 0.0
 
         # free the searchmask
-        searchmask.done(remove=True)
+        #searchmask.done(remove=True)
 
         # threshold is global to all planes, select the maximum found as this
         # should be safe for all
@@ -455,8 +455,11 @@ def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
 
                 maskpix = nm.putchunk(blc=[0,0,0,plane], pixels=maskpix)
 
-        nm.close()
-        nm.done()
+	    nm.close()
+            nm.done()
+
+    # free the searchmask
+    searchmask.done(remove=True)
 
     LOG.debug('New threshold is: %s' % threshold)
     LOG.debug('%s %s' % (threshold, island_tree_peaks))

@@ -400,3 +400,24 @@ class MakeCleanListHeuristics(object):
         width = str(width)
         return width
 
+    def ncorr (self, spw):
+        # get the spw from the first vis set, assume all others the same for
+        # now
+        ms = self.context.observing_run.get_ms(name=self.vislist[0])
+        spw = ms.get_spectral_window(spw)
+
+        # Get the data description for this spw
+        dd = ms.get_data_description(spw=spw)
+        if dd is None:
+            LOG.debug('Missing data description for spw %s ' % spw.id)
+            return 0
+
+        # Determine the number of correlations
+        #   Check that they are between 1 and 4
+        ncorr = len (dd.corr_axis)
+        if ncorr not in set ([1, 2, 4]):
+            LOG.debug('Wrong number of correlations %s for spw %s ' % (ncorr, spw.id))
+            return 0
+
+	return ncorr
+
