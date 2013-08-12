@@ -7,17 +7,19 @@
 //#endif
 
 #define DDPRIORITY 1
-#include <iostream>
-#include <sstream>
 #include <algorithm>
-#include <vector>
-#include <map>
 #include <assert.h>
 #include <cmath>
 #include <complex>
+#include <iostream>
+#include <map>
+#include <sstream>
+#include <stdlib.h>
 #include <string>
+#include <vector>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -227,8 +229,6 @@ string lrtrim(std::string& s,const std::string& drop = " ")
   std::string r=s.erase(s.find_last_not_of(drop)+1);
   return r.erase(0,r.find_first_not_of(drop));
 }
-
-
 
 
 // These classes provide mappings from some ALMA Enumerations to their CASA counterparts.
@@ -1097,13 +1097,763 @@ map<MainRow*, int>     stateIdx2Idx;
 
 set<int> SwIdUsed;
 
+
+/**
+ * This function creates a table dedicated to the storage of Ephemeris informations and attaches it to an existing measurement set.
+ *
+ * The format of the table is inherited from the format of the tables created by the service HORIZONS provided by the JPL (see http://ssd.jpl.nasa.gov/?horizons)
+ * 
+ * By construction the table will be located under the FIELD directory of the MS to which the table will be attached.
+ */
+Table *  buildAndAttachEphemeris(const string & name, vector<double> observerLocation, MS* attachMS_p) {
+  TableDesc tableDesc;
+
+  // The table keywords firstly.
+  tableDesc.comment() = "An ephemeris table.";
+  tableDesc.rwKeywordSet().define("MJD0", casa::Double(0.0));
+  tableDesc.rwKeywordSet().define("dMJD", casa::Double(0.0));
+  tableDesc.rwKeywordSet().define("NAME", "T.B.D");
+  tableDesc.rwKeywordSet().define("GeoLong", casa::Double(observerLocation[0] / 3.14159265 * 180.0));
+  tableDesc.rwKeywordSet().define("GeoLat", casa::Double(observerLocation[1] / 3.14159265 * 180.0));
+  tableDesc.rwKeywordSet().define("GeoDist", casa::Double(observerLocation[2]));
+  
+  // Then the fields definitions and keywords.
+  ScalarColumnDesc<casa::Double> mjdColumn("MJD");
+  mjdColumn.rwKeywordSet().define("UNIT", "d");
+  tableDesc.addColumn(mjdColumn);
+
+  ScalarColumnDesc<casa::Double> raColumn("RA");
+  raColumn.rwKeywordSet().define("UNIT", "deg");
+  tableDesc.addColumn(raColumn);
+
+  ScalarColumnDesc<casa::Double> decColumn("DEC");
+  decColumn.rwKeywordSet().define("UNIT", "deg");
+  tableDesc.addColumn(decColumn);
+  
+  ScalarColumnDesc<casa::Double> rhoColumn("Rho");
+  rhoColumn.rwKeywordSet().define("UNIT", "AU");
+  tableDesc.addColumn(rhoColumn);
+
+  ScalarColumnDesc<casa::Double> radVelColumn("RadVel");
+  radVelColumn.rwKeywordSet().define("UNIT", "AU/d");
+  tableDesc.addColumn(radVelColumn);
+
+  ScalarColumnDesc<casa::Double> diskLongColumn("diskLong");
+  diskLongColumn.rwKeywordSet().define("UNIT", "deg");
+  tableDesc.addColumn(diskLongColumn);
+
+  ScalarColumnDesc<casa::Double> diskLatColumn("diskLat");
+  diskLatColumn.rwKeywordSet().define("UNIT", "deg");
+  tableDesc.addColumn(diskLatColumn);
+
+  SetupNewTable tableSetup(attachMS_p->tableName() + "/FIELD/" + String(name),
+			   tableDesc,
+			   Table::New);
+
+  Table* table_p = new Table(tableSetup, TableLock(TableLock::PermanentLockingWait));
+  AlwaysAssert(table_p, AipsError);
+  attachMS_p->rwKeywordSet().defineTable(name, *table_p);
+  table_p->flush();
+
+  return table_p;
+}
+
+void solveTridiagonalSystem(unsigned int		n,
+			    const vector<double>&	a,
+			    const vector<double>&	b,
+			    const vector<double>&	c,
+			    const vector<double>&	d,
+			    vector<double>&             x) {
+  LOGENTER("solveTridiagonalSystem");
+  vector<double>   cprime(n-1);
+  vector<double>   dprime(n);
+
+  cprime[0] = c[0] / b[0];
+  for (unsigned int i = 1 ; i < n-1; i++ ) 
+    cprime[i] = c[i] / (b[i] - cprime[i-1] * a[i]);
+  LOG("cprime computed");
+  
+  dprime[0] = d[0] / b[0];
+  for (unsigned int i = 1; i < n; i++)
+    dprime[i] = (d[i] - dprime[i-1] * a[i]) / (b[i] - cprime[i-1] * a[i]);
+  LOG("dprime computed");
+
+  x.clear(); x.resize(n);
+  x[n-1] = dprime[n-1];
+  for (int i = n-2; i >=0; i--) {
+    x[i] = dprime[i] - cprime[i] * x[i+1];
+  }
+  cout << endl;
+  LOGEXIT("solveTridiagonalSystem");
+}
+
+void linearInterpCoeff(uint32_t                   npoints,
+		       const vector<double>&      time_v,
+		       const vector<double>&      k_v,
+		       vector<vector<double> >&   coeff_vv) {
+  LOGENTER("linearInterpCoeff");
+  coeff_vv.clear();
+  coeff_vv.resize(npoints-1);
+  
+  for (uint32_t i = 0; i < npoints-1; i++) {
+    vector<double> coeff_v (2);
+    coeff_v[0] = k_v[i];
+    coeff_v[1] = (k_v[i+1] - k_v[i]) / (time_v[i+1] - time_v[i]);
+    coeff_vv[i] = coeff_v;
+  }
+  LOGEXIT("linearInterpCoeff");
+}
+
+void cubicSplineCoeff(unsigned int		npoints,
+		      const vector<double>&     time_v,
+		      const vector<double>&     k_v,
+		      const vector<double>&	a_v,
+		      const vector<double>&	b_v,
+		      const vector<double>&	c_v,
+		      const vector<double>&	d_v,
+		      vector<vector<double> >&	coeff_vv) {
+
+  LOGENTER("cubicSplineCoeff");
+  
+  vector<double> m_v(npoints);
+  vector<double> x_v;
+
+  coeff_vv.clear();
+  coeff_vv.resize(npoints-1);
+
+  solveTridiagonalSystem(npoints-1, a_v, b_v, c_v, d_v, x_v);
+  m_v.clear();
+  m_v.resize(npoints);
+  m_v[0] = 0.0;
+  m_v[npoints-1] = 0.0;
+  for (unsigned int i = 1; i < npoints - 1; i++)
+    m_v[i] = x_v[i-1];
+
+  for (unsigned int i = 0 ; i < npoints - 1; i++) {
+    vector<double> coeff_v (4);
+    LOG(" delta k " + lexical_cast<string>(k_v[i+1]-k_v[i]) + " delta t " + lexical_cast<string>(time_v[i+1] - time_v[i]));
+    LOG(" m_i = " + lexical_cast<string>(m_v[i]) + ", m_i+1 = " + lexical_cast<string>(m_v[i+1]));
+    coeff_v[0] = k_v[i];
+    coeff_v[1] = (k_v[i+1] - k_v[i]) / (time_v[i+1] - time_v[i]) - (time_v[i+1] - time_v[i]) * (2 * m_v[i] + m_v[i+1]) / 6.0;
+    coeff_v[2] = m_v[i] / 2.0;
+    coeff_v[3] = (m_v[i+1] - m_v[i]) / 6.0 / (time_v[i+1] - time_v[i]);
+    coeff_vv[i] = coeff_v;
+  }
+  LOGEXIT("cubicSplineCoeff");
+  return;
+}
+
+double evalPoly (unsigned int		numCoeff,
+		 const vector<double>&	coeff,
+		 double 		timeOrigin,
+		 double 		time) {
+  LOGENTER("evalPoly");
+  LOG( "numCoeff=" + lexical_cast<string>(numCoeff) + ", size of coeff=" + lexical_cast<string>(coeff.size())) ;
+  //
+  // Let's use the Horner schema to evaluate the polynomial.
+  double result = coeff[numCoeff-1];
+  for (int i = numCoeff - 2; i >= 0; i--) 
+    result = coeff[i] + result*(time-timeOrigin);
+
+  LOGEXIT("evalPoly");
+  return result;
+}
+
+#define LOG_EPHEM(message) if (getenv("FILLER_LOG_EPHEM")) cout << message;
+
+void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond) {
+  LOGENTER("fillEphemeris");
+  
+  try {
+    // Retrieve the Ephemeris table's content.
+    EphemerisTable & eT = ds_p->getEphemeris();
+    const vector<EphemerisRow *>&  eR_v = eT.get();
+  
+    infostream.str("");
+    infostream << "The dataset has " << eT.size() << " ephemeris row(s)...";
+    info(infostream.str());
+
+    // Let's partition the vector of Ephemeris rows based on the value of the field ephemerisId.
+    vector<EphemerisRow *> empty_v;
+    map<int, vector<EphemerisRow *> > i2e_m; // A map which associates a value of ephemerisId to the vector of Ephemeris rows 
+    // having this value in their field ephemerisId.
+    set<int> ephemerisId_s;
+    BOOST_FOREACH(EphemerisRow * eR_p , eR_v) {
+      int ephemerisId = eR_p -> getEphemerisId();
+      if (i2e_m.find(ephemerisId) == i2e_m.end()) {
+	ephemerisId_s.insert(ephemerisId);
+	i2e_m[ephemerisId] = empty_v;
+      }
+      i2e_m[ephemerisId].push_back(eR_p);
+    }
+
+    // Let's create and fill the MS ephemeris tables.
+
+    BOOST_FOREACH(int ephemerisId, ephemerisId_s) {
+      /**
+       * Check if there is at least one ASDM::Field row refering to this ephemerisId.
+       */
+      const vector<FieldRow *> fR_v = ds_p->getField().get();
+      vector<FieldRow *> relatedField_v;    // This vector elements will contain pointers to all the Fields refering to this ephemerisId.
+      BOOST_FOREACH(const FieldRow* fR_p, fR_v) {
+	if (fR_p->isEphemerisIdExists() && (fR_p->getEphemerisId() == ephemerisId))
+	  relatedField_v.push_back(const_cast<FieldRow *>(fR_p));
+      }
+    
+      if (relatedField_v.size() == 0) {
+	infostream.str("");
+	infostream << "No ASDM Field found with 'ephemerisId=='"<< ephemerisId << "'. An ephemeris table will be created in the MS though, but it will not be connected a Field.";
+	info(infostream.str());
+      }
+
+      // Let's use the value of 'fieldName' in first element (if any) of relatedField_v to build the name of the MS Ephemeris table to
+      // be created.
+      //
+      string fieldName;
+      if (relatedField_v.size() > 0)
+	fieldName = relatedField_v[0]->getFieldName();
+
+      /**
+       * For each MS ephemeris table we need :
+       *
+       * 1) MJD0
+       * 2) DMJD0
+       * 3) NAME
+       * 4) GeoLong in deg.
+       * 5) GeoLat  in deg.
+       * 6) GeoDist in km.
+       * 7) origin (a textual summary of the origin of this ephemeris)
+       *
+       * We derive these values from the informations found in the first element of i2e_m[ephemerisId]
+       */
+      vector<EphemerisRow *>&	v		 = i2e_m[ephemerisId];    
+      vector<double>		observerLocation = v[0]->getObserverLocation();
+      double			geoLong		 = observerLocation[0] / 3.14159265 * 180.0; // in order to get degrees.
+      double			geoLat		 = observerLocation[1] / 3.14159265 * 180.0; // in order to get degrees.
+      double                      geoDist          = observerLocation[2] / 1000.0;             // in order to get km (supposedly above the reference ellipsoid)
+
+      int64_t	t0ASDM = v[0]->getTimeInterval().getStart().get();	// The first time recorded for this ephemerisId.
+      int64_t	q      = t0ASDM / timeStepInNanoSecond;
+      int64_t	r      = t0ASDM % timeStepInNanoSecond;
+      int64_t	t0MS   = t0ASDM;
+      if ( r != 0 ) {  
+	q		       = q + 1;
+	t0MS	       = q * timeStepInNanoSecond;
+      }
+
+      double mjd0 = ArrayTime(t0MS).getMJD();
+      double dmjd = 0.001;
+
+      // Prepare the table keywords with the values computed above.
+      TableDesc tableDesc;
+    
+      tableDesc.comment() = v[0]->getOrigin();
+      tableDesc.rwKeywordSet().define("MJD0", casa::Double(mjd0));
+      tableDesc.rwKeywordSet().define("dMJD", casa::Double(dmjd));
+      tableDesc.rwKeywordSet().define("NAME", fieldName);
+      tableDesc.rwKeywordSet().define("GeoLong", casa::Double(geoLong));
+      tableDesc.rwKeywordSet().define("GeoLat", casa::Double(geoLat));
+      tableDesc.rwKeywordSet().define("GeoDist", casa::Double(geoDist));
+    
+      // Then the fields definitions and keywords.
+      ScalarColumnDesc<casa::Double> mjdColumn("MJD");
+      mjdColumn.rwKeywordSet().define("UNIT", "d");
+      tableDesc.addColumn(mjdColumn);
+    
+      ScalarColumnDesc<casa::Double> raColumn("RA");
+      raColumn.rwKeywordSet().define("UNIT", "deg");
+      tableDesc.addColumn(raColumn);
+    
+      ScalarColumnDesc<casa::Double> decColumn("DEC");
+      decColumn.rwKeywordSet().define("UNIT", "deg");
+      tableDesc.addColumn(decColumn);
+    
+      ScalarColumnDesc<casa::Double> rhoColumn("Rho");
+      rhoColumn.rwKeywordSet().define("UNIT", "AU");
+      tableDesc.addColumn(rhoColumn);
+    
+      ScalarColumnDesc<casa::Double> radVelColumn("RadVel");
+      radVelColumn.rwKeywordSet().define("UNIT", "km/s");
+      tableDesc.addColumn(radVelColumn);
+    
+      ScalarColumnDesc<casa::Double> diskLongColumn("diskLong");
+      diskLongColumn.rwKeywordSet().define("UNIT", "deg");
+      tableDesc.addColumn(diskLongColumn);
+    
+      ScalarColumnDesc<casa::Double> diskLatColumn("diskLat");
+      diskLatColumn.rwKeywordSet().define("UNIT", "deg");
+      tableDesc.addColumn(diskLatColumn);
+    
+  
+      string tableName = "EPHEM"
+	+ boost::lexical_cast<std::string>(ephemerisId)
+	+ "_"
+	+ fieldName
+	+ "_"
+	+ lexical_cast<string>(mjd0)
+	+ ".tab";
+
+      map<AtmPhaseCorrection, Table*> apc2EphemTable_m;
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	string tablePath = (string) iter->second->ms()->tableName() + string("/FIELD/") + tableName;  
+	SetupNewTable tableSetup(tablePath,
+				 tableDesc,
+				 Table::New);
+    
+	Table* table_p = new Table(tableSetup, TableLock(TableLock::PermanentLockingWait));
+	AlwaysAssert(table_p, AipsError);
+	(const_cast<casa::MeasurementSet*>(iter->second->ms()))->rwKeywordSet().defineTable(tableName, *table_p);
+	table_p->flush();
+	apc2EphemTable_m[iter->first] = table_p;
+	LOG("Empty ephemeris table '" + tablePath + "' created");
+      }
+
+      // 
+      // Now it's time to fill the EPHEM table(s).
+      //
+    
+      //
+      // Check that for each polynomial column the degree is always null or never null and that the optional fields are always present or always absent.
+      // And also verify that there is no "hole" in the time range covered by the sequence of ArrayTime intervals when the degree is == 0.
+      //
+      //
+      bool	numPolyDirIsOne	   = v[0]->getNumPolyDir() == 1;
+      bool	numPolyDistIsOne   = v[0]->getNumPolyDist() == 1;
+      bool	radVelExists	   = v[0]->isRadVelExists() && v[0]->isNumPolyRadVelExists();
+      bool	numPolyRadVelIsOne = radVelExists ? v[0]->getNumPolyRadVel() == 1 : false;
+
+      vector<double> duration_v;  // In seconds
+      vector<double> time_v;      //  "      "
+
+      time_v.push_back(1.0e-09*v[0]->getTimeInterval().getStart().get());
+
+      errstream.str("");
+      for (unsigned int i = 1; i < v.size(); i++) {
+	if (numPolyDirIsOne != (v[i]->getNumPolyDir() == 1)) {
+	  errstream << "In the table Ephemeris the value of the field 'numPolyDir' is expected to be whether always equal to 1 or always greater than 1. This rule is violated at line #" << i <<"."; 
+	  error(errstream.str());
+	}
+
+	if (numPolyDistIsOne != (v[i]->getNumPolyDist() == 1)) {
+	  errstream << "In the table Ephemeris the value of the field 'numPolyDist' is expected to be whether always equal to 1 or always greater than 1. This rule is violated at line #" << i <<"."; 
+	  error(errstream.str());
+	}
+      
+	if (radVelExists != (v[i]->isRadVelExists() && v[i]->isNumPolyRadVelExists())) {
+	  errstream << "In the table Ephemeris the fields 'radVel' and 'numPolyRadVel' are expected to be whether always absent or always present. This rule is violated at line #" << i <<".";
+	  error(errstream.str());
+	}
+
+	if (radVelExists) {
+	  if (numPolyRadVelIsOne != (v[i]->getNumPolyRadVel() == 1)) {
+	    errstream << "In the table Ephemeris the value of the field 'numPolyRadVel' is expected to be whether always equal to 1 or always greater than 1. This rule is violated at line #" << i <<"."; 
+	    error(errstream.str());
+	  }	 
+	}
+
+	if (numPolyDirIsOne || numPolyDistIsOne || (radVelExists && numPolyRadVelIsOne)) {
+	  int64_t start_i = v[i]->getTimeInterval().getStart().get() ;
+	  int64_t start_i_1 = v[i-1]->getTimeInterval().getStart().get();
+	  int64_t duration_i_1 = v[i-1]->getTimeInterval().getDuration().get();
+	  if (start_i != (start_i_1 + duration_i_1)) {
+	    infostream.str("");
+	    infostream << "The value of 'timeInterval' at row #" << i-1 << " does not cover the time range up to the start time of the next row. The polynomial will be evaluated despite the presence of this 'hole'";
+	    info(infostream.str());
+	  }
+	  duration_v.push_back(1.0e-09*(start_i - start_i_1));
+	  time_v.push_back(1.0e-09*start_i); 
+	}
+      }
+    
+      LOG ("numPolyDirIsOne = " + lexical_cast<string>(numPolyDirIsOne));
+      LOG ("numPolyDistIsOne = " + lexical_cast<string>(numPolyDistIsOne));
+      LOG ("radVelExists = " + lexical_cast<string>(radVelExists));
+      LOG ("numPolyRadVelIsOne = " + lexical_cast<string>(numPolyRadVelIsOne));
+    
+
+      //
+      // The number of tabulated values (i.e. the number of rows in the MS Ephemerides) table depend on the 
+      // degrees of each polynomial column. If there is at least one such degree which is equal to 1 then
+      // we exclude the last element of the vector v, i.e. the last ArrayTimeInterval, since on this time interval
+      // we would miss one end value for the interpolation (so far extrapolation is excluded).
+      //
+      if (numPolyDirIsOne || numPolyDistIsOne || (radVelExists && numPolyRadVelIsOne)) {
+	// Then just "forget" the last element.
+	LOG("Erasing the last element of v (size before = '" + lexical_cast<string>(v.size()) + "')");
+	v.erase(v.begin() + v.size() - 1);
+	LOG("Erasing the last element of v (size after = '" + lexical_cast<string>(v.size()) + "')");
+
+	LOG("Erasing the last element of duration_v (size before = '" + lexical_cast<string>(duration_v.size()) + "')");
+	duration_v.erase(duration_v.begin() + duration_v.size() - 1);
+	LOG("Erasing the last element of duration_v (size after = '" + lexical_cast<string>(duration_v.size()) + "')");
+      }
+
+      // 
+      // Determine the timely ordered sequence of indexes in v which will be used to tabulate the ephemeris data to be put into the MS table.
+      //
+      LOG("Prepare the time ordered sequence of indexes used to tabulate the ephemeris data to be written in the MS table.");
+      typedef pair<uint32_t, int64_t> atiIdxMStime_pair;
+      vector<atiIdxMStime_pair>  atiIdxMStime_v;
+
+      uint32_t index = 0;  
+      int64_t tMS = t0MS;
+      atiIdxMStime_v.push_back(atiIdxMStime_pair(index, tMS));
+      LOG ("size of atiIdxMStime_v="+lexical_cast<string>(atiIdxMStime_v.size())+", index = "+lexical_cast<string>(index)+", tMS = "+lexical_cast<string>(tMS));
+      tMS += timeStepInNanoSecond;
+
+      int64_t  start =  v[index]->getTimeInterval().getStart().get();
+      int64_t  end   =  start + v[index]->getTimeInterval().getDuration().get();
+      do {
+	if (tMS < end) {
+	  atiIdxMStime_v.push_back(atiIdxMStime_pair(index, tMS));
+	  tMS += timeStepInNanoSecond;
+	  LOG ("size of atiIdxMStime_v="+lexical_cast<string>(atiIdxMStime_v.size())+", index = "+lexical_cast<string>(index)+", tMS = "+lexical_cast<string>(tMS));
+	}
+	else {
+	  index++;
+	  end   =  v[index]->getTimeInterval().getStart().get() + v[index]->getTimeInterval().getDuration().get();
+	}
+
+      } while (index < v.size()-1);
+    
+      LOG("atiIdxMStime_v has " + lexical_cast<string>(atiIdxMStime_v.size()) + " elements.");
+
+      //
+      // Prepare the coefficients which will be used for the tabulation.
+ 
+      LOG("Prepare the coefficients which will be used for the tabulations.");
+      vector<vector<double> >  raASDM_vv;
+      vector<double>           raASDM_v;
+      vector<vector<double> >  decASDM_vv;
+      vector<double>           decASDM_v;
+      vector<vector<double> >  distanceASDM_vv;
+      vector<double>           distanceASDM_v;
+      vector<vector<double> >  radVelASDM_vv;
+      vector<double>           radVelASDM_v;
+      vector<double>           empty_v;
+      vector<double>           temp_v;
+    
+      cout.precision(10);
+      for (unsigned int i = 0; i < v.size(); i++) {
+	LOG_EPHEM("original " + lexical_cast<string> (ArrayTime(v[i]->getTimeInterval().getStart().get()).getMJD()));
+	vector<vector<double> > temp_vv = v[i]->getDir();
+	if (numPolyDistIsOne) {
+	  raASDM_v.push_back(temp_vv[0][0]/3.14159265*180.0);
+	  decASDM_v.push_back(temp_vv[0][1]/3.14159265*180.0);
+	  LOG_EPHEM (" " + lexical_cast<string>(raASDM_v.back()) + " " + lexical_cast<string>(decASDM_v.back()));
+	}
+	else {
+	  raASDM_vv.push_back(empty_v);
+	  decASDM_vv.push_back(empty_v);
+	  for (unsigned int j = 0; j < v[i]->getNumPolyDir(); j++) {
+	    raASDM_vv.back().push_back(temp_vv[j][0]/3.14159265*180.0);
+	    decASDM_vv.back().push_back(temp_vv[j][1]/3.14159265*180.0);
+	  }
+	}
+
+	temp_v = v[i]->getDistance();      
+	if (numPolyDistIsOne) {
+	  distanceASDM_v.push_back(temp_v[0] / 1.4959787066e11);           // AU
+	  LOG_EPHEM (" " + lexical_cast<string>(distanceASDM_v.back()));
+	}
+	else {
+	  distanceASDM_vv.push_back(empty_v);
+	  for (unsigned int j = 0; j < v[i]->getNumPolyDist(); j++)
+	    distanceASDM_vv.back().push_back(temp_v[j] / 1.4959787066e11); // AU
+	}
+
+	if (radVelExists) {
+	  temp_v = v[i]->getRadVel();
+	  if (numPolyRadVelIsOne) { 
+	    radVelASDM_v.push_back(temp_v[0] / 1000.0);                    // km/s
+	    LOG_EPHEM(" " + lexical_cast<string>(radVelASDM_v.back()));
+	  }
+	  else {
+	    radVelASDM_vv.push_back(empty_v);
+	    for (unsigned int j = 0; j < v[i]->getNumPolyRadVel(); j++)
+	      radVelASDM_vv.back().push_back(temp_v[j]/1000);              // km/s
+	  }	
+	}
+	LOG_EPHEM("\n");
+      }
+
+#if 0
+      // Preparing the coefficients of cubic splines.
+      vector<double> a_v(v.size()-2);
+      vector<double> b_v(v.size()-1);
+      vector<double> c_v(v.size()-2);
+      vector<double> dRA_v(v.size()-2);
+      vector<double> dDEC_v(v.size()-2);
+      vector<double> dDist_v(v.size()-2);
+      vector<double> dRadV_v(v.size()-2);
+
+      //
+      // The calculations below are done only once and will be useful for all the columns
+      // requiring the cubic spline interpolation.
+      //
+      if (numPolyDirIsOne || numPolyDistIsOne || (radVelExists && numPolyRadVelIsOne)) {
+	LOG("Prepare the tridiagonal system of equations.");
+	LOG("a");
+	for (unsigned int  i = 0; i < a_v.size(); i++) 
+	  a_v[i] = duration_v[i];       
+
+	LOG("b");
+	for (unsigned int i = 0; i < b_v.size(); i++)
+	  b_v[i] = 2.0 * (duration_v[i] + duration_v[i+1]);
+      
+	LOG("c");
+	for (unsigned int i = 0; i < c_v.size(); i++) 
+	  c_v[i] = duration_v[i+1];
+
+	if (numPolyDirIsOne) {
+	  LOG("dRA");
+	  for (unsigned int i = 0; i < dRA_v.size(); i++)
+	    dRA_v[i] = 6.0 * (raASDM_v[i+1] - raASDM_v[i]) / duration_v[i];
+
+	  LOG("Compute the cubic spline coefficients for RAD");
+	  cubicSplineCoeff(v.size(),
+			   time_v,
+			   raASDM_v,
+			   a_v,
+			   b_v,
+			   c_v,
+			   dRA_v,
+			   raASDM_vv);
+	  LOG("size of raASDM_vv="+lexical_cast<string>(raASDM_vv.size()));
+	  BOOST_FOREACH(vector<double> temp_v, raASDM_vv) {
+	    LOG("raASDM_v = [");
+	    BOOST_FOREACH(double temp, temp_v){
+	      LOG(lexical_cast<string>(temp)+" ");
+	    }
+	    LOG("]");
+	  }
+	
+	  for (unsigned int i = 0; i < dDEC_v.size(); i++)
+	    dDEC_v[i] = 6.0 * (decASDM_v[i+1] - decASDM_v[i]) / duration_v[i];
+
+	  LOG("Compute the cubic spline coefficients for DEC");
+	  cubicSplineCoeff(v.size(),
+			   time_v,
+			   decASDM_v,
+			   a_v,
+			   b_v,
+			   c_v,
+			   dDEC_v,
+			   decASDM_vv);
+	  LOG("size of decASDM_vv="+lexical_cast<string>(decASDM_vv.size()));	
+	}
+
+	if (numPolyDistIsOne)  {
+	  for (unsigned int i = 0; i < dRA_v.size(); i++)
+	    dDist_v[i] = 6.0 * (distanceASDM_v[i+1] - distanceASDM_v[i]) / duration_v[i];
+
+	  LOG("Compute the cubic spline coefficients for Dist");
+	  cubicSplineCoeff(v.size(),
+			   time_v,
+			   distanceASDM_v,
+			   a_v,
+			   b_v,
+			   c_v,
+			   dDist_v,
+			   distanceASDM_vv);
+	  LOG("size of distanceASDM_vv="+lexical_cast<string>(distanceASDM_vv.size()));		
+	}
+      
+	if (radVelExists && numPolyRadVelIsOne) {
+	  LOG("Compute the cubic spline coefficients for RadVel");
+	  for (unsigned int i = 0; i < dRA_v.size(); i++) 
+	    dRadV_v[i] = 6.0 * (radVelASDM_v[i+1] - radVelASDM_v[i]) / duration_v[i];
+
+	  cubicSplineCoeff(v.size(),
+			   time_v,
+			   radVelASDM_v,
+			   a_v,
+			   b_v,
+			   c_v,
+			   dRadV_v,
+			   radVelASDM_vv);
+	  LOG("size of radVelASDM_vv="+lexical_cast<string>(radVelASDM_vv.size()));
+	}     
+      }
+      // End of preparing the coefficients of cubic splines.
+#else
+      // Preparing the coefficients of piecewise polynomial of degree 1.
+      //
+      // The calculations below are done only once and will be useful for all the columns
+      // requiring the cubic spline interpolation.
+      //
+      if (numPolyDirIsOne || numPolyDistIsOne || (radVelExists && numPolyRadVelIsOne)) {
+	if (numPolyDirIsOne) {
+	  LOG("Compute the linear interpolation coefficients for RAD");
+	  linearInterpCoeff(v.size(),
+			    time_v,
+			    raASDM_v,
+			    raASDM_vv);
+	
+	  LOG("Compute the linear interpolation coefficients for DEC");
+	  linearInterpCoeff(v.size(),
+			    time_v,
+			    decASDM_v,
+			    decASDM_vv);
+	}
+
+	if (numPolyDistIsOne)  {
+	  LOG("Compute the linear interolation coefficients for Dist");
+	  linearInterpCoeff(v.size(),
+			    time_v,
+			    distanceASDM_v,
+			    distanceASDM_vv);
+	}
+      
+	if (radVelExists && numPolyRadVelIsOne) {
+	  LOG("Compute the linear interpolation coefficients for RadVel");
+	  linearInterpCoeff(v.size(),
+			    time_v,
+			    radVelASDM_v,
+			    radVelASDM_vv);
+	}     
+      }
+      // End of interpolating with piecewise polynomial of degree 1.
+#endif
+    
+      vector<double> mjdMS_v;
+      vector<double> raMS_v;
+      vector<double> decMS_v;
+      vector<double> distanceMS_v;
+      vector<double> radVelMS_v;
+
+      BOOST_FOREACH (atiIdxMStime_pair atiIdxMStime, atiIdxMStime_v) {
+	//
+	// MJD
+	mjdMS_v.push_back(ArrayTime(atiIdxMStime.second).getMJD());
+	LOG_EPHEM( "resampled " + lexical_cast<string>(mjdMS_v.back()));
+	LOG("mjdMS_v -> "+lexical_cast<string>(mjdMS_v.back()));
+      
+	double timeOrigin = 1.0e-09 * v[atiIdxMStime.first]->getTimeOrigin().get(); 
+	double time       = 1.0e-09 * atiIdxMStime.second;
+      
+	LOG("timeOrigin="+lexical_cast<string>(timeOrigin)+", time="+lexical_cast<string>(time));
+
+	//
+	// RA / DEC
+	LOG("Eval poly for RA");
+	LOG("atiIdxMStime.first = " + lexical_cast<string>(atiIdxMStime.first));
+	raMS_v.push_back(evalPoly(raASDM_vv[atiIdxMStime.first].size(),
+				  raASDM_vv[atiIdxMStime.first],
+				  timeOrigin,
+				  time));
+	LOG_EPHEM(" " + lexical_cast<string>(raMS_v.back()));
+	LOG("raMS_v -> "+lexical_cast<string>(raMS_v.back()));
+
+	LOG("Eval poly for DEC");
+	decMS_v.push_back(evalPoly(decASDM_vv[atiIdxMStime.first].size(),
+				   decASDM_vv[atiIdxMStime.first],
+				   timeOrigin,
+				   time));
+	LOG_EPHEM(" " + lexical_cast<string>(decMS_v.back()));
+      
+	//
+	// Distance
+	LOG("Eval poly for distance");
+	distanceMS_v.push_back(evalPoly(distanceASDM_vv[atiIdxMStime.first].size(),
+					distanceASDM_vv[atiIdxMStime.first],
+					timeOrigin,
+					time));
+	LOG_EPHEM(" " + lexical_cast<string>(distanceMS_v.back()));
+	//
+	// Radvel
+	if (radVelExists) { 
+	  LOG("Eval poly for radvel");
+	  radVelMS_v.push_back(evalPoly(radVelASDM_vv[atiIdxMStime.first].size(),
+					radVelASDM_vv[atiIdxMStime.first],
+					timeOrigin,
+					time));
+	  LOG_EPHEM(" " + lexical_cast<string>(radVelMS_v.back()));
+	}
+	LOG_EPHEM("\n");
+      }
+
+      // Now the data are ready to be written to the MS Ephemeris table.
+      // Let's proceed, using Slicers.
+      //
+    
+      unsigned int numRows = raMS_v.size();
+      Slicer slicer(IPosition(1, 0),
+		    IPosition(1, numRows-1),
+		    Slicer::endIsLast);
+
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	Table * table_p = apc2EphemTable_m[iter->first];
+	table_p->addRow(numRows);
+	LOG ("Added "+lexical_cast<string>(numRows)+" rows to table "+((string)table_p->tableName()));
+      
+	LOG("Filling column MJD");
+	Vector<casa::Double> MJD_V(IPosition(1, numRows), &mjdMS_v[0], SHARE);
+	ScalarColumn<casa::Double> MJD(*table_p, "MJD");
+	MJD.putColumnRange(slicer, MJD_V);
+      
+	LOG("Filling column RA");
+	Vector<casa::Double> RA_V(IPosition(1, numRows), &raMS_v[0], SHARE);
+	ScalarColumn<casa::Double> RA(*table_p,  "RA");
+	RA.putColumnRange(slicer, RA_V);
+      
+	LOG("Filling column DEC");
+	Vector<casa::Double> DEC_V(IPosition(1, numRows), &decMS_v[0], SHARE);
+	ScalarColumn<casa::Double> DEC(*table_p, "DEC");
+	DEC.putColumnRange(slicer, DEC_V);
+      
+	LOG ("Filling column Rho");
+	Vector<casa::Double> Rho_V(IPosition(1, numRows), &distanceMS_v[0], SHARE);
+	ScalarColumn<casa::Double> Rho(*table_p, "Rho");
+	Rho.putColumnRange(slicer, Rho_V);
+      
+	if (radVelExists) {
+	  LOG ("Filling column RadVel");
+	  Vector<casa::Double> RadVel_V(IPosition(1, numRows), &radVelMS_v[0], SHARE);
+	  ScalarColumn<casa::Double> RadVel(*table_p, "RadVel");
+	  RadVel.putColumnRange(slicer, RadVel_V);
+	}
+      
+	table_p->flush();
+	infostream.str("");
+	infostream << "converted in " << table_p->nrow() << " ephemeris rows in the table '" << table_p->tableName() << "'.";
+	info(infostream.str());
+      }
+    }
+  }
+  catch (IllegalAccessException& e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch (ConversionException e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch ( std::exception & e) {
+    errstream.str("");
+    errstream << e.what();
+    error(errstream.str());      
+  }
+  LOGEXIT("fillEphemeris");
+  
+}
+
 /** 
  * This function fills the MS Field table.
  * given :
  * @parameter ds_p a pointer to the ASDM dataset.
+ * @parameter considerEphemeris take into account the reference to Ephemeris table(s).
  */
-void fillField(ASDM* ds_p) {
-  if (debug) cout << "fillField : entering" << endl;
+void fillField(ASDM* ds_p, bool considerEphemeris) {
+  LOGENTER("fillField");
+  vector<pair<int, int> > idxEphemerisId_v;
+
   try {
     FieldTable& fieldT = ds_p->getField();
     FieldRow* r = 0;
@@ -1136,9 +1886,8 @@ void fillField(ASDM* ds_p) {
       vector<vector<double> > phaseDir     = DConverter::toMatrixD<Angle>(r->getPhaseDir());
       vector<vector<double> > referenceDir = DConverter::toMatrixD<Angle>(r->getReferenceDir());
       
-      int sourceId = -1;
-      if (r->isSourceIdExists()) sourceId = r->getSourceId();
-      
+      if (r->isEphemerisIdExists()) idxEphemerisId_v.push_back(pair<int, int>(i, r->getEphemerisId()));
+
       for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
 	   iter != msFillers.end();
 	   ++iter) {
@@ -1150,9 +1899,17 @@ void fillField(ASDM* ds_p) {
 				phaseDir,
 				referenceDir,
 				directionCode,
-				r->isSourceIdExists()?r->getSourceId():0);
+				r->isSourceIdExists()?r->getSourceId():0 );
       }
     }
+    
+    if (considerEphemeris && (idxEphemerisId_v.size() > 0)) 
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	   iter != msFillers.end();
+	   ++iter) {
+	iter->second->updateEphemerisIdInField(idxEphemerisId_v);
+      }
+
     if (nField) {
       infostream.str("");
       infostream << "converted in " << msFillers.begin()->second->ms()->field().nrow() << "  field(s) in the measurement set(s)." ;
@@ -1174,7 +1931,8 @@ void fillField(ASDM* ds_p) {
     errstream << e.what();
     error(errstream.str());      
   }
-  if (debug) cout << "fillField : exiting" << endl;
+
+  LOGEXIT("fillField");
 }
 
 /** 
@@ -1183,7 +1941,8 @@ void fillField(ASDM* ds_p) {
  * @parameter ds_p a pointer to the ASDM dataset.
  */
 void fillSpectralWindow(ASDM* ds_p) {
-  if (debug) cout << "fillSpectralWindow : entering" << endl;
+  LOGENTER("fillSpectralWindow");
+
   try {
     SpectralWindowTable& spwT = ds_p->getSpectralWindow();      
     vector<Tag> reorderedSwIds = reorderSwIds(*ds_p); // The vector of Spectral Window Tags in the order they will be inserted in the MS.
@@ -1462,7 +2221,7 @@ void fillSpectralWindow(ASDM* ds_p) {
     errstream << e.what();
     error(errstream.str());      
   }
-  if (debug) cout << "fillSpectralWindow : exiting" << endl;
+  LOGEXIT("fillSpectralWindow");
 }  
 
 /**
@@ -1473,7 +2232,7 @@ void fillSpectralWindow(ASDM* ds_p) {
  */
 
 void fillState(MainRow* r_p) {
-  if (debug) cout << "fillState : entering" << endl;
+  LOGENTER("fillState");
 
   ASDM&			ds	   = r_p -> getTable() . getContainer();
   ScanRow*		scanR_p	   = ds.getScan().getRowByKey(r_p -> getExecBlockId(),	r_p -> getScanNumber());
@@ -1521,7 +2280,7 @@ void fillState(MainRow* r_p) {
       }
     }	    
   }
-  if (debug) cout << "fillState : exiting" << endl;
+  LOGEXIT("fillState");
 }
 
 void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   selected_eb_scan_m, const casa::MeasurementSet*  tab_p) {
@@ -1811,18 +2570,21 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	  vector<Vector<casa::Double> > vv_uvw;
 	  vector<double> time_v(dataDescriptionIds.size() * (numberOfBaselines + numberOfAntennas),
 				time);
-	  uvwCoords.uvw_bl(*iter,
-			   time_v, 
-			   correlationMode,
-			   dataOrder,
-			   vv_uvw);
+
+	  if ( correlationMode != AUTO_ONLY ) {
+	    uvwCoords.uvw_bl(*iter,
+			     time_v, 
+			     correlationMode,
+			     dataOrder,
+			     vv_uvw);
+	  }
 	  
 	  //
-	  // If we have autocorrelations, ignore the numberOfAntennas * dataDescriptionIds.size()
+	  // If we have autocorrelations and cross correlations , ignore the numberOfAntennas * dataDescriptionIds.size()
 	  // first element of vv_uvw
 	  // 
 	  unsigned int uvwIndexBase = 0;
-	  if (correlationMode == CROSS_AND_AUTO || correlationMode == AUTO_ONLY) {
+	  if (correlationMode == CROSS_AND_AUTO) {
 	    uvwIndexBase += numberOfAntennas * dataDescriptionIds.size();
 	  }
 
@@ -1909,42 +2671,44 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	// This done with data descriptions varying the more slowly.
 	//
 	for (unsigned int iDD = 0; iDD < dataDescriptionIds.size(); iDD++) {
-	  msFillers[AP_UNCORRECTED]->addData(true,             // Yes ! these are complex data.
-					     auto_time_vv[iDD],
-					     auto_antenna1_vv[iDD],
-					     auto_antenna2_vv[iDD],
-					     auto_feed1_vv[iDD],
-					     auto_feed2_vv[iDD],
-					     auto_dataDescId_vv[iDD],
-					     processorId,
-					     fieldId,
-					     auto_interval_vv[iDD],
-					     auto_exposure_vv[iDD],
-					     auto_timeCentroid_vv[iDD],
-					     scanNumber, 
-					     arrayId,
-					     observationId,
-					     auto_stateId_vv[iDD],
-					     auto_nChanNPol_vv[iDD],
-					     auto_uvw_vv[iDD]);
-	  msFillers[AP_UNCORRECTED]->addData(true,             // Yes ! these are complex data.
-					     cross_time_vv[iDD],
-					     cross_antenna1_vv[iDD],
-					     cross_antenna2_vv[iDD],
-					     cross_feed1_vv[iDD],
-					     cross_feed2_vv[iDD],
-					     cross_dataDescId_vv[iDD],
-					     processorId,
-					     fieldId,
-					     cross_interval_vv[iDD],
-					     cross_exposure_vv[iDD],
-					     cross_timeCentroid_vv[iDD],
-					     scanNumber, 
-					     arrayId,
-					     observationId,
-					     cross_stateId_vv[iDD],
-					     cross_nChanNPol_vv[iDD],
-					     cross_uvw_vv[iDD]);      
+	  if ( correlationMode == CROSS_AND_AUTO || correlationMode == AUTO_ONLY )
+	    msFillers[AP_UNCORRECTED]->addData(true,             // Yes ! these are complex data.
+					       auto_time_vv[iDD],
+					       auto_antenna1_vv[iDD],
+					       auto_antenna2_vv[iDD],
+					       auto_feed1_vv[iDD],
+					       auto_feed2_vv[iDD],
+					       auto_dataDescId_vv[iDD],
+					       processorId,
+					       fieldId,
+					       auto_interval_vv[iDD],
+					       auto_exposure_vv[iDD],
+					       auto_timeCentroid_vv[iDD],
+					       scanNumber, 
+					       arrayId,
+					       observationId,
+					       auto_stateId_vv[iDD],
+					       auto_nChanNPol_vv[iDD],
+					       auto_uvw_vv[iDD]);
+	  if ( correlationMode == CROSS_AND_AUTO || correlationMode == CROSS_ONLY ) 
+	    msFillers[AP_UNCORRECTED]->addData(true,             // Yes ! these are complex data.
+					       cross_time_vv[iDD],
+					       cross_antenna1_vv[iDD],
+					       cross_antenna2_vv[iDD],
+					       cross_feed1_vv[iDD],
+					       cross_feed2_vv[iDD],
+					       cross_dataDescId_vv[iDD],
+					       processorId,
+					       fieldId,
+					       cross_interval_vv[iDD],
+					       cross_exposure_vv[iDD],
+					       cross_timeCentroid_vv[iDD],
+					       scanNumber, 
+					       arrayId,
+					       observationId,
+					       cross_stateId_vv[iDD],
+					       cross_nChanNPol_vv[iDD],
+					       cross_uvw_vv[iDD]);      
 	}
       }
       else 
@@ -2209,14 +2973,14 @@ void fillMain(int		rowNum,
 
 
 void testFunc(string& tstr) {
-   cerr<<tstr<<endl;
+  cerr<<tstr<<endl;
 }
 
 /**
  * compute the UVW (put in a method to keep sepearate from fillMain for
-   parallel case) returns a Matrix, mat_uvw for data passing thread-safe
-   way
- */
+ parallel case) returns a Matrix, mat_uvw for data passing thread-safe
+ way
+*/
 void calcUVW(MainRow* r_p, 
              SDMBinData& sdmBinData, 
              const VMSData* vmsData_p, 
@@ -2236,7 +3000,7 @@ void calcUVW(MainRow* r_p,
                    vv_uvw);
 #endif
 
-//put in a Matrix
+  //put in a Matrix
   for (unsigned int iUvw = 0; iUvw < vv_uvw.size(); iUvw++) {
     mat_uvw(iUvw, 0) = vv_uvw[iUvw](0);
     mat_uvw(iUvw, 1) = vv_uvw[iUvw](1);
@@ -2260,16 +3024,16 @@ void calcUVW(MainRow* r_p,
  * is filled and will be used by fillMain.
  */ 
 void fillMain_mt(MainRow*	r_p,
-	      const VMSData* vmsData_p,
-              casa::Double*&   puvw,
-	      bool		complexData,
-              int               spwId,
-	      bool           mute) {
+		 const VMSData* vmsData_p,
+		 casa::Double*&   puvw,
+		 bool		complexData,
+		 int               spwId,
+		 bool           mute) {
   
   //if (debug) cout << "fillMain : entering" << endl;
   //cout << "fillMain_mt : entering for row="<< rowNum << endl;
 
-   ASDM & ds = r_p -> getTable() . getContainer();
+  ASDM & ds = r_p -> getTable() . getContainer();
 
   // Then populate the Main table.
   ComplexDataFilter filter; // To process the case numCorr == 3
@@ -2298,25 +3062,25 @@ void fillMain_mt(MainRow*	r_p,
   for (unsigned int idd = 0; idd < vmsData_p->v_dataDescId.size(); idd++){
     for (unsigned int iseldd=0; iseldd < iddv.size(); iseldd++) {
       if (vmsData_p->v_dataDescId.at(idd) == iddv.at(iseldd)) {
-         filteredDDbasedRows.push_back(idd);
-         // if DDId matches also update a spwId set
-         if (SwIdUsed.find(spwId)==SwIdUsed.end()) 
-           SwIdUsed.insert(spwId);
+	filteredDDbasedRows.push_back(idd);
+	// if DDId matches also update a spwId set
+	if (SwIdUsed.find(spwId)==SwIdUsed.end()) 
+	  SwIdUsed.insert(spwId);
       }
     }
   }
 
   // debug: save the row selections for each DD
   /***
-  ofstream outf;
-  ostringstream oss;
-  oss<< spwId;
-  string filen ("filteredDDRows"+oss+".txt");
-  outf.open(filen.c_str());
-  for (unsigned int i=0; i < filteredDDbasedRows.size(); i++) {
-    outf << filteredDDbasedRows.at(i) <<endl;
-  }
-  outf.close();
+      ofstream outf;
+      ostringstream oss;
+      oss<< spwId;
+      string filen ("filteredDDRows"+oss+".txt");
+      outf.open(filen.c_str());
+      for (unsigned int i=0; i < filteredDDbasedRows.size(); i++) {
+      outf << filteredDDbasedRows.at(i) <<endl;
+      }
+      outf.close();
   ***/
 
   //return row containing data for specific spw
@@ -2430,25 +3194,25 @@ void fillMain_mt(MainRow*	r_p,
     if (! mute) {
       //cerr<<" actually filling the data (uncorrected) for spwId"<<spwId<<endl;
       msFillers_v[spwId][AP_UNCORRECTED]->addData(complexData,
-                                       uncorrectedTime, // this is already time midpoint
-                                       uncorrectedAntennaId1,
-                                       uncorrectedAntennaId2,
-                                       uncorrectedFeedId1,
-                                       uncorrectedFeedId2,
-                                       uncorrectedFilteredDD,
-				       vmsData_p->processorId,
-                                       uncorrectedFieldId,
-                                       uncorrectedInterval,
-                                       uncorrectedExposure,
-                                       uncorrectedTimeCentroid,
-                                       (int) r_p->getScanNumber(),
-                                       0,                                               // Array Id
-                                       (int) r_p->getExecBlockId().getTagValue(), // Observation Id
-                                       uncorrectedMsStateId,
-                                       uncorrectedUvw,
-                                       filteredShape, // vmsData_p->vv_dataShape after filtering the case numCorr == 3
-                                       uncorrectedData,
-                                       uncorrectedFlag);
+						  uncorrectedTime, // this is already time midpoint
+						  uncorrectedAntennaId1,
+						  uncorrectedAntennaId2,
+						  uncorrectedFeedId1,
+						  uncorrectedFeedId2,
+						  uncorrectedFilteredDD,
+						  vmsData_p->processorId,
+						  uncorrectedFieldId,
+						  uncorrectedInterval,
+						  uncorrectedExposure,
+						  uncorrectedTimeCentroid,
+						  (int) r_p->getScanNumber(),
+						  0,                                               // Array Id
+						  (int) r_p->getExecBlockId().getTagValue(), // Observation Id
+						  uncorrectedMsStateId,
+						  uncorrectedUvw,
+						  filteredShape, // vmsData_p->vv_dataShape after filtering the case numCorr == 3
+						  uncorrectedData,
+						  uncorrectedFlag);
 
       //cerr<<" filling the data (uncorrected) for spwId DONE ******"<<spwId<<endl;
     }
@@ -2457,32 +3221,33 @@ void fillMain_mt(MainRow*	r_p,
   if (correctedData.size() > 0 && (msFillers_v[spwId].find(AP_CORRECTED) != msFillers_v[spwId].end())) {
     if (! mute) {
       msFillers_v[spwId][AP_CORRECTED]->addData(complexData,
-				       correctedTime, // this is already time midpoint
-				       correctedAntennaId1, 
-				       correctedAntennaId2,
-				       correctedFeedId1,
-				       correctedFeedId2,
-				       correctedFilteredDD,
-				       vmsData_p->processorId,
-				       correctedFieldId,
-				       correctedInterval,
-				       correctedExposure,
-				       correctedTimeCentroid,
-				       (int) r_p->getScanNumber(), 
-				       0,                                               // Array Id
-				       (int) r_p->getExecBlockId().getTagValue(), // Observation Id
-				       correctedMsStateId,
-				       correctedUvw,
-				       filteredShape, // vmsData_p->vv_dataShape after filtering the case numCorr == 3
-				       correctedData,
-				       correctedFlag);
+						correctedTime, // this is already time midpoint
+						correctedAntennaId1, 
+						correctedAntennaId2,
+						correctedFeedId1,
+						correctedFeedId2,
+						correctedFilteredDD,
+						vmsData_p->processorId,
+						correctedFieldId,
+						correctedInterval,
+						correctedExposure,
+						correctedTimeCentroid,
+						(int) r_p->getScanNumber(), 
+						0,                                               // Array Id
+						(int) r_p->getExecBlockId().getTagValue(), // Observation Id
+						correctedMsStateId,
+						correctedUvw,
+						filteredShape, // vmsData_p->vv_dataShape after filtering the case numCorr == 3
+						correctedData,
+						correctedFlag);
     }
   }
   if (debug) cout << "fillMain_mt : exiting" << endl;
 }
 
 void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers, map<AtmPhaseCorrection, ASDM2MSFiller*>& msFillers_m) {
-  if (debug) cout << "fillSysPower_aux : entering" << endl;
+  LOGENTER("fillSysPower_aux");
+
   vector<int>		antennaId;
   vector<int>		spectralWindowId;
   vector<int>		feedId;
@@ -2492,8 +3257,8 @@ void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers, map<AtmPhaseCorre
   vector<float>		switchedPowerDifference;
   vector<float>		switchedPowerSum;
   vector<float>		requantizerGain;
-  
-  if (debug) cout << "fillSysPower_aux : resizing the arrays (" << sysPowers.size() << ") to populate the columns of the MS SYSPOWER table." << endl;
+
+  LOG("fillSysPower_aux : resizing the arrays (" + lexical_cast<string>(sysPowers.size()) + ") to populate the columns of the MS SYSPOWER table.");
 
   antennaId.resize(sysPowers.size());
   spectralWindowId.resize(sysPowers.size());
@@ -2504,7 +3269,7 @@ void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers, map<AtmPhaseCorre
   /*
    * Prepare the mandatory attributes.
    */
-  if (debug) cout << "fillSysPower_aux : filling the arrays to populate the columns of the MS SYSPOWER table." << endl;
+  LOG("fillSysPower_aux : filling the arrays to populate the columns of the MS SYSPOWER table.");
 
   transform(sysPowers.begin(), sysPowers.end(), antennaId.begin(), sysPowerAntennaId);
   transform(sysPowers.begin(), sysPowers.end(), spectralWindowId.begin(), sysPowerSpectralWindowId);
@@ -2515,10 +3280,10 @@ void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers, map<AtmPhaseCorre
   /*
    * Prepare the optional attributes.
    */
- if (debug) cout << "fillSysPower_aux : working on the optional attributes." << endl;
+  LOG("fillSysPower_aux : working on the optional attributes.");
 
   unsigned int numReceptor0 = sysPowers[0]->getNumReceptor();
-  if (debug) cout << "fillSysPower_aux : numReceptor = " << numReceptor0 << endl;
+  LOG("fillSysPower_aux : numReceptor = " + lexical_cast<string>(numReceptor0));
  
   bool switchedPowerDifferenceExists0 = sysPowers[0]->isSwitchedPowerDifferenceExists();
   if (switchedPowerDifferenceExists0) {
@@ -2538,7 +3303,7 @@ void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers, map<AtmPhaseCorre
     for_each(sysPowers.begin(), sysPowers.end(), sysPowerRequantizerGain(requantizerGain.begin()));  
   }
 
-  if (debug) cout << "fillSysPower_aux : about to append a slice to the MS SYSPOWER table." << endl;
+  LOG("fillSysPower_aux : about to append a slice to the MS SYSPOWER table.");
  
   for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers_m.begin();
        msIter != msFillers_m.end();
@@ -2555,7 +3320,7 @@ void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers, map<AtmPhaseCorre
 				     requantizerGain);
   }
   infostream << "Appended " << sysPowers.size() << " rows to the MS SYSPOWER table." << endl;
-  if (debug) cout << "fillSysPower_aux : exiting" << endl;
+  LOGEXIT("fillSysPower_aux");
 }
 
 /**
@@ -2568,10 +3333,10 @@ void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers, map<AtmPhaseCorre
  *
  */
 void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const vector<ScanRow *>& selectedScanRow_v, map<AtmPhaseCorrection, ASDM2MSFiller*>& msFillers_m) {
-
-  if (debug) cout << "fillSysPower : entering" << endl;
+  LOGENTER("fillSysPower");
 
   const SysPowerTable& sysPowerT = ds_p->getSysPower();
+
   infostream.str("");
   infostream << "The dataset has " << sysPowerT.size() << " syspower(s).";
   info(infostream.str()); 
@@ -2586,17 +3351,18 @@ void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const
       // 
       if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(asdmDirectory + "/SysPower.bin")))) {
 
-	if (debug) cout << "fillSysPower : working with SysPower.bin by successive slices." << endl;
+	LOG("fillSysPower : working with SysPower.bin by successive slices.");
 
 	TableStreamReader<SysPowerTable, SysPowerRow> tsrSysPower;
 	tsrSysPower.open(asdmDirectory);
+
 	// We can process the SysPower table by slice when it's stored in a binary file so let's do it.
 	while (tsrSysPower.hasRows()) {
 	  const vector<SysPowerRow*>&	sysPowerRows = tsrSysPower.untilNBytes(50000000);
 	  infostream.str("");
 	  infostream << "(considering the next " << sysPowerRows.size() << " rows of the SysPower table. ";
 
-	  if (debug) cout << "fillSysPower : determining which rows are in the selected scans." << endl;
+	  LOG("fillSysPower : determining which rows are in the selected scans.");
 	  const vector<SysPowerRow *>& sysPowers = selector(sysPowerRows, ignoreTime);
   
 	  if (!ignoreTime) 
@@ -2616,7 +3382,7 @@ void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const
       
       else if (boost::filesystem::exists(boost::filesystem::path(uniqSlashes(asdmDirectory + "/SysPower.xml")))) {
 
-	if (debug) cout << "fillSysPower : working with SysPower.xml read with a TableSAXReader" << endl;
+	LOG("fillSysPower : working with SysPower.xml read with a TableSAXReader");
 
 	//
 	// Instantiate a TableSAXReader functor with T==SysPowerTable, R==SysPowerRow 
@@ -2655,7 +3421,7 @@ void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const
       error(errstream.str());      
     }
   }
-  if (debug) cout << "fillSysPower : exiting" << endl;
+  LOGEXIT("fillSysPower");
 }
 
 // ------ data partition function
@@ -2669,6 +3435,7 @@ void partitionMS(vector<int> SwIds,
                  int maxNumCorr,
                  int maxNumChan)
 {
+  LOGENTER("partitionMS");
   for (int i=0; i<SwIds.size(); i++) {
     ostringstream oss;
     oss<< SwIds.at(i);
@@ -2686,13 +3453,14 @@ void partitionMS(vector<int> SwIds,
 						 false,
 						 lazy
 						 );
-     info("About to create a filler for the measurement set '" + msNames[iter->first] + msname_suffix + "'");
-   }
-   //vector<std::pair<const AtmPhaseCorrection,ASDM2MSFiller*> > msFillers_vec(msFillers.begin(),msFillers.end());
-   msFillers_v.push_back(msFillers);
-   //store ms names locally
+      info("About to create a filler for the measurement set '" + msNames[iter->first] + msname_suffix + "'");
+    }
+    //vector<std::pair<const AtmPhaseCorrection,ASDM2MSFiller*> > msFillers_vec(msFillers.begin(),msFillers.end());
+    msFillers_v.push_back(msFillers);
+    //store ms names locally
   }
-   //cerr<<"msFillers_v.size="<<msFillers_v.size()<<endl;
+  //cerr<<"msFillers_v.size="<<msFillers_v.size()<<endl;
+  LOGEXIT("partitionMS");
 }
 
 class MSMainRowsInSubscanChecker {
@@ -2710,7 +3478,9 @@ private:
 MSMainRowsInSubscanChecker::MSMainRowsInSubscanChecker() {;}
 MSMainRowsInSubscanChecker::~MSMainRowsInSubscanChecker() {;}
 void MSMainRowsInSubscanChecker::reset() {
+  LOGENTER("MSMainRowsInSubscanChecker::reset");
   report_v.clear();
+  LOGEXIT("MSMainRowsInSubscanChecker::reset");
 }
 
 void MSMainRowsInSubscanChecker::check( const VMSData* vmsData_p,
@@ -2812,13 +3582,15 @@ int main(int argc, char *argv[]) {
       ("revision,r", "logs information about the revision of this application.")
       ("dry-run,m", "does not fill the MS MAIN table.")
       ("ignore-time,t", "all the rows of the tables Feed, History, Pointing, Source, SysCal, CalDevice, SysPower and Weather are processed independently of the time range of the selected exec block / scan.")
-      ("no-syspower", "the SysPower table will be  ignored.")
       ("no-caldevice", "The CalDevice table will be ignored.")
+      ("no-ephemeris", "The ephemeris table will be ignored.")
+      ("no-syspower", "the SysPower table will be  ignored.")
       ("no-pointing", "The Pointing table will be ignored.")
       ("check-row-uniqueness", "The row uniqueness constraint will be checked in the tables where it's defined")
       ("bdf-slice-size", po::value<uint64_t>(&bdfSliceSizeInMb)->default_value(500),  "The maximum amount of memory expressed as an integer in units of megabytes (1024*1024) allocated for BDF data. The default is 500 (megabytes)") 
       //("parallel", "run with multithreading mode.")
-      ("lazy", "defers the production of the observational data in the MS Main table (DATA column) - Purely experimental, don't use in production !"); 
+      ("lazy", "defers the production of the observational data in the MS Main table (DATA column) - Purely experimental, don't use in production !");
+
     // Hidden options, will be allowed both on command line and
     // in config file, but will not be shown to the user.
     po::options_description hidden("Hidden options");
@@ -3197,7 +3969,7 @@ int main(int argc, char *argv[]) {
   bool	processSysPower	   = vm.count("no-syspower") == 0;
   bool	processCalDevice   = vm.count("no-caldevice") == 0;
   bool  processPointing	   = vm.count("no-pointing") == 0;
-
+  bool  processEphemeris   = vm.count("no-ephemeris") == 0;
   //
   // Report the selection's parameters.
   //
@@ -3222,6 +3994,8 @@ int main(int argc, char *argv[]) {
   if (!processSysPower)   infostream << "The SysPower table will not be processed." << endl;
   if (!processCalDevice)  infostream << "The CalDevice table will not be processed." << endl;
   if (!processPointing)   infostream << "The Pointing table will not be processed." << endl;
+  if (!processEphemeris)  infostream << "The Ephemeris table will not be processed." << endl;
+
   info(infostream.str());
   //
   // Shall we have Complex or Float data ?
@@ -3330,12 +4104,12 @@ int main(int argc, char *argv[]) {
 	// 	    maxNumChan);
 
         /***
-        for (int i=0; i < msFillers_v.size(); i++) {
-          for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers_v[i].begin();
-               iter != msFillers_v[i].end(); ++iter) {
+	    for (int i=0; i < msFillers_v.size(); i++) {
+	    for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers_v[i].begin();
+	    iter != msFillers_v[i].end(); ++iter) {
             //cerr<<"ms name: "<<iter->second->msPath()<<endl;
-          }
-        }
+	    }
+	    }
         ***/
       }
       else { // single thread case
@@ -3449,54 +4223,54 @@ int main(int argc, char *argv[]) {
       }
       
       /*** 
-      // Method 2 - use Measures and let Measure figure out
-      //            transoformation for local geodetic coordinates (with
-      //            earth's oblateness taken account) to geocentric
-      //            coordinates.
-      //            Use AZELGEO as a coordinate ref to be more precise
-      casa::Vector<casa::Quantity> vq; vq.resize(3);
-      vq[0] = casa::Quantity(antPosition.at(0).get(),"m");
-      vq[1] = casa::Quantity(antPosition.at(1).get(),"m");
-      vq[2] = casa::Quantity(antPosition.at(2).get(),"m");
-      casa::MVPosition mvp(vq);
-      casa::MVBaseline mvb(mvp);
+       // Method 2 - use Measures and let Measure figure out
+       //            transoformation for local geodetic coordinates (with
+       //            earth's oblateness taken account) to geocentric
+       //            coordinates.
+       //            Use AZELGEO as a coordinate ref to be more precise
+       casa::Vector<casa::Quantity> vq; vq.resize(3);
+       vq[0] = casa::Quantity(antPosition.at(0).get(),"m");
+       vq[1] = casa::Quantity(antPosition.at(1).get(),"m");
+       vq[2] = casa::Quantity(antPosition.at(2).get(),"m");
+       casa::MVPosition mvp(vq);
+       casa::MVBaseline mvb(mvp);
 
-      // setup conversion template
-      double anttime =  ((double) r->getTime().get()) / ArrayTime::unitsInASecond ;
-      casa::MEpoch ep(casa::Quantity(anttime,"s"), casa::MEpoch::UTC);
-      casa::Vector<casa::Quantity> rvq; rvq.resize(3);
-      //station vector in ITRF
-      rvq[0] = casa::Quantity(xStation,"m");
-      rvq[1] = casa::Quantity(yStation,"m");
-      rvq[2] = casa::Quantity(zStation,"m");
-      casa::MVPosition rmvp(rvq);
-      casa::MPosition rmp(rmvp,casa::MPosition::ITRF);
-      // set the direction to the pole
-      casa::MVDirection mvd = casa::MVDirection();
-      // this approximate the antenna position to be in topocentric, z is parallel
-      // to the station vector. 
-      casa::MDirection mdir(mvd,casa::MDirection::AZEL);
-      // to be precise set the ref to geodetic local coordinates  
-      //casa::MDirection mdir(mvd,casa::MDirection::AZELGEO);
-      casa::MeasFrame mFrame(rmp,ep,mdir);
+       // setup conversion template
+       double anttime =  ((double) r->getTime().get()) / ArrayTime::unitsInASecond ;
+       casa::MEpoch ep(casa::Quantity(anttime,"s"), casa::MEpoch::UTC);
+       casa::Vector<casa::Quantity> rvq; rvq.resize(3);
+       //station vector in ITRF
+       rvq[0] = casa::Quantity(xStation,"m");
+       rvq[1] = casa::Quantity(yStation,"m");
+       rvq[2] = casa::Quantity(zStation,"m");
+       casa::MVPosition rmvp(rvq);
+       casa::MPosition rmp(rmvp,casa::MPosition::ITRF);
+       // set the direction to the pole
+       casa::MVDirection mvd = casa::MVDirection();
+       // this approximate the antenna position to be in topocentric, z is parallel
+       // to the station vector. 
+       casa::MDirection mdir(mvd,casa::MDirection::AZEL);
+       // to be precise set the ref to geodetic local coordinates  
+       //casa::MDirection mdir(mvd,casa::MDirection::AZELGEO);
+       casa::MeasFrame mFrame(rmp,ep,mdir);
 
-      casa::MBaseline baseMeas;
-      casa::MVBaseline mantv;
-      casa::MBaseline::Ref baseref(MBaseline::AZEL, mFrame);
-      // geodetic local coordinates case
-      //casa::MBaseline::Ref baseref(MBaseline::AZELGEO, mFrame);
-      baseMeas.set(mantv, baseref);
-      baseMeas.getRefPtr()->set(mFrame);
+       casa::MBaseline baseMeas;
+       casa::MVBaseline mantv;
+       casa::MBaseline::Ref baseref(MBaseline::AZEL, mFrame);
+       // geodetic local coordinates case
+       //casa::MBaseline::Ref baseref(MBaseline::AZELGEO, mFrame);
+       baseMeas.set(mantv, baseref);
+       baseMeas.getRefPtr()->set(mFrame);
 
-      casa::MBaseline mb(mvb,baseref);
-      casa::MBaseline::Convert antvconv(baseMeas, MBaseline::Ref(MBaseline::ITRF));      
-      casa::MBaseline mbantp = antvconv(mb); 
+       casa::MBaseline mb(mvb,baseref);
+       casa::MBaseline::Convert antvconv(baseMeas, MBaseline::Ref(MBaseline::ITRF));      
+       casa::MBaseline mbantp = antvconv(mb); 
       
-      //compare transformed antenna positions in the two methods
-      //for the measure frame with AZEL those two values should be identical
-      cerr<<"rotated measAnt(0)="<<mbantp.getValue()(0)<<" measAnt(1)="<<mbantp.getValue()(1)<<" measAnt(2)="<<mbantp.getValue()(2)<<endl;
-      // end of Method2
-      ***/
+       //compare transformed antenna positions in the two methods
+       //for the measure frame with AZEL those two values should be identical
+       cerr<<"rotated measAnt(0)="<<mbantp.getValue()(0)<<" measAnt(1)="<<mbantp.getValue()(1)<<" measAnt(2)="<<mbantp.getValue()(2)<<endl;
+       // end of Method2
+       ***/
 
       //cerr<<"rotated cartAnt(0)="<<cartesianAnt2.at(0)<<" cartAnt(1)="<<cartesianAnt2.at(1)<<" cartAnt(2)="<<cartesianAnt2.at(2)<<endl;
 
@@ -3870,12 +4644,19 @@ int main(int argc, char *argv[]) {
     errstream << e.what();
     error(errstream.str());      
   }
-  
-  // Process the Field table.
-  // Now it respects the degree of the polynomials.
-  fillField(ds);
 
+  // Process the Ephemeris table.
   //
+  // Create and fill the MS ephemeris table(s) with a time interpolation time step set to 86400000000 nanoseconds ( 1/1000 day).
+  if (processEphemeris) 
+    fillEphemeris(ds, 86400000000LL);
+
+  // Process the Field table.
+  // Now it respects the degree of the polynomials but it ignores the ephemerisId.
+  // The ephemerisId will be processed during the call to fillEphemeris.
+  //
+  fillField(ds, processEphemeris);
+   
   // Process the FlagCmd table.
   //
   try {
@@ -4041,14 +4822,14 @@ int main(int argc, char *argv[]) {
 
 	PointingRow* r = 0;
 
-	vector<int> antenna_id_(numMSPointingRows, 0);
-	vector<double> time_(numMSPointingRows, 0.0);
-	vector<double> interval_(numMSPointingRows, 0.0);
-	vector<double> direction_(2 * numMSPointingRows, 0.0);
-	vector<double> target_(2 * numMSPointingRows, 0.0);
-	vector<double> pointing_offset_(2 * numMSPointingRows, 0.0);
-	vector<double> encoder_(2 * numMSPointingRows, 0.0);
-	vector<bool> tracking_(numMSPointingRows, false);
+	vector<int>	antenna_id_(numMSPointingRows, 0);
+	vector<double>	time_(numMSPointingRows, 0.0);
+	vector<double>	interval_(numMSPointingRows, 0.0);
+	vector<double>	direction_(2 * numMSPointingRows, 0.0);
+	vector<double>	target_(2 * numMSPointingRows, 0.0);
+	vector<double>	pointing_offset_(2 * numMSPointingRows, 0.0);
+	vector<double>	encoder_(2 * numMSPointingRows, 0.0);
+	vector<bool>	tracking_(numMSPointingRows, false);
 
 	//
 	// Let's check if the optional attribute overTheTop is present somewhere in the table.
