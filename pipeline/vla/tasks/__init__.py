@@ -21,3 +21,5 @@ from .finalcals import Finalcals
 from .fluxscale import Fluxboot
 from .setmodel import Fluxgains
 from .finalcals import Applycals
+from .flagging import Targetflag
+from .statwt import Statwt

@@ -72,8 +72,8 @@ class GainCurvesInputs(basetask.StandardInputs):
         
 	return {'vis': self.vis,
 	        'caltable': self.caltable,
-		    'caltype': self.caltype,
-            'parameter': self.parameter}
+		'caltype': self.caltype,
+                'parameter': self.parameter}
 
 
 class GainCurves(basetask.StandardTaskTemplate):
