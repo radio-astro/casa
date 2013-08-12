@@ -45,6 +45,18 @@ tblocal = tbtool()
 
 debug = False
 
+# Decorator function to print the arguments of a function
+def dump_args(func):
+    "This decorator dumps out the arguments passed to a function before calling it"
+    argnames = func.func_code.co_varnames[:func.func_code.co_argcount]
+    fname = func.func_name
+   
+    def echo_func(*args,**kwargs):
+        print fname, ":", ', '.join('%s=%r' % entry for entry in zip(argnames,args) + kwargs.items())
+        return func(*args, **kwargs)
+   
+    return echo_func
+
 #######################################################
 #
 #     Reading functions
@@ -119,7 +131,7 @@ def readFile(inputfile):
     
     return cmdlist
 
-# jagonzal (CAS-4119): Use absolute paths for input files to ensure that the engines find them
+# (CAS-4119): Use absolute paths for input files to ensure that the engines find them
 def addAbsPath(input_file):
     '''Read in the lines from an input file
     input_file -->  file in disk with a list of strings per line
@@ -138,7 +150,7 @@ def addAbsPath(input_file):
             output_file_id = open(output_file, 'w')
         except:
             output_file_id.close()
-            raise Exception, 'Error opening file ' + output_file
+            raise Exception, 'Error opening tmp file ' + output_file
     else:
         raise Exception, \
             'ASCII file not found - please verify the name'
@@ -155,7 +167,7 @@ def addAbsPath(input_file):
                     (par.count("addantenna") > 0) or 
                     (par.count("timedev") > 0) or 
                     (par.count("freqdev") > 0)):
-                    par = par.split("=")
+                    par = par.split("=",1)
                     file_local = par[1]
                     if file_local.count("'")>0:
                         file_local = file_local.split("'")
@@ -180,6 +192,10 @@ def addAbsPath(input_file):
     output_file_id.close()
     os.rename(output_file, input_file)
 
+    # Return the temporary file
+#    return output_file
+
+#@dump_args
 def makeDict(cmdlist, myreason='any'):
     '''Make a dictionary compatible with a FLAG_CMD table structure
        and select by reason if any is given
@@ -301,8 +317,9 @@ def makeDict(cmdlist, myreason='any'):
             keyvlist = command.split()
             if keyvlist.__len__() > 0:
                 for keyv in keyvlist:
+                    # Take care of '=' signs in values
                     try:
-                        (xkey, val) = keyv.split('=')
+                        (xkey, val) = keyv.split('=',1)
                     except:
                         print 'Error: not key=value pair for ' + keyv
                         break
@@ -350,7 +367,7 @@ def makeDict(cmdlist, myreason='any'):
     return myflagd
 
 
-
+#@dump_args
 def readXML(sdmfile, mytbuff):
     '''
 #   readflagxml: reads Antenna.xml and Flag.xml SDM tables and parses
@@ -656,6 +673,7 @@ def readXML(sdmfile, mytbuff):
     return flags
 
 
+#@dump_args
 def readFlagCmdTable(msfile,myflagrows=[],useapplied=True,myreason='any'):
     '''Read flag commands from rows of the FLAG_CMD table of msfile
     If useapplied=False then include only rows with APPLIED=False
@@ -778,7 +796,7 @@ def readFlagCmdTable(msfile,myflagrows=[],useapplied=True,myreason='any'):
             if keyvlist.__len__() > 0:
                 for keyv in keyvlist:
                     try:
-                        (xkey, val) = keyv.split('=')
+                        (xkey, val) = keyv.split('=', 1)
                     except:
                         print 'Error: not key=value pair for ' + keyv
                         break
@@ -822,7 +840,7 @@ def readFlagCmdTable(msfile,myflagrows=[],useapplied=True,myreason='any'):
 
     return myflagcmd
 
-#def getUnion(mslocal, vis, cmddict):
+#@dump_args
 def getUnion(vis, cmddict):
     '''Get a dictionary of a union of all selection parameters from a list of lines:
        vis --> MS
@@ -877,7 +895,7 @@ def getUnion(vis, cmddict):
             # Split by '='
             for keyv in keyvlist:
                    
-                (xkey,xval) = keyv.split('=')
+                (xkey,xval) = keyv.split('=',1)
 
                 # Remove quotes
                 if type(xval) == str:
@@ -1033,7 +1051,7 @@ def getNumPar(cmddict):
                 if keyv.count('#') > 0:
                     break
 
-                (xkey,xval) = keyv.split('=')
+                (xkey,xval) = keyv.split('=',1)
 
                 # Remove quotes
                 if type(xval) == str:
@@ -1095,7 +1113,7 @@ def getNumPar(cmddict):
     return npars
 
 
-#def compressSelectionList(mslocal=None, vis='',dicpars={}):
+#@dump_args
 def compressSelectionList(vis='',dicpars={}):
     """
     - Find a loose union of data-selection parameters, to reduce the MSSelection parsing load.
@@ -1132,6 +1150,7 @@ def compressSelectionList(vis='',dicpars={}):
 
 
 
+#@dump_args
 def writeFlagCmd(msfile, myflags, vrows, applied, add_reason, outfile):
     '''
     Writes the flag commands to FLAG_CMD or to an ASCII file
@@ -1303,7 +1322,7 @@ def getReason(cmdline):
         for keyv in keyvlist:            
 
             # Split by '='
-            (xkey,xval) = keyv.split('=')
+            (xkey,xval) = keyv.split('=',1)
 
             # Remove quotes
             if type(xval) == str:
@@ -1321,6 +1340,7 @@ def getReason(cmdline):
     return reason
 
 
+#@dump_args
 def getLinePars(cmdline, mlist=[]):
     '''Get a dictionary of all selection parameters from a line:
        cmdline --> a string with parameters
@@ -1343,7 +1363,7 @@ def getLinePars(cmdline, mlist=[]):
         # Split by '='
         for keyv in keyvlist:
 
-            (xkey,xval) = keyv.split('=')
+            (xkey,xval) = keyv.split('=',1)
 
             # Remove quotes
             if type(xval) == str:
@@ -1401,6 +1421,7 @@ def getLinePars(cmdline, mlist=[]):
             
     return dicpars
 
+#@dump_args
 def getSelectionPars(cmdline):
     '''Get a dictionary of all selection parameters from a line:
        cmdline --> a string with parameters
@@ -1420,7 +1441,7 @@ def getSelectionPars(cmdline):
         # Split by '='
         for keyv in keyvlist:
 
-            (xkey,xval) = keyv.split('=')
+            (xkey,xval) = keyv.split('=',1)
 
             # Remove quotes
             if type(xval) == str:
@@ -1468,6 +1489,7 @@ def getSelectionPars(cmdline):
     return dicpars
 
 
+#@dump_args
 def readNtime(params):
     '''Check the value and units of ntime
        params --> dictionary of agent's parameters '''
@@ -1508,6 +1530,7 @@ def readNtime(params):
     params['ntime'] = float(newtime)
 
 
+#@dump_args
 def fixType(params):
     '''Give correct types to non-string parameters
        The types are defined in the XML file of the task flagdata
@@ -1614,6 +1637,7 @@ def fixType(params):
     if params.has_key('spectralmax'):
         params['spectralmax'] = float(params['spectralmax']);
 
+#@dump_args
 def purgeEmptyPars(cmdline):
     '''Remove empty parameters from a string:
        cmdline --> a string with parameters
@@ -1629,7 +1653,7 @@ def purgeEmptyPars(cmdline):
         # Split by '='
         for keyv in keyvlist:
 
-            (xkey,xval) = keyv.split('=')
+            (xkey,xval) = keyv.split('=',1)
 
             # Remove quotes
             if type(xval) == str:
@@ -1650,6 +1674,7 @@ def purgeEmptyPars(cmdline):
     return newstr
 
 
+#@dump_args
 def purgeParameter(cmdline, par):
     '''Remove parameter from a string:
        cmdline --> a string with a parameter to be removed
@@ -1667,7 +1692,7 @@ def purgeParameter(cmdline, par):
         # Split by '='
         for keyv in keyvlist:
 
-            (xkey,xval) = keyv.split('=')
+            (xkey,xval) = keyv.split('=',1)
 
             # Remove quotes
             if type(xval) == str:
@@ -1687,6 +1712,7 @@ def purgeParameter(cmdline, par):
          
     return newstr
 
+#@dump_args
 def setupAgent(aflocal, myflagcmd, myrows, apply, writeflags, display=''):
     ''' Setup the parameters of each agent and call the agentflagger tool
     
@@ -2107,7 +2133,7 @@ def readAntennaList(infile=''):
     for aline in range(0,len(cleanlist),3):
           antdict = {};
           for row in range(0,3):
-               pars = cleanlist[aline+row].split("=");
+               pars = cleanlist[aline+row].split("=",1);
                #print aline, row, pars
                if(len(pars) != 2):
                     print 'Error in parsing : ', cleanlist[aline+row];
