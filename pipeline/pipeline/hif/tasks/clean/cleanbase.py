@@ -316,13 +316,18 @@ class CleanBase(basetask.StandardTaskTemplate):
 	# frequency with channel issues.
         if inputs.width == '':
             if inputs.mode != 'mfs':
-                width = clheuristics.width(int(spw))
+                width = clheuristics.width(int(spw.split(',')[0]))
                 #width = inputs.width
             else:
                 width = inputs.width
         else:
             width = inputs.width
 	inputs.width = width
+
+	if inputs.stokes == 'Q':
+	    ncorr = clheuristics.ncorr(int(spw.split(',')[0]))
+	    if ncorr <= 1 :
+	        LOG.warning('Q noise estimate invalid ncorrelation is %s' % ncorr )
 
         # Construct regex for string matching - escape likely problem
         # chars. Simpler way to do this ?

@@ -112,32 +112,35 @@ class Clean(cleanbase.CleanBase):
 
             # Remove rows in POINTING table - bug workaround.
 	    #    May no longer be necesssary
+	    result = None
 	    bestrms = None
             if inputs.imagermode == 'mosaic':
                 self._empty_pointing_table()
 	    else:
                 # Get an empirical noise estimate by generating Q image.
-	        #    Currently relies on presence of XX and YY correlations
-	        #    Currently relies on source being unpolarized
-	        #    Make this code more efficient (use MS) / intelligent at some point.
-	        #    Make changes when sensitity function is working.
+		#    This heuristics is ALMA specific
+	        #    Assumes presence of XX and YY correlations
+	        #    Assumes source is unpolarized
+	        #    Make code more efficient (use MS XX and YY correlations) directly.
+	        #    Update / replace  code when sensitity function is working.
 	        model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
 	            residual_min, rms2d, image_max = \
 		    self._do_noise_estimate (iter=0)
 	        bestrms = non_cleaned_rms
-	        LOG.info('Best rms estimate from Q image is %s' * bestrms)
+	        LOG.info('Best rms estimate from Q image is %s' % bestrms)
+	    LOG.info('Best rms estimate for cleaning is %s' % bestrms)
 
             # Compute the dirty image.
 	    result = self._do_clean (iter=0, stokes='I', cleanmask='', niter=0,
 	        threshold='0.0mJy', result=None) 
 
 	    # Return dirty image if cleaning is disabled.
-            if inputs.maxncleans == 0:
+            if inputs.maxncleans == 0 or inputs.niter <= 0:
 	        return result
 
 	    # Choose between simple cleaning and iterative cleaning.
 	    #   More code cleanup needed here.
-	    #   Not good if bestrms not defined but ...
+	    #   Not good if bestrms not properly defined but ...
 	    if inputs.hm_masking == 'psfiter':
 	        result = self._do_iterative_imaging(bestrms=bestrms, result=result)
 	    else:
@@ -230,7 +233,7 @@ class Clean(cleanbase.CleanBase):
 		    boxworker.iteration_result(iter=iter, \
 		    psf=result.psf, model= result.model, restored=result.image, residual= \
 		    result.residual, fluxscale=result.flux, cleanmask=new_cleanmask, \
-		    threshold=clthreshold)
+		    threshold=box_result.threshold)
 		best_rms = cleaned_rms
 
 	        LOG.info('Clean image iter %s stats' % iter)
