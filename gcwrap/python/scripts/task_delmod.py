@@ -21,7 +21,7 @@ def delmod(vis=None,otf=None,field=None,scr=None):
 			# ... and we are asked to do something...
 			# open without adding anything!
 			cb.open(vis,addcorr=False,addmodel=False)
-			cb.delmod(otf,field,scr)
+			cb.delmod(otf=otf,field=field,scr=scr)
 			cb.close()
 		else:
                         raise Exception, 'Visibility data set not found - please verify the name'
