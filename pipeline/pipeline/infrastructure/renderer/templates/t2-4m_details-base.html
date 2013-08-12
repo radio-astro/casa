@@ -86,7 +86,7 @@ Help disabled until the task descriptions from John's presentation are added
 				<dl class="dl-horizontal">
 				% for k, v in result.inputs.iteritems():
 					<dt>${str(k)}</dt>
-					<dd>${str(v)}</dd>
+					<dd>${str(v) if str(v) != '' else '&nbsp;'}</dd>
 				% endfor
 				</dl>
 			</div>
