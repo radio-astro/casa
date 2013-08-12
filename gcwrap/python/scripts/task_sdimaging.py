@@ -191,3 +191,13 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.imager.setsdoptions(pointingcolumntouse=self.pointingcolumn, convsupport=self.convsupport, truncate=self.truncate, gwidth=self.gwidth, jwidth=self.jwidth)
         self.imager.makeimage(type='singledish', image=self.outfile)
         self.close_imager()
+
+        if not os.path.exists(self.outfile):
+            raise RuntimeError, "Failed to generate output image '%s'" % self.outfile
+        # Convert output images to proper output frame
+        my_ia = gentools(['ia'])[0]
+        my_ia.open(self.outfile)
+        csys = my_ia.coordsys()
+        csys.setconversiontype(spectral=csys.referencecode('spectra')[0])
+        my_ia.setcoordsys(csys.torecord())
+        my_ia.close()
