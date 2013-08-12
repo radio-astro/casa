@@ -100,11 +100,11 @@ def pclean(vis=None,
 
     ###make sure units are consistent
     cubemode='channel'
-    if (qa.quantity(start)['unit'].find('Hz') > 0):
+    if (qa.quantity(start)['unit'].find('Hz') >= 0):
         cubemode='frequency'
         if (qa.quantity(width)['unit'].find('Hz') < 0):
             raise TypeError, "start and width parameter should be in the same units" 
-    if (qa.quantity(start)['unit'].find('m/s') > 0):
+    if (qa.quantity(start)['unit'].find('m/s') >= 0):
         cubemode='velocity'
         if (qa.quantity(width)['unit'].find('m/s') < 0):
             raise TypeError, "start and width parameter should be in the same units" 
@@ -197,7 +197,8 @@ def pclean(vis=None,
     else:
         ##need to calculate chanchunk
         memperproc=totmem/float(numprocperhost)/2.0
-        estmem=36.0*float(imsize[0]*imsize[1])*4
+        print 'memperproc', memperproc
+        estmem=72.0*float(imsize[0]*imsize[1])*4
         chanchunk=int(memperproc/estmem)
         while((chanchunk*numproc) > nchan):
             chanchunk=chanchunk-1

@@ -43,6 +43,7 @@ casa_add_python( tools tools_recipes_python python/${PYTHONV}/recipes
   listshapes.py
   astro_stations2simdata.py
   setOrder.py
+  specframeconvert.py
 )
 
 add_subdirectory( ephemerides )
