@@ -34,6 +34,8 @@
 #include <QDebug>
 #include <QMessageBox>
 
+#include <tr1/memory>
+
 namespace casa {
 
 	ImageManagerDialog::ImageManagerDialog(QWidget *parent)

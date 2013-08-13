@@ -50,12 +50,12 @@ const uInt ImageProfileFitterResults::_lsPlane = 1;
 
 
 ImageProfileFitterResults::ImageProfileFitterResults(
-	const std::tr1::shared_ptr<LogIO>& log, const CoordinateSystem& csysIm,
+	const std::tr1::shared_ptr<LogIO> log, const CoordinateSystem& csysIm,
 	const Array<ImageFit1D<Float> >* const &fitters, const SpectralList& nonPolyEstimates,
-	const std::tr1::shared_ptr<const SubImage<Float> >& subImage, Int polyOrder, Int fitAxis,
+	const std::tr1::shared_ptr<const SubImage<Float> > subImage, Int polyOrder, Int fitAxis,
 	uInt nGaussSinglets, uInt nGaussMultiplets, uInt nLorentzSinglets,
 	uInt nPLPCoeffs, uInt nLTPCoeffs,
-	Bool logResults, Bool multiFit, const std::tr1::shared_ptr<LogFile>& logfile,
+	Bool logResults, Bool multiFit, const std::tr1::shared_ptr<LogFile> logfile,
 	const String& xUnit, const String& summaryHeader
 ) : _logResults(logResults), _multiFit(multiFit), _xUnit(xUnit), _summaryHeader(summaryHeader),
 	_nGaussSinglets(nGaussSinglets), _nGaussMultiplets(nGaussMultiplets),
