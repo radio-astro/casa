@@ -173,6 +173,28 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             self.imager_param['phasecenter'] = self.phasecenter
         self.imager_param['movingsource'] = self.ephemsrcname
 
+        ### WORKAROUND for image unit ###
+        self.open_table(self.infile)
+        datacol_lookup = ['FLOAT_DATA', 'DATA']
+        valid_cols = self.table.colnames()
+        datacol = ''
+        for colname in datacol_lookup:
+            if colname in valid_cols:
+                datacol = colname
+                break
+
+        if len(datacol) == 0:
+            self.close_table()
+            raise Exception, "Could not find a column that stores data."
+
+        datakw = self.table.getcolkeywords(datacol)
+        self.tb_fluxunit = ''
+        if datakw.has_key('UNIT'):
+            self.tb_fluxunit = datakw['UNIT']
+
+        self.close_table()
+        ###
+
     def execute(self):
         # imaging
         casalog.post("Start imaging...", "INFO")
@@ -200,4 +222,9 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         csys = my_ia.coordsys()
         csys.setconversiontype(spectral=csys.referencecode('spectra')[0])
         my_ia.setcoordsys(csys.torecord())
+
+        ### WORKAROUND to fix image unit
+        if self.tb_fluxunit == 'K' and my_ia.brightnessunit() != 'K':
+            my_ia.setbrightnessunit(self.tb_fluxunit)
+
         my_ia.close()
