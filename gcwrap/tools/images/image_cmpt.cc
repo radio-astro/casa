@@ -1608,7 +1608,7 @@ image* image::transpose(
 	}
 	try {
 		std::auto_ptr<ImageFitter> fitter;
-		const ImageInterface<Float> *image = _image->getImage();
+        ImageTask::shCImFloat image = _image->getImage();
 		ImageFitter::CompListWriteControl writeControl =
 			complist.empty()
 			? ImageFitter::NO_WRITE
@@ -1745,7 +1745,7 @@ image* image::pbcor(
 	try {
 		*_log << _ORIGIN;
 		Array<Float> pbPixels;
-		ImageInterface<Float> *pb = 0;
+        ImageTask::shCImFloat pb_ptr;
 		if (pbimage.type() == variant::DOUBLEVEC) {
 			Vector<Int> shape = pbimage.arrayshape();
 			pbPixels.resize(IPosition(shape));
@@ -1753,17 +1753,19 @@ image* image::pbcor(
 			casa::convertArray(pbPixels, localpix.reform(IPosition(shape)));
 		}
 		else if (pbimage.type() == variant::STRING) {
-			ImageUtilities::openImage(pb, pbimage.getString(), *_log);
+            ImageInterface<Float>* pb;
+            ImageUtilities::openImage(pb, pbimage.getString(), *_log);
 			if (pb == 0) {
 				*_log << "Unable to open primary beam image " << pbimage.getString()
 					<< LogIO::EXCEPTION;
 			}
+            pb_ptr.reset(pb);
 		}
 		else {
 			*_log << "Unsupported type " << pbimage.typeString()
 				<< " for pbimage" << LogIO::EXCEPTION;
 		}
-		auto_ptr<ImageInterface<Float> > pbManager(pb);
+
 		String regionString = "";
 		auto_ptr<Record> regionRecord(0);
 		if (region.type() == variant::STRING || region.size() == 0) {
@@ -1786,15 +1788,16 @@ image* image::pbcor(
 			? ImagePrimaryBeamCorrector::DIVIDE
 			: ImagePrimaryBeamCorrector::MULTIPLY;
 		Bool useCutoff = cutoff >= 0.0;
-		std::auto_ptr<ImagePrimaryBeamCorrector> pbcor(
-			(pb == 0)
+        ImageTask::shCImFloat shImage = _image->getImage();
+        std::auto_ptr<ImagePrimaryBeamCorrector> pbcor(
+			(!pb_ptr)
 			? new ImagePrimaryBeamCorrector(
-				_image->getImage(), pbPixels, regionRecord.get(),
+				shImage, pbPixels, regionRecord.get(),
 				regionString, box, chans, stokes, mask, outfile, overwrite,
 				cutoff, useCutoff, myMode
 			)
 			: new ImagePrimaryBeamCorrector(
-				_image->getImage(), pb, regionRecord.get(),
+				shImage, pb_ptr, regionRecord.get(),
 				regionString, box, chans, stokes, mask, outfile, overwrite,
 				cutoff, useCutoff, myMode
 			)
@@ -3845,7 +3848,7 @@ bool image::isconform(const string& other) {
 			throw AipsError("Unable to open image " + other);
 		}
 		std::auto_ptr<ImageInterface<Float> > x(oth);
-		const ImageInterface<Float> *mine = _image->getImage();
+        std::tr1::shared_ptr<const ImageInterface<Float> > mine = _image->getImage();
 		if (mine->shape().isEqual(x->shape()) && mine->coordinates().near(
 				x->coordinates())) {
 			Vector<String> mc = mine->coordinates().worldAxisNames();
