@@ -145,6 +145,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		DisplayDataHolder::DisplayDataIterator beginRegistered() const;
 		DisplayDataHolder::DisplayDataIterator endRegistered() const;
 		QtDisplayData* getDD( const std::string& name ) const;
+		QtDisplayData* getDD( const DisplayData *dd ) const;
 		DisplayDataHolder* getDataHolder() const;
 		void setControllingDD( QtDisplayData* controllingDD );
 		// True if DD is on our list.  (It may _not_ be on viewer's list

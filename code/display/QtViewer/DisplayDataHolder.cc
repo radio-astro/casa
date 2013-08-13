@@ -129,6 +129,20 @@ namespace casa {
 		return qdd;
 	}
 
+	QtDisplayData* DisplayDataHolder::getDD(const DisplayData *dd) const {
+		// retrieve DD with given name (0 if none).
+		QtDisplayData* qdd = NULL;
+		DisplayDataIterator iter = dataList.begin();
+		while( iter != dataList.end()) {
+			if( (*iter)->dd() == dd ) {
+				qdd = (*iter);
+				break;
+			}
+			iter++;
+		}
+		return qdd;
+	}
+
 	void DisplayDataHolder::addDD( QtDisplayData* dd, int position,
 			bool autoRegister,
 			bool masterCoordinate, bool masterSaturation, bool masterHue ) {

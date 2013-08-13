@@ -40,6 +40,10 @@
 #include <casa/Arrays/VectorSTLIterator.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
+#include <coordinates/Coordinates/TabularCoordinate.h>
+#include <coordinates/Coordinates/StokesCoordinate.h>
+#include <coordinates/Coordinates/LinearCoordinate.h>
+#include <coordinates/Coordinates/QualityCoordinate.h>
 #include <stdexcept>
 #include <algorithm>
 #include <set>
@@ -304,3 +308,60 @@ namespace casa {
 
 	}
 }
+
+
+std::ostream &operator<<( std::ostream &os, const casa::CoordinateSystem &cs ) {
+    casa::Vector<casa::String> names = cs.worldAxisNames( );
+    casa::Vector<casa::String> units = cs.worldAxisUnits( );
+    os << "[[" << cs.nWorldAxes( ) << "w," << cs.nPixelAxes( ) << "p]" << std::endl;
+    for ( unsigned int i=0; i < cs.nWorldAxes(); ++i ) {
+        int coordNum, axisInCoord;
+        cs.findWorldAxis( coordNum, axisInCoord, i );
+        os << " ";
+        switch ( cs.type(coordNum) ) {
+          case casa::Coordinate::LINEAR:
+            {
+            const casa::LinearCoordinate &coordinate = cs.linearCoordinate(coordNum);
+            os << "(" << i << ":" << coordNum << ":" << axisInCoord << ":" << cs.worldAxisToPixelAxis(i) << "P),linear) " << names[i] << "/" << units[i];
+            }
+            break;
+          case casa::Coordinate::DIRECTION:
+            {
+            const casa::DirectionCoordinate &coordinate = cs.directionCoordinate(coordNum);
+            os << "(" << i << ":" << coordNum << ":" << axisInCoord << ":" << cs.worldAxisToPixelAxis(i) << "P),direction) " << names[i] << "/" << units[i];
+            }
+            break;
+          case casa::Coordinate::SPECTRAL: 
+            {
+            const casa::SpectralCoordinate &coordinate = cs.spectralCoordinate(coordNum);
+            os << "(" << i << ":" << coordNum << ":" << axisInCoord << ":" << cs.worldAxisToPixelAxis(i) << "P),spectral) " << names[i] << "/" << units[i];
+            }
+            break;
+          case casa::Coordinate::STOKES: 
+            {
+            const casa::StokesCoordinate  &coordinate = cs.stokesCoordinate(coordNum);
+            os << "(" << i << ":" << coordNum << ":" << axisInCoord << ":" << cs.worldAxisToPixelAxis(i) << "P),stokes) " << names[i] << "/" << units[i];
+            }
+            break;
+          case casa::Coordinate::TABULAR:
+            {
+            const casa::TabularCoordinate &coordinate = cs.tabularCoordinate(coordNum);
+            os << "(" << i << ":" << coordNum << ":" << axisInCoord << ":" << cs.worldAxisToPixelAxis(i) << "P),tabular) " << names[i] << "/" << units[i];
+            }
+            break;
+          case casa::Coordinate::QUALITY:
+            {
+            const casa::QualityCoordinate &coordinate = cs.qualityCoordinate(coordNum);
+            os << "(" << i << ":" << coordNum << ":" << axisInCoord << ":" << cs.worldAxisToPixelAxis(i) << "P),quality) " << names[i] << "/" << units[i];
+            }
+            break;
+          case casa::Coordinate::COORDSYS:
+            os << "<<<coordinate system>>>";
+        };
+        os << std::endl;
+    }
+    os << "]";
+    return os;
+}
+     
+
