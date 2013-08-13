@@ -36,7 +36,7 @@ const String ImageCropper<T>::_class = "ImageCropper";
 
 template <class T>
 ImageCropper<T>::ImageCropper(
-	const ImageInterface<T> *const &image,
+	const ImageTask::shCImFloat image,
 	const Record *const &regionRec, const String& box,
 	const String& chanInp, const String& stokes,
 	const String& maskInp, const String& outname,

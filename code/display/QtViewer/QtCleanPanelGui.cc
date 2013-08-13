@@ -50,6 +50,7 @@
 #include <casa/fstream.h>
 #include <casa/sstream.h>
 
+#include <tr1/memory>
 
 namespace casa {
 
@@ -395,7 +396,7 @@ namespace casa {
 	void QtCleanPanelGui::addedData( QString type, QtDisplayData *dd ) {
 		if ( type == "contour" ) {
 			maskdd_ = dd;
-			ImageInterface<Float> *maskim=maskdd_->imageInterface();
+			std::tr1::shared_ptr<ImageInterface<Float> > maskim=maskdd_->imageInterface();
 			csys_p=maskim->coordinates();
 			Int dirIndex=csys_p.findCoordinate(Coordinate::DIRECTION);
 			dirCoord_p=csys_p.directionCoordinate(dirIndex);
@@ -596,7 +597,7 @@ void QtCleanPanelGui::NAME( String x, String y, String z, std::vector<int> hidde
 				if ( ! imagereg ) throw AipsError("");
 
 
-				ImageInterface<Float> *maskim=maskdd_->imageInterface();
+				std::tr1::shared_ptr<ImageInterface<Float> > maskim=maskdd_->imageInterface();
 				//Write the region as text...will need to add a box/toggle
 				//to the viewer for that
 				//It was requested by some but

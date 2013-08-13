@@ -70,6 +70,8 @@
 #include <graphics/X11/X_exit.h>
 #include <display/QtPlotter/QtProfileGUI.ui.h>
 
+#include <tr1/memory>
+
 inline void initPlotterResource() {
 	Q_INIT_RESOURCE(QtPlotter);
 }
@@ -120,11 +122,11 @@ namespace casa {
 
 
 
-		QtProfile(ImageInterface<Float>* img, const char *name = 0,
+		QtProfile(std::tr1::shared_ptr<ImageInterface<Float> > img, const char *name = 0,
 		          QWidget *parent = 0, std::string rcstr="prf");
 
 		~QtProfile();
-		MFrequency::Types determineRefFrame( ImageInterface<Float>* img, bool check_native_frame = false );
+		MFrequency::Types determineRefFrame(std::tr1::shared_ptr<ImageInterface<Float> > img, bool check_native_frame = false );
 
 		virtual std::string rcid( ) const {
 			return rcid_;
@@ -152,7 +154,7 @@ namespace casa {
 		String getXAxisUnit() const;
 		QString getFileName() const;
 		QString getImagePath() const;
-		const ImageInterface<Float>* getImage( const QString& imageName="") const;
+		std::tr1::shared_ptr<const ImageInterface<Float> > getImage( const QString& imageName="") const;
 		const void getPixelBounds(Vector<double>& pixelX, Vector<double>& pixelY) const;
 		void persist( const QString& key, const QString& value );
 		QString read( const QString & key ) const;
@@ -191,7 +193,7 @@ namespace casa {
 
 		void changeTopAxisCoordinateType( const QString & text );
 		virtual void closeEvent ( QCloseEvent *);
-		void resetProfile(ImageInterface<Float>* img, const char *name = 0);
+		void resetProfile(std::tr1::shared_ptr<ImageInterface<Float> > img, const char *name = 0);
 		void wcChanged( const String,
 		                const Vector<Double>, const Vector<Double>,
 		                const Vector<Double>, const Vector<Double>,
@@ -231,7 +233,7 @@ namespace casa {
 	private:
 		void stringToPlotType(const QString &text,  QtProfile::PlotType &pType);
 		void stringToErrorType(const QString &text, QtProfile::ErrorType &eType);
-		void fillPlotTypes(const ImageInterface<Float>* img);
+		void fillPlotTypes(const std::tr1::shared_ptr<ImageInterface<Float> > img);
 		void getcoordTypeUnit(String &ctypeUnitStr, String &cTypeStr, String &unitStr);
 		void printIt(QPrinter*);
 		bool exportASCIISpectrum(QString &fn);
@@ -292,7 +294,7 @@ namespace casa {
 		void updateAxisUnitCombo( const QString& textToMatch, QComboBox* axisUnitCombo );
 		void setYUnitConversionVisibility( bool visible );
 		ImageAnalysis* analysis;
-		ImageInterface<Float>* image;
+		std::tr1::shared_ptr<ImageInterface<Float> > image;
 
 		//For deciding whether or not it makes sense to show the top axis when
 		//multiple images are loaded.

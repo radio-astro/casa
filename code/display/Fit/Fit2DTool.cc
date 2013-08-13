@@ -37,7 +37,7 @@ namespace casa {
 
 	Fit2DTool::Fit2DTool(QWidget *parent)
 		: QDialog(parent),  REGION_LABEL("Region:  "),
-		  image( NULL), fitter(NULL), progressBar( this ),
+		  image(), fitter(NULL), progressBar( this ),
 		  findSourcesDialog( this, false ), pixelRangeDialog( this ),
 		  logDialog( this ) {
 		ui.setupUi(this);
@@ -444,7 +444,7 @@ namespace casa {
 		}
 	}
 
-	void Fit2DTool::setImage( ImageInterface<Float>* image ) {
+	void Fit2DTool::setImage( ImageTask::shCImFloat image ) {
 		this->image = image;
 		bool enableFunctionality = true;
 		if ( image == NULL ) {

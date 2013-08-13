@@ -133,7 +133,7 @@ using namespace std;
 namespace casa { //# name space casa begins
 
 ImageAnalysis::ImageAnalysis() :
-	_image(0), _histograms(0),
+	_image(), _histograms(0),
 			pOldHistRegionRegion_p(0), pOldHistMaskRegion_p(0),
 			imageMomentsProgressMonitor(0){
 
@@ -144,6 +144,12 @@ ImageAnalysis::ImageAnalysis() :
 	_log.reset(new LogIO());
 
 }
+
+ImageAnalysis::ImageAnalysis(const std::tr1::shared_ptr<ImageInterface<Float> > image) :
+	_image(image), _log(new LogIO()), _histograms(0),
+				pOldHistRegionRegion_p(0), pOldHistMaskRegion_p(0),
+				imageMomentsProgressMonitor(0) {}
+
 
 ImageAnalysis::ImageAnalysis(const ImageInterface<Float>* inImage) :
 	_image(inImage->cloneII()), _log(new LogIO()),
@@ -242,7 +248,7 @@ Bool ImageAnalysis::open(const String& infile) {
 		// The pointer does explicitly need to be reset for proper destruction
 		// of the image esp if the image trying to be opened is the same
 		// as the image stored in the pre-existing pointer.
-		_image.reset(0);
+		_image.reset();
 	}
 
 	// Open input image.  We don't handle an Image tool because
@@ -721,7 +727,7 @@ Bool ImageAnalysis::imagefromshape(const String& outfile,
 		const Bool linear, const Bool overwrite, const Bool log) {
 	Bool rstat = False;
 	try {
-		*_log << LogOrigin("ImageAnalysis", "imagefromshape");
+		*_log << LogOrigin(className(), __FUNCTION__);
 
 		// Some protection
 		if (shapeV.nelements() == 0) {
@@ -735,7 +741,7 @@ Bool ImageAnalysis::imagefromshape(const String& outfile,
 
 		// Make with supplied CoordinateSystem if record not empty
 		String error;
-		if (coordinates.nfields() > 0) { //
+		if (! coordinates.empty()) {
 			PtrHolder<CoordinateSystem> pCS(makeCoordinateSystem(coordinates,
 					shapeV));
 			if (!make_image(error, outfile, *(pCS.ptr()), shapeV, *_log, log,
@@ -1581,7 +1587,7 @@ Bool ImageAnalysis::remove(Bool verbose)
     *_log << (verbose ? LogIO::NORMAL : LogIO::DEBUG1)
             << "Detaching from image" << LogIO::POST;
   }
-  _image.reset(0);
+  _image.reset();
   deleteHist();
 
   // Now try and blow it away.  If it's open, tabledelete won't delete it.
@@ -1912,8 +1918,8 @@ Bool ImageAnalysis::getchunk(Array<Float>& pixels, Array<Bool>& pixelMask,
 
 }
 
-const ImageInterface<Float>* ImageAnalysis::getImage() const {
-	return _image.get();
+std::tr1::shared_ptr<const ImageInterface<Float> > ImageAnalysis::getImage() const {
+	return _image;
 }
 
 
@@ -3951,7 +3957,8 @@ Bool ImageAnalysis::rename(const String& name, const Bool overwrite) {
 	// OK we passed the tests.  Close deletes temporary persistent image
 	if (_image.get() != 0) {
 		*_log << LogIO::NORMAL << "Detaching from image" << LogIO::POST;
-		_image.reset(0);
+		_image.reset();
+
 	}
 	deleteHist();
 
@@ -4213,8 +4220,7 @@ Bool ImageAnalysis::set(const String& lespixels, const Int pixelmask,
 }
 
 Bool ImageAnalysis::setbrightnessunit(const String& unit) {
-
-	*_log << LogOrigin("ImageAnalysis", "setbrightnessunit");
+	*_log << LogOrigin(className(), __FUNCTION__);
 	return _image->setUnits(Unit(unit));
 }
 
@@ -4759,9 +4765,7 @@ Bool ImageAnalysis::make_image(String &error, const String& outfile,
 	}
 	//
 	error = "";
-	if (_image.get() != 0) {
-		_image.reset(0);
-	}
+	_image.reset();
 
 	// This function is generally only called for creating new images,
 	// but you never know, so add histograms protection

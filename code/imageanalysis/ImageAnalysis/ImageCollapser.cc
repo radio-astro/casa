@@ -46,7 +46,7 @@ map<uInt, String> *ImageCollapser::_minMatchMap = 0;
 const String ImageCollapser::_class = "ImageCollapser";
 
 ImageCollapser::ImageCollapser(
-	String aggString, const ImageInterface<Float> *const image,
+	String aggString, const ImageTask::shCImFloat image,
 	const String& region, const Record *const regionRec,
 	const String& box,
 	const String& chanInp, const String& stokes,
@@ -64,7 +64,7 @@ ImageCollapser::ImageCollapser(
 }
 
 ImageCollapser::ImageCollapser(
-	const ImageInterface<Float> *const image,
+		const ImageTask::shCImFloat image,
 	const IPosition& axes, const Bool invertAxesSelection,
 	const AggregateType aggregateType,
 	const String& outname, const Bool overwrite

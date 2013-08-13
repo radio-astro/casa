@@ -1,4 +1,4 @@
-//# tSubImage.cc: Test program for class SubImage
+//# tsubImage->cc: Test program for class SubImage
 //# Copyright (C) 1998,1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -44,7 +44,7 @@ namespace casa {
 const String PVGenerator::_class = "PVGenerator";
 
 PVGenerator::PVGenerator(
-	const ImageInterface<Float> *const &image,
+		const ImageTask::shCImFloat image,
 	const Record *const &regionRec,
 	const String& chanInp, const String& stokes,
 	const String& maskInp, const String& outname,
@@ -101,16 +101,17 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	}
 
 	std::auto_ptr<ImageInterface<Float> > myClone(_getImage()->cloneII());
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
+	std::tr1::shared_ptr<SubImage<Float> > subImage(
+		new SubImage<Float>(SubImageFactory<Float>::createSubImage(
 		*myClone, *_getRegion(), _getMask(),
 		_getLog().get(), False, AxesSpecifier(), _getStretch(), True
-	);
+	)));
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
-	const CoordinateSystem& subCoords = subImage.coordinates();
+	const CoordinateSystem& subCoords = subImage->coordinates();
 	Vector<Int> dirAxes = subCoords.directionAxesNumbers();
 	Int xAxis = dirAxes[0];
 	Int yAxis = dirAxes[1];
-	IPosition subShape = subImage.shape();
+	IPosition subShape = subImage->shape();
 	IPosition origShape = _getImage()->shape();
 	if (
 		subShape[xAxis] != origShape[xAxis]
@@ -147,8 +148,8 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
         ys[2] = end[1] - halfy;
         ys[3] = end[1] + halfy;
         if (
-            min(xs) < 2 || max(xs) > subImage.shape()[xAxis] - 3
-            || min(ys) < 2 || max(ys) > subImage.shape()[yAxis] - 3
+            min(xs) < 2 || max(xs) > subImage->shape()[xAxis] - 3
+            || min(ys) < 2 || max(ys) > subImage->shape()[yAxis] - 3
         ) {
             *_getLog() << "Error: specified end points and half width are such "
                 << "that chosen directional region falls outside or within "
@@ -185,7 +186,7 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	);
 	Double padNumber = max(0.0, 1 - startPixRot[0]);
 	padNumber = max(padNumber, -(startPixRot[1] - halfwidth - 1));
-	ImageInterface<Float> *imageToRotate = &subImage;
+	ImageInterface<Float> *imageToRotate = subImage.get();
 	std::auto_ptr<ImageInterface<Float> > padded;
 	Int nPixels = 0;
 	if (padNumber > 0) {
@@ -194,12 +195,12 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 			<< "Some pixels will fall outside the rotated image, so "
 			<< "padding before rotating with " << nPixels << " pixels."
 			<< LogIO::POST;
-		ImagePadder padder(&subImage);
+		ImagePadder padder(subImage);
 		padder.setPaddingPixels(nPixels);
 		padded.reset(padder.pad(True));
 		imageToRotate = padded.get();
 	}
-	IPosition blc(subImage.ndim(), 0);
+	IPosition blc(subImage->ndim(), 0);
 	IPosition trc = subShape - 1;
 
 	// ensure we have enough real estate after the rotation
@@ -215,7 +216,7 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	) + nPixels;
 
 	Record lcbox = LCBox(blc, trc, imageToRotate->shape()).toRecord("");
-	std::auto_ptr<ImageInterface<Float> > rotated;
+	std::tr1::shared_ptr<ImageInterface<Float> > rotated;
 	if (paInRad == 0) {
 		*_getLog() << LogIO::NORMAL << "Slice is along x-axis, no rotation necessary.";
 		rotated.reset(
@@ -288,7 +289,7 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	lcbox = LCBox(blc, trc, rotated->shape()).toRecord("");
 	IPosition axes(1, yAxis);
 	ImageCollapser collapser(
-		"mean", rotated.get(), "", &lcbox,
+		"mean", rotated, "", &lcbox,
 		"", "", "", "", axes, "", False
 	);
 	std::auto_ptr<ImageInterface<Float> > collapsed(collapser.collapse(True));

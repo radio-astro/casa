@@ -62,6 +62,8 @@ class ImageTask {
 
 public:
 
+	typedef  std::tr1::shared_ptr<const ImageInterface<Float> > shCImFloat;
+
 	// verbosity levels
 	enum Verbosity {
 		QUIET,
@@ -96,7 +98,7 @@ protected:
   	// if <src>overwrite</src> is False, if image already exists exception will be thrown
 
    	ImageTask(
-   		const ImageInterface<Float> *const &image,
+   		const shCImFloat image,
     	const String& region, const Record *const &regionPtr,
     	const String& box, const String& chanInp,
     	const String& stokes, const String& maskInp,
@@ -112,7 +114,7 @@ protected:
 
     virtual void _construct(Bool verbose=True);
 
-    inline const ImageInterface<Float>* _getImage() const {return _image;}
+    inline const shCImFloat _getImage() const {return _image;}
 
     inline const String& _getMask() const {return _mask;}
 
@@ -138,7 +140,7 @@ protected:
 
     String _summaryHeader() const;
 
-    inline const std::tr1::shared_ptr<LogIO>& _getLog() const {return _log;}
+    inline const std::tr1::shared_ptr<LogIO> _getLog() const {return _log;}
 
     inline void _setSupportsLogfile(const Bool b) { _logfileSupport=b;}
 
@@ -175,7 +177,7 @@ protected:
     Verbosity _getVerbosity() const { return _verbosity; }
 
 private:
-    const ImageInterface<Float> *const _image;
+    const shCImFloat _image;
     std::tr1::shared_ptr<LogIO> _log;
     const Record *const _regionPtr;
     Record _regionRecord;

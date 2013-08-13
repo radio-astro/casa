@@ -44,7 +44,7 @@
 namespace casa {
 
 ImageTask::ImageTask(
-	const ImageInterface<Float> *const &image,
+	const shCImFloat image,
 	const String& region, const Record *const &regionPtr,
 	const String& box, const String& chanInp,
 	const String& stokes, const String& maskInp,
@@ -88,7 +88,7 @@ void ImageTask::_construct(Bool verbose) {
 	ImageInputProcessor inputProcessor;
 	inputProcessor.process(
 		_regionRecord, diagnostics, outputPtr,
-    	_stokesString, _image, _regionPtr,
+    	_stokesString, _image.get(), _regionPtr,
     	_region, _box, _chan,
     	_getStokesControl(), _supportsMultipleRegions(),
     	coordsPtr, verbose

@@ -58,6 +58,8 @@
 #include <QTextStream>
 #include <graphics/X11/X_exit.h>
 
+#include <tr1/memory>
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -1399,7 +1401,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		QtDisplayData *qdd = display_datas[item->text(0)];
 
-		ImageInterface<Float>* img = qdd->imageInterface();
+		std::tr1::shared_ptr<ImageInterface<Float> > img = qdd->imageInterface();
 		if (!img) {
 			img_output_error->setStyleSheet("color: red");
 			img_output_error->setText( "cannot export data, complex images cannot be exported" );
@@ -1417,10 +1419,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		bool OK = false;
 		switch ( msg.output_format ) {
 		case validation_msg::CASA:
-			OK = export_to_casa(img,msg.path.toStdString( ));
+			OK = export_to_casa(img.get(),msg.path.toStdString( ));
 			break;
 		case validation_msg::FITS:
-			OK = export_to_fits(img,msg.path.toStdString( ));
+			OK = export_to_fits(img.get(),msg.path.toStdString( ));
 			break;
 		default:
 			img_output_error->setStyleSheet("color: red");

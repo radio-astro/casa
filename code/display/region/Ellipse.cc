@@ -37,6 +37,8 @@
 #include <imageanalysis/Annotations/AnnEllipse.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 
+#include <tr1/memory>
+
 namespace casa {
 	namespace viewer {
 
@@ -326,7 +328,7 @@ namespace casa {
 					}
 					WCBox box(blcq, trcq, cs, Vector<Int>());
 					ImageRegion     *imgbox = new ImageRegion(box);
-					SubImage<Float> *boxImg = new SubImage<Float>(*image, *imgbox);
+					std::tr1::shared_ptr<SubImage<Float> > boxImg(new SubImage<Float>(*image, *imgbox));
 
 					// generate the WCEllipsoide
 					//Quantum<Double> px0(0.,"pix");
@@ -356,10 +358,16 @@ namespace casa {
 					WCEllipsoid ellipse( centerq, radiiq, IPosition(dispAxes), cs);
 					ImageRegion *imageregion = new ImageRegion(ellipse);
 
-					region_centers->push_back(std::tr1::shared_ptr<RegionInfo>(new ImageRegionInfo(name,description,getLayerCenter(padd,boxImg,*imageregion))));
+					region_centers->push_back(
+						std::tr1::shared_ptr<RegionInfo>(
+							new ImageRegionInfo(
+								name,description,
+								getLayerCenter(padd,boxImg,*imageregion)
+							)
+						)
+					);
 					delete imgbox;
 					delete imageregion;
-					delete boxImg;
 				} catch (const casa::AipsError& err) {
 					errMsg_ = err.getMesg();
 					fprintf( stderr, "Ellipse::generate_dds_centers( ): %s\n", errMsg_.c_str() );

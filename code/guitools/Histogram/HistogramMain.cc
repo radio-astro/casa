@@ -84,7 +84,7 @@ HistogramMain::HistogramMain(bool showFileLoader, bool fitControls,
 	plotWidget->setDisplayAxisTitles( true );
 }
 
-bool HistogramMain::setImage( ImageInterface<Float>* img ){
+bool HistogramMain::setImage( const ImageTask::shCImFloat img ){
 	bool imageSet = plotWidget->setImage( img );
 	return imageSet;
 }
@@ -158,7 +158,7 @@ void HistogramMain::colorsChanged(){
 
 void HistogramMain::imageFileChanged(){
 	QString imageFile = fileLoader.getFilePath();
-	ImageInterface<Float>* image = NULL;
+	ImageTask::shCImFloat image;
 	bool success = generateImage( imageFile, image );
 	if ( success ){
 		/*bool histogramSet =*/ plotWidget->setImage( image );
@@ -170,14 +170,14 @@ void HistogramMain::imageFileChanged(){
 }
 
 bool HistogramMain::generateImage( const QString& imagePath,
-		ImageInterface<Float>*& image ) {
+		ImageTask::shCImFloat image ) {
 	bool success = true;
 	try {
 		String filePath = imagePath.toStdString();
 		logger << LogIO::NORMAL
 				<< "\nLoading Image: "<<filePath<<"\n"
 				<< LogIO::POST;
-		image = new PagedImage<Float>(filePath);
+		image.reset(new PagedImage<Float>(filePath));
 	}
 	catch (AipsError x) {
 		String msg = x.getMesg();

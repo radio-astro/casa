@@ -79,9 +79,9 @@ Int main(Int argc, char *argv[]) {
 	}
 	ImageInterface<Float> *image;
 	ImageUtilities::openImage(image, imagename, log);
-
+	ImageTask::shCImFloat sImage(image);
 	ImageFitter imFitter(
-		image, region, 0, box, chans, stokes, mask, includePixelRange,
+		sImage, region, 0, box, chans, stokes, mask, includePixelRange,
 		excludePixelRange, residual, model, estimatesFilename,
 		newEstimatesFileName
 	);

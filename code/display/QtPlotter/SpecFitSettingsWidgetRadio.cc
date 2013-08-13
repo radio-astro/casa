@@ -472,7 +472,7 @@ namespace casa {
 	}
 
 	SpectralCoordinate SpecFitSettingsWidgetRadio::getSpectralCoordinate() const {
-		const ImageInterface<Float>* img = this->getImage();
+		std::tr1::shared_ptr<const ImageInterface<Float> > img = this->getImage();
 		CoordinateSystem cSys = img->coordinates();
 		SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
 		return spectralCoordinate;
@@ -497,7 +497,7 @@ namespace casa {
 
 		reset();
 		QString fitCurveName = ui.curveComboBox->currentText();
-		const ImageInterface<float>* image = getImage( fitCurveName );
+		std::tr1::shared_ptr<const ImageInterface<float> > image = getImage( fitCurveName );
 		const String pixelBox = getPixelBox();
 
 		Bool validSpectralList;
@@ -910,7 +910,7 @@ namespace casa {
 		//Convert the center and fwhm from pixels to whatever units the canvas is
 		//using.
 		QString xAxisUnit = pixelCanvas->getUnits();
-		ImageInterface<float>* img = const_cast<ImageInterface<float>* >(taskMonitor->getImage());
+		ImageInterface<float>* img = const_cast<ImageInterface<float>* >(taskMonitor->getImage().get());
 		CoordinateSystem cSys = img->coordinates();
 		int axisCount = cSys.nPixelAxes();
 		IPosition imPos(axisCount);

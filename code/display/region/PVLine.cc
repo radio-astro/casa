@@ -624,7 +624,7 @@ namespace casa {
 				try {
 					if ( ! padd->conformsTo(*wc_) ) continue;
 
-					ImageInterface<Float> *image = padd->imageinterface( );
+					std::tr1::shared_ptr<ImageInterface<Float> > image(padd->imageinterface( ));
 
 					if ( image == 0 ) continue;
 
@@ -856,7 +856,7 @@ namespace casa {
 			return path_;
 		}
 
-		ImageInterface<Float> *PVLine::generatePVImage( ImageInterface<Float> *input_image, std::string output_file, int width, bool need_result ) {
+		ImageInterface<Float> *PVLine::generatePVImage( std::tr1::shared_ptr<ImageInterface<Float> > input_image, std::string output_file, int width, bool need_result ) {
 			Record dummy;
 			PVGenerator pvgen( input_image, &dummy, "" /*chanInp*/, "" /*stokes*/, "" /*maskInp*/, output_file, true );
 			double startx, starty, endx, endy;
@@ -902,10 +902,14 @@ namespace casa {
 			for ( std::list<DisplayData*>::const_iterator ddi=dds.begin(); ddi != dds.end(); ++ddi ) {
 				PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(*ddi);
 				if ( padd == 0 ) continue;
+				// Hmm doesn't this always return 0?
+				// PrincipalAxesDD.h does not declare it so it has to come from
+				// DisplayData, but that always returns 0 - dmehring shared_ptr refactor
 				ImageInterface<Float> *image = padd->imageinterface( );
+				std::tr1::shared_ptr<ImageInterface<Float> > ptr(image);
 				if ( image->name( ) == casa_desc ) {
 					display_element de( name );
-					ImageInterface<Float> *new_image = generatePVImage( image, de.outputPath( ), width, true );
+					std::tr1::shared_ptr<ImageInterface<Float> > new_image(generatePVImage( ptr, de.outputPath( ), width, true ));
 					if ( sub_dpg == 0 ) {
 						sub_dpg = dock_->panel( )->createNewPanel( );
 						connect( sub_dpg, SIGNAL(destroyed(QObject*)), SLOT(dpg_deleted(QObject*)) );

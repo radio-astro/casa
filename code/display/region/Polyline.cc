@@ -89,7 +89,7 @@ namespace casa {
 			initPlot();
 		}
 
-		RegionInfo * Polyline::newInfoObject( ImageInterface<Float> *image, PrincipalAxesDD * ) {
+		RegionInfo * Polyline::newInfoObject( std::tr1::shared_ptr<ImageInterface<Float> > image, PrincipalAxesDD * ) {
 			SliceRegionInfo* sliceRegion = NULL;
 			if ( image != NULL ) {
 				RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();
@@ -129,7 +129,7 @@ namespace casa {
 			if ( wc_ != NULL  ) {
 				DisplayData* dd = wc_->csMaster();
 				if ( dd != NULL ) {
-					ImageInterface<float>* masterImage = dd->imageinterface();
+					std::tr1::shared_ptr<ImageInterface<float> > masterImage(dd->imageinterface());
 					if ( masterImage != NULL ) {
 						slicePlot->setImage( masterImage );
 						imageName = masterImage->name(true).c_str();

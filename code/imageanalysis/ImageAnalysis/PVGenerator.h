@@ -30,6 +30,7 @@
 
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
 #include <casa/namespace.h>
+#include <tr1/memory>
 
 class MDirection;
 
@@ -75,7 +76,7 @@ public:
 	// and <src>stokes</src>="", and <src>chanInp</src>="", that implies you want to use all
 	// spectral channels and all polarization planes in the input image.
 	PVGenerator(
-		const ImageInterface<Float> *const &image,
+			const ImageTask::shCImFloat image,
 		const Record *const &regionRec, const String& chanInp,
 		const String& stokes, const String& maskInp,
 		const String& outname, const Bool overwrite

@@ -33,7 +33,7 @@
 namespace casa {
 
 PeakIntensityFluxDensityConverter::PeakIntensityFluxDensityConverter(
-	const ImageInterface<Float> *const image
+		const ImageTask::shCImFloat  image
 ) : ImageTask(
 		image, "", 0, "", "", "", "", "", ""
 	), _size(Angular2DGaussian::NULL_BEAM), _shape(ComponentType::GAUSSIAN),

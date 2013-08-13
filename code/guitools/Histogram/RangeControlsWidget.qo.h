@@ -29,6 +29,9 @@
 #include <QtGui/QWidget>
 #include <guitools/Histogram/RangeControlsWidget.ui.h>
 
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
+#include <tr1/memory>
+
 using namespace std;
 
 class QDoubleValidator;
@@ -43,7 +46,7 @@ template <class T> class ImageInterface;
  */
 class PercentageCalculator {
 public:
-	PercentageCalculator( float minValue, float maxValue, ImageInterface<float>* image );
+	PercentageCalculator( float minValue, float maxValue, const ImageTask::shCImFloat image );
 	void work();
 	float getRangeMin() const;
 	float getRangeMax() const;
@@ -54,7 +57,7 @@ private:
 	float maxValue;
 	float rangeMin;
 	float rangeMax;
-	ImageInterface<float>* image;
+	ImageTask::shCImFloat image;
 };
 
 
@@ -68,7 +71,7 @@ class RangeControlsWidget : public QWidget {
 
 public:
     RangeControlsWidget(QWidget *parent = 0);
-    void setImage( ImageInterface<float>* image );
+    void setImage(const ImageTask::shCImFloat image );
     void hideMaximum();
     void setRange( double min, double max, bool signal=true );
     void setDataLimits( double min, double max );
@@ -98,7 +101,7 @@ private:
     QDoubleValidator* minMaxValidator;
     PercentageCalculator* percentCalculator;
     Ui::RangeControlsWidgetClass ui;
-    ImageInterface<float>* image;
+    ImageTask::shCImFloat image;
     QString percentage;
     double rangeMin;
     double rangeMax;

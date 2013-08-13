@@ -74,6 +74,8 @@
 #include <QMessageBox>
 #include <limits>
 
+#include <tr1/memory>
+
 namespace casa {
 
 	const QString QtProfile::PLOT_TYPE_FLUX = "Flux Density";
@@ -89,7 +91,7 @@ namespace casa {
 
 	}
 
-	QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *parent, std::string rcstr)
+	QtProfile::QtProfile(std::tr1::shared_ptr<ImageInterface<Float> > img, const char *name, QWidget *parent, std::string rcstr)
 		:QMainWindow(parent),
 //pc(0),
 //te(0),
@@ -276,7 +278,7 @@ namespace casa {
 	}
 
 
-	MFrequency::Types QtProfile::determineRefFrame(ImageInterface<Float>* img, bool check_native_frame ) {
+	MFrequency::Types QtProfile::determineRefFrame(std::tr1::shared_ptr<ImageInterface<Float> > img, bool check_native_frame ) {
 		MFrequency::Types freqtype;
 
 		CoordinateSystem cSys=img->coordinates();
@@ -555,7 +557,7 @@ namespace casa {
 		emit hideProfile();
 	}
 
-	void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name) {
+	void QtProfile::resetProfile(std::tr1::shared_ptr<ImageInterface<Float> > img, const char *name) {
 		image = img;
 		try {
 			if (analysis)
@@ -1007,7 +1009,7 @@ namespace casa {
 	}
 
 	int QtProfile::getChannelCount( ImageAnalysis* analysis ){
-		const ImageInterface<float>* img = analysis->getImage();
+		std::tr1::shared_ptr<const ImageInterface<float> > img(analysis->getImage());
 		CoordinateSystem cSys = img->coordinates();
 		Int spectralIndex = cSys.spectralAxisNumber();
 		IPosition imgShape = img->shape();
@@ -1693,7 +1695,7 @@ namespace casa {
 	}
 
 
-	void QtProfile::fillPlotTypes(const ImageInterface<Float>* img) {
+	void QtProfile::fillPlotTypes(const std::tr1::shared_ptr<ImageInterface<Float> > img) {
 
 		// check whether plot mode "flux" make sense
 		bool allowFlux(false);
@@ -2615,7 +2617,7 @@ namespace casa {
 		return imagePath;
 	}
 
-	const ImageInterface<Float>* QtProfile::getImage( const QString& imageName ) const {
+	std::tr1::shared_ptr<const ImageInterface<Float> > QtProfile::getImage( const QString& imageName ) const {
 		//First look for a specific image with the name
 		if ( imageName.length() > 0 && over ) {
 			QListIterator<OverplotAnalysis> i( *over );
@@ -2624,7 +2626,7 @@ namespace casa {
 				QString ky = overplot.first;
 				if ( ky == imageName ) {
 					ImageAnalysis* analysis = overplot.second;
-					const ImageInterface<Float>* imageInterface = analysis->getImage();
+					std::tr1::shared_ptr<const ImageInterface<Float> > imageInterface(analysis->getImage());
 					return imageInterface;
 				}
 			}

@@ -36,6 +36,10 @@
 #include <display/Fit/Fit2DLogDialog.qo.h>
 #include <display/region/QtRegionSource.qo.h>
 
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
+
+#include <tr1/memory>
+
 namespace casa {
 
 	template <class T> class ImageInterface;
@@ -48,7 +52,7 @@ namespace casa {
 
 	public:
 		Fit2DTool(QWidget *parent = 0);
-		void setImage( ImageInterface<Float>* image );
+		void setImage( ImageTask::shCImFloat image );
 		~Fit2DTool();
 
 	signals:
@@ -106,7 +110,7 @@ namespace casa {
 		void clearRegions();
 
 		const QString REGION_LABEL;
-		ImageInterface<Float>* image;
+		ImageTask::shCImFloat image;
 		QList<RegionShape*> fitMarkers;
 		Gaussian2DFitter* fitter;
 		ColorComboDelegate* fitColorDelegate;

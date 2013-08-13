@@ -61,7 +61,7 @@ BinPlotWidget::BinPlotWidget( bool fitControls, bool rangeControls,
 		bool plotModeControls, QWidget* parent ):
     QWidget(parent),
     curveColor( Qt::blue ), selectionColor( 205, 201, 201, 127 ),
-    colorMap( NULL ), image( NULL ), binPlot( this ),
+    colorMap( NULL ), image( ), binPlot( this ),
     NO_DATA( "No Data"), NO_DATA_MESSAGE( "Data is needed in order to zoom."), IMAGE_ID(-1),
 	dragLine( NULL ), rectMarker( NULL ),
     toolTipPicker(NULL), contextMenuZoom(this),
@@ -1142,9 +1142,9 @@ std::vector<float> BinPlotWidget::getXValues() const {
 	return values;
 }
 
-bool BinPlotWidget::setImage( ImageInterface<Float>* img ){
+bool BinPlotWidget::setImage( const ImageTask::shCImFloat img ){
 	bool success = true;
-	if ( image != img && img != NULL ){
+	if ( image != img && img.get() != NULL ){
 		image = img;
 		Histogram::setImage( image );
 		clearHistograms();

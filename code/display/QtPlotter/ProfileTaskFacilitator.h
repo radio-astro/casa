@@ -37,6 +37,8 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Containers/Record.h>
 
+#include <tr1/memory>
+
 class QDoubleValidator;
 
 namespace casa {
@@ -74,7 +76,7 @@ namespace casa {
 		virtual QString getYUnit() const;
 		virtual QString getYUnitPrefix() const;
 		virtual String getXAxisUnit() const;
-		virtual const ImageInterface<Float>* getImage( const QString& name="") const;
+		virtual const std::tr1::shared_ptr<const ImageInterface<Float> > getImage( const QString& name="") const;
 		virtual const String getPixelBox() const;
 
 		bool isOptical();

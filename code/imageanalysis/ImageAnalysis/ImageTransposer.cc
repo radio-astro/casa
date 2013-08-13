@@ -18,7 +18,7 @@ namespace casa {
 const String ImageTransposer::_class = "ImageTransposer";
 
 ImageTransposer::ImageTransposer(
-	const ImageInterface<Float> *const &image, const String& order, const String& outputImage
+		const ImageTask::shCImFloat image, const String& order, const String& outputImage
 )
 	: ImageTask(
 		image, "", 0, "", "", "",
@@ -40,7 +40,7 @@ ImageTransposer::ImageTransposer(
 }
 
 ImageTransposer::ImageTransposer(
-	const ImageInterface<Float> *const &image, const Vector<String> order,
+		const ImageTask::shCImFloat image, const Vector<String> order,
 	const String& outputImage
 )
 :  ImageTask(
@@ -80,7 +80,7 @@ ImageTransposer::ImageTransposer(
 }
 
 ImageTransposer::ImageTransposer(
-	const ImageInterface<Float> *const &image, uInt order,
+		const ImageTask::shCImFloat image, uInt order,
 	const String& outputImage
 )
 :  ImageTask(

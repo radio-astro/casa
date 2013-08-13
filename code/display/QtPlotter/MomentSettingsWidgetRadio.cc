@@ -399,7 +399,7 @@ namespace casa {
 
 		// Get the spectral axis number.
 		// TODO: Generalize this to any hidden axis
-		const ImageInterface<float>* image = taskMonitor->getImage();
+		std::tr1::shared_ptr<const ImageInterface<float> > image = taskMonitor->getImage();
 		CoordinateSystem cSys = image -> coordinates();
 		int spectralAxisNumber = cSys.spectralAxisNumber();
 		Vector<String> method;
@@ -440,7 +440,10 @@ namespace casa {
 		                             pixelBox, pos, infile);
 		//Set up the imageAnalysis
 		if ( imageAnalysis == NULL ) {
-			imageAnalysis = new ImageAnalysis( image );
+			// a cast might work, but I'm just going to clone it to be safe - dmehring shared_ptr refactor
+			// cloning was what the old ImageAnalysis constructor did anyway
+			std::tr1::shared_ptr<ImageInterface<float> > image2(image->cloneII());
+			imageAnalysis = new ImageAnalysis( image2 );
 
 		}
 
@@ -601,7 +604,7 @@ namespace casa {
 		delete collapseThread;
 		collapseThread = NULL;
 		if ( taskMonitor != NULL ) {
-			ImageInterface<Float>* img = const_cast<ImageInterface <Float>* >(taskMonitor->getImage());
+			ImageInterface<Float>* img = const_cast<ImageInterface <Float>* >(taskMonitor->getImage().get());
 			imageAnalysis = new ImageAnalysis(img);
 		}
 	}
@@ -695,7 +698,8 @@ namespace casa {
 			thresholdingBinDialog = new ThresholdingBinPlotDialog( yUnits, this );
 			connect( thresholdingBinDialog, SIGNAL(accepted()), this, SLOT(thresholdSpecified()));
 		}
-		ImageInterface<Float>* image = const_cast<ImageInterface<Float>* >(taskMonitor->getImage());
+		// ImageInterface<Float>* image = const_cast<ImageInterface<Float>* >(taskMonitor->getImage().get());
+		std::tr1::shared_ptr<ImageInterface<Float> > image(std::tr1::const_pointer_cast<ImageInterface<Float> >(taskMonitor->getImage()));
 		thresholdingBinDialog->setImage( image );
 		thresholdingBinDialog->show();
 		QString minValueStr = ui.minThresholdLineEdit->text();

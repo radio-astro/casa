@@ -51,8 +51,8 @@ const String ImagePrimaryBeamCorrector::_class = "ImagePrimaryBeamCorrector";
 uInt _tempTableNumber = 0;
 
 ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
-	const ImageInterface<Float> *const &image,
-	const ImageInterface<Float> *const &pbImage,
+		const ImageTask::shCImFloat image,
+		const ImageTask::shCImFloat pbImage,
 	const Record *const &regionPtr,
 	const String& region, const String& box,
 	const String& chanInp, const String& stokes,
@@ -69,7 +69,7 @@ ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
 }
 
 ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
-	const ImageInterface<Float> *const &image,
+		const ImageTask::shCImFloat image,
 	const Array<Float>& pbArray,
 	const Record *const &regionPtr,
 	const String& region, const String& box,
@@ -112,7 +112,7 @@ ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
 		}
 	}
 	else {
-		*_getLog() << "Primary beam array is of wrong shape" << LogIO::EXCEPTION;
+		*_getLog() << "Primary beam array is of wrong shape (" << pbArray.shape() << ")" << LogIO::EXCEPTION;
 	}
 	_pbImage->put(pbArray);
 	_construct();

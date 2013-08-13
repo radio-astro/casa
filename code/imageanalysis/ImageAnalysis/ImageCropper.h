@@ -70,7 +70,7 @@ public:
 	// and <src>box</src>="", <src>stokes</src>="", and <src>chanInp</src>="", that implies you want to use all
 	// of the input image.
 	ImageCropper(
-		const ImageInterface<T> *const &image,
+		const ImageTask::shCImFloat image,
 		const Record *const &regionRec, const String& box, const String& chanInp,
 		const String& stokes, const String& maskInp,
 		const String& outname, const Bool overwrite

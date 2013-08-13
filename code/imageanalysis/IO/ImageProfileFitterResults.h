@@ -66,7 +66,7 @@ public:
 		const std::tr1::shared_ptr<LogIO>& log, const CoordinateSystem& csysIm,
 		const Array<ImageFit1D<Float> > * const &fitters,
 		const SpectralList& nonPolyEstimates,
-		const SubImage<Float> * const &subImage, Int fitAxis, Int polyOrder,
+		const std::tr1::shared_ptr<const SubImage<Float> >& subImage, Int fitAxis, Int polyOrder,
 		uInt nGaussSinglets, uInt nGaussMultiplets, uInt nLorentzSinglets,
 		uInt nPLPCoeffs, uInt nLTPCoeffs, Bool logResults, Bool multiFit,
 		const std::tr1::shared_ptr<LogFile>& logfile, const String& xUnit,
@@ -164,7 +164,7 @@ private:
 	SpectralList _nonPolyEstimates;
  // subimage contains the region of the original image
 	// on which the fit is performed.
-	const SubImage<Float> * const _subImage;
+	const std::tr1::shared_ptr<const SubImage<Float> > _subImage;
 	Int _polyOrder, _fitAxis;
 	vector<axisType> _axisTypes;
 	Matrix<String> _worldCoords;

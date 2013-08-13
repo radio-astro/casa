@@ -231,7 +231,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		displayType_(displayType),
 		TYPE_IMAGE( "image"),
 		SKY_CATALOG( "skycatalog"), MS( "ms"),
-		im_(0),
+		im_(),
 		cim_(0),
 		dd_(0),
 		clrMapName_(""),
@@ -314,7 +314,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					case ImageOpener::AIPSPP: {
 
 						if( imagePixelType(path_) == TpFloat ) {
-							im_  = new PagedImage<Float>(path_, TableLock::AutoNoReadLocking);
+							im_.reset(new PagedImage<Float>(path_, TableLock::AutoNoReadLocking));
 							// regions in image...
 							// Vector<String> regions = im_->regionNames( );
 							// for ( int i = 0; i < regions.size( ); ++i ) {
@@ -329,14 +329,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					case ImageOpener::FITS: {
 						FITSImgParser fip = FITSImgParser(tmp_path);
 						if (fip.has_qualityimg() && fip.is_qualityimg(ext_expr)) {
-							im_  = new FITSQualityImage(path);
+							im_.reset(new FITSQualityImage(path));
 						} else {
-							im_ = new FITSImage(path);
+							im_.reset(new FITSImage(path));
 						}
 						break;
 					}
 					case ImageOpener::MIRIAD: {
-						im_ = new MIRIADImage(path);
+						im_.reset(new MIRIADImage(path));
 						break;
 					}
 
@@ -359,9 +359,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							std::string outpath = viewer::options.temporaryPath(Path(path_).baseName());
 							panel_->status( "generating temporary image: " + outpath );
 							panel_->logIO( ) << "generating temporary image \'" << outpath << "'" << LogIO::POST;
-							ImageInterface<Float> *newim = ia.regrid( String(outpath), regrid_to->imageInterface( ), method, true );
-							std::auto_ptr<ImageInterface<Float> > imptr(im_);
-							im_ = newim;
+							ImageInterface<Float> *newim = ia.regrid( String(outpath), regrid_to->imageInterface( ).get(), method, true );
+							// std::auto_ptr<ImageInterface<Float> > imptr(im_);
+							im_.reset(newim);
 						}
 						std::string slice_description = ddo["slice"];
 						if ( slice_description != "" && slice_description != "none" ) {
@@ -374,8 +374,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 									if ( for_each(vec.begin( ),vec.end( ),check_str( )) ) {
 										Slicer slicer = for_each(vec.begin( ),vec.end( ),str_to_slicer( ));
 										SubImage<Float> *subim = new SubImage<Float>( (const ImageInterface<Float>&) *im_, slicer );
-										std::auto_ptr<ImageInterface<Float> > imptr(im_);
-										im_ = subim;
+										//std::auto_ptr<ImageInterface<Float> > imptr(im_);
+										im_.reset(subim);
 									}
 								} catch( const AipsError &err ) {
 									panel_->status( "unnable to generate sub-image: " + err.getMesg( ) );
@@ -392,7 +392,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					LatticeExprNode expr = ImageExprParse::command(path_);
 
 					if(expr.dataType() == TpFloat) {
-						im_ = new ImageExpr<Float>(LatticeExpr<Float>(expr), name_);
+						im_.reset(new ImageExpr<Float>(LatticeExpr<Float>(expr), name_));
 					} else if(expr.dataType() == TpComplex) {
 						cim_ = new ImageExpr<Complex>(LatticeExpr<Complex>(expr), name_);
 					} else throw AipsError("Only Float or Complex LEL expressions "
@@ -425,7 +425,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			emit qddError(errMsg_);
 			// (error signal propagated externally, rather than throw.
 			// Alternatively, caller can test newQdd->isEmpty()).
-			im_=0;
+			im_.reset();
 			cim_=0;
 			return;
 		}
@@ -450,7 +450,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		dd_->setOptions( record, outRecord );
 	}
 
-	void QtDisplayData::setImage( ImageInterface<Float>* img ) {
+	void QtDisplayData::setImage(std::tr1::shared_ptr<ImageInterface<Float> > img ) {
 		im_=img;
 	}
 
@@ -480,32 +480,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if( isRaster()) {
 			if(im_!=0) {
-				if(ndim ==2) dd_ = new LatticeAsRaster<Float>(im_, 0, 1);
-				else dd_ = new LatticeAsRaster<Float>(im_, axs[0], axs[1], axs[2], fixedPos, panel_ );
+				if(ndim ==2) dd_ = new LatticeAsRaster<Float>(im_.get(), 0, 1);
+				else dd_ = new LatticeAsRaster<Float>(im_.get(), axs[0], axs[1], axs[2], fixedPos, panel_ );
 			} else {
 				if(ndim ==2) dd_ = new LatticeAsRaster<Complex>(cim_, 0, 1);
 				else dd_ = new LatticeAsRaster<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos, panel_ );
 			}
 		} else if( isContour() ) {
 			if(im_!=0) {
-				if(ndim ==2) dd_ = new LatticeAsContour<Float>(im_, 0, 1);
-				else dd_ = new LatticeAsContour<Float>( im_, axs[0], axs[1], axs[2], fixedPos, panel_ );
+				if(ndim ==2) dd_ = new LatticeAsContour<Float>(im_.get(), 0, 1);
+				else dd_ = new LatticeAsContour<Float>( im_.get(), axs[0], axs[1], axs[2], fixedPos, panel_ );
 			} else {
 				if(ndim ==2) dd_ = new LatticeAsContour<Complex>(cim_, 0, 1);
 				else dd_ = new LatticeAsContour<Complex>( cim_, axs[0], axs[1], axs[2], fixedPos, panel_ );
 			}
 		} else if( isVector() ) {
 			if(im_!=0) {
-				if(ndim ==2) dd_ = new LatticeAsVector<Float>(im_, 0, 1);
-				else dd_ = new LatticeAsVector<Float>(im_, axs[0], axs[1], axs[2], fixedPos);
+				if(ndim ==2) dd_ = new LatticeAsVector<Float>(im_.get(), 0, 1);
+				else dd_ = new LatticeAsVector<Float>(im_.get(), axs[0], axs[1], axs[2], fixedPos);
 			} else {
 				if(ndim ==2) dd_ = new LatticeAsVector<Complex>(cim_, 0, 1);
 				else dd_ = new LatticeAsVector<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos);
 			}
 		} else if( isMarker()) {
 			if(im_!=0) {
-				if(ndim ==2) dd_ = new LatticeAsMarker<Float>(im_, 0, 1);
-				else dd_ = new LatticeAsMarker<Float>(im_, axs[0], axs[1], axs[2], fixedPos);
+				if(ndim ==2) dd_ = new LatticeAsMarker<Float>(im_.get(), 0, 1);
+				else dd_ = new LatticeAsMarker<Float>(im_.get(), axs[0], axs[1], axs[2], fixedPos);
 			} else {
 				if(ndim ==2) dd_ = new LatticeAsMarker<Complex>(cim_, 0, 1);
 				else dd_ = new LatticeAsMarker<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos);
@@ -788,9 +788,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		delete dd_;
 		dd_=0;
-		if(im_!=0)  {
-			delete im_;
-			im_=0;
+		if(im_)  {
+			im_.reset();
 		}
 		if(cim_!=0) {
 			delete cim_;

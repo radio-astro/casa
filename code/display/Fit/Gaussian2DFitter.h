@@ -32,6 +32,10 @@
 #include <QString>
 #include <QThread>
 
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
+
+#include <tr1/memory>
+
 namespace casa {
 
 	template <class T> class ImageInterface;
@@ -45,7 +49,7 @@ namespace casa {
 		Gaussian2DFitter();
 		void run();
 		bool isFitSuccessful() const;
-		void setFitParameters( ImageInterface<Float>* image, const String& box,
+		void setFitParameters( ImageTask::shCImFloat image, const String& box,
 		                       int channelNum, const String& estimatesFileName, const String& residualImageFile,
 		                       const Vector<Float>& includeVector, const Vector<Float>& excludeVector);
 		QString getErrorMessage() const;
@@ -54,7 +58,7 @@ namespace casa {
 		QString getResidualImagePath() const;
 		void setFilePath( String path );
 		bool writeRegionFile() const;
-		QList<RegionShape*> toDrawingDisplay( ImageInterface<Float>* image, const QString& colorName) const;
+		QList<RegionShape*> toDrawingDisplay( const ImageTask::shCImFloat image, const QString& colorName) const;
 		virtual ~Gaussian2DFitter();
 
 	private:
@@ -64,7 +68,7 @@ namespace casa {
 		bool successfulFit;
 		bool logFile;
 		ComponentListWrapper fitResultList;
-		ImageInterface<Float>* image;
+		ImageTask::shCImFloat image;
 		Vector<Float> includePixs;
 		Vector<Float> excludePixs;
 		String pixelBox;

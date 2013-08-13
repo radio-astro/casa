@@ -46,12 +46,12 @@
 #include <imageanalysis/ImageAnalysis/ImageMoments.h>
 
 namespace casa {
-SpectralCollapser::SpectralCollapser(ImageInterface<Float> * image):
+SpectralCollapser::SpectralCollapser(const ImageTask::shCImFloat image):
 		_image(image), _log(new LogIO()), _storePath(""){
 	_setUp();
 }
 
-SpectralCollapser::SpectralCollapser(ImageInterface<Float> * image, const String storePath):
+SpectralCollapser::SpectralCollapser(const ImageTask::shCImFloat image, const String storePath):
 		_image(image), _log(new LogIO()), _storePath(storePath){
 	_setUp();
 }
@@ -147,8 +147,8 @@ Bool SpectralCollapser::collapse(const Vector<Float> &specVals, const Float star
 	_getOutputName(wcsInp, outname, outnameData, outnameError);
 
 	if (_hasQualAxis){
-		SubImage<Float> subData;
-		SubImage<Float> subError;
+		std::tr1::shared_ptr<SubImage<Float> > subData;
+		std::tr1::shared_ptr<SubImage<Float> > subError;
 		if (!_getQualitySubImgs(_image, subData, subError)){
 			msg = String("Can not split image: ") + _image->name(True) + String(" to data and error array!");
 			*_log << LogIO::WARN << msg << LogIO::POST;
@@ -159,14 +159,14 @@ Bool SpectralCollapser::collapse(const Vector<Float> &specVals, const Float star
 		{
 		case SpectralCollapser::PNOERROR:
 			// collapse the data
-			ok = _collapse(&subData, dataAggStr, chanInp, outname);
+			ok = _collapse(subData, dataAggStr, chanInp, outname);
 			break;
 		case SpectralCollapser::PERMSE:
 			// collapse the data
-			ok = _collapse(&subData, dataAggStr, chanInp, outnameData);
+			ok = _collapse(subData, dataAggStr, chanInp, outnameData);
 
 			// collapse the error
-			ok = _collapse(&subData, errorAggStr, chanInp, outnameError);
+			ok = _collapse(subData, errorAggStr, chanInp, outnameError);
 
 			// merge the data and the error
 			ok = _mergeDataError(outname, outnameData, outnameError);
@@ -177,10 +177,10 @@ Bool SpectralCollapser::collapse(const Vector<Float> &specVals, const Float star
 			break;
 		case SpectralCollapser::PPROPAG:
 			// collapse the data
-			ok = _collapse(&subData, dataAggStr, chanInp, outnameData);
+			ok = _collapse(subData, dataAggStr, chanInp, outnameData);
 
 			// collapse the error
-			ok = _collapse(&subError, errorAggStr, chanInp, outnameError);
+			ok = _collapse(subError, errorAggStr, chanInp, outnameError);
 
 			// merge the data and the error
 			ok = _mergeDataError(outname, outnameData, outnameError, Float(endIndex-startIndex));
@@ -438,16 +438,16 @@ Bool SpectralCollapser::_getQualitySubImg(const ImageInterface<Float>* image, co
 	return True;
 }
 
-Bool SpectralCollapser::_getQualitySubImgs(ImageInterface<Float>* image, SubImage<Float> &subData, SubImage<Float> &subError) const{
+Bool SpectralCollapser::_getQualitySubImgs(ImageTask::shCImFloat image, std::tr1::shared_ptr<SubImage<Float> >  subData, std::tr1::shared_ptr<SubImage<Float> >  subError) const{
 
 	// check whether the image origin is FITS
-	FITSQualityImage *qImg = dynamic_cast<FITSQualityImage*>(image);
+	const FITSQualityImage  * const qImg = dynamic_cast<const FITSQualityImage*const>(image.get());
 	if (qImg){
 		// create the data image from the FITS data extension
-		subData = SubImage<Float>(*(qImg->fitsData()));
+		subData.reset(new SubImage<Float>(*(qImg->fitsData())));
 
 		// create the error image from the FITS error extension
-		subError = SubImage<Float>(*(qImg->fitsError()));
+		subError.reset(new SubImage<Float>(*(qImg->fitsError())));
 	}
 	else{
 		// get the coordinate system and the
@@ -478,10 +478,10 @@ Bool SpectralCollapser::_getQualitySubImgs(ImageInterface<Float>* image, SubImag
 		AxesSpecifier axSpec(iposKeep);
 
 		// create the data sub-image
-		subData = SubImage<Float>(*image, sliceData, axSpec);
+		subData.reset(new SubImage<Float>(*image, sliceData, axSpec));
 
 		// create the error sub-image
-		subError = SubImage<Float>(*image, sliceError, axSpec);
+		subError.reset(new SubImage<Float>(*image, sliceError, axSpec));
 	}
 	return True;
 }
@@ -527,7 +527,7 @@ Bool SpectralCollapser::_getOutputName(const String &wcsInp, String &outImg, Str
 	return True;
 }
 
-Bool SpectralCollapser::_collapse(const ImageInterface<Float> *image, const String &aggString,
+Bool SpectralCollapser::_collapse(const ImageTask::shCImFloat image, const String &aggString,
 		const String& chanInp, const String& outname) const {
 	// create and execute the imcollapse-class
 	ImageCollapser collapser(

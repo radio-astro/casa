@@ -71,7 +71,7 @@ namespace casa {
 const String ImageFitter::_class = "ImageFitter";
 
 ImageFitter::ImageFitter(
-	const ImageInterface<Float>* const &image, const String& region,
+		const ImageTask::shCImFloat image, const String& region,
 	const Record *const regionRec,
 	const String& box,
 	const String& chanInp, const String& stokes,

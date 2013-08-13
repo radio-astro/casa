@@ -32,6 +32,8 @@
 
 #include <casa/namespace.h>
 
+#include <tr1/memory>
+
 class MDirection;
 
 namespace casa {
@@ -66,7 +68,7 @@ public:
 	// <group>
 
 	ImagePadder(
-		const ImageInterface<Float> *const image,
+			const ImageTask::shCImFloat  image,
 		const Record *const regionRec=0,
 		const String& box="", const String& chanInp="",
 		const String& stokes="", const String& maskInp="",

@@ -2086,7 +2086,7 @@ namespace casa {
 			return MDirection::EXTRA;
 		}
 
-		RegionInfo::center_t *Region::getLayerCenter( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg) {
+		RegionInfo::center_t *Region::getLayerCenter( PrincipalAxesDD *padd, std::tr1::shared_ptr<ImageInterface<Float> > image, ImageRegion& imgReg) {
 			if( image==0 || padd == 0 ) return 0;
 			try {
 				// store the coordinate system and the axis names
@@ -2497,8 +2497,9 @@ namespace casa {
 						if (padd==0) {
 							continue;
 						}
-						ImageInterface<float>* image = dd->imageinterface();
-						if ( image != NULL ) {
+						// dd->imageinterface() seems to always return 0 from what I can see so I'm confused
+						std::tr1::shared_ptr<ImageInterface<float> > image(dd->imageinterface());
+						if ( image ) {
 							histogram->addImage( image );
 							histogram->setImageRegion( image->name(true).c_str(),region, id_);
 						}

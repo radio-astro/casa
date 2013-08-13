@@ -40,6 +40,8 @@
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/ds9/ds9writer.h>
 
+#include <tr1/memory>
+
 namespace casa {
 	namespace viewer {
 
@@ -968,7 +970,7 @@ namespace casa {
 					}
 					WCBox box(blcq, trcq, cs, Vector<Int>());
 					ImageRegion     *imgbox = new ImageRegion(box);
-					SubImage<Float> *boxImg = new SubImage<Float>(*image, *imgbox);
+					std::tr1::shared_ptr<SubImage<Float> > boxImg(new SubImage<Float>(*image, *imgbox));
 
 					// technically (I guess), WorldCanvasHolder::worldAxisUnits( ) should be
 					// used here, because it references the "CSmaster" DisplayData which all
@@ -985,7 +987,6 @@ namespace casa {
 
 					delete imgbox;
 					delete imageregion;
-					delete boxImg;
 				} catch (const casa::AipsError& err) {
 					errMsg_ = err.getMesg();
 					fprintf( stderr, "Polygon::generate_dds_centers( ): %s\n", errMsg_.c_str() );

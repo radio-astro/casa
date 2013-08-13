@@ -205,7 +205,7 @@ namespace casa {
 
 
 	bool ComponentListWrapper::toEstimateFile( QTextStream& stream,
-	        ImageInterface<Float>* image, QString& errorMsg,
+	        const ImageInterface<Float>*const image, QString& errorMsg,
 	        bool screenEstimates, RegionBox* screenBox ) const {
 		//The format of each line is
 		//peak intensity, peak x-pixel value, peak y-pixel value, major axis, minor axis, position angle, fixed
@@ -327,7 +327,7 @@ namespace casa {
 		}
 	}
 
-	QList<RegionShape*> ComponentListWrapper::toDrawingDisplay(ImageInterface<Float>* image,
+	QList<RegionShape*> ComponentListWrapper::toDrawingDisplay(const ImageInterface<Float>* image,
 	        const QString& colorName) const {
 		int sourceCount = getSize();
 		QList<RegionShape*> fitList;
@@ -363,7 +363,7 @@ namespace casa {
 		return fitList;
 	}
 
-	bool ComponentListWrapper::toRegionFile( ImageInterface<float>* image,
+	bool ComponentListWrapper::toRegionFile(const ImageInterface<float>* image,
 	        int channelIndex, const QString& filePath ) const {
 		bool success = false;
 		int sourceCount = getSize();

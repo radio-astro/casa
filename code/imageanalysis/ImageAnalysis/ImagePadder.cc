@@ -37,7 +37,7 @@ namespace casa {
 const String ImagePadder::_class = "ImagePadder";
 
 ImagePadder::ImagePadder(
-	const ImageInterface<Float> *const image,
+		const ImageTask::shCImFloat image,
 	const Record *const regionRec,
 	const String& box,
 	const String& chanInp, const String& stokes,

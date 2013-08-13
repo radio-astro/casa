@@ -39,6 +39,9 @@
 #include <QDebug>
 #include <QMenu>
 
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
+#include <tr1/memory>
+
 using namespace std;
 
 class QwtPlotMarker;
@@ -89,7 +92,7 @@ public:
     BinPlotWidget( bool fitControls, bool rangeControls, bool plotModeControls,
     	QWidget* parent);
 
-    bool setImage( ImageInterface<Float>* img );
+    bool setImage( const ImageTask::shCImFloat img );
     bool setImageRegion( ImageRegion* imageRegion, int id );
     void deleteImageRegion( int id );
     void imageRegionSelected( int id );
@@ -235,7 +238,7 @@ private:
     //Histogram & data
     QList<QwtPlotCurve*> curves;
     QMap<int,Histogram*> histogramMap;
-    ImageInterface<Float>* image;
+    ImageTask::shCImFloat image;
     QwtPlot binPlot;
     const QString NO_DATA;
     const QString NO_DATA_MESSAGE;

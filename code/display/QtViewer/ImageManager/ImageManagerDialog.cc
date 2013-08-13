@@ -203,8 +203,8 @@ namespace casa {
 			String ddType(imageData->dataType());
 
 			//Get the path
-			ImageInterface<float>* image = imageData->imageInterface();
-			if ( image != NULL ) {
+            std::tr1::shared_ptr<ImageInterface<float> > image = imageData->imageInterface();
+			if ( image ) {
 				String path = image->name();
 
 				//Get the display type
@@ -279,7 +279,7 @@ namespace casa {
 				ColormapDefinition* hueDefinition = hueMap->definition();
 				double baseColorMin;
 				double baseColorMax;
-				ImageInterface<float>* hueInterface = colorDD->imageInterface();
+                std::tr1::shared_ptr<ImageInterface<float> > hueInterface = colorDD->imageInterface();
 				getIntensityMinMax( hueInterface, &baseColorMin, &baseColorMax );
 
 				for ( DisplayDataHolder::DisplayDataIterator iter = allImages->beginDD();
@@ -288,7 +288,7 @@ namespace casa {
 					if ( (*iter) != saturationDD ){
 						double intensityMin;
 						double intensityMax;
-						ImageInterface<float>* ddInterface = (*iter)->imageInterface();
+                        std::tr1::shared_ptr<ImageInterface<float> > ddInterface = (*iter)->imageInterface();
 						getIntensityMinMax( ddInterface, &intensityMin, &intensityMax );
 						ddMap = generateMasterDefinition( hueDefinition,
 								baseColorMin, baseColorMax, intensityMin, intensityMax );
@@ -425,7 +425,7 @@ namespace casa {
 	}
 
 
-	bool ImageManagerDialog::getIntensityMinMax( ImageInterface<float>* img,
+	bool ImageManagerDialog::getIntensityMinMax( std::tr1::shared_ptr<ImageInterface<float> > img,
 	        double* intensityMin, double* intensityMax ) {
 		ImageStatistics<Float> stats(*img, False);
 		bool success = true;

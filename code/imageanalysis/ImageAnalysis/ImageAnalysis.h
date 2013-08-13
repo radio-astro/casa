@@ -40,6 +40,7 @@
 #include <measures/Measures/Stokes.h>
 
 #include <memory>
+#include <tr1/memory>
 
 namespace casa {
 
@@ -83,6 +84,7 @@ class ImageAnalysis
 
     ImageAnalysis();
 
+    ImageAnalysis(const std::tr1::shared_ptr<ImageInterface<Float> > image);
     //ImageInterface constructor
     ImageAnalysis(const ImageInterface<Float>* inImage);
     
@@ -555,7 +557,7 @@ class ImageAnalysis
     Bool fromRecord(const RecordInterface& rec, const String& imagename="");
 
     // get the associated ImageInterface object
-    const ImageInterface<Float>* getImage() const;
+    std::tr1::shared_ptr<const ImageInterface<Float> > getImage() const;
 
     // If file name empty make TempImage (allowTemp=T) or do nothing.
     // Otherwise, make a PagedImage from file name and copy mask and
@@ -574,7 +576,7 @@ class ImageAnalysis
 
  private:
     
-    std::auto_ptr<ImageInterface<Float> > _image;
+    std::tr1::shared_ptr<ImageInterface<Float> > _image;
     std::auto_ptr<LogIO> _log;
 
     // Having private version of IS and IH means that they will

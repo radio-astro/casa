@@ -64,6 +64,8 @@
 #include <display/DisplayErrors.h>
 #include <display/DisplayDatas/PrincipalAxesDD.h>
 
+#include <tr1/memory>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	namespace viewer {
@@ -859,7 +861,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void QtDisplayPanelGui::resetListenerImage() {
 		QtDisplayData* controllingDD = dd();
 		if ( controllingDD != NULL ) {
-			ImageInterface<float>* img = /*pdd*/controllingDD->imageInterface();
+			std::tr1::shared_ptr<ImageInterface<float> > img = /*pdd*/controllingDD->imageInterface();
 			if ( sliceTool != NULL ) {
 				sliceTool->setImage( img );
 			}
@@ -879,7 +881,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		} else {
 			if ( histogrammer != NULL ) {
-				histogrammer->setImage( NULL );
+				histogrammer->setImage( std::tr1::shared_ptr<ImageInterface<Float> >() );
 			}
 
 		}
@@ -975,11 +977,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if ( fitTool != NULL ) {
 			QtDisplayData* controllingDD = dd();
 			if ( controllingDD != NULL ) {
-				ImageInterface<float>* img = controllingDD->imageInterface();
+				std::tr1::shared_ptr<const ImageInterface<Float> > img = controllingDD->imageInterface();
 				fitTool->setImage( img );
 			}
 			else {
-				fitTool->setImage( NULL );
+				std::tr1::shared_ptr<const ImageInterface<Float> > p;
+				fitTool->setImage( p);
 			}
 		}
 	}
@@ -1283,10 +1286,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 
-	void QtDisplayPanelGui::addDD(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img) {
+	void QtDisplayPanelGui::addDD(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, std::tr1::shared_ptr<ImageInterface<Float> > img) {
 		// create a new DD
 		QtDisplayData* dd = NULL;
-		if ( img == NULL ) {
+		if ( ! img ) {
 			createDD(path, dataType, displayType, autoRegister);
 		} else {
 			dd =new QtDisplayData( this, path, dataType, displayType);
@@ -1430,10 +1433,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			regionDock_->updateRegionStats( );
 		}
 		if ( fitTool != NULL ) {
-			fitTool->setImage( NULL );
+			std::tr1::shared_ptr<const ImageInterface<Float> > p;
+			fitTool->setImage( p );
 		}
 		if ( histogrammer != NULL ) {
-			histogrammer->setImage( NULL );
+			std::tr1::shared_ptr< ImageInterface<Float> > p;
+
+			histogrammer->setImage( p );
 		}
 
 		updateFrameInformation();
@@ -1544,9 +1550,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			iter--;
 			QtDisplayData* pdd = (*iter);
 			if ( pdd != 0 && pdd->isImage() ) {
-				ImageInterface<float>* img = pdd->imageInterface( );
+				std::tr1::shared_ptr<ImageInterface<float> > img = pdd->imageInterface( );
 				PanelDisplay* ppd = qdp_->panelDisplay( );
-				if ( ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0 ) {
+				if ( ppd != 0 && ppd->isCSmaster(pdd->dd()) && img ) {
 					ctrld = pdd;
 					break;
 				}
@@ -1659,13 +1665,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			iter++;
 			if(pdd != 0) {
-				ImageInterface<float>* img = pdd->imageInterface();
+				std::tr1::shared_ptr<ImageInterface<float> > img = pdd->imageInterface();
 
 				PanelDisplay* ppd = qdp_->panelDisplay();
 				//cout << "ppd->isCSmaster="
 				//      << ppd->isCSmaster(pdd->dd()) << endl;
 				if (ppd != 0 && ppd->isCSmaster(pdd->dd())) {
-					if (pdd->isImage() && img !=0) {
+					if (pdd->isImage() && img ) {
 						if ( fboxAct_ ) fboxAct_->setEnabled(True);
 						if ( mkRgnAct_ ) mkRgnAct_->setEnabled(True);
 						if ( annotAct_ ) annotAct_->setEnabled(True);
@@ -2058,9 +2064,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			iter++;
 			if(pdd != 0 && pdd->dataType() == "image") {
 
-				ImageInterface<float>* img = pdd->imageInterface();
+				std::tr1::shared_ptr<ImageInterface<float> > img = pdd->imageInterface();
 				PanelDisplay* ppd = qdp_->panelDisplay();
-				if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
+				if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img ) {
 					connect(qmr_,  SIGNAL(hideRegionInImage()),
 					        SLOT(hideMakeRegionPanel()));
 					qmr_->showNormal();
@@ -2098,9 +2104,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			QtDisplayData* pdd = (*iter);
 			if(pdd != 0 && pdd->isImage()) {
 
-				ImageInterface<float>* img = pdd->imageInterface();
+				std::tr1::shared_ptr<ImageInterface<float> > img = pdd->imageInterface();
 				PanelDisplay* ppd = qdp_->panelDisplay();
-				if (ppd != 0 && img != 0) {
+				if (ppd != 0 && img ) {
 
 					if (ppd->isCSmaster(pdd->dd())) {
 

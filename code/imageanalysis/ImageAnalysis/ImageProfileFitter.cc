@@ -46,7 +46,7 @@ namespace casa {
 const String ImageProfileFitter::_class = "ImageProfileFitter";
 
 ImageProfileFitter::ImageProfileFitter(
-	const ImageInterface<Float> *const &image, const String& region,
+		const ImageTask::shCImFloat image, const String& region,
 	const Record *const &regionPtr,	const String& box,
 	const String& chans, const String& stokes,
 	const String& mask, const Int axis,
@@ -67,7 +67,7 @@ ImageProfileFitter::ImageProfileFitter(
 	_minGoodPoints(0), _results(Record()),
 	_nonPolyEstimates(SpectralList()), _goodAmpRange(Vector<Double>(0)),
 	_goodCenterRange(Vector<Double>(0)), _goodFWHMRange(Vector<Double>(0)),
-	_sigma(0), _abscissaDivisor(1.0) {
+	_sigma(), _abscissaDivisor(1.0) {
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
     if (! estimatesFilename.empty()) {
     	if (spectralList.nelements() > 0) {
@@ -181,9 +181,10 @@ Record ImageProfileFitter::fit() {
     	std::auto_ptr<ImageInterface<Float> > clone(
     		_getImage()->cloneII()
     	);
-    	_subImage = SubImageFactory<Float>::createSubImage(
-    		*clone, *_getRegion(),
-    		_getMask(), 0, False, AxesSpecifier(), _getStretch()
+    	 _subImage.reset( new SubImage<Float>(SubImageFactory<Float>::createSubImage(
+    			*clone, *_getRegion(),
+    			_getMask(), 0, False, AxesSpecifier(), _getStretch()
+))
     	);
     	if (_sigma.get()) {
     		if (! _sigmaName.empty()) {
@@ -205,17 +206,17 @@ Record ImageProfileFitter::fit() {
 	try {
 		if (! _multiFit) {
 			ImageCollapser collapser(
-				&_subImage, IPosition(1, _fitAxis), True,
+				_subImage, IPosition(1, _fitAxis), True,
 				ImageCollapser::MEAN, "", True
 			);
 			std::auto_ptr<ImageInterface<Float> > x(
 				collapser.collapse(True)
 			);
 			// _subImage needs to be a SubImage<Float> object
-			_subImage = SubImageFactory<Float>::createSubImage(
+			_subImage.reset(new SubImage<Float>(SubImageFactory<Float>::createSubImage(
 				*x, Record(), "", _getLog().get(),
 				False, AxesSpecifier(), False
-			);
+			)));
 			if (_sigma.get()) {
 				Array<Bool> sigmaMask = _sigma->get() != Array<Float>(_sigma->shape(), 0.0);
 				if (anyTrue(! sigmaMask)) {
@@ -228,7 +229,7 @@ Record ImageProfileFitter::fit() {
 					_sigma->pixelMask().put(sigmaMask);
 				}
 				ImageCollapser collapsedSigma(
-					_sigma.get(), IPosition(1, _fitAxis), True,
+					_sigma, IPosition(1, _fitAxis), True,
 					ImageCollapser::MEAN, "", True
 				);
 				_sigma.reset(
@@ -248,7 +249,7 @@ Record ImageProfileFitter::fit() {
 
 	ImageProfileFitterResults resultHandler(
 		_getLog(), _getImage()->coordinates(), &_fitters,
-		_nonPolyEstimates, &_subImage, _polyOrder,
+		_nonPolyEstimates, _subImage, _polyOrder,
 		_fitAxis, _nGaussSinglets, _nGaussMultiplets,
 		_nLorentzSinglets, _nPLPCoeffs, _nLTPCoeffs, _logResults,
 		_multiFit, _getLogFile(), _xUnit, _summaryHeader()
@@ -510,7 +511,7 @@ void ImageProfileFitter::_finishConstruction() {
 }
 
 Bool ImageProfileFitter::_inVelocitySpace() const {
-	return _fitAxis == _subImage.coordinates().spectralAxisNumber()
+	return _fitAxis == _subImage->coordinates().spectralAxisNumber()
 		&& Quantity(1, _xUnit).isConform("m/s");
 }
 
@@ -532,8 +533,8 @@ Double ImageProfileFitter::getWorldValue(
 	Vector<Double> world(pixel.size());
 	// in pixels here
 	pixel[_fitAxis] = pixelVal;
-	_subImage.coordinates().toWorld(world, pixel);
-	SpectralCoordinate spectCoord = _subImage.coordinates().spectralCoordinate();
+	_subImage->coordinates().toWorld(world, pixel);
+	SpectralCoordinate spectCoord = _subImage->coordinates().spectralCoordinate();
 	Double convertedVal;
 	if (velocity) {
 		spectCoord.setVelocity( units );
@@ -555,9 +556,9 @@ Double ImageProfileFitter::getWorldValue(
 
 void ImageProfileFitter::_fitallprofiles() {
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
-	IPosition imageShape = _subImage.shape();
+	IPosition imageShape = _subImage->shape();
 	// Set default axis
-	CoordinateSystem cSys = _subImage.coordinates();
+	CoordinateSystem cSys = _subImage->coordinates();
 	Int pAxis = CoordinateUtil::findSpectralAxis(cSys);
 	Int axis2 = _fitAxis;
 	if (axis2 < 0) {
@@ -565,7 +566,7 @@ void ImageProfileFitter::_fitallprofiles() {
 			axis2 = pAxis;
 		}
 		else {
-			axis2 = _subImage.ndim() - 1;
+			axis2 = _subImage->ndim() - 1;
 		}
 	}
 	// Create output images with a mask
@@ -573,7 +574,7 @@ void ImageProfileFitter::_fitallprofiles() {
 	if (
 		! _model.empty()
 		&& ! ImageAnalysis::makeExternalImage(
-			fitImage, _model, cSys, imageShape, _subImage,
+			fitImage, _model, cSys, imageShape, *_subImage,
 			*_getLog(), True, False, True
 		)
 	) {
@@ -583,7 +584,7 @@ void ImageProfileFitter::_fitallprofiles() {
 		! _residual.empty()
 		&& ! ImageAnalysis::makeExternalImage(
 			residImage, _residual, cSys, imageShape,
-			_subImage, *_getLog(), True, False, True
+			*_subImage, *_getLog(), True, False, True
 		)
 	) {
 		*_getLog() << LogIO::WARN << "Failed to create residual image" << LogIO::POST;
@@ -609,7 +610,7 @@ void ImageProfileFitter::_fitProfiles(
 	const std::auto_ptr<ImageInterface<Float> >& pResid,
     const Bool showProgress
 ) {
-	IPosition inShape = _subImage.shape();
+	IPosition inShape = _subImage->shape();
 	if (pFit.get()) {
 		AlwaysAssert(inShape.isEqual(pFit->shape()), AipsError);
 	}
@@ -619,7 +620,7 @@ void ImageProfileFitter::_fitProfiles(
 
 	// Check axis
 
-	const uInt nDim = _subImage.ndim();
+	const uInt nDim = _subImage->ndim();
 
 	// Progress Meter
 
@@ -660,7 +661,7 @@ void ImageProfileFitter::_fitProfiles(
 	Array<Bool> resultMask(sliceShape);
 
     String doppler = "";
-	CoordinateSystem csys = _subImage.coordinates();
+	CoordinateSystem csys = _subImage->coordinates();
 	ImageUtilities::getUnitAndDoppler(
 		_xUnit, doppler, _fitAxis, csys
 	);
@@ -675,9 +676,9 @@ void ImageProfileFitter::_fitProfiles(
 		*_getLog() << errMsg << LogIO::EXCEPTION;
 	}
 
-	IPosition inTileShape = _subImage.niceCursorShape();
-	TiledLineStepper stepper (_subImage.shape(), inTileShape, _fitAxis);
-	RO_MaskedLatticeIterator<Float> inIter(_subImage, stepper);
+	IPosition inTileShape = _subImage->niceCursorShape();
+	TiledLineStepper stepper (_subImage->shape(), inTileShape, _fitAxis);
+	RO_MaskedLatticeIterator<Float> inIter(*_subImage, stepper);
 
 	uInt nProfiles = 0;
 	uInt nFit = 0;
@@ -687,12 +688,12 @@ void ImageProfileFitter::_fitProfiles(
 	Int nPoints = fitterShape.product();
 	uInt count = 0;
 	vector<IPosition> goodPos(0);
-	Bool checkMinPts = _minGoodPoints > 0 && _subImage.isMasked();
+	Bool checkMinPts = _minGoodPoints > 0 && _subImage->isMasked();
 	SpectralList newEstimates = _nonPolyEstimates;
 
 	ImageFit1D<Float> fitter = (_sigma.get() == 0)
-		? ImageFit1D<Float>(_subImage, _fitAxis)
-		: ImageFit1D<Float>(_subImage, *_sigma, _fitAxis);
+		? ImageFit1D<Float>(*_subImage, _fitAxis)
+		: ImageFit1D<Float>(*_subImage, *_sigma, _fitAxis);
 
 	Bool isSpectral = _fitAxis == csys.spectralAxisNumber();
 
@@ -742,7 +743,7 @@ void ImageProfileFitter::_fitProfiles(
 			sliceShape = 1;
 			sliceShape[_fitAxis] = inShape[_fitAxis];
 			if (
-				ntrue(_subImage.getMaskSlice(curPos, sliceShape, True))
+				ntrue(_subImage->getMaskSlice(curPos, sliceShape, True))
 				< _minGoodPoints
 			) {
 				// not enough good points, just use the dummy fitter

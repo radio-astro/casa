@@ -469,7 +469,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		switch (saveType_) {
 		case IMAGE: {
-			ImageInterface<Float>* img = qdd->imageInterface();
+			std::tr1::shared_ptr<ImageInterface<Float> > img = qdd->imageInterface();
 			if (!img) {
 				// it should not get to here
 				QString msg = "The selected display does not contain a\n float image. Complex images can NOT be exported!";
@@ -478,9 +478,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			} else {
 				String outFile((fInfo.absoluteFilePath()).toStdString());
 				if (formatBox_->currentText().contains("FITS")) {
-					expImageInterfaceToFITS(img, outFile);
+					expImageInterfaceToFITS(img.get(), outFile);
 				} else if (formatBox_->currentText().contains("CASA")) {
-					expImageInterfaceToCASA(img, outFile);
+					expImageInterfaceToCASA(img.get(), outFile);
 				}
 				//else if (formatBox_->currentText().contains("MIRIAD")){
 				//	expImageInterfaceToMIRIAD(img, outFile);

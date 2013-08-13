@@ -49,6 +49,8 @@
 
 #include <casa/Arrays/Vector.h>
 
+#include <tr1/memory>
+
 extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char *func );
 #define DISPLAY_PURE_VIRTUAL(FUNCTION,RESULT) \
   { casa_viewer_pure_virtual( __FILE__, __LINE__, #FUNCTION ); return RESULT; }
@@ -58,6 +60,7 @@ namespace casa {
 	class WorldCanvas;
 	class PrincipalAxesDD;
 	template <class T> class ImageInterface;
+
 	class ImageRegion;
 	class DisplayData;
 	class HistogramTab;
@@ -515,7 +518,7 @@ namespace casa {
 			inline double linear_average( double a, double b ) const {
 				return (a + b) / 2.0;
 			}
-			RegionInfo::center_t *getLayerCenter( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg);
+			RegionInfo::center_t *getLayerCenter( PrincipalAxesDD *padd, std::tr1::shared_ptr<ImageInterface<Float> > image, ImageRegion& imgReg);
 			RegionInfo::stats_t  *getLayerStats( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg );
 
 			region::Units current_xunits( ) const;

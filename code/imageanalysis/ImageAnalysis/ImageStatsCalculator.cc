@@ -40,7 +40,7 @@ const String ImageStatsCalculator::_class = "ImageStatsCalculator";
 
 
 ImageStatsCalculator::ImageStatsCalculator(
-	const ImageInterface<Float> *const &image,
+		const ImageTask::shCImFloat image,
 	const Record *const &regionPtr,
 	const String& maskInp,
 	Bool beVerboseDuringConstruction

@@ -35,6 +35,8 @@
 
 #include <casa/namespace.h>
 
+#include <tr1/memory>
+
 namespace casa {
 
 class PeakIntensityFluxDensityConverter : public ImageTask {
@@ -65,7 +67,7 @@ public:
 
 	// Specify image to get beam and coordinate info from
 	PeakIntensityFluxDensityConverter(
-		const ImageInterface<Float> *const image
+		const ImageTask::shCImFloat image
 	);
 
 	// destructor
