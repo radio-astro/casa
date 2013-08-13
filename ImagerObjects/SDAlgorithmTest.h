@@ -26,8 +26,8 @@
 //#
 //# $Id$
 
-#ifndef SYNTHESIS_SDALGORITHMHOGBOMCLEAN_H
-#define SYNTHESIS_SDALGORITHMHOGBOMCLEAN_H
+#ifndef SYNTHESIS_SDALGORITHMTEST_H
+#define SYNTHESIS_SDALGORITHMTEST_H
 
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <synthesis/MeasurementComponents/SkyModel.h>
@@ -47,24 +47,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class SIMinorCycleController;
 
 
-  class SDAlgorithmHogbomClean : public SDAlgorithmBase 
+  class SDAlgorithmTest : public SDAlgorithmBase 
   {
   public:
     
     // Empty constructor
-    SDAlgorithmHogbomClean();
-    virtual  ~SDAlgorithmHogbomClean();
+    SDAlgorithmTest();
+    virtual  ~SDAlgorithmTest();
     
     virtual void restore( CountedPtr<SIImageStore> imagestore );
     
   protected:
     
     // Local functions to be overloaded by various algorithm deconvolvers.
-    virtual void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int &iterdone );
+    virtual void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int& iterdone );
     virtual void initializeDeconvolver( Float &peakresidual, Float &modelflux );
     virtual void finalizeDeconvolver();
     virtual void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
     
+    // ....
+
+    //    Bool findMaxAbs(const Matrix<Float>& lattice,Float& maxAbs,IPosition& posMaxAbs);
+
+    void calculatePatchBoundaries();
+    void makeBoxesSameSize(IPosition& blc1, IPosition& trc1, IPosition &blc2, IPosition& trc2);
+
 
     /*
     void findNextComponent( Float loopgain );
@@ -78,8 +85,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Float itsPeakResidual;
     Float itsModelFlux;
 
-    Array<Float> itsMatMask;
-
+    //    IPositions for patch boundaries.
+    IPosition itsBlc, itsTrc, itsBlcPsf, itsTrcPsf;
     
   };
 

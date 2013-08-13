@@ -30,7 +30,7 @@
 #define SYNTHESIS_SDALGORITHMBASE_H
 
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <synthesis/MeasurementComponents/SkyModel.h>
+//#include <synthesis/MeasurementComponents/SkyModel.h>
 #include <casa/Arrays/Matrix.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
@@ -38,6 +38,12 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/System/PGPlotter.h>
+
+#include <casa/aips.h>
+#include <images/Images/ImageInterface.h>
+#include <components/ComponentModels/ComponentList.h>
+#include <casa/BasicSL/String.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
 
 #include<synthesis/ImagerObjects/SDMaskHandler.h>
 #include<synthesis/ImagerObjects/SIImageStore.h>
@@ -66,15 +72,16 @@ public:
 protected:
 
   // Local functions to be overloaded by various algorithm deconvolvers.
-  virtual void takeOneStep( Float loopgain, Float &peakresidual, Float &modelflux );
-  virtual void initializeDeconvolver( Float &peakresidual, Float &modelflux );
-  virtual void finalizeDeconvolver(){};
+  virtual void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int& iterdone )=0;
+  virtual void initializeDeconvolver( Float &peakresidual, Float &modelflux )=0;
+  virtual void finalizeDeconvolver()=0;
   virtual void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
 
   // Non virtual. Implemented only in the base class.
   Bool checkStop( SIMinorCycleController &loopcontrols, Float currentresidual );
   void partitionImages();
   void initializeSubImages(uInt subim);
+  Bool findMaxAbs(const Matrix<Float>& lattice,Float& maxAbs,IPosition& posMaxAbs);
 
   // Algorithm name
   String itsAlgorithmName;

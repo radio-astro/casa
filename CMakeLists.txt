@@ -336,6 +336,7 @@ casa_add_library( synthesis
  ImagerObjects/SynthesisDeconvolver.cc
  ImagerObjects/SDAlgorithmBase.cc
  ImagerObjects/SDAlgorithmHogbomClean.cc
+ ImagerObjects/SDAlgorithmTest.cc
  ImagerObjects/SDMaskHandler.cc
  ImagerObjects/SynthesisParSync.cc
   )
@@ -635,6 +636,7 @@ install (FILES
 	ImagerObjects/SynthesisParSync.h
 	ImagerObjects/SDAlgorithmBase.h
 	ImagerObjects/SDAlgorithmHogbomClean.h
+	ImagerObjects/SDAlgorithmTest.h
 	DESTINATION include/casacode/synthesis/ImagerObjects
 	)
 install (FILES
