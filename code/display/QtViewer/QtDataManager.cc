@@ -1177,19 +1177,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         if ( controlling_velocities.size( ) > 0 ) {
              std::vector<double> new_velocities(image_properties.velocities( ));
              if ( new_velocities.size( ) > 0 ) {
-                  if ( new_velocities.size( ) <= controlling_velocities.size( ) ) {
-                       bool matched = true;
-                       for ( std::vector<double>::iterator newiter=new_velocities.begin( ), controliter=controlling_velocities.begin( );
-                             newiter != new_velocities.end( ) && controliter != controlling_velocities.end( );
-                             ++newiter, ++controliter ) {
-                            if ( *newiter != *controliter ) {
-                                 matched = false;
-                                 break;
-                            }
+                  bool matched = true;
+                  unsigned int COUNT=0;
+                  for ( std::vector<double>::iterator newiter=new_velocities.begin( ), controliter=controlling_velocities.begin( );
+                        newiter != new_velocities.end( ) && controliter != controlling_velocities.end( );
+                        ++newiter, ++controliter ) {
+                       if ( *newiter != *controliter ) {
+                            matched = false;
+                            break;
                        }
-                       if ( matched != true ) {
-                            regrid->setDisabled(false);
-                       }
+                  }
+                  if ( matched != true ) {
+                       regrid->setDisabled(false);
                   }
              }
         }
