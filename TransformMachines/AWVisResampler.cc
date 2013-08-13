@@ -363,14 +363,24 @@ namespace casa{
 	  {
 	    grad = (ix-convOrigin[0])*pointingOffset[0];
 	    Double sx,cx;
+#if defined(__APPLE__)
+	    sx = sin(grad);
+	    cx = cos(grad);
+#else
 	    sincos(grad,&sx,&cx);
+#endif
 	    //	    phx = Complex(cos(grad),sin(grad));
 	    phx = Complex(cx,sx);
 	    for(Int iy=0;iy<ny;iy++)
 	      {
 		grad = (iy-convOrigin[1])*pointingOffset[1];
 		Double sy,cy;
+#if defined(__APPLE__)
+	    sy = sin(grad);
+	    cy = cos(grad);
+#else
 		sincos(grad,&sy,&cy);
+#endif
 		//		phy = Complex(cos(grad),sin(grad));
 		phy = Complex(cy,sy);
 		cached_phaseGrad_p(ix,iy)=phx*phy;
@@ -895,7 +905,12 @@ void AWVisResampler::sgrid(Vector<Double>& pos, Vector<Int>& loc,
     {
       phase=-2.0*C::pi*dphase*freq/C::c;
       Double sp,cp;
+#if defined(__APPLE__)
+      sp = sin(phase);
+      cp = cos(phase);
+#else
       sincos(phase,&sp,&cp);
+#endif
       //      phasor=Complex(cos(phase), sin(phase));
       phasor=Complex(cp,sp);
     }
