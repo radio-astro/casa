@@ -2330,8 +2330,9 @@ class cleanhelper:
             finc = newfreqs[1]-newfreqs[0]
             if debug: print "finc(newfreqs1-newfreqs0)=",finc
           if mode=="frequency":
-            if descendingnewfreqs:
-              finc = -finc
+            # It seems that this is no longer necessary... TT 2013-08-12
+            #if descendingnewfreqs:
+            #  finc = -finc
             retwidth=str(finc)+'Hz'
           elif mode=="velocity":
             # for default width assume it is vel<0 (incresing in freq)
