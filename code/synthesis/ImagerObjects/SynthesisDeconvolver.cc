@@ -124,7 +124,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	if(algorithm==String("test")) 
 	  {
-	    itsDeconvolver = new SDAlgorithmBase(); 
+	    itsDeconvolver = new SDAlgorithmTest(); 
 	  }
 	else if(algorithm==String("hogbom"))
 	  {

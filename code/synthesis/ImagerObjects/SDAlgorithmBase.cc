@@ -105,8 +105,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	initializeSubImages( subimageid );
 
 	Int startiteration = loopcontrols.getIterDone();
-	Float peakresidual;
-	Float modelflux;
+	Float peakresidual=0.0;
+	Float modelflux=0.0;
+	Int iterdone=0;
 
 	initializeDeconvolver( peakresidual, modelflux );
 
@@ -118,9 +119,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // Optionally, fiddle with maskhandler for autoboxing.... 
 	    // mask = maskhandler->makeAutoBox();
 	    
-	    takeOneStep( loopcontrols.getLoopGain(), peakresidual, modelflux );
+	    takeOneStep( loopcontrols.getLoopGain(), 
+			 loopcontrols.getCycleNiter(), 
+			 loopcontrols.getCycleThreshold(),
+			 peakresidual, 
+			 modelflux,
+			 iterdone);
 
-	    loopcontrols.incrementMinorCycleCount( );
+	    loopcontrols.incrementMinorCycleCount( iterdone );
 	    loopcontrols.setPeakResidual( peakresidual );
 	    loopcontrols.addSummaryMinor( deconvolverid, subimageid, modelflux, peakresidual );
 	  }// end of minor cycle iterations for this subimage.
@@ -147,25 +153,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return loopcontrols.majorCycleRequired(currentresidual);
   }
 
-  void SDAlgorithmBase::initializeDeconvolver( Float &peakresidual, Float &modelflux )
-  {
-    tmpPos_p = itsResidual.shape()/2;
-    peakresidual = itsResidual.getAt(tmpPos_p);
-    modelflux = itsModel.getAt(tmpPos_p);
-  }
-
-  void SDAlgorithmBase::takeOneStep( Float loopgain, Float &peakresidual, Float &modelflux)
-  {
-
-    itsComp =  loopgain * itsResidual.getAt(tmpPos_p);
-    itsModel.putAt( itsModel.getAt(tmpPos_p) + itsComp  , tmpPos_p );
-    itsResidual.putAt( itsResidual.getAt(tmpPos_p) - itsComp  , tmpPos_p );
-
-    peakresidual = itsResidual.getAt(tmpPos_p);
-    modelflux = itsModel.getAt(tmpPos_p);
-  }	    
-
-  void SDAlgorithmBase::restore(CountedPtr<SIImageStore> imagestore )
+   void SDAlgorithmBase::restore(CountedPtr<SIImageStore> imagestore )
   {
 
     LogIO os( LogOrigin("SDAlgorithmBase","restore",WHERE) );
@@ -248,5 +236,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsModel = SubImage<Float>( *(itsImages->model()), itsDecSlices[subim], True );
   }
 
+
+  /////////// Helper Functions for all deconvolvers to use if they need it.
+
+  Bool SDAlgorithmBase::findMaxAbs(const Matrix<Float>& lattice,
+					  Float& maxAbs,
+					  IPosition& posMaxAbs)
+  {
+    
+    posMaxAbs = IPosition(lattice.shape().nelements(), 0);
+    maxAbs=0.0;
+    
+    Float minVal;
+    IPosition posmin(lattice.shape().nelements(), 0);
+    minMax(minVal, maxAbs, posmin, posMaxAbs, lattice);
+    //cout << "min " << minVal << "  " << maxAbs << "   " << max(lattice) << endl;
+    if(abs(minVal) > abs(maxAbs)){
+      maxAbs=minVal;
+      posMaxAbs=posmin;
+    }
+    return True;
+  }
+  
+  
+  
 } //# NAMESPACE CASA - END
 

@@ -28,7 +28,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
                                        ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='hogbom',\
+                                       algo='test',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
@@ -44,7 +44,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
                                        ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='hogbom',\
+                                       algo='test',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
@@ -59,7 +59,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
                                        ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='hogbom',\
+                                       algo='test',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
@@ -76,7 +76,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
                                        ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='hogbom',\
+                                       algo='test',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
@@ -90,7 +90,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
                                        ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='hogbom',\
+                                       algo='test',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
