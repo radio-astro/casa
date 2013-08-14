@@ -348,14 +348,15 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
             for intent in intent_list:
                 re_intent = intent.replace('*', '.*')
                 intent_fields.update(
-                  [fld.name for fld in fields if
+                  [(fld.name,fld.id) for fld in fields if
                   re.search(pattern=re_intent, string=str(fld.intents))])
             intent_fields = list(intent_fields)
 
             for description in result.qa2.descriptions():
                 add = False
                 for intent_field in intent_fields:
-                    if 'Field:%s' % intent_field in description:
+                    if ('Field:%s' % intent_field[0] in description) and \
+                      ('ID:%s' % intent_field[1] in description):
                         add = True
                         break
                 
