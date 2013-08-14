@@ -54,7 +54,8 @@ class ResultBase(object):
         fields = [('File',temp), 
                   ('Intent',self.intent),
                   ('Field',self.fieldname),
-                  ('Spw',self.spw),
+                  ('ID',self.field_id),
+                  ('SpW',self.spw),
                   ('Pol',self.pol),
                   ('Ant',self.ant),
                   ('Time',tstring)]
