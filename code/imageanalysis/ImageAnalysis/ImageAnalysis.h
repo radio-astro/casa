@@ -84,7 +84,8 @@ class ImageAnalysis
 
     ImageAnalysis();
 
-    ImageAnalysis(const std::tr1::shared_ptr<ImageInterface<Float> > image);
+    ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Float> > image);
+    /*
     //ImageInterface constructor
     ImageAnalysis(const ImageInterface<Float>* inImage);
     
@@ -92,17 +93,17 @@ class ImageAnalysis
     // to take over management of the input pointer. The input pointer will be deleted
     // when this object is destroyed.
     ImageAnalysis(ImageInterface<Float>* inImage, const Bool cloneInputPointer);
-
+*/
     virtual ~ImageAnalysis();
 
     Bool addnoise(const String& type, const Vector<Double>& pars,
                   Record& region, const Bool zero = False);
 
-    ImageInterface<Float> * imagecalc(const String& outfile, 
+    std::tr1::shared_ptr<ImageInterface<Float> > imagecalc(const String& outfile, 
                                       const String& pixels, 
                                       const Bool overwrite = False);
 
-    ImageInterface<Float> * imageconcat(const String& outfile, 
+    std::tr1::shared_ptr<ImageInterface<Float> > imageconcat(const String& outfile, 
                                         const Vector<String>& infiles, 
                                         const Int axis, 
                                         const Bool relax = False, 

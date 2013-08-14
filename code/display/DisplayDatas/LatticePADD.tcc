@@ -162,15 +162,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // >2d image-based ctor
 	template <class T>
-	LatticePADisplayData<T>::LatticePADisplayData(ImageInterface<T> *image,
+	LatticePADisplayData<T>::LatticePADisplayData(std::tr1::shared_ptr<ImageInterface<T> > image,
 	        const uInt xAxis,
 	        const uInt yAxis,
 	        const uInt mAxis,
 	        const IPosition fixedPos, viewer::StatusSink *sink ) :
 		PrincipalAxesDD(xAxis, yAxis, mAxis, True, sink),
-		itsBaseImagePtr(0),
+		itsBaseImagePtr(),
 		itsBaseArrayPtr(0),
-		itsMaskedLatticePtr(0),
+		itsMaskedLatticePtr(),
 		itsDeleteMLPointer(False),
 		itsLatticeStatisticsPtr(0),
 		itsRegionPtr(0),
@@ -178,7 +178,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsDataUnit(image->units()),
 		itsComplexToRealMethod(Display::Magnitude) {
 
-		itsBaseImagePtr = image->cloneII();
+		itsBaseImagePtr.reset(image->cloneII());
 		itsMaskedLatticePtr = itsBaseImagePtr;
 		updateLatticeStatistics();
 
@@ -196,20 +196,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // 2d image-based ctor
 	template <class T>
-	LatticePADisplayData<T>::LatticePADisplayData(ImageInterface<T> *image,
+	LatticePADisplayData<T>::LatticePADisplayData(std::tr1::shared_ptr<ImageInterface<T> > image,
 	        const uInt xAxis,
 	        const uInt yAxis) :
 		PrincipalAxesDD(xAxis, yAxis),
-		itsBaseImagePtr(0),
+		itsBaseImagePtr(),
 		itsBaseArrayPtr(0),
-		itsMaskedLatticePtr(0),
+		itsMaskedLatticePtr(),
 		itsDeleteMLPointer(False),
 		itsLatticeStatisticsPtr(0),
 		itsRegionPtr(0),
 		itsMaskPtr(0),
 		itsDataUnit(image->units()),
 		itsComplexToRealMethod(Display::Magnitude) {
-		itsBaseImagePtr = image->cloneII();
+		itsBaseImagePtr.reset(image->cloneII());
 		itsMaskedLatticePtr = itsBaseImagePtr;
 		updateLatticeStatistics();
 
@@ -237,14 +237,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (itsLatticeStatisticsPtr) {
 			delete itsLatticeStatisticsPtr;
 		}
-		if (itsDeleteMLPointer && itsMaskedLatticePtr) {
-			delete itsMaskedLatticePtr;
-		}
 		if (itsBaseArrayPtr) {
 			delete itsBaseArrayPtr;
-		}
-		if (itsBaseImagePtr) {
-			delete itsBaseImagePtr;
 		}
 		if (itsResampleHandler) {
 			delete itsResampleHandler;
@@ -461,10 +455,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // be true
 
 				AlwaysAssert(itsDeleteMLPointer, AipsError);
-				if (itsMaskedLatticePtr) {
-					delete itsMaskedLatticePtr;
-				}
-				itsMaskedLatticePtr = new SubLattice<T>(ArrayLattice<T>(array));
+				itsMaskedLatticePtr.reset(new SubLattice<T>(ArrayLattice<T>(array)));
 				updateLatticeStatistics();
 				setAxes(displayAxes()[0], displayAxes()[1],
 				        displayAxes()[2], fixedPosition());
@@ -533,16 +524,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				}
 //
 				if (itsDeleteMLPointer && itsMaskedLatticePtr) {
-					delete itsMaskedLatticePtr;
+					itsMaskedLatticePtr.reset();
 				}
-				itsMaskedLatticePtr = 0;
+				itsMaskedLatticePtr.reset();
 
 // If pImage is now null, it means both region and mask are now unset
 // so we return to the base image
 
 				CoordinateSystem cSysOld = originalCoordinateSystem();
 				if (pImage) {
-					itsMaskedLatticePtr = pImage;
+					itsMaskedLatticePtr.reset(pImage);
 					itsDeleteMLPointer = True;
 					newHistNeeded = True;
 
@@ -1151,11 +1142,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void LatticePADisplayData<T>::SetUpBeamData_() {
 		// Called by constructors: set up data for beam drawing, if applicable.
 
-		if(itsBaseImagePtr==0) return;
+		if(! itsBaseImagePtr) return;
 
 		viewer::ImageProperties info;
 		try {
-			info = itsBaseImagePtr;
+			// implicit constructor
+			info = viewer::ImageProperties(itsBaseImagePtr);
 		} catch(...) { }
 		beams_ = info.restoringBeams( );
 

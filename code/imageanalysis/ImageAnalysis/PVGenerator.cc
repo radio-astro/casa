@@ -160,7 +160,6 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	*_getLog() << LogIO::NORMAL << "Rotating image by "
 		<< (paInRad*180/C::pi)
 		<< " degrees to align specified slice with the x axis" << LogIO::POST;
-
 	Vector<Double> worldStart, worldEnd;
 	const DirectionCoordinate& dc1 = subCoords.directionCoordinate();
 	dc1.toWorld(worldStart, Vector<Double>(start));
@@ -186,8 +185,7 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	);
 	Double padNumber = max(0.0, 1 - startPixRot[0]);
 	padNumber = max(padNumber, -(startPixRot[1] - halfwidth - 1));
-	ImageInterface<Float> *imageToRotate = subImage.get();
-	std::auto_ptr<ImageInterface<Float> > padded;
+	std::tr1::shared_ptr<ImageInterface<Float> > imageToRotate = subImage;
 	Int nPixels = 0;
 	if (padNumber > 0) {
 		nPixels = (Int)padNumber + 1;
@@ -197,8 +195,7 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 			<< LogIO::POST;
 		ImagePadder padder(subImage);
 		padder.setPaddingPixels(nPixels);
-		padded.reset(padder.pad(True));
-		imageToRotate = padded.get();
+		imageToRotate.reset(padder.pad(True));
 	}
 	IPosition blc(subImage->ndim(), 0);
 	IPosition trc = subShape - 1;
@@ -240,6 +237,9 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 			)
 		);
 	}
+	// done with this pointer
+	imageToRotate.reset();
+
 	Vector<Double> origStartPixel = Vector<Double>(subShape.size(), 0);
 	origStartPixel[xAxis] = start[0];
 	origStartPixel[yAxis] = start[1];

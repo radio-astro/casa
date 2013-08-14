@@ -106,7 +106,7 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 	// We can get away with no region processing if the region record
 	// is empty and the user is not dropping degenerate axes
 	if (region.nfields() == 0 && axesSpecifier.keep()) {
-		subImage = (outMaskMgr.get() == 0)
+        subImage = (outMaskMgr.get() == 0)
 			? SubImage<T>(inImage, writableIfPossible, axesSpecifier, preserveAxesOrder)
 			: SubImage<T>(
 				inImage, *outMaskMgr,
@@ -201,20 +201,18 @@ template<class T> ImageInterface<Float>* SubImageFactory<T>::createImage(
 		log << LogIO::NORMAL << "Creating image '" << outfile
 			<< "' of shape " << subImage->shape() << LogIO::POST;
 	}
-	std::auto_ptr<PagedImage<Float> > outImage(
-		new PagedImage<Float> (
+	PagedImage<Float> outImage(
 			subImage->shape(),
 			subImage->coordinates(), outfile
-		)
 	);
-	ImageUtilities::copyMiscellaneous(*outImage, *subImage);
+	ImageUtilities::copyMiscellaneous(outImage, *subImage);
 	// Make output mask if required
 	if (subImage->isMasked()) {
 		String maskName("");
-		ImageMaskAttacher<T>::makeMask(*outImage, maskName, False, True, log, list);
+		ImageMaskAttacher<T>::makeMask(outImage, maskName, False, True, log, list);
 	}
-	LatticeUtilities::copyDataAndMask(log, *outImage, *subImage);
-	return outImage.release();
+	LatticeUtilities::copyDataAndMask(log, outImage, *subImage);
+	return new PagedImage<Float>(outImage);
 }
 
 

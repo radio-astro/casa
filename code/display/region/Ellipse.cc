@@ -284,9 +284,9 @@ namespace casa {
 				try {
 					if ( ! padd->conformsTo(*wc_) ) continue;
 
-					ImageInterface<Float> *image = padd->imageinterface( );
+					std::tr1::shared_ptr<ImageInterface<Float> > image (padd->imageinterface( ));
 
-					if ( image == 0 ) continue;
+					if ( ! image ) continue;
 
 					String description = image->name(false);
 					String name = image->name(true);
@@ -402,7 +402,7 @@ namespace casa {
 			lin(1) = center_y;
 			if ( ! wc_->linToWorld(center, lin)) return 0;
 
-			ImageInterface<Float> *image = padd->imageinterface( );
+			std::tr1::shared_ptr<ImageInterface<Float> > image( padd->imageinterface( ));
 			Vector<Int> dispAxes = padd->displayAxes( );
 			dispAxes.resize(2,True);
 

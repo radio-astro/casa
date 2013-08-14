@@ -629,7 +629,7 @@ namespace casa {
 			lin(1) = trc_y;
 			if ( ! wc_->linToWorld(trc, lin)) return 0;
 
-			ImageInterface<Float> *image = padd->imageinterface( );
+			std::tr1::shared_ptr<ImageInterface<Float> > image(padd->imageinterface( ));
 			if ( image == 0 ) return 0;
 
 			Vector<Int> dispAxes = padd->displayAxes( );

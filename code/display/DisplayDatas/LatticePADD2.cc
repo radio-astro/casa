@@ -438,12 +438,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	template <>
-	ImageInterface<Float> *LatticePADisplayData<Complex>::imageinterface( ) {
-		return 0;
+	std::tr1::shared_ptr<ImageInterface<Float> > LatticePADisplayData<Complex>::imageinterface( ) {
+		return std::tr1::shared_ptr<ImageInterface<Float> >();
 	}
 
 	template <>
-	ImageInterface<Float> *LatticePADisplayData<Float>::imageinterface( ) {
+	std::tr1::shared_ptr<ImageInterface<Float> > LatticePADisplayData<Float>::imageinterface( ) {
 		return itsBaseImagePtr;
 	}
 

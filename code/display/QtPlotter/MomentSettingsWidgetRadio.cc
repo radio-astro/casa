@@ -604,7 +604,7 @@ namespace casa {
 		delete collapseThread;
 		collapseThread = NULL;
 		if ( taskMonitor != NULL ) {
-			ImageInterface<Float>* img = const_cast<ImageInterface <Float>* >(taskMonitor->getImage().get());
+			std::tr1::shared_ptr<ImageInterface<Float> > img = std::tr1::const_pointer_cast<ImageInterface <Float> >(taskMonitor->getImage());
 			imageAnalysis = new ImageAnalysis(img);
 		}
 	}

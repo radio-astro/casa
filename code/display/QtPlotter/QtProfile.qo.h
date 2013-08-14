@@ -161,7 +161,7 @@ namespace casa {
 		void imageCollapsed(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img);
 		void setPosition( const QList<double>& xValues, const QList<double>& yValues );
 		void processTrackRecord( const String& dataName, const String& positionInfo );
-		typedef std::pair<QString, ImageInterface<float>* > OverplotInterface;
+		typedef std::pair<QString, std::tr1::shared_ptr<ImageInterface<float> > > OverplotInterface;
 		typedef pair<QString,ImageAnalysis*> OverplotAnalysis;
 	public slots:
 		void zoomIn();

@@ -232,7 +232,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		TYPE_IMAGE( "image"),
 		SKY_CATALOG( "skycatalog"), MS( "ms"),
 		im_(),
-		cim_(0),
+		cim_(),
 		dd_(0),
 		clrMapName_(""),
 		clrMap_(0),
@@ -322,7 +322,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							// }
 
 						} else if(imagePixelType(path_)==TpComplex) {
-							cim_ = new PagedImage<Complex>(path_, TableLock::AutoNoReadLocking);
+							cim_.reset( new PagedImage<Complex>(path_, TableLock::AutoNoReadLocking));
 						} else  throw AipsError( "Only Float and Complex CASA images are supported at present.");
 						break;
 					}
@@ -394,7 +394,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					if(expr.dataType() == TpFloat) {
 						im_.reset(new ImageExpr<Float>(LatticeExpr<Float>(expr), name_));
 					} else if(expr.dataType() == TpComplex) {
-						cim_ = new ImageExpr<Complex>(LatticeExpr<Complex>(expr), name_);
+						cim_.reset( new ImageExpr<Complex>(LatticeExpr<Complex>(expr), name_));
 					} else throw AipsError("Only Float or Complex LEL expressions "
 						                       "are allowed");
 				}
@@ -426,7 +426,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// (error signal propagated externally, rather than throw.
 			// Alternatively, caller can test newQdd->isEmpty()).
 			im_.reset();
-			cim_=0;
+			cim_.reset();
 			return;
 		}
 
@@ -480,32 +480,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if( isRaster()) {
 			if(im_!=0) {
-				if(ndim ==2) dd_ = new LatticeAsRaster<Float>(im_.get(), 0, 1);
-				else dd_ = new LatticeAsRaster<Float>(im_.get(), axs[0], axs[1], axs[2], fixedPos, panel_ );
+				if(ndim ==2) dd_ = new LatticeAsRaster<Float>(im_, 0, 1);
+				else dd_ = new LatticeAsRaster<Float>(im_, axs[0], axs[1], axs[2], fixedPos, panel_ );
 			} else {
 				if(ndim ==2) dd_ = new LatticeAsRaster<Complex>(cim_, 0, 1);
 				else dd_ = new LatticeAsRaster<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos, panel_ );
 			}
 		} else if( isContour() ) {
 			if(im_!=0) {
-				if(ndim ==2) dd_ = new LatticeAsContour<Float>(im_.get(), 0, 1);
-				else dd_ = new LatticeAsContour<Float>( im_.get(), axs[0], axs[1], axs[2], fixedPos, panel_ );
+				if(ndim ==2) dd_ = new LatticeAsContour<Float>(im_, 0, 1);
+				else dd_ = new LatticeAsContour<Float>( im_, axs[0], axs[1], axs[2], fixedPos, panel_ );
 			} else {
 				if(ndim ==2) dd_ = new LatticeAsContour<Complex>(cim_, 0, 1);
 				else dd_ = new LatticeAsContour<Complex>( cim_, axs[0], axs[1], axs[2], fixedPos, panel_ );
 			}
 		} else if( isVector() ) {
 			if(im_!=0) {
-				if(ndim ==2) dd_ = new LatticeAsVector<Float>(im_.get(), 0, 1);
-				else dd_ = new LatticeAsVector<Float>(im_.get(), axs[0], axs[1], axs[2], fixedPos);
+				if(ndim ==2) dd_ = new LatticeAsVector<Float>(im_, 0, 1);
+				else dd_ = new LatticeAsVector<Float>(im_, axs[0], axs[1], axs[2], fixedPos);
 			} else {
 				if(ndim ==2) dd_ = new LatticeAsVector<Complex>(cim_, 0, 1);
 				else dd_ = new LatticeAsVector<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos);
 			}
 		} else if( isMarker()) {
 			if(im_!=0) {
-				if(ndim ==2) dd_ = new LatticeAsMarker<Float>(im_.get(), 0, 1);
-				else dd_ = new LatticeAsMarker<Float>(im_.get(), axs[0], axs[1], axs[2], fixedPos);
+				if(ndim ==2) dd_ = new LatticeAsMarker<Float>(im_, 0, 1);
+				else dd_ = new LatticeAsMarker<Float>(im_, axs[0], axs[1], axs[2], fixedPos);
 			} else {
 				if(ndim ==2) dd_ = new LatticeAsMarker<Complex>(cim_, 0, 1);
 				else dd_ = new LatticeAsMarker<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos);
@@ -791,9 +791,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if(im_)  {
 			im_.reset();
 		}
-		if(cim_!=0) {
-			delete cim_;
-			cim_=0;
+		if(cim_) {
+			cim_.reset();
 		}
 	}
 

@@ -52,6 +52,8 @@
 
 #include <casa/Quanta/MVAngle.h>
 
+#include <tr1/memory>
+
 namespace casa {
 	namespace viewer {
 
@@ -728,8 +730,8 @@ namespace casa {
 			lin(1) = trc_y;
 			if ( ! wc_->linToWorld(trc, lin)) return 0;
 
-			ImageInterface<Float> *image = padd->imageinterface( );
-			if ( image == 0 ) return 0;
+			std::tr1::shared_ptr<ImageInterface<Float> > image( padd->imageinterface( ));
+			if ( ! image ) return 0;
 
 			Vector<Int> dispAxes = padd->displayAxes( );
 			dispAxes.resize(2,True);
@@ -905,7 +907,7 @@ namespace casa {
 				// Hmm doesn't this always return 0?
 				// PrincipalAxesDD.h does not declare it so it has to come from
 				// DisplayData, but that always returns 0 - dmehring shared_ptr refactor
-				ImageInterface<Float> *image = padd->imageinterface( );
+				std::tr1::shared_ptr<ImageInterface<Float> > image( padd->imageinterface( ));
 				std::tr1::shared_ptr<ImageInterface<Float> > ptr(image);
 				if ( image->name( ) == casa_desc ) {
 					display_element de( name );

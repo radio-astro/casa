@@ -445,7 +445,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	private:
 		// Not intended for use.
-		QtDisplayData() : panel_(0), im_(), cim_(0), dd_(0) {  }
+		QtDisplayData() : panel_(0), im_(), cim_(), dd_(0) {  }
 		static bool globalColorSettings;
 		bool setColorBarOptions( Record& opts, Record& chgdOpts );
 		void checkGlobalChange( Record& chgdOpts );
@@ -459,7 +459,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		const std::string SKY_CATALOG;
 		const std::string MS;
 		std::tr1::shared_ptr<ImageInterface<Float> > im_;
-		ImageInterface<Complex>* cim_;
+		std::tr1::shared_ptr<ImageInterface<Complex> > cim_;
 		DisplayData* dd_;
 
 		std::string name_;

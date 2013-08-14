@@ -74,7 +74,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	template <class T>
 	IPosition LatticePADisplayMethod<T>::dataShape() {
 		Lattice<T> *latt = ((LatticePADisplayData<T> *)parentDisplayData())->
-		                   maskedLattice();
+		                   maskedLattice().get();
 		if (!latt) {
 			throw(AipsError("LatticePADisplayMethod<T>::dataShape - "
 			                "no lattice is available"));
@@ -89,7 +89,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	        const IPosition& sliceShape,
 	        const IPosition& stride) {
 		MaskedLattice<T>* latt =
-		    ((LatticePADisplayData<T> *)parentDisplayData())->maskedLattice();
+		    ((LatticePADisplayData<T> *)parentDisplayData())->maskedLattice().get();
 		if (!latt) {
 			throw(AipsError("LatticePADisplayMethod<T>::dataGetSlice - "
 			                "no lattice is available"));

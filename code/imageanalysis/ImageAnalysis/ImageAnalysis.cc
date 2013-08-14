@@ -145,12 +145,13 @@ ImageAnalysis::ImageAnalysis() :
 
 }
 
-ImageAnalysis::ImageAnalysis(const std::tr1::shared_ptr<ImageInterface<Float> > image) :
+ImageAnalysis::ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Float> > image) :
 	_image(image), _log(new LogIO()), _histograms(0),
 				pOldHistRegionRegion_p(0), pOldHistMaskRegion_p(0),
 				imageMomentsProgressMonitor(0) {}
 
 
+/*
 ImageAnalysis::ImageAnalysis(const ImageInterface<Float>* inImage) :
 	_image(inImage->cloneII()), _log(new LogIO()),
 	_histograms(0), pOldHistRegionRegion_p(0),
@@ -162,7 +163,7 @@ _log(new LogIO()), _histograms(0),
 	pOldHistMaskRegion_p(0), imageMomentsProgressMonitor(0) {
 	_image.reset(cloneInputPointer ? inImage->cloneII() : inImage);
 }
-
+*/
 ImageAnalysis::~ImageAnalysis() {
 	if (_image.get() != 0) {
 		if((_image->isPersistent()) && ((_image->imageType()) == "PagedImage")){
@@ -223,11 +224,9 @@ Bool ImageAnalysis::fromRecord(const RecordInterface& rec, const String& name) {
 
 Bool ImageAnalysis::open(const String& infile) {
 	Bool rstat = True;
-
 	if (_log.get() == 0) {
 		_log.reset(new LogIO());
 	}
-
 	*_log << LogOrigin(className(), __FUNCTION__);
 	// Check whether infile exists
 	if (infile.empty()) {
@@ -240,7 +239,6 @@ Bool ImageAnalysis::open(const String& infile) {
 				<< LogIO::POST;
 		return false;
 	}
-
 	// Generally used if the image is already closed !b
 	if (_image.get() != 0) {
 		*_log << LogIO::WARN << "Image is already open, closing first"
@@ -257,7 +255,6 @@ Bool ImageAnalysis::open(const String& infile) {
 	ImageInterface<Float> *image = 0;
 	ImageUtilities::openImage(image, infile, *_log);
 	_image.reset(image);
-
 	// Ensure that we reconstruct the statistics and histograms objects
 	deleteHist();
 	return rstat;
@@ -300,7 +297,7 @@ Bool ImageAnalysis::addnoise(const String& type, const Vector<Double>& pars,
 	return rstat;
 }
 
-ImageInterface<Float> *
+std::tr1::shared_ptr<ImageInterface<Float> >
 ImageAnalysis::imagecalc(const String& outfile, const String& expr,
 		const Bool overwrite) {
 
@@ -413,11 +410,11 @@ ImageAnalysis::imagecalc(const String& outfile, const String& expr,
 
 	// Delete the ImageRegions (by using an empty GlishRecord).
 	makeRegionBlock(tempRegs, Record(), *_log);
-	return _image.get();
+	return _image;
 
 }
 
-ImageInterface<Float>* ImageAnalysis::imageconcat(
+std::tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::imageconcat(
 	const String& outfile,
 	const Vector<String>& inFiles, const Int axis, const Bool relax,
 	const Bool tempclose, const Bool overwrite
@@ -518,7 +515,7 @@ ImageInterface<Float>* ImageAnalysis::imageconcat(
 	else {
 		_image.reset(pConcat->cloneII());
 	}
-	return _image.get();
+	return _image;
 }
 
 Bool ImageAnalysis::imagefromarray(const String& outfile,
@@ -1128,7 +1125,7 @@ ImageInterface<Float>* ImageAnalysis::continuumsub(
 	Bool ledropdeg = False;
 	Bool leoverwrite = False;
 	Bool lelist = False;
-	std::auto_ptr<ImageInterface<Float> > subim(
+	std::tr1::shared_ptr<ImageInterface<Float> > subim(
 		SubImageFactory<Float>::createImage(
 			*_image, leoutfile, region, lemask,
 			ledropdeg, leoverwrite, lelist, False
@@ -1213,7 +1210,7 @@ ImageInterface<Float>* ImageAnalysis::continuumsub(
 			<< "varying resolution is not advised. Proceed at your "
 			<< "own risk." << LogIO::POST;
 	}
-	ImageAnalysis ia(subim.get());
+	ImageAnalysis ia(subim);
 	ImageInterface<Float>* rstat = ia._fitpolynomial(
 		outline, outcont, sigmafile, spectralPixelAxis,
 		fitorder, fitregion, mask, overwrite
@@ -3604,12 +3601,16 @@ ImageInterface<Float>* ImageAnalysis::_regridByVelocity(
 		dynamic_cast<CoordinateSystem *>(csysTemplate.clone())
 	);
 	SpectralCoordinate templateSpecCoord = csys->spectralCoordinate();
-	SubImage<Float> maskedClone = SubImageFactory<Float>::createSubImage(
-		*_image, Record(), mask, 0, False,
-		AxesSpecifier(), extendMask
+	std::tr1::shared_ptr<SubImage<Float> > maskedClone(
+		new SubImage<Float>(
+			SubImageFactory<Float>::createSubImage(
+				*_image, Record(), mask, 0, False,
+				AxesSpecifier(), extendMask
+			)
+		)
 	);
 	std::auto_ptr<CoordinateSystem> coordClone(
-		dynamic_cast<CoordinateSystem *>(maskedClone.coordinates().clone())
+		dynamic_cast<CoordinateSystem *>(maskedClone->coordinates().clone())
 	);
 
 	// SpectralCoordinate templateSpecCoord = csys->spectralCoordinate();
@@ -3676,10 +3677,10 @@ ImageInterface<Float>* ImageAnalysis::_regridByVelocity(
 			newVelInc = vel1 - vel0;
 		}
 		else {
-			maskedClone.setCoordinateInfo(*cs);
+			maskedClone->setCoordinateInfo(*cs);
 		}
 	}
-	ImageAnalysis newIA(&maskedClone);
+	ImageAnalysis newIA(maskedClone);
 	// do not pass the mask info in, the subimage is already masked
 
 	std::auto_ptr<ImageInterface<Float> > outImage(
@@ -3729,7 +3730,7 @@ ImageInterface<Float>* ImageAnalysis::_regridByVelocity(
 	if (
 		! newCoords->replaceCoordinate(
 			newSpecCoord,
-			maskedClone.coordinates().linearCoordinateNumber())
+			maskedClone->coordinates().linearCoordinateNumber())
 		&& ! newSpecCoord.near(newCoords->spectralCoordinate())
 	) {
 		*_log << "Unable to replace coordinate for velocity regridding"
