@@ -589,20 +589,22 @@ void ImageProfileFitterResults::_writeImages(
 		}
 		String id = _getTag(i);
 		IPosition maskShape = _results.asRecord(id).asArrayDouble("amp").shape();
-		Array<Bool> fMask(maskShape);
-		uInt n = maskShape[maskShape.size()-1];
+		//Array<Bool> fMask(maskShape);
+		//uInt n = maskShape[maskShape.size()-1];
 		maskShape[maskShape.size()-1] = 1;
 		Array<Bool> reshapedMask = mask.reform(maskShape);
 		AlwaysAssert(ntrue(mask) == ntrue(reshapedMask), AipsError);
 
-		IPosition shape = fMask.shape();
-		IPosition begin(shape.size(), 0);
-		IPosition end = shape - 1;
+		/*
+		//IPosition shape = fMask.shape();
+		IPosition begin(maskShape.size(), 0);
+		IPosition end = maskShape - 1;
 		for (uInt j=0; j<n; j++) {
-			begin[shape.size() - 1] = j;
-			end[shape.size() - 1] = j;
+			begin[maskShape.size() - 1] = j;
+			end[maskShape.size() - 1] = j;
 			fMask(begin, end) = reshapedMask;
 		}
+		*/
 
 		for (
 			map<String, String>::const_iterator iter=mymap.begin();
@@ -621,50 +623,46 @@ void ImageProfileFitterResults::_writeImages(
 				_makeSolutionImage(
 					imagename, mycsys,
 					_results.asRecord(id).asArrayDouble(iter->first),
-					unitmap.find(iter->first)->second, fMask
+					unitmap.find(iter->first)->second, reshapedMask
 				);
 			}
 		}
 	}
-	if (_nPLPCoeffs > 0 && (! _plpName.empty() || ! _plpErrName.empty())) {
-		IPosition maskShape = _results.asRecord("plp").asArrayDouble("solution").shape();
-		Array<Bool> fMask(maskShape);
+	if (
+		(_nPLPCoeffs > 0 && (! _plpName.empty() || ! _plpErrName.empty()))
+		|| (_nLTPCoeffs > 0 && (! _ltpName.empty() || ! _ltpErrName.empty()))
+	) {
+		String type = _results.isDefined("plp") ? "plp" : "ltp";
+		IPosition maskShape = _results.asRecord(type).asArrayDouble("solution").shape();
 		maskShape[maskShape.size() - 1] = 1;
 		Array<Bool> reshapedMask = mask.reform(maskShape);
 		AlwaysAssert(ntrue(mask) == ntrue(reshapedMask), AipsError);
-		if (! _plpName.empty()) {
+		if (_nPLPCoeffs > 0 && ! _plpName.empty()) {
 			_makeSolutionImage(
 				_plpName, mycsys,
 				_results.asRecord("plp").asArrayDouble("solution"),
-				"", fMask
+				"", reshapedMask
 			);
 		}
-		if (! _plpErrName.empty()) {
+		if (_nPLPCoeffs > 0 && ! _plpErrName.empty()) {
 			_makeSolutionImage(
 				_plpErrName, mycsys,
 				_results.asRecord("plp").asArrayDouble("error"),
-				"", fMask
+				"", reshapedMask
 			);
 		}
-	}
-	if (_nLTPCoeffs > 0 && (! _ltpName.empty() || ! _ltpErrName.empty())) {
-		IPosition maskShape = _results.asRecord("ltp").asArrayDouble("solution").shape();
-		Array<Bool> fMask(maskShape);
-		maskShape[maskShape.size() - 1] = 1;
-		Array<Bool> reshapedMask = mask.reform(maskShape);
-		AlwaysAssert(ntrue(mask) == ntrue(reshapedMask), AipsError);
-		if (! _ltpName.empty()) {
+		if (_nLTPCoeffs > 0 && ! _ltpName.empty()) {
 			_makeSolutionImage(
 				_ltpName, mycsys,
 				_results.asRecord("ltp").asArrayDouble("solution"),
-				"", fMask
+				"", reshapedMask
 			);
 		}
-		if (! _ltpErrName.empty()) {
+		if (_nLTPCoeffs > 0 && ! _ltpErrName.empty()) {
 			_makeSolutionImage(
 				_ltpErrName, mycsys,
 				_results.asRecord("ltp").asArrayDouble("error"),
-				"", fMask
+				"", reshapedMask
 			);
 		}
 	}
