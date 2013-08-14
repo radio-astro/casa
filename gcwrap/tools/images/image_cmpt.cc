@@ -78,6 +78,7 @@
 #include <casa/namespace.h>
 
 #include <memory>
+#include <tr1/memory>
 
 using namespace std;
 
@@ -99,7 +100,21 @@ try {
 }
 
 // private ImageInterface constructor for on the fly components
-image::image(const casa::ImageInterface<casa::Float>* inImage) :
+// The constructed object will take over management of the provided pointer
+// using a shared_ptr
+image::image(casa::ImageInterface<casa::Float> *inImage) :
+	_log(new LogIO()), _image(new ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Float> >(inImage))) {
+	try {
+		*_log << _ORIGIN;
+
+	} catch (AipsError x) {
+		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+				<< LogIO::POST;
+		RETHROW(x);
+	}
+}
+
+image::image(std::tr1::shared_ptr<casa::ImageInterface<casa::Float> > inImage) :
 	_log(new LogIO()), _image(new ImageAnalysis(inImage)) {
 	try {
 		*_log << _ORIGIN;
@@ -111,6 +126,7 @@ image::image(const casa::ImageInterface<casa::Float>* inImage) :
 	}
 }
 
+/*
 // private ImageInterface constructor for on the fly components
 image::image(casa::ImageInterface<casa::Float>* inImage,
 		const bool cloneInputPointer) :
@@ -123,7 +139,7 @@ image::image(casa::ImageInterface<casa::Float>* inImage,
 		RETHROW(x);
 	}
 }
-
+*/
 image::~image() {
 }
 
@@ -258,7 +274,7 @@ image * image::collapse(
 			chans, stokes, mask, myAxes, outfile, overwrite
 		);
 		collapser.setStretch(stretch);
-		return new image(collapser.collapse(True), False);
+		return new image(collapser.collapse(True));
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
@@ -271,8 +287,9 @@ image* image::imagecalc(
 	const bool overwrite
 ) {
 	try {
-		std::auto_ptr<ImageAnalysis> ia(new ImageAnalysis());
-	        return  new image(ia->imagecalc(outfile, pixels, overwrite));
+		ImageAnalysis ia;
+        tr1::shared_ptr<ImageInterface<Float> > out(ia.imagecalc(outfile, pixels, overwrite));
+        return  new image(out);
 		
 	}
 	catch (AipsError x) {
@@ -300,9 +317,9 @@ image* image::imageconcat(
 		else {
 			*_log << "Unrecognized infiles datatype" << LogIO::EXCEPTION;
 		}
-		std::auto_ptr<ImageAnalysis> ia(new ImageAnalysis());
+		ImageAnalysis ia;
 		rstat = new image(
-			ia->imageconcat(
+			ia.imageconcat(
 				outfile, inFiles, axis,	relax, tempclose, overwrite
 			)
 		);
@@ -509,16 +526,17 @@ image::adddegaxes(
 	const bool tabular, const bool overwrite, const bool silent
 ) {
 	try {
-		*_log << _ORIGIN;
+        *_log << _ORIGIN;
 		if (detached()) {
 			return 0;
 		}
 		PtrHolder<ImageInterface<Float> > outimage;
-		ImageUtilities::addDegenerateAxes(
+        std::tr1::shared_ptr<const ImageInterface<Float> > x = _image->getImage();
+        ImageUtilities::addDegenerateAxes(
 			*_log, outimage, *_image->getImage(), outfile,
 			direction, spectral, stokes, linear, tabular, overwrite, silent
 		);
-		return new image(outimage.ptr());
+		return new image(outimage.ptr()->cloneII());
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
@@ -593,7 +611,7 @@ image::adddegaxes(
 				outFile, kernelArray,
 				kernelFileName, in_scale, *Region,
 				theMask, overwrite, async, stretch
-			), False
+			)
 		);
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -680,11 +698,7 @@ bool image::calcmask(const std::string& mask, const std::string& maskName,
 bool image::close() {
 	try {
 		*_log << _ORIGIN;
-		if (_image.get() != 0) {
-			_image.reset(0);
-		} else {
-			*_log << LogIO::WARN << "Image is already closed" << LogIO::POST;
-		}
+		_image.reset();
 		_stats.reset(0);
 		return True;
 	} catch (const AipsError& x) {
@@ -709,16 +723,16 @@ image* image::continuumsub(
 		if (theChannels.size() == 1 && theChannels[0] == -1) {
 			theChannels.resize(0);
 		}
-		std::auto_ptr<ImageInterface<Float> > theResid(
+		std::tr1::shared_ptr<ImageInterface<Float> > theResid(
 			_image->continuumsub(
 				outline, outcont, *leRegion, theChannels,
 				pol, in_fitorder, overwrite
 			)
 		);
-		if (!theResid.get()) {
+		if (!theResid) {
 			*_log << "continuumsub failed " << LogIO::EXCEPTION;
 		}
-		return new ::casac::image(theResid.get());
+		return new ::casac::image(theResid);
 	}
 	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -867,7 +881,7 @@ image* image::convolve2d(
 				outFile, Axes, type, majorKernel, minorKernel,
 				paKernel, in_scale, *Region, mask, overwrite,
 				stretch, targetres
-			), False
+			)
 		);
 
 	}
@@ -1240,7 +1254,7 @@ bool image::done(const bool remove, const bool verbose) {
 						<< LogIO::POST;
 			}
 		}
-		_image.reset(0);
+		_image.reset();
 		return True;
 
 		/*
@@ -1565,7 +1579,7 @@ image* image::transpose(
 		}
 		
 		image *rstat =new image(
-			transposer->transpose(), False
+			transposer->transpose()
 		);
 		if(!rstat)
 			throw AipsError("Unable to transpose image");
@@ -1803,8 +1817,8 @@ image* image::pbcor(
 			)
 		);
 		pbcor->setStretch(stretch);
-		auto_ptr<ImageInterface<Float> > corrected(pbcor->correct(True));
-		return new image(corrected.get());
+        std::tr1::shared_ptr<ImageInterface<Float> > corrected(pbcor->correct(True));
+		return new image(corrected);
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
@@ -1931,14 +1945,14 @@ image::getslice(const std::vector<double>& x, const std::vector<double>& y,
 			mask = "";
 		}
 
-		std::auto_ptr<ImageInterface<Float> > pImOut(
+		tr1::shared_ptr<ImageInterface<Float> > pImOut(
 			_image->hanning(
 				outFile, *Region, mask, axis, drop,
 				overwrite, stretch
 			)
 		);
 		// Return handle to new file
-		casac::image *rstat = new image(pImOut.get());
+		casac::image *rstat = new image(pImOut);
 		if(!rstat)
 			throw AipsError("Unable create image");
 		return rstat;
@@ -2313,7 +2327,7 @@ image::moments(
 			for (int i = 0; i < num; i++)
 				excludepix[i] = d_excludepix[i];
 		}
-		std::auto_ptr<ImageInterface<Float> > outIm(
+		std::tr1::shared_ptr<ImageInterface<Float> > outIm(
 			_image->moments(
 				whichmoments, axis,
 				*Region, mask, method, Vector<Int> (smoothaxes), kernels,
@@ -2322,7 +2336,7 @@ image::moments(
 				overwrite, removeAxis, stretch
 			)
 		);
-		return new ::casac::image(outIm.get());
+		return new ::casac::image(outIm);
 	}
 	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -2356,7 +2370,7 @@ bool image::open(const std::string& infile) {
 		_stats.reset(0);
 
 		*_log << _ORIGIN;
-		return _image->open(infile);
+        return _image->open(infile);
 
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -2364,14 +2378,14 @@ bool image::open(const std::string& infile) {
 		RETHROW(x);
 	}
 }
-
+/*
 bool image::open(const casa::ImageInterface<casa::Float>* inImage) {
 	try {
 		if (_log.get() == 0) {
 			_log.reset(new LogIO());
 		}
 		*_log << _ORIGIN;
-		_image.reset(new ImageAnalysis(inImage));
+		_image.reset(new ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Float> >(inImage)));
 		return True;
 	} catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -2379,7 +2393,7 @@ bool image::open(const casa::ImageInterface<casa::Float>* inImage) {
 		RETHROW(x);
 	}
 }
-
+*/
 image* image::pad(
 	const string& outfile, int npixels, double value, bool padmask,
 	bool overwrite, const variant& region, const string& box,
@@ -2402,9 +2416,9 @@ image* image::pad(
 		);
 		padder.setStretch(stretch);
 		padder.setPaddingPixels(npixels, value, padmask);
-		std::auto_ptr<ImageInterface<Float> > out(padder.pad(wantreturn));
+		tr1::shared_ptr<ImageInterface<Float> > out(padder.pad(wantreturn));
 		if (wantreturn) {
-			return new image(out.get());
+			return new image(out);
 		}
 		return 0;
 
@@ -2442,9 +2456,9 @@ image* image::crop(
 		);
 		cropper.setStretch(stretch);
         cropper.setAxes(saxes);
-        std::auto_ptr<ImageInterface<Float> > out(cropper.crop(wantreturn));
+        std::tr1::shared_ptr<ImageInterface<Float> > out(cropper.crop(wantreturn));
 		if (wantreturn) {
-			return new image(out.get());
+			return new image(out);
 		}
 		return 0;
 
@@ -2642,8 +2656,8 @@ image* image::pv(
 		pv.setStretch(stretch);
 		pv.setWidth(width);
 		pv.setOffsetUnit(unit);
-		std::auto_ptr<ImageInterface<Float> > resImage(pv.generate(wantreturn));
-		image *ret = wantreturn ? new image(resImage.get()) : 0;
+		tr1::shared_ptr<ImageInterface<Float> > resImage(pv.generate(wantreturn));
+		image *ret = wantreturn ? new image(resImage) : 0;
 		return ret;
 	}
 	catch (const AipsError& x) {
@@ -2673,13 +2687,13 @@ image* image::rebin(
 		if (mask == "[]") {
 			mask = "";
 		}
-		std::auto_ptr<ImageInterface<Float> > pImOut(
+		tr1::shared_ptr<ImageInterface<Float> > pImOut(
 			_image->rebin(
 				outFile, factors, *Region,
 				mask, dropdeg, overwrite, stretch
 			)
 		);
-		return new ::casac::image(pImOut.get());
+		return new image(pImOut);
 	}
 	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -2721,7 +2735,7 @@ image* image::regrid(
 				axes, *Region, mask, methodU, decimate, replicate,
 				doRefChange, dropDegenerateAxes, overwrite,
 				forceRegrid, specAsVelocity, stretch
-			), False
+			)
 		);
 	}
 	catch (AipsError x) {
@@ -2749,13 +2763,13 @@ image* image::regrid(
 		if (mask == "[]") {
 			mask = "";
 		}
-		std::auto_ptr<ImageInterface<Float> > pImOut(
+		std::tr1::shared_ptr<ImageInterface<Float> > pImOut(
 			_image->rotate(
 				outfile, shape, pa, *Region, mask, method,
 				decimate, replicate, dropdeg, overwrite, stretch
 			)
 		);
-		return new ::casac::image(pImOut.get());
+		return new image(pImOut);
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
@@ -2907,14 +2921,14 @@ image::restoringbeam(int channel, int polarization) {
 				smoothaxes[i] = i;
 			}
 		}
-		std::auto_ptr<ImageInterface<Float> > pImOut(
+		std::tr1::shared_ptr<ImageInterface<Float> > pImOut(
 			_image->sepconvolve(outFile,
 				smoothaxes, kernels, kernelwidths,
 				Scale, *pRegion, mask, overwrite,
 				stretch
 			)
 		);
-		return new ::casac::image(pImOut.get());
+		return new ::casac::image(pImOut);
 	}
 	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -3230,14 +3244,14 @@ bool image::twopointcorrelation(
 			*_log << LogIO::WARN << "outfile was not specified and wantreturn is false. "
 				<< "The resulting image will be inaccessible" << LogIO::POST;
 		}
-		std::auto_ptr<ImageInterface<Float> > clone(_image->getImage()->cloneII());
-		std::auto_ptr<ImageInterface<Float> > tmpIm(
+        tr1::shared_ptr<ImageInterface<Float> > clone(_image->getImage()->cloneII());
+		tr1::shared_ptr<ImageInterface<Float> > tmpIm(
 			SubImageFactory<Float>::createImage(
 				*clone, outfile, *regionRec,
 				mask, dropDegenerateAxes, overwrite, list, stretch
 			)
 		);
-		image *res = wantreturn ? new image(tmpIm.get()) : 0;
+		image *res = wantreturn ? new image(tmpIm) : 0;
 		return res;
 	}
 	catch (const AipsError& x) {
@@ -3534,14 +3548,14 @@ image* image::newimagefromimage(
 		}
 
 		std::auto_ptr<Record> regionPtr(toRecord(region));
-		auto_ptr<ImageInterface<Float> >outIm(
+        std::tr1::shared_ptr<ImageInterface<Float> >outIm(
 			newImage->newimage(
 				infile, outfile,*regionPtr,
 				mask, dropdeg, overwrite
 			)
 		);
-		if (outIm.get() != 0) {
-			rstat = new image(outIm.get());
+		if (outIm) {
+			rstat = new image(outIm);
 		} else {
 			rstat = new image();
 		}
@@ -3565,11 +3579,11 @@ image* image::newimagefromfile(const std::string& fileName) {
 		}
 		std::auto_ptr<ImageAnalysis> newImage(new ImageAnalysis());
 		*_log << _ORIGIN;
-		std::auto_ptr<ImageInterface<Float> > outIm(
+		std::tr1::shared_ptr<ImageInterface<Float> > outIm(
 			newImage->newimagefromfile(fileName)
 		);
 		if (outIm.get() != 0) {
-			rstat =  new image(outIm.get());
+			rstat =  new image(outIm);
 		} else {
 			rstat =  new image();
 		}
@@ -3639,14 +3653,14 @@ image* image::newimagefromarray(
 			return new image();
 		}
 		auto_ptr<Record> coordinates(toRecord(csys));
-		auto_ptr<ImageInterface<Float> > outIm(
+        tr1::shared_ptr<ImageInterface<Float> > outIm(
 			newImage->newimagefromarray(
 				outfile, pixelsArray, *coordinates,
 				linear, overwrite, log
 			)
 		);
 		if (outIm.get() != 0) {
-			rstat =  new image(outIm.get());
+			rstat =  new image(outIm);
 		} else {
 			rstat =  new image();
 		}
@@ -3674,14 +3688,14 @@ image* image::newimagefromshape(
 		auto_ptr<ImageAnalysis> newImage(new ImageAnalysis());
 		*_log << _ORIGIN;
 		auto_ptr<Record> coordinates(toRecord(csys));
-		auto_ptr<ImageInterface<Float> > outIm(
+        std::tr1::shared_ptr<ImageInterface<Float> > outIm(
 			newImage->newimagefromshape(
 				outfile, Vector<Int>(shape), *coordinates,
 				linear, overwrite, log
 			)
 		);
 		if (outIm.get() != 0) {
-			rstat =  new image(outIm.get());
+			rstat =  new image(outIm);
 		} else {
 			rstat =  new image();
 		}
@@ -3707,14 +3721,14 @@ image* image::newimagefromfits(
 		}
 		auto_ptr<ImageAnalysis> newImage(new ImageAnalysis());
 		*_log << _ORIGIN;
-		auto_ptr<ImageInterface<Float> > outIm(
+        tr1::shared_ptr<ImageInterface<Float> > outIm(
 			newImage->newimagefromfits(
 				outfile,
 				fitsfile, whichrep, whichhdu, zeroBlanks, overwrite
 			)
 		);
 		if (outIm.get() != 0) {
-			rstat = new image(outIm.get());
+			rstat = new image(outIm);
 		} else {
 			rstat = new image();
 		}

@@ -5,7 +5,7 @@
 #include <measures/Measures/Stokes.h>
 #include <components/ComponentModels/ComponentType.h>
 #include <memory>
-
+#include <tr1/memory>
 namespace casa 
 {
 	class LogIO;

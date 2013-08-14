@@ -180,24 +180,26 @@ image *
 imagepol::depolratio(const std::string& infile, const bool debias, const double clip, const double sigma, const std::string& outfile)
 {
 
-  image *outim = new image();
   try{
     *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
-      return outim;
+      return 0;
     }
     ImageInterface<Float> *out;
     Bool rstat(False);
     rstat = itsImPol->depolratio(out, infile, debias, clip, sigma, outfile);
-    if(rstat && !outim->open(out))
+    if (rstat) {
+        new image(out);
+    }
+    else {
       throw(AipsError("could not attach depolratio image"));
+    }
   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
-  return outim;
 }
 
 bool
@@ -245,96 +247,104 @@ imagepol::fourierrotationmeasure(const std::string& complex, const std::string& 
 image *
 imagepol::fraclinpol(const bool debias, const double clip, const double sigma, const std::string& outfile)
 {
-  image *outim = new image();
   try{
     *itsLog << LogOrigin("imagepol", "fraclinpol");
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
-      return outim;
+      return 0;
     }
     ImageInterface<Float> *out;
     Bool rstat(False);
     rstat = itsImPol->fracLinPol(out,debias,Float(clip),
 				 Float(sigma),String(outfile));
-    if(rstat && !outim->open(out))
+    if (rstat) {
+        return new image(out);
+    }
+    else {
       throw(AipsError("could not attach fraclinpol image"));
+    }
   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
-  return outim;
 }
 
 image *
 imagepol::fractotpol(const bool debias, const double clip, const double sigma, const std::string& outfile)
 {
-  image *outim = new image();
   try{
     *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
-      return outim;
+      return 0;
     }
     ImageInterface<Float> *out;
     Bool rstat(False);
     rstat = itsImPol->fracTotPol(out,debias,Float(clip),
 				 Float(sigma),String(outfile));
-    if(rstat && !outim->open(out))
+    if (rstat) {
+        return new image(out);
+    }
+    else {
       throw(AipsError("could not attach fractotpol image"));
-  } catch (AipsError x) {
+    }
+    } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
-  return outim;
 }
 
 image *
 imagepol::linpolint(const bool debias, const double clip, const double sigma, const std::string& outfile)
 {
-  image *outim = new image();
   try{
     *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
-      return outim;
+      return 0;
     }
     ImageInterface<Float> *out;
     Bool rstat(False);
     rstat = itsImPol->linPolInt(out,debias,Float(clip),
 				Float(sigma),String(outfile));
-    if(rstat && !outim->open(out))
+    if (rstat) {
+        return new image(out);
+     }
+    else {
       throw(AipsError("could not attach linpolint image"));
-  } catch (AipsError x) {
+    }
+    } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
-  return outim;
 }
 
 image *
 imagepol::linpolposang(const std::string& outfile)
 {
-  image *outim = new image();
   try{
     *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
-      return outim;
+      return 0;
     }
     ImageInterface<Float> *out;
     Bool rstat(False);
     rstat = itsImPol->linPolPosAng(out,String(outfile));
-    if(rstat && !outim->open(out))
+    if (rstat) {
+        return new image(out);
+    }
+    else {
       throw(AipsError("could not attach linpolposang image"));
+    }
   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
-  return outim;
 }
 
 bool
@@ -362,13 +372,12 @@ imagepol::makecomplex(const std::string& complex, const std::string& real, const
 image *
 imagepol::pol(const std::string& which, const bool debias, const double clip, const double sigma, const std::string& outfile)
 {
-  image *outim = new image();
   try{
     *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
-      return outim;
+      return 0;
     }
     ImageInterface<Float> *out;
     String type(which);
@@ -391,15 +400,16 @@ imagepol::pol(const std::string& which, const bool debias, const double clip, co
     } else {
       throw(AipsError("Code "+String(which)+" is unrecognized"));
     }
-      
-    if(rstat && !outim->open(out))
+      if (rstat) {
+          return new image(out);
+      }
+      else {
       throw(AipsError("could not attach pol image"));
-    
+      }    
   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
-  return outim;
 }
 
 bool
@@ -449,79 +459,82 @@ imagepol::sigma(const double clip)
 image *
 imagepol::sigmadepolratio(const std::string& infile, const bool debias, const double clip, const double sigma, const std::string& outfile)
 {
-  image *outim = new image();
   try{
     *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
-      return outim;
+      return 0;
     }
     ImageInterface<Float> *out;
     Bool rstat(False);
     rstat = itsImPol->sigmaDepolarizationRatio(out,String(infile), debias,
 					       Float(clip), Float(sigma),
 					       String(outfile));
-    if(rstat && !outim->open(out))
+    if (rstat) {
+        return new image(out);
+    }
+    else {
       throw(AipsError("could not attach sigmadepolratio image"));
-    
+    }
   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 
-  return outim;
 }
 
 image *
 imagepol::sigmafraclinpol(const double clip, const double sigma, const std::string& outfile)
 {
-  image *outim = new image();
   try{
     *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
-      return outim;
+      return 0;
     }
     ImageInterface<Float> *out;
     Bool rstat(False);
     rstat = itsImPol->sigmaFracLinPol(out, Float(clip), Float(sigma),
 				      String(outfile));
-    if(rstat && !outim->open(out))
+    if (rstat) {
+        return new image(out);
+    }
+    else {
       throw(AipsError("could not attach sigmafraclinpol image"));
-  } catch (AipsError x) {
+    }
+    } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
-
-  return outim;
 }
 
 image *
 imagepol::sigmafractotpol(const double clip, const double sigma, const std::string& outfile)
 {
-  image *outim = new image();
   try{
     *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
-      return outim;
+      return 0;
     }
     ImageInterface<Float> *out;
     Bool rstat(False);
     rstat = itsImPol->sigmaFracTotPol(out, Float(clip),
 				      Float(sigma), String(outfile));
-    if(rstat && !outim->open(out))
+    if (rstat) {
+        return new image(out);
+    }
+    else {
       throw(AipsError("could not attach sigmafractotpol image"));
-    
+    }
   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 
-  return outim;
 }
 
 double
@@ -546,27 +559,28 @@ imagepol::sigmalinpolint(const double clip, const double sigma, const std::strin
 image *
 imagepol::sigmalinpolposang(const double clip, const double sigma, const std::string& outfile)
 {
-  image *outim = new image();
   try{
     *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
-      return outim;
+      return 0;
     }
     ImageInterface<Float> *out;
     Bool rstat(False);
     rstat = itsImPol->sigmaLinPolPosAng(out,Float(clip),
 					Float(sigma),String(outfile));
-    if(rstat && !outim->open(out))
-      throw(AipsError("could not attach sigmalinpolposang image"));
-    
+    if (rstat) {
+        return new image(out);
+    }
+    else {
+    throw(AipsError("could not attach sigmalinpolposang image"));
+    }
   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 
-  return outim;
 }
 
 double
@@ -698,13 +712,12 @@ imagepol::sigmatotpolint(const double clip, const double sigma)
 image *
 imagepol::stokes(const std::string& which, const std::string& outfile)
 {
-  image *outim = new image();
   try{
     *itsLog << LogOrigin("imagepol", "stokes");
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
-      return outim;
+      return 0;
     }
     ImageInterface<Float> *out;
     Bool rstat(false);
@@ -721,109 +734,117 @@ imagepol::stokes(const std::string& which, const std::string& outfile)
     } else {
       throw(AipsError("Stokes "+String(which)+" is unrecognized"));
     }
-    if(rstat && !outim->open(out))
+    if (rstat) {
+        return new image(out);
+    } 
+    else {
       throw(AipsError("could not attach sigmadepolratio image"));
-  } catch (AipsError x) {
+    }
+    } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
-  return outim;
 }
 
 image *
 imagepol::stokesi(const std::string& outfile)
 {
-  image *outim = new image();
   try{
     *itsLog << LogOrigin("imagepol", "stokesi");
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
-      return outim;
+      return 0;
     }
     ImageInterface<Float> *out;
     Bool rstat(False);
     rstat = itsImPol->stokesI(out, String(outfile));
-    if(rstat && !outim->open(out))
-      throw(AipsError("could not attach stokesi image"));
-  } catch (AipsError x) {
+    if (rstat) {
+        return new image(out);
+    }
+    else {
+        throw(AipsError("could not attach stokesi image"));
+    }
+    } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
-
-  return outim;
 }
 
 image *
 imagepol::stokesq(const std::string& outfile)
 {
-  image *outim = new image();
   try{
     *itsLog << LogOrigin("imagepol", "stokesq");
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
-      return outim;
+      return 0;
     }
     ImageInterface<Float> *out;
     Bool rstat(False);
     rstat = itsImPol->stokesQ(out, String(outfile));
-    if(rstat && !outim->open(out))
-      throw(AipsError("could not attach stokesq image"));
-  } catch (AipsError x) {
+    if (rstat) {
+        return new image(out);
+    }
+    else {
+    throw(AipsError("could not attach stokesq image"));
+    }
+    } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
-
-  return outim;
 }
 
 image *
 imagepol::stokesu(const std::string& outfile)
 {
-  image *outim = new image();
   try{
     *itsLog << LogOrigin("imagepol", "stokesu");
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
-      return outim;
+      return 0;
     }
     ImageInterface<Float> *out;
     Bool rstat(False);
     rstat = itsImPol->stokesU(out, String(outfile));
-    if(rstat && !outim->open(out))
+    if (rstat) {
+        return new image(out);
+    }
+    else {
       throw(AipsError("could not attach stokesu image"));
-  } catch (AipsError x) {
+    }
+    } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
-
-  return outim;
 }
 
 image *
 imagepol::stokesv(const std::string& outfile)
 {
-  image *outim = new image();
   try{
     *itsLog << LogOrigin("imagepol", "stokesv");
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
-      return outim;
+      return 0;
     }
     ImageInterface<Float> *out;
     Bool rstat(False);
     rstat = itsImPol->stokesV(out, String(outfile));
-    if(rstat && !outim->open(out))
-      throw(AipsError("could not attach stokesv image"));
-  } catch (AipsError x) {
+    if (rstat) {
+        return new image(out);
+    }
+    else {
+    throw(AipsError("could not attach stokesv image"));
+    }
+    } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 
-  return outim;
 }
 
 bool
@@ -849,26 +870,28 @@ imagepol::summary()
 image *
 imagepol::totpolint(const bool debias, const double clip, const double sigma, const std::string& outfile)
 {
-  image *outim = new image();
   try{
     *itsLog << LogOrigin("imagepol", __FUNCTION__);
     if(itsImPol==0){
       *itsLog << LogIO::SEVERE <<"No attached image, please use open " 
 	      << LogIO::POST;
-      return outim;
+      return 0;
     }
     ImageInterface<Float> *out;
     Bool rstat(False);
     rstat = itsImPol->totPolInt(out,debias,Float(clip),
 				Float(sigma),String(outfile));
-    if(rstat && !outim->open(out))
+    if (rstat) {
+        return new image(out);
+    }
+    else {
       throw(AipsError("could not attach totpolint image"));
-  } catch (AipsError x) {
+    }
+    } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
 
-  return outim;
 }
 
 } // casac namespace

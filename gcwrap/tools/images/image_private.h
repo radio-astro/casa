@@ -2,7 +2,13 @@
 public:
 
 // Allow other components that return image tool to open an image
-bool open(const casa::ImageInterface<casa::Float>* inImage);
+//bool open(const casa::ImageInterface<casa::Float>* inImage);
+
+// The constructed object will manage the input pointer with a
+// shared_ptr
+image(casa::ImageInterface<casa::Float> * inImage);
+
+image(std::tr1::shared_ptr<casa::ImageInterface<casa::Float> > inImage);
 
 private:
 
@@ -14,9 +20,8 @@ std::auto_ptr<casa::ImageStatsCalculator> _stats;
 static const casa::String _class;
 
 // Private ImageInterface constructor to make components on the fly
-image(const casa::ImageInterface<casa::Float>* inImage);
 
-image(casa::ImageInterface<casa::Float>* inImage, const bool cloneInputPointer);
+//image(casa::ImageInterface<casa::Float>* inImage, const bool cloneInputPointer);
 
 
 // Having private version of IS and IH means that they will
