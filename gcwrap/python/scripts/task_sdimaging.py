@@ -132,7 +132,8 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         if self.dochannelmap:
             # start
             if mode == 'velocity':
-                startval = ['LSRK', '%s%s'%(self.start,self.specunit)]
+                #startval = ['LSRK', '%s%s'%(self.start,self.specunit)]
+                startval = '%s%s'%(self.start,self.specunit)
             elif mode == 'frequency':
                 startval = '%s%s'%(self.start,self.specunit)
             else:
