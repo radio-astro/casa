@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from callibrary import *
 from taskinit import *
 
 def polcal(vis=None,caltable=None,
@@ -8,6 +9,7 @@ def polcal(vis=None,caltable=None,
            observation=None, msselect=None,
 	   solint=None,combine=None,preavg=None,refant=None,minblperant=None,minsnr=None,
 	   poltype=None,smodel=None,append=None,
+	   docallib=None,callib=None,
 	   gaintable=None,gainfield=None,interp=None,spwmap=None):
 
 	#Python script
@@ -37,46 +39,63 @@ def polcal(vis=None,caltable=None,
                 if (len(smodel)>0):
                         cb.setptmodel(smodel);
 
-		# Arrange apply of existing other calibrations 
-		# First do the existing cal tables...
-		ngaintab = 0;
-		if (gaintable!=['']):
-			ngaintab=len(gaintable)
-		ngainfld = len(gainfield)
-		nspwmap = len(spwmap)
-		ninterp = len(interp)
+		# Arrange applies....
 
-		# handle list of list issues with spwmap
-		if (nspwmap>0):
-			if (type(spwmap[0])!=list):
-				# first element not a list, only one spwmap specified
-				# make it a list of list
-				spwmap=[spwmap];
-				nspwmap=1;
+		if docallib:
+			# by cal library
+			if isinstance(callib,dict):
+				mycb.setcallib(callib)
+			elif isinstance(callib,str):
+				# parse from file
+				mycallib=callibrary()
+				mycallib.read(callib)
+				mycb.setcallib(mycallib.cld)
 
-		for igt in range(ngaintab):
-			if (gaintable[igt]!=''):
+		else:
 
-				# field selection is null unless specified
-				thisgainfield=''
-				if (igt<ngainfld):
-					thisgainfield=gainfield[igt]
+			# by traditional parameters
+
+			ngaintab = 0;
+			if (gaintable!=['']):
+				ngaintab=len(gaintable)
+
+			ngainfld = len(gainfield)
+			nspwmap = len(spwmap)
+			ninterp = len(interp)
+
+			# handle list of list issues with spwmap
+			if (nspwmap>0):
+				if (type(spwmap[0])!=list):
+					# first element not a list, only one spwmap specified
+					# make it a list of list
+					spwmap=[spwmap];
+					nspwmap=1;
+
+			for igt in range(ngaintab):
+				if (gaintable[igt]!=''):
+
+					# field selection is null unless specified
+					thisgainfield=''
+					if (igt<ngainfld):
+						thisgainfield=gainfield[igt]
 					
-				# spwmap is null unless specifed
-				thisspwmap=[-1]
-				if (igt<nspwmap):
-					thisspwmap=spwmap[igt];
+					# spwmap is null unless specifed
+					thisspwmap=[-1]
+					if (igt<nspwmap):
+						thisspwmap=spwmap[igt];
 
-				# interp is 'linear' unless specified
-				thisinterp='linear'
-				if (igt<ninterp):
-					if (interp[igt]==''):
-						interp[igt]=thisinterp
-					thisinterp=interp[igt];
+					# interp is 'linear' unless specified
+					thisinterp='linear'
+					if (igt<ninterp):
+						if (interp[igt]==''):
+							interp[igt]=thisinterp;
+						thisinterp=interp[igt];
+					
+					mycb.setapply(t=0.0,table=gaintable[igt],field=thisgainfield,
+						      calwt=True,spwmap=thisspwmap,interp=thisinterp)
 
-				cb.setapply(t=0.0,table=gaintable[igt],field=thisgainfield,
-					    calwt=True,spwmap=thisspwmap,interp=thisinterp)
-		
+
+
 		# ...and now the specialized terms
 		# (BTW, interp irrelevant for these, since they are evaluated)
 

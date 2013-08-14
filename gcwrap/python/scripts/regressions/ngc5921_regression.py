@@ -100,6 +100,7 @@ import time
 import regression_utility as tstutl
 import listing
 import datetime
+from callibrary import *
 
 # Enable benchmarking?
 benchmarking = True
@@ -353,10 +354,7 @@ field = '1331+305*'
 # This is 1.4GHz D-config and 1331+305 is sufficiently unresolved
 # that we do not need a model image.  For higher frequencies
 # (particularly in A and B config) you would want to use one.
-#
-# Note: modimage/model is moved to a sub-parameter for Perley-Butler 2010
-# and Perley-Butler 2013 per CAS-5157
-#modimage = ''
+modimage = ''
 
 # Setjy knows about this source so we don't need anything more
 standard='Perley-Taylor 99'  # enforce older standard
@@ -379,6 +377,11 @@ setjy()
 if benchmarking:
     setjytime = time.time()
 
+
+# the callibrary into which we will deposit calibration results
+c=callibrary()
+
+
 #
 #=====================================================================
 #
@@ -397,11 +400,6 @@ vis = msfile
 # set the name for the output bandpass caltable
 btable = prefix + '.bcal'
 caltable = btable
-
-# No gain tables yet
-gaintable = ''
-gainfield = ''
-interp = ''
 
 # Use flux calibrator 1331+305 = 3C286 (FIELD_ID 0) as bandpass calibrator
 field = '0'
@@ -437,6 +435,9 @@ bandpass()
 # Note the rolloff in the start and end channels.  Looks like
 # channels 6-56 (out of 0-62) are the best
 
+# add this to the callibrary
+c.add(caltable='ngc5921.bcal',tinterp='nearest',calwt=T)
+
 # bandpass calibration completion time
 if benchmarking:
     bptime = time.time()
@@ -457,15 +458,6 @@ vis = msfile
 # set the name for the output gain caltable
 gtable = prefix + '.gcal'
 caltable = gtable
-
-# Use our previously determined bandpass
-# Note this will automatically be applied to all sources
-# not just the one used to determine the bandpass
-gaintable = btable
-gainfield = '0'
-
-# Use nearest (there is only one bandpass entry)
-interp = 'nearest'
 
 # Gain calibrators are 1331+305 and 1445+099 (FIELD_ID 0 and 1)
 field = '0,1'
@@ -491,6 +483,10 @@ minsnr = 1.0
 # reference antenna 15 (15=VLA:N2)
 refant = '15'
 
+# Turn on cal library apply
+docallib=T
+callib=c.cld
+
 gaincal()
 
 # You can use plotcal to examine the gain solutions
@@ -505,6 +501,12 @@ gaincal()
 #plotcal()
 #
 # The amp and phase coherence looks good
+
+
+# add this gain result to the callibrary
+c.add(caltable='ngc5921.gcal',field='0',fldmap=[0],tinterp='nearest',calwt=T)
+c.add(caltable='ngc5921.gcal',field='1,2',fldmap='1',tinterp='linear',calwt=T)
+
 
 # gaincal calibration completion time
 if benchmarking:
@@ -593,6 +595,10 @@ fluxscale()
 # you will see now it has brought the amplitudes in line between
 # the first scan on 1331+305 and the others on 1445+099
 
+# Add this to the cal library
+
+c.add(caltable='ngc5921.fluxscale',fldmap='nearest',tinterp='nearest',calwt=T)
+
 # Record fluxscale completion time
 if benchmarking:
     fstime = time.time()
@@ -611,29 +617,16 @@ vis = msfile
 # We want to correct the calibrators using themselves
 # and transfer from 1445+099 to itself and the target N5921
 
-# Start with the fluxscale/gain and bandpass tables
-#gaintable = [ftable,btable]
-#for incremental fluxscale table case
-gaintable = [ftable,gtable,btable]
-
-# use nearest (on sky) for gain transfer
-# use explicit selection on the bandpass table (all of it, in this case)
-#gainfield = ['nearest','0']
-gainfield = ['nearest','nearest','0']
-
-# interpolation using linear for gain, nearest for bandpass
-#interp = ['linear','nearest']
-interp = ['linear', 'linear','nearest']
-
-# only one spw, do not need mapping
-spwmap = []
-
 # all channels
 spw = ''
 selectdata = False
 
 # select all fields
 field = ''
+
+# Turn on the cal library
+docallib=T
+callib=c.cld
 
 applycal()
 

@@ -29,6 +29,7 @@
 #define CALTABLES_CLPATCHPANEL_H
 
 #include <synthesis/CalTables/NewCalTable.h>
+#include <synthesis/CalTables/CTColumns.h>
 #include <synthesis/CalTables/CTTimeInterp1.h>
 #include <synthesis/CalTables/RIorAParray.h>
 #include <synthesis/CalTables/VisCalEnum.h>
@@ -120,6 +121,38 @@ protected:
   //Matrix<Int> mcalmap_;  // per-id prioritized, e.g., 'nearest'
 };
 
+class FieldCalMap : public CalMap
+{
+public:
+
+  // Null ctor
+  FieldCalMap();
+
+  // Construct from Vector<Int> (override CalMap)
+  FieldCalMap(const Vector<Int>& calmap);
+
+  // Algorithmic ctor that uses MS and CT meta info
+  FieldCalMap(const String fieldcalmap, const MeasurementSet& ms, const NewCalTable& ct);
+
+private:
+
+  // Calculate the simple nearest field map
+  void setNearestFieldMap(const MeasurementSet& ms, const NewCalTable& ct);
+  void setNearestFieldMap(const NewCalTable& ctasms, const NewCalTable& ct);
+  void setNearestFieldMap(const ROMSFieldColumns& msfc, const ROCTColumns& ctc);
+
+  // Parse field selection map
+  void setSelectedFieldMap(const String& fieldsel,
+			   const MeasurementSet& ms,const NewCalTable& ct);
+
+  // User's specification
+  String fieldcalmap_;
+
+
+};
+
+
+
 
 // A class to parse the contents of a single CalLib slice 
 //  i.e., for one caltable, one setup
@@ -132,7 +165,10 @@ public:
 	      Vector<Int> fldmap=Vector<Int>(1,-1), 
 	      Vector<Int> spwmap=Vector<Int>(1,-1), 
 	      Vector<Int> antmap=Vector<Int>(1,-1));
-  CalLibSlice(const Record& clslice);
+  CalLibSlice(const Record& clslice,
+	      const MeasurementSet& ms=MeasurementSet(),
+	      const NewCalTable& ct=NewCalTable());
+
 
   String obs,fld,ent,spw;
   String tinterp,finterp;
@@ -144,7 +180,7 @@ public:
   // Extract as a record
   Record asRecord();
 
-  void state();
+  String state();
 
 };
 
@@ -324,6 +360,8 @@ private:
 
   Cube<Float> result_;
   Cube<Bool> resFlag_;
+
+  LogIO logsink_;
 
 
 };

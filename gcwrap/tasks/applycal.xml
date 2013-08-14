@@ -85,34 +85,44 @@ another visibility file.
 		<value></value>
 	</param>
 
-	<param type="stringArray" name="gaintable" mustexist="true">
+	<param type="bool" name="docallib" >
+	        <description>Use callib or traditional cal apply parameters</description>
+	        <value>False</value>
+	</param>
+
+	<param type="variant" name="callib" subparam="true" >
+	        <description>Cal Library filename</description>
+                <value type="string"></value>
+	</param>
+
+	<param type="stringArray" name="gaintable" mustexist="false"  subparam="true">
 		<description>Gain calibration table(s) to apply on the fly</description>
 		<value></value>
 	</param>
 
-	<param type="stringArray" name="gainfield">
+	<param type="stringArray" name="gainfield" subparam="true">
 		<description>Select a subset of calibrators from gaintable(s)</description>
 		<value></value>
 	</param>
 
-	<param type="stringArray" name="interp">
+	<param type="stringArray" name="interp" subparam="true">
 		<description>Interp type in time[,freq], per gaintable.  default=linear,linear</description>
 		<value></value>
 	</param>
 
-	<param type="intArray" name="spwmap">
+	<param type="intArray" name="spwmap" subparam="true">
 		<description>Spectral windows combinations to form for gaintables(s)</description>
 		<value></value>
+	</param>
+
+	<param type="boolArray" name="calwt" subparam="true">
+		<description>Calibrate data weights per gaintable.</description>
+		<value>True</value>
 	</param>
 
 	<param type="bool" name="parang">
 		<description>Apply parallactic angle correction</description>
 		<value>False</value>
-	</param>
-
-	<param type="boolArray" name="calwt">
-		<description>Calibrate data weights per gaintable.</description>
-		<value>True</value>
 	</param>
 
 	<param type="string" name="applymode">
@@ -144,13 +154,25 @@ another visibility file.
 		</equals>
 		<equals type="bool" value="False"/>
 	</when>
+        <when param="docallib">
+                <equals type="bool" value="False">
+                        <default param="gaintable"><value type="stringArray"/></default>
+                        <default param="gainfield"><value type="stringArray"/></default>
+                        <default param="interp"><value type="stringArray"/></default>
+                        <default param="spwmap"><value type="intArray"/></default>
+                        <default param="calwt"><value type="boolArray">True</value></default>
+		</equals>
+                <equals type="bool" value="True">
+                        <default param="callib"><value type="string"/></default>
+		</equals>
+        </when>
    </constraints>
 </input>
 <example>
 
 
-       Applycal reads the specified gain calibration tables, applies
-       them to the (raw) data column (with the specified selection),
+       Applycal reads the specified gain calibration tables or cal library, 
+       applies them to the (raw) data column (with the specified selection),
        and writes the calibrated results into the corrected column.
        This is done in one step, so all available calibration tables must
        be specified.  
@@ -158,10 +180,15 @@ another visibility file.
        Applycal will overwrite existing corrected data, and will flag data
        for which there is no calibration available.
 
-       All calibration tables (both temporal, frequency, polarization
+       In the traditional interface (docallib=False), all calibration 
+       tables (both temporal, frequency, polarization
        calibrations) are specified in the gaintable parameter.  The
        calibration values associated with a restricted list of fields
        can also be selected for each table in gainfield.
+
+       As of CASA v4.2, docallib=True provides specification of an
+       ensemble of calibration tables and directives via the cal
+       library.
 
        See task accum for instructions on forming calibration
        incrementally.  See task split for copying out any portion of the data
@@ -231,6 +258,11 @@ another visibility file.
        msselect -- Optional complex data selection (ignore for now)
 
        --- Calibration files to apply
+       docallib -- Control means of specifying the caltables:
+               default: False ==&gt; Use gaintable,gainfield,interp,spwmap,calwt
+                        If True, specify a file containing cal library in callib
+       callib -- If docallib=True, specify a file containing cal
+                  library directives
        gaintable -- Gain calibration table(s) to apply 
                default: '' (none);
                examples: gaintable='ngc5921.gcal'

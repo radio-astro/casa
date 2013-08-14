@@ -269,8 +269,6 @@ calibrater::setcallib(const ::casac::record& callib) {
 
     Record callibrec = *toRecord(callib);
 
-    cout << "callibrec.isFixed() = " << boolalpha << callibrec.isFixed() << endl;
-
     // Forward to the Calibrater object
     itsCalibrater->setcallib(callibrec);
 
