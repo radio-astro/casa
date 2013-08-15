@@ -480,6 +480,9 @@ private:
   // Solved-for flag
   Bool solved_;
 
+  // Signal apply by callib
+  Bool byCallib_;
+
   // Solving mode
   String apmode_;
 
