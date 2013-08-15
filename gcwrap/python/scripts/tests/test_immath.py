@@ -1364,6 +1364,142 @@ class immath_test3(unittest.TestCase):
                 expr="1*IM0", mask="mask3.im > 5", stretch=False
             )
         )
+        
+    def test21(self):
+        """Test moved from imagetest regreesion"""
+        
+        myia = iatool()
+        # Define some arrays to be stored in the test images.
+        # Define 2 local symbols to hold the results.
+        # Delete the image files in case they are still present.
+        #a1 = array(1:96, 8,12)
+        #a2 = a1 + 100
+        a1 = myia.makearray(0.0,[8,12])
+        a2 = myia.makearray(0.0,[8,12])
+        sum = myia.makearray(0.0,[8,12])
+        num = 1
+        for j in range(8):
+            for k in range(12):
+                a1[j][k] = num
+                a2[j][k] = a1[j][k]+100
+                sum[j][k] = a1[j][k]+a2[j][k]
+                num = num+1
+        names=""
+
+        # Create 2 images.
+        # Keep the first one in a global symbol (with a strange name),
+        # so it can be used in a LEL expression with the $-notation.
+        imname1 = 'im.1'
+        global_iet_im1 = myia.newimagefromarray(imname1, a1)
+        self.assertTrue(global_iet_im1)
+        imname2 = 'im.2'
+        im2 = myia.newimagefromarray(imname2, a2)
+        self.assertTrue(im2)
+        
+        im2.done()
+        
+        # Form a simple expression and check if the result is correct.
+        #global_iet_im1.done()
+        ex = '"'+imname1+'" + "'+imname2+'"'
+        outf = 'ex1.1'
+        global_iet_ex1 = myia.imagecalc(outfile=outf, pixels=ex, overwrite=True)
+        self.assertTrue(global_iet_ex1)
+            
+        pixels = global_iet_ex1.getchunk()
+        self.assertTrue(abs(pixels - sum).all() < .0001)
+
+        # Now form and check an expression using the $-notation.
+        # The mask should be all true (in fact, there is no mask).
+        #ex2 = imagecalc(pixels='$global_iet_ex1 - $global_iet_im1')
+        #$-notation no longer works
+        global_iet_ex1.done() #need to close before re-opening
+        ex2 = myia.imagecalc(pixels='"'+outf+'" - "'+imname1+'"')
+        self.assertTrue(ex2)
+            
+        pixels = ex2.getregion()
+        mask = ex2.getregion(getmask=True)
+        self.assertTrue(len(pixels) > 0 and len(mask) > 0)
+        ok = ex2.done()
+        self.assertTrue(abs(pixels - a2).all() < 0.0001)
+            
+        self.assertTrue(mask.all())
+        
+
+        # Define a region as a global symbol.
+        # Use it in an expression using the $-notation.
+        # The mask should be all true (in fact, there is no mask).
+        #global_iet_reg1 = rg.quarter()
+        global_iet_reg1 = rg.box(blc=[.25,.25],trc=[.75,.75], frac=True)
+        #ex3 = imagecalc(pixels='$global_iet_im1[$global_iet_reg1]')
+        ex3all = myia.imagecalc(pixels='"'+imname1+'"')
+        self.assertTrue(ex3all)
+           
+        ex3 = ex3all.subimage(region=global_iet_reg1)
+        self.assertTrue(ex3)
+          
+        ok = ex3all.done()
+        pixels = ex3.getregion()
+        mask = ex3.getregion(getmask=True)
+        ## ex3.maskhandler ("get", names)
+        ok = ex3.done()
+        #if not alleq(pixels, a1[3:6,4:9], tolerance=0.0001):
+        self.assertTrue(abs(pixels - a1[2:6,3:9]).all() < 0.0001)
+        self.assertTrue(mask.all())
+        
+        ##    if (len(names) != 0) {
+        ##      global_iet_im1.done()
+        ##      fail ("imageexprtest: there is a mask in '$im1[$reg1]'")
+
+        # Close the first image.
+        # Note that after im4.done te image server might be closed because
+        # there are no active objects anymore.
+        imname4 = 'im.4'
+        ex = '"'+imname1+'"['+'"'+imname1+'"%2==0]'
+        im4 = myia.imagecalc (imname4, ex)
+        self.assertTrue(im4)
+        pixels = im4.getregion()
+        mask = im4.getregion(getmask=True)
+        ok = im4.maskhandler ("get",names)
+        ok = im4.done()
+        self.assertTrue(abs(pixels - a1).all() < 0.0001)
+
+        a1mod2 = a1 % 2 == 0
+        self.assertTrue((mask == a1mod2).all())
+        
+        self.assertTrue(len(names) == 0)
+         
+        # Move the image to test if its mask table can still be found
+        # and if the default mask was set.
+        imname5= 'im.5'
+        myia.close()  # close imname4
+        ok = os.renames(imname4, imname5)
+        ex = '"'+imname5+'"'
+        ex3 = myia.imagecalc(pixels=ex)
+        self.assertTrue(ex3)
+            
+        pixels = ex3.getregion()
+        mask = ex3.getregion(getmask=True)
+        ok = ex3.done()
+        self.assertTrue(abs(pixels - a1).all() <0.0001)
+         
+        self.assertTrue((mask==a1mod2).all())
+
+        # Now issue some incorrect expressions.
+        ex = '"'+imname1+'"+'+'"im..2"'
+        self.assertRaises(Exception, myia.imagecalc, pixels=ex)
+       
+
+        ex = '"'+imname2+'" - max("'+imname1+'", "'+imname2+'", "'+imname1+'")'
+        self.assertRaises(Exception, myia.imagecalc, pixels=ex)
+
+
+        # Close last open image.
+        # Remove the image files created.
+        # Note that im.4 has been moved into im.1.
+        ok = global_iet_im1.done()
+      
+
+
 
 def suite():
     return [immath_test1, immath_test2, immath_test3]
