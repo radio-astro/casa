@@ -946,7 +946,7 @@ void Plotter2::setViewportBackgroundColor(const int bgcolor, const int inVpid) {
     vi->vpBColor = bgcolor;
 }
 
-  /*
+/*
 void Plotter2::setAnnotation(const std::string& label, const float posx, const float posy, const float angle, const float fjust, const float size, const std::string& style, const int color, const int bgcolor, const int inVpid) {
     int vpid = inVpid;
     if (vpid < 0) {
@@ -979,7 +979,7 @@ void Plotter2::setAnnotation(const std::string& label, const float posx, const f
     //vi->titleColor  = color;
     //vi->titleBColor = bgcolor;
 }
-  */
+*/
 
 void Plotter2::close() {
     if (hasDevice) {
