@@ -100,11 +100,12 @@ class Context(object):
         pickled state 
 
     """
-    def __init__(self, measurement_sets=[], sessions=[], output_dir=None):
+    def __init__(self, measurement_sets=[], sessions=[], output_dir=None,
+                 name=None):
         # initialise the context name with something reasonable: a current
         # timestamp
         now = datetime.datetime.utcnow()
-        self.name = now.strftime('pipeline-%Y%m%dT%H%M%S')
+        self.name = name if name else now.strftime('pipeline-%Y%m%dT%H%M%S')
 
         self.callibrary = callibrary.CalLibrary(self)
         self.calimlist = imagelibrary.ImageLibrary()
@@ -217,7 +218,7 @@ class Pipeline(object):
     """
 
     def __init__(self, context=None, output_dir='./', loglevel='info',
-                 casa_version_check=True):
+                 casa_version_check=True, name=None):
         """
         Initialise the pipeline, creating a new ~Context or loading a saved
         ~Context from disk.
@@ -260,7 +261,7 @@ class Pipeline(object):
         # if no previous context was specified, create a new context for the
         # given measurement set
         if context is None:
-            self.context = Context(output_dir=output_dir)
+            self.context = Context(output_dir=output_dir, name=name)
 
         # otherwise load the context from disk..
         else:
