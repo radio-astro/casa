@@ -94,6 +94,7 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   urefantlist_(1,-1),
   minblperant_(4),
   solved_(False),
+  byCallib_(False),
   apmode_(""),
   solint_("inf"),
   fsolint_("none"),
@@ -353,8 +354,15 @@ void SolvableVisCal::setCallib(const Record& callib) {
   if (prtlev()>2) 
     cout << "SVC::setCallib(callib)" << endl;
 
+  if (typeName().contains("BPOLY") ||
+      typeName().contains("GSPLINE"))
+    throw(AipsError(typeName()+" not yet supported for apply by cal library."));
+
   // Call VisCal version for generic stuff
   VisCal::setCallib(callib);
+
+  // signal that we are using a callib
+  byCallib_=True;
 
   // Collect Cal table parameters
   if (callib.isDefined("tablename")) {
@@ -889,7 +897,9 @@ String SolvableVisCal::applyinfo() {
   o << typeName()
     << ": table="  << calTableName();
 
-  if (ci_) {
+  if (byCallib_)
+    o << " (by cal library)";
+  else {
     o << " select=" << calTableSelect()
       << " interp=" << tInterpType();
     if (this->freqDepPar())
@@ -897,8 +907,6 @@ String SolvableVisCal::applyinfo() {
     o << " spwmap=" << spwMap();
       
   }
-  else 
-    o << " (by cal library)";
 
   o << boolalpha << " calWt=" << calWt();
     //    << " t="      << interval();

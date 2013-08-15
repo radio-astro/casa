@@ -21,30 +21,32 @@ def bandpass(vis=None,caltable=None,
         casalog.origin('bandpass')
 
 	try:
+		mycb=cbtool()
+		
                 if ((type(vis)==str) & (os.path.exists(vis))):    
-                        cb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
+                        mycb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
-		cb.reset()
+		mycb.reset()
 
 		# Do data selection according to selectdata
 		if (selectdata):
 			# pass all data selection parameters in as specified
-			cb.selectvis(time=timerange,spw=spw,scan=scan,field=field,
-				     intent=intent, observation=str(observation),
-				     baseline=antenna,uvrange=uvrange,chanmode='none',
-				     msselect=msselect);
+			mycb.selectvis(time=timerange,spw=spw,scan=scan,field=field,
+				       intent=intent, observation=str(observation),
+				       baseline=antenna,uvrange=uvrange,chanmode='none',
+				       msselect=msselect);
 		else:
 			# selectdata=F, so time,scan,baseline,uvrange,msselect=''
 			# using spw and field specifications only
-			cb.selectvis(time='',spw=spw,scan='',field=field,intent=intent,
-				     observation='', baseline='',uvrange='',chanmode='none',
-				     msselect='');
+			mycb.selectvis(time='',spw=spw,scan='',field=field,intent=intent,
+				       observation='', baseline='',uvrange='',chanmode='none',
+				       msselect='');
 
 
 		# set the model, if specified
 		if (len(smodel)>0):
-			cb.setptmodel(smodel);
+			mycb.setptmodel(smodel);
 		
 
 		# Arrange applies....
@@ -106,23 +108,23 @@ def bandpass(vis=None,caltable=None,
 		# (BTW, interp irrelevant for these, since they are evaluated)
 
 		# Apply parallactic angle, if requested
-		if parang: cb.setapply(type='P')
+		if parang: mycb.setapply(type='P')
 
 		# set up for solving (
 		if (bandtype=='B'):
-			cb.setsolve(type='B',t=solint,combine=combine,refant=refant,minblperant=minblperant,
+			mycb.setsolve(type='B',t=solint,combine=combine,refant=refant,minblperant=minblperant,
 				    solnorm=solnorm,minsnr=minsnr,table=caltable,append=append,fillgaps=fillgaps)
 		elif (bandtype=='BPOLY'):
-			cb.setsolvebandpoly(refant=refant,table=caltable,append=append,
+			mycb.setsolvebandpoly(refant=refant,table=caltable,append=append,
 					    t=solint,combine=combine,
 					    degamp=degamp,degphase=degphase,visnorm=visnorm,
 					    solnorm=solnorm,maskcenter=maskcenter,maskedge=maskedge)
 
-		cb.solve()
-		cb.close()
+		mycb.solve()
+		mycb.close()
 
 	except Exception, instance:
 		print '*** Error ***',instance
-		cb.close()
+		mycb.close()
 		raise Exception, instance
 

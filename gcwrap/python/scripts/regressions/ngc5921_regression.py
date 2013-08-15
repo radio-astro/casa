@@ -436,7 +436,7 @@ bandpass()
 # channels 6-56 (out of 0-62) are the best
 
 # add this to the callibrary
-c.add(caltable='ngc5921.bcal',tinterp='nearest',calwt=T)
+c.add(caltable=btable,tinterp='nearest',calwt=T)
 
 # bandpass calibration completion time
 if benchmarking:
@@ -504,8 +504,8 @@ gaincal()
 
 
 # add this gain result to the callibrary
-c.add(caltable='ngc5921.gcal',field='0',fldmap=[0],tinterp='nearest',calwt=T)
-c.add(caltable='ngc5921.gcal',field='1,2',fldmap='1',tinterp='linear',calwt=T)
+c.add(caltable=gtable,field='0',fldmap=[0],tinterp='nearest',calwt=T)
+c.add(caltable=gtable,field='1,2',fldmap='1',tinterp='linear',calwt=T)
 
 
 # gaincal calibration completion time
@@ -597,7 +597,7 @@ fluxscale()
 
 # Add this to the cal library
 
-c.add(caltable='ngc5921.fluxscale',fldmap='nearest',tinterp='nearest',calwt=T)
+c.add(caltable=ftable,fldmap='nearest',tinterp='nearest',calwt=T)
 
 # Record fluxscale completion time
 if benchmarking:
