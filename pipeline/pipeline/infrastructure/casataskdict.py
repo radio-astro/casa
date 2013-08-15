@@ -1,4 +1,5 @@
 import pipeline.hif.tasks as hif_tasks
+import pipeline.hsd.tasks as hsd_tasks
 
 CasaTaskDict = {
                    'hif_antpos'       : 'Antpos',
@@ -41,6 +42,7 @@ CasaTaskDict = {
 
 
 classToCASATask = {
+    # Interferometry tasks ---------------------------------------------------
     hif_tasks.Antpos : 'hif_antpos',
     hif_tasks.AgentFlagger : 'hif_flagdata',
     hif_tasks.Applycal : 'hif_applycal',    
@@ -68,4 +70,16 @@ classToCASATask = {
     hif_tasks.Tsysflagchans : 'hif_tsysflagchans',
     hif_tasks.Wvrgcal : 'hif_wvrgcal',
     hif_tasks.Wvrgcalflag : 'hif_wvrgcalflag',
+    # Single dish tasks ------------------------------------------------------
+    hsd_tasks.SDCalSky : 'hsd_calsky',
+    hsd_tasks.SDCalTsys : 'hsd_caltsys',
+    hsd_tasks.SDApplyCal : 'hsd_applycal',
+    hsd_tasks.SDExportData : 'hsd_exportdata',
+    hsd_tasks.SDImportData : 'hsd_importdata',
+    hsd_tasks.SDInspectData : 'hsd_inspectdata',
+    hsd_tasks.SDImaging : 'hsd_imaging',
+    hsd_tasks.SDBaseline : 'hsd_baseline',
+    hsd_tasks.SDFlagData : 'hsd_flagdata',
+    hsd_tasks.SDPlotFlagBaseline : 'hsd_plotflagbaseline',
+    hsd_tasks.SDReduction : 'hsd_reduce'
 }
