@@ -332,8 +332,20 @@ PLOTS = function () {
             getterFns = [histogramGetter.getAllDataHistogram,
                          histogramGetter.getSelectedDataHistogram],
             // CSS ids for all data and selected data
-            layerIds = ["allData", "filterData"];
+            layerIds = ["allData", "filterData"],
+            // tick format, which we can cache to save recreating it
+            tickFormat = null,
+            // duration for axis realignment. Set to zero for no initial animation. 
+            duration = 0,
+            // whether to plot the full range (0 to max) or data extent range (min to max)
+            plotExtent = true;
 
+        var translate = function(x) {
+        	return function(d) {
+        		return "translate(" + x(d) + ",0)";
+        	};
+        }
+        
         // histogram of all scores. this never changes so we can generate it at construction time
         var allDataHistogram = histogramGetter.getAllDataHistogram();
         // get the extent (ie. the range) of scores. We cannot derive this from
@@ -356,18 +368,8 @@ PLOTS = function () {
         var height = 150 - margin.top - margin.bottom;
         // but the width is, so let it be set in the resize function
         var width = shrinkFactor * $(reference).empty().width() - margin.left - margin.right;
-
-        // Set X and Y scales. Note that the Y scale never changes on window
-        // resize.
-        var x = d3.scale.linear()
-            .domain(d3.extent(extent))
-            .range([0, width]);
-        var y = d3.scale.linear()
-            .domain([0, yMax])
-            .range([height, 0]);
-        var xAxis = d3.svg.axis()
-            .scale(x)
-            .orient("bottom");
+        // end Y position for the x axis ticks
+        var tickHeight = height + 5;       
 
         // Lastly, define svg as a G element that translates the origin to the
         // top-left corner of the chart area.
@@ -377,7 +379,19 @@ PLOTS = function () {
 
         var gTransform = svg.append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        
+        // Compute the new X and Y scales. Note that the Y scale never changes
+        // on window resize.
+        var x = d3.scale.linear()
+            .domain(plotExtent === true ? d3.extent(extent) : [0, d3.max(extent)])
+            .range([0, width]);
+        var y = d3.scale.linear()
+            .domain([0, yMax])
+            .range([height, 0]);
 
+        // Stash the new scale.
+        this.__chart__ = x;                
+        
         var layer = gTransform.selectAll("g")
             .data(getterFns)
             .enter().append("g")
@@ -408,6 +422,104 @@ PLOTS = function () {
             .attr("width", width)
             .attr("height", height);
 
+        // draw the x axis horizontal line
+        var xAxisLine = gTransform.append("g")
+	        .attr("class", "axis")
+	        .append("line")
+	        .attr("y1", height)
+	        .attr("y2", height)
+	        .attr("x1", 0)
+	        .attr("x2", width-1);
+        
+        var plot = function() {
+            // Compute the tick format.
+            var format = tickFormat || x.tickFormat(8);
+            // fade in/out time
+            var fadeTime = duration / 2;
+            var oldBrushExtent = false;
+            // resize brush if selected
+            if (brush) {
+                oldBrushExtent = brush.extent();
+        	};
+            
+            // Compute the new X scale
+            x.domain(plotExtent === true ? d3.extent(extent) : [0, d3.max(extent)])
+
+            if (brush) {
+            	var rebrush = function() {
+            		context.select(".brush").call(brush.extent(oldBrushExtent));
+            	};
+            	gbrush.transition().duration(fadeTime).style("opacity", 1e-6).each("end", rebrush).transition().duration(fadeTime).style("opacity", 1);
+            }
+            
+            // Retrieve the old x-scale, if this is an update.
+            var x0 = this.__chart__ || d3.scale.linear()
+            	.domain(plotExtent === false ? d3.extent(extent) : [0, d3.max(extent)])
+            	.range([0, width]);
+
+            
+            // Stash the new scale.
+            this.__chart__ = x;                
+            
+            // Update the tick groups.
+            var tick = gTransform.selectAll("g.tick")
+                .data(x.ticks(8), function(d) {
+                  return this.textContent || format(d);
+                });
+
+            // Initialize the ticks with the old scale, x0.
+            var tickEnter = tick.enter().append("g")
+                .attr("class", "tick")
+                .attr("transform", translate(x0))
+                .style("opacity", 1e-6);
+
+            tickEnter.append("line")
+                .attr("y1", height)
+                .attr("y2", tickHeight);
+
+            tickEnter.append("text")
+                .attr("text-anchor", "middle")
+                .attr("dy", "1em")
+                .attr("y", tickHeight)
+                .text(format);
+
+            // Transition the entering ticks to the new scale, x.
+            tickEnter.transition()
+                .duration(duration)
+                .attr("transform", translate(x))
+                .style("opacity", 1);
+
+            // Transition the updating ticks to the new scale, x.
+            var tickUpdate = tick.transition()
+                .duration(duration)
+                .attr("transform", translate(x))
+                .style("opacity", 1);
+
+            tickUpdate.select("line")
+                .attr("y1", height)
+                .attr("y2", tickHeight);
+
+            tickUpdate.select("text")
+                .attr("y", tickHeight);
+
+            // Transition the exiting ticks to the new scale, x.
+            tick.exit().transition()
+                .duration(duration)
+                .attr("transform", translate(x))
+                .style("opacity", 1e-6)
+                .remove();
+
+            // move the histogram bars and counts to the new position
+            rect.transition()
+            	.duration(duration)
+            	.attr("x", function(d) { return x(d.x); })
+            	.attr("width", function(d) { return x(d.x + d.dx) - x(d.x) - 2; });
+            text.transition()
+            	.duration(duration)
+            	.attr("x", function(d) { return x(d.x + d.dx / 2); });
+        };
+        plot();
+        
         var context = gTransform.append("g")
             .attr("transform", "translate(0," + margin.top + ")");
 
@@ -417,7 +529,7 @@ PLOTS = function () {
 
         // the lightweight object to return, which will hold bare minimum
         // functions for resizing the plots, refreshing the selected data
-        // histograms and a stub for informing the filter on brush changes.
+        // histograms and a hook for informing the filter on brush changes.
         var that = {};
 
         // stub function that is called whenever the brush is updated, i.e.
@@ -432,18 +544,12 @@ PLOTS = function () {
             that.onBrush(e[0], e[1]);
         }
 
-        context.append("g")
+        var gbrush = context.append("g")
             .attr("class", "x brush")
             .call(brush)
             .selectAll("rect")
             .attr("y", -17)
             .attr("height", height + 7);
-
-        gTransform.append("g")
-            .attr("class", "x axis")
-            .attr("transform", "translate(0," + height + ")")
-            .attr("id", "xaxis")
-            .call(xAxis);
 
         // text label for the x axis
         var xAxisLabel = gTransform.append("text")
@@ -478,9 +584,11 @@ PLOTS = function () {
                 .attr("width", function(d) { return x(d.x + d.dx) - x(d.x) - 2; });
             text.attr("x", function(d) { return x(d.x + d.dx / 2); });
 
-            xAxis.scale(x);
-            gTransform.select("#xaxis").call(xAxis);
+            xAxisLine.attr("x2", width-1);
+            that.duration(0).plot();
             xAxisLabel.attr("transform", "translate(" + (width / 2) + " ," + (height + margin.bottom) + ")")
+            
+            context.select(".brush").call(brush.extent(brush.extent()));
         };
 
         // Function to refresh the select data histogram. We assume resizing and
@@ -506,6 +614,27 @@ PLOTS = function () {
                 .text(function(d) { return formatCount(d.y) });
         }
 
+        that.duration = function(x) {
+            if (!arguments.length) return duration;
+            duration = x;
+            return that;
+        };
+
+        that.plot = plot;
+        
+        that.tickFormat = function(x) {
+            if (!arguments.length) return tickFormat;
+            tickFormat = x;
+            return that;
+        };        
+
+        that.plotExtent = function(p) {
+            if (!arguments.length) return plotExtent;
+            plotExtent = p;
+            plot();
+            return that;
+        };        
+        
         return that;
     };
 

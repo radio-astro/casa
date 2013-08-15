@@ -37,13 +37,19 @@ $(document).ready(function () {
 
     // create histograms and histogram filters for the three distributions we want
     // to highlight: RMS, average median, and maximum median reached.
-    ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict,
-            "median", "#histogram-tsysmedian", xAxis);
-    ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict,
-            "median_max", "#histogram-tsysmedianmax", xAxis);
-    ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict,
-            "rms", "#histogram-tsysrms", xAxis);
+    var charts = [ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "median", "#histogram-tsysmedian", xAxis),
+    			  ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "median_max", "#histogram-tsysmedianmax", xAxis),
+				  ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "rms", "#histogram-tsysrms", xAxis)]
 
+    // link histogram ranges to the range checkbox
+    var rangeCheckbox = $("input#rangeCheckbox");
+	rangeCheckbox.click(function() {
+		var state = rangeCheckbox.prop("checked");
+		charts.forEach(function(chart) {
+			chart.histogram.duration(1000).plotExtent(state);
+		});
+	});
+    
     // add on-click handler to our thumbnails to launch FancyBox with the
     // relevant thumbnails
     $("ul.thumbnails li div a").click(function (evt) {
@@ -62,7 +68,10 @@ $(document).ready(function () {
 	<h1>T<sub>sys</sub> Plots<button class="btn btn-large pull-right" onClick="javascript:location.reload();">Back</button></h1>
 </div>
 
-<div class="column-fluid"> 
+<div class="column-fluid">
+	<label class="checkbox"> 
+		<input type="checkbox" id="rangeCheckbox" checked></input>Clip histogram range to match data
+	</label>
 	<div class="row-fluid">
 		<div class="column-fluid span4">
 			<fieldset>
