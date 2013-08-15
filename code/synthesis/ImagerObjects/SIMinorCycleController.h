@@ -89,7 +89,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /* Getter Methods for the control variables */
     Float getLoopGain(); 
 
-    void incrementMinorCycleCount();
+    void incrementMinorCycleCount(Int itersDonePerStep=1);
 
     Int getIterDone();
     Int getCycleNiter();
@@ -132,10 +132,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        during a major cycle */
     Int   itsMaxCycleIterDone;
     
-   Float itsMaxPsfSidelobe;
 
    Float itsPeakResidual;
    Float itsIntegratedFlux;
+   Float itsMaxPsfSidelobe;
    
 
     /* Summary Variable */

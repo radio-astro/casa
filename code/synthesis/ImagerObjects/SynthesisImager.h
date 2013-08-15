@@ -109,11 +109,13 @@ class SynthesisImager
 			   const String convFunc="SF", 
 			   const String startmodel="");
   //Define image via a predefine SIImageStore object
-  virtual Bool defineImage(CountedPtr<SIImageStore> imstor, const String& ftmachine);
+  virtual Bool defineImage(CountedPtr<SIImageStore> imstor, 
+			   const String& ftmachine);
   //Defining componentlist to use while degriding
   //This should be called once...if multiple lists are used..they can be merged in one
   //if sdgrid=True then image plane degridding is done
-  virtual void setComponentList(const ComponentList& cl, Bool sdgrid=False);
+  virtual void setComponentList(const ComponentList& cl, 
+				Bool sdgrid=False);
   Bool weight(const String& type="natural", 
 	      const String& rmode="norm",
 	      const Quantity& noise=Quantity(0.0, "Jy"), 
@@ -142,18 +144,24 @@ class SynthesisImager
 protected:
  
   /////////////// Internal Functions
-  MDirection tmpStringToMDir(String phasecenter);
-  CountedPtr<CoordinateSystem> buildImageCoordinateSystem(String phasecenter, 
-							  Double cellx, Double celly, 
-							  uInt imx, uInt imy,
-							  uInt npol, uInt nchan);
 
-  CoordinateSystem buildCoordSys(const MDirection& phasecenter, const Quantity& cellx, const Quantity& celly,
-		  const Int nx, const Int ny, const String& stokes, const Projection& projection, const Int nchan,
-		  const Quantity& freqStart, const Quantity& freqStep, const Vector<Quantity>& restFreq, const MFrequency::Types freqFrame);
+  CoordinateSystem buildCoordSys(const MDirection& phasecenter, 
+				 const Quantity& cellx, 
+				 const Quantity& celly,
+				 const Int nx, 
+				 const Int ny, 
+				 const String& stokes, 
+				 const Projection& projection, 
+				 const Int nchan,
+				 const Quantity& freqStart, 
+				 const Quantity& freqStep, 
+				 const Vector<Quantity>& restFreq, 
+				 const MFrequency::Types freqFrame);
 
-  void createFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT,  const String& ftname,
-		  const Int facets=1);
+  void createFTMachine(CountedPtr<FTMachine>& theFT, 
+		       CountedPtr<FTMachine>& theIFT,  
+		       const String& ftname,
+		       const Int facets=1);
   void createVisSet(const Bool writeaccess=False);
   
   void runMajorCycle(const Bool dopsf=False, const Bool useViVb2=False);

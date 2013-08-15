@@ -214,8 +214,8 @@ class NewCalTable : public Table
    // Provide RO access to 
    //   inline ROCTMainColumns mcols() const {return ROCTMainColumns(*this);};
 
-   static Complex NCTtestvalueC(Int iant,Int ispw,Int ich,Double time,Double refTime,Double tint);
-   static Float NCTtestvalueF(Int iant,Int ispw,Int ich,Double time,Double refTime,Double tint);
+   static Complex NCTtestvalueC(Int iant,Int ispw,Double ich,Double time,Double refTime,Double tint);
+   static Float NCTtestvalueF(Int iant,Int ispw,Double ich,Double time,Double refTime,Double tint);
 
    // Fill in antenna-based solutions
    //  (obsId-less version calls obsId-capable version w/ obsId=0)

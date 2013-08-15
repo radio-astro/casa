@@ -187,6 +187,13 @@ void VisCal::setApply(const Record& apply) {
 
 }
 
+void VisCal::setCallib(const Record& callib) {
+
+  // Forward to setApply
+  VisCal::setApply(callib);
+
+}
+
 
 String VisCal::applyinfo() {
 
@@ -1487,8 +1494,8 @@ void VisJones::syncWtScale() {
     cWSswt += cWSiwt;
   }
 
-  cWS(cWSswt<FLT_MIN)=0.0;
-  cWSswt(cWSswt<FLT_MIN)=1.0;  // avoid /0 below
+  cWS(cWSswt<FLT_EPSILON)=1.0;
+  cWSswt(cWSswt<FLT_EPSILON)=1.0;  // avoid /0 below
   cWS/=cWSswt;
 
   // Square it

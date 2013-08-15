@@ -215,6 +215,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     inline void cacheAxisIncrements(const Vector<Int>& n, Vector<Int>& inc)
     {inc.resize(4);inc[0]=1; inc[1]=inc[0]*n[0]; inc[2]=inc[1]*n[1]; inc[3]=inc[2]*n[2];(void)n[3];}
 
+    inline void cacheAxisIncrements(const Int n[4], Int inc[4])
+    {inc[0]=1; inc[1]=inc[0]*n[0]; inc[2]=inc[1]*n[1]; inc[3]=inc[2]*n[2];(void)n[3];}
+
     // Version that use internally cached inc_p
     //    template <class T>
     inline void addTo4DArray(DComplex* __restrict__& store, Int* __restrict__& iPos, 

@@ -54,15 +54,106 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
 
+#include <casa/System/Choice.h>
+#include <synthesis/MSVis/StokesVector.h>
+
+
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+#define NEED_UNDERSCORES
+#if defined(NEED_UNDERSCORES)
+#define hclean hclean_
+#endif
+extern "C" {
+  void hclean(Float*, Float*, Float*, int*, Float*, int*, int*, int*,
+              int*, int*, int*, int*, int*, int*, int*, Float*, Float*,
+              Float*, void *, void *);
+   };
+
+
+
+  ////////////////// Global functions ? 
+void REFHogbomCleanImageSkyModelstopnow (Int *yes) {
+
+  Vector<String> choices(2);
+  choices(0)="Continue";
+  choices(1)="Stop Now";
+  LogMessage message(LogOrigin("REFHogbomCleanImageSkyModel","solve"));
+  LogSink logSink;
+  *yes=0;
+  return;
+  String choice=Choice::choice("Clean iteration: do you want to continue or stop?", choices);
+  if (choice==choices(0)) {
+    *yes=0;
+  }
+  else {
+    message.message("Stopping");
+    logSink.post(message);
+    *yes=1;
+  }
+
+}
+
+void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* px, Int* py,
+				    Float* fMaxVal) {
+  LogMessage message(LogOrigin("REFHogbomCleanImageSkyModel","solve"));
+  ostringstream o; 
+  LogSink logSink;
+  
+  if(*npol<0) {
+    StokesVector maxVal(fMaxVal[0], fMaxVal[1], fMaxVal[2], fMaxVal[3]);
+    if(*iter==0) {
+      //      o<<stokes<<": Before iteration, peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      o<<"Before iteration, peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      message.message(o);
+      logSink.post(message);
+    }
+    else if(*iter>-1) {
+      //      o<<stokes<<": Iteration "<<*iter<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      o<<"Iteration "<<*iter<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      message.message(o);
+      logSink.post(message);
+    }
+    else {
+      //      o<<stokes<<": Final iteration "<<abs(*iter)<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      o<<"Final iteration "<<abs(*iter)<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      message.message(o);
+      logSink.post(message);
+    }
+  }
+  else {
+    Float maxVal(fMaxVal[0]);
+    if(*iter==0) {
+      //      o<<stokes<<": Before iteration, peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      o<<"Before iteration, peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      message.message(o);
+      logSink.post(message);
+    }
+    else if(*iter>-1) {
+      //      o<<stokes<<": Iteration "<<*iter<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      o<<"Iteration "<<*iter<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      message.message(o);
+      logSink.post(message);
+    }
+    else {
+      //      o<<stokes<<": Final iteration "<<abs(*iter)<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      o<<"Final iteration "<<abs(*iter)<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
+      message.message(o);
+      logSink.post(message);
+    }
+  }
+  
+}
+
 
 
   SDAlgorithmHogbomClean::SDAlgorithmHogbomClean():
     SDAlgorithmBase(),
     itsMatResidual(), itsMatModel(), itsMatPsf(),
     itsMaxPos( IPosition() ),
+    itsPeakResidual(0.0),
     itsModelFlux(0.0),
-    itsPeakResidual(0.0)
+    itsMatMask()
  {
    itsAlgorithmName=String("Hogbom");
  }
@@ -88,32 +179,73 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     peakresidual = itsPeakResidual;
     modelflux = itsModelFlux;
 
+    cout << "HOG: Set mask to 1" << endl;
+    itsMatMask.resize( itsMatPsf.shape() );
+    itsMatMask.set(1.0);
+    
+
   }
 
-  void SDAlgorithmHogbomClean::takeOneStep( Float loopgain, Float &peakresidual, Float &modelflux )
+  void SDAlgorithmHogbomClean::takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int &iterdone)
   {
-    /*
-    findNextComponent();
-    updateModel( loopgain );
-    updateResidual( loopgain );
-    */
 
-    itsMatModel( itsMaxPos ) += itsPeakResidual * loopgain;
-    itsModelFlux += itsPeakResidual*loopgain;
+    Bool delete_iti, delete_its, delete_itp, delete_itm;
+    const Float *lpsf_data, *lmask_data;
+    Float *limage_data, *limageStep_data;
 
-    // Remove a scaled and shifted version of the PSF.
-    // Calculate blc/trc
-    calculatePatchBoundaries();
-    Matrix<Float> residualSub = itsMatResidual( itsBlc, itsTrc );
-    Matrix<Float> psfSub = itsMatPsf( itsBlcPsf, itsTrcPsf );
+    limage_data = itsMatResidual.getStorage( delete_iti );
+    limageStep_data = itsMatModel.getStorage( delete_its );
+    lpsf_data = itsMatPsf.getStorage( delete_itp );
+    lmask_data = itsMatMask.getStorage( delete_itm );
 
-    residualSub -= itsPeakResidual * loopgain * psfSub;
-      //    itsMatResidual( itsMaxPos ) -= itsPeakResidual*loopgain;
+    Int niter= cycleNiter;
+    Float g = loopgain;
+    Float thres = cycleThreshold;
 
+    IPosition shp = itsMatPsf.shape();
+    Int xbeg = shp[0]/4;
+    Int xend = 3*shp[0]/4;
+    Int ybeg = shp[1]/4;
+    Int yend = 3*shp[1]/4;
+
+    Int newNx = shp[0];
+    Int newNy = shp[1];
+    Int npol = shp[2];
+    
+
+    Int fxbeg=xbeg+1;
+    Int fxend=xend;
+    Int fybeg=ybeg+1;
+    Int fyend=yend;
+    
+    Int domaskI = 1;
+    
+    Int starting_iteration = 0;  
+    Int ending_iteration=0;         
+    Float cycleSpeedup = -1; // ie, ignore it
+    
+    hclean(limage_data, limageStep_data,
+	   (Float*)lpsf_data, &domaskI, (Float*)lmask_data,
+	   &newNx, &newNy, &npol,
+	   &fxbeg, &fxend, &fybeg, &fyend, &niter,
+	   &starting_iteration, &ending_iteration,
+	   &g, &thres, &cycleSpeedup,
+	   (void*) &REFHogbomCleanImageSkyModelmsgput,
+	   (void*) &REFHogbomCleanImageSkyModelstopnow);
+    
+    iterdone=ending_iteration;
+    
+    itsMatResidual.putStorage( limage_data, delete_iti );
+    itsMatModel.putStorage( limageStep_data, delete_its );
+    itsMatPsf.freeStorage( lpsf_data, delete_itp );
+    itsMatMask.freeStorage( lmask_data, delete_itm );
+    
+    
+    /////////////////
     findMaxAbs( itsMatResidual, itsPeakResidual, itsMaxPos );
-
     peakresidual = itsPeakResidual;
-    modelflux = itsModelFlux;
+
+    modelflux = sum( itsMatModel ); // Performance hog ?
   }	    
 
   void SDAlgorithmHogbomClean::finalizeDeconvolver()
@@ -123,36 +255,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
-  /*
-  void SDAlgorithmHogbomClean::findNextComponent()
-  {
-    //Hogbom Clean. find the peak residual and its location.
-    ///findMaxAbs( itsResidual, itsPeakResidual, itsMaxPos );
-
-    // This is a no-op. The peak residual is alread known !
-
-  }
-
-  void SDAlgorithmHogbomClean::updateModel( Float loopgain )
-  {
-    // Add the delta function component to the model image
-    //    itsModel.putAt( itsModel.getAt(itsMaxPos) + (itsPeakResidual*loopgain) , itsMaxPos);
-
-    itsMatModel( itsMaxPos ) += itsPeakResidual * loopgain;
-
-    itsModelFlux += itsPeakResidual*loopgain;
-  }
-
-  // Subtract the shifted PSF from that location
-  void SDAlgorithmHogbomClean::updateResidual( Floag loopgain )
-  {
-    //    itsResidual.putAt( itsResidual.getAt(itsMaxPos) - (itsPeakResidual*loopgain)  , itsMaxPos );
-    itsMatResidual( itsMaxPos ) -= itsPeakResidual*loopgain;
-    findMaxAbs( itsMatResidual, itsPeakResidual, itsMaxPos );
-  }
-  */
-
-  void SDAlgorithmHogbomClean::restore(CountedPtr<SIImageStore> imagestore )
+    void SDAlgorithmHogbomClean::restore(CountedPtr<SIImageStore> imagestore )
   {
 
     LogIO os( LogOrigin("SDAlgorithmHogbomClean","restore",WHERE) );
@@ -171,107 +274,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
-
-Bool SDAlgorithmHogbomClean::findMaxAbs(const Matrix<Float>& lattice,
-					Float& maxAbs,
-					IPosition& posMaxAbs)
-{
-
-  posMaxAbs = IPosition(lattice.shape().nelements(), 0);
-  maxAbs=0.0;
-
-  Float minVal;
-  IPosition posmin(lattice.shape().nelements(), 0);
-  minMax(minVal, maxAbs, posmin, posMaxAbs, lattice);
-  //cout << "min " << minVal << "  " << maxAbs << "   " << max(lattice) << endl;
-  if(abs(minVal) > abs(maxAbs)){
-    maxAbs=minVal;
-    posMaxAbs=posmin;
-  }
-  return True;
-}
-
-
-
-  /*
-Bool SDAlgorithmHogbomClean::findMaxAbsMask(const Matrix<Float>& lattice,
-					    const Matrix<Float>& mask,
-					    Float& maxAbs,
-					    IPosition& posMaxAbs)
-{
-
-  posMaxAbs = IPosition(lattice.shape().nelements(), 0);
-  maxAbs=0.0;
-  Float minVal;
-  IPosition posmin(lattice.shape().nelements(), 0);
-  minMaxMasked(minVal, maxAbs, posmin, posMaxAbs, lattice, mask);
-  if(abs(minVal) > abs(maxAbs)){
-    maxAbs=minVal;
-    posMaxAbs=posmin;
-  }
- 
-  return True;
-}
-  */
-
-
-  void SDAlgorithmHogbomClean::calculatePatchBoundaries()
-  {
-    IPosition support(itsMatModel.shape());
-    IPosition inc(itsMatModel.shape().nelements(), 1);
-
-    itsBlc = IPosition(itsMaxPos-support/2);
-    // itsTrc = IPosition(itsMaxPos+support/2-1);
-    itsTrc = IPosition(itsMaxPos+support/2);
-    LCBox::verify(itsBlc, itsTrc, inc, itsMatModel.shape());
-    
-    IPosition posPeakPsf( support/2 );
-
-    itsBlcPsf = IPosition(itsBlc+posPeakPsf-itsMaxPos);
-    itsTrcPsf = IPosition(itsTrc+posPeakPsf-itsMaxPos);
-    LCBox::verify(itsBlcPsf, itsTrcPsf, inc, support);
-
-    makeBoxesSameSize(itsBlc,itsTrc,itsBlcPsf,itsTrcPsf);
-
-    /*    
-    cout << "support : " << support;
-    cout << "   peak : " << itsMaxPos << "   psf peak : " << posPeakPsf;
-    cout << "   blc " << itsBlc.asVector() << " trc " << itsTrc.asVector();
-    cout << "   blcPSF " << itsBlcPsf.asVector() << " trcPSF " << itsTrcPsf.asVector() << endl;
-    */
-
-  }
-
-void SDAlgorithmHogbomClean::makeBoxesSameSize(IPosition& blc1, IPosition& trc1, 
-                  IPosition &blc2, IPosition& trc2)
-{
-  const IPosition shape1 = trc1 - blc1;
-  const IPosition shape2 = trc2 - blc2;
-
-  AlwaysAssert(shape1.nelements() == shape2.nelements(), AipsError);
-  
-  if (shape1 == shape2) {
-      return;
-  }
-  for (uInt i=0;i<shape1.nelements();++i) {
-       Int minLength = shape1[i];
-       if (shape2[i]<minLength) {
-           minLength = shape2[i];
-       }
-       AlwaysAssert(minLength>=0, AipsError);
-       //if (minLength % 2 != 0) {
-           // if the number of pixels is odd, ensure that the centre stays 
-           // the same by making this number even
-           //--minLength; // this code is a mistake and should be removed
-       //}
-       const Int increment1 = shape1[i] - minLength;
-       const Int increment2 = shape2[i] - minLength;
-       blc1[i] += increment1/2;
-       trc1[i] -= increment1/2 + (increment1 % 2 != 0 ? 1 : 0);
-       blc2[i] += increment2/2;
-       trc2[i] -= increment2/2 + (increment2 % 2 != 0 ? 1 : 0);
-  }
-}
 
 
 } //# NAMESPACE CASA - END

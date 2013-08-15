@@ -95,11 +95,30 @@
 //
 // </motivation>
 //
+
+
 using namespace casa::CFDefs;
 using namespace std;
 namespace casa { //# NAMESPACE CASA - BEGIN
   //  template <class T>
   typedef Complex TT;
+
+  struct CFBStruct {
+    CFCStruct *CFBStorage;
+    int shape[3];
+    Double *freqValues, *wValues, *pointingOffset;
+    Double fIncr, wIncr;
+    Int **muellerElementsIndex, **muellerElements, 
+      **conjMuellerElementsIndex, **conjMuellerElements,
+      **conjFreqNdxMap, **freqNdxMap;
+    Int nMueller;
+    
+
+    CFCStruct* getCFB(int i, int j, int k)
+    { return &(CFBStorage[i + (shape[1]-1)*j + (shape[1]-1)*(shape[2]-1)*k]);}
+    //    { return &(CFBStorage[i + (shape[1]-1)*j + (shape[2]-1)*k]);}
+  } ;
+
   class CFBuffer
   {
   public:
@@ -110,7 +129,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CFBuffer(): wValues_p(), maxXSupport_p(-1), maxYSupport_p(-1), pointingOffset_p(), cfHitsStats(),
 		freqNdxMapsReady_p(False), freqNdxMap_p(), conjFreqNdxMap_p()
     {};
-
+    
     CFBuffer(Int maxXSup, Int maxYSup):
       wValues_p(), maxXSupport_p(maxXSup), maxYSupport_p(maxYSup), pointingOffset_p(), cfHitsStats(),
       freqNdxMapsReady_p(False), freqNdxMap_p(), conjFreqNdxMap_p()
@@ -120,13 +139,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // coordSys_p.resize(1,1,1); 
       // coordSys_p(0,0,0) = cs;
     };
-
+    
     ~CFBuffer() 
     {
       LogIO log_l(LogOrigin("CFBuffer","~CFBuffer[R&D]"));
       log_l << "CF Hits stats gathered: " << cfHitsStats << endl;
     };
-
+    
     CountedPtr<CFBuffer> clone();
     void allocCells(const Cube<CountedPtr<CFCell> >& cells);
     void setParams(const CFBuffer& other);
@@ -147,10 +166,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     inline Int nW() {return nW_p;}
     inline Int nMuellerElements() {return nPol_p;}
     inline IPosition shape() {IPosition shp(3,nChan_p, nW_p, nPol_p); return shp;}
-
+    
     inline Vector<Double> getFreqList() {return freqValues_p;};
     inline Vector<Double> getWList() {return wValues_p;};
-
+    
     CFCell& getCFCell(const Double& freqVal, const Double& wValue, 
 		      const Int & muellerElement); 
     // muellerElement: (i,j) of the Mueller Matrix
@@ -158,24 +177,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				     const Int & muellerElement); 
     CFCell& getCFCell(const Int& i, const Int& j, const Int& k);
     CountedPtr<CFCell >& getCFCellPtr(const Int& i, const Int& j, const Int& k);
-
+    
     //=========================================================================
     Array<TT>& getCF(const Double& freqVal, const Double& wValue, 
 		     const Int & muellerElement)
     {return *(getCFCell(freqVal, wValue, muellerElement).storage_p);}
     // muellerElement: (i,j) of the Mueller Matrix
-
+    
     CountedPtr<Array<TT> >& getCFPtr(const Double& freqVal, const Double& wValue, 
 				     const Int & muellerElement) 
     {return getCFCellPtr(freqVal, wValue, muellerElement)->storage_p;}
-
+    
     Array<TT>& getCF(const Int& i, const Int& j, const Int& k)
     {return *(getCFCell(i,j,k).storage_p);}
     
     CountedPtr<Array<TT> >& getCFPtr(const Int& i, const Int& j, const Int& k)
     {return getCFCellPtr(i,j,k)->storage_p;}
-
-
+    
+    
     //
     // Get the parameters of a the CFs indexed by values.  The version
     // which returns also the Coordinate System associated with the
@@ -207,7 +226,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       ySupport = cfCells_p(iFreq,iW,iPol)->ySupport_p;
       freqVal = freqValues_p(iFreq);
     }
-
+    
     inline void getCoordList(Vector<Double>& freqValues, Vector<Double>& wValues,
 			     PolMapType& muellerElementsIndex, PolMapType& muellerElements, 
 			     PolMapType& conjMuellerElementsIndex, PolMapType& conjMuellerElements, 
@@ -218,25 +237,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       conjMuellerElements.assign(conjMuellerElements_p); conjMuellerElementsIndex.assign(conjMuellerElementsIndex_p);
       fIncr = freqValIncr_p; wIncr = wValIncr_p;
     }
-
+    
     Int nearestNdx(const Double& val, const Vector<Double>& valList, const Double& incr);
-
+    
     Int nearestFreqNdx(const Double& freqVal) ;
-
+    
     inline Int nearestWNdx(const Double& wVal) 
     {
       //      return SynthesisUtils::nint(sqrt(wValIncr_p*abs(wVal)));
       return (int)(sqrt(wValIncr_p*abs(wVal)));
     }
-
+    
     Double nearest(Bool& found, const Double& val, const Vector<Double>& valList, const Double& incr);
-
+    
     inline Double nearestFreq(Bool& found, const Double& freqVal)
     {return nearest(found, freqVal, freqValues_p, freqValIncr_p);}
-
+    
     inline Double nearestWVal(Bool& found, const Double& wVal)
     {return nearest(found, wVal, wValues_p, wValIncr_p);}
-
+    
     //-------------------------------------------------------------------------
     //
     // Generate a map for the given frequency and Mueller element list
@@ -313,17 +332,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Returns True if the internal storage is not yet initialized.
     //
     Bool null() {return (cfCells_p.nelements() == 0);};
-
+    
     Cube<CountedPtr<CFCell> >& getStorage() {return cfCells_p;};
     void makePersistent(const char *dir);
-
+    
     void initMaps(const VisBuffer& vb,const Matrix<Double>& freqSelection,const Double& imRefFreq);
-
+    
+    //
+    // For CUDA kernel
+    //
+    void getFreqNdxMaps(Vector<Vector<Int> >& freqNdx, Vector<Vector<Int> >& conjFreqNdx);
     inline Int nearestFreqNdx(const Int& spw, const Int& chan, const Bool conj=False)
     {
       if (conj) return conjFreqNdxMap_p[spw][chan];
       else  return freqNdxMap_p[spw][chan];
     }
+    
+    void getAsStruct(CFBStruct& st);
+    
+    static void initCFBStruct(CFBStruct& cfbSt) 
+    {
+      cfbSt.CFBStorage=NULL;
+      cfbSt.freqValues=NULL;
+      cfbSt.wValues=NULL;
+      cfbSt.muellerElementsIndex=NULL;
+      cfbSt.muellerElements=NULL;
+      cfbSt.conjMuellerElementsIndex=NULL;
+      cfbSt.conjMuellerElements=NULL;
+      cfbSt.shape[0]=cfbSt.shape[1]=cfbSt.shape[2]=0;
+      cfbSt.fIncr=cfbSt.wIncr=0.0;
+    }
+    
     //
     //============================= Protected Parts ============================
     //------------------------------------------------------------------
@@ -340,12 +379,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     PolMapType muellerElements_p, muellerElementsIndex_p,conjMuellerElements_p,conjMuellerElementsIndex_p; 
     Double wValIncr_p, freqValIncr_p;
     MuellerMatrixType muellerMask_p;
-
+    
     Int nPol_p, nChan_p, nW_p, maxXSupport_p, maxYSupport_p;
     Vector<Double> pointingOffset_p;
     Cube<Int> cfHitsStats;
     Bool freqNdxMapsReady_p;
     Vector<Vector<Int> > freqNdxMap_p, conjFreqNdxMap_p;
+    void ASSIGNVVofI(Int** &target,Vector<Vector<Int> >& source, Bool& doAlloc);
   };
+  
 } //# NAMESPACE CASA - END
 #endif

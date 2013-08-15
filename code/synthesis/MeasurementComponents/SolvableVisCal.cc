@@ -79,6 +79,7 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   corruptor_p(NULL),
   ct_(NULL),
   ci_(NULL),
+  cpp_(NULL),
   spwOK_(vs.numberSpw(),False),
   maxTimePerSolution_p(0), 
   minTimePerSolution_p(10000000), 
@@ -201,6 +202,7 @@ SolvableVisCal::~SolvableVisCal() {
   deleteSVC();
 
   if (ci_)   delete ci_;   ci_=NULL;
+  if (cpp_)  delete cpp_;  cpp_=NULL;
   if (ct_)   delete ct_;   ct_=NULL;
 
 }
@@ -344,6 +346,35 @@ void SolvableVisCal::setApply(const Record& apply) {
   //  cout << "End of SVC::setApply" << endl;
 
 }
+
+// Setapply from a Cal Table, etc.
+void SolvableVisCal::setCallib(const Record& callib) {
+
+  if (prtlev()>2) 
+    cout << "SVC::setCallib(callib)" << endl;
+
+  // Call VisCal version for generic stuff
+  VisCal::setCallib(callib);
+
+  // Collect Cal table parameters
+  if (callib.isDefined("tablename")) {
+    calTableName()=callib.asString("tablename");
+    // Verify that CalTable is of correct type
+    verifyCalTable(calTableName());
+  }
+
+  // This is apply context  
+  setApplied(True);
+  setSolved(False);
+
+  // Make the interpolation engine
+  MeasurementSet ms(msName());
+  cpp_ = new CLPatchPanel(calTableName(),ms,callib,matrixType(),nPar());
+
+  //  cpp_->listmappings();
+
+}
+
 
 // ===================================================
 
@@ -854,8 +885,10 @@ String SolvableVisCal::applyinfo() {
   o << typeName()
     << ": table="  << calTableName()
     << " select=" << calTableSelect()
-    << " interp=" << tInterpType()
-    << " spwmap=" << spwMap()
+    << " interp=" << tInterpType();
+  if (this->freqDepPar())
+    o << "," << fInterpType();
+  o << " spwmap=" << spwMap()
     << boolalpha
     << " calWt=" << calWt();
     //    << " t="      << interval();
@@ -2710,6 +2743,11 @@ void SolvableVisCal::calcPar() {
 
   // This method is relevant only to the apply (& simulate) context
 
+  // If we have a CLPatchPanel, use it
+  if (cpp_)
+    this->calcParByCLPP();
+  else { // use CTPatchedInterp
+
   Bool newcal(False);
 
   // Interpolate solution   (CTPatchedInterp)
@@ -2765,8 +2803,73 @@ void SolvableVisCal::calcPar() {
     invalidateCalMat();
   }
   }
+  }
 
 }
+
+void SolvableVisCal::calcParByCLPP() {
+
+  Bool newcal(False);
+  Cube<Bool> resFlag;
+
+  // Interpolate solution   
+  switch (parType()) {
+  case VisCalEnum::COMPLEX: {
+
+    if (freqDepPar()) {
+      // Call w/ freq-dep
+      newcal=cpp_->interpolate(currCPar(),resFlag,currObs(),currField(),-1,currSpw(),currTime(),currFreq());
+    }
+    else {
+      // Call w/ fiducial freq for phase-delay correction
+      Double freq=1.0e9*currFreq()(currFreq().nelements()/2);
+      newcal=cpp_->interpolate(currCPar(),resFlag,currObs(),currField(),-1,currSpw(),currTime(),freq);
+    }
+    break;
+  }
+  case VisCalEnum::REAL: {
+    // Interpolate solution   
+    if (freqDepPar()) {
+      // Call w/ freq-dep
+      newcal=cpp_->interpolate(currRPar(),resFlag,currObs(),currField(),-1,currSpw(),currTime(),currFreq());
+    }
+    else {
+      newcal=cpp_->interpolate(currRPar(),resFlag,currObs(),currField(),-1,currSpw(),currTime(),-1.0);
+    }
+    break;
+  }
+  default:
+    throw(AipsError("Unhandled parType()")); // users should never see this
+    break;
+  }
+
+  // TBD: signal failure to find calibration??  (e.g., for a spw?)
+  
+  // Parameters now (or still) valid (independent of newcal!!)
+  validateP();
+
+  if (newcal) {
+ 
+    // Assign _inverse_ of parameter flags
+    currParOK().reference(!resFlag);
+
+    // Ensure shapes recorded correctly
+    // (New interpolation generates cal samples for all data channels...revisit?
+    //  IS THIS NEEDED?
+    IPosition ip=currCPar().shape();
+    nChanPar()=ip(1);
+    startChan()=0;
+
+    // In case we need solution timestamp
+    // NB: w/ new caltables, we use currTime() here.
+    refTime() = currTime();
+
+    // If new parameters, matrices (generically) are necessarily invalid now
+    invalidateCalMat();
+  }
+
+}
+
 
 // Report solved-for QU
 void SolvableVisCal::reportSolvedQU() {

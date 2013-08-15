@@ -1669,5 +1669,280 @@ namespace casa{
       if(rayy) deleteRay(rayy);
     }
   }
+  //
+  //----------------------------------------------------------------------
+  // Compute only the required polarizations.
+  //
+  Int BeamCalc::calculateAperture(ApertureCalcParams *ap, const Int& whichPoln)
+  {
+    Complex fp, Exr, Eyr, Exl, Eyl;
+    Complex Er[3], El[3];
+    Complex Pr[2], Pl[2]; 
+    Complex q[2];
+    Double dx, dy, x0, y0, Rhole, Rant, R2, H2, eps;
+    Complex rr, rl, lr, ll, tmp;
+    Double L0, phase;
+    Double sp, cp;
+    Double B[3][3];
+    calcAntenna *a;
+    Pathology *p;
+    Int nx, ny, os;
+    Int i, j;
+    Double pac, pas; /* parallactic angle cosine / sine */
+    Complex Iota; Iota=Complex(0,1);
+
+    //UNUSED: Complex E1[3];
+    //UNUSED: Double x,y, r2, L, amp, dP, dA, d0, x1, y1, dx1, dy1, dx2, dy2, dO;
+    //UNUSED: Ray *ray, *rayx, *rayy;
+    //UNUSED: Int iter;
+    //UNUSED: Int niter=6;
+
+    a = newAntennafromApertureCalcParams(ap);
+    p = newPathologyfromApertureCalcParams(ap);
+    
+    /* compute central ray pathlength */
+    {
+      Ray *tmpRay;
+      tmpRay = trace(a, 0.0, 0.00001, p);
+      L0 = Raylen(tmpRay);
+      deleteRay(tmpRay);
+    }
+    
+    pac = cos(ap->pa+M_PI/2);
+    pas = sin(ap->pa+M_PI/2);
+
+    if(obsName_p=="EVLA" || obsName_p=="VLA"){
+      /* compute polarization vectors in circular basis */
+      Pr[0] = 1.0/M_SQRT2; Pr[1] =  Iota/M_SQRT2;
+      Pl[0] = 1.0/M_SQRT2; Pl[1] = -Iota/M_SQRT2;
+
+      /* compensate for feed orientation */
+      getfeedbasis(a, B); 
+      phase = atan2(B[0][1], B[0][0]);
+      cp = cos(phase);
+      sp = sin(phase);
+      
+      q[0] = Pr[0];
+      q[1] = Pr[1];
+      Pr[0] =  Complex(cp,0)*q[0] + Complex(sp,0)*q[1];
+      Pr[1] = -Complex(sp,0)*q[0] + Complex(cp,0)*q[1];
+      q[0] = Pl[0];
+      q[1] = Pl[1];
+      Pl[0] =  Complex(cp,0)*q[0] + Complex(sp,0)*q[1];
+      Pl[1] = -Complex(sp,0)*q[0] + Complex(cp,0)*q[1];
+    }
+    else{
+      /* in linear basis */
+      Pr[0] = 1.0; Pr[1] = 0.0;
+      Pl[0] = 0.0; Pl[1] = 1.0;
+    }
+    
+    
+    
+    /* compute 3-vector feed efields for the two polarizations */
+    if ((whichPoln == Stokes::RR) || (whichPoln == Stokes::XX))
+      Efield(a, Pr, Er); 
+    else if ((whichPoln == Stokes::LL) || (whichPoln == Stokes::YY))
+      Efield(a, Pl, El); 
+    else
+      {Efield(a, Pr, Er); Efield(a, Pl, El);}
+
+    ap->aperture->set(Complex(0.0));
+    
+    os = ap->oversamp;
+    nx = ap->nx*os;
+    ny = ap->ny*os;
+    dx = ap->dx/os;
+    dy = ap->dy/os;
+    x0 = ap->x0 - ap->dx/2.0 + dx/2.0;
+    y0 = ap->y0 - ap->dy/2.0 + dy/2.0;
+    Rant = a->radius;
+    Rhole = a->hole_radius;
+    R2 = Rant*Rant;
+    H2 = Rhole*Rhole;
+    
+    eps = dx/4.0;
+    
+    IPosition pos(4);
+    //    shape = ap->aperture->shape();
+
+    
+    // cerr << "max threads " << omp_get_max_threads() 
+    // 	 << " threads available " << omp_get_num_threads() 
+    // 	 << endl;
+    Int Nth=1, localWhichPoln=whichPoln;
+#ifdef HAS_OMP
+    Nth=max(omp_get_max_threads()-2,1);
+#endif
+    // Timer tim;
+    // tim.mark();
+#pragma omp parallel default(none) firstprivate(Er, El, nx, ny, localWhichPoln)  private(i,j) shared(ap, a, p, L0) num_threads(Nth)
+    {
+#pragma omp for
+    for(j = 0; j < ny; j++)
+      {
+	for(i = 0; i < nx; i++)
+	  {
+	    computePixelValues(ap, a, p, L0, Er, El, i,j,whichPoln);
+	  }
+      }
+    }
+    // tim.show("BeamCalc:");
+    
+    deletePathology(p);
+    deleteAntenna(a);
+    
+    return 1;
+  }
+
+  void BeamCalc::computePixelValues(const ApertureCalcParams *ap, 
+				     const calcAntenna *a, const Pathology *p,
+				     const Double &L0,
+				     Complex *Er, Complex *El,
+				     const Int &i, const Int &j,
+				     const Int& whichPoln)
+  {
+    Complex fp, Exr, Eyr, Exl, Eyl;
+    //    Complex Er[3], El[3];
+    Complex E1[3];
+    Double dx, dy, x0, y0, x, y, r2, Rhole, Rant, R2, H2, eps;
+    Complex rr, rl, lr, ll, tmp;
+    Double L, amp, dP, dA, dO, x1, y1, dx1, dy1, dx2, dy2, phase;
+    Int nx, ny, os;
+    Int niter=6;
+    Double pac, pas, cp,sp; /* parallactic angle cosine / sine */
+    Complex Iota; Iota=Complex(0,1);
+    IPosition pos(4);pos=0;
+
+    Ray *ray=0, *rayx=0, *rayy=0;
+    /* determine parallactic angle rotated coordinates */
+    
+    os = ap->oversamp;
+    nx = ap->nx*os;
+    ny = ap->ny*os;
+    dx = ap->dx/os;
+    dy = ap->dy/os;
+    x0 = ap->x0 - ap->dx/2.0 + dx/2.0;
+    y0 = ap->y0 - ap->dy/2.0 + dy/2.0;
+    Rant = a->radius;
+    Rhole = a->hole_radius;
+    R2 = Rant*Rant;
+    H2 = Rhole*Rhole;
+    //   for(Int i=0; i < nx; ++i)
+     {
+      eps = dx/4.0;
+      pac = cos(ap->pa+M_PI/2);
+      pas = sin(ap->pa+M_PI/2);
+      
+      x = pac*(x0 + i*dx) - pas*(y0 + j*dy);
+      y = pas*(x0 + i*dx) + pac*(y0 + j*dy);
+      x = -x;
+      
+      if(fabs(x) > Rant) goto nextpoint;
+      if(fabs(y) > Rant) goto nextpoint;
+      r2 = x*x + y*y;
+      if(r2 > R2) goto nextpoint;
+      if(r2 < H2) goto nextpoint;
+      
+      ray = rayx = rayy = 0;
+      
+      x1 = x;
+      y1 = y;
+      
+      for(Int iter = 0; iter < niter; iter++)
+	{
+	  ray = trace(a, x1, y1, p);
+	  if(!ray) goto nextpoint;
+	  x1 += (x - ray->aper[0]);
+	  y1 += (y - ray->aper[1]);
+	  deleteRay(ray);
+	  ray = 0;
+	}
+      
+      ray = trace(a, x1, y1, p);
+      
+      /* check for leg blockage */
+      if(legplanewaveblock2(a, ray))
+	goto nextpoint;
+      if(legsphericalwaveblock(a, ray))
+	goto nextpoint;
+      
+      if(y < 0) rayy = trace(a, x1, y1+eps, p);
+      else rayy = trace(a, x1, y1-eps, p);
+      
+      if(x < 0) rayx = trace(a, x1+eps, y1, p);
+      else rayx = trace(a, x1-eps, y1, p);
+      
+      if(ray == 0 || rayx == 0 || rayy == 0)
+	goto nextpoint;
+      
+      /* compute solid angle subtended at the feed */
+      dx1 = rayx->aper[0]-ray->aper[0];
+      dy1 = rayx->aper[1]-ray->aper[1];
+      dx2 = rayy->aper[0]-ray->aper[0];
+      dy2 = rayy->aper[1]-ray->aper[1];
+      
+      dA = 0.5*fabs(dx1*dy2 - dx2*dy1);
+      dO = (dOmega(a, rayx, rayy, ray, p)/dA)*dx*dx;
+      dP = dO*feedgain(a, ray, p);
+      amp = sqrt(dP);
+      
+      L = Raylen(ray);
+      
+      phase = 2.0*M_PI*(L-L0)/a->lambda;
+      
+      /* phase retard the wave */
+      cp = cos(phase);
+      sp = sin(phase);
+      //	    fp = cp + sp*1.0i;
+      
+      fp = Complex(cp,sp);
+      
+      
+      tracepol(Er, ray, E1);
+      Exr = fp*amp*E1[0];
+      Eyr = fp*amp*E1[1];
+      // 	    rr = Exr - 1.0i*Eyr;
+      // 	    rl = Exr + 1.0i*Eyr;
+      rr = Exr - Iota*Eyr;
+      rl = Exr + Iota*Eyr;
+
+      tracepol(El, ray, E1);
+      Exl = fp*amp*E1[0];
+      Eyl = fp*amp*E1[1];
+      // 	    lr = Exl - 1.0i*Eyl;
+      // 	    ll = Exl + 1.0i*Eyl;
+      lr = Exl - Iota*Eyl;
+      ll = Exl + Iota*Eyl;
+      
+      // 	    pos(0)=(Int)((j/os) - (25.0/dy/os)/2 + shape(0)/2 - 0.5);
+      // 	    pos(1)=(Int)((i/os) - (25.0/dx/os)/2 + shape(1)/2 - 0.5);
+      // Following 3 lines go with ANT tag in VLACalc.....
+      //	    Double antRadius=BeamCalcGeometryDefaults[ap->band].Rant;
+      //	    pos(0)=(Int)((j/os) - (antRadius/dy/os) + shape(0)/2 - 0.5);
+      //	    pos(1)=(Int)((i/os) - (antRadius/dx/os) + shape(1)/2 - 0.5);
+      // Following 2 lines go with the PIX tag in VLACalc...
+      pos(0)=(Int)((j/os));
+      pos(1)=(Int)((i/os));
+      pos(2)=0;
+      pos(3)=0;
+      
+      if ((whichPoln==Stokes::RR) || (whichPoln==Stokes::XX))
+	{tmp=ap->aperture->getAt(pos);ap->aperture->putAt(tmp+rr,pos);}
+
+      if ((whichPoln==Stokes::RL) || (whichPoln==Stokes::XY))
+	{tmp=ap->aperture->getAt(pos);ap->aperture->putAt(tmp+rl,pos);}
+
+      if ((whichPoln==Stokes::LR) || (whichPoln==Stokes::YX))
+	{tmp=ap->aperture->getAt(pos);ap->aperture->putAt(tmp+lr,pos);}
+
+      if ((whichPoln==Stokes::LL) || (whichPoln==Stokes::YY))
+	{tmp=ap->aperture->getAt(pos);ap->aperture->putAt(tmp+ll,pos);}
+    nextpoint:
+      if(ray)  deleteRay(ray);
+      if(rayx) deleteRay(rayx);
+      if(rayy) deleteRay(rayy);
+    }
+  }
 };
 

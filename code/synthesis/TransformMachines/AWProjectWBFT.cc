@@ -142,6 +142,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	wtImageFTDone_p =   other.wtImageFTDone_p;
 	rotatedCFWts_p  =   other.rotatedCFWts_p;
 	visResamplerWt_p=other.visResamplerWt_p; // Copy the counted pointer
+	//	*visResamplerWt_p = *other.visResamplerWt_p; // Call the appropriate operator=()
 
 	//	visResampler_p=other.visResampler_p->clone();
     };
@@ -1410,6 +1411,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Matrix<Double> uvwOrigin;
     vbs.uvw_p.reference(uvwOrigin); 
     Bool dopsf_l=True;
+    vbs.accumCFs_p=((vbs.uvw_p.nelements() == 0) && dopsf_l);
     
     // Array<Complex> gwts; Bool removeDegenerateAxis=False;
     // wtsGrid.get(gwts, removeDegenerateAxis);

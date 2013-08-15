@@ -362,6 +362,7 @@ private:
 	bool filterRows_p;
 	bool filterPols_p;
 	bool filterChannels_p;
+	bool flagAutoCorrelations_p;
 	Bool antennaNegation_p;
 
 	// Own data selection indexes

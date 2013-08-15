@@ -28,6 +28,7 @@
 #ifndef SYNTHESIS_VBSTORE_H
 #define SYNTHESIS_VBSTORE_H
 #include <synthesis/TransformMachines/Utils.h>
+#include <synthesis/TransformMachines/CFBuffer.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   class VBStore
@@ -86,7 +87,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // correctedCube_p.assign(other.correctedCube_p);
     }
 
-    Int nRow_p, beginRow_p, endRow_p, spwID_p, startChan_p, endChan_p;
+    Int nRow_p, beginRow_p, endRow_p, spwID_p, startChan_p, endChan_p,nDataChan_p, nDataPol_p;
     Matrix<Double> uvw_p;
     Vector<Bool> rowFlag_p;
     Cube<Bool> flagCube_p;
@@ -99,6 +100,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Int> antenna1_p, antenna2_p;
     const VisBuffer *vb_p;
     Double imRefFreq_p;
+    CFBStruct cfBSt_p;
+    Bool accumCFs_p;
   };
 
 } //# NAMESPACE CASA - END

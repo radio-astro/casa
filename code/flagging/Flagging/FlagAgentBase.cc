@@ -155,6 +155,7 @@ FlagAgentBase::initialize()
    filterChannels_p = false;
    filterRows_p = false;
    filterPols_p = false;
+   flagAutoCorrelations_p = false;
    uvwUnits_p = true; // Meters
 
 	// Initialize state
@@ -1412,10 +1413,10 @@ FlagAgentBase::setAgentParameters(Record config)
 	exists = config.fieldNumber ("autocorr");
 	if (exists >= 0)
 	{
-		flagDataHandler_p->flagAutoCorrelations_p = config.asBool("autocorr");
-		*logger_p << logLevel_p << "autocorr is " << flagDataHandler_p->flagAutoCorrelations_p
+		flagAutoCorrelations_p = config.asBool("autocorr");
+		*logger_p << logLevel_p << "autocorr is " << flagAutoCorrelations_p
 				<< LogIO::POST;
-		if (flagDataHandler_p->flagAutoCorrelations_p) {
+		if (flagAutoCorrelations_p) {
 			filterRows_p=true;
 			*logger_p << logLevel_p << "Will only apply auto-correlation flagging to data with processor==CORRELATOR"
 					<< LogIO::POST;
@@ -1505,7 +1506,7 @@ FlagAgentBase::generateRowsIndex(uInt nRows)
 			}
 
 			// Check auto-correlations
-			if (flagDataHandler_p->flagAutoCorrelations_p)
+			if (flagAutoCorrelations_p)
 			{
 				// if not an auto-corr, do not add row to the vector
 				if (visibilityBuffer_p->antenna1()[row_i] != visibilityBuffer_p->antenna2()[row_i]) {

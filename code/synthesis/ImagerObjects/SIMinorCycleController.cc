@@ -41,9 +41,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                 itsIterDone(0),
                                 itsCycleIterDone(0),
                                 itsTotalIterDone(0),
-                                itsIntegratedFlux(0),
                                 itsMaxCycleIterDone(0),
                                 itsPeakResidual(0),
+                                itsIntegratedFlux(0),
                                 itsMaxPsfSidelobe(0),
                                 itsSummaryMinor(IPosition(2,6,0)),
 				itsNSummaryFields(6),
@@ -76,11 +76,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsUpdatedModelFlag = updatedmodel;
   }
 
-  void SIMinorCycleController::incrementMinorCycleCount()
+  void SIMinorCycleController::incrementMinorCycleCount(Int itersDonePerStep)
   {
-    itsIterDone++;
-    itsTotalIterDone++;
-    itsCycleIterDone++;
+    itsIterDone += itersDonePerStep;
+    itsTotalIterDone += itersDonePerStep;
+    itsCycleIterDone += itersDonePerStep;
   }
 
   Float SIMinorCycleController::getPeakResidual()
