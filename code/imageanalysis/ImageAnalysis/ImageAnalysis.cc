@@ -5196,7 +5196,7 @@ ImageInterface<Float> *
 ImageAnalysis::newimagefromarray(const String& outfile,
 		Array<Float> & pixelsArray, const Record& csys, const Bool linear,
 		const Bool overwrite, const Bool log) {
-	ImageInterface<Float>* outImage = 0;
+	auto_ptr<ImageInterface<Float> > outImage(0);
 
 	try {
 		*_log << LogOrigin("ImageAnalysis", "newimagefromarray");
@@ -5206,8 +5206,7 @@ ImageAnalysis::newimagefromarray(const String& outfile,
 			NewFile validfile;
 			String errmsg;
 			if (!validfile.valueOK(outfile, errmsg)) {
-				*_log << LogIO::WARN << errmsg << LogIO::POST;
-				return outImage;
+			    throw AipsError(errmsg);
 			}
 		}
 		// Some protection
@@ -5236,32 +5235,25 @@ ImageAnalysis::newimagefromarray(const String& outfile,
 
 		uInt ndim = (pixelsArray.shape()).nelements();
 		if (ndim != cSys.nPixelAxes()) {
-			*_log << LogIO::SEVERE
-					<< "Supplied CoordinateSystem and image shape are inconsistent"
-					<< LogIO::POST;
-			return outImage;
-		}
+			throw AipsError("Supplied CoordinateSystem and image shape are inconsistent");
+				}
 		//
 
 		if (outfile.empty()) {
-			outImage = new TempImage<Float> (IPosition(pixelsArray.shape()),
-					cSys);
-			if (outImage == 0) {
-				*_log << LogIO::SEVERE << "Failed to create TempImage"
-						<< LogIO::POST;
-				return outImage;
+			outImage.reset(new TempImage<Float> (IPosition(pixelsArray.shape()),
+					cSys));
+			if (outImage.get() == 0) {
+			    throw AipsError("Failed to create TempImage");
 			}
 			if (log) {
 				*_log << LogIO::NORMAL << "Creating (temp)image of shape "
 						<< outImage->shape() << LogIO::POST;
 			}
 		} else {
-			outImage = new PagedImage<Float> (IPosition(pixelsArray.shape()),
-					cSys, outfile);
-			if (outImage == 0) {
-				*_log << LogIO::SEVERE << "Failed to create PagedImage"
-						<< LogIO::POST;
-				return outImage;
+			outImage.reset(new PagedImage<Float> (IPosition(pixelsArray.shape()),
+					cSys, outfile));
+			if (outImage.get() == 0) {
+				throw AipsError("Failed to create PagedImage");
 			}
 			if (log) {
 				*_log << LogIO::NORMAL << "Creating image '" << outfile
@@ -5272,11 +5264,12 @@ ImageAnalysis::newimagefromarray(const String& outfile,
 		// Fill image
 		outImage->putSlice(pixelsArray, IPosition(pixelsArray.ndim(), 0),
 				IPosition(pixelsArray.ndim(), 1));
+        outImage->flush();
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 	}
-	return outImage;
+	return outImage.release();
 }
 
 ImageInterface<Float> *
