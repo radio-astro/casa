@@ -173,7 +173,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="hourangle" subparam="true">
-      <description>hour angle of observation center e.g. -3:00:00, or "transit"</description>
+      <description>hour angle of observation center e.g. "-3:00:00", "5h", "-4.5" (a number without units will be interpreted as hours), or "transit" </description>
       <value>transit</value>
     </param>
     

@@ -257,7 +257,8 @@ class convertToMMS():
         
         # Run partition   
         default('partition')
-        partition(vis=ms, outputvis=mms, createmms=True, datacolumn='all', parallel=runmode)
+        partition(vis=ms, outputvis=mms, createmms=True, datacolumn='all', flagbackup=False,
+                  parallel=runmode)
         casalog.origin('convertToMMS')
         
         # Check if MMS was created

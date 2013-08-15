@@ -141,22 +141,32 @@ calibrations can be applied on the fly.
 		<value>False</value>
 	</param>
 
-	<param type="stringArray" name="gaintable">
+	<param type="bool" name="docallib" >
+	        <description>Use callib or traditional cal apply parameters</description>
+	        <value>False</value>
+	</param>
+
+	<param type="variant" name="callib" subparam="true" >
+	        <description>Cal Library filename</description>
+                <value type="string"></value>
+	</param>
+
+	<param type="stringArray" name="gaintable" subparam="true">
 		<description>Gain calibration table(s) to apply</description>
 		<value></value>
 	</param>
 
-	<param type="stringArray" name="gainfield">
+	<param type="stringArray" name="gainfield" subparam="true">
 		<description>Select a subset of calibrators from gaintable(s)</description>
 		<value></value>
 	</param>
 
-	<param type="stringArray" name="interp">
+	<param type="stringArray" name="interp" subparam="true">
 		<description>Interpolation mode (in time) to use for each gaintable</description>
 		<value></value>
 	</param>
 
-	<param type="intArray" name="spwmap">
+	<param type="intArray" name="spwmap" subparam="true">
 		<description>Spectral windows combinations to form for gaintables(s)</description>
 		<value></value>
 	</param>
@@ -173,6 +183,17 @@ calibrations can be applied on the fly.
 		</equals>
 		<equals type="bool" value="False"/>
 	</when>
+        <when param="docallib">
+                <equals type="bool" value="False">
+                        <default param="gaintable"><value type="stringArray"/></default>
+                        <default param="gainfield"><value type="stringArray"/></default>
+                        <default param="interp"><value type="stringArray"/></default>
+                        <default param="spwmap"><value type="intArray"/></default>
+		</equals>
+                <equals type="bool" value="True">
+                        <default param="callib"><value type="string"/></default>
+		</equals>
+        </when>
    </constraints>
 </input>
 <example>
@@ -349,7 +370,13 @@ calibrations can be applied on the fly.
                    or be non-overlapping.
               default: False; overwrite existing table or make new table
 
-      --- Other calibrations to apply on the fly before determining gaincal solution
+      --- Other calibrations to apply on the fly before determining polcal solution
+
+      docallib -- Control means of specifying the caltables:
+               default: False ==&gt; Use gaintable,gainfield,interp,spwmap,calwt
+                        If True, specify a file containing cal library in callib
+      callib -- If docallib=True, specify a file containing cal
+                  library directives
 
       gaintable -- Gain calibration table(s) to apply 
                default: '' (none);  BUT I CALIBRATION TABLES SHOULD GENERALLY BE INCLUDED

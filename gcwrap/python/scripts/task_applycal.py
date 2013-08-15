@@ -2,6 +2,7 @@ import os
 import time
 import numpy as np
 from taskinit import *
+from callibrary import *
 from parallel.parallel_task_helper import ParallelTaskHelper
 
 def applycal(vis=None,
@@ -15,12 +16,14 @@ def applycal(vis=None,
 	     scan=None,
              observation=None,
 	     msselect=None,
+	     docallib=None,
+	     callib=None,
 	     gaintable=None,
 	     gainfield=None,
 	     interp=None,
 	     spwmap=None,
-	     parang=None,
 	     calwt=None,
+	     parang=None,
 	     applymode=None,
 	     flagbackup=None):
 
@@ -72,57 +75,67 @@ def applycal(vis=None,
                                      observation='', baseline='',uvrange='',
                                      chanmode='none', msselect='')
 
-		# Arrange all of the applies
-		# NB: calwt and interp apply to all; spwmap to gain only
-		# TBD: interp and spwmap probably should be hardwired here?
-		# TBD: trap case of ngainfield>ngaintab, etc.
-		# First other tables...
 
-		ngaintab = 0;
-		if (gaintable!=['']):
-			ngaintab=len(gaintable)
+		# Arrange applies....
 
-		ncalwt=len(calwt)
-		if ncalwt==1:
-			calwt = [calwt[0] for i in range(ngaintab)]
+		if docallib:
+			# by cal library
+			if isinstance(callib,dict):
+				mycb.setcallib(callib)
+			elif isinstance(callib,str):
+				# parse from file
+				mycallib=callibrary()
+				mycallib.read(callib)
+				mycb.setcallib(mycallib.cld)
 
-		ngainfld = len(gainfield)
-		nspwmap = len(spwmap)
-		ninterp = len(interp)
-		
-		# handle list of list issues with spwmap
-		if (nspwmap>0):
-			if (type(spwmap[0])!=list):
-				# first element not a list, only one spwmap specified
-				# make it a list of list
-				spwmap=[spwmap];
-				nspwmap=1;
+		else:
 
-		for igt in range(ngaintab):
-			if (gaintable[igt]!=''):
+			# by traditional parameters
 
-				# field selection is null unless specified
-				thisgainfield=''
-				if (igt<ngainfld):
-					thisgainfield=gainfield[igt]
+			ngaintab = 0;
+			if (gaintable!=['']):
+				ngaintab=len(gaintable)
+
+			ncalwt=len(calwt)
+			if ncalwt==1:
+				calwt = [calwt[0] for i in range(ngaintab)]
+
+			ngainfld = len(gainfield)
+			nspwmap = len(spwmap)
+			ninterp = len(interp)
+
+			# handle list of list issues with spwmap
+			if (nspwmap>0):
+				if (type(spwmap[0])!=list):
+					# first element not a list, only one spwmap specified
+					# make it a list of list
+					spwmap=[spwmap];
+					nspwmap=1;
+
+			for igt in range(ngaintab):
+				if (gaintable[igt]!=''):
+
+					# field selection is null unless specified
+					thisgainfield=''
+					if (igt<ngainfld):
+						thisgainfield=gainfield[igt]
 					
-				# spwmap is null unless specifed
-				thisspwmap=[-1]
-				if (igt<nspwmap):
-					thisspwmap=spwmap[igt];
+					# spwmap is null unless specifed
+					thisspwmap=[-1]
+					if (igt<nspwmap):
+						thisspwmap=spwmap[igt];
 
-				# interp is 'linear' unless specified
-				thisinterp='linear'
-				if (igt<ninterp):
-					if (interp[igt]==''):
-						interp[igt]=thisinterp;
-					thisinterp=interp[igt];
+					# interp is 'linear' unless specified
+					thisinterp='linear'
+					if (igt<ninterp):
+						if (interp[igt]==''):
+							interp[igt]=thisinterp;
+						thisinterp=interp[igt];
 					
-				mycb.setapply(t=0.0,table=gaintable[igt],field=thisgainfield,
-					      calwt=calwt[igt],spwmap=thisspwmap,interp=thisinterp)
+					mycb.setapply(t=0.0,table=gaintable[igt],field=thisgainfield,
+						      calwt=calwt[igt],spwmap=thisspwmap,interp=thisinterp)
 
 		# ...and now the specialized terms
-		# (BTW, interp irrelevant for these, since they are evaluated)
 
 		# Apply parallactic angle, if requested
 		if parang: mycb.setapply(type='P')

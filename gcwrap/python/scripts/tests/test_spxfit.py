@@ -75,7 +75,7 @@ import unittest
 import numpy
 
 
-datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/specfit/'
+datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/spxfit/'
 myia = iatool()
 myfn = fntool()
 
@@ -433,6 +433,23 @@ class spxfit_test(unittest.TestCase):
                 abs(myia.getchunk() - rec['plp']['error']) < 1e-8
             ).all()
         )
+        
+    def test_output_mask(self):
+        """ Test the the output solution image mask is correct"""
+        im45 = datapath + "small_42GHz_map.image"
+        im690 = datapath + "small_690GHz_map.image"
+        outfile = "test_sol.im"
+        res = spxfit(
+            imagename=[im45, im690],multifit=True,
+            spxest=[1e-3,-3],spxtype='ltp',div='100GHz',spxsol=outfile
+        )
+        self.assertTrue(res)
+        global myia
+        myia.open(outfile)
+        mask = myia.getchunk(getmask=T)
+        self.assertTrue((mask.shape == myia.shape()).all())
+        self.assertTrue(mask.all())
+
         
 def suite():
     return [spxfit_test]

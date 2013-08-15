@@ -444,13 +444,13 @@ def simalma(
                     mapx = qa.add(PB12,model_size[0])   # in the unit same as PB
                     mapy = qa.add(PB12,model_size[1])   # in the unit same as PB
                     mapsize_tp = [qa.tos(mapx), qa.tos(mapy)]
-                    msg("Full skymodel mapped by ALMA 12-m and ACA 7-m arrays. The total power antenna observes 1PB larger extent.", origin="simalma", priority='warn')
+                    msg("The full skymodel is being mapped by ALMA 12-m and ACA 7-m arrays. The total power antenna observes 1PB larger extent.", origin="simalma", priority='warn')
                 else:
                     # mapsize is defined. Add 1 PB to mapsize.
                     mapx = qa.add(qa.quantity(mapsize[0]), PB12)
                     mapy = qa.add(qa.quantity(mapsize[1]), PB12)
                     mapsize_tp = [qa.tos(mapx), qa.tos(mapy)]
-                    msg("A part of skymodel mapped by ALMA 12-m and ACA 7-m arrays. The total power antenna observes 1PB larger extent.", origin="simalma", priority='warn')
+                    msg("Only part of the skymodel is being mapped by ALMA 12-m and ACA 7-m arrays. The total power antenna observes 1PB larger extent.", origin="simalma", priority='warn')
             else:
                 # multi-pointing mode
                 npts, pointings, time = myutil.read_pointings(ptgfile_bl)

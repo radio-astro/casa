@@ -1090,15 +1090,6 @@ class test_selections_alma(test_base):
         res = flagdata(vis=self.vis, mode='summary',scan='1,2')
         self.assertEqual(res['flagged'], 80184+96216)
         self.assertEqual(res['total'], 80184+96216)
-
-    def test_invalid_antenna(self):
-        '''flagdata: CAS-3712, handle good and bad antenna names in MS selection'''
-        self.setUp_data4tfcrop()
-        
-        flagdata(vis=self.vis, antenna='ea01,ea93', mode='manual', flagbackup=False)
-        res = flagdata(vis=self.vis, mode='summary', antenna='ea01', basecnt=True)
-        self.assertEqual(res['flagged'], 2199552)
-        self.assertEqual(res['total'], 2199552)
         
     def test_unknown_intent(self):
         '''flagdata: CAS-3712, handle unknown value in intent expression'''
@@ -1118,6 +1109,29 @@ class test_selections_alma(test_base):
         self.assertEqual(res['spw']['4']['flagged'], 0)
         self.assertEqual(res['spw']['0']['flagged'], 276480)
 
+    def test_autocorr_wvr_list(self):
+        '''flagdata: CAS-5485 flag autocorrs in list mode'''
+        mycmd = ["mode='manual' antenna='DV01'",
+                 "mode='manual autocorr=True"]
+        
+        # The first cmd only flags cross-correlations of DV01
+        # The second cmd only flags auto-corrs of all antennas
+        # that have processor type=CORRELATOR. The radiometer
+        # data should not be flagged, which is in spw=4
+        res = flagdata(vis=self.vis, mode='list', inpfile=mycmd, flagbackup=False)
+        res = flagdata(vis=self.vis, mode='summary',basecnt=True)
+        
+        # These are the auto-correlations not flagged in the list flagging.
+        # Verify that the non-flagged points are those from the WVR data
+        wvr1 = res['baseline']['DV01&&DV01']['total'] - res['baseline']['DV01&&DV01']['flagged']
+        wvr2 = res['baseline']['DV02&&DV02']['total'] - res['baseline']['DV02&&DV02']['flagged']
+        wvr3 = res['baseline']['PM03&&PM03']['total'] - res['baseline']['PM03&&PM03']['flagged']
+        wvrspw= res['spw']['4']['total']
+        
+        self.assertEqual(wvrspw, wvr1+wvr2+wvr3, 'Auto-corr of WVR data should not be flagged')
+        self.assertEqual(res['antenna']['DV01']['flagged'],565920)
+        self.assertEqual(res['antenna']['DV01']['total'],573504)
+        self.assertEqual(res['spw']['4']['flagged'], 0)
 
 class test_selections2(test_base):
     '''Test other selections'''
@@ -1272,26 +1286,6 @@ class test_list_file(test_base):
         flagcmd(vis=self.vis, action='apply')
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 2524284)
-
-    def test_file5(self):
-        '''flagdata: clip zeros in mode=list and save reason to FLAG_CMD'''
-        # get the correct data, by passing the previous setUp()
-        self.setUp_data4tfcrop()
-        
-        # creat input list
-        myinput = "mode='clip' clipzeros=true reason='CLIP_ZERO'"
-        filename = 'list5.txt'
-        create_input(myinput, filename)
-
-        # Save to FLAG_CMD
-        flagdata(vis=self.vis, mode='list', inpfile=filename, action='', savepars=True)
-        
-        # Run in flagcmd and select by reason
-        flagcmd(vis=self.vis, action='apply', reason='CLIP_ZERO')
-        
-        res = flagdata(vis=self.vis, mode='summary', spw='8')
-        self.assertEqual(res['flagged'], 274944, 'Should clip only spw=8')
-        self.assertEqual(res['total'], 274944)
 
     def test_file6(self):
         '''flagdata: select by reason in list mode from a file'''
@@ -1502,23 +1496,6 @@ class test_list_list(test_base):
         self.assertEqual(res1['flagged'], res2['flagged'])
         self.assertEqual(res1['total'], res2['total'])
 
-    def test_list4(self):
-        '''flagdata: clip zeros in mode=list and save reason to FLAG_CMD'''
-        # get the correct data, by passing the previous setUp()
-        self.setUp_data4tfcrop()
-        
-        # creat input list
-        myinput = ["mode='clip' clipzeros=true reason='CLIP_ZERO'"]
-
-        # Save to FLAG_CMD
-        flagdata(vis=self.vis, mode='list', inpfile=myinput, action='', savepars=True)
-        
-        # Run in flagcmd and select by reason
-        flagcmd(vis=self.vis, action='apply', reason='CLIP_ZERO')
-        
-        res = flagdata(vis=self.vis, mode='summary', spw='8')
-        self.assertEqual(res['flagged'], 274944, 'Should clip only spw=8')
-
     def test_list5(self):
         '''flagdata: select by reason in list mode from a list'''
         # creat input list
@@ -1619,7 +1596,47 @@ class test_clip(test_base):
         flagdata(vis=self.vis, mode='clip', clipzeros=True, flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary', spw='8')
         self.assertEqual(res['flagged'],274944,'Should clip only spw=8')
+
+    def test_clip_list1(self):
+        '''flagdata: clip zeros in mode=list and save reason to FLAG_CMD'''
         
+        # creat input list
+        myinput = ["mode='clip' clipzeros=true reason='CLIP_ZERO'"]
+
+        # Save to FLAG_CMD
+        flagdata(vis=self.vis, mode='list', inpfile=myinput, action='', savepars=True)
+        
+        # Run in flagcmd and select by reason
+        flagcmd(vis=self.vis, action='apply', reason='CLIP_ZERO')
+        
+        res = flagdata(vis=self.vis, mode='summary', spw='8')
+        self.assertEqual(res['flagged'], 274944, 'Should clip only spw=8')
+
+    def test_clip_file1(self):
+        '''flagdata: clip zeros in mode=list and save reason to FLAG_CMD'''
+        
+        # creat input list
+        myinput = "mode='clip' clipzeros=true reason='CLIP_ZERO'"
+        filename = 'list5.txt'
+        create_input(myinput, filename)
+
+        # Save to FLAG_CMD
+        flagdata(vis=self.vis, mode='list', inpfile=filename, action='', savepars=True)
+        
+        # Run in flagcmd and select by reason
+        flagcmd(vis=self.vis, action='apply', reason='CLIP_ZERO')
+        
+        res = flagdata(vis=self.vis, mode='summary', spw='8')
+        self.assertEqual(res['flagged'], 274944, 'Should clip only spw=8')
+        self.assertEqual(res['total'], 274944)
+        
+    def test_invalid_antenna(self):
+        '''flagdata: CAS-3712, handle good and bad antenna names in MS selection'''
+        
+        flagdata(vis=self.vis, antenna='ea01,ea93', mode='manual', flagbackup=False)
+        res = flagdata(vis=self.vis, mode='summary', antenna='ea01', basecnt=True)
+        self.assertEqual(res['flagged'], 2199552)
+        self.assertEqual(res['total'], 2199552)
 
 class test_CASA_4_0_bug_fix(test_base):
     """flagdata:: Regression test for the fixes introduced during the CASA 4.0 bug fix season"""
@@ -2484,6 +2501,12 @@ class test_float_column(test_base):
         self.assertEqual(res['spw']['5']['flagged'],40)
         self.assertEqual(res['spw']['7']['flagged'],40)
         self.assertEqual(res['flagged'],120)
+
+    def test_field_name(self):
+        '''flagdata: Field name with whitespaces'''
+        flagdata(vis=self.vis, flagbackup=False, field='r aqr')
+        res = flagdata(vis=self.vis, mode='summary', field='r aqr')
+        self.assertEqual(res['field']['r aqr']['flagged'],14360)
 
     def test_clip_frange(self):
         '''flagdata: datacolumn=FLOAT_DATA, flag a range'''

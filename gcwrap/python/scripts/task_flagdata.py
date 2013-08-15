@@ -450,7 +450,7 @@ def flagdata(vis,
 
         # Create a flagcmd dictionary of the interface parameters to save
         # when savepars = True
-        if mode != 'list' and mode != 'summary':
+        if savepars == True and mode != 'list' and mode != 'summary':
 
             # CAS-4063: remove any white space in the values of the
             # selection parameters before creating the string.
@@ -481,8 +481,10 @@ def flagdata(vis,
             for k in seldic.keys():
                 if seldic[k] != '':
                     # Delete any space in the value
-                    val = delspace(seldic[k], '')
-                    sel_pars = sel_pars +' ' + k + '=' + val
+#                    val = delspace(seldic[k], '')
+                    # Do not remove spaces from selection strings
+                    # because they are valid in field names
+                    sel_pars = sel_pars +' ' + k + '=' + seldic[k]
                                
             # Add the agent's parameters to the same string 
             for k in agent_pars.keys():

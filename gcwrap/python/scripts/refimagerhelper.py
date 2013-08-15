@@ -29,13 +29,13 @@ class PySynthesisImager:
         self.initDefaults()
 
         # Check all input parameters, after partitioning setup.
-        # Default to only 1 node, indexed by '0'. 
-        # For parallel runs, this dict is extended in PyParallelImagerHelper::partitionDataSelection()
-        self.allselpars = {'0': params.getSelPars() }
+
+        # Selection Parameters. Dictionary of dictionaries, indexed by 'ms0','ms1',...
+        self.allselpars = params.getSelPars()
         # Imaging/Deconvolution parameters. Same for serial and parallel runs
         self.alldecpars = params.getDecPars()
         self.allimpars = params.getImagePars()
-        self.allweightpars = params.getWeightpars()
+        self.weightpars = params.getWeightPars()
         # Iteration parameters
         self.iterpars = params.getIterPars() ## Or just params.iterpars
 
@@ -59,30 +59,21 @@ class PySynthesisImager:
 #############################################
 #############################################
     def initializeImagers(self):
+        
+        ## Initialize the tool for the current node
+        self.SItool = casac.synthesisimager()
+        
+        ## Send in selection parameters for all MSs in the list.
+        for mss in sorted( (self.allselpars).keys() ):
+            self.SItool.selectdata( **(self.allselpars[mss]) )
 
-        for node in range(0,self.NN):
-#            nimpars = copy.deepcopy(self.allimpars)
-#            if self.NN>1:
-#                for ff  in range(0,self.NF):
-#                    nimpars[str(ff)]['imagename'] = nimpars[str(ff)]['imagename']+'.n'+str(node)
+        ## For each image-field, define imaging parameters
+        nimpars = copy.deepcopy(self.allimpars)
+        for fld in range(0,self.NF):
+            self.SItool.defineimage( **( nimpars[str(fld)]  ) )
 
-            ## Initialize the tool for the current node
-            self.SItools.append( casac.synthesisimager() )
-            ## For this node's tool, send in selection parameters for all MSs in the list.
-            for mss in sorted( (self.allselpars[str(node)]).keys() ):
-                self.SItools[node].selectdata( **(self.allselpars[str(node)][mss]) )
-
-            ## For each image-field, define imaging parameters
-            nimpars = copy.deepcopy(self.allimpars)
-            for fld in range(0,self.NF):
-                if self.NN>1:
-                    nimpars[str(ff)]['imagename'] = nimpars[str(ff)]['imagename']+'.n'+str(node)
-                self.SItools[node].defineimage( **( nimpars[str(fld)]  ) )
-
-            ## Set weighting parameters, and all pars common to all fields.
-            self.SItools[node].setweighting( **(self.allweightpars) )
-
-#            self.SItools[node].initializemajorcycle(self.allselpars[str(node)], nimpars, self.allweightpars)
+        ## Set weighting parameters, and all pars common to all fields.
+        self.SItool.setweighting( **(self.weightpars) )
 
 
 #############################################
@@ -93,16 +84,11 @@ class PySynthesisImager:
               self.SDtools[immod].setupdeconvolution(decpars=self.alldecpars[str(immod)])
 
 #############################################
-
+    ## Overloaded by ParallelCont
     def initializeParallelSync(self):
         for immod in range(0,self.NF):
             self.PStools.append(casac.synthesisparsync())
             syncpars = {'imagename':self.allimpars[str(immod)]['imagename']}
-            partnames = []
-            if(self.NN>1):
-                for node in range(0,self.NN):
-                    partnames.append( self.allimpars[str(immod)]['imagename']+'.n'+str(node)  )
-                syncpars['partimagenames'] = partnames
             self.PStools[immod].setupparsync(syncpars=syncpars)
 
 #############################################
@@ -119,20 +105,18 @@ class PySynthesisImager:
 
 #############################################
 
-    def getSummary(self):
+    def getSummary(self,fignum=1):
         summ = self.IBtool.getiterationsummary()
-        return summ
+        self.plotReport( summ, fignum )
 
 #############################################
     def deleteImagers(self):
-         for node in range(0,len(self.SItools)):
-              self.SItools[node].done()
-
+        if self.SItool != None:
+            self.SItool.done()
 
     def deleteDeconvolvers(self):
          for immod in range(0,len(self.SDtools)):
               self.SDtools[immod].done()
-              
 
     def deleteParSyncs(self):
          for immod in range(0,len(self.PStools)):
@@ -143,13 +127,14 @@ class PySynthesisImager:
               self.IBtool.done()
 
     def deleteCluster(self):
-         print 'no cluster to delete'
+#         print 'no cluster to delete'
+        return
 
     def initDefaults(self):
         # Reset globals/members
          self.NF=1
          self.NN=1
-         self.SItools=[]
+         self.SItool=None
          self.SDtools=[]
          self.PStools=[]
          self.IBtool=None
@@ -207,15 +192,13 @@ class PySynthesisImager:
 #############################################
 ## Overloaded for parallel runs
     def makePSFCore(self):
-        for node in range(0,self.NN):
-             self.SItools[node].makepsf()
+        self.SItool.makepsf()
 
 #############################################
 ## Overloaded for parallel runs
     def runMajorCycleCore(self):
         ### Run major cycle
-        for node in range(0,self.NN):
-             self.SItools[node].executemajorcycle(controls={})
+        self.SItool.executemajorcycle(controls={})
 #############################################
 
     def runMinorCycle(self):
@@ -325,26 +308,24 @@ class PyParallelContSynthesisImager(PySynthesisImager):
                     nimpars[str(fld)]['imagename'] = nimpars[str(fld)]['imagename']+'.n'+str(node)
                 joblist.append( self.PH.runcmd("toolsi.defineimage( **" + str( nimpars[str(fld)] ) + ")", node ) )
             
-            joblist.append( self.PH.runcmd("toolsi.setweighting( **" + str(self.allweightpars) + ")", node ) )
+            joblist.append( self.PH.runcmd("toolsi.setweighting( **" + str(self.weightpars) + ")", node ) )
 
         self.PH.checkJobs( joblist )
 
 #############################################
-#############################################
-#    def initializeImagers(self):
-#        joblist=[]
-#        for node in range(0,self.NN):
-#            nimpars = copy.deepcopy(self.allimpars)
-#            if self.NN>1:
-#                for ff  in range(0,self.NF):
-#                    nimpars[str(ff)]['imagename'] = nimpars[str(ff)]['imagename']+'.n'+str(node)
-#
-#            ## Later, move out common commands into self.CL.pgc
-#            self.PH.runcmd("toolsi = casac.synthesisimager()", node)
-#            joblist.append( self.PH.runcmd("toolsi.initializemajorcycle("+str(self.allselpars[str(node)])+","+str(nimpars)+","+str(self.allweightpars)+")", node) )
-#        self.PH.checkJobs( joblist )
 
-#############################################
+    def initializeParallelSync(self):
+        for immod in range(0,self.NF):
+            self.PStools.append(casac.synthesisparsync())
+            syncpars = {'imagename':self.allimpars[str(immod)]['imagename']}
+            partnames = []
+            if(self.NN>1):
+                for node in range(0,self.NN):
+                    partnames.append( self.allimpars[str(immod)]['imagename']+'.n'+str(node)  )
+                syncpars['partimagenames'] = partnames
+            self.PStools[immod].setupparsync(syncpars=syncpars)
+
+
 #############################################
 
     def deleteImagers(self):
@@ -372,7 +353,109 @@ class PyParallelContSynthesisImager(PySynthesisImager):
 
 #############################################
 
+#############################################
+# Parallelize both the major and minor cycle for Cube imaging
+# Run a separate instance of PySynthesisImager on each node.
+#### ( later, use the live-object interface of ImStore to reference-break the cubes )
+#### For nprocesses > nnodes, run the whole 'clean' loop multiple times. 
+#############################################
+class PyParallelCubeSynthesisImager():
 
+    def __init__(self,params=None,clusterdef=''):
+
+        self.params=params
+
+        allselpars = params.getSelPars()
+        allimagepars = params.getImagePars()
+        self.weightpars = params.getWeightPars()
+        self.decpars = params.getDecPars()
+        self.iterpars = params.getIterPars()
+        
+        self.PH = PyParallelImagerHelper( clusterdef )
+        self.NN = self.PH.NN
+        ## Partition both data and image coords the same way.
+        self.allselpars = self.PH.partitionDataSelection(allselpars)
+        self.allimpars = self.PH.partitionCubeDeconvolution(allimagepars)
+
+        joblist=[]
+        for node in range(0,self.NN):
+            joblist.append( self.PH.runcmd("from refimagerhelper import ImagerParameters, PySynthesisImager", node) )
+        self.PH.checkJobs( joblist )
+            
+
+    def initializeImagers(self):
+        joblist=[]
+        for node in range(0,self.NN):
+
+            joblist.append( self.PH.runcmd("paramList = ImagerParameters()", node) )
+            joblist.append( self.PH.runcmd("paramList.setSelPars("+str(self.allselpars[str(node)])+")", node) )
+            joblist.append( self.PH.runcmd("paramList.setImagePars("+str(self.allimpars[str(node)])+")", node) )
+            joblist.append( self.PH.runcmd("paramList.setWeightPars("+str(self.weightpars)+")", node) )
+            joblist.append( self.PH.runcmd("paramList.setDecPars("+str(self.decpars)+")", node) )
+            joblist.append( self.PH.runcmd("paramList.setIterPars("+str(self.iterpars)+")", node) )
+
+            joblist.append( self.PH.runcmd("imager = PySynthesisImager(params=paramList)", node) )
+            joblist.append( self.PH.runcmd("imager.initializeImagers()", node) )
+
+        self.PH.checkJobs( joblist )
+
+    def initializeDeconvolvers(self):
+        joblist=[]
+        for node in range(0,self.NN):
+            joblist.append( self.PH.runcmd("imager.initializeDeconvolvers()", node) )
+        self.PH.checkJobs( joblist )
+
+    def initializeParallelSync(self):
+        joblist=[]
+        for node in range(0,self.NN):
+            joblist.append( self.PH.runcmd("imager.initializeParallelSync()", node) )
+        self.PH.checkJobs( joblist )
+
+    def initializeIterationControl(self):
+        joblist=[]
+        for node in range(0,self.NN):
+            joblist.append( self.PH.runcmd("imager.initializeIterationControl()", node) )
+        self.PH.checkJobs( joblist )
+
+    def makePSF(self):
+        joblist=[]
+        for node in range(0,self.NN):
+            joblist.append( self.PH.runcmd("imager.makePSF()", node) )
+        self.PH.checkJobs( joblist )
+
+    def runMajorMinorLoops(self):
+        joblist=[]
+        for node in range(0,self.NN):
+            joblist.append( self.PH.runcmd("imager.runMajorMinorLoops()", node) )
+        self.PH.checkJobs( joblist )
+
+    def runMajorCycle(self):
+        joblist=[]
+        for node in range(0,self.NN):
+            joblist.append( self.PH.runcmd("imager.runMajorCycle()", node) )
+        self.PH.checkJobs( joblist )
+
+    def restoreImages(self):
+        joblist=[]
+        for node in range(0,self.NN):
+            joblist.append( self.PH.runcmd("imager.restoreImages()", node) )
+        self.PH.checkJobs( joblist )
+
+    def getSummary(self):
+        joblist=[]
+        for node in range(0,self.NN):
+            joblist.append( self.PH.runcmd("imager.getSummary("+str(node)+")", node) )
+        self.PH.checkJobs( joblist )
+
+    def deleteTools(self):
+        joblist=[]
+        for node in range(0,self.NN):
+            joblist.append( self.PH.runcmd("imager.deleteTools()", node) )
+        self.PH.checkJobs( joblist )
+
+#############################################
+#############################################
+#############################################
 
 class PyParallelDeconvolver(PySynthesisImager):
 
@@ -466,7 +549,7 @@ class PyParallelImagerHelper():
         print oneselpars
         for node in range(0,self.NN):
             ## Replicate the Selection pars for all nodes, before modifying them.
-            allselpars[str(node)]  = copy.deepcopy(oneselpars['0']) 
+            allselpars[str(node)]  = copy.deepcopy(oneselpars) 
 
             ######## WARNING : Very special case for SPW 0 of points_2spw.ms
             if allselpars[str(node)]['ms0']['msname'] == "DataTest/point_twospws.ms":
@@ -496,7 +579,12 @@ class PyParallelImagerHelper():
                  if not allimpars[str(node)][field].has_key('nchan'):
                       allimpars[str(node)][field]['nchan']=1
                  else:
-                      allimpars[str(node)][field]['nchan'] = int( ( allimpars[str(node)][field]['nchan'])/self.NN )
+                     allimpars[str(node)][field]['nchan'] = int( ( allimpars[str(node)][field]['nchan'])/self.NN )
+                     ############# WARNING : Very special case for points_2spw.ms
+                     if node==0:
+                         allimpars[str(node)][field]['freqstart'] = '1.0GHz'
+                     else:
+                         allimpars[str(node)][field]['freqstart'] = '1.2GHz'
                  allimpars[str(node)][field]['imagename'] = allimpars[str(node)][field]['imagename']+'.n'+str(node)
         print 'ImSplit : ', allimpars
         return allimpars
@@ -646,7 +734,7 @@ class PyParallelImagerHelper():
 
 class ImagerParameters():
 
-    def __init__(self,casalog,
+    def __init__(self,
                  msname='',field='',spw='',usescratch=True,readonly=True,
                  outlierfile='',
                  imagename='', nchan=1, freqstart='1.0GHz', freqstep='1.0GHz',
@@ -657,8 +745,6 @@ class ImagerParameters():
                  minpsffraction=0.1,maxpsffraction=0.8,
                  threshold='0.0Jy',loopgain=0.1,
                  interactive=False):
-
-        self.casalog = casalog
 
         ## Selection params. For multiple MSs, all are lists.
         ## For multiple nodes, the selection parameters are modified inside PySynthesisImager
@@ -671,7 +757,7 @@ class ImagerParameters():
         self.outlierfile = outlierfile
         ## Initialize the parameter lists with the 'main' or '0' field's parameters
         self.allimpars = { '0' :{'imagename':imagename, 'nchan':nchan, 'imsize':imsize, 'cellsize':cellsize, 'phasecenter':phasecenter, 'freqstart':freqstart, 'freqstep':freqstep, 'ftmachine':ftmachine, 'startmodel':startmodel} }
-        self.allweightpars = {'type':weighting } 
+        self.weightpars = {'type':weighting } 
         self.alldecpars = { '0' : { 'id':0, 'algo':algo } }
 
         ## Iteration control. 
@@ -679,23 +765,19 @@ class ImagerParameters():
 
         ## List of supported parameters in outlier files.
         ## All other parameters will default to the global values.
-        self.outimparlist = ['imagename','nchan','imsize','cellsize','phasecenter','ftmachine','startmodel']
+        self.outimparlist = ['imagename','nchan','imsize','cellsize','phasecenter','ftmachine','startmodel','freqstart','freqstep']
         self.outweightparlist=[]
         self.outdecparlist=['algo','startmodel']
 
 
     def getSelPars(self):
         return self.allselpars
-
     def getImagePars(self):
         return self.allimpars
-        
-    def getWeightpars(self):
-        return self.allweightpars
-
+    def getWeightPars(self):
+        return self.weightpars
     def getDecPars(self):
         return self.alldecpars
-
     def getIterPars(self):
         return self.iterpars
 
@@ -703,10 +785,18 @@ class ImagerParameters():
         self.allselpars = selpars
     def setImagePars(self,impars):
         self.allimpars = impars
+    def setWeightPars(self,weightpars):
+        self.weightpars = weightpars
+    def setDecPars(self,decpars):
+        self.alldecpars = decpars
+    def setIterPars(self,iterpars):
+        self.iterpars = iterpars
+
+
 
     def checkParameters(self):
-        self.casalog.origin('tclean.checkParameters')
-        self.casalog.post('Verifying Input Parameters')
+        casalog.origin('tclean.checkParameters')
+        casalog.post('Verifying Input Parameters')
         # Init the error-string
         errs = "" 
         errs += self.checkAndFixSelectionPars()
@@ -716,7 +806,7 @@ class ImagerParameters():
 
         ## If there are errors, print a message and exit.
         if len(errs) > 0:
-            self.casalog.post('Parameter Errors : \n' + errs,'WARN')
+            casalog.post('Parameter Errors : \n' + errs,'WARN')
             return False
         return True
 
@@ -810,8 +900,8 @@ class ImagerParameters():
             modelid = str(immod+1)
             self.allimpars[ modelid ] = copy.deepcopy(self.allimpars[ '0' ])
             self.allimpars[ modelid ].update(outlierpars[immod]['impars'])
-#            self.allweightpars[ modelid ] = copy.deepcopy(self.allweightpars[ '0' ])
-#            self.allweightpars[ modelid ].update(outlierpars[immod]['weightpars'])
+#            self.weightpars[ modelid ] = copy.deepcopy(self.weightpars[ '0' ])
+#            self.weightpars[ modelid ].update(outlierpars[immod]['weightpars'])
             self.alldecpars[ modelid ] = copy.deepcopy(self.alldecpars[ '0' ])
             self.alldecpars[ modelid ].update(outlierpars[immod]['decpars'])
             self.alldecpars[ modelid ][ 'id' ] = immod+1  ## Try to eliminate.
@@ -981,9 +1071,9 @@ class ImagerParameters():
 
 
     def printParameters(self):
-        self.casalog.post('SelPars : ' + str(self.allselpars), 'INFO')
-        self.casalog.post('ImagePars : ' + str(self.allimpars), 'INFO')
-        self.casalog.post('Weightpars : ' + str(self.allweightpars), 'INFO')
-        self.casalog.post('DecPars : ' + str(self.alldecpars), 'INFO')
-        self.casalog.post('IterPars : ' + str(self.iterpars), 'INFO')
+        casalog.post('SelPars : ' + str(self.allselpars), 'INFO')
+        casalog.post('ImagePars : ' + str(self.allimpars), 'INFO')
+        casalog.post('Weightpars : ' + str(self.weightpars), 'INFO')
+        casalog.post('DecPars : ' + str(self.alldecpars), 'INFO')
+        casalog.post('IterPars : ' + str(self.iterpars), 'INFO')
 

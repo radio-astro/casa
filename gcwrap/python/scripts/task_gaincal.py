@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from callibrary import *
 from taskinit import *
 
 def gaincal(vis=None,caltable=None,
@@ -10,6 +11,7 @@ def gaincal(vis=None,caltable=None,
 	    minsnr=None,solnorm=None,
 	    gaintype=None,smodel=None,calmode=None,append=None,
 	    splinetime=None,npointaver=None,phasewrap=None,
+	    docallib=None,callib=None,
 	    gaintable=None,gainfield=None,interp=None,spwmap=None,
 	    parang=None):
 
@@ -42,47 +44,61 @@ def gaincal(vis=None,caltable=None,
 			mycb.setptmodel(smodel);
 
 
+		# Arrange applies....
 
-		# Arrange apply of existing other calibrations 
-		# First do the existing cal tables...
-		ngaintab = 0;
-		if (gaintable!=['']):
-			ngaintab=len(gaintable)
-		ngainfld = len(gainfield)
-		nspwmap = len(spwmap)
-		ninterp = len(interp)
+		if docallib:
+			# by cal library
+			if isinstance(callib,dict):
+				mycb.setcallib(callib)
+			elif isinstance(callib,str):
+				# parse from file
+				mycallib=callibrary()
+				mycallib.read(callib)
+				mycb.setcallib(mycallib.cld)
 
-		# handle list of list issues with spwmap
-		if (nspwmap>0):
-			if (type(spwmap[0])!=list):
-				# first element not a list, only one spwmap specified
-				# make it a list of list
-				spwmap=[spwmap];
-				nspwmap=1;
+		else:
 
-		for igt in range(ngaintab):
-			if (gaintable[igt]!=''):
+			# by traditional parameters
 
-				# field selection is null unless specified
-				thisgainfield=''
-				if (igt<ngainfld):
-					thisgainfield=gainfield[igt]
+			ngaintab = 0;
+			if (gaintable!=['']):
+				ngaintab=len(gaintable)
+
+			ngainfld = len(gainfield)
+			nspwmap = len(spwmap)
+			ninterp = len(interp)
+
+			# handle list of list issues with spwmap
+			if (nspwmap>0):
+				if (type(spwmap[0])!=list):
+					# first element not a list, only one spwmap specified
+					# make it a list of list
+					spwmap=[spwmap];
+					nspwmap=1;
+
+			for igt in range(ngaintab):
+				if (gaintable[igt]!=''):
+
+					# field selection is null unless specified
+					thisgainfield=''
+					if (igt<ngainfld):
+						thisgainfield=gainfield[igt]
 					
-				# spwmap is null unless specifed
-				thisspwmap=[-1]
-				if (igt<nspwmap):
-					thisspwmap=spwmap[igt];
+					# spwmap is null unless specifed
+					thisspwmap=[-1]
+					if (igt<nspwmap):
+						thisspwmap=spwmap[igt];
 
-				# interp is 'linear' unless specified
-				thisinterp='linear'
-				if (igt<ninterp):
-					if (interp[igt]==''):
-						interp[igt]=thisinterp
-					thisinterp=interp[igt];
+					# interp is 'linear' unless specified
+					thisinterp='linear'
+					if (igt<ninterp):
+						if (interp[igt]==''):
+							interp[igt]=thisinterp;
+						thisinterp=interp[igt];
+					
+					mycb.setapply(t=0.0,table=gaintable[igt],field=thisgainfield,
+						      calwt=True,spwmap=thisspwmap,interp=thisinterp)
 
-				mycb.setapply(t=0.0,table=gaintable[igt],field=thisgainfield,
-					    calwt=True,spwmap=thisspwmap,interp=thisinterp)
-		
 		# ...and now the specialized terms
 		# (BTW, interp irrelevant for these, since they are evaluated)
 

@@ -173,9 +173,14 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
 
     def test004(self):
         """Test004: Bad antenna id"""
-        # not throw any exception, but return False
-        res=sdimaging(infile=self.rawfile,antenna=self.badid,outfile=self.outfile)
-        self.assertFalse(res)
+        try:
+            res=sdimaging(infile=self.rawfile,antenna=self.badid,outfile=self.outfile)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Failed to generate output image')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
         
     def test005(self):
         """Test005: Bad stokes parameter"""
@@ -196,9 +201,12 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
 
     def test007(self):
         """Test007: Bad scanlist"""
-        # empty selection, but not throw exception
-        res=sdimaging(infile=self.rawfile,scanlist=[self.badid],outfile=self.outfile)
-        self.assertFalse(res)
+        try:
+            res=sdimaging(infile=self.rawfile,scanlist=[self.badid],outfile=self.outfile)
+        except Exception, e:
+            pos=str(e).find('Failed to generate output image')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test008(self):
         """Test008: Existing outfile with overwrite=False"""

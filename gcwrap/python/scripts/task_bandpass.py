@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from callibrary import *
 from taskinit import *
 
 def bandpass(vis=None,caltable=None,
@@ -12,6 +13,7 @@ def bandpass(vis=None,caltable=None,
 	     append=None,fillgaps=None,
 	     degamp=None,degphase=None,visnorm=None,
 	     maskcenter=None,maskedge=None,
+	     docallib=None,callib=None,
 	     gaintable=None,gainfield=None,interp=None,spwmap=None,
 	     parang=None):
 
@@ -19,94 +21,110 @@ def bandpass(vis=None,caltable=None,
         casalog.origin('bandpass')
 
 	try:
+		mycb=cbtool()
+		
                 if ((type(vis)==str) & (os.path.exists(vis))):    
-                        cb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
+                        mycb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
-		cb.reset()
+		mycb.reset()
 
 		# Do data selection according to selectdata
 		if (selectdata):
 			# pass all data selection parameters in as specified
-			cb.selectvis(time=timerange,spw=spw,scan=scan,field=field,
-				     intent=intent, observation=str(observation),
-				     baseline=antenna,uvrange=uvrange,chanmode='none',
-				     msselect=msselect);
+			mycb.selectvis(time=timerange,spw=spw,scan=scan,field=field,
+				       intent=intent, observation=str(observation),
+				       baseline=antenna,uvrange=uvrange,chanmode='none',
+				       msselect=msselect);
 		else:
 			# selectdata=F, so time,scan,baseline,uvrange,msselect=''
 			# using spw and field specifications only
-			cb.selectvis(time='',spw=spw,scan='',field=field,intent=intent,
-				     observation='', baseline='',uvrange='',chanmode='none',
-				     msselect='');
+			mycb.selectvis(time='',spw=spw,scan='',field=field,intent=intent,
+				       observation='', baseline='',uvrange='',chanmode='none',
+				       msselect='');
 
 
 		# set the model, if specified
 		if (len(smodel)>0):
-			cb.setptmodel(smodel);
+			mycb.setptmodel(smodel);
 		
 
-		#Apply other calibrations
-		# First do the existing cal tables...
-		ngaintab = 0;
-		if (gaintable!=['']):
-			ngaintab=len(gaintable)
+		# Arrange applies....
 
-		ngainfld = len(gainfield)
-		nspwmap = len(spwmap)
-		ninterp = len(interp)
+		if docallib:
+			# by cal library
+			if isinstance(callib,dict):
+				mycb.setcallib(callib)
+			elif isinstance(callib,str):
+				# parse from file
+				mycallib=callibrary()
+				mycallib.read(callib)
+				mycb.setcallib(mycallib.cld)
 
-		# handle list of list issues with spwmap
-		if (nspwmap>0):
-			if (type(spwmap[0])!=list):
-				# first element not a list, only one spwmap specified
-				# make it a list of list
-				spwmap=[spwmap];
-				nspwmap=1;
+		else:
 
-		for igt in range(ngaintab):
-			if (gaintable[igt]!=''):
+			# by traditional parameters
 
-				# field selection is null unless specified
-				thisgainfield=''
-				if (igt<ngainfld):
-					thisgainfield=gainfield[igt]
+			ngaintab = 0;
+			if (gaintable!=['']):
+				ngaintab=len(gaintable)
+
+			ngainfld = len(gainfield)
+			nspwmap = len(spwmap)
+			ninterp = len(interp)
+
+			# handle list of list issues with spwmap
+			if (nspwmap>0):
+				if (type(spwmap[0])!=list):
+					# first element not a list, only one spwmap specified
+					# make it a list of list
+					spwmap=[spwmap];
+					nspwmap=1;
+
+			for igt in range(ngaintab):
+				if (gaintable[igt]!=''):
+
+					# field selection is null unless specified
+					thisgainfield=''
+					if (igt<ngainfld):
+						thisgainfield=gainfield[igt]
 					
-				# spwmap is null unless specifed
-				thisspwmap=[-1]
-				if (igt<nspwmap):
-					thisspwmap=spwmap[igt];
+					# spwmap is null unless specifed
+					thisspwmap=[-1]
+					if (igt<nspwmap):
+						thisspwmap=spwmap[igt];
 
-				# interp is 'linear' unless specified
-				thisinterp='linear'
-				if (igt<ninterp):
-					if (interp[igt]==''):
-						interp[igt]=thisinterp
-					thisinterp=interp[igt]
+					# interp is 'linear' unless specified
+					thisinterp='linear'
+					if (igt<ninterp):
+						if (interp[igt]==''):
+							interp[igt]=thisinterp;
+						thisinterp=interp[igt];
+					
+					mycb.setapply(t=0.0,table=gaintable[igt],field=thisgainfield,
+						      calwt=True,spwmap=thisspwmap,interp=thisinterp)
 
-				cb.setapply(t=0.0,table=gaintable[igt],field=thisgainfield,
-					    calwt=True,spwmap=thisspwmap,interp=thisinterp)
-		
 		# ...and now the specialized terms
 		# (BTW, interp irrelevant for these, since they are evaluated)
 
 		# Apply parallactic angle, if requested
-		if parang: cb.setapply(type='P')
+		if parang: mycb.setapply(type='P')
 
 		# set up for solving (
 		if (bandtype=='B'):
-			cb.setsolve(type='B',t=solint,combine=combine,refant=refant,minblperant=minblperant,
+			mycb.setsolve(type='B',t=solint,combine=combine,refant=refant,minblperant=minblperant,
 				    solnorm=solnorm,minsnr=minsnr,table=caltable,append=append,fillgaps=fillgaps)
 		elif (bandtype=='BPOLY'):
-			cb.setsolvebandpoly(refant=refant,table=caltable,append=append,
+			mycb.setsolvebandpoly(refant=refant,table=caltable,append=append,
 					    t=solint,combine=combine,
 					    degamp=degamp,degphase=degphase,visnorm=visnorm,
 					    solnorm=solnorm,maskcenter=maskcenter,maskedge=maskedge)
 
-		cb.solve()
-		cb.close()
+		mycb.solve()
+		mycb.close()
 
 	except Exception, instance:
 		print '*** Error ***',instance
-		cb.close()
+		mycb.close()
 		raise Exception, instance
 

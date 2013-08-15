@@ -1,5 +1,6 @@
 import os
 from taskinit import *
+import pdb
 
 def deconvolve(imagename,model,psf,alg,niter,gain,threshold,mask,scales,sigma,targetflux,prior):
     """ deconvolve: Image based deconvolver. The psf provided is
@@ -30,93 +31,85 @@ def deconvolve(imagename,model,psf,alg,niter,gain,threshold,mask,scales,sigma,ta
 
     """
     
-    try:
-	casalog.origin('deconvolve')
+    
+    casalog.origin('deconvolve')
         
-        tmppsf=''
-        tmpImagename=''
-        if(len(psf)==0):
-            raise Exception, "****give some psf please****"
-        if(len(psf)==1):
-            if (type(psf[0])==str and os.path.exists(psf[0])):
-                psf=psf[0]
-                ia.open(psf)
-                psfaxis=len(ia.shape())
-                ia.close()
-                if(psfaxis<4):
-                    modPsf=_add_axes(psf)
-                    if modPsf is False:
-                        raise Exception, "****problem with input psf image****"
-                    else:
-                        tmppsf='__decon_tmp_psf'
-                        ia.fromimage(tmppsf,modPsf)
-                        ia.close()
-                        psf=tmppsf
-                ia.open(imagename)
-                imnaxis=len(ia.shape())
-                ia.close()
-                if(imnaxis<4):
-                    tmpImagename=_add_axes(imagename)
-                    if tmpImagename is False:
-                        raise Exception, "****problem with input diry image****"
-                    else:
-                        imagename=tmpImagename
-             
-            else:
-                raise Exception, "****psf file, %s does not exist****" % psf
-            
-        if(len(psf)==3):
-            #We've got bmaj bmin bpa
-            # add axes if the input dirty image does not have four axes
+    tmppsf=''
+    tmpImagename=''
+    if(len(psf)==0):
+        raise Exception, "****give some psf please****"
+    if(len(psf)==1):
+        if (type(psf[0])==str and os.path.exists(psf[0])):
+            psf=psf[0]
+            ia.open(psf)
+            psfaxis=len(ia.shape())
+            ia.close()
+            if(psfaxis<4):
+                modPsf=_add_axes(psf)
+                if modPsf is False:
+                    raise Exception, "****problem with input psf image****"
+                else:
+                    tmppsf='__decon_tmp_psf'
+                    ia.fromimage(tmppsf,modPsf, overwrite=True)
+                    ia.close()
+                    psf=tmppsf
             ia.open(imagename)
             imnaxis=len(ia.shape())
-            #csys=ia.coordsys()
             ia.close()
             if(imnaxis<4):
-               tmpImagename=_add_axes(imagename)
-               if tmpImagename is False:
-                   raise Exception, "****problem with input diry image****"
-               else:
-                   imagename=tmpImagename
-            tmppsf=model+'.psf'
-            dc.open(imagename,psf='', warn=False)
-            print 
-            dc.makegaussian(tmppsf,bmaj=psf[0],bmin=psf[1],
-                            bpa=psf[2], normalize=False)
-            dc.close()
-            psf=tmppsf
-        dc.open(imagename,psf=psf)
-        if(alg=='multiscale'):
-            dc.setscales(scalemethod='uservector', uservector=scales)
-        if((alg=='hogbom') or (alg=='multiscale')):
-            dc.clean(algorithm=alg, model=model, niter=niter, gain=gain,
-                     mask=mask, threshold=qa.quantity(threshold, 'mJy'))
-        elif(alg=='clark'):
-            dc.clarkclean(niter=niter, model=model, mask=mask,
-                          gain=gain, threshold=qa.quantity(threshold, 'mJy'))
-        elif(alg=='mem'):
-            dc.mem(niter=niter, sigma=sigma, targetflux=targetflux,
-                   model=model, prior=prior)
+                tmpImagename=_add_axes(imagename)
+                if tmpImagename is False:
+                    raise Exception, "****problem with input diry image****"
+                else:
+                    imagename=tmpImagename
+
         else:
-            raise Exception, '****algorithm %s is not known****'%alg
-        dc.restore(model=model, image=model+'.restored')
-        dc.residual(model=model, image=model+'.residual')
-        dc.close()    
-        #if(len(tmppsf) != 0):
-        #    os.system('rm -rf '+tmppsf)
-        if(len(tmpImagename) != 0):
-            #os.system('rm -rf '+tmpImagename)
-            ia.removefile(tmpImagename)
-        tb.clearlocks()
-    except Exception, instance:
-        print '*** Error ***',instance
-        ###lets try to close if we can
-        try:
-            tb.clearlocks()
-            dc.close()
-        except: pass
+            raise Exception, "****psf file, %s does not exist****" % psf
 
-
+    if(len(psf)==3):
+        #We've got bmaj bmin bpa
+        # add axes if the input dirty image does not have four axes
+        ia.open(imagename)
+        imnaxis=len(ia.shape())
+        #csys=ia.coordsys()
+        ia.close()
+        if(imnaxis<4):
+           tmpImagename=_add_axes(imagename)
+           if tmpImagename is False:
+               raise Exception, "****problem with input diry image****"
+           else:
+               imagename=tmpImagename
+        tmppsf=model+'.psf'
+        dc.open(imagename,psf='', warn=False)
+        print 
+        dc.makegaussian(tmppsf,bmaj=psf[0],bmin=psf[1],
+                        bpa=psf[2], normalize=False)
+        dc.close()
+        psf=tmppsf
+    dc.open(imagename,psf=psf)
+    if(alg=='multiscale'):
+        dc.setscales(scalemethod='uservector', uservector=scales)
+    if((alg=='hogbom') or (alg=='multiscale')):
+        dc.clean(algorithm=alg, model=model, niter=niter, gain=gain,
+                 mask=mask, threshold=qa.quantity(threshold, 'mJy'))
+    elif(alg=='clark'):
+        dc.clarkclean(niter=niter, model=model, mask=mask,
+                      gain=gain, threshold=qa.quantity(threshold, 'mJy'))
+    elif(alg=='mem'):
+        dc.mem(niter=niter, sigma=sigma, targetflux=targetflux,
+               model=model, prior=prior)
+    else:
+        raise Exception, '****algorithm %s is not known****'%alg
+    dc.restore(model=model, image=model+'.restored')
+    dc.residual(model=model, image=model+'.residual')
+    dc.close()    
+    #if(len(tmppsf) != 0):
+    #    os.system('rm -rf '+tmppsf)
+    if(len(tmpImagename) != 0):
+        #os.system('rm -rf '+tmpImagename)
+        ia.removefile(tmpImagename)
+    tb.clearlocks()
+   
 # helper function to add degenerate axes
 def _add_axes(inImage):
         tmpim=''
@@ -130,21 +123,23 @@ def _add_axes(inImage):
             isSpectral=csys.findcoordinate('spectral')[0] 
             if not isStokes:
                 ia.open(inImage)
-                ia.adddegaxes(tmpim, stokes="I", overwrite=True)
+                ib=ia.adddegaxes(tmpim, stokes="I", overwrite=True)
                 ia.close() 
+                ib.done()
                 if not isSpectral:
                     tmpim2='__decon_tmp_im2'
                     ia.open(tmpim)
-                    ia.adddegaxes(tmpim2, spectral=True, overwrite=True)
+                    ib=ia.adddegaxes(tmpim2, spectral=True, overwrite=True)
                     ia.remove()
                     outImage=tmpim2
-                    
+                    ib.done()
                 else:
                     outImage=tmpim
             elif not isSpectral:
                 ia.open(inImage)
-                ia.adddegaxes(tmpim, spectral=True, overwrite=True)
-                ia.close() 
+                ib=ia.adddegaxes(tmpim, spectral=True, overwrite=True)
+                ia.close()
+                ib.done()
                 outImage=tmpim
             else:
                 outImage=inImage 

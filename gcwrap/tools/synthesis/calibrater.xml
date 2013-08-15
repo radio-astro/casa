@@ -518,6 +518,60 @@ called 'gcal' to data for a field matching 'N5921*'
 </method>
 
 
+<method type="function" name="setcallib">
+   <shortdescription>Arrange to apply calibration via a Cal Library</shortdescription>
+
+<input>
+
+     <param type="record" direction="in" name="callib">
+     <description>A calibration library record</description>
+     <value type="record"></value>
+     </param>
+
+</input>
+<returns type="bool"/>
+
+<description>
+
+TBD
+
+</description>
+
+<example>
+
+TBD
+
+</example>
+</method>
+
+<method type="function" name="validatecallib">
+   <shortdescription>Validate a Cal Library record</shortdescription>
+
+<input>
+
+     <param type="record" direction="in" name="callib">
+     <description>A calibration library record</description>
+     <value type="record"></value>
+     </param>
+
+</input>
+<returns type="bool"/>
+
+<description>
+
+TBD
+
+</description>
+
+<example>
+
+TBD
+
+</example>
+</method>
+
+
+
 <method type="function" name="setsolve">
    <shortdescription>Arrange to solve for calibration</shortdescription>
    
