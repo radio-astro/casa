@@ -261,4 +261,30 @@ def enable_memstats():
 
     jobrequest.PREHOOKS.append(get_hook_fn('Memory usage before '))
     jobrequest.POSTHOOKS.append(get_hook_fn('Memory usage after '))
+
+
+def get_calfroms(inputs, caltypes=None):
+    """
+    Get the CalFroms of the requested type from the callibrary.
+    
+    This function assumes that 'vis' is a property of the given inputs. 
+    """
+    import pipeline.infrastructure.callibrary as callibrary
+    if caltypes is None:
+        caltypes = callibrary.CalFrom.CALTYPES.keys()
+
+    # check that the 
+    if type(caltypes) is types.StringType:
+        caltypes = (caltypes,)
+            
+    for c in caltypes:
+        assert c in callibrary.CalFrom.CALTYPES
+
+    # get the CalState for the ms - no field/spw/antenna selection (for now..)
+    calto = callibrary.CalTo(vis=inputs.vis)
+    calstate = inputs.context.callibrary.get_calstate(calto)
+
+    calfroms = (itertools.chain(*calstate.merged().values()))
+    
+    return [cf for cf in calfroms if cf.caltype in caltypes]
     

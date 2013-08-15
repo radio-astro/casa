@@ -8,6 +8,7 @@ from pipeline.hif.heuristics.tsysspwmap import tsysspwmap
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.utils as utils
 from pipeline.hif.tasks.flagging.flagdatasetter import FlagdataSetter
 
 from .resultobjects import TsysflagResults
@@ -357,18 +358,16 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
         self.result.vis = tsystable.vis
 
         # Get the MS object.
-        ms = self.inputs.context.observing_run.get_ms(name=tsystable.vis)
+        ms = inputs.context.observing_run.get_ms(name=tsystable.vis)
 
         # Construct a callibrary entry for the results that are to be
         # merged back into the context.
         calto = callibrary.CalTo(vis=tsystable.vis)
-	if not ms.tsys_spwmap:
-            spwmap = tsysspwmap(vis=tsystable.vis, tsystable=name,
-	        tsysChanTol=1)
-	else:
-	    spwmap = ms.tsys_spwmap
-            LOG.info ('Retrieving tsys spwmap %s for %s from context' % \
-	        (spwmap, tsystable.vis))
+        # get the first tsys CalFrom from the callibrary. This assumes that 
+        # tsyscal has been called and its Tsys table accepted in to the 
+        # context 
+        tsys_calfrom = utils.get_calfroms(inputs, 'tsys')[0]
+        spwmap = tsys_calfrom.spwmap
         calfrom = callibrary.CalFrom(name, caltype='tsys', spwmap=spwmap)
         calapp = callibrary.CalApplication(calto, calfrom)
         final.append(calapp)
