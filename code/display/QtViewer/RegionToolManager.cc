@@ -37,8 +37,10 @@
 #include <imageanalysis/Annotations/AnnSymbol.h>
 #include <display/DisplayDatas/DisplayData.h>
 #include <display/region/QtRegionDock.qo.h>
+#include <display/QtViewer/QtDisplayData.qo.h>
 #include <algorithm>
 
+#include <display/Utilities/ImageProperties.h>
 
 namespace casa {
 	namespace viewer {
@@ -497,13 +499,13 @@ namespace casa {
 				WorldCanvas *wc = wcs.getRight();
 				if ( wc == 0 ) continue;
 				DisplayData *dd = wc->csMaster( );
-				if ( dd == 0 ) continue;
-				const CoordinateSystem &test = wc->coordinateSystem();
+				QtDisplayData *qdd = panel->displayPanel( )->getDD(dd);
+				if ( qdd == 0 ) continue;
 				const Vector<String> &units = wc->worldAxisUnits( );
 				IPosition shape(2);
 				shape[0] = dd->dataShape( )(0);
 				shape[1] = dd->dataShape( )(1);
-				RegionTextList rlist( path, test, shape );
+				RegionTextList rlist( path, qdd->imageProperties( ).cs( ), qdd->imageProperties( ).shape( ) );
 				Vector<AsciiAnnotationFileLine> aaregions = rlist.getLines( );
 				for ( unsigned int i=0; i < aaregions.size( ); ++i ) {
 					if ( aaregions[i].getType( ) != AsciiAnnotationFileLine::ANNOTATION ) continue;

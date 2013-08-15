@@ -367,6 +367,10 @@ void SolvableVisCal::setCallib(const Record& callib) {
   setApplied(True);
   setSolved(False);
 
+  logSink() << LogIO::NORMAL << ".   "
+	    << this->applyinfo()
+	    << LogIO::POST;
+
   // Make the interpolation engine
   MeasurementSet ms(msName());
   cpp_ = new CLPatchPanel(calTableName(),ms,callib,matrixType(),nPar());
@@ -883,14 +887,20 @@ String SolvableVisCal::applyinfo() {
 
   ostringstream o;
   o << typeName()
-    << ": table="  << calTableName()
-    << " select=" << calTableSelect()
-    << " interp=" << tInterpType();
-  if (this->freqDepPar())
-    o << "," << fInterpType();
-  o << " spwmap=" << spwMap()
-    << boolalpha
-    << " calWt=" << calWt();
+    << ": table="  << calTableName();
+
+  if (ci_) {
+    o << " select=" << calTableSelect()
+      << " interp=" << tInterpType();
+    if (this->freqDepPar())
+      o << "," << fInterpType();
+    o << " spwmap=" << spwMap();
+      
+  }
+  else 
+    o << " (by cal library)";
+
+  o << boolalpha << " calWt=" << calWt();
     //    << " t="      << interval();
 
   return String(o);

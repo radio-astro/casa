@@ -606,14 +606,10 @@ Bool Calibrater::setcallib(Record callib) {
       // Add a new VisCal to the apply list
       vc = createVisCal(upType,*vs_p);  
 
+
       // ingest this table according to its callib
       vc->setCallib(thistabrec);
 
-      logSink() << LogIO::NORMAL << ".   "
-		<< " *** NEED TO UPDATE vc->applyinfo for CL *** "
-		<< vc->applyinfo()
-		<< LogIO::POST;
-      
     } catch (AipsError x) {
       logSink() << LogIO::SEVERE << x.getMesg() 
 		<< " Check inputs and try again."

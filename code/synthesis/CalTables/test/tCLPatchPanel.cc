@@ -242,7 +242,7 @@ void tCalLibSlice1 (Bool verbose=False) {
 		    obsmap,fldmap,spwmap,antmap);
 
     if (v)
-      cls.state();
+      cout << cls.state();
 
     AlwaysAssert( cls.obs==obs, AipsError);
     AlwaysAssert( cls.fld==fld, AipsError);
@@ -265,7 +265,7 @@ void tCalLibSlice1 (Bool verbose=False) {
       cout << "r.conform(r2) = " << boolalpha << r.conform(r2) << endl;
 
     if (v)
-      cls2.state();
+      cout << cls2.state();
    
   }
   cout << "---tCalLibSlice1---END---" << endl << endl;

@@ -102,6 +102,9 @@ namespace casa {
 			const std::string &path( ) const {
 				return path_;
 			}
+
+			const CoordinateSystem &cs( ) const { return cs_; }
+
 			bool ok( ) const {
 				return status_ok;
 			}
@@ -141,5 +144,6 @@ namespace casa {
 	}
 }
 
+std::ostream &operator<<( std::ostream &os, const casa::CoordinateSystem &cs );
 
 #endif
