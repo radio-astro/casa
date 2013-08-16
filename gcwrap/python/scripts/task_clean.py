@@ -123,12 +123,13 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                     #print imname, tchan, st, localwidth 
 
                     os.system('rm -rf '+imname+'*')
+                    
                     clean(vis=vis,imagename=imname,outlierfile=outlierfile,field=field,
                           spw=spw,selectdata=selectdata,timerange=timerange,uvrange=uvrange,
                           antenna=antenna,scan=scan, observation=str(observation),intent=intent,
-                          mode=mode,gridmode=gridmode, 
+                          mode=mode, resmooth=resmooth, gridmode=gridmode, 
                           wprojplanes=wprojplanes,facets=facets,cfcache=cfcache,rotpainc=rotpainc, painc=painc,
-                          psterm=psterm,aterm=aterm,mterm=mterm,wbawp=wbaw,conjbeams=conjbeams,
+                          psterm=psterm,aterm=aterm,mterm=mterm,wbawp=wbawp,conjbeams=conjbeams,
                           epjtable=epjtable,interpolation=interpolation,niter=niter,
                           gain=gain,
                           threshold=threshold,psfmode=psfmode,imagermode=imagermode, 
