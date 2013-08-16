@@ -58,6 +58,8 @@ class Fluxgains(basetask.StandardTaskTemplate):
 
         calMs = 'calibrators.ms'
 
+        LOG.info("Setting models for standard primary calibrators")
+
         standard_source_names, standard_source_fields = standard_sources(calMs)
 
         context = self.inputs.context
@@ -85,7 +87,11 @@ class Fluxgains(basetask.StandardTaskTemplate):
                 for myspw in spws:
                     reference_frequency = center_frequencies[myspw]
                     EVLA_band = vlautils.find_EVLA_band(reference_frequency)
+                    LOG.info("Center freq for spw "+str(myspw)+" = "+str(reference_frequency)+", observing band = "+EVLA_band)
+                    
                     model_image = standard_source_names[i] + '_' + EVLA_band + '.im'
+
+                    LOG.info("Setting model for field "+str(myfield)+" spw "+str(myspw)+" using "+model_image)
 
                     #Double check, but the fluxdensity=-1 should not matter since
                     #  the model image take precedence
@@ -96,11 +102,17 @@ class Fluxgains(basetask.StandardTaskTemplate):
                         # something has gone wrong, return an empty result
                         LOG.error('Unable to complete flux scaling operation for field '+str(myfield)+', spw '+str(myspw))
                         LOG.exception(e)
+        
+        LOG.info("Making gain tables for flux density bootstrapping")
+        LOG.info("Short solint = " + new_gain_solint1)
+        LOG.info("Long solint = " + gain_solint2)
                         
        
         gaincal_result = self._do_gaincal(context, calMs, 'fluxphaseshortgaincal.g', 'p', [''], solint=new_gain_solint1, minsnr=3.0)
         
         gaincal_result = self._do_gaincal(context, calMs, 'fluxgaincal.g', 'ap', ['fluxphaseshortgaincal.g'], solint=gain_solint2, minsnr=5.0)
+        
+        LOG.info("Gain table fluxgaincal.g is ready for flagging")
         
         return FluxgainsResults()
 

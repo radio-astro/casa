@@ -69,6 +69,8 @@ class Testgains(basetask.StandardTaskTemplate):
         testgains_result = self._do_gtype_testgains('calibrators.ms', 'testgaincal.g', solint=solint, context=context, combtime=combtime)
 
         flaggedSolnResult1 = getCalFlaggedSoln('testgaincal.g')
+        LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult1['all']['fraction']))
+        LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult1['antmedian']['fraction']))
 
 
         if (flaggedSolnResult1['all']['total'] > 0):
@@ -84,6 +86,9 @@ class Testgains(basetask.StandardTaskTemplate):
 
             testgains_result = self._do_gtype_testgains('calibrators.ms', 'testgaincal3.g', solint=solint, context=context, combtime=combtime)
             flaggedSolnResult3 = getCalFlaggedSoln('testgaincal3.g')
+            
+            LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult3['all']['fraction']))
+            LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult3['antmedian']['fraction']))
 
             if (flaggedSolnResult3['all']['total'] > 0):
                 fracFlaggedSolns3=flaggedSolnResult3['antmedian']['fraction']
@@ -100,6 +105,8 @@ class Testgains(basetask.StandardTaskTemplate):
 
                     testgains_result = self._do_gtype_testgains('calibrators.ms', 'testgaincal10.g', solint=solint, context=context, combtime=combtime)
                     flaggedSolnResult10 = getCalFlaggedSoln(tablebase + table_suffix[2])
+                    LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult3['all']['fraction']))
+                    LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult3['antmedian']['fraction']))
 
                     if (flaggedSolnResult10['all']['total'] > 0):
                         fracFlaggedSolns10 = flaggedSolnResult10['antmedian']['fraction']
@@ -115,6 +122,8 @@ class Testgains(basetask.StandardTaskTemplate):
                             combtime=''
                             testgains_result = self._do_gtype_testgains('calibrators.ms', 'testgaincalscan.g', solint=solint, context=context, combtime=combtime)
                             flaggedSolnResultScan = getCalFlaggedSoln('testgaincalscan.g')
+                            LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult3['all']['fraction']))
+                            LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult3['antmedian']['fraction']))
                             
                             if (flaggedSolnResultScan['all']['total'] > 0):
                                 fracFlaggedSolnsScan=flaggedSolnResultScan['antmedian']['fraction']

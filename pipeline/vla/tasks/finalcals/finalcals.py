@@ -85,8 +85,12 @@ class Finalcals(basetask.StandardTaskTemplate):
         calfrom = callibrary.CalFrom(gaintable=bpdgain_touse, interp='linear,linear', calwt=True)
         context.callibrary.add(calto, calfrom)
         
+        LOG.info("Initial BP gain calibration complete")
+        
 
         bandpass_result = self._do_bandpass(bpcaltable, context=context)
+        
+        LOG.info("Bandpass calibration complete")
         
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(gaintable=bpdgain_touse, interp='linear,linear', calwt=True)
@@ -403,7 +407,12 @@ class Finalcals(basetask.StandardTaskTemplate):
                 for myspw in spws:
                     reference_frequency = center_frequencies[myspw]
                     EVLA_band = vlautils.find_EVLA_band(reference_frequency)
+                    
+                    LOG.info("Center freq for spw "+str(myspw)+" = "+str(reference_frequency)+", observing band = "+EVLA_band)
+                    
                     model_image = standard_source_names[i] + '_' + EVLA_band + '.im'
+                    
+                    LOG.info("Setting model for field "+str(myfield)+" spw "+str(myspw)+" using "+model_image)
 
                     #Double check, but the fluxdensity=-1 should not matter since
                     #  the model image take precedence
@@ -536,6 +545,8 @@ class Finalcals(basetask.StandardTaskTemplate):
                 
     
     def _do_powerfitsetjy(self, calMs, results):
+        
+        LOG.info("Setting power-law fit in the model column")
         
         for result in results:
             for spw_i in result[1]:

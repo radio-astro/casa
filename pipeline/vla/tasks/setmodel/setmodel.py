@@ -90,6 +90,15 @@ def standard_sources(vis):
 
     standard_source_names = [ '3C48', '3C138', '3C147', '3C286' ]
     standard_source_fields = find_standards(positions)
+    
+    standard_source_found = False
+    for standard_source_field in standard_source_fields:
+        if standard_source_field:
+            standard_source_found = True
+    if not standard_source_found:
+        standard_source_found = False
+        LOG.error("ERROR: No standard flux density calibrator observed, flux density scale will be arbitrary")
+        QA2_calprep='Fail'
 
     return standard_source_names, standard_source_fields
 
@@ -202,10 +211,14 @@ class SetModel(basetask.StandardTaskTemplate):
                 for myspw in spws:
                     reference_frequency = center_frequencies[myspw]
                     EVLA_band = vlautils.find_EVLA_band(reference_frequency)
+                    LOG.info("Center freq for spw "+str(myspw)+" = "+str(reference_frequency)+", observing band = "+EVLA_band)
                     model_image = standard_source_names[i] + '_' + EVLA_band + '.im'
 
                     #Double check, but the fluxdensity=-1 should not matter since
                     #  the model image take precedence
+                    
+                    LOG.info("Setting model for field "+str(myfield)+" spw "+str(myspw)+" using "+model_image)
+                    
                     try:
                         setjy_result = self._do_setjy(str(myfield), str(myspw), model_image, -1)
                         result.measurements.update(setjy_result.measurements)

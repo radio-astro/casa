@@ -61,6 +61,8 @@ class Solint(basetask.StandardTaskTemplate):
         channels = self.inputs.context.evla['msinfo'][m.name].channels
         calibrator_scan_select_string = self.inputs.context.evla['msinfo'][m.name].calibrator_scan_select_string
     
+        LOG.info("Splitting out calibrators into calibrators.ms")
+    
         task_args = {'vis'          : m.name,
                      'outputvis'    : calMs,
                      'datacolumn'   : 'corrected',

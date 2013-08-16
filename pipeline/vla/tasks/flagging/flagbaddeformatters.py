@@ -38,16 +38,18 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
     
     def prepare(self):
         
-        method_args = {'testq' : 'amp',
-                       'tstat' : 'rat',
-                       'doprintall' : True,
-                       'testlimit' : 0.15,
+        #Setting control parameters as method arguments
+
+        method_args = {'testq' : 'amp',  # Which quantity to test? ['amp','phase','real','imag']
+                       'tstat' : 'rat',  # Which stat to use? ['min','max','mean','var'] or 'rat'=min/max or 'diff'=max-min
+                       'doprintall' : True,  # Print detailed flagging stats
+                       'testlimit' : 0.15,   # Limit for test (flag values under/over this limit)
                        'testunder' : True,
-                       'nspwlimit' : 4,
-                       'doflagundernspwlimit' : True,
-                       'doflagemptyspws' : False,
-                       'calBPtablename' : 'testBPcal.b',
-                       'flagreason' : 'bad_deformatters_amp or RFI'}
+                       'nspwlimit' : 4,      # Number of spw per baseband to trigger flagging entire baseband
+                       'doflagundernspwlimit' : True, # Flag individual spws when below nspwlimit
+                       'doflagemptyspws' : False, # Flag data for spws with no unflagged channel solutions in any poln?
+                       'calBPtablename' : 'testBPcal.b', # Define the table to run this on
+                       'flagreason' : 'bad_deformatters_amp or RFI'} # Define the REASON given for the flags
         
         bad_deformat_result = self._do_flag_baddeformatters(**method_args)
         

@@ -53,6 +53,8 @@ class Checkflag(basetask.StandardTaskTemplate):
     
     def prepare(self):
         
+        LOG.info("Checking RFI flagging of BP and Delay Calibrators")
+        
         #Default values
         m = self.inputs.context.observing_run.measurement_sets[0]
         checkflagfields = self.inputs.context.evla['msinfo'][m.name].checkflagfields

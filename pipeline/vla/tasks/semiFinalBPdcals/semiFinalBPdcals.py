@@ -51,21 +51,21 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         
         context = self.inputs.context
         
-        print "Before gaincal", context.callibrary.active
+        
         
         gtype_delaycal_result = self._do_gtype_delaycal(caltable=gtypecaltable, context=context)
         
-        print "After gaincal", context.callibrary.active
+        
 
         fracFlaggedSolns = 1.0
         
         critfrac = context.evla['msinfo'][m.name].critfrac
 
         #Iterate and check the fraciton of Flagged solutions, each time running gaincal in 'K' mode
-        while (fracFlaggedSolns > critfrac):
+        flagcount=0
+        while (fracFlaggedSolns > critfrac and AND flagcount < 4):
             
             context = self.inputs.context
-            print "Ktype step: ", context.callibrary.active
             
             calto = callibrary.CalTo(self.inputs.vis)
             calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='linear,linear', calwt=True)
@@ -74,6 +74,10 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
             ktype_delaycal_result = self._do_ktype_delaycal(caltable=ktypecaltable, addcaltable=gtypecaltable, context=context)
             flaggedSolnResult = getCalFlaggedSoln(ktype_delaycal_result.__dict__['inputs']['caltable'])
             fracFlaggedSolns = self._check_flagSolns(flaggedSolnResult)
+            
+            LOG.info("Fraction of flagged solutions = "+str(flaggedSolnResult['all']['fraction']))
+            LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult['antmedian']['fraction']))
+            flagcount += 1
 
             try:
                 calto = callibrary.CalTo(self.inputs.vis)
@@ -293,6 +297,8 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         
         m = context.observing_run.measurement_sets[0]
         calibrator_scan_select_string = context.evla['msinfo'][m.name].calibrator_scan_select_string
+        
+        LOG.info("Applying semi-final delay and BP calibrations to all calibrators")
         
         applycal_inputs = applycal.Applycal.Inputs(context,
             vis = self.inputs.vis,

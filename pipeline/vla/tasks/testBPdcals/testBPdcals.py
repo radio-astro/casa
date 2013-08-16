@@ -62,31 +62,33 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
         context = self.inputs.context
         
-        print "Before gaincal", context.callibrary.active
+       
         
         gtype_delaycal_result = self._do_gtype_delaycal(caltable=gtypecaltable, context=context)
         
-        print "After gaincal", context.callibrary.active
+        LOG.info("Initial phase calibration on delay calibrator complete")
 
         fracFlaggedSolns = 1.0
         
         critfrac = context.evla['msinfo'][m.name].critfrac
 
         #Iterate and check the fraciton of Flagged solutions, each time running gaincal in 'K' mode
-        while (fracFlaggedSolns > critfrac):
+        flagcount=0
+        while (fracFlaggedSolns > critfrac and flagcount < 4):
             
             context = self.inputs.context
-            print "Ktype step: ", context.callibrary.active
+            
             
             calto = callibrary.CalTo(self.inputs.vis)
             calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='linear,linear', calwt=True)
             context.callibrary._remove(calto, calfrom, context.callibrary._active)
             
-            
-            
             ktype_delaycal_result = self._do_ktype_delaycal(caltable=ktypecaltable, addcaltable=gtypecaltable, context=context)
             flaggedSolnResult = getCalFlaggedSoln(ktype_delaycal_result.__dict__['inputs']['caltable'])
             fracFlaggedSolns = self._check_flagSolns(flaggedSolnResult)
+            LOG.info("Fraction of flagged solutions = "+str(flaggedSolnResult['all']['fraction']))
+            LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult['antmedian']['fraction']))
+            flagcount += 1
 
             try:
                 calto = callibrary.CalTo(self.inputs.vis)
@@ -111,7 +113,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
         context.callibrary._remove(calto, calfrom, context.callibrary._active)
 
         context = self.inputs.context
-        print "After all ktypes:",  context.callibrary.active
+        
         bpdgain_touse = tablebase + table_suffix[0]
         
         gtype_gaincal_result = self._do_gtype_bpdgains(tablebase + table_suffix[0], addcaltable=ktypecaltable, solint=solint, context=context)
@@ -119,6 +121,8 @@ class testBPdcals(basetask.StandardTaskTemplate):
         
         
         flaggedSolnResult1 = getCalFlaggedSoln(tablebase + table_suffix[0])
+        LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult1['all']['fraction']))
+        LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult1['antmedian']['fraction']))
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[0], interp='linear,linear', calwt=True)
         context.callibrary._remove(calto, calfrom, context.callibrary._active)
@@ -143,6 +147,8 @@ class testBPdcals(basetask.StandardTaskTemplate):
             
             gtype_gaincal_result = self._do_gtype_bpdgains(tablebase + table_suffix[1], addcaltable=ktypecaltable, solint=solint, context=context)
             flaggedSolnResult3 = getCalFlaggedSoln(tablebase + table_suffix[1])
+            LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult1['all']['fraction']))
+            LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult1['antmedian']['fraction']))
             calto = callibrary.CalTo(self.inputs.vis)
             calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[1], interp='linear,linear', calwt=True)
             context.callibrary._remove(calto, calfrom, context.callibrary._active)
@@ -170,6 +176,8 @@ class testBPdcals(basetask.StandardTaskTemplate):
                 
                     gtype_gaincal_result = self._do_gtype_bpdgains(tablebase + table_suffix[2], addcaltable=ktypecaltable, solint=solint, context=context)
                     flaggedSolnResult10 = getCalFlaggedSoln(tablebase + table_suffix[2])
+                    LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult1['all']['fraction']))
+                    LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult1['antmedian']['fraction']))
                     calto = callibrary.CalTo(self.inputs.vis)
                     calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[2], interp='linear,linear', calwt=True)
                     context.callibrary._remove(calto, calfrom, context.callibrary._active)
@@ -192,6 +200,9 @@ class testBPdcals(basetask.StandardTaskTemplate):
                         if (fracFlaggedSolns > 0.05):
                             LOG.warn("There is a large fraction of flagged solutions, there might be something wrong with your data.")
 
+
+        LOG.info("Test amp and phase calibration on delay and bandpass calibrators complete")
+        LOG.info("Using short solint = "+gain_solint1)
         context = self.inputs.context
         
         #Add appropriate temporary tables to the callibrary
@@ -205,6 +216,11 @@ class testBPdcals(basetask.StandardTaskTemplate):
         
         
         bandpass_result = self._do_bandpass(bpcaltable, context=context)
+        
+        LOG.info("Fraction of flagged solutions = "+str(flaggedSolnResult['all']['fraction']))
+        LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult['antmedian']['fraction']))
+        
+        LOG.info("Applying test calibrations to BP and delay calibrators")
         
         applycal_result = self._do_applycal(context=context)
 
@@ -349,6 +365,8 @@ class testBPdcals(basetask.StandardTaskTemplate):
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
         minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
 
+        LOG.info("Doing test bandpass calibration")
+
         #bandtype = 'B'
         bandpass_inputs = bandpass.ChannelBandpass.Inputs(context,
             vis = self.inputs.vis,
@@ -366,6 +384,8 @@ class testBPdcals(basetask.StandardTaskTemplate):
         bandpass_inputs.refant = bandpass_inputs.refant.lower()
 
         bandpass_task = bandpass.ChannelBandpass(bandpass_inputs)
+        
+        LOG.info("Test bandpass calibration complete")
 
         return self._executor.execute(bandpass_task, merge=True)
 
