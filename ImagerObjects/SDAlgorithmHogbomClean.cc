@@ -75,6 +75,10 @@ extern "C" {
   ////////////////// Global functions ? 
 void REFHogbomCleanImageSkyModelstopnow (Int *yes) {
 
+  *yes=0;
+  return;
+
+  /*
   Vector<String> choices(2);
   choices(0)="Continue";
   choices(1)="Stop Now";
@@ -91,6 +95,7 @@ void REFHogbomCleanImageSkyModelstopnow (Int *yes) {
     logSink.post(message);
     *yes=1;
   }
+  */
 
 }
 
@@ -182,7 +187,8 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     cout << "HOG: Set mask to 1" << endl;
     itsMatMask.resize( itsMatPsf.shape() );
     itsMatMask.set(1.0);
-    
+
+    cout << "Image Shapes : " << itsMatResidual.shape() << endl;
 
   }
 
@@ -193,8 +199,8 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     const Float *lpsf_data, *lmask_data;
     Float *limage_data, *limageStep_data;
 
-    limage_data = itsMatResidual.getStorage( delete_iti );
-    limageStep_data = itsMatModel.getStorage( delete_its );
+    limage_data = itsMatModel.getStorage( delete_iti );
+    limageStep_data = itsMatResidual.getStorage( delete_its );
     lpsf_data = itsMatPsf.getStorage( delete_itp );
     lmask_data = itsMatMask.getStorage( delete_itm );
 
@@ -210,7 +216,7 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
 
     Int newNx = shp[0];
     Int newNy = shp[1];
-    Int npol = shp[2];
+    Int npol = 1;
     
 
     Int fxbeg=xbeg+1;
@@ -235,8 +241,8 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     
     iterdone=ending_iteration;
     
-    itsMatResidual.putStorage( limage_data, delete_iti );
-    itsMatModel.putStorage( limageStep_data, delete_its );
+    itsMatModel.putStorage( limage_data, delete_iti );
+    itsMatResidual.putStorage( limageStep_data, delete_its );
     itsMatPsf.freeStorage( lpsf_data, delete_itp );
     itsMatMask.freeStorage( lmask_data, delete_itm );
     

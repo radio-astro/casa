@@ -126,6 +126,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 modelflux,
 			 iterdone);
 
+	    //	    cout << "SDAlgoBase: After one step, residual=" << peakresidual << " model=" << modelflux << " iters=" << iterdone << endl;
+
 	    loopcontrols.incrementMinorCycleCount( iterdone );
 	    loopcontrols.setPeakResidual( peakresidual );
 	    loopcontrols.addSummaryMinor( deconvolverid, subimageid, modelflux, peakresidual );
