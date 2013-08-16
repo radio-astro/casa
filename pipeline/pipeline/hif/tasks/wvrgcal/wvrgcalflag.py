@@ -364,6 +364,7 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
                     self.result.addview(description, result.qa2.last(description))
  
         # populate other parts of result
+        self.result.pool[:] = result.pool[:]
         self.result.final = result.final 
         self.result.vis = inputs.vis
         self.result.qa2 = result.qa2
