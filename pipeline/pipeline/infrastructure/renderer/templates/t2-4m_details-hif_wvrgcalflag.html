@@ -8,27 +8,39 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <%block name="title">WVR Calibration and Flagging</%block>
 
-<h2>Flagging results</h2>
+<p>This task checks whether the WVR radiometers are working as intended,
+interpolating for antennas that are not. The WVR caltable is only added to 
+subsequent pre-applys if it gives a tangible improvement.</p>
+
+<h2>Results</h2>
+% if applications:
 <table class="table table-bordered" summary="Flagging Results">
-	<caption>Flagging Results</caption>
+	<caption>Flagging results and applications for WVR</caption>
     <thead>
         <tr>
             <th>Measurement Set</th>
-            <th>Flags</th>
+			<th>WVR Table</th>
+            <th>Interpolated Antennas</th>
+			<th>Applied</th>
         </tr>
     </thead>
 	<tbody>
-% for r in result:
+% for application in applications:
 		<tr>
-			<td>${os.path.basename(r.vis)}</td>
-		  	<td>'${', '.join(r.wvrflag)}'</td>
+			<td>${application.ms}</td>
+		  	<td>${application.gaintable}
+		  	<td>${application.interpolated}</td>
+		  	<td><i class="icon-${'ok' if application.applied else 'remove'}"></i></td>
 		</tr>
 % endfor		
 	</tbody>
 </table>
+% else:
+<p>This measurement set does not contain any WVR data.</p>
+% endif
  
 % if plot_groups:
-<h2>Flag Plots</h2>
+<h2>Plots</h2>
 <ul>
 % for plot_group in plot_groups:
 	<li><a class="replace" href="${os.path.join(dirname, plot_group.filename)}"}>${plot_group.title}</a></li>

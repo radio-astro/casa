@@ -1202,6 +1202,9 @@ class T2_4MDetailsWvrgcalflagRenderer(T2_4MDetailsDefaultRenderer):
     and output specific to the wvrgcalflag task.
     """
     
+    WvrApplication = collections.namedtuple('WvrApplication', 
+                                            'ms gaintable interpolated applied') 
+    
     def __init__(self, template='t2-4m_details-hif_wvrgcalflag.html', 
                  always_rerender=False):
         # set the name of our specialised Mako template via the superclass
@@ -1232,11 +1235,14 @@ class T2_4MDetailsWvrgcalflagRenderer(T2_4MDetailsDefaultRenderer):
 
         plotter = image.ImageDisplay()
         plots = []
+        applications = []
         for result in results:
             if result.view:
                 plot = plotter.plot(context, result, reportdir=plots_dir, 
                                     prefix='flag', change='Flagging')
                 plots.append(plot)
+
+            applications.extend(self.get_wvr_applications(result))
 
         # Group the Plots by axes and plot types; each logical grouping will
         # be contained in a PlotGroup  
@@ -1251,8 +1257,37 @@ class T2_4MDetailsWvrgcalflagRenderer(T2_4MDetailsDefaultRenderer):
         # add the PlotGroups to the Mako context. The Mako template will parse
         # these objects in order to create links to the thumbnail pages we
         # just created
-        ctx.update({'plot_groups' : plot_groups})
+        ctx.update({'plot_groups' : plot_groups,
+                    'applications' : applications})
         return ctx
+
+    def get_wvr_applications(self, result):
+        applications = []
+
+        interpolated = utils.commafy(result.wvrflag, False)
+
+        # define a closure that adds a wvrapplication for each calapplication
+        # unless the applications list already contains one for that 
+        # ms/caltable combination
+        def collect(calapps, accept):
+            for calapp in calapps:
+                ms = os.path.basename(calapp.vis)
+                gaintable = os.path.basename(calapp.gaintable)
+    
+                a = T2_4MDetailsWvrgcalflagRenderer.WvrApplication(ms, 
+                                                                   gaintable, 
+                                                                   interpolated,
+                                                                   accept)            
+    
+                if not any([r for r in applications 
+                            if r.ms == ms and r.gaintable == gaintable]):
+                    applications.append(a)
+
+        collect(result.final, True)
+        collect(result.pool, False)
+
+        print applications
+        return applications
 
 
 class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
