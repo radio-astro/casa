@@ -123,41 +123,48 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                     #print imname, tchan, st, localwidth 
 
                     os.system('rm -rf '+imname+'*')
-                    
-                    clean(vis=vis,imagename=imname,outlierfile=outlierfile,field=field,
-                          spw=spw,selectdata=selectdata,timerange=timerange,uvrange=uvrange,
-                          antenna=antenna,scan=scan, observation=str(observation),intent=intent,
-                          mode=mode, resmooth=resmooth, gridmode=gridmode, 
-                          wprojplanes=wprojplanes,facets=facets,cfcache=cfcache,rotpainc=rotpainc, painc=painc,
-                          psterm=psterm,aterm=aterm,mterm=mterm,wbawp=wbawp,conjbeams=conjbeams,
-                          epjtable=epjtable,interpolation=interpolation,niter=niter,
-                          gain=gain,
-                          threshold=threshold,psfmode=psfmode,imagermode=imagermode, 
-                          ftmachine=ftmachine,mosweight=mosweight,scaletype=scaletype,
-                          multiscale=multiscale,negcomponent=negcomponent,
-                          smallscalebias=smallscalebias,interactive=interactive,
-                          mask=mask,nchan=tchan,start=st,width=localwidth,outframe=outframe,
-                          veltype=veltype,imsize=imsize,cell=cell,phasecenter=phasecenter,
-                          restfreq=restfreq,stokes=stokes,weighting=weighting,
-                          robust=robust,uvtaper=uvtaper,outertaper=outertaper,
-                          innertaper=innertaper,modelimage=modelimage,
-                          restoringbeam=restoringbeam,pbcor=pbcor,minpb=minpb,
-                          usescratch=usescratch,noise=noise,npixels=npixels,npercycle=npercycle,
-                          cyclefactor=cyclefactor,cyclespeedup=cyclespeedup,nterms=nterms,
-                          reffreq=reffreq,chaniter=chaniter,flatnoise=flatnoise,
-                          allowchunk=False)
+                    try:
+                        clean(vis=vis,imagename=imname,outlierfile=outlierfile,field=field,
+                              spw=spw,selectdata=selectdata,timerange=timerange,uvrange=uvrange,
+                              antenna=antenna,scan=scan, observation=str(observation),intent=intent,
+                              mode=mode, resmooth=resmooth, gridmode=gridmode, 
+                              wprojplanes=wprojplanes,facets=facets,cfcache=cfcache,rotpainc=rotpainc, painc=painc,
+                              psterm=psterm,aterm=aterm,mterm=mterm,wbawp=wbawp,conjbeams=conjbeams,
+                              epjtable=epjtable,interpolation=interpolation,niter=niter,
+                              gain=gain,
+                              threshold=threshold,psfmode=psfmode,imagermode=imagermode, 
+                              ftmachine=ftmachine,mosweight=mosweight,scaletype=scaletype,
+                              multiscale=multiscale,negcomponent=negcomponent,
+                              smallscalebias=smallscalebias,interactive=interactive,
+                              mask=mask,nchan=tchan,start=st,width=localwidth,outframe=outframe,
+                              veltype=veltype,imsize=imsize,cell=cell,phasecenter=phasecenter,
+                              restfreq=restfreq,stokes=stokes,weighting=weighting,
+                              robust=robust,uvtaper=uvtaper,outertaper=outertaper,
+                              innertaper=innertaper,modelimage=modelimage,
+                              restoringbeam=restoringbeam,pbcor=pbcor,minpb=minpb,
+                              usescratch=usescratch,noise=noise,npixels=npixels,npercycle=npercycle,
+                              cyclefactor=cyclefactor,cyclespeedup=cyclespeedup,nterms=nterms,
+                              reffreq=reffreq,chaniter=chaniter,flatnoise=flatnoise,
+                              allowchunk=False)
+                    except Exception, instance:
+                        if(string.count(instance.message, 'PSFZero') >0):
+                            ia.fromimage(outfile=imname+'.image', infile=imname+'.residual', overwrite=True)
+                            ia.done()
+                        else:
+                            raise instance
                     subimg.append(imname)
 
                 for i in ['.image', '.flux', '.model', '.psf', '.residual', '.mask']:
-                    casalog.post('concate '+bigimg+'_*'+i+' to '+bigimg+i)   
-                    os.system('rm -rf '+bigimg+i)
-                    inf=''
-                    for j in range(len(subimg)):
-                        inf+=' '+subimg[j]+i   
-                    bigim=ia.imageconcat(outfile=bigimg+i, infiles=inf, relax=True)
-                    bigim.done()
-                    ia.close()
-                    os.system('rm -rf '+inf)
+                    if((len(subimg) > 0) and  os.path.exists(subimg[0]+i)):
+                        casalog.post('concate '+bigimg+'_*'+i+' to '+bigimg+i)   
+                        os.system('rm -rf '+bigimg+i)
+                        inf=''
+                        for j in range(len(subimg)):
+                            inf+=' '+subimg[j]+i   
+                        bigim=ia.imageconcat(outfile=bigimg+i, infiles=inf, relax=True)
+                        bigim.done()
+                        ia.close()
+                        os.system('rm -rf '+inf)
 
                 return    
             else:
