@@ -107,7 +107,7 @@ class ImageDisplay(object):
             ax.fill([0.1, 0.2, 0.2, 0.1], [yoff, yoff,
               yoff+1.0/80.0, yoff+1.0/80.0], facecolor='indigo',
               edgecolor='indigo')
-            yoff = self.plottext(0.25, yoff, 'No data', 35, mult=0.9)
+            yoff = self.plottext(0.25, yoff, 'No data', 35, mult=0.8)
 
             ax.fill([0.1, 0.2, 0.2, 0.1], [yoff, yoff, yoff+1.0/80.0,
               yoff+1.0/80.0], facecolor='violet', edgecolor='violet')
@@ -278,14 +278,14 @@ class ImageDisplay(object):
           vmax=vmax, interpolation='nearest', origin='lower', aspect=aspect)
         lims = plt.axis()
 
-        plt.xlabel(xtitle, size=20)
+        plt.xlabel(xtitle, size=15)
         for label in plt.gca().get_xticklabels():
-            label.set_fontsize(16)
+            label.set_fontsize(10)
         plt.title(subtitle, fontsize='large')
         if plotnumber==1:
-            plt.ylabel(ytitle, size=20)
+            plt.ylabel(ytitle, size=15)
         for label in plt.gca().get_yticklabels():
-            label.set_fontsize(16)
+            label.set_fontsize(10)
 
         # plot wedge, make tick numbers smaller, label with units
         if vmin==vmax:
@@ -298,12 +298,12 @@ class ImageDisplay(object):
                 cb = plt.colorbar(shrink=shrink, fraction=fraction,
                   format='%.1e')
         for label in cb.ax.get_yticklabels():
-            label.set_fontsize(12)
+            label.set_fontsize(10)
         if plotnumber==1:
             if dataunits is not None:
-                cb.set_label('%s (%s)' % (datatype, dataunits), fontsize=14)
+                cb.set_label('%s (%s)' % (datatype, dataunits), fontsize=10)
             else:
-                cb.set_label(datatype, fontsize=12)
+                cb.set_label(datatype, fontsize=10)
 
         if ytitle.upper() == 'TIME':
             plt.gca().yaxis.set_major_locator(plt.NullLocator())
@@ -317,7 +317,7 @@ class ImageDisplay(object):
                     t -= m * 60.0
                     s = int(np.floor(t))
                     tstring = '%sh%sm%ss' % (h,m,s)
-                    plt.text(lims[0]-0.25, i, tstring, fontsize=14,
+                    plt.text(lims[0]-0.25, i, tstring, fontsize=10,
                       ha='right', va='bottom')
 
         # reset lims to values for image, stops box being pulled off edge
@@ -350,13 +350,13 @@ class ImageDisplay(object):
                 if words_in_line == 1:
                     while len(temp) > 0:
                         ax.text(xoff, yoff, temp[:maxchars], va='center',
-                          fontsize=mult*16,
+                          fontsize=mult*8,
                           transform=ax.transAxes, clip_on=False)
                         temp = temp[min(len(temp), maxchars):]
                         yoff -= 0.03 * ny_subplot * mult
                     words_in_line = 0
                 else:
-                    ax.text(xoff, yoff, line, va='center', fontsize=mult*16,
+                    ax.text(xoff, yoff, line, va='center', fontsize=mult*8,
                       transform=ax.transAxes, clip_on=False)
                     yoff -= 0.03 * ny_subplot * mult
                     line = words[i] + ' '
@@ -364,7 +364,7 @@ class ImageDisplay(object):
             else:
                 line = temp
         if len(line) > 0:
-            ax.text(xoff, yoff, line, va='center', fontsize=mult*16,
+            ax.text(xoff, yoff, line, va='center', fontsize=mult*8,
               transform=ax.transAxes, clip_on=False)
             yoff -= 0.02 * ny_subplot * mult
         yoff -= 0.02 * ny_subplot * mult
