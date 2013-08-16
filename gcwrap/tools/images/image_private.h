@@ -13,7 +13,7 @@ image(std::tr1::shared_ptr<casa::ImageInterface<casa::Float> > inImage);
 private:
 
 
-std::auto_ptr<casa::LogIO> _log;
+mutable casa::LogIO _log;
 std::auto_ptr<casa::ImageAnalysis> _image;
 std::auto_ptr<casa::ImageStatsCalculator> _stats;
 
