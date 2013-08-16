@@ -97,6 +97,7 @@ MeasComet::MeasComet(const MeasComet &other) :
 MeasComet &MeasComet::operator=(const MeasComet &other) {
   if (this != &other) {
     initMeas(other.tp_p);
+    for (uInt i=0; i<2; i++) lnr_p[i] = -1;
   }
   return *this;
 }
@@ -392,6 +393,7 @@ void MeasComet::closeMeas() {
     tp_p   = "";
     msgDone_p = False;
     for (uInt i=0; i<2; ++i)  lnr_p[i] = -1;
+    row_p = ROTableRow();
     tab_p = Table();
   }
 }

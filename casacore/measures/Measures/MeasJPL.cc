@@ -156,7 +156,7 @@ Bool MeasJPL::initMeas(MeasJPL::Files which) {
         ok = False;
       }
       if (ok) {
-        MeasIERS::openNote(&MeasIERS::closeMeas);
+        MeasIERS::openNote(&MeasJPL::closeMeas);
         if (!kws.isDefined("MJD0") || kws.asDouble("MJD0") < 10000 ||
             !kws.isDefined("dMJD") || kws.asDouble("dMJD") < 8 ||
             !kws.isDefined("AU") || kws.asDouble("AU") < 1e8 ||
@@ -212,6 +212,7 @@ Bool MeasJPL::initMeas(MeasJPL::Files which) {
       }
       if (!ok) {
         // Close table if open.
+	row[which] = ROTableRow();
         t[which] = Table();
         LogIO os(LogOrigin("MeasJPL",
                            String("initMeas(MeasJPL::Files)"),
@@ -243,6 +244,7 @@ void MeasJPL::closeMeas() {
           nv = 3;
           twot = 0.0;
           vfac = 0.0;
+	  row[i] = ROTableRow();
           t[i] = Table();
         }
         measFlag[i] = True;

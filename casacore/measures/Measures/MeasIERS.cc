@@ -207,7 +207,7 @@ void MeasIERS::closeMeas() {
           mjd0[i] = 0;
           mjdl[i] = 0;
           msgDone = False;
-	  row[i] = TableRow();
+	  row[i] = ROTableRow();
           t[i] = Table();
         }
         measFlag[i] = True;
@@ -217,7 +217,7 @@ void MeasIERS::closeMeas() {
 }
 
 void MeasIERS::openNote(CLOSEFUN fun) {
-  if (nNote <= sizeNote) {
+  if (nNote >= sizeNote) {
     CLOSEFUN *tmp = 0;
     if (sizeNote > 0) {
       tmp = new CLOSEFUN[sizeNote];
@@ -226,7 +226,9 @@ void MeasIERS::openNote(CLOSEFUN fun) {
     }
     toclose = new CLOSEFUN[sizeNote+10];
     for (uInt i=0; i<sizeNote; ++i) toclose[i] = tmp[i];
-    for (uInt i=sizeNote; i<sizeNote+10; ++i) toclose[i] = 0;
+    for (uInt i=sizeNote; i<sizeNote+10; ++i){
+      toclose[i] = 0;
+    }
     sizeNote += 10;
     delete [] tmp; tmp = 0;
   }
@@ -235,8 +237,10 @@ void MeasIERS::openNote(CLOSEFUN fun) {
 
 void MeasIERS::closeTables() {
   if (sizeNote > 0) {
-    for (uInt i=sizeNote; i-1 != 0; --i) {
-      if (toclose[i-1] != 0) toclose[i-1]();
+    for (uInt i=sizeNote; i >= 1; --i) {
+      if (toclose[i-1] != 0){
+	toclose[i-1]();
+      }
       toclose[i-1] = 0;
     }
     delete [] toclose; toclose = 0;
