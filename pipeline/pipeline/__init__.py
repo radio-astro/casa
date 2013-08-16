@@ -8,6 +8,7 @@ import sys
 import webbrowser
 
 from . import infrastructure
+from . import recipes
 
 from . import h
 from . import hco
