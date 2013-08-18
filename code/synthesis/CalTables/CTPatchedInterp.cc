@@ -332,7 +332,6 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
     }
   }
 
-
   // Initialize caltable slices
   sliceTable();
 
@@ -344,7 +343,6 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
     setFldMap(ms.field());  // on a trial basis
   else
     setDefFldMap();
-
 
   // Set defaultmaps
   setDefAntMap();
@@ -367,7 +365,8 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
          altFld_(iMSFld)=ifld;  
   }
   //  cout << "------------" << endl;
-  //  cout << "fldMap_ = " << fldMap_ << "  altFld_ = " << altFld_ << endl;
+  //  cout << "fldMap_ = " << fldMap_ << endl;
+  //  cout << "altFld_ = " << altFld_ << endl;
 
   // Setup mapped interpolators
   // TBD: defer this to later, so that spwmap, etc. can be revised
@@ -505,16 +504,30 @@ CTPatchedInterp::~CTPatchedInterp() {
 
   if (CTPATCHEDINTERPVERB) cout << "CTPatchedInterp::~CTPatchedInterp()" << endl;
 
-  IPosition sh(tI_.shape());
-  for (Int l=0;l<sh(3);++l)
-    for (Int k=0;k<sh(2);++k)
-      for (Int j=0;j<sh(1);++j)
-	for (Int i=0;i<sh(0);++i) {
-	  IPosition ip(4,i,j,k,l);
-	  if (tIdel_(ip))
-	    delete tI_(ip);
-	}
-  tI_.resize();
+  {  
+    IPosition sh(tI_.shape());
+    for (Int l=0;l<sh(3);++l)
+      for (Int k=0;k<sh(2);++k)
+	for (Int j=0;j<sh(1);++j)
+	  for (Int i=0;i<sh(0);++i) {
+	    IPosition ip(4,i,j,k,l);
+	    if (tIdel_(ip))
+	      delete tI_(ip);
+	  }
+    tI_.resize();
+  }
+  {
+    IPosition sh(ctSlices_.shape());
+    for (Int l=0;l<sh(3);++l)
+      for (Int k=0;k<sh(2);++k)
+	for (Int j=0;j<sh(1);++j)
+	  for (Int i=0;i<sh(0);++i) {
+	    IPosition ip(4,i,j,k,l);
+	    if (ctSlices_(ip)) 
+	      delete ctSlices_(ip);
+	  }
+    ctSlices_.resize();
+  }
 }
 
 Bool CTPatchedInterp::interpolate(Int msobs, Int msfld, Int msspw, Double time, Double freq) {
@@ -656,6 +669,7 @@ void CTPatchedInterp::sliceTable() {
 
   // Indexed by the fields, spws, ants in the cal table (pre-mapped)
   ctSlices_.resize(IPosition(4,nCTElem_,nCTSpw_,nCTFld_,nCTObs_));
+  ctSlices_.set(NULL);
 
   // Initialize spwInOK_
   spwInOK_.resize(nCTSpw_);
@@ -682,8 +696,8 @@ void CTPatchedInterp::sliceTable() {
       Int ifld = (byField_ ? ctiter.thisField() : 0); // use 0 if not slicing by field
       Int iobs = (byObs_ ? ctiter.thisObs() : 0); // use 0 if not slicing by obs
       IPosition ip(4,0,ispw,ifld,iobs);
-      ctSlices_(ip)=ctiter.table();
-      spwInOK_(ispw)=(spwInOK_(ispw) || ctSlices_(ip).nrow()>0);
+      ctSlices_(ip)= new NewCalTable(ctiter.table());
+      spwInOK_(ispw)=(spwInOK_(ispw) || ctSlices_(ip)->nrow()>0);
       ctiter.next();
     }
     break;
@@ -704,8 +718,8 @@ void CTPatchedInterp::sliceTable() {
       Int ifld = (byField_ ? ctiter.thisField() : 0); // use 0 if not slicing by field
       Int iobs = (byObs_ ? ctiter.thisObs() : 0); // use 0 if not slicing by obs
       IPosition ip(4,ibln,ispw,ifld,iobs);
-      ctSlices_(ip)=ctiter.table();
-      spwInOK_(ispw)=(spwInOK_(ispw) || ctSlices_(ip).nrow()>0);
+      ctSlices_(ip)=new NewCalTable(ctiter.table());
+      spwInOK_(ispw)=(spwInOK_(ispw) || ctSlices_(ip)->nrow()>0);
       ctiter.next();
     }    
     break;
@@ -723,8 +737,8 @@ void CTPatchedInterp::sliceTable() {
       Int ifld = (byField_ ? ctiter.thisField() : 0); // use 0 if not slicing by field
       Int iobs = (byObs_ ? ctiter.thisObs() : 0); // use 0 if not slicing by obs
       IPosition ip(4,iant,ispw,ifld,iobs);
-      ctSlices_(ip)=ctiter.table();
-      spwInOK_(ispw)=(spwInOK_(ispw) || ctSlices_(ip).nrow()>0);
+      ctSlices_(ip)= new NewCalTable(ctiter.table());
+      spwInOK_(ispw)=(spwInOK_(ispw) || ctSlices_(ip)->nrow()>0);
       ctiter.next();
     }    
     break;
@@ -764,7 +778,7 @@ void CTPatchedInterp::makeInterpolators() {
 	  for (Int iMSElem=0;iMSElem<nMSElem_;++iMSElem) {
 	    // Realize the mapping 
 	    IPosition ictip(4,elemMap_(iMSElem),spwMap_(iMSSpw),fldMap_(iMSFld),iMSObs);
-	    NewCalTable& ict(ctSlices_(ictip));
+	    NewCalTable& ict(*ctSlices_(ictip));
 	    if (!ict.isNull()) {
 	      Matrix<Float> tR(timeResult_(iMSSpw,iMSFld,iMSObs).xyPlane(iMSElem));
 	      Matrix<Bool> tRf(timeResFlag_(iMSSpw,iMSFld,iMSObs).xyPlane(iMSElem));

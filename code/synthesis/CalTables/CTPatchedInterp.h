@@ -219,7 +219,7 @@ private:
   Cube<Cube<Bool> >  resFlag_;    // [nMSSpw_,nMSFld_,nMSObs_][nFpar,nChan,nAnt]
 
   // The CalTable slices
-  Array<NewCalTable> ctSlices_;  // [nCTElem_,nCTSpw_,nCTFld_,nCTObs_]
+  Array<NewCalTable*> ctSlices_;  // [nCTElem_,nCTSpw_,nCTFld_,nCTObs_]
 
   // The pre-patched Time interpolation engines
   //   These are populated by the available caltables slices
