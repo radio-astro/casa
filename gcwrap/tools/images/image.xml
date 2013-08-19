@@ -7312,9 +7312,10 @@ ia.close()
      <value>-1</value>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is the whole image.</description>
-     <value></value>
+     <param type="any"  name="region">
+        <any type="variant"/>
+        <description>The region of interest.  Default is the whole image.</description>
+        <value/>
      </param>
   
      <param type="any"  name="mask">

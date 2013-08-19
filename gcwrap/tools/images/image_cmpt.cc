@@ -67,11 +67,12 @@
 #include <imageanalysis/ImageAnalysis/ImagePadder.h>
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
 #include <imageanalysis/ImageAnalysis/ImagePrimaryBeamCorrector.h>
-#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
+#include <imageanalysis/ImageAnalysis/ImageRegridder.h>
 #include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
 #include <imageanalysis/ImageAnalysis/ImageTransposer.h>
 #include <imageanalysis/ImageAnalysis/PeakIntensityFluxDensityConverter.h>
 #include <imageanalysis/ImageAnalysis/PVGenerator.h>
+#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 
 #include <stdcasa/version.h>
 
@@ -89,15 +90,7 @@ namespace casac {
 const String image::_class = "image";
 
 image::image() :
-_log(), _image(new ImageAnalysis()) {
-try {
-    _log << _ORIGIN;
-	} catch (AipsError x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-}
+_log(), _image(new ImageAnalysis()) {}
 
 // private ImageInterface constructor for on the fly components
 // The constructed object will take over management of the provided pointer
@@ -290,9 +283,8 @@ image* image::imagecalc(
 		ImageAnalysis ia;
         tr1::shared_ptr<ImageInterface<Float> > out(ia.imagecalc(outfile, pixels, overwrite));
         return  new image(out);
-		
 	}
-	catch (AipsError x) {
+	catch (const AipsError& x) {
 		RETHROW(x);
 	}
 }
@@ -338,7 +330,8 @@ bool image::fromarray(const std::string& outfile,
 		const ::casac::variant& pixels, const ::casac::record& csys,
 		const bool linear, const bool overwrite, const bool log) {
 	try {
-		_image.reset(new ImageAnalysis());
+		_reset();
+
 		_log << _ORIGIN;
 
 		Vector<Int> shape = pixels.arrayshape();
@@ -390,6 +383,13 @@ bool image::fromarray(const std::string& outfile,
 	}
 }
 
+void image::_reset() {
+	_image.reset(new ImageAnalysis());
+	_imageFloat.reset();
+	_imageComplex.reset();
+	_stats.reset(0);
+}
+
 bool image::fromascii(const string& outfile, const string& infile,
 		const vector<int>& shape, const string& sep, const record& csys,
 		const bool linear, const bool overwrite) {
@@ -406,9 +406,7 @@ bool image::fromascii(const string& outfile, const string& infile,
 			return false;
 		}
 
-		if (_image.get() == 0) {
-			_image.reset(new ImageAnalysis());
-		}
+		_reset();
 		auto_ptr<Record> coordsys(toRecord(csys));
 		if (
 			_image->imagefromascii(
@@ -431,8 +429,7 @@ bool image::fromfits(const std::string& outfile, const std::string& fitsfile,
 		const int whichrep, const int whichhdu, const bool zeroBlanks,
 		const bool overwrite) {
 	try {
-		_image.reset(new ImageAnalysis());
-
+		_reset();
 		_log << _ORIGIN;
 		return _image->imagefromfits(outfile, fitsfile, whichrep, whichhdu,
 				zeroBlanks, overwrite);
@@ -447,8 +444,8 @@ bool image::fromimage(const string& outfile, const string& infile,
 		const record& region, const variant& mask, const bool dropdeg,
 		const bool overwrite) {
 	try {
-		_image.reset(new ImageAnalysis());
-		_stats.reset(0);
+		_reset();
+
 		_log << _ORIGIN;
 		String theMask;
 		if (mask.type() == variant::BOOLVEC) {
@@ -484,7 +481,7 @@ bool image::fromshape(
 ) {
 	try {
 		_log << _ORIGIN;
-		_image.reset(new ImageAnalysis());
+		_reset();
 		auto_ptr<Record> coordinates(toRecord(csys));
 		if (
 			_image->imagefromshape(
@@ -492,7 +489,6 @@ bool image::fromshape(
 				*coordinates, linear, overwrite, log
 			)
 		) {
-			_stats.reset(0);
 			return True;
 		}
 		throw AipsError("Error creating image from shape");
@@ -728,7 +724,7 @@ image* image::continuumsub(
 
 record* image::convertflux(
 	const variant& qvalue, const variant& major,
-	const variant& minor,  const string& type,
+	const variant& minor,  const string& /*type*/,
 	const bool toPeak,
 	const int channel, const int polarization
 ) {
@@ -1569,7 +1565,7 @@ image* image::transpose(
 		if(!rstat)
 			throw AipsError("Unable to transpose image");
 		return rstat;
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		RETHROW(x);
 	}
 }
@@ -2348,8 +2344,7 @@ std::string image::name(const bool strippath) {
 
 bool image::open(const std::string& infile) {
 	try {
-		_image.reset(new ImageAnalysis());
-		_stats.reset(0);
+		_reset();
 
 		_log << _ORIGIN;
         return _image->open(infile);
@@ -2361,7 +2356,7 @@ bool image::open(const std::string& infile) {
 	}
 }
 /*
-bool image::open(const casa::ImageInterface<casa::Float>* inImage) {
+bool image::open(const shImFloat& inImage) {
 	try {
 		if (_log.get() == 0) {
 			_log.reset(new LogIO());
@@ -2687,7 +2682,7 @@ image* image::rebin(
 image* image::regrid(
 	const string& outfile, const vector<int>& inshape,
 	const record& csys, const vector<int>& inaxes,
-	const record& region, const variant& vmask,
+	const variant& region, const variant& vmask,
 	const string& method, const int decimate, const bool replicate,
 	const bool doRefChange, const bool dropDegenerateAxes,
 	const bool overwrite, const bool forceRegrid,
@@ -2700,6 +2695,36 @@ image* image::regrid(
 		        throw AipsError("Unable to create image");
 			return 0;
 		}
+		auto_ptr<Record> csysRec(toRecord(csys));
+		auto_ptr<CoordinateSystem> coordinates(CoordinateSystem::restore(*csysRec, ""));
+		ThrowIf (
+			! coordinates.get(),
+			"Invalid specified coordinate system record."
+		);
+		std::auto_ptr<Record> regionPtr(_getRegion(region, True));
+		String mask = vmask.toString();
+		if (mask == "[]") {
+			mask = "";
+		}
+		Vector<Int> axes;
+		if (!((inaxes.size() == 1) && (inaxes[0] == -1))) {
+			axes = inaxes;
+		}
+		ImageRegridder regridder(
+			_image->getImage(), regionPtr.get(),
+			mask, outfile, overwrite, *coordinates,
+			IPosition(axes), IPosition(inshape), dropDegenerateAxes
+		);
+		regridder.setMethod(method);
+		regridder.setDecimate(decimate);
+		regridder.setReplicate(replicate);
+		regridder.setDoRefChange(doRefChange);
+		regridder.setForceRegrid(forceRegrid);
+		regridder.setSpecAsVelocity(specAsVelocity);
+		regridder.setStretch(stretch);
+		tr1::shared_ptr<ImageInterface<Float> > x(regridder.regrid(True));
+		return new image(x);
+		/*
 		std::auto_ptr<Record> coordinates(toRecord(csys));
 		String methodU(method);
 		std::auto_ptr<Record> Region(toRecord(region));
@@ -2719,8 +2744,11 @@ image* image::regrid(
 				forceRegrid, specAsVelocity, stretch
 			)
 		);
+		*/
 	}
-	catch (AipsError x) {
+	catch (const AipsError& x) {
+		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+			<< LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -2910,7 +2938,7 @@ image::restoringbeam(int channel, int polarization) {
 				stretch
 			)
 		);
-		return new ::casac::image(pImOut);
+		return new image(pImOut);
 	}
 	catch (AipsError x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -3037,7 +3065,8 @@ std::vector<int> image::shape() {
 	try {
 		_image->getImage()->shape().asVector().tovector(rstat);
 		return rstat;
-	} catch (AipsError x) {
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -3478,7 +3507,7 @@ bool image::maketestimage(
 	const std::string& outfile, const bool overwrite
 ) {
 	try {
-		_image.reset(new ImageAnalysis());
+		_reset();
 		_log << _ORIGIN;
 		return _image->maketestimage(outfile, overwrite);
 	} catch (AipsError x) {
@@ -3564,7 +3593,7 @@ image* image::newimagefromfile(const std::string& fileName) {
 		if(!rstat)
 			throw AipsError("Unable to create image");
 		return rstat;
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
