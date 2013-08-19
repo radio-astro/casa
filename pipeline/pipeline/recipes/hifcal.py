@@ -76,7 +76,7 @@ def hifcal (vislist, importonly=True, pipelinemode='automatic', interactive=True
 
 	# Tsys spectra with deviant shapes with respect to a reference
         hif_tsysflag (metric='fieldshape', refintent='BANDPASS',
-	    flag_maxabs=True, fmax_limit=20, flag_tmf1=True,
+	    flag_maxabs=True, fmax_limit=3, flag_tmf1=True,
 	    tmf1_axis='Antenna1', tmf1_limit=0.666,
             flag_nmedian=False, pipelinemode=pipelinemode)
 

@@ -81,7 +81,7 @@
             </Parameter>
             <Parameter>
                 <Keyword xmlns="">fmax_limit</Keyword>
-                <Value xmlns="">20</Value>
+                <Value xmlns="">3</Value>
             </Parameter>
             <Parameter>
                 <Keyword xmlns="">flag_tmf1</Keyword>
