@@ -249,8 +249,8 @@ private:
     // to something astronomer friendly if it so desires.
 
     void _fitProfiles(
-    	const std::auto_ptr<ImageInterface<Float> >& pFit,
-    	const std::auto_ptr<ImageInterface<Float> >& pResid,
+    	tr1::shared_ptr<ImageInterface<Float> > pFit,
+    	tr1::shared_ptr<ImageInterface<Float> > pResid,
         const Bool showProgress=False
     );
 
@@ -273,8 +273,8 @@ private:
     ) const;
 
     void _updateModelAndResidual(
-    	const std::auto_ptr<ImageInterface<Float> >& pFit,
-    	const std::auto_ptr<ImageInterface<Float> >& pResid,
+    	tr1::shared_ptr<ImageInterface<Float> > pFit,
+    	tr1::shared_ptr<ImageInterface<Float> > pResid,
         Bool fitOK,
     	const ImageFit1D<Float>& fitter, const IPosition& sliceShape,
     	const IPosition& curPos, Lattice<Bool>* const &pFitMask,

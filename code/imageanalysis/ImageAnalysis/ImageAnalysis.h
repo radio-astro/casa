@@ -26,6 +26,7 @@
 #ifndef _IMAGEANALYSIS__H__
 #define _IMAGEANALYSIS__H__
 
+// PLEASE DO *NOT* ADD ADDITIONAL METHODS TO THIS CLASS
 
 //# put includes here
 #include <coordinates/Coordinates/CoordinateSystem.h>
@@ -85,15 +86,7 @@ class ImageAnalysis
     ImageAnalysis();
 
     ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Float> > image);
-    /*
-    //ImageInterface constructor
-    ImageAnalysis(const ImageInterface<Float>* inImage);
-    
-    //Use this constructor with cloneInputPointer=False if you want this object
-    // to take over management of the input pointer. The input pointer will be deleted
-    // when this object is destroyed.
-    ImageAnalysis(ImageInterface<Float>* inImage, const Bool cloneInputPointer);
-*/
+
     virtual ~ImageAnalysis();
 
     Bool addnoise(const String& type, const Vector<Double>& pars,
@@ -156,7 +149,7 @@ class ImageAnalysis
                   const Bool asdefault = True);
 
 
-    ImageInterface<Float> * continuumsub(const String& outline, 
+    tr1::shared_ptr<ImageInterface<Float> > continuumsub(const String& outline,
                                          const String& outcont, Record& region,
                                          const Vector<int>& channels, 
                                          const String& pol = "", 
@@ -268,8 +261,6 @@ class ImageAnalysis
     	const String& infile, Record& region,
     	const Vector<double>& locate, Bool verbose
     );
-
-    //    Bool isopen();
 
     Bool ispersistent();
 
@@ -531,8 +522,7 @@ class ImageAnalysis
     // If file name empty make TempImage (allowTemp=T) or do nothing.
     // Otherwise, make a PagedImage from file name and copy mask and
     // misc from inimage.   Returns T if image made, F if not
-    static Bool	makeExternalImage (
-    	std::auto_ptr<ImageInterface<Float> >& image,
+    static tr1::shared_ptr<ImageInterface<Float> >	makeExternalImage (
     	const String& fileName,
     	const CoordinateSystem& cSys,
     	const IPosition& shape,
@@ -628,7 +618,7 @@ class ImageAnalysis
     //return a vector of the spectral axis values in units requested
     //e.g "vel", "fre" or "pix"..specVal has to be sized already
 
-   ImageInterface<Float>* _fitpolynomial(
+   tr1::shared_ptr<ImageInterface<Float> > _fitpolynomial(
     	const String& residfile,
     	const String& fitfile,
     	const String& sigmafile,

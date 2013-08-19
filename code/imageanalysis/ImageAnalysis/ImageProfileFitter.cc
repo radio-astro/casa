@@ -350,18 +350,16 @@ void ImageProfileFitter::setSigma(const ImageInterface<Float> *const &sigma) {
 		sigma->ndim() == _getImage()->ndim()
 		&& sigma->shape() == _getImage()->shape()
 	) {
-		ImageInterface<Float> *clone = sigma->cloneII();
-		_sigma.reset(dynamic_cast<TempImage<Float> *>(clone));
-		if (! _sigma.get()) {
-			delete clone;
-			std::auto_ptr<ImageInterface<Float> > x(0);
-			if (
-				ImageAnalysis::makeExternalImage(
-					x, "", sigma->coordinates(), sigma->shape(), *sigma, *_getLog(), False, True, True
-				)
-			) {
-				_sigma.reset(dynamic_cast<TempImage<Float> *>(x.release()));
-				if (! _sigma.get()) {
+		tr1::shared_ptr<ImageInterface<Float> > clone(sigma->cloneII());
+		_sigma = tr1::dynamic_pointer_cast<TempImage<Float> >(clone);
+		if (! _sigma) {
+			tr1::shared_ptr<ImageInterface<Float> > x = ImageAnalysis::makeExternalImage(
+				"", sigma->coordinates(), sigma->shape(),
+				*sigma, *_getLog(), False, True, True
+			);
+			if (x) {
+				_sigma = tr1::dynamic_pointer_cast<TempImage<Float> >(x);
+				if (! _sigma) {
 					*_getLog() << "Unable to create temporary weights image" << LogIO::EXCEPTION;
 				}
 			}
@@ -570,21 +568,25 @@ void ImageProfileFitter::_fitallprofiles() {
 		}
 	}
 	// Create output images with a mask
-	std::auto_ptr<ImageInterface<Float> > fitImage(0), residImage(0);
+	tr1::shared_ptr<ImageInterface<Float> > fitImage, residImage;
 	if (
 		! _model.empty()
-		&& ! ImageAnalysis::makeExternalImage(
-			fitImage, _model, cSys, imageShape, *_subImage,
-			*_getLog(), True, False, True
+		&& ! (
+			fitImage = ImageAnalysis::makeExternalImage(
+				_model, cSys, imageShape, *_subImage,
+				*_getLog(), True, False, True
+			)
 		)
 	) {
 		*_getLog() << LogIO::WARN << "Failed to create model image" << LogIO::POST;
 	}
 	if (
 		! _residual.empty()
-		&& ! ImageAnalysis::makeExternalImage(
-			residImage, _residual, cSys, imageShape,
-			*_subImage, *_getLog(), True, False, True
+		&& ! (
+			residImage =  ImageAnalysis::makeExternalImage(
+				_residual, cSys, imageShape, *_subImage,
+				*_getLog(), True, False, True
+			)
 		)
 	) {
 		*_getLog() << LogIO::WARN << "Failed to create residual image" << LogIO::POST;
@@ -606,8 +608,8 @@ void ImageProfileFitter::_fitallprofiles() {
 
 // moved from ImageUtilities
 void ImageProfileFitter::_fitProfiles(
-	const std::auto_ptr<ImageInterface<Float> >& pFit,
-	const std::auto_ptr<ImageInterface<Float> >& pResid,
+	const tr1::shared_ptr<ImageInterface<Float> > pFit,
+	const tr1::shared_ptr<ImageInterface<Float> > pResid,
     const Bool showProgress
 ) {
 	IPosition inShape = _subImage->shape();
@@ -794,7 +796,7 @@ void ImageProfileFitter::_fitProfiles(
 		}
 		_fitters(curPos) = fitter;
 		// Evaluate and fill
-		if (pFit.get() || pResid.get()) {
+		if (pFit || pResid) {
 			_updateModelAndResidual(
 				pFit, pResid, ok, fitter, sliceShape, curPos,
 				pFitMask, pResidMask, failData, failMask
@@ -809,8 +811,8 @@ void ImageProfileFitter::_fitProfiles(
 }
 
 void ImageProfileFitter::_updateModelAndResidual(
-    const std::auto_ptr<ImageInterface<Float> >& pFit,
-    const std::auto_ptr<ImageInterface<Float> >& pResid,
+    tr1::shared_ptr<ImageInterface<Float> > pFit,
+    tr1::shared_ptr<ImageInterface<Float> > pResid,
     Bool fitOK,
     const ImageFit1D<Float>& fitter, const IPosition& sliceShape,
     const IPosition& curPos, Lattice<Bool>* const &pFitMask,

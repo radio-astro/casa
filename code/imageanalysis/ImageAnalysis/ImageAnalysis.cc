@@ -25,6 +25,10 @@
 //#
 //# $Id: ImageAnalysis.cc 20491 2009-01-16 08:33:56Z gervandiepen $
 //   
+
+// PLEASE DO *NOT* ADD ADDITIONAL METHODS TO THIS CLASS
+
+
 #include <casa/aips.h>
 #include <casa/iostream.h>
 #include <casa/sstream.h>
@@ -1094,7 +1098,7 @@ Bool ImageAnalysis::calcmask(const String& mask, Record& regions,
 	return True;
 }
 
-ImageInterface<Float>* ImageAnalysis::continuumsub(
+tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::continuumsub(
 	const String& outline, const String& outcont,
 	Record& region, const Vector<Int>& channels, const String& pol,
 	const Int in_fitorder, const Bool overwrite
@@ -1197,7 +1201,7 @@ ImageInterface<Float>* ImageAnalysis::continuumsub(
 			<< "own risk." << LogIO::POST;
 	}
 	ImageAnalysis ia(subim);
-	ImageInterface<Float>* rstat = ia._fitpolynomial(
+	tr1::shared_ptr<ImageInterface<Float> > rstat = ia._fitpolynomial(
 		outline, outcont, sigmafile, spectralPixelAxis,
 		fitorder, fitregion, mask, overwrite
 	);
@@ -1726,7 +1730,7 @@ Record ImageAnalysis::findsources(const int nMax, const double cutoff,
 	return listOut;
 }
 
-ImageInterface<Float>* ImageAnalysis::_fitpolynomial(
+tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::_fitpolynomial(
 	const String& residFile, const String& fitFile,
 	const String& sigmaFile, const Int axis, const Int order,
 	Record& Region, const String& mask, const Bool overwrite
@@ -1785,20 +1789,21 @@ ImageInterface<Float>* ImageAnalysis::_fitpolynomial(
 		  ? pAxis
 		  : subImage.ndim() - 1;
 	// Create output residual image with no mask
-	std::auto_ptr<ImageInterface<Float> > pResid(0);
+	tr1::shared_ptr<ImageInterface<Float> > pResid, pFit;
 	if (
-		! makeExternalImage(
-			pResid, residFile, cSys, imageShape, subImage,
-			*_log, overwrite, True, False
+		! (
+			pResid = makeExternalImage(
+				residFile, cSys, imageShape, subImage,
+				*_log, overwrite, True, False
+			)
 		)
 	) {
 		*_log << "Unable to create residual image" << LogIO::EXCEPTION;
 	}
 	// Create optional disk image holding fit
 	// Create with no mask
-	std::auto_ptr<ImageInterface<Float> > pFit(0);
-	makeExternalImage(
-		pFit, fitFile, cSys, imageShape, subImage,
+	pFit = makeExternalImage(
+		fitFile, cSys, imageShape, subImage,
 		*_log, overwrite, False, False
 	);
 
@@ -1821,11 +1826,11 @@ ImageInterface<Float>* ImageAnalysis::_fitpolynomial(
 		).product()
 	) {
 		if (pFit.get() && ! fitFile.empty()) {
-			pFit.reset(0);
+			pFit.reset();
 			Table::deleteTable(fitFile, True);
 		}
 		if (pResid.get() && ! residFile.empty()) {
-			pResid.reset(0);
+			pResid.reset();
 			Table::deleteTable(residFile, True);
 		}
 		*_log << "All " << nFailed << " fits failed!" << LogIO::EXCEPTION;
@@ -1859,7 +1864,7 @@ ImageInterface<Float>* ImageAnalysis::_fitpolynomial(
 		}
 	}
 	// Return residual image
-	return pResid.release();
+	return pResid;
 }
 
 Bool ImageAnalysis::getchunk(Array<Float>& pixels, Array<Bool>& pixelMask,
@@ -4406,12 +4411,12 @@ Bool ImageAnalysis::make_image(String &error, const String& outfile,
 	return True;
 }
 
-Bool ImageAnalysis::makeExternalImage(
-	std::auto_ptr<ImageInterface<Float> >& image,
+tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::makeExternalImage(
 	const String& fileName, const CoordinateSystem& cSys,
 	const IPosition& shape, const ImageInterface<Float>& inImage,
 	LogIO& os, Bool overwrite, Bool allowTemp, Bool copyMask
 ) {
+	tr1::shared_ptr<ImageInterface<Float> > image;
 	if (fileName.empty()) {
 		if (allowTemp) {
 			os << LogIO::NORMAL << "Creating (Temp)Image '" << " of shape "
@@ -4431,8 +4436,8 @@ Bool ImageAnalysis::makeExternalImage(
 				<< shape << LogIO::POST;
 		image.reset(new PagedImage<Float> (shape, cSys, fileName));
 	}
-	if (! image.get()) {
-		return False;
+	if (! image) {
+		return image;
 	}
 	image->put(inImage.get());
 	ImageUtilities::copyMiscellaneous(*image, inImage);
@@ -4449,7 +4454,7 @@ Bool ImageAnalysis::makeExternalImage(
 			);
 		}
 	}
-	return True;
+	return image;
 }
 
 CoordinateSystem* ImageAnalysis::makeCoordinateSystem(
