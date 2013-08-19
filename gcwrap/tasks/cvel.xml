@@ -149,7 +149,7 @@ Hanning smoothing may not be necessary.
                         <value>galacto</value>
                         <value>lgroup</value>
                         <value>cmb</value>
-                        <value>object</value>
+                        <value>source</value>
 			<value></value>
 		</allowed>
 	</param>
@@ -375,8 +375,8 @@ Hanning smoothing may not be necessary.
                NH_3 (1,1) put restfreq='23.694496GHz'
 
       outframe -- output reference frame (not case-sensitive)
-               possible values: LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, TOPO, or OBJECT
-               (OBJECT is meant for solar system work and corresponds to GEO + radial velocity
+               possible values: LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, TOPO, or SOURCE
+               (SOURCE is meant for solar system work and corresponds to GEO + radial velocity
                correction for ephemeris objects).
                default='' (keep original reference frame) ; example: outframe='BARY'     
 

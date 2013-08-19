@@ -15,6 +15,7 @@ vis_c = 'jupiter6cm.demo-thinned.ms'
 vis_d = 'g19_d2usb_targets_line-shortened-thinned.ms'
 vis_e = 'evla-highres-sample-thinned.ms'
 vis_f = 'test_cvel1.ms'
+vis_g = 'jup.ms'
 outfile = 'cvel-output.ms'
 
 def verify_ms(msname, expnumspws, expnumchan, inspw, expchanfreqs=[]):
@@ -77,13 +78,45 @@ class cvel_test(unittest.TestCase):
         if(forcereload or not os.path.exists(vis_f)):
             shutil.rmtree(vis_f, ignore_errors=True)
             os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/cvel/test_cvel1.ms .') # 39 MB
+        if(forcereload or not os.path.exists(vis_g)):
+            # construct an MS with attached Jupiter ephemeris from vis_c
+            shutil.rmtree(vis_g, ignore_errors=True)
+            split(vis=vis_c, outputvis=vis_g, field='JUPITER', datacolumn='data')
+            tb.open(vis_g, nomodify=False)
+            a = tb.getcol('TIME')
+            delta = (54709.*86400-a[0])
+            a = a + delta
+            strt = a[0]
+            tb.putcol('TIME', a)
+            a = tb.getcol('TIME_CENTROID')
+            a = a + delta
+            tb.putcol('TIME_CENTROID', a)
+            tb.close()
+            tb.open(vis_g+'/OBSERVATION', nomodify=False)
+            a = tb.getcol('TIME_RANGE')
+            delta = strt - a[0][0]
+            a = a + delta
+            tb.putcol('TIME_RANGE', a)
+            tb.close()
+            tb.open(vis_g+'/FIELD', nomodify=False)
+            a = tb.getcol('TIME')
+            delta = strt - a[0]
+            a = a + delta
+            tb.putcol('TIME', a)
+            tb.close()
+            ms.open(vis_g, nomodify=False)
+            ms.addephemeris(0,os.environ.get('CASAPATH').split()[0]+'/data/ephemerides/JPL-Horizons/Jupiter_54708-55437dUTC.tab',
+                            'Jupiter_54708-55437dUTC', 0)
+            ms.close()
 
+            
         self.assertTrue(os.path.exists(vis_a))
         self.assertTrue(os.path.exists(vis_b))
         self.assertTrue(os.path.exists(vis_c))
         self.assertTrue(os.path.exists(vis_d))
         self.assertTrue(os.path.exists(vis_e))
         self.assertTrue(os.path.exists(vis_f))
+        self.assertTrue(os.path.exists(vis_g))
 
 
     def tearDown(self):
@@ -1124,6 +1157,19 @@ class cvel_test(unittest.TestCase):
         self.assertNotEqual(rval,False)
         ret = verify_ms(outfile, 1, 150, 0, b)
         self.assertTrue(ret[0],ret[1])
+
+
+    def test53(self):
+        '''Cvel 53: cvel of a field with ephemeris attached and outframe SOURCE'''
+        myvis = vis_g
+        os.system('ln -sf ' + myvis + ' myinput.ms')
+        rval = cvel(
+                vis = 'myinput.ms',
+                outputvis = outfile,
+                outframe = 'SOURCE'
+                )
+        self.assertTrue(rval)
+
 
 
 class cleanup(unittest.TestCase):
