@@ -784,8 +784,8 @@ def simanalyze(
             shutil.rmtree(imagename+".image.flat")
         if os.path.exists(imagename+".residual.flat"):
             shutil.rmtree(imagename+".residual.flat")
-        if os.path.exists(imagename+".flux"):
-            shutil.rmtree(imagename+".flux")
+        if os.path.exists(imagename+".flux.pbcoverage"):
+            shutil.rmtree(imagename+".flux.pbcoverage")
         absdiff = imagename + '.absdiff'
         if os.path.exists(absdiff):
             shutil.rmtree(absdiff)
