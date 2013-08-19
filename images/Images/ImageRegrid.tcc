@@ -347,8 +347,9 @@ void ImageRegrid<T>::regridOneCoordinate (LogIO& os, IPosition& outShape2,
 		Bool lastPass = allEQ(doneOutPixelAxes, True);
 		//
 		if (!regridIt) {
-			os << "Input and output shape/coordinate information for these "
-					"axes equal - no regridding needed" << LogIO::POST;
+			os << "Input and output shape/coordinate information for "
+					<< Coordinate::typeToString(cIn.type())
+					<< " axes equal - no regridding needed" << LogIO::POST;
 			if (lastPass) {
 
 				// Can't avoid this copy
@@ -422,8 +423,9 @@ void ImageRegrid<T>::regridOneCoordinate (LogIO& os, IPosition& outShape2,
 		Bool lastPass = allEQ(doneOutPixelAxes, True);
 		//
 		if (!regridIt) {
-			os << "Input and output shape/coordinate information for this axis "
-					"equal - no regridding needed" << LogIO::POST;
+			os << "Input and output shape/coordinate information for "
+				<< Coordinate::typeToString(inCoord.type()) << " axis "
+				"equal - no regridding needed" << LogIO::POST;
 			if (lastPass) {
 
 				// Can't avoid this copy
@@ -601,16 +603,18 @@ Bool ImageRegrid<T>::insert (ImageInterface<T>& outImage,
 }
 
 template<class T> CoordinateSystem ImageRegrid<T>::makeCoordinateSystem(
-	LogIO& os, const CoordinateSystem& cSysTo,
+	LogIO& os, std::set<Coordinate::Type>& coordsToBeRegridded, const CoordinateSystem& cSysTo,
 	const CoordinateSystem& cSysFrom,
 	const IPosition& outPixelAxes, const IPosition& inShape
 ) {
+	coordsToBeRegridded.clear();
 	os << LogOrigin("ImageRegrid<T>", __FUNCTION__, WHERE);
 	const uInt nCoordsFrom = cSysFrom.nCoordinates();
 	const uInt nPixelAxesFrom = cSysFrom.nPixelAxes();
-	if (inShape.nelements() > 0 && inShape.nelements() != nPixelAxesFrom) {
-		os << "Inconsistent size and csysFrom" << LogIO::EXCEPTION;
-	}
+	ThrowIf(
+		inShape.nelements() > 0 && inShape.nelements() != nPixelAxesFrom,
+		"Inconsistent size and csysFrom"
+	);
 
 	// Create output CS.  Copy the output ObsInfo over first.
 
@@ -626,10 +630,16 @@ template<class T> CoordinateSystem ImageRegrid<T>::makeCoordinateSystem(
 
 	for (uInt i=0; i<nCoordsFrom; i++) {
 		Coordinate::Type typeFrom = cSysFrom.type(i);
-		// Are any of this coordinates axes being regridded ?
-
-		Vector<Int> pixelAxes = cSysFrom.pixelAxes(i);
 		Bool regridIt = False;
+
+		// Stokes is never regridded
+		if (typeFrom == Coordinate::STOKES) {
+			if (outPixelAxes.size() > 0) {
+				os << LogIO::WARN << "A stokes coordinate cannot be regridded, ignoring" << LogIO::POST;
+			}
+			continue;
+		}
+		Vector<Int> pixelAxes = cSysFrom.pixelAxes(i);
 		for (uInt k=0; k<pixelAxes.nelements(); k++) {
 			if (
 				inShape.nelements() == 0
@@ -652,19 +662,20 @@ template<class T> CoordinateSystem ImageRegrid<T>::makeCoordinateSystem(
 
 			Int iCoordTo = cSysTo.findCoordinate(typeFrom, -1);
 			if (iCoordTo < 0) {
-				os << Coordinate::typeToString(typeFrom) << " coordinate is not present "
+				os << LogIO::WARN << Coordinate::typeToString(typeFrom) << " coordinate is not present "
 					<< " in the output coordinate system, so it cannot be regridded"
-					<< endl;
+					<< LogIO::POST;
 			}
-			if (
-				cSysTo.pixelAxes(iCoordTo).nelements()
-				!= cSysFrom.pixelAxes(i).nelements()
-			) {
-				os << "Wrong number of pixel axes in 'To' CoordinateSystem for "
-						"coordinate of type " <<
-						cSysTo.showType(iCoordTo) << LogIO::EXCEPTION;
+			else {
+				ThrowIf(
+					cSysTo.pixelAxes(iCoordTo).nelements()
+					!= cSysFrom.pixelAxes(i).nelements(),
+					"Wrong number of pixel axes in 'To' CoordinateSystem for "
+					"coordinate of type " + cSysTo.showType(iCoordTo)
+				);
+				cSysOut.replaceCoordinate (cSysTo.coordinate(iCoordTo), i);
+				coordsToBeRegridded.insert(typeFrom);
 			}
-			cSysOut.replaceCoordinate (cSysTo.coordinate(iCoordTo), i);
 		}
 	}
 	return cSysOut;
