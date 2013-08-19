@@ -220,6 +220,8 @@ componentlist::remove(const std::vector<int>& which, const bool log)
 
   bool rstat(false);
   try{
+    std::vector<int> witch=which;
+    
     if(itsList && itsBin){
       const Vector<Int> intVec = checkIndices(which, "remove",
                                               "No components removed");
@@ -1803,6 +1805,10 @@ Vector<Int> componentlist::checkIndices(const vector<int>& which,
   itsLog->origin(LogOrigin("componentlist", function));
   
   Vector<Int> intVec(which);
+  if((intVec.nelements()==1) && (intVec[0]==-1)){
+    intVec.resize( itsList->nelements());
+    indgen(intVec);
+  }
   const Int listLength = itsList->nelements();
   const uInt whichLength = which.size();
   for (uInt c = 0; c < whichLength; c++) {
