@@ -410,7 +410,7 @@ class SubMS
 			    const String& veltype,
 			    const Bool verbose=False,
 			    const MRadialVelocity mRV=MRadialVelocity() // additional radial velo shift to apply, 
-                                                                        // used e.g. when outframe=="OBJECT"
+                                                                        // used e.g. when outframe=="SOURCE"
 			    );
 
   // Support method for regridSpw():
