@@ -131,22 +131,13 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 	if (! outCoords.setReferencePixel(refPixels)) {
 		*_getLog() << "Unable to set reference pixel" << LogIO::EXCEPTION;
 	}
-	std::auto_ptr<ImageInterface<Float> > outImage(0);
-	if (_getOutname().empty()) {
-		outImage.reset(new TempImage<Float>(outShape, outCoords));
-	}
-	else {
-		_removeExistingOutfileIfNecessary();
-		outImage.reset(
-			new PagedImage<Float>(outShape, outCoords, _getOutname())
-		);
-	}
+	TempImage<Float> tmpIm(outShape, outCoords);
 	if (_aggType == ZERO) {
 		Array<Float> zeros(outShape, 0.0);
-		outImage->put(zeros);
+		tmpIm.put(zeros);
 	}
 	else if (_aggType == MEDIAN) {
-		_doMedian(subImage, outImage);
+		_doMedian(subImage, tmpIm);
 	}
 	else {
 		if (subImage.getMask().size() > 0 && ! allTrue(subImage.getMask())) {
@@ -191,12 +182,12 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 			Array<Float> dataCopy = (_axes.size() <= 1)
 				? data
 				: data.addDegenerate(_axes.size() - 1);
-			IPosition newOrder(outImage->ndim(), -1);
+			IPosition newOrder(tmpIm.ndim(), -1);
 			uInt nAltered = _axes.size();
-			uInt nUnaltered = outImage->ndim() - nAltered;
+			uInt nUnaltered = tmpIm.ndim() - nAltered;
 			uInt alteredCount = nUnaltered;
 			uInt unAlteredCount = 0;
-			for (uInt i=0; i<outImage->ndim(); i++) {
+			for (uInt i=0; i<tmpIm.ndim(); i++) {
 				for (uInt j=0; j<_axes.size(); j++) {
 					if (i == _axes[j]) {
 						newOrder[i] = alteredCount;
@@ -209,7 +200,7 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 					unAlteredCount++;
 				}
 			}
-			outImage->put(reorderArray(dataCopy, newOrder));
+			tmpIm.put(reorderArray(dataCopy, newOrder));
 			if (! allTrue(mask)) {
 				Array<Bool> maskCopy = (
 					_axes.size() <= 1)
@@ -217,7 +208,7 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 					: mask.addDegenerate(_axes.size() - 1
 				);
 				Array<Bool> mCopy = reorderArray(maskCopy, newOrder);
-				_attachOutputMask(outImage, mCopy);
+				_attachOutputMask(tmpIm, mCopy);
 			}
 		}
 		else {
@@ -228,7 +219,7 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 				IPosition start = toIPositionInArray(i, outShape);
 				IPosition end = start + shape - 1;
 				Slicer s(start, end, Slicer::endIsLast);
-				outImage->putAt(function(data(s)), start);
+				tmpIm.putAt(function(data(s)), start);
 			}
 		}
 	}
@@ -241,20 +232,18 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 			<< "then run the task imsmooth or the tool method ia.convolve2d() first, "
 			<< "and use the output image of that as the input for collapsing."
 			<< LogIO::POST;
-		ImageUtilities::copyMiscellaneous(*outImage, subImage, False);
+		ImageUtilities::copyMiscellaneous(tmpIm, subImage, False);
 		ImageInfo info = subImage.imageInfo();
 		vector<Vector<Quantity> > out;
 		GaussianBeam beam = *(info.getBeamSet().getBeams().begin());
         info.removeRestoringBeam();
 		info.setRestoringBeam(beam);
-		outImage->setImageInfo(info);
+		tmpIm.setImageInfo(info);
 	}
 	else {
-		ImageUtilities::copyMiscellaneous(*outImage, subImage, True);
+		ImageUtilities::copyMiscellaneous(tmpIm, subImage, True);
 	}
-	if (! _getOutname().empty()) {
-		outImage->flush();
-	}
+	std::auto_ptr<ImageInterface<Float> > outImage = _prepareOutputImage(&tmpIm);
 	if (! wantReturn) {
 		outImage.reset(0);
 	}
@@ -350,7 +339,7 @@ void ImageCollapser::_invert() {
 }
 
 void ImageCollapser::_doMedian(
-	const SubImage<Float>& subImage, const std::auto_ptr<ImageInterface<Float> >& outImage
+	const SubImage<Float>& subImage, TempImage<Float>& outImage
 ) const {
 	IPosition cursorShape(subImage.ndim(), 1);
 	for (uInt i=0; i<cursorShape.size(); i++) {
@@ -376,7 +365,7 @@ void ImageCollapser::_doMedian(
 			Vector<Bool> maskSlice(mask(slicer));
 			if (! anyTrue(maskSlice)) {
 				if (outMask.get() == 0) {
-					outMask.reset(new Array<Bool>(outImage->shape(), True));
+					outMask.reset(new Array<Bool>(outImage.shape(), True));
 				}
 				(*outMask)(stepper.position()) = False;
 				kk.resize(0);
@@ -405,7 +394,7 @@ void ImageCollapser::_doMedian(
 		GenSort<Float>::sort(kk);
 		uInt s = kk.size();
 
-		outImage->putAt(
+		outImage.putAt(
 			s == 0
 				? 0
 				: s % 2 == 1
@@ -420,20 +409,18 @@ void ImageCollapser::_doMedian(
 }
 
 void ImageCollapser::_attachOutputMask(
-	const std::auto_ptr<ImageInterface<Float> >& outImage,
+	TempImage<Float>& outImage,
 	const Array<Bool>& outMask
 ) const {
 	if (_getOutname().empty()) {
-		dynamic_cast<TempImage<Float> *>(
-			outImage.get()
-		)->attachMask(ArrayLattice<Bool>(outMask));
+		outImage.attachMask(ArrayLattice<Bool>(outMask));
 	}
 	else {
-		String maskName = outImage->makeUniqueRegionName(
+		String maskName = outImage.makeUniqueRegionName(
 			String("mask"), 0
 		);
-		outImage->makeMask(maskName, True, True, True, True);
-		(&outImage->pixelMask())->put(outMask);
+		outImage.makeMask(maskName, True, True, True, True);
+		(&outImage.pixelMask())->put(outMask);
 	}
 }
 

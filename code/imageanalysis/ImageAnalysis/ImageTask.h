@@ -165,16 +165,18 @@ protected:
 
     // Create a TempImage or PagedImage depending if _outname is empty or not. Generally meant
     // for the image to be returned to the UI or the final image product that the user will want.
-    // values=0 => the pixel values from the subimage will be used
-    // mask=0 => the mask attached to the subimage, if any will be used, outShape=0 => use subImage shape, coordsys=0 => use subImage coordinate
+    // values=0 => the pixel values from the image will be used
+    // mask=0 => the mask attached to the image, if any will be used, outShape=0 => use image shape, coordsys=0 => use image coordinate
     // system
     std::auto_ptr<ImageInterface<Float> > _prepareOutputImage(
-    	const ImageInterface<Float> *const subImage, const Array<Float> *const values=0,
+    	const ImageInterface<Float> *const image, const Array<Float> *const values=0,
     	const ArrayLattice<Bool> *const mask=0,
     	const IPosition *const outShape=0, const CoordinateSystem *const coordsys=0
     ) const;
 
     Verbosity _getVerbosity() const { return _verbosity; }
+
+    Bool _getOverwrite() const { return _overwrite; }
 
 private:
     const shCImFloat _image;

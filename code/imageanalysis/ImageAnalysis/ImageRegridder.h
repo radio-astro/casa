@@ -25,24 +25,24 @@
 //#
 //# $Id: tSubImage.cc 20567 2009-04-09 23:12:39Z gervandiepen $
 
-#ifndef IMAGES_IMAGECOLLAPSER_H
-#define IMAGES_IMAGECOLLAPSER_H
+#ifndef IMAGEANALYSIS_IMAGEREGRIDDER_H
+#define IMAGEANALYSIS_IMAGEREGRIDDER_H
 
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
+
+#include <scimath/Mathematics/Interpolate2D.h>
 #include <casa/namespace.h>
 
 #include <tr1/memory>
 
 namespace casa {
 
-template <class T> class TempImage;
 template <class T> class SubImage;
+template <class T> class TempImage;
 
-
-class ImageCollapser : public ImageTask {
+class ImageRegridder : public ImageTask {
 	// <summary>
-	// Top level interface which allows collapsing of images along a single axis. An aggregate method
-	// (average, sum, etc) is applied to the collapsed pixels.
+	// Top level interface which regrids an image to a specified coordinate system
 	// </summary>
 
 	// <reviewed reviewer="" date="" tests="" demos="">
@@ -52,11 +52,11 @@ class ImageCollapser : public ImageTask {
 	// </prerequisite>
 
 	// <etymology>
-	// Collapses image.
+	// Regrids image.
 	// </etymology>
 
 	// <synopsis>
-	// High level interface for collapsing an image along a single axis.
+	// High level interface for regridding an image.
 	// </synopsis>
 
 	// <example>
@@ -68,60 +68,54 @@ class ImageCollapser : public ImageTask {
 
 public:
 
-	enum AggregateType {
-		//AVDEV,
-		MAX,
-		MEAN,
-		MEDIAN,
-		MIN,
-		RMS,
-		STDDEV,
-		SUM,
-		VARIANCE,
-		// set all pixels in output image to 0
-		ZERO,
-		UNKNOWN
-	};
-
 	// if <src>outname</src> is empty, no image will be written
 	// if <src>overwrite</src> is True, if image already exists it will be removed
 	// if <src>overwrite</src> is False, if image already exists exception will be thrown
-	//
 	// <group>
 
-	ImageCollapser(
-		String aggString, const ImageTask::shCImFloat image,
-		const String& region, const Record *const regionRec,
-		const String& box,
-		const String& chanInp, const String& stokes,
-		const String& maskInp, const IPosition& axes,
-		const String& outname, const Bool overwrite
+	ImageRegridder(
+		const ImageTask::shCImFloat image,
+		const Record *const regionRec,
+		const String& maskInp, const String& outname, Bool overwrite,
+		const CoordinateSystem& csysTo, const IPosition& axes,
+		const IPosition& shape, Bool dropdeg=False
 	);
 
-	ImageCollapser(
-		const ImageTask::shCImFloat image,
-		const IPosition& axes, const Bool invertAxesSelection,
-		const AggregateType aggregateType,
-		const String& outname, const Bool overwrite
+	ImageRegridder(
+		const ImageTask::shCImFloat image, const String& outname,
+		const ImageTask::shCImFloat templateIm, const IPosition& axes=IPosition(),
+		const Record *const regionRec=0,
+		const String& maskInp="", Bool overwrite=False,
+		 Bool dropdeg=False, const IPosition& shape=IPosition()
 	);
 	// </group>
 
 	// destructor
-	~ImageCollapser();
+	~ImageRegridder();
 
-	// perform the collapse. If <src>wantReturn</src> is True, return a pointer to the
+	// perform the regrid. If <src>wantReturn</src> is True, return a pointer to the
 	// collapsed image. The returned pointer is created via new(); it is the caller's
 	// responsibility to delete the returned pointer. If <src>wantReturn</src> is False,
 	// a NULL pointer is returned and pointer deletion is performed internally.
-	ImageInterface<Float>* collapse(const Bool wantReturn) const;
+	ImageInterface<Float>* regrid(const Bool wantReturn) const;
 
-	static ImageCollapser::AggregateType aggregateType(String& aggString);
-
-	static const map<uInt, Float (*)(const Array<Float>&)>* funcMap();
-	static const map<uInt, String>* funcNameMap();
-	static const map<uInt, String>* minMatchMap();
+	void setSpecAsVelocity(Bool v) { _specAsVelocity = v; }
 
 	inline String getClass() const { return _class; }
+
+	void setMethod(const String& method) { _method = Interpolate2D::stringToMethod(method); }
+
+	void setMethod(Interpolate2D::Method method) { _method = method; }
+
+	void setDebug(Int debug) { _debug = debug; }
+
+	void setDoRefChange(Bool d) { _doRefChange = d; }
+
+	void setReplicate(Bool r) { _replicate = r; }
+
+	void setDecimate(Int d) { _decimate = d; }
+
+	void setForceRegrid(Bool f) { _forceRegrid = f; }
 
 protected:
 	inline  CasacRegionManager::StokesControl _getStokesControl() const {
@@ -133,35 +127,23 @@ protected:
 	}
 
 private:
-	Bool _invertAxesSelection;
-	IPosition _axes;
-	AggregateType _aggType;
+	const CoordinateSystem _csysTo;
+	IPosition _axes, _shape;
+	Bool _dropdeg, _specAsVelocity, _doRefChange, _replicate, _forceRegrid;
+	Int _debug, _decimate;
 	static const String _class;
-
-	static map<uInt, Float (*)(const Array<Float>&)> _funcMap;
-	static map<uInt, String> *_funcNameMap, *_minMatchMap;
+	Interpolate2D::Method _method;
 
 	// disallow default constructor
-	ImageCollapser();
-
-	void _invert();
-
-	//std::vector<ImageInputProcessor::OutputStruct> _getOutputStruct();
+	ImageRegridder();
 
 	void _finishConstruction();
 
-	// necessary to improve performance
-	void _doMedian(
-		const SubImage<Float>& subImage,
-		TempImage<Float>& outImage
-	) const;
+	TempImage<Float> _regrid() const;
 
-	void _attachOutputMask(
-		TempImage<Float>& outImage,
-		const Array<Bool>& outMask
-	) const;
+	TempImage<Float> _regridByVelocity() const;
 
-	static const map<uInt, Float (*)(const Array<Float>&)>& _getFuncMap();
+
 
 
 };

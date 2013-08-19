@@ -333,38 +333,6 @@ class ImageAnalysis
         const Bool extendMask=False
     );
 
-    //regrids to a given coordinate system...one uses a record that is 
-    //converted to a CoordinateSytem 
-
-    ImageInterface<Float> * regrid(
-    	const String& outfile, const Vector<Int>& shape,
-        const Record& csys, const Vector<Int>& axes,
-        Record& region, const String& mask,
-        const String& method="linear", const Int decimate=10,
-        const Bool replicate=False, const Bool doref=True,
-        const Bool dropdeg=False, const Bool overwrite=False,
-        const Bool force=False, const Bool specAsVelocity=False,
-        const Bool extendAxes=False
-    ) const;
-    
-
-    // regrids to match the "other" image interface...
-    ImageInterface<Float> * regrid(
-    	const String& outfile, const ImageInterface<Float>*other,
-        const String& method="linear",
-        const Bool specAsVelocity=False,
-    	const Vector<Int>& axes = Vector<Int>(0),
-	const Record &region = Record(),
-	const String& mask="",
-        const Int decimate=10,
-        const Bool replicate=False,
-        const Bool doref=True,
-        const Bool dropdeg=False,
-        const Bool overwrite=False,
-        const Bool force=False,
-        const Bool extendAxes=False
-    ) const;
-
     ImageInterface<Float>* rotate(
     	const String& outfile,
         const Vector<int>& shape,
@@ -622,16 +590,6 @@ class ImageAnalysis
                           const casa::IPosition& shape,
                           casa::LogIO& os, casa::Bool log=casa::True,
                           casa::Bool overwrite=casa::False);
-    
-    /*
-
-    // Make a mask and define it in the image.
-    static Bool makeMask(casa::ImageInterface<Float>& out,
-                        String& maskName,
-                        Bool init, Bool makeDefault,
-                        LogIO& os, Bool list);
-
-*/
 
 // Convert a Record to a CoordinateSystem
     casa::CoordinateSystem*
@@ -646,21 +604,6 @@ class ImageAnalysis
     // Set the cache
     void set_cache(const casa::IPosition& chunk_shape) const;
     
-
-    // Prints an error message if the image DO is detached and returns True.
-    //bool detached() const;
-    
-    // Convert object-id's in the expression to LatticeExprNode objects.
-    // It returns a string where the object-id's are placed by $n.
-    // That string can be parsed by ImageExprParse.
-    // Furthermore it fills the string exprName with the expression
-    // where the object-id's are replaced by the image names.
-    // Note that an image name can be an expression in itself, so
-    // this string is not suitable for the ImageExprParse.
-    //casa::String substituteOID (casa::Block<casa::LatticeExprNode>& nodes,
-    //                            casa::String& exprName,
-    //                            const casa::String& expr) const;
-
 
     // Some helper functions that needs to be in casa namespace coordsys
     
@@ -685,28 +628,7 @@ class ImageAnalysis
     //return a vector of the spectral axis values in units requested
     //e.g "vel", "fre" or "pix"..specVal has to be sized already
 
-
-    ImageInterface<Float> * _regrid(
-    	const String& outfile, const Vector<Int>& shape,
-        const CoordinateSystem& csys, const Vector<Int>& axes,
-        const Record& region, const String& mask,
-        const String& method, const Int decimate,
-        const Bool replicate, const Bool doref,
-        const Bool dropdeg, const Bool overwrite,
-        const Bool force, const Bool extendMask
-    ) const;
-
-    ImageInterface<Float>* _regridByVelocity(
-    	const String& outfile, const Vector<Int>& shape,
-    	const CoordinateSystem& csysTemplate, const Vector<Int>& axes,
-    	const Record& region, const String& mask,
-    	const String& method, const Int decimate,
-    	const Bool replicate, const Bool doref,
-    	const Bool dropdeg, const Bool overwrite,
-    	const Bool force, const Bool extendMask
-    ) const;
-
-    ImageInterface<Float>* _fitpolynomial(
+   ImageInterface<Float>* _fitpolynomial(
     	const String& residfile,
     	const String& fitfile,
     	const String& sigmafile,

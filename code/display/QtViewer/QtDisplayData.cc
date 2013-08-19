@@ -74,6 +74,8 @@
 #include <algorithm>
 #include <display/functional/elements.h>
 
+#include <imageanalysis/ImageAnalysis/ImageRegridder.h>
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -354,12 +356,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					if ( im_ != 0 ) {
 						if ( regrid_to && method != "" ) {
 							// regrid new image to match the one provided...
-							ImageAnalysis ia(im_);
 							// need an option to delete temporary files on exit...
 							std::string outpath = viewer::options.temporaryPath(Path(path_).baseName());
 							panel_->status( "generating temporary image: " + outpath );
 							panel_->logIO( ) << "generating temporary image \'" << outpath << "'" << LogIO::POST;
-							ImageInterface<Float> *newim = ia.regrid( String(outpath), regrid_to->imageInterface( ).get(), method, true );
+							ImageRegridder regridder(im_, String(outpath), regrid_to->imageInterface( ) );
+							regridder.setMethod(method);
+							regridder.setSpecAsVelocity(False);
+							ImageInterface<Float> *newim = regridder.regrid(True);
 							// std::auto_ptr<ImageInterface<Float> > imptr(im_);
 							im_.reset(newim);
 						}

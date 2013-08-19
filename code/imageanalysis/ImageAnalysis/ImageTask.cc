@@ -267,14 +267,14 @@ void ImageTask::setLogfileAppend(const Bool a) {
 }
 
 std::auto_ptr<ImageInterface<Float> > ImageTask::_prepareOutputImage(
-    const ImageInterface<Float> *const subImage,
+    const ImageInterface<Float> *const image,
     const Array<Float> *const values,
     const ArrayLattice<Bool> *const mask,
 	const IPosition *const outShape,
 	const CoordinateSystem *const coordsys
 ) const {
-	IPosition oShape = outShape == 0 ? subImage->shape() : *outShape;
-	CoordinateSystem csys = coordsys == 0 ? subImage->coordinates() : *coordsys;
+	IPosition oShape = outShape == 0 ? image->shape() : *outShape;
+	CoordinateSystem csys = coordsys == 0 ? image->coordinates() : *coordsys;
 	std::auto_ptr<ImageInterface<Float> > outImage(
 		new TempImage<Float>(
 			TiledShape(oShape), csys
@@ -284,13 +284,13 @@ std::auto_ptr<ImageInterface<Float> > ImageTask::_prepareOutputImage(
 	if (mask != 0) {
 		mymask.reset(dynamic_cast<ArrayLattice<Bool> *>(mask->clone()));
 	}
-	else if (subImage->hasPixelMask()) {
-		mymask.reset(new ArrayLattice<Bool>(subImage->pixelMask().get()));
+	else if (image->hasPixelMask()) {
+		mymask.reset(new ArrayLattice<Bool>(image->pixelMask().get()));
 	}
 	if (mymask.get() != 0 && ! allTrue(mymask->get())) {
 		dynamic_cast<TempImage<Float> *>(outImage.get())->attachMask(*mymask);
 	}
-	ImageUtilities::copyMiscellaneous(*outImage, *subImage);
+	ImageUtilities::copyMiscellaneous(*outImage, *image);
 	if (! _getOutname().empty()) {
 		_removeExistingOutfileIfNecessary();
 		String emptyMask = "";
@@ -302,7 +302,7 @@ std::auto_ptr<ImageInterface<Float> > ImageTask::_prepareOutputImage(
 			)
 		);
 	}
-	outImage->put(values == 0 ? subImage->get() : *values);
+	outImage->put(values == 0 ? image->get() : *values);
 	return outImage;
 }
 
