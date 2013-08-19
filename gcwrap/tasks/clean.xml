@@ -1154,6 +1154,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        niter -- Maximum number iterations,
                if niter=0, then no CLEANing is done ("invert" only).
                (niter=0 can be used instead of the 'ft' task to predict/save a model)
+	       For cube or multi field images niter is the maximum of iteration for each image plane.
+               The number of iterations used may be less that niter if threshold value is reached 
                default: 500; example: niter=5000
        gain -- Loop gain for CLEANing
                default: 0.1; example: gain=0.5
