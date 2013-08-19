@@ -150,7 +150,7 @@ ImageAnalysis::ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Float> > image)
 				pOldHistRegionRegion_p(0), pOldHistMaskRegion_p(0),
 				imageMomentsProgressMonitor(0) {}
 
-mageAnalysis::~ImageAnalysis() {
+ImageAnalysis::~ImageAnalysis() {
 	if (_image.get() != 0) {
 		if((_image->isPersistent()) && ((_image->imageType()) == "PagedImage")){
 			ImageOpener::ImageTypes type = ImageOpener::imageType(_image->name());
@@ -4873,6 +4873,7 @@ ImageAnalysis::newimagefromarray(const String& outfile,
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 	}
+    outImage->flush();
 	return outImage.release();
 }
 
