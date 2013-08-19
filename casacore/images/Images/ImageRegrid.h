@@ -200,8 +200,10 @@ public:
   // are unity (ie the axes are degenerate), and the corresponding axis in <src>csysFrom</src> is the only
   // axis in its corresponding coordinate, this coordinate will not be replaced
   // even if the axis is specified in <src>axes</src>.
+  // Upon return, <src>coordsToBeRegridded</src> will contain a list of the coordinates that will
+  // be regridded.
   static CoordinateSystem makeCoordinateSystem(
-		  LogIO& os,
+		  LogIO& os, std::set<Coordinate::Type>& coordsToBeRegridded,
 		  const CoordinateSystem& cSysTo,
 		  const CoordinateSystem& cSysFrom,
 		  const IPosition& axes,

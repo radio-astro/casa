@@ -272,7 +272,7 @@ Interpolate2D::Method Interpolate2D::stringToMethod (const String &method) {
   } else if (tmp==String("C")) {
     method2 = Interpolate2D::CUBIC;
   } else {
-    throw(AipsError("Illegal method"));
+    throw(AipsError("Unknown interpolation method " + method + "."));
   }
   return method2;
 }
