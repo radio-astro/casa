@@ -551,8 +551,26 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
                             stackmedian[j] = np.median(valid_data)
                             stackmedianflag[j] = False
 
+                    LOG.info('looking for atmospheric lines')
+                    # flag channels that may cover lines
+                    diff = abs(stackmedian[1:] - stackmedian[:-1])
+                    diff_flag = np.logical_or(stackmedianflag[1:], stackmedianflag[:-1])
+
+                    newflag = (diff>0.05) & np.logical_not(diff_flag)
+                    flag_chan = np.zeros([len(newflag)+1], np.bool)
+                    flag_chan[:-1] = newflag
+                    flag_chan[1:] = np.logical_or(flag_chan[1:], newflag)
+                    channels_flagged = np.arange(len(newflag)+1)[flag_chan]
+
+                    # flag the 'view'
+                    if len(flag_chan) > 0:
+                        LOG.info('possible lines flagged in channels: %s', 
+                          channels_flagged)
+                        stackmedianflag[flag_chan] = True
+           
                     tsysref = commonresultobjects.SpectrumResult(
-                      data=stackmedian, 
+                      data=stackmedian,
+                      flag=stackmedianflag,  
                       datatype='Median Normalised Tsys',
                       filename=tsystable.name, spw=spwid, pol=pol,
                       ant=(antenna_id, antenna_name[antenna_id]),
