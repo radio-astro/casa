@@ -2091,7 +2091,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
     String oframe = outframe;
     oframe.upcase();
-    Bool doRadVelCorr = (oframe=="OBJECT");
+    Bool doRadVelCorr = (oframe=="SOURCE");
 
     // Loop 1: Verify the input parameters, no modification of the MS
     if(!setRegridParameters(oldSpwId,
@@ -4226,7 +4226,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			    const String& outframe,
 			    const String& veltype,
 			    const Bool verbose,
-			    const MRadialVelocity mRV // only used for outframe=="OBJECT"
+			    const MRadialVelocity mRV // only used for outframe=="SOURCE"
 			    ){
 
     Vector<Double> newChanLoBound; 
@@ -4287,7 +4287,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       theFrame = theOldRefFrame;
       needTransform = False;
     }
-    else if(oframe=="OBJECT"){ // GEO trafo + radial velocity correction
+    else if(oframe=="SOURCE"){ // GEO trafo + radial velocity correction
       theFrame = MFrequency::GEO;
       doRadVelCorr = True;
     }
@@ -4673,7 +4673,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  theFrame = theOldRefFrame;
 	  needTransform = False;
 	}
-	else if(oframe=="OBJECT"){ // GEO trafo + radial velocity correction
+	else if(oframe=="SOURCE"){ // GEO trafo + radial velocity correction
 	  theFrame = MFrequency::GEO;
 	  doRadVelCorr = True;
 	}
