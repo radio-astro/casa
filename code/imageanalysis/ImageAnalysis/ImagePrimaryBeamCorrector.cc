@@ -246,7 +246,7 @@ ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
     	False, AxesSpecifier(), _getStretch()
     );
 	tmpStore.reset(0);
-	std::auto_ptr<ImageInterface<Float> > outImage(0);
+	std::tr1::shared_ptr<ImageInterface<Float> > outImage;
 	if (_getOutname().empty()) {
 		outImage.reset(
 			new TempImage<Float>(
@@ -271,11 +271,9 @@ ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
 		_removeExistingOutfileIfNecessary();
 		String mask = "";
 	    Record empty;
-		outImage.reset(
-			SubImageFactory<Float>::createImage(
-				subImage, _getOutname(), empty,
-				mask, False, False, False, False
-			)
+		outImage = SubImageFactory<Float>::createImage(
+			subImage, _getOutname(), empty,
+			mask, False, False, False, False
 		);
 	}
 	LatticeExpr<Float> expr = (_mode == DIVIDE)
@@ -284,10 +282,7 @@ ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
 	outImage->copyData(expr);
 
     if (wantReturn) {
-    	ImageInterface<Float> *ret = outImage.get();
-    	// release the pointer for return without deleting its object
-    	outImage.release();
-    	return ret;
+    	return outImage->cloneII();
     }
     else {
     	return 0;

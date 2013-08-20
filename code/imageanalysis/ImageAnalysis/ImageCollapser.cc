@@ -243,11 +243,14 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 	else {
 		ImageUtilities::copyMiscellaneous(tmpIm, subImage, True);
 	}
-	std::auto_ptr<ImageInterface<Float> > outImage = _prepareOutputImage(&tmpIm);
-	if (! wantReturn) {
-		outImage.reset(0);
+	std::tr1::shared_ptr<ImageInterface<Float> > outImage = _prepareOutputImage(tmpIm);
+	if (wantReturn) {
+		return outImage->cloneII();
 	}
-	return outImage.release();
+	else {
+		return 0;
+	}
+
 }
 
 const map<uInt, String>* ImageCollapser::funcNameMap() {

@@ -158,7 +158,7 @@ namespace casa {
 			typedef std::list<display_element> display_list_t;
 			display_list_t display_list;
 
-			ImageInterface<Float> *generatePVImage( std::tr1::shared_ptr<ImageInterface<Float> >, std::string, int, bool );
+            std::tr1::shared_ptr<ImageInterface<Float> > generatePVImage( std::tr1::shared_ptr<ImageInterface<Float> >, std::string, int, bool );
 
 		private:
 			bool within_vertex_handle( double x, double y ) const;

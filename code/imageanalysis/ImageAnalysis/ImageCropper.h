@@ -31,6 +31,8 @@
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
 #include <casa/namespace.h>
 
+#include <tr1/memory>
+
 namespace casa {
 
 template <class T>  class ImageCropper : public ImageTask {
@@ -79,11 +81,9 @@ public:
 	// destructor
 	~ImageCropper();
 
-	// Perform the cropping. If <src>wantReturn</src> is True, return a pointer to the
-	// cropped image. The returned pointer is created via new(); it is the caller's
-	// responsibility to delete the returned pointer. If <src>wantReturn</src> is False,
-	// a NULL pointer is returned and pointer deletion is performed internally.
-	ImageInterface<T>* crop(const Bool wantReturn) const;
+	// Perform the cropping. If <src>wantReturn</src> is True, a shared_ptr which
+	// wraps the cropped image is returned. If False, an empty shared_ptr is returned.
+	std::tr1::shared_ptr<ImageInterface<T> > crop(const Bool wantReturn) const;
 
 	// Set the axes along which to do the cropping. An empty set means
 	// crop all axes.

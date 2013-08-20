@@ -858,14 +858,15 @@ namespace casa {
 			return path_;
 		}
 
-		ImageInterface<Float> *PVLine::generatePVImage( std::tr1::shared_ptr<ImageInterface<Float> > input_image, std::string output_file, int width, bool need_result ) {
+        std::tr1::shared_ptr<ImageInterface<Float> > PVLine::generatePVImage( std::tr1::shared_ptr<ImageInterface<Float> > input_image, std::string output_file, int width, bool need_result ) {
 			Record dummy;
 			PVGenerator pvgen( input_image, &dummy, "" /*chanInp*/, "" /*stokes*/, "" /*maskInp*/, output_file, true );
 			double startx, starty, endx, endy;
+            std::tr1::shared_ptr<ImageInterface<Float> > result;
 			try {
 				linear_to_pixel( wc_, pt1_x, pt1_y, pt2_x, pt2_y, startx, starty, endx, endy );
 			} catch(...) {
-				return 0;
+				return result;
 			}
 			pvgen.setEndpoints( startx, starty, endx, endy );
 			pvgen.setWidth(width);
@@ -873,7 +874,6 @@ namespace casa {
 			dock_->panel( )->logIO( ) << "generating temporary image \'" << output_file  << "'" << LogIO::POST;
 			dock_->panel( )->logIO( ) << "generating P/V image with pixel points: (" <<
 			                          startx << "," << starty << ") (" << endx << "," << endy << ")" << LogIO::POST;
-			ImageInterface<Float> *result = 0;
 			QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
 			try {
 				result = pvgen.generate( need_result );

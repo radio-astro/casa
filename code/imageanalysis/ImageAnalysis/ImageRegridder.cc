@@ -109,8 +109,9 @@ ImageInterface<Float>* ImageRegridder::regrid(const Bool wantReturn) const {
 	else {
 		workIm = _regrid();
 	}
+	std::tr1::shared_ptr<ImageInterface<Float> > outImage = _prepareOutputImage(workIm);
 	if (wantReturn) {
-		return _prepareOutputImage(&workIm).release();
+		return outImage->cloneII();
 	}
 	else {
 		return 0;

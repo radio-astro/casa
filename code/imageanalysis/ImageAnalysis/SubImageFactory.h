@@ -30,6 +30,8 @@
 
 #include <images/Images/SubImage.h>
 
+#include <tr1/memory>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>
@@ -100,9 +102,9 @@ public:
   );
 
   // return a PagedImage if outfile is not blank or a SubImage if it is.
-  static ImageInterface<Float>* createImage(
+  static std::tr1::shared_ptr<ImageInterface<T> > createImage(
 	  ImageInterface<T>& image,
-	  const String& outfile, Record& Region,
+	  const String& outfile, const Record& region,
 	  const String& mask, const Bool dropDegenerateAxes,
 	  const Bool overwrite, const Bool list, const Bool extendMask
   );

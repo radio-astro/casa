@@ -93,7 +93,9 @@ void PVGenerator::setWidth(uInt width) {
 	_width = width;
 }
 
-ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
+std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
+	const Bool wantReturn
+) const {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 
 	if (_start.get() == 0 || _end.get() == 0) {
@@ -297,17 +299,7 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	newRefPix[xAxis] = rotPixStart[xAxis] - blc[xAxis];
 	newRefPix[yAxis] = rotPixStart[yAxis] - blc[yAxis];
 	CoordinateSystem collCoords = collapsed->coordinates();
-	/*
-	 * this is the original code for setting of the full direction coordinate
-	 * which was deemed undesirable by the CSSC representative. He wants
-	 * an angular offset coordinate instead.
 
-	collCoords.setReferencePixel(newRefPix);
-	Vector<Double> refVal = collCoords.referenceValue();
-	refVal[xAxis] = startWorld[xAxis];
-	refVal[yAxis] = startWorld[yAxis];
-	collCoords.setReferenceValue(refVal);
-	*/
 	// to determine the pixel increment of the angular offset axis, get the
 	// distance between the end points
 	ImageMetaData<Float> md(collapsed.get());
@@ -358,27 +350,22 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 		}
 	}
 	// now remove the degenerate linear axis
-	Record empty;
 	SubImage<Float> cDropped = SubImageFactory<Float>::createSubImage(
-		*collapsed, empty, "", 0, False, AxesSpecifier(keep, axisPath),
+		*collapsed, Record(), "", 0, False, AxesSpecifier(keep, axisPath),
 		False, True
 	);
 	std::auto_ptr<ArrayLattice<Bool> > newMask;
 	if (dynamic_cast<TempImage<Float> *>(collapsed.get())->hasPixelMask()) {
 		// because the mask doesn't lose its degenerate axis when subimaging.
-		Array<Bool> oldArray = collapsed->pixelMask().get();
+		Array<Bool> newArray = collapsed->pixelMask().get().reform(cDropped.shape());
 		newMask.reset(new ArrayLattice<Bool>(cDropped.shape()));
-		Array<Bool> newArray = oldArray;
-		newArray.resize(cDropped.shape(), True);
 		newMask->put(newArray);
 	}
-	std::auto_ptr<ImageInterface<Float> > outImage = _prepareOutputImage(&cDropped, 0, newMask.get());
-	if (wantReturn) {
-		return outImage.release();
+	std::tr1::shared_ptr<ImageInterface<Float> > outImage = _prepareOutputImage(cDropped, 0, newMask.get());
+	if (! wantReturn) {
+		outImage.reset();
 	}
-	else {
-		return 0;
-	}
+	return outImage;
 }
 
 void PVGenerator::setOffsetUnit(const String& s) {

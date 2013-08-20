@@ -79,7 +79,9 @@ void ImageCropper<T>::setAxes(const std::set<uInt>& axes) {
 }
 
 template <class T>
-ImageInterface<T>* ImageCropper<T>::crop(const Bool wantReturn) const {
+std::tr1::shared_ptr<ImageInterface<T> > ImageCropper<T>::crop(
+	const Bool wantReturn
+) const {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 
 	std::auto_ptr<ImageInterface<T> > myClone(_getImage()->cloneII());
@@ -134,13 +136,11 @@ ImageInterface<T>* ImageCropper<T>::crop(const Bool wantReturn) const {
 		subImage, lcbox.toRecord(""), "",
 		_getLog().get(), False, AxesSpecifier(), False, True
 	);
-	std::auto_ptr<ImageInterface<T> > outImage = _prepareOutputImage(&cropped);
-	if (wantReturn) {
-		return outImage.release();
+	std::tr1::shared_ptr<ImageInterface<T> > outImage = _prepareOutputImage(cropped);
+	if (! wantReturn) {
+		outImage.reset();
 	}
-	else {
-		return 0;
-	}
+	return outImage;
 }
 
 template <class T>

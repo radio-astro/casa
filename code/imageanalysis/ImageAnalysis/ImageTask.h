@@ -168,8 +168,8 @@ protected:
     // values=0 => the pixel values from the image will be used
     // mask=0 => the mask attached to the image, if any will be used, outShape=0 => use image shape, coordsys=0 => use image coordinate
     // system
-    std::auto_ptr<ImageInterface<Float> > _prepareOutputImage(
-    	const ImageInterface<Float> *const image, const Array<Float> *const values=0,
+    std::tr1::shared_ptr<ImageInterface<Float> > _prepareOutputImage(
+    	const ImageInterface<Float>& image, const Array<Float> *const values=0,
     	const ArrayLattice<Bool> *const mask=0,
     	const IPosition *const outShape=0, const CoordinateSystem *const coordsys=0
     ) const;

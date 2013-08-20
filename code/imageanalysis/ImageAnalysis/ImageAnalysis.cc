@@ -268,7 +268,8 @@ Bool ImageAnalysis::addnoise(const String& type, const Vector<Double>& pars,
 	String mask;
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*_image,
-		*(ImageRegion::tweakedRegionRecord(pRegion)),
+		//*(ImageRegion::tweakedRegionRecord(pRegion)),
+		*pRegion,
 		mask, _log.get(), True
 	);
 
@@ -666,7 +667,8 @@ Bool ImageAnalysis::imagefromimage(const String& outfile, const String& infile,
 			axesSpecifier = AxesSpecifier(False);
 		}
 		SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-			*inImage, *(ImageRegion::tweakedRegionRecord(&region)),
+			*inImage, // *(ImageRegion::tweakedRegionRecord(&region)),
+			region,
 			Mask, _log.get(), True, axesSpecifier
 		);
 
@@ -790,7 +792,8 @@ ImageAnalysis::convolve(
 
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*_image,
-		*(ImageRegion::tweakedRegionRecord(&region)),
+		//*(ImageRegion::tweakedRegionRecord(&region)),
+		region,
 		mask, _log.get(), False, AxesSpecifier(), stretch
 	);
 
@@ -851,7 +854,8 @@ ImageAnalysis::boundingbox(const Record& Region) {
 	Record tmpR(Region);
 	const ImageRegion* pRegion = ImageRegion::fromRecord(
 		0, _image->coordinates(), _image->shape(),
-		*ImageRegion::tweakedRegionRecord(&tmpR)
+		//*ImageRegion::tweakedRegionRecord(&tmpR)
+		Region
 	);
 	LatticeRegion latRegion = pRegion->toLatticeRegion(_image->coordinates(),
 			_image->shape());
@@ -1242,7 +1246,8 @@ ImageInterface<Float>* ImageAnalysis::convolve2d(
 	}
 
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_image, *(ImageRegion::tweakedRegionRecord(&Region)),
+		*_image, // *(ImageRegion::tweakedRegionRecord(&Region)),
+		Region,
 		mask, _log.get(), False, AxesSpecifier(), stretch
 	);
 
@@ -1449,7 +1454,8 @@ Matrix<Float> ImageAnalysis::decompose(
 
 	AxesSpecifier axesSpec(False);
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_image, *(ImageRegion::tweakedRegionRecord(&Region)), mask,
+		*_image, //*(ImageRegion::tweakedRegionRecord(&Region)),
+		Region, mask,
 		_log.get(), False, axesSpec, stretch
 	);
 	// Make finder
@@ -1642,7 +1648,8 @@ Bool ImageAnalysis::fft(
 	}
 
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_image, *(ImageRegion::tweakedRegionRecord(&Region)),
+		*_image, //*(ImageRegion::tweakedRegionRecord(&Region)),
+		Region,
 		mask, _log.get(), False, AxesSpecifier(), stretch
 	);
 
@@ -1711,7 +1718,8 @@ Record ImageAnalysis::findsources(const int nMax, const double cutoff,
 
 	AxesSpecifier axesSpec(False);
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_image, *(ImageRegion::tweakedRegionRecord(&Region)),
+		*_image, //*(ImageRegion::tweakedRegionRecord(&Region)),
+		Region,
 		mask, _log.get(), False, axesSpec
 	);
 
@@ -1751,7 +1759,8 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::_fitpolynomial(
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		pRegionRegion, pMaskRegion,
-		*_image, *(ImageRegion::tweakedRegionRecord(&Region)),
+		*_image,// *(ImageRegion::tweakedRegionRecord(&Region)),
+		Region,
 		mask, 0, False
 	);
 	delete pMaskRegion;
@@ -1928,7 +1937,8 @@ Bool ImageAnalysis::getregion(
 	IPosition iAxes = IPosition(Vector<Int> (axes));
 
     SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_image, *(ImageRegion::tweakedRegionRecord(&Region)),
+		*_image, //*(ImageRegion::tweakedRegionRecord(&Region)),
+		Region,
 		Mask, (list ? _log.get() : 0), False, AxesSpecifier(),
 		extendMask
 	);
@@ -2034,7 +2044,8 @@ ImageInterface<Float>* ImageAnalysis::hanning(
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		pRegionRegion, pMaskRegion,
-		*_image, *(ImageRegion::tweakedRegionRecord(&Region)), mask,
+		*_image, //*(ImageRegion::tweakedRegionRecord(&Region)),
+		Region, mask,
 		_log.get(), False, AxesSpecifier(), extendMask
 	);
 	IPosition blc(subImage.ndim(), 0);
@@ -2184,7 +2195,8 @@ Record ImageAnalysis::histograms(
 
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		pRegionRegion, pMaskRegion, *_image,
-		*(ImageRegion::tweakedRegionRecord(&regionRec)),
+		//*(ImageRegion::tweakedRegionRecord(&regionRec)),
+		regionRec,
 		sMask, _log.get(), False, AxesSpecifier(), extendMask
 	);
 
@@ -2442,12 +2454,14 @@ Bool ImageAnalysis::makecomplex(const String& outFile, const String& imagFile,
 	String mask;
 	SubImage<Float> subRealImage = SubImageFactory<Float>::createSubImage(
 		*_image,
-		*(ImageRegion::tweakedRegionRecord(&Region)),
+		//*(ImageRegion::tweakedRegionRecord(&Region)),
+		Region,
 		mask, _log.get(), False
 	);
 	SubImage<Float> subImagImage = SubImageFactory<Float>::createSubImage(
 		imagImage,
-		*(ImageRegion::tweakedRegionRecord(&Region)),
+		//*(ImageRegion::tweakedRegionRecord(&Region)),
+		Region,
 		mask, 0, False
 	);
 
@@ -2602,7 +2616,8 @@ Bool ImageAnalysis::modify(
 
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*_image,
-		*(ImageRegion::tweakedRegionRecord(&Region)),
+		//*(ImageRegion::tweakedRegionRecord(&Region)),
+		Region,
 		mask,  (list ? _log.get() : 0), True, AxesSpecifier(), extendMask
 	);
 
@@ -2640,7 +2655,8 @@ Record ImageAnalysis::maxfit(Record& Region, const Bool doPoint,
 	String mask;
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		pRegionRegion, pMaskRegion, *_image,
-		*(ImageRegion::tweakedRegionRecord(&Region)),
+		//*(ImageRegion::tweakedRegionRecord(&Region)),
+		Region,
 		mask, _log.get(), False, axesSpec
 	);
 	Vector<Float> blc;
@@ -2725,24 +2741,23 @@ ImageInterface<Float> * ImageAnalysis::moments(
 	Record r;
 	std::auto_ptr<ImageInterface<Float> > pIm;
 	try {
-		std::auto_ptr<ImageInterface<Float> > x;
+		tr1::shared_ptr<ImageInterface<Float> > x;
 		if (_image->imageType() != PagedImage<Float>::className()) {
             Path tmpImage = File::newUniqueName (".", "moments.scratch.image");
             tmpImageName = tmpImage.baseName();
 			*_log << LogIO::NORMAL << "Calculating moments of non-paged images can be notoriously slow, "
 					<< "so converting to a CASA temporary paged image named "
 					<< tmpImageName  << " first which will be written to the current directory" << LogIO::POST;
-            x.reset(
-            	SubImageFactory<Float>::createImage(
-            		*_image, tmpImageName, r, "", False,
-            		False, True, False
-            	)
+            x = SubImageFactory<Float>::createImage(
+            	*_image, tmpImageName, r, "", False,
+            	False, True, False
             );
 		}
 		else {
 			x.reset(
 				SubImageFactory<Float>::createSubImage(
-					*_image, *(ImageRegion::tweakedRegionRecord(&Region)),
+					*_image, //*(ImageRegion::tweakedRegionRecord(&Region)),
+					Region,
 					mask, _log.get(), False, AxesSpecifier(), stretchMask
 				).cloneII()
 			);
@@ -3116,7 +3131,8 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 
 	const ImageRegion* pRegion = ImageRegion::fromRecord(
 		(list ? _log.get() : 0), _image->coordinates(), _image->shape(),
-		*ImageRegion::tweakedRegionRecord(&region)
+		//*ImageRegion::tweakedRegionRecord(&region)
+		region
 	);
 	LatticeRegion latRegion = pRegion->toLatticeRegion(_image->coordinates(),
 			_image->shape());
@@ -3307,7 +3323,8 @@ ImageInterface<Float>* ImageAnalysis::rebin(
 		axesSpecifier = AxesSpecifier(False);
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*_image,
-		*(ImageRegion::tweakedRegionRecord(&Region)),
+		//*(ImageRegion::tweakedRegionRecord(&Region)),
+		Region,
 		mask, _log.get(), False, axesSpecifier, extendMask
 	);
 
@@ -3398,7 +3415,8 @@ ImageInterface<Float>* ImageAnalysis::rotate(
 	AxesSpecifier axesSpecifier;
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*_image,
-		*(ImageRegion::tweakedRegionRecord(&Region)),
+		//*(ImageRegion::tweakedRegionRecord(&Region)),
+		Region,
 		mask, _log.get(), False, axesSpecifier, extendMask
 	);
 
@@ -3616,7 +3634,8 @@ Bool ImageAnalysis::replacemaskedpixels(
 	}
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*_image,
-		*(ImageRegion::tweakedRegionRecord(&pRegion)),
+		//*(ImageRegion::tweakedRegionRecord(&pRegion)),
+		pRegion,
 		maskRegion, (list ? _log.get() : 0), True,
 		AxesSpecifier(), extendMask
 	);
@@ -3687,7 +3706,8 @@ ImageInterface<Float>* ImageAnalysis::sepconvolve(
 
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*_image,
-		*(ImageRegion::tweakedRegionRecord(&pRegion)),
+		//*(ImageRegion::tweakedRegionRecord(&pRegion)),
+		pRegion,
 		mask, _log.get(), False, AxesSpecifier(), extendMask
 	);
 
@@ -3773,7 +3793,8 @@ Bool ImageAnalysis::set(const String& lespixels, const Int pixelmask,
 	Record *tmpRegion = new Record(p_Region);
 	const ImageRegion* pRegion = ImageRegion::fromRecord(
 		(list ? _log.get() : 0), _image->coordinates(), _image->shape(),
-		*(ImageRegion::tweakedRegionRecord(tmpRegion))
+		//*(ImageRegion::tweakedRegionRecord(tmpRegion))
+		*tmpRegion
 	);
 	delete tmpRegion;
 	SubImage<Float> subImage(*_image, *pRegion, True);
@@ -4031,7 +4052,8 @@ Bool ImageAnalysis::twopointcorrelation(
 	AxesSpecifier axesSpecifier;
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*_image,
-		*(ImageRegion::tweakedRegionRecord(&theRegion)),
+		//*(ImageRegion::tweakedRegionRecord(&theRegion)),
+		theRegion,
 		mask, _log.get(), False, axesSpecifier, stretch
 	);
 
@@ -4188,7 +4210,8 @@ Bool ImageAnalysis::tofits(
 	}
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*_image,
-		*(ImageRegion::tweakedRegionRecord(&pRegion)),
+		//*(ImageRegion::tweakedRegionRecord(&pRegion)),
+		pRegion,
 		mask, _log.get(), False, axesSpecifier, stretch
 	);
 	if (
@@ -4730,7 +4753,8 @@ ImageAnalysis::newimage(const String& infile, const String& outfile,
 			axesSpecifier = AxesSpecifier(False);
 		SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 			*inImage,
-			*(ImageRegion::tweakedRegionRecord(&region)),
+			//*(ImageRegion::tweakedRegionRecord(&region)),
+			region,
 			Mask, _log.get(), True, axesSpecifier
 		);
 

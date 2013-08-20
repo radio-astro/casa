@@ -254,7 +254,8 @@ Record ImageStatsCalculator::statistics(
 	Record regionRec = *_getRegion();
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 			pRegionRegion, pMaskRegion, *clone,
-			*(ImageRegion::tweakedRegionRecord(&regionRec)),
+			//*(ImageRegion::tweakedRegionRecord(&regionRec)),
+			regionRec,
 			mtmp,  (_verbose ? _getLog().get() : 0), False, AxesSpecifier(),
 			_getStretch()
 	);

@@ -86,10 +86,8 @@ public:
 	~PVGenerator();
 
 	// perform the collapse. If <src>wantReturn</src> is True, return a pointer to the
-	// collapsed image. The returned pointer is created via new(); it is the caller's
-	// responsibility to delete the returned pointer. If <src>wantReturn</src> is False,
-	// a NULL pointer is returned and pointer deletion is performed internally.
-	ImageInterface<Float>* generate(const Bool wantReturn) const;
+	// collapsed image.
+	std::tr1::shared_ptr<ImageInterface<Float> > generate(const Bool wantReturn) const;
 
 	// set the endpoints of the slice in direction space. Input values represent pixel
 	// locations.
