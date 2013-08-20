@@ -1,7 +1,7 @@
 /*
  *  This file was originally part of the "D-Bus++ - C++ bindings for D-Bus":
  *
- *          include/dbus-c++/eventloop-integration.h
+ *          include/dbus-cpp/eventloop-integration.h
  *
  *  I found the BusDispatcher to be... not so great. I was eventually able to
  *  get it to work. All I wanted to do was be able to wait until a signal to
@@ -40,8 +40,8 @@
 #ifndef DBUS_DISPATCHER_H_
 #define DBUS_DISPATCHER_H_
 
-#include <dbus-c++/dbus.h>
-#include <dbus-c++/connection.h>
+#include <dbus-cpp/dbus.h>
+#include <dbus-cpp/connection.h>
 
 namespace casa {
     namespace dbus {

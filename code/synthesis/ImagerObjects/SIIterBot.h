@@ -23,13 +23,14 @@
 #ifndef SYNTHESIS_SIITERBOT
 #define SYNTHESIS_SIITERBOT
 
+#include <casadbus/utilities/BusAccess.h>
 // .casarc interface
 #include <casa/System/AipsrcValue.h>
 
 // System utilities (for profiling macros)
 #include <casa/OS/HostInfo.h>
 #include <sys/time.h>
-#include <dbus-c++/dbus.h> /*for DBus::Variant... probably can be removed with *_adaptor class*/
+#include <dbus-cpp/dbus.h> /*for DBus::Variant... probably can be removed with *_adaptor class*/
 
 
 // Boost Libraries for mutex and noncopyable semantics
@@ -266,13 +267,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	class SIIterBot_adaptor
 #ifdef INTERACTIVE_ITERATION
-		: private edu::nrao::casa::SynthImager_adaptor,
+		: private dbus::address,
+		  private edu::nrao::casa::SynthesisImager_adaptor,
 		  public DBus::IntrospectableAdaptor,
 		  public DBus::ObjectAdaptor
 #endif
 		{
 			public:
-				SIIterBot_adaptor( std::tr1::shared_ptr<SIIterBot_state> state, const std::string &serviceName);
+				SIIterBot_adaptor( std::tr1::shared_ptr<SIIterBot_state> state, const std::string &bus_name, const std::string &object_path );
 				~SIIterBot_adaptor();
 
 				bool incrementController( )	{ return state->incrementController( ); }
@@ -280,7 +282,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				void interactionRequired( const bool &val ) {
 #ifdef INTERACTIVE_ITERATION
-					edu::nrao::casa::SynthImager_adaptor::interactionRequired( val );
+					edu::nrao::casa::SynthesisImager_adaptor::interactionRequired( val );
 #endif
 				}
 				void controlUpdate(const std::map< std::string, ::DBus::Variant >& newParams)

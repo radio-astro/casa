@@ -2,7 +2,7 @@
 #define CASA_DBUS_BASE_H__
 
 #include <boost/thread/thread.hpp>
-#include <dbus-c++/dbus.h>
+#include <dbus-cpp/dbus.h>
 
 namespace casa {
 
@@ -31,7 +31,7 @@ class DBusThreadedBase
                       public DBusThreadedBase
 {
  public:
-  DBusService(const std::string &serviceName);
+  DBusService(const std::string &bus_name, const std::string &object_path);
   ~DBusService();
 };
 

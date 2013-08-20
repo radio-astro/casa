@@ -22,7 +22,6 @@
 
 #include <synthesis/ImagerObjects/SIIterBot.h>
 #include <casadbus/session/DBusSession.h>
-#include <casadbus/utilities/BusAccess.h>
 #include <casadbus/utilities/Conversion.h>
 
 /* Include file for the lock guard */
@@ -32,8 +31,6 @@
 #include <casa/Containers/Record.h>
 #include <casadbus/types/nullptr.h>		// for casa::memory::nullptr
 #include <math.h>						// For FLT_MAX
-
-#
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -566,9 +563,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	}
 
-	SIIterBot_adaptor::SIIterBot_adaptor( std::tr1::shared_ptr<SIIterBot_state> s, const std::string &serviceName) :
+	SIIterBot_adaptor::SIIterBot_adaptor( std::tr1::shared_ptr<SIIterBot_state> s, const std::string &bus_name, const std::string &object_path) :
 #ifdef INTERACTIVE_ITERATION
-				DBus::ObjectAdaptor( DBusSession::instance().connection( ), dbus::adaptor_object(serviceName).c_str()),
+				dbus::address(bus_name),
+				DBus::ObjectAdaptor( DBusSession::instance().connection( ), object_path ),
 #endif
 				state(s) {
 #ifdef INTERACTIVE_ITERATION
@@ -582,6 +580,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #ifdef INTERACTIVE_ITERATION
 		state->denyCallbacks(this);
 		disconnect();
+		
 #endif
 	}
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
-<node name="/casa/synthimager">
-  <interface name="edu.nrao.casa.SynthImager">
+<node name="/casa/synthesis/imager">
+  <interface name="edu.nrao.casa.SynthesisImager">
     <method name="incrementController">
       <arg direction="out" type="b"/>
     </method>

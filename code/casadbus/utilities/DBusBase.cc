@@ -116,9 +116,9 @@ namespace casa {
 
 
   /* -------------------------------------------------------- */
-  DBusService::DBusService(const std::string& serviceName):
+  DBusService::DBusService(const std::string &bus_name, const std::string &object_path):
     DBus::ObjectAdaptor(DBusSession::instance().connection( ), 
-                        dbus::adaptor_object(serviceName).c_str()),
+                        dbus::adaptor_object(bus_name,object_path).c_str( )),
     DBusThreadedBase()
   {
   }

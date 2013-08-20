@@ -30,6 +30,7 @@
 #include <cstring>
 #include <sys/time.h>
 #include <vector>
+#include <iostream>
 
 #define CASA_PREFIX "edu.nrao.casa."
 #define CASA_PATH "/casa/"
@@ -51,7 +52,7 @@ namespace casa {
 	}
 
 	static char *generate_casa_proxy_name(bool unique_name, const std::string &dbusname, const std::string &defaultname ) {
-	    const int suffix_length = 12;
+	    const int suffix_length = 3;
 
 	    if ( dbusname.size( ) == 0 && defaultname.size( ) == 0 )
 		return generate_proxy_suffix( suffix_length * 2 );
@@ -67,7 +68,47 @@ namespace casa {
 		sprintf(result, (suffix ? "%s_%s" : "%s"), defaultname.c_str( ), suffix);
 	    }
 	    if ( suffix ) delete [] suffix;
+		cout << "PROXY-SUFFIX: " << result << endl;
 	    return result;
+	}
+
+	address::address( const std::string &bus_address, bool unique ) {
+		if ( bus_address.size( ) == 0  ) {
+			if ( unique == false )
+				throw AipsError("no bus address supplied");
+			else {
+				name_ = generate_name("dba");
+			}
+		} else {
+			name_ = generate_name(bus_address);
+		}
+	}
+
+	address::address( ) {
+		name_ = generate_name("dba");
+	}
+
+	std::string address::generate_name( const std::string &base ) {
+        casa::DBusSession &session = casa::DBusSession::instance( );
+		std::string result;
+		const int suffix_length = 3;
+		char *buffer = new char[ strlen(CASA_PREFIX) + base.size( ) + suffix_length + 2 ];
+		while ( result.size( ) == 0 ) {
+            char *suffix = generate_proxy_suffix(suffix_length);
+            sprintf( buffer, "%s%s_%s", CASA_PREFIX, base.c_str( ), suffix );
+            try {
+                session.connection( ).request_name( buffer );
+                result = buffer;
+            } catch (...) { }
+			delete [] suffix;
+        }
+		delete [] buffer;
+		return result;
+	}
+
+	address::~address( ) {
+        casa::DBusSession &session = casa::DBusSession::instance( );
+		session.connection( ).release_name(name_.c_str( ));
 	}
 
 
@@ -164,11 +205,22 @@ namespace casa {
 	    return std::string( CASA_PATH + oname );
 	}
 
-	std::string adaptor_object( const std::string &name ) {
-	    casa::DBusSession &session = casa::DBusSession::instance( );
-	    std::string obj(CASA_PREFIX + name);
-	    session.connection( ).request_name( obj.c_str( ) );
-	    return std::string( CASA_PATH + name );
+	std::string adaptor_object( const std::string &name, const std::string &path ) {
+        casa::DBusSession &session = casa::DBusSession::instance( );
+		std::string result;
+		const int suffix_length = 3;
+		char *buffer = new char[ strlen(CASA_PREFIX) + name.size( ) + suffix_length + 2 ];
+		while ( result.size( ) == 0 ) {
+            char *suffix = generate_proxy_suffix(suffix_length);
+            sprintf( buffer, "%s%s_%s", CASA_PREFIX, name.c_str( ), suffix );
+            try {
+                session.connection( ).request_name( buffer );
+                result = buffer;
+            } catch (...) { }
+			delete [] suffix;
+        }
+		delete [] buffer;
+		return path;
 	}
-    }
+	}
 }

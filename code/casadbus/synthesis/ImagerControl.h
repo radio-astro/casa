@@ -51,29 +51,30 @@ namespace casa {
 
 	class ImagerControl
 #ifdef INTERACTIVE_ITERATION
-							: private edu::nrao::casa::SynthImager_proxy,
+							: private edu::nrao::casa::SynthesisImager_proxy,
 							public DBus::IntrospectableProxy,
 							public DBus::ObjectProxy
 #endif
 							{
 		public:
-			static std::string connection_name( ) { return "edu.nrao.casa.SynthImager001"; }
-			static std::string interface_name( ) { return "edu.nrao.casa.SynthImager"; }
-			static std::string object_name( ) { return "/casa/synthimager"; }
+			static std::string name( ) { return "SynthesisImager"; }
+			static std::string connection_name( ) { return "edu.nrao.casa.SynthesisImager_001"; }
+			static std::string interface_name( ) { return "edu.nrao.casa.SynthesisImager"; }
+			static std::string object_path( ) { return "/casa/synthesis/imager"; }
 
-			ImagerControl( const std::string &connection_name_=connection_name( ), const std::string &object_name_=object_name( ) );
+			ImagerControl( const std::string &connection_name_=connection_name( ), const std::string &object_path_=object_path( ) );
 			~ImagerControl( );
 
 		    bool incrementController( ) {
 #ifdef INTERACTIVE_ITERATION
-					return edu::nrao::casa::SynthImager_proxy::incrementController( );
+					return edu::nrao::casa::SynthesisImager_proxy::incrementController( );
 #else
 					return false;
 #endif
 			}
 		    bool decrementController( ) {
 #ifdef INTERACTIVE_ITERATION
-					return edu::nrao::casa::SynthImager_proxy::decrementController( );
+					return edu::nrao::casa::SynthesisImager_proxy::decrementController( );
 #else
 					return false;
 #endif
@@ -81,13 +82,13 @@ namespace casa {
 
 		    void changePauseFlag( const bool &state ) {
 #ifdef INTERACTIVE_ITERATION
-					edu::nrao::casa::SynthImager_proxy::changePauseFlag( state );
+					edu::nrao::casa::SynthesisImager_proxy::changePauseFlag( state );
 #endif
 			}
 
 		    void changeStopFlag(const bool& state) {
 #ifdef INTERACTIVE_ITERATION
-					edu::nrao::casa::SynthImager_proxy::changeStopFlag( state );
+					edu::nrao::casa::SynthesisImager_proxy::changeStopFlag( state );
 #endif
 			}
 
@@ -99,7 +100,7 @@ namespace casa {
 
 			std::string getDescription( ) {
 #ifdef INTERACTIVE_ITERATION
-					return edu::nrao::casa::SynthImager_proxy::getDescription( );
+					return edu::nrao::casa::SynthesisImager_proxy::getDescription( );
 #else
 					return std::string( );
 #endif
@@ -107,7 +108,7 @@ namespace casa {
 			std::map<std::string,dbus::variant> getDetails( )
 				{
 #ifdef INTERACTIVE_ITERATION
-					return dbus::toStdMap( edu::nrao::casa::SynthImager_proxy::getDetails( ) );
+					return dbus::toStdMap( edu::nrao::casa::SynthesisImager_proxy::getDetails( ) );
 #else
 					return std::map<std::string,dbus::variant>( );
 #endif
@@ -115,12 +116,12 @@ namespace casa {
 
 		    void controlUpdate(const std::map<std::string,dbus::variant>& newParams) {
 #ifdef INTERACTIVE_ITERATION
-				edu::nrao::casa::SynthImager_proxy::controlUpdate( dbus::fromStdMap(newParams) );
+				edu::nrao::casa::SynthesisImager_proxy::controlUpdate( dbus::fromStdMap(newParams) );
 #endif
 			}
 
 			/******************************************************************************
-			**********methods*provided*by*SynthImager_proxy********************************
+			**********methods*provided*by*SynthesisImager_proxy********************************
 			*******************************************************************************
 		    bool incrementController()
 		    bool decrementController()
