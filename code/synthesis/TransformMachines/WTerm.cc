@@ -26,6 +26,7 @@
 //#
 //# $Id$
 #include <synthesis/TransformMachines/WTerm.h>
+#include <synthesis/TransformMachines/SynthesisMath.h>
 #ifdef HAS_OMP
 #include <omp.h>
 #endif
@@ -61,12 +62,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if(rsq<1.0) 
 		  {
 		    Double phase=twoPiW*(sqrt(1.0-rsq)-1.0), sp, cp;
-#if defined(__APPLE__)
-		    sp = sin(phase);
-		    cp = cos(phase);
-#else
-		    sincos(phase, &sp, &cp);
-#endif
+		    SINCOS(phase, sp, cp);
 		    screen(ix+convSize/2,iy+convSize/2)*=Complex(cp, sp);
 		  }
 	      }
