@@ -28,6 +28,7 @@
 #include <display/QtViewer/ImageManager/ImageView.qo.h>
 #include <display/QtViewer/ImageManager/DisplayLabel.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
+#include <limits>
 
 #include <QUuid>
 #include <QDrag>
