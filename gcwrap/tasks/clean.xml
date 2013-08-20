@@ -177,7 +177,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="interpolation" subparam="true">
-      <description>Spectral interpolation (nearest, linear, cubic). Use nearest for mode=channel</description>
+      <description>Spectral interpolation (nearest, linear, cubic). </description>
       <value>linear</value>
       <allowed kind="enum">
 	<value>nearest</value>
@@ -939,7 +939,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         points on both sides of each image frequency. Errors
                         are therefore possible at edge  channels, or near
                         flagged data channels.
-                 For mode='channel', please use 'nearest'.
+                When image channel width is much larger than the data channel width 
+                there is nothing much to be gained using linear or cubic thus not worth
+                the extra computation  involved.
 
 	      resmooth -- if the cube has a different restoring beam/channel. Restore 
                                 image to a common beam  or leave as is (default)
