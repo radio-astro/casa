@@ -41,6 +41,7 @@ namespace casa {
 	ImageManagerDialog::ImageManagerDialog(QWidget *parent)
 		: QDialog(parent),
 		  allImages( NULL ),
+		  displayedImages( NULL ),
 		  SINGLE_COLOR_MAP( "Color Saturation Map"),
 		  MASTER_COLOR_MAP( "Master Color Saturation Map"),
 		  COLOR_MAP_SIZE(100){
@@ -103,15 +104,17 @@ namespace casa {
 		//master image combo selection box.
 		allImages = images;
 		displayedImages = registeredImages;
-		allImages->setImageTracker( this );
+		if ( allImages != NULL && displayedImages != NULL ){
+			allImages->setImageTracker( this );
 
-		//Add the images to the scroll.
-		for ( DisplayDataHolder::DisplayDataIterator iter = allImages->beginDD();
+			//Add the images to the scroll.
+			for ( DisplayDataHolder::DisplayDataIterator iter = allImages->beginDD();
 				iter != allImages->endDD(); iter++ ){
-			bool registered = displayedImages->exists( *iter );
-			bool coordinateMaster = allImages->isCoordinateMaster( *iter );
-			imageAdded( *iter, -1, registered, coordinateMaster, false, false );
+				bool registered = displayedImages->exists( *iter );
+				bool coordinateMaster = allImages->isCoordinateMaster( *iter );
+				imageAdded( *iter, -1, registered, coordinateMaster, false, false );
 
+			}
 		}
 	}
 
@@ -126,6 +129,9 @@ namespace casa {
 	void ImageManagerDialog::reorderDisplayImages( QtDisplayData* displayData,
 			int dropIndex, bool registered, bool masterCoordinate,
 			bool masterSaturation, bool masterHue, QColor rgbColor ){
+		if ( displayedImages == NULL || allImages == NULL ){
+			return;
+		}
 		//First remove it from the registered images, it it is preset.
 		if ( registered ){
 			displayedImages->discardDD( displayData );
@@ -156,7 +162,7 @@ namespace casa {
 	//-------------------------------------------------------------------------
 
 	void ImageManagerDialog::masterImageChanged(QtDisplayData* newMaster ) {
-		if ( allImages != NULL ){
+		if ( allImages != NULL && displayedImages != NULL ){
 
 			//See if there was an old master
 			QtDisplayData* oldMaster = displayedImages->getDDControlling();
@@ -483,9 +489,12 @@ namespace casa {
 //-------------------------------------------------------------------
 //                   Closing & Registration
 //------------------------------------------------------------------
+	void ImageManagerDialog::closeImageView( QtDisplayData* image ){
+		imageScroll->removeImageView( image );
+	}
 
 	void ImageManagerDialog::closeImage( QtDisplayData* image, bool controlling ) {
-		if ( allImages->exists(image)) {
+		if ( allImages != NULL && allImages->exists(image)) {
 			//If it was the image used to set the master coordinate system,
 			//we notify that the master coordinate system image is NULL
 			if ( controlling ){
@@ -500,13 +509,15 @@ namespace casa {
 
 
 	void ImageManagerDialog::closeAll() {
-		//Notify that there will be no master image used to set the
-		//coordinate system.
-		allImages->setDDControlling( NULL );
-		displayedImages->setDDControlling( NULL );
+		if ( allImages != NULL && displayedImages != NULL ){
+			//Notify that there will be no master image used to set the
+			//coordinate system.
+			allImages->setDDControlling( NULL );
+			displayedImages->setDDControlling( NULL );
 
-		//Close all the images.
-		imageScroll->closeImages();
+			//Close all the images.
+			imageScroll->closeImages();
+		}
 	}
 
 	void ImageManagerDialog::updateAllButtons(){
@@ -543,7 +554,6 @@ namespace casa {
 		if ( registerImage ){
 			int overallIndex = imageScroll->getIndex( imageView );
 			int registerPosition = imageScroll->getRegisteredIndex(overallIndex);
-
 			emit registerDD( displayData, registerPosition );
 		}
 		else {
@@ -574,8 +584,26 @@ namespace casa {
 	void ImageManagerDialog::imageAdded( QtDisplayData* image, int position,
 			bool autoRegister, bool masterCoordinate,
 			bool masterSaturation, bool masterHue ) {
+
+		if ( allImages == NULL && displayedImages == NULL ){
+			return;
+		}
+
+		//By default if there are no registered images, and this one will
+		//be registered, we make it the master coordinate image, provided
+		//we don't already have a master coordinate image.
+		if ( autoRegister ){
+			QtDisplayData* displayData = imageScroll->getCoordinateMaster();
+			if ( displayData == NULL ){
+				int registeredCount = imageScroll->getRegisteredCount();
+				if (registeredCount == 0 ){
+					masterCoordinate = true;
+				}
+			}
+		}
 		imageScroll->addImageView( image, autoRegister, position,
 				masterCoordinate, masterSaturation, masterHue);
+
 		if ( masterCoordinate ){
 			allImages->setDDControlling( image );
 			displayedImages->setDDControlling( image );
@@ -596,8 +624,9 @@ namespace casa {
 
 
 	ImageManagerDialog::~ImageManagerDialog() {
-		delete allImages;
-		delete displayedImages;
+		//Note:  allImages and displayedImages are deleted in the QtDisplayPanelGui
+		//and QtDisplayPanel, respectively.  This is because someone may not even use
+		//the image manager.
 		delete ui.colorRestrictionsGroupBox;
 	}
 }

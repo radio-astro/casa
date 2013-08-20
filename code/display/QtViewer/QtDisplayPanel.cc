@@ -199,9 +199,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	QtDisplayPanel::~QtDisplayPanel() {
 		removeEventHandlers_();
+		setControllingDD( NULL );
 		unregisterAll();	// Also removes/deletes color bar panels.
 
-		delete pd_;		// Also deletes MWCTools that were added to it...
+		delete pd_;		// Also deletes MWCTools that were add	ed to it...
 
 		delete snsFidd_;	// (not the case with PCTools...)
 		delete bncFidd_;

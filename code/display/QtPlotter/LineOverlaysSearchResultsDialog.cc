@@ -35,6 +35,10 @@ namespace casa {
 		: QDialog(parent) {
 		ui.setupUi(this);
 
+		Qt::WindowFlags flags = this->windowFlags();
+		flags = flags | Qt::WindowStaysOnTopHint;
+		setWindowFlags( flags );
+
 		QHBoxLayout* layout = new QHBoxLayout();
 		searchResultsWidget = new SearchMoleculesResultsWidget( this );
 		layout->addWidget( searchResultsWidget );

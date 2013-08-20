@@ -60,6 +60,8 @@ namespace casa {
 		//Sets the image that is currently being viewed (on the Animator).  Allows the image
 		//manager to indicate the current image on the display.
 		void setViewedImage( int registrationIndex );
+		void closeImageView( QtDisplayData* image );
+
 		~ImageManagerDialog();
 
 		//-----------------------------------------------------------------------
@@ -91,6 +93,7 @@ namespace casa {
 	public slots:
 		//The ImageView has changed types (raster, contour, vector, etc)
 		void displayTypeChanged( ImageView* changedView );
+
 
 	private slots:
 		//Opens the display data options panel for the specific display data.

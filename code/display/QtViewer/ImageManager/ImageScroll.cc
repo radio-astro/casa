@@ -260,10 +260,8 @@ namespace casa {
 	}
 
 	void ImageScroll::setRegisterAll( bool select ) {
-		QList<ImageView*>::iterator iter = images.begin();
-		while ( iter != images.end()) {
-			(*iter)->setRegistered( select );
-			iter++;
+		for ( int i = 0; i < images.size(); i++ ) {
+			images[i]->setRegistered( select );
 		}
 	}
 
@@ -502,12 +500,20 @@ namespace casa {
 	//                  Utility
 	//-------------------------------------------------------------------------
 
+	QString ImageScroll::stripBold( QString name ) const {
+		QString result = name.remove( "<b>");
+		result = result.remove( "</b>");
+		return result;
+	}
+
 	int ImageScroll::findImageView( QString targetName, bool exactMatch ) {
 		int index = 0;
 		int targetIndex = -1;
+		targetName = stripBold( targetName );
 		for ( QList<ImageView*>::iterator iter =images.begin();
 				iter != images.end(); iter++ ) {
 			QString viewName = (*iter)->getName();
+			viewName = stripBold( viewName );
 			if ( viewName == targetName ) {
 				targetIndex = index;
 				break;
@@ -521,7 +527,8 @@ namespace casa {
 			index = 0;
 			for ( QList<ImageView*>::iterator iter =images.begin();
 							iter != images.end(); iter++ ) {
-				QString imagePrefix = removeSuffixes( (*iter)->getName() );
+				QString viewName = stripBold( (*iter)->getName());
+				QString imagePrefix = removeSuffixes( viewName );
 				if ( prefix == imagePrefix && (*iter)->isEmpty()){
 					targetIndex = index;
 					break;
@@ -552,11 +559,5 @@ namespace casa {
 
 
 	ImageScroll::~ImageScroll() {
-		while( images.isEmpty()) {
-			ImageView* viewerImage = images.takeLast();
-			delete viewerImage;
-		}
-		delete spacer;
-		delete dropMarker;
 	}
 }
