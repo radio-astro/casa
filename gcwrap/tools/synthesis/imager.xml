@@ -1007,7 +1007,7 @@ im.defineimage(nx=1024,ny=1024, cellx='30marcsec',celly='30marcsec',
 nchan=1, stokes='IV', phasecenter=me.direction('mars'));
 ## Example 2
 im.defineimage(nx=1024,ny=1024, cellx='30marcsec',celly='30marcsec', 
-nchan=1, stokes='IV', phasecenter=['J2000', '19:00:30.5', '-45:00:25.6']);
+nchan=1, stokes='IV', phasecenter=['J2000', '19:00:30.5', '-45d00m25.6']);
 ## Example 3
 im.selectvis(nchan=10, start=3, spw=[0,1], field=[3, 4, 5, 6, 7, 9, 10])
 im.defineimage(nx=500, ny=500, mode='mfs', spwid=[0,1], fieldid=7)
@@ -1031,23 +1031,22 @@ im.clean(algorithm='mfclark', model=['box1', 'box2', 'box3'],
 
 
 In the first example, the image parameters are set for 1024 by 1024
-pixels of 30marc, 1 channel will be made, Stokes I and V will be
+pixels of 30milli arcsec, 1 channel will be made, Stokes I and V will be
 imaged, and the phasecenter will be the direction of Mars as given by
 the JPL DE-200 emphemeris. In the second, the phase center is taken
-to be that of the reference pixel of another image.
+to be an absolute coordinate value.
 
 The third example shows the use of selectvis and defineimage to setup a mosaic. In 
-the set data we have chosen 10 channels (for each IF) of data starting form 
-channel 3. We also have selected IF 1 and 2. We have selected data from 
+the set data we have chosen 10 channels (for each spectral window) of data starting form 
+channel 3. We also have selected spectral windows 0 and 1. We have selected data from 
 fields 3 to 10. In the defineimage we decide to use the data to make a 
 multifrequency synthesis image. We center the image on the field 7 pointing.  
 
 The fourth example is use to clean regions where the user knows the
 sources are and ignore all the other regions. This is very efficient
-in large fields with few sources. Smaller images are made and
+in large fields with few sources. Smaller outlier images are made and
 deconvolved around known sources rather than making a big image
-englobing all three fields. Care should be taken in NOT overlapping
-the regions imaged this way otherwise the deconvolution will fail.
+englobing all three fields. 
 
 
 Now here are some examples about defining cubes using different {\tt mode}
