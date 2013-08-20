@@ -4269,12 +4269,9 @@ im.uvrange(0, 4000.0)
    
 <description>
 Apply visibility weighting to correct for the local density of
-sampling in the uv plane. The imaging weights are written into a Table
-column called IMAGING\_WEIGHT, which may be plotted using
-<link anchor="table">tb</link> and pl.
+sampling in the uv plane. The imaging weights are calculated on the fly 
+when processing the data and can be viewed by
 <link anchor="imager:imager.plotweights.function">plotweights</link>. 
-The column may also be directly accessed using either the
-<link anchor="table">table</link> or <link anchor="ms">ms</link> modules.
 
 To correct for visibility sampling effects, natural, uniform (the
 default), radial, and Briggs weighting are supported.  These work as
@@ -4329,8 +4326,8 @@ For more details about Briggs (aka robust) weighting, see the \htmladdnormallink
 {\briggsURL}.
 
 Note that this weighting is {\em not} cumulative since the imaging weights are
-calculated from the specified sigma (expected noise) per visibility
-(actually stored in the SIGMA column).
+calculated from the specified weight (function of noise; usually $1/\sigma^2$) per visibility
+(actually stored in the  WEIGHT column).
 
 </description>
 <input>
