@@ -418,6 +418,10 @@ void MeasurementSet::init()
 	// WEIGHT_SPECTRUM
 	colMapDef(WEIGHT_SPECTRUM, "WEIGHT_SPECTRUM", TpArrayFloat,
 		  "Weight for each data point","","");
+	// CORRECTED_WEIGHT_SPECTRUM
+	colMapDef(CORRECTED_WEIGHT_SPECTRUM, "CORRECTED_WEIGHT_SPECTRUM", TpArrayFloat,
+		  "Weight for each corrected data point","","");
+
 
 	// PredefinedKeywords
 

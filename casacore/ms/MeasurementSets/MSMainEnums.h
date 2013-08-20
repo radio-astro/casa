@@ -241,7 +241,7 @@ public:
     CORRECTED_WEIGHT_SPECTRUM,
     //
     // Not a column, but just a final enum specifying the number of enums.
-    NUMBER_PREDEFINED_COLUMNS=WEIGHT_SPECTRUM
+    NUMBER_PREDEFINED_COLUMNS=CORRECTED_WEIGHT_SPECTRUM
     };
   
     // Keywords with a predefined meaning
