@@ -4334,11 +4334,13 @@ calculated from the specified weight (function of noise; usually $1/\sigma^2$) p
 
      <param type="string" name="type">
      <description>Type of weighting</description>
-     <value>uniform</value>
      <value>natural</value>
-     <value>briggs</value>
-     <value>radial</value>
-     <value>natural</value>
+     <allowed kind="enum">
+       <value>uniform</value>
+       <value>briggs</value>
+       <value>radial</value>
+       <value>natural</value>
+     </allowed>
      </param>
 
      <param type="string" name="rmode">
