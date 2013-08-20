@@ -52,6 +52,7 @@
 #include <ms/MeasurementSets/MSHistoryHandler.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <casadbus/session/DBusSession.h>
+#include <casadbus/synthesis/ImagerControl.h>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -73,7 +74,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void SynthesisIterBot::dbus_thread_launch_pad( ) {
-		SIIterBot_adaptor dbus_adaptor(itsLoopController,generateServiceName());
+		SIIterBot_adaptor dbus_adaptor(itsLoopController,ImagerControl::name( ),ImagerControl::object_path( ));
 		casa::DBusSession::instance().dispatcher( ).enter( );
 		std::cout << "Service Loop Exited: " << time(0) << std::endl;
 	}
@@ -226,14 +227,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 
-	string SynthesisIterBot::generateServiceName() {
-		ostringstream name;
-		timeval tp;
-		gettimeofday(&tp, NULL);
-		name << "SynthesisImager" <<tp.tv_sec << "_" << std::setw(6) 
-			 << std::setfill('0') << tp.tv_usec;
-		return name.str();
-	}
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ////    Internal Functions start here.  These are not visible to the tool layer.

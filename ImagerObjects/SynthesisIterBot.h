@@ -92,7 +92,6 @@ protected:
     /////////////// All input parameters
 
  private:
-  static string generateServiceName();
   boost::thread  *dbus_thread;
   void dbus_thread_launch_pad( );
 };
