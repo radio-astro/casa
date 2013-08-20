@@ -52,7 +52,7 @@
 #endif
 
 /*\file ASDM.h
-    \brief Generated from model's revision "1.61", branch "HEAD"
+    \brief Generated from model's revision "-1", branch ""
 */
 
 namespace asdm {
@@ -72,6 +72,9 @@ class AntennaTable;
 
 //class asdm::CalAmpliTable;
 class CalAmpliTable;
+
+//class asdm::CalAppPhaseTable;
+class CalAppPhaseTable;
 
 //class asdm::CalAtmosphereTable;
 class CalAtmosphereTable;
@@ -253,7 +256,7 @@ class WeatherTable;
  * creates a complete set of tables.
  *
  * 
- * Generated from model's revision "1.61", branch "HEAD"
+ * Generated from model's revision "-1", branch ""
  */
 //class ASDM : public Representable {
 class ASDM {
@@ -296,6 +299,12 @@ public:
 	 * @return The table CalAmpli as a CalAmpliTable.
 	 */
 	CalAmpliTable & getCalAmpli () const;
+
+	/**
+	 * Get the table CalAppPhase.
+	 * @return The table CalAppPhase as a CalAppPhaseTable.
+	 */
+	CalAppPhaseTable & getCalAppPhase () const;
 
 	/**
 	 * Get the table CalAtmosphere.
@@ -996,6 +1005,11 @@ private:
 	 * The table CalAmpli
 	 */
 	CalAmpliTable * calAmpli;
+
+	/**
+	 * The table CalAppPhase
+	 */
+	CalAppPhaseTable * calAppPhase;
 
 	/**
 	 * The table CalAtmosphere
