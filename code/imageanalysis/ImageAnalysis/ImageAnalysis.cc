@@ -1764,11 +1764,11 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::_fitpolynomial(
 		mask, 0, False
 	);
 	delete pMaskRegion;
-	std::auto_ptr<ImageRegion> region(pRegionRegion);
+    std::tr1::shared_ptr<ImageRegion> region(pRegionRegion);
 	IPosition imageShape = subImage.shape();
 
 	// Make subimage from input error image
-	std::auto_ptr<SubImage<Float> > pSubSigmaImage(0);
+	std::tr1::shared_ptr<SubImage<Float> > pSubSigmaImage;
 	if (!sigmaFile.empty()) {
 		PagedImage<Float> sigmaImage(sigmaFile);
 		if (!sigmaImage.shape().conform(_image->shape())) {
@@ -1776,7 +1776,7 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::_fitpolynomial(
 				<< LogIO::EXCEPTION;
 		}
 		if (Region.nfields() > 0) {
-			std::auto_ptr<ImageRegion> pR(
+			std::tr1::shared_ptr<ImageRegion> pR(
 				ImageRegion::fromRecord(
 					_log.get(), sigmaImage.coordinates(),
 					sigmaImage.shape(), Region
@@ -1799,14 +1799,11 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::_fitpolynomial(
 		  : subImage.ndim() - 1;
 	// Create output residual image with no mask
 	tr1::shared_ptr<ImageInterface<Float> > pResid, pFit;
-	if (
-		! (
-			pResid = makeExternalImage(
-				residFile, cSys, imageShape, subImage,
-				*_log, overwrite, True, False
-			)
-		)
-	) {
+    pResid = makeExternalImage(
+                            residFile, cSys, imageShape, subImage,
+                                            *_log, overwrite, True, False
+                                                        );
+    if (! pResid) {
 		*_log << "Unable to create residual image" << LogIO::EXCEPTION;
 	}
 	// Create optional disk image holding fit
@@ -1834,23 +1831,23 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::_fitpolynomial(
 			IPosition::otherAxes(subImage.ndim(), IPosition(1, axis2))
 		).product()
 	) {
-		if (pFit.get() && ! fitFile.empty()) {
+		if (pFit && ! fitFile.empty()) {
 			pFit.reset();
 			Table::deleteTable(fitFile, True);
 		}
-		if (pResid.get() && ! residFile.empty()) {
+		if (pResid && ! residFile.empty()) {
 			pResid.reset();
 			Table::deleteTable(residFile, True);
 		}
 		*_log << "All " << nFailed << " fits failed!" << LogIO::EXCEPTION;
 	}
-	pFit.reset(fitPtr);
-	pResid.reset(residPtr);
+	//pFit.reset(fitPtr);
+	//pResid.reset(residPtr);
 
 	// Copy mask from input image so that we exclude the OTF mask
 	// in the output.  The OTF mask is just used to select what we fit
 	// but should not be copied to the output
-	std::auto_ptr<SubImage<Float> > pSubImage2(
+	std::tr1::shared_ptr<SubImage<Float> > pSubImage2(
 		region.get() != 0
 		? new SubImage<Float> (*_image, *region, True)
 		: new SubImage<Float> (*_image, True)
@@ -1863,7 +1860,7 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::_fitpolynomial(
 			Lattice<Bool>& pixelMaskOut = pResid->pixelMask();
 			pixelMaskOut.copyData(pixelMaskIn);
 		}
-		if (pFit.get()) {
+		if (pFit) {
 			String maskNameFit;
 			ImageMaskAttacher<Float>::makeMask(*pFit, maskNameFit, False, True, *_log, True);
 			{
