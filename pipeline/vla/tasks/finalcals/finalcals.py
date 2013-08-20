@@ -189,7 +189,7 @@ class Finalcals(basetask.StandardTaskTemplate):
             vis = self.inputs.vis,
             caltable = caltable,
             field    = delay_field_select_string,
-            spw      = tst_delay_spw,
+            spw      = '',
             solint   = 'inf',
             calmode  = 'p',
             minsnr   = 3.0,
@@ -428,14 +428,14 @@ class Finalcals(basetask.StandardTaskTemplate):
         return True
     
     
-    def _do_setjy(self, calMs, field, spw, modimage, fluxdensity):
+    def _do_setjy(self, calMs, field, spw, model_image, fluxdensity):
         
         task_args = {'vis'            : calMs,
                      'field'          : field,
                      'spw'            : spw,
                      'selectdata'     : False,
                      'modimage'       : model_image,
-                     'listmodeimages' : False,
+                     'listmodels'     : False,
                      'scalebychan'    : True,
                      'fluxdensity'    : -1,
                      'standard'       : 'Perley-Butler 2010',

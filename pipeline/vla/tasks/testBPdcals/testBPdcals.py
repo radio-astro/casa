@@ -279,7 +279,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
             vis = self.inputs.vis,
             caltable = caltable,
             field    = delay_field_select_string,
-            spw      = tst_delay_spw,
+            spw      = '',
             solint   = 'inf',
             calmode  = 'p',
             minsnr   = 3.0,

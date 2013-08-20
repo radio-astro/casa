@@ -63,7 +63,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
 
         #Iterate and check the fraciton of Flagged solutions, each time running gaincal in 'K' mode
         flagcount=0
-        while (fracFlaggedSolns > critfrac and AND flagcount < 4):
+        while (fracFlaggedSolns > critfrac and flagcount < 4):
             
             context = self.inputs.context
             
@@ -192,7 +192,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
             vis = self.inputs.vis,
             caltable = caltable,
             field    = delay_field_select_string,
-            spw      = tst_delay_spw,
+            spw      = '',
             solint   = 'inf',
             calmode  = 'p',
             minsnr   = 3.0,
