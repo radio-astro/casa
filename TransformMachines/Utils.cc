@@ -997,4 +997,62 @@ namespace casa{
     return polIDList;
   }
 
+
+  // 
+  // Calcualte the BLC, TRC of the intersection of two rectangles (courtesy U.Rau)
+  //
+  void SynthesisUtils::calcIntersection(const Int blc1[2], const Int trc1[2], 
+					const Float blc2[2], const Float trc2[2],
+					Float blc[2], Float trc[2])
+  {
+    //    cerr << blc1[0] << " " << blc1[1] << " " << trc1[0] << " " << trc1[1] << " " << blc2[0] << " " << blc2[1] << " " << trc2[0] << " " << trc2[1] << endl;
+    Float dblc, dtrc;
+    for (Int i=0;i<2;i++)
+      {
+        dblc = blc2[i] - blc1[i];
+        dtrc = trc2[i] - trc1[i];
+
+        if ((dblc >= 0) and (dtrc >= 0))
+	  {
+            blc[i] = blc1[i] + dblc;
+            trc[i] = trc2[i] - dtrc;
+	  }
+        else if ((dblc >= 0) and (dtrc < 0))
+	  {
+            blc[i] = blc1[i] + dblc;
+            trc[i] = trc1[i] + dtrc;
+	  }
+        else if ((dblc < 0) and (dtrc >= 0))
+	  {
+            blc[i] = blc2[i] - dblc;
+            trc[i] = trc2[i] - dtrc;
+	  }
+        else
+	  {
+            blc[i] = blc2[i] - dblc;
+            trc[i] = trc1[i] + dtrc;
+	  }
+      }
+  }
+  //
+  // Check if the two rectangles interset (courtesy U.Rau).
+  //
+  Bool SynthesisUtils::checkIntersection(const Int blc1[2], const Int trc1[2], const Float blc2[2], const Float trc2[2])
+  {
+    // blc1[2] = {xmin1, ymin1}; 
+    // blc2[2] = {xmin2, ymin2};
+    // trc1[2] = {xmax1, ymax1};
+    // trc2[2] = {xmax2, ymax2};
+
+    if ((blc1[0] > trc2[0]) || (trc1[0] < blc2[0]) || (blc1[1] > trc2[1]) || (trc1[1] < blc2[1])) 
+      return False;
+    else
+      return True;
+// def checkintersect(  xmin1, ymin1, xmax1, ymax1,   xmin2, ymin2, xmax2, ymax2 ):
+//     if  xmin1 > xmax2  or xmax1 < xmin2 or ymin1 > ymax2 or ymax1 < ymin2 :
+//         return False
+//     else : 
+//         return True
+  }
+
 } // namespace casa

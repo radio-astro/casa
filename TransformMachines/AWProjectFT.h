@@ -505,6 +505,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void resampleGridToData(VBStore& vbs, Array<Complex>& griddedData,
 				    const VisBuffer& vb);
 
+    virtual void makeThGridCoords(VBStore& vbs, const Vector<Int>& gridShape);
     virtual void setupVBStore(VBStore& vbs,
 			      const VisBuffer& vb,
 			      const Matrix<Float>& imagingweight,
@@ -512,7 +513,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			      const Matrix<Double>& uvw,
 			      const Cube<Int>& flagCube,
 			      const Vector<Double>& dphase,
-			      const Bool& doPSF);
+			      const Bool& doPSF,
+			      const Vector<Int> &gridShape);
 
     //    AWVisResampler visResampler_p;
     CountedPtr<VisibilityResamplerBase> visResampler_p;
