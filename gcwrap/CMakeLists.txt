@@ -794,9 +794,11 @@ set( SAXON ${Java_java_EXECUTABLE} -jar ${CMAKE_SOURCE_DIR}/install/saxon8.jar )
 # Form all possible DBus prefixes and use them as hints to casa_find()
 #
 set( dbus_prefix "" )
-foreach( _p ${CMAKE_INSTALL_PREFIX} ${casa_packages}  /sw /opt/local /usr/local /opt /usr )
+#foreach( _p ${casa_packages} ${CMAKE_INSTALL_PREFIX} /sw /opt/local /usr/local /opt /usr )
+foreach( _p ${casa_packages} ${CMAKE_INSTALL_PREFIX} /sw /opt/local /usr/local /opt /usr )
   foreach( _l lib lib64 )
-    list( APPEND dbus_prefix ${_p}/dbus-1.0 )
+    list( APPEND dbus_prefix ${_p} )
+    list( APPEND dbus_prefix ${_p}/include )
     list( APPEND dbus_prefix ${_p}/${_l}/dbus-1.0 )
     list( APPEND dbus_prefix ${_p}/${_l}/qt-4.3.4/dbus )
     list( APPEND dbus_prefix ${_p}/${_l}/qt-4.3.4/dbus/${_l}/dbus-1.0 )
@@ -805,23 +807,93 @@ endforeach()
 
 casa_find( DBUSARCH
   INCLUDES dbus/dbus-arch-deps.h
-  PREFIX_HINTS ${DBUS_ARCH_DIR} ${dbus_prefix}
+  PREFIX_HINTS ${dbus_prefix}
   NO_CHECK   # This header does not compile if included directly
   NO_REQUIRE
 )
 if( DBUSARCH_FOUND )
-  set( dbus_depends DBUSARCH )
+  casa_find( DBUSARCH
+    INCLUDES dbus/dbus-arch-deps.h
+    PREFIX_HINTS ${DBUS_ARCH_DIR} ${dbus_prefix}
+    NO_CHECK   # This header does not compile if included directly
+    NO_REQUIRE
+  )
+  if( DBUSARCH_FOUND )
+    set( dbus_depends DBUSARCH )
+  endif()
 endif()
+
+if ( DBUS_FOUND )
+   unset(DBUS_FOUND CACHE)
+   unset(DBUS_INCLUDE_DIRS CACHE)
+   unset(DBUS_LIBRARIES CACHE)
+   unset(DBUS_casa-dbus-cpp CACHE)
+   unset(DBUS_dbusxx-xml2cpp_EXECUTABLE CACHE)
+endif (DBUS_FOUND)
+if ( DBUS_2_FOUND )
+   unset(DBUS_2_FOUND CACHE)
+   unset(DBUS_2_INCLUDE_DIRS CACHE)
+   unset(DBUS_2_LIBRARIES CACHE)
+   unset(DBUS_2_casa-dbus-cpp CACHE)
+   unset(DBUS_dbusxx-xml2cpp_EXECUTABLE CACHE)
+endif (DBUS_2_FOUND)
+if ( DBUS_3_FOUND )
+   unset(DBUS_3_FOUND CACHE)
+   unset(DBUS_3_INCLUDE_DIRS CACHE)
+   unset(DBUS_3_LIBRARIES CACHE)
+   unset(DBUS_3_casa-dbus-cpp CACHE)
+   unset(DBUS_dbusxx-xml2cpp_EXECUTABLE CACHE)
+endif (DBUS_3_FOUND)
 
 casa_find( DBUS
   INCLUDES dbus/dbus.h
-           dbus-c++/dbus.h
-  INCLUDES_SUFFIXES dbus-1.0 dbus-c++-1
+           dbus-cpp/dbus.h
+  INCLUDES_SUFFIXES dbus-1.0
   PREFIX_HINTS ${DBUS_ROOT_DIR} ${dbus_prefix}
-  LIBS dbus-c++-1
-  PROGRAMS dbusxx-xml2cpp
+  LIBS casa-dbus-cpp
+  PROGRAMS dbuspp-xml2cpp
   DEPENDS ${dbus_depends}
+  NO_REQUIRE
 )
+
+if( DBUS_FOUND )
+    set( DBUS_dbusxx-xml2cpp_EXECUTABLE ${DBUS_dbuspp-xml2cpp_EXECUTABLE} CACHE STRING "${package} version" FORCE )
+else()
+    message( STATUS "Trying again to find DBus..." )
+    casa_find( DBUS_2
+               INCLUDES dbus/dbus.h
+               dbus-cpp/dbus.h
+               INCLUDES_SUFFIXES dbus-1.0
+               PREFIX_HINTS ${DBUS_ROOT_DIR} ${dbus_prefix}
+               LIBS dbus-cpp
+               PROGRAMS dbuspp-xml2cpp
+               DEPENDS ${dbus_depends}
+               NO_REQUIRE
+             )
+    if ( DBUS_2_FOUND )
+        set( DBUS_FOUND TRUE CACHE BOOL "dbus found" FORCE )
+        set( DBUS_dbusxx-xml2cpp_EXECUTABLE ${DBUS_2_dbuspp-xml2cpp_EXECUTABLE} CACHE STRING "${package} version" FORCE )
+        set( DBUS_LIBRARIES ${DBUS_2_LIBRARIES} CACHE FILEPATH "dbus library" FORCE )
+        set( DBUS_casa-dbus-cpp ${DBUS_2_dbus-cpp} CACHE FILEPATH "dbus library redux" FORCE )
+    else()
+        message( STATUS "Trying again to find DBus..." )
+        casa_find( DBUS_3
+                   INCLUDES dbus/dbus.h
+                   dbus-c++/dbus.h
+                   INCLUDES_SUFFIXES dbus-1.0 dbus-c++-1
+                   PREFIX_HINTS ${DBUS_ROOT_DIR} ${dbus_prefix}
+                   LIBS dbus-c++-1
+                   PROGRAMS dbusxx-xml2cpp
+                   DEPENDS ${dbus_depends}
+                 )
+        if ( DBUS_3_FOUND )
+            set( DBUS_FOUND TRUE CACHE BOOL FORCE )
+            set( DBUS_dbusxx-xml2cpp_EXECUTABLE ${DBUS_3_dbusxx-xml2cpp_EXECUTABLE} CACHE STRING "${package} version" FORCE )
+            set( DBUS_LIBRARIES ${DBUS_3_LIBRARIES} CACHE FILEPATH "dbus library" FORCE )
+            set( DBUS_casa-dbus-cpp ${DBUS_3_dbus-c++-1} CACHE FILEPATH "dbus library redux" FORCE )
+        endif( DBUS_3_FOUND )
+    endif( DBUS_2_FOUND )
+endif( DBUS_FOUND )
 
 # ATM
 casa_find( ATM
