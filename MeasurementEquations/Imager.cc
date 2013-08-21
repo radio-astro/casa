@@ -889,8 +889,8 @@ Bool Imager::defineImage(const Int nx, const Int ny,
   //Clear the sink 
   logSink_p.clearLocally();
   LogIO os(LogOrigin("imager", "defineimage()"), logSink_p);
-
-
+  if(cellx.getValue() == 0.0  || celly.getValue()==0.0)
+	 throw(AipsError("Infinite resolution not possible... please do let us know what you are drinking"));
   os << LogIO::NORMAL << "Defining image properties:"; // Loglevel INFO
   os << "nx=" << nx << " ny=" << ny
      << " cellx='" << cellx.getValue() << cellx.getUnit()
