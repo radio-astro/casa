@@ -363,9 +363,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							ImageRegridder regridder(im_, String(outpath), regrid_to->imageInterface( ) );
 							regridder.setMethod(method);
 							regridder.setSpecAsVelocity(False);
-							ImageInterface<Float> *newim = regridder.regrid(True);
+							im_ = regridder.regrid(True);
 							// std::auto_ptr<ImageInterface<Float> > imptr(im_);
-							im_.reset(newim);
 						}
 						std::string slice_description = ddo["slice"];
 						if ( slice_description != "" && slice_description != "none" ) {

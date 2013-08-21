@@ -1841,8 +1841,6 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::_fitpolynomial(
 		}
 		*_log << "All " << nFailed << " fits failed!" << LogIO::EXCEPTION;
 	}
-	//pFit.reset(fitPtr);
-	//pResid.reset(residPtr);
 
 	// Copy mask from input image so that we exclude the OTF mask
 	// in the output.  The OTF mask is just used to select what we fit

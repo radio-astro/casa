@@ -83,7 +83,9 @@ ImageRegridder::ImageRegridder(
 
 ImageRegridder::~ImageRegridder() {}
 
-ImageInterface<Float>* ImageRegridder::regrid(const Bool wantReturn) const {
+std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::regrid(
+	Bool wantReturn
+) const {
 	Bool regridByVel = False;
 	if (
 		_specAsVelocity && _getImage()->coordinates().hasSpectralAxis()
@@ -110,12 +112,10 @@ ImageInterface<Float>* ImageRegridder::regrid(const Bool wantReturn) const {
 		workIm = _regrid();
 	}
 	std::tr1::shared_ptr<ImageInterface<Float> > outImage = _prepareOutputImage(workIm);
-	if (wantReturn) {
-		return outImage->cloneII();
+	if (! wantReturn) {
+		outImage.reset();
 	}
-	else {
-		return 0;
-	}
+	return outImage;
 }
 
 TempImage<Float> ImageRegridder::_regrid() const {
@@ -161,6 +161,13 @@ TempImage<Float> ImageRegridder::_regrid() const {
 				blcQ[i] = Quantity(blc[i], units[i]);
 				trcQ[i] = Quantity(trc[i], units[i]);
 			}
+			Vector<Double> pixel;
+			csys.toPixel(pixel, blc);
+			*_getLog() << LogIO::NORMAL << "The blc in the selected region corresponds to pixel "
+				<< pixel << " in the template coordinate system." << LogIO::POST;
+			csys.toPixel(pixel, trc);
+			*_getLog() << LogIO::NORMAL << "The trc in the selected region corresponds to pixel "
+				<< pixel << " in the template coordinate system." << LogIO::POST;
 			WCBox box(blcQ, trcQ, csysFrom, absrel);
 			SubImage<Float> overlap = SubImageFactory<Float>::createSubImage(
 				workIm, box.toRecord(""), "", _getLog().get(),
