@@ -360,7 +360,7 @@ public:
                       Double& minInX, Double& minInY,
                       Double& maxInX, Double& maxInY,
                       Cube<Double>& in2DPos,
-                      Matrix<Bool>& succeed,
+                      const Matrix<Bool>& succeed,
                       uInt xInAxis, uInt yInAxis,
                       uInt xOutAxis, uInt yOutAxis,
                       const IPosition& outPos,
