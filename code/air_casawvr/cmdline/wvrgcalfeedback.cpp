@@ -137,8 +137,8 @@ namespace LibAIR {
 		      const std::vector<std::pair<double, double> > &tmask)
   {
     double tbase=time[0];
-    os<<"Times used for the statistics caculation (in seconds from first astro datum) "<<std::endl
-      <<"----------------------------------------------------------------------------"<<std::endl;
+    os<<"Times used for the statistics calculation (in seconds from first astro datum) "<<std::endl
+      <<"-----------------------------------------------------------------------------"<<std::endl;
     for(size_t i=0; i<tmask.size(); ++i)
     {
       os<<"("<<tmask[i].first-tbase<<", "<<tmask[i].second-tbase<<")"

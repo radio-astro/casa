@@ -176,13 +176,12 @@ namespace LibAIR {
     casa::ROArrayColumn<casa::Bool> c_flags(ms,
 					    casa::MS::columnName(casa::MS::FLAG));
 
-    casa::ROScalarColumn<casa::Bool> c_flagrow(ms,
-					       casa::MS::columnName(casa::MS::FLAG_ROW));
-
     std::map<size_t, size_t> srcmap=getFieldSrcMap(ms);
 
     times.resize(0);
     states.resize(0);
+
+    double prev_time=0.;
 
     const size_t nrows=c_desc_id.nrow();    
     for(size_t ii=0; ii<nrows; ++ii)
@@ -190,12 +189,13 @@ namespace LibAIR {
 
       size_t i = sortedI[ii];
 
-      if (a1(i)==0 and 
-	  c_desc_id(i)== (int)dsc_id and
-	  casa::allEQ(casa::False, c_flags(i)) and
-	  !c_flagrow(i)          // False means not flagged
+      if (c_times(i)>prev_time and  // only one entry per time stamp
+	  c_desc_id(i)==(int)dsc_id and
+	  casa::allEQ(casa::False, c_flags(i))
 	  )
       {
+	prev_time = c_times(i);
+
 	times.push_back(c_times(i));
 	states.push_back(c_states(i));
 	field.push_back(c_field(i));
@@ -334,9 +334,6 @@ namespace LibAIR {
     casa::ROArrayColumn<casa::Bool> inflags(ms,
 					    casa::MS::columnName(casa::MS::FLAG));
 
-    casa::ROScalarColumn<casa::Bool> inflagrow(ms,
-					       casa::MS::columnName(casa::MS::FLAG_ROW));
-
     for(size_t ii=0; ii<nrows; ++ii)
     {
       size_t i = sortedI[ii];
@@ -344,14 +341,15 @@ namespace LibAIR {
       if (a1(i) == a2(i) and 
 	  dsc_ids.count(indsc_id(i)) > 0)
       {
+
 	casa::Array<casa::Bool> fl;
 	inflags.get(i, fl, ::casa::True);
  
-	if(casa::allEQ(casa::False, inflags(i)) and
-	   !inflagrow(i)) // i.e. not flagged at all
+	if(casa::allEQ(casa::False, inflags(i))) // i.e. not flagged
 	{
 	  casa::Array<std::complex<float> > a;
 	  indata.get(i,a, casa::True);
+
 	  for(size_t k=0; k<4; ++k)
 	  {
 	    res->set(curr_time[a1(i)],
