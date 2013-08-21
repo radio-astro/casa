@@ -309,9 +309,9 @@ class wvrgcal_test(unittest.TestCase):
         print rvaldict
         print rvaldict2
 
-        self.rval = rvaldict['success']
+        self.rval = rvaldict['success'] and rvaldict2['success']
 
-        if(self.rval and rvaldict2['success']):
+        if(self.rval):
             self.rval = (rvaldict==rvaldict2)
                
         self.assertTrue(self.rval)
@@ -337,9 +337,9 @@ class wvrgcal_test(unittest.TestCase):
         print rvaldict
         print rvaldict2
 
-        self.rval = rvaldict['success']
+        self.rval = rvaldict['success'] and rvaldict2['success']
 
-        if(self.rval and rvaldict2['success']):
+        if(self.rval):
             rvaldict2['Disc_um'][2]=49.100000000000001 # The value for antenna2 is the only one expected to be different
                                                        # as it was flagged. Replace by value for the unflagged case
                                                        # to make following test pass if all else agrees.
@@ -374,6 +374,38 @@ class wvrgcal_test(unittest.TestCase):
                         break
             
         self.assertTrue(self.rval)
+
+    def test17(self):
+        '''Test 17:  wvrgcal4quasar_10s.ms, two antennas flagged in main table, one only partially'''
+        myvis = self.vis_g
+        os.system('rm -rf myinput2.ms comp.W')
+        os.system('cp -R ' + myvis + ' myinput.ms')
+
+        os.system('rm -rf '+self.out)
+        rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, wvrflag='DA41', toffset=-1.)
+
+        flagdata(vis='myinput.ms', mode='manual', antenna='DA41&&*')
+        flagdata(vis='myinput.ms', mode='manual', antenna='CM01&&*', scan='1') # antenna 0, scan 1 only!
+        
+        rvaldict2 = wvrgcal(vis="myinput.ms", caltable='comp.W', toffset=-1.)
+
+        print rvaldict
+        print rvaldict2
+
+        self.rval = rvaldict['success'] and rvaldict2['success']
+
+        if(self.rval):
+            rvaldict2['Disc_um'][2]=49.100000000000001 # The value for antenna2 is the only one expected to be different
+                                                       # as it was flagged. Replace by value for the unflagged case
+                                                       # to make following test pass if all else agrees.
+            rvaldict2['Flag'][2]=True # by the same logic as above
+            rvaldict2['RMS_um'][2]=66.900000000000006 # by the same logic as above
+            for mykey in ['Name', 'WVR', 'RMS_um', 'Disc_um']:  
+                print mykey+" "+str(rvaldict[mykey]==rvaldict2[mykey])
+            self.rval = (rvaldict==rvaldict2)
+               
+        self.assertTrue(self.rval)
+
 
 
 def suite():
