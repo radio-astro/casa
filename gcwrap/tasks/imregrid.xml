@@ -44,6 +44,20 @@ template images must have the same coordinate structure.
         <description>The interpolation method.  One of "nearest", "linear", "cubic".</description>
         <value>linear</value>
      </param>
+     <param type="int"  name="decimate">
+     <description>Decimation factor for coordinate grid computation</description>
+     <value>10</value>
+     </param>
+  
+     <param type="bool"  name="replicate">
+     <description>Replicate image rather than regrid?</description>
+     <value>False</value>
+     </param>
+     
+     <param type="bool"  name="overwrite">
+     <description>Overwrite (unprompted) pre-existing output file?</description>
+     <value>False</value>
+     </param>
      <constraints>
         <when param="template">
             <notequals type="string" value="get">
@@ -88,6 +102,9 @@ axes            The pixel axes to regrid. Default value [-1] => all except Stoke
                 be provided as an array. example axes=[0,1] (only regrid the first two axes, which
                 are normally the directional axes).
 interpolation   The interpolation method.  One of 'nearest', 'linear', 'cubic'.
+decimate        Decimation factor for coordinate grid computation
+replicate       Replicate image rather than regrid?
+overwrite">     Overwrite (unprompted) pre-existing output file?
 async           Run task in a separate process (return CASA prompt)
                 default: False; example: async=True
                 
@@ -114,6 +131,31 @@ The new coordinate system is defined by the template parameter, which can be:
       The input and template images must have the same
       coordinate structure.
       
+      
+The argument {\stfaf replicate} can be used to simply replicate pixels
+rather than regridding them.  Normally ({\stfaf replicate=F}), for every
+output pixel, its world coordinate is computed and the corresponding
+input pixel found (then a little interpolation grid is generated).  If
+you set {\stfaf replicate=T}, then what happens is that for every output
+axis, a vector of regularly sampled input pixels is generated (based on
+the ratio of the output and input axis shapes).  So this just means the
+pixels get replicated (by whatever interpolation scheme you use) rather
+than regridded in world coordinate space.  This process is much faster,
+but its not a true world coordinate based regrid. 
+
+As decribed above, when {\stfaf replicate} is False, a coordinate is
+computed for each output pixel; this is an expensive operation.  The
+argument {\stfaf decimate} allows you to decimate the computation of
+that coordinate grid to a sparse grid, which is then filled in via fast
+interpolation.  The default for {\stfaf decimate} is 10.  The number of
+pixels per axis in the sparse grid is the number of output pixels for
+that axis divided by the decimation factor.  A factor of 10 does pretty
+well.  You may find that for very non-linear coordinate systems (e.g. 
+very close to the pole) that you have to reduce the decimation factor.
+You may also have to reduce the decimation factor if the number of pixels
+in the output image along an axis to be regridded is less than about 50, or
+the output image may be completely masked.
+
 If one of the axes to be regridded is a spectral axis and asvelocity=T,
 the axis will be regridded to match the velocity, not the frequency,
 coordinate of the template coordinate system. Thus the output pixel

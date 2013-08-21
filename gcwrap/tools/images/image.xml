@@ -7484,7 +7484,10 @@ interpolation.  The default for {\stfaf decimate} is 10.  The number of
 pixels per axis in the sparse grid is the number of output pixels for
 that axis divided by the decimation factor.  A factor of 10 does pretty
 well.  You may find that for very non-linear coordinate systems (e.g. 
-very close to the pole) that you have to reduce the decimation factor. 
+very close to the pole) that you have to reduce the decimation factor.
+You may also have to reduce the decimation factor if the number of pixels
+in the output image along an axis to be regridded is less than about 50, or
+the output image may be completely masked.
 
 If one of the axes to be regridded is a spectral axis and asvelocity=T,
 the axis will be regridded to match the velocity, not the frequency,
