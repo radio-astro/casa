@@ -1776,7 +1776,7 @@ Date/Time:                         RR:                      RL:                 
     <description>Get the MS metadata associated with this MS.</description>
     <input>
         <param type="float" direction="in" name="cachesize">
-            <descrition>Maximum cache size, in megabytes, to use. </descrition>
+            <description>Maximum cache size, in megabytes, to use. </description>
             <value>50</value>
         </param>
     </input>
