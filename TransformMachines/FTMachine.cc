@@ -306,7 +306,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     else{
       uvwMachine_p=new UVWMachine(mImage_p, vb.phaseCenter(), mFrame_p, 
-				  False, True);
+				  False, tangentSpecified_p);
     }
     AlwaysAssert(uvwMachine_p, AipsError);
     
@@ -785,31 +785,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	String observatory=vb.msColumns().observation().telescopeName()(0);
 	if(uvwMachine_p) delete uvwMachine_p; uvwMachine_p=0;
-	if(tangentSpecified_p) {
-	  if(observatory.contains("ATCA") || observatory.contains("WSRT")){
-	    //Tangent specified is being wrongly used...it should be for a 
-	    //Use the safest way  for now.
+	if(observatory.contains("ATCA") || observatory.contains("WSRT")){
+		//Tangent specified is being wrongly used...it should be for a
+	    	//Use the safest way  for now.
 	    uvwMachine_p=new UVWMachine(phasecenter, vb.phaseCenter(), mFrame_p,
 					True, False);
-	  }
-	  else{
-	    uvwMachine_p=new UVWMachine(phasecenter, vb.phaseCenter(), mFrame_p,
-					False, True);
-	  }
 	}
-	else {
-	  if(observatory.contains("ATCA") || observatory.contains("WSRT")){
-	    uvwMachine_p=new UVWMachine(phasecenter, vb.phaseCenter(), mFrame_p,
-					True, False);
-	  }
-	  else{
-	    uvwMachine_p=new UVWMachine(phasecenter, vb.phaseCenter(), mFrame_p, 
-					False, True);
-	  }
-	}
+	else{
+		uvwMachine_p=new UVWMachine(phasecenter, vb.phaseCenter(), mFrame_p,
+					False,tangentSpecified_p);
+	    }
+     }
+
 	lastFieldId_p=vb.fieldId();
 	lastMSId_p=vb.msId();
-      }
+
       
       AlwaysAssert(uvwMachine_p, AipsError);
       

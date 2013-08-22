@@ -2568,9 +2568,14 @@ Bool Imager::createFTMachine()
 	 << "No of WProjection planes set too low for W projection - recommend at least 128"
 	 << LogIO::POST;
     }
-    
-    ft_p = new WProjectFT(wprojPlanes_p,  mLocation_p,
-			  cache_p/2, tile_p, True, padding_p, useDoublePrecGrid);
+    if(facets_p > 1){
+      ft_p = new WProjectFT(wprojPlanes_p,  phaseCenter_p, mLocation_p,
+			    cache_p/2, tile_p, True, padding_p, useDoublePrecGrid);
+    }
+    else{
+      ft_p = new WProjectFT(wprojPlanes_p,  mLocation_p,
+			    cache_p/2, tile_p, True, padding_p, useDoublePrecGrid);
+    }
     AlwaysAssert(ft_p, AipsError);
     cft_p = new SimpleComponentFTMachine();
     AlwaysAssert(cft_p, AipsError);
