@@ -608,7 +608,7 @@ Bool Calibrater::setcallib(Record callib) {
 
 
       // ingest this table according to its callib
-      vc->setCallib(thistabrec);
+      vc->setCallib(thistabrec,*mssel_p);
 
     } catch (AipsError x) {
       logSink() << LogIO::SEVERE << x.getMesg() 

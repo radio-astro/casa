@@ -153,7 +153,7 @@ public:
   // Set the application parameters 
   virtual void setApply();
   virtual void setApply(const Record& apply);
-  virtual void setCallib(const Record& callib);
+  virtual void setCallib(const Record& callib,const MeasurementSet& selms);
 
   virtual void setModel(const String& )
   {throw(SynthesisError("Internal error: setModel() not yet supported for non EPJones type."));};
