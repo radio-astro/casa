@@ -26,6 +26,7 @@ import math
 import pipeline.infrastructure.casatools as casatools
 import numpy
 
+import itertools
 
 from pipeline.hif.heuristics import fieldnames
 import pipeline.infrastructure as infrastructure
@@ -35,6 +36,10 @@ from pipeline.hif.tasks.common import commonfluxresults
 from . import setjy
 
 from pipeline.vla.tasks.vlautils import VLAUtils
+
+import pipeline.domain.measures as measures
+import pipeline.extern.asizeof as asizeof
+
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -204,6 +209,48 @@ class SetModel(basetask.StandardTaskTemplate):
         vlainputs = VLAUtils.Inputs(context)
         vlautils = VLAUtils(vlainputs)
         
+        
+        #fields_list = map(str, list(set(itertools.chain.from_iterable(standard_source_fields))))
+        #spws_list = map(str, list(set(itertools.chain.from_iterable(field_spws))))
+        
+        #model_images = [for i in
+        
+        #setjyinputs = setjy.Setjy.Inputs(self.inputs.context,
+        #     field=fields_list, spw=spws_list, modimage=modimage, fluxdensity=-1)
+             
+        
+        
+        for i, fields in enumerate(standard_source_fields):
+            for myfield in fields:
+                spws = field_spws[myfield]
+                #spws = [1,2,3]
+                #reference_frequency = center_frequencies[myspw]
+                
+                
+                for myspw in spws:
+                    reference_frequency = center_frequencies[myspw]
+                    EVLA_band = vlautils.find_EVLA_band(reference_frequency)
+                    LOG.info("Center freq for spw "+str(myspw)+" = "+str(reference_frequency)+", observing band = "+EVLA_band)
+                    model_image = standard_source_names[i] + '_' + EVLA_band + '.im'
+
+                    #Double check, but the fluxdensity=-1 should not matter since
+                    #  the model image take precedence
+                    
+                    LOG.info("Setting model for field "+str(myfield)+" spw "+str(myspw)+" using "+model_image)
+                    
+                    try:
+                        LOG.info('Context size: %s' % str(measures.FileSize(asizeof.asizeof(context), measures.FileSizeUnits.BYTES)))
+                        setjy_result = self._do_setjy(str(myfield), str(myspw), model_image, -1)
+                        result.measurements.update(setjy_result.measurements)
+                    except Exception, e:
+                        # something has gone wrong, return an empty result
+                        LOG.error('Unable to complete flux scaling operation')
+                        LOG.exception(e)
+                        return result
+        
+        
+        
+        '''
         for i, fields in enumerate(standard_source_fields):
             for myfield in fields:
                 spws = field_spws[myfield]
@@ -220,6 +267,7 @@ class SetModel(basetask.StandardTaskTemplate):
                     LOG.info("Setting model for field "+str(myfield)+" spw "+str(myspw)+" using "+model_image)
                     
                     try:
+                        LOG.info('Context size: %s' % str(measures.FileSize(asizeof.asizeof(context), measures.FileSizeUnits.BYTES)))
                         setjy_result = self._do_setjy(str(myfield), str(myspw), model_image, -1)
                         result.measurements.update(setjy_result.measurements)
                     except Exception, e:
@@ -227,7 +275,7 @@ class SetModel(basetask.StandardTaskTemplate):
                         LOG.error('Unable to complete flux scaling operation')
                         LOG.exception(e)
                         return result
-       
+        '''        
         return result
 
     def analyse(self, result):
