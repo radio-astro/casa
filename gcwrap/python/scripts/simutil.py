@@ -3313,7 +3313,7 @@ class simutil:
     
         print "Found %d baselines" % (len(l))
         
-    return mylengths
+        return mylengths
 
 
 ######################
