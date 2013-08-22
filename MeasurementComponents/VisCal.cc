@@ -187,7 +187,7 @@ void VisCal::setApply(const Record& apply) {
 
 }
 
-void VisCal::setCallib(const Record& callib) {
+void VisCal::setCallib(const Record& callib,const MeasurementSet& /*selms*/) {
 
   // Forward to setApply
   VisCal::setApply(callib);

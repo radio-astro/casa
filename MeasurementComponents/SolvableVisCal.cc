@@ -349,7 +349,8 @@ void SolvableVisCal::setApply(const Record& apply) {
 }
 
 // Setapply from a Cal Table, etc.
-void SolvableVisCal::setCallib(const Record& callib) {
+void SolvableVisCal::setCallib(const Record& callib,
+			       const MeasurementSet& selms) {
 
   if (prtlev()>2) 
     cout << "SVC::setCallib(callib)" << endl;
@@ -359,7 +360,7 @@ void SolvableVisCal::setCallib(const Record& callib) {
     throw(AipsError(typeName()+" not yet supported for apply by cal library."));
 
   // Call VisCal version for generic stuff
-  VisCal::setCallib(callib);
+  VisCal::setCallib(callib,selms);
 
   // signal that we are using a callib
   byCallib_=True;
@@ -380,8 +381,7 @@ void SolvableVisCal::setCallib(const Record& callib) {
 	    << LogIO::POST;
 
   // Make the interpolation engine
-  MeasurementSet ms(msName());
-  cpp_ = new CLPatchPanel(calTableName(),ms,callib,matrixType(),nPar());
+  cpp_ = new CLPatchPanel(calTableName(),selms,callib,matrixType(),nPar());
 
   //  cpp_->listmappings();
 
