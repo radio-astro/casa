@@ -1754,7 +1754,22 @@ State Methods
   </returns>
 </method>
 
-
+<method type="function" name="setScriptClient">
+  <keyword>setScriptClient</keyword>
+  
+  <shortdescription>Determines whether the client is a GUI supporting user interaction or a non-interactive scripting client.</shortdescription>
+  
+  <description />
+  
+  <input>
+    <param type="bool" name="scriptClient">
+      <description>If true, use a non-interactive scripting client, else provide a GUI supporting user interaction.</description>
+    </param>
+  </input>
+  <example />
+  <returns />
+ 
+</method>
 <!--
 ###############################################################################
 Miscellaneous Methods

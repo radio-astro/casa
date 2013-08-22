@@ -26,9 +26,9 @@ def plotms(vis=None,
            title=None, xlabel=None, ylabel=None,
            showmajorgrid=None, majorwidth=None, majorstyle=None,  majorcolor=None,    
            showminorgrid=None, minorwidth=None, minorstyle=None,  minorcolor=None,    
-           plotfile=None, format=None,
-           highres=None, interactive=None, overwrite=None  # ,
-           #           showgui=None    --- remove for 3.2 release, restore later
+           plotfile=None, expformat=None,
+           highres=None, interactive=None, overwrite=None, 
+           scriptclient=None, showgui=None
 ):
 
 # we'll add these later
@@ -132,6 +132,9 @@ def plotms(vis=None,
 
     coloraxis -- which axis to use for colorizing
                      default: ''  (ignored - same as colorizing off)
+                     
+    scriptclient -- whether the client should be a GUI supporting full user-interaction or a scripting client
+                     default: False.  The default is a full GUI supporting user-interaction.               
     
     title  -- title along top of plot (called "canvas" in some places)
     xlabel, ylabel -- text to label horiz. and vert. axes, with formatting (%% and so on)
@@ -181,22 +184,32 @@ def plotms(vis=None,
         if (xdatacolumn=='cor' or xdatacolumn=='corr'):  xdatacolumn='corrected'
         if (ydatacolumn=='cor' or ydatacolumn=='corr'):  ydatacolumn='corrected'
 
+        #if showgui:
+         #   tp.setgui( True )     ####  showgui );
+        #else:
+         #   tp.setgui( False )    
 
-        tp.setgui( True );     ####  showgui );
-
-
-        # Set filename and axes
         vis = os.path.abspath(vis.strip())
+        
+        #Determine whether this is going to be a scripting client or a full GUI supporting
+        #user interaction.  This must be done before other properties are set because it affects
+        #the constructor of plotms.
+        pm.setScriptClient( scriptclient )
+        if showgui:
+            pm.show()
+        else:
+            pm.hide()
+     
         pm.setPlotMSFilename(vis, False)
         pm.setPlotAxes(xaxis, yaxis, xdatacolumn, ydatacolumn, False)
         
         # Set selection
-        if (selectdata):
+        if (selectdata and os.path.exists(vis)):
             pm.setPlotMSSelection(field, spw, timerange, uvrange, antenna, scan,
                                   correlation, array, str(observation), msselect, False)
         else:
             pm.setPlotMSSelection('', '', '', '', '', '', '', '', '', '', False)
-            
+       
         # Set averaging
         if not averagedata:
             avgchannel = avgtime = ''
@@ -205,7 +218,6 @@ def plotms(vis=None,
             scalar = False
             
         pm.setPlotMSAveraging(avgchannel, avgtime, avgscan, avgfield, avgbaseline, avgantenna, avgspw, scalar, False)
-
         # Set transformations
         if not transform:
             freqframe=''
@@ -222,7 +234,6 @@ def plotms(vis=None,
         if extcorr:
             extcorrstr='all'
         pm.setFlagExtension(extendflag, extcorrstr, extchannel)
-        
 
         # Set stuff that informs the plot on additional axes
         #  (iteration, colorization, etc.)
@@ -234,28 +245,24 @@ def plotms(vis=None,
         pm.setColorAxis(coloraxis,False)
 
         # Set custom symbol
-        #if not customsymbol:
         symbolshape = symbolshape or 'autoscaling'
         symbolsize = symbolsize or 2
         symbolcolor = symbolcolor or '0000ff'
         symbolfill = symbolfill or 'fill'
         symboloutline = symboloutline or False
-        #if customsymbol:
         pm.setSymbol(symbolshape, symbolsize, symbolcolor,
                      symbolfill, symboloutline, False)
-
+        
         # Set custom flagged symbol
-        #if not customflaggedsymbol:
         flaggedsymbolshape = flaggedsymbolshape or 'nosymbol'
         flaggedsymbolsize = flaggedsymbolsize or 2
         flaggedsymbolcolor = flaggedsymbolcolor or 'ff0000'
         flaggedsymbolfill = flaggedsymbolfill or 'fill'
         flaggedsymboloutline = flaggedsymboloutline or False
-        #if customflaggedsymbol:
         pm.setFlaggedSymbol(flaggedsymbolshape, flaggedsymbolsize,
                             flaggedsymbolcolor, flaggedsymbolfill,
                             flaggedsymboloutline, False)
-
+        
         # Set various user-directed appearance parameters
         pm.setTitle(title,False)
         pm.setXAxisLabel(xlabel,False)
@@ -274,14 +281,12 @@ def plotms(vis=None,
 
         pm.setXRange((xrange<=0.), plotrange[0],plotrange[1], False)
         pm.setYRange((yrange<=0.), plotrange[2],plotrange[3], False)
-
-        # Update and show
-        pm.update()
-        #if (showgui):
-        #    pm.show()
-        pm.show()
         
+        # Update
+        pm.update()
+    
         # write file if requested
+        casalog.post("Plot file " + plotfile, 'NORMAL')
         if(plotfile != ""):
             time.sleep(0.5)
             if (pm.isDrawing()):
@@ -289,7 +294,8 @@ def plotms(vis=None,
             while (pm.isDrawing()):
                 time.sleep(0.5)
             casalog.post("Exporting the plot.",'NORMAL')
-            pm.save(plotfile, format, highres, interactive)
+            casalog.post("Calling pm.save,", 'NORMAL')
+            pm.save( plotfile, expformat, highres, interactive)
     
     except Exception, instance:
         print "Exception during plotms task: ", instance

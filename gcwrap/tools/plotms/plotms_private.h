@@ -32,6 +32,7 @@ public:
 private:
     // Plotms parent.
     plotms *p;
+
 };
 
 class plotms_app  {
@@ -97,3 +98,4 @@ void setFlagging_(const PlotMSFlagging& flagging);
 
 // Bool that turns on iteration
 bool doIter_;
+bool scriptClient;
