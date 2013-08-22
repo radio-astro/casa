@@ -34,6 +34,19 @@ def simobserve(
 
     try:
 
+        #########################
+        # some hardcoded variables
+        pbcoeff = 1.13 ##  PB defined as pbcoeff*lambda/d
+        nyquist = 0.5/bpcoeff ## Nyquist spacing = PB*nyquist
+
+        relmargin = .5  # number of PB between edge of model and ptg centers
+        scanlength = 1  # number of integrations per scan
+
+
+
+
+
+
         # RI TODO for inbright=unchanged, need to scale input image to jy/pix
         # according to actual units in the input image
 
@@ -114,10 +127,6 @@ def simobserve(
                    myparams=in_params)
 
 
-
-        # some hardcoded variables that may be reintroduced in future development
-        relmargin = .5  # number of PB between edge of model and pointing centers
-        scanlength = 1  # number of integrations per scan
 
         if type(skymodel) == type([]):
             skymodel = skymodel[0]
@@ -262,7 +271,7 @@ def simobserve(
 
 
         ##################################################################
-        # read antenna file here to get Primary Beam, and estimate maxbase and psfsize
+        # read antenna file here to get Primary Beam, and estimate psfsize
         aveant = -1
         stnx = []  # for later, to know if we read an array in or not
         pb = 0. # primary beam
@@ -341,27 +350,17 @@ def simobserve(
                 padnames = [padnames[sdant]]
                 nant = 1
 
+            # (set back to simdata - there must be an automatic way to do this)
+            casalog.origin('simobserve')
+
             for k in xrange(0,nant): antnames.append('A%02d'%k)
             aveant = stnd.mean()
             # TODO use max ant = min PB instead?
-            # (set back to simdata - there must be an automatic way to do this)
-            casalog.origin('simobserve')
-            pb = 1.2*0.29979/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi # arcsec
+            pb = pbcoeff*0.29979/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi # arcsec
 
             # PSF size
             if uvmode:
-                # approx max baseline, to compare with model_cell:
-#                cx=pl.mean(stnx)
-#                cy=pl.mean(stny)
-#                cz=pl.mean(stnz)
-#                lat,lon,el = util.itrf2loc(stnx,stny,stnz,cx,cy,cz)
-#                maxbase=max(lat)-min(lat) # in meters
-#                maxbase2=max(lon)-min(lon)
-#                if maxbase2>maxbase:
-#                    maxbase=maxbase2
-#                # estimate the psf size from the minimum spatial scale
-#                psfsize = 0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/maxbase*3600.*180/pl.pi # lambda/b converted to arcsec
-#                del cx, cy, cz, lat, lon, maxbase, maxbase2
+                # approx beam, to compare with model_cell:
                 psfsize = util.approxBeam(antennalist,qa.convert(qa.quantity(model_center),'GHz')['value'])
             else: # Single-dish
                 psfsize = pb
@@ -514,7 +513,7 @@ def simobserve(
             if len(pointingspacing) < 1:
                 pointingspacing = "Nyquist"
             if str.upper(pointingspacing)=="NYQUIST":
-                pointingspacing="0.48113PB"
+                pointingspacing="%fPB" % nyquist
             q = re.compile('(\d+.?\d+)\s*PB')
             qq = q.match(pointingspacing.upper())
             if qq:
@@ -524,6 +523,7 @@ def simobserve(
                     return False
                 pointingspacing = "%farcsec" % (float(z[0])*pb)
                 # todo make more robust to nonconforming z[0] strings
+
             if verbose:
                 msg("pointing spacing in mosaic = "+pointingspacing)
             pointings = util.calc_pointings2(pointingspacing,mapsize,maptype=maptype, direction=dir, beam=pb)
@@ -989,6 +989,7 @@ def simobserve(
                 tb.open(msfile)
                 rawdata = tb.getcol("UVW")
                 tb.done()
+                # TODO make this use the 90% baseline as in aU.getBaselineStats
                 maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m
                 if maxbase > 0.:
                     psfsize = 0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/maxbase*3600.*180/pl.pi # lambda/b converted to arcsec

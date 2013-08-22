@@ -3327,3 +3327,10 @@ class simutil:
         return 0.3/freq/ninety*3600.*180/pl.pi # lambda/b converted to arcsec
 
         
+    def is_array_type(self,value):
+        array_type = [list, tuple, numpy.ndarray]
+        if type(value) in array_type:
+            return True
+        else:
+            return False
+
