@@ -523,12 +523,16 @@ def getScanSpwSummary(mslist=[]):
     
     # Loop through all MSs
     for subms in mslist:
-        mslocal1.open(subms)
-        scans = mslocal1.getscansummary()
-        msscanlist.append(scans)
-        spws = mslocal1.getspectralwindowinfo()
-        msspwlist.append(spws)
-        mslocal1.close()
+        try:
+            mslocal1.open(subms)
+            scans = mslocal1.getscansummary()
+            msscanlist.append(scans)
+            spws = mslocal1.getspectralwindowinfo()
+            msspwlist.append(spws)
+            mslocal1.close()
+        except:
+            mslocal1.close()
+            raise Exception, 'Cannot get scan/spw information from subMS'
 
         # Get the data volume in bytes per sub-MS
         sizelist.append(getDiskUsage(subms))
@@ -595,7 +599,7 @@ def getScanSpwSummary(mslist=[]):
                 
             
         outdict[ims] = tempdict
-#            pprint.pprint(outdict)
+    #pprint.pprint(outdict)
 
     return outdict
 
