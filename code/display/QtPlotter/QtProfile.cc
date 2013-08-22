@@ -1662,7 +1662,7 @@ namespace casa {
 
 
 
-			if (z_eval.size() > 0) {
+			/*if (z_eval.size() > 0) {
 				for (uInt i = 0; i < z_xval.size(); i++) {
 					ts << z_xval(i) << "    " << scaleFactor*z_yval(i) << "    "  << scaleFactor*z_eval(i) << "\n";
 				}
@@ -1670,11 +1670,11 @@ namespace casa {
 				for (uInt i = 0; i < z_xval.size(); i++) {
 					ts << z_xval(i) << "    " << scaleFactor*z_yval(i) << "\n";
 				}
-			}
+			}*/
 
 
 		int i = pixelCanvas->getLineCount();
-		for (int k = 1; k < i; k++) {
+		for (int k = 0; k < i; k++) {
 			ts << "\n";
 			ts << "# " << pixelCanvas->getCurveName(k) << "\n";
 			CurveData data = pixelCanvas->getCurveData(k);

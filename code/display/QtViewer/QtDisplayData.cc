@@ -538,13 +538,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Initialize colormap if necessary.
 		if(usesClrMap_()) {
-
-			// Check .aipsrc, otherwise use "Hot Metal 1" by default initially.
-
+			// Changing Default color map (see CAS-4081).  If none is found
+			//in .aipsrc, the default will be a greyscale, not rainbow.
 			String defaultCMName;
 			Aipsrc::find(defaultCMName, "display.colormaps.defaultcolormap",
-			             "Rainbow 2");
-
+			             "Greyscale 1");
 			// ...but fall back to "Greyscale 1" unless the above is a valid
 			// ('primary') name.  ('Synonym' colormap names (like "mono") are not
 			// supported at present through this QDD interface).  In case the table

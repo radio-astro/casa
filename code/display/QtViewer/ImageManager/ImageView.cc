@@ -680,10 +680,8 @@ namespace casa {
 		ui.colorGroupBox->setParent( NULL );
 		ui.restGroupBox->setParent( NULL );
 		ui.dataOptionsButton->setParent( NULL );
-
 		minimumSize = SIZE_COLLAPSED;
-		QIcon openIcon( ":/icons/imageMaximize.png");
-		ui.openCloseButton->setIcon( openIcon );
+		ui.openCloseButton->setText( "Options...");
 	}
 
 	void ImageView::maximizeDisplay() {
@@ -694,8 +692,7 @@ namespace casa {
 		ui.widgetLayout->addSpacerItem( spacerLast );
 		ui.displayOptionsLayout->insertWidget( 1, ui.dataOptionsButton );
 		minimumSize = SIZE_EXPANDED;
-		QIcon closeIcon( ":/icons/imageMinimize.png");
-		ui.openCloseButton->setIcon( closeIcon );
+		ui.openCloseButton->setText( "Close" );
 	}
 
 
