@@ -1097,7 +1097,7 @@ void NewMSSimulator::observe(const String& sourceName,
 			     const Bool state_ref=True,
 			     const double& state_cal=0.,
 			     const double& state_load=0.,
-			     const unsigned int state_sub_scan=0,
+			     const unsigned int state_sub_scan=1,
 			     const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE",
 			     const String& observername="CASA simulator",
 			     const String& projectname="CASA simulation")
@@ -1126,7 +1126,7 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
 			     const Bool state_ref=True,
 			     const double& state_cal=0.,
 			     const double& state_load=0.,
-			     const unsigned int state_sub_scan=0,
+			     const unsigned int state_sub_scan=1,
 			     const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE",
 			     const String& observername="CASA simulator",
 			     const String& projectname="CASA simulation")
@@ -1384,7 +1384,7 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
   Int nMSRows=ms_p->nrow();
 
   // init counters past end
-  Int scan=-1;
+  Int scan=0;
   
   if(nMSRows>0) {
     msc.scanNumber().get(nMSRows-1,scan);
