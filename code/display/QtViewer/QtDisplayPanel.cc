@@ -733,7 +733,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void QtDisplayPanel::ddCreated_(QtDisplayData* qdd, Bool autoRegister,
 			int position ) {
 		// DP actions to take when viewer signals new DD creation.
-
 		if(autoRegister) {
 			registerDD_(qdd, position );
 			emit newRegisteredDD(qdd);
@@ -769,10 +768,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void QtDisplayPanel::registerDD_(QtDisplayData* qdd, int position ) {
+
 		// Internal method, called by public register method above,
 		// or in reaction to new DD creation (ddCreated_() slot).
 		// Precondition: isUnregistered(qdd) should be True before this is called.
 		displayDataHolder->addDD( qdd, position, true );
+
 		DisplayData* dd = qdd->dd();
 
 		hold();
@@ -819,6 +820,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		rgnImgPath_ = qdd->path();
 		qdd->registerNotice(this);	// Let QDD know.
 		release();
+
+
 	}
 
 
@@ -888,6 +891,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		else {
 			pd_->setCSmaster( NULL );
 		}
+		displayDataHolder->setDDControlling( controllingDD );
 	}
 
 

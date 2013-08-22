@@ -924,6 +924,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				}
 			}
 		}
+
 		if ( change == viewer::region::RegionChangeCreate ||
 		        change == viewer::region::RegionChangeUpdate ||
 		        change == viewer::region::RegionChangeModified ) {
@@ -951,18 +952,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void QtDisplayPanelGui::resetHistogram( viewer::Region* region ) {
 		if ( region != NULL && histogrammer != NULL ) {
-			/*List<QtDisplayData*> rdds = qdp_->registeredDDs();
-			for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
-				QtDisplayData* pdd = qdds.getRight();
-				if(pdd != 0 && pdd->dataType() == "image") {
-					ImageInterface<float>* img = pdd->imageInterface();
-					PanelDisplay* ppd = qdp_->panelDisplay();
-					if (ppd != 0 && img != 0) {
-						DisplayData* displayData = pdd->dd();
-						if (ppd->isCSmaster(displayData)) {*/
 			QtDisplayData* controllingDD = dd();
 			if ( controllingDD != NULL ) {
-				ImageRegion* imageRegion = region->getImageRegion(/*displayData*/controllingDD->dd());
+				ImageRegion* imageRegion = region->getImageRegion(controllingDD->dd());
 				if ( imageRegion != NULL ) {
 					int regionId = region->getId();
 					histogrammer->setImageRegion( imageRegion, regionId );
@@ -1206,8 +1198,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		qdd->setName(name);
 		qdd->setPlotTitle();
 		status( "loaded: " + qdd->path( ) );
+
+		//By default if there are no images,
+		//we make it the master coordinate image, provided
+		//we don't already have a master coordinate image.
+		QtDisplayData* controllingData = displayDataHolder->getDDControlling();
+		if ( controllingData == NULL && autoRegister ){
+			int imageCount = displayDataHolder->getCount();
+			if (imageCount == 0 ){
+				masterCoordinate = true;
+			}
+		}
 		displayDataHolder->addDD( qdd, insertPosition, autoRegister,
-				masterCoordinate, masterSaturation, masterHue );
+				masterCoordinate, masterSaturation,	 masterHue );
 		emit ddCreated(qdd, autoRegister, insertPosition);
 		updateFrameInformation();
 		if ( regionDock_ ) {
@@ -1294,7 +1297,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		return boundedChannel;
 	}
-
+	void QtDisplayPanelGui::addDDSlot(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img) {
+		std::tr1::shared_ptr<ImageInterface<Float> > imgPtr(img);
+		addDD( path, dataType, displayType, autoRegister, tmpData, imgPtr );
+	}
 
 	void QtDisplayPanelGui::addDD(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, std::tr1::shared_ptr<ImageInterface<Float> > img) {
 		// create a new DD
@@ -1549,11 +1555,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	QtDisplayData* QtDisplayPanelGui::dd(const std::string& name) {
 		// retrieve DD with given name (0 if none).
-
 		QtDisplayData* qdd = displayDataHolder->getDD(name);
-		/*for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
-			if( (qdd=qdds.getRight())->name() == name ) return qdd;  }
-		return 0;*/
 		return qdd;
 	}
 
@@ -1581,11 +1583,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		QtDisplayData* controlling_dd = displayDataHolder->getDDControlling();
 		if ( controlling_dd == 0 ) {
 			controlling_dd = lookForExistingController();
-			if ( controlling_dd != 0 ) {
+			/*if ( controlling_dd != 0 ) {
 				emit axisToolUpdate( controlling_dd );
-				connect( controlling_dd, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
-				         SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
-			}
+				//The connection below represents a threading problem.  Arrays should
+				//not be passed between threads because they are not deep copied. To
+				//reproduce the threading problem, uncomment the code, set the coordinate
+				//system master to NULL and then try to bring up the histogram tool.
+				//connect( controlling_dd, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
+				  //       SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
+			}*/
 		}
 		return controlling_dd;
 	}
@@ -2136,8 +2142,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 									profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
 							connect( pdd, SIGNAL(spectrumChanged(String, String, String )),
 									profile_, SLOT(changeSpectrum(String, String, String )));
-							connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool, ImageInterface<Float>*)),
-									this, SLOT(addDD(String, String, String, Bool, Bool, ImageInterface<Float>*)));
+							connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool, ImageInterface<Float>* )),
+									this, SLOT(addDDSlot(String, String, String, Bool, Bool, ImageInterface<Float>*)));
 							connect(profile_, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
 							connect( this, SIGNAL(frameChanged(int)), profile_, SLOT(frameChanged(int)));
 							connect( profile_, SIGNAL(movieChannel(int,int)), this, SLOT(movieChannels(int, int)));

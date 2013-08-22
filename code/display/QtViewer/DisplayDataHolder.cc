@@ -73,14 +73,17 @@ namespace casa {
 	void DisplayDataHolder::setDDControlling( QtDisplayData* controlDD ) {
 		//The control dd can be just an open image.  It does not even
 		//need to be in the list of registered images.
-		if ( controlling_dd != controlDD || controlDD == NULL) {
+		if ( controlling_dd != controlDD || ( controlDD == NULL && controlling_dd != NULL)) {
+			//Important for the statement below to be first so we don't
+			//get into an infinite loop.
+			controlling_dd = controlDD;
 			if ( imageTracker != NULL ) {
 				imageTracker->masterImageSelected( controlDD );
 			}
 			if ( imageDisplayer != NULL ) {
 				imageDisplayer->setControllingDD( controlDD );
 			}
-			controlling_dd = controlDD;
+
 		}
 	}
 
@@ -159,6 +162,9 @@ namespace casa {
 					i++;
 				}
 				dataList.insert( iter, dd );
+			}
+			if ( masterCoordinate ){
+				setDDControlling( dd );
 			}
 			if ( imageTracker != NULL ) {
 				imageTracker->imageAdded( dd, position, autoRegister, masterCoordinate, masterSaturation, masterHue );

@@ -667,6 +667,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void add2DFitOverlay( QList<RegionShape*> fitMarkers );
 		void remove2DFitOverlay( QList<RegionShape*> fitMarkers );
 		void addResidualFitImage( String path );
+		virtual void addDDSlot(String path, String dataType, String displayType, Bool autoRegister=True, Bool tmpData=False, ImageInterface<Float>* img = NULL);
 		void sliceChanged( int regionId, viewer::region::RegionChanges change,
 		                   const QList<double> & worldX, const QList<double> & worldY,
 		                   const QList<int> &pixelX, const QList<int> & pixelY );

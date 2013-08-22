@@ -589,18 +589,7 @@ namespace casa {
 			return;
 		}
 
-		//By default if there are no registered images, and this one will
-		//be registered, we make it the master coordinate image, provided
-		//we don't already have a master coordinate image.
-		if ( autoRegister ){
-			QtDisplayData* displayData = imageScroll->getCoordinateMaster();
-			if ( displayData == NULL ){
-				int registeredCount = imageScroll->getRegisteredCount();
-				if (registeredCount == 0 ){
-					masterCoordinate = true;
-				}
-			}
-		}
+
 		imageScroll->addImageView( image, autoRegister, position,
 				masterCoordinate, masterSaturation, masterHue);
 

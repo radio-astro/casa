@@ -1178,7 +1178,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
              std::vector<double> new_velocities(image_properties.velocities( ));
              if ( new_velocities.size( ) > 0 ) {
                   bool matched = true;
-                  unsigned int COUNT=0;
+                  //unsigned int COUNT=0;
                   for ( std::vector<double>::iterator newiter=new_velocities.begin( ), controliter=controlling_velocities.begin( );
                         newiter != new_velocities.end( ) && controliter != controlling_velocities.end( );
                         ++newiter, ++controliter ) {
