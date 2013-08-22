@@ -351,17 +351,18 @@ def simobserve(
             # PSF size
             if uvmode:
                 # approx max baseline, to compare with model_cell:
-                cx=pl.mean(stnx)
-                cy=pl.mean(stny)
-                cz=pl.mean(stnz)
-                lat,lon,el = util.itrf2loc(stnx,stny,stnz,cx,cy,cz)
-                maxbase=max(lat)-min(lat) # in meters
-                maxbase2=max(lon)-min(lon)
-                if maxbase2>maxbase:
-                    maxbase=maxbase2
-                # estimate the psf size from the minimum spatial scale
-                psfsize = 0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/maxbase*3600.*180/pl.pi # lambda/b converted to arcsec
-                del cx, cy, cz, lat, lon, maxbase, maxbase2
+#                cx=pl.mean(stnx)
+#                cy=pl.mean(stny)
+#                cz=pl.mean(stnz)
+#                lat,lon,el = util.itrf2loc(stnx,stny,stnz,cx,cy,cz)
+#                maxbase=max(lat)-min(lat) # in meters
+#                maxbase2=max(lon)-min(lon)
+#                if maxbase2>maxbase:
+#                    maxbase=maxbase2
+#                # estimate the psf size from the minimum spatial scale
+#                psfsize = 0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/maxbase*3600.*180/pl.pi # lambda/b converted to arcsec
+#                del cx, cy, cz, lat, lon, maxbase, maxbase2
+                psfsize = util.approxBeam(antennalist,qa.convert(qa.quantity(model_center),'GHz')['value'])
             else: # Single-dish
                 psfsize = pb
                 # check for model size
@@ -1116,7 +1117,7 @@ def simobserve(
                 msg("telescopename read from "+noisymsroot+".ms: "+telescopename)
 
             if telescopename not in knowntelescopes:
-                msg("thermal noise only works properly for ALMA/ACA or EVLA",origin="noise",priority="warn")
+                msg("thermal noise only works properly for ALMA/ACA, (J)VLA, and SMA",origin="noise",priority="warn")
             eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp(telescope=telescopename,freq=model_center)
 
             # antenna efficiency

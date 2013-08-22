@@ -155,6 +155,99 @@ class simutil:
 
     ###########################################################
 
+    def msg2(self, s, out=None, origin=None, priority=None):
+        # new version that specifies output to Logger, Terminal, and/or
+        # File (self.reportfile) as ['l','t','f']
+        # 
+        # ansi color codes:
+        # Foreground colors
+        # 30    Black
+        # 31    Red
+        # 32    Green
+        # 33    Yellow
+        # 34    Blue
+        # 35    Magenta
+        # 36    Cyan
+        # 37    White
+        
+        if out==None:
+            out=self.msg2_out
+
+        if type(out)==type(" "):
+            out=[out]
+
+        toterm=False
+        if priority==None:
+            clr="\x1b[32m"
+            priority="INFO"
+        else:
+            priority=priority.upper()
+            if priority=="WARN":
+                clr="\x1b[35m"                
+                toterm=True
+                priority="INFO" # otherwise casalog will spew to term also.
+            else:
+                if priority=="ERROR":
+                    clr="\x1b[31m"
+                    toterm=False  # casalog spews severe to term already
+                else:
+                    if not (priority=="DEBUG" or priority[:-1]=="DEBUG"):
+                        priority="INFO"
+        bw="\x1b[0m"
+        if origin==None:
+            origin="simutil"            
+
+        if out.count('t'):
+            toterm=True
+
+        if toterm:
+            print clr+"["+origin+"] "+bw+s
+
+        if out.count('f'):
+            if self.isreport():
+                self.report.write(s+"\n")
+            else:
+                raise Exception, "ERROR: Attempt to write to report file failed."
+
+        if priority=="ERROR":
+            #return False
+            raise Exception, s
+        else:
+            if out.count('l'):
+                casalog.post(s,priority=priority,origin=origin)
+
+
+    ###########################################################
+
+    def isreport(self):
+        # is there an open report file?
+        try:
+            if self.report.name() == self.reportfile:
+                return True
+            else:
+                return False                
+        except:
+            return False
+    
+
+    def openreport(self):
+        try:
+            if os.path.exists(self.reportfile):
+                msg("Report file "+self.reportfile+"already exists - delete or change reportfile",priority="ERROR",origin="simutil")
+        except:
+            msg("Can't open reportfile because it's not defined",priority="ERROR",origin="simutil")
+        self.report=open(self.reportfile,"w")
+               
+
+    def closereport(self):
+        self.report.close()
+        
+
+    
+
+
+    ###########################################################
+
     def isquantity(self,s,halt=True):
         if type(s)!=type([]):
             t=[s]
@@ -3181,3 +3274,56 @@ class simutil:
                     yy.append(-y)
         
         return xx,yy
+
+
+
+
+######################################
+    # adapted from aU.getBaselineStats
+    def baselineLengths(self, configfile):
+        stnx, stny, stnz, stnd, padnames, nAntennas, telescopename = self.readantenna(configfile)
+        
+        cx=pl.mean(stnx)
+        cy=pl.mean(stny)
+        cz=pl.mean(stnz)
+        lat,lon,el = util.itrf2loc(stnx,stny,stnz,cx,cy,cz)
+        
+        #l = {}
+        neighborlist = []
+        maxlength = 0
+        minlength = 1e9
+        mylengths = pl.zeros([nAntennas,nAntennas])
+
+        for i in range(nAntennas):
+            neighborlist.append([names[i]])
+            # For the ith antenna, we now measure each baseline, and if it is less
+            # than half the specified criterion, we add it to the neighborlist for
+            # the ith antenna.  This will yield a group of antennas within a circle
+            # of diameter of length centered near the ith antenna.
+            for j in range(i+1,nAntennas):
+                x = lat[i]-lat[j]
+                y = lon[i]-lon[j]
+                z =  el[i]- el[j]
+                mylengths[i][j] = (x**2 + y**2 + z**2)**0.5
+                if (mylengths[i][j] > maxlength):
+                    maxlength = mylengths[i][j]
+                if (mylengths[i][j] < minlength):
+                    minlength = mylengths[i][j]
+                #l['%s-%s'%(names[i],names[j])] = mylengths[i][j]
+    
+        print "Found %d baselines" % (len(l))
+        
+    return mylengths
+
+
+######################
+    def approxBeam(self,configfile,freq):
+        # freq must be in GHz
+        lengths=self.baselineLengths(configfile)
+        rmslength = pl.sqrt(pl.mean(lengths.flatten()**2))
+        from scipy.stats import scoreatpercentile
+        ninety = scoreatpercentile(mylengths, 90)
+
+        return 0.3/freq/ninety*3600.*180/pl.pi # lambda/b converted to arcsec
+
+        
