@@ -25,7 +25,6 @@
 //#
 //# $Id: $
 #include <casadbus/utilities/Conversion.h>
-#include <dbus-cpp/dbus.h>
 
 
 namespace casa {

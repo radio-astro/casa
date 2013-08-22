@@ -40,8 +40,13 @@
 #ifndef DBUS_DISPATCHER_H_
 #define DBUS_DISPATCHER_H_
 
+#if defined(NEWDBUS)
 #include <dbus-cpp/dbus.h>
 #include <dbus-cpp/connection.h>
+#else
+#include <dbus-c++/dbus.h>
+#include <dbus-c++/connection.h>
+#endif
 
 namespace casa {
     namespace dbus {

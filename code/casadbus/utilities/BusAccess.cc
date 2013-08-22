@@ -108,7 +108,9 @@ namespace casa {
 
 	address::~address( ) {
         casa::DBusSession &session = casa::DBusSession::instance( );
+#if defined(NEWDBUS)
 		session.connection( ).release_name(name_.c_str( ));
+#endif
 	}
 
 
