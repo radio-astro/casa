@@ -29,7 +29,7 @@
 
 #include <casa/Containers/Record.h>
 #include <graphics/GenericPlotter/PlotFactory.h>
-#include <plotms/Actions/PlotMSThread.qo.h>
+//#include <plotms/Threads/PlotMSThread.qo.h>
 #include <plotms/PlotMS/PlotMSWatchedParameters.h>
 
 #include <casa/namespace.h>

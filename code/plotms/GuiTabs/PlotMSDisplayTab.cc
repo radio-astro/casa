@@ -40,7 +40,7 @@ namespace casa {
 //////////////////////////////////
 
 PlotMSDisplayTab::PlotMSDisplayTab(PlotMSPlotTab* tab, PlotMSPlotter* parent) :
-        PlotMSPlotSubtab(tab, parent), itsPDisplay_(parent->getFactory()) {
+        PlotMSPlotSubtab(tab, parent), itsPDisplay_(parent->getPlotFactory()) {
     setupUi(this);
     
     // Setup widgets.
@@ -49,7 +49,7 @@ PlotMSDisplayTab::PlotMSDisplayTab(PlotMSPlotTab* tab, PlotMSPlotter* parent) :
     hideIndex();
     
     itsTitleWidget_ = new QtLabelWidget(PMS::DEFAULT_TITLE_FORMAT);
-    PlotFactoryPtr factory = parent->getFactory();
+    PlotFactoryPtr factory = parent->getPlotFactory();
     itsSymbolWidget_ = new PlotSymbolWidget(factory,
             PMS::DEFAULT_UNFLAGGED_SYMBOL(factory), false, false, false,false);
     itsMaskedSymbolWidget_ = new PlotSymbolWidget(factory,

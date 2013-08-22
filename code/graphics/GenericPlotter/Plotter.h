@@ -98,6 +98,9 @@ public:
     // Sets the plotter GUI size in pixels
     virtual void setSize(int width, int height) = 0;
     
+    //Set the size of cached axes stack image
+    virtual void setCanvasCachedAxesStackImageSize( int width, int height );
+
     // Returns the plotter window's title.
     virtual String windowTitle() const = 0;
     
@@ -282,6 +285,9 @@ public:
     // exactly one PlotLogger per Plotter.
     virtual PlotLoggerPtr logger() const;
     
+    virtual bool exportPlot(const PlotExportFormat& format) = 0;
+    bool isVisible(PlotCanvasPtr& canvas );
+
 protected:
     // Logger.
     PlotLoggerPtr m_logger;

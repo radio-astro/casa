@@ -114,10 +114,22 @@ public:
     using PlotCanvas::setLegendFont;
 
 
+
     // PlotCanvas Methods //
     
     // Implements PlotCanvas::size().
     pair<int, int> size() const;
+    virtual void setMinimumSize( int width, int height ){
+    	QFrame::setMinimumSize( width, height );
+    }
+
+    virtual void show(){
+    	QFrame::show();
+    }
+
+    virtual void hide(){
+    	QFrame::show();
+    }
 
     // Implements PlotCanvas::title().
     String title() const;

@@ -30,7 +30,7 @@
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Plots/PlotMSSinglePlot.h>
 
-#include <casa/namespace.h>
+//#include <casa/namespace.h>
 
 namespace casa {
 
@@ -66,7 +66,7 @@ public:
     vector<PlotCanvasPtr> canvases() const;
     
     // Implements PlotMSPlot::setupPlotSubtabs().
-    void setupPlotSubtabs(PlotMSPlotTab& tab) const;
+    void setupPlotSubtabs(/*PlotMSPlotTab*/PlotInformationManager& tab) const;
     
     // Implements PlotMSPlot::attachToCanvases().
     void attachToCanvases();

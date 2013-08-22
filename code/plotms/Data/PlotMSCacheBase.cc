@@ -26,7 +26,7 @@
 //# $Id: $
 #include <plotms/Data/PlotMSCacheBase.h>
 #include <plotms/Data/PlotMSIndexer.h>
-
+#include <plotms/Threads/ThreadCommunication.h>
 #include <casa/OS/Timer.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/OS/Memory.h>
@@ -141,9 +141,8 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 			   const PlotMSSelection& selection,
 			   const PlotMSAveraging& averaging,
 			   const PlotMSTransformations& transformations,
-			   PlotMSCacheThread* thread) {
+			   ThreadCommunication* thread) {
 
-  //cout << "PlotMSCacheBase::load" << endl;
 
     // TBD: 
     // o Should we have ONE PtrBlock to a list of Records, each of which
@@ -443,9 +442,8 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange, Bool g
 
   logLoad("Setting up iteration indexing (if necessary), and calculating plot ranges.");
 
-  //  cout << "############ PlotMSCacheBase::setUpIndexer: " << PMS::axis(iteraxis) 
-  //       << " cacheReady() = " << boolalpha << cacheReady() << endl;
-
+    cout << "############ PlotMSCacheBase::setUpIndexer: " << PMS::axis(iteraxis)
+         << " cacheReady() = " << boolalpha << cacheReady() << endl;
   Int nIter=0;
   Vector<Int> iterValues;
 
@@ -549,7 +547,7 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange, Bool g
     logLoad(ss.str());
   }
   
-  //  cout << "********nIter = " << nIter << " iterValues = " << iterValues(IPosition(1,0),IPosition(1,nIter-1)) << endl;
+   cout << "********nIter = " << nIter << " iterValues = " << iterValues(IPosition(1,0),IPosition(1,nIter-1)) << endl;
 
   deleteIndexer();
   indexer_.resize(nIter);

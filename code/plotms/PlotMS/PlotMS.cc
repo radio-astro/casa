@@ -28,6 +28,11 @@
 
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMSDBusApp.h>
+#include <plotms/Client/ClientFactory.h>
+#include <plotms/Actions/ActionFactory.h>
+#include <plotms/Actions/ActionCacheLoad.h>
+
+#include <QDebug>
 
 namespace casa {
 
@@ -52,13 +57,14 @@ namespace casa {
 
 // Constructors/Destructors //
 
-PlotMSApp::PlotMSApp(bool connectToDBus) : itsDBus_(NULL) {
-    initialize(connectToDBus); }
+PlotMSApp::PlotMSApp(bool connectToDBus, bool userGui) : itsDBus_(NULL) {
+    initialize(connectToDBus, userGui);
+}
 
-PlotMSApp::PlotMSApp(const PlotMSParameters& params, bool connectToDBus) :
-        itsPlotter_(NULL), itsParameters_(params), itsDBus_(NULL) 
-{
-    initialize(connectToDBus); 
+PlotMSApp::PlotMSApp(const PlotMSParameters& params, bool connectToDBus,
+		bool userGui) :
+        itsPlotter_(NULL), itsParameters_(params), itsDBus_(NULL) {
+    initialize(connectToDBus, userGui);
 }
 
 PlotMSApp::~PlotMSApp() {
@@ -68,7 +74,7 @@ PlotMSApp::~PlotMSApp() {
 
 // Public Methods //
 
-PlotMSPlotter* PlotMSApp::getPlotter() { return itsPlotter_; }
+//PlotMSPlotter* PlotMSApp::getPlotter() { return itsPlotter_; }
 void PlotMSApp::showGUI(bool show) { itsPlotter_->showGUI(show); }
 bool PlotMSApp::guiShown() const { return itsPlotter_->guiShown(); }
 int PlotMSApp::execLoop() { return itsPlotter_->execLoop(); }
@@ -96,34 +102,59 @@ void PlotMSApp::parametersHaveChanged(const PlotMSWatchedParameters& params,
         itsLogger_->setFilterMinPriority(itsParameters_.logPriority());
         
         pair<int, int> cis = itsParameters_.cachedImageSize();
-        if(itsPlotter_ != NULL && !itsPlotter_->getPlotter().null() &&
+        /*if(itsPlotter_ != NULL && !itsPlotter_->getPlotter().null() &&
            !itsPlotter_->getPlotter()->canvasLayout().null()) {
             vector<PlotCanvasPtr> canv = itsPlotter_->getPlotter()
                                      ->canvasLayout()->allCanvases();
             for(unsigned int i = 0; i < canv.size(); i++)
                 if(!canv[i].null())
                     canv[i]->setCachedAxesStackImageSize(cis.first,cis.second);
+        }*/
+        if ( itsPlotter_ != NULL ){
+        	itsPlotter_->setCanvasCachedAxesStackImageSize( cis.first, cis.second );
         }
     }
+}
+
+PlotSymbolPtr PlotMSApp::createSymbol( const PlotSymbolPtr& copy ){
+	PlotSymbolPtr symbol;
+	if ( itsPlotter_ != NULL ){
+		symbol = itsPlotter_->createSymbol( copy );
+	}
+	return symbol;
+}
+
+PlotSymbolPtr PlotMSApp::createSymbol (const String& descriptor,
+    		Int size, const String& color,
+        	const String& fillPattern, bool outline ){
+	PlotSymbolPtr symbol;
+	if ( itsPlotter_ != NULL ){
+		symbol = itsPlotter_->createSymbol( descriptor, size, color, fillPattern, outline );
+	}
+	return symbol;
 }
 
 PlotLoggerPtr PlotMSApp::getLogger() { return itsLogger_; }
 PlotMSPlotManager& PlotMSApp::getPlotManager() { return itsPlotManager_; }
 
-PlotMSPlot* PlotMSApp::addSinglePlot(const PlotMSPlotParameters* p) {
+/*PlotMSPlot* PlotMSApp::addSinglePlot(const PlotMSPlotParameters* p) {
     return itsPlotManager_.addSinglePlot(p); }
-
-PlotMSPlot* PlotMSApp::addMultiPlot(const PlotMSPlotParameters* p) {
+*/
+/*PlotMSPlot* PlotMSApp::addMultiPlot(const PlotMSPlotParameters* p) {
     return itsPlotManager_.addMultiPlot(p); }
-
-PlotMSPlot* PlotMSApp::addIterPlot(const PlotMSPlotParameters* p) {
+*/
+/*PlotMSPlot* PlotMSApp::addIterPlot(const PlotMSPlotParameters* p) {
     return itsPlotManager_.addIterPlot(p); }
-
+*/
 PlotMSOverPlot* PlotMSApp::addOverPlot(const PlotMSPlotParameters* p) {
     return itsPlotManager_.addOverPlot(p); }
 
 bool PlotMSApp::isDrawing() const {
 	return itsPlotter_->isDrawing();
+}
+
+void PlotMSApp::setAnnotationModeActive( PlotMSAction::Type type, bool active ){
+	itsPlotter_->setAnnotationModeActive( type, active );
 }
 
 bool PlotMSApp::isClosed() const {
@@ -135,17 +166,74 @@ bool PlotMSApp::save(const PlotExportFormat& format, const bool interactive) {
 	return itsPlotter_->exportPlot(format, interactive, false);
 }
 
+PlotFactoryPtr PlotMSApp::getPlotFactory(){
+	return itsPlotter_->getPlotFactory();
+}
+
+void PlotMSApp::quitApplication(){
+	CountedPtr<PlotMSAction> quitAction = ActionFactory::getAction( PlotMSAction::QUIT, NULL );
+	quitAction->doAction( this );
+}
+
+PlotMSFlagging PlotMSApp::getFlagging() const {
+	return itsPlotter_->getFlagging();
+}
+
+void PlotMSApp::setFlagging(PlotMSFlagging flag){
+	itsPlotter_->setFlagging( flag );
+}
+
+void PlotMSApp::canvasAdded( PlotCanvasPtr canvas ){
+	itsPlotter_->canvasAdded( canvas );
+}
+
+bool PlotMSApp::exportToFormat(const PlotExportFormat& format){
+	return itsPlotter_->exportToFormat( format );
+}
+
+bool PlotMSApp::isVisible(PlotCanvasPtr& canvas ) {
+	return itsPlotter_->isVisible( canvas );
+}
+
+Record PlotMSApp::locateInfo( Bool& success, String& errorMessage ){
+	CountedPtr<PlotMSAction> action = ActionFactory::getAction(PlotMSAction::SEL_INFO, NULL );
+	Record retval;
+	success = action->doActionWithResponse( this, retval );
+	if(! success ) {
+		errorMessage = action->doActionResult();
+	}
+	return retval;
+}
+
+PlotterPtr PlotMSApp::getPlotter(){
+	return itsPlotter_->getPlotter();
+}
+
+bool PlotMSApp::updateCachePlot( PlotMSPlot* plot,
+		void (*f)(void*, bool), bool setupPlot){
+	 ActionCacheLoad loadCacheAction( itsPlotter_, plot, f);
+	 bool threading = itsPlotter_->isInteractive();
+
+	 loadCacheAction.setUseThreading( threading );
+	 loadCacheAction.setSetupPlot( setupPlot );
+	 bool result = loadCacheAction.doAction( this );
+	 return result;
+}
 // Private Methods //
 
-void PlotMSApp::initialize(bool connectToDBus) {
+void PlotMSApp::initialize(bool connectToDBus, bool userGui ) {
 
 	its_want_avoid_popups=false;
 	
     itsParameters_.addWatcher(this);
-    
-    itsPlotter_ = new PlotMSPlotter(this);
-    itsPlotter_->showIterationButtons(true);
-    itsLogger_ = itsPlotter_->getPlotter()->logger();
+    ClientFactory::ClientType clientType = ClientFactory::GUI;
+    if ( !userGui ){
+    	clientType = ClientFactory::SCRIPT;
+    }
+
+    itsPlotter_ = ClientFactory::makeClient( clientType, this );
+    //itsPlotter_->showIterationButtons(true);
+    itsLogger_ = itsPlotter_->getLogger();
     
     itsPlotManager_.setParent(this);
     

@@ -27,6 +27,7 @@
 #ifndef QTPROGRESSWIDGET_QO_H_
 #define QTPROGRESSWIDGET_QO_H_
 
+#include <graphics/GenericPlotter/ProgressMonitor.h>
 #include <casaqt/QtUtilities/QtProgressCompactWidget.ui.h>
 #include <casaqt/QtUtilities/QtProgressWidget.ui.h>
 
@@ -37,7 +38,7 @@ namespace casa {
 // GUI for displaying progress information.  It also shows "background",
 // "cancel", and "pause/resume" buttons for the user.  The parent of this
 // widget is responsible for implementing these behaviors as needed.
-class QtProgressWidget : public QWidget {
+class QtProgressWidget : public QWidget, public ProgressMonitor {
     Q_OBJECT
     
 public:
@@ -57,6 +58,9 @@ public:
     // Returns the mutex used for this widget.
     QMutex& mutex();
     
+    void initialize( const String& operationName );
+    void setProgress(unsigned int progress, const String& status);
+
 public slots:
     // Initializes the GUI with the given operation name.  Should be called
     // before the operation starts.

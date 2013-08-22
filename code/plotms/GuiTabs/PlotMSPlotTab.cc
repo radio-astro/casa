@@ -38,7 +38,7 @@
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <plotms/Plots/PlotMSIterPlot.h>
-
+#include <QDebug>
 namespace casa {
 
 //////////////////////////////////
@@ -183,7 +183,7 @@ PlotMSPlot* PlotMSPlotTab::currentPlot() const { return itsCurrentPlot_; }
 
 
 PlotMSPlotParameters PlotMSPlotTab::currentlySetParameters() const {
-    PlotMSPlotParameters params(itsPlotter_->getFactory());
+    PlotMSPlotParameters params(itsPlotter_->getPlotFactory());
     if(itsCurrentParameters_ != NULL) params = *itsCurrentParameters_;
     
     foreach(PlotMSPlotSubtab* tab, itsSubtabs_) tab->getValue(params);
@@ -258,10 +258,7 @@ void PlotMSPlotTab::plot() {
 		PlotMSSelection &sel = (PlotMSSelection &)d->selection();
 		sel.setForceNew(forceReloadCounter_);
 		
-	
-        
         if (paramsChanged || cancelledCache) {
-			
             if (paramsChanged) {
                 // check for "clear selections on axes change" setting
                 if(itsParent_->getParameters().clearSelectionsOnAxesChange() &&
@@ -295,7 +292,7 @@ void PlotMSPlotTab::clearSubtabs() {
     tabWidget->clear();
 }
 
-void PlotMSPlotTab::clearSubtabsAfter(int index) {
+void PlotMSPlotTab::clearAfter(int index) {
     while(index < itsSubtabs_.size()) {
         itsSubtabs_.removeAt(itsSubtabs_.size() - 1);
         tabWidget->removeTab(tabWidget->count() - 1);
@@ -327,7 +324,7 @@ void PlotMSPlotTab::insertSubtab(int index, PlotMSPlotSubtab* tab) {
 
 PlotMSAxesTab*  PlotMSPlotTab::addAxesSubtab ()
 {
-     return insertAxesSubtab (itsSubtabs_.size ());
+     return insertAxesSubtab ( itsSubtabs_.size() );
 }
 
 
@@ -345,7 +342,10 @@ PlotMSAxesTab* PlotMSPlotTab::insertAxesSubtab (int index)
      return tab;
 }
 
-
+void PlotMSPlotTab::insertAxes (int index)
+{
+	insertAxesSubtab( index );
+}
 
 
 PlotMSCacheTab* PlotMSPlotTab::addCacheSubtab ()
@@ -353,7 +353,9 @@ PlotMSCacheTab* PlotMSPlotTab::addCacheSubtab ()
      return insertCacheSubtab (itsSubtabs_.size ());
 }
 
-
+void PlotMSPlotTab::insertCache (int index){
+	insertCacheSubtab( index );
+}
 
 PlotMSCacheTab* PlotMSPlotTab::insertCacheSubtab (int index)
 {
@@ -372,14 +374,16 @@ PlotMSCacheTab* PlotMSPlotTab::insertCacheSubtab (int index)
 
 
 
-PlotMSCanvasTab*  PlotMSPlotTab::addCanvasSubtab ()
-{
+PlotMSCanvasTab*  PlotMSPlotTab::addCanvasSubtab (){
      return insertCanvasSubtab (itsSubtabs_.size ());
 }
 
 
-PlotMSCanvasTab*  PlotMSPlotTab::insertCanvasSubtab (int index)
-{
+void PlotMSPlotTab::insertCanvas (int index){
+	insertCanvasSubtab( index );
+}
+
+PlotMSCanvasTab*  PlotMSPlotTab::insertCanvasSubtab (int index){
      PlotMSCanvasTab *tab = NULL;
      foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
           tab = dynamic_cast < PlotMSCanvasTab * >(t);
@@ -392,18 +396,12 @@ PlotMSCanvasTab*  PlotMSPlotTab::insertCanvasSubtab (int index)
      return tab;
 }
 
-
-
-
-
-PlotMSDataTab*  PlotMSPlotTab::addDataSubtab ()
-{
+PlotMSDataTab*  PlotMSPlotTab::addDataSubtab (){
      return insertDataSubtab (itsSubtabs_.size ());
 }
 
 
-PlotMSDataTab*  PlotMSPlotTab::insertDataSubtab (int index)
-{
+PlotMSDataTab*  PlotMSPlotTab::insertDataSubtab (int index){
      PlotMSDataTab *tab = NULL;
      foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
           tab = dynamic_cast < PlotMSDataTab * >(t);
@@ -416,8 +414,9 @@ PlotMSDataTab*  PlotMSPlotTab::insertDataSubtab (int index)
      return tab;
 }
 
-
-
+void  PlotMSPlotTab::insertData(int index){
+	insertDataSubtab( index );
+}
 
 PlotMSDisplayTab*  PlotMSPlotTab::addDisplaySubtab ()
 {
@@ -425,8 +424,7 @@ PlotMSDisplayTab*  PlotMSPlotTab::addDisplaySubtab ()
 }
 
 
-PlotMSDisplayTab *PlotMSPlotTab::insertDisplaySubtab (int index)
-{
+PlotMSDisplayTab* PlotMSPlotTab::insertDisplaySubtab (int index){
      PlotMSDisplayTab *tab = NULL;
      foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
           tab = dynamic_cast < PlotMSDisplayTab * >(t);
@@ -439,17 +437,19 @@ PlotMSDisplayTab *PlotMSPlotTab::insertDisplaySubtab (int index)
      return tab;
 }
 
+void PlotMSPlotTab::insertDisplay(int index){
+	insertDisplaySubtab( index );
+}
 
-
-
-PlotMSIterateTab*  PlotMSPlotTab::addIterateSubtab ()
-{
+PlotMSIterateTab*  PlotMSPlotTab::addIterateSubtab (){
      return insertIterateSubtab (itsSubtabs_.size ());
 }
 
+void PlotMSPlotTab::insertIterate(int index){
+	insertIterateSubtab( index );
+}
 
-PlotMSIterateTab*  PlotMSPlotTab::insertIterateSubtab (int index)
-{
+PlotMSIterateTab* PlotMSPlotTab::insertIterateSubtab (int index){
      PlotMSIterateTab *tab = NULL;
      foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
           tab = dynamic_cast < PlotMSIterateTab * >(t);
@@ -465,14 +465,15 @@ PlotMSIterateTab*  PlotMSPlotTab::insertIterateSubtab (int index)
 
 
 
-PlotMSExportTab*  PlotMSPlotTab::addExportSubtab ()
-{
+PlotMSExportTab*  PlotMSPlotTab::addExportSubtab (){
      return insertExportSubtab (itsSubtabs_.size ());
 }
 
+void  PlotMSPlotTab::insertExport (int index){
+	insertExportSubtab( index );
+}
 
-PlotMSExportTab*  PlotMSPlotTab::insertExportSubtab (int index)
-{
+PlotMSExportTab*  PlotMSPlotTab::insertExportSubtab (int index){
      PlotMSExportTab *tab = NULL;
      foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
           tab = dynamic_cast < PlotMSExportTab * >(t);
@@ -486,14 +487,12 @@ PlotMSExportTab*  PlotMSPlotTab::insertExportSubtab (int index)
 }
 
 
-PlotMSTransformationsTab*  PlotMSPlotTab::addTransformationsSubtab ()
-{
+PlotMSTransformationsTab*  PlotMSPlotTab::addTransformationsSubtab (){
      return insertTransformationsSubtab (itsSubtabs_.size ());
 }
 
 
-PlotMSTransformationsTab*  PlotMSPlotTab::insertTransformationsSubtab (int index)
-{
+PlotMSTransformationsTab*  PlotMSPlotTab::insertTransformationsSubtab (int index){
      PlotMSTransformationsTab *tab = NULL;
      foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
           tab = dynamic_cast < PlotMSTransformationsTab * >(t);
@@ -507,6 +506,9 @@ PlotMSTransformationsTab*  PlotMSPlotTab::insertTransformationsSubtab (int index
 }
 
 
+void  PlotMSPlotTab::insertTransformations (int index){
+	insertTransformationsSubtab( index );
+}
 
 
 // Private //
@@ -613,7 +615,7 @@ void PlotMSPlotTab::tabChanged() {
         foreach(PlotMSPlotSubtab* tab, itsSubtabs_)
             tab->update(*itsCurrentPlot_);
         
-        itsCurrentPlot_->plotTabHasChanged(*this);
+        //itsCurrentPlot_->plotTabHasChanged(*this);
         
         itsUpdateFlag_ = true;
     }

@@ -39,7 +39,8 @@ namespace casa {
 //# Forward declarations
 class PlotMSApp;
 class PlotMSPages;
-class PlotMSPlotTab;
+//class PlotMSPlotTab;
+class PlotInformationManager;
 
 // Abstract class for a single "plot" concept.  Generally speaking this one
 // plot handles one data source across potentially many scatter plots and
@@ -58,7 +59,7 @@ public:
     // class, using the given PlotMS parent.
     static void makeParameters(PlotMSPlotParameters& params, PlotMSApp* plotms);
     
-    
+    void customizeAutoSymbol( const PlotSymbolPtr& baseSymbol, uInt dataSize  );
     // Non-Static //
     
     // Constructor which takes the parent PlotMS object.  Starts out with
@@ -86,7 +87,7 @@ public:
     
     // Sets up subtabs for the given plot tab, using the add/insert subtab
     // methods.
-    virtual void setupPlotSubtabs(PlotMSPlotTab& tab) const = 0;
+    virtual void setupPlotSubtabs(/*PlotMSPlotTab*/PlotInformationManager& tab) const = 0;
     
     // Attaches/Detaches internal plot objects to their assigned canvases.
     // <group>
@@ -95,7 +96,7 @@ public:
     // </group>
     
     // Called when the GUI settings in the plot tab have changed.
-    virtual void plotTabHasChanged(PlotMSPlotTab& tab) = 0;
+    //virtual void plotTabHasChanged(PlotMSPlotTab& tab) = 0;
     
     
     // IMPLEMENTED METHODS //
@@ -154,11 +155,13 @@ public:
     // Exports canvases associated with this plot to the given format.  Exports
     // to multiple files if the plot has more than one canvas.
     virtual bool exportToFormat(const PlotExportFormat& format);
+    void exportToFormatCancel();
     
     // This method should be called when the given canvas (which was owned by
     // this plot) was disowned.
     virtual void canvasWasDisowned(PlotCanvasPtr canvas);
-    
+    vector<PMS::Axis> getCachedAxes();
+    vector<PMS::DataColumn> getCachedData();
 protected:
     // ABSTRACT METHODS //
     
@@ -227,6 +230,10 @@ private:
     PlotMSPlot(const PlotMSPlot& copy);
     PlotMSPlot& operator=(const PlotMSPlot& copy);
     // </group>
+
+    static const uInt PIXEL_THRESHOLD;
+    static const uInt MEDIUM_THRESHOLD;
+    static const uInt LARGE_THRESHOLD;
 };
 
 }

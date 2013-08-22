@@ -64,9 +64,10 @@ String MSCache::polname(Int ipol) {
 
 void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 		     vector<PMS::DataColumn>& loadData,
-		     PlotMSCacheThread* thread) {
+		     ThreadCommunication* thread) {
 
   {
+
     // Check if scr cols present
     Bool corcolOk(False);
     const ColumnDescSet cds=Table(filename_).tableDesc().columnDescSet();
@@ -216,14 +217,11 @@ void MSCache::setUpVisIter(const String& msname,
 }
       
 void MSCache::countChunks(ROVisibilityIterator& vi,
-			  PlotMSCacheThread* ) {  // thread) {
-
-  /*
+			  ThreadCommunication* thread ) {
   if (thread!=NULL) {
     thread->setStatus("Establishing cache size.  Please wait...");
     thread->setAllowedOperations(false,false,false);
   }
-  */
 
   // This is the old way, with no averaging over chunks.
 
@@ -237,16 +235,15 @@ void MSCache::countChunks(ROVisibilityIterator& vi,
   int chunk = 0;
   for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
 
-    /*
     if (thread!=NULL) {
       if (thread->wasCanceled()) {
-	dataLoaded_=false;
-	return;
+    	  dataLoaded_=false;
+    	  return;
       }
-      else
-	thread->setProgress(2);
+      else{
+    	  thread->setProgress(2);
+      }
     }
-    */
 
     for (vi.origin(); vi.more(); vi++) {
       ++chunk;
@@ -262,14 +259,12 @@ void MSCache::countChunks(ROVisibilityIterator& vi,
 
 void MSCache::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,
 			  const PlotMSAveraging& averaging,
-			  PlotMSCacheThread* ) { //  thread) {
-
-  /*
+			  ThreadCommunication* thread) {
   if (thread!=NULL) {
     thread->setStatus("Establishing cache size.  Please wait...");
     thread->setAllowedOperations(false,false,false);
   }
-  */
+
   Bool verby(False);
 
   Bool combscan(averaging_.scan());
@@ -305,16 +300,16 @@ void MSCache::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,
   stringstream ss;
   
   for (vi.originChunks(); vi.moreChunks(); vi.nextChunk(),chunk++) {
-    /*
     if (thread!=NULL) {
       if (thread->wasCanceled()) {
-	dataLoaded_=false;
-	return;
+    	  dataLoaded_=false;
+    	  return;
       }
-      else
-	thread->setProgress(2);
+      else {
+    	  thread->setProgress(2);
+      }
     }
-    */
+
     Int iter(0);
     for (vi.origin(); vi.more();vi++,iter++) {
 
@@ -428,7 +423,7 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 			 const vector<PMS::Axis> loadAxes,
 			 const vector<PMS::DataColumn> loadData,
 			 const PlotMSAveraging& averaging,
-			 PlotMSCacheThread* thread) {
+			 ThreadCommunication* thread) {
 
   // permit cancel in progress meter:
   if(thread != NULL)
@@ -538,7 +533,7 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 			 const Vector<Int>& nIterPerAve,
 			 const vector<PMS::Axis> loadAxes,
 			 const vector<PMS::DataColumn> loadData,
-			 PlotMSCacheThread* thread) {
+			 ThreadCommunication* thread) {
   
   // permit cancel in progress meter:
   if(thread != NULL)

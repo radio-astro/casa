@@ -32,7 +32,7 @@
 #include <plotms/PlotMS/PlotMSAveraging.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/PlotMS/PlotMSFlagging.h>
-#include <plotms/Actions/PlotMSCacheThread.qo.h>
+//#include <plotms/Threads/PlotMSCacheThread.qo.h>
 
 #include <synthesis/CalTables/NewCalTable.h>
 #include <synthesis/CalTables/CTIter.h>
@@ -81,7 +81,7 @@ protected:
   // CAL-specific loadIt method
   virtual void loadIt(vector<PMS::Axis>& loadAxes,
 		      vector<PMS::DataColumn>& loadData,
-		      PlotMSCacheThread* thread = NULL);
+		      ThreadCommunication* thread = NULL);
 
 private:
     
@@ -96,7 +96,7 @@ private:
 		    Bool corrselect=True);
 
   // Count the chunks required in the cache
-  void countChunks(ROCTIter& ci,PlotMSCacheThread* thread);  // old
+  void countChunks(ROCTIter& ci,ThreadCommunication* thread);  // old
 
   // Trap attempt to use to much memory (too many points)
   //  void trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes);
@@ -104,7 +104,7 @@ private:
   // Loop over VisIter, filling the cache
   void loadCalChunks(ROCTIter& ci,
 		  const vector<PMS::Axis> loadAxes,
-		  PlotMSCacheThread* thread);
+		  ThreadCommunication* thread);
 
   // Loads the specific axis/metadata into the cache using the given VisBuffer.
   void loadCalAxis(ROCTIter& cti, Int chunk, PMS::Axis axis);

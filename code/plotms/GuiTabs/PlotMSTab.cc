@@ -54,7 +54,6 @@ PlotMSTab::PlotMSTab(PlotMSPlotter* parent) : itsParent_(parent->getParent()),
 PlotMSTab::~PlotMSTab() { }
 
 
- 
 void PlotMSTab::highlightWidgetText(QLabel* label, bool highlight) {
     label->setText( highlightifyText( label->text(), highlight) );
 }

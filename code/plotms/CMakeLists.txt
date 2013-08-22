@@ -22,10 +22,6 @@ include( ${QT_USE_FILE} )
 set( QT4_LIBRARIES ${QT_LIBRARIES} )
 
 qt4_wrap_cpp( outfiles_qoh
-  Actions/PlotMSCacheThread.qo.h
-  Actions/PlotMSDrawThread.qo.h
-  Actions/PlotMSExportThread.qo.h
-  Actions/PlotMSThread.qo.h
   Gui/PlotMSAveragingWidget.qo.h
   Gui/PlotMSAxisWidget.qo.h
   Gui/PlotMSFlaggingWidget.qo.h
@@ -49,6 +45,10 @@ qt4_wrap_cpp( outfiles_qoh
   GuiTabs/PlotMSTab.qo.h
   GuiTabs/PlotMSToolsTab.qo.h
   GuiTabs/PlotMSTransformationsTab.qo.h
+  Threads/Gui/PlotMSCacheThread.qo.h
+  Threads/Gui/PlotMSDrawThread.qo.h
+  Threads/Gui/PlotMSExportThread.qo.h
+  Threads/Gui/PlotMSThread.qo.h
   )
 
 casa_qt4_wrap_ui( outfiles_ui
@@ -81,11 +81,53 @@ include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/Gui )
 
 casa_add_library( plotms
   ${outfiles_qoh} ${outfiles_ui} ${outfiles_qrc}
+  Actions/ActionAnnotate.cc
+  Actions/ActionAnnotateRectangle.cc
+  Actions/ActionAnnotateText.cc
+  Actions/ActionCache.cc
+  Actions/ActionCacheLoad.cc
+  Actions/ActionCacheRelease.cc
+  Actions/ActionClearPlotter.cc
+  Actions/ActionClearRegions.cc
+  Actions/ActionExport.cc
+  Actions/ActionFactory.cc
+  Actions/ActionHoldReleaseDrawing.cc
+  Actions/ActionInformation.cc
+  Actions/ActionIterFirst.cc
+  Actions/ActionIterLast.cc
+  Actions/ActionIterNext.cc
+  Actions/ActionIterPrev.cc
+  Actions/ActionLocate.cc
+  Actions/ActionMarkRegions.cc
+  Actions/ActionPan.cc
+  Actions/ActionPlot.cc
+  Actions/ActionQuit.cc
+  Actions/ActionSelect.cc
+  Actions/ActionSelectFlag.cc
+  Actions/ActionSelectUnflag.cc
+  Actions/ActionStack.cc
+  Actions/ActionStackBack.cc
+  Actions/ActionStackBase.cc
+  Actions/ActionStackForward.cc
+  Actions/ActionSubtractRegions.cc
+  Actions/ActionSummary.cc
+  Actions/ActionTool.cc
+  Actions/ActionTracker.cc
+  Actions/ActionTrackerDisplay.cc
+  Actions/ActionTrackerHover.cc
+  Actions/ActionZoom.cc
   Actions/PlotMSAction.cc
-  Actions/PlotMSCacheThread.cc
-  Actions/PlotMSDrawThread.cc
-  Actions/PlotMSExportThread.cc
-  Actions/PlotMSThread.cc
+  Threads/BackgroundThread.cc
+  Threads/CacheThread.cc
+  Threads/ExportThread.cc
+  Threads/Gui/PlotMSCacheThread.cc
+  Threads/Gui/PlotMSDrawThread.cc
+  Threads/Gui/PlotMSExportThread.cc
+  Threads/Gui/PlotMSThread.cc
+  Threads/ThreadController.cc
+  Client/ClientFactory.cc
+  Client/ClientScript.cc
+  Client/Client.cc
   Data/PlotMSCacheBase.cc
   Data/MSCache.cc
   Data/MSCacheVolMeter.cc
@@ -138,11 +180,14 @@ casa_add_library( plotms
 
 INSTALL (FILES
         Actions/PlotMSAction.h
-        Actions/PlotMSCacheThread.qo.h
-        Actions/PlotMSDrawThread.qo.h
-        Actions/PlotMSExportThread.qo.h
-        Actions/PlotMSThread.qo.h
 	DESTINATION include/casacode/plotms/Actions )
+
+INSTALL (FILES
+        Threads/Gui/PlotMSCacheThread.qo.h
+        Threads/Gui/PlotMSDrawThread.qo.h
+        Threads/Gui/PlotMSExportThread.qo.h
+        Threads/Gui/PlotMSThread.qo.h
+	DESTINATION include/casacode/plotms/Threads/Gui )
 
 INSTALL (FILES
         Data/PlotMSIndexer.h
@@ -189,6 +234,7 @@ INSTALL (FILES
         PlotMS/PlotMSParameters.h
         PlotMS/PlotMSRegions.h
         PlotMS/PlotMSSelection.h
+        PlotMS/PlotEngine.h
         PlotMS/PlotMSTransformations.h
         PlotMS/PlotMSWatchedParameters.h
 	DESTINATION include/casacode/plotms/PlotMS )
@@ -205,3 +251,8 @@ INSTALL (FILES
 
 
 casa_add_executable( plotms casaplotms apps/casaplotms/casaplotms.cc )
+
+#TESTING
+casa_add_executable( plotms tExportPlot test/tExportPlot.cc )
+casa_add_executable( plotms tDataSelection test/tDataSelection.cc )
+casa_add_executable( plotms tSymbol test/tSymbol.cc )

@@ -26,8 +26,8 @@
 //# $Id: $
 #include <plotms/Plots/PlotMSPage.h>
 
-#include <plotms/Gui/PlotMSPlotter.qo.h>
-#include <plotms/GuiTabs/PlotMSToolsTab.qo.h>
+//#include <plotms/Gui/PlotMSPlotter.qo.h>
+//#include <plotms/GuiTabs/PlotMSToolsTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlot.h>
 
@@ -72,16 +72,15 @@ PlotMSPage::PlotMSPage(PlotMSPages& parent, unsigned int pageNumber) :
 void PlotMSPage::resize(unsigned int nrows, unsigned int ncols) {
     unsigned int oldrows = canvasRows(), oldcols = canvasCols();
     if(nrows == oldrows && ncols == oldcols) return;
-    
-    bool moreRows = nrows > oldrows, moreCols = ncols > oldcols;
-    //if(!moreRows || !moreCols) {
-        // we're shrinking in rows or columns, so disown those that will be
-        // deleted
-        for(unsigned int r = 0; r < itsCanvases_.size(); r++)
-            for(unsigned int c = 0; c < itsCanvases_[r].size(); c++)
-                //if(r >= nrows || c >= ncols)
-                    disown(r, c);
-    //}
+
+    // we're shrinking in rows or columns, so disown those that will be
+    // deleted
+    for(unsigned int r = 0; r < itsCanvases_.size(); r++){
+    	for(unsigned int c = 0; c < itsCanvases_[r].size(); c++){
+
+    		disown(r, c);
+    	}
+    }
 
     itsCanvases_.clear();
     itsCanvasOwners_.clear();
@@ -89,41 +88,22 @@ void PlotMSPage::resize(unsigned int nrows, unsigned int ncols) {
     itsCanvasOwners_.resize(nrows);
     
     PlotMSApp* plotms = itsParent_->itsManager_->parent();
-    PlotMSPlotter* plotter = plotms->getPlotter();
-    PlotFactoryPtr factory = plotter->getFactory();
+    PlotFactoryPtr factory = plotms->getPlotFactory();
     PlotStandardMouseToolGroupPtr tools;
-    PlotMSToolsTab* toolsTab = plotter->getToolsTab();
     pair<int, int> cimg = plotms->getParameters().cachedImageSize();
     PlotCanvasPtr canvas;
     for(unsigned int r = 0; r < nrows; r++) {
         itsCanvases_[r].resize(ncols);
         itsCanvasOwners_[r].resize(ncols, NULL);
         for(unsigned int c = 0; c < ncols; c++) {
-            //if(r >= oldrows || c >= oldcols) {
-                canvas = factory->canvas();
-                itsCanvases_[r][c] = canvas;
 
-                // connect new canvases' tracker to tool tab
-                tools = canvas->standardMouseTools();
-                tools->trackerTool()->addNotifier(toolsTab);
-                tools->selectTool()->setDrawRects(true);
+        	canvas = factory->canvas();
+        	itsCanvases_[r][c] = canvas;
 
-                // register annotator tool
-                canvas->registerMouseTool(
-                    PlotMouseToolPtr(&plotter->getAnnotator(), false),
-                    false, true);
+        	plotms->canvasAdded( canvas );
 
-                // add plotmsplotter as draw watcher
-                canvas->registerDrawWatcher(PlotDrawWatcherPtr(plotter,false));
-
-                // watch for keystrokes related to using tracker feature
-                canvas->registerKeyHandler(
-                    PlotKeyEventHandlerPtr(toolsTab->tracker_key_handler,
-                                           false));
-
-                // set cached image size
-                canvas->setCachedAxesStackImageSize(cimg.first, cimg.second);
-            //}
+        	// set cached image size
+        	canvas->setCachedAxesStackImageSize(cimg.first, cimg.second);
         }
     }
 }

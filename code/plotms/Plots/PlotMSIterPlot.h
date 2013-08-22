@@ -29,7 +29,7 @@
 
 #include <plotms/Plots/PlotMSPlot.h>
 
-#include <casa/namespace.h>
+//#include <casa/namespace.h>
 #include <plotms/Data/PlotMSIndexer.h>
 #include <plotms/Data/MSCache.h>
 
@@ -96,7 +96,7 @@ public:
     vector<PlotCanvasPtr> canvases() const;
     
     // Implements PlotMSPlot::setupPlotSubtabs().
-    void setupPlotSubtabs(PlotMSPlotTab& tab) const;
+    void setupPlotSubtabs(/*PlotMSPlotTab*/PlotInformationManager& tab) const;
     
     // Implements PlotMSPlot::attachToCanvases().
     void attachToCanvases();
@@ -105,7 +105,7 @@ public:
     void detachFromCanvases();
     
     // Implements PlotMSPlot::plotTabHasChanged().
-    void plotTabHasChanged(PlotMSPlotTab& tab) { (void)tab; }
+    //void plotTabHasChanged(PlotMSPlotTab& tab) { (void)tab; }
 
     // Step the iteration
     bool firstIter();
@@ -171,7 +171,7 @@ private:
     bool updateCanvas();
     bool updateDisplay();
     // </group>
-    
+
     // Set default colors
     void setColors();
 
@@ -193,9 +193,7 @@ private:
 	private:
 	void cacheLoaded_ (bool wasCanceled);
 	
-    static const uInt pixelThreshold;
-    static const uInt mediumThreshold;
-    static const uInt largeThreshold;
+
 };
 
 }

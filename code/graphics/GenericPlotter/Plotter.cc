@@ -183,6 +183,18 @@ PlotCanvasPtr Plotter::canvas() {
     else               return PlotCanvasPtr();
 }
 
+void Plotter::setCanvasCachedAxesStackImageSize( int width, int height ){
+	PlotCanvasLayoutPtr layout = canvasLayout();
+	if ( !layout.null() ) {
+		vector<PlotCanvasPtr> canv = layout->allCanvases();
+	    for(unsigned int i = 0; i < canv.size(); i++){
+	    	if(!canv[i].null()){
+	    		canv[i]->setCachedAxesStackImageSize(width,height);
+	    	}
+	    }
+	}
+}
+
 void Plotter::setCanvas(PlotCanvasPtr canvas) {
     if(!canvas.null())
         setCanvasLayout(PlotCanvasLayoutPtr(new PlotLayoutSingle(canvas)));
@@ -207,6 +219,19 @@ PlotLoggerPtr Plotter::logger() const {
         const_cast<PlotLoggerPtr&>(m_logger) = new PlotLogger(
                 const_cast<Plotter*>(this));
     return m_logger;
+}
+
+bool Plotter::isVisible(PlotCanvasPtr& canvas ){
+	vector<PlotCanvasPtr> currentPlots = canvasLayout()->allCanvases();
+	int plotCount = currentPlots.size();
+	bool visible = false;
+	for ( int i = 0; i < plotCount; i++  ){
+		if ( currentPlots[i] == canvas ){
+			visible = true;
+			break;
+		}
+	}
+	return visible;
 }
 
 }

@@ -30,7 +30,8 @@
 #include <plotms/PlotMS/PlotMSAveraging.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/PlotMS/PlotMSFlagging.h>
-#include <plotms/Actions/PlotMSCacheThread.qo.h>
+#include <plotms/PlotMS/PlotMSTransformations.h>
+//#include <plotms/Threads/PlotMSCacheThread.qo.h>
 //#include <plotms/Data/PlotMSIndexer.h>
 
 #include <casa/aips.h>
@@ -42,7 +43,7 @@ namespace casa {
 //# Forward declarations.
 class PlotMSApp;
 class PlotMSIndexer;
-
+class ThreadCommunication;
 
 class PlotMSCacheBase {
   
@@ -132,7 +133,7 @@ public:
 		    const PlotMSSelection& selection,
 		    const PlotMSAveraging& averaging,
 		    const PlotMSTransformations& transformations,
-		    PlotMSCacheThread* thread = NULL);
+		    /*PlotMSCacheThread**/ThreadCommunication* thread = NULL);
   
   // Clears the cache of all stored values.  This should be called when the
   // underlying MS or MS selection is changed, thus invalidating stored data.
@@ -212,7 +213,7 @@ protected:
   //  (pure virtual: implemented specifically in child classes)
   virtual void loadIt(vector<PMS::Axis>& loadAxes,
 		      vector<PMS::DataColumn>& loadData,
-		      PlotMSCacheThread* thread = NULL)=0;
+		      /*PlotMSCacheThread**/ThreadCommunication* thread = NULL)=0;
 
   virtual void flagToDisk(const PlotMSFlagging& flagging,
 			  Vector<Int>& chunks, 

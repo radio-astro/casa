@@ -26,12 +26,12 @@
 //# $Id: $
 #include <plotms/Plots/PlotMSPlot.h>
 
-#include <plotms/Gui/PlotMSPlotter.qo.h>
+//#include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <plotms/Data/MSCache.h>
-#include <casaqt/QwtPlotter/QPCanvas.qo.h>
-#include <casaqt/QwtPlotter/QPPlotter.qo.h>
+//#include <casaqt/QwtPlotter/QPCanvas.qo.h>
+//#include <casaqt/QwtPlotter/QPPlotter.qo.h>
 
 namespace casa {
 
@@ -42,7 +42,7 @@ namespace casa {
 // Static //
 
 PlotMSPlotParameters PlotMSPlot::makeParameters(PlotMSApp* plotms) {
-    PlotMSPlotParameters p(plotms->getPlotter()->getFactory());
+    PlotMSPlotParameters p(plotms->getPlotFactory());
     makeParameters(p, plotms);
     return p;    
 }
@@ -52,13 +52,15 @@ void PlotMSPlot::makeParameters(PlotMSPlotParameters& params, PlotMSApp* /*plotm
     if(params.typedGroup<PMS_PP_MSData>() == NULL)
         params.setGroup<PMS_PP_MSData>();
 }
-
+const uInt PlotMSPlot::PIXEL_THRESHOLD = 1000000;
+const uInt PlotMSPlot::MEDIUM_THRESHOLD = 10000;
+const uInt PlotMSPlot::LARGE_THRESHOLD = 1000;
 
 // Constructors/Destructors //
 
 PlotMSPlot::PlotMSPlot(PlotMSApp* parent) : 
   itsParent_(parent),
-  itsFactory_(parent->getPlotter()->getFactory()),
+  itsFactory_(parent->getPlotFactory()),
   itsParams_(itsFactory_),
   itsCache_(NULL) { 
   
@@ -76,22 +78,74 @@ PlotMSPlot::~PlotMSPlot() {
   itsCache_=NULL;
 
 }
+void PlotMSPlot::customizeAutoSymbol( const PlotSymbolPtr& baseSymbol, uInt dataSize ){
+	if( baseSymbol->symbol() == PlotSymbol::AUTOSCALING) {
 
+		if( dataSize > PIXEL_THRESHOLD ) {
+			baseSymbol->setSymbol(PlotSymbol::PIXEL);
+		    baseSymbol->setSize(1,1);
+		}
+		else if( dataSize > MEDIUM_THRESHOLD ) {
+		    baseSymbol->setSymbol( PlotSymbol::CIRCLE);
+		    baseSymbol->setSize(2,2);
+		}
+		else if( dataSize > LARGE_THRESHOLD ) {
+		    baseSymbol->setSymbol( PlotSymbol::CIRCLE );
+		    baseSymbol->setSize(4,4);
+		}
+		else {
+		    baseSymbol->setSymbol( PlotSymbol::CIRCLE );
+		    baseSymbol->setSize(6,6);
+		}
+	}
+}
 
 // Public Methods //
+
+vector<PMS::DataColumn> PlotMSPlot::getCachedData(){
+	PMS_PP_Cache* cache = itsParams_.typedGroup<PMS_PP_Cache>();
+	int count = cache->numXAxes() + cache->numYAxes();
+	vector<PMS::DataColumn> cdata( count );
+	for(uInt i = 0; i < cache->numXAxes(); ++i) {
+		cdata[i] = cache->xDataColumn(i);
+	}
+	for( int i = cache->numYAxes(); i < count; ++i) {
+	    cdata[i] = cache->yDataColumn(i - cache->numXAxes());
+	}
+	return cdata;
+}
+
+
+vector<PMS::Axis> PlotMSPlot::getCachedAxes() {
+	PMS_PP_Cache* c = itsParams_.typedGroup<PMS_PP_Cache>();
+	vector<PMS::Axis> axes(c->numXAxes() + c->numYAxes());
+	for(unsigned int i = 0; i < c->numXAxes(); i++)
+		axes[i] = c->xAxis(i);
+	for(unsigned int i = c->numXAxes(); i < axes.size(); i++)
+	    axes[i] = c->yAxis(i - c->numXAxes());
+	/*vector<PMS::Axis> axes(2);
+	axes[0] = c->xAxis();
+	axes[1] = c->yAxis();*/
+	return axes;
+}
 
 const PlotMSPlotParameters& PlotMSPlot::parameters() const{ return itsParams_;}
 PlotMSPlotParameters& PlotMSPlot::parameters() { return itsParams_; }
 
 vector<PlotCanvasPtr> PlotMSPlot::visibleCanvases() const {
-    vector<PlotCanvasPtr> v, canv = canvases(),
-                          visCanv= itsParent_->getPlotter()->currentCanvases();
-    bool found = false;
+    vector<PlotCanvasPtr> v;
+    vector<PlotCanvasPtr> canv = canvases();
+                         // visCanv= itsParent_->getPlotter()->currentCanvases();
+    //bool found = false;
     for(unsigned int i = 0; i < canv.size(); i++) {
-        found = false;
+        /*found = false;
         for(unsigned int j = 0; !found && j < visCanv.size(); j++)
             if(canv[i] == visCanv[j]) found = true;
-        if(found) v.push_back(canv[i]);
+        if(found) v.push_back(canv[i]);*/
+    	bool visible = itsParent_->isVisible( canv[i] );
+    	if ( visible ){
+    		v.push_back( canv[i] );
+    	}
     }
     return v;
 }
@@ -200,19 +254,24 @@ void PlotMSPlot::plotDataChanged() {
 bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
     vector<PlotCanvasPtr> canv = canvases();
     if(canv.size() == 0) return true;
-    else if(canv.size() == 1)
+    else if(canv.size() == 1){
         return canv[0]->exportToFile(format);
+    }
     else {
-        bool success = true;
-        success = QPCanvas::exportPlotter(
-            dynamic_cast<QPPlotter*>(&(*itsParent_->getPlotter()->getPlotter())), format);
-        //PlotExportFormat form(format);
-        //for(unsigned int i = 0; i < canv.size(); i++) {
-        //    form.location = format.location + "-" + String::toString(i);
-        //    if(!canv[i]->exportToFile(form)) success = false;
-        //}
+        bool success = itsParent_->exportToFormat( format );
         return success;
     }
+}
+
+void PlotMSPlot::exportToFormatCancel(){
+	vector<PlotCanvasPtr> canv = canvases();
+	PlotOperationPtr op;
+	for(unsigned int i = 0; i < canv.size(); i++) {
+		if(canv[i].null()) continue;
+	    op = canv[i]->operationExport();
+	    if(op.null()) continue;
+	    op->setCancelRequested(true);
+	}
 }
 
 void PlotMSPlot::canvasWasDisowned(PlotCanvasPtr canvas) {

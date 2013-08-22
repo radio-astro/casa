@@ -213,6 +213,8 @@ public:
     // Overrides QWidget::minimumSizeHint() to return an invalid size.
     QSize minimumSizeHint() const;
     
+    virtual bool exportPlot(const PlotExportFormat& format);
+
 protected:
     // For catching resize events.
     void resizeEvent(QResizeEvent* event);

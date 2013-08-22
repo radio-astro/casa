@@ -32,7 +32,8 @@
 #include <plotms/PlotMS/PlotMSAveraging.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/PlotMS/PlotMSFlagging.h>
-#include <plotms/Actions/PlotMSCacheThread.qo.h>
+//#include <plotms/Threads/PlotMSCacheThread.qo.h>
+#include <plotms/Threads/ThreadCommunication.h>
 #include <plotms/Data/PlotMSVBAverager.h>
 #include <plotms/Data/MSCacheVolMeter.h>
 
@@ -80,7 +81,7 @@ protected:
   // MS-specific loadIt method
   virtual void loadIt(vector<PMS::Axis>& loadAxes,
 		      vector<PMS::DataColumn>& loadData,
-		      PlotMSCacheThread* thread = NULL);
+		      /*PlotMSCacheThread**/ThreadCommunication* thread = NULL);
 
 private:
     
@@ -95,9 +96,9 @@ private:
 		    Bool corrselect=True);
 
   // Count the chunks required in the cache
-  void countChunks(ROVisibilityIterator& vi,PlotMSCacheThread* thread);  // old
+  void countChunks(ROVisibilityIterator& vi,/*PlotMSCacheThread**/ThreadCommunication* thread);  // old
   void countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,  // supports time-averaging 
-		   const PlotMSAveraging& averaging,PlotMSCacheThread* thread);
+		   const PlotMSAveraging& averaging,/*PlotMSCacheThread**/ThreadCommunication* thread);
 
   // Trap attempt to use to much memory (too many points)
   void trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes);
@@ -107,13 +108,13 @@ private:
 		  const vector<PMS::Axis> loadAxes,
 		  const vector<PMS::DataColumn> loadData,
 		  const PlotMSAveraging& averaging,
-		  PlotMSCacheThread* thread);
+		  /*PlotMSCacheThread**/ThreadCommunication* thread);
   void loadChunks(ROVisibilityIterator& vi,
 		  const PlotMSAveraging& averaging,
 		  const Vector<Int>& nIterPerAve,
 		  const vector<PMS::Axis> loadAxes,
 		  const vector<PMS::DataColumn> loadData,
-		  PlotMSCacheThread* thread);
+		  /*PlotMSCacheThread**/ThreadCommunication* thread);
 
   // Force read on vb for requested axes 
   //   (so pre-cache averaging treats all data it should)

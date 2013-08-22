@@ -26,7 +26,7 @@
 //# $Id: $
 #include <plotms/Plots/PlotMSPlotManager.h>
 
-#include <plotms/Gui/PlotMSPlotter.qo.h>
+//#include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSIterPlot.h>
 #include <plotms/Plots/PlotMSOverPlot.h>
@@ -52,8 +52,8 @@ PlotMSPlotManager::~PlotMSPlotManager() {
 PlotMSApp* PlotMSPlotManager::parent() { return itsParent_; }
 void PlotMSPlotManager::setParent(PlotMSApp* parent) {
     itsParent_ = parent;
-    itsPlotter_ = parent->getPlotter()->getPlotter();
-    itsFactory_ = parent->getPlotter()->getFactory();
+    itsPlotter_ = parent->getPlotter();
+    itsFactory_ = parent->getPlotFactory();
     itsPlotter_->setCanvasLayout(PlotCanvasLayoutPtr());
 }
 
@@ -134,7 +134,6 @@ void PlotMSPlotManager::clearPlotsAndCanvases() {
     
     itsPlotParameters_.clear();
     itsPages_.clearPages();
-    
     for(unsigned int i = 0; i < plotsCopy.size(); i++) {
         plotsCopy[i]->detachFromCanvases();
         delete plotsCopy[i];

@@ -176,6 +176,24 @@ void PlotAreaFill::setColor(const String& co) {
     setColor(*c);
 }
 
+void PlotAreaFill::setPattern( const String& descriptor ){
+	 if(descriptor == "fill") {
+		 setPattern(PlotAreaFill::FILL);
+	 }
+	 else if(descriptor == "mesh1") {
+	     setPattern(PlotAreaFill::MESH1);
+	 }
+	 else if(descriptor == "mesh2") {
+	     setPattern(PlotAreaFill::MESH2);
+	 }
+	 else if(descriptor == "mesh3") {
+	     setPattern(PlotAreaFill::MESH3);
+	 }
+	 else {
+		 cout << "Unrecognized fill pattern: "<<descriptor.c_str()<<endl;
+	 }
+}
+
 Record PlotAreaFill::toRecord() const {
     Record rec;
     PlotColorPtr c = color();
@@ -309,6 +327,8 @@ void PlotSymbol::setAreaFill(const PlotAreaFillPtr a) {
     else          setAreaFill("black", PlotAreaFill::NOFILL);
 }
 
+
+
 void PlotSymbol::setAreaFill(const String& color,
         PlotAreaFill::Pattern pattern) {
     PlotAreaFillPtr a = areaFill();
@@ -328,7 +348,9 @@ void PlotSymbol::setColor(const PlotColor& color) {
 }
 
 void PlotSymbol::setColor(const PlotColorPtr color) {
-    if(!color.null()) setColor(*color); }
+    if(!color.null()) setColor(*color);
+}
+
 void PlotSymbol::setColor(const String& color) {
     PlotLinePtr l = line();
     l->setColor(color);
@@ -357,6 +379,30 @@ Record PlotSymbol::toRecord() const {
     if(!a.null()) rec.defineRecord(REC_AREAFILL, a->toRecord());
 
     return rec;
+}
+
+void PlotSymbol::setSymbol( const String& descriptor ){
+	if(descriptor == "pixel") {
+		setSymbol(PlotSymbol::PIXEL);
+	}
+	else if(descriptor == "autoscaling") {
+		setSymbol(PlotSymbol::AUTOSCALING);
+	}
+	else if(descriptor== "circle") {
+		setSymbol(PlotSymbol::CIRCLE);
+	}
+	else if(descriptor == "square") {
+		setSymbol(PlotSymbol::SQUARE);
+	}
+	else if(descriptor == "diamond") {
+		setSymbol(PlotSymbol::DIAMOND);
+	}
+	else if(descriptor == "nosymbol"){
+		setSymbol(PlotSymbol::NOSYMBOL );
+	}
+	else {
+		cout << "Unrecognized PlotSymbol: "<<descriptor.c_str()<<endl;
+	}
 }
 
 void PlotSymbol::fromRecord(const Record& record) {

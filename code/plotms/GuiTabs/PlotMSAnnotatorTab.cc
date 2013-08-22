@@ -41,7 +41,7 @@ PlotMSAnnotatorTab::PlotMSAnnotatorTab(PlotMSPlotter* parent) :
         PlotMSTab(parent), itsAnnotator_(parent->getAnnotator()) {
     setupUi(this);
     
-    PlotFactoryPtr factory = parent->getFactory();
+    PlotFactoryPtr factory = parent->getPlotFactory();
     
     // Set up text widgets.
     itsTextFont_ = new PlotFontWidget(factory);

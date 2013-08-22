@@ -25,15 +25,14 @@
 //#
 //# $Id: $
 #include <plotms/PlotMS/PlotMSDBusApp.h>
-
+#include <plotms/Actions/ActionFactory.h>
 #include <plotms/Actions/PlotMSAction.h>
-#include <plotms/Gui/PlotMSPlotter.qo.h>
-#include <plotms/GuiTabs/PlotMSFlaggingTab.qo.h>
-#include <plotms/PlotMS/PlotMS.h>
+//#include <plotms/PlotMS/PlotMS.h>
+#include <plotms/PlotMS/PlotMSFlagging.h>
 #include <graphics/GenericPlotter/PlotOptions.h>
 
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
-
+#include <QDebug>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -68,9 +67,11 @@ const String PlotMSDBusApp::PARAM_TRANSFORMATIONS = "transformations";
 const String PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY = "updateImmediately";
 const String PlotMSDBusApp::PARAM_WIDTH = "width";
 
-const String PlotMSDBusApp::PARAM_EXPORT_FILENAME = "exportfilename";
-const String PlotMSDBusApp::PARAM_EXPORT_FORMAT = "exportformat";
-const String PlotMSDBusApp::PARAM_EXPORT_HIGHRES = "exporthighres";
+//const String PlotMSDBusApp::PARAM_EXPORT_FILENAME = "exportfilename";
+const String PlotMSDBusApp::PARAM_EXPORT_FILENAME = "plotfile";
+const String PlotMSDBusApp::PARAM_EXPORT_FORMAT = "expformat";
+const String PlotMSDBusApp::PARAM_EXPORT_HIGHRES = "highres";
+//const String PlotMSDBusApp::PARAM_EXPORT_HIGHRES = "exporthighres";
 const String PlotMSDBusApp::PARAM_EXPORT_INTERACTIVE = "exportinteractive";
 const String PlotMSDBusApp::PARAM_EXPORT_ASYNC = "exportasync";
 
@@ -165,7 +166,7 @@ const QString &PlotMSDBusApp::name( ) {
 
 // Constructors/Destructors //
 
-PlotMSDBusApp::PlotMSDBusApp(PlotMSApp& plotms) : itsPlotms_(plotms),
+PlotMSDBusApp::PlotMSDBusApp(PlotEngine& plotms) : itsPlotms_(plotms),
         itsUpdateFlag_(false) {
     // Register self as watcher.
     plotms.getPlotManager().addWatcher(this);
@@ -214,7 +215,7 @@ void PlotMSDBusApp::parametersHaveChanged(const PlotMSWatchedParameters& p,
 void PlotMSDBusApp::plotsChanged(const PlotMSPlotManager& manager) {
     const vector<PlotMSPlotParameters*>& p = manager.plotParameters();
     itsPlotParams_.resize(p.size(),
-            PlotMSPlotParameters(itsPlotms_.getPlotter()->getFactory()));
+            PlotMSPlotParameters(/*itsPlotms_.getPlotter()->getFactory())*/itsPlotms_.getPlotFactory()));
     for(unsigned int i = 0; i < p.size(); i++) itsPlotParams_[i] = *p[i];
 }
 
@@ -226,8 +227,6 @@ void PlotMSDBusApp::plotsChanged(const PlotMSPlotManager& manager) {
 void PlotMSDBusApp::dbusRunXmlMethod(
     const String& methodName, const Record& parameters, Record& retValue,
     const String& /*callerName*/, bool isAsync) {
-
-  //  cout << "PlotMSDBusApp::dbusRunXmlMethod: " << methodName << " by " << callerName << boolalpha << " " << isAsync << endl;
 
     // Common parameters: plot index.
     int index = -1;
@@ -409,9 +408,9 @@ void PlotMSDBusApp::dbusRunXmlMethod(
         
         
         if(parameters.isDefined(PARAM_FILENAME) &&
-           parameters.dataType(PARAM_FILENAME) == TpString)
+           parameters.dataType(PARAM_FILENAME) == TpString){
             ppdata->setFilename(parameters.asString(PARAM_FILENAME));
-        
+        }
         if(parameters.isDefined(PARAM_SELECTION) &&
            parameters.dataType(PARAM_SELECTION) == TpRecord) {
             PlotMSSelection sel = ppdata->selection();
@@ -553,40 +552,8 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             String color = parameters.asString(PARAM_SYMBOLCOLOR);
             String fill = parameters.asString(PARAM_SYMBOLFILL);
             bool outline = parameters.asBool(PARAM_SYMBOLOUTLINE);
-            PlotFactoryPtr pf = itsPlotms_.getPlotter()->getFactory();
-            PlotSymbolPtr ps = pf->symbol(PlotSymbol::NOSYMBOL);
-            // Point shape
-            if(shape == "pixel") {
-                ps->setSymbol(PlotSymbol::PIXEL);
-            } else if(shape == "autoscaling") {
-                ps->setSymbol(PlotSymbol::AUTOSCALING);
-            } else if(shape == "circle") {
-                ps->setSymbol(PlotSymbol::CIRCLE);
-            } else if(shape == "square") {
-                ps->setSymbol(PlotSymbol::SQUARE);
-            } else if(shape == "diamond") {
-                ps->setSymbol(PlotSymbol::DIAMOND);
-            }
-            // Point size
-            ps->setSize(size, size);
-            // Point color
-            ps->setColor(color);
-            // Point fill pattern
-            PlotAreaFillPtr paf = pf->areaFill(color, PlotAreaFill::NOFILL);
-            if(fill == "fill") {
-                paf->setPattern(PlotAreaFill::FILL);
-            } else if(fill == "mesh1") {
-                paf->setPattern(PlotAreaFill::MESH1);
-            } else if(fill == "mesh2") {
-                paf->setPattern(PlotAreaFill::MESH2);
-            } else if(fill == "mesh3") {
-                paf->setPattern(PlotAreaFill::MESH3);
-            }
-            ps->setAreaFill(paf);
-            // Point outline
-            if(outline) {
-                ps->setLine("black");
-            }
+            PlotSymbolPtr ps = itsPlotms_.createSymbol( shape, size, color,
+                        		fill, outline );
             ppdisp->setUnflaggedSymbol(ps);
         }
 
@@ -598,40 +565,9 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             String color = parameters.asString(PARAM_FLAGGEDSYMBOLCOLOR);
             String fill = parameters.asString(PARAM_FLAGGEDSYMBOLFILL);
             bool outline = parameters.asBool(PARAM_FLAGGEDSYMBOLOUTLINE);
-            PlotFactoryPtr pf = itsPlotms_.getPlotter()->getFactory();
-            PlotSymbolPtr ps = pf->symbol(PlotSymbol::NOSYMBOL);
-            // Point shape
-            if(shape == "pixel") {
-                ps->setSymbol(PlotSymbol::PIXEL);
-            } else if(shape == "autoscaling") {
-                ps->setSymbol(PlotSymbol::AUTOSCALING);
-            } else if(shape == "circle") {
-                ps->setSymbol(PlotSymbol::CIRCLE);
-            } else if(shape == "square") {
-                ps->setSymbol(PlotSymbol::SQUARE);
-            } else if(shape == "diamond") {
-                ps->setSymbol(PlotSymbol::DIAMOND);
-            }
-            // Point size
-            ps->setSize(size, size);
-            // Point color
-            ps->setColor(color);
-            // Point fill pattern
-            PlotAreaFillPtr paf = pf->areaFill(color, PlotAreaFill::NOFILL);
-            if(fill == "fill") {
-                paf->setPattern(PlotAreaFill::FILL);
-            } else if(fill == "mesh1") {
-                paf->setPattern(PlotAreaFill::MESH1);
-            } else if(fill == "mesh2") {
-                paf->setPattern(PlotAreaFill::MESH2);
-            } else if(fill == "mesh3") {
-                paf->setPattern(PlotAreaFill::MESH3);
-            }
-            ps->setAreaFill(paf);
-            // Point outline
-            if(outline) {
-                ps->setLine("black");
-            }
+            PlotSymbolPtr ps = itsPlotms_.createSymbol( shape, size, color,
+            		fill, outline );
+
             ppdisp->setFlaggedSymbol(ps);
         }
         
@@ -713,12 +649,11 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             plp->setWidth(w);
             ppcan->setGridMinorLine(plp);
         }
-        
-        
-        
-        
+
         if(updateImmediately && itsPlotms_.guiShown()) {
-            if(resized) itsPlotms_.addOverPlot(&ppp);
+            if(resized){
+            	itsPlotms_.addOverPlot(&ppp);
+            }
             else {
                 PlotMSPlotParameters* sp =
                     itsPlotms_.getPlotManager().plotParameters(index);
@@ -726,28 +661,34 @@ void PlotMSDBusApp::dbusRunXmlMethod(
                 *sp = ppp;
                 sp->releaseNotification();
             }
-        } else if(updateImmediately) itsUpdateFlag_ = true;
+        }
+        else if(updateImmediately){
+        	itsUpdateFlag_ = true;
+        }
         
     } else if(methodName == METHOD_GETFLAGGING) {
-        retValue.defineRecord(0, itsPlotms_.getPlotter()->getFlaggingTab()->
-                                 getValue().toRecord(true));
+    	PlotMSFlagging flagging = itsPlotms_.getFlagging();
+        retValue.defineRecord(0, flagging.toRecord(true));
         
     } else if(methodName == METHOD_SETFLAGGING) {
         PlotMSFlagging flag;
         flag.fromRecord(parameters);
-        itsPlotms_.getPlotter()->getFlaggingTab()->setValue(flag);
+        itsPlotms_.setFlagging( flag );
+        //itsPlotms_.getPlotter()->getFlaggingTab()->setValue(flag);
         
     } else if(methodName == METHOD_LOCATEINFO) {
         retValue.defineRecord(0, _locateInfo(parameters));
-    } else if(methodName == METHOD_SHOW || methodName == METHOD_HIDE) {
+    }
+    else if(methodName == METHOD_SHOW || methodName == METHOD_HIDE) {
         itsPlotms_.showGUI(methodName == METHOD_SHOW);
         if(itsPlotms_.guiShown() && itsUpdateFlag_) {
         	update();
         }
-    } else if(methodName == METHOD_UPDATE) {
+    }
+    else if(methodName == METHOD_UPDATE) {
         update();
     } else if(methodName == METHOD_QUIT) {
-        PlotMSAction(PlotMSAction::QUIT).doAction(&itsPlotms_);
+    	itsPlotms_.quitApplication();
     }
     else if(methodName == METHOD_SAVE) {
     	update();
@@ -769,20 +710,22 @@ void PlotMSDBusApp::dbusRunXmlMethod(
 
 
 Record PlotMSDBusApp::_locateInfo(const Record&) {
-    String methodName = "_locateInfo";
-    PlotMSAction action(PlotMSAction::SEL_INFO);
-    Record retval;
-    if(!action.doActionWithResponse(&itsPlotms_, retval)) {
-        log("Method " + methodName + ": " + action.doActionResult());
-    }
-    return retval;
+	String methodName = "_locateInfo";
+	Bool success = false;
+	String errorMessage;
+	Record retval = itsPlotms_.locateInfo( success, errorMessage );
+	if(!success) {
+		log("Method " + methodName + ": " + errorMessage);
+	}
+	return retval;
 }
 
 
 bool PlotMSDBusApp::_savePlot(const Record& parameters) {
 	bool ok = true;
 	String methodName = "_savePlot";
-	PlotMSAction action(PlotMSAction::PLOT_EXPORT);
+	//CountedPtr<PlotMSAction> action = ActionFactory::getAction( PlotMSAction::PLOT_EXPORT );
+	//PlotMSAction action(PlotMSAction::PLOT_EXPORT);
 	String filename;
 	if(parameters.isDefined(PARAM_EXPORT_FILENAME)) {
 		filename = parameters.asString(PARAM_EXPORT_FILENAME);
@@ -799,10 +742,8 @@ bool PlotMSDBusApp::_savePlot(const Record& parameters) {
 	if (ok) {
 		String format;
 		PlotExportFormat::Type type;
-		if (
-			! parameters.isDefined(PARAM_EXPORT_FORMAT)
-			|| (format = parameters.asString(PARAM_EXPORT_FORMAT)).empty()
-		) {
+		if ( ! parameters.isDefined(PARAM_EXPORT_FORMAT)
+			|| (format = parameters.asString(PARAM_EXPORT_FORMAT)).empty()) {
 			type = PlotExportFormat::typeForExtension(filename, &ok);
 			if (!ok) {
 				log(
@@ -832,6 +773,7 @@ bool PlotMSDBusApp::_savePlot(const Record& parameters) {
 				parameters.isDefined(PARAM_EXPORT_INTERACTIVE)
 				&& ! parameters.asBool(PARAM_EXPORT_INTERACTIVE)
 			);
+
 			if (! (ok = itsPlotms_.save(format, interactive))) {
 				log("Method " + methodName + ": failed to save plot to file ");
 			}
@@ -882,7 +824,7 @@ bool PlotMSDBusApp::plotParameters(int& plotIndex) const {
     if((unsigned int)plotIndex >= itsPlotParams_.size()) {
         resized = true;
         const_cast<PlotMSDBusApp*>(this)->itsPlotParams_.resize(plotIndex + 1,
-                PlotMSPlotParameters(itsPlotms_.getPlotter()->getFactory()));
+                PlotMSPlotParameters(itsPlotms_.getPlotFactory()));
     }
 
     return resized;
@@ -891,9 +833,8 @@ bool PlotMSDBusApp::plotParameters(int& plotIndex) const {
 void PlotMSDBusApp::update() {
 	// single threaded here
     itsUpdateFlag_ = false;
-    itsPlotms_.showGUI(true);
+    //itsPlotms_.showGUI(true);
     unsigned int n = itsPlotms_.getPlotManager().plotParameters().size();
-    
     // update plot parameters
     PlotMSPlotParameters* p;
     for(unsigned int i = 0; i < n; i++) {
@@ -909,11 +850,13 @@ void PlotMSDBusApp::update() {
     // check for added plots
     if(itsPlotParams_.size() > n) {
         vector<PlotMSPlotParameters> v(itsPlotParams_.size() - n,
-                PlotMSPlotParameters(itsPlotms_.getPlotter()->getFactory()));
+                PlotMSPlotParameters(itsPlotms_.getPlotFactory()));
         for(unsigned int i = 0; i < v.size(); i++)
             v[i] = itsPlotParams_[i + n];
-        for(unsigned int i = 0; i < v.size(); i++)
-            itsPlotms_.addSinglePlot(&v[i]);
+        for(unsigned int i = 0; i < v.size(); i++){
+            //itsPlotms_.addSinglePlot(&v[i]);
+        	itsPlotms_.addOverPlot(&v[i]);
+        }
     }
 }
 
