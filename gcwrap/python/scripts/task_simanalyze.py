@@ -68,7 +68,10 @@ def simanalyze(
         grfile = True
     
     try:
-#    if True:
+
+        # Predefined parameters 
+        pbcoeff = 1.13 ##  PB defined as pbcoeff*lambda/d
+
 
         # handle '$project' in modelimage
         modelimage = modelimage.replace('$project',project)
@@ -364,7 +367,8 @@ def simanalyze(
                     tb.done()
                     aveant = pl.mean(diams)
                     # model_center should be set even if we didn't predict this execution
-                    pb = 1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi
+                    pb = pbcoeff*0.29979/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi # arcsec
+
                     beam['major'] = beam['minor'] = qa.quantity(pb,'arcsec')
                     beam['positionangle'] = qa.quantity(0.0,'deg')
                     msg('Primary beam: '+str(beam['major']))
