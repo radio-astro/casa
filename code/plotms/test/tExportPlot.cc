@@ -35,7 +35,7 @@
 #include <synthesis/MSVis/UtilJ.h>
 #include <casa/namespace.h>
 #include <QApplication>
-int main(int /*argc*/, char* /*argv[]*/) {
+int main(int /*argc*/, char** /*argv[]*/) {
 
 	bool showGui = false;
 

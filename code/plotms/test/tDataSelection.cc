@@ -34,7 +34,7 @@
 #include <plotms/test/tUtil.h>
 #include <casa/namespace.h>
 
-int main(int /*argc*/, char* /*argv[]*/) {
+int main(int /*argc*/, char** /*argv[]*/) {
 
 	bool showGui = true;
 
