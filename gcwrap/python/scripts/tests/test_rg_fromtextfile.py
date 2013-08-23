@@ -120,6 +120,9 @@ def deep_equality(a, b):
         return True
     return a == b
 
+datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/rg.fromtextfile/'
+
+
 class rg_fromtextfile_test(unittest.TestCase):
     
     _fixtures = [
@@ -212,6 +215,22 @@ class rg_fromtextfile_test(unittest.TestCase):
             shape, csys.torecord()
         )
          
+    def test_rectangle_rotation(self):
+        """Test rectangle region is preserved under coordinate frame switch"""
+        self.ia.fromshape("",[200, 200])
+        csys = self.ia.coordsys()
+        xx = rg.fromtext(
+            "box[[5834.23813221arcmin, -3676.92506701arcmin],[5729.75600494arcmin, -3545.36602909arcmin]] coord=GALACTIC",
+            csys=csys.torecord(), shape=self.ia.shape()
+        )
+        zz = self.ia.subimage("", region=xx)
+        got = zz.getchunk(getmask=True)
+        self.ia.open(datapath + "rect_rot.im")
+        expec = self.ia.getchunk(getmask=True)
+        self.assertTrue((got == expec).all())
+        zz.done()
+        self.ia.done()
+        
         
 
 def suite():
