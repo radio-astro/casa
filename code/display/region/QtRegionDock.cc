@@ -170,7 +170,10 @@ namespace casa {
 			} else {
 				region_stack->addWidget(state);
 			}
-			region_stack->setCurrentWidget(state);
+			int currentWidgetIndex = region_stack->indexOf( state );
+			if ( currentWidgetIndex >= 0 ){
+				region_stack->setCurrentWidget(state);
+			}
 
 			// emit regionChange( r, "created" );
 
@@ -222,8 +225,14 @@ namespace casa {
 		}
 
 		void QtRegionDock::selectRegion(QtRegionState *state, bool scroll ) {
-			if ( scroll ) region_stack->setCurrentWidget(state);
 			if ( state != NULL ) {
+				if ( scroll ){
+					int stateIndex = region_stack->indexOf( state );
+					if ( stateIndex >= 0 ){
+						region_stack->setCurrentWidget(state);
+					}
+				}
+
 				state->nowVisible( );
 				Region* region = state->region();
 				if ( region != NULL ) {
