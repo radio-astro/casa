@@ -50,9 +50,9 @@ namespace casa{
     freqNdxMapsReady_p = other.freqNdxMapsReady_p;
 
     freqNdxMap_p.assign(other.freqNdxMap_p);
-    for(Int i=0;i<freqNdxMap_p.nelements();i++) freqNdxMap_p[i].assign(other.freqNdxMap_p[i]);
+    for(uInt i=0;i<freqNdxMap_p.nelements();i++) freqNdxMap_p[i].assign(other.freqNdxMap_p[i]);
     conjFreqNdxMap_p.assign(other.conjFreqNdxMap_p);
-    for(Int i=0;i<conjFreqNdxMap_p.nelements();i++) conjFreqNdxMap_p[i].assign(other.conjFreqNdxMap_p[i]);
+    for(uInt i=0;i<conjFreqNdxMap_p.nelements();i++) conjFreqNdxMap_p[i].assign(other.conjFreqNdxMap_p[i]);
   }
   //---------------------------------------------------------------
   //
@@ -410,7 +410,7 @@ namespace casa{
     freqNdxMap_p.resize(maxSpw+1);
     conjFreqNdxMap_p.resize(maxSpw+1);
 
-    for (Int i=0;i<spwList.nelements(); i++)
+    for (Int i=0;i<(Int)spwList.nelements(); i++)
       {
 	Int spw=(Int)freqSelection(i,0);
 	Double fmin=freqSelection(i,1), fmax=freqSelection(i,2), finc=freqSelection(i,3);
@@ -498,14 +498,14 @@ namespace casa{
       }
     //	st.CFBStorage[i] = (cfstore[i]).operator->()->getStorage()->getStorage(dummy);
     
-    if (doAlloc) st.pointingOffset=(Double *)malloc(pointingOffset_p.nelements());
-    for (int i=0;i<pointingOffset_p.nelements();i++) st.pointingOffset[i]=pointingOffset_p[i];
+    if (doAlloc) st.pointingOffset=(Double *)malloc(pointingOffset_p.nelements()*sizeof(Double));
+    for (uInt i=0;i<pointingOffset_p.nelements();i++) st.pointingOffset[i]=pointingOffset_p[i];
 
-    if (doAlloc) st.freqValues=(Double *)malloc(freqValues_p.nelements());
-    for (int i=0;i<freqValues_p.nelements();i++) st.freqValues[i]=freqValues_p[i];
+    if (doAlloc) st.freqValues=(Double *)malloc(freqValues_p.nelements()*sizeof(Double));
+    for (uInt i=0;i<freqValues_p.nelements();i++) st.freqValues[i]=freqValues_p[i];
 
-    if (doAlloc) st.wValues=(Double *)malloc(wValues_p.nelements());
-    for (int i=0;i<wValues_p.nelements();i++) st.wValues[i]=wValues_p[i];
+    if (doAlloc) st.wValues=(Double *)malloc(wValues_p.nelements()*sizeof(Double));
+    for (uInt i=0;i<wValues_p.nelements();i++) st.wValues[i]=wValues_p[i];
 
     ASSIGNVVofI(st.muellerElements, muellerElements_p, doAlloc);
     ASSIGNVVofI(st.muellerElementsIndex, muellerElementsIndex_p,doAlloc);
