@@ -15,29 +15,32 @@ def polcal(vis=None,caltable=None,
 	#Python script
         casalog.origin('polcal')
 
-	try: 
+	try:
+
+                mycb=cbtool()
+		
                 if ((type(vis)==str) & (os.path.exists(vis))):
-                        cb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
+                        mycb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
 
 		# Do data selection according to selectdata
 		if (selectdata):
 			# pass all data selection parameters in as specified
-			cb.selectvis(time=timerange,spw=spw,scan=scan,field=field,
-				     intent=intent, observation=str(observation),
-				     baseline=antenna,uvrange=uvrange,chanmode='none',
-				     msselect=msselect);
+			mycb.selectvis(time=timerange,spw=spw,scan=scan,field=field,
+				       intent=intent, observation=str(observation),
+				       baseline=antenna,uvrange=uvrange,chanmode='none',
+				       msselect=msselect);
 		else:
 			# selectdata=F, so time,scan,baseline,uvrange,msselect=''
 			# using spw and field specifications only
-			cb.selectvis(time='',spw=spw,scan='',field=field,intent=intent,
-				     baseline='',uvrange='',chanmode='none',
-				     observation='', msselect='')
+			mycb.selectvis(time='',spw=spw,scan='',field=field,intent=intent,
+				       baseline='',uvrange='',chanmode='none',
+				       observation='', msselect='')
 
                 # set the model, if specified
                 if (len(smodel)>0):
-                        cb.setptmodel(smodel);
+                        mycb.setptmodel(smodel);
 
 		# Arrange applies....
 
@@ -100,19 +103,19 @@ def polcal(vis=None,caltable=None,
 		# (BTW, interp irrelevant for these, since they are evaluated)
 
 		# D-terms require parallactic angle
-		cb.setapply(type='P')
+		mycb.setapply(type='P')
 
 		# Set up for solving: 
 		phaseonly=False
-		cb.setsolve(type=poltype,t=solint,combine=combine,preavg=preavg,refant=refant,
-			    minblperant=minblperant,solnorm=False,minsnr=minsnr,table=caltable,
-			    apmode='ap',phaseonly=phaseonly,append=append)
+		mycb.setsolve(type=poltype,t=solint,combine=combine,preavg=preavg,refant=refant,
+			      minblperant=minblperant,solnorm=False,minsnr=minsnr,table=caltable,
+			      apmode='ap',phaseonly=phaseonly,append=append)
 
-		cb.solve()
-		cb.close()
+		mycb.solve()
+		mycb.close()
 
 	except Exception, instance:
 		print '*** Error ***',instance
-		cb.close()
+		mycb.close()
 		raise Exception, instance
 
