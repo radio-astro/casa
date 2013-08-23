@@ -354,6 +354,7 @@ namespace casa {
 		LogIO *itsLog;
 		Int ordersOfM_;
 		Bool newCollapseVals;
+		bool showTopAxis;
 
 		static const QString PLOT_TYPE_FLUX;
 		static const QString PLOT_TYPE_MEAN;
@@ -362,6 +363,8 @@ namespace casa {
 		static const QString FREQUENCY;
 		static const QString RADIO_VELOCITY;
 		static const QString CHANNEL;
+		static const QString OPTICAL;
+		static const QString AIR;
 
 		class spectra_info {
 		public:

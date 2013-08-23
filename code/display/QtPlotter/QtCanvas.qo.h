@@ -172,9 +172,9 @@ namespace casa {
 
 		//Whether or not to show a top axis on the plot.
 		void setShowTopAxis( bool showAxis );
-		bool getShowTopAxis() const {
+		/*bool getShowTopAxis() const {
 			return showTopAxis;
-		}
+		}*/
 
 		//Even if the user wants to show a top axis, we won't do it
 		//when there are multiple curves which are not compatible in their
