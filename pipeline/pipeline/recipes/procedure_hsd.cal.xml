@@ -40,4 +40,10 @@
         </ParameterSet>
     </ProcessingCommand>
 
+    <ProcessingCommand>
+        <Command xmlns="">hsd_exportdata</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
 </ProcessingProcedure>
