@@ -44,6 +44,13 @@
 #ifdef HAS_OMP
 #include <omp.h>
 #endif
+#if ((__GNUC__ >= 4) && (__GNUC_MINOR__ >= 4))
+#define GCC44x 1
+#else
+#define GCC44x 0
+#endif
+
+
 using namespace std;
 namespace casa{
 
@@ -1776,14 +1783,18 @@ namespace casa{
 #endif
     // Timer tim;
     // tim.mark();
+#if GCC44x
 #pragma omp parallel default(none) firstprivate(Er, El, nx, ny, localWhichPoln)  private(i,j) shared(ap, a, p, L0) num_threads(Nth)
+#else
+#pragma omp parallel default(none) firstprivate(Er, El, nx, ny, localWhichPoln)  private(i,j) shared(ap, a, p, L0) num_threads(Nth)
+#endif
     {
 #pragma omp for
     for(j = 0; j < ny; j++)
       {
 	for(i = 0; i < nx; i++)
 	  {
-	    computePixelValues(ap, a, p, L0, Er, El, i,j,whichPoln);
+	    computePixelValues(ap, a, p, L0, Er, El, i,j,localWhichPoln);
 	  }
       }
     }
