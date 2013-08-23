@@ -5,8 +5,6 @@ import decimal
 import math
 import re
 
-from . import unitformat
-
 
 class ArcUnits(object):
     DEGREE           = { 'name' : 'DEGREE'           , 'symbol' : 'd'   , 'html' : '&#x00B0;' , 'units per circle' : decimal.Decimal(360)        }
@@ -87,10 +85,9 @@ class FrequencyUnits(object):
 
 
 class LinearVelocityUnits(object):
-    METRES_PER_SECOND     = { 'name' : 'METRES_PER_SECOND'     , 'symbol' : 'm/s'  , 'mps' : decimal.Decimal(1)         }
-    KILOMETRES_PER_SECOND = { 'name' : 'KILOMETERS_PER_SECOND' , 'symbol' : 'km/s' , 'mps' : decimal.Decimal(1000)      }
-    Z                     = { 'name' : 'Z'                     , 'symbol' : 'Z'    , 'mps' : decimal.Decimal(299792458) }
-
+    KILOMETRES_PER_SECOND = { 'name' : 'KILOMETERS_PER_SECOND' , 'symbol' : 'km/s' , 'kmps' : decimal.Decimal(1)            }
+    MILES_PER_HOUR        = { 'name' : 'MILES_PER_HOUR'        , 'symbol' : 'mi/h' , 'kmps' : decimal.Decimal('4.4704E-4')  }
+    Z                     = { 'name' : 'Z'                     , 'symbol' : 'Z'    , 'kmps' : decimal.Decimal('299792.458') }
 
 class FileSizeUnits(object):
     BYTES     = { 'name' : 'BYTES'    , 'symbol' : 'b' , 'bytes' : decimal.Decimal(1)               }
@@ -226,13 +223,6 @@ class Distance(ComparableUnit):
         factor = self.units['metres'] / otherUnits['metres']
         return self.value * factor
 
-    def __str__(self):
-        return unitformat.distance.format(self.to_units(DistanceUnits.METRE))
-
-    def __repr__(self):
-        return 'Distance(%s, DistanceUnits.%s)' % (self.value,
-                                                   self.units['name'])
-
 
 class EquatorialArc(ComparableUnit):
     def __init__(self, value=0, units=ArcUnits.DEGREE):
@@ -323,10 +313,6 @@ class EquatorialArc(ComparableUnit):
         """
         return (self / 15).toDms()
 
-    def __repr__(self):
-        return 'EquatorialArc(%s, ArcUnits.%s)' % (self.value,
-                                                   self.units['name'])
-
     
 class FluxDensity(ComparableUnit):
     def __init__(self, value=0, units=FluxDensityUnits.JANSKY):
@@ -379,13 +365,6 @@ class FluxDensity(ComparableUnit):
         factor = self.units['Jy'] / otherUnits['Jy']
         return self.value * factor
 
-    def __str__(self):
-        return unitformat.flux.format(self.to_units(FluxDensityUnits.JANSKY))
-
-    def __repr__(self):
-        return 'FluxDensity(%s, FluxDensityUnits.%s)' % (self.value,
-                                                         self.units['name'])
-
 
 class LinearVelocity(ComparableUnit):
     def __init__(self, value=0, units=LinearVelocityUnits.KILOMETRES_PER_SECOND):
@@ -437,16 +416,9 @@ class LinearVelocity(ComparableUnit):
         Returns:
             this linear velocity's value converted to otherUnits.
         """
-        factor = self.units['mps'] / otherUnits['mps']
+        factor = self.units['kmps'] / otherUnits['kmps']
         return self.value * factor
 
-    def __str__(self):
-        mps = self.to_units(LinearVelocityUnits.METRES_PER_SECOND)
-        return unitformat.velocity.format(mps)
-
-    def __repr__(self):
-        return ('LinearVelocity(%s, '
-                'LinearVelocityUnits.%s)' % (self.value, self.units['name']))
 
 
 class FileSize(ComparableUnit):
@@ -563,13 +535,6 @@ class Frequency(ComparableUnit):
         factor = self.units['hz'] / otherUnits['hz']
         return self.value * factor
 
-    def __str__(self):
-        return unitformat.frequency.format(self.to_units(FrequencyUnits.HERTZ))
-
-    def __repr__(self):
-        return 'Frequency(%s, FrequencyUnits.%s)' % (self.value,
-                                                     self.units['name'])
-
 
 class FrequencyRange(object):
     __slots__ = ('low', 'high')
@@ -579,7 +544,7 @@ class FrequencyRange(object):
 
     def __setstate__(self, state):
         self.low, self.high = state    
-    
+        
     def __init__(self, frequency1=None, frequency2=None):
         """Creates a new instance with the given endpoints.
 
@@ -896,15 +861,10 @@ class Latitude(EquatorialArc):
         return self < other
 
     def __repr__(self):
-        return 'Latitude(%s, ArcUnits.%s)' % (self.value,
-                                              self.units['name'])
-
-    def __str__(self):
         (d, m, s) = self.toDms()
         return '%+.2d%s%.2d%s%05.2f%s' % (d, ArcUnits.DEGREE['symbol'],
                                          m, ArcUnits.ARC_MINUTE['symbol'],
                                          round(s, 2), ArcUnits.ARC_SECOND['symbol'])
-
 
 class Longitude(EquatorialArc):
     patt = re.compile('\s*' + 
@@ -1040,10 +1000,6 @@ class Longitude(EquatorialArc):
         return not (o <= self.value or o > r)
 
     def __repr__(self):
-        return 'Longitude(%s, ArcUnits.%s)' % (self.value,
-                                               self.units['name'])
-
-    def __str__(self):
         (h, m, s) = self.toHms()
         return '%.2d%s%.2d%s%05.2f%s' % (h, ArcUnits.HOUR['symbol'],
                                          m, ArcUnits.MINUTE['symbol'],

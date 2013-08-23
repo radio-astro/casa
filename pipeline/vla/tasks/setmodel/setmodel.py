@@ -33,12 +33,14 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.utils as utils
 from pipeline.hif.tasks.common import commonfluxresults
+from pipeline.infrastructure import casa_tasks
+import pipeline.infrastructure.casatools as casatools
 from . import setjy
 
 from pipeline.vla.tasks.vlautils import VLAUtils
 
-import pipeline.domain.measures as measures
-import pipeline.extern.asizeof as asizeof
+#import pipeline.domain.measures as measures
+#import pipeline.extern.asizeof as asizeof
 
 
 LOG = infrastructure.get_logger(__name__)
@@ -239,9 +241,10 @@ class SetModel(basetask.StandardTaskTemplate):
                     LOG.info("Setting model for field "+str(myfield)+" spw "+str(myspw)+" using "+model_image)
                     
                     try:
-                        LOG.info('Context size: %s' % str(measures.FileSize(asizeof.asizeof(context), measures.FileSizeUnits.BYTES)))
+                        #LOG.info('Context size: %s' % str(measures.FileSize(asizeof.asizeof(context), measures.FileSizeUnits.BYTES)))
                         setjy_result = self._do_setjy(str(myfield), str(myspw), model_image, -1)
-                        result.measurements.update(setjy_result.measurements)
+                        #Need to add this line back in when calling vla.tasks.setjy
+                        #result.measurements.update(setjy_result.measurements)
                     except Exception, e:
                         # something has gone wrong, return an empty result
                         LOG.error('Unable to complete flux scaling operation')
@@ -283,7 +286,24 @@ class SetModel(basetask.StandardTaskTemplate):
 
     def _do_setjy(self, field, spw, modimage, fluxdensity):
         
-        setjyinputs = setjy.Setjy.Inputs(self.inputs.context,
-             field=field, spw=spw, modimage=modimage, fluxdensity=fluxdensity)
-        setjytask = setjy.Setjy(setjyinputs)
-        return self._executor.execute(setjytask, True)
+        task_args = {'vis'            : self.inputs.vis,
+                     'field'          : field,
+                     'spw'            : spw,
+                     'selectdata'     : False,
+                     'modimage'       : modimage,
+                     'listmodels'     : False,
+                     'scalebychan'    : True,
+                     'fluxdensity'    : fluxdensity,
+                     'spix'           : 0,
+                     'standard'       : 'Perley-Butler 2010',
+                     'usescratch'     : False,
+                     'async'          : False}
+        
+        job = casa_tasks.setjy(**task_args)
+            
+        return self._executor.execute(job)
+        
+        #setjyinputs = setjy.Setjy.Inputs(self.inputs.context,
+        #     field=field, spw=spw, modimage=modimage, fluxdensity=fluxdensity)
+        #setjytask = setjy.Setjy(setjyinputs)
+        #return self._executor.execute(setjytask, True)
