@@ -24,8 +24,8 @@ class WvrgcalInputs(basetask.StandardInputs):
       caltable=None, hm_toffset=None, toffset=None, segsource=None, 
       hm_tie=None, tie=None, sourceflag=None, nsol=None,
       disperse=None, wvrflag=None, hm_smooth=None, smooth=None,
-      scale=None, qa2_intent=None, qa2_bandpass_intent=None,
-      bandpass_result=None, nowvr_result=None):
+      scale=None, maxdistm=None, minnumants=None, qa2_intent=None,
+      qa2_bandpass_intent=None, bandpass_result=None, nowvr_result=None):
         self._init_properties(vars())
 
     @property
@@ -159,6 +159,26 @@ class WvrgcalInputs(basetask.StandardInputs):
         self._scale = value
 
     @property
+    def maxdistm(self):
+        if self._maxdistm is None:
+            return 500.0
+        return self._maxdistm
+
+    @maxdistm.setter
+    def maxdistm(self, value):
+        self._maxdistm = value
+
+    @property
+    def minnumants(self):
+        if self._minnumants is None:
+            return 2
+        return self._minnumants
+
+    @minnumants.setter
+    def minnumants(self, value):
+        self._minnumants = value
+
+    @property
     def qa2_intent(self):
         if self._qa2_intent is None:
             return ''
@@ -231,6 +251,8 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         disperse = inputs.disperse
         wvrflag = inputs.wvrflag
         scale = inputs.scale
+	maxdistm = inputs.maxdistm
+	minnumants = inputs.minnumants
 
         # smooth may vary with spectral window so need to ensure we calculate
         # results that can cover them all
@@ -262,7 +284,8 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                   caltable=caltable, toffset=toffset, segsource=segsource,
                   tie=tie, sourceflag=sourceflag, nsol=nsol,
                   disperse=disperse, wvrflag=wvrflag,
-                  smooth=smooth))
+                  smooth=smooth, scale=scale, maxdistm=maxdistm,
+		  minnumants=minnumants))
 
                 smooths_done.add(smooth)
 

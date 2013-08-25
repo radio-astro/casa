@@ -22,8 +22,8 @@ class WvrgcalflagInputs(basetask.StandardInputs):
       caltable=None, hm_toffset=None, toffset=None, segsource=None, 
       hm_tie=None, tie=None, sourceflag=None, nsol=None,
       disperse=None, wvrflag=None, hm_smooth=None, smooth=None,
-      scale=None, flag_intent=None, qa2_intent=None,
-      qa2_bandpass_intent=None, flag_hi=None, fhi_limit=None,
+      scale=None, maxdistm=None, minnumants=None, flag_intent=None,
+      qa2_intent=None, qa2_bandpass_intent=None, flag_hi=None, fhi_limit=None,
       fhi_minsample=None):
 	self._init_properties(vars())
 
@@ -158,6 +158,26 @@ class WvrgcalflagInputs(basetask.StandardInputs):
         self._scale = value
 
     @property
+    def maxdistm(self):
+        if self._maxdistm is None:
+            return 500.0
+        return self._maxdistm
+
+    @maxdistm.setter
+    def maxdistm(self, value):
+        self._maxdistm = value
+
+    @property
+    def minnumants(self):
+        if self._minnumants is None:
+            return 2
+        return self._minnumants
+
+    @minnumants.setter
+    def minnumants(self, value):
+        self._minnumants = value
+
+    @property
     def flag_intent(self):
         if self._flag_intent is None:
             return 'BANDPASS'
@@ -247,7 +267,8 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
           tie=inputs.tie, sourceflag=inputs.sourceflag, nsol=inputs.nsol,
           disperse=inputs.disperse, wvrflag=inputs.wvrflag, 
           hm_smooth=inputs.hm_smooth, smooth=inputs.smooth,
-          scale=inputs.scale, flag_intent=inputs.flag_intent,
+          scale=inputs.scale, maxdistm=inputs.maxdistm,
+          minnumants=inputs.minnumants, flag_intent=inputs.flag_intent,
           qa2_intent=inputs.qa2_intent,
           qa2_bandpass_intent=inputs.qa2_bandpass_intent)
         datatask = WvrgcalflagWorker(datainputs)
@@ -293,8 +314,8 @@ class WvrgcalflagWorkerInputs(basetask.StandardInputs):
       caltable=None, hm_toffset=None, toffset=None, segsource=None, 
       hm_tie=None, tie=None, sourceflag=None, nsol=None,
       disperse=None, wvrflag=None, hm_smooth=None, smooth=None,
-      scale=None, flag_intent=None, qa2_intent=None,
-      qa2_bandpass_intent=None):
+      scale=None, maxdistm=None, minnumants=None, flag_intent=None,
+      qa2_intent=None, qa2_bandpass_intent=None):
 	self._init_properties(vars())
 
 
@@ -322,6 +343,7 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
           sourceflag=inputs.sourceflag, nsol=inputs.nsol,
           disperse=inputs.disperse, wvrflag=inputs.wvrflag,
           hm_smooth=inputs.hm_smooth, smooth=inputs.smooth, scale=inputs.scale,
+          maxdistm=inputs.maxdistm, minnumants=inputs.minnumants,
           qa2_intent=inputs.qa2_intent,
           qa2_bandpass_intent=inputs.qa2_bandpass_intent,
           bandpass_result=self.result.bandpass_result,
