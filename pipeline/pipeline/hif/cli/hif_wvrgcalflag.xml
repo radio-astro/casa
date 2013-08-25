@@ -96,6 +96,22 @@ Generate a gain table based on Water Vapour Radiometer data and flag bad antenna
 	<value>1.</value>
     </param>
 
+      <param type="double" name="maxdistm">
+        <description>Maximum distance (m) of an antenna used for interpolation for a flagged antenna</description>
+        <value>500.</value>
+      </param>
+
+      <param type="int" name="minnumants">
+        <description>Minimum number of near antennas (up to 3) required for interpolation</description>
+        <value>2</value>
+        <allowed kind="enum">
+            <value>1</value>
+            <value>2</value>
+            <value>3</value>
+        </allowed>
+      </param>
+
+
     <param type="string" name="flag_intent">
         <description>Data intents to use in detecting and flagging bad wvr antennas</description>
         <value>BANDPASS</value>
@@ -308,6 +324,16 @@ smooth -- Smooth WVR data on this timescale before calculating the correction.
 
 scale -- Scale the entire phase correction by this factor.
     default: 1
+
+maxdistm -- Maximum distance in meters of an antenna used for interpolation
+    from a flagged antenna.
+    default: 500
+    example: 550
+
+minnumants -- Minimum number of neraby antennas (up to 3) used for
+    interpolation from a flagged antenna.
+    default: 2
+    example: 3
 
 flag_intent -- The data intents on whose wvr correction results the search
     for bad wvr antennas is to be based.

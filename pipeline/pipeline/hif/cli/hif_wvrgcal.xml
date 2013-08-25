@@ -97,6 +97,21 @@ a QA2 score based on its effect on the interferometric data.
 	<value>1.</value>
     </param>
 
+      <param type="double" name="maxdistm">
+        <description>Maximum distance (m) of an antenna used for interpolation for a flagged antenna</description>
+        <value>500.</value>
+      </param>
+
+      <param type="int" name="minnumants">
+        <description>Minimum number of near antennas (up to 3) required for interpolation</description>
+        <value>2</value>
+        <allowed kind="enum">
+            <value>1</value>
+            <value>2</value>
+            <value>3</value>
+        </allowed>
+      </param>
+
     <param type="string" name="qa2_intent">
         <description>Data intents to use in estimating the effectiveness of the wvr correction</description>
         <value></value>
@@ -271,6 +286,16 @@ smooth -- Smooth WVR data on this timescale before calculating the correction.
 
 scale -- Scale the entire phase correction by this factor.
     default: 1
+
+maxdistm -- Maximum distance in meters of an antenna used for interpolation
+    from a flagged antenna.
+    default: 500
+    example: 550
+
+minnumants -- Minimum number of neraby antennas (up to 3) used for
+    interpolation from a flagged antenna.
+    default: 2
+    example: 3
 
 qa2_intent -- The list of data intents on which the wvr correction is to be 
     tried as a means of estimating its effectiveness.
