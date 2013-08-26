@@ -4305,11 +4305,14 @@ class scantable(Scantable):
             raise ValueError(msg)
         s = None
         if mode.lower() == "paired":
+            from asap._asap import srctype
             sel = self.get_selection()
-            sel.set_query("SRCTYPE==psoff")
+            #sel.set_query("SRCTYPE==psoff")
+            sel.set_types(srctype.psoff)
             self.set_selection(sel)
             offs = self.copy()
-            sel.set_query("SRCTYPE==pson")
+            #sel.set_query("SRCTYPE==pson")
+            sel.set_types(srctype.pson)
             self.set_selection(sel)
             ons = self.copy()
             s = scantable(self._math._quotient(ons, offs, preserve))
