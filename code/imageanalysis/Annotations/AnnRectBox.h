@@ -97,8 +97,7 @@ public:
 	ostream& print(ostream &os) const;
 
 private:
-	AnnotationBase::Direction _inputCorners;
-
+	//AnnotationBase::Direction _inputCorners;
 };
 
 }

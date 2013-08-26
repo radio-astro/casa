@@ -331,7 +331,7 @@ namespace casa {
 			}
 		}
 		//cout << options << endl;
-		connect( ui.restLineEdit, SIGNAL(editingFinished()), this, SLOT(restFrequencyChanged()));
+		connect( ui.restLineEdit, SIGNAL(textChanged(const QString&)), this, SLOT(restFrequencyChanged()));
 		connect( ui.restUnitsCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(restFrequencyChanged()));
 	}
 

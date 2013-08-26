@@ -43,7 +43,8 @@ AnnRectBox::AnnRectBox(
 		dopplerString, restfreq, stokes,
 		annotationOnly
 	  ) 
-{}
+{
+	}
 
 AnnRectBox::AnnRectBox(
 	const Quantity& blcx,
@@ -54,7 +55,8 @@ AnnRectBox::AnnRectBox(
 	const IPosition& imShape,
 	const Vector<Stokes::StokesTypes>& stokes
 ) : AnnPolygon(RECT_BOX, blcx, blcy, trcx, trcy, csys, imShape, stokes)
-	{}
+	{
+	}
 
 AnnRectBox& AnnRectBox::operator= (
 	const AnnRectBox& other
@@ -63,18 +65,24 @@ AnnRectBox& AnnRectBox::operator= (
     	return *this;
     }
     AnnPolygon::operator=(other);
-    _inputCorners.resize(other._inputCorners.shape());
-    _inputCorners = other._inputCorners;
+    //_inputCorners.resize(other._inputCorners.shape());
+    //_inputCorners = other._inputCorners;
+
     return *this;
 }
+
+
 
 ostream& AnnRectBox::print(ostream &os) const {
 	_printPrefix(os);
 	os << "box [["
-		<< _printDirection(_inputCorners[0].first, _inputCorners[0].second)
+	///	<< _printDirection(_inputCorners[0].first, _inputCorners[0].second)
+			<< _printDirection( _origXPos[0], _origYPos[0])
 		<< "], ["
-		<< _printDirection(_inputCorners[1].first, _inputCorners[1].second)
+		//<< _printDirection(_inputCorners[1].first, _inputCorners[1].second)
+		<< _printDirection( _origXPos[2], _origYPos[2])
 		<< "]]";
+
 	_printPairs(os);
 	return os;
 }

@@ -129,9 +129,9 @@ protected:
 		const Vector<Stokes::StokesTypes>& stokes
 	);
 
-private:
-	Vector<Quantity> _origXPos, _origYPos;
 
+	Vector<Quantity> _origXPos, _origYPos;
+private:
 	void _init();
 
 	void _initCorners(
