@@ -18,6 +18,7 @@ results = task.execute (dry_run = False)
 """
 from __future__ import absolute_import
 import os
+import errno
 import tarfile
 import fnmatch
 import shutil
