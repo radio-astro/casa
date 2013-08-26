@@ -94,8 +94,9 @@ class test_base(unittest.TestCase):
         flagdata(vis=self.vis, mode='unflag', flagbackup=False)
         default(flagcmd)
 
-    def setUp_flagdatatest_alma(self):
-        self.vis = "flagdatatest-alma.ms"
+    def setUp_alma_ms(self):
+        '''ALMA MS, scan=1,8,10 spw=0~3 4,128,128,1 chans, I,XX,YY'''
+        self.vis = "uid___A002_X30a93d_X43e_small.ms"
 
         if os.path.exists(self.vis):
             print "The MS is already around, just unflag"
@@ -104,9 +105,8 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
+        default(flagdata3)
         flagdata(vis=self.vis, mode='unflag', flagbackup=False)
-        default(flagcmd)
-
         
     def setUp_evla(self):
         self.vis = "tosr0001_scan3_noonline.ms"
@@ -196,7 +196,8 @@ class test_alma(test_base):
     # Test various selections for alma data 
 
     def setUp(self):
-        self.setUp_flagdatatest_alma()
+#        self.setUp_flagdatatest_alma()
+        self.setUp_alma_ms()
     
     def test_intent(self):
         '''flagcmd: test scan intent selection'''
@@ -208,24 +209,25 @@ class test_alma(test_base):
         # flag POINTING CALIBRATION scans and ignore comment line
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False,
                 flagbackup=False)
-        test_eq(flagdata(vis=self.vis,mode='summary', antenna='2'), 377280, 26200)
+#         test_eq(flagdata(vis=self.vis,mode='summary', antenna='2'), 377280, 26200)
         res = flagdata(vis=self.vis,mode='summary')
-        self.assertEqual(res['scan']['1']['flagged'], 80184, 'Only scan 1 should be flagged')
-        self.assertEqual(res['scan']['4']['flagged'], 0, 'Scan 4 should not be flagged')
+#         self.assertEqual(res['scan']['1']['flagged'], 80184, 'Only scan 1 should be flagged')
+#         self.assertEqual(res['scan']['4']['flagged'], 0, 'Scan 4 should not be flagged')
+        self.assertEqual(res['scan']['1']['flagged'], 192416.0)
         
     def test_cmd(self):
         '''flagcmd: inpmode=list with empty parameter'''
         
         # Test the correct parsing with empty parameter such as antenna=''
         flagcmd(vis=self.vis, inpmode='list', 
-                 inpfile=["intent='CAL*POINT*' field=''","scan='3,4' antenna=''","scan='5'"], 
+                 inpfile=["intent='CAL*POINT*' field=''","scan='1,8' antenna=''","scan='10'"], 
                  action='apply', savepars=False, flagbackup=False)
         res = flagdata(vis=self.vis,mode='summary')
-        self.assertEqual(res['scan']['1']['flagged'], 80184)
-        self.assertEqual(res['scan']['4']['flagged'], 48132)
-        self.assertEqual(res['flagged'], 160392)
-        
-             
+        self.assertEqual(res['scan']['1']['flagged'], 192416)
+        self.assertEqual(res['scan']['8']['flagged'], 39096)
+        self.assertEqual(res['scan']['10']['flagged'], 39096)
+        self.assertEqual(res['flagged'], 270608)
+                     
     def test_extract(self):
         '''flagcmd: action = extract and apply clip on WVR'''
         # Remove any cmd from table
@@ -238,12 +240,12 @@ class test_alma(test_base):
         # Extract it
         res = flagcmd(vis=self.vis, action='extract', useapplied=True)
         
-        # Apply to clip only WVR
+        # Apply cmd to clip only WVR
         flagcmd(vis=self.vis, inpmode='list', inpfile=[res[0]['command']], savepars=False, action='apply',
                 flagbackup=False)
         ret = flagdata(vis=self.vis, mode='summary')
-        self.assertEqual(ret['flagged'], 22752)
-        self.assertEqual(ret['correlation']['I']['flagged'], 22752)
+        self.assertEqual(ret['flagged'], 498)
+        self.assertEqual(ret['correlation']['I']['flagged'], 498)
         self.assertEqual(ret['correlation']['XX']['flagged'], 0)
         self.assertEqual(ret['correlation']['YY']['flagged'], 0)
                 
@@ -1051,7 +1053,7 @@ class cleanup(test_base):
     
     def tearDown(self):
         os.system('rm -rf multiobs.ms*')
-        os.system('rm -rf flagdatatest-alma.ms*')
+        os.system('rm -rf uid___A002_X30a93d_X43e_small.ms*')
         os.system('rm -rf ngc5921.ms*')
         os.system('rm -rf Four_ants*.ms*')
         os.system('rm -rf shadowtest*.ms*')
