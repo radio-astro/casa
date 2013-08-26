@@ -20,7 +20,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
     #Python script
     casalog.origin('clean')
     casalog.post('nchan='+str(nchan)+' start='+str(start)+' width='+str(width))  
-
     #If using new FT-Machines, do not use the on-the-fly model_data columns.
     if gridmode == 'advancedaprojection' and usescratch==False:
         casalog.post('Forcing usescratch=True for new FTMs. This is temporary.', 'WARN')
@@ -254,7 +253,17 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             localnchan=nchan
             localstart=start
             localwidth=width
-
+        ##### Warn that we cannot save model larger than 2GB in complex 
+        ##### Table record issue in SOURCE table---CAS 5425
+        ###### should be removed when the ticket is fixed
+        ###rough estimates for pol will overestimate it for cases like RRLL
+        localnpol=len(str(stokes))
+        maximsize=max(imsize) if(type(imsize)==list) else imsize
+        imvol=localnchan*maximsize*maximsize*localnpol
+        if((imvol > 60e6) and (not usescratch)):
+            casalog.post("please set usescratch=True for large images till we fix a problem of saving large images in the virtual model_data column", "ERROR")
+            raise ValueError,  'please set usescratch=True for large images till we fix a problem of saving large images in the virtual model_data column'
+        #######End of warn section for CAS-5425
         #setup for 'per channel' clean
         dochaniter=False
         #if interactive and chaniter:
