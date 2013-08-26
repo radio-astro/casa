@@ -98,11 +98,11 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.imager_param['outframe'] = self.outframe
         if self.outframe == '':
             # get from MS
-            myms = gentools(['ms'])[0]
-            myms.open(self.infile)
-            spwinfo = myms.getspectralwindowinfo()
-            myms.close()
-            del myms
+            my_ms = gentools(['ms'])[0]
+            my_ms.open(self.infile)
+            spwinfo = my_ms.getspectralwindowinfo()
+            my_ms.close()
+            del my_ms
             for key, spwval in spwinfo.items():
                 if spwval['SpectralWindowId'] == self.imager_param['spw']:
                     self.imager_param['outframe'] = spwval['Frame']
@@ -114,6 +114,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             casalog.post("Using frequency frame defined by user, '%s'" % self.imager_param['outframe'])
         
         # antenna
+        in_antenna = self.antenna # backup for future use
         if type(self.antenna)==int:
             if self.antenna >= 0:
                 self.antenna=str(self.antenna)+'&&&'
@@ -133,16 +134,31 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         if os.path.exists(self.outfile) and self.overwrite:
             os.system('rm -rf %s'%(self.outfile))
 
-        # imsize
-        (nx,ny) = sdutil.get_nx_ny(self.imsize)
-        self.imager_param['nx'] = nx
-        self.imager_param['ny'] = ny
 
         # cell
-        (cellx,celly) = sdutil.get_cellx_celly(self.cell,
-                                               unit='arcmin')
+        cell = self.cell
+        if cell == '' or cell[0] == '':
+            # Calc PB
+            grid_factor = 3.
+            qPB = self._calc_PB(in_antenna)
+            casalog.post("Cell size is calculated using PB size")
+            cell = '%f%s' % (qPB['value']/grid_factor, qPB['unit'])
+            casalog.post("Using cell size = PB/%4.2F = %s" % (grid_factor, cell))
+
+        (cellx,celly) = sdutil.get_cellx_celly(cell, unit='arcmin')
         self.imager_param['cellx'] = cellx
         self.imager_param['celly'] = celly
+
+        # imsize
+        imsize = self.imsize
+        if imsize == [] or imsize[0] < 1:
+            imsize = self._get_imsize_from_map_extent(cellx, celly)
+            if imsize[0] > 1024 or imsize[1] > 1024:
+                casalog.post("The calculated image pixel number is larger than 1024. It would take time to generate the image. Please wait...", priority='warn')
+
+        (nx,ny) = sdutil.get_nx_ny(imsize)
+        self.imager_param['nx'] = nx
+        self.imager_param['ny'] = ny
 
         # channel map
         if self.dochannelmap:
@@ -246,3 +262,106 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             my_ia.setbrightnessunit(self.tb_fluxunit)
 
         my_ia.close()
+
+    def _calc_PB(self, antenna):
+        pb_factor = 1.175
+        self.open_table(self.antenna_table)
+        antid = -1
+        casalog.post("Calculating Pirimary beam size:")
+        try:
+            if type(antenna) == int and antenna < self.table.nrows():
+                antid = antenna
+            elif type(antenna) == str and len(antenna) > 0:
+                for idx in range(self.table.nrows()):
+                    if (antenna.upper() == self.table.getcell('NAME', idx)):
+                        antid = idx
+                        break
+            antdiam_unit = self.table.getcolkeyword('DISH_DIAMETER', 'QuantumUnits')[0]
+            if antid > 0:
+                antdiam_ave = qa.quantity(self.table.getcell('DISH_DIAMETER'),antdiam_unit)
+            else:
+                diams = self.table.getcol('DISH_DIAMETER')
+                antdiam_ave = qa.quantity(diams.mean(), antdiam_unit)
+        finally:
+            self.close_table()
+        
+        my_qa = qatool()
+        rest_frequency = self.restfreq
+        if type(rest_frequency) in [float, numpy.float64]:
+            rest_frequency = my_qa.tos(my_qa.quantity(rest_frequency, 'Hz'))
+        if not my_qa.compare(rest_frequency, 'Hz'):
+            raise Exception, "Invalid rest frequency, %s" % str(rest_frequency)
+        wave_length = 0.2997924 / my_qa.convert(my_qa.quantity(rest_frequency),'GHz')['value']
+        D_m = my_qa.convert(antdiam_ave, 'm')['value']
+        lambda_D = wave_length / D_m * 3600. * 180 / numpy.pi
+        PB = my_qa.quantity(pb_factor*lambda_D, 'arcsec')
+        # Summary
+        casalog.post("- Antenna diameter: %s m" % D_m)
+        casalog.post("- Reference Frequency: %s" % rest_frequency)
+        casalog.post("PB size = %5.3f * lambda/D = %s" % (pb_factor, my_qa.tos(PB)))
+        return PB
+
+
+    def _get_imsize_from_map_extent(self, dx, dy):
+        ### MS selection is ignored. This is not quite right.
+        casalog.post("Calculating image pixel from map extent.")
+        colname = self.pointingcolumn.upper()
+        self.open_table(self.pointing_table)
+        try:
+            dirinfo = self.table.getcolkeywords(colname)
+            dir_unit = dirinfo['QuantumUnits'] if dirinfo.has_key('QuantumUnits') \
+                    else ['rad', 'rad']
+            pointing = self.table.getcol(colname)
+        finally:
+            self.close_table()
+
+        my_qa = qatool()
+        ymax = pointing[1][0].max()
+        ymin = pointing[1][0].min()
+        qheight = my_qa.quantity(ymax - ymin, dir_unit[1])
+        qcenty = my_qa.quantity(0.5*(ymin + ymax), dir_unit[1])
+
+        x_to_rad = my_qa.convert(my_qa.quantity(1., dir_unit[0]), 'rad')['value']
+        xrad = pointing[0][0] * x_to_rad
+        del pointing
+        width = self._get_x_extent(xrad) * \
+                numpy.cos(my_qa.convert(qcenty, 'rad')['value'])
+        qwidth = my_qa.quantity(width, dir_unit[0])
+
+        ny = numpy.ceil( ( my_qa.convert(qheight, my_qa.getunit(dy))['value'] /  \
+                           my_qa.getvalue(dy) ) )
+        nx = numpy.ceil( ( my_qa.convert(qwidth, my_qa.getunit(dx))['value'] /  \
+                           my_qa.getvalue(dx) ) )
+        casalog.post("- Pointing extent: [%s, %s]" % (my_qa.tos(qwidth), my_qa.tos(qheight)))
+        casalog.post("- Cell size: [%s, %s]" % (dx, dy))
+        casalog.post("Image pixel numbers to cover pointings: [%d, %d]" % (nx+1, ny+1))
+        return (int(nx+1), int(ny+1))
+
+
+    def _get_x_extent(self, x):
+        # assumed the x is in unit of rad.
+        pi2 = 2. * numpy.pi
+        x = (x % pi2)
+        npart = 4
+        dlon = pi2/float(npart)
+        pos = [int(v/dlon) for v in x]
+        voids = [False for dummy in range(npart)]
+        for ipos in range(npart):
+            try: dummy = pos.index(ipos)
+            except: voids[ipos] = True
+        if not any(voids):
+            raise Exception, "Failed to find pointing gap. The algorithm requires at least 2PI/%d of pointing gap" % npart
+        rot_pos = []
+        if (not voids[0]) and (not voids[npart-1]):
+            gmax = -1
+            for idx in range(npart-2, 0, -1):
+                if voids[idx]:
+                    gmax = idx
+                    break
+            if gmax < 0:
+                raise Exception, "Failed to detect gap max"
+            rot_pos = range(gmax+1, npart)
+        for idx in xrange(len(x)):
+            x[idx] = (x[idx] - pi2) if pos[idx] in rot_pos else x[idx]
+
+        return (x.max() - x.min())

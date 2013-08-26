@@ -174,7 +174,8 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
     def test004(self):
         """Test004: Bad antenna id"""
         try:
-            res=sdimaging(infile=self.rawfile,antenna=self.badid,outfile=self.outfile)
+            res=sdimaging(infile=self.rawfile,antenna=self.badid,
+                          imsize=self.imsize,cell=self.cell,outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -257,20 +258,20 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
 
     def test012(self):
         """Test012: Bad imsize"""
-        try:
-            res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=[0,0],phasecenter=self.phasecenter)
-            self.assertTrue(False,
-                            msg='The task must throw exception')
-        except Exception, e:
-            pos=str(e).find('%s does not exist'%(self.outfile))
-            self.assertNotEqual(pos,-1,
-                                msg='Unexpected exception was thrown: %s'%(str(e)))
-        
+        # This does not raise error anymore.
+        res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=[1,0],phasecenter=self.phasecenter)
+        self.assertFalse(res)
+
     def test013(self):
         """Test013: Bad cell size"""
         # empty image will be created
-        res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell=[0.,0.],imsize=self.imsize,phasecenter=self.phasecenter)
-        self.assertFalse(res)
+        try:
+            res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell=[0.,0.],imsize=self.imsize,phasecenter=self.phasecenter)
+            self.assertFail(msg='The task must throw exception')
+        except Exception, e:
+            pos=str(e).find('Infinite resolution not possible.')
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test014(self):
         """Test014: Too fine resolution (smaller than original channel width"""
