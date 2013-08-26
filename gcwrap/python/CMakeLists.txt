@@ -43,6 +43,7 @@ scripts/listing.py
 scripts/mindpipes.py
 scripts/ngc5921_usecase.py
 scripts/odict.py
+scripts/OrderedDictionary.py
 scripts/parallel_go.py
 scripts/parallelSplit.py
 scripts/parameter_check.py
