@@ -1834,7 +1834,6 @@ def setupAgent(aflocal, myflagcmd, myrows, apply, writeflags, display=''):
             else:
                 # Unknown mode, ignore it
                 casalog.post('Ignoring unknown mode', 'WARN')
-                valid = False
 
         else:
             # No mode means manual
@@ -1853,15 +1852,15 @@ def setupAgent(aflocal, myflagcmd, myrows, apply, writeflags, display=''):
         modepars['apply'] = apply
         
         # Unapply selected rows only and re-apply the other rows with APPLIED=True
-        if not apply and myrows.__len__() > 0:
-            if key in myrows:
-                modepars['apply'] = False
-            elif not applied:
-                casalog.post("Skipping this %s"%modepars,"DEBUG")
-                continue
-            elif applied:
-                modepars['apply'] = True
-                valid = False
+#         if not apply and myrows.__len__() > 0:
+#             if key in myrows:
+#                 modepars['apply'] = False
+#             elif not applied:
+#                 casalog.post("Skipping this %s"%modepars,"DEBUG")
+#                 continue
+#             elif applied:
+#                 modepars['apply'] = True
+#                 valid = False
         
         # Keep only cmds that overlap with the unapply cmds
         # TODO later

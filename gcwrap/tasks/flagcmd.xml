@@ -166,7 +166,7 @@
     The flagcmd task will flag data based on the commands input on inpmode:
         table = input from FLAG_CMD table in MS
         list  = input from a file, list of files or a (Python) list of command strings
-        xml   = input from Flag.xml in the MS given by vis
+        xml   = input from Flag.xml in the MS given by vis (only for EVLA MSs)
 
     Batch operations include : apply/unapply/list/plot/clear/extract
 
@@ -302,7 +302,8 @@
 
    
        inpmode "xml" -- input online flags from Flag.xml file in the MS. This mode
-                        is not available for cal tables.
+                        is not available for cal tables. This works only for MSs 
+                        imported using importevla. It will not work for ALMA MSs.
                         NOTE: You can only apply the flags from a XML file; you will not be able
                               to unapply them. Transfer the flag commands to the FLAG_CMD table
                               if you want to unapply the flags. For this, see action='list' below.
@@ -344,14 +345,7 @@
 
           This operation will unapply the commands chosen by inpmode='table' ONLY.
           After unapplying the commands, the task will update the APPLIED column to False. 
-          
-          IMPORTANT: In order to guarantee that only the data selected in 
-          the command is unapplied, the framework will first unapply the selected
-          rows and then re-apply the overlapping data that got unapplied in the
-          first pass. This is a true unapply action, but it will take longer to
-          process because it will re-apply all the remaining commands that have
-          APPLIED = True!
-   
+             
           flagbackup -- Automatically backup MS FLAG column before unapplying?
                options: True,False
                default: True
@@ -585,7 +579,7 @@
 
         * action = 'unapply'
 
-          This will effectively unapply any commands on the selected data that
+          This will unapply any commands on the selected data that
           come from the FLAG_CMD table.
 
         * action = 'list'

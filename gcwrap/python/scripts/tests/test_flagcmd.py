@@ -78,7 +78,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        flagdata(vis=self.vis, mode='unflag', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
         default(flagcmd)
 
     def setUp_multi(self):
@@ -91,7 +91,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        flagdata(vis=self.vis, mode='unflag', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
         default(flagcmd)
 
     def setUp_flagdatatest_alma(self):
@@ -104,7 +104,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        flagdata(vis=self.vis, mode='unflag', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
         default(flagcmd)
 
         
@@ -118,7 +118,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        flagdata(vis=self.vis, mode='unflag', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
         default(flagcmd)
         
     def setUp_shadowdata(self):
@@ -131,7 +131,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        flagdata(vis=self.vis, mode='unflag', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
         default(flagcmd)
         
     def setUp_data4rflag(self):
@@ -144,7 +144,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        flagdata(vis=self.vis, mode='unflag', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
         default(flagcmd)
 
     def setUp_bpass_case(self):
@@ -159,7 +159,7 @@ class test_base(unittest.TestCase):
                         "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        flagdata(vis=self.vis, mode='unflag', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
         default(flagcmd)
         
 class test_manual(test_base):
@@ -422,26 +422,34 @@ class test_unapply(test_base):
         # Remove any cmd from table
         flagcmd(vis=self.vis, action='clear', clearall=True)
 
-        # Flag using manual agent
-        myinput = "scan=1"
-        filename = create_input(myinput)
-        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True,
-                flagbackup=False)
-
         # Flag using the quack agent
         myinput = "scan=1~3 mode=quack quackinterval=1.0"
         filename = create_input(myinput)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True,
                 flagbackup=False)
-        
+        result = flagdata(vis=self.vis,mode='summary')
+        quack_flags = result['scan']['1']['flagged']
+
+        # Flag using manual agent
+        myinput = "scan=1"
+        filename = create_input(myinput)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True,
+                flagbackup=False)
+        result = flagdata(vis=self.vis,mode='summary')
+        scan1_flags = result['scan']['1']['flagged']
+
         # Unapply only the quack line
-        flagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=1, savepars=True)
-        result = flagdata(vis=self.vis,mode='summary',scan='1')
+        flagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=0, savepars=True)
+        result = flagdata(vis=self.vis,mode='summary')
+        manual_flags = result['scan']['1']['flagged']
         
         # Only the manual flags should be there
-        self.assertEqual(result['flagged'], 568134, 'Expected 568134 flags, found %s'%result['flagged'])
-        self.assertEqual(result['total'], 568134,'Expected total 568134, found %s'%result['total'])
-        
+#         self.assertEqual(result['flagged'], 568134, 'Expected 568134 flags, found %s'%result['flagged'])
+#         self.assertEqual(result['total'], 568134,'Expected total 568134, found %s'%result['total'])
+        # CAS-5377. New unapply action
+        self.assertEqual(result['scan']['3']['flagged'], 0)
+        self.assertEqual(manual_flags,scan1_flags - quack_flags)
+
     def test_umanualflag(self):
         '''flagcmd: unapply manual agent'''
         # Remove any cmd from table
@@ -459,13 +467,15 @@ class test_unapply(test_base):
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True,
                 flagbackup=False)
         
-        # Unapply only the manual line
+        # Unapply the manual line
         flagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=0, savepars=False)
-        result = flagdata(vis=self.vis,mode='summary',scan='1')
+        result = flagdata(vis=self.vis,mode='summary',scan='1,2,3')
         
-        # Only the quack flags should be left
-        self.assertEqual(result['flagged'], 44226, 'Expected 44226 flags, found %s'%result['flagged'])
-        self.assertEqual(result['total'], 568134,'Expected total 568134, found %s'%result['total'])
+        # scan 1 should be fully unflagged
+        self.assertEqual(result['scan']['1']['flagged'], 0)
+        self.assertEqual(result['scan']['2']['flagged'], 47628)
+        self.assertEqual(result['scan']['3']['flagged'], 47628)
+        self.assertEqual(result['flagged'], 47628+47628)
         
 
     def test_uscans(self):
@@ -481,10 +491,10 @@ class test_unapply(test_base):
         flagdata(vis=self.vis, scan='4', savepars=True, flagbackup=False)
         
         # There should be 5 cmds in FLAG_CMD. Unapply row=1 and set APPLIED to False
-        flagcmd(vis=self.vis, action='unapply', tablerows=1, savepars=False)
+        flagcmd(vis=self.vis, action='unapply', tablerows=1, useapplied=True)
         
         # Unapply scans 2 and 3 only. It should not re-apply scan=1 (row 1)
-        flagcmd(vis=self.vis, action='unapply', tablerows=[2,3], savepars=False)
+        flagcmd(vis=self.vis, action='unapply', tablerows=[2,3], useapplied=True)
         
         # We should have left only scans 4 and 7 flagged.
         res = flagdata(vis=self.vis, mode='summary')
@@ -945,19 +955,19 @@ class test_cmdbandpass(test_base):
         aflocal = casac.agentflagger()
         flagmanager(vis=self.vis, mode='list')
         aflocal.open(self.vis)
-        self.assertEqual(len(aflocal.getflagversionlist()), 3)
+        self.assertEqual(len(aflocal.getflagversionlist()), 2)
         aflocal.done()
 
         flagcmd(vis=self.vis, inpmode='list', inpfile=["spw='3'"])
         flagmanager(vis=self.vis, mode='list')
         aflocal.open(self.vis)
-        self.assertEqual(len(aflocal.getflagversionlist()), 4)
+        self.assertEqual(len(aflocal.getflagversionlist()), 3)
         aflocal.done()
 
         flagcmd(vis=self.vis, inpmode='list', inpfile=["spw='4'"], flagbackup=False)
         flagmanager(vis=self.vis, mode='list')
         aflocal.open(self.vis)
-        self.assertEqual(len(aflocal.getflagversionlist()), 4)
+        self.assertEqual(len(aflocal.getflagversionlist()), 3)
         aflocal.done()
         
         newname = 'BackupBeforeSpwFlags'
@@ -966,7 +976,7 @@ class test_cmdbandpass(test_base):
                     comment='Backup of flags before applying flags on spw')
         flagmanager(vis=self.vis, mode='list')
         aflocal.open(self.vis)
-        self.assertEqual(len(aflocal.getflagversionlist()), 4)
+        self.assertEqual(len(aflocal.getflagversionlist()), 3)
         aflocal.done()
         
         # Apply spw=5 flags

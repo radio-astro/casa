@@ -155,13 +155,12 @@ def flagcmd(
                 else:
                     msfile = inpfile
     
-                # Read only the selected rows for action = apply and
-                # always read all rows with APPLIED=True for action = unapply
-                if action == 'unapply':
-                    myflagcmd = readFromTable(msfile, useapplied=True,
-                            myreason=reason)
-                else:
-                    myflagcmd = readFromTable(msfile, myflagrows=tablerows,
+                # Set useapplied also for the unapply action
+#                 if action == 'unapply':
+#                     myflagcmd = readFromTable(msfile, useapplied=True,
+#                             myreason=reason)
+#                 else:
+                myflagcmd = readFromTable(msfile, myflagrows=tablerows,
                             useapplied=useapplied, myreason=reason)
     
                 listmode = 'cmd'
@@ -222,7 +221,7 @@ def flagcmd(
     
                 casalog.post('Reading from Flag.xml')
                 if action == 'unapply':
-                    casalog.post("The unapply action can only be used with inpmode='table;'",'WARN')
+                    casalog.post("The unapply action can only be used with inpmode='table' or 'list';'",'WARN')
                     casalog.post("save the commands to the FLAG_CMD table before using unapply.",'WARN')
                     raise ValueError, "Unsupported action='unapply' for inpmode='xml'"
 
@@ -316,7 +315,7 @@ def flagcmd(
                 # Preserve the order of the cmd list. When unapply, the order
                 # should not be preserved, because the unapply list should run
                 # before the re-apply list in the FlagAgentList.apply() method
-                preserve_order = True
+#                preserve_order = True
     
                 # Get the list of parameters
                 cmdlist = []
@@ -352,7 +351,7 @@ def flagcmd(
                 # Parse the agents parameters
                 if action == 'unapply':
                     apply = False
-                    preserve_order = False
+#                    preserve_order = False
     
                 list2save = fh.setupAgent(aflocal, myflagcmd, tablerows,
                         apply, True)
@@ -367,7 +366,8 @@ def flagcmd(
                     fh.backupFlags(aflocal, msfile='', prename='flagcmd')
     
                 # Run the tool
-                stats = aflocal.run(True, preserve_order)
+#                stats = aflocal.run(True, preserve_order)
+                stats = aflocal.run(True)
     
                 aflocal.done()
     
