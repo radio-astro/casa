@@ -66,7 +66,8 @@ namespace casa {
 		}
 		try {
 			if ( taskMonitor != NULL ) {
-				ImageInterface<Float>* img = const_cast<ImageInterface <Float>* >(taskMonitor->getImage());
+				//ImageInterface<Float>* img = const_cast<ImageInterface <Float>* >(taskMonitor->getImage().get());
+				std::tr1::shared_ptr<ImageInterface<Float> > img(std::tr1::const_pointer_cast<ImageInterface<Float> >(taskMonitor->getImage()));
 				collapser = new SpectralCollapser(img, String(QDir::tempPath().toStdString()));
 
 			}
@@ -183,7 +184,7 @@ namespace casa {
 		SpectralCollapser::stringToCollapseType(String(text.toStdString ()), itsCollapseType);
 
 		// get the coo-sys
-		ImageInterface<Float> * image = const_cast<ImageInterface <Float>* > (taskMonitor->getImage());
+		ImageInterface<Float> * image = const_cast<ImageInterface <Float>* > (taskMonitor->getImage().get());
 		CoordinateSystem cSys = image->coordinates();
 
 		// depending on the collapse type,

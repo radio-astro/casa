@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#include <plotms/Actions/PlotMSDrawThread.qo.h>
+#include <plotms/Threads/Gui/PlotMSDrawThread.qo.h>
 
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 
@@ -34,11 +34,11 @@ namespace casa {
 // PLOTMSDRAWTHREAD DEFINITIONS //
 //////////////////////////////////
 
-PlotMSDrawThread::PlotMSDrawThread(PlotMSPlotter* plotter,
+PlotMSDrawThread::PlotMSDrawThread(PlotMSPlotter* plotter, QtProgressWidget* progress,
         PMSPTMethod postThreadMethod, PMSPTObject postThreadObject) :
-        PlotMSThread(plotter->getProgressWidget(), postThreadMethod,
-        postThreadObject), itsPlotter_(plotter), isRunning_(false),
-        itsOperationFlag_(false), wasCanceled_(false) {
+        PlotMSThread( progress, postThreadMethod, postThreadObject),
+        itsPlotter_(plotter), isRunning_(false),
+        itsOperationFlag_(false) {
     updatePlotterCanvases();
 }
 
@@ -118,11 +118,12 @@ void PlotMSDrawThread::startOperation() {
     
     if(done) {
         itsOperationsMutex_.unlock();
-        emit finishedOperation(this);
+        //emit finishedOperation(this);
+        signalFinishedOperation( this );
         return;
     }
     
-    initializeProgressWidget(itsOperations_[0]->name());
+    initializeProgress(itsOperations_[0]->name());
     setAllowedOperations(false, false, true);
     
     isRunning_ = true;
@@ -151,33 +152,18 @@ void PlotMSDrawThread::operationChanged(const PlotOperation& operation) {
         done &= itsOperations_[i]->isFinished();
     }
     
-    updateProgressWidget((unsigned int)(progress / n), status);
+    setProgress((unsigned int)(progress / n), status);
     
     if(done) {
-        finalizeProgressWidget();
+        finalizeProgress();
         isRunning_ = false;
         itsOperationsMutex_.unlock();
-        emit finishedOperation(this);
+        //emit finishedOperation(this);
+        signalFinishedOperation( this );
         return;
     }
     
     itsOperationsMutex_.unlock();
-}
-
-
-bool PlotMSDrawThread::wasCanceled() const { return wasCanceled_; }
-
-
-void PlotMSDrawThread::background() {
-    cout << "PlotMSDrawThread::background() not yet implemented." << endl;
-}
-
-void PlotMSDrawThread::pause() {
-    cout << "PlotMSDrawThread::pause() not yet implemented." << endl;
-}
-
-void PlotMSDrawThread::resume() {
-    cout << "PlotMSDrawThread::resume() not yet implemented." << endl;
 }
 
 bool PlotMSDrawThread::isDrawing() const {

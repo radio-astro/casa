@@ -386,7 +386,8 @@ public:
     // DEFAULT IMPLEMENTATION.
     virtual PlotLinePtr line(const PlotLinePtr copy,
             bool smartDelete = true) const;
-    
+    virtual PlotSymbolPtr createSymbol (const String& descriptor, int size, const String& color,
+    			const String& fillPattern, bool outline );
     // Returns a new symbol with the given style.
     virtual PlotSymbolPtr symbol(PlotSymbol::Symbol style,
             bool smartDelete = true) const = 0;

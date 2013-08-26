@@ -86,7 +86,7 @@ const String PMS_PP_MSData::REC_AVERAGING = "averaging";
 const String PMS_PP_MSData::REC_TRANSFORMATIONS = "transformations";
 
 
-PMS_PP_MSData::PMS_PP_MSData(PlotFactoryPtr factory) 
+PMS_PP_MSData::PMS_PP_MSData(PlotFactoryPtr factory)
 	:  PlotMSPlotParameters::Group(factory)
 {
     setDefaults();
@@ -216,7 +216,8 @@ const String PMS_PP_Cache::REC_XDATACOLS = "xdatacolumns";
 const String PMS_PP_Cache::REC_YDATACOLS = "ydatacolumns";
 
 
-PMS_PP_Cache::PMS_PP_Cache(PlotFactoryPtr factory) : PlotMSPlotParameters::Group(factory)
+PMS_PP_Cache::PMS_PP_Cache(PlotFactoryPtr factory)
+	: PlotMSPlotParameters::Group(factory)
     {
     setDefaults();
     } PMS_PP_Cache::PMS_PP_Cache(const PMS_PP_Cache& copy) : PlotMSPlotParameters::Group(copy)
@@ -356,7 +357,8 @@ const String PMS_PP_Axes::REC_XRANGES = "xRanges";
 const String PMS_PP_Axes::REC_YRANGES = "yRanges";
 
 
-PMS_PP_Axes::PMS_PP_Axes(PlotFactoryPtr factory) : PlotMSPlotParameters::Group(factory)
+PMS_PP_Axes::PMS_PP_Axes(PlotFactoryPtr factory)
+: PlotMSPlotParameters::Group(factory)
     {
     setDefaults();
     } PMS_PP_Axes::PMS_PP_Axes(const PMS_PP_Axes& copy) : PlotMSPlotParameters::Group(copy)
@@ -634,7 +636,8 @@ const String PMS_PP_Canvas::REC_GRIDMAJLINES = "gridMajorLines";
 const String PMS_PP_Canvas::REC_GRIDMINLINES = "gridMinorLines";
 
 
-PMS_PP_Canvas::PMS_PP_Canvas(PlotFactoryPtr factory) : PlotMSPlotParameters::Group(factory)
+PMS_PP_Canvas::PMS_PP_Canvas(PlotFactoryPtr factory)
+: PlotMSPlotParameters::Group(factory)
     {
     setDefaults();
     } PMS_PP_Canvas::PMS_PP_Canvas(const PMS_PP_Canvas& copy) : PlotMSPlotParameters::Group(copy)

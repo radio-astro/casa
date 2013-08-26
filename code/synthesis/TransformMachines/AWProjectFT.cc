@@ -1523,6 +1523,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
       }
 
+    cerr << "initializeToSky for grid" << endl;
     if(useDoubleGrid_p) 
       visResampler_p->initializeToSky(griddedData2, sumWeight);
     else
@@ -1657,19 +1658,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
     VBStore vbs;
-    setupVBStore(vbs,vb, elWeight,data,uvw,flags, dphase,dopsf);
+    Vector<Int> gridShape = griddedData2.shape().asVector();
+    setupVBStore(vbs,vb, elWeight,data,uvw,flags, dphase,dopsf,gridShape);
 
     if (useDoubleGrid_p)
       resampleDataToGrid(griddedData2, vbs, vb, dopsf);//, *imagingweight, *data, uvw,flags,dphase,dopsf);
     else
       resampleDataToGrid(griddedData, vbs, vb, dopsf);//, *imagingweight, *data, uvw,flags,dphase,dopsf);
-    
-  //Double or single precision gridding.
-  // if(useDoubleGrid_p) 
-  //   visResampler_p->DataToGrid(griddedData2, vbs, sumWeight, dopsf);
-  // else
-  //    visResampler_p->DataToGrid(griddedData, vbs, sumWeight, dopsf); 
-
   }
   //
   //-------------------------------------------------------------------------
@@ -1679,7 +1674,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO log_l(LogOrigin("AWProjectFT", "resampleDataToGrid[R&D]"));
     visResampler_p->DataToGrid(griddedData_l, vbs, sumWeight, dopsf); 
-    cerr << "SumWt: " << sumWeight << endl;
+    //    cerr << "####SumWt(C): " << sumWeight << endl;
   }
   //
   //-------------------------------------------------------------------------
@@ -1687,11 +1682,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::resampleDataToGrid(Array<DComplex>& griddedData_l, VBStore& vbs, 
 				       const VisBuffer& /*vb*/, Bool& dopsf)
   {
-    //    static int count=0;
     LogIO log_l(LogOrigin("AWProjectFT", "resampleDataToGridD[R&D]"));
-    //    cerr << count++ << " ";
     visResampler_p->DataToGrid(griddedData_l, vbs, sumWeight, dopsf); 
-    cerr << "SumWt: " << sumWeight << endl;
+    //    cerr << "####SumWt(DC): " << sumWeight << endl;
   }
   //
   //---------------------------------------------------------------
@@ -1773,7 +1766,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     VBStore vbs;
     //    setupVBStore(vbs,vb, vb.imagingWeight(),vb.modelVisCube(),uvw,flags, dphase, dopsf);
     Bool tmpDoPSF=False;
-    setupVBStore(vbs,vb, vb.imagingWeight(),data,uvw,flags, dphase,tmpDoPSF);
+    setupVBStore(vbs,vb, vb.imagingWeight(),data,uvw,flags, dphase,tmpDoPSF,griddedData.shape().asVector());
 
       // visResampler_p->setParams(uvScale,uvOffset,dphase);
       // visResampler_p->setMaps(chanMap, polMap);
@@ -2234,6 +2227,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //-------------------------------------------------------------------------
   //  
+  void AWProjectFT::makeThGridCoords(VBStore& vbs, const Vector<Int>& gridShape)
+  {
+    Float dNx=(gridShape(0)/8.0), dNy=(gridShape(1)/8.0);
+    Int GNx=SynthesisUtils::nint(gridShape(0)/dNx),
+      GNy=SynthesisUtils::nint(gridShape(1)/dNy);
+
+    vbs.BLCXi.resize(GNx,GNy);    
+    vbs.BLCYi.resize(GNx,GNy);    
+    vbs.TRCXi.resize(GNx,GNy);
+    vbs.TRCYi.resize(GNx,GNy);
+    vbs.BLCXi=vbs.BLCYi=vbs.TRCXi=vbs.TRCYi=-1;
+
+    for (Int i=0;i<GNx;i++)
+      for (Int j=0;j<GNy;j++)
+	{
+	  vbs.BLCXi(i,j)=max(0,SynthesisUtils::nint(i*dNx));
+	  vbs.BLCYi(i,j)=max(0,SynthesisUtils::nint(j*dNy));
+	  vbs.TRCXi(i,j)=min(gridShape(0), SynthesisUtils::nint((i+1)*dNx-1.0));
+	  vbs.TRCYi(i,j)=min(gridShape(1), SynthesisUtils::nint((j+1)*dNy-1.0));
+	}
+    // for (Int i=0;i<GNx;i++)
+    //   for (Int j=0;j<GNy;j++)
+    // 	cerr << i << " " << j << ": " << vbs.BLCXi(i,j) << " " << vbs.BLCYi(i,j) << " " << vbs.TRCXi(i,j) << " " << vbs.TRCYi(i,j) << endl;
+  }
+  //
+  //-------------------------------------------------------------------------
+  //  
   void AWProjectFT::setupVBStore(VBStore& vbs,
 				 const VisBuffer& vb, 
 				 const Matrix<Float>& imagingweight,
@@ -2241,7 +2261,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				 const Matrix<Double>& uvw,
 				 const Cube<Int>& flagCube,
 				 const Vector<Double>& dphase,
-				 const Bool& dopsf)
+				 const Bool& dopsf,
+				 const Vector<Int>& gridShape)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "setupVBStore[R&D]"));
 
@@ -2305,14 +2326,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // For AzElApertures, this rotates the CFs.
     //
     convFuncCtor_p->prepareConvFunction(vb,theMap);
-
-
+    
+    
     //    CFBStruct cfbst_pub;
     theMap[0]->getAsStruct(cfbst_pub);
     vbs.cfBSt_p=cfbst_pub;
     vbs.accumCFs_p=((vbs.uvw_p.nelements() == 0) && dopsf);
-
-
+    
+    
     // for(int ii=0;ii<cfbst_pub.shape[0];ii++)
     //   for(int jj=0;jj<cfbst_pub.shape[1];jj++)
     // 	for(int kk=0;kk<cfbst_pub.shape[2];kk++)
@@ -2325,7 +2346,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // 		 << endl;
     // 	  }
 
+    makeThGridCoords(vbs,gridShape);
+
     runTime1_p += timer_p.real();
+    visResampler_p->initializeDataBuffers(vbs);
     //    visResampler_p->setConvFunc(cfs_p);
   }
 

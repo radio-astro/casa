@@ -56,6 +56,8 @@
 
 #include <display/region/QtRegionDock.qo.h>
 
+#include <tr1/memory>
+
 
 extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char *func ) {
 	fprintf( stderr, "%s:%d pure virtual '%s( )' called...\n", file, line, func );
@@ -2086,7 +2088,7 @@ namespace casa {
 			return MDirection::EXTRA;
 		}
 
-		RegionInfo::center_t *Region::getLayerCenter( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg) {
+		RegionInfo::center_t *Region::getLayerCenter( PrincipalAxesDD *padd, std::tr1::shared_ptr<ImageInterface<Float> > image, ImageRegion& imgReg) {
 			if( image==0 || padd == 0 ) return 0;
 			try {
 				// store the coordinate system and the axis names
@@ -2497,8 +2499,9 @@ namespace casa {
 						if (padd==0) {
 							continue;
 						}
-						ImageInterface<float>* image = dd->imageinterface();
-						if ( image != NULL ) {
+						// dd->imageinterface() seems to always return 0 from what I can see so I'm confused
+						std::tr1::shared_ptr<ImageInterface<float> > image(dd->imageinterface());
+						if ( image ) {
 							histogram->addImage( image );
 							histogram->setImageRegion( image->name(true).c_str(),region, id_);
 						}
@@ -2539,9 +2542,9 @@ namespace casa {
 
 				try {
 
-					ImageInterface<Float> *image = padd->imageinterface( );
+					std::tr1::shared_ptr<ImageInterface<Float> > image ( padd->imageinterface( ));
 
-					if ( image == 0 ) continue;
+					if ( ! image ) continue;
 
 					String full_image_name = image->name(false);
 					std::map<String,bool>::iterator repeat = processed.find(full_image_name);
@@ -2550,20 +2553,20 @@ namespace casa {
 
 					if ( name_ == "polyline" ) {
 
-						RegionInfo *info = newInfoObject( image, padd );
+						RegionInfo *info = newInfoObject( image.get(), padd );
 						if ( info ) region_statistics->push_back( std::tr1::shared_ptr<RegionInfo>(info));
 
 					} else if ( name_ == "p/v line" ) {
 
 						get_image_region( dd );
-						RegionInfo *info = newInfoObject( image, padd );
+						RegionInfo *info = newInfoObject( image.get(), padd );
 						if ( info ) region_statistics->push_back( std::tr1::shared_ptr<RegionInfo>(info) );
 
 					} else {
 
 						if ( imageregion.get( ) == NULL  ) continue;
 
-						RegionInfo::stats_t *dd_stats = getLayerStats(padd,image,*imageregion);
+						RegionInfo::stats_t *dd_stats = getLayerStats(padd,image.get(),*imageregion);
 						if ( dd_stats ) {
 							dd_stats->push_back(std::pair<String,String>("region count",region_component_count));
 							region_statistics->push_back(std::tr1::shared_ptr<RegionInfo>(new ImageRegionInfo( image->name(true), image->name(false), dd_stats)));

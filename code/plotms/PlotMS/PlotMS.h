@@ -29,6 +29,9 @@
 
 #include <plotms/PlotMS/PlotMSParameters.h>
 #include <plotms/Plots/PlotMSPlotManager.h>
+#include <plotms/PlotMS/PlotMSFlagging.h>
+#include <plotms/PlotMS/PlotEngine.h>
+#include <plotms/Actions/PlotMSAction.h>
 
 namespace casa {
 
@@ -41,21 +44,21 @@ namespace casa {
 
 //# Forward declarations.
 class PlotMSDBusApp;
-class PlotMSPlotter;
+class Client;
 
 
 // Controller class for plotms.  Handles interactions between the UI and plots.
-class PlotMSApp : public PlotMSParametersWatcher {
+class PlotMSApp : public PlotMSParametersWatcher, public PlotEngine {
 public:    
     // Default constructor that uses default options.  If connectToDBus is
     // true, then the application registers itself with CASA's DBus server
     // using the PlotMSDBusApp::dbusName() with the current process ID.
-    PlotMSApp(bool connectToDBus = false);
+    PlotMSApp(bool connectToDBus = false, bool userGui = true );
     
     // Constructor which takes the given parameters.  If connectToDBus is true,
     // then the application registers itself with CASA's DBus server using the
     // PlotMSDBusApp::dbusName() with the current process ID.
-    PlotMSApp(const PlotMSParameters& params, bool connectToDBus = false);
+    PlotMSApp(const PlotMSParameters& params, bool connectToDBus = false, bool userGui = true);
     
     // Destructor
     ~PlotMSApp();
@@ -64,13 +67,14 @@ public:
     // Plotter Methods //
     
     // Returns the PlotMSPlotter associated with this PlotMS. 
-    PlotMSPlotter* getPlotter();
+    //PlotMSPlotter* getPlotter();
     
+
     // See PlotMSPlotter::showGUI().
-    void showGUI(bool show = true);
+    virtual void showGUI(bool show = true);
     
     // See PlotMSPlotter::guiShown().
-    bool guiShown() const;
+    virtual bool guiShown() const;
     
     // See PlotMSPlotter::execLoop().
     int execLoop();
@@ -93,60 +97,77 @@ public:
     void showMessage(const String& message,
             const String& title = "PlotMS Message");
     
+    // Enable/disable annotations in the client
+    void setAnnotationModeActive( PlotMSAction::Type type, bool active );
     
     // Parameter Methods //
     
     // Gets/Sets the parameters for this PlotMS.
     // <group>
-    PlotMSParameters& getParameters();
+    virtual PlotMSParameters& getParameters();
     void setParameters(const PlotMSParameters& params);
     // </group>
     
     // Implements PlotMSParametersWatcher::parametersHaveChanged().
     void parametersHaveChanged(const PlotMSWatchedParameters& params,
                 int updateFlag);
-    
-    
+    virtual PlotSymbolPtr createSymbol (const String& descriptor,
+    		Int size, const String& color,
+        	const String& fillPattern, bool outline );
+    PlotSymbolPtr createSymbol( const PlotSymbolPtr& copy );
     // Logger Methods //
     
     // Gets the logger associated with this PlotMS.
-    PlotLoggerPtr getLogger();
+    virtual PlotLoggerPtr getLogger();
     
     
     // Plot Management Methods //
     
     // Returns the PlotMSPlotManager associated with this PlotMS.
-    PlotMSPlotManager& getPlotManager();
+    virtual PlotMSPlotManager& getPlotManager();
     
     // See PlotMSPlotManager::addSinglePlot().
-    PlotMSPlot* addSinglePlot(const PlotMSPlotParameters* p = NULL);
+   // virtual PlotMSPlot* addSinglePlot(const PlotMSPlotParameters* p = NULL);
     
     // See PlotMSPlotManager::addMultiPlot();
-    PlotMSPlot* addMultiPlot(const PlotMSPlotParameters* p = NULL);
+    //PlotMSPlot* addMultiPlot(const PlotMSPlotParameters* p = NULL);
 
     // See PlotMSPlotManager::addIterPlot();
-    PlotMSPlot* addIterPlot(const PlotMSPlotParameters* p = NULL);
+    //PlotMSPlot* addIterPlot(const PlotMSPlotParameters* p = NULL);
 
     // See PlotMSPlotManager::addOverPlot();
-    PlotMSOverPlot* addOverPlot(const PlotMSPlotParameters* p = NULL);
+    virtual PlotMSOverPlot* addOverPlot(const PlotMSPlotParameters* p = NULL);
     
-    bool isDrawing() const;
+    virtual bool isDrawing() const;
     bool isClosed() const;
 
     // save plot  to file using specified format. If interactive, pop up confirm window, if not, no confirm windowl
     bool save(const PlotExportFormat& format, const bool interactive);
 
+    /**
+     * PlotEngine methods
+     */
+    virtual PlotFactoryPtr getPlotFactory();
+    virtual void quitApplication();
+    virtual PlotMSFlagging getFlagging() const;
+    virtual void setFlagging(PlotMSFlagging flag);
+    void canvasAdded( PlotCanvasPtr canvas );
+    bool isVisible(PlotCanvasPtr& canvas );
+    bool exportToFormat(const PlotExportFormat& format);
+    virtual Record locateInfo( Bool& success, String& errorMessage );
+    PlotterPtr getPlotter();
 public:
     // To allow normal error/warning/info popups, which block execution,
     // or, if not, prevent blocking by writing to the Logger and posting 
     // text to a status bar (or other visible gui element TBD)
     // (public for now, while it's experimental)
 	bool its_want_avoid_popups;
-
+	bool updateCachePlot( PlotMSPlot* plot, void (*f)(void*, bool), bool setupPlot);
 private:
     // Plotter GUI.
-    PlotMSPlotter* itsPlotter_;
-    
+    //PlotMSPlotter* itsPlotter_;
+    Client* itsPlotter_;
+
     // Current parameters.
     PlotMSParameters itsParameters_;
     
@@ -161,7 +182,7 @@ private:
 
     
     // Initializes a new PlotMS object, to be called from constructor.
-    void initialize(bool connectToDBus);    
+    void initialize(bool connectToDBus, bool userGui );
     
     // Disable copy constructor and operator for now.
     // <group>

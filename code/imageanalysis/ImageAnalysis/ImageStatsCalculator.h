@@ -35,6 +35,7 @@
 #include <casa/namespace.h>
 
 #include <memory>
+#include <tr1/memory>
 
 namespace casa {
 
@@ -60,7 +61,7 @@ class ImageStatsCalculator: public ImageTask {
 public:
 
    	ImageStatsCalculator(
-   		const ImageInterface<Float> *const &image,
+   		const ImageTask::shCImFloat image,
     	const Record *const &regionPtr,
     	const String& maskInp, Bool beVerboseDuringConstruction
     );

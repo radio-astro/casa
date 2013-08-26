@@ -34,6 +34,7 @@
 #include <casa/namespace.h>
 
 #include <memory>
+#include <tr1/memory>
 
 namespace casa {
 
@@ -77,8 +78,8 @@ public:
 	// <group>
 
 	ImagePrimaryBeamCorrector(
-		const ImageInterface<Float> * const &image,
-		const ImageInterface<Float> * const &pbImage,
+			const ImageTask::shCImFloat image,
+			const ImageTask::shCImFloat pbImage,
 		const Record * const &regionPtr,
 		const String& region, const String& box,
 		const String& chanInp, const String& stokes,
@@ -88,7 +89,7 @@ public:
 	);
 
 	ImagePrimaryBeamCorrector(
-		const ImageInterface<Float> * const &image,
+			const ImageTask::shCImFloat image,
 		const Array<Float>& pbArray,
 		const Record * const &regionPtr,
 		const String& region, const String& box,

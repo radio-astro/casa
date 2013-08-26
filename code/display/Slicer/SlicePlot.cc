@@ -44,7 +44,7 @@ namespace casa {
 	const QString SlicePlot::UNIT_X_ARCDEG = "Arc Degrees";
 
 	SlicePlot::SlicePlot(QWidget *parent, bool allFunctionality ) :QwtPlot(parent),
-		image( NULL ), imageAnalysis( NULL ), AXIS_FONT_SIZE(8),
+		image(  ), imageAnalysis( NULL ), AXIS_FONT_SIZE(8),
 		statLayout(NULL), factory(NULL) {
 		setCanvasBackground( Qt::white );
 
@@ -318,8 +318,8 @@ namespace casa {
 //                      Data Processing
 //-------------------------------------------------------------------
 
-	void SlicePlot::setImage( ImageInterface<float>* img ) {
-		if ( img != NULL && image != img ) {
+	void SlicePlot::setImage( std::tr1::shared_ptr<ImageInterface<float> > img ) {
+		if ( img && image != img ) {
 			//Reset the image.  The units the image is using may have changed.
 			image = img;
 			Unit brightnessUnit = image->units();

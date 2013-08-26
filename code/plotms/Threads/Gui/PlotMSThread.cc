@@ -24,10 +24,10 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#include <plotms/Actions/PlotMSThread.qo.h>
+#include <plotms/Threads/Gui/PlotMSThread.qo.h>
 
 #include <casaqt/QtUtilities/QtProgressWidget.qo.h>
-
+#include <graphics/GenericPlotter/ProgressMonitor.h>
 namespace casa {
 
 //////////////////////////////
@@ -35,38 +35,67 @@ namespace casa {
 //////////////////////////////
 
 PlotMSThread::PlotMSThread(QtProgressWidget* progress,
-        PMSPTMethod postThreadMethod, PMSPTObject postThreadObject) :
-        itsProgressWidget_(progress), itsPostThreadMethod_(postThreadMethod),
-        itsPostThreadObject_(postThreadObject) {
-    connect(progress, SIGNAL(backgroundRequested()), SLOT(background()));
-    connect(progress, SIGNAL(pauseRequested()), SLOT(pause()));
-    connect(progress, SIGNAL(resumeRequested()), SLOT(resume()));
-    connect(progress, SIGNAL(cancelRequested()), SLOT(cancel()));
+        PMSPTMethod postThreadMethod, PMSPTObject postThreadObject)
+        : ThreadController( progress, postThreadMethod, postThreadObject ) {
+    connect(progress, SIGNAL(backgroundRequested()), SLOT(backgroundThread()));
+    connect(progress, SIGNAL(pauseRequested()), SLOT(pauseThread()));
+    connect(progress, SIGNAL(resumeRequested()), SLOT(resumeThread()));
+    connect(progress, SIGNAL(cancelRequested()), SLOT(cancelThread()));
     
-    connect(this, SIGNAL(initializeProgress(const QString&)),
+    //Signal/slot calls rather than direct calls so that the updates go on
+    //the GUI thread
+    connect(this, SIGNAL(initProgress(const QString&)),
             progress, SLOT(initialize(const QString&)));
     connect(this, SIGNAL(updateProgress(unsigned int, const QString&)),
             progress, SLOT(setProgress(unsigned int, const QString&)));
     connect(this, SIGNAL(finalizeProgress()), progress, SLOT(finalize()));
 }
 
+
+void PlotMSThread::initializeProgress(const String& operationName){
+	QString opName( operationName.c_str() );
+	emit initProgress( opName );
+}
+
+void PlotMSThread::setProgress(unsigned int progress, const String& status){
+	QString statusStr( status.c_str() );
+	emit updateProgress( progress, statusStr );
+}
+
+void PlotMSThread::finishProgress(){
+	emit finalizeProgress();
+}
+
+void PlotMSThread::finished( ){
+	threadFinished();
+}
+
+void PlotMSThread::signalFinishedOperation(PlotMSThread* thread ){
+	emit finishedOperation( thread );
+}
+
+// For when the user requests "background" for the thread.
+void PlotMSThread::backgroundThread(){
+	background();
+}
+
+	// For when the user requests "pause" for the thread.
+void PlotMSThread::pauseThread(){
+	pause();
+}
+
+// For when the user requests "resume" for the thread.
+void PlotMSThread::resumeThread(){
+	resume();
+}
+
+// For when the user requests "cancel" for the thread.
+void PlotMSThread::cancelThread(){
+	cancel();
+}
+
 PlotMSThread::~PlotMSThread() { }
 
-void PlotMSThread::postThreadMethod() {
-    if(itsPostThreadMethod_ != NULL && itsPostThreadObject_ != NULL)
-        (*itsPostThreadMethod_)(itsPostThreadObject_, wasCanceled());
 }
 
-void PlotMSThread::initializeProgressWidget(const String& operationName) {
-    emit initializeProgress(operationName.c_str()); }
 
-void PlotMSThread::updateProgressWidget(unsigned int progress,
-        const String& status) { emit updateProgress(progress, status.c_str());}
-
-void PlotMSThread::finalizeProgressWidget() { emit finalizeProgress(); }
-
-void PlotMSThread::setAllowedOperations(bool background, bool pauseResume,
-        bool cancel) {
-    itsProgressWidget_->setAllowedOperations(background, pauseResume,cancel); }
-
-}

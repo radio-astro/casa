@@ -74,6 +74,8 @@
 #include <algorithm>
 #include <display/functional/elements.h>
 
+#include <imageanalysis/ImageAnalysis/ImageRegridder.h>
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -231,8 +233,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		displayType_(displayType),
 		TYPE_IMAGE( "image"),
 		SKY_CATALOG( "skycatalog"), MS( "ms"),
-		im_(0),
-		cim_(0),
+		im_(),
+		cim_(),
 		dd_(0),
 		clrMapName_(""),
 		clrMap_(0),
@@ -314,7 +316,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					case ImageOpener::AIPSPP: {
 
 						if( imagePixelType(path_) == TpFloat ) {
-							im_  = new PagedImage<Float>(path_, TableLock::AutoNoReadLocking);
+							im_.reset(new PagedImage<Float>(path_, TableLock::AutoNoReadLocking));
 							// regions in image...
 							// Vector<String> regions = im_->regionNames( );
 							// for ( int i = 0; i < regions.size( ); ++i ) {
@@ -322,21 +324,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							// }
 
 						} else if(imagePixelType(path_)==TpComplex) {
-							cim_ = new PagedImage<Complex>(path_, TableLock::AutoNoReadLocking);
+							cim_.reset( new PagedImage<Complex>(path_, TableLock::AutoNoReadLocking));
 						} else  throw AipsError( "Only Float and Complex CASA images are supported at present.");
 						break;
 					}
 					case ImageOpener::FITS: {
 						FITSImgParser fip = FITSImgParser(tmp_path);
 						if (fip.has_qualityimg() && fip.is_qualityimg(ext_expr)) {
-							im_  = new FITSQualityImage(path);
+							im_.reset(new FITSQualityImage(path));
 						} else {
-							im_ = new FITSImage(path);
+							im_.reset(new FITSImage(path));
 						}
 						break;
 					}
 					case ImageOpener::MIRIAD: {
-						im_ = new MIRIADImage(path);
+						im_.reset(new MIRIADImage(path));
 						break;
 					}
 
@@ -354,14 +356,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					if ( im_ != 0 ) {
 						if ( regrid_to && method != "" ) {
 							// regrid new image to match the one provided...
-							ImageAnalysis ia(im_);
 							// need an option to delete temporary files on exit...
 							std::string outpath = viewer::options.temporaryPath(Path(path_).baseName());
 							panel_->status( "generating temporary image: " + outpath );
 							panel_->logIO( ) << "generating temporary image \'" << outpath << "'" << LogIO::POST;
-							ImageInterface<Float> *newim = ia.regrid( String(outpath), regrid_to->imageInterface( ), method, true );
-							std::auto_ptr<ImageInterface<Float> > imptr(im_);
-							im_ = newim;
+							ImageRegridder regridder(im_, String(outpath), regrid_to->imageInterface( ) );
+							regridder.setMethod(method);
+							regridder.setSpecAsVelocity(False);
+							im_ = regridder.regrid(True);
+							// std::auto_ptr<ImageInterface<Float> > imptr(im_);
 						}
 						std::string slice_description = ddo["slice"];
 						if ( slice_description != "" && slice_description != "none" ) {
@@ -374,8 +377,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 									if ( for_each(vec.begin( ),vec.end( ),check_str( )) ) {
 										Slicer slicer = for_each(vec.begin( ),vec.end( ),str_to_slicer( ));
 										SubImage<Float> *subim = new SubImage<Float>( (const ImageInterface<Float>&) *im_, slicer );
-										std::auto_ptr<ImageInterface<Float> > imptr(im_);
-										im_ = subim;
+										//std::auto_ptr<ImageInterface<Float> > imptr(im_);
+										im_.reset(subim);
 									}
 								} catch( const AipsError &err ) {
 									panel_->status( "unnable to generate sub-image: " + err.getMesg( ) );
@@ -392,9 +395,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					LatticeExprNode expr = ImageExprParse::command(path_);
 
 					if(expr.dataType() == TpFloat) {
-						im_ = new ImageExpr<Float>(LatticeExpr<Float>(expr), name_);
+						im_.reset(new ImageExpr<Float>(LatticeExpr<Float>(expr), name_));
 					} else if(expr.dataType() == TpComplex) {
-						cim_ = new ImageExpr<Complex>(LatticeExpr<Complex>(expr), name_);
+						cim_.reset( new ImageExpr<Complex>(LatticeExpr<Complex>(expr), name_));
 					} else throw AipsError("Only Float or Complex LEL expressions "
 						                       "are allowed");
 				}
@@ -425,8 +428,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			emit qddError(errMsg_);
 			// (error signal propagated externally, rather than throw.
 			// Alternatively, caller can test newQdd->isEmpty()).
-			im_=0;
-			cim_=0;
+			im_.reset();
+			cim_.reset();
 			return;
 		}
 
@@ -450,7 +453,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		dd_->setOptions( record, outRecord );
 	}
 
-	void QtDisplayData::setImage( ImageInterface<Float>* img ) {
+	void QtDisplayData::setImage(std::tr1::shared_ptr<ImageInterface<Float> > img ) {
 		im_=img;
 	}
 
@@ -535,13 +538,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Initialize colormap if necessary.
 		if(usesClrMap_()) {
-
-			// Check .aipsrc, otherwise use "Hot Metal 1" by default initially.
-
+			// Changing Default color map (see CAS-4081).  If none is found
+			//in .aipsrc, the default will be a greyscale, not rainbow.
 			String defaultCMName;
 			Aipsrc::find(defaultCMName, "display.colormaps.defaultcolormap",
-			             "Rainbow 2");
-
+			             "Greyscale 1");
 			// ...but fall back to "Greyscale 1" unless the above is a valid
 			// ('primary') name.  ('Synonym' colormap names (like "mono") are not
 			// supported at present through this QDD interface).  In case the table
@@ -788,13 +789,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		delete dd_;
 		dd_=0;
-		if(im_!=0)  {
-			delete im_;
-			im_=0;
+		if(im_)  {
+			im_.reset();
 		}
-		if(cim_!=0) {
-			delete cim_;
-			cim_=0;
+		if(cim_) {
+			cim_.reset();
 		}
 	}
 

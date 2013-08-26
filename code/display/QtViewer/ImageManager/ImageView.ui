@@ -184,16 +184,12 @@
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="openCloseButton">
+      <widget class="QPushButton" name="openCloseButton">
        <property name="toolTip">
         <string>Minimize/Maximize the display properties of the image.</string>
        </property>
        <property name="text">
-        <string>...</string>
-       </property>
-       <property name="icon">
-        <iconset>
-         <normaloff>:/icons/imageMinimize.png</normaloff>:/icons/imageMinimize.png</iconset>
+        <string>Options...</string>
        </property>
       </widget>
      </item>

@@ -26,8 +26,8 @@
 //# $Id: $
 #include <plotms/Plots/PlotMSSinglePlot.h>
 
-#include <plotms/Gui/PlotMSPlotter.qo.h>
-#include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
+//#include <plotms/Gui/PlotMSPlotter.qo.h>
+//#include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 
@@ -262,26 +262,28 @@ bool PlotMSSinglePlot::updateCache() {
     itsPlot_->dataChanged();
     
     // Set up cache loading parameters.
-    vector<PMS::Axis> axes(2);
+    /*vector<PMS::Axis> axes(2);
     axes[0] = c->xAxis();
     axes[1] = c->yAxis();
     vector<PMS::DataColumn> data(2);
     data[0] = c->xDataColumn();
-    data[1] = c->yDataColumn();
+    data[1] = c->yDataColumn();*/
     
     // Log the cache loading.
     itsParent_->getLogger()->markMeasurement(PMS::LOG_ORIGIN,
             PMS::LOG_ORIGIN_LOAD_CACHE, PMS::LOG_EVENT_LOAD_CACHE);
     itsTCLParams_.endCacheLog = true;
     
-    PlotMSCacheThread* ct = new PlotMSCacheThread(this, &itsData_, axes, data,
+    /*PlotMSCacheThread* ct = new PlotMSCacheThread(this, &itsData_, axes, data,
 						  d->filename(), 
 						  d->selection(), 
 						  d->averaging(), 
 						  d->transformations(), 
 						  true, 
 						  &PlotMSSinglePlot::cacheLoaded, this);
-    itsParent_->getPlotter()->doThreadedOperation(ct);
+    itsParent_->getPlotter()->doThreadedOperation(ct);*/
+    bool result = itsParent_->updateCachePlot( this, PlotMSSinglePlot::cacheLoaded, true);
+    return result;
     
     return true;
 }

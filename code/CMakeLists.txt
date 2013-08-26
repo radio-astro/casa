@@ -689,7 +689,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.208
+           VERSION 1.0.210
            PREFIX_HINTS ${CASACORE_ROOT_DIR} ${Boost_INCLUDE_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
@@ -749,11 +749,34 @@ foreach( _p ${CMAKE_INSTALL_PREFIX} ${casa_packages}  /sw /opt/local /usr/local 
   endforeach()
 endforeach()
 
+if ( DBUS_FOUND )
+   unset(DBUS_FOUND CACHE)
+   unset(DBUS_INCLUDE_DIRS CACHE)
+   unset(DBUS_LIBRARIES CACHE)
+   unset(DBUS_casa-dbus-cpp CACHE)
+   unset(DBUS_dbusxx-xml2cpp_EXECUTABLE CACHE)
+endif (DBUS_FOUND)
+if ( DBUS_2_FOUND )
+   unset(DBUS_2_FOUND CACHE)
+   unset(DBUS_2_INCLUDE_DIRS CACHE)
+   unset(DBUS_2_LIBRARIES CACHE)
+   unset(DBUS_2_casa-dbus-cpp CACHE)
+   unset(DBUS_dbusxx-xml2cpp_EXECUTABLE CACHE)
+endif (DBUS_2_FOUND)
+if ( DBUS_3_FOUND )
+   unset(DBUS_3_FOUND CACHE)
+   unset(DBUS_3_INCLUDE_DIRS CACHE)
+   unset(DBUS_3_LIBRARIES CACHE)
+   unset(DBUS_3_casa-dbus-cpp CACHE)
+   unset(DBUS_dbusxx-xml2cpp_EXECUTABLE CACHE)
+endif (DBUS_3_FOUND)
+
 casa_find( DBUSARCH
   INCLUDES dbus/dbus-arch-deps.h
-  PREFIX_HINTS ${DBUS_ARCH_DIR} ${dbus_prefix}
+  PREFIX_HINTS /usr/lib64/dbus-1.0 ${DBUS_ARCH_DIR} ${dbus_prefix}
   NO_CHECK   # This header does not compile if included directly
   NO_REQUIRE
+  IGNORE /usr/lib64/casapy
 )
 if( DBUSARCH_FOUND )
   set( dbus_depends DBUSARCH )
@@ -767,6 +790,7 @@ casa_find( DBUS
   LIBS dbus-c++-1
   PROGRAMS dbusxx-xml2cpp
   DEPENDS ${dbus_depends}
+  IGNORE /usr/lib64/casapy
 )
 
 # ATM

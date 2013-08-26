@@ -38,6 +38,7 @@
 #include <synthesis/CalTables/CTColumns.h>
 #include <synthesis/CalTables/CTMainColumns.h>
 #include <plotms/PlotMS/PlotMS.h>
+#include <plotms/Threads/ThreadCommunication.h>
 #include <tables/Tables/Table.h>
 
 namespace casa {
@@ -68,7 +69,7 @@ String CalCache::polname(Int ipol) {
 
 void CalCache::loadIt(vector<PMS::Axis>& loadAxes,
 		      vector<PMS::DataColumn>& /*loadData*/,
-		      PlotMSCacheThread* thread) {
+		      ThreadCommunication* thread) {
 
   //  cout << "CalCache::loadIt" << endl;
 
@@ -169,18 +170,13 @@ void CalCache::setUpCalIter(const String& ctname,
 }
       
 void CalCache::countChunks(ROCTIter& ci,
-			   PlotMSCacheThread* ) {  // thread) {
+			   ThreadCommunication* thread) {
 
   //  cout << "CalCache::countChunks" << endl;
-
-
-
-  /*
   if (thread!=NULL) {
     thread->setStatus("Establishing cache size.  Please wait...");
     thread->setAllowedOperations(false,false,false);
   }
-  */
 
 
   ci.reset();
@@ -232,7 +228,7 @@ void MSCache::trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes) {
 
 void CalCache::loadCalChunks(ROCTIter& ci,
 			     const vector<PMS::Axis> loadAxes,
-			     PlotMSCacheThread* thread) {
+			     ThreadCommunication* thread) {
 
   //  cout << "CalCache::loadCalChunks" << endl;
 

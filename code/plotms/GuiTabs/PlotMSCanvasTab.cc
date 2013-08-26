@@ -42,7 +42,7 @@ PlotMSCanvasTab::PlotMSCanvasTab(PlotMSPlotTab* plotTab,PlotMSPlotter* parent):
         PlotMSPlotSubtab(plotTab, parent) {
     setupUi(this);
     
-    PlotFactoryPtr factory = parent->getFactory();
+    PlotFactoryPtr factory = parent->getPlotFactory();
     
     // Setup widgets.
     itsTitleWidget_ = new QtLabelWidget(PMS::DEFAULT_TITLE_FORMAT);

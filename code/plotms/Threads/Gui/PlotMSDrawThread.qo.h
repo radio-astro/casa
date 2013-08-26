@@ -27,81 +27,71 @@
 #ifndef PLOTMSDRAWTHREAD_QO_H_
 #define PLOTMSDRAWTHREAD_QO_H_
 
-#include <plotms/Actions/PlotMSThread.qo.h>
-
+#include <plotms/Threads/Gui/PlotMSThread.qo.h>
+#include <graphics/GenericPlotter/PlotOperation.h>
 #include <vector>
-
-#include <casa/namespace.h>
+#include <QMutex>
+//#include <casa/namespace.h>
 
 namespace casa {
 
 //# Forward Declarations
 class PlotMSPlotter;
+class QtProgressWidget;
 
 // Subclass of PlotMSThread that handles following the progress of canvas
 // drawing.
 class PlotMSDrawThread : public PlotMSThread, public PlotOperationWatcher {
     Q_OBJECT
-    
+
 public:
     // Constructor which takes the plotter, and optional post-thread method
     // parameters.
-    PlotMSDrawThread(PlotMSPlotter* plotter,
+    PlotMSDrawThread(PlotMSPlotter* plotter, QtProgressWidget* progress,
             PMSPTMethod postThreadMethod = NULL,
             PMSPTObject postThreadObject = NULL);
-    
+
     // Destructor.
     ~PlotMSDrawThread();
-    
-    
+
+
     // Updates the internal list of canvases based upon the parent
     // PlotMSPlotter.
     void updatePlotterCanvases();
-    
+
     // Implements PlotMSThread::startOperation().
-    void startOperation();
-    
+    virtual void startOperation();
+
     bool isDrawing() const;
 
     // Implements PlotOperationWatcher::operationChanged().
     void operationChanged(const PlotOperation& operation);
-    
+
+
 protected:
-    // Implements PlotMSThread::wasCanceled().
-    bool wasCanceled() const;
-    
-protected slots:
-    // Implements PlotMSThread::background().  Currently is unimplemented.
-    void background();
-    
-    // Implements PlotMSThread::pause().  Currently is unimplemented.
-    void pause();
-    
-    // Implements PlotMSThread::resume().  Currently is unimplemented.
-    void resume();
-    
-    // Implements PlotMSThread::cancel().  Currently is unimplemented.
+
+
     void cancel();
-    
+
 private:
-    // Parent plotter.
+    PlotMSDrawThread( const PlotMSDrawThread& other );
+    PlotMSDrawThread operator=( const PlotMSDrawThread& other );
     PlotMSPlotter* itsPlotter_;
-    
+
     // Operations.
     vector<PlotOperationPtr> itsOperations_;
-    
+
     // Mutex for accessing operations.
     QMutex itsOperationsMutex_;
-    
+
     // Flag for if thread is currently running or not.
     bool isRunning_;
-    
+
     // Flag indicating that one or more operations tried to call
     // operationChanged() while the operations mutex was locked.
     bool itsOperationFlag_;
-    
-    // Flag for whether thread was canceled or not.
-    bool wasCanceled_;
+
+
 };
 
 }

@@ -52,6 +52,8 @@
 
 #include <casa/Quanta/MVAngle.h>
 
+#include <tr1/memory>
+
 namespace casa {
 	namespace viewer {
 
@@ -624,7 +626,7 @@ namespace casa {
 				try {
 					if ( ! padd->conformsTo(*wc_) ) continue;
 
-					ImageInterface<Float> *image = padd->imageinterface( );
+					std::tr1::shared_ptr<ImageInterface<Float> > image(padd->imageinterface( ));
 
 					if ( image == 0 ) continue;
 
@@ -728,8 +730,8 @@ namespace casa {
 			lin(1) = trc_y;
 			if ( ! wc_->linToWorld(trc, lin)) return 0;
 
-			ImageInterface<Float> *image = padd->imageinterface( );
-			if ( image == 0 ) return 0;
+			std::tr1::shared_ptr<ImageInterface<Float> > image( padd->imageinterface( ));
+			if ( ! image ) return 0;
 
 			Vector<Int> dispAxes = padd->displayAxes( );
 			dispAxes.resize(2,True);
@@ -856,14 +858,15 @@ namespace casa {
 			return path_;
 		}
 
-		ImageInterface<Float> *PVLine::generatePVImage( ImageInterface<Float> *input_image, std::string output_file, int width, bool need_result ) {
+        std::tr1::shared_ptr<ImageInterface<Float> > PVLine::generatePVImage( std::tr1::shared_ptr<ImageInterface<Float> > input_image, std::string output_file, int width, bool need_result ) {
 			Record dummy;
 			PVGenerator pvgen( input_image, &dummy, "" /*chanInp*/, "" /*stokes*/, "" /*maskInp*/, output_file, true );
 			double startx, starty, endx, endy;
+            std::tr1::shared_ptr<ImageInterface<Float> > result;
 			try {
 				linear_to_pixel( wc_, pt1_x, pt1_y, pt2_x, pt2_y, startx, starty, endx, endy );
 			} catch(...) {
-				return 0;
+				return result;
 			}
 			pvgen.setEndpoints( startx, starty, endx, endy );
 			pvgen.setWidth(width);
@@ -871,7 +874,6 @@ namespace casa {
 			dock_->panel( )->logIO( ) << "generating temporary image \'" << output_file  << "'" << LogIO::POST;
 			dock_->panel( )->logIO( ) << "generating P/V image with pixel points: (" <<
 			                          startx << "," << starty << ") (" << endx << "," << endy << ")" << LogIO::POST;
-			ImageInterface<Float> *result = 0;
 			QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
 			try {
 				result = pvgen.generate( need_result );
@@ -902,10 +904,14 @@ namespace casa {
 			for ( std::list<DisplayData*>::const_iterator ddi=dds.begin(); ddi != dds.end(); ++ddi ) {
 				PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(*ddi);
 				if ( padd == 0 ) continue;
-				ImageInterface<Float> *image = padd->imageinterface( );
+				// Hmm doesn't this always return 0?
+				// PrincipalAxesDD.h does not declare it so it has to come from
+				// DisplayData, but that always returns 0 - dmehring shared_ptr refactor
+				std::tr1::shared_ptr<ImageInterface<Float> > image( padd->imageinterface( ));
+				std::tr1::shared_ptr<ImageInterface<Float> > ptr(image);
 				if ( image->name( ) == casa_desc ) {
 					display_element de( name );
-					ImageInterface<Float> *new_image = generatePVImage( image, de.outputPath( ), width, true );
+					std::tr1::shared_ptr<ImageInterface<Float> > new_image(generatePVImage( ptr, de.outputPath( ), width, true ));
 					if ( sub_dpg == 0 ) {
 						sub_dpg = dock_->panel( )->createNewPanel( );
 						connect( sub_dpg, SIGNAL(destroyed(QObject*)), SLOT(dpg_deleted(QObject*)) );

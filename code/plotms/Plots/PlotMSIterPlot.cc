@@ -26,14 +26,16 @@
 //# $Id: $
 #include <plotms/Plots/PlotMSIterPlot.h>
 
-#include <plotms/Gui/PlotMSPlotter.qo.h>
-#include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
+//#include <plotms/Gui/PlotMSPlotter.qo.h>
+//#include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
+#include <plotms/Plots/PlotInformationManager.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
+#include <plotms/Actions/ActionCacheLoad.h>
 #include <plotms/Data/MSCache.h>
 #include <plotms/Data/CalCache.h>
 
-#include <casaqt/QwtPlotter/QPOptions.h>
+//#include <casaqt/QwtPlotter/QPOptions.h>
 
 #define THREADLOAD True
 
@@ -51,9 +53,7 @@ PlotMSPlotParameters PlotMSIterPlot::makeParameters(PlotMSApp* plotms) {
     return p;
 }
 
-const uInt PlotMSIterPlot::pixelThreshold = 1000000;
-const uInt PlotMSIterPlot::mediumThreshold = 10000;
-const uInt PlotMSIterPlot::largeThreshold = 1000;
+
 
 void PlotMSIterPlot::makeParameters(PlotMSPlotParameters& params,
         PlotMSApp* plotms) {
@@ -111,16 +111,16 @@ vector<MaskedScatterPlotPtr> PlotMSIterPlot::plots() const {
 vector<PlotCanvasPtr> PlotMSIterPlot::canvases() const {
     return vector<PlotCanvasPtr>(1, itsCanvas_); }
 
-void PlotMSIterPlot::setupPlotSubtabs(PlotMSPlotTab& tab) const {
-    tab.insertDataSubtab(0);
-    tab.insertAxesSubtab(1);
-    tab.insertIterateSubtab(2);
-    tab.insertTransformationsSubtab(3);
+void PlotMSIterPlot::setupPlotSubtabs(/*PlotMSPlotTab*/PlotInformationManager& tab) const {
+    tab.insertData(0);
+    tab.insertAxes(1);
+    tab.insertIterate(2);
+    tab.insertTransformations(3);
     //    tab.insertCacheSubtab(4);
-    tab.insertDisplaySubtab(4);
-    tab.insertCanvasSubtab(5);
-    tab.insertExportSubtab(6);
-    tab.clearSubtabsAfter(7);
+    tab.insertDisplay(4);
+    tab.insertCanvas(5);
+    tab.insertExport(6);
+    tab.clearAfter(7);
 }
 
 void PlotMSIterPlot::attachToCanvases() {
@@ -260,6 +260,8 @@ void PlotMSIterPlot::constructorSetup() {
 }
 
 
+
+
 // Private Methods //
 
 bool PlotMSIterPlot::updateCache() {
@@ -290,14 +292,14 @@ bool PlotMSIterPlot::updateCache() {
     // Let the plot know that the data (will) change.
     itsPlot_->dataChanged();
     
-    // Set up cache loading parameters.
-    vector<PMS::Axis> axes(2);
+    //Set up cache loading parameters.
+    /*vector<PMS::Axis> axes(2);
     axes[0] = c->xAxis();
     axes[1] = c->yAxis();
     vector<PMS::DataColumn> data(2);
     data[0] = c->xDataColumn();
-    data[1] = c->yDataColumn();
-    
+    data[1] = c->yDataColumn();*/
+
     // Log the cache loading.
     itsParent_->getLogger()->markMeasurement(PMS::LOG_ORIGIN,
             PMS::LOG_ORIGIN_LOAD_CACHE, PMS::LOG_EVENT_LOAD_CACHE);
@@ -327,31 +329,39 @@ bool PlotMSIterPlot::updateCache() {
 	}
       }
     }
-	
-    if (THREADLOAD) {
+
+    //if (THREADLOAD) {
       //cout << "Doing threaded load" << endl;
-      PlotMSCacheThread* ct = new PlotMSCacheThread(this, itsCache_, 
+
+
+      /*PlotMSCacheThread* ct = new PlotMSCacheThread(this, itsCache_,
 						    axes, data,
 						    d->filename(), 
 						    d->selection(), 
 						    d->averaging(), 
 						    d->transformations(), 
 						    false, 
-						    &PlotMSIterPlot::cacheLoaded, this);
-      itsParent_->getPlotter()->doThreadedOperation(ct);
-    }
-    else {
+						    &PlotMSIterPlot::cacheLoaded, this);*/
+
+      //itsParent_->getPlotter()->doThreadedOperation(ct);
+    //}
+    //else {
 
       //cout << "Doing NON-threaded load" << endl;
       
       // Now load it
-      itsCache_->load(axes, data,
+      /*itsCache_->load(axes, data,
 		      d->filename(),d->selection(),
 		      d->averaging(),d->transformations());
       this->cacheLoaded_(false);
+      */
+
       
-    }
-    return true;
+    //}
+
+
+    bool result = itsParent_->updateCachePlot( this, PlotMSIterPlot::cacheLoaded, false);
+    return result;
 }
 
 
@@ -612,6 +622,8 @@ bool PlotMSIterPlot::updateCanvas() {
     }
 }
 
+
+
 bool PlotMSIterPlot::updateDisplay() {
 
     try {
@@ -626,45 +638,19 @@ bool PlotMSIterPlot::updateDisplay() {
         // Hack to get a new PlotSymbol rather than a reference to the existing
         // one.  We don't want to modify the internal state of the GUI, just
         // modify what is passed to the plot.
-        PlotSymbolPtr symbolUnmasked =
-            PlotSymbolPtr(new QPSymbol(*d->unflaggedSymbol()));
-        if(symbolUnmasked->symbol() == PlotSymbol::AUTOSCALING) {
-            uInt data_size = itsCache_->indexer(iter_).sizeUnmasked();
-            if(data_size > pixelThreshold) {
-                symbolUnmasked->setSymbol(PlotSymbol::PIXEL);
-                symbolUnmasked->setSize(1, 1);
-            } else if(data_size > mediumThreshold) {
-                symbolUnmasked->setSymbol(PlotSymbol::CIRCLE);
-                symbolUnmasked->setSize(2, 2);
-            } else if(data_size > largeThreshold) {
-                symbolUnmasked->setSymbol(PlotSymbol::CIRCLE);
-                symbolUnmasked->setSize(4, 4);
-            } else {
-                symbolUnmasked->setSymbol(PlotSymbol::CIRCLE);
-                symbolUnmasked->setSize(6, 6);
-            }
-        }
-        // Hack to get a new PlotSymbol rather than a reference to the existing
-        // one.  We don't want to modify the internal state of the GUI, just
-        // modify what is passed to the plot.
-        PlotSymbolPtr symbolMasked =
-            PlotSymbolPtr(new QPSymbol(*d->flaggedSymbol()));
-        if(symbolMasked->symbol() == PlotSymbol::AUTOSCALING) {
-            uInt data_size = itsCache_->indexer(iter_).sizeMasked();
-            if(data_size > pixelThreshold) {
-                symbolMasked->setSymbol(PlotSymbol::PIXEL);
-                symbolMasked->setSize(1, 1);
-            } else if(data_size > mediumThreshold) {
-                symbolMasked->setSymbol(PlotSymbol::CIRCLE);
-                symbolMasked->setSize(2, 2);
-            } else if(data_size > largeThreshold) {
-                symbolMasked->setSymbol(PlotSymbol::CIRCLE);
-                symbolMasked->setSize(4, 4);
-            } else {
-                symbolMasked->setSymbol(PlotSymbol::CIRCLE);
-                symbolMasked->setSize(6, 6);
-            }
-        }
+
+        /*PlotSymbolPtr symbolUnmasked =
+            PlotSymbolPtr(new QPSymbol(*d->unflaggedSymbol()));*/
+        PlotSymbolPtr symbolUnmasked = itsParent_->createSymbol ( d->unflaggedSymbol() );
+        uInt dataSize = itsCache_->indexer(iter_).sizeUnmasked();
+        customizeAutoSymbol( symbolUnmasked, dataSize );
+
+        //PlotSymbolPtr symbolMasked =
+         //   PlotSymbolPtr(new QPSymbol(*d->flaggedSymbol()));
+        PlotSymbolPtr symbolMasked = itsParent_->createSymbol( d->flaggedSymbol() );
+        dataSize = itsCache_->indexer(iter_).sizeMasked();
+        customizeAutoSymbol( symbolMasked, dataSize );
+
 	/*	
 	cout << "Unflagged symbol=" << d->unflaggedSymbol()->symbol() 
 	     << " size=" << d->unflaggedSymbol()->size().first << " " << d->unflaggedSymbol()->size().second
@@ -677,7 +663,6 @@ bool PlotMSIterPlot::updateDisplay() {
 	     << " color=" <<  d->flaggedSymbol()->areaFill()->color()->asName()
 	     << endl;
 	*/
-
         itsPlot_->setSymbol(symbolUnmasked);
         itsPlot_->setMaskedSymbol(symbolMasked);
         

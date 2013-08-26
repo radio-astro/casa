@@ -36,6 +36,8 @@
 
 #include <casa/namespace.h>
 
+#include <tr1/memory>
+
 namespace casa {
 
 class ImageProfileFitter : public ImageTask {
@@ -87,7 +89,7 @@ public:
 	// or a non-empty <src>spectralList</src> can be specified.
 
 	ImageProfileFitter(
-		const ImageInterface<Float> *const &image, const String& region,
+			const ImageTask::shCImFloat image, const String& region,
 		const Record *const &regionPtr, const String& box,
 		const String& chans, const String& stokes, const String& mask,
 		const Int axis, const uInt ngauss, const String& estimatesFilename,
@@ -209,13 +211,13 @@ private:
 	Array<ImageFit1D<Float> > _fitters;
     // subimage contains the region of the original image
 	// on which the fit is performed.
-	SubImage<Float> _subImage;
+	std::tr1::shared_ptr<SubImage<Float> > _subImage;
 	Record _results;
 	SpectralList _nonPolyEstimates;
 	Vector<Double> _goodAmpRange, _goodCenterRange, _goodFWHMRange;
 	Matrix<String> _worldCoords;
 
-	std::auto_ptr<TempImage<Float> > _sigma;
+	std::tr1::shared_ptr<TempImage<Float> > _sigma;
 	Double _abscissaDivisor;
 
 	const static String _class;
@@ -247,8 +249,8 @@ private:
     // to something astronomer friendly if it so desires.
 
     void _fitProfiles(
-    	const std::auto_ptr<ImageInterface<Float> >& pFit,
-    	const std::auto_ptr<ImageInterface<Float> >& pResid,
+    	tr1::shared_ptr<ImageInterface<Float> > pFit,
+    	tr1::shared_ptr<ImageInterface<Float> > pResid,
         const Bool showProgress=False
     );
 
@@ -271,8 +273,8 @@ private:
     ) const;
 
     void _updateModelAndResidual(
-    	const std::auto_ptr<ImageInterface<Float> >& pFit,
-    	const std::auto_ptr<ImageInterface<Float> >& pResid,
+    	tr1::shared_ptr<ImageInterface<Float> > pFit,
+    	tr1::shared_ptr<ImageInterface<Float> > pResid,
         Bool fitOK,
     	const ImageFit1D<Float>& fitter, const IPosition& sliceShape,
     	const IPosition& curPos, Lattice<Bool>* const &pFitMask,

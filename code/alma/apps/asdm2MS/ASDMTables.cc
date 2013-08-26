@@ -780,6 +780,324 @@ void ASDM_CALAMPLI::fill(const ASDM& asdm) {
 	table_p_->flush();
 }
 	 
+ASDM_CALAPPPHASE::ASDM_CALAPPPHASE() {
+  name_ = "ASDM_CALAPPPHASE";
+  tableDesc_.comment() = "The verbatim copy of the ASDM's dataset CalAppPhase table";
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("basebandName", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("scanNumber", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("calDataId", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("calReductionId", "blabla"));
+  		
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("startValidTime", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("endValidTime", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("adjustTime", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("adjustToken", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("phasingMode", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numPhasedAntennas", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<String>("phasedAntennas", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("refAntennaIndex", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("candRefAntennaIndex", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("phasePacking", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numReceptors", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numChannels", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numPhaseValues", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<float>("phaseValues", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numCompare", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numEfficiencies", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<String>("compareArray", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<int>("efficiencyIndices", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<float>("efficiencies", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<float>("quality", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("phasedSumAntenna", "blabla"));
+  		
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("typeSupports", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<int>("numSupports", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<float>("phaseSupports", "blabla"));
+  		  		
+}
+
+ASDM_CALAPPPHASE::~ASDM_CALAPPPHASE() {
+}
+
+const TableDesc& ASDM_CALAPPPHASE::tableDesc() const {
+  return tableDesc_;
+}
+
+#include "CalAppPhaseTable.h"
+#include "CalAppPhaseRow.h"
+
+		
+			
+using namespace BasebandNameMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
+void ASDM_CALAPPPHASE::fill(const ASDM& asdm) {
+	vector<CalAppPhaseRow*> rows = asdm.getCalAppPhase().get();
+	unsigned int rowIndex = table_p_->nrow();
+	table_p_->addRow(rows.size());
+  		
+    ScalarColumn<String> basebandName(*table_p_, "basebandName");             
+  		
+    ScalarColumn<int> scanNumber(*table_p_, "scanNumber");             
+  		
+    ScalarColumn<String> calDataId(*table_p_, "calDataId");             
+  		
+    ScalarColumn<String> calReductionId(*table_p_, "calReductionId");             
+  		
+  		
+    ScalarColumn<double> startValidTime(*table_p_, "startValidTime");             
+  		
+    ScalarColumn<double> endValidTime(*table_p_, "endValidTime");             
+  		
+    ScalarColumn<double> adjustTime(*table_p_, "adjustTime");             
+  		
+    ScalarColumn<String> adjustToken(*table_p_, "adjustToken");             
+  		
+    ScalarColumn<String> phasingMode(*table_p_, "phasingMode");             
+  		
+    ScalarColumn<int> numPhasedAntennas(*table_p_, "numPhasedAntennas");             
+  		
+    ArrayColumn<String> phasedAntennas(*table_p_, "phasedAntennas");             
+  		
+    ScalarColumn<int> refAntennaIndex(*table_p_, "refAntennaIndex");             
+  		
+    ScalarColumn<int> candRefAntennaIndex(*table_p_, "candRefAntennaIndex");             
+  		
+    ScalarColumn<String> phasePacking(*table_p_, "phasePacking");             
+  		
+    ScalarColumn<int> numReceptors(*table_p_, "numReceptors");             
+  		
+    ScalarColumn<int> numChannels(*table_p_, "numChannels");             
+  		
+    ScalarColumn<int> numPhaseValues(*table_p_, "numPhaseValues");             
+  		
+    ArrayColumn<float> phaseValues(*table_p_, "phaseValues");             
+  		
+    ScalarColumn<int> numCompare(*table_p_, "numCompare");             
+  		
+    ScalarColumn<int> numEfficiencies(*table_p_, "numEfficiencies");             
+  		
+    ArrayColumn<String> compareArray(*table_p_, "compareArray");             
+  		
+    ArrayColumn<int> efficiencyIndices(*table_p_, "efficiencyIndices");             
+  		
+    ArrayColumn<float> efficiencies(*table_p_, "efficiencies");             
+  		
+    ArrayColumn<float> quality(*table_p_, "quality");             
+  		
+    ScalarColumn<String> phasedSumAntenna(*table_p_, "phasedSumAntenna");             
+  		
+  		
+    ScalarColumn<String> typeSupports(*table_p_, "typeSupports");             
+  		
+    ScalarColumn<int> numSupports(*table_p_, "numSupports");             
+  		
+    ArrayColumn<float> phaseSupports(*table_p_, "phaseSupports");             
+  		  	
+
+	for (unsigned int i = 0; i < rows.size(); i++) {
+		
+	
+	basebandName.put(rowIndex, CBasebandName::name(rows.at(i)->getBasebandName()));
+	
+
+	
+	scanNumber.put(rowIndex, rows.at(i)->getScanNumber());
+	
+
+	
+	calDataId.put(rowIndex, rows.at(i)->getCalDataId().toString());
+	
+
+	
+	calReductionId.put(rowIndex, rows.at(i)->getCalReductionId().toString());
+	
+
+		
+	
+	startValidTime.put(rowIndex, rows.at(i)->getStartValidTime().get()/(1.0e9));
+	
+
+	
+	endValidTime.put(rowIndex, rows.at(i)->getEndValidTime().get()/(1.0e9));
+	
+
+	
+	adjustTime.put(rowIndex, rows.at(i)->getAdjustTime().get()/(1.0e9));
+	
+
+	
+	adjustToken.put(rowIndex, rows.at(i)->getAdjustToken());
+	
+
+	
+	phasingMode.put(rowIndex, rows.at(i)->getPhasingMode());
+	
+
+	
+	numPhasedAntennas.put(rowIndex, rows.at(i)->getNumPhasedAntennas());
+	
+
+	
+	phasedAntennas.put(rowIndex, basic2CASA1D<string,String>(rows.at(i)->getPhasedAntennas()));
+	
+
+	
+	refAntennaIndex.put(rowIndex, rows.at(i)->getRefAntennaIndex());
+	
+
+	
+	candRefAntennaIndex.put(rowIndex, rows.at(i)->getCandRefAntennaIndex());
+	
+
+	
+	phasePacking.put(rowIndex, rows.at(i)->getPhasePacking());
+	
+
+	
+	numReceptors.put(rowIndex, rows.at(i)->getNumReceptors());
+	
+
+	
+	numChannels.put(rowIndex, rows.at(i)->getNumChannels());
+	
+
+	
+	numPhaseValues.put(rowIndex, rows.at(i)->getNumPhaseValues());
+	
+
+	
+	phaseValues.put(rowIndex, basic2CASA1D<float,float>(rows.at(i)->getPhaseValues()));
+	
+
+	
+	numCompare.put(rowIndex, rows.at(i)->getNumCompare());
+	
+
+	
+	numEfficiencies.put(rowIndex, rows.at(i)->getNumEfficiencies());
+	
+
+	
+	compareArray.put(rowIndex, basic2CASA1D<string,String>(rows.at(i)->getCompareArray()));
+	
+
+	
+	efficiencyIndices.put(rowIndex, basic2CASA1D<int,int>(rows.at(i)->getEfficiencyIndices()));
+	
+
+	
+	efficiencies.put(rowIndex, basic2CASA2D<float,float>(rows.at(i)->getEfficiencies()));
+	
+
+	
+	quality.put(rowIndex, basic2CASA1D<float,float>(rows.at(i)->getQuality()));
+	
+
+	
+	phasedSumAntenna.put(rowIndex, rows.at(i)->getPhasedSumAntenna());
+	
+
+		
+	
+	if (rows.at(i)->isTypeSupportsExists())
+		typeSupports.put(rowIndex, rows.at(i)->getTypeSupports());
+	
+
+	
+	if (rows.at(i)->isNumSupportsExists())
+		numSupports.put(rowIndex, rows.at(i)->getNumSupports());
+	
+
+	
+	if (rows.at(i)->isPhaseSupportsExists())
+		phaseSupports.put(rowIndex, basic2CASA1D<float,float>(rows.at(i)->getPhaseSupports()));
+	
+
+		rowIndex++;		
+	}
+	table_p_->flush();
+}
+	 
 ASDM_CALATMOSPHERE::ASDM_CALATMOSPHERE() {
   name_ = "ASDM_CALATMOSPHERE";
   tableDesc_.comment() = "The verbatim copy of the ASDM's dataset CalAtmosphere table";

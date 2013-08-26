@@ -93,7 +93,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     skyCoverage_p(0), machineName_p("MosaicFT"), stokes_p(stokes)
 {
   convSize=0;
-  tangentSpecified_p=False;
+  //reproject to the phase center
+  tangentSpecified_p=True;
   lastIndex_p=0;
   doneWeightImage_p=False;
   convWeightImage_p=0;

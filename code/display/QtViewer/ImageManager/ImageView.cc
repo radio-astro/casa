@@ -28,6 +28,7 @@
 #include <display/QtViewer/ImageManager/ImageView.qo.h>
 #include <display/QtViewer/ImageManager/DisplayLabel.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
+#include <limits>
 
 #include <QUuid>
 #include <QDrag>
@@ -330,7 +331,7 @@ namespace casa {
 			}
 		}
 		//cout << options << endl;
-		connect( ui.restLineEdit, SIGNAL(editingFinished()), this, SLOT(restFrequencyChanged()));
+		connect( ui.restLineEdit, SIGNAL(textChanged(const QString&)), this, SLOT(restFrequencyChanged()));
 		connect( ui.restUnitsCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(restFrequencyChanged()));
 	}
 
@@ -679,10 +680,8 @@ namespace casa {
 		ui.colorGroupBox->setParent( NULL );
 		ui.restGroupBox->setParent( NULL );
 		ui.dataOptionsButton->setParent( NULL );
-
 		minimumSize = SIZE_COLLAPSED;
-		QIcon openIcon( ":/icons/imageMaximize.png");
-		ui.openCloseButton->setIcon( openIcon );
+		ui.openCloseButton->setText( "Options...");
 	}
 
 	void ImageView::maximizeDisplay() {
@@ -693,8 +692,7 @@ namespace casa {
 		ui.widgetLayout->addSpacerItem( spacerLast );
 		ui.displayOptionsLayout->insertWidget( 1, ui.dataOptionsButton );
 		minimumSize = SIZE_EXPANDED;
-		QIcon closeIcon( ":/icons/imageMinimize.png");
-		ui.openCloseButton->setIcon( closeIcon );
+		ui.openCloseButton->setText( "Close" );
 	}
 
 

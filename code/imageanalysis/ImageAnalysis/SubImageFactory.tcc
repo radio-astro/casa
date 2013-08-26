@@ -106,7 +106,7 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 	// We can get away with no region processing if the region record
 	// is empty and the user is not dropping degenerate axes
 	if (region.nfields() == 0 && axesSpecifier.keep()) {
-		subImage = (outMaskMgr.get() == 0)
+        subImage = (outMaskMgr.get() == 0)
 			? SubImage<T>(inImage, writableIfPossible, axesSpecifier, preserveAxesOrder)
 			: SubImage<T>(
 				inImage, *outMaskMgr,
@@ -166,9 +166,9 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
     return mySubim;
 }
 
-template<class T> ImageInterface<Float>* SubImageFactory<T>::createImage(
+template<class T> std::tr1::shared_ptr<ImageInterface<T> > SubImageFactory<T>::createImage(
 	ImageInterface<T>& image,
-	const String& outfile, Record& Region,
+	const String& outfile, const Record& region,
 	const String& mask, const Bool dropDegenerateAxes,
 	const Bool overwrite, const Bool list, const Bool extendMask
 ) {
@@ -184,37 +184,36 @@ template<class T> ImageInterface<Float>* SubImageFactory<T>::createImage(
 		}
 	}
 	AxesSpecifier axesSpecifier(! dropDegenerateAxes);
-	std::auto_ptr<SubImage<Float> > subImage(
+	std::tr1::shared_ptr<SubImage<Float> > subImage(
 		new SubImage<Float>(
 			SubImageFactory<Float>::createSubImage(
 				image,
-				*(ImageRegion::tweakedRegionRecord(&Region)),
+			//	*(ImageRegion::tweakedRegionRecord(&Region)),
+				region,
 				mask, list ? &log : 0, True, axesSpecifier, extendMask
 			)
 		)
 	);
 	if (outfile.empty()) {
-		return subImage.release();
+		return subImage;
 	}
 	// Make the output image
 	if (list) {
 		log << LogIO::NORMAL << "Creating image '" << outfile
 			<< "' of shape " << subImage->shape() << LogIO::POST;
 	}
-	std::auto_ptr<PagedImage<Float> > outImage(
-		new PagedImage<Float> (
+	PagedImage<Float> outImage(
 			subImage->shape(),
 			subImage->coordinates(), outfile
-		)
 	);
-	ImageUtilities::copyMiscellaneous(*outImage, *subImage);
+	ImageUtilities::copyMiscellaneous(outImage, *subImage);
 	// Make output mask if required
 	if (subImage->isMasked()) {
 		String maskName("");
-		ImageMaskAttacher<T>::makeMask(*outImage, maskName, False, True, log, list);
+		ImageMaskAttacher<T>::makeMask(outImage, maskName, False, True, log, list);
 	}
-	LatticeUtilities::copyDataAndMask(log, *outImage, *subImage);
-	return outImage.release();
+	LatticeUtilities::copyDataAndMask(log, outImage, *subImage);
+	return std::tr1::shared_ptr<PagedImage<T> >(new PagedImage<T>(outImage));
 }
 
 

@@ -167,8 +167,9 @@ namespace casa {
 //-----------------------------------------------------------------------------
 
 	void SpectralPositioningWidget::setPosition() {
-		const ImageInterface<float>* image = profileTaskMonitor->getImage();
-		if ( image ) {
+		//const ImageInterface<float>* image = profileTaskMonitor->getImage().get();
+
+		if ( profileTaskMonitor->getImage() ) {
 			QList<double> worldX;
 			QList<double> worldY;
 			QList<int> pixelX;
@@ -372,7 +373,9 @@ namespace casa {
 	        QList<double> &worldX, QList<double> &worldY ) {
 
 		bool success = true;
-		ImageInterface<float>* image = const_cast<ImageInterface<float>* >(profileTaskMonitor->getImage());
+		//ImageInterface<float>* image = const_cast<ImageInterface<float>* >(profileTaskMonitor->getImage());
+		std::tr1::shared_ptr<ImageInterface<Float> > image(std::tr1::const_pointer_cast<ImageInterface<Float> >(profileTaskMonitor->getImage()));
+
 		CoordinateSystem cSys = image -> coordinates();
 		int nAxes = cSys.nPixelAxes();
 		for ( int i = 0; i < pixelX.size(); i++ ) {

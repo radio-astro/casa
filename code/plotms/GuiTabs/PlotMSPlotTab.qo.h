@@ -32,6 +32,7 @@
 #include <plotms/GuiTabs/PlotMSTab.qo.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/Plots/PlotMSPlotManager.h>
+#include <plotms/Plots/PlotInformationManager.h>
 
 #include <casa/namespace.h>
 
@@ -98,7 +99,8 @@ protected:
 // current PlotMSPlot's parameters for changes to update the GUI as needed and
 // watches the PlotMSPlotManager for changes to the plots.
 class PlotMSPlotTab : public PlotMSTab, Ui::PlotTab,
-                      public PlotMSPlotManagerWatcher {
+                      public PlotMSPlotManagerWatcher,
+                      public PlotInformationManager {
     Q_OBJECT
     
     //# Friend class declarations.
@@ -168,7 +170,7 @@ protected:
     void clearSubtabs();
     
     // Clears set subtabs after (and including) the given index.
-    void clearSubtabsAfter(int index);
+    void clearAfter(int index);
     
     // Adds the given subtab to the end of the tab widget.
     void addSubtab(PlotMSPlotSubtab* tab);
@@ -181,21 +183,28 @@ protected:
     // <group>
     PlotMSAxesTab* addAxesSubtab();
     PlotMSAxesTab* insertAxesSubtab(int index);
+    void insertAxes(int index);
     PlotMSCacheTab* addCacheSubtab();
     PlotMSCacheTab* insertCacheSubtab(int index);
+    void insertCache(int index);
     PlotMSCanvasTab* addCanvasSubtab();
     PlotMSCanvasTab* insertCanvasSubtab(int index);
+    void insertCanvas(int index);
     PlotMSDataTab* addDataSubtab();
     PlotMSDataTab* insertDataSubtab(int index);
+    void insertData(int index);
     PlotMSDisplayTab* addDisplaySubtab();
     PlotMSDisplayTab* insertDisplaySubtab(int index);
+    void insertDisplay(int index);
     PlotMSIterateTab* addIterateSubtab();
     PlotMSIterateTab* insertIterateSubtab(int index);
+    void insertIterate(int index);
     PlotMSExportTab* addExportSubtab();
     PlotMSExportTab* insertExportSubtab(int index);
+    void insertExport(int index);
     PlotMSTransformationsTab* addTransformationsSubtab();
     PlotMSTransformationsTab* insertTransformationsSubtab(int index);
-
+    void insertTransformations(int index);
     // </group>
     
     // Returns the first subtab with the given type, or NULL if there are none

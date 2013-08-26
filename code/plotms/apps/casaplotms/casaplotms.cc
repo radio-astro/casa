@@ -36,7 +36,7 @@
 #include <casadbus/utilities/Diagnostic.h>
 
 #include <signal.h>
-
+#include <QDebug>
 #include <casa/namespace.h>
 
 int main(int argc, char* argv[]) {    
@@ -47,7 +47,7 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
 
     // log arguments if CASA_DIAGNOSTIC_FILE environment variable is set...
     casa::dbus::diagnostic.argv( argc, argv );
-
+    qDebug() << "Launching main application";
     // Parameter defaults.
     String ms    = "",
            xaxis = PMS::axis(PMS::DEFAULT_XAXIS),
@@ -58,6 +58,8 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
     bool cachedImageSizeToScreenResolution = false, usePixels = false,
          casapy = false, debug = false,
          nopopups = false;
+    bool showGui = true;
+    bool scriptClient = false;
   
     // Parse arguments.
     String arg, arg2, arg3;
@@ -77,7 +79,13 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
            ARG_LOGFILE = PlotMSDBusApp::APP_LOGFILENAME_SWITCH,
            ARG_LOGFILTER = PlotMSDBusApp::APP_LOGFILTER_SWITCH,
            ARG_NOITERPLOT = "--noiter",
-           ARG_NOPOPUPS = "--nopopups";
+           ARG_NOPOPUPS = "--nopopups",
+    	   ARG_SHOWGUI = "--nogui",
+    	   ARG_SCRIPTCLIENT = "--script";
+   //Note:  script controls whether to use the scripting version with no
+   //user controls or whether to use the interactive version with user controls.
+   //With either the script or user control version it is possible to show the
+   //plots on the screen or not (nogui).
            
     const vector<String>& selectFields = PlotMSSelection::fieldStrings(),
                           averagingFields = PlotMSAveraging::fieldStrings();
@@ -149,6 +157,12 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
                  
                  << "\n* " << ARG_DEBUG1 << " or " << ARG_DEBUG2 << "\n     "
                  << "Turn on debugging log messages."
+
+                 << "\n* " << ARG_SHOWGUI << "\n           "
+                 << "Run without showing anything on the screen"
+
+                 << "\n* " << ARG_SCRIPTCLIENT << "\n           "
+                 << "Run using the scripting interface rather than as a GUI interactive user controls."
             
                  << endl;
             return 0;
@@ -173,7 +187,15 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
         } else if(arg2 == ARG_CASAPY) {
             casapy = true;
 	    continue;
-        } else if(arg2 == ARG_DEBUG1 || arg2 == ARG_DEBUG2) {
+        } else if (arg2 == ARG_SHOWGUI){
+        	showGui = false;
+        continue;
+        } else if (arg2 == ARG_SCRIPTCLIENT ){
+        	scriptClient = true;
+        	continue;
+        }
+
+        else if(arg2 == ARG_DEBUG1 || arg2 == ARG_DEBUG2) {
             debug = true;
 	    continue;                        
         } else if(i < argc - 1) {
@@ -228,7 +250,7 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
 
         }
     }
-    
+    qDebug() << "Finished parsing args";
     // If run from casapy, don't let Ctrl-C kill the application.
     if(casapy) signal(SIGINT,SIG_IGN);
     
@@ -247,7 +269,7 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
             }
         }
     }
-    
+    qDebug() << "Setting parameters";
     // Set up parameters for plotms.
     PlotMSParameters params(logfile, PlotLogger::FLAG_FROM_PRIORITY(p), p);
     
@@ -255,9 +277,13 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
         params.setCachedImageSizeToResolution();
     
     // Set up plotms object.
-    PlotMSApp plotmsapp(params, casapy);
-    if(!casapy) plotmsapp.showGUI(true); // don't automatically show for casapy
-    
+    qDebug() << "Calling plotMSApp constructor casapy="<<casapy<<" scriptClient="<<scriptClient;
+    PlotMSApp plotmsapp(params, casapy, !scriptClient );
+
+    qDebug() << " showGui="<<showGui<<" nopopups="<<nopopups;
+    if(!casapy){
+    	plotmsapp.showGUI(showGui); // don't automatically show for casapy
+    }
     if (nopopups)
       plotmsapp.its_want_avoid_popups = true;
     
@@ -269,6 +295,7 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
       plotmsapp.its_want_avoid_popups = true;
     
     // Set up parameters for plot.
+    qDebug() << "Set up parameters for plot";
     PlotMSPlotParameters plotparams = PlotMSOverPlot::makeParameters(&plotmsapp);
 
     PMS_PP_CALL(plotparams, PMS_PP_MSData, setFilename, ms)
@@ -285,6 +312,7 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
     }
     
     // Add the plot to plotms.
+    qDebug() << "Add overplot";
     plotmsapp.addOverPlot(&plotparams);
     
     // If we're connected to DBus, don't quite the application when the window
@@ -293,5 +321,6 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
     if(casapy) QApplication::setQuitOnLastWindowClosed(false);
     
     //return plotms.execLoop();
+    qDebug() << "Returning QtApp::exec()";
     return QtApp::exec();
 }

@@ -29,8 +29,11 @@
 #define IMAGEANALYSIS_SPECTRALCOLLAPSER_H
 
 #include <images/Images/ImageInterface.h>
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
 
 #include <casa/namespace.h>
+
+#include <tr1/memory>
 
 namespace casa {
 
@@ -77,10 +80,10 @@ public:
 	};
 
 	// Constructor
-	SpectralCollapser(ImageInterface<Float> * image);
+	SpectralCollapser(const ImageTask::shCImFloat image);
 
 	// Constructor
-	SpectralCollapser(ImageInterface<Float> * image, const String storePath);
+	SpectralCollapser(const ImageTask::shCImFloat image, const String storePath);
 
 	// Destructor
 	virtual ~SpectralCollapser();
@@ -114,7 +117,7 @@ public:
    static void collapseErrorToString(const SpectralCollapser::CollapseError &collError, String &strCollError);
 
 private:
-   ImageInterface<Float> * _image;
+   ImageTask::shCImFloat _image;
    LogIO *_log;
 
    String _storePath;
@@ -129,9 +132,9 @@ private:
    Bool _cleanTmpData(const String &tmpFileName) const;
    Bool _cleanTmpData(const String &tmpData, const String &tmpError) const;
    Bool _getQualitySubImg(const ImageInterface<Float>* image, const Bool &data, SubImage<Float> &qualitySub);
-   Bool _getQualitySubImgs(ImageInterface<Float>* image, SubImage<Float> &subData, SubImage<Float> &subError) const;
+   Bool _getQualitySubImgs(ImageTask::shCImFloat image, std::tr1::shared_ptr<SubImage<Float> > subData, std::tr1::shared_ptr<SubImage<Float> >  subError) const;
    Bool _getOutputName(const String &wcsInp, String &outImg, String &outImgData, String &outImgError) const;
-   Bool _collapse(const ImageInterface<Float> *image, const String &aggString,
+   Bool _collapse(const ImageTask::shCImFloat image, const String &aggString,
    		const String& chanInp, const String& outname) const;
    Bool _moments(const ImageInterface<Float> *image, const Vector<Int> &momentVec,
    		const Int & startIndex, const Int &endIndex, const String& outname);

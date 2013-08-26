@@ -574,6 +574,15 @@ void QPPlotter::legendTurned(bool on) {
         canvases[i]->showLegend(on, a);
 }
 
+
+
+bool QPPlotter::exportPlot(const PlotExportFormat& format){
+	bool success = QPCanvas::exportPlotter( this, format);
+	return success;
+}
+
+
+
 void QPPlotter::exportCanvases() {
     PlotExportFormat format(PlotExportFormat::exportFormat(
             exportFormat->currentText().toStdString()), "");

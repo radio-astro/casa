@@ -813,7 +813,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			try {
 				if ( ! padd->conformsTo(*itsCurrentWC) ) continue;
 
-				ImageInterface<Float> *image = padd->imageinterface( );
+				std::tr1::shared_ptr<ImageInterface<Float> > image = padd->imageinterface( );
 
 				if ( image == 0 ) continue;
 
@@ -846,7 +846,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				Quantum<Double> px0(0.,"pix");
 				Vector<Quantum<Double> > blcq(nAxes,px0), trcq(nAxes,px0);
 
-				Int spaxis = getAxisIndex( image, String("Spectral") );
+				Int spaxis = getAxisIndex( image.get(), String("Spectral") );
 				for (Int ax = 0; ax < nAxes; ax++) {
 					if ( ax == dispAxes[0] || ax == dispAxes[1] || ax == spaxis) {
 						trcq[ax].setValue(shp[ax]-1);
@@ -873,7 +873,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				ImageRegion *imageregion = new ImageRegion(box);
 
 
-				getLayerStats_t *layerstats = getLayerStats( padd, image, *imageregion );
+				getLayerStats_t *layerstats = getLayerStats( padd, image.get(), *imageregion );
 
 #if OLDSTUFF
 				// (1) create statistics matrix (gui)

@@ -27,7 +27,7 @@
 #ifndef PLOTMSCACHETHREAD_QO_H_
 #define PLOTMSCACHETHREAD_QO_H_
 
-#include <plotms/Actions/PlotMSThread.qo.h>
+#include <plotms/Threads/Gui/PlotMSThread.qo.h>
 #include <plotms/PlotMS/PlotMSSelection.h>
 #include <plotms/PlotMS/PlotMSAveraging.h>
 #include <plotms/PlotMS/PlotMSTransformations.h>
@@ -59,7 +59,7 @@ public:
     // LOADING constructor which takes the PlotMSPlot, the PlotMSData, the axes
     // and data columns, the averaging, a flag for whether to call setupPlot
     // after the loading, and optional post-thread method parameters.
-    PlotMSCacheThread(PlotMSPlot* plot, PlotMSCacheBase* cache,
+   /* PlotMSCacheThread(PlotMSPlot* plot, PlotMSCacheBase* cache,
 		      const vector<PMS::Axis>& axes, 
 		      const vector<PMS::DataColumn>& data2,
 		      const String& msname, 
@@ -68,24 +68,28 @@ public:
 		      const PlotMSTransformations& transformations, 
 		      bool setupPlot = false,
 		      PMSPTMethod postThreadMethod = NULL,
-		      PMSPTObject postThreadObject = NULL);
+		      PMSPTObject postThreadObject = NULL);*/
     
     // RELEASING constructor which takes the PlotMSPlot, the axes, and optional
     // post-thread method parameters.
-    PlotMSCacheThread(PlotMSPlot* plot, const vector<PMS::Axis>& axes,
+    /*PlotMSCacheThread(PlotMSPlot* plot, const vector<PMS::Axis>& axes,
             PMSPTMethod postThreadMethod = NULL,
-            PMSPTObject postThreadObject = NULL);
+            PMSPTObject postThreadObject = NULL);*/
+    PlotMSCacheThread(QtProgressWidget* progress,
+                PMSPTMethod postThreadMethod = NULL,
+                PMSPTObject postThreadObject = NULL);
     
     // Destructor.
     ~PlotMSCacheThread();
     
     
     // Implements PlotMSThread::startOperation().
-    void startOperation();
+    virtual void startOperation();
     
+    virtual void cancelOperation();
+
 protected:
-    // Implements PlotMSThread::wasCanceled().
-    bool wasCanceled() const;
+
     
     // Allows the cache to set the progress.
     void setProgress(unsigned int progress) {
@@ -98,20 +102,13 @@ protected:
     // Allows the cache to set the progress and the status.
     void setProgressAndStatus(unsigned int progress, const String& status);
     
-protected slots:
-    // Implements PlotMSThread::background().  Currently is unimplemented.
-    void background();
-    
-    // Implements PlotMSThread::pause().  Currently is unimplemented.
-    void pause();
-    
-    // Implements PlotMSThread::resume().  Currently is unimplemented.
-    void resume();
-    
-    // Implements PlotMSThread::cancel().
-    void cancel();
-    
+    // Slot for when the QThread finishes.
+    virtual void threadFinished();
+
 private:
+    PlotMSCacheThread( const PlotMSCacheThread& other );
+    PlotMSCacheThread operator=( const PlotMSCacheThread& other );
+
     // Plot.
     PlotMSPlot* itsPlot_;
     
@@ -142,36 +139,16 @@ private:
     // Last set status.
     String itsLastStatus_;
     
-    // Flag for whether thread was canceled or not.
-    bool wasCanceled_;
+
     
     // Error message, if there was one (otherwise empty).
     String itsCacheError_;
     
-private slots:
-    // Slot for when the QThread finishes.
-    void threadFinished();
+
 };
 
 
-// Helper class for PlotMSCacheThread that actually does the work in a new
-// QThread.
-class PlotMSCacheThreadHelper : public QThread {
-public:
-    // Constructor that takes parent.
-    PlotMSCacheThreadHelper(PlotMSCacheThread& parent);
-    
-    // Destructor.
-    ~PlotMSCacheThreadHelper();
 
-protected:
-    // Implements QThread::run().
-    void run();
-    
-private:
-    // Parent.
-    PlotMSCacheThread& itsParent_;
-};
 
 }
 

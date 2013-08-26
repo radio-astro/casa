@@ -182,6 +182,22 @@ PlotSymbolPtr PlotFactory::symbol(char sym, bool smartDelete) const {
     return s;
 }
 
+PlotSymbolPtr PlotFactory::createSymbol (const String& descriptor,
+		Int size, const String& color,
+    	const String& fillPattern, bool outline ){
+	PlotSymbolPtr ps = symbol(PlotSymbol::NOSYMBOL);
+	ps->setSymbol( descriptor );
+	ps->setSize( size, size );
+	ps->setColor( color );
+	PlotAreaFillPtr paf = areaFill(color, PlotAreaFill::NOFILL);
+	paf ->setPattern( fillPattern );
+	ps->setAreaFill( paf );
+	if(outline) {
+		ps->setLine("black");
+	}
+	return ps;
+}
+
 PlotSymbolPtr PlotFactory::uSymbol(unsigned short unicode,
         bool smartDelete) const {
     PlotSymbolPtr s = symbol(PlotSymbol::CHARACTER, smartDelete);

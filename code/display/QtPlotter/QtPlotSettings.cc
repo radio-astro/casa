@@ -52,10 +52,10 @@ namespace casa {
 			double stepX = spanX( axisIndex ) / numXTicks/*[i]*/;
 			minX[i] += dx * stepX;
 			maxX[i] += dx * stepX;
-			if ( axisIndex == QtPlotSettings::xBottom ) {
+			/*if ( axisIndex == QtPlotSettings::xBottom ) {
 				originalMinX = minX[i];
 				originalMaxX = maxX[i];
-			}
+			}*/
 		}
 
 		double stepY = spanY() / numYTicks;
@@ -78,10 +78,10 @@ namespace casa {
 			double prevSpanX = spanX(axisIndex);
 			minX[i] = minX[i] - zoomFactor * prevSpanX;
 			maxX[i] = maxX[i] + zoomFactor * prevSpanX;
-			if ( axisIndex == QtPlotSettings::xBottom ) {
+			/*if ( axisIndex == QtPlotSettings::xBottom ) {
 				originalMinX = minX[i];
 				originalMaxX = maxX[i];
-			}
+			}*/
 		}
 		adjust( topUnits, bottomUnits, autoScaleX, autoScaleY );
 	}
@@ -111,10 +111,10 @@ namespace casa {
 			double prevSpanX = spanX( axisIndex );
 			minX[i] = minX[i] + zoomFactor * prevSpanX;
 			maxX[i] = maxX[i] - zoomFactor * prevSpanX;
-			if ( axisIndex == QtPlotSettings::xBottom ) {
+			/*if ( axisIndex == QtPlotSettings::xBottom ) {
 				originalMinX = minX[i];
 				originalMaxX = maxX[i];
-			}
+			}*/
 		}
 		adjust( topUnits, bottomUnits, autoScaleX, autoScaleY );
 	}
@@ -125,12 +125,12 @@ namespace casa {
 	                             bool autoScaleX, bool autoScaleY) {
 		if ( autoScaleX ) {
 			//Adjust the bottom axis allowing it to set the number of ticks.
-			adjustAxis( minX[0], maxX[0], numXTicks);
+			pair<double,double> percentChange=adjustAxis( minX[0], maxX[0], numXTicks);
 
 			//Adjust the top axis using the same number of ticks.  Use a
 			//converter to get its min and max based on the min and max of
 			//the bottom axis.
-			adjustAxisTop( minX[1], maxX[1], topUnits, bottomUnits);
+			adjustAxisTop( minX[1], maxX[1], topUnits, bottomUnits, percentChange);
 		}
 
 		if ( autoScaleY ) {
@@ -139,7 +139,7 @@ namespace casa {
 		}
 	}
 
-	void QtPlotSettings::adjustAxis(double &min, double &max,
+	pair<double,double> QtPlotSettings::adjustAxis(double &min, double &max,
 	                                int &numTicks ) {
 		const int MinTicks = 4;
 		double grossStep = fabs(max - min) / MinTicks;
@@ -152,19 +152,35 @@ namespace casa {
 		numTicks = (int)fabs(ceil(max / step) - floor(min / step));
 		double newMin = floor(min / step) * step;
 		double newMax = ceil(max / step) * step;
-		minPercentage = (min - newMin) / (max - min);
-		maxPercentage = (newMax - max) / (max - min );
+		double minPercentage = 0;
+		double maxPercentage = 0;
+		if ( max  != min ){
+			minPercentage = (min - newMin) / (max - min);
+			maxPercentage = (newMax - max) / (max - min );
+		}
 		min = newMin;
 		max = newMax;
+		pair<double,double> percentageChange( minPercentage, maxPercentage );
+		return percentageChange;
 	}
 
-
-
 	void QtPlotSettings::adjustAxisTop(double &min, double &max,
-	                                   const QString& topUnits, const QString& bottomUnits) {
+	    const QString& /*topUnits*/, const QString& /*bottomUnits*/, pair<double,double> percentChange ) {
+
+		double minPercent = percentChange.first;
+		double maxPercent = percentChange.second;
+
+		//The calculation below, based on percentages is being used rather than
+		//using a converter because of CAS-5175.  The problem was that the
+		//converter could not distinguish between optical velocity in km/sec
+		//and radio velocity in km/sec since the units were the same.
+		double topRange = maxX[QtPlotSettings::xTop] - minX[QtPlotSettings::xTop];
+		min = minX[QtPlotSettings::xTop] - minPercent * topRange;
+		max = maxX[QtPlotSettings::xTop] + maxPercent * topRange;
+
 
 		//Top axis is not channels
-		if ( topUnits != "" ) {
+		/*if ( topUnits != "" ) {
 			Converter* converter = Converter::getConverter( bottomUnits, topUnits);
 			min = converter->convert( minX[QtPlotSettings::xBottom] );
 			max = converter->convert( maxX[QtPlotSettings::xBottom] );
@@ -188,21 +204,21 @@ namespace casa {
 		if ( bottomUnits == "") {
 			minPercentage = 0;
 			maxPercentage = 0;
-		}
+		}*/
 	}
 
 	void QtPlotSettings::setMinX( AxisIndex index, double value ) {
 		minX[static_cast<int>(index)] = value;
-		if ( index == QtPlotSettings::xBottom ) {
+		/*if ( index == QtPlotSettings::xBottom ) {
 			originalMinX = value;
-		}
+		}*/
 	}
 
 	void QtPlotSettings::setMaxX( AxisIndex index, double value ) {
 		maxX[static_cast<int>(index)] = value;
-		if ( index == QtPlotSettings::xBottom ) {
+		/*if ( index == QtPlotSettings::xBottom ) {
 			originalMaxX = value;
-		}
+		}*/
 	}
 
 	void QtPlotSettings::setMinY( double value ) {

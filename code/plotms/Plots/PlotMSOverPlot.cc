@@ -26,14 +26,15 @@
 //# $Id: $
 #include <plotms/Plots/PlotMSOverPlot.h>
 
-#include <plotms/Gui/PlotMSPlotter.qo.h>
-#include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
+//#include <plotms/Gui/PlotMSPlotter.qo.h>
+//#include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
+#include <plotms/Plots/PlotInformationManager.h>
 #include <plotms/Data/PlotMSCacheBase.h>
 #include <plotms/Data/MSCache.h>
 #include <plotms/Data/CalCache.h>
-#include <casaqt/QwtPlotter/QPCanvas.qo.h>
+//#include <casaqt/QwtPlotter/QPCanvas.qo.h>
 
 #include <algorithm>
 #include <cmath>
@@ -47,10 +48,6 @@ namespace casa {
 ////////////////////////////////
 
 // Static
-
-const uInt PlotMSOverPlot::pixelThreshold = 1000000;
-const uInt PlotMSOverPlot::mediumThreshold = 10000;
-const uInt PlotMSOverPlot::largeThreshold = 1000;
 
 PlotMSPlotParameters PlotMSOverPlot::makeParameters(PlotMSApp *plotms) {
     PlotMSPlotParameters p = PlotMSPlot::makeParameters(plotms);
@@ -140,15 +137,16 @@ vector<PlotCanvasPtr> PlotMSOverPlot::canvases() const {
     return v;
 }
 
-void PlotMSOverPlot::setupPlotSubtabs(PlotMSPlotTab &tab) const {
-    tab.insertDataSubtab(0);
-    tab.insertAxesSubtab(1);
-    tab.insertIterateSubtab(2);
-    tab.insertTransformationsSubtab(3);
-    tab.insertDisplaySubtab(4);
-    tab.insertCanvasSubtab(5);
-    tab.insertExportSubtab(6);
-    tab.clearSubtabsAfter(7);
+void PlotMSOverPlot::setupPlotSubtabs(PlotInformationManager& tab) const {
+//void PlotMSOverPlot::setupPlotSubtabs(PlotMSPlotTab &tab) const {
+    tab.insertData(0);
+    tab.insertAxes(1);
+    tab.insertIterate(2);
+    tab.insertTransformations(3);
+    tab.insertDisplay(4);
+    tab.insertCanvas(5);
+    tab.insertExport(6);
+    tab.clearAfter(7);
 }
 
 void PlotMSOverPlot::attachToCanvases() {
@@ -161,8 +159,8 @@ void PlotMSOverPlot::attachToCanvases() {
                     itsCanvases_[r][c]->plotItem(itsPlots_[r][c]);
                     ++iter;
                 }
-                ((QPCanvas*)(&*itsCanvases_[r][c]))->show();
-                ((QPCanvas*)(&*itsCanvases_[r][c]))->setMinimumSize(5,5);
+                (/*(QPCanvas*)*/(&*itsCanvases_[r][c]))->show();
+                (/*(QPCanvas*)*/(&*itsCanvases_[r][c]))->setMinimumSize(5,5);
             }
         }
     }
@@ -175,7 +173,7 @@ void PlotMSOverPlot::detachFromCanvases() {
                 if(itsCanvases_[r][c]->numPlotItems() > 0) {
                     itsCanvases_[r][c]->removePlotItem(itsPlots_[r][c]);
                 }
-                ((QPCanvas*)(&*itsCanvases_[r][c]))->hide();
+                (/*(QPCanvas*)*/(&*itsCanvases_[r][c]))->hide();
             }
         }
     }
@@ -259,7 +257,6 @@ bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
     const PMS_PP_Iteration *iter = itsParams_.typedGroup<PMS_PP_Iteration>();
     if(data == NULL || iter == NULL)
         return true;
-
     itsTCLParams_.releaseWhenDone = releaseWhenDone;
     itsTCLParams_.updateCanvas = (updateFlag & PMS_PP::UPDATE_AXES) ||
         (updateFlag & PMS_PP::UPDATE_CACHE) ||
@@ -328,7 +325,7 @@ bool PlotMSOverPlot::updateCache() {
     PMS_PP_Iteration* iter = itsParams_.typedGroup<PMS_PP_Iteration>();
     if(data == NULL || cache == NULL || iter == NULL)
         return false;
-    
+
     // Don't load if data isn't set or there was an error during data opening.
     if(!data->isSet()) return false;
 
@@ -350,7 +347,6 @@ bool PlotMSOverPlot::updateCache() {
 
     // Set up cache loading parameters
     if(cache->numXAxes() != cache->numYAxes()) return false;
-
     vector<PMS::Axis> caxes(cache->numXAxes() + cache->numYAxes());
     vector<PMS::DataColumn> cdata(cache->numXAxes() + cache->numYAxes());
     for(uInt i = 0; i < cache->numXAxes(); ++i) {
@@ -391,18 +387,20 @@ bool PlotMSOverPlot::updateCache() {
         }
     }
 
-    if(THREADLOAD) {
+    /*if(THREADLOAD) {
         PlotMSCacheThread *ct = new PlotMSCacheThread(
             this, itsCache_, caxes, cdata, data->filename(), data->selection(),
             data->averaging(), data->transformations(), true,
             &PlotMSOverPlot::cacheLoaded, this);
-        itsParent_->getPlotter()->doThreadedOperation(ct);
-    } else {
-        itsCache_->load(caxes, cdata, data->filename(), data->selection(),
-                        data->averaging(), data->transformations());
-        this->cacheLoaded_(false);
-    }
-    return true;
+        //itsParent_->getPlotter()->doThreadedOperation(ct);
+    } else {*/
+        //itsCache_->load(caxes, cdata, data->filename(), data->selection(),
+        //                data->averaging(), data->transformations());
+        //this->cacheLoaded_(false);
+    //}
+    bool result = itsParent_->updateCachePlot( this,
+    		PlotMSOverPlot::cacheLoaded, true );
+    return result;
 }
 
 bool PlotMSOverPlot::updateCanvas() {
@@ -552,54 +550,24 @@ bool PlotMSOverPlot::updateDisplay() {
         PMS_PP_Axes *axes = itsParams_.typedGroup<PMS_PP_Axes>();
         PMS_PP_Display *display = itsParams_.typedGroup<PMS_PP_Display>();
         if(cache == NULL || axes == NULL || display == NULL) return false;
-
         MaskedScatterPlotPtr plot;
         uInt nIter = itsCache_->nIter();
         uInt rows = itsPlots_.size();
+
         for(uInt row = 0; row < rows; ++row) {
             uInt cols = itsPlots_[row].size();
             uInt iter = iter_ + row * cols;
             if(iter >= nIter) break;
             for(uInt col = 0; col < itsPlots_[row].size(); ++col) {
                 if(iter >= nIter) break;
-
                 // Set symbols.
-                PlotSymbolPtr symbolUnmasked = PlotSymbolPtr(
-                    new QPSymbol(*display->unflaggedSymbol()));
-                if(symbolUnmasked->symbol() == PlotSymbol::AUTOSCALING) {
-                    uInt data_size = itsCache_->indexer(iter).sizeUnmasked();
-                    if(data_size > pixelThreshold) {
-                        symbolUnmasked->setSymbol(PlotSymbol::PIXEL);
-                        symbolUnmasked->setSize(1, 1);
-                    } else if(data_size > mediumThreshold) {
-                        symbolUnmasked->setSymbol(PlotSymbol::CIRCLE);
-                        symbolUnmasked->setSize(2, 2);
-                    } else if(data_size > largeThreshold) {
-                        symbolUnmasked->setSymbol(PlotSymbol::CIRCLE);
-                        symbolUnmasked->setSize(4, 4);
-                    } else {
-                        symbolUnmasked->setSymbol(PlotSymbol::CIRCLE);
-                        symbolUnmasked->setSize(6, 6);
-                    }
-                }
-                PlotSymbolPtr symbolMasked = PlotSymbolPtr(
-                    new QPSymbol(*display->flaggedSymbol()));
-                if(symbolMasked->symbol() == PlotSymbol::AUTOSCALING) {
-                    uInt data_size = itsCache_->indexer(iter).sizeMasked();
-                    if(data_size > pixelThreshold) {
-                        symbolMasked->setSymbol(PlotSymbol::PIXEL);
-                        symbolMasked->setSize(1, 1);
-                    } else if(data_size > mediumThreshold) {
-                        symbolMasked->setSymbol(PlotSymbol::CIRCLE);
-                        symbolMasked->setSize(2, 2);
-                    } else if(data_size > largeThreshold) {
-                        symbolMasked->setSymbol(PlotSymbol::CIRCLE);
-                        symbolMasked->setSize(4, 4);
-                    } else {
-                        symbolMasked->setSymbol(PlotSymbol::CIRCLE);
-                        symbolMasked->setSize(6, 6);
-                    }
-                }
+                PlotSymbolPtr symbolUnmasked = itsParent_->createSymbol ( display->unflaggedSymbol() );
+                uInt dataSize = itsCache_->indexer(iter).sizeUnmasked();
+                customizeAutoSymbol( symbolUnmasked, dataSize );
+
+                PlotSymbolPtr symbolMasked = itsParent_->createSymbol ( display->flaggedSymbol() );
+                dataSize = itsCache_->indexer(iter).sizeMasked();
+                customizeAutoSymbol( symbolMasked, dataSize );
 
                 plot = itsPlots_[row][col];
                 if(plot.null()) continue;
@@ -648,11 +616,11 @@ void PlotMSOverPlot::setColors() {
         for(uInt col = 0; col < cols; ++col) {
             uInt iteration = iter_ + row * cols + col;
             if(iteration >= nIter) break;
-            itsColoredPlots_[row][col] = //ColoredPlotPtr(
-                //dynamic_cast<ColoredPlot*>(&*itsPlots_[row][col]), false);
-                dynamic_cast<QPScatterPlot*>(&*itsPlots_[row][col]);
-            //if(!itsColoredPlots_[row][col].null()) {
-            if(itsColoredPlots_[row][col] != NULL) {
+            itsColoredPlots_[row][col] = ColoredPlotPtr(
+                dynamic_cast<ColoredPlot*>(&*itsPlots_[row][col]), false);
+                //dynamic_cast<QPScatterPlot*>(&*itsPlots_[row][col]);
+            if(!itsColoredPlots_[row][col].null()) {
+            //if(itsColoredPlots_[row][col] != NULL) {
                 const vector<String> &colors = PMS::COLORS_LIST();
                 for(uInt i = 0; i < colors.size(); ++i) {
                     itsColoredPlots_[row][col]->setColorForBin(

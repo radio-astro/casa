@@ -30,7 +30,7 @@
 namespace casa {
 
 	ResidualHistogramDialog::ResidualHistogramDialog(QWidget *parent)
-		: QDialog(parent), residualImage( NULL ) {
+		: QDialog(parent), residualImage( ) {
 		ui.setupUi(this);
 		setWindowTitle( "Fit 2D Residual Image Histogram");
 
@@ -46,13 +46,10 @@ namespace casa {
 	}
 	bool ResidualHistogramDialog::setImage( const String& imagePath ) {
 		bool success = true;
-		if ( residualImage != NULL ) {
-			delete residualImage;
-			residualImage = NULL;
-		}
+		residualImage = ImageTask::shCImFloat();
 
 		try {
-			residualImage = new PagedImage<Float> (imagePath);
+			residualImage.reset(new PagedImage<Float> (imagePath));
 			plotWidget->setImage( residualImage );
 		} catch( AipsError& error ) {
 			success = false;
@@ -62,6 +59,5 @@ namespace casa {
 	}
 
 	ResidualHistogramDialog::~ResidualHistogramDialog() {
-		delete residualImage;
 	}
 }

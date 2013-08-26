@@ -102,6 +102,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Double imRefFreq_p;
     CFBStruct cfBSt_p;
     Bool accumCFs_p;
+    Matrix<uInt> BLCXi, BLCYi, TRCXi, TRCYi;
   };
 
 } //# NAMESPACE CASA - END

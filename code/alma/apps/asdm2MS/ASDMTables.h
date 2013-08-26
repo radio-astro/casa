@@ -100,6 +100,19 @@ class ASDM_CALAMPLI : public ASDM_TABLE_SINGLETON<ASDM_CALAMPLI>, public ASDM_TA
   void fill(const ASDM& asdm);
 };
 	
+class ASDM_CALAPPPHASE : public ASDM_TABLE_SINGLETON<ASDM_CALAPPPHASE>, public ASDM_TABLE_BASE {
+  friend class ASDM_TABLE_SINGLETON<ASDM_CALAPPPHASE>;
+
+ private:
+  ASDM_CALAPPPHASE();
+  ~ASDM_CALAPPPHASE();
+  TableDesc tableDesc_;
+
+ public:
+  const TableDesc& tableDesc() const;
+  void fill(const ASDM& asdm);
+};
+	
 class ASDM_CALATMOSPHERE : public ASDM_TABLE_SINGLETON<ASDM_CALATMOSPHERE>, public ASDM_TABLE_BASE {
   friend class ASDM_TABLE_SINGLETON<ASDM_CALATMOSPHERE>;
 

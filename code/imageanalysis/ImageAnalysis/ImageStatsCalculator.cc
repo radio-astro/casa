@@ -40,7 +40,7 @@ const String ImageStatsCalculator::_class = "ImageStatsCalculator";
 
 
 ImageStatsCalculator::ImageStatsCalculator(
-	const ImageInterface<Float> *const &image,
+		const ImageTask::shCImFloat image,
 	const Record *const &regionPtr,
 	const String& maskInp,
 	Bool beVerboseDuringConstruction
@@ -254,7 +254,8 @@ Record ImageStatsCalculator::statistics(
 	Record regionRec = *_getRegion();
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 			pRegionRegion, pMaskRegion, *clone,
-			*(ImageRegion::tweakedRegionRecord(&regionRec)),
+			//*(ImageRegion::tweakedRegionRecord(&regionRec)),
+			regionRec,
 			mtmp,  (_verbose ? _getLog().get() : 0), False, AxesSpecifier(),
 			_getStretch()
 	);

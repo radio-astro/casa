@@ -29,11 +29,15 @@
 #define IMAGES_IMAGECOLLAPSER_H
 
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
-#include <images/Images/SubImage.h>
-
 #include <casa/namespace.h>
 
+#include <tr1/memory>
+
 namespace casa {
+
+template <class T> class TempImage;
+template <class T> class SubImage;
+
 
 class ImageCollapser : public ImageTask {
 	// <summary>
@@ -86,7 +90,7 @@ public:
 	// <group>
 
 	ImageCollapser(
-		String aggString, const ImageInterface<Float> *const image,
+		String aggString, const ImageTask::shCImFloat image,
 		const String& region, const Record *const regionRec,
 		const String& box,
 		const String& chanInp, const String& stokes,
@@ -95,7 +99,7 @@ public:
 	);
 
 	ImageCollapser(
-		const ImageInterface<Float> * const image,
+		const ImageTask::shCImFloat image,
 		const IPosition& axes, const Bool invertAxesSelection,
 		const AggregateType aggregateType,
 		const String& outname, const Bool overwrite
@@ -149,11 +153,11 @@ private:
 	// necessary to improve performance
 	void _doMedian(
 		const SubImage<Float>& subImage,
-		const std::auto_ptr<ImageInterface<Float> >& outImage
+		TempImage<Float>& outImage
 	) const;
 
 	void _attachOutputMask(
-		const std::auto_ptr<ImageInterface<Float> >& outImage,
+		TempImage<Float>& outImage,
 		const Array<Bool>& outMask
 	) const;
 

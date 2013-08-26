@@ -29,14 +29,19 @@
 #include <casaqt/PlotterImplementations/PlotterImplementations.h>
 #include <casaqt/QtUtilities/QtActionGroup.qo.h>
 #include <casaqt/QtUtilities/QtProgressWidget.qo.h>
-#include <plotms/Actions/PlotMSDrawThread.qo.h>
+#include <plotms/Actions/ActionFactory.h>
+#include <plotms/Actions/ActionExport.h>
+#include <plotms/Threads/Gui/PlotMSCacheThread.qo.h>
+#include <plotms/Threads/Gui/PlotMSDrawThread.qo.h>
+#include <plotms/Threads/Gui/PlotMSExportThread.qo.h>
 #include <plotms/GuiTabs/PlotMSAnnotatorTab.qo.h>
 #include <plotms/GuiTabs/PlotMSFlaggingTab.qo.h>
 #include <plotms/GuiTabs/PlotMSOptionsTab.qo.h>
 #include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
 #include <plotms/GuiTabs/PlotMSToolsTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
-
+//#include <plotms/Plots/PlotMSPlot.h>
+#include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <QCloseEvent>
 #include <QDockWidget>
 #include <QMessageBox>
@@ -44,6 +49,8 @@
 #include <QSet>
 #include <QSplitter>
 #include <QThread>
+#include <QDebug>
+
 
 namespace casa {
 
@@ -54,8 +61,9 @@ namespace casa {
 // Constructors/Destructors //
 
 PlotMSPlotter::PlotMSPlotter(PlotMSApp* parent, Plotter::Implementation impl) :
-        itsParent_(parent), itsAnnotator_(parent)
+        itsParent_(parent), itsAnnotator_(this)
         {
+	parent->getPlotManager().addWatcher(&itsAnnotator_);
     initialize(impl);
 }
 
@@ -69,13 +77,40 @@ PlotMSPlotter::~PlotMSPlotter() {
 
 // Public Methods //
 
+
+
+void PlotMSPlotter::canvasAdded( PlotCanvasPtr& canvas ){
+
+	// connect new canvases' tracker to tool tab
+	PlotStandardMouseToolGroupPtr tools = canvas->standardMouseTools();
+	tools->trackerTool()->addNotifier(itsToolsTab_);
+	tools->selectTool()->setDrawRects(true);
+
+	// register annotator tool
+	canvas->registerMouseTool(
+			PlotMouseToolPtr(&itsAnnotator_, false),
+			false, true);
+
+	// add plotmsplotter as draw watcher
+	canvas->registerDrawWatcher(PlotDrawWatcherPtr(this,false));
+
+	// watch for keystrokes related to using tracker feature
+	canvas->registerKeyHandler(
+			PlotKeyEventHandlerPtr(itsToolsTab_->tracker_key_handler,
+					false));
+
+
+}
+
 void PlotMSPlotter::showGUI(bool show) {
     isClosed_ = false;
     setVisible(show);
     itsPlotter_->showGUI(show);
 }
 
-bool PlotMSPlotter::guiShown() const { return isVisible(); }
+bool PlotMSPlotter::guiShown() const {
+	return QMainWindow::isVisible();
+}
 
 int PlotMSPlotter::execLoop() {
     QApplication::processEvents();
@@ -89,9 +124,48 @@ int PlotMSPlotter::execLoop() {
     }
 }
 
-void PlotMSPlotter::doThreadedOperation(PlotMSThread* t) {
-    if(t == NULL) return;
-    
+ThreadController* PlotMSPlotter::getThreadController( PlotMSAction::Type type,
+		PMSPTMethod postThreadMethod, PMSPTObject postThreadObject ){
+	PlotMSThread* controller = NULL;
+
+	if ( type == PlotMSAction::PLOT_EXPORT ){
+		controller = new PlotMSExportThread( itsThreadProgress_, this );
+	}
+	else if ( type == PlotMSAction::CACHE_LOAD || type == PlotMSAction::CACHE_RELEASE ){
+		PlotMSPlotParameters params = getPlotParameters();
+		PMS_PP_Cache* paramsCache = params.typedGroup<PMS_PP_Cache>();
+		if ( postThreadObject == NULL ){
+			controller = new PlotMSCacheThread(itsThreadProgress_,
+					PMS_PP_Cache::notifyWatchers, paramsCache);
+		}
+		else {
+			controller = new PlotMSCacheThread( itsThreadProgress_, postThreadMethod,
+					postThreadObject );
+		}
+	}
+	else if ( type == PlotMSAction::HOLD_RELEASE_DRAWING ){
+		controller = new PlotMSDrawThread( this, itsThreadProgress_);
+	}
+	else {
+		qDebug() << "PlotMSPlotter::getThreadController Unsupported threaded operation: "<< type;
+	}
+	return controller;
+}
+
+void PlotMSPlotter::setAnnotationModeActive( PlotMSAction::Type type, bool active ){
+	if ( active ){
+		PlotMSAnnotator::Mode annotateMode = PlotMSAnnotator::TEXT;
+		if ( type == PlotMSAction::TOOL_ANNOTATE_RECTANGLE ){
+			annotateMode = PlotMSAnnotator::RECTANGLE;
+		}
+		getAnnotator().setDrawingMode(annotateMode);
+	}
+	getAnnotator().setActive(active);
+}
+
+void PlotMSPlotter::doThreadedOperation( ThreadController* controller) {
+    if(controller == NULL) return;
+    PlotMSThread* t = dynamic_cast<PlotMSThread*>(controller );
     if(itsCurrentThread_ == NULL) {
         // no currently running thread, so start this one
         itsCurrentThread_ = t;
@@ -108,7 +182,7 @@ void PlotMSPlotter::doThreadedOperation(PlotMSThread* t) {
         itsCurrentThread_->startOperation();
     } else {
         // there is a currently running thread, so add to waiting list
-        itsWaitingThreads_.push_back(t);
+        itsWaitingThreads_.push_back( t );
     }
 }
 
@@ -146,13 +220,13 @@ bool PlotMSPlotter::canvasDrawBeginning(
             // the actual drawing is still being done in the background).  If
             // the drawing finishes before the current thread, when the drawing
             // thread starts it will immediately exit.
-            dt = new PlotMSDrawThread(this);
+            dt = new PlotMSDrawThread(this, itsThreadProgress_);
             itsWaitingThreads_.push_back(dt);
         }
         return true;
     }
 
-    dt = new PlotMSDrawThread(this);
+    dt = new PlotMSDrawThread(this, itsThreadProgress_ );
     doThreadedOperation(dt);
     return true;
 }
@@ -174,36 +248,12 @@ bool PlotMSPlotter::showQuestion(const String& message, const String& title) {
         ) == QMessageBox::Yes;
 }
 
-void PlotMSPlotter::holdDrawing() {
-    vector<PlotCanvasPtr> canvases = currentCanvases();
-    for(unsigned int i = 0; i < canvases.size(); i++) {
-        canvases[i]->holdDrawing();
-    }
-}
 
-void PlotMSPlotter::releaseDrawing() {
-    vector<PlotCanvasPtr> canvases = currentCanvases();
-    for(unsigned int i = 0; i < canvases.size(); i++) {
-        canvases[i]->releaseDrawing();
-    }
-}
 
-bool PlotMSPlotter::allDrawingHeld() const {
-    if(itsPlotter_.null() || itsPlotter_->canvasLayout().null()) {
-    	return false;
-    }
-    vector<PlotCanvasPtr> canvases= itsPlotter_->canvasLayout()->allCanvases();
-    for(unsigned int i = 0; i < canvases.size(); i++) {
-        if(!canvases[i].null() && !canvases[i]->drawingIsHeld()) {
-        	return false;
-        }
-    }
-    return true;
-}
 
-vector<PlotCanvasPtr> PlotMSPlotter::currentCanvases() {
-	return itsPlotter_->canvasLayout()->allCanvases();
-}
+
+
+
 
 
 void PlotMSPlotter::setWindowTitle(const String& windowTitle) {
@@ -337,7 +387,7 @@ void PlotMSPlotter::showAbout() {
 
 void PlotMSPlotter::prepareForPlotting()   {
 	
-	PlotMSToolsTab *ttab =  getToolsTab();
+	//PlotMSToolsTab *ttab =  getToolsTab();
 	
 	// This is a fix for the zoom stack bug, JIRA CAS-1770.
 	// The fix is to force all tool buttons unpressed
@@ -347,7 +397,7 @@ void PlotMSPlotter::prepareForPlotting()   {
 	// checking the "None" radio button in the tools tab.
 	// These radio buttons are wired to the tool bar, causing them
 	// to also become unchecked.
-	ttab->toolsUnchecked();
+	itsToolsTab_->toolsUnchecked();
 }
 
 
@@ -375,7 +425,7 @@ void PlotMSPlotter::closeEvent(QCloseEvent* event) {
         for(unsigned int i = 0; i < itsWaitingThreads_.size(); i++)
             delete itsWaitingThreads_[i];
         itsWaitingThreads_.clear();
-        itsCurrentThread_->terminateOperation();
+        itsCurrentThread_->cancel();
     }
     isClosed_ = true;
     // Close plotter separately if not Qt-based.
@@ -569,6 +619,7 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     setMinimumHeight(600);
     resize(width(), 600);
     setVisible(false);
+    showIterationButtons( true );
 }
 
 
@@ -576,8 +627,8 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
 
 void PlotMSPlotter::action(QAction* act) {
     if(act == NULL) return;
-setStatusText(" " );//    
-clearStatusText();
+    setStatusText(" " );//
+    clearStatusText();
     
     // If it's the annotate button, turn on/off the action corresponding to the
     // current mode.
@@ -600,13 +651,14 @@ clearStatusText();
     // Set up the generic PlotMS action mapped to the QAction.
     PlotMSAction::Type type = itsActionMap_.key(act);
 
-    if(type == PlotMSAction::PLOT_EXPORT) {
+    /*if(type == PlotMSAction::PLOT_EXPORT) {
         // export plot triggers an action so return immediately
         exportPlot(itsPlotTab_->currentlySetExportFormat(), true, true);
         return;
-    }
+    }*/
 
-    PlotMSAction action(type);
+    //PlotMSAction action(type);
+    /*CountedPtr<PlotMSAction> action = ActionFactory::getAction( type );
     
     // Set required parameters for actions that need them.
     if(PlotMSAction::requires(type, PlotMSAction::P_ON_OFF))
@@ -621,26 +673,38 @@ clearStatusText();
     else if(type == PlotMSAction::CACHE_RELEASE)
         action.setParameter(PlotMSAction::P_AXES,
                 itsPlotTab_->selectedReleaseAxes());
+*/
+
 
     
     // Trigger the action.
-    _triggerAction(action);
+    _triggerAction(/*action*/type);
 
 }
 
-bool PlotMSPlotter::_triggerAction(PlotMSAction& action) {
-    bool result = action.doAction(itsParent_);
+bool PlotMSPlotter::_triggerAction(/*PlotMSAction& action*/PlotMSAction::Type type) {
+    /*bool result = action.doAction(itsParent_);
     if(!result) {
     	showError(action.doActionResult(), "Action Failed!", false);
     }
     return result;
+    */
+	CountedPtr<PlotMSAction> action = ActionFactory::getAction( type, this );
+	bool result = action->doAction(itsParent_);
+	if ( !result ){
+		showError( action->doActionResult(), "Action Failed!", false );
+	}
+	return result;
 }
+
+
+
 
 bool PlotMSPlotter::exportPlot(
 		const PlotExportFormat& format, const bool interactive, const bool async
 ) {
 	(void)async;
-	PlotMSAction action(PlotMSAction::PLOT_EXPORT);
+	/*PlotMSAction action(PlotMSAction::PLOT_EXPORT);
 	action.setParameter(PlotMSAction::P_PLOT, itsPlotTab_->currentPlot());
 	action.setParameter(PlotMSAction::P_FILE, format.location);
 	action.setParameter(
@@ -654,8 +718,16 @@ bool PlotMSPlotter::exportPlot(
 	action.setParameter(PlotMSAction::P_HEIGHT, format.height);
 	action.setParameter(PlotMSAction::P_INTERACTIVE, interactive);
 
-	_triggerAction(action);
-	return true;
+	_triggerAction(action);*/
+
+	ActionExport action( this );
+	action.setExportFormat( format );
+	action.setInteractive( interactive );
+	bool result = action.doAction(itsParent_);
+	if ( !result ){
+		showError( action.doActionResult(), "Export Failed!", false );
+	}
+	return result;
 }
 
 void PlotMSPlotter::currentThreadFinished() {
@@ -765,6 +837,57 @@ String PlotMSPlotter::aboutText(Plotter::Implementation impl, bool useHTML) {
     return ss.str();
 }
 
+bool PlotMSPlotter::isActionEnabled( PlotMSAction::Type type ) const {
+	QAction* guiAction = itsActionMap_[type];
+	return guiAction->isChecked();
+}
 
+PlotMSPlot* PlotMSPlotter::getCurrentPlot() const {
+	return itsPlotTab_->currentPlot();
+}
+
+vector<PMS::Axis> PlotMSPlotter::getSelectedLoadAxes() const {
+	return itsPlotTab_->selectedLoadAxes();
+}
+
+vector<PMS::Axis> PlotMSPlotter::getSelectedReleaseAxes() const {
+	return itsPlotTab_->selectedReleaseAxes();
+}
+
+PlotExportFormat PlotMSPlotter::getPlotExportFormat() const {
+	return itsPlotTab_->currentlySetExportFormat();
+}
+
+PlotMSFlagging PlotMSPlotter::getFlagging() const {
+	return itsFlaggingTab_->getValue();
+}
+
+void PlotMSPlotter::setFlagging(PlotMSFlagging flag){
+	itsFlaggingTab_->setValue(flag);
+}
+
+bool PlotMSPlotter::isInteractive() const {
+	return true;
+}
+
+bool PlotMSPlotter::isMSSummaryVerbose() const {
+	return itsPlotTab_->msSummaryVerbose();
+}
+
+PlotMSPlotParameters PlotMSPlotter::getPlotParameters() const {
+	return itsPlotTab_->currentlySetParameters();
+}
+
+PMS::SummaryType PlotMSPlotter::getMSSummaryType() const{
+	return itsPlotTab_->msSummaryType();
+}
+
+
+
+
+
+void PlotMSPlotter::plot(){
+	itsPlotTab_->plot();
+}
 
 }

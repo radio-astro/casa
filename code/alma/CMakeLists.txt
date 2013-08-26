@@ -56,6 +56,8 @@ ASDM/CalAmpliRow.cc
 ASDM/CalAmpliTable.cc
 ASDM/CalAtmosphereRow.cc
 ASDM/CalAtmosphereTable.cc
+ASDM/CalAppPhaseRow.cc
+ASDM/CalAppPhaseTable.cc
 ASDM/CalBandpassRow.cc
 ASDM/CalBandpassTable.cc
 ASDM/CalCurveRow.cc
@@ -707,9 +709,33 @@ casa_add_executable( alma bdflags2MS
   apps/asdm2MS/bdflags2MS.cc
   )
 
+casa_add_executable( alma parasdm2MS
+  apps/asdm2MS/parasdm2MS.cc
+  apps/asdm2MS/ASDM2MSFiller.cc
+  apps/asdm2MS/BDF2AsdmStManIndex.cc
+  apps/asdm2MS/ASDMTableBase.cc
+  apps/asdm2MS/ASDMTables.cc
+  apps/asdm2MS/ASDMVerbatimFiller.cc
+  apps/asdm2MS/Name2Table.cc
+  apps/asdm2MS/UvwCoords.cc
+  )
+
 casa_add_assay(alma ASDMBinaries/test/tReadBigBDF.cc)
 casa_add_assay(alma ASDMBinaries/test/tReadAllBDFs.cc)
 casa_add_assay(alma ASDM/test/tTableStreamReader.cc)
 casa_add_assay(alma ASDMBinaries/test/tReadSeqBDFs.cc)
 casa_add_assay(alma ASDMBinaries/test/tReadParBDFs.cc)
+
+#
+# The Python <- C++ binding generated with swig
+#
+#
+# Firstly the Enumerations
+#
+#add_subdirectory(Enumerations/swig)
+#
+# Then the ASDM
+#
+#add_subdirectory(ASDM/swig)
+
 

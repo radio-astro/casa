@@ -29,6 +29,8 @@
 #include <QtGui/QWidget>
 #include <display/region/HistogramTab.ui.h>
 
+#include <tr1/memory>
+
 namespace casa {
 
 	template <class T> class ImageInterface;
@@ -45,7 +47,7 @@ namespace casa {
 
 	public:
 		HistogramTab(QWidget *parent = 0);
-		void addImage( ImageInterface<float>* image );
+		void addImage( std::tr1::shared_ptr<ImageInterface<float> > image );
 		void setImageRegion( const std::string& imageName, ImageRegion* region, int regionId);
 		void clear();
 		/**

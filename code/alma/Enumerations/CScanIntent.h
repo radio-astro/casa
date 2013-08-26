@@ -56,7 +56,7 @@ namespace ScanIntentMod
   //! ScanIntent.
   //!  [ASDM.Scan] Scan intents
   
-  const char *const revision = "1.10";
+  const char *const revision = "-1";
   const int version = 1;
   
   enum ScanIntent
@@ -102,6 +102,20 @@ namespace ScanIntentMod
     TEST /*!< used for development. */
      ,
     UNSPECIFIED /*!< Unspecified scan intent */
+     ,
+    CALIBRATE_ANTENNA_POSITION /*!< Requested by EVLA. */
+     ,
+    CALIBRATE_ANTENNA_PHASE /*!< Requested by EVLA. */
+     ,
+    MEASURE_RFI /*!< Requested by EVLA. */
+     ,
+    CALIBRATE_ANTENNA_POINTING_MODEL /*!< Requested by EVLA. */
+     ,
+    SYSTEM_CONFIGURATION /*!< Requested by EVLA. */
+     ,
+    CALIBRATE_APPPHASE_ACTIVE /*!< Calculate phase errors and assess phasing efficiency. Requested by the APP project. */
+     ,
+    CALIBRATE_APPPHASE_PASSIVE /*!< Assess phasing efficiency. Requested by the APP project. */
      
   };
   typedef ScanIntent &ScanIntent_out;
@@ -165,6 +179,20 @@ class CScanIntent {
 	static const std::string& sTEST; /*!< A const string equal to "TEST".*/
 	
 	static const std::string& sUNSPECIFIED; /*!< A const string equal to "UNSPECIFIED".*/
+	
+	static const std::string& sCALIBRATE_ANTENNA_POSITION; /*!< A const string equal to "CALIBRATE_ANTENNA_POSITION".*/
+	
+	static const std::string& sCALIBRATE_ANTENNA_PHASE; /*!< A const string equal to "CALIBRATE_ANTENNA_PHASE".*/
+	
+	static const std::string& sMEASURE_RFI; /*!< A const string equal to "MEASURE_RFI".*/
+	
+	static const std::string& sCALIBRATE_ANTENNA_POINTING_MODEL; /*!< A const string equal to "CALIBRATE_ANTENNA_POINTING_MODEL".*/
+	
+	static const std::string& sSYSTEM_CONFIGURATION; /*!< A const string equal to "SYSTEM_CONFIGURATION".*/
+	
+	static const std::string& sCALIBRATE_APPPHASE_ACTIVE; /*!< A const string equal to "CALIBRATE_APPPHASE_ACTIVE".*/
+	
+	static const std::string& sCALIBRATE_APPPHASE_PASSIVE; /*!< A const string equal to "CALIBRATE_APPPHASE_PASSIVE".*/
 	
 
 	/**

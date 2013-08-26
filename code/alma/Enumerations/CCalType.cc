@@ -46,7 +46,7 @@ string CCalType::revision () {
 }
 
 unsigned int CCalType::size() {
-	return 17;
+	return 18;
 	}
 	
 	
@@ -84,6 +84,8 @@ const std::string& CCalType::sCAL_SEEING = "CAL_SEEING";
 	
 const std::string& CCalType::sCAL_WVR = "CAL_WVR";
 	
+const std::string& CCalType::sCAL_APPPHASE = "CAL_APPPHASE";
+	
 const std::vector<std::string> CCalType::names() {
     std::vector<std::string> enumSet;
     
@@ -120,6 +122,8 @@ const std::vector<std::string> CCalType::names() {
     enumSet.insert(enumSet.end(), CCalType::sCAL_SEEING);
     
     enumSet.insert(enumSet.end(), CCalType::sCAL_WVR);
+    
+    enumSet.insert(enumSet.end(), CCalType::sCAL_APPPHASE);
         
     return enumSet;
 }
@@ -177,6 +181,9 @@ std::string CCalType::name(const CalTypeMod::CalType& f) {
     
     case CalTypeMod::CAL_WVR:
       return CCalType::sCAL_WVR;
+    
+    case CalTypeMod::CAL_APPPHASE:
+      return CCalType::sCAL_APPPHASE;
     	
     }
     // Impossible siutation but....who knows with C++ enums
@@ -252,6 +259,10 @@ CalTypeMod::CalType CCalType::newCalType(const std::string& name) {
     if (name == CCalType::sCAL_WVR) {
         return CalTypeMod::CAL_WVR;
     }
+    	
+    if (name == CCalType::sCAL_APPPHASE) {
+        return CalTypeMod::CAL_APPPHASE;
+    }
     
     throw badString(name);
 }
@@ -324,6 +335,10 @@ CalTypeMod::CalType CCalType::literal(const std::string& name) {
     	
     if (name == CCalType::sCAL_WVR) {
         return CalTypeMod::CAL_WVR;
+    }
+    	
+    if (name == CCalType::sCAL_APPPHASE) {
+        return CalTypeMod::CAL_APPPHASE;
     }
     
     throw badString(name);

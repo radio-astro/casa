@@ -51,8 +51,8 @@ const String ImagePrimaryBeamCorrector::_class = "ImagePrimaryBeamCorrector";
 uInt _tempTableNumber = 0;
 
 ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
-	const ImageInterface<Float> *const &image,
-	const ImageInterface<Float> *const &pbImage,
+		const ImageTask::shCImFloat image,
+		const ImageTask::shCImFloat pbImage,
 	const Record *const &regionPtr,
 	const String& region, const String& box,
 	const String& chanInp, const String& stokes,
@@ -69,7 +69,7 @@ ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
 }
 
 ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
-	const ImageInterface<Float> *const &image,
+		const ImageTask::shCImFloat image,
 	const Array<Float>& pbArray,
 	const Record *const &regionPtr,
 	const String& region, const String& box,
@@ -112,7 +112,7 @@ ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
 		}
 	}
 	else {
-		*_getLog() << "Primary beam array is of wrong shape" << LogIO::EXCEPTION;
+		*_getLog() << "Primary beam array is of wrong shape (" << pbArray.shape() << ")" << LogIO::EXCEPTION;
 	}
 	_pbImage->put(pbArray);
 	_construct();
@@ -246,7 +246,7 @@ ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
     	False, AxesSpecifier(), _getStretch()
     );
 	tmpStore.reset(0);
-	std::auto_ptr<ImageInterface<Float> > outImage(0);
+	std::tr1::shared_ptr<ImageInterface<Float> > outImage;
 	if (_getOutname().empty()) {
 		outImage.reset(
 			new TempImage<Float>(
@@ -271,11 +271,9 @@ ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
 		_removeExistingOutfileIfNecessary();
 		String mask = "";
 	    Record empty;
-		outImage.reset(
-			SubImageFactory<Float>::createImage(
-				subImage, _getOutname(), empty,
-				mask, False, False, False, False
-			)
+		outImage = SubImageFactory<Float>::createImage(
+			subImage, _getOutname(), empty,
+			mask, False, False, False, False
 		);
 	}
 	LatticeExpr<Float> expr = (_mode == DIVIDE)
@@ -284,10 +282,7 @@ ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
 	outImage->copyData(expr);
 
     if (wantReturn) {
-    	ImageInterface<Float> *ret = outImage.get();
-    	// release the pointer for return without deleting its object
-    	outImage.release();
-    	return ret;
+    	return outImage->cloneII();
     }
     else {
     	return 0;

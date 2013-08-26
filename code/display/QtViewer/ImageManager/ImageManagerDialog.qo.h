@@ -30,6 +30,8 @@
 #include <display/QtViewer/ImageManager/ImageTracker.h>
 #include <casa/BasicSL/String.h>
 
+#include <tr1/memory>
+
 namespace casa {
 
 	class DisplayOptionsDialog;
@@ -58,6 +60,8 @@ namespace casa {
 		//Sets the image that is currently being viewed (on the Animator).  Allows the image
 		//manager to indicate the current image on the display.
 		void setViewedImage( int registrationIndex );
+		void closeImageView( QtDisplayData* image );
+
 		~ImageManagerDialog();
 
 		//-----------------------------------------------------------------------
@@ -89,6 +93,7 @@ namespace casa {
 	public slots:
 		//The ImageView has changed types (raster, contour, vector, etc)
 		void displayTypeChanged( ImageView* changedView );
+
 
 	private slots:
 		//Opens the display data options panel for the specific display data.
@@ -126,7 +131,7 @@ namespace casa {
 		//Returns the transparency to use when combining images.
 		float getTransparency() const;
 		//Get the min and max intensity of the image.
-		bool getIntensityMinMax( ImageInterface<float>* img,
+		bool getIntensityMinMax( std::tr1::shared_ptr<ImageInterface<float> > img,
 		                         double* intensityMin, double* intensityMax );
         //Generate a color map based on a single base color (RGB mode).
 		Colormap* generateColorMap( QColor baseColor);

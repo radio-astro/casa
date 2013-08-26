@@ -30,13 +30,13 @@
 #include <casaqt/QtUtilities/QtDBusXmlApp.qo.h>
 #include <plotms/PlotMS/PlotMSParameters.h>
 #include <plotms/Plots/PlotMSPlotManager.h>
-
+#include <plotms/PlotMS/PlotEngine.h>
 #include <casa/namespace.h>
 
 namespace casa {
 
 //# Forward declarations.
-class PlotMSApp;
+//class PlotEngine;
 
 
 // Subclass of QtDBusXmlApp to control plotms using DBus communication.
@@ -223,7 +223,7 @@ public:
     // Non-Static //
     
     // Constructor which takes PlotMS parent object.
-    PlotMSDBusApp(PlotMSApp& plotms);
+    PlotMSDBusApp(PlotEngine& plotms);
     
     // Destructor.
     ~PlotMSDBusApp();
@@ -253,7 +253,8 @@ protected:
     
 private:
     // Parent PlotMS.
-    PlotMSApp& itsPlotms_;
+    //PlotMSApp& itsPlotms_;
+    PlotEngine& itsPlotms_;
     
     // Set PlotMS parameters that haven't yet been transferred to the current
     // PlotMS.

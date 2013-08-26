@@ -30,6 +30,8 @@
 #include <QtGui/QWidget>
 #include <display/region/HistogramGraph.ui.h>
 
+#include <tr1/memory>
+
 namespace casa {
 
 	template <class T> class ImageInterface;
@@ -52,7 +54,7 @@ namespace casa {
 		void initPlot();
 		void setIndex( int stackIndex );
 		void setNextEnabled( bool enabled );
-		void setImage( ImageInterface<float>* image );
+		void setImage( std::tr1::shared_ptr<ImageInterface<float> > image );
 		void setImageRegion( ImageRegion* region, int id );
 
 	signals:

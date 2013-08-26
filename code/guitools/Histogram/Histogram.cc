@@ -36,7 +36,7 @@ namespace casa {
 
 const int Histogram::ALL_CHANNELS = -1;
 const int Histogram::ALL_INTENSITIES = -1;
-ImageInterface<Float>* Histogram::image = NULL;
+ImageTask::shCImFloat Histogram::image = ImageTask::shCImFloat();
 int Histogram::channelMin = ALL_CHANNELS;
 int Histogram::channelMax = ALL_CHANNELS;
 float Histogram::intensityMin = ALL_INTENSITIES;
@@ -115,7 +115,7 @@ bool Histogram::compute( ){
 	return success;
 }
 
-ImageHistograms<Float>* Histogram::filterByChannels( const ImageInterface<Float>* image ){
+ImageHistograms<Float>* Histogram::filterByChannels( const ImageTask::shCImFloat image ){
 	ImageHistograms<Float>* imageHistogram = NULL;
 	if ( channelMin != ALL_CHANNELS && channelMax != ALL_CHANNELS ){
 		//Create a slicer from the image
@@ -141,7 +141,7 @@ ImageHistograms<Float>* Histogram::filterByChannels( const ImageInterface<Float>
 	return imageHistogram;
 }
 
-void Histogram::setImage(ImageInterface<Float>* img ){
+void Histogram::setImage(const ImageTask::shCImFloat img ){
 	image = img;
 }
 
@@ -165,9 +165,8 @@ bool Histogram::reset(){
 			}
 			else {
 				//Make the histogram based on the region
-				SubImage<Float>* subImage = new SubImage<Float>( *image, *region );
+				std::tr1::shared_ptr<SubImage<Float> > subImage(new SubImage<Float>( *image, *region ));
 				histogramMaker = filterByChannels( subImage );
-				delete subImage;
 			}
 			success = compute();
 		}

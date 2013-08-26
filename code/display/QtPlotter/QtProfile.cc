@@ -74,6 +74,8 @@
 #include <QMessageBox>
 #include <limits>
 
+#include <tr1/memory>
+
 namespace casa {
 
 	const QString QtProfile::PLOT_TYPE_FLUX = "Flux Density";
@@ -83,13 +85,13 @@ namespace casa {
 	const QString QtProfile::FREQUENCY = "frequency";
 	const QString QtProfile::RADIO_VELOCITY = "radio velocity";
 	const QString QtProfile::CHANNEL = "channel";
-
+	const QString QtProfile::OPTICAL = "optical";
+	const QString QtProfile::AIR = "air";
 
 	QtProfile::~QtProfile() {
-
 	}
 
-	QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *parent, std::string rcstr)
+	QtProfile::QtProfile(std::tr1::shared_ptr<ImageInterface<Float> > img, const char *name, QWidget *parent, std::string rcstr)
 		:QMainWindow(parent),
 //pc(0),
 //te(0),
@@ -107,6 +109,7 @@ namespace casa {
 		 colorSummaryWidget( NULL ), legendPreferencesDialog( NULL ),newOverplots( false ) {
 		setupUi(this);
 		initPlotterResource();
+		showTopAxis = true;
 
 		//Remove the setPosition tab because duplicate functionality exists in the viewer.
 		functionTabs->removeTab(0);
@@ -276,7 +279,7 @@ namespace casa {
 	}
 
 
-	MFrequency::Types QtProfile::determineRefFrame(ImageInterface<Float>* img, bool check_native_frame ) {
+	MFrequency::Types QtProfile::determineRefFrame(std::tr1::shared_ptr<ImageInterface<Float> > img, bool check_native_frame ) {
 		MFrequency::Types freqtype;
 
 		CoordinateSystem cSys=img->coordinates();
@@ -445,7 +448,7 @@ namespace casa {
 
 	void QtProfile::initPreferences() {
 		profilePrefs = new QtProfilePrefs(this,pixelCanvas->getAutoScaleX(), pixelCanvas->getAutoScaleY(),
-		                                  pixelCanvas->getShowGrid(),stateMProf, stateRel, pixelCanvas->getShowToolTips(), pixelCanvas-> getShowTopAxis(),
+		                                  pixelCanvas->getShowGrid(),stateMProf, stateRel, pixelCanvas->getShowToolTips(), showTopAxis,
 		                                  pixelCanvas->isDisplayStepFunction(), specFitSettingsWidget->isOptical(), pixelCanvas->isShowChannelLine());
 		connect(profilePrefs, SIGNAL(currentPrefs(bool, bool, int, int, int, bool, bool, bool, bool, bool)),
 		        this, SLOT(setPreferences(bool, bool, int, int, int, bool, bool, bool, bool, bool)));
@@ -470,7 +473,7 @@ namespace casa {
 		pixelCanvas->setShowChannelLine( showChannelLine );
 		pixelCanvas ->setDisplayStepFunction( displayStepFunction );
 		adjustTopAxisSettings();
-
+		this->showTopAxis = showTopAxis;
 		stateMProf=inMProf;
 		stateRel  = inRel;
 
@@ -555,7 +558,7 @@ namespace casa {
 		emit hideProfile();
 	}
 
-	void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name) {
+	void QtProfile::resetProfile(std::tr1::shared_ptr<ImageInterface<Float> > img, const char *name) {
 		image = img;
 		try {
 			if (analysis)
@@ -1007,7 +1010,7 @@ namespace casa {
 	}
 
 	int QtProfile::getChannelCount( ImageAnalysis* analysis ){
-		const ImageInterface<float>* img = analysis->getImage();
+		std::tr1::shared_ptr<const ImageInterface<float> > img(analysis->getImage());
 		CoordinateSystem cSys = img->coordinates();
 		Int spectralIndex = cSys.spectralAxisNumber();
 		IPosition imgShape = img->shape();
@@ -1035,7 +1038,8 @@ namespace casa {
 	}
 
 	void QtProfile::changeTopAxis() {
-		if ( pixelCanvas->getShowTopAxis() && lastWX.size() >= 2 ) {
+
+		if ( topAxisCType->isEnabled() && lastWX.size() /*>= 2*/> 0 ) {
 			Vector<Float> xValues (lastWX.size());
 			Vector<Float> yValues (lastWY.size());
 			QString text = topAxisCType ->currentText();
@@ -1072,10 +1076,11 @@ namespace casa {
 
 	void QtProfile::plotMainCurve() {
 		pixelCanvas -> clearCurve();
-		changeTopAxis();
+
 		pixelCanvas -> plotPolyLine(z_xval, z_yval, z_eval, fileName);
 		specFitSettingsWidget->setCurveName( fileName );
-		topAxisCType->setEnabled( pixelCanvas->getShowTopAxis() );
+		adjustTopAxisSettings();
+		changeTopAxis();
 	}
 
 	int QtProfile::findNearestChannel( float xval ) const {
@@ -1660,7 +1665,7 @@ namespace casa {
 
 
 
-			if (z_eval.size() > 0) {
+			/*if (z_eval.size() > 0) {
 				for (uInt i = 0; i < z_xval.size(); i++) {
 					ts << z_xval(i) << "    " << scaleFactor*z_yval(i) << "    "  << scaleFactor*z_eval(i) << "\n";
 				}
@@ -1668,11 +1673,11 @@ namespace casa {
 				for (uInt i = 0; i < z_xval.size(); i++) {
 					ts << z_xval(i) << "    " << scaleFactor*z_yval(i) << "\n";
 				}
-			}
+			}*/
 
 
 		int i = pixelCanvas->getLineCount();
-		for (int k = 1; k < i; k++) {
+		for (int k = 0; k < i; k++) {
 			ts << "\n";
 			ts << "# " << pixelCanvas->getCurveName(k) << "\n";
 			CurveData data = pixelCanvas->getCurveData(k);
@@ -1693,7 +1698,7 @@ namespace casa {
 	}
 
 
-	void QtProfile::fillPlotTypes(const ImageInterface<Float>* img) {
+	void QtProfile::fillPlotTypes(const std::tr1::shared_ptr<ImageInterface<Float> > img) {
 
 		// check whether plot mode "flux" make sense
 		bool allowFlux(false);
@@ -2040,6 +2045,7 @@ namespace casa {
 	                                        const String& coordinateType, const String& xaxisUnit,
 	                                        Vector<Float> &z_xval, Vector<Float> &z_yval) {
 		Bool ok = False;
+
 		switch (itsPlotType) {
 		case QtProfile::PMEAN:
 			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
@@ -2472,29 +2478,37 @@ namespace casa {
 		topAxisCType->clear();
 
 		for ( int i = 0; i < xUnitsList.size(); i++ ){
-			bool bottomVelocity = isVelocityUnit( bottomUnits );
-			bool bottomWavelength = isWavelengthUnit( bottomUnits );
-			bool bottomFrequency = isFrequencyUnit( bottomUnits );
-
-			//Allow a top axis of frequency if the bottom axis is already displaying
-			//frequency or the images are compatible in channel/frequency.
-			bool freqVisible = isFrequencyUnit( xUnitsList[i])  && (allowFrequency || bottomFrequency);
-			bool waveVisible = isWavelengthUnit(xUnitsList[i])  && (allowFrequency || bottomWavelength);
-			bool velocityVisible = isVelocityUnit( xUnitsList[i]) && (allowVelocity || bottomVelocity );
-
-			//We enable channels if the units on the bottom axis are compatible in
-			//channels.
 			bool channelVisible = false;
-			int channelIndex = xUnitsList[i].indexOf( CHANNEL );
-			if ( channelIndex >= 0 ){
-				if ( bottomVelocity && allowVelocity ){
-					channelVisible = true;
+			bool freqVisible = false;
+			bool velocityVisible = false;
+			bool waveVisible = false;
+			if ( restrictOptions ){
+				if ( xUnitsList[i].indexOf( OPTICAL ) >= 0 || xUnitsList[i].indexOf( AIR) >= 0 ){
+					continue;
 				}
-				else if ( (bottomWavelength || bottomFrequency ) && allowFrequency ){
-					channelVisible = true;
+
+				bool bottomVelocity = isVelocityUnit( bottomUnits );
+				bool bottomWavelength = isWavelengthUnit( bottomUnits );
+				bool bottomFrequency = isFrequencyUnit( bottomUnits );
+
+				//Allow a top axis of frequency if the bottom axis is already displaying
+				//frequency or the images are compatible in channel/frequency.
+				freqVisible = isFrequencyUnit( xUnitsList[i])  && (allowFrequency || bottomFrequency);
+				waveVisible = isWavelengthUnit(xUnitsList[i])  && (allowFrequency || bottomWavelength);
+				velocityVisible = isVelocityUnit( xUnitsList[i]) && (allowVelocity || bottomVelocity );
+
+				//We enable channels if the units on the bottom axis are compatible in
+				//channels.
+				int channelIndex = xUnitsList[i].indexOf( CHANNEL );
+				if ( channelIndex >= 0 ){
+					if ( bottomVelocity && allowVelocity ){
+						channelVisible = true;
+					}
+					else if ( (bottomWavelength || bottomFrequency ) && allowFrequency ){
+						channelVisible = true;
+					}
 				}
 			}
-
 			if ( !restrictOptions ||
 				channelVisible || freqVisible || velocityVisible || waveVisible ){
 				topAxisCType->addItem( xUnitsList[i]);
@@ -2535,10 +2549,12 @@ namespace casa {
 		//If the user does not want us to show a top axis
 		//we don't.
 		QString bottomAxisUnits = bottomAxisCType->currentText();
+
 		restrictTopAxisOptions( false, bottomAxisUnits );
-		if ( !pixelCanvas->getShowTopAxis() ){
+		if ( !showTopAxis ){
 			topAxisCType->setEnabled( false );
 		}
+
 		//If we have more than one curve, we show the top axis
 		//only if there is an image whose domain encompasses the domains
 		//of all the other images using the frequency units on the bottom
@@ -2547,22 +2563,27 @@ namespace casa {
 		//the min/max of a single image.  We also need to check that the
 		//frequency units/channel are the same on all images.
 		else if ( mainCurveCount > 1 ) {
-
-
-			bool frequencyMatch = isFrequencyMatch();
-			bool velocityMatch = isVelocityMatch();
-			bool enableTopAxis = frequencyMatch || velocityMatch;
-			topAxisCType->setEnabled( enableTopAxis );
-			if ( enableTopAxis ){
-
-				restrictTopAxisOptions( true, bottomAxisUnits, frequencyMatch, velocityMatch );
+			int opticalIndex = bottomAxisUnits.indexOf( OPTICAL );
+			int airIndex = bottomAxisUnits.indexOf( AIR );
+			if ( opticalIndex >= 0 || airIndex >= 0 ){
+				topAxisCType->setEnabled( false );
 			}
-			pixelCanvas->setTopAxisCompatible( enableTopAxis );
+			else {
+				bool frequencyMatch = isFrequencyMatch();
+				bool velocityMatch = isVelocityMatch();
+				bool enableTopAxis = frequencyMatch || velocityMatch;
+				topAxisCType->setEnabled( enableTopAxis );
+				if ( enableTopAxis ){
+					restrictTopAxisOptions( true, bottomAxisUnits, frequencyMatch, velocityMatch );
+				}
+				pixelCanvas->setTopAxisCompatible( enableTopAxis );
+			}
 		//If there is only one curve, we show the top axis assuming
 		//nothing else applies.
 		} else {
 			topAxisCType-> setEnabled( true );
 		}
+		pixelCanvas->setShowTopAxis( topAxisCType->isEnabled());
 	}
 
 	void QtProfile::addCanvasMainCurve( const Vector<Float>& xVals,
@@ -2615,7 +2636,7 @@ namespace casa {
 		return imagePath;
 	}
 
-	const ImageInterface<Float>* QtProfile::getImage( const QString& imageName ) const {
+	std::tr1::shared_ptr<const ImageInterface<Float> > QtProfile::getImage( const QString& imageName ) const {
 		//First look for a specific image with the name
 		if ( imageName.length() > 0 && over ) {
 			QListIterator<OverplotAnalysis> i( *over );
@@ -2624,7 +2645,7 @@ namespace casa {
 				QString ky = overplot.first;
 				if ( ky == imageName ) {
 					ImageAnalysis* analysis = overplot.second;
-					const ImageInterface<Float>* imageInterface = analysis->getImage();
+					std::tr1::shared_ptr<const ImageInterface<Float> > imageInterface(analysis->getImage());
 					return imageInterface;
 				}
 			}

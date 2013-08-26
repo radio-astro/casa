@@ -57,10 +57,10 @@ namespace casa {
 		void fromComponentList( ComponentList list );
 		bool fromRecord( String& errorMsg, Record& record );
 		bool toEstimateFile( QTextStream& stream,
-		                     ImageInterface<Float>* image, QString& errorMsg,
+		                     const ImageInterface<Float>*const image, QString& errorMsg,
 		                     bool screenEstimates = false, RegionBox* screenBox = NULL) const;
-		QList<RegionShape*> toDrawingDisplay( ImageInterface<Float>* image, const QString& colorName) const;
-		bool toRegionFile( ImageInterface<float>* image, int channelIndex, const QString& filePath ) const;
+		QList<RegionShape*> toDrawingDisplay(const ImageInterface<Float>* image, const QString& colorName) const;
+		bool toRegionFile(const ImageInterface<float>* image, int channelIndex, const QString& filePath ) const;
 		virtual ~ComponentListWrapper();
 
 	private:

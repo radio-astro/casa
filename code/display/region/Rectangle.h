@@ -104,6 +104,7 @@ namespace casa {
 			           QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN ) :
 				Region( name, wc, d, hold_signals, sym ), blc_x(x1<x2?x1:x2),
 				blc_y(y1<y2?y1:y2), trc_x(x1<x2?x2:x1), trc_y(y1<y2?y2:y1) {
+				initHistogram();
 				complete = true;
 			}
 

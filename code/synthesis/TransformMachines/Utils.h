@@ -114,6 +114,10 @@ namespace casa
 
     Vector<Int> mapSpwIDToDDID(const VisBuffer& vb, const Int& spwID);
     Vector<Int> mapSpwIDToPolID(const VisBuffer& vb, const Int& spwID);
+    void calcIntersection(const Int blc1[2], const Int trc1[2], const Float blc2[2], const Float trc2[2],
+			  Float blc[2], Float trc[2]);
+    Bool checkIntersection(const Int blc1[2], const Int trc1[2], const Float blc2[2], const Float trc2[2]);
+			  
   }
 
   void getHADec(MeasurementSet& ms, const VisBuffer& vb, Double &HA, Double& RA, Double& Dec);

@@ -37,7 +37,7 @@ namespace casa {
 const String ImagePadder::_class = "ImagePadder";
 
 ImagePadder::ImagePadder(
-	const ImageInterface<Float> *const image,
+		const ImageTask::shCImFloat image,
 	const Record *const regionRec,
 	const String& box,
 	const String& chanInp, const String& stokes,
@@ -92,11 +92,11 @@ ImageInterface<Float>* ImagePadder::pad(const Bool wantReturn) const {
 	ArrayLattice<Float> values(valArray);
 	values.putSlice(subImage.get(), blc);
 	const Array<Float>& vals = values.get();
-	std::auto_ptr<ImageInterface<Float> > outImage = _prepareOutputImage(
-		&subImage, &vals, &mask, &outShape, &newCoords
+	std::tr1::shared_ptr<ImageInterface<Float> > outImage = _prepareOutputImage(
+		subImage, &vals, &mask, &outShape, &newCoords
 	);
 	if (wantReturn) {
-		return outImage.release();
+		return outImage->cloneII();
 	}
 	return 0;
 }

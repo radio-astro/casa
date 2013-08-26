@@ -311,7 +311,7 @@ public:
     
     // Sets the pattern for this area fill to the given.
     virtual void setPattern(Pattern pattern) = 0;
-    
+    virtual void setPattern( const String& descriptor );
     
     // CONVENIENCE METHODS //
     
@@ -494,6 +494,7 @@ public:
     
     // Sets the symbol style to the given.
     virtual void setSymbol(Symbol symbol) = 0;
+    virtual void setSymbol( const String& descriptor );
     
     // Sets the symbol character to the given.  Implies setSymbol(CHARACTER).
     virtual void setSymbol(char c) = 0;

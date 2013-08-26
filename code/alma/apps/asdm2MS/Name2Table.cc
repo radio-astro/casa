@@ -59,6 +59,8 @@ bool Name2Table::init() {
 	
 	  name2Table_["CalAmpli"] = ASDM_CALAMPLI::instance();	
 	
+	  name2Table_["CalAppPhase"] = ASDM_CALAPPPHASE::instance();	
+	
 	  name2Table_["CalAtmosphere"] = ASDM_CALATMOSPHERE::instance();	
 	
 	  name2Table_["CalBandpass"] = ASDM_CALBANDPASS::instance();	

@@ -43,6 +43,8 @@
 #include <display/DisplayDatas/MSAsRaster.h>
 #include <display/DisplayErrors.h>
 
+#include <tr1/memory>
+
 namespace casa {
 	namespace viewer {
 
@@ -530,9 +532,9 @@ namespace casa {
 				try {
 					if ( ! padd->conformsTo(*wc_) ) continue;
 
-					ImageInterface<Float> *image = padd->imageinterface( );
+					std::tr1::shared_ptr<ImageInterface<Float> > image(padd->imageinterface( ));
 
-					if ( image == 0 ) continue;
+					if ( ! image  ) continue;
 
 					String description = image->name(false);
 					String name = image->name(true);
@@ -627,7 +629,7 @@ namespace casa {
 			lin(1) = trc_y;
 			if ( ! wc_->linToWorld(trc, lin)) return 0;
 
-			ImageInterface<Float> *image = padd->imageinterface( );
+			std::tr1::shared_ptr<ImageInterface<Float> > image(padd->imageinterface( ));
 			if ( image == 0 ) return 0;
 
 			Vector<Int> dispAxes = padd->displayAxes( );

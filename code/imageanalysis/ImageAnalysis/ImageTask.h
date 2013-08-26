@@ -62,6 +62,8 @@ class ImageTask {
 
 public:
 
+	typedef  std::tr1::shared_ptr<const ImageInterface<Float> > shCImFloat;
+
 	// verbosity levels
 	enum Verbosity {
 		QUIET,
@@ -96,7 +98,7 @@ protected:
   	// if <src>overwrite</src> is False, if image already exists exception will be thrown
 
    	ImageTask(
-   		const ImageInterface<Float> *const &image,
+   		const shCImFloat image,
     	const String& region, const Record *const &regionPtr,
     	const String& box, const String& chanInp,
     	const String& stokes, const String& maskInp,
@@ -112,7 +114,7 @@ protected:
 
     virtual void _construct(Bool verbose=True);
 
-    inline const ImageInterface<Float>* _getImage() const {return _image;}
+    inline const shCImFloat _getImage() const {return _image;}
 
     inline const String& _getMask() const {return _mask;}
 
@@ -138,7 +140,7 @@ protected:
 
     String _summaryHeader() const;
 
-    inline const std::tr1::shared_ptr<LogIO>& _getLog() const {return _log;}
+    inline const std::tr1::shared_ptr<LogIO> _getLog() const {return _log;}
 
     inline void _setSupportsLogfile(const Bool b) { _logfileSupport=b;}
 
@@ -163,19 +165,21 @@ protected:
 
     // Create a TempImage or PagedImage depending if _outname is empty or not. Generally meant
     // for the image to be returned to the UI or the final image product that the user will want.
-    // values=0 => the pixel values from the subimage will be used
-    // mask=0 => the mask attached to the subimage, if any will be used, outShape=0 => use subImage shape, coordsys=0 => use subImage coordinate
+    // values=0 => the pixel values from the image will be used
+    // mask=0 => the mask attached to the image, if any will be used, outShape=0 => use image shape, coordsys=0 => use image coordinate
     // system
-    std::auto_ptr<ImageInterface<Float> > _prepareOutputImage(
-    	const ImageInterface<Float> *const subImage, const Array<Float> *const values=0,
+    std::tr1::shared_ptr<ImageInterface<Float> > _prepareOutputImage(
+    	const ImageInterface<Float>& image, const Array<Float> *const values=0,
     	const ArrayLattice<Bool> *const mask=0,
     	const IPosition *const outShape=0, const CoordinateSystem *const coordsys=0
     ) const;
 
     Verbosity _getVerbosity() const { return _verbosity; }
 
+    Bool _getOverwrite() const { return _overwrite; }
+
 private:
-    const ImageInterface<Float> *const _image;
+    const shCImFloat _image;
     std::tr1::shared_ptr<LogIO> _log;
     const Record *const _regionPtr;
     Record _regionRecord;

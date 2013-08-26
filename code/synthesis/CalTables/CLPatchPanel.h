@@ -225,7 +225,7 @@ public:
 
    // From caltable name and (selected) MS 
   CLPatchPanel(const String& ctname,
-	       MeasurementSet& ms,
+	       const MeasurementSet& ms,
 	       const Record& callib,
 	       VisCalEnum::MatrixType mtype,
 	       Int nPar);

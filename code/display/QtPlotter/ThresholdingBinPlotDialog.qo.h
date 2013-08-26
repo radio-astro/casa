@@ -30,6 +30,9 @@
 #include <utility>
 #include <QMainWindow>
 
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
+#include <tr1/memory>
+
 using namespace std;
 
 namespace casa {
@@ -47,7 +50,7 @@ namespace casa {
 
 	public:
 		ThresholdingBinPlotDialog(QString yAxisUnits, QWidget *parent = 0);
-		void setImage( ImageInterface<Float>* img );
+		void setImage( const ImageTask::shCImFloat img );
 		void setInterval( double minValue, double maxValue );
 		pair<double,double> getInterval() const;
 		~ThresholdingBinPlotDialog();

@@ -46,7 +46,7 @@ string CScanIntent::revision () {
 }
 
 unsigned int CScanIntent::size() {
-	return 21;
+	return 28;
 	}
 	
 	
@@ -92,6 +92,20 @@ const std::string& CScanIntent::sTEST = "TEST";
 	
 const std::string& CScanIntent::sUNSPECIFIED = "UNSPECIFIED";
 	
+const std::string& CScanIntent::sCALIBRATE_ANTENNA_POSITION = "CALIBRATE_ANTENNA_POSITION";
+	
+const std::string& CScanIntent::sCALIBRATE_ANTENNA_PHASE = "CALIBRATE_ANTENNA_PHASE";
+	
+const std::string& CScanIntent::sMEASURE_RFI = "MEASURE_RFI";
+	
+const std::string& CScanIntent::sCALIBRATE_ANTENNA_POINTING_MODEL = "CALIBRATE_ANTENNA_POINTING_MODEL";
+	
+const std::string& CScanIntent::sSYSTEM_CONFIGURATION = "SYSTEM_CONFIGURATION";
+	
+const std::string& CScanIntent::sCALIBRATE_APPPHASE_ACTIVE = "CALIBRATE_APPPHASE_ACTIVE";
+	
+const std::string& CScanIntent::sCALIBRATE_APPPHASE_PASSIVE = "CALIBRATE_APPPHASE_PASSIVE";
+	
 const std::vector<std::string> CScanIntent::names() {
     std::vector<std::string> enumSet;
     
@@ -136,6 +150,20 @@ const std::vector<std::string> CScanIntent::names() {
     enumSet.insert(enumSet.end(), CScanIntent::sTEST);
     
     enumSet.insert(enumSet.end(), CScanIntent::sUNSPECIFIED);
+    
+    enumSet.insert(enumSet.end(), CScanIntent::sCALIBRATE_ANTENNA_POSITION);
+    
+    enumSet.insert(enumSet.end(), CScanIntent::sCALIBRATE_ANTENNA_PHASE);
+    
+    enumSet.insert(enumSet.end(), CScanIntent::sMEASURE_RFI);
+    
+    enumSet.insert(enumSet.end(), CScanIntent::sCALIBRATE_ANTENNA_POINTING_MODEL);
+    
+    enumSet.insert(enumSet.end(), CScanIntent::sSYSTEM_CONFIGURATION);
+    
+    enumSet.insert(enumSet.end(), CScanIntent::sCALIBRATE_APPPHASE_ACTIVE);
+    
+    enumSet.insert(enumSet.end(), CScanIntent::sCALIBRATE_APPPHASE_PASSIVE);
         
     return enumSet;
 }
@@ -205,6 +233,27 @@ std::string CScanIntent::name(const ScanIntentMod::ScanIntent& f) {
     
     case ScanIntentMod::UNSPECIFIED:
       return CScanIntent::sUNSPECIFIED;
+    
+    case ScanIntentMod::CALIBRATE_ANTENNA_POSITION:
+      return CScanIntent::sCALIBRATE_ANTENNA_POSITION;
+    
+    case ScanIntentMod::CALIBRATE_ANTENNA_PHASE:
+      return CScanIntent::sCALIBRATE_ANTENNA_PHASE;
+    
+    case ScanIntentMod::MEASURE_RFI:
+      return CScanIntent::sMEASURE_RFI;
+    
+    case ScanIntentMod::CALIBRATE_ANTENNA_POINTING_MODEL:
+      return CScanIntent::sCALIBRATE_ANTENNA_POINTING_MODEL;
+    
+    case ScanIntentMod::SYSTEM_CONFIGURATION:
+      return CScanIntent::sSYSTEM_CONFIGURATION;
+    
+    case ScanIntentMod::CALIBRATE_APPPHASE_ACTIVE:
+      return CScanIntent::sCALIBRATE_APPPHASE_ACTIVE;
+    
+    case ScanIntentMod::CALIBRATE_APPPHASE_PASSIVE:
+      return CScanIntent::sCALIBRATE_APPPHASE_PASSIVE;
     	
     }
     // Impossible siutation but....who knows with C++ enums
@@ -296,6 +345,34 @@ ScanIntentMod::ScanIntent CScanIntent::newScanIntent(const std::string& name) {
     if (name == CScanIntent::sUNSPECIFIED) {
         return ScanIntentMod::UNSPECIFIED;
     }
+    	
+    if (name == CScanIntent::sCALIBRATE_ANTENNA_POSITION) {
+        return ScanIntentMod::CALIBRATE_ANTENNA_POSITION;
+    }
+    	
+    if (name == CScanIntent::sCALIBRATE_ANTENNA_PHASE) {
+        return ScanIntentMod::CALIBRATE_ANTENNA_PHASE;
+    }
+    	
+    if (name == CScanIntent::sMEASURE_RFI) {
+        return ScanIntentMod::MEASURE_RFI;
+    }
+    	
+    if (name == CScanIntent::sCALIBRATE_ANTENNA_POINTING_MODEL) {
+        return ScanIntentMod::CALIBRATE_ANTENNA_POINTING_MODEL;
+    }
+    	
+    if (name == CScanIntent::sSYSTEM_CONFIGURATION) {
+        return ScanIntentMod::SYSTEM_CONFIGURATION;
+    }
+    	
+    if (name == CScanIntent::sCALIBRATE_APPPHASE_ACTIVE) {
+        return ScanIntentMod::CALIBRATE_APPPHASE_ACTIVE;
+    }
+    	
+    if (name == CScanIntent::sCALIBRATE_APPPHASE_PASSIVE) {
+        return ScanIntentMod::CALIBRATE_APPPHASE_PASSIVE;
+    }
     
     throw badString(name);
 }
@@ -384,6 +461,34 @@ ScanIntentMod::ScanIntent CScanIntent::literal(const std::string& name) {
     	
     if (name == CScanIntent::sUNSPECIFIED) {
         return ScanIntentMod::UNSPECIFIED;
+    }
+    	
+    if (name == CScanIntent::sCALIBRATE_ANTENNA_POSITION) {
+        return ScanIntentMod::CALIBRATE_ANTENNA_POSITION;
+    }
+    	
+    if (name == CScanIntent::sCALIBRATE_ANTENNA_PHASE) {
+        return ScanIntentMod::CALIBRATE_ANTENNA_PHASE;
+    }
+    	
+    if (name == CScanIntent::sMEASURE_RFI) {
+        return ScanIntentMod::MEASURE_RFI;
+    }
+    	
+    if (name == CScanIntent::sCALIBRATE_ANTENNA_POINTING_MODEL) {
+        return ScanIntentMod::CALIBRATE_ANTENNA_POINTING_MODEL;
+    }
+    	
+    if (name == CScanIntent::sSYSTEM_CONFIGURATION) {
+        return ScanIntentMod::SYSTEM_CONFIGURATION;
+    }
+    	
+    if (name == CScanIntent::sCALIBRATE_APPPHASE_ACTIVE) {
+        return ScanIntentMod::CALIBRATE_APPPHASE_ACTIVE;
+    }
+    	
+    if (name == CScanIntent::sCALIBRATE_APPPHASE_PASSIVE) {
+        return ScanIntentMod::CALIBRATE_APPPHASE_PASSIVE;
     }
     
     throw badString(name);

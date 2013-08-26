@@ -94,6 +94,11 @@ void QtProgressWidget::setAllowedOperations(bool background, bool pauseResume,
 
 QMutex& QtProgressWidget::mutex() { return itsMutex_; }
 
+void QtProgressWidget::initialize( const String& operationName ){
+	QString opName( operationName.c_str() );
+	initialize( opName );
+}
+
 void QtProgressWidget::initialize(const QString& operationName) {
     itsMutex_.lock();
     QLabel* operationLabel = (itsProgress_ != NULL) ?
@@ -107,6 +112,11 @@ void QtProgressWidget::initialize(const QString& operationName) {
     progressBar->setValue(0);
     statusLabel->setText("Starting " + operationName + ".");
     itsMutex_.unlock();
+}
+
+void QtProgressWidget::setProgress(unsigned int progress, const String& status) {
+	QString statusStr( status.c_str() );
+	setProgress( progress, statusStr );
 }
 
 void QtProgressWidget::setStatus(const QString& status) {

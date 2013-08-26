@@ -29,7 +29,7 @@
 
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Data/PlotMSIndexer.h>
-#include <casaqt/QwtPlotter/QPScatterPlot.h>
+//#include <casaqt/QwtPlotter/QPScatterPlot.h>
 
 #include <casa/namespace.h>
 
@@ -76,10 +76,11 @@ public:
     String spectype() const { return "Over"; }
     vector<MaskedScatterPlotPtr> plots() const;
     vector<PlotCanvasPtr> canvases() const;
-    void setupPlotSubtabs(PlotMSPlotTab &tab) const;
+    //void setupPlotSubtabs(PlotMSPlotTab &tab) const;
+    virtual void setupPlotSubtabs(PlotInformationManager& tab) const;
     void attachToCanvases();
     void detachFromCanvases();
-    void plotTabHasChanged(PlotMSPlotTab&) {}
+    //void plotTabHasChanged(PlotMSPlotTab&) {}
     Int iter() { return iter_; }
 
 protected:
@@ -116,7 +117,7 @@ protected:
 private:
     vector<vector<MaskedScatterPlotPtr> > itsPlots_;
     vector<vector<PlotCanvasPtr> > itsCanvases_;
-    vector<vector<QPScatterPlot*> > itsColoredPlots_;
+    vector<vector</*QPScatterPlot**/ColoredPlotPtr> > itsColoredPlots_;
     TCLParams itsTCLParams_;
 
     Int iter_;
@@ -138,9 +139,6 @@ public:
 private:
     void cacheLoaded_(bool wasCanceled);
 
-    static const uInt pixelThreshold;
-    static const uInt mediumThreshold;
-    static const uInt largeThreshold;
 };
 
 } // namespace casa

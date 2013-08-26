@@ -27,7 +27,7 @@
 #include <plotms/Gui/PlotMSAnnotator.h>
 
 #include <plotms/Gui/PlotMSPlotter.qo.h>
-#include <plotms/PlotMS/PlotMS.h>
+//#include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlot.h>
 
 #include <QInputDialog>
@@ -41,9 +41,11 @@ namespace casa {
 // Public Methods //
 
 // itsFactory_ member cannot be initialized here yet.
-PlotMSAnnotator::PlotMSAnnotator(PlotMSApp* parent, Mode startMode) :
-        itsParent_(parent), itsMode_(startMode), itsAnnotateAction_(NULL) {
-    parent->getPlotManager().addWatcher(this);
+PlotMSAnnotator::PlotMSAnnotator(PlotMSPlotter* widgetParent, Mode startMode ) :
+       /* itsParent_(parent),*/
+     itsMode_(startMode), itsAnnotateAction_(NULL), guiParent( widgetParent) {
+
+	 //parent->getPlotManager().addWatcher(this);
 }
 
 PlotMSAnnotator::~PlotMSAnnotator() { }
@@ -230,7 +232,7 @@ void PlotMSAnnotator::handleMouseEvent(const PlotEvent& event) {
 
             // For text mode, ask for a String and draw it where click is.
             if(itsMode_ == TEXT) {
-                QString str = QInputDialog::getText(itsParent_->getPlotter(),
+                QString str = QInputDialog::getText(guiParent,
                         "New Text Annotation",
                         "Enter the text for the new annotation:");
                 if(!str.isEmpty()) {

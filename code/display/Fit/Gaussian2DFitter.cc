@@ -65,7 +65,7 @@ namespace casa {
 		logFile = write;
 	}
 
-	void Gaussian2DFitter::setFitParameters( ImageInterface<Float>* image, const String& box,
+	void Gaussian2DFitter::setFitParameters( ImageTask::shCImFloat image, const String& box,
 	        int channelNum, const String& estimatesFileName, const String& residualImage,
 	        const Vector<Float>& include, const Vector<Float>& exclude ) {
 		this->image = image;
@@ -84,8 +84,8 @@ namespace casa {
 		}
 	}
 
-	QList<RegionShape*> Gaussian2DFitter::toDrawingDisplay(ImageInterface<Float>* image, const QString& colorName) const {
-		return fitResultList.toDrawingDisplay( image, colorName );
+	QList<RegionShape*> Gaussian2DFitter::toDrawingDisplay(const ImageTask::shCImFloat image, const QString& colorName) const {
+		return fitResultList.toDrawingDisplay( image.get(), colorName );
 	}
 
 	void Gaussian2DFitter::run() {
@@ -117,7 +117,7 @@ namespace casa {
 
 	bool Gaussian2DFitter::writeRegionFile() const {
 		QString regionFile = filePath.c_str() + REGION_SUFFIX;
-		bool successfulWrite = fitResultList.toRegionFile( image, channelNumber, regionFile );
+		bool successfulWrite = fitResultList.toRegionFile( image.get(), channelNumber, regionFile );
 		return successfulWrite;
 	}
 

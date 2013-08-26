@@ -53,6 +53,52 @@ AnnPolygon::AnnPolygon(
 	_init();
 }
 
+AnnPolygon::AnnPolygon(
+	AnnotationBase::Type shape,
+	const Quantity& blcx,
+	const Quantity& blcy,
+	const Quantity& trcx,
+	const Quantity& trcy,
+	const String& dirRefFrameString,
+	const CoordinateSystem& csys,
+	const IPosition& imShape,
+	const Quantity& beginFreq,
+	const Quantity& endFreq,
+	const String& freqRefFrameString,
+	const String& dopplerString,
+	const Quantity& restfreq,
+	const Vector<Stokes::StokesTypes> stokes,
+	const Bool annotationOnly
+) : AnnRegion(
+		shape, dirRefFrameString, csys, imShape, beginFreq,
+		endFreq, freqRefFrameString, dopplerString,
+		restfreq, stokes, annotationOnly
+), _origXPos(4), _origYPos(4) {
+	_initCorners(blcx, blcy, trcx, trcy);
+	_init();
+}
+
+	// Simplified constructor.
+	// all frequencies are used (these can be set after construction).
+	// blcx, blcy, trcx, and trcy
+	// must be in the same frame as the csys direction coordinate.
+	// is a region (not just an annotation), although this value can be changed after
+	// construction.
+AnnPolygon::AnnPolygon(
+	AnnotationBase::Type shape,
+	const Quantity& blcx,
+	const Quantity& blcy,
+	const Quantity& trcx,
+	const Quantity& trcy,
+	const CoordinateSystem& csys,
+	const IPosition& imShape,
+	const Vector<Stokes::StokesTypes>& stokes
+) : AnnRegion(shape, csys, imShape, stokes),
+	_origXPos(4), _origYPos(4) {
+	_initCorners(blcx, blcy, trcx, trcy);
+	_init();
+}
+
 AnnPolygon& AnnPolygon::operator= (
 	const AnnPolygon& other
 ) {
@@ -120,6 +166,22 @@ void AnnPolygon::pixelVertices(vector<Double>& x, vector<Double>& y) const {
 		x[i] = pixel[dirAxes[0]];
 		y[i] = pixel[dirAxes[1]];
 	}
+}
+
+void AnnPolygon::_initCorners(
+	const Quantity& blcx,
+	const Quantity& blcy,
+	const Quantity& trcx,
+	const Quantity& trcy
+) {
+	_origXPos[0] = blcx;
+	_origYPos[0] = blcy;
+	_origXPos[1] = trcx;
+	_origYPos[1] = blcy;
+	_origXPos[2] = trcx;
+	_origYPos[2] = trcy;
+	_origXPos[3] = blcx;
+	_origYPos[3] = trcy;
 }
 
 void AnnPolygon::_init() {

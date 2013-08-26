@@ -72,10 +72,10 @@ namespace casa {
 		ImageProperties::ImageProperties( const std::string &path ) {
 			reset(path);
 		}
-		ImageProperties::ImageProperties( ImageInterface<Float> *image ) {
+		ImageProperties::ImageProperties(std::tr1::shared_ptr<ImageInterface<Float> > image ) {
 			reset(image);
 		}
-		ImageProperties::ImageProperties( ImageInterface<std::complex<float> >* ) {
+		ImageProperties::ImageProperties( std::tr1::shared_ptr<ImageInterface<std::complex<float> > > ) {
 			throw std::runtime_error("complex images are not supported");
 		}
 
@@ -154,7 +154,7 @@ namespace casa {
 			restoring_beams.resize(0);
 		}
 
-		void ImageProperties::initialize_state( ImageInterface<Float> *image ) {
+		void ImageProperties::initialize_state( std::tr1::shared_ptr<ImageInterface<Float> > image ) {
 
 			cs_ = image->coordinates( );
 			ImageAnalysis ia(image);
@@ -246,7 +246,7 @@ namespace casa {
 			return result;
 		}
 
-		void ImageProperties::reset( ImageInterface<Float> *image ) {
+		void ImageProperties::reset(std::tr1::shared_ptr<ImageInterface<Float> > image ) {
 			// clear settings...
 			clear_state( );
 			path_ = image->name(false);
@@ -262,7 +262,7 @@ namespace casa {
 			// check for validity...
 			if ( path_ == "" ) return;
 
-			ImageInterface<Float> *image = 0;
+			std::tr1::shared_ptr<ImageInterface<Float> > image;
 
 			// check for a FITS extension in the path name
 			File fin(path_);
@@ -279,31 +279,29 @@ namespace casa {
 			switch ( ImageOpener::imageType(path_) ) {
 			case ImageOpener::AIPSPP:
 				if ( imagePixelType(path_) != TpFloat ) return;
-				image = new PagedImage<Float>(path_, TableLock::AutoNoReadLocking);
+				image.reset(new PagedImage<Float>(path_, TableLock::AutoNoReadLocking));
 				break;
 			case ImageOpener::FITS: {
 				FITSImgParser fip = FITSImgParser(tmp_path);
 				if (fip.has_qualityimg() && fip.is_qualityimg(ext_expr)) {
-					image  = new FITSQualityImage(path);
+					image.reset(new FITSQualityImage(path));
 				} else {
-					image = new FITSImage(path);
+					image.reset(new FITSImage(path));
 				}
 			}
 			break;
 			case ImageOpener::MIRIAD:
-				image = new MIRIADImage(path);
+				image.reset(new MIRIADImage(path));
 				break;
 			default:
 				return;
 			}
 
 			if ( image->ok( ) == false ) {
-				delete image;
 				return;
 			}
 
 			initialize_state( image );
-			delete image;
 		}
 
 	}

@@ -390,7 +390,8 @@ namespace casa {
 		ui.sourceTable->setRowCount( 0 );
 		clearSkyOverlay();
 
-		ImageAnalysis* analysis = new ImageAnalysis( image );
+		std::tr1::shared_ptr<ImageInterface<Float> > x(image->cloneII());
+		ImageAnalysis* analysis = new ImageAnalysis( x );
 		bool validRegion = false;
 		Record region = makeRegion( &validRegion );
 		if ( !validRegion ) {
@@ -529,7 +530,7 @@ namespace casa {
 		if ( success ) {
 			QTextStream out( &file );
 			QString errorMsg;
-			success = skyList.toEstimateFile( out, image, errorMsg, screenEstimates, screeningBox );
+			success = skyList.toEstimateFile( out, image.get(), errorMsg, screenEstimates, screeningBox );
 			if ( !success ) {
 				QMessageBox::warning( this, "Problem Writing Estimates", errorMsg );
 			}
@@ -663,7 +664,7 @@ namespace casa {
 		pixelBox = pixelBoxStr.toStdString();
 	}
 
-	void FindSourcesDialog::setImage( ImageInterface<Float>* img ) {
+	void FindSourcesDialog::setImage( ImageTask::shCImFloat img ) {
 		image = img;
 		if ( image != NULL ) {
 			const CoordinateSystem cSys = image->coordinates();

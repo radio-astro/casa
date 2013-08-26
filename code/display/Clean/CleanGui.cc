@@ -28,15 +28,13 @@
 #include <casadbus/utilities/io.h>
 #include <display/Clean/CleanGui.qo.h>
 #include <iostream>
+#include <iomanip>
 #include <iterator>
 #include <QDebug>
-
+#define DEBUG 1
 namespace casa {
 
 	namespace viewer {
-
-#define IMAGER_NAME "SynthesisImager"
-		static const char imager_address[] = "edu.nrao.casa." IMAGER_NAME;
 
 		CleanGui::CleanGui(QWidget *parent) : QDialog(parent), ic(0), current_process_index(-1),
 			current_process_state(UNDEFINED) {
@@ -68,15 +66,29 @@ namespace casa {
 				casa::DBusSession &session = casa::DBusSession::instance( );
 				typedef std::vector<std::string> namelist_t;
 				namelist_t names = session.listNames( );
+#if DEBUG
+				fprintf( stderr, "<CleanGui::CleanGui>: finding existing clean services...\n" );
+				fflush(stderr);
+#endif
 				for ( namelist_t::iterator it = names.begin( ); it != names.end( ); ++it ) {
-					if ( it->compare( 0, sizeof(imager_address)-1, imager_address ) == 0 ) {
+#if DEBUG
+					cout << std::setw(25) << "<CleanGui::CleanGui>:" << std::setw(50) << it->c_str( ) << 
+						std::setw(50) << ImagerControl::interface_name( );
+#endif
+					if ( it->compare( 0, ImagerControl::interface_name( ).size( ), ImagerControl::interface_name( ) ) == 0 ) {
+#if DEBUG
+						cout << std::setw(7) << "(yes)" << endl;
+#endif
 						std::string value = *it;
-						value.erase( 0, sizeof(imager_address)-1 );
+						value.erase( 0, ImagerControl::interface_name( ).size( ) );
 						QTreeWidgetItem *item = new QTreeWidgetItem(clean_processes);
 						if ( current_item == 0 ) current_item = item;
 						item->setText( 0, QString::fromStdString(value) );
 						item->setCheckState( 0, Qt::Unchecked );
 					}
+#if DEBUG
+					else { cout << std::setw(7) << "(no)" << endl; }
+#endif
 				}
 			} catch( ... ) { }
 
@@ -243,7 +255,10 @@ namespace casa {
 						delete ic;
 						ic = 0;
 					}
-					ic = new ImagerControl( IMAGER_NAME + process_id.toStdString( ) );
+#ifdef DEBUG
+					cout << "<CleanGui::selection_change>: creating imager control object:\t" << ImagerControl::name( ) + process_id.toStdString( ) << endl;
+#endif
+					ic = new ImagerControl( "edu.nrao.casa." + ImagerControl::name( ) + process_id.toStdString( ) );
 					current_process_index = index;
 
 					if ( ic ) {
@@ -264,7 +279,9 @@ namespace casa {
 
 		void CleanGui::refresh( ) {
 			try {
-
+#if DEBUG
+				fprintf( stderr, "<CleanGui::refresh>: getting details...\n" );
+#endif
 				typedef std::map<std::string,dbus::variant> details_t;
 				details_t details = ic->getDetails( );
 #if DEBUG
@@ -427,8 +444,11 @@ namespace casa {
 
 				set_send_needed(false);
 
+			} catch ( std::exception e ) {
+				fprintf( stderr, "error CleanGui::refresh( ): %s\n", e.what( ) );
+				fflush( stderr );
 			} catch ( ... ) {
-				fprintf( stderr, "\t\toops...\n" );
+				fprintf( stderr, "unexpected error in CleanGui::refresh( )\n" );
 				fflush( stderr );
 			}
 
@@ -437,6 +457,9 @@ namespace casa {
 		std::map<std::string,dbus::variant> CleanGui::collect( ) {
 			typedef std::map<std::string,dbus::variant> details_t;
 			details_t result;
+#if DEBUG
+			cerr << "CleanGui::collect( )\n" << endl;
+#endif
 			try {
 				/***********************************************************************
 				******  Is interaction currently enabled?                         ******
@@ -496,8 +519,11 @@ namespace casa {
 				***********************************************************************/
 				//it = details.find("cleanstate");
 
+			} catch ( std::exception e ) {
+				fprintf( stderr, "error CleanGui::collect( ): %s\n", e.what( ) );
+				fflush( stderr );
 			} catch ( ... ) {
-				fprintf( stderr, "\t\toops...\n" );
+				fprintf( stderr, "unexpected error in CleanGui::collect( )\n" );
 				fflush( stderr );
 			}
 			return result;

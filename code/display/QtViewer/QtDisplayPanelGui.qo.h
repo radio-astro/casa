@@ -273,7 +273,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// display cursor information for the specified point (in world coordinates)
 		void updateCursorInfo( WorldCanvas *wc, Quantity x, Quantity y );
-		typedef std::pair<QString, ImageInterface<float>* > OverplotInterface;
+		typedef std::pair<QString, std::tr1::shared_ptr<ImageInterface<float> > > OverplotInterface;
 
 	public slots:
 
@@ -339,7 +339,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//</group>
 
 		// add a new DD
-		virtual void addDD(String path, String dataType, String displayType, Bool autoRegister=True, Bool tmpDtata=False, ImageInterface<Float>* img = NULL);
+		virtual void addDD(String path, String dataType, String displayType, Bool autoRegister=True, Bool tmpDtata=False, std::tr1::shared_ptr<ImageInterface<Float> > img = std::tr1::shared_ptr<ImageInterface<Float> >());
 		// go to a specifc channel
 		virtual void doSelectChannel(int channelIndex);
 
@@ -667,6 +667,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void add2DFitOverlay( QList<RegionShape*> fitMarkers );
 		void remove2DFitOverlay( QList<RegionShape*> fitMarkers );
 		void addResidualFitImage( String path );
+		virtual void addDDSlot(String path, String dataType, String displayType, Bool autoRegister=True, Bool tmpData=False, ImageInterface<Float>* img = NULL);
 		void sliceChanged( int regionId, viewer::region::RegionChanges change,
 		                   const QList<double> & worldX, const QList<double> & worldY,
 		                   const QList<int> &pixelX, const QList<int> & pixelY );

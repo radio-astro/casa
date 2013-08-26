@@ -30,6 +30,9 @@
 #include <casa/aips.h>
 #include <casa/BasicSL/String.h>
 
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
+#include <tr1/memory>
+
 namespace casa {
 
 	template <class T> class ImageInterface;
@@ -47,7 +50,7 @@ namespace casa {
 		ResidualHistogramDialog( const ResidualHistogramDialog& other );
 		ResidualHistogramDialog operator=( const ResidualHistogramDialog& other );
 		BinPlotWidget* plotWidget;
-		ImageInterface<Float>* residualImage;
+		ImageTask::shCImFloat residualImage;
 		Ui::ResidualHistogramDialogClass ui;
 	};
 }

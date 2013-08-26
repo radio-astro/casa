@@ -42,6 +42,8 @@
 
 #include <CalAmpliTable.h>
 
+#include <CalAppPhaseTable.h>
+
 #include <CalAtmosphereTable.h>
 
 #include <CalBandpassTable.h>
@@ -170,6 +172,8 @@ using asdm::AnnotationTable;
 using asdm::AntennaTable;
 
 using asdm::CalAmpliTable;
+
+using asdm::CalAppPhaseTable;
 
 using asdm::CalAtmosphereTable;
 
@@ -341,6 +345,10 @@ namespace asdm {
 		calAmpli = new CalAmpliTable (*this);
 		table.push_back(calAmpli);
 		tableEntity["CalAmpli"] = emptyEntity;
+
+		calAppPhase = new CalAppPhaseTable (*this);
+		table.push_back(calAppPhase);
+		tableEntity["CalAppPhase"] = emptyEntity;
 
 		calAtmosphere = new CalAtmosphereTable (*this);
 		table.push_back(calAtmosphere);
@@ -652,6 +660,14 @@ namespace asdm {
 	 */
 	CalAmpliTable & ASDM::getCalAmpli () const {
 		return *calAmpli;
+	}
+
+	/**
+	 * Get the table CalAppPhase.
+	 * @return The table CalAppPhase as a CalAppPhaseTable.
+	 */
+	CalAppPhaseTable & ASDM::getCalAppPhase () const {
+		return *calAppPhase;
 	}
 
 	/**
@@ -1123,7 +1139,7 @@ namespace asdm {
 	string ASDM::toXML()   {
 		string out;
 		out.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		out.append("<ASDM xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cntnr=\"http://Alma/XASDM/ASDM\" xsi:schemaLocation=\"http://Alma/XASDM/ASDM http://almaobservatory.org/XML/XASDM/3/ASDM.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\"> ");
+		out.append("<ASDM xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cntnr=\"http://Alma/XASDM/ASDM\" xsi:schemaLocation=\"http://Alma/XASDM/ASDM http://almaobservatory.org/XML/XASDM/3/ASDM.xsd\" schemaVersion=\"3\" schemaRevision=\"-1\"> ");
 
 		if (entity.isNull())
 			throw ConversionException("Container entity cannot be null.","Container");
@@ -1181,15 +1197,11 @@ namespace asdm {
 		s = xml.getElement("<startTimeDurationInXML","/>");
 		if (s.length() != 0) 
 			ArrayTimeInterval::readStartTimeDurationInXML(true);
-		else 
-			ArrayTimeInterval::readStartTimeDurationInXML(false);
 			
 		// Do we have an element startTimeDurationInBin
 		s = xml.getElement("<startTimeDurationInBin","/>");
 		if (s.length() != 0) 
-			ArrayTimeInterval::readStartTimeDurationInBin(true);
-		else 
-			ArrayTimeInterval::readStartTimeDurationInBin(false);			 		 
+			ArrayTimeInterval::readStartTimeDurationInBin(true);			 		 
 
 		// Get each table in the dataset.
 		s = xml.getElementContent("<Table>","</Table>");
@@ -1248,6 +1260,8 @@ namespace asdm {
 		result->antenna = *(this->antenna->toIDL());
 		
 		result->calAmpli = *(this->calAmpli->toIDL());
+		
+		result->calAppPhase = *(this->calAppPhase->toIDL());
 		
 		result->calAtmosphere = *(this->calAtmosphere->toIDL());
 		
@@ -1379,6 +1393,8 @@ namespace asdm {
 		this->antenna->fromIDL(x->antenna);
 		
 		this->calAmpli->fromIDL(x->calAmpli);
+		
+		this->calAppPhase->fromIDL(x->calAppPhase);
 		
 		this->calAtmosphere->fromIDL(x->calAtmosphere);
 		
@@ -1759,6 +1775,43 @@ namespace asdm {
 			
 			// And finally parse the XML document to populate the table.	
 			dataset->getCalAmpli().fromXML(tableDoc);						
+		}
+
+		entity = dataset->tableEntity["CalAppPhase"];
+		if (entity.getEntityId().getId().length()  != 0) {
+			// Which file must we read ?
+			string tablename = xmlDirectory + "/CalAppPhase.xml";
+
+			// Determine the file size
+			ifstream::pos_type size;	
+			ifstream tablein (tablename.c_str() , ios::in|ios::binary|ios::ate);
+  			if (tablein.is_open()) { 
+  				size = tablein.tellg(); 
+  			}
+			else {
+				throw ConversionException("Could not open file " + tablename, "CalAppPhase");
+			}
+			
+			// Read the file in a string
+			string tableDoc;
+
+			tableDoc.reserve(size);
+			tablein.seekg (0);	
+			int nread = BLOCKSIZE;	
+			while (nread == BLOCKSIZE) {
+				tablein.read(c, BLOCKSIZE);
+				if (tablein.rdstate() == istream::failbit || tablein.rdstate() == istream::badbit) {
+					throw ConversionException("Error reading file " + tablename,"ASDM");
+				}
+				nread = tablein.gcount();
+				tableDoc.append(c, nread);
+			}
+			tablein.close();
+			if (tablein.rdstate() == istream::failbit)
+				throw ConversionException("Could not close file " + tablename,"ASDM");
+			
+			// And finally parse the XML document to populate the table.	
+			dataset->getCalAppPhase().fromXML(tableDoc);						
 		}
 
 		entity = dataset->tableEntity["CalAtmosphere"];
@@ -3974,6 +4027,10 @@ namespace asdm {
 			getCalAmpli().toFile(directory);
 		}
 	
+		if (getCalAppPhase().size() > 0) {
+			getCalAppPhase().toFile(directory);
+		}
+	
 		if (getCalAtmosphere().size() > 0) {
 			getCalAtmosphere().toFile(directory);
 		}
@@ -4327,6 +4384,11 @@ namespace asdm {
 				getCalAmpli().setFromFile(directory);
 			}
 	
+			entity = tableEntity["CalAppPhase"];
+			if (entity.getEntityId().getId().length()  != 0) {
+				getCalAppPhase().setFromFile(directory);
+			}
+	
 			entity = tableEntity["CalAtmosphere"];
 			if (entity.getEntityId().getId().length()  != 0) {
 				getCalAtmosphere().setFromFile(directory);
@@ -4630,6 +4692,8 @@ namespace asdm {
 	
 			getCalAmpli().presentInMemory = tableEntity["CalAmpli"].getEntityId().getId().length() == 0;	
 	
+			getCalAppPhase().presentInMemory = tableEntity["CalAppPhase"].getEntityId().getId().length() == 0;	
+	
 			getCalAtmosphere().presentInMemory = tableEntity["CalAtmosphere"].getEntityId().getId().length() == 0;	
 	
 			getCalBandpass().presentInMemory = tableEntity["CalBandpass"].getEntityId().getId().length() == 0;	
@@ -4830,6 +4894,13 @@ namespace asdm {
 			container->getCalAmpli().setEntity(entity);
 			xml = getXMLEntity(entity.getEntityId());
 			container->getCalAmpli().fromXML(xml);
+		}
+			
+		entity = container->tableEntity["CalAppPhase"];
+		if (entity.getEntityId().getId().size() != 0) {
+			container->getCalAppPhase().setEntity(entity);
+			xml = getXMLEntity(entity.getEntityId());
+			container->getCalAppPhase().fromXML(xml);
 		}
 			
 		entity = container->tableEntity["CalAtmosphere"];

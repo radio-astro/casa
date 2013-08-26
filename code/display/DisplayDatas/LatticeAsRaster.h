@@ -33,6 +33,8 @@
 #include <casa/Arrays/Array.h>
 #include <display/DisplayDatas/LatticePADD.h>
 
+#include <tr1/memory>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <class T> class Array;
@@ -178,8 +180,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// and indicate the fixed axis values for axes in the data that are
 		// not specified as xAxis, yAxis or mAxis.
 		// <group>
-		LatticeAsRaster( ImageInterface<T> *image, const uInt xAxis, const uInt yAxis, const uInt mAxis, const IPosition fixedPos, viewer::StatusSink *sink=0 );
-		LatticeAsRaster(ImageInterface<T> *image, const uInt xAxis,
+		LatticeAsRaster( std::tr1::shared_ptr<ImageInterface<T> > image, const uInt xAxis, const uInt yAxis, const uInt mAxis, const IPosition fixedPos, viewer::StatusSink *sink=0 );
+		LatticeAsRaster(std::tr1::shared_ptr<ImageInterface<T> > image, const uInt xAxis,
 		                const uInt yAxis);
 		// </group>
 

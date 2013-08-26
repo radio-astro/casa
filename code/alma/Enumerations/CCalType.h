@@ -56,7 +56,7 @@ namespace CalTypeMod
   //! CalType.
   //!  [CalDM.CalData] Used to point to a given CalResult table
   
-  const char *const revision = "1.10";
+  const char *const revision = "-1";
   const int version = 1;
   
   enum CalType
@@ -94,6 +94,8 @@ namespace CalTypeMod
     CAL_SEEING /*!<  */
      ,
     CAL_WVR /*!<  */
+     ,
+    CAL_APPPHASE /*!< Phasing loop data on the slow  timescale. Requested by the APP project. */
      
   };
   typedef CalType &CalType_out;
@@ -149,6 +151,8 @@ class CCalType {
 	static const std::string& sCAL_SEEING; /*!< A const string equal to "CAL_SEEING".*/
 	
 	static const std::string& sCAL_WVR; /*!< A const string equal to "CAL_WVR".*/
+	
+	static const std::string& sCAL_APPPHASE; /*!< A const string equal to "CAL_APPPHASE".*/
 	
 
 	/**

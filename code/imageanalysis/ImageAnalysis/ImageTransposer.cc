@@ -18,7 +18,7 @@ namespace casa {
 const String ImageTransposer::_class = "ImageTransposer";
 
 ImageTransposer::ImageTransposer(
-	const ImageInterface<Float> *const &image, const String& order, const String& outputImage
+		const ImageTask::shCImFloat image, const String& order, const String& outputImage
 )
 	: ImageTask(
 		image, "", 0, "", "", "",
@@ -40,7 +40,7 @@ ImageTransposer::ImageTransposer(
 }
 
 ImageTransposer::ImageTransposer(
-	const ImageInterface<Float> *const &image, const Vector<String> order,
+		const ImageTask::shCImFloat image, const Vector<String> order,
 	const String& outputImage
 )
 :  ImageTask(
@@ -80,7 +80,7 @@ ImageTransposer::ImageTransposer(
 }
 
 ImageTransposer::ImageTransposer(
-	const ImageInterface<Float> *const &image, uInt order,
+		const ImageTask::shCImFloat image, uInt order,
 	const String& outputImage
 )
 :  ImageTask(
@@ -120,7 +120,7 @@ ImageInterface<Float>* ImageTransposer::transpose() const {
 	for (uInt i=0; i<newShape.size(); i++) {
 		newShape[i] = shape[_order[i]];
 	}
-	std::auto_ptr<ImageInterface<Float> > output(
+	std::tr1::shared_ptr<ImageInterface<Float> > output(
 		new TempImage<Float>(TiledShape(newShape), newCsys)
 	);
 
@@ -143,14 +143,12 @@ ImageInterface<Float>* ImageTransposer::transpose() const {
 	ImageUtilities::copyMiscellaneous(*output, *_getImage());
 	if (! _getOutname().empty()) {
 		Record empty;
-		output.reset(
-			SubImageFactory<Float>::createImage(
-				*output, _getOutname(), empty, "",
-				False, False, True, False
-			)
+		output = SubImageFactory<Float>::createImage(
+			*output, _getOutname(), empty, "",
+			False, False, True, False
 		);
 	}
-	return output.release();
+	return output->cloneII();
 }
 
 ImageTransposer::~ImageTransposer() {}

@@ -137,6 +137,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				      const Matrix<Double>& sumwt) {(void)griddedData;(void)sumwt;};
     virtual void initializePutBuffers(const Array<Complex>& griddedData,
 				      const Matrix<Double>& sumwt) {(void)griddedData;(void)sumwt;};
+    virtual void initializeDataBuffers(VBStore& vbs) {(void)vbs;};
 
 
     virtual void releaseBuffers() {};

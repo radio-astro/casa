@@ -26,9 +26,9 @@
 //# $Id: $
 #include <plotms/Plots/PlotMSMultiPlot.h>
 
-#include <plotms/Gui/PlotMSPlotter.qo.h>
-#include <plotms/GuiTabs/PlotMSDisplayTab.qo.h>
-#include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
+//#include <plotms/Gui/PlotMSPlotter.qo.h>
+//#include <plotms/GuiTabs/PlotMSDisplayTab.qo.h>
+//#include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPage.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
@@ -115,16 +115,16 @@ vector<PlotCanvasPtr> PlotMSMultiPlot::canvases() const {
     return v;
 }
 
-void PlotMSMultiPlot::setupPlotSubtabs(PlotMSPlotTab& tab) const {
+void PlotMSMultiPlot::setupPlotSubtabs(/*PlotMSPlotTab*/PlotInformationManager& tab) const {
 
-    tab.insertDataSubtab(0);
-    tab.insertAxesSubtab(1);
-    tab.insertIterateSubtab(2);
-    tab.insertCacheSubtab(3);
-    tab.insertDisplaySubtab(4);
-    tab.insertCanvasSubtab(5);
-    tab.insertExportSubtab(6);
-    tab.clearSubtabsAfter(7);
+    tab.insertData(0);
+    tab.insertAxes(1);
+    tab.insertIterate(2);
+    tab.insertCache(3);
+    tab.insertDisplay(4);
+    tab.insertCanvas(5);
+    tab.insertExport(6);
+    tab.clearAfter(7);
 
 }
 
@@ -142,8 +142,8 @@ void PlotMSMultiPlot::detachFromCanvases() {
             itsCanvases_[i][j]->removePlotItem(itsPlots_[i][j]);
 }
 
-void PlotMSMultiPlot::plotTabHasChanged(PlotMSPlotTab& tab) {
-	(void)tab;
+//void PlotMSMultiPlot::plotTabHasChanged(PlotMSPlotTab& tab) {
+//	(void)tab;
 	
     /* (gmoellen, 2010Aug12) the following is no longer necessary
        since we will only support one pair of X/Y axes for now 
@@ -161,7 +161,7 @@ void PlotMSMultiPlot::plotTabHasChanged(PlotMSPlotTab& tab) {
 
     */
 
-}
+//}
 
 
 // Protected Methods //
@@ -429,7 +429,7 @@ bool PlotMSMultiPlot::updateCache() {
     // Set up cache loading parameters.
     // TBD: simplify the following
     
-    vector<PMS::Axis> axes(c->numXAxes() + c->numYAxes());
+    /*vector<PMS::Axis> axes(c->numXAxes() + c->numYAxes());
     for(unsigned int i = 0; i < c->numXAxes(); i++)
         axes[i] = c->xAxis(i);
     for(unsigned int i = c->numXAxes(); i < axes.size(); i++)
@@ -439,13 +439,13 @@ bool PlotMSMultiPlot::updateCache() {
         data[i] = c->xDataColumn(i);
     for(unsigned int i = c->numXAxes(); i < axes.size(); i++)
         data[i] = c->yDataColumn(i - c->numXAxes());
-    
+    */
     // Log the cache loading.
     itsParent_->getLogger()->markMeasurement(PMS::LOG_ORIGIN,
             PMS::LOG_ORIGIN_LOAD_CACHE, PMS::LOG_EVENT_LOAD_CACHE);
     itsTCLParams_.endCacheLog = true;
     
-    PlotMSCacheThread* ct = new PlotMSCacheThread(this, &itsData_, 
+    /*PlotMSCacheThread* ct = new PlotMSCacheThread(this, &itsData_,
 						  axes, data,
 						  d->filename(), 
 						  d->selection(), 
@@ -456,7 +456,9 @@ bool PlotMSMultiPlot::updateCache() {
 
     itsParent_->getPlotter()->doThreadedOperation(ct);
     
-    return true;
+    return true;*/
+    bool result = itsParent_->updateCachePlot( this, PlotMSMultiPlot::cacheLoaded, true );
+    return result;
 }
 
 bool PlotMSMultiPlot::updateCanvas() {

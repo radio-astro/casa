@@ -41,6 +41,8 @@
 
 #include <QtCore/qmath.h>
 
+#include <tr1/memory>
+
 namespace casa {
 	namespace viewer {
 
@@ -89,7 +91,7 @@ namespace casa {
 			initPlot();
 		}
 
-		RegionInfo * Polyline::newInfoObject( ImageInterface<Float> *image, PrincipalAxesDD * ) {
+		RegionInfo * Polyline::newInfoObject( std::tr1::shared_ptr<ImageInterface<Float> > image, PrincipalAxesDD * ) {
 			SliceRegionInfo* sliceRegion = NULL;
 			if ( image != NULL ) {
 				RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();
@@ -129,7 +131,7 @@ namespace casa {
 			if ( wc_ != NULL  ) {
 				DisplayData* dd = wc_->csMaster();
 				if ( dd != NULL ) {
-					ImageInterface<float>* masterImage = dd->imageinterface();
+					std::tr1::shared_ptr<ImageInterface<float> > masterImage(dd->imageinterface());
 					if ( masterImage != NULL ) {
 						slicePlot->setImage( masterImage );
 						imageName = masterImage->name(true).c_str();
@@ -1203,9 +1205,9 @@ namespace casa {
 				try {
 					if ( ! padd->conformsTo(*wc_) ) continue;
 
-					ImageInterface<Float> *image = padd->imageinterface( );
+					std::tr1::shared_ptr<ImageInterface<Float> > image( padd->imageinterface( ));
 
-					if ( image == 0 ) continue;
+					if ( ! image ) continue;
 
 					String description = image->name(false);
 					String name = image->name(true);

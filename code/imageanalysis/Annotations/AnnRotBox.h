@@ -92,7 +92,7 @@ public:
 	// get the four corners of the box in direction space.
 	// These will have been converted to the frame of the
 	// coordinate system if necessary. The only thing about
-	// the order of the vector that is garaunteed is that
+	// the order of the vector that is guaranteed is that
 	// adjacent entries in the returned Vector will not be
 	// diagonally opposite corners.
 	Vector<MDirection> getCorners() const;

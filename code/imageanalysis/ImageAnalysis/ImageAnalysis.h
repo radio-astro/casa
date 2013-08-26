@@ -26,6 +26,7 @@
 #ifndef _IMAGEANALYSIS__H__
 #define _IMAGEANALYSIS__H__
 
+// PLEASE DO *NOT* ADD ADDITIONAL METHODS TO THIS CLASS
 
 //# put includes here
 #include <coordinates/Coordinates/CoordinateSystem.h>
@@ -40,6 +41,7 @@
 #include <measures/Measures/Stokes.h>
 
 #include <memory>
+#include <tr1/memory>
 
 namespace casa {
 
@@ -83,24 +85,18 @@ class ImageAnalysis
 
     ImageAnalysis();
 
-    //ImageInterface constructor
-    ImageAnalysis(const ImageInterface<Float>* inImage);
-    
-    //Use this constructor with cloneInputPointer=False if you want this object
-    // to take over management of the input pointer. The input pointer will be deleted
-    // when this object is destroyed.
-    ImageAnalysis(ImageInterface<Float>* inImage, const Bool cloneInputPointer);
+    ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Float> > image);
 
     virtual ~ImageAnalysis();
 
     Bool addnoise(const String& type, const Vector<Double>& pars,
                   Record& region, const Bool zero = False);
 
-    ImageInterface<Float> * imagecalc(const String& outfile, 
+    std::tr1::shared_ptr<ImageInterface<Float> > imagecalc(const String& outfile, 
                                       const String& pixels, 
                                       const Bool overwrite = False);
 
-    ImageInterface<Float> * imageconcat(const String& outfile, 
+    std::tr1::shared_ptr<ImageInterface<Float> > imageconcat(const String& outfile, 
                                         const Vector<String>& infiles, 
                                         const Int axis, 
                                         const Bool relax = False, 
@@ -153,7 +149,7 @@ class ImageAnalysis
                   const Bool asdefault = True);
 
 
-    ImageInterface<Float> * continuumsub(const String& outline, 
+    tr1::shared_ptr<ImageInterface<Float> > continuumsub(const String& outline,
                                          const String& outcont, Record& region,
                                          const Vector<int>& channels, 
                                          const String& pol = "", 
@@ -266,8 +262,6 @@ class ImageAnalysis
     	const Vector<double>& locate, Bool verbose
     );
 
-    //    Bool isopen();
-
     Bool ispersistent();
 
     Bool lock(const Bool writelock = False, const Int nattempts = 0);
@@ -329,38 +323,6 @@ class ImageAnalysis
         const Bool overwrite=False,
         const Bool extendMask=False
     );
-
-    //regrids to a given coordinate system...one uses a record that is 
-    //converted to a CoordinateSytem 
-
-    ImageInterface<Float> * regrid(
-    	const String& outfile, const Vector<Int>& shape,
-        const Record& csys, const Vector<Int>& axes,
-        Record& region, const String& mask,
-        const String& method="linear", const Int decimate=10,
-        const Bool replicate=False, const Bool doref=True,
-        const Bool dropdeg=False, const Bool overwrite=False,
-        const Bool force=False, const Bool specAsVelocity=False,
-        const Bool extendAxes=False
-    ) const;
-    
-
-    // regrids to match the "other" image interface...
-    ImageInterface<Float> * regrid(
-    	const String& outfile, const ImageInterface<Float>*other,
-        const String& method="linear",
-        const Bool specAsVelocity=False,
-    	const Vector<Int>& axes = Vector<Int>(0),
-	const Record &region = Record(),
-	const String& mask="",
-        const Int decimate=10,
-        const Bool replicate=False,
-        const Bool doref=True,
-        const Bool dropdeg=False,
-        const Bool overwrite=False,
-        const Bool force=False,
-        const Bool extendAxes=False
-    ) const;
 
     ImageInterface<Float>* rotate(
     	const String& outfile,
@@ -555,13 +517,12 @@ class ImageAnalysis
     Bool fromRecord(const RecordInterface& rec, const String& imagename="");
 
     // get the associated ImageInterface object
-    const ImageInterface<Float>* getImage() const;
+    std::tr1::shared_ptr<const ImageInterface<Float> > getImage() const;
 
     // If file name empty make TempImage (allowTemp=T) or do nothing.
     // Otherwise, make a PagedImage from file name and copy mask and
     // misc from inimage.   Returns T if image made, F if not
-    static Bool	makeExternalImage (
-    	std::auto_ptr<ImageInterface<Float> >& image,
+    static tr1::shared_ptr<ImageInterface<Float> >	makeExternalImage (
     	const String& fileName,
     	const CoordinateSystem& cSys,
     	const IPosition& shape,
@@ -574,7 +535,7 @@ class ImageAnalysis
 
  private:
     
-    std::auto_ptr<ImageInterface<Float> > _image;
+    std::tr1::shared_ptr<ImageInterface<Float> > _image;
     std::auto_ptr<LogIO> _log;
 
     // Having private version of IS and IH means that they will
@@ -619,16 +580,6 @@ class ImageAnalysis
                           const casa::IPosition& shape,
                           casa::LogIO& os, casa::Bool log=casa::True,
                           casa::Bool overwrite=casa::False);
-    
-    /*
-
-    // Make a mask and define it in the image.
-    static Bool makeMask(casa::ImageInterface<Float>& out,
-                        String& maskName,
-                        Bool init, Bool makeDefault,
-                        LogIO& os, Bool list);
-
-*/
 
 // Convert a Record to a CoordinateSystem
     casa::CoordinateSystem*
@@ -643,21 +594,6 @@ class ImageAnalysis
     // Set the cache
     void set_cache(const casa::IPosition& chunk_shape) const;
     
-
-    // Prints an error message if the image DO is detached and returns True.
-    //bool detached() const;
-    
-    // Convert object-id's in the expression to LatticeExprNode objects.
-    // It returns a string where the object-id's are placed by $n.
-    // That string can be parsed by ImageExprParse.
-    // Furthermore it fills the string exprName with the expression
-    // where the object-id's are replaced by the image names.
-    // Note that an image name can be an expression in itself, so
-    // this string is not suitable for the ImageExprParse.
-    //casa::String substituteOID (casa::Block<casa::LatticeExprNode>& nodes,
-    //                            casa::String& exprName,
-    //                            const casa::String& expr) const;
-
 
     // Some helper functions that needs to be in casa namespace coordsys
     
@@ -682,28 +618,7 @@ class ImageAnalysis
     //return a vector of the spectral axis values in units requested
     //e.g "vel", "fre" or "pix"..specVal has to be sized already
 
-
-    ImageInterface<Float> * _regrid(
-    	const String& outfile, const Vector<Int>& shape,
-        const CoordinateSystem& csys, const Vector<Int>& axes,
-        const Record& region, const String& mask,
-        const String& method, const Int decimate,
-        const Bool replicate, const Bool doref,
-        const Bool dropdeg, const Bool overwrite,
-        const Bool force, const Bool extendMask
-    ) const;
-
-    ImageInterface<Float>* _regridByVelocity(
-    	const String& outfile, const Vector<Int>& shape,
-    	const CoordinateSystem& csysTemplate, const Vector<Int>& axes,
-    	const Record& region, const String& mask,
-    	const String& method, const Int decimate,
-    	const Bool replicate, const Bool doref,
-    	const Bool dropdeg, const Bool overwrite,
-    	const Bool force, const Bool extendMask
-    ) const;
-
-    ImageInterface<Float>* _fitpolynomial(
+   tr1::shared_ptr<ImageInterface<Float> > _fitpolynomial(
     	const String& residfile,
     	const String& fitfile,
     	const String& sigmafile,

@@ -33,6 +33,8 @@
 #include <graphics/GenericPlotter/PlotFactory.h>
 #include <plotms/Actions/PlotMSAction.h>
 #include <plotms/Gui/PlotMSAnnotator.h>
+#include <plotms/Client/Client.h>
+#include <plotms/PlotMS/PlotMSConstants.h>
 
 #include <QMainWindow>
 #include <QToolButton>
@@ -51,14 +53,28 @@ class PlotMSPlotTab;
 class PlotMSThread;
 class PlotMSToolsTab;
 
-
 // High(ish)-level plotter class that manages the GUI (semi-) transparently to
 // the rest of PlotMS.
 class PlotMSPlotter : public QMainWindow, Ui::PlotterWindow,
-                      public PlotDrawWatcher {
+                      public PlotDrawWatcher, public Client {
     Q_OBJECT
     
 public:
+
+    //Methods from the client interface
+    virtual bool isActionEnabled( PlotMSAction::Type type ) const;
+    virtual bool isMSSummaryVerbose() const;
+    virtual PMS::SummaryType getMSSummaryType() const;
+    virtual PlotMSPlot* getCurrentPlot() const;
+    virtual void plot();
+    virtual vector<PMS::Axis> getSelectedLoadAxes() const;
+    virtual vector<PMS::Axis> getSelectedReleaseAxes() const;
+    virtual PlotExportFormat getPlotExportFormat() const;
+    virtual PlotMSFlagging getFlagging() const;
+    virtual bool isInteractive() const;
+	virtual PlotMSPlotParameters getPlotParameters() const;
+	virtual void canvasAdded( PlotCanvasPtr& canvas );
+	virtual void setAnnotationModeActive( PlotMSAction::Type type, bool active );
     // Static //
     
     // Returns "about" text for the given implementation, using HTML or not.
@@ -80,49 +96,42 @@ public:
     // Accessor methods.
     // <group>
     PlotMSApp* getParent() { return itsParent_; }
-    PlotFactoryPtr getFactory() { return itsFactory_; }
-    PlotterPtr getPlotter() { return itsPlotter_; }
+
     QtProgressWidget* getProgressWidget() { return itsThreadProgress_; }
-    PlotMSPlotTab* getPlotTab() { return itsPlotTab_; }
-    PlotMSToolsTab* getToolsTab() { return itsToolsTab_; }
-    PlotMSOptionsTab* getOptionsTab() { return itsOptionsTab_; }
-    PlotMSFlaggingTab* getFlaggingTab() { return itsFlaggingTab_; }
+
     PlotMSAnnotator& getAnnotator() { return itsAnnotator_; }
     // </group>
 
-    bool isDrawing() const;
-    bool isClosed() const;
+    virtual bool isDrawing() const;
+    virtual bool isClosed() const;
 
     // Execution Methods //
     
     // Shows/hides the GUI.
-    void showGUI(bool show = true);
+    virtual void showGUI(bool show = true);
     
     // Returns true if the GUI is currently visible, false otherwise.
-    bool guiShown() const;
+    virtual bool guiShown() const;
     
     // Enters the plotter's execution loop, and returns its return value.
     // Only during this execution loops will GUI windows be shown and
     // GUI events be handled.  The execution loop ends when the user clicks
     // the "close" or "quit" buttons.  This method can be called multiple
     // times.
-    int execLoop();
+    virtual int execLoop();
     
-    // See showGUI() and execLoop().
-    int showAndExec(bool show = true) {
-        showGUI(show);
-        return execLoop();
-    }
+
     
     // Runs the given operation thread, keeping GUI and progress information
     // synchronized as necessary.  The given thread will be deleted upon
     // completion.
-    void doThreadedOperation(PlotMSThread* thread);
+    virtual void doThreadedOperation(/*PlotMSThread**/ThreadController* thread);
     
     // Implements PlotDrawWatcher::canvasDrawBeginning().
     bool canvasDrawBeginning(PlotOperationPtr drawOperation,
                 bool drawingIsThreaded, int drawnLayersFlag);
-    
+    virtual ThreadController* getThreadController( PlotMSAction::Type type,
+    		PMSPTMethod postThreadMethod = NULL, PMSPTObject postThreadObject = NULL );
     
     // GUI Methods //
     
@@ -134,18 +143,8 @@ public:
     // otherwise rejecting the dialog.
     bool showQuestion(const String& message, const String& title);
     
-    // Holds/Releases drawing on all visible plot canvases.
-    // <group>
-    void holdDrawing();
-    void releaseDrawing();
-    // </group>
-    
-    // Returns true if drawing is being held on ALL visible plot canvases,
-    // false otherwise.
-    bool allDrawingHeld() const;
 
-    // Returns all currently shown canvases in the plotter.
-    vector<PlotCanvasPtr> currentCanvases();
+
     
     
     // Plotter Customization Methods //
@@ -190,14 +189,14 @@ public:
     // </group>
     
     // export a plot to a file
-    bool exportPlot(const PlotExportFormat& format, const bool interactive, const bool async);
-    
+    virtual bool exportPlot(const PlotExportFormat& format, const bool interactive, const bool async);
+    virtual void setFlagging(PlotMSFlagging flag);
 public slots:
     // Shows the given error/warning message in a GUI window.
-    void showError(const String& message, const String& title, bool isWarning);
+    virtual void showError(const String& message, const String& title, bool isWarning);
     
     // Shows the given informational message in a GUI window.
-    void showMessage(const String& message, const String& title);
+    virtual void showMessage(const String& message, const String& title);
     
     // Slot for showing an "about" dialog.
     void showAbout();
@@ -207,6 +206,10 @@ public slots:
     // 2) ... anything else needed in the future ...
     void prepareForPlotting();
     
+    virtual bool close(){
+    	return QMainWindow::close();
+    }
+
     
 protected:
     // Overrides QWidget::closeEvent(), in case we're dealing with a plotter
@@ -224,12 +227,9 @@ private:
     // Flag for whether the widget is open or not
     bool isClosed_;
     
-    // Plot factory.
-    PlotFactoryPtr itsFactory_;
+
     
-    // Plotter.
-    PlotterPtr itsPlotter_;
-    
+
     // Widgets to be enabled/disabled during threading.
     QList<QWidget*> itsEnableWidgets_;
     
@@ -273,7 +273,7 @@ private:
     QString itsAboutString_;
     
     
-    bool _triggerAction(PlotMSAction& action);
+    bool _triggerAction(/*PlotMSAction& action*/PlotMSAction::Type type);
     
     // Initializes the plotter with the given implementation.  MUST be called
     // from constructors.

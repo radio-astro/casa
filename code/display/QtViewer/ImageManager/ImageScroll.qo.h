@@ -52,10 +52,11 @@ namespace casa {
 
 		//Accessors
 		QList<ImageView*> getViews();
-		//Returns the image in charge of defining the hue color..
+		//Returncds the image in charge of defining the hue color..
 		QtDisplayData* getHueMaster() const;
 		//Returns the image in charge of defining the saturation color.
 		QtDisplayData* getSaturationMaster() const;
+		QtDisplayData* getCoordinateMaster() const;
 
 		//Returns the number of open images.
 		int getImageCount() const;
@@ -132,7 +133,7 @@ namespace casa {
 		ImageScroll operator=( const ImageScroll& other );
 
 		//Coordinate system master image
-		QtDisplayData* getCoordinateMaster() const;
+
 		void resetMasterCoordinate( ImageView* newMaster );
 
 		//Adds an image at a particular place in the layout
@@ -141,6 +142,7 @@ namespace casa {
 		//Returns the index of a particular image.
 		int findImageView( QString name, bool exactMatch = true );
 		QString removeSuffixes( QString name ) const;
+		QString stripBold( QString name ) const;
 
 		//Drag and drop
 		int getDropIndex( int dropY );

@@ -40,6 +40,8 @@
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/ds9/ds9writer.h>
 
+#include <tr1/memory>
+
 namespace casa {
 	namespace viewer {
 
@@ -924,9 +926,9 @@ namespace casa {
 				try {
 					if ( ! padd->conformsTo(*wc_) ) continue;
 
-					ImageInterface<Float> *image = padd->imageinterface( );
+					std::tr1::shared_ptr<ImageInterface<Float> > image ( padd->imageinterface( ));
 
-					if ( image == 0 ) continue;
+					if ( ! image  ) continue;
 
 					String description = image->name(false);
 					String name = image->name(true);
@@ -968,7 +970,7 @@ namespace casa {
 					}
 					WCBox box(blcq, trcq, cs, Vector<Int>());
 					ImageRegion     *imgbox = new ImageRegion(box);
-					SubImage<Float> *boxImg = new SubImage<Float>(*image, *imgbox);
+					std::tr1::shared_ptr<SubImage<Float> > boxImg(new SubImage<Float>(*image, *imgbox));
 
 					// technically (I guess), WorldCanvasHolder::worldAxisUnits( ) should be
 					// used here, because it references the "CSmaster" DisplayData which all
@@ -985,7 +987,6 @@ namespace casa {
 
 					delete imgbox;
 					delete imageregion;
-					delete boxImg;
 				} catch (const casa::AipsError& err) {
 					errMsg_ = err.getMesg();
 					fprintf( stderr, "Polygon::generate_dds_centers( ): %s\n", errMsg_.c_str() );
@@ -1021,8 +1022,8 @@ namespace casa {
 				y[i] = wld[1];
 			}
 
-			ImageInterface<Float> *image = padd->imageinterface( );
-			if ( image == 0 ) return 0;
+			std::tr1::shared_ptr<ImageInterface<Float> >image (padd->imageinterface( ));
+			if ( ! image ) return 0;
 
 			Vector<Int> dispAxes = padd->displayAxes( );
 			dispAxes.resize(2,True);

@@ -28,6 +28,9 @@
 #include <QtGui/QWidget>
 #include <guitools/Histogram/ZoomWidget.ui.h>
 
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
+
+#include <tr1/memory>
 
 namespace casa {
 
@@ -40,7 +43,7 @@ class ZoomWidget : public QWidget
 
 public:
     ZoomWidget(bool rangeControls, QWidget *parent = 0);
-    void setImage( ImageInterface<float>* image );
+    void setImage( const ImageTask::shCImFloat image );
     void setRegion( ImageRegion* region );
     void copyState( ZoomWidget* other );
 
@@ -61,7 +64,7 @@ private:
 	void calculateRange( );
     Ui::ZoomWidgetClass ui;
     QStringList zoomList;
-    ImageInterface<float>* image;
+    ImageTask::shCImFloat image;
     ImageRegion* region;
 };
 

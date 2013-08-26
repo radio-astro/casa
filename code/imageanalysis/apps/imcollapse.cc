@@ -62,8 +62,9 @@ Int main(Int argc, char *argv[]) {
 		mylog << "Unable to open image " << imagename << LogIO::EXCEPTION;
 	}
 	Record *regionPtr = 0;
+	ImageTask::shCImFloat image(myim);
     ImageCollapser imCollapser(
-		function, myim, region, regionPtr, box,
+		function, image, region, regionPtr, box,
 		chans, stokes, mask, axes, outname,
         overwrite
     );

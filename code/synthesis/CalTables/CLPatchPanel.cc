@@ -711,7 +711,7 @@ CLPatchPanel::CLPatchPanel(const String& ctname,
 
 // (MS sensitive)
 CLPatchPanel::CLPatchPanel(const String& ctname,
-			   MeasurementSet& ms,
+			   const MeasurementSet& ms,
 			   const Record& callib,
 			   VisCalEnum::MatrixType mtype,
 			   Int nPar) :
@@ -902,6 +902,8 @@ CLPatchPanel::CLPatchPanel(const String& ctname,
 	  Int& thisMSspw=reqMSspw(iMSspw);
 	  Int thisCTspw=cls.spwmap(thisMSspw);
 	  if (thisCTspw<0) thisCTspw=thisMSspw; // MUST BE DEFINITE!
+
+	  //	  cout << "   thisCTspw=" << thisCTspw << "; thisMSspw="<<thisMSspw<<endl;
 	  
 	  // Apply thisCTspw selection to CT
 	  this->selectOnCT(spwselCT,fldselCT,"","",String::toString(thisCTspw),"");

@@ -83,18 +83,18 @@ namespace casa {
 
 	private:
 
-		void adjustAxis(double &min, double &max, int &numTicks);
+		pair<double,double> adjustAxis(double &min, double &max, int &numTicks);
 		void adjustAxisTop( double &min, double &max, const QString& topUnits,
-		                    const QString& bottomUnits );
+		                    const QString& bottomUnits, pair<double,double> percentages );
 		double minX[END_AXIS_INDEX];
 		double maxX[END_AXIS_INDEX];
 		int numXTicks;
 		double minY;
 		double maxY;
-		double minPercentage;
-		double maxPercentage;
-		double originalMinX;
-		double originalMaxX;
+		//double minPercentage;
+		//double maxPercentage;
+		//double originalMinX;
+		//double originalMaxX;
 		int numYTicks;
 	};
 

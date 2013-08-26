@@ -223,7 +223,10 @@ namespace casa {
 
 		void QtRegionStats::go_next( ) {
 			if ( container_ == 0 || next_ == 0 ) return;
-			container_->setCurrentWidget(next_);
+			int nextIndex = container_->indexOf( next_ );
+			if ( nextIndex >= 0 ){
+				container_->setCurrentWidget(next_);
+			}
 		}
 
 		qt::stats_t *QtRegionStats::new_stats_box( RegionInfo::InfoTypes type, Region* region, const string& label ) {

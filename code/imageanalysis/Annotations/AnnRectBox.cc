@@ -36,13 +36,17 @@ AnnRectBox::AnnRectBox(
 	const Quantity& restfreq,
 	const Vector<Stokes::StokesTypes> stokes,
 	const Bool annotationOnly
-) : AnnRegion(
-		RECT_BOX, dirRefFrameString, csys, imShape,
+) : AnnPolygon(
+		RECT_BOX, blcx, blcy, trcx, trcy,
+		dirRefFrameString, csys, imShape,
 		beginFreq, endFreq, freqRefFrameString,
 		dopplerString, restfreq, stokes,
 		annotationOnly
-	  ), _inputCorners(AnnotationBase::Direction(2)) {
-	_init(blcx, blcy, trcx, trcy);
+	  ), _inputCorners(2) {
+	_inputCorners[0].first = blcx;
+	_inputCorners[0].second = blcy;
+	_inputCorners[1].first = trcx;
+	_inputCorners[1].second = trcy;
 }
 
 AnnRectBox::AnnRectBox(
@@ -53,9 +57,13 @@ AnnRectBox::AnnRectBox(
 	const CoordinateSystem& csys,
 	const IPosition& imShape,
 	const Vector<Stokes::StokesTypes>& stokes
-) : AnnRegion(RECT_BOX, csys, imShape, stokes),
-	_inputCorners(AnnotationBase::Direction(2)) {
-	_init(blcx, blcy, trcx, trcy);
+) : AnnPolygon(
+	RECT_BOX, blcx, blcy, trcx, trcy, csys, imShape, stokes
+), _inputCorners(2) {
+	_inputCorners[0].first = blcx;
+	_inputCorners[0].second = blcy;
+	_inputCorners[1].first = trcx;
+	_inputCorners[1].second = trcy;
 }
 
 AnnRectBox& AnnRectBox::operator= (
@@ -64,14 +72,11 @@ AnnRectBox& AnnRectBox::operator= (
     if (this == &other) {
     	return *this;
     }
-    AnnRegion::operator=(other);
+    AnnPolygon::operator=(other);
     _inputCorners.resize(other._inputCorners.shape());
     _inputCorners = other._inputCorners;
-    return *this;
-}
 
-Vector<MDirection> AnnRectBox::getCorners() const {
-	return _getConvertedDirections();
+    return *this;
 }
 
 ostream& AnnRectBox::print(ostream &os) const {
@@ -85,32 +90,5 @@ ostream& AnnRectBox::print(ostream &os) const {
 	return os;
 }
 
-void AnnRectBox::_init(
-	const Quantity& blcx, const Quantity& blcy,
-	const Quantity& trcx, const Quantity& trcy
-) {
-	_inputCorners[0].first = blcx;
-	_inputCorners[0].second = blcy;
-	_inputCorners[1].first = trcx;
-	_inputCorners[1].second = trcy;
-	_checkAndConvertDirections(String(__FUNCTION__), _inputCorners);
-	Vector<Int> absrel(2,(Int)RegionType::Abs);
-	Vector<Quantity> qblc(2);
-	Vector<Quantity> qtrc(2);
-	for (uInt i=0; i<2; i++) {
-		qblc[i] = Quantity(
-			_getConvertedDirections()[0].getAngle("rad").getValue("rad")[i],
-			"rad"
-		);
-		qtrc[i] = Quantity(
-			_getConvertedDirections()[1].getAngle("rad").getValue("rad")[i],
-			"rad"
-		);
-	}
-	WCBox box(qblc, qtrc, _getDirectionAxes(), getCsys(), absrel);
-	_setDirectionRegion(box);
-	_extend();
 }
 
-
-}

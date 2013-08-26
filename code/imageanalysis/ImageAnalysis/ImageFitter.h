@@ -37,6 +37,8 @@
 #include <components/ComponentModels/ComponentType.h>
 #include <casa/namespace.h>
 
+#include <tr1/memory>
+
 namespace casa {
 
 class ImageFitter : public ImageTask {
@@ -100,7 +102,7 @@ public:
 	// use these constructors when you already have a pointer to a valid ImageInterface object
 
 	ImageFitter(
-		const ImageInterface<Float>* const &image, const String& region,
+			const ImageTask::shCImFloat image, const String& region,
 		const Record *const regionRec,
 		const String& box="",
 		const String& chanInp="", const String& stokes="",

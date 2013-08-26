@@ -134,6 +134,7 @@ namespace casa{
 	// by the two antenna types.  For homgeneous arrays, all
 	// baselines will map to a single antenna-type pair.
 	//
+
 	CountedPtr<CFBuffer> cfb_l;
 	try
 	  {
@@ -148,6 +149,9 @@ namespace casa{
 
 	cfb_l->setPointingOffset(pointingOffset);
 	vbRow2CFBMap_p(irow) = cfb_l;
+
+
+
 	/*
 	//
 	// Now do the in-row mappings.

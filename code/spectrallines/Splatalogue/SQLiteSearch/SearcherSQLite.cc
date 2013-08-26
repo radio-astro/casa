@@ -476,7 +476,7 @@ string SearcherSQLite::prepareQuery( bool countOnly, int offset ) const {
 			}
 		}
 	}
-	cout << "Query: "<<query.c_str()<<endl;
+	//cout << "Query: "<<query.c_str()<<endl;
 	return query;
 }
 

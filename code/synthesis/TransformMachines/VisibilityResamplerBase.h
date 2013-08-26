@@ -114,6 +114,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				      const Matrix<Double>& sumwt) = 0;
     virtual void initializePutBuffers(const Array<Complex>& griddedData,
 				      const Matrix<Double>& sumwt) = 0;
+    virtual void initializeDataBuffers(VBStore& vbs)=0;
     //
     // Aliases for more readable code at the FTMachine layer.
     //

@@ -92,10 +92,54 @@ public:
 
 	virtual ostream& print(ostream &os) const;
 
+protected:
+	// for rectangle subclasses
+	AnnPolygon(
+		AnnotationBase::Type shape,
+		const Quantity& blcx,
+		const Quantity& blcy,
+		const Quantity& trcx,
+		const Quantity& trcy,
+		const String& dirRefFrameString,
+		const CoordinateSystem& csys,
+		const IPosition& imShape,
+		const Quantity& beginFreq,
+		const Quantity& endFreq,
+		const String& freqRefFrameString,
+		const String& dopplerString,
+		const Quantity& restfreq,
+		const Vector<Stokes::StokesTypes> stokes,
+		const Bool annotationOnly
+	);
+
+	// Simplified constructor.
+	// all frequencies are used (these can be set after construction).
+	// blcx, blcy, trcx, and trcy
+	// must be in the same frame as the csys direction coordinate.
+	// is a region (not just an annotation), although this value can be changed after
+	// construction.
+	AnnPolygon(
+		AnnotationBase::Type shape,
+		const Quantity& blcx,
+		const Quantity& blcy,
+		const Quantity& trcx,
+		const Quantity& trcy,
+		const CoordinateSystem& csys,
+		const IPosition& imShape,
+		const Vector<Stokes::StokesTypes>& stokes
+	);
+
 private:
 	Vector<Quantity> _origXPos, _origYPos;
 
 	void _init();
+
+	void _initCorners(
+		const Quantity& blcx,
+		const Quantity& blcy,
+		const Quantity& trcx,
+		const Quantity& trcy
+	);
 };
 
 }

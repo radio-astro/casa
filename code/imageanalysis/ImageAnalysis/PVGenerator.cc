@@ -1,4 +1,4 @@
-//# tSubImage.cc: Test program for class SubImage
+//# tsubImage->cc: Test program for class SubImage
 //# Copyright (C) 1998,1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -44,7 +44,7 @@ namespace casa {
 const String PVGenerator::_class = "PVGenerator";
 
 PVGenerator::PVGenerator(
-	const ImageInterface<Float> *const &image,
+		const ImageTask::shCImFloat image,
 	const Record *const &regionRec,
 	const String& chanInp, const String& stokes,
 	const String& maskInp, const String& outname,
@@ -93,7 +93,9 @@ void PVGenerator::setWidth(uInt width) {
 	_width = width;
 }
 
-ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
+std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
+	const Bool wantReturn
+) const {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 
 	if (_start.get() == 0 || _end.get() == 0) {
@@ -101,16 +103,17 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	}
 
 	std::auto_ptr<ImageInterface<Float> > myClone(_getImage()->cloneII());
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
+	std::tr1::shared_ptr<SubImage<Float> > subImage(
+		new SubImage<Float>(SubImageFactory<Float>::createSubImage(
 		*myClone, *_getRegion(), _getMask(),
 		_getLog().get(), False, AxesSpecifier(), _getStretch(), True
-	);
+	)));
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
-	const CoordinateSystem& subCoords = subImage.coordinates();
+	const CoordinateSystem& subCoords = subImage->coordinates();
 	Vector<Int> dirAxes = subCoords.directionAxesNumbers();
 	Int xAxis = dirAxes[0];
 	Int yAxis = dirAxes[1];
-	IPosition subShape = subImage.shape();
+	IPosition subShape = subImage->shape();
 	IPosition origShape = _getImage()->shape();
 	if (
 		subShape[xAxis] != origShape[xAxis]
@@ -147,8 +150,8 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
         ys[2] = end[1] - halfy;
         ys[3] = end[1] + halfy;
         if (
-            min(xs) < 2 || max(xs) > subImage.shape()[xAxis] - 3
-            || min(ys) < 2 || max(ys) > subImage.shape()[yAxis] - 3
+            min(xs) < 2 || max(xs) > subImage->shape()[xAxis] - 3
+            || min(ys) < 2 || max(ys) > subImage->shape()[yAxis] - 3
         ) {
             *_getLog() << "Error: specified end points and half width are such "
                 << "that chosen directional region falls outside or within "
@@ -159,7 +162,6 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	*_getLog() << LogIO::NORMAL << "Rotating image by "
 		<< (paInRad*180/C::pi)
 		<< " degrees to align specified slice with the x axis" << LogIO::POST;
-
 	Vector<Double> worldStart, worldEnd;
 	const DirectionCoordinate& dc1 = subCoords.directionCoordinate();
 	dc1.toWorld(worldStart, Vector<Double>(start));
@@ -185,8 +187,7 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	);
 	Double padNumber = max(0.0, 1 - startPixRot[0]);
 	padNumber = max(padNumber, -(startPixRot[1] - halfwidth - 1));
-	ImageInterface<Float> *imageToRotate = &subImage;
-	std::auto_ptr<ImageInterface<Float> > padded;
+	std::tr1::shared_ptr<ImageInterface<Float> > imageToRotate = subImage;
 	Int nPixels = 0;
 	if (padNumber > 0) {
 		nPixels = (Int)padNumber + 1;
@@ -194,12 +195,11 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 			<< "Some pixels will fall outside the rotated image, so "
 			<< "padding before rotating with " << nPixels << " pixels."
 			<< LogIO::POST;
-		ImagePadder padder(&subImage);
+		ImagePadder padder(subImage);
 		padder.setPaddingPixels(nPixels);
-		padded.reset(padder.pad(True));
-		imageToRotate = padded.get();
+		imageToRotate.reset(padder.pad(True));
 	}
-	IPosition blc(subImage.ndim(), 0);
+	IPosition blc(subImage->ndim(), 0);
 	IPosition trc = subShape - 1;
 
 	// ensure we have enough real estate after the rotation
@@ -215,7 +215,7 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	) + nPixels;
 
 	Record lcbox = LCBox(blc, trc, imageToRotate->shape()).toRecord("");
-	std::auto_ptr<ImageInterface<Float> > rotated;
+	std::tr1::shared_ptr<ImageInterface<Float> > rotated;
 	if (paInRad == 0) {
 		*_getLog() << LogIO::NORMAL << "Slice is along x-axis, no rotation necessary.";
 		rotated.reset(
@@ -239,6 +239,9 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 			)
 		);
 	}
+	// done with this pointer
+	imageToRotate.reset();
+
 	Vector<Double> origStartPixel = Vector<Double>(subShape.size(), 0);
 	origStartPixel[xAxis] = start[0];
 	origStartPixel[yAxis] = start[1];
@@ -288,7 +291,7 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	lcbox = LCBox(blc, trc, rotated->shape()).toRecord("");
 	IPosition axes(1, yAxis);
 	ImageCollapser collapser(
-		"mean", rotated.get(), "", &lcbox,
+		"mean", rotated, "", &lcbox,
 		"", "", "", "", axes, "", False
 	);
 	std::auto_ptr<ImageInterface<Float> > collapsed(collapser.collapse(True));
@@ -296,17 +299,7 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	newRefPix[xAxis] = rotPixStart[xAxis] - blc[xAxis];
 	newRefPix[yAxis] = rotPixStart[yAxis] - blc[yAxis];
 	CoordinateSystem collCoords = collapsed->coordinates();
-	/*
-	 * this is the original code for setting of the full direction coordinate
-	 * which was deemed undesirable by the CSSC representative. He wants
-	 * an angular offset coordinate instead.
 
-	collCoords.setReferencePixel(newRefPix);
-	Vector<Double> refVal = collCoords.referenceValue();
-	refVal[xAxis] = startWorld[xAxis];
-	refVal[yAxis] = startWorld[yAxis];
-	collCoords.setReferenceValue(refVal);
-	*/
 	// to determine the pixel increment of the angular offset axis, get the
 	// distance between the end points
 	ImageMetaData<Float> md(collapsed.get());
@@ -357,27 +350,22 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 		}
 	}
 	// now remove the degenerate linear axis
-	Record empty;
 	SubImage<Float> cDropped = SubImageFactory<Float>::createSubImage(
-		*collapsed, empty, "", 0, False, AxesSpecifier(keep, axisPath),
+		*collapsed, Record(), "", 0, False, AxesSpecifier(keep, axisPath),
 		False, True
 	);
 	std::auto_ptr<ArrayLattice<Bool> > newMask;
 	if (dynamic_cast<TempImage<Float> *>(collapsed.get())->hasPixelMask()) {
 		// because the mask doesn't lose its degenerate axis when subimaging.
-		Array<Bool> oldArray = collapsed->pixelMask().get();
+		Array<Bool> newArray = collapsed->pixelMask().get().reform(cDropped.shape());
 		newMask.reset(new ArrayLattice<Bool>(cDropped.shape()));
-		Array<Bool> newArray = oldArray;
-		newArray.resize(cDropped.shape(), True);
 		newMask->put(newArray);
 	}
-	std::auto_ptr<ImageInterface<Float> > outImage = _prepareOutputImage(&cDropped, 0, newMask.get());
-	if (wantReturn) {
-		return outImage.release();
+	std::tr1::shared_ptr<ImageInterface<Float> > outImage = _prepareOutputImage(cDropped, 0, newMask.get());
+	if (! wantReturn) {
+		outImage.reset();
 	}
-	else {
-		return 0;
-	}
+	return outImage;
 }
 
 void PVGenerator::setOffsetUnit(const String& s) {

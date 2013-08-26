@@ -122,7 +122,7 @@ void ZoomWidget::calculateRange( ){
 	}
 }
 
-void ZoomWidget::setImage( ImageInterface<float>* image ){
+void ZoomWidget::setImage( const ImageTask::shCImFloat image ){
 	this->image = image;
 }
 

@@ -133,7 +133,7 @@ public:
   // Set the application parameters
   virtual void setApply();
   virtual void setApply(const Record& apply);
-  virtual void setCallib(const Record& callib);
+  virtual void setCallib(const Record& callib,const MeasurementSet& selms);
 
   // Apply info/params, suitable for logging
   virtual String applyinfo();
