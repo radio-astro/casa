@@ -31,14 +31,10 @@
 #include <images/Images/ImageRegrid.h>
 #include <images/Regions/WCBox.h>
 
-/*
-#include <casa/Arrays/ArrayMath.h>
-#include <images/Images/ImageUtilities.h>
-#include <images/Images/PagedImage.h>
-#include <images/Images/TempImage.h>
+#include <imageanalysis/ImageAnalysis/ImageMetaData.h>
+#include <imageanalysis/Annotations/AnnRectBox.h>
 
-#include <lattices/Lattices/LatticeUtilities.h>
-*/
+
 #include <memory>
 
 namespace casa {
@@ -146,42 +142,103 @@ TempImage<Float> ImageRegridder::_regrid() const {
 	ImageUtilities::copyMiscellaneous(workIm, subImage);
 	String maskName("");
 	ImageMaskAttacher<Float>::makeMask(workIm, maskName, True, True, *_getLog(), True);
-	try {		// check that there is overlap between input and output
-		IPosition shapeIn = subImage.shape();
-		Vector<Double> blc, trc;
-		Bool ok = csysFrom.toWorld(blc, IPosition(shapeIn.size(), 0));
-		if (ok) {
-			ok = csysFrom.toWorld(trc, IPosition(shapeIn-1));
-		}
-		if (ok) {
-			Vector<String> units = csysFrom.worldAxisUnits();
-			Vector<Quantity> blcQ(blc.size()), trcQ(trc.size());
-			Vector<Int> absrel(blc.size(), RegionType::Abs);
-			for (uInt i=0; i<shapeIn.size(); i++) {
-				blcQ[i] = Quantity(blc[i], units[i]);
-				trcQ[i] = Quantity(trc[i], units[i]);
-			}
-			Vector<Double> pixel;
-			csys.toPixel(pixel, blc);
-			*_getLog() << LogIO::NORMAL << "The blc in the selected region corresponds to pixel "
-				<< pixel << " in the template coordinate system." << LogIO::POST;
-			csys.toPixel(pixel, trc);
-			*_getLog() << LogIO::NORMAL << "The trc in the selected region corresponds to pixel "
-				<< pixel << " in the template coordinate system." << LogIO::POST;
-			WCBox box(blcQ, trcQ, csysFrom, absrel);
-			SubImage<Float> overlap = SubImageFactory<Float>::createSubImage(
-				workIm, box.toRecord(""), "", _getLog().get(),
-				False, AxesSpecifier(), False
-			);
-		}
-	}
-	catch (const AipsError& x) {
-		throw AipsError(
+	if (csysFrom.hasDirectionCoordinate() && csys.hasDirectionCoordinate()) {
+		ThrowIf (
+			! _doImagesOverlap(subImage, workIm),
 			"There is no overlap between the (region chosen in) the input image"
 			" and the output image with respect to the axes being regridded."
 		);
-	}
+		/*
+		try {
+			// check that there is overlap between input and output
+			IPosition shapeIn = subImage.shape();
+			Vector<Double> blc, trc;
+			Bool ok = csysFrom.toWorld(blc, IPosition(shapeIn.size(), 0));
+			if (ok) {
+				ok = csysFrom.toWorld(trc, IPosition(shapeIn-1));
+			}
+			if (ok) {
+				if (
+					csysFrom.directionCoordinate().directionType(True) == csys.directionCoordinate().directionType(True)
+					&& (
+						! csysFrom.hasSpectralAxis()
+						|| csysFrom.spectralCoordinate().frequencySystem(True) == csys.spectralCoordinate().frequencySystem(True)
+					)
+				) {
+					Vector<Double> pixel;
+					csys.toPixel(pixel, blc);
+					*_getLog() << LogIO::NORMAL << "The blc in the selected region corresponds to pixel "
+							<< pixel << " in the template coordinate system." << LogIO::POST;
+					csys.toPixel(pixel, trc);
+					*_getLog() << LogIO::NORMAL << "The trc in the selected region corresponds to pixel "
+							<< pixel << " in the template coordinate system." << LogIO::POST;
+				}
+				cout << __FILE__ << " " << __LINE__ << endl;
 
+				Vector<String> units = csysFrom.worldAxisUnits();
+				Vector<Quantity> blcQ(blc.size()), trcQ(trc.size());
+				Vector<Int> absrel(blc.size(), RegionType::Abs);
+				cout << __FILE__ << " " << __LINE__ << endl;
+
+				for (uInt i=0; i<shapeIn.size(); i++) {
+					blcQ[i] = Quantity(blc[i], units[i]);
+					trcQ[i] = Quantity(trc[i], units[i]);
+				}
+				Vector<Int> dirPix = csysFrom.directionAxesNumbers();
+				Quantity blcx = blcQ[dirPix[0]];
+				Quantity blcy = blcQ[dirPix[1]];
+				Quantity trcx = trcQ[dirPix[0]];
+				Quantity trcy = trcQ[dirPix[1]];
+				String dirRefFrameString = MDirection::showType(
+					csysFrom.directionCoordinate().directionType(True)
+				);
+				Quantity beginFreq(0, "Hz");
+				Quantity endFreq(0, "Hz");
+				Quantity restfreq(0, "Hz");
+				String freqRefFrameString, dopplerString;
+				if (csysFrom.hasSpectralAxis()) {
+					Int specAxis = csysFrom.spectralAxisNumber(True);
+					beginFreq = blcQ[specAxis];
+					endFreq = trcQ[specAxis];
+					freqRefFrameString = MFrequency::showType(
+						csysFrom.spectralCoordinate().frequencySystem(True)
+					);
+					dopplerString = MDoppler::showType(csysFrom.spectralCoordinate().velocityDoppler());
+					restfreq = Quantity(csysFrom.spectralCoordinate().restFrequency(), units[specAxis]);
+				}
+				cout << __FILE__ << " " << __LINE__ << endl;
+
+				AnnRectBox box(
+					blcx, blcy, trcx, trcy, dirRefFrameString,
+					csys, workIm.shape(),
+					beginFreq, endFreq, freqRefFrameString,
+					dopplerString, restfreq,
+					Vector<Stokes::StokesTypes>(0),
+					False
+				);
+				cout << __FILE__ << " " << __LINE__ << endl;
+
+				//WCBox box(blcQ, trcQ, csysFrom, absrel);
+				SubImage<Float> overlap = SubImageFactory<Float>::createSubImage(
+						workIm, box.asRecord(), "", _getLog().get(),
+						False, AxesSpecifier(), False
+				);
+				cout << __FILE__ << " " << __LINE__ << endl;
+
+			}
+		}
+		catch (const AipsError& x) {
+			cout << __FILE__ << " " << __LINE__ << endl;
+
+			cout << "*** in catch blcok" << endl;
+			ThrowIf (
+				! _doImagesOverlap(subImage, workIm),
+				"There is no overlap between the (region chosen in) the input image"
+				" and the output image with respect to the axes being regridded."
+			);
+		}
+		*/
+	}
 	ImageRegrid<Float> ir;
 	ir.showDebugInfo(_debug);
 	ir.disableReferenceConversions(!_doRefChange);
@@ -367,6 +424,161 @@ void ImageRegridder::_finishConstruction() {
 			_shape = tmp;
 		}
 	}
+}
+
+Bool ImageRegridder::_doImagesOverlap(
+	const ImageInterface<Float>& image0,
+	const ImageInterface<Float>& image1
+) {
+	const CoordinateSystem csys0 = image0.coordinates();
+	const CoordinateSystem csys1 = image0.coordinates();
+	IPosition shape0 = image0.shape();
+	IPosition shape1 = image1.shape();
+	if (
+		csys0.hasDirectionCoordinate()
+		&& csys1.hasDirectionCoordinate()
+	) {
+		const DirectionCoordinate dc0 = csys0.directionCoordinate();
+		DirectionCoordinate dc1 = csys1.directionCoordinate();
+		Bool sameFrame = dc0.directionType(True) == dc1.directionType(True);
+		if (!sameFrame) {
+			dc1.setReferenceConversion(dc0.directionType(True));
+		}
+		ImageMetaData<Float> md0(&image0);
+		ImageMetaData<Float> md1(&image1);
+		Vector<Int> dirShape0 = md0.directionShape();
+		Vector<Int> dirShape1 = md1.directionShape();
+		Vector<std::pair<Double, Double> > corners0 = _getDirectionCorners(
+			dc0, dirShape0
+		);
+		Vector<std::pair<Double, Double> > corners1 = _getDirectionCorners(
+			dc1, dirShape1
+		);
+		if (sameFrame) {
+			Double minx0 = corners0[0].first;
+			Double maxx0 = minx0;
+			Double miny0 = corners0[0].second;
+			Double maxy0 = miny0;
+			Double minx1 = corners1[0].first;
+			Double maxx1 = minx1;
+			Double miny1 = corners1[0].second;
+			Double maxy1 = miny1;
+
+			for (uInt i=1; i<4; i++) {
+				minx0 = min(minx0, corners0[i].first);
+				maxx0 = max(maxx0, corners0[i].first);
+				miny0 = min(miny0, corners0[i].second);
+				maxy0 = max(maxy0, corners0[i].second);
+
+				minx1 = min(minx1, corners1[i].first);
+				maxx1 = max(maxx1, corners1[i].first);
+				miny1 = min(miny1, corners1[i].second);
+				maxy1 = max(maxy1, corners1[i].second);
+			}
+			if (
+				minx0 > maxx1 || maxx0 < minx1
+				|| miny0 > maxy1 || maxy0 < miny1
+			) {
+				return False;
+			}
+		}
+		for (uInt i=0; i<4; i++) {
+			Vector<Double> start0(2, corners0[i].first);
+			start0[1] = corners0[i].second;
+			Vector<Double> end0(
+				2,
+				i == 3 ? corners0[0].first
+					: corners0[i+1].first
+			);
+			end0[1] = i == 3 ? corners0[0].second : corners0[i+1].second;
+
+			for (uInt j=0; j<4; j++) {
+				Vector<Double> start1(2, corners1[j].first);
+				start1[1] = corners1[j].second;
+				Vector<Double> end1(
+					2,
+					j == 3 ? corners1[0].first
+						: corners1[j+1].first
+				);
+				end1[1] = j == 3 ? corners1[0].second : corners1[j+1].second;
+				if (
+					_doLineSegmentsIntersect(
+						start0, end0, start1, end1
+					)
+				) {
+					return True;
+				}
+			}
+		}
+	}
+	return False;
+}
+
+
+Vector<std::pair<Double, Double> > ImageRegridder::_getDirectionCorners(
+	const DirectionCoordinate& dc,
+	const IPosition& directionShape
+) {
+	Vector<Double> world;
+	Vector<Double> pixel(2, 0);
+	Vector<String> units = dc.worldAxisUnits();
+	dc.toWorld(world, pixel);
+	Vector<std::pair<Double, Double> > corners(4);
+	// blcx, blcy
+	corners[0].first = Quantity(world[0], units[0]).getValue("rad");
+	corners[0].second = Quantity(world[1], units[1]).getValue("rad");
+	// trcx, blcy
+	pixel[0] = directionShape[0];
+	dc.toWorld(world, pixel);
+	corners[1].first = Quantity(world[0], units[0]).getValue("rad");
+	corners[1].second = Quantity(world[1], units[1]).getValue("rad");
+	// trcx, trcy
+	pixel[1] = directionShape[1];
+	dc.toWorld(world, pixel);
+	corners[2].first = Quantity(world[0], units[0]).getValue("rad");
+	corners[2].second = Quantity(world[1], units[1]).getValue("rad");
+	// blcx, trcy
+	pixel[0] = 0;
+	dc.toWorld(world, pixel);
+	corners[3].first = Quantity(world[0], units[0]).getValue("rad");
+	corners[3].second = Quantity(world[1], units[1]).getValue("rad");
+	return corners;
+}
+
+Bool ImageRegridder::_doLineSegmentsIntersect(
+	const Vector<Double>& line0point0,
+	const Vector<Double>& line0point1,
+	const Vector<Double>& line1point0,
+	const Vector<Double>& line1point1
+) {
+	// algorithm from
+	// http://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
+	Vector<Double> p = line0point0;
+	Vector<Double> r = line0point1 - line0point0;
+	Vector<Double> q = line1point0;
+	Vector<Double> s = line1point1 - line1point0;
+	Double rCrossS = _2DCrossProduct(r, s);
+	Vector<Double> diffQP = q-p;
+
+	if (rCrossS == 0) {
+		if (_2DCrossProduct(diffQP, r) == 0) {
+			// lines are coincident
+			return True;
+		}
+		else {
+			// lines are parallel
+			return False;
+		}
+	}
+	Double t = _2DCrossProduct(diffQP, s)/rCrossS;
+	Double u = _2DCrossProduct(diffQP, r)/rCrossS;
+	return t >= 0 && t <= 1 && u >= 0 && u <= 1;
+}
+
+Double ImageRegridder::_2DCrossProduct(
+	const Vector<Double> v0, const Vector<Double> v1
+) {
+	return v0[0]*v1[1] - v0[1]*v1[0];
 }
 
 }
