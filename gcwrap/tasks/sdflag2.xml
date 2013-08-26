@@ -33,7 +33,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param> 
 
     <param type="string" name="specunit">
-	<description>units for spectral axis (channel,km/s,GHz)</description>
+	<description>units for spectral axis [\'channel\' | \'km/s\' | \'GHz\'] (''=channel)</description>
 	<value></value>
 	<allowed kind="enum">
 	    <value></value>
@@ -63,7 +63,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="mode">
-	    <description>mode of data selection and flag operation</description>
+	    <description>mode of data selection and flag operation [\'manual\' | \'clip\' | \'interactive\' | \'rowid\'(expert)]</description>
             <value>manual</value>
             <allowed kind="enum">
             <value>manual</value>
@@ -76,7 +76,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- Common sub-parameters for ALL modes but 'interactive'-->
     <param type="bool" name="unflag" subparam="true">
-            <description>unflag selected data</description>
+            <description>unflag selected data (False: flag, True: unflag)</description>
             <value>False</value>
     </param>
 
@@ -88,7 +88,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="field" subparam="true">
-	    <description>string for selection by source name</description>
+	    <description>string for selection by source name (e.g., \'FLS3a*\')</description>
 	    <value></value>
     </param>
 
@@ -105,7 +105,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- For mode='manual' -->
     <param type="intArray" name="maskflag" subparam="true">
-            <description>list of mask regions to flag/unflag</description>
+            <description>list of mask regions to flag/unflag (e.g., [[0,500],[1000,1500]])</description>
             <value></value>
     </param>
 
@@ -132,7 +132,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- For mode='rowid' -->
     <param type="intArray" name="rows" subparam="true">
-            <description>list of row numbers to apply row-based flagging/unflagging</description>
+            <description>list of row numbers to apply row-based flagging/unflagging (e.g., [0,3,5])</description>
             <value></value>
     </param>
 
@@ -143,7 +143,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="outform">
-            <description>output file format (ASCII,MS,SDFITS,ASAP) (See a WARNING in help document)</description>
+            <description>output file format [\'ASCII\' | \'MS\' | \'SDFITS\' | \'ASAP\'] (See a WARNING in help document)</description>
             <value>ASAP</value>
             <allowed kind="enum">
             <value>ASCII</value>
@@ -344,7 +344,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         lists of scan numbers, IF numbers, and polarization idices in mode='manual',
         (2) channel based flagging by specifying a range of spectral values in
         mode='clip', and 
-        (3) row based flagging by specifying a list of row numbers in mode='rowid'.
+        (3) row based flagging by specifying a list of row numbers in 
+        mode='rowid'. Note this is an EXPERT mode.
 
         In mode='manual', the channel based flagging are invoked when regions
         in channel, frequency, or velocity are soecufued to maskflag parameter. 
