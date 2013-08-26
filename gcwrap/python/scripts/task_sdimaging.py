@@ -78,10 +78,6 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             casalog.post("restfreq set to %s"%self.restfreq, "INFO")
         self.imager_param['restfreq'] = self.restfreq
         
-        # outframe (force using the current frame)
-        #self.imager_param['outframe'] = ''
-        self.imager_param['outframe'] = self.outframe
-        
         # 
         # spw
         self.spwid=-1
@@ -96,6 +92,26 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.allchannels=self.table.getcell('NUM_CHAN',self.spwid)
         self.close_table()
         self.imager_param['spw'] = self.spwid
+
+        # outframe (force using the current frame)
+        #self.imager_param['outframe'] = ''
+        self.imager_param['outframe'] = self.outframe
+        if self.outframe == '':
+            # get from MS
+            myms = gentools(['ms'])[0]
+            myms.open(self.infile)
+            spwinfo = myms.getspectralwindowinfo()
+            myms.close()
+            del myms
+            for key, spwval in spwinfo.items():
+                if spwval['SpectralWindowId'] == self.imager_param['spw']:
+                    self.imager_param['outframe'] = spwval['Frame']
+                    casalog.post("Using frequency frame of MS, '%s'" % self.imager_param['outframe'])
+                    break
+            if self.imager_param['outframe'] == '':
+                raise Exception, "Internal error of getting frequency frame of spw=%d." % self.imager_param['spw']
+        else:
+            casalog.post("Using frequency frame defined by user, '%s'" % self.imager_param['outframe'])
         
         # antenna
         if type(self.antenna)==int:
@@ -133,9 +149,10 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             # start
             if mode == 'velocity':
                 #startval = ['LSRK', '%s%s'%(self.start,self.specunit)]
-                startval = '%s%s'%(self.start,self.specunit)
+                startval = [self.imager_param['outframe'], '%s%s'%(self.start,self.specunit)]
             elif mode == 'frequency':
-                startval = '%s%s'%(self.start,self.specunit)
+                #startval = '%s%s'%(self.start,self.specunit)
+                startval = [self.imager_param['outframe'], '%s%s'%(self.start,self.specunit)]
             else:
                 startval = self.start
 
