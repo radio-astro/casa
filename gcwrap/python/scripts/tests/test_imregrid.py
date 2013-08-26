@@ -582,6 +582,89 @@ class imregrid_test(unittest.TestCase):
             Exception,myia.regrid, outfile="seventh",csys=ccopy.torecord(),
             axes=2, region=rg.box([0,0,0,0],[19,19,998,3])
         )
+        
+    def test_no_output_stokes(self):
+        """Test rule that if input image has no stokes and template image has stokes, output image has no stokes"""
+        myia = self._myia
+        imagename = "aa.im"
+        myia.fromshape(imagename, [20, 20, 20])
+        template = "aa_temp.im"
+        myia.fromshape(template, [20, 20, 2, 20])
+        csys = myia.coordsys()
+        csys.setincrement([-0.9, 0.9, 1, 1500])
+        myia.setcoordsys(csys.torecord())
+        myia.done()
+        output = "aa.out.im"
+        self.assertTrue(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5
+            )
+        )
+        myia.open(output)
+        self.assertFalse(myia.coordsys().findcoordinate("stokes")[0])
+        myia.done()
+        
+    def test_no_template_stokes(self):
+        """Test rule that if input image has stokes and template image does not have stokes, output image has stokes"""
+        myia = self._myia
+        imagename = "ab.im"
+        myia.fromshape(imagename, [20, 20, 2, 20])
+        template = "ab_temp.im"
+        myia.fromshape(template, [20, 20, 20])
+        csys = myia.coordsys()
+        csys.setincrement([-0.9, 0.9, 1, 1500])
+        myia.setcoordsys(csys.torecord())
+        myia.done()
+        output = "ab.out.im"
+        self.assertTrue(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5
+            )
+        )
+        myia.open(output)
+        stokes_info = myia.coordsys().findcoordinate("stokes")
+        self.assertTrue(stokes_info[0])
+        exp_axis = 2
+        self.assertTrue(stokes_info[1][0] == exp_axis)
+        self.assertTrue(myia.shape()[exp_axis] == 2)
+        self.assertTrue(myia.coordsys().stokes() == ['I','Q'])
+        myia.done()
+        self.assertFalse(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5, overwrite=True,
+                shape=[20, 20, 1, 20]
+            )
+        )
+        self.assertFalse(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5, overwrite=True,
+                shape=[20, 20, 3, 20]
+            )
+        )
+        self.assertTrue(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5, overwrite=True,
+                shape=[20, 20, 2, 20]
+            )
+        )
+        
+    def test_regrid_galactic(self):
+        """Verify fix for CAS-5534"""
+        myia = self._myia
+        myia.open(datapath + "ngc5921.clean.image")
+        csys = myia.coordsys()
+        csys.setreferencecode('GALACTIC', type='direction', adjust=True)
+        zz = myia.regrid(outfile='gal_regrid.image', shape=[300, 300, 1, 46], csys=csys.torecord(), overwrite=True)    
+        myia.open(datapath + "gal_regrid.image")
+        self.assertTrue(numpy.max(numpy.abs(zz.getchunk() - myia.getchunk())) < 1e-8)
+        self.assertTrue((zz.getchunk(getmask=True) == myia.getchunk(getmask=True)).all())
+        myia.done()
+        zz.done()
 
         
 def suite():

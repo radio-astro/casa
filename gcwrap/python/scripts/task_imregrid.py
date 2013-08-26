@@ -42,31 +42,44 @@ def imregrid(
                 if not os.path.isdir(template) or not os.access(template,
                                                                 os.R_OK):
                     raise TypeError, 'Cannot read template image ' + template
-
-                _myia.open(imagename)
+                template_ia = iatool()
+                template_ia.open(template)
+                template_csys = template_ia.coordsys()
+                image_ia = iatool()
+                image_ia.open(imagename)
+                image_csys = image_ia.coordsys()
+                
                 axestoregrid = axes
                 if (axes[0] < 0):
-                    axestoregrid = range(len(_myia.shape()))
-                axesnames = _myia.coordsys().names()
-                _myia.open(template)
-                csys = _myia.coordsys()
+                    axestoregrid = []
+                    image_ncoords = image_csys.ncoordinates()
+                    for i in range(image_ncoords):
+                        ctype = image_csys.coordinatetype(i)[0]
+                        if ctype != 'Stokes' and template_csys.findcoordinate(ctype)[0]:
+                            world_axes = image_csys.findcoordinate(ctype)[1]
+                            axestoregrid.extend(world_axes)
+                    if len(axestoregrid) == 0:
+                        raise Exception("Found no axes to regrid!")
+                    axestoregrid.sort()                                        
+                # axesnames = _myia.coordsys().names()
                 if (len(shape) == 1 and shape[0] == -1):
                     # CAS-4959, output shape should have template shape
                     # for axes being regridded, input image shape for axes
                     # not being regridded
-                    tempshape = _myia.shape()
-                    _myia.open(imagename)
-                    imshape = _myia.shape()
-                    shape = _myia.shape()
-                    targetaxesnames = _myia.coordsys().names()
+                    tempshape = template_ia.shape()
+                    imshape = image_ia.shape()
+                    shape = imshape
+                    targetaxesnames = image_csys.names()
                     for i in range(len(imshape)):
                         for j in axestoregrid:
                             if i == j:
                                 # axis numbers may not correspond so have to look for the template axis
                                 # location by the axis name, CAS-4960
-                                shape[i] = tempshape[csys.findaxisbyname(targetaxesnames[i])]
+                                shape[i] = tempshape[template_csys.findaxisbyname(targetaxesnames[i])] 
                                 break
-                _myia.done()
+                template_ia.done()
+                image_ia.done()
+                csys = template_csys
         else:
             csys = cstool()
             csys.fromrecord(template['csys'])
