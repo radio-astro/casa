@@ -1628,7 +1628,7 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 
 
 	// Apply channel average if necessary
-	if (channelAverage_p)
+	if (freqbinMap_p.find(spwId) != freqbinMap_p.end())
 	{
 		calculateIntermediateFrequencies(spwId,originalCHAN_FREQ,originalCHAN_WIDTH,inputCHAN_FREQ,inputCHAN_WIDTH);
 
@@ -1675,7 +1675,7 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 						);
 
 	// Check if pre-averaging step is necessary
-	if (not channelAverage_p)
+	if (freqbinMap_p.find(spwId) == freqbinMap_p.end())
 	{
 		Double avgCombinedWidth = 0;
 		for (uInt chanIdx=0;chanIdx<originalCHAN_WIDTH.size();chanIdx++)
@@ -1727,7 +1727,7 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 			<< regriddedCHAN_FREQ(0) << " Hz"
 			<< ", last channel = "
 			<< std::setprecision(9) << std::setw(14) << std::scientific
-			<< regriddedCHAN_FREQ(regriddedCHAN_FREQ.size()) << " Hz";
+			<< regriddedCHAN_FREQ(regriddedCHAN_FREQ.size()-1) << " Hz";
 	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 	    				<< oss.str() << LogIO::POST;
 
