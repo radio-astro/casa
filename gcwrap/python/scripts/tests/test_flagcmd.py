@@ -105,7 +105,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        default(flagdata3)
+        default(flagdata)
         flagdata(vis=self.vis, mode='unflag', flagbackup=False)
         
     def setUp_evla(self):
