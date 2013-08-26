@@ -172,6 +172,7 @@ public:
     return uvw2Quant_p;}
   const ROArrayColumn<Complex>& videoPoint() const {return videoPoint_p;}
   const ROArrayColumn<Float>& weightSpectrum() const {return weightSpectrum_p;}
+  const ROArrayColumn<Float>& weightSpectrumCorrected() const {return weightSpectrumCorrected_p;}
   // </group>
 
   // Convenience function that returns the number of rows in any of the columns
@@ -234,6 +235,7 @@ private:
   ROArrayColumn<Double> uvw2_p;
   ROArrayColumn<Complex> videoPoint_p;
   ROArrayColumn<Float> weightSpectrum_p;
+  ROArrayColumn<Float> weightSpectrumCorrected_p;
 
   //# columns required for synthesis applications - all optional
   ROArrayColumn<Complex> correctedData_p;
@@ -390,6 +392,7 @@ public:
     return uvw2Quant_p;}
   ArrayColumn<Complex>& videoPoint() {return videoPoint_p;}
   ArrayColumn<Float>& weightSpectrum() {return weightSpectrum_p;}
+  ArrayColumn<Float>& weightSpectrumCorrected() {return weightSpectrumCorrected_p;}
   // </group>
 
   // Read-only access to required columns
@@ -494,6 +497,8 @@ public:
     return ROMSMainColumns::videoPoint();}
   const ROArrayColumn<Float>& weightSpectrum() const {
     return ROMSMainColumns::weightSpectrum();}
+  const ROArrayColumn<Float>& weightSpectrumCorrected() const {
+    return ROMSMainColumns::weightSpectrumCorrected();}
   // </group>
 
   // set the epoch type for the TIME and TIME_CENTROID columns. 
@@ -572,6 +577,7 @@ private:
   ArrayColumn<Double> uvw2_p;
   ArrayColumn<Complex> videoPoint_p;
   ArrayColumn<Float> weightSpectrum_p;
+  ArrayColumn<Float> weightSpectrumCorrected_p;
 
   //# columns required for synthesis applications - all optional
   ArrayColumn<Complex> correctedData_p;

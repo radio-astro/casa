@@ -103,6 +103,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 	  dataColName == MS::columnName(MS::FLAG) || 
 	  dataColName == MS::columnName(MS::SIGMA_SPECTRUM) ||
 	  dataColName == MS::columnName(MS::WEIGHT_SPECTRUM) ||
+	  dataColName == MS::columnName(MS::CORRECTED_WEIGHT_SPECTRUM) ||
 	  dataColName == MS::columnName(MS::FLOAT_DATA) ||
 	  dataColName == MS::columnName(MS::CORRECTED_DATA) || 
 	  dataColName == MS::columnName(MS::MODEL_DATA) || 
