@@ -89,10 +89,11 @@ class test_base(unittest.TestCase):
         default(flagdata)
         flagdata(vis=self.vis, mode='unflag', savepars=False)
 
-    def setUp_flagdatatest_alma(self):
-        self.vis = "flagdatatest-alma.ms"
+    def setUp_alma_ms(self):
+        '''ALMA MS, scan=1,8,10 spw=0~3 4,128,128,1 chans, I,XX,YY'''
+        self.vis = "uid___A002_X30a93d_X43e_small.ms"
         if testmms:
-            self.vis = 'flagdatatest-alma.mms'
+            self.vis = 'uid___A002_X30a93d_X43e_small.mms'
 
         if os.path.exists(self.vis):
             print "The MS is already around, just unflag"
@@ -102,7 +103,7 @@ class test_base(unittest.TestCase):
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         default(flagdata)
-        flagdata(vis=self.vis, mode='unflag', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
 
     def setUp_data4tfcrop(self):
         self.vis = "Four_ants_3C286.ms"
@@ -1028,110 +1029,224 @@ class test_selections(test_base):
         self.assertEqual(res['scan']['7']['flagged'], 190512)
         self.assertEqual(res['flagged'], 238140+47628+476280+190512)
 
-        
-class test_selections_alma(test_base):
-    # Test various selections for alma data 
+class test_alma(test_base):
+    # Test various flagging on alma data 
 
     def setUp(self):
-        self.setUp_flagdatatest_alma()
+        self.setUp_alma_ms()
 
     def test_scanitent(self):
         '''flagdata: scanintent selection'''
         # flag POINTING CALIBRATION scans 
         # (CALIBRATE_POINTING_.. from STATE table's OBS_MODE)
         flagdata(vis=self.vis, intent='CAL*POINT*', savepars=False)
-        test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 377280, 26200)
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'], 192416.0)
         
     def test_wvr(self):
         '''flagdata: flag WVR correlation'''
         flagdata(vis=self.vis, correlation='I', savepars=False, flagbackup=False)
-        test_eq(flagdata(vis=self.vis, mode='summary', spw='4'),22752, 22752)
+        test_eq(flagdata(vis=self.vis, mode='summary', spw='0'),608, 608)
 
     def test_abs_wvr(self):
         '''flagdata: clip ABS_WVR'''
         flagdata(vis=self.vis, mode='clip',clipminmax=[0,50], correlation='ABS_WVR', savepars=False,
                  flagbackup=False)
-        test_eq(flagdata(vis=self.vis, mode='summary', spw='4'),22752, 22752)
-        
+        res = flagdata(vis=self.vis, mode='summary', spw='0')
+        self.assertEqual(res['spw']['0']['flagged'], 498)
+        self.assertEqual(res['flagged'], 498)
+        self.assertEqual(res['correlation']['I']['flagged'], 498)
+
     def test_abs_i(self):
         '''flagdata: clip ABS_I. Do not flag WVR'''
         flagdata(vis=self.vis, mode='clip', clipminmax=[0,50], correlation='ABS_I', savepars=False,
                  flagbackup=False)
-        test_eq(flagdata(vis=self.vis, mode='summary'),1154592, 0)
+        res = flagdata(vis=self.vis, mode='summary', spw='0')
+        self.assertEqual(res['spw']['0']['flagged'], 0)
+        self.assertEqual(res['flagged'], 0)
+        self.assertEqual(res['correlation']['I']['flagged'], 0)
 
     def test_abs_all(self):
         '''flagdata: clip ABS ALL. Do not flag WVR'''
         flagdata(vis=self.vis, mode='clip', clipminmax=[0,1], correlation='ABS ALL', savepars=False,
                  flagbackup=False)
-        test_eq(flagdata(vis=self.vis, mode='summary'),1154592, 130736)
-        test_eq(flagdata(vis=self.vis, mode='summary', correlation='I'),22752, 0)
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['spw']['0']['flagged'], 0)
+        self.assertEqual(res['flagged'], 1851)
+        self.assertEqual(res['correlation']['I']['flagged'], 0)
+        self.assertEqual(res['correlation']['XX']['flagged'], 568)
+        self.assertEqual(res['correlation']['YY']['flagged'], 1283)
 
     def test_spw(self):
         '''flagdata: flag various spw'''
         # Test that a white space in the spw parameter is taken correctly
-        flagdata(vis=self.vis, mode='manual', spw='1,3, 4', savepars=False,
+        flagdata(vis=self.vis, mode='manual', spw='1,2, 3', savepars=False,
                  flagbackup=False)
-        res = flagdata(vis=self.vis, mode='summary', spw='0,1,4')
+        res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['spw']['0']['flagged'], 0, 'spw=0 should not be flagged')
-        self.assertEqual(res['spw']['1']['flagged'], 552960, 'spw=1 should be fully flagged')
-        self.assertEqual(res['spw']['4']['flagged'], 22752, 'spw=4 should not be flagged')
-        self.assertEqual(res['spw']['4']['total'], 22752, 'spw=4 should not be flagged')
+        self.assertEqual(res['spw']['1']['flagged'], 192000, 'spw=1 should be fully flagged')
+        self.assertEqual(res['spw']['3']['flagged'], 1200, 'spw=3 should be flagged')
+        self.assertEqual(res['spw']['3']['total'], 1200, 'spw=3 should be flagged')
         
     def test_null_intent_selection1(self):
         '''flagdata: handle unknown scan intent in list mode'''
         
-        myinput = ["intent='FOCUS",   # non-existing intent
-                 "intent='CALIBRATE_POINTING_ON_SOURCE'", # scan=1
-                 "intent='CALIBRATE_AMPLI_ON_SOURCE", # scan=2
-                 "intent='CALIBRATE_AMPLI_ON_SOURC",
+        myinput = ["intent='FOCUS'",   # non-existing intent
+                 "intent='CALIBRATE_POINTING*'", # scan=1
                  "intent='*DELAY*'"] # non-existing
        
         flagdata(vis=self.vis, mode='list', inpfile=myinput, flagbackup=False)
-        res = flagdata(vis=self.vis, mode='summary',scan='1,2')
-        self.assertEqual(res['flagged'], 80184+96216)
-        self.assertEqual(res['total'], 80184+96216)
+        res = flagdata(vis=self.vis, mode='summary',scan='1')
+        self.assertEqual(res['flagged'], 192416)
+        self.assertEqual(res['total'], 192416)
         
     def test_unknown_intent(self):
         '''flagdata: CAS-3712, handle unknown value in intent expression'''
-        flagdata(vis=self.vis,intent='*POINTING*,*ATM*',flagbackup=False)
+        flagdata(vis=self.vis,intent='*POINTING*,*FOCUS*',flagbackup=False)
         
-        # Only POINTING scan exists. *ATM* should not raise a NULL MS selection
+        # Only POINTING scan exists. *FOCUS* should not raise a NULL MS selection
         res = flagdata(vis=self.vis, mode='summary', scan='1')
-        self.assertEqual(res['flagged'], 80184)
-        self.assertEqual(res['total'], 80184)
+        self.assertEqual(res['flagged'], 192416)
+        self.assertEqual(res['total'], 192416)
         
     def test_autocorr_wvr(self):
         '''flagdata: CAS-5286, do not flag auto-correlations in WVR data'''
         flagdata(vis=self.vis,autocorr=True,flagbackup=False)
-        res = flagdata(vis=self.vis, mode='summary', spw='0,4')
+        res = flagdata(vis=self.vis, mode='summary', spw='0,1')
         
-        # spw='4' contains the WVR data
-        self.assertEqual(res['spw']['4']['flagged'], 0)
-        self.assertEqual(res['spw']['0']['flagged'], 276480)
+        # spw='0' contains the WVR data
+        self.assertEqual(res['spw']['1']['flagged'], 15360)
+        self.assertEqual(res['spw']['0']['flagged'], 0)
+        self.assertEqual(res['flagged'], 15360)
 
     def test_autocorr_wvr_list(self):
         '''flagdata: CAS-5485 flag autocorrs in list mode'''
-        mycmd = ["mode='manual' antenna='DV01'",
-                 "mode='manual autocorr=True"]
+        mycmd = ["mode='manual' antenna='DA41'",
+                 "mode='manual' autocorr=True"]
         
         # The first cmd only flags cross-correlations of DV01
         # The second cmd only flags auto-corrs of all antennas
         # that have processor type=CORRELATOR. The radiometer
-        # data should not be flagged, which is in spw=4
+        # data should not be flagged, which is in spw=0
         res = flagdata(vis=self.vis, mode='list', inpfile=mycmd, flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary',basecnt=True)
         
         # These are the auto-correlations not flagged in the list flagging.
         # Verify that the non-flagged points are those from the WVR data
-        wvr1 = res['baseline']['DV01&&DV01']['total'] - res['baseline']['DV01&&DV01']['flagged']
-        wvr2 = res['baseline']['DV02&&DV02']['total'] - res['baseline']['DV02&&DV02']['flagged']
-        wvr3 = res['baseline']['PM03&&PM03']['total'] - res['baseline']['PM03&&PM03']['flagged']
-        wvrspw= res['spw']['4']['total']
+        wvr1 = res['baseline']['DA41&&DA41']['total'] - res['baseline']['DA41&&DA41']['flagged']
+        wvr2 = res['baseline']['DA42&&DA42']['total'] - res['baseline']['DA42&&DA42']['flagged']
+        wvr3 = res['baseline']['DV02&&DV02']['total'] - res['baseline']['DV02&&DV02']['flagged']
+        wvr4 = res['baseline']['PM03&&PM03']['total'] - res['baseline']['PM03&&PM03']['flagged']
+        wvrspw= res['spw']['0']['total']
         
-        self.assertEqual(wvrspw, wvr1+wvr2+wvr3, 'Auto-corr of WVR data should not be flagged')
-        self.assertEqual(res['antenna']['DV01']['flagged'],565920)
-        self.assertEqual(res['antenna']['DV01']['total'],573504)
-        self.assertEqual(res['spw']['4']['flagged'], 0)
+        self.assertEqual(wvrspw, wvr1+wvr2+wvr3+wvr4, 'Auto-corr of WVR data should not be flagged')
+        self.assertEqual(res['antenna']['DA41']['flagged'],75600)
+        self.assertEqual(res['antenna']['DA41']['total'],75752)
+        self.assertEqual(res['spw']['0']['flagged'], 0)
+        
+# class test_selections_alma(test_base):
+#     # Test various selections for alma data 
+# 
+#     def setUp(self):
+#         self.setUp_flagdatatest_alma()
+# 
+#     def test_scanitent(self):
+#         '''flagdata: scanintent selection'''
+#         # flag POINTING CALIBRATION scans 
+#         # (CALIBRATE_POINTING_.. from STATE table's OBS_MODE)
+#         flagdata(vis=self.vis, intent='CAL*POINT*', savepars=False)
+#         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 377280, 26200)
+#         
+#     def test_wvr(self):
+#         '''flagdata: flag WVR correlation'''
+#         flagdata(vis=self.vis, correlation='I', savepars=False, flagbackup=False)
+#         test_eq(flagdata(vis=self.vis, mode='summary', spw='4'),22752, 22752)
+# 
+#     def test_abs_wvr(self):
+#         '''flagdata: clip ABS_WVR'''
+#         flagdata(vis=self.vis, mode='clip',clipminmax=[0,50], correlation='ABS_WVR', savepars=False,
+#                  flagbackup=False)
+#         test_eq(flagdata(vis=self.vis, mode='summary', spw='4'),22752, 22752)
+#         
+#     def test_abs_i(self):
+#         '''flagdata: clip ABS_I. Do not flag WVR'''
+#         flagdata(vis=self.vis, mode='clip', clipminmax=[0,50], correlation='ABS_I', savepars=False,
+#                  flagbackup=False)
+#         test_eq(flagdata(vis=self.vis, mode='summary'),1154592, 0)
+# 
+#     def test_abs_all(self):
+#         '''flagdata: clip ABS ALL. Do not flag WVR'''
+#         flagdata(vis=self.vis, mode='clip', clipminmax=[0,1], correlation='ABS ALL', savepars=False,
+#                  flagbackup=False)
+#         test_eq(flagdata(vis=self.vis, mode='summary'),1154592, 130736)
+#         test_eq(flagdata(vis=self.vis, mode='summary', correlation='I'),22752, 0)
+# 
+#     def test_spw(self):
+#         '''flagdata: flag various spw'''
+#         # Test that a white space in the spw parameter is taken correctly
+#         flagdata(vis=self.vis, mode='manual', spw='1,3, 4', savepars=False,
+#                  flagbackup=False)
+#         res = flagdata(vis=self.vis, mode='summary', spw='0,1,4')
+#         self.assertEqual(res['spw']['0']['flagged'], 0, 'spw=0 should not be flagged')
+#         self.assertEqual(res['spw']['1']['flagged'], 552960, 'spw=1 should be fully flagged')
+#         self.assertEqual(res['spw']['4']['flagged'], 22752, 'spw=4 should not be flagged')
+#         self.assertEqual(res['spw']['4']['total'], 22752, 'spw=4 should not be flagged')
+#         
+#     def test_null_intent_selection1(self):
+#         '''flagdata: handle unknown scan intent in list mode'''
+#         
+#         myinput = ["intent='FOCUS",   # non-existing intent
+#                  "intent='CALIBRATE_POINTING_ON_SOURCE'", # scan=1
+#                  "intent='CALIBRATE_AMPLI_ON_SOURCE", # scan=2
+#                  "intent='CALIBRATE_AMPLI_ON_SOURC",
+#                  "intent='*DELAY*'"] # non-existing
+#        
+#         flagdata(vis=self.vis, mode='list', inpfile=myinput, flagbackup=False)
+#         res = flagdata(vis=self.vis, mode='summary',scan='1,2')
+#         self.assertEqual(res['flagged'], 80184+96216)
+#         self.assertEqual(res['total'], 80184+96216)
+#         
+#     def test_unknown_intent(self):
+#         '''flagdata: CAS-3712, handle unknown value in intent expression'''
+#         flagdata(vis=self.vis,intent='*POINTING*,*ATM*',flagbackup=False)
+#         
+#         # Only POINTING scan exists. *ATM* should not raise a NULL MS selection
+#         res = flagdata(vis=self.vis, mode='summary', scan='1')
+#         self.assertEqual(res['flagged'], 80184)
+#         self.assertEqual(res['total'], 80184)
+#         
+#     def test_autocorr_wvr(self):
+#         '''flagdata: CAS-5286, do not flag auto-correlations in WVR data'''
+#         flagdata(vis=self.vis,autocorr=True,flagbackup=False)
+#         res = flagdata(vis=self.vis, mode='summary', spw='0,4')
+#         
+#         # spw='4' contains the WVR data
+#         self.assertEqual(res['spw']['4']['flagged'], 0)
+#         self.assertEqual(res['spw']['0']['flagged'], 276480)
+# 
+#     def test_autocorr_wvr_list(self):
+#         '''flagdata: CAS-5485 flag autocorrs in list mode'''
+#         mycmd = ["mode='manual' antenna='DV01'",
+#                  "mode='manual autocorr=True"]
+#         
+#         # The first cmd only flags cross-correlations of DV01
+#         # The second cmd only flags auto-corrs of all antennas
+#         # that have processor type=CORRELATOR. The radiometer
+#         # data should not be flagged, which is in spw=4
+#         res = flagdata(vis=self.vis, mode='list', inpfile=mycmd, flagbackup=False)
+#         res = flagdata(vis=self.vis, mode='summary',basecnt=True)
+#         
+#         # These are the auto-correlations not flagged in the list flagging.
+#         # Verify that the non-flagged points are those from the WVR data
+#         wvr1 = res['baseline']['DV01&&DV01']['total'] - res['baseline']['DV01&&DV01']['flagged']
+#         wvr2 = res['baseline']['DV02&&DV02']['total'] - res['baseline']['DV02&&DV02']['flagged']
+#         wvr3 = res['baseline']['PM03&&PM03']['total'] - res['baseline']['PM03&&PM03']['flagged']
+#         wvrspw= res['spw']['4']['total']
+#         
+#         self.assertEqual(wvrspw, wvr1+wvr2+wvr3, 'Auto-corr of WVR data should not be flagged')
+#         self.assertEqual(res['antenna']['DV01']['flagged'],565920)
+#         self.assertEqual(res['antenna']['DV01']['total'],573504)
+#         self.assertEqual(res['spw']['4']['flagged'], 0)
 
 class test_selections2(test_base):
     '''Test other selections'''
@@ -2562,7 +2677,7 @@ class cleanup(test_base):
         os.system('rm -rf flagdatatest.*ms*')
         os.system('rm -rf missing-baseline.*ms*')
         os.system('rm -rf multiobs.*ms*')
-        os.system('rm -rf flagdatatest-alma.*ms*')
+        os.system('rm -rf uid___A002_X30a93d_X43e_small.*ms*')
         os.system('rm -rf Four_ants_3C286.*ms*')
         os.system('rm -rf shadowtest_part.*ms*')
         os.system('rm -rf testmwa.*ms*')
@@ -2584,7 +2699,7 @@ def suite():
             test_flagmanager,
             test_selections,
             test_selections2,
-            test_selections_alma,
+            test_alma,
             test_statistics_queries,
             test_msselection,
             test_elevation,
