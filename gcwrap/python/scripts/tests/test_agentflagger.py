@@ -72,6 +72,19 @@ class test_base(unittest.TestCase):
         os.system('rm -rf ' + self.vis + '.flagversions')
         self.unflag_table()
 
+    def setUp_alma_ms(self):
+        '''ALMA MS, scan=1,8,10 spw=0~3 4,128,128,1 chans, I,XX,YY'''
+        self.vis = "uid___A002_X30a93d_X43e_small.ms"
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        self.unflag_table()
+        
     def setUp_flagdatatest_alma(self):
         self.vis = "flagdatatest-alma.ms"
 
@@ -679,7 +692,7 @@ class test_bpass(test_base):
 class test_MS(test_base):
 
     def setUp(self):
-        self.setUp_flagdatatest_alma()
+        self.setUp_alma_ms()
 
     def test_null_intent_selection1(self):
         '''Agentflagger: handle unknown scan intent in list mode'''
@@ -688,47 +701,17 @@ class test_MS(test_base):
         aflocal.open(self.vis)
         aflocal.selectdata()
         aflocal.parsemanualparameters(intent='FOCUS') # non-existing intent
-        aflocal.parsemanualparameters(intent='CALIBRATE_POINTING_ON_SOURCE') # scan=1
-        aflocal.parsemanualparameters(intent='CALIBRATE_AMPLI_ON_SOURCE') # scan=2
+        aflocal.parsemanualparameters(intent='CALIBRATE_POINTING*') # scan=1
         aflocal.parsemanualparameters(intent='CALIBRATE_AMPLI_ON_SOURC') # typo
         aflocal.parsemanualparameters(intent='*DELAY*') # non-existing
         aflocal.parsesummaryparameters()
         aflocal.init()
         summary = aflocal.run()
         aflocal.done()
-        self.assertEqual(summary['report0']['scan']['1']['flagged'], 80184)
-        self.assertEqual(summary['report0']['scan']['2']['flagged'], 96216)
-        self.assertEqual(summary['report0']['flagged'], 80184+96216)
-         
-#    def test_null_intent_selection2(self):
-#        '''flagdata: do not handle unknown scan intent in list mode'''
-#        
-#        input = ["intent='FOCUS",   # non-existing intent
-#                 "intent='CALIBRATE_POINTING_ON_SOURCE'", # scan=1
-#                 "intent='CALIBRATE_AMPLI_ON_SOURCE", # scan=2
-#                 "intent='CALIBRATE_AMPLI_ON_SOURC",
-#                 "intent='*DELAY*'"] # non-existing
-#       
-#        flagdata(vis=self.vis, mode='list', inpfile=input, handleMSexception=False)
-#        res = flagdata(vis=self.vis, mode='summary')
-#        self.assertEqual(res['scan']['1']['flagged'], 0)
-#        self.assertEqual(res['flagged'], 0)
-   
-#    def test_catchNullSel(self):
-#        '''AgentFlagger: Catch null selections'''
-#        aflocal = casac.agentflagger()
-#        aflocal.open(self.vis)
-#        aflocal.selectdata(scan='1', catchnullsel=True)
-#        self.assertFalse(aflocal.parsemanualparameters())
-#        self.assertFalse(aflocal.init())
-#        res = aflocal.run()
-#        aflocal.done()
-#        self.assertTrue(res == {})
-#        
-#    def test_donotcatchNullSel(self):
-#        '''AgentFlagger: do not catch null selections'''
-        
-    
+        self.assertEqual(summary['report0']['scan']['1']['flagged'], 192416)
+        self.assertEqual(summary['report0']['scan']['8']['flagged'], 0)
+        self.assertEqual(summary['report0']['flagged'], 192416)
+             
 class test_display(test_base):
     """AgentFlagger:: Automatic test to check basic behaviour of display GUI using pause=False option """
 

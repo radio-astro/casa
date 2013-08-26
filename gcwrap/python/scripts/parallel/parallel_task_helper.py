@@ -146,7 +146,7 @@ class ParallelTaskHelper:
                     except Exception, instance:
                         casalog.post("Error post processing MMS results %s: %s" % (subMs,instance),"WARN","postExecution")
             return ret_dict     
-        elif all(v==None for v in ret_list.itervalues()) and self._consolidateOutput:         
+        elif (ret_list.values()[0]==None) and self._consolidateOutput:  
             return None      
         else:
             return ret_list

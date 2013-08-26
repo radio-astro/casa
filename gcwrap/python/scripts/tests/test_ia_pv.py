@@ -261,8 +261,6 @@ class ia_pv_test(unittest.TestCase):
         self.assertTrue(myia.coordsys().units()[0] == unit)
         myia.done()
         
-             
-        
     def test_fits(self):
         """ia.pv(): Test exporting and importing to/from FITS"""
         myia = self.ia
@@ -282,6 +280,22 @@ class ia_pv_test(unittest.TestCase):
         myia.done()
         self.assertTrue(got == expec)
         
+    def test_mask(self):
+        """Verify fix of mask defect in CAS-5520"""
+        myia = self.ia
+        outfile = "mask_test_got.im"
+        impv(
+            imagename=datapath + "pv_mask_test.im", outfile=outfile,
+            overwrite=True, start=[343,42],end=[343,660],width=425,unit='arcsec'
+        )
+        myia.open(datapath + "pv_mask_exp.im")
+        expec = myia.getchunk(getmask=T)
+        myia.open(outfile)
+        got = myia.getchunk(getmask=T)
+        myia.done()
+        self.assertTrue((got == expec).all())
+
+
         
     
 def suite():

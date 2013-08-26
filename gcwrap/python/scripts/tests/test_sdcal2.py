@@ -90,8 +90,12 @@ class sdcal2_caltest_base(sdcal2_unittest_base):
             for name in meta:
                 vout = tout.getcol(name)
                 vref = tref.getcol(name)
-                self.assertTrue(numpy.all(vout==vref),
-                                msg='column %s differ'%(name))
+                diff = numpy.abs(vout - vref) / vref
+                #print 'max difference: ',diff.max()
+                #self.assertTrue(numpy.all(vout==vref),
+                #                msg='column %s differ'%(name))
+                self.assertTrue(numpy.all(diff < 1.0e-15),
+                                          msg='column %s differ'%(name))
 
             # check calibration data
             for irow in xrange(tout.nrows()):
@@ -585,9 +589,10 @@ class sdcal2_applycal(sdcal2_caltest_base,unittest.TestCase):
 
         tb.open(self.rawfile)
         tsel=tb.query('IFNO IN [5,6] && SRCTYPE==0')
-        tsel.copy(self.outfile)
+        tcp = tsel.copy(self.outfile)
         tsel.close()
         tb.close()
+        tcp.close()
         self._compare(self.outfile, self.reftables[0], True)
 
     def test_applycal04(self):

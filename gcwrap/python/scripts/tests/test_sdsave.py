@@ -1272,8 +1272,132 @@ class sdsave_freq_labeling(unittest.TestCase,sdsave_unittest_base):
             self.assertTrue(maxdiff < 1.0e-15,
                             msg="spw %s: frequency labels differ"%(int(k[1:])))
 
+###
+# Test for handling flags in MSWriter
+###
+class sdsave_flagging(unittest.TestCase,sdsave_unittest_base):
+    """
+    Read Scantable data, modify flags in various ways, and write as MS.
+    """
+    # Input and output names
+    infile='OrionS_rawACSmod_cal2123.asap'
+    prefix=sdsave_unittest_base.taskname+'Test2'
+    outfile=prefix+'.ms'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.infile)):
+            shutil.copytree(self.datapath+self.infile, self.infile)
+        if (not os.path.exists(self.basefile)):
+            shutil.copytree(self.datapath+self.basefile, self.basefile)
+
+        default(sdsave)
+        self._setAttributes()
+        self.scanno=0
+
+    def tearDown(self):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+        if (os.path.exists(self.basefile)):
+            shutil.rmtree(self.basefile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def test_noflag(self):
+        """
+        test_noflag: test for unflagged data. All the flags must be False.
+        """
+        # execute task
+        sdsave(infile=self.infile, outfile=self.outfile, outform='MS2')
+
+        # verification
+        try:
+            tb.open(self.outfile)
+            for irow in xrange(tb.nrows()):
+                flag_row = tb.getcell('FLAG_ROW', irow)
+                flag = tb.getcell('FLAG', irow)
+                self.assertFalse(flag_row,
+                                 msg='FLAG_ROW must be False in row %s'%(irow))
+                self.assertTrue(all(flag.flatten()==False),
+                                msg='all FLAG values must be False in row %s'%(irow))
+        finally:
+            tb.close()
+        
+    def test_channelflag(self):
+        """
+        test_channelflag: test for channel flagged data. All the flags must be transferred properly.
+        """
+        # put channel flag to the first row
+        tb.open(self.infile, nomodify=False)
+        flagtra = tb.getcell('FLAGTRA', 0)
+        flagtra[:] = 1
+        tb.putcell('FLAGTRA', 0, flagtra)
+        tb.close()
+
+        # execute task
+        sdsave(infile=self.infile, outfile=self.outfile, outform='MS2')
+
+        # verification
+        try:
+            tb.open(self.outfile)
+            # all channels in first row must be flagged
+            irow = 0
+            flag_row = tb.getcell('FLAG_ROW', irow)
+            flag = tb.getcell('FLAG', irow)
+            self.assertFalse(flag_row,
+                             msg='FLAG_ROW must be False in row %s'%(irow))
+            self.assertTrue(all(flag[0]==True),
+                            msg='FLAG values for first polarization must be True in row %s'%(irow))
+            self.assertTrue(all(flag[1:].flatten()==False),
+                            msg='FLAG values for other polarizations must be False in row %s'%(irow))
+            for irow in xrange(1, tb.nrows()):
+                flag_row = tb.getcell('FLAG_ROW', irow)
+                flag = tb.getcell('FLAG', irow)
+                self.assertFalse(flag_row,
+                                 msg='FLAG_ROW must be False in row %s'%(irow))
+                self.assertTrue(all(flag.flatten()==False),
+                                msg='all FLAG values must be False in row %s'%(irow))
+        finally:
+            tb.close()        
+
+    def test_rowflag(self):
+        """
+        test_rowflag: test for row flagged data. In this case, channel flags have to be set while row flags should not be set. 
+        """
+        # put row flag to the first row
+        tb.open(self.infile, nomodify=False)
+        tb.putcell('FLAGROW', 0, 1)
+        tb.close()        
+        
+        # execute task
+        sdsave(infile=self.infile, outfile=self.outfile, outform='MS2')
+
+        # verification
+        try:
+            tb.open(self.outfile)
+            # all channels in first row must be flagged
+            irow = 0
+            flag_row = tb.getcell('FLAG_ROW', irow)
+            flag = tb.getcell('FLAG', irow)
+            self.assertFalse(flag_row,
+                            msg='FLAG_ROW must be False in row %s'%(irow))
+            self.assertTrue(all(flag[0]==True),
+                            msg='FLAG values for first polarization must be True in row %s'%(irow))
+            self.assertTrue(all(flag[1:].flatten()==False),
+                            msg='FLAG values for other polarizations must be False in row %s'%(irow))
+
+            for irow in xrange(1, tb.nrows()):
+                flag_row = tb.getcell('FLAG_ROW', irow)
+                flag = tb.getcell('FLAG', irow)
+                self.assertFalse(flag_row,
+                                 msg='FLAG_ROW must be False in row %s'%(irow))
+                self.assertTrue(all(flag.flatten()==False),
+                                msg='all FLAG values must be False in row %s'%(irow))
+        finally:
+            tb.close()        
+        
+            
 def suite():
     return [sdsave_test0,sdsave_test1,sdsave_test2,
             sdsave_test3,sdsave_test4,sdsave_test5,
             sdsave_test6,sdsave_test7,sdsave_storageTest,
-            sdsave_freq_labeling]
+            sdsave_freq_labeling,sdsave_flagging]

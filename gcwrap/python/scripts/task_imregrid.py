@@ -2,7 +2,10 @@ import os
 import shutil
 from taskinit import *
 
-def imregrid(imagename, template, output, asvelocity, axes, shape, interpolation):
+def imregrid(
+    imagename, template, output, asvelocity, axes, shape,
+    interpolation, decimate, replicate, overwrite
+):
     _myia = None
     _tmp = None
     csys = None
@@ -16,9 +19,6 @@ def imregrid(imagename, template, output, asvelocity, axes, shape, interpolation
                 output = imagename + '.regridded'
                 casalog.post("output was not specified - defaulting to\n\t"
                      + output, 'INFO')
-        if os.path.exists(output):
-            raise Exception, 'Output destination ' + output + \
-              " exists.\nPlease remove it or change the output file name."
         _myia = iatool()
         # Figure out what the user wants.
         if not isinstance(template, dict):
@@ -33,7 +33,10 @@ def imregrid(imagename, template, output, asvelocity, axes, shape, interpolation
                 'HADEC', 'AZEL', 'AZELSW', 'AZELNE', 'ECLIPTIC',
                 'MECLIPTIC', 'TECLIPTIC', 'SUPERGAL'
             ):
-                _imregrid_to_new_ref_frame(_myia, imagename, template, output, axes, shape)
+                _imregrid_to_new_ref_frame(
+                    _myia, imagename, template, output,
+                    axes, shape, overwrite
+                )
                 return True
             else:                   # Don't use a template named 'get', people.
                 if not os.path.isdir(template) or not os.access(template,
@@ -73,8 +76,9 @@ def imregrid(imagename, template, output, asvelocity, axes, shape, interpolation
         _myia.open(imagename)
         _tmp = _myia.regrid(
             outfile=output, shape=shape, csys=csys.torecord(),
-            axes=axes, overwrite=True, asvelocity=asvelocity,
-            method=interpolation
+            axes=axes, asvelocity=asvelocity,
+            method=interpolation, decimate=decimate,
+            replicate=replicate, overwrite=overwrite
         )
         _myia.done()
         _tmp.done()
@@ -91,7 +95,10 @@ def imregrid(imagename, template, output, asvelocity, axes, shape, interpolation
         if csys:
             csys.done()
             
-def _imregrid_to_new_ref_frame(_myia, imagename, template, output, axes, shape):
+def _imregrid_to_new_ref_frame(
+    _myia, imagename, template, output,
+    axes, shape, overwrite
+):
     _myia.open(imagename)
     csys = _myia.coordsys()
     if len(shape) > 0 and shape != [-1]:
@@ -177,7 +184,7 @@ def _imregrid_to_new_ref_frame(_myia, imagename, template, output, axes, shape):
     # now crop
                 
     casalog.post("Cropping masked image boundaries", "NORMAL")
-    cropped = rot.crop(outfile=output, axes=diraxes)
+    cropped = rot.crop(outfile=output, axes=diraxes, overwrite=overwrite)
     cropped.done()   
     rot.done()
     _myia.done()

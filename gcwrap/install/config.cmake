@@ -68,6 +68,8 @@ endmacro()
 
 
 
+
+
 #   casa_find - Generic package finder.
 #
 #   Synopsis:
@@ -87,6 +89,7 @@ endmacro()
 #               [ DEPENDS package1 ... ]
 #               [ NO_REQUIRE ]
 #               [ NO_CHECK ]
+#               [ IGNORE ]
 #             )
 #
 #   Sets the following variables
@@ -146,7 +149,7 @@ endmacro()
 #      NO_CHECK: If defined, the check on whether the headers compile
 #                is skipped
 #
-#
+#        IGNORE: do not consider these directories
 #  
 #  In addition to the given PREFIX_HINTS, this macro also searches in
 #  the build directory ${CMAKE_INSTALL_PREFIX}, and
@@ -205,6 +208,7 @@ macro( casa_find package )
   set( _extra_test "" )
   set( _definitions "" )
   set( _depends "" )
+  set( _ignore "" )
   set( _no_require False )
   set( _no_check False )
   foreach ( _a ${ARGN} )
@@ -223,6 +227,8 @@ macro( casa_find package )
       set( _current _libs )
     elseif (${_a} STREQUAL PREFIX_HINTS )
       set( _current _prefix_hints )
+    elseif (${_a} STREQUAL IGNORE )
+      set( _current _ignore )
     elseif (${_a} STREQUAL CPP_VERSION )
       set( _current _cpp_version )
     elseif (${_a} STREQUAL RUN_VERSION )
@@ -295,6 +301,58 @@ macro( casa_find package )
     endif()
   endforeach()
 
+
+  ##
+  ## strip out ignored header prefixes...
+  ##
+  set( _trimmed_prefix_hints "" )
+  foreach( _p ${_prefix_hints} )
+    set(_ok "yes")
+    foreach( _ix ${_ignore} )
+      if( ${_p} MATCHES "^${_ix}" )
+        set(_ok "no")
+        message( STATUS "        ignoring ${_p} when looking for ${package}")
+      endif()
+    endforeach()
+    if( ${_ok} STREQUAL "yes" )
+      list( APPEND _trimmed_prefix_hints "${_p}" )
+    endif()
+  endforeach()
+  set( _prefix_hints ${_trimmed_prefix_hints} )
+  ##
+  ## strip out ignored paths for standard paths...
+  ##
+  set( _standard_include_paths "" )
+  foreach( _p ${CMAKE_INSTALL_PREFIX}/include ${casa_packages}/include
+              /opt/local/include /sw/include /opt/include )
+    set(_ok "yes")
+    foreach( _ix ${_ignore} )
+      if( ${_p} MATCHES "^${_ix}" )
+        set(_ok "no")
+        message( STATUS "        ignoring standard path ${_p} when looking for ${package}")
+      endif()
+    endforeach()
+    if( ${_ok} STREQUAL "yes" )
+      list( APPEND _standard_include_paths "${_p}" )
+    endif()
+  endforeach()
+
+  set( _standard_library_paths "" )
+  foreach( _p  ${CMAKE_INSTALL_PREFIX}/lib ${casa_packages}/lib
+               /opt/local/lib /sw/lib /opt/lib )
+    set(_ok "yes")
+    foreach( _ix ${_ignore} )
+      if( ${_p} MATCHES "^${_ix}" )
+        set(_ok "no")
+        message( STATUS "        ignoring standard path ${_p} when looking for ${package}")
+      endif()
+    endforeach()
+    if( ${_ok} STREQUAL "yes" )
+      list( APPEND _standard_library_paths "${_p}" )
+    endif()
+  endforeach()
+    
+ 
   set( _try ${CMAKE_BINARY_DIR}/try_run.cc )
 
   set( _found TRUE )
@@ -311,7 +369,6 @@ macro( casa_find package )
       set( _paths ${${package}_INCLUDE_DIRS} )
       message( STATUS "Looking for ${package} headers in ${_paths}" )
     else()
-
       set( _prefix_hints_include "" )
       foreach( _p ${_prefix_hints} )
         list( APPEND _prefix_hints_include "${_p}/include" )
@@ -319,11 +376,7 @@ macro( casa_find package )
 
       set( _paths
         ${_prefix_hints_include}
-	${CMAKE_INSTALL_PREFIX}/include
-        ${casa_packages}/include
-        /opt/local/include
-        /sw/include
-        /opt/include
+        ${_standard_include_paths}
        )
     endif()
     set( ${package}_INCLUDE_DIRS "" )
@@ -503,11 +556,7 @@ macro( casa_find package )
 
       set( _paths
         ${_prefix_hints_lib}       # append lib to each?
-	${CMAKE_INSTALL_PREFIX}/lib
-        ${casa_packages}/lib
-        /opt/local/lib
-        /sw/lib
-        /opt/lib
+        ${_standard_library_paths}
         )
       # Note: find_library() automatically searches in and prefers
       # a lib64 variant of these paths, if it exists (see man cmake).
@@ -804,7 +853,6 @@ macro( casa_find package )
   #endforeach()
    
 endmacro( casa_find )
-
 
 
 #

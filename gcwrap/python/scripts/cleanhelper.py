@@ -3182,7 +3182,10 @@ class cleanhelper:
         if os.path.exists( img ):
             ia.open( img )
             mycsys=ia.coordsys()
-            if mycsys.torecord()['spectral2']['conversion']['system']!='LSRK':
+            if (mycsys.torecord()['spectral2']['conversion']['system']=='REST') :
+                ia.close()
+                return
+            if (mycsys.torecord()['spectral2']['conversion']['system']!='LSRK') :
                 mycsys.setreferencecode('LSRK','spectral',True)
             mycsys.setconversiontype(spectral='LSRK')
             ia.setcoordsys( mycsys.torecord() )

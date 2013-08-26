@@ -2020,7 +2020,7 @@ ms::cvelfreqs(const std::vector<int>& spwids,
       
       // determine phase center
       casa::MDirection phaseCenter;
-      casa::MRadialVelocity mRV; // needed when using outframe "OBJECT"
+      casa::MRadialVelocity mRV; // needed when using outframe "SOURCE"
       Int phasec_fieldid = -1;
       String t_phasec = toCasaString(phasec);
       

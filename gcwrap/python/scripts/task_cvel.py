@@ -151,7 +151,7 @@ def cvel(vis, outputvis,
                  NH_3 (1,1) put restfreq='23.694496GHz'
     
           outframe -- output reference frame (not case-sensitive)
-               possible values: LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, TOPO or OBJECT
+               possible values: LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, TOPO or SOURCE
                default='' (keep original reference frame) ; example: outframe='BARY' 
     
           veltype -- definition of velocity (in mode)

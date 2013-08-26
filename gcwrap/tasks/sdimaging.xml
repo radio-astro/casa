@@ -39,7 +39,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="any" name="restfreq">
             <description>rest frequency</description>
-            <any type="variant" limittype="string double"/>
+            <any type="variant" limittypes="string double"/>
             <value type="string"/>
     </param>
 
@@ -50,7 +50,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="any" name="field">
 	    <description>string for selection by field name or id</description>
-	    <any type="variant" limittype="string int"/>
+	    <any type="variant" limittypes="string int"/>
             <value type="int">-1</value>
     </param>
 
@@ -61,7 +61,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="any" name="antenna">
             <description>antenna name(s) or id(s)</description>
-            <any type="variant" limittype="string int"/>
+            <any type="variant" limittypes="string int"/>
             <value type="int">-1</value>
     </param>
 
@@ -94,19 +94,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="any" name="truncate" subparam="true">
             <description>truncation radius for gridding</description>
-            <any type="variant" limittype="string int double"/>
+            <any type="variant" limittypes="string int double"/>
             <value type="int">-1</value>
     </param>
 
     <param type="any" name="gwidth" subparam="true">
             <description>HWHM for gaussian</description>
-            <any type="variant" limittype="string int double"/>
+            <any type="variant" limittypes="string int double"/>
             <value type="int">-1</value>
     </param>
 
     <param type="any" name="jwidth" subparam="true">
             <description>c-parameter for jinc function</description>
-            <any type="variant" limittype="string int double"/>
+            <any type="variant" limittypes="string int double"/>
             <value type="int">-1</value>
     </param>
    
@@ -121,15 +121,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="intArray" name="imsize">
-            <description>x and y image size in pixels, symmetric for single value</description>
+            <description>x and y image size in pixels, symmetric for single value (e.g., [128,128])</description>
             <value type="vector">
-    <value>256</value><value>256</value>
+<!--    <value>256</value><value>256</value> -->
             </value>
     </param>
 
-    <param type="doubleArray" name="cell" units="arcmin">
-    <description>x and y cell size. default unit arcmin</description>
-    <value type="vector"><value>1.0</value><value>1.0</value></value>
+<!--    <param type="doubleArray" name="cell" units="arcmin"> -->
+    <param type="any" name="cell">
+    <description>x and y cell size (e.g., [\'30arcsec\',\'30arcsec\']). default unit arcmin</description>
+<!--    <value type="vector"><value>1.0</value><value>1.0</value></value> -->
+    <any type="variant" limittypes="string stringArray doubleArray"/>
+    <value type="string"></value>
     </param>
 
     <param type="bool" name="dochannelmap">
@@ -294,10 +297,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 options: True, False
                 example: if True, existing file will be overwritten
         imsize -- x and y image size in pixels, symmetric for single value
-                default: [256,256]
+                default: [] (=cover all pointings in MS)
                 example: imsize=200 (equivalent to [200,200])
         cell -- x and y cell size. default unit arcmin
-                default: ['1.0arcmin', '1.0arcmin']
+                default: '' (=1/3 PB)
                 example: cell=['0.2arcmin, 0.2arcmin']
                          cell='0.2arcmin' (equivalent to example above)
         dochannelmap -- channel map image or total power image

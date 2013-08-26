@@ -68,8 +68,11 @@ def listpartition(vis=None, createdict=None, listfile=None):
 
         # Get a consolidated dictionary with scan, spw, channel information
         # of the list of subMSs. It adds the nrows of all sub-scans of a scan.
-        outdict = {}
-        outdict = ph.getScanSpwSummary(mslist)        
+        try:
+            outdict = {}
+            outdict = ph.getScanSpwSummary(mslist) 
+        except Exception, instance:
+            casalog.post('%s'%instance,'ERROR')
 
         # Now loop through the dictionary to print the information
         if outdict.keys() == []:

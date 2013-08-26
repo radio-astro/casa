@@ -46,7 +46,9 @@ const unsigned int plotms::LAUNCH_TOTAL_WAIT_US    = 5000000;
 
 // Constructors/Destructors //
 
-  plotms::plotms() : itsWatcher_(this),doIter_(True) { }
+  plotms::plotms() : itsWatcher_(this),doIter_(True) {
+	  scriptClient = false;
+  }
 
   plotms::~plotms() { closeApp(); }
 
@@ -574,13 +576,11 @@ void plotms::update() {
 void plotms::waitUntilIdle() {
 
   // Wait for it to have launched...
-  cout << "Running synchronously..." << flush;
   bool idle = false;
   while(!idle) {
     usleep(500000);
     idle=!this->isDrawing();
   }
-  cout << "done." << endl;
   return;
 }
 
@@ -650,6 +650,11 @@ void plotms::launchApp() {
 
     if(!app.dbusName( ).empty() || !displaySet()) return;
     
+    String scriptGui;
+    if ( scriptClient ){
+    	scriptGui = "--script";
+    }
+
     // Launch PlotMS application with the DBus switch.
     pid_t pid = fork();
     if(pid == 0) {
@@ -673,7 +678,7 @@ void plotms::launchApp() {
                PlotMSDBusApp::APP_CASAPY_SWITCH.c_str(),
 	       nopop.c_str(),
                file.c_str(), filter.c_str(),
-	       iter.c_str(),
+	       iter.c_str(), scriptGui.c_str(),
                NULL);
         
     } else {
@@ -857,7 +862,9 @@ void plotms::setYRange(const bool yautorange,  const double ymin, const double y
     
 }
 
-
+void plotms::setScriptClient( bool scriptClient ){
+	this->scriptClient = scriptClient;
+}
 
 // A _temporary_ method to enable turning off the iteration path
 bool plotms::enableIter(const bool enable) {

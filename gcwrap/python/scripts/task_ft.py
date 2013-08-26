@@ -56,7 +56,7 @@ def ft(vis=None,field=None,spw=None,model=None,nterms=None,reffreq=None,complist
                im.selectvis(field=field,spw=spw)
 	       
                # Define image co-ordinates (all defaults)
-               im.defineimage()
+               #im.defineimage()
 
                # Check 'model'. The 'xml' allows a variant => do the checking here.
                if( (not type(model)==str) and (not (type(model)==list) ) ) :

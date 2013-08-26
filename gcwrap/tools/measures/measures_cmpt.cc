@@ -31,6 +31,7 @@
 #include <measures/Measures/MeasComet.h>
 #include <measures/Measures/MeasTable.h>
 #include <measures/Measures/MeasureHolder.h>
+#include <measures/Measures/MeasIERS.h>
 #include <measures_cmpt.h>
 
 using namespace std;
@@ -51,6 +52,7 @@ measures::~measures()
 {
   delete frame_p;
   if (pcomet_p) delete pcomet_p;
+  MeasIERS::closeTables();
 }
 
 // Show a direction formatted
@@ -2793,6 +2795,7 @@ measures::done()
     pcomet_p=0;
     delete frame_p;
     frame_p=new MeasFrame();
+    MeasIERS::closeTables();
     return true;
   } catch (AipsError(x)) {
     *itsLog << LogIO::SEVERE << "Exception Reports: " << x.getMesg() << LogIO::POST;

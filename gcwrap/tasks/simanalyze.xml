@@ -77,7 +77,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 -->    
     <param type="int" name="niter" subparam="true">
       <description>maximum number of iterations (0 for dirty image)</description>
-      <value>500</value>
+      <value>0</value>
     </param>
 
     <param type="string" name="threshold" subparam="true">

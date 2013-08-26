@@ -79,7 +79,8 @@ class imregrid_test(unittest.TestCase):
         self._myia.done()
         
         for i in (IMAGE, out1, out2, out3, out4, out5, out6):
-            os.system('rm -rf ' + i)
+            if (os.path.exists(i)):
+                os.system('rm -rf ' + i)
         
         self.assertTrue(len(tb.showcache()) == 0)
         
@@ -404,20 +405,8 @@ class imregrid_test(unittest.TestCase):
         
     def test_CAS_4262(self):
         """ Test degenerate axes are not relabeled to template"""
+        # test degenerate spectral axis is not regridded nor relabeled in output
         myia = self._myia
-        myia.fromshape("", [10, 10, 1, 10])
-        csys = myia.coordsys()
-        refvals = csys.referencevalue()["numeric"]
-        refvals[3] *= 10
-        csys.setreferencevalue(refvals)
-        regridded = myia.regrid("", myia.shape(), csys.torecord(), asvelocity=False)
-        self.assertTrue((regridded.getchunk(getmask=True) == False).all())
-        self.assertTrue(
-            (
-             regridded.coordsys().referencevalue()["numeric"] == refvals
-            ).all()
-        )
-        # test degenerate spectral exis is not regridded nor relabeled in output
         myia.fromshape("", [10, 10, 1, 1])
         csys = myia.coordsys()
         refvals = csys.referencevalue()["numeric"]
@@ -485,8 +474,9 @@ class imregrid_test(unittest.TestCase):
         
     def test_interpolate(self):
         """Test interpolation parameter is recognized"""
+        imagename = "zzx.im"
         myia = self._myia
-        myia.open(datapath + "myim.im")
+        myia.fromshape(imagename, [30, 30])
         csys = myia.coordsys()
         incr = csys.increment()['numeric']
         incr[0] = incr[0]*0.9
@@ -498,13 +488,13 @@ class imregrid_test(unittest.TestCase):
         myia.done()
         self.assertFalse(
             imregrid(
-                imagename=datapath + "myim.im", template=template,
+                imagename=imagename, template=template,
                 output="blah", interpolation="x"
             )
         )
         self.assertTrue(
             imregrid(
-                imagename=datapath + "myim.im", template=template,
+                imagename=imagename, template=template,
                 output="blah3", interpolation="cubic"
             )
         )
@@ -547,7 +537,6 @@ class imregrid_test(unittest.TestCase):
         myia = self._myia
         target = "target.im"
         myia.fromshape(target, [4,4,2,30])
-        print "input axis names " + str(myia.coordsys().names())
         template = "template.im"
         myia.fromshape(template, [6, 6, 36, 2])
         outfile = "myout.im"
@@ -561,7 +550,39 @@ class imregrid_test(unittest.TestCase):
         self.assertTrue((myia.shape() == [6, 6, 2, 30]).all())
         myia.done()
 
-        
+    def test_overlap(self):
+        """Test for notification if no overlap between input and output images"""
+        myia = self._myia
+        myia.fromshape("", [20, 20, 20, 4])
+        csys = myia.coordsys()
+        csys.setreferencevalue([1800, 0], 'direction')
+        myia.setcoordsys(csys.torecord())
+
+        ccopy = csys.copy()
+        xx = myia.regrid(outfile="first",csys=ccopy.torecord())
+        self.assertTrue(xx)
+        xx.done()
+
+        ccopy.setreferencevalue([1890, 0], 'direction')
+        self.assertRaises(Exception, myia.regrid, "second",csys=ccopy.torecord())
+        xx = myia.regrid("forth",csys=ccopy.torecord(), axes=2)
+        self.assertTrue(xx)
+        xx.done()
+        myia.fromshape("", [200, 200, 20, 4], csys=csys.torecord())
+        xx = myia.regrid(outfile="third",csys=ccopy.torecord())
+        self.assertTrue(xx)
+        xx.done()
+        ccopy.setreferencevalue(1.416e9, 'spectral')
+        self.assertRaises(Exception, myia.regrid, "fifth",csys=ccopy.torecord())
+        myia.fromshape("", [20, 20, 1001, 4], csys=csys.torecord())
+        xx = myia.regrid(outfile="sixth",csys=ccopy.torecord(), axes=2)
+        self.assertTrue(xx)
+        xx.done()
+        self.assertRaises(
+            Exception,myia.regrid, outfile="seventh",csys=ccopy.torecord(),
+            axes=2, region=rg.box([0,0,0,0],[19,19,998,3])
+        )
+
         
 def suite():
     return [imregrid_test]
