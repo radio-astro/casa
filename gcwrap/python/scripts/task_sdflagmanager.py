@@ -1,6 +1,7 @@
 import os
-from taskinit import *
+import string
 
+from taskinit import casalog, gentools
 import asap as sd
 import task_flagmanager
 import sdutil
@@ -31,7 +32,9 @@ class sdflagmanager_worker(sdutil.sdtask_template):
 
     def initialize_scan(self):
         self.scan = sd.scantable(self.infile_abs, average=False)
-
+        
+        # CAS-5410 Use private tools inside task scripts
+        fg = gentools(['fg'])[0]
         fg.done()
 
     def execute(self):
@@ -55,7 +58,8 @@ class sdflagmanager_worker(sdutil.sdtask_template):
         move(self.msfverfile, self.sdfverfile)
 
     def cleanup(self):
-        remove(self.msfile)
+        if hasattr(self, 'msfile'):
+            remove(self.msfile)
 
 def domanage(infilename, mode, versionname, oldname, comment, merge):
     availablemodes = ['list','save','restore','delete','rename']
