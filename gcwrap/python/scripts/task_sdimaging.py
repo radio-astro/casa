@@ -141,8 +141,8 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         if cell == '' or cell[0] == '':
             # Calc PB
             grid_factor = 3.
+            casalog.post("The cell size will be calculated using PB size")
             qPB = self._calc_PB(in_antenna)
-            casalog.post("Cell size is calculated using PB size")
             cell = '%f%s' % (qPB['value']/grid_factor, qPB['unit'])
             casalog.post("Using cell size = PB/%4.2F = %s" % (grid_factor, cell))
 
@@ -152,10 +152,12 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
 
         # imsize
         imsize = self.imsize
-        if imsize == [] or imsize[0] < 1:
+        if len(imsize) == 0 or imsize[0] < 1:
             imsize = self._get_imsize_from_map_extent(cellx, celly)
+            if len(self.phasecenter) > 0:
+                casalog.post("You defined phasecenter but not imsize. The image will cover as wide area as pointing in MS extends, but be centered at phasecenter. This could result in a strange image if your phasecenter is a part from the center of pointings", priority='warn')
             if imsize[0] > 1024 or imsize[1] > 1024:
-                casalog.post("The calculated image pixel number is larger than 1024. It would take time to generate the image. Please wait...", priority='warn')
+                casalog.post("The calculated image pixel number is larger than 1024. It could take time to generate the image depending on your computer resource. Please wait...", priority='warn')
 
         (nx,ny) = sdutil.get_nx_ny(imsize)
         self.imager_param['nx'] = nx
@@ -267,10 +269,15 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         my_ia.close()
 
     def _calc_PB(self, antenna):
+        """
+        Calculate the primary beam size of antenna,
+        using dish diamenter and rest frequency
+        """
         # CAS-5410 Use private tools inside task scripts
         my_qa = qatool()
         
         pb_factor = 1.175
+        # Antenna diameter
         self.open_table(self.antenna_table)
         antid = -1
         casalog.post("Calculating Pirimary beam size:")
@@ -290,19 +297,24 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
                 antdiam_ave = my_qa.quantity(diams.mean(), antdiam_unit)
         finally:
             self.close_table()
-        
-        rest_frequency = self.restfreq
-        if type(rest_frequency) in [float, numpy.float64]:
-            rest_frequency = my_qa.tos(my_qa.quantity(rest_frequency, 'Hz'))
-        if not my_qa.compare(rest_frequency, 'Hz'):
-            raise Exception, "Invalid rest frequency, %s" % str(rest_frequency)
-        wave_length = 0.2997924 / my_qa.convert(my_qa.quantity(rest_frequency),'GHz')['value']
+        # Reference frequency
+        ref_freq = self.restfreq
+        if type(ref_freq) in [float, numpy.float64]:
+            ref_freq = my_qa.tos(my_qa.quantity(ref_freq, 'Hz'))
+        if not my_qa.compare(ref_freq, 'Hz'):
+            msg = "Could not get the reference frequency. " + \
+                  "Your data does not seem to have valid one in selected field.\n" + \
+                  "PB is not calculated.\n" + \
+                  "Please set restreq or cell manually to generate an image."
+            raise Exception, msg
+        # Calculate PB
+        wave_length = 0.2997924 / my_qa.convert(my_qa.quantity(ref_freq),'GHz')['value']
         D_m = my_qa.convert(antdiam_ave, 'm')['value']
         lambda_D = wave_length / D_m * 3600. * 180 / numpy.pi
         PB = my_qa.quantity(pb_factor*lambda_D, 'arcsec')
         # Summary
         casalog.post("- Antenna diameter: %s m" % D_m)
-        casalog.post("- Reference Frequency: %s" % rest_frequency)
+        casalog.post("- Reference Frequency: %s" % ref_freq)
         casalog.post("PB size = %5.3f * lambda/D = %s" % (pb_factor, my_qa.tos(PB)))
         return PB
 
@@ -338,9 +350,11 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
                            my_qa.getvalue(dy) ) )
         nx = numpy.ceil( ( my_qa.convert(qwidth, my_qa.getunit(dx))['value'] /  \
                            my_qa.getvalue(dx) ) )
-        casalog.post("- Pointing extent: [%s, %s]" % (my_qa.tos(qwidth), my_qa.tos(qheight)))
+        casalog.post("- Pointing extent: [%s, %s]" % (my_qa.tos(qwidth), \
+                                                      my_qa.tos(qheight)))
         casalog.post("- Cell size: [%s, %s]" % (dx, dy))
-        casalog.post("Image pixel numbers to cover pointings: [%d, %d]" % (nx+1, ny+1))
+        casalog.post("Image pixel numbers to cover pointings: [%d, %d] (projected)" % \
+                     (nx+1, ny+1))
         return (int(nx+1), int(ny+1))
 
 
@@ -356,7 +370,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             try: dummy = pos.index(ipos)
             except: voids[ipos] = True
         if not any(voids):
-            raise Exception, "Failed to find pointing gap. The algorithm requires at least 2PI/%d of pointing gap" % npart
+            raise Exception, "Failed to find global pointing gap. The algorithm requires at least 2PI/%d of pointing gap" % npart
         rot_pos = []
         if (not voids[0]) and (not voids[npart-1]):
             gmax = -1
