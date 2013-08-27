@@ -3,7 +3,7 @@ import os
 import numpy
 import pylab as pl
 import asap as sd
-from taskinit import *
+from taskinit import casalog, gentools, qatool
 import sdutil
 
 @sdutil.sdtask_decorator
@@ -196,12 +196,14 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             mref = dirinfo['MEASINFO']['Ref'] if dirinfo.has_key('MEASINFO') \
                    else 'J2000'
             forms = ['dms','dms'] if mref.find('AZEL') != -1 else ['hms','dms']
-            qx = qa.quantity(numpy.median(dir[0,:,:]),units[0])
-            qy = qa.quantity(numpy.median(dir[1,:,:]),units[1])
+            # CAS-5410 Use private tools inside task scripts
+            my_qa = qatool()
+            qx = my_qa.quantity(numpy.median(dir[0,:,:]),units[0])
+            qy = my_qa.quantity(numpy.median(dir[1,:,:]),units[1])
             self.close_table()
             phasecenter = ' '.join([mref,
-                                    qa.formxxx(qx,forms[0]),
-                                    qa.formxxx(qy,forms[1])])
+                                    my_qa.formxxx(qx,forms[0]),
+                                    my_qa.formxxx(qy,forms[1])])
             self.imager_param['phasecenter'] = phasecenter
         else:
             self.imager_param['phasecenter'] = self.phasecenter
@@ -264,6 +266,9 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         my_ia.close()
 
     def _calc_PB(self, antenna):
+        # CAS-5410 Use private tools inside task scripts
+        my_qa = qatool()
+        
         pb_factor = 1.175
         self.open_table(self.antenna_table)
         antid = -1
@@ -278,14 +283,13 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
                         break
             antdiam_unit = self.table.getcolkeyword('DISH_DIAMETER', 'QuantumUnits')[0]
             if antid > 0:
-                antdiam_ave = qa.quantity(self.table.getcell('DISH_DIAMETER'),antdiam_unit)
+                antdiam_ave = my_qa.quantity(self.table.getcell('DISH_DIAMETER'),antdiam_unit)
             else:
                 diams = self.table.getcol('DISH_DIAMETER')
-                antdiam_ave = qa.quantity(diams.mean(), antdiam_unit)
+                antdiam_ave = my_qa.quantity(diams.mean(), antdiam_unit)
         finally:
             self.close_table()
         
-        my_qa = qatool()
         rest_frequency = self.restfreq
         if type(rest_frequency) in [float, numpy.float64]:
             rest_frequency = my_qa.tos(my_qa.quantity(rest_frequency, 'Hz'))
@@ -315,6 +319,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         finally:
             self.close_table()
 
+        # CAS-5410 Use private tools inside task scripts
         my_qa = qatool()
         ymax = pointing[1][0].max()
         ymin = pointing[1][0].min()
