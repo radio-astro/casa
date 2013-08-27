@@ -47,7 +47,7 @@
 
 		<param type="variant" name="defaultaxesvalues">
 			<description>List of values to assign to added degenerate axes when defaultaxes==True (ra,dec,freq,stokes)</description>
-			<value>[0.,0.,'1.415GHz','I']</value>
+			<value>[]</value>
 		</param>
 	</input>
 
