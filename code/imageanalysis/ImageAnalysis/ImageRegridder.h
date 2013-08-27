@@ -143,8 +143,27 @@ private:
 
 	TempImage<Float> _regridByVelocity() const;
 
+	static Bool _doImagesOverlap(
+		const ImageInterface<Float>& image0,
+		const ImageInterface<Float>& image1
+	);
 
+	static Bool _doLineSegmentsIntersect(
+		const Vector<Double>& line0point0,
+		const Vector<Double>& line0point1,
+		const Vector<Double>& line1point0,
+		const Vector<Double>& line1point1
+	);
 
+	static Double _2DCrossProduct(
+		const Vector<Double> v0,
+		const Vector<Double> v1
+	);
+
+	static Vector<std::pair<Double, Double> > _getDirectionCorners(
+		const DirectionCoordinate& dc,
+		const IPosition& directionShape
+	);
 
 };
 }
