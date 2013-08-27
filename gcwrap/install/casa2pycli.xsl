@@ -79,7 +79,15 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 <xsl:for-each select="aps:input">
 	<xsl:for-each select="aps:param">
 		<xsl:if test="not(@visibility) or @visibility!='hidden'">
-		<xsl:text>		</xsl:text><xsl:value-of select="@name"/><xsl:text>:	</xsl:text><xsl:value-of select="aps:description"/><xsl:text>
+		<xsl:choose>
+		<xsl:when test="aps:shortdescription">
+		<xsl:text>		</xsl:text><xsl:value-of select="@name"/><xsl:text>:	</xsl:text><xsl:value-of select="aps:shortdescription"/>
+		</xsl:when>
+		<xsl:otherwise>
+		<xsl:text>		</xsl:text><xsl:value-of select="@name"/><xsl:text>:	</xsl:text><xsl:value-of select="aps:description"/>
+		</xsl:otherwise>
+		</xsl:choose>
+		<xsl:text>
 </xsl:text>
 <xsl:text>		   Default Value: </xsl:text><xsl:value-of select="aps:value"/>
 <xsl:if test="aps:allowed">
@@ -462,7 +470,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 
 <xsl:template name="oneliners">
 <xsl:for-each select="aps:param">
-<xsl:text disable-output-escaping="yes">               &apos;</xsl:text><xsl:value-of select="@name"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;: &apos;</xsl:text><xsl:value-of select="aps:description" disable-output-escaping="yes"/><xsl:text disable-output-escaping="yes">&apos;,&#10;</xsl:text></xsl:for-each>
+	<xsl:text disable-output-escaping="yes">               &apos;</xsl:text><xsl:value-of select="@name"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;: &apos;</xsl:text><xsl:choose><xsl:when test="aps:shortdescription"><xsl:value-of select="aps:shortdescription" disable-output-escaping="yes"/></xsl:when><xsl:otherwise><xsl:value-of select="aps:description" disable-output-escaping="yes"/></xsl:otherwise></xsl:choose><xsl:text disable-output-escaping="yes">&apos;,&#10;</xsl:text></xsl:for-each>
 </xsl:template>
 
 <xsl:template name="oneliners2">
