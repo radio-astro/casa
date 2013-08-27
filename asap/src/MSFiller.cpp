@@ -256,8 +256,7 @@ class MSFillerVisitor: public BaseMSFillerVisitor, public MSFillerUtils {
 public:
   MSFillerVisitor(const Table &from, Scantable &to)
     : BaseMSFillerVisitor(from),
-      scantable(to),
-      freqToLsr_(False)
+      scantable(to)
   { 
     antennaId = 0 ;
     rowidx = 0 ;
@@ -714,7 +713,6 @@ public:
     }
     sysCalTsysCol.attach( sctab, tsysCol ) ;
   }
-  void setFreqToLsr(Bool b) { freqToLsr_ = b; }
   STHeader getHeader() { return header ; }
   uInt getNumBeam() { return nbeam ; }
   uInt getFilledRowNum() { return rowidx ; }
@@ -846,12 +844,6 @@ private:
     Double refval = qa[refchan].getValue( "Hz" ) ;
     if ( even )
       refval = 0.5 * ( refval + qa[refchan+1].getValue( "Hz" ) ) ;
-    if ( freqToLsr_ && freqRef != MFrequency::LSRK ) {
-      //cout << "do conversion to LSRK" << endl;
-      MeasFrame mframe( me, mp, md ) ;
-      MFrequency::Convert tolsr( freqRef, MFrequency::Ref( MFrequency::LSRK, mframe ) ) ;
-      refval = tolsr( Quantum<Double>( refval, "Hz" ) ).get( "Hz" ).getValue() ;
-    }
     
     // add new row to FREQUENCIES
     Table ftab = scantable.frequencies().table() ;
@@ -1320,7 +1312,6 @@ private:
   Vector<Double> syscalInterval;
   //String tsysCol;
   //String tcalCol;
-  Bool freqToLsr_;
 
   // MS subtables
   Table obstab;
@@ -1592,7 +1583,6 @@ MSFiller::MSFiller( casa::CountedPtr<Scantable> stable )
     antenna_( -1 ),
     antennaStr_(""),
     getPt_( True ),
-    freqToLsr_( False ),
     isFloatData_( False ),
     isData_( False ),
     isDoppler_( False ),
@@ -1639,9 +1629,6 @@ bool MSFiller::open( const std::string &filename, const casa::Record &rec )
     else {
       antenna_ = 0 ;
     }
-    if ( msrec.isDefined( "freq_tolsr" ) ) {
-      freqToLsr_ = msrec.asBool( "freq_tolsr" ) ;
-    }
   }
 
   MeasurementSet *tmpMS = new MeasurementSet( filename, Table::Old ) ;
@@ -1662,8 +1649,7 @@ bool MSFiller::open( const std::string &filename, const casa::Record &rec )
   os_ << "Parsing MS options" << endl ;
   os_ << "   getPt = " << (getPt_ ? "True" : "False") << endl ;
   os_ << "   antenna = " << antenna_ << endl ;
-  os_ << "   antennaStr = " << antennaStr_ << endl ;
-  os_ << "   freqToLsr = " << (freqToLsr_  ? "True" : "False") << LogIO::POST;
+  os_ << "   antennaStr = " << antennaStr_ << LogIO::POST;
 
   mstable_ = MeasurementSet( (*tmpMS)( tmpMS->col("ANTENNA1") == antenna_ 
                                        && tmpMS->col("ANTENNA1") == tmpMS->col("ANTENNA2") ) ) ;
@@ -1755,16 +1741,9 @@ void MSFiller::fill()
 
   // SUBTABLES: FREQUENCIES
   //string freqFrame = getFrame() ;
-  if ( freqToLsr_ ) {
-    string freqFrame = "LSRK" ;
-    table_->frequencies().setFrame( freqFrame ) ;
-    table_->frequencies().setFrame( freqFrame, True ) ;
-  }
-  else {
-    string baseFrame = frameFromSpwTable() ;
-    table_->frequencies().setFrame( baseFrame ) ;
-    table_->frequencies().setFrame( baseFrame, True ) ;
-  }
+  string baseFrame = frameFromSpwTable() ;
+  table_->frequencies().setFrame( baseFrame ) ;
+  table_->frequencies().setFrame( baseFrame, True ) ;
 
   // SUBTABLES: WEATHER
   fillWeather() ;
@@ -1810,7 +1789,6 @@ void MSFiller::fill()
       myVisitor.setWeatherTime( mwTime_, mwInterval_, mwIndex_ ) ;
     if ( isSysCal_ ) 
       myVisitor.setSysCalRecord( tcalrec_ ) ;
-    myVisitor.setFreqToLsr( freqToLsr_ ) ;
     
     //double t2 = mathutil::gettimeofday_sec() ;
     traverseTable(mstable_, cols, tms, &myVisitor);

@@ -340,13 +340,6 @@ class scantable(Scantable):
                           This is effective only when filename is MS.
                           The default (True) is to import direction
                           from MS/POINTING.
-
-            freq_tolsr:   Whether to convert frequency frame information
-                          to LSRK or not.
-                          This is effective only when filename is MS.
-                          The default (False) is to import frequency
-                          as is.
-                          
         """
         if average is None:
             average = rcParams['scantable.autoaverage']
@@ -375,7 +368,7 @@ class scantable(Scantable):
                 elif is_ms(filename):
                     # Measurement Set
                     opts={'ms': {}}
-                    mskeys=['getpt','antenna','freq_tolsr']
+                    mskeys=['getpt','antenna']
                     for key in mskeys:
                         if key in args.keys():
                             opts['ms'][key] = args[key]

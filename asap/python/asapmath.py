@@ -949,10 +949,11 @@ def almacal( scantab, scannos=[], calmode='none', verify=False ):
     return scal
 
 @asaplog_post_dec
-def splitant(filename, outprefix='',overwrite=False, getpt=True, freq_tolsr=False):
+def splitant(filename, outprefix='',overwrite=False, getpt=True):
     """
     Split Measurement set by antenna name, save data as a scantables,
-    and return a list of filename.
+    and return a list of filename. Note that frequency reference frame
+    is imported as it is in Measurement set.
     Notice this method can only be available from CASA.
     Prameter
        filename:    the name of Measurement set to be read.
@@ -965,14 +966,11 @@ def splitant(filename, outprefix='',overwrite=False, getpt=True, freq_tolsr=Fals
                     without writing the output. USE WITH CARE.
        getpt        Whether to import direction from MS/POINTING
                     table or not. Default is True (import direction).
-       freq_tolsr   Whether to convert frequency frame information
-                    to LSRK or not. Default is False (import as is).
-
     """
     # Import the table toolkit from CASA
-    from casac import casac
+    from taskinit import gentools
     from asap.scantable import is_ms
-    tb = casac.table()
+    tb = gentools(['tb'])[0]
     # Check the input filename
     if isinstance(filename, str):
         import os.path
@@ -982,9 +980,6 @@ def splitant(filename, outprefix='',overwrite=False, getpt=True, freq_tolsr=Fals
             s = "File '%s' not found." % (filename)
             raise IOError(s)
         # check if input file is MS
-        #if not os.path.isdir(filename) \
-        #       or not os.path.exists(filename+'/ANTENNA') \
-        #       or not os.path.exists(filename+'/table.f1'):
         if not is_ms(filename):
             s = "File '%s' is not a Measurement set." % (filename)
             raise IOError(s)
@@ -1000,28 +995,18 @@ def splitant(filename, outprefix='',overwrite=False, getpt=True, freq_tolsr=Fals
     outfiles=[]
     tb.open(tablename=filename,nomodify=True)
     ant1=tb.getcol('ANTENNA1',0,-1,1)
-    #anttab=tb.getkeyword('ANTENNA').split()[-1]
     anttab=tb.getkeyword('ANTENNA').lstrip('Table: ')
     tb.close()
-    #tb.open(tablename=filename+'/ANTENNA',nomodify=True)
     tb.open(tablename=anttab,nomodify=True)
     nant=tb.nrows()
     antnames=tb.getcol('NAME',0,nant,1)
     tb.close()
-    tmpname='asapmath.splitant.tmp'
     for antid in set(ant1):
-        tb.open(tablename=filename,nomodify=True)
-        tbsel=tb.query('ANTENNA1 == %s && ANTENNA2 == %s'%(antid,antid),tmpname)
-        scan=scantable(tmpname,average=False,antenna=int(antid),getpt=getpt,freq_tolsr=freq_tolsr,)
+        scan=scantable(filename,average=False,antenna=int(antid),getpt=getpt)
         outname=prefix+antnames[antid]+'.asap'
         scan.save(outname,format='ASAP',overwrite=overwrite)
-        tbsel.close()
-        tb.close()
-        del tbsel
         del scan
         outfiles.append(outname)
-        os.system('rm -rf '+tmpname)
-    del tb
     return outfiles
 
 @asaplog_post_dec
