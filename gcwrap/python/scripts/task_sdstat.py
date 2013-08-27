@@ -1,12 +1,13 @@
 import os
 import sys
-from taskinit import *
+import string
 from get_user import get_user
+import pylab as pl
 
+from taskinit import casalog, qatool
 import asap as sd
 from asap import _to_list
 from asap.scantable import is_scantable
-import pylab as pl
 import sdutil
 
 @sdutil.sdtask_decorator
@@ -75,6 +76,9 @@ class sdstat_worker(sdutil.sdtask_template):
         self.calc_statistics()
 
     def calc_statistics(self):
+        # CAS-5410 Use private tools inside task scripts
+        qa = qatool()
+
         # Warning for multi-IF data
         if len(self.scan.getifnos()) > 1:
             casalog.post( 'The scantable contains multiple IF data.', priority='WARN' )
@@ -219,6 +223,9 @@ class sdstat_worker(sdutil.sdtask_template):
             self.format_string='3.3f'
 
     def __set_unit_labels(self):
+        # CAS-5410 Use private tools inside task scripts
+        qa = qatool()
+
         if self.specunit != '': self.abclbl = self.specunit
         else: self.abclbl = self.scan.get_unit()
         if self.fluxunit != '': ordlbl = self.fluxunit
@@ -259,6 +266,9 @@ class sdstat_worker(sdutil.sdtask_template):
         return out 
 
 def check_unit(unit_in,valid_unit=None,default_unit=None):
+    # CAS-5410 Use private tools inside task scripts
+    qa = qatool()
+
     if qa.check(unit_in):
         return valid_unit
     else:
