@@ -257,6 +257,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       rowMap.resize();
       return;
     }
+    ///// In multi ms mode ndishpair may change when meeting a new ms
+    //// redo the calculation then
+    if(doneMainConv_p && (convSupport_p.nelements() != uInt(ndishpair)))
+      doneMainConv_p=False;
+
+
     // Get the coordinate system
     CoordinateSystem coords(iimage.coordinates());
     Int directionIndex=coords.findCoordinate(Coordinate::DIRECTION);
@@ -296,8 +302,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     pixFieldDir(1)=-pixFieldDir(1)*2.0*C::pi/Double(ny)/Double(convSampling);
 
     
-
-
+   
     if(!doneMainConv_p){
       Vector<Double> sampling;
       sampling = dc.increment();
