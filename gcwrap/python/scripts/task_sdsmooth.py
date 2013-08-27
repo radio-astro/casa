@@ -1,5 +1,5 @@
 import os
-from taskinit import *
+from taskinit import casalog, qatool
 
 import asap as sd
 from asap._asap import Scantable
@@ -87,6 +87,9 @@ class sdsmooth_engine(sdutil.sdtask_engine):
             sdutil.plot_scantable(self.worker.scan, pltfile, self.plotlevel, 'Raw spectra')
 
     def execute(self):
+        # CAS-5410 Use private tools inside task scripts
+        qa = qatool()
+
         scan = self.worker.scan
         if self.kernel == 'regrid':
             if not qa.isquantity(self.chanwidth):
