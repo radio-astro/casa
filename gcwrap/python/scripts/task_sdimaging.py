@@ -326,11 +326,18 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.open_table(self.pointing_table)
         try:
             dirinfo = self.table.getcolkeywords(colname)
-            dir_unit = dirinfo['QuantumUnits'] if dirinfo.has_key('QuantumUnits') \
-                    else ['rad', 'rad']
             pointing = self.table.getcol(colname)
         finally:
             self.close_table()
+
+        dir_unit = dirinfo['QuantumUnits'] if dirinfo.has_key('QuantumUnits') \
+                   else ['rad', 'rad']
+        mref = dirinfo['MEASINFO']['Ref'] if dirinfo.has_key('MEASINFO') \
+               else 'J2000'
+        if len(self.phasecenter) > 0:
+            rf = self.phasecenter.split()[0]
+            if rf != '' and rf != mref:
+                casalog.post("You are attempting to convert spatial coordinate frame. Pointing extent may not accrate in that case", priority='warn')
 
         # CAS-5410 Use private tools inside task scripts
         my_qa = qatool()
@@ -350,8 +357,8 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
                            my_qa.getvalue(dy) ) )
         nx = numpy.ceil( ( my_qa.convert(qwidth, my_qa.getunit(dx))['value'] /  \
                            my_qa.getvalue(dx) ) )
-        casalog.post("- Pointing extent: [%s, %s]" % (my_qa.tos(qwidth), \
-                                                      my_qa.tos(qheight)))
+        casalog.post("- Pointing extent: [%s, %s] (%s)" % (my_qa.tos(qwidth), \
+                                                      my_qa.tos(qheight), mref))
         casalog.post("- Cell size: [%s, %s]" % (dx, dy))
         casalog.post("Image pixel numbers to cover pointings: [%d, %d] (projected)" % \
                      (nx+1, ny+1))
