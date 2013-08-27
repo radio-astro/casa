@@ -22,7 +22,7 @@ def importfits(fitsimage,imagename,whichrep,whichhdu,zeroblanks,overwrite,defaul
 	defaultaxes -- Add the default 4D coordinate axes where they are missing
 	        default=False, example: defaultaxes=True
 	defaultaxesvalues -- List of values to assign to added degenerate axes when defaultaxes==True (ra,dec,freq,stokes)
-	        default = [0.,0.,'1.415GHz','I'], example: defaultaxesvalues=['13.5h', '-2.5deg', '88.5GHz', 'Q'] 
+	        default = [], example: defaultaxesvalues=['13.5h', '-2.5deg', '88.5GHz', 'Q'] 
 
 	"""
 
@@ -47,7 +47,7 @@ def importfits(fitsimage,imagename,whichrep,whichhdu,zeroblanks,overwrite,defaul
 
 		if defaultaxes:
 			if len(defaultaxesvalues)!=4:
-				raise TypeError, 'The parameter defaultaxesvalues must be a list of exactly 4 values: RA, Dec, Freq, Stokes'
+				raise TypeError, 'When defaultaxes==True, parameter defaultaxesvalues must be provided as a list of 4 values: RA, Dec, Freq, Stokes,\n e.g. [\'13.5h\', \'-2.5deg\', \'88.5GHz\', \'I\']'
 			_myia.open(fitsimage)
 			_mycs=_myia.coordsys()
 			acts = _mycs.axiscoordinatetypes()

@@ -7,7 +7,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   
 <task type="function" name="simalma" category="simulation" visibility="experimental">
 
-  <shortdescription>(Experimental) simple simulation task for ALMA </shortdescription>
+  <shortdescription>Simulation task for ALMA </shortdescription>
   <description>
     This task will simulate ALMA 12-m, ACA-7m and total power array data, 
     and image and analyze them. 
@@ -21,6 +21,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <description>root prefix for output file names</description>
       <value>sim</value>
     </param>
+
+    <param type="bool" name="dryrun">
+      <description>dryrun=True will only produce the informative report, not run simobserve/analyze</description>
+      <value>True</value>
+    </param>
     
 
 
@@ -32,7 +37,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value type="string"></value>
     </param>
 
-    <param type="string" name="inbright" subparam='true'>
+    <param type="string" name="inbright" subparam="true">
        <description>scale surface brightness of brightest pixel e.g. "1.2Jy/pixel"</description>
        <value type="string"></value>
     </param>
@@ -127,93 +132,40 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 -->
 
-<!--
-    <param type="string" name="caldirection" subparam="true">
-      <description>pt source calibrator [experimental]</description>
-      <value type="string"></value>
+
+    <param type="stringArray" name="antennalist">
+      <description>antenna position files of ALMA 12m and 7m arrays</description>
+      <value type="vector">
+	<value type="string">alma.cycle1.1.cfg</value>
+	<value type="string">aca.cycle1.cfg</value>
+      </value>
     </param>
-
-    <param type="string" name="calflux" subparam="true">
-      <description></description>
-      <value>1Jy</value>
-    </param>
--->
-
-
-
-
-
-
-<!--*************************************************************-->
-<!--  observe always reads from $project.skymodel file now -->
-
-<!--
-    <param type="bool" name="observe">
-      <description></description>
-      <value>True</value>
-    </param>
--->
-
-<!--
-    <param type="string" name="obsmode">
-      <description>observation mode to simulate [int(interferometer)|sd(singledish)|""(none)]</description>
-      <value>int</value>
-      <allowed kind="enum">
-	<value type="string"></value>
-	<value type="string">int</value>
-	<value type="string">sd</value>
-      </allowed>
-    </param>
--->
-
-<!--
-    <param type="string" name="refdate" subparam="true">
-      <description>date of observation - not critical unless concatting simulations</description>
-      <value>2014/01/01</value>
-    </param>
--->
-
-
-    <param type="string" name="antennalist">
-      <description>antenna position file of ALMA 12m array</description>
-      <value>alma_cycle1_1.cfg</value>
-    </param>
-
 
     <param type="string" name="hourangle">
       <description>hour angle of observation center e.g. -3:00:00, or "transit"</description>
       <value>transit</value>
     </param>
     
-    <param type="string" name="totaltime">
-      <description>total time of observation or number of repetitions</description>
-      <value>7200s</value>
+    <param type="stringArray" name="totaltime">
+      <description>total time of observation; vector corresponding to antennalist</description>
+      <value type="vector">
+	<value>20min</value>
+	<value>1h</value>
+      </value>
     </param>
 
-<!-- TODO put in more than one synth_antfile to do ALMA and ACA config - 
-it'll do them for the same amount of time -->
-
-<!--
-    <param type="string" name="sdantlist" subparam="true">
-      <description>single dish antenna position file</description>
-      <value></value>
+    <param type="int" name="tpnant">
+      <description>Number of total power antennas to use (0-4)</description>
+      <value>2</value>
+      <allowed kind="range">
+	<value range="min">0</value>
+	<value range="max">4</value>
+      </allowed>
     </param>
 
-    <param type="int" name="sdant" subparam="true">
-      <description>single dish antenna index in file</description>
-      <value>0</value>
-    </param>
-
--->
-    <param type="double" name="acaratio">
-      <description>Ratio of the total observation time for ACA in relation to 12-m array or 0 for no ACA</description>
-      <value>0.0</value>
-      <allowed kind="range"><value range="min">0</value></allowed>
-    </param>
-
-    <param type="string" name="acaconfig" subparam="true">
-      <description>Antenna configuration of ACA 7-m array [""|"cycle1"|"i"|"ns"]</description>
-      <value></value>
+    <param type="string" name="tptime" subparam="true">
+      <description>total observation time for total power</description>
+      <value type="string">0s</value>
     </param>
 
 
@@ -307,7 +259,7 @@ it'll do them for the same amount of time -->
     
     <param type="int" name="niter" subparam="true">
       <description>maximum number of iterations (0 for dirty image)</description>
-      <value>500</value>
+      <value>0</value>
     </param>
 
     <param type="string" name="threshold" subparam="true">
@@ -444,51 +396,11 @@ it'll do them for the same amount of time -->
 	</equals>
       </when>
       <!-- **********************************************************  -->
-      <when param="acaratio">
-	<notequals type="double" value="0">
-	  <default param="acaconfig"><value type="string"></value></default>
+      <when param="tpnant">
+	<notequals type="int" value="0">
+	  <default param="tptime"><value type="string">0s</value></default>
 	</notequals>
       </when>
-<!--
-      <when param="observe">
-	<equals type="bool" value="True">
-	  <default param="antennalist"><value type="string">alma.out10.cfg</value></default>
-	  <default param="refdate"><value type="string">2014/05/21</value></default>
-	  <default param="hourangle"><value type="string">transit</value></default>
-	  <default param="totaltime"><value>"7200s"</value></default>
-	  <default param="caldirection"><value type="string"></value></default>
-	  <default param="calflux"><value type="string">1Jy</value></default>
-          <default param="acaratio"><value type="double">0</value></default>
-	</equals>
-	<equals type="bool" value="False">
-	  <default param="antennalist"><value type="string"></value>
-	  <description>antenna info can be used to calculate the primary beam</description></default>
-	  <default param="sdantlist"><value type="string"></value>
-	  <description>antenna info can be used to calculate the primary beam</description></default>
-	  <default param="sdant"><value type="int">0</value></default>
-          <default param="useaca"><value>False</value></default>
- 	</equals>
-      </when>
--->
-      <!-- **********************************************************  -->
-<!--
-      <when param="thermalnoise">
-	<equals type="string" value=""/>
-	<equals type="string" value="False"/>
-	<equals type="string" value="F"/>
-	<equals type="string" value="tsys-atm">
-	  <default param="user_pwv"><value>1.</value></default>
-	  <default param="t_ground"><value>269.</value></default>
-	  <default param="seed"><value>11111</value></default>
-	</equals>	
-	<equals type="string" value="tsys-manual">
-	  <default param="t_ground"><value>269.</value></default>
-	  <default param="t_sky"><value>263.</value></default>
-	  <default param="tau0"><value>0.1</value></default>
-	  <default param="seed"><value>11111</value></default>
-	</equals>
-      </when>
--->
       <!-- **********************************************************  -->
       <when param="image">
 	<equals type="bool" value="True">
@@ -503,7 +415,7 @@ it'll do them for the same amount of time -->
 	    <value type="string"></value>
 	  </default>
 	  <default param="cell"><value type="string"></value></default>
-	  <default param="niter"><value>500</value></default>
+	  <default param="niter"><value>0</value></default>
 	  <default param="threshold"><value type="string">0.1mJy</value></default>
 <!--
 	  <default param="weighting"><value type="string">natural</value></default>

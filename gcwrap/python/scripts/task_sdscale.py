@@ -1,9 +1,8 @@
-import os
-import sys
-from taskinit import *
-import sdutil
+from taskinit import casalog
+
 import asap as sd
 from asap.scantable import is_scantable, is_ms
+import sdutil
 
 @sdutil.sdtask_decorator
 def sdscale(infile, antenna, factor, scaletsys, outfile, overwrite):

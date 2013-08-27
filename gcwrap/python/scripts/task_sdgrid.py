@@ -1,9 +1,7 @@
 # sd task for imaging
-import os
-import numpy
-import pylab as pl
+from taskinit import casalog
+
 import asap as sd
-from taskinit import *
 import sdutil
 
 @sdutil.sdtask_decorator

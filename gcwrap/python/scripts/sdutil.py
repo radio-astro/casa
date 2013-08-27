@@ -1,19 +1,16 @@
 import os
-from casac import casac
-from taskinit import casalog
-import asap as sd
-from asap import _to_list
-from asap.scantable import is_scantable, is_ms
 import numpy as np
 import traceback
 import string
-from taskinit import gentools
 import functools
 import re
 import abc
 
-qatl = casac.quanta()
-
+from casac import casac
+from taskinit import casalog, gentools
+import asap as sd
+from asap import _to_list
+from asap.scantable import is_scantable, is_ms
 
 def sdtask_decorator(func):
     """
@@ -372,6 +369,7 @@ def get_selector(in_scans=None, in_ifs=None, in_pols=None, \
 
 
 def get_restfreq_in_Hz(s_restfreq):
+    qatl = casac.quanta()
     if not qatl.isquantity(s_restfreq):
         mesg = "Input value is not a quantity: %s" % (str(s_restfreq))
         raise Exception, mesg

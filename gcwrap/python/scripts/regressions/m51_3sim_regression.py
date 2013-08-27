@@ -201,6 +201,8 @@ else:
 imsize = [512,512]
 #imdirection = 'B1950 23h59m59.96 -34d59m59.50'
 cell = '0.2arcsec'
+# 201320826 new default is feather not sd as model, so specify that 
+modelimage='$project.sd.image'
 
 analyze = True
 # show psf & residual are not available for SD-only simulation
@@ -297,6 +299,13 @@ refstats = { 'max': 0.19413,
              'rms': 0.02848,
              'sigma': 0.021183,
              'sum': 2305.2 }
+# 20130826
+refstats = { 'max': 0.1980,
+             'min': -0.02607,
+             'rms': 0.0302,
+             'sigma': 0.0228,
+             'sum': 2371. }
+
 
 
 
@@ -325,6 +334,12 @@ diffstats = {'max': 0.036524,
              'rms': 0.023563,
              'sigma': 0.02028,
              'sum': -1433.9 }
+# 20130826
+diffstats = {'max': 0.03680,
+             'min': -0.1586,
+             'rms': 0.02516,
+             'sigma': 0.02181,
+             'sum': -1500. }
 
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,

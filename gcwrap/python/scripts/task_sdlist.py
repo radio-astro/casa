@@ -1,6 +1,3 @@
-import os
-from taskinit import *
-
 import asap as sd
 import sdutil
 

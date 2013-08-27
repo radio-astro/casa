@@ -28,7 +28,6 @@
 #include <images/Images/ImageExprParse.h>
 #include <images/Images/ImageFITSConverter.h>
 #include <images/Images/ImageInterface.h>
-#include <images/Images/ImageRegrid.h>
 #include <images/Images/ImageStatistics.h>
 #include <images/Images/ImageSummary.h>
 #include <images/Images/ImageUtilities.h>

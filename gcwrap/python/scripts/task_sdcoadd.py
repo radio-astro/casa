@@ -1,9 +1,6 @@
-import os
-from taskinit import *
+from taskinit import casalog
 
 import asap as sd
-from asap.scantable import is_scantable
-import pylab as pl
 import sdutil
 
 @sdutil.sdtask_decorator

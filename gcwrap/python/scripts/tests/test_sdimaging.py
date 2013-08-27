@@ -747,6 +747,142 @@ class sdimaging_test3(sdimaging_unittest_base,unittest.TestCase):
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.419536e+09Hz'}
         self._checkstats(self.outfile,refstats)
 
+###
+# Test auto-resolution of spatial gridding parameters
+###
+class sdimaging_test4(sdimaging_unittest_base,unittest.TestCase):
+    """
+    Test auto-resolution of spatial gridding parameters
+
+       - manual setting
+       - all
+       - phasecenter
+       - cell (get rest freq from table)
+       - imsize
+    """
+    prefix=sdimaging_unittest_base.taskname+'Test4'
+    outfile=prefix+sdimaging_unittest_base.postfix
+    # auto calculation result of imsize
+    cell_auto = "162.545308arcsec"
+    imsize_auto = [73, 68]
+    phasecenter_auto = "J2000 17:17:59.64 59.29.59.926"
+    # manual setup
+    imsize = [40, 35]
+    cell = ["320arcsec", "350arcsec"]
+    phasecenter = "J2000 17:18:05 59.30.05"
+
+    def setUp(self):
+        if os.path.exists(self.rawfile):
+            shutil.rmtree(self.rawfile)
+        shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if os.path.exists(self.outfile):
+            shutil.rmtree(self.outfile)
+
+        default(sdimaging)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+
+    def test401(self):
+        """test 401: Set phasecenter, cell, and imsize manually"""
+        res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,dochannelmap=False)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during imaging')
+        self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
+        self._checkdirax(self.outfile,self.phasecenter,self.cell,self.imsize)
+    def test402(self):
+        """test 402: Automatic resolution of phasecenter, cell, and imsize"""
+        res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell="",imsize=[],phasecenter="",dochannelmap=False)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during imaging')
+        self._checkshape(self.outfile,self.imsize_auto[0],self.imsize_auto[1],1,1)
+        self._checkdirax(self.outfile,self.phasecenter_auto,self.cell_auto,self.imsize_auto)
+    def test403(self):
+        """test 403: Resolve phasecenter"""
+        res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter="",dochannelmap=False)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during imaging')
+        self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
+        self._checkdirax(self.outfile,self.phasecenter_auto,self.cell, self.imsize)
+
+    def test404(self):
+        """test 404: Resolve cell"""
+        res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell="",imsize=self.imsize,phasecenter=self.phasecenter,dochannelmap=False)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during imaging')
+        self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
+        self._checkdirax(self.outfile,self.phasecenter,self.cell_auto,self.imsize)
+
+    def test405(self):
+        """test 405: Resolve imsize"""
+        ref_imsize = [38, 32]
+        res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=[],phasecenter=self.phasecenter,dochannelmap=False)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during imaging')
+        self._checkshape(self.outfile,ref_imsize[0],ref_imsize[1],1,1)
+        self._checkdirax(self.outfile,self.phasecenter,self.cell,ref_imsize)
+
+
+    def _checkdirax(self, imagename, center, cell, imsize):
+        """ Test image center, cell size and imsize"""
+        cell = self._format_dir_list(cell)
+        imsize = self._format_dir_list(imsize)
+        ia.open(imagename)
+        csys = ia.coordsys()
+        ret = ia.summary()
+        ia.close()
+        ra_idx = csys.findaxisbyname('ra')
+        dec_idx = csys.findaxisbyname('dec')
+        ra_unit = ret['axisunits'][ra_idx]
+        dec_unit = ret['axisunits'][dec_idx]
+        # imsize
+        self.assertEqual(imsize[0], ret['shape'][ra_idx],\
+                         msg="nx = %d (expected: %d)" % \
+                         (imsize[0], ret['shape'][ra_idx]))
+        self.assertEqual(imsize[1], ret['shape'][dec_idx],\
+                         msg="nx = %d (expected: %d)" % \
+                         (imsize[1], ret['shape'][dec_idx]))
+        # image center
+        tol = "1arcsec"
+        cen_arr = center.split()
+        cen_ref = me.direction(*cen_arr)
+        cen_x = (qa.convert(cen_ref['m0'], 'rad')['value'] % (numpy.pi*2))
+        cen_y = qa.convert(cen_ref['m1'], 'rad')['value']
+        ref_x = qa.convert(qa.quantity(ret['refval'][ra_idx],ra_unit),'rad')['value']
+        ref_x = (ref_x % (numpy.pi*2))
+        ref_y = qa.convert(qa.quantity(ret['refval'][dec_idx],dec_unit),'rad')['value']
+        tol_val = qa.convert(tol, 'rad')['value']
+        self.assertTrue(abs(ref_x-cen_x) < tol_val,
+                        msg="center_x = %f %s (expected: %f)" % \
+                        (ref_x, ra_unit, cen_x))
+        self.assertTrue(abs(ref_y-cen_y) < tol_val,
+                        msg="center_y = %f %s (expected: %f)" % \
+                        (ref_x, ra_unit, cen_x))
+        
+        # cell (imager seems to set negative incr for dx)
+        dx = - qa.convert(cell[0], ra_unit)['value']
+        dy = qa.convert(cell[1], dec_unit)['value']
+        incx = ret['incr'][ra_idx]
+        incy = ret['incr'][dec_idx]
+        self.assertAlmostEqual((incx-dx)/dx, 0., places=5, \
+                               msg="cellx = %f %s (expected: %f)" % \
+                               (incx, ra_unit, dx))
+        self.assertAlmostEqual((incy-dy)/dy, 0., places=5, \
+                               msg="celly = %f %s (expected: %f)" % \
+                               (incy, dec_unit, dy))
+
+    def _format_dir_list(self, inval):
+        if type(inval) == str:
+            return [inval, inval]
+        elif len(inval) == 1:
+            return [inval[0], inval[0]]
+        return inval[0:2]
+    
+
 def suite():
     return [sdimaging_test0,sdimaging_test1,
-            sdimaging_test2,sdimaging_test3]
+            sdimaging_test2,sdimaging_test3,
+            sdimaging_test4]

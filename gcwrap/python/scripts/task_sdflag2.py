@@ -1,12 +1,12 @@
 import os
-from taskinit import *
-
-import sdutil
-import asap as sd
-from asap.scantable import is_scantable,is_ms
-from asap.flagplotter import flagplotter
-import pylab as pl
 from numpy import ma, array, logical_not, logical_and
+
+from taskinit import casalog
+
+import asap as sd
+from asap.scantable import is_scantable, is_ms
+from asap.flagplotter import flagplotter
+import sdutil
 
 def sdflag2(infile, antenna, specunit, restfreq, frame, doppler, mode, unflag, scans, field, ifs, pols, maskflag, clipminmax, clipoutside, showflagged, rows, outfile, outform, overwrite, plotlevel):
     with sdutil.sdtask_manager(sdflag_worker, locals()) as worker:
