@@ -1,11 +1,11 @@
 # sd task for image processing (press or basket)
 import os
+import time
 import numpy
 import numpy.fft as npfft
 import pylab as pl
 import asap as sd
-from taskinit import *
-import time
+from taskinit import casalog, gentools, utilstool, qatool
 import sdutil
 
 @sdutil.sdtask_decorator
@@ -116,6 +116,9 @@ class sdimprocess_worker(sdutil.sdtask_interface):
         ###
         casalog.post( 'Apply Pressed-out method' )
 
+        # CAS-5410 Use private tools inside task scripts
+        ia = gentools(['ia'])[0]
+
         # mask
         self.image = ia.newimagefromimage(infile=self.infiles,outfile=self.tmpmskname)
         imshape = self.image.shape()
@@ -164,6 +167,8 @@ class sdimprocess_worker(sdutil.sdtask_interface):
         # smoothing
         #bmajor = 0.0
         #bminor = 0.0
+        # CAS-5410 Use private tools inside task scripts
+        qa = qatool()
         if type(self.beamsize) == str:
             qbeamsize = qa.quantity(self.beamsize)
         else:
@@ -213,9 +218,11 @@ class sdimprocess_worker(sdutil.sdtask_interface):
         #polyimage = convimage.fitpolynomial( fitfile=tmppolyname, axis=fitaxis, order=numpoly, overwrite=True )
         #polyimage.done()
         if os.path.exists( self.tmppolyname ):
+            # CAS-5410 Use private tools inside task scripts
+            cu = utilstool()
             cu.removetable([self.tmppolyname])
         self.convimage.setbrightnessunit('K')
-        resultdic = self.convimage.fitprofile( model=self.tmppolyname, axis=fitaxis, poly=self.numpoly, ngauss=0, multifit=True )
+        resultdic = self.convimage.fitprofile( model=self.tmppolyname, axis=fitaxis, poly=self.numpoly, ngauss=0, multifit=True, gmncomps=0 )
         polyimage = ia.newimage( self.tmppolyname )
 
         # subtract fitted image from original map
@@ -250,6 +257,9 @@ class sdimprocess_worker(sdutil.sdtask_interface):
         # Basket-Weaving (Emerson & Grave 1988)
         ###
         casalog.post( 'Apply Basket-Weaving' )
+
+        # CAS-5410 Use private tools inside task scripts
+        ia = gentools(['ia'])[0]
 
         # initial setup
         outimage = ia.newimagefromimage( infile=self.infiles[0], outfile=self.outfile, overwrite=self.overwrite )
@@ -530,5 +540,7 @@ class sdimprocess_worker(sdutil.sdtask_interface):
                 else:
                     if os.path.exists(f):
                         existing_files.append(f)
+        # CAS-5410 Use private tools inside task scripts
+        cu = utilstool()
         cu.removetable(existing_files)
     
