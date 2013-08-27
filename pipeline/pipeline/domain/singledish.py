@@ -256,7 +256,10 @@ class Frequencies(spectralwindow.SpectralWindow,SingleDishBase):
                   8: 'CMB' }
 
     def __getstate__(self):
-        return self.__dict__
+        state_dictionary = self.__dict__.copy()
+        for attribute in self.__slots__:
+            state_dictionary[attribute] = getattr(self, attribute)
+        return state_dictionary
 
     def __setstate__(self, d):
         self.__dict__ = d
