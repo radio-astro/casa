@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LCPolygon.h 21038 2011-04-04 12:16:23Z gervandiepen $
+//# $Id: LCPolygon.h 21389 2013-08-27 11:44:07Z gervandiepen $
 
 #ifndef LATTICES_LCPOLYGON_H
 #define LATTICES_LCPOLYGON_H
@@ -56,16 +56,19 @@ template<class T> class Matrix;
 // <linkto class=LCRegion>LCRegion</linkto>.
 // It makes it possible to define a 2-dimensional region by means
 // an ordered collection of points with straight lines connecting
-// adjacent points. The last points can be equal to the first one.
-// If not, an extra point gets added to get the closing line.
+// adjacent points. The last point can be equal to the first one.
+// If not, an extra point gets added to form the closing line.
 // <p>
 // The polygon can be as complex as one likes. E.g. it is possible to
 // have a rectangle with an inner rectangle to exclude interior points.
 // <p>
 // The points defining the polygon do not need to coincide with pixel points.
-// At least one point of the polygon must be within the lattice space.
-// Points may be outside the lattice meaining that only part of the
-// polygon surface is actually used.
+// Points may be outside the lattice meaning that only part of the
+// polygon surface is actually used. However, at least some part of the
+// polygon surface has to intersect with the lattice.
+// <br>A lattice pixel is part of the polygon surface if the center of
+// the pixel is on or inside the polygon. Note that 0 is the beginning ond
+// 1 is the end of the first pixel. Thus 0.5 is its center.
 // </synopsis> 
 
 // <example>
