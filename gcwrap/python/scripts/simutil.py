@@ -15,6 +15,18 @@ import pylab as pl
 
 im, cb, ms, tb, fg, me, ia, po, sm, cl, cs, rg, sl, dc, vp, msmd, fi, fn, imd = gentools()
 
+
+# functions defined outside of the simutil class
+def is_array_type(value):
+    array_type = [list, tuple, pl.ndarray]
+    if type(value) in array_type:
+        return True
+    else:
+        return False
+
+
+
+
 class compositenumber:
     def __init__(self, maxval=100):
         self.generate(maxval)
@@ -176,6 +188,7 @@ class simutil:
         if type(out)==type(" "):
             out=[out]
 
+        clr=""
         toterm=False
         if priority==None:
             clr="\x1b[32m"
@@ -222,7 +235,7 @@ class simutil:
     def isreport(self):
         # is there an open report file?
         try:
-            if self.report.name() == self.reportfile:
+            if self.report.name == self.reportfile:
                 return True
             else:
                 return False                
@@ -577,7 +590,7 @@ class simutil:
                 x,y = self.getTrianglePoints(xsize_asec, ysize_asec, angle, spacing_asec)
             else:
                 if beam<=0: 
-                    beam=spacing_asec*1.2*sqrt(3) # ASSUMES Nyquist and arcsec
+                    beam=spacing_asec*pbcoeff*pl.sqrt(3) # ASSUMES ALMA default and arcsec
                 x,y = self.getTriangularTiling(xsize_asec, ysize_asec, angle, spacing_asec, beam)
 
             pointings = []
@@ -933,10 +946,10 @@ class simutil:
         if telescope==None: telescope=self.telescopename
         telescope=str.upper(telescope)
         
-        obs =['ALMA','ACA','EVLA','VLA','SMA']
-        d   =[ 12.   ,7.,   25.  , 25.  , 6. ]
-        ds  =[ 0.75,  0.75, 0.364, 0.364,0.35] # subreflector size for ACA?
-        eps =[ 25.,   20.,  300,   300  ,15. ] # antenna surface accuracy
+        obs =['ALMASD','ALMA','ACA','EVLA','VLA','SMA']
+        d   =[ 12.    ,12.   ,7.   ,25.   ,25.  , 6. ]
+        ds  =[ 0.75   ,0.75  ,0.75 ,0.364 ,0.364,0.35] # subreflector size for ACA?
+        eps =[ 25.    ,25.   ,20.  ,300   ,300  ,15. ] # antenna surface accuracy
         
         cq  =[ 0.845, 0.845,  0.88,  0.79, 0.86] # correlator eff
         # ALMA includes quantization eff of 0.96    
@@ -986,7 +999,7 @@ class simutil:
         eta_q = cq[iobs]
 
         # Receiver radiation temperature in K.         
-        if telescope=='ALMA' or telescope=='ACA':
+        if telescope=='ALMA' or telescope=='ACA' or telescope=='ALMASD':
             # ALMA-40.00.00.00-001-A-SPE.pdf
             # http://www.eso.org/sci/facilities/alma/system/frontend/
 
@@ -1230,7 +1243,7 @@ class simutil:
             self.imclean(tmpname+".ms",tmpname,
                        "csclean",cellsize,[128,128],
                        "J2000 00:00:00.00 "+qa.angle(dec)[0],
-                       100,"0.01mJy","natural",[],"I")
+                       False,100,"0.01mJy","natural",[],"I")
 
             ia.open(tmpname+".image")
             stats= ia.statistics(robust=True, verbose=False,list=False)
@@ -2709,12 +2722,14 @@ class simutil:
     # image/clean subtask
 
     def imclean(self,mstoimage,imagename,
-                cleanmode,cell,imsize,imcenter,niter,threshold,weighting,
+                cleanmode,cell,imsize,imcenter,interactive,niter,threshold,weighting,
                 outertaper,stokes,sourcefieldlist="",modelimage="",mask=[]):
         from clean import clean
 
+        from simutil import is_array_type
+
         # determine channelization from (first) ms:
-        if type(mstoimage)==type([]):
+        if is_array_type(mstoimage):
             ms0=mstoimage[0]
             if len(mstoimage)==1:
                 mstoimage=mstoimage[0]
@@ -2757,6 +2772,8 @@ class simutil:
             self.msg(str(imsize)+' is not an acceptable imagesize, will use '+str(optsize)+" instead",priority="warn")
             imsize=optsize
                 
+        if not interactive:
+            interactive=False
         # print clean inputs no matter what, so user can use them.
         # and write a clean.last file
         cleanlast=open(imagename+".clean.last","write")
@@ -2810,7 +2827,9 @@ class simutil:
         cleanlast.write('multiscale              = []\n')
         cleanlast.write('negcomponent            = -1\n')
         cleanlast.write('smallscalebias          = 0.6\n')
-        cleanlast.write('interactive             = False\n')
+        cleanlast.write('interactive             = '+str(interactive)+'\n')
+        if interactive:
+            cleanstr=cleanstr+",interactive=True"
         if type(mask)==type(" "):
             cleanlast.write('mask                    = "'+mask+'"\n')
             cleanstr=cleanstr+",mask='"+mask+"'"
@@ -2886,6 +2905,7 @@ class simutil:
               psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
               imsize=imsize, cell=map(qa.tos,cell), phasecenter=imcenter,
               stokes=stokes, weighting=weighting, robust=robust,
+              interactive=interactive,
               uvtaper=uvtaper,outertaper=outertaper, pbcor=True, mask=mask,
               modelimage=modelimage)
 
@@ -3286,32 +3306,24 @@ class simutil:
         cx=pl.mean(stnx)
         cy=pl.mean(stny)
         cz=pl.mean(stnz)
-        lat,lon,el = util.itrf2loc(stnx,stny,stnz,cx,cy,cz)
+        lat,lon,el = self.itrf2loc(stnx,stny,stnz,cx,cy,cz)
         
         #l = {}
-        neighborlist = []
+        #neighborlist = []
         maxlength = 0
         minlength = 1e9
-        mylengths = pl.zeros([nAntennas,nAntennas])
+        #mylengths = pl.zeros([nAntennas,nAntennas])
+        mylengths=pl.zeros(nAntennas*(nAntennas-1)/2)
+        k=0
 
         for i in range(nAntennas):
-            neighborlist.append([names[i]])
-            # For the ith antenna, we now measure each baseline, and if it is less
-            # than half the specified criterion, we add it to the neighborlist for
-            # the ith antenna.  This will yield a group of antennas within a circle
-            # of diameter of length centered near the ith antenna.
             for j in range(i+1,nAntennas):
                 x = lat[i]-lat[j]
                 y = lon[i]-lon[j]
                 z =  el[i]- el[j]
-                mylengths[i][j] = (x**2 + y**2 + z**2)**0.5
-                if (mylengths[i][j] > maxlength):
-                    maxlength = mylengths[i][j]
-                if (mylengths[i][j] < minlength):
-                    minlength = mylengths[i][j]
-                #l['%s-%s'%(names[i],names[j])] = mylengths[i][j]
-    
-        print "Found %d baselines" % (len(l))
+                #mylengths[i][j] = (x**2 + y**2 + z**2)**0.5
+                mylengths[k]=(x**2 + y**2 + z**2)**0.5
+                k=k+1
         
         return mylengths
 
@@ -3319,18 +3331,11 @@ class simutil:
 ######################
     def approxBeam(self,configfile,freq):
         # freq must be in GHz
-        lengths=self.baselineLengths(configfile)
-        rmslength = pl.sqrt(pl.mean(lengths.flatten()**2))
+        mylengths=self.baselineLengths(configfile)
+        rmslength = pl.sqrt(pl.mean(mylengths.flatten()**2))
         from scipy.stats import scoreatpercentile
         ninety = scoreatpercentile(mylengths, 90)
 
-        return 0.3/freq/ninety*3600.*180/pl.pi # lambda/b converted to arcsec
+        return 0.2997924/freq/ninety*3600.*180/pl.pi # lambda/b converted to arcsec
 
         
-    def is_array_type(self,value):
-        array_type = [list, tuple, numpy.ndarray]
-        if type(value) in array_type:
-            return True
-        else:
-            return False
-

@@ -8,10 +8,15 @@ import pdb
 def simanalyze(
     project=None,
     image=None,
-    imagename=None,
-    vis=None, modelimage=None, cell=None, imsize=None, imdirection=None,
-    niter=None, threshold=None,
+    # if image==False:
+    imagename=None, 
+    skymodel=None,
+    # else:
+    vis=None, modelimage=None, imsize=None, imdirection=None, cell=None,
+    interactive=None, niter=None, threshold=None,
     weighting=None, mask=None, outertaper=None, stokes=None,
+    featherimage=None,
+    # endif
     analyze=None,
     showuv=None, showpsf=None, showmodel=None,
     showconvolved=None, showclean=None, showresidual=None, showdifference=None,
@@ -41,6 +46,7 @@ def simanalyze(
     util = simutil()
     if verbose: util.verbose = True
     msg = util.msg
+    from simutil import is_array_type
 
     # put output in directory called "project"
     fileroot = project
@@ -75,71 +81,18 @@ def simanalyze(
 
         # handle '$project' in modelimage
         modelimage = modelimage.replace('$project',project)
+        featherimage = featherimage.replace('$project',project)
 
-# things we need: model_cell, model_direction if user doesn't specify - 
-# so find those first, and get information using util.modifymodel
-# with skymodel=newmodel
-
-        components_only=False
-
-        # first look for skymodel, if not then compskymodel
-        skymodels=glob.glob(fileroot+"/"+project+"*.skymodel")+glob.glob(fileroot+"/"+project+"*.newmodel")
-        nmodels=len(skymodels)
-        if nmodels>1:
-            msg("Found %i sky model images:" % nmodels)
-            for ff in skymodels:
-                msg("   "+ff)            
-            msg("Using "+skymodels[0])
-        if nmodels>=1:
-            skymodel=skymodels[0]
-        else:
-            skymodel=""
-        
-        if os.path.exists(skymodel):
-            msg("Sky model image "+skymodel+" found.")
-        else:
-            skymodels=glob.glob(fileroot+"/"+project+"*.compskymodel")
-            nmodels=len(skymodels)
-            if nmodels>1:
-                msg("Found %i sky model images:" % nmodels)
-                for ff in skymodels:
-                    msg("   "+ff)
-                msg("Using "+skymodels[0])
-            if nmodels>=1:
-                skymodel=skymodels[0]
-            else:
-                skymodel=""
-
-            if os.path.exists(skymodel):
-                msg("Sky model image "+skymodel+" found.")
-                components_only=True
-            else:
-                msg("Can't find a model image in your project directory, named skymodel or compskymodel - output image will be been created, but comparison with the input model is not possible.",priority="error")
-                return False
-
-        modelflat = skymodel+".flat"
-        if not os.path.exists(modelflat):
-            util.flatimage(skymodel,verbose=verbose)
-
-        # modifymodel just collects info if skymodel==newmodel
-        returnpars = util.modifymodel(skymodel,skymodel,
-                                      "","","","","",-1,
-                                      flatimage=False)
-        if not returnpars:
-            return False
-
-        (model_refdir,model_cell,model_size,
-         model_nchan,model_center,model_width,
-         model_stokes) = returnpars
+        #=========================
+        # things we need: model_cell, model_direction if user doesn't specify - 
+        # so find those first, and get information using util.modifymodel
+        # with skymodel=newmodel
 
 
-        cell_asec=qa.convert(model_cell[0],'arcsec')['value']
-
-
-        #####################################################################
-        # clean if desired, use noisy image for further calculation if present
-        # todo suggest a cell size from psf?
-        #####################################################################
+        # we need to parse either the mslist or imagename (if image=False) 
+        # first, so that we can pick the appropriate skymodel, 
+        # if there are several.
+        skymodel_searchstring="NOT SPECIFIED"
         if (not image):
             user_imagename=imagename
             if user_imagename=="default" or len(user_imagename)<=0:
@@ -148,54 +101,30 @@ def simanalyze(
                     msg("can't find any image in project directory",priority="error")
                     return False
                 if len(images)>1:
-                    msg("found multiple images in project directory")
-                    msg("using  "+images[0])
+                    msg("found multiple images in project directory",priority="warn")
+                    msg("using  "+images[0],priority="warn")
                 imagename=images[0]
             # trim .image suffix:
             imagename= imagename.replace(".image","")
+            
+            # if the user hasn't specified a sky model image, we can try to 
+            # see if their imagename contains something like the project and 
+            # configuration, as it would if simobserve created it.
+            user_skymodel=skymodel
+            if not os.path.exists(user_skymodel):
+                if os.path.exists(fileroot+"/"+user_skymodel):
+                    user_skymodel=fileroot+"/"+user_skymodel
+                elif len(user_skymodel)>0:
+                    raise Exception,"Can't find your specified skymodel "+user_skymodel
+            # try to strip a searchable identifier
+            tmpstring=user_skymodel.split("/")[-1]            
+            skymodel_searchstring=tmpstring.replace(".image","")
+            
 
 
-        beam_current = False
+
+            
         if image:
-
-            # make sure cell is defined
-            if type(cell) == type([]):
-                if len(cell) > 0:
-                    cell0 = cell[0]
-                else:
-                    cell0 = ""
-            else:
-                cell0 = cell
-            if len(cell0) <= 0:
-                cell = model_cell
-            if type(cell) == type([]):
-                if len(cell) == 1:
-                    cell = [cell[0],cell[0]]
-            else:
-                cell = [cell,cell]
-            
-            # cells are positive by convention
-            cell = [qa.abs(cell[0]),qa.abs(cell[1])]
-            
-            # and imsize
-            if type(imsize) == type([]):
-                if len(imsize) > 0:
-                    imsize0 = imsize[0]
-                    if len(imsize) > 1:
-                        imsize1 = imsize[1]
-                    else:
-                        imsize1 = imsize0
-                else:
-                    imsize0 = -1
-            else:
-                imsize0 = imsize
-            if imsize0 <= 0:
-                imsize = [int(pl.ceil(qa.convert(qa.div(model_size[0],cell[0]),"")['value'])),
-                          int(pl.ceil(qa.convert(qa.div(model_size[1],cell[1]),"")['value']))]
-            else:
-                imsize=[imsize0,imsize1]
-
-
             # check for default measurement sets:
             default_mslist = glob.glob(fileroot+"/*ms")
             n_default=len(default_mslist)
@@ -248,7 +177,7 @@ def simanalyze(
                             i=default_mslist.index(ms1_noisy)
                             default_requested[i]=True
                             if vis == "default": continue
-                            msg("You requested "+ms1+" but there is a corrupted (noisy) version of the ms in your project directory - if your intent is to model noisy data you may want to check inputs",priority="warn")
+                            msg("You requested "+ms1+" but there is a noisy version of the ms in your project directory - if your intent is to model noisy data you may want to check inputs",priority="warn")
 
                     # check if the ms is tp data or not.
                     if util.ismstp(ms1,halt=False):
@@ -278,6 +207,12 @@ def simanalyze(
                     msg("Project directory contains "+default_mslist[i]+" but you have not requested to include it in your simulated image.",priority=priority)
 
 
+            # now try to parse the mslist for an identifier string that 
+            # we can use to find the right skymodel if there are several
+            tmpstring=(mstoimage[0]).split("/")[-1]         
+            skymodel_searchstring=tmpstring.replace(".ms","")
+
+
 
             # more than one to image?
             if len(mstoimage) > 1:
@@ -290,6 +225,121 @@ def simanalyze(
                 concat(mstoimage,concatms)
                 mstoimage=[concatms]
 
+
+
+
+        #========================================================
+        # now we can search for skymodel, and if there are several, 
+        # pick the one that is closest to either the imagename, 
+        # or the first MS if there are several MS to image.
+
+        components_only=False
+
+        # first look for skymodel, if not then compskymodel
+        skymodels=glob.glob(fileroot+"/"+project+"*.skymodel")+glob.glob(fileroot+"/"+project+"*.newmodel")
+        nmodels=len(skymodels)
+        if nmodels>1:
+            msg("Found %i sky model images:" % nmodels)
+            # use the skymodel_searchstring to try to pick the right one
+            # print them out for the user while we're at it.
+            skymodel_index=0
+            for i in range(nmodels):
+                msg("   "+skymodels[i])
+                if skymodels[i].count(skymodel_searchstring)>0:
+                    skymodel_index=i
+            msg("Using skymodel "+skymodels[skymodel_index],priority="warn")
+        if nmodels>=1:
+            skymodel=skymodels[0]
+        else:
+            skymodel=""
+
+        if os.path.exists(skymodel):
+            msg("Sky model image "+skymodel+" found.")
+        else:
+            skymodels=glob.glob(fileroot+"/"+project+"*.compskymodel")
+            nmodels=len(skymodels)
+            if nmodels>1:
+                msg("Found %i sky model images:" % nmodels)
+                for ff in skymodels:
+                    msg("   "+ff)
+                msg("Using "+skymodels[0])
+            if nmodels>=1:
+                skymodel=skymodels[0]
+            else:
+                skymodel=""
+
+            if os.path.exists(skymodel):
+                msg("Sky model image "+skymodel+" found.")
+                components_only=True
+            else:
+                msg("Can't find a model image in your project directory, named skymodel or compskymodel - output image will be been created, but comparison with the input model is not possible.",priority="error")
+                return False
+
+        modelflat = skymodel+".flat"
+        if not os.path.exists(modelflat):
+            util.flatimage(skymodel,verbose=verbose)
+
+        # modifymodel just collects info if skymodel==newmodel
+        returnpars = util.modifymodel(skymodel,skymodel,
+                                      "","","","","",-1,
+                                      flatimage=False)
+        if not returnpars:
+            return False
+
+        (model_refdir,model_cell,model_size,
+         model_nchan,model_center,model_width,
+         model_stokes) = returnpars
+
+
+        cell_asec=qa.convert(model_cell[0],'arcsec')['value']
+
+
+        #####################################################################
+        # clean if desired, use noisy image for further calculation if present
+        # todo suggest a cell size from psf?
+        #####################################################################
+        beam_current = False
+        if image:
+
+            # make sure cell is defined
+            if is_array_type(cell):
+                if len(cell) > 0:
+                    cell0 = cell[0]
+                else:
+                    cell0 = ""
+            else:
+                cell0 = cell
+            if len(cell0)<=0:
+                cell = model_cell
+            if is_array_type(cell):
+                if len(cell) == 1:
+                    cell = [cell[0],cell[0]]
+            else:
+                cell = [cell,cell]
+            
+            # cells are positive by convention
+            cell = [qa.abs(cell[0]),qa.abs(cell[1])]
+            
+            # and imsize
+            if is_array_type(imsize):
+                if len(imsize) > 0:
+                    imsize0 = imsize[0]
+                    if len(imsize) > 1:
+                        imsize1 = imsize[1]
+                    else:
+                        imsize1 = imsize0
+                else:
+                    imsize0 = -1
+            else:
+                imsize0 = imsize
+            if imsize0 <= 0:
+                imsize = [int(pl.ceil(qa.convert(qa.div(model_size[0],cell[0]),"")['value'])),
+                          int(pl.ceil(qa.convert(qa.div(model_size[1],cell[1]),"")['value']))]
+            else:
+                imsize=[imsize0,imsize1]
+
+
+
             if len(mstoimage) == 0:
                 if tpmstoimage:
                     sd_only = True
@@ -299,6 +349,7 @@ def simanalyze(
             else:
                 sd_only = False
                 # get some quantities from the interferometric ms
+                # TODO use something like aU.baselineStats for this, and the 90% baseline
                 maxbase=0.
                 # TODO make work better for multiple MS
                 for msfile in mstoimage:
@@ -316,7 +367,7 @@ def simanalyze(
                     msg("The number of image pixel in y-axis, %d, is small to cover 8 x PSF. Setting y pixel number, %d" % (imsize[1], minimsize), priority='warn')
                     imsize[1] = minimsize
 
-
+            tpimage=None
             # Do single dish imaging first if tpmstoimage exists.
             if tpmstoimage and os.path.exists(tpmstoimage):
                 msg('creating image from ms: '+tpmstoimage)
@@ -332,11 +383,11 @@ def simanalyze(
                            tpimage != fileroot+"/"+modelimage:
                         msg("modelimage parameter set to "+modelimage+" but also creating a new total power image "+tpimage,priority="warn")
                         msg("assuming you know what you want, and using modelimage="+modelimage+" in deconvolution",priority="warn")
-                    else:
-                        # This forces to use TP image as a model for clean
-                        if len(modelimage) <= 0:
-                            msg("you are generating total power image "+tpimage+". this is used as a model image for clean",priority="warn")
-                        modelimage = tpimage
+#                    else:
+#                        # This forces to use TP image as a model for clean
+#                        if len(modelimage) <= 0:
+#                            msg("you are generating total power image "+tpimage+". this is used as a model image for clean",priority="warn")
+#                        modelimage = tpimage
                 
                 # format image size properly
                 sdimsize = imsize
@@ -433,19 +484,49 @@ def simanalyze(
             # in simdata we use imdirection instead of model_refdir
             if not util.isdirection(imdirection,halt=False):
                 imdirection=model_refdir
+
             util.imclean(mstoimage,imagename,
-                       cleanmode,cell,imsize,imdirection,
-                       niter,threshold,weighting,
-                       outertaper,stokes, #sourcefieldlist=sourcefieldlist,
-                       modelimage=modelimage,mask=mask)
+                         cleanmode,cell,imsize,imdirection,
+                         interactive,niter,threshold,weighting,
+                         outertaper,stokes, #sourcefieldlist=sourcefieldlist,
+                         modelimage=modelimage,mask=mask)
+
 
             # create imagename.flat and imagename.residual.flat:
             util.flatimage(imagename+".image",verbose=verbose)
             util.flatimage(imagename+".residual",verbose=verbose)
             outflat_current = True
 
+            # feather
+            if featherimage:
+                if not os.path.exists(featherimage):
+                    raise Exception,"Could not find featherimage "+featherimage
+            else:
+                featherimage=""
+                if tpimage:
+                    # if you set modelimage, then it won't force tpimage into 
+                    # featherimage.  this could be hard to explain 
+                    # to the user.
+                    if os.path.exists(tpimage) and not os.path.exists(modelimage):
+                        featherimage=tpimage
+                    
+
+            if os.path.exists(featherimage):
+                msg("feathering the interfermetric image "+imagename+".image with "+featherimage)
+                from feather import feather 
+                # TODO call with params?
+                feather(imagename+".feather.image",imagename+".image",featherimage)
+                # copy residual flat image
+                shutil.copytree(imagename+".residual.flat",imagename+".feather.residual.flat")
+                imagename=imagename+".feather"
+                # but replace combined flat image
+                util.flatimage(imagename+".image",verbose=verbose)
+
+
+
+
             msg("done inverting and cleaning")
-            if not type(cell) == type([]):
+            if not is_array_type(cell):
                 cell = [cell,cell]
             if len(cell) <= 1:
                 cell = [qa.quantity(cell[0]),qa.quantity(cell[0])]
@@ -523,13 +604,12 @@ def simanalyze(
 
         if analyze:
 
-# set above            
-#            if not image:
-#                imagename = fileroot + "/" + project
-
             if not os.path.exists(imagename+".image"):
-                msg("Can't find a simulated image - expecting "+imagename,priority="error")
-                return False
+                if os.path.exists(fileroot+"/"+imagename+".image"):
+                    imagename=fileroot+"/"+imagename
+                else:
+                    msg("Can't find a simulated image - expecting "+imagename,priority="error")
+                    return False
 
             # we should have skymodel.flat created above 
 

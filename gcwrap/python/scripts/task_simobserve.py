@@ -37,7 +37,7 @@ def simobserve(
         #########################
         # some hardcoded variables
         pbcoeff = 1.13 ##  PB defined as pbcoeff*lambda/d
-        nyquist = 0.5/bpcoeff ## Nyquist spacing = PB*nyquist
+        nyquist = 0.5/pbcoeff ## Nyquist spacing = PB*nyquist
 
         relmargin = .5  # number of PB between edge of model and ptg centers
         scanlength = 1  # number of integrations per scan
@@ -64,6 +64,7 @@ def simobserve(
         util = simutil(direction)  # this is the dir of the observation - could be ""
         if verbose: util.verbose = True
         msg = util.msg
+        from simutil import is_array_type
 
         # it was requested to make the user interface "observe" for what 
         # is sm.observe and sm.predict.
@@ -128,11 +129,11 @@ def simobserve(
 
 
 
-        if type(skymodel) == type([]):
+        if is_array_type(skymodel):
             skymodel = skymodel[0]
         skymodel = skymodel.replace('$project',project)
 
-        if type(complist) == type([]):
+        if is_array_type(complist):
             complist = complist[0]
 
         if((not os.path.exists(skymodel)) and (not os.path.exists(complist))):
@@ -250,17 +251,17 @@ def simobserve(
             mapsize = model_size
             if verbose: msg("setting map size to "+str(model_size))
         else:
-             if type(mapsize) == type([]):
+             if is_array_type(mapsize):
                  if len(mapsize[0]) == 0:
                      mapsize = model_size
                      if verbose: msg("setting map size to "+str(model_size))
 
         if components_only:
-            if type(mapsize) == type([]):
+            if is_array_type(mapsize):
                 map_asec = qa.convert(mapsize[0],"arcsec")['value']
             else:
                 map_asec = qa.convert(mapsize,"arcsec")['value']
-            if type(model_size) == type([]):
+            if is_array_type(model_size):
                 mod_asec = qa.convert(model_size[0],"arcsec")['value']
             else:
                 mod_asec = qa.convert(model_size,"arcsec")['value']
@@ -476,7 +477,7 @@ def simobserve(
         # set up pointings
         dir = model_refdir
         dir0 = dir
-        if type(direction) == type([]):
+        if is_array_type(direction):
             if len(direction) > 0:
                 if util.isdirection(direction[0],halt=False):
                     dir = direction
@@ -511,7 +512,8 @@ def simobserve(
             if verbose: util.msg("calculating map pointings centered at "+str(dir0))
 
             if len(pointingspacing) < 1:
-                pointingspacing = "Nyquist"
+                # ALMA OT uses lambda/d/sqrt(3)
+                pointingspacing = "%fPB" % (1./pl.sqrt(3)/pbcoeff) 
             if str.upper(pointingspacing)=="NYQUIST":
                 pointingspacing="%fPB" % nyquist
             q = re.compile('(\d+.?\d+)\s*PB')
@@ -535,7 +537,7 @@ def simobserve(
             # repeat
             ptgfile = fileroot + "/" + project + ".ptg.txt"
         else:
-            if type(ptgfile) == type([]):
+            if is_array_type(ptgfile):
                 ptgfile = ptgfile[0]
             ptgfile = ptgfile.replace('$project',project)
             # precedence to ptg file outside the project dir
@@ -643,7 +645,7 @@ def simobserve(
         util.isquantity(calflux)
         calfluxjy = qa.convert(calflux,'Jy')['value']
         # XML returns a list even for a string:
-        if type(caldirection) == type([]): caldirection = caldirection[0]
+        if is_array_type(caldirection): caldirection = caldirection[0]
         if len(caldirection) < 4: caldirection = ""
         if calfluxjy > 0 and caldirection != "" and uvmode:
             docalibrator = True
