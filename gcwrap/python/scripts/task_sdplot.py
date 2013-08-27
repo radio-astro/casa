@@ -1,8 +1,8 @@
 import os
-from taskinit import *
-
-import asap as sd
 import pylab as pl
+
+from taskinit import casalog, qatool
+import asap as sd
 from asap import _to_list
 from asap.scantable import is_scantable
 import sdutil
@@ -326,6 +326,9 @@ class sdplot_worker(sdutil.sdtask_template):
         del gridder
 
     def __get_grid_parameters(self, calc=False):
+        # CAS-5410 Use private tools inside task scripts
+        qa = qatool()
+
         (nx,ny) = self.__get_mapsize()
         mapcenter = sdutil.get_map_center(self.center)
         (cellx,celly) = sdutil.get_cellx_celly(self.cell)
@@ -354,6 +357,9 @@ class sdplot_worker(sdutil.sdtask_template):
 
     def __calc_center_and_cell(self, center, cellx, celly):
         from numpy import array
+        # CAS-5410 Use private tools inside task scripts
+        qa = qatool()
+
         # Get map extent (in radian)
         dirarr = array(self.scan.get_directionval()).transpose()
         xmin = dirarr[0].min()
