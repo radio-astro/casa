@@ -230,6 +230,17 @@ struct spwInfo {
 		RESOLUTION = CHAN_WIDTH;
 	}
 
+	void resize(uInt nChannels)
+	{
+		NUM_CHAN = nChannels;
+		CHAN_FREQ.resize(nChannels,True);
+		CHAN_WIDTH.resize(nChannels,True);
+		EFFECTIVE_BW.resize(nChannels,True);
+		RESOLUTION.resize(nChannels,True);
+		CHAN_FREQ_aux.resize(nChannels,True);
+		update();
+	}
+
 	uInt NUM_CHAN;
 	Vector<Double> CHAN_FREQ;
 	Vector<Double> CHAN_WIDTH;

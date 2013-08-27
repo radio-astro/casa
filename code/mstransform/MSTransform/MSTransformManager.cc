@@ -2088,7 +2088,7 @@ void MSTransformManager::dropNonUniformWidthChannels()
 			chanFreqCol.put(spw_idx, frequencyVector);
 
 			// Update output number of channels
-			inputOutputSpwMap_p[spw_idx].second.NUM_CHAN -= 1;
+			inputOutputSpwMap_p[spw_idx].second.resize(nChans-1);
 		}
 	}
 
