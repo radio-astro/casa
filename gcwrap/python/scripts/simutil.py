@@ -158,7 +158,6 @@ class simutil:
         if toterm:
             print clr+"["+origin+"] "+bw+s
         if priority=="ERROR":
-            #return False
             raise Exception, s
         else:
             casalog.post(s,priority=priority,origin=origin)

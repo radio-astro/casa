@@ -26,6 +26,7 @@ def simanalyze(
     overwrite=None,
     async=False):
 
+
     # Collect a list of parameter values to save inputs
     in_params =  locals()
 
@@ -52,7 +53,7 @@ def simanalyze(
     fileroot = project
     if not os.path.exists(fileroot):
         msg(fileroot+" directory doesn't exist - the task expects to find results from creating the datasets there, like the skymodel.",priority="error")
-        return False
+        # msg should raise an exception for priority=error
 
 
     saveinputs = myf['saveinputs']
@@ -722,7 +723,7 @@ def simanalyze(
                 showpsf = False
             if (not image) and (not os.path.exists(msfile)):
                 if showpsf or showuv:
-                    msg("No image is generated in this run. Default MS, '%s', does not exists -- uv and psf will not be plotted" % msfile,priority='warn')
+                    msg("No image is generated in this run. Default MS, '%s', does not exist -- uv and psf will not be plotted" % msfile,priority='warn')
                 showpsf = False
                 showuv = False
             
