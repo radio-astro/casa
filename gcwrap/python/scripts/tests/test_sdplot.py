@@ -361,7 +361,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         # Tests
         self.assertEqual(result,None)
         self.assertEqual(len(pl.gcf().axes),1)
-        self.assertEqual(len(pl.gca().get_lines()),1)
+        self.assertEqual(len(pl.gca().get_lines()),2)
         self.assertEqual(pl.gca().get_xlabel(),'RA [deg.]')
         self.assertEqual(pl.gca().get_ylabel(),'Declination [deg.]')
         self._checkOutFile(outfile)
