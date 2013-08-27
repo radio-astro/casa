@@ -127,7 +127,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="pointingspacing" subparam="true">
-      <description>spacing in between pointings or "0.25PB" or "" for Nyquist</description>
+      <description>spacing in between pointings or "0.25PB" or "" for ALMA default lambda/D/sqrt(3)</description>
       <value></value>
     </param>
 
