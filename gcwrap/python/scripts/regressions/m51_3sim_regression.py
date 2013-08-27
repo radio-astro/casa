@@ -300,11 +300,11 @@ refstats = { 'max': 0.19413,
              'sigma': 0.021183,
              'sum': 2305.2 }
 # 20130826
-refstats = { 'max': 0.1980,
-             'min': -0.02607,
-             'rms': 0.0302,
-             'sigma': 0.0228,
-             'sum': 2371. }
+refstats = { 'max': 0.211,
+             'min': -0.0295,
+             'rms': 0.0312,
+             'sigma': 0.0235,
+             'sum': 2455. }
 
 
 
@@ -335,11 +335,14 @@ diffstats = {'max': 0.036524,
              'sigma': 0.02028,
              'sum': -1433.9 }
 # 20130826
-diffstats = {'max': 0.03680,
-             'min': -0.1586,
-             'rms': 0.02516,
-             'sigma': 0.02181,
-             'sum': -1500. }
+diffstats = {'max': 0.0408,
+             'min': -0.175,
+             'rms': 0.0267,
+             'sigma': 0.0232,
+             'sum': -1580. }
+
+
+
 
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,
