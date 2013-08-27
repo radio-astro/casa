@@ -80,11 +80,11 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 	<xsl:for-each select="aps:param">
 		<xsl:if test="not(@visibility) or @visibility!='hidden'">
 		<xsl:choose>
-		<xsl:when test="aps:shortdescription">
-		<xsl:text>		</xsl:text><xsl:value-of select="@name"/><xsl:text>:	</xsl:text><xsl:value-of select="aps:shortdescription"/>
+		<xsl:when test="aps:description">
+		<xsl:text>		</xsl:text><xsl:value-of select="@name"/><xsl:text>:	</xsl:text><xsl:value-of select="aps:description"/>
 		</xsl:when>
 		<xsl:otherwise>
-		<xsl:text>		</xsl:text><xsl:value-of select="@name"/><xsl:text>:	</xsl:text><xsl:value-of select="aps:description"/>
+		<xsl:text>		</xsl:text><xsl:value-of select="@name"/><xsl:text>:	</xsl:text><xsl:value-of select="aps:shortdescription"/>
 		</xsl:otherwise>
 		</xsl:choose>
 		<xsl:text>
