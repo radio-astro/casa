@@ -3,9 +3,10 @@ import os
 import time
 import numpy
 import numpy.fft as npfft
-import pylab as pl
-import asap as sd
+
 from taskinit import casalog, gentools, utilstool, qatool
+
+import asap as sd
 import sdutil
 
 @sdutil.sdtask_decorator

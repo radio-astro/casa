@@ -1,9 +1,10 @@
 # sd task for total power raster scan imaging
-import os
 import numpy
 import pylab as pl
+
+from taskinit import casalog
+
 import asap as sd
-from taskinit import *
 import sdutil
 
 interactive=False

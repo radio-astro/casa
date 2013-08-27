@@ -1,13 +1,8 @@
-import os
-from taskinit import *
+from taskinit import casalog
 
 import sdutil
 import asap as sd
-from asap._asap import Scantable
-from asap import _to_list
 from asap.scantable import is_scantable
-import math
-import pylab as pl
 
 @sdutil.sdtask_decorator
 def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, tau, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verify, verbose, bloutput, blformat, showprogress, minnrow, outfile, outform, overwrite, plotlevel):

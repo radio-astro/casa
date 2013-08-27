@@ -1,9 +1,7 @@
-import os
 from taskinit import casalog, qatool
 
 import asap as sd
 from asap._asap import Scantable
-from asap import _to_list
 from asap.scantable import is_scantable
 import sdutil
 

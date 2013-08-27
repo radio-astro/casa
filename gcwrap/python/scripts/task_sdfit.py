@@ -1,10 +1,7 @@
-import os
-from taskinit import *
-
-import sdutil
-import asap as sd
-import pylab as pl
+from taskinit import casalog
 from numpy import ma, array, logical_not, logical_and
+
+import asap as sd
 import sdutil
 
 @sdutil.sdtask_decorator

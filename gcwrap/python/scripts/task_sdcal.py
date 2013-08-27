@@ -1,10 +1,7 @@
-import os
-from taskinit import *
+from taskinit import casalog
 
 import asap as sd
 from asap._asap import Scantable
-import pylab as pl
-from asap import _to_list
 from asap.scantable import is_scantable
 import sdutil
 

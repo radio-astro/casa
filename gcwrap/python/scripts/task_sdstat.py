@@ -1,12 +1,10 @@
 import os
-import sys
 import string
 from get_user import get_user
-import pylab as pl
 
 from taskinit import casalog, qatool
+
 import asap as sd
-from asap import _to_list
 from asap.scantable import is_scantable
 import sdutil
 

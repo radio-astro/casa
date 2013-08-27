@@ -1,9 +1,8 @@
 import os
-import pylab as pl
 
 from taskinit import casalog, qatool
+
 import asap as sd
-from asap import _to_list
 from asap.scantable import is_scantable
 import sdutil
 

@@ -1,17 +1,8 @@
-import os
-from taskinit import *
-import sys
-import string
-import inspect
-from odict import odict
+from taskinit import casalog
 
-import sdutil
 import asap as sd
-from asap._asap import Scantable
-import pylab as pl
-from sdcal import sdcal
-from sdsmooth import sdsmooth
-from sdbaseline import sdbaseline
+import sdutil
+
 import task_sdcal
 import task_sdsmooth
 import task_sdbaseline
