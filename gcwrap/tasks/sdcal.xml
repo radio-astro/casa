@@ -187,7 +187,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="bool" name="verify">
-            <description>verify the results of calibration</description>
+            <description>interactively verify the results of calibration</description>
             <value>False</value>
     </param>
 
@@ -410,13 +410,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         tau -- atmospheric optical depth
                 default: 0.0 (no correction)
-        verify -- verify the results of calibration. Only effective if 
-                  calmode is not 'none'.
+        verify -- interactively verify the results of calibration. Only
+                  effective if calmode = 'ps' (but not for ALMA data),
+                  'otf', and 'nod'.
+                  When verify = True, spectra before and after calibration
+                  are displayed in a plot for six spectra in scantable.
+                  At the prompt there are two choices of action:
+                  'Y' (accept the calibration) and 'N' (reject the calibration).
+                  Note that when calibration is rejected by 'N', no
+                  calibration is done to the whole scantable.
                 options: (bool) True,False
                 default: False
-                WARNING: Currently this just asks whether you accept
-                         the displayed calibration and if not, continues
-                         without doing any calibration. 
         outfile -- Name of output file
                 default: '' (&lt;infile&gt;_cal)
         outform -- format of output file
