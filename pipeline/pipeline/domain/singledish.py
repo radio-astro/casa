@@ -262,6 +262,9 @@ class Frequencies(spectralwindow.SpectralWindow,SingleDishBase):
         return state_dictionary
 
     def __setstate__(self, d):
+        for (k,v) in d.items():
+            if not hasattr(self, k):
+                setattr(self, k, v)
         self.__dict__ = d
     
     @staticmethod
