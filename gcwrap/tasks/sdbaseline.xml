@@ -193,7 +193,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
     </param>
 
     <param type="bool" name="verify">
-            <description>verify the results of baseline fitting (only for blfunc="poly")</description>
+            <description>interactively verify the results of baseline fitting for each spectrum. (only for blfunc="poly")</description>
             <value>False</value>
     </param>
 
@@ -491,13 +491,20 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
                          default: 3
                  clipniter -- maximum iteration number
                          default: 0 (no iteration, i.e., no clipping)
-        verify -- verify the results of baseline fitting
+        verify -- interactively verify the results of baseline fitting for each spectrum.
+                  When verify = True, for each input spectrum the baseline
+                  fit function and spectra before and after the fit are 
+                  displayed in a plot window. At the prompt there are four
+                  choices of action: 'Y' (accept the fit and continue to the
+                  next input spectrum), 'N' (reject the fit and continue to the
+                  next input spectrum), 'A' (accept the current fit and continue
+                  non-interactively), and 'R' (reject the current fit and exit
+                  from baseline fitting).
+                  Note that when the baseline fit is rejected by 'N' or 'R',
+                  no baseline fit is applied to the spectrum/spectra. 
                 options: (bool) True,False
                 default: False
                 NOTE: Currently available only when blfunc='poly'
-                WARNING: Currently this just asks whether you accept
-                         the displayed fit and if not, continues
-                         without doing any baseline fit.
         verbose -- output fitting results to logger
                 default: True
                 example: If False, the fitting results including coefficients, 

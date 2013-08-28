@@ -309,17 +309,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="bool" name="verifycal">
-            <description>verify the results of calibration</description>
+            <description>interactively verify the results of calibration</description>
             <value>False</value>
     </param>
 
     <param type="bool" name="verifysm">
-            <description>verify the results of smoothing [not available for kernel="regrid"]</description>
+            <description>interactively verify the results of smoothing for each spectrum. [not available for kernel="regrid"]</description>
             <value>False</value>
     </param>
 
     <param type="bool" name="verifybl">
-            <description>verify the results of baseline fitting (only for blfunc="poly")</description>
+            <description>interactively verify the results of baseline fitting for each spectrum. (only for blfunc="poly")</description>
             <value>False</value>
     </param>
 
@@ -751,17 +751,22 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  clipniter -- maximum iteration number
                          default: 0 (no iteration, i.e., no clipping)
 
-        verifycal -- verify the results of calibration
+        verifycal -- interactively verify the results of calibration
+                  See description of verify parameter in the task, sdcal,
+                  for details.
                 options: (bool) True,False
                 default: False
-                WARNING: Currently verifying parameters just asks whether you 
-                         accept the displayed calibraion/fit and if not, 
-                         continues without doing any calibraion/baseline fit.
-        verifysm -- verify the results of smoothing
+        verifysm -- interactively verify the results of smoothing for each
+                    spectrum.
+                  See description of verify parameter in the task, sdsmooth,
+                  for details.
                 options: (bool) True,False
                 default: False
                 Note: verification is not yet available for kernel='regrid'
-        verifybl -- verify the results of baseline fitting
+        verifybl -- interactively verify the results of baseline fitting for
+                    each spectrum.
+                  See description of verify parameter in the task, sdbaseline,
+                  for details.
                 options: (bool) True,False
                 default: False
                 NOTE: Currently available only when blfunc='poly'

@@ -79,7 +79,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="bool" name="verify">
-            <description>verify the results of smoothing [not available for kernel="regrid"]</description>
+            <description>interactively verify the results of smoothing for each spectrum. [not available for kernel="regrid"]</description>
             <value>False</value>
     </param>
 
@@ -176,12 +176,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	                 default: '5' (in channels)
 		         example: '500MHz', '0.2km/s'
 
-        verify -- verify the results of smoothing
+        verify -- interactively verify the results of smoothing for each
+                  spectrum.
+                  When verify = True, for each input spectrum, spectra
+                  before and after the smoothing are displayed in a plot
+                  window. At the prompt there are four choices of action:
+                  'Y' (accept the smoothing and continue to the next input
+                  spectrum), 'N' (reject the smoothing and continue to the
+                  next input spectrum), 'A' (accept the current smoothing
+                  and continue non-interactively), and 'R' (reject the
+                  current smoothing and exit from smoothing).
+                  Note that when the smoothing is rejected by 'N' or 'R',
+                  no smoothing is done to the spectrum/spectra. 
                 options: (bool) True,False
                 default: False
-                WARNING: Currently this just asks whether you accept
-                         the displayed smoothing and if not, continues
-                         without smoothing.
                 Note: verification is not yet available for kernel='regrid'
 	outfile -- Name of output ASAP format(scantable) file
 	        default: '' (&lt;infile&gt;_sm)

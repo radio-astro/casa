@@ -3007,36 +3007,84 @@ class par(str):
 	@staticmethod
 	def verify():
 		"""
-		verify -- verify the results. 
+		verify -- interactively verify the results. 
                 options: (bool) True,False
                 default: False
+                (for sdcal)
+                    When verify = True, spectra before and after calibration
+                    are displayed in a plot for six spectra in scantable.
+                    At the prompt there are two choices of action:
+                    'Y' (accept the calibration) and 'N' (reject the calibration).
+                    Note that when calibration is rejected by 'N', no
+                    calibration is done to the whole scantable.
+                
+		---------------------------------------------------------------
+
+		(for others)
+                    When verify = True, for each input spectrum the spectra before
+                    and after the operation are displayed in a plot window.
+                    At the prompt there are four choices of action:
+                    'Y' (accept the result and continue to the next input spectrum),
+                    'N' (reject the result and continue to the next input spectrum),
+                    'A' (accept the current result and continue non-interactively), and
+                    'R' (reject the current result and exit from the operation).
+                    Note that when the result is rejected by 'N' or 'R',
+                    no operation is done to the spectrum/spectra. 
 		"""
 		
 	@staticmethod
 	def verifybl():
 		"""
-		verifybl -- verify the results of baseline fitting
+		verifybl -- interactively verify the results of baseline fitting
+                            for each spectrum.
+                    When verifybl = True, for each input spectrum the baseline
+                    fit function and spectra before and after the fit are 
+                    displayed in a plot window. At the prompt there are four
+                    choices of action:
+                    'Y' (accept the fit and continue to the next input spectrum),
+                    'N' (reject the fit and continue to the next input spectrum),
+                    'A' (accept the current fit and continue non-interactively), and
+                    'R' (reject the current fit and exit from baseline fitting).
+                    Note that when the baseline fit is rejected by 'N' or 'R',
+                    no baseline fit is applied to the spectrum/spectra. 
                 options: (bool) True,False
                 default: False
+                NOTE: Currently available only when blfunc='poly'
 		"""
 
 	@staticmethod
 	def verifycal():
 		"""
-		verifycal -- verify the results of calibration
+		verifycal -- interactively verify the results of calibration. Only
+                             effective if calmode = 'ps' (but not for ALMA data),
+                             'otf', and 'nod'.
+                    When verifycal = True, spectra before and after calibration
+                    are displayed in a plot for six spectra in scantable.
+                    At the prompt there are two choices of action:
+                    'Y' (accept the calibration) or 'N' (reject the calibration).
+                    Note that when calibration is rejected by 'N', no
+                    calibration is done to the whole scantable.
                 options: (bool) True,False
                 default: False
-                WARNING: Currently verifying parameters just asks whether you 
-                         accept the displayed calibraion/fit and if not, 
-                         continues without doing any calibraion/baseline fit.
 		"""
 		
 	@staticmethod
 	def verifysm():
 		"""
-		verifysm -- verify the results of smoothing
+		verifysm -- interactively verify the results of smoothing for each
+                            spectrum.
+                    When verifysm = True, for each input spectrum, spectra
+                    before and after the smoothing are displayed in a plot
+                    window. At the prompt there are four choices of action:
+                    'Y' (accept the smoothing and continue to the next input spectrum),
+                    'N' (reject the smoothing and continue to the next input spectrum),
+                    'A' (accept the current smoothing and continue non-interactively), and
+                    'R' (reject the current smoothing and exit from smoothing).
+                    Note that when the smoothing is rejected by 'N' or 'R',
+                    no smoothing is done to the spectrum/spectra. 
                 options: (bool) True,False
                 default: False
+                Note: verification is not yet available for kernel='regrid'
 		"""
 		
 	@staticmethod
