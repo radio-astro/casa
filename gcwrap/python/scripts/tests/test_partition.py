@@ -67,7 +67,27 @@ class test_base(unittest.TestCase):
 
         default('partition')
 
+    def setUp_floatcol(self):
+        datapath = os.environ.get('CASAPATH').split()[0] + \
+                    "/data/regression/unittest/flagdata/"
+                    
+        # 15 rows, 3 scans, 9 spw, mixed chans, XX,YY, FLOAT_DATA col
+        self.prefix = "SDFloatColumn"
+        self.msfile = 'SDFloatColumn.ms'
+        
+        # Output files                      
+        self.mmsfile = self.prefix + '.mms'
+        
+        fpath = os.path.join(datapath,self.msfile)
+        
+        if not os.path.exists(self.msfile):        
+            shutil.copytree(fpath, self.msfile, symlinks=True)
+        else:
+            print 'MS is already around, no need to copy it.'
 
+        default('partition')
+
+ 
 class partition_test1(test_base):
     
     def setUp(self):
@@ -610,13 +630,47 @@ class partition_test2(test_base):
 
     def test_channels3(self):
         '''partition: verify spw sub-table consolidation'''
-        partition(vis=self.msfile, outputvis=self.mmsfile, spw='3,5:10~20,7,9,11,13,15',
+        partition(vis=self.msfile, outputvis=self.mmsfile, spw='3,5:10~19,7,9,11,13,15',
                     createmms=True,separationaxis='spw', flagbackup=False)       
                              
         self.assertTrue(os.path.exists(self.mmsfile))
         
         # spw=5 should be spw=1 after consolidation, with 10 channels
         ret = th.verifyMS(self.mmsfile, 7, 10, 1, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])
+
+class partition_float(test_base):
+    def setUp(self):
+        self.setUp_floatcol()
+
+    def tearDown(self):
+        shutil.rmtree(self.mmsfile, ignore_errors=True)        
+        shutil.rmtree(self.mmsfile+'.flagversions', ignore_errors=True) 
+
+    def test_split_float(self):
+        '''partition: split an MS with FLOAT_DATA'''
+        partition(vis=self.msfile, outputvis=self.mmsfile,spw='1,3,5',
+                  createmms=False,datacolumn='FLOAT_DATA', parallel=False,flagbackup=False)
+        
+        ret = th.verifyMS(self.mmsfile, 3, 512, 0, [], ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])
+        ret = th.verifyMS(self.mmsfile, 3, 512, 1, [], ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])
+        ret = th.verifyMS(self.mmsfile, 3, 1024, 2, [], ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])
+
+    def test_mms_float(self):
+        '''partition: '''
+        partition(vis=self.msfile, outputvis=self.mmsfile,spw='1,3,5',
+                  datacolumn='FLOAT_DATA', parallel=False,flagbackup=False)
+        
+        ret = th.verifyMS(self.mmsfile, 3, 512, 0, [], ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])
+        ret = th.verifyMS(self.mmsfile, 3, 512, 1, [], ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])
+        ret = th.verifyMS(self.mmsfile, 3, 1024, 2, [], ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])
+                
 
 # Cleanup class 
 class partition_cleanup(test_base):
@@ -629,7 +683,10 @@ class partition_cleanup(test_base):
         print 'Cleaning up after test_partition'
           
 def suite():
-    return [partition_test1, partition_test2, partition_cleanup]
+    return [partition_test1, 
+            partition_test2, 
+            partition_float,
+            partition_cleanup]
 
 
 
