@@ -2129,6 +2129,15 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       return -1;
     }
 
+    if(oframe=="SOURCE" || oframe=="GEO"){
+      os << LogIO::NORMAL
+	 << "Note: with outframe==GEO or outframe==SOURCE, the resulting spectral windows with be labeled as having reference frame REST.\n"
+	 << "      All integrations will be Doppler-tracked to correspond to the GEO frame at the beginning of the observation\n"
+	 << "      (with radial velocity corrections in the case of outframe==SOURCE).\n"
+	 << "      No subsequent regridding to other reference frames will be possible."
+	 << LogIO::POST;
+    }
+
     // Loop 2: Write modified DD, SPW, and SOURCE tables
 
     if(!setRegridParameters(oldSpwId,
@@ -2312,11 +2321,11 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     GenSortIndirect<Double>::sort(sortedI,mainTimesV);
 
     // prepare progress meter
-    Float progress = 0.4;
-    Float progressStep = 0.4;
+    Float progress = 0.2;
+    Float progressStep = 0.2;
     if(ms_p.nrow()>100000){
-      progress = 0.2;
-      progressStep = 0.2;
+      progress = 0.1;
+      progressStep = 0.1;
     }
 
     // prepare some regridding prerequisites
@@ -2388,6 +2397,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
 	  // create frequency machine for this time stamp
 	  MDirection fldDir = fldCols.phaseDirMeas(theFieldId, mainTimesV(mainTabRow));
+
 
 	  MFrequency::Ref fromFrame = MFrequency::Ref(fromFrameTypeV[iDone], MeasFrame(fldDir, mObsPosV[iDone], theObsTime));
 	  Unit unit(String("Hz"));
@@ -5072,7 +5082,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    numChanCol.put(nextSPWId, newNUM_CHAN);
 	    chanWidthCol.put(nextSPWId,  newCHAN_WIDTH);
 	    refFrequencyCol.put(nextSPWId, newREF_FREQUENCY.getValue());
-	    measFreqRefCol.put(nextSPWId, (Int)theFrame);
+	    if(theFrame==MFrequency::GEO){ // i.e. outframe was GEO or SOURCE
+	      measFreqRefCol.put(nextSPWId, (Int)MFrequency::REST);
+	    }
+	    else{
+	      measFreqRefCol.put(nextSPWId, (Int)theFrame);
+	    }
+
 	    totalBandwidthCol.put(nextSPWId, newTOTAL_BANDWIDTH);
 	    effectiveBWCol.put(nextSPWId, newEFFECTIVE_BW);
 	    resolutionCol.put(nextSPWId, newRESOLUTION);
@@ -6153,11 +6169,11 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       vector<Int> prevFailedAvCorrs;
 
       // prepare progress meter
-      Float progress = 0.4;
-      Float progressStep = 0.4;
+      Float progress = 0.2;
+      Float progressStep = 0.2;
       if(nMainTabRows>100000){
-	progress = 0.2;
-	progressStep = 0.2;
+	progress = 0.1;
+	progressStep = 0.1;
       }
 
       while(mainTabRowI<nMainTabRows &&
