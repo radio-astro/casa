@@ -1835,7 +1835,11 @@ void MSTransformManager::calculateIntermediateFrequencies(	Int spwId,
 																Vector<Double> &intermediateChanWidth)
 {
 	uInt mumOfInterChan = inputChanFreq.size() / freqbinMap_p[spwId];
-	if (inputChanFreq.size() % freqbinMap_p[spwId]) mumOfInterChan += 1;
+	uInt lastChannelWidth = inputChanFreq.size() % freqbinMap_p[spwId];
+	if (lastChannelWidth > 0)
+	{
+		mumOfInterChan += 1;
+	}
 	numOfCombInputChanMap_p[spwId] = inputChanFreq.size();
 	numOfCombInterChanMap_p[spwId] = mumOfInterChan;
 	intermediateChanFreq.resize(mumOfInterChan,False);
@@ -1846,6 +1850,12 @@ void MSTransformManager::calculateIntermediateFrequencies(	Int spwId,
 	for (uInt chanIdx=0;chanIdx<mumOfInterChan;chanIdx++)
 	{
 		intermediateChanWidth[chanIdx] *= freqbinMap_p[spwId];
+	}
+
+	if (lastChannelWidth > 0)
+	{
+		intermediateChanWidth[mumOfInterChan-1] /= freqbinMap_p[spwId];
+		intermediateChanWidth[mumOfInterChan-1] *= lastChannelWidth;
 	}
 
     return;
@@ -2046,15 +2056,27 @@ void MSTransformManager::dropNonUniformWidthChannels()
     ScalarColumn<Double> totalBandwidthCol = spwCols.totalBandwidth();
 
 	uInt nChans;
+	Int spwId;
 	for(uInt spw_idx=0; spw_idx<nInputSpws; spw_idx++)
 	{
 		nChans = numChanCol(spw_idx);
 		Vector<Double> widthVector = chanWidthCol(spw_idx);
 
-		if (widthVector(nChans-1) < widthVector(0))
+    	if (outputInputSPWIndexMap_p.size()>0)
+    	{
+    		spwId = outputInputSPWIndexMap_p[spw_idx];
+    	}
+    	else
+    	{
+    		spwId = spw_idx;
+    	}
+
+		uInt nchanInAvg = floor((widthVector(nChans-1) / (widthVector(0) / freqbinMap_p[spwId])) + 0.5);
+
+		if (nchanInAvg < freqbinMap_p[spwId])
 		{
 			logger_p 	<< LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
-						<< "Not enough channels to populate last averaged channel from SPW " << spw_idx
+						<< "Not enough channels to populate last averaged channel from SPW " << spwId
 						<< " with an uniform width of " << widthVector(0) << " Hz" << endl
 						<< "The resulting channel would have width of only " << widthVector(nChans-1) << " Hz." << endl
 						<< "The channel will be dropped in order to have an uniform grid."
@@ -4336,13 +4358,13 @@ template <class T> void MSTransformManager::average(	Int inputSpw,
 		outChanIndex += 1;
 	}
 
-	/*
-	if (tail)
+	// jagonzal: The last channel is dropped when there are not enough input channels
+	//           to populate it only when there is no regridding afterwards
+	if (tail and (outChanIndex <= outputDataStripe.size()-1) )
 	{
 		averageKernel(	inputDataStripe,inputFlagsStripe,inputWeightsStripe,
 						outputDataStripe,outputFlagsStripe,startChan,outChanIndex,tail);
 	}
-	*/
 
 	return;
 }
@@ -4369,9 +4391,11 @@ template <class T> void  MSTransformManager::simpleAverage(	uInt width,
 		outChanIndex += 1;
 	}
 
-	if (tail)
+	// jagonzal: The last channel is dropped when there are not enough input channels
+	//           to populate it only when there is no regridding afterwards
+	if (tail and (outChanIndex <= outputData.size()-1) )
 	{
-		simpleAverageKernel(inputData,inputFlags,inputWeights,outputData,outputFlags,startChan,outChanIndex,width);
+		simpleAverageKernel(inputData,inputFlags,inputWeights,outputData,outputFlags,startChan,outChanIndex,tail);
 	}
 
 	return;
