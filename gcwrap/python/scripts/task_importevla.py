@@ -215,7 +215,7 @@ def importevla(
             if flagpol:
                 flagz['reason'] = 'CLIP_ZERO_ALL'
                 flagz['command'] = \
-                    'mode=clip clipzeros=True correlation=ABS_ALL'
+                    "mode='clip' clipzeros=True correlation='ABS_ALL'"
                 flagz['id'] = 'ZERO_ALL'
                 allflags[nflags] = flagz.copy()
                 nflags += 1
@@ -224,14 +224,14 @@ def importevla(
 
                 flagz['reason'] = 'CLIP_ZERO_RR'
                 flagz['command'] = \
-                    'mode=clip clipzeros=True correlation=ABS_RR'
+                    "mode='clip' clipzeros=True correlation='ABS_RR'"
                 flagz['id'] = 'ZERO_RR'
                 allflags[nflags] = flagz.copy()
                 nflags += 1
             
                 flagz['reason'] = 'CLIP_ZERO_LL'
                 flagz['command'] = \
-                    'mode=clip clipzeros=True correlation=ABS_LL'
+                    "mode='clip' clipzeros=True correlation='ABS_LL'"
                 flagz['id'] = 'ZERO_LL'
                 allflags[nflags] = flagz.copy()
                 nflags += 1
@@ -252,7 +252,8 @@ def importevla(
             flagh['mode'] = 'shadow'
             flagh['reason'] = 'SHADOW'
 
-            scmd = 'mode=shadow tolerance=' + str(tolerance)
+#            scmd = 'mode=shadow tolerance=' + str(tolerance)
+            scmd = "mode='shadow' tolerance=" + str(tolerance)
 
             if type(addantenna) == str:
                 if addantenna != '':
