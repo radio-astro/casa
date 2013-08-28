@@ -29,6 +29,7 @@
 #include <QtGui/QFrame>
 #include <casa/BasicSL/String.h>
 #include <casa/Containers/Record.h>
+#include <measures/Measures/MDoppler.h>
 #include <display/QtViewer/ImageManager/ImageView.ui.h>
 
 class QSpacerItem;
@@ -108,6 +109,9 @@ namespace casa {
 
 
 	private slots:
+		//Method of specifying "rest" has changed.
+		void restChanged();
+		void restUnitsChanged();
 		//Minimize/maximize the display
 		void openCloseDisplay();
 		//Display data has changed register/unregister status.
@@ -139,6 +143,12 @@ namespace casa {
 		void initDisplayType();
 		void setTitle();
 
+		//Conversion
+		double wavelengthFrequencyConversion( double value,
+			QString oldUnits, QString newUnits ) const;
+		bool isCategoryMatch( const QString& newUnits, const QString& oldUnits ) const;
+
+
 		//Background color.  Master image used to set the
 		//coordinate system is a slightly different color
 		void setBackgroundColor( QColor color );
@@ -163,6 +173,10 @@ namespace casa {
 		enum DisplayType { DISPLAY_RASTER, DISPLAY_CONTOUR, DISPLAY_VECTOR, DISPLAY_MARKER, DISPLAY_NONE };
 		QMap<DisplayType,QString> displayTypeMap;
 		DisplayType storedDisplay;
+
+		enum RestTypes { REST_FREQUENCY, REST_WAVELENGTH, REST_REDSHIFT };
+		RestTypes restType;
+		QString restUnits;
 
 		//Available context menu choices
 		QAction viewAction;

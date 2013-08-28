@@ -984,6 +984,8 @@ namespace casa {
 			// new rest frequency is taken into account this COULD be done as such:
 			if(lastPX.nelements() > 0) { // update display with new rest frequency/wavelength
 				wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY, UNKNPROF);
+				//Reset the channel marker to whatever it was before.
+				frameChanged( frameIndex );
 			}
 		}
 	}

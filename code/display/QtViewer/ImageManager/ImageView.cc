@@ -28,6 +28,10 @@
 #include <display/QtViewer/ImageManager/ImageView.qo.h>
 #include <display/QtViewer/ImageManager/DisplayLabel.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
+#include <display/QtPlotter/conversion/Converter.h>
+//#include <measures/Measures/MeasConvert.h>
+//#include <measures/Measures/MCDoppler.h>
+//#include <measures/Measures/MRadialVelocity.h>
 #include <limits>
 
 #include <QUuid>
@@ -286,16 +290,18 @@ namespace casa {
 	void ImageView::initRestSettings(){
 		frequencyUnits = (QStringList() << "Hz"<<"MHz"<<"GHz");
 		wavelengthUnits = (QStringList() << "mm"<<"um"<<"nm"<<"Angstrom");
+
+		QButtonGroup* buttonGroup = new QButtonGroup( this );
+		buttonGroup->addButton( ui.frequencyRadio );
+		buttonGroup->addButton( ui.wavelengthRadio );
+		connect( ui.frequencyRadio, SIGNAL(clicked()), this, SLOT(restChanged()));
+		connect( ui.wavelengthRadio, SIGNAL(clicked()), this, SLOT(restChanged()));
+
 		double maxValue = std::numeric_limits<double>::max();
 		double minValue = 0;
 		QValidator* restValidator = new QDoubleValidator( minValue, maxValue, 8, this);
 		ui.restLineEdit->setValidator( restValidator );
-		for ( int i = 0; i < frequencyUnits.size(); i++ ){
-			ui.restUnitsCombo->addItem( frequencyUnits[i]);
-		}
-		for ( int i = 0; i < wavelengthUnits.size(); i++ ){
-			ui.restUnitsCombo->addItem( wavelengthUnits[i]);
-		}
+
 		Record options = imageData->getOptions();
 		if ( options.isDefined( REST_FREQUENCY_KEY)){
 			Record restRecord = options.asRecord( REST_FREQUENCY_KEY);
@@ -308,6 +314,8 @@ namespace casa {
 				if ( unitsIndex >= 0 ){
 					restValue = restValueStr.before(unitsIndex );
 					restUnits = frequencyUnits[i];
+					ui.frequencyRadio->setChecked( true );
+					restType = REST_FREQUENCY;
 					break;
 				}
 			}
@@ -317,6 +325,8 @@ namespace casa {
 					if ( unitsIndex >= 0 ){
 						restValue = restValueStr.before( unitsIndex );
 						restUnits = wavelengthUnits[i];
+						ui.wavelengthRadio->setChecked( true );
+						restType = REST_WAVELENGTH;
 						break;
 					}
 				}
@@ -326,13 +336,47 @@ namespace casa {
 				int index = ui.restUnitsCombo->findText( restUnits );
 				ui.restUnitsCombo->setCurrentIndex( index );
 			}
-			else {
-				qDebug() << "Could not parse: "<<restValueStr.c_str();
-			}
 		}
 		//cout << options << endl;
 		connect( ui.restLineEdit, SIGNAL(textChanged(const QString&)), this, SLOT(restFrequencyChanged()));
-		connect( ui.restUnitsCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(restFrequencyChanged()));
+		connect( ui.restUnitsCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(restUnitsChanged()));
+		restChanged();
+	}
+
+	bool ImageView::isCategoryMatch( const QString& newUnits, const QString& oldUnits ) const {
+		bool categoryMatch = false;
+		if ( frequencyUnits.indexOf( newUnits )>= 0 && frequencyUnits.indexOf( oldUnits )>= 0 ){
+			categoryMatch = true;
+		}
+		else if ( wavelengthUnits.indexOf( newUnits )>= 0 && wavelengthUnits.indexOf( newUnits )>= 0 ){
+			categoryMatch = true;
+		}
+		return categoryMatch;
+	}
+
+	void ImageView::restUnitsChanged(){
+		//Only use this if changing withen units withen a given category.
+		//I.e. Frequency in Hz->GHz
+
+		QString newUnits = ui.restUnitsCombo->currentText();
+		bool categoryMatch = isCategoryMatch( newUnits, restUnits );
+		if ( categoryMatch && restUnits != newUnits &&
+				newUnits.trimmed().length() > 0 && restUnits.trimmed().length() > 0 ){
+			QString oldValueStr = ui.restLineEdit->text();
+			if ( oldValueStr.trimmed().length() > 0 ){
+				double oldValue = oldValueStr.toDouble();
+				double newValue = oldValue;
+				Converter* converter = Converter::getConverter( restUnits, newUnits );
+				if ( converter != NULL ){
+					newValue = converter->convert( oldValue );
+				}
+				delete converter;
+				if ( newValue != oldValue && ! isnan( newValue )){
+					ui.restLineEdit->setText( QString::number( newValue ));
+				}
+			}
+			restUnits = newUnits;
+		}
 	}
 
 	void ImageView::restFrequencyChanged(){
@@ -345,6 +389,15 @@ namespace casa {
 			Record restRecord = dataOptions.asRecord( REST_FREQUENCY_KEY );
 			restRecord.define( VALUE_KEY, comboStr );
 			dataOptions.defineRecord( REST_FREQUENCY_KEY, restRecord );
+			//An AipsError occurs if we do not remove region and mask;
+			const String REGION_RECORD = "region";
+			if ( dataOptions.isDefined( REGION_RECORD)){
+				dataOptions.removeField( REGION_RECORD);
+			}
+			const String MASK_RECORD = "mask";
+			if ( dataOptions.isDefined( MASK_RECORD)){
+				dataOptions.removeField( MASK_RECORD);
+			}
 			imageData->setOptions( dataOptions );
 		}
 	}
@@ -581,6 +634,47 @@ namespace casa {
 	//            Slots
 	//----------------------------------------------------------------
 
+	void ImageView::restChanged(){
+		ui.restUnitsCombo->clear();
+		if ( ui.frequencyRadio->isChecked()){
+			for ( int i = 0; i < frequencyUnits.size(); i++ ){
+				ui.restUnitsCombo->addItem( frequencyUnits[i]);
+			}
+		}
+		else {
+			for ( int i = 0; i < wavelengthUnits.size(); i++ ){
+				ui.restUnitsCombo->addItem( wavelengthUnits[i]);
+			}
+		}
+
+		QString restValueStr = ui.restLineEdit->text();
+		if ( restValueStr.trimmed().length() > 0 ){
+			double restValue = restValueStr.toDouble();
+			double convertedRestValue = restValue;
+			QString newUnits = ui.restUnitsCombo->currentText();
+			//Moving between frequency/wavelenth units
+			if (  restUnits.length() > 0 && newUnits.length() > 0 ){
+				convertedRestValue = wavelengthFrequencyConversion( restValue, restUnits, newUnits );
+			}
+			//Store the old rest type and units for next time.
+			restUnits = newUnits;
+			if ( ui.frequencyRadio->isChecked()){
+				restType = REST_FREQUENCY;
+			}
+			else {
+				restType = REST_WAVELENGTH;
+			}
+
+
+			//Put the converted value back into the text field.
+			if ( restValue != convertedRestValue ){
+				ui.restLineEdit->setText( QString::number(convertedRestValue) );
+			}
+
+		}
+	}
+
+
 	void ImageView::displayTypeChanged() {
 		//Decide if there has been a change to Raster/Color/Contour/Vector
 		DisplayType guiDisplay = static_cast<DisplayType>(displayGroup->checkedId());
@@ -744,6 +838,17 @@ namespace casa {
 
 	void ImageView::mouseMoveEvent( QMouseEvent* event ) {
 		makeDrag( event );
+	}
+
+	double ImageView::wavelengthFrequencyConversion( double value,
+			QString oldUnits, QString newUnits ) const {
+		Converter* converter = Converter::getConverter( oldUnits, newUnits );
+		double result = value;
+		if ( converter != NULL ){
+			result = converter->convert( value );
+		}
+		delete converter;
+		return result;
 	}
 
 	ImageView::~ImageView() {
