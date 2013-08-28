@@ -1,4 +1,3 @@
-//# tSubImage.cc: Test program for class SubImage
 //# Copyright (C) 1998,1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -28,12 +27,14 @@
 #include <imageanalysis/ImageAnalysis/ImageRegridder.h>
 
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
+#include <images/Images/ImageConcat.h>
 #include <images/Images/ImageRegrid.h>
 #include <images/Regions/WCBox.h>
 
 #include <imageanalysis/ImageAnalysis/ImageMetaData.h>
 #include <imageanalysis/Annotations/AnnRectBox.h>
 
+#include <casa/Arrays/ArrayLogical.h>
 
 #include <memory>
 
@@ -54,7 +55,7 @@ ImageRegridder::ImageRegridder(
 	_csysTo(csysTo), _axes(axes), _shape(shape), _dropdeg(dropdeg),
 	_specAsVelocity(False), _doRefChange(True), _replicate(False),
 	_forceRegrid(False), _debug(0), _decimate(10),
-	_method(Interpolate2D::LINEAR) {
+	_method(Interpolate2D::LINEAR), _outputStokes(0) {
 	_construct();
 	_finishConstruction();
 }
@@ -71,8 +72,7 @@ ImageRegridder::ImageRegridder(
 	_csysTo(templateIm->coordinates()), _axes(axes), _shape(shape),
 	_dropdeg(dropdeg), _specAsVelocity(False), _doRefChange(True),
 	_replicate(False), _forceRegrid(False), _debug(0), _decimate(10),
-	_method(Interpolate2D::LINEAR)
-{
+	_method(Interpolate2D::LINEAR),_outputStokes(0) {
 	_construct();
 	_finishConstruction();
 }
@@ -100,21 +100,21 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::regrid(
 			}
 		}
 	}
-	TempImage<Float> workIm;
+	std::tr1::shared_ptr<ImageInterface<Float> > workIm;
 	if (regridByVel) {
 		workIm = _regridByVelocity();
 	}
 	else {
 		workIm = _regrid();
 	}
-	std::tr1::shared_ptr<ImageInterface<Float> > outImage = _prepareOutputImage(workIm);
+	std::tr1::shared_ptr<ImageInterface<Float> > outImage = _prepareOutputImage(*workIm);
 	if (! wantReturn) {
 		outImage.reset();
 	}
 	return outImage;
 }
 
-TempImage<Float> ImageRegridder::_regrid() const {
+std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regrid() const {
 	std::auto_ptr<ImageInterface<Float> > clone(_getImage()->cloneII());
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*clone, *_getRegion(), _getMask(), _getLog().get(),
@@ -137,124 +137,83 @@ TempImage<Float> ImageRegridder::_regrid() const {
 			<< "The number of pixel axes in the output shape and Coordinate System must be the same"
 			<< LogIO::EXCEPTION;
 	}
-	TempImage<Float> workIm(_shape, csys);
-	workIm.set(0.0);
-	ImageUtilities::copyMiscellaneous(workIm, subImage);
+	std::tr1::shared_ptr<ImageInterface<Float> > workIm(
+		new TempImage<Float>(_kludgedShape, csys)
+	);
+	workIm->set(0.0);
+	ImageUtilities::copyMiscellaneous(*workIm, subImage);
 	String maskName("");
-	ImageMaskAttacher<Float>::makeMask(workIm, maskName, True, True, *_getLog(), True);
+	ImageMaskAttacher<Float>::makeMask(*workIm, maskName, True, True, *_getLog(), True);
 	if (csysFrom.hasDirectionCoordinate() && csys.hasDirectionCoordinate()) {
 		ThrowIf (
-			! _doImagesOverlap(subImage, workIm),
+			! _doImagesOverlap(subImage, *workIm),
 			"There is no overlap between the (region chosen in) the input image"
 			" and the output image with respect to the axes being regridded."
 		);
-		/*
-		try {
-			// check that there is overlap between input and output
-			IPosition shapeIn = subImage.shape();
-			Vector<Double> blc, trc;
-			Bool ok = csysFrom.toWorld(blc, IPosition(shapeIn.size(), 0));
-			if (ok) {
-				ok = csysFrom.toWorld(trc, IPosition(shapeIn-1));
-			}
-			if (ok) {
-				if (
-					csysFrom.directionCoordinate().directionType(True) == csys.directionCoordinate().directionType(True)
-					&& (
-						! csysFrom.hasSpectralAxis()
-						|| csysFrom.spectralCoordinate().frequencySystem(True) == csys.spectralCoordinate().frequencySystem(True)
-					)
-				) {
-					Vector<Double> pixel;
-					csys.toPixel(pixel, blc);
-					*_getLog() << LogIO::NORMAL << "The blc in the selected region corresponds to pixel "
-							<< pixel << " in the template coordinate system." << LogIO::POST;
-					csys.toPixel(pixel, trc);
-					*_getLog() << LogIO::NORMAL << "The trc in the selected region corresponds to pixel "
-							<< pixel << " in the template coordinate system." << LogIO::POST;
-				}
-				cout << __FILE__ << " " << __LINE__ << endl;
-
-				Vector<String> units = csysFrom.worldAxisUnits();
-				Vector<Quantity> blcQ(blc.size()), trcQ(trc.size());
-				Vector<Int> absrel(blc.size(), RegionType::Abs);
-				cout << __FILE__ << " " << __LINE__ << endl;
-
-				for (uInt i=0; i<shapeIn.size(); i++) {
-					blcQ[i] = Quantity(blc[i], units[i]);
-					trcQ[i] = Quantity(trc[i], units[i]);
-				}
-				Vector<Int> dirPix = csysFrom.directionAxesNumbers();
-				Quantity blcx = blcQ[dirPix[0]];
-				Quantity blcy = blcQ[dirPix[1]];
-				Quantity trcx = trcQ[dirPix[0]];
-				Quantity trcy = trcQ[dirPix[1]];
-				String dirRefFrameString = MDirection::showType(
-					csysFrom.directionCoordinate().directionType(True)
-				);
-				Quantity beginFreq(0, "Hz");
-				Quantity endFreq(0, "Hz");
-				Quantity restfreq(0, "Hz");
-				String freqRefFrameString, dopplerString;
-				if (csysFrom.hasSpectralAxis()) {
-					Int specAxis = csysFrom.spectralAxisNumber(True);
-					beginFreq = blcQ[specAxis];
-					endFreq = trcQ[specAxis];
-					freqRefFrameString = MFrequency::showType(
-						csysFrom.spectralCoordinate().frequencySystem(True)
-					);
-					dopplerString = MDoppler::showType(csysFrom.spectralCoordinate().velocityDoppler());
-					restfreq = Quantity(csysFrom.spectralCoordinate().restFrequency(), units[specAxis]);
-				}
-				cout << __FILE__ << " " << __LINE__ << endl;
-
-				AnnRectBox box(
-					blcx, blcy, trcx, trcy, dirRefFrameString,
-					csys, workIm.shape(),
-					beginFreq, endFreq, freqRefFrameString,
-					dopplerString, restfreq,
-					Vector<Stokes::StokesTypes>(0),
-					False
-				);
-				cout << __FILE__ << " " << __LINE__ << endl;
-
-				//WCBox box(blcQ, trcQ, csysFrom, absrel);
-				SubImage<Float> overlap = SubImageFactory<Float>::createSubImage(
-						workIm, box.asRecord(), "", _getLog().get(),
-						False, AxesSpecifier(), False
-				);
-				cout << __FILE__ << " " << __LINE__ << endl;
-
-			}
-		}
-		catch (const AipsError& x) {
-			cout << __FILE__ << " " << __LINE__ << endl;
-
-			cout << "*** in catch blcok" << endl;
-			ThrowIf (
-				! _doImagesOverlap(subImage, workIm),
-				"There is no overlap between the (region chosen in) the input image"
-				" and the output image with respect to the axes being regridded."
-			);
-		}
-		*/
 	}
 	ImageRegrid<Float> ir;
 	ir.showDebugInfo(_debug);
 	ir.disableReferenceConversions(!_doRefChange);
 	ir.regrid(
-		workIm, _method, _axes, subImage,
+		*workIm, _method, _axes, subImage,
 		_replicate, _decimate, True,
 		_forceRegrid
 	);
+	if (! _outputStokes.empty()) {
+		ImageMetaData<Float> md(workIm.get());
+		if (_outputStokes.size() < md.nStokes()) {
+			CasacRegionManager rm(workIm->coordinates());
+			String diagnostics;
+			uInt nSelectedChannels = 0;
+			if (_outputStokes.size() == 1) {
+				/*
+				String& diagnostics, uInt& nSelectedChannels, String& stokes,
+					const String& chans,
+					const StokesControl stokesControl, const String& box,
+					const IPosition& imShape
+					*/
+				String stokes = _outputStokes[0];
+				Record region = rm.fromBCS(
+					diagnostics, nSelectedChannels, stokes,
+					"", CasacRegionManager::USE_FIRST_STOKES,
+					"", workIm->shape()
+				).toRecord("");
+				workIm = SubImageFactory<Float>::createImage(
+					*workIm, "", region, "", False, False, False, False
+				);
+			}
+			else {
+				// Only include the wanted stokes
+				std::tr1::shared_ptr<ImageConcat<Float> > concat(
+					new ImageConcat<Float>(
+						workIm->coordinates().polarizationAxisNumber(False)
+					)
+				);
+				for (uInt i=0; i<_outputStokes.size(); i++) {
+					String stokes = _outputStokes[i];
+					Record region = rm.fromBCS(
+						diagnostics, nSelectedChannels, stokes,
+						"", CasacRegionManager::USE_FIRST_STOKES,
+						"", workIm->shape()
+					).toRecord("");
+					concat->setImage(
+						*SubImageFactory<Float>::createImage(
+							*workIm, "", region, "", False, False, False, False
+						), True
+					);
+				}
+				workIm = concat;
+			}
+		}
+	}
 	ThrowIf(
-		workIm.hasPixelMask() && ! anyTrue(workIm.pixelMask().get()),
+		workIm->hasPixelMask() && ! anyTrue(workIm->pixelMask().get()),
 		"All output pixels are masked."
 	);
 	return workIm;
 }
 
-TempImage<Float> ImageRegridder::_regridByVelocity() const {
+std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regridByVelocity() const {
 	if (
 		_csysTo.spectralCoordinate().frequencySystem(True)
 		!= _getImage()->coordinates().spectralCoordinate().frequencySystem(True)
@@ -280,7 +239,6 @@ TempImage<Float> ImageRegridder::_regridByVelocity() const {
 		dynamic_cast<CoordinateSystem *>(maskedClone->coordinates().clone())
 	);
 
-	// SpectralCoordinate templateSpecCoord = csys->spectralCoordinate();
 	SpectralCoordinate newSpecCoord = coordClone->spectralCoordinate();
 
 	Double newVelRefVal = 0;
@@ -361,11 +319,11 @@ TempImage<Float> ImageRegridder::_regridByVelocity() const {
 	regridder.setStretch(_getStretch());
 	regridder.setSpecAsVelocity(False);
 
-	TempImage<Float> outImage = regridder._regrid();
+	std::tr1::shared_ptr<ImageInterface<Float> > outImage = regridder._regrid();
 
 	// replace the temporary linear coordinate with the saved spectral coordinate
 	std::auto_ptr<CoordinateSystem> newCoords(
-		dynamic_cast<CoordinateSystem *>(outImage.coordinates().clone())
+		dynamic_cast<CoordinateSystem *>(outImage->coordinates().clone())
 	);
 
 	// make frequencies correct
@@ -409,12 +367,13 @@ TempImage<Float> ImageRegridder::_regridByVelocity() const {
 		*_getLog() << "Unable to replace coordinate for velocity regridding"
 			<< LogIO::EXCEPTION;
 	}
-	outImage.setCoordinateInfo(*newCoords);
+	outImage->setCoordinateInfo(*newCoords);
 	return outImage;
 }
 
 void ImageRegridder::_finishConstruction() {
-	if (_shape.empty() || (_shape.size() == 1 && _shape[0] <= 0)) {
+	Bool shapeSpecified = ! _shape.empty() && _shape[0] >= 0;
+	if (! shapeSpecified) {
 		IPosition imShape = _getImage()->shape();
 		_shape.resize(imShape.size());
 		_shape = imShape;
@@ -422,6 +381,56 @@ void ImageRegridder::_finishConstruction() {
 			IPosition tmp = _shape.nonDegenerate();
 			_shape.resize(tmp.size());
 			_shape = tmp;
+		}
+	}
+	_kludgedShape = _shape;
+	const CoordinateSystem csysFrom = _getImage()->coordinates();
+	// enforce stokes rules CAS-4960
+	if (csysFrom.hasPolarizationCoordinate() && _csysTo.hasPolarizationCoordinate()) {
+		Vector<Int> templateStokes = _csysTo.stokesCoordinate().stokes();
+		Vector<Int> inputStokes = csysFrom.stokesCoordinate().stokes();
+		Int inputPolAxisNumber = csysFrom.polarizationAxisNumber();
+		if (
+			(
+				_axes.empty()
+				|| inputPolAxisNumber < (Int)_axes.size()
+			) && templateStokes.size() > 1
+		) {
+			if (
+				(
+					_axes.empty() && inputStokes.size() > 1
+				)
+				|| _axes[inputPolAxisNumber] > 0
+			) {
+				StokesCoordinate stokesFrom = csysFrom.stokesCoordinate();
+				StokesCoordinate stokesTo = _csysTo.stokesCoordinate();
+				Stokes::StokesTypes valFrom, valTo;
+				for (uInt i=0; i<inputStokes.size(); i++) {
+					stokesFrom.toWorld(valFrom, i);
+					for (uInt j=0; j<templateStokes.size(); j++) {
+						stokesTo.toWorld(valTo, j);
+						if (valFrom == valTo) {
+							_outputStokes.push_back(Stokes::name(valFrom));
+							break;
+						}
+					}
+				}
+				ThrowIf(
+					_outputStokes.empty(),
+					"Input image and template coordinate system have no common stokes."
+				);
+				ThrowIf(
+					shapeSpecified && ((Int)_outputStokes.size() != _shape[inputPolAxisNumber]),
+					"Specified output stokes axis length (" + String::toString(_shape[inputPolAxisNumber])
+					+ ") does not match the number of common stokes ("
+					+ String::toString(_outputStokes.size())
+					+ ") in the input image and template coordinate system."
+				);
+				// This is a kludge to fool the underlying ImageRegrid constructor that the shape
+				// is acceptable to it. We copy just the stokes we from the output of ImageRegrid.
+				ImageMetaData<Float> md(_getImage().get());
+				_kludgedShape[csysFrom.polarizationAxisNumber(False)] = md.nStokes();
+			}
 		}
 	}
 }
@@ -513,7 +522,6 @@ Bool ImageRegridder::_doImagesOverlap(
 	}
 	return False;
 }
-
 
 Vector<std::pair<Double, Double> > ImageRegridder::_getDirectionCorners(
 	const DirectionCoordinate& dc,

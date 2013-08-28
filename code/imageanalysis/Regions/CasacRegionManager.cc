@@ -124,6 +124,9 @@ vector<uInt> CasacRegionManager::_setPolarizationRanges(
 		return ranges;
 	}
 	specification.trim();
+	specification.ltrim('[');
+	specification.rtrim(']');
+
 	specification.upcase();
 	if (specification == ALL) {
 		ranges.push_back(0);
@@ -172,33 +175,27 @@ vector<uInt> CasacRegionManager::_setPolarizationRanges(
 		sortedNames[i] = polNames[idx[i]];
 		sortedNames[i].upcase();
 	}
-
 	for (uInt i=0; i<parts.size(); i++) {
 		String part = parts[i];
-
+		part.trim();
 		Vector<String>::iterator iter = sortedNames.begin();
 		while (iter != sortedNames.end() && ! part.empty()) {
 			if (part.startsWith(*iter)) {
 				Int stokesPix = csys.stokesPixelNumber(*iter);
 				if (stokesPix >= int(nStokes)) {
-					stokesPix = -1;
-				}
-				if (stokesPix >= 0) {
-					ranges.push_back(stokesPix);
-					ranges.push_back(stokesPix);
-					// consume the string
-					part = part.substr(iter->length());
-					if (! part.empty()) {
-						// reset the iterator to start over at the beginning of the list for
-						// the next specified polarization
-						iter = sortedNames.begin();
-					}
-				}
-				else {
 					*_getLog() << "Polarization " << *iter << " specified in "
 						<< parts[i] << " does not exist in the specified "
 						<< "coordinate system for the specified number of "
 						<< "polarization parameters" << LogIO::EXCEPTION;
+				}
+				ranges.push_back(stokesPix);
+				ranges.push_back(stokesPix);
+				// consume the string
+				part = part.substr(iter->length());
+				if (! part.empty()) {
+					// reset the iterator to start over at the beginning of the list for
+					// the next specified polarization
+					iter = sortedNames.begin();
 				}
 			}
 			else {
@@ -284,7 +281,7 @@ Record CasacRegionManager::fromBCS(
 		if (box.freq(",") % 4 != 3) {
 			*_getLog() << "box not specified correctly" << LogIO::EXCEPTION;
 		}
-		regionRecord = _fromBCS(
+		regionRecord = fromBCS(
 				diagnostics, nSelectedChannels, stokes,
 				chans, stokesControl, box, imShape
 		).toRecord("");
@@ -325,7 +322,7 @@ Record CasacRegionManager::fromBCS(
 	}
 	else {
 		vector<uInt> chanEndPts, polEndPts;
-		regionRecord = _fromBCS(
+		regionRecord = fromBCS(
 			diagnostics, nSelectedChannels, stokes,
 			chans, stokesControl, box, imShape
 		).toRecord("");
@@ -485,7 +482,7 @@ void CasacRegionManager::_setRegion(
 	}
 }
 
-ImageRegion CasacRegionManager::_fromBCS(
+ImageRegion CasacRegionManager::fromBCS(
 	String& diagnostics, uInt& nSelectedChannels, String& stokes,
 	const String& chans,
 	const StokesControl stokesControl, const String& box,
@@ -696,10 +693,6 @@ ImageRegion CasacRegionManager::_fromBCS(
 				Vector<Double> range(2, 0);
 				range[1] = imShape[axisNumber] - 1;
 				axisCornerMap[axisNumber] = range;
-				/*
-				*_getLog() << "Unhandled image axis number " << axisNumber
-					<< LogIO::EXCEPTION;
-				*/
 			}
 		}
 	}

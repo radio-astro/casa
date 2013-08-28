@@ -128,20 +128,21 @@ protected:
 
 private:
 	const CoordinateSystem _csysTo;
-	IPosition _axes, _shape;
+	IPosition _axes, _shape, _kludgedShape;
 	Bool _dropdeg, _specAsVelocity, _doRefChange, _replicate, _forceRegrid;
 	Int _debug, _decimate;
 	static const String _class;
 	Interpolate2D::Method _method;
+	vector<String> _outputStokes;
 
 	// disallow default constructor
 	ImageRegridder();
 
 	void _finishConstruction();
 
-	TempImage<Float> _regrid() const;
+	std::tr1::shared_ptr<ImageInterface<Float> > _regrid() const;
 
-	TempImage<Float> _regridByVelocity() const;
+	std::tr1::shared_ptr<ImageInterface<Float> > _regridByVelocity() const;
 
 	static Bool _doImagesOverlap(
 		const ImageInterface<Float>& image0,
