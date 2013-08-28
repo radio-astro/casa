@@ -65,7 +65,10 @@ def imregrid(
                 if (len(shape) == 1 and shape[0] == -1):
                     # CAS-4959, output shape should have template shape
                     # for axes being regridded, input image shape for axes
-                    # not being regridded
+                    # not being regridded,
+                    # CAS-4960 in cases where the input image and template both have multiple stokes,
+                    # the number of pixels on the output stokes axis is to be the number of stokes the
+                    # input and template have in common
                     tempshape = template_ia.shape()
                     imshape = image_ia.shape()
                     shape = imshape
@@ -77,8 +80,24 @@ def imregrid(
                                 # location by the axis name, CAS-4960
                                 shape[i] = tempshape[template_csys.findaxisbyname(targetaxesnames[i])] 
                                 break
+                    if (
+                        template_csys.findcoordinate("stokes")[0]
+                        and image_csys.findcoordinate("stokes")[0]
+                        and len(template_csys.stokes()) > 1
+                        and len(image_csys.stokes()) > 1
+                    ):
+                        # adjust stokes length to be equal to number of common stokes
+                        common_stokes_count = 0
+                        for image_stokes in image_csys.stokes():
+                            for template_stokes in template_csys.stokes():
+                                if image_stokes == template_stokes:
+                                    common_stokes_count += 1
+                                    break
+                        shape[image_csys.findaxisbyname("stokes")] = common_stokes_count
+                
                 template_ia.done()
                 image_ia.done()
+                
                 csys = template_csys
         else:
             csys = cstool()

@@ -631,6 +631,8 @@ class imregrid_test(unittest.TestCase):
         self.assertTrue(myia.shape()[exp_axis] == 2)
         self.assertTrue(myia.coordsys().stokes() == ['I','Q'])
         myia.done()
+        # specifying an output stokes length other than the input stokes length
+        # is not allowed
         self.assertFalse(
             imregrid(
                 imagename=imagename, template=template,
@@ -645,6 +647,8 @@ class imregrid_test(unittest.TestCase):
                 shape=[20, 20, 3, 20]
             )
         )
+        # specifying an output stokes length other than the input stokes length
+        # is allowed
         self.assertTrue(
             imregrid(
                 imagename=imagename, template=template,
@@ -653,6 +657,124 @@ class imregrid_test(unittest.TestCase):
             )
         )
         
+    def test_degenerate_template_stokes_axis_and_input_stokes_length_gt_0(self):
+        """Verify correct behavior for the template image having a degenerate stokes axis"""
+        myia = self._myia
+        imagename = "ac.im"
+        myia.fromshape(imagename, [20, 20, 2, 20])
+        template = "ac_temp.im"
+        myia.fromshape(template, [20, 20, 1, 20])
+        csys = myia.coordsys()
+        csys.setincrement([-0.9, 0.9, 1, 1500])
+        myia.setcoordsys(csys.torecord())
+        myia.done()
+        output = "ac.out.im"
+        # all input stokes in output if shape and axes not specified
+        self.assertTrue(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5, overwrite=True
+            )
+        )
+        myia.open(output)
+        self.assertTrue(myia.shape()[2] == 2)
+        myia.done()
+        # not allowed if output stokes length different from input stokes length
+        self.assertFalse(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5, shape=[20, 20, 1, 20],
+                overwrite=True
+            )
+        )
+        self.assertFalse(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5, shape=[20, 20, 3, 20],
+                overwrite=True
+            )
+        )
+        self.assertTrue(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5, shape=[20, 20, 2, 20],
+                overwrite=True
+            )
+        )
+        
+    def test_template_stokes_length_gt_1_and_input_stokes_length_gt_0(self):
+        """Verify correct behavior for the template image having a stokes axis of length > 1"""
+        myia = self._myia
+        imagename = "ad.im"
+        myia.fromshape(imagename, [20, 20, 4, 20])
+        template = "ad_temp.im"
+        myia.fromshape(template, [20, 20, 4, 20])
+        csys = myia.coordsys()
+        csys.setincrement([-0.9, 0.9, 1, 1500])
+        myia.setcoordsys(csys.torecord())
+        myia.done()
+        output = "ad.out.im"
+        self.assertTrue(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5, overwrite=True
+            )
+        )
+        myia.open(template)
+        csys = myia.coordsys()
+        csys.setstokes('XX RL LR YY')
+        myia.setcoordsys(csys.torecord())
+        myia.done()
+        # no match between input and template stokes => not allowed
+        self.assertFalse(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5, overwrite=True
+            )
+        )
+        csys.setstokes("XX I LL RR")
+        myia.open(template)
+        myia.setcoordsys(csys.torecord())
+        myia.done()
+        # specified output stokes axis length != number of common stokes => not allowed
+        self.assertFalse(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5, overwrite=True,
+                shape=[20, 20, 3, 20]
+            )
+        )
+        # no output shape and number of common stokes > 0 => allowed
+        self.assertTrue(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5, overwrite=True
+            )
+        )
+        myia.open(output)
+        expec = ["I"]
+        self.assertTrue(myia.coordsys().stokes() == expec)
+        myia.done()
+        
+        csys.setstokes("XX I U RR")
+        myia.open(template)
+        myia.setcoordsys(csys.torecord())
+        print "*** template stokes " + str(myia.coordsys().stokes())
+
+        myia.done()
+        # no output shape and number of common stokes > 0 => allowed
+        self.assertTrue(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5, overwrite=True
+            )
+        )
+        myia.open(output)
+        expec = ["I", "U"]
+        self.assertTrue(myia.coordsys().stokes() == expec)
+        self.assertTrue((myia.shape() == [20, 20, 2, 20]).all())
+        myia.done()
+    
     def test_regrid_galactic(self):
         """Verify fix for CAS-5534"""
         myia = self._myia
