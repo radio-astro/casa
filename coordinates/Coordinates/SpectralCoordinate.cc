@@ -1028,7 +1028,7 @@ MFrequency::Types SpectralCoordinate::frequencySystem(Bool showConversion) const
     }         
 }
 
-void  SpectralCoordinate::setFrequencySystem(MFrequency::Types type)
+void  SpectralCoordinate::setFrequencySystem(MFrequency::Types type, Bool verbose)
 {
     if (type==type_p) return;
 //   
@@ -1050,7 +1050,7 @@ void  SpectralCoordinate::setFrequencySystem(MFrequency::Types type)
 // the current conversion, and demand the user re-issues the
 // setReferenceConversion function
 
-   if (oldType != conversionType_p) {
+   if (verbose && oldType != conversionType_p) {
       LogIO os(LogOrigin("SpectralCoordinate", "setFrequencySystem"));
       os << LogIO::WARN << "Resetting the conversion frequency system " << MFrequency::showType(conversionType_p) << endl;
       os << "to the new native frequency system " << MFrequency::showType(type_p) << endl;

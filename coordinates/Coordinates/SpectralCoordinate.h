@@ -440,7 +440,7 @@ public:
     // conversion machines.  
     // <group>
     MFrequency::Types frequencySystem(Bool showConversion=False) const;
-    void  setFrequencySystem(MFrequency::Types type);
+    void  setFrequencySystem(MFrequency::Types type, Bool verbose=True);
     // </group>
 
     // Report the value of the requested attribute.
