@@ -104,7 +104,19 @@ class test_base(unittest.TestCase):
             
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform)              
-        
+
+    def setUp_floatcol(self):
+        datapath = os.environ.get('CASAPATH').split()[0] + \
+                    "/data/regression/unittest/flagdata/"
+                    
+        # 15 rows, 3 scans, 9 spw, mixed chans, XX,YY, FLOAT_DATA col
+        self.vis = 'SDFloatColumn.ms'
+        if os.path.exists(self.vis):
+            self.cleanup()
+            
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
+        default(mstransform)   
+               
     def cleanup(self):
         os.system('rm -rf '+ self.vis)
 
@@ -207,10 +219,10 @@ class test_Combspw1(test_base):
         mytb = tbtool()
         mytb.open(outputms + '/DATA_DESCRIPTION')
         spwCol = mytb.getcol('SPECTRAL_WINDOW_ID')      
+        mytb.close()          
         nspw = spwCol.size  
         check_eq(nspw, 1)   
         check_eq(spwCol[0], 0)
-        mytb.close()          
         
 
 class test_Regridms1(test_base):
@@ -888,13 +900,13 @@ class test_SeparateSPWs(test_base):
         mytb = tbtool()
         mytb.open(outputms + '/DATA_DESCRIPTION')
         spwCol = mytb.getcol('SPECTRAL_WINDOW_ID')      
+        mytb.close()    
         nspw = spwCol.size  
         check_eq(nspw, 4)   
         check_eq(spwCol[0], 0)
         check_eq(spwCol[1], 1)
         check_eq(spwCol[2], 2)
         check_eq(spwCol[3], 3)
-        mytb.close()    
         
     def test_CAS_5403_2(self):
         '''mstransform: combine spw 0,1,2 into one spw and then break it doen in 4 spws. 
@@ -907,13 +919,13 @@ class test_SeparateSPWs(test_base):
         mytb = tbtool()
         mytb.open(outputms + '/DATA_DESCRIPTION')
         spwCol = mytb.getcol('SPECTRAL_WINDOW_ID')      
+        mytb.close()            
         nspw = spwCol.size  
         check_eq(nspw, 4)   
         check_eq(spwCol[0], 0)
         check_eq(spwCol[1], 1)
         check_eq(spwCol[2], 2)
         check_eq(spwCol[3], 3)
-        mytb.close()            
    
         # Verify that some sub-tables are properly re-indexed.
         dd_col = th.getVarCol(outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')            
@@ -1116,12 +1128,12 @@ class test_WeightSpectrum(test_base):
         mytb.open(self.outvis)
         data = mytb.getcol('DATA')  
         exposure = mytb.getcol('EXPOSURE')    
+        mytb.close() 
         nchan = data.size   
         check_eq(nchan, 50)
         check_eq(data[0][0][0].real, 0.0950, 0.0001)
         check_eq(data[0][nchan-1][0].imag, 0.0610, 0.0001)
         check_eq(exposure[0], 7.5, 0.0001)
-        mytb.close() 
         
         
     def test_combineSPWDiffExpWithWeightSpectrumFilledFromWeight(self):
@@ -1140,12 +1152,12 @@ class test_WeightSpectrum(test_base):
         mytb.open(self.outvis)
         data = mytb.getcol('DATA')   
         exposure = mytb.getcol('EXPOSURE')       
+        mytb.close()        
         nchan = data.size   
         check_eq(nchan, 50)
         check_eq(data[0][0][0].real, 0.0950, 0.0001)
         check_eq(data[0][nchan-1][0].imag, 0.0610, 0.0001)
         check_eq(exposure[0], 7.5, 0.0001)
-        mytb.close()        
         
         
     def test_fillWeightSpectrumFromWeight(self):
@@ -1163,11 +1175,11 @@ class test_WeightSpectrum(test_base):
         mytb = tbtool()
         mytb.open(self.outvis)
         weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')      
+        mytb.close()
         nchan = weightSpectrum.size  
         check_eq(nchan, 50)   
         check_eq(weightSpectrum[0][0][0], 58.9232, 0.0001)
         check_eq(weightSpectrum[0][nchan-1][0], 31.4836, 0.0001)
-        mytb.close()
         
         
     def test_combineSPWAndChanAvgWithWeightSpectrum(self):
@@ -1185,11 +1197,11 @@ class test_WeightSpectrum(test_base):
         mytb = tbtool()
         mytb.open(self.outvis)
         data = mytb.getcol('DATA')      
+        mytb.close()  
         nchan = data.size   
         check_eq(nchan, 12)
         check_eq(data[0][0][0].real, 0.0628, 0.0001)
         check_eq(data[0][nchan-1][0].imag, -0.2508, 0.0001)
-        mytb.close()  
         
         
     def test_combineSPWDiffExpAndChanAvgWithWeightSpectrum(self):
@@ -1207,11 +1219,11 @@ class test_WeightSpectrum(test_base):
         mytb = tbtool()
         mytb.open(self.outvis)
         data = mytb.getcol('DATA')      
+        mytb.close()  
         nchan = data.size   
         check_eq(nchan, 12)
         check_eq(data[0][0][0].real, 0.0628, 0.0001)
         check_eq(data[0][nchan-1][0].imag, -0.2508, 0.0001)
-        mytb.close()  
         
 class test_channelAverageByDefault(test_base):
     
@@ -1232,10 +1244,31 @@ class test_channelAverageByDefault(test_base):
         mytb.open(self.outvis)
         data = mytb.getcol('DATA')      
         nchan = data.shape[1]
+        mytb.close() 
         check_eq(nchan, 55)
         check_eq(data[0][0][0].real, 0.0323, 0.0001)
         check_eq(data[0][nchan-1][0].imag, 0.3296, 0.0001)
-        mytb.close() 
+ 
+class test_float_column(test_base):
+    def setUp(self):
+        self.setUp_floatcol()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outputms)
+        
+# The following seg faults at the moment. Uncomment in suite later
+    def test_regrid_float(self):
+        '''mstransform: change outframe of FLOAT_DATA MS'''
+        self.outputms = 'floatcol1.mms'
+        mstransform(vis=self.vis,outputvis=self.outputms,datacolumn='FLOAT_DATA',
+                    regridms=True,outframe='LSRK',spw='1,2')
+         
+        mytb = tbtool()
+        mytb.open(self.outputms+'/SPECTRAL_WINDOW')
+        refnum = mytb.getcell('MEAS_FREQ_REF',0)
+        mytb.close()
+        self.assertEqual(refnum, 1)
  
 # Cleanup class 
 class Cleanup(test_base):
@@ -1266,4 +1299,5 @@ def suite():
             test_state,
             test_WeightSpectrum,
             test_channelAverageByDefault,
+#            test_float_column,
             Cleanup]
