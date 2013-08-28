@@ -8,7 +8,7 @@ import asap as sd
 import sdutil
 
 @sdutil.sdtask_decorator
-def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes, gridfunction, convsupport, truncate, gwidth, jwidth, outfile, overwrite, imsize, cell, dochannelmap, nchan, start, step, outframe, phasecenter, ephemsrcname, pointingcolumn):
+def sdimaging(infiles, specunit, restfreq, scanlist, field, spw, antenna, stokes, gridfunction, convsupport, truncate, gwidth, jwidth, outfile, overwrite, imsize, cell, dochannelmap, nchan, start, step, outframe, phasecenter, ephemsrcname, pointingcolumn):
     with sdutil.sdtask_manager(sdimaging_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -52,7 +52,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             try:
                 self.fieldid = field_names.tolist().index(self.field)
             except:
-                msg = 'field name '+field+' not found in FIELD table'
+                msg = 'field name '+field+' not found in FIELD table of the first MS'
                 raise ValueError, msg
         else:
             if self.field == -1:
@@ -61,7 +61,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
                 self.fieldid = self.field
                 self.sourceid = source_ids[self.field]
             else:
-                msg = 'field id %s does not exist' % (self.field)
+                msg = 'field id %s does not exist in the first MS' % (self.field)
                 raise ValueError, msg
 
         # restfreq
@@ -80,37 +80,44 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.imager_param['restfreq'] = self.restfreq
         
         # 
-        # spw
+        # spw (define representative spw id = self.spwid)
         self.spwid=-1
         self.open_table(self.spw_table)
         nrows=self.table.nrows()
-        if self.spw < nrows:
-            self.spwid=self.spw
-        else:
+        for id in self.spw:
+            if id < nrows:
+                self.spwid=id
+                break
+        if self.spwid < 0:
             self.close_table()
-            msg='spw id %s does not exist' % (self.spw)
+            msg='No valid spw id exists in the first table'
             raise ValueError, msg
         self.allchannels=self.table.getcell('NUM_CHAN',self.spwid)
         self.close_table()
-        self.imager_param['spw'] = self.spwid
+        self.imager_param['spw'] = -1 #self.spwid
 
         # outframe (force using the current frame)
         #self.imager_param['outframe'] = ''
         self.imager_param['outframe'] = self.outframe
         if self.outframe == '':
-            # get from MS
-            my_ms = gentools(['ms'])[0]
-            my_ms.open(self.infile)
-            spwinfo = my_ms.getspectralwindowinfo()
-            my_ms.close()
-            del my_ms
-            for key, spwval in spwinfo.items():
-                if spwval['SpectralWindowId'] == self.imager_param['spw']:
-                    self.imager_param['outframe'] = spwval['Frame']
-                    casalog.post("Using frequency frame of MS, '%s'" % self.imager_param['outframe'])
-                    break
+            if len(self.infiles) > 1:
+                # The default will be 'LSRK'
+                casalog.post("Multiple MS inputs. The default outframe is set to 'LSRK'")
+                self.imager_param['outframe'] = 'LSRK'
+            else:
+                # get from MS
+                my_ms = gentools(['ms'])[0]
+                my_ms.open(self.infiles[0])
+                spwinfo = my_ms.getspectralwindowinfo()
+                my_ms.close()
+                del my_ms
+                for key, spwval in spwinfo.items():
+                    if spwval['SpectralWindowId'] == self.spwid:
+                        self.imager_param['outframe'] = spwval['Frame']
+                        casalog.post("Using frequency frame of MS, '%s'" % self.imager_param['outframe'])
+                        break
             if self.imager_param['outframe'] == '':
-                raise Exception, "Internal error of getting frequency frame of spw=%d." % self.imager_param['spw']
+                raise Exception, "Internal error of getting frequency frame of spw=%d." % self.spwid
         else:
             casalog.post("Using frequency frame defined by user, '%s'" % self.imager_param['outframe'])
         
@@ -187,7 +194,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.imager_param['start'] = startval
         self.imager_param['step'] = stepval
         self.imager_param['nchan'] = self.nchan
-                
+        
         # phasecenter
         # if empty, it should be determined here...
         if len(self.phasecenter) == 0:
@@ -213,41 +220,49 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.imager_param['movingsource'] = self.ephemsrcname
 
         ### WORKAROUND for image unit ###
-        self.open_table(self.infile)
         datacol_lookup = ['FLOAT_DATA', 'DATA']
-        valid_cols = self.table.colnames()
-        datacol = ''
-        for colname in datacol_lookup:
-            if colname in valid_cols:
-                datacol = colname
-                break
-
-        if len(datacol) == 0:
-            self.close_table()
-            raise Exception, "Could not find a column that stores data."
-
-        datakw = self.table.getcolkeywords(datacol)
         self.tb_fluxunit = ''
-        if datakw.has_key('UNIT'):
-            self.tb_fluxunit = datakw['UNIT']
+        for name in self.infiles:
+            self.open_table(name)
+            valid_cols = self.table.colnames()
+            datacol = ''
+            for colname in datacol_lookup:
+                if colname in valid_cols:
+                    datacol = colname
+                    break
 
-        self.close_table()
+            if len(datacol) == 0:
+                self.close_table()
+                raise Exception, "Could not find a column that stores data."
+
+            datakw = self.table.getcolkeywords(datacol)
+            curr_fluxunit = datakw['UNIT'] if datakw.has_key('UNIT') else self.tb_fluxunit
+
+            if len(self.tb_fluxunit) == 0:
+                self.tb_fluxunit = curr_fluxunit
+            elif curr_fluxunit != self.tb_fluxunit:
+                self.close_table()
+                raise Exception, "Mixed flux unit in input MSes (%s and %s). You cannot image data sets with different flux units." % (self.tb_fluxunit, curr_fluxunit)
+
+            self.close_table()
         ###
 
     def execute(self):
         # imaging
         casalog.post("Start imaging...", "INFO")
         casalog.post("Using phasecenter \"%s\""%(self.imager_param['phasecenter']), "INFO")
-        self.open_imager(self.infile)
-        self.imager.selectvis(field=self.fieldid, spw=self.spwid, nchan=-1, start=0, step=1, baseline=self.antenna, scan=self.scanlist)
-        #self.imager.selectvis(vis=infile, field=fieldid, spw=spwid, nchan=-1, start=0, step=1, baseline=antenna, scan=scanlist)
+        if len(self.infiles) == 1:
+            self.open_imager(self.infiles[0])
+            self.imager.selectvis(field=self.fieldid, spw=self.spwid, nchan=-1,\
+                                  start=0, step=1, baseline=self.antenna, scan=self.scanlist)
+        else:
+            self.close_imager()
+            for name in self.infiles:
+                self.imager.selectvis(vis=name, field=self.fieldid, spw=self.spwid, nchan=-1,\
+                                      start=0, step=1, baseline=self.antenna, scan=self.scanlist)
+                # need to do this
+                self.is_imager_opened = True
         self.imager.defineimage(**self.imager_param)#self.__get_param())
-##         if self.dochannelmap:
-##             self.imager.defineimage(mode=self.mode, nx=self.nx, ny=self.ny, cellx=self.cellx, celly=self.celly, nchan=self.nchan, start=self.startval, step=self.stepval, restfreq=self.restfreq, phasecenter=self.phasecenter, spw=self.spwid, stokes=self.stokes, movingsource=self.ephemsrcname)
-##         else:
-## ##             if self.mode != 'channel':
-## ##                 casalog.post('Setting imaging mode as \'channel\'','INFO')
-##             self.imager.defineimage(mode='channel', nx=self.nx, ny=self.ny, cellx=self.cellx, celly=self.celly, nchan=1, start=0, step=self.allchannels, phasecenter=self.phasecenter, spw=self.spwid, restfreq=self.restfreq, stokes=self.stokes, movingsource=self.ephemsrcname)
         self.imager.setoptions(ftmachine='sd', gridfunction=self.gridfunction)
         self.imager.setsdoptions(pointingcolumntouse=self.pointingcolumn, convsupport=self.convsupport, truncate=self.truncate, gwidth=self.gwidth, jwidth=self.jwidth)
         self.imager.makeimage(type='singledish', image=self.outfile)
@@ -273,14 +288,24 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         Calculate the primary beam size of antenna,
         using dish diamenter and rest frequency
         """
+        casalog.post("Calculating Pirimary beam size:")
         # CAS-5410 Use private tools inside task scripts
         my_qa = qatool()
         
         pb_factor = 1.175
+        # Reference frequency
+        ref_freq = self.restfreq
+        if type(ref_freq) in [float, numpy.float64]:
+            ref_freq = my_qa.tos(my_qa.quantity(ref_freq, 'Hz'))
+        if not my_qa.compare(ref_freq, 'Hz'):
+            msg = "Could not get the reference frequency. " + \
+                  "Your data does not seem to have valid one in selected field.\n" + \
+                  "PB is not calculated.\n" + \
+                  "Please set restreq or cell manually to generate an image."
+            raise Exception, msg
         # Antenna diameter
         self.open_table(self.antenna_table)
         antid = -1
-        casalog.post("Calculating Pirimary beam size:")
         try:
             if type(antenna) == int and antenna < self.table.nrows():
                 antid = antenna
@@ -297,16 +322,6 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
                 antdiam_ave = my_qa.quantity(diams.mean(), antdiam_unit)
         finally:
             self.close_table()
-        # Reference frequency
-        ref_freq = self.restfreq
-        if type(ref_freq) in [float, numpy.float64]:
-            ref_freq = my_qa.tos(my_qa.quantity(ref_freq, 'Hz'))
-        if not my_qa.compare(ref_freq, 'Hz'):
-            msg = "Could not get the reference frequency. " + \
-                  "Your data does not seem to have valid one in selected field.\n" + \
-                  "PB is not calculated.\n" + \
-                  "Please set restreq or cell manually to generate an image."
-            raise Exception, msg
         # Calculate PB
         wave_length = 0.2997924 / my_qa.convert(my_qa.quantity(ref_freq),'GHz')['value']
         D_m = my_qa.convert(antdiam_ave, 'm')['value']

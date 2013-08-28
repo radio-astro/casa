@@ -232,6 +232,7 @@ class sdtask_template_imaging(sdtask_interface):
         self.is_table_opened = False
         self.is_imager_opened = False
         self.table, self.imager = gentools(['tb','im'])
+        self.__set_infiles()
         self.__set_subtable_name()
 
     def __del__(self, base=sdtask_interface):
@@ -254,7 +255,7 @@ class sdtask_template_imaging(sdtask_interface):
             self.table.close()
         self.is_table_opened = False
 
-    def open_imager(self, name):
+    def open_imager(self, name=''):
         if self.is_imager_opened:
             casalog.post('Close imager before re-open', priority='WARN')
             return
@@ -267,10 +268,11 @@ class sdtask_template_imaging(sdtask_interface):
         self.is_imager_opened = False
 
     def initialize(self):
-        # infile must be MS
-        if not is_ms(self.infile):
-            msg='infile must be in MS format'
-            raise Exception, msg
+        # infiles must be MS
+        for idx in range(len(self.infiles)):
+            if not is_ms(self.infiles[idx]):
+                msg='input data sets must be in MS format'
+                raise Exception, msg
         
         self.parameter_check()
         self.compile()
@@ -288,7 +290,7 @@ class sdtask_template_imaging(sdtask_interface):
         pass
         
     def __set_subtable_name(self):
-        self.open_table(self.infile)
+        self.open_table(self.infiles[0])
         keys = self.table.getkeywords()
         self.close_table()
         self.field_table = get_subtable_name(keys['FIELD'])
@@ -300,6 +302,11 @@ class sdtask_template_imaging(sdtask_interface):
         self.pointing_table = get_subtable_name(keys['POINTING'])
         self.data_desc_table = get_subtable_name(keys['DATA_DESCRIPTION'])
         self.pointing_table = get_subtable_name(keys['POINTING'])
+
+    def __set_infiles(self):
+        if type(self.infiles) == str:
+            self.infiles = [self.infiles]
+
 
 class sdtask_engine(sdtask_interface):
     def __init__(self, worker):

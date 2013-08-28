@@ -145,14 +145,14 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
     def test001(self):
         """Test001: Bad specunit"""
         # argument verification error
-        res=sdimaging(infile=self.rawfile,specunit='frequency',outfile=self.outfile)
+        res=sdimaging(infiles=self.rawfile,specunit='frequency',outfile=self.outfile)
         self.assertFalse(res)
 
     def test002(self):
         """Test002: Bad field id"""
         outfile=self.prefix+self.postfix
         try:
-            res=sdimaging(infile=self.rawfile,field=self.badid,outfile=self.outfile)
+            res=sdimaging(infiles=self.rawfile,field=self.badid,outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -163,18 +163,18 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
     def test003(self):
         """Test003: Bad spectral window id"""
         try:
-            res=sdimaging(infile=self.rawfile,spw=self.badid,outfile=self.outfile)
+            res=sdimaging(infiles=self.rawfile,spw=self.badid,outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
-            pos=str(e).find('spw id %s does not exist'%(self.badid))
+            pos=str(e).find('No valid spw id exists in the first table')
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test004(self):
         """Test004: Bad antenna id"""
         try:
-            res=sdimaging(infile=self.rawfile,antenna=self.badid,
+            res=sdimaging(infiles=self.rawfile,antenna=self.badid,
                           imsize=self.imsize,cell=self.cell,outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
@@ -186,7 +186,7 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
     def test005(self):
         """Test005: Bad stokes parameter"""
         try:
-            res=sdimaging(infile=self.rawfile,stokes='BAD',outfile=self.outfile)
+            res=sdimaging(infiles=self.rawfile,stokes='BAD',outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -197,13 +197,13 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
     def test006(self):
         """Test006: Bad gridfunction"""
         # argument verification error
-        res=sdimaging(infile=self.rawfile,gridfunction='BAD',outfile=self.outfile)
+        res=sdimaging(infiles=self.rawfile,gridfunction='BAD',outfile=self.outfile)
         self.assertFalse(res)
 
     def test007(self):
         """Test007: Bad scanlist"""
         try:
-            res=sdimaging(infile=self.rawfile,scanlist=[self.badid],outfile=self.outfile)
+            res=sdimaging(infiles=self.rawfile,scanlist=[self.badid],outfile=self.outfile)
         except Exception, e:
             pos=str(e).find('Failed to generate output image')
             self.assertNotEqual(pos,-1,
@@ -215,7 +215,7 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
         print >> f, 'existing file'
         f.close()
         try:
-            res=sdimaging(infile=self.rawfile,outfile=self.outfile)
+            res=sdimaging(infiles=self.rawfile,outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -226,7 +226,7 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
     def test009(self):
         """Test009: Bad phasecenter string"""
         try:
-            res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter='This is bad')
+            res=sdimaging(infiles=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter='This is bad')
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -238,8 +238,8 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
         """Test010: Bad phasecenter reference (J2000 is assumed)"""
         # default for unknown direction frame is J2000 
         refimage=self.outfile+'2'
-        sdimaging(infile=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter.replace('J2000','J3000'))
-        sdimaging(infile=self.rawfile,outfile=refimage,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter)
+        sdimaging(infiles=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter.replace('J2000','J3000'))
+        sdimaging(infiles=self.rawfile,outfile=refimage,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter)
         tb.open(self.outfile)
         chunk=tb.getcol('map')
         tb.close()
@@ -253,20 +253,20 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
     def test011(self):
         """Test011: Bad pointingcolumn name"""
         # argument verification error
-        res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,pointingcolumn='non_exist')
+        res=sdimaging(infiles=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,pointingcolumn='non_exist')
         self.assertFalse(res)
 
     def test012(self):
         """Test012: Bad imsize"""
         # This does not raise error anymore.
-        res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=[1,0],phasecenter=self.phasecenter)
+        res=sdimaging(infiles=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=[1,0],phasecenter=self.phasecenter)
         self.assertFalse(res)
 
     def test013(self):
         """Test013: Bad cell size"""
         # empty image will be created
         try:
-            res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell=[0.,0.],imsize=self.imsize,phasecenter=self.phasecenter)
+            res=sdimaging(infiles=self.rawfile,outfile=self.outfile,cell=[0.,0.],imsize=self.imsize,phasecenter=self.phasecenter)
             self.assertFail(msg='The task must throw exception')
         except Exception, e:
             pos=str(e).find('Infinite resolution not possible.')
@@ -276,7 +276,7 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
     def test014(self):
         """Test014: Too fine resolution (smaller than original channel width"""
         try:
-            res=sdimaging(infile=self.rawfile,specunit='GHz',outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=10,start=1.4202,step=1.0e-10)
+            res=sdimaging(infiles=self.rawfile,specunit='GHz',outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=10,start=1.4202,step=1.0e-10)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -319,7 +319,7 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
 
     def test100(self):
         """Test 100: Integrated image (dochannelmap=False)"""
-        res=sdimaging(infile=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=False)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=False)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
@@ -328,7 +328,7 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
 
 ##     def test101(self):
 ##         """Test 101: Integrated image (dochannelmap=True,nchan=-1)"""
-##         res=sdimaging(infile=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=-1,start=0,step=1)
+##         res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=-1,start=0,step=1)
 ##         self.assertEqual(res,None,
 ##                          msg='Any error occurred during imaging')
 ##         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
@@ -374,7 +374,7 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
         else:
             nchan=tb.getcell('DATA').shape[1]
         tb.close()
-        res=sdimaging(infile=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=0,step=1)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=0,step=1)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
@@ -399,7 +399,7 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
     def test103(self):
         """Test 103: Selected channel image"""
         nchan=40
-        res=sdimaging(infile=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=400,step=10)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=400,step=10)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
@@ -424,7 +424,7 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
     def test104(self):
         """Test 104: Box-car gridding"""
         nchan=40
-        res=sdimaging(infile=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='BOX',dochannelmap=True,nchan=nchan,start=400,step=10)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='BOX',dochannelmap=True,nchan=nchan,start=400,step=10)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
@@ -449,7 +449,7 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
     def test105(self):
         """Test 105: Prolate Spheroidal gridding"""
         nchan=40
-        res=sdimaging(infile=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='SF',dochannelmap=True,nchan=nchan,start=400,step=10)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='SF',dochannelmap=True,nchan=nchan,start=400,step=10)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
@@ -474,7 +474,7 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
     def test106(self):
         """Test 106: Imaging two polarization separately (XX and YY, not Stokes I)"""
         nchan=40
-        res=sdimaging(infile=self.rawfile,specunit=self.mode,stokes='XXYY',outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='PB',dochannelmap=True,nchan=nchan,start=400,step=10)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,stokes='XXYY',outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='PB',dochannelmap=True,nchan=nchan,start=400,step=10)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],2,nchan)
@@ -499,7 +499,7 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
     def test107(self):
         """Test 107: Gaussian gridding"""
         nchan=40
-        res=sdimaging(infile=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='GAUSS',dochannelmap=True,nchan=nchan,start=400,step=10)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='GAUSS',dochannelmap=True,nchan=nchan,start=400,step=10)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
@@ -524,7 +524,7 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
     def test108(self):
         """Test 108: Gaussian*Jinc gridding"""
         nchan=40
-        res=sdimaging(infile=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='GJINC',dochannelmap=True,nchan=nchan,start=400,step=10)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='GJINC',dochannelmap=True,nchan=nchan,start=400,step=10)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
@@ -549,7 +549,7 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
     def test109(self):
         """Test 109: Empty phasecenter (auto-calculation)"""
         nchan=40
-        res=sdimaging(infile=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,dochannelmap=True,nchan=nchan,start=400,step=10)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,dochannelmap=True,nchan=nchan,start=400,step=10)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
@@ -603,7 +603,7 @@ class sdimaging_test2(sdimaging_unittest_base,unittest.TestCase):
 
     def test200(self):
         """Test 200: Integrated image (dochannelmap=False)"""
-        res=sdimaging(infile=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=False)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=False)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
@@ -613,7 +613,7 @@ class sdimaging_test2(sdimaging_unittest_base,unittest.TestCase):
     def test201(self):
         """Test 201: Selected frequency image"""
         nchan=100
-        res=sdimaging(infile=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=1.4202,step=1.0e-5)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=1.4202,step=1.0e-5)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
@@ -638,7 +638,7 @@ class sdimaging_test2(sdimaging_unittest_base,unittest.TestCase):
     def test202(self):
         """Test 202: Selected frequency image with other frequency unit"""
         nchan=100
-        res=sdimaging(infile=self.rawfile,specunit='MHz',outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=1420.2,step=0.01)
+        res=sdimaging(infiles=self.rawfile,specunit='MHz',outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=1420.2,step=0.01)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
@@ -690,7 +690,7 @@ class sdimaging_test3(sdimaging_unittest_base,unittest.TestCase):
 
     def test300(self):
         """Test 300: Integrated image (dochannelmap=False)"""
-        res=sdimaging(infile=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=False)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=False)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
@@ -700,7 +700,7 @@ class sdimaging_test3(sdimaging_unittest_base,unittest.TestCase):
     def test301(self):
         """Test 301: Selected velocity image"""
         nchan=100
-        res=sdimaging(infile=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=-200.0,step=2.0)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=-200.0,step=2.0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
@@ -725,7 +725,7 @@ class sdimaging_test3(sdimaging_unittest_base,unittest.TestCase):
     def test302(self):
         """Test 302: Selected velocity image (different rest frequency)"""
         nchan=100
-        res=sdimaging(infile=self.rawfile,specunit=self.mode,restfreq='1.420GHz',outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=-100.0,step=2.0)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,restfreq='1.420GHz',outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=-100.0,step=2.0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
@@ -788,21 +788,21 @@ class sdimaging_test4(sdimaging_unittest_base,unittest.TestCase):
 
     def test401(self):
         """test 401: Set phasecenter, cell, and imsize manually"""
-        res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,dochannelmap=False)
+        res=sdimaging(infiles=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,dochannelmap=False)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
         self._checkdirax(self.outfile,self.phasecenter,self.cell,self.imsize)
     def test402(self):
         """test 402: Automatic resolution of phasecenter, cell, and imsize"""
-        res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell="",imsize=[],phasecenter="",dochannelmap=False)
+        res=sdimaging(infiles=self.rawfile,outfile=self.outfile,cell="",imsize=[],phasecenter="",dochannelmap=False)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize_auto[0],self.imsize_auto[1],1,1)
         self._checkdirax(self.outfile,self.phasecenter_auto,self.cell_auto,self.imsize_auto)
     def test403(self):
         """test 403: Resolve phasecenter"""
-        res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter="",dochannelmap=False)
+        res=sdimaging(infiles=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter="",dochannelmap=False)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
@@ -810,7 +810,7 @@ class sdimaging_test4(sdimaging_unittest_base,unittest.TestCase):
 
     def test404(self):
         """test 404: Resolve cell"""
-        res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell="",imsize=self.imsize,phasecenter=self.phasecenter,dochannelmap=False)
+        res=sdimaging(infiles=self.rawfile,outfile=self.outfile,cell="",imsize=self.imsize,phasecenter=self.phasecenter,dochannelmap=False)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
@@ -819,7 +819,7 @@ class sdimaging_test4(sdimaging_unittest_base,unittest.TestCase):
     def test405(self):
         """test 405: Resolve imsize"""
         ref_imsize = [38, 32]
-        res=sdimaging(infile=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=[],phasecenter=self.phasecenter,dochannelmap=False)
+        res=sdimaging(infiles=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=[],phasecenter=self.phasecenter,dochannelmap=False)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,ref_imsize[0],ref_imsize[1],1,1)
