@@ -259,7 +259,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if ( shown == "false" ) regionDock_->dismiss( );
 		}
 
-		setCentralWidget(qdp_);
+		QDockWidget* displayDock = new QDockWidget( this );
+		displayDock->setWidget( qdp_);
+		displayDock->setWindowTitle(QApplication::translate("Display", "Display", 0, QApplication::UnicodeUTF8));
+		std::string displayLocation = rc.get("viewer." + rcid() + ".position.display");
+		addDockWidget( displayLocation == "right" ? Qt::RightDockWidgetArea :
+				       displayLocation == "bottom" ? Qt::BottomDockWidgetArea :
+				       displayLocation == "top" ? Qt::TopDockWidgetArea :
+				       Qt::LeftDockWidgetArea, displayDock, Qt::Vertical );
+		string displayShown = getrc("visible.display");
+		if ( displayShown == "false" ){
+			displayDock->close( );
+		}
+
+
+		addDockWidget( Qt::LeftDockWidgetArea, displayDock );
+		//setCentralWidget(qdp_);
 
 		setFocusProxy(qdp_);	// Shifts panel kbd focus to qdp_, which
 		// in turn shifts it to PixelCanvas.
@@ -281,12 +296,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Create the widgets (plus a little parenting and properties)
 		ddMenu_       = menuBar()->addMenu("&Data");
 		ddOpenAct_    = ddMenu_->addAction("&Open...");
-		/*ddRegAct_     = ddMenu_->addAction("&Register");
-		ddRegMenu_    = new QMenu;
-		ddRegAct_->setMenu(ddRegMenu_);
-		ddCloseAct_   = ddMenu_->addAction("&Close");
-		ddCloseMenu_  = new QMenu;
-		ddCloseAct_->setMenu(ddCloseMenu_);*/
 		manageImagesAct_ = ddMenu_->addAction( "&Manage Images...");
 		ddAdjAct_     = ddMenu_->addAction("&Adjust Data Display...");
 		ddSaveAct_    = ddMenu_->addAction("Sa&ve as...");
@@ -343,12 +352,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		mainToolBar_->addAction(ddAdjAct_);
 		ddRegBtn_     = new QToolButton(mainToolBar_);
 		mainToolBar_->addWidget(ddRegBtn_);
-		//ddRegBtn_->setMenu(ddRegMenu_);
 		connect( ddRegBtn_, SIGNAL(clicked()), this, SLOT(showImageManager()));
 
-		//ddCloseBtn_   = new QToolButton(mainToolBar_);
-		//mainToolBar_->addWidget(ddCloseBtn_);
-		//ddCloseBtn_->setMenu(ddCloseMenu_);
 		mainToolBar_->addAction(ddSaveAct_);
 		mainToolBar_->addSeparator();
 		mainToolBar_->addAction(dpNewAct_);
