@@ -391,7 +391,7 @@ def calps(scantab, scannos, smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, veri
         if x.upper() == 'N':
             p.quit()
             del p
-            return scabtab
+            return scantab
         p.quit()
         del p
     ###
@@ -611,7 +611,7 @@ def calnod(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, 
         if x.upper() == 'N':
             p.quit()
             del p
-            return scabtab
+            return scantab
         p.quit()
         del p
     ###
@@ -814,7 +814,7 @@ def calfs(scantab, scannos=[], smooth=1, tsysval=0.0, tauval=0.0, tcalval=0.0, v
         if x.upper() == 'N':
             p.quit()
             del p
-            return scabtab
+            return scantab
         p.quit()
         del p
     ###

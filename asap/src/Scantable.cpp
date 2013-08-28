@@ -191,7 +191,7 @@ Scantable::Scantable( const Scantable& other, bool clear )
   }
   table_.tableInfo().setType( "Scantable" ) ;
   /// @todo reindex SCANNO, recompute nbeam, nif, npol
-  if ( !clear ) copySubtables(other);
+  if ( clear ) copySubtables(other);
   attachSubtables();
   originalTable_ = table_;
   attach();
