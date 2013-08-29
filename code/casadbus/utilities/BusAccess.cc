@@ -68,7 +68,7 @@ namespace casa {
 		sprintf(result, (suffix ? "%s_%s" : "%s"), defaultname.c_str( ), suffix);
 	    }
 	    if ( suffix ) delete [] suffix;
-		cout << "PROXY-SUFFIX: " << result << endl;
+		//cout << "PROXY-SUFFIX: " << result << endl;
 	    return result;
 	}
 

@@ -2491,6 +2491,9 @@ namespace casa {
 			DisplayData* masterDD = wc_->csMaster();
 			if ( masterDD != NULL ) {
 				ImageRegion* region = get_image_region( masterDD );
+				if ( region == NULL ){
+					return;
+				}
 				const std::list<DisplayData*> &dds = wc_->displaylist( );
 				for ( std::list<DisplayData*>::const_iterator ddi=dds.begin(); ddi != dds.end(); ++ddi ) {
 					DisplayData* dd = *ddi;
@@ -2499,17 +2502,14 @@ namespace casa {
 						if (padd==0) {
 							continue;
 						}
-						// dd->imageinterface() seems to always return 0 from what I can see so I'm confused
-						std::tr1::shared_ptr<ImageInterface<float> > image(dd->imageinterface());
-						if ( image ) {
+						std::tr1::shared_ptr<ImageInterface<float> > image(padd->imageinterface());
+						if ( image.get() != NULL ) {
 							histogram->addImage( image );
-							histogram->setImageRegion( image->name(true).c_str(),region, id_);
+							histogram->setImageRegion( image->name(true).c_str(), region, id_);
 						}
 					}
 				}
 			}
-
-
 		}
 
 

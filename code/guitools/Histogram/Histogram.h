@@ -73,12 +73,12 @@ public:
 	virtual ~Histogram();
 
 	//common to all histograms
-	static void setBinCount( int count );
-	static void setChannelRangeDefault();
-	static void setIntensityRangeDefault();
-	static void setChannelRange( int minChannel, int maxChannel );
-	static void setIntensityRange( float minimumIntensity, float maximumIntensity );
-	static void setImage( const ImageTask::shCImFloat image );
+	void setBinCount( int count );
+	void setChannelRangeDefault();
+	void setIntensityRangeDefault();
+	void setChannelRange( int minChannel, int maxChannel );
+	void setIntensityRange( float minimumIntensity, float maximumIntensity );
+	void setImage( const ImageTask::shCImFloat image );
 	static double computeYValue( double value, bool useLog );
 
 signals:
@@ -94,14 +94,15 @@ private:
 	ImageHistograms<Float>* histogramMaker;
 	ImageRegion* region;
 
-	static ImageTask::shCImFloat image;
-	static int channelMin;
-	static int channelMax;
-	static float intensityMin;
-	static float intensityMax;
-	static int binCount;
-	static const int ALL_CHANNELS;
-	static const int ALL_INTENSITIES;
+	const int ALL_CHANNELS;
+	const int ALL_INTENSITIES;
+	ImageTask::shCImFloat image;
+	int channelMin;
+	int channelMax;
+	float intensityMin;
+	float intensityMax;
+	int binCount;
+
 };
 
 } /* namespace casa */
