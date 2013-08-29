@@ -524,10 +524,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	void QtDisplayData::init() {
-
-
 		// Successful creation.
-
 		dd_source_map.insert( data_to_qtdata_map_type::value_type(dd_,this) );
 
 		dd_->setUIBase(0);
@@ -536,13 +533,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// is necessary after constructing DDs, to orient them away from
 		// their old default 1-based (glish) behavior.
 
+
+		// (For parsing user colormap selection via
+		// getOptions() / setOptions() / Options gui).
+		initColorSettings();
+
+		//Init global color settings. If 'global' is checked, we need to update
+		//a new QtDisplayData with whatever the global color settings are.
+		initGlobalColorSettings();
+	}
+
+	void QtDisplayData::initGlobalColorSettings(){
+		if ( globalColorSettings ){
+			QtDisplayData* colorTemplateDD = this->panel_->dd();
+			if ( colorTemplateDD != NULL ){
+				Record options = colorTemplateDD->getOptions();
+				Record globalColorOptions = getGlobalColorChangeRecord( options );
+				setOptions( globalColorOptions );
+			}
+		}
+	}
+
+	void QtDisplayData::initColorSettings() {
 		// Initialize colormap if necessary.
 		if(usesClrMap_()) {
-			// Changing Default color map (see CAS-4081).  If none is found
-			//in .aipsrc, the default will be a greyscale, not rainbow.
+			// The CSSC has made the decision that the default colormap should
+			// be a rainbow.
 			String defaultCMName;
 			Aipsrc::find(defaultCMName, "display.colormaps.defaultcolormap",
-			             "Greyscale 1");
+					             "Rainbow 1");
 			// ...but fall back to "Greyscale 1" unless the above is a valid
 			// ('primary') name.  ('Synonym' colormap names (like "mono") are not
 			// supported at present through this QDD interface).  In case the table
@@ -568,13 +587,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 			clrMapOpt_ = new DParameterChoice(COLOR_MAP, "Color Map",
-			                                  "Name of the mapping from data values to color",
-			                                  clrMapNames_, initialCMName, initialCMName, "");
+					                                  "Name of the mapping from data values to color",
+					                                  clrMapNames_, initialCMName, initialCMName, "");
 		}
-		// (For parsing user colormap selection via
-		// getOptions() / setOptions() / Options gui).
-
-
 		// Initialization for color bar, if necessary.
 
 		if(usesColorBar_() && clrMap_!=0) {
@@ -1075,45 +1090,61 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	}
 
-	void QtDisplayData::checkGlobalChange( Record& opts ) {
-		if ( globalColorSettings ) {
-			Record globalChangeRecord;
-			Record oldRecord = dd_->getOptions();
-			//Remove all but the global options from the chgdOpts.
-			int histFieldId = opts.fieldNumber( PrincipalAxesDD::HISTOGRAM_RANGE );
-			if ( histFieldId != -1 ) {
-				if ( opts.dataType(PrincipalAxesDD::HISTOGRAM_RANGE) == TpRecord ) {
-					Record rangeRecord = opts.subRecord( PrincipalAxesDD::HISTOGRAM_RANGE );
-					globalChangeRecord.defineRecord( PrincipalAxesDD::HISTOGRAM_RANGE, rangeRecord );
-				} else if (opts.dataType(PrincipalAxesDD::HISTOGRAM_RANGE) == TpArrayFloat) {
-					Vector<Float> minMaxVector(opts.toArrayFloat(PrincipalAxesDD::HISTOGRAM_RANGE));
-					Record rangeRecord;
-					rangeRecord.define("value", minMaxVector);
-					globalChangeRecord.defineRecord( PrincipalAxesDD::HISTOGRAM_RANGE, rangeRecord );
-				} else {
-					qDebug() <<"QtDisplayData::checkGlobalChange - unrecognized opts.dataType="<<opts.dataType(PrincipalAxesDD::HISTOGRAM_RANGE);
-				}
+	Record QtDisplayData::getGlobalColorChangeRecord( Record& opts ) const {
+		Record globalChangeRecord;
+		//Remove all but the global options from the opts.
+		int histFieldId = opts.fieldNumber( PrincipalAxesDD::HISTOGRAM_RANGE );
+		if ( histFieldId != -1 ) {
+			if ( opts.dataType(PrincipalAxesDD::HISTOGRAM_RANGE) == TpRecord ) {
+				Record rangeRecord = opts.subRecord( PrincipalAxesDD::HISTOGRAM_RANGE );
+				globalChangeRecord.defineRecord( PrincipalAxesDD::HISTOGRAM_RANGE, rangeRecord );
 			}
-
-			int colorMapId = opts.fieldNumber( COLOR_MAP );
-			if ( colorMapId != -1 ) {
+			else if (opts.dataType(PrincipalAxesDD::HISTOGRAM_RANGE) == TpArrayFloat) {
+				Vector<Float> minMaxVector(opts.toArrayFloat(PrincipalAxesDD::HISTOGRAM_RANGE));
+				Record rangeRecord;
+				rangeRecord.define("value", minMaxVector);
+				globalChangeRecord.defineRecord( PrincipalAxesDD::HISTOGRAM_RANGE, rangeRecord );
+			}
+			else {
+				qDebug() <<"QtDisplayData::checkGlobalChange - unrecognized opts.dataType="<<opts.dataType(PrincipalAxesDD::HISTOGRAM_RANGE);
+			}
+		}
+		int colorMapId = opts.fieldNumber( COLOR_MAP );
+		if ( colorMapId != -1 ) {
+			if ( opts.dataType( COLOR_MAP) == TpString ){
 				String colorMapName = opts.asString( COLOR_MAP );
 				globalChangeRecord.define( COLOR_MAP, colorMapName);
 			}
-
-			int powerId = opts.fieldNumber( WCPowerScaleHandler::POWER_CYCLES);
-			if ( powerId != -1 ) {
-				float powerValue = 0;
-				if ( opts.dataType(WCPowerScaleHandler::POWER_CYCLES ) == TpRecord ) {
-					Record subPowerRecord = opts.subRecord(WCPowerScaleHandler::POWER_CYCLES);
-					powerValue = subPowerRecord.asFloat( "value");
-				} else {
-					powerValue = opts.asFloat( WCPowerScaleHandler::POWER_CYCLES );
-				}
-				Record powerRecord = oldRecord.subRecord( WCPowerScaleHandler::POWER_CYCLES );
-				powerRecord.define( "value", powerValue );
-				globalChangeRecord.defineRecord( WCPowerScaleHandler::POWER_CYCLES, powerRecord);
+			else if ( opts.dataType( COLOR_MAP)  == TpRecord ){
+				Record colorRecord = opts.asRecord( COLOR_MAP );
+				globalChangeRecord.defineRecord( COLOR_MAP, colorRecord );
 			}
+			else {
+				qDebug() << "QtDisplayData::checkGlobalChange - unrecognized opts colormap type="<<opts.dataType( COLOR_MAP );
+			}
+		}
+
+		int powerId = opts.fieldNumber( WCPowerScaleHandler::POWER_CYCLES);
+		if ( powerId != -1 ) {
+			float powerValue = 0;
+			if ( opts.dataType(WCPowerScaleHandler::POWER_CYCLES ) == TpRecord ) {
+				Record subPowerRecord = opts.subRecord(WCPowerScaleHandler::POWER_CYCLES);
+				powerValue = subPowerRecord.asFloat( "value");
+			}
+			else {
+				powerValue = opts.asFloat( WCPowerScaleHandler::POWER_CYCLES );
+			}
+			Record oldRecord = dd_->getOptions();
+			Record powerRecord = oldRecord.subRecord( WCPowerScaleHandler::POWER_CYCLES );
+			powerRecord.define( "value", powerValue );
+			globalChangeRecord.defineRecord( WCPowerScaleHandler::POWER_CYCLES, powerRecord);
+		}
+		return globalChangeRecord;
+	}
+
+	void QtDisplayData::checkGlobalChange( Record& opts ) {
+		if ( globalColorSettings ) {
+			Record globalChangeRecord = getGlobalColorChangeRecord(opts);
 			if ( globalChangeRecord.nfields() > 0 ) {
 				emit globalOptionsChanged( this, globalChangeRecord );
 			}

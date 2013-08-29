@@ -450,6 +450,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		bool setColorBarOptions( Record& opts, Record& chgdOpts );
 		void checkGlobalChange( Record& chgdOpts );
 
+		//If global color settings is checked and a new QtDisplayData is added,
+		//it should pick up the global color settings already in place.
+		void initGlobalColorSettings();
+		void initColorSettings();
+		Record getGlobalColorChangeRecord( Record& opts ) const;
 		//# data
 
 		QtDisplayPanelGui *panel_;
