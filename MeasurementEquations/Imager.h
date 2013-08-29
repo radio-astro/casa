@@ -568,7 +568,7 @@ class Imager
 
   //helper function to copy a mask from one image to another
 
-  Bool copyMask(ImageInterface<Float>& out, const ImageInterface<Float>& in, String maskname="mask0", Bool setdefault=True); 
+  static Bool copyMask(ImageInterface<Float>& out, const ImageInterface<Float>& in, String maskname="mask0", Bool setdefault=True); 
 
 
   // Supports the "[] or -1 => everything" convention using the rule:

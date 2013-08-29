@@ -2257,7 +2257,7 @@ Bool Imager::copyMask(ImageInterface<Float>& out, const ImageInterface<Float>& i
     if(in.hasRegion(maskname) && !out.hasRegion(maskname)){
       ImageRegion outreg=out.makeMask(maskname, False, True);
       LCRegion& outmask=outreg.asMask();
-      outmask.copyData(in.getRegion("mask0").asLCRegion());
+      outmask.copyData(in.getRegion(maskname).asLCRegion());
       LatticeExpr<Float> myexpr(iif(outmask, out, 0.0) );
       out.copyData(myexpr);
       out.defineRegion(maskname, outreg, RegionHandler::Masks, True);
