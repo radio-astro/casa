@@ -4612,7 +4612,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
 }
 
 // This is the one used by im.setjy() (because it has a model arg).
-Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
+Record Imager::setjy(const Vector<Int>& /*fieldid*/,
                    const Vector<Int>& /*spectralwindowid*/,
                    const String& fieldnames, const String& spwstring,
                    const String& model,
@@ -4623,10 +4623,16 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
                    const String& intentstr, const String& obsidstr,
                    const String& interpolation)
 {
-  if(!valid())
-    return False;
+  //if(!valid())
+    //return False;
 
-  Bool didAnything = False;
+  //Bool didAnything = False;
+  
+  Record retval;
+  if(!valid()) {
+    retval.define("process",False);
+    return retval;
+  }
 
   logSink_p.clearLocally();
   LogIO os(LogOrigin("imager", "setjy()"), logSink_p);
@@ -4721,7 +4727,14 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
       MDirection fieldDir = msc.field().phaseDirMeas(fldid);
       String fieldName = msc.field().name()(fldid);
       Bool foundSrc = false;
-     
+    
+      //for returned flux densities
+      
+      //retfluxdDesc.addField("field",TpString);
+      //RecordFieldPtr<String> fieldnm(retval,0);
+      Record retvalperField;
+      //revalperField.define("field",fieldName);
+ 
       fluxUsed = fluxdens;
       if(precompute){
         // Pre-compute flux density for standard sources if not specified
@@ -4789,10 +4802,12 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
         MEpoch mtime = msc.field().timeMeas()(fldid);
 
         if(model != ""){
+
           tmodimage = sjy_prepImage(os, fluxStd, fluxUsed, freqsOfScale, freqscaling, model, msc.spectralWindow(),
                                     rawspwid, chanDep, mfreqs, selspw, fieldName,
                                     fieldDir, freqUnit, fluxdens, precompute, spix,
                                     reffreq, aveEpoch, fldid);
+          
         }
         else if(!precompute){
           // fluxUsed was supplied by the user instead of FluxStandard, so
@@ -4820,7 +4835,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
               os << LogIO::SEVERE
                  << "spix cannot be nonzero with reffreq = 0!"
                  << LogIO::POST;
-              return false;
+              //return false;
             }
             siModel.setRefFrequency(MFrequency(Quantity(1.0, "GHz")));
             siModel.setIndex(0.0);
@@ -4866,7 +4881,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
 	if(tempCLs[selspw] != ""){
           String errmsg;
 
-          didAnything = True;
+          //didAnything = True;
           if(Table::canDeleteTable(errmsg, tempCLs[selspw]))
             Table::deleteTable(tempCLs[selspw]);
           else
@@ -4875,8 +4890,16 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
                << " because the " << errmsg << "."
                << LogIO::POST;
         }
-      }
+        Record subrec;
+        subrec.define("fluxd",fluxUsed);
+        // TODO: add fluxd error when the flux density uncertainties 
+        //       are corrrectly filled.
+        retvalperField.defineRecord(String::toString(rawspwid),subrec);
+      }   // for selspw
+      retval.defineRecord(fieldName,retvalperField);
     }   // End of loop over fields.
+    // add a format info for the returned flux densities (Record)
+    retval.define("format","{field name: {spw Id: {fluxd: [I,Q,U,V] in Jy}}}");
 
     if(!precompute && spix != 0.0 && reffreq.getValue().getValue() > 0.0){
       os << LogIO::NORMAL
@@ -4891,7 +4914,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
 
     this->writeHistory(os);
     this->unlock();
-    return True;
+    //return True;
   }
   catch (AipsError x){
     this->unlock();
@@ -4901,9 +4924,10 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
     }
     if (tmodimage) delete tmodimage; tmodimage=NULL;
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
-    return False;
+    //return False;
   } 
-  return didAnything;
+  //return didAnything;
+  return retval;
 }
 
 String Imager::make_comp(const String& objName,
