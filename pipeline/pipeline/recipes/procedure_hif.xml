@@ -61,6 +61,10 @@
     <ProcessingCommand>
         <Command xmlns="">hif_tsysflagchans</Command>
         <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">intentgroups</Keyword>
+                <Value xmlns="">['ATMOSPHERE','BANDPASS','AMPLITUDE']</Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
