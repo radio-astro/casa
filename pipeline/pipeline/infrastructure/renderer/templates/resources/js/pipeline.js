@@ -316,6 +316,9 @@ PLOTS = function () {
                 .attr("baseline-shift", "sub")
                 .text("sys");
         },
+        "WVR phase RMS": function (xAxisLabel) {
+            xAxisLabel.text("Phase RMS ratio");
+        },
         "unknown": function (xAxisLabel) {
             xAxisLabel.text("N/A");
         }
@@ -338,7 +341,9 @@ PLOTS = function () {
             // duration for axis realignment. Set to zero for no initial animation. 
             duration = 0,
             // whether to plot the full range (0 to max) or data extent range (min to max)
-            plotExtent = true;
+            plotExtent = true,
+            // reference to this function for anonymous functions
+            that = this;
 
         var translate = function(x) {
         	return function(d) {
@@ -390,9 +395,9 @@ PLOTS = function () {
             .range([height, 0]);
 
         // Stash the new scale.
-        this.__chart__ = x;                
-        
-        var layer = gTransform.selectAll("g")
+        that.__scale__ = x;                
+
+       	var layer = gTransform.selectAll("g")
             .data(getterFns)
             .enter().append("g")
             .style("fill", function(d, i) { return color[i]; })
@@ -405,7 +410,7 @@ PLOTS = function () {
 
         var rect = bar.append("rect")
             .attr("x", function(d) { return x(d.x); })
-            .attr("width", function(d) { return x(d.x + d.dx) - x(d.x) - 2; })
+            .attr("width", function(d) { return Math.max(x(d.x + d.dx) - x(d.x) - 2, 0.1); })
             .attr("y", function(d) { return y(d.y); })
             .attr("height", function(d) { return height - y(d.y); });
 
@@ -437,40 +442,39 @@ PLOTS = function () {
             // fade in/out time
             var fadeTime = duration / 2;
             var oldBrushExtent = false;
+            var tickEnter, tickUpdate, tick = null;
+            // Retrieve the old x-scale, if this is an update.
+            var oldScale = that.__scale__;
+            // Compute the new X scale
+            var newScale = d3.scale.linear()
+	            .domain(plotExtent === true ? d3.extent(extent) : [0, d3.max(extent)])
+        	    .range([0, width]);
+            // Stash the new scale.
+            that.__scale__ = newScale;                
+
             // resize brush if selected
             if (brush) {
                 oldBrushExtent = brush.extent();
         	};
-            
-            // Compute the new X scale
-            x.domain(plotExtent === true ? d3.extent(extent) : [0, d3.max(extent)])
-
+           
             if (brush) {
             	var rebrush = function() {
             		context.select(".brush").call(brush.extent(oldBrushExtent));
             	};
+            	brush.x(newScale);
             	gbrush.transition().duration(fadeTime).style("opacity", 1e-6).each("end", rebrush).transition().duration(fadeTime).style("opacity", 1);
             }
-            
-            // Retrieve the old x-scale, if this is an update.
-            var x0 = this.__chart__ || d3.scale.linear()
-            	.domain(plotExtent === false ? d3.extent(extent) : [0, d3.max(extent)])
-            	.range([0, width]);
 
-            
-            // Stash the new scale.
-            this.__chart__ = x;                
-            
             // Update the tick groups.
-            var tick = gTransform.selectAll("g.tick")
-                .data(x.ticks(8), function(d) {
-                  return this.textContent || format(d);
+            tick = gTransform.selectAll("g.tick")
+                .data(newScale.ticks(8), function(d) {
+                	return this.textContent || format(d);
                 });
 
-            // Initialize the ticks with the old scale, x0.
-            var tickEnter = tick.enter().append("g")
+            // Initialize the ticks with the old scale
+            tickEnter = tick.enter().append("g")
                 .attr("class", "tick")
-                .attr("transform", translate(x0))
+                .attr("transform", translate(oldScale))
                 .style("opacity", 1e-6);
 
             tickEnter.append("line")
@@ -483,16 +487,16 @@ PLOTS = function () {
                 .attr("y", tickHeight)
                 .text(format);
 
-            // Transition the entering ticks to the new scale, x.
+            // Transition the entering ticks to the new scale
             tickEnter.transition()
                 .duration(duration)
-                .attr("transform", translate(x))
+                .attr("transform", translate(newScale))
                 .style("opacity", 1);
 
-            // Transition the updating ticks to the new scale, x.
-            var tickUpdate = tick.transition()
+            // Transition the updating ticks to the new scale
+            tickUpdate = tick.transition()
                 .duration(duration)
-                .attr("transform", translate(x))
+                .attr("transform", translate(newScale))
                 .style("opacity", 1);
 
             tickUpdate.select("line")
@@ -502,21 +506,21 @@ PLOTS = function () {
             tickUpdate.select("text")
                 .attr("y", tickHeight);
 
-            // Transition the exiting ticks to the new scale, x.
+            // Transition the exiting ticks to the new scale
             tick.exit().transition()
                 .duration(duration)
-                .attr("transform", translate(x))
+                .attr("transform", translate(newScale))
                 .style("opacity", 1e-6)
                 .remove();
 
             // move the histogram bars and counts to the new position
             rect.transition()
             	.duration(duration)
-            	.attr("x", function(d) { return x(d.x); })
-            	.attr("width", function(d) { return x(d.x + d.dx) - x(d.x) - 2; });
+            	.attr("x", function(d) { return newScale(d.x); })
+            	.attr("width", function(d) { return Math.max(newScale(d.x + d.dx) - newScale(d.x) - 2, 0.1); });
             text.transition()
             	.duration(duration)
-            	.attr("x", function(d) { return x(d.x + d.dx / 2); });
+            	.attr("x", function(d) { return newScale(d.x + d.dx / 2); });
         };
         plot();
         
@@ -530,18 +534,18 @@ PLOTS = function () {
         // the lightweight object to return, which will hold bare minimum
         // functions for resizing the plots, refreshing the selected data
         // histograms and a hook for informing the filter on brush changes.
-        var that = {};
+        var histObject = {};
 
         // stub function that is called whenever the brush is updated, i.e.
         // whenever a histogram range is selected via the mouse. This provides
         // a hook for the filters to be updated.
-        that.onBrush = function() {
+        histObject.onBrush = function() {
             // no-op - to be replaced by real filter
         };
 
         function brushed() {
             var e = brush.empty() ? x.domain() : brush.extent();
-            that.onBrush(e[0], e[1]);
+            histObject.onBrush(e[0], e[1]);
         }
 
         var gbrush = context.append("g")
@@ -570,7 +574,7 @@ PLOTS = function () {
         // we just need to alter dimensions in the X axis. Note that we alter
         // existing elements rather than replotting, i.e., re-writing the DOM,
         // as DOM rewrites are very expensive.
-        that.resize = function() {
+        histObject.resize = function() {
             // Define width and height as the inner dimensions of the chart area.
             // The drawing code needs to reference a responsive elements dimensions
 
@@ -579,13 +583,13 @@ PLOTS = function () {
             svg.attr("width", width + margin.left + margin.right);
             clipPath.attr("width", width);
 
-            x.range([0, width]);
-            rect.attr("x", function(d) { return x(d.x); })
-                .attr("width", function(d) { return x(d.x + d.dx) - x(d.x) - 2; });
-            text.attr("x", function(d) { return x(d.x + d.dx / 2); });
+            that.__scale__.range([0, width]);
+            rect.attr("x", function(d) { return that.__scale__(d.x); })
+                .attr("width", function(d) { return that.__scale__(d.x + d.dx) - that.__scale__(d.x) - 2; });
+            text.attr("x", function(d) { return that.__scale__(d.x + d.dx / 2); });
 
             xAxisLine.attr("x2", width-1);
-            that.duration(0).plot();
+            histObject.duration(0).plot();
             xAxisLabel.attr("transform", "translate(" + (width / 2) + " ," + (height + margin.bottom) + ")")
             
             context.select(".brush").call(brush.extent(brush.extent()));
@@ -597,7 +601,7 @@ PLOTS = function () {
         // DOM elements and then recalculate the Y positions, heights and scores
         // accordingly. Again, this saves DOM rewrites and so is the efficient
         // way to do it.
-        that.refreshSelectedData = function() {
+        histObject.refreshSelectedData = function() {
             var selectedHistogramData = histogramGetter.getSelectedDataHistogram();
             selectedRect.data(selectedHistogramData)
                 .transition()
@@ -614,28 +618,28 @@ PLOTS = function () {
                 .text(function(d) { return formatCount(d.y) });
         }
 
-        that.duration = function(x) {
+        histObject.duration = function(x) {
             if (!arguments.length) return duration;
             duration = x;
-            return that;
+            return histObject;
         };
 
-        that.plot = plot;
+        histObject.plot = plot;
         
-        that.tickFormat = function(x) {
+        histObject.tickFormat = function(x) {
             if (!arguments.length) return tickFormat;
             tickFormat = x;
-            return that;
+            return histObject;
         };        
 
-        that.plotExtent = function(p) {
+        histObject.plotExtent = function(p) {
             if (!arguments.length) return plotExtent;
             plotExtent = p;
             plot();
-            return that;
+            return histObject;
         };        
         
-        return that;
+        return histObject;
     };
 
     return module;
@@ -667,7 +671,6 @@ ALL_IN_ONE = function() {
         var extent = d3.extent(allScores);
         var histogram = d3.layout.histogram().bins(nBins).range(extent);
         var allDataHistogram = histogram(allScores);
-
         var that = {};
 
         that.getSelectedDataHistogram = function() {
