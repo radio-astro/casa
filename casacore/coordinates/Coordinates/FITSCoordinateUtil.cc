@@ -178,32 +178,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  MFrequency::Types convCtype = sCoord.frequencySystem(True); // converted type
 
 	  if (convCtype != nativeCtype) {
+	    MEpoch convEpoch;
+	    MPosition convPosition;
+	    MDirection convDirection;
+	    sCoord.getReferenceConversion(convCtype, convEpoch, convPosition, convDirection);
 	    // modify the spec coordsys corresponding to the conversion layer
-
-	    if(tabCoord==specCoord){ // we have a tabular spectral coodinate
-
-	      os << LogIO::WARN << "Taking into account the spectral conversion layer for tabular coordinates "
-		 << "is not yet implemented.\n Will use the native spectral reference frame." << LogIO::POST;
-
-	    }
-	    else{ // not tabular, only need to change ctype, crval, cdelt
-	      Vector<Double> newCrval(1,0.);
-	      sCoord.toWorld(newCrval[0], sCoord.referencePixel()[0]);
-	      
-	      Double tmpWorld=0.; 
-	      sCoord.toWorld(tmpWorld, sCoord.referencePixel()[0]+1);
-	      Vector<Double> newCdelt(1, tmpWorld-newCrval[0]);
-	    
-	      sCoord.setReferenceValue(newCrval);
-	      sCoord.setIncrement(newCdelt); 
-	      sCoord.setFrequencySystem(convCtype, False); // non-verbose
-
-	      // replace the spec-coordsys in coordsys by the new one
-	      coordsys.replaceCoordinate(sCoord, specCoord);
-	    }
+	    sCoord.transformFrequencySystem(convCtype, convEpoch, convPosition, convDirection);
+	    // replace the spec-coordsys in coordsys by the new one
+	    coordsys.replaceCoordinate(sCoord, specCoord);
 	  }
 	}
-
 
 // Generate keywords.  If we find we have a DC with one of the
 // axes removed, it will be linearized here.
