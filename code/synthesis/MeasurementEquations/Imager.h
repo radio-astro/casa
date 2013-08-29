@@ -502,7 +502,8 @@ class Imager
   //Setjy with model image. If chanDep=True then the scaling is calculated on a 
   //per channel basis for the model image...otherwise the whole spw gets the
   //same flux density.
-  Bool setjy(const Vector<Int>& fieldid, 
+  //Bool setjy(const Vector<Int>& fieldid, 
+  Record setjy(const Vector<Int>& fieldid, 
 	     const Vector<Int>& spectralwindowid, 
 	     const String& fieldnames, const String& spwstring, 
 	     const String& model,

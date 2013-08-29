@@ -245,6 +245,14 @@
                   </when>
                 </constraints>
 	</input>
+        <output>
+        <param type="any" name="fluxd">
+                <description>Dictionary containing flux densities and their errors.</description>
+                <any type="variant"/>
+                <value>{}</value>
+        </param>
+        </output>
+ 
 <returns type="void"/>
 
 <example>
@@ -299,6 +307,13 @@
     specified. As in the previous CASA versions, if fluxdensity[0] (Stokes I) 
     is &lt; 0, the default standard will be used to calculate flux density as 
     a function of frequency. 
+
+    The calculated flux densities are reported in the logger but also will be
+    returned as a dictionary if you run as,
+    fluxds = setjy(vis='ngc5921.ms', ...).
+    The dictionary have the structure, 
+         {field name, {spw Id: {'fluxd': [I,Q,U,V] (flux densities in Jy)}}}
+    and the description is also in fluxds['format']. 
 
     Keyword arguments:
     vis -- Name of input visibility file

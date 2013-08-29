@@ -3397,7 +3397,7 @@ one field, and will currently only process Stokes I.
      <value>nearest</value>
      </param>
 </input>
-<returns type="bool"/>
+<returns type="record"/>
 <example>
 
 im.setjy(fieldid=2, spwid=-1, fluxdensity=[2.6,0.2,0.3,0.5],standard='Baars')

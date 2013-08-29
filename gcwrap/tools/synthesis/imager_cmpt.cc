@@ -1542,7 +1542,8 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
 
 
 
-bool
+//bool
+casac::record*
 imager::setjy(const ::casac::variant& field, const ::casac::variant& spw, 
 	      const std::string& modimage,
 	      const std::vector<double>& fluxdensity, const std::string& standard,
@@ -1552,7 +1553,9 @@ imager::setjy(const ::casac::variant& field, const ::casac::variant& spw,
               const std::string& observation,
               const std::string& interpolation)
 {
-  Bool rstat = False;
+  //Bool rstat = False;
+  Record retval;
+  casac::record* rstat=0;
   *itsLog << LogOrigin("im", "setjy");
 
   if(hasValidMS_p){
@@ -1590,7 +1593,8 @@ imager::setjy(const ::casac::variant& field, const ::casac::variant& spw,
       casa::String intentstr(intent);
       casa::String interpstr(interpolation);
 
-      rstat = itsImager->setjy(fieldIndex, spwid, fieldnames, spwstring, 
+      //rstat = itsImager->setjy(fieldIndex, spwid, fieldnames, spwstring, 
+      retval = itsImager->setjy(fieldIndex, spwid, fieldnames, spwstring, 
                                modimage, fluxdensity, standard, scalebychan,
                                spix, mfreqref, timerange, scanstr, intentstr, obsstr, interpstr);
     } 
@@ -1603,6 +1607,7 @@ imager::setjy(const ::casac::variant& field, const ::casac::variant& spw,
     *itsLog << LogIO::SEVERE
             << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
   }
+  rstat=fromRecord(retval);
   return rstat;
 }
 

@@ -45,11 +45,12 @@ def setjy_core(vis=None, field=None, spw=None,
                useephemdir=None, interpolation=None, usescratch=None):
   """Fills the model column for flux density calibrators."""
 
-  retval = True
+  #retval = True
   clnamelist=[]
   try:
     # Here we only list the models available, but don't perform any operation
     if listmodels:
+      retval=True
       casalog.post("Listing model candidates (listmodels == True).")
       if vis:
         casalog.post("%s is NOT being modified." % vis)
@@ -74,7 +75,7 @@ def setjy_core(vis=None, field=None, spw=None,
         ssmoddirs=None
         for d in calmoddirs:
           lsmodims(d)
-
+        
     # Actual operation, when either the MODEL_DATA column or visibility model header are set
     else:
       if not os.path.isdir(vis):
@@ -149,7 +150,8 @@ def setjy_core(vis=None, field=None, spw=None,
       try:
         param_names = setjy.func_code.co_varnames[:setjy.func_code.co_argcount]
         param_vals = [eval(p) for p in param_names]   
-        retval &= write_history(myms, vis, 'setjy', param_names,
+        #retval &= write_history(myms, vis, 'setjy', param_names,
+        retval = write_history(myms, vis, 'setjy', param_names,
                                 param_vals, casalog)
       except Exception, instance:
         casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
@@ -176,7 +178,7 @@ def setjy_core(vis=None, field=None, spw=None,
           raise Exception, "Missing Tb models in the data directory"
 
         setjyutil=ss_setjy_helper(myim,vis,casalog)
-        setjyutil.setSolarObjectJy(field=field,spw=spw,scalebychan=scalebychan,
+        retval=setjyutil.setSolarObjectJy(field=field,spw=spw,scalebychan=scalebychan,
                          timerange=timerange,observation=str(observation), scan=scan, 
                          intent=intent, useephemdir=useephemdir,usescratch=usescratch)
         clnamelist=setjyutil.getclnamelist()
@@ -188,7 +190,7 @@ def setjy_core(vis=None, field=None, spw=None,
         if spix==[]: # handle the default 
             spix=0.0
         # need to modify imager to accept double array for spix
-        myim.setjy(field=field, spw=spw, modimage=modimage,
+        retval=myim.setjy(field=field, spw=spw, modimage=modimage,
                  fluxdensity=fluxdensity, spix=spix, reffreq=reffreq,
                  standard=instandard, scalebychan=scalebychan, time=timerange,
                  observation=str(observation), scan=scan, intent=intent, interpolation=interpolation)
@@ -197,7 +199,7 @@ def setjy_core(vis=None, field=None, spw=None,
   # This block should catch errors mainly from the actual operation mode 
   except Exception, instance:
     casalog.post('%s' % instance,'SEVERE')
-    retval=False
+    #retval=False
     raise instance
 
   finally:

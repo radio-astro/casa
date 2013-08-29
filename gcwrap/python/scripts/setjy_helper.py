@@ -22,7 +22,8 @@ class ss_setjy_helper:
         currently used per execution. For flux observation done in a long time span
         may need to run multiple setjy with selections by time range (or scans). 
 	"""
-	retval = True 
+	#retval = True 
+        output = {}
 	cleanupcomps = True # leave generated cl files 
 
         #from taskinit import * 
@@ -182,7 +183,7 @@ class ss_setjy_helper:
         # 
 	#import solar_system_setjy as ss_setjy
 	import solar_system_setjy as SSsetjy 
-	retdict={}
+	retdict={} # for returning flux densities?
         ss_setjy=SSsetjy.solar_system_setjy()
 	#for src in srcnames:
 	for vfid in validfids:
@@ -342,14 +343,18 @@ class ss_setjy_helper:
 	      #if cleanupcomps:          
               # 		  shutil.rmtree(clname)
               self.clnamelist.append(clname)
-          # end of for loop over fields		 
+
 	  msg="Using channel dependent " if scalebychan else "Using spw dependent "
        
 	  self._casalog.post(msg+" flux densities")
 	  self._reportoLog(clrecs,self._casalog)
 	  self._updateHistory(clrecs,self.vis)
-          
-	return retval
+          # dictionary of dictionary for each field
+          retdict[vfid]=clrecs 
+        # end of for loop over fields		 
+        output=self._makeRetFluxDict(retdict)
+	#return retval
+	return output
 
     def getclnamelist(self):
         return self.clnamelist
@@ -419,6 +424,28 @@ class ss_setjy_helper:
 	    mytb.putcell('TIME',rown, time)
 	    rown += 1
 	mytb.close()
+
+    def _makeRetFluxDict(self, flxdict):
+        """
+        re-arrange the calculated flux density info for returned dict. 
+        """
+        # flxdict should contains a ditionary per field
+        retflxdict={}
+        for fid in flxdict.keys():
+            comp=flxdict[fid]
+            tmpdict={}
+            for ky in comp.keys():
+	        srcn = ky.split('_')[0]
+	        ispw = ky.split('_')[1].strip('spw')
+                
+                tmpdict[ispw]={}
+                tmpdict[ispw]['fluxd']=comp[ky]['component0']['flux']['value']
+                #tmpdict[ispw]['fluxderr']=comp[ky]['component0']['flux']['error']
+            retflxdict[srcn]=tmpdict
+        retflxdict['format']=\
+          '{field name: {spw Id: {fluxd:[I,Q,U,V] in %s}}}' % \
+          comp[ky]['component0']['flux']['unit']
+        return retflxdict
 
 def testerrs(errcode,srcname):
     """
