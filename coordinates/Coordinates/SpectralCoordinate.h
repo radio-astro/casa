@@ -441,6 +441,13 @@ public:
     // <group>
     MFrequency::Types frequencySystem(Bool showConversion=False) const;
     void  setFrequencySystem(MFrequency::Types type, Bool verbose=True);
+
+    // Transform the SpectralCoordinate to a different native reference frame
+    // keeping the conversion layer as is
+    Bool transformFrequencySystem(MFrequency::Types type, 
+				  const MEpoch& epoch, const MPosition& position,
+				  const MDirection& direction);
+
     // </group>
 
     // Report the value of the requested attribute.
