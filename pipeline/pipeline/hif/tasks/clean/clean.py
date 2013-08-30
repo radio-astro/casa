@@ -133,6 +133,8 @@ class Clean(cleanbase.CleanBase):
             # Compute the dirty image.
 	    result = self._do_clean (iter=0, stokes='I', cleanmask='', niter=0,
 	        threshold='0.0mJy', result=None) 
+	    if result.empty():
+	        return result
 
 	    # Return dirty image if cleaning is disabled.
             if inputs.maxncleans == 0 or inputs.niter <= 0:
@@ -146,6 +148,8 @@ class Clean(cleanbase.CleanBase):
 	    else:
 	        result = self._do_simple_imaging(bestrms=bestrms, result=result)
 
+	except Exception, e:
+	    LOG.error('Iterative imaging error: %s' % (str(e)))
 	finally:
             if inputs.imagermode == 'mosaic':
                 # restore POINTING table to input state
@@ -350,15 +354,24 @@ class Clean(cleanbase.CleanBase):
         image_mask = None
 
         # Compute the dirty Q image.
-        result = self._do_clean (iter=0, stokes='Q', cleanmask='', niter=0,
-            threshold='0.0mJy', result=None) 
+	try:
+            result = self._do_clean (iter=0, stokes='Q', cleanmask='', niter=0,
+                threshold='0.0mJy', result=None) 
+	    if result.empty():
+                return model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
+	            residual_min, rms2d, image_max 
+	except Exception, e:
+            LOG.error('Error creating stokes Q noise image: %s' % (str(e)))
+            return model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
+	        residual_min, rms2d, image_max 
 
 	# Create the box worker.
 	boxworker = BasicBoxWorker()
 
         # Determine iteration status
         model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
-            residual_min, rms2d, image_max = boxworker.iteration_result(iter=0, \
+            residual_min, rms2d, image_max = \
+	    boxworker.iteration_result(iter=0, \
 	    psf=result.psf, model= result.model, restored=result.image, \
 	    residual=result.residual, fluxscale=result.flux, cleanmask=None)
 

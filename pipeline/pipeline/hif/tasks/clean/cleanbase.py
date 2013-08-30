@@ -381,12 +381,17 @@ class CleanBase(basetask.StandardTaskTemplate):
 	else:
 	    result = inputs.result
 
-	# Compute dirty image only
-        if inputs.iter == 0:
-	    result = self._do_dirty_cycle(scanidlist, result)
-	# Compute nth clean image
-	else:
-	    result = self._do_clean_cycle (scanidlist, result, iter=inputs.iter)
+	try:
+	    # Compute dirty image only
+            if inputs.iter == 0:
+	        result = self._do_dirty_cycle(scanidlist, result)
+	    # Compute nth clean image
+	    else:
+	        result = self._do_clean_cycle (scanidlist, result, iter=inputs.iter)
+	except Exception, e:
+            LOG.error('Clean error: %s' % (str(e)))
+	finally:
+	    pass
 
 	return result
 
