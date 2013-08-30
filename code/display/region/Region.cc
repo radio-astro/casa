@@ -1651,15 +1651,11 @@ namespace casa {
 				pixelv.resize(cs.nPixelAxes( ));
 
 			pixelv = cs.referencePixel( );
-
-			const DisplayData *dd = wc->displaylist().front();
-			std::vector<int> vec = dd->displayAxes( );
-
 			worldv(0) = world_x1;
 			worldv(1) = world_y1;
 
 			if ( ! cs.toPixel( pixelv, worldv ) )
-				throw internal_error( "linear to pixel conversion failed: " + cs.errorMessage( ) );
+					throw internal_error( "linear to pixel conversion failed: " + cs.errorMessage( ) );
 
 			pix_x1 = pixelv(0);
 			pix_y1 = pixelv(1);

@@ -202,7 +202,6 @@ namespace casa {
 		void changePlotType(const QString &text);
 		void changeErrorType(const QString &text);
 
-		void changeAxisOld(String xa, String ya, String za, std::vector<int>);
 		void changeAxis(String xa, String ya, String za, std::vector<int>);
 		void changeSpectrum(String spcTypeUnit, String spcRval, String spcSys);
 
@@ -241,7 +240,7 @@ namespace casa {
 		void messageFromProfile(QString &msg);
 		void setUnitsText( String unitStr );
 		void resetYUnits( const QString& units);
-
+		void outputCurve( int k, QTextStream& ts, Float scaleFactor );
 		/**
 		 * Returns false if first vector value is greater than the last
 		 * vector value; otherwise returns true.

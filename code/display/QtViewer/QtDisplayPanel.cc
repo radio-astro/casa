@@ -3039,6 +3039,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return displayDataHolder->isEmpty();
 	}
 
+	int QtDisplayPanel::getRegisteredCount() const {
+		return displayDataHolder->getCount();
+	}
+
 	DisplayDataHolder::DisplayDataIterator QtDisplayPanel::beginRegistered() const {
 		return displayDataHolder->beginDD();
 	}

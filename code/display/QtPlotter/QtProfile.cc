@@ -840,44 +840,7 @@ namespace casa {
 		wcChanged( last_event_cs, last_event_px, last_event_py, last_event_wx, last_event_wy, UNKNPROF);
 	}
 
-	void QtProfile::changeAxisOld(String xa, String ya, String za, std::vector<int> ) {
-		//cout << "change axis=" << xa << " " << ya
-		//     << " " << za << " cube=" << cube << endl;
-		int cb = 0;
-		if (xa.contains("Decl") && ya.contains("Right"))
-			cb = -1;
-		if (xa.contains("Right") && ya.contains("Decl"))
-			cb = 1;
-		if (xa.contains("atitu") && ya.contains("ongitu"))
-			cb = -1;
-		if (xa.contains("ongitu") && ya.contains("atitu"))
-			cb = 1;
-		if (!za.contains("Freq"))
-			cb = 0;
-		//if (cb != cube) {
-		cube = cb;
-		xpos = "";
-		ypos = "";
-		position = QString("");
-		profileStatus->showMessage(position);
-		if (cube == 0)
-			pixelCanvas->setWelcome("No profile available "
-			                        "for the given data \nor\n"
-			                        "No profile available for the "
-			                        "display axes orientation"
-			                       );
-		else
-			pixelCanvas->setWelcome("assign a mouse button to\n"
-			                        "'crosshair' or 'rectangle' or 'polygon'\n"
-			                        "click/press+drag the assigned button on\n"
-			                        "the image to get a spectral profile");
 
-		pixelCanvas->clearCurve();
-		//}
-
-		//cout << "cube=" << cube << endl;
-
-	}
 	void QtProfile::changeAxis(String xa, String ya, String za, std::vector<int> ) {
 
 		// the logic is as follows:
@@ -918,7 +881,7 @@ namespace casa {
 			pixelCanvas->clearCurve();
 		} else {
 			if (cb != cube) {
-				// either the profiler was intialized
+				// either the profiler was initialized
 				// or the axes have changed
 				xpos = "";
 				ypos = "";
@@ -1679,16 +1642,23 @@ namespace casa {
 
 
 		int i = pixelCanvas->getLineCount();
-		for (int k = 0; k < i; k++) {
-			ts << "\n";
-			ts << "# " << pixelCanvas->getCurveName(k) << "\n";
-			CurveData data = pixelCanvas->getCurveData(k);
-			int j = data.size() / 2;
-			for (int m = 0; m < j; m++) {
-				ts << data[2 * m] << " " << scaleFactor*data[2 * m + 1] << "\n";
-			}
+		for (int k = 1; k < i; k++) {
+			outputCurve( k, ts, scaleFactor );
+		}
+		if ( i > 0 ){
+			outputCurve( 0, ts, scaleFactor );
 		}
 		return true;
+	}
+
+	void QtProfile::outputCurve( int k, QTextStream& ts, Float scaleFactor ){
+		ts << "\n";
+		ts << "# " << pixelCanvas->getCurveName(k) << "\n";
+		CurveData data = pixelCanvas->getCurveData(k);
+		int j = data.size() / 2;
+		for (int m = 0; m < j; m++) {
+			ts << data[2 * m] << " " << scaleFactor*data[2 * m + 1] << "\n";
+		}
 	}
 
 	void QtProfile::messageFromProfile(QString &msg) {

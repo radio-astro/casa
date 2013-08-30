@@ -81,6 +81,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void updateDirectory(const std::string &);
 
 		void showTab( std::string );
+		void clearRegionMap();
 
 	signals:
 

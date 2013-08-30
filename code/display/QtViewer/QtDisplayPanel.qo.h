@@ -140,7 +140,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		~QtDisplayPanel();
 
 		Bool isEmptyRegistered() const;
-
+		int getRegisteredCount() const;
 		//Manipulation of the QtDisplayData's.
 		DisplayDataHolder::DisplayDataIterator beginRegistered() const;
 		DisplayDataHolder::DisplayDataIterator endRegistered() const;

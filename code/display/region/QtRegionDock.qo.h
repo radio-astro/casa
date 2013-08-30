@@ -137,7 +137,7 @@ namespace casa {
 			// *and* after Region has already been deleted...
 			// also sent when a region is created (see std::string arg)...
 			void regionChange( viewer::Region *, std::string );
-			void deleteAllRegions( );
+			void deleteAllRegions();
 			void regionSelected( int id );
 			void saveRegions( std::list<QtRegionState*>, RegionTextList & );
 			void saveRegions( std::list<QtRegionState*>, ds9writer & );
@@ -147,12 +147,12 @@ namespace casa {
 
 		public slots:
 			void updateRegionState(QtDisplayData*);
-
+			void delete_all_regions( bool );
 		private slots:
 			void stack_changed(int);
 			void change_stack(int);
 			void delete_current_region(bool);
-			void delete_all_regions(bool);
+
 			void output_region_event(const QString &what, const QString &where, const QString &type, const QString &csys );
 			void handle_visibility(bool);
 			void emit_region_stack_change( int );

@@ -523,7 +523,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// DataManager window and save-restore dialogs.
 		virtual Bool syncDataDir_(String filename);
 
-		//virtual void updateDDMenus_(Bool doCloseMenu = True);
+		virtual void updateDDMenus_(Bool doCloseMenu = True);
 
 
 		// scripted (via dbus) panels should override the closeEvent( ) and hide the gui
@@ -557,7 +557,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		//# GUI LAYOUT
 
-		QMenu *dpMenu_, *ddMenu_, /**ddRegMenu_, *ddCloseMenu_,*/ *tlMenu_, *vwMenu_;
+		QMenu *dpMenu_, *ddMenu_, /**ddRegMenu_,*/ *ddCloseMenu_, *tlMenu_, *vwMenu_;
 
 		QAction *dpNewAct_, *printAct_, *dpOptsAct_, *dpCloseAct_, *dpQuitAct_,
 		        *ddOpenAct_, *ddSaveAct_, *ddAdjAct_,/* *ddRegAct_, *ddCloseAct_,*/ *unzoomAct_,
@@ -566,7 +566,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		        *cleanAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_, *manageImagesAct_;
 
 		QToolBar* mainToolBar_;
-		QToolButton *ddRegBtn_/*, *ddCloseBtn_*/;
+		QToolButton *ddRegBtn_, *ddCloseBtn_;
 
 		QtMouseToolBar* mouseToolBar_;
 
@@ -588,6 +588,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void setAnimationRate();
 		int getBoundedChannel( int channelNumber ) const;
 		void updateViewedImage();
+		void profiledImageChange();
 		unsigned int showdataoptionspanel_enter_count;
 		QtDisplayPanelGui() : rc(viewer::getrc()), linkedCursorHandler(0) {  }		// (not intended for use)
 		QtDisplayData* processDD( String path, String dataType,
