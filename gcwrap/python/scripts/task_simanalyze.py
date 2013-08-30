@@ -210,7 +210,10 @@ def simanalyze(
 
             # now try to parse the mslist for an identifier string that 
             # we can use to find the right skymodel if there are several
-            tmpstring=(mstoimage[0]).split("/")[-1]         
+            if len(mstoimage) == 0 and len(tpmstoimage) > 0:
+                tmpstring = tpmstoimage.split("/")[-1]
+            else:
+                tmpstring=(mstoimage[0]).split("/")[-1]
             skymodel_searchstring=tmpstring.replace(".ms","")
 
 
