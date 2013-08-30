@@ -219,8 +219,23 @@ class rg_fromtextfile_test(unittest.TestCase):
         """Test rectangle region is preserved under coordinate frame switch"""
         self.ia.fromshape("",[200, 200])
         csys = self.ia.coordsys()
+        # rectangular box
         xx = rg.fromtext(
             "box[[5834.23813221arcmin, -3676.92506701arcmin],[5729.75600494arcmin, -3545.36602909arcmin]] coord=GALACTIC",
+            csys=csys.torecord(), shape=self.ia.shape()
+        )
+        zz = self.ia.subimage("", region=xx)
+        got = zz.getchunk(getmask=True)
+        self.ia.open(datapath + "rect_rot.im")
+        expec = self.ia.getchunk(getmask=True)
+        self.assertTrue((got == expec).all())
+        zz.done()
+        
+        #center box
+        self.ia.fromshape("",[200, 200])
+        csys = self.ia.coordsys()
+        xx = rg.fromtext(
+            "centerbox[[5781.9970685749995arcmin, -3611.1455480499999arcmin],[104.48212727000009arcmin, 131.55903791999981arcmin]] coord=GALACTIC",
             csys=csys.torecord(), shape=self.ia.shape()
         )
         zz = self.ia.subimage("", region=xx)
