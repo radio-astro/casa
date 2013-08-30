@@ -129,6 +129,42 @@ protected:
 		const Vector<Stokes::StokesTypes>& stokes
 	);
 
+	// For centered rectangles
+	AnnPolygon(
+		AnnotationBase::Type shape,
+		const Quantity& centerx,
+		const Quantity& centery,
+		const String& dirRefFrameString,
+		const CoordinateSystem& csys,
+		const Quantity& widthx,
+		const Quantity& widthy,
+		const IPosition& imShape,
+		const Quantity& beginFreq,
+		const Quantity& endFreq,
+		const String& freqRefFrameString,
+		const String& dopplerString,
+		const Quantity& restfreq,
+		const Vector<Stokes::StokesTypes> stokes,
+		const Bool annotationOnly
+	);
+
+		// Simplified constructor.
+		// all frequencies are used (these can be set after construction).
+		// centerx and centery
+		// must be in the same frame as the csys direction coordinate.
+		// is a region (not just an annotation), although this value can be changed after
+		// construction.
+		AnnPolygon(
+			AnnotationBase::Type shape,
+			const Quantity& centerx,
+			const Quantity& centery,
+			const CoordinateSystem& csys,
+			const IPosition& imShape,
+			const Quantity& widthx,
+			const Quantity& widthy,
+			const Vector<Stokes::StokesTypes>& stokes
+		);
+
 private:
 	Vector<Quantity> _origXPos, _origYPos;
 
@@ -140,6 +176,16 @@ private:
 		const Quantity& trcx,
 		const Quantity& trcy
 	);
+
+	void _initCenterRectCorners(
+		const Quantity& centerx,
+		const Quantity& centery,
+		const Quantity& widthx,
+		const Quantity& widthy
+	);
+
+	void _doCorners(const Quantity& widthx, const Quantity widthy);
+
 };
 
 }

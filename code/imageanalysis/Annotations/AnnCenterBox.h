@@ -18,7 +18,7 @@
 #define ANNOTATIONS_ANNCENTERBOX_H
 
 #include <casa/aips.h>
-#include <imageanalysis/Annotations/AnnRegion.h>
+#include <imageanalysis/Annotations/AnnPolygon.h>
 
 namespace casa {
 
@@ -42,11 +42,13 @@ namespace casa {
 
 // <synopsis>
 // This class represents an annotation of rectangular region in coordinate space specified by
-// center and widths of sides.
+// center and widths of sides. In general, in order
+// to preserve the region through a rotation (eg from one coordinate frame to another), all four corners
+// must be tracked through the rotation. Hence, this region is effectively a four corner polygon.
 // </synopsis>
 
 
-class AnnCenterBox: public AnnRegion {
+class AnnCenterBox: public AnnPolygon {
 
 public:
 
@@ -87,24 +89,19 @@ public:
 
 	AnnCenterBox& operator=(const AnnCenterBox& other);
 
-	MDirection getCenter() const;
-
-	Vector<Quantity> getWidths() const;
+	// Vector<Quantity> getWidths() const;
 
 	// get the blc and trc direction coords for the box which
 	// have been converted to the coordinate frame specified
 	// when the object was constructed.
-	Vector<MDirection> getCorners() const;
+	//Vector<MDirection> getCorners() const;
 
-	virtual ostream& print(ostream &os) const;
+	ostream& print(ostream &os) const;
 
 private:
 	Vector<Quantity> _widths;
-	Vector<MDirection> _corners;
 	Quantity _inpXCenter, _inpYCenter, _inpXWidth, _inpYWidth;
 
-	void _init();
-	void _doCorners();
 };
 
 }

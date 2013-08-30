@@ -17,6 +17,7 @@
 
 #include <imageanalysis/Annotations/AnnPolygon.h>
 
+#include <casa/Quanta/QMath.h>
 #include <images/Regions/WCPolygon.h>
 
 namespace casa {
@@ -96,6 +97,47 @@ AnnPolygon::AnnPolygon(
 ) : AnnRegion(shape, csys, imShape, stokes),
 	_origXPos(4), _origYPos(4) {
 	_initCorners(blcx, blcy, trcx, trcy);
+	_init();
+}
+
+AnnPolygon::AnnPolygon(
+	AnnotationBase::Type shape,
+	const Quantity& centerx,
+	const Quantity& centery,
+	const String& dirRefFrameString,
+	const CoordinateSystem& csys,
+	const Quantity& widthx,
+	const Quantity& widthy,
+	const IPosition& imShape,
+	const Quantity& beginFreq,
+	const Quantity& endFreq,
+	const String& freqRefFrameString,
+	const String& dopplerString,
+	const Quantity& restfreq,
+	const Vector<Stokes::StokesTypes> stokes,
+	const Bool annotationOnly
+) : AnnRegion(
+		shape, dirRefFrameString, csys, imShape, beginFreq,
+		endFreq, freqRefFrameString, dopplerString,
+		restfreq, stokes, annotationOnly
+		),
+		_origXPos(4), _origYPos(4) {
+		_initCenterRectCorners(centerx, centery, widthx, widthy);
+		_init();
+	}
+
+AnnPolygon::AnnPolygon(
+	AnnotationBase::Type shape,
+	const Quantity& centerx,
+	const Quantity& centery,
+	const CoordinateSystem& csys,
+	const IPosition& imShape,
+	const Quantity& widthx,
+	const Quantity& widthy,
+	const Vector<Stokes::StokesTypes>& stokes
+) : AnnRegion(shape, csys, imShape, stokes),
+	_origXPos(4), _origYPos(4) {
+	_initCenterRectCorners(centerx, centery, widthx, widthy);
 	_init();
 }
 
@@ -182,6 +224,34 @@ void AnnPolygon::_initCorners(
 	_origYPos[2] = trcy;
 	_origXPos[3] = blcx;
 	_origYPos[3] = trcy;
+}
+
+void AnnPolygon::_initCenterRectCorners(
+	const Quantity& centerx,
+	const Quantity& centery,
+	const Quantity& widthx,
+	const Quantity& widthy
+) {
+	if (! widthx.isConform("rad") && ! widthx.isConform("pix")) {
+			throw AipsError(
+				"x width unit " + widthx.getUnit() + " is not an angular unit."
+			);
+		}
+		if (! widthy.isConform("rad") && ! widthy.isConform("pix")) {
+			throw AipsError(
+				"y width unit " + widthx.getUnit() + " is not an angular unit."
+			);
+		}
+		Vector<Double> inc = getCsys().increment();
+		Double xFactor = inc(_getDirectionAxes()[0]) > 0 ? 1.0 : -1.0;
+		Double yFactor = inc(_getDirectionAxes()[1]) > 0 ? 1.0 : -1.0;
+		Quantity blcx = centerx - xFactor * widthx/2;
+		Quantity blcy = centery - yFactor * widthy/2;
+		Quantity trcx = centerx + xFactor * widthx/2;
+		Quantity trcy = centery + yFactor * widthy/2;
+		_initCorners(
+			blcx, blcy, trcx, trcy
+		);
 }
 
 void AnnPolygon::_init() {

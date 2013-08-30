@@ -34,14 +34,18 @@ AnnCenterBox::AnnCenterBox(
 	const Quantity& restfreq,
 	const Vector<Stokes::StokesTypes> stokes,
 	const Bool annotationOnly
-) :  AnnRegion(
-		CENTER_BOX, dirRefFrameString, csys, imShape, beginFreq,
-		endFreq, freqRefFrameString, dopplerString,
-		restfreq, stokes, annotationOnly
+) :  AnnPolygon(
+		CENTER_BOX, xcenter, ycenter,
+		dirRefFrameString, csys, xwidth,
+		ywidth, imShape, beginFreq, endFreq,
+		freqRefFrameString, dopplerString,
+		restfreq, stokes,
+		annotationOnly
 	), _widths(Vector<Quantity>(2)),
-	_corners(Vector<MDirection>(2)), _inpXCenter(xcenter),
+	 _inpXCenter(xcenter),
 	_inpYCenter(ycenter), _inpXWidth(xwidth), _inpYWidth(ywidth) {
-	_init();
+	_widths[0] = _lengthToAngle(_inpXWidth, _getDirectionAxes()[0]);
+	_widths[1] = _lengthToAngle(_inpYWidth, _getDirectionAxes()[1]);
 }
 
 AnnCenterBox::AnnCenterBox(
@@ -52,13 +56,16 @@ AnnCenterBox::AnnCenterBox(
 	const CoordinateSystem& csys,
 	const IPosition& imShape,
 	const Vector<Stokes::StokesTypes>& stokes
-) : AnnRegion(
-		CENTER_BOX, csys, imShape, stokes
+) : AnnPolygon(
+		CENTER_BOX, xcenter, ycenter,
+		csys, imShape, xwidth, ywidth,
+		stokes
 	), _widths(Vector<Quantity>(2)),
-	_corners(Vector<MDirection>(2)), _inpXCenter(xcenter),
+	 _inpXCenter(xcenter),
 	_inpYCenter(ycenter), _inpXWidth(xwidth), _inpYWidth(ywidth)
 {
-	_init();
+	_widths[0] = _lengthToAngle(_inpXWidth, _getDirectionAxes()[0]);
+	_widths[1] = _lengthToAngle(_inpYWidth, _getDirectionAxes()[1]);
 }
 
 AnnCenterBox& AnnCenterBox::operator= (
@@ -68,87 +75,21 @@ AnnCenterBox& AnnCenterBox::operator= (
     	return *this;
     }
     AnnRegion::operator=(other);
-    _widths.resize(other._widths.nelements());
-    _widths = other._widths;
-    _corners.resize(other._corners.nelements());
-    _corners = other._corners;
+   _widths.resize(other._widths.nelements());
+   _widths = other._widths;
+   // _corners.resize(other._corners.nelements());
+    //_corners = other._corners;
 	_inpXCenter = other._inpXCenter;
 	_inpYCenter = other._inpYCenter;
 	_inpXWidth = other._inpXWidth;
 	_inpYWidth = other._inpYWidth;
     return *this;
 }
-
-MDirection AnnCenterBox::getCenter() const {
-	return _getConvertedDirections()[0];
-}
-
+/*
 Vector<Quantity> AnnCenterBox::getWidths() const {
 	return _widths;
 }
-
-void AnnCenterBox::_init() {
-	if (! _inpXWidth.isConform("rad") && ! _inpXWidth.isConform("pix")) {
-		throw AipsError(
-			"x width unit " + _inpXWidth.getUnit() + " is not an angular unit."
-		);
-	}
-	if (! _inpYWidth.isConform("rad") && ! _inpYWidth.isConform("pix")) {
-		throw AipsError(
-			"y width unit " + _inpYWidth.getUnit() + " is not an angular unit."
-		);
-	}
-	_widths[0] = _lengthToAngle(_inpXWidth, _getDirectionAxes()[0]);
-	_widths[1] = _lengthToAngle(_inpYWidth, _getDirectionAxes()[1]);
-
-	AnnotationBase::Direction center(1);
-	center[0].first = _inpXCenter;
-	center[0].second =_inpYCenter;
-	_checkAndConvertDirections(String(__FUNCTION__), center);
-
-	_doCorners();
-	MDirection blc = _corners[0];
-	MDirection trc = _corners[1];
-
-	// FIXME refactor this so it can be shared by RectBox
-	Vector<Double> blcValues = blc.getAngle().getValue();
-	Vector<Quantity> qblc(2);
-
-	Vector<Double> trcValues = trc.getAngle().getValue();
-	Vector<Quantity> qtrc(2);
-	Vector<Int> absrel(2,(Int)RegionType::Abs);
-	for (uInt i=0; i<qtrc.size(); i++) {
-		qblc[i] = Quantity(blcValues[i], "rad");
-		qtrc[i] = Quantity(trcValues[i], "rad");
-	}
-
-	WCBox box(qblc, qtrc, _getDirectionAxes(), getCsys(), absrel);
-	_setDirectionRegion(box);
-	_extend();
-}
-
-void AnnCenterBox::_doCorners() {
-
-	Vector<Double> inc = getCsys().increment();
-
-	Double xFactor = inc(_getDirectionAxes()[0]) > 0 ? 1.0 : -1.0;
-	Double yFactor = inc(_getDirectionAxes()[1]) > 0 ? 1.0 : -1.0;
-
-	Quantity xShift = Quantity(0.5*xFactor)*_widths[0];
-	Quantity yShift = Quantity(0.5*yFactor)*_widths[1];
-
-	MDirection blc = _getConvertedDirections()[0];
-	blc.shift(Quantity(-1)*xShift, Quantity(-1)*yShift);
-	MDirection trc = _getConvertedDirections()[0];
-	trc.shift(xShift, yShift);
-	_corners[0] = blc;
-	_corners[1] = trc;
-}
-
-Vector<MDirection> AnnCenterBox::getCorners() const {
-	return _corners;
-}
-
+*/
 ostream& AnnCenterBox::print(ostream &os) const {
 	_printPrefix(os);
 	os << "centerbox [[" << _printDirection(_inpXCenter, _inpYCenter) << "], ["
