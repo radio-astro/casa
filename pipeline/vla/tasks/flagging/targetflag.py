@@ -56,7 +56,7 @@ class Targetflag(basetask.StandardTaskTemplate):
         
         rflag_result = self._do_rflag(**method_args)
         
-        return TargetResults([rflag_result])
+        return TargetflagResults([rflag_result])
     
     def analyse(self, results):
 	return results

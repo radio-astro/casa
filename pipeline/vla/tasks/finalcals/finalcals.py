@@ -107,8 +107,16 @@ class Finalcals(basetask.StandardTaskTemplate):
         #other steps, it will be flagged by those gain tables).
         
         unflag_result = self._do_unflag('averagephasegain.g')
+        
+        #calto = callibrary.CalTo(self.inputs.vis)
+        #calfrom = callibrary.CalFrom(gaintable='averagephasegain.g', interp='linear,linear', calwt=True)
+        #context.callibrary.add(calto, calfrom)
 
         applycal_result = self._do_applycal(context=context)
+        
+        #calto = callibrary.CalTo(self.inputs.vis)
+        #calfrom = callibrary.CalFrom(gaintable='averagephasegain.g', interp='linear,linear', calwt=True)
+        #context.callibrary._remove(calto, calfrom)
         
         #---------------------------------------------------
         
@@ -250,6 +258,7 @@ class Finalcals(basetask.StandardTaskTemplate):
             solint   = solint,
             calmode  = 'p',
             minsnr   = 3.0,
+            scan = bandpass_scan_select_string,
             minblperant = minBL_for_cal,
             solnorm = False,
             combine = 'scan',
@@ -277,6 +286,7 @@ class Finalcals(basetask.StandardTaskTemplate):
             field = bandpass_field_select_string,
             spw = '',
             intent = '',
+            scan = bandpass_scan_select_string,
             solint = 'inf',
             combine = 'scan',
             minblperant = minBL_for_cal,

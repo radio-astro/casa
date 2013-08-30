@@ -196,6 +196,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
             solint   = 'inf',
             calmode  = 'p',
             minsnr   = 3.0,
+            scan     = delay_scan_select_string,
             minblperant = minBL_for_cal,
             solnorm = False, 
             combine = 'scan',
@@ -282,6 +283,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
             intent = '',
             solint = 'inf',
             combine = 'scan',
+            scan = bandpass_scan_select_string,
             minblperant = minBL_for_cal,
             minsnr = 5.0,
             solnorm = False)

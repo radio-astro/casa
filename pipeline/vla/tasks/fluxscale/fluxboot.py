@@ -299,6 +299,11 @@ class Fluxboot(basetask.StandardTaskTemplate):
             
                 self._executor.execute(job)
                 
+                #Run on the ms
+                task_args['vis'] = self.inputs.vis
+                job = casa_tasks.setjy(**task_args)
+                self._executor.execute(job)
+                
                 if (abs(self.spix) > 5.0):
                     LOG.warn("abs(spix) > 5.0 - Fail")
         

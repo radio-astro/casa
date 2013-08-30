@@ -253,7 +253,7 @@ class FlagDeterVLAInputs( flagdeterbase.FlagDeterBaseInputs ):
 # Outputs:
 # --------
 # The python dictionary containing the arguments (and their values) for CASA
-# task tflagdata, returned via the function value.  The temporary file that
+# task tflagdata, returned via the function value.  The teend 5 percent of each spw or minimum of 3 channelsmporary file that
 # contains the flagging commands for the tflagdata task, located in the output
 # directory.
 
@@ -354,15 +354,23 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
             flag_cmds = flag_cmds + '\n'
             flag_cmds = flag_cmds + self._get_quack_cmds()
             
+        # Flag end 5 percent of each spw or minimum of 3 channels
+        if inputs.edgespw:
+            flag_cmds = flag_cmds + '\n'
+            flag_cmds = flag_cmds + self._get_edgespw_cmds()
+            
         # Flag 10 end channels at edges of basebands
         if inputs.baseband:
             flag_cmds = flag_cmds + '\n'
             flag_cmds = flag_cmds + self._get_baseband_cmds()
+        
+        
             
         print flag_cmds
         
         return flag_cmds
             
+    '''
     def _get_edgespw_cmds(self):
         """
         Return a flagdata flagging command that will flag the edge channels
@@ -443,7 +451,44 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
                         return '# No valid edge spw flagging command'
                     else:
                         return 'mode=manual spw={0}'.format(','.join(to_flag))
-
+                    
+    
+    '''
+    
+    def _get_edgespw_cmds(self):
+        
+        inputs = self.inputs
+        
+        context = inputs.context
+        
+        m = context.observing_run.measurement_sets[0]
+        numSpws = context.evla['msinfo'][m.name].numSpws
+        channels = context.evla['msinfo'][m.name].channels
+        
+        SPWtoflag=''
+        
+        for ispw in range(numSpws):
+            fivepctch=int(0.05*channels[ispw])
+            startch1=0
+            startch2=fivepctch-1
+            endch1=channels[ispw]-fivepctch
+            endch2=channels[ispw]-1
+            
+            #Minimum number of channels flagged must be three on each end
+            if (fivepctch < 3):
+                startch2=2
+                endch1=channels[ispw]-3
+            
+            if (ispw<max(range(numSpws))):
+                SPWtoflag=SPWtoflag+str(ispw)+':'+str(startch1)+'~'+str(startch2)+';'+str(endch1)+'~'+str(endch2)+','
+            else:
+                SPWtoflag=SPWtoflag+str(ispw)+':'+str(startch1)+'~'+str(startch2)+';'+str(endch1)+'~'+str(endch2)
+                
+        edgespw_cmd = "mode='manual' spw='" + SPWtoflag + "'"
+                
+        return edgespw_cmd
+        
+    
     def _get_quack_cmds(self):
             """
             Return a flagdata flagging command that will quack, ie

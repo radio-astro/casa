@@ -301,7 +301,7 @@ class VLAImportData(basetask.StandardTaskTemplate):
                                      savecmds=self.inputs.save_flagonline,
                                      outfile=outfile,
                                      #process_caldevice=False,
-                                     #asis=self.inputs.asis,
+                                     asis="",
                                      overwrite=self.inputs.overwrite)        
         
         self._executor.execute(task)
