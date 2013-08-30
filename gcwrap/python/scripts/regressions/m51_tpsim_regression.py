@@ -145,12 +145,19 @@ ia.close()
 #             'rms': 0.26383,
 #             'sigma': 0.24221,
 #             'sum': 27423 }
-# update after setvp fix (r21970)
-diffstats = {'max': 1.19746065,
-             'min': -0.50039643,
-             'rms': 0.13544469,
-             'sigma': 0.12991888,
-             'sum': 10038.482 }
+# # update after setvp fix (r21970)
+# diffstats = {'max': 1.19746065,
+#              'min': -0.50039643,
+#              'rms': 0.13544469,
+#              'sigma': 0.12991888,
+#              'sum': 10038.482 }
+# update after PB change (r26333)
+diffstats = {'max': 0.82618213,
+             'min': -0.50403631,
+             'rms': 0.10586927,
+             'sigma': 0.10465023,
+             'sum': 4199.82504407 }
+
 
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,
