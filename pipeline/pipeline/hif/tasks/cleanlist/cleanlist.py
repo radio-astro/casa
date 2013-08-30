@@ -215,6 +215,7 @@ class CleanList(basetask.StandardTaskTemplate):
 #		threshold=None)
             datatask = Clean(datainputs)
 
+	    clean_result = None
             try:
                 clean_result = self._executor.execute(datatask)
                 result.add_result(clean_result, image_target,
@@ -222,8 +223,12 @@ class CleanList(basetask.StandardTaskTemplate):
             except Exception, e:
                 LOG.error('Clean failed error: %s' % (str(e)))
                 #LOG.exception(e)
-                result.add_result(CleanResult(), image_target,
-                  outcome='failure')
+		if not clean_result:
+                    result.add_result(CleanResult(), image_target,
+                        outcome='failure')
+		else:
+                    result.add_result(clean_result, image_target,
+                        outcome='failure')
 
         return result
 
