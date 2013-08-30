@@ -272,7 +272,8 @@ class SDExportData(basetask.StandardTaskTemplate):
         if not self._executor._dry_run:
             shutil.copy (casalog_file, out_casalog_file)
         
-        return os.path.basename(out_casalog_file)
+        #return os.path.basename(out_casalog_file)
+        return out_casalog_file
     
     def _export_images (self, context, products_dir, images):
         #cwd = os.getcwd()
@@ -355,8 +356,7 @@ class SDExportData(basetask.StandardTaskTemplate):
             
             #selection
             Xasap_outX =[splitwith_dot[i] for i in range(len(splitwith_dot))
-                if identif_sky_tsys_bl[0] == splitwith_dot[i][-1] or  identif_sky_tsys_bl[1] == splitwith_dot[i][-1] or  identif_sky_tsys_bl[2] == splitwith_dot[i][-1]]
-                #if identif_splitted[0] == splitwith_dot[i][-2] and identif_splitted[1] == splitwith_dot[i][-1]]
+                if identif_sky_tsys_bl[0] == splitwith_dot[i][-2] or identif_sky_tsys_bl[1] == splitwith_dot[i][-2] or identif_sky_tsys_bl[2] == splitwith_dot[i][-2] ]
             
             # create tar name
             outname = []
@@ -383,7 +383,7 @@ class SDExportData(basetask.StandardTaskTemplate):
             list_of_tarname=[]
             if not self._executor._dry_run and len(Xasap_outX)!=0:
                 for i in range(len(snum2)):
-                    LOG.info ('CAL_FLAG_BL: Copying final tar file in %s ' % os.path.join (products_dir,tar_filename[i]))
+                    LOG.info ('SKY_TSYSCAL_BL: Copying final tar file in %s ' % os.path.join (products_dir,tar_filename[i]))
                     tar = tarfile.open (os.path.join(products_dir, tar_filename[i]), "w:gz")
                     for num in snum2[i]:
                         tar.add (Xasap_outX[num])
@@ -392,14 +392,14 @@ class SDExportData(basetask.StandardTaskTemplate):
             elif self._executor._dry_run and len(Xasap_outX)!=0:
                 for i in range(len(snum2)):
                     for num in snum2[i]:
-                        LOG.info('CAL_FLAG_BL: Target Calibrated and Flag_BL is %s' % Xasap_outX[num])
-                    LOG.info('CAL_FLAG_BL: Saving final tar file is %s ' % os.path.join (products_dir,tar_filename[i]))
+                        LOG.info('SKY_TSYSCAL_BL: Target Calibrated and Flag_BL is %s' % Xasap_outX[num])
+                    LOG.info('SKY_TSYSCAL_BL: Saving final tar file is %s ' % os.path.join (products_dir,tar_filename[i]))
                     list_of_tarname.append(tar_filename[i])
-                LOG.info('CAL_FLAG_BL: identifier is %s' % "product.tbl")
+                LOG.info('SKY_TSYSCAL_BL: identifier is %s' % "skycal.tbl/tsyscal.tbl/bl.tbl")
             elif len(Xasap_outX)==0:
-                LOG.info('CAL_FLAG_BL: There are no Cal_Flag_bl_coeff(*.skycal/*.tsyscal/*.bl) in output_dir')
+                LOG.info('SKY_TSYSCAL_BL: There are no Cal_Flag_bl_coeff(*.skycal.tbl/*.tsyscal.tbl/*.bl.tbl) in output_dir')
         else:
-            LOG.info('CAL_FLAG_BL: There are no target files here')
+            LOG.info('SKY_TSYSCAL_BL: There are no target files here')
         return list_of_tarname
     
     def _export_weblog (self, context, products_dir):
@@ -450,12 +450,12 @@ class SDExportData(basetask.StandardTaskTemplate):
                             if fnmatch.fnmatch(ln,"*fits*"):
                                 output_txt = " %s \n" % os.path.basename(ln)
                                 f.write(output_txt)
-                if fnmatch.fnmatch(n, "flag_bl"):
+                if fnmatch.fnmatch(n, "skytsyscal_bl"):
                     listname_txt = "\n %s : \n --------\n" % n
                     f.write(listname_txt)
                     for i in range(len(inputlist)):
                         for ln in inputlist[i]:
-                            if fnmatch.fnmatch(ln,"*" + "product.tbl" + "*"):
+                            if fnmatch.fnmatch(ln,"*" + "skycal_tsyscal_bl" + "*"):
                                 output_txt = " %s \n" % os.path.basename(ln)
                                 f.write(output_txt)
                 if fnmatch.fnmatch(n, "weblog"):
@@ -466,5 +466,20 @@ class SDExportData(basetask.StandardTaskTemplate):
                             if fnmatch.fnmatch(ln,"*weblog*"):
                                 output_txt = " %s \n" % os.path.basename(ln)
                                 f.write(output_txt)
+                if fnmatch.fnmatch(n, "pprfiles"):
+                    listname_txt = "\n %s : \n --------\n" % n
+                    f.write(listname_txt)
+                    for i in range(len(inputlist)):
+                        for ln in inputlist[i]:
+                            if fnmatch.fnmatch(ln,"*PPR*"):
+                                output_txt = " %s \n" % os.path.basename(ln)
+                                f.write(output_txt)
+                if fnmatch.fnmatch(n, "casa_commands_file"):
+                    listname_txt = "\n %s : \n --------\n" % n
+                    f.write(listname_txt)
+                    for i in range(len(inputlist)):
+                        for ln in inputlist[i]:
+                            if fnmatch.fnmatch(ln,"*casa_commands*"):
+                                output_txt = " %s \n" % os.path.basename(ln)
+                                f.write(output_txt)
             f.close()
-    
