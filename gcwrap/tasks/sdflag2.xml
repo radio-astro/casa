@@ -106,7 +106,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- Common sub-parameters for ALL modes but 'rowid'-->
 
     <param type="intArray" name="scans" subparam="true">
-	    <shortdescription>list of scan numbers to process (e.g. [1,2,3,4])</shortdescription>
+	    <description>list of scan numbers to process (e.g. [1,2,3,4])</description>
 	    <value></value>
     </param>
 
