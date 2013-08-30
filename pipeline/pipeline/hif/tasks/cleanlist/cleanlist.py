@@ -220,8 +220,8 @@ class CleanList(basetask.StandardTaskTemplate):
                 result.add_result(clean_result, image_target,
                   outcome='success')
             except Exception, e:
-                LOG.error('clean failed')
-                LOG.exception(e)
+                LOG.error('Clean failed error: %s' % (str(e)))
+                #LOG.exception(e)
                 result.add_result(CleanResult(), image_target,
                   outcome='failure')
 
