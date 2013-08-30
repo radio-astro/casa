@@ -33,7 +33,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param> 
 
     <param type="string" name="specunit">
-	<description>units for spectral axis [\'channel\' | \'km/s\' | \'GHz\'] (''=channel)</description>
+	<shortdescription>units for spectral axis [\'channel\'|\'km/s\'|\'GHz\'] (\'\'=channel)</shortdescription>
+        <description>units for spectral axis</description>
 	<value></value>
 	<allowed kind="enum">
 	    <value></value>
@@ -53,17 +54,39 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="frame">
-	    <description>frequency reference frame, e.g. LSRK (''=current)</description>
+            <shortdescription>frequency reference frame [\'lsrk\'|\'lsrd\'|\'bary\'|\'geo\'|\'topo\'|\'galacto\'|\'lgroup\'|\'cmb\'] (\'\'=current frame) </shortdescription>
+	    <description>frequency reference frame (\'\'=current)</description>
 	    <value></value>
+            <allowed kind="enum">
+                    <value>lsrk</value>
+                    <value>lsrd</value>
+                    <value>bary</value>
+                    <value>geo</value>
+                    <value>topo</value>
+                    <value>galacto</value>
+                    <value>lgroup</value>
+                    <value>cmb</value>
+                    <value></value>
+           </allowed>
     </param>
 
     <param type="string" name="doppler">
-	    <description>doppler convention, e.g. RADIO (''=current)</description>
+	    <shortdescription>doppler convention [\'radio\'|\'optical\'|\'z\'|\'beta\'|\'gamma\'](\'\'=current)</shortdescription>
+	    <description>doppler convention (\'\'=current)</description>
 	    <value></value>
+            <allowed kind="enum">
+                    <value>radio</value>
+                    <value>optical</value>
+                    <value>z</value>
+                    <value>beta</value>
+                    <value>gamma</value>
+                    <value></value>
+           </allowed>
     </param>
 
     <param type="string" name="mode">
-	    <description>mode of data selection and flag operation [\'manual\' | \'clip\' | \'interactive\' | \'rowid\'(expert)]</description>
+	    <shortdescription>mode of data selection and flag operation [\'manual\'|\'clip\'|\'interactive\'|\'rowid\'(expert)]</shortdescription>
+	    <description>mode of data selection and flag operation</description>
             <value>manual</value>
             <allowed kind="enum">
             <value>manual</value>
@@ -83,17 +106,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- Common sub-parameters for ALL modes but 'rowid'-->
 
     <param type="intArray" name="scans" subparam="true">
-	    <description>list of scans to use (e.g. [1,2,3,4])</description>
+	    <shortdescription>list of scan numbers to process (e.g. [1,2,3,4])</shortdescription>
 	    <value></value>
     </param>
 
     <param type="string" name="field" subparam="true">
-	    <description>string for selection by source name (e.g., \'FLS3a*\')</description>
+	    <description>selection string for selecting by source name (e.g., \'FLS3a*\')</description>
 	    <value></value>
     </param>
 
     <param type="intArray" name="ifs" subparam="true">
-	    <description>list of IF ids to select (e.g. [0,1])</description>
+	    <shortdescription>list of IF id numbers to select (e.g. [0,1])</shortdescription>
 	    <value></value>
     </param>
 
@@ -126,13 +149,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- For mode='interactive' -->
     <param type="bool" name="showflagged" subparam="true">
-            <description>show flagged data on plots</description>
+            <description>show flagged data (in gray) on plots</description>
             <value>False</value>
     </param>
 
 <!-- For mode='rowid' -->
     <param type="intArray" name="rows" subparam="true">
-            <description>list of row numbers to apply row-based flagging/unflagging (e.g., [0,3,5])</description>
+            <description>list of row IDs to apply row-based flagging/unflagging (e.g., [0,3,5])</description>
             <value></value>
     </param>
 
@@ -143,7 +166,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="outform">
-            <description>output file format [\'ASCII\' | \'MS\' | \'SDFITS\' | \'ASAP\'] (See a WARNING in help document)</description>
+            <shortdescription>output file format [\'ASCII\'|\'MS\'|\'SDFITS\'|\'ASAP\'] (See a WARNING in help document)</shortdescription>
+            <description>output file format (See a WARNING in help document)</description>
             <value>ASAP</value>
             <allowed kind="enum">
             <value>ASCII</value>
