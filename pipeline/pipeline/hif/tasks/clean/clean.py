@@ -351,7 +351,7 @@ class Clean(cleanbase.CleanBase):
         residual_max = None
         residual_min = None
         rms2d = None
-        image_mask = None
+        image_max = None
 
         # Compute the dirty Q image.
 	try:
