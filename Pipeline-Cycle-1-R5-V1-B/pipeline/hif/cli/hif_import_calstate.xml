@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hif_import_calstate" category="pipeline">
+<shortdescription>Import a calibration state from disk</shortdescription>
+
+<description>
+hif_import calstate clears and then recreates the pipeline calibration state
+based on the set of applycal calls given in the named file.
+</description>		
+
+<input>
+    <param type="string" name="filename">
+        <description>Name of the saved calibration state</description>
+        <value></value>
+    </param>
+</input>
+
+<example>
+Import a calibration state to disk.
+		
+Keyword arguments:
+
+filename -- Name of the saved calibration state.
+
+Description
+
+hif_import calstate clears and then recreates the pipeline calibration state
+based on the set of applycal calls given in the named file. The applycal
+statements are interpreted in additive fashion; for identically specified
+data selection targets, caltables specified in later statements will be added
+to the state created by earlier calls.
+
+Issues
+
+Example
+
+1. Import a calibration state from disk.
+
+    hif_import_calstate(filename='aftergaincal.calstate')
+
+</example>
+</task>
+</casaxml>

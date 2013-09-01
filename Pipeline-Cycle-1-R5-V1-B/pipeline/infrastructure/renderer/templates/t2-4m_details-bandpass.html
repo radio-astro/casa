@@ -1,0 +1,22 @@
+<%!
+rsc_path = ""
+import operator
+import os
+
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.infrastructure.utils as utils
+%>
+<%inherit file="t2-4m_details-base.html"/>
+
+<%block name="title">Phase-up bandpass calibration</%block>
+
+% if plot_groups:
+<h2>Plots</h2>
+<ul>
+	% for plot_group in plot_groups:
+		<li>
+			<a class="replace" href="${os.path.join(dirname, plot_group.filename)}">${plot_group.title}</a>
+		</li>
+	% endfor
+</ul>
+% endif

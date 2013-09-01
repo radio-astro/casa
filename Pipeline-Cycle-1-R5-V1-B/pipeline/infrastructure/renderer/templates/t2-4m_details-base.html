@@ -1,0 +1,118 @@
+<%!
+import pipeline.domain.measures as measures
+import pipeline.extern.asizeof as asizeof
+import pipeline.infrastructure.logging as logging
+
+def get_logrecords(result, loglevel):
+    """
+    Get the logrecords for the result, removing any duplicates
+
+    :param result: a result containing logrecords
+    :param loglevel: the loglevel to match
+    :return:
+    """
+    lst = [l for l in result.logrecords if l.levelno is loglevel]
+
+    dset = set()
+    # relies on the fact that dset.add() always returns None.
+    return [l for l in lst if
+            l.msg not in dset and not dset.add(l.msg)]
+%>
+
+<div class="page-header">
+	<h1><%block name="title">Untitled Task</%block><%block name="backbutton"><button class="btn btn-large pull-right" onClick="javascript:window.history.back();">Back</button></%block></h1>
+</div>
+
+<ul class="unstyled">
+% for r in result:
+	% for logrecord in get_logrecords(r, logging.ERROR):
+	<li class="alert alert-error">
+		<strong>Error!</strong> ${logrecord.msg}
+	</li>
+	% endfor
+	% for logrecord in get_logrecords(r, logging.WARNING):
+	<li class="alert">
+		<strong>Warning!</strong> ${logrecord.msg}
+	</li>
+	% endfor
+%endfor	
+</ul>
+
+${next.body()}
+
+<div class="accordion" id="details-accordion">
+
+<%doc>
+Help disabled until the task descriptions from John's presentation are added
+
+%if taskhelp:
+
+	<div class="accordion-group">
+	    <div class="accordion-heading">
+			<a class="accordion-toggle" data-toggle="collapse" data-parent="#details-accordion" href="#collapseOne">
+	        	Task Help
+	      	</a>
+	    </div>
+	    <div id="collapseOne" class="accordion-body collapse">
+			<div class="accordion-inner">
+				${taskhelp}
+			</div>
+		</div>
+	</div>
+%endif
+</%doc>
+
+	<div class="accordion-group">
+	    <div class="accordion-heading">
+			<a class="accordion-toggle" data-toggle="collapse" data-parent="#details-accordion" href="#collapseTwo">
+	        	CASA Logs
+	      	</a>
+	    </div>
+	    <div id="collapseTwo" class="accordion-body collapse">
+			<div class="accordion-inner">
+				<pre>${stagelog}</pre>
+			</div>
+		</div>
+	</div>
+
+	<div class="accordion-group">
+	    <div class="accordion-heading">
+			<a class="accordion-toggle" data-toggle="collapse" data-parent="#details-accordion" href="#collapseThree">
+	        	Input Parameters
+	      	</a>
+	    </div>
+	    <div id="collapseThree" class="accordion-body collapse">
+			<div class="accordion-inner">
+				<dl class="dl-horizontal">
+				% for k, v in result.inputs.iteritems():
+					<dt>${str(k)}</dt>
+					<dd>${str(v) if str(v) != '' else '&nbsp;'}</dd>
+				% endfor
+				</dl>
+			</div>
+		</div>
+	</div>
+
+	<div class="accordion-group">
+	    <div class="accordion-heading">
+			<a class="accordion-toggle" data-toggle="collapse" data-parent="#details-accordion" href="#collapseFour">
+				Task Execution Times
+	      	</a>
+	    </div>
+	    <div id="collapseFour" class="accordion-body collapse">
+			<div class="accordion-inner">
+				<dl class="dl-horizontal">
+					<dt>Start time</dt>
+					<dd>${result.timestamps.start}</dd>
+					<dt>End</dt>
+					<dd>${result.timestamps.end}</dd>
+					<dt>Duration</dt>
+					<dd>${str(result.timestamps.end - result.timestamps.start)}</dd>
+					<dt>Context size</dt>
+					<dd>${str(measures.FileSize(asizeof.asizeof(pcontext), measures.FileSizeUnits.BYTES))}</dd>
+				</dl>
+			</div>
+		</div>
+	</div>
+
+</div>

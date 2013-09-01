@@ -1,0 +1,106 @@
+<%!
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.domain.measures as measures
+%>
+<div class="page-header">
+	<h1>Spectral Setup Details<button class="btn btn-large pull-right" onclick="javascript:location.reload();">Back</button></h1>
+</div>
+
+<div id="tabbable">
+	<ul class="nav nav-tabs">
+		<li class="active"><a href="#tabs-science" data-toggle="tab">Science Windows</a></li>
+		<li><a href="#tabs-all" data-toggle="tab">All Windows</a></li>
+	</ul>
+	<div class="tab-content">
+		<div class="tab-pane active" id="tabs-science">		
+			<h2>Science Windows</h2>
+			<table class="table table-bordered table-striped table-condensed" summary="Science Spectral Windows in ${ms.basename}">
+				<caption>Spectral Windows with Science Intent in ${ms.basename}</caption>
+			    <thead>
+			        <tr>
+			            <th scope="col" rowspan="2">ID</th>
+			            <th scope="col" colspan="3">Frequency</th>
+			            <th scope="col" rowspan="2">Bandwidth</th>
+			            <th scope="col" colspan="3">Channels</th>
+			            <th scope="col" rowspan="2">Correlator Axis</th>
+			            <th scope="col" rowspan="2">Band</th>
+			        </tr>
+			        <tr>
+			        	<th>Start</th>
+			        	<th>Centre</th>
+			        	<th>End</th>
+			        	<th>Number</th>
+			        	<th>Width</th>
+			        	<th>Resolution</th>
+			        </tr>
+			    </thead>
+				<tbody>
+					% for spw in ms.get_spectral_windows(science_windows_only=True):
+					<tr>
+					  <td>${spw.id}</td>
+					  <td>${str(spw.min_frequency)}</td>
+					  <td>${str(spw.centre_frequency)}</td>
+					  <td>${str(spw.max_frequency)}</td>
+					  <td>${str(spw.bandwidth)}</td>
+					  <td>${spw.num_channels}</td>
+					  <td>${spw.channels[0].getWidth()}</td>
+					  <td>${str(measures.LinearVelocity(299792458 * spw.channels[0].getWidth().to_units(measures.FrequencyUnits.HERTZ) / spw.centre_frequency.to_units(measures.FrequencyUnits.HERTZ), measures.LinearVelocityUnits.METRES_PER_SECOND))}</td>
+					  <td>${', '.join(sorted(ms.get_data_description(spw=spw).corr_axis))}</td>
+					  <td>${spw.band}</td>
+					</tr>
+					% endfor
+				</tbody>
+			</table>
+		</div>
+	
+		<div class="tab-pane" id="tabs-all">
+			<h2>All Windows</h2>
+			<table class="table table-bordered table-striped table-condensed" summary="Spectral Windows in ${ms.basename}">
+				<caption>All Spectral Windows in ${ms.basename}</caption>
+			    <thead>
+			        <tr>
+			            <th scope="col" rowspan="2">ID</th>
+			            <th scope="col" colspan="3">Frequency</th>
+			            <th scope="col" rowspan="2">Bandwidth</th>
+			            <th scope="col" colspan="3">Channels</th>
+			            <th scope="col" rowspan="2">Correlator Axis</th>
+			            <th scope="col" rowspan="2">Band</th>
+			            <th scope="col" rowspan="2">Intents</th>
+			        </tr>
+			        <tr>
+			        	<th>Start</th>
+			        	<th>Centre</th>
+			        	<th>End</th>
+			        	<th>Number</th>
+			        	<th>Width</th>
+			        	<th>Resolution</th>
+			        </tr>
+			    </thead>
+				<tbody>
+					% for spw in ms.get_spectral_windows(science_windows_only=False):
+					<tr>
+						<td>${spw.id}</td>
+						<td>${str(spw.min_frequency)}</td>
+						<td>${str(spw.centre_frequency)}</td>
+						<td>${str(spw.max_frequency)}</td>
+						<td>${str(spw.bandwidth)}</td>
+						<td>${spw.num_channels}</td>
+						<td>${spw.channels[0].getWidth()}</td>
+						<td>${str(measures.LinearVelocity(299792458 * spw.channels[0].getWidth().to_units(measures.FrequencyUnits.HERTZ) / spw.centre_frequency.to_units(measures.FrequencyUnits.HERTZ), measures.LinearVelocityUnits.METRES_PER_SECOND))}</td>
+						<%
+							dd = ms.get_data_description(spw=spw)
+							if dd is None:
+								polarizations = ""
+							else:
+								polarizations = ', '.join(sorted(dd.corr_axis))
+						%>
+						<td>${polarizations}</td>
+						<td>${spw.band}</td>
+				  		<td>${', '.join(sorted([i for i in spw.intents]))}</td>
+					</tr>
+					% endfor
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>

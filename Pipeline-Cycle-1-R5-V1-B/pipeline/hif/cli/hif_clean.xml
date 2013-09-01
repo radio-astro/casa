@@ -1,0 +1,517 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hif_clean" category="pipeline">
+<shortdescription>Compute clean map</shortdescription>
+<description>
+Compute a clean map.  
+</description>
+<input>
+
+  <param type="stringArray" name="vis" subparam="true">
+    <description>List of input measurement sets, \'\' for default</description>
+    <value></value>
+  </param>
+
+  <param type="string" name="imagename" subparam="true">
+     <description>Prefix for image filenames, \'\' for default</description>
+     <value></value>
+  </param>
+
+  <param type="string" name="intent" subparam="true">
+    <description>Set of data selection intents, \'\' for all</description>
+    <value></value>
+  </param>
+
+  <param type="string" name="field" subparam="true">
+    <description>Set of data selection field names or ids</description>
+    <value></value>
+  </param>
+
+  <param type="string" name="spw" subparam="true">
+    <description>Set of data selection spectral window/channels \'\' for all</description>
+    <value></value>
+  </param>
+
+  <param type="any" name="uvrange" subparam="true">
+    <description>Set of uv ranges, \'\' for all</description>
+    <any type="variant" limittypes="string stringArray"/>
+    <value type="string"></value>
+  </param>
+
+  <param type="string" name="mode">
+     <description>Spectral gridding type (mfs, frequency, \'\' for default)</description>
+     <value></value>
+       <allowed kind="enum">
+         <value></value>
+         <value>mfs</value>
+         <value>frequency</value>
+       </allowed>
+  </param>
+
+  <param type="string" name="imagermode" subparam="true">
+     <description>Imaging mode (csclean, mosaic, \'\' for default)</description>
+     <value></value>
+       <allowed kind="enum">
+         <value></value>
+         <value>csclean</value>
+         <value>mosaic</value>
+       </allowed>
+  </param>
+
+  <param type="string" name="outframe" subparam="true">
+     <description>velocity frame of output image (LSRK, \'\' for default)</description>
+     <value></value>
+       <allowed kind="enum">
+         <value></value>
+         <value>LSRK</value>
+       </allowed>
+  </param>
+
+  <param type="intArray" name="imsize">
+    <description>Y and Y image size in pixels, single value same for both, \'\' for default</description>
+    <value></value>
+  </param>
+
+  <param type="stringArray" name="cell">
+    <description>Y and Y cell size(s), single value same for both, \'\' for default</description>
+    <value></value>
+  </param>
+
+  <param type="any" name="phasecenter" subparam="true">
+    <description>Image center (direction or field index), \'\' for default</description>
+    <any type="variant"/>
+    <value type="string"></value>
+  </param>
+
+  <param type="int" name="nchan" subparam="true">
+    <description>Number of channels or planes in output image, -1 = all</description>
+    <value>-1</value>
+  </param>
+
+  <param type="any" name="start" subparam="true">
+    <description>Start of output spectral dimension</description>
+    <any type="variant"/>
+    <value type="string"></value>
+  </param>
+
+  <param type="any" name="width">
+    <description>Width of output spectral channels, \'\' for default</description>
+    <any type="variant"/>
+    <value type="string"></value>
+  </param>
+
+  <param type="string" name="weighting">
+     <description>Type of weighting</description>
+     <value>natural</value>
+       <allowed kind="enum">
+         <value>natural</value>
+         <value>uniform</value>
+         <value>briggs</value>
+         <value>superuniform</value>
+         <value>briggsabs</value>
+       </allowed>
+  </param>
+
+  <param type="double" name="robust" subparam="true">
+     <description>Briggs weighting robustness parameter</description>
+     <value>0.0</value>
+  </param>
+
+  <param type="any" name="noise" subparam="true">
+    <description>Briggs weighting noise parameter</description>
+    <any type="variant"/>
+    <value type="string">1.0Jy</value>
+  </param>
+
+  <param type="int" name="npixels" subparam="true">
+    <description>Weighting algorithm parameter</description>
+    <value type="int">1</value>
+  </param>
+
+  <param type="stringArray" name="restoringbeam" subparam="true">
+     <description>Gaussian restoring beam, \'\' for default</description>
+     <value></value>
+  </param>
+
+  <param type="string" name="hm_masking">
+     <description>Pipeline heuristics masking option</description>
+       <value>none</value>
+       <allowed kind="enum">
+         <value>none</value>
+         <value>centralquarter</value>
+         <value>psf</value>
+         <value>psfiter</value>
+         <value>manual</value>
+         <value></value>
+       </allowed>
+  </param>
+
+  <param type="string" name="hm_cleaning">
+     <description>Pipeline clean control heuristics</description>
+       <value>manual</value>
+       <allowed kind="enum">
+         <value>manual</value>
+         <value>sensitivity</value>
+         <value>timesmask</value>
+         <value>rms</value>
+       </allowed>
+  </param>
+
+  <param type="any" name="mask" subparam="true">
+       <description>User mask, \'\' for whole image</description>
+       <any type="variant"/>
+       <value type="stringArray"></value>
+  </param>
+
+  <param type="int" name="niter" subparam="true">
+    <description>Maximum number of clean iterations</description>
+    <value>500</value>
+  </param>
+
+  <param type="double" name="threshold" units="mJy" subparam="true">
+       <description>Flux level to stop cleaning, must include units: \'1.0mJy\'</description>
+       <value>0.0</value>
+  </param>
+
+  <param type="double" name="tlimit" subparam="true">
+       <description>Times the sensitivity limit for cleaning</description>
+       <value>2.0</value>
+  </param>
+
+  <param type="int" name="masklimit" subparam="true">
+       <description>Times good mask pixels for cleaning</description>
+       <value>4</value>
+  </param>
+
+  <param type="int" name="maxncleans" subparam="true">
+    <description>Maximum number of clean task calls</description>
+    <value>1</value>
+  </param>
+
+  <param type="string" name="pipelinemode">
+    <description>The pipeline operating mode</description>
+    <value>automatic</value>
+    <allowed kind="enum">
+      <value>automatic</value>
+      <value>interactive</value>
+      <value>getinputs</value>
+    </allowed>
+  </param>
+
+  <param type="bool" name="dryrun" subparam="true">
+    <description>Run the task (False) or display the command(True)</description>
+    <value>False</value>
+  </param>
+
+  <param type="bool" name="acceptresults" subparam="true">
+    <description>Add the results to the pipeline context</description>
+   <value>True</value>
+  </param>
+
+
+  <constraints>
+
+    <when param="pipelinemode">
+      <equals type="string" value="automatic"/>
+      <equals type="string" value="interactive">
+        <default param="vis"><value type="stringArray"></value></default>
+        <default param="imagename"><value type="string"></value></default>
+        <default param="intent"><value type="string"></value></default>
+        <default param="field"><value type="string"></value></default>
+        <default param="spw"><value type="string"></value></default>
+        <default param="uvrange"><value type="string"></value></default>
+        <default param="imagermode"><value type="string"></value></default>
+        <default param="outframe"><value type="string">LSRK</value></default>
+        <default param="nchan"><value>-1</value></default>
+        <default param="start"><value type="string"></value></default>
+        <default param="phasecenter"><value type="string"></value></default>
+        <default param="restoringbeam"><value type="stringArray"></value></default>
+        <default param="noise"><value type="string">1.0Jy</value></default>
+        <default param="npixels"><value type="int">1</value></default>
+        <default param="dryrun"><value type="bool">False</value></default>
+        <default param="acceptresults"><value type="bool">True</value></default>
+      </equals>
+      <equals type="string" value="getinputs">
+        <default param="vis"><value type="stringArray"></value></default>
+        <default param="imagename"><value type="string"></value></default>
+        <default param="intent"><value type="string"></value></default>
+        <default param="field"><value type="string"></value></default>
+        <default param="spw"><value type="string"></value></default>
+        <default param="uvrange"><value type="string"></value></default>
+        <default param="imagermode"><value type="string"></value></default>
+        <default param="outframe"><value type="string">LSRK</value></default>
+        <default param="nchan"><value>-1</value></default>
+        <default param="start"><value type="string"></value></default>
+        <default param="phasecenter"><value type="string"></value></default>
+        <default param="restoringbeam"><value type="stringArray"></value></default>
+      </equals>
+    </when>
+
+    <when param="hm_masking">
+      <equals value="none">
+      </equals>
+      <equals value="centralquarter">
+      </equals>
+      <equals value="psf">
+      </equals>
+      <equals value="psfiter">
+        <default param="maxncleans"><value type="int">10</value></default>
+      </equals>
+      <equals value="manual">
+        <default param="mask"><value type="string"></value></default>
+      </equals>
+      <equals value="">
+      </equals>
+    </when>
+
+    <when param="hm_cleaning">
+      <equals value="manual">
+        <default param="niter"><value type="int">500</value></default>
+        <default param="threshold"><value type="double" units="mJy">0.0</value></default>
+      </equals>
+      <equals value="sensitivity">
+        <default param="tlimit"><value type="double">2.0</value></default>
+        <default param="niter"><value type="int">500</value></default>
+      </equals>
+      <equals value="rms">
+        <default param="tlimit"><value type="double">2.0</value></default>
+        <default param="niter"><value type="int">500</value></default>
+      </equals>
+      <equals value="mask">
+        <default param="masklimit"><value type="int">4</value></default>
+        <default param="threshold"><value type="double" units="mJy">0.0</value></default>
+      </equals>
+    </when>
+
+    <when param="mode">
+      <equals type="string" value="">
+      </equals>
+      <equals type="string" value="mfs">
+      </equals>
+      <equals value="frequency">
+        <default param="nchan"><value>-1</value></default>
+        <default param="start"><value type="string"></value></default>
+        <default param="outframe"><value type="string"></value></default>
+      </equals>
+    </when>
+
+    <when param="weighting">
+      <equals value="natural"/>
+      <equals value="uniform"/>
+      <equals value="briggs">
+         <default param="robust"><value>0.0</value></default>
+         <default param="npixels"><value>0</value></default>
+      </equals>
+      <equals value="briggsabs">
+        <default param="robust"><value>0.0</value></default>
+        <default param="noise"><value type="string">1.0Jy</value></default>
+        <default param="npixels"><value>0</value></default>
+      </equals>
+      <equals value="superuniform">
+        <default param="npixels"><value>0</value></default>
+      </equals>
+    </when>
+
+  </constraints>
+
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+
+Compute a cleaned image for a particular target source/intent and spectral
+window.
+
+Keyword arguments:
+
+--- pipeline parameter arguments which can be set in any pipeline mode
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+       determines the values of all context defined pipeline inputs
+       automatically.  In interactive mode the user can set the pipeline
+       context defined parameters manually.  In 'getinputs' mode the user
+       can check the settings of all pipeline parameters without running
+       the task.
+       default: 'automatic'.
+
+
+---- pipeline context defined parameter arguments which can be set only in
+'interactive mode'
+
+vis -- The list of input measurement sets. Defaults to the list of measurement
+    sets in the context.
+    default: ''
+    example: vis=['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
+
+imagename -- Prefix of output images. Defaults to one of the following options
+   depending on the availability of project information. 
+   '{ousstatus uid}.{field}.[{intent}.]s{stage number}.spw{spw}'
+   'multivis.{field}.[{intent}.]s{stage number}.spw{spw}'
+
+   cleanboxes and thresholds to use as it goes. For each iteration the
+   output images are:
+      {prename}.iter{n}.image; cleaned and restored image
+      {prename}.iter{n}.psf; point spread function (dirty beam)
+      {prename}.iter{n}.flux; relative sky sensitivity over field
+      {prename}.iter{n}.flux.pbcoverage; relative pb coverage over field
+                                        (only for mosaics)
+      {prename}.iter{n}.model; image of clean components
+      {prename}.iter{n}.residual; image of residuals
+      {prename}.iter{n}.cleanmask; image of cleanmask used
+   default: ''
+   example: 'test1'
+  
+intent -- An intent against which the selected fields are matched. Default
+    means select all data from fields specified by 'field' paramete
+    default: ''
+    example: '', 'TARGET'
+
+field -- Fields id(s) or name(s) to image or mosaic. Must be set.
+    default:  
+    example: '3C279', 'Centaurus*'
+
+spw -- Spectral window/channels to image. \'\' for all science data.
+    default: ''
+    example: '9', '9,11'
+
+mode -- Frequency imaging mode, 'mfs', 'frequency'. \'\' defaults to
+    'frequency' if intent parameter includes 'TARGET' otherwise 'mfs'.
+    default: ''
+    example: 'mfs', 'mosaic'
+
+imagermode -- Advanced imaging mode e.g. mosaic or Cotton-Schwab clean.
+   Derived as follows:
+      1. The 'field' parameter is converted into a list of field_ids for
+         each measurement set in 'vis'.
+      2. If there is more than 1 field_id in the list for any measurement 
+         set then imagermode is set to 'mosaic', otherwise it will be set
+         to 'csclean'. 
+    default: ''
+
+outframe -- The reference frame of the output image. The only supported option
+    is 'LSRK'
+    default: ''
+    example: 'LSRK'
+
+imsize -- X and Y image size in pixels).  Must be even and contain factors
+    2,3,5,7 only.
+    Default derived as follows:
+      1. Determine 'phasecenter' value and spread of field centres around it. 
+      2. Set size of image to cover spread of field centres plus a border of
+         width 0.75 * beam radius (to first null).
+      3. Divide x and y extents by 'cell' values to arrive at the numbers of
+         pixels required. 
+    default: ''
+    example: [320,320]
+
+cell -- X and Y cell size. Derived from maximum UV spacing. Details TBD
+    default ''
+    example: ['0.5arcsec', '0.5arcsec']
+
+phasecenter -- Direction measure or field id for the mosaic center.
+   Default derived as follows:
+       1. Make an array containing all the field centers to be imaged together.
+       2. Derive the mean direction from the directions array.
+    default: \'\'
+    example: 2
+
+nchan -- Number of channels or planes in the output image, -1 for all
+    default: -1
+    example: 128
+
+width -- Width of spectral dimension in frequency, \'\' for default.
+    default: \'\'
+    example: '7.8125MHz'
+
+weighting -- Weighting to apply to visibilities. Options are: 'natural',
+    'uniform','briggs', 'superuniform','briggsabs','radial'
+     default='natural'
+     example: weighting='uniform'
+
+robust -- Parameter for  'briggs' and 'briggsabs' weighting. Ranges from -2.0 to
+    2.0. -2 for uniform +2 for natural.
+    default=0.0
+    example: 0.5
+
+noise -- Parameter for 'briggsabs' weighting
+    default: '1.0Jy'
+    example: '0.5Jy'
+
+npixels -- Parameter for 'briggs' and 'briggsabs; weighting
+    default: 1
+    example: 1
+
+restoringbeam -- Gaussina sestoring beam for clean, \'\' for default
+    default: \'\'
+    example:
+
+hm_masking -- Clean masking mode. Options are 'none', 'centralquarter'
+    'psf', 'psfiter' and 'manual'
+    default: 'centralquarter'
+    example: 'manual'
+
+mask -- Image mask for hm_masking manual mode. User responsible for
+    matching image sizes, coordinates, etc.
+    default: \'\'
+    example: 'mymask.mask'
+
+niter -- Maximum number of iterations per clean call
+    default: 500
+    example: 100
+
+threshold -- Threshold for cleaning
+    default: '0.0'
+    example: '0.05'
+
+maxncleans -- Maximum number of clean calls
+    default: 1
+    example: 10
+
+--- pipeline task execution modes
+dryrun -- Run the commands (True) or generate the commands to be run but
+   do not execute (False).
+   default: False
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+   reject them (False).
+   default: True
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+    the results object for the pipeline task is returned.
+
+
+Examples:
+
+Make an 'mfs' image of calibrator 3c279 using data in spectral window 1. 
+The cell size is set to 0.2 arcsec in RA and Dec. Other clean parameters
+are derived from heuristics:
+
+hif_clean(field='3c279', cell='0.2arcsec', spw='1', mode='mfs')
+
+Make a cube of calibrator 3c279 using data in spectral window 1. The
+cube planes will be evenly spaced in frequency in the LSRK frame. Other
+clean parameters are derived from heuristics.
+ 
+hif_clean(field='3c279', cell='0.2arcsec', spw='1', mode='frequency',
+ outframe='LSRK')
+
+</example>
+
+</task>
+</casaxml>
+

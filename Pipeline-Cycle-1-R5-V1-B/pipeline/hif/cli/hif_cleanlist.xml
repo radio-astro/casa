@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hif_cleanlist" category="pipeline">
+<shortdescription>Compute clean map</shortdescription>
+<description>
+Compute clean results from a list of specified targets.  
+</description>
+<input>
+
+  <param type="stringArray" name="vis" subparam="true">
+    <description>List of input measurement sets</description>
+    <value></value>
+  </param>
+
+  <param type="any" name="target_list" subparam="true">
+    <any type="variant"/>
+    <description>Dictionary specifying targets to be imaged; blank will read list from context</description>
+    <value>{}</value>
+  </param>
+
+  <param type="string" name="weighting">
+    <description>Weighting of uv (natural, uniform, briggs, ...)</description>
+    <value>natural</value>
+    <allowed kind="enum">
+      <value>natural</value>
+      <value>uniform</value>
+      <value>briggs</value>
+      <value>superuniform</value>
+      <value>briggsabs</value>
+    </allowed>
+  </param>
+
+  <param type="double" name="robust" subparam="true">
+    <description>Briggs robustness parameter</description>
+    <value>0.0</value>
+  </param>
+
+  <param type="any" name="noise"  subparam="true">
+    <description>noise parameter for briggs abs mode weighting</description>
+    <any type="variant"/>
+    <value type="string">1.0Jy</value>
+  </param>
+
+  <param type="int" name="npixels" subparam="true">
+    <description>number of pixels for superuniform or briggs weighting</description>
+    <value>1</value>
+  </param>
+
+  <param type="string" name="hm_masking">
+     <description>Pipeline heuristics masking option</description>
+       <value></value>
+       <allowed kind="enum">
+         <value></value>
+         <value>none</value>
+         <value>centralquarter</value>
+         <value>psf</value>
+         <value>psfiter</value>
+       </allowed>
+  </param>
+
+  <param type="string" name="hm_cleaning">
+     <description>Pipeline cleaning mode </description>
+       <value></value>
+       <allowed kind="enum">
+         <value></value>
+         <value>rms</value>
+         <value>sensitivity</value>
+         <value>timesmask</value>
+       </allowed>
+  </param>
+
+  <param type="double" name="tlimit" subparam="true">
+       <description>Times the sensitivity limit for cleaning</description>
+       <value>2.0</value>
+  </param>
+
+  <param type="int" name="masklimit" subparam="true">
+       <description>Times good mask pixels for cleaning</description>
+       <value>4</value>
+  </param>
+
+  <param type="int" name="maxncleans" subparam="true">
+    <description>Maximum number of clean task calls</description>
+    <value>1</value>
+  </param>
+
+  <param type="string" name="pipelinemode">
+    <description>The pipeline operating mode</description>
+    <value>automatic</value>
+    <allowed kind="enum">
+      <value>automatic</value>
+      <value>interactive</value>
+      <value>getinputs</value>
+    </allowed>
+  </param>
+
+  <param type="bool" name="dryrun" subparam="true">
+    <description>Run the task (False) or display the command(True)</description>
+    <value>False</value>
+  </param>
+
+  <param type="bool" name="acceptresults" subparam="true">
+    <description>Add the results to the pipeline context</description>
+   <value>True</value>
+  </param>
+
+
+  <constraints>
+
+    <when param="pipelinemode">
+      <equals type="string" value="automatic"/>
+      <equals type="string" value="interactive">
+        <default param="vis"><value type="stringArray"></value></default>
+        <default param="target_list"><value>{}</value></default>
+        <default param="dryrun"><value type="bool">False</value></default>
+        <default param="acceptresults"><value type="bool">True</value></default>
+      </equals>
+      <equals type="string" value="getinputs">
+        <default param="vis"><value type="stringArray"></value></default>
+        <default param="target_list"><value>{}</value></default>
+      </equals>
+    </when>
+
+    <when param="hm_masking">
+      <equals value="">
+      </equals>
+      <equals value="none">
+      </equals>
+      <equals value="centralquarter">
+      </equals>
+      <equals value="psf">
+      </equals>
+      <equals value="psfiter">
+        <default param="maxncleans"><value type="int">10</value></default>
+      </equals>
+    </when>
+
+    <when param="hm_cleaning">
+      <equals value="">
+      </equals>
+      <equals value="rms">
+        <default param="tlimit"><value type="double">2.0</value></default>
+      </equals>
+      <equals value="sensitivity">
+        <default param="tlimit"><value type="double">2.0</value></default>
+      </equals>
+      <equals value="timesmask">
+        <default param="masklimit"><value type="int">4</value></default>
+      </equals>
+    </when>
+
+    <when param="weighting">
+      <equals value="natural"/>
+      <equals value="uniform"/>
+      <equals value="briggs">
+         <default param="robust"><value>0.0</value></default>
+         <default param="npixels"><value>0</value></default>
+      </equals>
+      <equals value="briggsabs">
+        <default param="robust"><value>0.0</value></default>
+        <default param="noise"><value type="string">1.0Jy</value></default>
+        <default param="npixels"><value>0</value></default>
+      </equals>
+      <equals value="superuniform">
+        <default param="npixels"><value>0</value></default>
+      </equals>
+    </when>
+
+  </constraints>
+
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+
+Compute a cleaned image for a particular target source/intent and spectral
+window.
+
+Keyword arguments:
+
+--- pipeline parameter arguments which can be set in any pipeline mode
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+       determines the values of all context defined pipeline inputs
+       automatically.  In interactive mode the user can set the pipeline
+       context defined parameters manually.  In 'getinputs' mode the user
+       can check the settings of all pipeline parameters without running
+       the task.
+       default: 'automatic'.
+
+
+---- pipeline context defined parameter arguments which can be set only in
+'interactive mode'
+
+vis -- The list of input measurement sets. Defaults to the list of measurment
+    sets specified in the h_init or hif_importdata sets.
+    example: vis='ngc5921.ms'
+             vis=['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
+    default: use all measurement sets in the context 
+
+weighting -- Weighting to apply to visibilities:
+             default='natural'; example: weighting='uniform';
+             Options: 'natural','uniform','briggs', 
+                'superuniform','briggsabs','radial'
+
+weighting_robust -- For weighting='briggs' and 'briggsabs'
+                       default=0.0; example: robust=0.5;
+                       Options: -2.0 to 2.0; -2 (uniform)/+2 (natural)
+                 
+weighting_noise -- For weighting='briggsabs'
+                       noise parameter to use for Briggs "abs" weighting
+                       example noise='1.0mJy'
+
+
+--- pipeline task execution modes
+dryrun -- Run the commands (True) or generate the commands to be run but
+   do not execute (False).
+   default: False
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+   reject them (False).
+   default: True
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+    the results object for the pipeline task is returned.
+
+
+Examples:
+
+</example>
+
+</task>
+</casaxml>
+

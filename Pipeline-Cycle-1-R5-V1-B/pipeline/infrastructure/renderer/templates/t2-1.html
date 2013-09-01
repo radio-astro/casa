@@ -1,0 +1,66 @@
+<%!
+navbar_active='Observation Summary'
+import re
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+%>
+<%inherit file="base.html"/>
+
+<!-- include pipeline JS for access to UTILS module -->
+<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
+
+<script>
+$(document).ready(function() {
+	// sidebar may need to start/stop scrolling if window is resized
+	$(window).resize(UTILS.calculateAffix);
+
+	// Load MS details into panel is 'ms=x' given in URL
+ 	var msName = $.url().param('ms').replace(/[^a-zA-Z0-9]/gi, '_');
+	var msLink = 'a#link_ms' + msName;
+	var msDetailsUrl = $(msLink).data('fakeframehref');
+	var fakeframe = $('div#fakeframe');
+	if (typeof msDetailsUrl != 'undefined') {
+		UTILS.loadFakeframe(fakeframe, msDetailsUrl);
+		$(msLink).parent().addClass("active");
+	};
+	
+	$('#nav').affix({
+		offset: $('nav').position()
+	});	
+});
+</script>
+
+<%block name="title">Session Data Details</%block>
+
+
+<div class="row-fluid">
+	<div class="span3">
+		<div class="well sidebar-nav-fixed"  data-spy="affix">
+			<ul class="nav nav-list">
+			% for session in sessions:
+				<li class="nav-header">Session '${session.name}'</li>
+				% for ms in session.mses:
+				<li>
+					<a id="link_ms${re.sub('[^a-zA-Z0-9]', '_', ms.basename)}"
+					   href="t2-1.html?ms=${ms.basename}"
+					   data-fakeframehref="session${session.name}/${ms.basename}/t2-1_details.html">
+						${ms.basename}
+					</a>
+				</li>
+				% endfor
+			% endfor
+			</ul>
+		</div><!-- /.well -->
+	</div><!-- /.span3 -->		
+	<%
+	first_session_name = sessions[0].name
+	first_ms_name = sessions[0].mses[0].basename
+	%>
+	<div class="span9 span-fixed-sidebar">
+		<div id="fakeframe"
+			 data-src="session${first_session_name}/${first_ms_name}/t2-1_details.html"> 
+			Javascript must be enabled to view task details
+		</div>
+	</div>
+</div>
+
+<%block name="footer"><a href="t1-2.html">Back to Observation Summary</a></%block>
