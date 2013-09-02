@@ -5,9 +5,10 @@ import string
 import functools
 import re
 import abc
+import datetime
 
 from casac import casac
-from taskinit import casalog, gentools
+from taskinit import casalog, gentools, qatool
 import asap as sd
 from asap import _to_list
 from asap.scantable import is_scantable, is_ms
@@ -193,10 +194,29 @@ class sdtask_template(sdtask_interface):
                       'rowlist','field']
         for a in attributes:
             if not hasattr(self,a): setattr(self,a,None)
-        return get_selector(in_scans=self.scanlist, in_ifs=self.iflist,
-                            in_pols=self.pollist, in_beams=self.beamlist,
-                            in_rows=self.rowlist, in_field=self.field)
+        selector = get_selector(in_scans=self.scanlist, in_ifs=self.iflist,
+                                in_pols=self.pollist, in_beams=self.beamlist,
+                                in_rows=self.rowlist, in_field=self.field)
 
+        # CAS-5496 selection by timerange
+        if hasattr(self, 'timerange') and len(self.timerange) > 0:
+            # base scantable
+            if hasattr(self, 'infile'):
+                base_table = self.infile
+            elif hasattr(self, 'infiles'):
+                base_table = self.infiles[0]
+            else:
+                base_table = None
+            taql_for_timerange = select_by_timerange(base_table, self.timerange)
+            query_org = selector.get_query()
+            if len(query_org) > 0:
+                selector.set_query(' && '.join([query_org, taql_for_timerange]))
+            else:
+                selector.set_query(taql_for_timerange)
+
+        return selector
+                
+        
     def set_to_scan(self):
         if hasattr(self,'fluxunit'):
             set_fluxunit(self.scan, self.fluxunit, self.telescopeparm)
@@ -357,7 +377,8 @@ def get_listvalue(value):
     return _to_list(value, int) or []
 
 def get_selector(in_scans=None, in_ifs=None, in_pols=None, \
-                 in_field=None, in_beams=None, in_rows=None):
+                 in_field=None, in_beams=None, in_rows=None,
+                 in_timerange=None):
     scans = get_listvalue(in_scans)
     ifs   = get_listvalue(in_ifs)
     pols  = get_listvalue(in_pols)
@@ -893,3 +914,152 @@ def read_factor_file(filename):
                 factor[j] = float(split_line[j])
             factor_list.append(factor)
     return factor_list
+
+
+#
+# The following functions are for timerange selection (CAS-5496)
+#
+def split_timerange(timerange, separator):
+    return [s.strip() for s in timerange.split(separator)
+            if not (s.isspace() or len(s) == 0)]
+
+def split_date_string(date_string, full=True):
+    split_by_slash = date_string.split('/')
+    split_by_colon = split_by_slash[-1].split(':')
+    if full:
+        split_by_comma = split_by_colon[-1].split('.')
+    else:
+        split_by_comma = [split_by_colon[-1]]
+    elements_list = [element for element in
+                     split_by_slash[:-1] + split_by_colon[:-1] + split_by_comma
+                     if len(element) > 0]
+    if full and len(elements_list) > 1 and date_string.find('.') == -1:
+        elements_list += ['0']
+    return elements_list
+        
+def get_full_description(date_string, year='YYYY', month='MM', day='DD', hour='hh', minute='mm', second='ss', subsecond='ff', default=None):
+    number_of_slashes = date_string.count('/')
+    number_of_colons = date_string.count(':')
+
+    elements_list = split_date_string(date_string)
+
+    template = string.Template('$year/$month/$day/$hour:$min:$sec.$subsec')
+    keys = ['year', 'month', 'day', 'hour', 'min', 'sec', 'subsec']
+
+    if default is None:
+        default_values = [year, month, day, hour, minute, second, subsecond]
+    else:
+        default_values = split_date_string(default)
+        if len(default_values) < 7:
+            default_values = defalut_values + ['00']
+            
+    values = default_values[:7-len(elements_list)] + elements_list
+
+    return template.safe_substitute(**dict(zip(keys, values)))
+
+def to_datetime(date):
+    date_elements_list = split_date_string(date, full=False)
+    date_list = map(int, date_elements_list[:-1]) + [float(date_elements_list[-1])]
+    t = datetime.datetime(date_list[0], date_list[1], date_list[2],
+                          date_list[3], date_list[4], int(date_list[5]),
+                          int((date_list[5]-int(date_list[5]))*1e6))
+    return t
+
+def to_timedelta(delta):
+    delta_elements_list = split_date_string(delta, full=False)
+    delta_list = map(int, delta_elements_list[:-1]) + [float(delta_elements_list[-1])]
+    dummy1 = datetime.datetime(1999, 1, 1)
+    dummy2 = datetime.datetime(1999, 1, 1,
+                               delta_list[0], delta_list[1], int(delta_list[2]),
+                               int((delta_list[2]-int(delta_list[2]))*1e6))
+    dt = dummy2 - dummy1
+    return dt
+
+def add_time(date, delta):
+    t = to_datetime(date)
+    dt = to_timedelta(delta)
+    return t+dt    
+
+def sub_time(date, delta):
+    t = to_datetime(date)
+    dt = to_timedelta(delta)
+    return t-dt
+
+def select_by_timerange(data, timerange):
+    tb = gentools(['tb'])[0]
+    qa = qatool()
+
+    # first get default time and interval
+    if data is not None:
+        tb.open(data)
+        irow = 0
+        while (tb.getcell('FLAGROW') != 0
+               or all(tb.getcell('FLAGTRA') != 0)):
+            irow = irow + 1
+        default_mjd = tb.getcell('TIME', irow)
+        default_interval = tb.getcell('INTERVAL', irow)
+        tb.close()
+    else:
+        default_mjd = 0.0
+        defalut_interval = 0.0
+
+    qdate = qa.quantity(default_mjd, 'd')
+    date_dict = qa.splitdate(qdate)
+    parameters = {'year': str(date_dict['year']),
+                  'month': str(date_dict['month']),
+                  'day': str(date_dict['monthday']),
+                  'hour': str(date_dict['hour']),
+                  'minute': str(date_dict['min']),
+                  'second': str(date_dict['sec']),
+                  'subsecond': str(date_dict['usec'])}    
+    
+    if re.match('.+~.+', timerange):
+        # This is case 1: 'T0~T1'
+        dates_list = split_timerange(timerange, '~')
+        first_date = get_full_description(dates_list[0], **parameters)
+        second_date = get_full_description(dates_list[1], default=first_date)
+        taql = 'TIME > MJD(DATETIME("%s")) && TIME < MJD(DATETIME("%s"))'%(first_date, second_date)
+    elif re.match('.+\+.+', timerange):
+        # This is case 3: 'T0+dT'
+        dates_list = split_timerange(timerange, '+')
+        first_date = get_full_description(dates_list[0], **parameters)
+        delta_time = dates_list[1]
+        second_date_datetime = add_time(first_date, delta_time)
+        second_date = second_date_datetime.strftime('%Y/%m/%d/%H:%M:%S')
+        microsec = '%s'%(second_date_datetime.microsecond/1e6)
+        second_date += microsec.lstrip('0')
+        taql = 'TIME > MJD(DATETIME("%s")) && TIME < MJD(DATETIME("%s"))'%(first_date, second_date)
+    elif re.match('^ *>.+', timerange):
+        # This is case 4: '>T0'
+        dates_list = split_timerange(timerange, '>')
+        first_date = get_full_description(dates_list[0], **parameters)
+        taql = 'TIME > MJD(DATETIME("%s"))'%(first_date)
+    elif re.match('^ *<.+', timerange):
+        # This is case 5: '<T0'
+        dates_list = split_timerange(timerange, '<')
+        first_date = get_full_description(dates_list[0], **parameters)
+        taql = 'TIME < MJD(DATETIME("%s"))'%(first_date)
+    elif re.match('^[0-9/:.]+$', timerange):
+        # This is case 2: 'T0'
+        middle_date = get_full_description(timerange, **parameters)
+        hours = int(0.5 * default_interval / 3600.0)
+        minutes = int((0.5 * default_interval - hours * 3600.0) / 60.0)
+        seconds = (0.5 * default_interval) % 60.0
+        delta_time = '%d:%d:%s'%(hours, minutes, seconds)
+        first_date_datetime = sub_time(middle_date, delta_time)
+        second_date_datetime = add_time(middle_date, delta_time)
+        first_date = first_date_datetime.strftime('%Y/%m/%d/%H:%M:%S')
+        microsec = '%s'%(first_date_datetime.microsecond/1e6)
+        first_date += microsec.lstrip('0')
+        second_date = second_date_datetime.strftime('%Y/%m/%d/%H:%M:%S')
+        microsec = '%s'%(second_date_datetime.microsecond/1e6)
+        second_date += microsec.lstrip('0')
+        taql = 'TIME > MJD(DATETIME("%s")) && TIME < MJD(DATETIME("%s"))'%(first_date, second_date)
+    else:
+        # invalid format
+        casalog.post('WARNING: timerange="%s" is invalid'%(timerange), priority='WARN')
+        taql = ''
+
+    casalog.post('taql for timerange: \'%s\''%(taql), priority='DEBUG')
+
+    return taql

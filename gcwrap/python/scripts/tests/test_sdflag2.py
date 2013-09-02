@@ -5,6 +5,7 @@ from __main__ import default
 from tasks import *
 from taskinit import *
 import unittest
+import numpy
 
 import asap as sd
 from sdflag2 import sdflag2
@@ -181,6 +182,171 @@ class sdflag2_test(unittest.TestCase):
             pos = str(e).find('Selection contains no data. Not applying it.')
             self.assertNotEqual(pos, -1, msg='Unexpected exception was thrown: %s'%(str(e)))
 
+class sdflag2_test_timerange(unittest.TestCase):
+    """
+    Basic unit tests for task sdflag2.
 
+    The list of tests:
+    test01   --- test row flagging with selection by timerange 'T0~T1'
+    test02   --- test row flagging with selection by timerange 'T0'
+    test03   --- test row flagging with selection by timerange 'T0+dT'
+    test04   --- test row flagging with selection by timerange '>T0'
+    test05   --- test row flagging with selection by timerange '<T0'
+    test06   --- test row flagging with selection by timerange '>T0'
+                 and scan number
+    test07   --- test row flagging with selection by timerange '>T0'
+                 and field name
+    test08   --- test row flagging with selection by timerange 'T0~T1'
+                 where T0 and T1 are incomplete time strings
+    test09   --- test row flagging with selection by timerange '>T0'
+                 where T0 is incomplete time string
+
+    ***NOTE*** These tests are for Scantable only. Tests for the other formats
+               which ASAP supports, including MS and SDFITS, are to be made later.
+
+    NOTE2: 'Artificial_Flat.asap' has 6 flat spectra with rms of 1.0.
+
+    """
+    # Data path of input/output
+    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdflag/'
+    # Input and output names
+    infile = 'Artificial_Flat.asap'
+
+    def setUp(self):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+
+        # edit TIME column for testing
+        table = gentools(['tb'])[0]
+        table.open(self.infile, nomodify=False)
+        time_column = table.getcol('TIME')
+        for irow in xrange(table.nrows()):
+            time_column[irow] += irow * 1000.0 / 86400.0
+        table.putcol('TIME', time_column)
+        table.close()
+
+        default(sdflag2)
+
+    def tearDown(self):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+
+    def verify(self, data, flag_row_expected):
+        scan = sd.scantable(self.infile, average=False)
+        flag_row = numpy.array([scan._getflagrow(i) for i in xrange(scan.nrow())], dtype=bool)
+        del scan
+        self.assertTrue(all(flag_row_expected==flag_row),
+                        msg='FLAGROW is different from expected value: %s (expected: %s)'%(flag_row, flag_row_expected))
+        
+    def test01(self):
+        """timerange test01: test row flagging with selection by timerange 'T0~T1'"""
+        # first two rows should be flagged
+        timerange = '2006/01/19/01:50:00~2006/01/19/02:24:00'
+        flag_row_expected = numpy.array([True, True, False, False, False, False], dtype=bool)
+        sdflag2(infile=self.infile, mode='manual', timerange=timerange)
+
+        # verification
+        self.verify(self.infile, flag_row_expected)
+        
+    def test02(self):
+        """timerange test02: test row flagging with selection by timerange 'T0'"""
+        # only second row should be flagged
+        timerange = '2006/01/19/02:16:45.0'
+        flag_row_expected = numpy.array([False, True, False, False, False, False], dtype=bool)
+        sdflag2(infile=self.infile, mode='manual', timerange=timerange)
+
+        # verification
+        self.verify(self.infile, flag_row_expected)
+
+    def test03(self):
+        """timerange test03: test row flagging with selection by timerange 'T0+dT'"""
+        # second and third rows should be flagged
+        timerange = '2006/01/19/02:08:00.0+0:30:00'
+        flag_row_expected = numpy.array([False, True, True, False, False, False], dtype=bool)
+        sdflag2(infile=self.infile, mode='manual', timerange=timerange)
+
+        # verification
+        self.verify(self.infile, flag_row_expected)
+
+    def test04(self):
+        """timerange test04: test row flagging with selection by timerange '>T0'"""
+        # fourth and subsequent rows should be flagged
+        timerange = '>2006/01/19/02:42:00'
+        flag_row_expected = numpy.array([False, False, False, True, True, True], dtype=bool)
+        sdflag2(infile=self.infile, mode='manual', timerange=timerange)
+
+        # verification
+        self.verify(self.infile, flag_row_expected)
+
+    def test05(self):
+        """timerange test05: test row flagging with selection by timerange '<T0'"""
+        # only first row should be flagged
+        timerange = '<2006/01/19/02:00:00'
+        flag_row_expected = numpy.array([True, False, False, False, False, False], dtype=bool)
+        sdflag2(infile=self.infile, mode='manual', timerange=timerange)
+
+        # verification
+        self.verify(self.infile, flag_row_expected)
+
+    def test06(self):
+        """timerange test06: test row flagging with selection by timerange '>T0' and scan number"""
+        # only fifth row should be flagged
+        timerange = '>2006/01/19/02:42:00'
+        flag_row_expected = numpy.array([False, False, False, False, True, False], dtype=bool)
+        scans = [4]
+        sdflag2(infile=self.infile, mode='manual', scans=scans, timerange=timerange)
+
+        # verification
+        self.verify(self.infile, flag_row_expected)
+
+    def test07(self):
+        """timerange test06: test row flagging with selection by timerange '>T0' and field name"""
+        # edit infile
+        table = gentools(['tb'])[0]
+        table.open(self.infile, nomodify=False)
+        table.putcell('SRCNAME', 3, 'SDFLAG2_TEST')
+        table.close()
+        
+        # only fourth row should be flagged
+        timerange = '>2006/01/19/02:42:00'
+        field = 'SDFLAG2*'
+        flag_row_expected = numpy.array([False, False, False, True, False, False], dtype=bool)
+        scans = [4]
+        sdflag2(infile=self.infile, mode='manual', field=field, timerange=timerange)
+
+        # verification
+        self.verify(self.infile, flag_row_expected)
+
+    def test08(self):
+        """timerange test08: test row flagging with selection by timerange 'T0~T1' where T0 and T1 are incomplete time string"""
+        # first two rows should be flagged
+        timerange = '01:50:00~02:24:00'
+        flag_row_expected = numpy.array([True, True, False, False, False, False], dtype=bool)
+        sdflag2(infile=self.infile, mode='manual', timerange=timerange)
+
+        # verification
+        self.verify(self.infile, flag_row_expected)
+        
+    def test09(self):
+        """timerange test09: test row flagging with selection by timerange '>T0'"""
+        # fourth and subsequent rows should be flagged
+        timerange = '>02:42:00'
+        flag_row_expected = numpy.array([False, False, False, True, True, True], dtype=bool)
+        sdflag2(infile=self.infile, mode='manual', timerange=timerange)
+
+        # verification
+        self.verify(self.infile, flag_row_expected)
+
+    def test10(self):
+        """timerange test10: test row flagging with selection by timerange 'T0~T1' where only T1 is incomplete time string"""
+        # first two rows should be flagged
+        timerange = '2006/01/19/01:50:00~02:24:00'
+        flag_row_expected = numpy.array([True, True, False, False, False, False], dtype=bool)
+        sdflag2(infile=self.infile, mode='manual', timerange=timerange)
+
+        # verification
+        self.verify(self.infile, flag_row_expected)
+        
 def suite():
-    return [sdflag2_test]
+    return [sdflag2_test, sdflag2_test_timerange]
