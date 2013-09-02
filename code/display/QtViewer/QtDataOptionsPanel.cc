@@ -79,7 +79,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// These are the tabs I _really_ want....
 
 
-		connect( panel_, SIGNAL(ddCreated(QtDisplayData*, Bool, int)),
+		connect( panel_, SIGNAL(ddCreated(QtDisplayData*, Bool, int, Bool)),
 		         SLOT(createDDTab_(QtDisplayData*, Bool, int)) );
 
 		/*connect( panel_, SIGNAL(ddRemoved(QtDisplayData*)),

@@ -394,7 +394,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// autoregister tells DPs whether they are to register the DD.
 		// ***** dd is added to the world canvas holder during *****
 		// ***** the processing of this event...               *****
-		void ddCreated(QtDisplayData*, Bool autoRegister, int insertPosition);
+		void ddCreated(QtDisplayData*, Bool autoRegister, int insertPosition, Bool csMaster);
 
 		// The DD is no longer on QtViewerBase's list, but is not
 		// destroyed until after the signal.

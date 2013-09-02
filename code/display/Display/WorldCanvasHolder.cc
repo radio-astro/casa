@@ -336,7 +336,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return masterFound;
 	}
 
-	void WorldCanvasHolder::clearCSMasterSettings( WorldCanvas* wCanvas ){
+	void WorldCanvasHolder::clearCSMasterSettings( WorldCanvas* wCanvas, bool clearZoom ){
 		// None assumed CS master role (canvas may be empty).  Remove
 		// any old axis codes; next master will set them to suit itself.
 		// Assure that the zoom window is reset when a DD _does_ accept CS master.
@@ -348,12 +348,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		wCanvas->removeAttribute(xAxis);
 		wCanvas->removeAttribute(yAxis);
 
-		Attribute unZoom("resetCoordinates", True);
-		itsWorldCanvas->setAttribute(unZoom);	// "zoom-to-extent" order.
+		if ( clearZoom ){
+			Attribute unZoom("resetCoordinates", True);
+			itsWorldCanvas->setAttribute(unZoom);	// "zoom-to-extent" order.
 
-		String zoomB = "manualZoomBlc", zoomT = "manualZoomTrc";
-		itsWorldCanvas->removeAttribute(zoomB);	  // These will not be
-		itsWorldCanvas->removeAttribute(zoomT);
+			String zoomB = "manualZoomBlc", zoomT = "manualZoomTrc";
+			itsWorldCanvas->removeAttribute(zoomB);	  // These will not be
+			itsWorldCanvas->removeAttribute(zoomT);
+		}
 	}
 
 	bool WorldCanvasHolder::setCSMaster( DisplayData* dd ) {
@@ -672,11 +674,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 
 			if ( titleDD != NULL ){
+				clearCSMasterSettings(this->worldCanvas(), false);
 				worldCanvas()->csMaster() = titleDD;
 				//Preserve the zoom when there is no CS Master
 				itsLastCSmaster=titleDD;
 				executeSizeControl(worldCanvas() );
-
 			}
 		}
 	}

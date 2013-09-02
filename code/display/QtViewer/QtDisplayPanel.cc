@@ -136,8 +136,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-		connect( panel_, SIGNAL(ddCreated(QtDisplayData*, Bool, int)),
-		         SLOT(ddCreated_(QtDisplayData*, Bool, int)) );
+		connect( panel_, SIGNAL(ddCreated(QtDisplayData*, Bool, int, Bool)),
+		         SLOT(ddCreated_(QtDisplayData*, Bool, int, Bool)) );
 
 		/*connect( panel_, SIGNAL(ddRemoved(QtDisplayData*)),
 		         SLOT(ddRemoved_(QtDisplayData*)) );
@@ -731,11 +731,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	void QtDisplayPanel::ddCreated_(QtDisplayData* qdd, Bool autoRegister,
-			int position ) {
+			int position, Bool csMaster ) {
 		// DP actions to take when viewer signals new DD creation.
 		if(autoRegister) {
 			registerDD_(qdd, position );
 			emit newRegisteredDD(qdd);
+			if ( csMaster ){
+				setControllingDD( qdd );
+			}
 		}
 
 		else emit newUnregisteredDD(qdd);
@@ -891,6 +894,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		else {
 			pd_->setCSmaster( NULL );
 		}
+
 		displayDataHolder->setDDControlling( controllingDD );
 	}
 
@@ -2708,6 +2712,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			trc[0] = wc->linXMax();
 			trc[1] = wc->linYMax();
 		}
+		qDebug() << "QtDisplayPanel::panel_state blc[0]="<<blc[0]<<" blc[1]="<<blc[1]
+		             <<" trc[0]="<<trc[0]<<" trc[1]="<<trc[1];
 
 		panel_state::colormap_map colormapstate;
 		Vector<Float> shiftSlope, brtCont;

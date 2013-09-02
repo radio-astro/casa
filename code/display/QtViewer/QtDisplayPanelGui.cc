@@ -1223,8 +1223,9 @@ QtDisplayData* QtDisplayPanelGui::processDD( String path, String dataType, Strin
 	}
 	displayDataHolder->addDD( qdd, insertPosition, autoRegister,
 			masterCoordinate, masterSaturation,	 masterHue );
+
 	updateDDMenus_( true );
-	emit ddCreated(qdd, autoRegister, insertPosition);
+	emit ddCreated(qdd, autoRegister, insertPosition, masterCoordinate);
 	updateFrameInformation();
 	if ( regionDock_ ) {
 		regionDock_->updateRegionStats( );
@@ -1773,7 +1774,7 @@ void QtDisplayPanelGui::showDataManager() {
 		qdm_ = new QtDataManager(this);
 		/*connect( this, SIGNAL(ddRemoved(QtDisplayData*)),
 					qdm_, SLOT(updateDisplayDatas(QtDisplayData*)));*/
-		connect( this, SIGNAL(ddCreated(QtDisplayData*, Bool, int)),
+		connect( this, SIGNAL(ddCreated(QtDisplayData*, Bool, int, Bool)),
 				qdm_, SLOT(updateDisplayDatas(QtDisplayData*, Bool)));
 	}
 	qdm_->showNormal();
