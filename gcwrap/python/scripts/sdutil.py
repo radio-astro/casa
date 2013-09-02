@@ -1019,7 +1019,7 @@ def select_by_timerange(data, timerange):
         dates_list = split_timerange(timerange, '~')
         first_date = get_full_description(dates_list[0], **parameters)
         second_date = get_full_description(dates_list[1], default=first_date)
-        taql = 'TIME > MJD(DATETIME("%s")) && TIME < MJD(DATETIME("%s"))'%(first_date, second_date)
+        taql = 'TIME >= MJD(DATETIME("%s")) && TIME <= MJD(DATETIME("%s"))'%(first_date, second_date)
     elif re.match('.+\+.+', timerange):
         # This is case 3: 'T0+dT'
         dates_list = split_timerange(timerange, '+')
@@ -1029,7 +1029,7 @@ def select_by_timerange(data, timerange):
         second_date = second_date_datetime.strftime('%Y/%m/%d/%H:%M:%S')
         microsec = '%s'%(second_date_datetime.microsecond/1e6)
         second_date += microsec.lstrip('0')
-        taql = 'TIME > MJD(DATETIME("%s")) && TIME < MJD(DATETIME("%s"))'%(first_date, second_date)
+        taql = 'TIME >= MJD(DATETIME("%s")) && TIME <= MJD(DATETIME("%s"))'%(first_date, second_date)
     elif re.match('^ *>.+', timerange):
         # This is case 4: '>T0'
         dates_list = split_timerange(timerange, '>')
@@ -1055,7 +1055,7 @@ def select_by_timerange(data, timerange):
         second_date = second_date_datetime.strftime('%Y/%m/%d/%H:%M:%S')
         microsec = '%s'%(second_date_datetime.microsecond/1e6)
         second_date += microsec.lstrip('0')
-        taql = 'TIME > MJD(DATETIME("%s")) && TIME < MJD(DATETIME("%s"))'%(first_date, second_date)
+        taql = 'TIME >= MJD(DATETIME("%s")) && TIME <= MJD(DATETIME("%s"))'%(first_date, second_date)
     else:
         # invalid format
         casalog.post('WARNING: timerange="%s" is invalid'%(timerange), priority='WARN')
