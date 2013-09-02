@@ -80,21 +80,21 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.imager_param['restfreq'] = self.restfreq
         
         # 
-        # spw (define representative spw id = self.spwid)
-        self.spwid=-1
+        # spw (define representative spw id = spwid_ref)
+        spwid_ref=-1
         self.open_table(self.spw_table)
         nrows=self.table.nrows()
         for id in self.spw:
             if id < nrows:
-                self.spwid=id
+                spwid_ref=id
                 break
-        if self.spwid < 0:
+        if spwid_ref < 0:
             self.close_table()
             msg='No valid spw id exists in the first table'
             raise ValueError, msg
-        self.allchannels=self.table.getcell('NUM_CHAN',self.spwid)
+        self.allchannels=self.table.getcell('NUM_CHAN',spwid_ref)
         self.close_table()
-        self.imager_param['spw'] = -1 #self.spwid
+        self.imager_param['spw'] = -1 #spwid_ref
 
         # outframe (force using the current frame)
         #self.imager_param['outframe'] = ''
@@ -112,12 +112,12 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
                 my_ms.close()
                 del my_ms
                 for key, spwval in spwinfo.items():
-                    if spwval['SpectralWindowId'] == self.spwid:
+                    if spwval['SpectralWindowId'] == spwid_ref:
                         self.imager_param['outframe'] = spwval['Frame']
                         casalog.post("Using frequency frame of MS, '%s'" % self.imager_param['outframe'])
                         break
             if self.imager_param['outframe'] == '':
-                raise Exception, "Internal error of getting frequency frame of spw=%d." % self.spwid
+                raise Exception, "Internal error of getting frequency frame of spw=%d." % spwid_ref
         else:
             casalog.post("Using frequency frame defined by user, '%s'" % self.imager_param['outframe'])
         
@@ -266,12 +266,12 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         casalog.post("Using phasecenter \"%s\""%(self.imager_param['phasecenter']), "INFO")
         if len(self.infiles) == 1:
             self.open_imager(self.infiles[0])
-            self.imager.selectvis(field=self.fieldid, spw=self.spwid, nchan=-1,\
+            self.imager.selectvis(field=self.fieldid, spw=self.spw, nchan=-1,\
                                   start=0, step=1, baseline=self.antenna, scan=self.scanlist)
         else:
             self.close_imager()
             for name in self.infiles:
-                self.imager.selectvis(vis=name, field=self.fieldid, spw=self.spwid, nchan=-1,\
+                self.imager.selectvis(vis=name, field=self.fieldid, spw=self.spw, nchan=-1,\
                                       start=0, step=1, baseline=self.antenna, scan=self.scanlist)
                 # need to do this
                 self.is_imager_opened = True
