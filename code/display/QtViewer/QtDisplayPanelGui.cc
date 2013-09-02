@@ -1457,7 +1457,10 @@ void QtDisplayPanelGui::removeAllDDs() {
 
 	//Remove them all from the master list
 	displayDataHolder->removeDDAll();
+	updateFrameInformation();
+}
 
+void QtDisplayPanelGui::clearTools() {
 	//Tell other widgets to update.
 	if ( regionDock_ ) {
 		regionDock_->updateRegionStats( );
@@ -1470,8 +1473,6 @@ void QtDisplayPanelGui::removeAllDDs() {
 		std::tr1::shared_ptr< ImageInterface<Float> > p;
 		histogrammer->setImage( p );
 	}
-
-	updateFrameInformation();
 }
 
 Bool QtDisplayPanelGui::isEmptyDD() const {
@@ -1512,6 +1513,13 @@ void QtDisplayPanelGui::notifyDDRemoval( QtDisplayData* qdd ){
 Bool QtDisplayPanelGui::removeDD(QtDisplayData*& qdd) {
 	bool removed = displayDataHolder->removeDD( qdd );
 	if ( removed ) {
+		int imageCount = displayDataHolder->getCount();
+		if ( imageCount == 0 ){
+			qdp_->setControllingDD( NULL );
+			displayDataHolder->setDDControlling( NULL );
+			clearTools();
+		}
+
 		notifyDDRemoval( qdd );
 		qdd->done();
 		delete qdd;

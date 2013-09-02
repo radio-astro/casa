@@ -447,7 +447,7 @@ namespace casa {
 	void Fit2DTool::setImage( ImageTask::shCImFloat image ) {
 		this->image = image;
 		bool enableFunctionality = true;
-		if ( image == NULL ) {
+		if ( image.get() == NULL ) {
 			enableFunctionality = false;
 		} else {
 			String imageName = image->name(false);
