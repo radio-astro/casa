@@ -213,6 +213,7 @@ class sdtask_template(sdtask_interface):
                 selector.set_query(' && '.join([query_org, taql_for_timerange]))
             else:
                 selector.set_query(taql_for_timerange)
+            casalog.post('taql: \'%s\''%(selector.get_query()), priority='DEBUG')
 
         return selector
                 
