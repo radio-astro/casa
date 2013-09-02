@@ -553,22 +553,22 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
-        refstats={'blc':numpy.array([0, 0, 0, 0], dtype=numpy.int32),
-                  'blcf': '17:31:48.804, +57.36.05.613, I, 1.42038e+09Hz',
-                  'max':numpy.array([ 15.64525127]),
-                  'maxpos':numpy.array([57, 20,  0, 20], dtype=numpy.int32),
-                  'maxposf': '17:10:18.441, +58.38.07.786, I, 1.42087e+09Hz',
-                  'mean':numpy.array([ 0.66039691]),
-                  'min':numpy.array([-0.42533547]),
-                  'minpos':numpy.array([68, 63,  0, 38], dtype=numpy.int32),
-                  'minposf': '17:05:17.614, +60.45.47.043, I, 1.42131e+09Hz',
-                  'npts':numpy.array([ 225000.]),
-                  'rms':numpy.array([ 1.38528216]),
-                  'sigma':numpy.array([ 1.21773941]),
-                  'sum':numpy.array([ 148589.30382503]),
-                  'sumsq':numpy.array([ 431776.51775705]),
-                  'trc':numpy.array([74, 74,  0, 39], dtype=numpy.int32),
-                  'trcf': '17:02:34.472, +61.17.47.871, I, 1.42133e+09Hz'}
+        refstats={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
+                  'blcf': '17:31:48.220, +57.36.09.784, I, 1.42038e+09Hz',
+                  'max': numpy.array([ 15.64525127]),
+                  'maxpos': numpy.array([57, 20,  0, 20], dtype=numpy.int32),
+                  'maxposf': '17:10:17.816, +58.38.11.961, I, 1.42087e+09Hz',
+                  'mean': numpy.array([ 0.66039867]),
+                  'min': numpy.array([-0.42533547]),
+                  'minpos': numpy.array([68, 63,  0, 38], dtype=numpy.int32),
+                  'minposf': '17:05:16.976, +60.45.51.215, I, 1.42131e+09Hz',
+                  'npts': numpy.array([ 225000.]),
+                  'rms': numpy.array([ 1.38517249]),
+                  'sigma': numpy.array([ 1.21761365]),
+                  'sum': numpy.array([ 148589.70138012]),
+                  'sumsq': numpy.array([ 431708.13145918]),
+                  'trc': numpy.array([74, 74,  0, 39], dtype=numpy.int32),
+                  'trcf': '17:02:33.828, +61.17.52.040, I, 1.42133e+09Hz'}
         self._checkstats(self.outfile,refstats)
         
 
@@ -765,7 +765,7 @@ class sdimaging_test4(sdimaging_unittest_base,unittest.TestCase):
     # auto calculation result of imsize
     cell_auto = "162.545308arcsec"
     imsize_auto = [73, 68]
-    phasecenter_auto = "J2000 17:17:59.64 59.29.59.926"
+    phasecenter_auto = "J2000 17:17:59.03 59.30.04.104"
     # manual setup
     imsize = [40, 35]
     cell = ["320arcsec", "350arcsec"]
