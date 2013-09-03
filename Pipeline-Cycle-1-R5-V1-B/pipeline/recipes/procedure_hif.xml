@@ -189,6 +189,10 @@
     <ProcessingCommand>
         <Command xmlns="">hif_makecleanlist</Command>
         <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">mode</Keyword>
+                <Value xmlns="">mfs</Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
