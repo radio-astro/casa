@@ -1077,7 +1077,7 @@ class test_alma(test_base):
         self.assertEqual(res['correlation']['XX']['flagged'], 568)
         self.assertEqual(res['correlation']['YY']['flagged'], 1283)
 
-    def test_spw(self):
+    def test_spw_alma(self):
         '''flagdata: flag various spw'''
         # Test that a white space in the spw parameter is taken correctly
         flagdata(vis=self.vis, mode='manual', spw='1,2, 3', savepars=False,
@@ -2617,11 +2617,12 @@ class test_float_column(test_base):
         self.assertEqual(res['spw']['7']['flagged'],40)
         self.assertEqual(res['flagged'],120)
 
-    def test_field_name(self):
-        '''flagdata: Field name with whitespaces'''
-        flagdata(vis=self.vis, flagbackup=False, field='r aqr')
-        res = flagdata(vis=self.vis, mode='summary', field='r aqr')
-        self.assertEqual(res['field']['r aqr']['flagged'],14360)
+# Uncomment after new parser is in place
+#    def test_field_name(self):
+#        '''flagdata: Field name with whitespaces'''
+#        flagdata(vis=self.vis, flagbackup=False, field='r aqr')
+#        res = flagdata(vis=self.vis, mode='summary', field='r aqr')
+#        self.assertEqual(res['field']['r aqr']['flagged'],14360)
 
     def test_clip_frange(self):
         '''flagdata: datacolumn=FLOAT_DATA, flag a range'''
