@@ -1535,7 +1535,10 @@ void DirectionCoordinate::setReferenceFrame(const MDirection::Types rf) {
 	);
 }
 
-
+Bool DirectionCoordinate::hasSquarePixels() const {
+	Vector<Double> inc = increment();
+	return casa::near(fabs(inc[0]), fabs(inc[1]));
+}
 
 void DirectionCoordinate::toCurrent(Vector<Double>& value) const
 {
