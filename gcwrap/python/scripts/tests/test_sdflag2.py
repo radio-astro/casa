@@ -200,6 +200,9 @@ class sdflag2_test_timerange(unittest.TestCase):
                  where T0 and T1 are incomplete time strings
     test09   --- test row flagging with selection by timerange '>T0'
                  where T0 is incomplete time string
+    test10   --- test row flagging with selection by timerange 'T0~T1'
+                 where only T1 is incomplete time strings
+    test11   --- test selection by timerange 'T0~T1' is inclusive
 
     ***NOTE*** These tests are for Scantable only. Tests for the other formats
                which ASAP supports, including MS and SDFITS, are to be made later.
@@ -347,6 +350,29 @@ class sdflag2_test_timerange(unittest.TestCase):
 
         # verification
         self.verify(self.infile, flag_row_expected)
+
+    def test11(self):
+        """test11: test selection by timerange 'T0~T1' is inclusive"""
+        # edit infile
+        T0 = '2006/01/19/01:52:05'
+        T1 = '2006/01/19/02:08:45'
+        qa = qatool()
+        mjd0 = qa.totime(T0)['value']
+        mjd1 = qa.totime(T1)['value']
+        table = gentools(['tb'])[0]
+        table.open(self.infile, nomodify=False)
+        table.putcell('TIME', 0, mjd0)
+        table.putcell('TIME', 1, mjd1)
+        table.close()
+        
+        # first two rows should be flagged
+        timerange = '%s~%s'%(T0,T1)
+        flag_row_expected = numpy.array([True, True, False, False, False, False], dtype=bool)
+        sdflag2(infile=self.infile, mode='manual', timerange=timerange)
+
+        # verification
+        self.verify(self.infile, flag_row_expected)
+        
         
 def suite():
     return [sdflag2_test, sdflag2_test_timerange]
