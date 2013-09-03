@@ -4686,6 +4686,18 @@ Vector<Int> CoordinateSystem::getWorldAxesOrder(
 	return myorder;
 }
 
+Bool CoordinateSystem::isDirectionAbscissaLongitude() const {
+	Bool xIsLong = True;
+	DirectionCoordinate dirCoordinate = directionCoordinate();
+	Vector<Int> dirPixelAxes = directionAxesNumbers();
+	ThrowIf(
+		dirPixelAxes(0) == -1 || dirPixelAxes(1) == -1,
+		"The pixel axes for the DirectionCoordinate have been removed"
+	);
+	return dirPixelAxes(0)==0 && dirPixelAxes(1)==1;
+}
+
+
 void CoordinateSystem::_downcase(Vector<String>& vec) const {
 	for (Vector<String>::iterator iter = vec.begin(); iter != vec.end(); iter++) {
 		iter->downcase();
