@@ -42,9 +42,10 @@ namespace casa {
 
 // <synopsis>
 // This class represents an annotation of a circular region in coordinate space specified by
-// center and radius.
+// center and radius. Note that this represents a world coordinate region, even if the input
+// radius is in pixels. If the direction coordinate does not have square pixels, then
+// AnnEllipse should be used instead.
 // </synopsis>
-
 
 class AnnCircle: public AnnRegion {
 

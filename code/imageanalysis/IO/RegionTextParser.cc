@@ -265,7 +265,7 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 		}
 		// now look for per-line shapes and annotations
 		Vector<Quantity> qDirs;
-		Vector<Quantity> quantities;
+		vector<Quantity> quantities;
 		String textString;
 		AnnotationBase::Type annType = _getAnnotationType(
 			qDirs, quantities, textString, consumeMe, preamble
@@ -348,7 +348,7 @@ void RegionTextParser::_addLine(const AsciiAnnotationFileLine& line) {
 
 AnnotationBase::Type RegionTextParser::_getAnnotationType(
 	Vector<Quantity>& qDirs,
-	Vector<Quantity>& quantities,
+	vector<Quantity>& quantities,
 	String& textString,
 	String& consumeMe, const String& preamble
 ) const {
@@ -787,7 +787,7 @@ void RegionTextParser::_createAnnotation(
 	const AnnotationBase::Type annType,
 	const Vector<Quantity>& qDirs,
 	const Vector<Quantity>& qFreqs,
-	const Vector<Quantity>& quantities,
+	const vector<Quantity>& quantities,
 	const String& textString,
 	const ParamSet& currentParamSet,
 	const Bool annOnly, const Bool isDifference,
@@ -858,11 +858,25 @@ void RegionTextParser::_createAnnotation(
 			}
 			break;
 		case AnnotationBase::CIRCLE:
-			annotation = new AnnCircle(
-				qDirs[0], qDirs[1], quantities[0],
-				dirRefFrame,  _csys, _imShape, qFreqs[0], qFreqs[1],
-				freqRefFrame, doppler, restfreq,  stokes, annOnly
-			);
+			if (
+				quantities[0].getUnit() == "pix"
+				&& ! _csys.directionCoordinate().hasSquarePixels()
+			) {
+				// radius specified in pixels and pixels are not square, use
+				// an AnnEllipse
+				annotation = new AnnEllipse(
+					qDirs[0], qDirs[1], quantities[0], quantities[0], Quantity(0, "deg"),
+					dirRefFrame,  _csys, _imShape, qFreqs[0], qFreqs[1],
+					freqRefFrame, doppler, restfreq,  stokes, annOnly
+				);
+			}
+			else {
+				annotation = new AnnCircle(
+					qDirs[0], qDirs[1], quantities[0],
+					dirRefFrame,  _csys, _imShape, qFreqs[0], qFreqs[1],
+					freqRefFrame, doppler, restfreq,  stokes, annOnly
+				);
+			}
 			break;
 		case AnnotationBase::ANNULUS:
 			annotation = new AnnAnnulus(

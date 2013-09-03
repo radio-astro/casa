@@ -16,8 +16,9 @@
 
 #include <imageanalysis/Annotations/AnnEllipse.h>
 
-#include <images/Regions/WCEllipsoid.h>
+#include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <casa/Quanta/QLogical.h>
+#include <images/Regions/WCEllipsoid.h>
 
 namespace casa {
 
@@ -73,6 +74,7 @@ AnnEllipse& AnnEllipse::operator= (
     _inputPositionAngle = other._inputPositionAngle;
     _convertedSemiMajorAxis = other._convertedSemiMajorAxis;
     _convertedSemiMinorAxis = other._convertedSemiMinorAxis;
+    _convertedPositionAngle = other._convertedPositionAngle;
     return *this;
 }
 
@@ -88,7 +90,8 @@ Bool AnnEllipse::operator== (
 		&& _inputSemiMinorAxis == other._inputSemiMinorAxis
 		&& _inputPositionAngle == other._inputPositionAngle
 		&& _convertedSemiMajorAxis == other._convertedSemiMajorAxis
-		&& _convertedSemiMinorAxis == other._convertedSemiMinorAxis;
+		&& _convertedSemiMinorAxis == other._convertedSemiMinorAxis
+		&& _convertedPositionAngle == other._convertedPositionAngle;
 }
 
 MDirection AnnEllipse::getCenter() const {
@@ -104,7 +107,7 @@ Quantity AnnEllipse::getSemiMinorAxis() const {
 }
 
 Quantity AnnEllipse::getPositionAngle() const {
-	return _inputPositionAngle;
+	return _convertedPositionAngle;
 }
 
 ostream& AnnEllipse::print(ostream &os) const {
@@ -121,24 +124,34 @@ ostream& AnnEllipse::print(ostream &os) const {
 void AnnEllipse::_init(
 	const Quantity& xcenter, const Quantity& ycenter
 ) {
-	_convertedSemiMajorAxis = _lengthToAngle(_inputSemiMajorAxis, _getDirectionAxes()[0]);
-	_convertedSemiMinorAxis = _lengthToAngle(_inputSemiMinorAxis, _getDirectionAxes()[0]);
-	String preamble = String(__FUNCTION__) + ": ";
-	if (
-		_convertedSemiMinorAxis.getValue("rad")
-		> _convertedSemiMajorAxis.getValue("rad")
-	) {
-		throw AipsError(
-			preamble
-			+ "Semi-major axis must be greater than or "
-			+ "equal to semi-minor axis"
+	ThrowIf(
+		! _inputPositionAngle.isConform("rad"),
+		"Position angle must have angular units"
+	);
+	ThrowIf(
+		_inputSemiMajorAxis.getUnit() == "pix"
+		&& ! getCsys().directionCoordinate().hasSquarePixels()
+		&& (
+			! casa::near(fmod(_inputPositionAngle.getValue("rad"), C::pi), 0.0)
+			&& ! casa::near(fmod(fabs(_inputPositionAngle.getValue("rad")), C::pi), C::pi_2)
+		),
+		"When pixels are not square and units are expressed in "
+		"pixels, position angle must be zero"
+	);
+	uInt x = getCsys().isDirectionAbscissaLongitude() ? 0 : 1;
+	uInt y = x == 0 ? 1 : 0;
+	_convertedSemiMajorAxis = _lengthToAngle(_inputSemiMajorAxis, _getDirectionAxes()[y]);
+	_convertedSemiMinorAxis = _lengthToAngle(_inputSemiMinorAxis, _getDirectionAxes()[x]);
+	_convertedPositionAngle = _inputPositionAngle;
+	if (_convertedSemiMajorAxis < _convertedSemiMinorAxis) {
+		std::swap(_convertedSemiMajorAxis, _convertedSemiMinorAxis);
+		_convertedPositionAngle = Quantity(
+			std::fmod(
+				(_inputPositionAngle + Quantity(C::pi_2, "rad")).getValue("rad"),
+				C::pi),
+			"rad"
 		);
-	}
-	if (! _inputPositionAngle.isConform("rad")) {
-		throw AipsError(
-			preamble
-			+ "Position angle must have angular units"
-		);
+		_convertedPositionAngle.convert(_inputPositionAngle);
 	}
 	_inputCenter[0].first = xcenter;
 	_inputCenter[0].second = ycenter;
@@ -153,7 +166,7 @@ void AnnEllipse::_init(
 
 	// WCEllipsoid expects the angle to the major axis to be relative to the positive x
 	// axis. Astronomers however measure the position angle relative to north (positive y axis usually).
-	Quantity relToXAxis = _inputPositionAngle + Quantity(90, "deg");
+	Quantity relToXAxis = _convertedPositionAngle + Quantity(90, "deg");
 
 	WCEllipsoid ellipse(
 		qCenter[0], qCenter[1],

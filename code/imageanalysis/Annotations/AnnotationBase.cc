@@ -105,10 +105,6 @@ AnnotationBase::AnnotationBase(
 	String preamble = _class + ": " + String(__FUNCTION__) + ": ";
 	if (!csys.hasDirectionCoordinate()) {
 		cout << __FUNCTION__ << endl;
-		cout << "*** ncoords " << csys.nCoordinates() << endl;
-		cout << "*** npixelaxis " << csys.nPixelAxes() << endl;
-		cout << __FUNCTION__ << endl;
-
 		throw AipsError(
 			preamble + "Coordinate system has no direction coordinate"
 		);
