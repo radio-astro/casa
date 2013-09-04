@@ -27,6 +27,7 @@ casa_add_library( air_casawvr
   casawvr/msspec.cpp
   casawvr/msweather.cpp 
   casawvr/msantdata.cpp
+  apps/arraygains2.cpp
   )
 
 casa_add_executable( air_casawvr wvrgcal

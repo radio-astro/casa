@@ -190,20 +190,34 @@ namespace LibAIR {
       size_t i = sortedI[ii];
 
       if (c_times(i)>prev_time and  // only one entry per time stamp
-	  c_desc_id(i)==(int)dsc_id and
-	  casa::allEQ(casa::False, c_flags(i))
+	  c_desc_id(i)==(int)dsc_id 
 	  )
       {
 	prev_time = c_times(i);
 
-	times.push_back(c_times(i));
-	states.push_back(c_states(i));
-	field.push_back(c_field(i));
+	bool timeAllFlagged=true;
+	size_t iii=ii;
+	while(iii<nrows && c_times(sortedI[iii])==prev_time)
+	{
+	  // while in this timestamp, check if all rows flagged
+	  if(casa::allEQ(casa::False, c_flags(sortedI[iii]))) // i.e. not flagged
+	  {
+	    timeAllFlagged=false;
+	    break;
+	  }
+	  iii++;
+	}
+	if(!timeAllFlagged)
+	{
+	  times.push_back(c_times(i));
+	  states.push_back(c_states(i));
+	  field.push_back(c_field(i));
 #if __GNUC__ <= 4 and __GNUC_MINOR__ < 1
-	source.push_back(srcmap[(c_field(i))]);
+	  source.push_back(srcmap[(c_field(i))]);
 #else
-	source.push_back(srcmap.at(c_field(i)));
+	  source.push_back(srcmap.at(c_field(i)));
 #endif
+	}
       }
     }
   }
@@ -270,7 +284,8 @@ namespace LibAIR {
   }
 			  
 
-  InterpArrayData *loadWVRData(const casa::MeasurementSet &ms, std::vector<size_t>& sortedI)
+  InterpArrayData *loadWVRData(const casa::MeasurementSet &ms, std::vector<size_t>& sortedI, 
+			       std::set<int>& flaggedantsInMain)
   {
     std::set<size_t> dsc_ids=WVRDataDescIDs(ms);
     AntSet wvrants=WVRAntennas(ms);
@@ -282,6 +297,7 @@ namespace LibAIR {
     const size_t nrows=maintime.nrow();
 
     sortedI.resize(nrows);
+    flaggedantsInMain.clear();
 
     {
       casa::Vector<casa::uInt> sortedIV(nrows);
@@ -292,7 +308,7 @@ namespace LibAIR {
       }
     }
     
-    std::cout << "Multi-MS (MMS) capable version using time sorted access." << std::endl;
+    std::cout << "Multi-MS (MMS) capable version using time sorted access and respecting flags." << std::endl;
 
     std::vector<double> times, az, el;
     std::vector<size_t> states, fields, source;
@@ -301,10 +317,10 @@ namespace LibAIR {
 		       states,
 		       fields,
 		       source,
-		       sortedI); // this function ignores all main table entries which are partially or totally flagged
+		       sortedI); 
 
     if (times.size() == 0)
-      throw LibAIR::MSInputDataError("Didn't find any (unflagged) WVR data points");
+      throw LibAIR::MSInputDataError("Didn't find any WVR data points");
     
     WVRNearestPointing(ms, times, az, el);
       
@@ -320,7 +336,11 @@ namespace LibAIR {
 
 
     // This holds how far we've filled in for each of the antennas
-    std::vector<size_t> curr_time(nWVRs, 0);
+
+    //std::vector<size_t> counters(nWVRs, 0);
+    int counter = -1;
+
+    std::vector<size_t> nunflagged(nWVRs, 0);
 
     casa::ROArrayColumn<casa::Complex> indata(ms, 
 					      casa::MS::columnName(casa::MS::DATA));
@@ -334,6 +354,11 @@ namespace LibAIR {
     casa::ROArrayColumn<casa::Bool> inflags(ms,
 					    casa::MS::columnName(casa::MS::FLAG));
 
+    casa::ROScalarColumn<casa::Double> c_times(ms,
+					       casa::MS::columnName(casa::MS::TIME));  
+
+    double prevtime=0;
+
     for(size_t ii=0; ii<nrows; ++ii)
     {
       size_t i = sortedI[ii];
@@ -342,32 +367,75 @@ namespace LibAIR {
 	  dsc_ids.count(indsc_id(i)) > 0)
       {
 
-	casa::Array<casa::Bool> fl;
-	inflags.get(i, fl, ::casa::True);
- 
-	if(casa::allEQ(casa::False, inflags(i))) // i.e. not flagged
+	int newtimestamp = 0;
+	if(c_times(i)>prevtime)
 	{
-	  casa::Array<std::complex<float> > a;
-	  indata.get(i,a, casa::True);
-
-	  for(size_t k=0; k<4; ++k)
-	  {
-	    res->set(curr_time[a1(i)],
-		     a1(i),
-		     k,
-		     a(casa::IPosition(2,k,0)).real());
-	  }
-	  curr_time[a1(i)]++;
+	  prevtime = c_times(i); 
+	  newtimestamp = 1;
 	}
+	
+	if(c_times(i)==times[counter+newtimestamp]) // there is data for this timestamp
+	{
 
+	  if(newtimestamp==1)
+	  {
+	    counter++;
+	  }
 
-	/*
-	std::cerr<<i<<","
-		 <<curr_time[a1(i)]<<","
-		 <<a1(i)<<std::endl;
-	*/
-		  
+	  casa::Array<casa::Bool> fl;
+	  inflags.get(i, fl, ::casa::True);
+ 
+	  if(casa::allEQ(casa::False, inflags(i))) // i.e. not flagged
+	  {
+	    casa::Array<std::complex<float> > a;
+	    indata.get(i,a, casa::True);
+
+	    for(size_t k=0; k<4; ++k)
+	    {
+	      res->set(counter,
+		       a1(i),
+		       k,
+		       a(casa::IPosition(2,k,0)).real());
+	    }
+	    nunflagged[a1(i)]++;
+	  }
+	  else
+	  {
+	    for(size_t k=0; k<4; ++k)
+	    {
+	      res->set(counter,
+		       a1(i),
+		       k,
+		       0.);
+	    }
+	  }
+	} // end if c_times ...
       }
+    } // end for ii
+
+
+    bool allFlagged=true;
+    for(size_t i=0; i<nWVRs; i++)
+    {
+      if(nunflagged[i]>0)
+      {
+	allFlagged=false;
+      }
+    }
+    if(!allFlagged)
+    {
+      for(size_t i=0; i<nWVRs; i++)
+      {
+	if(nunflagged[i]==0)
+	{
+	  std::cout << "All WVR data for antenna " << i << " is flagged." << std::endl;
+	  flaggedantsInMain.insert(i);
+	}
+      }
+    }
+    else
+    {
+      throw LibAIR::MSInputDataError("All WVR data points are flagged.");
     }
 
     return res.release();
