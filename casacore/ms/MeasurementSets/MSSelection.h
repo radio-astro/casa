@@ -311,10 +311,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {if (spwDDIDs_p.nelements() <= 0) getTEN(ms); return spwDDIDs_p;}
 
     //
-    // The key in the ordered map returned by getPolMap() is the
-    // pol. ID. The value is a vector containing the list of in-row
-    // indices to pick out the selected polarizations (or
-    // equivalently, the list of indices for the vector in the
+    // The key in the ordered map returned by getPolMap() is the Data
+    // Description ID (DDID). The value is a vector containing the
+    // list of in-row indices to pick out the selected polarizations
+    // (or equivalently, the list of indices for the vector in the
     // corrType column of the POLARIZATION sub-table). These are also
     // what the user intended (i.e., e.g. not all DD IDs due to user
     // POL expression might be selected due to SPW expressions).
@@ -322,6 +322,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     inline OrderedMap<Int, Vector<Int> > getPolMap(const MeasurementSet* ms=NULL) 
     {getTEN(ms); return selectedPolMap_p;};
 
+    //
+    // The key in the ordered map returned by getCorrMap() is the
+    // pol. is the Data Description ID (DDID).  The value is a set of
+    // two vectors.  The first vector is the list of the in-row
+    // indices to pick out the selected polarizations (or
+    // equivalently, the list of indices for the vector in the
+    // corrType column of the POLARIZATION sub-table).
+    //
     inline OrderedMap<Int, Vector<Vector<Int> > > getCorrMap(const MeasurementSet* ms=NULL) 
     {getTEN(ms); return selectedSetupMap_p;};
 
