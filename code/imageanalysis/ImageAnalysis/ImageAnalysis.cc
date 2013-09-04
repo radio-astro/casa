@@ -5051,9 +5051,9 @@ ImageAnalysis::echo(Record& v, const bool godeep) {
 
 Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 		Vector<Float>& specVal, const CoordinateSystem& cs,
-		const String& xunits, const String& specFrame, const String& restValue) {
+		const String& xunits, const String& specFrame, const String& restValue,
+		int altAxisIndex) {
 	*_log << LogOrigin("ImageAnalysis", __FUNCTION__);
-
 	CoordinateSystem cSys=cs;
 	if(specFrame != ""){
 		String errMsg;
@@ -5084,9 +5084,26 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 	}
 
 	Int specAx = cSys.findCoordinate(Coordinate::SPECTRAL);
+	SpectralCoordinate specCoor;
+	if ( altAxisIndex >= 0 ){
+		specAx = altAxisIndex;
+		//Make a fake spectral axis.
+		TabularCoordinate tabCoordinate = cSys.tabularCoordinate( altAxisIndex );
+		Vector<Double> freqs = tabCoordinate.worldValues();
+		MFrequency::Types mFrequency = MFrequency::DEFAULT;
+		Bool recognized = MFrequency::getType(mFrequency, specFrame );
+		specCoor = SpectralCoordinate(mFrequency, freqs);
+	}
+	else if ( specAx >= 0 ){
+		specCoor = cSys.spectralCoordinate(specAx);
+	}
+	else {
+		*_log << LogIO::WARN << "Could not find a frequency axis." << LogIO::POST;
+		return False;
+	}
 	Vector<Double> pix(specVal.nelements());
 	indgen(pix);
-	SpectralCoordinate specCoor = cSys.spectralCoordinate(specAx);
+
 	Vector<Double> xworld(pix.nelements());
 	String axis = specaxis;
 	axis.downcase();
@@ -5147,10 +5164,9 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 				   Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
 				   const String& xytype,
 				   const String& specaxis, const Int&,
-				   const Int&, const Int&,
+				   const Int& whichTabular, const Int&,
 				   const String& xunits, const String& specFrame,
 				   const Int& whichQuality, const String& restValue) {
-
 	*_log << LogOrigin("ImageAnalysis", __FUNCTION__);
 	if (xy.size() != 2) {
 		*_log << "input xy vector must have exactly two elements. It has "
@@ -5180,7 +5196,7 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 			return False;
 		xypix = xy;
 	}
-
+	
 	// create container to define the corners
 	IPosition blc(_image->ndim(), 0);
 	IPosition trc(_image->ndim(), 0);
@@ -5209,6 +5225,9 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 
 	// set the spectral index to extract the entire spectrum
 	Int specAx = cSys.findCoordinate(Coordinate::SPECTRAL);
+	if ( whichTabular >= 0 ){
+		specAx = cSys.findCoordinate( Coordinate::TABULAR );
+	}
 	Vector<Bool> zyaxismask;
 	trc[cSys.pixelAxes(specAx)[0]] = _image->shape()(cSys.pixelAxes(specAx)[0]) - 1;
 
@@ -5240,7 +5259,7 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 
 	// get the spectral values
 	zxaxisval.resize(zyaxisval.nelements());
-	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame, restValue);
+	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame, restValue, whichTabular);
 }
 
 
@@ -5255,7 +5274,6 @@ Bool ImageAnalysis::getFreqProfile(
 		Int beamChannel)
 {
 	*_log << LogOrigin("ImageAnalysis", __FUNCTION__);
-
 	Vector<Double> xy(2);
 	xy[0] = 0;
 	xy[1] = 0;
@@ -5336,8 +5354,24 @@ Bool ImageAnalysis::getFreqProfile(
 	// n > 1, i.e. region to average over is a rectangle or polygon
 	// identify the relevant axes (SPECTRAL and DIRECTIONAL)
 	Int specAx = cSys.findCoordinate(Coordinate::SPECTRAL);
-	Int pixSpecAx = cSys.pixelAxes(specAx)[0];
-	Int nchan = _image->shape()(pixSpecAx);
+	Int nchan = -1;
+	Int pixSpecAx = -1;
+	//We prefer the tabular axis if one has been specified.
+	if ( whichTabular >= 0  ){
+		pixSpecAx = cSys.pixelAxes(whichTabular)[0];
+		nchan = _image->shape()(pixSpecAx);
+	}
+	//We default to a spectral axis if one is available.
+	else if ( specAx >= 0 ){
+		pixSpecAx = cSys.pixelAxes(specAx)[0];
+		nchan = _image->shape()(pixSpecAx);
+	}
+
+	if ( nchan < 0 ){
+		*_log << LogIO::WARN << "Image: " << _image->name()
+			<< " does not have a FREQUENCY axis!" << LogIO::POST;
+		return False;
+	}
 	Int which = cSys.findCoordinate(Coordinate::DIRECTION);
 	if (which < 0){
 		*_log << LogIO::WARN << "Image: " << _image->name()
@@ -5363,7 +5397,6 @@ Bool ImageAnalysis::getFreqProfile(
 			imagreg = regMan.wbox(blc, trc, pixax, cSys);
 		}
 	}
-
 	// create the image region for
 	// a polygon
 	if (n > 2) {
@@ -5397,7 +5430,6 @@ Bool ImageAnalysis::getFreqProfile(
 
 	IPosition blc(cSys.nPixelAxes(),0);
 	IPosition trc(cSys.nPixelAxes(),0);
-
 	//FIXME only the I image for now
 	//Int polAx  = cSys.findCoordinate(Coordinate::STOKES);
 	//if (polAx >= 0) {
@@ -5545,7 +5577,7 @@ Bool ImageAnalysis::getFreqProfile(
 
 	// get the spectral values
 	zxaxisval.resize(zyaxisval.nelements());
-	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame, restValue);
+	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame, restValue, whichTabular);
 }
 
 // These should really go in a coordsys inside the casa name space
