@@ -543,7 +543,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      if (msSpwGramParseCommand(msLike->spectralWindow(), 
 						msLike->dataDescription(),
 						colAsTEN, spwExpr_p,
-						spwIDs_p, chanIDs_p) == 0)
+						spwIDs_p, chanIDs_p,spwDDIDs_p) == 0)
 			node = *(msSpwGramParseNode());
 		    }
 		  break;
