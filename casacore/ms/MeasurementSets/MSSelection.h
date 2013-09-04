@@ -294,9 +294,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Matrix<Double> getChanFreqList(const MeasurementSet* ms=NULL, 
 				   const Bool sorted=False);
 
-    // Accessor for the list of the selected Data Description IDs.
+    // Accessor for the list of the selected Data Description IDs
+    // (DDID) from the polarization expression parsing.  The actual
+    // selected DDIDs would be an intersection of the DDIDs selected
+    // from polarization and SPW expressions parsing (see
+    // getSPWDDIDList() below).
     inline Vector<Int> getDDIDList(const MeasurementSet* ms=NULL) 
     {if (ddIDs_p.nelements() <= 0) getTEN(ms); return ddIDs_p;}
+
+    // Accessor for the list of the selected Data Description IDs from
+    // the SPW expression parsing.  The actual
+    // selected DDIDs would be an intersection of the DDIDs selected
+    // from polarization and SPW expressions parsing (see
+    // getDDIDList() above).
+    inline Vector<Int> getSPWDDIDList(const MeasurementSet* ms=NULL) 
+    {if (spwDDIDs_p.nelements() <= 0) getTEN(ms); return spwDDIDs_p;}
 
     //
     // The key in the ordered map returned by getPolMap() is the
@@ -435,7 +447,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Priority
     Vector<Int> exprOrder_p;
     Vector<Int> antenna1IDs_p,antenna2IDs_p,fieldIDs_p, spwIDs_p, scanIDs_p, arrayIDs_p,
-      ddIDs_p,stateObsModeIDs_p, observationIDs_p;
+      ddIDs_p,stateObsModeIDs_p, observationIDs_p, spwDDIDs_p;
     Matrix<Int> chanIDs_p;
     Matrix<Int> baselineIDs_p;
     Matrix<Double> selectedTimesList_p;

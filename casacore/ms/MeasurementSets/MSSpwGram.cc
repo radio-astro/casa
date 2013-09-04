@@ -90,7 +90,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
   int baseMSSpwGramParseCommand (MSSpwParse* parser, const String& command,
-				 Vector<Int>& selectedIDs, Matrix<Int>&selectedChans) 
+				 Vector<Int>& selectedIDs, Matrix<Int>&selectedChans,
+				 Vector<Int>& selectedDDIDs) 
   {
     try 
       {
@@ -104,6 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	ret=MSSpwGramparse();                // parse command string
 	selectedIDs = parser->selectedIDs();
 	selectedChans = parser->selectedChanIDs();
+	selectedDDIDs = parser->selectedDDIDs();
 	if ((selectedIDs.size() == 0) ||
 	    (selectedChans.size() == 0))
 	  throw(MSSelectionSpwParseError("No valid SPW & Chan combination found"));
@@ -121,15 +123,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   int msSpwGramParseCommand (const MSSpectralWindow& spwSubTable, 
 			     const MSDataDescription& ddSubTable, 
 			     const TableExprNode& colAsTEN,
-			     const String& command,Vector<Int>& selectedIDs,
-			     Matrix<Int>& selectedChans) 
+			     const String& command,
+			     Vector<Int>& selectedIDs,
+			     Matrix<Int>& selectedChans,
+			     Vector<Int>& selectedDDIDs) 
   {
     Int ret;
     //    MSSpwParse *thisParser = new MSSpwParse(ms);
     MSSpwParse *thisParser = new MSSpwParse(spwSubTable, ddSubTable, colAsTEN);
     try
       {
-	ret=baseMSSpwGramParseCommand(thisParser, command, selectedIDs, selectedChans);
+	ret=baseMSSpwGramParseCommand(thisParser, command, selectedIDs, selectedChans, selectedDDIDs);
       }
     catch(MSSelectionSpwError &x)
       {
