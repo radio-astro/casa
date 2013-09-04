@@ -43,6 +43,7 @@
 #include <display/QtViewer/QtMouseToolBar.qo.h>
 #include <display/QtViewer/QtViewer.qo.h>
 #include <display/QtPlotter/QtProfile.qo.h>
+#include <display/QtPlotter/Util.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/QtDataManager.qo.h>
 #include <display/QtViewer/QtExportManager.qo.h>
@@ -2193,8 +2194,9 @@ void QtDisplayPanelGui::showImageProfile() {
 							pdd->checkAxis();
 						}
 					}
-
-					if (pdd->getAxisIndex(String("Spectral")) == -1) {
+					if (pdd->getAxisIndex(String("Spectral")) == -1 &&
+						Util::getTabularFrequencyAxisIndex( img) == -1 ) {
+					//if (pdd->getAxisIndex(String("Spectral")) == -1) {
 						profileDD_ = 0;
 						hideImageProfile();
 						QMessageBox::warning( this, "Channel Image Problem", "The z-axis of the channel image is not frequency.");

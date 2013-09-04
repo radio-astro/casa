@@ -144,11 +144,6 @@ namespace casa {
 		//User legend preferences
 		legendPreferencesDialog = new LegendPreferences( canvasHolder, this );
 
-		CoordinateSystem cSys = image->coordinates();
-		if ( cSys.hasSpectralAxis() ) {
-			SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
-			Converter::setSpectralCoordinate( spectralCoordinate );
-		}
 
 		// read the preferred ctype from casarc
 		initializeXAxisUnits();
@@ -162,8 +157,7 @@ namespace casa {
 		ctypeUnit = String(bottomAxisCType->currentText().toStdString());
 		getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
 		pixelCanvas -> setToolTipXUnit( xaxisUnit.c_str());
-
-
+		initializeSpectralProperties();
 
 		// get reference frame info for freq axis label
 		MFrequency::Types freqtype = determineRefFrame(img);
@@ -272,6 +266,10 @@ namespace casa {
 		restrictTopAxisOptions( false, bottomAxisCType->currentText() );
 	}
 
+
+
+
+
 	void QtProfile::setUnitsText( String unitStr ) {
 		QString unitLabel("<font color='black'>["+QString(unitStr.c_str())+"]</font>");
 		specFitSettingsWidget->setUnits( unitLabel );
@@ -285,9 +283,13 @@ namespace casa {
 		CoordinateSystem cSys=img->coordinates();
 		Int specAx=cSys.findCoordinate(Coordinate::SPECTRAL);
 		if ( specAx < 0 ) {
-			QMessageBox::information( this, "No spectral axis...",
+			int tabIndex = Util::getTabularFrequencyAxisIndex( img );
+			if ( tabIndex < 0 ){
+				//See if it has a tabular axis with units frequency.
+				QMessageBox::information( this, "No spectral axis...",
 			                          "Sorry, could not find a spectral axis for this image...",
 			                          QMessageBox::Ok);
+			}
 			return MFrequency::DEFAULT;
 		}
 
@@ -500,6 +502,23 @@ namespace casa {
 		emit coordinateChange(coordinate);
 	}
 
+	MFrequency::Types QtProfile::getReferenceFrame() const {
+		QString refText = spcRef->currentText();
+		MFrequency::Types mFrequency = MFrequency::DEFAULT;
+		MFrequency::getType( mFrequency, refText.toStdString());
+		return mFrequency;
+	}
+
+	bool QtProfile::isSpectralAxis() const {
+		bool spectralAxis = true;
+		if ( image ){
+			const CoordinateSystem& cSys = image->coordinates();
+			if ( !cSys.hasSpectralAxis()){
+				spectralAxis = false;
+			}
+		}
+		return spectralAxis;
+	}
 
 	void QtProfile::changeFrame(const QString &text) {
 		spcRefFrame=String(text.toStdString());
@@ -597,11 +616,7 @@ namespace casa {
 			updateAxisUnitCombo( pref_ctype, topAxisCType );
 		}
 
-		CoordinateSystem cSys = image->coordinates();
-		if ( cSys.hasSpectralAxis() ) {
-			SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
-			Converter::setSpectralCoordinate( spectralCoordinate );
-		}
+		initializeSpectralProperties();
 		initializeSolidAngle();
 
 		ctypeUnit = String(bottomAxisCType->currentText().toStdString());
@@ -643,6 +658,58 @@ namespace casa {
 		position = QString("");
 		profileStatus->showMessage(position);
 		pixelCanvas->clearCurve();
+	}
+
+	void QtProfile::initializeSpectralProperties(){
+		CoordinateSystem cSys = image->coordinates();
+		bool spectralAxis = cSys.hasSpectralAxis();
+		if ( spectralAxis ) {
+			SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
+			Converter::setSpectralCoordinate( spectralCoordinate );
+		}
+		else {
+			Int tabularCoordinateIndex = Util::getTabularFrequencyAxisIndex( image );
+			if ( tabularCoordinateIndex >= 0 ){
+				resetTabularConversion();
+			}
+		}
+		resetXUnits(spectralAxis);
+	}
+
+	void QtProfile::resetXUnits( bool spectralAxis ){
+		//Because we do not know the rest frequency we can not make valid conversions
+		//from frequency/wavelength <-> velocity.  Therefore, we remove all velocity
+		//units from the combos if we do not have a spectral axis..
+		QString oldUnit = bottomAxisCType->currentText();
+		bottomAxisCType->clear();
+		int unitCount = xUnitsList.size();
+		for ( int i = 0; i < unitCount; i++ ){
+			if ( xUnitsList[i].indexOf( "velocity") == -1 || spectralAxis ){
+				bottomAxisCType->addItem( xUnitsList[i]);
+			}
+		}
+		int oldUnitsIndex = bottomAxisCType->findText( oldUnit );
+		if ( oldUnitsIndex != -1 ){
+			bottomAxisCType->setCurrentIndex( oldUnitsIndex );
+		}
+	}
+
+	void QtProfile::resetTabularConversion(){
+
+		int tabularIndex = Util::getTabularFrequencyAxisIndex( image );
+		if ( tabularIndex >= 0 ){
+			CoordinateSystem& cSys = const_cast<CoordinateSystem&>(image->coordinates());
+			TabularCoordinate tabCoordinate = cSys.tabularCoordinate( tabularIndex );
+			Vector<Double> worlds = tabCoordinate.worldValues();
+			MFrequency::Types mFrequency = getReferenceFrame();
+			SpectralCoordinate spectralCoordinate( mFrequency, worlds );
+
+			//Put the new spectral coordinate into the image in place of the tabular
+			//coordinate.
+			//cSys.replaceCoordinate( spectralCoordinate, tabularIndex);
+			Converter::setSpectralCoordinate( spectralCoordinate );
+		}
+
 	}
 
 	void QtProfile::adjustPlotUnits() {
@@ -979,7 +1046,19 @@ namespace casa {
 		CoordinateSystem cSys = img->coordinates();
 		Int spectralIndex = cSys.spectralAxisNumber();
 		IPosition imgShape = img->shape();
-		int channelCount = imgShape[spectralIndex];
+		int channelCount = -1;
+		if ( spectralIndex >= 0 ){
+			channelCount = imgShape[spectralIndex];
+		}
+		else {
+			Int tabularIndex = Util::getTabularFrequencyAxisIndex( img );
+			if ( tabularIndex >= 0 ){
+				channelCount = imgShape[tabularIndex];
+			}
+			else {
+				qDebug() << "Could not find a tabular or spectral frequency axis: "<<img->name().c_str();
+			}
+		}
 		return channelCount;
 	}
 
@@ -1021,8 +1100,10 @@ namespace casa {
 			//Of all the images we are overplotting, use the one with the maximum
 			//number of channels.
 			ImageAnalysis* maxChannelAnalysis = findImageWithMaximumChannels();
+			int tabularIndex = getFreqProfileTabularIndex( maxChannelAnalysis );
 			bool ok=maxChannelAnalysis->getFreqProfile( lastWX, lastWY, xValues, yValues,
-						                             WORLD_COORDINATES, coordinateType, 0, 0, 0, cTypeUnit, spcRefFrame,
+						                             WORLD_COORDINATES, coordinateType, 0,
+						                             tabularIndex, 0, cTypeUnit, spcRefFrame,
 						                             (Int)QtProfile::MEAN, 0, cSysRval);
 			if ( ok ){
 				//Check to see if the top axis ordering is ascending in x
@@ -1332,6 +1413,7 @@ namespace casa {
 
 		//Get Profile Flux density v/s coordinateType
 		bool ok = assignFrequencyProfile( wxv,wyv, coordinateType, xaxisUnit,z_xval,z_yval);
+
 		if ( !ok ) {
 			return;
 		}
@@ -2013,43 +2095,43 @@ namespace casa {
 	}
 
 
+
 	bool QtProfile::assignFrequencyProfile( const Vector<double> &wxv, const Vector<double> &wyv,
 	                                        const String& coordinateType, const String& xaxisUnit,
 	                                        Vector<Float> &z_xval, Vector<Float> &z_yval) {
-		Bool ok = False;
 
+		Int whichTabular = getFreqProfileTabularIndex( analysis );
+		Bool ok = false;
 		switch (itsPlotType) {
 		case QtProfile::PMEAN:
 			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-			                             WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-			                             (Int)QtProfile::MEAN, 0, cSysRval);
+					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0, xaxisUnit, spcRefFrame,
+					(Int)QtProfile::MEAN, 0, cSysRval);
 			break;
 		case QtProfile::PMEDIAN:
 			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-			                             WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-			                             (Int)QtProfile::MEDIAN, 0, cSysRval);
+					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0, xaxisUnit, spcRefFrame,
+					(Int)QtProfile::MEDIAN, 0, cSysRval);
 			break;
 		case QtProfile::PSUM:
 			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-			                             WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-			                             (Int)QtProfile::SUM, 0, cSysRval );
+					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0, xaxisUnit, spcRefFrame,
+					(Int)QtProfile::SUM, 0, cSysRval );
 			break;
 		case QtProfile::PFLUX:
 			ok=getFrequencyProfileWrapper( analysis, wxv, wyv, z_xval, z_yval,
-			                               WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-			                               (Int)QtProfile::FLUX, 0, cSysRval);
+					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0, xaxisUnit, spcRefFrame,
+					(Int)QtProfile::FLUX, 0, cSysRval);
 			break;
-			//case QtProfile::PVRMSE:
-			//	 ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-			//			 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-			//			 (Int)QtProfile::RMSE, 0);
-			//	 break;
+
 		default:
 			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-			                             WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-			                             (Int)QtProfile::MEAN, 0, cSysRval);
+					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0, xaxisUnit, spcRefFrame,
+					(Int)QtProfile::MEAN, 0, cSysRval);
 			break;
 		}
+
+
 
 		if (!ok) {
 			// change to notify user of error...
@@ -2058,10 +2140,21 @@ namespace casa {
 		return ok;
 	}
 
+	int QtProfile::getFreqProfileTabularIndex(ImageAnalysis* analysis ) {
+		Int whichTabular = -1;
+		std::tr1::shared_ptr<const ImageInterface<Float> > img = analysis->getImage();
+		const CoordinateSystem& cSys = img->coordinates();
+		if ( !cSys.hasSpectralAxis() ){
+			whichTabular = Util::getTabularFrequencyAxisIndex( img );
+		}
+		return whichTabular;
+	}
+
 	bool QtProfile::setErrorPlotting( const Vector<double> &wxv, const Vector<double> &wyv ) {
 		bool ok = true;
 		// get the coordinate system
 		CoordinateSystem cSys = image->coordinates();
+		int tabularIndex = getFreqProfileTabularIndex(analysis);
 		switch (itsErrorType) {
 		case QtProfile::PNOERROR:
 			if (z_eval.size()> 0)
@@ -2087,7 +2180,7 @@ namespace casa {
 					//		 break;
 				default:
 					ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
-					                             WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+					                             WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
 					                             (Int)QtProfile::RMSE, 0, cSysRval);
 					break;
 				}
@@ -2102,7 +2195,7 @@ namespace casa {
 				switch ( itsPlotType ) {
 				case QtProfile::PMEAN:
 					ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
-					                             WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+					                             WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
 					                             (Int)QtProfile::NSQRTSUM, 1, cSysRval);
 					break;
 				case QtProfile::PMEDIAN:
@@ -2112,12 +2205,12 @@ namespace casa {
 					break;
 				case QtProfile::PSUM:
 					ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
-					                             WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+					                             WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
 					                             (Int)QtProfile::SQRTSUM, 1, cSysRval);
 					break;
 				case QtProfile::PFLUX:
 					ok=getFrequencyProfileWrapper( analysis, wxv, wyv, z_xval, z_eval,
-					                               WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+					                               WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
 					                               (Int)QtProfile::EFLUX, 1, cSysRval);
 					break;
 				default:
@@ -2264,40 +2357,42 @@ namespace casa {
 	void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv,
 			const Vector<double> &wyv, Int ordersOfM ) {
 		bool ok = true;
+
 		if ( over != NULL ) {
 			QListIterator<OverplotAnalysis> i(*over);
 			while (i.hasNext() && stateMProf) {
 				OverplotAnalysis overplot = i.next();
 				QString ky = overplot.first;
 				ImageAnalysis* ana = overplot.second;
+				int tabularIndex = getFreqProfileTabularIndex( ana );
 				Vector<Float> xval(100);
 				Vector<Float> yval(100);
 
 				switch (itsPlotType) {
 				case QtProfile::PMEAN:
 					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
-					                        WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+					                        WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
 					                        (Int)QtProfile::MEAN, 0);
 					break;
 				case QtProfile::PMEDIAN:
 					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
-					                        WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+					                        WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
 					                        (Int)QtProfile::MEDIAN, 0);
 					break;
 				case QtProfile::PSUM:
 					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
-					                        WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+					                        WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
 					                        (Int)QtProfile::PSUM, 0);
 					break;
 				case QtProfile::PFLUX:
 					ok=getFrequencyProfileWrapper( ana, wxv, wyv, xval, yval,
-					                               WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+					                               WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
 					                               (Int)QtProfile::PFLUX, 0, "");
 					break;
 
 				default:
 					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
-					                        WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+					                        WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
 					                        (Int)QtProfile::MEAN, 0);
 					break;
 				}
@@ -2390,8 +2485,9 @@ namespace casa {
 			String coordinateType;
 			String cTypeUnit;
 			getcoordTypeUnit(xUnits, coordinateType, cTypeUnit);
+			int tabularIndex = getFreqProfileTabularIndex( analysis );
 			*ok=analysis->getFreqProfile( lastWX, lastWY, xval, yval,
-					WORLD_COORDINATES, coordinateType, 0, 0, 0, cTypeUnit, spcRefFrame,
+					WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, cTypeUnit, spcRefFrame,
 							(Int)QtProfile::MEAN, 0);
 			if ( *ok ){
 				unitPerChannel = qAbs(xval[0] - xval[1]) / z_xval.size();
@@ -2483,7 +2579,15 @@ namespace casa {
 			}
 			if ( !restrictOptions ||
 				channelVisible || freqVisible || velocityVisible || waveVisible ){
-				topAxisCType->addItem( xUnitsList[i]);
+				//One last check, make sure the bottom axis already contains the unit.
+				//In the case of using a tabular spectral index, the rest frequency may not
+				//be available.  In such a case, we can not make valid velocity conversions
+				//so velocity units are removed from the bottom axis, and should not be supported
+				//on the top axis either.
+				int unitIndex = bottomAxisCType->findText( xUnitsList[i]);
+				if ( unitIndex >= 0 ){
+					topAxisCType->addItem( xUnitsList[i]);
+				}
 			}
 		}
 	}

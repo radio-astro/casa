@@ -23,12 +23,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 #include <display/QtPlotter/Util.h>
+#include <images/Images/ImageInterface.h>
+#include <coordinates/Coordinates/TabularCoordinate.h>
 #include <assert.h>
 #include <cmath>
 #include <iostream>
 #include <QMessageBox>
 #include <QWidget>
 #include <QMap>
+#include <QDebug>
 #include <QtCore/qmath.h>
 
 namespace casa {
@@ -221,6 +224,25 @@ namespace casa {
 		}
 	}
 
+	int Util::getTabularFrequencyAxisIndex(std::tr1::shared_ptr<const ImageInterface<Float> > img){
+		int tabIndex = -1;
+		const CoordinateSystem& cSys = img->coordinates();
+		Int tabularCoordinateIndex = cSys.findCoordinate( Coordinate::TABULAR);
+		if ( tabularCoordinateIndex >= 0 ){
+			//Check to see if the units are frequency
+			TabularCoordinate tabCoordinate = cSys.tabularCoordinate( tabularCoordinateIndex );
+			Vector<String> tabUnits = tabCoordinate.worldAxisUnits();
+			int tabCount = tabUnits.size();
+			for ( int i = 0; i < tabCount; i++ ){
+				QString tabUnit( tabUnits[i].c_str() );
+				if ( tabUnit.indexOf( "Hz") != -1 ){
+					tabIndex = tabularCoordinateIndex;
+					break;
+				}
+			}
 
+		}
+		return tabIndex;
+	}
 
 }

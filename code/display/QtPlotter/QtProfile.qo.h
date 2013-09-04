@@ -135,7 +135,6 @@ namespace casa {
 			imagePath = filePath;
 		}
 
-
 		//Allows the profiler to come up specialized to do spectroscopy
 		//or another task.
 		void setPurpose( ProfileTaskMonitor::PURPOSE purpose );
@@ -161,8 +160,12 @@ namespace casa {
 		void imageCollapsed(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img);
 		void setPosition( const QList<double>& xValues, const QList<double>& yValues );
 		void processTrackRecord( const String& dataName, const String& positionInfo );
+		virtual MFrequency::Types getReferenceFrame() const;
+
 		typedef std::pair<QString, std::tr1::shared_ptr<ImageInterface<float> > > OverplotInterface;
 		typedef pair<QString,ImageAnalysis*> OverplotAnalysis;
+
+
 	public slots:
 		void zoomIn();
 		void zoomOut();
@@ -241,6 +244,12 @@ namespace casa {
 		void setUnitsText( String unitStr );
 		void resetYUnits( const QString& units);
 		void outputCurve( int k, QTextStream& ts, Float scaleFactor );
+		int getFreqProfileTabularIndex(ImageAnalysis* analysis );
+		void resetTabularConversion();
+		bool isSpectralAxis() const;
+		void initializeSpectralProperties();
+		void resetXUnits( bool spectralAxis);
+
 		/**
 		 * Returns false if first vector value is greater than the last
 		 * vector value; otherwise returns true.
