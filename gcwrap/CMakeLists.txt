@@ -320,6 +320,12 @@ elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
             set( arch linux_gnu )
         endif()
         set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -Wno-deprecated -Woverloaded-virtual" )
+
+        set( dbusxx dbus-c++ )
+        set( casa_packages /usr/lib/casapy )
+        set( qt4 system-qt )
+        set( python_version 2.6 )
+
     endif()
 else()
     message( WARNING "Unsupported system: ${CMAKE_SYSTEM_NAME}" )
