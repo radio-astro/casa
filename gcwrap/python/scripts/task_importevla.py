@@ -215,7 +215,6 @@ def importevla(
 
             # Flag cross-hands too
             if flagpol:
-                print 'flagpol = True'
                 flagz['reason'] = 'CLIP_ZERO_ALL'
 #                flagz['command'] = \
 #                    "mode='clip' clipzeros=True correlation='ABS_ALL'"
@@ -231,7 +230,6 @@ def importevla(
                 print allflags
                 
             else:
-                print 'flagpol = False'
                 flagz['reason'] = 'CLIP_ZERO_RR'
 #                flagz['command'] = \
 #                    "mode='clip' clipzeros=True correlation='ABS_RR'"
@@ -243,9 +241,7 @@ def importevla(
                 flagz['id'] = 'ZERO_RR'
                 allflags[nflags] = flagz.copy()
                 nflags += 1
-                print allflags
             
-                print 'create LL dictionary'
                 flagz['reason'] = 'CLIP_ZERO_LL'
 #                flagz['command'] = \
 #                    "mode='clip' clipzeros=True correlation='ABS_LL'"
@@ -258,7 +254,6 @@ def importevla(
                 allflags[nflags] = flagz.copy()
                 nflags += 1
                 nflagz = 2
-                print allflags
 
             casalog.post('Created %s command(s) to clip zeros'%str(nflagz))
 
@@ -315,8 +310,6 @@ def importevla(
                 aflocal.selectdata()
 
                 # Setup the agent's parameters
-                print allflags
-#                saved_list = fh.setupAgent(aflocal, allflags, [], True, True)
                 fh.parseAgents(aflocal, allflags, [], True, True, '')
 
                 # Initialize the agents
