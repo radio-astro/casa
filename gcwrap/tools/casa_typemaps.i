@@ -185,7 +185,7 @@ if($1){
 //%typemap(freearg) variant& {
    //delete $1;
 //}
-%typemap(freearg) variant& columnname{
+%typemap(freearg) variant& value{
    delete $1;
 }
 
