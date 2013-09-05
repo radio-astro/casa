@@ -4481,7 +4481,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
 	  FluxStandard fluxStd(fluxScaleEnum);
 	  Flux<Double> returnFlux, returnFluxErr;
 
-	  if (fluxStd.compute(fieldName, mfreq, mtime, returnFlux, returnFluxErr)) {
+	  if (fluxStd.compute(fieldName, position, mfreq, mtime, returnFlux, returnFluxErr)) {
 	    // Standard reference source identified
 	    returnFlux.value(fluxUsed);
 	  } 
@@ -5094,7 +5094,7 @@ Bool Imager::sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
     // Just get the fluxes and their uncertainties for scaling the image.
     //foundSrc = fluxStd.compute(fieldName, mfreqs, returnFluxes,
      //                          returnFluxErrs);
-    foundSrc = fluxStd.compute(fieldName, mfreqs, mtime, returnFluxes,
+    foundSrc = fluxStd.compute(fieldName, fieldDir, mfreqs, mtime, returnFluxes,
                               returnFluxErrs);
   }
   else{
@@ -5250,7 +5250,7 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
       if(precompute){
         //fluxStd.compute(fieldName, spwcols.chanFreqMeas()(rawspwid)(whichChan),
         //                returnFlux, returnFluxErr);
-	fluxStd.compute(fieldName, MFrequency(Quantity(freqArray[k], "Hz"), MFrequency::LSRK),
+	fluxStd.compute(fieldName, fieldDir, MFrequency(Quantity(freqArray[k], "Hz"), MFrequency::LSRK),
 			aveEpoch, returnFlux, returnFluxErr);
         returnFlux.value(fluxUsed);
       }
