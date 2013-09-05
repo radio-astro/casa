@@ -2,10 +2,56 @@ from taskinit import *
 import time
 import os
 import sys
+import copy
+import pprint
 import flaghelper as fh
 from parallel.parallel_task_helper import ParallelTaskHelper
 
 debug = False
+
+# Decorator function to print the arguments of a function
+def dump_args(func):
+    "This decorator dumps out the arguments passed to a function before calling it"
+    argnames = func.func_code.co_varnames[:func.func_code.co_argcount]
+    fname = func.func_name
+   
+    def echo_func(*args,**kwargs):
+        print fname, ":", ', '.join('%s=%r' % entry for entry in zip(argnames,args) + kwargs.items())
+        return func(*args, **kwargs)
+   
+    return echo_func
+
+# Helper class
+class FlagHelper(ParallelTaskHelper):
+    def __init__(self, args={}):
+        self.__args = args
+    
+    @dump_args
+    def setupInputFile(self, parname):
+        '''Create a temporary input file with
+           absolute pathnames for other input files
+           such as addantenna, timedev, freqdev.
+           The temporary input file will have the same
+           name with an extension .tmp'''
+        
+        newpar = None
+        if isinstance(parname, str) and parname != '':
+            newpar = fh.addAbsolutePath(parname)
+        elif isinstance(parname, list) and os.path.isfile(parname[0]):
+            newpar = []
+            for i in range(len(parname)):
+                newpar.append(fh.addAbsolutePath(parname[i]))
+        
+        return newpar
+    
+        
+#    @dump_args
+    def setupCluster(self, thistask=''):
+        '''Get a simple_cluster to execute this task'''
+        if thistask == '':
+            thistask = 'flagdata'
+            
+        ParallelTaskHelper.__init__(self, task_name=thistask, args=self.__args)
 
 
 def flagdata(vis,
@@ -74,40 +120,14 @@ def flagdata(vis,
              cmdreason,     # reason to save to flag cmd
              outfile):      # output file to save flag commands
 
-    # Global parameters
-    # vis, mode, action, savepars                      
     
     #
     # Task flagdata
     #    Flags data from an MS or calibration table based on data selection in various ways
     
     casalog.origin('flagdata')
-    
-    # (CAS-4119): Use absolute paths for input files to ensure that the engines find them
-    if isinstance(inpfile, str) and inpfile != "":                   
-        inpfile = os.path.abspath(inpfile)
-        fh.addAbsPath(inpfile)
-        
-    elif isinstance(inpfile, list) and os.path.isfile(inpfile[0]):
-        # It is a list of input files
-        for inputfile in range(len(inpfile)):
-            inpfile[inputfile] = os.path.abspath(inpfile[inputfile])
-            fh.addAbsPath(inpfile[inputfile])
-            
-    if (outfile != ""):
-        outfile = os.path.abspath(outfile)        
-        
-    if (isinstance(addantenna,str) and addantenna != ""):
-        addantenna = os.path.abspath(addantenna)
-        
-    if (isinstance(timedev,str) and timedev != ""):
-        timedev = os.path.abspath(timedev)        
-        
-    if (isinstance(freqdev,str) and freqdev != ""):
-        freqdev = os.path.abspath(freqdev)        
-        
-    # CAS-4696
-    if (action == 'none' or action=='' or action=='calculate' and flagbackup):
+                    
+    if (action == 'none' or action=='' or action=='calculate'):
         flagbackup = False
         
     # SMC: moved the flagbackup to before initializing the cluster.
@@ -120,37 +140,51 @@ def flagdata(vis,
         # should create a backup
         flagbackup = False
 
+    # Initialize the helper class
+    orig_locals = locals()
+    FHelper = FlagHelper()
 
-    # Save all the locals()
-    orig_locals = locals().copy()
-    # inputfile may have been added to the locals dictionary. The cluster does not
-    # recognize it as a parameter for the task, so we have to remove it.
-    if orig_locals.__contains__('inputfile'):
-        del orig_locals['inputfile']
-        
-    
-    iscal = False
-    summary_stats={};
-    
-    # Check if vis is a cal table:
+    # Check if vis is a MS, MMS or cal table:
     # typevis = 1 --> cal table
     # typevis = 0 --> MS
     # typevis = 2 --> MMS
+    iscal = False
     typevis = fh.isCalTable(vis)
     if typevis == 1:
-        iscal = True  
+        iscal = True
 
-    if pCASA.is_mms(vis):
-        pCASA.execute("flagdata", orig_locals)
-        return
 
-    # Take care of the trivial parallelization
-    # jagonzal (CAS-4119): If flags are not going to be applied is better to run in sequential mode
-#        if ParallelTaskHelper.isParallelMS(vis) and action != '' and action != 'none':
+    # ***************** Input is MMS -- Parallel Processing ***********************   
+         
     if typevis == 2 and action != '' and action != 'none':
-        # To be safe convert file names to absolute paths.
-        helper = ParallelTaskHelper('flagdata', orig_locals)
-        # jagonzal (CAS-4119): Override summary minabs,maxabs,minrel,maxrel 
+                            
+        # Create a temporary input file with .tmp extension.
+        # Use this file for all the processing from now on.
+        if (isinstance(inpfile,str) and inpfile != '') or \
+           (isinstance(inpfile, list) and os.path.isfile(inpfile[0])):
+            inpfile = FHelper.setupInputFile(inpfile)
+            if inpfile != None:
+                orig_locals['inpfile'] = inpfile
+        
+        if outfile != '':
+            outfile = os.path.abspath(outfile)
+            orig_locals['outfile'] = outfile
+        if isinstance(addantenna, str) and addantenna != '':
+            addantenna = os.path.abspath(addantenna)
+            orig_locals['addantenna'] = addantenna
+        if isinstance(timedev, str) and timedev != '':
+            timedev = os.path.abspath(timedev)
+            orig_locals['timedev'] = timedev
+        if isinstance(freqdev, str) and freqdev != '':
+            freqdev = os.path.abspath(freqdev)
+            orig_locals['freqdev'] = freqdev    
+    
+        FHelper.__init__(orig_locals)
+
+        FHelper.bypassParallelProcessing(1)
+
+        FHelper.setupCluster('flagdata')
+        # (CAS-4119): Override summary minabs,maxabs,minrel,maxrel 
         # so that it is done after consolidating the summaries
         
         # By-pass options to filter summary
@@ -165,16 +199,16 @@ def flagdata(vis,
             
             if (minrel != 0.0):
                 minreal_dict = create_arg_dict(subMS_list,0.0)
-                helper.override_arg('minrel',minreal_dict)
+                FHelper.override_arg('minrel',minreal_dict)
             if (maxrel != 1.0):
                 maxrel_dict = create_arg_dict(subMS_list,1.0)
-                helper.override_arg('maxrel',maxrel_dict)
+                FHelper.override_arg('maxrel',maxrel_dict)
             if (minabs != 0):
                 minabs_dict = create_arg_dict(subMS_list,0)
-                helper.override_arg('minabs',minabs_dict)
+                FHelper.override_arg('minabs',minabs_dict)
             if (maxabs != -1):
                 maxabs_dict = create_arg_dict(subMS_list,-1)
-                helper.override_arg('maxabs',maxabs_dict)
+                FHelper.override_arg('maxabs',maxabs_dict)
                 
         # By-pass options to filter summary
         if savepars:  
@@ -185,9 +219,10 @@ def flagdata(vis,
             myms.close()
             
             savepars_dict = create_arg_dict(subMS_list,False)
-            helper.override_arg('savepars',savepars_dict)
+            FHelper.override_arg('savepars',savepars_dict)
             
-        retVar = helper.go()
+        # Execute the parallel engines
+        retVar = FHelper.go()
         
         # Filter summary at MMS level
         if (mode == 'summary'):
@@ -199,6 +234,15 @@ def flagdata(vis,
             action = 'none'
         else:
             return retVar
+    
+    summary_stats={};
+    
+#    if pCASA.is_mms(vis):
+#        pCASA.execute("flagdata", orig_locals)
+#        return
+    
+    
+    # ***************** Input is a normal MS/cal table ****************
     
     # Create local tools
     aflocal = casac.agentflagger()
@@ -245,7 +289,6 @@ def flagdata(vis,
 
         # Get the parameters for the mode
         agent_pars = {}
-
         
         # By default, write flags to the MS
         writeflags = True
@@ -262,11 +305,14 @@ def flagdata(vis,
             mode = 'manual'
         
         # Read in the list of commands
+        # Make a dictionary of the input commands. Select by reason if requested
+        flagcmd = {}
+        
         if mode == 'list':
             casalog.post('List mode is active')
             # Parse the input file
             try:            
-                # Is it a file or a Python list?
+                # Input commands are given in a list
                 if isinstance(inpfile, list):
                     
                     # It is a list of input files
@@ -276,16 +322,14 @@ def flagdata(vis,
                             casalog.post('Will read commands from the file '+ifile)                    
                             flaglist = flaglist + fh.readFile(ifile)
                         
-                        # Make a FLAG_CMD compatible dictionary. Select by reason if requested
-                        flagcmd = fh.makeDict(flaglist, reason)
+                        flagcmd = fh.parseDictionary(flaglist, reason)
                     
                     # It is a list of strings with flag commands
                     else:
-                        # Make a FLAG_CMD compatible dictionary. Select by reason if requested
                         casalog.post('Will read commands from a Python list')
-                        flagcmd = fh.makeDict(inpfile, reason)
+                        flagcmd = fh.parseDictionary(inpfile, reason)
                     
-                # It is only one file
+                # Input commands are given in a file
                 elif isinstance(inpfile, str):
                     
                     if inpfile == '':
@@ -295,25 +339,18 @@ def flagdata(vis,
                     flaglist = fh.readFile(inpfile)
                     casalog.post('%s'%flaglist,'DEBUG')
                     
-                    # Make a FLAG_CMD compatible dictionary. Select by reason if requested
-                    flagcmd = fh.makeDict(flaglist, reason)
+                    flagcmd = fh.parseDictionary(flaglist, reason)
                 
                 else:
                     casalog.post('Input type is not supported', 'ERROR')
                     
-                casalog.post('%s'%flagcmd,'DEBUG')
-                
-                # Update the list of commands with the selection
-                flaglist = []
-                for k in flagcmd.keys():
-                    cmdline = flagcmd[k]['command']
-                    flaglist.append(cmdline)
-                                    
-                # List of command keys in dictionary
+                casalog.post('%s'%flagcmd,'DEBUG1')
+                                                                    
+                # List of flag commands in dictionary
                 vrows = flagcmd.keys()
                 
-
-            except:
+            except Exception, instance:
+                casalog.post('%s'%instance,'ERROR')
                 raise Exception, 'Error reading the input list '
             
             casalog.post('Read ' + str(vrows.__len__())
@@ -395,8 +432,9 @@ def flagdata(vis,
 
                       
         elif mode == 'rflag':
-
-            agent_pars['ntime'] = newtime
+            if newtime != 0.0:
+                # this means ntime='scan', the default
+                agent_pars['ntime'] = newtime
             agent_pars['combinescans'] = combinescans   
             agent_pars['datacolumn'] = datacolumn.upper()
             agent_pars['winsize'] = winsize
@@ -448,13 +486,15 @@ def flagdata(vis,
             casalog.post('Summary mode is active')
 
 
-        # Create a flagcmd dictionary of the interface parameters to save
-        # when savepars = True
-        if mode != 'list' and mode != 'summary':
+        # Add the mode to the agent's parameters
+        agent_pars['mode'] = mode
 
-            # CAS-4063: remove any white space in the values of the
-            # selection parameters before creating the string.
-            
+        # Correlation does not go in selectdata, but in the agent's parameters
+        if correlation != '':
+            agent_pars['correlation'] = correlation.upper()
+
+        # Create a flagcmd dictionary of the interface parameters for saving
+        if mode != 'list' and mode != 'summary':
             # Create a dictionary of the selection parameters
             seldic = {}
             seldic['field'] = field
@@ -468,75 +508,45 @@ def flagdata(vis,
             seldic['intent'] = intent
             seldic['observation'] = str(observation)
             
-            # String to hold the selection parameters
-            sel_pars = []
-            sel_pars = ' mode='+mode
-            if correlation != '':
-                # Replace an empty space, in case there is one
-                expr = delspace(correlation, '_')
-                sel_pars = sel_pars +' correlation=' + expr
+            # Add the agent's parameters
+            seldic.update(agent_pars)
             
-            # Include only parameters with values in the string
-            # Remove the white spaces from the values
-            for key,val in seldic.iteritems():
-                if val != '':
-                    # Delete any space in the value
-                    if key != 'field':
-                        val = delspace(val, '')
-                    # Do not remove spaces from selection strings
-                    # because they are valid in field names
-                    sel_pars = sel_pars +' ' + key + '=' + val
-                               
-            # Add the agent's parameters to the same string 
-            for k in agent_pars.keys():
-                if agent_pars[k] != '':
-                    # Remove any white space from the string value
-                    nospace = delspace(str(agent_pars[k]),'')
-                    sel_pars = sel_pars + ' ' + k + '=' + nospace
-                
+            tempdict = copy.deepcopy(seldic)
+            # Remove the empty parameters
+            for k,v in seldic.iteritems():
+                if v == '':
+                    tempdict.pop(k)
             
-            # Create a dictionary according to the FLAG_CMD structure
-            flagcmd = fh.makeDict([sel_pars])
-                        
+            cmddict = {'command':tempdict}
+            cmddict['reason'] = ''
+            cmddict['applied'] = False
+            flagcmd[0] = cmddict
+            
             # Number of commands in dictionary
             vrows = flagcmd.keys()
-            casalog.post('There are %s cmds in dictionary of mode %s'%(vrows.__len__(),mode),'DEBUG')
-
+            casalog.post('There are %s cmds in dictionary of mode %s'%(vrows.__len__(),mode),'DEBUG1')
 
         # Setup global parameters in the agent's dictionary
-        apply = True
-                    
-        # Correlation does not go in selectdata, but in the agent's parameters
-        if correlation != '':
-            agent_pars['correlation'] = correlation.upper()
-        
+        apply = True        
         
         # Hold the name of the agent
         agent_name = mode.capitalize()
         agent_pars['name'] = agent_name
-        agent_pars['mode'] = mode
         agent_pars['apply'] = apply      
                           
         ##########  Only save the parameters and exit; action = ''     
-        if (action == '' or action == 'none') and savepars == False:
-            casalog.post('Parameter action=\'\' is only meaningful with savepars=True.', 'WARN')
-            aflocal.done()
-            return summary_stats
-        
-        if (action == '' or action == 'none') and savepars == True:
-            if iscal:
-                if outfile == '':
+        if action == '' or action == 'none':
+            if savepars == False:
+                casalog.post('Parameter action=\'\' is only meaningful with savepars=True.', 'WARN')
+                aflocal.done()
+                return summary_stats
+            
+            else:
+                if iscal and outfile == '':
                     casalog.post('Saving to FLAG_CMD is not supported for cal tables', 'WARN')
-                else:
-                    casalog.post('Saving parameters to '+outfile)                            
-                    fh.writeFlagCmd(vis, flagcmd, vrows, False, cmdreason, outfile) 
-            else: 
-                if outfile == '':
-                    casalog.post('Saving parameters to FLAG_CMD')
-                else:
-                    casalog.post('Saving parameters to '+outfile)                            
-                
-                fh.writeFlagCmd(vis, flagcmd, vrows, False, cmdreason, outfile) 
+
+                else:                                 
+                    fh.writeFlagCommands(vis, flagcmd, writeflags, cmdreason, outfile, True) 
                      
             aflocal.done()
             return summary_stats
@@ -560,7 +570,7 @@ def flagdata(vis,
        
         else:        
             # Select a loose union of the data selection from the list
-            # The loose union will be calculated for field and spw only
+            # The loose union will be calculated for field and spw only;
             # antenna, correlation and timerange should be handled by the agent
             if vrows.__len__() == 0:
                 raise Exception, 'There are no valid commands in list'
@@ -569,14 +579,13 @@ def flagdata(vis,
             # Do not crete union for a cal table
             if iscal:
                 if vrows.__len__() == 1:
-                    cmd0 = flagcmd[vrows[0]]['command']
-                    unionpars = fh.getSelectionPars(cmd0)
+                    unionpars = fh.parseSelectionPars(flagcmd[0]['command'])
                     casalog.post('The selected subset of the cal table will be: ');
                     casalog.post('%s'%unionpars);
                     
             else:
                 if vrows.__len__() > 1:
-                   unionpars = fh.getUnion(vis, flagcmd)
+                   unionpars = fh.parseUnion(vis, flagcmd)
                    
                    if( len( unionpars.keys() ) > 0 ):
                         casalog.post('Pre-selecting a subset of the MS : ');
@@ -587,15 +596,14 @@ def flagdata(vis,
                                                 
                 # Get all the selection parameters, but set correlation to ''
                 elif vrows.__len__() == 1:
-                    cmd0 = flagcmd[vrows[0]]['command']
-                    unionpars = fh.getSelectionPars(cmd0)
+                    unionpars = fh.parseSelectionPars(flagcmd[0]['command'])
                     casalog.post('The selected subset of the MS will be: ');
                     casalog.post('%s'%unionpars);
                 
             aflocal.selectdata(unionpars);
 
             # Parse the parameters for each agent in the list
-            list2save = fh.setupAgent(aflocal, flagcmd, [], apply, writeflags, display)
+            fh.parseAgents(aflocal, flagcmd, [], apply, writeflags, display)
 
         # Do display if requested
         if display != '':
@@ -615,7 +623,7 @@ def flagdata(vis,
             elif display == 'report':
                 agent_pars['reportdisplay'] = True
                 
-            # jagonzal: CAS-3966 Add datacolumn to display agent parameters
+            # CAS-3966 Add datacolumn to display agent parameters
             agent_pars['datacolumn'] = datacolumn.upper()
             aflocal.parseagentparameters(agent_pars)
             
@@ -643,7 +651,8 @@ def flagdata(vis,
 
         ## Pull out RFlag outputs. There will be outputs only if writeflags=False
         if (mode == 'rflag' or mode== 'list') and (writeflags==False):  
-            fh.extractRFlagOutputFromSummary(mode,summary_stats_list, flagcmd)
+            pprint.pprint(summary_stats_list)
+            fh.parseRFlagOutputFromSummary(mode,summary_stats_list, flagcmd)
 
         # Save the current parameters/list to FLAG_CMD or to output
         if savepars:  
@@ -653,24 +662,16 @@ def flagdata(vis,
                     casalog.post('Saving to FLAG_CMD is not supported for cal tables', 'WARN')
                 else:
                     casalog.post('Saving parameters to '+outfile)
-                    if mode != 'list':     
-                        fh.writeFlagCmd(vis, flagcmd, vrows, writeflags, cmdreason, outfile)  
-                    else:
-                        valid_rows = list2save.keys()
-                        fh.writeFlagCmd(vis, list2save, valid_rows, writeflags, cmdreason, outfile)        
+                    fh.writeFlagCommands(vis, flagcmd, writeflags, cmdreason, outfile, True)  
                     
             # MS type
             else:                
                 if outfile == '':
                     casalog.post('Saving parameters to FLAG_CMD')        
                 else:
-                    casalog.post('Saving parameters to '+outfile)
-                                          
-                if mode != 'list':     
-                    fh.writeFlagCmd(vis, flagcmd, vrows, writeflags, cmdreason, outfile)  
-                else:
-                    valid_rows = list2save.keys()
-                    fh.writeFlagCmd(vis, list2save, valid_rows, writeflags, cmdreason, outfile)        
+                    casalog.post('Saving parameters to '+outfile)                                          
+                
+                fh.writeFlagCommands(vis, flagcmd, writeflags, cmdreason, outfile, True)
             
         # Destroy the tool
         aflocal.done()

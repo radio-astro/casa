@@ -53,13 +53,14 @@ if os.environ.has_key('TEST_DATADIR'):
 print 'flagdata tests will use data from '+datapath         
 
 # jagonzal (CAS-4287): Add a cluster-less mode to by-pass parallel processing for MMSs as requested 
-if os.environ.has_key('BYPASS_SEQUENTIAL_PROCESSING'):
+if os.environ.has_key('BYPASS_PARALLEL_PROCESSING'):
     ParallelTaskHelper.bypassParallelProcessing(1)
 
 # Base class which defines setUp functions
 # for importing different data sets
 class test_base(unittest.TestCase):
     def setUp_flagdatatest(self):
+        '''VLA data set, scan=2500~2600 spw=0 1 chan, RR,LL'''
         self.vis = "flagdatatest.ms"
         if testmms:
             self.vis = "flagdatatest.mms"
@@ -73,9 +74,10 @@ class test_base(unittest.TestCase):
         os.system('rm -rf ' + self.vis + '.flagversions')
         
         default(flagdata)
-        flagdata(vis=self.vis, mode='unflag', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
 
     def setUp_ngc5921(self):
+        '''VLA data set, scan=1~7, spw=0 63 chans, RR,LL'''
         self.vis = "ngc5921.ms"
         if testmms:
             self.vis = 'ngc5921.mms'
@@ -87,7 +89,7 @@ class test_base(unittest.TestCase):
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         default(flagdata)
-        flagdata(vis=self.vis, mode='unflag', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
 
     def setUp_alma_ms(self):
         '''ALMA MS, scan=1,8,10 spw=0~3 4,128,128,1 chans, I,XX,YY'''
@@ -105,7 +107,24 @@ class test_base(unittest.TestCase):
         default(flagdata)
         flagdata(vis=self.vis, mode='unflag', flagbackup=False)
 
+# Seems to be a corrupted MS. Replaced by the one in setUp_alma_ms
+#     def setUp_flagdatatest_alma(self):
+#         self.vis = "flagdatatest-alma.ms"
+#         if testmms:
+#             self.vis = 'flagdatatest-alma.mms'
+# 
+#         if os.path.exists(self.vis):
+#             print "The MS is already around, just unflag"
+#         else:
+#             print "Moving data..."
+#             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
+# 
+#         os.system('rm -rf ' + self.vis + '.flagversions')
+#         default(flagdata)
+#         flagdata(vis=self.vis, mode='unflag', savepars=False)
+
     def setUp_data4tfcrop(self):
+        '''EVLA MS, 4 ants, scan=30,31 spw=0~15, 64 chans, RR,RL,LR,LL'''
         self.vis = "Four_ants_3C286.ms"
         if testmms:
             self.vis = 'Four_ants_3C286.mms'
@@ -118,9 +137,10 @@ class test_base(unittest.TestCase):
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         default(flagdata)
-        flagdata(vis=self.vis, mode='unflag', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
 
     def setUp_shadowdata2(self):
+        '''CASA simulation data set. scan=0 spw=0, 2 chans, RR,LL'''
         self.vis = "shadowtest_part.ms"
         if testmms:
             self.vis = "shadowtest_part.mms"
@@ -133,7 +153,7 @@ class test_base(unittest.TestCase):
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         default(flagdata)
-        flagdata(vis=self.vis, mode='unflag', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
         
     def setUp_multi(self):
         self.vis = "multiobs.ms"
@@ -148,9 +168,10 @@ class test_base(unittest.TestCase):
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         default(flagdata)
-        flagdata(vis=self.vis, mode='unflag', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
         
     def setUp_mwa(self):
+        '''MWA data set, scan=1 spw=0, 11 chans, XX,XY,YX,YY'''
         self.vis = "testmwa.ms"
         if testmms:
             self.vis = 'testmwa.mms'
@@ -163,7 +184,7 @@ class test_base(unittest.TestCase):
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         default(flagdata)
-        flagdata(vis=self.vis, mode='unflag', savepars=False)        
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)        
 
     def setUp_wtspec(self):
         # Four rows, 2 ants, 1 spw, 31 chans, 2 pols, WEIGHT_SPECTRUM col
@@ -179,7 +200,7 @@ class test_base(unittest.TestCase):
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         default(flagdata)
-        flagdata(vis=self.vis, mode='unflag', savepars=False)        
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)        
 
     def setUp_floatcol(self):
         # 15 rows, 3 scans, 9 spw, mixed chans, XX,YY, FLOAT_DATA col
@@ -195,7 +216,7 @@ class test_base(unittest.TestCase):
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         default(flagdata)
-        flagdata(vis=self.vis, mode='unflag', savepars=False)        
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)        
 
     def setUp_tsys_case(self):
         self.vis = "X7ef.tsys"
@@ -211,7 +232,7 @@ class test_base(unittest.TestCase):
 
         os.system('rm -rf ' + self.vis + '.flagversions')
 
-        flagdata(vis=self.vis, mode='unflag', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
 
     def setUp_bpass_case(self):
         self.vis = "cal.fewscans.bpass"
@@ -226,7 +247,7 @@ class test_base(unittest.TestCase):
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         
-        flagdata(vis=self.vis, mode='unflag', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
 
     def setUp_newcal(self):
         '''New cal table format from 4.1 onwards'''
@@ -394,9 +415,13 @@ class test_rflag(test_base):
     def test_rflag3(self):
         '''flagdata:: Test3 of mode = rflag : output/input via two methods'''
         # (1) Test input/output files, through the task, mode='rflag'
-        flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
-                      freqdev='fdevfile.txt', action='calculate', extendflags=False);
-        flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
+        # Files tdevfile.txt and fdevfile.txt are created in this step
+        flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', 
+                      freqdev='fdevfile.txt', action='calculate', extendflags=False)
+        self.assertTrue(os.path.exists('tdevfile.txt'))
+        self.assertTrue(os.path.exists('fdevfile.txt'))
+        
+        flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', 
                       freqdev='fdevfile.txt', action='apply', flagbackup=False, 
                       extendflags=False)
         res1 = flagdata(vis=self.vis, mode='summary', spw='9,10')
@@ -574,29 +599,29 @@ class test_flagmanager(test_base):
         aflocal = casac.agentflagger()
         flagmanager(vis=self.vis, mode='list')
         aflocal.open(self.vis)
-        self.assertEqual(len(aflocal.getflagversionlist()), 3)
+        self.assertEqual(len(aflocal.getflagversionlist()), 2)
         aflocal.done()
 
 
         flagdata(vis=self.vis, mode='unflag', flagbackup=False)
         flagmanager(vis=self.vis, mode='list')
         aflocal.open(self.vis)
-        self.assertEqual(len(aflocal.getflagversionlist()), 3)
+        self.assertEqual(len(aflocal.getflagversionlist()), 2)
         aflocal.done()
 
         flagdata(vis=self.vis, mode='unflag', flagbackup=True)
         flagmanager(vis=self.vis, mode='list')
         aflocal.open(self.vis)
-        self.assertEqual(len(aflocal.getflagversionlist()), 4)
+        self.assertEqual(len(aflocal.getflagversionlist()), 3)
         aflocal.done()
         
         newname = 'Ha! The best version ever!'
 
-        flagmanager(vis=self.vis, mode='rename', oldname='flagdata_2', versionname=newname, 
+        flagmanager(vis=self.vis, mode='rename', oldname='flagdata_1', versionname=newname, 
                     comment='This is a *much* better name')
         flagmanager(vis=self.vis, mode='list')
         aflocal.open(self.vis)
-        self.assertEqual(len(aflocal.getflagversionlist()), 4)
+        self.assertEqual(len(aflocal.getflagversionlist()), 3)
         aflocal.done()
         
         self.assertTrue(os.path.exists(self.vis+'.flagversions/flags.'+newname),
@@ -631,10 +656,10 @@ class test_flagmanager(test_base):
 
         print "After flagging antenna 2 and 3 there were", ant3, "flags"
 
-        flagmanager(vis=self.vis, mode='restore', versionname='flagdata_3')
+        flagmanager(vis=self.vis, mode='restore', versionname='flagdata_2')
         restore2 = flagdata(vis=self.vis, mode='summary')['flagged']
 
-        print "After restoring pre-antenna 3 flagging, there are", restore2, "flags; should be", ant2
+        print "After restoring pre-antenna 2 flagging, there are", restore2, "flags; should be", ant2
 
         self.assertEqual(restore2, ant2)
 
@@ -724,7 +749,7 @@ class test_msselection(test_base):
     def test_autocorr3(self):
         '''flagdata: flag auto-corrs in list mode'''
         # creat input list
-        myinput = "scan='1' mode='manual' autocorr=true reason='AUTO'\n"\
+        myinput = "scan='1' mode='manual' autocorr=True reason='AUTO'\n"\
                 "scan='3' autocorr=True reason='AUTO'\n"\
                 "scan='4' reason='ALL'"
         filename = 'listauto.txt'
@@ -1029,6 +1054,115 @@ class test_selections(test_base):
         self.assertEqual(res['scan']['7']['flagged'], 190512)
         self.assertEqual(res['flagged'], 238140+47628+476280+190512)
 
+# The flagdatatest-alma.ms seems to be corrupted as suggested
+# by D. Petry, email from 23 Aug 2013 and CAS-4885. Replace it with another
+# ALMA dataset. The same tests are done in test_alma using the
+# new data set.
+
+# class test_selections_alma(test_base):
+#     # Test various selections for alma data 
+# 
+#     def setUp(self):
+#         self.setUp_flagdatatest_alma()
+# 
+#     def test_scanitent(self):
+#         '''flagdata: scanintent selection'''
+#         # flag POINTING CALIBRATION scans 
+#         # (CALIBRATE_POINTING_.. from STATE table's OBS_MODE)
+#         flagdata(vis=self.vis, intent='CAL*POINT*', savepars=False)
+#         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 377280, 26200)
+#         
+#     def test_wvr(self):
+#         '''flagdata: flag WVR correlation'''
+#         flagdata(vis=self.vis, correlation='I', savepars=False, flagbackup=False)
+#         test_eq(flagdata(vis=self.vis, mode='summary', spw='4'),22752, 22752)
+# 
+#     def test_abs_wvr(self):
+#         '''flagdata: clip ABS_WVR'''
+#         flagdata(vis=self.vis, mode='clip',clipminmax=[0,50], correlation='ABS_WVR', savepars=False,
+#                  flagbackup=False)
+#         test_eq(flagdata(vis=self.vis, mode='summary', spw='4'),22752, 22752)
+#         
+#     def test_abs_i(self):
+#         '''flagdata: clip ABS_I. Do not flag WVR'''
+#         flagdata(vis=self.vis, mode='clip', clipminmax=[0,50], correlation='ABS_I', savepars=False,
+#                  flagbackup=False)
+#         test_eq(flagdata(vis=self.vis, mode='summary'),1154592, 0)
+# 
+#     def test_abs_all(self):
+#         '''flagdata: clip ABS ALL. Do not flag WVR'''
+#         flagdata(vis=self.vis, mode='clip', clipminmax=[0,1], correlation='ABS ALL', savepars=False,
+#                  flagbackup=False)
+#         test_eq(flagdata(vis=self.vis, mode='summary'),1154592, 130736)
+#         test_eq(flagdata(vis=self.vis, mode='summary', correlation='I'),22752, 0)
+# 
+#     def test_spw(self):
+#         '''flagdata: flag various spw'''
+#         # Test that a white space in the spw parameter is taken correctly
+#         flagdata(vis=self.vis, mode='manual', spw='1,3, 4', savepars=False,
+#                  flagbackup=False)
+#         res = flagdata(vis=self.vis, mode='summary', spw='0,1,4')
+#         self.assertEqual(res['spw']['0']['flagged'], 0, 'spw=0 should not be flagged')
+#         self.assertEqual(res['spw']['1']['flagged'], 552960, 'spw=1 should be fully flagged')
+#         self.assertEqual(res['spw']['4']['flagged'], 22752, 'spw=4 should not be flagged')
+#         self.assertEqual(res['spw']['4']['total'], 22752, 'spw=4 should not be flagged')
+#         
+#     def test_null_intent_selection1(self):
+#         '''flagdata: handle unknown scan intent in list mode'''
+#         
+#         myinput = ["intent='FOCUS'",   # non-existing intent
+#                  "intent='CALIBRATE_POINTING_ON_SOURCE'", # scan=1
+#                  "intent='CALIBRATE_AMPLI_ON_SOURCE'", # scan=2
+#                  "intent='CALIBRATE_AMPLI_ON_SOURC'",
+#                  "intent='*DELAY*'"] # non-existing
+#        
+#         flagdata(vis=self.vis, mode='list', inpfile=myinput, flagbackup=False)
+#         res = flagdata(vis=self.vis, mode='summary',scan='1,2')
+#         self.assertEqual(res['flagged'], 80184+96216)
+#         self.assertEqual(res['total'], 80184+96216)
+#         
+#     def test_unknown_intent(self):
+#         '''flagdata: CAS-3712, handle unknown value in intent expression'''
+#         flagdata(vis=self.vis,intent='*POINTING*,*ATM*',flagbackup=False)
+#         
+#         # Only POINTING scan exists. *ATM* should not raise a NULL MS selection
+#         res = flagdata(vis=self.vis, mode='summary', scan='1')
+#         self.assertEqual(res['flagged'], 80184)
+#         self.assertEqual(res['total'], 80184)
+#         
+#     def test_autocorr_wvr(self):
+#         '''flagdata: CAS-5286, do not flag auto-correlations in WVR data'''
+#         flagdata(vis=self.vis,autocorr=True,flagbackup=False)
+#         res = flagdata(vis=self.vis, mode='summary', spw='0,4')
+#         
+#         # spw='4' contains the WVR data
+#         self.assertEqual(res['spw']['4']['flagged'], 0)
+#         self.assertEqual(res['spw']['0']['flagged'], 276480)
+# 
+#     def test_autocorr_wvr_list(self):
+#         '''flagdata: CAS-5485 flag autocorrs in list mode'''
+#         mycmd = ["mode='manual' antenna='DV01'",
+#                  "mode='manual' autocorr=True"]
+#         
+#         # The first cmd only flags cross-correlations of DV01
+#         # The second cmd only flags auto-corrs of all antennas
+#         # that have processor type=CORRELATOR. The radiometer
+#         # data should not be flagged, which is in spw=4
+#         res = flagdata(vis=self.vis, mode='list', inpfile=mycmd, flagbackup=False)
+#         res = flagdata(vis=self.vis, mode='summary',basecnt=True)
+#         
+#         # These are the auto-correlations not flagged in the list flagging.
+#         # Verify that the non-flagged points are those from the WVR data
+#         wvr1 = res['baseline']['DV01&&DV01']['total'] - res['baseline']['DV01&&DV01']['flagged']
+#         wvr2 = res['baseline']['DV02&&DV02']['total'] - res['baseline']['DV02&&DV02']['flagged']
+#         wvr3 = res['baseline']['PM03&&PM03']['total'] - res['baseline']['PM03&&PM03']['flagged']
+#         wvrspw= res['spw']['4']['total']
+#         
+#         self.assertEqual(wvrspw, wvr1+wvr2+wvr3, 'Auto-corr of WVR data should not be flagged')
+#         self.assertEqual(res['antenna']['DV01']['flagged'],565920)
+#         self.assertEqual(res['antenna']['DV01']['total'],573504)
+#         self.assertEqual(res['spw']['4']['flagged'], 0)
+
 class test_alma(test_base):
     # Test various flagging on alma data 
 
@@ -1077,7 +1211,7 @@ class test_alma(test_base):
         self.assertEqual(res['correlation']['XX']['flagged'], 568)
         self.assertEqual(res['correlation']['YY']['flagged'], 1283)
 
-    def test_spw_alma(self):
+    def test_spw(self):
         '''flagdata: flag various spw'''
         # Test that a white space in the spw parameter is taken correctly
         flagdata(vis=self.vis, mode='manual', spw='1,2, 3', savepars=False,
@@ -1143,110 +1277,6 @@ class test_alma(test_base):
         self.assertEqual(res['antenna']['DA41']['flagged'],75600)
         self.assertEqual(res['antenna']['DA41']['total'],75752)
         self.assertEqual(res['spw']['0']['flagged'], 0)
-        
-# class test_selections_alma(test_base):
-#     # Test various selections for alma data 
-# 
-#     def setUp(self):
-#         self.setUp_flagdatatest_alma()
-# 
-#     def test_scanitent(self):
-#         '''flagdata: scanintent selection'''
-#         # flag POINTING CALIBRATION scans 
-#         # (CALIBRATE_POINTING_.. from STATE table's OBS_MODE)
-#         flagdata(vis=self.vis, intent='CAL*POINT*', savepars=False)
-#         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 377280, 26200)
-#         
-#     def test_wvr(self):
-#         '''flagdata: flag WVR correlation'''
-#         flagdata(vis=self.vis, correlation='I', savepars=False, flagbackup=False)
-#         test_eq(flagdata(vis=self.vis, mode='summary', spw='4'),22752, 22752)
-# 
-#     def test_abs_wvr(self):
-#         '''flagdata: clip ABS_WVR'''
-#         flagdata(vis=self.vis, mode='clip',clipminmax=[0,50], correlation='ABS_WVR', savepars=False,
-#                  flagbackup=False)
-#         test_eq(flagdata(vis=self.vis, mode='summary', spw='4'),22752, 22752)
-#         
-#     def test_abs_i(self):
-#         '''flagdata: clip ABS_I. Do not flag WVR'''
-#         flagdata(vis=self.vis, mode='clip', clipminmax=[0,50], correlation='ABS_I', savepars=False,
-#                  flagbackup=False)
-#         test_eq(flagdata(vis=self.vis, mode='summary'),1154592, 0)
-# 
-#     def test_abs_all(self):
-#         '''flagdata: clip ABS ALL. Do not flag WVR'''
-#         flagdata(vis=self.vis, mode='clip', clipminmax=[0,1], correlation='ABS ALL', savepars=False,
-#                  flagbackup=False)
-#         test_eq(flagdata(vis=self.vis, mode='summary'),1154592, 130736)
-#         test_eq(flagdata(vis=self.vis, mode='summary', correlation='I'),22752, 0)
-# 
-#     def test_spw(self):
-#         '''flagdata: flag various spw'''
-#         # Test that a white space in the spw parameter is taken correctly
-#         flagdata(vis=self.vis, mode='manual', spw='1,3, 4', savepars=False,
-#                  flagbackup=False)
-#         res = flagdata(vis=self.vis, mode='summary', spw='0,1,4')
-#         self.assertEqual(res['spw']['0']['flagged'], 0, 'spw=0 should not be flagged')
-#         self.assertEqual(res['spw']['1']['flagged'], 552960, 'spw=1 should be fully flagged')
-#         self.assertEqual(res['spw']['4']['flagged'], 22752, 'spw=4 should not be flagged')
-#         self.assertEqual(res['spw']['4']['total'], 22752, 'spw=4 should not be flagged')
-#         
-#     def test_null_intent_selection1(self):
-#         '''flagdata: handle unknown scan intent in list mode'''
-#         
-#         myinput = ["intent='FOCUS",   # non-existing intent
-#                  "intent='CALIBRATE_POINTING_ON_SOURCE'", # scan=1
-#                  "intent='CALIBRATE_AMPLI_ON_SOURCE", # scan=2
-#                  "intent='CALIBRATE_AMPLI_ON_SOURC",
-#                  "intent='*DELAY*'"] # non-existing
-#        
-#         flagdata(vis=self.vis, mode='list', inpfile=myinput, flagbackup=False)
-#         res = flagdata(vis=self.vis, mode='summary',scan='1,2')
-#         self.assertEqual(res['flagged'], 80184+96216)
-#         self.assertEqual(res['total'], 80184+96216)
-#         
-#     def test_unknown_intent(self):
-#         '''flagdata: CAS-3712, handle unknown value in intent expression'''
-#         flagdata(vis=self.vis,intent='*POINTING*,*ATM*',flagbackup=False)
-#         
-#         # Only POINTING scan exists. *ATM* should not raise a NULL MS selection
-#         res = flagdata(vis=self.vis, mode='summary', scan='1')
-#         self.assertEqual(res['flagged'], 80184)
-#         self.assertEqual(res['total'], 80184)
-#         
-#     def test_autocorr_wvr(self):
-#         '''flagdata: CAS-5286, do not flag auto-correlations in WVR data'''
-#         flagdata(vis=self.vis,autocorr=True,flagbackup=False)
-#         res = flagdata(vis=self.vis, mode='summary', spw='0,4')
-#         
-#         # spw='4' contains the WVR data
-#         self.assertEqual(res['spw']['4']['flagged'], 0)
-#         self.assertEqual(res['spw']['0']['flagged'], 276480)
-# 
-#     def test_autocorr_wvr_list(self):
-#         '''flagdata: CAS-5485 flag autocorrs in list mode'''
-#         mycmd = ["mode='manual' antenna='DV01'",
-#                  "mode='manual autocorr=True"]
-#         
-#         # The first cmd only flags cross-correlations of DV01
-#         # The second cmd only flags auto-corrs of all antennas
-#         # that have processor type=CORRELATOR. The radiometer
-#         # data should not be flagged, which is in spw=4
-#         res = flagdata(vis=self.vis, mode='list', inpfile=mycmd, flagbackup=False)
-#         res = flagdata(vis=self.vis, mode='summary',basecnt=True)
-#         
-#         # These are the auto-correlations not flagged in the list flagging.
-#         # Verify that the non-flagged points are those from the WVR data
-#         wvr1 = res['baseline']['DV01&&DV01']['total'] - res['baseline']['DV01&&DV01']['flagged']
-#         wvr2 = res['baseline']['DV02&&DV02']['total'] - res['baseline']['DV02&&DV02']['flagged']
-#         wvr3 = res['baseline']['PM03&&PM03']['total'] - res['baseline']['PM03&&PM03']['flagged']
-#         wvrspw= res['spw']['4']['total']
-#         
-#         self.assertEqual(wvrspw, wvr1+wvr2+wvr3, 'Auto-corr of WVR data should not be flagged')
-#         self.assertEqual(res['antenna']['DV01']['flagged'],565920)
-#         self.assertEqual(res['antenna']['DV01']['total'],573504)
-#         self.assertEqual(res['spw']['4']['flagged'], 0)
 
 class test_selections2(test_base):
     '''Test other selections'''
@@ -1336,11 +1366,15 @@ class test_list_file(test_base):
     
     def setUp(self):
         self.setUp_ngc5921()
+        
+    def tearDown(self):
+        pass
+#        os.system('rm -rf list*.txt list*.tmp')
 
     def test_file1(self):
         '''flagdata: apply flags from a list and do not save'''
         # creat input list
-        myinput = "scan=1~3 mode=manual\n"+"scan=5 mode=manualflag\n"\
+        myinput = "scan='1~3' mode='manual'\n"+"scan='5' mode='manualflag'\n"\
                 "#scan='4'"
         filename = 'list1.txt'
         create_input(myinput, filename)
@@ -1354,7 +1388,7 @@ class test_list_file(test_base):
     def test_file2(self):
         '''flagdata: only save parameters without running the tool'''
         # creat input list
-        myinput = "scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
+        myinput = "scan='1~3' mode='manual'\n"+"scan='5' mode='manual'\n"
         filename = 'list2.txt'
         create_input(myinput, filename)
 
@@ -1371,7 +1405,7 @@ class test_list_file(test_base):
     def test_file3(self):
         '''flagdata: flag and save list to FLAG_CMD'''
         # creat input list
-        myinput = "scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
+        myinput = "scan='1~3' mode='manual'\n"+"scan='5' mode='manual'\n"
         filename = 'list3.txt'
         create_input(myinput, filename)
 
@@ -1554,6 +1588,21 @@ class test_list_file(test_base):
         self.assertEqual(res['scan']['1']['flagged'], 99198)
         self.assertEqual(res['flagged'], 99198)
 
+    def test_anychar(self):
+        '''flagdata: parse any printable character'''
+        myinput = "mode=manualflag field='Any $3[=character (}'"
+        filename = 'anychar.txt'
+        create_input(myinput, filename)
+        
+        outname = 'outweirdname.txt'
+        
+        flagdata(vis=self.vis, mode='list', inpfile=filename, action='', savepars=True,
+                  outfile=outname)
+        self.assertTrue(os.path.exists(outname))
+        
+        # Compare output with input. The output should have quotes around manualflag
+        self.assertFalse(filecmp.cmp(filename, outname, 1), 'Files should not be equal')
+
 
 class test_list_list(test_base):
     """Test of mode = 'list' using input list"""
@@ -1662,32 +1711,47 @@ class test_list_list(test_base):
         self.assertEqual(res['flagged'], 1663578)
               
     # CAS-4974  
+#    def test_cmdreason1(self):
+#        '''flagdata: detect blank space in cmdreason. Catch exception'''
+#        outtxt = 'badreason.txt'
+#        flagdata(vis=self.vis, scan='1,3', action='calculate', savepars=True, outfile=outtxt, 
+#                 cmdreason='ODD SCANS')
+#        flagdata(vis=self.vis, scan='2,4', action='calculate', savepars=True, outfile=outtxt, 
+#                 cmdreason='EVEN SCANS')
+#        
+#        # Apply the cmd with blanks in reason. Catch the error.
+#        try:
+#            flagdata(vis=self.vis, mode='list', inpfile=outtxt, reason='ODD SCANS')
+#        except Exception, instance:
+#            print '*** Expected exception. \"%s\"'%instance
+#            res = flagdata(vis=self.vis, mode='summary')
+#            self.assertEqual(res['flagged'], 0)
+#    
+#        # Now apply the corrected version with underscores
+#        flagdata(vis=self.vis, mode='list', inpfile=outtxt, reason='ODD_SCANS')
+#        res = flagdata(vis=self.vis, mode='summary')
+#        self.assertEqual(res['scan']['1']['flagged'], 568134)
+#        self.assertEqual(res['scan']['3']['flagged'], 762048)
+#        self.assertEqual(res['flagged'], 568134+762048)
+
+    # The new parser allows whitespaces in reason values. Change the test
     def test_cmdreason1(self):
-        '''flagdata: detect blank space in cmdreason. Catch exception'''
-        outtxt = 'badreason.txt'
+        '''flagdata: allow whitespace in cmdreason'''
+        outtxt = 'spacereason.txt'
         flagdata(vis=self.vis, scan='1,3', action='calculate', savepars=True, outfile=outtxt, 
                  cmdreason='ODD SCANS')
         flagdata(vis=self.vis, scan='2,4', action='calculate', savepars=True, outfile=outtxt, 
                  cmdreason='EVEN SCANS')
         
-        # Apply the cmd with blanks in reason. Catch the error.
-        try:
-            flagdata(vis=self.vis, mode='list', inpfile=outtxt, reason='ODD SCANS')
-        except Exception, instance:
-            print '*** Expected exception. \"%s\"'%instance
-            res = flagdata(vis=self.vis, mode='summary')
-            self.assertEqual(res['flagged'], 0)
-    
-        # Now apply the corrected version with underscores
-        flagdata(vis=self.vis, mode='list', inpfile=outtxt, reason='ODD_SCANS')
+        # Apply the cmd with blanks in reason.
+        flagdata(vis=self.vis, mode='list', inpfile=outtxt, reason='ODD SCANS')
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 568134)
         self.assertEqual(res['scan']['3']['flagged'], 762048)
         self.assertEqual(res['flagged'], 568134+762048)
-
     
     def test_cmdreason2(self):
-        '''flagdata: Blanks in reason are only allowed in FLAG_CMD table'''
+        '''flagdata: Blanks in reason are also allowed in FLAG_CMD table'''
         outtxt = 'goodreason.txt'
         flagdata(vis=self.vis, scan='1,3', action='calculate', savepars=True, 
                  cmdreason='ODD SCANS')
@@ -1716,7 +1780,7 @@ class test_clip(test_base):
         '''flagdata: clip zeros in mode=list and save reason to FLAG_CMD'''
         
         # creat input list
-        myinput = ["mode='clip' clipzeros=true reason='CLIP_ZERO'"]
+        myinput = ["mode='clip' clipzeros=True reason='CLIP_ZERO'"]
 
         # Save to FLAG_CMD
         flagdata(vis=self.vis, mode='list', inpfile=myinput, action='', savepars=True)
@@ -1731,7 +1795,7 @@ class test_clip(test_base):
         '''flagdata: clip zeros in mode=list and save reason to FLAG_CMD'''
         
         # creat input list
-        myinput = "mode='clip' clipzeros=true reason='CLIP_ZERO'"
+        myinput = "mode='clip' clipzeros=True reason='CLIP_ZERO'"
         filename = 'list5.txt'
         create_input(myinput, filename)
 
@@ -2392,28 +2456,28 @@ class test_bandpass(test_base):
         aflocal = casac.agentflagger()
         flagmanager(vis=self.vis, mode='list')
         aflocal.open(self.vis)
-        self.assertEqual(len(aflocal.getflagversionlist()), 3)
+        self.assertEqual(len(aflocal.getflagversionlist()), 2)
         aflocal.done()
 
         flagdata(vis=self.vis, mode='unflag', flagbackup=False)
         flagmanager(vis=self.vis, mode='list')
         aflocal.open(self.vis)
-        self.assertEqual(len(aflocal.getflagversionlist()), 3)
+        self.assertEqual(len(aflocal.getflagversionlist()), 2)
         aflocal.done()
 
         flagdata(vis=self.vis, mode='unflag', flagbackup=True)
         flagmanager(vis=self.vis, mode='list')
         aflocal.open(self.vis)
-        self.assertEqual(len(aflocal.getflagversionlist()), 4)
+        self.assertEqual(len(aflocal.getflagversionlist()), 3)
         aflocal.done()
         
         newname = 'Ha! The best version ever!'
 
-        flagmanager(vis=self.vis, mode='rename', oldname='flagdata_2', versionname=newname, 
+        flagmanager(vis=self.vis, mode='rename', oldname='flagdata_1', versionname=newname, 
                     comment='This is a *much* better name')
         flagmanager(vis=self.vis, mode='list')
         aflocal.open(self.vis)
-        self.assertEqual(len(aflocal.getflagversionlist()), 4)
+        self.assertEqual(len(aflocal.getflagversionlist()), 3)
         aflocal.done()
         
         self.assertTrue(os.path.exists(self.vis+'.flagversions/flags.'+newname),
@@ -2617,12 +2681,11 @@ class test_float_column(test_base):
         self.assertEqual(res['spw']['7']['flagged'],40)
         self.assertEqual(res['flagged'],120)
 
-# Uncomment after new parser is in place
-#    def test_field_name(self):
-#        '''flagdata: Field name with whitespaces'''
-#        flagdata(vis=self.vis, flagbackup=False, field='r aqr')
-#        res = flagdata(vis=self.vis, mode='summary', field='r aqr')
-#        self.assertEqual(res['field']['r aqr']['flagged'],14360)
+    def test_field_name(self):
+        '''flagdata: Field name with whitespaces'''
+        flagdata(vis=self.vis, flagbackup=False, field='r aqr')
+        res = flagdata(vis=self.vis, mode='summary', field='r aqr')
+        self.assertEqual(res['field']['r aqr']['flagged'],14360)
 
     def test_clip_frange(self):
         '''flagdata: datacolumn=FLOAT_DATA, flag a range'''
@@ -2669,6 +2732,20 @@ class test_float_column(test_base):
         self.assertEqual(res['flagged'],0)
         self.assertEqual(res['baseline']['PM04&&PM04']['flagged'],0)
 
+    def test_field_strange_chars(self):
+        '''flagdata: CAS-5481, field name with = sign'''
+        # Create a fake list, as this MS does not have such field
+        cmdlist = "mode='manual' field='FAKE=FIELD' autocorr=False\n"+\
+                   "mode='clip' clipzeros=True field='Is= TO FAKE'\n"
+        
+        filename = 'listfakefield.txt'
+        create_input(cmdlist, filename)
+        
+        flagdata(vis=self.vis, mode='list', inpfile=filename, flagbackup=False,
+                  action='', savepars=True, outfile='outfakefield.txt')
+        
+        self.assertTrue(filecmp.cmp(filename, 'outfakefield.txt', 1), 'Files should be equal')
+
 
 # Cleanup class 
 class cleanup(test_base):
@@ -2684,7 +2761,7 @@ class cleanup(test_base):
         os.system('rm -rf testmwa.*ms*')
         os.system('rm -rf cal.fewscans.bpass*')
         os.system('rm -rf X7ef.tsys* ap314.gcal*')
-        os.system('rm -rf list*txt')
+        os.system('rm -rf list*txt*')
         os.system('rm -rf fourrows*')
         os.system('rm -rf SDFloatColumn*')
 

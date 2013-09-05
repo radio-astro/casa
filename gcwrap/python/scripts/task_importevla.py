@@ -176,7 +176,8 @@ def importevla(
             # Parse Flag.xml into flag dictionary
             #
             if online:
-                flago = fh.readXML(asdm, tbuff)
+#                flago = fh.readXML(asdm, tbuff)
+                flago = fh.parseXML(asdm, tbuff)
                 onlinekeys = flago.keys()
 
                 nkeys = onlinekeys.__len__()
@@ -199,6 +200,7 @@ def importevla(
         # Now add zero and shadow flags
         if flagzero:
             flagz = {}
+            
             # clip zero data
             # NOTE: currently hard-wired to RL basis
             # assemble into flagging commands and add to myflagd
@@ -213,34 +215,56 @@ def importevla(
 
             # Flag cross-hands too
             if flagpol:
+                print 'flagpol = True'
                 flagz['reason'] = 'CLIP_ZERO_ALL'
-                flagz['command'] = \
-                    "mode='clip' clipzeros=True correlation='ABS_ALL'"
+#                flagz['command'] = \
+#                    "mode='clip' clipzeros=True correlation='ABS_ALL'"
+                command = {}
+                command['mode'] = 'clip'
+                command['clipzeros'] = True
+                command['correlation'] = 'ABS_ALL'
+                flagz['command'] = command
                 flagz['id'] = 'ZERO_ALL'
                 allflags[nflags] = flagz.copy()
                 nflags += 1
                 nflagz = 1
+                print allflags
+                
             else:
-
+                print 'flagpol = False'
                 flagz['reason'] = 'CLIP_ZERO_RR'
-                flagz['command'] = \
-                    "mode='clip' clipzeros=True correlation='ABS_RR'"
+#                flagz['command'] = \
+#                    "mode='clip' clipzeros=True correlation='ABS_RR'"
+                command = {}
+                command['mode'] = 'clip'
+                command['clipzeros'] = True
+                command['correlation'] = 'ABS_RR'
+                flagz['command'] = command
                 flagz['id'] = 'ZERO_RR'
                 allflags[nflags] = flagz.copy()
                 nflags += 1
+                print allflags
             
+                print 'create LL dictionary'
                 flagz['reason'] = 'CLIP_ZERO_LL'
-                flagz['command'] = \
-                    "mode='clip' clipzeros=True correlation='ABS_LL'"
+#                flagz['command'] = \
+#                    "mode='clip' clipzeros=True correlation='ABS_LL'"
+                command = {}
+                command['mode'] = 'clip'
+                command['clipzeros'] = True
+                command['correlation'] = 'ABS_LL'
+                flagz['command'] = command
                 flagz['id'] = 'ZERO_LL'
                 allflags[nflags] = flagz.copy()
                 nflags += 1
                 nflagz = 2
+                print allflags
 
             casalog.post('Created %s command(s) to clip zeros'%str(nflagz))
 
         if shadow:
             flagh = {}
+            command = {}
             # flag shadowed data
             flagh['time'] = 0.5 * (ms_startmjds + ms_endmjds)
             flagh['interval'] = ms_endmjds - ms_startmjds
@@ -253,20 +277,24 @@ def importevla(
             flagh['reason'] = 'SHADOW'
 
 #            scmd = 'mode=shadow tolerance=' + str(tolerance)
-            scmd = "mode='shadow' tolerance=" + str(tolerance)
+#            scmd = "mode='shadow' tolerance=" + str(tolerance)
+            command['mode'] = 'shadow'
+            command['tolerance'] = tolerance
 
             if type(addantenna) == str:
                 if addantenna != '':
                     # it's a filename, create a dictionary
                     antdict = fh.readAntennaList(addantenna)
-                    scmd = scmd  +' addantenna='+str(antdict) 
+#                    scmd = scmd  +' addantenna='+str(antdict) 
+                    command['addantenna'] = antdict
                     
             elif type(addantenna) == dict:
                 if addantenna != {}:
-                    scmd = scmd  +' addantenna='+str(addantenna)
+#                    scmd = scmd  +' addantenna='+str(addantenna)
+                    command['addantenna'] = addantenna
             
-            flagh['command'] = scmd
-                
+#            flagh['command'] = scmd
+            flagh['command'] = command
             flagh['id'] = 'SHADOW'
             allflags[nflags] = flagh.copy()
             nflags += 1
@@ -282,27 +310,17 @@ def importevla(
 
                 # Open the MS and attach the tool
                 aflocal.open(viso)
-                
-                # Create a loose union
-#                flaglist = []
-#                for k in myflagd.keys():
-#                	cmdline = myflagd[k]['command']
-#                	flaglist.append(cmdline)
-#                	
-#                unionpars = fh.getUnion(mslocal, viso, allflags)
-                
+                                
                 # Select the data
                 aflocal.selectdata()
 
                 # Setup the agent's parameters
-                saved_list = fh.setupAgent(aflocal, allflags, [], True, True)
+                print allflags
+#                saved_list = fh.setupAgent(aflocal, allflags, [], True, True)
+                fh.parseAgents(aflocal, allflags, [], True, True, '')
 
                 # Initialize the agents
                 aflocal.init()
-
-                # Backup the flags. Already done in the beginning of the task
-#                if flagbackup:
-#                    fh.backupFlags(aflocal=aflocal, msfile='', prename='importevla')
 
                 # Run the tool
                 stats = aflocal.run(True, True)
@@ -313,7 +331,8 @@ def importevla(
                 aflocal.done()
                 
                 # Save the flags to FLAG_CMD and update the APPLIED column
-                fh.writeFlagCmd(viso, allflags, allkeys, True, '', '')
+#                fh.writeFlagCmd(viso, allflags, allkeys, True, '', '')
+                fh.writeFlagCommands(viso,allflags,True,'','', True)
                 
             else:
 
@@ -322,7 +341,8 @@ def importevla(
         else :
             casalog.post('Will not apply flags (applyflags=False), use flagcmd to apply')
             if nflags > 0:
-                fh.writeFlagCmd(viso, allflags, allkeys, False, '', '')
+#                fh.writeFlagCmd(viso, allflags, allkeys, False, '', '')
+                fh.writeFlagCommands(viso,allflags,False,'','', True)
 
                
         # Save the flag commads to an ASCII file 
@@ -334,7 +354,8 @@ def importevla(
                     # Save to standard filename
                     outfile = viso.replace('.ms','_cmd.txt')
                     
-                fh.writeFlagCmd(viso, allflags, allkeys, False, '', outfile)
+#                fh.writeFlagCmd(viso, allflags, allkeys, False, '', outfile)
+                fh.writeFlagCommands(viso,allflags,False,'',outfile, True)
                 
                 casalog.post('Saved %s flag commands to %s'%(nflags,outfile))
         

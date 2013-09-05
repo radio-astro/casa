@@ -379,13 +379,13 @@ def importasdm(
             # Parse Flag.xml into flag dictionary
             #
             if process_flags:
-                flagcmds = fh.readXML(asdm, float(tbuff))
+#                flagcmds = fh.readXML(asdm, float(tbuff))
+                flagcmds = fh.parseXML(asdm, float(tbuff))
                 onlinekeys = flagcmds.keys()
 
                 nflags = onlinekeys.__len__()
                                 
                 # Apply flags to the MS
-                saved_list = {}
                 if nflags > 0:
                     if applyflags:
                         
@@ -396,7 +396,9 @@ def importasdm(
                         aflocal.selectdata()
                         
                         # Setup the agent's parameters
-                        saved_list = fh.setupAgent(aflocal, flagcmds, [], True, True)
+#                        saved_list = fh.setupAgent(aflocal, flagcmds, [], True, True)
+#                        fh.setupAgent(aflocal, flagcmds, [], True, True)
+                        fh.parseAgents(aflocal, flagcmds, [], True, True, '')
                         
                         # Initialize the agents
                         aflocal.init()
@@ -410,13 +412,15 @@ def importasdm(
                         aflocal.done()
                         
                         # Save to FLAG_CMD table. APPLIED is set to True.
-                        fh.writeFlagCmd(viso, flagcmds, onlinekeys, True, '', '')       
+#                        fh.writeFlagCmd(viso, flagcmds, onlinekeys, True, '', '')       
+                        fh.writeFlagCommands(viso, flagcmds, True, '', '', True)       
                         
                     else:
                         casalog.post('Will not apply flags (apply_flags=False), use flagcmd to apply')
                     
                         # Write to FLAG_CMD, APPLIED is set to False
-                        fh.writeFlagCmd(viso, flagcmds, onlinekeys, False, '', '')
+#                        fh.writeFlagCmd(viso, flagcmds, onlinekeys, False, '', '')
+                        fh.writeFlagCommands(viso, flagcmds, False, '', '', True)
                     
                     # Save the flag cmds to an ASCII file
                     if savecmds:
@@ -424,7 +428,8 @@ def importasdm(
                         if outfile == '': 
                             outfile = viso.replace('.ms','_cmd.txt')
                             
-                        fh.writeFlagCmd(viso, flagcmds, onlinekeys, False, '', outfile)
+#                        fh.writeFlagCmd(viso, flagcmds, onlinekeys, False, '', outfile)
+                        fh.writeFlagCommands(viso, flagcmds, False, '', outfile, True)
                         casalog.post('Saved %s flag commands to %s'%(nflags,outfile))
                     
                 else:

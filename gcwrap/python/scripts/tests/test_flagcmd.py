@@ -6,6 +6,7 @@ import exceptions
 from tasks import *
 from taskinit import *
 from __main__ import default
+from OrderedDictionary import OrderedDict
 
 #
 # Test of flagcmd task. It uses flagdata to unflag and summary
@@ -105,8 +106,8 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        default(flagdata)
         flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        default(flagcmd)
         
     def setUp_evla(self):
         self.vis = "tosr0001_scan3_noonline.ms"
@@ -241,8 +242,8 @@ class test_alma(test_base):
         res = flagcmd(vis=self.vis, action='extract', useapplied=True)
         
         # Apply cmd to clip only WVR
-        flagcmd(vis=self.vis, inpmode='list', inpfile=[res[0]['command']], savepars=False, action='apply',
-                flagbackup=False)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=[res[0]['command']], savepars=False, 
+                 action='apply',flagbackup=False)
         ret = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(ret['flagged'], 498)
         self.assertEqual(ret['correlation']['I']['flagged'], 498)
@@ -282,7 +283,8 @@ class test_unapply(test_base):
         res = flagdata(vis=self.vis,mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 568134, 'Whole scan=1 should be flagged')
         #self.assertEqual(res['scan']['4']['flagged'], 1201, 'scan=4 should be partially flagged')
-        self.assertTrue(res['scan']['4']['flagged']>= 1200 and res['scan']['4']['flagged']<= 1204, 'scan=4 should be partially flagged')
+        self.assertTrue(res['scan']['4']['flagged']>= 1200 and res['scan']['4']['flagged']<= 1204, \
+                        'scan=4 should be partially flagged')
         
         # Unapply only the tfcrop line
         flagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=1, savepars=False)
@@ -377,7 +379,7 @@ class test_unapply(test_base):
         mytb.close()         
         
     def test_unapply_clip_and_unset_flagrow(self):
-        '''flagcmd: Check that FLAG_ROW is unset after un-applying an clip agent'''
+        '''flagcmd: Check that FLAG_ROW is unset after un-applying a clip agent'''
         # Remove any cmd from table
         flagcmd(vis=self.vis, action='clear', clearall=True)
 
@@ -391,8 +393,8 @@ class test_unapply(test_base):
         mytb.open(self.vis)
         selectedtb = mytb.query('SCAN_NUMBER in [4]')
         FLAG_ROW = selectedtb.getcol('FLAG_ROW')
-        self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
         mytb.close()        
+        self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
         
         # Flag using tfcrop agent from file
         myinput = "scan=4 mode=clip "
@@ -405,8 +407,8 @@ class test_unapply(test_base):
         mytb.open(self.vis)
         selectedtb = mytb.query('SCAN_NUMBER in [4]')
         FLAG_ROW = selectedtb.getcol('FLAG_ROW')
-        self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
         mytb.close()           
+        self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
         
         # Unapply only the tfcrop line
         flagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=0, savepars=False)
@@ -416,8 +418,8 @@ class test_unapply(test_base):
         mytb.open(self.vis)
         selectedtb = mytb.query('SCAN_NUMBER in [4]')
         FLAG_ROW = selectedtb.getcol('FLAG_ROW')
-        self.assertEqual(FLAG_ROW.sum(), 0)
         mytb.close()        
+        self.assertEqual(FLAG_ROW.sum(), 0)
 
     def test_uquack(self):
         '''flagcmd: unapply quack agent'''
@@ -517,7 +519,7 @@ class test_savepars(test_base):
         
         ########## TEST 1 
         # create text file called flagcmd.txt
-        myinput = "scan=4 mode=clip correlation=ABS_RR clipminmax=[0,4]\n"
+        myinput = "scan='4' mode='clip' correlation='ABS_RR' clipminmax=[0, 4]\n"
         filename = create_input(myinput)
         filename1 = 'filename1.txt'
         os.system('cp '+filename+' '+filename1)
@@ -534,7 +536,7 @@ class test_savepars(test_base):
         
         ########## TEST 2 
         # create another input
-        myinput = "scan=1~3 mode=manual\n"
+        myinput = "scan='1~3' mode='manual'\n"
         filename = create_input(myinput)
         
         # apply and don't save to MS
@@ -562,7 +564,7 @@ class test_savepars(test_base):
         self.assertEqual(res['scan']['4']['flagged'], 3348, 'Only RR should be flagged')
         self.assertEqual(res['scan']['4']['total'], 95256)
         
-        # Only cmd form TEST 1 should be in MS
+        # Only cmd from TEST 1 should be in MS
         os.system('rm -rf myflags.txt')
         flagcmd(vis=self.vis, action='list', outfile='myflags.txt', useapplied=True, savepars=True)
         self.assertTrue(filecmp.cmp(filename1, 'myflags.txt', 1), 'Files should be equal')        
@@ -701,26 +703,31 @@ class test_rflag(test_base):
 
 
         # (3) flagcmd : Send in the same text files produces/used in (1)
-        input1 = "{'name':'Rflag','timedev':[[1.0,9.0,0.038859],[1.0,10.0,0.162833]]}\n"
-        input2 = "{'name':'Rflag','freqdev':[[1.0,9.0,0.079151],[1.0,10.0,0.205693]]}\n"
+#        input1 = "{'name':'Rflag','timedev':[[1.0,9.0,0.038859],[1.0,10.0,0.162833]]}\n"
+#        input2 = "{'name':'Rflag','freqdev':[[1.0,9.0,0.079151],[1.0,10.0,0.205693]]}\n"
+        input1 = "{'name':'Rflag','timedev':[[1.0,9.0,0.038859101518899999],[1.0,10.0,0.16283325492600001]]}\n"
+        input2 = "{'name':'Rflag','freqdev':[[1.0,9.0,0.079151260994399994],[1.0,10.0,0.20569361620099999]]}\n"
         filename1 = create_input(input1,'tdevfile.txt')
         filename2 = create_input(input2,'fdevfile.txt')
 
-        commlist=['mode=rflag spw=9,10 extendflags=False timedev='+filename1+' freqdev='+filename2]
+        commlist=["mode='rflag' spw='9,10' extendflags=False timedev='"+filename1+"' "+\
+                   "freqdev='"+filename2+"'"]
 
-        flagdata(vis=self.vis,mode='unflag', flagbackup=False);
+#        flagdata(vis=self.vis,mode='unflag', flagbackup=False);
         flagcmd(vis=self.vis, inpmode='list', inpfile=commlist, action='apply', flagbackup=False)
         res3 = flagdata(vis=self.vis, mode='summary')
         print "(3) Finished flagcmd test : using tdevfile, fdevfile in the cmd (test 1)) : ", res3['flagged']
 
 
         # (4) Give the values directly in the cmd input.....
-        commlist=['mode=rflag spw=9,10 extendflags=False ' \
-                  'timedev=[[1.0,9.0,0.038859],[1.0,10.0,0.162833]] \
-                          freqdev=[[1.0,9.0,0.079151],[1.0,10.0,0.205693]]']
+        commstr = "mode='rflag' spw='9,10' extendflags=False timedev=[[1.0,9.0,0.038859101518899999],[1.0,10.0,0.16283325492600001]] "+\
+                   "freqdev=[[1.0,9.0,0.079151260994399994],[1.0,10.0,0.20569361620099999]]"
+#        commlist=["mode='rflag' spw='9,10' extendflags=False ' \
+#                  'timedev=[[1.0,9.0,0.038859],[1.0,10.0,0.162833]] \
+#                          freqdev=[[1.0,9.0,0.079151],[1.0,10.0,0.205693]]"]
 
         flagdata(vis=self.vis,mode='unflag', flagbackup=False);
-        flagcmd(vis=self.vis, inpmode='list', inpfile=commlist, action='apply', flagbackup=False)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=[commstr], action='apply', flagbackup=False)
         res4 = flagdata(vis=self.vis, mode='summary')
 
         print "(4) Finished flagcmd test : using cmd arrays : ", res4['flagged']
