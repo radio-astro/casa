@@ -301,7 +301,7 @@ elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
   set( CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
 
   if( CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
-    if ( EXISTS /usr/lib64/casa/01 )
+    if ( EXISTS /usr/lib64/casa/01/bin/qmake )
       set( casa_packages /usr/lib64/casa/01 )
 	  set( dbusxx dbus-cpp )
 	  add_definitions( -DDBUS_CPP )
