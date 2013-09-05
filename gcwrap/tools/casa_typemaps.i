@@ -104,7 +104,7 @@ using namespace casac;
    $1 = PyString_Check($input);
 }
 
-%typemap(freearg) const string& columnname{
+%typemap(feeearg) const string& columnname{
 if($1){
   delete $1;
 }
@@ -175,14 +175,25 @@ if($1){
 }
 
 %typemap(in) variant {
-   $1 = new varaiant(pyobj2variant($input, true));
+   $1 = new variant(pyobj2variant($input, true));
 }
 
 %typemap(in) variant& {
    $1 = new variant(pyobj2variant($input, true));
 }
 
+//%typemap(freearg) variant& {
+   //delete $1;
+//}
+%typemap(freearg) variant& columnname{
+   delete $1;
+}
+
 %typemap(freearg) variant& thevalue{
+   delete $1;
+}
+
+%typemap(freearg) variant& pixels{
    delete $1;
 }
 
