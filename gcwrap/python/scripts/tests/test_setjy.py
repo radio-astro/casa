@@ -614,8 +614,8 @@ class test_ModImage(SetjyUnitTestBase):
             print "importuvfits error:"
             raise e
     
-    def test1_UBandModelQithQBandMS(self):
-        """ Test U-Band model with W-Band data to see impact of flux density scale """
+    def test1_UBandModelwithQBandMS(self):
+        """ Test U-Band model with Q-Band data to see impact of flux density scale """
 
         # The MS is in Q band, so deliberately choose the U band model so that the structure
         # is not too far off, but whether or not its flux density is scaled makes a difference.
@@ -744,7 +744,29 @@ class test_inputs(SetjyUnitTestBase):
         sjran = setjy(vis=self.inpms,listmodels=True)
         self.assertTrue(sjran)
       
-        
-  
+class test_conesearch(SetjyUnitTestBase):
+    """Test search for field match by position (standard='Perley-Butler 2013')"""
+
+    def setUp(self):
+        self.setUpMS('unittest/setjy/n1333_nonstdcalname.ms')
+        self.field = 'myfcalsrc'
+        self.modelim = '3C147_U.im'
+        self.result = {}
+
+    def tearDown(self):
+        self.resetMS()
+ 
+    def test_searchByPosition(self): 
+        sjran = setjy(vis=self.inpms, 
+                      field=self.field,
+                      modimage=self.modelim,
+                      scalebychan=False,
+                      #standard='Perley-Taylor 99',
+                      standard='Perley-Butler 2013',
+                      usescratch=True,
+                      async=False)
+
+        self.check_eq(sjran['myfcalsrc']['1']['fluxd'][0],0.99125797,0.0001)
+
 def suite():
-    return [test_SingleObservation,test_MultipleObservations,test_ModImage, test_inputs]
+    return [test_SingleObservation,test_MultipleObservations,test_ModImage, test_inputs, test_conesearch]
