@@ -1519,6 +1519,7 @@ Bool QtDisplayPanelGui::removeDD(QtDisplayData*& qdd) {
 			qdp_->setControllingDD( NULL );
 			displayDataHolder->setDDControlling( NULL );
 			clearTools();
+			regionDock_->delete_all_regions( true );
 		}
 
 		notifyDDRemoval( qdd );
