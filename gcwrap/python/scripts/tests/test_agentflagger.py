@@ -80,7 +80,9 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
+            os.system('cp -r ' + \
+                        os.environ.get('CASAPATH').split()[0] +
+                        "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         self.unflag_table()
