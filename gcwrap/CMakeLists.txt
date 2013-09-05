@@ -31,6 +31,15 @@ set( CASA_MINOR_VERSION 2 )
 set( CASA_PATCH_VERSION 0 )
 set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}" )
 
+###
+### default name for casa-maintained dbus C++ library... (but could also be called just "dbus-cpp")
+###
+set( dbus-cpp-library-name casa-dbus-cpp )
+###
+### by default, look for Qt4 in the standard places... (with casa01-* RPMs and linux, we avoid system places)...
+###
+set( qt4 system-qt )
+
 enable_language (Fortran)
 
 # Define compiler paths on OSX 10.5. This must be done before invoking project()
@@ -269,6 +278,21 @@ if( APPLE )
        endif()
 	    
     endif()
+
+    find_program( DBUS_FLAVOR_dbuspp-xml2cpp_EXECUTABLE dbuspp-xml2cpp PATHS ${casa_packages}/bin /opt/local/bin /usr/local/bin )
+    if ( ${DBUS_FLAVOR_dbuspp-xml2cpp_EXECUTABLE} MATCHES "NOTFOUND$" )
+        set( dbusxx dbus-c++ )
+    else( )
+        set( dbusxx dbus-cpp )
+        add_definitions( -DDBUS_CPP )
+        STRING( REGEX REPLACE "(^.*)/bin.*" "\\1" dbus-root-path  ${DBUS_FLAVOR_dbuspp-xml2cpp_EXECUTABLE} )
+        if( EXISTS ${dbus-root-path}/lib/dbus-1.0 )
+            set( dbus-arch-path-guess ${dbus-root-path}/lib/dbus-1.0 )
+        endif( )
+        if( EXISTS ${dbus-root-path}/lib/libdbus-cpp.dylib )
+            set( dbus-cpp-library-name dbus-cpp )
+        endif( )
+    endif( )
 
     set( python_version 2.6 )
 
@@ -846,7 +870,7 @@ if ( ${dbusxx} STREQUAL dbus-c++ )
 else( )
   casa_find( DBUSPP_ARCH
     INCLUDES dbus/dbus-arch-deps.h
-    PREFIX_HINTS ${DBUS_ARCH_DIR} ${casa_packages}/lib/dbus-1.0
+    PREFIX_HINTS ${DBUS_ARCH_DIR} ${casa_packages}/lib/dbus-1.0 ${dbus-arch-path-guess}
     NO_CHECK   # This header does not compile if included directly
     NO_REQUIRE
   )
@@ -859,7 +883,7 @@ else( )
              dbus-cpp/dbus.h
     INCLUDES_SUFFIXES dbus-1.0 dbus-cpp
     PREFIX_HINTS ${DBUS_ROOT_DIR} ${casa_packages}
-    LIBS casa-dbus-cpp
+    LIBS ${dbus-cpp-library-name}
     PROGRAMS dbuspp-xml2cpp
     DEPENDS ${dbus_depends}
   )
