@@ -27,7 +27,7 @@ else
     casa3party="/usr/lib/casapy"
     CPU=$(uname -p)
     if [ "${CPU}" = "x86_64" ]; then
-	casa3party="/usr/lib64/casapy"
+	casa3party="@casa_packages@"
     fi
     p_root=${casa3party}
     if [[ "$CASAPATH" =~ /usr/lib* ]]; then
@@ -64,7 +64,7 @@ a_host=$(hostname -s)
 a_arch=`echo ${CASAPATH} | awk '{print $2}'`
 a_site="${a_site}-${a_arch}"
 p_bind=${p_root}/bin
-p_libd=${p_root}/lib/python2.6
+p_libd=${p_root}/lib/python@python_version@
 
 if [ $isapple = 'T' ]; then
     export PYTHONEXECUTABLE=${p_root}/Resources/Python.app/Contents/MacOS/Python
@@ -85,9 +85,9 @@ fi
 
 
 if [ $installed_from_rpm = "T" ]; then
-    export   __CASAPY_PYTHONDIR=${prefix}/lib/python2.6
+    export   __CASAPY_PYTHONDIR=${prefix}/lib/python@python_version@
 else
-    export   __CASAPY_PYTHONDIR=${prefix}/python/2.6
+    export   __CASAPY_PYTHONDIR=${prefix}/python/@python_version@
 fi
 p_path=${__CASAPY_PYTHONDIR}:${__CASAPY_PYTHONDIR}/regressions/admin:${p_path}
 # echo "DEBUG: __CASAPY_PYTHONDIR = $__CASAPY_PYTHONDIR"
@@ -204,13 +204,13 @@ if [[ -f casapy.log ]]; then
 fi
 
 if [ $installed_from_rpm = "T" ]; then
-    casapy_command="${prefix}/lib/python2.6/casapy.py"
+    casapy_command="${prefix}/lib/python@python_version@/casapy.py"
 else
-    casapy_command="${prefix}/python/2.6/casapy.py"
+    casapy_command="${prefix}/python/@python_version@/casapy.py"
 fi
 # echo "DEBUG: casapy_command = $casapy_command"
 
-#exec -a pythonw /opt/casa/darwin11/bin/pythonw -W ignore::DeprecationWarning -m cProfile -o stats.prof ${prefix}/python/2.6/casapy.py $*
+#exec -a pythonw /opt/casa/darwin11/bin/pythonw -W ignore::DeprecationWarning -m cProfile -o stats.prof ${prefix}/python/@python_version@/casapy.py $*
 if [ ${_dodebug} = "T" ]; then
     echo
     echo "Debugger run command is: run -W ignore::DeprecationWarning ${casapy_command} $*"

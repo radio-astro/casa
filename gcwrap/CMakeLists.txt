@@ -270,12 +270,25 @@ if( APPLE )
 	    
     endif()
 
+    set( python_version 2.6 )
+
 elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
 
   set( CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
 
   if( CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
-    set( casa_packages /usr/lib64/casapy )
+    if ( EXISTS /usr/lib64/casa/01 )
+      set( casa_packages /usr/lib64/casa/01 )
+	  set( dbusxx dbus-cpp )
+	  add_definitions( -DDBUS_CPP )
+	  set( qt4 casa-qt )
+      set( python_version 2.7 )
+    else( )
+	  set( dbusxx dbus-c++ )
+      set( casa_packages /usr/lib64/casapy )
+	  set( qt4 system-qt )
+      set( python_version 2.6 )
+    endif( )
     if( NOT arch )
     	set( arch linux_64b )
     endif()
@@ -786,68 +799,74 @@ casa_find( Java
 
 set( SAXON ${Java_java_EXECUTABLE} -jar ${CMAKE_SOURCE_DIR}/install/saxon8.jar )
 
-# C++ DBus
-#
-# The header file dbus/dbus-arch-deps.h exists on some but not all systems, in a directory
-# for itself
-#
-# Form all possible DBus prefixes and use them as hints to casa_find()
-#
-set( dbus_prefix "" )
-#foreach( _p ${casa_packages} ${CMAKE_INSTALL_PREFIX} /sw /opt/local /usr/local /opt /usr )
-foreach( _p ${casa_packages} ${CMAKE_INSTALL_PREFIX} /sw /opt/local /usr/local /opt /usr )
-  foreach( _l lib lib64 )
-    list( APPEND dbus_prefix ${_p} )
-    list( APPEND dbus_prefix ${_p}/include )
-    list( APPEND dbus_prefix ${_p}/${_l}/dbus-1.0 )
-    list( APPEND dbus_prefix ${_p}/${_l}/qt-4.3.4/dbus )
-    list( APPEND dbus_prefix ${_p}/${_l}/qt-4.3.4/dbus/${_l}/dbus-1.0 )
+if ( ${dbusxx} STREQUAL dbus-c++ )
+  # C++ DBus
+  #
+  # The header file dbus/dbus-arch-deps.h exists on some but not all systems, in a directory
+  # for itself
+  #
+  # Form all possible DBus prefixes and use them as hints to casa_find()
+  #
+  set( dbus_prefix "" )
+  #foreach( _p ${casa_packages} ${CMAKE_INSTALL_PREFIX} /sw /opt/local /usr/local /opt /usr )
+  foreach( _p ${casa_packages} ${CMAKE_INSTALL_PREFIX} /sw /opt/local /usr/local /opt /usr )
+    foreach( _l lib lib64 )
+      list( APPEND dbus_prefix ${_p} )
+      list( APPEND dbus_prefix ${_p}/include )
+      list( APPEND dbus_prefix ${_p}/${_l}/dbus-1.0 )
+      list( APPEND dbus_prefix ${_p}/${_l}/qt-4.3.4/dbus )
+      list( APPEND dbus_prefix ${_p}/${_l}/qt-4.3.4/dbus/${_l}/dbus-1.0 )
+    endforeach()
   endforeach()
-endforeach()
 
-if ( DBUS_FOUND )
-   unset(DBUS_FOUND CACHE)
-   unset(DBUS_INCLUDE_DIRS CACHE)
-   unset(DBUS_LIBRARIES CACHE)
-   unset(DBUS_casa-dbus-cpp CACHE)
-   unset(DBUS_dbusxx-xml2cpp_EXECUTABLE CACHE)
-endif (DBUS_FOUND)
-if ( DBUS_2_FOUND )
-   unset(DBUS_2_FOUND CACHE)
-   unset(DBUS_2_INCLUDE_DIRS CACHE)
-   unset(DBUS_2_LIBRARIES CACHE)
-   unset(DBUS_2_casa-dbus-cpp CACHE)
-   unset(DBUS_dbusxx-xml2cpp_EXECUTABLE CACHE)
-endif (DBUS_2_FOUND)
-if ( DBUS_3_FOUND )
-   unset(DBUS_3_FOUND CACHE)
-   unset(DBUS_3_INCLUDE_DIRS CACHE)
-   unset(DBUS_3_LIBRARIES CACHE)
-   unset(DBUS_3_casa-dbus-cpp CACHE)
-   unset(DBUS_dbusxx-xml2cpp_EXECUTABLE CACHE)
-endif (DBUS_3_FOUND)
+  casa_find( DBUSXX_ARCH
+    INCLUDES dbus/dbus-arch-deps.h
+    PREFIX_HINTS /usr/lib64/dbus-1.0 ${DBUS_ARCH_DIR} ${dbus_prefix}
+    NO_CHECK   # This header does not compile if included directly
+    NO_REQUIRE
+    IGNORE /usr/lib64/casapy
+  )
+  if( DBUSXX_ARCH_FOUND )
+    set( dbus_depends DBUSXX_ARCH )
+  endif()
 
-casa_find( DBUSARCH
-  INCLUDES dbus/dbus-arch-deps.h
-  PREFIX_HINTS /usr/lib64/dbus-1.0 ${DBUS_ARCH_DIR} ${dbus_prefix}
-  NO_CHECK   # This header does not compile if included directly
-  NO_REQUIRE
-  IGNORE /usr/lib64/casapy
-)
-if( DBUSARCH_FOUND )
-  set( dbus_depends DBUSARCH )
-endif()
+  casa_find( DBUSXX
+    INCLUDES dbus/dbus.h
+             dbus-c++/dbus.h
+    INCLUDES_SUFFIXES dbus-1.0 dbus-c++-1
+    PREFIX_HINTS ${DBUS_ROOT_DIR} ${dbus_prefix}
+    LIBS dbus-c++-1
+    PROGRAMS dbusxx-xml2cpp
+    DEPENDS ${dbus_depends}
+    IGNORE /usr/lib64/casapy
+  )
+  set( dbus-xml-2-cxx ${DBUSXX_dbusxx-xml2cpp_EXECUTABLE} )
+  set( DBUS_INCLUDE_DIRS ${DBUSXX_INCLUDE_DIRS} )
+  set( DBUS_LIBRARIES ${DBUSXX_LIBRARIES} )
+else( )
+  casa_find( DBUSPP_ARCH
+    INCLUDES dbus/dbus-arch-deps.h
+    PREFIX_HINTS ${DBUS_ARCH_DIR} ${casa_packages}/lib/dbus-1.0
+    NO_CHECK   # This header does not compile if included directly
+    NO_REQUIRE
+  )
+  if( DBUSPP_ARCH_FOUND )
+    set( dbus_depends DBUSPP_ARCH )
+  endif()
 
-casa_find( DBUS
-  INCLUDES dbus/dbus.h
-           dbus-c++/dbus.h
-  INCLUDES_SUFFIXES dbus-1.0 dbus-c++-1
-  PREFIX_HINTS ${DBUS_ROOT_DIR} ${dbus_prefix}
-  LIBS dbus-c++-1
-  PROGRAMS dbusxx-xml2cpp
-  DEPENDS ${dbus_depends}
-  IGNORE /usr/lib64/casapy
-)
+  casa_find( DBUSPP
+    INCLUDES dbus/dbus.h
+             dbus-cpp/dbus.h
+    INCLUDES_SUFFIXES dbus-1.0 dbus-cpp
+    PREFIX_HINTS ${DBUS_ROOT_DIR} ${casa_packages}
+    LIBS casa-dbus-cpp
+    PROGRAMS dbuspp-xml2cpp
+    DEPENDS ${dbus_depends}
+  )
+  set( dbus-xml-2-cxx ${DBUSPP_dbuspp-xml2cpp_EXECUTABLE} )
+  set( DBUS_INCLUDE_DIRS ${DBUSPP_INCLUDE_DIRS} )
+  set( DBUS_LIBRARIES ${DBUSPP_LIBRARIES} )
+endif( )
 
 # ATM
 casa_find( ATM
@@ -903,6 +922,15 @@ endif()
 
 
 # QT4  4.3.4 or 4.5.1
+
+if( ${qt4} STREQUAL casa-qt )
+  ### cmake is so lame...
+  set( QT_QMAKE_EXECUTABLE /usr/lib64/casa/01/bin/qmake )
+  message( STATUS "Explicitly setting qmake: ${QT_QMAKE_EXECUTABLE}" )
+  set( qt4-version 4.8.5 )
+else()
+  set( qt4-version 4.3.4 )
+endif()
 
 find_package(
   Qt4 4.3.4
@@ -1117,11 +1145,14 @@ add_subdirectory(python)
 add_custom_target( doc DEPENDS taskref_html taskref_pdf casaref_html casaref_pdf )
 #add_custom_target( doc )
 
+configure_file( apps/casapy/casapy ${CMAKE_CURRENT_BINARY_DIR}/preprocessed/casapy @ONLY )
+configure_file( apps/casapy/casa ${CMAKE_CURRENT_BINARY_DIR}/preprocessed/casa @ONLY )
+
 install( PROGRAMS
          install/buildmytasks
          install/xmlgenpy
-	 apps/casapy/casa
-	 apps/casapy/casapy
+	 ${CMAKE_CURRENT_BINARY_DIR}/preprocessed/casa
+	 ${CMAKE_CURRENT_BINARY_DIR}/preprocessed/casapy
          DESTINATION bin )
 
 install( FILES 
