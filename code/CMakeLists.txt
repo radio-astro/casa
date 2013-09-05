@@ -31,6 +31,15 @@ set( CASA_MINOR_VERSION 2 )
 set( CASA_PATCH_VERSION 0 )
 set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}" )
 
+###
+### default name for casa-maintained dbus C++ library... (but could also be called just "dbus-cpp")
+###
+set( dbus-cpp-library-name casa-dbus-cpp )
+###
+### by default, look for Qt4 in the standard places... (with casa01-* RPMs and linux, we avoid system places)...
+###
+set( qt4 system-qt )
+
 enable_language (Fortran)
 
 # Define compiler paths on OSX 10.5. This must be done before invoking project()
@@ -40,16 +49,16 @@ if( APPLE )
         message(STATUS "Use " ${CMAKE_Fortran_COMPILER})
     elseif( EXISTS            /opt/casa/core2-apple-darwin8/3rd-party/bin/gfortran )
         set( CMAKE_Fortran_COMPILER /opt/casa/core2-apple-darwin8/3rd-party/bin/gfortran )
-	set( CMAKE_CXX_COMPILER     /opt/casa/core2-apple-darwin8/3rd-party/bin/g++ )
+	    set( CMAKE_CXX_COMPILER     /opt/casa/core2-apple-darwin8/3rd-party/bin/g++ )
     elseif( EXISTS        /opt/local/bin/gfortran )
         set( CMAKE_Fortran_COMPILER /opt/local/bin/gfortran )
     elseif( EXISTS        /opt/local/bin/gfortran-mp-4.2 )
         set( CMAKE_Fortran_COMPILER /opt/local/bin/gfortran-mp-4.2 )
     elseif( EXISTS        /opt/local/bin/gfortran-mp-4.4 )
         set( CMAKE_Fortran_COMPILER /opt/local/bin/gfortran-mp-4.4 )
-	if( EXISTS /opt/local/bin/g++-mp-4.4 )
-	    set( CMAKE_CXX_COMPILER /opt/local/bin/g++-mp-4.4 )
-	endif()
+	    if( EXISTS /opt/local/bin/g++-mp-4.4 )
+	        set( CMAKE_CXX_COMPILER /opt/local/bin/g++-mp-4.4 )
+	    endif()
     endif()
 else()
     set( SO so )
@@ -61,7 +70,7 @@ project( CASA C CXX Fortran )
 # - FindQt4.cmake requires it (bug)
 # - ccmtools uses the C preprocessor
 if( CMAKE_Fortran_COMPILER STREQUAL CMAKE_Fortran_COMPILER-NOTFOUND )
-  message( FATAL_ERROR "Could not find fortran compiler. Please check!" )
+    message( FATAL_ERROR "Could not find fortran compiler. Please check!" )
 endif()
 
 casa_always_install()
@@ -72,17 +81,17 @@ casa_always_install()
 
 # force searching for libcasacore instead of libcasa_*
 if( NOT USE_LIBCASACORE )
-  set( USE_LIBCASACORE False )
+    set( USE_LIBCASACORE False )
 endif()
 
 # Build type (None, Release, Debug, RelWithDebInfo, MinSizeRel).
 if( NOT CMAKE_BUILD_TYPE )
-  set( CMAKE_BUILD_TYPE RelWithDebInfo )
+    set( CMAKE_BUILD_TYPE RelWithDebInfo )
 endif()
 
 if( CMAKE_BUILD_TYPE STREQUAL Debug )
-  add_definitions( -DAIPS_DEBUG )
-  set( CMAKE_CXX_FLAGS_DEBUG "-ggdb3 -O0 -fno-omit-frame-pointer" )
+    add_definitions( -DAIPS_DEBUG )
+    set( CMAKE_CXX_FLAGS_DEBUG "-ggdb3 -O0 -fno-omit-frame-pointer" )
 endif()
 
 if( INTERACTIVE_ITERATION )
@@ -99,35 +108,33 @@ endif()
 # aipshosts is supported for backwards compatibility
 #
 if( NOT arch AND EXISTS ${casaroot}/aipshosts )
-  message( WARNING "Found ${casaroot}/aipshosts. You probably don't need  this file unless you need to build multiple architectures. If you remove aipshosts the name of the installation directory will be automatically set  based on this machine's architecture, or defined by the cmake command line option -Darch=<arch name>. Specifying on the command line will override the aipshosts entry." )
-  execute_process( COMMAND uname -n
-                   COMMAND awk -F. "{print $1}"
-                   OUTPUT_VARIABLE _host OUTPUT_STRIP_TRAILING_WHITESPACE )
-  execute_process( COMMAND egrep "^[\ ]*${_host}[\ \t]*" ${casaroot}/aipshosts 
-                   COMMAND awk "{print $2}"
-    OUTPUT_VARIABLE _a
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
+    message( WARNING "Found ${casaroot}/aipshosts. You probably don't need  this file unless you need to build multiple architectures. If you remove aipshosts the name of the installation directory will be automatically set  based on this machine's architecture, or defined by the cmake command line option -Darch=<arch name>. Specifying on the command line will override the aipshosts entry." )
+    execute_process( COMMAND uname -n
+                     COMMAND awk -F. "{print $1}"
+                     OUTPUT_VARIABLE _host OUTPUT_STRIP_TRAILING_WHITESPACE )
+    execute_process( COMMAND egrep "^[\ ]*${_host}[\ \t]*" ${casaroot}/aipshosts 
+                     COMMAND awk "{print $2}"
+                     OUTPUT_VARIABLE _a
+                     OUTPUT_STRIP_TRAILING_WHITESPACE )
 
-  if( _a )
-    set( arch ${_a} )    
-  endif()
+    if( _a )
+        set( arch ${_a} )    
+    endif()
 endif()
 
 set( CMAKE_CXX_FLAGS_PROFILE "-g -O2 -pg -fprofile-arcs" )
 
 # On Linux x86_64 add the (gcc specific) -fno-omit-frame-pointer
 # flag to debug builds
-if( CMAKE_SYSTEM_NAME STREQUAL Linux AND
-    CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
-  foreach( _c CXX C FORTRAN )
-    set( CMAKE_${_c}_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer")
-    set( CMAKE_${_c}_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -fno-omit-frame-pointer")
-  endforeach()
+if( CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
+    foreach( _c CXX C FORTRAN )
+        set( CMAKE_${_c}_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer")
+        set( CMAKE_${_c}_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -fno-omit-frame-pointer")
+    endforeach()
 endif()
 
 if (CMAKE_CROSSCOMPILING)
-  dump( CMAKE_HOST_SYSTEM )
+    dump( CMAKE_HOST_SYSTEM )
 endif()
 dump( CMAKE_SYSTEM
       CMAKE_SYSTEM_PROCESSOR
@@ -136,19 +143,15 @@ dump( CMAKE_SYSTEM
 
 set( BUILD_SHARED_LIBS ON )
 
-set( DEFAULT_CXX_FLAGS 
-     "-pipe -Wall -Wextra -Wno-non-template-friend -Wcast-align -Wno-comment"
-     )
+set( DEFAULT_CXX_FLAGS "-pipe -Wall -Wextra -Wno-non-template-friend -Wcast-align -Wno-comment" )
 
-set( DEFAULT_C_FLAGS 
-     "-pipe -Wall -Wextra -Wcast-align -Wno-comment"
-     )
+set( DEFAULT_C_FLAGS "-pipe -Wall -Wextra -Wcast-align -Wno-comment" )
 
 # OpenMP
 find_package( OpenMP )
 if( OPENMP_FOUND )
-  set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} ${OpenMP_CXX_FLAGS}" )
-  set( DEFAULT_C_FLAGS   "${DEFAULT_C_FLAGS}   ${OpenMP_C_FLAGS}" )
+    set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} ${OpenMP_CXX_FLAGS}" )
+    set( DEFAULT_C_FLAGS   "${DEFAULT_C_FLAGS}   ${OpenMP_C_FLAGS}" )
 endif()
 
 # Test driver which requires that test programs are up-to-date
@@ -165,7 +168,7 @@ set( CASA_assay ${CMAKE_SOURCE_DIR}/install/assay )
 if( APPLE )
     set( CMAKE_Fortran_FLAGS -fno-second-underscore )
     execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
-	    COMMAND perl -e "$found = 0; while(<>) { if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.${CMAKE_SHARED_LIBRARY_SUFFIX}\" ) { print \"$d/libgfortran.${CMAKE_SHARED_LIBRARY_SUFFIX}\"; $found = 1; break;}; if ( -e \"$d/libgfortran.a\" and !$found ) { print \"$d/libgfortran.a \"; $found = 1; break;}break if $found;}break if $found;} break if $found; }"
+                     COMMAND perl -e "$found = 0; while(<>) { if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.${CMAKE_SHARED_LIBRARY_SUFFIX}\" ) { print \"$d/libgfortran.${CMAKE_SHARED_LIBRARY_SUFFIX}\"; $found = 1; break;}; if ( -e \"$d/libgfortran.a\" and !$found ) { print \"$d/libgfortran.a \"; $found = 1; break;}break if $found;}break if $found;} break if $found; }"
                      OUTPUT_VARIABLE _gfortran_lib_path
                      OUTPUT_STRIP_TRAILING_WHITESPACE )
 
@@ -173,128 +176,138 @@ if( APPLE )
         set( casa_packages /opt/casa/core2-apple-darwin8/3rd-party )
         set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error" )
         if( NOT arch )
-        	set( arch darwin )
+            set( arch darwin )
         endif()
-    elseif( CMAKE_SYSTEM MATCHES ^Darwin-10 OR
-		CMAKE_SYSTEM MATCHES ^Darwin-11 )
+    elseif( CMAKE_SYSTEM MATCHES ^Darwin-10 OR CMAKE_SYSTEM MATCHES ^Darwin-11 )
         if( NOT arch )
-        	set( arch darwin64 )
+            set( arch darwin64 )
         endif()
         if( NOT archflag )
             set( archflag x86_64 )
             if( EXISTS /opt/casa/darwin11 )
                 set( archflag x86_64 )
-            if( EXISTS /opt/casa/darwin10-64b )
-                set( archflag x86_64 )
-            elseif( EXISTS /opt/casa/core2-apple-darwin10 )
-                set( archflag i386 )
-            else()
-              ## Apple no longer supplies fortran compilers, checking for x86_64 with fortran
-	      ## compiler will be a good indication if x86_64 is available or not...
-	      execute_process( 
-                COMMAND ${CMAKE_Fortran_COMPILER} -print-libgcc-file-name
-        	COMMAND perl -e "while(<>){ print if s|^.*?(x86_64).*|$1| }"
-		OUTPUT_VARIABLE archflag
-		OUTPUT_STRIP_TRAILING_WHITESPACE )
-              if( NOT archflag )
-                set( archflag x86_64 )
-              endif()
+                if( EXISTS /opt/casa/darwin10-64b )
+                    set( archflag x86_64 )
+                elseif( EXISTS /opt/casa/core2-apple-darwin10 )
+                    set( archflag i386 )
+                else()
+                    ## Apple no longer supplies fortran compilers, checking for x86_64 with fortran
+                    ## compiler will be a good indication if x86_64 is available or not...
+                    execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-libgcc-file-name
+                                     COMMAND perl -e "while(<>){ print if s|^.*?(x86_64).*|$1| }"
+                                     OUTPUT_VARIABLE archflag
+                                     OUTPUT_STRIP_TRAILING_WHITESPACE )
+                    if( NOT archflag )
+                        set( archflag x86_64 )
+                    endif()
+                endif()
             endif()
+            if( archflag STREQUAL x86_64 )
+                if(CMAKE_SYSTEM MATCHES ^Darwin-11)
+                    set ( casa_packages /opt/casa/darwin11 )
+                else()
+                    set ( casa_packages /opt/casa/darwin10-64b )
+                endif()
+                add_definitions( -DAIPS_64B )
+            endif()
+        else()
+            set( casa_packages /opt/casa/core2-apple-darwin10 )
         endif()
-        if( archflag STREQUAL x86_64 )
-	      if(CMAKE_SYSTEM MATCHES ^Darwin-11)
-                  set ( casa_packages /opt/casa/darwin11 )
-	      else()
-                  set ( casa_packages /opt/casa/darwin10-64b )
-	      endif()
-              add_definitions( -DAIPS_64B )
-	endif()
-    else()
-        set( casa_packages /opt/casa/core2-apple-darwin10 )
-    endif()
-	execute_process( COMMAND ${CMAKE_Fortran_COMPILER} --version
-			 COMMAND head -1
-			 COMMAND perl -pe "s|.*?(\\d+\\.\\d+)\\.\\d+$|$1|"
-			 OUTPUT_VARIABLE _gfortran_version
-			 OUTPUT_STRIP_TRAILING_WHITESPACE )
-	execute_process( COMMAND ${CMAKE_CXX_COMPILER} -dumpmachine
-			 COMMAND head -1
-			 COMMAND perl -pe "s|.*?(\\d+\\.\\d+)\\.\\d+$|$1|"
-			 OUTPUT_VARIABLE _gcc_machine
-			 OUTPUT_STRIP_TRAILING_WHITESPACE )
-	execute_process( COMMAND ${CMAKE_CXX_COMPILER} --version
-			 COMMAND head -1
-			 COMMAND perl -pe "s|.*?(\\d+\\.\\d+)\\.\\d+$|$1|"
-			 OUTPUT_VARIABLE _cxx_version
-			 OUTPUT_STRIP_TRAILING_WHITESPACE )
-	set (INTEL_CXX_COMPILER "false" )
-	if( _cxx_version MATCHES "ICC")
-		set (INTEL_CXX_COMPILER "true" )
-	endif()
-	set (INTEL_FORTRAN_COMPILER "false" )
-	if( _gfortran__version MATCHES "IFORT")
-		set (INTEL_FORTRAN_COMPILER "true" )
-	endif()
-
-	
-	message( STATUS "$_gfortran_version = ${_gfortran_version}" )
-	message( STATUS "$_gfortran_lib_path = ${_gfortran_lib_path}" )
-	message( STATUS "$_gcc_machine = ${_gcc_machine}" )
+        execute_process( COMMAND ${CMAKE_Fortran_COMPILER} --version
+                         COMMAND head -1
+                         COMMAND perl -pe "s|.*?(\\d+\\.\\d+)\\.\\d+$|$1|"
+                         OUTPUT_VARIABLE _gfortran_version
+                         OUTPUT_STRIP_TRAILING_WHITESPACE )
+        execute_process( COMMAND ${CMAKE_CXX_COMPILER} -dumpmachine
+                         COMMAND head -1
+                         COMMAND perl -pe "s|.*?(\\d+\\.\\d+)\\.\\d+$|$1|"
+                         OUTPUT_VARIABLE _gcc_machine
+                         OUTPUT_STRIP_TRAILING_WHITESPACE )
+        execute_process( COMMAND ${CMAKE_CXX_COMPILER} --version
+                         COMMAND head -1
+                         COMMAND perl -pe "s|.*?(\\d+\\.\\d+)\\.\\d+$|$1|"
+                         OUTPUT_VARIABLE _cxx_version
+                         OUTPUT_STRIP_TRAILING_WHITESPACE )
+        set (INTEL_CXX_COMPILER "false" )
+        if( _cxx_version MATCHES "ICC")
+            set (INTEL_CXX_COMPILER "true" )
+        endif()
+        set (INTEL_FORTRAN_COMPILER "false" )
+        if( _gfortran__version MATCHES "IFORT")
+            set (INTEL_FORTRAN_COMPILER "true" )
+        endif()
+    
+        message( STATUS "$_gfortran_version = ${_gfortran_version}" )
+        message( STATUS "$_gfortran_lib_path = ${_gfortran_lib_path}" )
+        message( STATUS "$_gcc_machine = ${_gcc_machine}" )
         message( STATUS "cxxversion (${_cxx_version})" )
-	if( NOT _gfortran_version STREQUAL "4.4" AND
-			NOT _gfortran_version STREQUAL "4.2" AND
-			NOT LLVMCOMPILER )
-	    set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS}" )
-	    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit -lgfortran")
-	else()
-	    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit"  )
+        if( NOT _gfortran_version STREQUAL "4.4" AND NOT _gfortran_version STREQUAL "4.2" AND NOT LLVMCOMPILER )
+            set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS}" )
+            set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit -lgfortran")
+        else()
+            set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit"  )
         endif()
         # Which part of CASA needs -framework AppKit to run? This should probably *not* be added
         # as a generic linker flag.
-	if( NOT _cxx_version STREQUAL "4.4" )
-	    set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS}" )
-	endif()
+        if( NOT _cxx_version STREQUAL "4.4" )
+            set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS}" )
+        endif()
+
     else()
         message( WARNING "Unsupported Mac: ${CMAKE_SYSTEM}" )
     endif()
 
     if( NOT INTEL_CXX_COMPILER STREQUAL "true" )
-       if( _cxx_version STREQUAL "4.4" )
-	   set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse" )
-       else()
-	   set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse -fasm-blocks" )
-       endif()
-	    
+        if( _cxx_version STREQUAL "4.4" )
+            set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse" )
+        else()
+            set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse -fasm-blocks" )
+        endif()
     endif()
+
+    find_program( DBUS_FLAVOR_dbuspp-xml2cpp_EXECUTABLE dbuspp-xml2cpp PATHS ${casa_packages}/bin /opt/local/bin /usr/local/bin )
+    if ( ${DBUS_FLAVOR_dbuspp-xml2cpp_EXECUTABLE} MATCHES "NOTFOUND$" )
+        set( dbusxx dbus-c++ )
+    else( )
+        set( dbusxx dbus-cpp )
+        add_definitions( -DDBUS_CPP )
+        STRING( REGEX REPLACE "(^.*)/bin.*" "\\1" dbus-root-path  ${DBUS_FLAVOR_dbuspp-xml2cpp_EXECUTABLE} )
+        if( EXISTS ${dbus-root-path}/lib/dbus-1.0 )
+            set( dbus-arch-path-guess ${dbus-root-path}/lib/dbus-1.0 )
+        endif( )
+        if( EXISTS ${dbus-root-path}/lib/libdbus-cpp.dylib )
+            set( dbus-cpp-library-name dbus-cpp )
+        endif( )
+    endif( )
 
 elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
 
-  set( CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
+    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
 
-  if( CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
-    if ( EXISTS /usr/lib64/casa/01 )
-      set( casa_packages /usr/lib64/casa/01 )
-	  set( dbusxx dbus-cpp )
-	  add_definitions( -DDBUS_CPP )
-	  set( qt4 casa-qt )
-    else( )
-	  set( dbusxx dbus-c++ )
-      set( casa_packages /usr/lib64/casapy )
-	  set( qt4 system-qt )
-    endif( )
-    if( NOT arch )
-    	set( arch linux_64b )
+    if( CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
+        if ( EXISTS /usr/lib64/casa/01 )
+            set( casa_packages /usr/lib64/casa/01 )
+            set( dbusxx dbus-cpp )
+            add_definitions( -DDBUS_CPP )
+            set( qt4 casa-qt )
+        else( )
+            set( dbusxx dbus-c++ )
+            set( casa_packages /usr/lib64/casapy )
+            set( qt4 system-qt )
+        endif( )
+        if( NOT arch )
+            set( arch linux_64b )
+        endif()
+        set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -Wno-deprecated" )
+    else()
+        set( casa_packages /usr/lib/casapy )
+        if( NOT arch )
+            set( arch linux_gnu )
+        endif()
+        set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -Wno-deprecated -Woverloaded-virtual" )
     endif()
-    set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -Wno-deprecated" )
-  else()
-    set( casa_packages /usr/lib/casapy )
-    if( NOT arch )
-        set( arch linux_gnu )
-    endif()
-    set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -Wno-deprecated -Woverloaded-virtual" )
-  endif()
 else()
-  message( WARNING "Unsupported system: ${CMAKE_SYSTEM_NAME}" )
+    message( WARNING "Unsupported system: ${CMAKE_SYSTEM_NAME}" )
 endif()
 
 set( CMAKE_MODULE_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS} )
@@ -786,7 +799,7 @@ if ( ${dbusxx} STREQUAL dbus-c++ )
 else( )
   casa_find( DBUSPP_ARCH
     INCLUDES dbus/dbus-arch-deps.h
-    PREFIX_HINTS ${DBUS_ARCH_DIR} ${casa_packages}/lib/dbus-1.0
+    PREFIX_HINTS ${DBUS_ARCH_DIR} ${casa_packages}/lib/dbus-1.0 ${dbus-arch-path-guess}
     NO_CHECK   # This header does not compile if included directly
     NO_REQUIRE
   )
@@ -799,7 +812,7 @@ else( )
              dbus-cpp/dbus.h
     INCLUDES_SUFFIXES dbus-1.0 dbus-cpp
     PREFIX_HINTS ${DBUS_ROOT_DIR} ${casa_packages}
-    LIBS casa-dbus-cpp
+    LIBS ${dbus-cpp-library-name}
     PROGRAMS dbuspp-xml2cpp
     DEPENDS ${dbus_depends}
   )
