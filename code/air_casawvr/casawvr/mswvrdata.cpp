@@ -195,19 +195,20 @@ namespace LibAIR {
       {
 	prev_time = c_times(i);
 
-	bool timeAllFlagged=true;
+	bool haveUnflaggedWvrData=false;
 	size_t iii=ii;
 	while(iii<nrows && c_times(sortedI[iii])==prev_time)
 	{
-	  // while in this timestamp, check if all rows flagged
-	  if(casa::allEQ(casa::False, c_flags(sortedI[iii]))) // i.e. not flagged
+	  // while in this timestamp, check if there is unflagged WVR data
+	  if(c_desc_id(sortedI[iii])==(int)dsc_id and 
+	     casa::allEQ(casa::False, c_flags(sortedI[iii]))) // i.e. not flagged
 	  {
-	    timeAllFlagged=false;
+	    haveUnflaggedWvrData=true;
 	    break;
 	  }
 	  iii++;
 	}
-	if(!timeAllFlagged)
+	if(haveUnflaggedWvrData)
 	{
 	  times.push_back(c_times(i));
 	  states.push_back(c_states(i));
