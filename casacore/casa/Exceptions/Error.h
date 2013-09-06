@@ -57,10 +57,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #ifdef NDEBUG
 #define AssertCc(c) {assert (c); }
 #else
-#define AssertCc(c) { utilj::throwIf (! (c), "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }
+#define AssertCc(c) { if (! c) {casa::AipsError::throwIf (True, "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }}
 #endif
 
-#define AssertAlways(c) { throwIf (! (c), "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }
+#define AssertAlways(c) { if (! c) {casa::AipsError::throwIf (True, "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }}
 
 #if defined (NDEBUG)
 #    define ThrowCc(m) \
@@ -70,9 +70,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #    define ThrowCc(m) throw AipsError ((m), __FILE__, __LINE__)
 #endif
 
-#define ThrowIf(c,m) {if (c) {casa::AipsError::throwIf ((c), (m), __FILE__, __LINE__, __PRETTY_FUNCTION__);}}
+#define ThrowIf(c,m) {if (c) {casa::AipsError::throwIf (True, (m), __FILE__, __LINE__, __PRETTY_FUNCTION__);}}
 
-#define ThrowIfError(c,m) {if (c) {casa::AipsError::throwIfError ((c), (m), __FILE__, __LINE__, __PRETTY_FUNCTION__);}}
+#define ThrowIfError(c,m) {if (c) {casa::AipsError::throwIfError (True, (m), __FILE__, __LINE__, __PRETTY_FUNCTION__);}}
 
 #define Rethrow(e,m) {throw casa::AipsError::repackageAipsError ((e),(m),__FILE__,__LINE__, __PRETTY_FUNCTION__);}
 
