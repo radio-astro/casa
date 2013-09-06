@@ -15,85 +15,120 @@
 #  os.system('buildmytasks')
 #  execfile('mytasks.py')
 #
+# In a single line:
+# os.system('buildmytasks');execfile('mytasks.py');os.chdir('/net/yildun/export/data_1/thunter/alma/data/SciVer/TWHya')
+#
 # Some regression commands to run after making major changes:
+# Note: the reason that we call plotbandpass2 here is because you cannot define a
+#    private task with the same name as an existing casa task.  So I test it with
+#    the buildmytasks approach under the name plotbandpass2, then when I am happy, 
+#    I copy task_plotbandpass2.py and plotbandpass2.xml to task_plotbandpass.py 
+#    and plotbandpass.xml.  I then commit these to the CSV cvs server in order to 
+#    get an automatic version number updated.  Finally, I copy these files to my
+#    checkout of the casa trunk and do an svn commit there.
 # ALMA data:
 #    casa 3.3 tables
 # cd /net/yildun/export/data_1/thunter/alma/data/SciVer/TWHya
-# au.plotbandpass('bandpass.bcal',showtsky=F,xaxis='freq',yaxis='amp',overlay='antenna',spw='',field='')
-# au.plotbandpass('bandpass.bcal',showtsky=F,xaxis='freq',yaxis='amp',overlay='antenna,time',spw='',field='')
-# au.plotbandpass('bandpass.bcal',showtsky=F,xaxis='freq',yaxis='both',phase=[-180,180],plotrange=[0,0,0,2])
-# au.plotbandpass('bandpass.bcal',showtsky=F,xaxis='freq',yaxis='amp',overlay='antenna',spw='',field='',chanrange='1200~2000')
-# au.plotbandpass('bandpass.bcal',showatm=T,xaxis='chan',yaxis='amp',overlay='antenna',spw='',field='',plotrange=[1200,2000,0,0])
-# au.plotbandpass('bandpass.bcal',showatm=T,xaxis='chan',yaxis='amp',spw='',field='',plotrange=[1200,3840,0,0])
-# au.plotbandpass('bandpass.bcal',showtsky=F,xaxis='chan',yaxis='amp',overlay='antenna',spw='',field='',showatm=T)
-# au.plotbandpass('bandpass.bcal',showtsky=F,xaxis='freq',yaxis='phase',overlay='antenna',spw='',field='')
-# au.plotbandpass('bandpass.bcal',showtsky=F,xaxis='freq',yaxis='phase',overlay='antenna',spw='',field='',chanrange='1200~1800')
-# au.plotbandpass('bandpass.bcal',overlay='antenna',yaxis='amp',field='0~1,4',xaxis='freq',showtsky=T)
-# au.plotbandpass('bandpass_b_skipspw19high.bcal',yaxis='amp',field='0',xaxis='freq',caltable2='bandpass_bpoly_skipspw19high.bcal',showpoints=True,spw=0,figfile='bpoly_overlay')
-# au.plotbandpass('bandpass_b_skipspw19high.bcal',yaxis='phase',field='0',xaxis='freq',caltable2='bandpass_bpoly_skipspw19high.bcal',showpoints=True,spw=0,figfile='bpoly_overlay',caltable3='bandpass_bpoly_skipspw19high.bcal')
-# au.plotbandpass('bandpass_b_skipspw19high.bcal',yaxis='both',field='0',xaxis='freq',caltable2='bandpass_bpoly_skipspw19high.bcal',showpoints=True,spw=0,figfile='bpoly_overlay',caltable3='bandpass_bpoly_skipspw19high.bcal')
-# au.plotbandpass('X3c1.tsys.fdm',overlay='antenna',yaxis='amp',field='1',xaxis='chan',figfile='tsys.png',showtsky=T) 
-# au.plotbandpass('X3c1.tsys.fdm',overlay='antenna',yaxis='amp',field='1',xaxis='chan',figfile='tsys.png',poln='y')
-# au.plotbandpass('X3c1.tsys',overlay='antenna',yaxis='amp',field='0~1,4',xaxis='chan',figfile='tsys.png')
-# au.plotbandpass('X3c1.tsys',overlay='time',yaxis='amp',field='2',xaxis='chan')
-# au.plotbandpass('X3c1.tsys',overlay='',yaxis='amp',field='',xaxis='freq',showfdm=True)
-# au.plotbandpass('X3c1.tsys',overlay='',yaxis='amp',field='2',xaxis='freq',chanrange='45~65')
-# au.plotbandpass('bandpass_bpoly_skipspw19high.bcal')
-# au.plotbandpass('bandpass.bcal',caltable2='bandpass.bcal_smooth',xaxis='freq')  
-# au.plotbandpass('bandpass.bcal',caltable2='bandpass.bcal_smooth',yaxis='phase', xaxis='freq')
-# au.plotbandpass('bandpass.bcal',caltable2='bandpass.bcal_smooth',xaxis='freq',chanrange='1000~3000')
-# au.plotbandpass('bandpass.bcal',caltable2='bandpass.bcal_smooth',xaxis='freq',showtsky=T)
-# au.plotbandpass('bandpass.bcal',caltable2='bandpass.bcal_smooth',xaxis='freq',poln='x',showflagged=True) 
-# au.plotbandpass('bandpass.bcal',caltable2='bandpass.bcal_smooth',xaxis='freq',poln='x',showflagged=True, showtsky=T)
-# au.plotbandpass(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',    yaxis='amp',xaxis='freq',figfile='tsys.png') 
-# au.plotbandpass(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',    yaxis='amp',xaxis='freq',figfile='tsys.png', showtsky=T)  
-# au.plotbandpass(caltable='X3c1.tsys',    caltable2='X3c1.tsys.fdm',yaxis='amp',xaxis='freq',figfile='tsys.png')
-# au.plotbandpass(caltable='X3c1.tsys',    caltable2='X3c1.tsys.fdm',yaxis='amp',xaxis='freq',figfile='tsys.png', showtsky=T) 
-# au.plotbandpass(caltable='X3c1.tsys',caltable2='X3c1.tsys.fdm',    yaxis='both',xaxis='freq',figfile='tsys.png',chanrange='1000~3000')
-# au.plotbandpass(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',    yaxis='both',xaxis='freq',figfile='tsys.png',chanrange='1000~3000')
-# au.plotbandpass(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',    yaxis='both',xaxis='freq',figfile='tsys.png',chanrange='1000~3000',showtsky=T) 
-# au.plotbandpass(caltable='X3c1.tsys',    caltable2='X3c1.tsys.fdm',yaxis='both',xaxis='freq',figfile='tsys.png')  
-# au.plotbandpass(caltable='X3c1.tsys',    caltable2='X3c1.tsys.fdm',yaxis='both',xaxis='freq',figfile='tsys.png', showtsky=T)  
-# au.plotbandpass(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',    yaxis='both',xaxis='freq',figfile='tsys.png',zoom='intersect')
-# au.plotbandpass(caltable='X3c1.tsys',    caltable2='X3c1.tsys.fdm',yaxis='both',xaxis='freq',figfile='tsys.png',zoom='intersect')
-# au.plotbandpass(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',yaxis='amp',xaxis='freq',figfile='tsys.png',poln='XX') 
-# au.plotbandpass(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',yaxis='amp',field='1',xaxis='freq',figfile='tsys.png',poln='YY',zoom='intersect')
-# au.plotbandpass(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',yaxis='amp',field='1',xaxis='freq',figfile='tsys.png',poln='YY',zoom='intersect',showatm=T)
-# au.plotbandpass(caltable='X3c1.tsys.fdm',yaxis='amp',field='1',xaxis='chan',figfile='tsys.png',poln='YY',zoom='intersect',showatm=T,showimage=T)
+# plotbandpass2('bandpass.bcal',showtsky=F,xaxis='freq',yaxis='amp',overlay='antenna',spw='',field='')
+# plotbandpass2('bandpass.bcal',showtsky=F,xaxis='freq',yaxis='amp',overlay='antenna,time',spw='',field='')
+# plotbandpass2('bandpass.bcal',showtsky=F,xaxis='freq',yaxis='both',phase=[-180,180],plotrange=[0,0,0,2])
+# plotbandpass2('bandpass.bcal',showtsky=F,xaxis='freq',yaxis='amp',overlay='antenna',spw='',field='',chanrange='1200~2000')
+# plotbandpass2('bandpass.bcal',showatm=T,xaxis='chan',yaxis='amp',overlay='antenna',spw='',field='',plotrange=[1200,2000,0,0])
+# plotbandpass2('bandpass.bcal',showatm=T,xaxis='chan',yaxis='amp',spw='',field='',plotrange=[1200,3840,0,0])
+# plotbandpass2('bandpass.bcal',showtsky=F,xaxis='chan',yaxis='amp',overlay='antenna',spw='',field='',showatm=T)
+# plotbandpass2('bandpass.bcal',showtsky=F,xaxis='freq',yaxis='phase',overlay='antenna',spw='',field='')
+# plotbandpass2('bandpass.bcal',showtsky=F,xaxis='freq',yaxis='phase',overlay='antenna',spw='',field='',chanrange='1200~1800')
+# plotbandpass2('bandpass.bcal',overlay='antenna',yaxis='amp',field='0~1,4',xaxis='freq',showtsky=T)
+# plotbandpass2('bandpass.bcal',overlay='baseband',yaxis='amp',field='0~1,4',xaxis='freq',showtsky=T)
+# plotbandpass2('bandpass_b_skipspw19high.bcal',yaxis='amp',field='0',xaxis='freq',caltable2='bandpass_bpoly_skipspw19high.bcal',showpoints=True,spw=0,figfile='bpoly_overlay')
+# plotbandpass2('bandpass_b_skipspw19high.bcal',yaxis='phase',field='0',xaxis='freq',caltable2='bandpass_bpoly_skipspw19high.bcal',showpoints=True,spw=0,figfile='bpoly_overlay',caltable3='bandpass_bpoly_skipspw19high.bcal')
+# plotbandpass2('bandpass_b_skipspw19high.bcal',yaxis='both',field='0',xaxis='freq',caltable2='bandpass_bpoly_skipspw19high.bcal',showpoints=True,spw=0,figfile='bpoly_overlay',caltable3='bandpass_bpoly_skipspw19high.bcal')
+# plotbandpass2('X3c1.tsys.fdm',overlay='antenna',yaxis='amp',field='1',xaxis='chan',figfile='tsys.png',showtsky=T) 
+# plotbandpass2('X3c1.tsys.fdm',overlay='antenna',yaxis='amp',field='1',xaxis='chan',figfile='tsys.png',poln='y') 
+# plotbandpass2('X3c1.tsys',overlay='antenna',yaxis='amp',field='0~1,4',xaxis='chan',figfile='tsys.png')
+# plotbandpass2('X3c1.tsys',overlay='antenna',yaxis='amp',field='0~1,4',xaxis='chan',figfile='tsys.png',showBasebandNumber=T,basebands=[1,4,3,2])
+# plotbandpass2('X3c1.tsys',overlay='time',yaxis='amp',field='2',xaxis='chan')
+# plotbandpass2('X3c1.tsys',overlay='',yaxis='amp',field='',xaxis='freq',showfdm=True)
+#
+# plotbandpass2('X3c1.tsys',overlay='',yaxis='amp',field='2',xaxis='freq',chanrange='45~65')
+# plotbandpass2('bandpass_bpoly_skipspw19high.bcal')
+# plotbandpass2('bandpass.bcal',caltable2='bandpass.bcal_smooth',xaxis='freq')  
+# plotbandpass2('bandpass.bcal',caltable2='bandpass.bcal_smooth',yaxis='phase', xaxis='freq')
+# plotbandpass2('bandpass.bcal',caltable2='bandpass.bcal_smooth',xaxis='freq',chanrange='1000~3000')
+# plotbandpass2('bandpass.bcal',caltable2='bandpass.bcal_smooth',xaxis='freq',showtsky=T)
+# plotbandpass2('bandpass.bcal',caltable2='bandpass.bcal_smooth',xaxis='freq',poln='x',showflagged=True) 
+# plotbandpass2('bandpass.bcal',caltable2='bandpass.bcal_smooth',xaxis='freq',poln='x',showflagged=True, showtsky=T)
+# plotbandpass2(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',    yaxis='amp',xaxis='freq',figfile='tsys.png') 
+# plotbandpass2(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',    yaxis='amp',xaxis='freq',figfile='tsys.png', showtsky=T)  
+# plotbandpass2(caltable='X3c1.tsys',    caltable2='X3c1.tsys.fdm',yaxis='amp',xaxis='freq',figfile='tsys.png')
+# plotbandpass2(caltable='X3c1.tsys',    caltable2='X3c1.tsys.fdm',yaxis='amp',xaxis='freq',figfile='tsys.png', showtsky=T) 
+# plotbandpass2(caltable='X3c1.tsys',caltable2='X3c1.tsys.fdm',    yaxis='both',xaxis='freq',figfile='tsys.png',chanrange='1000~3000')
+# plotbandpass2(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',    yaxis='both',xaxis='freq',figfile='tsys.png',chanrange='1000~3000')
+# plotbandpass2(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',    yaxis='both',xaxis='freq',figfile='tsys.png',chanrange='1000~3000',showtsky=T) 
+# plotbandpass2(caltable='X3c1.tsys',    caltable2='X3c1.tsys.fdm',yaxis='both',xaxis='freq',figfile='tsys.png')  
+# plotbandpass2(caltable='X3c1.tsys',    caltable2='X3c1.tsys.fdm',yaxis='both',xaxis='freq',figfile='tsys.png', showtsky=T)  
+# plotbandpass2(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',    yaxis='both',xaxis='freq',figfile='tsys.png',zoom='intersect')
+# plotbandpass2(caltable='X3c1.tsys',    caltable2='X3c1.tsys.fdm',yaxis='both',xaxis='freq',figfile='tsys.png',zoom='intersect')
+# plotbandpass2(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',yaxis='amp',xaxis='freq',figfile='tsys.png',poln='XX') 
+# plotbandpass2(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',yaxis='amp',field='1',xaxis='freq',figfile='tsys.png',poln='YY',zoom='intersect')
+# plotbandpass2(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',yaxis='amp',field='1',xaxis='freq',figfile='tsys.png',poln='YY',zoom='intersect',showatm=T)
+# plotbandpass2(caltable='X3c1.tsys.fdm',yaxis='amp',field='1',xaxis='chan',figfile='tsys.png',poln='YY',zoom='intersect',showatm=T,showimage=T)
 #
 # tests for multi-field solution overlay: in SciVer/TWHya
-# au.plotbandpass('band7multi_a6p7_titan.bcal',caltable2='band7multi_b.bcal',debug=F,xaxis='freq',yaxis='amp',chanrange='')
-# au.plotbandpass(caltable='band7multi_b.bcal',caltable3='band7multi_bpoly_a6p7_titan.bcal',caltable2='band7multi_bpoly.bcal',xaxis='freq',yaxis='both')
+# plotbandpass2('band7multi_a6p7_titan.bcal',caltable2='band7multi_b.bcal',debug=F,xaxis='freq',yaxis='amp',chanrange='')
+# plotbandpass2(caltable='band7multi_b.bcal',caltable3='band7multi_bpoly_a6p7_titan.bcal',caltable2='band7multi_bpoly.bcal',xaxis='freq',yaxis='both')
 #
 # ALMA data, casa 3.4 tables:
+# os.system('buildmytasks');execfile('mytasks.py');os.chdir('/lustre/naasc/thunter/alma/SV_data_TWHya/3.4guide')
 # cd /lustre/naasc/thunter/alma/SV_data_TWHya/3.4guide
-# au.plotbandpass(caltable='bandpass_all_bpoly_dv04',xaxis='freq',yaxis='both')       
-# au.plotbandpass(caltable='bandpass_all_b_odd_dv04',caltable2='bandpass_all_bpoly_dv04',xaxis='freq',yaxis='both')
+# plotbandpass2(caltable='bandpass_all_bpoly_dv04',xaxis='freq',yaxis='both')       
+# plotbandpass2(caltable='bandpass_all_b_odd_dv04',caltable2='bandpass_all_bpoly_dv04',xaxis='freq',yaxis='both')
 # ALMA data, FDM+TDM in same caltable
-# au.plotbandpass(caltable='bandpass_all_b_odd_dv04',xaxis='freq',yaxis='phase',chanrange='', showatm=True)
-# au.plotbandpass(caltable='bandpass_all_b_odd_dv04',xaxis='freq',yaxis='phase',chanrange='', channeldiff=5)
+# plotbandpass2(caltable='bandpass_all_b_odd_dv04',xaxis='freq',yaxis='phase',chanrange='', showatm=True)
+# plotbandpass2(caltable='bandpass_all_b_odd_dv04',xaxis='freq',yaxis='phase',chanrange='', channeldiff=5)
 #
 # ALMA 1-pol data:
 # cd /lustre/naasc/thunter/singlePol
-# au.plotbandpass('uid___A002_X494155_X23a.ms.split.bandpass',xaxis='freq')
+# plotbandpass2('uid___A002_X494155_X23a.ms.split.bandpass',xaxis='freq')
 #
 # ALMA 4-pol data:
-# cd /lustre/naasc/nmarceli/pipeline/root/2011.0.00054.CSV_2013_04_18T17_19_00.609/MOUS_uid___A002_X576a5e_X1e/SBS_uid___A002_X576a5e_X21/working
-# au.plotbandpass('uid___A002_X61068c_Xc3.ms.spw1_3_5_7.solintinf_7_8125MHz.bcal.s9_2.tbl',xaxis='freq')
+# cd /lustre/naasc/thunter/cycle1/4pol/
+# plotbandpass2('uid___A002_X60e47a_X8a6.ms.spw0_2_4_6.solintinf_7_8125MHz.bcal.s8_2.tbl',xaxis='freq')
 #
 # EVLA dual-pol data:
+# os.system('buildmytasks');execfile('mytasks.py');os.chdir('/lustre/naasc/thunter/evla/10C-186/K_BnA_cont')
 #  cd /lustre/naasc/thunter/evla/10C-186/K_BnA_cont
-#  au.plotbandpass('bandpasspcal.bcal',poln='',yaxis='both')
-#  au.plotbandpass('bandpasspcal.bcal',poln='',yaxis='phase',overlay='antenna')
-#  au.plotbandpass('bandpasspcal.bcal',poln='',yaxis='amp',overlay='antenna', chanrange='0~30',xaxis='freq')
-#  au.plotbandpass('bandpasspcal.bcal',poln='',yaxis='both',showatm=T)
-#  au.plotbandpass('bandpasspcal.bcal',poln='LL',yaxis='both')
+#  new style table from 4.1.0
+#  plotbandpass2('bandpass_4.1.0.bcal',poln='',yaxis='amp',overlay='spw',xaxis='freq')
+#  old style 3.3 tables
+#  plotbandpass2('bandpasspcal.bcal',poln='',yaxis='amp',overlay='spw',xaxis='freq')
+#  plotbandpass2('bandpasspcal.bcal',poln='',yaxis='amp',overlay='baseband',xaxis='freq')
+#  plotbandpass2('bandpasspcal.bcal',poln='',yaxis='amp',overlay='time',xaxis='freq')
+#  plotbandpass2('bandpasspcal.bcal',poln='',yaxis='both')
+#  plotbandpass2('bandpasspcal.bcal',poln='',yaxis='phase',overlay='antenna')
+#  plotbandpass2('bandpasspcal.bcal',poln='',yaxis='amp',overlay='antenna', chanrange='0~30',xaxis='freq')
+#  plotbandpass2('bandpasspcal.bcal',poln='',yaxis='both',showatm=T)
+#  plotbandpass2('bandpasspcal.bcal',poln='LL',yaxis='both')
 #
 # EVLA single-pol data:
 #  cd /lustre/naasc/thunter/evla/AB1346/g19.36
-#  au.plotbandpass('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
+#  new style table from 4.1.0
+#   N/A
+#  old style 3.3 tables
+#  plotbandpass2('bandpass.bcal',yaxis='amp',xaxis='freq',overlay='spw')
+#  plotbandpass2('bandpass.bcal',yaxis='phase',xaxis='freq',overlay='baseband')
+#  plotbandpass2('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
+#  plotbandpass2('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq', showatm=T)
+#  plotbandpass2('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
+#  plotbandpass2('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq',showatm=T)
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.29 2013/07/31 15:32:51 thunter Exp $" 
+# SMA data
+# cd /net/yildun/export/data_1/thunter/sma/ngc6334_SM2_filler/
+# plotbandpass2('sm2_rx0.usb.if2.tsys.ms.bandpass.bcal')
+# plotbandpass2('sm2_rx0.usb.if2.tsys.ms.bandpass.bcal',overlay='baseband',xaxis='freq',figfile='sma.png')
+# plotbandpass2('sm2_rx0.usb.if2.tsys.ms.bandpass.bcal',overlay='baseband',xaxis='chan',figfile='sma.png')
+#
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.30 2013/09/06 19:14:46 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -102,6 +137,7 @@ import re  # used for testing if a string is a float
 import casadef     # necessary to read the casa version strings
 from taskinit import * # necessary for tb.open() to work
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter, ScalarFormatter
+import inspect
 
 TOP_MARGIN  = 0.25   # Used if showatm=T or showtksy=T
 BOTTOM_MARGIN = 0.25 # Used if showfdm=T
@@ -162,6 +198,15 @@ developerEmail = "thunter@nrao.edu"
     # taken from Stokes.h in casa, for reference only
 #    (Undefined, I,Q,U,V,RR,RL,LR,LL,XX,XY,YX,YY) = range(13)  
 
+def version(showfile=True):
+    """
+    Returns the CVS revision number.
+    """
+    myversion = "$Id: task_plotbandpass.py,v 1.30 2013/09/06 19:14:46 thunter Exp $" 
+    if (showfile):
+        print "Loaded from %s" % (__file__)
+    return myversion
+
 def refTypeToString(rtype):
     rtypes = ['REST','LSRK','LSRD','BARY','GEO','TOPO','GALACTO','LGROUP','CMB']
     return(rtypes[rtype])
@@ -186,7 +231,8 @@ def buildAntString(antID,msFound,msAnt):
       
 def makeplot(figfile,msFound,msAnt,overlayAntennas,pages,pagectr,density,
              interactive,antennasToPlot,spwsToPlot,overlayTimes,
-             locationCalledFrom,debug):
+             locationCalledFrom, resample='1', debug=False,
+             figfileSequential=False, figfileNumber=0):
     if (type(figfile) == str):
         if (figfile.find('/')>=0):
             directories = figfile.split('/')
@@ -204,21 +250,27 @@ def makeplot(figfile,msFound,msAnt,overlayAntennas,pages,pagectr,density,
     t = pages[pagectr][PAGE_TIME] # + 1
     antstring, Antstring = buildAntString(antennasToPlot[pages[pagectr][PAGE_ANT]], msFound, msAnt)
     figfile = figfile.split('.png')[0]
-    if (msFound):
-        if (overlayAntennas):
-            plotfilename = figfile+'.spw%02d'%(ispw)+'.t'+str(t)
-        elif (overlayTimes):
-            plotfilename = figfile+'.'+antstring+'.spw%02d'%(ispw)
-        else:
-            plotfilename = figfile+'.'+antstring+'.spw%02d'%(ispw)+'.t'+str(t)
+    if (figfileSequential):
+        plotfilename = figfile + '.%03d' % (figfileNumber)
     else:
-        if (overlayAntennas):
-            plotfilename = figfile+'.spw%02d'%(ispw)+'.t'+str(t)
-        elif (overlayTimes):
-            plotfilename = figfile+'.ant'+antstring+'.spw%02d'%(ispw)
+        if (msFound):
+            if (overlayAntennas):
+                plotfilename = figfile+'.spw%02d'%(ispw)+'.t'+str(t)
+            elif (overlayTimes):
+                plotfilename = figfile+'.'+antstring+'.spw%02d'%(ispw)
+            else:
+                plotfilename = figfile+'.'+antstring+'.spw%02d'%(ispw)+'.t'+str(t)
         else:
-            plotfilename = figfile+'.ant'+antstring+'.spw%02d'%(ispw)+'.t'+str(t)
-    plotfilename += '.png'
+            if (overlayAntennas):
+                plotfilename = figfile+'.spw%02d'%(ispw)+'.t'+str(t)
+            elif (overlayTimes):
+                plotfilename = figfile+'.ant'+antstring+'.spw%02d'%(ispw)
+            else:
+                plotfilename = figfile+'.ant'+antstring+'.spw%02d'%(ispw)+'.t'+str(t)
+    if (int(resample) > 1):
+        plotfilename += '.resample%d.png' % (int(resample))
+    else:
+        plotfilename += '.png'
     if (interactive == False or True):
         casalogPost(debug,"Building %s" % (plotfilename))
     pb.savefig(plotfilename, format='png', dpi=density)
@@ -240,19 +292,6 @@ def mjdsecArrayToUTString(timerangeListTimes):
     return(timerangeListTimesString)
 
 def utstring(mjdsec, xframeStart=110):
-    (mjd, dateTimeString) = au.mjdSecondsToMJDandUT(mjdsec)
-    tokens = dateTimeString.split()
-    hoursMinutes = tokens[1][0:len(tokens[1])-3]
-    hoursMinutesSeconds = tokens[1][0:len(tokens[1])]
-    if (xframeStart == 110):  # 2011-01-01 UT 00:00
-        return(tokens[0]+' '+tokens[2]+' '+hoursMinutes)
-    elif (xframeStart == 3):
-        return(hoursMinutesSeconds)
-    else:  # 00:00
-        return(hoursMinutes)
-    
-def utstring(mjdsec, xframeStart=110):
-#    print "utstring(%f)" % mjdsec
     (mjd, dateTimeString) = mjdSecondsToMJDandUT(mjdsec)
     tokens = dateTimeString.split()
     hoursMinutes = tokens[1][0:len(tokens[1])-3]
@@ -315,13 +354,11 @@ def openBpolyFile(caltable, debug):
       spwBP = []
       for c in cal_desc_id:
           spwBP.append(spws[0][c])
-      if (debug): casalog.post("Calling mytb.done 0")
       mytb.done()
       return([polyMode, polyType, nPolyAmp, nPolyPhase, scaleFactor, nRows, nSpws, nUniqueTimesBP,
               uniqueTimesBP, frequencyLimits, increments, frequenciesGHz,
               polynomialPhase, polynomialAmplitude, times, antenna1, cal_desc_id, spwBP])
    else:
-      if (debug): casalog.post("Calling mytb.done 1")
       mytb.done()
       return([])
    # end of openBpolyFile()
@@ -406,7 +443,6 @@ def getCorrType(msName, spwsToPlot, mymsmd, debug=False):
                 # Need to allow non-VLA, non-ALMA to stop here
                 break
     mytb.close()
-    mytb.done()
     corr_type_string = []
     if (len(corr_type) == 4):
         casalogPost(debug,"This is a 4-polarization dataset.")
@@ -435,9 +471,11 @@ def writeArgument(f,name,arg):
     f.write(s+'\n')
     return(t)
 
-def channelDifferences(y, x):
+def channelDifferences(y, x, resample=1):
     """
     Takes a vector, and computes the channel-to-channel derivative.
+    Optionally, it will also resample the data and compute the
+    derivative.
     - Todd Hunter
     """
     x = np.array(x)
@@ -445,11 +483,25 @@ def channelDifferences(y, x):
     if (len(x) > 1):
         channelWidth = x[1]-x[0]
         d = (np.diff(y)/np.diff(x))
-        d *= channelWidth 
+        newy = d*channelWidth 
         newx = (x[1:]+x[:-1])/2.  # midpoints of input x-axis
-        return(d, newx)
     else:
-        return(y,x)
+        newx = x
+        newy = y
+    if (resample > 1):
+        x,y = resampleSolution(x,y,resample)
+        if (len(x) > 1):
+            channelWidth = x[1]-x[0]
+            d = (np.diff(y)/np.diff(x))
+            resy = d*channelWidth 
+            resx = (x[1:]+x[:-1])/2.  # midpoints of input x-axis
+        else:
+            resx = x
+            resy = y
+    else:
+        resy = newy
+        resx = newx
+    return(newy, newx, resy, resx)
 
 def getDataColumnName(inputMs, debug):
     mytb = createCasaTool(tbtool)
@@ -466,7 +518,6 @@ def getDataColumnName(inputMs, debug):
         correctedDataColumnName = 'CORRECTED_DATA'
     if 'MODEL_DATA' in colnames:
         modelDataColumnName = 'MODEL_DATA'
-    if (debug): casalog.post("Calling mytb.done 2")
     mytb.done()
     return(dataColumnName)
 
@@ -524,13 +575,14 @@ def drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,ti
                            timerangeListTimes, solutionTimeThresholdSeconds,debugSloppyMatch,
                            ystartOverlayLegend,debug,mysize, fieldsToPlot,myUniqueColor,
                            timeHorizontalSpacing, fieldIndex,overlayColors,
-                           antennaVerticalSpacing, overlayAntennas, timerangeList, caltableTitle):
+                           antennaVerticalSpacing, overlayAntennas, 
+                           timerangeList, caltableTitle,
+                           mytime, scansToPlot, scansForUniqueTimes):
     """
     Draws the legend at the top of the page, if it is the correct time to do so,
     including the overlayTimes, the 'UT' label, and the caltable name.
     """
     if (xframe == firstFrame):
-#      if (overlayAntennas == False):
         # draw title including caltable name
         pb.text(xstartTitle, ystartTitle, caltableTitle, size=titlesize,
                 color='k', transform=pb.gcf().transFigure)
@@ -561,7 +613,10 @@ def drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,ti
             for tlt in timerangeListTimes:
                 if (debug):
                     print "3)checking time %d" % (t)
-                if (sloppyMatch(uTPFPS[a],timerangeListTimes,solutionTimeThresholdSeconds,debugSloppyMatch)):
+                if (sloppyMatch(uTPFPS[a],timerangeListTimes,
+                                solutionTimeThresholdSeconds,
+                                mytime, scansToPlot, scansForUniqueTimes,
+                                debugSloppyMatch)):
                     myUniqueTime = uTPFPS[a]
                     if (debug):
                         print "3)setting myUniqueTime to %d" % (myUniqueTime)
@@ -576,27 +631,36 @@ def drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,ti
             else:
                 pb.text(x0, y0, legendString,fontsize=mysize, transform=pb.gcf().transFigure)
 
+def lineNumber():
+    """Returns the current line number in our program."""
+    return inspect.currentframe().f_back.f_lineno
+        
 def drawAtmosphereAndFDM(showatm, showtsky, atmString, subplotRows, mysize, TebbSky,
                          TebbSkyImage,plotrange, xaxis, atmchan, atmfreq, transmission,
                          subplotCols, showatmPoints,xframe, channels,LO1,atmchanImage,
                          atmfreqImage,transmissionImage, firstFrame,showfdm,nChannels,tableFormat,
                          originalSpw_casa33, chanFreqGHz_casa33,originalSpw,chanFreqGHz,
-                         overlayTimes, overlayAntennas, xant, antennasToPlot):
+                         overlayTimes, overlayAntennas, xant, antennasToPlot, overlaySpws,
+                         baseband, showBasebandNumber, basebandDict):
     """
     If requested by the user at the command line, draw the atmospheric curve
     and the FDM window locations.
     """
+    mylineno = lineNumber()
     if ((showatm or showtsky) and len(atmString) > 0): 
         DrawAtmosphere(showatm, showtsky, subplotRows, atmString,
                        mysize, TebbSky, plotrange, xaxis, atmchan,
                        atmfreq, transmission, subplotCols,
-                       showatmPoints=showatmPoints, xframe=xframe, channels=channels)
+                       showatmPoints=showatmPoints, xframe=xframe, 
+                       channels=channels,
+                       mylineno=mylineno,xant=xant)
         if (LO1 != ''):
             # Now draw the image band
             DrawAtmosphere(showatm,showtsky, subplotRows, atmString,
                 mysize, TebbSkyImage, plotrange, xaxis,
                 atmchanImage, atmfreqImage, transmissionImage,
-                subplotCols, LO1, xframe, firstFrame, showatmPoints, channels=channels)
+                subplotCols, LO1, xframe, firstFrame, showatmPoints, 
+                channels=channels, mylineno=mylineno,xant=xant)
     # The following case is needed for the case that overlay='antenna,time' and
     # the final timerange is flagged on the final antenna.
 #    if (overlayTimes==False or overlayAntennas==False or xant==antennasToPlot[-1]):
@@ -605,13 +669,15 @@ def drawAtmosphereAndFDM(showatm, showtsky, atmString, subplotRows, mysize, Tebb
     if (True):
         if (xaxis.find('freq')>=0 and showfdm and nChannels <= 256):
             if (tableFormat == 33):
-                showFDM(originalSpw_casa33, chanFreqGHz_casa33)
+                showFDM(originalSpw_casa33, chanFreqGHz_casa33,
+                        baseband, showBasebandNumber, basebandDict)
             else:
-                showFDM(originalSpw, chanFreqGHz)
+                showFDM(originalSpw, chanFreqGHz,
+                        baseband, showBasebandNumber, basebandDict)
 
 def DrawPolarizationLabelsForOverlayTime(xstartPolLabel,ystartPolLabel,corr_type,polsToPlot,
                                          channeldiff,ystartMadLabel,subplotRows,gamp_mad,mysize,
-                                         ampmarkstyle,markersize,ampmarkstyle2):
+                                         ampmarkstyle,markersize,ampmarkstyle2, gamp_std):
     """
     Currently this is only called for amp vs. X plots. The corresponding code for phase
     vs. X plots is still inside plotbandpass().  But this is okay because overlay='time'
@@ -622,7 +688,7 @@ def DrawPolarizationLabelsForOverlayTime(xstartPolLabel,ystartPolLabel,corr_type
     if (corrTypeToString(corr_type[0]) in polsToPlot):
         if (channeldiff > 0):
             pb.text(x0, ystartMadLabel-0.03*subplotRows*0,
-                    corrTypeToString(corr_type[0])+' MAD = %.4f'%(gamp_mad[0]['mad']),
+                    corrTypeToString(corr_type[0])+' MAD = %.4f, St.Dev = %.4f'%(gamp_mad[0]['mad'], gamp_std[0]['std']),
                     color='k',size=mysize, transform=pb.gca().transAxes)
         if (ampmarkstyle.find('-')>=0):
             pb.text(x0, y0, corrTypeToString(corr_type[0])+' solid', color='k',
@@ -636,7 +702,7 @@ def DrawPolarizationLabelsForOverlayTime(xstartPolLabel,ystartPolLabel,corr_type
         if (corrTypeToString(corr_type[1]) in polsToPlot):
             if (channeldiff > 0):
                 pb.text(x0, ystartMadLabel-0.03*subplotRows*1,
-                        corrTypeToString(corr_type[1])+' MAD = %.4f'%(gamp_mad[1]['mad']),
+                        corrTypeToString(corr_type[1])+' MAD = %.4f, St.Dev = %.4f'%(gamp_mad[1]['mad'], gamp_std[1]['std']),
                         color='k',size=mysize, transform=pb.gca().transAxes)
             if (ampmarkstyle2.find('--')>=0):
                 pb.text(x0, y0-0.03*subplotRows, corrTypeToString(corr_type[1])+' dashed',
@@ -660,6 +726,7 @@ def casalogPost(debug,mystring):
     casalog.post(mystring)
     if (debug): print mystring
     
+DEFAULT_PLATFORMING_THRESHOLD = 10.0 # unused if platformingSigma != 0
 def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                  xaxis='chan', figfile='', plotrange=[0,0,0,0], 
                  caltable2='', overlay='', showflagged=False, timeranges='',
@@ -670,7 +737,10 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                  solutionTimeThresholdSeconds=30.0, debug=False,
                  phase='',  vis='', showtsky=False, showfdm=False,showatmfield='',
                  lo1='', showimage=False, showatmPoints=False, parentms='', 
-                 pdftk='pdftk', channeldiff=False, edge=8):
+                 pdftk='pdftk', channeldiff=False, edge=8, resample=1,
+                 platformingThreshold=DEFAULT_PLATFORMING_THRESHOLD,
+                 platformingSigma=5.0, basebands=[], showBasebandNumber=False,
+                 scans='', figfileSequential=False):
     """
     This is a task to plot bandpass and Tsys calibration tables faster and more
     flexibly than plotcal, including the ability to overlay the atmospheric transmission,
@@ -694,8 +764,12 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         print "   gs='gs', convert='convert', chanrange='', debug=False,"
         print "   solutionTimeThresholdSeconds=30.0, phase='', vis='', showtsky=False,"
         print "   showfdm=False, showatmfield='', lo1='', showimage=False,"
-        print "   showatmPoints=False, parentms='', pdftk='pdftk')"
+        print "   showatmPoints=False, parentms='', pdftk='pdftk', channeldiff=False,"
+        print "   edge=8, resample=1, vis='',platformingThreshold=%f," % (DEFAULT_PLATFORMING_THRESHOLD)
+        print "   platformingSigma=%.1f, basebands=[], showBasebandNumber=False," % (5.0)
+        print "   scans='')"
         print " antenna: must be either an ID (int or string or list), or a single antenna name or list"
+        print " basebands: show only spws from the specified baseband or list of basebands (default:None=all)"
         print " buildpdf: True/False, if True and figfile is set, assemble pngs into a pdf"
         print " caltable: a bandpass table, of type B or BPOLY"
         print " caltable2: a second cal table, of type BPOLY or B, to overlay on a B table"
@@ -707,23 +781,31 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         print " edge: the number of edge channels to ignore in finding outliers (for channeldiff>0)"
         print " field: must be an ID, source name, or list thereof; can use trailing *: 'J*'"
         print " figfile: the base_name of the png files to save: base_name.antX.spwY.png"
+        print " figfileSequential: naming scheme, False: name by spw/antenna (default)"
+        print "                    True: figfile.1.png, figfile.2.png, etc."
         print " gs: full path for ghostscript command (in case it's not found)"
         print " interactive: if False, then figfile will run to completion automatically and no gui"
         print " lo1: specify the LO1 setting (in GHz) for the observation"
-        print " overlay: 'antenna' or 'time', make 1 plot with different items in colors"
-        print " showflagged:  show the values of data, even if flagged"
+        print " overlay: 'antenna','time','spw', or 'baseband', make 1 plot with different items in colors"
         print " markersize: size of points (default=3)"
         print " vis: name of the ms for this table, in case it does not match the string in the caltable"
         print " parentms: name of the parent ms, in case the ms has been previously split"
         print " pdftk: full path for pdftk command (in case it's not found)"
         print " phase: the y-axis limits to use for phase plots when yaxis='both'"
+        print " platformingSigma: declare platforming if the amplitude derivative exceeds this many times the MAD"
+        print " platformingThreshold: if platformingSigma=0, then declare platforming if the amplitude"
+        print "                       derivative exceeds this percentage of the median"
         print " plotrange: define axis limits: [x0,x1,y0,y1] where 0,0 means auto"
         print " poln: polarizations to plot (e.g. 'XX','YY','RR','LL' or '' for both)"
         print " pwv: define the pwv to use for the showatm option: 'auto' or value in mm"
+        print " resample: channel expansion factor to use when computing MAD of derivative (for channeldiff>0)"
+        print " scans: show only solutions for the specified scans (int, list, or string)"
         print " showatm: compute and overlay the atmospheric transmission curve"
         print " showatmfield: for overlay='time', use first observation of this fieldID or name"
         print " showatmPoints: draw atmospheric curve with points instead of a line"
+        print " showBasebandNumber: put the BBC_NO in the title of each plot"
         print " showfdm: when showing TDM spws with xaxis='freq', draw locations of FDM spws"
+        print " showflagged:  show the values of data, even if flagged"
         print " showimage: also show the atmospheric curve for the image sideband (in black)"
         print " showtsky: compute and overlay the sky temperature curve instead of transmission"
         print " showlines: draw lines connecting the data (default=T for amp, F for phase)"
@@ -756,6 +838,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
     chanFreqGHz = None
     # initialize arguments to DrawPolarizationLabelsForOverlayTime()
     gamp_mad = None
+    gamp_std = None
+    figfileNumber = 0  # only used if figfileSequential == True
     
     if (False):
       # Write a .last file
@@ -831,10 +915,10 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
     if (plotrange=='' or plotrange==[]):
         plotrange = [0,0,0,0]
     if (type(plotrange) != list):
-        print "plotrange must be an array:  [0,1,-180,180]"
+        print "plotrange must be an array: e.g. [0,1,-180,180]"
         return()
     if (len(plotrange) < 4):
-        print "plotrange must be an array:  [0,1,-180,180]"
+        print "plotrange must be an array: e.g. [0,1,-180,180]"
         return()
     if (phase != ''):
         if (type(phase) != list):
@@ -848,6 +932,11 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         print "edge must be >= 0"
         return(vm)
     
+    if (resample < 1):
+        print "resample must be an integer >= 1"
+        return(vm)
+    resample = int(resample)
+
     if (buildpdf and figfile==''):
         print "With buildPDF=True, you must specify figfile='yourFileName' (.png will be appended if necessary)."
         return()
@@ -929,9 +1018,10 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             polsToPlot = [poln]
         
           
-    if ((overlay in ['antenna', 'time', '', 'antenna,time', 'time,antenna']) == False): # try to support antenna,time
-       print "Unrecognized option for overlay: only 'antenna' and 'time' are supported, not both."
-       return()
+    if ((overlay in ['antenna', 'spw', 'time', 'baseband', '',
+                     'antenna,time', 'time,antenna']) == False):
+        print "Unrecognized option for overlay: only 'antenna', 'spw', 'baseband', 'time' and 'antenna,time' are supported."
+        return()
        
     allowedFrames = [11,22,32,42]
     if (int(subplot) > 100):
@@ -1001,6 +1091,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         fstringLimit = 12 # character length of multi-field overlay title string
     
     xframe = xframeStart
+    alreadyPlottedAmp = False  # needed for (overlay='baseband', yaxis='both')
     xcolor = 'b'
     ycolor = 'g'
     pcolor = ['b','g']
@@ -1076,7 +1167,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
     amplitudeWithPhase = (yaxis.find('both')>=0 or yaxis.find('ap')>=0)
     if (amplitudeWithPhase):
         myhspace = 0.30
-        if (overlay.find('antenna')>=0 or overlay.find('time')>=0):
+        if (overlay.find('antenna')>=0 or overlay.find('time')>=0  or overlay.find('spw')>=0):
             print "Option 'overlay' is incompatible with yaxis='both'.  Pick either amp or phase."
             return()
     else:
@@ -1101,6 +1192,18 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
     except:
         print "Could not open the caltable = %s" % (caltable)
         return()
+    if (caltable[0] != '/'):
+        # print this so when someone sends me a bug report I can find their data!
+        try:
+            print "caltable = %s:%s/%s" % (os.uname()[1], os.getcwd(), caltable)
+        except:
+            print "caltable = localhost:%s/%s" % (os.getcwd(), caltable)
+    else:
+        try:
+            print "caltable = %s:%s" % (os.uname()[1], caltable)
+        except:
+            print "caltable = localhost:%s" % (caltable)
+  
     if (len(caltable) > 100):
         caltableTitle = '...' + caltable[-100:]
     else:
@@ -1157,9 +1260,24 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             originalChannelRange = mytb.getcol('CHAN_RANGE')
             originalChannelStart = originalChannelRange[0][0][:][0]
         mytb.close()
+        try:
+            mytb.open(msName+'/SPECTRAL_WINDOW')
+            refFreq = mytb.getcol('REF_FREQUENCY')    
+            net_sideband = mytb.getcol('NET_SIDEBAND')
+            measFreqRef = mytb.getcol('MEAS_FREQ_REF')
+            originalSpw_casa33 = range(len(measFreqRef))
+            chanFreqGHz_casa33 = []     # used by showFDM
+            for i in originalSpw_casa33:
+                # They array shapes can vary.
+                chanFreqGHz_casa33.append(1e-9 * mytb.getcell('CHAN_FREQ',i))
+            mytb.close()
+        except:
+            print "2) Could not open the associated measurement set tables (%s). Will not translate antenna names." % (msName)
     else:  # 3.4
         tableFormat = 34
         cal_desc_id = mytb.getcol('SPECTRAL_WINDOW_ID')
+        cal_scans = mytb.getcol('SCAN_NUMBER')
+        unique_cal_scans = np.unique(cal_scans)
         ParType = mytb.getkeyword('ParType')    # string = 'Complex'
         msName = mytb.getkeyword('MSName')      
         VisCal = mytb.getkeyword('VisCal')      # string = 'B TSYS'
@@ -1183,6 +1301,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         print "This version of casa is too old to use the msmd tool.  Use au.plotbandpass instead."
         return
     mymsmd = createCasaTool(msmdtool)
+    observatoryName = ''
     if (debug): print  "msName = %s." % (msName)
     if (os.path.exists(msName) or os.path.exists(os.path.dirname(caltable)+'/'+msName)):
         if (os.path.exists(msName) == False):
@@ -1202,6 +1321,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             if (debug): print "msAnt = %s" % (str(msAnt))
 #            msFields = mymsmd.namesforfields(range(mymsmd.nfields())) # bombs if split has been run on subset of fields
             msFields = mymsmd.namesforfields()
+            observatoryName = mymsmd.observatorynames()[0]
             casalogPost(debug,"Available antennas = %s" % (str(msAnt)))
         except:
             print "1)Could not open the associated measurement set tables (%s). Will not translate antenna names or frequencies." % (msName)
@@ -1221,6 +1341,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                 msAnt = mymsmd.antennanames(range(mymsmd.nantennas()))
 #                msFields = mymsmd.namesforfields(range(mymsmd.nfields())) # bombs if split has been run on subset of fields
                 msFields = mymsmd.namesforfields()
+                observatoryName = mymsmd.observatorynames()[0]
                 casalogPost(debug,"Available antennas = %s" % (str(msAnt)))
             except:
                 print "1b) Could not open the associated measurement set tables (%s). Will not translate antenna names or channels to frequencies." % (msName)
@@ -1254,12 +1375,36 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             chanFreqGHz.append(newfreqs)
   
     uniqueSpwsInCalTable = np.unique(cal_desc_id)
+
+    # initial calculation for final message if not all spws appear with overlay='antenna'
+    uniqueTimes = sloppyUnique(np.unique(times), 1.0)
+    nUniqueTimes = len(uniqueTimes)
+    if (nUniqueTimes == 1):
+        solutionTimeSpread = 0
+    else:
+        solutionTimeSpread = np.max(uniqueTimes)-np.min(uniqueTimes)
+    casalogPost(debug,"Found solutions with %d unique times (within a threshold of 1.0 second)." % (nUniqueTimes))
+
     uniqueTimes = sloppyUnique(np.unique(times), solutionTimeThresholdSeconds)
     nUniqueTimes = len(uniqueTimes)
     if (nUniqueTimes == 1):
-        casalogPost(debug,"Found solutions with %d unique time within a threshold of %d seconds." % (nUniqueTimes,solutionTimeThresholdSeconds))
+        casalogPost(debug,"Found solutions with %d unique time (within a threshold of %d seconds)." % (nUniqueTimes,solutionTimeThresholdSeconds))
     else:
         casalogPost(debug,"Found solutions with %d unique times (within a threshold of %d seconds)." % (nUniqueTimes,solutionTimeThresholdSeconds))
+
+    scansForUniqueTimes = []
+    if (tableFormat >= 34):
+        if (len(unique_cal_scans) == 1):
+            casalogPost(debug,"Found solutions with %d unique scan number %s" % (len(unique_cal_scans), str(unique_cal_scans)))
+        else:
+            casalogPost(debug,"Found solutions with %d unique scan numbers %s" % (len(unique_cal_scans), str(unique_cal_scans)))
+
+        scansForUniqueTimes, nUniqueTimes = computeScansForUniqueTimes(uniqueTimes, cal_scans, times, unique_cal_scans)
+    elif (scans != ''):
+        print "Selection by scan is not support for old-style tables that do not have the scan number filled."
+        return
+    uniqueTimesCopy = uniqueTimes[:]
+
     mystring = ''
     if (debug):
        for u in uniqueTimes:
@@ -1316,6 +1461,66 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         if (myspw not in uniqueSpwsInCalTable):
             print "spw %d is not in the solution" % (myspw)
             return
+        
+    for myspw in spwsToPlot:
+        if (myspw not in uniqueSpwsInCalTable):
+            print "WARNING: spw %d is not in the solution. Removing it from the list to plot." % (myspw)
+            spwsToPlot.remove(myspw)
+            if (casadef.casa_version >= '4.1.0'):
+# #              nonwvrspws = list(set(range(mymsmd.nspw())).difference(set(mymsmd.wvrspws())))
+                if (myspw not in range(mymsmd.nspw())):
+                    print "FATAL: spw %d is not even in the ms.  There might be a bug in your script." % (myspw)
+                    return
+                elif (myspw in mymsmd.wvrspws()):
+                    print "WARNING: spw %d is a WVR spw." % (myspw)
+                    return
+    if (spwsToPlot == []):
+        print "FATAL: no spws to plot"
+        return
+    originalSpwsToPlot = computeOriginalSpwsToPlot(spwsToPlot, originalSpw, tableFormat, debug)
+           
+    # Now generate the list of minimal basebands that contain the spws to be plotted
+    if (casadef.casa_version >= '4.1.0'):
+        allBasebands = []
+        try:
+            for spw in originalSpwsToPlot:
+                mybaseband = mymsmd.baseband(spw)
+                if (debug): print "appending: spw=%d -> bb=%d" % (spw,mybaseband)
+                allBasebands.append(mybaseband)
+            allBasebands = np.unique(allBasebands)
+            basebandDict = getBasebandDict(msName)  # needed later by showFDM()
+        except:
+            basebandDict = {}
+            if (observatoryName.find('SMA')>=0):
+                print "This SMA dataset (%s) does not have a BBC_NO column in the SPECTRAL_WINDOW_TABLE." % (msName)
+            else:
+                print "This MS (%s) is too old to have a BBC_NO column in the SPECTRAL_WINDOW_TABLE." % (msName)
+            if (overlay.find('spw')>=0):
+                print "As such, overlay='spw' is not supported, but overlay='baseband' should work."
+                return
+    else:
+        basebandDict = getBasebandDict(msName)  # needed later by showFDM()
+        allBasebands = []
+        for spw in originalSpwsToPlot:
+            mybaseband = [key for key in basebandDict if spw in basebandDict[key]]
+            if (len(mybaseband)>0): allBasebands.append(mybaseband[0])
+        allBasebands = np.unique(allBasebands)
+        if (allBasebands == []):
+            allBasebands = [1,2,3,4]
+    if (debug):
+        print "================ allBasebands = ", allBasebands
+        
+    if (basebands == None or basebands == [] or basebands == ''):
+        basebands = allBasebands
+    elif (type(basebands) == str):
+        basebands = [int(s) for s in basebands.split(',')]
+    elif (type(basebands) != list):
+        # it is a single integer
+        basebands = [basebands]
+        for baseband in basebands:
+            if (baseband not in allBasebands):
+                print "Baseband %d is not in the dataset (only %s)" % (baseband,str(allBasebands))
+                return
         
     casalogPost(debug,"%d field%s in the solution = %s" % (len(uniqueFields), plural(uniqueFields), str(uniqueFields)))
     
@@ -1417,6 +1622,34 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
     else:
         overlayTimes = False
         
+    if (overlay.find('spw')>=0):
+        if (tableFormat < 34):
+            print "Overlay spw may not work reliably for old cal tables"
+        overlaySpws = True
+        if (bpoly == True):
+              print "The overlay of times, antennas, or spws is not supported with BPOLY solutions"
+              return(vm)
+        if (len(caltable2)>0):
+              print "The overlay of times, antennas, or spws not supported when overlaying a B or BPOLY solution"
+              return(vm)
+        casalogPost(debug,"Will overlay solutions from different spws within a baseband")
+    else:
+        overlaySpws = False
+        
+    if (overlay.find('baseband')>=0):
+        if (tableFormat < 34):
+            print "Overlay baseband may not work reliably for old cal tables"
+        overlayBasebands = True
+        if (bpoly == True):
+              print "The overlay of times, antennas, spws, or basebands is not supported with BPOLY solutions"
+              return(vm)
+        if (len(caltable2)>0):
+              print "The overlay of times, antennas, spws, or basebands not supported when overlaying a B or BPOLY solution"
+              return(vm)
+        casalogPost(debug,"Will overlay solutions from all spws regardless of baseband")
+    else:
+        overlayBasebands = False
+
     if (bOverlay):        
           # Now open the Bandpass solution table
           try:
@@ -1558,6 +1791,33 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
   
     timerangeListTimes = np.array(uniqueTimes)[timerangeList]
     timerangeListTimesString = mjdsecArrayToUTString(timerangeListTimes)
+    if (tableFormat == 33 or scansForUniqueTimes == []):
+        # SMA data with scan numbers of -1 has empty list for scansForUniqueTimes
+        scansToPlot = []
+        if (scans != ''):
+            print "Selection by scan is not possible for this dataset."
+            return
+    else:
+        if (debug): print "scansForUniqueTimes = %s" % (str(scansForUniqueTimes))
+        scansToPlot = np.array(scansForUniqueTimes)[timerangeList]
+        if (np.unique(scansToPlot)[0] == -1):
+            # scan numbers are not correct in this new-style cal table
+            scansToPlot = []
+            if (scans != ''):
+                print "Selection by scan number is not possible with this dataset."
+                return
+        if (scans != '' and scans != []):
+            if (type(scans) == list):
+                scansToPlot = scans
+            elif (type(scans) == str):
+                scansToPlot = [int(a) for a in scans.split(',')]
+            else:
+                scansToPlot = [scans]
+            for scan in scansToPlot:
+                if (scan not in scansForUniqueTimes):
+                    print "Scan %d is not in any solution" % (scan)
+                    return
+    casalogPost(debug,"scans to plot: %s" % (str(scansToPlot)))
     casalogPost(debug,"UT times to plot: %s" % (timerangeListTimesString))
     casalogPost(debug,"Corresponding time IDs (0-based): %s" % (str(timerangeList)))
   
@@ -1567,7 +1827,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             print "There are more timeranges (%d) to plot from %s than exist in the caltable2=%s (%d)" % (len(timerangeListTimes), caltable,caltable2, nUniqueTimesBP)
             for i in timerangeList:
                 if (sloppyMatch(timerangeListTimes[i],uniqueTimesBP[0],
-                                solutionTimeThresholdSeconds)):
+                                solutionTimeThresholdSeconds, mytime,
+                                scansToPlot, scansForUniqueTimes, False)):
                     print "Try adding 'timeranges=%d'" % (i+1)
             return()
         if (bpolyOverlay2):
@@ -1779,18 +2040,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             match = np.where(i==uniqueFields2)[0]
         fieldIndicesToPlot.append(match[0])
         
-    if (overlayTimes and len(fieldsToPlot)>1 and 1==0):
-          print "Times cannot be overlaid if more than one field is specified"
-          return()
-#    if (overlayTimes and len(fieldsToPlot)>1):
-#        multiFieldsWithOverlayTime = True
-#    else:
-#        multiFieldsWithOverlayTime = False
-  
-# #  print "Antennas to plot = ", antennasToPlot
     casalogPost(debug,"spws to plot = %s" % (str(spwsToPlot)))
     casalogPost(debug,"Field IDs to plot: %s" % (str(fieldsToPlot)))
-# #  print "Field indices to plot: ", fieldIndicesToPlot
   
     redisplay = False
     myap = 0  # this variable is necessary to make the 'b' option work for 
@@ -1844,7 +2095,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
          ispw = spwsToPlot[spwctr]
          mytime = 0
          while (mytime < nUniqueTimes):
-           if (len(uniqueTimes) > 0 and (sloppyMatch(mytime,timerangeList,solutionTimeThresholdSeconds,myprint=debugSloppyMatch)==False)):
+           if (len(uniqueTimes) > 0 and (mytime not in timerangeList)):
                if (debug):
                    print "@@@@@@@@@@@@@@@  Skipping mytime=%d" % (mytime)
                mytime += 1
@@ -1856,15 +2107,22 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
            antennaString = 'Ant%2d: %s,  ' % (xant,antstring)
            for index in range(nRows):
               # Find this antenna, spw, and timerange combination in the table
-              if (xant==ant[index] and sloppyMatch(uniqueTimes[mytime],times[index],solutionTimeThresholdSeconds,myprint=debugSloppyMatch) and
+              if (xant==ant[index] and sloppyMatch(uniqueTimes[mytime],times[index],solutionTimeThresholdSeconds,
+                                                   mytime, scansToPlot, scansForUniqueTimes,
+                                                   myprint=debugSloppyMatch) and
                   (ispw == cal_desc_id[index]) and (fields[index] in fieldsToPlot)):
                   fieldIndex = np.where(fields[index] == uniqueFields)[0]
+                  if (type(fieldIndex) == list or type(fieldIndex) == np.ndarray):
+                      fieldIndex = fieldIndex[0]
                   validDomain = [frequencyLimits[0,index], frequencyLimits[1,index]]
                   if (msFound):
                       fieldString = msFields[uniqueFields[fieldIndex]]
                   else:
                       fieldString = str(field)
                   timeString = ',  t%d/%d  %s' % (mytime,nUniqueTimes-1,utstring(uniqueTimes[mytime],3))
+                  if (scansForUniqueTimes != []):
+                      if (scansForUniqueTimes[mytime]>=0):
+                          timeString = ',  scan%d  %s' % (scansForUniqueTimes[mytime],utstring(uniqueTimes[mytime],3))
                   if ((yaxis.find('amp')>=0 or amplitudeWithPhase) and myap==0):
                     xframe += 1
                     myUniqueColor = []
@@ -1950,7 +2208,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                            plotfiles.append(makeplot(figfile,msFound,msAnt,
                                             overlayAntennas,pages,pagectr,
                                             density,interactive,antennasToPlot,
-                                            spwsToPlot,overlayTimes,0,debug))
+                                            spwsToPlot,overlayTimes,0,resample,
+                                            debug,figfileSequential,figfileNumber))
+                           figfileNumber += 1
                        donetime = timeUtilities.time()
                        if (interactive):
                           pb.draw()
@@ -1961,6 +2221,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                        skippingSpwMessageSent = 0
                        mytimestamp = timeUtilities.time()
                        if (myinput.find('q') >= 0):
+                           showFinalMessage(overlayAntennas, solutionTimeSpread, nUniqueTimes)
                            return()
                        if (myinput.find('b') >= 0):
                            if (pagectr > 0):
@@ -2032,7 +2293,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                   plotfiles.append(makeplot(figfile,msFound,msAnt,
                                     overlayAntennas,pages,pagectr,
                                     density,interactive,antennasToPlot,
-                                    spwsToPlot,overlayTimes,1,debug))
+                                    spwsToPlot,overlayTimes,1,resample,debug,
+                                    figfileSequential,figfileNumber))
+                  figfileNumber += 1
               donetime = timeUtilities.time()
               if (interactive):
                  pb.draw()
@@ -2065,6 +2328,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
               if (debug):
                   print "1)Setting xframe to %d" % xframeStart
               xframe = xframeStart
+              alreadyPlottedAmp = False  # needed for (overlay='baseband', yaxis='both')
               if (xctr+1 < len(antennasToPlot)):
                   # don't clear the final plot when finished
                   pb.clf()
@@ -2084,11 +2348,13 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         # end while(spwctr)
         if (redisplay == False):
             xctr += 1
-      # end while(xctr)
+      # end while(xctr) for BPOLY
       if (len(figfile) > 0 and pagectr<len(pages)):
          plotfiles.append(makeplot(figfile,msFound,msAnt,overlayAntennas,pages,
                                    pagectr,density,interactive,antennasToPlot,
-                                   spwsToPlot,overlayTimes,2,debug))
+                                   spwsToPlot,overlayTimes,2,resample,debug,
+                                   figfileSequential,figfileNumber))
+         figfileNumber += 1
       if (len(plotfiles) > 0 and buildpdf):
           pdfname = figfile+'.pdf'
           filelist = ''
@@ -2114,7 +2380,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
       return()
   
 ####################################################################################
-# # bpoly == false
+# # bpoly == false, 
 #################
     msFound = False
     mytb.open(caltable)
@@ -2182,7 +2448,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         measFreqRef = mytb.getcol('MEAS_FREQ_REF')
         mytb.close()
         
-        (corr_type, corr_type_string, nPolarizations) = getCorrType(msName, spwsToPlot, mymsmd, debug)
+#        (corr_type, corr_type_string, nPolarizations) = getCorrType(msName, spwsToPlot, mymsmd, debug)
+        (corr_type, corr_type_string, nPolarizations) = getCorrType(msName, originalSpwsToPlot, mymsmd, debug)
         if (corr_type_string == []):
             return()
     except:
@@ -2304,1917 +2571,2170 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                         else:
                             # this includes tsys and amp
                             madstats[madstats.keys()[i]][spwsToPlot[j]][k][l] = {'amp': None}
+        madstats['platforming'] = {}
 # #      print "madstats = ", madstats
     myinput = ''
     atmEverBeenShown = False
+    spwsToPlotInBaseband = []
+    frequencyRangeToPlotInBaseband = []
+    if (basebands == []):
+        # MS is too old to have BBC_NO
+        spwsToPlotInBaseband = [spwsToPlot]
+        frequencyRangeToPlotInBaseband = [callFrequencyRangeForSpws(mymsmd, spwsToPlot, vm)]
+        basebands = [0]
+    elif (overlayBasebands):
+        spwsToPlotInBaseband = [spwsToPlot]  # treat all spws as if in the same baseband
+        frequencyRangeToPlotInBaseband = [callFrequencyRangeForSpws(mymsmd, spwsToPlot, vm)]
+    else:
+        for baseband in basebands:
+            myspwlist = []
+            for spw in spwsToPlot:
+                if (casadef.casa_version >= '4.1.0'):
+                    if (mymsmd.baseband(originalSpwsToPlot[list(spwsToPlot).index(spw)]) == baseband):
+                        myspwlist.append(spw)
+                else:
+                    # need to write a function to retrieve baseband
+                    if (spw != 0): myspwlist.append(spw)
+            spwsToPlotInBaseband.append(myspwlist)
+            frequencyRangeToPlotInBaseband.append(callFrequencyRangeForSpws(mymsmd, myspwlist,vm))
+  
+    firstTimeMatch = -1    # Aug 5, 2013
     while (xctr < len(antennasToPlot)):
       xant = antennasToPlot[xctr]
-      spwctr = 0
+      bbctr = 0
       antstring, Antstring = buildAntString(xant,msFound,msAnt)
-      while (spwctr < len(spwsToPlot)):
-        ispw = spwsToPlot[spwctr]
-        ispwInCalTable = list(uniqueSpwsInCalTable).index(ispw)
-        mytime = 0
-        if (debug):
-            print "+++++++ set mytime=0 for ispw=%d, len(chanFreqGHz) = %d" % (ispw, len(chanFreqGHz))
-        if (overlayAntennas):
-            xctr = -1
-        firstTimeMatch = -1
-        while (mytime < nUniqueTimes):
+      while (bbctr < len(spwsToPlotInBaseband)):
+          baseband = basebands[bbctr]
+          spwsToPlot = spwsToPlotInBaseband[bbctr]
           if (debug):
-              print "mytime = %d < %d, uniqueTimes[mytime] = %s" % (mytime,nUniqueTimes,str(uniqueTimes[mytime]))
-              print "timerangeList = %s" % (str(timerangeList))
-              print "timerangeListTimes = %s" % (str(timerangeListTimes))
-              print "debugSloppyMatch = %s" % (str(debugSloppyMatch))
-              print "solutionTimeThresholdSeconds = %s" % (str(solutionTimeThresholdSeconds))
-          if (len(timerangeList) > 0 and (sloppyMatch(uniqueTimes[mytime],timerangeListTimes,solutionTimeThresholdSeconds,myprint=debugSloppyMatch)==False)):
-              if (debug):
-                  print "Skipping time %d because it is not in the list: %s" % (mytime, str(timerangeList))
-              mytime += 1
-              if (mytime == nUniqueTimes and overlayTimes and overlayAntennas):  
-                  # added March 14, 2013 to support the case when final timerange is flagged
-                  doneOverlayTime = False
-                  if (debug):
-                      print "$$$$$$$$$$$$$$$$$$$$$$  Setting doneOverlayTime=False" % (xframe)
-              continue
-          if (overlayAntennas):
-              xctr += 1
-              if (xctr >= len(antennasToPlot)):
-                  xctr = 0
-              xant = antennasToPlot[xctr]
-              if (debug):
-                  print "mytime=%d, Set xant to %d" % (mytime,xant)
-              antennaString = ''
-          else:
-              antennaString = 'Ant%2d: %s,  ' % (xant,antstring)
-          # This used to be above the previous if/else block
-          if (newpage==1):
-              # add the current page (being created here) to the list
-              pages.append([xctr,spwctr,mytime,0])
-              if (debug):
-                  print "top: appending [%d,%d,%d,%d]" % (xctr,spwctr,mytime,0)
-              newpage = 0
-          gplotx = []
-          gploty = []
-          channels = []
-          xchannels = []
-          ychannels = []
-          frequencies = []
-          xfrequencies = []
-          yfrequencies = []
-          channels2 = []
-          xchannels2 = []
-          ychannels2 = []
-          frequencies2 = []
-          xfrequencies2 = []
-          yfrequencies2 = []
-          gplotx2 = []
-          gploty2 = []
-          xflag = []
-          yflag = []
-          xflag2 = []
-          yflag2 = []
-          matchFound = False
-          for i in range(nRows):
-              sm = sloppyMatch(uniqueTimes[mytime],times[i],solutionTimeThresholdSeconds,myprint=False)
-              if ((ant[i]==xant) and (cal_desc_id[i]==ispw) and sm
-                  and (mytime in timerangeList)   # this test was added to support multiFieldInTimeOverlay
-                  ):
-                  if (debug): print "len(chanFreqGHz)=%d, ispw=%d" % (len(chanFreqGHz),ispw)
-                  if (msFound):
-                      if (len(chanFreqGHz[ispw]) == 1):
-                          if ((skippingSpwMessageSent & (1<<ispw)) == 0):
-                              casalogPost(debug,"Skipping spw=%d because it has only 1 channel." % (ispw))
-                              skippingSpwMessageSent |= (1<<ispw)
-                          break
-                  if (fields[i] in fieldsToPlot):
-                      interval = intervals[i] # used for CalcAtmTransmission
-                      fieldIndex = np.where(fields[i] == uniqueFields)[0]
-                      if (debug):
-                          print "%d Found match at field,ant,spw,mytime,time = %d(index=%d),%d,%d,%d,%f=%s" % (matchctr,fields[i],fieldIndex,xant,ispw,mytime,uniqueTimes[mytime],utstring(uniqueTimes[mytime],4))
-                      if (matchFound):
-                          print "WARNING: This cal table has multiple rows for field=%d,ant=%d,spw=%d,time=%d=%.0f=%s. Only showing the first one." % (fields[i],xant,ispw,mytime,uniqueTimes[mytime],utstring(uniqueTimes[mytime],3))
-                      else:
-                          matchFound = True
-                          if (msFound):
-                              nChannels = len(chanFreqGHz[ispw])
-                          else:
-                              nChannels = len(ggx[0])
-                          xflag.append(flags[i][0][:])
-                          yflag.append(flags[i][1][:])
-                          BRowNumber = i
-                          for j in range(nChannels):   # len(chanFreqGHz[ispw])):
-                              channels.append(j)  # both flagged and unflagged
-                              if (msFound):
-                                  frequencies.append(chanFreqGHz[ispw][j])
-                                  if (j==0 and debug):
-                                      print "found match: ispw=%d, j=%d, len(chanFreqGHz)=%d, chanFreqGHz[0]=%f" % (ispw,j, len(chanFreqGHz),chanFreqGHz[ispw][0])
-                              if (showflagged or (showflagged == False and flags[i][0][j]==0)):
-                                  gplotx.append(ggx[i][j])
-                                  xchannels.append(j)
-                                  if (msFound):
-                                      xfrequencies.append(chanFreqGHz[ispw][j])
-                              if (nPolarizations == 2):
-                                  if (showflagged or (showflagged == False and flags[i][1][j]==0)):
-                                      gploty.append(ggy[i][j])
-                                      ychannels.append(j)
-                                      if (msFound):
-                                          yfrequencies.append(chanFreqGHz[ispw][j])
-          # end 'for i'
-          myspw = originalSpw[ispw]
-          if (msFound):
-              if debug: 
-                  print "myspw=%s" % (str(myspw))
-                  print "len(refFreq)=%d" % (len(refFreq))
-              if (myspw >= len(refFreq)):
-                  myspw = ispw
-          if (msFound and refFreq[myspw]*1e-9 > 60):
-            # Then this cannot be EVLA data.  But I should really check the telescope name!
-            if (refFreq[myspw]*1e-9 > np.mean(frequencies)):
-                sideband = -1
-                xlabelString = "%s LSB Frequency (GHz)" % refTypeToString(measFreqRef[myspw])
-            else:
-                sideband = +1
-                xlabelString = "%s USB Frequency (GHz)" % refTypeToString(measFreqRef[myspw])
-          else:
-              sideband = -1
-              xlabelString = "Frequency (GHz)"
-          if ((len(frequencies)>0) and (chanrange[1] > len(frequencies))):
-              print "Invalid chanrange (%d-%d) for spw%d in caltable1. Valid range = 0-%d" % (chanrange[0],chanrange[1],ispw,len(frequencies)-1)
-              return()
-          pchannels = [xchannels,ychannels]
-          pfrequencies = [xfrequencies,yfrequencies]
-          gplot = [gplotx,gploty]
-          # We only need to compute the atmospheric transmission if:
-          #   * we have been asked to show it,
-          #   * there is a non-trivial number of channels, 
-          #   * the current field is the one for which we should calculate it (if times are being overlaied)
-          #       But this will cause no atmcurve to appear if that field is flagged on the first
-          #       antenna; so, I added the atmEverBeenShown flag to deal with this.
-          #   * the previous calculation is not identical to what this one will be
-          #
-          if ((showatm or showtsky) and (len(xchannels)>1 or len(ychannels)>1) and
-              (uniqueFields[fieldIndex]==showatmfield or overlayTimes==False or atmEverBeenShown==False) and
-              ((overlayTimes==False and computedAtmField!=fieldIndex) or (computedAtmSpw!=ispw) or
-               (overlayTimes==False and computedAtmTime!=mytime))):
-            atmEverBeenShown = True
-            # The following 'if' is used to avoid wasting time since atm is not shown for
-            # overlay='antenna,time'.
-            if (overlayTimes==False or overlayAntennas==False or True):  # support showatm for overlay='antenna,time'
-#            if (overlayTimes==False or overlayAntennas==False):
-# #            print "CAF, CAS, CAT = ", computedAtmField, computedAtmSpw, computedAtmTime
-              computedAtmField = fieldIndex
-              computedAtmSpw = ispw
-              computedAtmTime = mytime
-              atmtime = timeUtilities.time()
-              asdm = ''
-# #            print "A) uniqueFields[%d] = " % (fieldIndex), uniqueFields[fieldIndex]
-              uFFI = uniqueFields[fieldIndex]
-              if (type(uFFI) == type(np.ndarray(0))):
-                  uFFI = uFFI[0]
-                  if (debug): print "converting uFFI from array to %s" % (str(type(uFFI)))
-              (atmfreq,atmchan,transmission,pwvmean,atmairmass,TebbSky,missingCalWVRErrorPrinted) = \
-                 CalcAtmTransmission(channels, frequencies, xaxis, pwv,
-                         vm, mymsmd, msName, asdm, xant, uniqueTimes[mytime],
-                         interval, uFFI, refFreq[originalSpw[ispw]],
-                         net_sideband[originalSpw[ispw]], mytime, 
-                         missingCalWVRErrorPrinted, verbose=DEBUG)
-              if (showimage):
-                  if (lo1 != ''):
-                      LO1 = lo1
-                  else:
-                    if (getLOsReturnValue == []):
-                      if (lo1 == ''):
-                          print "Because you do not have the ASDM_RECEIVER table, if you want the showimage"
-                          print "option to work, then you must specify the LO1 frequency with lo1=."
-# #                        return()
-                      LO1 = lo1
-                    else:
-                      if (lo1s == None or lo1s == {}):
-                          print "Failed to get LO1, disabling showimage.  Alternatively, you can use printLOsFromASDM and supply the lo1 parameter to plotbandpass."
-                          showimage = False
-                          LO1 = ''
-                      else:
-                          LO1 = lo1s[originalSpw[ispw]]*1e-9  
-                          if (ispw not in foundLO1Message):
-                              casalogPost(debug,"For spw %d (%d), found LO1 = %.6f GHz" % (ispw,originalSpw[ispw],LO1))
-                              foundLO1Message.append(ispw)
-              if (LO1 != ''):
-                  frequenciesImage = list(2*LO1 - np.array(frequencies))
-                  xfrequenciesImage = list(2*LO1 - np.array(pfrequencies[0]))
-                  yfrequenciesImage = list(2*LO1 - np.array(pfrequencies[1]))
-                  pfrequenciesImage = [xfrequenciesImage, yfrequenciesImage]
-                  if (debug):
-                     print "B) uniqueFields[%d] = %s" % (fieldIndex, str(uniqueFields[fieldIndex]))
-                  uFFI = uniqueFields[fieldIndex]
-                  if (debug):
-                     print "type(uFFI) = %s" % (str(type(uFFI)))
-                  if (type(uFFI) == list or type(uFFI) == type(np.ndarray(0))):
-                     uFFI = uFFI[0]
-                  if (debug):
-                     print "uFFI = %s" % (str(uFFI))
-                  (atmfreqImage,atmchanImage,transmissionImage,pwvmean,atmairmass,TebbSkyImage,missingCalWVRErrorPrinted) = \
-                      CalcAtmTransmission(channels, frequenciesImage, xaxis,
-                                          pwv, vm, mymsmd, msName, asdm, xant, uniqueTimes[mytime],
-                                          interval, uFFI, refFreq[originalSpw[ispw]],
-                                          net_sideband[originalSpw[ispw]], mytime, 
-                                          missingCalWVRErrorPrinted, verbose=DEBUG)
-                  atmfreqImage = list(2*LO1 - np.array(atmfreqImage))
-                  atmfreqImage.reverse()
-                  atmchanImage.reverse()
-  
-              if (overlayTimes):
-                  atmString = 'PWV %.2fmm, airmass %.2f (field %d)' % (pwvmean,atmairmass,showatmfield)
+              if (overlayBasebands):
+                  print "Regardless of baseband (%s), plotting all spws: %s" % (basebands,str(spwsToPlot))
               else:
-                  atmString = 'PWV %.2fmm, airmass %.3f' % (pwvmean,atmairmass)
-          if (bOverlay):
-            for i in range(nRows2):
-              if ((ant2[i]==xant) and (cal_desc_id2[i]==ispw) and sloppyMatch(uniqueTimes2[mytime],times2[i],solutionTimeThresholdSeconds,myprint=debugSloppyMatch)):
-                  if (fields2[i] in fieldsToPlot):
-                        xflag2.append(flags2[i][0][:])
-                        yflag2.append(flags2[i][1][:])
-                        # With solint='2ch' or more, the following loop should not be over
-                        # chanFreqGHz2 but over the channels in the solution.
-                        for j in range(len(chanFreqGHz2[ispw])):
-                          channels2.append(j)
-                          frequencies2.append(chanFreqGHz2[ispw][j])
-# #                        print "len(chanFreqGHz2[%d])=%d, i=%d,j=%d, len(ggx2)=%d, len(ggx2[0])=%d, shape(ggx2) = " % (ispw,len(chanFreqGHz2[ispw]),i,j,len(ggx2),len(ggx2[0])), np.shape(np.array(ggx2))
-                          if (showflagged or (showflagged == False and flags2[i][0][j]==0)):
-                              gplotx2.append(ggx2[i][j])
-                              xchannels2.append(j)
-                              xfrequencies2.append(chanFreqGHz2[ispw][j])
-# #                            print "appending %f to xfrequencies2" % (chanFreqGHz2[ispw][j])
-# #                        else:
-# #                            if (debug):  # The following crashes
-# #                                print "********* flags2[0,%d,%d] = %d, showflagged=" % (j,i,flags2[0,j,i]), showflagged
-                          if (nPolarizations2 == 2):
-                              if (showflagged or (showflagged == False and flags2[i][1][j]==0)):
-                                  gploty2.append(ggy2[i][j])
-                                  ychannels2.append(j)
-                                  yfrequencies2.append(chanFreqGHz2[ispw][j])
-            # end 'for i'
-            pchannels2 = [xchannels2,ychannels2]
-            pfrequencies2 = [xfrequencies2,yfrequencies2]
-            gplot2 = [gplotx2,gploty2]
-# #
-# #  Don't check here, because chanrange refers only to caltable, not caltable2.
-# #          if (len(frequencies2)>0 and (chanrange[1] > len(frequencies2))):
-# #              print "Invalid chanrange for spw%d in caltable2. Valid range = 0-%d" % (ispw,len(frequencies2))
-# #              return()
-                
-# # Prevents crash if long value is set for solutionTimeThresholdSeconds, but prints a lot of
-# # messages for Tsys with overlay='antenna'.
-# #        if (len(xchannels) < 1):
-# #            print "No unflagged data found for (ant,spw,mytime,time) = %d,%d,%d,%.1f=%s" % (xant,ispw,mytime,uniqueTimes[mytime],utstring(uniqueTimes[mytime],4))
-# #            matchFound = False
-  
-          if (matchFound==False):
-              if (overlayAntennas==False or (overlayAntennas==True and xctr+1 >= len(antennasToPlot))):
-                  mytime += 1
-                  if (debug):
-                      print "a) xctr=%d, Incrementing mytime to %d" % (xctr, mytime)
-              continue
-          #  The following variable allows color legend of UT times to match line plot
-          myUniqueTime = []
-          if (True):  # multiFieldsWithOverlayTime):
-              # support multi-fields with overlay='time'
-              uTPFPS = []
-              for f in fieldIndicesToPlot:
-                  for t in uniqueTimesPerFieldPerSpw[ispwInCalTable][f]:
-                      if (sloppyMatch(t, timerangeListTimes, solutionTimeThresholdSeconds,myprint=debugSloppyMatch)):
-                          uTPFPS.append(t)
-              uTPFPS = np.sort(uTPFPS)
-              ctr = 0
-              for t in uTPFPS:
-                  if (debug and False):
-                      print "1)checking time %d" % (t)
-                  if (sloppyMatch(t, uniqueTimes[mytime], solutionTimeThresholdSeconds,myprint=debugSloppyMatch)):
-                      if (debug):
-                          print "1)setting myUniqueTime to %d" % (mytime)
-                      myUniqueTime = mytime
-                      ctr += 1
-              if (ctr > 1 and bOverlay==False):
-                  print "multi-field time overlay ***************  why are there 2 matches?"
-# #            if (ctr == 0):
-# #                print "No match for %.1f in "%(t), uTPFPS
-          else:
-# #          print "ispw=%d, fieldIndex=%d, len(uTPFPS)=%d" % (ispw,fieldIndex,len(uniqueTimesPerFieldPerSpw))
-            for t in uniqueTimesPerFieldPerSpw[ispwInCalTable][fieldIndex]:
-              if (debug):
-                  print "2)checking time %d" % (t)
-              if (sloppyMatch(t, uniqueTimes[mytime], solutionTimeThresholdSeconds,myprint=debugSloppyMatch) == True):
-                  myUniqueTime = mytime  # was t
-                  if (debug):
-                      print "2)setting myUniqueTime to %d" % (mytime)
-          
-# #        print "Overlay antenna %d, myUniqueTime=%d" % (xctr, myUniqueTime)
-          if (xframe == xframeStart):
-                pb.clf()
-          xflag = [item for sublist in xflag for item in sublist]
-          yflag = [item for sublist in yflag for item in sublist]
-#          pflag = [xflag, yflag]
-#          flagfrequencies = [frequencies, frequencies2]
-          antstring, Antstring = buildAntString(xant,msFound,msAnt)
-          if (msFound):
-              fieldString = msFields[uniqueFields[fieldIndex]]
-          else:
-              fieldString = str(field)
-          if (overlayTimes):
-              timeString =''
-          else:
-              timeString = ',  t%d/%d  %s' % (mytime,nUniqueTimes-1,utstring(uniqueTimes[mytime],3))
-          if (ispw==originalSpw[ispw]):
-                titleString = "%sspw%2d,  field %d: %s%s" % (antennaString,ispw,uniqueFields[fieldIndex],fieldString,timeString)
-          else:
-                titleString = "%sspw%2d (%d),  field %d: %s%s" % (antennaString,ispw,originalSpw[ispw],uniqueFields[fieldIndex],fieldString,timeString)
-          if (sum(xflag)==nChannels and sum(yflag)==nChannels and showflagged==False):
-                  if (overlayTimes):
-                      print "Skip %s (%s) for time%d=%s all data flagged" % (antstring, titleString,mytime,utstring(uniqueTimes[mytime],3))
-                      # need to set doneOverlayTime = True if this is the final time
-                      if (debug):
-                          print "########## uniqueTimes[%d]=%d,  timerangeListTimes[-1]=%d" % (mytime,uniqueTimes[mytime],timerangeListTimes[-1])
-                      if (sloppyMatch(timerangeListTimes[-1], uniqueTimes[mytime], solutionTimeThresholdSeconds,myprint=debugSloppyMatch)):
-                          doneOverlayTime = True  # 08-Nov-2012
-                          if (debug):
-                              print "###### set doneOverlayTime = %s" % (str(doneOverlayTime))
-  
-                          # draw labels
-                          # try adding the following 'if' statement on Jun 18, 2013; it works.
-                          if (drewAtmosphereOnFlaggedAntenna==False or overlayAntennas==False):
-                              drewAtmosphereOnFlaggedAntenna = True
-                              drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,titlesize,
-                                  fieldIndicesToPlot,ispwInCalTable,uniqueTimesPerFieldPerSpw,timerangeListTimes,
-                                  solutionTimeThresholdSeconds,debugSloppyMatch,ystartOverlayLegend,debug,mysize,
-                                  fieldsToPlot,myUniqueColor,timeHorizontalSpacing,fieldIndex,overlayColors,
-                                  antennaVerticalSpacing, overlayAntennas, timerangeList, caltableTitle)
-                              drawAtmosphereAndFDM(showatm,showtsky,atmString,subplotRows,mysize,TebbSky,TebbSkyImage,
-                                               plotrange, xaxis,atmchan,atmfreq,transmission,subplotCols,
-                                               showatmPoints,xframe, channels,LO1,atmchanImage,atmfreqImage,
-                                               transmissionImage, firstFrame,showfdm,nChannels,tableFormat,
-                                               originalSpw_casa33, chanFreqGHz_casa33,originalSpw,chanFreqGHz,
-                                               overlayTimes, overlayAntennas, xant, antennasToPlot)
-                          DrawPolarizationLabelsForOverlayTime(xstartPolLabel,ystartPolLabel,corr_type,polsToPlot,
-                                                               channeldiff,ystartMadLabel,subplotRows,gamp_mad,mysize,
-                                                               ampmarkstyle,markersize,ampmarkstyle2)
-                  else:
-                      print "Skip %s (%s) all data flagged" % (antstring, titleString)
-                      if (myinput == 'b'):
-                          redisplay = False # This prevents infinite loop when htting 'b' on first screen when ant0 flagged. 2013-03-08
-                  if (overlayAntennas==False):
-                    if (doneOverlayTime==False or overlayTimes==False):  # added on 08-Nov-2012
-                      mytime += 1
-                      if (debug):
-                          print "F) incrementing mytime to %d" % mytime
-                  if (overlayAntennas):
-                      if (xctr == firstUnflaggedAntennaToPlot):
-                          firstUnflaggedAntennaToPlot += 1
-                          if (firstUnflaggedAntennaToPlot >= len(antennasToPlot)):
-                              firstUnflaggedAntennaToPlot = 0
-                              mytime += 1
-                          if (debug):
-                              print "----- Resetting firstUnflaggedAntennaToPlot from %d to %d = %d" % (firstUnflaggedAntennaToPlot-1, firstUnflaggedAntennaToPlot, antennasToPlot[firstUnflaggedAntennaToPlot])
-                          continue # Try this on Apr 2, 2012 to fix bug.
-                  if (overlayAntennas==False and subplot==11):
-                        # added the case (subplot==11) on April 22, 2012 to prevent crash on multi-antenna subplot=421
-                        if (debug):
-                            print "#######  removing [%d,%d,%d,%d]" % (pages[len(pages)-1][PAGE_ANT],
-                                                              pages[len(pages)-1][PAGE_SPW],
-                                                              pages[len(pages)-1][PAGE_TIME],
-                                                              pages[len(pages)-1][PAGE_AP])
-                        pages = pages[0:len(pages)-1]
-                        newpage = 1
-                  if (overlayAntennas==False):
-                      if (doneOverlayTime==False):  # inserted on 08-Nov-2012
-                          continue
-                      elif (debug):
-                          print "=========== Not continuing because doneOverlayTime=%s" % (str(doneOverlayTime))
-                  
-          if (firstTimeMatch == -1):
-                firstTimeMatch = mytime
+                  print "Showing baseband %d containing spws: %s" % (baseband,str(spwsToPlot))
+          spwctr = 0
+          while (spwctr < len(spwsToPlot)):
+                ispw = spwsToPlot[spwctr]
+                ispwInCalTable = list(uniqueSpwsInCalTable).index(ispw)
+                mytime = 0
                 if (debug):
-                    print "Setting firstTimeMatch from -1 to %s" % (str(firstTimeMatch))
-  
-########### Here is the amplitude plotting ############
-          if (yaxis.find('amp')>=0 or yaxis.find('both')>=0 or yaxis.find('ap')>=0) and doneOverlayTime==False:
-  
-            if (debug):
-                print "amp: xctr=%d, xant=%d, myap=%d, mytime=%d(%s), firstTimeMatch=%d, bOverlay=" % (xctr, xant, myap, mytime, utstring(uniqueTimes[mytime],3), firstTimeMatch), bOverlay
-            if (myap==1):
-              if (overlayTimes == False or mytime==firstTimeMatch):
-                  if (overlayAntennas==False or xctr==firstUnflaggedAntennaToPlot
-                      or xctr==antennasToPlot[-1]):  # 2012-05-24, to fix the case where all ants flagged on one timerange
-                      xframe += 1
-                      if (debug):
-                          print "y) incrementing xframe to %d" % xframe
-                          print "mytime=%d  ==  firstTimeMatch=%d" % (mytime, firstTimeMatch)
-                          print "xctr=%d  ==  firstUnflaggedAntennaToPlot=%d,  antennastoPlot[-1]=%d" % (xctr, firstUnflaggedAntennaToPlot,antennasToPlot[-1])
-                      myUniqueColor = []
-                      newylimits = [LARGE_POSITIVE, LARGE_NEGATIVE]
-            else: # (myap == 0)
-              if (overlayTimes == False or mytime==firstTimeMatch):
-                  if (overlayAntennas==False or xctr==firstUnflaggedAntennaToPlot
-                      or xctr>antennasToPlot[-1]):  # 2012-05-24, to fix the case where all ants flagged on one timerange
-                      xframe += 1
-                      if (debug):
-                          print "Y) incrementing xframe to %d" % xframe
-                          print "mytime=%d  ==  firstTimeMatch=%d" % (mytime, firstTimeMatch)
-                          print "xctr=%d  ==  firstUnflaggedAntennaToPlot=%d,  antennasToPlot[-1]=%d" % (xctr, firstUnflaggedAntennaToPlot,antennasToPlot[-1])
-                      myUniqueColor = []
-                      newylimits = [LARGE_POSITIVE, LARGE_NEGATIVE]
-                      if (debug):
-                          print "myap=%d, mytime == firstTimeMatch=%d" % (myap, firstTimeMatch)
-              if (debug):
-                  print "$$$$$$$$$$$$$$$$$$$$$$$  ready to plot amp on xframe %d" % (xframe)
-# #            print ",,,,,,,,,,,,,,,, Starting with newylimits = ", newylimits
-              adesc = pb.subplot(xframe)
-              drewAtmosphereOnFlaggedAntenna = False
-              pb.hold(overlayAntennas or overlayTimes)
-              gampx = np.abs(gplotx)
-              if (nPolarizations == 2):
-                  gampy = np.abs(gploty)
-                  if (yaxis.lower().find('db') >= 0):
-                      gamp = [10*np.log10(gampx), 10*np.log10(gampy)]
-                  else:
-                      if (channeldiff>0):
-                          if (debug): print "Computing derivatives"
-                          if (xaxis == 'chan'):
-                              gamp0, newx0 = channelDifferences(gampx, pchannels[0])
-                              gamp1, newx1 = channelDifferences(gampy, pchannels[1])
-                              pchannels = [newx0, newx1]
-                          else:
-                              gamp0, newx0 = channelDifferences(gampx, pfrequencies[0])
-                              gamp1, newx1 = channelDifferences(gampy, pfrequencies[1])
-                              pfrequencies = [newx0, newx1]
-                          gamp = [gamp0, gamp1]
-                          if (VisCal.lower().find('tsys') >= 0 and tsysPercent):
-                              gamp = [100*gamp0/np.median(gampx), 100*gamp1/np.median(gampy)]
-                          elif (VisCal.lower().find('tsys') < 0 and ampPercent):
-                              gamp = [100*gamp0/np.median(gampx), 100*gamp1/np.median(gampy)]
-                          gamp_mad = [madInfo(gamp[0],madsigma,edge), madInfo(gamp[1],madsigma,edge)]
-                          if (debug): print "gamp_mad done"
-                          for p in [0,1]:
-                              if (debug):
-                                  print "gamp_mad[%d] = %s" % (p, str(gamp_mad[p]))
-                                  print "madstats[%s][%d] = %s" % (Antstring,ispw, str(madstats[Antstring][ispw]))
-                              madstats[Antstring][ispw][mytime][p]['amp'] = gamp_mad[p]['mad']
-                              if (gamp_mad[p]['nchan'] > 0):
-                                  casalogPost(debug, "%s, Pol %d, spw %2d, %s, amp: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gamp_mad[p]['nchan'], madsigma, gamp_mad[p]['outlierValue'], gamp_mad[p]['outlierChannel']+pchannels[p][0]))
-                          if (debug): print "madstats done"
-                      else:
-                          gamp = [gampx,gampy]
-              else:
-                  if (yaxis.lower().find('db') >= 0):
-                      gamp = [10*np.log10(gampx)]
-                  else:
-                      if (channeldiff>0):
-                          if (xaxis == 'chan'):
-                              gamp0, newx0 = channelDifferences(gampx, pchannels[0])
-                              pchannels = [newx0]
-                          else:
-                              gamp0, newx0 = channelDifferences(gampx, pfrequencies[0])
-                              pfrequencies = [newx0]
-                          gamp = [gamp0]
-                          if (VisCal.lower().find('tsys') >= 0 and tsysPercent):
-                              gamp = [100*gamp0/np.median(gampx)]
-                          elif (VisCal.lower().find('tsys') < 0 and ampPercent):
-                              gamp = [100*gamp0/np.median(gampx)]
-                          p = 0
-                          gamp_mad = [madInfo(gamp[p], madsigma,edge)]
-                          madstats[Antstring][ispw][mytime][p]['amp'] = gamp_mad[p]['mad']
-                          if (gamp_mad[p]['nchan'] > 0):
-                              casalogPost(debug, "%s, Pol %d, spw %2d, %s, amp: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gamp_mad[p]['nchan'], madsigma, gamp_mad[p]['outlierValue'], gamp_mad[p]['outlierChannel']+pchannels[p][0]))
-                      else:
-                          gamp = [gampx]
-              if (bOverlay):
-                    gampx2 = np.abs(gplotx2)
-                    if (nPolarizations2 == 2):
-                      gampy2 = np.abs(gploty2)
-                      if (yaxis.lower().find('db') >= 0):
-                          gamp2 = [10*np.log10(gampx2), 10*np.log10(gampy2)]
-                      else:
-                          if (channeldiff>0):
-                              if (xaxis == 'chan'):
-                                  gamp2_0, newx0 = channelDifferences(gampx2, pchannels2[0])
-                                  gamp2_1, newx1 = channelDifferences(gampy2, pchannels2[1])
-                                  pchannels2 = [newx0, newx1]
-                              else:
-                                  gamp2_0, newx0 = channelDifferences(gampx2, pfrequencies2[0])
-                                  gamp2_1, newx1 = channelDifferences(gampy2, pfrequencies2[1])
-                                  pfrequencies2 = [newx0, newx1]
-                              gamp2 = [gamp2_0, gamp2_1]
-                              if (VisCal.lower().find('tsys') >= 0 and tsysPercent):
-                                  gamp2 = [100*gamp2_0/np.median(gampx2), 100*gamp2_1/np.median(gampy2)]
-                              elif (VisCal.lower().find('tsys') < 0 and ampPercent):
-                                  gamp2 = [100*gamp2_0/np.median(gampx2), 100*gamp2_1/np.median(gampy2)]
-                          else:
-                              gamp2 = [gampx2, gampy2]
+                    print "+++++++ set mytime=0 for ispw=%d, len(chanFreqGHz) = %d" % (ispw, len(chanFreqGHz))
+                if (overlayAntennas):
+                    xctr = -1
+                if (overlayTimes):
+                    # since the times/scans can vary between spws, redefine nUniqueTimes for each spw
+                    nUniqueTimes = len(uniqueTimesCopy)
+                    uniqueTimes = uniqueTimesCopy[:]
+                    uniqueTimesForSpw = []
+                    testtime = 0
+                    while (testtime < nUniqueTimes):
+                        if (ispw in cal_desc_id[np.where(uniqueTimes[testtime] == times)[0]]):
+                            uniqueTimesForSpw.append(uniqueTimes[testtime])
+                        testtime += 1
+                    uniqueTimes = uniqueTimesForSpw[:]
+                    if (tableFormat >= 34):
+                        scansForUniqueTimes, nUniqueTimes = computeScansForUniqueTimes(uniqueTimes, cal_scans, times, unique_cal_scans)
                     else:
-                      if (yaxis.lower().find('db') >= 0):
-                          gamp2 = [10*np.log10(gampx2)]
-                      else:
-                          if (channeldiff>0):
-                              if (xaxis == 'chan'):
-                                  gamp2_0, newx0 = channelDifferences(gampx2, pchannels[0])
-                                  pchannels2 = [newx0]
-                              else:
-                                  gamp2_0, newx0 = channelDifferences(gampx2, pfrequencies[0])
-                                  pfrequencies2 = [newx0]
-                              gamp2 = [gamp2_0]
-                              if (VisCal.lower().find('tsys') >= 0 and tsysPercent):
-                                  gamp2 = [100*gamp2_0/np.median(gampx2)]
-                              elif (VisCal.lower().find('tsys') < 0 and ampPercent):
-                                  gamp2 = [100*gamp2_0/np.median(gampx2)]
-                          else:
-                              gamp2 = [gampx2]
-              if (xaxis.find('chan')>=0 or msFound==False):    #  'amp'
-                  if (debug):
-                      print "amp: plot vs. channel **********************"
-                  pb.hold(True)
-                  for p in range(nPolarizations):
-                      if (overlayAntennas or overlayTimes):
-                          if (corr_type_string[p] in polsToPlot):
-                                pdesc = pb.plot(pchannels[p],gamp[p],'%s'%ampmarkstyles[p],
-                                                markersize=markersize,
-                                                markerfacecolor=overlayColors[xctr])
-                                newylimits =  recalcYlimits(plotrange,newylimits,gamp[p])
-                                if (overlayAntennas and overlayTimes==False):
-                                    pb.setp(pdesc, color=overlayColors[xctr])
-                                elif (overlayTimes and overlayAntennas==False):
-                                    pb.setp(pdesc, color=overlayColors[mytime])
-                                elif (overlayTimes and overlayAntennas): # try to support time,antenna
-                                    if (debug):
-                                        print "p=%d, len(fieldsToPlot)=%d, len(timerangeList)=%d" % (p,len(fieldsToPlot),len(timerangeList))
-                                    if (myUniqueTime != [] and (len(fieldsToPlot) > 1 or len(timerangeList)>1)):
-                                        pb.setp(pdesc, color=overlayColors[myUniqueTime])
-# #                                      print "pb.setp: myUniqueTime, overlayColors = ", myUniqueTime, overlayColors[myUniqueTime]
-                                        # The third 'or' below is needed if pol='0' is flagged on antenna 0. -- 2012/10/12
-                                        if (p==0 or len(polsToPlot)==1 or myUniqueColor==[]):
-                                            myUniqueColor.append(overlayColors[len(myUniqueColor)])
-                                        pb.setp(pdesc, color=myUniqueColor[-1])
-                      else:
-                          if (corr_type_string[p] in polsToPlot):
-# #                          print "pcolor[%d]=%s" % (p,pcolor)
-                            pb.plot(pchannels[p],gamp[p],'%s%s'%(pcolor[p],ampmarkstyle), markersize=markersize)
-                            newylimits =  recalcYlimits(plotrange,newylimits,gamp[p])
-                  if (sum(xflag)>0):
-                      xrange = np.max(channels)-np.min(channels)
-                      SetNewXLimits([np.min(channels)-xrange/20, np.max(channels)+xrange/20])
-# #                    print "amp: Resetting xaxis channel range to counteract flagged data"
-                  if (xframe in bottomRowFrames or (xctr+1==len(antennasToPlot) and ispw==spwsToPlot[-1])):
-                      pb.xlabel("Channel", size=mysize)
-              elif (xaxis.find('freq')>=0):   # amp
-                  if (bOverlay):
-                        pb.hold(True)
-                        xrange = np.abs(xfrequencies[0]-xfrequencies[-1])
-                        try:
-                            xrange2 = np.abs(xfrequencies2[0]-xfrequencies2[-1])
-                        except:
-                            print "No amp data found in second solution.  Try increasing the solutionTimeThresholdSeconds above %.0f." % (solutionTimeThresholdSeconds)
-                            print "If this doesn't work, email the developer (%s)." % (developerEmail)
-                            return()
-  
-                        if (np.abs(xrange/xrange2 - 1) > 0.05 + len(xflag)/len(xchannels)):  # 0.0666 is 2000/1875-1
-                           # These line widths are optimal for visualizing FDM over TDM
-                           width1 = 1
-                           width2 = 4
-                           # solutions differ in frequency width
-                           if (xrange < xrange2):
-                              for p in range(nPolarizations):
-                                    if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                          pb.plot(pfrequencies[p], gamp[p], '%s%s'%(pcolor[p],ampmarkstyle), linewidth=width2, markersize=markersize)
-                                          newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
-                              for p in range(nPolarizations):
-                                    if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                          pb.plot(pfrequencies2[p], gamp2[p], '%s%s'%(p2color[p],ampmarkstyle), linewidth=width1, markersize=markersize)
-                                          newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp2[p], sideband,plotrange,xchannels2)
-                           else:
-                              for p in range(nPolarizations):
-                                    if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                          pb.plot(pfrequencies2[p], gamp2[p], '%s%s'%(p2color[p],ampmarkstyle), linewidth=width2, markersize=markersize)
-                                          newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp2[p], sideband,plotrange,xchannels2)
-                              for p in range(nPolarizations):
-                                    if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                          pb.plot(pfrequencies[p], gamp[p], '%s%s'%(pcolor[p],ampmarkstyle), linewidth=width1, markersize=markersize)
-                                          newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
-                        else:
-                           width1 = 1
-                           width2 = 2  # Just enough to distinguish one line from the other.
-                           # solutions may be different level of smoothing, so plot highest rms first
-                           if (np.std(gamp[0]) < np.std(gamp2[0])):
-                              for p in range(nPolarizations):
-                                  if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                      pb.plot(pfrequencies2[p], gamp2[p], '%s%s'%(p2color[p],ampmarkstyle), linewidth=width1, markersize=markersize)
-                                      newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp2[p], sideband,plotrange,xchannels2)
-                              for p in range(nPolarizations):
-                                  if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                      pb.plot(pfrequencies[p], gamp[p], '%s%s'%(pcolor[p],ampmarkstyle), linewidth=width2, markersize=markersize)
-                                      newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
-                           else:
-                              for p in range(nPolarizations):
-                                  if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                      pb.plot(pfrequencies[p], gamp[p], '%s%s'%(pcolor[p],ampmarkstyle), linewidth=width2, markersize=markersize)
-                                      newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
-                              for p in range(nPolarizations):
-                                  if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                      pb.plot(pfrequencies2[p], gamp2[p], '%s%s'%(p2color[p],ampmarkstyle), linewidth=width1, markersize=markersize)
-                                      newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp2[p], sideband,plotrange,xchannels2)
-                        # must set new limits after plotting  'amp'
-                        if (zoom=='intersect'):
-                            if (xrange < xrange2):
-                                SetNewXLimits([min(xfrequencies[0],xfrequencies[-1])-xrange*0.1, max(xfrequencies[0],xfrequencies[-1])+xrange*0.1])
-                                SetLimits(plotrange, chanrange, newylimits, channels, frequencies,
-                                          pfrequencies, ampMin, ampMax, xaxis, pxl)
-                            else:
-# #                              print "len(xfrequencies2) = ", len(xfrequencies2)
-                                SetNewXLimits([min(xfrequencies2[0],xfrequencies2[-1])-xrange2*0.1, max(xfrequencies2[0],xfrequencies2[-1])+xrange2*0.1])
-                                slstatus = SetLimits(plotrange, chanrange, newylimits, channels, frequencies2,
-                                          pfrequencies2, ampMin, ampMax, xaxis, pxl)
-                        else:
-                            if (xrange < xrange2):
-                                SetLimits(plotrange, chanrange, newylimits, channels, frequencies,
-                                          pfrequencies, ampMin, ampMax, xaxis, pxl)
-                            else:
-                                SetLimits(plotrange, chanrange, newylimits, channels, frequencies2,
-                                          pfrequencies2, ampMin, ampMax, xaxis, pxl)
-                        # draw polarization and spw labels
-                        if (xframe == firstFrame):
-                            # draw title including caltable name
-                            caltableList = 'c1 = ' + caltable + ',  c2 = ' + caltable2 + ' (%s)'%(utstring(uniqueTimes2[mytime],3))
-                            pb.text(xstartTitle, ystartTitle, caltableList, size=titlesize,
-                                    color='k', transform=pb.gcf().transFigure)
-                  elif (bpolyOverlay):
-                      if (debug):
-                          print "in bpolyOverlay **********************************"
-                      matches1 = []
-                      for tbp in range(len(timesBP)):
-                          if (sloppyMatch(uniqueTimes[mytime], timesBP[tbp], solutionTimeThresholdSeconds,myprint=debugSloppyMatch)):
-                              matches1.append(tbp)
-                      matches1 = np.array(matches1)
-                      if (len(matches1) < 1):
-                          print "No time match found between %.1f and %s" % (uniqueTimes[mytime], str(timesBP))
-                          print "If you are sure the solutions correspond to the same data, you can set solutionTimeThresholdSeconds>=%.0f" % (1+np.ceil(np.abs(timesBP[0]-uniqueTimes[mytime])))
-                          return()
-                      matches2 = np.where(xant == np.array(antennasBP))[0]
-                      if (len(matches2) < 1):
-                          print "No antenna match found: %s" % (str(xant), str(antennasBP))
-                      if (tableFormat == 33):
-                          matches3 = np.where(ispw == np.array(cal_desc_idBP))[0]
-                          if (len(matches3) < 1):
-                              print "No spw match found: %d not in %s" % (ispw, str(cal_desc_idBP))
-                      else:
-                          matches3 = np.where(ispw == np.array(spwBP))[0]
-                          if (len(matches3) < 1):
-                              print "No spw match found: %d not in %s" % (ispw, str(spwBP))
-                      matches12 = np.intersect1d(matches1,matches2)
-                      if (len(matches12) < 1):
-                          print "No time+antenna match between: %s and %s" % (str(matches1), str(matches2))
-                      matches = np.intersect1d(matches12, matches3)
-                      if (len(matches) < 1):
-                          print "No time+antenna+spw match between: %s and %s" % (str(matches12), str(matches3))
-                      try:
-                          index = matches[0]
-                          if (debug):
-                              print "Match = %d ***********************************" % (index)
-                      except:
-                          print "No match found for time=%.6f, xant=%d, ispw=%d"  % (uniqueTimes[mytime],xant,ispw)
-                          print "antennasBP = %s" % (str(antennasBP))
-                          print "cal_desc_idBP = %s" % (str(cal_desc_idBP))
-                          timesBPstring = 'timesBP = '
-                          for i in timesBP:
-                              timesBPstring += "%.6f, " % i
-                          print timesBPstring
-                          return()
-                      validDomain = [frequencyLimits[0,index], frequencyLimits[1,index]]
-                      cc = calcChebyshev(polynomialAmplitude[index][0:nPolyAmp[index]], validDomain, frequenciesGHz[index]*1e+9)
-                      fa = np.array(frequenciesGHz[index])
-                      if (xfrequencies[0] < xfrequencies[-1]):
-                          matches = np.where(fa>xfrequencies[0])[0]
-                          matches2 = np.where(fa<xfrequencies[-1])[0]
-                      else:
-                          matches = np.where(fa>xfrequencies[-1])[0]
-                          matches2 = np.where(fa<xfrequencies[0])[0]
-                      if (len(matches) < 1):
-                          print "looking for %f-%f GHz inside %f-%f" % (xfrequencies[0],xfrequencies[-1],fa[0],fa[-1])
-                      amplitudeSolutionX = np.mean(gampx)*(cc-np.mean(cc)+1)
-  
-                      cc = calcChebyshev(polynomialAmplitude[index][nPolyAmp[index]:2*nPolyAmp[index]], validDomain, frequenciesGHz[index]*1e+9)
-                      if (nPolarizations > 1):
-                        if (yfrequencies[0] < yfrequencies[-1]):
-                          matches = np.where(fa>yfrequencies[0])[0]
-                          matches2 = np.where(fa<yfrequencies[-1])[0]
-                        else:
-                          matches = np.where(fa>yfrequencies[-1])[0]
-                          matches2 = np.where(fa<yfrequencies[0])[0]
-                        amplitudeSolutionY = np.mean(gampy)*(cc-np.mean(cc)+1)
-                      if (bpolyOverlay2):
-                          validDomain = [frequencyLimits2[0,index], frequencyLimits2[1,index]]
-                          cc = calcChebyshev(polynomialAmplitude2[index][0:nPolyAmp2[index]],
-                                             validDomain, frequenciesGHz2[index]*1e+9)
-                          fa = np.array(frequenciesGHz2[index])
-                          if (xfrequencies[0] < xfrequencies[-1]):
-                              matches = np.where(fa>xfrequencies[0])[0]
-                              matches2 = np.where(fa<xfrequencies[-1])[0]
-                          else:
-                              matches = np.where(fa>xfrequencies[-1])[0]
-                              matches2 = np.where(fa<xfrequencies[0])[0]
-                          amplitudeSolution2X = np.mean(gampx)*(cc-np.mean(cc)+1)
-  
-                          cc = calcChebyshev(polynomialAmplitude2[index][nPolyAmp2[index]:2*nPolyAmp2[index]],
-                                             validDomain, frequenciesGHz2[index]*1e+9)
-                          fa = np.array(frequenciesGHz2[index])
-                          if (yfrequencies[0] < yfrequencies[-1]):
-                              matches = np.where(fa>yfrequencies[0])[0]
-                              matches2 = np.where(fa<yfrequencies[-1])[0]
-                          else:
-                              matches = np.where(fa>yfrequencies[-1])[0]
-                              matches2 = np.where(fa<yfrequencies[0])[0]
-                          amplitudeSolution2Y = np.mean(gampy)*(cc-np.mean(cc)+1)
-  
-                          pb.hold(True)
-                          for p in range(nPolarizations):
-                              if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                  pb.plot(pfrequencies[p], gamp[p],'%s%s'%(pcolor[p],ampmarkstyle), markersize=markersize)
-                                  newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
-                          if (corrTypeToString(corr_type[0]) in polsToPlot):
-                              pb.plot(frequenciesGHz[index], amplitudeSolutionX,'%s%s'%(p2color[0],bpolymarkstyle))
-                              newylimits = recalcYlimitsFreq(chanrange, newylimits, amplitudeSolutionX, sideband,plotrange,xchannels)
-                              pb.plot(frequenciesGHz2[index], amplitudeSolution2X, '%s%s'%(p3color[0],bpolymarkstyle))
-                              newylimits = recalcYlimitsFreq(chanrange, newylimits, amplitudeSolution2X, sideband,plotrange,xchannels2)
-                          if (nPolarizations == 2):
-                             if (corrTypeToString(corr_type[1]) in polsToPlot):
-                                pb.plot(frequenciesGHz[index], amplitudeSolutionY,'%s%s'%(p2color[1],bpolymarkstyle))
-                                pb.plot(frequenciesGHz2[index], amplitudeSolution2Y, '%s%s'%(p3color[1],bpolymarkstyle))
-                      else:
-                          pb.hold(True)
-                          for p in range(nPolarizations):
-                              if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                  pb.plot(pfrequencies[p], gamp[p],'%s%s'%(pcolor[p],ampmarkstyle), markersize=markersize)
-                                  newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
-                          if (corrTypeToString(corr_type[0]) in polsToPlot):
-                              pb.plot(frequenciesGHz[index], amplitudeSolutionX,'%s%s'%(p2color[0],bpolymarkstyle))
-                              newylimits = recalcYlimitsFreq(chanrange, newylimits, amplitudeSolutionX, sideband,plotrange,xchannels)
-                          if (nPolarizations == 2):
-                             if (corrTypeToString(corr_type[1]) in polsToPlot):
-                                pb.plot(frequenciesGHz[index], amplitudeSolutionY,'%s%s'%(p2color[1],bpolymarkstyle))
-                                newylimits = recalcYlimitsFreq(chanrange, newylimits, amplitudeSolutionY, sideband,plotrange,ychannels)
-                      # endif (bpolyOverlay2)
-                  else:
-                      # we are not overlaying any B or polynomial solutions      'amp vs. freq'
-                      if (showflagged):
-                          # Also show the flagged data to see where the flags are
-                          pb.hold(True)  # Matches line 2326 for xaxis='chan'
-                          for p in range(nPolarizations):
-                            if (corrTypeToString(corr_type[p]) in polsToPlot):
-                              if (overlayAntennas or overlayTimes):
-                                pdesc1 = pb.plot(pfrequencies[p], gamp[p], '%s'%ampmarkstyles[p], markersize=markersize)
-                                newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
-                                if (overlayAntennas and overlayTimes==False):
-                                    pb.setp(pdesc1, color=overlayColors[xctr])
-                                elif (overlayTimes and overlayAntennas==False):
-                                    pb.setp(pdesc1, color=overlayColors[mytime])
-                                elif (overlayTimes and overlayAntennas): # try to support antenna,time
-                                    if (myUniqueTime != []):
-                                        pb.setp(pdesc1, color=overlayColors[myUniqueTime])
-                                        # The third 'or' below is needed if pol='0' is flagged on antenna 0. -- 2012/10/12 (original spot)
-                                        if (p==0 or len(polsToPlot)==1 or myUniqueColor==[]):
-                                            myUniqueColor.append(overlayColors[len(myUniqueColor)])
-                                        pb.setp(pdesc1, color=myUniqueColor[-1])
-                              else:
-                                pb.plot(pfrequencies[p], gamp[p], '%s%s'%(pcolor[p],ampmarkstyles[p]), markersize=markersize)
-                                newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
-                      else:   # showing only unflagged data    'amp vs. freq'
-                          pb.hold(True)
-                          for p in range(nPolarizations):
-                            if (debug):
-                                print "p=%d, polsToPlot=%s, len(fieldsToPlot)=%d, len(timerangeList)=%d, myUniqueTime=%s" % (p,str(polsToPlot),len(fieldsToPlot),len(timerangeList), str(myUniqueTime))
-                            if (corrTypeToString(corr_type[p]) in polsToPlot):
-                              if (len(gamp[p]) == 0):  # Try this on Apr 2, 2012
-# #                                print "=============== Skipping flagged data on antenna %d = %s" % (xant,antstring)
-                                  continue
-                              if (overlayAntennas or overlayTimes):
-                                pdesc = pb.plot(pfrequencies[p], gamp[p], '%s'%ampmarkstyles[p], markersize=markersize)
-                                newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
-                                if (overlayAntennas and overlayTimes==False):
-                                    pb.setp(pdesc, color=overlayColors[xctr])
-                                elif (overlayTimes and overlayAntennas==False):
-                                    pb.setp(pdesc, color=overlayColors[mytime])
-                                elif (overlayTimes and overlayAntennas):     #  try to support antenna,time
-                                    if (myUniqueTime != []):
-                                        pb.setp(pdesc, color=overlayColors[myUniqueTime])
-                                        # The third 'or' below is needed if pol='0' is flagged on antenna 0. -- 2012/10/12 (original spot)
-                                        if (p==0 or len(polsToPlot)==1 or myUniqueColor==[]):
-                                            myUniqueColor.append(overlayColors[len(myUniqueColor)])
-                                        if (debug):
-                                            print "myUniqueColor = %s" % (str(myUniqueColor))
-                                        pb.setp(pdesc, color=myUniqueColor[-1])
-                              else:
-                                 if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                    # since there is no overlay, don't use dashed line, so zero ------v
-                                    pb.plot(pfrequencies[p], gamp[p], '%s%s'%(pcolor[p],ampmarkstyles[0]),markersize=markersize)
-                                    newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
-# #                        print "newylimits for amp = ", newylimits
-                          if (sum(xflag)>0):
-# #                            print "amp: Resetting xaxis frequency range to counteract flagged data"
-                              xrange = np.max(frequencies)-np.min(frequencies)
-                              SetNewXLimits([np.min(frequencies)-0.15*xrange, np.max(frequencies)+0.15*xrange])
-                              
-                  if (1==1 or (xframe in bottomRowFrames) or (xctr+1==len(antennasToPlot) and ispw==spwsToPlot[-1])):
-                      # use 1==1 because spw might change between top row and bottom row of frames
-                      pb.xlabel(xlabelString, size=mysize)
-              # endif (xaxis=='chan' elif xaxis=='freq'  for 'amp')
-              if (overlayTimes):
-                  timeString =''
-              else:
-                  if (len(uniqueTimes) > mytime):
-                      timeString = ',  t%d/%d  %s' % (mytime,nUniqueTimes-1,utstring(uniqueTimes[mytime],3))
-              if (ispw==originalSpw[ispw]):
-                  if (overlayTimes and len(fieldsToPlot) > 1):
-                        indices = fstring = ''
-                        for f in fieldIndicesToPlot:
-                            if (f != fieldIndicesToPlot[0]):
-                                indices += ','
-                                fstring += ','
-                            indices += str(uniqueFields[f])
-                            if (msFound):
-                                fstring += msFields[uniqueFields[f]]
-                        if (len(fstring) > fstringLimit):
-                              fstring = fstring[0:fstringLimit] + '...'
-                        titleString = "%sspw%2d,  fields %s: %s%s" % (antennaString,ispw,
-                                  indices, fstring, timeString)
-                  else:
-                        titleString = "%sspw%2d,  field %d: %s%s" % (antennaString,ispw,uniqueFields[fieldIndex],fieldString,timeString)
-              else:
-                  if (overlayTimes and len(fieldsToPlot) > 1):
-                      indices = fstring = ''
-                      for f in fieldIndicesToPlot:
-                          if (f != fieldIndicesToPlot[0]):
-                              indices += ','
-                              fstring += ','
-                          indices += str(uniqueFields[f])
-                          if (msFound):
-                              fstring += msFields[uniqueFields[f]]
-                      if (len(fstring) > fstringLimit):
-                              fstring = fstring[0:fstringLimit] + '...'
-                      titleString = "%sspw%2d (%d),  fields %s: %s%s" % (antennaString,ispw,originalSpw[ispw],
-                                  indices, fstring, timeString)
-                  else:
-                      titleString = "%sspw%2d (%d),  field %d: %s%s" % (antennaString,ispw,originalSpw[ispw],uniqueFields[fieldIndex],fieldString,timeString)
-              pb.title(titleString, size=titlesize)
-              if (abs(plotrange[0]) > 0 or abs(plotrange[1]) > 0):
-                  SetNewXLimits([plotrange[0],plotrange[1]])
-              else:
-                  # Here is 1st place where we eliminate white space on right and left edge of the plots: 'amp'
-                  if (xaxis.find('chan')>=0):
-                      SetNewXLimits([channels[0],channels[-1]])
-                  else:
-                      if (zoom != 'intersect'):
-                          SetNewXLimits([frequencies[0], frequencies[-1]])
-                      if (bOverlay):
-                          if (xrange2 > xrange+0.1 and zoom != 'intersect'):
-                              TDMisSecond = True
-              if (abs(plotrange[2]) > 0 or abs(plotrange[3]) > 0):
-                  SetNewYLimits([plotrange[2],plotrange[3]])
-  
-              ResizeFonts(adesc,mysize)
-              adesc.xaxis.grid(True,which='major')
-              adesc.yaxis.grid(True,which='major')
-              pb.ylabel(yAmplitudeLabel, size=mysize)
-              pb.subplots_adjust(hspace=myhspace, wspace=mywspace)
-              xlim = pb.xlim()
-              ylim = pb.ylim()
-              xrange = xlim[1]-xlim[0]
-              yrange = ylim[1]-ylim[0]
-# #            print "amp: ylim, yrange = ",  ylim, yrange
-              if (overlayAntennas == False and overlayTimes == False and bOverlay == False):
-                  # draw polarization labels for no overlay
-                  x0 = xstartPolLabel
-                  y0 = ystartPolLabel
-                  for p in range(nPolarizations):
-                     if (corrTypeToString(corr_type[p]) in polsToPlot):
-                        pb.text(x0, y0-subplotRows*p*0.03, corrTypeToString(corr_type[p]),
-                                color=pcolor[p],size=mysize, transform=pb.gca().transAxes)
-                        if (channeldiff > 0):
-                            pb.text(x0, ystartMadLabel-0.03*subplotRows*p,
-                                    corrTypeToString(corr_type[p])+' MAD = %.4f'%(gamp_mad[p]['mad']),
-                                    color=pcolor[p],size=mysize, transform=pb.gca().transAxes)
-                  if (xframe == firstFrame):
-                        # draw title including caltable name
-                        caltableList = caltableTitle
-                        if (bpolyOverlay):
-                              caltableList += ', ' + caltable2 + ' (degamp=%d, degphase=%d)'%(nPolyAmp[index]-1,nPolyPhase[index]-1)
-                              if (bpolyOverlay2):
-                                    caltableList += ', ' + caltable3 + ' (degamp=%d, degphase=%d)'%(nPolyAmp2[index]-1,nPolyPhase2[index]-1)
-                        pb.text(xstartTitle, ystartTitle, caltableList, size=titlesize,
-                                color='k', transform=pb.gcf().transFigure)
-  
-              elif (overlayAntennas==True and xant==antennasToPlot[-1] and bOverlay == False   # ):
-                    and overlayTimes==False):  # try to support antenna,time  avoid antenna labels 'phase'
-                      # We do this last, because by then, the limits will be stable.
-                      x0 = xstartPolLabel
-                      y0 = ystartPolLabel
-                      # draw polarization labels
-                      if (corrTypeToString(corr_type[0]) in polsToPlot):
-                        if (channeldiff > 0):
-                            pb.text(x0, ystartMadLabel-0.03*subplotRows*0,
-                                    corrTypeToString(corr_type[0])+' MAD = %.4f'%(gamp_mad[0]['mad']),
-                                    color=overlayColors[0],size=mysize, transform=pb.gca().transAxes)
-                        if (ampmarkstyle.find('-')>=0):
-                            pb.text(x0, y0, corrTypeToString(corr_type[0])+' solid', color=overlayColors[0],size=mysize,
-                                    transform=pb.gca().transAxes)
-                        else:
-                            pb.text(x0+0.02, y0, corrTypeToString(corr_type[0]), color=overlayColors[0],size=mysize,
-                                    transform=pb.gca().transAxes)
-                            pdesc = pb.plot([x0-0.01], [y0], '%sk'%ampmarkstyle, markersize=markersize,
-                                            scalex=False,scaley=False, transform=pb.gca().transAxes)
-                      if (len(corr_type) > 1):
-                       if (corrTypeToString(corr_type[1]) in polsToPlot):
-                        if (channeldiff > 0):
-                            pb.text(x0, ystartMadLabel-0.03*subplotRows*1,
-                                    corrTypeToString(corr_type[1])+' MAD = %.4f'%(gamp_mad[1]['mad']),
-                                    color=overlayColors[0],size=mysize, transform=pb.gca().transAxes)
-                        if (ampmarkstyle2.find('--')>=0):
-                          pb.text(x0, y0-0.03*subplotRows, corrTypeToString(corr_type[1])+' dashed',
-                                  color=overlayColors[0],size=mysize, transform=pb.gca().transAxes)
-                        else:
-                          pb.text(x0+0.02, y0-0.03*subplotRows, corrTypeToString(corr_type[1]),
-                                  color=overlayColors[0],size=mysize, transform=pb.gca().transAxes)
-                          pdesc = pb.plot([x0-0.01], [y0-0.03*subplotRows], '%sk'%ampmarkstyle2,
-                                          markersize=markersize, scalex=False,scaley=False)
-                      if (xframe == firstFrame):
-                          # draw title including caltable name
-                          pb.text(xstartTitle, ystartTitle, caltableTitle, size=titlesize, color='k',
-                                  transform=pb.gcf().transFigure)
-                          DrawAntennaNames(msAnt, antennasToPlot, msFound, mysize)
-              elif (overlayTimes==True and bOverlay == False
-                    and overlayAntennas==False):  # try to support antenna,time
-                  doneOverlayTime = True  # assumed until proven otherwise in the 'for' loop
-                  for f in fieldIndicesToPlot:
-                    if (len(uniqueTimesPerFieldPerSpw[ispwInCalTable][f]) > 0):
-                      if ((uniqueTimes[mytime] < uniqueTimesPerFieldPerSpw[ispwInCalTable][f][-1]-solutionTimeThresholdSeconds) and
-                          (uniqueTimes[mytime] < timerangeListTimes[-1])):
-                          if (debug):
-                              print "-----------Not done because %.0f < %.0f-%d for fieldIndex=%d and <%.0f" % (uniqueTimes[mytime], uniqueTimesPerFieldPerSpw[ispwInCalTable][f][-1], solutionTimeThresholdSeconds, f, timerangeListTimes[-1])
-                              print "-----------ispwInCalTable=%d, mytime=%d, len(uniqueTimes) = %d" % (ispwInCalTable, mytime, len(uniqueTimes))
-                          doneOverlayTime = False
-                  if (debug):
-                      print "------doneOverlayTime = %s" % (str(doneOverlayTime))
-                  if (doneOverlayTime):
-                  # either it is the last time of any times in solution, or the last time in the list of times to plot
-                      if (debug):
-                          print "*** on last time = %d for last fieldIndex %d  or %d>=%d" % (mytime,fieldIndex,mytime,timerangeList[-1])
-                      mytime = nUniqueTimes-1
-                      # We do this last, because by then, the limits will be broad enought and stable.
-                      # draw polarization labels
-                      DrawPolarizationLabelsForOverlayTime(xstartPolLabel,ystartPolLabel,corr_type,polsToPlot,
-                                                           channeldiff,ystartMadLabel,subplotRows,gamp_mad,mysize,
-                                                           ampmarkstyle,markersize,ampmarkstyle2)
-                      if (xframe == firstFrame):
-                          # draw title including caltable name
-                          pb.text(xstartTitle, ystartTitle, caltableTitle, size=titlesize,
-                                  color='k', transform=pb.gcf().transFigure)
-                          drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,
-                                                 caltable,titlesize,fieldIndicesToPlot,
-                                                 ispwInCalTable,uniqueTimesPerFieldPerSpw,
-                                                 timerangeListTimes, solutionTimeThresholdSeconds,
-                                                 debugSloppyMatch,ystartOverlayLegend,debug,mysize,
-                                                 fieldsToPlot,myUniqueColor,timeHorizontalSpacing,
-                                                 fieldIndex,overlayColors, antennaVerticalSpacing,
-                                                 overlayAntennas, timerangeList, caltableTitle)
-              elif (overlayAntennas and overlayTimes):  # Oct 23, 2012
-                  # This will only happen for overlay='antenna,time'
-                  if (xframe == firstFrame and mytime == 0 and xctr==firstUnflaggedAntennaToPlot and bOverlay==False):
-                      # draw title including caltable name
-                      pb.text(xstartTitle, ystartTitle, caltableTitle, size=titlesize, color='k',
-                              transform=pb.gcf().transFigure)
-                      DrawBottomLegendPageCoords(msName, uniqueTimes[mytime], mysize)
-                  # Adding the following 'for' loop on Mar 13, 2013 to support the case of
-                  # single time range with overlay='antenna,time'
-                  if (xant==antennasToPlot[-1]):
-                    doneOverlayTime = True  # assumed until proven otherwise in the 'for' loop
-                    for f in fieldIndicesToPlot:
-                        if (len(uniqueTimesPerFieldPerSpw[ispwInCalTable][f]) > 0):
-                            if ((uniqueTimes[mytime] < uniqueTimesPerFieldPerSpw[ispwInCalTable][f][-1]-solutionTimeThresholdSeconds) and
-                                (uniqueTimes[mytime] < timerangeListTimes[-1])):
-                                if (debug):
-                                    print "-----------Not done because %.0f < %.0f-%d for fieldIndex=%d and <%.0f" % (uniqueTimes[mytime], uniqueTimesPerFieldPerSpw[ispwInCalTable][f][-1], solutionTimeThresholdSeconds, f, timerangeListTimes[-1])
-                                    print "-----------ispwInCalTable=%d, mytime=%d, len(uniqueTimes) = %d" % (ispwInCalTable, mytime, len(uniqueTimes))
-                                doneOverlayTime = False
-                    if (doneOverlayTime):
-                        # This is necessary for the case that no antennas were flagged for the single timerange selected
-                        drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,titlesize,
-                                               fieldIndicesToPlot,ispwInCalTable,uniqueTimesPerFieldPerSpw,
-                                               timerangeListTimes, solutionTimeThresholdSeconds,
-                                               debugSloppyMatch,ystartOverlayLegend,debug,mysize,
-                                               fieldsToPlot,myUniqueColor,timeHorizontalSpacing,
-                                               fieldIndex,overlayColors, antennaVerticalSpacing,
-                                               overlayAntennas, timerangeList, caltableTitle)
-
-  
-              # Here is 2nd place where we eliminate any white space on the right and left edge of the plots: 'amp'
-              # 
-              if (abs(plotrange[2]) > 0 or abs(plotrange[3]) > 0):
-                  SetNewYLimits([plotrange[2],plotrange[3]])
-              if (plotrange[0]==0 and plotrange[1]==0):
-                  if (xaxis.find('chan')>=0):
-                      SetNewXLimits([channels[0],channels[-1]])
-                  else:
-                      if (zoom != 'intersect'):
-                          SetNewXLimits([frequencies[0], frequencies[-1]])
-                      if (bOverlay):
-# #                        print "Checking if %f >= %f" % (xrange2, xrange)
-                          if (xrange2 >= xrange and zoom != 'intersect'):
-                              # This is necessary if caltable2=TDM and caltable=FDM
-                              SetNewXLimits([frequencies2[0], frequencies2[-1]])
-                          if (xrange2 > xrange+0.1 and zoom != 'intersect'):
-                              TDMisSecond = True
-              else:
-                  SetNewXLimits([plotrange[0], plotrange[1]])
-  
-              # I need the following line for chanrange to work
-              if (chanrange[0] != 0 or chanrange[1] != 0):
-                  SetLimits(plotrange, chanrange, newylimits, channels, frequencies, pfrequencies, ampMin, ampMax, xaxis,pxl)
-  
-              # Finally, draw the atmosphere and FDM windows, if requested.
-              if ((overlayAntennas==False and overlayTimes==False) or
-                  (overlayAntennas==True and overlayTimes==False and xant==antennasToPlot[-1]) or
-                  (overlayTimes==True and overlayAntennas==False and doneOverlayTime) or
-                  (xant==antennasToPlot[-1] and doneOverlayTime) # support showatm with overlay='antenna,time'
-                  ):
-                  if ((showatm or showtsky) and len(atmString) > 0): 
-                      DrawAtmosphere(showatm, showtsky, subplotRows, atmString,
-                                     mysize, TebbSky, plotrange, xaxis, atmchan,
-                                     atmfreq, transmission, subplotCols,
-                                     showatmPoints=showatmPoints, xframe=xframe, channels=channels)
-                      if (LO1 != ''):
-                          # Now draw the image band
-                          DrawAtmosphere(showatm,showtsky, subplotRows, atmString,
-                              mysize, TebbSkyImage, plotrange, xaxis,
-                              atmchanImage, atmfreqImage, transmissionImage,
-                              subplotCols, LO1, xframe, firstFrame, showatmPoints, channels=channels)
-                  if (xaxis.find('freq')>=0 and showfdm and nChannels <= 256):
-                      if (tableFormat == 33):
-                          showFDM(originalSpw_casa33, chanFreqGHz_casa33)
-                      else:
-                          showFDM(originalSpw, chanFreqGHz)
-  
-              if (bOverlay):
-                  # draw polarization labels
-                  x0 = xstartPolLabel
-                  y0 = ystartPolLabel
-                  for p in range(nPolarizations):
-                      if (corrTypeToString(corr_type[p]) in polsToPlot):
-                          pb.text(x0, y0-p*0.03*subplotRows, corrTypeToString(corr_type[p])+'-c1',
-                                  color=pcolor[p],size=mysize,transform=pb.gca().transAxes)
-                          pb.text(x0, y0-p*0.03*subplotRows-0.06*subplotRows, corrTypeToString(corr_type[p])+'-c2',
-                                  color=p2color[p],size=mysize,transform=pb.gca().transAxes)
-              if (bpolyOverlay and xaxis.find('freq')>=0):
-                  # draw polarization labels
-                  x0 = xstartPolLabel
-                  y0 = ystartPolLabel
-                  if (x2color != xcolor):
-                        for p in range(nPolarizations):
-                            if (corrTypeToString(corr_type[0]) in polsToPlot):
-                                pb.text(x0+0.1, y0-p*0.03*subplotRows, corrTypeToString(corr_type[p]), color=p2color[p],
-                                        size=mysize,transform=pb.gca().transAxes)
-                  if (bpolyOverlay2):
-                        for p in range(nPolarizations):
-                              if (corrTypeToString(corr_type[0]) in polsToPlot):
-                                    pb.text(x0+0.2, y0-p*0.03*subplotRows, corrTypeToString(corr_type[p]),
-                                            color=p3color[p], size=mysize,transform=pb.gca().transAxes)
-                  
-# #            if (xframe == 111 and amplitudeWithPhase):
-              myIndexTime = uniqueTimesPerFieldPerSpw[ispwInCalTable][fieldIndex][-1]
-              matched,mymatch = sloppyMatch(myIndexTime,uniqueTimes,solutionTimeThresholdSeconds,whichone=True)
-              if (matched == False):
-                  print "---------- 1) Did not find %f in %s" % (myIndexTime,str(uniqueTimes))
-                  print "Try re-running with a smaller solutionTimeThresholdSeconds (currently %f)" % (solutionTimeThresholdSeconds)
-                  return
-              if ((xframe == 111 and amplitudeWithPhase) or
-                  # Following case is needed to make subplot=11 to work for: try to support overlay='antenna,time'
-                  (xframe == lastFrame and overlayTimes and overlayAntennas and
-                   xctr+1==len(antennasToPlot) and
-#                   mytime+1==len(uniqueTimes) and  # this worked for nspw <= 4
-                   mytime==mymatch and
-                   spwctr+1<len(spwsToPlot))):
-                       if (debug):
-                           print "xframe=%d  ==  lastFrame=%d,  amplitudeWithPhase=%s" % (xframe, lastFrame, str(amplitudeWithPhase))
-                           print "xctr+1=%d == len(antennasToPlot)=%d"  % (xctr+1,len(antennasToPlot))
-                           print "mytime+1=%d == len(uniqueTimes)=%d"  % (mytime+1,len(uniqueTimes))
-                           print "spwctr+1=%d < len(spwsToPlot)=%d"  % (spwctr+1,len(spwsToPlot))
-                       if (len(figfile) > 0):
-                             plotfiles.append(makeplot(figfile,msFound,msAnt,
-                                              overlayAntennas,pages,pagectr,
-                                              density,interactive,antennasToPlot,
-                                              spwsToPlot,overlayTimes,3,debug))
-                       donetime = timeUtilities.time()
-                       if (interactive):
-                          pb.draw()
-# #                        myinput = raw_input(":(%.1f sec) Press return for next page (b for backwards, q to quit): "%(donetime-mytimestamp))
-                          myinput = raw_input("Press return for next page (b for backwards, q to quit): ")
-                       else:
-                          myinput = ''
-                       skippingSpwMessageSent = 0
-                       mytimestamp = timeUtilities.time()
-                       if (myinput.find('q') >= 0):
-                           return()
-                       if (myinput.find('b') >= 0):
-                           if (pagectr > 0):
-                               if (debug):
-                                   print "Decrementing pagectr from %d to %d" % (pagectr, pagectr-1)
-                               pagectr -= 1
-                           else:
-                               if (debug):
-                                   print "Not decrementing pagectr=%d" % (pagectr)
-
-                           redisplay = True
-                           #redisplay the current page by setting ctrs back to the value they had at start of that page
-                           xctr = pages[pagectr][PAGE_ANT]
-                           spwctr = pages[pagectr][PAGE_SPW]
-                           mytime = pages[pagectr][PAGE_TIME]
-                           myap = pages[pagectr][PAGE_AP]
-                           xant = antennasToPlot[xctr]
-                           antstring, Antstring = buildAntString(xant,msFound,msAnt)
-                           ispw = spwsToPlot[spwctr]
-# #                         print "Returning to [%d,%d,%d,%d]" % (xctr,spwctr,mytime,myap)
-#                           redisplay = True
-                           if (xctr==pages[0][PAGE_ANT] and spwctr==pages[0][PAGE_SPW] and mytime==pages[0][PAGE_TIME] and pages[0][PAGE_AP]==myap):
-                             pb.clf()
-                             if (debug):
-                                 print "2)Setting xframe to %d" % xframeStart
-                             xframe = xframeStart
-                             myUniqueColor = []
-                             continue
-                       else:
-                           pagectr += 1
-                           if (pagectr >= len(pages)):
-                             pages.append([xctr,spwctr,mytime,1])
-                             if (debug):
-                                 print "amp: appending [%d,%d,%d,%d]" % (xctr,spwctr,mytime,1)
-                             newpage = 0
-                       pb.clf()
-                       if (debug):
-                           print "3)Setting xframe to %d" % xframeStart
-                       xframe = xframeStart
-                       myUniqueColor = []
-###################################################
-########### Here is the phase plotting ############
-###################################################
-          if (yaxis.find('phase')>=0 or amplitudeWithPhase) and doneOverlayTime==False:
-              if (channeldiff > 0):
-                  pchannels = [xchannels,ychannels]  # this is necessary because np.diff reduces nchan by 1
-                  pfrequencies = [xfrequencies,yfrequencies]  # this is necessary because np.diff reduces nchan by 1
-                  if (bOverlay):
-                      pchannels2 = [xchannels2,ychannels2]  # this is necessary because np.diff reduces nchan by 1
-                      pfrequencies2 = [xfrequencies2,yfrequencies2]  # this is necessary because np.diff reduces nchan by 1
-              if (overlayTimes == False or mytime==firstTimeMatch):  
-                  if (overlayAntennas==False or xctr==firstUnflaggedAntennaToPlot
-                      or xctr>antennasToPlot[-1]):  # 2012-05-24, to fix the case where all ants flagged on one timerange
-                      xframe += 1
-# #                    print "u) incrementing xframe to %d" % xframe
-                      myUniqueColor = []
-                      newylimits = [LARGE_POSITIVE, LARGE_NEGATIVE]
-                      if (phase != ''):
-                          if ((phase[0] != 0 or phase[1] != 0) and amplitudeWithPhase):
-                              newylimits = phase
-              if (debug):
-                  print "$$$$$$$$$$$$$$$$$$$$$$$  ready to plot phase on xframe %d" % (xframe)
-              adesc = pb.subplot(xframe)
-              drewAtmosphereOnFlaggedAntenna = False
-              pb.hold(overlayAntennas or overlayTimes)
-              gphsx = np.arctan2(np.imag(gplotx),np.real(gplotx))*180.0/math.pi
-              if (nPolarizations == 2):
-                  gphsy = np.arctan2(np.imag(gploty),np.real(gploty))*180.0/math.pi
-                  if (channeldiff>0):
-                      if (xaxis == 'chan'):
-                          gphs0, newx0 = channelDifferences(gphsx, pchannels[0])
-                          gphs1, newx1 = channelDifferences(gphsy, pchannels[1])
-                          pchannels = [newx0,newx1]
-                      else:
-                          gphs0, newx0 = channelDifferences(gphsx, pfrequencies[0])
-                          gphs1, newx1 = channelDifferences(gphsy, pfrequencies[1])
-                          pfrequencies = [newx0,newx1]
-                      gphs = [gphs0, gphs1]
-                      gphs_mad = [madInfo(gphs[0],madsigma,edge), madInfo(gphs[1],madsigma,edge)]
-                      for p in [0,1]:
-                          madstats[Antstring][ispw][mytime][p]['phase'] = gphs_mad[p]['mad']
-                          if (gphs_mad[p]['nchan'] > 0):
-                              checkAbsSum = np.sum(np.abs(gphs[p]))
-                              if (checkAbsSum < PHASE_ABS_SUM_THRESHOLD):
-                                  if (debug): print "%s, Pol %d, spw %d, %s, phs: not printing because abs sum of all values near zero (%f)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), checkAbsSum)
-                              else:
-                                  casalogPost(debug, "%s, Pol %d, spw %2d, %s, phs: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gphs_mad[p]['nchan'], madsigma, gphs_mad[p]['outlierValue'], gphs_mad[p]['outlierChannel']+pchannels[p][0]))
-                  else:
-                      gphs = [gphsx,gphsy]
-              else:  # 1-pol
-                  if (channeldiff>0):
-                      if (xaxis == 'chan'):
-                          gphs0, newx0 = channelDifferences(gphsx, pchannels[0])
-                          pchannels = [newx0]
-                      else:
-                          gphs0, newx0 = channelDifferences(gphsx, pfrequencies[0])
-                          pfrequencies = [newx0]
-                      gphs = [gphs0]
-                      p = 0
-                      gphs_mad = [madInfo(gphs[p], madsigma, edge)]
-                      madstats[Antstring][ispw][mytime][p]['phase'] = gphs_mad[p]['mad']
-                      if (gphs_mad[p]['nchan'] > 0):
-                          checkAbsSum = np.sum(np.abs(gphs[p]))
-                          if (checkAbsSum < PHASE_ABS_SUM_THRESHOLD):
-                              if (debug): print "%s, Pol %d, spw %d, %s, phs: not printing because all values near zero (%f)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), checkAbsSum)
-                          else:
-                              casalogPost(debug, "%s, Pol %d, spw %2d, %s, phs: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gphs_mad[p]['nchan'], madsigma, gphs_mad[p]['outlierValue'], gphs_mad[p]['outlierChannel']+pchannels[p][0]))
-                  else:
-                      gphs = [gphsx]
-              if (bOverlay):
-                    if (debug):
-                        print "computing phase for second table"
-                    gphsx2 = np.arctan2(np.imag(gplotx2),np.real(gplotx2))*180.0/math.pi
-                    if (nPolarizations == 2):
-                        gphsy2 = np.arctan2(np.imag(gploty2),np.real(gploty2))*180.0/math.pi
-                        if (channeldiff>0):
-                            if (xaxis == 'chan'):
-                                gphs2_0, newx0 = channelDifferences(gphsx2, pchannels2[0])
-                                gphs2_1, newx1 = channelDifferences(gphsy2, pchannels2[1])
-                                pchannels2 = [newx0, newx1]
-                            else:
-                                gphs2_0, newx0 = channelDifferences(gphsx2, pfrequencies2[0])
-                                gphs2_1, newx1 = channelDifferences(gphsy2, pfrequencies2[1])
-                                pfrequencies2 = [newx0, newx1]
-                            gphs2 = [gphs2_0, gphs2_1]
-                        else:
-                            gphs2 = [gphsx2, gphsy2]
-                    else:
-                        if (channeldiff>0):
-                            if (xaxis == 'chan'):
-                                gphs2_0, newx0 = channelDifferences(gphsx2, pchannels2[0])
-                                pchannels2 = [newx0]
-                            else:
-                                gphs2_0, newx0 = channelDifferences(gphsx2, pfrequencies2[0])
-                                pfrequencies2 = [newx0]
-                            gphs2 = [gphs2_0]
-                        else:
-                            gphs2 = [gphsx2]
-              else:
-                    if (debug):
-                        print "bOverlay is FALSE ==========================="
-                  
-              if (xaxis.find('chan')>=0 or len(xfrequencies) < 1):    # 'phase'
-                  pb.hold(True)
-                  for p in range(nPolarizations):
-                    if (corrTypeToString(corr_type[p]) in polsToPlot):
-                      if (overlayAntennas or overlayTimes):
-                          pdesc = pb.plot(pchannels[p],gphs[p],'%s'%(phasemarkstyles[p]),markersize=markersize)
-                          newylimits =  recalcYlimits(plotrange,newylimits,gphs[p])  # 10/27/2011
-                          if (newylimits[1]-newylimits[0] < minPhaseRange):
-                              newylimits = [-minPhaseRange,minPhaseRange]
-                          if (phase != ''):
-                              if ((phase[0] != 0 or phase[1] != 0) and amplitudeWithPhase):
-                                  newylimits = phase
-  
-                          if (overlayAntennas and overlayTimes==False):
-                              pb.setp(pdesc, color=overlayColors[xctr])
-                          elif (overlayTimes and overlayAntennas==False):
-                              pb.setp(pdesc, color=overlayColors[mytime])
-                          elif (overlayTimes):   # try to support antenna,time
-                              if (myUniqueTime != []):
-                                  pb.setp(pdesc, color=overlayColors[myUniqueTime])
-                                  # The third 'or' below is needed if pol='0' is flagged on antenna 0. -- 2012/10/12 (original spot)
-                                  if (p==0 or len(polsToPlot)==1 or myUniqueColor==[]):
-                                      myUniqueColor.append(overlayColors[len(myUniqueColor)])
-                                  pb.setp(pdesc, color=myUniqueColor[-1])
-                      else:
-                          pb.plot(pchannels[p],gphs[p],'%s%s'%(pcolor[p],phasemarkstyles[0]), markersize=markersize)
-                          newylimits =  recalcYlimits(plotrange,newylimits,gphs[p]) # 10/27/2011
-                          if (newylimits[1]-newylimits[0] < minPhaseRange):
-                              newylimits = [-minPhaseRange,minPhaseRange]
-                          if (phase != ''):
-                              if ((phase[0] != 0 or phase[1] != 0) and amplitudeWithPhase):
-                                  newylimits = phase
-                  if (sum(xflag)>0):
-# #                    print "phase: Resetting xaxis channel range to counteract flagged data"
-                      xrange = np.max(channels)-np.min(channels)
-                      SetNewXLimits([np.min(channels)-xrange/20, np.max(channels)+xrange/20])
-                  if (xframe in bottomRowFrames or (xctr+1==len(antennasToPlot) and ispw==spwsToPlot[-1])):
-                      pb.xlabel("Channel", size=mysize)
-              elif (xaxis.find('freq')>=0):     # 'phase'
-                  if (bOverlay):
-                        pb.hold(True)
+                        nUniqueTimes = len(uniqueTimes)
+                if (overlaySpws or overlayBasebands):
+                    if (xctr >= firstUnflaggedAntennaToPlot):
                         if (debug):
-                            print "Preparing to plot phase from %f-%f for pols: %s" % (xfrequencies[0],xfrequencies[-1],str(polsToPlot))
-                            print "Preparing to plot phase from %f-%f for pols: %s" % (pfrequencies[p][0],pfrequencies[p][-1],str(polsToPlot))
-                            print "Preparing to plot phase from %f-%f for pols: %s" % (pfrequencies2[p][0],pfrequencies2[p][-1],str(polsToPlot))
-                        xrange = np.abs(xfrequencies[0]-xfrequencies[-1])
-                        try:
-                            xrange2 = np.abs(xfrequencies2[0]-xfrequencies2[-1])
-                        except:
-                            print "No phase data found in second solution.  Try increasing the solutionTimeThresholdSeconds above %.0f." % (solutionTimeThresholdSeconds)
-                            print "If this doesn't work, email the developer (%s)." % (developerEmail)
-                            return()
-                        if (np.abs(xrange/xrange2 - 1) > 0.05 + len(xflag)/len(xchannels)):  # 0.0666 is 2000/1875-1
-                           # These line widths are optimal for visualizing FDM over TDM
-                           width1 = 1
-                           width2 = 4
-                           # solutions differ in frequency width, so show the narrower one first
-                           if (xrange < xrange2):
-                             for p in range(nPolarizations):
-                               if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                  if (debug): print "pb.plot 1"
-                                  pb.plot(pfrequencies[p], gphs[p], '%s%s'%(pcolor[p],phasemarkstyle), linewidth=width2, markersize=markersize)
-                                  newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband,plotrange,xchannels)
-                             for p in range(nPolarizations):
-                               if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                  if (debug): print "pb.plot 2"
-                                  pb.plot(pfrequencies2[p], gphs2[p], '%s%s'%(p2color[p],phasemarkstyle), linewidth=width1, markersize=markersize)
-                                  newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs2[p], sideband,plotrange,xchannels2)
-                           else:
-                             for p in range(nPolarizations):
-                               if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                   if (debug): print "pb.plot 3"
-                                   pb.plot(pfrequencies2[p], gphs2[p], '%s%s'%(p2color[p],phasemarkstyle), linewidth=width2, markersize=markersize)
-                                   newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs2[p], sideband,plotrange,xchannels2)
-                             for p in range(nPolarizations):
-                               if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                   if (debug): print "pb.plot 4"
-                                   pb.plot(pfrequencies[p], gphs[p], '%s%s'%(pcolor[p],phasemarkstyle), linewidth=width1, markersize=markersize)
-                                   newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband,plotrange,xchannels)
-                        else:
-                           width1 = 1
-                           width2 = 1
-                           # solutions may be different level of smoothing, so plot highest rms first
-                           pb.hold(True)
-                           if (np.std(gphsx) < np.std(gphsx2)):
-                             for p in range(nPolarizations):
-                               if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                 if (debug): print "pb.plot 5"
-                                 pb.plot(pfrequencies2[p], gphs2[p], '%s%s'%(p2color[p],phasemarkstyle), linewidth=width1, markersize=markersize)
-                                 newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs2[p], sideband,plotrange,xchannels2)
-                             for p in range(nPolarizations):
-                               if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                 if (debug): print "pb.plot 6"
-                                 pb.plot(pfrequencies[p], gphs[p], '%s%s'%(pcolor[p],phasemarkstyle), linewidth=width2, markersize=markersize)
-                                 newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband,plotrange,xchannels)
-                           else:
-                             for p in range(nPolarizations):
-                               if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                 if (debug): print "pb.plot 7"
-                                 pb.plot(pfrequencies[p], gphs[p], '%s%s'%(pcolor[p],phasemarkstyle), linewidth=width2, markersize=markersize)
-                                 newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband,plotrange,xchannels)
-                             for p in range(nPolarizations):
-                               if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                 if (debug): print "pb.plot 9"
-                                 pb.plot(pfrequencies2[p], gphs2[p], '%s%s'%(p2color[p],phasemarkstyle), linewidth=width1, markersize=markersize)
-                                 newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs2[p], sideband,plotrange,xchannels2)
-                        # must set new limits after plotting  'phase'
-                        (y0,y1) = pb.ylim()
-                        if (y1-y0 < minPhaseRange):
-                              # this must come before defining ticks 
-                              SetNewYLimits([-minPhaseRange,minPhaseRange])
-                        if (zoom=='intersect'):
-                            if (xrange < xrange2):
-                                SetNewXLimits([min(xfrequencies[0],xfrequencies[-1])-xrange*0.1, max(xfrequencies[0],xfrequencies[-1])+xrange*0.1])
-                                SetLimits(plotrange, chanrange, newylimits, channels, frequencies,
-                                          pfrequencies, ampMin, ampMax, xaxis,pxl)
-                            else:
-                                SetNewXLimits([min(xfrequencies2[0],xfrequencies2[-1])-xrange2*0.1, max(xfrequencies2[0],xfrequencies2[-1])+xrange2*0.1])
-                                SetLimits(plotrange, chanrange, newylimits, channels, frequencies2,
-                                          pfrequencies2, ampMin, ampMax, xaxis,pxl)
-                        else:
-                            if (xrange < xrange2):
-                                SetLimits(plotrange, chanrange, newylimits, channels, frequencies,
-                                          pfrequencies, ampMin, ampMax, xaxis,pxl)
-                            else:
-                                SetLimits(plotrange, chanrange, newylimits, channels, frequencies2,
-                                          pfrequencies2, ampMin, ampMax, xaxis,pxl)
-                        # draw polarization and spw labels
-                        if (xframe == firstFrame):
-                            # draw title including caltable name
-                            caltableList = 'c1 = ' + caltable + ',  c2 = ' + caltable2 + ' (%s)'%(utstring(uniqueTimes2[mytime],3))
-                            pb.text(xstartTitle, ystartTitle, caltableList, size=titlesize,
-                                    color='k', transform=pb.gcf().transFigure)
-                  elif (bpolyOverlay):
-                          matches1 = []
-                          for tbp in range(len(timesBP)):
-                              if (sloppyMatch(uniqueTimes[mytime], timesBP[tbp], solutionTimeThresholdSeconds, myprint=debugSloppyMatch)):
-                                  matches1.append(tbp)
-                          matches1 = np.array(matches1)
-# #                        print "time matches: matches1 = ", matches1
-                          if (len(matches1) < 1):
-                              print "No time match found"
-                              print "If you are sure the solutions correspond to the same data, you can set solutionTimeThresholdSeconds=%.0f" % (1+np.ceil(np.abs(timesBP[0]-uniqueTimes[mytime])))
-                              return()
-# #                        matches1 = np.where(np.floor(uniqueTimes[mytime]) == np.floor(np.array(timesBP)))[0]
-                          matches2 = np.where(xant == np.array(antennasBP))[0]
-                          if (len(matches2) < 1):
-                              print "No antenna match found between %s and %s" % (str(xant), str(antennasBP))
-# #                        print "antenna matches: matches2 = ", matches2
-  
-                          if (tableFormat == 33):
-                              matches3 = np.where(ispw == np.array(cal_desc_idBP))[0]
-                              if (len(matches3) < 1):
-                                  print "No spw match found: %d not in %s" % (ispw, str(cal_desc_idBP))
+                            print "xctr=%d >= firstUnflaggedAntennaToPlot=%d" % (xctr, firstUnflaggedAntennaToPlot)
+                        spwctr -= 1
+              
+                firstTimeMatch = -1
+                while (mytime < nUniqueTimes):
+                  if (debug):
+                      print "mytime = %d < %d, uniqueTimes[mytime] = %s" % (mytime,nUniqueTimes,str(uniqueTimes[mytime]))
+                      print "timerangeList = %s" % (str(timerangeList))
+                      print "timerangeListTimes = %s" % (str(timerangeListTimes))
+                      print "debugSloppyMatch = %s" % (str(debugSloppyMatch))
+                      print "solutionTimeThresholdSeconds = %s" % (str(solutionTimeThresholdSeconds))
+                  if (len(timerangeList) > 0 and (sloppyMatch(uniqueTimes[mytime],timerangeListTimes,solutionTimeThresholdSeconds,
+                                                              mytime, scansToPlot, scansForUniqueTimes, myprint=debugSloppyMatch)==False)):
+                      if (debug):
+                          print "Skipping time %d because it is not in the list: %s" % (mytime, str(timerangeList))
+                      mytime += 1
+                      if (mytime == nUniqueTimes and overlayTimes and overlayAntennas):  
+                          # added March 14, 2013 to support the case when final timerange is flagged
+                          doneOverlayTime = False
+                          if (debug):
+                              print "$$$$$$$$$$$$$$$$$$$$$$  Setting doneOverlayTime=False" % (xframe)
+                      continue
+                  if (overlayAntennas):
+                      xctr += 1
+                      if (xctr >= len(antennasToPlot)):
+                          xctr = 0
+                      xant = antennasToPlot[xctr]
+                      if (debug):
+                          print "mytime=%d, Set xant to %d" % (mytime,xant)
+                      antennaString = ''
+                  else:
+                      antennaString = 'Ant%2d: %s,  ' % (xant,antstring)
+                  if (overlaySpws or overlayBasebands):
+                      spwctr += 1
+                      if (spwctr >= len(spwsToPlot)):
+                          spwctr = 0
+                          if (xctr < firstUnflaggedAntennaToPlot):
+                              xctr += 1
+                              if (xctr == len(antennasToPlot)): 
+                                  break
+                              xant = antennasToPlot[xctr]
+                              antstring = buildAntString(xant,msFound,msAnt)
+                              if (debug):
+                                  print "mytime=%d, Set xant to %d" % (mytime,xant)
+                              antennaString = 'Ant%2d: %s,  ' % (xant,antstring)
+                      ispw = spwsToPlot[spwctr]
+                      ispwInCalTable = list(uniqueSpwsInCalTable).index(ispw)
+                      if (debug):
+                          print "----------------------------- spwctr=%d, ispw set to %d, xctr=%d" % (spwctr,ispw,xctr)
+        
+                  # This used to be above the previous if/else block
+                  if (newpage==1):
+                      # add the current page (being created here) to the list
+                      pages.append([xctr,spwctr,mytime,0])
+                      if (debug):
+                          print "top: appending [%d,%d,%d,%d]" % (xctr,spwctr,mytime,0)
+                      newpage = 0
+                  gplotx = []
+                  gploty = []
+                  channels = []
+                  xchannels = []
+                  ychannels = []
+                  frequencies = []
+                  xfrequencies = []
+                  yfrequencies = []
+                  channels2 = []
+                  xchannels2 = []
+                  ychannels2 = []
+                  frequencies2 = []
+                  xfrequencies2 = []
+                  yfrequencies2 = []
+                  gplotx2 = []
+                  gploty2 = []
+                  xflag = []
+                  yflag = []
+                  xflag2 = []
+                  yflag2 = []
+                  matchFound = False
+                  matchField = -1
+                  matchRow = -1
+                  matchTime = -1
+                  for i in range(nRows):
+                      if (overlayTimes or overlayAntennas or len(fieldsToPlot)>1 or
+                          (nFields>1 and len(fieldlist)<nFields)):
+                          # When there are multiple fields, then matching by scan causes the first
+                          # matching solution to be displayed every time.  So use the original method
+                          # of matching by time until I think of something better.
+                          sm = sloppyMatch(uniqueTimes[mytime],times[i],solutionTimeThresholdSeconds,myprint=False)
+                      else:
+                          sm = sloppyMatch(uniqueTimes[mytime],times[i],solutionTimeThresholdSeconds,
+                                           mytime, scansToPlot, scansForUniqueTimes, myprint=False)
+                      if ((ant[i]==xant) and (cal_desc_id[i]==ispw) and sm
+                          and (mytime in timerangeList)   # this test was added to support multiFieldInTimeOverlay
+                          ):
+                          if (debug): print "len(chanFreqGHz)=%d, ispw=%d" % (len(chanFreqGHz),ispw)
+                          if (msFound):
+                              if (len(chanFreqGHz[ispw]) == 1):
+                                  if ((skippingSpwMessageSent & (1<<ispw)) == 0):
+                                      casalogPost(debug,"Skipping spw=%d because it has only 1 channel." % (ispw))
+                                      skippingSpwMessageSent |= (1<<ispw)
+                                  break
+                          if (fields[i] in fieldsToPlot):
+                              interval = intervals[i] # used for CalcAtmTransmission
+                              myFieldIndex = np.where(fields[i] == uniqueFields)[0]
+                              if (type(myFieldIndex) == list or type(myFieldIndex) == np.ndarray):
+                                  myFieldIndex = myFieldIndex[0]
+                              if (debug):
+                                  print "%d Found match at field,ant,spw,mytime,time = %d(index=%d),%d,%d,%d,%f=%s" % (matchctr,fields[i],myFieldIndex,xant,ispw,mytime,uniqueTimes[mytime],utstring(uniqueTimes[mytime],4))
+                              if (matchFound):
+                                  if (myFieldIndex == matchField and matchTime==times[i]):
+                                      print "WARNING: multiple rows for field=%d,ant=%d,spw=%d,scan=%d,time=%d=%.0f=%s,row=%d. Only showing the first one." % (fields[i],xant,ispw,scansForUniqueTimes[mytime],mytime,uniqueTimes[mytime],utstring(uniqueTimes[mytime],3),i)
+                              else:
+                                  matchFound = True
+                                  fieldIndex = myFieldIndex
+                                  matchField = myFieldIndex
+                                  matchTime = times[i]
+                                  matchRow = i
+                                  if (msFound):
+                                      nChannels = len(chanFreqGHz[ispw])
+                                  else:
+                                      nChannels = len(ggx[0])
+                                  xflag.append(flags[i][0][:])
+                                  yflag.append(flags[i][1][:])
+                                  BRowNumber = i
+                                  for j in range(nChannels):   # len(chanFreqGHz[ispw])):
+                                      channels.append(j)  # both flagged and unflagged
+                                      if (msFound):
+                                          frequencies.append(chanFreqGHz[ispw][j])
+                                          if (j==0 and debug):
+                                              print "found match: ispw=%d, j=%d, len(chanFreqGHz)=%d, chanFreqGHz[0]=%f" % (ispw,j, len(chanFreqGHz),chanFreqGHz[ispw][0])
+                                      if (showflagged or (showflagged == False and flags[i][0][j]==0)):
+                                          gplotx.append(ggx[i][j])
+                                          xchannels.append(j)
+                                          if (msFound):
+                                              xfrequencies.append(chanFreqGHz[ispw][j])
+                                      if (nPolarizations == 2):
+                                          if (showflagged or (showflagged == False and flags[i][1][j]==0)):
+                                              gploty.append(ggy[i][j])
+                                              ychannels.append(j)
+                                              if (msFound):
+                                                  yfrequencies.append(chanFreqGHz[ispw][j])
+                  # end 'for i'
+                  myspw = originalSpw[ispw]
+                  if (msFound):
+                      if debug: 
+                          print "myspw=%s" % (str(myspw))
+                          print "len(refFreq)=%d" % (len(refFreq))
+                      if (myspw >= len(refFreq)):
+                          myspw = ispw
+                  if (msFound and refFreq[myspw]*1e-9 > 60):
+                    # Then this cannot be EVLA data.  But I should really check the telescope name!
+                    if (refFreq[myspw]*1e-9 > np.mean(frequencies)):
+                        sideband = -1
+                        xlabelString = "%s LSB Frequency (GHz)" % refTypeToString(measFreqRef[myspw])
+                    else:
+                        sideband = +1
+                        xlabelString = "%s USB Frequency (GHz)" % refTypeToString(measFreqRef[myspw])
+                  else:
+                      sideband = -1
+                      xlabelString = "Frequency (GHz)"
+                  if ((len(frequencies)>0) and (chanrange[1] > len(frequencies))):
+                      print "Invalid chanrange (%d-%d) for spw%d in caltable1. Valid range = 0-%d" % (chanrange[0],chanrange[1],ispw,len(frequencies)-1)
+                      return()
+                  pchannels = [xchannels,ychannels]
+                  pfrequencies = [xfrequencies,yfrequencies]
+                  gplot = [gplotx,gploty]
+                  # We only need to compute the atmospheric transmission if:
+                  #   * we have been asked to show it,
+                  #   * there is a non-trivial number of channels, 
+                  #   * the current field is the one for which we should calculate it (if times are being overlaied)
+                  #       But this will cause no atmcurve to appear if that field is flagged on the first
+                  #       antenna; so, I added the atmEverBeenShown flag to deal with this.
+                  #   * the previous calculation is not identical to what this one will be
+                  #
+                  if ((showatm or showtsky) and (len(xchannels)>1 or len(ychannels)>1) and
+                      (uniqueFields[fieldIndex]==showatmfield or overlayTimes==False or atmEverBeenShown==False) and
+                      ((overlayTimes==False and computedAtmField!=fieldIndex) or (computedAtmSpw!=ispw) or
+                       (overlayTimes==False and computedAtmTime!=mytime))):
+                    atmEverBeenShown = True
+                    # The following 'if' is used to avoid wasting time since atm is not shown for
+                    # overlay='antenna,time'.
+                    if (overlayTimes==False or overlayAntennas==False or True):  # support showatm for overlay='antenna,time'
+#       #            if (overlayTimes==False or overlayAntennas==False):
+# #     # #            print "CAF, CAS, CAT = ", computedAtmField, computedAtmSpw, computedAtmTime
+                      if (type(fieldIndex) == list or type(fieldIndex) == np.ndarray):
+                          computedAtmField = fieldIndex[0]
+                      else:
+                          computedAtmField = fieldIndex
+                      computedAtmSpw = ispw
+                      computedAtmTime = mytime
+                      atmtime = timeUtilities.time()
+                      asdm = ''
+# #     # #            print "A) uniqueFields[%d] = " % (fieldIndex), uniqueFields[fieldIndex]
+                      uFFI = uniqueFields[fieldIndex]
+                      if (type(uFFI) == type(np.ndarray(0))):
+                          uFFI = uFFI[0]
+                          if (debug): print "converting uFFI from array to %s" % (str(type(uFFI)))
+                      (atmfreq,atmchan,transmission,pwvmean,atmairmass,TebbSky,missingCalWVRErrorPrinted) = \
+                         CalcAtmTransmission(channels, frequencies, xaxis, pwv,
+                                 vm, mymsmd, msName, asdm, xant, uniqueTimes[mytime],
+                                 interval, uFFI, refFreq[originalSpw[ispw]],
+                                 net_sideband[originalSpw[ispw]], mytime, 
+                                 missingCalWVRErrorPrinted, verbose=DEBUG)
+                      if (showimage):
+                          if (lo1 != ''):
+                              LO1 = lo1
                           else:
-                              matches3 = np.where(ispw == np.array(spwBP))[0]
-                              if (len(matches3) < 1):
-                                  print "No spw match found: %d not in %s" % (ispw, str(spwBP))
-# #                        print "spw matches: matches3 = ", matches3
-  
-                          matches12 = np.intersect1d(matches1,matches2)
-                          if (len(matches12) < 1):
-                              print "No match between: %s and %s" % (str(matches1), str(matches2))
-# #                        print "antenna&time matches: matches12 = ", matches12
-  
-                          matches = np.intersect1d(matches12, matches3)
-                          if (len(matches) < 1):
-                              print "No match between: %s and %s" % (str(matches12), str(matches3))
-# #                        print "antenna&time&spw matches: matches = ", matches
-  
-                          try:
-                              index = matches[0]  # holds the row number of the matching solution in the BPOLY table
-                          except:
-                              print "No match found for time=%.6f, xant=%d, ispw=%d"  % (uniqueTimes[mytime],xant,ispw)
-                              print "antennasBP = %s" % (str(antennasBP))
-                              print "cal_desc_idBP = %s" % (str(cal_desc_idBP))
-                              timesBPstring = "timesBP = "
-                              for i in timesBP:
-                                  timesBPstring += "%.6f, " % i
-                              print timesBPstring
-                              return()
-# #                        print "phase: Using index = %d/%d (mytime=%d), domain=%.3f,%.3f" % (index,len(polynomialPhase),mytime,frequencyLimits[0,index]*1e-9,frequencyLimits[1,index]*1e-9)
-                          if (debug): print "BRowNumber = %d, BPolyRowNumber = %d"  % (BRowNumber, index)
-                          validDomain = [frequencyLimits[0,index], frequencyLimits[1,index]]
-                          cc = calcChebyshev(polynomialPhase[index][0:nPolyPhase[index]], validDomain, frequenciesGHz[index]*1e+9) * 180/math.pi
-                          fa = np.array(frequenciesGHz[index])
-                          if (xfrequencies[0] < xfrequencies[-1]):
-                              matches = np.where(fa>xfrequencies[0])[0]
-                              matches2 = np.where(fa<xfrequencies[-1])[0]
-                          else:
-                              matches = np.where(fa>xfrequencies[-1])[0]
-                              matches2 = np.where(fa<xfrequencies[0])[0]
-# #                        print "xfrequencies[0] = %f, xfrequencies[-1] = %f" % (xfrequencies[0], xfrequencies[-1])
-# #                        print "len(matches)=%d, len(matches2)=%d" % (len(matches), len(matches2))
-# #                        print "fa = ", fa
-                          mymean = complexMeanDeg(np.array(cc)[matches[0]:matches2[-1]+1])
-                          phaseSolutionX = np.mean(gphsx) - mymean + cc
-  
-                          cc = calcChebyshev(polynomialPhase[index][nPolyPhase[index]:2*nPolyPhase[index]], validDomain, frequenciesGHz[index]*1e+9) * 180/math.pi
-                          if (nPolarizations > 1):
-                            if (yfrequencies[0] < yfrequencies[-1]):
-                              matches = np.where(fa>yfrequencies[0])[0]
-                              matches2 = np.where(fa<yfrequencies[-1])[0]
+                            if (getLOsReturnValue == []):
+                              if (lo1 == ''):
+                                  print "Because you do not have the ASDM_RECEIVER table, if you want the showimage"
+                                  print "option to work, then you must specify the LO1 frequency with lo1=."
+# #     # #                        return()
+                              LO1 = lo1
                             else:
-                              matches = np.where(fa>yfrequencies[-1])[0]
-                              matches2 = np.where(fa<yfrequencies[0])[0]
-                            mymean = complexMeanDeg(np.array(cc)[matches[0]:matches2[-1]+1])
-                            phaseSolutionY = np.mean(gphsy) - mymean + cc
-                          if (bpolyOverlay2):
-                              validDomain = [frequencyLimits2[0,index], frequencyLimits2[1,index]]
-                              cc = calcChebyshev(polynomialPhase2[index][0:nPolyPhase2[index]], validDomain, frequenciesGHz2[index]*1e+9) * 180/math.pi
-                              fa = np.array(frequenciesGHz2[index])
+                              if (lo1s == None or lo1s == {}):
+                                  print "Failed to get LO1, disabling showimage.  Alternatively, you can use printLOsFromASDM and supply the lo1 parameter to plotbandpass."
+                                  showimage = False
+                                  LO1 = ''
+                              else:
+                                  LO1 = lo1s[originalSpw[ispw]]*1e-9  
+                                  if (ispw not in foundLO1Message):
+                                      casalogPost(debug,"For spw %d (%d), found LO1 = %.6f GHz" % (ispw,originalSpw[ispw],LO1))
+                                      foundLO1Message.append(ispw)
+                      if (LO1 != ''):
+                          frequenciesImage = list(2*LO1 - np.array(frequencies))
+                          xfrequenciesImage = list(2*LO1 - np.array(pfrequencies[0]))
+                          yfrequenciesImage = list(2*LO1 - np.array(pfrequencies[1]))
+                          pfrequenciesImage = [xfrequenciesImage, yfrequenciesImage]
+                          if (debug):
+                             print "B) uniqueFields[%d] = %s" % (fieldIndex, str(uniqueFields[fieldIndex]))
+                          uFFI = uniqueFields[fieldIndex]
+                          if (debug):
+                             print "type(uFFI) = %s" % (str(type(uFFI)))
+                          if (type(uFFI) == list or type(uFFI) == type(np.ndarray(0))):
+                             uFFI = uFFI[0]
+                          if (debug):
+                             print "uFFI = %s" % (str(uFFI))
+                          (atmfreqImage,atmchanImage,transmissionImage,pwvmean,atmairmass,TebbSkyImage,missingCalWVRErrorPrinted) = \
+                              CalcAtmTransmission(channels, frequenciesImage, xaxis,
+                                                  pwv, vm, mymsmd, msName, asdm, xant, uniqueTimes[mytime],
+                                                  interval, uFFI, refFreq[originalSpw[ispw]],
+                                                  net_sideband[originalSpw[ispw]], mytime, 
+                                                  missingCalWVRErrorPrinted, verbose=DEBUG)
+                          atmfreqImage = list(2*LO1 - np.array(atmfreqImage))
+                          atmfreqImage.reverse()
+                          atmchanImage.reverse()
+          
+                      if (overlayTimes):
+                          atmString = 'PWV %.2fmm, airmass %.2f (field %d)' % (pwvmean,atmairmass,showatmfield)
+                      else:
+                          atmString = 'PWV %.2fmm, airmass %.3f' % (pwvmean,atmairmass)
+                  if (bOverlay):
+                    for i in range(nRows2):
+                      if ((ant2[i]==xant) and (cal_desc_id2[i]==ispw) and 
+                          sloppyMatch(uniqueTimes2[mytime],times2[i],solutionTimeThresholdSeconds,
+                                      mytime, scansToPlot, scansForUniqueTimes,
+                                      myprint=debugSloppyMatch)):
+                          if (fields2[i] in fieldsToPlot):
+                                xflag2.append(flags2[i][0][:])
+                                yflag2.append(flags2[i][1][:])
+                                # With solint='2ch' or more, the following loop should not be over
+                                # chanFreqGHz2 but over the channels in the solution.
+                                for j in range(len(chanFreqGHz2[ispw])):
+                                  channels2.append(j)
+                                  frequencies2.append(chanFreqGHz2[ispw][j])
+# #     # #                        print "len(chanFreqGHz2[%d])=%d, i=%d,j=%d, len(ggx2)=%d, len(ggx2[0])=%d, shape(ggx2) = " % (ispw,len(chanFreqGHz2[ispw]),i,j,len(ggx2),len(ggx2[0])), np.shape(np.array(ggx2))
+                                  if (showflagged or (showflagged == False and flags2[i][0][j]==0)):
+                                      gplotx2.append(ggx2[i][j])
+                                      xchannels2.append(j)
+                                      xfrequencies2.append(chanFreqGHz2[ispw][j])
+# #     # #                            print "appending %f to xfrequencies2" % (chanFreqGHz2[ispw][j])
+# #     # #                        else:
+# #     # #                            if (debug):  # The following crashes
+# #     # #                                print "********* flags2[0,%d,%d] = %d, showflagged=" % (j,i,flags2[0,j,i]), showflagged
+                                  if (nPolarizations2 == 2):
+                                      if (showflagged or (showflagged == False and flags2[i][1][j]==0)):
+                                          gploty2.append(ggy2[i][j])
+                                          ychannels2.append(j)
+                                          yfrequencies2.append(chanFreqGHz2[ispw][j])
+                    # end 'for i'
+                    pchannels2 = [xchannels2,ychannels2]
+                    pfrequencies2 = [xfrequencies2,yfrequencies2]
+                    gplot2 = [gplotx2,gploty2]
+# #     # #
+# #  Don# #  Don't check here, because chanrange refers only to caltable, not caltable2.
+# #     # #          if (len(frequencies2)>0 and (chanrange[1] > len(frequencies2))):
+# #     # #              print "Invalid chanrange for spw%d in caltable2. Valid range = 0-%d" % (ispw,len(frequencies2))
+# #     # #              return()
+                        
+# # Prev# # Prevents crash if long value is set for solutionTimeThresholdSeconds, but prints a lot of
+# # mess# # messages for Tsys with overlay='antenna'.
+# #     # #        if (len(xchannels) < 1):
+# #     # #            print "No unflagged data found for (ant,spw,mytime,time) = %d,%d,%d,%.1f=%s" % (xant,ispw,mytime,uniqueTimes[mytime],utstring(uniqueTimes[mytime],4))
+# #     # #            matchFound = False
+          
+                  if (matchFound==False):
+                      if ((overlayAntennas==False and overlaySpws==False and overlayBasebands==False) or
+                          (overlayAntennas and xctr+1 >= len(antennasToPlot)) or
+                          ((overlaySpws or overlayBasebands) and spwctr+1 >= len(spwsToPlot))):
+                          mytime += 1
+                          if (debug):
+                              print "a) xctr=%d, Incrementing mytime to %d" % (xctr, mytime)
+                      continue
+                  #  The following variable allows color legend of UT times to match line plot
+                  myUniqueTime = []
+                  if (True):  # multiFieldsWithOverlayTime):
+                      # support multi-fields with overlay='time'
+                      uTPFPS = []
+                      for f in fieldIndicesToPlot:
+                          for t in uniqueTimesPerFieldPerSpw[ispwInCalTable][f]:
+                              if (sloppyMatch(t, timerangeListTimes, solutionTimeThresholdSeconds,
+                                              mytime, scansToPlot, scansForUniqueTimes,
+                                              myprint=debugSloppyMatch
+                                              )):
+                                  uTPFPS.append(t)
+                      uTPFPS = np.sort(uTPFPS)
+                      ctr = 0
+                      for t in uTPFPS:
+                          if (debug and False):
+                              print "1)checking time %d" % (t)
+                          if (overlayTimes or overlayAntennas):
+                              sm = sloppyMatch(uniqueTimes[mytime],times[i],solutionTimeThresholdSeconds,myprint=False)
+                          else:
+                              sm = sloppyMatch(t, uniqueTimes[mytime], solutionTimeThresholdSeconds,
+                                               mytime, scansToPlot, scansForUniqueTimes,
+                                               myprint=debugSloppyMatch
+                                               )
+                          if (sm):
+                              if (debug):
+                                  print "1)setting myUniqueTime to %d" % (mytime)
+                              myUniqueTime = mytime
+                              ctr += 1
+                      if (ctr > fieldIndicesToPlot and bOverlay==False):
+                          print "multi-field time overlay ***************  why are there 2 matches?"
+# #     # #            if (ctr == 0):
+# #     # #                print "No match for %.1f in "%(t), uTPFPS
+                  
+# #     # #        print "Overlay antenna %d, myUniqueTime=%d" % (xctr, myUniqueTime)
+                  if (xframe == xframeStart):
+                        pb.clf()
+                  xflag = [item for sublist in xflag for item in sublist]
+                  yflag = [item for sublist in yflag for item in sublist]
+#       #          pflag = [xflag, yflag]
+#       #          flagfrequencies = [frequencies, frequencies2]
+                  antstring, Antstring = buildAntString(xant,msFound,msAnt)
+                  if (msFound):
+                      fieldString = msFields[uniqueFields[fieldIndex]]
+                  else:
+                      fieldString = str(field)
+                  if (overlayTimes):
+                      timeString =''
+                  else:
+                      timeString = ',  t%d/%d  %s' % (mytime,nUniqueTimes-1,utstring(uniqueTimes[mytime],3))
+                      if (scansForUniqueTimes != []):
+                          if (scansForUniqueTimes[mytime]>=0):
+                              timeString = ',  scan%d  %s' % (scansForUniqueTimes[mytime],utstring(uniqueTimes[mytime],3))
+                  spwString = buildSpwString(overlaySpws, overlayBasebands, spwsToPlot, 
+                                             ispw, originalSpw[ispw], observatoryName, 
+                                             baseband, showBasebandNumber)
+                  titleString = "%sspw%s,  field %d: %s%s" % (antennaString,spwString,uniqueFields[fieldIndex],fieldString,timeString)
+                  if (sum(xflag)==nChannels and sum(yflag)==nChannels and showflagged==False):
+                      if (overlayTimes):
+                          print "Skip %s (%s) for time%d=%s all data flagged" % (antstring, titleString,mytime,utstring(uniqueTimes[mytime],3))
+                          # need to set doneOverlayTime = True if this is the final time,
+                          # otherwise, we get "subplot number exceeds total subplots" at line 2427
+                          # but we need to draw the labels at the top of the page, else they will not get done
+                          if (debug):
+                              print "########## uniqueTimes[%d]=%d,  timerangeListTimes[-1]=%d" % (mytime,uniqueTimes[mytime],timerangeListTimes[-1])
+                          if (sloppyMatch(timerangeListTimes[-1], uniqueTimes[mytime],
+                                          solutionTimeThresholdSeconds,
+                                          mytime, scansToPlot, scansForUniqueTimes,
+                                          myprint=debugSloppyMatch
+                                          )):
+                              doneOverlayTime = True  # 08-Nov-2012
+                              if (debug):
+                                  print "###### set doneOverlayTime = %s" % (str(doneOverlayTime))
+          
+                              # draw labels
+                              # try adding the following 'if' statement on Jun 18, 2013; it works.
+                              if (drewAtmosphereOnFlaggedAntenna==False or overlayAntennas==False):
+                                  drewAtmosphereOnFlaggedAntenna = True
+                                  drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,
+                                                         caltable,titlesize,fieldIndicesToPlot,
+                                                         ispwInCalTable,uniqueTimesPerFieldPerSpw,
+                                                         timerangeListTimes,
+                                                         solutionTimeThresholdSeconds,
+                                                         debugSloppyMatch,
+                                                         ystartOverlayLegend,debug,mysize,
+                                                         fieldsToPlot,myUniqueColor,
+                                                         timeHorizontalSpacing,fieldIndex,
+                                                         overlayColors,
+                                                         antennaVerticalSpacing, overlayAntennas, 
+                                                         timerangeList, caltableTitle, mytime,
+                                                         scansToPlot, scansForUniqueTimes)
+                                  drawAtmosphereAndFDM(showatm,showtsky,atmString,subplotRows,mysize,
+                                                       TebbSky,TebbSkyImage,plotrange, xaxis,atmchan,
+                                                       atmfreq,transmission,subplotCols,showatmPoints,
+                                                       xframe, channels,LO1,atmchanImage,atmfreqImage,
+                                                       transmissionImage, firstFrame,showfdm,nChannels,
+                                                       tableFormat,originalSpw_casa33, 
+                                                       chanFreqGHz_casa33,originalSpw,chanFreqGHz,
+                                                       overlayTimes, overlayAntennas, xant, 
+                                                       antennasToPlot, overlaySpws, baseband,
+                                                       showBasebandNumber, basebandDict)
+                              if (xant == firstUnflaggedAntennaToPlot or overlayAntennas==False):
+                                  DrawPolarizationLabelsForOverlayTime(xstartPolLabel,ystartPolLabel,corr_type,polsToPlot,
+                                                                       channeldiff,ystartMadLabel,subplotRows,gamp_mad,mysize,
+                                                                       ampmarkstyle,markersize,ampmarkstyle2,gamp_std)
+                      else:
+                          print "Skip %s (%s) all data flagged" % (antstring, titleString)
+                          if (myinput == 'b'):
+                              redisplay = False # This prevents infinite loop when htting 'b' on first screen when ant0 flagged. 2013-03-08
+                      if (overlayAntennas==False):
+                        if (doneOverlayTime==False or overlayTimes==False):  # added on 08-Nov-2012
+                          mytime += 1
+                          if (debug):
+                              print "F) incrementing mytime to %d" % mytime
+                      if (overlayAntennas):
+                          if (xctr == firstUnflaggedAntennaToPlot):
+                              firstUnflaggedAntennaToPlot += 1
+                              if (firstUnflaggedAntennaToPlot >= len(antennasToPlot)):
+                                  firstUnflaggedAntennaToPlot = 0
+                                  mytime += 1
+                              if (debug):
+                                  print "----- Resetting firstUnflaggedAntennaToPlot from %d to %d = %d" % (firstUnflaggedAntennaToPlot-1, firstUnflaggedAntennaToPlot, antennasToPlot[firstUnflaggedAntennaToPlot])
+                              continue # Try this on Apr 2, 2012 to fix bug.
+                      if (overlaySpws or overlayBasebands):
+                          if (xctr == firstUnflaggedAntennaToPlot):
+                              firstUnflaggedAntennaToPlot += 1
+                              if (firstUnflaggedAntennaToPlot >= len(antennasToPlot)):
+                                  firstUnflaggedAntennaToPlot = 0
+                                  mytime += 1
+                              if (debug):
+                                  print "----- Resetting firstUnflaggedAntennaToPlot from %d to %d" % (firstUnflaggedAntennaToPlot-1, firstUnflaggedAntennaToPlot)
+                                  print "-----    = antenna %d" % (antennasToPlot[firstUnflaggedAntennaToPlot])
+                              continue
+                      if (overlayAntennas==False and subplot==11):
+                            # added the case (subplot==11) on April 22, 2012 to prevent crash on multi-antenna subplot=421
+                            if (debug):
+                                print "#######  removing [%d,%d,%d,%d]" % (pages[len(pages)-1][PAGE_ANT],
+                                                                  pages[len(pages)-1][PAGE_SPW],
+                                                                  pages[len(pages)-1][PAGE_TIME],
+                                                                  pages[len(pages)-1][PAGE_AP])
+                            pages = pages[0:len(pages)-1]
+                            newpage = 1
+                      if (overlayAntennas==False):
+                          if (doneOverlayTime==False):  # inserted on 08-Nov-2012
+                              continue
+                          elif (debug):
+                              print "=========== Not continuing because doneOverlayTime=%s" % (str(doneOverlayTime))
+                      
+                  if (firstTimeMatch == -1):
+                        firstTimeMatch = mytime
+                        if (debug):
+                            print "Setting firstTimeMatch from -1 to %s" % (str(firstTimeMatch))
+          
+################### Here is the amplitude plotting ############    stopping here Sep 4, 2013
+                  if (yaxis.find('amp')>=0 or yaxis.find('both')>=0 or yaxis.find('ap')>=0) and doneOverlayTime==False:
+          
+                    if (debug):
+                        print "amp: xctr=%d, xant=%d, myap=%d, mytime=%d(%s), firstTimeMatch=%d, bOverlay=" % (xctr, xant, myap, mytime, utstring(uniqueTimes[mytime],3), firstTimeMatch), bOverlay
+                    if (myap==1):
+                      if (overlayTimes == False or mytime==firstTimeMatch):
+                        if ((overlaySpws == False and overlayBasebands==False) or spwctr == 0 or spwctr>len(spwsToPlot)):
+                          if (overlayAntennas==False or xctr==firstUnflaggedAntennaToPlot
+                              or xctr==antennasToPlot[-1]):  # 2012-05-24, to fix the case where all ants flagged on one timerange
+                              xframe += 1
+                              if (debug):
+                                  print "y) incrementing xframe to %d" % xframe
+                                  print "mytime=%d  ==  firstTimeMatch=%d" % (mytime, firstTimeMatch)
+                                  print "xctr=%d  ==  firstUnflaggedAntennaToPlot=%d,  antennastoPlot[-1]=%d" % (xctr, firstUnflaggedAntennaToPlot,antennasToPlot[-1])
+                              myUniqueColor = []
+                              newylimits = [LARGE_POSITIVE, LARGE_NEGATIVE]
+                    else: # (myap == 0)
+                      if (overlayTimes == False or mytime==firstTimeMatch):
+                        if ((overlaySpws == False and overlayBasebands==False) or spwctr == 0 or spwctr>len(spwsToPlot)):
+                          if (overlayAntennas==False or xctr==firstUnflaggedAntennaToPlot
+                              or xctr>antennasToPlot[-1]):  # 2012-05-24, to fix the case where all ants flagged on one timerange
+                              xframe += 1
+                              if (debug):
+                                  print "Y) incrementing xframe to %d" % xframe
+                                  print "mytime=%d  ==  firstTimeMatch=%d" % (mytime, firstTimeMatch)
+                                  print "xctr=%d  ==  firstUnflaggedAntennaToPlot=%d,  antennasToPlot[-1]=%d" % (xctr, firstUnflaggedAntennaToPlot,antennasToPlot[-1])
+                                  print "spwctr=%d  >? len(spwsToPlot)=%d" % (spwctr, len(spwsToPlot))
+                              myUniqueColor = []
+                              newylimits = [LARGE_POSITIVE, LARGE_NEGATIVE]
+                              if (debug):
+                                  print "myap=%d, mytime == firstTimeMatch=%d" % (myap, firstTimeMatch)
+                      if (debug):
+                          print "$$$$$$$$$$$$$$$$$$$$$$$  ready to plot amp on xframe %d" % (xframe)
+# #     # #            print ",,,,,,,,,,,,,,,, Starting with newylimits = ", newylimits
+                      adesc = pb.subplot(xframe)
+                      alreadyPlottedAmp = True  # needed for (overlay='baseband', yaxis='both')
+                      drewAtmosphereOnFlaggedAntenna = False
+                      pb.hold(overlayAntennas or overlayTimes or overlaySpws or overlayBasebands)
+                      gampx = np.abs(gplotx)
+                      if (nPolarizations == 2):
+                          gampy = np.abs(gploty)
+                          if (yaxis.lower().find('db') >= 0):
+                              gamp = [10*np.log10(gampx), 10*np.log10(gampy)]
+                          else:
+                              if (channeldiff>0):
+                                  if (debug): print "Computing derivatives"
+                                  if (xaxis == 'chan'):
+                                      gamp0, newx0, gamp0res, newx0res = channelDifferences(gampx, pchannels[0], resample)
+                                      gamp1, newx1, gamp1res, newx1res = channelDifferences(gampy, pchannels[1], resample)
+                                      pchannels = [newx0, newx1]
+                                  else:
+                                      gamp0, newx0, gamp0res, newx0res  = channelDifferences(gampx, pfrequencies[0], resample)
+                                      gamp1, newx1, gamp1res, newx1res = channelDifferences(gampy, pfrequencies[1], resample)
+                                      pfrequencies = [newx0, newx1]
+                                  gamp = [gamp0, gamp1]
+                                  gampres = [gamp0res, gamp1res]
+                                  if (VisCal.lower().find('tsys') >= 0 and tsysPercent):
+                                      gamp = [100*gamp0/np.median(gampx), 100*gamp1/np.median(gampy)]
+                                      gampres = [100*gamp0res/np.median(gampx), 100*gamp1res/np.median(gampy)]
+                                  elif (VisCal.lower().find('tsys') < 0 and ampPercent):
+                                      gamp = [100*gamp0/np.median(gampx), 100*gamp1/np.median(gampy)]
+                                      gampres = [100*gamp0res/np.median(gampx), 100*gamp1res/np.median(gampy)]
+                                  gamp_mad = [madInfo(gamp[0],madsigma,edge), madInfo(gamp[1],madsigma,edge)]
+                                  gamp_std = [stdInfo(gampres[0],madsigma,edge,ispw,xant,0), stdInfo(gampres[1],madsigma,edge,ispw,xant,1)]
+                                  if (debug): print "gamp_mad done"
+                                  if (platformingSigma > 0):
+                                      platformingThresholdX = gamp_mad[0]['mad']*platformingSigma
+                                      platformingThresholdY = gamp_mad[1]['mad']*platformingSigma
+                                  else:
+                                      platformingThresholdX = platformingThreshold
+                                      platformingThresholdY = platformingThreshold
+                                      gamp_platforming = [platformingCheck(gamp[0],platformingThresholdX),
+                                                          platformingCheck(gamp[1],platformingThresholdY)]
+                                  for p in [0,1]:
+                                      if (debug):
+                                          print "gamp_mad[%d] = %s" % (p, str(gamp_mad[p]))
+                                          print "madstats[%s][%d] = %s" % (Antstring,ispw, str(madstats[Antstring][ispw]))
+                                      madstats[Antstring][ispw][mytime][p]['amp'] = gamp_mad[p]['mad']
+                                      madstats[Antstring][ispw][mytime][p]['ampstd'] = gamp_std[p]['std']
+                                      if (gamp_platforming[p]):
+                                          if (Antstring not in madstats['platforming'].keys()):
+                                              madstats['platforming'][Antstring] = {}
+                                          if (ispw not in madstats['platforming'][Antstring].keys()):
+                                              madstats['platforming'][Antstring][ispw] = {}
+                                          if (p not in madstats['platforming'][Antstring][ispw].keys()):
+                                              madstats['platforming'][Antstring][ispw][p] = []
+                                          madstats['platforming'][Antstring][ispw][p].append(uniqueTimes[mytime])
+                                      if (gamp_mad[p]['nchan'] > 0):
+                                          casalogPost(debug, "%s, Pol %d, spw %2d, %s, amp: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gamp_mad[p]['nchan'], madsigma, gamp_mad[p]['outlierValue'], gamp_mad[p]['outlierChannel']+pchannels[p][0]))
+                                  if (debug): print "madstats done"
+                              else:
+                                  gamp = [gampx,gampy]
+                      else:
+                          if (yaxis.lower().find('db') >= 0):
+                              gamp = [10*np.log10(gampx)]
+                          else:
+                              if (channeldiff>0):
+                                  if (xaxis == 'chan'):
+                                      gamp0, newx0, gamp0res, newx0res  = channelDifferences(gampx, pchannels[0], resample)
+                                      pchannels = [newx0]
+                                  else:
+                                      gamp0, newx0, gamp0res, newx0res  = channelDifferences(gampx, pfrequencies[0], resample)
+                                      pfrequencies = [newx0]
+                                  gamp = [gamp0]
+                                  gampres = [gamp0res]
+                                  if (VisCal.lower().find('tsys') >= 0 and tsysPercent):
+                                      gamp = [100*gamp0/np.median(gampx)]
+                                      gampres = [100*gamp0res/np.median(gampx)]
+                                  elif (VisCal.lower().find('tsys') < 0 and ampPercent):
+                                      gamp = [100*gamp0/np.median(gampx)]
+                                      gampres = [100*gamp0res/np.median(gampx)]
+                                  p = 0
+                                  gamp_mad = [madInfo(gamp[p], madsigma,edge)]
+                                  gamp_std = [stdInfo(gampres[p], madsigma,edge,ispw,xant,p)]
+                                  if (platformingSigma > 0):
+                                      platformingThresholdX = gamp_mad[0]['mad']*platformingSigma
+                                  else:
+                                      platformingThresholdX = platformingThreshold
+                                  gamp_platforming = [platformingCheck(gamp[p], platformingThresholdX)]
+                                  madstats[Antstring][ispw][mytime][p]['amp'] = gamp_mad[p]['mad']
+                                  madstats[Antstring][ispw][mytime][p]['ampstd'] = gamp_std[p]['std']
+                                  if (gamp_platforming[p]):
+                                      if (Antstring not in madstats['platforming'].keys()):
+                                          madstats['platforming'][Antstring] = {}
+                                      if (ispw not in madstats['platforming'][Antstring].keys()):
+                                          madstats['platforming'][Antstring][ispw] = {}
+                                      if (p not in madstats['platforming'][Antstring][ispw].keys()):
+                                          madstats['platforming'][Antstring][ispw][p] = []
+                                      madstats['platforming'][Antstring][ispw][p].append(mytime)
+                                  if (gamp_mad[p]['nchan'] > 0):
+                                      casalogPost(debug, "%s, Pol %d, spw %2d, %s, amp: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gamp_mad[p]['nchan'], madsigma, gamp_mad[p]['outlierValue'], gamp_mad[p]['outlierChannel']+pchannels[p][0]))
+                              else:
+                                  gamp = [gampx]
+                      if (bOverlay):
+                            gampx2 = np.abs(gplotx2)
+                            if (nPolarizations2 == 2):
+                              gampy2 = np.abs(gploty2)
+                              if (yaxis.lower().find('db') >= 0):
+                                  gamp2 = [10*np.log10(gampx2), 10*np.log10(gampy2)]
+                              else:
+                                  if (channeldiff>0):
+                                      if (xaxis == 'chan'):
+                                          gamp2_0, newx0, gamp2_0res, newx0res = channelDifferences(gampx2, pchannels2[0], resample)
+                                          gamp2_1, newx1, gamp2_1res, newx1res = channelDifferences(gampy2, pchannels2[1], resample)
+                                          pchannels2 = [newx0, newx1]
+                                      else:
+                                          gamp2_0, newx0, gamp2_0res, newx0res = channelDifferences(gampx2, pfrequencies2[0], resample)
+                                          gamp2_1, newx1, gamp2_1res, newx1res = channelDifferences(gampy2, pfrequencies2[1], resample)
+                                          pfrequencies2 = [newx0, newx1]
+                                      gamp2 = [gamp2_0, gamp2_1]
+                                      gamp2res = [gamp2_0res, gamp2_1res]
+                                      if (VisCal.lower().find('tsys') >= 0 and tsysPercent):
+                                          gamp2 = [100*gamp2_0/np.median(gampx2), 100*gamp2_1/np.median(gampy2)]
+                                          gamp2res = [100*gamp2_0res/np.median(gampx2), 100*gamp2_1res/np.median(gampy2)]
+                                      elif (VisCal.lower().find('tsys') < 0 and ampPercent):
+                                          gamp2 = [100*gamp2_0/np.median(gampx2), 100*gamp2_1/np.median(gampy2)]
+                                          gamp2res = [100*gamp2_0res/np.median(gampx2), 100*gamp2_1res/np.median(gampy2)]
+                                  else:
+                                      gamp2 = [gampx2, gampy2]
+                            else:
+                              if (yaxis.lower().find('db') >= 0):
+                                  gamp2 = [10*np.log10(gampx2)]
+                              else:
+                                  if (channeldiff>0):
+                                      if (xaxis == 'chan'):
+                                          gamp2_0, newx0, gamp2_0res, newx0res = channelDifferences(gampx2, pchannels[0], resample)
+                                          pchannels2 = [newx0]
+                                      else:
+                                          gamp2_0, newx0, gamp2_0res, newx0res = channelDifferences(gampx2, pfrequencies[0], resample)
+                                          pfrequencies2 = [newx0]
+                                      gamp2 = [gamp2_0]
+                                      gamp2res = [gamp2_0res]
+                                      if (VisCal.lower().find('tsys') >= 0 and tsysPercent):
+                                          gamp2 = [100*gamp2_0/np.median(gampx2)]
+                                          gamp2res = [100*gamp2_0res/np.median(gampx2)]
+                                      elif (VisCal.lower().find('tsys') < 0 and ampPercent):
+                                          gamp2 = [100*gamp2_0/np.median(gampx2)]
+                                          gamp2res = [100*gamp2_0res/np.median(gampx2)]
+                                  else:
+                                      gamp2 = [gampx2]
+                      if (xaxis.find('chan')>=0 or msFound==False):    #  'amp'
+                          if (debug):
+                              print "amp: plot vs. channel **********************"
+                          pb.hold(True)
+                          for p in range(nPolarizations):
+                              if (overlayAntennas or overlayTimes):
+                                  if (corr_type_string[p] in polsToPlot):
+                                        pdesc = pb.plot(pchannels[p],gamp[p],'%s'%ampmarkstyles[p],
+                                                        markersize=markersize,
+                                                        markerfacecolor=overlayColors[xctr])
+                                        newylimits =  recalcYlimits(plotrange,newylimits,gamp[p])
+                                        if (overlayAntennas and overlayTimes==False):
+                                            pb.setp(pdesc, color=overlayColors[xctr])
+                                        elif (overlayTimes and overlayAntennas==False):
+                                            pb.setp(pdesc, color=overlayColors[mytime])
+                                        elif (overlayTimes and overlayAntennas): # try to support time,antenna
+                                            if (debug):
+                                                print "p=%d, len(fieldsToPlot)=%d, len(timerangeList)=%d" % (p,len(fieldsToPlot),len(timerangeList))
+                                            if (myUniqueTime != [] and (len(fieldsToPlot) > 1 or len(timerangeList)>1)):
+                                                pb.setp(pdesc, color=overlayColors[myUniqueTime])
+# #     # #                                      print "pb.setp: myUniqueTime, overlayColors = ", myUniqueTime, overlayColors[myUniqueTime]
+                                                # The third 'or' below is needed if pol='0' is flagged on antenna 0. -- 2012/10/12
+                                                if (p==0 or len(polsToPlot)==1 or myUniqueColor==[]):
+                                                    myUniqueColor.append(overlayColors[len(myUniqueColor)])
+                                                pb.setp(pdesc, color=myUniqueColor[-1])
+                              else:
+                                  if (corr_type_string[p] in polsToPlot):
+# #     # #                          print "pcolor[%d]=%s" % (p,pcolor)
+                                    pb.plot(pchannels[p],gamp[p],'%s%s'%(pcolor[p],ampmarkstyle), markersize=markersize)
+                                    newylimits =  recalcYlimits(plotrange,newylimits,gamp[p])
+                          if (sum(xflag)>0):
+                              xrange = np.max(channels)-np.min(channels)
+                              SetNewXLimits([np.min(channels)-xrange/20, np.max(channels)+xrange/20])
+# #     # #                    print "amp: Resetting xaxis channel range to counteract flagged data"
+                          if (xframe in bottomRowFrames or (xctr+1==len(antennasToPlot) and ispw==spwsToPlot[-1])):
+                              pb.xlabel("Channel", size=mysize)
+                      elif (xaxis.find('freq')>=0):   # amp
+                          if (bOverlay):
+                                pb.hold(True)
+                                xrange = np.abs(xfrequencies[0]-xfrequencies[-1])
+                                try:
+                                    xrange2 = np.abs(xfrequencies2[0]-xfrequencies2[-1])
+                                except:
+                                    print "No amp data found in second solution.  Try increasing the solutionTimeThresholdSeconds above %.0f." % (solutionTimeThresholdSeconds)
+                                    print "If this doesn't work, email the developer (%s)." % (developerEmail)
+                                    return()
+          
+                                if (np.abs(xrange/xrange2 - 1) > 0.05 + len(xflag)/len(xchannels)):  # 0.0666 is 2000/1875-1
+                                   # These line widths are optimal for visualizing FDM over TDM
+                                   width1 = 1
+                                   width2 = 4
+                                   # solutions differ in frequency width
+                                   if (xrange < xrange2):
+                                      for p in range(nPolarizations):
+                                            if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                                  pb.plot(pfrequencies[p], gamp[p], '%s%s'%(pcolor[p],ampmarkstyle), linewidth=width2, markersize=markersize)
+                                                  newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
+                                      for p in range(nPolarizations):
+                                            if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                                  pb.plot(pfrequencies2[p], gamp2[p], '%s%s'%(p2color[p],ampmarkstyle), linewidth=width1, markersize=markersize)
+                                                  newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp2[p], sideband,plotrange,xchannels2)
+                                   else:
+                                      for p in range(nPolarizations):
+                                            if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                                  pb.plot(pfrequencies2[p], gamp2[p], '%s%s'%(p2color[p],ampmarkstyle), linewidth=width2, markersize=markersize)
+                                                  newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp2[p], sideband,plotrange,xchannels2)
+                                      for p in range(nPolarizations):
+                                            if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                                  pb.plot(pfrequencies[p], gamp[p], '%s%s'%(pcolor[p],ampmarkstyle), linewidth=width1, markersize=markersize)
+                                                  newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
+                                else:
+                                   width1 = 1
+                                   width2 = 2  # Just enough to distinguish one line from the other.
+                                   # solutions may be different level of smoothing, so plot highest rms first
+                                   if (np.std(gamp[0]) < np.std(gamp2[0])):
+                                      for p in range(nPolarizations):
+                                          if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                              pb.plot(pfrequencies2[p], gamp2[p], '%s%s'%(p2color[p],ampmarkstyle), linewidth=width1, markersize=markersize)
+                                              newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp2[p], sideband,plotrange,xchannels2)
+                                      for p in range(nPolarizations):
+                                          if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                              pb.plot(pfrequencies[p], gamp[p], '%s%s'%(pcolor[p],ampmarkstyle), linewidth=width2, markersize=markersize)
+                                              newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
+                                   else:
+                                      for p in range(nPolarizations):
+                                          if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                              pb.plot(pfrequencies[p], gamp[p], '%s%s'%(pcolor[p],ampmarkstyle), linewidth=width2, markersize=markersize)
+                                              newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
+                                      for p in range(nPolarizations):
+                                          if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                              pb.plot(pfrequencies2[p], gamp2[p], '%s%s'%(p2color[p],ampmarkstyle), linewidth=width1, markersize=markersize)
+                                              newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp2[p], sideband,plotrange,xchannels2)
+                                # must set new limits after plotting  'amp'
+                                if (zoom=='intersect'):
+                                    if (xrange < xrange2):
+                                        SetNewXLimits([min(xfrequencies[0],xfrequencies[-1])-xrange*0.1, max(xfrequencies[0],xfrequencies[-1])+xrange*0.1])
+                                        SetLimits(plotrange, chanrange, newylimits, channels, frequencies,
+                                                  pfrequencies, ampMin, ampMax, xaxis, pxl)
+                                    else:
+# #     # #                              print "len(xfrequencies2) = ", len(xfrequencies2)
+                                        SetNewXLimits([min(xfrequencies2[0],xfrequencies2[-1])-xrange2*0.1, max(xfrequencies2[0],xfrequencies2[-1])+xrange2*0.1])
+                                        slstatus = SetLimits(plotrange, chanrange, newylimits, channels, frequencies2,
+                                                  pfrequencies2, ampMin, ampMax, xaxis, pxl)
+                                else:
+                                    if (xrange < xrange2):
+                                        SetLimits(plotrange, chanrange, newylimits, channels, frequencies,
+                                                  pfrequencies, ampMin, ampMax, xaxis, pxl)
+                                    else:
+                                        SetLimits(plotrange, chanrange, newylimits, channels, frequencies2,
+                                                  pfrequencies2, ampMin, ampMax, xaxis, pxl)
+                                # draw polarization and spw labels
+                                if (xframe == firstFrame):
+                                    # draw title including caltable name
+                                    caltableList = 'c1 = ' + caltable + ',  c2 = ' + caltable2 + ' (%s)'%(utstring(uniqueTimes2[mytime],3))
+                                    pb.text(xstartTitle, ystartTitle, caltableList, size=titlesize,
+                                            color='k', transform=pb.gcf().transFigure)
+                          elif (bpolyOverlay):
+                              if (debug):
+                                  print "in bpolyOverlay **********************************"
+                              matches1 = []
+                              for tbp in range(len(timesBP)):
+                                  if (sloppyMatch(uniqueTimes[mytime], timesBP[tbp], solutionTimeThresholdSeconds,
+                                                  mytime, scansToPlot, scansForUniqueTimes,
+                                                  myprint=debugSloppyMatch
+                                                  )):
+                                      matches1.append(tbp)
+                              matches1 = np.array(matches1)
+                              if (len(matches1) < 1):
+                                  print "No time match found between %.1f and %s" % (uniqueTimes[mytime], str(timesBP))
+                                  print "If you are sure the solutions correspond to the same data, you can set solutionTimeThresholdSeconds>=%.0f" % (1+np.ceil(np.abs(timesBP[0]-uniqueTimes[mytime])))
+                                  return()
+                              matches2 = np.where(xant == np.array(antennasBP))[0]
+                              if (len(matches2) < 1):
+                                  print "No antenna match found: %s" % (str(xant), str(antennasBP))
+                              if (tableFormat == 33):
+                                  matches3 = np.where(ispw == np.array(cal_desc_idBP))[0]
+                                  if (len(matches3) < 1):
+                                      print "No spw match found: %d not in %s" % (ispw, str(cal_desc_idBP))
+                              else:
+                                  matches3 = np.where(ispw == np.array(spwBP))[0]
+                                  if (len(matches3) < 1):
+                                      print "No spw match found: %d not in %s" % (ispw, str(spwBP))
+                              matches12 = np.intersect1d(matches1,matches2)
+                              if (len(matches12) < 1):
+                                  print "No time+antenna match between: %s and %s" % (str(matches1), str(matches2))
+                              matches = np.intersect1d(matches12, matches3)
+                              if (len(matches) < 1):
+                                  print "No time+antenna+spw match between: %s and %s" % (str(matches12), str(matches3))
+                              try:
+                                  index = matches[0]
+                                  if (debug):
+                                      print "Match = %d ***********************************" % (index)
+                              except:
+                                  print "No match found for time=%.6f, xant=%d, ispw=%d"  % (uniqueTimes[mytime],xant,ispw)
+                                  print "antennasBP = %s" % (str(antennasBP))
+                                  print "cal_desc_idBP = %s" % (str(cal_desc_idBP))
+                                  timesBPstring = 'timesBP = '
+                                  for i in timesBP:
+                                      timesBPstring += "%.6f, " % i
+                                  print timesBPstring
+                                  return()
+                              validDomain = [frequencyLimits[0,index], frequencyLimits[1,index]]
+                              cc = calcChebyshev(polynomialAmplitude[index][0:nPolyAmp[index]], validDomain, frequenciesGHz[index]*1e+9)
+                              fa = np.array(frequenciesGHz[index])
                               if (xfrequencies[0] < xfrequencies[-1]):
                                   matches = np.where(fa>xfrequencies[0])[0]
                                   matches2 = np.where(fa<xfrequencies[-1])[0]
                               else:
                                   matches = np.where(fa>xfrequencies[-1])[0]
                                   matches2 = np.where(fa<xfrequencies[0])[0]
-                              mymean = complexMeanDeg(np.array(cc)[matches[0]:matches2[-1]+1])
-                              phaseSolution2X = np.mean(gphsx) + cc - mymean
-  
-                              cc = calcChebyshev(polynomialPhase2[index][nPolyPhase2[index]:2*nPolyPhase2[index]], validDomain, frequenciesGHz2[index]*1e+9) * 180/math.pi
-                              if (yfrequencies[0] < yfrequencies[-1]):
+                              if (len(matches) < 1):
+                                  print "looking for %f-%f GHz inside %f-%f" % (xfrequencies[0],xfrequencies[-1],fa[0],fa[-1])
+                              amplitudeSolutionX = np.mean(gampx)*(cc-np.mean(cc)+1)
+          
+                              cc = calcChebyshev(polynomialAmplitude[index][nPolyAmp[index]:2*nPolyAmp[index]], validDomain, frequenciesGHz[index]*1e+9)
+                              if (nPolarizations > 1):
+                                if (yfrequencies[0] < yfrequencies[-1]):
                                   matches = np.where(fa>yfrequencies[0])[0]
                                   matches2 = np.where(fa<yfrequencies[-1])[0]
-                              else:
+                                else:
                                   matches = np.where(fa>yfrequencies[-1])[0]
                                   matches2 = np.where(fa<yfrequencies[0])[0]
-                              mymean = complexMeanDeg(np.array(cc)[matches[0]:matches2[-1]+1])
-                              phaseSolution2Y = np.mean(gphsy) + cc - mymean
-                              pb.hold(True)
-                              for p in range(nPolarizations):
-                                  if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                      pb.plot(pfrequencies[p], gphs[p],'%s%s' % (pcolor[p],phasemarkstyle), markersize=markersize)
-                                      newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband,plotrange,xchannels)
-                              if (corrTypeToString(corr_type[0]) in polsToPlot):
-                                  pb.plot(frequenciesGHz[index],phaseSolutionX,'%s%s'%(x2color,bpolymarkstyle))
-                                  newylimits = recalcYlimitsFreq(chanrange, newylimits, phaseSolutionX, sideband,plotrange,xchannels)
-                                  pb.plot(frequenciesGHz2[index],phaseSolution2X,'%s%s'%(x3color,bpolymarkstyle))
-                                  newylimits = recalcYlimitsFreq(chanrange, newylimits, phaseSolution2X, sideband,plotrange,xchannels2)
-                              if (nPolarizations == 2):
-                                 if (corrTypeToString(corr_type[1]) in polsToPlot):
-                                    pb.plot(frequenciesGHz[index],phaseSolutionY,'%s%s'%(y2color,bpolymarkstyle))
-                                    newylimits = recalcYlimitsFreq(chanrange, newylimits, phaseSolutionY, sideband,plotrange,xchannels)
-                                    pb.plot(frequenciesGHz2[index],phaseSolution2Y,'%s%s'%(y3color,bpolymarkstyle))
-                                    newylimits = recalcYlimitsFreq(chanrange, newylimits, phaseSolution2Y, sideband,plotrange,xchannels2)
-                          else:
-                              pb.hold(True)
-                              for p in range(nPolarizations):
-                                  if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                      pb.plot(pfrequencies[p], gphs[p],'%s%s'%(pcolor[p],phasemarkstyle), markersize=markersize)
-                                      newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband,plotrange,xchannels)
-                              if (corrTypeToString(corr_type[0]) in polsToPlot):
-                                 pb.plot(frequenciesGHz[index],phaseSolutionX,'%s%s'%(x2color,bpolymarkstyle))
-                                 newylimits = recalcYlimitsFreq(chanrange, newylimits, phaseSolutionX, sideband,plotrange,xchannels)
-                              if (nPolarizations == 2):
-                                 if (corrTypeToString(corr_type[1]) in polsToPlot):
-                                    pb.plot(frequenciesGHz[index],phaseSolutionY,'%s%s'%(y2color,bpolymarkstyle))
-                                    newylimits = recalcYlimitsFreq(chanrange, newylimits, phaseSolutionY, sideband,plotrange,xchannels)
-                          # endif (bpolyOverlay2)
-                          # Adding the following 4 lines on March 14, 2013
-                          (y0,y1) = pb.ylim()
-                          if (y1-y0 < minPhaseRange):
-                              # this must come before defining ticks 
-                              SetNewYLimits([-minPhaseRange,minPhaseRange])
-                  else:
-                      # we are not overlaying any B or polynomial solutions   'phase vs. freq'
-                      pb.hold(True)
-                      for p in range(nPolarizations):
-                          if (corrTypeToString(corr_type[p]) in polsToPlot):
-                              if (overlayAntennas or overlayTimes):
-                                pdesc = pb.plot(pfrequencies[p], gphs[p],'%s'%(phasemarkstyles[p]), markersize=markersize)
-                                newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband,plotrange,xchannels) # Apr 2, 2012
-                                if (overlayAntennas and overlayTimes==False):
-                                    pb.setp(pdesc, color=overlayColors[xctr])
-                                elif (overlayTimes and overlayAntennas==False):
-                                    pb.setp(pdesc, color=overlayColors[mytime])
-                                elif (overlayTimes): # try to support antenna,time
-                                    if (myUniqueTime != []):
-                                        pb.setp(pdesc, color=overlayColors[myUniqueTime])
-                                        # The third 'or' below is needed if pol='0' is flagged on antenna 0. -- 2012/10/12 (original spot)
-                                        if (p==0 or len(polsToPlot)==1 or myUniqueColor==[]):
-                                            myUniqueColor.append(overlayColors[len(myUniqueColor)])
-                                        pb.setp(pdesc, color=myUniqueColor[-1])
-                              else:
-                                pb.plot(pfrequencies[p], gphs[p],'%s%s'%(pcolor[p],phasemarkstyles[0]), markersize=markersize)
-                                newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband, plotrange,xchannels)
-                          if (sum(xflag)>0):
-# #                            print "phase frame %d: Resetting xaxis frequency range to counteract flagged data" % (xframe)
-                              xrange = np.max(frequencies)-np.min(frequencies)
-                              SetNewXLimits([np.min(frequencies)-0.15*xrange, np.max(frequencies)+0.15*xrange])
-                          if (len(gphs[p]) > 0):
-                              if (np.max(gphs[p]) < minPhaseRange and np.min(gphs[p]) > -minPhaseRange):
-                                  SetNewYLimits([-minPhaseRange,minPhaseRange])
-                  #endif bOverlay
-  
-                  if (1==1):
-                      pb.xlabel(xlabelString, size=mysize)
-              #endif xaxis='chan'/freq  for 'phase'
-              if (overlayTimes):
-                  timeString =''
-              else:
-                  timeString = ',  t%d/%d  %s' % (mytime+1,nUniqueTimes,utstring(uniqueTimes[mytime],3))
-              if (ispw==originalSpw[ispw]):
-                    titleString = "%sspw%2d,  field %d: %s%s" % (antennaString,ispw,
-                                                                uniqueFields[fieldIndex],fieldString,timeString)
-              else:
-                    titleString = "%sspw%2d (%d),  field %d: %s%s" % (antennaString,ispw,originalSpw[ispw],
-                                                                uniqueFields[fieldIndex],fieldString,timeString)
-              pb.title(titleString,size=titlesize)
-              if (abs(plotrange[0]) > 0 or abs(plotrange[1]) > 0):
-                  SetNewXLimits([plotrange[0],plotrange[1]])
-  
-              # Here is 1st place where we eliminate any white space on the right and left edge of the plots: 'phase'
-              else:
-                  if (xaxis.find('chan')>=0):
-                      SetNewXLimits([channels[0],channels[-1]])
-                  else:
-                      if (zoom != 'intersect'):
-                          SetNewXLimits([frequencies[0], frequencies[-1]])
-                      if (bOverlay):
-                          if (xrange2 > xrange+0.1 and zoom != 'intersect'):
-                              TDMisSecond = True
-  
-              if (abs(plotrange[2]) > 0 or abs(plotrange[3]) > 0):
-                  if (amplitudeWithPhase == False or phase == ''):
-                      SetNewYLimits([plotrange[2],plotrange[3]])
-              if (amplitudeWithPhase and phase != ''):
-                  if (phase[0] != 0 or phase[1] != 0):
-                      SetNewYLimits(phase)
-                  
-  
-              (y0,y1) = pb.ylim()
-              if (y1-y0 < minPhaseRange):
-                    # this must come before defining ticks
-                    SetNewYLimits([-minPhaseRange,minPhaseRange])
-                    SetNewYLimits(newylimits)  # added 10/2/2012 for the case of only 1 data point
-              if (amplitudeWithPhase and phase != ''):
-                  if (phase[0] != 0 or phase[1] != 0):
-                      SetNewYLimits(phase)
-              (y0,y1) = pb.ylim()
-              ResizeFonts(adesc,mysize)
-              adesc.xaxis.grid(True,which='major')
-              adesc.yaxis.grid(True,which='major')
-              pb.ylabel(yPhaseLabel, size=mysize)
-              pb.subplots_adjust(hspace=myhspace, wspace=mywspace)
-              ylim = pb.ylim()
-              xlim = pb.xlim()
-              xrange = xlim[1]-xlim[0]
-              yrange = ylim[1]-ylim[0]
-# #            print "phase: ylim, yrange = ",  ylim, yrange
-              myap = 0
-              if (overlayAntennas == False and overlayTimes == False and bOverlay == False):
-                  # draw polarization labels
-                  x0 = xstartPolLabel
-                  y0 = ystartPolLabel
-                  for p in range(nPolarizations):
-                        if (corrTypeToString(corr_type[p]) in polsToPlot):
-                            pb.text(x0, y0-0.03*subplotRows*p, corrTypeToString(corr_type[p]), color=pcolor[p],
-                                    size=mysize, transform=pb.gca().transAxes)
-                            if (channeldiff > 0):
-                                pb.text(x0, ystartMadLabel-0.03*subplotRows*p,
-                                        corrTypeToString(corr_type[p])+' MAD = %.4f'%(gphs_mad[p]['mad']),
-                                        color=pcolor[p],size=mysize, transform=pb.gca().transAxes)
-                  if (xframe == firstFrame):
-                        # draw title including caltable name
-                        caltableList = caltableTitle
-                        if (bpolyOverlay):
-                              caltableList += ', ' + caltable2 + ' (degamp=%d, degphase=%d)'%(nPolyAmp[index]-1,nPolyPhase[index]-1)
+                                amplitudeSolutionY = np.mean(gampy)*(cc-np.mean(cc)+1)
                               if (bpolyOverlay2):
-                                    caltableList += ', ' + caltable3 + ' (degamp=%d, degphase=%d)'%(nPolyAmp2[index]-1,nPolyPhase2[index]-1)
-                        pb.text(xstartTitle, ystartTitle, caltableList, size=titlesize,
-                                color='k', transform=pb.gcf().transFigure)
-              elif (overlayAntennas==True and xant==antennasToPlot[-1] and bOverlay==False  # ):
-                    and overlayTimes==False):  # try to support antenna,time   avoid antenna labels 'phase'
-                  # We do this last, because by then, the limits will be stable.
-                  x0 = xstartPolLabel
-                  y0 = ystartPolLabel
-                  if (corrTypeToString(corr_type[0]) in polsToPlot):
-                      if (channeldiff > 0):
-                          pb.text(x0, ystartMadLabel-0.03*subplotRows*p,
-                                  corrTypeToString(corr_type[p])+' MAD = %.4f'%(gphs_mad[p]['mad']),
-                                  color=overlayColors[0], size=mysize, transform=pb.gca().transAxes)
-                      if (phasemarkstyle.find('-')>=0):
-                          pb.text(x0, y0-0.03*subplotRows*0, corrTypeToString(corr_type[0])+' solid', color=overlayColors[0],
-                                  fontsize=mysize, transform=pb.gca().transAxes)
-                      else:
-                          pb.text(x0+0.02, y0-0.03*subplotRows*0, corrTypeToString(corr_type[0]), color=overlayColors[0],
-                                  fontsize=mysize, transform=pb.gca().transAxes)
-                          pdesc = pb.plot([x0], [y0+0.015-0*0.03*subplotRows], '%sk'%phasemarkstyle, markersize=markersize,
-                                          scalex=False,scaley=False, transform=pb.gca().transAxes)
-                  if (len(corr_type) > 1):
-                    if (corrTypeToString(corr_type[1]) in polsToPlot):
-                      if (channeldiff > 0):
-                          pb.text(x0, ystartMadLabel-0.03*subplotRows*p,
-                                  corrTypeToString(corr_type[p])+' MAD = %.4f'%(gphs_mad[p]['mad']),
-                                  color=overlayColors[0], size=mysize, transform=pb.gca().transAxes)
-                      if (phasemarkstyle2.find('--')>=0):
-                          pb.text(x0, y0-0.03*subplotRows*1, corrTypeToString(corr_type[1])+' dashed', color=overlayColors[0],
-                                  fontsize=mysize, transform=pb.gca().transAxes)
-                      else:
-                          pb.text(x0+0.02, y0-0.03*subplotRows*1, corrTypeToString(corr_type[1]), color=overlayColors[0],
-                                  fontsize=mysize, transform=pb.gca().transAxes)
-                          pdesc = pb.plot([x0], [y0+0.015*subplotRows-0.03*subplotRows*1],'%sk'%phasemarkstyle2, markersize=markersize,
-                                          scalex=False,scaley=False, transform=pb.gca().transAxes)
-                  if (xframe == firstFrame):
-                      # draw title including caltable name
-                      pb.text(xstartTitle, ystartTitle, caltableTitle, size=titlesize, color='k',
-                              transform=pb.gcf().transFigure)
-                      DrawAntennaNames(msAnt, antennasToPlot, msFound, mysize)
-              elif (overlayTimes==True and bOverlay == False 
-                    and overlayAntennas==False):  # try to support antenna,time
-                  doneOverlayTime = True # assumed until proven otherwise in the 'for' loop
-                  for f in fieldIndicesToPlot:
-                      if (uniqueTimes[mytime] < uniqueTimesPerFieldPerSpw[ispwInCalTable][f][-1]-solutionTimeThresholdSeconds and
-                          uniqueTimes[mytime] < timerangeListTimes[-1]):
-                          doneOverlayTime = False
-                  if (doneOverlayTime):
-                      # either it is the last time of any times in solution, or the last time in the list of times to plot
-                      mytime = nUniqueTimes-1
-                      # We do this last, because by then, the limits will be broad enough and stable.
-                      x0 = xstartPolLabel
-                      y0 = ystartPolLabel
-                      if (corrTypeToString(corr_type[0]) in polsToPlot):
-                        if (channeldiff > 0):
-                            p = 0
-                            pb.text(x0, ystartMadLabel-0.03*subplotRows*p,
-                                    corrTypeToString(corr_type[p])+' MAD = %.4f'%(gphs_mad[p]['mad']),
-                                    color='k', size=mysize, transform=pb.gca().transAxes)
-                        if (phasemarkstyle.find('-')>=0):
-                            pb.text(x0, y0, corrTypeToString(corr_type[0])+' solid', color='k',
-                                    fontsize=mysize, transform=pb.gca().transAxes)
-                        else:
-                            pb.text(x0+0.02, y0, corrTypeToString(corr_type[0]), color='k',
-                                    fontsize=mysize, transform=pb.gca().transAxes)
-                            pdesc = pb.plot([x0], [y0+0.015*subplotRows], '%sk'%phasemarkstyle, markersize=markersize,
-                                            scalex=False,scaley=False, transform=pb.gca().transAxes)
-                      if (len(corr_type) > 1):
-                        if (corrTypeToString(corr_type[1]) in polsToPlot):
-                          if (channeldiff > 0):
-                              p = 1
-                              pb.text(x0, ystartMadLabel-0.03*subplotRows*p,
-                                      corrTypeToString(corr_type[p])+' MAD = %.4f'%(gphs_mad[p]['mad']),
-                                      color='k', size=mysize, transform=pb.gca().transAxes)
-                          if (phasemarkstyle2.find('--')>=0):
-                              pb.text(x0, y0-0.03*subplotRows, corrTypeToString(corr_type[1])+' dashed',
-                                      color='k',fontsize=mysize, transform=pb.gca().transAxes)
+                                  validDomain = [frequencyLimits2[0,index], frequencyLimits2[1,index]]
+                                  cc = calcChebyshev(polynomialAmplitude2[index][0:nPolyAmp2[index]],
+                                                     validDomain, frequenciesGHz2[index]*1e+9)
+                                  fa = np.array(frequenciesGHz2[index])
+                                  if (xfrequencies[0] < xfrequencies[-1]):
+                                      matches = np.where(fa>xfrequencies[0])[0]
+                                      matches2 = np.where(fa<xfrequencies[-1])[0]
+                                  else:
+                                      matches = np.where(fa>xfrequencies[-1])[0]
+                                      matches2 = np.where(fa<xfrequencies[0])[0]
+                                  amplitudeSolution2X = np.mean(gampx)*(cc-np.mean(cc)+1)
+          
+                                  cc = calcChebyshev(polynomialAmplitude2[index][nPolyAmp2[index]:2*nPolyAmp2[index]],
+                                                     validDomain, frequenciesGHz2[index]*1e+9)
+                                  fa = np.array(frequenciesGHz2[index])
+                                  if (yfrequencies[0] < yfrequencies[-1]):
+                                      matches = np.where(fa>yfrequencies[0])[0]
+                                      matches2 = np.where(fa<yfrequencies[-1])[0]
+                                  else:
+                                      matches = np.where(fa>yfrequencies[-1])[0]
+                                      matches2 = np.where(fa<yfrequencies[0])[0]
+                                  amplitudeSolution2Y = np.mean(gampy)*(cc-np.mean(cc)+1)
+          
+                                  pb.hold(True)
+                                  for p in range(nPolarizations):
+                                      if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                          pb.plot(pfrequencies[p], gamp[p],'%s%s'%(pcolor[p],ampmarkstyle), markersize=markersize)
+                                          newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
+                                  if (corrTypeToString(corr_type[0]) in polsToPlot):
+                                      pb.plot(frequenciesGHz[index], amplitudeSolutionX,'%s%s'%(p2color[0],bpolymarkstyle))
+                                      newylimits = recalcYlimitsFreq(chanrange, newylimits, amplitudeSolutionX, sideband,plotrange,xchannels)
+                                      pb.plot(frequenciesGHz2[index], amplitudeSolution2X, '%s%s'%(p3color[0],bpolymarkstyle))
+                                      newylimits = recalcYlimitsFreq(chanrange, newylimits, amplitudeSolution2X, sideband,plotrange,xchannels2)
+                                  if (nPolarizations == 2):
+                                     if (corrTypeToString(corr_type[1]) in polsToPlot):
+                                        pb.plot(frequenciesGHz[index], amplitudeSolutionY,'%s%s'%(p2color[1],bpolymarkstyle))
+                                        newylimits = recalcYlimitsFreq(chanrange, newylimits, amplitudeSolutionY, sideband,plotrange,ychannels,debug,12)
+                                        pb.plot(frequenciesGHz2[index], amplitudeSolution2Y, '%s%s'%(p3color[1],bpolymarkstyle))
+                                        newylimits = recalcYlimitsFreq(chanrange, newylimits, amplitudeSolution2Y, sideband,plotrange,ychannels2,debug,13)
+                              else:
+                                  pb.hold(True)
+                                  for p in range(nPolarizations):
+                                      if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                          pb.plot(pfrequencies[p], gamp[p],'%s%s'%(pcolor[p],ampmarkstyle), markersize=markersize)
+                                          newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
+                                  if (corrTypeToString(corr_type[0]) in polsToPlot):
+                                      pb.plot(frequenciesGHz[index], amplitudeSolutionX,'%s%s'%(p2color[0],bpolymarkstyle))
+                                      newylimits = recalcYlimitsFreq(chanrange, newylimits, amplitudeSolutionX, sideband,plotrange,xchannels)
+                                  if (nPolarizations == 2):
+                                     if (corrTypeToString(corr_type[1]) in polsToPlot):
+                                        pb.plot(frequenciesGHz[index], amplitudeSolutionY,'%s%s'%(p2color[1],bpolymarkstyle))
+                                        newylimits = recalcYlimitsFreq(chanrange, newylimits, amplitudeSolutionY, sideband,plotrange,ychannels)
+                              # endif (bpolyOverlay2)
                           else:
-                              pb.text(x0+0.02, y0-0.03*subplotRows, corrTypeToString(corr_type[1]),
-                                      color='k', fontsize=mysize, transform=pb.gca().transAxes)
-                              pdesc = pb.plot([x0], [y0+0.015*subplotRows-0.03*subplotRows], '%sk'%phasemarkstyle2,
-                                              markersize=markersize, scalex=False,scaley=False, transform=pb.gca().transAxes)
-                      if (xframe == firstFrame):
-                          # draw title including caltable name
-                          pb.text(xstartTitle, ystartTitle, caltableTitle, size=titlesize, color='k',
-                                  transform=pb.gcf().transFigure)
-                          drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,
-                                                 caltable,titlesize,fieldIndicesToPlot,
-                                                 ispwInCalTable,uniqueTimesPerFieldPerSpw,
-                                                 timerangeListTimes, solutionTimeThresholdSeconds,
-                                                 debugSloppyMatch,ystartOverlayLegend,debug,mysize,
-                                                 fieldsToPlot,myUniqueColor,timeHorizontalSpacing,
-                                                 fieldIndex,overlayColors, antennaVerticalSpacing,
-                                                 overlayAntennas, timerangeList, caltableTitle)
-              elif (overlayAntennas and overlayTimes):  # Oct 23, 2012
-# #            else:
-                  # This will only happen for: try to support overlay='antenna,time'
-                  if (xframe == firstFrame and mytime==0 and xctr==firstUnflaggedAntennaToPlot and bOverlay==False):
-                      # draw title including caltable name
-                      pb.text(xstartTitle, ystartTitle, caltableTitle, size=titlesize, color='k',
-                              transform=pb.gcf().transFigure)
-                      DrawBottomLegendPageCoords(msName, uniqueTimes[mytime], mysize)
-                  
-              #endif (overlayAntennas == False and overlayTimes == False and bOverlay == False)
-              
-              # Here is 2nd place where we eliminate any white space on the right and left edge of the plots: 'phase'
-              if (abs(plotrange[2]) > 0 or abs(plotrange[3]) > 0):
-                  if (amplitudeWithPhase == False or phase == ''):
-                      SetNewYLimits([plotrange[2],plotrange[3]])
-              if (phase != '' and amplitudeWithPhase):
-                  if (phase[0] != 0 or phase[1] != 0):
-                      SetNewYLimits(phase)
-              if (plotrange[0]==0 and plotrange[1]==0):
-                  if (xaxis.find('chan')>=0):
-                      SetNewXLimits([channels[0],channels[-1]])
-                  else:
-                      if (zoom != 'intersect'):
-                          SetNewXLimits([frequencies[0], frequencies[-1]])
-                      if (bOverlay):
-                          if (xrange2 >= xrange and zoom != 'intersect'):
-                              # This is necessary if caltable2=TDM and caltable=FDM
-                              SetNewXLimits([frequencies2[0], frequencies2[-1]])
-                          if (xrange2 > xrange+0.1 and zoom != 'intersect'):
-                              TDMisSecond = True
-              else:
-                  SetNewXLimits([plotrange[0], plotrange[1]])
-  
-              # I need the following line for chanrange to work
-              if (chanrange[0] != 0 or chanrange[1] != 0):
-                  SetLimits(plotrange, chanrange, newylimits, channels, frequencies, pfrequencies, ampMin, ampMax, xaxis,pxl)
-  
-              # Finally, draw the atmosphere and FDM windows, if requested.
-              if ((overlayAntennas==False and overlayTimes==False) or
-                  (overlayAntennas==True and overlayTimes==False and xant==antennasToPlot[-1]) or
-                  (overlayTimes==True and overlayAntennas==False and doneOverlayTime) or
-                  (xant==antennasToPlot[-1] and doneOverlayTime)
-                  ):
-                  if ((showatm or showtsky) and len(atmString)>0):
-                      DrawAtmosphere(showatm, showtsky, subplotRows, atmString,
-                                     mysize, TebbSky, plotrange, xaxis, atmchan,
-                                     atmfreq, transmission, subplotCols,
-                                     showatmPoints=showatmPoints, xframe=xframe, channels=channels)
-                      if (LO1 != ''):
-                          DrawAtmosphere(showatm,showtsky, subplotRows, atmString,
-                                  mysize, TebbSky, plotrange, xaxis, atmchanImage,
-                                  atmfreqImage, transmissionImage, subplotCols,
-                                  LO1, xframe, firstFrame, showatmPoints, channels=channels)
-              
-                  if (xaxis.find('freq')>=0 and showfdm and nChannels <= 256):
-                      if (tableFormat == 33):
-                          showFDM(originalSpw_casa33, chanFreqGHz_casa33)
+                              # we are not overlaying any B or polynomial solutions      'amp vs. freq'
+                              if (showflagged):
+                                  # Also show the flagged data to see where the flags are
+                                  pb.hold(True)  # Matches line 2326 for xaxis='chan'
+                                  for p in range(nPolarizations):
+                                    if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                      if (overlayAntennas or overlayTimes):
+                                        pdesc1 = pb.plot(pfrequencies[p], gamp[p], '%s'%ampmarkstyles[p], markersize=markersize)
+                                        newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
+                                        if (overlayAntennas and overlayTimes==False):
+                                            pb.setp(pdesc1, color=overlayColors[xctr])
+                                        elif (overlayTimes and overlayAntennas==False):
+                                            pb.setp(pdesc1, color=overlayColors[mytime])
+                                        elif (overlayTimes and overlayAntennas): # try to support antenna,time
+                                            if (myUniqueTime != []):
+                                                pb.setp(pdesc1, color=overlayColors[myUniqueTime])
+                                                # The third 'or' below is needed if pol='0' is flagged on antenna 0. -- 2012/10/12 (original spot)
+                                                if (p==0 or len(polsToPlot)==1 or myUniqueColor==[]):
+                                                    myUniqueColor.append(overlayColors[len(myUniqueColor)])
+                                                pb.setp(pdesc1, color=myUniqueColor[-1])
+                                      else:
+                                        pb.plot(pfrequencies[p], gamp[p], '%s%s'%(pcolor[p],ampmarkstyles[p]), markersize=markersize)
+                                        newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
+                              else:   # showing only unflagged data    'amp vs. freq'
+                                  pb.hold(True)
+                                  for p in range(nPolarizations):
+                                    if (debug):
+                                        print "*p=%d, polsToPlot=%s, len(fieldsToPlot)=%d, len(timerangeList)=%d, myUniqueTime=%s" % (p,str(polsToPlot),len(fieldsToPlot),len(timerangeList), str(myUniqueTime))
+                                    if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                      if (len(gamp[p]) == 0):  # Try this on Apr 2, 2012
+# #     # #                                print "=============== Skipping flagged data on antenna %d = %s" % (xant,antstring)
+                                          continue
+                                      if (overlayAntennas or overlayTimes):
+                                        pdesc = pb.plot(pfrequencies[p], gamp[p], '%s'%ampmarkstyles[p], markersize=markersize)
+                                        newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
+                                        if (overlayAntennas and overlayTimes==False):
+                                            pb.setp(pdesc, color=overlayColors[xctr])
+                                        elif (overlayTimes and overlayAntennas==False):
+                                            pb.setp(pdesc, color=overlayColors[mytime])
+                                        elif (overlayTimes and overlayAntennas):     #  try to support antenna,time
+                                            if (myUniqueTime != []):
+                                                pb.setp(pdesc, color=overlayColors[myUniqueTime])
+                                                # The third 'or' below is needed if pol='0' is flagged on antenna 0. -- 2012/10/12 (original spot)
+                                                if (p==0 or len(polsToPlot)==1 or myUniqueColor==[]):
+                                                    myUniqueColor.append(overlayColors[len(myUniqueColor)])
+                                                if (debug):
+                                                    print "myUniqueColor = %s" % (str(myUniqueColor))
+                                                pb.setp(pdesc, color=myUniqueColor[-1])
+                                      else:
+                                         if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                            # since there is no overlay, don't use dashed line, so zero ------v
+                                            pb.plot(pfrequencies[p], gamp[p], '%s%s'%(pcolor[p],ampmarkstyles[0]),markersize=markersize)
+                                            newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
+                                            #                        print "newylimits for amp = ", newylimits
+#                                  if (debug): print "finished 'for' loop"
+                                  if (sum(xflag)>0):
+                                      # print "amp: Resetting xaxis frequency range to counteract flagged data"
+                                      xrange = np.max(frequencies)-np.min(frequencies)
+                                      SetNewXLimits([np.min(frequencies)-0.15*xrange, np.max(frequencies)+0.15*xrange])
+                                      
+                          if (1==1 or (xframe in bottomRowFrames) or (xctr+1==len(antennasToPlot) and ispw==spwsToPlot[-1])):
+                              # use 1==1 because spw might change between top row and bottom row of frames
+                              pb.xlabel(xlabelString, size=mysize)
+                      # endif (xaxis=='chan' elif xaxis=='freq'  for 'amp')
+#                      if (debug): print "finished 'if' block"
+                      if (overlayTimes):
+                          timeString =''
                       else:
-                          showFDM(originalSpw, chanFreqGHz)
-  
-              if (bOverlay):
-                  # draw polarization labels
-                  x0 = xstartPolLabel
-                  y0 = ystartPolLabel
-                  for p in range(nPolarizations):
-                      if (corrTypeToString(corr_type[p]) in polsToPlot):
-                          pb.text(x0, y0-p*0.03*subplotRows, corrTypeToString(corr_type[p])+'-c1',
-                                  color=pcolor[p],size=mysize,transform=pb.gca().transAxes)
-                          pb.text(x0, y0-(p*0.03+0.06)*subplotRows, corrTypeToString(corr_type[p])+'-c2',
-                                  color=p2color[p],size=mysize, transform=pb.gca().transAxes)
-              if (bpolyOverlay and xaxis.find('freq')>=0):
-                  x0 = xstartPolLabel
-                  y0 = ystartPolLabel
-                  if (xcolor != x2color):
-                      for p in range(nPolarizations):
-                          if (corrTypeToString(corr_type[p]) in polsToPlot):
-                              pb.text(x0+0.1, y0-p*0.03*subplotRows, corrTypeToString(corr_type[p]), color=p2color[p],
-                                      size=mysize, transform=pb.gca().transAxes)
-                  if (bpolyOverlay2):
-                      for p in range(nPolarizations):
+                          if (len(uniqueTimes) > mytime):
+                              timeString = ',  t%d/%d  %s' % (mytime,nUniqueTimes-1,utstring(uniqueTimes[mytime],3))
+                              if (scansForUniqueTimes != []):
+                                  if (scansForUniqueTimes[mytime]>=0):
+                                      timeString = ',  scan%d  %s' % (scansForUniqueTimes[mytime],utstring(uniqueTimes[mytime],3))
+                      spwString = buildSpwString(overlaySpws, overlayBasebands,
+                                                 spwsToPlot, ispw, originalSpw[ispw],
+                                                 observatoryName, baseband, 
+                                                 showBasebandNumber)
+                      if (overlayTimes and len(fieldsToPlot) > 1):
+                          indices = fstring = ''
+                          for f in fieldIndicesToPlot:
+                              if (f != fieldIndicesToPlot[0]):
+                                  indices += ','
+                                  fstring += ','
+                              indices += str(uniqueFields[f])
+                              if (msFound):
+                                  fstring += msFields[uniqueFields[f]]
+                          if (len(fstring) > fstringLimit):
+                              fstring = fstring[0:fstringLimit] + '...'
+                          titleString = "%sspw%s,  fields %s: %s%s" % (antennaString,spwString,
+                                                                       indices, fstring, timeString)
+                      else:
+                          titleString = "%sspw%s,  field %d: %s%s" % (antennaString,spwString,uniqueFields[fieldIndex],
+                                                                      fieldString,timeString)
+                      pb.title(titleString, size=titlesize)
+                      if (abs(plotrange[0]) > 0 or abs(plotrange[1]) > 0):
+                          SetNewXLimits([plotrange[0],plotrange[1]])
+                      else:
+                          # Here is 1st place where we eliminate white space on right and left edge of the plots: 'amp'
+                          if (xaxis.find('chan')>=0):
+                              SetNewXLimits([channels[0],channels[-1]])
+                          else:
+                              if (zoom != 'intersect'):
+                                  if (overlaySpws or overlayBasebands):
+                                      SetNewXLimits(frequencyRangeToPlotInBaseband[bbctr])
+                                  else:
+                                      SetNewXLimits([frequencies[0], frequencies[-1]])
+                              if (bOverlay):
+                                  if (xrange2 > xrange+0.1 and zoom != 'intersect'):
+                                      TDMisSecond = True
+                      if (abs(plotrange[2]) > 0 or abs(plotrange[3]) > 0):
+                          SetNewYLimits([plotrange[2],plotrange[3]])
+          
+                      ResizeFonts(adesc,mysize)
+                      adesc.xaxis.grid(True,which='major')
+                      adesc.yaxis.grid(True,which='major')
+                      pb.ylabel(yAmplitudeLabel, size=mysize)
+                      pb.subplots_adjust(hspace=myhspace, wspace=mywspace)
+                      xlim = pb.xlim()
+                      ylim = pb.ylim()
+                      xrange = xlim[1]-xlim[0]
+                      yrange = ylim[1]-ylim[0]
+# #     # #            print "amp: ylim, yrange = ",  ylim, yrange
+                      if (overlayAntennas == False and overlayTimes == False and bOverlay == False and
+                          ((overlaySpws == False and overlayBasebands == False) or spwctr==0)):
+                          # draw polarization labels for no overlay
+                          x0 = xstartPolLabel
+                          y0 = ystartPolLabel
+                          for p in range(nPolarizations):
+                             if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                pb.text(x0, y0-subplotRows*p*0.03, corrTypeToString(corr_type[p]),
+                                        color=pcolor[p],size=mysize, transform=pb.gca().transAxes)
+                                if (channeldiff > 0):
+                                    pb.text(x0, ystartMadLabel-0.03*subplotRows*p,
+                                            corrTypeToString(corr_type[p])+' MAD = %.4f, St.Dev = %.4f'%(gamp_mad[p]['mad'],gamp_std[p]['std']),
+                                            color=pcolor[p],size=mysize, transform=pb.gca().transAxes)
+                          if (xframe == firstFrame):
+                                # draw title including caltable name
+                                caltableList = caltableTitle
+                                if (bpolyOverlay):
+                                      caltableList += ', ' + caltable2 + ' (degamp=%d, degphase=%d)'%(nPolyAmp[index]-1,nPolyPhase[index]-1)
+                                      if (bpolyOverlay2):
+                                            caltableList += ', ' + caltable3 + ' (degamp=%d, degphase=%d)'%(nPolyAmp2[index]-1,nPolyPhase2[index]-1)
+                                pb.text(xstartTitle, ystartTitle, caltableList, size=titlesize,
+                                        color='k', transform=pb.gcf().transFigure)
+          
+                      elif (overlayAntennas==True and xant==antennasToPlot[-1] and bOverlay == False   # ):
+                            and overlayTimes==False):  # try to support antenna,time  avoid antenna labels 'phase'
+                              # We do this last, because by then, the limits will be stable.
+                              x0 = xstartPolLabel
+                              y0 = ystartPolLabel
+                              # draw polarization labels
+                              if (corrTypeToString(corr_type[0]) in polsToPlot):
+                                if (channeldiff > 0):
+                                    pb.text(x0, ystartMadLabel-0.03*subplotRows*0,
+                                            corrTypeToString(corr_type[0])+' MAD = %.4f, St.Dev = %.4f'%(gamp_mad[0]['mad'],gamp_std[0]['std']),
+                                            color=overlayColors[0],size=mysize, transform=pb.gca().transAxes)
+                                if (ampmarkstyle.find('-')>=0):
+                                    pb.text(x0, y0, corrTypeToString(corr_type[0])+' solid', color=overlayColors[0],size=mysize,
+                                            transform=pb.gca().transAxes)
+                                else:
+                                    pb.text(x0+0.02, y0, corrTypeToString(corr_type[0]), color=overlayColors[0],size=mysize,
+                                            transform=pb.gca().transAxes)
+                                    pdesc = pb.plot([x0-0.01], [y0], '%sk'%ampmarkstyle, markersize=markersize,
+                                                    scalex=False,scaley=False, transform=pb.gca().transAxes)
+                              if (len(corr_type) > 1):
+                               if (corrTypeToString(corr_type[1]) in polsToPlot):
+                                if (channeldiff > 0):
+                                    pb.text(x0, ystartMadLabel-0.03*subplotRows*1,
+                                            corrTypeToString(corr_type[1])+' MAD = %.4f, St.Dev = %.4f'%(gamp_mad[1]['mad'],gamp_std[1]['std']),
+                                            color=overlayColors[0],size=mysize, transform=pb.gca().transAxes)
+                                if (ampmarkstyle2.find('--')>=0):
+                                  pb.text(x0, y0-0.03*subplotRows, corrTypeToString(corr_type[1])+' dashed',
+                                          color=overlayColors[0],size=mysize, transform=pb.gca().transAxes)
+                                else:
+                                  pb.text(x0+0.02, y0-0.03*subplotRows, corrTypeToString(corr_type[1]),
+                                          color=overlayColors[0],size=mysize, transform=pb.gca().transAxes)
+                                  pdesc = pb.plot([x0-0.01], [y0-0.03*subplotRows], '%sk'%ampmarkstyle2,
+                                                  markersize=markersize, scalex=False,scaley=False)
+                              if (xframe == firstFrame):
+                                  # draw title including caltable name
+                                  pb.text(xstartTitle, ystartTitle, caltableTitle, size=titlesize, color='k',
+                                          transform=pb.gcf().transFigure)
+                                  DrawAntennaNames(msAnt, antennasToPlot, msFound, mysize)
+                      elif (overlayTimes==True and bOverlay == False
+                            and overlayAntennas==False):  # try to support antenna,time
+                          doneOverlayTime = True  # assumed until proven otherwise in the 'for' loop
+                          for f in fieldIndicesToPlot:
+                            if (len(uniqueTimesPerFieldPerSpw[ispwInCalTable][f]) > 0):
+                              if ((uniqueTimes[mytime] < uniqueTimesPerFieldPerSpw[ispwInCalTable][f][-1]-solutionTimeThresholdSeconds) and
+                                  (uniqueTimes[mytime] < timerangeListTimes[-1])):
+                                  if (debug):
+                                      print "-----------Not done because %.0f < %.0f-%d for fieldIndex=%d and <%.0f" % (uniqueTimes[mytime], uniqueTimesPerFieldPerSpw[ispwInCalTable][f][-1], solutionTimeThresholdSeconds, f, timerangeListTimes[-1])
+                                      print "-----------ispwInCalTable=%d, mytime=%d, len(uniqueTimes) = %d" % (ispwInCalTable, mytime, len(uniqueTimes))
+                                  doneOverlayTime = False
+                          if (debug):
+                              print "------doneOverlayTime = %s" % (str(doneOverlayTime))
+                          if (doneOverlayTime):
+                          # either it is the last time of any times in solution, or the last time in the list of times to plot
+                              if (debug):
+                                  print "*** on last time = %d for last fieldIndex %d  or %d>=%d" % (mytime,fieldIndex,mytime,timerangeList[-1])
+                              mytime = nUniqueTimes-1
+                              # We do this last, because by then, the limits will be broad enought and stable.
+                              # draw polarization labels
+                              DrawPolarizationLabelsForOverlayTime(xstartPolLabel,ystartPolLabel,corr_type,polsToPlot,
+                                                                   channeldiff,ystartMadLabel,subplotRows,gamp_mad,mysize,
+                                                                   ampmarkstyle,markersize,ampmarkstyle2, gamp_std)
+                              if (xframe == firstFrame):
+                                  # draw title including caltable name
+                                  pb.text(xstartTitle, ystartTitle, caltableTitle, size=titlesize,
+                                          color='k', transform=pb.gcf().transFigure)
+                                  drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,
+                                                         caltable,titlesize,fieldIndicesToPlot,
+                                                         ispwInCalTable,uniqueTimesPerFieldPerSpw,
+                                                         timerangeListTimes, solutionTimeThresholdSeconds,
+                                                         debugSloppyMatch,ystartOverlayLegend,debug,mysize,
+                                                         fieldsToPlot,myUniqueColor,timeHorizontalSpacing,
+                                                         fieldIndex,overlayColors, antennaVerticalSpacing,
+                                                         overlayAntennas, timerangeList, caltableTitle,
+                                                         mytime, scansToPlot, scansForUniqueTimes)
+                      elif (overlayAntennas and overlayTimes):  # Oct 23, 2012
+                          # This will only happen for overlay='antenna,time'
+                          if (xframe == firstFrame and mytime == 0 and xctr==firstUnflaggedAntennaToPlot and bOverlay==False):
+                              # draw title including caltable name
+                              pb.text(xstartTitle, ystartTitle, caltableTitle, size=titlesize, color='k',
+                                      transform=pb.gcf().transFigure)
+                              DrawBottomLegendPageCoords(msName, uniqueTimes[mytime], mysize)
+                          # Adding the following 'for' loop on Mar 13, 2013 to support the case of
+                          # single time range with overlay='antenna,time'
+                          if (xant==antennasToPlot[-1]):
+                            doneOverlayTime = True  # assumed until proven otherwise in the 'for' loop
+                            for f in fieldIndicesToPlot:
+                                if (len(uniqueTimesPerFieldPerSpw[ispwInCalTable][f]) > 0):
+                                    if ((uniqueTimes[mytime] < uniqueTimesPerFieldPerSpw[ispwInCalTable][f][-1]-solutionTimeThresholdSeconds) and
+                                        (uniqueTimes[mytime] < timerangeListTimes[-1])):
+                                        if (debug):
+                                            print "-----------Not done because %.0f < %.0f-%d for fieldIndex=%d and <%.0f" % (uniqueTimes[mytime], uniqueTimesPerFieldPerSpw[ispwInCalTable][f][-1], solutionTimeThresholdSeconds, f, timerangeListTimes[-1])
+                                            print "-----------ispwInCalTable=%d, mytime=%d, len(uniqueTimes) = %d" % (ispwInCalTable, mytime, len(uniqueTimes))
+                                        doneOverlayTime = False
+                            if (doneOverlayTime):
+                                # This is necessary for the case that no antennas were flagged for the single timerange selected
+                                drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,titlesize,
+                                                       fieldIndicesToPlot,ispwInCalTable,uniqueTimesPerFieldPerSpw,
+                                                       timerangeListTimes, solutionTimeThresholdSeconds,
+                                                       debugSloppyMatch,ystartOverlayLegend,debug,mysize,
+                                                       fieldsToPlot,myUniqueColor,timeHorizontalSpacing,
+                                                       fieldIndex,overlayColors, antennaVerticalSpacing,
+                                                       overlayAntennas, timerangeList, caltableTitle,
+                                                       mytime, scansToPlot, scansForUniqueTimes)
+        
+          
+                      # Here is 2nd place where we eliminate any white space on the right and left edge of the plots: 'amp'
+                      # 
+                      if (abs(plotrange[2]) > 0 or abs(plotrange[3]) > 0):
+                          SetNewYLimits([plotrange[2],plotrange[3]])
+                      if (plotrange[0]==0 and plotrange[1]==0):
+                          if (xaxis.find('chan')>=0):
+                              SetNewXLimits([channels[0],channels[-1]])
+                          else:
+                              if (zoom != 'intersect'):
+                                  if (overlaySpws or overlayBasebands):
+                                      SetNewXLimits(frequencyRangeToPlotInBaseband[bbctr])
+                                  else:
+                                      SetNewXLimits([frequencies[0], frequencies[-1]])
+                              if (bOverlay):
+# #     # #                        print "Checking if %f >= %f" % (xrange2, xrange)
+                                  if (xrange2 >= xrange and zoom != 'intersect'):
+                                      # This is necessary if caltable2=TDM and caltable=FDM
+                                      SetNewXLimits([frequencies2[0], frequencies2[-1]])
+                                  if (xrange2 > xrange+0.1 and zoom != 'intersect'):
+                                      TDMisSecond = True
+                      else:
+                          SetNewXLimits([plotrange[0], plotrange[1]])
+          
+                      # I need the following line for chanrange to work
+                      if (chanrange[0] != 0 or chanrange[1] != 0):
+                          SetLimits(plotrange, chanrange, newylimits, channels, frequencies, pfrequencies, ampMin, ampMax, xaxis,pxl)
+          
+                      # Finally, draw the atmosphere and FDM windows, if requested.
+                      if ((overlayAntennas==False and overlayTimes==False) or
+                          (overlayAntennas==True and overlayTimes==False and xant==antennasToPlot[-1]) or
+                          (overlayTimes==True and overlayAntennas==False and doneOverlayTime) or
+#       #                  (xant==antennasToPlot[-1] and doneOverlayTime) # support showatm with overlay='antenna,time'
+                          (overlayTimes and overlayAntennas and  # Aug 5, 2013
+                           xant==antennasToPlot[-1] and doneOverlayTime and mytime==nUniqueTimes-1)
+                          ):
+                          if ((showatm or showtsky) and len(atmString) > 0): 
+                              DrawAtmosphere(showatm, showtsky, subplotRows, atmString,
+                                             mysize, TebbSky, plotrange, xaxis, atmchan,
+                                             atmfreq, transmission, subplotCols,
+                                             showatmPoints=showatmPoints, xframe=xframe, 
+                                             channels=channels,mylineno=lineNumber())
+                              if (LO1 != ''):
+                                  # Now draw the image band
+                                  DrawAtmosphere(showatm,showtsky, subplotRows, atmString,
+                                                 mysize, TebbSkyImage, plotrange, xaxis,
+                                                 atmchanImage, atmfreqImage, transmissionImage,
+                                                 subplotCols, LO1, xframe, firstFrame, showatmPoints, 
+                                                 channels=channels,mylineno=lineNumber())
+                          if (xaxis.find('freq')>=0 and showfdm and nChannels <= 256):
+                              if (tableFormat == 33):
+                                  showFDM(originalSpw_casa33, chanFreqGHz_casa33, baseband, showBasebandNumber, basebandDict)
+                              else:
+                                  showFDM(originalSpw, chanFreqGHz, baseband, showBasebandNumber, basebandDict)
+          
+                      if (bOverlay):
+                          # draw polarization labels
+                          x0 = xstartPolLabel
+                          y0 = ystartPolLabel
+                          for p in range(nPolarizations):
+                              if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                  pb.text(x0, y0-p*0.03*subplotRows, corrTypeToString(corr_type[p])+'-c1',
+                                          color=pcolor[p],size=mysize,transform=pb.gca().transAxes)
+                                  pb.text(x0, y0-p*0.03*subplotRows-0.06*subplotRows, corrTypeToString(corr_type[p])+'-c2',
+                                          color=p2color[p],size=mysize,transform=pb.gca().transAxes)
+                      if (bpolyOverlay and xaxis.find('freq')>=0):
+                          # draw polarization labels
+                          x0 = xstartPolLabel
+                          y0 = ystartPolLabel
+                          if (x2color != xcolor):
+                                for p in range(nPolarizations):
+                                    if (corrTypeToString(corr_type[0]) in polsToPlot):
+                                        pb.text(x0+0.1, y0-p*0.03*subplotRows, corrTypeToString(corr_type[p]), color=p2color[p],
+                                                size=mysize,transform=pb.gca().transAxes)
+                          if (bpolyOverlay2):
+                                for p in range(nPolarizations):
+                                      if (corrTypeToString(corr_type[0]) in polsToPlot):
+                                            pb.text(x0+0.2, y0-p*0.03*subplotRows, corrTypeToString(corr_type[p]),
+                                                    color=p3color[p], size=mysize,transform=pb.gca().transAxes)
+                          
+# #     # #            if (xframe == 111 and amplitudeWithPhase):
+                      myIndexTime = uniqueTimesPerFieldPerSpw[ispwInCalTable][fieldIndex][-1]
+                      matched,mymatch = sloppyMatch(myIndexTime,uniqueTimes,solutionTimeThresholdSeconds,
+                                                    mytime, scansToPlot, 
+                                                    scansForUniqueTimes,
+                                                    whichone=True)
+                      if (matched == False):
+                          print "---------- 1) Did not find %f in %s" % (myIndexTime,str(uniqueTimes))
+                          print "Try re-running with a smaller solutionTimeThresholdSeconds (currently %f)" % (solutionTimeThresholdSeconds)
+                          return
+                      else:
+                          # we are on the final time to be plotted
+                          mytimeTest = mytime==nUniqueTimes-1 # mytime==myIndexTime  # mytime==mymatch
+                      if ((xframe == 111 and amplitudeWithPhase) or
+                          # Following case is needed to make subplot=11 to work for: try to support overlay='antenna,time'
+                          (xframe == lastFrame and overlayTimes and overlayAntennas and
+                           xctr+1==len(antennasToPlot) and
+#       #                   mytime+1==len(uniqueTimes) and  # this worked for nspw <= 4
+                           mytimeTest and
+                           spwctr+1<len(spwsToPlot))):
+                               if (debug):
+                                   print "xframe=%d  ==  lastFrame=%d,  amplitudeWithPhase=%s" % (xframe, lastFrame, str(amplitudeWithPhase))
+                                   print "xctr+1=%d == len(antennasToPlot)=%d"  % (xctr+1,len(antennasToPlot))
+                                   print "mytime+1=%d == len(uniqueTimes)=%d"  % (mytime+1,len(uniqueTimes))
+                                   print "spwctr+1=%d < len(spwsToPlot)=%d"  % (spwctr+1,len(spwsToPlot))
+                               if (len(figfile) > 0):
+                                     plotfiles.append(makeplot(figfile,msFound,msAnt,
+                                                               overlayAntennas,pages,pagectr,
+                                                               density,interactive,antennasToPlot,
+                                                               spwsToPlot,overlayTimes,3,resample,
+                                                               debug,figfileSequential,figfileNumber))
+                                     figfileNumber += 1
+        
+                               donetime = timeUtilities.time()
+                               if (interactive):
+                                  pb.draw()
+# #     # #                        myinput = raw_input(":(%.1f sec) Press return for next page (b for backwards, q to quit): "%(donetime-mytimestamp))
+                                  myinput = raw_input("Press return for next page (b for backwards, q to quit): ")
+                               else:
+                                  myinput = ''
+                               skippingSpwMessageSent = 0
+                               mytimestamp = timeUtilities.time()
+                               if (myinput.find('q') >= 0):
+                                   showFinalMessage(overlayAntennas, solutionTimeSpread, nUniqueTimes)
+                                   return()
+                               if (myinput.find('b') >= 0):
+                                   if (pagectr > 0):
+                                       if (debug):
+                                           print "Decrementing pagectr from %d to %d" % (pagectr, pagectr-1)
+                                       pagectr -= 1
+                                   else:
+                                       if (debug):
+                                           print "Not decrementing pagectr=%d" % (pagectr)
+        
+                                   redisplay = True
+                                   #redisplay the current page by setting ctrs back to the value they had at start of that page
+                                   xctr = pages[pagectr][PAGE_ANT]
+                                   spwctr = pages[pagectr][PAGE_SPW]
+                                   mytime = pages[pagectr][PAGE_TIME]
+                                   myap = pages[pagectr][PAGE_AP]
+                                   xant = antennasToPlot[xctr]
+                                   antstring, Antstring = buildAntString(xant,msFound,msAnt)
+                                   ispw = spwsToPlot[spwctr]
+# #     # #                         print "Returning to [%d,%d,%d,%d]" % (xctr,spwctr,mytime,myap)
+                                   if (xctr==pages[0][PAGE_ANT] and spwctr==pages[0][PAGE_SPW] and mytime==pages[0][PAGE_TIME] and pages[0][PAGE_AP]==myap):
+                                     pb.clf()
+                                     if (debug):
+                                         print "2)Setting xframe to %d" % xframeStart
+                                     xframe = xframeStart
+                                     alreadyPlottedAmp = False  # needed for (overlay='baseband', yaxis='both')
+                                     myUniqueColor = []
+                                     continue
+                               else:
+                                   pagectr += 1
+                                   if (pagectr >= len(pages)):
+                                     pages.append([xctr,spwctr,mytime,1])
+                                     if (debug):
+                                         print "amp: appending [%d,%d,%d,%d]" % (xctr,spwctr,mytime,1)
+                                     newpage = 0
+                               pb.clf()
+                               if (debug):
+                                   print "3)Setting xframe to %d" % xframeStart
+                               xframe = xframeStart
+                               alreadyPlottedAmp = False  # needed for (overlay='baseband', yaxis='both')
+                               myUniqueColor = []
+###########################################################
+################### Here is the phase plotting ############
+###########################################################
+                  if (yaxis.find('phase')>=0 or amplitudeWithPhase) and doneOverlayTime==False:
+                      if (channeldiff > 0):
+                          pchannels = [xchannels,ychannels]  # this is necessary because np.diff reduces nchan by 1
+                          pfrequencies = [xfrequencies,yfrequencies]  # this is necessary because np.diff reduces nchan by 1
+                          if (bOverlay):
+                              pchannels2 = [xchannels2,ychannels2]  # this is necessary because np.diff reduces nchan by 1
+                              pfrequencies2 = [xfrequencies2,yfrequencies2]  # this is necessary because np.diff reduces nchan by 1
+                      if (overlayTimes == False or mytime==firstTimeMatch):  
+                        if ((overlaySpws == False and overlayBasebands==False) or spwctr == 0 or spwctr>spwsToPlot[-1]):
+                          if (overlayAntennas==False or xctr==firstUnflaggedAntennaToPlot
+                              or xctr>antennasToPlot[-1]):  # 2012-05-24, to fix the case where all ants flagged on one timerange
+                              xframe += 1
+# #     # #                    print "u) incrementing xframe to %d" % xframe
+                              myUniqueColor = []
+                              newylimits = [LARGE_POSITIVE, LARGE_NEGATIVE]
+                              if (phase != ''):
+                                  if ((phase[0] != 0 or phase[1] != 0) and amplitudeWithPhase):
+                                      newylimits = phase
+                      if (debug):
+                          print "$$$$$$$$$$$$$$$$$$$$$$$  ready to plot phase on xframe %d" % (xframe)
+                      adesc = pb.subplot(xframe)
+                      drewAtmosphereOnFlaggedAntenna = False
+                      pb.hold(overlayAntennas or overlayTimes)
+                      gphsx = np.arctan2(np.imag(gplotx),np.real(gplotx))*180.0/math.pi
+                      if (nPolarizations == 2):
+                          gphsy = np.arctan2(np.imag(gploty),np.real(gploty))*180.0/math.pi
+                          if (channeldiff>0):
+                              if (xaxis == 'chan'):
+                                  gphs0, newx0, gphs0res, newx0res = channelDifferences(gphsx, pchannels[0], resample)
+                                  gphs1, newx1, gphs1res, newx1res = channelDifferences(gphsy, pchannels[1], resample)
+                                  pchannels = [newx0,newx1]
+                              else:
+                                  gphs0, newx0, gphs0res, newx0res = channelDifferences(gphsx, pfrequencies[0], resample)
+                                  gphs1, newx1, gphs1res, newx1res  = channelDifferences(gphsy, pfrequencies[1], resample)
+                                  pfrequencies = [newx0,newx1]
+                              gphs = [gphs0, gphs1]
+                              gphsres = [gphs0res, gphs1res]
+                              gphs_mad = [madInfo(gphs[0],madsigma,edge), madInfo(gphs[1],madsigma,edge)]
+                              gphs_std = [stdInfo(gphsres[0],madsigma,edge,ispw,xant,0), stdInfo(gphsres[1],madsigma,edge,ispw,xant,1)]
+                              for p in [0,1]:
+                                  madstats[Antstring][ispw][mytime][p]['phase'] = gphs_mad[p]['mad']
+                                  madstats[Antstring][ispw][mytime][p]['phasestd'] = gphs_std[p]['std']
+                                  if (gphs_mad[p]['nchan'] > 0):
+                                      checkAbsSum = np.sum(np.abs(gphs[p]))
+                                      if (checkAbsSum < PHASE_ABS_SUM_THRESHOLD):
+                                          if (debug): print "%s, Pol %d, spw %d, %s, phs: not printing because abs sum of all values near zero (%f)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), checkAbsSum)
+                                      else:
+                                          casalogPost(debug, "%s, Pol %d, spw %2d, %s, phs: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gphs_mad[p]['nchan'], madsigma, gphs_mad[p]['outlierValue'], gphs_mad[p]['outlierChannel']+pchannels[p][0]))
+                          else:
+                              gphs = [gphsx,gphsy]
+                      else:  # 1-pol
+                          if (channeldiff>0):
+                              if (xaxis == 'chan'):
+                                  gphs0, newx0, gphs0res, newx0res = channelDifferences(gphsx, pchannels[0], resample)
+                                  pchannels = [newx0]
+                              else:
+                                  gphs0, newx0, gphs0res, newx0res = channelDifferences(gphsx, pfrequencies[0], resample)
+                                  pfrequencies = [newx0]
+                              gphs = [gphs0]
+                              gphsres = [gphs0res]
+                              p = 0
+                              gphs_mad = [madInfo(gphs[p], madsigma, edge)]
+                              gphs_std = [stdInfo(gphsres[p], madsigma, edge, ispw,xant,p)]
+                              madstats[Antstring][ispw][mytime][p]['phase'] = gphs_mad[p]['mad']
+                              madstats[Antstring][ispw][mytime][p]['phasestd'] = gphs_mad[p]['std']
+                              if (gphs_mad[p]['nchan'] > 0):
+                                  checkAbsSum = np.sum(np.abs(gphs[p]))
+                                  if (checkAbsSum < PHASE_ABS_SUM_THRESHOLD):
+                                      if (debug): print "%s, Pol %d, spw %d, %s, phs: not printing because all values near zero (%f)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), checkAbsSum)
+                                  else:
+                                      casalogPost(debug, "%s, Pol %d, spw %2d, %s, phs: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gphs_mad[p]['nchan'], madsigma, gphs_mad[p]['outlierValue'], gphs_mad[p]['outlierChannel']+pchannels[p][0]))
+                          else:
+                              gphs = [gphsx]
+                      if (bOverlay):
+                            if (debug):
+                                print "computing phase for second table"
+                            gphsx2 = np.arctan2(np.imag(gplotx2),np.real(gplotx2))*180.0/math.pi
+                            if (nPolarizations == 2):
+                                gphsy2 = np.arctan2(np.imag(gploty2),np.real(gploty2))*180.0/math.pi
+                                if (channeldiff>0):
+                                    if (xaxis == 'chan'):
+                                        gphs2_0, newx0, gphs2_0res, newx0res = channelDifferences(gphsx2, pchannels2[0], resample)
+                                        gphs2_1, newx1, gphs2_1res, newx1res  = channelDifferences(gphsy2, pchannels2[1], resample)
+                                        pchannels2 = [newx0, newx1]
+                                    else:
+                                        gphs2_0, newx0, gphs2_0res, newx0res = channelDifferences(gphsx2, pfrequencies2[0], resample)
+                                        gphs2_1, newx1, gphs2_1res, newx1res = channelDifferences(gphsy2, pfrequencies2[1], resample)
+                                        pfrequencies2 = [newx0, newx1]
+                                    gphs2 = [gphs2_0, gphs2_1]
+                                    gphs2res = [gphs2_0res, gphs2_1res]
+                                else:
+                                    gphs2 = [gphsx2, gphsy2]
+                            else:
+                                if (channeldiff>0):
+                                    if (xaxis == 'chan'):
+                                        gphs2_0, newx0, gphs2_0res, newx0res = channelDifferences(gphsx2, pchannels2[0], resample)
+                                        pchannels2 = [newx0]
+                                    else:
+                                        gphs2_0, newx0, gphs2_0res, newx0res = channelDifferences(gphsx2, pfrequencies2[0], resample)
+                                        pfrequencies2 = [newx0]
+                                    gphs2 = [gphs2_0]
+                                    gphs2res = [gphs2_0res]
+                                else:
+                                    gphs2 = [gphsx2]
+                      else:
+                            if (debug):
+                                print "bOverlay is FALSE ==========================="
+                          
+                      if (xaxis.find('chan')>=0 or len(xfrequencies) < 1):    # 'phase'
+                          pb.hold(True)
+                          for p in range(nPolarizations):
                             if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                  pb.text(x0+0.2, y0-p*0.03*subplotRows, corrTypeToString(corr_type[p]), color=p3color[p],
-                                          size=mysize, transform=pb.gca().transAxes)
-  
-          # endif (yaxis='phase')
-  
-          redisplay = False
-  
-          if (xframe == lastFrame):
-            if (debug):
-                print "*** mytime+1=%d,  nUniqueTimes=%d, timerangeList[-1]=%d, doneOverlayTime=%s" % (mytime+1, nUniqueTimes,timerangeList[-1],doneOverlayTime)
-                print "*** xant=%d, antennasToPlot[-1]=%d, overlayAntennas=%s, overlayTimes=%s" % (xant,antennasToPlot[-1],overlayAntennas,overlayTimes)
-                print "*** xframe=%d, lastFrame=%d, xctr=%d, spwctr=%d, len(antennasToPlot)=%d, len(spwsToPlot)=%d" % (xframe,lastFrame,xctr,spwctr,len(antennasToPlot), len(spwsToPlot))
-            myIndexTime = uniqueTimesPerFieldPerSpw[ispwInCalTable][fieldIndex][-1]
-            matched,mymatch = sloppyMatch(myIndexTime,uniqueTimes,solutionTimeThresholdSeconds,whichone=True)
-            if (matched==False):
-                print "---------- 2) Did not find %f within %.1f seconds of anything in %s" % (myIndexTime,solutionTimeThresholdSeconds,str(uniqueTimes))
-                print "Try re-running with a smaller solutionTimeThresholdSeconds (currently %f)" % (solutionTimeThresholdSeconds)
-                return
-            else:
-                mytimeTest = mytime==mymatch
-            if ((overlayAntennas==False and overlayTimes==False)
-                # either it is the last time of any, or the last time in the list of times to plot
-                or (overlayAntennas==False and (mytime+1==nUniqueTimes or mytime == timerangeList[-1])) # or mytimeTest)) # removed on July 25, 2013 because it prevents all times from showing up overlaid on lower right plot
-                or (xant==antennasToPlot[-1] and overlayAntennas==True and overlayTimes==False)  
-                # Following case is needed to make subplot=11 to work for: try to support overlay='antenna,time'
-                or (xframe == lastFrame and overlayTimes and overlayAntennas and
-                   xctr+1==len(antennasToPlot) and
-                   mytimeTest and
-                   spwctr+1<len(spwsToPlot))
-                or (doneOverlayTime and overlayTimes==True
-                    and overlayAntennas==False 
-                    )):
-              DrawBottomLegendPageCoords(msName, uniqueTimes[mytime], mysize)
-  
-              # added len(pages)>0 on July 30, 2013 to prevent crash when called with single
-              # antenna and subplot=11 and all solutions flagged.
-              if (len(figfile) > 0 and len(pages)>0):
-                  plotfiles.append(makeplot(figfile,msFound,msAnt,
-                                            overlayAntennas,pages,pagectr,
-                                            density,interactive,antennasToPlot,
-                                            spwsToPlot,overlayTimes,4,debug))
-              myinput = ''
-              donetime = timeUtilities.time()
-              if (interactive):
-                  pb.draw()
-# #                myinput = raw_input("(%.1f sec) Press return for next screen (b for backwards, q to quit): "%(donetime-mytimestamp))
-                  myinput = raw_input("Press return for next page (b for backwards, q to quit): ")
-              else:
-                  myinput = ''
-              skippingSpwMessageSent = 0
-              mytimestamp = timeUtilities.time()
-              if (myinput.find('q') >= 0):
-                  mytime = len(uniqueTimes)
-                  spwctr = len(spwsToPlot)
-                  xctr = len(antennasToPlot)
-                  break
-              if (debug):
-                  print "4)Setting xframe to %d" % (xframeStart)
-              xframe = xframeStart
-              myUniqueColor = []
-              pb.subplots_adjust(hspace=myhspace, wspace=mywspace)
-              if (myinput.find('b') >= 0):
-                  if (pagectr > 0):
+                              if (overlayAntennas or overlayTimes):
+                                  pdesc = pb.plot(pchannels[p],gphs[p],'%s'%(phasemarkstyles[p]),markersize=markersize)
+                                  newylimits =  recalcYlimits(plotrange,newylimits,gphs[p])  # 10/27/2011
+                                  if (newylimits[1]-newylimits[0] < minPhaseRange):
+                                      newylimits = [-minPhaseRange,minPhaseRange]
+                                  if (phase != ''):
+                                      if ((phase[0] != 0 or phase[1] != 0) and amplitudeWithPhase):
+                                          newylimits = phase
+          
+                                  if (overlayAntennas and overlayTimes==False):
+                                      pb.setp(pdesc, color=overlayColors[xctr])
+                                  elif (overlayTimes and overlayAntennas==False):
+                                      pb.setp(pdesc, color=overlayColors[mytime])
+                                  elif (overlayTimes):   # try to support antenna,time
+                                      if (myUniqueTime != []):
+                                          pb.setp(pdesc, color=overlayColors[myUniqueTime])
+                                          # The third 'or' below is needed if pol='0' is flagged on antenna 0. -- 2012/10/12 (original spot)
+                                          if (p==0 or len(polsToPlot)==1 or myUniqueColor==[]):
+                                              myUniqueColor.append(overlayColors[len(myUniqueColor)])
+                                          pb.setp(pdesc, color=myUniqueColor[-1])
+                              else:
+                                  pb.plot(pchannels[p],gphs[p],'%s%s'%(pcolor[p],phasemarkstyles[0]), markersize=markersize)
+                                  newylimits =  recalcYlimits(plotrange,newylimits,gphs[p]) # 10/27/2011
+                                  if (newylimits[1]-newylimits[0] < minPhaseRange):
+                                      newylimits = [-minPhaseRange,minPhaseRange]
+                                  if (phase != ''):
+                                      if ((phase[0] != 0 or phase[1] != 0) and amplitudeWithPhase):
+                                          newylimits = phase
+                          if (sum(xflag)>0):
+# #     # #                    print "phase: Resetting xaxis channel range to counteract flagged data"
+                              xrange = np.max(channels)-np.min(channels)
+                              SetNewXLimits([np.min(channels)-xrange/20, np.max(channels)+xrange/20])
+                          if (xframe in bottomRowFrames or (xctr+1==len(antennasToPlot) and ispw==spwsToPlot[-1])):
+                              pb.xlabel("Channel", size=mysize)
+                      elif (xaxis.find('freq')>=0):     # 'phase'
+                          if (bOverlay):
+                                pb.hold(True)
+                                if (debug):
+                                    print "Preparing to plot phase from %f-%f for pols: %s" % (xfrequencies[0],xfrequencies[-1],str(polsToPlot))
+                                    print "Preparing to plot phase from %f-%f for pols: %s" % (pfrequencies[p][0],pfrequencies[p][-1],str(polsToPlot))
+                                    print "Preparing to plot phase from %f-%f for pols: %s" % (pfrequencies2[p][0],pfrequencies2[p][-1],str(polsToPlot))
+                                xrange = np.abs(xfrequencies[0]-xfrequencies[-1])
+                                try:
+                                    xrange2 = np.abs(xfrequencies2[0]-xfrequencies2[-1])
+                                except:
+                                    print "No phase data found in second solution.  Try increasing the solutionTimeThresholdSeconds above %.0f." % (solutionTimeThresholdSeconds)
+                                    print "If this doesn't work, email the developer (%s)." % (developerEmail)
+                                    return()
+                                if (np.abs(xrange/xrange2 - 1) > 0.05 + len(xflag)/len(xchannels)):  # 0.0666 is 2000/1875-1
+                                   # These line widths are optimal for visualizing FDM over TDM
+                                   width1 = 1
+                                   width2 = 4
+                                   # solutions differ in frequency width, so show the narrower one first
+                                   if (xrange < xrange2):
+                                     for p in range(nPolarizations):
+                                       if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                          if (debug): print "pb.plot 1"
+                                          pb.plot(pfrequencies[p], gphs[p], '%s%s'%(pcolor[p],phasemarkstyle), linewidth=width2, markersize=markersize)
+                                          newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband,plotrange,xchannels)
+                                     for p in range(nPolarizations):
+                                       if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                          if (debug): print "pb.plot 2"
+                                          pb.plot(pfrequencies2[p], gphs2[p], '%s%s'%(p2color[p],phasemarkstyle), linewidth=width1, markersize=markersize)
+                                          newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs2[p], sideband,plotrange,xchannels2)
+                                   else:
+                                     for p in range(nPolarizations):
+                                       if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                           if (debug): print "pb.plot 3"
+                                           pb.plot(pfrequencies2[p], gphs2[p], '%s%s'%(p2color[p],phasemarkstyle), linewidth=width2, markersize=markersize)
+                                           newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs2[p], sideband,plotrange,xchannels2)
+                                     for p in range(nPolarizations):
+                                       if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                           if (debug): print "pb.plot 4"
+                                           pb.plot(pfrequencies[p], gphs[p], '%s%s'%(pcolor[p],phasemarkstyle), linewidth=width1, markersize=markersize)
+                                           newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband,plotrange,xchannels)
+                                else:
+                                   width1 = 1
+                                   width2 = 1
+                                   # solutions may be different level of smoothing, so plot highest rms first
+                                   pb.hold(True)
+                                   if (np.std(gphsx) < np.std(gphsx2)):
+                                     for p in range(nPolarizations):
+                                       if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                         if (debug): print "pb.plot 5"
+                                         pb.plot(pfrequencies2[p], gphs2[p], '%s%s'%(p2color[p],phasemarkstyle), linewidth=width1, markersize=markersize)
+                                         newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs2[p], sideband,plotrange,xchannels2)
+                                     for p in range(nPolarizations):
+                                       if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                         if (debug): print "pb.plot 6"
+                                         pb.plot(pfrequencies[p], gphs[p], '%s%s'%(pcolor[p],phasemarkstyle), linewidth=width2, markersize=markersize)
+                                         newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband,plotrange,xchannels)
+                                   else:
+                                     for p in range(nPolarizations):
+                                       if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                         if (debug): print "pb.plot 7"
+                                         pb.plot(pfrequencies[p], gphs[p], '%s%s'%(pcolor[p],phasemarkstyle), linewidth=width2, markersize=markersize)
+                                         newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband,plotrange,xchannels)
+                                     for p in range(nPolarizations):
+                                       if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                         if (debug): print "pb.plot 9"
+                                         pb.plot(pfrequencies2[p], gphs2[p], '%s%s'%(p2color[p],phasemarkstyle), linewidth=width1, markersize=markersize)
+                                         newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs2[p], sideband,plotrange,xchannels2)
+                                # must set new limits after plotting  'phase'
+                                (y0,y1) = pb.ylim()
+                                if (y1-y0 < minPhaseRange):
+                                      # this must come before defining ticks 
+                                      SetNewYLimits([-minPhaseRange,minPhaseRange])
+                                if (zoom=='intersect'):
+                                    if (xrange < xrange2):
+                                        SetNewXLimits([min(xfrequencies[0],xfrequencies[-1])-xrange*0.1, max(xfrequencies[0],xfrequencies[-1])+xrange*0.1])
+                                        SetLimits(plotrange, chanrange, newylimits, channels, frequencies,
+                                                  pfrequencies, ampMin, ampMax, xaxis,pxl)
+                                    else:
+                                        SetNewXLimits([min(xfrequencies2[0],xfrequencies2[-1])-xrange2*0.1, max(xfrequencies2[0],xfrequencies2[-1])+xrange2*0.1])
+                                        SetLimits(plotrange, chanrange, newylimits, channels, frequencies2,
+                                                  pfrequencies2, ampMin, ampMax, xaxis,pxl)
+                                else:
+                                    if (xrange < xrange2):
+                                        SetLimits(plotrange, chanrange, newylimits, channels, frequencies,
+                                                  pfrequencies, ampMin, ampMax, xaxis,pxl)
+                                    else:
+                                        SetLimits(plotrange, chanrange, newylimits, channels, frequencies2,
+                                                  pfrequencies2, ampMin, ampMax, xaxis,pxl)
+                                # draw polarization and spw labels
+                                if (xframe == firstFrame):
+                                    # draw title including caltable name
+                                    caltableList = 'c1 = ' + caltable + ',  c2 = ' + caltable2 + ' (%s)'%(utstring(uniqueTimes2[mytime],3))
+                                    pb.text(xstartTitle, ystartTitle, caltableList, size=titlesize,
+                                            color='k', transform=pb.gcf().transFigure)
+                          elif (bpolyOverlay):
+                                  matches1 = []
+                                  for tbp in range(len(timesBP)):
+                                      if (sloppyMatch(uniqueTimes[mytime], timesBP[tbp], solutionTimeThresholdSeconds,
+                                                      mytime, scansToPlot, scansForUniqueTimes,
+                                                      myprint=debugSloppyMatch)):
+                                          matches1.append(tbp)
+                                  matches1 = np.array(matches1)
+# #     # #                        print "time matches: matches1 = ", matches1
+                                  if (len(matches1) < 1):
+                                      print "No time match found"
+                                      print "If you are sure the solutions correspond to the same data, you can set solutionTimeThresholdSeconds=%.0f" % (1+np.ceil(np.abs(timesBP[0]-uniqueTimes[mytime])))
+                                      return()
+# #     # #                        matches1 = np.where(np.floor(uniqueTimes[mytime]) == np.floor(np.array(timesBP)))[0]
+                                  matches2 = np.where(xant == np.array(antennasBP))[0]
+                                  if (len(matches2) < 1):
+                                      print "No antenna match found between %s and %s" % (str(xant), str(antennasBP))
+# #     # #                        print "antenna matches: matches2 = ", matches2
+          
+                                  if (tableFormat == 33):
+                                      matches3 = np.where(ispw == np.array(cal_desc_idBP))[0]
+                                      if (len(matches3) < 1):
+                                          print "No spw match found: %d not in %s" % (ispw, str(cal_desc_idBP))
+                                  else:
+                                      matches3 = np.where(ispw == np.array(spwBP))[0]
+                                      if (len(matches3) < 1):
+                                          print "No spw match found: %d not in %s" % (ispw, str(spwBP))
+# #     # #                        print "spw matches: matches3 = ", matches3
+          
+                                  matches12 = np.intersect1d(matches1,matches2)
+                                  if (len(matches12) < 1):
+                                      print "No match between: %s and %s" % (str(matches1), str(matches2))
+# #     # #                        print "antenna&time matches: matches12 = ", matches12
+          
+                                  matches = np.intersect1d(matches12, matches3)
+                                  if (len(matches) < 1):
+                                      print "No match between: %s and %s" % (str(matches12), str(matches3))
+# #     # #                        print "antenna&time&spw matches: matches = ", matches
+          
+                                  try:
+                                      index = matches[0]  # holds the row number of the matching solution in the BPOLY table
+                                  except:
+                                      print "No match found for time=%.6f, xant=%d, ispw=%d"  % (uniqueTimes[mytime],xant,ispw)
+                                      print "antennasBP = %s" % (str(antennasBP))
+                                      print "cal_desc_idBP = %s" % (str(cal_desc_idBP))
+                                      timesBPstring = "timesBP = "
+                                      for i in timesBP:
+                                          timesBPstring += "%.6f, " % i
+                                      print timesBPstring
+                                      return()
+# #     # #                        print "phase: Using index = %d/%d (mytime=%d), domain=%.3f,%.3f" % (index,len(polynomialPhase),mytime,frequencyLimits[0,index]*1e-9,frequencyLimits[1,index]*1e-9)
+                                  if (debug): print "BRowNumber = %d, BPolyRowNumber = %d"  % (BRowNumber, index)
+                                  validDomain = [frequencyLimits[0,index], frequencyLimits[1,index]]
+                                  cc = calcChebyshev(polynomialPhase[index][0:nPolyPhase[index]], validDomain, frequenciesGHz[index]*1e+9) * 180/math.pi
+                                  fa = np.array(frequenciesGHz[index])
+                                  if (xfrequencies[0] < xfrequencies[-1]):
+                                      matches = np.where(fa>xfrequencies[0])[0]
+                                      matches2 = np.where(fa<xfrequencies[-1])[0]
+                                  else:
+                                      matches = np.where(fa>xfrequencies[-1])[0]
+                                      matches2 = np.where(fa<xfrequencies[0])[0]
+# #     # #                        print "xfrequencies[0] = %f, xfrequencies[-1] = %f" % (xfrequencies[0], xfrequencies[-1])
+# #     # #                        print "len(matches)=%d, len(matches2)=%d" % (len(matches), len(matches2))
+# #     # #                        print "fa = ", fa
+                                  mymean = complexMeanDeg(np.array(cc)[matches[0]:matches2[-1]+1])
+                                  phaseSolutionX = np.mean(gphsx) - mymean + cc
+          
+                                  cc = calcChebyshev(polynomialPhase[index][nPolyPhase[index]:2*nPolyPhase[index]], validDomain, frequenciesGHz[index]*1e+9) * 180/math.pi
+                                  if (nPolarizations > 1):
+                                    if (yfrequencies[0] < yfrequencies[-1]):
+                                      matches = np.where(fa>yfrequencies[0])[0]
+                                      matches2 = np.where(fa<yfrequencies[-1])[0]
+                                    else:
+                                      matches = np.where(fa>yfrequencies[-1])[0]
+                                      matches2 = np.where(fa<yfrequencies[0])[0]
+                                    mymean = complexMeanDeg(np.array(cc)[matches[0]:matches2[-1]+1])
+                                    phaseSolutionY = np.mean(gphsy) - mymean + cc
+                                  if (bpolyOverlay2):
+                                      validDomain = [frequencyLimits2[0,index], frequencyLimits2[1,index]]
+                                      cc = calcChebyshev(polynomialPhase2[index][0:nPolyPhase2[index]], validDomain, frequenciesGHz2[index]*1e+9) * 180/math.pi
+                                      fa = np.array(frequenciesGHz2[index])
+                                      if (xfrequencies[0] < xfrequencies[-1]):
+                                          matches = np.where(fa>xfrequencies[0])[0]
+                                          matches2 = np.where(fa<xfrequencies[-1])[0]
+                                      else:
+                                          matches = np.where(fa>xfrequencies[-1])[0]
+                                          matches2 = np.where(fa<xfrequencies[0])[0]
+                                      mymean = complexMeanDeg(np.array(cc)[matches[0]:matches2[-1]+1])
+                                      phaseSolution2X = np.mean(gphsx) + cc - mymean
+          
+                                      cc = calcChebyshev(polynomialPhase2[index][nPolyPhase2[index]:2*nPolyPhase2[index]], validDomain, frequenciesGHz2[index]*1e+9) * 180/math.pi
+                                      if (yfrequencies[0] < yfrequencies[-1]):
+                                          matches = np.where(fa>yfrequencies[0])[0]
+                                          matches2 = np.where(fa<yfrequencies[-1])[0]
+                                      else:
+                                          matches = np.where(fa>yfrequencies[-1])[0]
+                                          matches2 = np.where(fa<yfrequencies[0])[0]
+                                      mymean = complexMeanDeg(np.array(cc)[matches[0]:matches2[-1]+1])
+                                      phaseSolution2Y = np.mean(gphsy) + cc - mymean
+                                      pb.hold(True)
+                                      for p in range(nPolarizations):
+                                          if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                              pb.plot(pfrequencies[p], gphs[p],'%s%s' % (pcolor[p],phasemarkstyle), markersize=markersize)
+                                              newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband,plotrange,xchannels)
+                                      if (corrTypeToString(corr_type[0]) in polsToPlot):
+                                          pb.plot(frequenciesGHz[index],phaseSolutionX,'%s%s'%(x2color,bpolymarkstyle))
+                                          newylimits = recalcYlimitsFreq(chanrange, newylimits, phaseSolutionX, sideband,plotrange,xchannels)
+                                          pb.plot(frequenciesGHz2[index],phaseSolution2X,'%s%s'%(x3color,bpolymarkstyle))
+                                          newylimits = recalcYlimitsFreq(chanrange, newylimits, phaseSolution2X, sideband,plotrange,xchannels2)
+                                      if (nPolarizations == 2):
+                                         if (corrTypeToString(corr_type[1]) in polsToPlot):
+                                            pb.plot(frequenciesGHz[index],phaseSolutionY,'%s%s'%(y2color,bpolymarkstyle))
+                                            newylimits = recalcYlimitsFreq(chanrange, newylimits, phaseSolutionY, sideband,plotrange,xchannels)
+                                            pb.plot(frequenciesGHz2[index],phaseSolution2Y,'%s%s'%(y3color,bpolymarkstyle))
+                                            newylimits = recalcYlimitsFreq(chanrange, newylimits, phaseSolution2Y, sideband,plotrange,xchannels2)
+                                  else:
+                                      pb.hold(True)
+                                      for p in range(nPolarizations):
+                                          if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                              pb.plot(pfrequencies[p], gphs[p],'%s%s'%(pcolor[p],phasemarkstyle), markersize=markersize)
+                                              newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband,plotrange,xchannels)
+                                      if (corrTypeToString(corr_type[0]) in polsToPlot):
+                                         pb.plot(frequenciesGHz[index],phaseSolutionX,'%s%s'%(x2color,bpolymarkstyle))
+                                         newylimits = recalcYlimitsFreq(chanrange, newylimits, phaseSolutionX, sideband,plotrange,xchannels)
+                                      if (nPolarizations == 2):
+                                         if (corrTypeToString(corr_type[1]) in polsToPlot):
+                                            pb.plot(frequenciesGHz[index],phaseSolutionY,'%s%s'%(y2color,bpolymarkstyle))
+                                            newylimits = recalcYlimitsFreq(chanrange, newylimits, phaseSolutionY, sideband,plotrange,xchannels)
+                                  # endif (bpolyOverlay2)
+                                  # Adding the following 4 lines on March 14, 2013
+                                  (y0,y1) = pb.ylim()
+                                  if (y1-y0 < minPhaseRange):
+                                      # this must come before defining ticks 
+                                      SetNewYLimits([-minPhaseRange,minPhaseRange])
+                          else:
+                              # we are not overlaying any B or polynomial solutions   'phase vs. freq'
+                              pb.hold(True)
+                              for p in range(nPolarizations):
+                                  if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                      if (overlayAntennas or overlayTimes):
+                                        pdesc = pb.plot(pfrequencies[p], gphs[p],'%s'%(phasemarkstyles[p]), markersize=markersize)
+                                        newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband,plotrange,xchannels) # Apr 2, 2012
+                                        if (overlayAntennas and overlayTimes==False):
+                                            pb.setp(pdesc, color=overlayColors[xctr])
+                                        elif (overlayTimes and overlayAntennas==False):
+                                            pb.setp(pdesc, color=overlayColors[mytime])
+                                        elif (overlayTimes): # try to support antenna,time
+                                            if (myUniqueTime != []):
+                                                pb.setp(pdesc, color=overlayColors[myUniqueTime])
+                                                # The third 'or' below is needed if pol='0' is flagged on antenna 0. -- 2012/10/12 (original spot)
+                                                if (p==0 or len(polsToPlot)==1 or myUniqueColor==[]):
+                                                    myUniqueColor.append(overlayColors[len(myUniqueColor)])
+                                                pb.setp(pdesc, color=myUniqueColor[-1])
+                                      else:
+                                        pb.plot(pfrequencies[p], gphs[p],'%s%s'%(pcolor[p],phasemarkstyles[0]), markersize=markersize)
+                                        newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband, plotrange,xchannels)
+                                  if (sum(xflag)>0):
+# #     # #                            print "phase frame %d: Resetting xaxis frequency range to counteract flagged data" % (xframe)
+                                      xrange = np.max(frequencies)-np.min(frequencies)
+                                      SetNewXLimits([np.min(frequencies)-0.15*xrange, np.max(frequencies)+0.15*xrange])
+                                  if (len(gphs[p]) > 0):
+                                      if (np.max(gphs[p]) < minPhaseRange and np.min(gphs[p]) > -minPhaseRange):
+                                          SetNewYLimits([-minPhaseRange,minPhaseRange])
+                          #endif bOverlay
+          
+                          if (1==1):
+                              pb.xlabel(xlabelString, size=mysize)
+                      #endif xaxis='chan'/freq  for 'phase'
+                      if (overlayTimes):
+                          timeString =''
+                      else:
+                          timeString = ',  t%d/%d  %s' % (mytime+1,nUniqueTimes,utstring(uniqueTimes[mytime],3))
+                          if (scansForUniqueTimes != []):
+                              if (scansForUniqueTimes[mytime]>=0):
+                                  timeString = ',  scan%d  %s' % (scansForUniqueTimes[mytime],utstring(uniqueTimes[mytime],3))
+                      spwString = buildSpwString(overlaySpws, overlayBasebands,
+                                                 spwsToPlot, ispw, originalSpw[ispw],
+                                                 observatoryName, baseband, 
+                                                 showBasebandNumber)
+                      titleString = "%sspw%s,  field %d: %s%s" % (antennaString,
+                                                                  spwString,uniqueFields[fieldIndex],fieldString,timeString)
+                      pb.title(titleString,size=titlesize)
+                      if (abs(plotrange[0]) > 0 or abs(plotrange[1]) > 0):
+                          SetNewXLimits([plotrange[0],plotrange[1]])
+          
+                      # Here is 1st place where we eliminate any white space on the right and left edge of the plots: 'phase'
+                      else:
+                          if (xaxis.find('chan')>=0):
+                              SetNewXLimits([channels[0],channels[-1]])
+                          else:
+                              if (zoom != 'intersect'):
+                                  if (overlaySpws or overlayBasebands):
+                                      SetNewXLimits(frequencyRangeToPlotInBaseband[bbctr])
+                                  else:
+                                      SetNewXLimits([frequencies[0], frequencies[-1]])
+                              if (bOverlay):
+                                  if (xrange2 > xrange+0.1 and zoom != 'intersect'):
+                                      TDMisSecond = True
+          
+                      if (abs(plotrange[2]) > 0 or abs(plotrange[3]) > 0):
+                          if (amplitudeWithPhase == False or phase == ''):
+                              SetNewYLimits([plotrange[2],plotrange[3]])
+                      if (amplitudeWithPhase and phase != ''):
+                          if (phase[0] != 0 or phase[1] != 0):
+                              SetNewYLimits(phase)
+                          
+          
+                      (y0,y1) = pb.ylim()
+                      if (y1-y0 < minPhaseRange):
+                            # this must come before defining ticks
+                            SetNewYLimits([-minPhaseRange,minPhaseRange])
+                            SetNewYLimits(newylimits)  # added 10/2/2012 for the case of only 1 data point
+                      if (amplitudeWithPhase and phase != ''):
+                          if (phase[0] != 0 or phase[1] != 0):
+                              SetNewYLimits(phase)
+                      (y0,y1) = pb.ylim()
+                      ResizeFonts(adesc,mysize)
+                      adesc.xaxis.grid(True,which='major')
+                      adesc.yaxis.grid(True,which='major')
+                      pb.ylabel(yPhaseLabel, size=mysize)
+                      pb.subplots_adjust(hspace=myhspace, wspace=mywspace)
+                      ylim = pb.ylim()
+                      xlim = pb.xlim()
+                      xrange = xlim[1]-xlim[0]
+                      yrange = ylim[1]-ylim[0]
+# #     # #            print "phase: ylim, yrange = ",  ylim, yrange
+                      myap = 0
+                      if (overlayAntennas == False and overlayTimes == False and bOverlay == False and
+                          ((overlaySpws == False and overlayBasebands == False) or spwctr==0)):
+                          # draw polarization labels
+                          x0 = xstartPolLabel
+                          y0 = ystartPolLabel
+                          for p in range(nPolarizations):
+                                if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                    pb.text(x0, y0-0.03*subplotRows*p, corrTypeToString(corr_type[p]), color=pcolor[p],
+                                            size=mysize, transform=pb.gca().transAxes)
+                                    if (channeldiff > 0):
+                                        pb.text(x0, ystartMadLabel-0.03*subplotRows*p,
+                                                corrTypeToString(corr_type[p])+' MAD = %.4f, St.Dev = %.4f'%(gphs_mad[p]['mad'],gphs_std[p]['std']),
+                                                color=pcolor[p],size=mysize, transform=pb.gca().transAxes)
+                          if (xframe == firstFrame):
+                                # draw title including caltable name
+                                caltableList = caltableTitle
+                                if (bpolyOverlay):
+                                      caltableList += ', ' + caltable2 + ' (degamp=%d, degphase=%d)'%(nPolyAmp[index]-1,nPolyPhase[index]-1)
+                                      if (bpolyOverlay2):
+                                            caltableList += ', ' + caltable3 + ' (degamp=%d, degphase=%d)'%(nPolyAmp2[index]-1,nPolyPhase2[index]-1)
+                                pb.text(xstartTitle, ystartTitle, caltableList, size=titlesize,
+                                        color='k', transform=pb.gcf().transFigure)
+                      elif (overlayAntennas==True and xant==antennasToPlot[-1] and bOverlay==False  # ):
+                            and overlayTimes==False):  # try to support antenna,time   avoid antenna labels 'phase'
+                          # We do this last, because by then, the limits will be stable.
+                          x0 = xstartPolLabel
+                          y0 = ystartPolLabel
+                          if (corrTypeToString(corr_type[0]) in polsToPlot):
+                              if (channeldiff > 0):
+                                  pb.text(x0, ystartMadLabel-0.03*subplotRows*p,
+                                          corrTypeToString(corr_type[p])+' MAD = %.4f, St.Dev = %.4f'%(gphs_mad[p]['mad'],gphs_std[p]['std']),
+                                          color=overlayColors[0], size=mysize, transform=pb.gca().transAxes)
+                              if (phasemarkstyle.find('-')>=0):
+                                  pb.text(x0, y0-0.03*subplotRows*0, corrTypeToString(corr_type[0])+' solid', color=overlayColors[0],
+                                          fontsize=mysize, transform=pb.gca().transAxes)
+                              else:
+                                  pb.text(x0+0.02, y0-0.03*subplotRows*0, corrTypeToString(corr_type[0]), color=overlayColors[0],
+                                          fontsize=mysize, transform=pb.gca().transAxes)
+                                  pdesc = pb.plot([x0], [y0+0.015-0*0.03*subplotRows], '%sk'%phasemarkstyle, markersize=markersize,
+                                                  scalex=False,scaley=False, transform=pb.gca().transAxes)
+                          if (len(corr_type) > 1):
+                            if (corrTypeToString(corr_type[1]) in polsToPlot):
+                              if (channeldiff > 0):
+                                  pb.text(x0, ystartMadLabel-0.03*subplotRows*p,
+                                          corrTypeToString(corr_type[p])+' MAD = %.4f, St.Dev = %.4f'%(gphs_mad[p]['mad'],gphs_std[p]['std']),
+                                          color=overlayColors[0], size=mysize, transform=pb.gca().transAxes)
+                              if (phasemarkstyle2.find('--')>=0):
+                                  pb.text(x0, y0-0.03*subplotRows*1, corrTypeToString(corr_type[1])+' dashed', color=overlayColors[0],
+                                          fontsize=mysize, transform=pb.gca().transAxes)
+                              else:
+                                  pb.text(x0+0.02, y0-0.03*subplotRows*1, corrTypeToString(corr_type[1]), color=overlayColors[0],
+                                          fontsize=mysize, transform=pb.gca().transAxes)
+                                  pdesc = pb.plot([x0], [y0+0.015*subplotRows-0.03*subplotRows*1],'%sk'%phasemarkstyle2, markersize=markersize,
+                                                  scalex=False,scaley=False, transform=pb.gca().transAxes)
+                          if (xframe == firstFrame):
+                              # draw title including caltable name
+                              pb.text(xstartTitle, ystartTitle, caltableTitle, size=titlesize, color='k',
+                                      transform=pb.gcf().transFigure)
+                              DrawAntennaNames(msAnt, antennasToPlot, msFound, mysize)
+                      elif (overlayTimes==True and bOverlay == False 
+                            and overlayAntennas==False):  # try to support antenna,time
+                          doneOverlayTime = True # assumed until proven otherwise in the 'for' loop
+                          for f in fieldIndicesToPlot:
+                              if (uniqueTimes[mytime] < uniqueTimesPerFieldPerSpw[ispwInCalTable][f][-1]-solutionTimeThresholdSeconds and
+                                  uniqueTimes[mytime] < timerangeListTimes[-1]):
+                                  doneOverlayTime = False
+                          if (doneOverlayTime):
+                              # either it is the last time of any times in solution, or the last time in the list of times to plot
+                              mytime = nUniqueTimes-1
+                              # We do this last, because by then, the limits will be broad enough and stable.
+                              x0 = xstartPolLabel
+                              y0 = ystartPolLabel
+                              if (corrTypeToString(corr_type[0]) in polsToPlot):
+                                if (channeldiff > 0):
+                                    p = 0
+                                    pb.text(x0, ystartMadLabel-0.03*subplotRows*p,
+                                            corrTypeToString(corr_type[p])+' MAD = %.4f'%(gphs_mad[p]['mad']),
+                                            color='k', size=mysize, transform=pb.gca().transAxes)
+                                if (phasemarkstyle.find('-')>=0):
+                                    pb.text(x0, y0, corrTypeToString(corr_type[0])+' solid', color='k',
+                                            fontsize=mysize, transform=pb.gca().transAxes)
+                                else:
+                                    pb.text(x0+0.02, y0, corrTypeToString(corr_type[0]), color='k',
+                                            fontsize=mysize, transform=pb.gca().transAxes)
+                                    pdesc = pb.plot([x0], [y0+0.015*subplotRows], '%sk'%phasemarkstyle, markersize=markersize,
+                                                    scalex=False,scaley=False, transform=pb.gca().transAxes)
+                              if (len(corr_type) > 1):
+                                if (corrTypeToString(corr_type[1]) in polsToPlot):
+                                  if (channeldiff > 0):
+                                      p = 1
+                                      pb.text(x0, ystartMadLabel-0.03*subplotRows*p,
+                                              corrTypeToString(corr_type[p])+' MAD = %.4f'%(gphs_mad[p]['mad']),
+                                              color='k', size=mysize, transform=pb.gca().transAxes)
+                                  if (phasemarkstyle2.find('--')>=0):
+                                      pb.text(x0, y0-0.03*subplotRows, corrTypeToString(corr_type[1])+' dashed',
+                                              color='k',fontsize=mysize, transform=pb.gca().transAxes)
+                                  else:
+                                      pb.text(x0+0.02, y0-0.03*subplotRows, corrTypeToString(corr_type[1]),
+                                              color='k', fontsize=mysize, transform=pb.gca().transAxes)
+                                      pdesc = pb.plot([x0], [y0+0.015*subplotRows-0.03*subplotRows], '%sk'%phasemarkstyle2,
+                                                      markersize=markersize, scalex=False,scaley=False, transform=pb.gca().transAxes)
+                              if (xframe == firstFrame):
+                                  # draw title including caltable name
+                                  pb.text(xstartTitle, ystartTitle, caltableTitle, size=titlesize, color='k',
+                                          transform=pb.gcf().transFigure)
+                                  drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,
+                                                         caltable,titlesize,fieldIndicesToPlot,
+                                                         ispwInCalTable,uniqueTimesPerFieldPerSpw,
+                                                         timerangeListTimes, solutionTimeThresholdSeconds,
+                                                         debugSloppyMatch,ystartOverlayLegend,debug,mysize,
+                                                         fieldsToPlot,myUniqueColor,timeHorizontalSpacing,
+                                                         fieldIndex,overlayColors, antennaVerticalSpacing,
+                                                         overlayAntennas, timerangeList, caltableTitle,
+                                                         mytime, scansToPlot, scansForUniqueTimes)
+        
+                      elif (overlayAntennas and overlayTimes):  # Oct 23, 2012
+                          # This will only happen for: try to support overlay='antenna,time'
+                          if (xframe == firstFrame and mytime==0 and xctr==firstUnflaggedAntennaToPlot and bOverlay==False):
+                              # draw title including caltable name
+                              pb.text(xstartTitle, ystartTitle, caltableTitle, size=titlesize, color='k',
+                                      transform=pb.gcf().transFigure)
+                              DrawBottomLegendPageCoords(msName, uniqueTimes[mytime], mysize)
+                          
+                      #endif (overlayAntennas == False and overlayTimes == False and bOverlay == False)
+                      
+                      # Here is 2nd place where we eliminate any white space on the right and left edge of the plots: 'phase'
+                      if (abs(plotrange[2]) > 0 or abs(plotrange[3]) > 0):
+                          if (amplitudeWithPhase == False or phase == ''):
+                              SetNewYLimits([plotrange[2],plotrange[3]])
+                      if (phase != '' and amplitudeWithPhase):
+                          if (phase[0] != 0 or phase[1] != 0):
+                              SetNewYLimits(phase)
+                      if (plotrange[0]==0 and plotrange[1]==0):
+                          if (xaxis.find('chan')>=0):
+                              SetNewXLimits([channels[0],channels[-1]])
+                          else:
+                              if (zoom != 'intersect'):
+                                  if (overlaySpws or overlayBasebands):
+                                      SetNewXLimits(frequencyRangeToPlotInBaseband[bbctr])
+                                  else:
+                                      SetNewXLimits([frequencies[0], frequencies[-1]])
+                              if (bOverlay):
+                                  if (xrange2 >= xrange and zoom != 'intersect'):
+                                      # This is necessary if caltable2=TDM and caltable=FDM
+                                      SetNewXLimits([frequencies2[0], frequencies2[-1]])
+                                  if (xrange2 > xrange+0.1 and zoom != 'intersect'):
+                                      TDMisSecond = True
+                      else:
+                          SetNewXLimits([plotrange[0], plotrange[1]])
+          
+                      # I need the following line for chanrange to work
+                      if (chanrange[0] != 0 or chanrange[1] != 0):
+                          SetLimits(plotrange, chanrange, newylimits, channels, frequencies, pfrequencies, ampMin, ampMax, xaxis,pxl)
+          
+                      # Finally, draw the atmosphere and FDM windows, if requested.
+                      if ((overlayAntennas==False and overlayTimes==False) or
+                          (overlayAntennas==True and overlayTimes==False and xant==antennasToPlot[-1]) or
+                          (overlayTimes==True and overlayAntennas==False and doneOverlayTime) or
+                          (xant==antennasToPlot[-1] and doneOverlayTime)
+                          ):
+                          if ((showatm or showtsky) and len(atmString)>0):
+                              DrawAtmosphere(showatm, showtsky, subplotRows, atmString,
+                                             mysize, TebbSky, plotrange, xaxis, atmchan,
+                                             atmfreq, transmission, subplotCols,
+                                             showatmPoints=showatmPoints, xframe=xframe, 
+                                             channels=channels, mylineno=lineNumber())
+                              if (LO1 != ''):
+                                  DrawAtmosphere(showatm,showtsky, subplotRows, atmString,
+                                                 mysize, TebbSky, plotrange, xaxis, atmchanImage,
+                                                 atmfreqImage, transmissionImage, subplotCols,
+                                                 LO1, xframe, firstFrame, showatmPoints, 
+                                                 channels=channels, mylineno=lineNumber())
+                      
+                          if (xaxis.find('freq')>=0 and showfdm and nChannels <= 256):
+                              if (tableFormat == 33):
+                                  showFDM(originalSpw_casa33, chanFreqGHz_casa33, baseband, showBasebandNumber, basebandDict)
+                              else:
+                                  showFDM(originalSpw, chanFreqGHz, baseband, showBasebandNumber, basebandDict)
+          
+                      if (bOverlay):
+                          # draw polarization labels
+                          x0 = xstartPolLabel
+                          y0 = ystartPolLabel
+                          for p in range(nPolarizations):
+                              if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                  pb.text(x0, y0-p*0.03*subplotRows, corrTypeToString(corr_type[p])+'-c1',
+                                          color=pcolor[p],size=mysize,transform=pb.gca().transAxes)
+                                  pb.text(x0, y0-(p*0.03+0.06)*subplotRows, corrTypeToString(corr_type[p])+'-c2',
+                                          color=p2color[p],size=mysize, transform=pb.gca().transAxes)
+                      if (bpolyOverlay and xaxis.find('freq')>=0):
+                          x0 = xstartPolLabel
+                          y0 = ystartPolLabel
+                          if (xcolor != x2color):
+                              for p in range(nPolarizations):
+                                  if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                      pb.text(x0+0.1, y0-p*0.03*subplotRows, corrTypeToString(corr_type[p]), color=p2color[p],
+                                              size=mysize, transform=pb.gca().transAxes)
+                          if (bpolyOverlay2):
+                              for p in range(nPolarizations):
+                                    if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                          pb.text(x0+0.2, y0-p*0.03*subplotRows, corrTypeToString(corr_type[p]), color=p3color[p],
+                                                  size=mysize, transform=pb.gca().transAxes)
+          
+                  # endif (yaxis='phase')
+          
+                  redisplay = False
+          
+                  if (xframe == lastFrame):
+                    if (debug):
+                        print "*** mytime+1=%d,  nUniqueTimes=%d, timerangeList[-1]=%d, doneOverlayTime=%s" % (mytime+1, nUniqueTimes,timerangeList[-1],doneOverlayTime)
+                        print "*** xant=%d, antennasToPlot[-1]=%d, overlayAntennas=%s, overlayTimes=%s" % (xant,antennasToPlot[-1],overlayAntennas,overlayTimes)
+                        print "*** xframe=%d, lastFrame=%d, xctr=%d, spwctr=%d, len(antennasToPlot)=%d, len(spwsToPlot)=%d" % (xframe,lastFrame,xctr,spwctr,len(antennasToPlot), len(spwsToPlot))
+                    myIndexTime = uniqueTimesPerFieldPerSpw[ispwInCalTable][fieldIndex][-1]
+                    if (debug):
+                        print "myIndexTime = ", myIndexTime
+                    matched,mymatch = sloppyMatch(myIndexTime,uniqueTimes,solutionTimeThresholdSeconds,
+                                                  mytime, scansToPlot, scansForUniqueTimes,
+                                                  whichone=True, debug=False, myprint=False)
+                    if (matched==False):
+                        print "---------- 2) Did not find %f within %.1f seconds of anything in %s" % (myIndexTime,solutionTimeThresholdSeconds,str(uniqueTimes))
+                        print "Try re-running with a smaller solutionTimeThresholdSeconds (currently %f)" % (solutionTimeThresholdSeconds)
+                        return
+                    else:
+                        # we are on the final time to be plotted
+                        mytimeTest = mytime==nUniqueTimes-1 
+                    if ((overlayAntennas==False and overlayTimes==False and overlaySpws==False and overlayBasebands==False)
+                        # either it is the last time of any, or the last time in the list of times to plot
+                        or (overlayAntennas==False and overlaySpws==False and overlayBasebands==False and (mytime+1==nUniqueTimes or mytime == timerangeList[-1])) # or mytimeTest)) # removed on July 25,2013
+                        or (xant==antennasToPlot[-1] and overlayAntennas==True and overlayTimes==False and overlaySpws==False and overlayBasebands==False)
+                        or (spwctr==len(spwsToPlot)-1 and (overlaySpws or overlayBasebands) and overlayAntennas==False and overlayTimes==False)  
+                        # Following case is needed to make subplot=11 to work for: try to support overlay='antenna,time' :  'phase'
+                        or (xframe == lastFrame and overlayTimes and overlayAntennas and
+                            xctr+1==len(antennasToPlot) and
+                            mytimeTest and
+                            spwctr<len(spwsToPlot))
+                        or (doneOverlayTime and overlayTimes==True
+                            and overlayAntennas==False 
+                            )):
                       if (debug):
-                          print "Decrementing pagectr from %d to %d" % (pagectr, pagectr-1)
-                      pagectr -= 1
-                  else:
+                          print "entered 'if' block"
+                      DrawBottomLegendPageCoords(msName, uniqueTimes[mytime], mysize)
+          
+                      # added len(pages)>0 on July 30, 2013 to prevent crash when called with single
+                      # antenna and subplot=11 and all solutions flagged.
+                      if (len(figfile) > 0 and len(pages)>0):
+                          if (debug):
+                              print "calling makeplot"
+                          plotfiles.append(makeplot(figfile,msFound,msAnt,
+                                                    overlayAntennas,pages,pagectr,
+                                                    density,interactive,antennasToPlot,
+                                                    spwsToPlot,overlayTimes,4,resample,debug,
+                                                    figfileSequential, figfileNumber))
+                          if (debug):
+                              print "done makeplot"
+                          figfileNumber += 1
+                      myinput = ''
+                      donetime = timeUtilities.time()
+                      if (interactive):
+                          pb.draw()
+# #     # #                myinput = raw_input("(%.1f sec) Press return for next screen (b for backwards, q to quit): "%(donetime-mytimestamp))
+                          myinput = raw_input("Press return for next page (b for backwards, q to quit): ")
+                      else:
+                          myinput = ''
+                      skippingSpwMessageSent = 0
+                      mytimestamp = timeUtilities.time()
+                      if (myinput.find('q') >= 0):
+                          mytime = len(uniqueTimes)
+                          spwctr = len(spwsToPlot)
+                          xctr = len(antennasToPlot)
+                          bbctr = len(spwsToPlotInBaseband)
+                          break
                       if (debug):
-                          print "Not decrementing pagectr=%d" % (pagectr)
-                  redisplay = True
-                  #redisplay the current page by setting ctrs back to the value they had at start of that page
-                  xctr = pages[pagectr][PAGE_ANT]
-                  spwctr = pages[pagectr][PAGE_SPW]
-                  mytime = pages[pagectr][PAGE_TIME]
-                  myap = pages[pagectr][PAGE_AP]
-                  xant = antennasToPlot[xctr]
-                  antstring, Antstring = buildAntString(xant,msFound,msAnt)
-                  ispw = spwsToPlot[spwctr]
-# #                print "Returning to [%d,%d,%d,%d]" % (xctr,spwctr,mytime,myap)
-              else:
-                  pagectr += 1
-                  if (pagectr >= len(pages)):
-                      newpage = 1
-                  else:
-                      newpage = 0
-              if (overlayTimes==True and sloppyMatch(uniqueTimesPerFieldPerSpw[ispwInCalTable][fieldIndex][-1],uniqueTimes[mytime],solutionTimeThresholdSeconds,myprint=debugSloppyMatch)):
-                  # be sure to avoid any more loops through mytime which will cause 'b' button to fail
-                  mytime = nUniqueTimes
-# #          else:
-# #              print "Not going to new page, uniqueTimes[mytime]=%.1f, uniqueTimesPerFieldPerSpw[ispwInCalTable][fieldIndex][-1]=%.1f" % (uniqueTimes[mytime],uniqueTimesPerFieldPerSpw[ispwInCalTable][fieldIndex][-1])
-          if (redisplay == False):
-              if (xctr+1 >= len(antennasToPlot) or overlayAntennas==False): 
-                  mytime += 1
-                  if (debug):
-                      print "AT BOTTOM OF LOOP: Incrementing mytime to %d, setting firstUnflaggedAntennaToPlot to 0" % (mytime)
-                  firstUnflaggedAntennaToPlot = 0  # try this
-                  doneOverlayTime = False  # added on 08-nov-2012
-        # end of while(mytime) loop
-        if (redisplay == False):
-            spwctr += 1
-            if (debug):
-                print "Incrementing spwctr to %d" % (spwctr)
-        else:
-            if (debug):
-                print "redisplay = True"
-      # end of while(spwctr) loop
+                          print "4)Setting xframe to %d" % (xframeStart)
+                      xframe = xframeStart
+                      alreadyPlottedAmp = False  # needed for (overlay='baseband', yaxis='both')
+                      myUniqueColor = []
+                      pb.subplots_adjust(hspace=myhspace, wspace=mywspace)
+                      if (myinput.find('b') >= 0):
+                          if (pagectr > 0):
+                              if (debug):
+                                  print "Decrementing pagectr from %d to %d" % (pagectr, pagectr-1)
+                              pagectr -= 1
+                          else:
+                              if (debug):
+                                  print "Not decrementing pagectr=%d" % (pagectr)
+                          redisplay = True
+                          #redisplay the current page by setting ctrs back to the value they had at start of that page
+                          xctr = pages[pagectr][PAGE_ANT]
+                          spwctr = pages[pagectr][PAGE_SPW]
+                          mytime = pages[pagectr][PAGE_TIME]
+                          myap = pages[pagectr][PAGE_AP]
+                          xant = antennasToPlot[xctr]
+                          antstring, Antstring = buildAntString(xant,msFound,msAnt)
+                          ispw = spwsToPlot[spwctr]
+# #     # #                print "Returning to [%d,%d,%d,%d]" % (xctr,spwctr,mytime,myap)
+                      else:
+                          pagectr += 1
+                          if (pagectr >= len(pages)):
+                              newpage = 1
+                          else:
+                              newpage = 0
+                      if (overlayTimes==True and 
+                          sloppyMatch(uniqueTimesPerFieldPerSpw[ispwInCalTable][fieldIndex][-1],
+                                      uniqueTimes[mytime],solutionTimeThresholdSeconds,
+                                      mytime, scansToPlot, scansForUniqueTimes,
+                                      myprint=debugSloppyMatch)):
+                          # be sure to avoid any more loops through mytime which will cause 'b' button to fail
+                          mytime = nUniqueTimes
+        
+                  if (redisplay == False):
+                      if ((overlayAntennas and xctr+1 >= len(antennasToPlot)) or
+                          ((overlaySpws or overlayBasebands) and spwctr+1 >= len(spwsToPlot)) or                
+                          (overlayAntennas==False and overlaySpws==False and overlayBasebands==False)): 
+                          mytime += 1
+                          if (debug):
+                              print "AT BOTTOM OF LOOP: Incrementing mytime to %d, setting firstUnflaggedAntennaToPlot to 0" % (mytime)
+                          firstUnflaggedAntennaToPlot = 0  # try this
+                          doneOverlayTime = False  # added on 08-nov-2012
+                # end of while(mytime) loop
+                if (redisplay == False):
+                    spwctr += 1
+                    if (debug):
+                        print "Incrementing spwctr to %d" % (spwctr)
+                else:
+                    if (debug):
+                        print "redisplay = True"
+          # end of while(spwctr) loop
+          bbctr += 1
+      # end of while(bbctr) loop
       if (xant >= antennasToPlot[-1] and xframe != xframeStart):
           # this is the last antenna, so make a final plot
           if (len(figfile) > 0):
-                plotfiles.append(makeplot(figfile,msFound,msAnt,overlayAntennas,
-                                       pages,pagectr,density,interactive,
-                                       antennasToPlot,spwsToPlot,overlayTimes,5,debug))
+              plotfiles.append(makeplot(figfile,msFound,msAnt,overlayAntennas,
+                                        pages,pagectr,density,interactive,
+                                        antennasToPlot,spwsToPlot,overlayTimes,5,resample,debug,
+                                        figfileSequential,figfileNumber))
+              figfileNumber += 1
       if (redisplay == False):
           xctr += 1
 # #        print "Incrementing xctr to %d" % (xctr)
@@ -4223,6 +4743,10 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
           break
     # end of while(xant) loop
     pb.draw()
+    if (len(plotfiles) == 1 and figfileSequential):
+        # rename the single file to remove ".000"
+        print "renaming %s to %s" % (plotfiles[0],plotfiles[0].split('.000.png')[0]+'.png')
+        os.system('mv %s %s' % (plotfiles[0],plotfiles[0].split('.000.png')[0]+'.png'))
     if (len(plotfiles) > 0 and buildpdf):
       pdfname = figfile+'.pdf'
       filelist = ''
@@ -4237,6 +4761,10 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             break
         filelist += plotfiles[i].split('.png')[0] + '.pdf '
       if (buildpdf):
+          # The following 2 lines reduce the total number of characters on the command line, which
+          # was apparently a problem at JAO for Liza.
+          filelist = ' '.join(pruneFilelist(filelist.split()))
+          pdfname = pruneFilelist([pdfname])[0]
           cmd = '%s %s cat output %s' % (pdftk, filelist, pdfname)
           casalogPost(debug,"Running command = %s" % (cmd))
           mystatus = os.system(cmd)
@@ -4250,6 +4778,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
               os.system("rm -f %s" % filelist)
           else:
               print "Both pdftk and ghostscript are missing, so no PDF built."
+
+    showFinalMessage(overlayAntennas, solutionTimeSpread, nUniqueTimes)
+
     if (channeldiff>0):
         # Compute median over all antennas, or at least those completed before 'q' was hit
         madstats['median'] = dict.fromkeys(spwsToPlot)
@@ -4271,9 +4802,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                     for m in madstats['median'][j][k][l].keys():
                         value = []
                         for i in madstats.keys():  # loop over antennas
-                            if (i != 'median'):
+                            if (i != 'median' and i != 'platforming'):
                                 if (madstats[i][j][k][l][m] != None):
-# #                                  print "madstats[%s][%d][%d][%d][%s] = " % (i,j,k,l,m), madstats[i][j][k][l][m]
+                                    if (debug): print "madstats[%s][%d][%d][%d][%s] = " % (i,j,k,l,m), madstats[i][j][k][l][m]
                                     value.append(madstats[i][j][k][l][m])
                                     spwvalue[m].append(madstats[i][j][k][l][m])
                         madstats['median'][j][k][l][m] = np.median(value)
@@ -4289,6 +4820,40 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         return(madstats)
     else:
         return()
+    # end of plotbandpass
+
+def showFinalMessage(overlayAntennas, solutionTimeSpread, nUniqueTimes):
+  if (overlayAntennas and solutionTimeSpread > 0 and nUniqueTimes==1):
+      print "If not all spws were shown, then try setting solutionTimeThreshold=%.0f seconds" % (solutionTimeSpread+1)
+
+def computeOriginalSpwsToPlot(spwsToPlot, originalSpws, tableFormat, debug):
+    if (tableFormat > 33):
+        # New caltables use the same numbering as the original ms
+        return(spwsToPlot)
+    else:
+        originalSpwsToPlot = []
+        for spw in spwsToPlot:
+            originalSpwsToPlot.append(originalSpws[spw])
+        return(list(originalSpwsToPlot))
+
+def computeScansForUniqueTimes(uniqueTimes, cal_scans, times, unique_cal_scans,
+                               debug=False):
+    scansForUniqueTimes = []
+    nUniqueTimes = len(uniqueTimes)
+    for uT in uniqueTimes:
+        if (debug): print "Checking uniqueTime = %s" % (str(uT))
+        scansForUniqueTimes.append(cal_scans[list(times).index(uT)])
+    if (len(unique_cal_scans) == 1):
+        if (unique_cal_scans[0] != -1): 
+            nUniqueTimes = len(np.unique(scansForUniqueTimes))
+        else:
+            # This 3.4 table does not have the scan numbers populated
+            scansForUniqueTimes = []
+            print "Because the scan numbers are not correct in this ms, I will use timestamps instead."
+    else:
+        nUniqueTimes = len(np.unique(scansForUniqueTimes))
+    return(scansForUniqueTimes, nUniqueTimes)
+    
 
 def calcChebyshev(coeff, validDomain, x):
     """
@@ -4748,24 +5313,54 @@ def SetNewXLimits(newxlimits):
 #        print "Swapping xlimits order"
         pb.xlim(newxlimits[1]-xrange*buffer, newxlimits[0]+xrange*buffer)
 
-def sloppyMatch(newvalue, mylist, threshold, myprint=False, whichone=False):
-    matched = False
-    if (type(mylist) != list and type(mylist)!=type(np.ndarray(0))):
-	mylist = [mylist]
-    mymatch = -1
-    for i in range(len(mylist)):
-        v = mylist[i]
-        if (abs(newvalue-v) < threshold):
-            matched = True
-            mymatch = i
-    
-    if (matched == False and myprint==True):
-        casalogPost(myprint,"sloppyMatch: %.0f is not within %.0f of anything in %s" % (newvalue,threshold, str(mylist)))
-#        print "Returning matched = ", matched
-    elif (myprint==True):
-        casalogPost(myprint,"sloppyMatch: %.0f is within %.0f of something in %s" % (newvalue,threshold, str(mylist)))
-#        print "Returning matched = ", matched
-    if (whichone == False):
+def sloppyMatch(newvalue, mylist, threshold, mytime=None, scansToPlot=[],
+                scansForUniqueTimes=[], myprint=False, whichone=False, debug=False):
+    """
+    If scan numbers are present, perform an exact match, otherwise compare the
+    time stamps of the solutions.
+    """
+    if (debug):
+        print "sloppyMatch: scansToPlot = %s" % (str(scansToPlot))
+    if (len(scansToPlot) > 0):
+        matched = scansForUniqueTimes[mytime] in scansToPlot
+        if (debug):
+            print "matched = ", matched
+        if (whichone or myprint):
+            myscan = scansForUniqueTimes[mytime]
+            if (debug):
+                print "myscan = ", myscan
+            mymatch = list(scansToPlot).index(myscan)
+            if (debug):
+                print "mymatch = ", mymatch
+        if (matched == False and myprint==True):
+            print "sloppyMatch: %d is not in %s" % (myscan, list(scansToPlot))
+        elif (myprint==True):
+            print "sloppyMatch: %d is in %s" % (myscan, list(scansToPlot))
+    else:
+        matched = False
+        if (debug):
+            print "matched = ", matched
+        if (type(mylist) != list and type(mylist)!=np.ndarray):
+            mylist = [mylist]
+        if (debug):
+            print "mylist = ", mylist
+        mymatch = -1
+        for i in range(len(mylist)):
+            v = mylist[i]
+            if (debug):
+                print "v = ", v
+            if (abs(newvalue-v) < threshold):
+                matched = True
+                mymatch = i
+                if (debug):
+                    print "setting matched=True at mymatch = ", mymatch
+        if (matched == False and myprint==True):
+            print "sloppyMatch: %.0f is not within %.0f of anything in %s" % (newvalue,threshold, str([int(round(b)) for b in mylist]))
+        elif (myprint==True):
+            print "sloppyMatch: %.0f is within %.0f of something in %s" % (newvalue,threshold, str([int(round(b)) for b in mylist]))
+    if (debug):
+        print "Returning"
+    if (whichone ==  False):
         return(matched)
     else:
         return(matched,mymatch)
@@ -4815,21 +5410,27 @@ def SetLimits(plotrange, chanrange, newylimits, channels, frequencies, pfrequenc
         SetNewYLimits([plotrange[2],plotrange[3]])
     return(0)
     
-def showFDM(originalSpw, chanFreqGHz):
+def showFDM(originalSpw, chanFreqGHz, baseband, showBasebandNumber, basebandDict):
     """
     Draws a horizontal bar indicating the location of FDM spws in the dataset.
 
-    originalSpw should contain all spws in the dataset, not just the ones
-    in the caltable
+    Still need to limit based on the baseband -- need dictionary passed in.
+    originalSpw: should contain all spws in the dataset, not just the ones
+                in the caltable
+    baseband: the baseband of the current spw
+    showBasebandNumber: force the display of all FDM spws, and their baseband number
+    basebandDict: {1:[17,19], 2:[21,23], etc.}  or {} for really old datasets  
     """
-
+    
     # add some space at the bottom -- Apr 25, 2012
     ylim = pb.ylim()
     yrange = ylim[1]-ylim[0]
     pb.ylim([ylim[0]-BOTTOM_MARGIN*yrange, ylim[1]])
 
     sdebug = False
-    if (sdebug): print "Showing FDM (%d) %s" % (len(originalSpw), str(originalSpw))
+    if (sdebug):
+        print "Showing FDM (%d)" % (len(originalSpw)), originalSpw
+        print "baseband = %d, basebandDict = %s" % (baseband, str(basebandDict))
     fdmctr = -1
     x0,x1 = pb.xlim()
     y0,y1 = pb.ylim()
@@ -4839,7 +5440,9 @@ def showFDM(originalSpw, chanFreqGHz):
     labelAbove = False  # False means label to the right
     for i in range(len(originalSpw)):
         nchan = len(chanFreqGHz[i])
-        if (nchan >= 15 and nchan not in [256,128,64,32,16]):
+        # latter 3 values are for ACA with FPS enabled
+        if (nchan >= 15 and nchan not in [256,128,64,32,16,248,124,62]):
+          if (originalSpw[i] in basebandDict[baseband] or showBasebandNumber):
             fdmctr += 1
             verticalOffset = fdmctr*0.04*yrange
             y1a = y0 + 0.03*yrange + verticalOffset
@@ -4868,10 +5471,19 @@ def showFDM(originalSpw, chanFreqGHz):
                     xlabel = v1+0.02*xrange
                 pb.plot([v0,v1], [y1a,y1a], '-',
                         linewidth=4, color=overlayColors[fdmctr])
-                pb.text(xlabel, y2, "spw%d"%(i), size=7)  
+                if (showBasebandNumber):
+                    mybaseband = [key for key in basebandDict if i in basebandDict[key]]
+                    if (len(mybaseband) > 0):
+                        pb.text(xlabel, y2, "spw%d(bb%d)"%(i,mybaseband[0]), size=7)
+                    else:
+                        pb.text(xlabel, y2, "spw%d(bb?)"%(i), size=7)
+                else:
+                    pb.text(xlabel, y2, "spw%d"%(i), size=7)
                 if (sdebug): print "Plotting spw %d (%d)" % (i, originalSpw[i])
             else:
                 if (sdebug): print "Not plotting spw %d (%d) because %f < %f" % (i,originalSpw[i],v0,v1)
+          else:
+              if (sdebug): print "Not plotting spw %d (%d) because it is not in baseband %d (%s)" % (i,originalSpw[i],baseband,basebandDict[baseband])
         else:
             if (sdebug): print "Not plotting spw %d (%d) because fewer than 256 channels (%d)" % (i,originalSpw[i],nchan)
     if (fdmctr > -1):
@@ -4881,7 +5493,7 @@ def showFDM(originalSpw, chanFreqGHz):
 def DrawAtmosphere(showatm, showtsky, subplotRows, atmString, mysize,
                    TebbSky, plotrange, xaxis, atmchan, atmfreq, transmission,
                    subplotCols, lo1='', xframe=0, firstFrame=0,
-                   showatmPoints=False, channels=[0]):
+                   showatmPoints=False, channels=[0], mylineno=-1,xant=-1):
     """
     Draws atmospheric transmission or Tsky on an amplitude vs. chan or freq plot.
     """
@@ -5032,6 +5644,37 @@ def fixGapInSpws(spws, verbose=False):
             spws[i] -= gap
     return(spws)
 
+def stdInfo(a, sigma=3, edge=0, spw=-1, xant=-1, pol=-1):
+    """
+    Computes the standard deviation of a list, then returns the value, plus the
+    number and list of channels that exceed sigma*std, and the worst outlier.
+    """
+    info = {}
+    if (edge >= len(a)/2):  # protect against too large of an edge value
+        originalEdge = edge
+        if (len(a) == 2*(len(a)/2)):
+            edge = len(a)/2 - 1 # use middle 2 points
+        else:
+            edge = len(a)/2  # use central point
+        if (edge < 0):
+            edge = 0
+        print "stdInfo: WARNING edge value is too large for spw%d xant%d pol%d, reducing it from %d to %d." % (spw, xant, pol, originalEdge, edge)
+    info['std'] = np.std(a[edge:len(a)-edge])
+    chan = []
+    outlierValue = 0
+    outlierChannel = None
+    for i in range(edge,len(a)-edge):
+        if (np.abs(a[i]) > sigma*info['std']):
+            chan.append(i)
+        if (np.abs(a[i]) > np.abs(outlierValue)):
+            outlierValue = a[i]
+            outlierChannel = i
+    info['nchan'] = len(chan)
+    info['chan'] = chan
+    info['outlierValue'] = outlierValue/info['std']
+    info['outlierChannel'] = outlierChannel
+    return(info)
+    
 def madInfo(a, madsigma=3, edge=0):
     """
     Computes the MAD of a list, then returns the value, plus the number and list
@@ -5061,6 +5704,40 @@ def madInfo(a, madsigma=3, edge=0):
     info['outlierChannel'] = outlierChannel
     return(info)
     
+def platformingCheck(a, threshold=DEFAULT_PLATFORMING_THRESHOLD):
+    """
+    Checks for values outside the range of +-threshold.
+    Meant to be passed an amplitude spectrum.
+    """
+    info = {}
+    startChan = len(a)/32. - 1
+    endChan = len(a)*31/32. + 1
+#    print "Checking channels %d-%d for platforming" % (startChan,endChan)
+    if (startChan <= 0 or endChan >= len(a)):
+        return
+    middleChan = (startChan+endChan)/2
+    channelRange1 = range(startChan,middleChan+1)
+    channelRange2 = range(endChan,middleChan,-1)
+    platforming = False
+    awayFromEdge = False
+    for i in channelRange1:
+        if (np.abs(a[i]) > threshold):
+            if (awayFromEdge):
+#                print "a[%d]=%f" % (i,a[i])
+                platforming = True
+                return(platforming)
+        else:
+            awayFromEdge = True
+    awayFromEdge = False
+    for i in channelRange2:
+        if (np.abs(a[i]) > threshold):
+            if (awayFromEdge):
+                platforming = True
+                return(platforming)
+        else:
+            awayFromEdge = True
+    return(platforming)
+    
 def mad(a, c=0.6745, axis=0):
     """
     Median Absolute Deviation along given axis of an array:
@@ -5088,6 +5765,92 @@ def mad(a, c=0.6745, axis=0):
         m = np.median(np.fabs(aswp - d) / c, axis=0)
 
     return m
+
+def callFrequencyRangeForSpws(mymsmd, spwlist, vm):
+    """
+    Returns the min and max frequency of a list of spws.
+    """
+    if (mymsmd != '' and casadef.casa_version >= '4.1.0'):
+        return(frequencyRangeForSpws(mymsmd,spwlist))
+    else:
+        freqs = []
+#        print "vm.spwInfo.keys() = ", vm.spwInfo.keys()
+        for spw in spwlist:
+            freqs += list(vm.spwInfo[spw]["chanFreqs"])
+        return(np.min(freqs)*1e-9, np.max(freqs)*1e-9)
+
+def frequencyRangeForSpws(mymsmd, spwlist):
+    """
+    Returns the min and max frequency of a list of spws.
+    """
+    allfreqs = []
+    for spw in spwlist:
+        allfreqs += list(mymsmd.chanfreqs(spw))
+    return(np.min(allfreqs)*1e-9, np.max(allfreqs)*1e-9)
+
+def buildSpwString(overlaySpws, overlayBasebands, spwsToPlot, ispw, originalSpw,
+                   observatoryName, baseband, showBasebandNumber):
+    if (overlayBasebands):
+        spwString = ' all'
+    elif (overlaySpws and len(spwsToPlot)>1):
+        if (observatoryName.find('ALMA') >= 0 or observatoryName.find('ACA') >= 0):
+            # show a list of all spws
+            spwString = str(spwsToPlot).replace(' ','').strip('[').strip(']')
+        else:
+            # show the range of spw numbers
+            spwString = '%2d-%2d' % (np.min(spwsToPlot),np.max(spwsToPlot))
+    elif (ispw==originalSpw):
+        spwString = '%2d' % (ispw)
+    else:
+        spwString = '%2d (%d)' % (ispw,originalSpw)
+    if (overlayBasebands==False):
+        spwString = appendBasebandNumber(spwString, baseband, showBasebandNumber)
+    return(spwString)
+
+def appendBasebandNumber(spwString, baseband, showBasebandNumber):
+    if (showBasebandNumber):
+        spwString += ', bb%d' % (baseband)
+    return(spwString)
+
+def getSpwsForBaseband(vis,bb):
+    if (casadef.subversion_revision >= 25753):
+        mymsmd = createCasaTool(msmdtool)
+        mymsmd.open(vis)
+        s = mymsmd.spwsforbaseband(bb)
+        mymsmd.close()
+        return(s)
+    else:
+        return(getBasebandDict(vis))
+        
+def getBasebandDict(vis, spwlist=[]):
+    """
+    Builds a dictionary with baseband numbers as the keys and the
+    associated spws as the values.  The optional parameter spwlist can
+    be used to restrict the contents of the dictionary.
+    Note: This is obsoleted by msmd.spwsforbaseband(-1)
+    """
+    bbdict = {}
+    if (casadef.casa_version >= '4.1.0'):
+        mymsmd = createCasaTool(msmdtool)
+        mymsmd.open(vis)
+        if (spwlist == []):
+            nspws = mymsmd.nspw()
+            spwlist = range(nspws)
+        for spw in spwlist:
+            bbc_no = mymsmd.baseband(spw)
+            if (bbc_no not in bbdict.keys()):
+                bbdict[bbc_no] = [spw]
+            else:
+                bbdict[bbc_no].append(spw)
+        mymsmd.close()
+    else: # read from spw table
+        bbs = getBasebandNumbers(vis)
+        ubbs = np.unique(bbs)
+        for bb in ubbs:
+            bbdict[bb] = []
+        for i in range(len(bbs)):
+            bbdict[bbs[i]].append(i)
+    return(bbdict)
 
 def createCasaTool(mytool):
     """
@@ -5211,7 +5974,6 @@ def getMedianPWV(vis='.', myTimes=[0,999999999999], asdm='', verbose=False):
        if (len(asdm) > 0):
            if (os.path.exists(asdm) == False):
                print "Could not open ASDM = %s" % (asdm)
-               if (verbose): casalog.post("Calling mytb.done 3")
                mytb.done()
                return(0,-1)
            try:
@@ -5219,7 +5981,6 @@ def getMedianPWV(vis='.', myTimes=[0,999999999999], asdm='', verbose=False):
            except:
                if (verbose):
                    print "Could not open ASDM = %s" % (asdm)
-                   casalog.post("Calling mytb.done 4")
                mytb.done()
                return(pwvmean,-1)
        else:
@@ -5241,14 +6002,12 @@ def getMedianPWV(vis='.', myTimes=[0,999999999999], asdm='', verbose=False):
                    except:
                        if (verbose):
                            print "No CalWVR.xml file found, so no PWV retrieved. Copy it to this directory and try again."
-                           casalog.post("Calling mytb.done 5")
                        mytb.done()
                        return(pwvmean,-1)
     try:
         matches = np.where(np.array(pwvtime)>myTimes[0])[0]
     except:
         print "Found no times > %d" % (myTimes[0])
-        if (verbose): casalog.post("Calling mytb.done 6")
         mytb.done()
         return(0,-1)
     if (len(pwv) < 1):
@@ -5315,7 +6074,6 @@ def getRADecForField(ms, myfieldId, debug):
 #    if (mydir[0] < 0):
 #        mydir[0] += 2*math.pi
 #    mytb.close()
-    if (debug): casalog.post("Calling mytb.done 7")
     mytb.done()
     return(mydir)
 
@@ -5348,7 +6106,6 @@ def getWeather(vis='', scan='', antenna='0',verbose=False, mymsmd=None):
         mytb.open("%s/POINTING" % vis)
     except:
         print "POINTING table does not exist"
-        if (verbose): casalog.post("Calling mytb.done 8")
         mytb.done()
         return([0,0])
     subtable = mytb.query("ANTENNA_ID == %s" % antenna)
@@ -5382,7 +6139,6 @@ def getWeather(vis='', scan='', antenna='0',verbose=False, mymsmd=None):
                 print "times = %s" % (str(newTimes))
             except:
                 print "Error reading scan %d, is it in the data?" % (sc)
-                if (verbose): casalog.post("Calling mytb.done 9")
                 mytb.done()
                 return([conditions,[]])
             myTimes = np.concatenate((myTimes,newTimes))
@@ -5391,11 +6147,9 @@ def getWeather(vis='', scan='', antenna='0',verbose=False, mymsmd=None):
             myTimes = mymsmd.timesforscan(scan)
         except:
             print "Error reading scan %d, is it in the data?" % (scan)
-            if (verbose): casalog.post("Calling mytb.done 10")
             mytb.done()
             return([conditions,[]])
     else:
-        if (verbose): casalog.post("Calling mytb.done 11")
         mytb.done()
         return([conditions,[]])
     if (type(scan) == str):
@@ -5531,7 +6285,6 @@ def getWeather(vis='', scan='', antenna='0',verbose=False, mymsmd=None):
         mytb.open("%s/WEATHER" % vis)
     except:
         print "Could not open the WEATHER table for this ms."
-        if (verbose): casalog.post("Calling mytb.done 12")
         mytb.done()
         return([conditions,myTimes])
     if (True):
@@ -5554,7 +6307,6 @@ def getWeather(vis='', scan='', antenna='0',verbose=False, mymsmd=None):
         sinWindDirection = np.sin(mytb.getcol('WIND_DIRECTION'))
         cosWindDirection = np.cos(mytb.getcol('WIND_DIRECTION'))
         windSpeed = mytb.getcol('WIND_SPEED')
-        if (verbose): casalog.post("Calling mytb.done 13")
         mytb.done()
         
         # put values into time order (they mostly are, but there can be small differences)
@@ -5633,8 +6385,6 @@ def getWeather(vis='', scan='', antenna='0',verbose=False, mymsmd=None):
               print "  Wind speed = %.2f m/s" % (conditions['windspeed'])
               print "  Wind direction = %.2f deg" % (conditions['winddirection'])
 
-#    if (verbose): casalog.post("Calling mytb.done 14")
-#    mytb.done()
     return([conditions,myTimes])
     # end of getWeather
 
@@ -6016,3 +6766,18 @@ def getScansForTimes(mymsmd, scantimes):
 #        print "scansfortime(%f) = " % (t), scan
         scans.append(scan)
     return(scans)
+
+def pruneFilelist(filelist):
+    """
+    Reduce size of filenames in filelist to the extent that current working directory
+    agrees with the path.
+    """
+    mypwd = os.getcwd() + '/'
+    newfilelist = []
+    for f in filelist:
+        fstart = 0
+        if (f.find(mypwd) == 0):
+            fstart = len(mypwd)
+        newfilelist.append(f[fstart:])
+    return(newfilelist)
+    

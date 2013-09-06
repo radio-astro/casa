@@ -84,11 +84,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="overlay">
-      <description>Show multiple solutions in same frame in different colors (time, antenna, or time,antenna)</description>
+      <description>Show multiple solutions in same frame in different colors (time, antenna, spw, baseband, or time,antenna)</description>
       <value type="string"></value>
       <allowed kind="enum">
          <value type="string"></value>
          <value>antenna</value>
+         <value>baseband</value>
+         <value>spw</value>
          <value>time</value>
          <value>antenna,time</value>
          <value>time,antenna</value>
@@ -198,7 +200,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="double" name="solutionTimeThresholdSeconds">
       <description>Consider 2 solutions simultaneous if within this interval in seconds</description>
-      <value type="double">60.0</value>
+      <value type="double">30.0</value>
     </param>
 
     <param type="bool" name="debug">
@@ -270,6 +272,43 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>8</value>
     </param>
 
+    <param type="int" name="resample" subparam="true">
+      <description>The channel expansion factor to use when computing MAD of derivative (for channeldiff>0)</description>
+      <value>1</value>
+    </param>
+
+    <param type="double" name="platformingThreshold" subparam="true">
+      <description>if platformingSigma=0, then declare platforming if the amplitude derivative exceeds this percentage of the median</description>
+      <value>10.0</value>
+    </param>
+
+    <param type="double" name="platformingSigma" subparam="true">
+      <description>declare platforming if the amplitude derivative exceeds this many times the MAD</description>
+      <value>10.0</value>
+    </param>
+
+    <param type="any" name="basebands">
+      <description>A baseband number or list of baseband numbers for which to display solutions.  Default = all.</description>
+      <any type="variant" limittypes="int string list"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="bool" name="showBasebandNumber">
+      <description>Put the baseband converter number (BBC_NO) in the title of each plot</description>
+      <value>False</value>
+    </param>
+
+    <param type="any" name="scans">
+      <description>A scan or list of scans for which to display solutions.  Default = all.</description>
+      <any type="variant" limittypes="int string list"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="bool" name="figfileSequential">
+      <description>naming scheme for pngs: False: name by spw/antenna (default), True: figfile.000.png, figfile.001.png, etc.</description>
+      <value>False</value>
+    </param>
+
     <constraints>
       <when param="figfile">
         <notequals type="string" value="">
@@ -320,6 +359,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <when param="channeldiff">
         <notequals type="bool" value="False">
           <default param="edge"><value type="int">8</value></default>
+          <default param="resample"><value type="int">1</value></default>
+          <default param="platformingSigma"><value type="double">5.0</value></default>
+          <default param="platformingThreshold"><value type="double">10.0</value></default>
         </notequals>
       </when>
       <when param="caltable2">
@@ -352,6 +394,7 @@ on the yaxis selection.
    Keyword arguments:
 
  antenna: must be either an ID (int or string or list), or a single antenna name or list
+ basebands: show only spws from the specified baseband or list of basebands (default: ''=[]=all)
  buildpdf: True/False, if True and figfile is set, assemble pngs into a pdf
  caltable: a bandpass table, of type B or BPOLY
  caltable2: a second cal table, of type BPOLY or B, to overlay on a B table
@@ -363,23 +406,31 @@ on the yaxis selection.
  edge: the number of edge channels to ignore in finding outliers (for channeldiff>0)
  field: must be an ID, source name, or list thereof; can use trailing *: 'J*'
  figfile: the base_name of the png files to save: base_name.antX.spwY.png
+ figfileSequential: naming scheme, False: name by spw/antenna (default)
+                    True: figfile.1.png, figfile.2.png, etc.
  gs: full path for ghostscript command (in case it's not found)
  interactive: if False, then figfile will run to completion automatically
  lo1: specify the LO1 setting (in GHz) for the observation
- overlay: 'antenna' or 'time', make 1 plot with different items in colors
- showflagged:  show the values of data, even if flagged
+ overlay: 'antenna','time','spw', or 'baseband', make 1 plot with different items in colors
  markersize: size of points (default=3)
  ms: name of the ms for this table, in case it does not match the string in the caltable
  parentms: name of the parent ms, in case the ms has been previously split
  pdftk: full path for pdftk command (in case it's not found)
  phase: the y-axis limits to use for phase plots when yaxis='both'
+ platformingSigma: declare platforming if the amplitude derivative exceeds this many times the MAD
+ platformingThreshold: if platformingSigma=0, then declare platforming if the amplitude
+                       derivative exceeds this percentage of the median
  plotrange: define axis limits: [x0,x1,y0,y1] where 0,0 means auto
  poln: polarizations to plot (e.g. 'XX','YY','RR','LL' or '' for both)
  pwv: define the pwv to use for the showatm option: 'auto' or value in mm
+ resample: channel expansion factor to use when computing MAD of derivative (for channeldiff>0)
+ scans: show only solutions for the specified scans (int, list, or string)
  showatm: compute and overlay the atmospheric transmission curve (on B or Tsys solutions)
  showatmfield: use first observation of this fieldID or name
  showatmPoints: draw atmospheric curve with points instead of a line
+ showBasebandNumber: put the BBC_NO in the title of each plot
  showfdm: when showing TDM spws with xaxis='freq', draw locations of FDM spws
+ showflagged:  show the values of data, even if flagged
  showimage: also show the atmospheric curve for the image sideband (in black)
  showtsky: compute and overlay the sky temperature curve instead of transmission
  showlines: draw lines connecting the data (default=T for amp, F for phase)
