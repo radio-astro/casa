@@ -331,7 +331,6 @@ class imregrid_test(unittest.TestCase):
         # moved from iamgetest_regression
         
         # Make RA/DEC/Spectral image
-        
         imname = 'ia.fromshape.image1'
         imshape = [32,32,32]
         myia = self._myia
@@ -343,7 +342,6 @@ class imregrid_test(unittest.TestCase):
         self.assertRaises(Exception, myim.regrid, shape=[10,20,30,40])       
         self.assertRaises(Exception, myim.regrid, csys='fish')
         self.assertRaises(Exception, myim.regrid, method='doggies')
-
         # Regrid it to itself (all axes        #
         iDone = 1
         #      for method in ["near","linear","cubic"]:
@@ -759,7 +757,6 @@ class imregrid_test(unittest.TestCase):
         csys.setstokes("XX I U RR")
         myia.open(template)
         myia.setcoordsys(csys.torecord())
-        print "*** template stokes " + str(myia.coordsys().stokes())
 
         myia.done()
         # no output shape and number of common stokes > 0 => allowed
@@ -775,13 +772,162 @@ class imregrid_test(unittest.TestCase):
         self.assertTrue((myia.shape() == [20, 20, 2, 20]).all())
         myia.done()
     
+    def test_no_input_spectral(self):
+        """Verify if input image has no spectral axis, output will not have spectral axis"""
+        myia = self._myia
+        imagename = "ae.im"
+        myia.fromshape(imagename, [20, 20, 4])
+        template = "ae_temp.im"
+        myia.fromshape(template, [20, 20, 4, 20])
+        csys = myia.coordsys()
+        csys.setincrement([-0.9, 0.9, 1, 1500])
+        myia.setcoordsys(csys.torecord())
+        myia.done()
+        output = "ae.out.im"
+        self.assertTrue(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5, overwrite=True
+            )
+        )
+        myia.open(output)
+        self.assertTrue((myia.shape() == [20, 20, 4]).all())
+        myia.done()
+        
+    def test_no_template_spectral_axis(self):
+        """Verify behavior for when template has no spectral axis, but input does"""
+        myia = self._myia
+        imagename = "af.im"
+        myia.fromshape(imagename, [20, 20, 4, 20])
+        template = "af_temp.im"
+        myia.fromshape(template, [20, 20, 4])
+        csys = myia.coordsys()
+        csys.setincrement([-0.9, 0.9, 1])
+        myia.setcoordsys(csys.torecord())
+        myia.done()
+        output = "af.out.im"
+        self.assertTrue(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5, overwrite=True
+            )
+        )
+        myia.open(output)
+        self.assertTrue((myia.shape() == [20, 20, 4, 20]).all())
+        myia.done()
+        # Cannot explicitly specify to regrid spectral axis if template has no such axis
+        self.assertFalse(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5, overwrite=True,
+                axes=[0, 1, 3]
+            )
+        )
+        
+    def test_degenerate_template_spectral_axis(self):
+        """Verify correct behavior for when template has a degenerate spectral axis"""
+        myia = self._myia
+        imagename = "ag.im"
+        myia.fromshape(imagename, [20, 20, 4, 20])
+        template = "ag_temp.im"
+        myia.fromshape(template, [20, 20, 4, 1])
+        csys = myia.coordsys()
+        csys.setincrement([-0.9, 0.9, 1, 900])
+        myia.setcoordsys(csys.torecord())
+        myia.done()
+        output = "ag.out.im"
+        # input spectral axis copied to output
+        self.assertTrue(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5, overwrite=True
+            )
+        )
+        myia.open(output)
+        self.assertTrue((myia.shape() == [20, 20, 4, 20]).all())
+    
+        # the spectral axis is removed from the list of axes, a warning is emitted
+        # that it cannot be regridded, and the input spectral axis is copied to
+        # the ouptut image
+        self.assertTrue(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5, overwrite=True,
+                axes=[0, 1, 3]
+            )
+        )
+        myia.open(output)
+        self.assertTrue((myia.shape() == [20, 20, 4, 20]).all())
+        myia.done()
+    
+    def test_degenerate_input_spectral_axis(self):
+        """Verify correct behavior for when input has a degenerate spectral axis"""
+        myia = self._myia
+        imagename = "ah.im"
+        myia.fromshape(imagename, [20, 20, 4, 1])
+        template = "ah_temp.im"
+        myia.fromshape(template, [20, 20, 4, 20])
+        csys = myia.coordsys()
+        csys.setincrement([-0.9, 0.9, 1, 900])
+        myia.setcoordsys(csys.torecord())
+        myia.done()
+        output = "ah.out.im"
+        # when spectral axis not specified, input spectral axis is copied to
+        # output spectral axis
+        self.assertTrue(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5, overwrite=True
+            )
+        )
+        myia.open(output)
+        self.assertTrue((myia.shape() == [20, 20, 4, 1]).all())
+        # if explicitly specified in the axis parameter, the template spectral
+        # axis is copied to the output and the output's spectral axis length as
+        # the same as the template's spectral axis length. The output pixel values
+        # are replicated from the input image, all spectral hyperplanes in the output
+        # will have identical pixel value arrays.
+        self.assertTrue(
+            imregrid(
+                imagename=imagename, template=template,
+                output=output, decimate=5, overwrite=True,
+                axes=[0, 1, 3]
+            )
+        )
+        myia.open(output)
+        self.assertTrue((myia.shape() == [20, 20, 4, 20]).all())
+        got = myia.coordsys().increment()['numeric']
+        expec = csys.increment()['numeric']
+        self.assertTrue((got == expec).all())
+        myia.done()
+    
+    def test_bad_shape(self):
+        """ Verify that bad shape specification results in exception"""
+        myia = self._myia
+        imagename = "aj.im"
+        myia.fromshape(imagename, [20, 20, 1, 1])
+        template = "aj_temp.im"
+        myia.fromshape(template, [20, 20, 1, 20])
+        csys = myia.coordsys()
+        csys.setincrement([-0.9, 0.9, 1, 900])
+        myia.setcoordsys(csys.torecord())
+        myia.done()
+        output = "aj.out.im"
+        self.assertFalse(
+            imregrid(
+                imagename=imagename,
+                template=template, output=output, decimate=5,
+                overwrite=True, shape=[20, 20, 20, 1]
+            )
+        )
+    
     def test_regrid_galactic(self):
         """Verify fix for CAS-5534"""
         myia = self._myia
         myia.open(datapath + "ngc5921.clean.image")
         csys = myia.coordsys()
         csys.setreferencecode('GALACTIC', type='direction', adjust=True)
-        zz = myia.regrid(outfile='gal_regrid.image', shape=[300, 300, 1, 46], csys=csys.torecord(), overwrite=True)    
+        zz = myia.regrid(outfile='gal_regrid.image', shape=[300, 300, 1, 46], csys=csys.torecord(), overwrite=True)  
         myia.open(datapath + "gal_regrid.image")
         self.assertTrue(numpy.max(numpy.abs(zz.getchunk() - myia.getchunk())) < 1e-8)
         self.assertTrue((zz.getchunk(getmask=True) == myia.getchunk(getmask=True)).all())
