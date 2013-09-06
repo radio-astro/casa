@@ -62,9 +62,6 @@
           }\
         }
 
-#define ThrowIf(c,m) { if (c) { throw AipsError ((m), __FILE__, __LINE__); }}
-
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 MeasurementSet::MeasurementSet():hasBeenDestroyed_p(True) { }
