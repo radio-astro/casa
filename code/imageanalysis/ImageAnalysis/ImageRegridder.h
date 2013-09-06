@@ -134,6 +134,7 @@ private:
 	static const String _class;
 	Interpolate2D::Method _method;
 	vector<String> _outputStokes;
+	uInt _nReplicatedChans;
 
 	// disallow default constructor
 	ImageRegridder();
@@ -165,6 +166,15 @@ private:
 		const DirectionCoordinate& dc,
 		const IPosition& directionShape
 	);
+
+	void _checkOutputShape(
+		const SubImage<Float>& subImage,
+		const std::set<Coordinate::Type>& coordsToRegrid
+	) const;
+
+	void _decimateStokes(
+		std::tr1::shared_ptr<ImageInterface<Float> >& workIm
+	) const;
 
 };
 }
