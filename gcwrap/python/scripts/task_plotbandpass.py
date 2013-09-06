@@ -49,7 +49,6 @@
 # plotbandpass2('X3c1.tsys',overlay='antenna',yaxis='amp',field='0~1,4',xaxis='chan',figfile='tsys.png',showBasebandNumber=T,basebands=[1,4,3,2])
 # plotbandpass2('X3c1.tsys',overlay='time',yaxis='amp',field='2',xaxis='chan')
 # plotbandpass2('X3c1.tsys',overlay='',yaxis='amp',field='',xaxis='freq',showfdm=True)
-#
 # plotbandpass2('X3c1.tsys',overlay='',yaxis='amp',field='2',xaxis='freq',chanrange='45~65')
 # plotbandpass2('bandpass_bpoly_skipspw19high.bcal')
 # plotbandpass2('bandpass.bcal',caltable2='bandpass.bcal_smooth',xaxis='freq')  
@@ -85,7 +84,7 @@
 # plotbandpass2(caltable='bandpass_all_b_odd_dv04',caltable2='bandpass_all_bpoly_dv04',xaxis='freq',yaxis='both')
 # ALMA data, FDM+TDM in same caltable
 # plotbandpass2(caltable='bandpass_all_b_odd_dv04',xaxis='freq',yaxis='phase',chanrange='', showatm=True)
-# plotbandpass2(caltable='bandpass_all_b_odd_dv04',xaxis='freq',yaxis='phase',chanrange='', channeldiff=5)
+# plotbandpass2(caltable='bandpass_all_b_odd_dv04',xaxis='freq',yaxis='amp',chanrange='', channeldiff=5)
 #
 # ALMA 1-pol data:
 # cd /lustre/naasc/thunter/singlePol
@@ -100,6 +99,7 @@
 #  cd /lustre/naasc/thunter/evla/10C-186/K_BnA_cont
 #  new style table from 4.1.0
 #  plotbandpass2('bandpass_4.1.0.bcal',poln='',yaxis='amp',overlay='spw',xaxis='freq')
+#  plotbandpass2('bandpass_4.1.0.bcal',poln='',yaxis='amp',xaxis='freq',channeldiff=5)
 #  old style 3.3 tables
 #  plotbandpass2('bandpasspcal.bcal',poln='',yaxis='amp',overlay='spw',xaxis='freq')
 #  plotbandpass2('bandpasspcal.bcal',poln='',yaxis='amp',overlay='baseband',xaxis='freq')
@@ -128,7 +128,7 @@
 # plotbandpass2('sm2_rx0.usb.if2.tsys.ms.bandpass.bcal',overlay='baseband',xaxis='freq',figfile='sma.png')
 # plotbandpass2('sm2_rx0.usb.if2.tsys.ms.bandpass.bcal',overlay='baseband',xaxis='chan',figfile='sma.png')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.30 2013/09/06 19:14:46 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.29 2013/07/31 15:32:51 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -202,7 +202,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.30 2013/09/06 19:14:46 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.29 2013/07/31 15:32:51 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -3166,8 +3166,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                   else:
                                       platformingThresholdX = platformingThreshold
                                       platformingThresholdY = platformingThreshold
-                                      gamp_platforming = [platformingCheck(gamp[0],platformingThresholdX),
-                                                          platformingCheck(gamp[1],platformingThresholdY)]
+                                  gamp_platforming = [platformingCheck(gamp[0],platformingThresholdX),
+                                                      platformingCheck(gamp[1],platformingThresholdY)]
                                   for p in [0,1]:
                                       if (debug):
                                           print "gamp_mad[%d] = %s" % (p, str(gamp_mad[p]))
