@@ -776,12 +776,13 @@ void MSTransformManager::open()
 	// WARNING: Input MS is re-set at the end of a successful MSTransformDataHandler::makeSubMS,
 	// call therefore we have to use the selected MS always
 	inputMs_p = &(splitter_p->ms_p);
+	// Note: We always get the input number of channels because we don't know if pre-averaging will be necessary
+	getInputNumberOfChannels();
 
 	// Once the input MS is opened we can get the selection indexes,
 	// in this way we also validate the selection parameters
 	checkDataColumnsToFill();
 	initDataSelectionParams();
-	getInputNumberOfChannels();
 
 	// Determine channel specification for output MS
 	Vector<Int> chanSpec;
@@ -1018,12 +1019,24 @@ void MSTransformManager::setup()
 
 	//// Determine the frequency transformation methods to use ////
 
-	// Drop channels with non-uniform width when doing channel average
-	if (channelAverage_p) dropNonUniformWidthChannels();
+	// Drop channels with non-uniform width when doing only channel average
+	if (channelAverage_p and !refFrameTransformation_p and !combinespws_p )
+	{
+		dropNonUniformWidthChannels();
+	}
 
-	// Determine weight and sigma factors
-	getOutputNumberOfChannels();
-	calculateWeightAndSigmaFactors();
+	// Get number of output channels (needed by chan avg and separate SPWs when there is only 1 selected SPW)
+	if (channelAverage_p or (nspws_p>1 and !combinespws_p))
+	{
+		getOutputNumberOfChannels();
+	}
+
+	// Determine weight and sigma factors when either auto or user channel average is set
+	if (channelAverage_p)
+	{
+		calculateWeightAndSigmaFactors();
+	}
+
 
 	if (nspws_p > 1)
 	{
@@ -1032,6 +1045,7 @@ void MSTransformManager::setup()
 		{
 			totalNumberOfOutputChannels = inputOutputSpwMap_p[0].second.NUM_CHAN;
 		}
+		// jagonzal: This is the case when there is only one input SPW and there is no need to combine
 		else
 		{
 			uInt spwId = 0;
@@ -1046,6 +1060,7 @@ void MSTransformManager::setup()
 
 	    	totalNumberOfOutputChannels = numOfOutChanMap_p[spwId];
 		}
+
 
 		chansPerOutputSpw_p = totalNumberOfOutputChannels / nspws_p;
 		if (totalNumberOfOutputChannels % nspws_p)
@@ -1220,6 +1235,33 @@ void MSTransformManager::initDataSelectionParams()
 			numOfSelChanMap_p[spw] = channelWidth;
 			channelSelector_p->add (spw, channelStart, channelWidth,channelStep);
 		}
+	}
+	// jagonzal: must fill numOfSelChanMap_p
+	else
+	{
+		spwSelection_p = "*";
+		mssel.setSpwExpr(spwSelection_p);
+		Matrix<Int> spwchan = mssel.getChanList(inputMs_p);
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+				<< "All input SPWs selected " << spwchan << LogIO::POST;
+
+	    IPosition shape = spwchan.shape();
+	    uInt nSelections = shape[0];
+		Int spw,channelStart,channelStop,channelStep,channelWidth;
+		for(uInt selection_i=0;selection_i<nSelections;selection_i++)
+		{
+			// Get spw id and set the input-output spw map
+			spw = spwchan(selection_i,0);
+
+			// Set the channel selection ()
+			channelStart = spwchan(selection_i,1);
+			channelStop = spwchan(selection_i,2);
+			channelStep = spwchan(selection_i,3);
+			channelWidth = channelStop-channelStart+1;
+			numOfSelChanMap_p[spw] = channelWidth;
+		}
+
+		spwSelection_p = "";
 	}
 
 	// If we have channel average we have to populate the freqbin map
@@ -1604,6 +1646,10 @@ void MSTransformManager::regridAndCombineSpwSubtable()
 	return;
 }
 
+
+// -----------------------------------------------------------------------
+// Auxiliary method common whenever re-gridding is necessary (with or without combining the SPWs)
+// -----------------------------------------------------------------------
 void MSTransformManager::regridSpwAux(	Int spwId,
 											Vector<Double> &originalCHAN_FREQ,
 											Vector<Double> &originalCHAN_WIDTH,
@@ -1658,8 +1704,8 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 	SubMS::calcChanFreqs(	logger_p,
 							regriddedCHAN_FREQ,
 							regriddedCHAN_WIDTH,
-							originalCHAN_FREQ,
-							originalCHAN_WIDTH,
+							inputCHAN_FREQ,
+							inputCHAN_WIDTH,
 							phaseCenter_p,
 							inputReferenceFrame_p,
 							referenceTime_p,
@@ -1677,12 +1723,34 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 	// Check if pre-averaging step is necessary
 	if (freqbinMap_p.find(spwId) == freqbinMap_p.end())
 	{
+
+		Vector<Double> tmpCHAN_FREQ;
+		Vector<Double> tmpCHAN_WIDTH;
+		SubMS::calcChanFreqs(	logger_p,
+								tmpCHAN_FREQ,
+								tmpCHAN_WIDTH,
+								originalCHAN_FREQ,
+								originalCHAN_WIDTH,
+								phaseCenter_p,
+								inputReferenceFrame_p,
+								referenceTime_p,
+								observatoryPosition_p,
+								String("channel"),
+								-1,
+								String("0"),
+								String("1"),
+								restFrequency_p,
+								outputReferenceFramePar_p,
+								velocityType_p,
+								False // verbose
+							);
+
 		Double avgCombinedWidth = 0;
-		for (uInt chanIdx=0;chanIdx<originalCHAN_WIDTH.size();chanIdx++)
+		for (uInt chanIdx=0;chanIdx<tmpCHAN_WIDTH.size();chanIdx++)
 		{
-			avgCombinedWidth += originalCHAN_WIDTH(chanIdx);
+			avgCombinedWidth += tmpCHAN_WIDTH(chanIdx);
 		}
-		avgCombinedWidth /= originalCHAN_WIDTH.size();
+		avgCombinedWidth /= tmpCHAN_WIDTH.size();
 
 		Double avgRegriddedWidth = 0;
 		for (uInt chanIdx=0;chanIdx<regriddedCHAN_WIDTH.size();chanIdx++)
@@ -1691,13 +1759,13 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 		}
 		avgRegriddedWidth /= regriddedCHAN_WIDTH.size();
 
-		Int width =  (Int)floor(abs(avgRegriddedWidth/avgCombinedWidth) + 0.5);
+		Int width =  (Int)floor(abs(avgRegriddedWidth/avgCombinedWidth) + 0.001);
 
 		if ((width >= 2) and  2*width <= originalCHAN_WIDTH.size())
 		{
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-	        					<< "Ratio between input and output width is " << width
-	        					<< ". Activating pre-channel averaging"<< LogIO::POST;
+	        					<< "Ratio between input and output width is " << avgRegriddedWidth/avgCombinedWidth
+	        					<< ", setting pre-channel average width to " << width << LogIO::POST;
 			channelAverage_p = True;
 			freqbinMap_p[spwId] = width;
 
@@ -2126,21 +2194,27 @@ void MSTransformManager::dropNonUniformWidthChannels()
 // -----------------------------------------------------------------------
 void MSTransformManager::getOutputNumberOfChannels()
 {
-	if (combinespws_p)
+	if (refFrameTransformation_p or combinespws_p)
 	{
-		uInt width = 1;
-		if(!width_p.empty() && !(width_p=="[]"))
-		{
-			if ((mode_p == "channel") or (mode_p == "channel_b"))
-			{
-				width = atoi(width_p.c_str());
-			}
-		}
-
 		map<Int,Int>::iterator iter;
 		for(iter = numOfSelChanMap_p.begin(); iter != numOfSelChanMap_p.end(); iter++)
 		{
-			numOfOutChanMap_p[iter->first] = numOfSelChanMap_p[iter->first] / width;
+			if (freqbinMap_p.find(iter->first) == freqbinMap_p.end())
+			{
+				// When doing only re-gridding, maybe not all SPWs require pre-averaging
+				if (not combinespws_p)
+				{
+					freqbinMap_p[iter->first] = 1;
+				}
+				// When combining SPWs all of them get the same freqbin
+				else
+				{
+					freqbinMap_p[iter->first] = freqbinMap_p[0];
+				}
+			}
+
+			// Note: This will truncate the result, but it is ok because we are dropping the last channel
+			numOfOutChanMap_p[iter->first] = numOfSelChanMap_p[iter->first] / freqbinMap_p[iter->first];
 		}
 	}
 	else
@@ -2824,17 +2898,22 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 			mapVector(vb->exposure(),tmpVectorDouble);
 			writeVector(tmpVectorDouble,outputMsCols_p->exposure(),rowRef,nspws_p);
 		}
-		// Averaged matrix columns
-		// mapScaleAndAverageMatrix(vb->weight(),tmpMatrixFloat,weightFactorMap_p,vb->spectralWindows());
-		// writeMatrix(tmpMatrixFloat,outputMsCols_p->weight(),rowRef,nspws_p);
 
-		// jagonzal: According to dpetry we have to copy weights from the first SPW
-		// This is justified since the rows to be combined _must_ be from the
-		// same baseline and therefore have the same UVW coordinates in the MS (in meters).
-		// They could therefore be regarded to also have the same WEIGHT, at least to
-		// a good approximation.
-		mapMatrix(vb->weight(),tmpMatrixFloat);
-		writeMatrix(tmpMatrixFloat,outputMsCols_p->weight(),rowRef,nspws_p);
+		if (channelAverage_p)
+		{
+			mapScaleAndAverageMatrix(vb->weight(),tmpMatrixFloat,weightFactorMap_p,vb->spectralWindows());
+			writeMatrix(tmpMatrixFloat,outputMsCols_p->weight(),rowRef,nspws_p);
+		}
+		else
+		{
+			// jagonzal: According to dpetry we have to copy weights from the first SPW
+			// This is justified since the rows to be combined _must_ be from the
+			// same baseline and therefore have the same UVW coordinates in the MS (in meters).
+			// They could therefore be regarded to also have the same WEIGHT, at least to
+			// a good approximation.
+			mapMatrix(vb->weight(),tmpMatrixFloat);
+			writeMatrix(tmpMatrixFloat,outputMsCols_p->weight(),rowRef,nspws_p);
+		}
 
 
 		// Sigma must be redefined to 1/weight when corrected data becomes data
@@ -2846,17 +2925,22 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		}
 		else
 		{
-			// mapScaleAndAverageMatrix(vb->sigma(),tmpMatrixFloat,sigmaFactorMap_p,vb->spectralWindows());
-			// outputMsCols_p->sigma().putColumnCells(rowRef, tmpMatrixFloat);
-			// writeMatrix(tmpMatrixFloat,outputMsCols_p->sigma(),rowRef,nspws_p);
-
-			// jagonzal: According to dpetry we have to copy weights from the first SPW
-			// This is justified since the rows to be combined _must_ be from the
-			// same baseline and therefore have the same UVW coordinates in the MS (in meters).
-			// They could therefore be regarded to also have the same WEIGHT, at least to
-			// a good approximation.
-			mapMatrix(vb->sigma(),tmpMatrixFloat);
-			writeMatrix(tmpMatrixFloat,outputMsCols_p->sigma(),rowRef,nspws_p);
+			if (channelAverage_p)
+			{
+				mapScaleAndAverageMatrix(vb->sigma(),tmpMatrixFloat,sigmaFactorMap_p,vb->spectralWindows());
+				outputMsCols_p->sigma().putColumnCells(rowRef, tmpMatrixFloat);
+				writeMatrix(tmpMatrixFloat,outputMsCols_p->sigma(),rowRef,nspws_p);
+			}
+			else
+			{
+				// jagonzal: According to dpetry we have to copy weights from the first SPW
+				// This is justified since the rows to be combined _must_ be from the
+				// same baseline and therefore have the same UVW coordinates in the MS (in meters).
+				// They could therefore be regarded to also have the same WEIGHT, at least to
+				// a good approximation.
+				mapMatrix(vb->sigma(),tmpMatrixFloat);
+				writeMatrix(tmpMatrixFloat,outputMsCols_p->sigma(),rowRef,nspws_p);
+			}
 		}
 	}
 	else
@@ -2958,11 +3042,13 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		writeVector(vb->flagRow(),outputMsCols_p->flagRow(),rowRef,nspws_p);
 
 		Matrix<Float> weights = vb->weight();
-
-		if ( (weightFactorMap_p.find(vb->spectralWindows()(0))  != weightFactorMap_p.end()) and
-				(weightFactorMap_p[vb->spectralWindows()(0)] != 1) )
+		if (channelAverage_p)
 		{
-			weights *= weightFactorMap_p[vb->spectralWindows()(0)];
+			if ( (weightFactorMap_p.find(vb->spectralWindows()(0))  != weightFactorMap_p.end()) and
+					(weightFactorMap_p[vb->spectralWindows()(0)] != 1) )
+			{
+				weights *= weightFactorMap_p[vb->spectralWindows()(0)];
+			}
 		}
 		writeMatrix(weights,outputMsCols_p->weight(),rowRef,nspws_p);
 
@@ -2975,10 +3061,13 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		else
 		{
 			Matrix<Float> sigma = vb->sigma();
-			if ( (sigmaFactorMap_p.find(vb->spectralWindows()(0)) != sigmaFactorMap_p.end()) and
-					(sigmaFactorMap_p[vb->spectralWindows()(0)] != 1) )
+			if (channelAverage_p)
 			{
-				sigma *= sigmaFactorMap_p[vb->spectralWindows()(0)];
+				if ( (sigmaFactorMap_p.find(vb->spectralWindows()(0)) != sigmaFactorMap_p.end()) and
+						(sigmaFactorMap_p[vb->spectralWindows()(0)] != 1) )
+				{
+					sigma *= sigmaFactorMap_p[vb->spectralWindows()(0)];
+				}
 			}
 			writeMatrix(sigma,outputMsCols_p->sigma(),rowRef,nspws_p);
 		}
@@ -3204,10 +3293,13 @@ template <class T> void MSTransformManager::mapAndAverageMatrix(	const Matrix<T>
 //
 // -----------------------------------------------------------------------
 template <class T> void MSTransformManager::mapScaleAndAverageMatrix(	const Matrix<T> &inputMatrix,
-																			Matrix<T> &outputMatrix,
-																			map<Int,T> scaleMap,
-																			Vector<Int> spws)
+																		Matrix<T> &outputMatrix,
+																		map<Int,T> scaleMap,
+																		Vector<Int> spws)
 {
+	// Reset output Matrix
+	outputMatrix = 0;
+
 	// Get number of columns
 	uInt nCols = outputMatrix.shape()(0);
 
@@ -3216,7 +3308,7 @@ template <class T> void MSTransformManager::mapScaleAndAverageMatrix(	const Matr
 	uInt row;
 	uInt baseline_index = 0;
 	vector<uInt> baselineRows;
-	T normalizingFactor, contributionFactor;
+	T contributionFactor, normalizingFactor;
 	for (baselineMap::iterator iter = baselineMap_p.begin(); iter != baselineMap_p.end(); iter++)
 	{
 		// Get baseline rows vector
@@ -3245,8 +3337,10 @@ template <class T> void MSTransformManager::mapScaleAndAverageMatrix(	const Matr
 				outputMatrix(col,baseline_index) += contributionFactor*inputMatrix(col,row);
 			}
 
-			normalizingFactor += contributionFactor;
+			// normalizingFactor += contributionFactor;
+			normalizingFactor += 1;
 		}
+
 
 		// Normalize accumulated value
 		if (normalizingFactor>0)
@@ -3256,6 +3350,7 @@ template <class T> void MSTransformManager::mapScaleAndAverageMatrix(	const Matr
 				outputMatrix(col,baseline_index) /= normalizingFactor;
 			}
 		}
+
 
 		baseline_index += 1;
 	}

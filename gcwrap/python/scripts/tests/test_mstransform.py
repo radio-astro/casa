@@ -508,7 +508,6 @@ class test_FreqAvg(test_base):
         self.setUp_g19()
         
     def tearDown(self):
-        pass
         os.system('rm -rf '+ self.vis)
         os.system('rm -rf favg*.*ms')
 
@@ -1235,7 +1234,7 @@ class test_channelAverageByDefault(test_base):
         os.system('rm -rf '+ self.outvis)
         
     def test_channelAverageByDefaultInVelocityMode(self):
-        self.outvis = 'test_channelAverageByDefaultInVelocityModeNotCombining.ms'
+        self.outvis = 'test_channelAverageByDefaultInVelocityMode.ms'
         
         mstransform(vis=self.vis,outputvis=self.outvis,regridms=True,combinespws=True,interpolation="linear",
                     mode="velocity",veltype="optical",width='30km/s',restfreq='230GHz')
