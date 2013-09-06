@@ -112,7 +112,7 @@ FluxStdSrcs::Source FluxStdSrcs::srcNameToEnum(const String& srcName, const MDir
                return srcEnum;
           }
       }
-      // input source coordinates
+      // input source coordinates (input dir must be in J2000)
       Quantum<Vector<Double> > radec = dir.getAngle();
       String srcRA = String::toString(radec.getValue("rad")[0])+"rad";
       String srcDec = String::toString(radec.getValue("rad")[1])+"rad";
