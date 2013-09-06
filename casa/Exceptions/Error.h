@@ -57,10 +57,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #ifdef NDEBUG
 #define AssertCc(c) {assert (c); }
 #else
-#define AssertCc(c) { if (! c) {casa::AipsError::throwIf (True, "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }}
+#define AssertCc(c) { if (! (c)) {casa::AipsError::throwIf (True, "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }}
 #endif
 
-#define AssertAlways(c) { if (! c) {casa::AipsError::throwIf (True, "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }}
+#define AssertAlways(c) { if (! (c)) {casa::AipsError::throwIf (True, "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }}
 
 #if defined (NDEBUG)
 #    define ThrowCc(m) \
