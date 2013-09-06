@@ -87,19 +87,6 @@ class test_base(unittest.TestCase):
         os.system('rm -rf ' + self.vis + '.flagversions')
         self.unflag_table()
         
-    def setUp_flagdatatest_alma(self):
-        self.vis = "flagdatatest-alma.ms"
-
-        if os.path.exists(self.vis):
-            print "The MS is already around, just unflag"
-        else:
-            os.system('cp -r ' + \
-                        os.environ.get('CASAPATH').split()[0] +
-                        "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
-
-        os.system('rm -rf ' + self.vis + '.flagversions')
-        self.unflag_table()
-
     def unflag_table(self):
 
         aflocal = casac.agentflagger()
