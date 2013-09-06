@@ -410,7 +410,10 @@
             (also case insensitive) and it recognizes as long as the field name  
             contains the string listed below (e.g. 'PKS 1934-638' works).  
             For 3C Name, a space or an underscore between 3C and the number
-             (e.g. '3C 286' and '3C_286') also works.
+             (e.g. '3C 286' and '3C_286') also works. If the matching by 
+            the field name fails, the task tries to match by its position to
+            the known calibrator list stored in the data directory
+            (~/data/nrao/VLA/standards/fluxscalibrator.data). 
             -------------------------------------------------------------
             3C Name B1950 Name J2000 Name Alt. J2000 Name  standards*
             3C48    0134+329   0137+331   J0137+3309       1,2,3,4,5,6,7

@@ -47,8 +47,11 @@
 #include <casa/sstream.h>
 #include <casa/iomanip.h>
 #include <measures/Measures/MDirection.h>
+#include <measures/Measures/MCDirection.h>
+#include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MFrequency.h>
+#include <measures/Measures/MeasTable.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -197,7 +200,17 @@ Bool FluxStandard::compute(const String& sourceName,
      << LogIO::POST;
 
   // Set the source or fail.
-  if(!fluxStdPtr->setSource(sourceName,sourceDir)){
+  // setSource needs J2000 coordinates for source matching by position
+  MDirection sourceDirJ2000;
+  if (sourceDir.getRefString()!="J2000") {
+    MeasFrame frame(mtime);
+    MDirection::Ref outref(MDirection::J2000, frame);
+    sourceDirJ2000 = MDirection::Convert(sourceDir, outref)(); 
+  }
+  else {
+    sourceDirJ2000 = sourceDir;
+  }   
+  if(!fluxStdPtr->setSource(sourceName,sourceDirJ2000)){
     if(verbose)
       os << LogIO::SEVERE
          << sourceName << " is not recognized by " << standardName(itsFluxScale)
