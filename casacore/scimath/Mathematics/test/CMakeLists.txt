@@ -15,6 +15,7 @@ tSmooth
 tSparseDiff
 tStatAcc
 tVanVleck
+tVectorKernel
 )
 
 foreach (test ${tests})
