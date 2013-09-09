@@ -456,7 +456,7 @@ namespace casa {
 	}
 
 	void QtProfile::showSmoothingPreferences(){
-		//smoothWidget->show();
+		smoothWidget->show();
 	}
 
 	void QtProfile::initPreferences() {
@@ -1095,6 +1095,8 @@ namespace casa {
 			//number of channels.
 			ImageAnalysis* maxChannelAnalysis = findImageWithMaximumChannels();
 			int tabularIndex = getFreqProfileTabularIndex( maxChannelAnalysis );
+			//We don't have to worry about smoothing here because we are only using
+			//the x-values.
 			bool ok=maxChannelAnalysis->getFreqProfile( lastWX, lastWY, xValues, yValues,
 						                             WORLD_COORDINATES, coordinateType, 0,
 						                             tabularIndex, 0, cTypeUnit, spcRefFrame,
@@ -1198,6 +1200,15 @@ namespace casa {
 			(*over).append( overlay );
 		}
 		newOverplots = true;
+	}
+
+	void QtProfile::clearPlots(){
+		pixelCanvas->clearCurve();
+		delete analysis;
+		analysis = NULL;
+		delete over;
+		over = NULL;
+
 	}
 
 
@@ -2118,6 +2129,10 @@ namespace casa {
 		                               xytype, specaxis, whichStokes, whichTabular, whichLinear, xunits, specFrame,
 		                               combineType, whichQuality, restValue,
 		                               beamChannel);
+
+		//Note:  we don't have to worry about applying smoothing here because the callers
+		//of this method currently do it.
+
 		if ( itsPlotType == QtProfile::PFLUX ) {
 			//Post a warning that flux was calculated using a given channel
 			//and the resulting calculation was only an approximation.
@@ -2392,7 +2407,6 @@ namespace casa {
 	}
 
 
-
 	void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv,
 			const Vector<double> &wyv, Int ordersOfM ) {
 		bool ok = true;
@@ -2437,6 +2451,10 @@ namespace casa {
 				}
 
 				if (ok) {
+					//Apply smoothing to the vectors we get back.
+					if ( smoothWidget != NULL ){
+						yval = smoothWidget->applySmoothing( yval );
+					}
 					if(ordersOfM!=0) {
 						// correct display y axis values
 						for (uInt i = 0; i < yval.size(); i++) {
@@ -2525,6 +2543,8 @@ namespace casa {
 			String cTypeUnit;
 			getcoordTypeUnit(xUnits, coordinateType, cTypeUnit);
 			int tabularIndex = getFreqProfileTabularIndex( analysis );
+			//We don't have to worry about smoothing here because we are only
+			//using the x-values.
 			*ok=analysis->getFreqProfile( lastWX, lastWY, xval, yval,
 					WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, cTypeUnit, spcRefFrame,
 							(Int)QtProfile::MEAN, 0);

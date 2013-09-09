@@ -91,11 +91,11 @@ Vector<Float> SmoothPreferences::applySmoothing( Vector<Float> values) const {
 	QString smoothMethod = ui.smoothingCombo->currentText();
 	int valueCount = values.size();
 	Vector<Float> result( valueCount );
-	//if ( SMOOTH_NONE == smoothMethod ){
+	if ( SMOOTH_NONE == smoothMethod ){
 		for ( int i = 0; i < valueCount; i++ ){
 			result[i] = values[i];
 		}
-	/*}
+	}
 	else {
 		VectorKernel::KernelTypes kernelType = VectorKernel::BOXCAR;
 		if ( SMOOTH_HANNING == smoothMethod ){
@@ -103,12 +103,7 @@ Vector<Float> SmoothPreferences::applySmoothing( Vector<Float> values) const {
 		}
 		int width = ui.radiusSpinBox->value();
 		result = doConvolve( values, width, kernelType );
-
-		qDebug() << "Result of convolution="<<result.size();
-		for ( int i = 0; i < result.size(); i++ ){
-			qDebug() << "i="<<i<<" result[i]="<<result[i]<<" orig="<<values[i];
-		}
-	}*/
+	}
 	return result;
 }
 
@@ -130,10 +125,6 @@ Vector<Float> SmoothPreferences::doConvolve( const Vector<Float>& input,
 		if ( actualKernelSize > 1 ){
 			float width = actualKernelSize;
 			kernelVector = VectorKernel::make( kernelType, width, actualKernelSize, true );
-			/*qDebug() << "Kernel vector is:";
-			for ( int i = 0; i < actualKernelSize; i++ ){
-				qDebug()<<"i="<<i<<" kernel="<<kernelVector[i];
-			}*/
 		}
 		else {
 			kernelVector[0] = 1;
@@ -142,11 +133,9 @@ Vector<Float> SmoothPreferences::doConvolve( const Vector<Float>& input,
 		//Compute the value.
 		result[i] = 0;
 		int halfKernel = actualKernelSize /2;
-		//qDebug()<<" halfKernel="<<halfKernel<<" i="<<i;
 		for ( int j = -halfKernel; j < halfKernel + 1; j++ ){
 			result[i] = result[i] + kernelVector[halfKernel + j]*input[i+j];
 		}
-
 	}
 	return result;
 }

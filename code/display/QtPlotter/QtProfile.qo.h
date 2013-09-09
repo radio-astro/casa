@@ -210,6 +210,7 @@ namespace casa {
 		void changeSpectrum(String spcTypeUnit, String spcRval, String spcSys);
 
 		void plotMainCurve();
+		void clearPlots();
 		void setCollapseRange(double xmin, double xmax);
 
 		void overplot(QList<OverplotInterface>);

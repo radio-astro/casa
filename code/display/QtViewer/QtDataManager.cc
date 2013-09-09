@@ -447,9 +447,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void QtDataManager::clearRegionMap(){
 		typedef QtDisplayPanelGui::region_list_t region_list_t;
 		region_list_t regions = panel_->regions( );
-		for ( region_map_t::iterator it=region_to_treeitem.begin( ); it != region_to_treeitem.end( ); ++it ) {
-		//          fprintf( stderr, "\t>>>>>> 0x%x\n", it->first );
-			disconnect( it->first, 0, this, 0 );
+		if ( regions.size() > 0 ){
+			for ( region_map_t::iterator it=region_to_treeitem.begin( ); it != region_to_treeitem.end( ); ++it ) {
+				//          fprintf( stderr, "\t>>>>>> 0x%x\n", it->first );
+				disconnect( it->first, 0, this, 0 );
+			}
 		}
 
 		treeitem_to_region.clear( );
