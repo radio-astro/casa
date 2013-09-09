@@ -100,7 +100,9 @@ AveragingParameters::validateOptions ()
              "Inconsistent corrected weights options provided");
 
     if (nSet == 0){
-        averagingOptions_p |= AveragingOptions::CorrectedUseCorrectedWeights;
+    	// jagonzal (CAS-5587): Sometimes WEIGHT_SPECTRUM exists but it is not defined
+        // averagingOptions_p |= AveragingOptions::CorrectedUseCorrectedWeights;
+    	averagingOptions_p |= AveragingOptions::CorrectedUseNoWeights;
     }
 
     bits  = AveragingOptions::ModelUseCorrectedWeights |
