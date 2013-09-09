@@ -294,17 +294,17 @@ class wvrgcal_test(unittest.TestCase):
 
 
     def test14(self):
-        '''Test 14:  wvrgcal4quasar_10s.ms, two sources flagged with sourceflag, scan 1 flagged'''
+        '''Test 14:  wvrgcal4quasar_10s.ms, first seconds flagged for one antenna'''
         myvis = self.vis_g
-        os.system('rm -rf myinput2.ms comp.W')
+        os.system('rm -rf myinput2.ms comp.W comp2.W')
         os.system('cp -R ' + myvis + ' myinput.ms')
 
-        flagdata(vis="myinput.ms", scan='1', mode='manual')
+        flagdata(vis="myinput.ms", timerange='09:10:11~09:10:15', antenna='DV14&&*', mode='manual')
+        #flagdata(vis="myinput.ms", scan='2', mode='manual')
         split(vis='myinput.ms', outputvis='myinput2.ms', datacolumn='data', keepflags=False)
         
-        os.system('rm -rf '+self.out)
-        rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, sourceflag=['0455-462','0132-169'], toffset=0.)
-        rvaldict2 = wvrgcal(vis="myinput2.ms", caltable='comp.W', sourceflag=['0455-462','0132-169'], toffset=0.)
+        rvaldict = wvrgcal(vis="myinput.ms", caltable='comp.W', toffset=0.)
+        rvaldict2 = wvrgcal(vis="myinput2.ms", caltable='comp2.W', toffset=0.)
 
         print rvaldict
         print rvaldict2
@@ -312,10 +312,13 @@ class wvrgcal_test(unittest.TestCase):
         self.rval = rvaldict['success'] and rvaldict2['success']
 
         if(self.rval):
+            rvaldict2['Disc_um'][14]= 64.299999999999997 # The value for antenna14 is the only one expected to be different
+            rvaldict2['RMS_um'][14]= 55.600000000000001 # The value for antenna14 is the only one expected to be different
+            
             self.rval = (rvaldict==rvaldict2)
                
         self.assertTrue(self.rval)
-
+        
 
     def test15(self):
         '''Test 15:  wvrgcal4quasar_10s.ms, one antenna flagged'''
@@ -395,11 +398,42 @@ class wvrgcal_test(unittest.TestCase):
         self.rval = rvaldict['success'] and rvaldict2['success']
 
         if(self.rval):
-            rvaldict2['Disc_um'][2]=49.100000000000001 # The value for antenna2 is the only one expected to be different
+            rvaldict2['Disc_um'][2]=49.100000000000001 # The value for antenna 2 is the only one expected to be different
                                                        # as it was flagged. Replace by value for the unflagged case
                                                        # to make following test pass if all else agrees.
             rvaldict2['Flag'][2]=True # by the same logic as above
             rvaldict2['RMS_um'][2]=66.900000000000006 # by the same logic as above
+            for mykey in ['Name', 'WVR', 'RMS_um', 'Disc_um']:  
+                print mykey+" "+str(rvaldict[mykey]==rvaldict2[mykey])
+            self.rval = (rvaldict==rvaldict2)
+               
+        self.assertTrue(self.rval)
+
+    def test18(self):
+        '''Test 18:  wvrgcal4quasar_10s.ms, two antennas flagged in main table, one only partially'''
+        myvis = self.vis_g
+        os.system('rm -rf myinput2.ms comp.W')
+        os.system('cp -R ' + myvis + ' myinput.ms')
+
+        os.system('rm -rf '+self.out)
+        rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, wvrflag='DA41', toffset=-1.)
+
+        flagdata(vis='myinput.ms', mode='manual', antenna='DA41&&*')
+        flagdata(vis='myinput.ms', mode='manual', antenna='DV12&&*', timerange='9:10:12~9:10:13,9:12:31~9:12:32') # antenna 12, a few non-contiguous scans!
+        
+        rvaldict2 = wvrgcal(vis="myinput.ms", caltable='comp.W', toffset=-1.)
+
+        print rvaldict
+        print rvaldict2
+
+        self.rval = rvaldict['success'] and rvaldict2['success']
+
+        if(self.rval):
+            rvaldict2['Disc_um'][12]=42.100000000000001 # The value for antenna 2 is the only one expected to be different
+                                                       # as it was flagged. Replace by value for the unflagged case
+                                                       # to make following test pass if all else agrees.
+            rvaldict2['Flag'][12]=False # by the same logic as above
+            rvaldict2['RMS_um'][12]=66.0 # by the same logic as above
             for mykey in ['Name', 'WVR', 'RMS_um', 'Disc_um']:  
                 print mykey+" "+str(rvaldict[mykey]==rvaldict2[mykey])
             self.rval = (rvaldict==rvaldict2)
