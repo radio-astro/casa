@@ -118,7 +118,7 @@ def simanalyze(
                 elif len(user_skymodel)>0:
                     raise Exception,"Can't find your specified skymodel "+user_skymodel
             # try to strip a searchable identifier
-            tmpstring=user_skymodel.split("/")[-1]            
+            tmpstring=user_skymodel.split("/")[-1]
             skymodel_searchstring=tmpstring.replace(".image","")
             
 
@@ -226,7 +226,9 @@ def simanalyze(
                 msg(" will be concated and simultaneously deconvolved; if something else is desired, please specify vis, or image manually and use image=F",priority="warn")
                 concatms=project+"/"+project+".concat.ms"
                 from concat import concat
-                concat(mstoimage,concatms)
+                weights = get_concatweights(mstoimage)
+                msg(" concatnate weights: %s" % str(weights))
+                concat(mstoimage,concatvis=concatms,visweightscale=weights)
                 mstoimage=[concatms]
 
 
@@ -910,3 +912,77 @@ def finalize_tools():
     if ia.isopen(): ia.close()
     im.close()
     tb.close()
+
+### A helper function to get concat weight
+def get_concatweights(mslist):
+    from simutil import is_array_type
+    if type(mslist) == str:
+        mslist = [mslist]
+    if not is_array_type(mslist):
+        raise TypeError("get_concatweights: input should be a list of MS names")
+    if len(mslist) < 2 and os.path.exists(mslist[0]):
+        return (1.)
+
+    if not os.path.exists(mslist[0]):
+        raise ValueError("Could not find input file, %s" % mslist[0])
+    # Get integration to compare.
+    (mytb, mymsmd) = gentools(['tb', 'msmd'])
+    try:
+        mytb.open(mslist[0])
+        tint0 = mytb.getcell('INTERVAL',0)
+    finally:
+        mytb.close()
+    # Get antenna diameter of the first MS.
+    try:
+        mytb.open(mslist[0]+'/ANTENNA')
+        diam0 = mytb.getcell('DISH_DIAMETER', 0)
+    finally:
+        mytb.close()
+    
+    weights = []
+    for thems in mslist:
+        if not os.path.exists(thems):
+            raise ValueError("Could not find input file, %s" % thems)
+        # MS check - assumes that all antennas, spws, and data are used
+        # Check the number of spw
+        try:
+            mytb.open(thems+'/SPECTRAL_WINDOW')
+            if mytb.nrows() > 1:
+                casalog.post("simanalyze can not calculate concat weight of MSes with multiple spectral windows in an MS. Please concatenate them manually.", priority="ERROR")
+        finally:
+            mytb.close()
+
+        # Check antenna diameters in MS
+        try:
+            mytb.open(thems+'/ANTENNA')
+            diams = mytb.getcol('DISH_DIAMETER')
+        finally:
+            mytb.close()
+
+        for diam in diams:
+            if (diam != diams[0]):
+                casalog.post("simanalyze can not calculate concat weight of MSes with multiple antenna diameters in an MS. Please concatenate them manually.", priority="ERROR")
+        # Check integrations in MS
+        try:
+            mytb.open(thems)
+            integs = mytb.getcol('INTERVAL')
+        finally:
+            mytb.close()
+
+        for tint in integs:
+            if (tint != integs[0]):
+                casalog.post("simanalyze can not calculate concat weight of MSes with multiple integration times in an MS. Please concatenate them manually.", priority="ERROR")
+
+        # Check integration is equal to tint0
+        if integs[0] != tint0:
+            casalog.post("simanalyze can not calculate concat weight of MSes with different integration times. Please concatenate them manually.", priority="ERROR")
+        del integs
+        # Now calculate weight
+        weights.append((diams[0]/diam0)**2)
+
+    # end of MS loop
+    if len(mslist) != len(weights):
+        raise RuntimeError("Could not calculate weight of some MSes.")
+
+    return weights
+    
