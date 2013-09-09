@@ -19,7 +19,7 @@
 #include <synthesis/CalTables/CalHistRecord.h>
 
 #include "almawvr/libair_main.hpp"
-#include "almawvr/arraygains.hpp"
+#include "../apps/arraygains2.hpp"
 #include "msspec.hpp"
 #include "almawvr/dispersion.hpp"
 
@@ -31,7 +31,7 @@
 namespace LibAIR {
 
   // Write a NewCalTable
-  void writeNewGainTbl(const ArrayGains &g,
+  void writeNewGainTbl(const ArrayGains2 &g,
 		       const char *fnameout,
 		       const MSSpec &s,
 		       std::set<size_t> reverse,

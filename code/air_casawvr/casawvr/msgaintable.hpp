@@ -24,7 +24,7 @@
 namespace LibAIR {
 
   // Forward declarations
-  class ArrayGains;
+  class ArrayGains2;
   class MSSpec;
 
   /** \brief Write out gains calculated from WVRs to a table
@@ -40,7 +40,7 @@ namespace LibAIR {
       correction from the default dispersion table will be applied)
    */
 
-  void writeNewGainTbl(const ArrayGains &g,
+  void writeNewGainTbl(const ArrayGains2 &g,
 		       const char *fnameout,
 		       const MSSpec &s,
 		       std::set<size_t> reverse,
