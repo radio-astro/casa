@@ -48,7 +48,7 @@ class Solint(basetask.StandardTaskTemplate):
         calMs = 'calibrators.ms'
         split_result = self._do_split(calMs)
         
-        (longsolint, gain_solint2) = self._do_determine_solint()
+        (longsolint, gain_solint2) = self._do_determine_solint(calMs)
         
         return SolintResults(longsolint=longsolint, gain_solint2=gain_solint2)
     
@@ -84,17 +84,19 @@ class Solint(basetask.StandardTaskTemplate):
             
         return self._executor.execute(job)
     
-    def _do_determine_solint(self):
+    def _do_determine_solint(self, calMs):
         
         durations = []
         old_spws = []
         old_field = ''
         
-        with casatools.MSReader(self.inputs.vis) as ms:
+        with casatools.MSReader(calMs) as ms:
             scan_summary = ms.getscansummary()    
             
             m = self.inputs.context.observing_run.measurement_sets[0]
             phase_scan_list = self.inputs.context.evla['msinfo'][m.name].phase_scan_list
+            
+            print phase_scan_list
             
             for kk in range(len(phase_scan_list)):
                 ii = phase_scan_list[kk]
@@ -105,12 +107,18 @@ class Solint(basetask.StandardTaskTemplate):
                     new_spws = scan_summary[str(ii)]['0']['SpwIds']
                     new_field = scan_summary[str(ii)]['0']['FieldId']
                     
+                    #print end_time, begin_time, new_spws, new_field
+                    
                     if ((kk > 0) and (phase_scan_list[kk-1] == ii-1) and (set(new_spws) == set(old_spws)) and (new_field == old_field)):
                         # if contiguous scans, just increase the time on the previous one
+                        print "End time, old begin time", end_time, old_begin_time
                         durations[-1] = 86400*(end_time - old_begin_time)
+                        #print "first durations: ", durations
                     else:
+                        print "End time, begin time", end_time, begin_time
                         durations.append(86400*(end_time - begin_time))
                         old_begin_time = begin_time
+                        print "append durations, old, begin:", durations, old_begin_time, begin_time
                     LOG.info("Scan "+str(ii)+" has "+str(durations[-1])+"s on source")
                     old_spws = new_spws
                     old_field = new_field

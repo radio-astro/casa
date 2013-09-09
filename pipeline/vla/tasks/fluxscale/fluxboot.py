@@ -160,17 +160,22 @@ class Fluxboot(basetask.StandardTaskTemplate):
         ##            flux_densities.append([float(fields[11]), float(fields[13])])
         ##            spws.append(int(fields[9].split('=')[1]))
         
+        #Find the field_ids in the dictionary returned from the CASA task fluxscale
         dictkeys = fluxscale_result.keys()
-        sourcename = fluxscale_result[dictkeys[0]]['fieldName']
-        flux_d = list(fluxscale_result[dictkeys[0]]['fluxd'])
-        flux_d_err = list(fluxscale_result[dictkeys[0]]['fluxdErr'])
-        spwslist  = list(fluxscale_result['spwID'])
+        keys_to_remove = ['freq', 'spwName', 'spwID']
+        dictkeys = [field_id for field_id in dictkeys if field_id not in keys_to_remove]
+                
+        for field_id in dictkeys:        
+            sourcename = fluxscale_result[field_id]['fieldName']
+            flux_d = list(fluxscale_result[field_id]['fluxd'])
+            flux_d_err = list(fluxscale_result[field_id]['fluxdErr'])
+            spwslist  = list(fluxscale_result['spwID'])
         
-        for i in range(0,len(flux_d)):
-            if (flux_d[i] != -1.0):
-                sources.append(sourcename)
-                flux_densities.append([float(flux_d[i]), float(flux_d_err[i])])
-                spws.append(spwslist[i])
+            for i in range(0,len(flux_d)):
+                if (flux_d[i] != -1.0):
+                    sources.append(sourcename)
+                    flux_densities.append([float(flux_d[i]), float(flux_d_err[i])])
+                    spws.append(spwslist[i])
         
         self.inputs.sources = sources
         self.inputs.flux_densities = flux_densities

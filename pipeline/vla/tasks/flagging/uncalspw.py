@@ -138,7 +138,7 @@ class Uncalspw(basetask.StandardTaskTemplate):
         
         if (flagspw1 == ''):
             LOG.info("All spws have calibration")
-            return None
+            return UncalspwResults()
         else:
             LOG.info("No calibration found for spw(s) "+flagspw1+", flagging these spws in the ms")
             

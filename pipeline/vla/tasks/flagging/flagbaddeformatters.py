@@ -278,7 +278,7 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                 return FlagBadDeformattersResults([job])
                 
         #If the flag commands are not executed.
-        return None
+        return FlagBadDeformattersResults()
         
         
     def analyse(self, results):

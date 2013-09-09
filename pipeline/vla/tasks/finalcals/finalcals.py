@@ -108,15 +108,15 @@ class Finalcals(basetask.StandardTaskTemplate):
         
         unflag_result = self._do_unflag('averagephasegain.g')
         
-        #calto = callibrary.CalTo(self.inputs.vis)
-        #calfrom = callibrary.CalFrom(gaintable='averagephasegain.g', interp='linear,linear', calwt=True)
-        #context.callibrary.add(calto, calfrom)
+        calto = callibrary.CalTo(self.inputs.vis)
+        calfrom = callibrary.CalFrom(gaintable='averagephasegain.g', interp='linear,linear', calwt=True)
+        context.callibrary.add(calto, calfrom)
 
         applycal_result = self._do_applycal(context=context)
         
-        #calto = callibrary.CalTo(self.inputs.vis)
-        #calfrom = callibrary.CalFrom(gaintable='averagephasegain.g', interp='linear,linear', calwt=True)
-        #context.callibrary._remove(calto, calfrom)
+        calto = callibrary.CalTo(self.inputs.vis)
+        calfrom = callibrary.CalFrom(gaintable='averagephasegain.g', interp='linear,linear', calwt=True)
+        context.callibrary._remove(calto, calfrom, context.callibrary._active)
         
         #---------------------------------------------------
         
