@@ -53,12 +53,18 @@ void ActionCacheLoad::setSetupPlot( bool setUp ){
 	setupPlot = setUp;
 }
 
+
 bool ActionCacheLoad::isAxesValid( vector<pair<PMS::Axis,unsigned int > > cacheAxes, int axisIndex ) const {
-	bool valid = true;
-	for(unsigned int j = 0; j < cacheAxes.size(); j++){
-		if( cacheAxes[j].first == axes[axisIndex] ){
-			valid = false;
-			break;
+	bool valid = false;
+	if ( cacheAxes.size() == 0 ){
+		valid = true;
+	}
+	else {
+		for(unsigned int j = 0; j < cacheAxes.size(); j++){
+			if( cacheAxes[j].first == axes[axisIndex] ){
+				valid = true;
+				break;
+			}
 		}
 	}
 	return valid;

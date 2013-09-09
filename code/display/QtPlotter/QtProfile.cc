@@ -41,6 +41,7 @@
 #include <display/QtPlotter/ColorSummaryWidget.qo.h>
 #include <display/QtPlotter/Util.h>
 #include <display/QtPlotter/LegendPreferences.qo.h>
+#include <display/QtPlotter/SmoothPreferences.qo.h>
 #include <display/QtPlotter/conversion/Converter.h>
 #include <display/QtPlotter/conversion/ConverterIntensity.h>
 
@@ -114,7 +115,7 @@ namespace casa {
 		//Remove the setPosition tab because duplicate functionality exists in the viewer.
 		functionTabs->removeTab(0);
 
-
+		initSmoothing();
 		current_region_id = NO_REGION_ID;
 
 		setBackgroundRole(QPalette::Dark);
@@ -213,6 +214,7 @@ namespace casa {
 		connect(actionPreferences, SIGNAL(triggered()), this, SLOT(preferences()));
 		connect(actionColors, SIGNAL(triggered()), this, SLOT(curveColorPreferences()));
 		connect(actionLegend, SIGNAL(triggered()), this, SLOT(legendPreferences()));
+		connect(actionSmooth, SIGNAL(triggered()), this, SLOT(showSmoothingPreferences()));
 		connect(actionAnnotationText, SIGNAL(triggered()), pixelCanvas, SLOT(createAnnotationText()));
 		connect(actionRangeXSelection, SIGNAL(triggered()), pixelCanvas, SLOT(rangeSelectionMode()));
 		connect(actionChannelPositioning, SIGNAL(triggered()), pixelCanvas, SLOT(channelPositioningMode()));
@@ -448,6 +450,15 @@ namespace casa {
 		                        new QKeyEvent(QEvent::KeyPress, Qt::Key_Down, 0, 0));
 	}
 
+	void QtProfile::initSmoothing(){
+		smoothWidget = new SmoothPreferences( this );
+		connect( smoothWidget, SIGNAL(smoothingChanged()), this, SLOT(replotCurves()));
+	}
+
+	void QtProfile::showSmoothingPreferences(){
+		//smoothWidget->show();
+	}
+
 	void QtProfile::initPreferences() {
 		profilePrefs = new QtProfilePrefs(this,pixelCanvas->getAutoScaleX(), pixelCanvas->getAutoScaleY(),
 		                                  pixelCanvas->getShowGrid(),stateMProf, stateRel, pixelCanvas->getShowToolTips(), showTopAxis,
@@ -564,6 +575,13 @@ namespace casa {
 			frameChanged( -1 );
 		}
 
+	}
+
+	void QtProfile::replotCurves(){
+		pixelCanvas->clearCurve();
+		if ( lastPX.nelements() > 0 ){
+			wcChanged(coordinate,lastPX, lastPY, lastWX, lastWY, UNKNPROF );
+		}
 	}
 
 	void QtProfile::closeEvent (QCloseEvent *) {
@@ -795,31 +813,7 @@ namespace casa {
 
 
 		if (ns < 1) return;
-
-		switch (ptype) {
-		case SINGPROF:
-			pixelCanvas->setTitle("Single Point Profile");
-			region = "Point";
-			break;
-		case RECTPROF:
-			pixelCanvas->setTitle("Rectangle Region Profile");
-			region = "Rect";
-			break;
-		case ELLPROF:
-			pixelCanvas->setTitle("Elliptical Region Profile");
-			region = "Ellipse";
-			break;
-		case POLYPROF:
-			pixelCanvas->setTitle("Polygon Region Profile");
-			region = "Poly";
-			break;
-		case UNKNPROF:
-			break;
-		default:
-			pixelCanvas->setTitle("");
-			region = "";
-		}
-		pixelCanvas->setWelcome("");
+		setTitle( ptype );
 
 		setPositionStatus( pxv,pyv,wxv,wyv );
 
@@ -1950,19 +1944,59 @@ namespace casa {
 	}
 
 
+	void QtProfile::setTitle(const ProfileType ptype){
+		QString smoothDescription = smoothWidget->toString();
+		switch (ptype) {
+			case SINGPROF:
+				pixelCanvas->setTitle("Single Point Profile"+smoothDescription);
+				region = "Point";
+				break;
+			case RECTPROF:
+				pixelCanvas->setTitle("Rectangle Region Profile"+smoothDescription);
+				region = "Rect";
+				break;
+			case ELLPROF:
+				pixelCanvas->setTitle("Elliptical Region Profile"+smoothDescription);
+				region = "Ellipse";
+				break;
+			case POLYPROF:
+				pixelCanvas->setTitle("Polygon Region Profile"+smoothDescription);
+				region = "Poly";
+				break;
+			case UNKNPROF:
+			{
+				//In this case, we will not change the first part of the title,
+				//but, we will update any smoothing.
+				QString previousTitle = pixelCanvas->getTitle();
+				const QString PROFILE( "Profile");
+				int profileIndex = previousTitle.indexOf( PROFILE );
+				if ( profileIndex >= 0 ){
+					QString baseTitle = previousTitle.left( profileIndex + PROFILE.size());
+					baseTitle = baseTitle + smoothDescription;
+					pixelCanvas->setTitle(baseTitle );
+				}
+			}
+				break;
+			default:
+				pixelCanvas->setTitle("");
+				region = "";
+		}
+		pixelCanvas->setWelcome("");
+	}
 
 	void QtProfile::setTitle( const QString& shape ) {
+		QString smoothDescription = smoothWidget->toString();
 		if ( shape == "point" ) {
-			pixelCanvas->setTitle("Single Point Profile");
+			pixelCanvas->setTitle("Single Point Profile"+smoothDescription);
 			region = "Point";
 		} else if ( shape == "rectangle" ) {
-			pixelCanvas->setTitle("Rectangle Region Profile");
+			pixelCanvas->setTitle("Rectangle Region Profile"+smoothDescription);
 			region = "Rect";
 		} else if ( shape == "ellipse" ) {
-			pixelCanvas->setTitle("Elliptical Region Profile");
+			pixelCanvas->setTitle("Elliptical Region Profile"+smoothDescription);
 			region = "Ellipse";
 		} else if ( shape == "polygon" ) {
-			pixelCanvas->setTitle("Polygon Region Profile");
+			pixelCanvas->setTitle("Polygon Region Profile"+smoothDescription);
 			region = "Poly";
 		} else {
 			pixelCanvas->setTitle("");
@@ -2102,6 +2136,7 @@ namespace casa {
 
 		Int whichTabular = getFreqProfileTabularIndex( analysis );
 		Bool ok = false;
+
 		switch (itsPlotType) {
 		case QtProfile::PMEAN:
 			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
@@ -2131,11 +2166,15 @@ namespace casa {
 			break;
 		}
 
-
-
 		if (!ok) {
 			// change to notify user of error...
 			*itsLog << LogIO::WARN << "Can not generate the frequency profile!" << LogIO::POST;
+		}
+		else {
+			//Apply smoothing to the vectors we get back.
+			if ( smoothWidget != NULL ){
+				z_yval = smoothWidget->applySmoothing( z_yval );
+			}
 		}
 		return ok;
 	}

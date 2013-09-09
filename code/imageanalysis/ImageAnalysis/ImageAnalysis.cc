@@ -5091,7 +5091,6 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 		TabularCoordinate tabCoordinate = cSys.tabularCoordinate( altAxisIndex );
 		Vector<Double> freqs = tabCoordinate.worldValues();
 		MFrequency::Types mFrequency = MFrequency::DEFAULT;
-		Bool recognized = MFrequency::getType(mFrequency, specFrame );
 		specCoor = SpectralCoordinate(mFrequency, freqs);
 	}
 	else if ( specAx >= 0 ){

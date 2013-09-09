@@ -340,6 +340,7 @@
    <addaction name="actionPreferences"/>
    <addaction name="actionColors"/>
    <addaction name="actionLegend"/>
+   <addaction name="actionSmooth"/>
    <addaction name="separator"/>
    <addaction name="actionMoveLeft"/>
    <addaction name="actionMoveRight"/>
@@ -413,6 +414,18 @@
    </property>
    <property name="toolTip">
     <string>Open legend preferences.</string>
+   </property>
+  </action>
+  <action name="actionSmooth">
+   <property name="icon">
+    <iconset>
+     <normaloff>:/images/windowing.png</normaloff>:/images/windowing.png</iconset>
+   </property>
+   <property name="text">
+    <string>Smoothing Preferences</string>
+   </property>
+   <property name="toolTip">
+    <string>Open smoothing preferences.</string>
    </property>
   </action>
   <action name="actionRangeXSelection">

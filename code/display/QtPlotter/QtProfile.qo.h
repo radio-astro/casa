@@ -82,6 +82,7 @@ namespace casa {
 	class QtProfilePrefs;
 	class ColorSummaryWidget;
 	class LegendPreferences;
+	class SmoothPreferences;
 	class QtCanvas;
 
 //Note:  The purpose of the SpecFitMonitor interface is to provide
@@ -259,6 +260,7 @@ namespace casa {
 		bool isFrequencyUnit( const QString& unit ) const;
 		bool isWavelengthUnit( const QString& unit ) const;
 		void setTitle( const QString& shape );
+		void setTitle(const ProfileType ptype);
 		void copyToLastEvent( const String& c, const Vector<Double> &px,
 		                      const Vector<Double> &py,
 		                      const Vector<Double> &wx,
@@ -288,6 +290,7 @@ namespace casa {
 		                         const QString& label );
 		void adjustTopAxisSettings();
 		void initializeXAxisUnits();
+		void initSmoothing();
 		void setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit );
 		void toggleAction( QAction* action );
 		Int scaleAxis();
@@ -401,6 +404,7 @@ namespace casa {
 		LegendPreferences* legendPreferencesDialog;
 		QtCanvas* pixelCanvas;
 		QtProfilePrefs* profilePrefs;
+		SmoothPreferences* smoothWidget;
 		int frameIndex;
 		bool newOverplots;
 		pair<double,double> getMaximumTemperature();
@@ -412,8 +416,8 @@ namespace casa {
 		void setDisplayYUnits( const QString& unitStr );
 		void channelSelect(float xval);
 		void channelRangeSelect( float channelStart, float channelEnd );
-
-
+		void showSmoothingPreferences();
+		void replotCurves();
 	};
 
 }
