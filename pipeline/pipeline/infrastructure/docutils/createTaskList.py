@@ -320,6 +320,16 @@ class hetaskutil2( hetaskutil ):
         self.tasks['SD']=taskutil2( self.taskdir['SD'], prefix='hsd' )
         self.keys=['COMMON']+self.keys
 
+class hetaskutil3( hetaskutil ):
+    def __init__( self, dir='', cli='' ):
+        super(hetaskutil3,self).__init__(dir=dir,ifdir='hif/cli',sddir='hsd/cli')
+        self.taskdir['COMMON']=self.phdir+'/h/'+cli
+        self.titles['COMMON']='Common'
+        self.tasks['COMMON']=taskutil2( self.taskdir['COMMON'], prefix='h' )
+        self.tasks['IF']=taskutil2( self.taskdir['IF'], prefix='hif' )
+        self.tasks['SD']=taskutil2( self.taskdir['SD'], prefix='hsd' )
+        self.keys=['COMMON']+self.keys
+
 def create( dirname='/home/nakazato/ALMA/PIPELINE/Heuristics/src/heuristics' ):
     het=hetaskutil( dir=dirname )
     het.createtasklist()
@@ -332,3 +342,8 @@ def create2( dirname='' ):
     tasklist=het.gettasklist()
     het.createHTML()
 
+def create3(dirname=''):
+    het=hetaskutil3( dir=dirname, cli='cli' )
+    het.createtasklist()
+    tasklist=het.gettasklist()
+    het.createHTML()
