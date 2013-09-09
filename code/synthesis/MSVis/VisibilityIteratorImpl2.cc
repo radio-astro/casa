@@ -1191,29 +1191,32 @@ VisibilityIteratorImpl2::existsColumn (VisBufferComponent2 id) const
     case VisibilityCorrected:
     case VisibilityCubeCorrected:
 
-        result = ! columns_p.corrVis_p.isNull();
+        result = ! columns_p.corrVis_p.isNull() && columns_p.corrVis_p.isDefined(0);
         break;
 
     case VisibilityModel:
     case VisibilityCubeModel:
 
-        result = ! columns_p.modelVis_p.isNull();
+        result = ! columns_p.modelVis_p.isNull() && columns_p.modelVis_p.isDefined(0);
         break;
 
     case VisibilityObserved:
     case VisibilityCubeObserved:
 
-        result = ! (columns_p.vis_p.isNull() && columns_p.floatVis_p.isNull());
+        result = (! columns_p.vis_p.isNull() && columns_p.vis_p.isDefined(0)) ||
+        		(columns_p.floatVis_p.isNull() && columns_p.floatVis_p.isNull());
+
         break;
 
     case WeightSpectrum:
 
-        result = ! columns_p.weightSpectrum_p.isNull();
+        result = ! columns_p.weightSpectrum_p.isNull() && columns_p.weightSpectrum_p.isDefined(0);
         break;
 
     case WeightSpectrumCorrected:
 
-        result = ! columns_p.weightSpectrumCorrected_p.isNull();
+    	// jagonzal (CAS-5265): Sometimes WEIGHT_SPECTRUM exists but it is not defined
+        result = ! columns_p.weightSpectrumCorrected_p.isNull() && columns_p.weightSpectrumCorrected_p.isDefined(0);
         break;
 
     default:
