@@ -580,6 +580,9 @@ Bool VisModelData::isModelDefined(const Int fieldId, const MeasurementSet& thems
 
 void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& rec, const Vector<Int>& validfieldids, const Vector<Int>& spws, const Vector<Int>& starts, const Vector<Int>& nchan,  const Vector<Int>& incr, Bool iscomponentlist, Bool incremental){
 
+  LogIO logio;
+
+  try{
     //A field can have multiple FTmachines and ComponentList associated with it 
     //For example having many flanking images for the model
     //For componentlist it may have multiple componentlist ...for different spw
@@ -665,6 +668,12 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     //  }
     //  MSSourceColumns srcCol(mss);
     //  srcCol.sourceModel().put(0, outRec);
+  }
+  catch(...){
+    logio << "Could not save virtual model data column due to an artificial virtual model size limit. \nYou may need to use the scratch column if you need model visibilities" << LogIO::WARN << LogIO::POST ;
+    
+  }
+
 }
 
 
