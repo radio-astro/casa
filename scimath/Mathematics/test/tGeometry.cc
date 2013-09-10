@@ -32,18 +32,76 @@
 
 int main() {
     try {
-        Double x = 1;
-        Double y = 0;
-        Quantity theta(30, "deg");
-        Quantity cumulative(30, "deg");
-        for (uInt i=0; i<12; i++) {
-        	std::pair<Double, Double> rotated = Geometry::rotate2D(x, y, theta);
-        	x = rotated.first;
-        	y = rotated.second;
-        	AlwaysAssert(nearAbs(x, cos(cumulative.getValue("rad"))), AipsError);
-        	AlwaysAssert(nearAbs(y, sin(cumulative.getValue("rad"))), AipsError);
-        	cumulative += theta;
+    	{
+    		cout << "Text rotate2D()" << endl;
+    		Double x = 1;
+    		Double y = 0;
+    		Quantity theta(30, "deg");
+    		Quantity cumulative(30, "deg");
+    		for (uInt i=0; i<12; i++) {
+    			std::pair<Double, Double> rotated = Geometry::rotate2D(x, y, theta);
+    			x = rotated.first;
+    			y = rotated.second;
+    			AlwaysAssert(nearAbs(x, cos(cumulative.getValue("rad"))), AipsError);
+    			AlwaysAssert(nearAbs(y, sin(cumulative.getValue("rad"))), AipsError);
+    			cumulative += theta;
+    		}
         }
+    	{
+    		cout << "Test doLineSegmentsIntersect()" << endl;
+    		AlwaysAssert(
+    			! Geometry::doLineSegmentsIntersect(
+    				1, 1, 3, 3, 3, 1, 5, 5
+    			), AipsError
+    		);
+    		AlwaysAssert(
+    			! Geometry::doLineSegmentsIntersect(
+    				1, 1, 3, 3, 2.1, 2, 6, 2.9
+    			), AipsError
+    		);
+    		AlwaysAssert(
+    			Geometry::doLineSegmentsIntersect(
+    				1, 1, 3, 3, 3, 1, 1, 3
+    			), AipsError
+    		);
+    		// common end point => intersect
+    		AlwaysAssert(
+    			Geometry::doLineSegmentsIntersect(
+    				1, 1, 3, 3, 1, 1, 1, 3
+    			), AipsError
+    		);
+    		// end point of one segment colinear with the endpoints of the other
+    		// => intersect
+    		AlwaysAssert(
+    			Geometry::doLineSegmentsIntersect(
+    				1, 1, 3, 3, 2, 2, 1, 3
+    			), AipsError
+    		);
+    		// overlapping coincident segments => intersect
+    		AlwaysAssert(
+    			Geometry::doLineSegmentsIntersect(
+    				1, 1, 3, 3, 2, 2, 4, 4
+    			), AipsError
+    		);
+    		// nested coincident segments => intersect
+    		AlwaysAssert(
+    			Geometry::doLineSegmentsIntersect(
+    				1, 1, 3, 3, 2, 2, 2.5, 2.5
+    			), AipsError
+    		);
+    		// fully coincident segments => intersect
+    		AlwaysAssert(
+    			Geometry::doLineSegmentsIntersect(
+    				1, 1, 3, 3, 1, 1, 3, 3
+    			), AipsError
+    		);
+    		// parallel segments => no intersection
+    		AlwaysAssert(
+    			! Geometry::doLineSegmentsIntersect(
+    				1, 1, 3, 3, 2, 1, 4, 3
+    			), AipsError
+    		);
+    	}
         cout << "ok" << endl;
     }
     catch (const AipsError& x) {
