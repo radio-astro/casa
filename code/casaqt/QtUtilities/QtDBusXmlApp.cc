@@ -81,7 +81,11 @@ bool QtDBusXmlApp::dbusXmlCall(const String& from, const String& to,
 
         QDBusInterface iface(to.c_str(),serviceOwner(to),CASA_DBUS_XML_INTERFACE,connection());
 
-        ////////iface.setTimeout (120000); // 120 seconds in ms
+#if QT_VERSION >= 0x048500
+    if ( !methodIsAsync ){
+    	iface.setTimeout (12000000); //Time out in milliseconds (Essentially infinite)
+    }
+#endif
 
         if(methodIsAsync) {
             iface.call(QDBus::NoBlock, CASA_DBUS_XML_SLOT, xml.toXMLQString());
@@ -95,10 +99,10 @@ bool QtDBusXmlApp::dbusXmlCall(const String& from, const String& to,
                 if(reply.isValid())
                     *retValue = QtDBusXML::fromString(
                                 reply.value()).returnedValue();
-                /*else {
+                else {
                 	qDebug () << reply.error ();
                 	qDebug() << "Type="<<reply.error().type();
-                }*/
+                }
             }
         }
         return true;
