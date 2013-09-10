@@ -879,7 +879,7 @@ def simalma(
                 outv=['f']
             else:
                 outv=['l','t','f']
-            msg("Simulating %d TP antennas", priority=v_priority)
+            msg("Simulating %d TP antennas" % tpnant, priority=v_priority)
             for iant in range(tpnant):
                 task_param['sdant'] = iant
                 msg2("Running TP simulation with sdant = %d" % task_param['sdant'], priority=v_priority,out=outv)
@@ -936,18 +936,29 @@ def simalma(
 
                 vis_tp = []
                 for msname_tp in mslist_tp:
-                    if os.path.exists(fileroot+"/"+msname_tp):
+                    if dryrun:
+                        vis_tp.append(fileroot+"/"+msname_tp)
+                    elif os.path.exists(fileroot+"/"+msname_tp):
                         vis_tp.append(fileroot+"/"+msname_tp)
                     else:
                         msg2("Total power MS '%s' is not found" \
                              % msname_tp, origin="simalma", priority="error")
+
+                tp_kernel = 'SF'
+                #tp_kernel = 'GJINC'
 
                 # Define imsize to cover TP map region
                 msg2("Defining image size to cover map region of total power simulation", origin="simalma", priority=v_priority)
                 msg2("- The total power map size: [%s, %s]" % \
                     (qa.tos(qimgsize_tp[0]), qa.tos(qimgsize_tp[1])), \
                     origin="simalma", priority=v_priority)
-                if cell != '':
+                if tp_kernel.upper() == 'SF':
+                    beamsamp=6.42857
+                    qcell=qa.div(PB12, beamsamp)
+                    cell_tp = [qa.tos(qcell), qa.tos(qcell)]
+                    msg2("-Using fixed cell size for SF grid: %s" % cell_tp[0], \
+                       origin="simalma", priority=v_priority)
+                elif cell != '':
                    # user-defined cell size
                    msg2("- The user defined cell size: %s" % cell, \
                        origin="simalma", priority=v_priority)                   
@@ -974,7 +985,7 @@ def simalma(
 #                       origin="simalma", priority=v_priority)
                    cell_tp = [qa.tos(model_cell[0]), qa.tos(model_cell[1])]
 
-                 #####################################################
+                #####################################################
 
                 imsize_tp = calc_imsize(mapsize=qimgsize_tp, cell=cell_tp)
 
@@ -982,65 +993,103 @@ def simalma(
                     (imsize_tp[0], imsize_tp[1]), \
                     origin="simalma", priority=v_priority)
 
-                msg("Compare with BL imsize and adopt the larger one", \
+                msg("Compare with interferometer image area and adopt the larger one", \
                     origin="simalma", priority=v_priority)
                 # Compare with imsize of BL (note: imsize is an intArray)
+                imsize_bl = []
                 if is_array_type(imsize) and imsize[0] > 0:
-                    # User has defined imsize
                     if len(imsize) > 1:
                         imsize_bl = imsize[0:2]
                     else:
                         imsize_bl = [imsize[0], imsize[0]]
-                    msg2("---> BL imsize (user defined): [%d, %d]" % \
-                        (imsize_bl[0], imsize_bl[1]), \
+
+                if tp_kernel.upper() == 'SF':
+                    if len(imsize_bl) > 0:
+                        if cell != '':
+                            # user defined cell size for INT
+                            imarea = [qa.tos(qa.mul(cell, imsize[0])),
+                                      qa.tos(qa.mul(cell, imsize[1]))]
+                        else:
+                            # using model_cell for INT
+                            imarea = [qa.tos(qa.mul(model_cell[0], imsize[0])),
+                                      qa.tos(qa.mul(model_cell[1], imsize[1]))]
+                        tmpimsize = calc_imsize(mapsize=imarea, cell=cell_tp)
+                    else:
+                        msg2("estimating imsize from input sky model.", \
+                             origin="simalma", priority=v_priority)
+                        tmpimsize = calc_imsize(mapsize=model_size, cell=cell_tp)
+                    msg2("---> TP imsize to cover interferometrer image area: [%d, %d]" % \
+                         (tmpimsize[0], tmpimsize[1]), \
+                         origin="simalma", priority=v_priority)
+                elif len(imsize_bl) > 0:
+                    # User has defined imsize
+                    tmpimsize = imsize_bl
+                    msg2("---> Interferometer imsize (user defined): [%d, %d]" % \
+                        (tmpimsize[0], tmpimsize[1]), \
                         origin="simalma", priority=v_priority)
                 else:
                     # the same as input model (calculate from model_size)
-                    msg2("estimating imsize of BL from input sky model.", \
+                    msg2("estimating imsize of interferometr from input sky model.", \
                         origin="simalma", priority=v_priority)
-                    imsize_bl = calc_imsize(mapsize=model_size, cell=cell_tp)
-                    msg2("---> Estimated BL imsize (sky model): [%d, %d]" % \
-                        (imsize_bl[0], imsize_bl[1]), \
+                    tmpimsize = calc_imsize(mapsize=model_size, cell=cell_tp)
+                    msg2("---> Estimated interferometer imsize (sky model): [%d, %d]" % \
+                        (tmpimsize[0], tmpimsize[1]), \
                         origin="simalma", priority=v_priority)
 
 
-                imsize_tp = [max(imsize_tp[0], imsize_bl[0]), \
-                             max(imsize_tp[1], imsize_bl[1])]
+                imsize_tp = [max(imsize_tp[0], tmpimsize[0]), \
+                             max(imsize_tp[1], tmpimsize[1])]
 
                 msg2("The image pixel size of TP: [%d, %d]" % \
                     (imsize_tp[0], imsize_tp[1]), \
                     origin="simalma", priority=v_priority)
 
                 # Generate TP image
-                msg2("Generating TP image using 'GJinc' kernel.",\
-                    origin="simalma", priority=v_priority)
-                gfac = 2.52       # b in Mangum et al. (2007)
-                jfac = 1.55       # c in Mangum et al. (2007)
-                convfac = 1.8     # The conversion factor to get HWHM of kernel roughly equal to qhwhm
-                kernelfac = 0.7   # ratio of (kernel HWHM)/(TP pointingspacing)
-                #qfwhm = PB12      # FWHM of GJinc kernel.
-                #gwidth = qa.tos(qa.mul(gfac/3.,qfwhm))
-                #jwidth = qa.tos(qa.mul(jfac/3.,qfwhm))
-                qhwhm = qa.mul(qptgspc_tp, kernelfac)  # hwhm of GJinc kernel
-                gwidth = qa.tos(qa.mul(qhwhm, convfac))
-                jwidth = qa.tos(qa.mul(jfac/gfac/pl.log(2.),gwidth))
-                #print("Kernel parameter: [qhwhm, gwidth, jwidth] = [%s, %s, %s]" % (qa.tos(qhwhm), gwidth, jwidth))
-                # Parameters for sdimaging
-                task_param = {}
-#                 task_param['infile'] = fileroot+"/"+vis_tp
-                task_param['infiles'] = vis_tp
-                task_param['gridfunction'] = 'gjinc'
-                task_param['gwidth'] = gwidth
-                task_param['jwidth'] = jwidth
-                task_param['outfile'] = fileroot+"/"+imagename_tp
-                task_param['imsize'] = imsize_tp
-                # sdimaging doesn't actually take a quantity,
-                #cell_arcmin=qa.convert(cell_tp[0],'arcmin')['value']
-                #task_param['cell'] = cell_arcmin
-                task_param['cell'] = cell_tp
-                task_param['phasecenter'] = model_refdir
-                task_param['dochannelmap'] = True
-                task_param['nchan'] = model_nchan
+                if tp_kernel.upper() == 'SF':
+                    msg2("Generating TP image using 'SF' kernel.",\
+                         origin="simalma", priority=v_priority)
+                    # Parameters for sdimaging
+                    task_param = {}
+                    task_param['infiles'] = vis_tp
+                    task_param['gridfunction'] = 'sf'
+                    task_param['convsupport'] = 4
+                    task_param['outfile'] = fileroot+"/"+imagename_tp
+                    task_param['imsize'] = imsize_tp
+                    task_param['cell'] = cell_tp
+                    task_param['phasecenter'] = model_refdir
+                    task_param['dochannelmap'] = True
+                    task_param['nchan'] = model_nchan
+                else:
+                    msg2("Generating TP image using 'GJinc' kernel.",\
+                         origin="simalma", priority=v_priority)
+                    gfac = 2.52       # b in Mangum et al. (2007)
+                    jfac = 1.55       # c in Mangum et al. (2007)
+                    convfac = 1.8     # The conversion factor to get HWHM of kernel roughly equal to qhwhm
+                    kernelfac = 0.7   # ratio of (kernel HWHM)/(TP pointingspacing)
+                    #qfwhm = PB12      # FWHM of GJinc kernel.
+                    #gwidth = qa.tos(qa.mul(gfac/3.,qfwhm))
+                    #jwidth = qa.tos(qa.mul(jfac/3.,qfwhm))
+                    qhwhm = qa.mul(qptgspc_tp, kernelfac)  # hwhm of GJinc kernel
+                    gwidth = qa.tos(qa.mul(qhwhm, convfac))
+                    jwidth = qa.tos(qa.mul(jfac/gfac/pl.log(2.),gwidth))
+                    #print("Kernel parameter: [qhwhm, gwidth, jwidth] = [%s, %s, %s]" % (qa.tos(qhwhm), gwidth, jwidth))
+                    # Parameters for sdimaging
+                    task_param = {}
+#                     task_param['infile'] = fileroot+"/"+vis_tp
+                    task_param['infiles'] = vis_tp
+                    task_param['gridfunction'] = 'gjinc'
+                    task_param['gwidth'] = gwidth
+                    task_param['jwidth'] = jwidth
+                    task_param['outfile'] = fileroot+"/"+imagename_tp
+                    task_param['imsize'] = imsize_tp
+                    # sdimaging doesn't actually take a quantity,
+                    #cell_arcmin=qa.convert(cell_tp[0],'arcmin')['value']
+                    #task_param['cell'] = cell_arcmin
+                    task_param['cell'] = cell_tp
+                    task_param['phasecenter'] = model_refdir
+                    task_param['dochannelmap'] = True
+                    task_param['nchan'] = model_nchan
+
                 saveinputs('sdimaging',
                            fileroot+"/"+project+".sd.sdimaging.last",
                            myparams=task_param)
@@ -1054,12 +1103,14 @@ def simalma(
                 
                 # Set restoring beam
                 # TODO: set proper beam size
-                #bmsize = qa.quantity(PB12)
-                pbunit = PB12sim['unit']
-                simpb_val = PB12sim['value']
-                # the acutal HWHM is 3.5% smaller
-                kernel_val = qa.convert(qhwhm, pbunit)['value']*0.965 
-                bmsize = qa.quantity(pl.sqrt(simpb_val**2+4.*kernel_val**2), pbunit)
+                if tp_kernel.upper() == 'SF':
+                    bmsize = qa.quantity(PB12)
+                else: # GJinc
+                    pbunit = PB12sim['unit']
+                    simpb_val = PB12sim['value']
+                    # the acutal HWHM is 3.5% smaller
+                    kernel_val = qa.convert(qhwhm, pbunit)['value']*0.965 
+                    bmsize = qa.quantity(pl.sqrt(simpb_val**2+4.*kernel_val**2), pbunit)
                 msg2("Setting estimated restoring beam to TP image: %s" % qa.tos(bmsize),\
                          origin="simalma", priority=v_priority)
                 #print "- SimPB = %f%s" % (simpb_val, pbunit)
@@ -1071,23 +1122,6 @@ def simalma(
                                     pa=qa.quantity("0.0deg"))
                     ia.close()
                 
-#                 ##### Generate TP image using BOX kernel
-#                 msg("Generating TP image using 'BOX' kernel.",\
-#                     origin="simalma", priority=v_priority)
-#                 im.open(fileroot+"/"+vis_tp)
-#                 im.selectvis(nchan=model_nchan,start=0,step=1,spw=0)
-#                 ### TODO: should set proper phasecenter based on imdirection!!!
-#                 im.defineimage(mode='channel',nx=imsize_tp[0],ny=imsize_tp[1],cellx=imgcell[0],celly=imgcell[1],phasecenter=model_refdir,nchan=model_nchan,start=0,step=1,spw=0)
-#                 im.setoptions(ftmachine='sd',gridfunction='box')
-#                 im.makeimage(type='singledish',image=fileroot+"/"+imagename_tp)
-#                 im.close()
-#                 # set restoring beam
-#                 ia.open(fileroot+"/"+imagename_tp)
-#                 ia.setrestoringbeam(major=PB12,minor=PB12,pa=qa.quantity("0.0deg"))
-#                 ia.close()
-#                 #####################################################
-
-
 
                 # Analyze TP image
                 tpskymodel=fileroot+"/"+pref_tp+".skymodel"
@@ -1320,6 +1354,7 @@ def simalma(
                 # regrid TP image
                 inttemplate = imregrid(imagename = highimage0, template='get')
                 imregrid(imagename = fileroot+"/"+imagename_tp,
+                         interpolation="cubic",
                          template = inttemplate, output = regridimg)
                 # multiply SD image with INT PB coverage
                 if not os.path.exists(pbcov):
