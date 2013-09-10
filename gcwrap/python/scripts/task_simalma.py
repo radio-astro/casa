@@ -606,10 +606,10 @@ def simalma(
 #        
 #        imagename_tp = project+".sd.image"
 #        imagename_int = project+".concat.image"
-#        combimage = project+".feather.image"
 #        msname_concat = project+".concat.ms"
 #
-#        simana_file = project+".simanalyze.last"
+        combimage = project+".feather.image"
+        simana_file = project+".simanalyze.last"
 
 
 
@@ -705,6 +705,7 @@ def simalma(
             raise Exception,"You requested total power (tpnant=%d) but did not specify a valid nonzero tptime" % tpnant
 
 
+        mslist_tp = []
         if tptime_min>0:
             ########################################################
             # ACA-TP  simulation - always do this last
@@ -713,6 +714,9 @@ def simalma(
             msg2("="*60, origin="simalma", priority="warn",out=outv)
             msg2((" Step %d: simulating Total Power" % step), origin="simalma", priority="warn",out=outv)
             msg2("="*60, origin="simalma", priority="warn",out=outv)
+
+            if antlist_tp is None:
+                antlist_tp = antlist_tp_default
 
             pref_tp = get_data_prefix(antlist_tp, project)
             if addnoise:
@@ -900,6 +904,7 @@ def simalma(
         # Imaging
         if image:
             modelimage = ""
+            imagename_tp = project+".sd.image"
             if tptime_min > 0:
                 ########################################################
                 # Image ACA-TP
@@ -995,11 +1000,12 @@ def simalma(
                 #jwidth = qa.tos(qa.mul(jfac/3.,qfwhm))
                 qhwhm = qa.mul(qptgspc_tp, kernelfac)  # hwhm of GJinc kernel
                 gwidth = qa.tos(qa.mul(qhwhm, convfac))
-                jwidth = qa.tos(qa.mul(jfac/gfac/log(2.),gwidth))
+                jwidth = qa.tos(qa.mul(jfac/gfac/pl.log(2.),gwidth))
                 #print("Kernel parameter: [qhwhm, gwidth, jwidth] = [%s, %s, %s]" % (qa.tos(qhwhm), gwidth, jwidth))
                 # Parameters for sdimaging
                 task_param = {}
-                task_param['infile'] = fileroot+"/"+vis_tp
+#                 task_param['infile'] = fileroot+"/"+vis_tp
+                task_param['infiles'] = fileroot+"/"+vis_tp
                 task_param['gridfunction'] = 'gjinc'
                 task_param['gwidth'] = gwidth
                 task_param['jwidth'] = jwidth
@@ -1061,29 +1067,7 @@ def simalma(
 
 
                 # Analyze TP image
-                # TMP fix: move skymodels around to make sure simanalyze picks
-                # the right one
-                blskymodel=fileroot+"/"+pref_bl+".skymodel"
-                acaskymodel=fileroot+"/"+pref_aca+".skymodel"
                 tpskymodel=fileroot+"/"+pref_tp+".skymodel"
-                if not os.path.exists(blskymodel) and complist:
-                    blskymodel=fileroot+"/"+pref_bl+".compskymodel"
-                if not os.path.exists(acaskymodel) and complist:
-                    acaskymodel=fileroot+"/"+pref_aca+".compskymodel"
-                if not os.path.exists(tpskymodel) and complist:
-                    tpskymodel=fileroot+"/"+pref_tp+".compskymodel"
-
-                if os.path.exists(blskymodel):
-                    shutil.move(blskymodel,blskymodel+".save")
-                else:
-                    msg("BL skymodel '%s' is not found" \
-                        % blskymodel, origin="simalma", priority="error")
-                if os.path.exists(acaskymodel):
-                    shutil.move(acaskymodel,acaskymodel+".save")
-                else:
-                    msg("ACA skymodel '%s' is not found" \
-                        % acaskymodel, origin="simalma", priority="error")
-
 
                 msg2("Analyzing TP image.", origin="simalma", priority=v_priority)
                 vis_tp = fileroot+"/"+vis_tp
@@ -1092,6 +1076,7 @@ def simalma(
                 task_param['project'] = project
                 task_param['image'] = False
                 task_param['imagename'] = fileroot+"/"+imagename_tp
+                task_param['skymodel'] = tpskymodel
                 task_param['analyze'] = True
                 task_param['showuv'] = False
                 task_param['showpsf'] = False
@@ -1216,15 +1201,15 @@ def simalma(
                 for i in range(nconfig):
                     pref=get_data_prefix(antennalist[i],project)
                     if addnoise:
-                        msname = pref+".noisy.ms"
+                        msname = fileroot + "/" + pref+".noisy.ms"
                     else:
-                        msname = pref+".ms"
+                        msname = fileroot + "/" + pref+".ms"
                     mslist.append(msname)
 
-                msg2("Will execute: concat("+str(mslist)+",concatvis="+concatname+".ms,visweightscale="+str(weights))
+                msg2("Will execute: concat(vis="+str(mslist)+",concatvis="+concatname+".ms,visweightscale="+str(weights))
                 if not dryrun:
                     try:
-                        concat(mslist,concatvis=concatname+".ms",visweightscale=weights)
+                        concat(vis=mslist,concatvis=concatname+".ms",visweightscale=weights)
                     except:
                         raise Exception, simanaerr
                     finally:
@@ -1267,7 +1252,7 @@ def simalma(
                 task_param['overwrite'] = overwrite
 
                 msg2("Executing: "+get_taskstr('simanalyze', task_param), origin="simalma", priority=v_priority)
-                imagename_int=concatname+".image"
+                imagename_int=os.path.basename(concatname.rstrip("/"))+".image"
 
                 if not dryrun:
                     try:
@@ -1360,11 +1345,12 @@ def simalma(
                     feather(**task_param)
                     del task_param
 
-                    # transfer mask - feather should really do this
-                    ia.open(outimage0)
-                    ia.maskhandler('copy',[highimage+":mask0",'mask0'])
-                    ia.maskhandler('set','mask0')
-                    ia.done()
+                    # This seems not necessary anymore.
+                    ## transfer mask - feather should really do this
+                    #ia.open(outimage0)
+                    #ia.maskhandler('copy',[highimage+":mask0",'mask0'])
+                    #ia.maskhandler('set','mask0')
+                    #ia.done()
                 except:
                     raise Exception, "simalma caught an exception in task feather"
                 finally:
