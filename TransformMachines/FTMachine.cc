@@ -363,7 +363,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     chanMap.resize();
     
-    //  cout << "VBSPW " << vb.spectralWindow() << "  " << multiChanMap_p[vb.spectralWindow()] << endl;
     chanMap=multiChanMap_p[vb.spectralWindow()];
     if(chanMap.nelements() == 0)
       chanMap=Vector<Int>(vb.frequency().nelements(), -1);
@@ -1151,7 +1150,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool useCorrected= !(vi.msColumns().correctedData().isNull());
     if((type==FTMachine::CORRECTED) && (!useCorrected))
       type=FTMachine::OBSERVED;
-    cerr << "Type0 " << type << endl;
+    Bool normalize=True;
+    if(type==FTMachine::COVERAGE)
+      normalize=False;
+
     // Loop over the visibilities, putting VisBuffers
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin(); vi.more(); vi++) {
@@ -1185,7 +1187,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     finalizeToSky();
     // Normalize by dividing out weights, etc.
-    getImage(weight, True);
+    getImage(weight, normalize);
   }
   
   
@@ -1346,7 +1348,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   Bool FTMachine::matchChannel(const Int& spw, 
 			       const VisBuffer& vb){
-    
     
     if(nVisChan_p[spw] < 0)
       logIO() << " Spectral window " << spw 
