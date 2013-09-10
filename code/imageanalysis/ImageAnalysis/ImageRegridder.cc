@@ -608,34 +608,44 @@ Bool ImageRegridder::_doImagesOverlap(
 			minx0 > maxx1 || maxx0 < minx1
 			|| miny0 > maxy1 || maxy0 < miny1
 		) {
+			// bounds check shows images do not intersect
 			return False;
 		}
-		for (uInt i=0; i<4; i++) {
-			Vector<Double> start0(2, corners0[i].first);
-			start0[1] = corners0[i].second;
-			Vector<Double> end0(
-				2,
-				i == 3 ? corners0[0].first
-					: corners0[i+1].first
-			);
-			end0[1] = i == 3 ? corners0[0].second : corners0[i+1].second;
-
-			for (uInt j=0; j<4; j++) {
-				Vector<Double> start1(2, corners1[j].first);
-				start1[1] = corners1[j].second;
-				Vector<Double> end1(
+		else if (
+			(minx0 >= minx1 && maxx0 <= maxx1 && miny0 >= miny1 && maxy0 <= maxy1)
+			|| (minx0 < minx1 && maxx0 > maxx1 && miny0 < miny1 && maxy0 > maxy1)
+		) {
+			// one image lies completely inside the other
+			overlap = True;
+		}
+		else {
+			for (uInt i=0; i<4; i++) {
+				Vector<Double> start0(2, corners0[i].first);
+				start0[1] = corners0[i].second;
+				Vector<Double> end0(
 					2,
-					j == 3 ? corners1[0].first
-						: corners1[j+1].first
+					i == 3 ? corners0[0].first
+						: corners0[i+1].first
 				);
-				end1[1] = j == 3 ? corners1[0].second : corners1[j+1].second;
-				if (
-					 _doLineSegmentsIntersect(
-						start0, end0, start1, end1
-					)
-				) {
-					overlap = True;
-					break;
+				end0[1] = i == 3 ? corners0[0].second : corners0[i+1].second;
+
+				for (uInt j=0; j<4; j++) {
+					Vector<Double> start1(2, corners1[j].first);
+					start1[1] = corners1[j].second;
+					Vector<Double> end1(
+						2,
+						j == 3 ? corners1[0].first
+							: corners1[j+1].first
+					);
+					end1[1] = j == 3 ? corners1[0].second : corners1[j+1].second;
+					if (
+						_doLineSegmentsIntersect(
+							start0, end0, start1, end1
+						)
+					) {
+						overlap = True;
+						break;
+					}
 				}
 			}
 		}
