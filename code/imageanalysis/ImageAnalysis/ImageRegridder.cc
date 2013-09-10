@@ -27,14 +27,10 @@
 #include <imageanalysis/ImageAnalysis/ImageRegridder.h>
 
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
+#include <imageanalysis/ImageAnalysis/ImageMetaData.h>
 #include <images/Images/ImageConcat.h>
 #include <images/Images/ImageRegrid.h>
-#include <images/Regions/WCBox.h>
-
-#include <imageanalysis/ImageAnalysis/ImageMetaData.h>
-#include <imageanalysis/Annotations/AnnRectBox.h>
-
-#include <casa/Arrays/ArrayLogical.h>
+#include <scimath/Mathematics/Geometry.h>
 
 #include <memory>
 #include <stdcasa/cboost_foreach.h>
@@ -639,8 +635,9 @@ Bool ImageRegridder::_doImagesOverlap(
 					);
 					end1[1] = j == 3 ? corners1[0].second : corners1[j+1].second;
 					if (
-						_doLineSegmentsIntersect(
-							start0, end0, start1, end1
+						Geometry::doLineSegmentsIntersect(
+							start0[0], start0[1], end0[0], end0[1],
+							start1[0], start1[1], end1[0], end1[1]
 						)
 					) {
 						overlap = True;
@@ -729,42 +726,6 @@ Vector<std::pair<Double, Double> > ImageRegridder::_getDirectionCorners(
 		corners[i].second = Quantity(world[1], units[1]).getValue("rad");
 	}
 	return corners;
-}
-
-Bool ImageRegridder::_doLineSegmentsIntersect(
-	const Vector<Double>& line0point0,
-	const Vector<Double>& line0point1,
-	const Vector<Double>& line1point0,
-	const Vector<Double>& line1point1
-) {
-	// algorithm from
-	// http://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
-	Vector<Double> p = line0point0;
-	Vector<Double> r = line0point1 - line0point0;
-	Vector<Double> q = line1point0;
-	Vector<Double> s = line1point1 - line1point0;
-	Double rCrossS = _2DCrossProduct(r, s);
-	Vector<Double> diffQP = q-p;
-
-	if (rCrossS == 0) {
-		if (_2DCrossProduct(diffQP, r) == 0) {
-			// lines are coincident
-			return True;
-		}
-		else {
-			// lines are parallel
-			return False;
-		}
-	}
-	Double t = _2DCrossProduct(diffQP, s)/rCrossS;
-	Double u = _2DCrossProduct(diffQP, r)/rCrossS;
-	return t >= 0 && t <= 1 && u >= 0 && u <= 1;
-}
-
-Double ImageRegridder::_2DCrossProduct(
-	const Vector<Double> v0, const Vector<Double> v1
-) {
-	return v0[0]*v1[1] - v0[1]*v1[0];
 }
 
 }
