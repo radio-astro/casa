@@ -140,18 +140,9 @@ class runTest:
 
                     os.system("echo -n > " + process_data)
                     pp = SCRIPT_REPOS + '/profileplot.py'  # for release
+                    pyt = sys.executable
                     if not os.path.isfile(pp):
                         pp = SCRIPT_REPOS + '/../profileplot.py' # for devel
-                        pyt = UTILS_DIR + '/python'  # for release
-                    if not os.path.isfile(pyt):
-                        lib = "lib64" if os.uname()[4] == 'x86_64' else "lib"
-                        pyt = '/usr/' + lib + '/casapy/bin/python'
-                    if not os.path.isfile(pyt):
-                        pyt = '/usr/lib64/casapy/bin/python'    # for devel
-                    if not os.path.isfile(pyt):
-                        pyt = '/usr/lib/casapy/bin/python'    # for devel
-                    if not os.path.isfile(pyt):
-                        pyt = commands.getoutput('which python') # Mac devel
                     profileplot_pid=os.spawnlp(os.P_NOWAIT,
                                                pyt,
                                                pyt,
