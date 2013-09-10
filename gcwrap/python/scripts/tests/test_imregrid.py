@@ -921,6 +921,37 @@ class imregrid_test(unittest.TestCase):
             )
         )
     
+    def test_nested_image(self):
+        """ Verify that one image which lies completely inside the other will not cause failure"""
+        myia = self._myia
+        imagename = "ak.im"
+        myia.fromshape(imagename, [20, 20])
+        csys = myia.coordsys()
+        csys.setreferencevalue([1800, 1800])
+        myia.setcoordsys(csys.torecord())
+        template = "ak_temp.im"
+        myia.fromshape(template, [4, 4])
+        csys = myia.coordsys()
+        csys.setreferencevalue([1800, 1800])
+        csys.setincrement([-0.9, 0.9])
+        myia.setcoordsys(csys.torecord())
+        myia.done()
+        output = "ak.out.im"
+        self.assertTrue(
+            imregrid(
+                imagename=imagename,
+                template=template, output=output, decimate=5,
+                overwrite=True
+            )
+        )
+        self.assertTrue(
+            imregrid(
+                imagename=template,
+                template=imagename, output=output, decimate=5,
+                overwrite=True
+            )
+        )
+    
     def test_regrid_galactic(self):
         """Verify fix for CAS-5534"""
         myia = self._myia
