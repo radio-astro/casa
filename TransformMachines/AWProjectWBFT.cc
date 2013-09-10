@@ -364,15 +364,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Int pol_l=wtImIter.position()(2), chan_l=wtImIter.position()(3);
 	Double sumwt_l=1.0;;
 	// Lets write some mildly obfuscated code ~[8-)
-	if ((sensitivityPatternQualifier_p == -1) && (doSumWtNorm))
-	  sumwt_l = ((sumwt_l = getSumOfCFWeights()(pol_l,chan_l))==0)?1.0:sumwt_l;
+	//if ((sensitivityPatternQualifier_p == -1) && (doSumWtNorm))
+	//  sumwt_l = ((sumwt_l = getSumOfCFWeights()(pol_l,chan_l))==0)?1.0:sumwt_l;
 
-	//sumwt_l = 1.0;  // UUU : Make sure no per-term sumwt normalization happens here.
+	sumwt_l = getSumOfCFWeights()(pol_l,chan_l);
 
 	wtImIter.rwCursor() = (wtImIter.rwCursor()
 			       *Float(sizeX)*Float(sizeY)
 			       /sumwt_l
 			       );
+
+	wtImIter.rwCursor() = sqrt( fabs(wtImIter.rwCursor()) );
+
+	//	Double maxval = fabs( max( wtImIter.rwCursor() ) );
+	//	sumwt_l = getSumOfCFWeights()(pol_l,chan_l);
+	//	weightRatio_p = maxval * Float(sizeX)*Float(sizeY) / sumwt_l;
       }
 
   }

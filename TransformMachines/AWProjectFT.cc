@@ -1267,7 +1267,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	normalizeImage( *(modelImageVec[0]) , weightsVec[0],  *(weightImageVec[0]), 
 			False, (Float)pbLimit_p, (Int)1);
 
-
 	//
 	// Divide by sqrt(avgPB)
 	//
@@ -1814,7 +1813,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Question: Why three objects for the same precise information?
     // --SB (Dec. 2010).
     AlwaysAssert(image, AipsError);
-    
 
     weights.resize(sumWeight.shape());
     convertArray(weights, sumWeight);
@@ -1884,7 +1882,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  {
 		    if(weights(pol,chan)!=0.0)
 		      {
-			Complex rnorm(Float(inx)*Float(iny)/weights(pol,chan));
+			Complex rnorm(Float(inx)*Float(iny)/( weights(pol,chan) ));
 			lix.rwCursor()*=rnorm;
 		      }
 		    else
@@ -2329,8 +2327,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     
     //    CFBStruct cfbst_pub;
-    theMap[0]->getAsStruct(cfbst_pub);
-    vbs.cfBSt_p=cfbst_pub;
+    //UUU    theMap[0]->getAsStruct(cfbst_pub);
+    //UUU    vbs.cfBSt_p=cfbst_pub;
     vbs.accumCFs_p=((vbs.uvw_p.nelements() == 0) && dopsf);
     
     

@@ -1692,8 +1692,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     		    //		    (Float)1e-03,
     		    (Float)pbLimit_p,
     		    doSky? (Int)6 : (Int)0); // Normalize by sum-of-wts.
-		    // (Int)2); // Normalize by (sum-of-wts*avgPB)
-
+    		    // (Int)2); // Normalize by (sum-of-wts*avgPB)
 
     // storeImg(String("stokes1.im"),*(resImageVec[0]));
 
@@ -1817,14 +1816,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      
   	    case 4: // DIVIDE by sqrt of sensitivityImage 
 	      subOutput.copyData( (LatticeExpr<Float>) 
-				  (iif(sqrt(subSensitivityImage) > (pblimit), 
+				  (iif((subSensitivityImage) > (pblimit), 
 				       (subSkyImage/(sqrt(subSensitivityImage))),
 				       (subSkyImage))));
 				       //0.0)));
 	      break;
 	      
   	    case 5: // MULTIPLY by sqrt of sensitivityImage 
-	      subOutput.copyData( (LatticeExpr<Float>) (subSkyImage * sqrt(subSensitivityImage)) );
+	      subOutput.copyData( (LatticeExpr<Float>) 
+				  (iif((subSensitivityImage) > (pblimit), 
+				       (subSkyImage * (sqrt(subSensitivityImage))),
+				       (subSkyImage))));
+
 	      break;
 
 	    case 6: // divide by non normalized sensitivity image

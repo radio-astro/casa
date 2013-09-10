@@ -1043,6 +1043,9 @@ CubeSkyEquation::configureAsyncIo (ROVisibilityIterator * & oldRvi, VisibilityIt
 void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm, 
 				   Int& nslice) {
 
+  nslice=1;
+  return;
+
   //non-cube
   if(theIm.shape()[3]==1){
     nslice=1;
@@ -1936,14 +1939,15 @@ void CubeSkyEquation::tmpWBNormalizeImage(Bool& dopsf, const Float& pbLimit)
 	      {
 		if (((NewMultiTermFT *)ft_)->getDOPBCorrection())
 		  {
-		    le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/(*ggSSliceVec), 0.0)); // The negative sign is in FTM::normalizeImage()
-		    // le=LatticeExpr<Float>(*gSSliceVec); // The negative sign is in FTM::normalizeImage()
+		    //le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/(sqrt(*ggSSliceVec)), 0.0)); // The negative sign is in FTM::normalizeImage()
+		     le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/((*ggSSliceVec)), 0.0)); // The negative sign is in FTM::normalizeImage()
 		    gSSliceVec->copyData(le);
 		  }
 	      }
 	    else
 	      {
-		le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/(*ggSSliceVec), 0.0)); // The negative sign is in FTM::normalizeImage()
+		//le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/(sqrt(*ggSSliceVec)), 0.0)); // The negative sign is in FTM::normalizeImage()
+		le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/((*ggSSliceVec)), 0.0)); // The negative sign is in FTM::normalizeImage()
 		gSSliceVec->copyData(le);
 	      }
 	    
