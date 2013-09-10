@@ -36,8 +36,8 @@ namespace casa {
 		Double x, Double y, const Quantity& theta
 	) {
 		Double thetaRad = theta.getValue("rad");
-		Double c, s;
-		sincos(thetaRad, &s, &c);
+		Double c = cos(thetaRad);
+		Double s = sin(thetaRad);
 		return std::make_pair(x*c - y*s, x*s + y*c);
 	}
 
