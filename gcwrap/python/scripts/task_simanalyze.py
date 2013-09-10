@@ -244,11 +244,11 @@ def simanalyze(
         # first look for skymodel, if not then compskymodel
         skymodels=glob.glob(fileroot+"/"+project+"*.skymodel")+glob.glob(fileroot+"/"+project+"*.newmodel")
         nmodels=len(skymodels)
+        skymodel_index=0
         if nmodels>1:
             msg("Found %i sky model images:" % nmodels)
             # use the skymodel_searchstring to try to pick the right one
             # print them out for the user while we're at it.
-            skymodel_index=0
             for i in range(nmodels):
                 msg("   "+skymodels[i])
                 if skymodels[i].count(skymodel_searchstring)>0:
