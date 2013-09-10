@@ -28,6 +28,8 @@
 
 #include <scimath/Mathematics/Geometry.h>
 
+#include <casa/Arrays/MatrixMath.h>
+
 #include <utility>
 
 namespace casa {
@@ -40,6 +42,48 @@ namespace casa {
 		Double s = sin(thetaRad);
 		return std::make_pair(x*c - y*s, x*s + y*c);
 	}
+
+
+	Bool Geometry::doLineSegmentsIntersect(
+		Double a0x, Double a0y, Double a1x, Double a1y,
+		Double b0x, Double b0y, Double b1x, Double b1y
+	) {
+		Vector<Double > line0point0(2);
+		line0point0[0] = a0x;
+		line0point0[1] = a0y;
+		Vector<Double > line0point1(2);
+		line0point1[0] = a1x;
+		line0point1[1] = a1y;
+		Vector<Double > line1point0(2);
+		line1point0[0] = b0x;
+		line1point0[1] = b0y;
+		Vector<Double > line1point1(2);
+		line1point1[0] = b1x;
+		line1point1[1] = b1y;
+
+		Vector<Double> p = line0point0;
+		Vector<Double> r = line0point1 - line0point0;
+		Vector<Double> q = line1point0;
+		Vector<Double> s = line1point1 - line1point0;
+		Double rCrossS = crossProduct2D(r, s);
+		Vector<Double> diffQP = q-p;
+
+		if (rCrossS == 0) {
+			if (crossProduct2D(diffQP, r) == 0) {
+				// lines are coincident
+				return True;
+			}
+			else {
+				// lines are parallel
+				return False;
+			}
+		}
+		Double t = crossProduct2D(diffQP, s)/rCrossS;
+		Double u = crossProduct2D(diffQP, r)/rCrossS;
+		return t >= 0 && t <= 1 && u >= 0 && u <= 1;
+	}
+
+
 
 } //# NAMESPACE CASA - END
 
