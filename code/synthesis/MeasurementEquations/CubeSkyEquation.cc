@@ -1043,9 +1043,6 @@ CubeSkyEquation::configureAsyncIo (ROVisibilityIterator * & oldRvi, VisibilityIt
 void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm, 
 				   Int& nslice) {
 
-  nslice=1;
-  return;
-
   //non-cube
   if(theIm.shape()[3]==1){
     nslice=1;
