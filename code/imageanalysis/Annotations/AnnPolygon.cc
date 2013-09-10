@@ -19,6 +19,7 @@
 
 #include <casa/Quanta/QMath.h>
 #include <images/Regions/WCPolygon.h>
+#include <scimath/Mathematics/Geometry.h>
 
 //debug only
 #include <coordinates/Coordinates/DirectionCoordinate.h>
@@ -108,10 +109,11 @@ AnnPolygon::AnnPolygon(
 	AnnotationBase::Type shape,
 	const Quantity& centerx,
 	const Quantity& centery,
-	const String& dirRefFrameString,
-	const CoordinateSystem& csys,
 	const Quantity& widthx,
 	const Quantity& widthy,
+	const Quantity& positionAngle,
+	const String& dirRefFrameString,
+	const CoordinateSystem& csys,
 	const IPosition& imShape,
 	const Quantity& beginFreq,
 	const Quantity& endFreq,
@@ -126,7 +128,10 @@ AnnPolygon::AnnPolygon(
 		restfreq, stokes, annotationOnly
 		),
 		_origXPos(4), _origYPos(4) {
-		_initCenterRectCorners(centerx, centery, widthx, widthy);
+		_initCenterRectCorners(
+			centerx, centery, widthx, widthy,
+			positionAngle
+		);
 		_init();
 	}
 
@@ -134,14 +139,19 @@ AnnPolygon::AnnPolygon(
 	AnnotationBase::Type shape,
 	const Quantity& centerx,
 	const Quantity& centery,
-	const CoordinateSystem& csys,
-	const IPosition& imShape,
 	const Quantity& widthx,
 	const Quantity& widthy,
+	const Quantity& positionAngle,
+	const CoordinateSystem& csys,
+	const IPosition& imShape,
+
 	const Vector<Stokes::StokesTypes>& stokes
 ) : AnnRegion(shape, csys, imShape, stokes),
 	_origXPos(4), _origYPos(4) {
-	_initCenterRectCorners(centerx, centery, widthx, widthy);
+	_initCenterRectCorners(
+		centerx, centery, widthx, widthy,
+		positionAngle
+	);
 	_init();
 }
 
@@ -230,32 +240,97 @@ void AnnPolygon::_initCorners(
 	_origYPos[3] = trcy;
 }
 
+void AnnPolygon::_initCorners(
+	const MDirection& blc,
+	const MDirection& corner2,
+	const MDirection& trc,
+	const MDirection& corner4
+) {
+	for (uInt i=0; i<4; i++) {
+		MDirection dir;
+		switch(i) {
+		case 0:
+			dir = blc;
+			break;
+		case 1:
+			dir = corner2;
+			break;
+		case 2:
+			dir = trc;
+			break;
+		case 3:
+			dir = corner4;
+			break;
+		default:
+			break;
+		}
+		Quantum<Vector<Double> > dirq = dir.getAngle();
+		Vector<Double> x = dirq.getValue();
+		String unit = dirq.getUnit();
+		_origXPos[i] = Quantity(x[0], unit);
+		_origYPos[i] = Quantity(x[1], unit);
+	}
+}
+
 void AnnPolygon::_initCenterRectCorners(
 	const Quantity& centerx,
 	const Quantity& centery,
 	const Quantity& widthx,
-	const Quantity& widthy
+	const Quantity& widthy,
+	const Quantity& positionAngle
 ) {
-	if (! widthx.isConform("rad") && ! widthx.isConform("pix")) {
-			throw AipsError(
-				"x width unit " + widthx.getUnit() + " is not an angular unit."
+	ThrowIf(
+		! widthx.isConform("rad") && ! widthx.isConform("pix"),
+		"x width unit " + widthx.getUnit() + " is not an angular unit."
+	);
+	ThrowIf(
+		! widthy.isConform("rad") && ! widthy.isConform("pix"),
+		"y width unit " + widthx.getUnit() + " is not an angular unit."
+	);
+	ThrowIf(
+		! positionAngle.isConform("rad"),
+		"position angle unit " + positionAngle.getUnit() + " is not an angular unit."
+	);
+	ThrowIf(
+		widthx.getUnit() == "pix"
+		&& ! getCsys().directionCoordinate().hasSquarePixels()
+		&& (
+			! casa::near(fmod(positionAngle.getValue("rad"), C::pi), 0.0)
+			&& ! casa::near(fmod(fabs(positionAngle.getValue("rad")), C::pi), C::pi_2)
+		),
+		"When pixels are not square and units are expressed in "
+		"pixels, position angle must be zero"
+	);
+
+	Vector<Double> inc = getCsys().increment();
+	Double xFactor = inc(_getDirectionAxes()[0]) > 0 ? 1.0 : -1.0;
+	Double yFactor = inc(_getDirectionAxes()[1]) > 0 ? 1.0 : -1.0;
+
+	IPosition dirAxes = _getDirectionAxes();
+	Quantity wx = _lengthToAngle(widthx, dirAxes[0])/2;
+	Quantity wy = _lengthToAngle(widthy, dirAxes[1])/2;
+
+	Vector<MDirection> corners(4);
+	MDirection center(centerx, centery);
+	for (uInt i=0; i<4; i++) {
+		corners[i] = MDirection(center);
+		Int xsign = i == 0 || i == 3 ? -1 : 1;
+		Int ysign = i == 0 || i == 1 ? -1 : 1;
+		Quantity x = xFactor*xsign*wx;
+		Quantity y = yFactor*ysign*wy;
+		if (positionAngle.getValue() != 0) {
+			// because the pa is measured from north through east (positive y to
+			// positive x), this corresponds to a clockwise rotation in normal coordinates
+			// so we have to flip the sign of the positionAngle to take that into account.
+			std::pair<Double, Double> rotated = Geometry::rotate2D(
+				x.getValue("arcsec"), y.getValue("arcsec"), -positionAngle
 			);
+			x = Quantity(rotated.first, "arcsec");
+			y = Quantity(rotated.second, "arcsec");
 		}
-		if (! widthy.isConform("rad") && ! widthy.isConform("pix")) {
-			throw AipsError(
-				"y width unit " + widthx.getUnit() + " is not an angular unit."
-			);
-		}
-		Vector<Double> inc = getCsys().increment();
-		Double xFactor = inc(_getDirectionAxes()[0]) > 0 ? 1.0 : -1.0;
-		Double yFactor = inc(_getDirectionAxes()[1]) > 0 ? 1.0 : -1.0;
-		Quantity blcx = centerx - xFactor * widthx/2;
-		Quantity blcy = centery - yFactor * widthy/2;
-		Quantity trcx = centerx + xFactor * widthx/2;
-		Quantity trcy = centery + yFactor * widthy/2;
-		_initCorners(
-			blcx, blcy, trcx, trcy
-		);
+		corners[i].shift(x, y, True);
+	}
+	_initCorners(corners[0], corners[1], corners[2], corners[3]);
 }
 
 void AnnPolygon::_init() {

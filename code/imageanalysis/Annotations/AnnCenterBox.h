@@ -89,17 +89,9 @@ public:
 
 	AnnCenterBox& operator=(const AnnCenterBox& other);
 
-	// Vector<Quantity> getWidths() const;
-
-	// get the blc and trc direction coords for the box which
-	// have been converted to the coordinate frame specified
-	// when the object was constructed.
-	//Vector<MDirection> getCorners() const;
-
 	ostream& print(ostream &os) const;
 
 private:
-	Vector<Quantity> _widths;
 	Quantity _inpXCenter, _inpYCenter, _inpXWidth, _inpYWidth;
 
 };

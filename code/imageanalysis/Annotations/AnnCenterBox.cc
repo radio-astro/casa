@@ -36,17 +36,13 @@ AnnCenterBox::AnnCenterBox(
 	const Bool annotationOnly
 ) :  AnnPolygon(
 		CENTER_BOX, xcenter, ycenter,
-		dirRefFrameString, csys, xwidth,
-		ywidth, imShape, beginFreq, endFreq,
+		xwidth,	ywidth, Quantity(0, "deg"),
+		dirRefFrameString, csys, imShape, beginFreq, endFreq,
 		freqRefFrameString, dopplerString,
 		restfreq, stokes,
 		annotationOnly
-	), _widths(Vector<Quantity>(2)),
-	 _inpXCenter(xcenter),
-	_inpYCenter(ycenter), _inpXWidth(xwidth), _inpYWidth(ywidth) {
-	_widths[0] = _lengthToAngle(_inpXWidth, _getDirectionAxes()[0]);
-	_widths[1] = _lengthToAngle(_inpYWidth, _getDirectionAxes()[1]);
-}
+	), _inpXCenter(xcenter),
+	_inpYCenter(ycenter), _inpXWidth(xwidth), _inpYWidth(ywidth) {}
 
 AnnCenterBox::AnnCenterBox(
 	const Quantity& xcenter,
@@ -58,15 +54,12 @@ AnnCenterBox::AnnCenterBox(
 	const Vector<Stokes::StokesTypes>& stokes
 ) : AnnPolygon(
 		CENTER_BOX, xcenter, ycenter,
-		csys, imShape, xwidth, ywidth,
+		xwidth, ywidth, Quantity(0, "deg"),
+		csys, imShape,
 		stokes
-	), _widths(Vector<Quantity>(2)),
-	 _inpXCenter(xcenter),
+	), _inpXCenter(xcenter),
 	_inpYCenter(ycenter), _inpXWidth(xwidth), _inpYWidth(ywidth)
-{
-	_widths[0] = _lengthToAngle(_inpXWidth, _getDirectionAxes()[0]);
-	_widths[1] = _lengthToAngle(_inpYWidth, _getDirectionAxes()[1]);
-}
+{}
 
 AnnCenterBox& AnnCenterBox::operator= (
 	const AnnCenterBox& other
@@ -75,21 +68,13 @@ AnnCenterBox& AnnCenterBox::operator= (
     	return *this;
     }
     AnnRegion::operator=(other);
-   _widths.resize(other._widths.nelements());
-   _widths = other._widths;
-   // _corners.resize(other._corners.nelements());
-    //_corners = other._corners;
 	_inpXCenter = other._inpXCenter;
 	_inpYCenter = other._inpYCenter;
 	_inpXWidth = other._inpXWidth;
 	_inpYWidth = other._inpYWidth;
     return *this;
 }
-/*
-Vector<Quantity> AnnCenterBox::getWidths() const {
-	return _widths;
-}
-*/
+
 ostream& AnnCenterBox::print(ostream &os) const {
 	_printPrefix(os);
 	os << "centerbox [[" << _printDirection(_inpXCenter, _inpYCenter) << "], ["

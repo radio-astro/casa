@@ -134,10 +134,11 @@ protected:
 		AnnotationBase::Type shape,
 		const Quantity& centerx,
 		const Quantity& centery,
-		const String& dirRefFrameString,
-		const CoordinateSystem& csys,
 		const Quantity& widthx,
 		const Quantity& widthy,
+		const Quantity& positionAngle,
+		const String& dirRefFrameString,
+		const CoordinateSystem& csys,
 		const IPosition& imShape,
 		const Quantity& beginFreq,
 		const Quantity& endFreq,
@@ -158,10 +159,11 @@ protected:
 			AnnotationBase::Type shape,
 			const Quantity& centerx,
 			const Quantity& centery,
-			const CoordinateSystem& csys,
-			const IPosition& imShape,
 			const Quantity& widthx,
 			const Quantity& widthy,
+			const Quantity& positionAngle,
+			const CoordinateSystem& csys,
+			const IPosition& imShape,
 			const Vector<Stokes::StokesTypes>& stokes
 		);
 
@@ -177,11 +179,19 @@ private:
 		const Quantity& trcy
 	);
 
+	void _initCorners(
+		const MDirection& blc,
+		const MDirection& corner2,
+		const MDirection& trc,
+		const MDirection& corner4
+	);
+
 	void _initCenterRectCorners(
 		const Quantity& centerx,
 		const Quantity& centery,
 		const Quantity& widthx,
-		const Quantity& widthy
+		const Quantity& widthy,
+		const Quantity& positionAngle
 	);
 
 	void _doCorners(const Quantity& widthx, const Quantity widthy);

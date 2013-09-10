@@ -18,7 +18,7 @@
 #define ANNOTATIONS_ANNROTBOX_H
 
 #include <casa/aips.h>
-#include <imageanalysis/Annotations/AnnRegion.h>
+#include <imageanalysis/Annotations/AnnPolygon.h>
 
 namespace casa {
 
@@ -46,7 +46,7 @@ namespace casa {
 // </synopsis>
 
 
-class AnnRotBox: public AnnRegion {
+class AnnRotBox: public AnnPolygon {
 
 public:
 
@@ -89,37 +89,13 @@ public:
 
 	AnnRotBox& operator=(const AnnRotBox& other);
 
-	// get the four corners of the box in direction space.
-	// These will have been converted to the frame of the
-	// coordinate system if necessary. The only thing about
-	// the order of the vector that is guaranteed is that
-	// adjacent entries in the returned Vector will not be
-	// diagonally opposite corners.
-	Vector<MDirection> getCorners() const;
-
-	void worldBoundingBox(vector<Quantity>& blc, vector<Quantity>& trc) const;
-
-	// get the world coordinates of the polygon vertices
-	void worldCorners(vector<Quantity>& x, vector<Quantity>& y) const;
-
-	// get the pixel coordinates of the polygon vertices
-	void pixelCorners(vector<Double>& x, vector<Double>& y) const;
-
 	virtual ostream& print(ostream &os) const;
 
 private:
 	AnnotationBase::Direction _inputCenter;
 	Vector<Quantity> _inputWidths;
-	Vector<Quantity> _widths;
 	Quantity _positionAngle;
-	Vector<MDirection> _corners;
 
-	void _init(
-		const Quantity& xcenter, const Quantity& ycenter,
-		const Quantity& xwidth, const Quantity& ywidth
-	);
-
-	void _doCorners();
 };
 
 }
