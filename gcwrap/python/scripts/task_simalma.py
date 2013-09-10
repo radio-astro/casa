@@ -882,7 +882,25 @@ def simalma(
             msg2("Executing: "+get_taskstr('simobserve', task_param), origin="simalma", priority=v_priority,out=outv)
             if not dryrun:
                 try:
-                    simobserve(**task_param)
+                    for iant in range(tpnant):
+                        task_param['sdant'] = iant
+                        msg("Running TP simulation with sdant = %d" % task_param['sdant'], priority=v_priority )
+                        simobserve(**task_param)
+                        
+                        if tpnant == 1:
+                            mslist_tp = [msname_tp]
+                        else:
+                            # copy MSes
+                            orig_tp = fileroot + "/" + msname_tp 
+                            suffix = (".Ant%d" % iant)
+                            msg("Renaming '%s' to '%s'" % (orig_tp, orig_tp+suffix), priority=v_priority )
+                            shutil.move(orig_tp, orig_tp+suffix)
+                            mslist_tp.append(msname_tp+suffix)
+                            # noiseless MS
+                            if addnoise:
+                                orig_tp = orig_tp.replace(".noisy", "")
+                                msg("Renaming '%s' to '%s'" % (orig_tp, orig_tp+suffix), priority=v_priority )
+                                shutil.move(orig_tp, orig_tp+suffix)
                     del task_param
                 except:
                     raise Exception, simobserr
@@ -913,11 +931,13 @@ def simalma(
                 msg2(" Step %d: generating a total power image. " % step, origin="simalma", priority="warn")
                 msg2("="*60, origin="simalma", priority="warn")
 
-                if os.path.exists(fileroot+"/"+msname_tp):
-                    vis_tp = msname_tp
-                else:
-                    msg2("Total power MS '%s' is not found" \
-                        % msname_tp, origin="simalma", priority="error")
+                vis_tp = []
+                for msname_tp in mslist_tp:
+                    if os.path.exists(fileroot+"/"+msname_tp):
+                        vis_tp.append(fileroot+"/"+msname_tp)
+                    else:
+                        msg2("Total power MS '%s' is not found" \
+                             % msname_tp, origin="simalma", priority="error")
 
                 # Define imsize to cover TP map region
                 msg2("Defining image size to cover map region of total power simulation", origin="simalma", priority=v_priority)
@@ -1005,7 +1025,7 @@ def simalma(
                 # Parameters for sdimaging
                 task_param = {}
 #                 task_param['infile'] = fileroot+"/"+vis_tp
-                task_param['infiles'] = fileroot+"/"+vis_tp
+                task_param['infiles'] = vis_tp
                 task_param['gridfunction'] = 'gjinc'
                 task_param['gwidth'] = gwidth
                 task_param['jwidth'] = jwidth
@@ -1070,7 +1090,6 @@ def simalma(
                 tpskymodel=fileroot+"/"+pref_tp+".skymodel"
 
                 msg2("Analyzing TP image.", origin="simalma", priority=v_priority)
-                vis_tp = fileroot+"/"+vis_tp
 
                 task_param = {}
                 task_param['project'] = project
