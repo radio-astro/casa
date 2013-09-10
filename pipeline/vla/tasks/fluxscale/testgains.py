@@ -7,13 +7,14 @@ import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
 
+
 import itertools
 
 from pipeline.hif.tasks import gaincal
 from pipeline.hif.tasks import bandpass
 from pipeline.hif.tasks import applycal
 from pipeline.vla.heuristics import getCalFlaggedSoln, getBCalStatistics
-
+import pipeline.hif.heuristics.findrefant as findrefant
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -63,10 +64,16 @@ class Testgains(basetask.StandardTaskTemplate):
         shortsol1 = context.evla['msinfo'][m.name].shortsol1
         combtime = 'scan'
 
+        refantfield = context.evla['msinfo'][m.name].calibrator_field_select_string
+        refantobj = findrefant.RefAntHeuristics(vis='calibrators.ms',field=refantfield,geometry=True,flagging=True, intent='', spw='')
         
+        RefAntOutput=refantobj.calculate()
+        
+        refAnt=str(RefAntOutput[0])+','+str(RefAntOutput[1])+','+str(RefAntOutput[2])+','+str(RefAntOutput[3])
+
 
         bpdgain_touse = tablebase + table_suffix[0]
-        testgains_result = self._do_gtype_testgains('calibrators.ms', 'testgaincal.g', solint=solint, context=context, combtime=combtime)
+        testgains_result = self._do_gtype_testgains('calibrators.ms', 'testgaincal.g', solint=solint, context=context, combtime=combtime, refAnt=refAnt)
 
         flaggedSolnResult1 = getCalFlaggedSoln('testgaincal.g')
         LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult1['all']['fraction']))
@@ -84,7 +91,7 @@ class Testgains(basetask.StandardTaskTemplate):
             soltime = soltimes[1]
             solint = solints[1]
 
-            testgains_result = self._do_gtype_testgains('calibrators.ms', 'testgaincal3.g', solint=solint, context=context, combtime=combtime)
+            testgains_result = self._do_gtype_testgains('calibrators.ms', 'testgaincal3.g', solint=solint, context=context, combtime=combtime, refAnt=refAnt)
             flaggedSolnResult3 = getCalFlaggedSoln('testgaincal3.g')
             
             LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult3['all']['fraction']))
@@ -103,7 +110,7 @@ class Testgains(basetask.StandardTaskTemplate):
                     soltime = soltimes[2]
                     solint = solints[2]
 
-                    testgains_result = self._do_gtype_testgains('calibrators.ms', 'testgaincal10.g', solint=solint, context=context, combtime=combtime)
+                    testgains_result = self._do_gtype_testgains('calibrators.ms', 'testgaincal10.g', solint=solint, context=context, combtime=combtime, refAnt=refAnt)
                     flaggedSolnResult10 = getCalFlaggedSoln(tablebase + table_suffix[2])
                     LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult3['all']['fraction']))
                     LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult3['antmedian']['fraction']))
@@ -120,7 +127,7 @@ class Testgains(basetask.StandardTaskTemplate):
                         if (fracFlaggedSolns10 > 0.05):
                             solint='inf'
                             combtime=''
-                            testgains_result = self._do_gtype_testgains('calibrators.ms', 'testgaincalscan.g', solint=solint, context=context, combtime=combtime)
+                            testgains_result = self._do_gtype_testgains('calibrators.ms', 'testgaincalscan.g', solint=solint, context=context, combtime=combtime, refAnt=refAnt)
                             flaggedSolnResultScan = getCalFlaggedSoln('testgaincalscan.g')
                             LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult3['all']['fraction']))
                             LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult3['antmedian']['fraction']))
@@ -148,31 +155,9 @@ class Testgains(basetask.StandardTaskTemplate):
 
     def analyse(self, results):
 	return results
-    
- 
 
-    def _check_flagSolns(self, flaggedSolnResult):
-        
-        if (flaggedSolnResult['all']['total'] > 0):
-            fracFlaggedSolns=flaggedSolnResult['antmedian']['fraction']
-        else:
-            fracFlaggedSolns=1.0
 
-        refant_csvstring = self.inputs.context.observing_run.measurement_sets[0].reference_antenna
-        refantlist = [x for x in refant_csvstring.split(',')]
-
-        m = self.inputs.context.observing_run.measurement_sets[0]
-        critfrac = self.inputs.context.evla['msinfo'][m.name].critfrac
-
-        if (fracFlaggedSolns > critfrac):
-            refantlist.pop(0)
-            self.inputs.context.observing_run.measurement_sets[0].reference_antenna = ','.join(refantlist)
-            LOG.info("Not enough good solutions, trying a different reference antenna.")
-            LOG.info("The pipeline will use antenna "+refantlist[0]+" as the reference.")
-
-        return fracFlaggedSolns
-
-    def _do_gtype_testgains(self, calMs, caltable, solint='int', context=None, combtime='scan'):
+    def _do_gtype_testgains(self, calMs, caltable, solint='int', context=None, combtime='scan', refAnt=None):
 
         m = context.observing_run.measurement_sets[0]
 
@@ -180,8 +165,8 @@ class Testgains(basetask.StandardTaskTemplate):
         minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
 
         #Do this to get the reference antenna string
-        temp_inputs = gaincal.GTypeGaincal.Inputs(context)
-        refant = temp_inputs.refant.lower()
+        #temp_inputs = gaincal.GTypeGaincal.Inputs(context)
+        #refant = temp_inputs.refant.lower()
 
         task_args = {'vis'          : calMs,
                      'caltable'     : caltable,
@@ -193,7 +178,7 @@ class Testgains(basetask.StandardTaskTemplate):
                      'solint'       : solint,
                      'combine'      : combtime,
                      'preavg'       : -1.0,
-                     'refant'       : refant,
+                     'refant'       : refAnt.lower(),
                      'minblperant'  : minBL_for_cal,
                      'minsnr'       : 5.0,
                      'solnorm'      : False,

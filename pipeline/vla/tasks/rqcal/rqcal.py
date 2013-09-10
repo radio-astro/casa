@@ -100,7 +100,7 @@ class Rqcal(basetask.StandardTaskTemplate):
 
             callist = []
             calto = callibrary.CalTo(vis=inputs.vis)
-            calfrom = callibrary.CalFrom(gencal_args['caltable'], caltype='rq')
+            calfrom = callibrary.CalFrom(gencal_args['caltable'], caltype='rq', interp='', calwt=False)
             calapp = callibrary.CalApplication(calto, calfrom)
             callist.append(calapp)
 

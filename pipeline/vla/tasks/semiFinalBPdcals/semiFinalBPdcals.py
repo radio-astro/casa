@@ -13,7 +13,7 @@ from pipeline.hif.tasks import gaincal
 from pipeline.hif.tasks import bandpass
 from pipeline.hif.tasks import applycal
 from pipeline.vla.heuristics import getCalFlaggedSoln, getBCalStatistics
-
+import pipeline.hif.heuristics.findrefant as findrefant
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -50,10 +50,13 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         solint = solints[0]
         
         context = self.inputs.context
+        refantfield = context.evla['msinfo'][m.name].calibrator_field_select_string
+        refantobj = findrefant.RefAntHeuristics(vis=self.inputs.vis,field=refantfield,geometry=True,flagging=True, intent='', spw='')
+        
+        RefAntOutput=refantobj.calculate()
         
         
-        
-        gtype_delaycal_result = self._do_gtype_delaycal(caltable=gtypecaltable, context=context)
+        gtype_delaycal_result = self._do_gtype_delaycal(caltable=gtypecaltable, context=context, RefAntOutput=RefAntOutput)
         
         
 
@@ -68,12 +71,12 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
             context = self.inputs.context
             
             calto = callibrary.CalTo(self.inputs.vis)
-            calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='linear,linear', calwt=True)
+            calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='', calwt=False)
             context.callibrary._remove(calto, calfrom, context.callibrary._active)
                 
-            ktype_delaycal_result = self._do_ktype_delaycal(caltable=ktypecaltable, addcaltable=gtypecaltable, context=context)
+            ktype_delaycal_result = self._do_ktype_delaycal(caltable=ktypecaltable, addcaltable=gtypecaltable, context=context, RefAntOutput=RefAntOutput)
             flaggedSolnResult = getCalFlaggedSoln(ktype_delaycal_result.__dict__['inputs']['caltable'])
-            fracFlaggedSolns = self._check_flagSolns(flaggedSolnResult)
+            fracFlaggedSolns = self._check_flagSolns(flaggedSolnResult, RefAntOutput)
             
             LOG.info("Fraction of flagged solutions = "+str(flaggedSolnResult['all']['fraction']))
             LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult['antmedian']['fraction']))
@@ -81,7 +84,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
 
             try:
                 calto = callibrary.CalTo(self.inputs.vis)
-                calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='linear,linear', calwt=True)
+                calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
                 context.callibrary._remove(calto, calfrom, context.callibrary._active)
             except:
                 LOG.info(ktypecaltable + " does not exist in the context callibrary, and does not need to be removed.")
@@ -89,22 +92,22 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         LOG.info("Delay calibration complete")
 
         calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='linear,linear', calwt=True)
+        calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='', calwt=False)
         context.callibrary._remove(calto, calfrom, context.callibrary._active)
         
         context = self.inputs.context
 
         # Do initial gaincal on BP calibrator then semi-final BP calibration
         gain_solint1 = context.evla['msinfo'][m.name].gain_solint1
-        gtype_gaincal_result = self._do_gtype_bpdgains(tablebase + table_suffix[0], addcaltable=ktypecaltable, solint=gain_solint1, context=context)
+        gtype_gaincal_result = self._do_gtype_bpdgains(tablebase + table_suffix[0], addcaltable=ktypecaltable, solint=gain_solint1, context=context, RefAntOutput=RefAntOutput)
         
         #Remove temporary caltables
         calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[0], interp='linear,linear', calwt=True)
+        calfrom = callibrary.CalFrom(gaintable=tablebase + table_suffix[0], interp='', calwt=False)
         context.callibrary._remove(calto, calfrom, context.callibrary._active)
         
         calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='linear,linear', calwt=True)
+        calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
         context.callibrary._remove(calto, calfrom, context.callibrary._active)
         
         context = self.inputs.context
@@ -112,27 +115,27 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         
         #Add appropriate temporary tables to the callibrary
         calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='linear,linear', calwt=True)
+        calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
         context.callibrary.add(calto, calfrom)
         
         calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=bpdgain_touse, interp='linear,linear', calwt=True)
+        calfrom = callibrary.CalFrom(gaintable=bpdgain_touse, interp='', calwt=False)
         context.callibrary.add(calto, calfrom)
 
-        bandpass_result = self._do_bandpass(bpcaltable, context=context)
+        bandpass_result = self._do_bandpass(bpcaltable, context=context, RefAntOutput=RefAntOutput)
         
         calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=bpdgain_touse, interp='linear,linear', calwt=True)
+        calfrom = callibrary.CalFrom(gaintable=bpdgain_touse, interp='', calwt=False)
         context.callibrary._remove(calto, calfrom, context.callibrary._active)
 
         #context = self.inputs.context
         
         #calto = callibrary.CalTo(self.inputs.vis)
-        #calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='linear,linear', calwt=True)
+        #calfrom = callibrary.CalFrom(gaintable=ktypecaltable, interp='', calwt=False)
         #context.callibrary.add(calto, calfrom)
         
         #calto = callibrary.CalTo(self.inputs.vis)
-        #calfrom = callibrary.CalFrom(gaintable=bpcaltable, interp='linear,linear', calwt=True)
+        #calfrom = callibrary.CalFrom(gaintable=bpcaltable, interp='', calwt=False)
         #context.callibrary.add(calto, calfrom)
 
         applycal_result = self._do_applycal(context=context)
@@ -142,7 +145,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
     def analyse(self, results):
 	return results
     
-    def _do_gtype_delaycal(self, caltable=None, context=None):
+    def _do_gtype_delaycal(self, caltable=None, context=None, RefAntOutput=None):
         
         m = context.observing_run.measurement_sets[0]
         delay_field_select_string = context.evla['msinfo'][m.name].delay_field_select_string
@@ -160,6 +163,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
             solint   = 'int',
             calmode  = 'p',
             minsnr   = 3.0,
+            refant   = RefAntOutput[0].lower(),
             scan = delay_scan_select_string,
             minblperant = minBL_for_cal,
             solnorm = False,
@@ -173,7 +177,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
 
         return self._executor.execute(delaycal_task)
     
-    def _do_ktype_delaycal(self, caltable=None, addcaltable=None, context=None):
+    def _do_ktype_delaycal(self, caltable=None, addcaltable=None, context=None, RefAntOutput=None):
         
         m = context.observing_run.measurement_sets[0]
         delay_field_select_string = context.evla['msinfo'][m.name].delay_field_select_string
@@ -183,7 +187,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
 
         #Add appropriate temporary tables to the callibrary
         calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='linear,linear', calwt=True)
+        calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False)
         context.callibrary.add(calto, calfrom)
 
         #need to add scan?
@@ -196,6 +200,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
             solint   = 'inf',
             calmode  = 'p',
             minsnr   = 3.0,
+            refant   = RefAntOutput[0].lower(),
             scan     = delay_scan_select_string,
             minblperant = minBL_for_cal,
             solnorm = False, 
@@ -208,28 +213,28 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
 
         return self._executor.execute(delaycal_task)
     
-    def _check_flagSolns(self, flaggedSolnResult):
+    def _check_flagSolns(self, flaggedSolnResult, RefAntOutput):
         
         if (flaggedSolnResult['all']['total'] > 0):
             fracFlaggedSolns=flaggedSolnResult['antmedian']['fraction']
         else:
             fracFlaggedSolns=1.0
 
-        refant_csvstring = self.inputs.context.observing_run.measurement_sets[0].reference_antenna
-        refantlist = [x for x in refant_csvstring.split(',')]
+        #refant_csvstring = self.inputs.context.observing_run.measurement_sets[0].reference_antenna
+        #refantlist = [x for x in refant_csvstring.split(',')]
 
         m = self.inputs.context.observing_run.measurement_sets[0]
         critfrac = self.inputs.context.evla['msinfo'][m.name].critfrac
 
         if (fracFlaggedSolns > critfrac):
-            refantlist.pop(0)
-            self.inputs.context.observing_run.measurement_sets[0].reference_antenna = ','.join(refantlist)
+            RefAntOutput.pop(0)
+            self.inputs.context.observing_run.measurement_sets[0].reference_antenna = ','.join(RefAntOutput)
             LOG.info("Not enough good solutions, trying a different reference antenna.")
-            LOG.info("The pipeline will use antenna "+refantlist[0]+" as the reference.")
+            LOG.info("The pipeline will use antenna "+RefAntOutput[0]+" as the reference.")
 
         return fracFlaggedSolns
     
-    def _do_gtype_bpdgains(self, caltable, addcaltable=None, solint='int', context=None):
+    def _do_gtype_bpdgains(self, caltable, addcaltable=None, solint='int', context=None, RefAntOutput=None):
 
         m = context.observing_run.measurement_sets[0]
         delay_field_select_string = context.evla['msinfo'][m.name].delay_field_select_string
@@ -241,7 +246,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         
         #Add appropriate temporary tables to the callibrary
         calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='linear,linear', calwt=True)
+        calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False)
         context.callibrary.add(calto, calfrom)
         
         #need to add scan?
@@ -254,6 +259,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
             solint   = solint,
             calmode  = 'p',
             minsnr   = 3.0,
+            refant   = RefAntOutput[0].lower(),
             minblperant = minBL_for_cal,
             solnorm = False,
             combine = 'scan',
@@ -266,7 +272,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
 
         return self._executor.execute(bpdgains_task)
     
-    def _do_bandpass(self, caltable, context=None):
+    def _do_bandpass(self, caltable, context=None, RefAntOutput=None):
         """Run CASA task bandpass"""
 
         m = context.observing_run.measurement_sets[0]
@@ -283,6 +289,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
             intent = '',
             solint = 'inf',
             combine = 'scan',
+            refant   = RefAntOutput[0].lower(),
             scan = bandpass_scan_select_string,
             minblperant = minBL_for_cal,
             minsnr = 5.0,

@@ -21,7 +21,7 @@ from pipeline.hif.tasks import applycal
 from pipeline.vla.heuristics import getCalFlaggedSoln, getBCalStatistics
 from pipeline.vla.tasks.setmodel.setmodel import find_standards, standard_sources
 from . import setjy
-
+import pipeline.hif.heuristics.findrefant as findrefant
 
 from pipeline.vla.tasks.vlautils import VLAUtils
 
@@ -106,11 +106,19 @@ class Fluxgains(basetask.StandardTaskTemplate):
         LOG.info("Making gain tables for flux density bootstrapping")
         LOG.info("Short solint = " + new_gain_solint1)
         LOG.info("Long solint = " + gain_solint2)
-                        
-       
-        gaincal_result = self._do_gaincal(context, calMs, 'fluxphaseshortgaincal.g', 'p', [''], solint=new_gain_solint1, minsnr=3.0)
         
-        gaincal_result = self._do_gaincal(context, calMs, 'fluxgaincal.g', 'ap', ['fluxphaseshortgaincal.g'], solint=gain_solint2, minsnr=5.0)
+        refantfield = context.evla['msinfo'][m.name].calibrator_field_select_string
+        refantobj = findrefant.RefAntHeuristics(vis='calibrators.ms',field=refantfield,geometry=True,flagging=True, intent='', spw='')
+        
+        RefAntOutput=refantobj.calculate()
+        
+        refAnt=str(RefAntOutput[0])+','+str(RefAntOutput[1])+','+str(RefAntOutput[2])+','+str(RefAntOutput[3])
+                        
+        LOG.info("The pipeline will use antenna(s) "+refAnt+" as the reference")
+       
+        gaincal_result = self._do_gaincal(context, calMs, 'fluxphaseshortgaincal.g', 'p', [''], solint=new_gain_solint1, minsnr=3.0, refAnt=refAnt)
+        
+        gaincal_result = self._do_gaincal(context, calMs, 'fluxgaincal.g', 'ap', ['fluxphaseshortgaincal.g'], solint=gain_solint2, minsnr=5.0, refAnt=refAnt)
         
         LOG.info("Gain table fluxgaincal.g is ready for flagging")
         
@@ -138,14 +146,14 @@ class Fluxgains(basetask.StandardTaskTemplate):
         return self._executor.execute(job)
     
     
-    def _do_gaincal(self, context, calMs, caltable, calmode, gaintablelist, solint='int', minsnr=3.0):
+    def _do_gaincal(self, context, calMs, caltable, calmode, gaintablelist, solint='int', minsnr=3.0, refAnt=None):
         
         m = context.observing_run.measurement_sets[0]
         minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
         
         #Do this to get the reference antenna string
-        temp_inputs = gaincal.GTypeGaincal.Inputs(context)
-        refant = temp_inputs.refant.lower()
+        #temp_inputs = gaincal.GTypeGaincal.Inputs(context)
+        #refant = temp_inputs.refant.lower()
         
         task_args = {'vis'            : calMs,
                      'caltable'       : caltable,
@@ -156,7 +164,7 @@ class Fluxgains(basetask.StandardTaskTemplate):
                      'solint'         : solint,
                      'combine'        : 'scan',
                      'preavg'         : -1.0,
-                     'refant'         : refant,
+                     'refant'         : refAnt.lower(),
                      'minblperant'    : minBL_for_cal,
                      'minsnr'         : minsnr,
                      'solnorm'        : False,

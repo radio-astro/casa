@@ -133,7 +133,7 @@ class Opcal(basetask.StandardTaskTemplate):
 
         callist = []
         calto = callibrary.CalTo(vis=inputs.vis)
-        calfrom = callibrary.CalFrom(gencal_args['caltable'], caltype='opac')
+        calfrom = callibrary.CalFrom(gencal_args['caltable'], caltype='opac', interp='', calwt=False)
         calapp = callibrary.CalApplication(calto, calfrom)
         callist.append(calapp)
 

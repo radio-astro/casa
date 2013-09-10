@@ -102,7 +102,7 @@ class Swpowcal(basetask.StandardTaskTemplate):
 
             callist = []
             calto = callibrary.CalTo(vis=inputs.vis)
-            calfrom = callibrary.CalFrom(gencal_args['caltable'], caltype='swpow')
+            calfrom = callibrary.CalFrom(gencal_args['caltable'], caltype='swpow', interp='', calwt=False)
             calapp = callibrary.CalApplication(calto, calfrom)
             callist.append(calapp)
 
