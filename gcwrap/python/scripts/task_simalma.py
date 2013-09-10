@@ -879,34 +879,37 @@ def simalma(
                 outv=['f']
             else:
                 outv=['l','t','f']
-            msg2("Executing: "+get_taskstr('simobserve', task_param), origin="simalma", priority=v_priority,out=outv)
-            if not dryrun:
-                try:
-                    for iant in range(tpnant):
-                        task_param['sdant'] = iant
-                        msg("Running TP simulation with sdant = %d" % task_param['sdant'], priority=v_priority )
+            msg("Simulating %d TP antennas", priority=v_priority)
+            for iant in range(tpnant):
+                task_param['sdant'] = iant
+                msg2("Running TP simulation with sdant = %d" % task_param['sdant'], priority=v_priority,out=outv)
+                msg2("Executing: "+get_taskstr('simobserve', task_param), origin="simalma", priority=v_priority,out=outv)
+                if not dryrun:
+                    try:
                         simobserve(**task_param)
-                        
-                        if tpnant == 1:
-                            mslist_tp = [msname_tp]
-                        else:
-                            # copy MSes
-                            orig_tp = fileroot + "/" + msname_tp 
-                            suffix = (".Ant%d" % iant)
-                            msg("Renaming '%s' to '%s'" % (orig_tp, orig_tp+suffix), priority=v_priority )
+                    except:
+                        raise Exception, simobserr
+                    finally:
+                        casalog.origin('simalma')
+                if tpnant == 1:
+                    mslist_tp = [msname_tp]
+                else:
+                    # copy MSes
+                    orig_tp = fileroot + "/" + msname_tp 
+                    suffix = (".Ant%d" % iant)
+                    msg2("Renaming '%s' to '%s'" % (orig_tp, orig_tp+suffix), priority=v_priority,out=outv)
+                    if not dryrun:
+                        shutil.move(orig_tp, orig_tp+suffix)
+
+                    mslist_tp.append(msname_tp+suffix)
+                    # noiseless MS
+                    if addnoise:
+                        orig_tp = orig_tp.replace(".noisy", "")
+                        msg2("Renaming '%s' to '%s'" % (orig_tp, orig_tp+suffix), priority=v_priority,out=outv)
+                        if not dryrun:
                             shutil.move(orig_tp, orig_tp+suffix)
-                            mslist_tp.append(msname_tp+suffix)
-                            # noiseless MS
-                            if addnoise:
-                                orig_tp = orig_tp.replace(".noisy", "")
-                                msg("Renaming '%s' to '%s'" % (orig_tp, orig_tp+suffix), priority=v_priority )
-                                shutil.move(orig_tp, orig_tp+suffix)
-                    del task_param
-                except:
-                    raise Exception, simobserr
-                finally:
-                    casalog.origin('simalma')
-            
+
+            del task_param
 
 
 
