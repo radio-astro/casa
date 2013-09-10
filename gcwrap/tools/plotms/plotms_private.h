@@ -99,3 +99,4 @@ void setFlagging_(const PlotMSFlagging& flagging);
 // Bool that turns on iteration
 bool doIter_;
 bool scriptClient;
+bool asyncCall;
