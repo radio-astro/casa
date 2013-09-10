@@ -1,5 +1,5 @@
-//# version.h: Get casacore version
-//# Copyright (C) 2008
+//# Copyright (C) 2010 by ESO (in the framework of the ALMA collaboration)
+//# Copyright (C) 1995,1996,1997,1998,1999,2000,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,27 +23,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: version.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Combinatorics.cc 21100 2011-06-28 12:49:00Z gervandiepen $
+//   
 
-#ifndef CASA_VERSION_H
-#define CASA_VERSION_H
+#include <scimath/Mathematics/Geometry.h>
 
-#include <string>
+#include <utility>
 
-#define CASACORE_VERSION "1.0.215"
+namespace casa {
 
-namespace casa { //# NAMESPACE CASA - BEGIN
-
-  // Get the casacore version.
-  const std::string getVersion();
-
-  // Get the version of casacore on CASA's vendor branch
-  // Note: CASA's private version of casacore has a lifecycle
-  // which is not necessarily identical to versions of casacore
-  // elsewhere. This function returns the version of casacore
-  // on CASA's vendor branch.
-  const std::string getVersionCASA();
+	std::pair<Double, Double> Geometry::rotate2D(
+		Double x, Double y, const Quantity& theta
+	) {
+		Double thetaRad = theta.getValue("rad");
+		Double c, s;
+		sincos(thetaRad, &s, &c);
+		return std::make_pair(x*c - y*s, x*s + y*c);
+	}
 
 } //# NAMESPACE CASA - END
 
-#endif
