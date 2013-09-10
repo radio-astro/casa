@@ -7,6 +7,7 @@ tConvolver
 tInterpolateArray1D
 tFFTServer
 tFFTServer2
+tGeometry
 tHistAcc
 tMathFunc
 tMatrixMathLA
