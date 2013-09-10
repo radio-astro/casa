@@ -374,8 +374,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual Bool verifyShapes(IPosition shape0, IPosition shape1);
 
     inline virtual Float pbFunc(const Float& a, const Float& limit) 
-    //    {Float tt=sqrt(a);return  (abs(tt) >= limit)?tt:1.0;};
-    {if (abs(a) >= limit) return (a);else return 1.0;};
+    {Float tt=sqrt(a);return  (abs(tt) >= limit)?tt:1.0;};
+    // {if (abs(a) >= limit) return (a);else return 1.0;};
+
     inline virtual Complex pbFunc(const Complex& a, const Float& limit) 
     {if (abs(a)>=limit) return (a); else return Complex(1.0,0.0);};
 

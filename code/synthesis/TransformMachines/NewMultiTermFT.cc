@@ -106,7 +106,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	setConjBeams(((AWProjectWBFT*)subftm)->getConjBeams());
 
 	pblimit_p = ((AWProjectWBFT*)subftm)->getPBLimit();
-	cout << "dowideband : " << doWideBandPBCorrection_p << " conjbeams : " << useConjBeams_p << endl;
+	cout << "dowidebandpbcor : " << doWideBandPBCorrection_p << " conjbeams : " << useConjBeams_p << endl;
       }
     
     if(dbg_p) cout << "Running MTFT with doWideBandPBCorrection : " << doWideBandPBCorrection_p 
@@ -320,7 +320,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     
     /////////////////////////////   
-    normAvgPBs(weightImageVec);
+    //UU     normAvgPBs(weightImageVec);
 
     // Pre-prediction correction of the model, to rid it of the Primary Beam.
     if(PSOURCE) cout << "Divide the models by the PB before prediction" << endl;
@@ -331,11 +331,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if (doWideBandPBCorrection_p)
 	  for(uInt taylor=0;taylor<nterms_p;taylor++)
 	    {
+	      // Divide by PB
 	      normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)1);// normtype 1 divides by weightImageVec and ignores wegithsVec
+	      // Divide by sqrt(PB)
+	      //normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)4);
 	    }
       }
     else 
       {
+	cout << "NewMultiTermFT::inittoVis --> Prediction normalization of model will be wrong....... " << endl;
 	// The model contains avgPB scaling and twice the frequency-dependence of the PB in it. 
 	// Multiply all terms of the model by pbcoeffs_0. Divide TWICE by the wideband PB.
 	for(uInt taylor=0;taylor<nterms_p;taylor++)
@@ -381,7 +385,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	for(uInt taylor=0;taylor<nterms_p;taylor++)
 	  {
+	    //Mulitply by PB
 	    normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)3); // normtype 3 multiplies the model image with the pb
+	    //Mulitply by sqrt(PB)
+	    //normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)5); 
 	    
 	  }
       }
@@ -543,7 +550,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }// end for taylor
 
     //Normalize the weight images by the peak of the zero'th order weightImage.
-    normAvgPBs(weightImageVec);
+    //UU    normAvgPBs(weightImageVec);
 
     // Norm by sumwt for PSFs and Residuals.
     for(uInt taylor=0;taylor<gridnterms;taylor++)
