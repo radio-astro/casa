@@ -135,13 +135,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			dData.notifyUnregister(*this, ignoreRefresh);
 		}
 
-		//If there is nothing to display, and no master image has been
-		//designated, tell the canvas there is no CS master.
-		if ( itsDisplayList.size() == 0 && controllingDD == NULL){
+		//If (there is nothing to display, and no master image has been
+		//designated) OR (the one that is going away is the CSMaster),
+		//tell the canvas there is no CS master.
+		if ( ( itsDisplayList.size() == 0 && controllingDD == NULL ) ||
+				controllingDD == &dData ){
 			worldCanvas()->csMaster() = NULL;
 		}
 
-		if(csMaster()==0) executeSizeControl(worldCanvas());
+		if(csMaster()==0){
+			executeSizeControl(worldCanvas());
+		}
 		// If any remaining DD can assume CS master role, let it set up
 		// WC state immediately, since there is no master at present.
 		worldCanvas()->release();
@@ -343,8 +347,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		worldCanvas()->csMaster() = 0;
 
-		String xAxis = "xaxiscode (required match)",
-					       yAxis = "yaxiscode (required match)";
+		String xAxis = "xaxiscode (required match)";
+		String yAxis = "yaxiscode (required match)";
 		wCanvas->removeAttribute(xAxis);
 		wCanvas->removeAttribute(yAxis);
 
