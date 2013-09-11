@@ -52,6 +52,9 @@ class WvrgcalResult(basetask.Results):
 
         # Format the Wvrgcal results.
         s = 'WvrgcalResult:\n'
+        if not self.final:
+            s += '\tNo wvr caltables will be applied\n'
+
         for calapplication in self.final:
             s += '\tBest caltable for spw #{spw} field {field} in {vis} is {name}\n'.format(
               spw=calapplication.spw, field=calapplication.field,
