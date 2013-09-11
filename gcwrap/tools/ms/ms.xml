@@ -797,14 +797,19 @@ the ms definition itself. -->
        <description>(optional) time for ephemeris access (in seconds, as in Main table TIME column)</description>
        <value>0</value>
        </param>
-
+    <param type="string" name="format">
+        <description>Output format. Either "measure" (measure dictionary) or "string" (sexigesimal representation). Minimum match supported.</description>
+        <value>measure</value>
+       </param>
   </input>
-  <returns type="record">
+  <returns type="any">
   <shortdescription>direction measure</shortdescription>
+  <any type="variant"/>
   </returns>
   <description>
     This function returns the direction measures from the
-    given direction column of the MS FIELD table as a measure dictionary.
+    given direction column of the MS FIELD table as a either a measure dictionary
+    or sexigesimal string representation.
   </description>
   <example>
     

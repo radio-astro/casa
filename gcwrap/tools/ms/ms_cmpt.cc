@@ -716,10 +716,13 @@ ms::getspectralwindowinfo()
   return spwSummary;
 }
 
-::casac::record*
-ms::getfielddirmeas(const std::string& dircolname, int fieldid, double time)
+variant*
+ms::getfielddirmeas(
+	const std::string& dircolname, int fieldid,
+	double time, const string& format
+)
 {
-  ::casac::record *retval = 0;
+ variant *retval = 0;
   try{
     if(!detached()){
        *itsLog << LogOrigin("ms", "getfielddirmeas");
@@ -743,12 +746,16 @@ ms::getfielddirmeas(const std::string& dircolname, int fieldid, double time)
 		<< "Illegal FIELD direction column name: " << dircolname
 		<< LogIO::POST;
       }
-      
+      String f(format);
+      f.downcase();
+      if (f.startsWith("s")) {
+    	  return new variant(d.toString());
+      }
       MeasureHolder out(d);
       
       Record outRec;
       if (out.toRecord(error, outRec)) {
-	retval = fromRecord(outRec);
+	retval = new variant(fromRecord(outRec));
       } else {
 	error += String("Failed to generate direction return value.\n");
 	*itsLog << LogIO::SEVERE << error << LogIO::POST;
