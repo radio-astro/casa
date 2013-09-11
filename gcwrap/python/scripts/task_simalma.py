@@ -1183,10 +1183,10 @@ def simalma(
                 pref=get_data_prefix(antennalist[i], project)
                 if addnoise:
                     msname = pref+".noisy.ms"
-                    #imagename_int=pref+".noisy.ms"
+                    imagename_int=pref+".noisy.image"
                 else:
                     msname= pref+".ms"
-                    #imagename_int=pref+".ms"
+                    imagename_int=pref+".image"
                     
                 if os.path.exists(fileroot+"/"+msname):
                     vis_int = msname
