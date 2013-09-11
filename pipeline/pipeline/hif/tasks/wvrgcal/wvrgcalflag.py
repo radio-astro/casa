@@ -23,8 +23,8 @@ class WvrgcalflagInputs(basetask.StandardInputs):
       hm_tie=None, tie=None, sourceflag=None, nsol=None,
       disperse=None, wvrflag=None, hm_smooth=None, smooth=None,
       scale=None, maxdistm=None, minnumants=None, flag_intent=None,
-      qa2_intent=None, qa2_bandpass_intent=None, flag_hi=None, fhi_limit=None,
-      fhi_minsample=None):
+      qa2_intent=None, qa2_bandpass_intent=None, accept_threshold=None,
+      flag_hi=None, fhi_limit=None, fhi_minsample=None):
 	self._init_properties(vars())
 
     @property
@@ -215,6 +215,16 @@ class WvrgcalflagInputs(basetask.StandardInputs):
     def qa2_bandpass_intent(self, value):
         self._qa2_bandpass_intent = value
 
+    @property
+    def accept_threshold(self):
+        if self._accept_threshold is None:
+            return 1.0
+        return self._accept_threshold
+
+    @accept_threshold.setter
+    def accept_threshold(self, value):
+        self._accept_threshold = value
+
     # flag high outlier
     @property
     def flag_hi(self):
@@ -305,6 +315,18 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
         return result
 
     def analyse(self, result):
+        inputs = self.inputs
+
+        # the result should now contain a wvrg file that has been
+        # 'flagged' as necessary. If the associated qa2 score indicates 
+        # that applying it will make things worse then remove the file from
+        # the result so that it cannot be accepted into the context.
+        if result.qa2.overall_score < inputs.accept_threshold:
+            LOG.warning(
+              'wvrgcal file has qa2 score (%s) below accept_threshold (%s) and will not be applied' %
+              (result.qa2.overall_score, inputs.accept_threshold))
+            result.final = []
+
         return result
 
 
@@ -335,7 +357,8 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
         inputs = self.inputs
         jobs = []
 
-        # calculate the wvrgcal
+        # calculate the wvrgcal with low value for accept_threshold to
+        # ensure that the wvrgcal is always accepted into the context.
         wvrgcalinputs = wvrgcal.Wvrgcal.Inputs(context=inputs.context,
           output_dir=inputs.output_dir, vis=inputs.vis,
           hm_toffset=inputs.hm_toffset, toffset=inputs.toffset,
@@ -346,6 +369,7 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
           maxdistm=inputs.maxdistm, minnumants=inputs.minnumants,
           qa2_intent=inputs.qa2_intent,
           qa2_bandpass_intent=inputs.qa2_bandpass_intent,
+          accept_threshold=0.0,
           bandpass_result=self.result.bandpass_result,
           nowvr_result=self.result.nowvr_result)
         wvrgcaltask = wvrgcal.Wvrgcal(wvrgcalinputs)
@@ -359,31 +383,29 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
     def analyse(self, result):
         inputs = self.inputs
 
-        # if there is a valid wvrgcal result
-        if result.final:
-            # copy the views for the flag_intent from the QA2 section of the
-            # wvrgcal result
-            ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
-            fields = ms.fields
-            intent_list = self.inputs.flag_intent.split(',')
-            intent_fields = set()
-            for intent in intent_list:
-                re_intent = intent.replace('*', '.*')
-                intent_fields.update(
-                  [(fld.name,fld.id) for fld in fields if
-                  re.search(pattern=re_intent, string=str(fld.intents))])
-            intent_fields = list(intent_fields)
+        # copy the views for the flag_intent from the QA2 section of the
+        # wvrgcal result
+        ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
+        fields = ms.fields
+        intent_list = self.inputs.flag_intent.split(',')
+        intent_fields = set()
+        for intent in intent_list:
+            re_intent = intent.replace('*', '.*')
+            intent_fields.update(
+              [(fld.name,fld.id) for fld in fields if
+              re.search(pattern=re_intent, string=str(fld.intents))])
+        intent_fields = list(intent_fields)
 
-            for description in result.qa2.descriptions():
-                add = False
-                for intent_field in intent_fields:
-                    if ('Field:%s' % intent_field[0] in description) and \
-                      ('ID:%s' % intent_field[1] in description):
-                        add = True
-                        break
+        for description in result.qa2.descriptions():
+            add = False
+            for intent_field in intent_fields:
+                if ('Field:%s' % intent_field[0] in description) and \
+                  ('ID:%s' % intent_field[1] in description):
+                    add = True
+                    break
                 
-                if add:
-                    self.result.addview(description, result.qa2.last(description))
+            if add:
+                self.result.addview(description, result.qa2.last(description))
  
         # populate other parts of result
         self.result.pool[:] = result.pool[:]
