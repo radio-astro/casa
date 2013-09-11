@@ -1242,85 +1242,96 @@ myim.done()
 </method>
 
 <method type="function" name="collapse">
-    <shortdescription>Collapse image along specified axis, computing aggregate function of pixels along that axis.</shortdescription>
+    <shortdescription>Collapse an image along a specified axis, computing a specified aggregate function of pixels along that axis.</shortdescription>
     <input>
         <param type="string"  name="function">
-            <description>Aggregate function to apply: max, mean, median, min, rms, stdev, sum, variance.</description>
+            <description>Aggregate function to apply. This can be set to any of the following: max, mean, median, min, rms, stdev, sum, variance. User specification is required. Default value is unset.</description>
             <value></value>
         </param>
         <param type="any"  name="axes">
             <any type="variant"/>
-            <description>Zero-based axis number along which to collapse image.</description>
+            <description>Zero-based (0, 1, 2, …) axis number (specified as a list or integer) along which to collapse the specified image. Default value is 0. </description>
             <value>0</value>
         </param>
         <param type="string"  name="outfile">
-            <description>Output image file name. If blank, no image is written but a new image tool referencing the collapsed image is returned.</description>
+            <description>Output image file name. If left blank (the default), no image is written but a new image tool referencing the collapsed image is returned.</description>
             <value></value>
         </param>
         <param type="any" direction="in" name="region">
             <any type="variant" limittypes="string record"/>
-            <description>Region specification. See help par.region. Default is to use the full image.</description>
+            <description>Region specification. See help par.region for more details. Default setting is to use the full image.</description>
             <value type="string"></value>
         </param>
         <param type="string"  name="box">
-            <description>Box to use in position plane specified by four numbers "blcx, blcy, trcx, trcy"</description>
+            <description>Box to use in position plane specified by four numbers "blcx, blcy, trcx, trcy" ("bottom/top left/right corner x/y")</description>
             <value></value>
         </param>
         <param type="string"  name="chans">
-            <description>Channels to use. See "help par.chans" for examples. Channels must be contiguous. Default is to use all channels.</description>
+            <description>Channels to use. See help par.chans for more details. Channels specified must be contiguous. Default setting is to use all channels.</description>
             <value></value>
         </param>
         <param type="string"  name="stokes">
-            <description>Stokes planes to use. Planes must be contiguous. Default is to use all stokes.</description>
+            <description>Stokes planes to use. Planes specified must be contiguous. Default setting is to use all Stokes planes.</description>
             <value></value>
         </param>
         <param type="string"  name="mask">
-            <description>Mask to use. See help par.mask. Default is none.</description>
+            <description>Mask to use. See help par.mask for more details. Default setting is none. </description>
             <value type="string"/>
         </param>
         <param type="bool"  name="overwrite">
-            <description>Overwrite (unprompted) pre-existing output file? Ignored if outfile is blank.</description>
+            <description>Overwrite (unprompted) pre-existing output file? Ignored if "outfile" is left blank. </description>
             <value>false</value>
         </param>
         <param type="bool"  name="stretch">
-            <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
+            <description>Stretch the mask if necessary and possible? See help par.stretch. Default value is False.</description>
             <value>false</value>
         </param>
     </input>
     <returns type="image"/>
     <description>
-This method collapses an image along a specified axis or set of axes of N pixels to a single pixel on each
-specified axis. It computes the specified aggregate function for pixel values along the specified axes
+
+This method collapses an image along a specified axis or set of axes of length N pixels to a single pixel on each
+specified axis. It computes a user-specified aggregate function for pixel values along the specified axes,
 and places those values in the single remaining plane of those axes in the output image. The method returns
-an image analysis tool containing the newly created collapsed image. Choices of aggregate functions are:
-max, mean, median, min, rms, stdev, sum, variance. Minimal unique match is supported for the function
-parameter (eg, function="r" will compute the rms of the pixel values, "med" will compute the median).
-        
-Axes can be specified as a single integer or array of integers indicating the zero-based axes along
-which to collapse the image. Axes may also be specified as a single or array of strings which minimally
-and uniquely match (ignoring case) world axes names in the image (eg "dec" or ["ri, "d"] for
-collapsing along the declination axis or along the right ascension and declination axes, respectively).
-        
-If outfile is not specified (or contains only white spaces), no image is written but the
-collapsed image is still able to be accessed via the image analysis tool this method always
-returns which references the collpased image. If the returned object is not wanted it should
-still be captured and deleted via its done() method. If this is not done, there is no gaurantee
-for when the python garbage collector will delete it. If the returned object is wanted, it
-should be deleted as soon as possible for the same reasons, eg
-        
+an image analysis tool containing the newly-created collapsed image. Valid choices of aggregate functions are:
+'max', 'mean', 'median', 'min', 'rms', 'stdev', 'sum' and 'variance'. Minimal unique matching is supported
+for the function parameter (e.g. function = 'r' will compute the rms of the pixel values, 'med' will compute
+the median, etc.).
+
+Axes may be specified as a single integer or array of integers indicating the zero-based (i.e. 0, 1, 2, …)
+axes along which to collapse the image. Axes may also be specified as a single or array of strings which
+minimally and uniquely match (ignoring case) world axis names in the image (e.g. 'dec' for
+collapsing along the declination axis or ['ri', 'd'] for collapsing along both the right ascension and
+declination axes).
+
+If outfile is not specified (or contains only whitespace characters), no image is written but the
+collapsed image is still accessible via the image analysis tool this method always returns (which
+references the collapsed image). If the returned object is not wanted, it should still be
+captured and destroyed via its done() method.  If this is not done, there is no guarantee
+as to when the Python garbage collector will delete it. If the returned object is wanted, it
+should still be deleted as soon as possible for the same reasons, e.g.
+
 collapsed_image = ia.collapse(...)
 \begin{verbatim}
-# do things (or not) with collapsed_image and when done with object, do
+# do things (or not) with the collapsed_image and when finished working with the object, do
 \end{verbatim}
 collapsed_image.done()
 
 The reference pixel of the collapsed axis is set to 0 and its reference value is set to the mean
-of the the first and last values of that axis in the specified region of the input image.
+of the the first and last values of that axis in the specified region of the input image. The
+reference value is the world coordinate value of the reference pixel. For instance, if an axis
+to be collapsed were to be the frequency axis, in the collapsed image, the reference value would
+be the mean value of the frequency range spanned, and would be stored in pixel 0.
 
 If the input image has per plane beams, the beam at the origin of the subimage determined by
-the selected region is arbitrarily made the global beam of the output image. In general, you should
-understand the pitfalls of collapsing images with multiple beams (ie that employing an aggregate
-function on pixels with varying beam sizes more often than not leads to ill-defined results).
+the selected region is arbitrarily made the global beam of the output image. In general, the user
+should understand the pitfalls of collapsing images with multiple beams (i.e. that employing an
+aggregate function on pixels with varying beam sizes more often than not leads to ill-defined
+results).  Convolution to a common beam is not performed automatically as part of the preprocessing
+before the actual rebinning occurs.  In such cases, therefore, the user should probably first
+convolve the input image with a common restoring beam so that each plane has the same resolution,
+and/or use imsmooth to smooth the data to have the same beam.
+
     </description>
     <example>
 """
@@ -1329,7 +1340,7 @@ ia.open("myimage.im")
 # collapse a subimage of it along its spectral axis avoiding the 8 edge
 # channels at each end of the band, computing the mean value of the pixels
 # resulting image is 256x256x1x4 in size.
-collapsed = ia.collapse(outfile="collapse_spec_mean.im", function="mean", axis=2, box="127,127,383,383", chans="8-119")
+collapsed = ia.collapse(outfile="collapse_spec_mean.im", function="mean", axes=2, box="127,127,383,383", chans="8~119")
 # manipulate collapsed
 collapsed.done()
 
