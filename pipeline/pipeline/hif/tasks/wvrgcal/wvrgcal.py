@@ -25,7 +25,8 @@ class WvrgcalInputs(basetask.StandardInputs):
       hm_tie=None, tie=None, sourceflag=None, nsol=None,
       disperse=None, wvrflag=None, hm_smooth=None, smooth=None,
       scale=None, maxdistm=None, minnumants=None, qa2_intent=None,
-      qa2_bandpass_intent=None, bandpass_result=None, nowvr_result=None):
+      qa2_bandpass_intent=None, accept_threshold=None, 
+      bandpass_result=None, nowvr_result=None):
         self._init_properties(vars())
 
     @property
@@ -197,6 +198,16 @@ class WvrgcalInputs(basetask.StandardInputs):
     @qa2_bandpass_intent.setter
     def qa2_bandpass_intent(self, value):
         self._qa2_bandpass_intent = value
+
+    @property
+    def accept_threshold(self):
+        if self._accept_threshold is None:
+            return 1.0
+        return self._accept_threshold
+
+    @accept_threshold.setter
+    def accept_threshold(self, value):
+        self._accept_threshold = value
 
 
 class Wvrgcal(basetask.StandardTaskTemplate):
@@ -417,10 +428,10 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                 # if the qa2 score indicates that applying the wvrg file will
                 # make things worse then remove it from the results so that
                 # it cannot be accepted into the context.
-                if result.qa2.overall_score < 1:
+                if result.qa2.overall_score < inputs.accept_threshold:
                     LOG.warning(
-                      'wvrgcal has low qa2 score (%s) and will not be applied' %
-                      result.qa2.overall_score)
+                      'wvrgcal has qa2 score (%s) below accept_threshold (%s) and will not be applied' %
+                      (result.qa2.overall_score, inputs.accept_threshold))
                     result.final = []
 
         return result
