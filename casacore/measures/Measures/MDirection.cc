@@ -27,6 +27,9 @@
 
 //# Includes
 #include <casa/Exceptions.h>
+#include <casa/Quanta/MVAngle.h>
+#include <casa/Quanta/MVTime.h>
+#include <casa/Quanta/QMath.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Utilities/Register.h>
@@ -456,6 +459,34 @@ void MDirection::shiftAngle(Double off, Double pa) {
 
 Measure *MDirection::clone() const {
     return (new MDirection(*this));
+}
+
+String MDirection::toString() const {
+	Quantity longitude = getValue().getLong("deg");
+	Quantity lat = getValue().getLat("deg");
+	Types type = castType(ref.getType());
+	String output;
+	if (
+		type == J2000  || type == JMEAN
+		|| type == JTRUE || type == APP
+		|| type == B1950 || type == B1950_VLA
+		|| type == BMEAN || type == BTRUE
+	) {
+		String ra = MVTime(longitude).string(MVTime::TIME, 12);
+		String dec = MVAngle(abs(lat)).string(MVAngle::ANGLE_CLEAN, 11);
+		dec.trim();
+		if (lat.getValue() < 0) {
+			dec = "-" + dec;
+		}
+		output = ra + " " + dec;
+	}
+	else {
+		String longStr = MVAngle(longitude).string(MVAngle::ANGLE, 11);
+		String latStr = MVAngle(lat).string(MVAngle::ANGLE, 11);
+		output = longStr + " " + latStr;
+	}
+	output += " " + showType(type);
+	return output;
 }
 
 } //# NAMESPACE CASA - END
