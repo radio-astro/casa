@@ -18,12 +18,9 @@
 #include <imageanalysis/Annotations/AnnPolygon.h>
 
 #include <casa/Quanta/QMath.h>
+#include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <images/Regions/WCPolygon.h>
 #include <scimath/Mathematics/Geometry.h>
-
-//debug only
-#include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <iomanip>
 
 namespace casa {
 
@@ -351,13 +348,6 @@ void AnnPolygon::_init() {
 		Vector<Double> coords = _getConvertedDirections()[i].getAngle("rad").getValue();
 		xv[i] = coords[0];
 		yv[i] = coords[1];
-
-		// debug
-		Vector<Double> db = _getConvertedDirections()[i].getAngle("arcmin").getValue();
-		Vector<Double> pixel;
-		getCsys().directionCoordinate().toPixel(pixel, db);
-		cout << std::setprecision(12) << "final pixel " << pixel << endl;
-
 	}
 	Quantum<Vector<Double> > x(xv, "rad");
 	Quantum<Vector<Double> > y(yv, "rad");

@@ -580,72 +580,7 @@ Bool ImageRegridder::_doImagesOverlap(
 		Vector<std::pair<Double, Double> > corners1 = _getDirectionCorners(
 			dc1, dirShape1
 		);
-		Double minx0 = corners0[0].first;
-		Double maxx0 = minx0;
-		Double miny0 = corners0[0].second;
-		Double maxy0 = miny0;
-		Double minx1 = corners1[0].first;
-		Double maxx1 = minx1;
-		Double miny1 = corners1[0].second;
-		Double maxy1 = miny1;
-
-		for (uInt i=1; i<4; i++) {
-			minx0 = min(minx0, corners0[i].first);
-			maxx0 = max(maxx0, corners0[i].first);
-			miny0 = min(miny0, corners0[i].second);
-			maxy0 = max(maxy0, corners0[i].second);
-
-			minx1 = min(minx1, corners1[i].first);
-			maxx1 = max(maxx1, corners1[i].first);
-			miny1 = min(miny1, corners1[i].second);
-			maxy1 = max(maxy1, corners1[i].second);
-		}
-		if (
-			minx0 > maxx1 || maxx0 < minx1
-			|| miny0 > maxy1 || maxy0 < miny1
-		) {
-			// bounds check shows images do not intersect
-			return False;
-		}
-		else if (
-			(minx0 >= minx1 && maxx0 <= maxx1 && miny0 >= miny1 && maxy0 <= maxy1)
-			|| (minx0 < minx1 && maxx0 > maxx1 && miny0 < miny1 && maxy0 > maxy1)
-		) {
-			// one image lies completely inside the other
-			overlap = True;
-		}
-		else {
-			for (uInt i=0; i<4; i++) {
-				Vector<Double> start0(2, corners0[i].first);
-				start0[1] = corners0[i].second;
-				Vector<Double> end0(
-					2,
-					i == 3 ? corners0[0].first
-						: corners0[i+1].first
-				);
-				end0[1] = i == 3 ? corners0[0].second : corners0[i+1].second;
-
-				for (uInt j=0; j<4; j++) {
-					Vector<Double> start1(2, corners1[j].first);
-					start1[1] = corners1[j].second;
-					Vector<Double> end1(
-						2,
-						j == 3 ? corners1[0].first
-							: corners1[j+1].first
-					);
-					end1[1] = j == 3 ? corners1[0].second : corners1[j+1].second;
-					if (
-						Geometry::doLineSegmentsIntersect(
-							start0[0], start0[1], end0[0], end0[1],
-							start1[0], start1[1], end1[0], end1[1]
-						)
-					) {
-						overlap = True;
-						break;
-					}
-				}
-			}
-		}
+		overlap = _doRectanglesIntersect(corners0, corners1);
 	}
 	if (! overlap) {
 		return False;
@@ -726,6 +661,84 @@ Vector<std::pair<Double, Double> > ImageRegridder::_getDirectionCorners(
 		corners[i].second = Quantity(world[1], units[1]).getValue("rad");
 	}
 	return corners;
+}
+
+Bool ImageRegridder::_doRectanglesIntersect(
+	const Vector<std::pair<Double, Double> >& corners0,
+	const Vector<std::pair<Double, Double> >& corners1
+) {
+
+	Double minx0 = corners0[0].first;
+	Double maxx0 = minx0;
+	Double miny0 = corners0[0].second;
+	Double maxy0 = miny0;
+	Double minx1 = corners1[0].first;
+	Double maxx1 = minx1;
+	Double miny1 = corners1[0].second;
+	Double maxy1 = miny1;
+
+	for (uInt i=1; i<4; i++) {
+		minx0 = min(minx0, corners0[i].first);
+		maxx0 = max(maxx0, corners0[i].first);
+		miny0 = min(miny0, corners0[i].second);
+		maxy0 = max(maxy0, corners0[i].second);
+
+		minx1 = min(minx1, corners1[i].first);
+		maxx1 = max(maxx1, corners1[i].first);
+		miny1 = min(miny1, corners1[i].second);
+		maxy1 = max(maxy1, corners1[i].second);
+	}
+	if (
+		minx0 > maxx1 || maxx0 < minx1
+		|| miny0 > maxy1 || maxy0 < miny1
+	) {
+		// bounds check shows images do not intersect
+		return False;
+	}
+	else if (
+		(minx0 >= minx1 && maxx0 <= maxx1 && miny0 >= miny1 && maxy0 <= maxy1)
+		|| (minx0 < minx1 && maxx0 > maxx1 && miny0 < miny1 && maxy0 > maxy1)
+	) {
+		// one image lies completely inside the other
+		return True;
+	}
+	else {
+		// determine intersection
+		// FIXME There are more efficient algorithms. See eg
+		// the Shamos-Hoey Algorithm
+		// http://geomalgorithms.com/a09-_intersect-3.html#Pseudo-Code%3a%20S-H
+		for (uInt i=0; i<4; i++) {
+			Vector<Double> start0(2, corners0[i].first);
+			start0[1] = corners0[i].second;
+			Vector<Double> end0(
+				2,
+				i == 3 ? corners0[0].first
+					: corners0[i+1].first
+			);
+			end0[1] = i == 3 ? corners0[0].second : corners0[i+1].second;
+
+			for (uInt j=0; j<4; j++) {
+				Vector<Double> start1(2, corners1[j].first);
+				start1[1] = corners1[j].second;
+				Vector<Double> end1(
+					2,
+					j == 3 ? corners1[0].first
+						: corners1[j+1].first
+				);
+				end1[1] = j == 3 ? corners1[0].second : corners1[j+1].second;
+				if (
+					Geometry::doLineSegmentsIntersect(
+						start0[0], start0[1], end0[0], end0[1],
+						start1[0], start1[1], end1[0], end1[1]
+					)
+				) {
+					return True;
+					break;
+				}
+			}
+		}
+	}
+	return False;
 }
 
 }

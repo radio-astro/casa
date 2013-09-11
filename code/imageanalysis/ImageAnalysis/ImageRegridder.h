@@ -164,6 +164,12 @@ private:
 		std::tr1::shared_ptr<ImageInterface<Float> >& workIm
 	) const;
 
+	static Bool _doRectanglesIntersect(
+		const Vector<std::pair<Double, Double> >& corners0,
+		const Vector<std::pair<Double, Double> >& corners1
+	);
+
+
 };
 }
 
