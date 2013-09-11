@@ -10,7 +10,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <shortdescription></shortdescription>
 <description>
-Generate a gain table based on Water Vapour Radiometer data and flag bad antennas.
+Generate a gain table based on Water Vapour Radiometer data, interpolating over antennas with bad radiometers.
 </description>
     
 <input>
@@ -127,6 +127,11 @@ Generate a gain table based on Water Vapour Radiometer data and flag bad antenna
         <value>BANDPASS</value>
     </param>
 
+    <param type="double" name="accept_threshold">
+        <description>Improvement ratio (phase-rms without wvr / phase-rms with wvr) above which wvrg calibration file will be accepted</description>
+        <value>1.0</value>
+    </param>
+
     <param type="bool" name="flag_hi">
         <description>True to flag high figure of merit outliers</description>
         <value>True</value>
@@ -240,19 +245,21 @@ Generate a gain table based on Water Vapour Radiometer data and flag bad antenna
 First, generate a gain table based on the Water Vapour Radiometer data in each
 vis file. 
 
-Second, apply the wvr calibration to the data specified by 'qa2_intent',
-calculate a QA2 score based on its r.m.s. phase noise to indicate the effect
-of the correction on interferometric data; a score &gt; 1 implies that the 
-phase noise is improved, a score &lt; 1 implies that it is made worse. If 
-the score is &lt; 1 then the wvr gain table cannot be accepted into the 
-context for subsequent use.
+Second, apply the wvr calibration to the data specified by 'flag_intent',
+calculate flagging 'views' showing the ratio 
+phase-rms with wvr / phase-rms without wvr for each scan. A ratio &lt; 1 
+implies that the phase noise is improved, a score &gt; 1 implies that it 
+is made worse. 
 
-Third, looking at the QA2 results for data specified by 'flag_intent', 
-a search is made for antennas with anomalous high phase noise after the
-application of the wvr correction. If any are found then the wvr calibration
-is recalculated with the 'wvrflag' parameter set to ignore their data; in
-this case the wvr results for a bad antenna are interpolated from those 
-for the nearest 3 unflagged antennas.
+Third, search the flagging views for antennas with anomalous high values. 
+If any are found then recalculate the wvr calibration with the 'wvrflag' 
+parameter set to ignore their data and interpolate results from other 
+antennas according to 'maxdistm' and 'minnumants'.
+
+Fourth, if the overall QA2 score for the final wvr correction of a vis file 
+is greater than the value in 'accept_threshold' then make available the
+wvr calibration file for merging into the context and use in the 
+subsequent reduction.
       
 vis -- List of input visibility files
     default: none, in which case the vis files to be used will be read
@@ -330,7 +337,7 @@ maxdistm -- Maximum distance in meters of an antenna used for interpolation
     default: 500
     example: 550
 
-minnumants -- Minimum number of neraby antennas (up to 3) used for
+minnumants -- Minimum number of nearby antennas (up to 3) used for
     interpolation from a flagged antenna.
     default: 2
     example: 3
@@ -363,15 +370,21 @@ qa2_intent -- The list of data intents on which the wvr correction is to be
     overall score of 1 would correspond to no change in the phase noise,
     a score &gt; 1 implies an improvement.
 
-    If the overall score for a vis file is &lt; 1 then the wvr calibration
-    file is not made available for merging into the context for use in the
-    subsequent reduction.
+    If the overall score for a vis file is less than the value in
+    'accept_threshold' then the wvr calibration file is not made available 
+    for merging into the context for use in the subsequent reduction.
 
     default: 'PHASE'
     example: 'BANDPASS,AMPLITUDE'
 
 qa2_bandpass_intent -- The data intent to use for the bandpass calibration
     in the qa2 calculation.
+
+accept_threshold -- The phase-rms improvement ratio 
+    (rms without wvr / rms with wvr) above which the wrvg file will be 
+    accepted into the context for subsequent application.
+
+    default: 1.0
 
 
 Example
