@@ -586,7 +586,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      }
 	    
 	    // Do the calculation
-	    calculateTaylorPBs(weightImageVec);
+	    // UUU Taken out ( Sep2013 ) because sqrt(PB) is being accumulated and this is not OK
+	    //         for calculating Coeff PBs.  Need to eventually.....
+	    //         ......store PBSQ, Calc coeffs for PB squared, Do a polynomial square root.
+	    //         Until then, 'coeffPB' cannot be used for post-deconv corrections.
+	    //         Use sensitivityPB, and remember when it's a square and when not.
+	    //
+	    //calculateTaylorPBs(weightImageVec);
 	  
 	donePBTaylor_p = True;
 	
