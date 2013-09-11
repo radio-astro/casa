@@ -183,7 +183,7 @@ class SourceRow;
  * Summary of astromomical source information.
  * <BR>
  
- * Generated from model's revision "1.64", branch "HEAD"
+ * Generated from model's revision "-1", branch ""
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Source </CAPTION>
@@ -384,7 +384,7 @@ class SourceRow;
  * <TD> flux </TD> 
  * <TD> vector<vector<Flux > > </TD>
  * <TD>  numFreq, numStokes  </TD>
- * <TD>&nbsp; the array of flux densities. </TD>
+ * <TD>&nbsp; the array of flux densities expressed in Jansky (Jy). </TD>
  * </TR>
 	
  * <TR>
@@ -713,6 +713,15 @@ private:
 	std::string version ; 
 	
 	Entity entity;
+	
+
+
+
+	/*
+	** Let's use a map to implement the condition "one sourceName -> one sourceId"
+	*/
+	std::map<const std::string, int> name2id_m;
+	
 	
 
 
