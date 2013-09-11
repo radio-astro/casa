@@ -471,9 +471,16 @@ def simanalyze(
                              template=sdtemplate, output=tpimage,
                              overwrite=overwrite)
                     del newcsys, sdtemplate, incr, newincr, dir_idx
-                    del temp_out, temp_cell, temp_imsize, sfcell_asec, cell_asec
                     # Define PSF of image
-                    #imbeam = util.sfBeam(beam=pb_asec, convsupport=sfsupport)
+                    qpb = beam=qa.quantity(pb_asec,"arcsec")
+                    qpsf0 = util.sfBeam1d(qpb, cell=temp_cell[0],
+                                          convsupport=sfsupport)
+                    qpsf1 = util.sfBeam1d(qpb, cell=temp_cell[1],
+                                          convsupport=sfsupport)
+                    imbeam['major'] = max(qpsf0, qpsf1)
+                    imbeam['minor'] = min(qpsf0, qpsf1)
+                    imbeam['positionangle'] = qa.quantity(pl.arctan(qa.getvalue(qa.div(qpsf1,qpsf0))), "rad")
+                    del temp_out, temp_cell, temp_imsize, sfcell_asec, cell_asec
                 else: #PB grid
                     msg("Generating TP image using 'PB' kernel.")
                     # Final TP cell and image size.

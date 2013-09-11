@@ -1104,7 +1104,8 @@ def simalma(
                 # Set restoring beam
                 # TODO: set proper beam size
                 if tp_kernel.upper() == 'SF':
-                    bmsize = qa.quantity(PB12)
+                    bmsize = myutil.sfBeam1d(PB12sim, cell=cell_tp[0],
+                                             convsupport=4, sampling=ptgspacing_tp)
                 else: # GJinc
                     pbunit = PB12sim['unit']
                     simpb_val = PB12sim['value']
@@ -1182,10 +1183,10 @@ def simalma(
                 pref=get_data_prefix(antennalist[i], project)
                 if addnoise:
                     msname = pref+".noisy.ms"
-                    imagename_int=pref+".noisy.ms"
+                    #imagename_int=pref+".noisy.ms"
                 else:
                     msname= pref+".ms"
-                    imagename_int=pref+".ms"
+                    #imagename_int=pref+".ms"
                     
                 if os.path.exists(fileroot+"/"+msname):
                     vis_int = msname
