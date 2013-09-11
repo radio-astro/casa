@@ -4,6 +4,8 @@ import os
 import re
 import pylab as pl
 import pdb
+from sdimaging import sdimaging
+from imregrid import imregrid
 
 def simanalyze(
     project=None,
@@ -389,48 +391,117 @@ def simanalyze(
                            tpimage != fileroot+"/"+modelimage:
                         msg("modelimage parameter set to "+modelimage+" but also creating a new total power image "+tpimage,priority="warn")
                         msg("assuming you know what you want, and using modelimage="+modelimage+" in deconvolution",priority="warn")
+                    elif len(featherimage) and tpimage != featherimage and \
+                           tpimage != fileroot+"/"+featherimage:
+                        msg("featherimage parameter set to "+modelimage+" but also creating a new total power image "+tpimage,priority="warn")
+                        msg("assuming you know what you want, and using featherimage="+featherimage+" in feathe",priority="warn")
 #                    else:
 #                        # This forces to use TP image as a model for clean
 #                        if len(modelimage) <= 0:
 #                            msg("you are generating total power image "+tpimage+". this is used as a model image for clean",priority="warn")
 #                        modelimage = tpimage
                 
-                # format image size properly
-                sdimsize = imsize
-                if not isinstance(imsize,list):
-                    sdimsize = [imsize,imsize]
-                elif len(imsize) == 1:
-                    sdimsize = [imsize[0],imsize[0]]
-
-                im.open(tpmstoimage)
-                im.selectvis(nchan=model_nchan,start=0,step=1,spw=0)
-                ### TODO: need to set phasecenter properly based on imdirection
-                im.defineimage(mode='channel',nx=sdimsize[0],ny=sdimsize[1],cellx=cell[0],celly=cell[1],phasecenter=model_refdir,nchan=model_nchan,start=0,step=1,spw=0)
-                #im.setoptions(ftmachine='sd',gridfunction='pb')
-                im.setoptions(ftmachine='sd',gridfunction='pb')
-                im.makeimage(type='singledish',image=tpimage)
-                im.close()
-                del sdimsize
+                # Get PB size of TP Antenna
+                # !! aveant will only be set if modifymodel or setpointings and in 
+                # any case it will the the aveant of the INTERFM array - we want the SD
+                tb.open(tpmstoimage+"/ANTENNA")
+                diams = tb.getcol("DISH_DIAMETER")
+                tb.done()
+                aveant = pl.mean(diams)
+                # model_center should be set even if we didn't predict this execution
+                pb_asec = pbcoeff*0.29979/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi # arcsec
+                # default PSF from PB of antenna
+                imbeam = {'major': qa.quantity(pb_asec,'arcsec'),
+                          'minor': qa.quantity(pb_asec,'arcsec'),
+                          'positionangle': qa.quantity(0.0,'deg')}
+                
+                if True: #SF gridding
+                    msg("Generating TP image using 'SF' kernel.")
+                    beamsamp = 6.42857
+                    sfcell_asec = pb_asec/beamsamp
+                    sfcell = qa.tos(qa.quantity(sfcell_asec, "arcsec"))
+                    cell_asec = [qa.convert(cell[0],"arcsec")['value'],
+                                 qa.convert(cell[1],"arcsec")['value']]
+                    if cell_asec[0] > sfcell_asec or \
+                           cell_asec[1] > sfcell_asec:
+                        # imregrid() may not work properly for regrid of
+                        # small to large cell
+                        msg("The requested cell size is too large to invoke SF gridding. Please set cell size <= %f arcsec or grid TP MS '%s' manually" % (sfcell_arcsec, tpmstoimage),priority="error")
+                        return False
+                    sfsupport = 4
+                    temp_out = tpimage+"0"
+                    temp_cell = [sfcell, sfcell]
+                    temp_imsize = [int(pl.ceil(cell_asec[0]/sfcell_asec*imsize[0])),
+                                   int(pl.ceil(cell_asec[1]/sfcell_asec*imsize[1]))]
+                    msg("Using predefined algorithm to define grid parameters.")
+                    msg("SF gridding summary")
+                    msg("- Antenna primary beam: %f arcsec" % pb_asec)
+                    msg("- Image pixels per antenna PB (predefined): %f" % beamsamp)
+                    msg("- Cell size (arcsec): [%s, %s]" % (temp_cell[0], temp_cell[1]))
+                    msg("- Imsize to cover final TP image area: [%d, %d] (type: %s)" % (temp_imsize[0], temp_imsize[1], type(temp_imsize[0])))
+                    msg("- convolution support: %d" % sfsupport)
+                    sdimaging(infiles=[tpmstoimage], gridfunction='SF',
+                              convsupport = sfsupport,
+                              outfile=temp_out, overwrite=overwrite,
+                              imsize=temp_imsize, cell=temp_cell,
+                              phasecenter=model_refdir, dochannelmap=True,
+                              nchan=model_nchan, start=0, step=1, spw=[0])
+                    if not os.path.exists(temp_out):
+                        raise RuntimeError, "TP imaging failed."
+                    # Regrid TP image to final resolution
+                    msg("Regridding TP image to final resolution")
+                    msg("- cell size (arecsec): [%s, %s]" % (cell[0], cell[1]))
+                    msg("- imsize: [%d, %d]" % (imsize[0], imsize[1]))
+                    ia.open(temp_out)
+                    newcsys = ia.coordsys()
+                    ia.close()
+                    dir_idx = newcsys.findcoordinate("direction")[2]
+                    newcsys.setreferencepixel([imsize[0]/2., imsize[1]/2.],
+                                              type="direction")
+                    incr = newcsys.increment(type='direction')['numeric']
+                    newincr = [incr[0]*cell_asec[0]/sfcell_asec,
+                               incr[1]*cell_asec[1]/sfcell_asec,]
+                    newcsys.setincrement(newincr, type="direction")
+                    #
+                    sdtemplate = imregrid(imagename=temp_out, template="get")
+                    sdtemplate['csys'] = newcsys.torecord()
+                    for idx in range(len(dir_idx)):
+                        sdtemplate['shap'][ dir_idx[idx] ] = imsize[idx]
+                    imregrid(imagename=temp_out, interpolation="cubic",
+                             template=sdtemplate, output=tpimage,
+                             overwrite=overwrite)
+                    del newcsys, sdtemplate, incr, newincr, dir_idx
+                    del temp_out, temp_cell, temp_imsize, sfcell_asec, cell_asec
+                    # Define PSF of image
+                    #imbeam = util.sfBeam(beam=pb_asec, convsupport=sfsupport)
+                else: #PB grid
+                    msg("Generating TP image using 'PB' kernel.")
+                    # Final TP cell and image size.
+                    # imsize and cell are already int and quantum arrays
+                    sdimsize = imsize
+                    sdcell = [qa.tos(cell[0]), qa.tos(cell[1])]
+                    ### TODO: need to set phasecenter properly based on imdirection
+                    sdimaging(infiles=[tpmstoimage],gridfunction='PB',
+                              outfile=tpimage, overwrite=overwrite,
+                              imsize=sdimsize, cell=sdcell,
+                              phasecenter=model_refdir, dochannelmap=True,
+                              nchan=model_nchan,start=0,step=1,spw=[0])
+                    del sdimsize, sdcell
+                    # TODO: Define PSF of image here
+                    # for now use default 
 
                 # For single dish: manually set the primary beam
                 ia.open(tpimage)
                 beam = ia.restoringbeam()
                 if len(beam) == 0:
                     msg('setting primary beam information to image.')
-                    # !! aveant will only be set if modifymodel or setpointings and in 
-                    # any case it will the the aveant of the INTERFM array - we want the SD
-                    tb.open(tpmstoimage+"/ANTENNA")
-                    diams = tb.getcol("DISH_DIAMETER")
-                    tb.done()
-                    aveant = pl.mean(diams)
-                    # model_center should be set even if we didn't predict this execution
-                    pb = pbcoeff*0.29979/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi # arcsec
-
-                    beam['major'] = beam['minor'] = qa.quantity(pb,'arcsec')
-                    beam['positionangle'] = qa.quantity(0.0,'deg')
+                    beam['major'] = imbeam['major']
+                    beam['minor'] = imbeam['minor']
+                    beam['positionangle'] = imbeam['positionangle']
                     msg('Primary beam: '+str(beam['major']))
                     ia.setrestoringbeam(beam=beam)
-                ia.close()
+                    ia.close()
+
                 if sd_only:
                     beam_current = True
                     bmarea = beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
