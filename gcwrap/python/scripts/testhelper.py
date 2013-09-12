@@ -40,15 +40,15 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001, mode="percen
     tb.open(referencetab)
     cnames = tb.colnames()
 
-    #print cnames
-
     tb2.open(testtab)
 
     try:
         for c in cnames:
             if c in excludecols:
                 continue
-            print c
+            
+            print "\nTesting column " + c 
+            
             a = 0
             try:
                 a = tb.getcol(c)
@@ -57,7 +57,7 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001, mode="percen
                 print 'Error accessing column ', c, ' in table ', referencetab
                 print sys.exc_info()[0]
                 break
-            #print a
+
             b = 0
             try:
                 b = tb2.getcol(c)
@@ -66,7 +66,7 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001, mode="percen
                 print 'Error accessing column ', c, ' in table ', testtab
                 print sys.exc_info()[0]
                 break
-            #print b
+
             if not (len(a)==len(b)):
                 print 'Column ',c,' has different length in tables ', referencetab, ' and ', testtab
                 print a
@@ -74,65 +74,90 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001, mode="percen
                 rval = False
                 break
             else:
+                differs = False
                 if not (a==b).all():
-                    differs = False
                     for i in range(0,len(a)):
                         if (isinstance(a[i],float)):
-                            if ((mode=="percentage") and (abs(a[i]-b[i]) > tolerance*abs(a[i]+b[i]))) or ((mode=="absolute") and (abs(a[i]-b[i]) > tolerance)):
-                                print 'Column ',c,' differs in tables ', referencetab, ' and ', testtab
-                                print i
-                                print a[i]
-                                print b[i]
+                            if ((mode=="percentage") and (abs(a[i]-b[i]) > tolerance*abs(a[i]))) or ((mode=="absolute") and (abs(a[i]-b[i]) > tolerance)):
+                                print "Column " + c + " differs"
+                                print "Row=" + str(i)
+                                print "Reference file value: " + str(a[i])
+                                print "Input file value: " + str(b[i])
+                                if (mode=="percentage"):
+                                    print "tolerance in % should be " + str(100*abs(a[i]-b[i])/abs(a[i]))
+                                else:
+                                    print "absolute tolerance should be " + str(abs(a[i]-b[i]))
                                 differs = True
+                                rval = False
                                 break
                         elif (isinstance(a[i],int)):
                             if (abs(a[i]-b[i]) > 0):
-                                print 'Column ',c,' differs in tables ', referencetab, ' and ', testtab
-                                print i
-                                print a[i]
-                                print b[i]
+                                print "Column " + c + " differs"
+                                print "Row=" + str(i)
+                                print "Reference file value: " + str(a[i])
+                                print "Input file value: " + str(b[i])
+                                if (mode=="percentage"):
+                                    print "tolerance in % should be " + str(100*abs(a[i]-b[i])/abs(a[i]))
+                                else:
+                                    print "absolute tolerance should be " + str(abs(a[i]-b[i]))
                                 differs = True
-                                #break
+                                rval = False
+                                break
                         elif (isinstance(a[i],str)):
                             if not (a[i]==b[i]):
-                                print 'Column ',c,' differs in tables ', referencetab, ' and ', testtab
-                                print i
-                                print a[i]
-                                print b[i]
+                                print "Column " + c + " differs"
+                                print "Row=" + str(i)
+                                print "Reference file value: " + str(a[i])
+                                print "Input file value: " + str(b[i])
+                                if (mode=="percentage"):   
+                                    print "tolerance in % should be " + str(100*abs(a[i]-b[i])/abs(a[i]))
+                                else:
+                                    print "absolute tolerance should be " + str(abs(a[i]-b[i]))
                                 differs = True
+                                rval = False
                                 break
                         elif (isinstance(a[i],list)) or (isinstance(a[i],np.ndarray)):
                             for j in range(0,len(a[i])):
+                                if differs: break
                                 if ((isinstance(a[i][j],float)) or (isinstance(a[i][j],int))):
-                                    if ((mode=="percentage") and (abs(a[i][j]-b[i][j]) > tolerance*abs(a[i][j]+b[i][j]))) or ((mode=="absolute") and (abs(a[i][j]-b[i][j]) > tolerance)):
-                                        print 'Column ',c,' differs in tables ', referencetab, ' and ', testtab
-                                        print i, j
-                                        print a[i][j]
-                                        print b[i][j]
+                                    if ((mode=="percentage") and (abs(a[i][j]-b[i][j]) > tolerance*abs(a[i][j]))) or ((mode=="absolute") and (abs(a[i][j]-b[i][j]) > tolerance)):
+                                        print "Column " + c + " differs"
+                                        print "(Row,Element)=(" + str(j) + "," + str(i) + ")"
+                                        print "Reference file value: " + str(a[i][j])
+                                        print "Input file value: " + str(b[i][j])
+                                        if (mode=="percentage"):
+                                            print "Tolerance in % should be " + str(100*abs(a[i][j]-b[i][j])/abs(a[i][j]))
+                                        else:
+                                            print "Absolute tolerance should be " + str(abs(a[i][j]-b[i][j]))
                                         differs = True
+                                        rval = False
                                         break
                                 elif (isinstance(a[i][j],list)) or (isinstance(a[i][j],np.ndarray)):
                                     for k in range(0,len(a[i][j])):
-                                        if ((mode=="percentage") and (abs(a[i][j][k]-b[i][j][k]) > tolerance*abs(a[i][j][k]+b[i][j][k]))) or ((mode=="absolute") and (abs(a[i][j][k]-b[i][j][k]) > tolerance)):
-                                            print 'Column ',c,' differs in tables ', referencetab, ' and ', testtab
-                                            print i, j, k
-                                            print a[i][j][k]
-                                            print b[i][j][k]
+                                        if differs: break
+                                        if ((mode=="percentage") and (abs(a[i][j][k]-b[i][j][k]) > tolerance*abs(a[i][j][k]))) or ((mode=="absolute") and (abs(a[i][j][k]-b[i][j][k]) > tolerance)):
+                                            print "Column " + c + " differs"
+                                            print "(Row,Channel,Corr)=(" + str(k) + "," + str(j) + "," + str(i) + ")"
+                                            print "Reference file value: " + str(a[i][j][k])
+                                            print "Input file value: " + str(b[i][j][k])
+                                            if (mode=="percentage"):
+                                                print "Tolerance in % should be " + str(100*abs(a[i][j][k]-b[i][j][k])/abs(a[i][j][k]))
+                                            else:
+                                                print "Absolute tolerance should be " + str(abs(a[i][j][k]-b[i][j][k]))                     
                                             differs = True
-                                            break
+                                            rval = False
+                                            break                                          
+                                            
                         else:
-                            print "unknown data type: ",type(a[i])
+                            print "Unknown data type: ",type(a[i])
                             differs = True
+                            rval = False
                             break
-                    if differs:
-                        rval = False
-                        break
+                
+                if not differs: print "Column " + c + " PASSED" 
     finally:
         tb.close()
         tb2.close()
-
-    if rval:
-        print 'Tables ', referencetab, ' and ', testtab, ' agree.'
 
     return rval
 

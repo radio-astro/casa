@@ -165,6 +165,7 @@ void MSTransformManager::initialize()
 	timeAverage_p = False;
 	timeBin_p = 0.0;
 	timespan_p = String("");
+	timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::Nothing);
 
 	// MS-related members
 	splitter_p = NULL;
@@ -1242,8 +1243,6 @@ void MSTransformManager::initDataSelectionParams()
 		spwSelection_p = "*";
 		mssel.setSpwExpr(spwSelection_p);
 		Matrix<Int> spwchan = mssel.getChanList(inputMs_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-				<< "All input SPWs selected " << spwchan << LogIO::POST;
 
 	    IPosition shape = spwchan.shape();
 	    uInt nSelections = shape[0];
@@ -2292,12 +2291,16 @@ void MSTransformManager::checkFillWeightSpectrum()
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 				<< "Optional column WEIGHT_SPECTRUM found in input MS will be written to output MS" << LogIO::POST;
 	}
+
+	// jagonzal: I don't want to spend so much resources transforming and writing synthetic WEIGHT_SPECTRUM
+	/*
 	else
 	{
     	logger_p 	<< LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
     				<< "WEIGHT_SPECTRUM column not present." << endl
     				<< " Will fill output WEIGHT_SPECTRUM column using input WEIGHT column" << LogIO::POST;
 	}
+	*/
 
 	return;
 }
@@ -2322,6 +2325,9 @@ void MSTransformManager::checkDataColumnsToFill()
 			dataColMap_p[MS::DATA] = MS::DATA;
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 								"Adding DATA column to output MS "<< LogIO::POST;
+
+			timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
+			timeAvgOptions_p |= vi::AveragingOptions::ObservedUseNoWeights;
 		}
 
 		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA)))
@@ -2334,6 +2340,9 @@ void MSTransformManager::checkDataColumnsToFill()
 			dataColMap_p[MS::CORRECTED_DATA] = MS::CORRECTED_DATA;
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 								"Adding CORRECTED_DATA column to output MS "<< LogIO::POST;
+
+			timeAvgOptions_p |= vi::AveragingOptions::AverageCorrected;
+			timeAvgOptions_p |= vi::AveragingOptions::CorrectedUseNoWeights;
 		}
 
 		if ((inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA))) or realmodelcol_p)
@@ -2344,8 +2353,8 @@ void MSTransformManager::checkDataColumnsToFill()
 				mainColumn_p = MS::MODEL_DATA;
 				mainColSet = True;
 			}
-
 			dataColMap_p[MS::MODEL_DATA] = MS::MODEL_DATA;
+
 			if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
 			{
 				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
@@ -2356,6 +2365,9 @@ void MSTransformManager::checkDataColumnsToFill()
 				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 							"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column"<< LogIO::POST;
 			}
+
+			timeAvgOptions_p |= vi::AveragingOptions::AverageModel;
+			timeAvgOptions_p |= vi::AveragingOptions::ModelUseNoWeights;
 		}
 
 		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA)))
@@ -2368,6 +2380,9 @@ void MSTransformManager::checkDataColumnsToFill()
 			dataColMap_p[MS::FLOAT_DATA] = MS::FLOAT_DATA;
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 								"Adding FLOAT_DATA column to output MS "<< LogIO::POST;
+
+			// TODO: FLOAT_DATA is not yet supported by TVI
+			// timeAvgOptions_p |= vi::AveragingOptions::AverageFloatData;
 		}
 
 		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::LAG_DATA)))
@@ -2380,6 +2395,9 @@ void MSTransformManager::checkDataColumnsToFill()
 			dataColMap_p[MS::LAG_DATA] = MS::LAG_DATA;
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 								"Adding LAG_DATA column to output MS "<< LogIO::POST;
+
+			// TODO: LAG_DATA is not yet supported by TVI
+			// timeAvgOptions_p |= vi::AveragingOptions::AverageLagData;
 		}
 	}
 	else if (datacolumn_p.contains("FLOAT_DATA,DATA"))
@@ -2396,6 +2414,9 @@ void MSTransformManager::checkDataColumnsToFill()
 			dataColMap_p[MS::DATA] = MS::DATA;
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 								"Adding DATA column to output MS "<< LogIO::POST;
+
+			timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::AverageObserved);
+			timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::ObservedUseNoWeights);
 		}
 		else
 		{
@@ -2413,6 +2434,9 @@ void MSTransformManager::checkDataColumnsToFill()
 			dataColMap_p[MS::FLOAT_DATA] = MS::FLOAT_DATA;
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 								"Adding FLOAT_DATA column to output MS "<< LogIO::POST;
+
+			// TODO: FLOAT_DATA is not yet supported by TVI
+			// timeAvgOptions_p |= vi::AveragingOptions::AverageFloatData;
 		}
 		else
 		{
@@ -2432,6 +2456,9 @@ void MSTransformManager::checkDataColumnsToFill()
 			dataColMap_p[MS::FLOAT_DATA] = MS::FLOAT_DATA;
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 								"Adding FLOAT_DATA column to output MS "<< LogIO::POST;
+
+			// TODO: FLOAT_DATA is not yet supported by TVI
+			// timeAvgOptions_p |= vi::AveragingOptions::AverageFloatData;
 		}
 		else
 		{
@@ -2451,6 +2478,9 @@ void MSTransformManager::checkDataColumnsToFill()
 			dataColMap_p[MS::DATA] = MS::DATA;
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 								"Adding DATA column to output MS "<< LogIO::POST;
+
+			timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
+			timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::ObservedUseNoWeights);
 		}
 		else
 		{
@@ -2468,6 +2498,9 @@ void MSTransformManager::checkDataColumnsToFill()
 			dataColMap_p[MS::LAG_DATA] = MS::LAG_DATA;
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 								"Adding LAG_DATA column to output MS "<< LogIO::POST;
+
+			// TODO: LAG_DATA is not yet supported by TVI
+			// timeAvgOptions_p |= vi::AveragingOptions::AverageLagData;
 		}
 		else
 		{
@@ -2487,6 +2520,9 @@ void MSTransformManager::checkDataColumnsToFill()
 			dataColMap_p[MS::LAG_DATA] = MS::LAG_DATA;
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 								"Adding LAG_DATA column to output MS "<< LogIO::POST;
+
+			// TODO: LAG_DATA is not yet supported by TVI
+			// timeAvgOptions_p |= vi::AveragingOptions::AverageLagData;
 		}
 		else
 		{
@@ -2506,6 +2542,9 @@ void MSTransformManager::checkDataColumnsToFill()
 			dataColMap_p[MS::DATA] = MS::DATA;
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 								"Adding DATA column to output MS "<< LogIO::POST;
+
+			timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
+			timeAvgOptions_p |= vi::AveragingOptions::ObservedUseNoWeights;
 		}
 		else
 		{
@@ -2526,6 +2565,9 @@ void MSTransformManager::checkDataColumnsToFill()
 			correctedToData_p = True;
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 								"Adding DATA column to output MS as DATA from input CORRECTED_DATA column"<< LogIO::POST;
+
+			timeAvgOptions_p |= vi::AveragingOptions::AverageCorrected;
+			timeAvgOptions_p |= vi::AveragingOptions::CorrectedUseNoWeights;
 		}
 		else
 		{
@@ -2556,6 +2598,9 @@ void MSTransformManager::checkDataColumnsToFill()
 				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 							"Adding MODEL_DATA column to output MS as DATA from input virtual MODEL_DATA column"<< LogIO::POST;
 			}
+
+			timeAvgOptions_p |= vi::AveragingOptions::AverageModel;
+			timeAvgOptions_p |= vi::AveragingOptions::ModelUseNoWeights;
 		}
 		else
 		{
@@ -2650,7 +2695,7 @@ void MSTransformManager::generateIterator()
 
 	if (timeAverage_p)
 	{
-		vi::AveragingParameters parameters (timeBin_p, DBL_MAX, vi::SortColumns (sortColumns_p,false));
+		vi::AveragingParameters parameters (timeBin_p, 0, vi::SortColumns (sortColumns_p,false), timeAvgOptions_p, 0);
 		visibilityIterator_p = new vi::VisibilityIterator2 (vi::AveragingVi2Factory (parameters, selectedInputMs_p));
 		visibilityIterator_p->setWeightScaling (vi::WeightScaling::generateUnityWeightScaling());
 	}
@@ -3375,7 +3420,7 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
     	// Reset all the weights-based operations
     	setWeightBasedTransformations(weightmode_p);
     }
-    else
+    else if (combinespws_p)
     {
     	// Fill WEIGHT_SPECTRUM with WEIGHTS
 		Matrix<Float> inputWeightPlane = vb->weight();
@@ -3389,15 +3434,6 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 				inputWeightSpectrumPlane.row(pol) = inputWeightPlane(pol,row);
 			}
 		}
-
-    	// Unset all the weights-based operations
-    	setWeightBasedTransformations(MSTransformations::flat);
-
-		// Transform weights
-    	transformCubeOfData(vb,rowRef,weightSpectrumCube_p,outputMsCols_p->weightSpectrum(),NULL);
-
-    	// Reset all the weights-based operations
-    	setWeightBasedTransformations(weightmode_p);
     }
 
 	ArrayColumn<Bool> *outputFlagCol=NULL;
@@ -3491,6 +3527,20 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 			}
 		}
 	}
+
+	// Write out synthetic WEIGHT_SPECTRUM if it was used to combine SPWs
+	if ((not inputWeightSpectrumAvailable_p) and (combinespws_p and combinationOfSPWsWithDifferentExposure_p))
+	{
+		// Unset all the weights-based operations
+		setWeightBasedTransformations(MSTransformations::flat);
+
+		// jagonzal: I don't want to spend so much resources transforming and writing synthetic WEIGHT_SPECTRUM
+		transformCubeOfData(vb,rowRef,weightSpectrumCube_p,outputMsCols_p->weightSpectrum(),NULL);
+
+		// Reset all the weights-based operations
+		setWeightBasedTransformations(weightmode_p);
+	}
+
 
     // Special case for flag category
     if (fillFlagCategory_p)
