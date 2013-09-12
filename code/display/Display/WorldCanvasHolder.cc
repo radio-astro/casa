@@ -858,6 +858,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// the spectral DD's frames will be counted even if its blink
 		// restriction invalidates it for drawing at the moment).
 
+		//If we have no data, we have no frames.
+		int firstGuessCount = itsDisplayList.size();
+		if ( firstGuessCount == 0 ){
+			return firstGuessCount;
+		}
+
 		executeSizeControl(worldCanvas());
 		// makes sure WC state is up-to-date (e.g., with latest
 		// axis change on CS master).

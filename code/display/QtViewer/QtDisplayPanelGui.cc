@@ -1438,7 +1438,9 @@ void QtDisplayPanelGui::movieStop() {
 
 void QtDisplayPanelGui::removeAllDDs() {
 	if ( qdp_ != NULL ){
+
 		qdp_->setControllingDD( NULL );
+		qdp_->unregisterAll();
 	}
 
 	//Order is important.
@@ -1516,13 +1518,17 @@ Bool QtDisplayPanelGui::removeDD(QtDisplayData*& qdd) {
 	if ( removed ) {
 		int imageCount = displayDataHolder->getCount();
 		if ( imageCount == 0 ){
-			qdp_->setControllingDD( NULL );
+			if ( qdp_ != NULL ){
+				qdp_->setControllingDD( NULL );
+			}
 			displayDataHolder->setDDControlling( NULL );
 			clearTools();
-			if ( profile_) {
+			if ( profile_ != NULL ) {
 				profile_->clearPlots();
 			}
-			regionDock_->delete_all_regions( true );
+			if ( regionDock_ != NULL ){
+				regionDock_->delete_all_regions( true );
+			}
 		}
 
 		notifyDDRemoval( qdd );
