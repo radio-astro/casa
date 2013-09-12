@@ -128,7 +128,7 @@
 # plotbandpass2('sm2_rx0.usb.if2.tsys.ms.bandpass.bcal',overlay='baseband',xaxis='freq',figfile='sma.png')
 # plotbandpass2('sm2_rx0.usb.if2.tsys.ms.bandpass.bcal',overlay='baseband',xaxis='chan',figfile='sma.png')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.29 2013/07/31 15:32:51 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.31 2013/09/12 16:48:46 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -202,7 +202,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.29 2013/07/31 15:32:51 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.31 2013/09/12 16:48:46 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
