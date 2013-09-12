@@ -227,12 +227,22 @@ def simalma(
             model_size = model_vals[2]
             model_nchan = model_vals[3]
             model_center = model_vals[4]
+            model_width = model_vals[5]
             del model_vals
             msg("You will be simulating from sky model image "+skymodel,priority="info")
-            msg("  pixel(cell) size = "+ qa.tos(model_cell[0]),priority="info")
-            msg("  model_refdir size = "+qa.tos(model_size[0]),priority="info")
-            # XXX TODO add more 
+            msg("  pixel(cell) size    = "+ qa.tos(model_cell[0]),priority="info")
+            msg("  image size          = "+ qa.tos(model_size[0]),priority="info")
+            msg("  reference direction = "+model_refdir,priority="info")
+            if model_nchan>1:
+                msg("  # channels =          "+ qa.tos(model_nchan),priority="info")
+                msg("  channel width =       "+ qa.tos(model_width),priority="info")
+            else:
+                msg("  single channel / continuum image, with bandwidth = "+qa.tos(model_width),priority="info")
 
+            if os.path.exists(complist):
+                msg(" ",priority="info")
+                msg("You will also be simulating the components in "+complist,priority="info")
+                msg("  These will get added to a copy of the skymodel image.",priority="info")
         else:
             # XXX TODO make sure components AND image work here
             components_only=True
@@ -254,7 +264,13 @@ def simalma(
             model_cell = None
             model_nchan = 1
             del compdirs, coffs, xc, yc, cmax
-
+            msg("You will be simulating only from component list "+complist,priority="info")
+            msg("Based on the spatial distribution of components, a sky model image will be generated with these parameters:",priority="info")
+            msg("  image size          = "+ qa.tos(model_size[0]),priority="info")
+            msg("  reference direction = "+model_refdir,priority="info")
+            msg("and each call to simobserve will chose a skymodel cell size of 1/20 the expected PSF FWHM (to accurately locate components).",priority="info")
+            msg("Simulation from components-only produces a single channel / continuum observation",priority="info")
+            msg("  with bandwidth = "+compwidth,priority="info")
 
 
         #-----------------------------------
@@ -284,7 +300,8 @@ def simalma(
                 model_size=["%farcsec" % map_asec,"%farcsec" % map_asec]
 
 
-
+        msg(" ",priority="info")
+        msg("You will be mapping an area of size "+qa.tos(mapsize[0])+','+qa.tos(mapsize[1]))
 
 
 
@@ -303,7 +320,7 @@ def simalma(
         lambda_D = wave_length / Dant * 3600. * 180 / pl.pi
         PB12 = qa.quantity(lambda_D*pbcoeff, "arcsec")
         # Correction factor for PB in simulation
-        # (PSF of simulated image is somehow smaller than PB12)
+        # (PS of simulated image is somehow smaller than PB12)
         PB12sim = qa.mul(PB12, simpb_factor)
 
         msg("  primary beam size: %s" % (qa.tos(PB12)),priority="info")
