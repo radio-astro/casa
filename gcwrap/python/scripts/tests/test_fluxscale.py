@@ -86,19 +86,44 @@ class fluxscale1_test(unittest.TestCase):
         self.assertTrue(th.compTables(outtable, reference, ['WEIGHT']))
 
         # compare some determined values returned in the dict
-        refdict={'1': {'spidxerr': np.array([ 0.,  0.,  0.]), 'spidx': np.array([ 0.,  0.,  0.]), \
-                 'fluxdErr': np.array([0.00055571]), \
-                 'fieldName': '1445+09900002_0', 'numSol': np.array([54]), \
+
+        #refdict={'1': {'spidxerr': np.array([ 0.,  0.,  0.]), 'spidx': np.array([ 0.,  0.,  0.]), \
+        #         'fluxdErr': np.array([0.00055571]), \
+        #         'fieldName': '1445+09900002_0', 'numSol': np.array([54]), \
                  #'fluxd': np.array([0.16825763])}, \
                  # flux density seems changed a bit. Updated - 2013.01.29 TT
 		 # for linux on current trunk 22670
 		 # for OSX 10.6 got the previous value 
-                 'fluxd': np.array([0.16825765])}, \
-                 'freq': np.array([1.41266507e+09]), \
-                 'spwName': np.array(['none'], dtype='|S5'), \
-                 'spwID': np.array([0])} 
+        #         'fluxd': np.array([0.16825765])}, \
+        #         'freq': np.array([1.41266507e+09]), \
+        #         'spwName': np.array(['none'], dtype='|S5'), \
+        #         'spwID': np.array([0])} 
+      
+        # new returned dictionary (2013.09.12 TT)
+        refdict={'1': {'fitRefFreq': 0.0, 
+                       'spidxerr': np.array([ 0.,  0.,  0.]), 
+                       'spidx': np.array([ 0.,  0.,  0.]), 
+                       '0': {'fluxdErr': np.array([ 0.00055574,  0.        ,  0.        ,  0.        ]), 
+                             'numSol': np.array([ 54.,   0.,   0.,   0.]), 
+                             'fluxd': np.array([ 0.16825768,  0.        ,  0.        ,  0.        ])}, 
+                       'fitFluxd': 0.0, 
+                       'fieldName': '1445+09900002_0', 
+                       'fitFluxdErr': 0.0}, 
+                       'freq': np.array([  1.41266507e+09]), 
+                 '2': {'fitRefFreq': 0.0, 
+                       'spidxerr': np.array([ 0.,  0.,  0.]), 
+                       'spidx': np.array([ 0.,  0.,  0.]), 
+                       '0': {'fluxdErr': np.array([ 0.00304653,  0.        ,  0.        ,  0.        ]), 
+                             'numSol': np.array([ 54.,   0.,   0.,   0.]), 
+                             'fluxd': np.array([ 0.00604538,  0.        ,  0.        ,  0.        ])}, 
+                       'fitFluxd': 0.0, 
+                        'fieldName': 'N5921_2', 
+                       'fitFluxdErr': 0.0}, 
+                 'spwName': np.array(['none'],dtype='|S5'), 
+                 'spwID': np.array([0], dtype=np.int32)}
+
         
-        diff_fluxd=abs(refdict['1']['fluxd'][0]-thisdict['1']['fluxd'][0])/refdict['1']['fluxd'][0]
+        diff_fluxd=abs(refdict['1']['0']['fluxd'][0]-thisdict['1']['0']['fluxd'][0])/refdict['1']['0']['fluxd'][0]
         #self.assertTrue(diff_fluxd<1.5e-8)
 	# increase the tolerance level
         self.assertTrue(diff_fluxd<1.5e-7)
@@ -153,7 +178,6 @@ class fluxscale2_test(unittest.TestCase):
         os.system('rm -rf ngc4826*.gcal')
         os.system('rm -rf ngc4826*.fcal')
         
-        
     def test_spws(self):
         '''Fluxscale 2: Create a fluxscale table for an MS with many spws'''
         # Input
@@ -173,14 +197,47 @@ class fluxscale2_test(unittest.TestCase):
         self.assertTrue(th.compTables(outtable, reference, ['WEIGHT']))
         
         # compare some determined values returned in the dict
-        refdict={'1': {'spidxerr': np.array([ 0.,  0.,  0.]), 'spidx': np.array([ 0.,  0.,  0.]), \
-                 'fluxdErr': np.array([-1.        ,  0.04080052, -1.        , -1.        , -1.        , -1.        ]), \
-                 'fieldName': '1310+323-F0', 'numSol': np.array([-1,  8, -1, -1, -1, -1], dtype=np.int32), \
-                 'fluxd': np.array([-1.        ,  1.44578847, -1.        , -1.        , -1.        , -1.        ])}, \
-                 'freq': np.array([  1.15138579e+11,   1.15217017e+11,  -1.00000000e+00, -1.00000000e+00,  -1.00000000e+00, \
-                                 -1.00000000e+00]), 'spwName': np.array(['', '', '', '', '', ''], dtype='|S1'), \
-                 'spwID': np.array([0, 1, 2, 3, 4, 5], dtype=np.int32)} 
-        diff_fluxd=abs(refdict['1']['fluxd'][1]-thisdict['1']['fluxd'][1])/refdict['1']['fluxd'][1]
+
+        #refdict={'1': {'spidxerr': np.array([ 0.,  0.,  0.]), 'spidx': np.array([ 0.,  0.,  0.]), \
+        #         'fluxdErr': np.array([-1.        ,  0.04080052, -1.        , -1.        , -1.        , -1.        ]), \
+        #         'fieldName': '1310+323-F0', 'numSol': np.array([-1,  8, -1, -1, -1, -1], dtype=np.int32), \
+        #         'fluxd': np.array([-1.        ,  1.44578847, -1.        , -1.        , -1.        , -1.        ])}, \
+        #         'freq': np.array([  1.15138579e+11,   1.15217017e+11,  -1.00000000e+00, -1.00000000e+00,  -1.00000000e+00, \
+        #                         -1.00000000e+00]), 'spwName': np.array(['', '', '', '', '', ''], dtype='|S1'), \
+        #         'spwID': np.array([0, 1, 2, 3, 4, 5], dtype=np.int32)} 
+
+        # updated for new returned dictionary format (2013.09.12 TT)
+        refdict= {'1': {'fitRefFreq': 0.0, 
+                        'spidxerr': np.array([ 0.,  0.,  0.]), 
+                        'fitFluxd': 0.0, 
+                        'spidx': np.array([ 0.,  0.,  0.]), 
+                        '1': {'fluxdErr': np.array([ 0.04080052,  0.        ,  0.        ,  0.        ]), 
+                              'numSol': np.array([ 8.,  0.,  0.,  0.]), 
+                              'fluxd': np.array([ 1.44578847,  0.        ,  0.        ,  0.        ])}, 
+                        '0': {'fluxdErr': np.array([-1., -1., -1., -1.]), 
+                              'numSol': np.array([-1., -1., -1., -1.]), 
+                              'fluxd': np.array([-1., -1., -1., -1.])}, 
+                        '3': {'fluxdErr': np.array([-1., -1., -1., -1.]), 
+                              'numSol': np.array([-1., -1., -1., -1.]), 
+                              'fluxd': np.array([-1., -1., -1., -1.])}, 
+                        '2': {'fluxdErr': np.array([-1., -1., -1., -1.]), 
+                              'numSol': np.array([-1., -1., -1., -1.]), 
+                              'fluxd': np.array([-1., -1., -1., -1.])}, 
+                        '5': {'fluxdErr': np.array([-1., -1., -1., -1.]), 
+                              'numSol': np.array([-1., -1., -1., -1.]), 
+                              'fluxd': np.array([-1., -1., -1., -1.])}, 
+                        '4': {'fluxdErr': np.array([-1., -1., -1., -1.]), 
+                              'numSol': np.array([-1., -1., -1., -1.]), 
+                              'fluxd': np.array([-1., -1., -1., -1.])}, 
+                        'fieldName': '1310+323-F0', 
+                        'fitFluxdErr': 0.0}, 
+                  'freq': np.array([  1.15138579e+11,   1.15217017e+11,  -1.00000000e+00, -1.00000000e+00,  
+                                      -1.00000000e+00,  -1.00000000e+00]), 
+                  'spwName': np.array(['', '', '', '', '', ''], dtype='|S1'), 
+                  'spwID': np.array([0, 1, 2, 3, 4, 5], dtype=np.int32)}
+
+        diff_fluxd=abs(refdict['1']['1']['fluxd'][0]-thisdict['1']['1']['fluxd'][0])/refdict['1']['1']['fluxd'][0]
+
         self.assertTrue(diff_fluxd<1.e-8)
  
 def suite():
