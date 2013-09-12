@@ -1282,8 +1282,9 @@ class test_timeaverage(test_base):
         os.system('rm -rf '+ self.vis)
         os.system('rm -rf '+ self.outvis)
         os.system('rm -rf '+ self.refvis)
-        os.system('rm -rf '+ self.outvis_sorted)
-        os.system('rm -rf '+ self.refvis_sorted)
+        #os.system('rm -rf '+ self.tmpvis)
+        #os.system('rm -rf '+ self.outvis_sorted)
+        #os.system('rm -rf '+ self.refvis_sorted)
         
     def sort(self):
         myms = mstool()
@@ -1458,6 +1459,44 @@ class test_timeaverage(test_base):
         self.tolerance['SIGMA'] = 31
 
         self.post_process()   
+        
+    def test_timeaverage_and_combine_spws(self):
+        self.outvis = 'test_timeaverage_and_combine_spws_single_run.ms'
+        self.tmpvis = 'test_timeaverage_and_combine_spws_1st_step.ms'
+        self.refvis = 'test_timeaverage_and_combine_spws_2nd_step.ms'
+        self.outvis_sorted = 'test_timeaverage_and_combine_spws_single_run_sorted.ms'
+        self.refvis_sorted = 'test_timeaverage_and_combine_spws_2nd_step_sorted.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',antenna="0&&1",timerange='14:45:08.50~14:45:09.50',
+                    datacolumn='DATA',combinespws=True,timeaverage=True,timebin='2s')
+        mstransform(vis=self.vis,outputvis=self.tmpvis,spw='9,10',antenna="0&&1",timerange='14:45:08.50~14:45:09.50',
+                    datacolumn='DATA',timeaverage=True,timebin='2s')
+        mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',combinespws=True)
+        
+        self.generate_tolerance_map()
+        
+        self.mode['UVW'] = "absolute"
+        self.tolerance['UVW'] = 0.000001
+        
+        self.mode['FLAG'] = "absolute"
+        self.tolerance['FLAG'] = 1     
+        
+        self.mode['EXPOSURE'] = "absolute"
+        self.tolerance['EXPOSURE'] = 10000    
+        
+        self.mode['WEIGHT'] = "absolute"
+        self.tolerance['WEIGHT'] = 10000           
+        
+        self.mode['SIGMA'] = "absolute"
+        self.tolerance['SIGMA'] = 10000          
+        
+        self.mode['TIME_CENTROID'] = "absolute"
+        self.tolerance['TIME_CENTROID'] = 0.0001        
+        
+        self.mode['DATA'] = "absolute"
+        self.tolerance['DATA'] = 2   
+
+        self.post_process()         
 
 
 # Cleanup class 
