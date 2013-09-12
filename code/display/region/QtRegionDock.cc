@@ -418,6 +418,20 @@ namespace casa {
 			return dpg->numFrames( );
 		}
 
+		void QtRegionDock::updateFrameCount( int count ) {
+			std::list<Region*> regionList = regions();
+			for ( std::list<Region*>::iterator it = regionList.begin( );
+					it != regionList.end( ); ++it ) {
+				Region *rr = *it;
+				if ( rr != NULL ){
+					QtRegionState *state = rr->state( );
+					if ( state ){
+						state->updateFrameInformation( count );
+					}
+				}
+			}
+		}
+
 		void QtRegionDock::deleteRegions( const region::region_list_type &rl ) {
 			region::region_list_type listx(rl);
 			for ( region::region_list_type::iterator it = listx.begin( ); it != listx.end( ); ++it ) {

@@ -58,7 +58,7 @@ namespace casa {
 			int indexOf(QtRegionState*) const;
 			void removeRegion(QtRegionState*);
 			void selectRegion(QtRegionState*,bool scroll=true);
-
+			void updateFrameCount( int count );
 			void status( const std::string &msg, const std::string &type="info" );
 
 			QtDisplayPanelGui *panel( ) {

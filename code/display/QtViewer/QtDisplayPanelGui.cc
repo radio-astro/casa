@@ -1263,6 +1263,17 @@ void QtDisplayPanelGui::updateFrameInformationImage(){
 	animationHolder->setModeEnabled( uniqueImages.size() );
 }
 
+int QtDisplayPanelGui::numFrames( ) {
+	int frameCount = -1;
+	if ( animationHolder != NULL ){
+		frameCount = animationHolder->getChannelCount();
+	}
+	else {
+		frameCount = qdp_->nFrames( );
+	}
+	return frameCount;
+}
+
 void QtDisplayPanelGui::updateFrameInformationChannel(){
 	if ( qdp_ == NULL || animationHolder == NULL ){
 		return;
@@ -1285,6 +1296,7 @@ void QtDisplayPanelGui::updateFrameInformationChannel(){
 	}
 
 	//If we are in channel mode we use the actual number of channels.
+	int count = actualChannels;
 	if ( qdp_->modeZ()){
 		animationHolder->setChannelModeEnabled( actualChannels );
 	}
@@ -1292,6 +1304,10 @@ void QtDisplayPanelGui::updateFrameInformationChannel(){
 	//mode, we don't want it to come up selected.
 	else {
 		animationHolder->setChannelModeEnabled( maxChannels, false);
+		count = maxChannels;
+	}
+	if ( regionDock_ != NULL ){
+		regionDock_->updateFrameCount( count );
 	}
 }
 

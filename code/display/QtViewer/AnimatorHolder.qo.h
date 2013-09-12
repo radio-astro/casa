@@ -49,6 +49,7 @@ namespace casa {
 		int getRate( bool mode ) const;
 		int getLowerBoundChannel() const;
 		int getUpperBoundChannel() const;
+		int getChannelCount() const;
 		~AnimatorHolder();
 
 		void dismiss( );
