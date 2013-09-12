@@ -5599,6 +5599,9 @@ void SolvableVisJones::fluxscale(const String& outfile,
     Matrix<Double> spidx(nFld,3,0.0);
     Matrix<Double> spidxerr(nFld,3,0.0);
     Matrix<Double> covar;
+    Double fitFluxD(0.0);
+    Double fitFluxDErr(0.0);
+    Double fitRefFreq(0.0); 
     //Vector<Double> refFreq(nFld,0.0);
 
     for (Int iTran=0; iTran<nTran; iTran++) {
@@ -5659,7 +5662,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
         Vector<Double> log_relsolFreq=log10(freqs)-meanLogFreq;
         //Vector<Double> log_relsolFreq=log10(freqs);
         Vector<Double> log_fd=log10(fds);
-
+        
 	// The error in the log of fds is fderrs/fds
         Vector<Double> soln=fitter.fit(log_relsolFreq, log_fd, fderrs/fds);
         Vector<Double> errs=fitter.errors();
@@ -5669,18 +5672,21 @@ void SolvableVisJones::fluxscale(const String& outfile,
            spidx(tranidx,i) = soln(i);
            spidxerr(tranidx,i) = errs(i);
         } 
+        fitFluxD = pow(10.0,(soln(0)));
+//	correct for the proper propagation of error
+        fitFluxDErr = (errs(0)>0.0 ? log(10)*pow(10.0,(soln(0)))*errs(0) : 0.0);
+	fitRefFreq = pow(10.0,meanLogFreq);
         oFitMsg =" Fitted spectrum for ";
 	oFitMsg += fldNames(tranidx);
         oFitMsg += " with fitorder="+String::toString<Int>(myfitorder)+": ";
-//	oFitMsg += "Flux density = "+String::toString<Double>(exp10(soln(0)));
-	oFitMsg += "Flux density = "+String::toString<Double>(pow(10.0,(soln(0))));
+//	oFitMsg += "Flux density = "+String::toString<Double>(pow(10.0,(soln(0))));
+	oFitMsg += "Flux density = "+String::toString<Double>(fitFluxD);
 //	Double ferr=(errs(0)>0.0 ? exp10(errs(0)) : 0.0);
 //      Double ferr=(errs(0)>0.0 ? pow(10.0,(errs(0))) : 0.0);
-//	correct for the proper propagation of error
-        Double ferr=(errs(0)>0.0 ? log(10)*pow(10.0,(soln(0)))*errs(0) : 0.0);
-	oFitMsg += " +/- "+String::toString<Double>(ferr); 
+	oFitMsg += " +/- "+String::toString<Double>(fitFluxDErr); 
 //	oFitMsg += " (freq="+String::toString<Double>(refFreq(tranidx)/1.0e9)+" GHz)";
-	oFitMsg += " (freq="+String::toString<Double>(pow(10.0,meanLogFreq)/1.0e9)+" GHz)";
+//	oFitMsg += " (freq="+String::toString<Double>(pow(10.0,meanLogFreq)/1.0e9)+" GHz)";
+	oFitMsg += " (freq="+String::toString<Double>(fitRefFreq/1.0e9)+" GHz)";
         for (uInt j=1; j<soln.nelements();j++) {
           if (j==1) {
             oFitMsg += " spidx="+String::toString<Double>(soln(1)); 
@@ -5724,6 +5730,9 @@ void SolvableVisJones::fluxscale(const String& outfile,
     oFluxScaleStruct.freq = solFreq.copy();
     oFluxScaleStruct.spidx  = spidx.copy();
     oFluxScaleStruct.spidxerr  = spidxerr.copy();
+    oFluxScaleStruct.fitfd = fitFluxD;
+    oFluxScaleStruct.fitfderr = fitFluxDErr;
+    oFluxScaleStruct.fitreffreq = fitRefFreq;
     // quit if no scale factors found
     if (ntrue(scaleOK) == 0) throw(AipsError("No scale factors determined!"));
 
