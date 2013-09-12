@@ -1090,35 +1090,36 @@ fitsimage.done()
 </example>
 </method>
 
+
    <method type="function" name="imagecalc">
    <shortdescription>Perform mathematical calculations on an image or images.</shortdescription>
-   
+
 <input>
-  
+
      <param type="string"  name="outfile">
-     <description>Output image file name. If blank the resulting image is not written, but it can still be accessed via the returned image analysis tool.</description>
+     <description>Output image file name. If this is left blank then the resulting image is not written, but it can still be accessed via the returned image analysis tool.</description>
      <value></value>
      </param>
-  
+
      <param type="string"  name="pixels">
-     <description>LEL expression. Must be specified. For example "myimage1.im + myimage2.im".</description>
+     <description>LEL expression. This must be specified by the user. For example "myimage1.im + myimage2.im".</description>
      <value></value>
      </param>
-  
+
      <param type="bool"  name="overwrite">
-     <description>Overwrite (unprompted) pre-existing output file?</description>
+     <description>Overwrite (unprompted) pre-existing output file? </description>
      <value>false</value>
      </param>
 </input>
 <returns type="image"/>
 
-<description> 
+<description>
 
 This method is used to evaluate a mathematical expression involving
 existing images.  The syntax of the expression supplied via the pixels
 parameter (in what is called the Lattice Expression Language, or LEL) is
 explained in detail in \htmladdnormallink{note
-223}{http://aips2.nrao.edu/docs/notes/223/223.html}. This is a rich 
+223}{http://aips2.nrao.edu/docs/notes/223/223.html}. This is a rich
 mathematical language with allows all manner of mathematical operations
 to be applied to images.
 
@@ -1128,42 +1129,39 @@ Any image files embedded in the expression may be native \casa\ or
 If successful, this method always returns an image analysis tool that
 references the image resulting from the calculation. This returned tool
 should always be captured and closed as soon as the user is done with it
-to free up system resources (eg, memory). The image analysis tool on which
-the method is called (eg the ia tool when one runs ia.imagecalc()) remains
-unaltered, eg it still refers to the same image it did prior to the imagecalc()
+to free up system resources (e.g. memory). The image analysis tool on which
+the method is called (e.g. the ia tool when one runs ia.imagecalc()) remains
+unaltered, e.g. it still refers to the same image it did prior to the imagecalc()
 call.
 
 Values of the returned tool are evaluated "on demand". That is, only when a method
-is run on the returned tool are the necessary values computed. And in fact, the
-values have to be reevaluated for each operation (method call). This means that
-there is a small performance hit for using the returned tool rather than the image
-written to disk and that none of the images which were used in the expression
+is run on the returned tool are the necessary values computed. In fact, the
+values have to be re-evaluated for each operation (method call). This means that
+there is a small performance cost for using the returned tool rather than the image
+written to disk. Also, none of the images which were used in the expression
 should be deleted while the returned tool is in use because they must be accessed
 for calculating the expression each time an operation of the returned tool is
-performed. These limitations do not apply to the ouput image if one is specified
-with the outfile parameter; it is a genuine CASA image with
-numerical values. If outfile is blank, no ouput image is written (although
-the resulting image can still be accessed via the returned image analysis tool
-as described below).
+performed. These limitations do not apply to the output image if one is specified
+with the "outfile" parameter; it is a genuine CASA image with numerical values.
+If "outfile" is left blank, then no output image is written (although the resulting
+image can still be accessed via the returned image analysis tool as described below).
 
-Normally you should just write the image, close the returned
-tool, and open the results image with the default ia tool and operate on it. If
-you are interested in conserving disk space, you don't need to keep the result of
-the calculation around for very long, and/or you are only going to do a small 
-number of operations on the result image, should you set outfile="".
-
+Normally the user should just write the image, close the returned
+tool, open the resulting image with the default ia tool and operate on it. If
+there is a need to conserve disk space and it is not necessary to keep the result
+of the calculation around for very long, and/or the aim is only to perform a small
+number of operations on the resultant image, the user should set outfile = "".
 
 </description>
 
 <example>
 
 
-
 """
 # Suppose aF and bF are images with single precision and we want
 # to determine the result of the following expression:
 # aF + min(float($\pi$, mean(bF))
-#  
+# 
 # In this case, the images aF and bF do not need to have the same shapes and
 # coordinates, because only the mean(bF) results in the mean of all pixel
 # values in bF.  If aF has single precision pixel values, the resulting image
@@ -1203,15 +1201,15 @@ myim.done()
 # the minimum has been calculated on a pixel by pixel basis for the input
 # image(s).
 
-# create an image to operate on 
+# Create an image to operate on
 ia.fromshape('aF',[10,10],overwrite=true)
-# give it interesting values
+# Give it some interesting values
 ia.addnoise()
-# free up system resources
+# Free up system resources
 ia.done()
-# do the calculation and write results to image cF
+# Perform the calculation and write the results to image "cF"
 myim=ia.imagecalc('cF', 'min(aF, (min(aF)+max(aF))/2)', overwrite=true)
-# do whatever stuff you want with myim and the close it to free
+# Perform whatever other calculations are wanted on myim and the close it to free
 # up system resources
 myim.done()
 """
@@ -1219,11 +1217,13 @@ myim.done()
 
 <example>
 """
-# Here's an example of a more complicated function. Currently
+# Here is an example of a more complicated function. Currently
 # ia.fromshape() only creates real-valued images so the real()
-# function is not particularly exciting in this case but illustrates
-# possibilities. Trigonometric functions such as sin() assume the
+# function is not particularly exciting in this case, but it illustrates
+# the possibilities. Trigonometric functions such as sin() assume the
 # pixel values are in radians.
+
+# Create four images containing noise to operate on
 ia.fromshape('aD',[10,10],overwrite=true)
 ia.addnoise()
 ia.fromshape('aF',[10,10],overwrite=true)
@@ -1232,14 +1232,18 @@ ia.fromshape('bF',[10,10],overwrite=true)
 ia.addnoise()
 ia.fromshape('aC',[10,10],overwrite=true)
 ia.addnoise()
+# Free up system resources
 ia.done()
+# Perform the sample complicated calculation on myim
 myim = ia.imagecalc('eF', 'sin(aD)+(aF*2)+min(bF)+real(aC)', overwrite=true)
+# Close the myim tool to free up resources and complete the write to the resultant output file
 myim.done()
 """
 
 </example>
 
 </method>
+
 
 <method type="function" name="collapse">
     <shortdescription>Collapse an image along a specified axis, computing a specified aggregate function of pixels along that axis.</shortdescription>
@@ -6716,13 +6720,13 @@ ia.close()
 </example>
 </method>
 
- 
+
    <method type="function" name="open">
-   <shortdescription>Open a new image file with this image tool</shortdescription>
-   
+   <shortdescription>Open a new image file</shortdescription>
+
 
 <input>
-  
+
      <param type="string"  name="infile" mustexist="True">
      <description>image file name</description>
      </param>
@@ -6730,18 +6734,19 @@ ia.close()
 <returns type="bool">T or fail</returns>
 <description>
 
-Use this function when you are finished analyzing the current
-\imagefile\ and want to attach to another one.  This function detaches the
-\imagetool\ from the current \imagefile, and reattaches it (opens) to
-the new \imagefile. 
+This function can be used when analysis of the current \imagefile\
+has been done, and the user wishes to attach to another one.  This
+function detaches the \imagetool\ from the current \imagefile, and
+reattaches (opens) it to the new \imagefile.
 
-The input image file may be in native \casa, \fits, or Miriad  
-format.  Look \htmlref{here}{IMAGES:FOREIGNIMAGES}  for more
-information on foreign images.
+The input image file may be supplied in native \casa, \fits, or Miriad
+format.  See \htmlref{foreignimages}{IMAGES:FOREIGNIMAGES} for more
+information on the handling of foreign image formats.
 
 <!--
-You could, of course, also create a new \imagetool\ and associate that
-with the new \imagefile, but this saves you the \tool\ creation. 
+Of course, the user could also create a new \imagetool\ and associate that
+with the new \imagefile, but this approach allows the \tool\ creation to be
+omitted.
 -->
 
 </description>
@@ -6750,7 +6755,7 @@ with the new \imagefile, but this saves you the \tool\ creation.
 
 """
 #
-print "\t----\t open Ex 1 \t----"
+        print "\t----\t open Ex 1 \t----"
 ia.maketestimage('anotherimage',overwrite=true) #first make 2nd image
 ia.close()
 ia.maketestimage('myimage',overwrite=true)      #open image myimage
@@ -6759,9 +6764,14 @@ ia.close()
 #
 """
 
-The {\stff open} function first closes the old \imagefile.
+In the above example, an image file, "anotherimage", is first created, which is then closed.  An
+image file, "myimage", is then created (and opened), and then the file "anotherimage" is opened
+again, without first explicitly closing "myimage". The {\stff open} function first closes "myimage"
+before opening "anotherimage".
+
 </example>
 </method>
+
 
 <method type="function" name="pad">
     <shortdescription>Pad the perimeter of the direction plane with a number of pixels of specified value and mask.</shortdescription>
@@ -7242,74 +7252,75 @@ ia.close()
 </example>
 </method>
 
- 
+
    <method type="function" name="rebin">
-   <shortdescription>rebin the image by the specified factors</shortdescription>
-   
+   <shortdescription>Rebin the image data according to the specified settings</shortdescription>
+
 <input>
-  
+
      <param type="string"  name="outfile">
-     <description>Output image file name.  Default is unset.</description>
+     <description>Output image file name.  The default is unset.</description>
      </param>
-  
+
      <param type="intArray"  name="bin">
      <description>Binning factors for each axis</description>
      </param>
-  
+
      <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
+     <description>The region of interest.  The default setting is the whole image.</description>
      <value></value>
      </param>
-  
+
      <param type="any"  name="mask">
-	     <any type="variant"/>
-     <description>Mask to use. See help par.mask. Default is none.</description>
+             <any type="variant"/>
+     <description>Mask to use. See help on par.mask for more information. The default value is none. </description>
      <value type="string"/>
      </param>
-  
+
      <param type="bool"  name="dropdeg">
-     <description>Drop degenerate axes</description>
+     <description>Drop degenerate axes. The default value is false. </description>
      <value>false</value>
      </param>
-  
+
      <param type="bool"  name="overwrite">
-     <description>Overwrite (unprompted) pre-existing output file?</description>
+     <description>Overwrite (unprompted) pre-existing output file? The default value is false. </description>
      <value>false</value>
      </param>
-  
+
      <param type="bool"  name="async">
-     <description>Run asynchronously?</description>
+     <description>Run asynchronously?  The default value is false. </description>
      <value>false</value>
      </param>
-     
+
      <param type="bool"  name="stretch">
-        <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
+        <description>Stretch the mask if necessary and possible? See help par.stretch for more details. The default value is false. </description>
         <value>false</value>
      </param>
-     
+
 </input>
 <returns type="image"/>
 
 <description>
 
-This function rebins the current image by the specified integer binning
-factors for each axis.  The output pixel value is just the average of the
-input pixel values. The output pixel will be masked bad if there
-were no good input pixels.  You cannot rebin a Stokes axis.
+This function rebins the current image data by the specified integer binning
+factors for each axis.  The output pixel value is just the mean average of the
+input pixel values. The output pixel will be masked as bad if there
+were no good input pixels.  Stokes axes cannot be rebinned.
 
-If {\stfaf outfile} is given, the image is written to the specified
-disk file.  If {\stfaf outfile} is unset, the Image \tool\ is
-associated with a temporary image.  This temporary image may be in
-memory or on disk, depending on its size.  When you destroy the
-on-the-fly Image \tool\ returned by this function (with the <link
-anchor="images:image.done.function">done</link> function) this
-temporary image is deleted.
+The {\stfaf outfile} must be specified by the user, and the resultant
+image is written to the specified disk file.  If {\stfaf outfile} is
+set to an empty string (i.e. ""), the Image \tool\ is associated
+with a temporary image.  This temporary image may be in
+memory or on disk, depending on its size.  When the on-the-fly
+Image \tool\ returned by this function (with the <link
+anchor="images:image.done.function">done</link> function) is
+destroyed, this temporary image is deleted.
 
-Sometimes it is useful to drop axes of length one (degenerate axes). 
-Use the {\stfaf dropdeg} argument if you want to do this.  It will
-discard the axes from the input image.  Therefore the output shape and
-Coordinate System that you supply must be consistent with the input
-image after the degenerate axes are dropped. 
+It is sometimes useful/necessary to discard axes of length one (degenerate
+axes). The {\stfaf dropdeg} argument can be used to drop such degenerate
+axes from the input image.  The output shape and Coordinate System
+supplied by the user must therefore be consistent with the input
+image after the degenerate axes are dropped.
 
 </description>
 
@@ -7318,12 +7329,17 @@ image after the degenerate axes are dropped.
 """
 #
 print "\t----\t rebin Ex 1 \t----"
-ia.maketestimage();
-im2 = ia.rebin(bin=[2,3]);
+ia.maketestimage()
+im2 = ia.rebin(outfile="myrebin.im", bin=[2,3])
 im2.done()
 ia.close()
 #
 """
+
+In the above example, a temporary test image is first created.  This is
+then rebinned via an image tool instance called im2, in accordance with the
+rebinning factors [2, 3]. The output file written to disk is named myrebin.im.
+The im2 image tool instance is then destroyed and the image tool closed.
 
 </example>
 
@@ -10012,92 +10028,88 @@ temporary image.
 </example>
 </method>
 
-   <method type="function" name="newimagefromfits">
+
+   <method type="function" name="fromfits">
    <shortdescription>Construct a \casa\ image by conversion from a FITS image file</shortdescription>
-   
+
 <input>
-  
+
      <param type="string"  name="outfile">
-     <description>Output image file name.  Default is unset.</description>
+     <description>Output image file name.  The default value is unset.</description>
      <value></value>
      </param>
-  
+
      <param type="string"  name="infile">
-     <description>Input FITS disk file name.  Required.</description>
+     <description>Input FITS disk file name.  This must be specified by the user.</description>
      <value></value>
      </param>
-  
+
      <param type="int"  name="whichrep">
-     <description>If this FITS file contains multiple coordinate representations, which one should we read</description>
+     <description>If this FITS file contains multiple coordinate representations, this parameter is used to specify which one should be read (0-based, i.e. 0,1,2,3,…).  </description>
      <value>0</value>
      </param>
-  
+
      <param type="int"  name="whichhdu">
-     <description>If this FITS file contains multiple images, which one should we read (0-based).</description>
+     <description>If this FITS file contains multiple images, this parameter is used to specify which one should be read (0-based).  </description>
      <value>0</value>
      </param>
-  
+
      <param type="bool"  name="zeroblanks">
-     <description>If there are blanked pixels, set them to zero instead of NaN</description>
+     <description>If there are blanked pixels, specify that they should be set to a value of zero, instead of NaN.  </description>
      <value>false</value>
      </param>
-  
+
      <param type="bool"  name="overwrite">
-     <description>Overwrite (unprompted) pre-existing output file?</description>
+     <description>Overwrite (unprompted) the pre-existing output file?  </description>
      <value>false</value>
-     </param>
+       </param>
 </input>
-<returns type="image"/>
+<returns type="bool"/>
 <description>
 
-This function is used to convert a FITS disk image file (Float,
-Double, Short, Long are supported) to an \casa\ \imagefile.  If
-{\stfaf outfile} is given, the image is written to the specified disk
-file.  If {\stfaf outfile} is unset, the on-the-fly Image \tool\
-returned by this function is associated with a temporary image.  This
-temporary image may be in memory or on disk, depending on its size.
-When you destroy the on-the-fly Image \tool\ (with the <link
-anchor="images:image.done.function">done</link> function) this
-temporary image is deleted.
+This function is used to convert a FITS disk image file (Float, Double,
+Short and Long are supported) to a \casa\ \imagefile.  If a value for
+{\stfaf outfile} is provided by the user then the image is written to
+the specified disk file.  If {\stfaf outfile} is left unset, the Image
+\tool\ is associated with a temporary image.  This temporary image may
+be kept in memory or on disk, depending on its size.  When the user
+closes the Image \tool\ (with the <link anchor="images:image.close.function">close</link> function),
+this temporary image is deleted.
 
 This function reads from the FITS primary array (when the image is at
-the beginning of the FITS file; {\stfaf whichhdu=0}), or an image
+the beginning of the provided FITS file; {\stfaf whichhdu=0}), or an image
 extension (when the image is elsewhere in the FITS file, {\stfaf
-whichhdu $&gt;$ 0}). 
+whichhdu $&gt;$ 0}).
 
 By default, any blanked pixels will be converted to a mask value which
-is false, and a pixel value that is NaN.  If you set {\stfaf
-zeroblanks=T} then the pixel value will be zero rather than NaN.  The
-mask will still be set to false.  See the function
-<link anchor="images:image.replacemaskedpixels.function">replacemaskedpixels</link> if you
-need to replace masked pixel values after you have created the image. 
+is false, and a pixel value that is NaN.  If the user sets {\stfaf
+zeroblanks=T} then the values of these pixels will be set to zero
+rather than NaN.  The mask will still be set to false.  See the function
+<link anchor="images:image.replacemaskedpixels.function">replacemaskedpixels</link>
+if there is a need to replace masked pixel values after an image has
+been created.
 
 </description>
 <example>
 
 """
 #
-print "\t----\t newimagefromfits Ex 1 \t----"
-# Assume we can find test fits file using
-# CASAPATH environment variable
-pathname=os.environ.get("CASAPATH")
-pathname=pathname.split()[0]
+print "\t----\t fromfits Ex 1 \t----"
 datapath=pathname+'/data/demo/Images/imagetestimage.fits'
-im1=ia.newimagefromfits('./myimage', datapath, overwrite=true)
-print im1.summary()
-print im1.miscinfo()
-print 'fields=', im1.miscinfo().keys()
-im1.done()
+ia.fromfits('./myimage', datapath, overwrite=true)
+print ia.summary()
+s = ia.miscinfo()
+print s.keys()  #  prints any unrecognized field names
+ia.close()
 #
 """
 
-
 The FITS image is converted to a \casa\ \imagefile\ and access is
-provided via the \imagetool\ called {\stf im1}.  Any FITS header
-keywords which were not recognized or used are put in the
-miscellaneous information bucket accessible with the <link
+provided via the default \imagetool\ called {\stf ia}.  Any FITS
+header keywords which were not recognized or used are put into a
+miscellaneous information "bucket" that is accessible with the <link
 anchor="images:image.miscinfo.function">miscinfo</link> function.  In
-the example we list the names of the fields in this record.
+the above example, the names of the fields in this record are listed.
 
 </example>
 </method>
