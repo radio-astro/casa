@@ -137,8 +137,16 @@ def simobserve(
             complist = complist[0]
 
         if((not os.path.exists(skymodel)) and (not os.path.exists(complist))):
-            msg("No sky input found.  At least one of skymodel or complist must be set.",priority="error")
-            return False
+            if len(skymodel)>0:
+                msg("Your skymodel '"+skymodel+"' could not be found.",priority="warn")
+            if len(complist)>0:
+                msg("Your complist '"+complist+"' could not be found.",priority="warn")
+            if len(skymodel)==0 and len(complist)==0:
+                msg("At least one of skymodel or complist must be set.",priority="error")
+                
+            else:
+                msg("No sky input found.  At least one of skymodel or complist must exist.",priority="error")
+
 
         ### WORKAROUND for wrong flux in COMP + SKY TP simulations
         if (not uvmode) and (obsmode != "") and \
