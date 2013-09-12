@@ -193,6 +193,7 @@ macro( casa_add_tools out_swig out_sources out_py )
 
     # Generate .xml from .xml
     set( _out_xml casa${_base}.xml )
+    set( _typemaps ${CMAKE_SOURCE_DIR}/tools/casa_typemaps.i )
     set( _xsl ${CMAKE_SOURCE_DIR}/install/casa2swigxml.xsl )
     set( _swigh ${CMAKE_CURRENT_BINARY_DIR}/${_base}_cmpt.h )
     set( _swigi ${CMAKE_CURRENT_BINARY_DIR}/${_base}.i )
@@ -217,7 +218,7 @@ macro( casa_add_tools out_swig out_sources out_py )
       COMMAND sed -e \"s/\\\\\\\\r/r/g\" ${_out_xml} > ${_swigi}_tmp
       COMMAND ${SAXON} ${_swigi}_tmp ${_xsl3} > ${_swigi}_tmp2
       COMMAND sed -e \"s/<?xml version=.*//\" ${_swigi}_tmp2 > ${_swigi}
-      DEPENDS ${_xml} ${_swigh} ${_out_xml} ${_xsl3}
+      DEPENDS ${_xml} ${_swigh} ${_out_xml} ${_xsl3} ${_typemaps}
       )
     add_custom_command(
       OUTPUT ${_swigstatics}

@@ -182,132 +182,26 @@ if($1){
    $1 = new variant(pyobj2variant($input, true));
 }
 
-//%typemap(freearg) variant& {
-   //delete $1;
-//}
+%typemap(freearg) variant& {
+   delete $1;
+}
+
 //%typemap(freearg) record& {
    //delete $1;
 //}
-
-%typemap(freearg) variant& value{
-   delete $1;
-}
-
-%typemap(freearg) variant& thevalue{
-   delete $1;
-}
-
-%typemap(freearg) variant& pixels{
-   delete $1;
-}
-
-%typemap(freearg) variant& v_pixels{
-   delete $1;
-}
-
-%typemap(freearg) variant& inpa{
-   delete $1;
-}
-
-%typemap(freearg) variant& v_pixelmask{
-   delete $1;
-}
-
-%typemap(freearg) variant& vmask{
-   delete $1;
-}
-
-%typemap(freearg) variant& smoothtypes{
-   delete $1;
-}
-
-%typemap(freearg) variant& mask{
-   delete $1;
-}
-
-%typemap(freearg) variant& source{
-   delete $1;
-}
-
-%typemap(freearg) variant& beam{
-   delete $1;
-}
-
-%typemap(freearg) variant& widths{
-   delete $1;
-}
-
-%typemap(freearg) variant& theVar{
-   delete $1;
-}
-
-%typemap(freearg) variant& value{
-   delete $1;
-}
-
-%typemap(freearg) variant& fieldofview{
-   delete $1;
-}
-
-%typemap(freearg) variant& threshold{
-   delete $1;
-}
-
-%typemap(freearg) variant& bmaj{
-   delete $1;
-}
-
-%typemap(freearg) variant& bmin{
-   delete $1;
-}
-
-%typemap(freearg) variant& bpa{
-   delete $1;
-}
-
-%typemap(freearg) variant& time{
-   delete $1;
-}
-
-%typemap(freearg) variant& sigma{
-   delete $1;
-}
-
-%typemap(freearg) variant& targetflux{
-   delete $1;
-}
-
-%typemap(freearg) variant& pointingcenter{
-   delete $1;
-}
-
-%typemap(freearg) variant& parangle{
-   delete $1;
-}
-
-%typemap(freearg) variant& d_weight{
-   delete $1;
-}
-
-%typemap(freearg) variant& boxes{
-   delete $1;
-}
-
-%typemap(freearg) variant& circles{
-   delete $1;
-}
 
 %typemap(in) variant* {
    $1 = new variant(pyobj2variant($input, true));
 }
 
-%typemap(typecheck) variant {
-   $1=1;
-}
+//%typemap(typecheck) variant {
+ //  $1=1;
+//}
 
-%typemap(typecheck) variant& {
-   $1=1;
-}
+//%typemap(typecheck) variant& {
+   //$1=1;
+//}
+
 
 %typemap(in) record {
    if(PyDict_Check($input)){
