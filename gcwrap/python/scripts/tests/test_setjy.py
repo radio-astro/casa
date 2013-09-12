@@ -170,8 +170,8 @@ class test_SingleObservation(SetjyUnitTestBase):
         """Flux density in HISTORY (Uranus)?"""
         self.check_history(self.result['history'], ["Uranus", "V=0] Jy"])
         """Returned fluxes """
-        self.assertTrue(sjran.has_key('Uranus')) 
-        self.check_eq(sjran['Uranus']['1']['fluxd'][0],65.23839313,0.0001)
+        self.assertTrue(sjran.has_key('0')) 
+        self.check_eq(sjran['0']['1']['fluxd'][0],65.23839313,0.0001)
         """WVR spw"""
         self.check_eq(self.result['wvr'], numpy.array([[26.40653229+0.j,26.40653229+0.j]]),0.0001)
         """Zero spacing of spw 3"""
@@ -317,8 +317,8 @@ class test_SingleObservation(SetjyUnitTestBase):
         """Flux density in HISTORY (Uranus)?"""
         self.check_history(self.result['history'], ["Uranus:", "V=0.0] Jy"])
         """Returned fluxes """
-        self.assertTrue(sjran.has_key('Uranus')) 
-        self.check_eq(sjran['Uranus']['1']['fluxd'][0],66.112953186035156,0.0001)
+        self.assertTrue(sjran.has_key('0')) 
+        self.check_eq(sjran['0']['1']['fluxd'][0],66.112953186035156,0.0001)
         """WVR spw"""
         #self.check_eq(self.result['wvr'], numpy.array([[ 25.33798409+0.j,25.33798409+0.j]]),0.0001)
         # new value after code and ephemeris data update 2012-10-03
@@ -636,17 +636,18 @@ class test_ModImage(SetjyUnitTestBase):
         """Flux density in HISTORY (spix)?"""
         self.check_history(self.result['spix']['history'],["Scaling spw 1's model image to I ="])
         """ Returned flux density (using standard) """
-        self.assertTrue(self.result[True]['setjyran'].has_key('0542+498_1'))
-        self.check_eq(self.result[True]['setjyran']['0542+498_1']['1']['fluxd'][0],0.91134687,0.0001)
+        # fieldid = 12
+        self.assertTrue(self.result[True]['setjyran'].has_key('12'))
+        self.check_eq(self.result[True]['setjyran']['12']['1']['fluxd'][0],0.91134687,0.0001)
         """ Returned flux density (no  standard) """
-        self.assertTrue(self.result[False]['setjyran'].has_key('0542+498_1'))
-        self.check_eq(self.result[False]['setjyran']['0542+498_1']['1']['fluxd'][0],0.0,0.0001)
+        self.assertTrue(self.result[False]['setjyran'].has_key('12'))
+        self.check_eq(self.result[False]['setjyran']['12']['1']['fluxd'][0],0.0,0.0001)
         """ Returned flux density (with input fluxdensity) """
-        self.assertTrue(self.result['fluxdens']['setjyran'].has_key('0542+498_1'))
-        self.check_eq(self.result['fluxdens']['setjyran']['0542+498_1']['1']['fluxd'][0],1234.0,0.0001)
+        self.assertTrue(self.result['fluxdens']['setjyran'].has_key('12'))
+        self.check_eq(self.result['fluxdens']['setjyran']['12']['1']['fluxd'][0],1234.0,0.0001)
         """ Returned flux density (with input fluxdensity and spix) """
-        self.assertTrue(self.result['spix']['setjyran'].has_key('0542+498_1'))
-        self.check_eq(self.result['spix']['setjyran']['0542+498_1']['1']['fluxd'][0],1233.91240671,0.0001)
+        self.assertTrue(self.result['spix']['setjyran'].has_key('12'))
+        self.check_eq(self.result['spix']['setjyran']['12']['1']['fluxd'][0],1233.91240671,0.0001)
         """modimage != '' and fluxdensity == 0 -> no scaling?"""
         self.check_eq(self.result[False]['short'], 2.712631, 0.05)
         self.check_eq(self.result[False]['long'],  2.4080808, 0.05)
@@ -765,8 +766,20 @@ class test_conesearch(SetjyUnitTestBase):
                       standard='Perley-Butler 2013',
                       usescratch=True,
                       async=False)
-
+        ret = True
+        if type(sjran)!=dict:
+            ret = False
+        else: 
+            outfldid = ""
+            for ky in sjran.keys():
+                if sjran[ky].has_key('fieldName') and sjran[ky]['fieldName']==self.field:
+                    outfldid = ky
+                    break 
+            ret = len(outfldid)
+            if not ret:
+                print "FAIL: missing field = %s in the returned dictionary" % self.field 
         self.check_eq(sjran['myfcalsrc']['1']['fluxd'][0],0.99125797,0.0001)
+        self.assertTrue(ret)
 
 def suite():
     return [test_SingleObservation,test_MultipleObservations,test_ModImage, test_inputs, test_conesearch]

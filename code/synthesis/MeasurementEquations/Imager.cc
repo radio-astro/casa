@@ -4896,10 +4896,13 @@ Record Imager::setjy(const Vector<Int>& /*fieldid*/,
         //       are corrrectly filled.
         retvalperField.defineRecord(String::toString(rawspwid),subrec);
       }   // for selspw
-      retval.defineRecord(fieldName,retvalperField);
+      //retval.defineRecord(fieldName,retvalperField);
+      retvalperField.define("fieldName",fieldName);
+      retval.defineRecord(String::toString(fldid),retvalperField);
     }   // End of loop over fields.
     // add a format info for the returned flux densities (Record)
-    retval.define("format","{field name: {spw Id: {fluxd: [I,Q,U,V] in Jy}}}");
+    //retval.define("format","{field name: {spw Id: {fluxd: [I,Q,U,V] in Jy}}}");
+    retval.define("format","{field Id: {spw Id: {fluxd: [I,Q,U,V] in Jy}, 'fieldName':field name }}");
 
     if(!precompute && spix != 0.0 && reffreq.getValue().getValue() > 0.0){
       os << LogIO::NORMAL

@@ -102,7 +102,8 @@
                         <value>Butler-JPL-Horizons 2010</value>
                         <value>Scaife-Heald 2012</value>
 			<value>manual</value>
-			<value>image</value>
+			<value>fluxscale</value>
+			<!--<value>image</value>-->
 			</allowed>
 		</param>
 
@@ -135,6 +136,10 @@
 			<description>Reference frequency for spix</description>
 			<value>1GHz</value>
 		</param>
+                <param type="record" name="fluxdict" subparam="true">
+                       <description>output dictionary from fluxscale</description>
+                       <value type="record"></value>
+                </param>
                 <!-- for polarization fraction handling
 		<param type="doubleArray" name="polindex" subparam="true">
 			<description>Parameters of expansion of sqrt(Q^2+U^2) for linear polarization fraction</description>
@@ -237,11 +242,13 @@
                       <default param="rm"><value type="double">0.0</value></default>
                       -->
                   </equals>
-                  <equals type="string" value="image">
-                    <default param="model"><value type="string"></value></default>
-                   
-                    <!--<default param="modimage"><value type="string"></value></default>-->
+                  <equals type="string" value="fluxscale">
+                    <default param="fluxdict"><value type="record"></value></default>
                   </equals>
+                  <!--<equals type="string" value="image">
+                    <default param="model"><value type="string"></value></default>
+                  </equals>-->
+ 
                   </when>
                 </constraints>
 	</input>

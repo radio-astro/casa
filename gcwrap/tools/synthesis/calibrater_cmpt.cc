@@ -791,21 +791,53 @@ casac::record* calibrater::fluxscale(
     oRecord.define( "spwName", Vector<String>(oSPWName) );
     oRecord.define( "freq", Vector<Double>(oFluxD.freq) );
 
+    Vector<Double> SFluxD(4,0);
+    Vector<Double> SFluxDErr(4,0);
+    Vector<Double> numSoln(4,0);
+
     IPosition oStart( 2, 0, 0 );
     IPosition oEnd( 2, uiNumSPW-1, 0 );
     for ( uInt t=0; t<uiNumTranMax; t++ ) {
 
       oStart(1)=oEnd(1)=t;
+      
+      // Re-structured output record to make
+      // it similar to setjy output record
+      // 2013.09.10 TT
       //if (allNE(oFluxD.numSol(oStart,oEnd),-1)) {
       if (anyNE(oFluxD.numSol(oStart,oEnd),-1)) {
-	
 	Record oSubRecord;
+        for ( uInt s=0; s<uiNumSPW; s++) {
+          oStart(0)=oEnd(0)=s;
+          // I flux density       
+          SFluxD(0) = oFluxD.fd(oStart);
+          SFluxDErr(0) = oFluxD.fderr(oStart);
+	  numSoln(0) = oFluxD.numSol(oStart);
+          if (SFluxD(0) == -1) {
+            SFluxD(Slice(1,3))=-1;
+            SFluxDErr(Slice(1,3))=-1;    
+            numSoln(Slice(1,3))=-1;
+          } 
+          else { // reset to 0 for QUV fluxes 
+            SFluxD(Slice(1,3))=0;
+            SFluxDErr(Slice(1,3))=0;    
+            numSoln(Slice(1,3))=0;
+          }
+          Record oSubSubRecord;
+          oSubSubRecord.define("fluxd", SFluxD);
+          oSubSubRecord.define("fluxdErr", SFluxDErr);
+	  oSubSubRecord.define( "numSol", numSoln);
+          oSubRecord.defineRecord(String::toString<Int>(s), oSubSubRecord );
+        } //for loop for spw
 	oSubRecord.define( "fieldName", oFieldName[t] );
-	oSubRecord.define( "fluxd", Vector<Double>(oFluxD.fd(oStart,oEnd)) );
-	oSubRecord.define( "fluxdErr", Vector<Double>(oFluxD.fderr(oStart,oEnd)));
-	oSubRecord.define( "numSol", Vector<Int>(oFluxD.numSol(oStart,oEnd)));
+	//oSubRecord.define( "fluxd", Vector<Double>(oFluxD.fd(oStart,oEnd)) );
+	//oSubRecord.define( "fluxdErr", Vector<Double>(oFluxD.fderr(oStart,oEnd)));
+	//oSubRecord.define( "numSol", Vector<Int>(oFluxD.numSol(oStart,oEnd)));
 	oSubRecord.define( "spidx", Vector<Double>(oFluxD.spidx.row(t)));
 	oSubRecord.define( "spidxerr", Vector<Double>(oFluxD.spidxerr.row(t)));
+	oSubRecord.define( "fitFluxd", oFluxD.fitfd);
+	oSubRecord.define( "fitFluxdErr", oFluxD.fitfderr);
+	oSubRecord.define( "fitRefFreq", oFluxD.fitreffreq);
 	
 	oRecord.defineRecord( String::toString<Int>(t), oSubRecord );
       }

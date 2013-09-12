@@ -441,9 +441,10 @@ class ss_setjy_helper:
                 tmpdict[ispw]={}
                 tmpdict[ispw]['fluxd']=comp[ky]['component0']['flux']['value']
                 #tmpdict[ispw]['fluxderr']=comp[ky]['component0']['flux']['error']
-            retflxdict[srcn]=tmpdict
+            tmpdict['fieldName']=srcn
+            retflxdict[str(fid)]=tmpdict
         retflxdict['format']=\
-          '{field name: {spw Id: {fluxd:[I,Q,U,V] in %s}}}' % \
+          '{field Id: {spw Id: {fluxd:[I,Q,U,V] in %s}, \'fieldName\':field name}}' % \
           comp[ky]['component0']['flux']['unit']
         return retflxdict
 
