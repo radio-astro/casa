@@ -924,7 +924,7 @@ class simutil:
             iobs=obs.index(telescope)
         else:
             if self.verbose: self.msg("I don't know much about "+telescope+" so I'm going to use ALMA specs")
-            iobs=0 # ALMA is the default ;)
+            iobs=1 # ALMA is the default ;)
             
         if diam==None: diam=d[iobs]
         diam_subreflector=ds[iobs]

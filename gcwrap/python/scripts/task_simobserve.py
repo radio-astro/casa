@@ -1078,7 +1078,7 @@ def simobserve(
         msroot = fileroot + "/" + project  # if leakage, can just copy from this project
 
         if thermalnoise != "":
-            knowntelescopes = ["ALMA", "ACA", "SMA", "EVLA", "VLA"]
+            knowntelescopes = ["ALMASD", "ALMA", "ACA", "SMA", "EVLA", "VLA"]
 
             noise_any = True
 
