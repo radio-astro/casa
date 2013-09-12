@@ -1250,7 +1250,7 @@ myim.done()
         </param>
         <param type="any"  name="axes">
             <any type="variant"/>
-            <description>Zero-based (0, 1, 2, …) axis number (specified as a list or integer) along which to collapse the specified image. Default value is 0. </description>
+            <description>Zero-based (0, 1, 2) axis number (specified as a list or integer) along which to collapse the specified image. Default value is 0. </description>
             <value>0</value>
         </param>
         <param type="string"  name="outfile">
@@ -1298,7 +1298,7 @@ an image analysis tool containing the newly-created collapsed image. Valid choic
 for the function parameter (e.g. function = 'r' will compute the rms of the pixel values, 'med' will compute
 the median, etc.).
 
-Axes may be specified as a single integer or array of integers indicating the zero-based (i.e. 0, 1, 2, …)
+Axes may be specified as a single integer or an array of integers indicating the zero-based (i.e. 0, 1, 2)
 axes along which to collapse the image. Axes may also be specified as a single or array of strings which
 minimally and uniquely match (ignoring case) world axis names in the image (e.g. 'dec' for
 collapsing along the declination axis or ['ri', 'd'] for collapsing along both the right ascension and
