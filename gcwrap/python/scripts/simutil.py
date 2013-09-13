@@ -1203,7 +1203,7 @@ class simutil:
             self.imclean(tmpname+".ms",tmpname,
                        "csclean",cellsize,[128,128],
                        "J2000 00:00:00.00 "+qa.angle(dec)[0],
-                       False,100,"0.01mJy","natural",[],"I")
+                       False,100,"0.01mJy","natural",[],True,"I")
 
             ia.open(tmpname+".image")
             stats= ia.statistics(robust=True, verbose=False,list=False)
@@ -2684,7 +2684,7 @@ class simutil:
 
     def imclean(self,mstoimage,imagename,
                 cleanmode,cell,imsize,imcenter,interactive,niter,threshold,weighting,
-                outertaper,stokes,sourcefieldlist="",modelimage="",mask=[],dryrun=False):
+                outertaper,pbcor,stokes,sourcefieldlist="",modelimage="",mask=[],dryrun=False):
         from clean import clean
 
         from simutil import is_array_type
@@ -2846,7 +2846,8 @@ class simutil:
         else:
             cleanlast.write('modelimage              = ""\n');
         cleanlast.write("restoringbeam           = ['']\n");
-        cleanlast.write("pbcor                   = True\n");
+        cleanstr=cleanstr+",pbcor="+str(pbcor)
+        cleanlast.write("pbcor                   = "+str(pbcor)+"\n");
         cleanlast.write("minpb                   = 0.2\n");
         cleanlast.write("calready                = True\n");
         cleanlast.write('noise                   = ""\n');

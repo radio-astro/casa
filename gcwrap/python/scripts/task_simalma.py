@@ -1206,6 +1206,7 @@ def simalma(
                 msg(" ",priority="info")
                 msg("-"*60, origin="simalma", priority="info")
                 msg(("Step %d: imaging and analyzing " % step)+antennalist[i], origin="simalma", priority="info")
+                msg("  This step is optional, but useful to assess the result from just one configuration.",priority="warn",origin="simalma")
                 msg("  WARNING: The example clean shown here uses no mask, may diverge, and almost certainly is not optimal.",priority="warn",origin="simalma")
                 msg("  Users are HIGHLY recommended to use interactive clean masking (in simanalyze or directly in clean)",priority="warn",origin="simalma")
                 msg("  Auto-masking is under development for use in the ALMA pipeline and will be included here in a future release",priority="warn",origin="simalma")
@@ -1442,32 +1443,38 @@ def simalma(
                 
                 msg(" ",priority="info")
                 msg("Multiply total power image by interferometric sensitivity map:",priority=v_priority)
-                msg("immath(imagename=['"+regridimg+"','"+pbcov+"'],expr='IM1*IM0',outfile='"+scaledimg+"')",priority="info")
-                if not dryrun:
-                    immath(imagename=[regridimg, pbcov],
-                           expr='IM1*IM0',outfile=scaledimg)
+#                msg("immath(imagename=['"+regridimg+"','"+pbcov+"'],expr='IM1*IM0',outfile='"+scaledimg+"')",priority="info")
+#                if not dryrun:
+#                    immath(imagename=[regridimg, pbcov],
+#                           expr='IM1*IM0',outfile=scaledimg)
+#
+#                msg(" ",priority="info")                
+#                msg("Set total power image beam and brightness unit:",priority=v_priority)                                
+#                msg("ia.open('"+fileroot+"/"+imagename_tp+"')",priority="info")
+#                msg("beam_tp = ia.restoringbeam()",priority="info")
+#                msg("bunit_tp = ia.brightnessunit()",priority="info")
+#                msg("ia.close()",priority="info")
+#                msg("ia.open('"+scaledimg+"')",priority="info")
+#                msg("ia.setrestoringbeam(beam=beam_tp)",priority="info")
+#                msg("ia.setbrightnessunit(bunit_tp)",priority="info")
+#                msg("ia.close()",priority="info")
+#
+#                if not dryrun:
+#                    pdb.set_trace()
+#                    # restore TP beam and brightness unit
+#                    ia.open(fileroot+"/"+imagename_tp)
+#                    beam_tp = ia.restoringbeam()
+#                    bunit_tp = ia.brightnessunit()
+#                    ia.close()
+#                    ia.open(scaledimg)
+#                    ia.setrestoringbeam(beam=beam_tp)
+#                    ia.setbrightnessunit(bunit_tp)
+#                    ia.close()
 
-                msg(" ",priority="info")                
-                msg("Set total power image beam and brightness unit:",priority=v_priority)                                
-                msg("ia.open('"+fileroot+"/"+imagename_tp+"')",priority="info")
-                msg("beam_tp = ia.restoringbeam()",priority="info")
-                msg("bunit_tp = ia.brightnessunit()",priority="info")
-                msg("ia.close()",priority="info")
-                msg("ia.open('"+scaledimg+"')",priority="info")
-                msg("ia.setrestoringbeam(beam=beam_tp)",priority="info")
-                msg("ia.setbrightnessunit(bunit_tp)",priority="info")
-                msg("ia.close()",priority="info")
-
+                msg("impbcor('"+regridimg+"', '"+pbcov+"', outfile='"+scaledimg+"',mode='multiply')",priority="info")
                 if not dryrun:
-                    # restore TP beam and brightness unit
-                    ia.open(fileroot+"/"+imagename_tp)
-                    beam_tp = ia.restoringbeam()
-                    bunit_tp = ia.brightnessunit()
-                    ia.close()
-                    ia.open(scaledimg)
-                    ia.setrestoringbeam(beam=beam_tp)
-                    ia.setbrightnessunit(bunit_tp)
-                    ia.close()
+                    from impbcor import impbcor 
+                    impbcor(regridimg, pbcov, outfile=scaledimg,mode='multiply')
 
                 # de-pbcor the INT image
                 highimage = fileroot+"/"+imagename_int+".pbscaled"
@@ -1475,29 +1482,36 @@ def simalma(
                 #       expr='IM1/IM0',outfile=highimage)     
                 msg(" ",priority="info")
                 msg("Multiply interferometric image by sensitivity map (un-pbcor):",priority="info")
-                msg("immath(imagename=['"+highimage0+"','"+pbcov+"'],expr='IM1*IM0',outfile='"+highimage+"')",priority="info")
-                msg("Restore interferometric beam and brightness unit:",priority="info")
-                msg("ia.open('"+highimage0+"')",priority="info")
-                msg("beam_int = ia.restoringbeam()",priority="info")
-                msg("bunit_int = ia.brightnessunit()",priority="info")
-                msg("ia.close()",priority="info")
-                msg("ia.open('"+highimage+"')",priority="info")
-                msg("ia.setrestoringbeam(beam=beam_int)",priority="info")
-                msg("ia.setbrightnessunit(bunit_int)",priority="info")
-                msg("ia.close()",priority="info")
+#                msg("immath(imagename=['"+highimage0+"','"+pbcov+"'],expr='IM1*IM0',outfile='"+highimage+"')",priority="info")
+#                msg("Restore interferometric beam and brightness unit:",priority="info")
+#                msg("ia.open('"+highimage0+"')",priority="info")
+#                msg("beam_int = ia.restoringbeam()",priority="info")
+#                msg("bunit_int = ia.brightnessunit()",priority="info")
+#                msg("ia.close()",priority="info")
+#                msg("ia.open('"+highimage+"')",priority="info")
+#                msg("ia.setrestoringbeam(beam=beam_int)",priority="info")
+#                msg("ia.setbrightnessunit(bunit_int)",priority="info")
+#                msg("ia.close()",priority="info")
+#
+#                if not dryrun:
+#                    immath(imagename=[highimage0, pbcov],
+#                           expr='IM1*IM0',outfile=highimage)
+#                    # restore INT beam and brightness unit
+#                    ia.open(highimage0)
+#                    beam_int = ia.restoringbeam()
+#                    bunit_int = ia.brightnessunit()
+#                    ia.close()
+#                    ia.open(highimage)
+#                    ia.setrestoringbeam(beam=beam_int)
+#                    ia.setbrightnessunit(bunit_int)
+#                    ia.close()
 
+                msg("impbcor('"+highimage0+"', '"+pbcov+"', outfile='"+highimage+"',mode='multiply')",priority="info")
                 if not dryrun:
-                    immath(imagename=[highimage0, pbcov],
-                           expr='IM1*IM0',outfile=highimage)
-                    # restore INT beam and brightness unit
-                    ia.open(highimage0)
-                    beam_int = ia.restoringbeam()
-                    bunit_int = ia.brightnessunit()
-                    ia.close()
-                    ia.open(highimage)
-                    ia.setrestoringbeam(beam=beam_int)
-                    ia.setbrightnessunit(bunit_int)
-                    ia.close()
+                    impbcor(highimage0, pbcov, outfile=highimage,mode='multiply')
+
+
+
                     
                     
                 # Feathering
@@ -1528,13 +1542,21 @@ def simalma(
                     #shutil.rmtree(scaledimg)
                     casalog.origin('simalma')
 
+
                 # re-pbcor the result
                 msg(" ",priority="info")
                 msg("Re-apply the primary beam correction to the feathered result:",priority=v_priority)
-                msg("immath(imagename=['"+outimage0+"','"+pbcov+"'],expr='IM0/IM1',outfile='"+outimage+"')",priority="info")
+#                msg("immath(imagename=['"+outimage0+"','"+pbcov+"'],expr='IM0/IM1',outfile='"+outimage+"')",priority="info")
+#                if not dryrun:
+#                    immath(imagename=[outimage0, pbcov],
+#                           expr='IM0/IM1',outfile=outimage)
+
+                msg("impbcor('"+outimage0+"', '"+pbcov+"', outfile='"+outimage+"')",priority="info")
                 if not dryrun:
-                    immath(imagename=[outimage0, pbcov],
-                           expr='IM0/IM1',outfile=outimage)
+                    impbcor(outimage0, pbcov, outfile=outimage)
+
+
+
 
 
                 ########################################################

@@ -16,7 +16,7 @@ def simanalyze(
     # else:
     vis=None, modelimage=None, imsize=None, imdirection=None, cell=None,
     interactive=None, niter=None, threshold=None,
-    weighting=None, mask=None, outertaper=None, stokes=None,
+    weighting=None, mask=None, outertaper=None, pbcor=None, stokes=None,
     featherimage=None,
     # endif
     analyze=None,
@@ -251,7 +251,7 @@ def simanalyze(
         components_only=False
 
         # first look for skymodel, if not then compskymodel
-        skymodels=glob.glob(fileroot+"/"+project+"*\.skymodel")+glob.glob(fileroot+"/"+project+"*\.newmodel")
+        skymodels=glob.glob(fileroot+"/"+project+"*.skymodel")+glob.glob(fileroot+"/"+project+"*.newmodel")
         nmodels=len(skymodels)
         skymodel_index=0
         if nmodels>1:
@@ -291,10 +291,11 @@ def simanalyze(
                 analyze=False
 
         modelflat = skymodel+".flat"
-        if not (os.path.exists(modelflat) or dryrun):
-            myutil.flatimage(skymodel,verbose=verbose)
 
-        if os.path.exists(skymodel) or (not dryrun):
+        if os.path.exists(skymodel):
+            if not (os.path.exists(modelflat) or dryrun):
+                myutil.flatimage(skymodel,verbose=verbose)
+            
             # modifymodel just collects info if skymodel==newmodel
             (model_refdir,model_cell,model_size,
              model_nchan,model_center,model_width,
@@ -608,7 +609,7 @@ def simanalyze(
             myutil.imclean(mstoimage,imagename,
                          cleanmode,cell,imsize,imdirection,
                          interactive,niter,threshold,weighting,
-                         outertaper,stokes, #sourcefieldlist=sourcefieldlist,
+                         outertaper,pbcor,stokes, #sourcefieldlist=sourcefieldlist,
                          modelimage=modelimage,mask=mask,dryrun=dryrun)
 
 
