@@ -1146,9 +1146,16 @@ windows in the dataset and close the tool.
         
         <method type="function" name="wvrspws">
             <shortdescription>Get an array of spectral window IDs used for WVR. These are windows that have 4 channels.</shortdescription>
+            <input>
+                <param type="bool" direction="in" name="compliment">
+                    <description>If True, return all non-wvr spws.</description>
+                    <value>-false</value>
+                </param>
+            </input>
             <returns type="intArray"/>
             <description>
                 Get an array of spectral window IDs used for WVR. These are windows that have 4 channels.
+                If complement is True, return the compliment set instead (all non-wvr spw IDs).
             </description>
             <example>
     msmd.open("my.ms")

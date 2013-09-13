@@ -770,6 +770,11 @@ class msmd_test(unittest.TestCase):
             32, 33, 34, 35, 36, 37, 38, 39
         ])
         self.assertTrue((got == expec).all())
+        got = self.md.wvrspws(False)
+        self.assertTrue((got == expec).all())
+        got = self.md.wvrspws(True)
+        expec = range(1, 25)
+        self.assertTrue((got == expec).all())
 
     def test_bandwidths(self):
         """Test bandwidths()"""

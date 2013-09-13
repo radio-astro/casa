@@ -41,6 +41,9 @@
 
 #include <stdcasa/cboost_foreach.h>
 
+#include <boost/iterator/counting_iterator.hpp>
+
+
 #include <casa/namespace.h>
 
 #define _ORIGIN *_log << LogOrigin("msmetadata_cmpt.cc", __FUNCTION__, __LINE__);
@@ -782,10 +785,23 @@ vector<int> msmetadata::tdmspws() {
 	return vector<int>();
 }
 
-vector<int> msmetadata::wvrspws() {
-	_FUNC(
-		return _setUIntToVectorInt(_msmd->getWVRSpw());
-	)
+vector<int> msmetadata::wvrspws(bool complement) {
+	//_FUNC(
+		vector<int> wvrs = _setUIntToVectorInt(_msmd->getWVRSpw());
+		if (complement) {
+			vector<int> nonwvrs(
+				boost::counting_iterator<int>(0),
+				boost::counting_iterator<int>(_msmd->nSpw(True)));
+			vector<int>::iterator begin = nonwvrs.begin();
+			foreach_r_(int spw, wvrs) {
+				nonwvrs.erase(begin + spw);
+			}
+			return nonwvrs;
+		}
+		else {
+			return wvrs;
+		}
+	//)
 	return vector<int>();
 }
 
