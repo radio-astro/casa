@@ -3099,9 +3099,24 @@ Bool Imager::makeimage(const String& type, const String& image,
     Matrix<Float> weight;
     ft_p->makeImage(seType, *rvi_p, cImageImage, weight);
     StokesImageUtil::To(imageImage, cImageImage);
-    imageImage.setUnits(Unit("Jy/beam"));
-    cImageImage.setUnits(Unit("Jy/beam"));
-    
+    // Dirty way to set the proper unit to SD image
+    String msunit("");
+    String imunit;
+    if (ms_p->isColumn(MS::DATA))
+      msunit = ms_p->columnUnit(MS::DATA);
+    else if (ms_p->isColumn(MS::FLOAT_DATA))
+      msunit = ms_p->columnUnit(MS::FLOAT_DATA);
+    msunit.upcase();
+    //    cout << "got MS unit " << msunit << endl;
+    if (msunit == String("K"))
+      imunit = "K";
+    else
+      imunit = "Jy/beam";
+    imageImage.setUnits(Unit(imunit));
+    cImageImage.setUnits(Unit(imunit));
+//     imageImage.setUnits(Unit("Jy/beam"));
+//     cImageImage.setUnits(Unit("Jy/beam"));
+
     if(keepImage) {
       imageImage.table().unmarkForDelete();
     }
