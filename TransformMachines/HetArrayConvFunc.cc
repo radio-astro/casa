@@ -34,6 +34,7 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Containers/SimOrdMap.h>
+#include <scimath/Mathematics/FFTServer.h>
 #include <measures/Measures/MeasTable.h>
 #include <scimath/Mathematics/MathFunc.h>
 #include <scimath/Mathematics/ConvolveGridder.h>
@@ -68,6 +69,8 @@
 #include <synthesis/TransformMachines/PBMath1DNumeric.h>
 #include <synthesis/TransformMachines/PBMath2DImage.h>
 #include <synthesis/TransformMachines/HetArrayConvFunc.h>
+
+#include <casa/OS/Timer.h>
 
 #include <wcslib/wcsconfig.h>  /** HAVE_SINCOS **/
 
@@ -212,17 +215,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+ 
+
   void HetArrayConvFunc::findConvFunction(const ImageInterface<Complex>& iimage, 
 					  const VisBuffer& vb,
-					  const Int& convSampling,
-					  Cube<Complex>& convFunc, 
-					  Cube<Complex>& weightConvFunc, 
+					  const Int& convSampling, const Vector<Double>& visFreq,
+					  Array<Complex>& convFunc, 
+					  Array<Complex>& weightConvFunc, 
 					  Vector<Int>& convsize,
 					  Vector<Int>& convSupport,
-					  Vector<Int>& rowMap)
+					  Vector<Int>& convFuncPolMap,
+					  Vector<Int>& convFuncChanMap,
+					  Vector<Int>& convFuncRowMap)
   {
 
     storeImageParams(iimage,vb);
+    convFuncChanMap.resize(vb.nChannel());
+    Vector<Double> beamFreqs;
+    findUsefulChannels(convFuncChanMap, beamFreqs, vb, visFreq);
+    // cerr << "SPW " << vb.spectralWindow() << "   beamFreqs "<< beamFreqs <<  " chamMap " << convFuncChanMap << endl;
+    Int nBeamChans=beamFreqs.nelements();
+    /////For now not doing beam rotation or squints but to be enabled easily 
+    convFuncPolMap.resize(vb.nCorr());
+    Int nBeamPols=1;
+    convFuncPolMap.set(0);
     findAntennaSizes(vb);
     uInt ndish=antMath_p.nelements();
     if(ndish==0)
@@ -235,32 +251,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     convFunc.resize();
     weightConvFunc.resize();
-    rowMap.resize();
+    convFuncRowMap.resize();
     convsize.resize();
     convSupport.resize();
 
-    Int isCached=checkPBOfField(vb, rowMap);
- 
+    Int isCached=checkPBOfField(vb, convFuncRowMap);
     //cout << "isCached " << isCached <<  endl;
-    if(isCached==1 && (rowMap.shape()[0]==vb.nRow())){
-      convFunc.reference(convFunc_p);
+    if(isCached==1 && (convFuncRowMap.shape()[0]==vb.nRow())){
+      /*convFunc.reference(convFunc_p);
       weightConvFunc.reference(weightConvFunc_p);
       convsize=*convSizes_p[actualConvIndex_p];
       convSupport=convSupport_p;
        return;
+      */
     }
     else if(isCached ==2){
       convFunc.resize();
       weightConvFunc.resize();
       convsize.resize();
       convSupport.resize();
-      rowMap.resize();
+      convFuncRowMap.resize();
       return;
+      
+    }
+    actualConvIndex_p=convIndex(vb);
+    if(doneMainConv_p.shape()[0] < (actualConvIndex_p+1)){
+      //cerr << "resizing DONEMAIN " <<   doneMainConv_p.shape()[0] << endl;
+    	doneMainConv_p.resize(actualConvIndex_p+1, True);
+    	doneMainConv_p[actualConvIndex_p]=False;
     }
     ///// In multi ms mode ndishpair may change when meeting a new ms
     //// redo the calculation then
-    if(doneMainConv_p && (convSupport_p.nelements() != uInt(ndishpair)))
-      doneMainConv_p=False;
+    if(doneMainConv_p[actualConvIndex_p] && ((convSupport_p.nelements() != uInt(ndishpair)) || convFunctions_p[actualConvIndex_p]->shape()[3] != nBeamChans))
+      doneMainConv_p[actualConvIndex_p]=False;
 
 
     // Get the coordinate system
@@ -271,7 +294,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int nx=nx_p;
     Int ny=ny_p;
     Int support=0;
-    if(!doneMainConv_p){
+    if(!doneMainConv_p[actualConvIndex_p]){
       for (uInt ii=0; ii < ndish; ++ii){
 	support=max((antMath_p[ii])->support(coords), support);
       }
@@ -286,7 +309,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     DirectionCoordinate dc=dc_p;
     //where in the image in pixels is this pointing
-    Vector<Double> pixFieldDir(2);
+    Vector<Double> pixFieldDir(2);if(doneMainConv_p.shape()[0] < (actualConvIndex_p+1)){
+      //cerr << "resizing DONEMAIN " <<   doneMainConv_p.shape()[0] << endl;
+    	doneMainConv_p.resize(actualConvIndex_p+1, True);
+    	doneMainConv_p[actualConvIndex_p]=False;
+    }
     //no need to call toPix here as its been done already above in checkOFPB
     //thus the values are still current.
     pixFieldDir=thePix_p;
@@ -303,7 +330,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     
    
-    if(!doneMainConv_p){
+    if(!doneMainConv_p[actualConvIndex_p]){
       Vector<Double> sampling;
       sampling = dc.increment();
       sampling*=Double(convSampling);
@@ -318,17 +345,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       fieldDir.set(dc.worldAxisUnits()(0));
       dc.setReferenceValue(fieldDir.getAngle().getValue());
       coords.replaceCoordinate(dc, directionIndex);
-    
+      Int spind=coords.findCoordinate(Coordinate::SPECTRAL);
+      SpectralCoordinate spCoord=coords.spectralCoordinate(spind);
+      spCoord.setReferencePixel(Vector<Double>(1,0.0));
+      spCoord.setReferenceValue(Vector<Double>(1, beamFreqs(0)));
+      if(beamFreqs.nelements() >1)
+	spCoord.setIncrement(Vector<Double>(1, beamFreqs(1)-beamFreqs(0)));
+      coords.replaceCoordinate(spCoord, spind);
 
-      IPosition pbShape(4, convSize_p, convSize_p, 1, 1);
+      IPosition pbShape(4, convSize_p, convSize_p, 1, nBeamChans);
       TempImage<Complex> twoDPB(pbShape, coords);    
     
-      convFunc_p.resize(convSize_p, convSize_p, ndishpair);
+      convFunc_p.resize(IPosition(5, convSize_p, convSize_p, nBeamPols, nBeamChans, ndishpair));
       convFunc_p=0.0;
-      weightConvFunc_p.resize(convSize_p, convSize_p, ndishpair);
+      weightConvFunc_p.resize(IPosition(5, convSize_p, convSize_p, nBeamPols, nBeamChans, ndishpair));
       weightConvFunc_p=0.0;
-    
-  
+      IPosition begin(5, 0, 0, 0, 0, 0);
+      IPosition end(5, convFunc_p.shape()[0]-1,  convFunc_p.shape()[1]-1, nBeamPols-1, nBeamChans-1, 0);
+      FFTServer<Float, Complex> fft(IPosition(2, convSize_p, convSize_p));
       TempImage<Complex> pBScreen(pbShape, coords);
       TempImage<Complex> pB2Screen(pbShape, coords);
       IPosition start(4, 0, 0, 0, 0);
@@ -336,13 +370,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       for (uInt k=0; k < ndish; ++k){
       
 	for (uInt j =k ; j < ndish; ++j){
-	
+	  //Timer tim;
 	  //Matrix<Complex> screen(convSize_p, convSize_p);
 	  //screen=1.0;
 	  //pBScreen.putSlice(screen, start);
 	  //cerr << "k " << k << " shape " << pBScreen.shape() <<  " direction1 " << direction1_p << " direction2 " << direction2_p << endl;
 	  pBScreen.set(Complex(1.0, 0.0));
 	  //one antenna 
+	  //tim.mark();
 	  (antMath_p[k])->applyVP(pBScreen, pBScreen, direction1_p);
 
 	  //Then the other
@@ -360,49 +395,84 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  //Matrix<Complex> screenoo(convSize_p, convSize_p);
 	  //screenoo.set(1.0);
 	  //pB2Screen.putSlice(screenoo, start);
+	  //tim.show("After Apply ");
+	  //tim.mark();
 	  pB2Screen.set(Complex(1.0,0.0));
 	  //one antenna 
 	  (antMath_p[k])->applyPB(pB2Screen, pB2Screen, direction1_p);
 	  //Then the other
 	  (antMath_p[j])->applyPB(pB2Screen, pB2Screen, direction2_p);
 	  
-
+	  //tim.show("After Apply2 ");
+	  //tim.mark();
 	  pBScreen.copyData((LatticeExpr<Complex>) (iif(abs(pBScreen)> 5e-2, pBScreen, 0)));
 	  pB2Screen.copyData((LatticeExpr<Complex>) (iif(abs(pB2Screen)> 25e-4, pB2Screen, 0)));
-
+	  //tim.show("after masking ");
+	  //tim.mark();
 	  LatticeFFT::cfft2d(pBScreen);
 	  LatticeFFT::cfft2d(pB2Screen);
-
+	  
+	  //Matrix<Complex> lala=pBScreen.get(True);
+	  //fft.fft0(lala, True);
+	  //fft.flip(lala, False, False);
+	  // pBScreen.put(lala.reform(IPosition(4, convSize_p, convSize_p, 1, 1)));
+	  //lala=pB2Screen.get(True);
+	  //fft.fft0(lala, True);
+	  //fft.flip(lala, False, False);
+	  //pB2Screen.put(lala.reform(IPosition(4, convSize_p, convSize_p, 1, 1)));
+	  
+	  //////////*****************
+	  if(0){
+	    ostringstream os1;
+	    os1 << "PB_field_" << Int(thePix_p[0]) << "_" << Int(thePix_p[1]) << "_antpair_" << k <<"_"<<j ;
+	    PagedImage<Float> thisScreen(pbShape, coords, String(os1));
+	    LatticeExpr<Float> le(abs(pBScreen));
+	    thisScreen.copyData(le);
+	  
+	  }
+	  ////////*****************/
+	 
+	  //tim.show("after FFT ");
+	  //tim.mark();
 	  Int plane=0;
 	  for (uInt jj=0; jj < k; ++jj)
 	    plane=plane+ndish-jj-1;
 	  plane=plane+j;
-
-	  convFunc_p.xyPlane(plane)=pBScreen.get(True);
-	  weightConvFunc_p.xyPlane(plane)=pB2Screen.get(True);
+	  begin[4]=plane;
+	  end[4]=plane;
+	  //cerr <<  "SHAPES " << convFunc_p(begin, end).shape() << "  " << pBScreen.get(False).shape() << " begin and end " << begin << "    " << end << endl;
+	  convFunc_p(begin, end).copyMatchingPart(pBScreen.get(False));
+	  weightConvFunc_p(begin, end).copyMatchingPart(pB2Screen.get(False));
 	  supportAndNormalize(plane, convSampling);
-	  
+	  //tim.show("After search of support ");
 	}
 	
       }
 
 
-      doneMainConv_p=True;
-      convSave_p.resize();
-      weightSave_p.resize();
-      convSave_p=convFunc_p;
-      weightSave_p=weightConvFunc_p;
+      doneMainConv_p[actualConvIndex_p]=True;
+      convFunctions_p.resize(actualConvIndex_p+1);
+      convWeights_p.resize(actualConvIndex_p+1);
+      convFunctions_p[actualConvIndex_p]= new Array<Complex>();
+      convWeights_p[actualConvIndex_p]= new Array<Complex>();
       Int newConvSize=2*(max(convSupport_p)+2)*convSampling;
       if(newConvSize < convSize_p){
-	IPosition blc(3, (convSize_p/2)-(newConvSize/2),
-		      (convSize_p/2)-(newConvSize/2),0);
-	IPosition trc(3, (convSize_p/2)+(newConvSize/2-1),
-		      (convSize_p/2)+(newConvSize/2-1), ndishpair-1);
-	convSave_p.resize(newConvSize, newConvSize, ndishpair);
-	convSave_p=convFunc_p(blc,trc);
+	IPosition blc(5, (convSize_p/2)-(newConvSize/2),
+		      (convSize_p/2)-(newConvSize/2),0,0,0);
+	IPosition trc(5, (convSize_p/2)+(newConvSize/2-1),
+		      (convSize_p/2)+(newConvSize/2-1), nBeamPols-1, nBeamChans-1,ndishpair-1);
+	
+	convFunctions_p[actualConvIndex_p]= new Array<Complex>(IPosition(5, newConvSize, newConvSize, nBeamPols, nBeamChans, ndishpair ));
+	convWeights_p[actualConvIndex_p]= new Array<Complex>(IPosition(5, newConvSize, newConvSize, nBeamPols, nBeamChans, ndishpair ));
+	(*convFunctions_p[actualConvIndex_p])=convFunc_p(blc,trc);
 	convSize_p=newConvSize;
-	weightSave_p.resize(newConvSize, newConvSize, ndishpair);
-	weightSave_p=weightConvFunc_p(blc,trc);
+	(*convWeights_p[actualConvIndex_p])=weightConvFunc_p(blc,trc);
+	convFunc_p.resize();
+	weightConvFunc_p.resize();
+      }
+      else{
+	(*convFunctions_p[actualConvIndex_p])=convFunc_p;
+	(*convWeights_p[actualConvIndex_p])=weightConvFunc_p;
       }
 
     }
@@ -415,12 +485,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     }
     */
-    makerowmap(vb, rowMap);
+    makerowmap(vb, convFuncRowMap);
 
-    convFunctions_p.resize(actualConvIndex_p+1);
-    convWeights_p.resize(actualConvIndex_p+1);
-    convFunctions_p[actualConvIndex_p]= new Cube<Complex>();
-    convWeights_p[actualConvIndex_p]= new Cube<Complex>();
+    
     convSupportBlock_p.resize(actualConvIndex_p+1);
     convSizes_p.resize(actualConvIndex_p+1);
     convSupportBlock_p[actualConvIndex_p]=new Vector<Int>(ndishpair);
@@ -433,22 +500,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     *(convWeights_p[actualConvIndex_p])=weightSave_p;
     */
 
-    convFunc_p.resize(convSize_p, convSize_p, ndishpair);
-    convFunc_p=convSave_p;
-    weightConvFunc_p.resize(convSize_p, convSize_p, ndishpair);
-    weightConvFunc_p=weightSave_p;
+    convFunc_p.resize();
+    convFunc_p=(*convFunctions_p[actualConvIndex_p]);
+    weightConvFunc_p.resize();
+    weightConvFunc_p=(*convWeights_p[actualConvIndex_p]);
     Bool delc; Bool delw;
     Double dirX=pixFieldDir(0);
     Double dirY=pixFieldDir(1);
     Complex *convstor=convFunc_p.getStorage(delc);
     Complex *weightstor=weightConvFunc_p.getStorage(delw);
     Int elconvsize=convSize_p;
+    //cerr << "SHAPES " << convFunc_p.shape() << "     " << weightConvFunc_p.shape() << endl;
 
-#pragma omp parallel default(none) firstprivate(convstor, weightstor, dirX, dirY, elconvsize, ndishpair)
+#pragma omp parallel default(none) firstprivate(convstor, weightstor, dirX, dirY, elconvsize, ndishpair, nBeamChans, nBeamPols)
     {
-    #pragma omp for
+#pragma omp for
       for(Int iy=0; iy<elconvsize; ++iy){
-	applyGradientToYLine(iy,  convstor, weightstor, dirX, dirY, elconvsize, ndishpair);
+	applyGradientToYLine(iy,  convstor, weightstor, dirX, dirY, elconvsize, ndishpair, nBeamChans, nBeamPols);
 	
       }
     }///End of pragma
@@ -456,28 +524,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     convFunc_p.putStorage(convstor, delc);
     weightConvFunc_p.putStorage(weightstor, delw);
 
-    /*
-    //Apply the shift phase gradient
-
-    for (Int iy=0;iy<convSize_p;iy++) {
-      Double cy, sy;
-      //sincos(Double(iy-convSize_p/2)*pixFieldDir(1), &sy, &cy);
-      cy=cos(Double(iy-convSize_p/2)*pixFieldDir(1));
-      sy=sin(Double(iy-convSize_p/2)*pixFieldDir(1));
-      Complex phy(cy,sy) ;
-      for (Int ix=0;ix<convSize_p;ix++) {
-	Double cx, sx;
-	//sincos(Double(ix-convSize_p/2)*pixFieldDir(0), &sx, &cx);
-	cx=cos(Double(ix-convSize_p/2)*pixFieldDir(0));
-	sx=sin(Double(ix-convSize_p/2)*pixFieldDir(0));
-	Complex phx(cx,sx) ;
-	for(Int iz=0; iz <ndishpair; ++iz){
-	  (*(convFunctions_p[actualConvIndex_p]))(ix,iy,iz)= (*(convFunctions_p[actualConvIndex_p]))(ix,iy,iz)*phx*phy;
-	  (*(convWeights_p[actualConvIndex_p]))(ix,iy,iz)= (*(convWeights_p[actualConvIndex_p]))(ix,iy,iz)*phx*phy;
-	}
-      }
-    }
-    */
 
 
     //For now all have the same size convsize;
@@ -497,39 +543,50 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-  void HetArrayConvFunc::applyGradientToYLine(const Int iy, Complex*& convFunctions, Complex*& convWeights, const Double pixXdir, const Double pixYdir, Int convSize, const Int ndishpair){
+
+  void HetArrayConvFunc::applyGradientToYLine(const Int iy, Complex*& convFunctions, Complex*& convWeights, const Double pixXdir, const Double pixYdir, Int convSize, const Int ndishpair, const Int nChan, const Int nPol){
     Double cy, sy;
+
     SINCOS(Double(iy-convSize/2)*pixYdir, sy, cy);
     Complex phy(cy,sy) ;
     for (Int ix=0;ix<convSize;ix++) {
       Double cx, sx;
       SINCOS(Double(ix-convSize/2)*pixXdir, sx, cx);
       Complex phx(cx,sx) ;
-      for(Int iz=0; iz <ndishpair; ++iz){
-	Int index=(iz*convSize+iy)*convSize+ix;
-	convFunctions[index]= convFunctions[index]*phx*phy;
-	convWeights[index]= convWeights[index]*phx*phy;
+      for (Int ipol=0; ipol< nPol; ++ipol){
+	//Int poloffset=ipol*nChan*ndishpair*convSize*convSize;
+	for (Int ichan=0; ichan < nChan; ++ichan){
+	  //Int chanoffset=ichan*ndishpair*convSize*convSize;
+	  for(Int iz=0; iz <ndishpair; ++iz){
+	    Int index=(((ipol*nChan+ichan)*ndishpair+iz)*convSize+iy)*convSize+ix;
+	    convFunctions[index]= convFunctions[index]*phx*phy;
+	    convWeights[index]= convWeights[index]*phx*phy;
+	  }
+	}
       }
-    }
     
   }
-
+  }
    Bool HetArrayConvFunc::toRecord(RecordInterface& rec){
      
      try{
        rec.define("name", "HetArrayConvFunc");
-       rec.define("ndefined", nDefined_p);
-       rec.define("convfunctionmap", convFunctionMap_p);
-       for (Int64 k=0; k < nDefined_p; ++k){
+       Int numConv=convFunctions_p.nelements();
+       rec.define("ndefined", numConv);
+       //rec.define("convfunctionmap", convFunctionMap_p);
+       std::map<String, Int>::iterator it=vbConvIndex_p.begin();
+       for (Int64 k=0; k < numConv; ++k){
 	 rec.define("convfunctions"+String::toString(k), *(convFunctions_p[k]));
 	 rec.define("convweights"+String::toString(k), *(convWeights_p[k]));
 	 rec.define("convsizes"+String::toString(k), *(convSizes_p[k]));
 	 rec.define("convsupportblock"+String::toString(k), *(convSupportBlock_p[k]));
+	 rec.define(String("key")+String::toString(k), it->first);
+	rec.define(String("val")+String::toString(k), it->second);
+	it++;
        }
+       rec.define("actualconvindex",  actualConvIndex_p);
        rec.define("donemainconv", doneMainConv_p);
-       rec.define("convsave", convSave_p);
-       rec.define("weightsave", weightSave_p);
-       rec.define("convsupport", convSupport_p);
+      
        rec.define("pbclass", Int(pbClass_p));
        
     }
@@ -548,12 +605,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if(!rec.isDefined("name") || rec.asString("name") != "HetArrayConvFunc"){
 	throw(AipsError("Wrong record to recover HetArray from"));
       }
-      nDefined_p=rec.asInt64("ndefined");
-      rec.get("convfunctionmap", convFunctionMap_p);
+      nDefined_p=rec.asInt("ndefined");
+      //rec.get("convfunctionmap", convFunctionMap_p);
       convFunctions_p.resize(nDefined_p, True, False);
       convSupportBlock_p.resize(nDefined_p, True, False);
       convWeights_p.resize(nDefined_p, True, False);
       convSizes_p.resize(nDefined_p, True, False);
+      vbConvIndex_p.erase(vbConvIndex_p.begin(), vbConvIndex_p.end());
       for (Int64 k=0; k < nDefined_p; ++k){
 	convFunctions_p[k]=new Cube<Complex>();
 	convWeights_p[k]=new Cube<Complex>();
@@ -563,17 +621,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	rec.get("convweights"+String::toString(k), *(convWeights_p[k]));
 	rec.get("convsizes"+String::toString(k), *(convSizes_p[k]));
 	rec.get("convsupportblock"+String::toString(k), *(convSupportBlock_p[k]));
+	String key;
+	Int val;
+	rec.get(String("key")+String::toString(k), key);
+	rec.get(String("val")+String::toString(k), val);
+	vbConvIndex_p[key]=val;
       }
       //Now that we are calculating all phase gradients on the fly ..
       ///we should clean up some and get rid of the cached variables
       convSize_p=(*(convSizes_p[0]))[0];
-      convSave_p.resize();
-      rec.get("convsave", convSave_p);
-      weightSave_p.resize();
-      rec.get("weightsave", weightSave_p);
+      //convSave_p.resize();
+      //rec.get("convsave", convSave_p);
+      //weightSave_p.resize();
+      //rec.get("weightsave", weightSave_p);
       rec.get("donemainconv", doneMainConv_p);
-      convSupport_p.resize();
-      rec.get("convsupport", convSupport_p);
+      //convSupport_p.resize();
+      //rec.get("convsupport", convSupport_p);
       pbClass_p=static_cast<PBMathInterface::PBClass>(rec.asInt("pbclass"));
       calcFluxScale_p=calcfluxscale;
     }
@@ -592,13 +655,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << LogOrigin("HetArrConvFunc", "suppAndNorm")  << LogIO::NORMAL;
     // Locate support
 	Int convSupport=-1;
-	Float maxAbsConvFunc=max(amplitude(convFunc_p.xyPlane(plane)));
-	Float minAbsConvFunc=min(amplitude(convFunc_p.xyPlane(plane)));
+	IPosition begin(5, 0, 0, 0, 0, plane);
+	IPosition end(5, convFunc_p.shape()[0]-1,  convFunc_p.shape()[1]-1, 0, 0, plane);
+	Matrix<Complex> convPlane(convFunc_p(begin, end).reform(IPosition(2,convFunc_p.shape()[0], convFunc_p.shape()[1]))) ;
+	Float maxAbsConvFunc=max(amplitude(convPlane));
+	Float minAbsConvFunc=min(amplitude(convPlane));
 	Bool found=False;
 	Int trial=0;
 	for (trial=convSize_p/2-2;trial>0;trial--) {
 	  //Searching down a diagonal
-	  if(abs(convFunc_p.xyPlane(plane)(convSize_p/2-trial,convSize_p/2-trial)) >  (1.0e-2*maxAbsConvFunc)) {
+	  if(abs(convPlane(convSize_p/2-trial,convSize_p/2-trial)) >  (1.0e-2*maxAbsConvFunc)) {
 	    found=True;
 	    trial=Int(sqrt(2.0*Float(trial*trial)));
 	    break;
@@ -651,22 +717,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if(convSupport >0){
 	  IPosition blc(2, -convSupport*convSampling+convSize_p/2, -convSupport*convSampling+convSize_p/2);
 	  IPosition trc(2, convSupport*convSampling+convSize_p/2, convSupport*convSampling+convSize_p/2);
-	  
-	  pbSum=real(sum(convFunc_p.xyPlane(plane)(blc,trc)))/Double(convSampling)/Double(convSampling);
-	  if(pbSum>0.0) {
-	    (convFunc_p.xyPlane(plane))=convFunc_p.xyPlane(plane)*Complex(1.0/pbSum,0.0);
-	    (weightConvFunc_p.xyPlane(plane)) =(weightConvFunc_p.xyPlane(plane))*Complex(1.0/pbSum,0.0);
+	  for (Int chan=0; chan < convFunc_p.shape()[3]; ++chan){
+	    begin[3]=chan;
+	    end[3]=chan;
+	    convPlane.resize();
+	    convPlane.reference(convFunc_p(begin, end).reform(IPosition(2,convFunc_p.shape()[0], convFunc_p.shape()[1])));
+	    pbSum=real(sum(convPlane(blc,trc)))/Double(convSampling)/Double(convSampling);
+	    if(pbSum>0.0) {
+	      (convPlane)=convPlane*Complex(1.0/pbSum,0.0);
+	      convPlane.resize();
+	      convPlane.reference(weightConvFunc_p(begin, end).reform(IPosition(2,convFunc_p.shape()[0], convFunc_p.shape()[1])));
+	      (convPlane) =(convPlane)*Complex(1.0/pbSum,0.0);
+	    }
+	    else {
+	      os << "Convolution function integral is not positive"
+		 << LogIO::EXCEPTION;
+	    }
 	  }
-	  else {
-	    os << "Convolution function integral is not positive"
-	       << LogIO::EXCEPTION;
-	  }
-
 	}
 	else{
 	  //no valid convolution for this pointing
-	  convFunc_p.xyPlane(plane).set(0.0);
-	  weightConvFunc_p.xyPlane(plane).set(0.0);
+	  for (Int chan=0; chan < convFunc_p.shape()[3]; ++chan){
+	    begin[3]=chan;
+	    end[3]=chan;
+	    convFunc_p(begin, end).set(0.0);
+	    weightConvFunc_p(begin, end).set(0.0);
+	  //convFunc_p.xyPlane(plane).set(0.0);
+	  //weightConvFunc_p.xyPlane(plane).set(0.0);
+	  }
 	}
 
   }
