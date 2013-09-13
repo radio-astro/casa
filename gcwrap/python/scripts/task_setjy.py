@@ -191,12 +191,11 @@ def setjy_core(vis=None, field=None, spw=None,
                     # function to return selected field, spw, etc
                     fieldidused=parse_fluxdict(fluxdict, vis, field, spw, observation, timerange,
                                            scan, intent, usescratch)
-                    print "Fieldid used=",fieldidused
 
                     if len(fieldidused):
                         retval={}
                         for selfld in fieldidused:
-                            selspix=fluxdict[selfld]["spidx"][0]  # setjy only support alpha for now
+                            selspix=fluxdict[selfld]["spidx"][1]  # setjy only support alpha for now
                             # set all (even if fluxdensity = -1
                             if spw=='':
                                 selspw = [] 
@@ -222,7 +221,8 @@ def setjy_core(vis=None, field=None, spw=None,
                                 selfluxd = fluxdict[selfld][str(selspw[0])]['fluxd']
                                 # assuming the fluxscale reporting the center freq of a given spw
                                 selreffreq=fluxdict["freq"][selspw[0]] 
-                   
+                            casalog.post("Use fluxdensity=%s, reffreq=%s, spix=%s" %
+                                     (selfluxd,selreffreq,selspix)) 
                             curretval=myim.setjy(field=selfld,spw=selspw,modimage=modimage,
                                                  fluxdensity=selfluxd, spix=selspix, reffreq=selreffreq, 
                                                  standard=instandard, scalebychan=scalebychan,

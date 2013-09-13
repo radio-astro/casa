@@ -334,7 +334,7 @@ class test_SingleObservation(SetjyUnitTestBase):
 
         return sjran
 
-    def test4_SingleObservationSelectByChan(self):
+    def test4_SingleObservationSelectByIntent(self):
         """ Test vs an MS with one single observation using the Butler-JPL-Horizons 2010 model with the selection by intent"""
 
         os.system("mv " + self.inpms + " " + self.inpms + ".test2")
@@ -744,7 +744,8 @@ class test_inputs(SetjyUnitTestBase):
         print "\nRunning setjy in listmodels mode ...."
         sjran = setjy(vis=self.inpms,listmodels=True)
         self.assertTrue(sjran)
-      
+
+
 class test_conesearch(SetjyUnitTestBase):
     """Test search for field match by position (standard='Perley-Butler 2013')"""
 
@@ -778,8 +779,58 @@ class test_conesearch(SetjyUnitTestBase):
             ret = len(outfldid)
             if not ret:
                 print "FAIL: missing field = %s in the returned dictionary" % self.field 
-        self.check_eq(sjran['myfcalsrc']['1']['fluxd'][0],0.99125797,0.0001)
+        self.check_eq(sjran['12']['1']['fluxd'][0],0.99125797,0.0001)
         self.assertTrue(ret)
 
+class test_fluxscaleStandard(SetjyUnitTestBase):
+    """Test standard="fluxscale" mode"""
+
+    def setUp(self):
+        self.setUpMS('unittest/setjy/ngc5921.ms')
+        self.field = 'myfcalsrc'
+        self.modelim = '3C147_U.im'
+        self.result = {}
+
+    def tearDown(self):
+        self.resetMS()
+
+    def test1(self):
+        """ Test for accepting input fluxscale dictionary """
+        import numpy as np
+        fluxscaledict=\
+        {'1': {'0': {'fluxd': np.array([ 2.48362403,  0.        ,  0.        ,  0.        ]),
+             'fluxdErr': np.array([ 0.00215907,  0.        ,  0.        ,  0.        ]),
+             'numSol': np.array([ 54.,   0.,   0.,   0.])},
+       'fieldName': '1445+09900002_0',
+       'fitFluxd': 0.0,
+       'fitFluxdErr': 0.0,
+       'fitRefFreq': 0.0,
+       'spidx': np.array([ 0.,  0.,  0.]),
+       'spidxerr': np.array([ 0.,  0.,  0.])},
+       'freq':np. array([  1.41266507e+09]),
+       'spwID': np.array([0], dtype=np.int32),
+       'spwName': np.array(['none'], dtype='|S5')}
+
+        sjran = setjy(vis=self.inpms,
+                      standard='fluxscale',
+                      fluxdict=fluxscaledict,
+                      usescratch=False,
+                      async=False)
+        ret = True
+        if type(sjran)!=dict:
+            ret = False
+        else:
+            outfldid = ""
+            for ky in sjran.keys():
+                if sjran[ky].has_key('fieldName') and sjran[ky]['fieldName']==fluxscaledict['1']['fieldName']:
+                    outfldid = ky
+                    break
+            ret = len(outfldid)
+            if not ret:
+                print "FAIL: missing field = %s in the returned dictionary" % self.field
+        self.check_eq(sjran['1']['0']['fluxd'][0],2.48362403,0.0001)
+        self.assertTrue(ret)
+
+
 def suite():
-    return [test_SingleObservation,test_MultipleObservations,test_ModImage, test_inputs, test_conesearch]
+    return [test_SingleObservation,test_MultipleObservations,test_ModImage, test_inputs, test_conesearch, test_fluxscaleStandard]

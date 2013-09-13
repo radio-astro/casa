@@ -404,7 +404,8 @@
                      'Butler-JPL-Horizons 2010', 
                      'Butler-JPL-Horizons 2012', 
                      'manual'
-                     <!-- manual, image to be added -->
+                     'fluxscale' 
+                     <!-- image to be added -->
             All but the last two are for extragalactic calibrators,
             and the final two are for Solar System objects.  
             Note that Scaife-Heald 2012 is for the low frequencies (mostly
@@ -599,6 +600,19 @@
 
 		Examples: '86.0GHz', '4.65e9Hz'
 
+       &gt;&gt;&gt; standard="fluxscale" expandable parameters
+	    fluxdict -- Output dictionary from fluxscale
+                Using the fluxscale results, the flux density, spectral index,
+                and reference freuquency are extracted and set to fluxdensity,
+                spix, and reffreq parameters, respectively.
+                The field and spw selections can be used to sepecify subset of 
+                the fluxdict to be used to set the model. If they are left as 
+                default (field="", spw="") all fields and/or spws in 
+                the fluxdict (but those spws with fluxd=-1 will be skipped) are
+                used.  
+		default: {}
+                 
+
         usescratch  -- If False: 'virtual' model is created. The model is saved in the header 
         and model visibilities are evaluated when calculating calibration or plotting in plotms.
         If True: the model visibility will be evaluated and saved on disk in the MODEL_DATA 
@@ -613,6 +627,14 @@
 
          
         default: False        
+
+
+    Returned dictionary: 
+        When the setjy task is excuted as setjy(vis='', ..), the flux densities used to set
+        the model are returned as a Python dictionary with the format,
+        {field Id: {spw Id: {fluxd: [I,Q,U,V] in Jy}, 'fieldName':field name }}, where
+        field Id and spw Id are in string type. 
+            
 </example>
 </task>
 </casaxml>
