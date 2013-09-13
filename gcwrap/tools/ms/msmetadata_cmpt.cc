@@ -39,6 +39,8 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSMetaDataOnDemand.h>
 
+#include <stdcasa/cboost_foreach.h>
+
 #include <casa/namespace.h>
 
 #define _ORIGIN *_log << LogOrigin("msmetadata_cmpt.cc", __FUNCTION__, __LINE__);
@@ -168,9 +170,30 @@ record* msmetadata::antennaoffset(const variant& which) {
 	return 0;
 }
 
-record* msmetadata::antennaposition(const int which) {
+record* msmetadata::antennaposition(const variant& which) {
 	_FUNC(
-		MeasureHolder out(_msmd->getAntennaPositions(vector<uInt>(1, which))[0]);
+		variant::TYPE type = which.type();
+		ThrowIf(
+			type != variant::BOOLVEC && type != variant::INT
+			&& type != variant::STRING,
+			"Unsupported type for which, must be either int or string"
+		);
+		MeasureHolder out;
+		if (type == variant::BOOLVEC || type == variant::INT) {
+			out = MeasureHolder(
+				_msmd->getAntennaPositions(
+					type == variant::BOOLVEC ? vector<uInt>(1, 0)
+					: vector<uInt>(1, which.toInt())
+				)[0]
+			);
+		}
+		else {
+			out = MeasureHolder(
+				_msmd->getAntennaPositions(
+					vector<String>(1, which.toString())
+				)[0]
+			);
+		}
 		Record outRec;
 		out.toRecord(outRec);
 		return fromRecord(outRec);
@@ -178,22 +201,55 @@ record* msmetadata::antennaposition(const int which) {
 	return 0;
 }
 
-record* msmetadata::antennaposition(const string& name) {
+variant* msmetadata::bandwidths(const variant& spws) {
 	_FUNC(
-		MeasureHolder out(_msmd->getAntennaPositions(vector<String>(1, String(name)))[0]);
-		Record outRec;
-		out.toRecord(outRec);
-		return fromRecord(outRec);
+		variant::TYPE type = spws.type();
+		ThrowIf(
+			type != variant::INT && type != variant::INTVEC
+			&& type != variant::BOOLVEC,
+			"Unsupported type for spws (" + spws.typeString()
+			+ "), must be either an int or an array of ints"
+		)
+
+		int mymax = 0;
+		if (type == variant::INT) {
+			mymax = spws.toInt();
+		}
+		else if (type == variant::INTVEC) {
+			Vector<Int> tmp(spws.toIntVec());
+			ThrowIf(
+				min(tmp) < 0,
+				"When specified as an array, no element of spws may be < 0"
+			);
+			mymax = max(tmp);
+		}
+		_checkSpwId(mymax, False);
+		vector<Double> bws = _msmd->getBandWidths();
+		if (type == variant::BOOLVEC) {
+			return new variant(bws);
+		}
+		if (type == variant::INT) {
+			if (spws.toInt() < 0) {
+				return new variant(bws);
+			}
+			else {
+				return new variant(bws[spws.toInt()]);
+			}
+		}
+		else {
+			vector<Double> ret;
+			foreach_(int id, spws.toIntVec()) {
+				ret.push_back(bws[id]);
+			}
+			return new variant(ret);
+		}
 	)
 	return 0;
 }
-
 
 int msmetadata::baseband(int spw) {
 	_FUNC (
-		if (spw < 0 || spw >= (int)_msmd->nSpw(True)) {
-			*_log << "Spectral window ID out of range" << LogIO::EXCEPTION;
-		}
+		_checkSpwId(spw, True);
 		return _msmd->getBBCNos()[spw];
 	)
 	return 0;
@@ -218,14 +274,19 @@ vector<int> msmetadata::chanavgspws() {
 
 vector<double> msmetadata::chanfreqs(int spw, const string& unit) {
 	_FUNC2 (
-		if (spw < 0 || spw >= (int)_msmd->nSpw(True)) {
-			*_log << "Spectral window ID out of range" << LogIO::EXCEPTION;
-		}
+		_checkSpwId(spw, True);
 		return _msmd->getChanFreqs()[spw].getValue(Unit(unit)).tovector();
 	)
 	return vector<double>();
 }
 
+vector<double> msmetadata::chanwidths(int spw, const string& unit) {
+	_FUNC2 (
+		_checkSpwId(spw, True);
+		return _msmd->getChanWidths()[spw].getValue(Unit(unit)).tovector();
+	)
+	return vector<double>();
+}
 
 bool msmetadata::close() {
 	_FUNC2(
@@ -331,9 +392,7 @@ variant* msmetadata::fieldsforscans(const vector<int>& scans, const bool asnames
 
 variant* msmetadata::fieldsforspw(const int spw, const bool asnames) {
 	_FUNC(
-		if (spw < 0) {
-			throw AipsError("Spectral window ID must be nonnegative.");
-		}
+		_checkSpwId(spw, True);
 		if (asnames) {
 			return new variant(
 				_setStringToVectorString(_msmd->getFieldNamesForSpw(spw))
@@ -396,9 +455,7 @@ vector<string> msmetadata::intentsforscan(int scan) {
 
 vector<string> msmetadata::intentsforspw(int spw) {
 	_FUNC(
-		if (spw < 0) {
-			throw AipsError("Spectral window ID must be nonnegative.");
-		}
+		_checkSpwId(spw, True);
 		return _setStringToVectorString(_msmd->getIntentsForSpw(spw));
 	)
 	return vector<string>();
@@ -406,9 +463,7 @@ vector<string> msmetadata::intentsforspw(int spw) {
 
 double msmetadata::meanfreq(int spw, const string& unit) {
 	_FUNC2 (
-		if (spw < 0 || spw >= (int)_msmd->nSpw(True)) {
-			*_log << "Spectral window ID out of range" << LogIO::EXCEPTION;
-		}
+		_checkSpwId(spw, True);
 		return _msmd->getMeanFreqs()[spw].getValue(Unit(unit));
 	)
 	return 0;
@@ -460,9 +515,7 @@ int msmetadata::nbaselines() {
 
 int msmetadata::nchan(int spw) {
 	_FUNC2 (
-		if (spw < 0 || spw >= (int)_msmd->nSpw(True)) {
-			*_log << "Spectral window ID out of range" << LogIO::EXCEPTION;
-		}
+		_checkSpwId(spw, True);
 		return _msmd->nChans()[spw];
 	)
 	return 0;
@@ -579,9 +632,7 @@ vector<int> msmetadata::scansforintent(const string& intent) {
 
 vector<int> msmetadata::scansforspw(const int spw) {
 	_FUNC(
-		if (spw < 0) {
-			throw AipsError("spw must be nonnegative");
-		}
+		_checkSpwId(spw, True);
 		return _setIntToVectorInt(_msmd->getScansForSpw(spw));
 	)
 	return vector<int>();
@@ -606,9 +657,7 @@ vector<int> msmetadata::scansforstate(const int state) {
 
 int msmetadata::sideband(int spw) {
 	_FUNC2 (
-		if (spw < 0 || spw >= (int)_msmd->nSpw(True)) {
-			*_log << "Spectral window ID out of range" << LogIO::EXCEPTION;
-		}
+		_checkSpwId(spw, True);
 		return _msmd->getNetSidebands()[spw];
 	)
 	return 0;
@@ -638,6 +687,7 @@ variant* msmetadata::spwsforbaseband(int bb) {
 			return new variant(out);
 		}
 	)
+	return 0;
 }
 
 vector<int> msmetadata::spwsforintent(const string& intent) {
@@ -815,6 +865,16 @@ std::vector<uint> msmetadata::_vectorIntToVectorUInt(const std::vector<Int>& ins
 	std::copy(inset.begin(), inset.end(), std::back_inserter(output));
 	return output;
 }
+
+void msmetadata::_checkSpwId(int id, bool throwIfNegative) const {
+	ThrowIf(
+		id >= (int)_msmd->nSpw(True) || (throwIfNegative && id < 0),
+		"Spectral window ID " + String::toString(id)
+		+ " out of range, must be less than "
+		+ String::toString((int)_msmd->nSpw(True))
+	);
+}
+
 
 } // casac namespace
 

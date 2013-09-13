@@ -157,8 +157,9 @@ windows in the dataset and close the tool.
         <method type="function" name="antennaposition">
             <shortdescription>Get the position of the specified antenna.</shortdescription>
             <input>
-                <param type="int" direction="in" name="which">
-                    <description>Zero-based antenna position in the ANTENNA table.</description>
+                <param type="any" direction="in" name="which">
+                    <any type="variant" limittypes="int string"/>
+                    <description>Zero-based antenna ID in the ANTENNA table or antenna name.</description>
                     <value>0</value>
                 </param>
             </input>
@@ -171,27 +172,31 @@ windows in the dataset and close the tool.
     msmd.open("my.ms")
     # get the position of the (zero-based) 3rd antenna in the ANTENNA table
     antennna_position = msmd.antennaposition(3)
+    # get the position of the antenna named DV07
+    antennna_position = msmd.antennaposition("DV07")
     msmd.done()
             </example>
         </method>
-        
-        <method type="function" name="antennaposition">
-            <shortdescription>Get the position of the specified antenna.</shortdescription>
+
+        <method type="function" name="bandwidths">
+            <shortdescription>Get the bandwidths in Hz for the specified spectral windows. If spw less than zero, return bandwidths for all spws.</shortdescription>
             <input>
-                <param type="string" direction="in" name="name">
-                    <description>Name of the antenna.</description>
-                    <value/>
+                <param type="any" direction="in" name="spw">
+                <any type="variant" limittypes="int intarray"/>
+                    <description>Spectral window IDs, if integer less than zero, return bandwidths for all spws.</description>
+                    <value type="int">-1</value>
                 </param>
             </input>
-            <returns type="record"/>
+            <returns type="any">
+                <any type="variant"/>
+            </returns>
             <description>
-                Get the position of the specified antenna. The returned record represents a position measure,
-                and can be used as such by the measures (me) tool.
+                Get the bandwidths in Hz for the specified spectral windows. If spw less than zero, return bandwidths for all spws.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the position of the antenna named DV07
-    antennna_position = msmd.antennaposition("DV07")
+    # get bandwdith for spectral window 2.
+    baseband = msmd.bandwidth(2)
     msmd.done()
             </example>
         </method>
@@ -265,6 +270,29 @@ windows in the dataset and close the tool.
     msmd.open("my.ms")
     # get the channel frequencies for spectral window 2.
     chan_freqs = msmd.chanfreqs(2)
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="chanwidths">
+            <shortdescription>Get an array of channel widths for the specified spectral window.</shortdescription>
+            <input>
+                <param type="int" direction="in" name="spw">
+                    <description>Spectral window ID.</description>
+                </param>
+                <param type="string" direction="in" name="unit">
+                    <description>Convert frequencies to this unit.</description>
+                    <value>Hz</value>
+                </param>
+            </input>
+            <returns type="doubleArray"/>
+            <description>
+                Get an array of channel widths for the specified spectral window.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the channel widths for spectral window 2.
+    chan_freqs = msmd.chanwidths(2)
     msmd.done()
             </example>
         </method>

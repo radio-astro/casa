@@ -771,5 +771,45 @@ class msmd_test(unittest.TestCase):
         ])
         self.assertTrue((got == expec).all())
 
+    def test_bandwidths(self):
+        """Test bandwidths()"""
+        got = self.md.bandwidths()
+        expec = [
+            7.5e+09,      2e+09,        1.796875e+09,
+            2e+09,        1.796875e+09, 2e+09,
+            1.796875e+09, 2e+09,        1.796875e+09,
+            2e+09,        1.796875e+09, 2e+09,
+            1.796875e+09,   2e+09,   1.796875e+09,
+            2e+09,   1.796875e+09,   1.171875e+08,
+            1.171875e+08,   1.171875e+08,   1.171875e+08,
+            1.171875e+08,   1.171875e+08,   1.171875e+08,
+            1.171875e+08,   7.5e+09,   7.5e+09,
+            7.5e+09,   7.5e+09,   7.5e+09,
+            7.5e+09,   7.5e+09,   7.5e+09,
+            7.5e+09,   7.5e+09,   7.5e+09,
+            7.5e+09,   7.5e+09,   7.5e+09,
+            7.5e+09
+        ]
+        self.assertTrue((got == expec).all())
+        got = self.md.bandwidths(-1)
+        self.assertTrue((got == expec).all())
+        for i in range(len(expec)):
+            self.assertTrue(self.md.bandwidths(i) == expec[i])
+            self.assertTrue(self.md.bandwidths([i]) == [expec[i]])
+        self.assertTrue((self.md.bandwidths([4, 10, 5]) == [expec[4], expec[10], expec[5]]).all)
+        self.assertRaises(Exception, self.md.bandwidths, 50)
+        self.assertRaises(Exception, self.md.bandwidths, [4, 50])
+        self.assertRaises(Exception, self.md.bandwidths, [4, -1])
+        
+    def test_chanwidths(self):
+        """Test chanwidths()"""
+        got = self.md.chanwidths(0)
+        expec = numpy.array([1.5e9, 2.5e9, 2e9, 1.5e9])
+        self.assertTrue((got == expec).all())
+        got = self.md.chanwidths(0, "MHz")
+        self.assertTrue((got == expec/1e6).all())
+        self.assertRaises(Exception, self.md.chanwidths, 50);
+        self.assertRaises(Exception, self.md.chanwidths, -2);
+
 def suite():
     return [msmd_test]
