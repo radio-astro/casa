@@ -3099,15 +3099,27 @@ Bool Imager::makeimage(const String& type, const String& image,
     Matrix<Float> weight;
     ft_p->makeImage(seType, *rvi_p, cImageImage, weight);
     StokesImageUtil::To(imageImage, cImageImage);
+    //
     // Dirty way to set the proper unit to SD image
+    //
     String msunit("");
     String imunit;
-    if (ms_p->isColumn(MS::DATA))
+    if ( ms_p->tableDesc().isColumn("DATA") ){
       msunit = ms_p->columnUnit(MS::DATA);
-    else if (ms_p->isColumn(MS::FLOAT_DATA))
-      msunit = ms_p->columnUnit(MS::FLOAT_DATA);
+      if (msunit == String("")) {
+	ColumnDesc dataColDesc(ms_p->tableDesc().columnDesc("DATA"));
+	if (dataColDesc.keywordSet().isDefined("UNIT"))
+	  msunit = dataColDesc.keywordSet().asString("UNIT");
+      }
+    } else if ( ms_p->tableDesc().isColumn("FLOAT_DATA")) {
+      msunit = ms_p->columnUnit(MS::DATA);
+      if (msunit == String("")) {
+	ColumnDesc dataColDesc(ms_p->tableDesc().columnDesc("FLOAT_DATA"));
+	if (dataColDesc.keywordSet().isDefined("UNIT"))
+	  msunit = dataColDesc.keywordSet().asString("UNIT");
+      }
+    }
     msunit.upcase();
-    //    cout << "got MS unit " << msunit << endl;
     if (msunit == String("K"))
       imunit = "K";
     else
