@@ -257,7 +257,7 @@ public:
 
 	vector<Quantum<Vector<Double> > > getChanFreqs();
 
-	vector<vector<Double> > getChanWidths();
+	vector<Quantum<Vector<Double> > > getChanWidths();
 
 	vector<Int> getNetSidebands();
 
