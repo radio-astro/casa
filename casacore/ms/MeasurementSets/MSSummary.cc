@@ -1848,7 +1848,7 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 
 		vector<uInt> nChans = _msmd->nChans();
 		vector<Quantum<Vector<Double> > > chanFreqs = _msmd->getChanFreqs();
-		vector<vector<Double> > chanWidths = _msmd->getChanWidths();
+		vector<Quantum<Vector<Double> > > chanWidths = _msmd->getChanWidths();
 		vector<Double> bandwidths = _msmd->getBandWidths();
 		vector<uInt> bbcNo = hasBBCNo ? _msmd->getBBCNos() : vector<uInt>();
 
@@ -1881,7 +1881,7 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 			os<< chanFreqs[spw].getValue("MHz")[0];
 			// 6th column: channel resolution
 			os.output().width(widthFrqNum+2);
-			os << chanWidths[spw][0]/1000;
+			os << chanWidths[spw].getValue("kHz")[0];
 			// 7th column: total bandwidth of the spectral window
 			os.output().width(widthFrqNum);
 			os.output().precision(1);
