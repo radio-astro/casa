@@ -299,7 +299,14 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
 
         bandpass_task = bandpass.ChannelBandpass(bandpass_inputs)
 
-        return self._executor.execute(bandpass_task, merge=True)  
+        bandpass_result = self._executor.execute(bandpass_task, merge=True)  
+      
+        #bandpass_result.pool[0].calto.intent = ''
+        #bandpass_result.final[0].calto.intent = ''
+        #bandpass_result.pool[0].calfrom[-1].calwt = False
+        #bandpass_result.final[0].calfrom[-1].calwt = False
+      
+        return bandpass_result
       
     def _do_applycal(self, context=None):
         """Run CASA task applycal"""

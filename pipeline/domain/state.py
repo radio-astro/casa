@@ -47,6 +47,7 @@ class State(object):
         'OBSERVE_TARGET#ON_SOURCE'           : 'TARGET',
         'OBSERVE_TARGET.ON_SOURCE'           : 'TARGET',
         'OBSERVE_TARGET_ON_SOURCE'           : 'TARGET',
+        'OBSERVE_TARGET#UNSPECIFIED'         : 'TARGET',
         'OBSERVE_TARGET#OFF_SOURCE'          : 'REFERENCE',
         'OBSERVE_TARGET.OFF_SOURCE'          : 'REFERENCE',
         'OBSERVE_TARGET_OFF_SOURCE'          : 'REFERENCE',
