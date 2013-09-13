@@ -490,29 +490,27 @@ ALMA simulation task:
     mapsize -- angular size of map 
        * set to "" to span the model image
     -------------------------------
-    antennalist -- ascii file containing antenna positions.
+    antennalist -- vector of ascii files containing antenna positions, 
+         one for each configuration of 7m or 12m dishes.
        * NOTE: In this task, it should be an ALMA configuration.
        * standard arrays are found in your CASA data repository, 
          os.getenv("CASAPATH").split()[0]+"/data/alma/simmos/"        
-       * a string of the form "alma;0.5arcsec" will be parsed into a full 
-         12m ALMA configuration.  This only works for full ALMA and may fail 
-         to find the standard configuration files on some systems 
-         - see casaguides.nrao.edu
+       * a string of the form "alma;0.5arcsec" will be parsed into a 
+         12m ALMA configuration - see casaguides.nrao.edu
+       * examples: ['alma.cycle2.5.cfg','aca.cycle2.i.cfg']
+              ['alma.cycle1;0.3arcsec','alma.cycle1.1.cfg','aca.i.cfg']
     hourangle -- hour angle of observation e.g. '-3h'
        * note that if you don't add a unit, it will assume seconds.
-    totaltime --- total time of observation e.g '7200s' or if a number without
-         units, interpreted as the number of times to repeat the map
-    acaratio  --- ratio of the total observation time of ACA relative to 
-         that of 12m array. Set 0 for no ACA observation. 
-         For Cycle-1, set acaratio = 0 or 3.
-    acaconfig --- ACA configuration. Available configurations are:
-       * "" (default) : automatically defines based on antennalist. 
-               If antennalist is Cycle-1 configuration, acaconfig='cycle1'.
-               Otherwise, acaconfig='i'
-       * 'cycle1' : Cycle-1 ACA-7m configuration. Uses 'aca_cycle1.cfg'.
-       * "i" : Normal ACA configuration in full operation. Uses 'aca.i.cfg'.
-       * "ns": North-South extended configuration in full operation. 
-               Uses 'aca.ns.cfg'.
+    totaltime --- total time of observations. This should either be a scalar
+         time quantity expressed as a string e.g. '1h', '3600sec', '10min', 
+         or a vector of such quantities, corresponding to the elements of 
+         the antennalist vector, e.g. ['5min','20min','3h'].  If you 
+         specify a scalar, that will be used for the highest resolution 
+         12m configuration in antennalist, and any lower resolution 12m 
+         configurations, any 7m configurations, and any TP configurations
+         will have observing times relative to totaltime of 0.5, 2,and 4, 
+         respectively.
+
     -------------------------------
     pwv -- precipitable water vapor if constructing an atmospheric model.
          Set 0 for noise-free simulation. When pwv > 0, thermal noise is

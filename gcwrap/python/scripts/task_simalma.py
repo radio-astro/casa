@@ -379,7 +379,7 @@ def simalma(
                 if res_arcsec>0:
                     resols.append(res_arcsec)
                 else:
-                    msg("simalma cannot interpret the antennalist entry "+configfile+" as desired array and resolution e.g. ALMA;0.5arcsec",priority="ERROR")
+                    msg("simalma cannot interpret the antennalist entry '"+configfile+"' as desired array and resolution e.g. ALMA;0.5arcsec",priority="ERROR")
 
             else:
                 # we can only verify explicit files right now, not 
@@ -417,7 +417,7 @@ def simalma(
                     configtypes.append("ALMA")
                     isalma=isalma+1
                 else:
-                    msg("Inconsistent antennalist entry "+configfile_short+" has ALMA in the name but not set as the observatory",priority="error")
+                    msg("Inconsistent antennalist entry '"+configfile_short+"' has ALMA in the name but not set as the observatory",priority="error")
             if configfile_short.upper().find("ACA") >= 0:
                 if telescopename=="ACA" or telescopename=="BYRES":
                     configtypes.append("ACA")
@@ -427,26 +427,30 @@ def simalma(
                     configtypes.append("ALMASD")
                     isalma=isalma+1
                 else:
-                    msg("Inconsistent antennalist entry "+configfile_short+" has ACA in the name but the observatory is not ACA or ALMASD",priority="error")
+                    msg("Inconsistent antennalist entry '"+configfile_short+"' has ACA in the name but the observatory is not ACA or ALMASD",priority="error")
                 #if configfile.upper().find("CYCLE0")
 
 
             if isalma==0:
-                s="simalma can't accept antennalist entry "+configfile_short+" because it is neither ALMA nor ACA (in the name and the observatory in the file)"
-                msg(s,origin="simalma.report",priority="error")
+                s="simalma can't accept antennalist entry '"+configfile_short+"' because it is neither ALMA nor ACA (in the name and the observatory in the file)"
+                msg(s,origin="simalma",priority="error")
 #                raise ValueError, s  # not ness - msg2 raises the exception
             if isalma==2:
-                s="simalma doesn't understand your antennalist entry "+configfile_short
-                msg(s,origin="simalma.report",priority="error")
+                s="simalma doesn't understand your antennalist entry '"+configfile_short+"'"
+                msg(s,origin="simalma",priority="error")
 #                raise ValueError,s
             
 
         #-----------------------------
         # total power parameter:
         tptime_min=0.
-        if myutil.isquantity(tptime):
+        if myutil.isquantity(tptime,halt=False):
             if qa.compare(tptime,'s'):
                 tptime_min=qa.convert(tptime,'min')['value']
+            else:
+                msg("Can't interpret tptime='"+tptime+"' as a time quantity e.g. '3h'",priority="error")
+        else:
+            msg("Can't interpret tptime='"+tptime+"' as a time quantity e.g. '3h'",priority="error")
 
 
         #-----------------------------
@@ -462,14 +466,14 @@ def simalma(
         # exposure time parameter totaltime
         totaltime_min=[]
         if len(totaltime)==1:
-#        if type(totaltime)==type(" "):
             # scalar input - use defaults
             totaltime_min0=0.
-            myutil.isquantity(totaltime[0])
+            if not myutil.isquantity(totaltime[0],halt=False):
+                raise ValueError,"Can't interpret totaltime parameter '"+totaltime[0]+"' as a time quantity - example quantities: '1h', '20min', '3600sec'"
             if qa.compare(totaltime[0],'s'):
                 totaltime_min0=qa.convert(totaltime[0],'min')['value']
             else:
-                raise ValueError,"Can't convert totaltime parameter "+totaltime[0]+" to minutes"
+                raise ValueError,"Can't convert totaltime parameter '"+totaltime[0]+"' to minutes - example quantities: '1h', '20min','3600sec'"
             totaltime_min=pl.zeros(nconfigs)
             # sort by res'l - TP could still be on here
             resols=pl.array(resols)
@@ -490,11 +494,12 @@ def simalma(
                     raise Exception,"configuration types = "+str(configtypes)
         else:
             for time in totaltime:
-                myutil.isquantity(time)
+                if not myutil.isquantity(time,halt=False):
+                     raise ValueError,"Can't interpret totaltime vector element '"+time+"' as a time quantity - example quantities: '1h', '20min', '3600sec'"
                 if qa.compare(time,'s'):
                     time_min=qa.convert(time,'min')['value']
                 else:
-                    raise ValueError,"Can't convert totaltime parameter "+time+" to minutes"
+                    raise ValueError,"Can't convert totaltime vector element '"+time+"' to minutes - example quantities: '1h', '20min','3600sec'"
                 totaltime_min.append(time_min)
                 
         if len(totaltime_min)!=len(antennalist):
@@ -535,9 +540,9 @@ def simalma(
 
             # print cycle and warn if mixed
             if cycles[i]>'-1':
-                msg("    Cycle "+cycles[i]+" configuration",priority="info")
+                msg("    This is a cycle "+cycles[i]+" configuration",priority="info")
             else:
-                msg("    Full ALMA configuration",priority="info")
+                msg("    This is a full ALMA configuration",priority="info")
             if cyclesInconsistent:
                 msg("    WARNING: Your choices of configurations mix different cycles and/or Full ALMA.  Assuming you know what you want.",priority="info")
                 
@@ -545,6 +550,8 @@ def simalma(
             # print resolution for INT, and warn if model_cell too large
             if configtypes[i]!='ALMASD':
                 msg("    approximate synthesized beam FWHM = %f arcsec" % resols[i],priority="info")
+                msg("       (at zenith; the actual beam will depend on declination, hourangle, and uv coverage)",priority="info")
+
                 if is_array_type(model_cell):
                     cell_asec=qa.convert(model_cell[0],'arcsec')['value']
                 else:
@@ -1002,7 +1009,7 @@ def simalma(
                 imsize_tp = calc_imsize(mapsize=qimgsize_tp, cell=cell_tp)
 
                 msg(" ",priority=v_priority)
-                msg("---> The number of pixels needed to cover the map region: [%d, %d]" % \
+                msg("-> The number of pixels needed to cover the map region: [%d, %d]" % \
                     (imsize_tp[0], imsize_tp[1]), \
                     priority=v_priority)
 
@@ -1045,7 +1052,7 @@ def simalma(
                     msg("estimating imsize of interferometer from input sky model.", \
                         priority=v_priority)
                     tmpimsize = calc_imsize(mapsize=model_size, cell=cell_tp)
-                    msg("---> Estimated interferometer imsize (sky model): [%d, %d]" % \
+                    msg("-> Estimated interferometer imsize (sky model): [%d, %d]" % \
                         (tmpimsize[0], tmpimsize[1]), \
                             priority=v_priority)
 
