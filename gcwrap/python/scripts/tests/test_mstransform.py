@@ -1256,13 +1256,13 @@ class test_float_column(test_base):
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
         os.system('rm -rf '+ self.outputms)
-        
-# The following seg faults at the moment. Uncomment in suite later
+
     def test_regrid_float(self):
         '''mstransform: change outframe of FLOAT_DATA MS'''
         self.outputms = 'floatcol1.mms'
+        # jagonzal: Let's use spw 0, because the rest have negative chan widths
         mstransform(vis=self.vis,outputvis=self.outputms,datacolumn='FLOAT_DATA',
-                    regridms=True,outframe='LSRK',spw='1,2')
+                    regridms=True,outframe='LSRK',spw='0')
          
         mytb = tbtool()
         mytb.open(self.outputms+'/SPECTRAL_WINDOW')
@@ -1529,5 +1529,5 @@ def suite():
             test_WeightSpectrum,
             test_channelAverageByDefault,
             test_timeaverage,
-#            test_float_column,
+            test_float_column,
             Cleanup]
