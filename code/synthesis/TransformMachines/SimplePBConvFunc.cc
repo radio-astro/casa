@@ -33,6 +33,7 @@
 #include <casa/Arrays/Slicer.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
+#include <casa/OS/Timer.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/Quanta/MVAngle.h>
@@ -65,13 +66,13 @@
 #include <synthesis/TransformMachines/SkyJones.h>
 
 #include <casa/Utilities/CompositeNumber.h>
-
+#include <math.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
         npol_p(-1), pointToPix_p(), directionIndex_p(-1), thePix_p(0),
-        filledFluxScale_p(False),doneMainConv_p(False),
+        filledFluxScale_p(False),doneMainConv_p(0),
                                       
 	calcFluxScale_p(True), convFunctionMap_p(-1), actualConvIndex_p(-1), convSize_p(0), convSupport_p(0), pointingPix_p()  {
     //
@@ -81,7 +82,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
 
   SimplePBConvFunc::SimplePBConvFunc(const PBMathInterface::PBClass typeToUse): 
     nchan_p(-1),npol_p(-1),pointToPix_p(),
-    directionIndex_p(-1), thePix_p(0), filledFluxScale_p(False),doneMainConv_p(False), 
+    directionIndex_p(-1), thePix_p(0), filledFluxScale_p(False),doneMainConv_p(0), 
      calcFluxScale_p(True), convFunctionMap_p(-1), actualConvIndex_p(-1), convSize_p(0), convSupport_p(0), pointingPix_p() {
     //
     pbClass_p=typeToUse;
@@ -89,7 +90,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
   }
   SimplePBConvFunc::SimplePBConvFunc(const RecordInterface& rec, const Bool calcfluxneeded)
   : nchan_p(-1),npol_p(-1),pointToPix_p(), directionIndex_p(-1), thePix_p(0), filledFluxScale_p(False),
-    doneMainConv_p(False), 
+    doneMainConv_p(0), 
     calcFluxScale_p(calcfluxneeded), convFunctionMap_p(-1), actualConvIndex_p(-1), convSize_p(0), convSupport_p(0), pointingPix_p()
   {
     String err;
@@ -140,6 +141,13 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
       coordIndex=csys_p.findCoordinate(Coordinate::STOKES);
       pixAxis=csys_p.pixelAxes(coordIndex)[0];
       npol_p=iimage.shape()(pixAxis);
+      if(calcFluxScale_p){
+    	  if(fluxScale_p.shape().nelements()==0){
+    		  fluxScale_p=TempImage<Float>(IPosition(4,nx_p,ny_p,npol_p,nchan_p), csys_p);
+    		  fluxScale_p.set(0.0);
+    	  }
+    	  filledFluxScale_p=False;
+      }
       
     }
 
@@ -152,7 +160,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
       //pointToPix_p.setModel(theDir);
       
       MEpoch timenow(Quantity(vb.time()(0), timeUnit_p), timeMType_p);
-      //cout << "Ref " << vb.direction1()(0).getRefString() <<  " ep " << timenow.getRefString() << " time " << MVTime(timenow.getValue().getTime()).string(MVTime::YMD) << endl; 
+      //cerr << "Ref " << vb.direction1()(0).getRefString() <<  " ep " << timenow.getRefString() << " time " << MVTime(timenow.getValue().getTime()).string(MVTime::YMD) << endl; 
       pointFrame_p.resetEpoch(timenow);
       ///////////////////////////
       //MDirection some=pointToPix_p(vb.direction1()(0));
@@ -185,7 +193,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
   }
  
   void SimplePBConvFunc::reset(){
-    doneMainConv_p=False;
+    doneMainConv_p.resize();
     convFunctions_p.resize(0, True);
     convWeights_p.resize(0, True);
     convSizes_p.resize(0, True);
@@ -193,31 +201,47 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
     convFunctionMap_p.clear();
   }
 
-  void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage, 
-					  const VisBuffer& vb,
-					  const Int& convSampling,
-					  Cube<Complex>& convFunc, 
-					  Cube<Complex>& weightConvFunc, 
+
+
+  Int SimplePBConvFunc::convIndex(const VisBuffer& vb){
+	  String elkey=String::toString(vb.msId())+String("_")+String::toString(vb.spectralWindow());
+	  if(vbConvIndex_p.count(elkey) > 0){
+		  return vbConvIndex_p[elkey];
+	  }
+	  Int val=vbConvIndex_p.size();
+	  vbConvIndex_p[elkey]=val;
+	  return val;
+  }
+void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage, 
+					const VisBuffer& vb,
+					const Int& convSampling,
+					const Vector<Double>& visFreq, 
+					  Array<Complex>& convFunc, 
+					  Array<Complex>& weightConvFunc, 
 					  Vector<Int>& convsize,
 					  Vector<Int>& convSupport,
-					  Vector<Int>& convFuncMap
+					  Vector<Int>& convFuncPolMap,
+					  Vector<Int>& convFuncChanMap,
+					  Vector<Int>& convFuncRowMap
 					  ){
 
 
+
     storeImageParams(iimage, vb);
+    convFuncChanMap.resize(vb.nChannel());
+    Vector<Double> beamFreqs;
+    findUsefulChannels(convFuncChanMap, beamFreqs, vb, visFreq);
+    //cerr << "CHANMAP " << convFuncChanMap << endl;
+    Int nBeamChans=beamFreqs.nelements();
+    //indgen(convFuncChanMap);
+    convFuncPolMap.resize(vb.nCorr());
+    convFuncPolMap.set(0);
     //Only one plane in this version
-    convFuncMap.resize();
-    convFuncMap=Vector<Int>(vb.nRow(),0);
+    convFuncRowMap.resize();
+    convFuncRowMap=Vector<Int>(vb.nRow(),0);
     //break reference
     convFunc.resize();
     weightConvFunc.resize();
-    if(checkPBOfField(vb)){
-      convFunc.reference(*(convFunctions_p[actualConvIndex_p]));
-      weightConvFunc.reference(*(convWeights_p[actualConvIndex_p]));
-      convsize=Vector<Int>(1,convSize_p);
-      convSupport=Vector<Int>(1,convSupport_p);
-      return;
-    }
     LogIO os;
     os << LogOrigin("SimplePBConv", "findConvFunction")  << LogIO::NORMAL;
   
@@ -226,7 +250,8 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
     CoordinateSystem coords(iimage.coordinates());
     
     
-    
+    actualConvIndex_p=convIndex(vb);
+    //cerr << "In findConv " << actualConvIndex_p << endl;
     // Make a two dimensional image to calculate the
     // primary beam. We want this on a fine grid in the
     // UV plane 
@@ -237,28 +262,38 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
     Int nx=nx_p;
     Int ny=ny_p;
     //    convSize_p=max(nx,ny)*convSampling;
+    //cerr << "size " << nx << "  " << ny << endl;
+    //3 times the support size
+    if(doneMainConv_p.shape()[0] < (actualConvIndex_p+1)){
+      // cerr << "resizing DONEMAIN " <<   doneMainConv_p.shape()[0] << endl;
+    	doneMainConv_p.resize(actualConvIndex_p+1, True);
+    	doneMainConv_p[actualConvIndex_p]=False;
+    }
 
-    //3 times the support size 
-    if(!doneMainConv_p){
+    if(!(doneMainConv_p[actualConvIndex_p])){
+
       //convSize_p=4*(sj_p->support(vb, coords));
       convSize_p=Int(max(nx_p, ny_p)*2.0)/2*convSampling;
       // Make this a nice composite number, to speed up FFTs
       CompositeNumber cn(uInt(convSize_p*2.0));    
       convSize_p  = cn.nextLargerEven(Int(convSize_p));
-      //cout << "convSize : " << convSize_p << endl;
+      //      cerr << "convSize : " << convSize_p << endl;
 
     }
     
    
     toPix(vb);
+    //Timer tim;
+    //tim.mark();
     addPBToFlux(vb);
-
+    //tim.show("After addPBToFlux");
     DirectionCoordinate dc=dc_p;
 
     //where in the image in pixels is this pointing
     Vector<Double> pixFieldDir(2);
     pixFieldDir=thePix_p;
 
+    //cerr << "pix of pointing " << pixFieldDir << endl;
     MDirection fieldDir=direction1_p;
     //shift from center
     pixFieldDir(0) = pixFieldDir(0) - Double(nx / 2);
@@ -268,7 +303,8 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
     pixFieldDir(0) = -pixFieldDir(0)*2.0*C::pi/Double(nx)/Double(convSampling);
     pixFieldDir(1) = -pixFieldDir(1)*2.0*C::pi/Double(ny)/Double(convSampling);
 
-    if(!doneMainConv_p){
+    //cerr << "DonemainConv " << doneMainConv_p[actualConvIndex_p] << endl;
+    if(!doneMainConv_p[actualConvIndex_p]){
       Vector<Double> sampling;
       sampling = dc.increment();
       sampling*=Double(convSampling);
@@ -281,170 +317,90 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
       unitVec=convSize_p/2;
       dc.setReferencePixel(unitVec);
       
-      /////now lets make a SF to tamper down the ripple
-      unitVec=convSize_p/2;
-      ConvolveGridder<Double, Complex> gd(IPosition(2, convSize_p, 
-						    convSize_p), 
-					  sampling*((Double)(convSize_p)), unitVec);
-      //cout << "Function " << gd.cFunction() << "    " << gd.cSupport() << endl;
-      
-      Vector<Complex> correct1D(convSize_p);
-      
-      ///
       
       //make sure we are using the same units
       fieldDir.set(dc.worldAxisUnits()(0));
       
-      // Set the reference value to that of the pointing position of the
-      // current buffer since that's what will be applied
-      //####will need to use this when using a much smaller convsize than image.
-      //  getXYPos(vb, 0);
-      
       dc.setReferenceValue(fieldDir.getAngle().getValue());
       
       coords.replaceCoordinate(dc, directionIndex);
+      Int spind=coords.findCoordinate(Coordinate::SPECTRAL);
+      SpectralCoordinate spCoord=coords.spectralCoordinate(spind);
+      spCoord.setReferencePixel(Vector<Double>(1,0.0));
+      spCoord.setReferenceValue(Vector<Double>(1, beamFreqs(0)));
+      if(beamFreqs.nelements() >1)
+	spCoord.setIncrement(Vector<Double>(1, beamFreqs(1)-beamFreqs(0)));
+      coords.replaceCoordinate(spCoord, spind);
+      //cerr << "BEAM freqs " << beamFreqs << endl;
+
       //  coords.list(logIO(), MDoppler::RADIO, IPosition(), IPosition());
       
-      IPosition pbShape(4, convSize_p, convSize_p, 1, 1);
+      IPosition pbShape(4, convSize_p, convSize_p, 1, nBeamChans);
       Int memtobeused=-1;
       Long memtot=HostInfo::memoryFree();
       //check for 32 bit OS and limit it to 2Gbyte
       if( sizeof(void*) == 4){
-	if(memtot > 2000000)
-	  memtot=2000000;
+    	  if(memtot > 2000000)
+    		  memtot=2000000;
       }
-      if(memtot < 2000000)
-	memtobeused=0;
-      TempImage<Complex> twoDPB(pbShape, coords, memtobeused);
-      
+      if(memtot <= 2000000)
+    	  memtobeused=0;
+      //cerr << "mem to be used " << memtobeused << endl;
+      //tim.mark();
+      IPosition start(4, 0, 0, 0, 0);
+      IPosition pbSlice(4, convSize_p, convSize_p, 1, 1);
+      //cerr << "pbshape " << pbShape << endl;
+      TempImage<Complex> twoDPB(TiledShape(pbShape), coords, memtobeused);
+
+      //tim.show("after making one image");
       convFunc_p.resize(convSize_p, convSize_p);
       convFunc_p=0.0;
       
-      IPosition start(4, 0, 0, 0, 0);
-      IPosition pbSlice(4, convSize_p, convSize_p, 1, 1);
       
+
       // Accumulate terms 
       //Matrix<Complex> screen(convSize_p, convSize_p);
       //screen=1.0;
       // Either the SkyJones
-      twoDPB.set(Complex(1.0,0.0));
+      //tim.mark();
+      //twoDPB.set(Complex(1.0,0.0));
+      IPosition blcin(4, 0, 0, 0, 0);
+      IPosition trcin(4, convSize_p-1, convSize_p-1, 0, 0);
+      for (Int k=0; k < nBeamChans; ++k){
+	blcin[3]=k;
+	trcin[3]=k;
+	Slicer slin(blcin, trcin, Slicer::endIsLast);
+	SubImage<Complex> subim(twoDPB, slin, True);
+	subim.set(Complex(1.0,0.0));
       //twoDPB.putSlice(screen, start);
-      sj_p->apply(twoDPB, twoDPB, vb, 0); 
- 
+	sj_p->apply(subim, subim, vb, 0); 
+      }
+      //tim.show("after an apply" );
       //*****Test
-      TempImage<Complex> twoDPB2(pbShape, coords, memtobeused);
+      TempImage<Complex> twoDPB2(TiledShape(pbShape), coords, memtobeused);
       //Old way
       
       {
-	TempImage<Float> screen2(pbShape, coords, memtobeused);
-	//	Matrix<Float> screenoo(convSize_p, convSize_p);
-	//screenoo.set(1.0);
-	//screen2.putSlice(screenoo,start);
-	screen2.set(1.0);
-	sj_p->applySquare(screen2, screen2, vb, 0);
-	LatticeExpr<Complex> le(screen2);
-	twoDPB2.copyData(le);
+    	  TempImage<Float> screen2(TiledShape(pbShape), coords, memtobeused);
+    	  //	Matrix<Float> screenoo(convSize_p, convSize_p);
+    	  //screenoo.set(1.0);
+    	  //screen2.putSlice(screenoo,start);
+    	  //screen2.set(1.0);
+	  for (Int k=0; k < nBeamChans; ++k){
+	    blcin[3]=k;
+	    trcin[3]=k;
+	    Slicer slin(blcin, trcin, Slicer::endIsLast);
+	    SubImage<Float> subim(screen2, slin, True);
+	    subim.set(1.0);
+	    //twoDPB.putSlice(screen, start);
+	    sj_p->applySquare(subim, subim, vb, 0); 
+	  }
+    	  //sj_p->applySquare(screen2, screen2, vb, 0);
+    	  LatticeExpr<Complex> le(screen2);
+    	  twoDPB2.copyData(le);
       }
+      //tim.show("After applys ");
       
-      
-      //new one
-      /*
-      twoDPB2.set(Complex(1.0,0.0));
-      sj_p->apply(twoDPB2, twoDPB2, vb, 0); 
-      */
-
-
-      
-      // getting rid of beam rise after first null
-      /*
-	Array<Complex> centerline;
-	start=IPosition(4, convSize_p/2, convSize_p/2, 0,0);
-	Slicer slic(start, IPosition(4, convSize_p/2, convSize_p-1, 0,0), Slicer::endIsLast);
-	//  twoDPB.getSlice(centerline, start, IPosition(4,convSize_p/2-1,1,1,1), True);
-	twoDPB.getSlice(centerline, slic, True);
-	cout << "shape of centerline " << centerline.shape() << endl;
-	Vector<Float> line=amplitude(centerline);
-	cout << "line  " << line << endl;
-	Int nullpos=convSize_p/2-1;
-	for (Int k=4; k< convSize_p/2; ++k){
-	//if(line(k) > line(k-1)){
-	if(line(k) <  0.001*line(0)){
-	nullpos=k-1;
-	break;
-	}
-	}
-	cout << "Null is at " << nullpos << endl;
-	nullpos*=nullpos;
-	Array<Complex> dat;
-	Array<Complex> dat2;
-	Bool isRef=twoDPB.get(dat);
-	Bool isRef2=twoDPB2.get(dat2);
-	Matrix<Complex> datMat;
-	datMat.reference(dat.reform(IPosition(2,convSize_p, convSize_p)));
-	Matrix<Complex> datMat2;
-	datMat2.reference(dat2.reform(IPosition(2,convSize_p, convSize_p)));
-	for (Int k = 0; k <convSize_p; ++k){
-	for(Int j=0; j < convSize_p; ++j){
-	if( nullpos < ((j-convSize_p/2)*(j-convSize_p/2)+(k-convSize_p/2)*(k-convSize_p/2))){
-	datMat(j,k)=Complex(0);
-	datMat2(j,k)=Complex(0);
-	}
-	}
-	
-	}
-    if(!isRef)
-    twoDPB.put(dat);
-    if(!isRef2)
-    twoDPB2.put(dat2);
-      */
-      /////
-      
-      
-      ////Tampering by SF function
-      /*   
-      IPosition cursorShape(4, convSize_p, 1, 1, 1);
-      IPosition axisPath(4, 0, 1, 2, 3);
-      LatticeStepper lsx(pbShape, cursorShape, axisPath);
-      LatticeIterator<Complex> pbix(twoDPB, lsx);
-      LatticeIterator<Complex> pb2ix(twoDPB2, lsx);
-	   
-      for(pbix.reset(), pb2ix.reset(); !pbix.atEnd() ; pbix++, pb2ix++ ) {
-	gd.correctX1D(correct1D, pbix.position()(1));
-	pbix.rwVectorCursor()*=correct1D;
-	correct1D*=correct1D;
-	pb2ix.rwVectorCursor()*=correct1D;
-      }
-      */
-      /*
-	start=IPosition(4, 0, 0, 0,0);
-	IPosition end(4, convSize_p-1, 0, 0,0);
-	IPosition startvec(1,convSize_p/2);
-	IPosition endvec(1,convSize_p*3/2-1);
-	Array<Complex> beamdat=twoDPB.get();
-	for(Int k=convSize_p/2; k<3*convSize_p/2; ++k){
-	start(1)=k-convSize_p/2;
-	end(1)=k-convSize_p/2;
-	Vector<Complex> part(beamdat(start,end));
-	gd.correctX1D(correct1D, k);
-	part*=correct1D(startvec, endvec);
-	}
-	twoDPB.put(beamdat);
-      */
-      ///
-      /*
-	Vector<Double> sampling;
-	sampling = dc.increment();
-	sampling/=Double(convSampling);
-	sampling(0)/=Double(nx)/Double(convSize_p);
-	sampling(1)/=Double(ny)/Double(convSize_p);
-	dc.setIncrement(sampling);
-	coords.replaceCoordinate(dc, directionIndex);
-	twoDPB2.setCoordinateInfo(coords);
-	twoDPB.setCoordinateInfo(coords);
-      */
-      //****************
-      
-      //addBeamCoverage(twoDPB);
       
  
       if(0) {
@@ -461,7 +417,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
 	os1 << "Screen_" << vb.fieldId() ;
 	PagedImage<Float> thisScreen(pbShape, ftCoords, String(os1));
 	LatticeExpr<Float> le(abs(twoDPB));
-	thisScreen.copyData(le);
+		thisScreen.copyData(le);
       }
       
       // Now FFT and get the result back
@@ -486,7 +442,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
 	thisScreen.copyData(le);
       }
     
-      convFunc_p=twoDPB.get(True);
+      convFunc_p=twoDPB.getSlice(IPosition(4,0,0,0,0), IPosition(4, convSize_p, convSize_p, 1, 1), True);
       
       //convFunc/=max(abs(convFunc));
       Float maxAbsConvFunc=max(amplitude(convFunc_p));
@@ -505,20 +461,6 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
 	  break;
 	}
       }
-      /*
-	for (trial2=convSize_p/2-2;trial2>0;trial2--) {
-	//Searching from centre moving away
-	if(abs(convFunc_p(trial2,trial2)) <  (5.0e-2*maxAbsConvFunc)) {
-	found2=True;
-	break;
-	}
-	}
-	
-	if(found2 && (trial2 < trial)){
-	trial=trial2;
-	found=True;
-	}
-      */
       if(!found){
 	if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-2*maxAbsConvFunc)) 
 	  found=True;
@@ -581,87 +523,123 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
       (*(convSupportBlock_p[actualConvIndex_p]))[0]=convSupport_p;
       convFunctions_p.resize(actualConvIndex_p+1);
       convWeights_p.resize(actualConvIndex_p+1);
-      convFunctions_p[actualConvIndex_p]= new Cube<Complex>();
-      convWeights_p[actualConvIndex_p]= new Cube<Complex>();
+      convFunctions_p[actualConvIndex_p]= new Array<Complex>();
+      convWeights_p[actualConvIndex_p]= new Array<Complex>();
       Int newConvSize=2*(convSupport_p+2)*convSampling;
       //NEED to chop this right ...and in the centre
-      if(newConvSize < convSize_p){
-	IPosition blc(2, (convSize_p/2)-(newConvSize/2),
-		      (convSize_p/2)-(newConvSize/2));
-	IPosition trc(2, (convSize_p/2)+(newConvSize/2-1),
-		      (convSize_p/2)+(newConvSize/2-1));
-	convFunctions_p[actualConvIndex_p]->resize(newConvSize, newConvSize, 1);
-	convFunctions_p[actualConvIndex_p]->xyPlane(0)=convFunc_p(blc,trc);
-	convSize_p=newConvSize;
-	convWeights_p[actualConvIndex_p]->resize(newConvSize, newConvSize, 1);
-	convWeights_p[actualConvIndex_p]->xyPlane(0)=twoDPB2.get(True)(blc,trc)*Complex(1.0/pbSum,0.0);
+      if(newConvSize >=convSize_p)
+    	  newConvSize=convSize_p;
+
+      IPosition blc(4, (convSize_p/2)-(newConvSize/2),
+    		  (convSize_p/2)-(newConvSize/2), 0, 0);
+      IPosition trc(4, (convSize_p/2)+(newConvSize/2-1),
+		      (convSize_p/2)+(newConvSize/2-1), 0, nBeamChans-1);
+      convFunctions_p[actualConvIndex_p]->resize(IPosition(5, newConvSize, newConvSize, 1, nBeamChans,1));
+      //cerr << "convFunc shape " << (convFunctions_p[actualConvIndex_p])->shape() << 
+      //"  " << " twoDPB shape " <<twoDPB.get(False)(blc,trc).shape() << endl;
+      convFunctions_p[actualConvIndex_p]->copyMatchingPart(twoDPB.get(False)(blc,trc)*Complex(1.0/pbSum,0.0));
+      convSize_p=newConvSize;
+      convWeights_p[actualConvIndex_p]->resize(IPosition(5, newConvSize, newConvSize, 1, nBeamChans,1));
+      convWeights_p[actualConvIndex_p]->copyMatchingPart(twoDPB2.get(False)(blc,trc)*Complex(1.0/pbSum,0.0));
 	
-	convFunc_p.resize();//break any reference
-	weightConvFunc_p.resize();
-	convFunc_p.reference(convFunctions_p[actualConvIndex_p]->xyPlane(0));
-	
-      }
-      else{
-	convFunctions_p[actualConvIndex_p]->resize(convSize_p, convSize_p,1);
-	convFunctions_p[actualConvIndex_p]->xyPlane(0)=convFunc_p;
-	convWeights_p[actualConvIndex_p]->resize(convSize_p, convSize_p, 1);
-	convWeights_p[actualConvIndex_p]->xyPlane(0)=twoDPB2.get(True)*Complex(1.0/pbSum,0.0);
-      }
-      weightConvFunc_p.reference(convWeights_p[actualConvIndex_p]->xyPlane(0));
+      convFunc_p.resize();//break any reference
       (*convSizes_p[actualConvIndex_p])[0]=convSize_p;
-      doneMainConv_p=True;
-      convSave_p.resize();
-      weightSave_p.resize();
-      convSave_p= convFunc_p;
-      weightSave_p= weightConvFunc_p;
+      doneMainConv_p[actualConvIndex_p]=True;
       
     }
-    else{
-      convSupportBlock_p.resize(actualConvIndex_p+1);
-      convSizes_p.resize(actualConvIndex_p+1);
-      convSupportBlock_p[actualConvIndex_p]=new Vector<Int>(1);
-      convSizes_p[actualConvIndex_p]=new Vector<Int> (1);
-      (*(convSupportBlock_p[actualConvIndex_p]))[0]=convSupport_p;
-      (*convSizes_p[actualConvIndex_p])[0]=convSize_p;
-      convFunctions_p.resize(actualConvIndex_p+1);
-      convWeights_p.resize(actualConvIndex_p+1);
-      convFunctions_p[actualConvIndex_p]= new Cube<Complex>();
-      convWeights_p[actualConvIndex_p]= new Cube<Complex>();
-      
-      convFunctions_p[actualConvIndex_p]->resize(convSize_p, convSize_p,1);
-      (convFunctions_p[actualConvIndex_p]->xyPlane(0))=convSave_p;
-      convWeights_p[actualConvIndex_p]->resize(convSize_p, convSize_p, 1);
-      (convWeights_p[actualConvIndex_p]->xyPlane(0))=weightSave_p;
-    }
+
     //Apply the shift phase gradient
+    convFunc.resize();
+    weightConvFunc.resize();
+    convFunc.assign(*(convFunctions_p[actualConvIndex_p]));
+    weightConvFunc.assign(*(convWeights_p[actualConvIndex_p]));
+    Bool copyconv, copywgt;
+    Complex *cv=convFunc.getStorage(copyconv);
+    Complex *wcv=weightConvFunc.getStorage(copywgt);
+    //cerr << "Field " << vb.fieldId() << " spw " << vb.spectralWindow() << " phase grad: " << pixFieldDir << endl;
+   
+    for (Int nc=0; nc < nBeamChans; ++nc){ 
+    	Int planeoffset=nc*convSize_p*convSize_p;
+    	for (Int iy=0;iy<convSize_p;iy++) {
+    		Double cy, sy;
+		Int offset;
+	       
+    		sincos(Double(iy-convSize_p/2)*pixFieldDir(1), &sy, &cy);
+    		Complex phy(cy,sy) ;
+    		offset = iy*convSize_p+planeoffset;
+    		for (Int ix=0;ix<convSize_p;ix++) {
+    			Double cx, sx;
+    			sincos(Double(ix-convSize_p/2)*pixFieldDir(0), &sx, &cx);
+    			Complex phx(cx,sx) ;
+			cv[ix+offset]= cv[ix+offset]*phx*phy;
+			wcv[ix+offset]= wcv[ix+offset]*phx*phy;
 
-    //    cerr << "phase grad: " << pixFieldDir << endl;
-    for (Int iy=0;iy<convSize_p;iy++) { 
-      Complex phy(cos(Double(iy-convSize_p/2)*pixFieldDir(1)),sin(Double(iy-convSize_p/2)*pixFieldDir(1))) ;
-      for (Int ix=0;ix<convSize_p;ix++) {
-	Complex phx(cos(Double(ix-convSize_p/2)*pixFieldDir(0)),sin(Double(ix-convSize_p/2)*pixFieldDir(0))) ;
-	(*(convFunctions_p[actualConvIndex_p]))(ix,iy,0)= (*(convFunctions_p[actualConvIndex_p]))(ix,iy,0)*phx*phy;
-	(*(convWeights_p[actualConvIndex_p]))(ix,iy,0)= (*(convWeights_p[actualConvIndex_p]))(ix,iy,0)*phx*phy;
-
-      }
+    		}
+    	}
     }
-    convFunc.reference(*(convFunctions_p[actualConvIndex_p]));
-    weightConvFunc.reference(*(convWeights_p[actualConvIndex_p]));
-    convsize=Vector<Int>(1,convSize_p);
-    convSupport=Vector<Int>(1,convSupport_p);
+    convFunc.putStorage(cv, copyconv);
+    weightConvFunc.putStorage(wcv, copywgt);
+    convsize.resize();
+    convsize=*(convSizes_p[actualConvIndex_p]);
+    convSupport.resize();
+    convSupport=(*(convSupportBlock_p[actualConvIndex_p]));
     
     
   }
-
 
   void SimplePBConvFunc::setSkyJones(SkyJones* sj){
     sj_p=sj;
   }
 
+  void SimplePBConvFunc::findUsefulChannels(Vector<Int>& chanMap, Vector<Double>& chanFreqs,  const VisBuffer& vb, const Vector<Double>& freq){
+    chanMap.resize(freq.nelements());
+    Vector<Double> localfreq=vb.frequency();
+    Double minfreq=min(freq);
+    
+    Double origwidth=freq.nelements()==1 ? 1e12 : (max(freq)-min(freq))/(freq.nelements()-1);
+    ///Fractional bandwidth which will trigger mutiple PB in one spw
+    Double tol=(max(freq))*0.5/1000;
+    
+    Int nchan=Int(lround((max(freq)-min(freq))/tol));
+   
+    //cerr  << "TOLERA " << tol << " nchan " << nchan << " vb.nchan " << vb.nChannel() << endl;
+    //Number of beams that matters are the ones in the data
+    if(nchan > vb.nChannel())
+      nchan=vb.nChannel();
+
+    if(tol < origwidth) tol=origwidth;
+    chanFreqs.resize();
+    if(nchan >= (freq.nelements()-1)) { indgen(chanMap); chanFreqs=freq; return;}
+    if((nchan==0) || (freq.nelements()==1)) { chanFreqs=Vector<Double>(1, freq[0]);chanMap.set(0); return;}
+
+    //readjust the tolerance...
+    tol=(max(freq)-min(freq)+origwidth)/Double(nchan);
+    chanFreqs.resize(nchan);
+    for (Int k=0; k < nchan; ++k)
+      chanFreqs[k]=minfreq-origwidth+tol/2.0+tol*Double(k);
+    Int activechan=0;
+    chanMap.set(0);
+    for (uInt k=0; k < chanMap.nelements(); ++k){
+     
+      while((activechan< nchan) && fabs(freq[k]-chanFreqs[activechan]) > (tol/2.0)){
+	//		cerr << "k " << k << " atcivechan " << activechan << " comparison " 
+	//     << freq[k] << "    " << chanFreqs[activechan]  << endl;	
+	++activechan;
+      }
+      if(activechan != nchan)
+	chanMap[k]=activechan;
+      activechan=0;
+    }
+
+    return;
+  }
+
+
   Bool SimplePBConvFunc::checkPBOfField(const VisBuffer& vb){
     Int fieldid=vb.fieldId();
     String msid=vb.msName(True);
-    if(convFunctionMap_p.ndefined() > 0){
+    /*
+     if(convFunctionMap_p.ndefined() > 0){
       if (((fluxScale_p.shape()[3] != nchan_p) || (fluxScale_p.shape()[2] != npol_p)) && calcFluxScale_p){
 	convFunctionMap_p.clear();
       }
@@ -692,14 +670,15 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
       convFunc_p.resize(); // break any reference
       weightConvFunc_p.resize(); 
       //Here we will need to use the right xyPlane for different PA range.
-      convFunc_p.reference(convFunctions_p[actualConvIndex_p]->xyPlane(0));
-      weightConvFunc_p.reference(convWeights_p[actualConvIndex_p]->xyPlane(0));
+      //convFunc_p.reference(convFunctions_p[actualConvIndex_p]->xyPlane(0));
+      //weightConvFunc_p.reference(convWeights_p[actualConvIndex_p]->xyPlane(0));
       //Again this for one time of antenna only later should be fixed for all 
       // antennas independently
       convSupport_p=(*convSupportBlock_p[actualConvIndex_p])[0];
       convSize_p=(*convSizes_p[actualConvIndex_p])[0];
 
   }
+*/
  
  return True;
 
@@ -758,17 +737,20 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
       rec.define("name", "SimplePBConvFunc");
       rec.define("numconv", numConv);
       //cerr << "num of conv " << numConv << "  " << convFunctionMap_p.ndefined() << "  " <<convFunctions_p.nelements() << endl;
+      std::map<String, Int>::iterator it=vbConvIndex_p.begin();
       for (Int k=0; k < numConv; ++k){
 	rec.define("convfunctions"+String::toString(k), *(convFunctions_p[k]));
 	rec.define("convweights"+String::toString(k), *(convWeights_p[k]));
 	rec.define("convsizes"+String::toString(k), *(convSizes_p[k]));
 	rec.define("convsupportblock"+String::toString(k), *(convSupportBlock_p[k]));
 	//cerr << "k " << k << " key " << convFunctionMap_p.getKey(k) << " val " << convFunctionMap_p.getVal(k) << endl;
-	rec.define(String("key")+String::toString(k),convFunctionMap_p.getKey(k));
-	rec.define(String("val")+String::toString(k), convFunctionMap_p.getVal(k));
+	rec.define(String("key")+String::toString(k), it->first);
+	rec.define(String("val")+String::toString(k), it->second);
+	it++;
       }
       rec.define("pbclass", Int(pbClass_p));
       rec.define("actualconvindex",  actualConvIndex_p);
+      rec.define("donemainconv", doneMainConv_p);
       //The following is not needed ..can be regenerated
       //rec.define("pointingpix", pointingPix_p);
     }
@@ -793,6 +775,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
        convWeights_p.resize(numConv, True, False);
        convSizes_p.resize(numConv, True, False);
        convFunctionMap_p=SimpleOrderedMap<String, Int>(-1);
+       vbConvIndex_p.erase(vbConvIndex_p.begin(), vbConvIndex_p.end());
        for (Int k=0; k < numConv; ++k){
 	 convFunctions_p[k]=new Cube<Complex>();
 	 convWeights_p[k]=new Cube<Complex>();
@@ -806,7 +789,8 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
 	 Int val;
 	 rec.get(String("key")+String::toString(k), key);
 	 rec.get(String("val")+String::toString(k), val);
-	 convFunctionMap_p.define(key,val);
+	 vbConvIndex_p[key]=val;
+	 //convFunctionMap_p.define(key,val);
        }
        pbClass_p=static_cast<PBMathInterface::PBClass>(rec.asInt("pbclass"));
        rec.get("actualconvindex",  actualConvIndex_p);

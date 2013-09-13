@@ -81,14 +81,16 @@ namespace casa{
       ////Returns the convfunctions in the Cubes...the Matrix rowChanMap maps 
       // the vb.row and channel 
       //to the plane of the convfunc appropriate 
+      
       virtual void findConvFunction(const ImageInterface<Complex>& iimage, 
 				    const VisBuffer& vb,
 				    const Int& convSampling,
-				    Cube<Complex>& convFunc, 
-				    Cube<Complex>& weightConvFunc, 
+				    const Vector<Double>& visFreq,
+				    Array<Complex>& convFunc,
+				    Array<Complex>& weightConvFunc,
 				    Vector<Int>& convsize,
 				    Vector<Int>& convSupport,
-				    Vector<Int>& rowChanMap);
+				    Vector<Int>& polMap, Vector<Int>& chanMap, Vector<Int>& rowMap);
       virtual ImageInterface<Float>&  getFluxScaleImage();
       // slice fluxscale image by npol 
       virtual void sliceFluxScale(Int npol);
@@ -113,6 +115,7 @@ namespace casa{
       virtual Bool fromRecord(String& err, const RecordInterface& rec, Bool calcFluxneeded=False);
       //give possibility to erase history
       virtual void reset();
+
     protected:
       SkyJones* sj_p;
       TempImage<Float> fluxScale_p;
@@ -131,9 +134,12 @@ namespace casa{
       MDirection direction2_p;
       Vector<Double> thePix_p;
       Bool filledFluxScale_p;
-      Bool doneMainConv_p;
+      Vector<Bool> doneMainConv_p;
       Bool calcFluxScale_p;
+      std::map<String, Int> vbConvIndex_p;
+      virtual Int convIndex(const VisBuffer& vb);
       virtual void storeImageParams(const ImageInterface<Complex>& iimage, const VisBuffer& vb);
+      virtual void findUsefulChannels(Vector<Int>& chanMap, Vector<Double>& chanFreqs,  const VisBuffer& vb, const Vector<Double>& visFreq);
       //return the direction pixel corresponding to a direction
       virtual void toPix(const VisBuffer& vb);
       CountedPtr<TempImage<Float> > convWeightImage_p;
@@ -150,10 +156,10 @@ namespace casa{
       Matrix<Complex> weightSave_p;
       Int convSize_p; 
       Int convSupport_p;
-      //These are cubes for multiple PA
-      //May need a per antenna one if each antenna has its own.
-      Block <CountedPtr<Cube<Complex> > > convFunctions_p;
-      Block <CountedPtr<Cube<Complex> > > convWeights_p;
+      //These are Arrays of 5 dimension (x, y, npol, nchan, nrow)
+      //Thus every baseline may have its own.
+      Block <CountedPtr<Array<Complex> > > convFunctions_p;
+      Block <CountedPtr<Array<Complex> > > convWeights_p;
       Block<CountedPtr<Vector<Int> > > convSizes_p;
       Block <CountedPtr<Vector<Int> > > convSupportBlock_p;
       Matrix<Bool> pointingPix_p;

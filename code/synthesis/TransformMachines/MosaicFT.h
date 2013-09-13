@@ -304,14 +304,16 @@ protected:
   // Grid/degrid zero spacing points?
   Bool usezero_p;
 
-  Cube<Complex> convFunc;
-  Cube<Complex> weightConvFunc_p;
+  Array<Complex> convFunc;
+  Array<Complex> weightConvFunc_p;
   Int convSampling;
   Int convSize;
   Int convSupport;
   Vector<Int> convSupportPlanes_p;
   Vector<Int> convSizePlanes_p;
   Vector<Int> convRowMap_p;
+  Vector<Int> convChanMap_p;
+  Vector<Int> convPolMap_p;
 
   Int wConvSize;
 
