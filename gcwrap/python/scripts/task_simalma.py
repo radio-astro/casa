@@ -661,9 +661,9 @@ def simalma(
                 step += 1
 
                 msg("",priority="info")
-                if not dryrun: msg("="*60, origin="simalma", priority="warn")
+                msg("-"*60, origin="simalma", priority="warn")
                 msg(("Step %d: simulating " % step)+s, origin="simalma", priority="warn")
-                if not dryrun: msg("="*60, origin="simalma", priority="warn")
+                msg("-"*60, origin="simalma", priority="warn")
 
                 # filename prefixes
                 pref = get_data_prefix(antennalist[i], project)
@@ -729,9 +729,9 @@ def simalma(
             step += 1
             
             msg(" ",priority="info")
-            if not dryrun: msg("="*60, origin="simalma", priority="warn")
+            msg("-"*60, origin="simalma", priority="warn")
             msg(("Step %d: simulating Total Power" % step), origin="simalma", priority="warn")
-            if not dryrun: msg("="*60, origin="simalma", priority="warn")
+            msg("-"*60, origin="simalma", priority="warn")
 
             if antlist_tp is None:
                 antlist_tp = antlist_tp_default
@@ -809,7 +809,7 @@ def simalma(
                             / qa.convert(qptgspc_tp, pbunit)['value']) \
                         * int(qa.convert(mapy, pbunit)['value'] \
                               / qa.convert(qptgspc_tp, pbunit)['value'])
-            msg("Number of pointings to map a rect region = %d" % npts_rect, origin="simalma", priority="DEBUG2")
+            msg("Number of pointings to map a rect region = %d" % npts_rect, priority="DEBUG2")
         
             if rectmode:
                 dir_tp = direction
@@ -952,9 +952,10 @@ def simalma(
                 # Image ACA-TP
                 step += 1
                 msg(" ",priority="info")
-                if not dryrun: msg("="*60, origin="simalma", priority="info")
+                msg("-"*60, origin="simalma", priority="info")
                 msg("Step %d: generating a total power image. " % step, origin="simalma", priority="info")
-                if not dryrun: msg("="*60, origin="simalma", priority="info")
+                msg("  WARNING: Optimal gridding parameters are being analyzed by ALMA and may change.",priority="warn",origin="simalma")
+                msg("-"*60, origin="simalma", priority="info")
 
                 vis_tp = []
                 for msname_tp in mslist_tp:
@@ -1164,17 +1165,20 @@ def simalma(
                 task_param['graphics'] = graphics
                 task_param['verbose'] = verbose
                 task_param['overwrite'] = overwrite
+                task_param['dryrun'] = dryrun
+                task_param['logfile'] = myutil.reportfile
 
                 msg(get_taskstr('simanalyze', task_param), priority="info")
 
-                if not dryrun:
-                    try:
-                        simanalyze(**task_param)
-                        del task_param
-                    except:
-                        raise Exception, simanaerr
-                    finally:
-                        casalog.origin('simalma')
+                try:
+                    myutil.closereport()
+                    simanalyze(**task_param)
+                    del task_param
+                    myutil.openreport()
+                except:
+                    raise Exception, simanaerr
+                finally:
+                    casalog.origin('simalma')
 
                 # Back up simanalyze.last file
                 if os.path.exists(fileroot+"/"+simana_file):
@@ -1200,9 +1204,12 @@ def simalma(
             for i in range(nconfig):
                 step += 1
                 msg(" ",priority="info")
-                if not dryrun: msg("="*60, origin="simalma", priority="info")
+                msg("-"*60, origin="simalma", priority="info")
                 msg(("Step %d: imaging and analyzing " % step)+antennalist[i], origin="simalma", priority="info")
-                if not dryrun: msg("="*60, origin="simalma", priority="info")
+                msg("  WARNING: The example clean shown here uses no mask, may diverge, and almost certainly is not optimal.",priority="warn",origin="simalma")
+                msg("  Users are HIGHLY recommended to use interactive clean masking (in simanalyze or directly in clean)",priority="warn",origin="simalma")
+                msg("  Auto-masking is under development for use in the ALMA pipeline and will be included here in a future release",priority="warn",origin="simalma")
+                msg("-"*60, origin="simalma", priority="info")
 
                 pref=get_data_prefix(antennalist[i], project)
                 if addnoise:
@@ -1236,14 +1243,24 @@ def simalma(
 #                    msg("ACA skymodel '%s' is not found" \
 #                        % acaskymodel+".save", origin="simalma", priority="error")
 
+                # dryrun requires feeding cell and imsize from here.
                 task_param = {}
                 task_param['project'] = project
                 task_param['image'] = image
                 task_param['vis'] = vis_int
                 task_param['modelimage'] = ""
-                task_param['cell'] = cell
-                task_param['imsize'] = imsize
-                task_param['imdirection'] = imdirection
+                if cell:
+                    task_param['cell'] = cell
+                else:
+                    task_param['cell'] = qa.tos(model_cell[0])
+                if imsize[0]>0:
+                    task_param['imsize'] = imsize
+                else:
+                    task_param['imsize'] = int(qa.div(model_size[0],model_cell[0])['value'])
+                if len(imdirection)>0:                    
+                    task_param['imdirection'] = imdirection
+                else:
+                    task_param['imdirection'] = model_refdir    
                 task_param['niter'] = niter
                 task_param['threshold'] = threshold
                 task_param['weighting'] = weighting
@@ -1254,17 +1271,20 @@ def simalma(
                 task_param['graphics'] = graphics
                 task_param['verbose'] = verbose
                 task_param['overwrite'] = overwrite
+                task_param['dryrun'] = dryrun
+                task_param['logfile'] = myutil.reportfile
 
                 msg(get_taskstr('simanalyze', task_param), priority="info")
 
-                if not dryrun:
-                    try:
-                        simanalyze(**task_param)
-                        del task_param
-                    except:
-                        raise Exception, simanaerr
-                    finally:
-                        casalog.origin('simalma')
+                try:
+                    myutil.closereport()
+                    simanalyze(**task_param)
+                    del task_param
+                    myutil.openreport()
+                except:
+                    raise Exception, simanaerr
+                finally:
+                    casalog.origin('simalma')
 
 
 
@@ -1273,9 +1293,9 @@ def simalma(
                 # concat
                 step += 1
                 msg(" ",priority="info")
-                if not dryrun: msg("="*60, origin="simalma", priority="info")
+                msg("-"*60, origin="simalma", priority="info")
                 msg("Step %d: concatenating interferometric visibilities." % step, origin="simalma", priority="info")
-                if not dryrun: msg("="*60, origin="simalma", priority="info")
+                msg("-"*60, origin="simalma", priority="info")
                 
                 weights=pl.zeros(nconfig)+1
                 z=pl.where(configtypes=='ACA')[0]
@@ -1307,9 +1327,12 @@ def simalma(
             # Image ALMA-BL + ACA-7m                
                 step += 1
                 msg(" ",priority="info")
-                msg("="*60, origin="simalma", priority="info")
+                msg("-"*60, origin="simalma", priority="info")
                 msg(("Step %d: imaging and analyzing " % step)+concatname+".ms", origin="simalma", priority="info")
-                if not dryrun: msg("="*60, origin="simalma", priority="info")
+                msg("  WARNING: The example clean shown here uses no mask, may diverge, and almost certainly is not optimal.",priority="warn",origin="simalma")
+                msg("  Users are HIGHLY recommended to use interactive clean masking (in simanalyze or directly in clean)",priority="warn",origin="simalma")
+                msg("  Auto-masking is under development for use in the ALMA pipeline and will be included here in a future release",priority="warn",origin="simalma")
+                msg("-"*60, origin="simalma", priority="info")
 
                     
                 if dryrun:
@@ -1326,9 +1349,18 @@ def simalma(
                 task_param['image'] = image
                 task_param['vis'] = vis_int
                 task_param['modelimage'] = ""
-                task_param['cell'] = cell
-                task_param['imsize'] = imsize
-                task_param['imdirection'] = imdirection
+                if cell:
+                    task_param['cell'] = cell
+                else:
+                    task_param['cell'] = model_cell
+                if imsize[0]>0:
+                    task_param['imsize'] = imsize
+                else:
+                    task_param['imsize'] = int(qa.div(model_size[0],model_cell[0])['value'])
+                if len(imdirection)>0:                    
+                    task_param['imdirection'] = imdirection
+                else:
+                    task_param['imdirection'] = model_refdir    
                 task_param['niter'] = niter
                 task_param['threshold'] = threshold
                 task_param['weighting'] = weighting
@@ -1339,18 +1371,21 @@ def simalma(
                 task_param['graphics'] = graphics
                 task_param['verbose'] = verbose
                 task_param['overwrite'] = overwrite
+                task_param['dryrun'] = dryrun
+                task_param['logfile'] = myutil.reportfile
 
                 msg(get_taskstr('simanalyze', task_param), priority="info")
                 imagename_int=os.path.basename(concatname.rstrip("/"))+".image"
 
-                if not dryrun:
-                    try:
-                        simanalyze(**task_param)
-                        del task_param
-                    except:
-                        raise Exception, simanaerr
-                    finally:
-                        casalog.origin('simalma')
+                try:
+                    myutil.closereport()
+                    simanalyze(**task_param)
+                    del task_param
+                    myutil.openreport()
+                except:
+                    raise Exception, simanaerr
+                finally:
+                    casalog.origin('simalma')
 
 
 
@@ -1364,11 +1399,11 @@ def simalma(
                 # Combine TP + INT image
                 step += 1
                 msg(" ",priority="info")
-                if not dryrun: msg("="*60, origin="simalma", priority="info")
+                msg("-"*60, origin="simalma", priority="info")
                 msg("Step %d: combining a total power and synthesis image. " % step, origin="simalma", priority="info")
                 msg("  WARNING: feathering the two images is only one way to combine them.  ",priority="warn",origin="simalma")
                 msg("  Using the total power image as a model in cleaning the interferometric visibilities may work better in some circumstances.",priority="warn",origin="simalma")
-                if not dryrun: msg("="*60, origin="simalma", priority="info")
+                msg("-"*60, origin="simalma", priority="info")
 
                 if os.path.exists(fileroot+"/"+imagename_int) or dryrun:
                     highimage0 = fileroot+"/"+imagename_int
@@ -1412,7 +1447,7 @@ def simalma(
                     immath(imagename=[regridimg, pbcov],
                            expr='IM1*IM0',outfile=scaledimg)
 
-                msg(" ",priority="info")
+                msg(" ",priority="info")                
                 msg("Set total power image beam and brightness unit:",priority=v_priority)                                
                 msg("ia.open('"+fileroot+"/"+imagename_tp+"')",priority="info")
                 msg("beam_tp = ia.restoringbeam()",priority="info")

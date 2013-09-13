@@ -204,10 +204,12 @@ class simutil:
     def openreport(self):
         try:
             if os.path.exists(self.reportfile):
-                msg("Report file "+self.reportfile+"already exists - delete or change reportfile",priority="ERROR",origin="simutil")
+                self.report=open(self.reportfile,"a")
+                #self.msg("Report file "+self.reportfile+"already exists - delete or change reportfile",priority="ERROR",origin="simutil")
+            else:
+                self.report=open(self.reportfile,"w")
         except:
-            msg("Can't open reportfile because it's not defined",priority="ERROR",origin="simutil")
-        self.report=open(self.reportfile,"w")
+            self.msg("Can't open reportfile because it's not defined",priority="ERROR",origin="simutil")
                
 
     def closereport(self):
@@ -635,7 +637,7 @@ class simutil:
         if len(pointings) < 1:
             s="No valid lines found in pointing file"
             self.msg(s,priority="error")
-        self.msg("read in %i pointing(s) from file" % len(pointings))
+        self.msg("read in %i pointing(s) from file" % len(pointings),origin="read_pointings")
         self.pointings=pointings
         #self.direction=pointings
                 
@@ -2695,12 +2697,15 @@ class simutil:
         else:
             ms0=mstoimage
         
-        tb.open(ms0+"/SPECTRAL_WINDOW")
-        if tb.nrows() > 1:
-            self.msg("determining output cube parameters from FIRST of several SPW in MS "+ms0)
-        freq=tb.getvarcol("CHAN_FREQ")['r1']
-        nchan=freq.size
-        tb.done()
+        if os.path.exists(ms0):
+            tb.open(ms0+"/SPECTRAL_WINDOW")
+            if tb.nrows() > 1:
+                self.msg("determining output cube parameters from FIRST of several SPW in MS "+ms0)
+            freq=tb.getvarcol("CHAN_FREQ")['r1']
+            nchan=freq.size
+            tb.done()
+        elif dryrun:
+            nchan=1 # May be wrong
 
         if nchan==1:
             chanmode="mfs"
@@ -2852,11 +2857,12 @@ class simutil:
         cleanlast.write('nterms                  = 1\n');
         cleanlast.write('reffreq                 = ""\n');
         cleanlast.write('chaniter                = False\n');
-        cleanstr=cleanstr+")"
+        cleanstr=cleanstr+")"        
         if self.verbose:
-            self.msg(cleanstr,priority="warn")
+            # RI TODO assumed origin is simanalyze
+            self.msg(cleanstr,priority="warn",origin="simanalyze")
         else:
-            self.msg(cleanstr,priority="info")
+            self.msg(cleanstr,priority="info",origin="simanalyze")
         cleanlast.write("#"+cleanstr+"\n")
         cleanlast.close()
         
@@ -2870,7 +2876,7 @@ class simutil:
               uvtaper=uvtaper,outertaper=outertaper, pbcor=True, mask=mask,
               modelimage=modelimage)
 
-        del freq,nchan # something is holding onto the ms in table cache
+            del freq,nchan # something is holding onto the ms in table cache
 
 
 

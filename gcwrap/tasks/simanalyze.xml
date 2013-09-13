@@ -237,6 +237,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>False</value>
     </param>
 
+    <param type="string" name="logfile">
+      <description></description>
+      <value></value>
+    </param>
+
 
 
         

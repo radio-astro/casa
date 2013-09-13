@@ -103,7 +103,7 @@ ia.close()
 #             'sigma': 1.4e-04 }
 refstats = { 'flux': 0.0367,
              'max': 6.2e-04,
-             'min': -1.9e-04, 
+             'min': -1.75e-04, 
              'rms': 1.9e-04,
              'sigma': 1.36e-04 }
 

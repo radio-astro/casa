@@ -27,6 +27,7 @@ def simanalyze(
     verbose=None,
     overwrite=None,
     dryrun=False,
+    logfile=None,
     async=False):
 
 #def simanalyze(project='sim', image=True, imagename='default', skymodel='', vis='default', modelimage='', imsize=[128, 128], imdirection='', cell='', interactive=False, niter=0, threshold='0.1mJy', weighting='natural', mask=[], outertaper=[''], stokes='I', featherimage='', analyze=False, showuv=True, showpsf=True, showmodel=True, showconvolved=False, showclean=True, showresidual=False, showdifference=True, showfidelity=True, graphics='both', verbose=False, overwrite=True, dryrun=False):
@@ -49,10 +50,13 @@ def simanalyze(
             stacklevel = k
     myf = sys._getframe(stacklevel).f_globals
     
-    # create the utility object:
-    util = simutil()
-    if verbose: util.verbose = True
-    msg = util.msg
+    # create the utility object:    
+    myutil = simutil()
+    if logfile: 
+        myutil.reportfile=logfile
+        myutil.openreport()
+    if verbose: myutil.verbose = True
+    msg = myutil.msg
     from simutil import is_array_type
 
     # put output in directory called "project"
@@ -100,7 +104,8 @@ def simanalyze(
         # first, so that we can pick the appropriate skymodel, 
         # if there are several.
         skymodel_searchstring="NOT SPECIFIED"
-        if (not image):
+
+        if not (image or dryrun):
             user_imagename=imagename
             if user_imagename=="default" or len(user_imagename)<=0:
                 images= glob.glob(fileroot+"/*image")
@@ -129,8 +134,6 @@ def simanalyze(
             
 
 
-
-            
         if image:
             # check for default measurement sets:
             default_mslist = glob.glob(fileroot+"/*ms")
@@ -161,7 +164,7 @@ def simanalyze(
                 if os.path.exists(fileroot+"/"+ms1):
                     ms1 = fileroot + "/" + ms1
 
-                if os.path.exists(ms1):
+                if os.path.exists(ms1)or dryrun:
                     mslist.append(ms1)
 
                     # mark as requested
@@ -187,7 +190,12 @@ def simanalyze(
                             msg("You requested "+ms1+" but there is a noisy version of the ms in your project directory - if your intent is to model noisy data you may want to check inputs",priority="warn")
 
                     # check if the ms is tp data or not.
-                    if util.ismstp(ms1,halt=False):
+                    if dryrun:
+                        # HACK
+                        mstype.append('INT')
+                        mstoimage.append(ms1)
+
+                    elif myutil.ismstp(ms1,halt=False):
                         mstype.append('TP')
                         tpmstoimage = ms1
                         # XXX TODO more than one TP ms will not be handled
@@ -197,7 +205,7 @@ def simanalyze(
                         mstype.append('INT')
                         mstoimage.append(ms1)
                         msg("Found a synthesis measurement set, %s." % ms1,origin='simanalyze')
-                else:
+                else:          
                     msg("measurement set "+ms1+" not found -- removing from imaging list")
             
             # check default mslist for unrequested ms:
@@ -205,6 +213,9 @@ def simanalyze(
                 if not default_requested[i]:
                     msg("Project directory contains "+default_mslist[i]+" but you have not requested to include it in your simulated image.")
 
+
+            if not mstoimage:
+                raise Exception,"No MS found to image"
 
             # now try to parse the mslist for an identifier string that 
             # we can use to find the right skymodel if there are several
@@ -232,7 +243,6 @@ def simanalyze(
 
 
 
-
         #========================================================
         # now we can search for skymodel, and if there are several, 
         # pick the one that is closest to either the imagename, 
@@ -241,7 +251,7 @@ def simanalyze(
         components_only=False
 
         # first look for skymodel, if not then compskymodel
-        skymodels=glob.glob(fileroot+"/"+project+"*.skymodel")+glob.glob(fileroot+"/"+project+"*.newmodel")
+        skymodels=glob.glob(fileroot+"/"+project+"*\.skymodel")+glob.glob(fileroot+"/"+project+"*\.newmodel")
         nmodels=len(skymodels)
         skymodel_index=0
         if nmodels>1:
@@ -257,7 +267,7 @@ def simanalyze(
             skymodel=skymodels[skymodel_index]
         else:
             skymodel=""
-
+        
         if os.path.exists(skymodel):
             msg("Sky model image "+skymodel+" found.",origin='simanalyze')
         else:
@@ -276,27 +286,24 @@ def simanalyze(
             if os.path.exists(skymodel):
                 msg("Sky model image "+skymodel+" found.",origin='simanalyze')
                 components_only=True
-            else:
-                msg("Can't find a model image in your project directory, named skymodel or compskymodel - output image will be been created, but comparison with the input model is not possible.",priority="error",origin='simanalyze')
-                return False
+            elif not dryrun:
+                msg("Can't find a model image in your project directory, named skymodel or compskymodel - output image will be created, but comparison with the input model is not possible.",priority="warn",origin='simanalyze')
+                analyze=False
 
         modelflat = skymodel+".flat"
-        if not os.path.exists(modelflat) and not dryrun:
-            util.flatimage(skymodel,verbose=verbose)
+        if not (os.path.exists(modelflat) or dryrun):
+            myutil.flatimage(skymodel,verbose=verbose)
 
-        # modifymodel just collects info if skymodel==newmodel
-        returnpars = util.modifymodel(skymodel,skymodel,
-                                      "","","","","",-1,
-                                      flatimage=False)
-        if not returnpars:
-            return False
+        if os.path.exists(skymodel) or (not dryrun):
+            # modifymodel just collects info if skymodel==newmodel
+            (model_refdir,model_cell,model_size,
+             model_nchan,model_center,model_width,
+             model_stokes) = myutil.modifymodel(skymodel,skymodel,
+                                              "","","","","",-1,
+                                              flatimage=False)
+            
+            cell_asec=qa.convert(model_cell[0],'arcsec')['value']
 
-        (model_refdir,model_cell,model_size,
-         model_nchan,model_center,model_width,
-         model_stokes) = returnpars
-
-
-        cell_asec=qa.convert(model_cell[0],'arcsec')['value']
 
         #####################################################################
         # clean if desired, use noisy image for further calculation if present
@@ -343,7 +350,6 @@ def simanalyze(
                 imsize=[imsize0,imsize1]
 
 
-
             if len(mstoimage) == 0:
                 if tpmstoimage:
                     sd_only = True
@@ -367,7 +373,7 @@ def simanalyze(
                         minimsize = 8* int(psfsize/cell_asec)
                     elif dryrun:
                         minimsize = min(imsize)
-                        psfsize = cell[0]*3 # HACK
+                        psfsize = qa.mul(cell[0],3) # HACK
                     else:
                         raise Exception,mstoimage+" not found."
 
@@ -491,9 +497,9 @@ def simanalyze(
 
                         # Define PSF of image
                         qpb = beam=qa.quantity(pb_asec,"arcsec")
-                        qpsf0 = util.sfBeam1d(qpb, cell=temp_cell[0],
+                        qpsf0 = myutil.sfBeam1d(qpb, cell=temp_cell[0],
                                               convsupport=sfsupport)
-                        qpsf1 = util.sfBeam1d(qpb, cell=temp_cell[1],
+                        qpsf1 = myutil.sfBeam1d(qpb, cell=temp_cell[1],
                                               convsupport=sfsupport)
                         imbeam['major'] = max(qpsf0, qpsf1)
                         imbeam['minor'] = min(qpsf0, qpsf1)
@@ -596,10 +602,10 @@ def simanalyze(
                 msg("Found modelimage, %s." % modelimage,origin='simanalyze')
 
             # in simdata we use imdirection instead of model_refdir
-            if not util.isdirection(imdirection,halt=False):
+            if not myutil.isdirection(imdirection,halt=False):
                 imdirection=model_refdir
-
-            util.imclean(mstoimage,imagename,
+        
+            myutil.imclean(mstoimage,imagename,
                          cleanmode,cell,imsize,imdirection,
                          interactive,niter,threshold,weighting,
                          outertaper,stokes, #sourcefieldlist=sourcefieldlist,
@@ -608,8 +614,8 @@ def simanalyze(
 
             # create imagename.flat and imagename.residual.flat:
             if not dryrun:
-                util.flatimage(imagename+".image",verbose=verbose)
-                util.flatimage(imagename+".residual",verbose=verbose)
+                myutil.flatimage(imagename+".image",verbose=verbose)
+                myutil.flatimage(imagename+".residual",verbose=verbose)
             outflat_current = True
 
             # feather
@@ -637,7 +643,7 @@ def simanalyze(
                     shutil.copytree(imagename+".residual.flat",imagename+".feather.residual.flat")
                     imagename=imagename+".feather"
                     # but replace combined flat image
-                    util.flatimage(imagename+".image",verbose=verbose)
+                    myutil.flatimage(imagename+".image",verbose=verbose)
 
 
 
@@ -690,35 +696,35 @@ def simanalyze(
 
         if image and len(mstoimage) > 0:
             if grscreen or grfile:
-                util.newfig(multi=[2,2,1],show=grscreen)
+                myutil.newfig(multi=[2,2,1],show=grscreen)
 
                 # create regridded and convolved sky model image
-                util.convimage(modelflat,imagename+".image.flat")
+                myutil.convimage(modelflat,imagename+".image.flat")
                 convsky_current = True # don't remake this for analysis in this run
 
                 disprange = []  # passing empty list causes return of disprange
 
                 # original sky regridded to output pixels but not convolved with beam
-                discard = util.statim(modelflat+".regrid",disprange=disprange,showstats=False)
-                util.nextfig()
+                discard = myutil.statim(modelflat+".regrid",disprange=disprange,showstats=False)
+                myutil.nextfig()
 
                 # convolved sky model - units of Jy/bm
                 disprange = []
-                discard = util.statim(modelflat+".regrid.conv",disprange=disprange)
-                util.nextfig()
+                discard = myutil.statim(modelflat+".regrid.conv",disprange=disprange)
+                myutil.nextfig()
 
                 # clean image - also in Jy/beam
                 # although because of DC offset, better to reset disprange
                 disprange = []
-                discard = util.statim(imagename+".image.flat",disprange=disprange)
-                util.nextfig()
+                discard = myutil.statim(imagename+".image.flat",disprange=disprange)
+                myutil.nextfig()
 
                 if len(mstoimage) > 0:
-                    util.nextfig()
+                    myutil.nextfig()
 
                     # clean residual image - Jy/bm
-                    discard = util.statim(imagename+".residual.flat",disprange=disprange)
-                util.endfig(show=grscreen,filename=file)
+                    discard = myutil.statim(imagename+".residual.flat",disprange=disprange)
+                myutil.endfig(show=grscreen,filename=file)
 
 
 
@@ -749,7 +755,7 @@ def simanalyze(
                 beam_current = True
                 ia.close()
                 # model has units of Jy/pix - calculate beam area from clean image
-                cell = util.cellsize(imagename+".image")
+                cell = myutil.cellsize(imagename+".image")
                 cell= [ qa.convert(cell[0],'arcsec'),
                         qa.convert(cell[1],'arcsec') ]
                 # (even if we are not plotting graphics)
@@ -762,9 +768,9 @@ def simanalyze(
             outflat = imagename + ".image.flat"
             if (not outflat_current) or (not os.path.exists(outflat)):
                 # create imagename.flat and imagename.residual.flat
-                util.flatimage(imagename+".image",verbose=verbose)
+                myutil.flatimage(imagename+".image",verbose=verbose)
                 if os.path.exists(imagename+".residual"):
-                    util.flatimage(imagename+".residual",verbose=verbose)
+                    myutil.flatimage(imagename+".residual",verbose=verbose)
                 else:
                     if showresidual:
                         msg(imagename+".residual not found -- residual will not be plotted",priority="warn")
@@ -773,7 +779,7 @@ def simanalyze(
 
             # regridded and convolved input:?
             if not convsky_current:
-                util.convimage(modelflat,imagename+".image.flat")
+                myutil.convimage(modelflat,imagename+".image.flat")
                 convsky_current = True
 
             # now should have all the flat, convolved etc even if didn't run "image" 
@@ -841,7 +847,7 @@ def simanalyze(
 #                # image=sd_only=T or (image=F=predict_uv and predict_sd=T)
 #                msfile = sdmsfile
             # psf is not available for SD only sim
-            if os.path.exists(msfile) and util.ismstp(msfile,halt=False):
+            if os.path.exists(msfile) and myutil.ismstp(msfile,halt=False):
                 if showpsf: msg("single dish simulation -- psf will not be plotted",priority='warn')
                 showpsf = False
             if (not image) and (not os.path.exists(msfile)):
@@ -872,7 +878,7 @@ def simanalyze(
                 file = ""
 
             if grscreen or grfile:
-                util.newfig(multi=multi,show=grscreen)
+                myutil.newfig(multi=multi,show=grscreen)
 
                 # if order in task parameters changes, change here too
                 if showuv:
@@ -894,9 +900,9 @@ def simanalyze(
                     pl.axis('equal')
                     # Add zero-spacing (single dish) if not yet plotted
 # TODO make this a check over all ms
-#                    if predict_sd and not util.ismstp(msfile,halt=False):
+#                    if predict_sd and not myutil.ismstp(msfile,halt=False):
 #                        pl.plot([0.],[0.],'r,')
-                    util.nextfig()
+                    myutil.nextfig()
 
                 if showpsf:
                     if image:
@@ -937,42 +943,42 @@ def simanalyze(
                     ax = pl.gca()
                     pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['major']['value'],beam['minor']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
                     ia.close()
-                    util.nextfig()
+                    myutil.nextfig()
 
                 disprange = []  # first plot will define range
                 if showmodel:
-                    discard = util.statim(modelflat+".regrid",incell=cell,disprange=disprange,showstats=False)
-                    util.nextfig()
+                    discard = myutil.statim(modelflat+".regrid",incell=cell,disprange=disprange,showstats=False)
+                    myutil.nextfig()
                     disprange = []
 
                 if showconvolved:
-                    discard = util.statim(modelflat+".regrid.conv")
+                    discard = myutil.statim(modelflat+".regrid.conv")
                     # if disprange gets set here, it'll be Jy/bm
-                    util.nextfig()
+                    myutil.nextfig()
 
                 if showclean:
                     # own scaling because of DC/zero spacing offset
-                    discard = util.statim(imagename+".image.flat")
-                    util.nextfig()
+                    discard = myutil.statim(imagename+".image.flat")
+                    myutil.nextfig()
 
                 if showresidual:
                     # it gets its own scaling
-                    discard = util.statim(imagename+".residual.flat")
-                    util.nextfig()
+                    discard = myutil.statim(imagename+".residual.flat")
+                    myutil.nextfig()
 
                 if showdifference:
                     # it gets its own scaling.
-                    discard = util.statim(imagename+".diff")
-                    util.nextfig()
+                    discard = myutil.statim(imagename+".diff")
+                    myutil.nextfig()
 
                 if showfidelity:
                     # it gets its own scaling.
-                    discard = util.statim(imagename+".fidelity",showstats=False)
-                    util.nextfig()
+                    discard = myutil.statim(imagename+".fidelity",showstats=False)
+                    myutil.nextfig()
 
-                util.endfig(show=grscreen,filename=file)
+                myutil.endfig(show=grscreen,filename=file)
 
-            sim_min,sim_max,sim_rms,sim_units = util.statim(imagename+".image.flat",plot=False)
+            sim_min,sim_max,sim_rms,sim_units = myutil.statim(imagename+".image.flat",plot=False)
             # if not displaying still print stats:
             # 20100505 ia.stats changed to return Jy/bm:
             msg('Simulation rms: '+str(sim_rms/bmarea)+" Jy/pix = "+
@@ -1005,6 +1011,10 @@ def simanalyze(
 #            shutil.rmtree(imagename+".diff")
         if os.path.exists(imagename+".quick.psf") and os.path.exists(imagename+".psf"):
             shutil.rmtree(imagename+".quick.psf")
+
+        finalize_tools()
+        if myutil.isreport():
+            myutil.closereport()
 
 
     except TypeError, e:
