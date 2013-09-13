@@ -5527,6 +5527,11 @@ void SolvableVisJones::fluxscale(const String& outfile,
 	oMsg += fldNames(tranidx);
 	oMsg += " in SpW=";
 	oMsg += String::toString<Int>( ispw );
+        if (scaleOK(ispw,tranidx)) {
+          oMsg += " (freq=";
+          oMsg += String::toString<Double>(solFreq(ispw));
+          oMsg += " Hz)";
+        }
 
 	if ( refSpw != ispw ) {
 	  oMsg += " (ref SpW=";
