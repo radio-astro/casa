@@ -232,6 +232,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>True</value>
     </param>
 
+    <param type="bool" name="dryrun">
+      <description>only print information about cleaning, not run it [experimental]</description>
+      <value>False</value>
+    </param>
+
 
 
         

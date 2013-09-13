@@ -257,12 +257,12 @@ def simobserve(
         # if the user has not input a map size (for setpointings), then use model_size
         if len(mapsize) == 0:
             mapsize = model_size
-            if verbose: msg("setting map size to "+str(model_size))
+            if verbose: msg("setting map size to "+str(model_size),origin='simobserve')
         else:
              if is_array_type(mapsize):
                  if len(mapsize[0]) == 0:
                      mapsize = model_size
-                     if verbose: msg("setting map size to "+str(model_size))
+                     if verbose: msg("setting map size to "+str(model_size),origin="simobserve")
 
         if components_only:
             if is_array_type(mapsize):
@@ -517,7 +517,7 @@ def simobserve(
 
 
         if setpointings:
-            if verbose: util.msg("calculating map pointings centered at "+str(dir0))
+            util.msg("calculating map pointings centered at "+str(dir0),origin='simobserve')
 
             if len(pointingspacing) < 1:
                 # ALMA OT uses lambda/d/sqrt(3)
@@ -535,7 +535,7 @@ def simobserve(
                 # todo make more robust to nonconforming z[0] strings
 
             if verbose:
-                msg("pointing spacing in mosaic = "+pointingspacing)
+                msg("pointing spacing in mosaic = "+pointingspacing,origin='simobserve')
             pointings = util.calc_pointings2(pointingspacing,mapsize,maptype=maptype, direction=dir, beam=pb)
             nfld=len(pointings)
             etime = qa.convert(qa.mul(qa.quantity(integration),scanlength),"s")['value']
@@ -612,7 +612,7 @@ def simobserve(
                    qa.convert(mra,'deg')['value'])*pl.cos(qa.convert(dec,'rad')['value'] ),
                   (qa.convert(dec,'deg')['value'] - qa.convert(mdec,'deg')['value']) ]
         if verbose: 
-            msg("pointings are shifted relative to the model by %g,%g arcsec" % (shift[0]*3600,shift[1]*3600))
+            msg("pointings are shifted relative to the model by %g,%g arcsec" % (shift[0]*3600,shift[1]*3600),origin='simobserve')
 
         xmax = qa.convert(model_size[0],'deg')['value']*0.5
         ymax = qa.convert(model_size[1],'deg')['value']*0.5
@@ -634,10 +634,10 @@ def simobserve(
                     return False
             util.write_pointings(ptgfile,pointings,etime.tolist())
 
-        msg("center = "+imcenter)
+        msg("center = "+imcenter,origin='simobserve')
         if nfld > 1 and verbose:
             for idir in range(min(len(pointings),20)):
-                msg("   "+pointings[idir])
+                msg("   "+pointings[idir],origin='simobserve')
             if nfld >= 20:
                 msg("   (printing only first 20 - see pointing file for full list)")
 
@@ -747,6 +747,7 @@ def simobserve(
 
             message = "preparing empty measurement set"
             if verbose:
+                msg(" ",priority="info")
                 msg(message,origin="simobserve",priority="warn")
             else:
                 msg(message,origin="simobserve")
@@ -767,7 +768,7 @@ def simobserve(
                 z = qq.groups()
                 refdate=z[0]
                 if len(z)>1:
-                    msg("Discarding time part of refdate, "+z[1]+", in favor of hourangle parameter = "+hourangle)
+                    msg("Discarding time part of refdate, '"+z[1]+"', in favor of hourangle parameter = "+hourangle,origin='simobserve')
 
             if hourangle=="transit":
                 haoffset=0.0
@@ -842,7 +843,7 @@ def simobserve(
                                stokes='XX YY')
                 sm.setfeed(mode='perfect X Y',pol=[''])
 
-            if verbose: msg(" spectral window set at %s" % qa.tos(model_center))
+            if verbose: msg(" spectral window set at %s" % qa.tos(model_center),origin='simobserve')
             sm.setlimits(shadowlimit=0.01, elevationlimit='10deg')
             if uvmode:
                 sm.setauto(0.0)
@@ -943,7 +944,7 @@ def simobserve(
             if uvmode or components_only: #Interferometer only
                 sm.setvp()
 
-            msg("done setting up observations (blank visibilities)")
+            msg("done setting up observations (blank visibilities)",origin='simobserve')
             if verbose: sm.summary()
 
             # do actual calculation of visibilities:
@@ -962,12 +963,14 @@ def simobserve(
                 if len(complist) > 1:
                     message = "predicting from "+newmodel+" and "+complist
                     if verbose:
+                        msg(" ",priority="info")
                         msg(message,priority="warn",origin="simobserve")
                     else:
                         msg(message,origin="simobserve")
                 else:
                     message = "predicting from "+newmodel
                     if verbose:
+                        msg(" ",priority="info")
                         msg(message,priority="warn",origin="simobserve")
                     else:
                         msg(message,origin="simobserve")
@@ -1043,7 +1046,7 @@ def simobserve(
                     util.nextfig()
                     im.open(msfile)
                     # TODO spectral parms
-                    msg("using default model cell "+qa.tos(model_cell[0])+" for PSF calculation",priority="warn")
+                    msg("using default model cell "+qa.tos(model_cell[0])+" for PSF calculation",priority="warn",origin='simobserve')
                     im.defineimage(cellx=qa.tos(model_cell[0]),nx=int(max([minimsize,128])))
                     if os.path.exists(fileroot+"/"+project+".quick.psf"):
                         shutil.rmtree(fileroot+"/"+project+".quick.psf")
@@ -1107,6 +1110,7 @@ def simobserve(
             message = 'copying '+msroot+'.ms to ' + \
                       noisymsroot+'.ms and adding thermal noise'
             if verbose:
+                msg(" ",priority="info")
                 msg(message,origin="noise",priority="warn")
             else:
                 msg(message,origin="noise")
@@ -1128,20 +1132,20 @@ def simobserve(
                 msg("telescopename read from "+noisymsroot+".ms: "+telescopename)
 
             if telescopename not in knowntelescopes:
-                msg("thermal noise only works properly for ALMA/ACA, (J)VLA, and SMA",origin="noise",priority="warn")
+                msg("thermal noise only works properly for ALMA/ACA, (J)VLA, and SMA",origin="simobserve",priority="warn")
             eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp(telescope=telescopename,freq=model_center)
 
             # antenna efficiency
             eta_a = eta_p * eta_s * eta_b * eta_t
             if verbose: 
-                msg('antenna efficiency    = '+str(eta_a), origin="noise")
-                msg('spillover efficiency  = '+str(eta_s), origin="noise")
-                msg('correlator efficiency = '+str(eta_q), origin="noise")
+                msg('antenna efficiency    = '+str(eta_a), origin="simobserve")
+                msg('spillover efficiency  = '+str(eta_s), origin="simobserve")
+                msg('correlator efficiency = '+str(eta_q), origin="simobserve")
             # sensitivity constant
             scoeff = -1  #Force setting the default value, 1./sqrt(2.0)
             if not uvmode: #Single-dish
                 scoeff = 1.0
-                if verbose: msg('sensitivity constant = '+str(scoeff), origin="noise")
+                if verbose: msg('sensitivity constant = '+str(scoeff), origin="simobserve")
 
             sm.openfromms(noisymsroot+".ms")    # an existing MS
             sm.setdata(fieldid=[]) # force to get all fields

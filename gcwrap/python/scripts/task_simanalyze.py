@@ -26,7 +26,11 @@ def simanalyze(
     graphics=None,
     verbose=None,
     overwrite=None,
+    dryrun=False,
     async=False):
+
+#def simanalyze(project='sim', image=True, imagename='default', skymodel='', vis='default', modelimage='', imsize=[128, 128], imdirection='', cell='', interactive=False, niter=0, threshold='0.1mJy', weighting='natural', mask=[], outertaper=[''], stokes='I', featherimage='', analyze=False, showuv=True, showpsf=True, showmodel=True, showconvolved=False, showclean=True, showresidual=False, showdifference=True, showfidelity=True, graphics='both', verbose=False, overwrite=True, dryrun=False):
+
 
 
     # Collect a list of parameter values to save inputs
@@ -188,26 +192,18 @@ def simanalyze(
                         tpmstoimage = ms1
                         # XXX TODO more than one TP ms will not be handled
                         # correctly
-                        msg("Found a total power measurement set, %s." % ms1)
+                        msg("Found a total power measurement set, %s." % ms1,origin='simanalyze')
                     else:
                         mstype.append('INT')
                         mstoimage.append(ms1)
-                        msg("Found a synthesis measurement set, %s." % ms1)
+                        msg("Found a synthesis measurement set, %s." % ms1,origin='simanalyze')
                 else:
-                    if verbose:
-                        msg("measurement set "+ms1+" not found -- removing from imaging list",priority="warn")
-
-                    else:
-                        msg("measurement set "+ms1+" not found -- removing from imaging list")
+                    msg("measurement set "+ms1+" not found -- removing from imaging list")
             
             # check default mslist for unrequested ms:
-            if verbose:
-                priority="warn"
-            else:
-                priority="info"
             for i in range(n_default):
                 if not default_requested[i]:
-                    msg("Project directory contains "+default_mslist[i]+" but you have not requested to include it in your simulated image.",priority=priority)
+                    msg("Project directory contains "+default_mslist[i]+" but you have not requested to include it in your simulated image.")
 
 
             # now try to parse the mslist for an identifier string that 
@@ -222,16 +218,17 @@ def simanalyze(
 
             # more than one to image?
             if len(mstoimage) > 1:
-                msg("Multiple interferometric ms found:",priority="warn")
+                msg("Multiple interferometric ms found:",priority="info",origin='simanalyze')
                 for i in range(len(mstoimage)):
-                    msg(" "+mstoimage[i],priority="warn")
-                msg(" will be concated and simultaneously deconvolved; if something else is desired, please specify vis, or image manually and use image=F",priority="warn")
+                    msg(" "+mstoimage[i],priority="info",origin='simanalyze')
+                msg(" will be concated and simultaneously deconvolved; if something else is desired, please specify vis, or image manually and use image=F",priority="info",origin='simanalyze')
                 concatms=project+"/"+project+".concat.ms"
                 from concat import concat
                 weights = get_concatweights(mstoimage)
-                msg(" concatnate weights: %s" % str(weights))
-                concat(mstoimage,concatvis=concatms,visweightscale=weights)
-                mstoimage=[concatms]
+                msg(" concat('"+mstoimage+"',concatvis='"+concatms+"',visweightscale="+str(weights)+")",origin='simanalyze')
+                if not dryrun:
+                    concat(mstoimage,concatvis=concatms,visweightscale=weights)
+                    mstoimage=[concatms]
 
 
 
@@ -248,43 +245,43 @@ def simanalyze(
         nmodels=len(skymodels)
         skymodel_index=0
         if nmodels>1:
-            msg("Found %i sky model images:" % nmodels)
+            msg("Found %i sky model images:" % nmodels,origin='simanalyze')
             # use the skymodel_searchstring to try to pick the right one
             # print them out for the user while we're at it.
             for i in range(nmodels):
                 msg("   "+skymodels[i])
                 if skymodels[i].count(skymodel_searchstring)>0:
                     skymodel_index=i
-            msg("Using skymodel "+skymodels[skymodel_index],priority="warn")
+            msg("Using skymodel "+skymodels[skymodel_index],origin='simanalyze')
         if nmodels>=1:
             skymodel=skymodels[skymodel_index]
         else:
             skymodel=""
 
         if os.path.exists(skymodel):
-            msg("Sky model image "+skymodel+" found.")
+            msg("Sky model image "+skymodel+" found.",origin='simanalyze')
         else:
             skymodels=glob.glob(fileroot+"/"+project+"*.compskymodel")
             nmodels=len(skymodels)
             if nmodels>1:
-                msg("Found %i sky model images:" % nmodels)
+                msg("Found %i sky model images:" % nmodels,origin='simanalyze')
                 for ff in skymodels:
                     msg("   "+ff)
-                msg("Using "+skymodels[0])
+                msg("Using "+skymodels[0],origin='simanalyze')
             if nmodels>=1:
                 skymodel=skymodels[0]
             else:
                 skymodel=""
 
             if os.path.exists(skymodel):
-                msg("Sky model image "+skymodel+" found.")
+                msg("Sky model image "+skymodel+" found.",origin='simanalyze')
                 components_only=True
             else:
-                msg("Can't find a model image in your project directory, named skymodel or compskymodel - output image will be been created, but comparison with the input model is not possible.",priority="error")
+                msg("Can't find a model image in your project directory, named skymodel or compskymodel - output image will be been created, but comparison with the input model is not possible.",priority="error",origin='simanalyze')
                 return False
 
         modelflat = skymodel+".flat"
-        if not os.path.exists(modelflat):
+        if not os.path.exists(modelflat) and not dryrun:
             util.flatimage(skymodel,verbose=verbose)
 
         # modifymodel just collects info if skymodel==newmodel
@@ -300,7 +297,6 @@ def simanalyze(
 
 
         cell_asec=qa.convert(model_cell[0],'arcsec')['value']
-
 
         #####################################################################
         # clean if desired, use noisy image for further calculation if present
@@ -352,33 +348,40 @@ def simanalyze(
                 if tpmstoimage:
                     sd_only = True
                 else:
-                    msg("no measurement sets found to image",priority="warn")
-                    return False
+                    msg("no measurement sets found to image",priority="error",origin='simanalyze')
             else:
                 sd_only = False
                 # get some quantities from the interferometric ms
                 # TODO use something like aU.baselineStats for this, and the 90% baseline
                 maxbase=0.
+                if len(mstoimage)>1 and dryrun:
+                    msg("imaging multiple ms not possible in dryrun mode",priority="warn",origin="simanalyze")
                 # TODO make work better for multiple MS
                 for msfile in mstoimage:
-                    tb.open(msfile)
-                    rawdata = tb.getcol("UVW")
-                    tb.done()
-                    maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m
-                    psfsize = 0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/maxbase*3600.*180/pl.pi # lambda/b converted to arcsec
-                    minimsize = 8* int(psfsize/cell_asec)
+                    if os.path.exists(msfile):
+                        tb.open(msfile)
+                        rawdata = tb.getcol("UVW")
+                        tb.done()
+                        maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m
+                        psfsize = 0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/maxbase*3600.*180/pl.pi # lambda/b converted to arcsec
+                        minimsize = 8* int(psfsize/cell_asec)
+                    elif dryrun:
+                        minimsize = min(imsize)
+                        psfsize = cell[0]*3 # HACK
+                    else:
+                        raise Exception,mstoimage+" not found."
 
                 if imsize[0] < minimsize:
-                    msg("The number of image pixel in x-axis, %d, is small to cover 8 x PSF. Setting x pixel number, %d." % (imsize[0], minimsize), priority='warn')
+                    msg("The number of image pixel in x-axis, %d, is small to cover 8 x PSF. Setting x pixel number, %d." % (imsize[0], minimsize), priority='warn',origin='simanalyze')
                     imsize[0] = minimsize
                 if imsize[1] < minimsize:
-                    msg("The number of image pixel in y-axis, %d, is small to cover 8 x PSF. Setting y pixel number, %d" % (imsize[1], minimsize), priority='warn')
+                    msg("The number of image pixel in y-axis, %d, is small to cover 8 x PSF. Setting y pixel number, %d" % (imsize[1], minimsize), priority='warn',origin='simanalyze')
                     imsize[1] = minimsize
 
             tpimage=None
             # Do single dish imaging first if tpmstoimage exists.
             if tpmstoimage and os.path.exists(tpmstoimage):
-                msg('creating image from ms: '+tpmstoimage)
+                msg('creating image from ms: '+tpmstoimage,origin='simanalyze')
                 #if len(mstoimage):
                 #    tpimage = project + '.sd.image'
                 #else:
@@ -389,12 +392,12 @@ def simanalyze(
                 if len(mstoimage):
                     if len(modelimage) and tpimage != modelimage and \
                            tpimage != fileroot+"/"+modelimage:
-                        msg("modelimage parameter set to "+modelimage+" but also creating a new total power image "+tpimage,priority="warn")
-                        msg("assuming you know what you want, and using modelimage="+modelimage+" in deconvolution",priority="warn")
+                        msg("modelimage parameter set to "+modelimage+" but also creating a new total power image "+tpimage,priority="warn",origin='simanalyze')
+                        msg("assuming you know what you want, and using modelimage="+modelimage+" in deconvolution",priority="warn",origin='simanalyze')
                     elif len(featherimage) and tpimage != featherimage and \
                            tpimage != fileroot+"/"+featherimage:
-                        msg("featherimage parameter set to "+modelimage+" but also creating a new total power image "+tpimage,priority="warn")
-                        msg("assuming you know what you want, and using featherimage="+featherimage+" in feathe",priority="warn")
+                        msg("featherimage parameter set to "+modelimage+" but also creating a new total power image "+tpimage,priority="warn",origin='simanalyze')
+                        msg("assuming you know what you want, and using featherimage="+featherimage+" in feathe",priority="warn",origin='simanalyze')
 #                    else:
 #                        # This forces to use TP image as a model for clean
 #                        if len(modelimage) <= 0:
@@ -404,9 +407,16 @@ def simanalyze(
                 # Get PB size of TP Antenna
                 # !! aveant will only be set if modifymodel or setpointings and in 
                 # any case it will the the aveant of the INTERFM array - we want the SD
-                tb.open(tpmstoimage+"/ANTENNA")
-                diams = tb.getcol("DISH_DIAMETER")
-                tb.done()
+                if os.path.exists(tpmstoimage):
+                    tb.open(tpmstoimage+"/ANTENNA")
+                    diams = tb.getcol("DISH_DIAMETER")
+                    tb.done()
+                elif dryrun:
+                    # HACK
+                    diams=[12.]
+                else:
+                    raise Exception, tpmstoimage+" not found."
+
                 aveant = pl.mean(diams)
                 # model_center should be set even if we didn't predict this execution
                 pb_asec = pbcoeff*0.29979/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi # arcsec
@@ -416,7 +426,7 @@ def simanalyze(
                           'positionangle': qa.quantity(0.0,'deg')}
                 
                 if True: #SF gridding
-                    msg("Generating TP image using 'SF' kernel.")
+                    msg("Generating TP image using 'SF' kernel.",origin='simanalyze')
                     beamsamp = 6.42857
                     sfcell_asec = pb_asec/beamsamp
                     sfcell = qa.tos(qa.quantity(sfcell_asec, "arcsec"))
@@ -426,69 +436,83 @@ def simanalyze(
                            cell_asec[1] > sfcell_asec:
                         # imregrid() may not work properly for regrid of
                         # small to large cell
-                        msg("The requested cell size is too large to invoke SF gridding. Please set cell size <= %f arcsec or grid TP MS '%s' manually" % (sfcell_arcsec, tpmstoimage),priority="error")
-                        return False
+                        msg("The requested cell size is too large to invoke SF gridding. Please set cell size <= %f arcsec or grid TP MS '%s' manually" % (sfcell_arcsec, tpmstoimage),priority="error",origin='simanalyze')
+
                     sfsupport = 4
                     temp_out = tpimage+"0"
                     temp_cell = [sfcell, sfcell]
                     temp_imsize = [int(pl.ceil(cell_asec[0]/sfcell_asec*imsize[0])),
                                    int(pl.ceil(cell_asec[1]/sfcell_asec*imsize[1]))]
-                    msg("Using predefined algorithm to define grid parameters.")
-                    msg("SF gridding summary")
-                    msg("- Antenna primary beam: %f arcsec" % pb_asec)
-                    msg("- Image pixels per antenna PB (predefined): %f" % beamsamp)
-                    msg("- Cell size (arcsec): [%s, %s]" % (temp_cell[0], temp_cell[1]))
-                    msg("- Imsize to cover final TP image area: [%d, %d] (type: %s)" % (temp_imsize[0], temp_imsize[1], type(temp_imsize[0])))
-                    msg("- convolution support: %d" % sfsupport)
-                    sdimaging(infiles=[tpmstoimage], gridfunction='SF',
+                    msg("Using predefined algorithm to define grid parameters.",origin='simanalyze')
+                    msg("SF gridding summary",origin='simanalyze')
+                    msg("- Antenna primary beam: %f arcsec" % pb_asec,origin='simanalyze')
+                    msg("- Image pixels per antenna PB (predefined): %f" % beamsamp,origin='simanalyze')
+                    msg("- Cell size (arcsec): [%s, %s]" % (temp_cell[0], temp_cell[1]),origin='simanalyze')
+                    msg("- Imsize to cover final TP image area: [%d, %d] (type: %s)" % (temp_imsize[0], temp_imsize[1], type(temp_imsize[0])),origin='simanalyze')
+                    msg("- convolution support: %d" % sfsupport,origin='simanalyze')
+                    msg("sdimaging(infiles=['"+tpmstoimage+"'], gridfunction='SF', convsupport = "+str(sfsupport)+
+                        ",outfile='"+temp_out+"', overwrite="+str(overwrite)+
+                        ",imsize="+str(temp_imsize)+", cell="+str(temp_cell)+
+                        ",phasecenter='"+model_refdir+"', dochannelmap=True,"+
+                        "nchan="+str(model_nchan)+", start=0, step=1, spw=[0])",priority="info")
+                    if not dryrun:
+                        sdimaging(infiles=[tpmstoimage], gridfunction='SF',
                               convsupport = sfsupport,
                               outfile=temp_out, overwrite=overwrite,
                               imsize=temp_imsize, cell=temp_cell,
                               phasecenter=model_refdir, dochannelmap=True,
                               nchan=model_nchan, start=0, step=1, spw=[0])
-                    if not os.path.exists(temp_out):
-                        raise RuntimeError, "TP imaging failed."
+                        if not os.path.exists(temp_out):
+                            raise RuntimeError, "TP imaging failed."
                     # Regrid TP image to final resolution
-                    msg("Regridding TP image to final resolution")
-                    msg("- cell size (arecsec): [%s, %s]" % (cell[0], cell[1]))
-                    msg("- imsize: [%d, %d]" % (imsize[0], imsize[1]))
-                    ia.open(temp_out)
-                    newcsys = ia.coordsys()
-                    ia.close()
-                    dir_idx = newcsys.findcoordinate("direction")[2]
-                    newcsys.setreferencepixel([imsize[0]/2., imsize[1]/2.],
-                                              type="direction")
-                    incr = newcsys.increment(type='direction')['numeric']
-                    newincr = [incr[0]*cell_asec[0]/sfcell_asec,
-                               incr[1]*cell_asec[1]/sfcell_asec,]
-                    newcsys.setincrement(newincr, type="direction")
-                    #
-                    sdtemplate = imregrid(imagename=temp_out, template="get")
-                    sdtemplate['csys'] = newcsys.torecord()
-                    for idx in range(len(dir_idx)):
-                        sdtemplate['shap'][ dir_idx[idx] ] = imsize[idx]
-                    imregrid(imagename=temp_out, interpolation="cubic",
+                    msg("Regridding TP image to final resolution",origin='simanalyze')
+                    msg("- cell size (arecsec): [%s, %s]" % (cell[0], cell[1]),origin='simanalyze')
+                    msg("- imsize: [%d, %d]" % (imsize[0], imsize[1]),origin='simanalyze')
+                    if not dryrun:
+                        ia.open(temp_out)
+                        newcsys = ia.coordsys()
+                        ia.close()
+                        dir_idx = newcsys.findcoordinate("direction")[2]
+                        newcsys.setreferencepixel([imsize[0]/2., imsize[1]/2.],
+                                                  type="direction")
+                        incr = newcsys.increment(type='direction')['numeric']
+                        newincr = [incr[0]*cell_asec[0]/sfcell_asec,
+                                   incr[1]*cell_asec[1]/sfcell_asec,]
+                        newcsys.setincrement(newincr, type="direction")
+                        #
+                        sdtemplate = imregrid(imagename=temp_out, template="get")
+                        sdtemplate['csys'] = newcsys.torecord()
+                        for idx in range(len(dir_idx)):
+                            sdtemplate['shap'][ dir_idx[idx] ] = imsize[idx]
+                        imregrid(imagename=temp_out, interpolation="cubic",
                              template=sdtemplate, output=tpimage,
                              overwrite=overwrite)
-                    del newcsys, sdtemplate, incr, newincr, dir_idx
-                    # Define PSF of image
-                    qpb = beam=qa.quantity(pb_asec,"arcsec")
-                    qpsf0 = util.sfBeam1d(qpb, cell=temp_cell[0],
-                                          convsupport=sfsupport)
-                    qpsf1 = util.sfBeam1d(qpb, cell=temp_cell[1],
-                                          convsupport=sfsupport)
-                    imbeam['major'] = max(qpsf0, qpsf1)
-                    imbeam['minor'] = min(qpsf0, qpsf1)
-                    imbeam['positionangle'] = qa.quantity(pl.arctan(qa.getvalue(qa.div(qpsf1,qpsf0))), "rad")
-                    del temp_out, temp_cell, temp_imsize, sfcell_asec, cell_asec
+                        del newcsys, sdtemplate, incr, newincr, dir_idx
+
+                        # Define PSF of image
+                        qpb = beam=qa.quantity(pb_asec,"arcsec")
+                        qpsf0 = util.sfBeam1d(qpb, cell=temp_cell[0],
+                                              convsupport=sfsupport)
+                        qpsf1 = util.sfBeam1d(qpb, cell=temp_cell[1],
+                                              convsupport=sfsupport)
+                        imbeam['major'] = max(qpsf0, qpsf1)
+                        imbeam['minor'] = min(qpsf0, qpsf1)
+                        imbeam['positionangle'] = qa.quantity(pl.arctan(qa.getvalue(qa.div(qpsf1,qpsf0))), "rad")
+                        del temp_out, temp_cell, temp_imsize, sfcell_asec, cell_asec
                 else: #PB grid
-                    msg("Generating TP image using 'PB' kernel.")
+                    msg("Generating TP image using 'PB' kernel.",origin='simanalyze')
                     # Final TP cell and image size.
                     # imsize and cell are already int and quantum arrays
                     sdimsize = imsize
                     sdcell = [qa.tos(cell[0]), qa.tos(cell[1])]
                     ### TODO: need to set phasecenter properly based on imdirection
-                    sdimaging(infiles=[tpmstoimage],gridfunction='PB',
+                    msg("sdimaging(infiles=['"+tpmstoimage+"'], gridfunction='PB'"+
+                        ",outfile='"+temp_out+"', overwrite="+str(overwrite)+
+                        ",imsize="+str(sdimsize)+", cell="+str(sdcell)+
+                        ",phasecenter='"+model_refdir+"', dochannelmap=True,"+
+                        "nchan="+str(model_nchan)+", start=0, step=1, spw=[0])",priority="info")
+                    if not dryrun:
+                        sdimaging(infiles=[tpmstoimage],gridfunction='PB',
                               outfile=tpimage, overwrite=overwrite,
                               imsize=sdimsize, cell=sdcell,
                               phasecenter=model_refdir, dochannelmap=True,
@@ -498,16 +522,19 @@ def simanalyze(
                     # for now use default 
 
                 # For single dish: manually set the primary beam
-                ia.open(tpimage)
-                beam = ia.restoringbeam()
+                beam=None
+                if os.path.exists(tpimage):
+                    ia.open(tpimage)
+                    beam = ia.restoringbeam()
                 if len(beam) == 0:
-                    msg('setting primary beam information to image.')
+                    msg('setting primary beam information to image.',origin='simanalyze')
                     beam['major'] = imbeam['major']
                     beam['minor'] = imbeam['minor']
                     beam['positionangle'] = imbeam['positionangle']
-                    msg('Primary beam: '+str(beam['major']))
-                    ia.setrestoringbeam(beam=beam)
-                    ia.close()
+                    msg('Primary beam: '+str(beam['major']),origin='simanalyze')
+                    if ia.isopen():
+                        ia.setrestoringbeam(beam=beam)
+                        ia.close()
 
                 if sd_only:
                     beam_current = True
@@ -516,7 +543,7 @@ def simanalyze(
                 else: del beam
                 #del beam
 
-                msg('generation of total power image '+tpimage+' complete.')
+                msg('generation of total power image '+tpimage+' complete.',origin='simanalyze')
                 # update TP ms name the for following steps
                 sdmsfile = tpmstoimage
                 sd_any = True
@@ -540,11 +567,14 @@ def simanalyze(
 
             # get nfld, sourcefieldlist, from (interfm) ms if it was not just created
             # TODO make work better for multiple mstoimage (figures below)
-            tb.open(mstoimage[0]+"/SOURCE")
-            code = tb.getcol("CODE")
-            sourcefieldlist = pl.where(code=='OBJ')[0]
-            nfld = len(sourcefieldlist)
-            tb.done()
+            if os.path.exists(mstoimage[0]):
+                tb.open(mstoimage[0]+"/SOURCE")
+                code = tb.getcol("CODE")
+                sourcefieldlist = pl.where(code=='OBJ')[0]
+                nfld = len(sourcefieldlist)
+                tb.done()
+            elif dryrun:
+                nfld=1 # HACK
             msfile = mstoimage[0]
 
             # set cleanmode automatically (for interfm)
@@ -563,7 +593,7 @@ def simanalyze(
             # An image in fileroot/ has priority
             if len(modelimage) > 0 and os.path.exists(fileroot+"/"+modelimage):
                 modelimage = fileroot + "/" + modelimage
-                msg("Found modelimage, %s." % modelimage)
+                msg("Found modelimage, %s." % modelimage,origin='simanalyze')
 
             # in simdata we use imdirection instead of model_refdir
             if not util.isdirection(imdirection,halt=False):
@@ -573,12 +603,13 @@ def simanalyze(
                          cleanmode,cell,imsize,imdirection,
                          interactive,niter,threshold,weighting,
                          outertaper,stokes, #sourcefieldlist=sourcefieldlist,
-                         modelimage=modelimage,mask=mask)
+                         modelimage=modelimage,mask=mask,dryrun=dryrun)
 
 
             # create imagename.flat and imagename.residual.flat:
-            util.flatimage(imagename+".image",verbose=verbose)
-            util.flatimage(imagename+".residual",verbose=verbose)
+            if not dryrun:
+                util.flatimage(imagename+".image",verbose=verbose)
+                util.flatimage(imagename+".residual",verbose=verbose)
             outflat_current = True
 
             # feather
@@ -596,20 +627,23 @@ def simanalyze(
                     
 
             if os.path.exists(featherimage):
-                msg("feathering the interfermetric image "+imagename+".image with "+featherimage)
+                msg("feathering the interfermetric image "+imagename+".image with "+featherimage,origin='simanalyze',priority="info")
                 from feather import feather 
                 # TODO call with params?
-                feather(imagename+".feather.image",imagename+".image",featherimage)
-                # copy residual flat image
-                shutil.copytree(imagename+".residual.flat",imagename+".feather.residual.flat")
-                imagename=imagename+".feather"
-                # but replace combined flat image
-                util.flatimage(imagename+".image",verbose=verbose)
+                msg("feather('"+imagename+".feather.image','"+imagename+".image','"+featherimage+"')",priority="info")
+                if not dryrun:
+                    feather(imagename+".feather.image",imagename+".image",featherimage)
+                    # copy residual flat image
+                    shutil.copytree(imagename+".residual.flat",imagename+".feather.residual.flat")
+                    imagename=imagename+".feather"
+                    # but replace combined flat image
+                    util.flatimage(imagename+".image",verbose=verbose)
 
 
 
-
-            msg("done inverting and cleaning")
+            if verbose:
+                msg(" ")
+            msg("done inverting and cleaning",origin='simanalyze')
             if not is_array_type(cell):
                 cell = [cell,cell]
             if len(cell) <= 1:
@@ -619,16 +653,17 @@ def simanalyze(
             cell = [qa.abs(cell[0]),qa.abs(cell[0])]
 
             # get beam from output clean image
-            if verbose: msg("getting beam from "+imagename+".image",origin="analysis")
-            ia.open(imagename+".image")
-            beam = ia.restoringbeam()
-            beam_current = True
-            ia.close()
-            # model has units of Jy/pix - calculate beam area from clean image
-            # (even if we are not plotting graphics)
-            bmarea = beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
-            bmarea = bmarea/(cell[0]['value']*cell[1]['value']) # bm area in pix
-            msg("synthesized beam area in output pixels = %f" % bmarea)
+            if verbose: msg("getting beam from "+imagename+".image",origin='simanalyze')
+            if os.path.exists(imagename+".image"):
+                ia.open(imagename+".image")
+                beam = ia.restoringbeam()
+                beam_current = True
+                ia.close()
+                # model has units of Jy/pix - calculate beam area from clean image
+                # (even if we are not plotting graphics)
+                bmarea = beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
+                bmarea = bmarea/(cell[0]['value']*cell[1]['value']) # bm area in pix
+                msg("synthesized beam area in output pixels = %f" % bmarea,origin='simanalyze')
 
 
 
@@ -647,6 +682,11 @@ def simanalyze(
                 file = ""
         else:
             mslist=[]
+
+        if dryrun:
+            grscreen=False
+            grfile=False
+            analyze=False
 
         if image and len(mstoimage) > 0:
             if grscreen or grfile:
@@ -838,7 +878,7 @@ def simanalyze(
                 if showuv:
 # TODO loop over all ms - show all UV including zero
                     if len(mslist)>1:
-                        msg("Using only "+msfile+" for uv plot",priority="warn")
+                        msg("Using only "+msfile+" for uv plot",priority="warn",origin='simanalyze')
                     tb.open(msfile)
                     rawdata = tb.getcol("UVW")
                     tb.done()

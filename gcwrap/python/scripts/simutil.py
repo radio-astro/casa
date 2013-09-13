@@ -566,7 +566,7 @@ class simutil:
         if(len(pointings)==0):
             pointings.append(direction)
 
-        self.msg("using %i generated pointing(s)" % len(pointings))
+        self.msg("using %i generated pointing(s)" % len(pointings),origin='calc_pointings')
         self.pointings=pointings
         return pointings
 
@@ -2682,7 +2682,7 @@ class simutil:
 
     def imclean(self,mstoimage,imagename,
                 cleanmode,cell,imsize,imcenter,interactive,niter,threshold,weighting,
-                outertaper,stokes,sourcefieldlist="",modelimage="",mask=[]):
+                outertaper,stokes,sourcefieldlist="",modelimage="",mask=[],dryrun=False):
         from clean import clean
 
         from simutil import is_array_type
@@ -2738,7 +2738,8 @@ class simutil:
         cleanlast=open(imagename+".clean.last","write")
         cleanlast.write('taskname            = "clean"\n')
 
-        self.msg("clean inputs:")        
+        #self.msg("clean inputs:")        
+        if self.verbose: self.msg(" ")
         if type(mstoimage)==type([]):
             cleanstr="clean(vis="+str(mstoimage)+",imagename='"+imagename+"'"
             cleanlast.write('vis                 = '+str(mstoimage)+'\n')
@@ -2855,11 +2856,12 @@ class simutil:
         if self.verbose:
             self.msg(cleanstr,priority="warn")
         else:
-            self.msg(cleanstr)
+            self.msg(cleanstr,priority="info")
         cleanlast.write("#"+cleanstr+"\n")
         cleanlast.close()
         
-        clean(vis=mstoimage, imagename=imagename, mode=chanmode, 
+        if not dryrun:
+            clean(vis=mstoimage, imagename=imagename, mode=chanmode, 
               niter=niter, threshold=threshold, selectdata=False, nchan=nchan,
               psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
               imsize=imsize, cell=map(qa.tos,cell), phasecenter=imcenter,
@@ -2891,14 +2893,14 @@ class simutil:
 
         flat=image+".flat"
         if nchan>1:
-            if verbose: self.msg("creating moment zero image "+flat,origin="analysis")
+            if verbose: self.msg("creating moment zero image "+flat,origin="flatimage")
             ia.open(image)
             flat_ia = ia.moments(moments=[-1],outfile=flat,overwrite=True)
             ia.done()
             flat_ia.close()
             del flat_ia
         else:
-            if verbose: self.msg("removing degenerate image axes in "+flat,origin="analysis")
+            if verbose: self.msg("removing degenerate image axes in "+flat,origin="flatimage")
             # just remove degenerate axes from image
             flat_ia = ia.newimagefromimage(infile=image,outfile=flat,dropdeg=True,overwrite=True)
             flat_ia.close()
@@ -2994,7 +2996,7 @@ class simutil:
                             overwrite = True)
         shutil.rmtree(modelregrid+".tmp")
         if self.verbose:
-            self.msg("scaling model by pixel area ratio %g" % factor)
+            self.msg("scaling model by pixel area ratio %g" % factor,origin='convimage')
 
         # add unresolved components in Jy/pix
         # don't do this if you've already done it in flatimage()!
