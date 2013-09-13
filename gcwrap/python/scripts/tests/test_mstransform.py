@@ -1282,9 +1282,9 @@ class test_timeaverage(test_base):
         os.system('rm -rf '+ self.vis)
         os.system('rm -rf '+ self.outvis)
         os.system('rm -rf '+ self.refvis)
-        #os.system('rm -rf '+ self.tmpvis)
-        #os.system('rm -rf '+ self.outvis_sorted)
-        #os.system('rm -rf '+ self.refvis_sorted)
+        os.system('rm -rf '+ self.tmpvis)
+        os.system('rm -rf '+ self.outvis_sorted)
+        os.system('rm -rf '+ self.refvis_sorted)
         
     def sort(self):
         myms = mstool()
