@@ -209,7 +209,15 @@ def simalma(
             complist = complist[0]
 
         if((not os.path.exists(skymodel)) and (not os.path.exists(complist))):
-            raise ValueError, "No sky input found.  At least one of skymodel or complist must be set."
+            if len(skymodel)>0:
+                msg("Your skymodel '"+skymodel+"' could not be found.",priority="warn")
+            if len(complist)>0:
+                msg("Your complist '"+complist+"' could not be found.",priority="warn")
+            if len(skymodel)==0 and len(complist)==0:
+                msg("At least one of skymodel or complist must be set.",priority="error")
+                
+            else:
+                msg("No sky input found.  At least one of skymodel or complist must exist.",priority="error")
 
 
         #-------------------------
@@ -574,7 +582,7 @@ def simalma(
                 msg("You are also requesting Total Power observations:",priority="info")
                 msg("    %d antennas for %f minutes" % (tpnant,tptime_min),priority="info")
             else:
-                msg("You have requested %d total power antennas (tpnant), but no finite integration (tptime) -- check your inputs; no Total Power will be simulated.",priority="info")
+                msg("You have requested %d total power antennas (tpnant), but no finite integration (tptime) -- check your inputs; no Total Power will be simulated." % tpnant,priority="info")
 
 
 

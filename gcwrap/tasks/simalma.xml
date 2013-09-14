@@ -156,7 +156,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="int" name="tpnant">
       <description>Number of total power antennas to use (0-4)</description>
-      <value>2</value>
+      <value type="int">0</value>
       <allowed kind="range">
 	<value range="min">0</value>
 	<value range="max">4</value>
@@ -400,6 +400,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	<notequals type="int" value="0">
 	  <default param="tptime"><value type="string">0s</value></default>
 	</notequals>
+<!--
+	<equals type="int" value="0"/>
+-->
       </when>
       <!-- **********************************************************  -->
       <when param="image">
