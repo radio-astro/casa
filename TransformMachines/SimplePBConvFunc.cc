@@ -564,12 +564,12 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
     		Double cy, sy;
 		Int offset;
 	       
-    		sincos(Double(iy-convSize_p/2)*pixFieldDir(1), &sy, &cy);
+    		SINCOS(Double(iy-convSize_p/2)*pixFieldDir(1), sy, cy);
     		Complex phy(cy,sy) ;
     		offset = iy*convSize_p+planeoffset;
     		for (Int ix=0;ix<convSize_p;ix++) {
     			Double cx, sx;
-    			sincos(Double(ix-convSize_p/2)*pixFieldDir(0), &sx, &cx);
+    			SINCOS(Double(ix-convSize_p/2)*pixFieldDir(0), sx, cx);
     			Complex phx(cx,sx) ;
 			cv[ix+offset]= cv[ix+offset]*phx*phy;
 			wcv[ix+offset]= wcv[ix+offset]*phx*phy;

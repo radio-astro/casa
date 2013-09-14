@@ -72,15 +72,6 @@
 
 #include <casa/OS/Timer.h>
 
-#include <wcslib/wcsconfig.h>  /** HAVE_SINCOS **/
-
-#if HAVE_SINCOS
-#define SINCOS(a,s,c) sincos(a,&s,&c)
-#else
-#define SINCOS(a,s,c)                   \
-     s = sin(a);                        \
-     c = cos(a)
-#endif
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
