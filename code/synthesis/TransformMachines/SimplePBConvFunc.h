@@ -33,6 +33,17 @@
 #include <casa/Containers/Block.h>
 #include <casa/Utilities/CountedPtr.h>
 
+#include <wcslib/wcsconfig.h>  /** HAVE_SINCOS **/
+
+#if HAVE_SINCOS
+#define SINCOS(a,s,c) sincos(a,&s,&c)
+#else
+#define SINCOS(a,s,c)                   \
+     s = sin(a);                        \
+     c = cos(a)
+#endif
+
+
 namespace casa{
 
   // <summary>  A class to support FTMachines get their convolution Function </summary>
