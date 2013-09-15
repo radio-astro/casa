@@ -126,7 +126,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="bool" name="pbcor" subparam="true">
       <description>correct the output for primary beam response?</description>
-      <value>True</value>
+      <value type="bool">True</value>
     </param>
 
     <param type="string" name="stokes" subparam="true">
@@ -271,7 +271,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	  <default param="weighting"><value type="string">natural</value></default>
 	  <default param="mask">      <value type="vector"><value></value></value></default>
 	  <default param="outertaper"><value type="vector"><value></value></value></default>
-	  <default param="pbcor"><value type="string">True</value></default>
+	  <default param="pbcor"><value type="bool">True</value></default>
 	  <default param="stokes"><value type="string">I</value></default>
 	  <default param="featherimage"><value type="string"></value></default>
 
