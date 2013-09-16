@@ -79,7 +79,7 @@ void VisModelData::listModel(const MeasurementSet& thems){
   LogIO logio;
   if (nfields>0) {
 
-    logio << LogIO::DEBUGGING << "MS Header field records:"
+    logio << "MS Header field records:"
 	  << LogIO::POST;
 
     Int nlis(0);
@@ -92,13 +92,13 @@ void VisModelData::listModel(const MeasurementSet& thems){
     		{
     				String elkey=thetab->keywordSet().asString("definedmodel_field_"+String::toString(fields[k]));
     				if(thetab->keywordSet().isDefined(elkey))
-				  logio << LogIO::DEBUGGING << " " << fldnames[fields[k]] << " (id = " << fields[k] << ")" << LogIO::POST;
+				  logio << " " << fldnames[fields[k]] << " (id = " << fields[k] << ")" << LogIO::POST;
     				++nlis;
     		}
     	}
     }
     if (nlis==0)
-      logio << LogIO::DEBUGGING <<  " None." << LogIO::POST;
+      logio <<  " None." << LogIO::POST;
   }
     
 }
