@@ -39,10 +39,8 @@
 #include <tables/Tables/TableProxy.h>
 #include <tables/Tables/TableRecord.h>
 
-#include <iomanip>
-
-// DEBUG ONLY
 /*
+// DEBUG ONLY
 #include <casa/Arrays/ArrayIO.h>
 #include <iomanip>
 #include <casa/OS/PrecTimer.h>
@@ -235,6 +233,29 @@ std::map<Int, uInt> MSMetaData::_getDataDescIDToSpwMap(const MeasurementSet& ms)
 	String spwColName = MSDataDescription::columnName(MSDataDescriptionEnums::SPECTRAL_WINDOW_ID);
 	ROScalarColumn<Int> spwCol(ms.dataDescription(), spwColName);
 	return _toUIntMap(spwCol.getColumn());
+}
+
+std::map<Int, uInt> MSMetaData::_getDataDescIDToPolIDMap(const MeasurementSet& ms) {
+	String spwColName = MSDataDescription::columnName(MSDataDescriptionEnums::POLARIZATION_ID);
+	ROScalarColumn<Int> spwCol(ms.dataDescription(), spwColName);
+	return _toUIntMap(spwCol.getColumn());
+}
+
+std::map<std::pair<uInt, uInt>, Int> MSMetaData::_getSpwIDPolIDToDataDescIDMap(
+	const std::map<Int, uInt>& dataDescIDToSpwMap,
+	const std::map<Int, uInt>& dataDescIDToPolIDMap
+) {
+	std::map<Int, uInt>::const_iterator i1 = dataDescIDToSpwMap.begin();
+	std::map<Int, uInt>::const_iterator end = dataDescIDToSpwMap.end();
+	std::map<std::pair<uInt, uInt>, Int> ret;
+	while (i1 != end) {
+		Int dataDesc = i1->first;
+		uInt spw = i1->second;
+		uInt polID = dataDescIDToPolIDMap.at(dataDesc);
+		ret[std::make_pair(spw, polID)] = dataDesc;
+		i1++;
+	}
+	return ret;
 }
 
 Vector<Int> MSMetaData::_getFieldIDs(const MeasurementSet& ms) {

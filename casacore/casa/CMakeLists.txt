@@ -3,6 +3,7 @@
 #
 
 add_library (casa_casa
+Arrays/ArrayIO2.cc
 Arrays/Array2Math.cc
 Arrays/ArrayUtil2.cc
 Arrays/ArrayError.cc
