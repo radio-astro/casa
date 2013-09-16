@@ -777,8 +777,8 @@ def simobserve(
                 if qa.compare(hourangle,"s"):
                     haoffset=qa.convert(qa.quantity(hourangle),'s')['value']
                 else:
-                    msg("You desire an hour angle of "+haoffset+" hours",origin="simobserve")
                     haoffset=qa.convert(qa.quantity(hourangle+"h"),'s')['value']
+                    msg("You desire an hour angle of "+str(haoffset/3600.)+" hours",origin="simobserve")
 
             refdate=refdate+"/00:00:00"
             usehourangle=True
@@ -787,8 +787,8 @@ def simobserve(
             intsec = qa.convert(qa.quantity(integration),"s")['value']
 
             # totaltime as an integer for # times through the mosaic:
-            if not util.isquantity(totaltime):
-                msg("total time "+totaltime+" does not appear to represent a time interval (use 's','min','h'; not 'sec','m','hr')",priority="error")
+            if not util.isquantity(totaltime,halt=False):
+                msg("totaltime "+totaltime+" does not appear to represent a time interval (use 's','min','h'; not 'sec','m','hr')",priority="error")
                 return False
 
             if qa.quantity(totaltime)['value'] < 0.:
@@ -804,7 +804,7 @@ def simobserve(
                 msg("Total observing time = "+str(totalsec)+"s.",priority="warn")
             else:
                 if not qa.compare(totaltime,"1s"):
-                    msg("total time "+totaltime+" does not appear to represent a time interval (use 's','min','h'; not 'sec','m','hr')",priority="error")
+                    msg("totaltime "+totaltime+" does not appear to represent a time interval (use 's','min','h'; not 'sec','m','hr')",priority="error")
                     return False
                 totalsec = qa.convert(qa.quantity(totaltime),'s')['value']
 
