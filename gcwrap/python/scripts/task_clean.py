@@ -764,9 +764,9 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             ## This is because setReferenceFrame is called within makemultifieldmask2 to
             ## force new masks to LSRK, to enable interactive mask editing. CAS-5221
             imset.setFrameConversionForMasks()
-            if(resmooth != ''):
+            if(resmooth):
                 for k in range(len(modelimages)):
-                    imset.resmooth(modelimages[k], residualimage[k], restoredimage[k], resmooth)
+                    imset.resmooth(modelimages[k], residualimage[k], restoredimage[k], "common")
         imCln.close()
         ####################################################################
         if dochaniter:
