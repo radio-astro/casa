@@ -185,7 +185,7 @@ template<class T, class U>
 ostream &operator<<(ostream &s, const std::map<T, U> &a) {
 	ostringstream oss;
 	std::ostream_iterator<T> out_it (oss,", ");
-	copy ( a.begin(), a.end(), out_it );
+	std::copy ( a.begin(), a.end(), out_it );
 	String sout = oss.str();
 	sout.trim();
 	sout.rtrim(',');

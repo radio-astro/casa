@@ -96,6 +96,9 @@ public:
 	// get number of spectral windows
 	virtual uInt nSpw(Bool includewvr) = 0;
 
+	// get number of polarization configurations
+	virtual uInt nPol() = 0;
+
 	// get the number of rows
 	virtual uInt nRows()  = 0;
 
@@ -304,6 +307,8 @@ public:
 	// specified scan
 	virtual std::map<uInt, Double> getAverageIntervalsForScan(Int scan) = 0;
 
+	virtual std::map<std::pair<uInt, uInt>, Int> getSpwIDPolIDToDataDescIDMap() = 0;
+
 protected:
 
 	// (array_id, observation_id, scan_number, field_id) -> stuff mappings
@@ -351,6 +356,14 @@ protected:
 	static Vector<Int> _getArrayIDs(const MeasurementSet& ms);
 
 	static std::map<Int, uInt> _getDataDescIDToSpwMap(const MeasurementSet& ms);
+
+	static std::map<Int, uInt> _getDataDescIDToPolIDMap(const MeasurementSet& ms);
+
+	// The first member of the pair is spwID, the second is polID.
+	static std::map<std::pair<uInt, uInt>, Int> _getSpwIDPolIDToDataDescIDMap(
+		const std::map<Int, uInt>& dataDescIDToSpwMap,
+		const std::map<Int, uInt>& dataDescIDToPolIDMap
+	);
 
 	static Vector<Int> _getFieldIDs(const MeasurementSet& ms);
 

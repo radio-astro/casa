@@ -1185,7 +1185,28 @@ void testIt(MSMetaData& md) {
 				cout << "number " << iter->first << endl;
 				AlwaysAssert(iter->second == expec, AipsError);
 			}
-
+			{
+				cout << "*** test getSpwIDPolIDToDataDescIDMap()" << endl;
+				std::map<std::pair<uInt, uInt>, Int> dataDescToPolID = md.getSpwIDPolIDToDataDescIDMap();
+				std::map<std::pair<uInt, uInt>, Int>::const_iterator iter;
+				std::map<std::pair<uInt, uInt>, Int>::const_iterator begin = dataDescToPolID.begin();
+				std::map<std::pair<uInt, uInt>, Int>::const_iterator end = dataDescToPolID.end();
+				for(
+					iter=begin; iter!=end; iter++
+				) {
+					std::pair<uInt, uInt> mypair = iter->first;
+					uInt spw = mypair.first;
+					uInt pol = mypair.second;
+					Int dataDesc = iter->second;
+					AlwaysAssert(spw == dataDesc, AipsError);
+					AlwaysAssert(pol == (spw == 0 ? 1 : 0), AipsError);
+				}
+			}
+		}
+		{
+			cout << "*** test nPol()" << endl;
+			cout << "npol " << md.nPol() << endl;
+			AlwaysAssert(md.nPol() == 2, AipsError);
 		}
 		{
 			cout << "*** cache size " << md.getCache() << endl;

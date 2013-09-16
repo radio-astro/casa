@@ -114,7 +114,10 @@ template<class T> class Block;
 
 template<class T> ostream &operator << (ostream &, const Array<T> &);
 
+ostream &operator << (ostream &, const std::map<Int, uInt> &);
+
 template<class T, class U> ostream &operator << (ostream &, const std::map<T, U> &);
+
 template<class T> ostream &operator << (ostream &, const std::set<T> &);
 template<class T> ostream &operator << (ostream &, const std::vector<T> &);
 
