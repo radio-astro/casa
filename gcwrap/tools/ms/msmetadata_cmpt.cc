@@ -299,6 +299,29 @@ bool msmetadata::close() {
 	return false;
 }
 
+vector<int> msmetadata::datadescids(int spw, int pol) {
+	_FUNC(
+		_checkSpwId(spw, False);
+		_checkPolId(pol, False);
+		std::map<std::pair<uInt COMMA uInt> COMMA Int> mymap = _msmd->getSpwIDPolIDToDataDescIDMap();
+		vector<int> ddids;
+		foreach_ (std::pair<std::pair<uInt COMMA uInt> COMMA Int> iter, mymap) {
+			uInt myspw = iter.first.first;
+			uInt mypol = iter.first.second;
+			Int ddid = iter.second;
+			if (
+				(spw < 0 || (Int)myspw == spw)
+				&& (pol < 0 || (Int)mypol == pol)
+			) {
+				ddids.push_back(ddid);
+			}
+		}
+		std::sort (ddids.begin(),ddids.end());
+		return ddids;
+	)
+	return vector<int>();
+}
+
 bool msmetadata::done() {
 	_FUNC2(
 		_msmd.reset(0);
@@ -306,7 +329,6 @@ bool msmetadata::done() {
 	)
 	return false;
 }
-
 
 record* msmetadata::effexposuretime() {
 	return fromRecord(
@@ -891,6 +913,14 @@ void msmetadata::_checkSpwId(int id, bool throwIfNegative) const {
 	);
 }
 
+void msmetadata::_checkPolId(int id, bool throwIfNegative) const {
+	ThrowIf(
+		id >= (int)_msmd->nPol() || (throwIfNegative && id < 0),
+		"Spectral window ID " + String::toString(id)
+		+ " out of range, must be less than "
+		+ String::toString((int)_msmd->nPol())
+	);
+}
 
 } // casac namespace
 

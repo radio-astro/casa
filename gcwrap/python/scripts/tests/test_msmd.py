@@ -816,5 +816,23 @@ class msmd_test(unittest.TestCase):
         self.assertRaises(Exception, self.md.chanwidths, 50);
         self.assertRaises(Exception, self.md.chanwidths, -2);
 
+    def test_datadescids(self):
+        """Test datadescids()"""
+        md = self.md;
+        got = md.datadescids()
+        self.assertTrue((got == range(25)).all())
+        got = md.datadescids(-1, -1)
+        self.assertTrue((got == range(25)).all())
+        for i in range(25):
+            got = md.datadescids(i, -1)
+            self.assertTrue(got == [i])
+        got = md.datadescids(pol=1)
+        self.assertTrue(got == [0])
+        got = md.datadescids(pol=0)
+        self.assertTrue((got == range(1, 25)).all())
+        got = md.datadescids(spw=10, pol=1)
+        self.assertTrue(len(got) == 0)
+        
+
 def suite():
     return [msmd_test]

@@ -311,6 +311,35 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
+        <method type="function" name="datadescids">
+            <shortdescription>Get the data description IDs associated with the specified spectral window and/or polarization ID</shortdescription>
+            <input>
+                <param type="int" direction="in" name="spw">
+                    <description>Spectral window ID. Less than zero implies any,</description>
+                    <value>-1</value>
+                </param>
+                <param type="int" direction="in" name="pol">
+                    <description>Polarization ID. Less than zero implies any.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="intArray"/>
+            <description>
+                Get a list of data description IDs associated with the specified spectral window ID
+                and/or polarization ID. Values of less than zero for either means all IDs should be used
+                in the selection.
+            </description>
+            <example>
+                msmd.open("my.ms")
+                # get all data description IDs associated with spw 2.
+                msmd.datadescids(spw=2)
+                # same as before but limit the IDs returned to those associated with
+                # polarization ID 3
+                msmd.datadescids(spw=2, pol=3)
+                msmd.done()
+            </example>
+        </method>
+        
         <method type="function" name="done">
             <shortdescription>Close this tool and reclaim system resources associated with it.</shortdescription>
             <returns type="bool"/>
