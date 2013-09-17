@@ -2276,7 +2276,7 @@ Bool Imager::feather(const String& image, const String& highRes,
       
      
       // Get initial images
-      { //Drat lets deal with images that don't have stokes.
+      /*{ //Drat lets deal with images that don't have stokes.
 	PagedImage<Float> hightemp(highRes);
 	PagedImage<Float> lowtemp(lowRes);
 	if(hightemp.shape().nelements() != lowtemp.shape().nelements()){
@@ -2307,8 +2307,8 @@ Bool Imager::feather(const String& image, const String& highRes,
 					     "I", False, False,
 					     False);
 	  
-	}
-      }
+					     }
+      }*/
       PagedImage<Float> high(outHighRes);
       PagedImage<Float> low0(outLowRes);
       
