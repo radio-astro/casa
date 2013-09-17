@@ -276,13 +276,18 @@ public:
 
 	std::map<uInt, Double> getAverageIntervalsForScan(Int scan);
 
+	// The first value of the pair is spw, the second is polarization ID.
+	std::map<std::pair<uInt, uInt>, Int> getSpwIDPolIDToDataDescIDMap();
+
+	uInt nPol();
+
 
 private:
 	const MeasurementSet* _ms;
 	Float _cacheMB;
 	const Float _maxCacheMB;
 	uInt _nStates, _nACRows, _nXCRows, _nSpw, _nFields, _nAntennas,
-		_nObservations, _nScans, _nArrays, _nrows;
+		_nObservations, _nScans, _nArrays, _nrows, _nPol;
 	std::set<String> _uniqueIntents;
 	std::map<Int, std::set<uInt> > _scanToSpwsMap;
 	std::set<Int> _uniqueScanNumbers, _uniqueFieldIDs, _uniqueStateIDs;
@@ -291,8 +296,9 @@ private:
 		_stateIDs, _dataDescIDs, _observationIDs, _arrayIDs;
 	std::tr1::shared_ptr<AOSFMapI> _scanToNACRowsMap, _scanToNXCRowsMap;
 	std::tr1::shared_ptr<std::map<Int, uInt> > _fieldToNACRowsMap, _fieldToNXCRowsMap;
-	std::map<Int, uInt> _dataDescIDToSpwMap;
-	std::map<Int, std::set<String> > _scanToIntentsMap;
+	std::map<Int, uInt> _dataDescIDToSpwMap, _dataDescIDToPolIDMap;
+	std::map<std::pair<uInt, uInt>, Int> _spwPolIDToDataDescIDMap;
+ 	std::map<Int, std::set<String> > _scanToIntentsMap;
 	vector<std::set<String> > _stateToIntentsMap, _spwToIntentsMap, _fieldToIntentsMap;
 	vector<SpwProperties> _spwInfo;
 	std::map<Int, std::set<uInt> > _fieldToSpwMap;
@@ -439,6 +445,8 @@ private:
 	);
 
 	std::map<Int, uInt> _getDataDescIDToSpwMap();
+
+	std::map<Int, uInt> _getDataDescIDToPolIDMap();
 
 	vector<String> _getFieldNames();
 

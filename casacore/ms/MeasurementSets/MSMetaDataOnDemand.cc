@@ -48,7 +48,7 @@ MSMetaDataOnDemand::MSMetaDataOnDemand(const MeasurementSet *const &ms, const Fl
 	: _ms(ms), _cacheMB(0), _maxCacheMB(maxCacheSizeMB), _nStates(0),
 	  _nACRows(0), _nXCRows(0), _nSpw(0), _nFields(0),
 	  _nAntennas(0), _nObservations(0), _nScans(0), _nArrays(0),
-	  _nrows(0), _uniqueIntents(), _scanToSpwsMap(),
+	  _nrows(0), _nPol(0), _uniqueIntents(), _scanToSpwsMap(),
 	  _uniqueScanNumbers(),_uniqueFieldIDs(), _uniqueStateIDs(),
 	  _avgSpw(), _tdmSpw(),
 	  _fdmSpw(), _wvrSpw(),_antenna1(), _antenna2(),
@@ -717,6 +717,13 @@ uInt MSMetaDataOnDemand::nSpw(Bool includewvr) {
 	uInt nSpw = _ms->spectralWindow().nrow();
 	_nSpw = nSpw;
 	return includewvr ? nSpw : nSpw - getWVRSpw().size();
+}
+
+uInt MSMetaDataOnDemand::nPol() {
+	if (_nPol == 0) {
+		_nPol = _ms->polarization().nrow();
+	}
+	return _nPol;
 }
 
 std::set<String> MSMetaDataOnDemand::getIntentsForSpw(const uInt spw) {
@@ -1976,6 +1983,21 @@ void MSMetaDataOnDemand::_getFieldsAndIntentsMaps(
 	}
 }
 
+std::map<std::pair<uInt, uInt>, Int> MSMetaDataOnDemand::getSpwIDPolIDToDataDescIDMap() {
+	if (! _spwPolIDToDataDescIDMap.empty()) {
+		return _spwPolIDToDataDescIDMap;
+	}
+	std::map<std::pair<uInt, uInt>, Int> spwPolIDToDataDescIDMap = MSMetaData::_getSpwIDPolIDToDataDescIDMap(
+		_getDataDescIDToSpwMap(),
+		_getDataDescIDToPolIDMap()
+	);
+	uInt mysize = 2*sizeof(Int)*spwPolIDToDataDescIDMap.size();
+	if (_cacheUpdated(mysize)) {
+		_spwPolIDToDataDescIDMap = spwPolIDToDataDescIDMap;
+	}
+	return spwPolIDToDataDescIDMap;
+}
+
 std::map<Int, uInt> MSMetaDataOnDemand::_getDataDescIDToSpwMap() {
 	if (! _dataDescIDToSpwMap.empty()) {
 		return _dataDescIDToSpwMap;
@@ -1986,6 +2008,18 @@ std::map<Int, uInt> MSMetaDataOnDemand::_getDataDescIDToSpwMap() {
 		_dataDescIDToSpwMap = dataDescToSpwMap;
 	}
 	return dataDescToSpwMap;
+}
+
+std::map<Int, uInt> MSMetaDataOnDemand::_getDataDescIDToPolIDMap() {
+	if (! _dataDescIDToPolIDMap.empty()) {
+		return _dataDescIDToPolIDMap;
+	}
+	std::map<Int, uInt> dataDescToPolIDMap = MSMetaData::_getDataDescIDToPolIDMap(*_ms);
+	uInt mysize = sizeof(Int) * dataDescToPolIDMap.size();
+	if (_cacheUpdated(mysize)) {
+		_dataDescIDToPolIDMap = dataDescToPolIDMap;
+	}
+	return dataDescToPolIDMap;
 }
 
 vector<MSMetaData::SpwProperties> MSMetaDataOnDemand::_getSpwInfo(
