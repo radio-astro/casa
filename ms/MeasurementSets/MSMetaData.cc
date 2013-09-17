@@ -39,6 +39,8 @@
 #include <tables/Tables/TableProxy.h>
 #include <tables/Tables/TableRecord.h>
 
+#include <casa/Utilities/Regex.h>
+
 /*
 // DEBUG ONLY
 #include <casa/Arrays/ArrayIO.h>
@@ -307,8 +309,9 @@ ArrayColumn<Bool>* MSMetaData::_getFlags(const MeasurementSet& ms) {
 
 vector<MSMetaData::SpwProperties>  MSMetaData::_getSpwInfo(
 	std::set<uInt>& avgSpw, std::set<uInt>& tdmSpw, std::set<uInt>& fdmSpw,
-	std::set<uInt>& wvrSpw, const MeasurementSet& ms
+	std::set<uInt>& wvrSpw, std::set<uInt>& sqldSpw, const MeasurementSet& ms
 ) {
+	static const Regex rxSqld("BB_[0-9]#SQLD");
 	ROMSSpWindowColumns spwCols(ms.spectralWindow());
 	Vector<Double> bws = spwCols.totalBandwidth().getColumn();
 	ArrayColumn<Double> cfCol = spwCols.chanFreq();
@@ -343,6 +346,9 @@ vector<MSMetaData::SpwProperties>  MSMetaData::_getSpwInfo(
 		spwInfo[i].name = name[i];
 		if (myHasBBCNo) {
 			spwInfo[i].bbcno = bbcno[i];
+		    if(name[i].contains(rxSqld)) {
+		    	sqldSpw.insert(i);
+		    }
 		}
 		if (spwInfo[i].nchans==64 || spwInfo[i].nchans==128 || spwInfo[i].nchans==256) {
 			tdmSpw.insert(i);

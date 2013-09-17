@@ -61,6 +61,12 @@ public:
 		BOTH
 	};
 
+	enum SQLDSwitch {
+		SQLD_INCLUDE,
+		SQLD_EXCLUDE,
+		SQLD_ONLY
+	};
+
 	virtual ~MSMetaData();
 
 	// construct an object which loads metadata from the specified MS. If onDemand=False,
@@ -159,19 +165,22 @@ public:
 	// get the antenna ID for the antenna with the specified name.
 	virtual vector<uInt> getAntennaIDs(const vector<String>& antennaName) = 0;
 
-	// get set of spectral windows used for TDM. These are windows that have
+	// ALMA-specific. Get set of spectral windows used for TDM. These are windows that have
 	// 64, 128, or 256 channels
 	virtual std::set<uInt> getTDMSpw() = 0;
 
-	// get set of spectral windows used for FDM. These are windows that do not
+	// ALMA-specific. Get set of spectral windows used for FDM. These are windows that do not
 	// have 1, 4, 64, 128, or 256 channels.
 	virtual std::set<uInt> getFDMSpw() = 0;
 
-	// get spectral windows that have been averaged. These are windows with 1 channel.
+	// ALMA-specific. Get spectral windows that have been averaged. These are windows with 1 channel.
 	virtual std::set<uInt> getChannelAvgSpw() = 0;
 
-	// Get the spectral window set used for WVR measurements. These have 4 channels each.
+	// ALMA-specific. Get the spectral window set used for WVR measurements. These have 4 channels each.
 	virtual std::set<uInt> getWVRSpw() = 0;
+
+	// ALMA-specific. Get the square law detector (total power) spectral windows.
+	virtual std::set<uInt> getSQLDSpw() = 0;
 
 	// Get the scans which fail into the specified time range (center-tol to center+tol)
 	virtual std::set<Int> getScansForTimes(const Double center, const Double tol) = 0;
@@ -299,7 +308,7 @@ public:
 
 	virtual vector<uInt> getBBCNos() = 0;
 
-	virtual std::map<uInt, std::set<uInt> > getBBCNosToSpwMap() = 0;
+	virtual std::map<uInt, std::set<uInt> > getBBCNosToSpwMap(SQLDSwitch sqldSwitch) = 0;
 
 	virtual vector<String> getSpwNames() = 0;
 
@@ -344,7 +353,7 @@ protected:
 
 	static vector<SpwProperties>  _getSpwInfo(
 		std::set<uInt>& avgSpw, std::set<uInt>& tdmSpw, std::set<uInt>& fdmSpw,
-		std::set<uInt>& wvrSpw, const MeasurementSet& ms
+		std::set<uInt>& wvrSpw, std::set<uInt>& sqldSpw, const MeasurementSet& ms
 	);
 
 	static Vector<Int> _getDataDescIDs(const MeasurementSet& ms);

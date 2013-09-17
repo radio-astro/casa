@@ -51,7 +51,7 @@ MSMetaDataOnDemand::MSMetaDataOnDemand(const MeasurementSet *const &ms, const Fl
 	  _nrows(0), _nPol(0), _uniqueIntents(), _scanToSpwsMap(),
 	  _uniqueScanNumbers(),_uniqueFieldIDs(), _uniqueStateIDs(),
 	  _avgSpw(), _tdmSpw(),
-	  _fdmSpw(), _wvrSpw(),_antenna1(), _antenna2(),
+	  _fdmSpw(), _wvrSpw(), _sqldSpw(), _antenna1(), _antenna2(),
 	  _scans(), _fieldIDs(), _stateIDs(), _dataDescIDs(),
 	  _observationIDs(),
 	  _scanToNACRowsMap(), _scanToNXCRowsMap(),
@@ -79,7 +79,7 @@ MSMetaDataOnDemand::MSMetaDataOnDemand(const MeasurementSet *const &ms, const Fl
 	  _taqlTempTable(
 		File(ms->tableName()).exists() ? 0 : 1, ms
 	  ), _flagsColumn(), _scanToTimeRangeMap(),
-	  _scanSpwToIntervalMap() {}
+	  _scanSpwToIntervalMap(), _spwInfoStored(False) {}
 
 MSMetaDataOnDemand::~MSMetaDataOnDemand() {}
 
@@ -1069,15 +1069,15 @@ std::set<uInt> MSMetaDataOnDemand::getTDMSpw() {
 	if (! _tdmSpw.empty()) {
 		return _tdmSpw;
 	}
-	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
-	_getSpwInfo(avgSpw, tdmSpw, fdmSpw, wvrSpw);
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw;
+	_getSpwInfo(avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw);
 	return tdmSpw;
 }
 
 vector<Double> MSMetaDataOnDemand::getBandWidths() {
-	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw;
 	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
-		avgSpw, tdmSpw, fdmSpw, wvrSpw
+		avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw
 	);
 	vector<MSMetaData::SpwProperties>::const_iterator end = props.end();
 	vector<Double> out;
@@ -1091,9 +1091,9 @@ vector<Double> MSMetaDataOnDemand::getBandWidths() {
 }
 
 vector<Quantum<Vector<Double> > > MSMetaDataOnDemand::getChanFreqs() {
-	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw;
 	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
-		avgSpw, tdmSpw, fdmSpw, wvrSpw
+		avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw
 	);
 	vector<MSMetaData::SpwProperties>::const_iterator end = props.end();
 	vector<Quantum<Vector<Double> > > out;
@@ -1107,9 +1107,9 @@ vector<Quantum<Vector<Double> > > MSMetaDataOnDemand::getChanFreqs() {
 }
 
 vector<Quantum<Vector<Double> > > MSMetaDataOnDemand::getChanWidths() {
-	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw;
 	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
-		avgSpw, tdmSpw, fdmSpw, wvrSpw
+		avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw
 	);
 	vector<MSMetaData::SpwProperties>::const_iterator end = props.end();
 	vector<Quantum<Vector<Double> > > out;
@@ -1123,9 +1123,9 @@ vector<Quantum<Vector<Double> > > MSMetaDataOnDemand::getChanWidths() {
 }
 
 vector<Int> MSMetaDataOnDemand::getNetSidebands() {
-	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw;
 	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
-		avgSpw, tdmSpw, fdmSpw, wvrSpw
+		avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw
 	);
 	vector<MSMetaData::SpwProperties>::const_iterator end = props.end();
 	vector<Int> out;
@@ -1139,9 +1139,9 @@ vector<Int> MSMetaDataOnDemand::getNetSidebands() {
 }
 
 vector<Quantity> MSMetaDataOnDemand::getMeanFreqs() {
-	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw;
 	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
-		avgSpw, tdmSpw, fdmSpw, wvrSpw
+		avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw
 	);
 	vector<MSMetaData::SpwProperties>::const_iterator end = props.end();
 	vector<Quantity> out;
@@ -1155,9 +1155,9 @@ vector<Quantity> MSMetaDataOnDemand::getMeanFreqs() {
 }
 
 vector<uInt> MSMetaDataOnDemand::nChans() {
-	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw;
 	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
-		avgSpw, tdmSpw, fdmSpw, wvrSpw
+		avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw
 	);
 	vector<MSMetaData::SpwProperties>::const_iterator end = props.end();
 	vector<uInt> out;
@@ -1171,9 +1171,9 @@ vector<uInt> MSMetaDataOnDemand::nChans() {
 }
 
 vector<vector<Double> > MSMetaDataOnDemand::getEdgeChans() {
-	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw;
 	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
-		avgSpw, tdmSpw, fdmSpw, wvrSpw
+		avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw
 	);
 	vector<MSMetaData::SpwProperties>::const_iterator end = props.end();
 	vector<vector<Double> > out;
@@ -1190,9 +1190,9 @@ vector<uInt> MSMetaDataOnDemand::getBBCNos() {
 	if (! hasBBCNo(*_ms)) {
 		throw AipsError("This MS's SPECTRAL_WINDOW table does not have a BBC_NO column");
 	}
-	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw;
 	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
-		avgSpw, tdmSpw, fdmSpw, wvrSpw
+		avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw
 	);
 	vector<MSMetaData::SpwProperties>::const_iterator end = props.end();
 	vector<uInt> out;
@@ -1205,24 +1205,52 @@ vector<uInt> MSMetaDataOnDemand::getBBCNos() {
 	return out;
 }
 
-std::map<uInt, std::set<uInt> > MSMetaDataOnDemand::getBBCNosToSpwMap() {
+std::map<uInt, std::set<uInt> > MSMetaDataOnDemand::getBBCNosToSpwMap(
+	SQLDSwitch sqldSwitch
+) {
 	vector<uInt> mymap = getBBCNos();
 	std::map<uInt, std::set<uInt> > out;
 	vector<uInt>::const_iterator end = mymap.end();
+	std::set<uInt> sqldSpw;
+	if (sqldSwitch != SQLD_INCLUDE) {
+		std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+		_getSpwInfo(
+			avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw
+		);
+	}
 	uInt i = 0;
+	Bool found = True;
 	for (
 		vector<uInt>::const_iterator iter=mymap.begin();
 		iter!=end; iter++, i++
 	) {
-		out[*iter].insert(i);
+		if (out.find(*iter) == out.end()) {
+			out[*iter] = std::set<uInt>();
+		}
+		if (sqldSwitch != SQLD_INCLUDE) {
+			found = sqldSpw.find(i) != sqldSpw.end();
+		}
+		if (
+			sqldSwitch == SQLD_INCLUDE
+			|| (
+				sqldSwitch == SQLD_EXCLUDE
+				&& ! found
+			)
+			|| (
+				sqldSwitch == SQLD_ONLY
+				&& found
+			)
+		) {
+			out[*iter].insert(i);
+		}
 	}
 	return out;
 }
 
 vector<String> MSMetaDataOnDemand::getSpwNames() {
-	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw;
 	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
-		avgSpw, tdmSpw, fdmSpw, wvrSpw
+		avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw
 	);
 	vector<MSMetaData::SpwProperties>::const_iterator end = props.end();
 	vector<String> out;
@@ -1239,8 +1267,8 @@ std::set<uInt> MSMetaDataOnDemand::getFDMSpw() {
 	if (! _fdmSpw.empty()) {
 		return _fdmSpw;
 	}
-	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
-	_getSpwInfo(avgSpw, tdmSpw, fdmSpw, wvrSpw);
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw;
+	_getSpwInfo(avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw);
 	return fdmSpw;
 }
 
@@ -1248,18 +1276,27 @@ std::set<uInt> MSMetaDataOnDemand::getChannelAvgSpw() {
 	if (! _avgSpw.empty()) {
 		return _avgSpw;
 	}
-	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
-	_getSpwInfo(avgSpw, tdmSpw, fdmSpw, wvrSpw);
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw;
+	_getSpwInfo(avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw);
 	return avgSpw;
 }
 
 std::set<uInt> MSMetaDataOnDemand::getWVRSpw() {
-	if (! _wvrSpw.empty()) {
+	if (_spwInfoStored) {
 		return _wvrSpw;
 	}
-	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
-	_getSpwInfo(avgSpw, tdmSpw, fdmSpw, wvrSpw);
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw;
+	_getSpwInfo(avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw);
 	return wvrSpw;
+}
+
+std::set<uInt> MSMetaDataOnDemand::getSQLDSpw() {
+	if (_spwInfoStored) {
+		return _sqldSpw;
+	}
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw;
+	_getSpwInfo(avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw);
+	return sqldSpw;
 }
 
 std::set<Int> MSMetaDataOnDemand::getScansForTimes(
@@ -1786,8 +1823,8 @@ Quantity MSMetaDataOnDemand::getEffectiveTotalExposureTime() {
 		return _exposureTime;
 	}
 	std::tr1::shared_ptr<Vector<Double> > times = _getTimes();
-	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
-	vector<SpwProperties> spwInfo = _getSpwInfo(avgSpw, tdmSpw, fdmSpw, wvrSpw);
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw;
+	vector<SpwProperties> spwInfo = _getSpwInfo(avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw);
 	std::map<Int, uInt> dataDescIDToSpwMap = _getDataDescIDToSpwMap();
 	std::map<Double, Double> timeToBWMap = _getTimeToTotalBWMap(
 		*times, *_getDataDescIDs(), dataDescIDToSpwMap, spwInfo
@@ -1825,13 +1862,13 @@ void MSMetaDataOnDemand::_getUnflaggedRowStats(
 
 	std::tr1::shared_ptr<Vector<Int> > ant1, ant2;
 	_getAntennas(ant1, ant2);
-	std::set<uInt> a, b, c, d;
+	std::set<uInt> a, b, c, d, e;
 	MSMetaData::_getUnflaggedRowStats(
 		nACRows, nXCRows, myFieldNACRows,
 		myFieldNXCRows, myScanNACRows, myScanNXCRows, *ant1,
 		*ant2, /*_getFlagRows(*_ms),*/ *_getDataDescIDs(),
 		_getDataDescIDToSpwMap(),
-		_getSpwInfo(a, b, c, d), *MSMetaData::_getFlags(*_ms), *_getFieldIDs(),
+		_getSpwInfo(a, b, c, d, e), *MSMetaData::_getFlags(*_ms), *_getFieldIDs(),
 		*_getScans(), *_getObservationIDs(), *_getArrayIDs()
 	);
 	fieldNACRows.reset(myFieldNACRows);
@@ -1856,8 +1893,10 @@ vector<std::set<String> > MSMetaDataOnDemand::_getSpwToIntentsMap() {
 	if (! _spwToIntentsMap.empty()) {
 		return _spwToIntentsMap;
 	}
-	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
-	vector<SpwProperties> spwInfo = _getSpwInfo(avgSpw, tdmSpw, fdmSpw, wvrSpw);
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw;
+	vector<SpwProperties> spwInfo = _getSpwInfo(
+		avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw
+	);
 	std::set<String> emptySet;
 	vector<SpwProperties>::const_iterator end = spwInfo.end();
 	vector<std::set<String> > spwToIntentsMap;
@@ -2024,23 +2063,23 @@ std::map<Int, uInt> MSMetaDataOnDemand::_getDataDescIDToPolIDMap() {
 
 vector<MSMetaData::SpwProperties> MSMetaDataOnDemand::_getSpwInfo(
 	std::set<uInt>& avgSpw, std::set<uInt>& tdmSpw,
-	std::set<uInt>& fdmSpw, std::set<uInt>& wvrSpw
+	std::set<uInt>& fdmSpw, std::set<uInt>& wvrSpw,
+	std::set<uInt>& sqldSpw
 ) {
-	if (
-		! _spwInfo.empty() && ! _avgSpw.empty() && ! _tdmSpw.empty()
-		&& ! _fdmSpw.empty() && ! _wvrSpw.empty()
-	) {
+	if (_spwInfoStored) {
 		avgSpw = _avgSpw;
 		tdmSpw = _tdmSpw;
 		fdmSpw = _fdmSpw;
 		wvrSpw = _wvrSpw;
+		sqldSpw = _sqldSpw;
 		return _spwInfo;
 	}
 	vector<SpwProperties> spwInfo = MSMetaData::_getSpwInfo(
-		avgSpw, tdmSpw, fdmSpw, wvrSpw, *_ms
+		avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw, *_ms
 	);
 	uInt mysize = sizeof(uInt)*(
-			avgSpw.size() + tdmSpw.size() + fdmSpw.size() + wvrSpw.size()
+			avgSpw.size() + tdmSpw.size() + fdmSpw.size()
+			+ wvrSpw.size() + sqldSpw.size()
 		) + 2*sizeof(Int)*spwInfo.size()
 		+ 2*sizeof(Double)*spwInfo.size();
 	vector<SpwProperties>::const_iterator end = spwInfo.end();
@@ -2056,7 +2095,9 @@ vector<MSMetaData::SpwProperties> MSMetaDataOnDemand::_getSpwInfo(
 		_tdmSpw = tdmSpw;
 		_fdmSpw = fdmSpw;
 		_wvrSpw = wvrSpw;
+		_sqldSpw = sqldSpw;
 		_spwInfo = spwInfo;
+		_spwInfoStored = True;
 	}
 	return spwInfo;
 }
