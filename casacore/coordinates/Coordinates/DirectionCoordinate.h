@@ -593,6 +593,8 @@ public:
     // set the base (as opposed to conversion) reference frame
     void setReferenceFrame(const MDirection::Types rf);
 
+    // are the pixels square?
+    Bool hasSquarePixels() const;
 
 private:
     // Direction type

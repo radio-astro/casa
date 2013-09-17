@@ -834,6 +834,11 @@ public:
 		   Bool allowFriendlyNames=False
    ) const;
 
+   // is the abscissa in the DirectionCoordinate the longitude axis? Throws exception
+   // if there is no DirectionCoordinate or if either of the direction pixel axes have
+   // been removed. For a normal direction coordinate, this will return True.
+   Bool isDirectionAbscissaLongitude() const;
+
 
 private:
     // Where we store copies of the coordinates we are created with.

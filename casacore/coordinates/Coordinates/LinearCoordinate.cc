@@ -515,7 +515,7 @@ Bool LinearCoordinate::near(const Coordinate& other,
       if (!exclude(i)) {
          if (!casa::near(crval1[i],crval2[i],tol)) {
             oss << "The LinearCoordinates have differing reference values for axis "
-                << i;
+                << i << ", " << crval1[i] << " vs. " << crval2[i];
             set_error(String(oss));
             return False;
          }

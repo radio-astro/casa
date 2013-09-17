@@ -166,9 +166,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Int> validPolIDs, validPolIndices;
     MSDataDescIndex msDDNdx(ms()->dataDescription());
     MSPolarizationIndex msPolNdx(ms()->polarization());
-    //    cout << "SpwIDs = " << spwIDs << endl;
+
     polnIDs = getPolnIDsV2(polnExpr, polTypes);
-    //    cout << "PolIDs = " << polnIDs << " polTypes = " << polTypes << endl;
+
     //   if (polnIDs.nelements() == 0)
    if (polTypes.nelements() == 0)
       {
@@ -196,7 +196,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		setIDLists((Int)polnIDs[p],0,polnIndices);
 		polMap_p(polnIDs[p]).resize(0);
 		polMap_p(polnIDs[p])=polnIndices;
-		//		cout << "DDIDs for SPW = " << spwIDs[s] << " = " << tmp[0] << endl;
 	      }
 	  }
 	if (thisDDList.nelements() > 0) 
@@ -374,7 +373,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(Int i=0;i<nSpecList;i++)
       {
 	Vector<String> tokens,tmp;
-	Vector<Int> spwIDs;
+	Vector<Int> spwIDs, spwDDIDs;
 	Matrix<Int> chanIDs;
 	Vector<Int> polnIDs;
 
@@ -420,7 +419,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    msSpwGramParseCommand(ms()->spectralWindow(), 
 				  ms()->dataDescription(),
 				  colAsTEN, spwExpr,
-				  spwIDs, chanIDs);
+				  spwIDs, chanIDs, spwDDIDs);
 	    //	    msSpwGramParseCommand(ms(), spwExpr,spwIDs, chanIDs);
 	  }
 	catch (MSSelectionSpwError &x)
@@ -455,6 +454,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    x.addMessage(mesg);
 	    throw;
 	  }
+
 	selectFromIDList(ddIDList_p);
       }
     {

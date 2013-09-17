@@ -7,6 +7,7 @@ tConvolver
 tInterpolateArray1D
 tFFTServer
 tFFTServer2
+tGeometry
 tHistAcc
 tMathFunc
 tMatrixMathLA
@@ -15,6 +16,7 @@ tSmooth
 tSparseDiff
 tStatAcc
 tVanVleck
+tVectorKernel
 )
 
 foreach (test ${tests})

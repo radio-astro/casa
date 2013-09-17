@@ -1099,13 +1099,13 @@ vector<Quantum<Vector<Double> > > MSMetaDataOnDemand::getChanFreqs() {
 	return out;
 }
 
-vector<vector<Double> > MSMetaDataOnDemand::getChanWidths() {
+vector<Quantum<Vector<Double> > > MSMetaDataOnDemand::getChanWidths() {
 	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
 	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
 		avgSpw, tdmSpw, fdmSpw, wvrSpw
 	);
 	vector<MSMetaData::SpwProperties>::const_iterator end = props.end();
-	vector<vector<Double> > out;
+	vector<Quantum<Vector<Double> > > out;
 	for (
 		vector<MSMetaData::SpwProperties>::const_iterator iter=props.begin();
 		iter!=end; iter++

@@ -294,6 +294,9 @@ vector<MSMetaData::SpwProperties>  MSMetaData::_getSpwInfo(
 	Array<String> cfUnits;
 	cfCol.keywordSet().get("QuantumUnits", cfUnits);
 	ArrayColumn<Double> cwCol = spwCols.chanWidth();
+	Array<String> cwUnits;
+	cwCol.keywordSet().get("QuantumUnits", cwUnits);
+
 	Vector<Int> nss  = spwCols.netSideband().getColumn();
 	Vector<String> name = spwCols.name().getColumn();
 	Bool myHasBBCNo = hasBBCNo(ms);
@@ -312,7 +315,7 @@ vector<MSMetaData::SpwProperties>  MSMetaData::_getSpwInfo(
 		spwInfo[i].edgechans = freqLimits;
 		tmp.resize(0);
 		cwCol.get(i, tmp);
-		spwInfo[i].chanwidths = tmp.tovector();
+		spwInfo[i].chanwidths = Quantum<Vector<Double> >(tmp, *cwUnits.begin());
 		// coded this way in ValueMapping
 		spwInfo[i].netsideband = nss[i] == 2 ? 1 : -1;
 		spwInfo[i].nchans = tmp.size();
@@ -440,11 +443,7 @@ Quantity MSMetaData::_getTotalExposureTime(
 	// each row represents a unique baseline, data description ID, and time combination
 	uInt nrows = result.nrow();
 	for (uInt i=0; i<nrows; i++) {
-		Vector<Double> channelWidths(
-			Vector<Double>(
-				spwProperties[dataDescToSpwIdMap.find(ddIDs[i])->second].chanwidths
-			)
-		);
+		Quantum<Vector<Double> > channelWidths = spwProperties[dataDescToSpwIdMap.find(ddIDs[i])->second].chanwidths;
 		Matrix<Bool> flagsMatrix(ArrayColumn<Bool>(result, "FLAG").get(i));
 		uInt nCorrelations = flagsMatrix.nrow();
 		Double denom = (timeToBWMap.find(times[i])->second)*maxNBaselines*nCorrelations;
@@ -452,7 +451,7 @@ Quantity MSMetaData::_getTotalExposureTime(
 			Vector<Bool> goodData = ! flagsMatrix.row(corr);
 			if (anyTrue(goodData)) {
 				MaskedArray<Double> flaggedChannelWidths(
-					channelWidths, goodData, True
+					channelWidths.getValue("Hz"), goodData, True
 				);
 				Double effectiveBW = sum(flaggedChannelWidths);
 				totalExposure += exposures[i]*effectiveBW/denom;
@@ -728,7 +727,7 @@ void MSMetaData::_getUnflaggedRowStats(
 		//if (! *flagIter) {
 			SpwProperties spwProp = spwInfo[dataDescIDToSpwMap.find(*dIter)->second];
 			Vector<Double> channelWidths(
-				Vector<Double>(spwProp.chanwidths)
+				Vector<Double>(spwProp.chanwidths.getValue("Hz"))
 			);
 			const Matrix<Bool>& flagsMatrix(flags.get(i));
             count += flagsMatrix.size();

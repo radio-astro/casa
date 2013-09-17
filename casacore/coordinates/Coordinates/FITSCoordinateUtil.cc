@@ -171,6 +171,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if (stokesAxis >= 0) units(stokesAxis) = "";
 	coordsys.setWorldAxisUnits(units);
 
+// If there is a spectral conversion layer, make it permanent here
+	if(specCoord>=0){
+	  SpectralCoordinate sCoord(coordsys.spectralCoordinate(specCoord));
+	  MFrequency::Types nativeCtype = sCoord.frequencySystem(False); // native type
+	  MFrequency::Types convCtype = sCoord.frequencySystem(True); // converted type
+
+	  if (convCtype != nativeCtype) {
+	    MEpoch convEpoch;
+	    MPosition convPosition;
+	    MDirection convDirection;
+	    sCoord.getReferenceConversion(convCtype, convEpoch, convPosition, convDirection);
+	    // modify the spec coordsys corresponding to the conversion layer
+	    sCoord.transformFrequencySystem(convCtype, convEpoch, convPosition, convDirection);
+	    // replace the spec-coordsys in coordsys by the new one
+	    coordsys.replaceCoordinate(sCoord, specCoord);
+	  }
+	}
+
 // Generate keywords.  If we find we have a DC with one of the
 // axes removed, it will be linearized here.
 

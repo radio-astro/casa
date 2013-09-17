@@ -114,15 +114,16 @@ public:
   // Get table expression node object.
   static const TableExprNode* node();
   static MSSpwParse* thisMSSParser;
+  static Vector<Int> selectedDDIDs() {return ddidList;}
   static Vector<Int> selectedIDs() {return idList;}
   static Matrix<Int> selectedChanIDs() {return chanList;}
-  static void reset() {idList.resize(0);chanList.resize(0,0);};
+  static void reset() {idList.resize(0);chanList.resize(0,0);ddidList.resize(0);};
   static void cleanup() {if (node_p) delete node_p;node_p=0x0;};
 
   MSSpectralWindow& subTable() {return spwSubTable_p;}
 private:
   static TableExprNode* node_p;
-  static Vector<Int> idList;
+  static Vector<Int> idList, ddidList;
   static Matrix<Int> chanList;
   MSSpectralWindow spwSubTable_p;
   MSDataDescription ddSubTable_p;
