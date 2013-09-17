@@ -133,14 +133,15 @@ public:
   SDGrid(SkyJones& sj, Int cachesize, Int tilesize,
 	 String convType="BOX", Int userSupport=-1);
   SDGrid(MPosition& ml, SkyJones& sj, Int cachesize,
-	 Int tilesize, String convType="BOX", Int userSupport=-1);
+	 Int tilesize, String convType="BOX", Int userSupport=-1,
+	 Float minweight=0.);
   SDGrid(Int cachesize, Int tilesize,
 	 String convType="BOX", Int userSupport=-1);
   SDGrid(MPosition& ml, Int cachesize, Int tilesize,
-	 String convType="BOX", Int userSupport=-1);
+	 String convType="BOX", Int userSupport=-1, Float minweight=0.);
   SDGrid(MPosition& ml, Int cachesize, Int tilesize,
 	 String convType="TGAUSS", Float truncate=-1.0, 
-         Float gwidth=0.0, Float jwidth=0.0);
+         Float gwidth=0.0, Float jwidth=0.0, Float minweight=0.);
   // </group>
 
   // Copy constructor
@@ -264,6 +265,8 @@ private:
   Float truncate_p;
   Float gwidth_p;
   Float jwidth_p;
+
+  Float minWeight_p;
 
   Int lastIndex_p;
 
