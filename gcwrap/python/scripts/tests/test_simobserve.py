@@ -1506,7 +1506,7 @@ class simobserve_badinputs(simobserve_unittest_base):
             res = simobserve()
             self.fail(self.failmsg)
         except Exception, e:
-            pos=str(e).find("No sky input found")
+            pos=str(e).find("At least one of skymodel or complist must be set.")
             msg =  self.errmsg % str(e)
             self.assertNotEqual(pos,-1,msg=msg)
 
