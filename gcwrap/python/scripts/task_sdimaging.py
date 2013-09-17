@@ -316,7 +316,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         # Modify default mask
         my_ia.open(self.outfile)
         #mask_name = my_ia.maskhandler('default')
-        my_ia.calcmask('%s>%f' % (weightfile,self.minweight), asdefault=True)
+        my_ia.calcmask('%s>%f' % (weightfile.replace("/", "\/"),self.minweight), asdefault=True)
         my_ia.close()
         del weight_val, mask_pixels
 
