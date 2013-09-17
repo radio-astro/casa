@@ -265,7 +265,8 @@ class Imager
 		    const Int convsupport=-1, String pointingColToUse="DIRECTION",
                     const Quantity truncate=Quantity(),
                     const Quantity gwidth=Quantity(),
-                    const Quantity jwidth=Quantity());
+                    const Quantity jwidth=Quantity(),
+		    const Float minweight=0.);
 
   // Set the voltage pattern
   Bool setvp(const Bool dovp,
@@ -699,6 +700,8 @@ protected:
   Quantity qtruncate_p;
   Quantity qgwidth_p;
   Quantity qjwidth_p;
+
+  Float minWeight_p;
 
   // special mf control parms, etc
   Float cyclefactor_p;

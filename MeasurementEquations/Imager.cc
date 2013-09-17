@@ -240,6 +240,7 @@ traceEvent(1,"Entering imager::defaults",25);
   skyPosThreshold_p=Quantity(180.,"deg");
   telescope_p="";
   gridfunction_p="SF";
+  minWeight_p=0.;
   doMultiFields_p=False;
   doWideBand_p=False;
   multiFields_p=False;
@@ -1949,7 +1950,8 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
 Bool Imager::setsdoptions(const Float scale, const Float weight, 
 			  const Int convsupport, String pointCol,
                           const Quantity truncate, 
-                          const Quantity gwidth, const Quantity jwidth)
+                          const Quantity gwidth, const Quantity jwidth,
+			  const Float minweight)
 {
 
 
@@ -1976,6 +1978,7 @@ Bool Imager::setsdoptions(const Float scale, const Float weight,
   qtruncate_p=truncate;
   qgwidth_p=gwidth;
   qjwidth_p=jwidth;
+  minWeight_p = minweight;
   // Destroy the FTMachine
   if(ft_p) {delete ft_p; ft_p=0;}
   if(gvp_p) {delete gvp_p; gvp_p=0;}
