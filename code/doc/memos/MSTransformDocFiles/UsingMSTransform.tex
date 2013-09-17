@@ -127,6 +127,21 @@ output channel.
     mstransform('uid.ms', outputvis='myout.ms', datacolumn='data', spw='1,3,5', combinespws=True)
 \end{verbatim}
 
+\subsubsection{Handling spectral windows with different sensitivities}
+Whenever the data to be combined has different EXPOSURE values in the spectral
+windows, mstransform will use the WEIGHT\_SPECTRUM for the combination. If
+WEIGHT\_SPECTRUM is not available, it will use the values from the WEIGHT
+column. Each output channel is calculated using the following equation:
+
+\begin{verbatim}
+outputChannel_j = SUM(inputChannel_i*contributionFraction_i*inputWeightSpectrum_i) 
+                --------------------------------------------------------------------
+                        SUM(contributionFraction_i*inputWeightSpectrum_i)
+
+where:
+    contributionFraction_i are geometrical factors to take into account any gaps or overlaps in the spws.
+\end{verbatim}
+
 \subsection{Channel averaging}
 Similar to task split, mstransform can average the selected channels based on a
 width parameter. The parameter {\it chanbin} can be either an integer or a list of

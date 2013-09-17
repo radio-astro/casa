@@ -285,12 +285,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </param>
 
         <param type="double" name="quantize_c" subparam="true">
-            <description>Quantize time_centroids to the nearest multiple of short time interval.</description>
+            <description>(TBI) Quantize time_centroids to the nearest multiple of short time interval.</description>
             <value type="double">0.01</value>
         </param>
 
         <param type="int" name="minbaselines" subparam="true">
-            <description>Minimum number of baselines for averaging to start.</description>
+            <description>(TBI) Minimum number of baselines for averaging to start.</description>
             <value type="int">2</value>
         </param>
     
@@ -524,6 +524,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     combinespws -- Combine the input spws into a new output spw.
         default: False
 
+                NOTE: Whenever the data to be combined has different EXPOSURE values 
+                      in the spectral windows, mstransform will use the WEIGHT_SPECTRUM 
+                      for the combination. If WEIGHT_SPECTRUM is not available, it will 
+                      use the values from the WEIGHT column. Each output channel is calculated 
+                      using the following equation:
+
+              outputChannel_j = SUM(inputChannel_i*contributionFraction_i*inputWeightSpectrum_i) 
+                               ------------------------------------------------------------------
+                                     SUM(contributionFraction_i*inputWeightSpectrum_i)
+
 --- Channel averaging parameters ---
     chanaverage -- Average data in channels. 
         default: False
@@ -599,7 +609,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         veltype -- Definition of velocity (as used in mode).
             default: 'radio'
 
---- Time averaging parameters ---(TBI)
+--- Time averaging parameters ---
     timeaverage -- Average data in time.
         default: False
 
@@ -615,11 +625,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                        numbers when time averaging.
             timespan = 'state,scan'; same as above.
 
-        quantize_c -- Quantize time_centroids to the nearest multiple of short
+        quantize_c -- (TBI) Quantize time_centroids to the nearest multiple of short
                       time interval (double).
             default: 0.01
 
-        minbaselines -- Minimum number of baselines for averaging to start (int).
+        minbaselines -- (TBI) Minimum number of baselines for averaging to start (int).
             default: 2
 
 ------ EXAMPLES ------
