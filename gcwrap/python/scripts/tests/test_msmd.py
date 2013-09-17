@@ -565,34 +565,48 @@ class msmd_test(unittest.TestCase):
 
     def test_spwsforbasebands(self):
         """Test spwsforbasebands()"""
-        got = self.md.spwsforbaseband()
-        self.assertTrue(len(got) == 5)
-        self.assertTrue(
-            (
-                got['0']
-                == [
-                    0, 25, 26, 27, 28, 29,
-                    30, 31, 32, 33, 34, 35,
-                    36, 37, 38, 39
-                ]
-             ).all()
-        )
-        self.assertTrue(
-            (got['1'] == [1, 2, 9, 10, 17, 18]).all()
-        )
-        self.assertTrue(
-            (got['2'] == [3, 4, 11, 12, 19, 20]).all()
-        )
-        self.assertTrue(
-            (got['3'] == [5, 6, 13, 14, 21, 22]).all()
-        )
-        self.assertTrue(
-            (got['4'] == [7, 8, 15, 16, 23, 24]).all()
-        )
-        for i in range(4):
-            self.assertTrue(
-                (got[str(i)] == self.md.spwsforbaseband(i)).all()
-            )
+        for mode in ("i", "e", "o"):
+            got = self.md.spwsforbaseband(sqldmode=mode)
+            print "*** got " + str(got)
+            self.assertTrue(len(got) == 5)
+            if mode == "o":
+                self.assertTrue(len(got['0']) == 0)
+                self.assertTrue(len(got['1']) == 0)
+                self.assertTrue(got['2'] == [3])
+                self.assertTrue(len(got['3']) == 0)
+                self.assertTrue(len(got['4']) == 0)
+            else:
+                self.assertTrue(
+                    (
+                        got['0']
+                        == [
+                            0, 25, 26, 27, 28, 29,
+                            30, 31, 32, 33, 34, 35,
+                            36, 37, 38, 39
+                        ]
+                     ).all()
+                )
+                self.assertTrue(
+                    (got['1'] == [1, 2, 9, 10, 17, 18]).all()
+                )
+                if mode == "i":
+                    self.assertTrue(
+                        (got['2'] == [3, 4, 11, 12, 19, 20]).all()
+                    )
+                else:
+                    self.assertTrue(
+                        (got['2'] == [4, 11, 12, 19, 20]).all()
+                )
+                self.assertTrue(
+                    (got['3'] == [5, 6, 13, 14, 21, 22]).all()
+                )
+                self.assertTrue(
+                    (got['4'] == [7, 8, 15, 16, 23, 24]).all()
+                )
+            for i in range(4):
+                self.assertTrue(
+                    (got[str(i)] == self.md.spwsforbaseband(i, sqldmode=mode)).all()
+                )
 
     def test_spwsforfield(self):
         """Test spwsforfield()"""
@@ -775,6 +789,63 @@ class msmd_test(unittest.TestCase):
         got = self.md.wvrspws(True)
         expec = range(1, 25)
         self.assertTrue((got == expec).all())
+
+    def test_almaspws(self):
+        """Test almaspws()"""
+        got = self.md.almaspws()
+        self.assertTrue(len(got) == 0)
+        got = self.md.almaspws(complement=True)
+        self.assertTrue(len(got) == 40)
+        got = self.md.almaspws(sqld=True)
+        self.assertTrue(len(got) == 1 and got[0] == 3)
+        got = self.md.almaspws(sqld=True, complement=True)
+        expec = range(40)
+        expec.remove(3)
+        self.assertTrue((got == expec).all())
+
+        got = self.md.almaspws(chavg=True)
+        expec = numpy.array([
+            2, 4, 6, 8, 10, 12, 14,
+            16, 18, 20, 22, 24
+        ])
+        self.assertTrue((got == expec).all())
+        got = self.md.almaspws(chavg=True, complement=True)
+        jj = range(40)
+        for i in expec:
+            jj.remove(i)
+        expec = jj
+        self.assertTrue((got == expec).all())
+        
+        got = self.md.almaspws(fdm=True)
+        expec = [17, 19, 21, 23]
+        self.assertTrue((got == expec).all())
+        got = self.md.almaspws(fdm=True, complement=True)
+        jj = range(40)
+        for i in expec:
+            jj.remove(i)
+        expec = jj
+        self.assertTrue((got == expec).all())
+        
+        got = self.md.almaspws(tdm=True)
+        expec = [1, 3, 5, 7, 9, 11, 13, 15]
+        self.assertTrue((got == expec).all())
+        got = self.md.almaspws(tdm=True, complement=True)
+        jj = range(40)
+        for i in expec:
+            jj.remove(i)
+        expec = jj
+        self.assertTrue((got == expec).all())
+        
+        got = self.md.almaspws(wvr=True)
+        expec = numpy.array([
+            0, 25, 26, 27, 28, 29, 30, 31,
+            32, 33, 34, 35, 36, 37, 38, 39
+        ])
+        self.assertTrue((got == expec).all())
+        got = self.md.almaspws(wvr=True, complement=True)
+        expec = range(1, 25)
+        self.assertTrue((got == expec).all())
+
 
     def test_bandwidths(self):
         """Test bandwidths()"""

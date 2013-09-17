@@ -43,7 +43,6 @@
 
 #include <boost/iterator/counting_iterator.hpp>
 
-
 #include <casa/namespace.h>
 
 #define _ORIGIN *_log << LogOrigin("msmetadata_cmpt.cc", __FUNCTION__, __LINE__);
@@ -75,6 +74,51 @@ namespace casac {
 msmetadata::msmetadata() : _log(new LogIO()) {}
 
 msmetadata::~msmetadata() {}
+
+vector<int> msmetadata::almaspws(
+	bool chavg, bool fdm, bool sqld, bool tdm, bool wvr, bool complement
+) {
+	_FUNC(
+	    std::set<uInt> x;
+	    if (chavg) {
+	    	std::set<uInt> y = _msmd->getChannelAvgSpw();
+	    	x.insert(y.begin(), y.end());
+	    }
+	    if (fdm) {
+	    	std::set<uInt> y = _msmd->getFDMSpw();
+	    	x.insert(y.begin(), y.end());
+	    }
+	    if (sqld) {
+	    	std::set<uInt> y = _msmd->getSQLDSpw();
+	    	x.insert(y.begin(), y.end());
+	    }
+	    if (tdm) {
+	    	std::set<uInt> y = _msmd->getTDMSpw();
+	    	x.insert(y.begin(), y.end());
+	    }
+	    if (wvr) {
+	    	std::set<uInt> y = _msmd->getWVRSpw();
+	    	x.insert(y.begin(), y.end());
+	    }
+		if (complement) {
+			uInt nspw = _msmd->nSpw(True);
+			set<uInt> allSpws(
+				boost::counting_iterator<int>(0),
+				boost::counting_iterator<int>(nspw)
+			);
+			vector<uInt> mycompl(nspw);
+			vector<uInt>::iterator begin = mycompl.begin();
+			vector<uInt>::iterator end = std::set_difference(
+				allSpws.begin(), allSpws.end(), x.begin(),
+				x.end(), begin
+			);
+			mycompl.resize(end - begin);
+			return _vectorUIntToVectorInt(mycompl);
+		}
+		return _setUIntToVectorInt(x);
+	)
+	return vector<int>();
+}
 
 vector<int> msmetadata::antennaids(const variant& names) {
 	_FUNC(
@@ -270,6 +314,8 @@ variant* msmetadata::baselines() {
 
 vector<int> msmetadata::chanavgspws() {
 	_FUNC (
+		*_log << LogIO::WARN << "This method is deprecated and will be removed. "
+			<< "Use almaspws(chavg=True) instead." << LogIO::POST;
 		return _setUIntToVectorInt(_msmd->getChannelAvgSpw());
 	)
 	return vector<int>();
@@ -339,6 +385,8 @@ record* msmetadata::effexposuretime() {
 
 vector<int> msmetadata::fdmspws() {
 	_FUNC(
+		*_log << LogIO::WARN << __FUNCTION__ << " is deprecated and will be removed. "
+			<< "Use almaspws(fdm=True) instead." << LogIO::POST;
 		return _setUIntToVectorInt(_msmd->getFDMSpw());
 	)
 	return vector<int>();
@@ -688,9 +736,27 @@ int msmetadata::sideband(int spw) {
 	return 0;
 }
 
-variant* msmetadata::spwsforbaseband(int bb) {
+variant* msmetadata::spwsforbaseband(int bb, const string& sqldmode) {
 	_FUNC(
-		map<uInt COMMA set<uInt> > x = _msmd->getBBCNosToSpwMap();
+		String mode = sqldmode;
+		mode.downcase();
+		MSMetaData::SQLDSwitch sqld;
+		if (mode.startsWith("i")) {
+			sqld = MSMetaData::SQLD_INCLUDE;
+		}
+		else if (mode.startsWith("e")) {
+			sqld = MSMetaData::SQLD_EXCLUDE;
+		}
+		else if (mode.startsWith("o")) {
+			sqld = MSMetaData::SQLD_ONLY;
+		}
+		else {
+			throw AipsError(
+				"Unsupported sqldmode " + sqldmode
+				+ ". Must be either i(nclude), e(xclude), or o(nly)."
+			);
+		}
+		map<uInt COMMA set<uInt> > x = _msmd->getBBCNosToSpwMap(sqld);
 		if (bb >= 0) {
 			if (x.find(bb) == x.end()) {
 				return new variant(vector<int>(0));
@@ -802,13 +868,17 @@ vector<double> msmetadata::timesforscans(const vector<int>& scans) {
 
 vector<int> msmetadata::tdmspws() {
 	_FUNC(
+		*_log << LogIO::WARN << __FUNCTION__ << " is deprecated and will be removed. "
+			<< "Use almaspws(tdm=True) instead." << LogIO::POST;
 		return _setUIntToVectorInt(_msmd->getTDMSpw());
 	)
 	return vector<int>();
 }
 
 vector<int> msmetadata::wvrspws(bool complement) {
-	//_FUNC(
+	_FUNC(
+		*_log << LogIO::WARN << __FUNCTION__ << " is deprecated and will be removed. "
+			<< "Use almaspws(tdm=True) instead." << LogIO::POST;
 		vector<int> wvrs = _setUIntToVectorInt(_msmd->getWVRSpw());
 		if (complement) {
 			vector<int> nonwvrs(
@@ -823,7 +893,7 @@ vector<int> msmetadata::wvrspws(bool complement) {
 		else {
 			return wvrs;
 		}
-	//)
+	)
 	return vector<int>();
 }
 

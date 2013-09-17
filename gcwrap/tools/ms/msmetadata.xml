@@ -81,6 +81,49 @@ windows in the dataset and close the tool.
             </example>
         </description>
 
+        <method type="function" name="almaspws">
+            <shortdescription>Get a list of spectral window IDs with ALMA-specific attributes.</shortdescription>
+            <input>
+                <param type="bool" name="chavg">
+                    <description>Get channel average spectral windows?</description>
+                    <value>false</value>
+                </param>
+                <param type="bool" name="fdm">
+                    <description>Get FDM spectral windows?</description>
+                    <value>false</value>
+                </param>
+                <param type="bool" name="sqld">
+                    <description>Get square law (i.e. total power) detector spectral windows?</description>
+                    <value>false</value>
+                </param>
+                <param type="bool" name="tdm">
+                    <description>Get TDM spectral windows?</description>
+                    <value>false</value>
+                </param>
+                <param type="bool" name="wvr">
+                    <description>Get WVR spectral windows?</description>
+                    <value>false</value>
+                </param>
+                <param type="bool" name="complement">
+                    <description>Return the complement of the selected set?</description>
+                    <value>false</value>
+                </param>
+            </input>
+            <returns type="intArray"/>
+            <description>
+                Get spectral window IDs based on ALMA-specific criteria. The inputs are or'ed together
+                to form the returned list. If complement=True, then the complement of the selection
+                is returned.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get all square law detector spectral window IDs
+    msmd.almaspws(sqld=True)
+    # get all spectral window IDs other than those associated with square law detectors
+    msmd.almaspws(sqld=True, complement=True)
+            </example>
+        </method>
+
         <method type="function" name="antennaids">
             <shortdescription>Get the zero-based antenna ID for the specfied antenna name.</shortdescription>
              <input>
@@ -179,11 +222,11 @@ windows in the dataset and close the tool.
         </method>
 
         <method type="function" name="bandwidths">
-            <shortdescription>Get the bandwidths in Hz for the specified spectral windows. If spw less than zero, return bandwidths for all spws.</shortdescription>
+            <shortdescription>Get the bandwidths in Hz for the specified spectral windows. If spw less than zero, return bandwidths for all spectral windows.</shortdescription>
             <input>
                 <param type="any" direction="in" name="spw">
                 <any type="variant" limittypes="int intarray"/>
-                    <description>Spectral window IDs, if integer less than zero, return bandwidths for all spws.</description>
+                    <description>Spectral window IDs, if integer less than zero, return bandwidths for all spectral windows.</description>
                     <value type="int">-1</value>
                 </param>
             </input>
@@ -191,7 +234,7 @@ windows in the dataset and close the tool.
                 <any type="variant"/>
             </returns>
             <description>
-                Get the bandwidths in Hz for the specified spectral windows. If spw less than zero, return bandwidths for all spws.
+                Get the bandwidths in Hz for the specified spectral windows. If spw less than zero, return bandwidths for all spectral windows.
             </description>
             <example>
     msmd.open("my.ms")
@@ -238,9 +281,10 @@ windows in the dataset and close the tool.
         
         
         <method type="function" name="chanavgspws">
-            <shortdescription>Get an array of spectral window IDs used for channel averages. These are windows that do have 1 channel.</shortdescription>
+            <shortdescription>DEPRECATED. Get an array of spectral window IDs used for channel averages. These are windows that do have 1 channel.</shortdescription>
             <returns type="intArray"/>
             <description>
+                DEPRECATED. USE almaspws(chavg=True).
                 Get an array of spectral window IDs used for channel averages. These are windows that do have 1 channel.
             </description>
             <example>
@@ -383,6 +427,7 @@ windows in the dataset and close the tool.
             <shortdescription>Get an array of spectral window IDs used for FDM. These are windows that do not have 64, 128, or 256 channels.</shortdescription>
             <returns type="intArray"/>
             <description>
+                DEPRECATED. USE almaspws(fdm=True) INSTEAD.
                 Get an array of spectral window IDs used for FDM. These are windows that do not have 64, 128, or 256 channels.
             </description>
             <example>
@@ -1001,10 +1046,14 @@ windows in the dataset and close the tool.
                     <description>Baseband number. If &lt;0, return a dictionary mapping basebands to spws.</description>
                     <value>-1</value>
                 </param>
+                <param type="string" direction="in" name="sqldmode">
+                    <description>If "include", include SQLD windows, if "exclude", exclude SQLD windows, if "only", include only SQLD windows. Case insenstive, inimum match honored.</description>
+                    <value>include</value>
+                </param>
             </input>
             <returns type="variant"/>
             <description>
-                Get the spws associated with the specified baseband or dictionary that maps baseband to spws.
+                Get the spectral windows associated with the specified baseband or dictionary that maps baseband to spectral windows.
             </description>
             <example>
     msmd.open("my.ms")
@@ -1102,6 +1151,7 @@ windows in the dataset and close the tool.
             <shortdescription>Get an array of spectral window IDs used for TDM. These are windows that have 64, 128, or 256 channels.</shortdescription>
             <returns type="intArray"/>
             <description>
+                DEPRECATED. USE almaspws(tdm=True) INSTEAD.
                 Get an array of spectral window IDs used for TDM. These are windows that have 64, 128, or 256 channels.
             </description>
             <example>
@@ -1183,6 +1233,7 @@ windows in the dataset and close the tool.
             </input>
             <returns type="intArray"/>
             <description>
+                DEPRECATED. USE almaspws(wvr=True) INSTEAD.
                 Get an array of spectral window IDs used for WVR. These are windows that have 4 channels.
                 If complement is True, return the compliment set instead (all non-wvr spw IDs).
             </description>
