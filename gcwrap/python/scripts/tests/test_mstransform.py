@@ -1273,7 +1273,14 @@ class test_float_column(test_base):
 class test_timeaverage(test_base):
 
     def setUp(self):
+        
         self.setUp_4ants()
+        self.outvis = ''
+        self.refvis = ''
+        self.tmpvis = ''
+        self.outvis_sorted = ''
+        self.refvis_sorted = ''
+        
         self.subtables=['/ANTENNA','/DATA_DESCRIPTION','/FEED','/FIELD','/FLAG_CMD',
                         '/OBSERVATION','/POINTING','/POLARIZATION','/PROCESSOR','/STATE']
         self.sortorder=['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME']      
