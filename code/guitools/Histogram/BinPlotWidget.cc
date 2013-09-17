@@ -338,10 +338,18 @@ void BinPlotWidget::channelRangeChanged( int minValue, int maxValue, bool allCha
 	}
 
 	if ( allChannels ){
-		Histogram::setChannelRangeDefault();
+		QList<int> histKeys = histogramMap.keys();
+		for ( QList<int>::iterator iter = histKeys.begin();
+				iter != histKeys.end(); iter++ ){
+			histogramMap[*iter]->setChannelRangeDefault();
+		}
 	}
 	else {
-		Histogram::setChannelRange( minValue, maxValue );
+		QList<int> histKeys = histogramMap.keys();
+		for ( QList<int>::iterator iter = histKeys.begin();
+						iter != histKeys.end(); iter++ ){
+			histogramMap[*iter]->setChannelRange( minValue, maxValue );
+		}
 	}
 	int selectedId = getSelectedId();
 	if ( histogramMap.contains( selectedId )){
@@ -358,7 +366,12 @@ void BinPlotWidget::binCountChanged( int count ){
 	if ( binCountWidgetMenu != NULL ){
 		binCountWidgetMenu->setBinCount( count );
 	}
-	Histogram::setBinCount( count );
+	QList<int> histKeys = histogramMap.keys();
+	for ( QList<int>::iterator iter = histKeys.begin();
+					iter != histKeys.end(); iter++ ){
+		histogramMap[*iter]->setBinCount( count );
+	}
+	//Histogram::setBinCount( count );
 	int selectedId = getSelectedId();
 	if ( histogramMap.contains(selectedId)){
 		histogramMap[selectedId]->compute();
@@ -590,7 +603,12 @@ void BinPlotWidget::zoomMenuFinished(){
 
 void BinPlotWidget::zoomPercentage( float minValue, float maxValue ){
 	if ( !isEmpty() ){
-		Histogram::setIntensityRange( minValue, maxValue );
+		
+		QList<int> histKeys = histogramMap.keys();
+		for ( QList<int>::iterator iter = histKeys.begin();
+						iter != histKeys.end(); iter++ ){
+			histogramMap[*iter]->setIntensityRange( minValue, maxValue );
+		}
 		int selectedId = getSelectedId();
 		if ( histogramMap.contains( selectedId )){
 			histogramMap[selectedId]->compute();
@@ -673,7 +691,11 @@ void BinPlotWidget::zoomRange( ){
 	if ( !isEmpty() ){
 		pair<double,double> bounds = this->getMinMaxValues();
 		if ( bounds.first < bounds.second ){
-			Histogram::setIntensityRange( bounds.first, bounds.second );
+			QList<int> histKeys = histogramMap.keys();
+			for ( QList<int>::iterator iter = histKeys.begin();
+							iter != histKeys.end(); iter++ ){
+				histogramMap[*iter]->setIntensityRange( bounds.first, bounds.second );
+			}
 			int id = getSelectedId();
 			if ( histogramMap.contains(id)){
 				histogramMap[id]->compute();
@@ -699,7 +721,11 @@ void BinPlotWidget::zoomRange( ){
 
 void BinPlotWidget::zoomNeutral(){
 	if ( !isEmpty() ){
-		Histogram::setIntensityRangeDefault();
+		QList<int> histKeys = histogramMap.keys();
+		for ( QList<int>::iterator iter = histKeys.begin();
+			iter != histKeys.end(); iter++ ){
+			histogramMap[*iter]->setIntensityRangeDefault();
+		}
 		int id = getSelectedId();
 		if ( histogramMap.contains( id )){
 			histogramMap[id]->compute();
@@ -1112,8 +1138,10 @@ Histogram* BinPlotWidget::findHistogramFor( int id ){
 	}
 	else {
 		histogram = new Histogram( this );
+
 		histogramMap.insert(id, histogram );
 	}
+	histogram->setImage( image );
 	return histogram;
 }
 
@@ -1146,7 +1174,6 @@ bool BinPlotWidget::setImage( const ImageTask::shCImFloat img ){
 	bool success = true;
 	if ( image != img && img.get() != NULL ){
 		image = img;
-		Histogram::setImage( image );
 		clearHistograms();
 		clearAll();
 		success = resetImage();
@@ -1203,6 +1230,7 @@ bool BinPlotWidget::resetImage(){
 	if ( image != NULL ){
 		if ( plotMode == FootPrintWidget::IMAGE_MODE ){
 			Histogram* histogram = findHistogramFor( IMAGE_ID );
+			histogram->setImage( image );
 			success = histogram->reset( );
 			if ( success ){
 				makeHistogram( IMAGE_ID, curveColor );
@@ -1214,6 +1242,7 @@ bool BinPlotWidget::resetImage(){
 			}
 		}
 		this->resetPlotTitle();
+
 	}
 	return success;
 }
@@ -1241,21 +1270,23 @@ void BinPlotWidget::makeHistogram( int id, const QColor& curveColor,
 		bool clearCurves ){
 	defineCurve( id, curveColor, clearCurves );
 	if ( isPrincipalHistogram( id ) ){
+		if ( histogramMap.contains(id)){
 
-		vector<float> xVector = histogramMap[id]->getXValues();
-		vector<float> yVector = histogramMap[id]->getYValues();
-		if ( fitWidget != NULL ){
-			fitWidget->setValues( id, xVector, yVector );
-		}
-		if ( toolTipPicker != NULL ){
-			this->toolTipPicker->setData( xVector, yVector );
-		}
-		if ( rangeControlWidget != NULL ){
-			pair<float,float> limits = histogramMap[id]->getDataRange();
-			rangeControlWidget->setDataLimits( limits.first, limits.second );
-			//We have to redraw the rectangle range marker if the histogram data has
-			//changed.
-			minMaxChanged();
+			vector<float> xVector = histogramMap[id]->getXValues();
+			vector<float> yVector = histogramMap[id]->getYValues();
+			if ( fitWidget != NULL ){
+				fitWidget->setValues( id, xVector, yVector );
+			}
+			if ( toolTipPicker != NULL ){
+				this->toolTipPicker->setData( xVector, yVector );
+			}
+			if ( rangeControlWidget != NULL ){
+				pair<float,float> limits = histogramMap[id]->getDataRange();
+				rangeControlWidget->setDataLimits( limits.first, limits.second );
+				//We have to redraw the rectangle range marker if the histogram data has
+				//changed.
+				minMaxChanged();
+			}
 		}
 	}
 	update();

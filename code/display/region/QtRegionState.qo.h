@@ -68,6 +68,7 @@ namespace casa {
 			void updateCoord( );
 			void updateStatistics(  );
 			void updateStatistics( std::list<std::tr1::shared_ptr<RegionInfo> > *stats );
+			void updateFrameInformation( int count );
 			void reloadStatistics( );
 			void updateCenters( std::list<std::tr1::shared_ptr<RegionInfo> > *centers );
 			void setCenterBackground(QString background);

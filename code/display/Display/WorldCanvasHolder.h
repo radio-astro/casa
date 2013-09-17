@@ -234,7 +234,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Bool isCSmaster(const DisplayData *dd) const {
 			return itsWorldCanvas->isCSmaster(dd);
 		}
-		void clearCSMasterSettings( WorldCanvas* wCanvas );
+		void clearCSMasterSettings( WorldCanvas* wCanvas, bool clearZoom = true );
 
 		// Was the passed DD the last CS master (or, if no DD passed, was
 		// there any CS master)?  For convenience of the DDs during the next

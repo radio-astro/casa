@@ -221,11 +221,15 @@ namespace casa {
 			}
 
 			int z_max = region_->numFrames( );
-			frame_min->setMaximum(z_max);
-			frame_max->setMaximum(z_max);
-			frame_max->setValue(z_max);
+			updateFrameInformation(z_max);
 
 			connect( categories, SIGNAL(currentChanged(int)), SLOT(category_change(int)) );
+		}
+
+		void QtRegionState::updateFrameInformation( int count ){
+			frame_min->setMaximum( count );
+			frame_max->setMaximum( count );
+			frame_max->setValue( count );
 		}
 
 		QtRegionState::~QtRegionState( ) {

@@ -34,18 +34,16 @@
 
 namespace casa {
 
-const int Histogram::ALL_CHANNELS = -1;
-const int Histogram::ALL_INTENSITIES = -1;
-ImageTask::shCImFloat Histogram::image = ImageTask::shCImFloat();
-int Histogram::channelMin = ALL_CHANNELS;
-int Histogram::channelMax = ALL_CHANNELS;
-float Histogram::intensityMin = ALL_INTENSITIES;
-float Histogram::intensityMax = ALL_INTENSITIES;
-int Histogram::binCount = 25;
-
-
 Histogram::Histogram( HeightSource* heightSource ):
-	histogramMaker(NULL), region(NULL){
+	histogramMaker(NULL), region(NULL),
+	ALL_CHANNELS(-1),
+	ALL_INTENSITIES( -1),
+	image(ImageTask::shCImFloat()),
+	channelMin( ALL_CHANNELS ),
+	channelMax( ALL_CHANNELS ),
+	intensityMin( ALL_INTENSITIES ),
+	intensityMax( ALL_INTENSITIES),
+	binCount( 25 ){
 	this->heightSource = heightSource;
 }
 
@@ -104,13 +102,11 @@ bool Histogram::compute( ){
 		}
 		catch( AipsError& error ){
 			success = false;
-			qDebug() << "Could not get histogram for count="<<binCount;
 			qDebug() << "Exception: "<<error.what();
 		}
 	}
 	else {
 		success = false;
-		qDebug() << "We should already have set an image to compute a histogram";
 	}
 	return success;
 }
@@ -118,12 +114,14 @@ bool Histogram::compute( ){
 ImageHistograms<Float>* Histogram::filterByChannels( const ImageTask::shCImFloat image ){
 	ImageHistograms<Float>* imageHistogram = NULL;
 	if ( channelMin != ALL_CHANNELS && channelMax != ALL_CHANNELS ){
+
 		//Create a slicer from the image
 		CoordinateSystem cSys = image->coordinates();
 		if ( cSys.hasSpectralAxis() ){
 			int spectralIndex = cSys.spectralCoordinateNumber();
 			IPosition imShape = image->shape();
 			int shapeCount = imShape.nelements();
+
 			IPosition startPos( shapeCount, 0);
 			IPosition endPos(imShape - 1);
 			IPosition stride( shapeCount, 1);
@@ -154,9 +152,7 @@ bool Histogram::reset(){
 	if ( image != NULL ){
 		if ( histogramMaker != NULL ){
 			delete histogramMaker;
-			//delete subImage;
 			histogramMaker = NULL;
-			//subImage = NULL;
 		}
 		try {
 			if ( region == NULL ){
@@ -166,22 +162,29 @@ bool Histogram::reset(){
 			else {
 				//Make the histogram based on the region
 				std::tr1::shared_ptr<SubImage<Float> > subImage(new SubImage<Float>( *image, *region ));
-				histogramMaker = filterByChannels( subImage );
+				if ( subImage.get() != NULL ){
+					histogramMaker = filterByChannels( subImage );
+				}
+				else {
+					success = false;
+				}
 			}
-			success = compute();
+			if ( success ){
+				success = compute();
+			}
 		}
 		catch( AipsError& error ){
 			success = false;
 			if ( heightSource != NULL ){
 				QString msg( "Could not make a histogram of the region: ");
 				msg.append( error.getMesg().c_str() );
+				qDebug() << "Could not make histogram message="<<msg;
 				heightSource->postMessage( msg );
 			}
 		}
 	}
 	else {
 		success = false;
-		qDebug() << "Cant reset histogram with a null image.";
 	}
 	return success;
 }

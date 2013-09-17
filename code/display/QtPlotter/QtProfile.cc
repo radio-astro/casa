@@ -41,6 +41,7 @@
 #include <display/QtPlotter/ColorSummaryWidget.qo.h>
 #include <display/QtPlotter/Util.h>
 #include <display/QtPlotter/LegendPreferences.qo.h>
+#include <display/QtPlotter/SmoothPreferences.qo.h>
 #include <display/QtPlotter/conversion/Converter.h>
 #include <display/QtPlotter/conversion/ConverterIntensity.h>
 
@@ -114,7 +115,7 @@ namespace casa {
 		//Remove the setPosition tab because duplicate functionality exists in the viewer.
 		functionTabs->removeTab(0);
 
-
+		initSmoothing();
 		current_region_id = NO_REGION_ID;
 
 		setBackgroundRole(QPalette::Dark);
@@ -144,11 +145,6 @@ namespace casa {
 		//User legend preferences
 		legendPreferencesDialog = new LegendPreferences( canvasHolder, this );
 
-		CoordinateSystem cSys = image->coordinates();
-		if ( cSys.hasSpectralAxis() ) {
-			SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
-			Converter::setSpectralCoordinate( spectralCoordinate );
-		}
 
 		// read the preferred ctype from casarc
 		initializeXAxisUnits();
@@ -162,8 +158,7 @@ namespace casa {
 		ctypeUnit = String(bottomAxisCType->currentText().toStdString());
 		getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
 		pixelCanvas -> setToolTipXUnit( xaxisUnit.c_str());
-
-
+		initializeSpectralProperties();
 
 		// get reference frame info for freq axis label
 		MFrequency::Types freqtype = determineRefFrame(img);
@@ -219,6 +214,7 @@ namespace casa {
 		connect(actionPreferences, SIGNAL(triggered()), this, SLOT(preferences()));
 		connect(actionColors, SIGNAL(triggered()), this, SLOT(curveColorPreferences()));
 		connect(actionLegend, SIGNAL(triggered()), this, SLOT(legendPreferences()));
+		connect(actionSmooth, SIGNAL(triggered()), this, SLOT(showSmoothingPreferences()));
 		connect(actionAnnotationText, SIGNAL(triggered()), pixelCanvas, SLOT(createAnnotationText()));
 		connect(actionRangeXSelection, SIGNAL(triggered()), pixelCanvas, SLOT(rangeSelectionMode()));
 		connect(actionChannelPositioning, SIGNAL(triggered()), pixelCanvas, SLOT(channelPositioningMode()));
@@ -272,6 +268,10 @@ namespace casa {
 		restrictTopAxisOptions( false, bottomAxisCType->currentText() );
 	}
 
+
+
+
+
 	void QtProfile::setUnitsText( String unitStr ) {
 		QString unitLabel("<font color='black'>["+QString(unitStr.c_str())+"]</font>");
 		specFitSettingsWidget->setUnits( unitLabel );
@@ -285,9 +285,13 @@ namespace casa {
 		CoordinateSystem cSys=img->coordinates();
 		Int specAx=cSys.findCoordinate(Coordinate::SPECTRAL);
 		if ( specAx < 0 ) {
-			QMessageBox::information( this, "No spectral axis...",
+			int tabIndex = Util::getTabularFrequencyAxisIndex( img );
+			if ( tabIndex < 0 ){
+				//See if it has a tabular axis with units frequency.
+				QMessageBox::information( this, "No spectral axis...",
 			                          "Sorry, could not find a spectral axis for this image...",
 			                          QMessageBox::Ok);
+			}
 			return MFrequency::DEFAULT;
 		}
 
@@ -446,6 +450,15 @@ namespace casa {
 		                        new QKeyEvent(QEvent::KeyPress, Qt::Key_Down, 0, 0));
 	}
 
+	void QtProfile::initSmoothing(){
+		smoothWidget = new SmoothPreferences( this );
+		connect( smoothWidget, SIGNAL(smoothingChanged()), this, SLOT(replotCurves()));
+	}
+
+	void QtProfile::showSmoothingPreferences(){
+		smoothWidget->show();
+	}
+
 	void QtProfile::initPreferences() {
 		profilePrefs = new QtProfilePrefs(this,pixelCanvas->getAutoScaleX(), pixelCanvas->getAutoScaleY(),
 		                                  pixelCanvas->getShowGrid(),stateMProf, stateRel, pixelCanvas->getShowToolTips(), showTopAxis,
@@ -500,6 +513,23 @@ namespace casa {
 		emit coordinateChange(coordinate);
 	}
 
+	MFrequency::Types QtProfile::getReferenceFrame() const {
+		QString refText = spcRef->currentText();
+		MFrequency::Types mFrequency = MFrequency::DEFAULT;
+		MFrequency::getType( mFrequency, refText.toStdString());
+		return mFrequency;
+	}
+
+	bool QtProfile::isSpectralAxis() const {
+		bool spectralAxis = true;
+		if ( image ){
+			const CoordinateSystem& cSys = image->coordinates();
+			if ( !cSys.hasSpectralAxis()){
+				spectralAxis = false;
+			}
+		}
+		return spectralAxis;
+	}
 
 	void QtProfile::changeFrame(const QString &text) {
 		spcRefFrame=String(text.toStdString());
@@ -545,6 +575,13 @@ namespace casa {
 			frameChanged( -1 );
 		}
 
+	}
+
+	void QtProfile::replotCurves(){
+		pixelCanvas->clearCurve();
+		if ( lastPX.nelements() > 0 ){
+			wcChanged(coordinate,lastPX, lastPY, lastWX, lastWY, UNKNPROF );
+		}
 	}
 
 	void QtProfile::closeEvent (QCloseEvent *) {
@@ -597,11 +634,7 @@ namespace casa {
 			updateAxisUnitCombo( pref_ctype, topAxisCType );
 		}
 
-		CoordinateSystem cSys = image->coordinates();
-		if ( cSys.hasSpectralAxis() ) {
-			SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
-			Converter::setSpectralCoordinate( spectralCoordinate );
-		}
+		initializeSpectralProperties();
 		initializeSolidAngle();
 
 		ctypeUnit = String(bottomAxisCType->currentText().toStdString());
@@ -643,6 +676,58 @@ namespace casa {
 		position = QString("");
 		profileStatus->showMessage(position);
 		pixelCanvas->clearCurve();
+	}
+
+	void QtProfile::initializeSpectralProperties(){
+		CoordinateSystem cSys = image->coordinates();
+		bool spectralAxis = cSys.hasSpectralAxis();
+		if ( spectralAxis ) {
+			SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
+			Converter::setSpectralCoordinate( spectralCoordinate );
+		}
+		else {
+			Int tabularCoordinateIndex = Util::getTabularFrequencyAxisIndex( image );
+			if ( tabularCoordinateIndex >= 0 ){
+				resetTabularConversion();
+			}
+		}
+		resetXUnits(spectralAxis);
+	}
+
+	void QtProfile::resetXUnits( bool spectralAxis ){
+		//Because we do not know the rest frequency we can not make valid conversions
+		//from frequency/wavelength <-> velocity.  Therefore, we remove all velocity
+		//units from the combos if we do not have a spectral axis..
+		QString oldUnit = bottomAxisCType->currentText();
+		bottomAxisCType->clear();
+		int unitCount = xUnitsList.size();
+		for ( int i = 0; i < unitCount; i++ ){
+			if ( xUnitsList[i].indexOf( "velocity") == -1 || spectralAxis ){
+				bottomAxisCType->addItem( xUnitsList[i]);
+			}
+		}
+		int oldUnitsIndex = bottomAxisCType->findText( oldUnit );
+		if ( oldUnitsIndex != -1 ){
+			bottomAxisCType->setCurrentIndex( oldUnitsIndex );
+		}
+	}
+
+	void QtProfile::resetTabularConversion(){
+
+		int tabularIndex = Util::getTabularFrequencyAxisIndex( image );
+		if ( tabularIndex >= 0 ){
+			CoordinateSystem& cSys = const_cast<CoordinateSystem&>(image->coordinates());
+			TabularCoordinate tabCoordinate = cSys.tabularCoordinate( tabularIndex );
+			Vector<Double> worlds = tabCoordinate.worldValues();
+			MFrequency::Types mFrequency = getReferenceFrame();
+			SpectralCoordinate spectralCoordinate( mFrequency, worlds );
+
+			//Put the new spectral coordinate into the image in place of the tabular
+			//coordinate.
+			//cSys.replaceCoordinate( spectralCoordinate, tabularIndex);
+			Converter::setSpectralCoordinate( spectralCoordinate );
+		}
+
 	}
 
 	void QtProfile::adjustPlotUnits() {
@@ -728,31 +813,7 @@ namespace casa {
 
 
 		if (ns < 1) return;
-
-		switch (ptype) {
-		case SINGPROF:
-			pixelCanvas->setTitle("Single Point Profile");
-			region = "Point";
-			break;
-		case RECTPROF:
-			pixelCanvas->setTitle("Rectangle Region Profile");
-			region = "Rect";
-			break;
-		case ELLPROF:
-			pixelCanvas->setTitle("Elliptical Region Profile");
-			region = "Ellipse";
-			break;
-		case POLYPROF:
-			pixelCanvas->setTitle("Polygon Region Profile");
-			region = "Poly";
-			break;
-		case UNKNPROF:
-			break;
-		default:
-			pixelCanvas->setTitle("");
-			region = "";
-		}
-		pixelCanvas->setWelcome("");
+		setTitle( ptype );
 
 		setPositionStatus( pxv,pyv,wxv,wyv );
 
@@ -840,44 +901,7 @@ namespace casa {
 		wcChanged( last_event_cs, last_event_px, last_event_py, last_event_wx, last_event_wy, UNKNPROF);
 	}
 
-	void QtProfile::changeAxisOld(String xa, String ya, String za, std::vector<int> ) {
-		//cout << "change axis=" << xa << " " << ya
-		//     << " " << za << " cube=" << cube << endl;
-		int cb = 0;
-		if (xa.contains("Decl") && ya.contains("Right"))
-			cb = -1;
-		if (xa.contains("Right") && ya.contains("Decl"))
-			cb = 1;
-		if (xa.contains("atitu") && ya.contains("ongitu"))
-			cb = -1;
-		if (xa.contains("ongitu") && ya.contains("atitu"))
-			cb = 1;
-		if (!za.contains("Freq"))
-			cb = 0;
-		//if (cb != cube) {
-		cube = cb;
-		xpos = "";
-		ypos = "";
-		position = QString("");
-		profileStatus->showMessage(position);
-		if (cube == 0)
-			pixelCanvas->setWelcome("No profile available "
-			                        "for the given data \nor\n"
-			                        "No profile available for the "
-			                        "display axes orientation"
-			                       );
-		else
-			pixelCanvas->setWelcome("assign a mouse button to\n"
-			                        "'crosshair' or 'rectangle' or 'polygon'\n"
-			                        "click/press+drag the assigned button on\n"
-			                        "the image to get a spectral profile");
 
-		pixelCanvas->clearCurve();
-		//}
-
-		//cout << "cube=" << cube << endl;
-
-	}
 	void QtProfile::changeAxis(String xa, String ya, String za, std::vector<int> ) {
 
 		// the logic is as follows:
@@ -918,7 +942,7 @@ namespace casa {
 			pixelCanvas->clearCurve();
 		} else {
 			if (cb != cube) {
-				// either the profiler was intialized
+				// either the profiler was initialized
 				// or the axes have changed
 				xpos = "";
 				ypos = "";
@@ -1016,7 +1040,19 @@ namespace casa {
 		CoordinateSystem cSys = img->coordinates();
 		Int spectralIndex = cSys.spectralAxisNumber();
 		IPosition imgShape = img->shape();
-		int channelCount = imgShape[spectralIndex];
+		int channelCount = -1;
+		if ( spectralIndex >= 0 ){
+			channelCount = imgShape[spectralIndex];
+		}
+		else {
+			Int tabularIndex = Util::getTabularFrequencyAxisIndex( img );
+			if ( tabularIndex >= 0 ){
+				channelCount = imgShape[tabularIndex];
+			}
+			else {
+				qDebug() << "Could not find a tabular or spectral frequency axis: "<<img->name().c_str();
+			}
+		}
 		return channelCount;
 	}
 
@@ -1058,8 +1094,12 @@ namespace casa {
 			//Of all the images we are overplotting, use the one with the maximum
 			//number of channels.
 			ImageAnalysis* maxChannelAnalysis = findImageWithMaximumChannels();
+			int tabularIndex = getFreqProfileTabularIndex( maxChannelAnalysis );
+			//We don't have to worry about smoothing here because we are only using
+			//the x-values.
 			bool ok=maxChannelAnalysis->getFreqProfile( lastWX, lastWY, xValues, yValues,
-						                             WORLD_COORDINATES, coordinateType, 0, 0, 0, cTypeUnit, spcRefFrame,
+						                             WORLD_COORDINATES, coordinateType, 0,
+						                             tabularIndex, 0, cTypeUnit, spcRefFrame,
 						                             (Int)QtProfile::MEAN, 0, cSysRval);
 			if ( ok ){
 				//Check to see if the top axis ordering is ascending in x
@@ -1160,6 +1200,15 @@ namespace casa {
 			(*over).append( overlay );
 		}
 		newOverplots = true;
+	}
+
+	void QtProfile::clearPlots(){
+		pixelCanvas->clearCurve();
+		delete analysis;
+		analysis = NULL;
+		delete over;
+		over = NULL;
+
 	}
 
 
@@ -1369,6 +1418,7 @@ namespace casa {
 
 		//Get Profile Flux density v/s coordinateType
 		bool ok = assignFrequencyProfile( wxv,wyv, coordinateType, xaxisUnit,z_xval,z_yval);
+
 		if ( !ok ) {
 			return;
 		}
@@ -1679,16 +1729,23 @@ namespace casa {
 
 
 		int i = pixelCanvas->getLineCount();
-		for (int k = 0; k < i; k++) {
-			ts << "\n";
-			ts << "# " << pixelCanvas->getCurveName(k) << "\n";
-			CurveData data = pixelCanvas->getCurveData(k);
-			int j = data.size() / 2;
-			for (int m = 0; m < j; m++) {
-				ts << data[2 * m] << " " << scaleFactor*data[2 * m + 1] << "\n";
-			}
+		for (int k = 1; k < i; k++) {
+			outputCurve( k, ts, scaleFactor );
+		}
+		if ( i > 0 ){
+			outputCurve( 0, ts, scaleFactor );
 		}
 		return true;
+	}
+
+	void QtProfile::outputCurve( int k, QTextStream& ts, Float scaleFactor ){
+		ts << "\n";
+		ts << "# " << pixelCanvas->getCurveName(k) << "\n";
+		CurveData data = pixelCanvas->getCurveData(k);
+		int j = data.size() / 2;
+		for (int m = 0; m < j; m++) {
+			ts << data[2 * m] << " " << scaleFactor*data[2 * m + 1] << "\n";
+		}
 	}
 
 	void QtProfile::messageFromProfile(QString &msg) {
@@ -1898,19 +1955,59 @@ namespace casa {
 	}
 
 
+	void QtProfile::setTitle(const ProfileType ptype){
+		QString smoothDescription = smoothWidget->toString();
+		switch (ptype) {
+			case SINGPROF:
+				pixelCanvas->setTitle("Single Point Profile"+smoothDescription);
+				region = "Point";
+				break;
+			case RECTPROF:
+				pixelCanvas->setTitle("Rectangle Region Profile"+smoothDescription);
+				region = "Rect";
+				break;
+			case ELLPROF:
+				pixelCanvas->setTitle("Elliptical Region Profile"+smoothDescription);
+				region = "Ellipse";
+				break;
+			case POLYPROF:
+				pixelCanvas->setTitle("Polygon Region Profile"+smoothDescription);
+				region = "Poly";
+				break;
+			case UNKNPROF:
+			{
+				//In this case, we will not change the first part of the title,
+				//but, we will update any smoothing.
+				QString previousTitle = pixelCanvas->getTitle();
+				const QString PROFILE( "Profile");
+				int profileIndex = previousTitle.indexOf( PROFILE );
+				if ( profileIndex >= 0 ){
+					QString baseTitle = previousTitle.left( profileIndex + PROFILE.size());
+					baseTitle = baseTitle + smoothDescription;
+					pixelCanvas->setTitle(baseTitle );
+				}
+			}
+				break;
+			default:
+				pixelCanvas->setTitle("");
+				region = "";
+		}
+		pixelCanvas->setWelcome("");
+	}
 
 	void QtProfile::setTitle( const QString& shape ) {
+		QString smoothDescription = smoothWidget->toString();
 		if ( shape == "point" ) {
-			pixelCanvas->setTitle("Single Point Profile");
+			pixelCanvas->setTitle("Single Point Profile"+smoothDescription);
 			region = "Point";
 		} else if ( shape == "rectangle" ) {
-			pixelCanvas->setTitle("Rectangle Region Profile");
+			pixelCanvas->setTitle("Rectangle Region Profile"+smoothDescription);
 			region = "Rect";
 		} else if ( shape == "ellipse" ) {
-			pixelCanvas->setTitle("Elliptical Region Profile");
+			pixelCanvas->setTitle("Elliptical Region Profile"+smoothDescription);
 			region = "Ellipse";
 		} else if ( shape == "polygon" ) {
-			pixelCanvas->setTitle("Polygon Region Profile");
+			pixelCanvas->setTitle("Polygon Region Profile"+smoothDescription);
 			region = "Poly";
 		} else {
 			pixelCanvas->setTitle("");
@@ -2032,6 +2129,10 @@ namespace casa {
 		                               xytype, specaxis, whichStokes, whichTabular, whichLinear, xunits, specFrame,
 		                               combineType, whichQuality, restValue,
 		                               beamChannel);
+
+		//Note:  we don't have to worry about applying smoothing here because the callers
+		//of this method currently do it.
+
 		if ( itsPlotType == QtProfile::PFLUX ) {
 			//Post a warning that flux was calculated using a given channel
 			//and the resulting calculation was only an approximation.
@@ -2043,41 +2144,40 @@ namespace casa {
 	}
 
 
+
 	bool QtProfile::assignFrequencyProfile( const Vector<double> &wxv, const Vector<double> &wyv,
 	                                        const String& coordinateType, const String& xaxisUnit,
 	                                        Vector<Float> &z_xval, Vector<Float> &z_yval) {
-		Bool ok = False;
+
+		Int whichTabular = getFreqProfileTabularIndex( analysis );
+		Bool ok = false;
 
 		switch (itsPlotType) {
 		case QtProfile::PMEAN:
 			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-			                             WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-			                             (Int)QtProfile::MEAN, 0, cSysRval);
+					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0, xaxisUnit, spcRefFrame,
+					(Int)QtProfile::MEAN, 0, cSysRval);
 			break;
 		case QtProfile::PMEDIAN:
 			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-			                             WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-			                             (Int)QtProfile::MEDIAN, 0, cSysRval);
+					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0, xaxisUnit, spcRefFrame,
+					(Int)QtProfile::MEDIAN, 0, cSysRval);
 			break;
 		case QtProfile::PSUM:
 			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-			                             WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-			                             (Int)QtProfile::SUM, 0, cSysRval );
+					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0, xaxisUnit, spcRefFrame,
+					(Int)QtProfile::SUM, 0, cSysRval );
 			break;
 		case QtProfile::PFLUX:
 			ok=getFrequencyProfileWrapper( analysis, wxv, wyv, z_xval, z_yval,
-			                               WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-			                               (Int)QtProfile::FLUX, 0, cSysRval);
+					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0, xaxisUnit, spcRefFrame,
+					(Int)QtProfile::FLUX, 0, cSysRval);
 			break;
-			//case QtProfile::PVRMSE:
-			//	 ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-			//			 WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-			//			 (Int)QtProfile::RMSE, 0);
-			//	 break;
+
 		default:
 			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-			                             WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-			                             (Int)QtProfile::MEAN, 0, cSysRval);
+					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0, xaxisUnit, spcRefFrame,
+					(Int)QtProfile::MEAN, 0, cSysRval);
 			break;
 		}
 
@@ -2085,13 +2185,30 @@ namespace casa {
 			// change to notify user of error...
 			*itsLog << LogIO::WARN << "Can not generate the frequency profile!" << LogIO::POST;
 		}
+		else {
+			//Apply smoothing to the vectors we get back.
+			if ( smoothWidget != NULL ){
+				z_yval = smoothWidget->applySmoothing( z_yval );
+			}
+		}
 		return ok;
+	}
+
+	int QtProfile::getFreqProfileTabularIndex(ImageAnalysis* analysis ) {
+		Int whichTabular = -1;
+		std::tr1::shared_ptr<const ImageInterface<Float> > img = analysis->getImage();
+		const CoordinateSystem& cSys = img->coordinates();
+		if ( !cSys.hasSpectralAxis() ){
+			whichTabular = Util::getTabularFrequencyAxisIndex( img );
+		}
+		return whichTabular;
 	}
 
 	bool QtProfile::setErrorPlotting( const Vector<double> &wxv, const Vector<double> &wyv ) {
 		bool ok = true;
 		// get the coordinate system
 		CoordinateSystem cSys = image->coordinates();
+		int tabularIndex = getFreqProfileTabularIndex(analysis);
 		switch (itsErrorType) {
 		case QtProfile::PNOERROR:
 			if (z_eval.size()> 0)
@@ -2117,7 +2234,7 @@ namespace casa {
 					//		 break;
 				default:
 					ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
-					                             WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+					                             WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
 					                             (Int)QtProfile::RMSE, 0, cSysRval);
 					break;
 				}
@@ -2132,7 +2249,7 @@ namespace casa {
 				switch ( itsPlotType ) {
 				case QtProfile::PMEAN:
 					ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
-					                             WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+					                             WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
 					                             (Int)QtProfile::NSQRTSUM, 1, cSysRval);
 					break;
 				case QtProfile::PMEDIAN:
@@ -2142,12 +2259,12 @@ namespace casa {
 					break;
 				case QtProfile::PSUM:
 					ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
-					                             WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+					                             WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
 					                             (Int)QtProfile::SQRTSUM, 1, cSysRval);
 					break;
 				case QtProfile::PFLUX:
 					ok=getFrequencyProfileWrapper( analysis, wxv, wyv, z_xval, z_eval,
-					                               WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+					                               WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
 					                               (Int)QtProfile::EFLUX, 1, cSysRval);
 					break;
 				default:
@@ -2290,49 +2407,54 @@ namespace casa {
 	}
 
 
-
 	void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv,
 			const Vector<double> &wyv, Int ordersOfM ) {
 		bool ok = true;
+
 		if ( over != NULL ) {
 			QListIterator<OverplotAnalysis> i(*over);
 			while (i.hasNext() && stateMProf) {
 				OverplotAnalysis overplot = i.next();
 				QString ky = overplot.first;
 				ImageAnalysis* ana = overplot.second;
+				int tabularIndex = getFreqProfileTabularIndex( ana );
 				Vector<Float> xval(100);
 				Vector<Float> yval(100);
 
 				switch (itsPlotType) {
 				case QtProfile::PMEAN:
 					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
-					                        WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+					                        WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
 					                        (Int)QtProfile::MEAN, 0);
 					break;
 				case QtProfile::PMEDIAN:
 					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
-					                        WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+					                        WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
 					                        (Int)QtProfile::MEDIAN, 0);
 					break;
 				case QtProfile::PSUM:
 					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
-					                        WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+					                        WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
 					                        (Int)QtProfile::PSUM, 0);
 					break;
 				case QtProfile::PFLUX:
 					ok=getFrequencyProfileWrapper( ana, wxv, wyv, xval, yval,
-					                               WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+					                               WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
 					                               (Int)QtProfile::PFLUX, 0, "");
 					break;
 
 				default:
 					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
-					                        WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
+					                        WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
 					                        (Int)QtProfile::MEAN, 0);
 					break;
 				}
 
 				if (ok) {
+					//Apply smoothing to the vectors we get back.
+					if ( smoothWidget != NULL ){
+						yval = smoothWidget->applySmoothing( yval );
+					}
 					if(ordersOfM!=0) {
 						// correct display y axis values
 						for (uInt i = 0; i < yval.size(); i++) {
@@ -2420,8 +2542,11 @@ namespace casa {
 			String coordinateType;
 			String cTypeUnit;
 			getcoordTypeUnit(xUnits, coordinateType, cTypeUnit);
+			int tabularIndex = getFreqProfileTabularIndex( analysis );
+			//We don't have to worry about smoothing here because we are only
+			//using the x-values.
 			*ok=analysis->getFreqProfile( lastWX, lastWY, xval, yval,
-					WORLD_COORDINATES, coordinateType, 0, 0, 0, cTypeUnit, spcRefFrame,
+					WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, cTypeUnit, spcRefFrame,
 							(Int)QtProfile::MEAN, 0);
 			if ( *ok ){
 				unitPerChannel = qAbs(xval[0] - xval[1]) / z_xval.size();
@@ -2513,7 +2638,15 @@ namespace casa {
 			}
 			if ( !restrictOptions ||
 				channelVisible || freqVisible || velocityVisible || waveVisible ){
-				topAxisCType->addItem( xUnitsList[i]);
+				//One last check, make sure the bottom axis already contains the unit.
+				//In the case of using a tabular spectral index, the rest frequency may not
+				//be available.  In such a case, we can not make valid velocity conversions
+				//so velocity units are removed from the bottom axis, and should not be supported
+				//on the top axis either.
+				int unitIndex = bottomAxisCType->findText( xUnitsList[i]);
+				if ( unitIndex >= 0 ){
+					topAxisCType->addItem( xUnitsList[i]);
+				}
 			}
 		}
 	}

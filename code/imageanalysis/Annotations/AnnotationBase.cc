@@ -105,10 +105,6 @@ AnnotationBase::AnnotationBase(
 	String preamble = _class + ": " + String(__FUNCTION__) + ": ";
 	if (!csys.hasDirectionCoordinate()) {
 		cout << __FUNCTION__ << endl;
-		cout << "*** ncoords " << csys.nCoordinates() << endl;
-		cout << "*** npixelaxis " << csys.nPixelAxes() << endl;
-		cout << __FUNCTION__ << endl;
-
 		throw AipsError(
 			preamble + "Coordinate system has no direction coordinate"
 		);
@@ -1011,7 +1007,7 @@ MDirection AnnotationBase::_directionFromQuantities(
 	try {
 		return MDirection(d0, d1, _directionRefFrame);
 	}
-	catch (AipsError x) {
+	catch (const AipsError& x) {
 		throw AipsError(
 			_class + "::" + String(__FUNCTION__) + ": Error converting direction ("
 			+ value + ") to MDirection: " + x.getMesg()
@@ -1054,8 +1050,8 @@ void AnnotationBase::_checkAndConvertDirections(
 			}
 		}
 	}
-	// check this now because if converting from world to pixel fails when regions are being formed,
-	// it will wreak havoc
+	// check this now because if converting from world to pixel fails when
+	// regions are being formed, it will wreak havoc
 	_testConvertToPixel();
 }
 

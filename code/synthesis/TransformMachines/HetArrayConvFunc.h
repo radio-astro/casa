@@ -66,17 +66,18 @@ namespace casa{
     HetArrayConvFunc(const RecordInterface& rec, Bool calcFluxscale);
     virtual ~HetArrayConvFunc();
 
-    //Returns the convfunctions in the Cubes...the rowMap maps the vb.row 
-    //to the  plane of the convfunc appropriate 
+    //Returns the convfunctions in the Arrays...the rowMap maps the vb.row 
+    //to the  plane of the convfunc appropriate...chanMap and polMap similarly 
 
     virtual void findConvFunction(const ImageInterface<Complex>& iimage, 
-				  const VisBuffer& vb,
-				  const Int& convSampling,
-				  Cube<Complex>& convFunc, 
-				  Cube<Complex>& weightConvFunc, 
-				  Vector<Int>& convsize,
-				  Vector<Int>& convSupport,
-				  Vector<Int>& rowMap);
+				    const VisBuffer& vb,
+				    const Int& convSampling,
+				  const Vector<Double>& visFreq,
+				    Array<Complex>& convFunc,
+				    Array<Complex>& weightConvFunc,
+				    Vector<Int>& convsize,
+				    Vector<Int>& convSupport,
+				    Vector<Int>& polMap, Vector<Int>& chanMap, Vector<Int>& rowMap);
 
     virtual ImageInterface<Float>&  getFluxScaleImage();
     // slice flux scale images 
@@ -89,7 +90,9 @@ namespace casa{
     //----------------------------------------------
 
     private:
-   void applyGradientToYLine(const Int iy, Complex*& convFunctions, Complex*& convWeights, const Double pixXdir, const Double pixYdir, Int convSize, const Int ndishpair);
+   void applyGradientToYLine(const Int iy, Complex*& convFunctions, 
+			     Complex*& convWeights, const Double pixXdir, const Double pixYdir, 
+			     Int convSize, const Int ndishpair, const Int nchan, const Int nPol);
       Int factorial(Int n);
       // the return value are -1 or False for not in cache yet but pointing direction 
       //seems to be inside image
@@ -109,14 +112,14 @@ namespace casa{
       Block<CountedPtr<PBMathInterface> > antMath_p;
       Int msId_p;
       Int actualConvIndex_p;
-      Cube<Complex> convFunc_p;
-      Cube<Complex> weightConvFunc_p;
-      Cube<Complex> convSave_p;
-      Cube<Complex> weightSave_p;
+      Array<Complex> convFunc_p;
+      Array<Complex> weightConvFunc_p;
+      Array<Complex> convSave_p;
+      Array<Complex> weightSave_p;
       Int convSize_p; 
       Vector<Int> convSupport_p;
-      Block <CountedPtr<Cube<Complex> > > convFunctions_p;
-      Block <CountedPtr<Cube<Complex> > > convWeights_p;
+      Block <CountedPtr<Array<Complex> > > convFunctions_p;
+      Block <CountedPtr<Array<Complex> > > convWeights_p;
       Block<CountedPtr<Vector<Int> > > convSizes_p;
       Block <CountedPtr<Vector<Int> > > convSupportBlock_p;
 

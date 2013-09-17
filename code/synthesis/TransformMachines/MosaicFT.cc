@@ -270,7 +270,11 @@ void MosaicFT::findConvFunction(const ImageInterface<Complex>& iimage,
     pbConvFunc_p=new SimplePBConvFunc();
   if(sj_p)
     pbConvFunc_p->setSkyJones(sj_p);
-  pbConvFunc_p->findConvFunction(iimage, vb, convSampling, convFunc, weightConvFunc_p, convSizePlanes_p, convSupportPlanes_p, convRowMap_p);
+  pbConvFunc_p->findConvFunction(iimage, vb, convSampling, interpVisFreq_p, convFunc, weightConvFunc_p, convSizePlanes_p, convSupportPlanes_p,
+		  convPolMap_p, convChanMap_p, convRowMap_p);
+
+
+  // cerr << "MAX of convFunc " << max(abs(convFunc)) << endl;
   //For now only use one size and support
   if(convSizePlanes_p.nelements() ==0)
     convSize=0;
@@ -280,7 +284,7 @@ void MosaicFT::findConvFunction(const ImageInterface<Complex>& iimage,
     convSupport=0;
   else
     convSupport=max(convSupportPlanes_p);
- 				 
+  				 
 }
 
 void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
@@ -292,12 +296,13 @@ void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
   
   //  if(convSize==0) {
     init();
-    findConvFunction(*image, vb);
+    
     //  }
   
   // Initialize the maps for polarization and channel. These maps
   // translate visibility indices into image indices
   initMaps(vb);
+  findConvFunction(*image, vb);
   prepGridForDegrid();
    
 }
@@ -382,13 +387,13 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
   
   //  if(convSize==0) {
     init();
-    findConvFunction(*image, vb);
+    
     //  }
   
   // Initialize the maps for polarization and channel. These maps
   // translate visibility indices into image indices
   initMaps(vb);
-  
+  findConvFunction(*image, vb);
   if((image->shape().product())>cachesize) {
     isTiled=True;
   }
@@ -618,8 +623,11 @@ Array<Complex>* MosaicFT::getDataPointer(const IPosition& centerLoc2D,
 #define NEED_UNDERSCORES
 #if defined(NEED_UNDERSCORES)
 #define gmoss gmoss_
+#define gmoss2 gmoss2_
 #define gmosd gmosd_
+#define gmosd2 gmosd2_
 #define dmos dmos_
+#define dmos2 dmos2_
 #endif
 
 extern "C" { 
@@ -655,38 +663,102 @@ extern "C" {
 	      Int*,
               Int*,
               Int*);
+  void gmosd2(const Double*,
+  	      Double*,
+  	      const Complex*,
+  	      Int*,
+  	      Int*,
+  	      Int*,
+  	      const Int*,
+  	      const Int*,
+  	      const Float*,
+  	      Int*,
+  	      Int*,
+  	      Double*,
+  	      Double*,
+  	      DComplex*,
+  	      Int*,
+  	      Int*,
+  	      Int *,
+  	      Int *,
+  	      const Double*,
+  	      const Double*,
+  	      Int*,
+  	      Int*,
+  	      Int*,
+  	      const Complex*,
+  	      Int*,
+  	      Int*,
+  	      Double*,
+  	      DComplex*,
+  	      Complex*,
+  	      Int*,
+  	      Int*,
+  	      Int*,Int*, Int*, Int*, Int*);
   void gmoss(const Double*,
-	      Double*,
-	      const Complex*,
-	      Int*,
-	      Int*,
-	      Int*,
-	      const Int*,
-	      const Int*,
-	      const Float*,
-	      Int*,
-	      Int*,
-	      Double*,
-	      Double*,
-	      Complex*,
-	      Int*,
-	      Int*,
-	      Int *,
-	      Int *,
-	      const Double*,
-	      const Double*,
-	      Int*,
-	      Int*,
-	      Int*,
-	      const Complex*,
-	      Int*,
-	      Int*,
-	      Double*,
-	      Complex*,
-	      Complex*,
-	      Int*,
-              Int*,
-              Int*);
+    	      Double*,
+    	      const Complex*,
+    	      Int*,
+    	      Int*,
+    	      Int*,
+    	      const Int*,
+    	      const Int*,
+    	      const Float*,
+    	      Int*,
+    	      Int*,
+    	      Double*,
+    	      Double*,
+    	      Complex*,
+    	      Int*,
+    	      Int*,
+    	      Int *,
+    	      Int *,
+    	      const Double*,
+    	      const Double*,
+    	      Int*,
+    	      Int*,
+    	      Int*,
+    	      const Complex*,
+    	      Int*,
+    	      Int*,
+    	      Double*,
+    	      Complex*,
+    	      Complex*,
+    	      Int*,
+    	      Int*,
+    	      Int*);
+  void gmoss2(const Double*,
+  	      Double*,
+  	      const Complex*,
+  	      Int*,
+  	      Int*,
+  	      Int*,
+  	      const Int*,
+  	      const Int*,
+  	      const Float*,
+  	      Int*, //10
+  	      Int*,
+  	      Double*,
+  	      Double*,
+  	      Complex*,
+  	      Int*,
+  	      Int*,
+  	      Int *,
+  	      Int *,
+  	      const Double*,
+  	      const Double*, //20
+  	      Int*,
+  	      Int*,
+  	      Int*,
+  	      const Complex*,
+  	      Int*,
+  	      Int*,
+  	      Double*,
+  	      Complex*,
+  	      Complex*,
+  	      Int*, //30
+  	      Int*,
+  	      Int*, Int*, Int*, Int*, Int*);
   void dmos(const Double*,
 	      Double*,
 	      Complex*,
@@ -696,7 +768,7 @@ extern "C" {
 	      const Int*,
 	      Int*,
 	      Int*,
-	      Double*,
+	    Double*, //10
 	      Double*,
 	      const Complex*,
 	      Int*,
@@ -706,13 +778,40 @@ extern "C" {
 	      const Double*,
 	      const Double*,
 	      Int*,
-	      Int*,
+	    Int*,//20
 	      Int*,
 	      const Complex*,
 	      Int*,
 	      Int*,
               Int*,
               Int*);
+
+  void dmos2(const Double*,
+  	      Double*,
+  	      Complex*,
+  	      Int*,
+  	      Int*,
+  	      const Int*,
+  	      const Int*,
+  	      Int*,
+  	      Int*,
+  	      Double*,
+  	      Double*,
+  	      const Complex*,
+  	      Int*,
+  	      Int*,
+  	      Int *,
+  	      Int *,
+  	      const Double*,
+  	      const Double*,
+  	      Int*,
+  	      Int*,
+  	      Int*,
+  	      const Complex*,
+  	      Int*,
+  	      Int*,
+  	      Int*,
+  	      Int*, Int*, Int*, Int*, Int*);
 }
 void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 		   FTMachine::Type type)
@@ -735,15 +834,13 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
     chanMap=multiChanMap_p[vb.spectralWindow()];
   }
 
+  //cerr << "CHANMAP " << chanMap << endl;
   //No point in reading data if its not matching in frequency
   if(max(chanMap)==-1)
     return;
 
 
-  findConvFunction(*image, vb);
-  //nothing to grid here as the pointing resulted in a zero support convfunc
-  if(convSupport <= 0)
-    return;
+ 
 
   const Matrix<Float> *imagingweight;
   imagingweight=&(vb.imagingWeight());
@@ -755,14 +852,19 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   Cube<Int> flags;
   Matrix<Float> elWeight;
   interpolateFrequencyTogrid(vb, *imagingweight,data, flags, elWeight, type);
-
+  
+  // This needs to be after the interp to get the interpolated channels
+  findConvFunction(*image, vb);
+  //nothing to grid here as the pointing resulted in a zero support convfunc
+  if(convSupport <= 0)
+    return;
 
   Bool iswgtCopy;
   const Float *wgtStorage;
   wgtStorage=elWeight.getStorage(iswgtCopy);
 
 
-  Int nConvFunc=convFunc.shape()(2);
+  
 
   Bool isCopy;
   const Complex *datStorage=0;
@@ -832,18 +934,21 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   Bool del;
   //    IPosition s(flags.shape());
   const IPosition& fs=flags.shape();
+  //cerr << "flags shape " << fs << endl;
   std::vector<Int>s(fs.begin(), fs.end());
   Bool uvwcopy; 
   const Double *uvwstor=uvw.getStorage(uvwcopy);
   Bool gridcopy;
   Bool convcopy;
   const Complex *convstor=convFunc.getStorage(convcopy);
- 
+  Int nPolConv=convFunc.shape()[2];
+  Int nChanConv=convFunc.shape()[3];
+  Int nConvFunc=convFunc.shape()(4);
   Bool weightcopy;
   if(useDoubleGrid_p) {
     DComplex *gridstor=griddedData2.getStorage(gridcopy);
     DComplex *gridwgtstor=griddedWeight2.getStorage(weightcopy);
-    gmosd(uvwstor,
+    gmosd2(uvwstor,
 	  dphase.getStorage(del),
 	   datStorage,
 	   &s[0],
@@ -874,7 +979,9 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	   weightConvFunc_p.getStorage(del),
 	   &doWeightGridding,
 	   convRowMap_p.getStorage(del),
-	   &nConvFunc
+	   convChanMap_p.getStorage(del),
+	   convPolMap_p.getStorage(del),
+	   &nConvFunc, &nChanConv, &nPolConv
 	   );
     
     griddedData2.putStorage(gridstor, gridcopy);
@@ -882,9 +989,11 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
     
   }
   else {
+    //cerr << "maps "  << convChanMap_p << "   " << chanMap  << endl;
+    //cerr << "nchan " << nchan << "  nchanconv " << nChanConv << endl;
     Complex *gridstor=griddedData.getStorage(gridcopy);
     Complex *gridwgtstor=griddedWeight.getStorage(weightcopy);
-    gmoss(uvwstor,
+    gmoss2(uvwstor,
 	   dphase.getStorage(del),
 	   datStorage,
 	   &s[0],
@@ -893,7 +1002,7 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	   flags.getStorage(del),
 	   rowFlags.getStorage(del),
 	   wgtStorage,
-	   &s[2],
+	   &s[2], //10
 	   &row,
 	   uvScale.getStorage(del),
 	   uvOffset.getStorage(del),
@@ -913,9 +1022,10 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	   sumWeight.getStorage(del),
 	   gridwgtstor,
 	   weightConvFunc_p.getStorage(del),
-	   &doWeightGridding,
-	   convRowMap_p.getStorage(del),
-	   &nConvFunc
+	   &doWeightGridding, //30
+	   convRowMap_p.getStorage(del),convChanMap_p.getStorage(del),
+	   convPolMap_p.getStorage(del),
+	   &nConvFunc, &nChanConv, &nPolConv
 	   );
    
     griddedData.putStorage(gridstor, gridcopy);
@@ -937,10 +1047,7 @@ void MosaicFT::get(VisBuffer& vb, Int row)
 {
   
 
-  findConvFunction(*image, vb);
-  // no valid pointing in this buffer
-  if(convSupport <= 0)
-    return;
+  
   // If row is -1 then we pass through all rows
   Int startRow, endRow, nRow;
   if (row==-1) {
@@ -956,7 +1063,7 @@ void MosaicFT::get(VisBuffer& vb, Int row)
   }
   
 
-  Int nConvFunc=convFunc.shape()(2);
+ 
 
 
   // Get the uvws in a form that Fortran can use
@@ -996,7 +1103,11 @@ void MosaicFT::get(VisBuffer& vb, Int row)
   Cube<Complex> data;
   Cube<Int> flags;
   getInterpolateArrays(vb, data, flags);
-
+  //Need to get interpolated freqs
+  findConvFunction(*image, vb);
+  // no valid pointing in this buffer
+  if(convSupport <= 0)
+    return;
   Complex *datStorage;
   Bool isCopy;
   datStorage=data.getStorage(isCopy);
@@ -1010,7 +1121,9 @@ void MosaicFT::get(VisBuffer& vb, Int row)
       if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
     }
   }
-  
+  Int nPolConv=convFunc.shape()[2];
+  Int nChanConv=convFunc.shape()[3];
+  Int nConvFunc=convFunc.shape()(4);
   if(isTiled) {
     Double invLambdaC=vb.frequency()(0)/C::c;
     Vector<Double> uvLambda(2);
@@ -1045,7 +1158,7 @@ void MosaicFT::get(VisBuffer& vb, Int row)
       const IPosition& fs=data.shape();
       std::vector<Int> s(fs.begin(), fs.end());
 
-      dmos(uvw.getStorage(del),
+      dmos2(uvw.getStorage(del),
 	     dphase.getStorage(del),
 	     datStorage,
 	     &s[0],
@@ -1069,8 +1182,9 @@ void MosaicFT::get(VisBuffer& vb, Int row)
 	     convFunc.getStorage(del),
 	     chanMap.getStorage(del),
 	     polMap.getStorage(del),
-	     convRowMap_p.getStorage(del),
-	     &nConvFunc);
+	     convRowMap_p.getStorage(del),convChanMap_p.getStorage(del),
+	     convPolMap_p.getStorage(del),
+	     &nConvFunc, &nChanConv, &nPolConv);
       }
     }
   }
@@ -1081,11 +1195,15 @@ void MosaicFT::get(VisBuffer& vb, Int row)
      Bool gridcopy;
      const Complex *gridstor=griddedData.getStorage(gridcopy);
      Bool convcopy;
-     const Complex *convstor=convFunc.getStorage(convcopy);
+     ////Degridding needs the conjugate ...doing it here
+     Array<Complex> conjConvFunc=conj(convFunc);
+     const Complex *convstor=conjConvFunc.getStorage(convcopy);
      //     IPosition s(data.shape());
      const IPosition& fs=data.shape();
      std::vector<Int> s(fs.begin(), fs.end());
-     dmos(uvwstor,
+     //cerr << "maps "  << convChanMap_p << "   " << chanMap  << endl;
+     //cerr << "nchan " << nchan << "  nchanconv " << nChanConv << " npolconv " << nPolConv << " nRowConv " << nConvFunc << endl;
+     dmos2(uvwstor,
 	    dphase.getStorage(del),
 	    datStorage,
 	    &s[0],
@@ -1094,7 +1212,7 @@ void MosaicFT::get(VisBuffer& vb, Int row)
 	    rowFlags.getStorage(del),
 	    &s[2],
 	    &row,
-	    uvScale.getStorage(del),
+	   uvScale.getStorage(del), //10
 	    uvOffset.getStorage(del),
 	    gridstor,
 	    &nx,
@@ -1104,14 +1222,15 @@ void MosaicFT::get(VisBuffer& vb, Int row)
 	    interpVisFreq_p.getStorage(del),
 	    &C::c,
 	    &convSupport,
-	    &convSize,
+	   &convSize,   //20
 	    &convSampling,
 	    convstor,
 	    chanMap.getStorage(del),
 	    polMap.getStorage(del),
-	    convRowMap_p.getStorage(del),
-	    &nConvFunc);
-     data.putStorage(datStorage, isCopy);
+	    convRowMap_p.getStorage(del), convChanMap_p.getStorage(del),
+	    convPolMap_p.getStorage(del),
+	    &nConvFunc, &nChanConv, &nPolConv);
+      data.putStorage(datStorage, isCopy);
      uvw.freeStorage(uvwstor, uvwcopy);
      griddedData.freeStorage(gridstor, gridcopy);
      convFunc.freeStorage(convstor, convcopy);

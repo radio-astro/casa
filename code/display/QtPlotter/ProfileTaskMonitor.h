@@ -28,6 +28,7 @@
 #include <QString>
 #include <casa/BasicSL/String.h>
 #include <casa/Arrays/Vector.h>
+#include <measures/Measures/MFrequency.h>
 
 #include <tr1/memory>
 
@@ -55,7 +56,7 @@ namespace casa {
 		virtual void plotMainCurve() = 0;
 		virtual std::tr1::shared_ptr<const ImageInterface<Float> > getImage( const QString& imageName = "") const = 0;
 		virtual const void getPixelBounds( Vector<double>& xPixels, Vector<double>& yPixels) const = 0;
-
+		virtual MFrequency::Types getReferenceFrame() const = 0;
 		//Specific to Moments
 		virtual void persist( const QString& key, const QString& value ) = 0;
 		virtual QString read( const QString & key ) const = 0;

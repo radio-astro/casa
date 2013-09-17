@@ -68,7 +68,7 @@ namespace casa {
 		sprintf(result, (suffix ? "%s_%s" : "%s"), defaultname.c_str( ), suffix);
 	    }
 	    if ( suffix ) delete [] suffix;
-		cout << "PROXY-SUFFIX: " << result << endl;
+		//cout << "PROXY-SUFFIX: " << result << endl;
 	    return result;
 	}
 
@@ -108,7 +108,7 @@ namespace casa {
 
 	address::~address( ) {
         casa::DBusSession &session = casa::DBusSession::instance( );
-#if defined(NEWDBUS)
+#if defined(DBUS_CPP)
 		session.connection( ).release_name(name_.c_str( ));
 #endif
 	}

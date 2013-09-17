@@ -717,7 +717,54 @@ int main () {
 				);
 			}
 		}
-	} catch (AipsError x) {
+		{
+			log << LogIO::NORMAL
+				<< "Test non-square pixels"
+				<< LogIO::POST;
+			Quantity centerx(50, "pix");
+			Quantity centery(50, "pix");
+			Quantity mi(20, "pix");
+			Quantity ma(20, "pix");
+			Quantity pa(0, "deg");
+			Quantity beginFreq, endFreq;
+			String dirTypeString = MDirection::showType(
+				csys.directionCoordinate().directionType(False)
+			);
+			String freqRefFrameString = MFrequency::showType(
+				csys.spectralCoordinate().frequencySystem()
+			);
+			String dopplerString = MDoppler::showType(
+				csys.spectralCoordinate().velocityDoppler()
+			);
+			Quantity restfreq(
+				csys.spectralCoordinate().restFrequency(), "Hz"
+			);
+			Vector<Stokes::StokesTypes> stokes(0);
+			Vector<Double> inc =csys.increment();
+			inc[0] = -1.4;
+			csys.setIncrement(inc);
+			AnnEllipse ellipse(
+				centerx, centery, ma, mi, pa, dirTypeString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
+				dopplerString, restfreq, stokes, False
+			);
+			AlwaysAssert(ellipse.getSemiMajorAxis().getValue() == 28, AipsError);
+			AlwaysAssert(ellipse.getSemiMinorAxis().getValue() == 20, AipsError);
+			AlwaysAssert(near(ellipse.getPositionAngle().getValue(), 90.0), AipsError);
+			inc[0] = -1;
+			inc[1] = 1.4;
+			csys.setIncrement(inc);
+			ellipse = 	AnnEllipse(
+				centerx, centery, ma, mi, pa, dirTypeString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
+				dopplerString, restfreq, stokes, False
+			);
+			AlwaysAssert(ellipse.getSemiMajorAxis().getValue() == 28, AipsError);
+			AlwaysAssert(ellipse.getSemiMinorAxis().getValue() == 20, AipsError);
+			AlwaysAssert(near(ellipse.getPositionAngle().getValue(), 0.0), AipsError);
+
+		}
+	} catch (const AipsError& x) {
 		cerr << "Caught exception: " << x.getMesg() << endl;
 		return 1;
 	}

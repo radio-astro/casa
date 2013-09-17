@@ -28,6 +28,7 @@
 
 #include <QDBusConnectionInterface>
 #include <QDBusInterface>
+#include <QDebug>
 
 namespace casa {
 
@@ -80,6 +81,12 @@ bool QtDBusXmlApp::dbusXmlCall(const String& from, const String& to,
 
         QDBusInterface iface(to.c_str(),serviceOwner(to),CASA_DBUS_XML_INTERFACE,connection());
 
+#if QT_VERSION >= 0x048500
+    if ( !methodIsAsync ){
+    	iface.setTimeout (12000000); //Time out in milliseconds (Essentially infinite)
+    }
+#endif
+
         if(methodIsAsync) {
             iface.call(QDBus::NoBlock, CASA_DBUS_XML_SLOT, xml.toXMLQString());
 
@@ -92,6 +99,10 @@ bool QtDBusXmlApp::dbusXmlCall(const String& from, const String& to,
                 if(reply.isValid())
                     *retValue = QtDBusXML::fromString(
                                 reply.value()).returnedValue();
+                else {
+                	qDebug () << reply.error ();
+                	qDebug() << "Type="<<reply.error().type();
+                }
             }
         }
         return true;

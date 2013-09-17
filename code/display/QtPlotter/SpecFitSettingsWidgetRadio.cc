@@ -910,16 +910,25 @@ namespace casa {
 		//Convert the center and fwhm from pixels to whatever units the canvas is
 		//using.
 		QString xAxisUnit = pixelCanvas->getUnits();
-		ImageInterface<float>* img = const_cast<ImageInterface<float>* >(taskMonitor->getImage().get());
+
+		std::tr1::shared_ptr<const casa::ImageInterface<float> > img = /*const_cast<ImageInterface<float>* >(*/taskMonitor->getImage()/*.get())*/;
 		CoordinateSystem cSys = img->coordinates();
 		int axisCount = cSys.nPixelAxes();
 		IPosition imPos(axisCount);
 		Bool velocityUnits;
 		Bool wavelengthUnits;
 		getConversion( xAxisUnit.toStdString(), velocityUnits, wavelengthUnits );
-		float centerVal = static_cast<float>(fitter->getWorldValue(centerValPix, imPos, xAxisUnit.toStdString(),velocityUnits, wavelengthUnits));
-		float fwhmValX = static_cast<float>(fitter->getWorldValue(fwhmValPix/2+centerValPix, imPos, xAxisUnit.toStdString(),velocityUnits, wavelengthUnits));
-
+		int tabularIndex = -1;
+		MFrequency::Types mFrequency = MFrequency::DEFAULT;
+		if ( !cSys.hasSpectralAxis() ){
+			//std::tr1::shared_ptr<const casa::ImageInterface<float> > imagePtr( img );
+			tabularIndex = Util::getTabularFrequencyAxisIndex( img );
+			mFrequency = taskMonitor->getReferenceFrame();
+		}
+		float centerVal = static_cast<float>(fitter->getWorldValue(centerValPix, imPos,
+				xAxisUnit.toStdString(),velocityUnits, wavelengthUnits, tabularIndex, mFrequency ));
+		float fwhmValX = static_cast<float>(fitter->getWorldValue(fwhmValPix/2+centerValPix, imPos,
+				xAxisUnit.toStdString(),velocityUnits, wavelengthUnits, tabularIndex, mFrequency ));
 		//Note::This converts to standard units.  In the case of frequency, this is "Hz". May
 		//need to add prefix.
 		if ( !velocityUnits && !wavelengthUnits ){

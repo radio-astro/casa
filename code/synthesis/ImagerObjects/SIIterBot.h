@@ -30,7 +30,7 @@
 // System utilities (for profiling macros)
 #include <casa/OS/HostInfo.h>
 #include <sys/time.h>
-#if defined(NEWDBUS)
+#if defined(DBUS_CPP)
 #include <dbus-cpp/dbus.h> /*for DBus::Variant... probably can be removed with *_adaptor class*/
 #else
 #include <dbus-c++/dbus.h>

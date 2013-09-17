@@ -17,7 +17,9 @@
 
 #include <imageanalysis/Annotations/AnnCircle.h>
 
+#include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <images/Regions/WCEllipsoid.h>
+
 
 namespace casa {
 
@@ -88,6 +90,12 @@ ostream& AnnCircle::print(ostream &os) const {
 }
 
 void AnnCircle::_init(const Quantity& xcenter, const Quantity& ycenter) {
+	ThrowIf(
+		_inputRadius.getUnit() == "pix"
+			&& ! getCsys().directionCoordinate().hasSquarePixels(),
+		"AnnCircle should not be used when radius is "
+			"in pixels and pixels are not square. Use AnnEllipse instead."
+	);
 	_convertedRadius = _lengthToAngle(_inputRadius, _getDirectionAxes()[0]);
 	_inputCenter[0].first = xcenter;
 	_inputCenter[0].second = ycenter;

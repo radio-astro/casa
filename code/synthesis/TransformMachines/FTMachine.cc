@@ -363,7 +363,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     chanMap.resize();
     
-    //  cout << "VBSPW " << vb.spectralWindow() << "  " << multiChanMap_p[vb.spectralWindow()] << endl;
     chanMap=multiChanMap_p[vb.spectralWindow()];
     if(chanMap.nelements() == 0)
       chanMap=Vector<Int>(vb.frequency().nelements(), -1);
@@ -1151,7 +1150,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool useCorrected= !(vi.msColumns().correctedData().isNull());
     if((type==FTMachine::CORRECTED) && (!useCorrected))
       type=FTMachine::OBSERVED;
-    cerr << "Type0 " << type << endl;
+    Bool normalize=True;
+    if(type==FTMachine::COVERAGE)
+      normalize=False;
+
     // Loop over the visibilities, putting VisBuffers
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin(); vi.more(); vi++) {
@@ -1185,7 +1187,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     finalizeToSky();
     // Normalize by dividing out weights, etc.
-    getImage(weight, True);
+    getImage(weight, normalize);
   }
   
   
@@ -1346,7 +1348,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   Bool FTMachine::matchChannel(const Int& spw, 
 			       const VisBuffer& vb){
-    
     
     if(nVisChan_p[spw] < 0)
       logIO() << " Spectral window " << spw 
@@ -1692,8 +1693,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     		    //		    (Float)1e-03,
     		    (Float)pbLimit_p,
     		    doSky? (Int)6 : (Int)0); // Normalize by sum-of-wts.
-		    // (Int)2); // Normalize by (sum-of-wts*avgPB)
-
+    		    // (Int)2); // Normalize by (sum-of-wts*avgPB)
 
     // storeImg(String("stokes1.im"),*(resImageVec[0]));
 
@@ -1817,14 +1817,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      
   	    case 4: // DIVIDE by sqrt of sensitivityImage 
 	      subOutput.copyData( (LatticeExpr<Float>) 
-				  (iif(sqrt(subSensitivityImage) > (pblimit), 
+				  (iif((subSensitivityImage) > (pblimit), 
 				       (subSkyImage/(sqrt(subSensitivityImage))),
 				       (subSkyImage))));
 				       //0.0)));
 	      break;
 	      
   	    case 5: // MULTIPLY by sqrt of sensitivityImage 
-	      subOutput.copyData( (LatticeExpr<Float>) (subSkyImage * sqrt(subSensitivityImage)) );
+	      subOutput.copyData( (LatticeExpr<Float>) 
+				  (iif((subSensitivityImage) > (pblimit), 
+				       (subSkyImage * (sqrt(subSensitivityImage))),
+				       (subSkyImage))));
+
 	      break;
 
 	    case 6: // divide by non normalized sensitivity image

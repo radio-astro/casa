@@ -206,6 +206,7 @@ namespace casa {
                 velocities_.resize(frequencies_.size( ));
                 freq_units = spec_unit_vec(0);
                 spec.setVelocity( "km/s" );
+
                 for ( size_t off=0; off < shape_[cs_.spectralAxisNumber( )]; ++off ) {
                     if ( spec.toWorld(frequencies_[off],off) == false ) {
                         has_spectral_axis = false;
@@ -213,12 +214,16 @@ namespace casa {
                         velocities_.resize(0);
                         break;
                     }
-					if ( spec.pixelToVelocity(velocities_[off],off) == false ) {
-                        has_spectral_axis = false;
-                        frequencies_.resize(0);
-                        velocities_.resize(0);
-                        break;
+
+                    //An exception that kills the viewer is thrown if we try to convert pixels to
+                    //velocity and the rest frequency is zero.
+                    if ( spec.restFrequency() == 0 || spec.pixelToVelocity(velocities_[off],off) == false ) {
+                    	has_spectral_axis = false;
+                    	frequencies_.resize(0);
+                    	velocities_.resize(0);
+                    	break;
                     }
+
                 }
 
                 if ( velocities_.size( ) > 0 ) {

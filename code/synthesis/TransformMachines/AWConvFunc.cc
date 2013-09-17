@@ -289,9 +289,9 @@ namespace casa{
 		    TempImage<Complex> twoDPBSq_l(pbShape,cs_l);
 		    //-------------------------------------------------------------		    
 		    // WBAWP CODE BEGIN -- ftATermSq_l has conj. PolCS
-		    //cfWtBuf *= ftATerm_l.get()*conj(ftATermSq_l.get());
+		    cfWtBuf *= ftATerm_l.get()*conj(ftATermSq_l.get());
 		    //tim.mark();
-		    cfWtBuf *= ftATerm_l.get();
+		    //UUU cfWtBuf *= ftATerm_l.get();
 		    cfBuf *= ftATerm_l.get();
 		    //tim.show("W*A*2: ");
 		    // WBAWP CODE END

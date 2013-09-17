@@ -39,7 +39,7 @@ namespace casa {
 // </etymology>
 
 // <synopsis>
-// This class represents an annotaton for a rectangular region in coordinate space. In general, in order
+// This class represents an annotation for a rectangular region in coordinate space. In general, in order
 // to preserve the region through a rotation (eg from one coordinate frame to another), all four corners
 // must be tracked through the rotation. Hence, this region is effectively a four corner polygon.
 // </synopsis>

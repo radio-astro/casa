@@ -135,13 +135,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			dData.notifyUnregister(*this, ignoreRefresh);
 		}
 
-		//If there is nothing to display, and no master image has been
-		//designated, tell the canvas there is no CS master.
-		if ( itsDisplayList.size() == 0 && controllingDD == NULL){
+		//If (there is nothing to display, and no master image has been
+		//designated) OR (the one that is going away is the CSMaster),
+		//tell the canvas there is no CS master.
+		if ( ( itsDisplayList.size() == 0 && controllingDD == NULL ) ||
+				controllingDD == &dData ){
 			worldCanvas()->csMaster() = NULL;
 		}
 
-		if(csMaster()==0) executeSizeControl(worldCanvas());
+		if(csMaster()==0){
+			executeSizeControl(worldCanvas());
+		}
 		// If any remaining DD can assume CS master role, let it set up
 		// WC state immediately, since there is no master at present.
 		worldCanvas()->release();
@@ -336,24 +340,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return masterFound;
 	}
 
-	void WorldCanvasHolder::clearCSMasterSettings( WorldCanvas* wCanvas ){
+	void WorldCanvasHolder::clearCSMasterSettings( WorldCanvas* wCanvas, bool clearZoom ){
 		// None assumed CS master role (canvas may be empty).  Remove
 		// any old axis codes; next master will set them to suit itself.
 		// Assure that the zoom window is reset when a DD _does_ accept CS master.
 
 		worldCanvas()->csMaster() = 0;
 
-		String xAxis = "xaxiscode (required match)",
-					       yAxis = "yaxiscode (required match)";
+		String xAxis = "xaxiscode (required match)";
+		String yAxis = "yaxiscode (required match)";
 		wCanvas->removeAttribute(xAxis);
 		wCanvas->removeAttribute(yAxis);
 
-		Attribute unZoom("resetCoordinates", True);
-		itsWorldCanvas->setAttribute(unZoom);	// "zoom-to-extent" order.
+		if ( clearZoom ){
+			Attribute unZoom("resetCoordinates", True);
+			itsWorldCanvas->setAttribute(unZoom);	// "zoom-to-extent" order.
 
-		String zoomB = "manualZoomBlc", zoomT = "manualZoomTrc";
-		itsWorldCanvas->removeAttribute(zoomB);	  // These will not be
-		itsWorldCanvas->removeAttribute(zoomT);
+			String zoomB = "manualZoomBlc", zoomT = "manualZoomTrc";
+			itsWorldCanvas->removeAttribute(zoomB);	  // These will not be
+			itsWorldCanvas->removeAttribute(zoomT);
+		}
 	}
 
 	bool WorldCanvasHolder::setCSMaster( DisplayData* dd ) {
@@ -672,11 +678,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 
 			if ( titleDD != NULL ){
+				clearCSMasterSettings(this->worldCanvas(), false);
 				worldCanvas()->csMaster() = titleDD;
 				//Preserve the zoom when there is no CS Master
 				itsLastCSmaster=titleDD;
 				executeSizeControl(worldCanvas() );
-
 			}
 		}
 	}
@@ -851,6 +857,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// between a continuum image and a selected slice of a spectral one;
 		// the spectral DD's frames will be counted even if its blink
 		// restriction invalidates it for drawing at the moment).
+
+		//If we have no data, we have no frames.
+		int firstGuessCount = itsDisplayList.size();
+		if ( firstGuessCount == 0 ){
+			return firstGuessCount;
+		}
 
 		executeSizeControl(worldCanvas());
 		// makes sure WC state is up-to-date (e.g., with latest

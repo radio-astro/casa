@@ -47,7 +47,7 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
 
     // log arguments if CASA_DIAGNOSTIC_FILE environment variable is set...
     casa::dbus::diagnostic.argv( argc, argv );
-    qDebug() << "Launching main application";
+
     // Parameter defaults.
     String ms    = "",
            xaxis = PMS::axis(PMS::DEFAULT_XAXIS),
@@ -250,7 +250,7 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
 
         }
     }
-    qDebug() << "Finished parsing args";
+
     // If run from casapy, don't let Ctrl-C kill the application.
     if(casapy) signal(SIGINT,SIG_IGN);
     
@@ -269,7 +269,7 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
             }
         }
     }
-    qDebug() << "Setting parameters";
+
     // Set up parameters for plotms.
     PlotMSParameters params(logfile, PlotLogger::FLAG_FROM_PRIORITY(p), p);
     
@@ -277,10 +277,7 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
         params.setCachedImageSizeToResolution();
     
     // Set up plotms object.
-    qDebug() << "Calling plotMSApp constructor casapy="<<casapy<<" scriptClient="<<scriptClient;
     PlotMSApp plotmsapp(params, casapy, !scriptClient );
-
-    qDebug() << " showGui="<<showGui<<" nopopups="<<nopopups;
     if(!casapy){
     	plotmsapp.showGUI(showGui); // don't automatically show for casapy
     }
@@ -295,7 +292,6 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
       plotmsapp.its_want_avoid_popups = true;
     
     // Set up parameters for plot.
-    qDebug() << "Set up parameters for plot";
     PlotMSPlotParameters plotparams = PlotMSOverPlot::makeParameters(&plotmsapp);
 
     PMS_PP_CALL(plotparams, PMS_PP_MSData, setFilename, ms)
@@ -312,7 +308,6 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
     }
     
     // Add the plot to plotms.
-    qDebug() << "Add overplot";
     plotmsapp.addOverPlot(&plotparams);
     
     // If we're connected to DBus, don't quite the application when the window
@@ -321,6 +316,5 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
     if(casapy) QApplication::setQuitOnLastWindowClosed(false);
     
     //return plotms.execLoop();
-    qDebug() << "Returning QtApp::exec()";
     return QtApp::exec();
 }

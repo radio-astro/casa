@@ -1647,8 +1647,8 @@ void variant::resize( int size ) {
     }
 }
 
-variant initialize_variant( const std::string & ) {
-	    return variant();
+variant& initialize_variant( const std::string & ) {
+	    return *new variant();
 }
 
 

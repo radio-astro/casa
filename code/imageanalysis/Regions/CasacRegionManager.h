@@ -84,6 +84,13 @@ public:
 		const String& box, const IPosition& imShape, const String& imageName="",
 		Bool verbose=True
 	);
+
+	ImageRegion fromBCS(
+			String& diagnostics, uInt& nSelectedChannels, String& stokes,
+			const String& chans, const StokesControl stokesControl,
+			const String& box, const IPosition& imShape
+	) const;
+
 	// <src>ranges</src> are pairs describing the pixel range over which to select.
 	// If you want to select just one pixel in the "range", you must specify that pixel
 	// in both parts of the pair. So if you want to select pixels 0 through 5 and pixel 13,
@@ -122,11 +129,7 @@ private:
 
 	vector<Double> _setBoxCorners(const String& box) const;
 
-	ImageRegion _fromBCS(
-			String& diagnostics, uInt& nSelectedChannels, String& stokes,
-			const String& chans, const StokesControl stokesControl,
-			const String& box, const IPosition& imShape
-	) const;
+
 
 	ImageRegion _fromBCS(
 			String& diagnostics,

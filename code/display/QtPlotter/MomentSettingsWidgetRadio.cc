@@ -402,6 +402,9 @@ namespace casa {
 		std::tr1::shared_ptr<const ImageInterface<float> > image = taskMonitor->getImage();
 		CoordinateSystem cSys = image -> coordinates();
 		int spectralAxisNumber = cSys.spectralAxisNumber();
+		if ( spectralAxisNumber < 0 ){
+			spectralAxisNumber = Util::getTabularFrequencyAxisIndex( image );
+		}
 		Vector<String> method;
 
 		//Note default SNRPEAK is 3.  Must be nonnegative.

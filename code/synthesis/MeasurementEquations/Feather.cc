@@ -23,9 +23,10 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $kgolap$
 #include <boost/math/special_functions/round.hpp>
 #include <synthesis/MeasurementEquations/Feather.h>
+#include <synthesis/MeasurementEquations/Imager.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <casa/OS/HostInfo.h>
 
@@ -101,6 +102,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CountedPtr<ImageInterface<Float> > sdcopy;
     sdcopy=new TempImage<Float>(SDImage.shape(), csyslow);
     (*sdcopy).copyData(SDImage);
+    ImageUtilities::copyMiscellaneous(*sdcopy, SDImage);
+    if(SDImage.getDefaultMask() != "")
+      Imager::copyMask(*sdcopy, SDImage,  SDImage.getDefaultMask());
     PtrHolder<ImageInterface<Float> > copyPtr;
     PtrHolder<ImageInterface<Float> > copyPtr2;
     
@@ -123,8 +127,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					 True);
       sdcopy=CountedPtr<ImageInterface<Float> >(copyPtr2.ptr(), False);
     }
-    //TempImage<Float> sdcopy(SDImage.shape(), csyslow);
-    //sdcopy.copyData(SDImage);
     lowIm_p=new TempImage<Float>(highIm_p->shape(), csysHigh_p);
     // regrid the single dish image
     {
@@ -170,36 +172,50 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   void Feather::setINTImage(const ImageInterface<Float>& INTImage){
+    LogIO os(LogOrigin("Feather", "setINTImage()", WHERE));
     ImageInfo highInfo=INTImage.imageInfo();
     hBeam_p=highInfo.restoringBeam();
     if(hBeam_p.isNull())
-      throw(AipsError("No Single dish restoring beam info in image"));
+      throw(AipsError("No high-resolution restoring beam info in image"));
     csysHigh_p=INTImage.coordinates();
+    CountedPtr<ImageInterface<Float> > intcopy=new TempImage<Float>(INTImage.shape(), csysHigh_p);
+    (*intcopy).copyData(INTImage);
+    ImageUtilities::copyMiscellaneous(*intcopy, INTImage);
+    if(INTImage.getDefaultMask() != "")
+      Imager::copyMask(*intcopy, INTImage,  INTImage.getDefaultMask());
+    PtrHolder<ImageInterface<Float> > copyPtr;
+    PtrHolder<ImageInterface<Float> > copyPtr2;
+    
+      
     Vector<Stokes::StokesTypes> stokesvec;
-    if(CoordinateUtil::findStokesAxis(stokesvec, csysHigh_p) <0)
+    if(CoordinateUtil::findStokesAxis(stokesvec, csysHigh_p) <0){
       CoordinateUtil::addIAxis(csysHigh_p);
-    if(CoordinateUtil::findSpectralAxis(csysHigh_p) <0)
+      ImageUtilities::addDegenerateAxes (os, copyPtr, *intcopy, "",
+					 False, False,"I", False, False,
+					 True);
+      intcopy=CountedPtr<ImageInterface<Float> >(copyPtr.ptr(), False);
+      
+    }
+    if(CoordinateUtil::findSpectralAxis(csysHigh_p) <0){
       CoordinateUtil::addFreqAxis(csysHigh_p);
-    IPosition myshap=INTImage.shape();
-    IPosition blcin(4,0,0,0,0);
-    IPosition trcin=INTImage.shape().nelements()==4 ? INTImage.shape()-1 : IPosition(4, 0, 0, 0,0);
-    
-    if(INTImage.shape().nelements()==2){
-      myshap.resize(uInt(4), False);
-      myshap=IPosition(4,INTImage.shape()(0), INTImage.shape()(1),1,1);
-      trcin=IPosition(4, INTImage.shape()(0)-1, INTImage.shape()(1)-1,0, 0);
+      ImageUtilities::addDegenerateAxes (os, copyPtr2, *intcopy, "",
+					 False, True,
+					 "", False, False,
+					 True);
+      intcopy=CountedPtr<ImageInterface<Float> >(copyPtr2.ptr(), False);
     }
-    if(INTImage.shape().nelements()==3){
-      myshap.resize(uInt(4), False);
-      myshap=IPosition(4,INTImage.shape()(0), INTImage.shape()(1),INTImage.shape()(2),1);
-      trcin=IPosition(4, INTImage.shape()(0)-1, INTImage.shape()(1)-1, INTImage.shape()(2)-1, 0);
-    }
-    Slicer slin(blcin, trcin, Slicer::endIsLast);
-    highIm_p=new TempImage<Float>(myshap, csysHigh_p);
+
+
+    highIm_p=new TempImage<Float>(intcopy->shape(), csysHigh_p);
     
-    SubImage<Float> subim(*highIm_p, slin, True, AxesSpecifier(IPosition::makeAxisPath(INTImage.shape().nelements())));
-    subim.copyData(INTImage);
-    ImageUtilities::copyMiscellaneous(*highIm_p, INTImage);
+    highIm_p->copyData(*intcopy);
+    ImageUtilities::copyMiscellaneous(*highIm_p, *intcopy);
+    String maskname=intcopy->getDefaultMask();
+    if(maskname != ""){
+      Imager::copyMask(*highIm_p, *intcopy, maskname);
+
+    }
+   
   }
 
   Bool Feather::setEffectiveDishDiam(const Float xdiam, const Float ydiam){
@@ -660,18 +676,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     String maskofHigh=highIm_p->getDefaultMask();
     String maskofLow=lowIm_p->getDefaultMask();
     if(maskofHigh != String("")){
-      ImageUtilities::copyMask(featherImage, *highIm_p, "mask0", maskofHigh, AxesSpecifier());
-      featherImage.setDefaultMask("mask0");
+      //ImageUtilities::copyMask(featherImage, *highIm_p, "mask0", maskofHigh, AxesSpecifier());
+      //featherImage.setDefaultMask("mask0");
+      Imager::copyMask(featherImage, *highIm_p, maskofHigh);
       if(maskofLow != String("")){
 	featherImage.pixelMask().copyData(LatticeExpr<Bool> (featherImage.pixelMask() && (lowIm_p->pixelMask())));
 	
       }
     }
     else if(maskofLow != String("")){
-      ImageUtilities::copyMask(featherImage, *lowIm_p, "mask0", maskofLow, AxesSpecifier());
+      //ImageUtilities::copyMask(featherImage, *lowIm_p, "mask0", maskofLow, AxesSpecifier());
+     Imager::copyMask(featherImage, *lowIm_p, maskofLow); 
     }
-    if(featherImage.hasRegion("mask0"))
-      featherImage.setDefaultMask("mask0");
 
     return true;
   }

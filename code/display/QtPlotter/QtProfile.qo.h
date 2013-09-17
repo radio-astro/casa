@@ -82,6 +82,7 @@ namespace casa {
 	class QtProfilePrefs;
 	class ColorSummaryWidget;
 	class LegendPreferences;
+	class SmoothPreferences;
 	class QtCanvas;
 
 //Note:  The purpose of the SpecFitMonitor interface is to provide
@@ -135,7 +136,6 @@ namespace casa {
 			imagePath = filePath;
 		}
 
-
 		//Allows the profiler to come up specialized to do spectroscopy
 		//or another task.
 		void setPurpose( ProfileTaskMonitor::PURPOSE purpose );
@@ -161,8 +161,12 @@ namespace casa {
 		void imageCollapsed(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img);
 		void setPosition( const QList<double>& xValues, const QList<double>& yValues );
 		void processTrackRecord( const String& dataName, const String& positionInfo );
+		virtual MFrequency::Types getReferenceFrame() const;
+
 		typedef std::pair<QString, std::tr1::shared_ptr<ImageInterface<float> > > OverplotInterface;
 		typedef pair<QString,ImageAnalysis*> OverplotAnalysis;
+
+
 	public slots:
 		void zoomIn();
 		void zoomOut();
@@ -202,11 +206,11 @@ namespace casa {
 		void changePlotType(const QString &text);
 		void changeErrorType(const QString &text);
 
-		void changeAxisOld(String xa, String ya, String za, std::vector<int>);
 		void changeAxis(String xa, String ya, String za, std::vector<int>);
 		void changeSpectrum(String spcTypeUnit, String spcRval, String spcSys);
 
 		void plotMainCurve();
+		void clearPlots();
 		void setCollapseRange(double xmin, double xmax);
 
 		void overplot(QList<OverplotInterface>);
@@ -241,6 +245,12 @@ namespace casa {
 		void messageFromProfile(QString &msg);
 		void setUnitsText( String unitStr );
 		void resetYUnits( const QString& units);
+		void outputCurve( int k, QTextStream& ts, Float scaleFactor );
+		int getFreqProfileTabularIndex(ImageAnalysis* analysis );
+		void resetTabularConversion();
+		bool isSpectralAxis() const;
+		void initializeSpectralProperties();
+		void resetXUnits( bool spectralAxis);
 
 		/**
 		 * Returns false if first vector value is greater than the last
@@ -251,6 +261,7 @@ namespace casa {
 		bool isFrequencyUnit( const QString& unit ) const;
 		bool isWavelengthUnit( const QString& unit ) const;
 		void setTitle( const QString& shape );
+		void setTitle(const ProfileType ptype);
 		void copyToLastEvent( const String& c, const Vector<Double> &px,
 		                      const Vector<Double> &py,
 		                      const Vector<Double> &wx,
@@ -280,6 +291,7 @@ namespace casa {
 		                         const QString& label );
 		void adjustTopAxisSettings();
 		void initializeXAxisUnits();
+		void initSmoothing();
 		void setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit );
 		void toggleAction( QAction* action );
 		Int scaleAxis();
@@ -393,6 +405,7 @@ namespace casa {
 		LegendPreferences* legendPreferencesDialog;
 		QtCanvas* pixelCanvas;
 		QtProfilePrefs* profilePrefs;
+		SmoothPreferences* smoothWidget;
 		int frameIndex;
 		bool newOverplots;
 		pair<double,double> getMaximumTemperature();
@@ -404,8 +417,8 @@ namespace casa {
 		void setDisplayYUnits( const QString& unitStr );
 		void channelSelect(float xval);
 		void channelRangeSelect( float channelStart, float channelEnd );
-
-
+		void showSmoothingPreferences();
+		void replotCurves();
 	};
 
 }

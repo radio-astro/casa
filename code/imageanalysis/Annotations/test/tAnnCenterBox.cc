@@ -202,31 +202,34 @@ int main () {
 				dopplerString, restfreq, stokes, False
 			);
 			Vector<MDirection> corners = box.getCorners();
-			AlwaysAssert(
-				near(
-					corners[0].getAngle("deg").getValue("deg")[0],
-					(centerx + widthx/2).getValue("deg")
-				), AipsError
-			);
-			AlwaysAssert(
-				near(
-					corners[0].getAngle("deg").getValue("deg")[1],
-					(centery - widthy/2).getValue("deg")
-				), AipsError
-			);
-			AlwaysAssert(
-				near(
-					corners[1].getAngle("deg").getValue("deg")[0],
-					(centerx - widthx/2).getValue("deg")
-				), AipsError
-			);
-			AlwaysAssert(
-				near(
-					corners[1].getAngle("deg").getValue("deg")[1],
-					(centery + widthy/2).getValue("deg")
-				), AipsError
-			);
-			cout << box.getCorners() << endl;
+			Double got = corners[0].getAngle("deg").getValue("deg")[0];
+			Double expec = (centerx + widthx/2).getValue("deg");
+			Double tol = 1e-7;
+			AlwaysAssert(near(got, expec, tol), AipsError);
+			got = corners[0].getAngle("deg").getValue("deg")[1];
+			expec = (centery - widthy/2).getValue("deg");
+			AlwaysAssert(near(got, expec, tol), AipsError);
+
+			got = corners[1].getAngle("deg").getValue("deg")[0];
+			expec = (centerx - widthx/2).getValue("deg");
+			AlwaysAssert(near(got, expec, tol), AipsError);
+			got = corners[1].getAngle("deg").getValue("deg")[1];
+			expec = (centery - widthy/2).getValue("deg");
+			AlwaysAssert(near(got, expec, tol), AipsError);
+
+			got = corners[2].getAngle("deg").getValue("deg")[0];
+			expec = (centerx - widthx/2).getValue("deg");
+			AlwaysAssert(near(got, expec, tol), AipsError);
+			got = corners[2].getAngle("deg").getValue("deg")[1];
+			expec = (centery + widthy/2).getValue("deg");
+			AlwaysAssert(near(got, expec, tol), AipsError);
+
+			got = corners[3].getAngle("deg").getValue("deg")[0];
+			expec = (centerx + widthx/2).getValue("deg");
+			AlwaysAssert(near(got, expec, tol), AipsError);
+			got = corners[3].getAngle("deg").getValue("deg")[1];
+			expec = (centery + widthy/2).getValue("deg");
+			AlwaysAssert(near(got, expec, tol), AipsError);
 		}
 		{
 
@@ -257,39 +260,41 @@ int main () {
 				dopplerString, restfreq, stokes, False
 			);
 			Vector<MDirection> corners = box.getCorners();
-			AlwaysAssert(
-				near(
-					corners[0].getAngle("deg").getValue("deg")[0],
-					(centerx + Quantity(900, "arcsec")).getValue("deg")
-				), AipsError
-			);
-			AlwaysAssert(
-				near(
-					corners[0].getAngle("deg").getValue("deg")[1],
-					(centery - Quantity(1350, "arcsec")).getValue("deg")
-				), AipsError
-			);
-			AlwaysAssert(
-				near(
-					corners[1].getAngle("deg").getValue("deg")[0],
-					(centerx - Quantity(900, "arcsec")).getValue("deg")
-				), AipsError
-			);
-			AlwaysAssert(
-				near(
-					corners[1].getAngle("deg").getValue("deg")[1],
-					(centery + Quantity(1350, "arcsec")).getValue("deg")
-				), AipsError
-			);
+			Double got = corners[0].getAngle("deg").getValue("deg")[0];
+			Double expec = (centerx + Quantity(900, "arcsec")).getValue("deg");
+			Double tol = 1e-4;
+			AlwaysAssert(near(got, expec, tol), AipsError);
+			got = corners[0].getAngle("deg").getValue("deg")[1];
+			expec = (centerx - Quantity(1350, "arcsec")).getValue("deg");
+			AlwaysAssert(near(got, expec, tol), AipsError);
 
-			cout << box.getCorners() << endl;
+			got = corners[1].getAngle("deg").getValue("deg")[0];
+			expec = (centerx - Quantity(900, "arcsec")).getValue("deg");
+			AlwaysAssert(near(got, expec, tol), AipsError);
+			got = corners[1].getAngle("deg").getValue("deg")[1];
+			expec = (centerx - Quantity(1350, "arcsec")).getValue("deg");
+			AlwaysAssert(near(got, expec, tol), AipsError);
+
+			got = corners[2].getAngle("deg").getValue("deg")[0];
+			expec = (centerx - Quantity(900, "arcsec")).getValue("deg");
+			AlwaysAssert(near(got, expec, tol), AipsError);
+			got = corners[2].getAngle("deg").getValue("deg")[1];
+			expec = (centerx + Quantity(1350, "arcsec")).getValue("deg");
+			AlwaysAssert(near(got, expec, tol), AipsError);
+
+			got = corners[3].getAngle("deg").getValue("deg")[0];
+			expec = (centerx + Quantity(900, "arcsec")).getValue("deg");
+			AlwaysAssert(near(got, expec, tol), AipsError);
+			got = corners[3].getAngle("deg").getValue("deg")[1];
+			expec = (centerx + Quantity(1350, "arcsec")).getValue("deg");
+			AlwaysAssert(near(got, expec, tol), AipsError);
 		}
 		{
 			log << LogIO::NORMAL << "Check unmodified frequencies" << LogIO::POST;
-			Quantity centerx(0.01, "deg");
+			Quantity centerx(-0.01, "deg");
 			Quantity centery(0.01, "deg");
-			Quantity widthx(30, "arcsec");
-			Quantity widthy(45, "arcsec");
+			Quantity widthx(30, "arcmin");
+			Quantity widthy(45, "arcmin");
 			Quantity beginFreq(1415, "MHz");
 			Quantity endFreq(1450e6, "Hz");
 
@@ -370,8 +375,8 @@ int main () {
 			log << LogIO::NORMAL << "Test frequencies GALACTO -> LSRK" << LogIO::POST;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "deg");
-			Quantity widthx(30, "arcsec");
-			Quantity widthy(45, "arcsec");
+			Quantity widthx(30, "arcmin");
+			Quantity widthy(45, "arcmin");
 
 			Quantity beginFreq(1415, "MHz");
 			Quantity endFreq(1450e6, "Hz");
@@ -409,8 +414,8 @@ int main () {
 				<< "Test unmodified frequencies when specifying relativistic velocities" << LogIO::POST;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "deg");
-			Quantity widthx(30, "arcsec");
-			Quantity widthy(45, "arcsec");
+			Quantity widthx(30, "arcmin");
+			Quantity widthy(45, "arcmin");
 
 			Quantity beginFreq(250000000, "m/s");
 			Quantity endFreq(-250000, "km/s");
@@ -450,8 +455,8 @@ int main () {
 				<< "Test unmodified frequencies when specifying velocities" << LogIO::POST;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "deg");
-			Quantity widthx(30, "arcsec");
-			Quantity widthy(45, "arcsec");
+			Quantity widthx(30, "arcmin");
+			Quantity widthy(45, "arcmin");
 
 			Quantity beginFreq(20000, "m/s");
 			Quantity endFreq(-20, "km/s");
@@ -492,8 +497,8 @@ int main () {
 				<< LogIO::POST;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "deg");
-			Quantity widthx(30, "arcsec");
-			Quantity widthy(45, "arcsec");
+			Quantity widthx(30, "arcmin");
+			Quantity widthy(45, "arcmin");
 
 			Quantity beginFreq(250000000, "m/s");
 			Quantity endFreq(-250000, "km/s");
@@ -533,8 +538,8 @@ int main () {
 				<< LogIO::POST;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "deg");
-			Quantity widthx(30, "arcsec");
-			Quantity widthy(45, "arcsec");
+			Quantity widthx(30, "arcmin");
+			Quantity widthy(45, "arcmin");
 
 			Quantity beginFreq(2013432.1736247784, "m/s");
 			Quantity endFreq(-1986.7458583077, "km/s");
@@ -570,7 +575,7 @@ int main () {
 			);
 		}
 
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		cerr << "Caught exception: " << x.getMesg() << endl;
 		return 1;
 	}

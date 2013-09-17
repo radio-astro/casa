@@ -484,7 +484,7 @@ class ImageAnalysis
    		 const String& xytype="world",
    		 const String& specaxis="freq",
    		 const Int& whichStokes=0,
-   		 const Int& whichTabular=0,
+   		 const Int& whichTabular=-1,
    		 const Int& whichLinear=0,
    		 const String& xunits="",
    		 const String& specframe="",
@@ -502,7 +502,7 @@ class ImageAnalysis
 			const String& xytype="world",
 			const String& specaxis="freq",
 			const Int& whichStokes=0,
-			const Int& whichTabular=0,
+			const Int& whichTabular=-1,
 			const Int& whichLinear=0,
 			const String& xunits="",
 			const String& specframe="",
@@ -611,10 +611,13 @@ class ImageAnalysis
                const Vector<Double>& replace) const;
 
     //return a vector of the spectral axis values in units requested
-    //e.g "vel", "fre" or "pix"..specVal has to be sized already 
+    //e.g "vel", "fre" or "pix"..specVal has to be sized already.  If a
+    //valid tabular axis is specified (>=0) it takes precedence over the
+    //spectral axis.
     Bool getSpectralAxisVal(const String& specaxis, Vector<Float>& specVal, 
                             const CoordinateSystem& cSys, const String& xunits, 
-                            const String& freqFrame="", const String& restValue="");
+                            const String& freqFrame="", const String& restValue="",
+                            int tabularAxisIndex = -1);
     //return a vector of the spectral axis values in units requested
     //e.g "vel", "fre" or "pix"..specVal has to be sized already
 

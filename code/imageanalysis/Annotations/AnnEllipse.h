@@ -108,7 +108,8 @@ public:
 	Quantity getSemiMinorAxis() const;
 
 	// get position angle. The quantity will have units
-	// of angular measure
+	// of angular measure and will be measured from north through east,
+	// using the normal astronomical convention.
 	Quantity getPositionAngle() const;
 
 	virtual ostream& print(ostream &os) const;
@@ -117,7 +118,8 @@ public:
 private:
 	AnnotationBase::Direction _inputCenter;
 	Quantity _inputSemiMajorAxis, _inputSemiMinorAxis, _inputPositionAngle,
-		_convertedSemiMajorAxis, _convertedSemiMinorAxis;
+		_convertedSemiMajorAxis, _convertedSemiMinorAxis,
+		_convertedPositionAngle;
 
 	void _init(	const Quantity& xcenter, const Quantity& ycenter);
 };

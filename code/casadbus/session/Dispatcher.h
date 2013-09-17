@@ -40,7 +40,7 @@
 #ifndef DBUS_DISPATCHER_H_
 #define DBUS_DISPATCHER_H_
 
-#if defined(NEWDBUS)
+#if defined(DBUS_CPP)
 #include <dbus-cpp/dbus.h>
 #include <dbus-cpp/connection.h>
 #else

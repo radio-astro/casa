@@ -30,7 +30,7 @@
 #include <map>
 #include <string>
 #include <casa/Containers/Record.h>
-#if defined(NEWDBUS)
+#if defined(DBUS_CPP)
 #include <dbus-cpp/dbus.h>
 #else
 #include <dbus-c++/dbus.h>

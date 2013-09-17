@@ -140,7 +140,7 @@ private:
 
 	AnnotationBase::Type _getAnnotationType(
 		Vector<Quantity>& qDirs,
-		Vector<Quantity>& qunatities,
+		vector<Quantity>& qunatities,
 		String& textString,
 		String& consumeMe, const String& preamble
 	) const;
@@ -155,7 +155,7 @@ private:
 		//const Vector<MDirection> dirs,
 		const Vector<Quantity>& qDirs,
 		const Vector<Quantity>& qFreqs,
-		const Vector<Quantity>& quantities,
+		const vector<Quantity>& quantities,
 		const String& textString,
 		const ParamSet& currentParamSet,
 		const Bool annOnly, const Bool isDifference,

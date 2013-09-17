@@ -77,6 +77,14 @@ namespace casa {
 
 	}
 
+	int AnimatorHolder::getChannelCount() const {
+		int frameCount = 0;
+		if ( animatorChannel != NULL ){
+			frameCount=animatorChannel->getFrameCount();
+		}
+		return frameCount;
+	}
+
 	int AnimatorHolder::getAnimationCount() const {
 		int count = 0;
 		QLayout* layoutBase = layout();

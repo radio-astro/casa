@@ -2,7 +2,7 @@
 #define CASA_DBUS_BASE_H__
 
 #include <boost/thread/thread.hpp>
-#if defined(NEWDBUS)
+#if defined(DBUS_CPP)
 #include <dbus-cpp/dbus.h>
 #else
 #include <dbus-c++/dbus.h>

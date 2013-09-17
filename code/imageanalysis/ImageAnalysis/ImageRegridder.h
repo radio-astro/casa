@@ -128,42 +128,47 @@ protected:
 
 private:
 	const CoordinateSystem _csysTo;
-	IPosition _axes, _shape;
+	IPosition _axes, _shape, _kludgedShape;
 	Bool _dropdeg, _specAsVelocity, _doRefChange, _replicate, _forceRegrid;
 	Int _debug, _decimate;
 	static const String _class;
 	Interpolate2D::Method _method;
+	vector<String> _outputStokes;
+	uInt _nReplicatedChans;
 
 	// disallow default constructor
 	ImageRegridder();
 
 	void _finishConstruction();
 
-	TempImage<Float> _regrid() const;
+	std::tr1::shared_ptr<ImageInterface<Float> > _regrid() const;
 
-	TempImage<Float> _regridByVelocity() const;
+	std::tr1::shared_ptr<ImageInterface<Float> > _regridByVelocity() const;
 
 	static Bool _doImagesOverlap(
 		const ImageInterface<Float>& image0,
 		const ImageInterface<Float>& image1
 	);
 
-	static Bool _doLineSegmentsIntersect(
-		const Vector<Double>& line0point0,
-		const Vector<Double>& line0point1,
-		const Vector<Double>& line1point0,
-		const Vector<Double>& line1point1
-	);
-
-	static Double _2DCrossProduct(
-		const Vector<Double> v0,
-		const Vector<Double> v1
-	);
-
 	static Vector<std::pair<Double, Double> > _getDirectionCorners(
 		const DirectionCoordinate& dc,
 		const IPosition& directionShape
 	);
+
+	void _checkOutputShape(
+		const SubImage<Float>& subImage,
+		const std::set<Coordinate::Type>& coordsToRegrid
+	) const;
+
+	void _decimateStokes(
+		std::tr1::shared_ptr<ImageInterface<Float> >& workIm
+	) const;
+
+	static Bool _doRectanglesIntersect(
+		const Vector<std::pair<Double, Double> >& corners0,
+		const Vector<std::pair<Double, Double> >& corners1
+	);
+
 
 };
 }

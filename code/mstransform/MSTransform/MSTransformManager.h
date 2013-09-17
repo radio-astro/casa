@@ -863,6 +863,7 @@ protected:
 	Bool timeAverage_p;
 	Double timeBin_p;
 	String timespan_p;
+	vi::AveragingOptions timeAvgOptions_p;
 
 	// MS-related members
 	MSTransformDataHandler *splitter_p;

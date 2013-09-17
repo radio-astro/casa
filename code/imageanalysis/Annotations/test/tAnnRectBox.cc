@@ -266,10 +266,33 @@ int main () {
 			AlwaysAssert(
 				near(
 					corners[1].getAngle("deg").getValue("deg")[1],
+					blcy.getValue("deg")
+				), AipsError
+			);
+			AlwaysAssert(
+				near(
+					corners[2].getAngle("deg").getValue("deg")[0],
+					trcx.getValue("deg")
+				), AipsError
+			);
+			AlwaysAssert(
+				near(
+					corners[2].getAngle("deg").getValue("deg")[1],
 					trcy.getValue("deg")
 				), AipsError
 			);
-			cout << box.getCorners() << endl;
+			AlwaysAssert(
+				near(
+					corners[3].getAngle("deg").getValue("deg")[0],
+					blcx.getValue("deg")
+				), AipsError
+			);
+			AlwaysAssert(
+				near(
+					corners[3].getAngle("deg").getValue("deg")[1],
+					trcy.getValue("deg")
+				), AipsError
+			);
 		}
 		{
 			log << LogIO::NORMAL
@@ -311,13 +334,13 @@ int main () {
 			);
 			AlwaysAssert(
 				near(
-					corners[1].getAngle("rad").getValue("rad")[0],
+					corners[2].getAngle("rad").getValue("rad")[0],
 					0.011444556041464694
 				), AipsError
 			);
 			AlwaysAssert(
 				near(
-					corners[1].getAngle("rad").getValue("rad")[1],
+					corners[2].getAngle("rad").getValue("rad")[1],
 					0.0050326323941514792
 				), AipsError
 			);

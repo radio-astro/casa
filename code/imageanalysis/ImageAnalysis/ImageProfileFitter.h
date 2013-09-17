@@ -178,9 +178,11 @@ public:
     const Vector<Double> getPixelCenter( uint index ) const;
 
     //Converts a pixel value into a world value either in velocity, wavelength, or
-    //frequency units.
+    //frequency units.  If the tabular index >= 0, it uses the tabular index for conversion
+    //with the specified MFrequency type, otherwise, it uses the spectral axis for
+    //conversion.
     Double getWorldValue( double pixelVal, const IPosition& imPos, const String& units,
-        bool velocity, bool wavelength) const;
+        bool velocity, bool wavelength, Int tabularIndex = -1, MFrequency::Types type = MFrequency::DEFAULT ) const;
 
     void setAbscissaDivisor(Double d);
 

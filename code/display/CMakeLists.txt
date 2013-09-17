@@ -59,6 +59,7 @@ qt4_wrap_cpp( outfiles_qoh
   QtPlotter/SearchMoleculesDialog.qo.h
   QtPlotter/SearchRedshiftDialog.qo.h
   QtPlotter/LineOverlaysTab.qo.h
+  QtPlotter/SmoothPreferences.qo.h
   QtPlotter/LineOverlaysSearchResultsDialog.qo.h
   QtPlotter/ColorSummaryWidget.qo.h
   QtPlotter/SpecFitSettingsFixedTableCell.qo.h
@@ -188,6 +189,7 @@ casa_qt4_wrap_ui( outfiles_ui
   QtPlotter/SpecFitSettingsFixedTableCell.ui
   QtPlotter/ThresholdingBinPlotDialog.ui
   QtPlotter/LegendPreferences.ui
+  QtPlotter/SmoothPreferences.ui
   QtPlotter/SpectralPositioningWidget.ui
   QtPlotter/annotations/AnnotationEditor.ui
   QtPlotter/annotations/AnnotationEditorText.ui
@@ -463,6 +465,7 @@ casa_add_library( display
   QtPlotter/SearchMoleculesResultsWidget.cc
   QtPlotter/SearchMoleculesResultDisplayer.cc
   QtPlotter/LineOverlaysTab.cc
+  QtPlotter/SmoothPreferences.cc
   QtPlotter/LineOverlaysSearchResultsDialog.cc
   QtPlotter/SearchMoleculesDialog.cc
   QtPlotter/SearchRedshiftDialog.cc

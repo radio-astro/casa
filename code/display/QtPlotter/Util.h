@@ -27,12 +27,17 @@
 
 #include <QString>
 #include <casa/Arrays/Vector.h>
-
+#include <tr1/memory>
 
 class QWidget;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+	template <class T> class ImageInterface;
+
 	class Util {
+
+
 	public:
 		static const QString ORGANIZATION;
 		static const QString APPLICATION;
@@ -60,6 +65,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		 * and return 'km/s'.
 		 */
 		static QString stripFont( QString unitStr );
+
+		//Support for tabular axes that are frequency.  Returns -1 if there
+		//is no tabular index in the image in frequency units.
+		static int getTabularFrequencyAxisIndex(std::tr1::shared_ptr<const ImageInterface<Float> > img);
+
 
 	private:
 		Util();

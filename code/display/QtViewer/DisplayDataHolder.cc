@@ -80,6 +80,7 @@ namespace casa {
 			if ( imageTracker != NULL ) {
 				imageTracker->masterImageSelected( controlDD );
 			}
+
 			if ( imageDisplayer != NULL ) {
 				imageDisplayer->setControllingDD( controlDD );
 			}

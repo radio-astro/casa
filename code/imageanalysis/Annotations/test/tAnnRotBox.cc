@@ -34,6 +34,70 @@
 
 #include <iomanip>
 
+void testCorners(const Vector<MDirection>& corners) {
+	Vector<Bool> found(4, False);
+	for (uInt i=0; i<4; i++) {
+		Double ra = corners[i].getAngle("arcmin").getValue("arcmin")[0];
+		Double dec = corners[i].getAngle("arcmin").getValue("arcmin")[1];
+		cout << "*** ra dec " << std::setprecision(19) << ra << " " << dec << endl;
+		if (
+			near(
+				ra, -1.140437089542486016
+			)
+		) {
+			AlwaysAssert(! found[0], AipsError);
+			AlwaysAssert(
+				near(
+					dec, 27.58556805004556267
+				), AipsError
+			);
+			found[0] = True;
+		}
+		else if (
+			near(
+				ra, 24.8405434977460402
+			)
+		) {
+			AlwaysAssert(! found[1], AipsError);
+			AlwaysAssert(
+				near(
+					dec, 12.58525870773907762
+				), AipsError
+			);
+			found[1] = True;
+		}
+		else if (
+			near(
+				ra, 2.340432320494556961
+			)
+		) {
+			AlwaysAssert(! found[2], AipsError);
+			AlwaysAssert(
+				near(
+					dec, -26.38556820383231738
+				), AipsError
+			);
+			found[2] = True;
+		}
+		else if (
+			near(
+				ra, -23.64051399776834117
+			)
+		) {
+			AlwaysAssert(! found[3], AipsError);
+			AlwaysAssert(
+				near(
+					dec, -11.38528853997836165
+				), AipsError
+			);
+			found[3] = True;
+		}
+		else {
+			throw AipsError("Corner could not be identified");
+		}
+	}
+}
+
 int main () {
 	try {
 		LogIO log;
@@ -279,72 +343,7 @@ int main () {
 				csys, imShape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
-
-			Vector<Bool> found(4, False);
-			Vector<MDirection> corners = box.getCorners();
-			Double cosp = cos(pa.getValue("rad"));
-			Double sinp = sin(pa.getValue("rad"));
-			for (uInt i=0; i<4; i++) {
-				Double ra = corners[i].getAngle("arcmin").getValue("arcmin")[0];
-				Double dec = corners[i].getAngle("arcmin").getValue("arcmin")[1];
-				cout << std::setprecision(19) << ra << " " << dec << endl;
-				if (
-					near(
-						ra, -1.140381056766581969
-					)
-				) {
-					AlwaysAssert(! found[0], AipsError);
-					AlwaysAssert(
-						near(
-							dec, 27.58557158514987862
-						), AipsError
-					);
-					found[0] = True;
-				}
-
-				else if (
-					near(
-						ra, 24.84038105676658503
-					)
-				) {
-					AlwaysAssert(! found[1], AipsError);
-					AlwaysAssert(
-						near(
-							dec, 12.58557158514987506
-						), AipsError
-					);
-					found[1] = True;
-				}
-				else if (
-					near(
-						ra, 2.340381056766581924
-					)
-				) {
-					AlwaysAssert(! found[2], AipsError);
-					AlwaysAssert(
-						near(
-							dec, -26.38557158514987577
-						), AipsError
-					);
-					found[2] = True;
-				}
-				else if (
-					near(
-						ra, -23.64038105676658219
-					)
-				) {
-					AlwaysAssert(! found[3], AipsError);
-					AlwaysAssert(
-						near(
-							dec, -11.38557158514987222
-						), AipsError
-					);
-					found[3] = True;
-				}
-				else {
-					log << "Corner could not be identified" << LogIO::EXCEPTION;
-				}
-			}
+			testCorners(box.getCorners());
 		}
 		{
 			log << LogIO::NORMAL
@@ -376,70 +375,7 @@ int main () {
 				dopplerString, restfreq, stokes, False
 			);
 
-			Vector<Bool> found(4, False);
-			Vector<MDirection> corners = box.getCorners();
-			Double cosp = cos(pa.getValue("rad"));
-			Double sinp = sin(pa.getValue("rad"));
-			for (uInt i=0; i<4; i++) {
-				Double ra = corners[i].getAngle("arcmin").getValue("arcmin")[0];
-				Double dec = corners[i].getAngle("arcmin").getValue("arcmin")[1];
-				if (
-						near(
-								ra, -1.140381056766581969
-						)
-				) {
-					AlwaysAssert(! found[0], AipsError);
-					AlwaysAssert(
-							near(
-									dec, 27.58557158514987862
-							), AipsError
-					);
-					found[0] = True;
-				}
-
-				else if (
-						near(
-								ra, 24.84038105676658503
-						)
-				) {
-					AlwaysAssert(! found[1], AipsError);
-					AlwaysAssert(
-							near(
-									dec, 12.58557158514987506
-							), AipsError
-					);
-					found[1] = True;
-				}
-				else if (
-						near(
-								ra, 2.340381056766581924
-						)
-				) {
-					AlwaysAssert(! found[2], AipsError);
-					AlwaysAssert(
-							near(
-									dec, -26.38557158514987577
-							), AipsError
-					);
-					found[2] = True;
-				}
-				else if (
-						near(
-								ra, -23.64038105676658219
-						)
-				) {
-					AlwaysAssert(! found[3], AipsError);
-					AlwaysAssert(
-							near(
-									dec, -11.38557158514987222
-							), AipsError
-					);
-					found[3] = True;
-				}
-				else {
-					log << "Corner could not be identified" << LogIO::EXCEPTION;
-				}
-			}
+			testCorners(box.getCorners());
 		}
 		{
 			log << LogIO::NORMAL

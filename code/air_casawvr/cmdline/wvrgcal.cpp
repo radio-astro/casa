@@ -33,7 +33,7 @@
 #include "../casawvr/msspec.hpp"
 #include "../casawvr/msantdata.hpp"
 #include "almawvr/arraydata.hpp"
-#include "almawvr/arraygains.hpp"
+#include "../apps/arraygains2.hpp"
 #include "almawvr/almaabs.hpp"
 #include "almawvr/dtdlcoeffs.hpp"
 #include "almawvr/almaresults.hpp"
@@ -342,7 +342,7 @@ std::set<size_t> reversedSPWs(const LibAIR::MSSpec &sp,
   return reverse;
 }
 
-void printExpectedPerf(const LibAIR::ArrayGains &g,
+void printExpectedPerf(const LibAIR::ArrayGains2 &g,
 		       const LibAIR::dTdLCoeffsBase &coeffs,
 		       const std::vector<std::pair<double, double> > &tmask)
 {
@@ -443,7 +443,7 @@ void computePathDisc(const LibAIR::InterpArrayData &d,
 		     LibAIR::dTdLCoeffsBase  &coeffs,
 		     std::vector<double> &res)
 {
-  LibAIR::ArrayGains g1(d.g_time(), 
+  LibAIR::ArrayGains2 g1(d.g_time(), 
 			d.g_el(),
 			d.g_state(),
 			d.g_field(),
@@ -457,7 +457,7 @@ void computePathDisc(const LibAIR::InterpArrayData &d,
   g1.calc(d,
 	  coeffs);    
   
-  LibAIR::ArrayGains g3(d.g_time(), 
+  LibAIR::ArrayGains2 g3(d.g_time(), 
 			d.g_el(),
 			d.g_state(),
 			d.g_field(),
@@ -604,6 +604,35 @@ filterInp(const LibAIR::ALMAAbsInpL &inp,
     {
       res.push_back(*i);
       rfb.push_back(fb[j]);
+    }
+  }
+  return std::make_pair(res, rfb);
+}
+
+/** Filter the set of input WVR measurements to retrieve the
+    coefficients from to exclude flagged data points (zero Tobs)
+    
+ */
+std::pair<LibAIR::ALMAAbsInpL,  std::vector<std::pair<double, double> > >
+filterFlaggedInp(const LibAIR::ALMAAbsInpL &inp,
+		 const std::vector<std::pair<double, double> > &fb)
+{
+
+  LibAIR::ALMAAbsInpL res;
+  std::vector<std::pair<double, double> > rfb;
+  size_t j=0;
+  bool fbFilled = (fb.size()>0);
+  for(LibAIR::ALMAAbsInpL::const_iterator i=inp.begin();
+      i!=inp.end();
+      ++i, ++j)
+  {
+    if(i->TObs[0]>0.) // flagged ALMAAbsInp would have TObs==0
+    {
+      res.push_back(*i);
+      if(fbFilled)
+      {
+	rfb.push_back(fb[j]);
+      }
     }
   }
   return std::make_pair(res, rfb);
@@ -768,9 +797,12 @@ int main(int argc,  char* argv[])
      iterations++;
 
      std::vector<size_t> sortedI; // to be filled with the time-sorted row number index
+     std::set<int> flaggedantsInMain; // the antennas totally flagged in the MS main table
+     boost::scoped_ptr<LibAIR::InterpArrayData> d (LibAIR::loadWVRData(ms, sortedI, flaggedantsInMain));
 
-     boost::scoped_ptr<LibAIR::InterpArrayData> d (LibAIR::loadWVRData(ms, sortedI));
-     
+     interpwvrs.insert(flaggedantsInMain.begin(),flaggedantsInMain.end()); // for flagInterp()
+     wvrflag.insert(flaggedantsInMain.begin(),flaggedantsInMain.end());
+
      d->offsetTime(vm["toffset"].as<double>());
      
      if (vm.count("smooth"))
@@ -790,12 +822,12 @@ int main(int argc,  char* argv[])
 		vm["minnumants"].as<int>(),
 		interpImpossibleAnts);
      
-     LibAIR::ArrayGains g(d->g_time(), 
-			  d->g_el(),
-			  d->g_state(),
-			  d->g_field(),
-			  d->g_source(),
-			  d->nWVRs);
+     LibAIR::ArrayGains2 g(d->g_time(), 
+			   d->g_el(),
+			   d->g_state(),
+			   d->g_field(),
+			   d->g_source(),
+			   d->nWVRs);
      
      boost::scoped_ptr<LibAIR::dTdLCoeffsBase>  coeffs;
      
@@ -868,6 +900,7 @@ int main(int argc,  char* argv[])
 					n,
 					useID);
 	}
+
 	
 	if (vm.count("sourceflag"))
 	{
@@ -877,6 +910,9 @@ int main(int argc,  char* argv[])
 					ms);
 	}
 	
+	boost::tie(inp,fb)=filterFlaggedInp(inp,
+					    fb);
+
 	std::cerr<<"Calculating the coefficients now...";
 	boost::ptr_list<LibAIR::ALMAResBase> rlist;
 	std::vector<int> problemAnts;

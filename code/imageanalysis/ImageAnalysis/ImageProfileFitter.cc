@@ -523,7 +523,7 @@ const Vector<Double> ImageProfileFitter::getPixelCenter( uint index ) const {
 
 Double ImageProfileFitter::getWorldValue(
     double pixelVal, const IPosition& imPos, const String& units,
-    bool velocity, bool wavelength ) const {
+    bool velocity, bool wavelength, int tabularIndex, MFrequency::Types freqType ) const {
 	Vector<Double> pixel(imPos.size());
 	for (uInt i=0; i<pixel.size(); i++) {
 		pixel[i] = imPos[i];
@@ -532,7 +532,19 @@ Double ImageProfileFitter::getWorldValue(
 	// in pixels here
 	pixel[_fitAxis] = pixelVal;
 	_subImage->coordinates().toWorld(world, pixel);
-	SpectralCoordinate spectCoord = _subImage->coordinates().spectralCoordinate();
+
+	SpectralCoordinate spectCoord;
+	//Use a tabular index for conversion if one has been specified.
+	if ( tabularIndex >= 0 ){
+		const CoordinateSystem& cSys = _subImage->coordinates();
+		TabularCoordinate tabCoord = cSys.tabularCoordinate( tabularIndex );
+		Vector<Double> worlds = tabCoord.worldValues();
+		spectCoord = SpectralCoordinate( freqType, worlds );
+	}
+	//Use the default spectral axis for conversion
+	else {
+		spectCoord = _subImage->coordinates().spectralCoordinate();
+	}
 	Double convertedVal;
 	if (velocity) {
 		spectCoord.setVelocity( units );

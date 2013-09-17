@@ -52,8 +52,9 @@ int main() {
 		{
 
             // CAS-2533
-			PagedImage<Float> img(datadir + "/CAS-2533.im");
-			ImageAnalysis analysis(&img);
+			PagedImage<Float>* img = new PagedImage<Float>(datadir + "/CAS-2533.im");
+			std::tr1::shared_ptr<casa::ImageInterface<float> > imgPtr( img );
+			ImageAnalysis analysis(imgPtr);
 
 			Vector<casa::Double> wxv(2);
 			Vector<casa::Double> wyv(2);
@@ -70,7 +71,7 @@ int main() {
 			bool ok = analysis.getFreqProfile(
 					wxv, wyv, z_xval, z_yval,
 					"world", "frequency",
-					0, 0, 0, "", "LSRK", 0, 0);
+					0, -1, 0, "", "LSRK", 0, 0);
 
 			// check the frequency/wavelength/velocity values
 			AlwaysAssert(ok, AipsError);
@@ -95,8 +96,9 @@ int main() {
 		}
 		{
 			// CAS-2533
-			PagedImage<Float> img(datadir + "/CAS-2533.im");
-			ImageAnalysis analysis(&img);
+			PagedImage<Float>* img = new PagedImage<Float>(datadir + "/CAS-2533.im");
+			std::tr1::shared_ptr<casa::ImageInterface<float> > imgPtr( img );
+			ImageAnalysis analysis(imgPtr);
 
 			Vector<casa::Double> wxv(2);
 			Vector<casa::Double> wyv(2);
@@ -113,7 +115,7 @@ int main() {
 			bool ok = analysis.getFreqProfile(
 					wxv, wyv, z_xval, z_yval,
 					"world", "frequency",
-					0, 0, 0, "MHz", "LSRK", 0, 0);
+					0, -1, 0, "MHz", "LSRK", 0, 0);
 
 			// check the frequency/wavelength/velocity values
 			AlwaysAssert(ok, AipsError);
@@ -128,8 +130,9 @@ int main() {
 		}
 		{
 			// CAS-2533
-			PagedImage<Float> img(datadir + "/CAS-2533.im");
-			ImageAnalysis analysis(&img);
+			PagedImage<Float>* img = new PagedImage<Float>(datadir + "/CAS-2533.im");
+			std::tr1::shared_ptr<casa::ImageInterface<float> > imgPtr( img );
+			ImageAnalysis analysis(imgPtr);
 
 			Vector<casa::Double> wxv(2);
 			Vector<casa::Double> wyv(2);
@@ -146,7 +149,7 @@ int main() {
 			bool ok = analysis.getFreqProfile(
 					wxv, wyv, z_xval, z_yval,
 					"world", "frequency",
-					0, 0, 0, "Hz", "LSRK", 0, 0);
+					0, -1, 0, "Hz", "LSRK", 0, 0);
 
 			// check the frequency/wavelength/velocity values
 			AlwaysAssert(ok, AipsError);
@@ -161,8 +164,9 @@ int main() {
 		}
 		{
 			// CAS-2533
-			PagedImage<Float> img(datadir + "/CAS-2533.im");
-			ImageAnalysis analysis(&img);
+			PagedImage<Float>* img = new PagedImage<Float>(datadir + "/CAS-2533.im");
+			std::tr1::shared_ptr<casa::ImageInterface<float> > imgPtr( img );
+			ImageAnalysis analysis(imgPtr);
 
 			Vector<casa::Double> wxv(2);
 			Vector<casa::Double> wyv(2);
@@ -179,7 +183,7 @@ int main() {
 			bool ok = analysis.getFreqProfile(
 					wxv, wyv, z_xval, z_yval,
 					"world", "radio velocity",
-					0, 0, 0, "", "LSRK", 0, 0);
+					0, -1, 0, "", "LSRK", 0, 0);
 
 			// check the frequency/wavelength/velocity values
 			AlwaysAssert(ok, AipsError);
@@ -204,8 +208,9 @@ int main() {
 		}
 		{
 			// wavelength output
-			PagedImage<Float> img(datadir + "/CAS-2533.im");
-			ImageAnalysis analysis(&img);
+			PagedImage<Float>* img = new PagedImage<Float>(datadir + "/CAS-2533.im");
+			std::tr1::shared_ptr<casa::ImageInterface<float> > imgPtr( img );
+			ImageAnalysis analysis(imgPtr);
 
 			Vector<casa::Double> wxv(2);
 			Vector<casa::Double> wyv(2);
@@ -222,7 +227,7 @@ int main() {
 			bool ok = analysis.getFreqProfile(
 					wxv, wyv, z_xval, z_yval,
 					"world", "wavelength",
-					0, 0, 0, "", "LSRK", 0, 0);
+					0, -1, 0, "", "LSRK", 0, 0);
 
 			// check the frequency/wavelength/velocity values
 			AlwaysAssert(ok, AipsError);
@@ -240,7 +245,7 @@ int main() {
 			ok = analysis.getFreqProfile(
 					wxv, wyv, z_xval, z_yval,
 					"world", "air wavelength",
-					0, 0, 0, "", "LSRK", 0, 0);
+					0, -1, 0, "", "LSRK", 0, 0);
 
 			// check the frequency/wavelength/velocity values
 			AlwaysAssert(ok, AipsError);
@@ -265,8 +270,9 @@ int main() {
 		}
 		{
 			// wavelength output
-			PagedImage<Float> img(datadir + "/CAS-2533.im");
-			ImageAnalysis analysis(&img);
+			PagedImage<Float>* img = new PagedImage<Float>(datadir + "/CAS-2533.im");
+			std::tr1::shared_ptr<casa::ImageInterface<float> > imgPtr( img );
+			ImageAnalysis analysis(imgPtr);
 
 			Vector<casa::Double> wxv(2);
 			Vector<casa::Double> wyv(2);
@@ -283,7 +289,7 @@ int main() {
 			bool ok = analysis.getFreqProfile(
 					wxv, wyv, z_xval, z_yval,
 					"world", "wavelength",
-					0, 0, 0, "nm", "LSRK", 0, 0);
+					0, -1, 0, "nm", "LSRK", 0, 0);
 
 			// check the frequency/wavelength/velocity values
 			AlwaysAssert(ok, AipsError);
@@ -301,7 +307,7 @@ int main() {
 			ok = analysis.getFreqProfile(
 					wxv, wyv, z_xval, z_yval,
 					"world", "air wavelength",
-					0, 0, 0, "nm", "LSRK", 1, 0);
+					0, -1, 0, "nm", "LSRK", 1, 0);
 
 			// check the frequency/wavelength/velocity values
 			AlwaysAssert(ok, AipsError);
@@ -316,8 +322,9 @@ int main() {
 		}
 		{
 			// wavelength output
-			PagedImage<Float> img(datadir + "/CAS-2533.im");
-			ImageAnalysis analysis(&img);
+			PagedImage<Float>* img = new PagedImage<Float>(datadir + "/CAS-2533.im");
+			std::tr1::shared_ptr<casa::ImageInterface<float> > imgPtr( img );
+			ImageAnalysis analysis(imgPtr);
 
 			Vector<casa::Double> wxv(2);
 			Vector<casa::Double> wyv(2);
@@ -334,7 +341,7 @@ int main() {
 			bool ok = analysis.getFreqProfile(
 					wxv, wyv, z_xval, z_yval,
 					"world", "wavelength",
-					0, 0, 0, "", "LSRK", 0, 0);
+					0, -1, 0, "", "LSRK", 0, 0);
 
 			// check the frequency/wavelength/velocity values
 			AlwaysAssert(ok, AipsError);
@@ -362,7 +369,7 @@ int main() {
 			ok = analysis.getFreqProfile(
 					wxv, wyv, z_xval, z_yval,
 					"world", "wavelength",
-					0, 0, 0, "", "LSRK", 1, 0);
+					0, -1, 0, "", "LSRK", 1, 0);
 
 			// check the spectrum points
 			AlwaysAssert(ok, AipsError);
@@ -381,7 +388,7 @@ int main() {
 			ok = analysis.getFreqProfile(
 					wxv, wyv, z_xval, z_yval,
 					"world", "wavelength",
-					0, 0, 0, "", "LSRK", 2, 0);
+					0, -1, 0, "", "LSRK", 2, 0);
 
 			// check the spectrum points
 			AlwaysAssert(ok, AipsError);
@@ -400,7 +407,7 @@ int main() {
 			ok = analysis.getFreqProfile(
 					wxv, wyv, z_xval, z_yval,
 					"world", "wavelength",
-					0, 0, 0, "", "LSRK", 3, 0);
+					0, -1, 0, "", "LSRK", 3, 0);
 
 			// check the spectrum points
 			AlwaysAssert(ok, AipsError);
@@ -418,7 +425,7 @@ int main() {
 			ok = analysis.getFreqProfile(
 					wxv, wyv, z_xval, z_yval,
 					"world", "wavelength",
-					0, 0, 0, "", "LSRK", 4, 0);
+					0, -1, 0, "", "LSRK", 4, 0);
 
 			// check the spectrum points
 			AlwaysAssert(ok, AipsError);
@@ -437,7 +444,7 @@ int main() {
 			ok = analysis.getFreqProfile(
 					wxv, wyv, z_xval, z_yval,
 					"world", "wavelength",
-					0, 0, 0, "", "LSRK", 5, 0);
+					0, -1, 0, "", "LSRK", 5, 0);
 
 			// check the spectrum points
 			AlwaysAssert(ok, AipsError);
@@ -456,7 +463,7 @@ int main() {
 			ok = analysis.getFreqProfile(
 					wxv, wyv, z_xval, z_yval,
 					"world", "wavelength",
-					0, 0, 0, "", "LSRK", 6, 0);
+					0, -1, 0, "", "LSRK", 6, 0);
 
 			// check the spectrum points
 			AlwaysAssert(ok, AipsError);
@@ -475,7 +482,7 @@ int main() {
 			ok = analysis.getFreqProfile(
 					wxv, wyv, z_xval, z_yval,
 					"world", "wavelength",
-					0, 0, 0, "", "LSRK", 100, 0);
+					0, -1, 0, "", "LSRK", 100, 0);
 
 			// check the frequency/wavelength/velocity values
 			AlwaysAssert(ok, AipsError);
@@ -498,6 +505,37 @@ int main() {
 			AlwaysAssert(fabs(1-z_yval[6]/-0.0924785) < 1e-5, AipsError);
 			AlwaysAssert(fabs(1-z_yval[7]/-0.131597)  < 1e-5, AipsError);
 
+		}
+		{
+			// Tabular Coordinate Instead of Spectral Coordinate
+			PagedImage<Float>* img = new PagedImage<Float>(datadir + "/18h03m_tabular_axis.image");
+			std::tr1::shared_ptr<casa::ImageInterface<float> > imgPtr( img );
+			ImageAnalysis analysis(imgPtr);
+
+			Vector<casa::Double> wxv(2);
+			Vector<casa::Double> wyv(2);
+			Vector<casa::Float> z_xval;
+			Vector<casa::Float> z_yval;
+
+			wxv[0] = 5.28206;
+			wxv[1] = 4.99135;
+			wyv[0] = 0.369376;
+			wyv[1] = 0.877171;
+
+			// extract the spectrum in "frequency"
+			// with the MHz as unit
+			bool ok = analysis.getFreqProfile(
+					wxv, wyv, z_xval, z_yval,
+					"world", "frequency",
+					0, 2, 0, "Hz", "LSRK", 0, 0);
+
+			// check the frequency/wavelength/velocity values
+			AlwaysAssert(ok, AipsError);
+			//cout <<"0="<<z_xval[0]<<" 1="<<z_xval[1]<<" 2="<<z_xval[2]<<" 3="<<z_xval[3]<<endl;
+			AlwaysAssert(fabs(144040000-z_xval[0])/100000000 < 1e-5, AipsError);
+			AlwaysAssert(fabs(151852000-z_xval[1])/100000000 < 1e-5, AipsError);
+			AlwaysAssert(fabs(160055000-z_xval[2])/100000000 < 1e-5, AipsError);
+			AlwaysAssert(fabs(167867000-z_xval[3])/100000000 < 1e-5, AipsError);
 		}
 		cout << "ok" << endl;
 	}
