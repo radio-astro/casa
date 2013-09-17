@@ -214,7 +214,7 @@ def simanalyze(
                     msg("Project directory contains "+default_mslist[i]+" but you have not requested to include it in your simulated image.")
 
 
-            if not mstoimage:
+            if not mstoimage  and len(tpmstoimage) == 0:
                 raise Exception,"No MS found to image"
 
             # now try to parse the mslist for an identifier string that 
