@@ -8,7 +8,7 @@ import asap as sd
 import sdutil
 
 @sdutil.sdtask_decorator
-def sdimaging(infiles, specunit, restfreq, scanlist, field, spw, antenna, stokes, gridfunction, convsupport, truncate, gwidth, jwidth, outfile, overwrite, imsize, cell, dochannelmap, nchan, start, step, outframe, phasecenter, ephemsrcname, pointingcolumn):
+def sdimaging(infiles, specunit, restfreq, scanlist, field, spw, antenna, stokes, gridfunction, convsupport, truncate, gwidth, jwidth, minweight, outfile, overwrite, imsize, cell, dochannelmap, nchan, start, step, outframe, phasecenter, ephemsrcname, pointingcolumn):
     with sdutil.sdtask_manager(sdimaging_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -22,6 +22,9 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
     def parameter_check(self):
         # outfile check
         sdutil.assert_outfile_canoverwrite_or_nonexistent(self.outfile,
+                                                          'im',
+                                                          self.overwrite)
+        sdutil.assert_outfile_canoverwrite_or_nonexistent(self.outfile+'.weight',
                                                           'im',
                                                           self.overwrite)
 
@@ -141,6 +144,8 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         # outfile
         if os.path.exists(self.outfile) and self.overwrite:
             os.system('rm -rf %s'%(self.outfile))
+        if os.path.exists(self.outfile+'.weight') and self.overwrite:
+            os.system('rm -rf %s'%(self.outfile+'.weight'))
 
 
         # cell
@@ -277,12 +282,16 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
                 self.is_imager_opened = True
         self.imager.defineimage(**self.imager_param)#self.__get_param())
         self.imager.setoptions(ftmachine='sd', gridfunction=self.gridfunction)
-        self.imager.setsdoptions(pointingcolumntouse=self.pointingcolumn, convsupport=self.convsupport, truncate=self.truncate, gwidth=self.gwidth, jwidth=self.jwidth)
+        self.imager.setsdoptions(pointingcolumntouse=self.pointingcolumn, convsupport=self.convsupport, truncate=self.truncate, gwidth=self.gwidth, jwidth=self.jwidth, minweight = self.minweight)
         self.imager.makeimage(type='singledish', image=self.outfile)
+        weightfile = self.outfile+".weight"
+        self.imager.makeimage(type='coverage', image=weightfile)
         self.close_imager()
 
         if not os.path.exists(self.outfile):
             raise RuntimeError, "Failed to generate output image '%s'" % self.outfile
+        if not os.path.exists(weightfile):
+            raise RuntimeError, "Failed to generate weight image '%s'" % weightfile
         # Convert output images to proper output frame
         my_ia = gentools(['ia'])[0]
         my_ia.open(self.outfile)
@@ -290,11 +299,26 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         csys.setconversiontype(spectral=csys.referencecode('spectra')[0])
         my_ia.setcoordsys(csys.torecord())
 
-        ### WORKAROUND to fix image unit
-        if self.tb_fluxunit == 'K' and my_ia.brightnessunit() != 'K':
-            my_ia.setbrightnessunit(self.tb_fluxunit)
+#         ### WORKAROUND to fix image unit
+#         if self.tb_fluxunit == 'K' and my_ia.brightnessunit() != 'K':
+#             my_ia.setbrightnessunit(self.tb_fluxunit)
 
         my_ia.close()
+
+        # Mask image pixels whose weight are smaller than minweight.
+        # Weight image should have 0 weight for pixels below < minweight
+        my_ia.open(weightfile)
+        weight_val = my_ia.getchunk()
+        mask_pixels = numpy.where(weight_val <= self.minweight)
+        weight_val[mask_pixels] = 0.
+        my_ia.putchunk(weight_val)
+        my_ia.close()
+        # Modify default mask
+        my_ia.open(self.outfile)
+        #mask_name = my_ia.maskhandler('default')
+        my_ia.calcmask('%s>%f' % (weightfile,self.minweight), asdefault=True)
+        my_ia.close()
+        del weight_val, mask_pixels
 
     def _calc_PB(self, antenna):
         """

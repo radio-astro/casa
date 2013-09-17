@@ -4001,6 +4001,13 @@ is multiplied by this factor.
      <value>-1pixel</value>
      </param>
 
+     <param type="double" name="minweight">
+     <description>Minimum weight level to use for weight correction and weight based masking.</description>
+     <range min="&gt;=0."/>
+     <value>0.</value>
+     </param>
+
+
 </input>
 <returns type="bool"/>
 <example>
