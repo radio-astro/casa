@@ -308,7 +308,7 @@ def _calcTaylorFromCube(imtemplate="",reffreq='1.42GHz',cubename="sim.pb",newtay
    ##### Fit a nterms-term polynomial to each point !!!
   
    # Linear fit
-   ptays=_linfit(ptays, freqs, pbcube[:,:,0,:], weightarr);
+   ptays=_linfit(ptays, freqs, pbcube[:,:,0,:], weightarr, pbthreshold);
 
    # Set all values below the pbthreshold, to zero
    for tt in range(0,nterms):
@@ -337,7 +337,7 @@ def _calcTaylorFromCube(imtemplate="",reffreq='1.42GHz',cubename="sim.pb",newtay
      ia.close();
 
  ####################################################
-def _linfit(ptays, freqs, pcube, wts):
+def _linfit(ptays, freqs, pcube, wts, pbthresh):
   #print 'Calculating PB Taylor Coefficients by applying Inv Hessian to Taylor-weighted sums'
   nterms=len(ptays);
   hess = np.zeros( (nterms,nterms) );
@@ -366,14 +366,14 @@ def _linfit(ptays, freqs, pcube, wts):
   
   for x in range(0,shp[0]):
     for y in range(0,shp[1]):
-      for ii in range(0,nterms):
-          rhs[ii,0]=np.mean( (freqs**(ii)) * pcube[x,y,:] * wts)/normval;
-      soln = np.dot(invhess,rhs);
-      for ii in range(0,nterms):
-          ptays[ii][x,y]=soln[ii,0];
+       if pcube[x,y,0] > pbthresh: # Calculate coeffs only where the largest beam is above thresh
+           for ii in range(0,nterms):
+               rhs[ii,0]=np.mean( (freqs**(ii)) * pcube[x,y,:] * wts)/normval;
+           soln = np.dot(invhess,rhs);
+           for ii in range(0,nterms):
+               ptays[ii][x,y]=soln[ii,0];
     if(x%100 == 0):
-      casalog.post('--- finished rows '+str(x)+ ' to '+ str(x+99), 'NORMAL');
-##      casalog.post('--- finished rows '+str(x)+ ' to '+ str(np.min(x+99,shp[0])), 'NORMAL');
+       casalog.post('--- finished rows '+str(x)+ ' to '+ str(x+99), 'NORMAL');
 
   return ptays;  
 
