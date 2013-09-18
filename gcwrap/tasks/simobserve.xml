@@ -545,11 +545,8 @@ it'll do them for the same amount of time -->
       </when>
       <!-- **********************************************************  -->
       <when param="thermalnoise">
-	<equals type="string" value=""/>
-	<equals type="string" value="False"/>
-	<equals type="string" value="F"/>
 	<equals type="string" value="tsys-atm">
-	  <default param="user_pwv"><value>1.</value></default>
+	  <default param="user_pwv"><value>0.5</value></default>
 	  <default param="t_ground"><value>269.</value></default>
 	  <default param="seed"><value>11111</value></default>
 	</equals>	
@@ -559,6 +556,9 @@ it'll do them for the same amount of time -->
 	  <default param="tau0"><value>0.1</value></default>
 	  <default param="seed"><value>11111</value></default>
 	</equals>
+	<equals type="string" value=""/>
+	<equals type="string" value="False"/>
+	<equals type="string" value="F"/>
       </when>
       <!-- **********************************************************  -->
     </constraints>
