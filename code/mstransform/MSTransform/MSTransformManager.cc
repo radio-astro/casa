@@ -90,7 +90,7 @@ MSTransformManager::~MSTransformManager()
 {
 	if (channelSelector_p) delete channelSelector_p;
 	if (visibilityIterator_p) delete visibilityIterator_p;
-	if (splitter_p) delete splitter_p;
+	if (dataHandler_p) delete dataHandler_p;
 	if (phaseCenterPar_p) delete phaseCenterPar_p;
 
 	return;
@@ -168,7 +168,7 @@ void MSTransformManager::initialize()
 	timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::Nothing);
 
 	// MS-related members
-	splitter_p = NULL;
+	dataHandler_p = NULL;
 	inputMs_p = NULL;
 	selectedInputMs_p = NULL;
 	outputMs_p = NULL;
@@ -772,11 +772,11 @@ void MSTransformManager::open()
 	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 			<< "Select data" << LogIO::POST;
 
-	splitter_p = new MSTransformDataHandler(inpMsName_p,Table::Old);
+	dataHandler_p = new MSTransformDataHandler(inpMsName_p,Table::Old);
 
-	// WARNING: Input MS is re-set at the end of a successful MSTransformDataHandler::makeSubMS,
+	// WARNING: Input MS is re-set at the end of a successful MSTransformDataHandler::makeMSBasicStructure,
 	// call therefore we have to use the selected MS always
-	inputMs_p = &(splitter_p->ms_p);
+	inputMs_p = dataHandler_p->getInputMS();
 	// Note: We always get the input number of channels because we don't know if pre-averaging will be necessary
 	getInputNumberOfChannels();
 
@@ -797,9 +797,9 @@ void MSTransformManager::open()
 		chanSpec = Vector<Int>(1,1);
 	}
 
-	// Set-up SubMS object
+	// Set-up splitter object
 	const String dummyExpr = String("");
-	splitter_p->setmsselect((const String)spwSelection_p,
+	dataHandler_p->setmsselect((const String)spwSelection_p,
 							(const String)fieldSelection_p,
 							(const String)baselineSelection_p,
 							(const String)scanSelection_p,
@@ -811,15 +811,15 @@ void MSTransformManager::open()
 							(const String)scanIntentSelection_p,
 							(const String)observationSelection_p);
 
-	splitter_p->selectTime(timeBin_p,timeSelection_p);
+	dataHandler_p->selectTime(timeBin_p,timeSelection_p);
 
 	// Create output MS structure
 	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 			<< "Create output MS structure" << LogIO::POST;
 
-	//jagonzal (CAS-5174)splitter_p->fillMainTable_p = False;
+	//jagonzal (CAS-5174)dataHandler_p->fillMainTable_p = False;
 	Bool selectionOk = False;
-	selectionOk = splitter_p->makeSubMS(outMsName_p,datacolumn_p,tileShape_p,timespan_p);
+	selectionOk = dataHandler_p->makeMSBasicStructure(outMsName_p,datacolumn_p,tileShape_p,timespan_p);
 	if (!selectionOk)
 	{
 		logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
@@ -828,9 +828,10 @@ void MSTransformManager::open()
 	}
 
 	// jagonzal (CAS-5076): Reindex state column when there is scan selection
+	map<Int, Int> stateRemapper = dataHandler_p->getStateRemapper();
     std::map<Int, Int>::iterator stateRemapperIter;
-    for (	stateRemapperIter = splitter_p->stateRemapper_p.begin();
-    		stateRemapperIter != splitter_p->stateRemapper_p.end();
+    for (	stateRemapperIter = stateRemapper.begin();
+    		stateRemapperIter != stateRemapper.end();
     		stateRemapperIter++)
     {
     	inputOutputScanIntentIndexMap_p[stateRemapperIter->first] = stateRemapperIter->second;
@@ -840,19 +841,20 @@ void MSTransformManager::open()
     }
 
     // jagonzal (CAS-5349): Reindex antenna columns when there is antenna selection
+    Vector<Int> antennaRemapper = dataHandler_p->getAntennaRemapper();
     if (!baselineSelection_p.empty())
     {
-    	for (uInt oldIndex=0;oldIndex<splitter_p->antNewIndex_p.size();oldIndex++)
+    	for (uInt oldIndex=0;oldIndex<antennaRemapper.size();oldIndex++)
     	{
-    		inputOutputAntennaIndexMap_p[oldIndex] = splitter_p->antNewIndex_p[oldIndex];
+    		inputOutputAntennaIndexMap_p[oldIndex] = antennaRemapper[oldIndex];
     	}
     }
 
 
-	selectedInputMs_p = &(splitter_p->mssel_p);
-	outputMs_p = &(splitter_p->msOut_p);
-	selectedInputMsCols_p = splitter_p->mscIn_p;
-	outputMsCols_p = splitter_p->msc_p;
+	selectedInputMs_p = dataHandler_p->getSelectedInputMS();
+	outputMs_p = dataHandler_p->getOutputMS();
+	selectedInputMsCols_p = dataHandler_p->getSelectedInputMSColumns();
+	outputMsCols_p = dataHandler_p->getOutputMSColumns();
 
 	return;
 }
@@ -1548,10 +1550,10 @@ void MSTransformManager::regridAndCombineSpwSubtable()
 	// Determine combined SPWs
 	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 			<< "Calculate combined SPW frequencies" << LogIO::POST;
-	SubMS combiner(*outputMs_p);
+
     Vector<Double> combinedCHAN_FREQ;
     Vector<Double> combinedCHAN_WIDTH;
-	combiner.combineSpws(Vector<Int>(1,-1),True,combinedCHAN_FREQ,combinedCHAN_WIDTH,True);
+    MSTransformRegridder::combineSpws(logger_p,outMsName_p,Vector<Int>(1,-1),combinedCHAN_FREQ,combinedCHAN_WIDTH,True);
 
 	// Create list of combined channels
 	vector<channelInfo> combinedChannels;
@@ -1700,24 +1702,24 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
     					<< "Calculate frequencies in output reference frame " << LogIO::POST;
 
-	SubMS::calcChanFreqs(	logger_p,
-							regriddedCHAN_FREQ,
-							regriddedCHAN_WIDTH,
-							inputCHAN_FREQ,
-							inputCHAN_WIDTH,
-							phaseCenter_p,
-							inputReferenceFrame_p,
-							referenceTime_p,
-							observatoryPosition_p,
-							mode_p,
-							nChan_p,
-							start_p,
-							width_p,
-							restFrequency_p,
-							outputReferenceFramePar_p,
-							velocityType_p,
-							True // verbose
-						);
+	MSTransformRegridder::calcChanFreqs(	logger_p,
+											regriddedCHAN_FREQ,
+											regriddedCHAN_WIDTH,
+											inputCHAN_FREQ,
+											inputCHAN_WIDTH,
+											phaseCenter_p,
+											inputReferenceFrame_p,
+											referenceTime_p,
+											observatoryPosition_p,
+											mode_p,
+											nChan_p,
+											start_p,
+											width_p,
+											restFrequency_p,
+											outputReferenceFramePar_p,
+											velocityType_p,
+											True // verbose
+											);
 
 	// Check if pre-averaging step is necessary
 	if (freqbinMap_p.find(spwId) == freqbinMap_p.end())
@@ -1725,24 +1727,24 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 
 		Vector<Double> tmpCHAN_FREQ;
 		Vector<Double> tmpCHAN_WIDTH;
-		SubMS::calcChanFreqs(	logger_p,
-								tmpCHAN_FREQ,
-								tmpCHAN_WIDTH,
-								originalCHAN_FREQ,
-								originalCHAN_WIDTH,
-								phaseCenter_p,
-								inputReferenceFrame_p,
-								referenceTime_p,
-								observatoryPosition_p,
-								String("channel"),
-								-1,
-								String("0"),
-								String("1"),
-								restFrequency_p,
-								outputReferenceFramePar_p,
-								velocityType_p,
-								False // verbose
-							);
+		MSTransformRegridder::calcChanFreqs(	logger_p,
+												tmpCHAN_FREQ,
+												tmpCHAN_WIDTH,
+												originalCHAN_FREQ,
+												originalCHAN_WIDTH,
+												phaseCenter_p,
+												inputReferenceFrame_p,
+												referenceTime_p,
+												observatoryPosition_p,
+												String("channel"),
+												-1,
+												String("0"),
+												String("1"),
+												restFrequency_p,
+												outputReferenceFramePar_p,
+												velocityType_p,
+												False // verbose
+												);
 
 		Double avgCombinedWidth = 0;
 		for (uInt chanIdx=0;chanIdx<tmpCHAN_WIDTH.size();chanIdx++)

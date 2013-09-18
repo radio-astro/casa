@@ -84,18 +84,20 @@ SDGrid::SDGrid(SkyJones& sj, Int icachesize, Int itilesize,
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
-    truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0)
+    truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0),
+    minWeight_p(0.)
 {
   lastIndex_p=0;
 }
 
 SDGrid::SDGrid(MPosition& mLocation, SkyJones& sj, Int icachesize, Int itilesize,
-	       String iconvType, Int userSupport)
+	       String iconvType, Int userSupport, Float minweight)
   : FTMachine(),  sj_p(&sj), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
-    truncate_p(-1.0), gwidth_p(0.0),  jwidth_p(0.0)
+    truncate_p(-1.0), gwidth_p(0.0),  jwidth_p(0.0),
+    minWeight_p(minweight)
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
@@ -107,30 +109,34 @@ SDGrid::SDGrid(Int icachesize, Int itilesize,
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
-    truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0)
+    truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0),
+    minWeight_p(0.)
 {
   lastIndex_p=0;
 }
 
 SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
-	       String iconvType, Int userSupport)
+	       String iconvType, Int userSupport, Float minweight)
   : FTMachine(), sj_p(0), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
-    truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0)
+    truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0),
+    minWeight_p(minweight)
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
 }
 
 SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
-	       String iconvType, Float truncate, Float gwidth, Float jwidth)
+	       String iconvType, Float truncate, Float gwidth, Float jwidth,
+	       Float minweight)
   : FTMachine(), sj_p(0), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(-1),
-     truncate_p(truncate), gwidth_p(gwidth), jwidth_p(jwidth)
+    truncate_p(truncate), gwidth_p(gwidth), jwidth_p(jwidth),
+    minWeight_p(minweight)
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
@@ -1091,7 +1097,7 @@ ImageInterface<Complex>& SDGrid::getImage(Matrix<Float>& weights,
       logIO() << LogIO::SEVERE << "No useful data in SDGrid: weights all zero"
 	      << LogIO::POST;
     }
-    lattice->copyData((LatticeExpr<Complex>)(iif((*wLattice<=0.0), 0.0,
+    lattice->copyData((LatticeExpr<Complex>)(iif((*wLattice<=minWeight_p), 0.0,
 						 (*lattice)/(*wLattice))));
   }
   

@@ -134,11 +134,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       IPosition axes(3,dirAxes(0),dirAxes(1),2);
       Int spectralAxisIndex=CoordinateUtil::findSpectralAxis(csysHigh_p);
       axes(2)=spectralAxisIndex;
-    
+      if(sdcopy->getDefaultMask() != "")
+	lowIm_p->makeMask(sdcopy->getDefaultMask(), True, True, True, True);
+
       ImageRegrid<Float> ir;
       ir.regrid(*lowIm_p, Interpolate2D::LINEAR, axes,  *sdcopy);
     }
-	    
+    /*if(sdcopy->getDefaultMask() != ""){
+      //Imager::copyMask(*lowIm_p, *sdcopy, sdcopy->getDefaultMask());
+      lowIm_p->makeMask(sdcopy->getDefaultMask(), True, True);
+      ImageUtilities::copyMask(*lowIm_p, *sdcopy,sdcopy->getDefaultMask() , sdcopy->getDefaultMask(), AxesSpecifier());
+      lowIm_p->setDefaultMask(sdcopy->getDefaultMask());
+
+    }
+    */
+    
     if(lowImOrig_p.null()){
       lowImOrig_p=new TempImage<Float>(lowIm_p->shape(), lowIm_p->coordinates(),0);
       lowImOrig_p->copyData(*lowIm_p);

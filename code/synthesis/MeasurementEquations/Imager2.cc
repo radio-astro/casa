@@ -2501,7 +2501,7 @@ Bool Imager::createFTMachine()
 	}
       } 
       ft_p = new SDGrid(mLocation_p, *gvp_p, cache_p/2, tile_p, gridfunction_p,
-                        sdConvSupport_p);
+                        sdConvSupport_p, minWeight_p);
     }
     else if (gridfunction_p=="gauss" || gridfunction_p=="gjinc") {
       if (mcellx_p != mcelly_p && 
@@ -2526,11 +2526,11 @@ Bool Imager::createFTMachine()
       else
         jwidth = qjwidth_p.getValue("rad")/mcelly_p.getValue("rad");
       ft_p = new SDGrid(mLocation_p, cache_p/2, tile_p, gridfunction_p,
-                        truncate, gwidth, jwidth);
+                        truncate, gwidth, jwidth, minWeight_p);
     }
     else {
       ft_p = new SDGrid(mLocation_p, cache_p/2, tile_p, gridfunction_p,
-                        sdConvSupport_p);
+                        sdConvSupport_p, minWeight_p);
     }
     ft_p->setPointingDirColumn(pointingDirCol_p);
 

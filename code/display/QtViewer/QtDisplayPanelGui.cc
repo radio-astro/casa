@@ -262,6 +262,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 
 	QDockWidget* displayDock = new QDockWidget( this );
 	displayDock->setWidget( qdp_);
+	//displayDock->setFocusPolicy( Qt::NoFocus );
 	displayDock->setWindowTitle(QApplication::translate("Display", "Display", 0, QApplication::UnicodeUTF8));
 	std::string displayLocation = rc.get("viewer." + rcid() + ".position.display");
 	addDockWidget( displayLocation == "right" ? Qt::RightDockWidgetArea :
@@ -1531,6 +1532,10 @@ void QtDisplayPanelGui::notifyDDRemoval( QtDisplayData* qdd ){
 
 Bool QtDisplayPanelGui::removeDD(QtDisplayData*& qdd) {
 	bool removed = displayDataHolder->removeDD( qdd );
+	//In case we are removing the coordinate master.
+	if ( displayDataHolder->isCoordinateMaster( qdd) && qdp_!= NULL ){
+		qdp_->setControllingDD( NULL );
+	}
 	if ( removed ) {
 		int imageCount = displayDataHolder->getCount();
 		if ( imageCount == 0 ){

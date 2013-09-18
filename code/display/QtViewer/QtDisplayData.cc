@@ -1093,51 +1093,56 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Record QtDisplayData::getGlobalColorChangeRecord( Record& opts ) const {
 		Record globalChangeRecord;
 		//Remove all but the global options from the opts.
-		int histFieldId = opts.fieldNumber( PrincipalAxesDD::HISTOGRAM_RANGE );
-		if ( histFieldId != -1 ) {
-			if ( opts.dataType(PrincipalAxesDD::HISTOGRAM_RANGE) == TpRecord ) {
-				Record rangeRecord = opts.subRecord( PrincipalAxesDD::HISTOGRAM_RANGE );
-				globalChangeRecord.defineRecord( PrincipalAxesDD::HISTOGRAM_RANGE, rangeRecord );
-			}
-			else if (opts.dataType(PrincipalAxesDD::HISTOGRAM_RANGE) == TpArrayFloat) {
-				Vector<Float> minMaxVector(opts.toArrayFloat(PrincipalAxesDD::HISTOGRAM_RANGE));
-				Record rangeRecord;
-				rangeRecord.define("value", minMaxVector);
-				globalChangeRecord.defineRecord( PrincipalAxesDD::HISTOGRAM_RANGE, rangeRecord );
-			}
-			else {
-				qDebug() <<"QtDisplayData::checkGlobalChange - unrecognized opts.dataType="<<opts.dataType(PrincipalAxesDD::HISTOGRAM_RANGE);
+		if ( opts.isDefined( PrincipalAxesDD::HISTOGRAM_RANGE )){
+			int histFieldId = opts.fieldNumber( PrincipalAxesDD::HISTOGRAM_RANGE );
+			if ( histFieldId != -1 ) {
+				if ( opts.dataType(PrincipalAxesDD::HISTOGRAM_RANGE) == TpRecord ) {
+					Record rangeRecord = opts.subRecord( PrincipalAxesDD::HISTOGRAM_RANGE );
+					globalChangeRecord.defineRecord( PrincipalAxesDD::HISTOGRAM_RANGE, rangeRecord );
+				}
+				else if (opts.dataType(PrincipalAxesDD::HISTOGRAM_RANGE) == TpArrayFloat) {
+					Vector<Float> minMaxVector(opts.toArrayFloat(PrincipalAxesDD::HISTOGRAM_RANGE));
+					Record rangeRecord;
+					rangeRecord.define("value", minMaxVector);
+					globalChangeRecord.defineRecord( PrincipalAxesDD::HISTOGRAM_RANGE, rangeRecord );
+				}
+				else {
+					qDebug() <<"QtDisplayData::checkGlobalChange - unrecognized opts.dataType="<<opts.dataType(PrincipalAxesDD::HISTOGRAM_RANGE);
+				}
 			}
 		}
-		int colorMapId = opts.fieldNumber( COLOR_MAP );
-		if ( colorMapId != -1 ) {
-			if ( opts.dataType( COLOR_MAP) == TpString ){
-				String colorMapName = opts.asString( COLOR_MAP );
-				globalChangeRecord.define( COLOR_MAP, colorMapName);
-			}
-			else if ( opts.dataType( COLOR_MAP)  == TpRecord ){
-				Record colorRecord = opts.asRecord( COLOR_MAP );
-				globalChangeRecord.defineRecord( COLOR_MAP, colorRecord );
-			}
-			else {
-				qDebug() << "QtDisplayData::checkGlobalChange - unrecognized opts colormap type="<<opts.dataType( COLOR_MAP );
+		if ( opts.isDefined( COLOR_MAP )){
+			int colorMapId = opts.fieldNumber( COLOR_MAP );
+			if ( colorMapId != -1 ) {
+				if ( opts.dataType( COLOR_MAP) == TpString ){
+					String colorMapName = opts.asString( COLOR_MAP );
+					globalChangeRecord.define( COLOR_MAP, colorMapName);
+				}
+				else if ( opts.dataType( COLOR_MAP)  == TpRecord ){
+					Record colorRecord = opts.asRecord( COLOR_MAP );
+					globalChangeRecord.defineRecord( COLOR_MAP, colorRecord );
+				}
+				else {
+					qDebug() << "QtDisplayData::checkGlobalChange - unrecognized opts colormap type="<<opts.dataType( COLOR_MAP );
+				}
 			}
 		}
 
-		int powerId = opts.fieldNumber( WCPowerScaleHandler::POWER_CYCLES);
-		if ( powerId != -1 ) {
-			float powerValue = 0;
-			if ( opts.dataType(WCPowerScaleHandler::POWER_CYCLES ) == TpRecord ) {
-				Record subPowerRecord = opts.subRecord(WCPowerScaleHandler::POWER_CYCLES);
-				powerValue = subPowerRecord.asFloat( "value");
+		if ( opts.isDefined( WCPowerScaleHandler::POWER_CYCLES )){
+			int powerId = opts.fieldNumber( WCPowerScaleHandler::POWER_CYCLES);
+			if ( powerId != -1 ) {
+				float powerValue = 0;
+				if ( opts.dataType(WCPowerScaleHandler::POWER_CYCLES ) == TpRecord ) {
+					Record subPowerRecord = opts.subRecord(WCPowerScaleHandler::POWER_CYCLES);
+					powerValue = subPowerRecord.asFloat( "value");
+				}
+				else {
+					powerValue = opts.asFloat( WCPowerScaleHandler::POWER_CYCLES );
+				}
+				Record powerRecord;
+				powerRecord.define( "value", powerValue );
+				globalChangeRecord.defineRecord( WCPowerScaleHandler::POWER_CYCLES, powerRecord);
 			}
-			else {
-				powerValue = opts.asFloat( WCPowerScaleHandler::POWER_CYCLES );
-			}
-			Record oldRecord = dd_->getOptions();
-			Record powerRecord = oldRecord.subRecord( WCPowerScaleHandler::POWER_CYCLES );
-			powerRecord.define( "value", powerValue );
-			globalChangeRecord.defineRecord( WCPowerScaleHandler::POWER_CYCLES, powerRecord);
 		}
 		return globalChangeRecord;
 	}

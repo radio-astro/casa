@@ -32,9 +32,11 @@
 // Measurement Set Selection
 #include <ms/MeasurementSets/MSSelection.h>
 
-// To use Sub-Ms class
-#include <synthesis/MSVis/SubMS.h>
+// Data handling
 #include <mstransform/MSTransform/MSTransformDataHandler.h>
+
+// Regridding
+#include <mstransform/MSTransform/MSTransformRegridder.h>
 
 // VisibityIterator / VisibilityBuffer framework
 #include <synthesis/MSVis/VisibilityIterator2.h>
@@ -55,6 +57,9 @@
 
 // To apply fft shift
 #include <scimath/Mathematics/FFTServer.h>
+
+// To apply 1D interpolations
+#include <scimath/Mathematics/InterpolateArray1D.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -866,7 +871,7 @@ protected:
 	vi::AveragingOptions timeAvgOptions_p;
 
 	// MS-related members
-	MSTransformDataHandler *splitter_p;
+	MSTransformDataHandler *dataHandler_p;
 	MeasurementSet *inputMs_p;
 	MeasurementSet *selectedInputMs_p;
 	MeasurementSet *outputMs_p;

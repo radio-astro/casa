@@ -741,10 +741,10 @@ void MSTransformDataHandler::selectTime(Double timeBin, String timerng)
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-Bool MSTransformDataHandler::makeSubMS(	String& msname,
-										String& colname,
-										const Vector<Int>& tileShape,
-										const String& combine)
+Bool MSTransformDataHandler::makeMSBasicStructure(	String& msname,
+													String& colname,
+													const Vector<Int>& tileShape,
+													const String& combine)
 {
 	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
 
@@ -2413,7 +2413,7 @@ Bool MSTransformDataHandler::copyFeed()
 }
 
 // -----------------------------------------------------------------------
-// Method to merge SPW sub-tables from SubMSs to create the MMS level SPW sub-table
+//
 // -----------------------------------------------------------------------
 Bool MSTransformDataHandler::copyFlag_Cmd()
 {

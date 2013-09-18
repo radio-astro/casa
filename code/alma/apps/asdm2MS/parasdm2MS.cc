@@ -2979,6 +2979,13 @@ string complexifyCrossData_s (float* data, uint32_t numData, uint32_t numCorr, u
   return oss.str().substr(0, numChar);
 }
 
+void complexifyCrossData_f(float* data, uint32_t numData, uint32_t numCorr, vector<float>& result) {
+  LOGENTER("complexifyCrossData_f");
+  result.resize(numData);
+  copy(data, data+numData, result.begin());
+  LOGEXIT("complexifyCrossData_f");
+}
+
 template <class T>
 void listCrossData(int64_t midpoint, int64_t interval, uint32_t numCrossData, T * data_p, vector<AnyValueMap<string> >& bb_spw_v, AnyValueMap<string>& msGroup_avm, uint32_t dataDescIndex, vector<ofstream *>& binaryDataPath_p_v, bool mute) {
   LOGENTER("listCrossData");
@@ -3011,7 +3018,10 @@ void listCrossData(int64_t midpoint, int64_t interval, uint32_t numCrossData, T 
 
       LOG("ici_5");
       
-      string complexCrossData_s = complexifyCrossData_s(cdSlice.data() + sliceStart, sliceEnd - sliceStart, numCrossPolProducts, 100);
+      //string complexCrossData_s = complexifyCrossData_s(cdSlice.data() + sliceStart, sliceEnd - sliceStart, numCrossPolProducts, 100);
+      vector<float> result;
+      complexifyCrossData_f(cdSlice.data() + sliceStart, sliceEnd - sliceStart, numCrossPolProducts, result);
+      
       if (! mute) *(binaryDataPath_p_v[dataDescIndex]) << "crossdata - time = " << ArrayTime(midpoint-interval/2).toFITS()
 						       << ", scaleFactor = " << 1./oneOverScaleFactor
 						       << ", ANTENNA1 = " << antennaId_v[iAntenna1]
@@ -3021,8 +3031,8 @@ void listCrossData(int64_t midpoint, int64_t interval, uint32_t numCrossData, T 
 						       << ", sliceEnd = " << sliceEnd
 						       << ", bl index = " << blIndex
 						       << ", dataDescIndex = " << dataDescIndex << "/" << numDD
-						       << ", size of cdSlice = " << cdSlice.size()
-						       << " -> " << complexCrossData_s  << endl;
+						       << ", size of cdSlice = " << cdSlice.size() << endl;
+      //						       << " -> " << complexCrossData_s  << endl;
       blIndex++;
     }
   }
@@ -3064,6 +3074,51 @@ string complexifyAutoData_s (const AUTODATATYPE* data, uint32_t numAutoData, uin
   return oss.str().substr(0, numChar);
 }
 
+void complexifyAutoData_f (const AUTODATATYPE* data, uint32_t numAutoData, uint32_t numCorr, vector<float>& result) {
+  LOGENTER("complexifyCrossData_f");
+  
+  uint32_t k = 0;
+  switch (numCorr) {
+  case 1:
+  case 2:
+    result.resize(numAutoData);
+    copy ( data, data+numAutoData, result.begin());
+    break;
+
+  case 3 :
+    result.resize(2 * numAutoData);
+    for (uint32_t iAutoData = 0; iAutoData < numAutoData; iAutoData = iAutoData + 4) {
+      result[k] = data[iAutoData]; k++;
+      result[k] = 0.0; k++;
+      result[k] = data[iAutoData+1]; k++;
+      result[k] = data[iAutoData+2]; k++;
+      result[k] = data[iAutoData+1]; k++;
+      result[k] = -data[iAutoData+1]; k++;
+      result[k] = data[iAutoData+3]; k++;
+      result[k] = 0.0; k++;      
+    }
+    break;
+    
+  case 4 :
+    result.resize((numAutoData*4)/3);
+    for (uint32_t iAutoData = 0; iAutoData < numAutoData; iAutoData = iAutoData + 6) {
+      result[k] = data[iAutoData]; k++;
+      result[k] = 0.0; k++;
+      result[k] = data[iAutoData+1]; k++;
+      result[k] = data[iAutoData+2]; k++;
+      result[k] = data[iAutoData+3]; k++;
+      result[k] = data[iAutoData+4]; k++;
+      result[k] = data[iAutoData+5]; k++;
+      result[k] = 0.0; k++;
+    }
+  default :
+    cout << "Invalid value for numCorr '" << numCorr << "'." << endl;
+    exit(2);
+  }
+
+  LOGEXIT("complexifyCrossData_f");
+}
+
 void listAutoData(int64_t midpoint, int64_t interval, uint32_t numAutoData, const AUTODATATYPE * data_p, vector<AnyValueMap<string> >& bb_spw_v, AnyValueMap<string>& msGroup_avm, uint32_t dataDescIndex, vector<ofstream *>& binaryDataPath_p_v, bool mute) {
   LOGENTER("listAutoData");
 
@@ -3077,15 +3132,17 @@ void listAutoData(int64_t midpoint, int64_t interval, uint32_t numAutoData, cons
   for (uint32_t iAntenna = 0; iAntenna < antennaId_v.size(); iAntenna++) {
     sliceStart	= iAntenna * msGroup_avm.getValue<uint32_t>("antOffset") + msGroup_avm.getValue<vector<uint32_t> >("adBBOffset")[dataDescIndex];
     sliceEnd    = sliceStart + msGroup_avm.getValue<vector<uint32_t> >("numChan")[dataDescIndex] * numberOfRealValuesPerAutoCorrelation(numSdPolProducts);
-    string complexAutoData_s = complexifyAutoData_s(data_p + sliceStart, sliceEnd - sliceStart, numSdPolProducts, 100);
+    // string complexAutoData_s = complexifyAutoData_s(data_p + sliceStart, sliceEnd - sliceStart, numSdPolProducts, 100);
+    vector<float> result;
+    complexifyAutoData_f(data_p + sliceStart, sliceEnd - sliceStart, numSdPolProducts, result);
     if (! mute) *(binaryDataPath_p_v[dataDescIndex]) << "autodata - time = " << ArrayTime(midpoint-interval/2).toFITS()
 						     << ", ANTENNA1 = " << antennaId_v[iAntenna]
 						     << ", ANTENNA2 = " << antennaId_v[iAntenna]
 						     << ", sliceStart = " << sliceStart
 						     << ", sliceEnd = " << sliceEnd
 						     << ", dataDescIndex = " << dataDescIndex << "/" << numDD
-						     << ", size of autoData = " << numAutoData
-						     << " -> " << complexAutoData_s << endl;
+						     << ", size of autoData = " << numAutoData << endl;
+    //						     << " -> " << complexAutoData_s << endl;
   }
   LOGEXIT("listAutoData");
 }
@@ -3103,6 +3160,18 @@ string complexifyRadiometricData_s (const AUTODATATYPE* data, uint32_t numRadiom
   oss << ")";
   LOGEXIT("complexifyRadiometricData_s");
   return oss.str().substr(0, numChar);
+}
+
+void complexifyRadiometricData_f(const AUTODATATYPE* data, uint32_t numRadiometricData, uint32_t numCorr, vector<float>& result) {
+  LOGENTER("complexifyRadiometricData_f");
+  result.resize(2 * numRadiometricData);
+  uint32_t k = 0;
+  for (uint32_t j = 0 ; j < numRadiometricData; j=j+numCorr)
+    for (uint32_t i = 0; i < numCorr; i++) { 
+      result[k] = data[i+j]; k++;
+      result[k] = 0.0; k++;
+    }
+  LOGEXIT("complexifyRadiometricData_f");
 }
 
 void listRadiometricData(int64_t midpoint, int64_t interval, uint32_t numTime, uint32_t numRadiometricData, const AUTODATATYPE * data_p, vector<AnyValueMap<string> >& bb_spw_v, AnyValueMap<string>& msGroup_avm, uint32_t dataDescIndex, vector<ofstream *>& binaryDataPath_p_v, bool mute) {
@@ -3129,14 +3198,16 @@ void listRadiometricData(int64_t midpoint, int64_t interval, uint32_t numTime, u
       sliceStart = base + iAntenna * antOffset + rmdOffset;
       sliceEnd	 = sliceStart + numChan * numSdPolProducts;
       string complexRadiometricData_s = complexifyRadiometricData_s(data_p + sliceStart, sliceEnd - sliceStart, numSdPolProducts, 100); 
+      vector<float> result;
+      complexifyRadiometricData_f(data_p + sliceStart, sliceEnd - sliceStart, numSdPolProducts, result); 
       if (!mute) *(binaryDataPath_p_v[dataDescIndex]) << "radiometricdata - time = " << (ArrayTime(startTime + timeCount * deltaTime)).toFITS()
 						      << ", ANTENNA1 = " << antennaId_v[iAntenna]
 						      << ", ANTENNA2 = " << antennaId_v[iAntenna]
 						      << ", sliceStart = " << sliceStart
 						      << ", sliceEnd = " << sliceEnd
 						      << ", dataDescIndex = " << dataDescIndex << "/" << numDD
-						      << ", size of radiometricData = " << numRadiometricData
-						      << " -> " << complexRadiometricData_s << endl;
+						      << ", size of radiometricData = " << numRadiometricData << endl;
+      //						      << " -> " << complexRadiometricData_s << endl;
     }
   }    
   LOGEXIT("listRadiometricData");
@@ -3169,12 +3240,15 @@ void fillMainPar( const string& dsPath, ASDM * ds_p, bool doparallel, bool mute 
 	     bind (&std::map<Tag, AnyValueMap<string> >::value_type::first, _1)
 	     );
 
-  cout << "Size of keys = " << keys_v.size() << endl;
-  //  copy ( keys_v.begin(), keys_v.end(), std::ostream_iterator<Tag>(std::cout, "\n") );
+  // cout << "Size of keys = " << keys_v.size() << endl;
+  // copy ( keys_v.begin(), keys_v.end(), std::ostream_iterator<Tag>(std::cout, "\n") );
 
+#pragma omp parallel for if(doparallel)
+  //BOOST_FOREACH(Tag configDescriptionId, keys_v) {
+  for (uint32_t iKey = 0; iKey < keys_v.size(); iKey++) {
+    Tag configDescriptionId = keys_v[iKey];
 
-  BOOST_FOREACH(Tag configDescriptionId, keys_v) {
-    cout << configDescriptionId << endl;
+    cout << configDescriptionId.toString() + "\n";
 
     AnyValueMap<string>& msGroup_avm = msGroup_m[configDescriptionId];
 
@@ -3280,7 +3354,7 @@ void fillMainPar( const string& dsPath, ASDM * ds_p, bool doparallel, bool mute 
 	    /**
 	     * Write MANY
 	     */
-#pragma omp parallel for if(doparallel)
+	    //#pragma omp parallel for if(doparallel)
 	    for (uint32_t dataDescIndex = 0; dataDescIndex < dataDescriptionId_v.size(); dataDescIndex++) {
 	      listAutoData(midpoint, interval, numAutoData, autoData_p, bb_spw_v, msGroup_avm, dataDescIndex, binaryDataPath_p_v, mute);
 
@@ -3340,7 +3414,7 @@ void fillMainPar( const string& dsPath, ASDM * ds_p, bool doparallel, bool mute 
 	  int64_t  midpoint = subset.time();
 	  int64_t  interval = subset.interval();
 	  uint32_t numTime  = sdo.numTime();
-#pragma omp parallel for if(doparallel)
+	  //#pragma omp parallel for if(doparallel)
 	  for (uint32_t dataDescIndex = 0; dataDescIndex < dataDescriptionId_v.size(); dataDescIndex++) {
 	  listRadiometricData(midpoint, interval, numTime, numRadiometricData, radiometricData_p, bb_spw_v, msGroup_avm, dataDescIndex, binaryDataPath_p_v, mute);
 	  }
@@ -3960,9 +4034,7 @@ void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers, map<AtmPhaseCorre
 void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const vector<ScanRow *>& selectedScanRow_v, map<AtmPhaseCorrection, ASDM2MSFiller*>& msFillers_m) {
   LOGENTER("fillSysPower");
 
-  cout << "calling getSysPower" << endl;
   const SysPowerTable& sysPowerT = ds_p->getSysPower();
-  cout << "called getSysPower" << endl;
 
   infostream.str("");
   infostream << "The dataset has " << sysPowerT.size() << " syspower(s).";

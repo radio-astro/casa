@@ -49,9 +49,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class MSTransformDataHandler
 {
 
- // Allow MSTransformManager to access protected methods and members of this class
-friend class MSTransformManager;
-
 public:
 
 	enum asdmStManUseAlternatives
@@ -129,7 +126,7 @@ public:
 	// Select time parameters
 	void selectTime(Double timeBin=-1.0, String timerng="");
 
-	//Method to make the subMS
+	//Method to make the basic structure of the MS
 	//
 	//TileShape of size 1 can have 2 values [0], and [1] ...these are used in to
 	//determine the tileshape by using MSTileLayout. Otherwise it has to be a
@@ -138,10 +135,10 @@ public:
 	//
 	// combine sets combine_p.  (Columns to ignore while time averaging.)
 	//
-	Bool makeSubMS(	String& submsname,
-					String& whichDataCol,
-					const Vector<Int>& tileShape = Vector<Int> (1, 0),
-					const String& combine = "");
+	Bool makeMSBasicStructure(	String& msname,
+								String& whichDataCol,
+								const Vector<Int>& tileShape = Vector<Int> (1, 0),
+								const String& combine = "");
 
 	Bool isAllColumns(const Vector<MS::PredefinedColumns>& colNames);
 
@@ -149,7 +146,7 @@ public:
 	Bool makeSelection();
 
 	// This sets up a default new ms
-	// Declared static as it can be (and is) called directly outside of SubMS.
+	// Declared static as it can be (and is) called directly from outside
 	// Therefore it is not dependent on any member variable.
 	static MeasurementSet* setupMS(	const String& msname, const Int nchan,
 									const Int npol, const String& telescop,
@@ -234,6 +231,16 @@ public:
 	static Bool mergeSpwSubTables(Vector<String> filenames);
 	static Bool mergeDDISubTables(Vector<String> filenames);
 
+	// Accesors for the MS objects
+	MeasurementSet * getInputMS() {return &ms_p;};
+	MeasurementSet * getSelectedInputMS() {return &mssel_p;};
+	MeasurementSet * getOutputMS() {return &msOut_p;};
+	ROMSColumns * getSelectedInputMSColumns() {return mscIn_p;};
+	MSColumns * getOutputMSColumns() {return msc_p;};
+
+	// Accesors for the Re-mapper objects
+	map<Int, Int> & getStateRemapper() {return stateRemapper_p;};
+	Vector<Int> & getAntennaRemapper() {return antNewIndex_p;};
 
 protected:
 
