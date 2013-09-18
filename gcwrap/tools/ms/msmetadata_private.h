@@ -28,3 +28,7 @@ friend msmetadata* ms::metadata(const float maxcache);
 
 void _init(const casa::MeasurementSet *const &ms, const float maxcache);
 
+void _checkSpwId(int id, bool throwIfNegative) const;
+
+void _checkPolId(int id, bool throwIfNegative) const;
+

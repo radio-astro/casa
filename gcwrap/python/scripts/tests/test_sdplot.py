@@ -26,11 +26,13 @@ class sdplot_unittest_base:
     currdir = os.path.abspath('curr_sdplot')
     # Minimum data size of figure allowed
     minsize = 20000
-    # save figure for reference?
-    saveref = True
     # GUI settings
     oldgui = sd.rcParams['plotter.gui']  # store previous GUI setting
     usegui = False   # need to set GUI status constant to compare
+    # Do you want to test pixel to pixel comparison of figures?
+    compare = False #(not usegui)
+    # save figure for reference?
+    saveref = compare
 
     # initialize plotter
     def _switchPlotterGUI(self, usegui):
@@ -347,7 +349,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(len(pl.gca().get_lines()),1)
         self.assertEqual(pl.gca().get_xlabel(),'Time (UT [hour])')
         self.assertEqual(pl.gca().get_ylabel(),'Az [deg.]')
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot02( self ):
         """Test 2: test plot type --- pointing"""
@@ -364,7 +366,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(len(pl.gca().get_lines()),2)
         self.assertEqual(pl.gca().get_xlabel(),'RA [deg.]')
         self.assertEqual(pl.gca().get_ylabel(),'Declination [deg.]')
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot03( self ):
         """
@@ -384,7 +386,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, locinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot04( self ):
         """
@@ -406,7 +408,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, self.baseinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot05( self ):
         """
@@ -430,7 +432,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot06( self ):
         """
@@ -454,7 +456,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot07( self ):
         """
@@ -478,7 +480,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot08( self ):
         """
@@ -498,7 +500,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot09( self ):
         """
@@ -519,7 +521,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot10( self ):
         """
@@ -540,7 +542,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot11( self ):
         """
@@ -561,7 +563,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot12( self ):
         """
@@ -582,7 +584,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot13( self ):
         """
@@ -604,7 +606,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot14( self ):
         """
@@ -624,7 +626,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot15( self ):
         """
@@ -645,7 +647,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot16( self ):
         """
@@ -666,7 +668,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot17( self ):
         """
@@ -687,7 +689,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot18( self ):
         """
@@ -708,7 +710,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot19( self ):
         """
@@ -731,7 +733,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot20( self ):
         """
@@ -783,7 +785,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, self.baseinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot23( self ):
         """
@@ -802,7 +804,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, self.baseinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot24( self ):
         """
@@ -822,7 +824,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot25( self ):
         """
@@ -842,7 +844,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot26( self ):
         """
@@ -863,7 +865,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         result = sdplot(infile=infile,panel=panel,stack=stack,
                         header=header,outfile=outfile)
         self.assertEqual(result,None)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot27( self ):
         """
@@ -885,7 +887,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         result = sdplot(infile=infile,panel=panel,
                         header=header,outfile=outfile)
         self.assertEqual(result,None)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot28( self ):
         """
@@ -907,7 +909,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot29( self ):
         """
@@ -932,7 +934,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
     def testplot30( self ):
         """
@@ -957,7 +959,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         currinfo = self._get_plot_info()
         self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
 
 
 #####
@@ -1113,7 +1115,7 @@ class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
                         iflist=self.iflist,header=self.header,outfile=outfile)
         # Test plot
         self.assertEqual(result,None)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
         axlist = self._get_axlist()
         self._check_axlabel(axlist,self.refaxlabel)
         # Compare units and coords of input scantable before/after run
@@ -1137,7 +1139,7 @@ class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
                         iflist=self.iflist,header=self.header,outfile=outfile)
         # Test plot
         self.assertEqual(result,None)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
         axlist = self._get_axlist()
         self._check_axlabel(axlist,self.refaxlabel)
         # Compare units and coords of input scantable before/after run
@@ -1161,7 +1163,7 @@ class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
                         iflist=self.iflist,header=self.header,outfile=outfile)
         # Test plot
         self.assertEqual(result,None)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
         axlist = self._get_axlist()
         self._check_axlabel(axlist,self.refaxlabel)
         # Compare units and coords of input scantable before/after run
@@ -1185,7 +1187,7 @@ class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
                         iflist=self.iflist,header=self.header,outfile=outfile)
         # Test plot
         self.assertEqual(result,None)
-        self._checkOutFile(outfile)
+        self._checkOutFile(outfile,self.compare)
         axlist = self._get_axlist()
         self._check_axlabel(axlist,self.refaxlabel)
         # Compare units and coords of input scantable before/after run
@@ -1232,11 +1234,6 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
                'xlabel': 'Channel',
                'ylabel': 'Brightness Temperature (K)'}
 
-    # Test settings
-    saveref = False
-    usegui = False
-    compare = False #(not usegui)
-    
     def setUp( self ):
         # switch on/off GUI
         self._switchPlotterGUI(self.usegui)
@@ -1558,10 +1555,6 @@ class sdplot_selectTest( sdplot_unittest_base, unittest.TestCase ):
     # common parameter values
     header = False
 
-    # Test settings
-    saveref = True
-    usegui = False
-    compare = (not usegui)
     
     def setUp( self ):
         # switch on/off GUI

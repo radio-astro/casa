@@ -169,6 +169,9 @@ class test_SingleObservation(SetjyUnitTestBase):
 
         """Flux density in HISTORY (Uranus)?"""
         self.check_history(self.result['history'], ["Uranus", "V=0] Jy"])
+        """Returned fluxes """
+        self.assertTrue(sjran.has_key('0')) 
+        self.check_eq(sjran['0']['1']['fluxd'][0],65.23839313,0.0001)
         """WVR spw"""
         self.check_eq(self.result['wvr'], numpy.array([[26.40653229+0.j,26.40653229+0.j]]),0.0001)
         """Zero spacing of spw 3"""
@@ -181,7 +184,7 @@ class test_SingleObservation(SetjyUnitTestBase):
         self.check_eq(self.result['med4'], numpy.array([[38.01076126+0.j],[38.01076126+0.j]]),0.0001)
         """Long spacing of spw 4"""
         self.check_eq(self.result['long4'], numpy.array([[2.83933783+0.j],[2.83933783+0.j]]),0.0001)
-
+        
         return sjran
 
     def test2_SingleObservationSelectByChan(self):
@@ -313,6 +316,9 @@ class test_SingleObservation(SetjyUnitTestBase):
 
         """Flux density in HISTORY (Uranus)?"""
         self.check_history(self.result['history'], ["Uranus:", "V=0.0] Jy"])
+        """Returned fluxes """
+        self.assertTrue(sjran.has_key('0')) 
+        self.check_eq(sjran['0']['1']['fluxd'][0],66.112953186035156,0.0001)
         """WVR spw"""
         #self.check_eq(self.result['wvr'], numpy.array([[ 25.33798409+0.j,25.33798409+0.j]]),0.0001)
         # new value after code and ephemeris data update 2012-10-03
@@ -328,7 +334,7 @@ class test_SingleObservation(SetjyUnitTestBase):
 
         return sjran
 
-    def test4_SingleObservationSelectByChan(self):
+    def test4_SingleObservationSelectByIntent(self):
         """ Test vs an MS with one single observation using the Butler-JPL-Horizons 2010 model with the selection by intent"""
 
         os.system("mv " + self.inpms + " " + self.inpms + ".test2")
@@ -608,8 +614,8 @@ class test_ModImage(SetjyUnitTestBase):
             print "importuvfits error:"
             raise e
     
-    def test1_UBandModelQithQBandMS(self):
-        """ Test U-Band model with W-Band data to see impact of flux density scale """
+    def test1_UBandModelwithQBandMS(self):
+        """ Test U-Band model with Q-Band data to see impact of flux density scale """
 
         # The MS is in Q band, so deliberately choose the U band model so that the structure
         # is not too far off, but whether or not its flux density is scaled makes a difference.
@@ -629,6 +635,19 @@ class test_ModImage(SetjyUnitTestBase):
         self.check_history(self.result['fluxdens']['history'],["Scaling spw 1's model image to I ="])
         """Flux density in HISTORY (spix)?"""
         self.check_history(self.result['spix']['history'],["Scaling spw 1's model image to I ="])
+        """ Returned flux density (using standard) """
+        # fieldid = 12
+        self.assertTrue(self.result[True]['setjyran'].has_key('12'))
+        self.check_eq(self.result[True]['setjyran']['12']['1']['fluxd'][0],0.91134687,0.0001)
+        """ Returned flux density (no  standard) """
+        self.assertTrue(self.result[False]['setjyran'].has_key('12'))
+        self.check_eq(self.result[False]['setjyran']['12']['1']['fluxd'][0],0.0,0.0001)
+        """ Returned flux density (with input fluxdensity) """
+        self.assertTrue(self.result['fluxdens']['setjyran'].has_key('12'))
+        self.check_eq(self.result['fluxdens']['setjyran']['12']['1']['fluxd'][0],1234.0,0.0001)
+        """ Returned flux density (with input fluxdensity and spix) """
+        self.assertTrue(self.result['spix']['setjyran'].has_key('12'))
+        self.check_eq(self.result['spix']['setjyran']['12']['1']['fluxd'][0],1233.91240671,0.0001)
         """modimage != '' and fluxdensity == 0 -> no scaling?"""
         self.check_eq(self.result[False]['short'], 2.712631, 0.05)
         self.check_eq(self.result[False]['long'],  2.4080808, 0.05)
@@ -725,8 +744,93 @@ class test_inputs(SetjyUnitTestBase):
         print "\nRunning setjy in listmodels mode ...."
         sjran = setjy(vis=self.inpms,listmodels=True)
         self.assertTrue(sjran)
-      
-        
-  
+
+
+class test_conesearch(SetjyUnitTestBase):
+    """Test search for field match by position (standard='Perley-Butler 2013')"""
+
+    def setUp(self):
+        self.setUpMS('unittest/setjy/n1333_nonstdcalname.ms')
+        self.field = 'myfcalsrc'
+        self.modelim = '3C147_U.im'
+        self.result = {}
+
+    def tearDown(self):
+        self.resetMS()
+ 
+    def test_searchByPosition(self): 
+        sjran = setjy(vis=self.inpms, 
+                      field=self.field,
+                      modimage=self.modelim,
+                      scalebychan=False,
+                      #standard='Perley-Taylor 99',
+                      standard='Perley-Butler 2013',
+                      usescratch=True,
+                      async=False)
+        ret = True
+        if type(sjran)!=dict:
+            ret = False
+        else: 
+            outfldid = ""
+            for ky in sjran.keys():
+                if sjran[ky].has_key('fieldName') and sjran[ky]['fieldName']==self.field:
+                    outfldid = ky
+                    break 
+            ret = len(outfldid)
+            if not ret:
+                print "FAIL: missing field = %s in the returned dictionary" % self.field 
+        self.check_eq(sjran['12']['1']['fluxd'][0],0.99125797,0.0001)
+        self.assertTrue(ret)
+
+class test_fluxscaleStandard(SetjyUnitTestBase):
+    """Test standard="fluxscale" mode"""
+
+    def setUp(self):
+        self.setUpMS('unittest/setjy/ngc5921.ms')
+        self.field = 'myfcalsrc'
+        self.modelim = '3C147_U.im'
+        self.result = {}
+
+    def tearDown(self):
+        self.resetMS()
+
+    def test1(self):
+        """ Test for accepting input fluxscale dictionary """
+        import numpy as np
+        fluxscaledict=\
+        {'1': {'0': {'fluxd': np.array([ 2.48362403,  0.        ,  0.        ,  0.        ]),
+             'fluxdErr': np.array([ 0.00215907,  0.        ,  0.        ,  0.        ]),
+             'numSol': np.array([ 54.,   0.,   0.,   0.])},
+       'fieldName': '1445+09900002_0',
+       'fitFluxd': 0.0,
+       'fitFluxdErr': 0.0,
+       'fitRefFreq': 0.0,
+       'spidx': np.array([ 0.,  0.,  0.]),
+       'spidxerr': np.array([ 0.,  0.,  0.])},
+       'freq':np. array([  1.41266507e+09]),
+       'spwID': np.array([0], dtype=np.int32),
+       'spwName': np.array(['none'], dtype='|S5')}
+
+        sjran = setjy(vis=self.inpms,
+                      standard='fluxscale',
+                      fluxdict=fluxscaledict,
+                      usescratch=False,
+                      async=False)
+        ret = True
+        if type(sjran)!=dict:
+            ret = False
+        else:
+            outfldid = ""
+            for ky in sjran.keys():
+                if sjran[ky].has_key('fieldName') and sjran[ky]['fieldName']==fluxscaledict['1']['fieldName']:
+                    outfldid = ky
+                    break
+            ret = len(outfldid)
+            if not ret:
+                print "FAIL: missing field = %s in the returned dictionary" % self.field
+        self.check_eq(sjran['1']['0']['fluxd'][0],2.48362403,0.0001)
+        self.assertTrue(ret)
+
+
 def suite():
-    return [test_SingleObservation,test_MultipleObservations,test_ModImage, test_inputs]
+    return [test_SingleObservation,test_MultipleObservations,test_ModImage, test_inputs, test_conesearch, test_fluxscaleStandard]

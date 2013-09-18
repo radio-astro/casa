@@ -264,6 +264,11 @@
                options: [] with flag commands or 
                         [] with filenames or 
                         '' with a filename.
+
+                  IMPORTANT: string values must contain quotes around them or the parser
+                             will not work. The parser evaluates the commands in the list
+                             and considers only existing Python types.
+
                   example1: the following commands can be saved to a file or group of files
                             and given to the task (e.g. save it to flags.txt).
                   

@@ -8,9 +8,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <task type="function" name="exportfits" category="import/export">
 <shortdescription>Convert a CASA image to a FITS file</shortdescription>
 <description>
-	CASA-produced images can be written to disk for transporting
-	to other software packages.  No subimaging of the fits image
-	can be made with this task.
+	CASA-produced images can be exported as FITS files for transporting
+	to other software packages or publication.  
+        No subimaging of the fits image can be made with this task.
+        The spectral reference frame can be changed prior to export
+        using the task imreframe.
 
 </description>
 <input>

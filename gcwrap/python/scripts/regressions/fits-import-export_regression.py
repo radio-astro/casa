@@ -420,6 +420,56 @@ else:
     failed_tests.append('defaultaxes')
 print myname, ' ***********************************************************'
 
+print myname, ' ***********************************************************'
+print myname, ' Test of export of FITs images with spectral conversion layer:'
+expecta = 2.191033189757E+11 # BARY
+expectb = 2.190956850603E+11 # LSRK
+passed = True
+try:
+    os.system('rm -rf freq.im')
+    importfits(imagename='freq.im', fitsimage='spec-test-freq.fits')
+    os.system('rm -rf freqx.im')
+    imreframe(imagename='freq.im', output='freqx.im', outframe='BARY')
+    cond0 = ia.open('freqx.im')
+    mycs1 = ia.coordsys()
+    ia.close()
+    myworld = mycs1.toworld([0,0,0,0])['numeric'][2]
+    cond1 = (abs(myworld-expecta)<1.) # avoid Python precision problems
+    print 'value, expectation, diff:', myworld,',', expecta, ",", myworld-expecta
+    cond2 = (mycs1.referencecode()[2]=='LSRK')
+    print cond0, cond1, cond2
+    passed1 = cond0 and cond1 and cond2
+    os.system('rm -rf spec-test-convbary-ex.fits')
+    exportfits(imagename='freqx.im', fitsimage='spec-test-convbary-ex.fits')
+    
+    passed2 = True
+    
+    os.system('rm -rf freq2.im')
+    importfits(imagename='freq2.im', fitsimage='spec-test-convbary-ex.fits')
+    cond0 = ia.open('freq2.im')
+    mycs2 = ia.coordsys()
+    ia.close()
+    myworld = mycs2.toworld([0,0,0,0])['numeric'][2]
+    cond1 = (abs(myworld-expecta)<1.) # avoid Python precision problems
+    print 'value, expectation, diff:', myworld,',', expecta, ",", myworld-expecta
+    cond2 = (mycs2.referencecode()[2]=='BARY')
+    print cond0, cond1, cond2
+    passed2 = cond0 and cond1 and cond2
+    
+    passed = passed1 and passed2
+
+except:
+    print myname, ' Error ', sys.exc_info()[0]
+    passed = False
+        
+if passed:
+    print myname, ' Export with conversion layer tests passed.'
+    passed_tests.append('Export with conversion layer')
+else:
+    print myname, ' Export with conversion layer tests failed.'
+    failed_tests.append('Export with conversion layer')
+print myname, ' ***********************************************************'
+
 
 
 if len(failed_tests)>0:

@@ -129,7 +129,6 @@
        opacity, etc.  The fluxscale results can also be degraded
        by poor pointing during the observation.
 
-
        Keyword arguments:
        vis -- Name of input visibility file
                default: none; example: vis='ngc5921.ms'
@@ -195,6 +194,25 @@
                 2 (spectral index and curvature).  It falls back to a lower fitorder if 
                 there are not enough solutions to fit with the requested fitorder.
                 default: 1
+
+       Returned dictionary: 
+                when it is run as fluxres = fluxscale(vis='my.ms',...), the determined flux
+                densities and spectral index information  are returned as a Python dictionary with
+                a format, {fieldIdstr: {spwIdstr: {'fluxd':array([I,Q,U,V]), 
+                                                  'fluxdErr': corresponding errors,
+                                                   'numSol': corresponding no. of solutions,
+                                        'fieldName': field name,
+                                        'fitFluxd': fitted flux density at the reference frequency,
+                                        'fitFluxdErr': fitted flux density error,
+                                        'fitRefFreq': reference frequency,
+                                        'spidx': a_0, a_1, a_2
+                                        'spidxerr': errors in a_0,a_1, a_2} 
+                           'freq': (center) spw frequencies 
+                           'spwID': list of spw IDs,
+                           'spwName': list of spw names}, where fieldIdstr and spwIdstr
+                are field Id and spw Id in string type, repectively.
+
+       
  </example>
  </task>
  </casaxml>

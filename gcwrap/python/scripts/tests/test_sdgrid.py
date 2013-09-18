@@ -818,9 +818,63 @@ class sdgrid_grid_center(sdgrid_unittest_base,unittest.TestCase):
         #print nonzeropix
         self.nonzero(nonzeropix_ref,nonzeropix)
 
+class sdgrid_flagging2(sdgrid_unittest_base,unittest.TestCase):
+    """
+    This is test suite for handling flag information in sdgrid.
+    """
+    rawfile='testimage1chan.map.asap'
+    modified_file=rawfile+'.mod'
+    def setUp(self):
+        if os.path.exists(self.rawfile):
+            shutil.rmtree(self.rawfile)
+        shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+
+        table = gentools(['tb'])[0]
+        table.open(self.rawfile, nomodify=False)
+        spectra = table.getcol('SPECTRA')
+        flagtra = table.getcol('FLAGTRA')
+        spectra_new = numpy.concatenate([spectra, spectra])
+        flagtra_new = numpy.concatenate([flagtra, flagtra])
+        table.putcol('SPECTRA', spectra_new)
+        table.putcol('FLAGTRA', flagtra_new)
+        table.close()
+        
+        default(sdgrid)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        if (os.path.exists(self.outfile)):
+            shutil.rmtree(self.outfile)
+
+    def test_channelflag(self):
+        """test_channelflag: test specific channels are flagged"""
+        # flag all channels
+        scan = sd.scantable(self.rawfile, average=False)
+        mask = scan.create_mask([0,0])
+        scan.flag(mask)
+        scan.save(self.modified_file, overwrite=True)
+
+        # run sdgrid
+        npix=17
+        res=sdgrid(infiles=self.modified_file,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during gridding')
+        
+        # check result
+        table = gentools(['tb'])[0]
+        table.open(self.outfile)
+        flagtra = table.getcol('FLAGTRA')
+        table.close()
+        self.assertTrue(all(flagtra[0] != 0),
+                        msg='Channel 0 should be flagged for all spectra')
+        self.assertTrue(all(flagtra[1] == 0),
+                        msg='Channel 1 should not be flagged')
+        
 
 def suite():
     return [sdgrid_failure_case, sdgrid_single_integ,
             sdgrid_clipping, sdgrid_flagging,
             sdgrid_weighting, sdgrid_map,
-            sdgrid_dec_correction, sdgrid_grid_center]
+            sdgrid_dec_correction, sdgrid_grid_center,
+            sdgrid_flagging2]

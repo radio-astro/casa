@@ -55,7 +55,6 @@
                 <any type="variant" limittypes="string stringArray"/>
                 <value type="string"></value>
             </param>
-
             <param type="any" name="reason" subparam="true">
             <description>Select by REASON types</description>
                         <any type="variant" limittypes="string stringArray"/>
@@ -746,6 +745,11 @@ The task will flag a subset of data based on the following modes of operation:
                   options: [] with flag commands or 
                            [] with filenames or 
                            '' with a filename.
+
+                  IMPORTANT: string values must contain quotes around them or the parser
+                             will not work. The parser evaluates the commands in the list
+                             and considers only existing Python types.
+
                   Example1: the following commands can be saved to a file or group of files
                             and given to the task (e.g. save it to flags.txt).
                   

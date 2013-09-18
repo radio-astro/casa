@@ -217,7 +217,7 @@ def plotcomp(compdict, showplot=True, wantdict=False, symb=',',
 
         # Unlike compdict['antennalist'], antennalist might have had repodir
         # prefixed to it.
-        pl.title('at ' + epstr + ' for ' + compdict['antennalist'], fontsize=10)
+        pl.title('at ' + epstr + ' for ' + os.path.basename(compdict['antennalist']), fontsize=10)
         titletxt='($%.0f^\circ$ az, $%.0f^\circ$ el)' % azeldegs
         # for comparison of old and new models - omit azeldegs as all in az~0
         if bl0flux > 0.0:

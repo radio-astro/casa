@@ -21,6 +21,10 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
     casalog.origin('clean')
     casalog.post('nchan='+str(nchan)+' start='+str(start)+' width='+str(width))  
     #If using new FT-Machines, do not use the on-the-fly model_data columns.
+    if (gridmode == 'advancedaprojection'):
+        raise Exception, 'This mode is not yet ready for use'
+
+        
     if gridmode == 'advancedaprojection' and usescratch==False:
         casalog.post('Forcing usescratch=True for new FTMs. This is temporary.', 'WARN')
         usescratch=True
@@ -760,9 +764,9 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             ## This is because setReferenceFrame is called within makemultifieldmask2 to
             ## force new masks to LSRK, to enable interactive mask editing. CAS-5221
             imset.setFrameConversionForMasks()
-            if(resmooth != ''):
+            if(resmooth):
                 for k in range(len(modelimages)):
-                    imset.resmooth(modelimages[k], residualimage[k], restoredimage[k], resmooth)
+                    imset.resmooth(modelimages[k], residualimage[k], restoredimage[k], "common")
         imCln.close()
         ####################################################################
         if dochaniter:

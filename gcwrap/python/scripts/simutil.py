@@ -125,51 +125,13 @@ class simutil:
     ###########################################################
 
     def msg(self, s, origin=None, priority=None):
-        # ansi color codes:
-        # Foreground colors
-        # 30    Black
-        # 31    Red
-        # 32    Green
-        # 33    Yellow
-        # 34    Blue
-        # 35    Magenta
-        # 36    Cyan
-        # 37    White
-        toterm=False
-        if priority==None:
-            clr="\x1b[32m"
-            priority="INFO"
-        else:
-            priority=priority.upper()
-            if priority=="WARN":
-                clr="\x1b[35m"                
-                toterm=True
-                priority="INFO" # otherwise casalog will spew to term also.
-            else:
-                if priority=="ERROR":
-                    clr="\x1b[31m"
-                    toterm=False  # casalog spews severe to term already
-                else:
-                    if not (priority=="DEBUG" or priority[:-1]=="DEBUG"):
-                        priority="INFO"
-        bw="\x1b[0m"
-        if origin==None:
-            origin="simutil"            
-        if toterm:
-            print clr+"["+origin+"] "+bw+s
-        if priority=="ERROR":
-            raise Exception, s
-        else:
-            casalog.post(s,priority=priority,origin=origin)
+        # everything goes to logger with priority=priority
+        # priority error: raise an exception, 
+        # priority warn: change color to magenta, send to terminal
+        # priority info: change color to green, send to terminal
+        # priority none: not normally to terminal unless toterm=True
+        # i.e. setting a priority makes it go to terminal
 
-
-
-    ###########################################################
-
-    def msg2(self, s, out=None, origin=None, priority=None):
-        # new version that specifies output to Logger, Terminal, and/or
-        # File (self.reportfile) as ['l','t','f']
-        # 
         # ansi color codes:
         # Foreground colors
         # 30    Black
@@ -181,52 +143,49 @@ class simutil:
         # 36    Cyan
         # 37    White
         
-        if out==None:
-            out=self.msg2_out
-
-        if type(out)==type(" "):
-            out=[out]
-
         clr=""
-        toterm=False
+        if self.verbose:
+            toterm=True     
+        else:
+            toterm=False
+    
         if priority==None:
-            clr="\x1b[32m"
             priority="INFO"
         else:
             priority=priority.upper()
-            if priority=="WARN":
+            toterm=True
+            if priority=="INFO":
+                clr="\x1b[32m"
+            elif priority.count("WARN")>0:
                 clr="\x1b[35m"                
                 toterm=True
                 priority="INFO" # otherwise casalog will spew to term also.
+            elif priority=="ERROR":                
+                clr="\x1b[31m"
+                toterm=False  # casalog spews severe to term already
             else:
-                if priority=="ERROR":
-                    clr="\x1b[31m"
-                    toterm=False  # casalog spews severe to term already
-                else:
-                    if not (priority=="DEBUG" or priority[:-1]=="DEBUG"):
-                        priority="INFO"
+                if not (priority=="DEBUG" or priority[:-1]=="DEBUG"):
+                    priority="INFO"
         bw="\x1b[0m"
-        if origin==None:
-            origin="simutil"            
-
-        if out.count('t'):
-            toterm=True
 
         if toterm:
-            print clr+"["+origin+"] "+bw+s
-
-        if out.count('f'):
-            if self.isreport():
-                self.report.write(s+"\n")
+            if origin:
+                print clr+"["+origin+"] "+bw+s
             else:
-                raise Exception, "ERROR: Attempt to write to report file failed."
+                print s
+
+            if self.isreport():
+                if origin:
+                    self.report.write("["+origin+"] "+s+"\n")
+                else:
+                    self.report.write(s+"\n")
 
         if priority=="ERROR":
-            #return False
             raise Exception, s
-        else:
-            if out.count('l'):
-                casalog.post(s,priority=priority,origin=origin)
+        else:            
+            if origin==None:
+                origin="simutil"
+            casalog.post(s,priority=priority,origin=origin)
 
 
     ###########################################################
@@ -245,10 +204,12 @@ class simutil:
     def openreport(self):
         try:
             if os.path.exists(self.reportfile):
-                msg("Report file "+self.reportfile+"already exists - delete or change reportfile",priority="ERROR",origin="simutil")
+                self.report=open(self.reportfile,"a")
+                #self.msg("Report file "+self.reportfile+"already exists - delete or change reportfile",priority="ERROR",origin="simutil")
+            else:
+                self.report=open(self.reportfile,"w")
         except:
-            msg("Can't open reportfile because it's not defined",priority="ERROR",origin="simutil")
-        self.report=open(self.reportfile,"w")
+            self.msg("Can't open reportfile because it's not defined",priority="ERROR",origin="simutil")
                
 
     def closereport(self):
@@ -607,7 +568,7 @@ class simutil:
         if(len(pointings)==0):
             pointings.append(direction)
 
-        self.msg("using %i generated pointing(s)" % len(pointings))
+        self.msg("using %i generated pointing(s)" % len(pointings),origin='calc_pointings')
         self.pointings=pointings
         return pointings
 
@@ -676,7 +637,7 @@ class simutil:
         if len(pointings) < 1:
             s="No valid lines found in pointing file"
             self.msg(s,priority="error")
-        self.msg("read in %i pointing(s) from file" % len(pointings))
+        self.msg("read in %i pointing(s) from file" % len(pointings),origin="read_pointings")
         self.pointings=pointings
         #self.direction=pointings
                 
@@ -965,7 +926,7 @@ class simutil:
             iobs=obs.index(telescope)
         else:
             if self.verbose: self.msg("I don't know much about "+telescope+" so I'm going to use ALMA specs")
-            iobs=0 # ALMA is the default ;)
+            iobs=1 # ALMA is the default ;)
             
         if diam==None: diam=d[iobs]
         diam_subreflector=ds[iobs]
@@ -1242,7 +1203,7 @@ class simutil:
             self.imclean(tmpname+".ms",tmpname,
                        "csclean",cellsize,[128,128],
                        "J2000 00:00:00.00 "+qa.angle(dec)[0],
-                       False,100,"0.01mJy","natural",[],"I")
+                       False,100,"0.01mJy","natural",[],True,"I")
 
             ia.open(tmpname+".image")
             stats= ia.statistics(robust=True, verbose=False,list=False)
@@ -1577,7 +1538,7 @@ class simutil:
                     obslon=qa.convert(obs['m0'],'deg')['value']
                     obsalt=qa.convert(obs['m2'],'m')['value']
                     if self.verbose:
-                        self.msg("converting local tangent plane coordinates to ITRF using observatory position = %d %d " % (obslat,obslon))
+                        self.msg("converting local tangent plane coordinates to ITRF using observatory position = %d %d " % (obslat,obslon),origin="readantenna")
                         #foo=self.getdatum(datum,verbose=True)
                     for i in range(len(inx)):
                         x,y,z = self.locxyz2itrf(obslat,obslon,obsalt,inx[i],iny[i],inz[i])
@@ -2271,7 +2232,7 @@ class simutil:
 
         # pull data first, since ia.stats doesn't work w/o a CS:
         if outimage!=inimage:
-            if self.verbose: self.msg("rearranging input data (may take some time for large cubes)")
+            if self.verbose: self.msg("rearranging input data (may take some time for large cubes)",origin="setup model")
             arr=in_ia.getchunk()
         else:
             # TODO move rearrange to inside ia tool, and at least don't do this:
@@ -2410,7 +2371,7 @@ class simutil:
             model_refpix=[0.5*in_shape[axmap[0]],0.5*in_shape[axmap[1]]]
             model_projection="SIN" # for indirection we default to SIN.
             model_projpars=pl.array([0.,0])
-            if self.verbose: self.msg("setting model image direction to indirection = "+model_refdir)
+            if self.verbose: self.msg("setting model image direction to indirection = "+model_refdir,origin="setup model")
         else:
             # indirection is not set - is there a direction in the model already?
             if not self.isdirection(model_refdir,halt=False):
@@ -2425,7 +2386,7 @@ class simutil:
             if qa.compare(incell[0],"1arcsec"): 
                 model_cell=incell
                 cell_replaced=True
-                if self.verbose: self.msg("replacing existing model cell size with incell")
+                if self.verbose: self.msg("replacing existing model cell size with incell",origin="setup model")
         valid_modcell=False
         if not cell_replaced:
             if self.isquantity(model_cell[0],halt=False):
@@ -2491,7 +2452,7 @@ class simutil:
                     model_center=incenter
                     model_restfreq=model_center
                     center_replaced=True
-                    if self.verbose: self.msg("setting central frequency to "+incenter)
+                    if self.verbose: self.msg("setting central frequency to "+incenter,origin="setup model")
         valid_modcenter=False
         if not center_replaced:
             if self.isquantity(model_center,halt=False):
@@ -2509,7 +2470,7 @@ class simutil:
                 if (qa.quantity(inwidth))['value']>=0:
                     model_width=inwidth
                     width_replaced=True
-                    if self.verbose: self.msg("setting channel width to "+inwidth)
+                    if self.verbose: self.msg("setting channel width to "+inwidth,origin="setup model")
         valid_modwidth=False
         if not width_replaced:
             if self.isquantity(model_width,halt=False):
@@ -2637,8 +2598,8 @@ class simutil:
             type="direction")
         modelcsys.setreferencepixel(model_refpix,"direction")
         if self.verbose: 
-            self.msg("sky model image direction = "+model_refdir)
-            self.msg("sky model image increment = "+str(model_cell))
+            self.msg("sky model image direction = "+model_refdir,origin="setup model")
+            self.msg("sky model image increment = "+str(model_cell),origin="setup model")
 
         modelcsys.setspectral(refcode="LSRK",restfreq=model_restfreq)
         modelcsys.setreferencevalue(qa.convert(model_center,modelcsys.units()[3])['value'],type="spectral")
@@ -2710,6 +2671,7 @@ class simutil:
         model_size=[qa.mul(modelshape[0],model_cell[0]),
                     qa.mul(modelshape[1],model_cell[1])]
 
+        if self.verbose: self.msg(" ") # add a line after my spewage
 
         return model_refdir,model_cell,model_size,model_nchan,model_center,model_width,model_stokes
 
@@ -2722,7 +2684,7 @@ class simutil:
 
     def imclean(self,mstoimage,imagename,
                 cleanmode,cell,imsize,imcenter,interactive,niter,threshold,weighting,
-                outertaper,stokes,sourcefieldlist="",modelimage="",mask=[]):
+                outertaper,pbcor,stokes,sourcefieldlist="",modelimage="",mask=[],dryrun=False):
         from clean import clean
 
         from simutil import is_array_type
@@ -2735,12 +2697,15 @@ class simutil:
         else:
             ms0=mstoimage
         
-        tb.open(ms0+"/SPECTRAL_WINDOW")
-        if tb.nrows() > 1:
-            self.msg("determining output cube parameters from FIRST of several SPW in MS "+ms0)
-        freq=tb.getvarcol("CHAN_FREQ")['r1']
-        nchan=freq.size
-        tb.done()
+        if os.path.exists(ms0):
+            tb.open(ms0+"/SPECTRAL_WINDOW")
+            if tb.nrows() > 1:
+                self.msg("determining output cube parameters from FIRST of several SPW in MS "+ms0)
+            freq=tb.getvarcol("CHAN_FREQ")['r1']
+            nchan=freq.size
+            tb.done()
+        elif dryrun:
+            nchan=1 # May be wrong
 
         if nchan==1:
             chanmode="mfs"
@@ -2778,7 +2743,8 @@ class simutil:
         cleanlast=open(imagename+".clean.last","write")
         cleanlast.write('taskname            = "clean"\n')
 
-        self.msg("clean inputs:")        
+        #self.msg("clean inputs:")        
+        if self.verbose: self.msg(" ")
         if type(mstoimage)==type([]):
             cleanstr="clean(vis="+str(mstoimage)+",imagename='"+imagename+"'"
             cleanlast.write('vis                 = '+str(mstoimage)+'\n')
@@ -2880,7 +2846,8 @@ class simutil:
         else:
             cleanlast.write('modelimage              = ""\n');
         cleanlast.write("restoringbeam           = ['']\n");
-        cleanlast.write("pbcor                   = True\n");
+        cleanstr=cleanstr+",pbcor="+str(pbcor)
+        cleanlast.write("pbcor                   = "+str(pbcor)+"\n");
         cleanlast.write("minpb                   = 0.2\n");
         cleanlast.write("calready                = True\n");
         cleanlast.write('noise                   = ""\n');
@@ -2891,15 +2858,17 @@ class simutil:
         cleanlast.write('nterms                  = 1\n');
         cleanlast.write('reffreq                 = ""\n');
         cleanlast.write('chaniter                = False\n');
-        cleanstr=cleanstr+")"
+        cleanstr=cleanstr+")"        
         if self.verbose:
-            self.msg(cleanstr,priority="warn")
+            # RI TODO assumed origin is simanalyze
+            self.msg(cleanstr,priority="warn",origin="simanalyze")
         else:
-            self.msg(cleanstr)
+            self.msg(cleanstr,priority="info",origin="simanalyze")
         cleanlast.write("#"+cleanstr+"\n")
         cleanlast.close()
         
-        clean(vis=mstoimage, imagename=imagename, mode=chanmode, 
+        if not dryrun:
+            clean(vis=mstoimage, imagename=imagename, mode=chanmode, 
               niter=niter, threshold=threshold, selectdata=False, nchan=nchan,
               psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
               imsize=imsize, cell=map(qa.tos,cell), phasecenter=imcenter,
@@ -2908,7 +2877,7 @@ class simutil:
               uvtaper=uvtaper,outertaper=outertaper, pbcor=True, mask=mask,
               modelimage=modelimage)
 
-        del freq,nchan # something is holding onto the ms in table cache
+            del freq,nchan # something is holding onto the ms in table cache
 
 
 
@@ -2931,14 +2900,14 @@ class simutil:
 
         flat=image+".flat"
         if nchan>1:
-            if verbose: self.msg("creating moment zero image "+flat,origin="analysis")
+            if verbose: self.msg("creating moment zero image "+flat,origin="flatimage")
             ia.open(image)
             flat_ia = ia.moments(moments=[-1],outfile=flat,overwrite=True)
             ia.done()
             flat_ia.close()
             del flat_ia
         else:
-            if verbose: self.msg("removing degenerate image axes in "+flat,origin="analysis")
+            if verbose: self.msg("removing degenerate image axes in "+flat,origin="flatimage")
             # just remove degenerate axes from image
             flat_ia = ia.newimagefromimage(infile=image,outfile=flat,dropdeg=True,overwrite=True)
             flat_ia.close()
@@ -3034,7 +3003,7 @@ class simutil:
                             overwrite = True)
         shutil.rmtree(modelregrid+".tmp")
         if self.verbose:
-            self.msg("scaling model by pixel area ratio %g" % factor)
+            self.msg("scaling model by pixel area ratio %g" % factor,origin='convimage')
 
         # add unresolved components in Jy/pix
         # don't do this if you've already done it in flatimage()!
@@ -3338,3 +3307,72 @@ class simutil:
         return 0.2997924/freq/ninety*3600.*180/pl.pi # lambda/b converted to arcsec
 
         
+######################
+    def sfBeam1d(self,beam="", cell="", convsupport=-1, sampling=""):
+        """
+        Calculates PSF of image generated by gridfunction 'SF'.
+        Migrated codes from gjinc.sfBeam() in analysisUtil module
+        by Todd Hunter.
+        Note: this is simplified version of the function.
+        
+        Paramters:
+           beam        : Antenna primary beam (quantity)
+           cell        : Cell size of image (quantity)
+           convsupport : convolution support used for imaging (integer)
+           sampling    : pointing spacing of observation (quantity).
+                         If not defined, comvolution of sampling kernel is
+                         skipped with warning.
+        Returns:
+           Estimated PSF of image (quantity).
+        """
+        import scipy.special as spspec
+        import scipy.signal as spsig
+        import scipy.interpolate as spintrp
+        
+        if not qa.compare(beam, "rad"):
+            raise ValueError, "beam should be a quantity of antenna primary beam size (angle)"
+        if not qa.compare(cell, "rad"):
+            raise ValueError, "cell should be a quantity of image pixel size (angle)"
+        if len(sampling) > 0 and not qa.compare(sampling, "rad"):
+            raise ValueError, "sampling should be a quantity of pointing spacing (angle)"
+        if (convsupport < -1):
+            convsupport = 3
+
+        supportwidth = (convsupport*2 + 1)
+        c = supportwidth * pl.pi/2.
+        pb_asec = qa.getvalue(qa.convert(beam, "arcsec"))
+        cell_asec = qa.getvalue(qa.convert(cell, "arcsec"))
+        samp_asec = -1.
+        if len(sampling) > 0:
+            samp_asec = qa.getvalue(qa.convert(sampling, "arcsec"))
+        # Define kernel array
+        myxaxis = pl.arange(-3*pb_asec,3*pb_asec+0.1,0.2)
+        # Gaussian func of PB
+        scale = 0.5 / ( (pb_asec/2.3548201)**2 )
+        mygaussian = pl.exp(- scale * myxaxis**2 ) ### exp(x**2/(2*sigma**2))
+        # Spheroidal kernel func
+        sfaxis = myxaxis/float((supportwidth-1)*cell_asec/2.0)
+        indices = pl.where(abs(sfaxis)<1)[0]
+        centralRegion = sfaxis[indices]
+        centralRegionY = spspec.pro_ang1_cv(0, 0, c, spspec.pro_cv(0,0,c),
+                                            centralRegion)[0]
+        mysf = pl.zeros(len(myxaxis))
+        mysf[indices] += centralRegionY/max(centralRegionY)
+        # Convolution of Gaussian PB and SF
+        result = spsig.convolve(mysf, mygaussian, mode='same')
+        del mygaussian, sfaxis, indices, centralRegion, centralRegionY
+        # Sampling function
+        if samp_asec > 0:
+            myboxcar = pl.zeros(len(myxaxis))
+            indices = pl.where(abs(myxaxis)<samp_asec/2.)[0]
+            myboxcar[indices] = 1
+            result = spsig.convolve(result, myboxcar, mode='same')
+        else:
+            self.msg("Pointing spacing is not specified. Calculated PSF could be less accurate.", priority="warn", origin="sfBeam1d")
+        # Calculate FWHM
+        result /= max(result)
+        halfmax = max(result)*0.5
+        spline = spintrp.UnivariateSpline(myxaxis, result-halfmax, s=0)
+        x0, x1 = spline.roots()
+        del result, myxaxis, spline
+        return qa.quantity(abs(x1-x0), "arcsec")

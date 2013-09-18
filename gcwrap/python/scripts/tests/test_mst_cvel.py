@@ -102,7 +102,7 @@ class cvel_test(unittest.TestCase):
 
 
     def tearDown(self):
-        os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')   
+        os.system('rm -rf cvel-output.ms cvel-output.ms.deselected myinput.ms')  
         
     
     def test1(self):
@@ -734,7 +734,7 @@ class cvel_test(unittest.TestCase):
             veltype = 'radio'
             )
         self.assertNotEqual(rval,False)
-        ret = verify_ms(outfile, 1, 29, 0)
+        ret = verify_ms(outfile, 1, 30, 0)
         self.assertTrue(ret[0],ret[1])
     
     def test24(self):
@@ -770,7 +770,7 @@ class cvel_test(unittest.TestCase):
             veltype = 'radio'
             )
         self.assertNotEqual(rval,False)
-        ret = verify_ms(outfile, 1, 34, 0)
+        ret = verify_ms(outfile, 1, 35, 0)
         self.assertTrue(ret[0],ret[1])
     
     def test25(self):

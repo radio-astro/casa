@@ -104,7 +104,19 @@ class test_base(unittest.TestCase):
             
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform)              
-        
+
+    def setUp_floatcol(self):
+        datapath = os.environ.get('CASAPATH').split()[0] + \
+                    "/data/regression/unittest/flagdata/"
+                    
+        # 15 rows, 3 scans, 9 spw, mixed chans, XX,YY, FLOAT_DATA col
+        self.vis = 'SDFloatColumn.ms'
+        if os.path.exists(self.vis):
+            self.cleanup()
+            
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
+        default(mstransform)   
+               
     def cleanup(self):
         os.system('rm -rf '+ self.vis)
 
@@ -207,10 +219,10 @@ class test_Combspw1(test_base):
         mytb = tbtool()
         mytb.open(outputms + '/DATA_DESCRIPTION')
         spwCol = mytb.getcol('SPECTRAL_WINDOW_ID')      
+        mytb.close()          
         nspw = spwCol.size  
         check_eq(nspw, 1)   
         check_eq(spwCol[0], 0)
-        mytb.close()          
         
 
 class test_Regridms1(test_base):
@@ -496,7 +508,6 @@ class test_FreqAvg(test_base):
         self.setUp_g19()
         
     def tearDown(self):
-        pass
         os.system('rm -rf '+ self.vis)
         os.system('rm -rf favg*.*ms')
 
@@ -888,13 +899,13 @@ class test_SeparateSPWs(test_base):
         mytb = tbtool()
         mytb.open(outputms + '/DATA_DESCRIPTION')
         spwCol = mytb.getcol('SPECTRAL_WINDOW_ID')      
+        mytb.close()    
         nspw = spwCol.size  
         check_eq(nspw, 4)   
         check_eq(spwCol[0], 0)
         check_eq(spwCol[1], 1)
         check_eq(spwCol[2], 2)
         check_eq(spwCol[3], 3)
-        mytb.close()    
         
     def test_CAS_5403_2(self):
         '''mstransform: combine spw 0,1,2 into one spw and then break it doen in 4 spws. 
@@ -907,13 +918,13 @@ class test_SeparateSPWs(test_base):
         mytb = tbtool()
         mytb.open(outputms + '/DATA_DESCRIPTION')
         spwCol = mytb.getcol('SPECTRAL_WINDOW_ID')      
+        mytb.close()            
         nspw = spwCol.size  
         check_eq(nspw, 4)   
         check_eq(spwCol[0], 0)
         check_eq(spwCol[1], 1)
         check_eq(spwCol[2], 2)
         check_eq(spwCol[3], 3)
-        mytb.close()            
    
         # Verify that some sub-tables are properly re-indexed.
         dd_col = th.getVarCol(outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')            
@@ -1116,12 +1127,12 @@ class test_WeightSpectrum(test_base):
         mytb.open(self.outvis)
         data = mytb.getcol('DATA')  
         exposure = mytb.getcol('EXPOSURE')    
+        mytb.close() 
         nchan = data.size   
         check_eq(nchan, 50)
         check_eq(data[0][0][0].real, 0.0950, 0.0001)
         check_eq(data[0][nchan-1][0].imag, 0.0610, 0.0001)
         check_eq(exposure[0], 7.5, 0.0001)
-        mytb.close() 
         
         
     def test_combineSPWDiffExpWithWeightSpectrumFilledFromWeight(self):
@@ -1140,56 +1151,57 @@ class test_WeightSpectrum(test_base):
         mytb.open(self.outvis)
         data = mytb.getcol('DATA')   
         exposure = mytb.getcol('EXPOSURE')       
+        mytb.close()        
         nchan = data.size   
         check_eq(nchan, 50)
         check_eq(data[0][0][0].real, 0.0950, 0.0001)
         check_eq(data[0][nchan-1][0].imag, 0.0610, 0.0001)
         check_eq(exposure[0], 7.5, 0.0001)
-        mytb.close()        
+        
+     
+   
+#    def test_fillWeightSpectrumFromWeight(self):
+#        '''mstransform: Fill output WEIGHT_SPECTRUM using WEIGHTS'''
+#        
+#        self.vis = 'combine-1-timestamp-2-SPW-no-WEIGHT_SPECTRUM-Same-Exposure.ms'
+#        self.outvis = 'fillWeightSpectrumFromWeight.ms'
+#        self.copyfile(self.vis)
+#        
+#        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn="DATA",combinespws=True,regridms=True,
+#                    mode="frequency",nchan=50,start="2.20804e+10Hz",width="1.950702e+05Hz",nspw=1,
+#                    interpolation="fftshift",phasecenter="J2000 12h01m53.13s -18d53m09.8s",
+#                    outframe="CMB",veltype="radio")  
+#        
+#        mytb = tbtool()
+#        mytb.open(self.outvis)
+#        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')      
+#        mytb.close()
+#        nchan = weightSpectrum.size  
+#        check_eq(nchan, 50)   
+#        check_eq(weightSpectrum[0][0][0], 58.9232, 0.0001)
+#        check_eq(weightSpectrum[0][nchan-1][0], 31.4836, 0.0001)
         
         
-    def test_fillWeightSpectrumFromWeight(self):
-        '''mstransform: Fill output WEIGHT_SPECTRUM using WEIGHTS'''
-        
-        self.vis = 'combine-1-timestamp-2-SPW-no-WEIGHT_SPECTRUM-Same-Exposure.ms'
-        self.outvis = 'fillWeightSpectrumFromWeight.ms'
-        self.copyfile(self.vis)
-        
-        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn="DATA",combinespws=True,regridms=True,
-                    mode="frequency",nchan=50,start="2.20804e+10Hz",width="1.950702e+05Hz",nspw=1,
-                    interpolation="fftshift",phasecenter="J2000 12h01m53.13s -18d53m09.8s",
-                    outframe="CMB",veltype="radio")  
-        
-        mytb = tbtool()
-        mytb.open(self.outvis)
-        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')      
-        nchan = weightSpectrum.size  
-        check_eq(nchan, 50)   
-        check_eq(weightSpectrum[0][0][0], 58.9232, 0.0001)
-        check_eq(weightSpectrum[0][nchan-1][0], 31.4836, 0.0001)
-        mytb.close()
-        
-        
-    def test_combineSPWAndChanAvgWithWeightSpectrum(self):
-        '''mstransform: Combine SPWs and channel average using WEIGHT_SPECTRUM'''
-        
-        self.vis = 'combine-1-timestamp-2-SPW-with-WEIGHT_SPECTRUM-Same-Exposure.ms'
-        self.outvis = 'test_combineSPWAndChanAvgWithWeightSpectrum.ms'
-        self.copyfile(self.vis)   
-        
-        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn="DATA",combinespws=True,regridms=True,
-                    mode="frequency",nchan=12,start="2.20804e+10Hz",width="7.802808e+05Hz",nspw=1,
-                    interpolation="fftshift",phasecenter="J2000 12h01m53.13s -18d53m09.8s",
-                    outframe="CMB",veltype="radio",chanaverage=True,chanbin=4,useweights='spectrum')
-        
-        mytb = tbtool()
-        mytb.open(self.outvis)
-        data = mytb.getcol('DATA')      
-        nchan = data.size   
-        check_eq(nchan, 12)
-        check_eq(data[0][0][0].real, 0.0628, 0.0001)
-        check_eq(data[0][nchan-1][0].imag, -0.2508, 0.0001)
-        mytb.close()  
+#    def test_combineSPWAndChanAvgWithWeightSpectrum(self):
+#        '''mstransform: Combine SPWs and channel average using WEIGHT_SPECTRUM'''
+#        
+#        self.vis = 'combine-1-timestamp-2-SPW-with-WEIGHT_SPECTRUM-Same-Exposure.ms'
+#        self.outvis = 'test_combineSPWAndChanAvgWithWeightSpectrum.ms'
+#        self.copyfile(self.vis)   
+#        
+#        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn="DATA",combinespws=True,regridms=True,
+#                    mode="frequency",nchan=12,start="2.20804e+10Hz",width="7.802808e+05Hz",nspw=1,
+#                    interpolation="fftshift",phasecenter="J2000 12h01m53.13s -18d53m09.8s",
+#                    outframe="CMB",veltype="radio",chanaverage=True,chanbin=4,useweights='spectrum')
+#        
+#        mytb = tbtool()
+#        mytb.open(self.outvis)
+#        data = mytb.getcol('DATA')      
+#        mytb.close()  
+#        nchan = data.size   
+#        check_eq(nchan, 12)
+#        check_eq(data[0][0][0].real, 0.0628, 0.0001)
+#        check_eq(data[0][nchan-1][0].imag, -0.2508, 0.0001)
         
         
     def test_combineSPWDiffExpAndChanAvgWithWeightSpectrum(self):
@@ -1207,11 +1219,11 @@ class test_WeightSpectrum(test_base):
         mytb = tbtool()
         mytb.open(self.outvis)
         data = mytb.getcol('DATA')      
+        mytb.close()  
         nchan = data.size   
         check_eq(nchan, 12)
         check_eq(data[0][0][0].real, 0.0628, 0.0001)
         check_eq(data[0][nchan-1][0].imag, -0.2508, 0.0001)
-        mytb.close()  
         
 class test_channelAverageByDefault(test_base):
     
@@ -1223,7 +1235,7 @@ class test_channelAverageByDefault(test_base):
         os.system('rm -rf '+ self.outvis)
         
     def test_channelAverageByDefaultInVelocityMode(self):
-        self.outvis = 'test_channelAverageByDefaultInVelocityModeNotCombining.ms'
+        self.outvis = 'test_channelAverageByDefaultInVelocityMode.ms'
         
         mstransform(vis=self.vis,outputvis=self.outvis,regridms=True,combinespws=True,interpolation="linear",
                     mode="velocity",veltype="optical",width='30km/s',restfreq='230GHz')
@@ -1232,11 +1244,261 @@ class test_channelAverageByDefault(test_base):
         mytb.open(self.outvis)
         data = mytb.getcol('DATA')      
         nchan = data.shape[1]
+        mytb.close() 
         check_eq(nchan, 55)
         check_eq(data[0][0][0].real, 0.0323, 0.0001)
         check_eq(data[0][nchan-1][0].imag, 0.3296, 0.0001)
-        mytb.close() 
  
+class test_float_column(test_base):
+    def setUp(self):
+        self.setUp_floatcol()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outputms)
+
+    def test_regrid_float(self):
+        '''mstransform: change outframe of FLOAT_DATA MS'''
+        self.outputms = 'floatcol1.mms'
+        # jagonzal: Let's use spw 0, because the rest have negative chan widths
+        mstransform(vis=self.vis,outputvis=self.outputms,datacolumn='FLOAT_DATA',
+                    regridms=True,outframe='LSRK',spw='0')
+         
+        mytb = tbtool()
+        mytb.open(self.outputms+'/SPECTRAL_WINDOW')
+        refnum = mytb.getcell('MEAS_FREQ_REF',0)
+        mytb.close()
+        self.assertEqual(refnum, 1)
+
+class test_timeaverage(test_base):
+
+    def setUp(self):
+        self.setUp_4ants()
+        self.subtables=['/ANTENNA','/DATA_DESCRIPTION','/FEED','/FIELD','/FLAG_CMD',
+                        '/OBSERVATION','/POINTING','/POLARIZATION','/PROCESSOR','/STATE']
+        self.sortorder=['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME']      
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outvis)
+        os.system('rm -rf '+ self.refvis)
+        os.system('rm -rf '+ self.tmpvis)
+        os.system('rm -rf '+ self.outvis_sorted)
+        os.system('rm -rf '+ self.refvis_sorted)
+        
+    def sort(self):
+        myms = mstool()
+        
+        myms.open(self.outvis)
+        myms.sort(self.outvis_sorted,self.sortorder)
+        myms.done()
+        
+        myms.open(self.refvis)
+        myms.sort(self.refvis_sorted,self.sortorder)
+        myms.done()
+        
+    def generate_tolerance_map(self):
+        
+        # Get column names
+        mytb = tbtool()
+        mytb.open(self.refvis)
+        self.columns = mytb.colnames()
+        mytb.close()
+        
+        # Define default tolerance
+        self.mode={}
+        self.tolerance={}
+        for col in self.columns:
+            self.mode[col] = "absolute"
+            self.tolerance[col] = 0
+
+        
+    def compare_subtables(self):
+        for subtable in self.subtables:
+            self.assertTrue(th.compTables(self.outvis_sorted+subtable,self.refvis_sorted+subtable, [],0.000001,"absolute"))
+            
+        # Special case for SOURCE which contains many un-defined columns
+        self.assertTrue(th.compTables(self.outvis_sorted+'/SOURCE',self.refvis_sorted+'/SOURCE', 
+                                      ['POSITION','TRANSITION','REST_FREQUENCY','SYSVEL'],0.000001,"absolute"))     
+        
+    def compare_main_table_columns(self):
+        for col in self.columns:
+            if col != "WEIGHT_SPECTRUM" and col != "FLAG_CATEGORY":
+                    tmpcolumn = self.columns[:]
+                    tmpcolumn.remove(col)
+                    self.assertTrue(th.compTables(self.refvis_sorted,self.outvis_sorted,tmpcolumn,self.tolerance[col],self.mode[col]))
+    
+        
+    def post_process(self):
+        
+        # Sort the output MSs so that they can be compared
+        self.sort()
+        
+        # Compare results for subtables
+        self.compare_subtables()
+        
+        # Compare columns from main table
+        self.compare_main_table_columns()
+            
+    def test_timeaverage_data(self):
+        self.outvis = 'test_timeaverage_data-mst.ms'
+        self.refvis = 'test_timeaverage_data-split.ms'
+        self.outvis_sorted = 'test_timeaverage_data-mst-sorted.ms'
+        self.refvis_sorted = 'test_timeaverage_data-split-sorted.ms'        
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn='DATA',timeaverage=True,timebin='30s')
+        split(vis=self.vis,outputvis=self.refvis,datacolumn='DATA',timebin='30s')
+        
+        self.generate_tolerance_map()
+
+        self.mode['UVW'] = "percentage"
+        self.tolerance['UVW'] = 0.15/100.0    
+        
+        self.mode['FLAG'] = "absolute"
+        self.tolerance['FLAG'] = 1
+        
+        self.mode['EXPOSURE'] = "absolute"
+        self.tolerance['EXPOSURE'] = 1.001
+        
+        self.mode['INTERVAL'] = "absolute" 
+        self.tolerance['INTERVAL'] = 1.0
+           
+        self.mode['TIME'] = "absolute"
+        self.tolerance['TIME'] = 1.5
+        
+        self.mode['TIME_CENTROID'] = "absolute"
+        self.tolerance['TIME_CENTROID'] = 1.075
+        
+        self.mode['DATA'] = "absolute"  
+        self.tolerance['DATA'] = 1.1
+        
+        self.mode['WEIGHT'] = "percentage"
+        self.tolerance['WEIGHT'] = 100
+        
+        self.mode['SIGMA'] = "absolute"
+        self.tolerance['SIGMA'] = 31
+
+        self.post_process()   
+        
+    def test_timeaverage_model(self):
+        self.outvis = 'test_timeaverage_model-mst.ms'
+        self.refvis = 'test_timeaverage_model-split.ms'
+        self.outvis_sorted = 'test_timeaverage_model-mst-sorted.ms'
+        self.refvis_sorted = 'test_timeaverage_model-split-sorted.ms'        
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn='MODEL',timeaverage=True,timebin='30s')
+        split(vis=self.vis,outputvis=self.refvis,datacolumn='MODEL',timebin='30s')
+        
+        self.generate_tolerance_map()
+
+        self.mode['UVW'] = "percentage"
+        self.tolerance['UVW'] = 0.15/100.0    
+        
+        self.mode['FLAG'] = "absolute"
+        self.tolerance['FLAG'] = 1
+        
+        self.mode['EXPOSURE'] = "absolute"
+        self.tolerance['EXPOSURE'] = 1.001
+        
+        self.mode['INTERVAL'] = "absolute" 
+        self.tolerance['INTERVAL'] = 1.0
+           
+        self.mode['TIME'] = "absolute"
+        self.tolerance['TIME'] = 1.5
+        
+        self.mode['TIME_CENTROID'] = "absolute"
+        self.tolerance['TIME_CENTROID'] = 1.075
+        
+        self.mode['DATA'] = "absolute"  
+        self.tolerance['DATA'] = 1.1
+        
+        self.mode['WEIGHT'] = "percentage"
+        self.tolerance['WEIGHT'] = 100
+        
+        self.mode['SIGMA'] = "absolute"
+        self.tolerance['SIGMA'] = 31
+
+        self.post_process()          
+        
+    def test_timeaverage_corrected(self):
+        self.outvis = 'test_timeaverage_corrected-mst.ms'
+        self.refvis = 'test_timeaverage_corrected-split.ms'
+        self.outvis_sorted = 'test_timeaverage_corrected-mst-sorted.ms'
+        self.refvis_sorted = 'test_timeaverage_corrected-split-sorted.ms'        
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn='CORRECTED',timeaverage=True,timebin='30s')
+        split(vis=self.vis,outputvis=self.refvis,datacolumn='CORRECTED',timebin='30s')
+        
+        self.generate_tolerance_map()
+
+        self.mode['UVW'] = "percentage"
+        self.tolerance['UVW'] = 0.15/100.0    
+        
+        self.mode['FLAG'] = "absolute"
+        self.tolerance['FLAG'] = 1
+        
+        self.mode['EXPOSURE'] = "absolute"
+        self.tolerance['EXPOSURE'] = 1.001
+        
+        self.mode['INTERVAL'] = "absolute" 
+        self.tolerance['INTERVAL'] = 1.0
+           
+        self.mode['TIME'] = "absolute"
+        self.tolerance['TIME'] = 1.5
+        
+        self.mode['TIME_CENTROID'] = "absolute"
+        self.tolerance['TIME_CENTROID'] = 1.075
+        
+        self.mode['DATA'] = "absolute"  
+        self.tolerance['DATA'] = 10
+        
+        self.mode['WEIGHT'] = "percentage"
+        self.tolerance['WEIGHT'] = 100
+        
+        self.mode['SIGMA'] = "absolute"
+        self.tolerance['SIGMA'] = 31
+
+        self.post_process()   
+        
+    def test_timeaverage_and_combine_spws(self):
+        self.outvis = 'test_timeaverage_and_combine_spws_single_run.ms'
+        self.tmpvis = 'test_timeaverage_and_combine_spws_1st_step.ms'
+        self.refvis = 'test_timeaverage_and_combine_spws_2nd_step.ms'
+        self.outvis_sorted = 'test_timeaverage_and_combine_spws_single_run_sorted.ms'
+        self.refvis_sorted = 'test_timeaverage_and_combine_spws_2nd_step_sorted.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',antenna="0&&1",timerange='14:45:08.50~14:45:09.50',
+                    datacolumn='DATA',combinespws=True,timeaverage=True,timebin='2s')
+        mstransform(vis=self.vis,outputvis=self.tmpvis,spw='9,10',antenna="0&&1",timerange='14:45:08.50~14:45:09.50',
+                    datacolumn='DATA',timeaverage=True,timebin='2s')
+        mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',combinespws=True)
+        
+        self.generate_tolerance_map()
+        
+        self.mode['UVW'] = "absolute"
+        self.tolerance['UVW'] = 0.000001
+        
+        self.mode['FLAG'] = "absolute"
+        self.tolerance['FLAG'] = 1     
+        
+        self.mode['EXPOSURE'] = "absolute"
+        self.tolerance['EXPOSURE'] = 10000    
+        
+        self.mode['WEIGHT'] = "absolute"
+        self.tolerance['WEIGHT'] = 10000           
+        
+        self.mode['SIGMA'] = "absolute"
+        self.tolerance['SIGMA'] = 10000          
+        
+        self.mode['TIME_CENTROID'] = "absolute"
+        self.tolerance['TIME_CENTROID'] = 0.0001        
+        
+        self.mode['DATA'] = "absolute"
+        self.tolerance['DATA'] = 2   
+
+        self.post_process()         
+
+
 # Cleanup class 
 class Cleanup(test_base):
     
@@ -1266,4 +1528,6 @@ def suite():
             test_state,
             test_WeightSpectrum,
             test_channelAverageByDefault,
+            test_timeaverage,
+            test_float_column,
             Cleanup]

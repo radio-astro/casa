@@ -217,6 +217,9 @@ class simobserve_sky(simobserve_unittest_base):
     # Reserved methods
     def setUp(self):
         print("")
+        if os.path.exists(self.project):
+            shutil.rmtree(self.project)
+
         default(simobserve)
         self.refpref_sd = self.refpref + \
                           self._get_data_prefix(self.sdantlist,self.refproj)
@@ -456,6 +459,9 @@ class simobserve_comp(simobserve_unittest_base):
     # Reserved methods
     def setUp(self):
         print("")
+        if os.path.exists(self.project):
+            shutil.rmtree(self.project)
+
         default(simobserve)
         self.refpref_sd = self.refpref + \
                           self._get_data_prefix(self.sdantlist,self.refproj)
@@ -696,6 +702,9 @@ class simobserve_skycomp(simobserve_unittest_base):
     # Reserved methods
     def setUp(self):
         print("")
+        if os.path.exists(self.project):
+            shutil.rmtree(self.project)
+
         default(simobserve)
         self.refpref_sd = self.refpref + \
                           self._get_data_prefix(self.sdantlist,self.refproj)
@@ -951,6 +960,10 @@ class simobserve_noise(simobserve_unittest_base):
     def setUp(self):
         # Add new line for better reading (these tests always print errors).
         print ""
+        for simdir in [self.project, self.project_int]:
+            if os.path.exists(simdir):
+                shutil.rmtree(simdir)
+            
         self._copy_input(self.indata)
         default(simobserve)
 

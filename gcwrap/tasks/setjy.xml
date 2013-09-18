@@ -102,7 +102,8 @@
                         <value>Butler-JPL-Horizons 2010</value>
                         <value>Scaife-Heald 2012</value>
 			<value>manual</value>
-			<value>image</value>
+			<value>fluxscale</value>
+			<!--<value>image</value>-->
 			</allowed>
 		</param>
 
@@ -135,6 +136,10 @@
 			<description>Reference frequency for spix</description>
 			<value>1GHz</value>
 		</param>
+                <param type="record" name="fluxdict" subparam="true">
+                       <description>output dictionary from fluxscale</description>
+                       <value type="record"></value>
+                </param>
                 <!-- for polarization fraction handling
 		<param type="doubleArray" name="polindex" subparam="true">
 			<description>Parameters of expansion of sqrt(Q^2+U^2) for linear polarization fraction</description>
@@ -237,14 +242,24 @@
                       <default param="rm"><value type="double">0.0</value></default>
                       -->
                   </equals>
-                  <equals type="string" value="image">
-                    <default param="model"><value type="string"></value></default>
-                   
-                    <!--<default param="modimage"><value type="string"></value></default>-->
+                  <equals type="string" value="fluxscale">
+                    <default param="fluxdict"><value type="record"></value></default>
                   </equals>
+                  <!--<equals type="string" value="image">
+                    <default param="model"><value type="string"></value></default>
+                  </equals>-->
+ 
                   </when>
                 </constraints>
 	</input>
+        <output>
+        <param type="any" name="fluxd">
+                <description>Dictionary containing flux densities and their errors.</description>
+                <any type="variant"/>
+                <value>{}</value>
+        </param>
+        </output>
+ 
 <returns type="void"/>
 
 <example>
@@ -299,6 +314,13 @@
     specified. As in the previous CASA versions, if fluxdensity[0] (Stokes I) 
     is &lt; 0, the default standard will be used to calculate flux density as 
     a function of frequency. 
+
+    The calculated flux densities are reported in the logger but also will be
+    returned as a dictionary if you run as,
+    fluxds = setjy(vis='ngc5921.ms', ...).
+    The dictionary have the structure, 
+         {field name, {spw Id: {'fluxd': [I,Q,U,V] (flux densities in Jy)}}}
+    and the description is also in fluxds['format']. 
 
     Keyword arguments:
     vis -- Name of input visibility file
@@ -382,7 +404,8 @@
                      'Butler-JPL-Horizons 2010', 
                      'Butler-JPL-Horizons 2012', 
                      'manual'
-                     <!-- manual, image to be added -->
+                     'fluxscale' 
+                     <!-- image to be added -->
             All but the last two are for extragalactic calibrators,
             and the final two are for Solar System objects.  
             Note that Scaife-Heald 2012 is for the low frequencies (mostly
@@ -395,7 +418,10 @@
             (also case insensitive) and it recognizes as long as the field name  
             contains the string listed below (e.g. 'PKS 1934-638' works).  
             For 3C Name, a space or an underscore between 3C and the number
-             (e.g. '3C 286' and '3C_286') also works.
+             (e.g. '3C 286' and '3C_286') also works. If the matching by 
+            the field name fails, the task tries to match by its position to
+            the known calibrator list stored in the data directory
+            (~/data/nrao/VLA/standards/fluxscalibrator.data). 
             -------------------------------------------------------------
             3C Name B1950 Name J2000 Name Alt. J2000 Name  standards*
             3C48    0134+329   0137+331   J0137+3309       1,2,3,4,5,6,7
@@ -574,6 +600,19 @@
 
 		Examples: '86.0GHz', '4.65e9Hz'
 
+       &gt;&gt;&gt; standard="fluxscale" expandable parameters
+	    fluxdict -- Output dictionary from fluxscale
+                Using the fluxscale results, the flux density, spectral index,
+                and reference freuquency are extracted and set to fluxdensity,
+                spix, and reffreq parameters, respectively.
+                The field and spw selections can be used to sepecify subset of 
+                the fluxdict to be used to set the model. If they are left as 
+                default (field="", spw="") all fields and/or spws in 
+                the fluxdict (but those spws with fluxd=-1 will be skipped) are
+                used.  
+		default: {}
+                 
+
         usescratch  -- If False: 'virtual' model is created. The model is saved in the header 
         and model visibilities are evaluated when calculating calibration or plotting in plotms.
         If True: the model visibility will be evaluated and saved on disk in the MODEL_DATA 
@@ -588,6 +627,14 @@
 
          
         default: False        
+
+
+    Returned dictionary: 
+        When the setjy task is excuted as setjy(vis='', ..), the flux densities used to set
+        the model are returned as a Python dictionary with the format,
+        {field Id: {spw Id: {fluxd: [I,Q,U,V] in Jy}, 'fieldName':field name }}, where
+        field Id and spw Id are in string type. 
+            
 </example>
 </task>
 </casaxml>

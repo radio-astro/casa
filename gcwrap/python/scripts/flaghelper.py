@@ -8,6 +8,9 @@ import time
 import ast
 import copy
 from taskinit import *
+from tasks import *
+import flagdata as flagdata
+
 # Remove this once CASA moves to Python 2.7+
 from OrderedDictionary import OrderedDict
 
@@ -92,6 +95,28 @@ class Parser():
 #        return dict((entry[0],ast.literal_eval(entry[1])) for entry in [entry.split(self.second,1) for entry in new])
         return OrderedDict((entry[0],ast.literal_eval(entry[1])) for entry in [entry.split(self.second,1) for entry in new])
 
+    def parseNoEval(self,string):
+        res = self.initialsplit(string)
+        new = []
+        for entry in res:
+            if self.second not in entry:
+                new[-1] += ' ' + entry
+            else:
+                new.append(entry)
+#        return dict((entry[0],ast.literal_eval(entry[1])) for entry in [entry.split(self.second,1) for entry in new])
+        return OrderedDict((entry[0],entry[1]) for entry in [entry.split(self.second,1) for entry in new])
+
+    def parse2List(self,string):
+        res = self.initialsplit(string)
+        new = []
+        for entry in res:
+            if self.second not in entry:
+                new[-1] += ' ' + entry
+            else:
+                new.append(entry)
+        return new
+#        return dict((entry[0],ast.literal_eval(entry[1])) for entry in [entry.split(self.second,1) for entry in new])
+#        return OrderedDict((entry[0],ast.literal_eval(entry[1])) for entry in [entry.split(self.second,1) for entry in new])
 
     def initialsplit(self,string):
         return string.split(self.prime)
@@ -149,7 +174,7 @@ def addAbsolutePath(input_file):
     flagdict = parseDictionary(cmdlist, 'any', False)
     
     for key in flagdict:
-        cmddict = flagdict[key]
+        cmddict = flagdict[key]['command']
         if cmddict.has_key('addantenna') and isinstance(cmddict['addantenna'],str) and \
             cmddict['addantenna'] != '':
             cmddict['addantenna'] = os.path.abspath(cmddict['addantenna'])
@@ -163,7 +188,7 @@ def addAbsolutePath(input_file):
     
     # Convert the dictionary back to a list and save it
     output_file = os.path.abspath(input_file + ".tmp")
-    writeFlagCommands('', flagdict, [], False, '', output_file, append=False)
+    writeFlagCommands('', flagdict, False, '', output_file, append=False)
     
     # Return the temporary file
     return output_file
@@ -199,7 +224,26 @@ def readFile(inputfile):
                 continue  
             uppercmd = cmd.replace('true','True')
             cmd = uppercmd.replace('false','False')      
+            
+            # Fix the missing quotes around some strings coming from importevla
+#             if cmd.__contains__('mode') and cmd.__contains__('shadow'):
+#                 newcmd = cmd.replace("mode=shadow","mode='shadow'")
+#                 cmd = newcmd
+#             if cmd.__contains__('mode') and cmd.__contains__('clip'):
+#                 newcmd = cmd.replace("mode=clip","mode='clip'")
+#                 cmd = newcmd
+#             if cmd.__contains__('correlation=') and cmd.__contains__('ABS_LL'):
+#                 newcmd = cmd.replace("correlation=ABS_LL","correlation='ABS_LL'")
+#                 cmd = newcmd
+#             if cmd.__contains__('correlation=') and cmd.__contains__('ABS_RR'):
+#                 newcmd = cmd.replace("correlation=ABS_RR","correlation='ABS_RR'")
+#                 cmd = newcmd
+#             if cmd.__contains__('correlation=') and cmd.__contains__('ABS_ALL'):
+#                 newcmd = cmd.replace("correlation=ABS_ALL","correlation='ABS_ALL'")
+#                 cmd = newcmd
+                
             cmdlist.append(cmd)
+
 
     except:
         casalog.post('Error reading lines from file '+ff.name, 'SEVERE')
@@ -211,13 +255,12 @@ def readFile(inputfile):
     return cmdlist
 
 #@dump_args
-def parseDictionary(cmdlist, rows=[], reason='any', shadow=True):
+def parseDictionary(cmdlist, reason='any', shadow=True):
     '''Create a dictionary after parsing a list of flag commands.
        If reason is different than 'any', only the selected
        rows will be parsed to the final dictionary.
      
        cmdlist --> list of flag commands
-       rows    --> list of rows to read in
        reason --> reason or list of reasons to select from
        shadow --> True will make a dictionary of the addantenna parameter
                    and add it to the flag command
@@ -232,26 +275,7 @@ def parseDictionary(cmdlist, rows=[], reason='any', shadow=True):
          
     if cmdlist.__len__() == 0:
         raise Exception, 'Empty list of commands'
- 
-    # Separate per ' ', then per '='
-    myParser = Parser(' ', '=')
- 
-    cmddict = {}
-    row = 0
-    for cmd in cmdlist:
-        # Skip comment and empty lines
-        if cmd.startswith('#'):
-            continue
-        if cmd == '':
-            continue
-        # TO Be allowed later
-        if cmd.__contains__('summary'):
-            casalog.post('Mode summary is not allowed in list operation', 'WARN')
-            continue
-        parsed = myParser.parse2Dictionary(cmd)
-        cmddict[row] = parsed
-        row += 1
-              
+
     # Gather all requested reasons
     myreaslist = []
     if type(reason) == str:
@@ -263,38 +287,104 @@ def parseDictionary(cmdlist, rows=[], reason='any', shadow=True):
         casalog.post('Cannot read reason; it contains unknown variable types',
                      'ERROR')
         return
+ 
+
+    # Separate per ' ', then per '='
+    myParser = Parser(' ', '=')
+ 
+    flagdict = {}
+    row = 0
+    for cmd in cmdlist:
+        cmddict = {}
+        
+        # Skip comment and empty lines
+        if cmd.startswith('#'):
+            continue
+        if cmd == '':
+            continue
+        # TO Be allowed later
+        if cmd.__contains__('summary'):
+            casalog.post('Mode summary is not allowed in list operation', 'WARN')
+            continue
+
+        mode = ''
+        antenna = ''
+        timerange = ''
+        
+        ##############################
+        # Get a dictionary without type evaluation
+        preparsing = myParser.parseNoEval(cmd)
+        
+        # Evaluate the types            
+        parsed = evaluateParameters(preparsing)
+        
+        ##############################
+        
+        # Parse the flag commands into a dictionary
+#        parsed = myParser.parse2Dictionary(cmd)
+        cmddict['row'] = str(row)
+        cmddict['id'] = str(row)
+        cmddict['command'] = parsed
+        if parsed.has_key('mode'):
+            mode = parsed['mode']
+          
+        input_reason = '' 
+        if parsed.has_key('reason'):
+            input_reason = parsed['reason']
+            
+        cmddict['reason'] = input_reason
+                        
+        if parsed.has_key('timerange'):
+            timerange = parsed['timerange']
+        if parsed.has_key('antenna'):
+            antenna = parsed['antenna']
+
+        cmddict['applied'] = False
+        cmddict['time'] = 0.0
+        cmddict['interval'] = 0
+        cmddict['level'] = 0
+        cmddict['severity'] = 0
+        cmddict['type'] = ''
+        cmddict['mode'] = mode
+        cmddict['timerange'] = timerange
+        cmddict['antenna'] = antenna
+        
+        flagdict[row] = cmddict
+        row += 1
+              
           
     # Select the input cmds based on the requested reasons
     selected_dict = {}
+    cmddict = {}
     row = 0
     if myreaslist.__len__() > 0:
-         
-        for k,v in cmddict.iteritems():
-            if v.__contains__('reason'):
-                input_reason = v['reason']
+        for key in flagdict.keys():
+            cmddict = flagdict[key]['command']
+            if cmddict.has_key('reason'):
+                input_reason = cmddict['reason']
                 if selectReason(myreaslist, input_reason):
-                    selected_dict[row] = v
+                    selected_dict[row] = flagdict[key]
                     row += 1
                      
         if selected_dict.__len__() == 0:
             raise Exception, 'No input lines matching requested reason(s)'
     else:
-        selected_dict = cmddict
+        selected_dict = flagdict
                 
     # Specific for the shadow mode
     if shadow:
+        cmddict = {}
         for key in selected_dict:
-            cmddict = selected_dict[key]
+            cmddict = selected_dict[key]['command']
             if cmddict.has_key('addantenna'):
                 if isinstance(cmddict['addantenna'],str) and \
                     cmddict['addantenna'] != '':
                 # Create a dictionary and replace the parameter
-                    casalog.post('The addantenna parameter will be parsed as a dictionary', 'WARN')
+                    casalog.post('The addantenna parameter will be parsed as a dictionary', 'DEBUG1')
                     antdict = readAntennaList(cmddict['addantenna'])
-                    selected_dict[key]['addantenna'] = antdict
+                    selected_dict[key]['command']['addantenna'] = antdict
             
     return selected_dict
-
 
 def selectReason(reasonlist, pattern):
     '''Return True if pattern is in the reasonlist'''
@@ -312,7 +402,7 @@ def selectReason(reasonlist, pattern):
 
 def parseSelectionPars(cmddict):
     '''Return only the selection parameters into a dictionary:
-       cmddict --> one dictionary with parameters
+       cmddict --> one row-dictionary with parameters
        The correlation parameter will not be considered.
     '''
             
@@ -371,7 +461,7 @@ def parseUnion(vis, flagdict):
         
     for k in flagdict.keys():
         # Each key is a dictionary of one flag command
-        cmddict = flagdict[k]
+        cmddict = flagdict[k]['command']
                
         for xkey,xval in cmddict.iteritems():        
             # Check which parameter
@@ -485,10 +575,12 @@ def parseAgents(aflocal, flagdict, myrows, apply, writeflags, display=''):
         return False
     
     # Do not modify original dictionary
-    myflagcmd = copy.deepcopy(flagdict)    
+    myflagcmd = copy.deepcopy(flagdict)  
         
     # Setup the agent for each input line    
-    for row,cmd in myflagcmd.iteritems():
+    for row in myflagcmd.keys():
+        cmd = OrderedDict()
+        cmd = myflagcmd[row]['command']
            
         if cmd.has_key('reason'):
             cmd.pop('reason')
@@ -510,7 +602,7 @@ def parseAgents(aflocal, flagdict, myrows, apply, writeflags, display=''):
         # Read ntime
         readNtime(cmd)
         
-        # Cast the correct type to non-string parameters
+        # Cast the correct type of some parameters
         evalParams(cmd)
 
         # Add the apply/unapply parameter to dictionary            
@@ -623,29 +715,34 @@ def evalParams(params):
     # rflag parameters
 #    if params.has_key('winsize'):
 #        params['winsize'] = int(params['winsize']);
-#    if params.has_key('timedev'):
-#        timepar = params['timedev']
-#        try:
-#            timepar = eval(timepar)
-#        except Exception:
-#            timepar = readRFlagThresholdFile(params['timedev'],'timedev');
-#        params['timedev'] = timepar
-#    if params.has_key('freqdev'):
-#        freqpar = params['freqdev']
-#        try:
-#            print 'TRYING freqdev'
-#            freqpar = eval(freqpar)
-#        except Exception:
-#            freqpar = readRFlagThresholdFile(params['freqdev'],'freqdev');
-#        params['freqdev'] = freqpar
-#    if params.has_key('timedevscale'):
-#        params['timedevscale'] = float(params['timedevscale']);
-#    if params.has_key('freqdevscale'):
-#        params['freqdevscale'] = float(params['freqdevscale']);
-#    if params.has_key('spectralmin'):
-#        params['spectralmin'] = float(params['spectralmin']);
-#    if params.has_key('spectralmax'):
-#        params['spectralmax'] = float(params['spectralmax']);
+
+    # This is only necessary when timedev/freqdev are strings
+    if params.has_key('timedev'):
+        timepar = params['timedev']
+        if isinstance(timepar, list):
+            return
+        try:
+            timepar = eval(timepar)
+        except Exception:
+            timepar = readRFlagThresholdFile(params['timedev'],'timedev');
+        params['timedev'] = timepar
+    if params.has_key('freqdev'):
+         freqpar = params['freqdev']
+         if isinstance(freqpar, list):
+            return
+         try:
+             freqpar = eval(freqpar)
+         except Exception:
+             freqpar = readRFlagThresholdFile(params['freqdev'],'freqdev');
+         params['freqdev'] = freqpar
+#     if params.has_key('timedevscale'):
+#         params['timedevscale'] = float(params['timedevscale']);
+#     if params.has_key('freqdevscale'):
+#         params['freqdevscale'] = float(params['freqdevscale']);
+#     if params.has_key('spectralmin'):
+#         params['spectralmin'] = float(params['spectralmin']);
+#     if params.has_key('spectralmax'):
+#         params['spectralmax'] = float(params['spectralmax']);
 
 #@dump_args
 def writeFlagCommands(msfile, flagdict, applied, add_reason, outfile, append=True):
@@ -673,34 +770,84 @@ def writeFlagCommands(msfile, flagdict, applied, add_reason, outfile, append=Tru
     # and warn the user.
     # TODO: I think this is not necessary for new parser!!! Check it
     if add_reason != '':
-#        tempreason = add_reason
-#        add_reason = tempreason.replace(' ','_')
         reason2add = True
 #        casalog.post('Replaced blanks with underscores in cmdreason', 'WARN')
         
     # Append to a file   
-    if outfile != '':    
-        if append:                      
+    if outfile != '': 
+        if append:
+            casalog.post('Will append commands to the file '+outfile)       
             ffout = open(outfile, 'a')
         else:
+            casalog.post('Will save commands to the file '+outfile)       
             os.system('rm -f '+outfile)
             ffout = open(outfile, 'w')
            
         try:                            
             for key in flagdict.keys():
                 cmdline = ""
-                cmddict = flagdict[key]
+                cmddict = flagdict[key]['command']
+                reason = flagdict[key]['reason']
+                                   
                 # Add new reason or replace old one with new reason
                 if reason2add: 
-                    cmddict['reason'] = add_reason
+                    reason = add_reason
+                    
+                if reason != '':
+                    cmddict['reason'] = reason
                                         
                 for k,v in cmddict.iteritems():
                     cmdstr = ""
                     if isinstance(v, str):
                         # Add quotes to string values
+                        if v.count("'") > 0:
+                            v = v.strip("'")
+                        if v.count('"') > 0:
+                            v = v.strip("'")
                         cmdstr = "'"+v+"'"
-                        v = cmdstr
-                    cmdline = cmdline + k + '=' + str(v) + ' '
+                        cmdline = cmdline + k + '=' + str(cmdstr) + ' '
+
+#                     elif k == 'timedev' and isinstance(v,list):
+#                         #outer list, 
+#                         # timedev = [[1.0, 9.0, 0.038859101518873986], [1.0, 10.0, 0.16283325492625655]]
+#                         outstr = "["
+#                         for outv in v:
+#                             instr = "["
+#                             for inv in outv:
+#                                 instr = instr + str(inv) + ','
+#                             instr = instr.rstrip(',')
+#                             instr = instr + "],"
+#                             outstr = outstr + instr
+#                         outstr = outstr.rstrip(',')
+#                         outstr = outstr + ']'
+#                             
+#                         cmdline = cmdline + k + "=" + outstr + ' '
+# 
+#                     elif k == 'freqdev' and isinstance(v,list):
+#                         #outer list, 
+#                         # freqdev = [[1.0, 9.0, 0.038859101518873986], [1.0, 10.0, 0.16283325492625655]]
+#                         outstr = "["
+#                         for outv in v:
+#                             instr = "["
+#                             for inv in outv:
+#                                 instr = instr + str(inv) + ','
+#                             instr = instr.rstrip(',')
+#                             instr = instr + "],"
+#                             outstr = outstr + instr
+#                         outstr = outstr.rstrip(',')
+#                         outstr = outstr + ']'
+#                             
+#                         cmdline = cmdline + k + "=" + outstr + ' '
+# 
+#                     elif isinstance(v,list):
+#                         lstring = ''
+#                         for ll in v:
+#                             lstring = lstring + str(ll)+','
+#                         lstring = lstring.rstrip(',')
+#                         cmdline = cmdline + k + '=['+ lstring + '] '
+                        
+                    else:
+                        cmdline = cmdline + k + '=' + str(v) + ' '
                
                 # Save to output file
                 print >> ffout, '%s' %cmdline.rstrip()
@@ -715,14 +862,19 @@ def writeFlagCommands(msfile, flagdict, applied, add_reason, outfile, append=Tru
     
     else:
         # Append new commands to existing FLAG_CMD table
+        casalog.post('Saving commands to the FLAG_CMD table')       
         cmdlist = []
         reasonlist = []
         for key in flagdict.keys():
             cmdline = ""
             reason = ""
-            cmddict = flagdict[key]
+            cmddict = flagdict[key]['command']
+            # Do not save reason in the COMMAND column
             if cmddict.has_key('reason'):
-                reason = cmddict.pop('reason')
+                cmddict.pop('reason')
+                
+            # Add to REASON column the user input reason if requested
+            reason = flagdict[key]['reason']
             if reason2add:
                 reason = add_reason
                 
@@ -730,10 +882,56 @@ def writeFlagCommands(msfile, flagdict, applied, add_reason, outfile, append=Tru
                 cmdstr = ""
                 if isinstance(v, str):
                     # Add quotes to string values
+                    if v.count("'") > 0:
+                        v = v.strip("'")
+                    if v.count('"') > 0:
+                        v = v.strip("'")
                     cmdstr = "'"+v+"'"
-                    v = cmdstr
-                cmdline = cmdline + k + '=' + str(v) + ' '
+                    cmdline = cmdline + k + '=' + str(cmdstr) + ' '
+
+#                 elif k == 'timedev' and isinstance(v,list):
+#                     #outer list, 
+#                     # timedev = [[1.0, 9.0, 0.038859101518873986], [1.0, 10.0, 0.16283325492625655]]
+#                     outstr = "["
+#                     for outv in v:
+#                         instr = "["
+#                         for inv in outv:
+#                             instr = instr + str(inv) + ','
+#                         instr = instr.rstrip(',')
+#                         instr = instr + "],"
+#                         outstr = outstr + instr
+#                     outstr = outstr.rstrip(',')
+#                     outstr = outstr + ']'
+#                         
+#                     cmdline = cmdline + k + "=" + outstr + ' '
+# 
+#                 elif k == 'freqdev' and isinstance(v,list):
+#                     #outer list, 
+#                     # freqdev = [[1.0, 9.0, 0.038859101518873986], [1.0, 10.0, 0.16283325492625655]]
+#                     outstr = "["
+#                     for outv in v:
+#                         instr = "["
+#                         for inv in outv:
+#                             instr = instr + str(inv) + ','
+#                         instr = instr.rstrip(',')
+#                         instr = instr + "],"
+#                         outstr = outstr + instr
+#                     outstr = outstr.rstrip(',')
+#                     outstr = outstr + ']'
+#                         
+#                     cmdline = cmdline + k + "=" + outstr + ' '
+# 
+#                 elif isinstance(v,list):
+#                     lstring = ''
+#                     for ll in v:
+#                         lstring = lstring + str(ll)+','
+#                     lstring = lstring.rstrip(',')
+#                     cmdline = cmdline + k + '=['+ lstring + '] '
+                    
+                else:
+                    cmdline = cmdline + k + '=' + str(v) + ' '
                 
+            cmdline = cmdline.rstrip()
             cmdlist.append(cmdline)
             reasonlist.append(reason)
             
@@ -767,9 +965,12 @@ def writeFlagCommands(msfile, flagdict, applied, add_reason, outfile, append=Tru
         tblocal.putcol('SEVERITY', pl.array(otherlist), startrow=nrows,nrow=Nadd)    
         tblocal.putcol('TIME', pl.array(timelist), startrow=nrows,nrow=Nadd)    
         tblocal.putcol('TYPE', pl.array(typelist), startrow=nrows,nrow=Nadd)    
-        tblocal.close()
         
-        casalog.post('Saved ' + str(Nadd) + ' rows to FLAG_CMD')
+        newrows = int(tblocal.nrows())
+        newrows = newrows - nrows
+        casalog.post('Saved ' + str(newrows) + ' rows to FLAG_CMD')
+        
+        tblocal.close()
         
     return True
 
@@ -800,7 +1001,7 @@ def parseRFlagOutputFromSummary(mode,summary_stats_list, flagcmd):
                 # Go through the flagcmd list, to find the 'rflags'.....
                 for key in flagcmd.keys():
                     # cmdline is a dictionary with flag commands
-                    cmdline = flagcmd[key]
+                    cmdline = flagcmd[key]['command']
                     if cmdline.has_key('mode') and cmdline['mode'] == 'rflag':
                     # Check for match between input flagcmd and output threshold, via the rflag id
                         if(key == rflagid):  
@@ -992,9 +1193,15 @@ def plotFlagCommands(myflags,plotname,t1sdata,t2sdata,):
     plotflag = {}
     ipf = 0
     for key in keylist:
-        antstr = myflags[key]['antenna']
-        reastr = myflags[key]['reason']
-        timstr = myflags[key]['timerange']
+        antstr = ''
+        reastr = ''
+        timstr = ''
+        if myflags[key].has_key('antenna'):
+            antstr = myflags[key]['antenna']
+        if myflags[key].has_key('reason'):
+            reastr = myflags[key]['reason']
+        if myflags[key].has_key('timerange'):
+            timstr = myflags[key]['timerange']
         if antstr != '':
             # flags that have antenna specified
             antlist = antstr.split(',')
@@ -1281,6 +1488,366 @@ def plotFlagCommands(myflags,plotname,t1sdata,t2sdata,):
     else:
         pl.savefig(plotname, dpi=150)
     return
+
+def evaluateParameters(pardict):
+    '''Evaluate the correct types in a string with parameters'''
+    
+    cmddict = OrderedDict()
+    
+    for key,val in pardict.iteritems():
+        newval = None        
+        # Selection parameters are always string
+        if key == 'spw' or key == 'scan' or key == 'field' or \
+            key == 'antenna' or key == 'correlation' or key == 'array' or \
+            key == 'timerange' or key == 'uvrange' or key == 'feed':
+            
+            if val.count("'") > 0:
+                val = val.strip("'")
+            if val.count('"') > 0:
+                val = val.strip('"')
+            newval = str(val)
+            cmddict[key] = newval
+            continue
+        
+        if val.startswith('['):
+            newval = ast.literal_eval(val)
+        elif val.startswith('{'):
+            newval = eval(val)
+        elif val == 'True' or val == 'False':
+            if eval(val) == True or eval(val) == False:
+                newval = eval(val)
+        if newval == None:
+            try:
+                # Try int
+                int(val)
+                newval = int(val)
+            except:
+                # Try float
+                try:
+                    float(val)
+                    newval = float(val)
+                except:
+                    # Try string                    
+                    if val.count("'") > 0:
+                        val = val.strip("'")
+                    if val.count('"') > 0:
+                        val = val.strip('"')
+                    newval = str(val)
+        
+        cmddict[key] = newval
+    
+    return cmddict
+
+def parseXML(sdmfile, mytbuff):
+    '''
+#   readflagxml: reads Antenna.xml and Flag.xml SDM tables and parses
+#                into returned dictionary as flag command strings
+#      sdmfile (string)  path to SDM containing Antenna.xml and Flag.xml
+#      mytbuff (float)   time interval (start and end) padding (seconds)
+#
+#   Usage: myflags = readflagxml(sdmfile,tbuff)
+#
+#   Dictionary structure:
+#   fid : 'id' (string)
+#         'mode' (string)         flag mode ('online')
+#         'antenna' (string)
+#         'timerange' (string)
+#         'reason' (string)
+#         'time' (float)          in mjd seconds
+#         'interval' (float)      in mjd seconds
+#         'command' (string)          string (for COMMAND col in FLAG_CMD)
+#         'type' (string)         'FLAG' / 'UNFLAG'
+#         'applied' (bool)        set to True here on read-in
+#         'level' (int)           set to 0 here on read-in
+#         'severity' (int)        set to 0 here on read-in
+#
+#   Updated STM 2011-11-02 handle new SDM Flag.xml format from ALMA
+#   Updated STM 2012-02-14 handle spectral window indices, names, IDs
+#   Updated STM 2012-02-21 handle polarization types
+#
+#   Mode to use for spectral window selection in commands:
+#   spwmode =  0 none (flag all spw)
+#   spwmode =  1 use name
+#   spwmode = -1 use index (counting rows in SpectralWindow.xml)
+#
+#   Mode to use for polarization selection in commands:
+#   polmode =  0 none (flag all pols/corrs)
+#   polmode =  1 use polarization type
+#
+#   CURRENT DEFAULT: Use spw names, flag pols
+    '''
+
+    spwmode = 1
+    polmode = 1
+
+#
+    try:
+        from xml.dom import minidom
+    except ImportError, e:
+        print 'failed to load xml.dom.minidom:\n', e
+        exit(1)
+
+    if type(mytbuff) != float:
+        casalog.post('Found incorrect type for tbuff','SEVERE')
+        exit(1)
+#        mytbuff = 1.0
+
+    # make sure Flag.xml and Antenna.xml are available (SpectralWindow.xml depends)
+    flagexist = os.access(sdmfile + '/Flag.xml', os.F_OK)
+    antexist = os.access(sdmfile + '/Antenna.xml', os.F_OK)
+    spwexist = os.access(sdmfile + '/SpectralWindow.xml', os.F_OK)
+    if not flagexist:
+        casalog.post('Cannot open ' + sdmfile + '/Flag.xml', 'SEVERE')
+        exit(1)
+    if not antexist:
+        casalog.post('Cannot open ' + sdmfile + '/Antenna.xml', 'SEVERE'
+                     )
+        exit(1)
+    if not spwexist:
+        casalog.post('Cannot open ' + sdmfile + '/SpectralWindow.xml',
+                     'WARN')
+
+    # construct look-up dictionary of name vs. id from Antenna.xml
+    xmlants = minidom.parse(sdmfile + '/Antenna.xml')
+    antdict = {}
+    rowlist = xmlants.getElementsByTagName('row')
+    for rownode in rowlist:
+        rowname = rownode.getElementsByTagName('name')
+        ant = str(rowname[0].childNodes[0].nodeValue)
+        rowid = rownode.getElementsByTagName('antennaId')
+        # CAS-4532: remove spaces between content and tags
+        antid = str(rowid[0].childNodes[0].nodeValue).strip()
+        antdict[antid] = ant
+    casalog.post('Found ' + str(rowlist.length)
+                 + ' antennas in Antenna.xml')
+
+    # construct look-up dictionary of name vs. id from SpectralWindow.xml
+    if spwexist:
+        xmlspws = minidom.parse(sdmfile + '/SpectralWindow.xml')
+        spwdict = {}
+        rowlist = xmlspws.getElementsByTagName('row')
+        ispw = 0
+        for rownode in rowlist:
+            rowid = rownode.getElementsByTagName('spectralWindowId')
+            # CAS-4532: remove spaces between content and tags
+            spwid = str(rowid[0].childNodes[0].nodeValue).strip()
+            spwdict[spwid] = {}
+            spwdict[spwid]['index'] = ispw
+            # SMC: 6/3/2012 ALMA SDM does not have name
+            if rownode.getElementsByTagName('name'):
+                rowname = rownode.getElementsByTagName('name')
+                spw = str(rowname[0].childNodes[0].nodeValue)
+                spwdict[spwid]['name'] = spw
+            else:
+                spwmode = -1
+                
+#            rowid = rownode.getElementsByTagName('spectralWindowId')
+#            spwid = str(rowid[0].childNodes[0].nodeValue)
+#            spwdict[spwid] = {}
+#            spwdict[spwid]['index'] = ispw
+            ispw += 1
+        casalog.post('Found ' + str(rowlist.length)
+                     + ' spw in SpectralWindow.xml')
+
+    # report chosen spw and pol modes
+    if spwmode > 0:
+        casalog.post('Will construct spw flags using names')
+    elif spwmode < 0:
+        casalog.post('Will construct spw flags using table indices')
+    else:
+        casalog.post('')
+    #
+    if polmode == 0:
+        casalog.post('Will not set polarization dependent flags (flag all corrs)'
+                     )
+    else:
+        casalog.post('Will construct polarization flags using polarizationType'
+                     )
+
+    # now read Flag.xml into dictionary row by row
+    xmlflags = minidom.parse(sdmfile + '/Flag.xml')
+    flagdict = {}
+    rowlist = xmlflags.getElementsByTagName('row')
+    nrows = rowlist.length
+    newsdm = -1
+    newspw = -1
+    newpol = -1
+    for fid in range(nrows):
+        rownode = rowlist[fid]
+        rowfid = rownode.getElementsByTagName('flagId')
+        fidstr = str(rowfid[0].childNodes[0].nodeValue)
+        flagdict[fid] = {}
+        flagdict[fid]['id'] = fidstr
+        rowid = rownode.getElementsByTagName('antennaId')
+        antid = rowid[0].childNodes[0].nodeValue
+        # check if there is a numAntenna specified (new format)
+        rownant = rownode.getElementsByTagName('numAntenna')
+        antname = ''
+        if rownant.__len__() > 0:
+            xid = antid.split()
+            nant = int(rownant[0].childNodes[0].nodeValue)
+            if newsdm < 0:
+                casalog.post('Found numAntenna=' + str(nant)
+                             + ' must be a new style SDM')
+            newsdm = 1
+            # CAS-4698. Flag auto-correlations when there is
+            # only one antenna
+            if nant == 1:
+                aid = xid[2]
+                ana = antdict[aid]
+                if antname == '':
+                    antname = ana+'&&*'
+                else:
+                    antname += ',' + ana
+                    
+            elif nant > 1:
+                for ia in range(nant):
+                    aid = xid[2 + ia]
+                    ana = antdict[aid]
+                    if antname == '':
+                        antname = ana
+                    else:
+                        antname += ',' + ana
+            else:
+            # numAntenna = 0 means flag all antennas
+                antname = ''
+        else:
+            if newsdm < 0:
+                casalog.post('No numAntenna entry found, must be an old style SDM'
+                             )
+            newsdm = 0
+            nant = 1
+            aid = antid
+            ana = antdict[aid]
+            antname = ana
+        # start and end times in mjd ns
+        rowstart = rownode.getElementsByTagName('startTime')
+        start = int(rowstart[0].childNodes[0].nodeValue)
+        startmjds = float(start) * 1.0E-9 - mytbuff
+        t = qa.quantity(startmjds, 's')
+        starttime = qa.time(t, form='ymd', prec=9)[0]
+        rowend = rownode.getElementsByTagName('endTime')
+        end = int(rowend[0].childNodes[0].nodeValue)
+        endmjds = float(end) * 1.0E-9 + mytbuff
+        t = qa.quantity(endmjds, 's')
+        endtime = qa.time(t, form='ymd', prec=9)[0]
+    # time and interval for FLAG_CMD use
+        times = 0.5 * (startmjds + endmjds)
+        intervs = endmjds - startmjds
+        flagdict[fid]['time'] = times
+        flagdict[fid]['interval'] = intervs
+        # reasons
+        rowreason = rownode.getElementsByTagName('reason')
+        reas = str(rowreason[0].childNodes[0].nodeValue)
+        # Replace any white space with underscores
+        reason = reas.replace(' ','_')
+    # NEW SDM ADDITIONS 2011-11-01
+        rownspw = rownode.getElementsByTagName('numSpectralWindow')
+        spwstring = ''
+        if spwmode != 0 and rownspw.__len__() > 0:
+            nspw = int(rownspw[0].childNodes[0].nodeValue)
+        # has a new-style spw specification
+            if newspw < 0:
+                if not spwexist:
+                    casalog.post('Cannot open ' + sdmfile
+                                 + '/SpectralWindow.xml', 'SEVERE')
+                    exit(1)
+                casalog.post('Found SpectralWindow=' + str(nspw)
+                             + ' must be a new style SDM')
+            newspw = 1
+            if nspw > 0:
+                rowspwid = \
+                    rownode.getElementsByTagName('spectralWindowId')
+                spwids = rowspwid[0].childNodes[0].nodeValue
+                xspw = spwids.split()
+                for isp in range(nspw):
+                    spid = str(xspw[2 + isp])
+                    if spwmode > 0:
+                        spstr = spwdict[spid]['name']
+                    else:
+                        spstr = str(spwdict[spid]['index'])
+                    if spwstring == '':
+                        spwstring = spstr
+                    else:
+                        spwstring += ',' + spstr
+        polstring = ''
+        rownpol = rownode.getElementsByTagName('numPolarizationType')
+        if polmode != 0 and rownpol.__len__() > 0:
+            npol = int(rownpol[0].childNodes[0].nodeValue)
+        # has a new-style pol specification
+            if newpol < 0:
+                casalog.post('Found numPolarizationType=' + str(npol)
+                             + ' must be a new style SDM')
+            newpol = 1
+            if npol > 0:
+                rowpolid = \
+                    rownode.getElementsByTagName('polarizationType')
+                polids = rowpolid[0].childNodes[0].nodeValue
+                xpol = polids.split()
+                for ipol in range(npol):
+                    polid = str(xpol[2 + ipol])
+                    if polstring == '':
+                        polstring = polid
+                    else:
+                        polstring += ',' + polid
+    #
+        # Construct antenna name and timerange and reason strings
+        flagdict[fid]['antenna'] = antname
+        timestr = starttime + '~' + endtime
+        flagdict[fid]['timerange'] = timestr
+        flagdict[fid]['reason'] = reason
+        # Construct command strings (per input flag)
+        cmddict = OrderedDict()
+#        cmd = "antenna='" + antname + "' timerange='" + timestr + "'"
+        cmddict['antenna'] = antname
+        cmddict['timerange'] = timestr
+        if spwstring != '':
+#            cmd += " spw='" + spwstring + "'"
+#            flagdict[fid]['spw'] = spwstring
+            cmddict['spw'] = spwstring
+#        if polstring != '':
+#            cmd += " poln='" + polstring + "'"
+#            flagdict[fid]['poln'] = polstring
+        if polstring != '':
+            # Write the poln translation in correlation
+            if polstring.count('R')>0:
+                if polstring.count('L')>0:
+                    corr = 'RR,RL,LR,LL'
+                else:
+                    corr = 'RR,RL,LR'
+            elif polstring.count('L')>0:
+                corr = 'LL,LR,RL'
+            elif polstring.count('X')>0:
+                if polstring.count('Y')>0:
+                    corr = 'XX,XY,YX,YY'
+                else:
+                    corr = 'XX,XY,YX'
+            elif polstring.count('Y')>0:
+                corr = 'YY,YX,XY'
+
+#            cmd += " correlation='" + corr + "'"
+            cmddict['correlation'] = corr
+#            flagdict[fid]['poln'] = polstring
+#        flagdict[fid]['command'] = cmd
+        flagdict[fid]['command'] = cmddict
+    #
+        flagdict[fid]['type'] = 'FLAG'
+        flagdict[fid]['applied'] = False
+        flagdict[fid]['level'] = 0
+        flagdict[fid]['severity'] = 0
+        flagdict[fid]['mode'] = 'online'
+
+    flags = {}
+    if rowlist.length > 0:
+        flags = flagdict
+        casalog.post('Found ' + str(rowlist.length)
+                     + ' flags in Flag.xml')
+    else:
+        casalog.post('No valid flags found in Flag.xml')
+
+    # return the dictionary for later use
+    return flags
+
 
 #        END of NEW PARSER FUNCTIONS  
 ##############################################################################################
@@ -2140,9 +2707,12 @@ def compressSelectionList(vis='',dicpars={}):
 
 
 #@dump_args
+# ONLY for flagcmd task
 def writeFlagCmd(msfile, myflags, vrows, applied, add_reason, outfile):
     '''
-    Writes the flag commands to FLAG_CMD or to an ASCII file
+    Writes the flag commands to FLAG_CMD or to an ASCII file. Used
+    only by the flagcmd task. This uses the old, simple parser.
+    For flagdata, use writeFlagCommands().
     
     msfile  -->   MS
     myflags -->  dictionary of commands read from inputfile (from readFromTable, etc.)
@@ -2173,7 +2743,6 @@ def writeFlagCmd(msfile, myflags, vrows, applied, add_reason, outfile):
             casalog.post('Replaced blanks with underscores in cmdreason', 'WARN')
            
         try:                            
-            printonce = True            
             for key in myflags.keys():
                 # Remove leading and trailing white spaces
                 cmdline = myflags[key]['command'].strip()
@@ -2181,37 +2750,54 @@ def writeFlagCmd(msfile, myflags, vrows, applied, add_reason, outfile):
                 # Add addantenna parameter back
                 if myflags[key].__contains__('addantenna'):
                     addantenna = myflags[key]['addantenna']
-                    cmdline = cmdline + ' addantenna=' + str(addantenna)
+                    cmdline = cmdline + ' addantenna=' + str(addantenna) + ' '
                                                         
                 reason = myflags[key]['reason']
-                                                    
-                # There is no reason in input
-                if reason == '':
+                if add_reason != '':
+                    reason = str(add_reason)
+                
+                if reason != '':    
+                    cmdline = cmdline + ' reason=' + str(reason) + ' '
                     
-                    # Add new reason to output
-                    if add_reason != '':
-                        print >> ffout, '%s reason=\'%s\'' %(cmdline, add_reason)
-                    else:
-                        print >> ffout, '%s' %cmdline
-                    
-                # There is reason in input    
-                else:
-                    # Output reason is empty
-                    if add_reason == '':
-                        tempreason = reason
-                        reason = tempreason.replace(' ','_')
-                        if printonce:
-                            casalog.post('Replaced blanks with underscores in reason', 'WARN')
-                            printonce = False
-                        print >> ffout, '%s reason=\'%s\'' %(cmdline, reason)
+                # For flagcmd saving
+                newdict = evalString(cmdline)
+#                newdict = evaluateString(cmdline)
+                cmdline = ''
+                for k,v in newdict.iteritems():
+                    cmdstr = ""
+                    # Add quotes to non-quoted strings
+                    if isinstance(v, str):
+                        if v.count("'") > 0:
+                            v = v.strip("'")
+                        if v.count('"') > 0:
+                            v = v.strip('"')
+                            
+                        # Add quotes to string values
+                        cmdstr = "'"+v+"'"
+                        v = cmdstr                        
+                        cmdline = cmdline + k + '=' + str(v) + ' '
+                        
+                    elif isinstance(v,list):
+                        lstring = ''
+                        for ll in v:
+                            if isinstance(ll,list):
+                                for nl in ll:
+                                    lstring = lstring + str(nl)+','
+                            else:
+                                lstring = lstring + str(ll)+','
+                        lstring = lstring.rstrip(',')
+                        cmdline = cmdline + k + '=['+ lstring + '] '
                         
                     else:
-                        # Replace input reason with new reason
-                        print >> ffout, '%s reason=\'%s\'' %(cmdline, add_reason)
+                        cmdline = cmdline + k + '=' + str(v) + ' '
+                                           
+                # Save to output file
+                print >> ffout, '%s' %cmdline.rstrip()
+          
                                 
-        except:
-            raise Exception, 'Error writing lines to file ' \
-                + outfile
+#        except:
+        except Exception, instance:
+            raise Exception, 'Error writing lines to file %s. %s' %(outfile,instance)
         ffout.close()
         return
     
@@ -2239,8 +2825,32 @@ def writeFlagCmd(msfile, myflags, vrows, applied, add_reason, outfile):
             if myflags[key].__contains__('addantenna'):
                 addantenna = myflags[key]['addantenna']
                 command = command + ' addantenna=' + str(addantenna)
-
-            cmd_list.append(command)
+                
+            # Evaluate the types
+            newdict = evalString(command)
+#            newdict = evaluateString(command)
+            cmdline = ''
+            for k,v in newdict.iteritems():
+                cmdstr = ""
+                if isinstance(v, str):
+                    if v.count("'") > 0:
+                        v = v.strip("'")
+                    if v.count('"') > 0:
+                        v = v.strip('"')
+                    # Add quotes to string values
+                    cmdstr = "'"+v+"'"
+                    v = cmdstr
+                    cmdline = cmdline + k + '=' + str(v) + ' '
+                elif isinstance(v,list):
+                    lstring = ''
+                    for ll in v:
+                        lstring = lstring + str(ll)+','
+                    lstring = lstring.rstrip(',')
+                    cmdline = cmdline + k + '=['+ lstring + '] '
+                else:
+                    cmdline = cmdline + k + '=' + str(v) + ' '
+                
+            cmd_list.append(cmdline)
             tim_list.append(myflags[key]['time'])
             intv_list.append(myflags[key]['interval'])
             if add_reason != '':
@@ -2282,14 +2892,15 @@ def writeFlagCmd(msfile, myflags, vrows, applied, add_reason, outfile):
                   nrow=nadd)
         tblocal.putcol('APPLIED', pl.array(app_list), startrow=nrows,
                   nrow=nadd)
-        tblocal.close()
     
-        casalog.post('Saved ' + str(nadd) + ' rows to FLAG_CMD')
+        nrows = int(tblocal.nrows())
+        tblocal.close()
+        casalog.post('Saved ' + str(nrows) + ' rows to FLAG_CMD')
         
     else:
         casalog.post('Saved zero rows to FLAG_CMD; no flags found')
 
-    return nadd
+    return nrows
 
 
 def getReason(cmdline):
@@ -3213,7 +3824,8 @@ def readRFlagThresholdFile(infile='',inkey=''):
         if(len(aline)>5 and aline[0] != '#'):
             cleanlist.append(aline.rstrip().rstrip('\n'))
               
-    threshlist={};
+#    threshlist={};
+    threshlist = OrderedDict()
     for aline in range(0,len(cleanlist)):
         threshlist[str(aline)] = convertStringToDict(cleanlist[aline]);
         if threshlist[str(aline)].has_key(inkey):
@@ -3231,11 +3843,13 @@ def convertDictToString(indict={}):
     thestr = thestr.replace('\n','');
     thestr = thestr.replace(' ','');
     return thestr;
+
 ##############################################
 def convertStringToDict(instr=''):
     '''Convert string to dictionary'''
     instr = instr.replace('\n','');
     try:
+        thedict = OrderedDict()
         thedict = ast.literal_eval(instr)
     except Exception, instance:
         casalog.post("*** Error converting string %s to dictionary : \'%s\'" % (instr,instance),'ERROR');
@@ -3298,6 +3912,60 @@ def extractRFlagOutputFromSummary(mode,summary_stats_list, flagcmd):
                             
                             flagcmd[key]['command'] = cmdline;
 
+# Only used in writeFlagCmd
+def evalString(cmdline):
+    '''Evaluate the correct types in a string with parameters'''
+    
+#    newcmdline = ""
+    cmddict = OrderedDict()
+    
+    try:
+        pairs = cmdline.split()
+    except Exception, instance:
+        raise "Whitespace in parameter values is not yet supported"
+    
+    for kv in pairs:
+        newval = None
+        (key,val) = kv.split('=',1)
+        
+        # Selection parameters are always string
+        if key == 'spw' or key == 'scan' or key == 'field' or \
+            key == 'antenna' or key == 'correlation' or key == 'array' or \
+            key == 'timerange' or key == 'uvrange' or key == 'feed':
+            
+            newval = str(val)
+            cmddict[key] = newval
+            continue
+        
+        if val.startswith('['):
+            newval = ast.literal_eval(val)
+        elif val.startswith('{'):
+            newval = eval(val)
+        elif val == 'True' or val == 'False':
+            if eval(val) == True or eval(val) == False:
+                newval = bool(val)
+                
+        if newval == None:
+            try:
+                int(val)
+                newval = int(val)
+            except:
+                # string
+                newval = str(val)
+        if newval == None:
+            try:
+                float(val)
+                newval = float(val)
+            except:
+                # string
+                newval = str(val)
+        
+        cmddict[key] = newval
+    
+    return cmddict
 
 
-##############################################
+
+
+    
+

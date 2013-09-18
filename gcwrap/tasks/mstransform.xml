@@ -477,7 +477,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         example: correlation='XX,YY' 
 
     timerange -- Select data based on time range:
-        default = '' (all); examples,
+        default: '' (all); examples,
            timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
            Note: if YYYY/MM/DD is missing date, timerange defaults to the
            first day in the dataset

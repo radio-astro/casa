@@ -50,12 +50,12 @@ if(regstate):
    # Test (1) : CS clean with wideband A-Projection with freq-conjugate beams.
    print '-- CS Clean with Wideband AProjection and Mosaicing --'
    default('clean')
-   clean( vis=msname, imagename=imname1, field='0,1', spw='', phasecenter=phasecenter, nterms=1, reffreq='1.5GHz', gridmode='advancedaprojection', wbawp=True, aterm=True, mterm=True, psterm=False, conjbeams=True, painc=360, rotpainc=5.0, cfcache=imname1+'.cfcache.dir', imsize=npix, cell='10.0arcsec', niter=10, gain=0.5, minpb=1e-04, usescratch=True)
+   clean( vis=msname, imagename=imname1, field='0,1', spw='', phasecenter=phasecenter, nterms=1, reffreq='1.5GHz', gridmode='advancedaprojection', wbawp=True, aterm=True, mterm=True, psterm=False, conjbeams=True, painc=360, rotpainc=360.0, cfcache=imname1+'.cfcache.dir', imsize=npix, cell='10.0arcsec', niter=10, gain=0.5, minpb=1e-04, usescratch=True)
 
    # Test (2) : MTMFS clean with wideband A-Projection with freq-conjugate beams.
    print '-- MTMFS Clean with Wideband AProjection and Mosaicing --'
    default('clean')
-   clean( vis=msname, imagename=imname2, field='0,1', spw='', phasecenter=phasecenter, nterms=2, reffreq='1.5GHz', gridmode='advancedaprojection', wbawp=True, aterm=True, mterm=True, psterm=False, conjbeams=True, painc=360, rotpainc=5.0, cfcache=imname2+'.cfcache.dir', imsize=npix, cell='10.0arcsec', niter=10, gain=0.5, minpb=1e-04, usescratch=True)
+   clean( vis=msname, imagename=imname2, field='0,1', spw='', phasecenter=phasecenter, nterms=2, reffreq='1.5GHz', gridmode='advancedaprojection', wbawp=True, aterm=True, mterm=True, psterm=False, conjbeams=True, painc=360, rotpainc=360.0, cfcache=imname2+'.cfcache.dir', imsize=npix, cell='10.0arcsec', niter=10, gain=0.5, minpb=1e-04, usescratch=True)
 
    # Test (3) Mosaic with wbawp=False, and post-deconvolution PB-correction
    #print '-- MTMFS Clean with Reference-Frequency AProjection and Mosaicing + Post Deconv PB-Correction --'
@@ -105,6 +105,19 @@ else:
    correct_mtmfs_alpha = -0.0037804
    correct_mtmfs_coeffpb_0 = 0.999975
    correct_mtmfs_coeffpb_1 = 0.705602
+
+   # 10 Sept 2013 (UR). 
+   ## Removed CF rotation, and using better norm'd PBs.
+   ## Removed test for coeffPB_1...
+   # These are pixel values at the center of the source, pixel 256, 315
+   # Test 1
+   correct_cs_intensity = 0.69031
+   correct_cs_avgpb = 0.695073
+   # Test 2
+   correct_mtmfs_intensity = 0.679821
+   correct_mtmfs_alpha = 0.036
+   correct_mtmfs_avgPB_tt0 = 0.695073  # avgPB_tt0
+##   correct_mtmfs_coeffpb_1 = 0.705602   ## Make this avgPB_tt1
 
 
 ###################################################
@@ -199,42 +212,42 @@ else:
    print >>logfile, '\n'
 
    # Test 2 : PB 0
-   if(os.path.exists(imname2+'.cfcache.dir/coeffPB_0')):
-      ia.open(imname2+'.cfcache.dir/coeffPB_0');
+   if(os.path.exists(imname2+'.cfcache.dir/avgPB_tt0')):
+      ia.open(imname2+'.cfcache.dir/avgPB_tt0');
       midpix = ia.pixelvalue([npix/2,npix/2])
       midpix = ia.pixelvalue([256,315])
       ia.close();
-      diff_mtmfs_coeffpb_0 = abs( midpix['value']['value'] - correct_mtmfs_coeffpb_0 )/ abs(correct_mtmfs_coeffpb_0);
-      if(diff_mtmfs_coeffpb_0<0.02): 
-         print >>logfile,'* Passed Test 2 : peak mtmfs_coeffpb_0 test ';
+      diff_mtmfs_avgPB_tt0 = abs( midpix['value']['value'] - correct_mtmfs_avgPB_tt0 )/ abs(correct_mtmfs_avgPB_tt0);
+      if(diff_mtmfs_avgPB_tt0<0.02): 
+         print >>logfile,'* Passed Test 2 : peak mtmfs_avgPB_tt0 test ';
       else: 
-         print >>logfile,'* FAILED Test 2 : peak mtmfs_coeffpb_0 test at the 2-percent level '
+         print >>logfile,'* FAILED Test 2 : peak mtmfs_avgPB_tt0 test at the 2-percent level '
 	 regstate = False;
-      print >>logfile,'-- Test 2 : peak mtmfs_coeffpb_0 : ' + str(midpix['value']['value']) + ' (' + str(correct_mtmfs_coeffpb_0) + ')';
+      print >>logfile,'-- Test 2 : peak mtmfs_avgPB_tt0 : ' + str(midpix['value']['value']) + ' (' + str(correct_mtmfs_avgPB_tt0) + ')';
    else:
-      print >>logfile,'-- FAILED Test 2 : No mtmfs_coeffpb_0 map generated';
+      print >>logfile,'-- FAILED Test 2 : No mtmfs_avgPB_tt0 map generated';
       regstate = False;
 
    print >>logfile, '\n'
 
-   # Test 2 : PB 1
-   if(os.path.exists(imname2+'.cfcache.dir/coeffPB_1')):
-      ia.open(imname2+'.cfcache.dir/coeffPB_1');
-      midpix = ia.pixelvalue([npix/2,npix/2])
-      midpix = ia.pixelvalue([256,315])
-      ia.close();
-      diff_mtmfs_coeffpb_1 = abs( midpix['value']['value'] - correct_mtmfs_coeffpb_1 )/ abs(correct_mtmfs_coeffpb_1);
-      if(diff_mtmfs_coeffpb_1<0.02): 
-         print >>logfile,'* Passed Test 2 : peak mtmfs_coeffpb_1 test ';
-      else: 
-         print >>logfile,'* FAILED Test 2 : peak mtmfs_coeffpb_1 test at the 2-percent level '
-	 regstate = False;
-      print >>logfile,'-- Test 2 : peak mtmfs_coeffpb_1 : ' + str(midpix['value']['value']) + ' (' + str(correct_mtmfs_coeffpb_1) + ')';
-   else:
-      print >>logfile,'-- FAILED Test 2 : No mtmfs_coeffpb_1 map generated';
-      regstate = False;
-
-   print >>logfile, '\n'
+#   # Test 2 : PB 1
+#   if(os.path.exists(imname2+'.cfcache.dir/coeffPB_1')):
+#      ia.open(imname2+'.cfcache.dir/coeffPB_1');
+#      midpix = ia.pixelvalue([npix/2,npix/2])
+#      midpix = ia.pixelvalue([256,315])
+#      ia.close();
+#      diff_mtmfs_coeffpb_1 = abs( midpix['value']['value'] - correct_mtmfs_coeffpb_1 )/ abs(correct_mtmfs_coeffpb_1);
+#      if(diff_mtmfs_coeffpb_1<0.02): 
+#         print >>logfile,'* Passed Test 2 : peak mtmfs_coeffpb_1 test ';
+#      else: 
+#         print >>logfile,'* FAILED Test 2 : peak mtmfs_coeffpb_1 test at the 2-percent level '
+#	 regstate = False;
+#      print >>logfile,'-- Test 2 : peak mtmfs_coeffpb_1 : ' + str(midpix['value']['value']) + ' (' + str(correct_mtmfs_coeffpb_1) + ')';
+#   else:
+#      print >>logfile,'-- FAILED Test 2 : No mtmfs_coeffpb_1 map generated';
+#      regstate = False;
+#
+#   print >>logfile, '\n'
 
 
 ###################################################
