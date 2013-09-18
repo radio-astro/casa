@@ -590,13 +590,16 @@ def simalma(
         antennalist=pl.array(antennalist)
         configtypes=pl.array(configtypes)
         totaltime_min=pl.array(totaltime_min)
-        resols=pl.array(resols)            
+        resols=pl.array(resols)
         z=pl.where(configtypes!='ALMASD')[0]
         antennalist=antennalist[z]
         configtypes=configtypes[z]
         totaltime_min=totaltime_min[z]
         resols=resols[z]
-
+        nconfigs=len(antennalist)
+        if nconfigs < 1:
+            msg("No interferometer configuration is requested. At least one interferometer configuration should be selected.", \
+                origin="simalma", priority="error")
                                  
 
 # TODO check model_size against mapsize  - separately after this?
