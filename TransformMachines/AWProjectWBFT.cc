@@ -1330,7 +1330,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	visResamplerWt_p->setMaps(chanMap, polMap);
 	Array<Complex> gwts; Bool removeDegenerateAxis=False;
 	griddedWeights.get(gwts, removeDegenerateAxis);
-	cerr << "initializeToSky for gwts" << endl;
+	//	cerr << "initializeToSky for gwts" << endl;
 	visResamplerWt_p->initializeToSky(gwts, sumCFWeight);
       }
   }
