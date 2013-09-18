@@ -31,10 +31,14 @@ if [[ $OSNAME = "Linux" ]]; then
 CASAPY=`which casapy`
 TOPLEVEL=`dirname $CASAPY`
 PYTHONEXEC=$TOPLEVEL/lib64/casapy/bin/python
-if [ -x PYTHONEXEC ]; then
-echo $PYTHONEXEC
-else
-PYTHONEXEC=/usr/lib64/casapy/bin/python
+if [ -x $PYTHONEXEC ]; then
+   echo $PYTHONEXEC
+   else if [ -x $TOPLEVEL/../lib64/casapy/bin/python ]; then
+	   PYTHONEXEC=$TOPLEVEL/../lib64/casapy/bin/python
+	   echo $PYTHONEXEC
+   else
+        PYTHONEXEC=/usr/lib64/casapy/bin/python
+   fi
 fi
 else
 PYTHONEXEC=python
