@@ -63,7 +63,7 @@ namespace casa{
   class ATerm: public CFTerms
   {
   public:
-    ATerm (): CFTerms() {};
+    ATerm ();
     virtual ~ATerm () {};
 
     virtual String name() = 0;
@@ -168,6 +168,8 @@ namespace casa{
     LogIO& logIO() {return logIO_p;}
     LogIO logIO_p;
     Vector<Int> polMap_p_base;
+    Int cachedOverSampling_p, cachedConvSize_p;
+
   };
 
 };
