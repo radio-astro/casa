@@ -175,11 +175,11 @@ ia.close()
 #              'sigma': 0.14695927,
 #              'sum':  4228.50428399}
 # update after mask to TP image (r26597)
-diffstats = {'max': 0.7616818,
-             'min': -0.70423162,
-             'rms': 0.154147,
-             'sigma': 0.15327509,
-             'sum': 3819.56091853}
+diffstats = {'max': 1.19147229,
+             'min': -0.69741619,
+             'rms': 0.1786425,
+             'sigma': 0.17307631,
+             'sum': 10320.91638317}
 
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,

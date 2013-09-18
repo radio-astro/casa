@@ -312,11 +312,11 @@ ia.close()
 #              'sigma': 0.01564628,
 #              'sum':  1124.31878767}
 # 20130917: update after mask to TP image (r26597)
-refstats = {'max': 0.13677189,
-             'min': -0.02414303,
-             'rms': 0.01804532,
-             'sigma': 0.01559602,
-             'sum':  1084.96242251}
+refstats = {'max': 0.13555302,
+             'min': -0.02538656,
+             'rms': 0.01750355,
+             'sigma': 0.01543498,
+             'sum':  986.6099945}
 
 
 # # reference statistic values for diff image
@@ -357,11 +357,11 @@ refstats = {'max': 0.13677189,
 #              'sigma': 0.00891475,
 #              'sum':  -253.00065438}
 # 20130917: update after mask to TP image (r26597)
-diffstats = {'max':  0.0373359,
-             'min': -0.06773765,
-             'rms': 0.00884265,
-             'sigma': 0.00866014,
-             'sum':  -213.64433131}
+diffstats = {'max':  0.03913748,
+             'min': -0.06746214,
+             'rms': 0.0089601,
+             'sigma': 0.00890806,
+             'sum':  -115.29187211}
 
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,
