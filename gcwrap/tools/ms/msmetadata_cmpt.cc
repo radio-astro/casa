@@ -314,8 +314,10 @@ variant* msmetadata::baselines() {
 
 vector<int> msmetadata::chanavgspws() {
 	_FUNC (
+			/*
 		*_log << LogIO::WARN << "This method is deprecated and will be removed. "
 			<< "Use almaspws(chavg=True) instead." << LogIO::POST;
+			*/
 		return _setUIntToVectorInt(_msmd->getChannelAvgSpw());
 	)
 	return vector<int>();
@@ -385,8 +387,10 @@ record* msmetadata::effexposuretime() {
 
 vector<int> msmetadata::fdmspws() {
 	_FUNC(
+			/*
 		*_log << LogIO::WARN << __FUNCTION__ << " is deprecated and will be removed. "
 			<< "Use almaspws(fdm=True) instead." << LogIO::POST;
+			*/
 		return _setUIntToVectorInt(_msmd->getFDMSpw());
 	)
 	return vector<int>();
@@ -868,8 +872,10 @@ vector<double> msmetadata::timesforscans(const vector<int>& scans) {
 
 vector<int> msmetadata::tdmspws() {
 	_FUNC(
+			/*
 		*_log << LogIO::WARN << __FUNCTION__ << " is deprecated and will be removed. "
 			<< "Use almaspws(tdm=True) instead." << LogIO::POST;
+			*/
 		return _setUIntToVectorInt(_msmd->getTDMSpw());
 	)
 	return vector<int>();
@@ -877,8 +883,10 @@ vector<int> msmetadata::tdmspws() {
 
 vector<int> msmetadata::wvrspws(bool complement) {
 	_FUNC(
+			/*
 		*_log << LogIO::WARN << __FUNCTION__ << " is deprecated and will be removed. "
 			<< "Use almaspws(tdm=True) instead." << LogIO::POST;
+			*/
 		vector<int> wvrs = _setUIntToVectorInt(_msmd->getWVRSpw());
 		if (complement) {
 			vector<int> nonwvrs(
