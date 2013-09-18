@@ -405,6 +405,7 @@ else:
     
 # mode="put"
 # change the reference RA value
+key = 'crval1'
 imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="3:00:00")
 # or equivalently
 imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="45deg")
