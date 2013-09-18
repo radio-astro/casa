@@ -1146,12 +1146,12 @@ void MSSummary::listAntenna (LogIO& os, Bool verbose) const
 			MPosition mLongLat=antCol.positionMeas()(ant);
 			MVAngle mvLong= mLongLat.getAngle().getValue()(0);
 			MVAngle mvLat= mLongLat.getAngle().getValue()(1);
-			Vector<Double> antOff = offsets[i].getValue("m");
+			Vector<Double> antOff = offsets[ant].getValue("m");
 			if (posIsITRF) {
-				MeasConvert<MPosition> toItrf(antPos[i], MPosition::ITRF);
-				antPos[i] = toItrf(antPos[i]);
+				MeasConvert<MPosition> toItrf(antPos[ant], MPosition::ITRF);
+				antPos[i] = toItrf(antPos[ant]);
 			}
-			Vector<Double> xyz = antPos[i].get("m").getValue();
+			Vector<Double> xyz = antPos[ant].get("m").getValue();
 			// write the row
 			os << indent;
 			os.output().width(indwidth);  os << ant;
