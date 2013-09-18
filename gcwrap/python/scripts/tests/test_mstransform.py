@@ -1145,7 +1145,7 @@ class test_WeightSpectrum(test_base):
         mstransform(vis=self.vis,outputvis=self.outvis,datacolumn="DATA",combinespws=True,regridms=True,
                     mode="frequency",nchan=50,start="2.20804e+10Hz",width="1.950702e+05Hz",nspw=1,
                     interpolation="fftshift",phasecenter="J2000 12h01m53.13s -18d53m09.8s",
-                    outframe="CMB",veltype="radio")        
+                    outframe="CMB",veltype="radio",usewtspectrum=True)        
         
         mytb = tbtool()
         mytb.open(self.outvis)
@@ -1160,48 +1160,48 @@ class test_WeightSpectrum(test_base):
         
      
    
-#    def test_fillWeightSpectrumFromWeight(self):
-#        '''mstransform: Fill output WEIGHT_SPECTRUM using WEIGHTS'''
-#        
-#        self.vis = 'combine-1-timestamp-2-SPW-no-WEIGHT_SPECTRUM-Same-Exposure.ms'
-#        self.outvis = 'fillWeightSpectrumFromWeight.ms'
-#        self.copyfile(self.vis)
-#        
-#        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn="DATA",combinespws=True,regridms=True,
-#                    mode="frequency",nchan=50,start="2.20804e+10Hz",width="1.950702e+05Hz",nspw=1,
-#                    interpolation="fftshift",phasecenter="J2000 12h01m53.13s -18d53m09.8s",
-#                    outframe="CMB",veltype="radio")  
-#        
-#        mytb = tbtool()
-#        mytb.open(self.outvis)
-#        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')      
-#        mytb.close()
-#        nchan = weightSpectrum.size  
-#        check_eq(nchan, 50)   
-#        check_eq(weightSpectrum[0][0][0], 58.9232, 0.0001)
-#        check_eq(weightSpectrum[0][nchan-1][0], 31.4836, 0.0001)
+    def test_fillWeightSpectrumFromWeight(self):
+        '''mstransform: Fill output WEIGHT_SPECTRUM using WEIGHTS'''
+        
+        self.vis = 'combine-1-timestamp-2-SPW-no-WEIGHT_SPECTRUM-Same-Exposure.ms'
+        self.outvis = 'fillWeightSpectrumFromWeight.ms'
+        self.copyfile(self.vis)
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn="DATA",combinespws=True,regridms=True,
+                    mode="frequency",nchan=50,start="2.20804e+10Hz",width="1.950702e+05Hz",nspw=1,
+                    interpolation="fftshift",phasecenter="J2000 12h01m53.13s -18d53m09.8s",
+                    outframe="CMB",veltype="radio",usewtspectrum=True)  
+        
+        mytb = tbtool()
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')      
+        mytb.close()
+        nchan = weightSpectrum.size  
+        check_eq(nchan, 50)   
+        check_eq(weightSpectrum[0][0][0], 1.9007, 0.0001)
+        check_eq(weightSpectrum[0][nchan-1][0], 1.0156, 0.0001)
         
         
-#    def test_combineSPWAndChanAvgWithWeightSpectrum(self):
-#        '''mstransform: Combine SPWs and channel average using WEIGHT_SPECTRUM'''
-#        
-#        self.vis = 'combine-1-timestamp-2-SPW-with-WEIGHT_SPECTRUM-Same-Exposure.ms'
-#        self.outvis = 'test_combineSPWAndChanAvgWithWeightSpectrum.ms'
-#        self.copyfile(self.vis)   
-#        
-#        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn="DATA",combinespws=True,regridms=True,
-#                    mode="frequency",nchan=12,start="2.20804e+10Hz",width="7.802808e+05Hz",nspw=1,
-#                    interpolation="fftshift",phasecenter="J2000 12h01m53.13s -18d53m09.8s",
-#                    outframe="CMB",veltype="radio",chanaverage=True,chanbin=4,useweights='spectrum')
-#        
-#        mytb = tbtool()
-#        mytb.open(self.outvis)
-#        data = mytb.getcol('DATA')      
-#        mytb.close()  
-#        nchan = data.size   
-#        check_eq(nchan, 12)
-#        check_eq(data[0][0][0].real, 0.0628, 0.0001)
-#        check_eq(data[0][nchan-1][0].imag, -0.2508, 0.0001)
+    def test_combineSPWAndChanAvgWithWeightSpectrum(self):
+        '''mstransform: Combine SPWs and channel average using WEIGHT_SPECTRUM'''
+        
+        self.vis = 'combine-1-timestamp-2-SPW-with-WEIGHT_SPECTRUM-Same-Exposure.ms'
+        self.outvis = 'test_combineSPWAndChanAvgWithWeightSpectrum.ms'
+        self.copyfile(self.vis)   
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn="DATA",combinespws=True,regridms=True,
+                    mode="frequency",nchan=12,start="2.20804e+10Hz",width="7.802808e+05Hz",nspw=1,
+                    interpolation="fftshift",phasecenter="J2000 12h01m53.13s -18d53m09.8s",
+                    outframe="CMB",veltype="radio",chanaverage=True,chanbin=4,useweights='spectrum')
+        
+        mytb = tbtool()
+        mytb.open(self.outvis)
+        data = mytb.getcol('DATA')      
+        mytb.close()  
+        nchan = data.size   
+        check_eq(nchan, 12)
+        check_eq(data[0][0][0].real, 0.0628, 0.0001)
+        check_eq(data[0][nchan-1][0].imag, -0.2508, 0.0001)
         
         
     def test_combineSPWDiffExpAndChanAvgWithWeightSpectrum(self):
