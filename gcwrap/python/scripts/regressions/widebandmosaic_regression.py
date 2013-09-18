@@ -40,11 +40,8 @@ copyTime=time.time()
 
 imname1=tempdir+'reg_widebandmosaic_cs.wbT.atT.mtT.psF'
 imname2= tempdir+'reg_widebandmosaic_mtmfs.wbT.atT.mtT.psF'
-npix=512
 
 msname = tempdir+'reg_mawproject_apr13.ms'
-
-phasecenter = 'J2000 19h58m53.883s +40d44m02.323s'
 
 
 def locclean( vis='', imagename='', field='', spw='', phasecenter='', nterms=1, reffreq='1.5GHz', gridmode='advancedaprojection', wbawp=True, aterm=True, mterm=True, psterm=False, conjbeams=True, painc=360, rotpainc=360.0, cfcache='', imsize=512, cell='10.0arcsec', niter=10, gain=0.5, minpb=1e-04, usescratch=True ):
@@ -62,8 +59,8 @@ def locclean( vis='', imagename='', field='', spw='', phasecenter='', nterms=1, 
 	   residuals.append(imagename+'.residual.tt'+str(tt));
 	   im.defineimage(nx=imsize,ny=imsize,
 			  cellx=cell,celly=cell,
-                          phasecenter = phasecenter,
-			  nchan=1,stokes=stokes,mode='mfs')
+                          phasecenter = [phasecenter],
+			  nchan=1,stokes='I',mode='mfs')
 #                          start='1.0GHz',step='2.0GHz');
 	   im.make(models[tt]);
       algo = 'msmfs'
@@ -74,11 +71,11 @@ def locclean( vis='', imagename='', field='', spw='', phasecenter='', nterms=1, 
       im.defineimage(nx=imsize,ny=imsize,
 			  cellx=cell,celly=cell,
 			  nchan=1, 
-                          phasecenter = phasecenter,
-                          stokes=stokes,mode='mfs')
+                          phasecenter = [phasecenter],
+                          stokes='I',mode='mfs')
       im.make(models[0]);
       algo = 'hogbom'
-   im.weight(type=weighting);
+   im.weight(type='natural');
    im.settaylorterms(ntaylorterms=nterms,
 		     reffreq=(qa.convert(qa.unit(reffreq),"Hz"))['value']);
    im.setscales(scalemethod='uservector',uservector=[0]);
@@ -95,7 +92,7 @@ def locclean( vis='', imagename='', field='', spw='', phasecenter='', nterms=1, 
 #     im.makeimage(type='pb',image=imagename+'.pb');
 
    print 'clean without mask';
-   im.clean(model=models,image=restoreds,residual=residuals,algorithm=algo,threshold=threshold,niter=niter,interactive=interactive,npercycle=niter,gain=gain,mask=''); 
+   im.clean(model=models,image=restoreds,residual=residuals,algorithm=algo,threshold='0.0Jy',niter=niter,interactive=False,npercycle=niter,gain=gain,mask=''); 
 
    im.done();
 
@@ -103,6 +100,8 @@ def locclean( vis='', imagename='', field='', spw='', phasecenter='', nterms=1, 
 
 
 if(regstate):
+   npix=512
+   phasecenter = 0 #'J2000 19h58m28.5s +40d44m01.50s'
    # Test (1) : CS clean with wideband A-Projection with freq-conjugate beams.
    print '-- CS Clean with Wideband AProjection and Mosaicing --'
    #default('clean')
