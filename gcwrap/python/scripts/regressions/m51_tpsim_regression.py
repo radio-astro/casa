@@ -127,13 +127,24 @@ ia.close()
 #            'rms': 0.22069,
 #            'sigma': 0.20145,
 #            'sum': 23627}
-# update after setvp fix (r21970)
-refstats = {'max': 3.17733955,
-            'min': -0.52407992,
-            'rms': 0.36143386,
-            'sigma': 0.32582116,
-            'sum': 41011.427}
-
+# # update after setvp fix (r21970)
+# refstats = {'max': 3.17733955,
+#             'min': -0.52407992,
+#             'rms': 0.36143386,
+#             'sigma': 0.32582116,
+#             'sum': 41011.427}
+# # update after change to gridfunction='SF' (r26496)
+# refstats = {'max': 3.760463,
+#              'min': -0.63766569,
+#              'rms': 0.39420992,
+#              'sigma': 0.36188505,
+#              'sum': 40982.74700824} 
+# update after mask to TP image (r26597)
+refstats = {'max': 3.760463,
+             'min': -0.63766569,
+             'rms': 0.4169735,
+             'sigma': 0.37817003,
+             'sum':  40972.22263158}
 
 #ia.open(project+"/"+project + '.aca.tp.diff')
 ia.open(project+"/"+project + '.sd.diff')
@@ -151,13 +162,24 @@ ia.close()
 #              'rms': 0.13544469,
 #              'sigma': 0.12991888,
 #              'sum': 10038.482 }
-# update after PB change (r26333)
-diffstats = {'max': 0.82618213,
-             'min': -0.50403631,
-             'rms': 0.10586927,
-             'sigma': 0.10465023,
-             'sum': 4199.82504407 }
-
+# # update after PB change (r26333)
+# diffstats = {'max': 0.82618213,
+#              'min': -0.50403631,
+#              'rms': 0.10586927,
+#              'sigma': 0.10465023,
+#              'sum': 4199.82504407 }
+# # update after change to gridfunction='SF' (r26496)
+# diffstats = {'max': 0.76168156,
+#              'min': -0.70423162,
+#              'rms': 0.14784159,
+#              'sigma': 0.14695927,
+#              'sum':  4228.50428399}
+# update after mask to TP image (r26597)
+diffstats = {'max': 0.7616818,
+             'min': -0.70423162,
+             'rms': 0.154147,
+             'sigma': 0.15327509,
+             'sum': 3819.56091853}
 
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,
