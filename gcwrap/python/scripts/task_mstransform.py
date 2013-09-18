@@ -897,6 +897,7 @@ def mstransform(
              feed,
              datacolumn,
              realmodelcol,
+             usewtspectrum,
              combinespws,        # spw combination --> cvel
              chanaverage,        # channel averaging --> split
              chanbin,
@@ -994,6 +995,8 @@ def mstransform(
         if mth.validateModelCol():        
             # Make real a virtual MODEL column in the output MS
             config['realmodelcol'] = realmodelcol
+        
+        config['usewtspectrum'] = usewtspectrum
         
         # Add the tile shape parameter
         if tileshape.__len__() == 1:

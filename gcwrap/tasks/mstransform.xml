@@ -145,6 +145,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>Make real a virtual MODEL column.</description>
             <value>False</value>
         </param>
+        
+    <param type="bool" name="usewtspectrum">
+        <description>Create a WEIGHT_SPECTRUM column in the output MS.</description>
+        <value>False</value>
+    </param>
 
     <!-- SPW COMBINATION parameters -->
     <param type="bool" name="combinespws">
@@ -519,6 +524,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         column will be added to the output MS based on the existing SOURCE_MODEL
                         column.
             default: False
+
+    usewtspectrum -- Create a WEIGHT_SPECTRUM column in the output MS. When set to True,
+                     a WEIGHT_SPECTRUM column will be created using the input WEIGHT column,
+                     such that each channel in the WEIGHT_SPECTRUM will get WEIGHT/nChannels.
+        default: False
 
 --- SPW combination parameters ---
     combinespws -- Combine the input spws into a new output spw.
