@@ -768,7 +768,8 @@ def simobserve(
                 z = qq.groups()
                 refdate=z[0]
                 if len(z)>1:
-                    msg("Discarding time part of refdate, '"+z[1]+"', in favor of hourangle parameter = "+hourangle,origin='simobserve')
+                    if len(z[1])>1:
+                        msg("Discarding time part of refdate, '"+z[1]+"', in favor of hourangle parameter = "+hourangle,origin='simobserve')
 
             if hourangle=="transit":
                 haoffset=0.0
