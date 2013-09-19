@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STAsciiWriter.h 1106 2006-08-03 00:28:39Z mar637 $
+//# $Id: STAsciiWriter.h 2658 2012-10-10 03:29:17Z MalteMarquarding $
 //#---------------------------------------------------------------------------
 #ifndef STASCIIWRITER_H
 #define STASCIIWRITER_H

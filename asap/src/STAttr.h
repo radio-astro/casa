@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STAttr.h 1346 2007-04-26 03:24:41Z mar637 $
+//# $Id: STAttr.h 2658 2012-10-10 03:29:17Z MalteMarquarding $
 //#---------------------------------------------------------------------------
 #ifndef STATTR_H
 #define STATTR_H

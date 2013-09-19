@@ -58,7 +58,7 @@ if is_casapy():
 from sbseparator import sbseparator
 from _asap import srctype
 
-__date__ = '$Date: 2011-12-01 04:05:36 -0500 (Thu, 01 Dec 2011) $'.split()[1]
+__date__ = '$Date: 2013-07-31 01:37:40 -0600 (Wed, 31 Jul 2013) $'.split()[1]
 __version__  = '4.2.0a'
 __revision__ = get_revision()
 

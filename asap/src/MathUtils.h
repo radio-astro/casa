@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: MathUtils.h 2258 2011-08-01 05:08:42Z TakeshiNakazato $
+//# $Id: MathUtils.h 2619 2012-08-02 08:19:59Z TakeshiNakazato $
 //#---------------------------------------------------------------------------
 #ifndef MATHUTILS_H
 #define MATHUTILS_H

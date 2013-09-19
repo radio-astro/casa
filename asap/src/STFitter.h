@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STFitter.h 1932 2010-09-17 08:35:58Z WataruKawasaki $
+//# $Id: STFitter.h 2666 2012-10-15 04:52:38Z MalteMarquarding $
 //#---------------------------------------------------------------------------
 #ifndef STFITTER_H
 #define STFITTER_H

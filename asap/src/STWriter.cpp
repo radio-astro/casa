@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STWriter.cpp 2023 2011-03-02 05:31:40Z TakeshiNakazato $
+//# $Id: STWriter.cpp 2658 2012-10-10 03:29:17Z MalteMarquarding $
 //#---------------------------------------------------------------------------
 
 #include <string>

@@ -22,7 +22,7 @@ int main( int argc, char *argv[] )
   // options
   Input inp ;
   String indent = "   " ;
-  String versionInfo = "$Id: asdm2ASAP.cc 2273 2011-08-12 06:20:30Z TakeshiNakazato $\nConverts an ASDM dataset into Scantable.\nUsage:\n"+indent+argv[0]+" -antenna <antenna name or id> -asdm <ASDM directory> -asap <Scantable name> [-apc both|yes|no] [-corr-mode ca|ao|ca,ao] [-ocorr-mode ao] [-time-sampling all|integration|subintegration] [-srt fr|bw|ca|fr,bw|fr,ca|ca,bw|all]" ;
+  String versionInfo = "$Id: asdm2ASAP.cc 2754 2013-01-31 02:14:27Z TakeshiNakazato $\nConverts an ASDM dataset into Scantable.\nUsage:\n"+indent+argv[0]+" -antenna <antenna name or id> -asdm <ASDM directory> -asap <Scantable name> [-apc both|yes|no] [-corr-mode ca|ao|ca,ao] [-ocorr-mode ao] [-time-sampling all|integration|subintegration] [-srt fr|bw|ca|fr,bw|fr,ca|ca,bw|all]" ;
   Bool helpMode = False ;
   for ( int i = 1 ; i < argc ; i++ ) {
     if ( strncmp( argv[i], "-h", 2 ) == 0 

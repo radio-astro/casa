@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STWriter.h 2163 2011-05-10 05:02:56Z MalteMarquarding $
+//# $Id: STWriter.h 2658 2012-10-10 03:29:17Z MalteMarquarding $
 //#---------------------------------------------------------------------------
 #ifndef STWRITER_H
 #define STWRITER_H

@@ -26,7 +26,7 @@
 //#                        Epping, NSW, 2121,
 //#                        AUSTRALIA
 //#
-//# $Id: STLineFinder.cpp 2345 2011-11-08 08:03:54Z WataruKawasaki $
+//# $Id: STLineFinder.cpp 2774 2013-02-25 06:35:27Z WataruKawasaki $
 //#---------------------------------------------------------------------------
 
 
