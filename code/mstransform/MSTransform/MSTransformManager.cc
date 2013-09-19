@@ -150,9 +150,6 @@ void MSTransformManager::initialize()
 	userPhaseCenter_p = False;
 	restFrequency_p = String("");
 	outputReferenceFramePar_p = String("");			// Options are: LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO
-	fftShift_p = 0;
-	fftShiftEnabled_p = False;
-	combinationOfSPWsWithDifferentExposure_p = False;
 
 	// Frequency specification parameters
 	mode_p = String("channel"); 					// Options are: channel, frequency, velocity
@@ -166,6 +163,9 @@ void MSTransformManager::initialize()
 	timeBin_p = 0.0;
 	timespan_p = String("");
 	timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::Nothing);
+
+	// Weight Spectrum parameters
+	usewtspectrum_p = False;
 
 	// MS-related members
 	dataHandler_p = NULL;
@@ -212,7 +212,15 @@ void MSTransformManager::initialize()
 	weightFactorMap_p.clear();
 	sigmaFactorMap_p.clear();
 
-	// Frequency transformation function pointers
+	// Reference frame transformation members
+	fftShiftEnabled_p = False;
+	fftShift_p = 0;
+
+	// Weight Spectrum members
+	inputWeightSpectrumAvailable_p = False;
+	combinationOfSPWsWithDifferentExposure_p = False;
+
+	// Transformations - related function pointers
 	transformCubeOfDataComplex_p = NULL;
 	transformCubeOfDataFloat_p = NULL;
 	fillWeightsPlane_p = NULL;
@@ -223,7 +231,7 @@ void MSTransformManager::initialize()
 	averageKernelComplex_p = NULL;
 	averageKernelFloat_p = NULL;
 
-	// I/O related members
+	// I/O related function pointers
 	writeOutputPlanesComplex_p = NULL;
 	writeOutputPlanesFloat_p = NULL;
 	writeOutputFlagsPlane_p = NULL;
@@ -287,6 +295,17 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 		{
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 					<< "MODEL column will be made real in the output MS " << LogIO::POST;
+		}
+	}
+
+	exists = configuration.fieldNumber ("usewtspectrum");
+	if (exists >= 0)
+	{
+		configuration.get (exists, usewtspectrum_p);
+		if (usewtspectrum_p)
+		{
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+					<< "WEIGHT_SPECTRUM will be written in output MS " << LogIO::POST;
 		}
 	}
 
@@ -3422,19 +3441,32 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
     	// Reset all the weights-based operations
     	setWeightBasedTransformations(weightmode_p);
     }
-    else if (combinespws_p)
+    else if (combinespws_p or usewtspectrum_p)
     {
     	// Fill WEIGHT_SPECTRUM with WEIGHTS
 		Matrix<Float> inputWeightPlane = vb->weight();
 		IPosition PolChanRow = vb->flagCube().shape();
 		weightSpectrumCube_p.resize(PolChanRow,False);
+		Double scaleFactor = 1.0/PolChanRow(1);
 		for (uInt row=0; row < PolChanRow(2); row++)
 		{
 			Matrix<Float> inputWeightSpectrumPlane = weightSpectrumCube_p.xyPlane(row);
 			for (uInt pol = 0; pol < PolChanRow(0); pol++)
 			{
-				inputWeightSpectrumPlane.row(pol) = inputWeightPlane(pol,row);
+				inputWeightSpectrumPlane.row(pol) = scaleFactor*inputWeightPlane(pol,row);
 			}
+		}
+
+		if (usewtspectrum_p)
+		{
+			// Unset all the weights-based operations
+			setWeightBasedTransformations(MSTransformations::flat);
+
+			// jagonzal: I don't want to spend so much resources transforming and writing synthetic WEIGHT_SPECTRUM
+			transformCubeOfData(vb,rowRef,weightSpectrumCube_p,outputMsCols_p->weightSpectrum(),NULL);
+
+			// Reset all the weights-based operations
+			setWeightBasedTransformations(weightmode_p);
 		}
     }
 
@@ -3529,20 +3561,6 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 			}
 		}
 	}
-
-	// Write out synthetic WEIGHT_SPECTRUM if it was used to combine SPWs
-	if ((not inputWeightSpectrumAvailable_p) and (combinespws_p and combinationOfSPWsWithDifferentExposure_p))
-	{
-		// Unset all the weights-based operations
-		setWeightBasedTransformations(MSTransformations::flat);
-
-		// jagonzal: I don't want to spend so much resources transforming and writing synthetic WEIGHT_SPECTRUM
-		transformCubeOfData(vb,rowRef,weightSpectrumCube_p,outputMsCols_p->weightSpectrum(),NULL);
-
-		// Reset all the weights-based operations
-		setWeightBasedTransformations(weightmode_p);
-	}
-
 
     // Special case for flag category
     if (fillFlagCategory_p)

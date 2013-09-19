@@ -870,6 +870,9 @@ protected:
 	String timespan_p;
 	vi::AveragingOptions timeAvgOptions_p;
 
+	// Weight Spectrum parameters
+	Bool usewtspectrum_p;
+
 	// MS-related members
 	MSTransformDataHandler *dataHandler_p;
 	MeasurementSet *inputMs_p;
@@ -921,7 +924,7 @@ protected:
 	Double fftShift_p;
 	ROScalarMeasColumn<MEpoch> timeMeas_p;
 
-	// Weight Spectrum handling members
+	// Weight Spectrum members
 	Bool inputWeightSpectrumAvailable_p;
 	Bool combinationOfSPWsWithDifferentExposure_p;
 	Cube<Float> weightSpectrumCube_p;
