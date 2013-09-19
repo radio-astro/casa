@@ -25,24 +25,27 @@
 
 #include "FeatherCurve.h"
 #include <guitools/Feather/FeatherPlot.h>
+#include <guitools/Feather/LegendCurve.h>
 #include <synthesis/MSVis/UtilJ.h>
 #include <QDebug>
 #include <QtCore/qmath.h>
 #include <qwt_plot_curve.h>
 #include <qwt_symbol.h>
+#include <qwt_legend_item.h>
 
 namespace casa {
 
 FeatherCurve::FeatherCurve(FeatherPlot* plot, QwtPlot::Axis xAxis,
 		QwtPlot::Axis yAxis, bool scaledCurve ){
-	plotCurve = new QwtPlotCurve();
+	plotCurve = new LegendCurve( this );
 	plotCurve->setAxis( xAxis, yAxis );
 	plotCurve->attach( plot );
-
 	scatterPlot = false;
 	scaleLogUV = false;
+	firstTime = true;
 	scaleLogAmplitude = false;
 	sumCurve = scaledCurve;
+	functionColor = Qt::black;
 }
 
 
@@ -72,6 +75,11 @@ bool FeatherCurve::isWeightCurve() const {
 	}
 	return weightCurve;
 }
+
+QColor FeatherCurve::getRectColor() const {
+	return functionColor;
+}
+
 void FeatherCurve::setCurveSize( bool scatterPlot, bool diagonalLine,
 		int dotSize, int lineThickness ){
 	this->scatterPlot = scatterPlot;
@@ -101,14 +109,16 @@ std::pair<double,double> FeatherCurve::getBoundsX() const {
 	double maxValue = maxX;
 	if ( !scatterPlot ){
 		if ( scaleLogUV ){
-			minValue = logarithm( minValue );
-			maxValue = logarithm( maxValue );
+			Bool valid = true;
+			minValue = logarithm( minValue, valid );
+			maxValue = logarithm( maxValue, valid );
 		}
 	}
 	else {
 		if ( scaleLogAmplitude && !isSumCurve()){
-			minValue = logarithm( minValue );
-			maxValue = logarithm( maxValue );
+			Bool valid = true;
+			minValue = logarithm( minValue, valid );
+			maxValue = logarithm( maxValue, valid );
 		}
 	}
 	return std::pair<double,double>(minValue,maxValue);
@@ -120,13 +130,13 @@ std::pair<double,double> FeatherCurve::getBoundsY() const {
 	double maxValue = maxY;
 	if ( scaleLogAmplitude ){
 		if ( !isWeightCurve() && !isSumCurve()){
-			minValue = logarithm( minValue );
-			maxValue = logarithm( maxValue );
+			Bool valid = true;
+			minValue = logarithm( minValue, valid );
+			maxValue = logarithm( maxValue, valid );
 		}
 	}
 	return std::pair<double,double>(minValue,maxValue);
 }
-
 
 QwtPlot::Axis FeatherCurve::getVerticalAxis() const {
 	QwtPlot::Axis verticalAxis = static_cast<QwtPlot::Axis>( plotCurve->yAxis());
@@ -155,7 +165,8 @@ void FeatherCurve::setCurveData( const QVector<double>& xVals, const QVector<dou
 
 
 void FeatherCurve::adjustData( bool uvLog, bool ampLog ){
-	if ( uvLog != scaleLogUV || ampLog != scaleLogAmplitude ){
+	if ( uvLog != scaleLogUV || ampLog != scaleLogAmplitude || firstTime ){
+		firstTime = false;
 		double* scaledXValues = new double[ xValues.size() ];
 		for ( int i = 0; i < xValues.size(); i++ ){
 			scaledXValues[i] = xValues[i];
@@ -166,45 +177,81 @@ void FeatherCurve::adjustData( bool uvLog, bool ampLog ){
 		}
 		//Decide whether to use a log scale or not.
 		scaleLogUV = uvLog;
+		QList<int> badIndices;
 		if ( scaleLogUV && !scatterPlot ){
-			doLogs( scaledXValues, xValues.size() );
+			badIndices = doLogs( scaledXValues, xValues.size() );
 		}
 
 		scaleLogAmplitude = ampLog;
+		QList<int> badYIndices;
 		if ( scaleLogAmplitude ){
 			if ( !isWeightCurve() && !isSumCurve()){
-				doLogs( scaledYValues, yValues.size() );
+				badYIndices = doLogs( scaledYValues, yValues.size() );
 				if ( scatterPlot ){
 					doLogs( scaledXValues, xValues.size() );
 				}
 			}
 		}
+		for ( int i = 0; i < badYIndices.size(); i++ ){
+			if ( ! badIndices.contains( badYIndices[i])){
+				badIndices.append( badYIndices[i]);
+			}
+		}
 
-		plotCurve->setData( scaledXValues, scaledYValues, xValues.size() );
+		int scaledSize = xValues.size();
+		//Sometimes the curves contain zero values.  We can't take the
+		//logarithm of those.  Apparently we are supposed to ignore zero
+		//values so we are removing any indices that are "bad", i.e.,
+		//zero or negative.
+		int totalBad = badIndices.size();
+		if ( totalBad > 0 ){
+			scaledSize = scaledSize - totalBad;
+			double* goodXValues = new double[ scaledSize ];
+			double* goodYValues = new double[ scaledSize ];
+			int j = 0;
+			for ( int i = 0; i < xValues.size(); i++ ){
+				if ( ! badIndices.contains( i ) ){
+					goodXValues[j] = scaledXValues[i];
+					goodYValues[j] = scaledYValues[i];
+					j++;
+				}
+			}
+			plotCurve->setData( goodXValues, goodYValues, scaledSize );
+		}
+		else {
+			plotCurve->setData( scaledXValues, scaledYValues, scaledSize );
+		}
 		delete[] scaledXValues;
 		delete[] scaledYValues;
 	}
 }
 
 
-double FeatherCurve::logarithm( double value ) const {
+double FeatherCurve::logarithm( double value, Bool& okay ) const {
 	double logValue = value;
-	if ( value < 0 ){
-		qDebug() << "curve="<<getTitle()<<" value="<<value;
+	okay = true;
+	const double BASICALLY_ZERO = 0;
+	if ( value <= BASICALLY_ZERO ){
+		okay = false;
 	}
-	Assert( value >= 0 );
-	if ( value != 0 ){
+	if ( value > BASICALLY_ZERO ){
 		logValue = qLn( value ) / qLn( 10 );
 	}
 	return logValue;
 }
 
 
-void FeatherCurve::doLogs( double* values, int count ) const {
+QList<int> FeatherCurve::doLogs( double* values, int count ) const {
+	QList<int> badIndices;
 	for ( int i = 0; i < count; i++ ){
 		double original = values[i];
-		values[i] = logarithm( original );
+		Bool okay = true;
+		values[i] = logarithm( original, okay );
+		if ( !okay ){
+			badIndices.append( i );
+		}
 	}
+	return badIndices;
 }
 
 
@@ -221,7 +268,7 @@ void FeatherCurve::resetDataBounds(){
 	maxY = std::numeric_limits<float>::min();
 	for ( int i = 0; i < xValues.size(); i++ ){
 		float testValue = xValues[i];
-		if ( testValue < minX ){
+		if ( testValue < minX && testValue > 0 ){
 			minX = testValue;
 		}
 		if ( testValue > maxX ){
@@ -230,7 +277,7 @@ void FeatherCurve::resetDataBounds(){
 	}
 	for ( int j = 0; j < yValues.size(); j++ ){
 		float testValue = yValues[j];
-		if ( testValue < minY ){
+		if ( testValue < minY && testValue > 0 ){
 			minY = testValue;
 		}
 		if ( testValue > maxY ){
@@ -246,13 +293,17 @@ QString FeatherCurve::getTitle() const{
 
 
 void FeatherCurve::setCurvePenColor( const QColor& color ){
+	functionColor = color;
 	QPen curvePen = plotCurve->pen();
 	curvePen.setColor( color );
 	plotCurve->setPen( curvePen );
 }
 
 
+
+
 void FeatherCurve::setFunctionColor( const QColor& color, bool diagonalLine ){
+	functionColor = color;
 	if ( !scatterPlot ){
 		setCurvePenColor( color );
 	}
@@ -269,6 +320,8 @@ void FeatherCurve::setFunctionColor( const QColor& color, bool diagonalLine ){
 		}
 	}
 }
+
+
 
 
 FeatherCurve::~FeatherCurve() {

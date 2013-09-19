@@ -32,6 +32,7 @@
 #include <guitools/Feather/FileLoader.qo.h>
 #include <guitools/Feather/Preferences.qo.h>
 #include <guitools/Feather/PreferencesColor.qo.h>
+#include <guitools/Feather/OverWriteFileDialog.qo.h>
 
 #include <casa/BasicSL/String.h>
 #include <casa/aipstype.h>
@@ -58,7 +59,7 @@ signals:
 
 private slots:
 	void openFileLoader();
-	void featherImages();
+	void featherImages( bool checkOutput = true );
 	void openPreferences();
 	void openPreferencesColor();
 	void ySupportChanged( bool ySupport );
@@ -75,6 +76,7 @@ private slots:
 	void imageFilesChanged();
 	void preferencesChanged();
 	void featheringDone();
+	void overWriteOK();
 
 private:
 	FeatherMain( const FeatherMain& other );
@@ -113,6 +115,7 @@ private:
     FeatherManager* dataManager;
     PlotHolder* plotHolder;
     QProgressDialog progressMeter;
+    OverWriteFileDialog overWriteFileDialog;
     LogIO logger;
 
 };

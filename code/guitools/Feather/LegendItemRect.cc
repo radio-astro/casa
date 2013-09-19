@@ -23,32 +23,28 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef FEATHERDATATYPE_H_
-#define FEATHERDATATYPE_H_
+#include "LegendItemRect.h"
+#include <guitools/Feather/ColorProvider.h>
+#include <QDebug>
 
 namespace casa {
 
-/**
- * An enumeration of the different kinds of data that can be
- * graphed on the plot.
- */
+LegendItemRect::LegendItemRect( const ColorProvider* colorProvider, QWidget* parent ):
+		QwtLegendItem( parent ),
+		MARGIN(3),
+		colorSource( colorProvider )
+	{
 
-class FeatherDataType {
-public:
-	typedef enum DataType {WEIGHT_SD,WEIGHT_INT,
-	    	    		LOW, LOW_WEIGHTED,
-	    	    		LOW_CONVOLVED_HIGH, LOW_CONVOLVED_HIGH_WEIGHTED,
-	    	    		//LOW_CONVOLVED_DIRTY, LOW_CONVOLVED_DIRTY_WEIGHTED,
-	    	    		HIGH, HIGH_WEIGHTED,
-	    	    		HIGH_CONVOLVED_LOW, HIGH_CONVOLVED_LOW_WEIGHTED,
-	    	    		DIRTY, DIRTY_WEIGHTED,
-	    	    		DIRTY_CONVOLVED_LOW, DIRTY_CONVOLVED_LOW_WEIGHTED,
-	    	    		END_DATA};
+}
 
-private:
-	FeatherDataType();
-	virtual ~FeatherDataType();
-};
+
+void LegendItemRect::drawIdentifier( QPainter* painter, const QRect& rect ) const {
+	QRect symbolRect( 0, MARGIN, rect.width()+MARGIN, rect.height() - 2 * MARGIN );
+	QColor rectColor = colorSource->getRectColor();
+	painter->fillRect(symbolRect, rectColor );
+}
+
+LegendItemRect::~LegendItemRect() {
+}
 
 } /* namespace casa */
-#endif /* FEATHERTYPE_H_ */

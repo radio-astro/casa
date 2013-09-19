@@ -22,33 +22,42 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+#ifndef OVERWRITEFILEDIALOG_QO_H
+#define OVERWRITEFILEDIALOG_QO_H
 
-#ifndef FEATHERDATATYPE_H_
-#define FEATHERDATATYPE_H_
+#include <QtGui/QDialog>
+#include <guitools/Feather/OverWriteFileDialog.ui.h>
 
 namespace casa {
 
 /**
- * An enumeration of the different kinds of data that can be
- * graphed on the plot.
+ * Warns the user that they will be overwriting the output file and provides
+ * them with the ability to change to a different output file.
  */
 
-class FeatherDataType {
+class OverWriteFileDialog : public QDialog
+{
+    Q_OBJECT
+
 public:
-	typedef enum DataType {WEIGHT_SD,WEIGHT_INT,
-	    	    		LOW, LOW_WEIGHTED,
-	    	    		LOW_CONVOLVED_HIGH, LOW_CONVOLVED_HIGH_WEIGHTED,
-	    	    		//LOW_CONVOLVED_DIRTY, LOW_CONVOLVED_DIRTY_WEIGHTED,
-	    	    		HIGH, HIGH_WEIGHTED,
-	    	    		HIGH_CONVOLVED_LOW, HIGH_CONVOLVED_LOW_WEIGHTED,
-	    	    		DIRTY, DIRTY_WEIGHTED,
-	    	    		DIRTY_CONVOLVED_LOW, DIRTY_CONVOLVED_LOW_WEIGHTED,
-	    	    		END_DATA};
+    OverWriteFileDialog(QWidget *parent = 0);
+    ~OverWriteFileDialog();
+    void setFile( const QString& fileName );
+    void setDirectory( const QString& directoryName );
+    QString getDirectory() const;
+    QString getFile() const;
+
+signals:
+	void overWriteOK();
+
+private slots:
+	void overWriteCancelled();
+	void overWriteAccepted();
+	void browse();
 
 private:
-	FeatherDataType();
-	virtual ~FeatherDataType();
+    Ui::OverWriteFileDialogClass ui;
 };
+}
 
-} /* namespace casa */
-#endif /* FEATHERTYPE_H_ */
+#endif // OVERWRITEFILEDIALOG_QO_H

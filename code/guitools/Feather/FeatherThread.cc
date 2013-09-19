@@ -39,6 +39,7 @@ FeatherThread::FeatherThread():
 				lowImage(NULL), highImage(NULL), dirtyImage(NULL){
 	saveOutput = false;
 	fileSaved = true;
+	success = true;
 	featherWorker = new Feather();
 	logger = NULL;
 }
@@ -51,6 +52,10 @@ void FeatherThread::setImages(ImageInterface<float>* lowImage, ImageInterface<fl
 	this->highImage = highImage;
 	this->dirtyImage = dirtyImage;
 
+}
+
+QString FeatherThread::getErrorMessage() const {
+	return errorMessage;
 }
 
 void FeatherThread::setLogger( LogIO* logger ){
@@ -86,13 +91,11 @@ bool FeatherThread::setWorkerImages( ImageInterface<float>* imageLow,
 		catch( AipsError& errorRef ){
 			if ( logger != NULL ){
 				(*logger)<<LogIO::WARN<<
-					 "\nFeatherThread::setWorkerImages problem loading images: "<<
+					 "\nFeatherThread:: Problem loading images: "<<
 					 errorRef.getMesg().c_str()<<LogIO::POST;
 				(*logger)<< LogIO::WARN<<
-						"\nFeatherThread::setWorkerImages low="<<imageLow->name().c_str() <<
-						LogIO::POST;
-				(*logger)<< LogIO::WARN<<"FeatherThread::setWorkerImages high="<<
-						imageHigh->name().c_str()<<LogIO::POST;
+						"\nFeatherThread:: Single Dish="<<imageLow->name().c_str() <<
+						" Interferometer="<< imageHigh->name().c_str()<<LogIO::POST;
 			}
 		}
 	}
@@ -100,9 +103,9 @@ bool FeatherThread::setWorkerImages( ImageInterface<float>* imageLow,
 }
 
 void FeatherThread::run(){
-	collectLowHighData();
-	if ( dirtyImage != NULL ){
-		collectLowDirtyData();
+	success = collectLowHighData();
+	if ( success && dirtyImage != NULL ){
+		success = collectLowDirtyData();
 	}
 }
 
@@ -125,7 +128,7 @@ bool FeatherThread::collectLowDirtyData(){
 		dirtyOriginal.setV( vX, vY );
 		dataMap.insert( DIRTY_ORIGINAL, dirtyOriginal );
 
-		try {
+		//try {
 			ImageInfo lowInfo = lowImage->imageInfo();
 			GaussianBeam beam = lowInfo.restoringBeam();
 			featherWorker->convolveINT( beam );
@@ -139,24 +142,28 @@ bool FeatherThread::collectLowDirtyData(){
 			convolvedDirtyCut.setU( uX, uY );
 			convolvedDirtyCut.setV( vX, vY );
 			dataMap.insert( DIRTY_CONVOLVED_LOW_WEIGHTED, convolvedDirtyCut );
-		}
+		/*}
 		catch( AipsError& error ){
+			lowDirtyLoaded = false;
+			errorMessage = "Could not convolve dirty image with low beam.";
 			if ( logger != NULL ){
-				(*logger)<<LogIO::WARN<<
-						"Could not convolve dirty image with low beam: "<<
-						error.getMesg().c_str()<<LogIO::POST;
+				(*logger)<<LogIO::WARN << errorMessage.toStdString() <<
+						"  "<<error.getMesg().c_str()<<LogIO::POST;
 			}
-		}
+		}*/
 
 
-		ImageInterface<float>* newLow = makeConvolvedImage( lowImage, dirtyImage );
+		/*ImageInterface<float>* newLow = makeConvolvedImage( lowImage, dirtyImage );
 		if ( newLow != NULL ){
 			featherWorker->setINTImage( *dirtyImage );
 			featherWorker->setSDImage( *newLow );
 			lowDirtyLoaded = collectConvolvedData(LOW_CONVOLVED_DIRTY, LOW_CONVOLVED_DIRTY_WEIGHTED );
 			delete newLow;
-		}
+		}*/
 
+	}
+	else {
+		errorMessage = "There was a problem loading the dirty image data.";
 	}
 	return lowDirtyLoaded;
 }
@@ -189,12 +196,15 @@ bool FeatherThread::collectConvolvedData( DataTypes original, DataTypes cut){
 		success = true;
 	}
 	catch( AipsError& error ){
+		errorMessage = "Could not get data for convolved image with the low reolution beam.";
 		if ( logger != NULL ){
-			(*logger)<<LogIO::WARN<<
-					"Could not get data for convolved image with low resolution beam: "<<
-					error.getMesg().c_str()<<LogIO::POST;
+			(*logger)<<LogIO::WARN<< errorMessage.toStdString() << "  "<<error.getMesg().c_str()<<LogIO::POST;
 		}
 	}
+	return success;
+}
+
+bool FeatherThread::isSuccess() const {
 	return success;
 }
 
@@ -262,10 +272,10 @@ bool FeatherThread::collectLowHighData(){
 			dataMap.insert( INT_CONVOLVED_LOW_WEIGHTED, convolvedIntCut );
 		}
 		catch( AipsError& error ){
+			lowHighLoaded = false;
+			errorMessage = "Could not convolve high image with low beam.";
 			if ( logger != NULL ){
-				(*logger)<<LogIO::WARN<<
-						"Could not convolve high image with low beam: "<<
-						error.getMesg().c_str()<<LogIO::POST;
+				(*logger)<<LogIO::WARN<< errorMessage.toStdString() << "  "<<error.getMesg().c_str()<<LogIO::POST;
 			}
 		}
 
@@ -276,6 +286,12 @@ bool FeatherThread::collectLowHighData(){
 			lowHighLoaded = collectConvolvedData(LOW_CONVOLVED_HIGH, LOW_CONVOLVED_HIGH_WEIGHTED );
 			delete newLow;
 		}
+		else {
+			lowHighLoaded = false;
+		}
+	}
+	else {
+		errorMessage = "There was a problem loading the single dish/interferometer data.";
 	}
 	return lowHighLoaded;
 }

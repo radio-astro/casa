@@ -23,32 +23,32 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef FEATHERDATATYPE_H_
-#define FEATHERDATATYPE_H_
-
+#ifndef LEGENDITEMRECT_H_
+#define LEGENDITEMRECT_H_
+#include <qwt_legend_item.h>
+#include <QPainter>
+#include <QRect>
 namespace casa {
 
+class ColorProvider;
+
 /**
- * An enumeration of the different kinds of data that can be
- * graphed on the plot.
+ * Custom QwtLegendItem that draws a rectangular
+ * legend symbol in a color matching the curve.
  */
 
-class FeatherDataType {
+class LegendItemRect : public QwtLegendItem {
 public:
-	typedef enum DataType {WEIGHT_SD,WEIGHT_INT,
-	    	    		LOW, LOW_WEIGHTED,
-	    	    		LOW_CONVOLVED_HIGH, LOW_CONVOLVED_HIGH_WEIGHTED,
-	    	    		//LOW_CONVOLVED_DIRTY, LOW_CONVOLVED_DIRTY_WEIGHTED,
-	    	    		HIGH, HIGH_WEIGHTED,
-	    	    		HIGH_CONVOLVED_LOW, HIGH_CONVOLVED_LOW_WEIGHTED,
-	    	    		DIRTY, DIRTY_WEIGHTED,
-	    	    		DIRTY_CONVOLVED_LOW, DIRTY_CONVOLVED_LOW_WEIGHTED,
-	    	    		END_DATA};
-
+	LegendItemRect( const ColorProvider* colorProvider, QWidget* parent = 0  );
+	virtual ~LegendItemRect();
+	void setRectColor( QColor rectColor );
+	virtual void drawIdentifier( QPainter* painter, const QRect& rect ) const;
 private:
-	FeatherDataType();
-	virtual ~FeatherDataType();
+	LegendItemRect( const LegendItemRect& other );
+	LegendItemRect operator=( const LegendItemRect& other );
+	const int MARGIN;
+	const ColorProvider* colorSource;
 };
 
 } /* namespace casa */
-#endif /* FEATHERTYPE_H_ */
+#endif /* LEGENDITEMRECT_H_ */

@@ -68,6 +68,7 @@ FileLoader::FileLoader(QWidget *parent)
 	ui.highResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/orion_vlamem.im");
 	ui.dirtyImageLineEdit->setText("/home/uniblab/casa/trunk/test/orion_vlamem.im2");
 */
+
 	//Multiplane images for testing
 	/*ui.lowResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/featherMultiPlane/n4826_bima.im" );
 	ui.highResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/featherMultiPlane/n4826_t12m_regrid.im");
@@ -76,7 +77,31 @@ FileLoader::FileLoader(QWidget *parent)
 	/*ui.lowResolutionLineEdit->setText("/lustre/aoc/users/jott/susan/gbt43.im_stokes" );
 	ui.highResolutionLineEdit->setText("/lustre/aoc/users/jott/susan/vla43.im_stokes");
 	ui.dirtyImageLineEdit->setText("/lustre/aoc/users/jott/susan/vla43.im_stokes");*/
+
+	//VLA+GBT Data N49 from D. Shepherd
+	/*ui.lowResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/Feather-n49/new_gbt_jyMask.image" );
+	ui.highResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/Feather-n49/n49combo-8final-pbcor-trans.image");
+	ui.dirtyImageLineEdit->setText("/home/uniblab/casa/trunk/test/Feather-n49/n49comboDirty.image");
+	ui.saveOutputCheckBox->setChecked( true );
+	ui.outputImageDirectoryLineEdit->setText( "/users/slovelan/tmp");
+	ui.outputImageFileLineEdit->setText( "output.image");
+*/
+
+	//Simulated ALMA Data
+	/*ui.lowResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/FeatherALMASIM/m51faintBestStableNew.aca.tp.noisy.sf.sd.image" );
+	ui.highResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/FeatherALMASIM/m51faintBestStableNew.12m7m.noisy.cleaned.image");
+	ui.dirtyImageLineEdit->setText("/home/uniblab/casa/trunk/test/FeatherALMASIM/m51faintBestStableNew.12m7m.noisy.dirty.image");
+	ui.saveOutputCheckBox->setChecked( true );
+	ui.outputImageDirectoryLineEdit->setText( "/users/slovelan/tmp");
+	ui.outputImageFileLineEdit->setText( "output.image");*/
+
+	//Real ALMA Data (M100 Science Verification data)
+	//ui.lowResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/Feather-M100/TP_CO_cube_JyOldGjinc" );
+	//ui.highResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/Feather-M100/M100_Intcombo_0.193_cube.image");
+
 }
+
+
 
 void FileLoader::keyPressEvent( QKeyEvent* event ){
 	int keyCode = event->key();
@@ -243,6 +268,13 @@ void FileLoader::filesChanged(){
 		emit imageFilesChanged();
 		this->close();
 	}
+}
+
+void FileLoader::updateOutput(const QString& directory, const QString& file ){
+	outputDirectory = directory;
+	outputFile = file;
+	ui.outputImageFileLineEdit->setText( outputFile );
+	ui.outputImageDirectoryLineEdit->setText( outputDirectory );
 }
 
 void FileLoader::filesReset(){

@@ -57,11 +57,13 @@ public:
 	typedef enum DataTypes { SD_WEIGHT, INT_WEIGHT, SD_CUT, INT_CUT, DIRTY_CUT,
 				SD_ORIGINAL, INT_ORIGINAL, INT_CONVOLVED_LOW, INT_CONVOLVED_LOW_WEIGHTED,
 				DIRTY_ORIGINAL, DIRTY_CONVOLVED_LOW, DIRTY_CONVOLVED_LOW_WEIGHTED, LOW_CONVOLVED_HIGH,
-				LOW_CONVOLVED_HIGH_WEIGHTED, LOW_CONVOLVED_DIRTY, LOW_CONVOLVED_DIRTY_WEIGHTED, END_DATA };
+				LOW_CONVOLVED_HIGH_WEIGHTED, /*LOW_CONVOLVED_DIRTY, LOW_CONVOLVED_DIRTY_WEIGHTED,*/ END_DATA };
 	void setImages(ImageInterface<float>* lowImage, ImageInterface<float>* highImage, ImageInterface<float>* dirtyImage );
 	void setFeatherWorker( Feather* worker );
 	void setLogger( LogIO* logger );
 	void setRadial( bool radialPlot );
+	bool isSuccess() const;
+	QString getErrorMessage() const;
 	void setSaveOutput( bool save, const QString& outputPath = "");
 	void run();
 	~FeatherThread();
@@ -86,7 +88,9 @@ private:
 	bool radial;
 	bool saveOutput;
 	bool fileSaved;
+	bool success;
 	QString saveFilePath;
+	QString errorMessage;
 };
 
 
