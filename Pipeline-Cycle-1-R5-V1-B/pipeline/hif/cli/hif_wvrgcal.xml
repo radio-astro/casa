@@ -122,6 +122,11 @@ a QA2 score based on its effect on the interferometric data.
         <value>BANDPASS</value>
     </param>
 
+    <param type="double" name="accept_threshold">
+        <description>Improvement ratio (phase-rms without wvr / phase-rms with wvr) above which wvrg calibration file will be accepted</description>
+        <value>1.0</value>
+    </param>
+
     <param type="string" name="pipelinemode">
         <description>The pipeline operating mode</description>
         <value>automatic</value>
@@ -212,8 +217,8 @@ Generate a gain table based on the Water Vapour Radiometer data in each vis
 file. By applying the wvr calibration to the data specified by 'qa2_intent',
 calculate a QA2 score to indicate its effect on interferometric data;
 a score &gt; 1 implies that the phase noise is improved, a score &lt; 1 implies
-that it is made worse. If the score is &lt; 1 then the wvr gain table cannot be
-accepted into the context for subsequent use.
+that it is made worse. If the score is less than 'accept_threshold' then the 
+wvr gain table is not accepted into the context for subsequent use.
   
 vis -- List of input visibility files
     default: none, in which case the vis files to be used will be read
@@ -292,7 +297,7 @@ maxdistm -- Maximum distance in meters of an antenna used for interpolation
     default: 500
     example: 550
 
-minnumants -- Minimum number of neraby antennas (up to 3) used for
+minnumants -- Minimum number of nearby antennas (up to 3) used for
     interpolation from a flagged antenna.
     default: 2
     example: 3
@@ -313,9 +318,9 @@ qa2_intent -- The list of data intents on which the wvr correction is to be
     overall score of 1 would correspond to no change in the phase noise,
     a score &gt; 1 implies an improvement.
 
-    If the overall score for a vis file is &lt; 1 then the wvr calibration
-    file is not made available for merging into the context for use in the
-    subsequent reduction.
+    If the overall score for a vis file is less than the value in          
+    'accept_threshold' then the wvr calibration file is not made available 
+    for merging into the context for use in the subsequent reduction.
 
     If you do not want any QA2 calculations then set qa2_intent=''.
 
@@ -326,6 +331,12 @@ qa2_bandpass_intent -- The data intent to use for the bandpass calibration
     in the qa2 calculation.
 
     default: 'BANDPASS'
+
+accept_threshold -- The phase-rms improvement ratio
+    (rms without wvr / rms with wvr) above which the wrvg file will be
+    accepted into the context for subsequent application.
+
+    default: 1.0
 
 
 Example
