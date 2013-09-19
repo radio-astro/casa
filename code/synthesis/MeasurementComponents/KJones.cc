@@ -56,6 +56,276 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
+// **********************************************************
+// DelayFFT Implementations
+//
+
+// Construct from freq info and a data-like Cube<Complex>
+DelayFFT::DelayFFT(Double f0, Double df, Double padBW, 
+		   Cube<Complex> V) :
+  f0_(f0),
+  df_(df),
+  padBW_(padBW),
+  nCorr_(V.shape()(0)),
+  nPadChan_(Int(padBW/df)),
+  nElem_(V.shape()(2)),
+  refant_(-1),  // ok?
+  Vpad_(),
+  delay_(),
+  flag_()
+{
+
+  IPosition ip1(3,nCorr_,nPadChan_,nElem_);
+  Vpad_.resize(ip1);
+  Vpad_.set(0.0);
+
+  Slicer sl1(Slice(),Slice(0,V.shape()(1),1),Slice());
+  Vpad_(sl1)=V;
+
+  //this->state();
+ }
+
+
+// Construct from freq info and shape, w/ initialization
+DelayFFT::DelayFFT(Double f0, Double df, Double padBW, 
+		   Int nCorr, Int nElem, Int refant, Complex v0) :
+  f0_(f0),
+  df_(df),
+  padBW_(padBW),
+  nCorr_(nCorr),
+  nPadChan_(Int(padBW/df)),
+  nElem_(nElem),
+  refant_(refant), 
+  Vpad_(),
+  delay_(),
+  flag_()
+{
+
+  Vpad_.resize(nCorr_,nPadChan_,nElem_);
+  Vpad_.set(v0);
+
+  //  this->state();
+
+}
+
+
+ DelayFFT::DelayFFT(const VisBuffer& vb,Double padBW,Int refant) :
+  f0_(vb.frequency()(0)/1.e9),      // GHz
+  df_(vb.frequency()(1)/1.e9-f0_),
+  padBW_(padBW),
+  nCorr_(0),    // set in body
+  nPadChan_(Int(padBW/df_)),
+  nElem_(vb.numberAnt()), // antenna-based
+  refant_(refant),
+  Vpad_(),
+  delay_(),
+  flag_()
+{
+
+  //  cout << "DelayFFT(vb)..." << endl;
+
+  // VB facts
+  Int nCorr=vb.nCorr();
+  Int nChan=vb.nChannel();
+  Int nRow=vb.nRow();
+
+  // Discern effective shapes
+  nCorr_=(nCorr>1 ? 2 : 1); // number of p-hands
+  Int sC=(nCorr>2 ? 3 : 1); // step for p-hands
+  
+  // Shape the data
+  IPosition ip1(3,nCorr_,nPadChan_,nElem_);
+  Vpad_.resize(ip1);
+  Vpad_.set(Complex(0.0));
+
+  //  this->state();
+
+  // Fill the relevant data
+  Int iant=0;
+  for (Int irow=0;irow<nRow;++irow) {
+    Int a1(vb.antenna1()(irow)), a2(vb.antenna2()(irow));
+    if (!vb.flagRow()(irow) && a1!=a2) {
+
+      if (a1==refant)
+	iant=a2;
+      else if (a2==refant) 
+	iant=a1;
+      else
+	continue;  // an irrelevant baseline
+
+      Slicer sl0(Slice(0,nCorr_,sC),Slice(),Slice(irow,1,1)); // this visCube slice
+      Slicer sl1(Slice(),Slice(0,nChan,1),Slice(iant,1,1)); // this Vpad_ slice
+
+      Cube<Complex> vC(vb.visCube()(sl0));
+
+      // Divide by non-zero amps
+      Cube<Float> vCa(amplitude(vC));
+      vCa(vCa<FLT_EPSILON)=1.0;
+      vC/=vCa;
+
+      // Zero flagged channels
+      Slicer fsl0(Slice(),Slice(irow,1,1));
+      Array<Bool> fl(vb.flag()(fsl0).nonDegenerate(IPosition(1,0)));
+      for (Int icor=0;icor<nCorr_;++icor) 
+	vC(Slice(icor,1,1),Slice(),Slice()).nonDegenerate(IPosition(1,1))(fl)=Complex(0.0);
+
+      // TBD: apply weights
+      //      Matrix<Float> wt(vb.weightMat()(Slice,Slice(irow,1,1)));
+
+      // Acquire this baseline for solving
+      Vpad_(sl1)=vC;
+    }
+  }
+  //cout << "...end DelayFFT(vb)" << endl;
+	      
+}
+
+void DelayFFT::FFT() {
+
+  //  cout << "DelayFFT::FFT()..." << endl;
+
+  // We always transform only the chan axis (1)
+  Vector<Bool> ax(3,False);
+  ax(1)=True;
+
+  // Transform
+  //  TBD: can Vpad_ be an ArrayLattice?
+  ArrayLattice<Complex> c(Vpad_);
+  LatticeFFT::cfft0(c,ax,True);
+
+  //  cout << "...end DelayFFT::FFT()" << endl;
+
+}
+
+void DelayFFT::shift(Double f) {
+
+  //  cout << "DelayFFT::shift(f)..." << endl;
+    
+  Double shift=-(f0_-f)/df_;                    // samples  
+  Vector<Double> ph(nPadChan_);  indgen(ph);   // indices
+  //  ph-=Double(nPadChan_/2);                     // centered
+  ph/=Double(nPadChan_);                       // cycles/sample
+  ph*=shift;                                   // cycles
+  ph*=(C::_2pi);                               // rad
+  Vector<Double> fsh(nPadChan_*2);
+  fsh(Slice(0,nPadChan_,2))=cos(ph);
+  fsh(Slice(1,nPadChan_,2))=sin(ph);
+  Vector<DComplex> csh(nPadChan_);
+  RealToComplex(csh,fsh);
+  Vector<Complex> sh(nPadChan_);
+  convertArray(sh,csh);  // downcovert to Complex
+
+  // Apply to each elem, corr
+  for (Int ielem=0;ielem<nElem_;++ielem)
+    for (Int icorr=0;icorr<nCorr_;++icorr) {
+      Vector<Complex> v(Vpad_.xyPlane(ielem).row(icorr));
+      v*=sh;
+    }
+
+  //  cout << "... end DelayFFT::shift(f)" << endl;
+
+}
+
+
+
+void DelayFFT::add(const DelayFFT& other) {
+
+  //  cout << "DelayFFT::add(x)..." << endl;
+
+  IPosition osh=other.Vpad_.shape();
+
+  AlwaysAssert( (other.nCorr_==nCorr_), AipsError);
+  AlwaysAssert( (other.nPadChan_<=nPadChan_), AipsError);
+  AlwaysAssert( (other.nElem_==nElem_), AipsError);
+
+  Int oNchan=other.nPadChan_;
+  Int lo(0);
+  while (lo < nPadChan_) {
+    Int nch=min(oNchan,nPadChan_-lo);  // ensure we don't overrun (impossible anyway?)
+    Slicer sl0(Slice(),Slice(0,nch,1),Slice());
+    Slicer sl1(Slice(),Slice(lo,nch,1),Slice());
+    Cube<Complex> v1(Vpad_(sl1)), v0(other.Vpad_(sl0));
+    v1+=v0;
+    lo+=oNchan;
+  }
+
+  //  cout << "...end DelayFFT::add(x)" << endl;
+
+}
+
+void DelayFFT::searchPeak() {
+
+  //  cout << "DelayFFT::searchPeak()..." << endl;
+
+  delay_.resize(nCorr_,nElem_);
+  delay_.set(0.0);
+  flag_.resize(nCorr_,nElem_);
+  flag_.set(True);  // all flagged
+  Vector<Float> amp;
+  Int ipk;
+  Float alo,amax,ahi,fpk;
+  for (Int ielem=0;ielem<nElem_;++ielem) {
+    for (Int icorr=0;icorr<nCorr_;++icorr) {
+      amp=amplitude(Vpad_(Slice(icorr,1,1),Slice(),Slice(ielem,1,1)));
+      amax=-1.0;
+      ipk=0;
+      for (Int ich=0;ich<nPadChan_;++ich) {
+	if (amp[ich]>amax) {
+	  ipk=ich;
+	  amax=amp[ich];
+	}
+      }
+
+      alo=amp(ipk>0 ? ipk-1 : (nPadChan_-1));
+      ahi=amp(ipk<(nPadChan_-1) ? ipk+1 : 0);
+
+      Float denom=(alo-2.*amax+ahi);
+      if (amax>0.0 && abs(denom)>0.0) {
+	fpk=Float(ipk)+0.5-(ahi-amax)/denom;
+	Float delay=fpk/Float(nPadChan_);  // cycles/sample
+	if (delay>0.5) delay-=1.0;         // fold
+	delay/=df_;                        // nsec
+
+	delay_(icorr,ielem)=delay;     
+	flag_(icorr,ielem)=False;
+      }
+    }
+  }
+  
+  // delays for ants>refant must be negated!
+  if (refant_>-1 && refant_<(nElem_-1)) {  // at least 1 such ant
+    Matrix<Float> d2(delay_(Slice(),Slice(refant_+1,nElem_-refant_-1,1)));
+    d2*=-1.0f;
+  }
+
+  // refant (if specified) is unflagged
+  if (refant_>-1)
+    flag_(Slice(),Slice(refant_,1,1))=False;
+
+  //  cout << "...end DelayFFT::searchPeak()" << endl;
+
+
+}
+
+void DelayFFT::state() {
+
+  cout << "DelayFFT::state()..." << endl << " ";
+  cout << " f0_=" << f0_ 
+       << " df_=" << df_
+       << " padBW_=" << padBW_ << endl << " "
+       << " nCorr_=" << nCorr_
+       << " nPadChan_=" << nPadChan_
+       << " nElem_=" << nElem_
+       << " refant_=" << refant_ << endl << " "
+       << " Vpad_.shape()=" << Vpad_.shape()
+       << " delay_.shape()=" << delay_.shape()
+       << " flag_.shape()=" << flag_.shape()
+       << endl;
+    
+}
+
+
+
 
 // **********************************************************
 //  KJones Implementations
@@ -191,13 +461,63 @@ void KJones::calcAllJones() {
 
 void KJones::selfSolveOne(VisBuffGroupAcc& vbga) {
 
-  // We don't support combine on spw or field (yet),
-  // so there should be only one VB in the vbga
+  // Forward to MBD solver if more than one VB (more than one spw, probably)
   if (vbga.nBuf()!=1) 
-    throw(AipsError("KJones can't process multi-VB vbga."));
+    //    throw(AipsError("KJones can't process multi-VB vbga."));
+    this->solveOneVBmbd(vbga);
 
-  // call the single-VB solver with the first VB in the vbga
-  this->solveOneVB(vbga(0));
+  // otherwise, call the single-VB solver with the first VB in the vbga
+  else
+    this->solveOneVB(vbga(0));
+
+}
+
+void KJones::solveOneVBmbd(VisBuffGroupAcc& vbga) {
+
+  Int nbuf=vbga.nBuf();
+
+  Vector<Int> nch(nbuf,0);
+  Vector<Double> f0(nbuf,0.0);
+  Vector<Double> df(nbuf,0.0);
+  Double flo(1e15),fhi(0.0);
+
+  for (Int ibuf=0;ibuf<nbuf;++ibuf) {
+    VisBuffer& vb(vbga(ibuf));
+    Vector<Double>& chf(vb.frequency());
+    nch(ibuf)=vbga(ibuf).nChannel();
+    f0(ibuf)=chf(0)/1.0e9;           // GHz
+    df(ibuf)=(chf(1)-chf(0))/1.0e9;  // GHz
+    flo=min(flo,f0[ibuf]);
+    fhi=max(fhi,f0[ibuf]+nch[ibuf]*df[ibuf]);
+  }
+  Double tbw=fhi-flo;
+  //  cout << "tbw = " << tbw << "  (" << flo << "-" << fhi << ")" << endl;
+
+  Double ptbw=tbw*8;  // pad total bw by 8X
+  // TBD:  verifty that all df are factors of tbw
+
+  Int nCor=vbga(0).nCorr();
+
+  DelayFFT sumfft(f0[0],min(df),ptbw,(nCor>1 ? 2 : 1),vbga(0).numberAnt(),refant(),Complex(0.0));
+  for (Int ibuf=0;ibuf<nbuf;++ibuf) {
+    DelayFFT delfft1(vbga(ibuf),ptbw,refant());
+    delfft1.FFT();
+    delfft1.shift(f0[0]);
+    sumfft.add(delfft1);
+    delfft1.searchPeak();
+    //    cout << ibuf << " "
+    //	 << delfft1.delay()(Slice(0,1,1),Slice()) << endl;
+  }
+
+  sumfft.searchPeak();
+
+  //  cout << "sum: " << sumfft.delay()(Slice(0,1,1),Slice()) << endl;
+  
+  // Keep solutions
+  Matrix<Float> sRP(solveRPar().nonDegenerate(1));
+  sRP=sumfft.delay();  
+  Matrix<Bool> sPok(solveParOK().nonDegenerate(1));
+  sPok=(!sumfft.flag());
 
 }
 
@@ -271,6 +591,13 @@ void KJones::solveOneVB(const VisBuffer& vb) {
 	    amax=amp(ich);
 	  }
 	} // ich
+
+	/*
+	cout << vb.antenna1()(irow) << " " << vb.antenna2()(irow) << " "
+	     << ntrue(vb.flagCube()(Slice(0,2,3),Slice(),Slice(irow,1,1))) << " "
+	     << ntrue(vb.flag()(Slice(),Slice(irow,1,1))) 
+	     << endl;
+	*/
 
        	// Derive refined peak (fractional) channel
 	// via parabolic interpolation of peak and neighbor channels

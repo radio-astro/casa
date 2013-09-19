@@ -33,6 +33,57 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+class DelayFFT {
+public:
+  // Construct from freq info and data-like Cube<Complex>
+  //  (for generic testing w/out MS data)
+  DelayFFT(Double f0, Double df, Double padBW, 
+	   Cube<Complex> V);
+
+  // Construct from freq info and shape, w/ initialization
+  //   (for accumulation)
+  DelayFFT(Double f0, Double df, Double padBW, 
+	   Int nCorr, Int nElem, Int refant, Complex v0);
+
+  // Construct from a VB
+  DelayFFT(const VisBuffer& vb,Double padBW,Int refant);
+
+  // Perform FFT
+  void FFT();
+
+  // Apply shift theorem
+  void shift(Double f);
+
+  // Accumulate another DelayFFT
+  void add(const DelayFFT& other);
+
+  // Find peaks
+  void searchPeak();
+
+  const Cube<Complex>& Vpad() const { return Vpad_; };
+
+  // Access to results
+  const Matrix<Float>& delay() const { return delay_; };
+  const Matrix<Bool>& flag() const { return flag_; };
+
+  // Report some stateinfo
+  void state();
+
+private:
+  Double f0_, df_, padBW_;
+  Int nCorr_, nPadChan_, nElem_;
+  Int refant_;
+  Cube<Complex> Vpad_;
+  Matrix<Float> delay_;
+  Matrix<Bool> flag_;
+
+};
+
+
+
+
+
+
 // Forward declarations
 
 // K Jones provides support for SBD delays
@@ -118,8 +169,11 @@ protected:
   // Local implementation of selfSolveOne (generalized signature)
   virtual void selfSolveOne(VisBuffGroupAcc& vbga);
 
-  // FFT solver for on VB
+  // FFT solver for one VB
   virtual void solveOneVB(const VisBuffer& vb);
+
+  // FFT solver for multi-VB (MBD)
+  virtual void solveOneVBmbd(VisBuffGroupAcc& vbga);
 
   // Reference frequencies
   Vector<Double> KrefFreqs_;
