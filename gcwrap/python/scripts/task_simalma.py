@@ -907,6 +907,7 @@ def simalma(
             msg("Simulating %d TP antennas" % tpnant, priority="info")
             for iant in range(tpnant):
                 task_param['sdant'] = iant
+                task_param['seed'] = int(pl.random()*100000)
                 msg(" ",priority=v_priority)
                 msg("Running TP simulation with sdant = %d" % task_param['sdant'], priority=v_priority)
                 msg(get_taskstr('simobserve', task_param), priority="info")
