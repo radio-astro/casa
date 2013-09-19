@@ -154,6 +154,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       lowImOrig_p->copyData(*lowIm_p);
       lBeamOrig_p=lBeam_p;
     }   
+    cweightCalced_p=False;
   }
 
   void Feather::convolveINT(const GaussianBeam& newHighBeam){
@@ -225,7 +226,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Imager::copyMask(*highIm_p, *intcopy, maskname);
 
     }
-   
+    cweightCalced_p=False;
+
   }
 
   Bool Feather::setEffectiveDishDiam(const Float xdiam, const Float ydiam){
@@ -424,14 +426,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Float fmax = abs(node.getComplex());
     cwImage_p->copyData(  (LatticeExpr<Complex>)( 1.0f - (*cwImage_p)/fmax ) );
     cweightCalced_p=True;
+    cweightApplied_p=False;
   }
 
   void Feather::getCutXY(Vector<Float>& ux, Vector<Float>& xamp, 
 			 Vector<Float>& uy, Vector<Float>& yamp, 
 			 const ImageInterface<Float>& image){
 
+   
     TempImage<Complex> cimage(image.shape(), image.coordinates() );
     StokesImageUtil::From(cimage, image);
+    if(image.getDefaultMask()!=""){
+      ImageRegion elMask=image.getRegion(image.getDefaultMask(),
+					 RegionHandler::Masks); 
+      LatticeRegion latReg=elMask.toLatticeRegion(image.coordinates(), image.shape());
+      ArrayLattice<Bool> pixmask(latReg.get());
+      LatticeExpr<Complex> myexpr(iif(pixmask, cimage, Complex(0.0)) );
+      cimage.copyData(myexpr);
+    
+    } 
+      
     LatticeFFT::cfft2d( cimage );
     getCutXY(ux, xamp, uy, yamp,  cimage);
     
