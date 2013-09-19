@@ -70,11 +70,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     mode image=False:
       * Sometimes the user has created a synthesized image themselves, 
         most likely using the clean task, perhaps along with 
-        sdimaging and feather. 
+        sdimaging and feather, or a previous call to simanalyze with image=True 
       * The user should input that simulated image as "imagename".  
-      * simanalyze will attempt to find an appropriate skymodel image 
-        (which had been used as input to simobserve or simalma to create 
-        the measurement sets) in the project directory, but if there are 
+        It will have suffix .image if created by clean, simanalyze, or simalma
+      * simanalyze will attempt to find an appropriate skymodel image - 
+        this is the *.skymodel image created by simobserve or simalma, 
+        the (optionally rescaled) original sky model, which was used 
+        to create the measurement set.
+        simanalyze will look in the project directory, but if there are 
         multuple skymodels present it may not find the right one, so the
         "skymodel" parameter allows explicit specification.
 

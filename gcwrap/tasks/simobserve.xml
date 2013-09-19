@@ -550,6 +550,9 @@ it'll do them for the same amount of time -->
 	  <default param="t_ground"><value>269.</value></default>
 	  <default param="seed"><value>11111</value></default>
 	</equals>	
+	<equals type="string" value=""/>
+	<equals type="string" value="False"/>
+	<equals type="string" value="F"/>
 	<equals type="string" value="tsys-manual">
 	  <default param="t_ground"><value>269.</value></default>
 	  <default param="t_sky"><value>263.</value></default>
