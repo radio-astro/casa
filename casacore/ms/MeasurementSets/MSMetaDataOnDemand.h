@@ -138,19 +138,22 @@ public:
 	// get the antenna ID for the antenna with the specified name.
 	vector<uInt> getAntennaIDs(	const vector<String>& antennaNames);
 
-	// get set of spectral windows used for TDM. These are windows that have
+	// ALMA-specific. get set of spectral windows used for TDM. These are windows that have
 	// 64, 128, or 256 channels
 	std::set<uInt> getTDMSpw();
 
-	// get set of spectral windows used for FDM. These are windows that do not
+	// ALMA-specific. get set of spectral windows used for FDM. These are windows that do not
 	// have 1, 4, 64, 128, or 256 channels.
 	std::set<uInt> getFDMSpw();
 
-	// get spectral windows that have been averaged. These are windows with 1 channel.
+	// ALMA-specific. get spectral windows that have been averaged. These are windows with 1 channel.
 	std::set<uInt> getChannelAvgSpw();
 
-	// Get the spectral window set used for WVR measurements. These have 4 channels each.
+	// ALMA-specific. Get the spectral window set used for WVR measurements. These have 4 channels each.
 	std::set<uInt> getWVRSpw();
+
+	// ALMA-specific. Get the square law detector (total power) spectral windows.
+	std::set<uInt> getSQLDSpw();
 
 	// Get the scans which fail into the specified time range (center-tol to center+tol)
 	std::set<Int> getScansForTimes(const Double center, const Double tol);
@@ -269,7 +272,7 @@ public:
 
 	vector<uInt> getBBCNos();
 
-	std::map<uInt, std::set<uInt> > getBBCNosToSpwMap();
+	std::map<uInt, std::set<uInt> > getBBCNosToSpwMap(SQLDSwitch sqldSwitch);
 
 
 	vector<String> getSpwNames();
@@ -291,7 +294,7 @@ private:
 	std::set<String> _uniqueIntents;
 	std::map<Int, std::set<uInt> > _scanToSpwsMap;
 	std::set<Int> _uniqueScanNumbers, _uniqueFieldIDs, _uniqueStateIDs;
-	std::set<uInt> _avgSpw, _tdmSpw, _fdmSpw, _wvrSpw;
+	std::set<uInt> _avgSpw, _tdmSpw, _fdmSpw, _wvrSpw, _sqldSpw;
 	std::tr1::shared_ptr<Vector<Int> > _antenna1, _antenna2, _scans, _fieldIDs,
 		_stateIDs, _dataDescIDs, _observationIDs, _arrayIDs;
 	std::tr1::shared_ptr<AOSFMapI> _scanToNACRowsMap, _scanToNXCRowsMap;
@@ -325,6 +328,7 @@ private:
 	std::tr1::shared_ptr<ArrayColumn<Bool> > _flagsColumn;
 	std::map<Int, vector<Double> > _scanToTimeRangeMap;
 	std::map<Int, std::map<uInt, Double> > _scanSpwToIntervalMap;
+	Bool _spwInfoStored;
 
 	// disallow copy constructor and = operator
 	MSMetaDataOnDemand(const MSMetaDataOnDemand&);
@@ -389,8 +393,9 @@ private:
 	);
 
 	vector<SpwProperties> _getSpwInfo(
-			std::set<uInt>& avgSpw, std::set<uInt>& tdmSpw,
-			std::set<uInt>& fdmSpw, std::set<uInt>& wvrSpw
+		std::set<uInt>& avgSpw, std::set<uInt>& tdmSpw,
+		std::set<uInt>& fdmSpw, std::set<uInt>& wvrSpw,
+		std::set<uInt>& sqldSpw
 	);
 
 	static uInt _sizeof(std::map<Int, std::set<uInt> >& map);
