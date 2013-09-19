@@ -280,7 +280,7 @@ else()
    if( NOT PYTHON_FOUND )
       if ( NOT PYTHON_LIBNAME )
          #set( _names 2.9 2.8 2.7 2.6 2.5.2 2.5 )
-         set( _names 2.6 2.5.2 2.5 )
+         set( _names 2.7 2.6 2.5.2 2.5 )
 	 # OSX 10.7 has Python2.7 by default. CASA has't yet supported python > 2.6 anyway.
          # (The library named libpython.2.5.2.dylib seems to exist only in the CASA world.)
       else()

@@ -18,6 +18,7 @@
 // casacore
 #include <casa/aips.h>
 #include <casa/Utilities/CountedPtr.h>
+#include <casa/Arrays/Vector.h>
 #include <measures/Measures/MDirection.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
@@ -129,16 +130,27 @@ private:
   bool getLo1FromScanTab(casa::CountedPtr< Scantable > &scantab,
 			 const double refval, const double refpix,
 			 const double increment, const int nChan);
+  //  bool getSpectraToSolve(const int polId, const int beamId,
+  //			 const double dirX, const double dirY,
+  //			 Matrix<float> &specmat, vector<uInt> &tabIdvec);
   bool getSpectraToSolve(const int polId, const int beamId,
 			 const double dirX, const double dirY,
-			 Matrix<float> &specmat, vector<uInt> &tabIdvec);
+			 Matrix<float> &specMat, Matrix<bool> &flagMat,
+			 vector<uInt> &tabIdvec);
 
-  vector<float> solve(const Matrix<float> &specmat,
+  vector<float> solve(const Matrix<float> &specMat,
 		      const vector<uInt> &tabIdvec,
 		      const bool signal = true);
 
+  Vector<bool> collapseFlag(const Matrix<bool> &flagMat,
+			    const vector<uInt> &tabIdvec,
+			    const bool signal = true);
+
   void shiftSpectrum(const Vector<float> &invec, double shift,
 		     Vector<float> &outvec);
+
+  void shiftFlag(const Vector<bool> &invec, double shift,
+		     Vector<bool> &outvec);
 
   void deconvolve(Matrix<float> &specmat, const vector<double> shiftvec,
 		  const double threshold, Matrix<float> &outmat);

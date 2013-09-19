@@ -282,15 +282,18 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
     doTsys = False;
   }
   else {
-    nchanTsys = tsystable_[0]->nchan(tsysifno);
-    ftsys = tsystable_[0]->getBaseFrequency(0);
-    interpolatorF_->setX(ftsys.data(), nchanTsys);
     id[0] = (int)tsysifno;
     sel.setIFs(id);
     for (uInt i = 0; i < tsystable_.size() ; i++) {
       tsystable_[i]->setSelection(sel);
-      nrowTsys += tsystable_[i]->nrow();
+      uInt nrowThisTsys = tsystable_[i]->nrow();
+      nrowTsys += nrowThisTsys;
+      if (nrowThisTsys > 0 and nchanTsys == 0) {
+	nchanTsys = tsystable_[i]->nchan(tsysifno);
+	ftsys = tsystable_[i]->getBaseFrequency(0);
+      }
     }
+    interpolatorF_->setX(ftsys.data(), nchanTsys);
   }
 
   uInt nchanSp = skytable_[skylist[0]]->nchan(ifno);

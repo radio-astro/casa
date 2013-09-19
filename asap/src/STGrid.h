@@ -261,6 +261,7 @@ protected:
   // loop variable
   Int nrow_ ;
   Array<Float> data_ ;
+  Array<uChar> flag_ ;
 
   Table tab_ ;
   // per pol

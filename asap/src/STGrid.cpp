@@ -660,6 +660,8 @@ void STGrid::gridPerRow()
   // data_ and gwgtArr share storage
   data_.resize( gshape ) ;
   data_ = 0.0 ;
+  flag_.resize( gshape ) ;
+  flag_ = (uChar)0;
   STCommonData common = STCommonData(gshape, data_);
   common.gnx = gnx ;
   common.gny = gny ;
@@ -808,6 +810,8 @@ void STGrid::gridPerRowWithClipping()
   // data_ and gwgtArr share storage
   data_.resize( gshape ) ;
   data_ = 0.0 ;
+  flag_.resize( gshape ) ;
+  flag_ = (uChar)0;
   STCommonDataWithClipping common = STCommonDataWithClipping( gshape,
                                                               pshape, 
                                                               data_ ) ;
@@ -1018,18 +1022,22 @@ void STGrid::setData( Array<Complex> &gdata,
   uInt len = data_.nelements() ;
   const Complex *w1_p ;
   Float *w2_p ;
-  Bool b1, b2 ;
+  Bool b1, b2, b3 ;
   const Complex *gdata_p = gdata.getStorage( b1 ) ;
   Float *gwgt_p = data_.getStorage( b2 ) ;
-  w1_p = gdata_p ;
-  w2_p = gwgt_p ;
+  uChar *gflg_p = flag_.getStorage( b3 ) ;
   for ( uInt i = 0 ; i < len ; i++ ) {
-    if ( *w2_p > 0.0 ) *w2_p = (*w1_p).real() / *w2_p ;
-    w1_p++ ;
-    w2_p++ ;
+    if (gwgt_p[i] > 0.0) {
+      gwgt_p[i] = (gdata_p[i]).real() / gwgt_p[i];
+      gflg_p[i] = (uChar)0;
+    }
+    else {
+      gflg_p[i] = (uChar)1;
+    }
   }
   gdata.freeStorage( gdata_p, b1 ) ;
   data_.putStorage( gwgt_p, b2 ) ;
+  flag_.putStorage( gflg_p, b3 ) ;
   t1 = mathutil::gettimeofday_sec() ;
   os << LogIO::DEBUGGING << "setData: elapsed time is " << t1-t0 << " sec." << LogIO::POST ; 
 }
@@ -1972,12 +1980,13 @@ void STGrid::fillTable( Table &tab )
   ScalarColumn<uInt> scannoCol( tab, "SCANNO" ) ;
   Int irow = 0 ;
   Vector<Float> sp( nchan_ ) ;
-  Vector<uChar> flag( nchan_, (uChar)1 ) ;
-  Vector<uChar> unflag( nchan_, (uChar)0 ) ;
-  Bool bsp, bdata ;
+  Vector<uChar> flag( nchan_ ) ;
+  Bool bsp, bdata, bflag ;
   const Float *data_p = data_.getStorage( bdata ) ;
+  const uChar *flag_p = flag_.getStorage( bflag ) ;
   Float *wsp_p, *sp_p ;
   const Float *wdata_p = data_p ;
+  const uChar *wflag_p = flag_p ;
   long step = nx_ * ny_ * npol_ ;
   long offset ;
   uInt scanno = 0 ;
@@ -1993,19 +2002,17 @@ void STGrid::fillTable( Table &tab )
         sp_p = sp.getStorage( bsp ) ;
         wsp_p = sp_p ;
         wdata_p = data_p + offset ;
+        wflag_p = flag_p + offset ;
         for ( Int ichan = 0 ; ichan < nchan_ ; ichan++ ) {
           *wsp_p = *wdata_p ;
           wsp_p++ ;
           wdata_p += step ;
+	  flag[ichan] = *wflag_p;
+	  wflag_p += step ;
         }
         sp.putStorage( sp_p, bsp ) ;
         spectraCol.put( irow, sp ) ;
-        if ( allEQ( sp, (Float)0.0 ) ) {
-          flagtraCol.put( irow, flag ) ;
-        }
-        else {
-          flagtraCol.put( irow, unflag ) ;
-        }
+        flagtraCol.put( irow, flag ) ;
         directionCol.put( irow, dir ) ;
         polnoCol.put( irow, pollist_[ipol] ) ;
         scannoCol.put( irow, scanno ) ;
@@ -2015,6 +2022,7 @@ void STGrid::fillTable( Table &tab )
     }
   }
   data_.freeStorage( data_p, bdata ) ;
+  flag_.freeStorage( flag_p, bflag ) ;
 
   fillMainColumns( tab ) ;
 }
