@@ -143,8 +143,8 @@ def simalma(
 
         # Save input parameters of simalma
         saveinputs = myf['saveinputs']
-        saveinputs('simalma',fileroot+"/"+project+".simalma.last",
-                   myparams=in_params)
+        saveinputs('simalma',fileroot+"/"+project+".simalma.last")
+#                   myparams=in_params)
 
 
 

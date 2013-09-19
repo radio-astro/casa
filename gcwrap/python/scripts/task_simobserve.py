@@ -124,9 +124,8 @@ def simobserve(
 
 
         saveinputs = myf['saveinputs']
-        saveinputs('simobserve',fileroot+"/"+project+".simobserve.last",
-                   myparams=in_params)
-
+        saveinputs('simobserve',fileroot+"/"+project+".simobserve.last")
+#                   myparams=in_params)
 
 
         if is_array_type(skymodel):
@@ -773,13 +772,19 @@ def simobserve(
 
             if hourangle=="transit":
                 haoffset=0.0
-            else:
+            else:                
+                haoffset="no"
                 # is this a time quantity?
-                if qa.compare(hourangle,"s"):
-                    haoffset=qa.convert(qa.quantity(hourangle),'s')['value']
-                else:
-                    haoffset=qa.convert(qa.quantity(hourangle+"h"),'s')['value']
-                    msg("You desire an hour angle of "+str(haoffset/3600.)+" hours",origin="simobserve")
+                if qa.isquantity(hourangle):
+                    if qa.compare(hourangle,"s"):
+                        haoffset=qa.convert(qa.quantity(hourangle),'s')['value']
+                elif qa.isquantity(hourangle+"h"):
+                    if qa.compare(hourangle+"h","s"):
+                        haoffset=qa.convert(qa.quantity(hourangle+"h"),'s')['value']
+            if haoffset=="no":
+                msg("Cannot interpret your hourangle parameter "+hourangle+" as a time quantity e.g. '5h', 30min'",origin="simobserve",priority="error")
+            else:
+                msg("You desire an hour angle of "+str(haoffset/3600.)+" hours",origin="simobserve")                    
 
             refdate=refdate+"/00:00:00"
             usehourangle=True

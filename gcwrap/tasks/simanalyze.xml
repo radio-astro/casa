@@ -45,7 +45,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         interferometric) image as a prior model during clean deconvolution
         if a higher resolution interferometric MS.  That is accomplished 
         by putting the low-resolution image in "modelimage" and the MS
-        to be deconvolved in "vis".
+        to be deconvolved in "vis". NOTE: This is not the original skymodel
+        that was used in simobserve or simalma.  It is recommended to 
+        leave this blank unless the user is familiar with using a prior 
+        in clean deconvolution. (see casaguides)
        
       * uses Cotton-Schwab clean for single fields and Mosaic gridding
         for multiple fields (with Clark PSF calculation in minor cycles).
@@ -167,7 +170,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="modelimage" subparam='true'>
-      <description>prior image to use in clean e.g. existing single dish image</description>
+      <description>lower resolution prior image to use in clean e.g. existing total power image</description>
       <value type="string"></value>
     </param>
     
