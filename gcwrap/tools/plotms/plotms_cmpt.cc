@@ -593,23 +593,23 @@ void plotms::waitUntilIdle() {
 }
 
 void plotms::show()   {
-	/*if ( !scriptClient ){
+	if ( !scriptClient ){
 		callAsync(PlotMSDBusApp::METHOD_SHOW);
 	}
-	else {*/
+	else {
 		QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
 	            PlotMSDBusApp::METHOD_SHOW, Record(), asyncCall);
-	//}
+	}
 }
 
 void plotms::hide()   {
-	/*if ( !scriptClient ){
+	if ( !scriptClient ){
 		callAsync(PlotMSDBusApp::METHOD_HIDE);
 	}
-	else {*/
+	else {
 		QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
 			            PlotMSDBusApp::METHOD_HIDE, Record(), asyncCall);
-	//}
+	}
 }
 
 bool plotms::save(const string& filename, const string& format, const bool highres, const bool interactive) {

@@ -46,16 +46,72 @@ msname = tempdir+'reg_mawproject_apr13.ms'
 
 phasecenter = 'J2000 19h58m53.883s +40d44m02.323s'
 
+
+def locclean( vis='', imagename='', field='', spw='', phasecenter='', nterms=1, reffreq='1.5GHz', gridmode='advancedaprojection', wbawp=True, aterm=True, mterm=True, psterm=False, conjbeams=True, painc=360, rotpainc=360.0, cfcache='', imsize=512, cell='10.0arcsec', niter=10, gain=0.5, minpb=1e-04, usescratch=True ):
+   
+   im.open(msname,usescratch=usescratch);
+   im.selectvis(spw=spw,field=field);
+
+   models=[];
+   restoreds=[];
+   residuals=[];
+   if(nterms>1):
+      for tt in range(0,nterms):
+	   models.append(imagename+'.model.tt'+str(tt));
+	   restoreds.append(imagename+'.image.tt'+str(tt));
+	   residuals.append(imagename+'.residual.tt'+str(tt));
+	   im.defineimage(nx=imsize,ny=imsize,
+			  cellx=cell,celly=cell,
+                          phasecenter = phasecenter,
+			  nchan=1,stokes=stokes,mode='mfs')
+#                          start='1.0GHz',step='2.0GHz');
+	   im.make(models[tt]);
+      algo = 'msmfs'
+   else:
+      models = [imagename+'.model'];
+      restoreds = [imagename+'.image'];
+      residuals = [imagename+'.residual'];
+      im.defineimage(nx=imsize,ny=imsize,
+			  cellx=cell,celly=cell,
+			  nchan=1, 
+                          phasecenter = phasecenter,
+                          stokes=stokes,mode='mfs')
+      im.make(models[0]);
+      algo = 'hogbom'
+   im.weight(type=weighting);
+   im.settaylorterms(ntaylorterms=nterms,
+		     reffreq=(qa.convert(qa.unit(reffreq),"Hz"))['value']);
+   im.setscales(scalemethod='uservector',uservector=[0]);
+   if(gridmode=='advancedaprojection'):
+     im.setoptions(ftmachine='awproject',
+		   applypointingoffsets=False, 
+		   dopbgriddingcorrections=True, 
+		   cfcachedirname=cfcache, 
+		   pastep=painc, rotpastep=rotpainc,pblimit=minpb, 
+                   psterm=psterm, aterm=aterm, wbawp=wbawp,mterm=mterm,conjbeams=conjbeams);
+   else:
+     im.setoptions(ftmachine="ft");
+#     im.setvp(dovp=True,usedefaultvp=True,telescope='EVLA');
+#     im.makeimage(type='pb',image=imagename+'.pb');
+
+   print 'clean without mask';
+   im.clean(model=models,image=restoreds,residual=residuals,algorithm=algo,threshold=threshold,niter=niter,interactive=interactive,npercycle=niter,gain=gain,mask=''); 
+
+   im.done();
+
+###############################
+
+
 if(regstate):
    # Test (1) : CS clean with wideband A-Projection with freq-conjugate beams.
    print '-- CS Clean with Wideband AProjection and Mosaicing --'
-   default('clean')
-   clean( vis=msname, imagename=imname1, field='0,1', spw='', phasecenter=phasecenter, nterms=1, reffreq='1.5GHz', gridmode='advancedaprojection', wbawp=True, aterm=True, mterm=True, psterm=False, conjbeams=True, painc=360, rotpainc=360.0, cfcache=imname1+'.cfcache.dir', imsize=npix, cell='10.0arcsec', niter=10, gain=0.5, minpb=1e-04, usescratch=True)
+   #default('clean')
+   locclean( vis=msname, imagename=imname1, field='0,1', spw='', phasecenter=phasecenter, nterms=1, reffreq='1.5GHz', gridmode='advancedaprojection', wbawp=True, aterm=True, mterm=True, psterm=False, conjbeams=True, painc=360, rotpainc=360.0, cfcache=imname1+'.cfcache.dir', imsize=npix, cell='10.0arcsec', niter=10, gain=0.5, minpb=1e-04, usescratch=True)
 
    # Test (2) : MTMFS clean with wideband A-Projection with freq-conjugate beams.
    print '-- MTMFS Clean with Wideband AProjection and Mosaicing --'
-   default('clean')
-   clean( vis=msname, imagename=imname2, field='0,1', spw='', phasecenter=phasecenter, nterms=2, reffreq='1.5GHz', gridmode='advancedaprojection', wbawp=True, aterm=True, mterm=True, psterm=False, conjbeams=True, painc=360, rotpainc=360.0, cfcache=imname2+'.cfcache.dir', imsize=npix, cell='10.0arcsec', niter=10, gain=0.5, minpb=1e-04, usescratch=True)
+   #default('clean')
+   locclean( vis=msname, imagename=imname2, field='0,1', spw='', phasecenter=phasecenter, nterms=2, reffreq='1.5GHz', gridmode='advancedaprojection', wbawp=True, aterm=True, mterm=True, psterm=False, conjbeams=True, painc=360, rotpainc=360.0, cfcache=imname2+'.cfcache.dir', imsize=npix, cell='10.0arcsec', niter=10, gain=0.5, minpb=1e-04, usescratch=True)
 
    # Test (3) Mosaic with wbawp=False, and post-deconvolution PB-correction
    #print '-- MTMFS Clean with Reference-Frequency AProjection and Mosaicing + Post Deconv PB-Correction --'
@@ -107,11 +163,11 @@ else:
    correct_mtmfs_coeffpb_1 = 0.705602
 
    # 10 Sept 2013 (UR). 
-   ## Removed CF rotation, and using better norm'd PBs.
-   ## Removed test for coeffPB_1...
+   ## Removed CF rotation (changed from 5.0 to 360.0), and using PB=sqrt(sum_pbsq)
+   ## Removed test for coeffPB_1, since this is no longer correct 
    # These are pixel values at the center of the source, pixel 256, 315
    # Test 1
-   correct_cs_intensity = 0.69031
+   correct_cs_intensity = 0.67087
    correct_cs_avgpb = 0.695073
    # Test 2
    correct_mtmfs_intensity = 0.679821

@@ -58,6 +58,7 @@ class sdimaging_unittest_base:
     imsize=[75,75]
     cell=['3.0arcmin','3.0arcmin']
     gridfunction='PB'
+    minweight0 = 0.
     statsinteg={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
                 'blcf': '17:32:18.690, +57.37.28.536, I, 1.42064e+09Hz',
                 'max': numpy.array([ 0.6109162]),
@@ -95,10 +96,15 @@ class sdimaging_unittest_base:
         self.assertEqual(nchan,imshape[3],
                     msg='nchan does not match')
         
-    def _checkstats(self,name,ref):
+    def _checkstats(self,name,ref,ignoremask=False):
         self._checkfile(name)
         ia.open(name)
+        if ignoremask:
+            def_mask = ia.maskhandler('default')
+            ia.calcmask('T')
         stats=ia.statistics(list=True, verbose=True)
+        if ignoremask:
+            ia.maskhandler('set',def_mask)
         ia.close()
         #for key in stats.keys():
         for key in self.keys:
@@ -238,8 +244,8 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
         """Test010: Bad phasecenter reference (J2000 is assumed)"""
         # default for unknown direction frame is J2000 
         refimage=self.outfile+'2'
-        sdimaging(infiles=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter.replace('J2000','J3000'))
-        sdimaging(infiles=self.rawfile,outfile=refimage,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter)
+        sdimaging(infiles=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter.replace('J2000','J3000'),minweight=self.minweight0)
+        sdimaging(infiles=self.rawfile,outfile=refimage,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,minweight=self.minweight0)
         tb.open(self.outfile)
         chunk=tb.getcol('map')
         tb.close()
@@ -284,6 +290,11 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 
+    def test015(self):
+        """Test015: negative minweight"""
+        res=sdimaging(infiles=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,dochannelmap=False,minweight=-1.)
+        self.assertFalse(res)
+
 
 ###
 # Test channel imaging
@@ -298,6 +309,7 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
        - BOX and SF imaging (default is PB)
        - two polarization imaging (XX and YY, default is Stokes I)
        - empty phasecenter
+       - settting minweight = 0.2
        
     """
     # Input and output names
@@ -319,16 +331,16 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
 
     def test100(self):
         """Test 100: Integrated image (dochannelmap=False)"""
-        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=False)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=False,minweight=self.minweight0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
         refstats=self.statsinteg
-        self._checkstats(self.outfile,refstats)
+        self._checkstats(self.outfile,refstats,ignoremask=True)
 
 ##     def test101(self):
 ##         """Test 101: Integrated image (dochannelmap=True,nchan=-1)"""
-##         res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=-1,start=0,step=1)
+##         res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=-1,start=0,step=1,minweight=self.minweight0)
 ##         self.assertEqual(res,None,
 ##                          msg='Any error occurred during imaging')
 ##         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
@@ -364,7 +376,7 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
 ##                     'sumsq': numpy.array([ 1046.2425779]),
 ##                     'trc': numpy.array([74, 74,  0,  0], dtype=numpy.int32),
 ##                     'trcf': '17:03:03.151, +61.19.10.757, I, 1.42064e+09Hz'}
-##         self._checkstats(self.outfile,refstats)
+##         self._checkstats(self.outfile,refstats,ignoremask=True)
         
     def test102(self):
         """Test 102: Full channel image"""
@@ -374,7 +386,7 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
         else:
             nchan=tb.getcell('DATA').shape[1]
         tb.close()
-        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=0,step=1)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=0,step=1,minweight=self.minweight0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
@@ -394,12 +406,12 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
                   'sumsq': numpy.array([ 5917423.42281288]),
                   'trc': numpy.array([  74,   74,    0, 1023], dtype=numpy.int32),
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.421893e+09Hz'}
-        self._checkstats(self.outfile,refstats)
+        self._checkstats(self.outfile,refstats,ignoremask=True)
 
     def test103(self):
         """Test 103: Selected channel image"""
         nchan=40
-        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=400,step=10)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=400,step=10,minweight=self.minweight0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
@@ -419,12 +431,12 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
                   'sumsq': numpy.array([ 538713.45272028]),
                   'trc': numpy.array([74, 74,  0, 39], dtype=numpy.int32),
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.42133e+09Hz'}
-        self._checkstats(self.outfile,refstats)
+        self._checkstats(self.outfile,refstats,ignoremask=True)
 
     def test104(self):
         """Test 104: Box-car gridding"""
         nchan=40
-        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='BOX',dochannelmap=True,nchan=nchan,start=400,step=10)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='BOX',dochannelmap=True,nchan=nchan,start=400,step=10,minweight=self.minweight0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
@@ -444,12 +456,12 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
                   'sumsq': numpy.array([ 432171.72687429]),
                   'trc': numpy.array([74, 74,  0, 39], dtype=numpy.int32),
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.42133e+09Hz'}
-        self._checkstats(self.outfile,refstats)
+        self._checkstats(self.outfile,refstats,ignoremask=True)
 
     def test105(self):
         """Test 105: Prolate Spheroidal gridding"""
         nchan=40
-        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='SF',dochannelmap=True,nchan=nchan,start=400,step=10)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='SF',dochannelmap=True,nchan=nchan,start=400,step=10,minweight=self.minweight0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
@@ -469,12 +481,12 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
                   'sumsq': numpy.array([ 505752.74505987]),
                   'trc': numpy.array([74, 74,  0, 39], dtype=numpy.int32),
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.42133e+09Hz'}
-        self._checkstats(self.outfile,refstats)
+        self._checkstats(self.outfile,refstats,ignoremask=True)
 
     def test106(self):
         """Test 106: Imaging two polarization separately (XX and YY, not Stokes I)"""
         nchan=40
-        res=sdimaging(infiles=self.rawfile,specunit=self.mode,stokes='XXYY',outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='PB',dochannelmap=True,nchan=nchan,start=400,step=10)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,stokes='XXYY',outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='PB',dochannelmap=True,nchan=nchan,start=400,step=10,minweight=self.minweight0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],2,nchan)
@@ -494,12 +506,12 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
                   'sumsq': numpy.array([ 1087217.77687839]),
                   'trc': numpy.array([74, 74,  1, 39], dtype=numpy.int32),
                   'trcf': '17:03:03.151, +61.19.10.757, YY, 1.42133e+09Hz'}
-        self._checkstats(self.outfile,refstats)
+        self._checkstats(self.outfile,refstats,ignoremask=True)
 
     def test107(self):
         """Test 107: Gaussian gridding"""
         nchan=40
-        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='GAUSS',dochannelmap=True,nchan=nchan,start=400,step=10)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='GAUSS',dochannelmap=True,nchan=nchan,start=400,step=10,minweight=self.minweight0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
@@ -519,12 +531,12 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
                   'sumsq': numpy.array([ 490757.49952306]),
                   'trc': numpy.array([74, 74,  0, 39], dtype=numpy.int32),
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.42133e+09Hz'}
-        self._checkstats(self.outfile,refstats)
+        self._checkstats(self.outfile,refstats,ignoremask=True)
 
     def test108(self):
         """Test 108: Gaussian*Jinc gridding"""
         nchan=40
-        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='GJINC',dochannelmap=True,nchan=nchan,start=400,step=10)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='GJINC',dochannelmap=True,nchan=nchan,start=400,step=10,minweight=self.minweight0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
@@ -544,12 +556,12 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
                   'sumsq':numpy.array([ 472970.63791706]),
                   'trc':numpy.array([74, 74,  0, 39], dtype=numpy.int32),
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.42133e+09Hz'}
-        self._checkstats(self.outfile,refstats)
+        self._checkstats(self.outfile,refstats,ignoremask=True)
 
     def test109(self):
         """Test 109: Empty phasecenter (auto-calculation)"""
         nchan=40
-        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,dochannelmap=True,nchan=nchan,start=400,step=10)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,dochannelmap=True,nchan=nchan,start=400,step=10,minweight=self.minweight0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
@@ -569,6 +581,31 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
                   'sumsq': numpy.array([ 431708.13145918]),
                   'trc': numpy.array([74, 74,  0, 39], dtype=numpy.int32),
                   'trcf': '17:02:33.828, +61.17.52.040, I, 1.42133e+09Hz'}
+        self._checkstats(self.outfile,refstats,ignoremask=True)
+
+    def test110(self):
+        """Test 110: setting minweight=70."""
+        nchan=40
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='GJINC',dochannelmap=True,nchan=nchan,start=400,step=10,minweight=70.)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during imaging')
+        self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
+        refstats={'blc':numpy.array([0, 0, 0, 0], dtype=numpy.int32),
+                  'blcf': '17:32:18.690, +57.37.28.536, I, 1.42038e+09Hz',
+                  'max':numpy.array([ 15.31498909]),
+                  'maxpos':numpy.array([58, 21,  0, 20], dtype=numpy.int32),
+                  'maxposf': '17:10:23.737, +58.42.25.413, I, 1.42087e+09Hz',
+                  'mean': numpy.array([ 0.96643395]),
+                  'min': numpy.array([-0.01385191]),
+                  'minpos': numpy.array([19, 63,  0, 33], dtype=numpy.int32),
+                  'minposf': '17:25:51.974, +60.48.38.410, I, 1.42119e+09Hz',
+                  'npts': numpy.array([ 143920.]),
+                  'rms': numpy.array([ 1.66819704]),
+                  'sigma': numpy.array([ 1.35974246]),
+                  'sum': numpy.array([ 139089.17359187]),
+                  'sumsq': numpy.array([ 400512.27532199]),
+                  'trc':numpy.array([74, 74,  0, 39], dtype=numpy.int32),
+                  'trcf': '17:03:03.151, +61.19.10.757, I, 1.42133e+09Hz'}
         self._checkstats(self.outfile,refstats)
         
 
@@ -603,17 +640,17 @@ class sdimaging_test2(sdimaging_unittest_base,unittest.TestCase):
 
     def test200(self):
         """Test 200: Integrated image (dochannelmap=False)"""
-        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=False)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=False,minweight=self.minweight0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
         refstats=self.statsinteg
-        self._checkstats(self.outfile,refstats)
+        self._checkstats(self.outfile,refstats,ignoremask=True)
         
     def test201(self):
         """Test 201: Selected frequency image"""
         nchan=100
-        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=1.4202,step=1.0e-5)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=1.4202,step=1.0e-5,minweight=self.minweight0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
@@ -633,12 +670,12 @@ class sdimaging_test2(sdimaging_unittest_base,unittest.TestCase):
                   'sumsq': numpy.array([ 1376440.6075593]),
                   'trc': numpy.array([74, 74,  0, 99], dtype=numpy.int32),
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.42119e+09Hz'}
-        self._checkstats(self.outfile,refstats)
+        self._checkstats(self.outfile,refstats,ignoremask=True)
         
     def test202(self):
         """Test 202: Selected frequency image with other frequency unit"""
         nchan=100
-        res=sdimaging(infiles=self.rawfile,specunit='MHz',outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=1420.2,step=0.01)
+        res=sdimaging(infiles=self.rawfile,specunit='MHz',outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=1420.2,step=0.01,minweight=self.minweight0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
@@ -658,7 +695,7 @@ class sdimaging_test2(sdimaging_unittest_base,unittest.TestCase):
                   'sumsq': numpy.array([ 1376440.6075593]),
                   'trc': numpy.array([74, 74,  0, 99], dtype=numpy.int32),
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.42119e+09Hz'}
-        self._checkstats(self.outfile,refstats)
+        self._checkstats(self.outfile,refstats,ignoremask=True)
         
 ###
 # Test velocity imaging
@@ -690,17 +727,17 @@ class sdimaging_test3(sdimaging_unittest_base,unittest.TestCase):
 
     def test300(self):
         """Test 300: Integrated image (dochannelmap=False)"""
-        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=False)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=False,minweight=self.minweight0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
         refstats=self.statsinteg
-        self._checkstats(self.outfile,refstats)
+        self._checkstats(self.outfile,refstats,ignoremask=True)
         
     def test301(self):
         """Test 301: Selected velocity image"""
         nchan=100
-        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=-200.0,step=2.0)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=-200.0,step=2.0,minweight=self.minweight0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
@@ -720,12 +757,12 @@ class sdimaging_test3(sdimaging_unittest_base,unittest.TestCase):
                   'sumsq': numpy.array([ 1495461.22406453]),
                   'trc': numpy.array([74, 74,  0, 99], dtype=numpy.int32),
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.420415e+09Hz'}
-        self._checkstats(self.outfile,refstats)
+        self._checkstats(self.outfile,refstats,ignoremask=True)
 
     def test302(self):
         """Test 302: Selected velocity image (different rest frequency)"""
         nchan=100
-        res=sdimaging(infiles=self.rawfile,specunit=self.mode,restfreq='1.420GHz',outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=-100.0,step=2.0)
+        res=sdimaging(infiles=self.rawfile,specunit=self.mode,restfreq='1.420GHz',outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction=self.gridfunction,dochannelmap=True,nchan=nchan,start=-100.0,step=2.0,minweight=self.minweight0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
@@ -745,7 +782,7 @@ class sdimaging_test3(sdimaging_unittest_base,unittest.TestCase):
                   'sumsq': numpy.array([ 20883.94443161]),
                   'trc': numpy.array([74, 74,  0, 99], dtype=numpy.int32),
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.419536e+09Hz'}
-        self._checkstats(self.outfile,refstats)
+        self._checkstats(self.outfile,refstats,ignoremask=True)
 
 ###
 # Test auto-resolution of spatial gridding parameters
@@ -788,21 +825,21 @@ class sdimaging_test4(sdimaging_unittest_base,unittest.TestCase):
 
     def test401(self):
         """test 401: Set phasecenter, cell, and imsize manually"""
-        res=sdimaging(infiles=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,dochannelmap=False)
+        res=sdimaging(infiles=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,dochannelmap=False,minweight=self.minweight0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
         self._checkdirax(self.outfile,self.phasecenter,self.cell,self.imsize)
     def test402(self):
         """test 402: Automatic resolution of phasecenter, cell, and imsize"""
-        res=sdimaging(infiles=self.rawfile,outfile=self.outfile,cell="",imsize=[],phasecenter="",dochannelmap=False)
+        res=sdimaging(infiles=self.rawfile,outfile=self.outfile,cell="",imsize=[],phasecenter="",dochannelmap=False,minweight=self.minweight0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize_auto[0],self.imsize_auto[1],1,1)
         self._checkdirax(self.outfile,self.phasecenter_auto,self.cell_auto,self.imsize_auto)
     def test403(self):
         """test 403: Resolve phasecenter"""
-        res=sdimaging(infiles=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter="",dochannelmap=False)
+        res=sdimaging(infiles=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter="",dochannelmap=False,minweight=self.minweight0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
@@ -810,7 +847,7 @@ class sdimaging_test4(sdimaging_unittest_base,unittest.TestCase):
 
     def test404(self):
         """test 404: Resolve cell"""
-        res=sdimaging(infiles=self.rawfile,outfile=self.outfile,cell="",imsize=self.imsize,phasecenter=self.phasecenter,dochannelmap=False)
+        res=sdimaging(infiles=self.rawfile,outfile=self.outfile,cell="",imsize=self.imsize,phasecenter=self.phasecenter,dochannelmap=False,minweight=self.minweight0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
@@ -819,7 +856,7 @@ class sdimaging_test4(sdimaging_unittest_base,unittest.TestCase):
     def test405(self):
         """test 405: Resolve imsize"""
         ref_imsize = [38, 32]
-        res=sdimaging(infiles=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=[],phasecenter=self.phasecenter,dochannelmap=False)
+        res=sdimaging(infiles=self.rawfile,outfile=self.outfile,cell=self.cell,imsize=[],phasecenter=self.phasecenter,dochannelmap=False,minweight=self.minweight0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,ref_imsize[0],ref_imsize[1],1,1)

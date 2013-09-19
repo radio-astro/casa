@@ -210,7 +210,7 @@ function set_CASA_3RD_PARTY_DIRECTORY {
             result="$CASA_INSTALLATION_DIRECTORY"
         else
             if [ "`uname -p`" = "x86_64" ]; then
-                result="/usr/lib64/casapy"
+                result="@casa_packages@"
             else
                 result="/usr/lib/casapy"
             fi
@@ -274,14 +274,14 @@ function set_CASAPY_SCRIPT {
     # Ignore any previous values.
     local result=""
     if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
-        result="${CASA_INSTALLATION_DIRECTORY}/python/2.6/casapy.py"
+        result="${CASA_INSTALLATION_DIRECTORY}/python/@python_version@/casapy.py"
     else
         case $OS_TYPE in
         "Darwin")
             result="${CASA_INSTALLATION_DIRECTORY}/Resources/python/casapy.py"
             ;;
         "Linux")
-            result="${CASA_INSTALLATION_DIRECTORY}/lib/python2.6/casapy.py"
+            result="${CASA_INSTALLATION_DIRECTORY}/lib/python@python_version@/casapy.py"
             ;;
         *)
             exit_with_error_message -1 "Unknown OS: $OS_TYPE"
@@ -338,10 +338,10 @@ function set_PYTHON_EXECUTABLE {
     case $OS_TYPE in
     "Darwin")
         if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
-            result="${CASA_3RD_PARTY_DIRECTORY}/Library/Frameworks/Python.framework/Versions/2.6/Resources/Python.app/Contents/MacOS/Python"
+            result="${CASA_3RD_PARTY_DIRECTORY}/Library/Frameworks/Python.framework/Versions/@python_version@/Resources/Python.app/Contents/MacOS/Python"
         else
             # Probably running from an app.  Not sure though...
-            result="${CASA_INSTALLATION_DIRECTORY}/Frameworks/Python.framework/Versions/2.6/Resources/Python.app/Contents/MacOS/Python"
+            result="${CASA_INSTALLATION_DIRECTORY}/Frameworks/Python.framework/Versions/@python_version@/Resources/Python.app/Contents/MacOS/Python"
         fi
         ;;
     "Linux")

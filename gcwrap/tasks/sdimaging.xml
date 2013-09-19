@@ -117,6 +117,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <any type="variant" limittypes="string int double"/>
             <value type="int">-1</value>
     </param>
+
+    <param type="double" name="minweight">
+            <shortdescription>Minimum weight level to use</shortdescription>
+            <description>Minimum weight level to use for weight correction and weight beased masking</description>
+            <allowed kind="range"> <value range="min">0</value> </allowed>
+            <value>0.1</value>
+    </param>
    
     <param type="string" name="outfile">
 	    <description>output image name</description>
@@ -302,6 +309,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          'GJINC'.
                    default: '-1' (use default for each gridfunction)
                    example: 3, '20arcsec', '3pixel'
+        minweight -- Minimum weight level to use for weight correction
+                     and weight based masking
+                default: 0.1
+                example: minweight = 0.
         outfile -- output image name
                 default: none
                 example: 'mySDimage.im'
