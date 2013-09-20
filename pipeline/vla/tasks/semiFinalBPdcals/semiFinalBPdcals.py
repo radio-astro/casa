@@ -260,6 +260,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
             calmode  = 'p',
             minsnr   = 3.0,
             refant   = RefAntOutput[0].lower(),
+            scan     = bandpass_scan_select_string,
             minblperant = minBL_for_cal,
             solnorm = False,
             combine = 'scan',

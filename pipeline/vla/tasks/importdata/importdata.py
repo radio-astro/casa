@@ -10,6 +10,7 @@ import string
 import tarfile
 import types
 import xml.etree.ElementTree as ElementTree
+import numpy
 
 import pipeline.domain as domain
 import pipeline.domain.measures as measures
@@ -19,6 +20,7 @@ from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.tablereader as tablereader
 from pipeline.hif.tasks.common import commonfluxresults
 from pipeline.vla.tasks.vlautils import VLAUtils
+import pipeline.infrastructure.casatools as casatools
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -119,6 +121,69 @@ class VLAImportDataResults(basetask.Results):
 
 class VLAImportData(basetask.StandardTaskTemplate):
     Inputs = VLAImportDataInputs
+    
+    def integrationTime(self, vis):
+        # Identify scan numbers, map scans to field ID, and run scan summary
+        # (needed for figuring out integration time later)
+        
+        #vis = self._asdm_to_vis_filename(asdm)
+        
+        casatools.table.open(vis+'/FIELD')
+        numFields = casatools.table.nrows()
+        field_positions = casatools.table.getcol('PHASE_DIR')
+        field_ids=range(numFields)
+        field_names=casatools.table.getcol('NAME')
+        casatools.table.close()
+        
+        casatools.table.open(vis)
+        scanNums = sorted(numpy.unique(casatools.table.getcol('SCAN_NUMBER')))
+        field_scans = []
+        for ii in range(0,numFields):
+            subtable = casatools.table.query('FIELD_ID==%s'%ii)
+            field_scans.append(list(numpy.unique(subtable.getcol('SCAN_NUMBER'))))
+        casatools.table.close()
+        
+        
+        ## field_scans is now a list of lists containing the scans for each field.
+        ## so, to access all the scans for the fields, you'd:
+        #
+        #for ii in range(0,len(field_scans)):
+        #   for jj in range(0,len(field_scans[ii]))
+        #
+        ## the jj'th scan of the ii'th field is in field_scans[ii][jj]
+        
+        # Identify intents
+        
+        casatools.table.open(vis+'/STATE')
+        intents=casatools.table.getcol('OBS_MODE')
+        casatools.table.close()
+        
+        
+        """Figure out integration time used"""
+        
+        casatools.ms.open(vis)
+        scan_summary = casatools.ms.getscansummary()
+        ms_summary = casatools.ms.summary()
+        casatools.ms.close()
+        startdate=float(ms_summary['BeginTime'])
+    
+        integ_scan_list = []
+        for scan in scan_summary:
+            integ_scan_list.append(int(scan))
+        sorted_scan_list = sorted(integ_scan_list)
+        
+        # find max and median integration times
+        #
+        integration_times = []
+        for ii in sorted_scan_list:
+            integration_times.append(scan_summary[str(ii)]['0']['IntegrationTime'])
+            
+        maximum_integration_time = max(integration_times)
+        median_integration_time = numpy.median(integration_times)
+        
+        int_time = maximum_integration_time
+        
+        return int_time
 
     def _ms_directories(self, names):
         """
@@ -295,14 +360,35 @@ class VLAImportData(basetask.StandardTaskTemplate):
         vis = self._asdm_to_vis_filename(asdm)
         outfile = os.path.join(self.inputs.output_dir,
                                os.path.basename(asdm)+"_flagonline.txt")
-
+                               
+        #Determine int_time for tbuff value
+        #int_time = self.integrationTime(vis)
+        #LOG.info("Using integration int_time = "+str(int_time))
+        
         task = casa_tasks.importevla(asdm=asdm, 
                                      vis=vis, 
                                      savecmds=self.inputs.save_flagonline,
                                      outfile=outfile,
                                      #process_caldevice=False,
                                      asis="",
-                                     overwrite=self.inputs.overwrite)        
+                                     overwrite=self.inputs.overwrite)
+        #                             online=True,
+        #                             tbuff=1.5*int_time)
+        #                             verbose=True,
+        #                             flagzero=False, flagpol=True,
+        #                             shadow=True)
+        
+        '''
+        task = casa_tasks.importevla(asdm=asdm,vis=vis,
+                                     ocorr_mode="co", compression=False,
+                                     asis="",scans="",verbose=True,
+                                     overwrite=False,online=False,
+                                     tbuff=0.0,flagzero=False,flagpol=True,
+                                     shadow=False,tolerance=0.0,
+                                     addantenna="",applyflags=False,
+                                     savecmds=False,outfile="",
+                                     flagbackup=False)
+        '''
         
         self._executor.execute(task)
         
