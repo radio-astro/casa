@@ -555,8 +555,18 @@ def simalma(
                 msg("    WARNING: Your choices of configurations mix different cycles and/or Full ALMA.  Assuming you know what you want.",priority="info")
                 
 
-            # print resolution for INT, and warn if model_cell too large
-            if configtypes[i]!='ALMASD':
+            if configtypes[i]=='ALMASD':
+                # imsize check for PB:
+                if not components_only:
+                    minsize = min(qa.convert(model_size[0],'arcsec')['value'],\
+                                      qa.convert(model_size[1],'arcsec')['value'])
+                    PB12sec=qa.convert(PB12,"arcsec")['value']
+                    if minsize < 2.5*PB12sec:
+                        msg("    WARNING: For TP imaging, skymodel should be larger than 2.5*primary beam. Your skymodel: %.3f arcsec < %.3f arcsec: 2.5*primary beam" % (minsize, 2.5*PB12sec),priority="warn")
+                        msg("    Total power imaging when the source is this small is not necessary, and may fail with an error.",priority="warn")
+                    del minsize
+            else:
+                # print resolution for INT, and warn if model_cell too large
                 msg("    approximate synthesized beam FWHM = %f arcsec" % resols[i],priority="info")
                 msg("       (at zenith; the actual beam will depend on declination, hourangle, and uv coverage)",priority="info")
 
@@ -567,9 +577,9 @@ def simalma(
                 if cell_asec > 0.2*resols[i]:
                     if cell_asec >= resols[i]:
                         # XXX if not dryrun raise exception here
-                        msg("   ERROR: your sky model cell %f arcsec is too large to simulate this beam.  Simulation will fail" % cell_asec,priority="info")
+                        msg("    ERROR: your sky model cell %f arcsec is too large to simulate this beam.  Simulation will fail" % cell_asec,priority="info")
                     else:
-                        msg("   WARNING: your sky model cell %f arcsec does not sample this beam well. Simulation may be unreliable or clean may fail." % cell_asec,priority="info")
+                        msg("    WARNING: your sky model cell %f arcsec does not sample this beam well. Simulation may be unreliable or clean may fail." % cell_asec,priority="info")
 
                 msg("    Observation time = %f min" % totaltime_min[i],priority="info")
                 if totaltime_min[i]>360:
@@ -581,6 +591,15 @@ def simalma(
             if tptime_min>0:
                 msg("You are also requesting Total Power observations:",priority="info")
                 msg("    %d antennas for %f minutes" % (tpnant,tptime_min),priority="info")
+                # imsize check for PB:
+                if not components_only:
+                    minsize = min(qa.convert(model_size[0],'arcsec')['value'],\
+                                      qa.convert(model_size[1],'arcsec')['value'])
+                    PB12sec=qa.convert(PB12,"arcsec")['value']
+                    if minsize < 2.5*PB12sec:
+                        msg("    WARNING: For TP imaging, skymodel should be larger than 2.5*primary beam. Your skymodel: %.3f arcsec < %.3f arcsec: 2.5*primary beam" % (minsize, 2.5*PB12sec),priority="warn")
+                        msg("    Total power imaging when the source is this small is not necessary, and may fail with an error.",priority="warn")
+
             else:
                 msg("You have requested %d total power antennas (tpnant), but no finite integration (tptime) -- check your inputs; no Total Power will be simulated." % tpnant,priority="info")
 

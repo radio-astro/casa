@@ -318,7 +318,6 @@ def simobserve(
                     if util.isquantity(tail,halt=False):
                         resl = qa.convert(tail,"arcsec")['value']
                         if os.path.exists(repodir):
-                            ######## FIXME!!!
                             confnum = 10.**(0.91-0.74*(resl*qa.convert(model_center,"GHz")['value']/345.))
                             confnum = max(1,min(7,confnum))
                             conf = str(int(round(confnum)))
@@ -399,8 +398,8 @@ def simobserve(
                 if not components_only:
                     minsize = min(qa.convert(model_size[0],'arcsec')['value'],\
                                   qa.convert(model_size[1],'arcsec')['value'])
-                    if minsize < 2*pb:
-                        msg("skymodel should be larger than 2*primary beam. Your skymodel: %.3f arcsec < %.3f arcsec: 2*primary beam" % (minsize, 2*pb),priority="error")
+                    if minsize < 2.5*pb:
+                        msg("skymodel should be larger than 2.5*primary beam. Your skymodel: %.3f arcsec < %.3f arcsec: 2.5*primary beam" % (minsize, 2.5*pb),priority="error")
                     del minsize
         else:
             msg("Can't find antennalist",priority="error")
