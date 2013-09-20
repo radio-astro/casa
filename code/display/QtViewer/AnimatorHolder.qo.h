@@ -26,8 +26,10 @@
 #define ANIMATORHOLDER_QO_H
 
 #include <QtGui/QWidget>
+#include <display/QtViewer/InActiveDock.qo.h>
 #include <display/QtViewer/AnimatorHolder.ui.h>
 #include <display/QtViewer/AnimatorWidget.qo.h>
+
 namespace casa {
 
     class QtDisplayPanelGui;
@@ -35,7 +37,7 @@ namespace casa {
 	 * Manages the Animator display on the viewer that allows users to scroll through
 	 * either the channels withen an image or between loaded images.
 	 */
-    class AnimatorHolder : public QDockWidget, protected Ui::AnimatorHolder {
+    class AnimatorHolder : public InActiveDock, protected Ui::AnimatorHolder {
 		Q_OBJECT
 
 	public:

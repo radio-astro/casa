@@ -65,6 +65,8 @@
 #include <display/DisplayErrors.h>
 #include <display/DisplayDatas/PrincipalAxesDD.h>
 
+#include <display/QtViewer/InActiveDock.qo.h>
+
 #include <tr1/memory>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -260,9 +262,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		if ( shown == "false" ) regionDock_->dismiss( );
 	}
 
-	QDockWidget* displayDock = new QDockWidget( this );
+	QDockWidget* displayDock = new InActiveDock( this );
 	displayDock->setWidget( qdp_);
-	//displayDock->setFocusPolicy( Qt::NoFocus );
 	displayDock->setWindowTitle(QApplication::translate("Display", "Display", 0, QApplication::UnicodeUTF8));
 	std::string displayLocation = rc.get("viewer." + rcid() + ".position.display");
 	addDockWidget( displayLocation == "right" ? Qt::RightDockWidgetArea :

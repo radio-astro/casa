@@ -26,6 +26,7 @@
 #define QTVIEWER_CURSORTRACKINGHOLDER_H_
 
 #include <QtGui/QWidget>
+#include <display/QtViewer/InActiveDock.qo.h>
 #include <display/QtViewer/CursorTrackingHolder.ui.h>
 #include <vector>
 
@@ -40,7 +41,7 @@ namespace casa {
 	/**
 	 * Dock widget which manages the cursor tracking dialogs...
 	 */
-    class CursorTrackingHolder : public QDockWidget, protected Ui::CursorTrackingHolder {
+    class CursorTrackingHolder : public InActiveDock, protected Ui::CursorTrackingHolder {
 		Q_OBJECT
 
 	public:

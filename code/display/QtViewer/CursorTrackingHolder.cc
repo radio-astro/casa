@@ -32,7 +32,7 @@
 namespace casa {
 
     CursorTrackingHolder::CursorTrackingHolder( QtDisplayPanelGui *panel, QWidget *parent )
-         : QDockWidget(parent), Ui::CursorTrackingHolder( ), panel_(panel), dismissed(false) {
+         : InActiveDock(parent), Ui::CursorTrackingHolder( ), panel_(panel), dismissed(false) {
 		setupUi(this);
 		connect( this, SIGNAL(visibilityChanged(bool)), SLOT(handle_visibility(bool)) );
 	}

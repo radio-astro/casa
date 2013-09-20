@@ -31,6 +31,7 @@
 #include <list>
 #include <iostream>
 #include <display/region/QtRegionDock.ui.h>
+#include <display/QtViewer/InActiveDock.qo.h>
 #include <imageanalysis/Annotations/AnnRegion.h>
 #include <imageanalysis/Annotations/RegionTextList.h>
 #include <display/region/Region.qo.h>
@@ -47,7 +48,7 @@ namespace casa {
 		class ds9writer;
 		class Region;
 
-		class QtRegionDock : public QDockWidget, protected Ui::QtRegionDock {
+		class QtRegionDock : public InActiveDock, protected Ui::QtRegionDock {
 			Q_OBJECT
 		public:
 
