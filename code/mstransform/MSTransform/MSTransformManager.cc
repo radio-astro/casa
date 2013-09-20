@@ -2826,16 +2826,18 @@ void MSTransformManager::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 	Int spwIndex = 0;
 	if (not combinespws_p)
 	{
+		// jagonzal : This is actually not necessary because we
+		// pass the original SPWId down to the interpol1D method
+		/*
 		if (inputOutputSPWIndexMap_p.size())
 		{
 			Int originalSPWid = vb->spectralWindows()(0);
 			spwIndex = inputOutputSPWIndexMap_p[originalSPWid];
 		}
-		else
-		{
-			spwIndex = vb->spectralWindows()(0);
-		}
+		*/
+		spwIndex = vb->spectralWindows()(0);
 	}
+
 
 	if (fftShiftEnabled_p)
 	{
