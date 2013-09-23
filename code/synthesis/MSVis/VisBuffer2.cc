@@ -35,6 +35,22 @@ VisBuffer2::factory (VisibilityIterator2 * vi, VisBufferType t, VisBufferOptions
     return result;
 }
 
+ms::MsRow *
+VisBuffer2::getRow (Int) const
+{
+    ThrowIf (True, "Not implemented by this subclass.");
+
+    return 0;
+}
+
+ms::MsRow *
+VisBuffer2::getRowMutable (Int)
+{
+    ThrowIf (True, "Not implemented by this subclass.");
+
+    return 0;
+}
+
 } // end namespace vi
 
 } // end namespace casa

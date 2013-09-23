@@ -30,16 +30,20 @@ AveragingParameters::AveragingParameters (Double averagingInterval,
                                           Double chunkInterval,
                                           const SortColumns & sortColumns,
                                           const AveragingOptions & options,
+                                          Double maxUvwDistance,
                                           WeightScaling * weightScalingForAveraging)
 : averagingInterval_p (averagingInterval),
   averagingOptions_p (options),
   chunkInterval_p (chunkInterval),
+  maxUvwDistance_p (maxUvwDistance),
   sortColumns_p (sortColumns),
   weightScaling_p (weightScalingForAveraging)
 {
     Assert (averagingInterval > 0);
     Assert (chunkInterval >= 0);
     Assert (chunkInterval == 0 || chunkInterval >= averagingInterval);
+    Assert (! options.contains (AveragingOptions::BaselineDependentAveraging) ||
+            maxUvwDistance_p > 1.0);
 
     validateOptions (); // Throws if error
 }
@@ -69,6 +73,12 @@ AveragingParameters::getAveragingInterval () const
     return averagingInterval_p;
 }
 
+Double
+AveragingParameters::getMaxUvwDistance () const
+{
+    return maxUvwDistance_p;
+}
+
 const AveragingOptions &
 AveragingParameters::getOptions () const
 {
@@ -90,35 +100,37 @@ AveragingParameters::getWeightScaling () const
 void
 AveragingParameters::validateOptions ()
 {
-    Int bits  = AveragingOptions::CorrectedUseCorrectedWeights |
+    if (averagingOptions_p.contains(AveragingOptions::AverageCorrected)){
+
+        Int bits  = AveragingOptions::CorrectedUseCorrectedWeights |
                 AveragingOptions::CorrectedUseNoWeights |
                 AveragingOptions::CorrectedUseWeights;
 
-    Int nSet = averagingOptions_p.nSet (bits);
+        Int nSet = averagingOptions_p.nSet (bits);
 
-    ThrowIf (nSet > 1,
-             "Inconsistent corrected weights options provided");
+        if (nSet == 0){
+            // jagonzal (CAS-5587): Sometimes WEIGHT_SPECTRUM exists but it is not defined
+            // averagingOptions_p |= AveragingOptions::CorrectedUseCorrectedWeights;
+            averagingOptions_p |= AveragingOptions::CorrectedUseNoWeights;
+        }
+        else{
+            averagingOptions_p |= AveragingOptions::CorrectedUseNoWeights;
+        }
 
-    if (nSet == 0){
-    	// jagonzal (CAS-5587): Sometimes WEIGHT_SPECTRUM exists but it is not defined
-        // averagingOptions_p |= AveragingOptions::CorrectedUseCorrectedWeights;
-    	averagingOptions_p |= AveragingOptions::CorrectedUseNoWeights;
+        if (averagingOptions_p.contains(AveragingOptions::AverageModel)){
+
+            Int bits  = AveragingOptions::ModelUseCorrectedWeights |
+                    AveragingOptions::ModelUseNoWeights |
+                    AveragingOptions::ModelUseWeights;
+
+            Int nSet = averagingOptions_p.nSet (bits);
+
+            ThrowIf (nSet > 1,
+                     "Inconsistent model weights options provided");
+
+            ThrowIf (nSet == 0, "Need to specify model data weighting option");
+        }
     }
-
-    bits  = AveragingOptions::ModelUseCorrectedWeights |
-            AveragingOptions::ModelUseNoWeights |
-            AveragingOptions::ModelUseWeights;
-
-    nSet = averagingOptions_p.nSet (bits);
-
-    ThrowIf (nSet > 1,
-             "Inconsistent model weights options provided");
-
-    if (nSet == 0){
-        averagingOptions_p |= AveragingOptions::ModelUseNoWeights;
-    }
-
-
 }
 
 AveragingVi2Factory::AveragingVi2Factory (const AveragingParameters & parameters,
@@ -208,8 +220,7 @@ AveragingVi2Factory::createVi (VisibilityIterator2 * vi2) const
 
     vii2->setWeightScaling (parameters_p.getWeightScaling());
 
-    AveragingTvi2 * averagingTvi2 = new AveragingTvi2 (vi2, vii2, parameters_p.getAveragingInterval (),
-                                                       parameters_p.getOptions());
+    AveragingTvi2 * averagingTvi2 = new AveragingTvi2 (vi2, vii2, parameters_p);
 
     return averagingTvi2;
 }

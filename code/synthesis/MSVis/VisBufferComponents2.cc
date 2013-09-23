@@ -65,6 +65,12 @@ VisBufferComponents2::contains (VisBufferComponent2 component) const
     return utilj::containsKey (component, set_p);
 }
 
+Bool
+VisBufferComponents2::empty () const
+{
+    return set_p.empty();
+}
+
 VisBufferComponents2::const_iterator
 VisBufferComponents2::end () const
 {
@@ -180,6 +186,7 @@ VisBufferComponents2::name (Int id)
     names [Weight] = "Weight";
     names [WeightScaled] = "WeightScaled";
     names [WeightSpectrum] = "WeightSpectrum";
+    names [WeightSpectrumCorrected] = "WeightSpectrumCorrected";
     names [WeightSpectrumScaled] = "WeightSpectrumScaled";
     names [Uvw] = "Uvw";
     names [VisibilityCorrected] = "VisibilityCorrected";
@@ -231,6 +238,21 @@ VisBufferComponents2::these (VisBufferComponent2 component, ...)
 
     return dirtyComponents;
 }
+
+String
+VisBufferComponents2::toString () const
+{
+    String result = "{";
+
+    for (const_iterator i = begin(); i != end(); i++){
+        result += name (*i) + ",";
+    }
+
+    * result.rbegin() = '}'; // replace last "," with "}"
+
+    return result;
+}
+
 
 } // end namespace vi
 

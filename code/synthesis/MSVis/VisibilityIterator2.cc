@@ -1019,12 +1019,11 @@ VisibilityIterator2::weightSpectrum (Cube<Float>& wtsp) const
     impl_p->weightSpectrum (wtsp);
 }
 
-//void
 void
 VisibilityIterator2::weightSpectrumCorrected (Cube<Float>& wtsp) const
 {
     CheckImplementationPointerR ();
-    impl_p->weightSpectrum (wtsp);
+    impl_p->weightSpectrumCorrected (wtsp);
 }
 
 //void

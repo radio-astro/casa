@@ -40,6 +40,8 @@ public:
                   CorrectedUseNoWeights = 1 << 7, // Use no weights when averaging corrected data
                   CorrectedUseWeights = 1 << 8, // Use normal weights when averaging corrected data
                   CorrectedUseCorrectedWeights = 1 << 9, // Use corrected weights when averaging corrected data
+                  BaselineDependentAveraging = 1 << 10, // Do averaging with lengths dependent on baselines
+                                                        // Requires specifying a max uvw distance parameter
                   MarksLast
     };
 
@@ -109,10 +111,12 @@ public:
                          Double chunkInterval,
                          const SortColumns & sortColumns = SortColumns (),
                          const AveragingOptions & options = AveragingOptions (),
+                         Double maxUvwDistance = 0,
                          WeightScaling * weightScalingForAveraging = 0);
 
     Double getAveragingInterval () const;
     Double getChunkInterval () const;
+    Double getMaxUvwDistance () const;
     const AveragingOptions & getOptions() const;
     const SortColumns & getSortColumns () const;
     WeightScaling * getWeightScaling () const;
@@ -124,6 +128,7 @@ private:
     Double averagingInterval_p;
     AveragingOptions averagingOptions_p;
     Double chunkInterval_p;
+    Double maxUvwDistance_p;
     SortColumns sortColumns_p;
     WeightScaling * weightScaling_p;
 
