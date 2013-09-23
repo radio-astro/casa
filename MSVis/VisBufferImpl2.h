@@ -51,6 +51,10 @@ namespace asyncio {
     class VLAT;
 } // end namespace asyncio
 
+namespace ms {
+    class Vbi2MsRow;
+}
+
 namespace vi {
 
 //#forward
@@ -113,6 +117,7 @@ class VisBufferImpl2 : public VisBuffer2 {
 
     friend class VLAT; // for async i/o
     friend class casa::vi::avg::VbAvg;
+    friend class AveragingTvi2;
     friend class VbCacheItemBase;
     friend class VisBufferCache;
     friend class VisBufferState;
@@ -121,6 +126,7 @@ class VisBufferImpl2 : public VisBuffer2 {
     friend class VisBufferImpl2AsyncWrapper; // for async i/o
     friend class ViReadImpl;
     friend class ViReadImplAsync; // for async I/O
+    friend class casa::ms::Vbi2MsRow;
 
 public:
 
@@ -128,6 +134,11 @@ public:
     // Destructor (detaches from VisIter)
 
     virtual ~VisBufferImpl2();
+
+    void appendRow (ms::Vbi2MsRow * rowSrc, Int initialCapacity,
+                    const VisBufferComponents2 & optionalComponentsToCopy);
+    void appendRowsComplete ();
+    Int appendSize () const;
 
     virtual void associateWithVisibilityIterator2 (const VisibilityIterator2 & vi);
 
@@ -156,6 +167,9 @@ public:
     virtual const Vector<Int> & getChannelNumbers (Int rowInBuffer) const;
 
     virtual const VisibilityIterator2 * getVi () const;
+
+    ms::MsRow * getRow (Int row) const;
+    ms::MsRow * getRowMutable (Int row);
 
     virtual void invalidate();
 

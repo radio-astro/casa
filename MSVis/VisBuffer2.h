@@ -56,6 +56,11 @@ class MDirection;
 template <typename T, Int N> class SquareMatrix;
 template <typename T> class Vector;
 
+namespace ms {
+
+    class MsRow;
+}
+
 namespace vi {
 
 class Subchunk;
@@ -144,6 +149,9 @@ public:
     // Destructor (detaches from VisIter)
 
     virtual ~VisBuffer2() {}
+
+    virtual ms::MsRow * getRow (Int row) const;
+    virtual ms::MsRow * getRowMutable (Int row);
 
     //---------------------------------------------------------------------
     //

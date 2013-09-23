@@ -110,7 +110,9 @@ public:
 
     const_iterator begin () const;
     Bool contains (VisBufferComponent2 component) const;
+    Bool empty () const;
     const_iterator end () const;
+    String toString () const;
 
     static VisBufferComponents2 all ();
     static VisBufferComponents2 exceptThese (VisBufferComponent2 component, ...);
@@ -118,6 +120,7 @@ public:
     static VisBufferComponents2 none ();
     static VisBufferComponents2 singleton (VisBufferComponent2 component);
     static VisBufferComponents2 these (VisBufferComponent2 component, ...);
+
 
 protected:
 

@@ -1239,9 +1239,27 @@ VisibilityIteratorImpl2::allSpectralWindowsSelected (Vector<Int> & selectedWindo
 {
     const FrequencySelectionUsingChannels * selection =
         dynamic_cast <const FrequencySelectionUsingChannels *> (& frequencySelections_p->get (msId()));
-    Assert (selection != 0);
 
-    if (selection->empty()){
+    if (selection == 0){
+
+        // Since the frequency selection was not specified using channels, return the
+        // entire number of channels in the selected spectral windows.  This might be overkill
+        // but it should not cause false results to the caller.
+
+        const FrequencySelection & frequencySelection = frequencySelections_p->get (msId());
+        set<Int> windows = frequencySelection.getSelectedWindows();
+
+        casa::ms::SpectralWindows spectralWindows (& measurementSets_p [msId()]);
+
+        Int i = 0;
+        for (set<Int>::iterator j = windows.begin(); j != windows.end(); j++){
+            selectedWindows [i] = * j;
+            nChannels [i] = spectralWindows.get (* j).nChannels();
+        }
+    }
+    else if (selection->empty()){
+
+        // No explicit selection, so everything is selected.
 
         casa::ms::SpectralWindows spectralWindows (& measurementSets_p [msId()]);
 
@@ -1261,6 +1279,8 @@ VisibilityIteratorImpl2::allSpectralWindowsSelected (Vector<Int> & selectedWindo
         }
     }
     else {
+
+        // Use the explicit channel-based selection to compute the result.
 
         const FrequencySelection & frequencySelection = frequencySelections_p->get (msId());
         set<Int> windows = frequencySelection.getSelectedWindows();

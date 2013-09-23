@@ -8,13 +8,20 @@
 
 namespace casa {
 
+namespace ms {
+
+class MsRow;
+
+};
+
 namespace vi {
 
 class AveragingOptions;
 
 namespace avg {
 
-class VbSet;
+class MsRowAvg;
+class VbAvg;
 
 }
 
@@ -23,7 +30,7 @@ class AveragingTvi2 : public TransformingVi2 {
 public:
 
     AveragingTvi2 (VisibilityIterator2 * vi, ViImplementation2 * inputVii,
-                   Double averagingInterval, const AveragingOptions & averagingOptions);
+                   const AveragingParameters & averagingParameters);
     ~AveragingTvi2 ();
 
     /////////////////////////////////////////////////////////////////////////
@@ -62,6 +69,8 @@ protected:
 
     void advanceInputVii ();
     Int determineDdidToUse () const;
+    Bool inputExceedsTimeDistance (ms::MsRow * rowInput, avg::MsRowAvg * rowAveraged);
+    Bool inputExceedsUvwDistance (ms::MsRow * rowInput, avg::MsRowAvg * rowAveraged);
     void produceSubchunk ();
     void processInputSubchunk (const VisBuffer2 *);
     Bool reachedAveragingBoundary();
@@ -73,11 +82,13 @@ private:
 
     const Double averagingInterval_p; // averaging interval in seconds
     AveragingOptions averagingOptions_p;
+    AveragingParameters averagingParameters_p;
     Int ddidLastUsed_p; // ddId last used to produce a subchunk.
     Bool inputViiAdvanced_p; // true if input VII was advanced but data not used
+    Bool more_p;
     Subchunk subchunk_p;
     Bool subchunkExists_p;
-    avg::VbSet * vbSet_p;
+    avg::VbAvg * vbAvg_p;
     WeightScaling * weightScaling_p;
 };
 
