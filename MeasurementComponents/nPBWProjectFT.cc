@@ -955,10 +955,52 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     localPB.set(1.0);
 
+    // The following replaces the simple vlaPB.applyPB() call.
+    // The functional interface of VLACalcIllumination was
+    // modified to apply one polarization PB at a time.  As a
+    // result, the co-ord. sys. of the image going to applyPB()
+    // should have only one Poln. plane.
+    //
+    // Before this change, the localPB image was directly sent to
+    // applyPB(). Now, in the code below, we go over the poln. planes
+    // of this image, make a temp. image with one poln. planes of
+    // localPB at a time, applyPB() on the temp. image, and copy the
+    // result in the appropriate planes of the localPB image.  The rest
+    // of the code therefore does not see a difference.
     {
       VLACalcIlluminationConvFunc vlaPB;
       if (bandID_p == -1) bandID_p=getVisParams(vb);
-      vlaPB.applyPB(localPB, vb, bandID_p);
+      CoordinateSystem coords=localPB.coordinates();
+      //----------------------------------------------------------------------
+      IPosition PolnPlane(4,0,0,0,0);
+      CoordinateSystem singlePolCoords=coords;
+      Int index, outNdx, whichPolPlane=0;
+      Vector<Int> inStokes, outStokes(1);
+      index = coords.findCoordinate(Coordinate::STOKES);
+      inStokes = coords.stokesCoordinate(index).stokes();
+      for (Int i=0; i<inStokes.nelements(); i++)
+	{
+	  outStokes(0)=inStokes(i);
+	  // Make a temp. image with a single Stokes along Pol. axis.
+	  StokesCoordinate polnCoord(outStokes);
+	  outNdx = singlePolCoords.findCoordinate(Coordinate::STOKES);
+	  singlePolCoords.replaceCoordinate(polnCoord, outNdx);
+	  IPosition singlePolShape = localPB.shape();
+	  singlePolShape(2)=1;
+	  Bool doSquint=False;
+	  {
+	    TempImage<Float> singlePolImg(singlePolShape, singlePolCoords);
+	    // Copy screen to the single pol. image.  Apply PB to it.  Copy 
+	    // the single pol. image plane to the twoDPB image.
+	    singlePolImg.set(1.0);
+	    vlaPB.applyPB(singlePolImg, vb, bandID_p, doSquint);
+	    PolnPlane(2)=whichPolPlane;   localPB.putSlice(singlePolImg.get(), PolnPlane);
+	  }
+	  whichPolPlane++;
+	}
+      //----------------------------------------------------------------------
+
+      //      vlaPB.applyPB(localPB, vb, bandID_p);
     }
     
     IPosition twoDPBShape(localPB.shape());
@@ -1573,11 +1615,59 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//
 	// Apply the PB...
 	//
-	Bool doSquint=True;
-	vlaPB.applyPB(twoDPB, vb, bandID_p, doSquint);
-	doSquint = False;
-	//	vlaPB.applyPBSq(twoDPBSq, vb, bandID_p, doSquint);
-	vlaPB.applyPB(twoDPBSq, vb, bandID_p, doSquint);
+
+	// The following replaces the simple vlaPB.applyPB() call.
+	// The functional interface of VLACalcIllumination was
+	// modified to apply one polarization PB at a time.  As a
+	// result, the co-ord. sys. of the image going to applyPB()
+	// should have only one Poln. plane.
+	//
+	// Before this change, the twoDPB and twoDPBSq images were
+	// directly sent to applyPB(). Now, in the code below, we go
+	// over the poln. planes of these images, make a temp. image
+	// with the poln. planes of these images, applyPB() on the
+	// temp. image, and copy the result in the appropriate planes
+	// of the twoD* images.  The rest of the code therefore does
+	// not see a difference.
+	{
+	  CoordinateSystem singlePolCoords=coords;
+	  Int index, outNdx, whichPolPlane=0;
+	  Vector<Int> inStokes, outStokes(1);
+	  index = coords.findCoordinate(Coordinate::STOKES);
+	  inStokes = coords.stokesCoordinate(index).stokes();
+	  for (Int i=0; i<inStokes.nelements(); i++)
+	    {
+	      outStokes(0)=inStokes(i);
+	      // Make a temp. image with a single Stokes along Pol. axis.
+	      StokesCoordinate polnCoord(outStokes);
+	      outNdx = singlePolCoords.findCoordinate(Coordinate::STOKES);
+	      singlePolCoords.replaceCoordinate(polnCoord, outNdx);
+	      IPosition singlePolShape = pbSqShp;
+	      singlePolShape(2)=1;
+	      Bool doSquint=True;
+	      {
+		TempImage<Complex> singlePolImg(singlePolShape, singlePolCoords);
+		// Copy screen to the single pol. image.  Apply PB to it.  Copy 
+		// the single pol. image plane to the twoDPB image.
+		doSquint=True;
+		PolnPlane(2)=0;               singlePolImg.putSlice(screen, PolnPlane);
+		vlaPB.applyPB(singlePolImg, vb, bandID_p, doSquint);
+		PolnPlane(2)=whichPolPlane;   twoDPB.putSlice(singlePolImg.get(), PolnPlane);
+	      }
+	      {
+		TempImage<Complex> singlePolImg(singlePolShape, singlePolCoords);
+		// Copy screen to the single pol. image.  Apply PB to it.  Copy 
+		// the single pol. image plane to the twoDPBSq image.
+		doSquint = False;
+		PolnPlane(2)=0;               singlePolImg.putSlice(screen, PolnPlane);
+		//vlaPB.applyPBSq(twoDPBSq, vb, bandID_p, doSquint);
+		vlaPB.applyPB(singlePolImg, vb, bandID_p, doSquint);
+		PolnPlane(2)=whichPolPlane;   twoDPBSq.putSlice(singlePolImg.get(), PolnPlane);
+	      }
+
+	      whichPolPlane++;
+	    }
+	}
 	/*
 // 	twoDPB.put(abs(twoDPB.get()));
 // 	twoDPBSq.put(abs(twoDPBSq.get()));
