@@ -32,7 +32,7 @@
 #include <plotms/Data/MSCache.h>
 #include <plotms/Data/PlotMSCacheBase.h>
 #include <plotms/Threads/CacheThread.h>
-
+#include <QDebug>
 #include <fstream>
 
 namespace casa {
@@ -72,9 +72,8 @@ bool ActionCache::doActionSpecific( PlotMSApp* plotms ){
 			// given axes are not already loaded.  If releasing, make sure that the
 			// axes are loaded.
 			vector<pair<PMS::Axis, unsigned int> > loaded = cache.loadedAxes();
-			bool valid;
 			for(unsigned int i = 0; i < axes.size(); i++) {
-				valid = true;
+				bool valid = true;
 				for(unsigned int j = 0;  j < a.size(); j++){
 					if(a[j] == axes[i]){
 						valid = false;
@@ -86,7 +85,9 @@ bool ActionCache::doActionSpecific( PlotMSApp* plotms ){
 					valid = isAxesValid( loaded, i );
 				}
 
-				if(valid) a.push_back(axes[i]);
+				if(valid){
+					a.push_back(axes[i]);
+				}
 			}
 
 			// Make sure that currently used axes and/or meta-data isn't being
