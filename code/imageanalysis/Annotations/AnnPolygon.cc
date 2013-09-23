@@ -308,7 +308,7 @@ void AnnPolygon::_initCenterRectCorners(
 	Quantity wy = _lengthToAngle(widthy, dirAxes[1])/2;
 
 	Vector<MDirection> corners(4);
-	MDirection center(centerx, centery);
+	MDirection center(centerx, centery, _getDirectionRefFrame());
 	for (uInt i=0; i<4; i++) {
 		corners[i] = MDirection(center);
 		Int xsign = i == 0 || i == 3 ? -1 : 1;
