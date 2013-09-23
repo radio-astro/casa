@@ -328,14 +328,15 @@ namespace casa{
 		  Float phase;
 		  val = ap.aperture->getAt(tndx);
 		  Rval = ap.aperture->getAt(PolnRIndex);
-		  Lval = ap.aperture->getAt(PolnLIndex);
+		  //Lval = ap.aperture->getAt(PolnLIndex);
 		  phase = arg(Rval);  Rval=Complex(cos(phase),sin(phase));
-		  phase = arg(Lval);  Lval=Complex(cos(phase),sin(phase));
+		  //phase = arg(Lval);  Lval=Complex(cos(phase),sin(phase));
 		  
-		  if      (tndx(2)==0) ap.aperture->putAt(val*conj(Rval),tndx);
-		  else if (tndx(2)==1) ap.aperture->putAt(val*conj(Lval),tndx);
-		  else if (tndx(2)==2) ap.aperture->putAt(val*conj(Rval),tndx);
-		  else if (tndx(2)==3) ap.aperture->putAt(val*conj(Lval),tndx);
+		  // if      (tndx(2)==0) ap.aperture->putAt(val*conj(Rval),tndx);
+		  // else if (tndx(2)==1) ap.aperture->putAt(val*conj(Lval),tndx);
+		  // else if (tndx(2)==2) ap.aperture->putAt(val*conj(Rval),tndx);
+		  // else if (tndx(2)==3) ap.aperture->putAt(val*conj(Lval),tndx);
+		  ap.aperture->putAt(val*conj(Rval),tndx);
 		}
       }
     
