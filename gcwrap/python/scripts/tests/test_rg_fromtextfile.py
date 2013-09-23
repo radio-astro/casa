@@ -234,15 +234,18 @@ class rg_fromtextfile_test(unittest.TestCase):
         #center box
         self.ia.fromshape("",[200, 200])
         csys = self.ia.coordsys()
+        yval = "-3611.1455480499999arcmin"
+        xwidth = qa.tos(qa.mul(qa.quantity("104.48212727000009arcmin"),qa.cos(yval)))
         xx = rg.fromtext(
-            "centerbox[[5781.9970685749995arcmin, -3611.1455480499999arcmin],[104.48212727000009arcmin, 131.55903791999981arcmin]] coord=GALACTIC",
+            "centerbox[[5781.9970685749995arcmin, " + yval + "],[" + xwidth + ", 131.55903791999981arcmin]] coord=GALACTIC",
             csys=csys.torecord(), shape=self.ia.shape()
         )
         zz = self.ia.subimage("", region=xx)
         got = zz.getchunk(getmask=True)
-        self.ia.open(datapath + "rect_rot.im")
+        self.ia.open(datapath + "rect_rot2.im")
         expec = self.ia.getchunk(getmask=True)
         self.assertTrue((got == expec).all())
+        
         zz.done()
         self.ia.done()
         
