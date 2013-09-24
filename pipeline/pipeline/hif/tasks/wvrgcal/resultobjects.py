@@ -37,6 +37,9 @@ class WvrgcalResult(basetask.Results):
         self.flagging = []
         self.wvrflag = wvrflag
         self.view = collections.defaultdict(list)
+        
+        # record wvrgcal tie arguments for weblog 
+        self.tie = ''
 
     def merge_with_context(self, context):
         if not self.final:

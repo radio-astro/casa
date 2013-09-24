@@ -3,6 +3,7 @@ import atexit
 import collections
 import contextlib
 import datetime
+import json
 import math
 import operator
 import os
@@ -30,6 +31,7 @@ import pipeline.infrastructure.displays.image as image
 import pipeline.infrastructure.displays.summary as summary
 import pipeline.infrastructure.displays.slice as slicedisplay
 import pipeline.infrastructure.displays.tsys as tsys
+import pipeline.infrastructure.displays.wvr as wvr
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.renderer.rendererutils as rendererutils
@@ -1233,33 +1235,80 @@ class T2_4MDetailsWvrgcalflagRenderer(T2_4MDetailsDefaultRenderer):
         if not os.path.exists(plots_dir):
             os.mkdir(plots_dir)
 
-        plotter = image.ImageDisplay()
-        plots = []
         applications = []
+        flag_plots = {}
+        phase_offset_summary_plots = {}
+        baseline_summary_plots = {}
         for result in results:
-            if result.view:
-                plot = plotter.plot(context, result, reportdir=plots_dir, 
-                                    prefix='flag', change='Flagging')
-                plots.append(plot)
+            # if there's no WVR data, the pool will be empty
+            if not result.pool:
+                continue
+
+            vis = os.path.basename(result.inputs['vis'])
+            ms = context.observing_run.get_ms(vis)
 
             applications.extend(self.get_wvr_applications(result))
+            
+            if result.view:
+                flag_plotter = image.ImageDisplay()
+                plots = flag_plotter.plot(context, result, reportdir=plots_dir, 
+                                          prefix='flag', change='Flagging')
+                # sort plots by spw
+                flag_plots[vis] = sorted(plots, 
+                                         key=lambda p: int(p.parameters['spw']))
 
-        # Group the Plots by axes and plot types; each logical grouping will
-        # be contained in a PlotGroup  
-        plot_groups = logger.PlotGroup.create_plot_groups(plots)
-        for plot_group in plot_groups:
-            # Write the thumbnail pages for each plot grouping to disk 
-            renderer = PlotGroupRenderer(context, results, plot_group, 'flag')
-            plot_group.filename = renderer.filename
+            # generate the phase offset summary plots
+            phase_offset_summary_plotter = wvr.WVRSummaryChart(context, result)
+            phase_offset_summary_plots[vis] = phase_offset_summary_plotter.plot()
+
+            # generate the per-antenna phase offset plots
+            phase_offset_plotter = wvr.WVRChart(context, result)            
+            phase_offset_plots = phase_offset_plotter.plot() 
+            # write the html for each MS to disk
+            renderer = WvrgcalflagPhaseOffsetPlotRenderer(context, result, 
+                                                          phase_offset_plots)
             with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
+                fileobj.write(renderer.render())        
+
+            baseline_plotter = wvr.WVRPhaseVsBaselineChart(context, result)
+            baseline_plots = baseline_plotter.plot()
+            # write the html for each MS to disk
+            renderer = WvrgcalflagPhaseOffsetVsBaselinePlotRenderer(context, result, 
+                                                                    baseline_plots)
+
+            # get the first scan for the QA2 intent(s)
+            qa2_intent = set(result.inputs['qa2_intent'].split(','))
+            qa2_scan = sorted([scan.id for scan in ms.scans 
+                               if not qa2_intent.isdisjoint(scan.intents)])[0]                               
+            # scan parameter on plot is comma-separated string 
+            qa2_scan = str(qa2_scan)            
+            LOG.trace('Using scan %s for phase vs baseline summary '
+                      'plots' % qa2_scan)
+            baseline_summary_plots[vis] = [p for p in baseline_plots
+                                           if qa2_scan in set(p.parameters['scan'].split(','))]
+            
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())        
+
+        weblog_dir = os.path.join(context.report_dir,
+                                  'stage%s' % results.stage_number)
 
         # add the PlotGroups to the Mako context. The Mako template will parse
         # these objects in order to create links to the thumbnail pages we
         # just created
-        ctx.update({'plot_groups' : plot_groups,
-                    'applications' : applications})
+        ctx.update({'applications' : applications,
+                    'flag_plots' : flag_plots,
+                    'phase_offset_summary_plots' : phase_offset_summary_plots,
+                    'baseline_summary_plots' : baseline_summary_plots,
+                    'dirname' : weblog_dir})
+
         return ctx
+
+        # Phase vs time for the overview plot should be for the widest window
+        # at the highest frequency
+#         spws = sorted(ms.spectral_windows, 
+#                       key=operator.attrgetter('bandwidth', 'centre_frequency'))
+#         overview_spw = spws[-1]
 
     def get_wvr_applications(self, result):
         applications = []
@@ -1286,8 +1335,145 @@ class T2_4MDetailsWvrgcalflagRenderer(T2_4MDetailsDefaultRenderer):
         collect(result.final, True)
         collect(result.pool, False)
 
-        print applications
         return applications
+
+
+class WvrgcalflagPhaseOffsetPlotRenderer(object):
+    template = 'wvr_phase_offset_plots.html'
+
+    def __init__(self, context, result, plots):
+        self.context = context
+        self.result = result
+        self.plots = plots
+        self.ms = os.path.basename(self.result.inputs['vis'])
+
+        # all values set on this dictionary will be written to the JSON file
+        d = {}
+        for plot in plots:
+            # calculate the relative pathnames as seen from the browser
+            thumbnail_relpath = os.path.relpath(plot.thumbnail,
+                                                self.context.report_dir)
+            image_relpath = os.path.relpath(plot.abspath,
+                                            self.context.report_dir)
+            antenna_name = plot.parameters['ant']
+            spw_id = plot.parameters['spw']
+
+            ratio = 1.0 / plot.qa2_score
+
+            # Javascript JSON parser doesn't like Javascript floating point 
+            # constants (NaN, Infinity etc.), so convert them to null. We  
+            # do not omit the dictionary entry so that the plot is hidden
+            # by the filters.
+            if math.isnan(ratio) or math.isinf(ratio):
+                ratio = 'null'
+
+            d[image_relpath] = {'antenna'   : antenna_name,
+                                'spw'       : spw_id,
+                                'ratio'     : ratio,
+                                'thumbnail' : thumbnail_relpath}
+
+        self.json = json.dumps(d)
+         
+    def _get_display_context(self):
+        return {'pcontext'   : self.context,
+                'result'     : self.result,
+                'plots'      : self.plots,
+                'dirname'    : self.dirname,
+                'json'       : self.json}
+
+    @property
+    def dirname(self):
+        stage = 'stage%s' % self.result.stage_number
+        return os.path.join(self.context.report_dir, stage)
+    
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('phase_offsets-%s.html' % self.ms)
+        return filename
+    
+    @property
+    def path(self):
+        return os.path.join(self.dirname, self.filename)
+    
+    def get_file(self, hardcopy=True):
+        if hardcopy and not os.path.exists(self.dirname):
+            os.makedirs(self.dirname)
+            
+        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
+        return contextlib.closing(file_obj)
+    
+    def render(self):
+        display_context = self._get_display_context()
+        t = TemplateFinder.get_template(self.template)
+        return t.render(**display_context)
+
+
+class WvrgcalflagPhaseOffsetVsBaselinePlotRenderer(object):
+    template = 'wvr_phase_offset_vs_baseline_plots.html'
+
+    def __init__(self, context, result, plots):
+        self.context = context
+        self.result = result
+        self.plots = plots
+        self.ms = os.path.basename(self.result.inputs['vis'])
+
+        # all values set on this dictionary will be written to the JSON file
+        d = {}
+        for plot in plots:
+            # calculate the relative pathnames as seen from the browser
+            thumbnail_relpath = os.path.relpath(plot.thumbnail,
+                                                self.context.report_dir)
+            image_relpath = os.path.relpath(plot.abspath,
+                                            self.context.report_dir)
+            spw_id = plot.parameters['spw']
+            scan_id = plot.parameters['scan']
+
+            # Javascript JSON parser doesn't like Javascript floating point 
+            # constants (NaN, Infinity etc.), so convert them to null. We  
+            # do not omit the dictionary entry so that the plot is hidden
+            # by the filters.
+#             if math.isnan(ratio) or math.isinf(ratio):
+#                 ratio = 'null'
+
+            d[image_relpath] = {'spw'       : spw_id,
+                                'scan'      : scan_id,
+                                'thumbnail' : thumbnail_relpath}
+
+        self.json = json.dumps(d)
+         
+    def _get_display_context(self):
+        return {'pcontext'   : self.context,
+                'result'     : self.result,
+                'plots'      : self.plots,
+                'dirname'    : self.dirname,
+                'json'       : self.json}
+
+    @property
+    def dirname(self):
+        stage = 'stage%s' % self.result.stage_number
+        return os.path.join(self.context.report_dir, stage)
+    
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('phase_offsets_vs_baseline-%s.html' % self.ms)
+        return filename
+    
+    @property
+    def path(self):
+        return os.path.join(self.dirname, self.filename)
+    
+    def get_file(self, hardcopy=True):
+        if hardcopy and not os.path.exists(self.dirname):
+            os.makedirs(self.dirname)
+            
+        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
+        return contextlib.closing(file_obj)
+    
+    def render(self):
+        display_context = self._get_display_context()
+        t = TemplateFinder.get_template(self.template)
+        return t.render(**display_context)
+
 
 
 class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
@@ -1473,7 +1659,7 @@ class T2_4MDetailsTsyscalFlagchansRenderer(T2_4MDetailsDefaultRenderer):
     Renders detailed HTML output for the Tsysflag task.
     '''
     def __init__(self, template='t2-4m_details-hif_tsysflagchans.html',
-                 always_rerender=True):
+                 always_rerender=False):
         super(T2_4MDetailsTsyscalFlagchansRenderer, self).__init__(template,
                                                                    always_rerender)
 
@@ -1637,7 +1823,7 @@ class T2_4MDetailsTsyscalRenderer(T2_4MDetailsDefaultRenderer):
 
             # generate the per-antenna charts and JSON file
             plotter = tsys.ScoringTsysPerAntennaChart(context, result)
-            plots = plotter.plot()
+            plots = plotter.plot() 
             json_path = plotter.json_filename
 
             # write the html for each MS to disk

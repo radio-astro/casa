@@ -127,9 +127,11 @@ class MandatoryInputsMixin(object):
         if self._vis is not None:
             return self._vis
 
-        ms_names = [ms.name 
-                    for ms in self.context.observing_run.measurement_sets]
-        return ms_names[0] if len(ms_names) == 1 else ms_names
+        return [ms.name for ms in self.context.observing_run.measurement_sets]
+
+#         ms_names = [ms.name 
+#                     for ms in self.context.observing_run.measurement_sets]
+#         return ms_names[0] if len(ms_names) == 1 else ms_names
 
     @vis.setter    
     def vis(self, value):
@@ -139,10 +141,10 @@ class MandatoryInputsMixin(object):
         else:
             vislist = value if type(value) is types.ListType else [value,]
 
-        # check that the context holds each vis specified by the user
-        for vis in vislist:
-            # get_ms throws a KeyError if the ms is not in the context 
-            self.context.observing_run.get_ms(name=vis)
+            # check that the context holds each vis specified by the user
+            for vis in vislist:
+                # get_ms throws a KeyError if the ms is not in the context 
+                self.context.observing_run.get_ms(name=vis)
 
         # VISLIST_RESET_KEY is present when vis is set by handle_multivis.
         # In this case we do not want to reset my_vislist, as handle_multivis is

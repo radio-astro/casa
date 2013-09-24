@@ -226,17 +226,22 @@ FILTERS = (function () {
     };
 
 
-    module.HistogramFilter = function(scoreType) {
-        var min = -1e9,  // minimum allowed PNG score
-            max = 1e9,   // maximum allowed PNG score
-            that = this; // reference for anonymous functions
-
+    module.HistogramFilter = function(scoreType, extent) {
+        var min = -1e9,      // minimum allowed PNG score
+            max = 1e9,       // maximum allowed PNG score
+            that = this,     // reference for anonymous functions
+        	enabled = false; // whether filter is enabled 
+        
         // Set the filter range in response to external input, eg. someone
         // dragging the filter range in the histogram GUI.
         this.setRange = function (newMin, newMax) {
             min = newMin;
             max = newMax;
 
+            // only enable the filter if the filter range differs from the
+            // full extent of the histogram
+            that.enabled = !((min === extent[0]) && (max === extent[1]));
+            
             // notify subscribers (ie. the filter pipeline) that the filter
             // thresholds have changed, and so PNGs should be re-filtered
             // accordingly.
@@ -244,7 +249,11 @@ FILTERS = (function () {
         };
 
         this.isVisible = function (pngScoreDict) {
-            var score = pngScoreDict[scoreType];
+        	if (!that.enabled) {
+        		return true;
+        	}
+        	
+        	var score = pngScoreDict[scoreType];
             if ((score >= min) && (score <= max)) {
                 return true;
             } else {
@@ -655,20 +664,23 @@ ALL_IN_ONE = function() {
             var anchor = $("a[href='" + png + "']"),
                 score;
 
-            if (filter === undefined) {
+            if ((filter === undefined) || ($(anchor).is(filter))) {
                 score = scores_dict[png][key];
-                scores.push(score);
-            } else if ($(anchor).is(filter)) {
-                score = scores_dict[png][key];
-                scores.push(score);
+                if (score !== "null") {
+                	scores.push(score);
+            	}
             }
         }
         return scores;
     };
 
     var createHistogramGetter = function(scores_dict, key, nBins) {
-        var allScores = getData(scores_dict, key);
+        var allScores = getData(scores_dict, key);        
         var extent = d3.extent(allScores);
+        if ((extent[1] - extent[0]) === 0.0) {
+        	extent[0] = Math.min(extent[0], 0.9);
+        	extent[1] = Math.max(extent[1], 0.1);
+        }
         var histogram = d3.layout.histogram().bins(nBins).range(extent);
         var allDataHistogram = histogram(allScores);
         var that = {};
@@ -695,7 +707,12 @@ ALL_IN_ONE = function() {
         xAxisLabeller = xAxisLabeller || PLOTS.xAxisLabels["unknown"];
         var histogramGetter = createHistogramGetter(scores, score_key, 20);
 
-        var filter = new FILTERS.HistogramFilter(score_key);
+        // the histogram filter displays unscored plots (those plots with a
+        // score of null) when the histogram filter is disengaged. The 
+        // histogram filter needs the histogram extent in order to compare it
+        // to the filter range to know when the filter should be disengaged.
+        var extent = histogramGetter.getExtent();
+        var filter = new FILTERS.HistogramFilter(score_key, extent);
         pipeline.addFilter(filter);
 
         var histogram = PLOTS.Histogram(element_id, histogramGetter,

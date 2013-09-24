@@ -50,7 +50,7 @@ def is_pane_active(idx):
 		% for field_idx, field in enumerate(plots_dict.keys()):
 		<div class="tab-pane${is_pane_active(field_idx)}" id="field${field_idx}">
 
-			<h4>Frequency Selection:</h4>
+			<h4>Spectral Window:</h4>
 			<ul class="nav nav-pills">
 				% for spw_idx, spw in enumerate(utils.numericSort(plots_dict[field].keys())):
 				<li ${is_active(spw_idx)}>

@@ -4,6 +4,7 @@ import contextlib
 import copy
 import datetime
 import decimal
+import functools
 import itertools
 import math
 import operator
@@ -52,7 +53,7 @@ open_image = context_manager_factory(casatools.image)
 open_ms = context_manager_factory(casatools.ms)
 
 
-def commafy(l, quotes=True):
+def commafy(l, quotes=True, multi_prefix='', separator=', '):
     '''
     Return the textual description of the given list.
     
@@ -60,6 +61,10 @@ def commafy(l, quotes=True):
     '''
     if type(l) is not types.ListType and isinstance(l, collections.Iterable):
         l = [i for i in l]
+    
+    # turn 's' into 's '
+    if multi_prefix:
+        multi_prefix += ' '
     
     length = len(l)
     if length is 0:
@@ -71,14 +76,14 @@ def commafy(l, quotes=True):
             return '%s' % l[0]
     if length is 2:
         if quotes:
-            return '\'%s\' and \'%s\'' % (l[0], l[1])
+            return '%s\'%s\' and \'%s\'' % (multi_prefix, l[0], l[1])
         else:
-            return '%s and %s' % (l[0], l[1])
+            return '%s%s and %s' % (multi_prefix, l[0], l[1])
     else:
         if quotes:
-            return '\'%s\', %s' % (l[0], commafy(l[1:], quotes))
+            return '%s\'%s\'%s%s' % (multi_prefix, l[0], separator, commafy(l[1:], separator=separator, quotes=quotes))
         else: 
-            return '%s, %s' % (l[0], commafy(l[1:], quotes))
+            return '%s%s%s%s' % (multi_prefix, l[0], separator, commafy(l[1:], separator=separator, quotes=quotes))
 
 def find_ranges(data):
     try:
@@ -114,6 +119,29 @@ def get_epoch_as_datetime(epoch):
     t = datetime.datetime.utcfromtimestamp(qt.getvalue(t))
 
     return t
+
+def unix_seconds_to_datetime(unix_secs):
+    """
+    Return the input list, specified in seconds elapsed since 1970-01-01,
+    converted to the equivalent Python datetimes.
+    
+    If given a list, a list is returned. If given a scalar, a scalar is 
+    returned.
+    """   
+    datetimes = [datetime.datetime.fromtimestamp(s) for s in unix_secs]
+    return datetimes if len(unix_secs) > 1 else datetimes[0] 
+
+def mjd_seconds_to_datetime(mjd_secs):
+    """
+    Return the input list, specified in MJD seconds, converted to the 
+    equivalent Python datetimes.
+    
+    If given a list, a list is returned. If given a scalar, a scalar is 
+    returned.
+    """   
+    # 1970-01-01 is JD 40587. 86400 = seconds in a day
+    unix_offset = 40587 * 86400
+    return unix_seconds_to_datetime(mjd_secs - unix_offset)
 
 def total_time_on_source(scans):
     '''
@@ -287,4 +315,32 @@ def get_calfroms(inputs, caltypes=None):
     calfroms = (itertools.chain(*calstate.merged().values()))
     
     return [cf for cf in calfroms if cf.caltype in caltypes]
+    
+    
+class memoized(object):
+    '''
+    Function decorator. Caches a function's return value each time it is 
+    called. If called later with the same arguments, the cached value is 
+    returned (not re-evaluated).
+    '''
+    def __init__(self, func):
+        self.func = func
+        self.cache = {}
+    def __call__(self, *args):
+        if not isinstance(args, collections.Hashable):
+            # uncacheable. a list, for instance.
+            # better to not cache than blow up.
+            return self.func(*args)
+        if args in self.cache:
+            return self.cache[args]
+        else:
+            value = self.func(*args)
+            self.cache[args] = value
+            return value
+    def __repr__(self):
+        '''Return the function's docstring.'''
+        return self.func.__doc__
+    def __get__(self, obj, objtype):
+        '''Support instance methods.'''
+        return functools.partial(self.__call__, obj)
     

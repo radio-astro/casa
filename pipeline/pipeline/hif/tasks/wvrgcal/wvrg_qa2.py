@@ -83,6 +83,7 @@ def calculate_phase_rms(context, gaintable):
         fieldids.sort()
 
         for fieldid in fieldids:
+            # TODO replace this with ms.get_fields?
             fieldname = [fld.name for fld in fields if fld.id==fieldid][0]
 
             sb = table.query('FIELD_ID==%s' % fieldid)
