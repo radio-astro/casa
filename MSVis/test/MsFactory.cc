@@ -542,7 +542,8 @@ MsFactory::fillWeightSpectrumCorrectedCube (FillState & fillState)
 {
     if (! columns_p.weightSpectrumCorrected_p.isNull()){
 
-        fillCube (columns_p.weightSpectrumCorrected_p, fillState, generators_p.get(MSMainEnums::CORRECTED_WEIGHT_SPECTRUM));
+        fillCube (columns_p.weightSpectrumCorrected_p, fillState,
+                  generators_p.get(MSMainEnums::CORRECTED_WEIGHT_SPECTRUM));
     }
 }
 

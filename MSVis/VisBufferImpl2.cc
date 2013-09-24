@@ -2531,9 +2531,41 @@ VisBufferImpl2::fillWeight (Matrix<Float>& value) const
 void
 VisBufferImpl2::fillWeightSpectrum (Cube<Float>& value) const
 {
-  CheckVisIter ();
+    CheckVisIter ();
 
-  getViP()->weightSpectrum (value);
+    if (getViP()->weightSpectrumExists()){
+
+        getViP()->weightSpectrum (value);
+    }
+    else{
+
+        // Weight spectrum doesn't exist so create on using the weight column.
+
+        Matrix<Float> theWeights = weight();
+
+        // The weight is the sum of the weight across all channels
+        // so divide it evenly between the channels.
+
+        theWeights = theWeights / nChannels();
+
+        value.resize (IPosition (3, nCorrelations (), nChannels (), nRows()));
+
+        // Copy the apportioned weight value into the weight spectrum
+
+        for (Int row = 0; row < nRows(); row ++){
+
+            for (Int correlation = 0; correlation < nCorrelations (); correlation ++){
+
+                float theWeight = theWeights (correlation, row);
+
+                for (Int channel = 0; channel < nChannels(); channel ++){
+
+                    value (correlation, channel, row) = theWeight;
+                }
+
+            }
+        }
+    }
 }
 
 void
@@ -2646,7 +2678,7 @@ Bool
 VisBufferImpl2::weightSpectrumPresent () const
 {
     Bool present = cache_p->weightSpectrum_p.isPresent() ||
-                   (isAttached() && getVi()->existsWeightSpectrum());
+                   (isAttached() && getVi()->weightSpectrumExists());
 
     return present;
 }

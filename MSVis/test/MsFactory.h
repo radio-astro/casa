@@ -441,6 +441,7 @@ private:
             generatorMap_p [MSMainEnums::DATA] = new GenerateVisibility (0);
             generatorMap_p [MSMainEnums::WEIGHT] = new GenerateUsingRow<Float> (4);
             generatorMap_p [MSMainEnums::WEIGHT_SPECTRUM] = new GenerateWeightSpectrum ();
+            generatorMap_p [MSMainEnums::CORRECTED_WEIGHT_SPECTRUM] = new GenerateWeightSpectrumCorrected ();
 
         }
 
