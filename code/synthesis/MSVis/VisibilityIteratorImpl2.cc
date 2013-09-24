@@ -2591,7 +2591,7 @@ VisibilityIteratorImpl2::weightSpectrumCorrectedExists () const
 
     }
 
-    return cache_p.msHasWeightSpectrum_p;
+    return cache_p.msHasWeightSpectrumCorrected_p;
 }
 
 void

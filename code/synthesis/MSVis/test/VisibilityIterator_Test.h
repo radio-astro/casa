@@ -149,6 +149,23 @@ public:
     Bool noMoreData (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int nRowsProcessed);
 };
 
+class Weighting : public TestWidget {
+
+public:
+
+    Weighting (): TestWidget ("Weighting") {}
+
+    virtual boost::tuple <MeasurementSet *, Int, Bool> createMs ();
+
+    virtual String name () const { return "Weighting";}
+    virtual void nextSubchunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/);
+
+private:
+
+    MsFactory * msf_p;
+    Int nRowsToProcess_p;
+};
+
 class BasicMutation : public BasicChannelSelection
 {
 public:

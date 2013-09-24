@@ -194,6 +194,7 @@ Tester::sweepMs (TestWidget & tester)
     Block<const MeasurementSet *> mss;
     pair<Bool,Bool> result;
     Bool moreSweeps = False;
+    Subchunk subchunk;
 
     try {
 
@@ -229,6 +230,8 @@ Tester::sweepMs (TestWidget & tester)
 
                 for (vi->origin(); vi->more (); vi->next()){
 
+                    subchunk = vi->getSubchunkId();
+
                     nRowsProcessed += vb->nRows();
 
                     tester.nextSubchunk (* vi, vb);
@@ -246,8 +249,8 @@ Tester::sweepMs (TestWidget & tester)
     }
     catch (TestError & e){
 
-        fprintf (stderr, "*** TestError while executing test %s:\n-->%s\n",
-                 tester.name ().c_str(), e.what());
+        fprintf (stderr, "*** TestError at subchunk %s while executing test %s:\n-->%s\n",
+                 subchunk.toString().c_str(), tester.name ().c_str(), e.what());
         result = make_pair (False, False);
     }
     catch (AipsError & e){
@@ -318,6 +321,8 @@ Tester::doTests (int nArgs, char * args [])
         doTest<FrequencyChannelSelection> ();
 
         doTest<MultipleMss> ();
+
+        doTest<Weighting> ();
 
 #if 0
         int tests = PerformanceComparator::Both;
@@ -1419,6 +1424,83 @@ bool
 MultipleMss::usesMultipleMss () const {
     return True;
 }
+
+boost::tuple <MeasurementSet *, Int, Bool>
+Weighting::createMs ()
+{
+    system ("rm -r Weighting.ms");
+
+    msf_p = new MsFactory ("Weighting.ms");
+    msf_p->setIncludeAutocorrelations(True);
+    msf_p->addSpectralWindow("spw", 5, 0, 100, "LL RR RL LR");
+
+    msf_p->addWeightSpectrum(False);
+    msf_p->addCorrectedWeightSpectrum(True);
+
+    pair<MeasurementSet *, Int> p = msf_p->createMs ();
+    nRowsToProcess_p = p.second;
+    return boost::make_tuple (p.first, p.second, False);
+}
+
+void
+Weighting::nextSubchunk (VisibilityIterator2 & vi, VisBuffer2 * vb)
+{
+    TestErrorIf (vi.weightSpectrumExists(),
+                 "This test requires that the weight spectrum column not exist.");
+
+    TestErrorIf (! vi.weightSpectrumCorrectedExists(),
+                 "This test requires that the correctedweight spectrum column exist.");
+
+    const Matrix <Float> & weight = vb->weight();
+    const Cube <float> & weightSpectrum = vb->weightSpectrum();
+    IPosition wsShape = weightSpectrum.shape();
+    IPosition wShape = weight.shape();
+
+    TestErrorIf (wsShape (0) != wShape (0) || wsShape (2) != wShape (1),
+                 "Incompatible weight and weight spectrum shapes: " + wShape.toString() + " vs. "
+                 + wsShape.toString());
+
+    Int nCorrelations = wsShape (0);
+    Int nChannels = wsShape (1);
+    Int nRows = wsShape (2);
+    const Vector<uInt> & rowIds = vb->rowIds();
+
+    for (Int row = 0; row < nRows; row ++){
+        for (Int correlation = 0; correlation < nCorrelations; correlation ++){
+
+            Float sum = 0;
+
+            for (Int channel = 0; channel < nChannels; channel ++){
+                sum = sum + weightSpectrum (correlation, channel, row);
+            }
+
+            Float delta = abs ((sum - weight (correlation, row)) / weight (correlation, row));
+            TestErrorIf (delta > 1e5,
+                         String::format ("Sum of weight spectrum != weight at"
+                                         " row=%d, correlation=%d, delta=%f",
+                                         row, correlation, delta));
+        }
+    }
+
+    const Cube<Float> & correctedWeightSpectrum = vb->weightSpectrumCorrected();
+
+    for (Int row = 0; row < nRows; row ++){
+        for (Int correlation = 0; correlation < nCorrelations; correlation ++){
+            for (Int channel = 0; channel < nChannels; channel ++){
+
+                Float expected = rowIds(row) * 1000 /*+ spw * 100*/ + channel * 10 + correlation + 2;
+                Float actual = correctedWeightSpectrum (correlation, channel, row);
+
+                TestErrorIf (actual != expected,
+                             String::format ("CorrectedWeightSpectrum incorrect at "
+                                     "row=%d, channel=%d, correlation=%d;\n"
+                                     "expected=%f but got %f\n",
+                                     row, channel, correlation, expected, actual));
+            }
+        }
+    }
+}
+
 
 } // end namespace test
 } // end namespace vi

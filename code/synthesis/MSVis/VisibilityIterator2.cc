@@ -316,17 +316,17 @@ VisibilityIterator2::existsFlagCategory() const
 
 
 Bool
-VisibilityIterator2::existsWeightSpectrum () const
+VisibilityIterator2::weightSpectrumExists () const
 {
     CheckImplementationPointerR ();
-    return impl_p->existsColumn (WeightSpectrum);
+    return impl_p->weightSpectrumExists();
 }
 
 Bool
-VisibilityIterator2::existsWeightSpectrumCorrected () const
+VisibilityIterator2::weightSpectrumCorrectedExists () const
 {
     CheckImplementationPointerR ();
-    return impl_p->existsColumn (WeightSpectrumCorrected);
+    return impl_p->weightSpectrumCorrectedExists();
 }
 
 void
