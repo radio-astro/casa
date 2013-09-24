@@ -545,28 +545,25 @@ class rg_frombcs_test(unittest.TestCase):
         myreg = run_frombcs(
             image, "", "", "", "a", region
         )
-
-        gotblc = recToList(myreg["regions"]["*2"]["blc"])
-        expblc = [box9, box10]
-        self.compLists(gotblc, expblc);
-        gottrc = recToList(myreg["regions"]["*2"]["trc"])
-        exptrc = [box11, box12]
-        self.compLists(gottrc, exptrc)
-
-        gotblc = recToList(myreg["regions"]["*1"]["regions"]["*1"]["blc"])
-        expblc = [box1, box2]
-        self.compLists(gotblc, expblc);
-        gottrc = recToList(myreg["regions"]["*1"]["regions"]["*1"]["trc"])
-        exptrc = [box3, box4]
-        self.compLists(gottrc, exptrc);
-         
-        gotblc = recToList(myreg["regions"]["*1"]["regions"]["*2"]["blc"])
-        expblc = [box5, box6]
-        self.compLists(gotblc, expblc);
-        gottrc = recToList(myreg["regions"]["*1"]["regions"]["*2"]["trc"])
-        exptrc = [box7, box8]
-        self.compLists(gottrc, exptrc);
-        
+        myia = iatool()
+        myia.open(image)
+        subi = myia.subimage("xxyy.im", region=myreg)
+        myia.done()
+        self.assertTrue((subi.shape()[0:2] == [11, 11]).all())
+        got = subi.toworld([0,0])['numeric'][0:2]
+        expec = [box1, box2]
+        self.compLists(got, expec)
+        expec = [box11, box12]
+        got = subi.toworld([10,10])['numeric'][0:2]
+        self.compLists(got, expec)
+        gotmask = subi.getchunk(getmask=T)[:,:,0,0]
+        subi.done()
+        expmask = gotmask.copy()
+        expmask[:] = False
+        expmask[0:3, 0:3] = True
+        expmask[4:7, 4:7] = True
+        expmask[8:11, 8:11] = True
+        self.assertTrue((gotmask == expmask).all())
 
 def suite():
     return [rg_frombcs_test]

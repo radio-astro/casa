@@ -169,16 +169,24 @@ class simutil:
         bw="\x1b[0m"
 
         if toterm:
-            if origin:
-                print clr+"["+origin+"] "+bw+s
-            else:
-                print s
-
             if self.isreport():
                 if origin:
                     self.report.write("["+origin+"] "+s+"\n")
                 else:
                     self.report.write(s+"\n")
+
+            if s.count("ERROR"):
+                foo=s.split("ERROR")
+                s=foo[0]+"\x1b[31mERROR\x1b[0m"+foo[1]
+            if s.count("WARNING"):
+                foo=s.split("WARNING")
+                s=foo[0]+"\x1b[35mWARNING\x1b[0m"+foo[1]
+
+            if origin:
+                print clr+"["+origin+"] "+bw+s
+            else:
+                print s
+
 
         if priority=="ERROR":
             raise Exception, s

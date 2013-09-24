@@ -295,6 +295,14 @@ class ia_pv_test(unittest.TestCase):
         myia.done()
         self.assertTrue((got == expec).all())
 
+    def test_refpix_far_outside_image(self):
+        """Test refpix far outside image doesn't lead to malloc error, CAS-5251"""
+        myia = self.ia
+        myia.fromshape("",[50,50,1000])
+        csys = myia.coordsys()
+        csys.setreferencepixel([2000, 2000, 500])
+        myia.setcoordsys(csys.torecord())
+        pv = myia.pv(start=[5,5], end=[10,10])
 
         
     
