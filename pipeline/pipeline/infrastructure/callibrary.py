@@ -3,9 +3,10 @@ import collections
 import copy
 import itertools
 import os
+import re
 import string
 import types
-import re
+import weakref
 
 import asap
 
@@ -133,7 +134,8 @@ class CalApplication(object):
     
     @property
     def spwmap(self):
-        l = [cf.spwmap for cf in self.calfrom]
+        # we need to convert tuples back into lists for the CASA argument
+        l = [list(cf.spwmap) for cf in self.calfrom]
         return l[0] if len(l) is 1 else l 
 
     @property
@@ -260,60 +262,116 @@ class CalFrom(object):
         'KANTPOS JONES' : 'KAntPos Jones (antenna position errors)',
     }
 
-    __slots__ = ('_caltype', '_calwt', '_gainfield', 'gaintable', '_interp', 
-                 '_spwmap')
-      
-    def __getstate__(self):
-        return (self._caltype, self._calwt, self._gainfield, self.gaintable, 
-                self._interp, self._spwmap)
- 
-    def __setstate__(self, state):
-        (self._caltype, self._calwt, self._gainfield, self.gaintable, 
-         self._interp, self._spwmap) = state
+    # Hundreds of thousands of CalFroms can be created and stored in a context.
+    # To save memory, CalFrom uses a Flyweight pattern, caching objects in 
+    # _CalFromPool and returning a shared immutable instance for CalFroms
+    # constructed with the same arguments.
+    _CalFromPool = weakref.WeakValueDictionary()
+
+    @staticmethod
+    def _calc_hash(gaintable, gainfield, interp, spwmap, calwt):
+        result = 17
+        result = 37*result + hash(gaintable)
+        result = 37*result + hash(gainfield)
+        result = 37*result + hash(interp)
+        result = 37*result + hash(spwmap)
+        result = 37*result + hash(calwt)
+        return result
     
-    def __init__(self, gaintable, gainfield=None, interp=None, spwmap=None,
-                 caltype=None, calwt=None):
-        self.gaintable = gaintable
-        self.gainfield = gainfield
-        self.interp = interp
-        self.spwmap = spwmap
-        self.caltype = caltype
-        self.calwt = calwt
+    def __new__(cls, gaintable=None, gainfield='', interp='linear,linear', 
+                spwmap=[], caltype='unknown', calwt=True):
+        if gaintable is None:
+            raise ValueError, 'gaintable must be specified. Got None'
+        
+        if type(gainfield) is not types.StringType:
+            raise ValueError, 'gainfield must be a string. Got %s' % str(gainfield)
+
+        if type(interp) is not types.StringType:
+            raise ValueError, 'interp must be a string. Got %s' % str(interp)
+
+        if type(spwmap) is types.TupleType:
+            spwmap = [spw for spw in spwmap]
+
+        if not isinstance(spwmap, list):
+            raise ValueError, 'spwmap must be a list. Got %s' % str(spwmap)
+        # Flyweight instances should be immutable, so convert spwmap to a
+        # tuple. This also makes spwmap hashable for our hash function.
+        spwmap = tuple([o for o in spwmap])
+                
+        caltype = string.lower(caltype)
+        assert caltype in CalFrom.CALTYPES
+
+        arg_hash = CalFrom._calc_hash(gaintable, gainfield, interp, spwmap, 
+                                      calwt)
+        
+        obj = CalFrom._CalFromPool.get(arg_hash, None)
+        if not obj:
+            LOG.trace('Creating new CalFrom(gaintable=\'%s\', '
+                      'gainfield=\'%s\', interp=\'%s\', spwmap=%s, '
+                      'caltype=\'%s\', calwt=%s)' % 
+                (gaintable, gainfield, interp, spwmap, caltype, calwt))
+            obj = object.__new__(cls)
+            obj.__gaintable = gaintable
+            obj.__gainfield = gainfield
+            obj.__interp = interp
+            obj.__spwmap = spwmap
+            obj.__caltype = caltype
+            obj.__calwt = calwt
+
+            LOG.debug('Adding new CalFrom to pool: %s' % obj)
+            CalFrom._CalFromPool[arg_hash] = obj
+            LOG.trace('New pool contents: %s' % CalFrom._CalFromPool.items())
+        else:
+            LOG.trace('Reusing existing CalFrom(gaintable=\'%s\', '
+                      'gainfield=\'%s\', interp=\'%s\', spwmap=\'%s\', '
+                      'caltype=\'%s\', calwt=%s)' % 
+                (gaintable, gainfield, interp, spwmap, caltype, calwt))
+                        
+        return obj
+
+    __slots__ = ('__caltype', '__calwt', '__gainfield', '__gaintable', 
+                 '__interp', '__spwmap', '__weakref__')
+          
+    def __getstate__(self):
+        return (self.__caltype, self.__calwt, self.__gainfield, 
+                self.__gaintable, self.__interp, self.__spwmap)
+     
+    def __setstate__(self, state):
+        # a misguided attempt to clear stale CalFroms when loading from a
+        # pickle. I don't think this should be done here.
+#         # prevent exception with pickle format #1 by calling hash on properties
+#         # rather than the object
+#         (_, calwt, gainfield, gaintable, interp, spwmap) = state
+#         old_hash = CalFrom._calc_hash(gaintable, gainfield, interp, spwmap, calwt)
+#         if old_hash in CalFrom._CalFromPool:
+#             del CalFrom._CalFromPool[old_hash]
+
+        (self.__caltype, self.__calwt, self.__gainfield, self.__gaintable, 
+         self.__interp, self.__spwmap) = state
+
+    def __getnewargs__(self):
+        return (self.gaintable, self.gainfield, self.interp, self.spwmap, 
+                self.caltype, self.calwt)
+    
+    def __init__(self, *args, **kw):
+        pass
 
     @property
     def caltype(self):
-        return self._caltype
-    
-    @caltype.setter
-    def caltype(self, value):
-        if value is None:
-            value = 'unknown'
-        value = string.lower(value)
-        assert value in CalFrom.CALTYPES
-        self._caltype = value
+        return self.__caltype
 
     @property
     def calwt(self):
-        return self._calwt
+        return self.__calwt
     
-    @calwt.setter
-    def calwt(self, value):
-        if value is None:
-            value = True
-        self._calwt = value
-
     @property
     def gainfield(self):
-        return self._gainfield
+        return self.__gainfield
     
-    @gainfield.setter
-    def gainfield(self, value):
-        if value is None:
-            value = ''
-        if type(value) is not types.StringType:
-            raise ValueError, 'gainfield must be a string'
-        self._gainfield = value
-
+    @property
+    def gaintable(self):
+        return self.__gaintable
+    
     @staticmethod
     def get_caltype_for_viscal(viscal):
         s = string.upper(viscal)
@@ -324,47 +382,26 @@ class CalFrom(object):
 
     @property
     def interp(self):
-        return self._interp
+        return self.__interp
     
-    @interp.setter
-    def interp(self, value):
-        if value is None:
-            value = 'linear,linear'
-        if type(value) is not types.StringType:
-            raise ValueError, 'interp must be a string'
-        self._interp = value
-        
     @property
     def spwmap(self):
-        return self._spwmap
+        return self.__spwmap
     
-    @spwmap.setter
-    def spwmap(self, value):
-        if value is None:
-            value = []
-        if not isinstance(value, list):
-            raise ValueError, 'spwmap must be a list'
-        self._spwmap = value[:]
-
-    def __eq__(self, other):
-        return (self.gaintable == other.gaintable and
-                self.gainfield == other.gainfield and
-                self.interp    == other.interp    and
-                self.spwmap    == other.spwmap    and
-                self.calwt     == other.calwt)
+#     def __eq__(self, other):
+#         return (self.gaintable == other.gaintable and
+#                 self.gainfield == other.gainfield and
+#                 self.interp    == other.interp    and
+#                 self.spwmap    == other.spwmap    and
+#                 self.calwt     == other.calwt)
     
     def __hash__(self):
-        result = 17
-        result = 37*result + hash(self.gaintable)
-        result = 37*result + hash(self.gainfield)
-        result = 37*result + hash(self.interp)
-        result = 37*result + hash(tuple([o for o in self.spwmap]))
-        result = 37*result + hash(self.calwt)
-        return result
+        return CalFrom._calc_hash(self.gaintable, self.gainfield, self.interp,
+                                  self.spwmap, self.calwt)
 
     def __repr__(self):
-        return ('CalFrom(\'%s\', gainfield=\'%s\', interp=\'%s\', '
-                'spwmap=\'%s\', caltype=\'%s\', calwt=%s)' % 
+        return ('CalFrom(\'%s\', gainfield=\'%s\', interp=\'%s\', spwmap=%s, '
+                'caltype=\'%s\', calwt=%s)' % 
                 (self.gaintable, self.gainfield, self.interp, self.spwmap, 
                  self.caltype, self.calwt))
 
@@ -568,8 +605,10 @@ class CalLibrary(object):
                 for intent in calto.get_field_intents(field_id, spw_id):
                     for antenna_id in calto.antenna:
                         for cf in calfroms:
-                            cf_copy = copy.deepcopy(cf)
-                            calstate[ms_name][spw_id][field_id][intent][antenna_id].append(cf_copy)
+                            # now that we use immutable flyweights, we don't 
+                            # need the deepcopy
+#                             cf_copy = copy.deepcopy(cf)
+                            calstate[ms_name][spw_id][field_id][intent][antenna_id].append(cf)
 
         LOG.trace('Calstate after _add:\n'
                   '%s' % calstate.as_applycal())
@@ -648,16 +687,22 @@ class CalLibrary(object):
 
                         # Make the hash function ignore the ignored properties
                         # by setting their value to the default (and equal) 
-                        # value. As we're modifying the CalFrom state, we must
-                        # do this to a deepcopied object.  
-                        calfroms_copy = copy.deepcopy(calfroms_orig)
-                        for prop in ignore:
-                            for calfrom in calfroms_copy:
-                                setattr(calfrom, prop, None)
+                        # value.
+                        calfroms_copy = [self._copy_calfrom(cf, ignore) 
+                                         for cf in calfroms_orig]
 
                         result[ms_name][spw_id][field_id][intent][antenna_id] = calfroms_copy
 
         return result
+
+    def _copy_calfrom(self, to_copy, ignore=[]):
+        calfrom_properties = ['caltype', 'calwt', 'gainfield', 'gaintable',
+                              'interp', 'spwmap']
+        
+        copied = dict((k, getattr(to_copy, k)) for k in calfrom_properties 
+                      if k not in ignore)
+        
+        return CalFrom(**copied)
 
     def import_state(self, filename=None, append=False):
         filename = self._calc_filename(filename)

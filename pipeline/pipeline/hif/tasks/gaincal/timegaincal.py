@@ -7,6 +7,7 @@ from . import gaincalmode
 from . import gtypegaincal
 from pipeline.hif.heuristics import caltable as gcaltable
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.callibrary as callibrary
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -126,11 +127,13 @@ class TimeGaincal(gaincalworker.GaincalWorker):
 
         # Compute the science target phase solution
         targetphaseresult = self._do_scitarget_phasecal()
-	# Readjust to the true calto.intent
+        # Readjust to the true calto.intent
         targetphaseresult.pool[0].calto.intent = 'PHASE,TARGET'
-        targetphaseresult.final[0].calto.intent = 'PHASE,TARGET'
-        targetphaseresult.pool[0].calfrom[-1].calwt = False
-        targetphaseresult.final[0].calfrom[-1].calwt = False
+        targetphaseresult.final[0].calto.intent = 'PHASE,TARGET'        
+        # CalFroms are immutable, so we must replace them with a new 
+        # object rather than editing them directly
+        self._mod_last_calwt(targetphaseresult.pool[0], False)
+        self._mod_last_calwt(targetphaseresult.final[0], False)
 
         # Adopt the target phase result
         result.pool.extend(targetphaseresult.pool)
@@ -139,11 +142,11 @@ class TimeGaincal(gaincalworker.GaincalWorker):
         # Compute the calibrator target phase solution
         # A local merge to context is done here.
         calphaseresult = self._do_caltarget_phasecal()
-	# Readjust to the true calto.intent
+        # Readjust to the true calto.intent
         calphaseresult.pool[0].calto.intent = 'AMPLITUDE,BANDPASS'
         calphaseresult.final[0].calto.intent = 'AMPLITUDE,BANDPASS'
-        calphaseresult.pool[0].calfrom[-1].calwt = False
-        calphaseresult.final[0].calfrom[-1].calwt = False
+        self._mod_last_calwt(calphaseresult.pool[0], False)
+        self._mod_last_calwt(calphaseresult.final[0], False)
 
         # Accept calphase result as is.
         result.pool.extend(calphaseresult.pool)
@@ -260,3 +263,14 @@ class TimeGaincal(gaincalworker.GaincalWorker):
         result =  self._executor.execute(gaincal_task)
 
         return result
+
+    def _mod_last_calwt(self, l, calwt):
+        l.calfrom[-1] = self._copy_with_calwt(l.calfrom[-1], calwt)
+
+    def _copy_with_calwt(self, old_calfrom, calwt):
+        return callibrary.CalFrom(gaintable=old_calfrom.gaintable,
+                                  gainfield=old_calfrom.gainfield,
+                                  interp=old_calfrom.interp,
+                                  spwmap=list(old_calfrom.spwmap),
+                                  caltype=old_calfrom.caltype,
+                                  calwt=calwt)

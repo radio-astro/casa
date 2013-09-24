@@ -1,8 +1,10 @@
 from __future__ import absolute_import
+import os
 
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
-import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.utils as utils
 from pipeline.infrastructure import casa_tasks
 from . import common
 
@@ -124,7 +126,13 @@ class GaincalWorker(basetask.StandardTaskTemplate):
         
         missing = [table for table in result.pool
                    if table not in on_disk and not self._executor._dry_run]        
-        result.error.clear()
-        result.error.update(missing)
+        if missing:
+            l = len(missing)
+            msg = ('Gaincal output caltable%s %s %s missing' % 
+                   ('' if l is 1 else 's',
+                    utils.commafy([os.path.basename(ca.gaintable) for ca in missing], False),
+                    'is' if l is 1 else 'are'))
+            LOG.error(msg)
+            raise IOError(msg)
 
         return result
