@@ -345,6 +345,27 @@ template<class T> void operator+= (Array<T> &left, const Array<T> &other)
     arrayTransformInPlace (left, other, std::plus<T>());
 }
 
+
+template<class T>
+vector<T> operator+ (const vector<T> &left, const vector<T> &right) {
+	checkStdVectorSizes(left, right, "+");
+	vector<T> result(left.size());
+	std::transform(
+		left.begin(), left.end(), right.begin(),
+		result.begin(), std::plus<T>()
+	);
+	return result;
+}
+
+template<class T>
+vector<T> operator/ (const vector<T> &left, const T &right) {
+	vector<T> result(left.size());
+	std::transform(
+		left.begin(), left.end(), result.begin(), std::bind2nd( std::divides<T>(), right )
+	);
+	return result;
+}
+
 template<class T>  T min(const Array<T> &a)
     { T Min, Max; minMax(Min, Max, a); return Min; }
 

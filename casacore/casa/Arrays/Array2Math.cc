@@ -40,6 +40,11 @@ void throwArrayShapes (const char* name)
                                ": arrays not conformant");
 }
 
+void throwStdVectorSizes (const char* name)
+{
+  throw ArrayConformanceError ("ArrayMath/Logical function " + String(name) +
+                               ": std::vectors not conformant");
+}
 
 //# We could use macros to considerably reduce the number of lines, however
 //# that makes it harder to debug, understand, etc.
