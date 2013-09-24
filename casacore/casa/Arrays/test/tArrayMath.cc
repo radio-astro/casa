@@ -489,6 +489,40 @@ TestComplex(real, real, testDComplexReal, DComplex, Double)
 TestComplex(imag, imag, testDComplexImag, DComplex, Double)
 TestComplex(conj, conj, testDComplexConj, DComplex, DComplex)
 
+void testStdVectorPlus() {
+	vector<Int> a(3);
+	vector<Int> b(3);
+	a[0] = 0; a[1] = 1; a[2] = 2;
+	b[0] = 5; b[1] = 6; b[2] = 7;
+	vector<Int> c = a + b;
+	AlwaysAssertExit(
+		c.size() == 3 && c[0] == 5
+		&& c[1] == 7 && c[2] == 9
+	);
+	vector<int> d(2);
+	Bool caught = False;
+	try {
+		vector<int> e = a + d;
+		// exception should be thrown, shouldn't get here.
+		AlwaysAssertExit(False);
+	}
+	catch (const ArrayConformanceError& exc) {
+		caught = True;
+	}
+	AlwaysAssertExit(caught);
+
+}
+
+void testStdVectorDivide() {
+	vector<Int> a(3);
+	a[0] = 0; a[1] = 2; a[2] = 4;
+	vector<Int> b = a/2;
+	AlwaysAssertExit(
+		b.size() == 3 && b[0] == 0
+		&& b[1] == 1 && b[2] == 2
+	);
+}
+
 int main()
 {
   try {
@@ -563,7 +597,10 @@ int main()
     testMakeComplex<Float,Complex>();
     testMakeComplex<Double,DComplex>();
     testMinMax1();
-  } catch (AipsError x) {
+
+    testStdVectorPlus();
+    testStdVectorDivide();
+  } catch (const AipsError& x) {
     cout << "Unexpected exception: " << x.getMesg() << endl;
     return 1;
   }

@@ -2242,11 +2242,17 @@ Bool MSConcat::copySource(const MeasurementSet& otherms){
       if(refType>=MDirection::MERCURY && refType<MDirection::N_Planets){ // we have a solar system object
 	solSystObjects_p.define(fieldCols.sourceId()(i), (Int) refType);
       }
+      if(!fieldCols.ephemPath(i).empty()){ // this is an ephemeris object
+	solSystObjects_p.define(fieldCols.sourceId()(i), -2); // mark as -2
+      }	
     }
     for(uInt i=0; i<otherms.field().nrow(); i++){
       MDirection::Types refType = MDirection::castType(otherFieldCols.phaseDirMeas(i).getRef().getType());
       if(refType>=MDirection::MERCURY && refType<MDirection::N_Planets){ // we have a solar system object
 	solSystObjects_p.define(otherFieldCols.sourceId()(i)+maxSrcId+1, (Int) refType);
+      }
+      if(!fieldCols.ephemPath(i).empty()){ // this is an ephemeris object
+	solSystObjects_p.define(otherFieldCols.sourceId()(i)+maxSrcId+1, -2); // mark as -2
       }
     }
 
@@ -2324,7 +2330,8 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
 	  if (!rowToBeRemoved(k)){
 	    if(thisSPWIdB(j)==thisSPWIdB(k)){ // the SPW id is the same
 	      Int reftypek = solSystObjects_p(thisId(k));
-	      Bool sameSolSystObjects = (reftypek==reftypej) && (reftypek!=-1);
+	      Bool sameSolSystObjects = ((reftypek==reftypej) && (reftypek>-1)) // object with solar syst ref frame
+		|| ((reftypek==reftypej) && (reftypek==-2)); // ephemeris object
 	      if( sourceRowsEquivalent(sourceCol, j, k, sameSolSystObjects) ){ // and all columns are the same (not testing source, spw id, time, and interval)
 		//cout << "Found SOURCE rows " << j << " and " << k << " to be identical." << endl;
 
@@ -2389,7 +2396,8 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
 	for (uint k=j+1 ; k < newNumrows_this ; ++k){
 	  if(thisSourceId(j)!=thisSourceId(k)){
 	    Int reftypek = solSystObjects_p(thisId(k));
-	    Bool sameSolSystObjects = (reftypek==reftypej) && (reftypek!=-1);
+	    Bool sameSolSystObjects = ((reftypek==reftypej) && (reftypek>-1)) // object with solar syst ref frame
+	      || ((reftypek==reftypej) && (reftypek==-2)); // ephemeris object;
 	    if( sourceRowsEquivalent(sourceCol, j, k, sameSolSystObjects)){ 
 	                                          // all columns are the same except source id (not testing spw id),
 	                                          // spw id must be different, otherwise row would have been deleted above
