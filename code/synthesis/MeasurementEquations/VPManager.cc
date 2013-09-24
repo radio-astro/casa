@@ -675,6 +675,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			     const String& realimage, 
 			     const String& imagimage,
 			     const String& compleximage,
+			     const Vector<String>& antennaNames,
 			     Record& rec){
 
     ScopedMutexLock locker(mutex_p);
@@ -689,7 +690,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       rec.define("telescope", tel);
     }
     rec.define("dopb", dopb);
-    rec.define("isthisvp", False);
+    rec.define("isthisvp", True);
     if(compleximage==""){
       rec.define("realimage", realimage);
       rec.define("imagimage", imagimage);
@@ -697,6 +698,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else{
       rec.define("compleximage", compleximage);
     }
+    rec.define("antennanames", antennaNames);
 
     if(dopb){
       vplistdefaults_p.define(rec.asString(rec.fieldNumber("telescope")), vplist_p.nfields());
@@ -706,6 +708,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     return True;
     
+  }
+
+  Bool VPManager::imagepbinfo(Vector<Vector<String> >& names, Vector<Record>& imagebeams){
+    
+    ScopedMutexLock locker(mutex_p);
+    Int nRec=vplist_p.nfields();
+    Bool retval=False;
+    names=Vector<Vector<String> >(0);
+    imagebeams=Vector<Record>(0);
+    for(Int k=0; k< nRec; ++k){
+      Record elrec=vplist_p.asRecord(k);
+      
+      if(elrec.isDefined("name") && elrec.asString("name")== String("IMAGE")){
+	names.resize(names.nelements()+1, True);
+	imagebeams.resize(names.nelements(), True);
+	Vector<String> localstr;
+	elrec.get("antennanames", localstr);
+	names(names.nelements()-1)=localstr;
+	imagebeams[names.nelements()-1]=elrec;
+	retval=True;
+      }
+    }
+
+    return retval;
+     
+
   }
 
   Bool VPManager::setpbpoly(const String& telescope,
