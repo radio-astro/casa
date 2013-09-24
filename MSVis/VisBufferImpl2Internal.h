@@ -8,6 +8,8 @@
 #ifndef VISBUFFERIMPL2INTERNAL_H_
 #define VISBUFFERIMPL2INTERNAL_H_
 
+#include <cassert>
+
 namespace casa {
 
 namespace ms {
