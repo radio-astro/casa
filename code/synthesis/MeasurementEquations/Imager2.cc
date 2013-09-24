@@ -4290,7 +4290,7 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
   PBMath::CommonPB kpb;
   PBMath::enumerateCommonPB(telescop, kpb);
   if(!((kpb == PBMath::UNKNOWN) || 
-       (kpb==PBMath::OVRO) || (kpb==PBMath::ALMA) || (kpb==PBMath::ACA))){
+       (kpb==PBMath::OVRO) || (kpb==PBMath::ALMA) || (kpb==PBMath::ACA) || !doDefaultVP_p)){
     
     if(!gvp_p) {
       ROMSColumns msc(*ms_p);
@@ -4299,13 +4299,14 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
            << "Using defaults for primary beams used in gridding" << LogIO::POST;
 	gvp_p=new VPSkyJones(msc, True, parAngleInc_p, squintType_p,
                              skyPosThreshold_p);
-      } else {
+	    } /*else {
 	os << LogIO::NORMAL // Loglevel INFO
            << "Using VP as defined in " << vpTableStr_p <<  LogIO::POST;
 	Table vpTable( vpTableStr_p ); 
 	gvp_p=new VPSkyJones(msc, vpTable, parAngleInc_p, squintType_p,
                              skyPosThreshold_p);
       }
+	*/
     } 
     gvp_p->setThreshold(minPB_p);
   }
@@ -4314,9 +4315,9 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
 		      useDoublePrec);
 
   if((kpb == PBMath::UNKNOWN) || (kpb==PBMath::OVRO) || (kpb==PBMath::ACA)
-     || (kpb==PBMath::ALMA)){
+     || (kpb==PBMath::ALMA) || (!doDefaultVP_p)){
     os << LogIO::NORMAL // Loglevel INFO
-       << "Using antenna diameters for determining beams for gridding"
+       << "Using antenna primary beams for determining beams for gridding"
        << LogIO::POST;
     //Use 1D-Airy
     PBMathInterface::PBClass pbtype=PBMathInterface::AIRY;
@@ -4331,7 +4332,14 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
 
       }
     }
-    CountedPtr<SimplePBConvFunc> mospb=new HetArrayConvFunc(pbtype);
+    if(!doDefaultVP_p){
+      	pbtype=PBMathInterface::IMAGE;
+    }
+    else{
+      vpTableStr_p="";
+    }
+    CountedPtr<SimplePBConvFunc> mospb=new HetArrayConvFunc(pbtype, vpTableStr_p);
+	
     static_cast<MosaicFT &>(*ft_p).setConvFunc(mospb);
   }
   
@@ -4486,6 +4494,7 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
     // need theOldRefFrame,theObsTime,mObsPos,mode,nchan,start,width,restfreq,
     // outframe,veltype
     //
+    cerr << "ouframe " << outframe << " oldRefFrame " << oldRefFrame << endl;
 
     Bool rst=SubMS::calcChanFreqs(os,
 			   imgridfreqs, 

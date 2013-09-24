@@ -93,6 +93,9 @@ namespace casa {
 		      const Bool dosquint, const Quantity& paincrement, 
 		      const Bool usesymmetricbeam, Record& rec);
 
+      
+     
+
       Bool setpbinvpoly(const String& telescope, const String& othertelescope,
 			const Bool dopb, const Vector<Double>& coeff,
 			const Quantity& maxrad,
@@ -115,9 +118,13 @@ namespace casa {
 			const Bool usesymmetricbeam,
 			Record &rec);
 
+      ///antnames => Antenna names for which this PB image applies. "*" is for all 
       Bool setpbimage(const String& telescope, const String& othertelescope, 
 		      const Bool dopb, const String& realimage, 
-		      const String& imagimage, const String& compleximage, Record& rec);
+		      const String& imagimage, const String& compleximage, const Vector<String>& antnames,  Record& rec);
+      ///////Returns the image beam that the vpmananger has in state
+      ////// antnames contains the antenna names for which each element of the image beams apply
+      Bool imagepbinfo(Vector<Vector<String> >& antnames, Vector<Record>& imagebeams);
 
       Bool setpbpoly(const String& telescope, const String& othertelescope,
 		     const Bool dopb, const Vector<Double>& coeff,
