@@ -39,6 +39,8 @@
 #include <numeric>
 #include <functional>
 
+#include <vector>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template<class T> class Matrix;
@@ -193,6 +195,17 @@ inline void checkArrayShapes (const ArrayBase& left, const ArrayBase& right,
 }
 // </group>
 
+void throwStdVectorSizes (const char* name);
+
+template<typename T>
+inline void checkStdVectorSizes(
+	const vector<T>& left, const vector<T>& right,
+    const char* name
+) {
+  if (left.size() != right.size()) {
+    throwStdVectorSizes (name);
+  }
+}
 
 // Functions to apply a binary or unary operator to arrays.
 // They are modeled after std::transform.
@@ -412,6 +425,9 @@ template<class T>
   Array<T> operator^ (const Array<T> &left, const Array<T> &right);
 // </group>
 
+template<class T>
+  vector<T> operator+ (const vector<T> &left, const vector<T> &right);
+
 // 
 // Element by element arithmetic between an array and a scalar, returning
 // an array.
@@ -433,6 +449,11 @@ template<class T>
 template<class T> 
     Array<T> operator^ (const Array<T> &left, const T &right);
 // </group>
+
+
+template<class T>
+vector<T> operator/ (const vector<T> &left, const T &right);
+
 
 // 
 // Element by element arithmetic between a scalar and an array, returning
