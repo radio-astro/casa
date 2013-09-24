@@ -76,8 +76,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // form, reducing the knowledge necessary to perform powerful query
 // operations directly in TaQL.  It is also possible to supply pure
 // TaQL expression(s) as sub-expressions if required. For a complete
-// list of the STaQL interface refer to: <a
-// href="http://casa.nrao.edu/Memos/msselection/index.html">Data
+// list of the STaQL interface refer to the MeasurementSet Selection Syntax document at: <a
+// href="http://casa.nrao.edu/other_doc.shtml">Data
 // Selection</a>
 //
 // The sub-expressions are interpreted in the order which they were
