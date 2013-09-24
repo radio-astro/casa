@@ -715,6 +715,10 @@ Note that beamsquint must be intrinsic to the images themselves.
 This will be accounted for correctly by regridding of the images
 from Az-El to Ra-Dec according to the parallactic angle.
 
+antnames is the Vector of names  for which this response pattern apply '*' is for all 
+The name has to match exactly the name of the Antennas in the ANTENNA table of the MS with which
+you want to use this VPManager table or object.
+
 </description>
 <input>
 
@@ -746,6 +750,13 @@ from Az-El to Ra-Dec according to the parallactic angle.
      <param type="string" name="compleximage">
      <description>complex vp as an image of complex numbers; if specified realimage and imagimage are ignored </description>
      <value></value>
+     </param>
+     
+     <param type="stringArray" name="antnames">
+     <description>antenna names for which this pattern is valid; default is all antennas</description>
+     <value type="vector">
+       <value type="string">*</value>
+     </value>
      </param>
 
 </input>
