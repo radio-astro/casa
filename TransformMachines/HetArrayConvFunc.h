@@ -60,7 +60,7 @@ namespace casa{
   public:
     HetArrayConvFunc();
     HetArrayConvFunc(const PBMathInterface::PBClass 
-		     typeToUse);
+		     typeToUse, const String vpTable="");
     //Constructor from record
     //if for prediction only no need to recover fluxscale
     HetArrayConvFunc(const RecordInterface& rec, Bool calcFluxscale);
@@ -96,18 +96,20 @@ namespace casa{
       Int factorial(Int n);
       // the return value are -1 or False for not in cache yet but pointing direction 
       //seems to be inside image
-      // 1 if value is cached
+      // 1 if value is cached..we have stopped caching..so it should not return this value
       // 2 pointing is off image ...thus valid but not useful
       Int checkPBOfField(const VisBuffer& vb, Vector<Int>& rowMap);
       void findAntennaSizes(const VisBuffer& vb);
       void supportAndNormalize(Int plane, Int convSampling);
+      void supportAndNormalizeLatt(Int plane, Int convSampling, TempLattice<Complex>& convFuncLat,
+				   TempLattice<Complex>& weightConvFuncLat);
       void init(const PBMathInterface::PBClass typeToUse);
       void makerowmap(const VisBuffer& vb, Vector<Int>& rowMap);
       PBMathInterface::PBClass pbClass_p;
       //SimpleOrderedMap <String, Int> convFunctionMap_p;
       Vector<Int64> convFunctionMap_p;
       Int64 nDefined_p;
-      SimpleOrderedMap <Double, Int> antDiam2IndexMap_p;
+      SimpleOrderedMap <String, Int> antDiam2IndexMap_p;
       Vector<Int> antIndexToDiamIndex_p;
       Block<CountedPtr<PBMathInterface> > antMath_p;
       Int msId_p;
@@ -117,6 +119,7 @@ namespace casa{
       Array<Complex> convSave_p;
       Array<Complex> weightSave_p;
       Int convSize_p; 
+      String vpTable_p;
       Vector<Int> convSupport_p;
       Block <CountedPtr<Array<Complex> > > convFunctions_p;
       Block <CountedPtr<Array<Complex> > > convWeights_p;

@@ -64,11 +64,11 @@
 #include <synthesis/MSVis/VisibilityIterator.h>
 
 #include <synthesis/TransformMachines/Utils.h>
-
 #include <synthesis/TransformMachines/PBMath1DAiry.h>
 #include <synthesis/TransformMachines/PBMath1DNumeric.h>
 #include <synthesis/TransformMachines/PBMath2DImage.h>
 #include <synthesis/TransformMachines/HetArrayConvFunc.h>
+#include <synthesis/MeasurementEquations/VPManager.h>
 
 #include <casa/OS/Timer.h>
 
@@ -82,8 +82,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     init(PBMathInterface::AIRY);
   }
 
-  HetArrayConvFunc::HetArrayConvFunc(const PBMathInterface::PBClass typeToUse):
-    convFunctionMap_p(0), nDefined_p(0), antDiam2IndexMap_p(-1),msId_p(-1), actualConvIndex_p(-1)
+  HetArrayConvFunc::HetArrayConvFunc(const PBMathInterface::PBClass typeToUse, const String vpTable):
+    convFunctionMap_p(0), nDefined_p(0), antDiam2IndexMap_p(-1),msId_p(-1), actualConvIndex_p(-1), vpTable_p(vpTable)
   {
     calcFluxScale_p=True;
     init(typeToUse);
@@ -111,19 +111,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if(msId_p != vb.msId()){
       msId_p=vb.msId();
+      
       const ROMSAntennaColumns& ac=vb.msColumns().antenna();
-      //cerr << "K: Number of rows " << ac.nrow() << endl;
       antIndexToDiamIndex_p.resize(ac.nrow());
       antIndexToDiamIndex_p.set(-1);
       Int diamIndex=antDiam2IndexMap_p.ndefined();
       Vector<Double> dishDiam=ac.dishDiameter().getColumn();
+      Vector<String>dishName=ac.name().getColumn();
+      if(vpTable_p == ""){
+      ////////We'll be using dish diameter as key
       for (uInt k=0; k < dishDiam.nelements(); ++k){
-	if((diamIndex !=0) && antDiam2IndexMap_p.isDefined(dishDiam(k))){
-	  antIndexToDiamIndex_p(k)=antDiam2IndexMap_p(dishDiam(k));
+	if((diamIndex !=0) && antDiam2IndexMap_p.isDefined(String::toString(dishDiam(k)))){
+	    antIndexToDiamIndex_p(k)=antDiam2IndexMap_p(String::toString(dishDiam(k)));
 	}
 	else{
 	  if(dishDiam[k] > 0.0){ //there may be stations with no dish on
-	    antDiam2IndexMap_p.define(dishDiam(k), diamIndex);
+	    antDiam2IndexMap_p.define(String::toString(dishDiam(k)), diamIndex);
 	    antIndexToDiamIndex_p(k)=diamIndex;
 	    antMath_p.resize(diamIndex+1);
 	    if(pbClass_p== PBMathInterface::AIRY){
@@ -188,6 +191,64 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
 
+      }
+      else{// vptable specified 
+
+	VPManager *vpman=VPManager::Instance();
+	vpman->loadfromtable(vpTable_p);
+	Vector<Record> recs;
+	Vector<Vector<String> > antnames;
+
+	if(vpman->imagepbinfo(antnames, recs)){
+	  Vector<Bool> dishDefined(dishName.nelements(), False);
+	  Int nbeams=antnames.nelements();
+	  ///will be keying on file image file name here 
+	  for (uInt k=0; k < dishDiam.nelements(); ++k){
+	    String key;
+	    Bool beamDone=False;
+	    Int recordToUse=0;
+	    for (Int j =0; j < nbeams; ++j){
+	      key=recs[j].isDefined("realimage") ? recs[j].asString("realimage") : recs[j].asString("compleximage");
+	      if(antnames[j][0]=="*" || anyEQ(dishName[k], antnames[j])){
+		  dishDefined[k]=True;
+		  recordToUse=j;
+	      
+		  if((diamIndex !=0) && antDiam2IndexMap_p.isDefined(key)){
+		    antIndexToDiamIndex_p(k)=antDiam2IndexMap_p(key);
+		    beamDone=True;
+		  }
+	      }
+	    }
+	    if(!beamDone && dishDefined[k]){
+	      key=recs[recordToUse].isDefined("realimage") ? recs[recordToUse].asString("realimage") : recs[recordToUse].asString("compleximage");
+	      antDiam2IndexMap_p.define(key, diamIndex);
+	      antIndexToDiamIndex_p(k)=diamIndex;
+	      antMath_p.resize(diamIndex+1);
+	      if(recs[recordToUse].isDefined("realimage") && recs[recordToUse].isDefined("imagimage")){
+		PagedImage<Float> realim(recs[recordToUse].asString("realimage"));
+		PagedImage<Float> imagim(recs[recordToUse].asString("imagim"));
+		antMath_p[diamIndex]=new PBMath2DImage(realim, imagim);
+	      }
+	      else {
+		 antMath_p[diamIndex]=new PBMath2DImage(PagedImage<Complex>(recs[recordToUse].asString("compleximage")));
+	      }
+	      ++diamIndex;
+	    }
+	  }
+	  if(!allTrue(dishDefined)){
+	    //cerr << "dishDefined " << dishDefined << endl;
+	    throw(AipsError("Some Antennas in the MS did not have a VP defined")); 
+	  }
+	}
+	else{
+	  throw(AipsError("Mosaic does not support non-image voltage patterns yet"));
+	}
+	
+	//Get rid of the static class
+	vpman->reset();
+      }
+
+      //cerr << "antIndexTodiamIndex " << antIndexToDiamIndex_p << endl;
     }
     
     
@@ -224,7 +285,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     convFuncChanMap.resize(vb.nChannel());
     Vector<Double> beamFreqs;
     findUsefulChannels(convFuncChanMap, beamFreqs, vb, visFreq);
-    // cerr << "SPW " << vb.spectralWindow() << "   beamFreqs "<< beamFreqs <<  " chamMap " << convFuncChanMap << endl;
+    //cerr << "SPW " << vb.spectralWindow() << "   beamFreqs "<< beamFreqs <<  " chamMap " << convFuncChanMap << endl;
     Int nBeamChans=beamFreqs.nelements();
     /////For now not doing beam rotation or squints but to be enabled easily 
     convFuncPolMap.resize(vb.nCorr());
@@ -347,12 +408,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       IPosition pbShape(4, convSize_p, convSize_p, 1, nBeamChans);
       TempImage<Complex> twoDPB(pbShape, coords);    
     
-      convFunc_p.resize(IPosition(5, convSize_p, convSize_p, nBeamPols, nBeamChans, ndishpair));
-      convFunc_p=0.0;
-      weightConvFunc_p.resize(IPosition(5, convSize_p, convSize_p, nBeamPols, nBeamChans, ndishpair));
-      weightConvFunc_p=0.0;
+      
+      TempLattice<Complex> convFuncTemp(IPosition(5, convSize_p, convSize_p, nBeamPols, nBeamChans, ndishpair));
+      TempLattice<Complex> weightConvFuncTemp(IPosition(5, convSize_p, convSize_p, nBeamPols, nBeamChans, ndishpair));
+	//convFunc_p.resize(IPosition(5, convSize_p, convSize_p, nBeamPols, nBeamChans, ndishpair));
+       
+      // convFunc_p=0.0;
+      //weightConvFunc_p.resize(IPosition(5, convSize_p, convSize_p, nBeamPols, nBeamChans, ndishpair));
+      //weightConvFunc_p=0.0;
       IPosition begin(5, 0, 0, 0, 0, 0);
-      IPosition end(5, convFunc_p.shape()[0]-1,  convFunc_p.shape()[1]-1, nBeamPols-1, nBeamChans-1, 0);
+      //IPosition end(5, convFuncTemp.shape()[0]-1,  convFuncTemp.shape()[1]-1, nBeamPols-1, nBeamChans-1, 0);
       FFTServer<Float, Complex> fft(IPosition(2, convSize_p, convSize_p));
       TempImage<Complex> pBScreen(pbShape, coords);
       TempImage<Complex> pB2Screen(pbShape, coords);
@@ -430,11 +495,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    plane=plane+ndish-jj-1;
 	  plane=plane+j;
 	  begin[4]=plane;
-	  end[4]=plane;
+	  //end[4]=plane;
 	  //cerr <<  "SHAPES " << convFunc_p(begin, end).shape() << "  " << pBScreen.get(False).shape() << " begin and end " << begin << "    " << end << endl;
-	  convFunc_p(begin, end).copyMatchingPart(pBScreen.get(False));
-	  weightConvFunc_p(begin, end).copyMatchingPart(pB2Screen.get(False));
-	  supportAndNormalize(plane, convSampling);
+	  //convFunc_p(begin, end).copyMatchingPart(pBScreen.get(False));
+	  //weightConvFunc_p(begin, end).copyMatchingPart(pB2Screen.get(False));
+	  convFuncTemp.putSlice(pBScreen.get(False), begin);
+	  weightConvFuncTemp.putSlice(pB2Screen.get(False), begin);
+
+	  //	  supportAndNormalize(plane, convSampling);
+	  supportAndNormalizeLatt( plane, convSampling, convFuncTemp,  weightConvFuncTemp);
+
+
+
 	  //tim.show("After search of support ");
 	}
 	
@@ -452,12 +524,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      (convSize_p/2)-(newConvSize/2),0,0,0);
 	IPosition trc(5, (convSize_p/2)+(newConvSize/2-1),
 		      (convSize_p/2)+(newConvSize/2-1), nBeamPols-1, nBeamChans-1,ndishpair-1);
+	IPosition shp(5, newConvSize, newConvSize, nBeamPols, nBeamChans, ndishpair);
 	
 	convFunctions_p[actualConvIndex_p]= new Array<Complex>(IPosition(5, newConvSize, newConvSize, nBeamPols, nBeamChans, ndishpair ));
 	convWeights_p[actualConvIndex_p]= new Array<Complex>(IPosition(5, newConvSize, newConvSize, nBeamPols, nBeamChans, ndishpair ));
-	(*convFunctions_p[actualConvIndex_p])=convFunc_p(blc,trc);
+	(*convFunctions_p[actualConvIndex_p])=convFuncTemp.getSlice(blc,shp);
 	convSize_p=newConvSize;
-	(*convWeights_p[actualConvIndex_p])=weightConvFunc_p(blc,trc);
+	(*convWeights_p[actualConvIndex_p])=weightConvFuncTemp.getSlice(blc, shp);
 	convFunc_p.resize();
 	weightConvFunc_p.resize();
       }
@@ -577,7 +650,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        }
        rec.define("actualconvindex",  actualConvIndex_p);
        rec.define("donemainconv", doneMainConv_p);
-      
+       rec.define("vptable", vpTable_p);
        rec.define("pbclass", Int(pbClass_p));
        
     }
@@ -625,6 +698,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //rec.get("convsave", convSave_p);
       //weightSave_p.resize();
       //rec.get("weightsave", weightSave_p);
+      rec.get("vptable", vpTable_p);
       rec.get("donemainconv", doneMainConv_p);
       //convSupport_p.resize();
       //rec.get("convsupport", convSupport_p);
@@ -733,6 +807,111 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    end[3]=chan;
 	    convFunc_p(begin, end).set(0.0);
 	    weightConvFunc_p(begin, end).set(0.0);
+	  //convFunc_p.xyPlane(plane).set(0.0);
+	  //weightConvFunc_p.xyPlane(plane).set(0.0);
+	  }
+	}
+
+  }
+
+  void HetArrayConvFunc::supportAndNormalizeLatt(Int plane, Int convSampling, TempLattice<Complex>& convFuncLat,
+						 TempLattice<Complex>& weightConvFuncLat){
+
+    LogIO os;
+    os << LogOrigin("HetArrConvFunc", "suppAndNorm")  << LogIO::NORMAL;
+    // Locate support
+	Int convSupport=-1;
+	IPosition begin(5, 0, 0, 0, 0, plane);
+	IPosition shape(5, convFuncLat.shape()[0],  convFuncLat.shape()[1], 1, 1, 1);
+	Matrix<Complex> convPlane=convFuncLat.getSlice(begin, shape, True);
+	Float maxAbsConvFunc=max(amplitude(convPlane));
+	Float minAbsConvFunc=min(amplitude(convPlane));
+	Bool found=False;
+	Int trial=0;
+	for (trial=convSize_p/2-2;trial>0;trial--) {
+	  //Searching down a diagonal
+	  if(abs(convPlane(convSize_p/2-trial,convSize_p/2-trial)) >  (1.0e-2*maxAbsConvFunc)) {
+	    found=True;
+	    trial=Int(sqrt(2.0*Float(trial*trial)));
+	    break;
+	  }
+	}
+	if(!found){
+	  if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-2*maxAbsConvFunc)) 
+	  found=True;
+	  // if it drops by more than 2 magnitudes per pixel
+	  trial=( (10*convSampling) < convSize_p) ? 5*convSampling : (convSize_p/2 - 4*convSampling);
+	}
+       
+				 
+	if(found) {
+	  if(trial < 5*convSampling) 
+	    trial= ( (10*convSampling) < convSize_p) ? 5*convSampling : (convSize_p/2 - 4*convSampling);
+	  convSupport=Int(0.5+Float(trial)/Float(convSampling))+1;
+	  //support is really over the edge
+	  if( (convSupport*convSampling) >= convSize_p/2){
+	    convSupport=convSize_p/2/convSampling-1;
+	  }
+	}
+	else {
+	  /*
+	  os << "Convolution function is misbehaved - support seems to be zero\n"
+	     << "Reasons can be: \nThe image definition not covering one or more of the pointings selected \n"
+         << "Or no unflagged data in a given pointing"
+	     
+	     << LogIO::EXCEPTION;
+	  */
+	  //OTF may have flagged stuff ...
+	  convSupport=0;
+	}
+	//cerr << "trial " << trial << " convSupport " << convSupport << " convSize " << convSize_p << endl;
+	convSupport_p(plane)=convSupport;
+	Double pbSum=0.0;
+	/*
+	Double pbSum1=0.0;
+	
+	for (Int iy=-convSupport;iy<=convSupport;iy++) {
+	  for (Int ix=-convSupport;ix<=convSupport;ix++) {
+	    Complex val=convFunc_p.xyPlane(plane)(ix*convSampling+convSize_p/2,
+						  iy*convSampling+convSize_p/2);
+	
+	    pbSum1+=sqrt(real(val)*real(val)+ imag(val)*imag(val));
+	  }
+	}
+    
+	*/
+	if(convSupport >0){
+	  IPosition blc(2, -convSupport*convSampling+convSize_p/2, -convSupport*convSampling+convSize_p/2);
+	  IPosition trc(2, convSupport*convSampling+convSize_p/2, convSupport*convSampling+convSize_p/2);
+	  for (Int chan=0; chan < convFuncLat.shape()[3]; ++chan){
+	    begin[3]=chan;
+	    //end[3]=chan;
+	    convPlane.resize();
+	    convPlane=convFuncLat.getSlice(begin, shape, True);
+	    pbSum=real(sum(convPlane(blc,trc)))/Double(convSampling)/Double(convSampling);
+	    if(pbSum>0.0) {
+	      (convPlane)=convPlane*Complex(1.0/pbSum,0.0);
+	      convFuncLat.putSlice(convPlane, begin);
+	      convPlane.resize();
+	      convPlane=weightConvFuncLat.getSlice(begin, shape, True);
+	      (convPlane) =(convPlane)*Complex(1.0/pbSum,0.0);
+	      weightConvFuncLat.putSlice(convPlane, begin);
+	    }
+	    else {
+	      os << "Convolution function integral is not positive"
+		 << LogIO::EXCEPTION;
+	    }
+	  }
+	}
+	else{
+	  //no valid convolution for this pointing
+	  for (Int chan=0; chan < convFuncLat.shape()[3]; ++chan){
+	    begin[3]=chan;
+	    //end[3]=chan;
+	    convPlane.resize(shape[0], shape[1]);
+	    convPlane.set(0.0);
+	    convFuncLat.putSlice(convPlane, begin);
+	    weightConvFuncLat.putSlice(convPlane, begin);
 	  //convFunc_p.xyPlane(plane).set(0.0);
 	  //weightConvFunc_p.xyPlane(plane).set(0.0);
 	  }
