@@ -76,7 +76,8 @@ subsequent pre-applys if it gives a tangible improvement.</p>
 % else:
 <p>This measurement set does not contain any WVR data.</p>
 % endif
- 
+
+% if flag_plots or phase_offset_summary_plots or baseline_summary_plots:
 <h2>Plots</h2>
 
 <p>The pipeline tests whether application of WVR correction improves the data
@@ -173,10 +174,10 @@ caltables are presented below.</p>
 	<p>One plot is generated per scan, with data plotted per correlation and antenna 
 	as a function of mean baseline length for that antenna.</p>
 
-	<p>The lower section of these plots presents the median absolute deviation of the gaincal 
-	corrections with and without WVR correction. The upper plots are based on the RMS of the
-	deviations about the data median measured; points plot the ratio of the RMS deviations
-	before and after WVR correction.</p>
+	<p>The lower panel of these plots presents the median absolute deviation of the gaincal 
+	corrections with and without WVR correction applied. The upper panel data are based on the RMS of the
+	deviations about the data median; points plot the ratio of RMS deviations
+	with WVR correction to RMS deviations without WVR correction.</p>
 
 	<p>
 	Click the summary plots to enlarge them, or the summary plot title to show a gallery of phase
@@ -221,4 +222,6 @@ caltables are presented below.</p>
 	        % endfor
 	    </ul>
 	%endfor
+%endif
+
 %endif
