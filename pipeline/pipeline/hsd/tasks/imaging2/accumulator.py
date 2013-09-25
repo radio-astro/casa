@@ -37,17 +37,11 @@ class Accumulator(object):
         self.kernel = self.KernelType[kernel_type.lower()](kernel_width)
 
     def init(self, nrow):
-        #self.data = data
-        self.data_shape = (nrow,)
-        #self.channel_weight = numpy.ones(self.data_shape, dtype=numpy.float32)
-        self.row_weight = numpy.ones(self.data_shape[0], dtype=numpy.float32)
-
-        # make sure that minmaxclip doesn't clip whole data
-        self.minmaxclip = self.minmaxclip and self.data_shape[0] > 2
+        self.nrow = nrow
+        self.row_weight = numpy.ones(self.nrow, dtype=numpy.float32)
 
     def accumulate(self, indexlist, rmslist, deltalist, tsys_base, exposure_base):
-        num_axis0 = self.data_shape[0]
-        #num_axis1 = self.data_shape[1]
+        num_axis0 = self.nrow
 
         # 2013/06/03 TN
         # Calculate channel-independent weights first, then distribute it
@@ -77,20 +71,6 @@ class Accumulator(object):
         for m in xrange(num_axis0):
             factor = self.kernel.get_weight(deltalist[m])
             self.row_weight[m] *= factor
-
-        # Channel-dependent weights
-        #self.channel_weight *= self.row_weight.reshape((num_axis0,1))
-
-        # Currently only channel-dependent weight is minmax clipping
-        #if self.minmaxclip:
-        #    self.channel_weight[numpy.argmin(self.data, axis=0), xrange(num_axis1)] = 0.0
-        #    self.channel_weight[numpy.argmax(self.data, axis=0), xrange(num_axis1)] = 0.0
-        
-        # Combine Spectra
-        #if self.channel_weight.sum() != 0:
-        #    self.accumulated = (numpy.sum(self.data * self.channel_weight, axis=0) / numpy.sum(self.channel_weight, axis=0))
-        #else:
-        #    self.accumulated = numpy.zeros(num_axis1, dtype=numpy.float32)
 
         # Calculate RMS of the spectrum
         r0 = ((rmslist * self.row_weight) * (rmslist * self.row_weight)).sum()

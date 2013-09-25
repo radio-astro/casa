@@ -2,9 +2,7 @@ from __future__ import absolute_import
 
 import os
 import math
-# from math import cos, sqrt, exp
 import numpy
-import time
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.sdfilenamer as filenamer

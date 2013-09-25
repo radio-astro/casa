@@ -4,7 +4,6 @@ import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from pipeline.domain.datatable import DataTableImpl as DataTable
 from . import utils
 
 LOG = infrastructure.get_logger(__name__)
@@ -128,8 +127,9 @@ class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
         self._inspect_casa_version()
 
     def _setup_datatable(self):
-        context = self.inputs.context
-        observing_run = context.observing_run
+        pass
+        #ontext = self.inputs.context
+        #observing_run = context.observing_run
         #data_table = observing_run.datatable_instance
         #if data_table is None:
         #    name = observing_run.datatable_name

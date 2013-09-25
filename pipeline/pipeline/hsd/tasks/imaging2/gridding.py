@@ -6,7 +6,6 @@ import numpy
 import time
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.casatools as casatools
 from .. import common 
 
 from .accumulator import Accumulator
@@ -133,8 +132,6 @@ class GriddingBase(object):
         
         # create storage
         num_spectra = len(index_list)
-        num_data = len(DataIn)
-        #num_spectra_per_data = num_spectra / num_data
         _counter = 0
         _index = ants[0]
         num_spectra_per_data = []
@@ -147,7 +144,6 @@ class GriddingBase(object):
                 _index = ants[i]
         num_spectra_per_data.append(num_spectra - sum(num_spectra_per_data))
         LOG.trace('num_spectra_per_data=%s'%(num_spectra_per_data))
-        #SpStorage = numpy.zeros((num_spectra, self.nchan), dtype=numpy.float32)
 
         LOG.info('Processing %d spectra...' % num_spectra)
         
@@ -176,14 +172,10 @@ class GriddingBase(object):
         StorageID = 0
         for i in xrange(len(DataIn)):
             # read data to SpStorage
-            with casatools.TableReader(DataIn[i]) as tb:
-                #for j in xrange(num_spectra_per_data):
-                for j in xrange(num_spectra_per_data[i]):
-                    x = index_list[StorageID]
-                    #SpStorage[StorageID] = tb.getcell('SPECTRA', rows[StorageID])
-                    IDX2StorageID[x] = StorageID
-                    StorageID += 1
-                LOG.debug('Data Stored in SpStorage')
+            for j in xrange(num_spectra_per_data[i]):
+                x = index_list[StorageID]
+                IDX2StorageID[x] = StorageID
+                StorageID += 1
 
         # Create progress timer
         Timer = common.ProgressTimer(80, num_grid, loglevel)
@@ -191,14 +183,12 @@ class GriddingBase(object):
         for [IF, POL, X, Y, RAcent, DECcent, RowDelta] in GridTable:
             # RowDelta is numpy array
             if len(RowDelta) == 0:
-                #rowlist = []
                 indexlist = []
                 deltalist = []
                 rmslist = []
             else:
                 indexlist = numpy.array([IDX2StorageID[int(idx)] for idx in RowDelta[:,3]])
                 valid_index = numpy.where(net_flag[indexlist] == 1)[0]
-                #rowlist = numpy.array(RowDelta[:,0].take(valid_index),dtype=int)
                 indexlist = indexlist.take(valid_index)
                 deltalist = RowDelta[:,1].take(valid_index)
                 rmslist = RowDelta[:,2].take(valid_index)
@@ -210,20 +200,13 @@ class GriddingBase(object):
                 pass
             elif num_valid == 1:
                 # One valid Spectrum at the position
-                #StorageOut[ID] = SpStorage[0]
                 RMS = rmslist[0]
             else:
                 # More than one valid Spectra at the position
-                #data = SpStorage[indexlist]
-
                 # Data accumulation by Accumulator
-                #accum = Accumulator(clip.upper()=='MINMAXREJECT',
-                #                    rms_weight,
-                #                    tsys_weight)
                 accum.init(len(indexlist))
                 accum.accumulate(indexlist, rmslist, deltalist, tsys, exposure)
                 
-                #StorageOut[ID] = accum.accumulated
                 RMS = accum.rms
 
             OutputTable.append([IF, POL, X, Y, RAcent, DECcent, num_valid, num_flagged, RMS])
@@ -235,7 +218,6 @@ class GriddingBase(object):
 
         end = time.time()
         LOG.info('dogrid: elapsed time %s sec'%(end-start))
-        #return (StorageOut, OutputTable)
         return OutputTable
 
 class RasterGridding(GriddingBase):
@@ -319,7 +301,6 @@ class SinglePointGridding(GriddingBase):
         start = time.time()
 
         GridTable = []
-        NROW = len(index_list)
 
         NGridRA = 1
         NGridDEC = 1
@@ -353,7 +334,6 @@ class MultiPointGridding(GriddingBase):
         start = time.time()
 
         GridTable = []
-        NROW = len(index_list)
 
         NGridRA = 0
         NGridDEC = 1
