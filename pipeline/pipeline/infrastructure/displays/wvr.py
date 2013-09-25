@@ -33,7 +33,9 @@ class WVRScoreFinder(object):
         
         spw_viewlist = [viewlist for viewlist in self._delegate.view.values() 
                         if viewlist[0].spw==spw_id]
-        assert len(spw_viewlist) is 1, 'Unexpected number of views for spw %s' % spw_id
+        assert len(spw_viewlist) is 1, ('Unexpected number of views for spw '
+                                        '%s. Expected %s but got '
+                                        '%s' % (spw_id, 1, len(spw_viewlist)))
         LOG.todo('Is the QA2 score the first or last viewlist?')
         spw_imageresult = spw_viewlist[0][-1]
         
@@ -337,17 +339,17 @@ class WVRChart(WVRPlotBase):
 
         self._table_before = nowvr_gaintable
         self._table_after = wvr_gaintable
+        self._load_caltables()
         
         self._score_retriever = WVRScoreFinder(result)
 
     def plot(self, spw_ids=None, antenna_ids=None, antenna_names=None):
-        # get the windows this was tested on by looking at the calapp. For  
-        # pipeline reductions this is the science SPWs, but we can't make that
-        # assumption for interactive use where the user might have specified a
-        # different set of SPWs.
-        spw_args = ','.join(set([c.spw for c in self.result.nowvr_result.final]))
-        spws = self.ms.get_spectral_windows(spw_args, 
-                                            science_windows_only=False)
+        data_before = self._data_before
+        data_after = self._data_after
+
+        # get the windows this was tested on from the caltable.
+        spw_ids = set(data_before.spw).intersection(set(data_after.spw))
+        spws = [spw for spw in self.ms.spectral_windows if spw.id in spw_ids]
 
         qa2_scans = self._get_qa2_scans()
 
@@ -370,7 +372,6 @@ class WVRChart(WVRPlotBase):
         return [p for p in plots if p is not None]
     
     def create_plot(self, spw, scans, helper):
-        self._load_caltables()
         data_before = self._data_before
         data_after = self._data_after
 
@@ -631,13 +632,12 @@ class WVRSummaryChart(WVRChart):
                             '%s.phase_offset_summary.spw%s.png' % (vis, spw.id))
 
     def plot(self):
-        # get the windows this was tested on by looking at the calapp. For  
-        # pipeline reductions this is the science SPWs, but we can't make that
-        # assumption for interactive use where the user might have specified a
-        # different set of SPWs.
-        spw_args = ','.join(set([c.spw for c in self.result.nowvr_result.final]))
-        spws = self.ms.get_spectral_windows(spw_args, 
-                                            science_windows_only=False)
+        data_before = self._data_before
+        data_after = self._data_after
+
+        # get the windows this was tested on from the caltable.
+        spw_ids = set(data_before.spw).intersection(set(data_after.spw))
+        spws = [spw for spw in self.ms.spectral_windows if spw.id in spw_ids]
 
         qa2_scans = self._get_qa2_scans()
 
@@ -758,21 +758,15 @@ class WVRPhaseVsBaselineChart(WVRPlotBase):
         self._wrappers = []
 
     def plot(self):
-        # get the windows this was tested on by looking at the calapp. For  
-        # pipeline reductions this is the science SPWs, but we can't make that
-        # assumption for interactive use where the user might have specified a
-        # different set of SPWs.
-        spw_args = ','.join(set([c.spw for c in self.result.nowvr_result.final]))
-        spws = self.ms.get_spectral_windows(spw_args, 
-                                            science_windows_only=False)
-
         self._load_caltables()
-
-        qa2_scans = self._get_qa2_scans()
-        
-        # get y axis limits for phase offset and score
         data_before = self._data_before
         data_after = self._data_after
+
+        # get the windows this was tested on from the caltable.
+        spw_ids = set(data_before.spw).intersection(set(data_after.spw))
+        spws = [spw for spw in self.ms.spectral_windows if spw.id in spw_ids]
+
+        qa2_scans = self._get_qa2_scans()
 
         # phase offsets are plotted per corr, spw and scan. We cannot index
         # the phase arrays with multiple corr/spw/scans as the unwrapped
