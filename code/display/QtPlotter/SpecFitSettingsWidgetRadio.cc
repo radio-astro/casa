@@ -792,14 +792,16 @@ namespace casa {
 	    Vector<float>& xValues, Vector<float>& xValuesPix) {
 
 		//Iterate through all the fits and post the results
-		Array<ImageFit1D<Float> > image1DFitters = fitter-> getFitters();
-		Array<ImageFit1D<Float> >::iterator iterend( image1DFitters.end());
+		Array<std::tr1::shared_ptr<ImageFit1D<Float> > > image1DFitters = fitter-> getFitters();
+		Array<std::tr1::shared_ptr<ImageFit1D<Float> > >::iterator iterend( image1DFitters.end());
 		uint fitIndex = 0;
 		bool successfulFit = false;
-		for ( Array<ImageFit1D<Float> >::iterator iter = image1DFitters.begin(); iter != iterend; ++iter ) {
-			ImageFit1D<Float> image1DFitter = *iter;
-
-			SpectralList solutions = image1DFitter.getList();
+		for ( Array<std::tr1::shared_ptr<ImageFit1D<Float> > >::iterator iter = image1DFitters.begin(); iter != iterend; ++iter ) {
+            std::tr1::shared_ptr<ImageFit1D<Float> > image1DFitter = *iter;
+            if (! image1DFitter) {
+                continue;
+            }
+			SpectralList solutions = image1DFitter->getList();
 
 			//Find the center of the fit in pixels.
 			int successCount = 0;
