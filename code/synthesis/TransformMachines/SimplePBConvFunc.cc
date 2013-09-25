@@ -777,8 +777,8 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
        convFunctionMap_p=SimpleOrderedMap<String, Int>(-1);
        vbConvIndex_p.erase(vbConvIndex_p.begin(), vbConvIndex_p.end());
        for (Int k=0; k < numConv; ++k){
-	 convFunctions_p[k]=new Cube<Complex>();
-	 convWeights_p[k]=new Cube<Complex>();
+	 convFunctions_p[k]=new Array<Complex>();
+	 convWeights_p[k]=new Array<Complex>();
 	 convSizes_p[k]=new Vector<Int>();
 	 convSupportBlock_p[k]=new Vector<Int>();
 	 rec.get("convfunctions"+String::toString(k), *(convFunctions_p[k]));

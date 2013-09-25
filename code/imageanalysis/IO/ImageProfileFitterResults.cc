@@ -51,7 +51,7 @@ const uInt ImageProfileFitterResults::_lsPlane = 1;
 
 ImageProfileFitterResults::ImageProfileFitterResults(
 	const std::tr1::shared_ptr<LogIO> log, const CoordinateSystem& csysIm,
-	const Array<ImageFit1D<Float> >* const &fitters, const SpectralList& nonPolyEstimates,
+	const Array<std::tr1::shared_ptr<ImageFit1D<Float> > >* const &fitters, const SpectralList& nonPolyEstimates,
 	const std::tr1::shared_ptr<const SubImage<Float> > subImage, Int polyOrder, Int fitAxis,
 	uInt nGaussSinglets, uInt nGaussMultiplets, uInt nLorentzSinglets,
 	uInt nPLPCoeffs, uInt nLTPCoeffs,
@@ -178,7 +178,7 @@ void ImageProfileFitterResults::_marshalFitResults(
     IPosition inTileShape = _subImage->niceCursorShape();
 	TiledLineStepper stepper (_subImage->shape(), inTileShape, _fitAxis);
 	RO_MaskedLatticeIterator<Float> inIter(*_subImage, stepper);
-	Vector<ImageFit1D<Float> >::const_iterator fitter = _fitters->begin();
+	Vector<std::tr1::shared_ptr<ImageFit1D<Float> > >::const_iterator fitter = _fitters->begin();
 	uInt count = 0;
 	const CoordinateSystem& csysSub = _subImage->coordinates();
 	const DirectionCoordinate *dcoord = csysSub.hasDirectionCoordinate()
@@ -193,18 +193,21 @@ void ImageProfileFitterResults::_marshalFitResults(
 	directionInfo.resize(returnDirection ? _fitters->size() : 0);
 	String latitude, longitude;
 	Double increment = fabs(_fitAxisIncrement());
-	Vector<ImageFit1D<Float> >::const_iterator end = _fitters->end();
+	Vector<std::tr1::shared_ptr<ImageFit1D<Float> > >::const_iterator end = _fitters->end();
 	for (
 		inIter.reset();
 		! inIter.atEnd() && fitter != end;
 		inIter++, fitter++, count++
 	) {
+		if (! *fitter) {
+			continue;
+		}
 		IPosition idx(1, count);
-		attemptedArr(idx) = fitter->getList().nelements() > 0;
-		successArr(idx) = fitter->succeeded();
+		attemptedArr(idx) = (*fitter)->getList().nelements() > 0;
+		successArr(idx) = (*fitter)->succeeded();
 		convergedArr(idx) = attemptedArr(idx) && successArr(idx)
-			&& fitter->converged();
-		validArr(idx) = convergedArr(idx) && fitter->isValid();
+			&& (*fitter)->converged();
+		validArr(idx) = convergedArr(idx) && (*fitter)->isValid();
 
 		pixel = inIter.position();
 		if (csysSub.toWorld(world, pixel)) {
@@ -243,9 +246,9 @@ void ImageProfileFitterResults::_marshalFitResults(
 		if (validArr(idx)) {
 			IPosition subimPos = inIter.position();
 			mask(idx) = anyTrue(inIter.getMask());
-			niterArr(idx) = (Int)fitter->getNumberIterations();
-			nCompArr(idx) = (Int)fitter->getList().nelements();
-			SpectralList solutions = fitter->getList();
+			niterArr(idx) = (Int)(*fitter)->getNumberIterations();
+			nCompArr(idx) = (Int)(*fitter)->getList().nelements();
+			SpectralList solutions = (*fitter)->getList();
 			uInt gCount = 0;
 			uInt gmCount = 0;
 			uInt lseCount = 0;
@@ -438,7 +441,6 @@ void ImageProfileFitterResults::_setResults() {
 	typeShape.resize(shape.size() + 1, True);
 	typeShape[typeShape.size() - 1] = nComps;
 	_results.define( "type", typeMat.reform(typeShape));
-
 	for (uInt i=0; i<_nGaussMultiplets+_nOthers; i++) {
 		if (i == _gsPlane && _nGaussSinglets == 0) {
 			continue;
@@ -543,6 +545,24 @@ void ImageProfileFitterResults::_insertPCF(
 	pcfMatrices[INTEGRALERR][idx](row, col) = pcf.getIntegralErr() * increment;
 }
 
+Array<Bool> ImageProfileFitterResults::_replicateMask(
+	const Array<Bool>& array, Int n
+) {
+	uInt axis = array.ndim() - 1;
+	IPosition newShape = array.shape();
+	newShape[axis] = n;
+	Array<Bool> extended(newShape);
+	IPosition begin(newShape.size(), 0);
+	IPosition end = newShape - 1;
+	for (Int j=0; j<n; j++) {
+		begin[axis] = j;
+		end[axis] = j;
+		extended(begin, end) = array;
+	}
+	return extended;
+}
+
+
 void ImageProfileFitterResults::_writeImages(
 	const CoordinateSystem& xcsys,
 	const Array<Bool>& mask, const String& yUnit
@@ -559,7 +579,6 @@ void ImageProfileFitterResults::_writeImages(
 	CoordinateSystem mycsys = CoordinateSystem(xcsys);
 
 	mycsys.addCoordinate(componentCoord);
-
 	map<String, String> mymap;
 	map<String, String> unitmap;
 	mymap["center"] = _centerName;
@@ -571,7 +590,6 @@ void ImageProfileFitterResults::_writeImages(
 	mymap["integral"] = _integralName;
 	mymap["integralErr"] = _integralErrName;
 	mymap["center"] = _centerName;
-
 	unitmap["center"] = _xUnit;
 	unitmap["centerErr"] = _xUnit;
 	unitmap["fwhm"] = _xUnit;
@@ -589,22 +607,12 @@ void ImageProfileFitterResults::_writeImages(
 		}
 		String id = _getTag(i);
 		IPosition maskShape = _results.asRecord(id).asArrayDouble("amp").shape();
-		//Array<Bool> fMask(maskShape);
-		//uInt n = maskShape[maskShape.size()-1];
+
 		maskShape[maskShape.size()-1] = 1;
 		Array<Bool> reshapedMask = mask.reform(maskShape);
 		AlwaysAssert(ntrue(mask) == ntrue(reshapedMask), AipsError);
-
-		/*
-		//IPosition shape = fMask.shape();
-		IPosition begin(maskShape.size(), 0);
-		IPosition end = maskShape - 1;
-		for (uInt j=0; j<n; j++) {
-			begin[maskShape.size() - 1] = j;
-			end[maskShape.size() - 1] = j;
-			fMask(begin, end) = reshapedMask;
-		}
-		*/
+		uInt n = maskShape[maskShape.size()-1];
+		Array<Bool> fMask = _replicateMask(reshapedMask, n);
 
 		for (
 			map<String, String>::const_iterator iter=mymap.begin();
@@ -623,7 +631,7 @@ void ImageProfileFitterResults::_writeImages(
 				_makeSolutionImage(
 					imagename, mycsys,
 					_results.asRecord(id).asArrayDouble(iter->first),
-					unitmap.find(iter->first)->second, reshapedMask
+					unitmap.find(iter->first)->second, fMask
 				);
 			}
 		}
@@ -638,31 +646,35 @@ void ImageProfileFitterResults::_writeImages(
 		Array<Bool> reshapedMask = mask.reform(maskShape);
 		AlwaysAssert(ntrue(mask) == ntrue(reshapedMask), AipsError);
 		if (_nPLPCoeffs > 0 && ! _plpName.empty()) {
+			Array<Bool> fMask = _replicateMask(reshapedMask, _nPLPCoeffs);
 			_makeSolutionImage(
 				_plpName, mycsys,
 				_results.asRecord("plp").asArrayDouble("solution"),
-				"", reshapedMask
+				"", fMask
 			);
 		}
 		if (_nPLPCoeffs > 0 && ! _plpErrName.empty()) {
+			Array<Bool> fMask = _replicateMask(reshapedMask, _nPLPCoeffs);
 			_makeSolutionImage(
 				_plpErrName, mycsys,
 				_results.asRecord("plp").asArrayDouble("error"),
-				"", reshapedMask
+				"", fMask
 			);
 		}
 		if (_nLTPCoeffs > 0 && ! _ltpName.empty()) {
+			Array<Bool> fMask = _replicateMask(reshapedMask, _nLTPCoeffs);
 			_makeSolutionImage(
 				_ltpName, mycsys,
 				_results.asRecord("ltp").asArrayDouble("solution"),
-				"", reshapedMask
+				"", fMask
 			);
 		}
 		if (_nLTPCoeffs > 0 && ! _ltpErrName.empty()) {
+			Array<Bool> fMask = _replicateMask(reshapedMask, _nLTPCoeffs);
 			_makeSolutionImage(
 				_ltpErrName, mycsys,
 				_results.asRecord("ltp").asArrayDouble("error"),
-				"", reshapedMask
+				"", fMask
 			);
 		}
 	}
@@ -779,7 +791,7 @@ void ImageProfileFitterResults::_resultsToLog() {
 			pixStart[i] = (Int)std::floor( pixStart[i] + 0.5);
 		}
 	}
-	Vector<ImageFit1D<Float> >::const_iterator fitter = _fitters->begin();
+	Vector<std::tr1::shared_ptr<ImageFit1D<Float> > >::const_iterator fitter = _fitters->begin();
 	Vector<Double> imPix(pixStart.size());
 	Vector<Double> world;
 	IPosition subimPos;
@@ -788,13 +800,15 @@ void ImageProfileFitterResults::_resultsToLog() {
 	Int pixPrecision = _multiFit ? 0 : 3;
 	_pixelPositions.resize( _fitters->size());
 	uint index = 0;
-	Vector<ImageFit1D<Float> >::const_iterator end = _fitters->end();
-
+	Vector<std::tr1::shared_ptr<ImageFit1D<Float> > >::const_iterator end = _fitters->end();
 	for (
 		inIter.reset();
 		! inIter.atEnd() && fitter != end;
 		inIter++, fitter++, index++
 	) {
+		if (! *fitter) {
+			continue;
+		}
 		summary.str("");
 		Int basePrecision = summary.precision(1);
 		summary.precision(basePrecision);
@@ -845,18 +859,18 @@ void ImageProfileFitterResults::_resultsToLog() {
 		}
 		summary << "]" << setprecision(basePrecision) << endl;
 		summary.unsetf(ios::fixed);
-		Bool attempted = fitter->getList().nelements() > 0;
+		Bool attempted = (*fitter)->getList().nelements() > 0;
 		summary << "    Attempted    : "
 			<< (attempted ? "YES" : "NO") << endl;
 		if (attempted) {
-			String converged = fitter->converged() ? "YES" : "NO";
+			String converged = (*fitter)->converged() ? "YES" : "NO";
 			summary << "    Converged    : " << converged << endl;
-			if (fitter->converged()) {
-				summary << "    Iterations   : " << fitter->getNumberIterations() << endl;
-				String valid = fitter->isValid() ? "YES" : "NO";
+			if ((*fitter)->converged()) {
+				summary << "    Iterations   : " << (*fitter)->getNumberIterations() << endl;
+				String valid = (*fitter)->isValid() ? "YES" : "NO";
 				summary << "    Valid        : " << valid << endl;
-				if (fitter->isValid()) {
-					solutions = fitter->getList();
+				if ((*fitter)->isValid()) {
+					solutions = (*fitter)->getList();
 					for (uInt i=0; i<solutions.nelements(); i++) {
 						SpectralElement::Types type = solutions[i]->getType();
 						if (solutions.nelements() > 1) {
@@ -1242,7 +1256,6 @@ void ImageProfileFitterResults::_makeSolutionImage(
 	Vector<Double>::const_iterator iter;
 	// isNaN(Array<Double>&) works, isNaN(Array<Float>&) gives spurious results
 	Array<Bool> nanInfMask = ! (isNaN(values) || isInf(values));
-
 	Vector<Float>::iterator jiter = dataCopy.begin();
 	for (iter=values.begin(); iter!=values.end(); iter++, jiter++) {
 		*jiter = (Float)*iter;

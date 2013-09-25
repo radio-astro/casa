@@ -64,7 +64,7 @@ class ImageProfileFitterResults {
 public:
 	ImageProfileFitterResults(
 		const std::tr1::shared_ptr<LogIO> log, const CoordinateSystem& csysIm,
-		const Array<ImageFit1D<Float> > * const &fitters,
+		const Array<std::tr1::shared_ptr<ImageFit1D<Float> > >* const &fitters,
 		const SpectralList& nonPolyEstimates,
 		const std::tr1::shared_ptr<const SubImage<Float> > subImage, Int fitAxis, Int polyOrder,
 		uInt nGaussSinglets, uInt nGaussMultiplets, uInt nLorentzSinglets,
@@ -160,7 +160,7 @@ private:
 		_ltpName, _ltpErrName, _sigmaName, _summaryHeader;
     uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,
 		_nPLPCoeffs, _nLTPCoeffs;
-    const Array<ImageFit1D<Float> > * const  _fitters;
+    const Array<std::tr1::shared_ptr<ImageFit1D<Float> > >* const  _fitters;
 	SpectralList _nonPolyEstimates;
  // subimage contains the region of the original image
 	// on which the fit is performed.
@@ -254,6 +254,10 @@ private:
     Vector< Vector<Double> > _pixelPositions;
 
     void _writeLogfile(const String& str, Bool open, Bool close);
+
+    // the input array must have a degenerate last axis. It will be replicated
+    // along this axis n times to form an array with a last axis laength of n.
+    static Array<Bool> _replicateMask(const Array<Bool>& array, Int n);
 };
 }
 
