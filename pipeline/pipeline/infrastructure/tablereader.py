@@ -607,25 +607,14 @@ class SourceTable(object):
 class StateTable(object):
     @staticmethod
     def get_states(ms):
-        states = [StateTable._create_state(*row) 
+        facility = ObservationTable.get_telescope_name(ms)
+        start, _ = ObservationTable.get_time_range(ms)
+        state_factory = domain.state.StateFactory(facility, start)        
+
+        states = [state_factory.create_state(*row) 
                   for row in StateTable._read_table(ms)]        
         return states            
         
-    @staticmethod
-    def _create_state(state_id, obs_mode, is_cycle0):
-        return domain.State(state_id, obs_mode, is_cycle0)
-    
-    @staticmethod
-    def _is_cycle0(ms):
-        telescope = ObservationTable.get_telescope_name(ms)
-        if telescope != 'ALMA':
-            return False
-
-        # casa time quantity corresponding to 2013-01-21T00:00:00
-        cutoff = datetime.datetime(2013,01,21)
-        start, _ = ObservationTable.get_time_range(ms)
-        return start < cutoff
-    
     @staticmethod
     def _read_table(ms):
         """Read the STATE table of the given measurement set.
@@ -634,14 +623,10 @@ class StateTable(object):
         ms = _get_ms_name(ms)
         state_table = os.path.join(ms, 'STATE')
 
-        # Cycle 0 data are labelled with PHASE
-        is_cycle0 = StateTable._is_cycle0(ms)
-        
         with utils.open_table(state_table) as table:
             obs_modes = table.getcol('OBS_MODE')
             state_ids = range(len(obs_modes))
-            cycle0 = [is_cycle0] * len(state_ids)
-            return zip(state_ids, obs_modes, cycle0)
+            return zip(state_ids, obs_modes)
 
 
 class FieldTable(object):
