@@ -14,6 +14,7 @@
 accum_test                      scastro eso.org
 alma-m100-analysis		dpetry@eso.org
 asdm-imexport+analysis		dpetry eso.org
+alma-titan-ephemeris		dpetry@eso.org
 async-segfault                  dpetry eso.org
 calstat_test                    jmlarsen eso.org
 cleanhelper_test                rindebet nrao.edu
