@@ -23,8 +23,8 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 	<tbody>
 % for r in result:
 		<tr>
-			<td>${r.qa2.vis}</td>
-			<td>${r.qa2.overall_score}</td>
+			<td>${getattr(r.qa2, 'vis', 'N/A')}</td>
+			<td>${getattr(r.qa2, 'overall_score', 'N/A')}</td>
 		</tr>
 % endfor
 	</tbody>
