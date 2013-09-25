@@ -1,10 +1,12 @@
 from __future__ import absolute_import
 
-import os
-import contextlib
+#import os
+#import contextlib
 
 import asap as sd
 from taskinit import gentools
+
+from ..common import temporary_filename
 
 def createExportTable(table_name):
     table = gentools(['tb'])[0]
@@ -110,12 +112,12 @@ def createExportTable(table_name):
     table.create(table_name, tabledesc=desc)
     table.close()
 
-@contextlib.contextmanager
-def temporary_filename(name='_heuristics.temporary.table'):
-    try:
-        yield name
-    finally:
-        os.system('rm -rf %s'%(name))
+# @contextlib.contextmanager
+# def temporary_filename(name='_heuristics.temporary.table'):
+#     try:
+#         yield name
+#     finally:
+#         os.system('rm -rf %s'%(name))
 
 def create_dummy_scan(name, datatable, index_list):
     param_org = sd.rcParams['scantable.storage']

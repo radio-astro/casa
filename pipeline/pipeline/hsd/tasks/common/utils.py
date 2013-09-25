@@ -1,7 +1,9 @@
 from __future__ import absolute_import 
 
 import sys
+import os
 import numpy
+import contextlib
 
 LogLevelMap = {'critical': 0,
                'error': 0,
@@ -143,3 +145,11 @@ def to_numeric(s):
             return s
     else:
         return s
+    
+@contextlib.contextmanager
+def temporary_filename(name='_heuristics.temporary.table'):
+    try:
+        yield name
+    finally:
+        os.system('rm -rf %s'%(name))
+
