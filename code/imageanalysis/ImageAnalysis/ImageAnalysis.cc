@@ -2747,6 +2747,12 @@ ImageInterface<Float> * ImageAnalysis::moments(
             	*_image, tmpImageName, r, "", False,
             	False, True, False
             );
+            x.reset(
+            	SubImageFactory<Float>::createSubImage(
+            		*x, Region, mask, _log.get(),
+            		False, AxesSpecifier(), stretchMask
+            	).cloneII()
+            );
 		}
 		else {
 			x.reset(

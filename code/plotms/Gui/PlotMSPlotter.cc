@@ -132,11 +132,11 @@ ThreadController* PlotMSPlotter::getThreadController( PlotMSAction::Type type,
 		controller = new PlotMSExportThread( itsThreadProgress_, this );
 	}
 	else if ( type == PlotMSAction::CACHE_LOAD || type == PlotMSAction::CACHE_RELEASE ){
-		PlotMSPlotParameters params = getPlotParameters();
-		PMS_PP_Cache* paramsCache = params.typedGroup<PMS_PP_Cache>();
 		if ( postThreadObject == NULL ){
+			PlotMSPlotParameters params = getPlotParameters();
+			PMS_PP_Cache* paramsCache = params.typedGroup<PMS_PP_Cache>();
 			controller = new PlotMSCacheThread(itsThreadProgress_,
-					PMS_PP_Cache::notifyWatchers, paramsCache);
+					&PMS_PP_Cache::notifyWatchers, paramsCache);
 		}
 		else {
 			controller = new PlotMSCacheThread( itsThreadProgress_, postThreadMethod,
@@ -689,7 +689,8 @@ bool PlotMSPlotter::_triggerAction(/*PlotMSAction& action*/PlotMSAction::Type ty
     }
     return result;
     */
-	CountedPtr<PlotMSAction> action = ActionFactory::getAction( type, this );
+
+	CountedPtr<PlotMSAction> action = ActionFactory::getAction( type, this);
 	bool result = action->doAction(itsParent_);
 	if ( !result ){
 		showError( action->doActionResult(), "Action Failed!", false );
