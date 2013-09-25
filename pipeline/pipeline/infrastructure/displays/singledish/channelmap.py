@@ -231,7 +231,7 @@ class SDChannelMapDisplay(SDImageDisplay):
             if float(ChanC) == line_window[0] - self.inputs.edge[0]:
                 VelC = self.velocity[ChanC]
             else:
-                 VelC = 0.5 * ( self.velocity[ChanC] + self.velocity[ChanC-1] )
+                VelC = 0.5 * ( self.velocity[ChanC] + self.velocity[ChanC-1] )
             if ChanC > 0:
                 ChanVelWidth = abs(self.velocity[ChanC] - self.velocity[ChanC - 1])
             else:
@@ -281,8 +281,8 @@ class SDChannelMapDisplay(SDImageDisplay):
             for pol in xrange(self.npol):
                 plotted_objects = []
                 
-                data = self.data[:,:,:,pol]
-                masked_data = data * self.mask[:,:,:,pol]
+                data = self.data.take([pol], axis=self.id_stokes).squeeze()
+                masked_data = data * self.mask.take([pol], axis=self.id_stokes).squeeze()
                 flattened_data = masked_data.reshape((nrow,self.nchan))
                 valid = ValidSp[:,pol]
                 

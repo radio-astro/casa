@@ -163,8 +163,6 @@ class SDImageDisplayInputs(SingleDishDisplayInputs):
         array3d = array2d.reshape((self.npol,self.ny,self.nx)).transpose()
         return numpy.flipud(array3d)
 
-
-
 class SDInspectionDisplay(object):
     __metaclass__ = abc.ABCMeta
     Inputs = SingleDishDisplayInputs
@@ -293,6 +291,14 @@ class SDImageDisplay(object):
 
         # 2008/9/20 Dec Effect has been taken into account
         self.aspect = 1.0 / math.cos(0.5 * (self.dec_min + self.dec_max) / 180.0 * 3.141592653)
+
+    @property
+    def id_spectral(self):
+        return self.image.id_spectral
+    
+    @property
+    def id_stokes(self):
+        return self.image.id_stokes
 
 
 

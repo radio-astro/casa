@@ -92,7 +92,7 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
         
         masked_data = self.data * self.mask
         for pol in xrange(self.npol):
-            Total = masked_data[:,:,0,pol]
+            Total = masked_data.take([pol], axis=self.id_stokes).squeeze()
             Total = numpy.flipud(Total.transpose())
             tmin = Total.min()
             tmax = Total.max()

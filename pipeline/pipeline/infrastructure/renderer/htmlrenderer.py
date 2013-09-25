@@ -158,6 +158,9 @@ def get_task_description(result_obj):
     if task_cls is hsd.tasks.SDImaging:
         return 'Image single dish data'
 
+    if task_cls is hsd.tasks.SDImaging2:
+        return 'Image single dish data'
+
     if task_cls is hsd.tasks.SDBaseline:
         return 'Subtract spectral baseline'
 
@@ -2442,6 +2445,7 @@ renderer_map = {
         hsd.tasks.SDBaseline     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_baseline.html'),
         hsd.tasks.SDFlagData     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagdata.html'),
         hsd.tasks.SDImaging      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html'),
+        hsd.tasks.SDImaging2     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html'),
         hsd.tasks.SDPlotFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_plotflagbaseline.html')
     }
 }

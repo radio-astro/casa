@@ -15,6 +15,7 @@ import flagmanager_cli
 import fluxscale_cli
 import gaincal_cli
 import gencal_cli
+import immath_cli
 import importasdm_cli
 import listobs_cli
 import plotants_cli
@@ -28,6 +29,7 @@ try:
     import sdcal2_cli
 except:
     import sdcal_cli as sdcal2_cli
+import sdsave_cli as sdsave_cli
 
 from . import casatools
 from . import logging
@@ -286,6 +288,9 @@ class CASATaskJobGenerator(object):
 
     def gencal(self, *v, **k):
         return self._get_job(gencal_cli.gencal_cli, *v, **k)
+    
+    def immath(self, *v, **k):
+        return self._get_job(immath_cli.immath_cli, *v, **k)
 
     def importasdm(self, *v, **k):
         return self._get_job(importasdm_cli.importasdm_cli, *v, **k)
@@ -316,6 +321,9 @@ class CASATaskJobGenerator(object):
 
     def sdcal2(self, *v, **k):
         return self._get_job(sdcal2_cli.sdcal2_cli, *v, **k)
+    
+    def sdsave(self, *v, **k):
+        return self._get_job(sdsave_cli.sdsave_cli, *v, **k) 
 
     def _get_job(self, task, *v, **k):
         job = JobRequest(task, *v, **k)

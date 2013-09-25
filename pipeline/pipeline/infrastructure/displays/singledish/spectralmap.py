@@ -109,7 +109,6 @@ class SDSpectralMapDisplay(SDImageDisplay):
 
         # read data to storage
         masked_data = self.data * self.mask
-        (nx, ny, nchan, npol) = self.data.shape
 
         # Raster Case: re-arrange spectra to match RA-DEC orientation
         mode = 'raster'
@@ -120,13 +119,13 @@ class SDSpectralMapDisplay(SDImageDisplay):
             NV = int((self.y_max - self.y_min) / NvPanel + 1)
             ROWS = numpy.zeros(NH * NV * NhPanel * NvPanel, dtype=numpy.int) - 1
             # 2010/6/15 GK Change the plotting direction: UpperLeft->UpperRight->OneLineDown repeat...
-            for x in xrange(nx):
+            for x in xrange(self.nx):
                 posx = (self.x_max - x) / NhPanel
                 offsetx = (self.x_max - x) % NhPanel
-                for y in xrange(ny):
+                for y in xrange(self.ny):
                     posy = (self.y_max - y) / NvPanel
                     offsety = NvPanel - 1 - (self.y_max - y) % NvPanel
-                    row = (nx - x - 1) * ny + y
+                    row = (self.nx - x - 1) * self.ny + y
                     ROWS[(posy*NH+posx)*NvPanel*NhPanel + offsety*NhPanel + offsetx] = row
         else:
             ROWS = rows[:]
@@ -148,7 +147,7 @@ class SDSpectralMapDisplay(SDImageDisplay):
         chan1 = -1
         if chan1 == -1:
             chan0 = 0
-            chan1 = nchan - 1
+            chan1 = self.nchan - 1
         xmin = min(self.frequency[chan0], self.frequency[chan1])
         xmax = max(self.frequency[chan0], self.frequency[chan1])
 
@@ -179,7 +178,7 @@ class SDSpectralMapDisplay(SDImageDisplay):
         is_baselined = reference_scantable.work_data != reference_scantable.name
         
         for pol in xrange(self.npol):
-            data = masked_data[:,:,:,pol]
+            data = masked_data.take([pol], axis=self.id_stokes).squeeze()
             Npanel = 0
 
             # to eliminate max/min value due to bad pixel or bad fitting,
@@ -203,10 +202,10 @@ class SDSpectralMapDisplay(SDImageDisplay):
             for irow in xrange(len(ROWS)):
                 row = ROWS[irow]
                     
-                _x = row / ny
-                _y = row % ny
+                _x = row / self.ny
+                _y = row % self.ny
 
-                if 0 <= _x < nx and 0 <= _y < ny:
+                if 0 <= _x < self.nx and 0 <= _y < self.ny:
                     a = axes_list[NSp]
                     a.set_axis_on()
                     pl.gcf().sca(a)
