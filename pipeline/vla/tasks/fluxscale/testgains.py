@@ -57,8 +57,9 @@ class Testgains(basetask.StandardTaskTemplate):
         soltimes = [1.0,3.0,10.0] 
         m = self.inputs.context.observing_run.measurement_sets[0]
         soltimes = [self.inputs.context.evla['msinfo'][m.name].int_time * x for x in soltimes]
+        print soltimes
         
-        solints = ['int', '3.0s', '10.0s']
+        solints = ['int', str(soltimes[1])+'s', str(soltimes[2])+'s']
         soltime = soltimes[0]
         solint = solints[0]
         shortsol1 = context.evla['msinfo'][m.name].shortsol1
@@ -138,7 +139,7 @@ class Testgains(basetask.StandardTaskTemplate):
                                 fracFlaggedSolnsScan=1.0
                                 
                             if (fracFlaggedSolnsScan < fracFlaggedSolns10):
-                                shortsol2=longsolint
+                                shortsol2=context.evla['msinfo'][m.name].longsolint
                                 bpdgain_touse = 'testgaincalscan.g'
                                 
                                 if (fracFlaggedSolnsScan > 0.05):

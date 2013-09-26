@@ -54,10 +54,19 @@ class UncalspwInputs(basetask.StandardInputs):
 
 
 class UncalspwResults(basetask.Results):
-    def __init__(self, jobs=[]):
+    def __init__(self, jobs=[], flagspw1='', flagspw1b='', flagspw2=''):
         super(UncalspwResults, self).__init__()
 
-        self.jobs=jobs
+        self.jobs = jobs
+        self.flagspw1  = flagspw1
+        self.flagspw1b = flagspw1b
+        self.flagspw2  = flagspw2
+    
+    def merge_with_context(self, context):
+        m = context.observing_run.measurement_sets[0]
+        context.evla['msinfo'][m.name].flagspw1  = self.flagspw1
+        context.evla['msinfo'][m.name].flagspw1b = self.flagspw1b
+        context.evla['msinfo'][m.name].flagspw2  = self.flagspw2
         
     def __repr__(self):
         s = 'Uncalspw results:\n'
@@ -81,8 +90,11 @@ class Uncalspw(basetask.StandardTaskTemplate):
         
     def _do_uncalspw(self, delaycaltable=None, bpcaltable=None):
         
+        print "uncalspw"
+        
         m = self.inputs.context.observing_run.measurement_sets[0]
-        myscans = self.inputs.context.evla['msinfo'][m.name].scandict
+        context = self.inputs.context
+        myscans = context.evla['msinfo'][m.name].scandict
         
         myspw = []
         for idd in myscans['DataDescription'].keys():
@@ -134,25 +146,85 @@ class Uncalspw(basetask.StandardTaskTemplate):
                 else:
                     flagspw += ','+str(ispw)
         
-        flagspw1 = ','.join(["%s" % ii for ii in uniq(flagspwlist)])
+        #From scripted uncalspws1.py
+        if (delaycaltable == 'testdelay.k' and bpcaltable == 'testBPcal.b'):
+            flagspw1 = ','.join(["%s" % ii for ii in uniq(flagspwlist)])
+            
+            print "uncalspws1"
         
-        if (flagspw1 == ''):
-            LOG.info("All spws have calibration")
-            return UncalspwResults()
-        else:
-            LOG.info("No calibration found for spw(s) "+flagspw1+", flagging these spws in the ms")
-            
-            task_args = {'vis'        : self.inputs.vis,
-                         'action'     : 'apply',                     
-                         'spw'    : flagspw1,
-                         'savepars'   : True,
-                         'flagbackup' : True}
-            
-            job = casa_tasks.flagdata(**task_args)
-            
-            self._executor.execute(job)
+            if (flagspw1 == ''):
+                LOG.info("All spws have calibration")
+                return UncalspwResults(jobs=[],flagspw1=flagspw1)
+            else:
+                LOG.info("No calibration found for spw(s) "+flagspw1+", flagging these spws in the ms")
+                spw = flagspw1
                 
-            return UncalspwResults([job])
+                task_args = {'vis'        : self.inputs.vis,
+                            'action'      : 'apply',                     
+                            'spw'         : spw,
+                            'savepars'    : True,
+                            'flagbackup'  : True}
+                
+                job = casa_tasks.flagdata(**task_args)
+                
+                self._executor.execute(job)
+                    
+                return UncalspwResults(jobs=[job], flagspw1=flagspw1)
+        
+        #From scripted uncalspws1b.py
+        if (delaycaltable == 'delay.k' and bpcaltable == 'BPcal.b'):
+            flagspw1b = ','.join(["%s" % ii for ii in uniq(flagspwlist)])
+            flagspw1 = context.evla['msinfo'][m.name].flagspw1
+            
+            if (flagspw1b == ''):
+                LOG.info("All spws have calibration")
+                return UncalspwResults(jobs=[], flagspw1=flagspw1, flagspw1b=flagspw1b)
+            elif (flagspw1b==flagspw1):
+                LOG.info("No calibration found for spw(s) "+flagspw1b+", already flagged")
+                return UncalspwResults(jobs=[], flagspw1=flagspw1, flagspw1b=flagspw1b)
+            else:
+                LOG.info("No calibration found for spw(s) "+flagspw1b+", flagging these spws in the ms")
+                spw=flagspw1b
+                
+                task_args = {'vis'        : self.inputs.vis,
+                            'action'      : 'apply',                     
+                            'spw'         : spw,
+                            'savepars'    : True,
+                            'flagbackup'  : True}
+                
+                job = casa_tasks.flagdata(**task_args)
+                
+                self._executor.execute(job)
+                    
+                return UncalspwResults(jobs=[job], flagspw1=flagspw1, flagspw1b=flagspw1b)
+        
+        #From scripted uncalspws2.py
+        if (delaycaltable == 'finaldelay.k' and bpcaltable == 'finalBPcal.b'):
+            flagspw2 = ','.join(["%s" % ii for ii in uniq(flagspwlist)])
+            flagspw1 = context.evla['msinfo'][m.name].flagspw1
+            flagspw1b = context.evla['msinfo'][m.name].flagspw1b
+            
+            if (flagspw2 == ''):
+                LOG.info("All spws have calibration")
+                return UncalspwResults(jobs=[], flagspw1=flagspw1, flagspw1b=flagspw1b, flagspw2=flagspw2)
+            elif (flagspw2==flagspw1b):
+                LOG.info("No calibration found for spw(s) "+flagspw2+", already flagged")
+                return UncalspwResults(jobs=[], flagspw1=flagspw1, flagspw1b=flagspw1b, flagspw2=flagspw2)
+            else:
+                LOG.info("No calibration found for spw(s) "+flagspw2+", flagging these spws in the ms")
+                spw=flagspw2
+                
+                task_args = {'vis'        : self.inputs.vis,
+                            'action'      : 'apply',                     
+                            'spw'         : spw,
+                            'savepars'    : True,
+                            'flagbackup'  : True}
+                
+                job = casa_tasks.flagdata(**task_args)
+                
+                self._executor.execute(job)
+                    
+                return UncalspwResults(jobs=[job], flagspw1=flagspw1, flagspw1b=flagspw1b, flagspw2=flagspw2)
 
         
     def analyse(self, results):

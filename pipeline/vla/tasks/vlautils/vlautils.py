@@ -602,6 +602,10 @@ class VLAUtils(basetask.StandardTaskTemplate):
         self.fluxscale_flux_densities = []
         self.fluxscale_spws = []
         
+        self.flagspw1  = ''
+        self.flagspw1b = ''
+        self.flagspw2  = ''
+        
         return int_time
         
     def quackingScans(self):

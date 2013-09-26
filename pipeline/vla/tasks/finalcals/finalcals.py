@@ -100,6 +100,15 @@ class Finalcals(basetask.StandardTaskTemplate):
 
         bandpass_result = self._do_bandpass(bpcaltable, context=context, refAnt=refAnt)
         
+        #Force calwt for the bp table to be False
+        calto = callibrary.CalTo(self.inputs.vis)
+        calfrom = callibrary.CalFrom(bpcaltable, interp='linear,linear', calwt=True)
+        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+        
+        calto = callibrary.CalTo(self.inputs.vis)
+        calfrom = callibrary.CalFrom(bpcaltable, interp='', calwt=False)
+        context.callibrary.add(calto, calfrom)
+        
         LOG.info("Bandpass calibration complete")
         
         calto = callibrary.CalTo(self.inputs.vis)

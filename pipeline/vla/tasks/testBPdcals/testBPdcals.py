@@ -56,7 +56,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
         soltimes = [1.0,3.0,10.0] 
         m = self.inputs.context.observing_run.measurement_sets[0]
         soltimes = [self.inputs.context.evla['msinfo'][m.name].int_time * x for x in soltimes]
-        solints = ['int', '3.0s', '10.0s']
+        solints = ['int', str(soltimes[1])+'s', str(soltimes[2])+'s']
         soltime = soltimes[0]
         solint = solints[0]
 
@@ -237,8 +237,22 @@ class testBPdcals(basetask.StandardTaskTemplate):
         calfrom = callibrary.CalFrom(gaintable=bpdgain_touse, interp='', calwt=False)
         context.callibrary.add(calto, calfrom)
         
+        #print context.callibrary.active
         
         bandpass_result = self._do_bandpass(bpcaltable, context=context, RefAntOutput=RefAntOutput)
+        
+        #print context.callibrary.active
+        
+        #Force calwt for the bp table to be False
+        calto = callibrary.CalTo(self.inputs.vis)
+        calfrom = callibrary.CalFrom(bpcaltable, interp='linear,linear', calwt=True)
+        context.callibrary._remove(calto, calfrom, context.callibrary._active)
+        
+        calto = callibrary.CalTo(self.inputs.vis)
+        calfrom = callibrary.CalFrom(bpcaltable, interp='', calwt=False)
+        context.callibrary.add(calto, calfrom)
+        
+        #print context.callibrary.active
         
         LOG.info("Fraction of flagged solutions = "+str(flaggedSolnResult['all']['fraction']))
         LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult['antmedian']['fraction']))
