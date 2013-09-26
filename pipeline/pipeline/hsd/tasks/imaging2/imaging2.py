@@ -11,6 +11,8 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.basetask as basetask
 from .gridding import gridding_factory
+from . import exportms
+from . import applyflag
 from .. import common
 from ..baseline import baseline
 from ..common import temporary_filename
@@ -67,12 +69,17 @@ class SDImaging2(common.SingleDishTaskTemplate):
         #     - Apply SummaryFlag in Baseline Table to FLAGROW and FLAGTRA
         #     - Flag WVR and reference data
         LOG.info('Step 1. Apply flags')
-        self.__apply_flags()
+        applyflag_inputs = applyflag.SDApplyFlag.Inputs(context, infiles)
+        applyflag_task = applyflag.SDApplyFlag(applyflag_inputs)
+        applyflag_results = applyflag_task.execute(dry_run=self._executor._dry_run)
 
         # Step 2.
         # Export each scantable to MS
         LOG.info('Step 2. Export data')
-        exported_mses = self.__export_ms()
+        export_inputs = exportms.ExportMS.Inputs(context, infiles)
+        export_task = exportms.ExportMS(export_inputs)
+        export_results = export_task.execute(dry_run=self._executor._dry_run)
+        exported_mses = export_results.outcome
 
         # search results and retrieve edge parameter from the most
         # recent SDBaselineResults if it exists
@@ -259,65 +266,6 @@ class SDImaging2(common.SingleDishTaskTemplate):
         spwlist = [spwid for i in antenna_indices]
 
         do_imaging(self.inputs.context, infiles, spwlist, imagename, datatable, reference_data, source_name, antenna_indices, srctype, edge)
-        
-        
-
-    def __apply_flags(self):
-        context = self.inputs.context
-        datatable = context.observing_run.datatable_instance
-        reduction_group = context.observing_run.reduction_group
-    
-        num_data = len(context.observing_run)
-
-        namer = filenamer.BaselineSubtractedTable()
-
-        # loop over reduction group
-        for (group_id, group_desc) in reduction_group.items():
-            
-            # for each group member
-            for member in group_desc:
-                # flag all WVR data and off-source data
-                index = member.antenna
-                data = context.observing_run[index]
-                wvr_spws = [spw for (spw, desc) in data.spectral_window.items()
-                            if desc.type == 'WVR']
-                filename = data.baselined_name
-                srctype = data.calibration_strategy['srctype']
-                apply_apriori_flags(filename, wvr_spws, srctype)
-
-                # apply baseline flags to the data
-                spwid = member.spw
-                namer.spectral_window(spwid)
-                namer.asdm(common.asdm_name(data))
-                namer.antenna_name(data.antenna.name)
-                bltable_name = namer.get_filename()
-                filename = data.name
-                apply_baseline_flags(filename, bltable_name)
-
-    def __export_ms(self):
-        # for each data
-        context = self.inputs.context
-        datatable = context.observing_run.datatable_instance
-        reduction_group = context.observing_run.reduction_group
-        output_dir = context.output_dir
-
-        export_done = [False for s in context.observing_run]
-        outfiles = {}
-        for (group_id, group_desc) in reduction_group.items():
-            for member in group_desc:
-                index = member.antenna
-                if not export_done[index]:
-                    data = context.observing_run[index]
-
-                    # create job
-                    job = create_export_job(data, output_dir)
-                    
-                    # execute job
-                    self._executor.execute(job)
-
-                    export_done[index] = True
-                    outfiles[index] = job.kw['outfile']
-        return outfiles
 
     def __set_weight(self, infile, outfile, antenna, spwid, srctype,
                      is_full_resolution):
@@ -341,59 +289,6 @@ class SDImaging2(common.SingleDishTaskTemplate):
 
     def analyse(self, result):
         return result
-
-
-def apply_apriori_flags(filename, wvr_spws, on_source):
-    with casatools.TableReader(filename, nomodify=False) as tb:
-        # flag WVR spws
-        tsel = tb.query('IFNO IN %s' % (list(wvr_spws)))
-        nrow = tsel.nrows()
-        flags = numpy.ones((4, nrow), dtype=int)
-        tsel.putcol('FLAGROW', flags[0])
-        tsel.putcol('FLAGTRA', flags)
-        tsel.close()
-        
-        # flag all reference (off source) data
-        tsel = tb.query('SRCTYPE != %s' % (on_source))
-        nrow = tsel.nrows()
-        for irow in xrange(nrow):
-            tsel.putcell('FLAGROW', irow, 1)
-            flags = tsel.getcell('FLAGTRA', irow)
-            flags[:] = 1
-            tsel.putcell('FLAGTRA', irow, flags)
-
-        
-def apply_baseline_flags(filename, bltable_name):
-    if not os.path.exists(bltable_name):
-        return
-        
-    with casatools.TableReader(bltable_name) as tb:
-        tsel = tb.query('SummaryFlag == False')
-        rows = tsel.getcol('Row')
-        tsel.close()
-
-    if len(rows) == 0:
-        return
-        
-    with casatools.TableReader(filename, nomodify=False) as tb:
-        tsel = tb.query('ROWNUMBER() IN %s' % (rows.tolist()), style='python')
-        for irow in xrange(tsel.nrows()):
-            tsel.putcell('FLAGROW', irow, 1)
-            channel_flag = tsel.getcell('FLAGTRA', irow)
-            channel_flag[:] = 1
-            tsel.putcell('FLAGTRA', irow, channel_flag)
-        tsel.close()
-
-def create_export_job(data, output_dir):
-    infile = data.baselined_name
-    asdm_name = common.asdm_name(data)
-    antenna_name = data.antenna.name
-    outfile = os.path.join(output_dir, '.'.join([asdm_name, antenna_name, 'ms']))
-    args = {'infile': infile,
-            'outfile': outfile,
-            'outform': 'MS2',
-            'overwrite': True}
-    return casa_tasks.sdsave(**args)
 
 def make_row_map(infile, outfile, spwid, srctype):
     rows_list = []
