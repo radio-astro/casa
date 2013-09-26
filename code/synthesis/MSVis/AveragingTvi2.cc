@@ -625,7 +625,7 @@ VbAvg::VbAvg (const AveragingParameters & averagingParameters)
   maxTimeDistance_p (averagingParameters.getAveragingInterval() * (0.999)),
         // Shrink it just a bit for roundoff
   maxUvwDistance_p (averagingParameters.getMaxUvwDistance()),
-  usingUvwDistance_p (maxUvwDistance_p > 1.0)
+  usingUvwDistance_p (averagingParameters.getOptions().contains (AveragingOptions::BaselineDependentAveraging))
 {}
 
 void
@@ -1243,8 +1243,12 @@ VbAvg::finalizeBaselineIfNeeded (MsRow * rowInput, MsRowAvg * rowAveraged, const
     // Finalization is needed if either the uvw distance or the time distance between the input
     // baseline and the averaged baseline is above the maximum
 
-    Bool needed = usingUvwDistance_p &&
-                  distance (rowInput->uvw(), rowAveraged->uvwFirst ()) > maxUvwDistance_p;
+    Bool needed = usingUvwDistance_p;
+
+    if (needed) {
+        Double deltaUvw = distance (rowInput->uvw(), rowAveraged->uvwFirst ());
+        needed = deltaUvw > maxUvwDistance_p;
+    }
 
     needed = needed || (rowInput->time() - rowAveraged->timeFirst()) > maxTimeDistance_p;
 

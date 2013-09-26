@@ -43,7 +43,7 @@ AveragingParameters::AveragingParameters (Double averagingInterval,
     Assert (chunkInterval >= 0);
     Assert (chunkInterval == 0 || chunkInterval >= averagingInterval);
     Assert (! options.contains (AveragingOptions::BaselineDependentAveraging) ||
-            maxUvwDistance_p > 1.0);
+            maxUvwDistance_p > 0.001);
 
     validateOptions (); // Throws if error
 }
