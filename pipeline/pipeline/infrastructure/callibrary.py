@@ -920,34 +920,133 @@ class SDCalFrom(CalFrom):
         'otf'          : 1
     }
     
+    @staticmethod
+    def _calc_hash(gaintable, gainfield, interp, spwmap, calwt):
+        result = 17
+        result = 37*result + hash(gaintable)
+        result = 37*result + hash(gainfield)
+        result = 37*result + hash(interp)
+        # since spwmap is dict...
+        result = 37*result + hash(tuple(spwmap.keys()))
+        # spwmap values are list
+        for v in spwmap.values():
+            result = 37*result + hash(tuple(v))
+        result = 37*result + hash(calwt)
+        return result
+
     def __init__(self, gaintable, gainfield=None, interp=None, spwmap=None,
                  caltype=None):
         super(SDCalFrom,self).__init__(gaintable, gainfield, interp, spwmap)
-        self.caltype = caltype
+        #self.caltype = caltype
+
+    def __new__(cls, gaintable=None, gainfield='', interp='linear,linear', 
+                spwmap={}, caltype='unknown', calwt=True):
+        if gaintable is None:
+            raise ValueError, 'gaintable must be specified. Got None'
+        
+        if type(gainfield) is not types.StringType:
+            raise ValueError, 'gainfield must be a string. Got %s' % str(gainfield)
+
+        if type(interp) is not types.StringType:
+            raise ValueError, 'interp must be a string. Got %s' % str(interp)
+
+        #if type(spwmap) is types.TupleType:
+        #    spwmap = [spw for spw in spwmap]
+
+        #if not isinstance(spwmap, list):
+        #    raise ValueError, 'spwmap must be a list. Got %s' % str(spwmap)
+        # Flyweight instances should be immutable, so convert spwmap to a
+        # tuple. This also makes spwmap hashable for our hash function.
+        #spwmap = tuple([o for o in spwmap])
+                
+        caltype = string.lower(caltype)
+        assert caltype in SDCalFrom.CALTYPES
+
+        arg_hash = SDCalFrom._calc_hash(gaintable, gainfield, interp, spwmap, 
+                                      calwt)
+        
+        obj = SDCalFrom._CalFromPool.get(arg_hash, None)
+        if not obj:
+            LOG.trace('Creating new SDCalFrom(gaintable=\'%s\', '
+                      'gainfield=\'%s\', interp=\'%s\', spwmap=%s, '
+                      'caltype=\'%s\', calwt=%s)' % 
+                (gaintable, gainfield, interp, spwmap, caltype, calwt))
+            
+            obj = object.__new__(cls)
+            obj.__gaintable = gaintable
+            obj.__gainfield = gainfield
+            obj.__interp = interp
+            if spwmap is None:
+                obj.__spwmap = {}
+            else:
+                if not isinstance(spwmap, dict):
+                    raise ValueError, 'spwmap must be a dict' 
+                obj.__spwmap = spwmap.copy()
+            if caltype is None:
+                obj.__caltype = 'unknown'
+            else:
+                obj.__caltype = caltype.lower()
+            obj.__calwt = calwt
+
+            LOG.debug('Adding new SDCalFrom to pool: %s' % obj)
+            SDCalFrom._CalFromPool[arg_hash] = obj
+            LOG.trace('New pool contents: %s' % SDCalFrom._CalFromPool.items())
+        else:
+            LOG.trace('Reusing existing SDCalFrom(gaintable=\'%s\', '
+                      'gainfield=\'%s\', interp=\'%s\', spwmap=\'%s\', '
+                      'caltype=\'%s\', calwt=%s)' % 
+                (gaintable, gainfield, interp, spwmap, caltype, calwt))
+                        
+        return obj
+
+    def __getstate__(self):
+        return (self.__caltype, self.__calwt, self.__gainfield, 
+                self.__gaintable, self.__interp, self.__spwmap)
+     
+    def __setstate__(self, state):
+        # a misguided attempt to clear stale CalFroms when loading from a
+        # pickle. I don't think this should be done here.
+#         # prevent exception with pickle format #1 by calling hash on properties
+#         # rather than the object
+#         (_, calwt, gainfield, gaintable, interp, spwmap) = state
+#         old_hash = CalFrom._calc_hash(gaintable, gainfield, interp, spwmap, calwt)
+#         if old_hash in CalFrom._CalFromPool:
+#             del CalFrom._CalFromPool[old_hash]
+
+        (self.__caltype, self.__calwt, self.__gainfield, self.__gaintable, 
+         self.__interp, self.__spwmap) = state
+
+    def __getnewargs__(self):
+        return (self.gaintable, self.gainfield, self.interp, self.spwmap, 
+                self.caltype, self.calwt)
 
     @property
     def caltype(self):
-        return self._caltype
-    
-    @caltype.setter
-    def caltype(self, value):
-        if value is None:
-            value = 'unknown'
-        value = string.lower(value)
-        assert value in SDCalFrom.CALTYPES
-        self._caltype = value
+        return self.__caltype
 
     @property
-    def spwmap(self):
-        return self._spwmap
+    def calwt(self):
+        return self.__calwt
     
-    @spwmap.setter
-    def spwmap(self, value):
-        if value is None:
-            value = {}
-        if not isinstance(value, dict):
-            raise ValueError, 'spwmap must be a list'
-        self._spwmap = value.copy()
+    @property
+    def gainfield(self):
+        return self.__gainfield
+    
+    @property
+    def gaintable(self):
+        return self.__gaintable
+    
+    @property
+    def interp(self):
+        return self.__interp
+    
+    @property
+    def spwmap(self):
+        return self.__spwmap
+    
+    def __hash__(self):
+        return SDCalFrom._calc_hash(self.gaintable, self.gainfield, self.interp,
+                                  self.spwmap, self.calwt)
 
     def __repr__(self):
         return ('SDCalFrom(\'%s\', gainfield=\'%s\', interp=\'%s\', '
