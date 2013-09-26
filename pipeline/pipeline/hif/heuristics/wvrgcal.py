@@ -102,48 +102,7 @@ class WvrgcalHeuristics(object):
         if hm_tie == 'manual':
             self._tie = tie
         else:
-            # get target names and directions
-            targets = [(field.name, field.mdirection) for field in ms.fields if
-              'TARGET' in field.intents]
-
-            # tie all target fields as assume they are close to each other
-            tied_targets = [target[0] for target in targets]
-        
-            # get names and directions of phase calibrators
-            phases = [(field.name, field.mdirection) for field in ms.fields if
-              'PHASE' in field.intents and 
-              'BANDPASS' not in field.intents and
-              'AMPLITUDE' not in field.intents]
-
-            # add phase calibrator to tie if it's less than 15 degress from
-            # target
-            tied_phases = []
-            for phase in phases:
-                separation = casatools.measures.separation(phase[1],
-                  targets[0][1])
-                LOG.info('Calibrator: %s distance from target: %s%s' % (phase[0],
-                  separation['value'], separation['unit']))
-                if casatools.quanta.le(separation, '15deg'):
-                    tied_phases.append(phase[0])
-            LOG.info('phase calibrators tied to target: %s' % tied_phases)
-
-            # assemble the full tie
-            tied = tied_phases + tied_targets
-
-            # and format it
-            if len(tied) > 1:
-                # eliminate duplicate names, remove quotes from names; these 
-                # cause wvrgcal to segfault
-                self._tie = set()
-                for name in set(tied):
-                    name = name.replace('"', '')
-                    name = name.replace("'", "")
-                    self._tie.add(name)                
- 
-                self._tie = ','.join([name for name in self._tie])
-                self._tie = ['%s' % self._tie]
-            else:
-                self._tie = []
+            self._tie = self._calculate_tie(ms)
 
         # sort out segsource whose valid value is dependent on tie
         if self._tie != []:
@@ -170,6 +129,52 @@ class WvrgcalHeuristics(object):
         if self._nsol != 1 and self._segsource:
             raise Exception, \
               'WvrgHeuristics: nsol <>1 incompatible with segsource True'  
+
+    def _calculate_tie(self, ms):
+        # get target names and directions
+        targets = [(field.name, field.mdirection) for field in ms.fields if
+                   'TARGET' in field.intents]
+        if not targets:
+            LOG.debug('No science targets in %s' % ms.basename)
+            return []
+
+        # tie all target fields as assume they are close to each other
+        tied_targets = [target[0] for target in targets]
+        
+        # get names and directions of phase calibrators
+        phases = [(field.name, field.mdirection) for field in ms.fields
+                  if 'PHASE' in field.intents
+                  and 'BANDPASS' not in field.intents
+                  and 'AMPLITUDE' not in field.intents]
+        
+        # add phase calibrator to tie if it's less than 15 degress from target
+        tied_phases = []
+        for phase in phases:
+            separation = casatools.measures.separation(phase[1], targets[0][1])
+            LOG.info('Calibrator: %s distance from target: %s%s'
+                     '' % (phase[0], separation['value'], separation['unit']))
+            if casatools.quanta.le(separation, '15deg'):
+                tied_phases.append(phase[0])
+        LOG.info('phase calibrators tied to target: %s' % tied_phases)
+        
+        # assemble the full tie
+        tied = tied_phases + tied_targets
+        
+        # and format it
+        if len(tied) > 1:
+            # eliminate duplicate names, remove quotes from names; these cause 
+            # wvrgcal to segfault
+            tie = set()
+            for name in set(tied):
+                name = name.replace('"', '')
+                name = name.replace("'", "")
+                tie.add(name)                
+        
+            tie = ','.join([name for name in tie])
+            tie = ['%s' % tie]
+            return tie
+        else:
+            return []
 
     def nsol(self):
         return self._nsol

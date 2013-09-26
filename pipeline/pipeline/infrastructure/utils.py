@@ -151,7 +151,12 @@ def total_time_on_source(scans):
     return -- a datetime.timedelta object set to the total time on source
     '''
     times_on_source = [scan.time_on_source for scan in scans]
-    return reduce(operator.add, times_on_source)
+    if times_on_source:
+        return reduce(operator.add, times_on_source)
+    else:
+        # could potentially be zero matching scans, such as when the
+        # measurement set is missing scans with science intent
+        return datetime.timedelta(0)
 
 def format_datetime(dt):
     '''
