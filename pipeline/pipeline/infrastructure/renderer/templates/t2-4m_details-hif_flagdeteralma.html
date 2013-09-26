@@ -87,7 +87,7 @@ def agent_data(agent, ms):
 		vis_type = type(result.inputs['vis'])
 		if vis_type is types.StringType:
 			flagfile = os.path.basename(result.inputs['file%s' % agent])			
-		elif vistype is types.ListType:
+		elif vis_type is types.ListType:
 			for v in result.inputs['vis']:
 				if os.path.basename(v) == ms:
 					ms_idx = result.inputs['vis'].index(v)
@@ -237,9 +237,9 @@ mses = [m for m in flags.keys() if 'online' in flags[m] or 'template' in flags[m
 	% for plot in flagplots:
 		<li class="span3">
 		  	<div class="thumbnail">
-				<a href="${os.path.join(dirname, plot.basename)}" 
+				<a href="${os.path.relpath(plot.basename, pcontext.report_dir)}" 
 				   class="fancybox">
-					<img src="${os.path.join(dirname, plot.thumbnail)}"
+					<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 						 title="Flagging Reason vs Time for ${plot.parameters['vis']}"
 						 alt="Flagging Reason vs Time for ${plot.parameters['vis']}" />
 			    </a>

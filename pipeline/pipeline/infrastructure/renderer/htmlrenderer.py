@@ -80,7 +80,7 @@ def get_task_description(result_obj):
     if task_cls is hif.tasks.CleanList:
         return 'Calculate clean products'
 
-    if task_cls is hif.tasks.FlagDeterALMA:
+    if task_cls in (hif.tasks.FlagDeterALMA, hif.tasks.ALMAAgentFlagger):
         return 'ALMA deterministic flagging'
 
     if task_cls is hif.tasks.FluxcalFlag:
@@ -1948,7 +1948,7 @@ class T2_4MDetailsAgentFlaggerRenderer(T2_4MDetailsDefaultRenderer):
 
     def __init__(self, template='t2-4m_details-hif_flagdeteralma.html', 
                  always_rerender=False):
-        super(T2_4MDetailsAgentFlaggerRenderer, self).__init__(template,
+       super(T2_4MDetailsAgentFlaggerRenderer, self).__init__(template,
                                                                always_rerender)
 
     def get_display_context(self, context, result):
@@ -2428,6 +2428,7 @@ renderer_map = {
         hif.tasks.GcorFluxscale  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_gfluxscale.html'),
         hif.tasks.ImportData     : T2_4MDetailsImportDataRenderer(),
         hif.tasks.AgentFlagger   : T2_4MDetailsAgentFlaggerRenderer(),
+        hif.tasks.ALMAAgentFlagger : T2_4MDetailsAgentFlaggerRenderer(),
         hif.tasks.Lowgainflag    : T2_4MDetailsLowgainFlagRenderer(),
         hif.tasks.MakeCleanList  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_makecleanlist.html'),
         hif.tasks.NormaliseFlux  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_normflux.html'),

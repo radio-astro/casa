@@ -45,7 +45,7 @@ CasaTaskDict = {
 classToCASATask = {
     # Interferometry tasks ---------------------------------------------------
     hif_tasks.Antpos : 'hif_antpos',
-    hif_tasks.AgentFlagger : 'hif_flagdata',
+    hif_tasks.ALMAAgentFlagger : 'hif_flagdata',
     hif_tasks.Applycal : 'hif_applycal',    
     hif_tasks.Atmflag : 'hif_atmflag',
     hif_tasks.Bandpass : 'hif_bandpass',
@@ -53,7 +53,6 @@ classToCASATask = {
     hif_tasks.Clean : 'hif_clean',
     hif_tasks.CleanList : 'hif_cleanlist',
     hif_tasks.ExportData : 'hif_exportdata',
-    hif_tasks.FlagDeterALMA : 'hif_flagdata',    
     hif_tasks.Fluxcal : 'hif_fluxcal',
     hif_tasks.FluxcalFlag : 'hif_fluxcalflag',
     hif_tasks.Fluxscale : 'hif_fluxscale',

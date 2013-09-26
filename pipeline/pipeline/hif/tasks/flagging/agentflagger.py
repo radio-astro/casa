@@ -44,9 +44,9 @@ class AgentFlaggerResults(basetask.Results):
 
 class AgentFlaggerInputs(basetask.StandardInputs):
     autocorr = basetask.property_with_default('autocorr', True)
-    edgespw = basetask.property_with_default('edgespw', True)
+    edgespw = basetask.property_with_default('edgespw', False)
     flagbackup = basetask.property_with_default('flagbackup', False)
-    fracspw = basetask.property_with_default('fracspw', 0.0625)
+    fracspw = basetask.property_with_default('fracspw', 0.05)
     online = basetask.property_with_default('online', True)
     scan = basetask.property_with_default('scan', True)
     scannumber = basetask.property_with_default('scannumber', '')
@@ -92,7 +92,7 @@ class AgentFlaggerInputs(basetask.StandardInputs):
     @filetemplate.setter
     def filetemplate(self, value):
         if value in (None, ''):
-            value = ''
+            value = []
         elif type(value) is types.StringType:
             value = list(value.replace('[','').replace(']','').replace("'","").split(','))
         self._filetemplate = value
@@ -124,7 +124,7 @@ class AgentFlagger(basetask.StandardTaskTemplate):
 
     def prepare(self):
         af = casatools.agentflagger
-        af.open(msname=self.inputs.ms.name, ntime=100.0);
+        af.open(msname=self.inputs.ms.name);
         af.selectdata();
 
         agentcmds = self._get_flag_commands()
@@ -168,6 +168,32 @@ class AgentFlagger(basetask.StandardTaskTemplate):
 
         casatools.agentflagger.parseagentparameters(agent_cmd)
 
+    def verify_spw(self, spw):
+        """
+        Verify that the given spw should be flagged, raising a ValueError if
+        it should not.
+        
+        Checks in this function should be generic. Observatory-dependent tests
+        should be added by extending the AgentFlagger and overriding this
+        method.
+        """
+        # Get the data description for this spw
+        dd = self.inputs.ms.get_data_description(spw=spw)
+        if dd is None:
+            raise ValueError('Missing data description for spw %s ' % spw.id)
+
+        ncorr = len(dd.corr_axis)
+        if ncorr not in (1, 2, 4):
+            raise ValueError('Wrong number of correlations %s for spw %s '
+                             '' % (ncorr, spw.id))
+
+    def get_fracspw(self, spw):
+        """
+        Get the fraction of data to flag for the given spw, expressed as a
+        floating point number between 0 and 1.
+        """
+        return self.inputs.fracspw
+
     def _get_edgespw_cmds(self):
         inputs = self.inputs
 
@@ -178,30 +204,24 @@ class AgentFlagger(basetask.StandardTaskTemplate):
         # spw in the ms. Calling get_spectral_windows() with no arguments
         # returns just the science windows, which is exactly what we want.
         for spw in inputs.ms.get_spectral_windows():
+            try:
+                # test that this spw should be flagged by assessing number of
+                # correlations, TDM/FDM mode etc.
+                self.verify_spw(spw)
+            except ValueError as e:
+                # this spw should not be or is incapable of being flagged
+                LOG.debug(e.message)
+                continue
+
+            # get fraction of spw to flag from template function
+            fracspw = self.get_fracspw(spw)
+
             # If the twice the number of flagged channels is greater than the
             # number of channels for a given spectral window, skip it.
-            frac_chan = int(round(inputs.fracspw * spw.num_channels + 0.5))
+            frac_chan = int(round(fracspw * spw.num_channels + 0.5))
             if 2*frac_chan >= spw.num_channels:
                 LOG.debug('Too many flagged channels %s for spw %s '
                           '' % (spw.num_channels, spw.id))
-                continue
-
-            # Get the data description for this spw
-            dd = inputs.ms.get_data_description(spw=spw)
-            if dd is None:
-                LOG.debug('Missing data description for spw %s ' % spw.id)
-                continue
-
-            ncorr = len (dd.corr_axis)
-            if ncorr not in (1, 2, 4):
-                LOG.debug('Wrong number of correlations %s for spw %s '
-                          '' % (ncorr, spw.id))
-                continue
-
-            # Skip if TDM mode where TDM modes are defined to be modes with 
-            # <= 256 channels per correlation
-            if (ncorr * spw.num_channels > 256):
-                LOG.debug('Skipping edge flagging for FDM spw %s ' % spw.id)
                 continue
 
             # calculate the channel ranges to flag. No need to calculate the
@@ -248,7 +268,6 @@ class AgentFlagger(basetask.StandardTaskTemplate):
 
         # Flag autocorrelations?
         if inputs.autocorr:
-            #cmds.append('mode=manual antenna=*&&& reason=autocorr')
             cmds.append('mode=manual autocorr=True reason=autocorr')
             cmds.append('mode=summary name=autocorr')
 
@@ -304,3 +323,50 @@ class AgentFlagger(basetask.StandardTaskTemplate):
             d[k] = v
         return d
 
+
+
+class ALMAAgentFlaggerInputs(AgentFlaggerInputs):
+    """
+    Flagger inputs class for ALMA data. It extends the standard inputs with
+    an extra parameter (fracspwfps) used when processing ACA windows.
+    """
+    # override superclass inputs with ALMA-specific values
+    edgespw = basetask.property_with_default('edgespw', True)
+    fracspw = basetask.property_with_default('fracspw', 0.0625)
+    template = basetask.property_with_default('template', True)
+    
+    # new property for ACA correlator
+    fracspwfps = basetask.property_with_default('fracspwfps', 0.048387)
+
+    def __init__(self, context, vis=None, output_dir=None, flagbackup=None,
+                  autocorr=None, shadow=None, scan=None, scannumber=None,
+                  intents=None, edgespw=None, fracspw=None, fracspwfps=None,
+                  online=None, fileonline=None, template=None,
+                  filetemplate=None):
+        self._init_properties(vars())
+
+
+class ALMAAgentFlagger(AgentFlagger):
+    """
+    Agent flagger class for ALMA data.
+    """
+    Inputs = ALMAAgentFlaggerInputs
+    
+    def get_fracspw(self, spw):    
+        # override the default fracspw getter with our ACA-aware code
+        if spw.num_channels in (62, 124, 248):
+            return self.inputs.fracspwfps
+        else:
+            return self.inputs.fracspw
+    
+    def verify_spw(self, spw):
+        # override the default verifier, adding an extra test that bypasses
+        # flagging of TDM windows
+        super(ALMAAgentFlagger, self).verify_spw(spw)
+
+        # Skip if TDM mode where TDM modes are defined to be modes with 
+        # <= 256 channels per correlation
+        dd = self.inputs.ms.get_data_description(spw=spw)
+        ncorr = len(dd.corr_axis)
+        if ncorr*spw.num_channels > 256:
+            raise ValueError('Skipping edge flagging for FDM spw %s' % spw.id)            
