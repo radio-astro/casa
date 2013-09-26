@@ -1442,11 +1442,11 @@ protected:
         Int nRowsPerWindow = nRows_p / N_Windows;
 
         for (Int i = 0; i < N_Windows; i++){
-            Int lastRow = nRowsPerWindow / averagingFactor * (i + 1); // ID of first row of last averaged VB
+            Int lastRow = (nRowsPerWindow / averagingFactor) * N_Windows + i * nBaselines_p; // ID of first row of last averaged VB
             Int nRowsInPartialAverage = (nRowsPerWindow % averagingFactor) / nBaselines_p;
 
             if (nRowsInPartialAverage != 0){
-                lastRow += i * nBaselines_p;
+                lastRow += i * nBaselines_p * N_Windows;
             }
             // remaining
             endBoundaryConditions.push_back (make_pair (lastRow, nRowsInPartialAverage));
@@ -1488,9 +1488,14 @@ protected:
         addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::sigma, "Sigma",
                                                endBoundaryConditions, 1.0, True));
 
+        Block<Int> columns (3, 0);
+        columns [0] = MS::ARRAY_ID;
+        columns [1] = MS::FIELD_ID;
+        columns [2] = MS::TIME;
+
         AveragingParameters parameters (interval * averagingFactor,
                                         chunkInterval,
-                                        SortColumns (),
+                                        SortColumns (columns, False),
                                         AveragingOptions (AveragingOptions::AverageObserved |
                                                           AveragingOptions::AverageModel |
                                                           AveragingOptions::AverageCorrected |
@@ -2591,7 +2596,7 @@ Tester::doTests (Int nArgs, char * args [])
         Environment environment;
         Arguments arguments = parseArgs (nArgs, args);
 
-        doTest <BaselineDependentAveraging> (environment, arguments);
+        doTest <SimpleTestsNWindows<2> > (environment, arguments);
 
         doTest <SimpleTests> (environment, arguments);
 
@@ -2601,9 +2606,9 @@ Tester::doTests (Int nArgs, char * args [])
 
         doTest <CubeFlaggingTests> (environment, arguments);
 
-        doTest <SimpleTestsNWindows<2> > (environment, arguments);
-
         doTest <WeightSelectionTests> (environment, arguments);
+
+        doTest <BaselineDependentAveraging> (environment, arguments);
 
         if (nTestsAttempted_p == nTestsPassed_p){
 

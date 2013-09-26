@@ -110,16 +110,16 @@ private:
 
     public:
 
-        SpwIndex (Int n) : Matrix<Int> (n, n, Empty), nBaselines_p (0) {}
+        SpwIndex (Int n) : Matrix<Int> (n, n, Empty) {}
 
         Int
-        getBaselineNumber (Int antenna1, Int antenna2)
+        getBaselineNumber (Int antenna1, Int antenna2, Int & nBaselines)
         {
             Int i = (* this) (antenna1, antenna2);
 
             if (i == Empty){
 
-                i = nBaselines_p ++;
+                i = nBaselines ++;
                 (* this) (antenna1, antenna2) = i;
             }
 
@@ -128,7 +128,6 @@ private:
 
     private:
 
-        Int nBaselines_p;
     };
 
     typedef vector<SpwIndex *> Index;
@@ -140,12 +139,14 @@ private:
 
     Index index_p;
     Int nAntennas_p;
+    Int nBaselines_p;
     Int nSpw_p;
 
 };
 
 BaselineIndex::BaselineIndex ()
 : nAntennas_p (0),
+  nBaselines_p (0),
   nSpw_p (0)
 {}
 
@@ -158,8 +159,11 @@ Int
 BaselineIndex::operator () (Int antenna1, Int antenna2, Int spectralWindow)
 {
     SpwIndex * spwIndex = getSpwIndex (spectralWindow);
+    if (spwIndex == 0){
+        addSpwIndex (spectralWindow);
+    }
 
-    Int i = spwIndex->getBaselineNumber (antenna1, antenna2);
+    Int i = spwIndex->getBaselineNumber (antenna1, antenna2, nBaselines_p);
 
     return i;
 }
@@ -171,10 +175,7 @@ BaselineIndex::addSpwIndex (Int i)
 {
     // Delete an existing SpwIndex so that we start fresh
 
-    if (index_p [i] != 0){
-        delete index_p [i];
-        index_p [i] = 0;
-    }
+    delete index_p [i];
 
     // Create a new SpwIndex and insert it into the main index.
 
@@ -190,6 +191,7 @@ BaselineIndex::configure (Int nAntennas, Int nSpw, const VisBuffer2 * vb)
 
     nAntennas_p = nAntennas;
     nSpw_p = nSpw;
+    nBaselines_p = 0;
 
     // Get rid of the existing index
 
@@ -230,6 +232,8 @@ BaselineIndex::destroy ()
 BaselineIndex::SpwIndex *
 BaselineIndex::getSpwIndex (Int spw)
 {
+    AssertCc (spw < (int) index_p.size());
+
     SpwIndex * spwIndex = index_p [spw];
 
     if (spwIndex == 0){
