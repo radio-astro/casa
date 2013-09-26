@@ -16,7 +16,7 @@ from pipeline.hif.tasks.common import viewflaggers
 LOG = infrastructure.get_logger(__name__)
 
 
-class WvrgcalflagInputs(basetask.StandardInputs):
+class WvrgcalflagInputs(wvrgcal.WvrgcalInputs):
     
     def __init__(self, context, output_dir=None, vis=None,
       caltable=None, hm_toffset=None, toffset=None, segsource=None, 
@@ -27,233 +27,59 @@ class WvrgcalflagInputs(basetask.StandardInputs):
       flag_hi=None, fhi_limit=None, fhi_minsample=None):
 	self._init_properties(vars())
 
-    @property
-    def hm_toffset(self):
-        if self._hm_toffset is None:
-            return 'automatic'
-        return self._hm_toffset
-
-    @hm_toffset.setter
-    def hm_toffset(self, value):
-        self._hm_toffset = value
-
-    @property
-    def toffset(self):
-        if self._toffset is None:
-            return 0
-        return self._toffset
-
-    @toffset.setter
-    def toffset(self, value):
-        self._toffset = value
-
-    @property
-    def segsource(self):
-        if self._segsource is None:
-            return True
-        return self._segsource
-
-    @segsource.setter
-    def segsource(self, value):
-        self._segsource = value
-
-    @property
-    def hm_tie(self):
-        if self._hm_tie is None:
-            return 'automatic'
-        return self._hm_tie
-
-    @hm_tie.setter
-    def hm_tie(self, value):
-        self._hm_tie = value
-
-    @property
-    def tie(self):
-        if self._tie is None:
-            return []
-        return self._tie
-
-    @tie.setter
-    def tie(self, value):
-        self._tie = value
-
-    @property
-    def sourceflag(self):
-        if self._sourceflag is None:
-            return []
-        return self._sourceflag
-
-    @sourceflag.setter
-    def sourceflag(self, value):
-        self._sourceflag = value
-
-    @property
-    def nsol(self):
-        if self._nsol is None:
-            return 1
-        return self._nsol
-
-    @nsol.setter
-    def nsol(self, value):
-        self._nsol = value
-
-    @property
-    def disperse(self):
-        if self._disperse is None:
-            return False
-        return self._disperse
-
-    @disperse.setter
-    def disperse(self, value):
-        self._disperse = value
-
-    @property
-    def wvrflag(self):
-        return self._wvrflag
-
-    @wvrflag.setter
-    def wvrflag(self, value):
+    # qa2_intent setter overrides version in WvrgcalInputs with a 
+    # different default 
+    @wvrgcal.WvrgcalInputs.qa2_intent.setter
+    def qa2_intent(self, value):
         if value is None:
-            self._wvrflag = []
-        elif type(value) is types.StringType:
-            if value == '':
-                self._wvrflag = []
-            else:
-                if value[0] == '[':
-                    strvalue=value.replace('[','').replace(']','').replace("'","")
-                else:
-                    strvalue = value
-                self._wvrflag = list(strvalue.split(','))
-        else:
-            self._wvrflag = value
-
-    @property
-    def hm_smooth(self):
-        if self._hm_smooth is None:
-            return 'automatic'
-        return self._hm_smooth
-
-    @hm_smooth.setter
-    def hm_smooth(self, value):
-        self._hm_smooth = value
-
-    @property
-    def smooth(self):
-        if self._smooth is None:
-            return 1
-        return self._smooth
-
-    @smooth.setter
-    def smooth(self, value):
-        self._smooth = value
-
-    @property
-    def scale(self):
-        if self._scale is None:
-            return 1.0
-        return self._scale
-
-    @scale.setter
-    def scale(self, value):
-        self._scale = value
-
-    @property
-    def maxdistm(self):
-        if self._maxdistm is None:
-            return 500.0
-        return self._maxdistm
-
-    @maxdistm.setter
-    def maxdistm(self, value):
-        self._maxdistm = value
-
-    @property
-    def minnumants(self):
-        if self._minnumants is None:
-            return 2
-        return self._minnumants
-
-    @minnumants.setter
-    def minnumants(self, value):
-        self._minnumants = value
-
-    @property
-    def flag_intent(self):
-        if self._flag_intent is None:
-            return 'BANDPASS'
-        return self._flag_intent
-
-    @flag_intent.setter
-    def flag_intent(self, value):
-        self._flag_intent = value
-    @property
-
-    def qa2_intent(self):
-        if self._qa2_intent is None:
             value = 'PHASE,BANDPASS'
-        else:
-            value = self._qa2_intent
+
         # ensure that qa2_intent includes flag_intent otherwise 
         # the results for flag_intent will not be calculated
         value_set = set(value.split(','))
         value_set.update(self.flag_intent.split(','))
         value = ','.join(value_set)
-
-        return value
-
-    @qa2_intent.setter
-    def qa2_intent(self, value):
         self._qa2_intent = value
 
     @property
-    def qa2_bandpass_intent(self):
-        if self._qa2_bandpass_intent is None:
-            return 'BANDPASS'
-        return self._qa2_bandpass_intent
+    def flag_intent(self):
+        return self._flag_intent
 
-    @qa2_bandpass_intent.setter
-    def qa2_bandpass_intent(self, value):
-        self._qa2_bandpass_intent = value
-
-    @property
-    def accept_threshold(self):
-        if self._accept_threshold is None:
-            return 1.0
-        return self._accept_threshold
-
-    @accept_threshold.setter
-    def accept_threshold(self, value):
-        self._accept_threshold = value
+    @flag_intent.setter
+    def flag_intent(self, value):
+        if value is None:
+            value = 'BANDPASS'
+        self._flag_intent = value
 
     # flag high outlier
     @property
     def flag_hi(self):
-        if self._flag_hi is None:
-            return True
         return self._flag_hi
 
     @flag_hi.setter
     def flag_hi(self, value):
+        if value is None:
+            value = True
         self._flag_hi = value
 
     @property
     def fhi_limit(self):
-        if self._fhi_limit is None:
-            return 10
         return self._fhi_limit
 
     @fhi_limit.setter
     def fhi_limit(self, value):
+        if value is None:
+            value = 10
         self._fhi_limit = value
-    @property
 
+    @property
     def fhi_minsample(self):
-        if self._fhi_minsample is None:
-            return 5
         return self._fhi_minsample
 
     @fhi_minsample.setter
     def fhi_minsample(self, value):
+        if value is None:
+            value = 5
         self._fhi_minsample = value
 
 
@@ -321,7 +147,8 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
         # 'flagged' as necessary. If the associated qa2 score indicates 
         # that applying it will make things worse then remove the file from
         # the result so that it cannot be accepted into the context.
-        if result.qa2.overall_score < inputs.accept_threshold:
+        if result.qa2.overall_score is not None and \
+          result.qa2.overall_score < inputs.accept_threshold:
             LOG.warning(
               'wvrgcal file has qa2 score (%s) below accept_threshold (%s) and will not be applied' %
               (result.qa2.overall_score, inputs.accept_threshold))
