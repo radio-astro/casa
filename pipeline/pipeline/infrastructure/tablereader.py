@@ -399,6 +399,13 @@ class ObservationTable(object):
         with utils.open_table(table_filename) as table:
             start_s, end_s = table.getcol('TIME_RANGE')
 
+            # start_s, end_s are arrays with a single entry for
+            # simple datasets. Measurement sets that are
+            # concats of simple datasets have more than 1 entry,
+            # so use the 'min' and 'max' to handle this possibiity.
+            start_s = numpy.min(start_s)
+            end_s = numpy.max(end_s)
+
             epoch_start = me.epoch(time_ref, qa.quantity(start_s, time_unit))
             epoch_end = me.epoch(time_ref, qa.quantity(end_s, time_unit))
 
