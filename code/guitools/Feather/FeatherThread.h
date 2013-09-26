@@ -52,7 +52,7 @@ public:
 	 * Computes First Image x Second Image.  Caller is responsible
 	 * for deleting the convolved image.
 	 */
-	static ImageInterface<float>* makeConvolvedImage(ImageInterface<float>* firstImage, ImageInterface<float>* secondImage );
+	ImageInterface<float>* makeConvolvedImage(ImageInterface<float>* firstImage, ImageInterface<float>* secondImage );
 	FeatherThread();
 	typedef enum DataTypes { SD_WEIGHT, INT_WEIGHT, SD_CUT, INT_CUT, DIRTY_CUT,
 				SD_ORIGINAL, INT_ORIGINAL, INT_CONVOLVED_LOW, INT_CONVOLVED_LOW_WEIGHTED,
@@ -73,7 +73,7 @@ private:
 	FeatherThread operator=( const FeatherThread& other );
 	bool collectLowHighData();
 	bool collectLowDirtyData();
-
+	ImageInterface<float>* addMissingAxes( ImageInterface<float>* firstImage );
 	bool collectConvolvedData( DataTypes original, DataTypes cut);
 	bool setWorkerImages( ImageInterface<float>* imageLow, ImageInterface<float>* imageHigh );
 	Feather* featherWorker;

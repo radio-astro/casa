@@ -32,13 +32,9 @@
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <synthesis/Utilities/SpectralImageUtil.h>
 
-
-
 #include <QDebug>
 
 namespace casa {
-
-
 
 FeatherManager::FeatherManager() :
 		lowResImage( NULL ), highResImage( NULL ), dirtyImage( NULL ),
@@ -336,7 +332,8 @@ FeatheredData FeatherManager::getDirtyCut() const {
 FeatheredData FeatherManager::getIntConvolvedSDOrig() {
 	FeatheredData dataPair;
 	if ( highResImage != NULL ){
-		ImageInterface<float>* highConvolved = FeatherThread::makeConvolvedImage( highResImage, lowResImage );
+		ImageInterface<float>* highConvolved =
+			thread->makeConvolvedImage( highResImage, lowResImage );
 		if ( highConvolved != NULL ){
 			dataPair = getConvolvedOrig( FeatherThread::INT_CONVOLVED_LOW, highConvolved );
 			delete highConvolved;
@@ -369,7 +366,6 @@ FeatheredData FeatherManager::getConvolvedOrig( FeatherThread::DataTypes dataTyp
 	FeatheredData dataPair;
 	if ( image != NULL ){
 		int channelCount = getPlaneCount( image );
-		//cout << "Channel count="<<channelCount<<endl;
 		bool channelsExceeded = false;
 		if ( channelIndex >= channelCount ){
 			channelsExceeded = true;
@@ -383,23 +379,18 @@ FeatheredData FeatherManager::getConvolvedOrig( FeatherThread::DataTypes dataTyp
 		if ( !channelsAveraged && !channelsExceeded ){
 			try {
 
-				TempImage<Float> imageCopy(image->shape(), image->coordinates(),0);
+				/*TempImage<Float> imageCopy(image->shape(), image->coordinates(),0);
 				imageCopy.copyData(*image);
-				ImageUtilities::copyMiscellaneous(imageCopy, *image);
+				ImageUtilities::copyMiscellaneous(imageCopy, *image);*/
+				ImageInterface<float>* imageCopy = thread->addMissingAxes(image);
 
-				SubImage<Float>* channeledImage = SpectralImageUtil::getChannel(imageCopy, channelIndex);
+				SubImage<Float>* channeledImage = SpectralImageUtil::getChannel(*imageCopy, channelIndex);
 				Vector<Float> ux;
 				Vector<Float> xamp;
 				Vector<Float> uy;
 				Vector<Float> yamp;
 				if ( !radialAxis ){
 					Feather::getCutXY(ux, xamp, uy, yamp, *channeledImage);
-					/*if ( FeatherThread::INT_ORIGINAL == dataType ){
-						cout << "Original high data="<<ux.size()<<" channeledImage="<<channeledImage<<endl;
-						for ( int i = 0; i < ux.size(); i++ ){
-							cout << "i="<<i<<" ux="<<ux[i]<<" xamp="<<xamp[i]<<endl;
-						}
-					}*/
 				}
 				else {
 					Feather::getRadialCut( ux, xamp, *channeledImage);
@@ -407,6 +398,7 @@ FeatheredData FeatherManager::getConvolvedOrig( FeatherThread::DataTypes dataTyp
 				dataPair.setU( ux, xamp );
 				dataPair.setV( uy, yamp );
 				delete channeledImage;
+				delete imageCopy;
 			}
 			catch( AipsError& error ){
 				channelsExceeded = true;
@@ -428,7 +420,8 @@ FeatheredData FeatherManager::getConvolvedOrig( FeatherThread::DataTypes dataTyp
 FeatheredData FeatherManager::getDirtyConvolvedSDOrig() {
 	FeatheredData dataPair;
 	if ( dirtyImage != NULL ){
-		ImageInterface<float>* dirtyConvolved = FeatherThread::makeConvolvedImage( dirtyImage, lowResImage );
+		ImageInterface<float>* dirtyConvolved =
+			thread->makeConvolvedImage( dirtyImage, lowResImage );
 		if ( dirtyConvolved != NULL ){
 			dataPair = getConvolvedOrig( FeatherThread::DIRTY_CONVOLVED_LOW, dirtyConvolved );
 			delete dirtyConvolved;
@@ -447,7 +440,8 @@ FeatheredData FeatherManager::getDirtyConvolvedSDCut() const {
 FeatheredData FeatherManager::getSDConvolvedIntOrig(){
 	FeatheredData dataPair;
 	if ( lowResImage != NULL ){
-		ImageInterface<float>* sdConvolved = FeatherThread::makeConvolvedImage( lowResImage, highResImage );
+		ImageInterface<float>* sdConvolved =
+			thread->makeConvolvedImage( lowResImage, highResImage );
 		if ( sdConvolved != NULL ){
 			dataPair = getConvolvedOrig( FeatherThread::LOW_CONVOLVED_HIGH, sdConvolved );
 			delete sdConvolved;

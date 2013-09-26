@@ -33,6 +33,14 @@ FeatheredData::FeatheredData() {
 
 }
 
+bool FeatheredData::isEmpty() const {
+	bool empty = true;
+	if ( ux.size() > 0 || uy.size() > 0 || vx.size() > 0 || vy.size() > 0 ){
+		empty = false;
+	}
+	return empty;
+}
+
 void FeatheredData::setU( const Vector<Float>& xVal, const Vector<Float>& yVal ){
 	int xCount = xVal.size();
 	ux.resize( xCount );

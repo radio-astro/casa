@@ -99,6 +99,9 @@ FileLoader::FileLoader(QWidget *parent)
 	//ui.lowResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/Feather-M100/TP_CO_cube_JyOldGjinc" );
 	//ui.highResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/Feather-M100/M100_Intcombo_0.193_cube.image");
 
+	//Non-stokes Axis low res
+	//ui.lowResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/Feather43/gbt43Jy.im");
+	//ui.highResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/Feather43/vla43.im");
 }
 
 

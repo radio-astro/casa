@@ -28,6 +28,7 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Images/TempImage.h>
 #include <synthesis/MeasurementEquations/Feather.h>
+#include <synthesis/MeasurementEquations/Imager.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <images/Images/ImageUtilities.h>
 #include <QDebug>
@@ -128,7 +129,7 @@ bool FeatherThread::collectLowDirtyData(){
 		dirtyOriginal.setV( vX, vY );
 		dataMap.insert( DIRTY_ORIGINAL, dirtyOriginal );
 
-		//try {
+		try {
 			ImageInfo lowInfo = lowImage->imageInfo();
 			GaussianBeam beam = lowInfo.restoringBeam();
 			featherWorker->convolveINT( beam );
@@ -142,7 +143,7 @@ bool FeatherThread::collectLowDirtyData(){
 			convolvedDirtyCut.setU( uX, uY );
 			convolvedDirtyCut.setV( vX, vY );
 			dataMap.insert( DIRTY_CONVOLVED_LOW_WEIGHTED, convolvedDirtyCut );
-		/*}
+		}
 		catch( AipsError& error ){
 			lowDirtyLoaded = false;
 			errorMessage = "Could not convolve dirty image with low beam.";
@@ -150,7 +151,7 @@ bool FeatherThread::collectLowDirtyData(){
 				(*logger)<<LogIO::WARN << errorMessage.toStdString() <<
 						"  "<<error.getMesg().c_str()<<LogIO::POST;
 			}
-		}*/
+		}
 
 
 		/*ImageInterface<float>* newLow = makeConvolvedImage( lowImage, dirtyImage );
@@ -287,6 +288,7 @@ bool FeatherThread::collectLowHighData(){
 			delete newLow;
 		}
 		else {
+			errorMessage = "Could not convolve low data with high beam.";
 			lowHighLoaded = false;
 		}
 	}
@@ -296,16 +298,63 @@ bool FeatherThread::collectLowHighData(){
 	return lowHighLoaded;
 }
 
-ImageInterface<float>* FeatherThread::makeConvolvedImage(ImageInterface<float>* firstImage, ImageInterface<float>* secondImage ){
-	TempImage<Float>* convolvedImage = NULL;
-	if ( secondImage != NULL && firstImage != NULL ){
-		ImageInfo lowInfo= secondImage->imageInfo();
-		GaussianBeam beam=lowInfo.restoringBeam();
-		convolvedImage = new TempImage<Float>(firstImage->shape(), firstImage->coordinates(),0);
-		convolvedImage->copyData(*firstImage);
-		ImageUtilities::copyMiscellaneous(*convolvedImage, *firstImage);
+ImageInterface<float>* FeatherThread::addMissingAxes( ImageInterface<float>* firstImage ){
+	TempImage<float>* convolvedImage = NULL;
+	if ( firstImage != NULL ){
+		CoordinateSystem cSys = firstImage->coordinates();
+		CountedPtr<ImageInterface<Float> > firstCopy;
+		firstCopy=new TempImage<Float>(firstImage->shape(), cSys);
+		(*firstCopy).copyData(*firstImage);
+		ImageUtilities::copyMiscellaneous(*firstCopy, *firstImage);
+		if(firstImage->getDefaultMask() != "")
+			Imager::copyMask(*firstCopy, *firstImage,  firstImage->getDefaultMask());
+		PtrHolder<ImageInterface<Float> > copyPtr;
+		PtrHolder<ImageInterface<Float> > copyPtr2;
+		Vector<Stokes::StokesTypes> stokesvec;
+		if(CoordinateUtil::findStokesAxis(stokesvec, cSys) <0){
+			CoordinateUtil::addIAxis(cSys);
+			ImageUtilities::addDegenerateAxes (*logger, copyPtr, *firstCopy, "",
+					False, False,"I", False, False,
+					True);
+			firstCopy=CountedPtr<ImageInterface<Float> >(copyPtr.ptr(), False);
+		}
+		if(CoordinateUtil::findSpectralAxis(cSys) <0){
+			CoordinateUtil::addFreqAxis(cSys);
+			ImageUtilities::addDegenerateAxes (*logger, copyPtr2, *firstCopy, "",
+					False, True,
+					"", False, False,
+					True);
+			firstCopy=CountedPtr<ImageInterface<Float> >(copyPtr2.ptr(), False);
+		}
 
-		StokesImageUtil::Convolve(*convolvedImage, beam, True);
+
+		convolvedImage=new TempImage<Float>(firstCopy->shape(), cSys);
+
+		convolvedImage->copyData(*firstCopy);
+		ImageUtilities::copyMiscellaneous(*convolvedImage, *firstCopy);
+		String maskname=firstCopy->getDefaultMask();
+		if(maskname != ""){
+			Imager::copyMask(*convolvedImage, *firstCopy, maskname);
+
+		}
+	}
+	return convolvedImage;
+}
+
+ImageInterface<float>* FeatherThread::makeConvolvedImage(ImageInterface<float>* firstImage, ImageInterface<float>* secondImage ){
+	ImageInterface<float>* convolvedImage = NULL;
+	if ( secondImage != NULL && firstImage != NULL ){
+		try {
+			ImageInfo lowInfo= secondImage->imageInfo();
+			GaussianBeam beam=lowInfo.restoringBeam();
+			convolvedImage = addMissingAxes( firstImage );
+			StokesImageUtil::Convolve(*convolvedImage, beam, True);
+		}
+		catch( AipsError& error ){
+			if ( logger != NULL ){
+				(*logger)<<LogIO::WARN<< "Error making convolved image: "<<error.getMesg().c_str()<<LogIO::POST;
+			}
+		}
 	}
 	return convolvedImage;
 }

@@ -408,16 +408,24 @@ void FeatherMain::addOriginalDataToPlots(){
 	FeatheredData sDOrig = dataManager->getSDOrig();
 	plotHolder->setData(sDOrig.getUX(), sDOrig.getUY(),
 				sDOrig.getVX(), sDOrig.getVY(), FeatherDataType::LOW );
+	if ( sDOrig.isEmpty()){
+		QMessageBox::warning(this,"Single Dish Data Missing", "There was a  loading single dish data.");
+	}
 
 
 	FeatheredData intOrig = dataManager->getIntOrig();
 	plotHolder->setData( intOrig.getUX(), intOrig.getUY(),
 				intOrig.getVX(), intOrig.getVY(), FeatherDataType::HIGH );
+	if ( intOrig.isEmpty() ){
+		QMessageBox::warning(this,"Interferometer Data Missing", "There was a problem loading interferometer data.");
+	}
 
 	FeatheredData dirtyOrig = dataManager->getDirtyOrig();
 	plotHolder->setData( dirtyOrig.getUX(), dirtyOrig.getUY(),
 		dirtyOrig.getVX(), dirtyOrig.getVY(), FeatherDataType::DIRTY );
-
+	if ( dirtyOrig.isEmpty() && dirtyImagePath.length() > 0 ){
+		QMessageBox::warning(this,"Dirty Data Missing", "There was a problem loading the data.");
+	}
 
 }
 
