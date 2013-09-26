@@ -39,6 +39,7 @@
 namespace casa {
 
 class LogFile;
+class ProfileFitResults;
 
 class ImageProfileFitterResults {
 	// <summary>
@@ -64,7 +65,7 @@ class ImageProfileFitterResults {
 public:
 	ImageProfileFitterResults(
 		const std::tr1::shared_ptr<LogIO> log, const CoordinateSystem& csysIm,
-		const Array<std::tr1::shared_ptr<ImageFit1D<Float> > >* const &fitters,
+		const Array<std::tr1::shared_ptr<ProfileFitResults> >* const &fitters,
 		const SpectralList& nonPolyEstimates,
 		const std::tr1::shared_ptr<const SubImage<Float> > subImage, Int fitAxis, Int polyOrder,
 		uInt nGaussSinglets, uInt nGaussMultiplets, uInt nLorentzSinglets,
@@ -160,14 +161,14 @@ private:
 		_ltpName, _ltpErrName, _sigmaName, _summaryHeader;
     uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,
 		_nPLPCoeffs, _nLTPCoeffs;
-    const Array<std::tr1::shared_ptr<ImageFit1D<Float> > >* const  _fitters;
+    const Array<std::tr1::shared_ptr<ProfileFitResults> >* const  _fitters;
 	SpectralList _nonPolyEstimates;
  // subimage contains the region of the original image
 	// on which the fit is performed.
 	const std::tr1::shared_ptr<const SubImage<Float> > _subImage;
 	Int _polyOrder, _fitAxis;
 	vector<axisType> _axisTypes;
-	Matrix<String> _worldCoords;
+	Array<String> _worldCoords;
 	Record _results;
 	const static uInt _nOthers, _gsPlane, _lsPlane;
 	std::tr1::shared_ptr<LogFile> _logfile;
@@ -182,7 +183,7 @@ private:
 
     String _getTag(const uInt i) const;
 
-    std::auto_ptr<vector<vector<Matrix<Double> > > > _createPCFMatrices() const;
+    std::auto_ptr<vector<vector<Array<Double> > > > _createPCFArrays() const;
 
     String _elementToString(
     	const Double value, const Double error,
@@ -217,13 +218,13 @@ private:
     ) const;
 
     void _marshalFitResults(
-    	Array<Bool>& attemptedArr, Array<Bool>& successArr,
-    	Array<Bool>& convergedArr, Array<Bool>& validArr,
-    	Matrix<String>& typeMat, Array<Int>& niterArr,
-    	Array<Int>& nCompArr, std::auto_ptr<vector<vector<Matrix<Double> > > >& pcfMatrices,
-    	vector<Matrix<Double> >& plpMatrices, vector<Matrix<Double> >& ltpMatrices, Bool returnDirection,
-        Vector<String>& directionInfo, Array<Bool>& mask
-    );
+        Array<Bool>& attemptedArr, Array<Bool>& successArr,
+        Array<Bool>& convergedArr, Array<Bool>& validArr,
+        Array<String>& typeMat, Array<Int>& niterArr,
+        Array<Int>& nCompArr, std::auto_ptr<vector<vector<Array<Double> > > >& pcfArrays,
+        vector<Array<Double> >& plpArrayss, vector<Array<Double> >& ltpArrays, Bool returnDirection,
+        Array<String>& directionInfo, Array<Bool>& mask 
+    ); 
 
     static void _makeSolutionImage(
     	const String& name, const CoordinateSystem& csys,
@@ -232,10 +233,10 @@ private:
     );
 
     void _insertPCF(
-    	vector<vector<Matrix<Double> > >& pcfMatrices, /* Bool& isSolutionSane,*/
-    	const uInt idx, const PCFSpectralElement& pcf,
-    	const uInt row, const uInt col, const IPosition& pos,
-    	const Double increment/*, const uInt npix*/
+        vector<vector<Array<Double> > >& pcfArrays, /*Bool& isSolutionSane,*/
+        const IPosition& pixel, const PCFSpectralElement& pcf, 
+        const uInt row, const uInt col, 
+        const Double increment/*, const uInt npix*/
     ) const;
 
     void _writeImages(
