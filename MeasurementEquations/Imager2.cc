@@ -4494,7 +4494,6 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
     // need theOldRefFrame,theObsTime,mObsPos,mode,nchan,start,width,restfreq,
     // outframe,veltype
     //
-    cerr << "ouframe " << outframe << " oldRefFrame " << oldRefFrame << endl;
 
     Bool rst=SubMS::calcChanFreqs(os,
 			   imgridfreqs, 
