@@ -132,8 +132,8 @@ dc.makegaussian('n12m_gaussian.im' ,bmaj='55arcsec', bmin='55arcsec', bpa='0deg'
 		normalize=false)
 dc.close()
 dc.open('n4826_t12motf.chregrid.im', psf='n12m_gaussian.im')
-dc.setscales(scalemethod='uservector', uservector=[30., 60.])
-dc.clean(algorithm='msclean', model='n4826_tjoint2', niter=100, gain=0.3)
+dc.setscales(scalemethod='uservector', uservector=[10., 40.])
+dc.clean(algorithm='msclean', model='n4826_tjoint2', niter=20, gain=0.3)
 dc.close()
 default('clean')
 ##### Mosaic the interferometer data...use model from obtain from deconvolve
@@ -199,7 +199,7 @@ joint2_flux=jc2_stats['flux'][0]
 ###these numbers are really fragile to minor changes...like the total flux
 ### makes no sense at all. better crieria needed
 f1_max=153.3498 # < 12/1/2009
-f1_flux=1523.515 # < 12/1/2009
+f1_flux= 2986 # < 0/27/2013
 f2_max=1.8816 # < 12/1/2009
 f2_flux=105.4628 # < 12/1/2009
 
@@ -228,7 +228,7 @@ jc1_flux=230.3 # changes due to channel centre change
 jc2_max=1.53 # < 12/1/2009
 
 #jc2_flux=67.27
-jc2_flux=147.7 # changes due to change in channel centre
+jc2_flux=168.8 # changes due to change in channel centre
 #jc2_flux=144.9498 # 3/17/2010
 #jc2_flux=145.09 # 3/19/2010  (adjusted clean's start by +1)
 #jc2_flux=135.89555 # 3/19/2010  (adjusted clean's start by another +1 (width/2 total))
