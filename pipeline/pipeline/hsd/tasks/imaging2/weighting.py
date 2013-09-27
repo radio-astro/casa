@@ -5,7 +5,6 @@ import numpy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
-from pipeline.infrastructure import casa_tasks
 from .. import common
 
 LOG = infrastructure.get_logger(__name__)
@@ -28,7 +27,7 @@ class WeightMSResults(common.SingleDishResults):
 
     def _outcome_name(self):
         # return [image.imagename for image in self.outcome]
-        return self.outcome['outfile']
+        return self.outcome
 
 
 class WeightMS(common.SingleDishTaskTemplate):

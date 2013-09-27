@@ -23,6 +23,14 @@ class ExportMSResults(common.SingleDishResults):
 
     def merge_with_context(self, context):
         super(ExportMSResults, self).merge_with_context(context)
+        observing_run = context.observing_run
+        outfiles = self.outcome['outfiles']
+        keys = outfiles.keys()
+        for i in xrange(len(observing_run)):
+            if i in keys:
+                observing_run[i].exported_ms = outfiles[i]
+            else:
+                observing_run[i].exported_ms = None
 
     def _outcome_name(self):
         # return [image.imagename for image in self.outcome]

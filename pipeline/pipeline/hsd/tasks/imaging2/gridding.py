@@ -6,6 +6,7 @@ import numpy
 import time
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.casatools as casatools
 from .. import common 
 
 from .accumulator import Accumulator
@@ -25,42 +26,51 @@ def gridding_factory(observing_pattern):
     else:
         raise ValueError('observing_pattern \'%s\' is invalid.'%(observing_pattern))
 
-class GriddingBase(object):
+class GriddingInputs(common.SingleDishInputs):
+    def __init__(self, context, antennaid, spwid, polid):
+        self._init_properties(vars())
+        
+class GriddingResults(common.SingleDishResults):
+    def __init__(self, task=None, success=None, outcome=None):
+        super(GriddingResults, self).__init__(task, success, outcome)
+
+    def merge_with_context(self, context):
+        super(GriddingResults, self).merge_with_context(context)
+
+    def _outcome_name(self):
+        # return [image.imagename for image in self.outcome]
+        return ''
+
+
+class GriddingBase(common.SingleDishTaskTemplate):
+    Inputs = GriddingInputs
     Rule = {'WeightDistance': 'Gauss', \
             'Clipping': 'MinMaxReject', \
             'WeightRMS': True, \
             'WeightTsysExptime': False} 
 
-    def __init__(self, datatable, antenna, files, spw, pol, srctype, nchan, grid_size):
-        self.datatable = datatable
-        self.datatable_name = self.datatable.plaintable
-        if type(antenna) == int:
-            self.antenna = [antenna]
-        else:
-            self.antenna = antenna
-        self.files = files
-        self.spw = spw
-        self.pol = pol
-        self.nchan = nchan
-        self.srctype = srctype
-        if isinstance(grid_size, list):
-            if len(grid_size) > 1:
-                self.grid_ra = grid_size[0]
-                self.grid_dec = grid_size[1]
-            elif len(grid_size) > 0:
-                self.grid_ra = grid_size[0]
-                self.grid_dec = grid_size[0]
-            else:
-                self.grid_ra = -1
-                self.grid_dec = -1
-        else:
-            self.grid_ra = grid_size
-            self.grid_dec = grid_size
-
-    def execute(self, dry_run=True):
-        if dry_run:
-            return [], []
+    def prepare(self):
         start = time.time()
+        inputs = self.inputs
+        context = inputs.context
+        self.datatable = context.observing_run.datatable_instance
+        self.datatable_name = self.datatable.plaintable
+        if type(inputs.antennaid) == int:
+            self.antenna = [inputs.antennaid]
+        else:
+            self.antenna = inputs.antennaid
+        self.files = [context.observing_run[i].name for i in self.antenna]
+        self.spw = inputs.spwid
+        self.pol = inputs.polid
+        reference_data = context.observing_run[self.antenna[0]]
+        reference_spw = reference_data.spectral_window[self.spw]
+        self.nchan = reference_spw.nchan
+        self.srctype = reference_data.calibration_strategy['srctype']
+        # beam size
+        grid_size = casatools.quanta.convert(reference_data.beam_size[self.spw], 'deg')['value']
+        self.grid_ra = grid_size
+        self.grid_dec = grid_size       
+        
         combine_radius = self.grid_ra
         kernel_width = 0.5 * combine_radius
         allowance = self.grid_ra * 0.1
@@ -70,7 +80,20 @@ class GriddingBase(object):
         grid_table = self.dogrid(DataIn, kernel_width, combine_radius, allowance, spacing)
         end = time.time()
         LOG.info('execute: elapsed time %s sec'%(end-start))
-        return grid_table
+        result = GriddingResults(task=self.__class__,
+                                 success=True,
+                                 outcome=grid_table)
+        result.task = self.__class__
+
+        if self.inputs.context.subtask_counter is 0: 
+            result.stage_number = self.inputs.context.task_counter - 1
+        else:
+            result.stage_number = self.inputs.context.task_counter 
+
+        return result
+    
+    def analyse(self, result):
+        return result
         
     def dogrid(self, DataIn, kernel_width, combine_radius, allowance_radius, grid_spacing, loglevel=2):
         """
@@ -221,10 +244,6 @@ class GriddingBase(object):
         return OutputTable
 
 class RasterGridding(GriddingBase):
-    def __init__(self, datatable, antenna, files, spw, pol, srctype, nchan, grid_size):
-
-        super(RasterGridding, self).__init__(datatable, antenna, files, spw, pol, srctype, nchan, grid_size)
-
     def _group(self, index_list, rows, ants, ras, decs, stats, CombineRadius, Allowance, GridSpacing, DecCorrection):
         """
         Gridding by RA/DEC position
@@ -290,10 +309,6 @@ class RasterGridding(GriddingBase):
         return GridTable
 
 class SinglePointGridding(GriddingBase):
-    def __init__(self, datatable, antenna, files, spw, pol, srctype, nchan, grid_size):
-
-        super(SinglePointGridding, self).__init__(datatable, antenna, files, spw, pol, srctype, nchan, grid_size)
-
     def _group(self, index_list, rows, ants, ras, decs, stats, CombineRadius, Allowance, GridSpacing, DecCorrection):
         """
         Gridding by RA/DEC position
@@ -323,10 +338,6 @@ class SinglePointGridding(GriddingBase):
 
 
 class MultiPointGridding(GriddingBase):
-    def __init__(self, datatable, antenna, files, spw, pol, srctype, nchan, grid_size):
-
-        super(MultiPointGridding, self).__init__(datatable, antenna, files, spw, pol, srctype, nchan, grid_size)
-
     def _group(self, index_list, rows, ants, ras, decs, stats, CombineRadius, Allowance, GridSpacing, DecCorrection):
         """
         Gridding by RA/DEC position
