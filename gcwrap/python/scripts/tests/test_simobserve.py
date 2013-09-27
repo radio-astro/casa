@@ -1858,7 +1858,7 @@ class simobserve_badinputs(simobserve_unittest_base):
                              hourangle=hourangle)
             self.fail(self.failmsg)
         except Exception, e:
-            pos=str(e).find('Error in QuantumHolder::fromString with input string "%s": Illegal input units or format' % hourangle)
+            pos=str(e).find("Cannot interpret your hourangle parameter %s as a time quantity" % hourangle)
             msg =  self.errmsg % str(e)
             self.assertNotEqual(pos,-1,msg=msg)        
 
