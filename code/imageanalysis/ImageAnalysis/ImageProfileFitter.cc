@@ -30,11 +30,15 @@
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Quanta/MVTime.h>
 // #include <casa/Utilities/Precision.h>
+//#include <casa/OS/Memory.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
 #include <scimath/Mathematics/Combinatorics.h>
+
+#include <imageanalysis/ImageAnalysis/ProfileFitResults.h>
+
 
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
@@ -684,34 +688,14 @@ void ImageProfileFitter::_fitProfiles(
 	Int nPoints = fitterShape.product();
 
 	if (showProgress) {
-		/*
-		Double nMin = 0.0;
-		Double nMax = 1.0;
-			for (uInt i=0; i<inShape.nelements(); i++) {
-				if ((Int)i != _fitAxis) {
-					nMax *= inShape(i);
-				}
-			}
-			ostringstream oss;
-			oss << "Fit profiles on axis " << _fitAxis+1;
-
-			pProgressMeter.reset(
-				new ProgressMeter(
-					nMin, nMax, String(oss),
-					String("Fits"),
-					String(""), String(""),
-					True, max(1,Int(nMax/20))
-				)
-			);
-			*/
-			ostringstream oss;
-			oss << "Fit profiles on axis " << _fitAxis+1;
-			pProgressMeter.reset(
-				new ProgressMeter(
-					0, nPoints, oss.str()
-				)
-			);
-		}
+		ostringstream oss;
+		oss << "Fit profiles on axis " << _fitAxis+1;
+		pProgressMeter.reset(
+			new ProgressMeter(
+				0, nPoints, oss.str()
+			)
+		);
+	}
 
 	vector<IPosition> goodPos(0);
 	Bool checkMinPts = _subImage->isMasked();
@@ -759,6 +743,15 @@ void ImageProfileFitter::_fitProfiles(
 			newEstimates.add(*polyEl);
 		}
 	}
+
+	Array<Double> (*xfunc)(const Array<Double>&) = 0;
+	Array<Double> (*yfunc)(const Array<Double>&) = 0;
+	if (_nLTPCoeffs > 0) {
+		if (! abscissaSet) {
+			xfunc = casa::log;
+		}
+		yfunc = casa::log;
+	}
 	uInt nOrigComps = newEstimates.nelements();
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	uInt mark = max(1000, pow(Int(10), (Int)log10(nPoints/100)));
@@ -773,15 +766,9 @@ void ImageProfileFitter::_fitProfiles(
 		fitter.clearList();
 		if (abscissaSet) {
 			fitter.setAbscissa(abscissaValues);
+			abscissaSet = False;
 		}
-		Array<Double> (*xfunc)(const Array<Double>&) = 0;
-		if (_nLTPCoeffs > 0 && ! abscissaSet) {
-			xfunc = casa::log;
-		}
-		Array<Double> (*yfunc)(const Array<Double>&) = 0;
-		if (_nLTPCoeffs > 0) {
-			yfunc = casa::log;
-		}
+
 		if (
 			! fitter.setData(
 				curPos, abcissaType, True, divisorPtr, xfunc, yfunc
@@ -811,7 +798,7 @@ void ImageProfileFitter::_fitProfiles(
 		catch (const AipsError& x) {
 			ok = False;
 		}
-		_fitters(curPos).reset(new ImageFit1D<Float>(fitter));
+		_fitters(curPos).reset(new ProfileFitResults(fitter));
 		// Evaluate and fill
 		if (pFit || pResid) {
 			_updateModelAndResidual(
@@ -819,8 +806,6 @@ void ImageProfileFitter::_fitProfiles(
 				pFitMask, pResidMask, failData, failMask
 			);
 		}
-
-
 	}
 }
 
@@ -1032,7 +1017,7 @@ Bool ImageProfileFitter::_isPCFSolutionOK(
 	return True;
 }
 
-const Array<std::tr1::shared_ptr<ImageFit1D<Float> > >& ImageProfileFitter::getFitters() const{
+const Array<std::tr1::shared_ptr<ProfileFitResults> >& ImageProfileFitter::getFitters() const{
 	return _fitters;
 }
 

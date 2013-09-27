@@ -25,7 +25,7 @@
 #include "SpecFitSettingsWidgetRadio.qo.h"
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
 #include <imageanalysis/IO/ImageProfileFitterResults.h>
-#include <imageanalysis/ImageAnalysis/ImageFit1D.h>
+#include <imageanalysis/ImageAnalysis/ProfileFitResults.h>
 #include <components/SpectralComponents/PCFSpectralElement.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <display/QtPlotter/QtCanvas.qo.h>
@@ -792,12 +792,12 @@ namespace casa {
 	    Vector<float>& xValues, Vector<float>& xValuesPix) {
 
 		//Iterate through all the fits and post the results
-		Array<std::tr1::shared_ptr<ImageFit1D<Float> > > image1DFitters = fitter-> getFitters();
-		Array<std::tr1::shared_ptr<ImageFit1D<Float> > >::iterator iterend( image1DFitters.end());
+		Array<std::tr1::shared_ptr<ProfileFitResults> > image1DFitters = fitter-> getFitters();
+		Array<std::tr1::shared_ptr<ProfileFitResults> >::iterator iterend( image1DFitters.end());
 		uint fitIndex = 0;
 		bool successfulFit = false;
-		for ( Array<std::tr1::shared_ptr<ImageFit1D<Float> > >::iterator iter = image1DFitters.begin(); iter != iterend; ++iter ) {
-            std::tr1::shared_ptr<ImageFit1D<Float> > image1DFitter = *iter;
+		for ( Array<std::tr1::shared_ptr<ProfileFitResults> >::iterator iter = image1DFitters.begin(); iter != iterend; ++iter ) {
+            std::tr1::shared_ptr<ProfileFitResults> image1DFitter = *iter;
             if (! image1DFitter) {
                 continue;
             }

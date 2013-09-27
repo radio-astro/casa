@@ -40,6 +40,8 @@
 
 namespace casa {
 
+class ProfileFitResults;
+
 class ImageProfileFitter : public ImageTask {
 	// <summary>
 	// Top level interface for one-dimensional profile fits.
@@ -176,7 +178,7 @@ public:
     inline void setOutputSigmaImage(const String& s) { _sigmaName = s; }
     // </group>
 
-    const Array<std::tr1::shared_ptr<ImageFit1D<Float> > >& getFitters() const;
+    const Array<std::tr1::shared_ptr<ProfileFitResults> >& getFitters() const;
     // Returns the center, in pixels of the indexth fit.
     const Vector<Double> getPixelCenter( uint index ) const;
 
@@ -213,7 +215,7 @@ private:
 	uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,
 		_nPLPCoeffs, _nLTPCoeffs;
 	uInt _minGoodPoints;
-	Array<std::tr1::shared_ptr<ImageFit1D<Float> > > _fitters;
+	Array<std::tr1::shared_ptr<ProfileFitResults> > _fitters;
     // subimage contains the region of the original image
 	// on which the fit is performed.
 	std::tr1::shared_ptr<SubImage<Float> > _subImage;
