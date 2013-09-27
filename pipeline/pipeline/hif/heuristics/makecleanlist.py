@@ -182,8 +182,13 @@ class MakeCleanListHeuristics(object):
             return 'csclean'
 
     def phasecenter(self, fields, centreonly=True):
+
+        cme = casatools.measures
+
         mdirections = []
         for ivis, vis in enumerate(self.vislist):
+
+	    # Get the visibilities
             ms = self.context.observing_run.get_ms(name=vis)
             visfields = fields[ivis]
             if visfields == '':
@@ -191,10 +196,11 @@ class MakeCleanListHeuristics(object):
             visfields = visfields.split(',')
             visfields = map(int, visfields)
 
+	    # Get the phase directions and convert to ICRS
             for field in visfields:
                 # get field centres as measures
                 fieldobj = ms.get_fields(field_id=field)[0]
-                phase_dir = fieldobj.mdirection
+                phase_dir = cme.measure(fieldobj.mdirection, 'ICRS')
                 mdirections.append(phase_dir)
 
         # sanity check - for single field images the field centres from
@@ -216,7 +222,6 @@ class MakeCleanListHeuristics(object):
         # offset. Consequently, what follows is a bit crude.
 
         # First, find the offset of all field from field 0.
-        cme = casatools.measures
         cqa = casatools.quanta
         xsep = []
         ysep = []
@@ -249,7 +254,7 @@ class MakeCleanListHeuristics(object):
 
         # convert to strings (CASA 4.0 returns as list for some reason
         # hence 0 index)
-        if ref=='J2000' or ref=='B1950':
+        if ref=='ICRS' or ref=='J2000' or ref=='B1950':
             m0 = cqa.time(m0, prec=7)[0]
         else:
             m0 = cqa.angle(m0)[0]
