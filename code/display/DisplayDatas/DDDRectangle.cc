@@ -52,7 +52,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	DDDRectangle::~DDDRectangle() {
 	}
 
-	void DDDRectangle::draw(const Display::RefreshReason &reason,
+	void DDDRectangle::draw(const Display::RefreshReason &/*reason*/,
 	                        WorldCanvas *worldcanvas) {
 		Vector<Double> pblc(2), ptrc(2);
 		worldcanvas->worldToPix(pblc, itsBlc);

@@ -67,19 +67,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Destructor
 		virtual ~LatticePADisplayMethod();
-
+		// Extract data from the lattice: used by draw() in PrincipalAxesDM
+		// this is probably not needed in this class...
+		virtual Bool dataGetSlice(Matrix<T>& datMatrix,
+				Matrix<Bool>& mask,
+				const IPosition& start,
+				const IPosition& sliceShape,
+				const IPosition& stride);
 	protected:
 
 		// Query the shape of the lattice: used by draw() in PrincipalAxesDM
 		virtual IPosition dataShape();
 
-		// Extract data from the lattice: used by draw() in PrincipalAxesDM
-		// this is probably not needed in this class...
-		virtual Bool dataGetSlice(Matrix<T>& datMatrix,
-		                          Matrix<Bool>& mask,
-		                          const IPosition& start,
-		                          const IPosition& sliceShape,
-		                          const IPosition& stride);
+
 
 		virtual Bool dataGetSlice(Matrix<T>& datMatrix,
 		                          Matrix<Bool>& mask,

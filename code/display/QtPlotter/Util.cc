@@ -31,6 +31,7 @@
 #include <QMessageBox>
 #include <QWidget>
 #include <QMap>
+#include <QDir>
 #include <QDebug>
 #include <QtCore/qmath.h>
 
@@ -243,6 +244,21 @@ namespace casa {
 
 		}
 		return tabIndex;
+	}
+
+	String Util::mainImageName( String path ){
+		String coreName = path;
+		QChar sep = QDir::separator();
+		int slashIndex = path.find_last_of( sep.toAscii(), 0 );
+		if ( slashIndex >= 0 ){
+			int count = path.length();
+			coreName = path.substr(slashIndex, count );
+		}
+		int dotIndex = path.find(".image");
+		if ( dotIndex >= 0){
+			coreName = path.substr(0, dotIndex);
+		}
+		return coreName;
 	}
 
 }

@@ -705,6 +705,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		// </group>
 
+		virtual void setDisplayDataRed( DisplayData* /*dd*/ ){}
+		virtual void setDisplayDataBlue( DisplayData* /*dd*/ ){}
+		virtual void setDisplayDataGreen( DisplayData* /*dd*/ ){}
+
 		const static String DATA_MIN;
 		const static String DATA_MAX;
 

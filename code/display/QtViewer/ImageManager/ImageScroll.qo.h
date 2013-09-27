@@ -77,10 +77,10 @@ namespace casa {
 		//the selection downward to the ImageView so it can be displayed.
 		void setMasterCoordinateImage( QString masterCoordinateImageName );
 
-
 		//ImageManipulation
 		void closeImages();
 		void addImageView( QtDisplayData* displayData, bool registered,
+				ImageView::ColorCombinationMode mode,
 				int dropIndex = -1, bool masterCoordinate = false,
 				bool masterSaturation = false, bool masterHue = false,
 				QColor rgbColor= QColor("#D3D3D3"));
@@ -133,7 +133,6 @@ namespace casa {
 		ImageScroll operator=( const ImageScroll& other );
 
 		//Coordinate system master image
-
 		void resetMasterCoordinate( ImageView* newMaster );
 
 		//Adds an image at a particular place in the layout

@@ -60,7 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void TblAsContourDM::cleanup() {
 	}
 
-	Bool TblAsContourDM::drawIntoList(Display::RefreshReason reason,
+	Bool TblAsContourDM::drawIntoList(Display::RefreshReason /*reason*/,
 	                                  WorldCanvasHolder &wcHolder) {
 
 		// which world canvas do we draw on?

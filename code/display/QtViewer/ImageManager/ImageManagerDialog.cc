@@ -70,6 +70,7 @@ namespace casa {
 		connect( ui.colorMasterImageRadio, SIGNAL(clicked()), this, SLOT(colorRestrictionsChanged()));
 		connect( ui.applyButton, SIGNAL(clicked()), this, SLOT(applyColorChanges()));
 
+		ui.colorMasterImageRadio->setVisible( false );
 		layout()->removeWidget( ui.colorRestrictionsGroupBox );
 		ui.colorRestrictionsGroupBox->setParent( NULL );
 
@@ -142,7 +143,8 @@ namespace casa {
 		//We handle adding it to the scroll first, because by the time
 		//we get the callbacks, the insert order is lost.
 		imageScroll->removeImageView( displayData );
-		imageScroll->addImageView( displayData, registered, dropIndex,
+
+		imageScroll->addImageView( displayData, registered, getColorCombinationMode(), dropIndex,
 				masterCoordinate, masterSaturation, masterHue, rgbColor );
 
 		//Now insert it at the correct position in all the images.
@@ -240,6 +242,7 @@ namespace casa {
 
 	void ImageManagerDialog::applyColorChanges() {
 		//Revert the color changes
+		//qDebug() << "Applying color changes sizeof QRGB="<<sizeof(QRgb);
 		for ( DisplayDataHolder::DisplayDataIterator iter = allImages->beginDD();
 			iter !=allImages->endDD(); iter++ ) {
 			(*iter)->removeColorMap( SINGLE_COLOR_MAP );
@@ -247,18 +250,54 @@ namespace casa {
 		}
 		if ( ui.colorPerImageRadio->isChecked()) {
 			QList<ImageView*> views = imageScroll->getViews();
+
 			int count = views.size();
-			for ( int i = 0; i < count; i++ ) {
-				//Find the min and max intensity
-				ImageView* view = views[i];
-				QtDisplayData* imageData = view->getData();
-				QColor baseColor = view->getDisplayedColor();
-				Colormap* saturationMap = generateColorMap( baseColor );
-				if ( saturationMap != NULL ) {
-					//Add it to the QtDisplayData and tell it to use it.
-					imageData->setColorMap( saturationMap );
+			QtDisplayData* redImage = NULL;
+			QtDisplayData* blueImage = NULL;
+			QtDisplayData* greenImage = NULL;
+			int assignedCount = 0;
+			qDebug() << "Coloring by image count="<<count;
+			for( int i = 0; i < count; i++ ){
+				QtDisplayData* dd = views[i]->getData();
+				if ( dd != NULL && dd->isRaster() ){
+					QColor displayedColor = views[i]->getDisplayedColor();
+					if ( displayedColor == Qt::red && redImage == NULL){
+						redImage = dd;
+						assignedCount++;
+					}
+					else if ( displayedColor == Qt::green && greenImage == NULL ){
+						greenImage = dd;
+						assignedCount++;
+					}
+					else if ( displayedColor == Qt::blue && blueImage == NULL ){
+						blueImage = dd;
+						assignedCount++;
+					}
 				}
 			}
+			//At least two of the colored images should be not NULL;
+			qDebug() << "Assigned color count="<<assignedCount;
+			if ( assignedCount >= 2 ){
+				QtDisplayData* controllingDD = this->displayedImages->getDDControlling();
+				if ( controllingDD == NULL ){
+					if ( redImage != NULL ){
+						controllingDD = redImage;
+					}
+					else if ( greenImage != NULL ){
+						controllingDD = greenImage;
+					}
+					else {
+						controllingDD = blueImage;
+					}
+
+				}
+				emit createRGBImage( controllingDD, redImage, greenImage, blueImage );
+			}
+			else {
+				//Post a warning
+				QMessageBox::warning( this, "Check Image Colors", "Please check that you have assigned colors to at least two images using 'Options...'.");
+			}
+
 		}
 		else if ( ui.noneRadio->isChecked()) {
 
@@ -271,16 +310,17 @@ namespace casa {
 		}
 	}
 
-	float ImageManagerDialog::getTransparency() const {
+	/*float ImageManagerDialog::getTransparency() const {
 		int alphaInt = ui.transparencySpinBox->value();
 		float alpha = (alphaInt * 1.0f) / ui.transparencySpinBox->maximum();
 		return alpha;
-	}
+	}*/
 
-	bool ImageManagerDialog::applyMasterColor( QString& errorMessage ) {
-		QtDisplayData* colorDD = imageScroll->getHueMaster();
-		QtDisplayData* saturationDD = imageScroll->getSaturationMaster();
+	bool ImageManagerDialog::applyMasterColor( QString& /*errorMessage*/ ) {
 		bool success = true;
+		/*QtDisplayData* colorDD = imageScroll->getHueMaster();
+		QtDisplayData* saturationDD = imageScroll->getSaturationMaster();
+
 		if ( colorDD != NULL && saturationDD != NULL ) {
 			Colormap* hueMap = colorDD->getColorMap();
 			if ( hueMap != NULL ) {
@@ -330,7 +370,7 @@ namespace casa {
 			errorMessage ="Please specify a master ";
 			errorMessage.append( missing );
 			errorMessage.append(" image by right clicking the mouse on an image.");
-		}
+		}*/
 		return success;
 	}
 
@@ -390,7 +430,7 @@ namespace casa {
 		String title( SINGLE_COLOR_MAP );
 		saturationMap->setName( title );
 		saturationMap->setColormapDefinition( saturationDefinition );
-		saturationMap->setAlpha( getTransparency() );
+		//saturationMap->setAlpha( getTransparency() );
 		return saturationMap;
 	}
 
@@ -469,20 +509,19 @@ namespace casa {
 		return success;
 	}
 
-
-	void ImageManagerDialog::colorRestrictionsChanged() {
+	ImageView::ColorCombinationMode ImageManagerDialog::getColorCombinationMode() const {
 		ImageView::ColorCombinationMode mode = ImageView::NO_COMBINATION;
 		if ( ui.colorPerImageRadio->isChecked()){
 			mode = ImageView::RGB;
-			ui.transparencySpinBox->setEnabled( true );
 		}
 		else if ( ui.colorMasterImageRadio->isChecked()){
 			mode = ImageView::HUE_SATURATION;
-			ui.transparencySpinBox->setEnabled( true );
 		}
-		else {
-			ui.transparencySpinBox->setEnabled( false );
-		}
+		return mode;
+	}
+
+	void ImageManagerDialog::colorRestrictionsChanged() {
+		ImageView::ColorCombinationMode mode = getColorCombinationMode();
 		imageScroll->setColorCombinationMode( mode );
 	}
 
@@ -590,7 +629,8 @@ namespace casa {
 		}
 
 
-		imageScroll->addImageView( image, autoRegister, position,
+		imageScroll->addImageView( image, autoRegister,
+				getColorCombinationMode(), position,
 				masterCoordinate, masterSaturation, masterHue);
 
 		if ( masterCoordinate ){

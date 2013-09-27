@@ -722,6 +722,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// <note role="warning">uShort type may not have enough bits
 		// to hold the pixel index on some high-end graphics systems </note>
 		// <group>
+
 		void mapToColor(Array<uChar> &outArray,
 		                const Array<uChar> &inArray, Bool rangeCheck = False) {
 			pcctbl()->mapToColor(colormap_, outArray, inArray, rangeCheck);
@@ -756,6 +757,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			pcctbl()->mapToColor(colormap_, inOutArray, rangeCheck);
 		}
 		// </group>
+
+
+
+		void mapToColor(Array<uInt> &outArray,
+				const Array<uInt> &inArrayRed, const Array<uInt> &inArrayGreen, const Array<uInt>& inArrayBlue) {
+			pcctbl()->mapToColorRGB(colormap_, outArray, inArrayRed, inArrayGreen, inArrayBlue);
+		}
+
 
 		// Multi-Channel functions that combine separate array channels into
 		// a single array of output colors for use with functions that take
@@ -883,6 +892,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// This is the current colormap.
 		Colormap * colormap_;
+
 
 		// This is the current drawing mode
 		Display::DrawMode drawMode_;

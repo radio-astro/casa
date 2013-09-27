@@ -52,7 +52,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return ifloor(v + .5);
 	}
 
-	MultiPVTool::MultiPVTool( viewer::RegionSourceFactory *rcs, PanelDisplay* pd, Display::KeySym keysym, const Bool persistent ) :
+	MultiPVTool::MultiPVTool( viewer::RegionSourceFactory *rcs, PanelDisplay* pd,
+			Display::KeySym keysym, const Bool /*persistent*/ ) :
 		RegionTool(keysym),
 		rfactory(rcs->newSource(this)),
 		itsPVLineExists(False),

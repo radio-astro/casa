@@ -113,7 +113,7 @@ namespace casa {
 	}
 
 	bool DS9FileWriter::writeHeader(QTextStream& file,
-	                                stringstream& errors) const {
+	                                stringstream& /*errors*/) const {
 		if(m_comments.empty()) return true;
 		QStringList comments = QString(m_comments.c_str()).split('\n',
 		                       QString::SkipEmptyParts);
@@ -122,7 +122,7 @@ namespace casa {
 		return true;
 	}
 
-	bool DS9FileWriter::writeGlobals(QTextStream& file,stringstream& errors) const {
+	bool DS9FileWriter::writeGlobals(QTextStream& file,stringstream& /*errors*/) const {
 		file << DS9::FILE_GLOBAL;
 
 		vector<String> props = globalProperties();
@@ -824,7 +824,7 @@ namespace casa {
 		}
 
 		const AnnSymbol* m;
-		const RSComposite* cp;
+		//const RSComposite* cp;
 		if(dynamic_cast<const AnnCircle*>(shape) != NULL) type = DS9::Circle;
 		else if(dynamic_cast<const AnnEllipse*>(shape) != NULL) type = DS9::Ellipse;
 		else if(dynamic_cast<const AnnRectBox*>(shape) != NULL) type = DS9::Box;

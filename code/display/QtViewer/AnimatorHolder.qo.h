@@ -52,6 +52,7 @@ namespace casa {
 		int getLowerBoundChannel() const;
 		int getUpperBoundChannel() const;
 		int getChannelCount() const;
+		void setChannelZAxis( const QString& zAxisTite );
 		~AnimatorHolder();
 
 		void dismiss( );

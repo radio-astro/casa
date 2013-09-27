@@ -465,6 +465,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 
+
+
 	void QtDisplayPanel::resetTool(String toolname) {
 		// (NB: no effect on PCTools (e.g. SHIFTSLOPE, BRIGHTCONTRAST).
 		std::tr1::shared_ptr<MultiWCTool> tool = pd_->getTool(toolname);

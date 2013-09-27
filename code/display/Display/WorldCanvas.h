@@ -743,6 +743,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void drawImage(const Vector<Double> &blPos, const Vector<Double> &trPos,
 		               const Matrix<Complex> &data,
 		               const Bool usePixelEdges = False, void* drawObj=0);
+		void drawImage(const Vector<Double> &blc,const Vector<Double> &trc, const Matrix<Float> &data,
+			           const Matrix<Float> &dataRed, const Matrix<Float> &dataGreen,
+			           const Matrix<Float> &dataBlue,const Bool usePixelEdges,void* drawObj = 0);
+		void drawImage(const Vector<Double> &blc,const Vector<Double> &trc, const Matrix<Complex> &data,
+					   const Matrix<Complex> &dataRed, const Matrix<Complex> &dataGreen,
+					   const Matrix<Complex> &dataBlue,const Bool usePixelEdges,void* drawObj = 0);
 		// </group>
 
 		// Draw an image, mapping data values to Colormap entries, and place
@@ -1193,6 +1199,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		                               const Bool &linear);
 
 
+
+
 		// <b>***Cached***</b> blc pixel where this world canvas begins =
 		// itsPixelCanvas->width()*frac(X|Y)Offset_.
 		// <group>
@@ -1348,6 +1356,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		};
 
+		ColorIndexedImage_* makeColorIndexedImage(const Vector<Double> &blc,
+				            const Vector<Double> &trc,
+				            const Matrix<Float> &data,
+				            const Bool usePixelEdges, void* drawObj);
+		Matrix<uInt> mapToColor( const Matrix<uInt> & scaledImage);
 		// Cache of pre-drawn ColorIndexedImage_'s.   When a caller of drawImage()
 		// wants to save one, it passes a drawing-object pointer in the 'drawObj'
 		// parameter for use as a retrieval key.  It should provide the same key

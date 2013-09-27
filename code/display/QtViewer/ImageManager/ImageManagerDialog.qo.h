@@ -28,6 +28,7 @@
 #include <QtGui/QDialog>
 #include <display/QtViewer/ImageManager/ImageManagerDialog.ui.h>
 #include <display/QtViewer/ImageManager/ImageTracker.h>
+#include <display/QtViewer/ImageManager/ImageView.qo.h>
 #include <casa/BasicSL/String.h>
 
 #include <tr1/memory>
@@ -36,7 +37,7 @@ namespace casa {
 
 	class DisplayOptionsDialog;
 	class QtDisplayData;
-	class ImageView;
+	//class ImageView;
 	class ImageScroll;
 	class DisplayDataHolder;
 	class ColormapDefinition;
@@ -89,6 +90,7 @@ namespace casa {
 		//selected.
 		void masterCoordinateChanged( QtDisplayData* oldMaster, QtDisplayData* newMaster );
 		void animateToImage( int index );
+		void createRGBImage( QtDisplayData* coordinateMaster, QtDisplayData* redImage, QtDisplayData* greenImage, QtDisplayData* blueImage );
 
 	public slots:
 		//The ImageView has changed types (raster, contour, vector, etc)
@@ -129,7 +131,7 @@ namespace casa {
 
 		//Coloring
 		//Returns the transparency to use when combining images.
-		float getTransparency() const;
+		//float getTransparency() const;
 		//Get the min and max intensity of the image.
 		bool getIntensityMinMax( std::tr1::shared_ptr<ImageInterface<float> > img,
 		                         double* intensityMin, double* intensityMax );
@@ -146,6 +148,7 @@ namespace casa {
 		Colormap* generateMasterDefinition( ColormapDefinition* baseMap,
 			double colorMin, double colorMax, double intensityMin, double intensityMax );
 		float getColorFraction( float value, double minValue, double maxValue );
+		ImageView::ColorCombinationMode getColorCombinationMode() const;
 
 		//Enable/disable the "all" buttons based on how many images are
 		//registered, unregistered, open.
@@ -155,6 +158,7 @@ namespace casa {
 		DisplayOptionsDialog* displayOptionsDialog;
 		//Holds the open images
 		DisplayDataHolder* allImages;
+
 		//Holds the registered images
 		DisplayDataHolder* displayedImages;
 		Ui::ImageManagerDialogClass ui;

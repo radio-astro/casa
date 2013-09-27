@@ -64,6 +64,7 @@
 #include <display/Clean/CleanGui.qo.h>
 #include <display/DisplayErrors.h>
 #include <display/DisplayDatas/PrincipalAxesDD.h>
+#include <display/DisplayDatas/LatticeAsRaster.h>
 
 #include <display/QtViewer/InActiveDock.qo.h>
 
@@ -264,6 +265,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 
 	QDockWidget* displayDock = new InActiveDock( this );
 	displayDock->setWidget( qdp_);
+	displayDock->setObjectName( QString::fromUtf8("Image Display"));
 	displayDock->setWindowTitle(QApplication::translate("Display", "Display", 0, QApplication::UnicodeUTF8));
 	std::string displayLocation = rc.get("viewer." + rcid() + ".position.display");
 	addDockWidget( displayLocation == "right" ? Qt::RightDockWidgetArea :
@@ -1242,6 +1244,55 @@ QtDisplayData* QtDisplayPanelGui::processDD( String path, String dataType, Strin
 	return qdd;
 }
 
+void QtDisplayPanelGui::createRGBImage( QtDisplayData* coordinateMaster,
+		QtDisplayData* redImage, QtDisplayData* greenImage,
+		QtDisplayData* blueImage ){
+	String redName(" ");
+	if ( redImage != NULL ){
+		redName = Util::mainImageName( redImage->name());
+	}
+	String greenName( " ");
+	if ( greenImage != NULL ){
+		greenName = Util::mainImageName( greenImage->name());
+	}
+	String blueName( " ");
+	if ( blueImage != NULL ){
+		blueName = Util::mainImageName( blueImage->name());
+	}
+	String imageName = "RGB("+redName+","+greenName+","+blueName+").image";
+	cout << "Image name="<<imageName<<endl;
+
+	std::tr1::shared_ptr<ImageInterface<Float> > imgPtr = coordinateMaster->imageInterface();
+	/*********************************************************
+	 * SML NOTE:  Need to get image and set in red, blue, green
+	 * before it gets painted - then add it to panel.
+	 *
+	 *
+	 *
+	 */
+
+	QtDisplayData* rgbImage = addDD( imageName, "image", "raster", true, true, imgPtr );
+	if ( rgbImage != NULL ){
+
+		//Set the data that will determine the amount of red, green, blue
+		DisplayData* rgbDD = rgbImage->dd();
+		if ( redImage != NULL ){
+			cout << "Set red image"<<endl;
+			rgbDD->setDisplayDataRed( redImage->dd() );
+		}
+		if ( greenImage != NULL ){
+			rgbDD->setDisplayDataGreen( greenImage->dd() );
+		}
+		if ( blueImage != NULL ){
+			cout << "Set blue image"<<endl;
+			rgbDD->setDisplayDataBlue( blueImage->dd() );
+		}
+	}
+	else {
+		cout << "Could not add RGB DD"<<endl;
+	}
+}
+
 
 void QtDisplayPanelGui::updateFrameInformationImage(){
 	if ( qdp_ == NULL || animationHolder == NULL ){
@@ -1335,11 +1386,11 @@ void QtDisplayPanelGui::addDDSlot(String path, String dataType, String displayTy
 	addDD( path, dataType, displayType, autoRegister, tmpData, imgPtr );
 }
 
-void QtDisplayPanelGui::addDD(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, std::tr1::shared_ptr<ImageInterface<Float> > img) {
+QtDisplayData* QtDisplayPanelGui::addDD(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, std::tr1::shared_ptr<ImageInterface<Float> > img) {
 	// create a new DD
 	QtDisplayData* dd = NULL;
 	if ( ! img ) {
-		createDD(path, dataType, displayType, autoRegister);
+		dd = createDD(path, dataType, displayType, autoRegister);
 	} else {
 		dd =new QtDisplayData( this, path, dataType, displayType);
 		dd->setImage( img );
@@ -1353,7 +1404,7 @@ void QtDisplayPanelGui::addDD(String path, String dataType, String displayType, 
 	if (tmpData && dd != NULL ) {
 		dd->setDelTmpData(True);
 	}
-
+	return dd;
 }
 
 void QtDisplayPanelGui::setAnimatedImage( int index ){
@@ -1720,12 +1771,37 @@ void QtDisplayPanelGui::updateAnimUi_() {
 void QtDisplayPanelGui::updateViewedImage(){
 	Bool modez = qdp_->modeZ();
 	Int  frm   = qdp_->frame();
+
+	//Tell the image manager what is being viewed now.
 	if ( imageManagerDialog != NULL ){
 		if ( !modez ){
 			imageManagerDialog->setViewedImage( frm );
 		}
 		else {
 			imageManagerDialog->setViewedImage( -1 );
+		}
+	}
+
+	//Update the title to the 'Channel' Animator if the axis changes type.
+	QtDisplayData* newViewedImage = qdp_->getChannelDD( -1 );
+	if ( newViewedImage != NULL ){
+
+		//Disconnect listening to the previous 'channel' DD.
+		for (DisplayDataHolder::DisplayDataIterator iter = qdp_->beginRegistered();
+			iter != qdp_->endRegistered(); iter++) {
+				disconnect( (*iter), SIGNAL(axisChanged(String, String, String, std::vector<int>)),
+										this, SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
+		}
+
+		//Hook up the new dd so we get axis change updates.
+		connect( newViewedImage, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
+				this, SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )),
+				Qt::UniqueConnection );
+
+		//Up date the animator to reflect the current axis state.
+		if ( animationHolder != NULL ){
+			String zAxisName = newViewedImage->getZAxisName();
+			animationHolder->setChannelZAxis( zAxisName.c_str());
 		}
 	}
 }
@@ -2923,9 +2999,11 @@ void QtDisplayPanelGui::replaceControllingDD( QtDisplayData* oldControllingDD, Q
 }
 
 
-void QtDisplayPanelGui::controlling_dd_axis_change(String, String, String, std::vector<int> ) {
-	QtDisplayData* controlling_dd = dd();
-	emit axisToolUpdate( controlling_dd );
+void QtDisplayPanelGui::controlling_dd_axis_change(String /*firstStr*/, String /*secondStr*/,
+		String thirdStr, std::vector<int> /*axes*/) {
+	if ( thirdStr.length() > 0 && animationHolder != NULL ){
+		animationHolder->setChannelZAxis( thirdStr.c_str() );
+	}
 }
 
 void QtDisplayPanelGui::showMomentsCollapseImageProfile() {
@@ -3138,6 +3216,8 @@ void QtDisplayPanelGui::showImageManager() {
 				this, SLOT(replaceControllingDD(QtDisplayData*, QtDisplayData*)));
 		connect( imageManagerDialog, SIGNAL(animateToImage(int)),
 				this, SLOT(setAnimatedImage(int)));
+		connect( imageManagerDialog, SIGNAL(createRGBImage(QtDisplayData*, QtDisplayData*, QtDisplayData*, QtDisplayData*)),
+				this, SLOT(createRGBImage(QtDisplayData*,QtDisplayData*,QtDisplayData*,QtDisplayData*)));
 		updateViewedImage();
 
 	}

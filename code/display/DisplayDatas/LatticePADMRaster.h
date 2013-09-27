@@ -159,6 +159,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//# Make parent members known.
 	protected:
 		using LatticePADisplayMethod<T>::parentDisplayData;
+	private:
+		bool initializeColorMatrix( LatticeAsRaster<T>* lar,
+							const IPosition &start,
+				            const IPosition &shape,
+				            const IPosition &stride,
+				            Matrix<T>& datMatrix,
+							Matrix<Bool>& maskMatrix) const;
 	};
 
 

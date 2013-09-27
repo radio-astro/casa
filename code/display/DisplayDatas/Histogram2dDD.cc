@@ -127,7 +127,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return itsBaseImage->units();
 	}
 
-	String Histogram2dDD::showValue(const Vector<Double> &world) {
+	String Histogram2dDD::showValue(const Vector<Double> &/*world*/) {
 		String retval;
 		// IMPLEMENT THIS
 		return retval;

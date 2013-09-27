@@ -281,6 +281,10 @@ namespace casa {
 		}
 	}
 
+	void AnimatorHolder::setChannelZAxis( const QString& zAxisTitle ){
+		channelGroupBox->setTitle( zAxisTitle);
+	}
+
 	void AnimatorHolder::setModeEnabled( int imageCount ) {
 		int animationCount = getAnimationCount();
 		bool modeChanged = false;

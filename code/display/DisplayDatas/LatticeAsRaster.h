@@ -224,12 +224,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		const static String HISTOGRAM_RANGE;
 		const static String COLOR_MODE;
-		//const static String GLOBAL_COLORS;
+
 	private:
-		//Bool setGlobalOption(Record &rec);
+
 		// Storage for the data range parameters
 		Vector<Float> itsOptionsDataRange;
 		Vector<Float> itsOptionsDataDefault;
+
+		LatticeAsRaster<T>* rasterRed;
+		LatticeAsRaster<T>* rasterGreen;
+		LatticeAsRaster<T>* rasterBlue;
 
 		//Float itsOptionsPower;
 
@@ -244,6 +248,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// allow the corresponding DisplayMethod to access this' private data.
 		friend class LatticePADMRaster<T>;
+		LatticeAsRaster<T>* getRasterRed();
+		LatticeAsRaster<T>* getRasterGreen();
+		LatticeAsRaster<T>* getRasterBlue();
+		virtual void setDisplayDataRed( DisplayData* dd );
+		virtual void setDisplayDataBlue( DisplayData* dd );
+		virtual void setDisplayDataGreen( DisplayData* dd );
+		void initializeDataMatrix( int index,
+					Matrix<T>& datMatrix, Matrix<Bool>& mask, const IPosition& start,
+					const IPosition& sliceShape, const IPosition& stride );
 
 		//static bool globalColors;
 

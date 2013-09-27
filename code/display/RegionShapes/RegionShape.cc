@@ -631,7 +631,7 @@ namespace casa {
 
 	RegionShapeDM::~RegionShapeDM() { }
 
-	Bool RegionShapeDM::drawIntoList(Display::RefreshReason reason,
+	Bool RegionShapeDM::drawIntoList(Display::RefreshReason /*reason*/,
 	                                 WorldCanvasHolder& wch) {
 		return m_shape.draw(wch);
 	}

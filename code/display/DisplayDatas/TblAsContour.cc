@@ -477,7 +477,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		ActiveCaching2dDD::setCoordinateSystem( itsCoord, itsLinblc, itsLintrc);
 	}
 
-	String TblAsContourDD::showValue(const Vector<Double> &world) {
+	String TblAsContourDD::showValue(const Vector<Double> &/*world*/) {
 
 		// NEED TO IMPLEMENT
 		// no examples of this function exist in any other DD but it should be

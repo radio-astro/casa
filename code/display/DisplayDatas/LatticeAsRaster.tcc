@@ -43,6 +43,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	template <class T>
 	const String LatticeAsRaster<T>::COLOR_MODE = "colormode";
 
+
 // >2d array-based ctor
 	template <class T>
 	LatticeAsRaster<T>::LatticeAsRaster(Array<T> *array, const uInt xAxis,
@@ -135,7 +136,58 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsOptionsDataRange.resize(2);
 		itsOptionsDataDefault.resize(2);
 
+		rasterRed = NULL;
+		rasterBlue = NULL;
+		rasterGreen = NULL;
 		PrincipalAxesDD::setupElements();
+	}
+
+	template <class T>
+	LatticeAsRaster<T>* LatticeAsRaster<T>::getRasterRed(){
+		return rasterRed;
+	}
+
+	template <class T>
+	LatticeAsRaster<T>* LatticeAsRaster<T>::getRasterGreen(){
+		return rasterGreen;
+	}
+
+	template <class T>
+	LatticeAsRaster<T>* LatticeAsRaster<T>::getRasterBlue(){
+		return rasterBlue;
+	}
+
+	template <class T>
+	void LatticeAsRaster<T>::setDisplayDataRed( DisplayData* dd ){
+		if ( typeid(*dd) == typeid(*this)){
+			rasterRed = dynamic_cast<LatticeAsRaster<T>* >(dd);
+		}
+	}
+
+	template <class T>
+	void LatticeAsRaster<T>::setDisplayDataBlue( DisplayData* dd ){
+		if ( typeid(*dd) == typeid(*this)){
+			rasterBlue = dynamic_cast<LatticeAsRaster<T>* >(dd);
+		}
+	}
+
+	template <class T>
+	void LatticeAsRaster<T>::setDisplayDataGreen( DisplayData* dd ){
+		if ( typeid(*dd) == typeid(*this)){
+			rasterGreen = dynamic_cast<LatticeAsRaster<T>* >(dd);
+		}
+	}
+
+	template <class T>
+	void LatticeAsRaster<T>::initializeDataMatrix( int index,
+			Matrix<T>& datMatrix, Matrix<Bool>& mask, const IPosition& start,
+			const IPosition& sliceShape, const IPosition& stride ){
+		if ( index < static_cast<int>(DDelement.size())){
+			((LatticePADisplayMethod<T> *)(DDelement[index]))->dataGetSlice( datMatrix, mask, start, sliceShape, stride);
+		}
+		else {
+			cerr<<"Cannot compute data slice for index="<<index<<" DDelement size="<<DDelement.size();
+		}
 	}
 
 	template <class T>

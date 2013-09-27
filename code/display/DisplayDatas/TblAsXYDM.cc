@@ -60,7 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void TblAsXYDM::cleanup() {
 	}
 
-	Bool TblAsXYDM::drawIntoList(Display::RefreshReason reason,
+	Bool TblAsXYDM::drawIntoList(Display::RefreshReason /*reason*/,
 	                             WorldCanvasHolder &wcHolder) {
 
 		// which world canvas do we draw on?

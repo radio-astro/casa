@@ -39,7 +39,7 @@ InActiveDock::InActiveDock( QWidget* parent ):
 
 }
 
-void InActiveDock::floatingChanged( bool floating ){
+void InActiveDock::floatingChanged( bool /*floating*/ ){
 	Qt::WindowFlags flags =	windowFlags();
 	flags = flags &  ~Qt::WindowStaysOnTopHint;
 	flags = flags | Qt::CustomizeWindowHint;

@@ -322,7 +322,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							// for ( int i = 0; i < regions.size( ); ++i ) {
 							// 	cout << "\t\t\t\t\t(" << i << "): " << regions[i] << endl;
 							// }
-
 						} else if(imagePixelType(path_)==TpComplex) {
 							cim_.reset( new PagedImage<Complex>(path_, TableLock::AutoNoReadLocking));
 						} else  throw AipsError( "Only Float and Complex CASA images are supported at present.");
@@ -442,6 +441,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return displayType_==SKY_CATALOG;
 	}
 
+
 	bool QtDisplayData::isMS() const {
 		return dataType_==MS;
 	}
@@ -483,35 +483,67 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if( isRaster()) {
 			if(im_!=0) {
-				if(ndim ==2) dd_ = new LatticeAsRaster<Float>(im_, 0, 1);
-				else dd_ = new LatticeAsRaster<Float>(im_, axs[0], axs[1], axs[2], fixedPos, panel_ );
+				if(ndim ==2){
+					dd_ = new LatticeAsRaster<Float>(im_, 0, 1);
+				}
+				else {
+					dd_ = new LatticeAsRaster<Float>(im_, axs[0], axs[1], axs[2], fixedPos, panel_ );
+				}
 			} else {
-				if(ndim ==2) dd_ = new LatticeAsRaster<Complex>(cim_, 0, 1);
-				else dd_ = new LatticeAsRaster<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos, panel_ );
+				if(ndim ==2) {
+					dd_ = new LatticeAsRaster<Complex>(cim_, 0, 1);
+				}
+				else {
+					dd_ = new LatticeAsRaster<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos, panel_ );
+				}
 			}
 		} else if( isContour() ) {
 			if(im_!=0) {
-				if(ndim ==2) dd_ = new LatticeAsContour<Float>(im_, 0, 1);
-				else dd_ = new LatticeAsContour<Float>( im_, axs[0], axs[1], axs[2], fixedPos, panel_ );
+				if(ndim ==2) {
+					dd_ = new LatticeAsContour<Float>(im_, 0, 1);
+				}
+				else {
+					dd_ = new LatticeAsContour<Float>( im_, axs[0], axs[1], axs[2], fixedPos, panel_ );
+				}
 			} else {
-				if(ndim ==2) dd_ = new LatticeAsContour<Complex>(cim_, 0, 1);
-				else dd_ = new LatticeAsContour<Complex>( cim_, axs[0], axs[1], axs[2], fixedPos, panel_ );
+				if(ndim ==2){
+					dd_ = new LatticeAsContour<Complex>(cim_, 0, 1);
+				}
+				else {
+					dd_ = new LatticeAsContour<Complex>( cim_, axs[0], axs[1], axs[2], fixedPos, panel_ );
+				}
 			}
 		} else if( isVector() ) {
 			if(im_!=0) {
-				if(ndim ==2) dd_ = new LatticeAsVector<Float>(im_, 0, 1);
-				else dd_ = new LatticeAsVector<Float>(im_, axs[0], axs[1], axs[2], fixedPos);
+				if(ndim ==2){
+					dd_ = new LatticeAsVector<Float>(im_, 0, 1);
+				}
+				else {
+					dd_ = new LatticeAsVector<Float>(im_, axs[0], axs[1], axs[2], fixedPos);
+				}
 			} else {
-				if(ndim ==2) dd_ = new LatticeAsVector<Complex>(cim_, 0, 1);
-				else dd_ = new LatticeAsVector<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos);
+				if(ndim ==2) {
+					dd_ = new LatticeAsVector<Complex>(cim_, 0, 1);
+				}
+				else {
+					dd_ = new LatticeAsVector<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos);
+				}
 			}
 		} else if( isMarker()) {
 			if(im_!=0) {
-				if(ndim ==2) dd_ = new LatticeAsMarker<Float>(im_, 0, 1);
-				else dd_ = new LatticeAsMarker<Float>(im_, axs[0], axs[1], axs[2], fixedPos);
+				if(ndim ==2){
+					dd_ = new LatticeAsMarker<Float>(im_, 0, 1);
+				}
+				else {
+					dd_ = new LatticeAsMarker<Float>(im_, axs[0], axs[1], axs[2], fixedPos);
+				}
 			} else {
-				if(ndim ==2) dd_ = new LatticeAsMarker<Complex>(cim_, 0, 1);
-				else dd_ = new LatticeAsMarker<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos);
+				if(ndim ==2) {
+					dd_ = new LatticeAsMarker<Complex>(cim_, 0, 1);
+				}
+				else {
+					dd_ = new LatticeAsMarker<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos);
+				}
 			}
 		} else throw AipsError("Unsupported image display type: " + displayType_);
 
@@ -571,6 +603,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			String initialCMName = "Greyscale 1";  // (Always valid/available).
 
 			clrMapNames_ = ColormapDefinition::builtinColormapNames();
+
 			// (Here 'builtin' means in a loaded table, or else "Greyscale 1").
 			// Don't use colormap 'synonyms' like "mono" in .aipsrc or
 			// QDD::setOptions()).  Note that it is possible to load a
@@ -886,7 +919,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		return opts;
 	}
-
+	String QtDisplayData::getZAxisName(){
+		Record rec = getOptions();
+		String zAxisName;
+		try {
+			zAxisName = rec.subRecord( "zaxis").asString("value");
+		}
+		catch( AipsError& error ){
+			//Image did not have a z-axis - no big deal.
+		}
+		return zAxisName;
+	}
 
 
 

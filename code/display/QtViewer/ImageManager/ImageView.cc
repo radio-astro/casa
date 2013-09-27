@@ -29,9 +29,6 @@
 #include <display/QtViewer/ImageManager/DisplayLabel.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtPlotter/conversion/Converter.h>
-//#include <measures/Measures/MeasConvert.h>
-//#include <measures/Measures/MCDoppler.h>
-//#include <measures/Measures/MRadialVelocity.h>
 #include <limits>
 
 #include <QUuid>
@@ -81,6 +78,7 @@ namespace casa {
 			empty = true;
 		}
 
+
 		//Rest frequency/wavelength information
 		initRestSettings();
 
@@ -107,10 +105,9 @@ namespace casa {
 		minimizeDisplay();
 		connect( ui.openCloseButton, SIGNAL(clicked()), this, SLOT(openCloseDisplay()));
 
-		layout()->removeWidget( ui.colorGroupBox );
-		ui.colorGroupBox->setParent( NULL );
-
+		rgbModeChanged();
 	}
+
 
 	void ImageView::setTitle(){
 		QString name;
@@ -132,22 +129,22 @@ namespace casa {
 		ui.colorLabel->setAutoFillBackground( true );
 		colorMode = NO_COMBINATION;
 		setColorCombinationMode( colorMode );
-		setButtonColor( normalColor );
+		//setButtonColor( normalColor );
 		QButtonGroup* colorGroup = new QButtonGroup( this );
 		colorGroup->addButton( ui.redRadio );
 		colorGroup->addButton( ui.greenRadio );
 		colorGroup->addButton( ui.blueRadio );
-		colorGroup->addButton( ui.otherRadio );
-		ui.otherRadio->setChecked( true );
+		//colorGroup->addButton( ui.otherRadio );
+		//ui.otherRadio->setChecked( true );
 		connect( ui.redRadio, SIGNAL(clicked()), this, SLOT(rgbChanged()));
 		connect( ui.greenRadio, SIGNAL(clicked()), this, SLOT(rgbChanged()));
 		connect( ui.blueRadio, SIGNAL(clicked()), this, SLOT(rgbChanged()));
-		connect( ui.otherRadio, SIGNAL(clicked()), this, SLOT(otherColorChanged()));
-		connect( ui.colorButton, SIGNAL(clicked()), this, SLOT(showColorDialog()));
-		otherColorChanged();
+		//connect( ui.otherRadio, SIGNAL(clicked()), this, SLOT(otherColorChanged()));
+		//connect( ui.colorButton, SIGNAL(clicked()), this, SLOT(showColorDialog()));
+		//otherColorChanged();
 
-		layout()->removeWidget( ui.colorLabel );
-		ui.colorLabel->setParent( NULL );
+		//layout()->removeWidget( ui.colorLabel );
+		//ui.colorLabel->setParent( NULL );
 	}
 
 	void ImageView::initDisplayLabel( QWidget* holder, DisplayLabel* label ){
@@ -441,7 +438,29 @@ namespace casa {
 	}
 
 	void ImageView::setColorCombinationMode( ColorCombinationMode mode ){
-		colorMode = mode;
+		if ( colorMode != mode ){
+			colorMode = mode;
+			rgbModeChanged();
+		}
+	}
+
+	bool ImageView::isRGBImage() const {
+		QString imageName = getName();
+		int RGBIndex = imageName.indexOf( "RGB");
+		bool rgbImage = false;
+		if ( RGBIndex == 0 ){
+			rgbImage = true;
+		}
+		return rgbImage;
+	}
+
+	void ImageView::rgbModeChanged(){
+		bool rgbMode = false;
+		if (colorMode == RGB ){
+			rgbMode = true;
+		}
+		bool colorLabelVisible = rgbMode && !isRGBImage();
+		ui.colorLabel->setVisible( colorLabelVisible );
 	}
 
 	void ImageView::setViewedImage( bool viewed ){
@@ -556,64 +575,59 @@ namespace casa {
 		return pal.color( QPalette::Background );
 	}
 
-	QColor ImageView::getButtonColor() const {
+	/*QColor ImageView::getButtonColor() const {
 		QPalette p = ui.colorButton->palette();
 		QBrush brush = p.brush(QPalette::Button );
 		QColor backgroundColor = brush.color();
 		return backgroundColor;
-	}
+	}*/
 
-	void ImageView::setButtonColor( QColor color ){
+	/*void ImageView::setButtonColor( QColor color ){
 		QPalette p = ui.colorButton->palette();
 		p.setBrush(QPalette::Button, color);
 		ui.colorButton->setPalette( p );
-	}
+	}*/
 
-	void ImageView::showColorDialog(){
+	/*void ImageView::showColorDialog(){
 		QColor initialColor = getButtonColor();
 		QColor selectedColor = QColorDialog::getColor( initialColor, this );
 		if ( selectedColor.isValid() ){
 			setButtonColor( selectedColor );
 			rgbChanged();
 		}
-	}
+	}*/
 
 	QColor ImageView::getDisplayedColor() const {
 		QColor displayedColor = Qt::black;
-		const int MAX_COLOR = 255;
-		if ( ui.otherRadio->isChecked()){
+		//const int MAX_COLOR = 255;
+		/*if ( ui.otherRadio->isChecked()){
 			displayedColor = getButtonColor();
 		}
-		else if ( ui.redRadio->isChecked()){
-			displayedColor.setRed( MAX_COLOR );
+		else*/
+		bool rgbImage = isRGBImage();
+		if ( !rgbImage ){
+			if ( ui.redRadio->isChecked()){
+				displayedColor = Qt::red;
+			}
+			else if ( ui.greenRadio->isChecked()){
+				displayedColor = Qt::green;
+			}
+			else if ( ui.blueRadio -> isChecked()){
+				displayedColor = Qt::blue;
+			}
 		}
-		else if ( ui.greenRadio->isChecked()){
-			displayedColor.setGreen( MAX_COLOR );
-		}
-		else if ( ui.blueRadio -> isChecked()){
-			displayedColor.setBlue( MAX_COLOR );
-		}
-		displayedColor.setAlpha(127);
 		return displayedColor;
 	}
 
 	void ImageView::setDisplayedColor( QColor rgbColor ){
-		int redAmount = rgbColor.red();
-		int greenAmount = rgbColor.green();
-		int blueAmount = rgbColor.blue();
-		const int MAX_COLOR = 255;
-		if ( redAmount == MAX_COLOR && blueAmount == 0 && greenAmount == 0 ){
+		if ( rgbColor == Qt::red ){
 			ui.redRadio->setChecked( true );
 		}
-		else if (redAmount == 0 && blueAmount == MAX_COLOR && greenAmount == 0){
+		else if (rgbColor == Qt::blue){
 			ui.blueRadio->setChecked( true );
 		}
-		else if ( redAmount == 0 && blueAmount == 0 && greenAmount == MAX_COLOR){
+		else if ( rgbColor == Qt::green){
 			ui.greenRadio->setChecked( true );
-		}
-		else {
-			setButtonColor( rgbColor );
-			ui.otherRadio->setChecked( true );
 		}
 		rgbChanged();
 	}
@@ -625,10 +639,10 @@ namespace casa {
 		ui.colorLabel->setPalette( pal );
 	}
 
-	void ImageView::otherColorChanged(){
+	/*void ImageView::otherColorChanged(){
 		ui.colorButton->setEnabled( ui.otherRadio->isChecked());
 		rgbChanged();
-	}
+	}*/
 
 	//----------------------------------------------------------------
 	//            Slots
@@ -781,8 +795,12 @@ namespace casa {
 	void ImageView::maximizeDisplay() {
 		ui.widgetLayout->addSpacerItem( spacerFirst );
 		ui.widgetLayout->addWidget( ui.displayGroupBox );
+
 		ui.widgetLayout->addWidget( ui.restGroupBox );
-		//ui.widgetLayout->addWidget( ui.colorGroupBox );
+		/*bool rgbImage = isRGBImage();
+		if ( !rgbImage ){
+			ui.widgetLayout->addWidget( ui.colorGroupBox );
+		}*/
 		ui.widgetLayout->addSpacerItem( spacerLast );
 		ui.displayOptionsLayout->insertWidget( 1, ui.dataOptionsButton );
 		minimumSize = SIZE_EXPANDED;

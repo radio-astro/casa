@@ -1326,7 +1326,7 @@ namespace casa {
 		return success;
 	}
 
-	bool DS9FileReader::processCoordSys(QString& line, stringstream& invld) {
+	bool DS9FileReader::processCoordSys(QString& line, stringstream& /*invld*/) {
 		m_nextSystem.first = DS9::coordinateSystem(line);
 		m_nextSystem.second = true;
 		return true;
