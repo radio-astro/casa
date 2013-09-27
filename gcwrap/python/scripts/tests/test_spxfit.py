@@ -489,20 +489,26 @@ class spxfit_test(unittest.TestCase):
             del expec[i]
         for i in range(len(got)):
             self.assertTrue(got[i] == expec[i]);
-        res2 = spxfit(
-            imagename = image, box="340,265,340,265",
-            spxest=[0.5,0.0],
-            multifit=True,mask=mask,
-            logfile=logfile
-        )
-        got = res2['plp']['solution'][0,0,0,0]
-        expec = res['plp']['solution'][340,265,0,0]
-        diff = abs((got - expec)/expec)
-        self.assertTrue(diff.max() < 0.003)
-        got = res2['direction'][0,0,0,0]
-        expec = res['direction'][340,265,0,0]
-        self.assertTrue(got == expec)
-
+        
+        for pixel in ([340, 265], [508,378]):
+            box = str(pixel[0]) + "," + str(pixel[1])
+            box = box + "," + box
+            res2 = spxfit(
+                imagename = image, box=box,
+                spxest=[0.5,0.0],
+                multifit=True,mask=mask,
+                logfile=logfile
+            )
+            for t in ("solution", "error"):
+                got = res2['plp'][t][0,0,0,0]
+                expec = res['plp'][t][pixel[0],pixel[1],0,0]
+                if (got.max() != 0 and expec.max() != 0):
+                    diff = abs((got - expec)/expec)
+                    self.assertTrue(diff.max() < 0.003, "got " + str(got) + " exp " + str(expec))
+            got = res2['direction'][0,0,0,0]
+            expec = res['direction'][pixel[0],pixel[1],0,0]
+            self.assertTrue(got == expec)
+        
 
 
         
