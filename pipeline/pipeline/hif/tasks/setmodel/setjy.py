@@ -251,11 +251,17 @@ class SetjyInputs(basetask.StandardInputs):
         
     def to_casa_args(self):
         d = super(SetjyInputs, self).to_casa_args()
-        for ignore in ('intent', 'reffile'):
-            if ignore in d:
-                del d[ignore]
-        return d
+	# Filter out reffile. Note that the , is required
+	for ignore in ('reffile',):
+	    if ignore in d:
+		del d[ignore]
 
+	# Enable intent selection in CASA. Convert to CASA intent if
+	# necessary. Not required here.
+	# d['intent'] = utils.to_CASA_intent (self.ms, d['intent'])
+	d['selectdata'] = True
+
+	return d
 
 class Setjy(basetask.StandardTaskTemplate):
     Inputs = SetjyInputs
