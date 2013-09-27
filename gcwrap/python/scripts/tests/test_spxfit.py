@@ -74,6 +74,7 @@ from __main__ import *
 import unittest
 import numpy
 
+nanvalue = 4.53345345
 
 datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/spxfit/'
 myia = iatool()
@@ -151,7 +152,6 @@ def run_specfit(
         goodfwhmrange=goodfwhmrange, sigma=sigma, outsigma=outsigma
     )
 
-
 class spxfit_test(unittest.TestCase):
     
     def setUp(self):
@@ -161,34 +161,37 @@ class spxfit_test(unittest.TestCase):
         myia.done()
         self.assertTrue(len(tb.showcache()) == 0)
 
+    def checkArray(self, gotArray, expectedArray):
+        mytype = type(gotArray.ravel()[0])
+        self.assertTrue(gotArray.shape == expectedArray.shape)
+        if mytype == numpy.float64:
+            newgot = gotArray.copy()
+            newexp = expectedArray.copy()
+            for arr in [newgot, newexp]:
+                if (numpy.isnan(arr).any()):
+                    arr2 = arr.ravel()
+                    for i in range(len(arr2)):
+                        if isnan(arr2[i]):
+                            arr2[i] = nanvalue
+                    arr = arr2
+            diffData = newgot - newexp
+            self.assertTrue(abs(diffData).max() < 2e-7)
+        else:
+            self.assertTrue((gotArray == expectedArray).all())
+
     def checkImage(self, gotImage, expectedName):
         expected = iatool()                                
-        expected.open(expectedName)
+        self.assertTrue(expected.open(expectedName))
         got = iatool()
         if type(gotImage) == str:
-            got.open(gotImage)
+            self.assertTrue(got.open(gotImage))
         else:
             got = gotImage
         self.assertTrue((got.shape() == expected.shape()).all())
         gotchunk = got.getchunk()
         expchunk = expected.getchunk()
-        if (numpy.isnan(gotchunk).any()):
-            gotchunk = gotchunk.ravel()
-            for i in range(len(gotchunk)):
-                if isnan(gotchunk[i]):
-                    gotchunk[i] = nanvalue
-        if (numpy.isnan(expchunk).any()):
-            expchunk = expchunk.ravel()
-            for i in range(len(expchunk)):
-                if isnan(expchunk[i]):
-                    expchunk[i] = nanvalue
-        diffData = gotchunk - expchunk
-        self.assertTrue(abs(diffData).max() < 2e-11)
-        self.assertTrue(
-            (
-                got.getchunk(getmask=T) == expected.getchunk(getmask=T)
-            ).all()
-        )
+        self.checkArray(gotchunk, expchunk)
+        self.checkArray(got.getchunk(getmask=T), expected.getchunk(getmask=T))
         gotCsys = got.coordsys()
         expectedCsys = expected.coordsys()
         diffPixels = gotCsys.referencepixel()['numeric'] - expectedCsys.referencepixel()['numeric']
@@ -450,6 +453,59 @@ class spxfit_test(unittest.TestCase):
         self.assertTrue((mask.shape == myia.shape()).all())
         self.assertTrue(mask.all())
 
+    def test_mask_and_pixels(self):
+        """Test that the mask and pixels of the output are correct"""
+        image = "cubeApF.im"
+        os.symlink(datapath + image, image)
+        mask = mask = 'mask("'+image +':spxmask")'
+        sol = 'cubeApF.spx'
+        err = 'cubeApF.spxerr'
+        model = 'cubeApF.spxmodel'
+        resid = 'cubeApF.spxresidual'
+        logfile = "spxfit.log"
+        res = spxfit(
+            imagename = image, spxsol=sol,
+            spxerr=err, model=model,
+            residual=resid, spxest=[0.5,0.0],
+            multifit=True,mask=mask,logresults=False,
+            logfile=logfile
+        )
+        for im in (sol, err, model, resid):
+            print "checking image product " + im
+            self.checkImage(im, datapath + im)
+        global myia
+        for im in (sol, err):
+            myia.open(im)
+            key = 'solution'
+            if (im == err):
+                key = 'error'
+            print "checking " + key + " array"
+            self.checkArray(res['plp'][key], myia.getchunk())
+            myia.done()
+        got = open(logfile).readlines()
+        expec = open(datapath + logfile).readlines()
+        for i in [9, 6]:
+            del got[i]
+            del expec[i]
+        for i in range(len(got)):
+            self.assertTrue(got[i] == expec[i]);
+        res2 = spxfit(
+            imagename = image, box="340,265,340,265",
+            spxest=[0.5,0.0],
+            multifit=True,mask=mask,
+            logfile=logfile
+        )
+        got = res2['plp']['solution'][0,0,0,0]
+        expec = res['plp']['solution'][340,265,0,0]
+        diff = abs((got - expec)/expec)
+        self.assertTrue(diff.max() < 0.003)
+        got = res2['direction'][0,0,0,0]
+        expec = res['direction'][340,265,0,0]
+        self.assertTrue(got == expec)
+
+
+
+        
         
 def suite():
     return [spxfit_test]
