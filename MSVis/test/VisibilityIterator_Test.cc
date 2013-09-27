@@ -1451,7 +1451,8 @@ Weighting::nextSubchunk (VisibilityIterator2 & vi, VisBuffer2 * vb)
     TestErrorIf (! vi.weightSpectrumCorrectedExists(),
                  "This test requires that the corrected weight spectrum column exist.");
 
-    const Matrix <Float> & weight = vb->weight();
+    Matrix <Float> weight;
+    weight = vb->weight();  // get an unshared copy
     const Cube <float> & weightSpectrum = vb->weightSpectrum();
     IPosition wsShape = weightSpectrum.shape();
     IPosition wShape = weight.shape();

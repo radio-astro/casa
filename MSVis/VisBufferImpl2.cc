@@ -2541,7 +2541,8 @@ VisBufferImpl2::fillWeightSpectrum (Cube<Float>& value) const
 
         // Weight spectrum doesn't exist so create on using the weight column.
 
-        Matrix<Float> theWeights = weight();
+        Matrix<Float> theWeights;
+        theWeights = weight();  // need a mutable copy so ensure no sharing.
 
         // The weight is the sum of the weight across all channels
         // so divide it evenly between the channels.
