@@ -61,8 +61,8 @@ class State(object):
                 and self.obs_mode.find(mode) != -1]
 
     def __repr__(self):
-        return '%s(id={0}, intents={1})'.format(self.__class__.__name__, 
-                                                self.id, self.intents)
+        return '{0}(id={1}, intents={2})'.format(self.__class__.__name__, 
+                                                 self.id, self.intents)
 
 
 class StateALMA(State):
