@@ -2521,7 +2521,7 @@ Date/Time:                         RR:                      RL:                 
   </description>
   <example>
     ms.open('my.ms')
-    ms.cvelfreqs(spwid=[1], mode='channel', nchan=20, start=2, width=3, outframe='LSRK')
+    ms.cvelfreqs(spwids=[1], mode='channel', nchan=20, start=2, width=3, outframe='LSRK')
 
     will take the grid of SPW 1 (i.e. the second in the SPW table), regrid it as in cvel
     with the given grid parameters and return the resulting channel centers as an array.
