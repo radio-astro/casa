@@ -47,6 +47,9 @@
 #include <components/ComponentModels/ComponentType.h>
 #include <casa/Quanta.h>
 #include <measures/Measures.h>
+#ifdef HAS_OMP
+#include <omp.h>
+#endif
 
 namespace casa {
 
@@ -289,6 +292,288 @@ PBMath2DImage::applyJones(const Array<Float>* reJones,
   }
 }
 
+
+// Complex to Complex
+void 
+PBMath2DImage::applyJonesFast(const Float*& reJones,
+			  const Float*& imJones,
+			  const Array<Complex>& in,
+			  Array<Complex>& out,
+			  Vector<Int>& polmap,
+			  Bool /*inverse*/,
+			  Bool /*conjugate*/,
+			  Int ipower,  // ie, 1=VP, 2=PB
+			  Float /*cutoff*/,
+			  Bool circular,
+			  Bool forward)
+{
+
+  LogIO os(LogOrigin("PBMath2DImage", "applyJones"));
+  // This should never be called
+  if((ipower!=2)&&(ipower!=1)) {
+    os << "Logic error - trying to apply illegal power of PB"
+       << LogIO::EXCEPTION;
+  }
+
+  Vector<Int> polmap1=polmap;
+  const Float* reJones1=reJones;
+  const Float* imJones1=imJones;
+
+  Int nx=in.shape()(0);
+  Int ny=in.shape()(1);
+  Int npol=in.shape()(2);
+  Bool lala=False;
+  Float laloo=0.0;
+  
+  Bool delin, delout;
+  Complex *outstor=out.getStorage(delout);
+  const Complex *instor=in.getStorage(delin);
+  Int ind0, ind1, ind2, ind3; 
+  // Loop through x, y coordinates of this cube
+  Matrix<Complex> cmat(2,2);
+  IPosition sp0(4, 0, 0, polmap(3), 0);
+  IPosition sp1(4, 0, 0, polmap(2), 0);
+  IPosition sp2(4, 0, 0, polmap(1), 0);
+  IPosition sp3(4, 0, 0, polmap(0), 0);
+
+
+   #pragma omp parallel default(none)  shared(outstor) firstprivate(reJones1, imJones1 , instor, polmap1, lala, laloo, ipower, circular, forward, nx,ny, npol)
+
+  {
+    #pragma omp for
+  for (Int ix=0; ix<nx; ix++) {
+    //sp0(0)=ix;
+    //sp1(0)=ix;
+    //sp2(0)=ix;
+    //sp3(0)=ix;
+    
+       applyJonesFastX(reJones1, imJones1, instor, outstor, polmap1,
+			  lala,	  lala,ipower,  // ie, 1=VP, 2=PB
+		    laloo,circular,forward,ix, nx, ny, npol);
+    
+       /* for (Int iy=0; iy<ny; iy++) {
+
+      //sp0(1)=iy;
+      //sp1(1)=iy;
+      //sp2(1)=iy;
+      //sp3(1)=iy;
+
+      ind0=ix+nx*iy +(nx*ny)*polmap(3);
+      ind1=ix+nx*iy +(nx*ny)*polmap(2);
+      ind2=ix+nx*iy +(nx*ny)*polmap(1);
+      ind3=ix+nx*iy +(nx*ny)*polmap(0);
+      // E Jones for this pixel
+      mjJones4 j4;
+      if(imJones) {
+	cmat(0,0)=Complex(reJones[ind0], imJones[ind0]);
+	cmat(1,0)=Complex(reJones[ind1], imJones[ind1]);
+	cmat(0,1)=Complex(reJones[ind2], imJones[ind2]);
+	cmat(1,1)=Complex(reJones[ind3], imJones[ind3]);
+      }
+      else {
+	cmat(0,0)=Complex(reJones[ind0], 0.0);
+	cmat(1,0)=Complex(reJones[ind1], 0.0);
+	cmat(0,1)=Complex(reJones[ind2], 0.0);
+	cmat(1,1)=Complex(reJones[ind3], 0.0);
+      }
+      mjJones2 j2(cmat);
+
+      // Make the relevant Jones matrix
+      // E
+      if(ipower==1) { // VP
+	mjJones2 j2unit(Complex(1.0, 0.0));
+	directProduct(j4, j2, j2unit);
+      }
+      // Primary beam = E . conj(E)
+      else if(ipower==2) { // PB
+	// Make the conjugate before constructing the
+	// mjJones since otherwise reference semantics
+	// get us
+	mjJones2 j2conj(conj(cmat));
+	directProduct(j4, j2, j2conj);
+      }
+
+      // Subtlety - we have to distinguish between applying
+      // the PB and applying the adjoint. The former is needed
+      // for predictions (sky->UV) and the latter is needed
+      // for inversion (UV->sky). For circular polarization
+      // this affects only the cross hand terms
+      if(!forward) {
+	j4=mjJones4(adjoint(j4.matrix()));
+      }
+
+      // Now apply the Jones matrix
+      if(npol==1) {
+	//IPosition ip0(4, ix, iy, 0, 0);
+	ind0=ix+iy*nx;
+	CStokesVector outCS(instor[ind0], 0.0, 0.0, 0.0);
+	outCS*=j4;
+	outstor[ind0]=outCS(0);
+      }
+      else if(npol==2) {
+	//IPosition ip0(4, ix, iy, 0, 0);
+	//IPosition ip1(4, ix, iy, 1, 0);
+	ind0=ix+iy*nx;
+	ind1=ix+iy*nx+nx*ny;
+	if(circular) {
+	  CStokesVector outCS(instor[ind0], 0.0, 0.0, instor[ind1]);
+	  outCS*=j4;
+	  outstor[ind0]=outCS(0);
+	  outstor[ind1]=outCS(3);
+	}
+	else {
+	  CStokesVector outCS(instor[ind0], instor[ind1], 0.0, 0.0);
+	  outCS*=j4;
+	  outstor[ind0]=outCS(0);
+	  outstor[ind1]=outCS(1);
+	}
+      }
+      else if(npol==4) {
+	//IPosition ip0(4, ix, iy, 0, 0);
+	//IPosition ip1(4, ix, iy, 1, 0);
+	//IPosition ip2(4, ix, iy, 2, 0);
+	//IPosition ip3(4, ix, iy, 3, 0);
+	ind0=ix+iy*nx;
+	ind1=ix+iy*nx+nx*ny;
+	ind2=ix+iy*nx+2*nx*ny;
+	ind3=ix+iy*nx+3*nx*ny;
+	CStokesVector outCS(instor[ind0], instor[ind1], instor[ind2], instor[ind3]);
+	outCS*=j4;
+	outstor[ind0]=outCS(0);
+	outstor[ind1]=outCS(1);
+	outstor[ind2]=outCS(2);
+	outstor[ind3]=outCS(3);
+      }
+    }
+       */
+    
+  }
+  } //OMP
+  out.putStorage(outstor, delout);
+  in.freeStorage(instor, delin);
+}
+
+
+void 
+PBMath2DImage::applyJonesFastX(const Float*& reJones,
+			  const Float*& imJones,
+			  const Complex*& instor,
+			  Complex*& outstor,
+			  const Vector<Int>& polmap,
+			  Bool /*inverse*/,
+			  Bool /*conjugate*/,
+			  Int ipower,  // ie, 1=VP, 2=PB
+			  Float /*cutoff*/,
+			  Bool circular,
+			       Bool forward,
+			       const Int ix, const Int nx, const Int ny, const Int npol){
+
+  Int ind0, ind1, ind2, ind3; 
+  // Loop through x, y coordinates of this cube
+  Matrix<Complex> cmat(2,2);
+
+  for (Int iy=0; iy<ny; iy++) {
+    
+    //sp0(1)=iy;
+    //sp1(1)=iy;
+    //sp2(1)=iy;
+    //sp3(1)=iy;
+    
+    ind0=ix+nx*iy +(nx*ny)*polmap(3);
+    ind1=ix+nx*iy +(nx*ny)*polmap(2);
+    ind2=ix+nx*iy +(nx*ny)*polmap(1);
+    ind3=ix+nx*iy +(nx*ny)*polmap(0);
+    // E Jones for this pixel
+    mjJones4 j4;
+    if(imJones) {
+      cmat(0,0)=Complex(reJones[ind0], imJones[ind0]);
+      cmat(1,0)=Complex(reJones[ind1], imJones[ind1]);
+      cmat(0,1)=Complex(reJones[ind2], imJones[ind2]);
+      cmat(1,1)=Complex(reJones[ind3], imJones[ind3]);
+    }
+    else {
+      cmat(0,0)=Complex(reJones[ind0], 0.0);
+      cmat(1,0)=Complex(reJones[ind1], 0.0);
+      cmat(0,1)=Complex(reJones[ind2], 0.0);
+      cmat(1,1)=Complex(reJones[ind3], 0.0);
+    }
+    mjJones2 j2(cmat);
+    
+    // Make the relevant Jones matrix
+    // E
+    if(ipower==1) { // VP
+      mjJones2 j2unit(Complex(1.0, 0.0));
+      directProduct(j4, j2, j2unit);
+    }
+    // Primary beam = E . conj(E)
+    else if(ipower==2) { // PB
+      // Make the conjugate before constructing the
+      // mjJones since otherwise reference semantics
+      // get us
+      mjJones2 j2conj(conj(cmat));
+      directProduct(j4, j2, j2conj);
+    }
+    
+    // Subtlety - we have to distinguish between applying
+    // the PB and applying the adjoint. The former is needed
+    // for predictions (sky->UV) and the latter is needed
+    // for inversion (UV->sky). For circular polarization
+    // this affects only the cross hand terms
+    if(!forward) {
+      j4=mjJones4(adjoint(j4.matrix()));
+    }
+    
+    // Now apply the Jones matrix
+      if(npol==1) {
+	//IPosition ip0(4, ix, iy, 0, 0);
+	ind0=ix+iy*nx;
+	CStokesVector outCS(instor[ind0], 0.0, 0.0, 0.0);
+	outCS*=j4;
+	outstor[ind0]=outCS(0);
+      }
+      else if(npol==2) {
+	//IPosition ip0(4, ix, iy, 0, 0);
+	//IPosition ip1(4, ix, iy, 1, 0);
+	ind0=ix+iy*nx;
+	ind1=ix+iy*nx+nx*ny;
+	if(circular) {
+	  CStokesVector outCS(instor[ind0], 0.0, 0.0, instor[ind1]);
+	  outCS*=j4;
+	  outstor[ind0]=outCS(0);
+	  outstor[ind1]=outCS(3);
+	}
+	else {
+	  CStokesVector outCS(instor[ind0], instor[ind1], 0.0, 0.0);
+	  outCS*=j4;
+	  outstor[ind0]=outCS(0);
+	  outstor[ind1]=outCS(1);
+	}
+      }
+      else if(npol==4) {
+	//IPosition ip0(4, ix, iy, 0, 0);
+	//IPosition ip1(4, ix, iy, 1, 0);
+	//IPosition ip2(4, ix, iy, 2, 0);
+	//IPosition ip3(4, ix, iy, 3, 0);
+	ind0=ix+iy*nx;
+	ind1=ix+iy*nx+nx*ny;
+	ind2=ix+iy*nx+2*nx*ny;
+	ind3=ix+iy*nx+3*nx*ny;
+	CStokesVector outCS(instor[ind0], instor[ind1], instor[ind2], instor[ind3]);
+	outCS*=j4;
+	outstor[ind0]=outCS(0);
+	outstor[ind1]=outCS(1);
+	outstor[ind2]=outCS(2);
+	outstor[ind3]=outCS(3);
+      }
+  }
+
+
+
+
+
+}
+
+
 // Float to Float on real part of complex stokes
 // This is only really useful for the weights image
 // from SkyEquation - perhaps make SkyEquation a
@@ -462,6 +747,7 @@ ImageInterface<Complex>& PBMath2DImage::apply(const ImageInterface<Complex>& in,
 //     inImage.copyData(le);
 //   }
 
+
   const IPosition oshape(out.shape());
   updateJones(out.coordinates(), oshape, sp, parAngle);
   
@@ -504,24 +790,32 @@ ImageInterface<Complex>& PBMath2DImage::apply(const ImageInterface<Complex>& in,
   RO_LatticeIterator<Float> reJonesli(*reRegridJonesImage_p, jls);
   reJonesli.reset();
 
+  Bool delreal, delimag;
   if(imRegridJonesImage_p) {
     RO_LatticeIterator<Float> imJonesli(*imRegridJonesImage_p, jls);
     
     imJonesli.reset();
     for (inli.reset(), outli.reset(); !inli.atEnd(); inli++, outli++) {
-      applyJones(&reJonesli.cursor(), &imJonesli.cursor(),
+      const Float *restor=reJonesli.cursor().getStorage(delreal);
+      const Float *imstor=imJonesli.cursor().getStorage(delimag);
+      applyJonesFast(restor, imstor,
 		 inli.cursor(), outli.rwCursor(), polmap,
 		 inverse, conjugate,
 		 ipower, cutoff, circular, forward);
+      reJonesli.cursor().freeStorage(restor, delreal);
+      imJonesli.cursor().freeStorage(imstor, delimag);
     }
   }
   else {
     for (inli.reset(), outli.reset(); !inli.atEnd(); inli++, outli++) {
-      applyJones(&(reJonesli.cursor()),
-		 (const Array<Float>*)0,
+      const Float *restor=reJonesli.cursor().getStorage(delreal);
+      const Float *imstor=NULL;
+      applyJonesFast(restor,
+		 imstor,
 		 inli.cursor(),
 		 outli.rwCursor(), polmap, inverse, conjugate,
 		 ipower, cutoff, circular, forward);
+      reJonesli.cursor().freeStorage(restor, delreal);
     }
   }
 
@@ -862,9 +1156,7 @@ void PBMath2DImage::updateJones(const CoordinateSystem& coords,
   // as the image to input image and the same stokes and frequency
   // axes as the input Jones images.
   {
-    // Delete any old images
-    if(reRegridJonesImage_p) delete reRegridJonesImage_p; reRegridJonesImage_p=0;
-    if(imRegridJonesImage_p) delete imRegridJonesImage_p; imRegridJonesImage_p=0;
+   
 
     AlwaysAssert(imdirectionindex>=0, AipsError);
     Int spectralIndex=coords.findCoordinate(Coordinate::SPECTRAL);
@@ -878,7 +1170,17 @@ void PBMath2DImage::updateJones(const CoordinateSystem& coords,
     CoordinateSystem desiredCoords(reJonesImage_p->coordinates());
     desiredCoords.replaceCoordinate(imageDirectionCoord, jonesdirectionindex);
     desiredCoords.replaceCoordinate(imageSpectralCoord, spectralIndex);
-    reRegridJonesImage_p = new TempImage<Float>(desiredShape,
+ 
+    if(reRegridJonesImage_p && desiredCoords.near(reRegridJonesImage_p->coordinates(), 1.0e-4 ) && (desiredShape == (reRegridJonesImage_p->shape()))) {
+	return;
+      }
+
+     // Delete any old images
+    if(reRegridJonesImage_p) delete reRegridJonesImage_p; reRegridJonesImage_p=0;
+    if(imRegridJonesImage_p) delete imRegridJonesImage_p; imRegridJonesImage_p=0;
+
+
+   reRegridJonesImage_p = new TempImage<Float>(desiredShape,
 						desiredCoords);
     reRegridJonesImage_p->set(0.0);
     if(imJonesImage_p) {
