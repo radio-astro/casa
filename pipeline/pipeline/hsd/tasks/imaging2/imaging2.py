@@ -13,6 +13,7 @@ import pipeline.infrastructure.basetask as basetask
 from .gridding import gridding_factory
 from . import exportms
 from . import applyflag
+from . import weighting
 from .. import common
 from ..baseline import baseline
 from ..common import temporary_filename
@@ -133,7 +134,6 @@ class SDImaging2(common.SingleDishTaskTemplate):
 
                 # reference data is first scantable 
                 st = context.observing_run[indices[0]]
-                is_full_resolution = st.spectral_window[spwid].type == 'SP'
 
                 # SRCTYPE for ON-SOURCE
                 srctype = st.calibration_strategy['srctype']
@@ -150,9 +150,6 @@ class SDImaging2(common.SingleDishTaskTemplate):
 
                 LOG.debug('filenames=%s' % (filenames))
                 
-                # create job for full channel image
-                LOG.info('create full channel image')
-
                 # image name
                 namer = filenamer.Image()
                 namer.casa_image()
@@ -180,9 +177,16 @@ class SDImaging2(common.SingleDishTaskTemplate):
                     index = indices[i]
                     original_st = filenames[i]
                     exported_ms = exported_mses[index]
-                    self.__set_weight(original_st, exported_ms, index,
-                                      spwid, srctype,
-                                      is_full_resolution)
+                    spwtype = context.observing_run[index].spectral_window[spwid].type
+                    #self.__set_weight(original_st, exported_ms, index,
+                    #                  spwid, srctype,
+                    #                  is_full_resolution)
+                    weighting_inputs = weighting.WeightMS.Inputs(context, infile=original_st, 
+                                                                 outfile=exported_ms, antenna=index,
+                                                                 spwid=spwid, spwtype=spwtype, 
+                                                                 onsourceid=srctype)
+                    weighting_task = weighting.WeightMS(weighting_inputs)
+                    weighting_result = weighting_task.execute(dry_run=self._executor._dry_run)
 
                 # Step 4.
                 # Imaging
@@ -267,141 +271,9 @@ class SDImaging2(common.SingleDishTaskTemplate):
 
         do_imaging(self.inputs.context, infiles, spwlist, imagename, datatable, reference_data, source_name, antenna_indices, srctype, edge)
 
-    def __set_weight(self, infile, outfile, antenna, spwid, srctype,
-                     is_full_resolution):
-        Rule = {'WeightDistance': 'Gauss',
-                'Clipping': 'MinMaxReject',
-                'WeightRMS': True,
-                'WeightTsysExpTime': False}
-        datatable = self.inputs.context.observing_run.datatable_instance
-        row_map = make_row_map(infile, outfile, spwid, srctype)
-        if is_full_resolution:
-            minmaxclip = (Rule['Clipping'].upper() == 'MINMAXREJECT')
-            weight_rms = Rule['WeightRMS']
-            weight_tintsys = Rule['WeightTsysExpTime']
-        else:
-            minmaxclip = False
-            weight_rms = False
-            weight_tintsys = True
-        set_weight(infile, outfile, datatable, antenna, spwid, srctype,
-                   row_map, minmaxclip=minmaxclip, weight_rms=weight_rms,
-                   weight_tintsys=weight_tintsys)
-
     def analyse(self, result):
         return result
 
-def make_row_map(infile, outfile, spwid, srctype):
-    rows_list = []
-    srctypes_list = []
-    with casatools.TableReader(infile) as tb:
-        for polno in xrange(4):
-            tsel = tb.query('IFNO==%s && POLNO==%s' % (spwid, polno),
-                            sortlist='TIME')
-            if tsel.nrows() > 0:
-                rows = tsel.rownumbers() 
-                srctypes = tsel.getcol('SRCTYPE')
-                rows_list.append(rows)
-                srctypes_list.append(srctypes)
-            tsel.close()
-
-    with casatools.TableReader(os.path.join(outfile, 'DATA_DESCRIPTION')) as tb:
-        spwids = tb.getcol('SPECTRAL_WINDOW_ID')
-        data_desc_id = numpy.where(spwids == spwid)[0][0]
-
-    with casatools.TableReader(outfile) as tb:
-        tsel = tb.query('DATA_DESC_ID==%s' % (data_desc_id),
-                        sortlist='TIME')
-        ms_rows = tsel.rownumbers() 
-
-    row_map = {}
-    # ms_row: (st_row_pol0, st_row_pol1)
-    for index in xrange(len(rows)):
-        if srctypes[index] == srctype:
-            row_map[ms_rows[index]] = [rows[index] for rows in rows_list]
-
-    return row_map
-         
-def set_weight(infile, outfile, datatable, antenna, spw, srctype,
-               row_map, minmaxclip, weight_rms, weight_tintsys):
-    # get corresponding datatable rows
-    datatable_name = datatable.plaintable
-    taqlstring = 'USING STYLE PYTHON SELECT ROWNUMBER() AS ID FROM "%s" WHERE IF==%s && SRCTYPE == %s && ANTENNA == %s' % (os.path.join(datatable_name, 'RO'), spw, srctype, antenna)
-    table = datatable.tb1
-    LOG.debug('taqlstring=\'%s\'' % (taqlstring))
-    tx = table.taql(taqlstring)
-    index_list = tx.getcol('ID')
-    tx.close()
-    del tx
-
-    rows = datatable.tb1.getcol('ROW').take(index_list)
-    weight = {}
-    for row in rows:
-        weight[row] = 1.0
-
-    # set weight 
-    if weight_rms:
-        stats = datatable.tb2.getcol('STATISTICS').take(index_list)
-        for index in xrange(len(rows)):
-            row = rows[index]
-            stat = stats[index]
-            if stat != 0.0:
-                weight[row] /= (stat * stat)
-            else:
-                weight[row] = 0.0
-
-    if weight_tintsys:
-        exposures = datatable.tb1.getcol('EXPOSURE').take(index_list)
-        tsyss = datatable.tb1.getcol('TSYS').take(index_list)
-        # print exposures
-        # print tsyss
-        for index in xrange(len(rows)):
-            row = rows[index]
-            exposure = exposures[index]
-            tsys = tsyss[index]
-            if tsys > 0.5:
-                weight[row] *= (exposure / (tsys * tsys))
-            else:
-                weight[row] = 0.0
-
-    # put weight
-    with casatools.TableReader(outfile, nomodify=False) as tb:
-        tsel = tb.query('ROWNUMBER() IN %s' % (row_map.keys()), style='python')
-        ms_weights = tsel.getcol('WEIGHT')
-        rownumbers = tsel.rownumbers().tolist()
-        for (k, v) in row_map.items():
-            ms_row = k
-            ms_weight = list((weight[row] for row in v))
-            ms_index = rownumbers.index(ms_row)
-            ms_weights[:, ms_index] = ms_weight
-        tsel.putcol('WEIGHT', ms_weights)
-        tsel.close()
-
-    # set channel flag for min/max in each channel
-    if minmaxclip:
-        with casatools.TableReader(outfile, nomodify=False) as tb:
-            tsel = tb.query('ROWNUMBER() IN %s' % (row_map.keys()),
-                            style='python')
-            if 'FLOAT_DATA' in tsel.colnames():
-                data_column = 'FLOAT_DATA'
-            else:
-                data_column = 'DATA'
-            data = tsel.getcol(data_column)  # (npol, nchan, nrow)
-
-            (npol, nchan, nrow) = data.shape
-            if nrow > 2:
-                argmax = data.argmax(axis=2)
-                argmin = data.argmin(axis=2)
-                print argmax.tolist()
-                print argmin.tolist()
-                flag = tsel.getcol('FLAG')
-                for ipol in xrange(npol):
-                    maxrow = argmax[ipol]
-                    minrow = argmin[ipol]
-                    for ichan in xrange(nchan):
-                        flag[ipol, ichan, maxrow[ichan]] = True
-                        flag[ipol, ichan, minrow[ichan]] = True
-                tsel.putcol('FLAG', flag)
-                return (argmin, argmax)
 
 def do_imaging(context, infiles, spwlist, imagename, datatable, reference_data, source_name, antennalist, srctype, edge):
     # imager tool
