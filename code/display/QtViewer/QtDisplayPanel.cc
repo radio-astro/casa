@@ -1697,7 +1697,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			PanelDisplay*  cbp     = cbps.getRight();
 			QtDisplayData* newdd   = newcbdds.getRight();
 			WedgeDD*       newcb   = newdd->colorBar();
-
 			if(i<nOld) {
 				QtDisplayData* olddd = oldcbdds.getRight();
 				WedgeDD*       oldcb = olddd->colorBar();
@@ -2721,8 +2720,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Vector<Float> shiftSlope, brtCont;
 		DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
 		while ( iter != displayDataHolder->endDD()) {
-			//for ( ConstListIter<QtDisplayData*> dds = registeredDDs(); ! dds.atEnd(); dds++ ) {
-			//QtDisplayData* dd = dds.getRight();
 			QtDisplayData* dd = (*iter);
 			if ( dd->hasColormap( ) ) {
 				dd->getCMShiftSlope(shiftSlope);
@@ -3069,6 +3066,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	QtDisplayData* QtDisplayPanel::getChannelDD( int index ) const {
 		return displayDataHolder->getChannelDD( index );
+	}
+
+	void QtDisplayPanel::registrationOrderChanged(){
+		pd_->removeDisplayDatas();
+		for ( DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
+				iter != displayDataHolder->endDD(); iter++ ){
+			DisplayData* displayData = (*iter)->dd();
+			pd_->addDisplayData( *displayData, -1);
+		}
 	}
 
 

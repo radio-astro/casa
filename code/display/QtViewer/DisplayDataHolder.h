@@ -85,6 +85,8 @@ namespace casa {
 
 		void setImageTracker( ImageTracker* tracker );
 		void setImageDisplayer( ImageDisplayer* displayer );
+
+		void registrationOrderChanged();
 		virtual ~DisplayDataHolder();
 	private:
 		DisplayDataHolder( const DisplayDataHolder& displayDataHolder );

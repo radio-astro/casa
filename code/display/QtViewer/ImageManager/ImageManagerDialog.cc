@@ -156,7 +156,10 @@ namespace casa {
 			int registeredIndex = imageScroll->getRegisteredIndex( dropIndex );
 			displayedImages->insertDD( displayData, registeredIndex,
 					registered );
+			displayedImages->registrationOrderChanged();
 		}
+
+
 	}
 
 	//-------------------------------------------------------------------------
@@ -256,7 +259,7 @@ namespace casa {
 			QtDisplayData* blueImage = NULL;
 			QtDisplayData* greenImage = NULL;
 			int assignedCount = 0;
-			qDebug() << "Coloring by image count="<<count;
+			//qDebug() << "Coloring by image count="<<count;
 			for( int i = 0; i < count; i++ ){
 				QtDisplayData* dd = views[i]->getData();
 				if ( dd != NULL && dd->isRaster() ){
@@ -276,7 +279,7 @@ namespace casa {
 				}
 			}
 			//At least two of the colored images should be not NULL;
-			qDebug() << "Assigned color count="<<assignedCount;
+			//qDebug() << "Assigned color count="<<assignedCount;
 			if ( assignedCount >= 2 ){
 				QtDisplayData* controllingDD = this->displayedImages->getDDControlling();
 				if ( controllingDD == NULL ){

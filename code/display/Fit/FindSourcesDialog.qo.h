@@ -57,6 +57,7 @@ namespace casa {
 		FindSourcesDialog(QWidget *parent = 0, bool displayModeFunctionality = true);
 		void setImage( ImageTask::shCImFloat image );
 		void setChannel( int channel );
+		void clearImage();
 
 		QString getRegionString() const;
 		String getPixelBox() const;

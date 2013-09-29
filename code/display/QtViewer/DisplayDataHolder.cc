@@ -88,6 +88,12 @@ namespace casa {
 		}
 	}
 
+	void DisplayDataHolder::registrationOrderChanged(){
+		if ( imageDisplayer != NULL ){
+			imageDisplayer->registrationOrderChanged();
+		}
+	}
+
 	QtDisplayData* DisplayDataHolder::getChannelDD( int index ) const {
 		QtDisplayData* channelDD = NULL;
 		if ( dataList.size() > 0 ){
