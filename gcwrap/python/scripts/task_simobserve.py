@@ -149,10 +149,9 @@ def simobserve(
                 msg("No sky input found.  At least one of skymodel or complist must exist.",priority="error")
 
 
-        ### WORKAROUND for wrong flux in COMP + SKY TP simulations
-        if (not uvmode) and (obsmode != "") and \
-           os.path.exists(skymodel) and os.path.exists(complist):
-            msg("Single dish simulation has a flux recovery issue using both skymodel an components list as an input.\nPlease generate compskymodel image first by obsmode='' and use the image as the skymodel input.\nSorry for the inconvenience.", priority="error")
+        ### WORKAROUND for wrong flux in COMP TP simulations
+        if (not uvmode) and (obsmode != "") and os.path.exists(complist):
+            msg("Single dish simulation has a flux recovery issue when using a components list as an input.\nPlease generate compskymodel image first by obsmode='' and use the image as the skymodel input.\nSorry for the inconvenience.", priority="error")
             return False
         ### End of WORKAROUND
 
