@@ -24,7 +24,7 @@ class ExportMSResults(common.SingleDishResults):
     def merge_with_context(self, context):
         super(ExportMSResults, self).merge_with_context(context)
         observing_run = context.observing_run
-        outfiles = self.outcome['outfiles']
+        outfiles = self.outcome
         keys = outfiles.keys()
         for i in xrange(len(observing_run)):
             if i in keys:
@@ -33,7 +33,7 @@ class ExportMSResults(common.SingleDishResults):
                 observing_run[i].exported_ms = None
 
     def _outcome_name(self):
-        return self.outcome['outfiles']
+        return self.outcome
 
 
 class ExportMS(common.SingleDishTaskTemplate):

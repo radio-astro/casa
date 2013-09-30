@@ -65,19 +65,20 @@ class SDImaging2(common.SingleDishTaskTemplate):
         LOG.info('Step 1. Apply flags')
         applyflag_inputs = applyflag.SDApplyFlag.Inputs(context, infiles)
         applyflag_task = applyflag.SDApplyFlag(applyflag_inputs)
-        applyflag_results = self._executor.execute(applyflag_task, merge=False)
+        applyflag_results = self._executor.execute(applyflag_task, merge=True)
 
         # Step 2.
         # Export each scantable to MS
         LOG.info('Step 2. Export data')
         export_inputs = exportms.ExportMS.Inputs(context, infiles)
         export_task = exportms.ExportMS(export_inputs)
-        export_results = self._executor.execute(export_task, merge=False)
+        export_results = self._executor.execute(export_task, merge=True)
         exported_mses = export_results.outcome
 
         # search results and retrieve edge parameter from the most
         # recent SDBaselineResults if it exists
-        results = [r.read() for r in context.results]
+        getresult = lambda r : r.read() if hasattr(r, 'read') else r
+        results = [getresult(r) for r in context.results]
         baseline_stage = -1
         for stage in xrange(len(results) - 1, -1, -1):
             if isinstance(results[stage], baseline.SDBaselineResults):
@@ -177,7 +178,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                                                                  spwid=spwid, spwtype=spwtype, 
                                                                  onsourceid=srctype)
                     weighting_task = weighting.WeightMS(weighting_inputs)
-                    weighting_result = self._executor.execute(weighting_task, merge=False)
+                    weighting_result = self._executor.execute(weighting_task, merge=True)
 
                 # Step 4.
                 # Imaging
@@ -187,7 +188,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                                                                onsourceid=srctype, edge=edge,
                                                                vislist=exported_mses)
                 imager_task = worker.SDImaging2Worker(imager_inputs)
-                imager_result = self._executor.execute(imager_task, merge=False)
+                imager_result = self._executor.execute(imager_task, merge=True)
 
                 # Additional Step.
                 # Make grid_table and put rms and valid spectral number array 
@@ -202,7 +203,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                     gridding_inputs = grid_task_class.Inputs(context, antennaid=indices, 
                                                              spwid=spwid, polid=pol)
                     gridding_task = grid_task_class(gridding_inputs)
-                    gridding_result = self._executor.execute(gridding_task, merge=False)
+                    gridding_result = self._executor.execute(gridding_task, merge=True)
                     grid_tables.append(gridding_result.outcome)
                 for i in xrange(len(pols)):
                     validsps.append([r[6] for r in grid_tables[i]])
