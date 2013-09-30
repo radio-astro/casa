@@ -20,6 +20,7 @@ void FeatherPlotWidgetScatter::addScatterCurve( const QVector<double>& xVals, co
 	int valueCount = xVals.size();
 	QVector<double> scatterXValues;
 	QVector<double> scatterYValues;
+
 	for ( int i = 0; i < valueCount; i++ ){
 		if ( yVals[i] <= dataLimit && xVals[i] <= dataLimit ){
 			scatterXValues.append( xVals[i]);
@@ -73,18 +74,19 @@ void FeatherPlotWidgetScatter::addZoomNeutralCurves(){
 		bool sumCurveY = FeatherCurveType::isSumCurve(yScatters[i]);
 		//We need to take logs of the xvalues, if we have not already done it,
 		//because the plot will not do it for sum curves.
+		bool logAmplitude = plot->isLogAmplitude();
 		QVector<double> scaledXVals = xVals;
-		if ( sumCurveY && !sumCurveX ){
+		if ( logAmplitude && sumCurveY && !sumCurveX ){
 			scaledXVals = scaleValues( xVals );
 		}
 		QVector<double> scaledYVals = yData[i];
-		if ( sumCurveX && ! sumCurveY  ){
+		if ( logAmplitude && sumCurveX && ! sumCurveY  ){
 			scaledYVals = scaleValues( yData[i]);
 		}
 
 		bool sumCurve = sumCurveX || sumCurveY;
 		double curveValueLimit = valueLimit;
-		if ( sumCurve ){
+		if ( sumCurve && logAmplitude ){
 			curveValueLimit = qLn( valueLimit ) / qLn(10 );
 		}
 		addScatterCurve( scaledXVals, scaledYVals, curveValueLimit, yScatters[i], sumCurve );

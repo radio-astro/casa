@@ -412,21 +412,28 @@ namespace casa {
 	}
 
 	void QtProfile::exportProfile() {
-		QString fn = QFileDialog::getSaveFileName(this,
-		             tr("Export profile"),
-		             QString(), tr( "FITS files (*.fits);; Text files (*.txt, *.plt)"));
-
-		if (fn.isEmpty())
-			return ;
-
-		QString ext = fn.section('.', -1);
-		bool ok;
-		if (ext =="fits")
-			ok = exportFITSSpectrum(fn);
-		else {
-			if (ext != "txt" && ext != "plt")
-				fn.append(".txt");
-			ok = exportASCIISpectrum(fn);
+		QString filterString = tr("FITS files (*.fits);;Text files (*.txt);;Vector Graphic Plotter files(*.plt)");
+		QFileDialog fd( this, tr("Export profile"),
+				                QString() );
+		fd.setFileMode( QFileDialog::AnyFile );
+		fd.setNameFilter( filterString );
+		if ( fd.exec() ) {
+			QStringList fileNames = fd.selectedFiles();
+			if ( fileNames.size() > 0 ) {
+				QString outputFileName = fileNames[0];
+				QString ext = outputFileName.section('.', -1);
+				bool ok;
+				if (ext =="fits"){
+					ok = exportFITSSpectrum(/*fn*/outputFileName);
+				}
+				else {
+					if (ext != "txt" && ext != "plt"){
+						//fn.append(".txt");
+						outputFileName.append( ".txt");
+					}
+					ok = exportASCIISpectrum(/*fn*/outputFileName );
+				}
+			}
 		}
 	}
 
@@ -1676,48 +1683,48 @@ namespace casa {
 		ts.setRealNumberPrecision(12);
 
 		//There should be a space separating the ra from the dec.
-			int coordinateCount = lastWX.size();
-			QList<QString> cornerCoordinatesWorld;
-			QList<QString> cornerCoordinatesPixel;
-			for ( int i = 0; i < coordinateCount; i++ ) {
-				QString raDecStr = getRaDec( lastWX[i], lastWY[i]);
-				int decIndex = raDecStr.indexOf("+");
-				if ( decIndex == -1 ) {
-					decIndex = raDecStr.indexOf( "-");
-				}
-				raDecStr.insert(decIndex, ", ");
-				cornerCoordinatesWorld.append("["+raDecStr+"]");
-				cornerCoordinatesPixel.append("["+ QString::number(lastPX[i])+
-				                              ", "+QString::number(lastPY[i])+"]");
+		int coordinateCount = lastWX.size();
+		QList<QString> cornerCoordinatesWorld;
+		QList<QString> cornerCoordinatesPixel;
+		for ( int i = 0; i < coordinateCount; i++ ) {
+			QString raDecStr = getRaDec( lastWX[i], lastWY[i]);
+			int decIndex = raDecStr.indexOf("+");
+			if ( decIndex == -1 ) {
+				decIndex = raDecStr.indexOf( "-");
 			}
+			raDecStr.insert(decIndex, ", ");
+			cornerCoordinatesWorld.append("["+raDecStr+"]");
+			cornerCoordinatesPixel.append("["+ QString::number(lastPX[i])+
+					", "+QString::number(lastPY[i])+"]");
+		}
 
-			ts << "#title: Spectral profile - " << fileName << "\n";
-			ts << "#region (world): "<< region << "[";
-			for ( int i = 0; i < coordinateCount; i++ ) {
-				ts << cornerCoordinatesWorld[i];
-				if ( i != coordinateCount - 1 ) {
-					ts << ", ";
-				}
+		ts << "#title: Spectral profile - " << fileName << "\n";
+		ts << "#region (world): "<< region << "[";
+		for ( int i = 0; i < coordinateCount; i++ ) {
+			ts << cornerCoordinatesWorld[i];
+			if ( i != coordinateCount - 1 ) {
+				ts << ", ";
 			}
-			ts << "]\n";
-			ts << "#region (pixel): "<< region << "[";
-			for ( int i = 0; i < coordinateCount; i++ ) {
-				ts << cornerCoordinatesPixel[i];
-				if ( i != coordinateCount - 1 ) {
-					ts << ", ";
-				}
+		}
+		ts << "]\n";
+		ts << "#region (pixel): "<< region << "[";
+		for ( int i = 0; i < coordinateCount; i++ ) {
+			ts << cornerCoordinatesPixel[i];
+			if ( i != coordinateCount - 1 ) {
+				ts << ", ";
 			}
-			ts << "]\n";
-			ts << "#coordinate: " << QString(coordinate.chars()) << "\n";
-			ts << "#xLabel: " << QString(ctypeUnit.chars()) << "\n";
-			ts << "#yLabel: " << "[" << yUnit << "] "<< plotMode->currentText() << "\n";
-			if (z_eval.size() > 0)
-				ts << "#eLabel: " << "[" << yUnit << "] " << errorMode->currentText() << "\n";
+		}
+		ts << "]\n";
+		ts << "#coordinate: " << QString(coordinate.chars()) << "\n";
+		ts << "#xLabel: " << QString(ctypeUnit.chars()) << "\n";
+		ts << "#yLabel: " << "[" << yUnit << "] "<< plotMode->currentText() << "\n";
+		if (z_eval.size() > 0)
+			ts << "#eLabel: " << "[" << yUnit << "] " << errorMode->currentText() << "\n";
 
 
 
 
-			/*if (z_eval.size() > 0) {
+		/*if (z_eval.size() > 0) {
 				for (uInt i = 0; i < z_xval.size(); i++) {
 					ts << z_xval(i) << "    " << scaleFactor*z_yval(i) << "    "  << scaleFactor*z_eval(i) << "\n";
 				}
@@ -1728,11 +1735,11 @@ namespace casa {
 			}*/
 
 
-		int i = pixelCanvas->getLineCount();
-		for (int k = 1; k < i; k++) {
+		int curveCount = pixelCanvas->getLineCount();
+		for (int k = 1; k < curveCount; k++) {
 			outputCurve( k, ts, scaleFactor );
 		}
-		if ( i > 0 ){
+		if ( curveCount > 0 ){
 			outputCurve( 0, ts, scaleFactor );
 		}
 		return true;

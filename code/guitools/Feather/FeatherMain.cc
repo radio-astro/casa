@@ -44,7 +44,8 @@ const int FeatherMain::SINGLE_DISH_FACTOR_DEFAULT = 1;
 FeatherMain::FeatherMain(QWidget *parent)
     : QMainWindow(parent), fileLoader( this ),
       preferences( this ), preferencesColor( this ),
-      plotHolder(NULL), progressMeter(this), logger(LogOrigin("CASA", "Feather")){
+      plotHolder(NULL), progressMeter(this), overWriteFileDialog( this ),
+      logger(LogOrigin("CASA", "Feather")){
 
 	ui.setupUi(this);
 	ui.outputLabel->setText("");
@@ -66,6 +67,8 @@ FeatherMain::FeatherMain(QWidget *parent)
 	progressMeter.setMinimum( 0 );
 	progressMeter.setMaximum( 0 );
 	connect( this, SIGNAL( featherFinished()), &progressMeter, SLOT(cancel()));
+
+	connect( &overWriteFileDialog, SIGNAL( overWriteOK()), this, SLOT( overWriteOK()));
 
 	//Put a validator on the effective dish diameter.
 	QDoubleValidator* validator = new QDoubleValidator( 0, std::numeric_limits<double>::max(), 10, this );
@@ -339,10 +342,32 @@ void FeatherMain::clearPlots(){
 }
 
 
-void FeatherMain::featherImages() {
+void FeatherMain::featherImages( bool checkOutput ) {
 
 	if ( lowResImagePath.trimmed().length() == 0 ){
 		return;
+	}
+
+	//If we are supposed to save output, we need to check that there is not another
+	//file there.  If there is, we need to put up a warning asking if we should overwrite
+	//the file our save with another name.
+	bool saveOutput = fileLoader.isOutputSaved();
+	if ( saveOutput && checkOutput ){
+		QFile outputFile( outputImagePath );
+		bool outputOverwrite = outputFile.exists();
+		if ( outputOverwrite ){
+			int lastSlash = outputImagePath.lastIndexOf( QDir::separator());
+			QString fileName = "";
+			QString directory = outputImagePath;
+			if ( lastSlash >= 0 ){
+				directory = outputImagePath.mid(lastSlash+1);
+				fileName = outputImagePath.left( lastSlash );
+			}
+			overWriteFileDialog.setFile( fileName );
+			overWriteFileDialog.setDirectory( directory );
+			overWriteFileDialog.show();
+			return;
+		}
 	}
 
 	Bool validDishDiameters = true;
@@ -383,16 +408,24 @@ void FeatherMain::addOriginalDataToPlots(){
 	FeatheredData sDOrig = dataManager->getSDOrig();
 	plotHolder->setData(sDOrig.getUX(), sDOrig.getUY(),
 				sDOrig.getVX(), sDOrig.getVY(), FeatherDataType::LOW );
+	if ( sDOrig.isEmpty()){
+		QMessageBox::warning(this,"Single Dish Data Missing", "There was a  loading single dish data.");
+	}
 
 
 	FeatheredData intOrig = dataManager->getIntOrig();
 	plotHolder->setData( intOrig.getUX(), intOrig.getUY(),
 				intOrig.getVX(), intOrig.getVY(), FeatherDataType::HIGH );
+	if ( intOrig.isEmpty() ){
+		QMessageBox::warning(this,"Interferometer Data Missing", "There was a problem loading interferometer data.");
+	}
 
 	FeatheredData dirtyOrig = dataManager->getDirtyOrig();
 	plotHolder->setData( dirtyOrig.getUX(), dirtyOrig.getUY(),
 		dirtyOrig.getVX(), dirtyOrig.getVY(), FeatherDataType::DIRTY );
-
+	if ( dirtyOrig.isEmpty() && dirtyImagePath.length() > 0 ){
+		QMessageBox::warning(this,"Dirty Data Missing", "There was a problem loading the data.");
+	}
 
 }
 
@@ -439,33 +472,42 @@ void FeatherMain::addFeatheredDataToPlots( ){
 	plotHolder->setData( sdConvolvedIntCut.getUX(), sdConvolvedIntCut.getUY(),
 			sdConvolvedIntCut.getVX(), sdConvolvedIntCut.getVY(), FeatherDataType::LOW_CONVOLVED_HIGH_WEIGHTED );
 
-	FeatheredData sdConvolvedDirty = dataManager->getSDConvolvedDirtyOrig();
+	/*FeatheredData sdConvolvedDirty = dataManager->getSDConvolvedDirtyOrig();
 	plotHolder->setData( sdConvolvedDirty.getUX(), sdConvolvedDirty.getUY(),
 				sdConvolvedDirty.getVX(), sdConvolvedDirty.getVY(), FeatherDataType::LOW_CONVOLVED_DIRTY );
 
 	FeatheredData sdConvolvedDirtyCut = dataManager->getSDConvolvedDirtyCut();
 	plotHolder->setData( sdConvolvedDirtyCut.getUX(), sdConvolvedDirtyCut.getUY(),
 				sdConvolvedDirtyCut.getVX(), sdConvolvedDirtyCut.getVY(), FeatherDataType::LOW_CONVOLVED_DIRTY_WEIGHTED );
+	*/
 }
 
 
 void FeatherMain::featheringDone(){
 	emit featherFinished();
 
-	//Remove all plots.
-	plotHolder->clearPlots();
+	bool successful = dataManager->isSuccess();
+	if ( !successful ){
+		QString errorMessage = dataManager->getError();
+		QMessageBox::warning( this, "Feathering Problem", errorMessage );
+	}
+	else {
 
-	resetData();
+		//Remove all plots.
+		plotHolder->clearPlots();
 
-	plotHolder->layoutPlotWidgets();
-	plotHolder->refreshPlots();
+		resetData();
 
-	//Post a message if we could not save the output image.
-	if ( fileLoader.isOutputSaved() ){
-		bool fileSaved = dataManager->isFileSaved();
-		if ( !fileSaved ){
-			QString msg( "There was a problem saving the image to "+ui.outputLabel->text());
-			QMessageBox::warning( this, "Save Problem", msg);
+		plotHolder->layoutPlotWidgets();
+		plotHolder->refreshPlots();
+
+		//Post a message if we could not save the output image.
+		if ( fileLoader.isOutputSaved() ){
+			bool fileSaved = dataManager->isFileSaved();
+			if ( !fileSaved ){
+				QString msg( "There was a problem saving the image to "+ui.outputLabel->text());
+				QMessageBox::warning( this, "Save Problem", msg);
+			}
 		}
 	}
 }
@@ -498,6 +540,19 @@ pair<float,float> FeatherMain::populateDishDiameters( Bool& validDiameters ) {
 	}
 	pair<float,float> diameters( xDiameter, yDiameter );
 	return diameters;
+}
+
+void FeatherMain::overWriteOK() {
+	QString outputDirectory = overWriteFileDialog.getDirectory();
+	QString outputFileName = overWriteFileDialog.getFile();
+	fileLoader.updateOutput( outputDirectory, outputFileName );
+	if ( !outputDirectory.endsWith( QDir::separator())){
+		outputDirectory = outputDirectory + QDir::separator();
+	}
+	outputImagePath = outputDirectory + outputFileName;
+	ui.outputLabel->setText( outputFileName );
+	//Reapply feather now without doing the output file check.
+	featherImages( false );
 }
 
 FeatherMain::~FeatherMain(){

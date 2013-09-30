@@ -41,7 +41,7 @@ namespace casa {
 	namespace viewer {
 
 		QtRegionDock::QtRegionDock( QtDisplayPanelGui *d, QWidget* parent ) :
-			QDockWidget(parent), Ui::QtRegionDock( ),
+			InActiveDock(parent), Ui::QtRegionDock( ),
 			dpg(d), current_dd(0), current_tab_state(-1,-1),
 			current_color_index(6 /*** magenta ***/ ), dismissed(false),
 			mouse_in_dock(false) {

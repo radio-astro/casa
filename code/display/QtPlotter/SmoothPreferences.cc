@@ -1,6 +1,8 @@
 #include "SmoothPreferences.qo.h"
+#include <display/QtPlotter/SmoothSpinBox.h>
 #include <QSettings>
 #include <QDebug>
+
 namespace casa {
 
 const QString SmoothPreferences::APPLICATION = "Profiler";
@@ -16,6 +18,12 @@ SmoothPreferences::SmoothPreferences(QWidget *parent)
     SMOOTH_HANNING( "Hanning"){
 
 	ui.setupUi(this);
+	setWindowTitle( "Smoothing");
+
+	smoothSpinBox = new SmoothSpinBox(this);
+	QLayout* spinLayout = new QHBoxLayout();
+	spinLayout->addWidget( smoothSpinBox );
+	ui.radiusHolder->setLayout(spinLayout);
 
 	ui.smoothingCombo->addItem( SMOOTH_NONE );
 	ui.smoothingCombo->addItem( SMOOTH_BOXCAR );
@@ -45,7 +53,7 @@ void SmoothPreferences::initialize(){
 void SmoothPreferences::persist(){
 	//Copy the settings from the UI into the internal variables
 	smoothMethod = ui.smoothingCombo->currentText();
-	smoothRadius = ui.radiusSpinBox->value();
+	smoothRadius = smoothSpinBox->value();
 
 	//Persist the settings
 	QSettings settings( ORGANIZATION, APPLICATION );
@@ -59,7 +67,7 @@ void SmoothPreferences::reset(){
 	if ( index >= 0 ){
 		ui.smoothingCombo->setCurrentIndex( index );
 	}
-	ui.radiusSpinBox->setValue( smoothRadius );
+	smoothSpinBox->setValue( smoothRadius );
 }
 
 void SmoothPreferences::smoothingAccepted(){
@@ -75,10 +83,10 @@ void SmoothPreferences::smoothingRejected(){
 void SmoothPreferences::smoothingMethodChanged(){
 	QString currentMethod = ui.smoothingCombo->currentText();
 	if ( SMOOTH_NONE == currentMethod ){
-		ui.radiusSpinBox->setEnabled( false );
+		smoothSpinBox->setEnabled( false );
 	}
 	else {
-		ui.radiusSpinBox->setEnabled( true );
+		smoothSpinBox->setEnabled( true );
 	}
 }
 
@@ -101,7 +109,7 @@ Vector<Float> SmoothPreferences::applySmoothing( Vector<Float> values) const {
 		if ( SMOOTH_HANNING == smoothMethod ){
 			kernelType = VectorKernel::HANNING;
 		}
-		int width = ui.radiusSpinBox->value();
+		int width = smoothSpinBox->value();
 		result = doConvolve( values, width, kernelType );
 	}
 	return result;

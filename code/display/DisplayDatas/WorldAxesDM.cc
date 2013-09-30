@@ -355,7 +355,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // end PGSBOX interface - derived from AvAxis.cc via WCCSNLAxisLabeller.cc
 ////////////////////////////////////////////////////////////////////////
 
-	Bool WorldAxesDM::drawIntoList(Display::RefreshReason reason,
+	Bool WorldAxesDM::drawIntoList(Display::RefreshReason /*reason*/,
 	                               WorldCanvasHolder &wcHolder) {
 
 		// Locate the WorldCanvas to draw upon

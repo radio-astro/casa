@@ -26,6 +26,7 @@
 #include <display/Fit/Gaussian2DFitter.h>
 #include <display/Fit/ColorComboDelegate.h>
 #include <display/RegionShapes/RegionShape.h>
+#include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/Display/Options.h>
 
 #include <QMessageBox>
@@ -449,6 +450,8 @@ namespace casa {
 		bool enableFunctionality = true;
 		if ( image.get() == NULL ) {
 			enableFunctionality = false;
+			findSourcesDialog.clearImage();
+			image.reset();
 		} else {
 			String imageName = image->name(false);
 			QString imageNameStr( imageName.c_str());
@@ -458,6 +461,8 @@ namespace casa {
 		}
 		setImageFunctionalityEnabled( enableFunctionality );
 	}
+
+
 
 	void Fit2DTool::newRegion( int id, const QString & shape, const QString &name,
 	                           const QList<double> & world_x, const QList<double> & world_y,

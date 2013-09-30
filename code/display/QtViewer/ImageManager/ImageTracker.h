@@ -61,6 +61,7 @@ namespace casa {
 		virtual void setControllingDD( QtDisplayData* controlDD ) = 0;
 		virtual void registerDD( QtDisplayData* dd, int position = -1) = 0;
 		virtual void unregisterDD( QtDisplayData* dd ) = 0;
+		virtual void registrationOrderChanged() = 0;
 	};
 
 

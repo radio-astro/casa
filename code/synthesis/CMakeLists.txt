@@ -115,6 +115,8 @@ casa_add_library( synthesis
 ####   MSVis/AsynchronousInterface2.cc
   MSVis/VisBuffer2.cc
   MSVis/VisBufferImpl2.cc
+  MSVis/MsRows.cc
+  MSVis/Vbi2MsRow.cc
 ####  MSVis/VisBufferImplAsync2.cc
 ####  MSVis/VisBufferAsyncWrapper2.cc
   MSVis/VisBufferComponents2.cc

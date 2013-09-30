@@ -967,28 +967,30 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 						// have to check in case ranges overlap, CAS-5211
 						mymajor = max(majRange[i], minRange[j]);
 						myminor = min(majRange[i], minRange[j]);
-						sourceIn.setMajorMinor(mymajor, myminor);
-						for (uInt k=0; k<2; k++) {
-							sourceIn.setPA(paRange[k]);
-							decon = Angular2DGaussian();
-							try {
-								isPointSource = beam.deconvolve(decon, sourceIn);
-							}
-							catch (const AipsError& x) {
-								fitSuccess = False;
-							}
-							if (fitSuccess) {
-								Quantity errMaj = abs(bestDecon.getMajor() - decon.getMajor());
-								errMaj.convert(emaj.getUnit());
-								Quantity errMin = abs(bestDecon.getMinor() - decon.getMinor());
-								errMin.convert(emin.getUnit());
-								Quantity errPA = abs(bestDecon.getPA(True) - decon.getPA(True));
-								errPA.convert("deg");
-								errPA.setValue(fmod(errPA.getValue(), 180.0));
-								errPA.convert(epa.getUnit());
-								emaj = max(emaj, errMaj);
-								emin = max(emin, errMin);
-								epa = max(epa, errPA);
+						if (mymajor.getValue() > 0 && myminor.getValue() > 0) {
+							sourceIn.setMajorMinor(mymajor, myminor);
+							for (uInt k=0; k<2; k++) {
+								sourceIn.setPA(paRange[k]);
+								decon = Angular2DGaussian();
+								try {
+									isPointSource = beam.deconvolve(decon, sourceIn);
+								}
+								catch (const AipsError& x) {
+									fitSuccess = False;
+								}
+								if (fitSuccess) {
+									Quantity errMaj = abs(bestDecon.getMajor() - decon.getMajor());
+									errMaj.convert(emaj.getUnit());
+									Quantity errMin = abs(bestDecon.getMinor() - decon.getMinor());
+									errMin.convert(emin.getUnit());
+									Quantity errPA = abs(bestDecon.getPA(True) - decon.getPA(True));
+									errPA.convert("deg");
+									errPA.setValue(fmod(errPA.getValue(), 180.0));
+									errPA.convert(epa.getUnit());
+									emaj = max(emaj, errMaj);
+									emin = max(emin, errMin);
+									epa = max(epa, errPA);
+								}
 							}
 						}
 					}

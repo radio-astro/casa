@@ -39,6 +39,7 @@ namespace casa {
 class FeatheredData {
 public:
 	FeatheredData();
+	bool isEmpty() const;
 	void setU( const Vector<Float>& xVal, const Vector<Float>& yVal );
 	void setV( const Vector<Float>& xVal, const Vector<Float>& yVal );
 	Vector<Float> getUX() const;

@@ -155,11 +155,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual Bool isRegistered(QtDisplayData*);
 		//</group>
 
+
 		//Returns the DD that will be animating the channels
 		//in normal mode.
 		QtDisplayData* getChannelDD( int index ) const;
 
-
+		//Reorders panels in response to a change in the registration order.
+		void registrationOrderChanged();
 
 		// Return Options record (of margins and no.-of-panels settings, e.g.)
 		// The form of the record is suitable for automatically creating

@@ -187,6 +187,30 @@ private:
 		  Bool circular=True,
 		  Bool forward=True);
 
+ void applyJonesFast(const Float*& reJones,
+			  const Float*& imJones,
+			  const Array<Complex>& in,
+			  Array<Complex>& out,
+			  Vector<Int>& polmap,
+			  Bool /*inverse*/,
+			  Bool /*conjugate*/,
+			  Int ipower,  // ie, 1=VP, 2=PB
+			  Float /*cutoff*/,
+			  Bool circular,
+		     Bool forward);
+ void applyJonesFastX(const Float*& reJones,
+			  const Float*& imJones,
+			  const Complex*& in,
+			  Complex*& outstor,
+			  const Vector<Int>& polmap,
+			  Bool /*inverse*/,
+			  Bool /*conjugate*/,
+			  Int ipower,  // ie, 1=VP, 2=PB
+			  Float /*cutoff*/,
+		      Bool circular,
+		      Bool forward,
+		      const Int ix, const Int nx, const Int ny, const Int npol);
+
 
   // Float to Float
   void applyJones(const Array<Float>* reJones,

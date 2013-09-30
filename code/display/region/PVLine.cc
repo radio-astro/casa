@@ -404,7 +404,7 @@ namespace casa {
 			return result;
 		}
 
-        void PVLine::draw_pv_line( PixelCanvas *pc, bool selected ) {
+        void PVLine::draw_pv_line( PixelCanvas *pc, bool /*selected*/ ) {
             double distance_from_line = ((double)display_width - 1.0) / 2.0;
 
             int x1, y1, x2, y2;

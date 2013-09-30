@@ -46,7 +46,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		cleanup();
 	}
 
-	Bool Histogram2dDM::drawIntoList(Display::RefreshReason reason,
+	Bool Histogram2dDM::drawIntoList(Display::RefreshReason /*reason*/,
 	                                 WorldCanvasHolder &wcHolder) {
 		// Locate the WorldCanvas to draw upon
 		WorldCanvas *wc = wcHolder.worldCanvas();

@@ -121,6 +121,10 @@ namespace casa {
 		connect( ui.saveButton, SIGNAL(clicked()), this, SLOT(saveEstimateFile()));
 	}
 
+	void FindSourcesDialog::clearImage(){
+		image.reset();
+	}
+
 	void FindSourcesDialog::viewerDisplayChanged() {
 		if ( ui.displayViewerCheckBox->isChecked() ) {
 			if ( skyPath.trimmed().length() > 0 ) {

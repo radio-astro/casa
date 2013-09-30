@@ -95,8 +95,8 @@ void PreferencesColor::setCurveDefaults(){
 	curvePreferences[FeatherCurveType::LOW_WEIGHTED]->setColor( "#008080");
 	curvePreferences[FeatherCurveType::LOW_CONVOLVED_HIGH]->setColor("#66CDAA");
 	curvePreferences[FeatherCurveType::LOW_CONVOLVED_HIGH_WEIGHTED]->setColor(Qt::green);
-	curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY]->setColor("#AFEEEE");
-	curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY_WEIGHTED]->setColor( "#5F93A0");
+	//curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY]->setColor("#AFEEEE");
+	//curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY_WEIGHTED]->setColor( "#5F93A0");
 	curvePreferences[FeatherCurveType::HIGH_ORIGINAL]->setColor( Qt::magenta);
 	curvePreferences[FeatherCurveType::HIGH_WEIGHTED]->setColor("#9370DB");
 	curvePreferences[FeatherCurveType::HIGH_CONVOLVED_LOW]->setColor( "#800080");
@@ -110,20 +110,20 @@ void PreferencesColor::setCurveDefaults(){
 	//Now the names of the curves
 	curvePreferences[FeatherCurveType::WEIGHT_LOW]->setName( "Weight Low" );
 	curvePreferences[FeatherCurveType::WEIGHT_HIGH]->setName( "Weight High" );
-	curvePreferences[FeatherCurveType::LOW_ORIGINAL]->setName( "Low" );
-	curvePreferences[FeatherCurveType::LOW_WEIGHTED]->setName( "Low, Weighted/Scaled");
-	curvePreferences[FeatherCurveType::LOW_CONVOLVED_HIGH]->setName("Low x High");
-	curvePreferences[FeatherCurveType::LOW_CONVOLVED_HIGH_WEIGHTED]->setName("Low x High, Weighted/Scaled");
-	curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY]->setName("Low x Dirty");
-	curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY_WEIGHTED]->setName( "Low x Dirty, Weighted/Scaled");
-	curvePreferences[FeatherCurveType::HIGH_ORIGINAL]->setName( "High");
-	curvePreferences[FeatherCurveType::HIGH_WEIGHTED]->setName("High, Weighted/Scaled");
-	curvePreferences[FeatherCurveType::HIGH_CONVOLVED_LOW]->setName( "High x Low");
-	curvePreferences[FeatherCurveType::HIGH_CONVOLVED_LOW_WEIGHTED]->setName("High x Low, Weighted/Scaled");
-	curvePreferences[FeatherCurveType::DIRTY_ORIGINAL]->setName( "Dirty");
-	curvePreferences[FeatherCurveType::DIRTY_WEIGHTED]->setName("Dirty, Weighted/Scaled");
-	curvePreferences[FeatherCurveType::DIRTY_CONVOLVED_LOW]->setName( "Dirty x Low");
-	curvePreferences[FeatherCurveType::DIRTY_CONVOLVED_LOW_WEIGHTED]->setName("Dirty x Low, Weighted/Scaled");
+	curvePreferences[FeatherCurveType::LOW_ORIGINAL]->setName( "Low Data" );
+	curvePreferences[FeatherCurveType::LOW_WEIGHTED]->setName( "Low Data, Weighted/Scaled");
+	curvePreferences[FeatherCurveType::LOW_CONVOLVED_HIGH]->setName("Low Data x High Beam");
+	curvePreferences[FeatherCurveType::LOW_CONVOLVED_HIGH_WEIGHTED]->setName("Low Data x High Beam, Weighted/Scaled");
+	//curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY]->setName("Low x Dirty");
+	//curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY_WEIGHTED]->setName( "Low x Dirty, Weighted/Scaled");
+	curvePreferences[FeatherCurveType::HIGH_ORIGINAL]->setName( "High Data");
+	curvePreferences[FeatherCurveType::HIGH_WEIGHTED]->setName("High Data, Weighted");
+	curvePreferences[FeatherCurveType::HIGH_CONVOLVED_LOW]->setName( "High Data x Low Beam");
+	curvePreferences[FeatherCurveType::HIGH_CONVOLVED_LOW_WEIGHTED]->setName("High Data x Low Beam, Weighted");
+	curvePreferences[FeatherCurveType::DIRTY_ORIGINAL]->setName( "Dirty Data");
+	curvePreferences[FeatherCurveType::DIRTY_WEIGHTED]->setName("Dirty Data, Weighted");
+	curvePreferences[FeatherCurveType::DIRTY_CONVOLVED_LOW]->setName( "Dirty Data x Low Beam");
+	curvePreferences[FeatherCurveType::DIRTY_CONVOLVED_LOW_WEIGHTED]->setName("Dirty Data x Low Beam, Weighted");
 	curvePreferences[FeatherCurveType::SUM_LOW_HIGH]->setName( "Sum" );
 
 	//Which curves should be visible
@@ -162,8 +162,8 @@ void PreferencesColor::addCurvePreferences(){
 	addCurvePreference( ui.lowWeightedPreferences, FeatherCurveType::LOW_WEIGHTED );
 	addCurvePreference( ui.lowConvolvedHighPreferences, FeatherCurveType::LOW_CONVOLVED_HIGH );
 	addCurvePreference( ui.lowConvolvedHighWeightedPreferences, FeatherCurveType::LOW_CONVOLVED_HIGH_WEIGHTED );
-	addCurvePreference( ui.lowConvolvedDirtyPreferences, FeatherCurveType::LOW_CONVOLVED_DIRTY );
-	addCurvePreference( ui.lowConvolvedDirtyWeightedPreferences, FeatherCurveType::LOW_CONVOLVED_DIRTY_WEIGHTED );
+	//addCurvePreference( ui.lowConvolvedDirtyPreferences, FeatherCurveType::LOW_CONVOLVED_DIRTY );
+	//addCurvePreference( ui.lowConvolvedDirtyWeightedPreferences, FeatherCurveType::LOW_CONVOLVED_DIRTY_WEIGHTED );
 	addCurvePreference( ui.highOriginalPreferences, FeatherCurveType::HIGH_ORIGINAL );
 	addCurvePreference( ui.highWeightedPreferences, FeatherCurveType::HIGH_WEIGHTED );
 	addCurvePreference( ui.highConvolvedLowPreferences, FeatherCurveType::HIGH_CONVOLVED_LOW );
@@ -336,15 +336,15 @@ QList<FeatherCurveType::CurveType> PreferencesColor::getScatterYCurve() const {
 
 void PreferencesColor::setDirtyEnabled( bool enabled ){
 	ui.dirtyGroupBox->setEnabled( enabled );
-	curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY]->setEnabled( enabled );
-	curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY_WEIGHTED]->setEnabled( enabled );
+	//curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY]->setEnabled( enabled );
+	//curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY_WEIGHTED]->setEnabled( enabled );
 	if ( !enabled ){
 		curvePreferences[FeatherCurveType::DIRTY_ORIGINAL]->setDisplayed( false );
 		curvePreferences[FeatherCurveType::DIRTY_WEIGHTED]->setDisplayed( false );
 		curvePreferences[FeatherCurveType::DIRTY_CONVOLVED_LOW]->setDisplayed( false );
 		curvePreferences[FeatherCurveType::DIRTY_CONVOLVED_LOW_WEIGHTED]->setDisplayed( false );
-		curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY]->setDisplayed( false );
-		curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY_WEIGHTED]->setDisplayed( false );
+		//curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY]->setDisplayed( false );
+		//curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY_WEIGHTED]->setDisplayed( false );
 	}
 	//Reset the curves that can be selected for the scatter
 	//axis based on whether or not there is a dirty image.

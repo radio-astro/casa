@@ -54,6 +54,7 @@ public:
 	virtual ~FeatherPlot();
 	void clearCurves();
 	void clearLegend();
+	void resetLegend();
 
 	void addCurve( QVector<double> xValues, QVector<double> yValues,
 			QColor curveColor, const QString& curveTitle, QwtPlot::Axis yAxis, bool sumCurve );
@@ -94,10 +95,12 @@ private:
 	void setAxisLabels();
 	void adjustPlotBounds( std::pair<double,double> curveBounds, QwtPlot::Axis yAxis );
 	void resetPlotBounds();
+	void setLegendSize();
 	void initAxes( );
 	void setCurveData( FeatherCurve* curve, QwtPlot::Axis yAxis );
 
-	QwtLegend* legend;
+	QwtLegend* externalLegend;
+	QWidget* legendParent;
 	PlotType plotType;
 
 	int lineThickness;
@@ -106,6 +109,7 @@ private:
 	bool scaleLogUV;
 
 	const int AXIS_COUNT;
+	const int MINIMUM_LEGEND_LINE_WIDTH;
 
     QList<FeatherCurve*> curves;
 

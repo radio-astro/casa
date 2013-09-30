@@ -230,6 +230,7 @@ private:
 class FrequencySelections {
 public:
 
+
     FrequencySelections ();
     FrequencySelections (const FrequencySelections & other);
     ~FrequencySelections ();

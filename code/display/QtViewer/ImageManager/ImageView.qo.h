@@ -123,11 +123,11 @@ namespace casa {
 		//Color this image will use in RGB mode has changed.
 		void rgbChanged();
 		//User selected color for RGB mode has changed.
-		void otherColorChanged();
+		//void otherColorChanged();
 		//Display the context menu.
 		void showContextMenu( const QPoint& location );
 		//Show a color dialog where the user can choose a custom color.
-		void showColorDialog();
+		//void showColorDialog();
 		//Show the display options for this image view.
 		void showDataOptions();
 
@@ -167,8 +167,9 @@ namespace casa {
 		void makeDrag( QMouseEvent* event );
 
 		//Custom color for RGB image combination
-		void setButtonColor( QColor color );
-		QColor getButtonColor() const;
+		//void setButtonColor( QColor color );
+		//QColor getButtonColor() const;
+		void rgbModeChanged();
 
 		enum DisplayType { DISPLAY_RASTER, DISPLAY_CONTOUR, DISPLAY_VECTOR, DISPLAY_MARKER, DISPLAY_NONE };
 		QMap<DisplayType,QString> displayTypeMap;
@@ -222,6 +223,7 @@ namespace casa {
 		const int VIEWED_BORDER_SIZE;
 		const int NOT_VIEWED_BORDER_SIZE;
 		bool isViewed() const;
+		bool isRGBImage() const;
 		Ui::ImageViewClass ui;
 	};
 

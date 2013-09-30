@@ -32,13 +32,9 @@
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <synthesis/Utilities/SpectralImageUtil.h>
 
-
-
 #include <QDebug>
 
 namespace casa {
-
-
 
 FeatherManager::FeatherManager() :
 		lowResImage( NULL ), highResImage( NULL ), dirtyImage( NULL ),
@@ -46,6 +42,7 @@ FeatherManager::FeatherManager() :
 	radialAxis = false;
 	channelIndex = 0;
 	channelsAveraged = true;
+	success = true;
 	featherWorker = NULL;
 }
 
@@ -87,6 +84,8 @@ bool FeatherManager::loadDirtyImage( const QString& dirtyImagePath ){
 bool FeatherManager::setEffectiveDishDiameter( float xDiam, float yDiam ){
 	bool valid = false;
 	if ( lowResImage != NULL ){
+		featherWorker->setINTImage( *highResImage );
+		featherWorker->setSDImage( *lowResImage );
 		valid = featherWorker->setEffectiveDishDiam( xDiam, yDiam );
 	}
 	return valid;
@@ -121,6 +120,10 @@ void FeatherManager::applyFeather( bool saveOutput, const QString& outputImagePa
 }
 
 void FeatherManager::featherDone(){
+	success = thread->isSuccess();
+	if ( !success ){
+		errorMessage = thread->getErrorMessage();
+	}
 	emit featheringDone();
 }
 
@@ -234,7 +237,6 @@ bool FeatherManager::generateDirtyImage( QString dirtyImagePath ){
 		String dirtyLocation(dirtyImagePath.toStdString());
 		PagedImage<Float> dirtyImageTemp(dirtyLocation);
 		if ( lowResImage == NULL ){
-			qDebug() << "Can't load a dirty image without a low resolution image.";
 			success = false;
 		}
 		else if( lowResImage->shape().nelements() != dirtyImageTemp.shape().nelements()){
@@ -330,7 +332,8 @@ FeatheredData FeatherManager::getDirtyCut() const {
 FeatheredData FeatherManager::getIntConvolvedSDOrig() {
 	FeatheredData dataPair;
 	if ( highResImage != NULL ){
-		ImageInterface<float>* highConvolved = FeatherThread::makeConvolvedImage( highResImage, lowResImage );
+		ImageInterface<float>* highConvolved =
+			thread->makeConvolvedImage( highResImage, lowResImage );
 		if ( highConvolved != NULL ){
 			dataPair = getConvolvedOrig( FeatherThread::INT_CONVOLVED_LOW, highConvolved );
 			delete highConvolved;
@@ -355,6 +358,10 @@ bool FeatherManager::isReady() const {
 	return imagesAvailable;
 }
 
+bool FeatherManager::isSuccess() const {
+	return success;
+}
+
 FeatheredData FeatherManager::getConvolvedOrig( FeatherThread::DataTypes dataType, ImageInterface<float>* image ) const {
 	FeatheredData dataPair;
 	if ( image != NULL ){
@@ -372,11 +379,12 @@ FeatheredData FeatherManager::getConvolvedOrig( FeatherThread::DataTypes dataTyp
 		if ( !channelsAveraged && !channelsExceeded ){
 			try {
 
-				TempImage<Float> imageCopy(image->shape(), image->coordinates(),0);
+				/*TempImage<Float> imageCopy(image->shape(), image->coordinates(),0);
 				imageCopy.copyData(*image);
-				ImageUtilities::copyMiscellaneous(imageCopy, *image);
+				ImageUtilities::copyMiscellaneous(imageCopy, *image);*/
+				ImageInterface<float>* imageCopy = thread->addMissingAxes(image);
 
-				SubImage<Float>* channeledImage = SpectralImageUtil::getChannel(imageCopy, channelIndex);
+				SubImage<Float>* channeledImage = SpectralImageUtil::getChannel(*imageCopy, channelIndex);
 				Vector<Float> ux;
 				Vector<Float> xamp;
 				Vector<Float> uy;
@@ -390,10 +398,10 @@ FeatheredData FeatherManager::getConvolvedOrig( FeatherThread::DataTypes dataTyp
 				dataPair.setU( ux, xamp );
 				dataPair.setV( uy, yamp );
 				delete channeledImage;
+				delete imageCopy;
 			}
 			catch( AipsError& error ){
 				channelsExceeded = true;
-				qDebug() << "Exception generating single channel image: "<<error.getMesg().c_str();
 				if ( logger != NULL ){
 					(*logger) << LogIO::WARN<<"\nAveraging channels for image "<<image->name()<<".  Error:"<<error.getMesg()
 						<<LogIO::POST;
@@ -401,7 +409,6 @@ FeatheredData FeatherManager::getConvolvedOrig( FeatherThread::DataTypes dataTyp
 			}
 		}
 		if ( channelsAveraged || channelsExceeded ){
-			qDebug()<< "Channels averaged so getting data from thread.";
 			if ( thread != NULL ){
 				dataPair = thread->dataMap[dataType];
 			}
@@ -413,7 +420,8 @@ FeatheredData FeatherManager::getConvolvedOrig( FeatherThread::DataTypes dataTyp
 FeatheredData FeatherManager::getDirtyConvolvedSDOrig() {
 	FeatheredData dataPair;
 	if ( dirtyImage != NULL ){
-		ImageInterface<float>* dirtyConvolved = FeatherThread::makeConvolvedImage( dirtyImage, lowResImage );
+		ImageInterface<float>* dirtyConvolved =
+			thread->makeConvolvedImage( dirtyImage, lowResImage );
 		if ( dirtyConvolved != NULL ){
 			dataPair = getConvolvedOrig( FeatherThread::DIRTY_CONVOLVED_LOW, dirtyConvolved );
 			delete dirtyConvolved;
@@ -432,7 +440,8 @@ FeatheredData FeatherManager::getDirtyConvolvedSDCut() const {
 FeatheredData FeatherManager::getSDConvolvedIntOrig(){
 	FeatheredData dataPair;
 	if ( lowResImage != NULL ){
-		ImageInterface<float>* sdConvolved = FeatherThread::makeConvolvedImage( lowResImage, highResImage );
+		ImageInterface<float>* sdConvolved =
+			thread->makeConvolvedImage( lowResImage, highResImage );
 		if ( sdConvolved != NULL ){
 			dataPair = getConvolvedOrig( FeatherThread::LOW_CONVOLVED_HIGH, sdConvolved );
 			delete sdConvolved;
@@ -447,7 +456,7 @@ FeatheredData FeatherManager::getSDConvolvedIntCut() const{
 	}
 	return dataPair;
 }
-FeatheredData FeatherManager::getSDConvolvedDirtyOrig(){
+/*FeatheredData FeatherManager::getSDConvolvedDirtyOrig(){
 	FeatheredData dataPair;
 	if ( lowResImage != NULL ){
 		ImageInterface<float>* sdConvolved = FeatherThread::makeConvolvedImage( lowResImage, dirtyImage );
@@ -457,14 +466,14 @@ FeatheredData FeatherManager::getSDConvolvedDirtyOrig(){
 		}
 	}
 	return dataPair;
-}
-FeatheredData FeatherManager::getSDConvolvedDirtyCut() const{
+}*/
+/*FeatheredData FeatherManager::getSDConvolvedDirtyCut() const{
 	FeatheredData dataPair;
 	if ( thread != NULL ){
 		dataPair = thread->dataMap[FeatherThread::LOW_CONVOLVED_DIRTY_WEIGHTED];
 	}
 	return dataPair;
-}
+}*/
 
 FeatherManager::~FeatherManager() {
 	delete lowResImage;

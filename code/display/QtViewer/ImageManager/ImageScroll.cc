@@ -187,8 +187,9 @@ namespace casa {
 	}
 
 	void ImageScroll::addImageView( QtDisplayData* data, bool registered,
-				int dropIndex, bool masterCoordinate,
-				bool masterSaturation, bool masterHue, QColor rgbColor ){
+			ImageView::ColorCombinationMode mode,
+			int dropIndex, bool masterCoordinate,
+			bool masterSaturation, bool masterHue, QColor rgbColor ){
 		ImageView* view = NULL;
 		String dataName = data->name();
 		int index = findImageView( dataName.c_str(), false );
@@ -199,6 +200,7 @@ namespace casa {
 		if ( view == NULL ){
 			view = new ImageView( data );
 			view->setRegistered( registered );
+			view->setColorCombinationMode( mode );
 			if ( masterCoordinate && view->isControlEligible()){
 				view->setMasterCoordinateImage( true );
 			}
@@ -329,6 +331,8 @@ namespace casa {
 			iter++;
 		}
 	}
+
+
 
 
 	void ImageScroll::setViewedImage( int registrationIndex ){

@@ -32,7 +32,7 @@ namespace casa {
 	const bool AnimatorHolder::NORMAL_MODE = true;
 
 	AnimatorHolder::AnimatorHolder( QtDisplayPanelGui *qdp, QWidget *parent )
-         : QDockWidget(parent), Ui::AnimatorHolder( ),
+         : InActiveDock(parent), Ui::AnimatorHolder( ),
 		  animatorChannel( NULL ), animatorImage( NULL ),
 		  selectedColor( Qt::white), panel_(qdp), dismissed(false) {
 
@@ -279,6 +279,10 @@ namespace casa {
 		if ( oldFrameCount != frameCount ) {
 			animatorChannel->setFrameInformation(0, frameCount );
 		}
+	}
+
+	void AnimatorHolder::setChannelZAxis( const QString& zAxisTitle ){
+		channelGroupBox->setTitle( zAxisTitle);
 	}
 
 	void AnimatorHolder::setModeEnabled( int imageCount ) {

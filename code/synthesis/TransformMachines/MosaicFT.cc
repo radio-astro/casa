@@ -302,7 +302,7 @@ void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
   // Initialize the maps for polarization and channel. These maps
   // translate visibility indices into image indices
   initMaps(vb);
-  findConvFunction(*image, vb);
+  //findConvFunction(*image, vb);
   prepGridForDegrid();
    
 }
@@ -393,7 +393,7 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
   // Initialize the maps for polarization and channel. These maps
   // translate visibility indices into image indices
   initMaps(vb);
-  findConvFunction(*image, vb);
+  //findConvFunction(*image, vb);
   if((image->shape().product())>cachesize) {
     isTiled=True;
   }

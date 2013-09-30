@@ -183,7 +183,6 @@ private:
 
 	String _resultsHeader() const;
 
-
 	// summarize the results in a nicely formatted string
 	String _resultsToString();
 
@@ -192,11 +191,7 @@ private:
 
 	String _fluxToString(uInt compNumber) const;
 
-
 	String _spectrumToString(uInt compNumber) const;
-
-	// write output to log file
-	// void _writeLogfile(const String& output) const;
 
 	// Write the estimates file using this fit.
 	void _writeNewEstimatesFile() const;
@@ -214,8 +209,6 @@ private:
 	Double _getStatistic(const String& type, const uInt index, const Record& stats) const;
 
 	String _statisticsToString() const;
-
-	void setErrors(const Record& residStats);
 
 	SubImage<Float> _createImageTemplate() const;
 

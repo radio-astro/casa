@@ -72,6 +72,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	}
 
+	template <class T>
+	bool LatticePADMRaster<T>::initializeColorMatrix( LatticeAsRaster<T>* lar,
+			const IPosition &start,
+            const IPosition &shape,
+            const IPosition &stride,
+            Matrix<T>& datMatrix,
+			Matrix<Bool>& maskMatrix) const {
+		bool initialized = false;
+		if ( lar != NULL ){
+			try {
+				lar->initializeDataMatrix(0, datMatrix, maskMatrix, start, shape, stride);
+				initialized = true;
+			}
+			catch( AipsError& error ){
+				LogIO os;
+				os << LogIO::WARN << LogOrigin("LatticePADMRaster","dataDrawSelf", WHERE)
+					<< "Could not initialize RGB image:"<<error.getMesg().c_str()<< LogIO::POST;
+			}
+		}
+		return initialized;
+	}
+
+
 // Actually draw the slice as a raster image
 	template <class T>
 	uInt LatticePADMRaster<T>::dataDrawSelf(WorldCanvas *wCanvas,
@@ -82,6 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                                        const IPosition &stride,
 	                                        const Bool usePixelEdges) {
 		uInt drawListNumber = wCanvas->newList();
+
 		LatticeAsRaster<T> *lar = (LatticeAsRaster<T> *)parentDisplayData();
 
 		// set min and max datavalues to help out scalehandler on WC.
@@ -109,17 +133,46 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			case Display::Index: {
 				if (lar->itsOptionsColorMode == "colormap") {
 
-					Bool opaqueMask = True;
-					// (per CB/cabal request CAS-531 (1), 7/08.  They don't
-					// want to see lower Raster layers 'shine through' the
-					// top layer's masked regions (and don't want to have to
-					// unregister the lower layers, apparently)).
+					LatticeAsRaster<T>*  larRed = lar->getRasterRed();
+					LatticeAsRaster<T>*  larGreen = lar->getRasterGreen();
+					LatticeAsRaster<T>*  larBlue = lar->getRasterBlue();
+					if ( larRed == NULL && larGreen == NULL && larBlue == NULL ){
+						Bool opaqueMask = True;
+						// (per CB/cabal request CAS-531 (1), 7/08.  They don't
+						// want to see lower Raster layers 'shine through' the
+						// top layer's masked regions (and don't want to have to
+						// unregister the lower layers, apparently)).
 
-					if (useMask) wCanvas->drawImage(blc, trc, datMatrix, maskMatrix,
+						if (useMask) wCanvas->drawImage(blc, trc, datMatrix, maskMatrix,
 						                                usePixelEdges, lar, opaqueMask);
 
-					else wCanvas->drawImage(blc, trc, datMatrix, usePixelEdges, lar);
-					// (caching color-indexed image under parent LAR DD).
+						else wCanvas->drawImage(blc, trc, datMatrix, usePixelEdges, lar);
+						// (caching color-indexed image under parent LAR DD).
+
+					}
+					else {
+						Matrix<T> datMatrixRed;
+						Matrix<Bool> maskMatrixRed;
+						bool redOK = initializeColorMatrix(larRed,start,shape,stride,datMatrixRed,maskMatrixRed );
+
+
+						Matrix<T> datMatrixGreen;
+						Matrix<Bool> maskMatrixGreen;
+						bool greenOK = initializeColorMatrix(larGreen,start,shape,stride,datMatrixGreen,maskMatrixGreen );
+
+						Matrix<T> datMatrixBlue;
+						Matrix<Bool> maskMatrixBlue;
+						bool blueOK = initializeColorMatrix(larBlue,start,shape,stride,datMatrixBlue,maskMatrixBlue );
+						if ( redOK || blueOK || greenOK ){
+							wCanvas->drawImage(blc, trc, datMatrix, datMatrixRed,
+									datMatrixGreen, datMatrixBlue, usePixelEdges, lar );
+						}
+						else {
+							LogIO os;
+							os << LogIO::WARN << LogOrigin("LatticePADMRaster","dataDrawSelf", WHERE)
+								<< "RGB Combination Image was not drawn."<< LogIO::POST;
+						}
+					}
 
 				} else {
 					LogIO os;

@@ -11,6 +11,7 @@
 #include <map>
 #include <memory>
 #include <utility>
+#include <cmath>
 
 using namespace std;
 
@@ -102,7 +103,7 @@ class WeightChecker : public CubeChecker {
 
 public:
 
-    WeightChecker (Int averagingFactor) : averagingFactor_p ((Float) averagingFactor) {}
+    WeightChecker (Float factor) : factor_p ((Float) factor) {}
 
     void
     checkCube (VisBuffer2 * vb, const VisibilityIterator2 * /*vi*/, Int rowId,
@@ -110,20 +111,20 @@ public:
     {
         Float weight = vb->weightSpectrum() (correlation, channel, row);
 
-        Bool ok = deltaEq (weight, averagingFactor_p, .001);
+        Bool ok = deltaEq (weight, factor_p, .001);
 
         if (! ok){
-            String expected = String::format ("%f", averagingFactor_p);
+            String expected = String::format ("%f", factor_p);
             String actual = String::format ("%f", weight);
 
             throwError (expected, actual, vb, rowId, row, channel, correlation, subchunkIndex,
-                        "weightSpectrum", String::format ("averagingFactor=%d", averagingFactor_p));
+                        "weightSpectrum", String::format ("factor=%d", factor_p));
         }
     }
 
 private:
 
-    Float averagingFactor_p;
+    Float factor_p;
 };
 
 class CheckerboardFlagCubeChecker : public CubeChecker {
@@ -321,6 +322,59 @@ protected:
     }
 };
 
+class UvwCheckerDefault : public RowChecker {
+
+public:
+
+    UvwCheckerDefault (Int averagingFactor, Int nBaselines, Int lastRow, Int nRowsInPartialAverage)
+    : averagingFactor_p (averagingFactor),
+      lastRow_p (lastRow),
+      nBaselines_p (nBaselines),
+      nRowsInPartialAverage_p (nRowsInPartialAverage)
+    {}
+
+    virtual
+    void
+    checkRow (VisBuffer2 * vb, const VisibilityIterator2 * /*vi*/, Int rowId,
+              Int row, Int subchunkIndex)
+    {
+        Vector<Double> actual = vb->uvw().column (row);
+        Vector<Double> expected (3, 0);
+
+        Int originalFirstRow = nBaselines_p * subchunkIndex * averagingFactor_p + row;
+        Double base = (originalFirstRow + (averagingFactor_p - 1) * nBaselines_p / 2.0);
+
+        if (rowId >= lastRow_p){
+            base = (originalFirstRow + (nRowsInPartialAverage_p - 1) * nBaselines_p / 2.0);
+        }
+
+        expected (0) = base * 10;
+        expected (1) = base * 10 + 1;
+        expected (2) = base * 10 + 2;
+
+        Bool equal = True;
+
+        for (Int i = 0; i < 3; i++){
+            equal = equal && actual (i) == expected(i);
+        }
+
+        if (! equal){
+            String expectedStr = String::format ("(%f,%f,%f)", expected (0), expected (1), expected (2));
+            String actualStr = String::format ("(%f,%f,%f)", actual (0), actual (1), actual (2));
+
+            throwError (expectedStr, actualStr, vb, rowId, row, subchunkIndex, "UVW");
+        }
+    }
+
+protected:
+
+    Int averagingFactor_p;
+    Int lastRow_p;
+    Int nBaselines_p;
+    Int nRowsInPartialAverage_p;
+
+};
+
 template <typename T, typename Accessor>
 class ConstantRowChecker : public RowChecker {
 
@@ -368,16 +422,22 @@ public:
     typedef const Matrix<Float> & (VisBuffer2::* Accessor) () const;
 
     SigmaWeightChecker (Int averagingFactor, Accessor accessor, const String & name,
-                        Int lastRow, Int nRowsInPartialAverage)
+                        Int lastRow, Int nRowsInPartialAverage, double channelFraction,
+                        Bool isSigma = False)
     : accessor_p (accessor), averagingFactor_p (averagingFactor),
+      channelFraction_p (channelFraction),
       endBoundaryConditions_p (EndBoundaryConditions (1, make_pair (lastRow, nRowsInPartialAverage))),
+      isSigma_p (isSigma),
       name_p (name)
     {}
 
     SigmaWeightChecker (Int averagingFactor, Accessor accessor, const String & name,
-                        const EndBoundaryConditions & endBoundaryConditions)
+                        const EndBoundaryConditions & endBoundaryConditions,
+                        double channelFraction, Bool isSigma = False)
     : accessor_p (accessor), averagingFactor_p (averagingFactor),
+      channelFraction_p (channelFraction),
       endBoundaryConditions_p (endBoundaryConditions),
+      isSigma_p (isSigma),
       name_p (name)
     {}
 
@@ -398,8 +458,11 @@ public:
 
 
             Float actual = (vb ->* accessor_p)()(c, row);
-            Float expected = (rowId < lastRow) ? averagingFactor_p * 1.0f
-                                               : nRowsInPartialAverage * 1.0f;
+            Float expected = (rowId < lastRow) ? averagingFactor_p * 1.0f * channelFraction_p
+                                               : nRowsInPartialAverage * 1.0f * channelFraction_p;
+            if (isSigma_p){
+                expected = 1.0 / std::sqrt (expected);
+            }
             Bool ok = deltaEq (actual, expected, .001);
 
             if (! ok){
@@ -417,37 +480,13 @@ private:
 
     Accessor accessor_p;
     Int averagingFactor_p;
+    Double channelFraction_p;
     EndBoundaryConditions endBoundaryConditions_p;
+    Bool isSigma_p;
     String name_p;
 };
 
 
-
-class SimpleIntervalChecker : public RowChecker {
-
-public:
-
-    SimpleIntervalChecker (Int averagingFactor) : averagingFactor_p (averagingFactor) {}
-
-    virtual void checkRow (VisBuffer2 * vb, const VisibilityIterator2 * /*vi*/, Int rowId,
-                           Int row, Int subchunkIndex){
-
-        Bool ok = deltaEq (vb->timeInterval()(row), averagingFactor_p, .001);
-
-        if (! ok){
-
-            throwError (String::format ("%f", averagingFactor_p * 1.0),
-                        String::format ("%f", vb->timeInterval()(row)),
-                        vb, rowId, row, subchunkIndex, "Interval");
-
-        }
-    }
-
-private:
-
-    Int averagingFactor_p;
-
-};
 
 class SimpleExposureChecker : public RowChecker {
 public:
@@ -499,9 +538,61 @@ private:
     Double interval_p;
 };
 
+class SimpleIntervalChecker : public RowChecker {
+public:
+
+    SimpleIntervalChecker  (Int averagingFactor, Double interval, Int lastRow, Int nRowsInPartialAverage)
+    : averagingFactor_p (averagingFactor),
+      endBoundaryConditions_p (EndBoundaryConditions (1, make_pair (lastRow, nRowsInPartialAverage))),
+      interval_p (interval)
+    {}
+
+    SimpleIntervalChecker  (Int averagingFactor, Double interval,
+                           const EndBoundaryConditions & endBoundaryConditions)
+    : averagingFactor_p (averagingFactor),
+      endBoundaryConditions_p (endBoundaryConditions),
+      interval_p (interval)
+    {}
+
+    virtual void checkRow (VisBuffer2 * vb, const VisibilityIterator2 * /*vi*/, Int rowId,
+                           Int row, Int subchunkIndex){
+
+        Double expected = -1;
+
+        Int ddId = vb->dataDescriptionIds()(0);
+        Assert (ddId < (Int) endBoundaryConditions_p.size());
+        Int lastRow = endBoundaryConditions_p [ddId].first;
+        Int nRowsInPartialAverage = endBoundaryConditions_p [ddId].second;
+
+        if (rowId >= lastRow){
+            expected = interval_p * nRowsInPartialAverage;
+        }
+        else {
+            expected = interval_p * averagingFactor_p;
+        }
+
+        Bool ok = deltaEq (vb->timeInterval ()(row), expected, .001);
+
+        if (! ok){
+
+            throwError (String::format ("%f", expected),
+                        String::format ("%f", vb->timeInterval()(row)),
+                        vb, rowId, row, subchunkIndex, "Interval");
+        }
+    }
+
+private:
+
+    Int averagingFactor_p;
+    EndBoundaryConditions endBoundaryConditions_p;
+    Double interval_p;
+};
+
 
 class SimpleTimeCentroidChecker : public RowChecker {
 public:
+
+    SimpleTimeCentroidChecker() {}
 
     SimpleTimeCentroidChecker (Int averagingFactor, Double interval, Int lastRow, Int nRowsInPartialAverage)
     : averagingFactor_p (averagingFactor),
@@ -522,22 +613,22 @@ public:
         Double expected = vb->time () (row);
         Double actual = vb->timeCentroid ()(row);
 
-        Int ddId = vb->dataDescriptionIds()(0);
-        Assert (ddId < (Int) endBoundaryConditions_p.size());
-        Int lastRow = endBoundaryConditions_p [ddId].first;
-        Int nRowsInPartialAverage = endBoundaryConditions_p [ddId].second;
+//        Int ddId = vb->dataDescriptionIds()(0);
+//        Assert (ddId < (Int) endBoundaryConditions_p.size());
+//        Int lastRow = endBoundaryConditions_p [ddId].first;
+//        Int nRowsInPartialAverage = endBoundaryConditions_p [ddId].second;
 
-        if (rowId >= lastRow && nRowsInPartialAverage > 0){
-
-            // Time is the time of the first row making up the average plus 1/2
-            // of the averaging interval (same as interval_p * averagingFactor_p).
-            // For a partial interval the time centroid will be only 1/2 of the
-            // the samples used (nRowsInPartialAverage_p) times the intersample interval.
-
-            Double delta = (averagingFactor_p - nRowsInPartialAverage) * interval_p * 0.5;
-
-            expected = vb->time() (row) - delta;
-        }
+//        if (rowId >= lastRow && nRowsInPartialAverage > 0){
+//
+//            // Time is the time of the first row making up the average plus 1/2
+//            // of the averaging interval (same as interval_p * averagingFactor_p).
+//            // For a partial interval the time centroid will be only 1/2 of the
+//            // the samples used (nRowsInPartialAverage_p) times the intersample interval.
+//
+//            Double delta = (averagingFactor_p - nRowsInPartialAverage) * interval_p * 0.5;
+//
+//            expected = vb->time() (row) - delta;
+//        }
 
         Bool ok = deltaEq (actual, expected, .001);
 
@@ -579,7 +670,6 @@ public:
                 throwError (String::format ("%d", expected),
                             String::format ("%d", actual),
                             vb, rowId, row, subchunkIndex, "flagRow");
-
             }
 
         }
@@ -597,7 +687,11 @@ public:
 
             // Now check the time
 
-            Double expected = subchunkIndex * averagingFactor_p + (averagingFactor_p - interval_p) * 0.5 ;
+            //Double expected = subchunkIndex * averagingFactor_p + (averagingFactor_p - interval_p) * 0.5 ;
+            //Double expected = (subchunkIndex * averagingFactor_p + (averagingFactor_p - 1) * interval_p) * 0.5 ;
+
+            Double expected = subchunkIndex * averagingFactor_p + (averagingFactor_p - 2) * interval_p * 0.5;
+                // Does not work with partial subchunks!!!
 
             Bool ok = deltaEq (vb->time()(row), expected, .001);
 
@@ -644,36 +738,67 @@ class SimpleTimeChecker : public RowChecker {
 
 public:
 
-    SimpleTimeChecker (Int averagingFactor, Double interval, Double averagingInterval)
+    SimpleTimeChecker  (Int averagingFactor, Double interval, Double averagingInterval,
+                        Int lastRow, Int nRowsInPartialAverage)
     : averagingFactor_p (averagingFactor),
+      endBoundaryConditions_p (EndBoundaryConditions (1, make_pair (lastRow, nRowsInPartialAverage))),
+      interval_p (interval),
+      middleOfAveragingInterval_p ((averagingInterval - interval) * 0.5)
+      {}
+
+    SimpleTimeChecker  (Int averagingFactor, Double interval, Double averagingInterval,
+                        const EndBoundaryConditions & endBoundaryConditions)
+    : averagingFactor_p (averagingFactor),
+      endBoundaryConditions_p (endBoundaryConditions),
       interval_p (interval),
       middleOfAveragingInterval_p ((averagingInterval - interval) * 0.5)
     {}
 
+//    SimpleTimeChecker (Int averagingFactor, Double interval, Double averagingInterval)
+//    : averagingFactor_p (averagingFactor),
+//      interval_p (interval),
+//      middleOfAveragingInterval_p ((averagingInterval - interval) * 0.5)
+//    {}
+
     virtual void checkRow (VisBuffer2 * vb, const VisibilityIterator2 * /*vi*/, Int rowId,
-                           Int row, Int subchunkIndex){
+                           Int row, Int subchunkIndex)
+    {
+        Double expected = -1;
 
-        Double expectedTime = averagingFactor_p * subchunkIndex * interval_p
-                              + middleOfAveragingInterval_p;
+        Int ddId = vb->dataDescriptionIds()(0);
+        Assert (ddId < (Int) endBoundaryConditions_p.size());
+        Int lastRow = endBoundaryConditions_p [ddId].first;
+        Int nRowsInPartialAverage = endBoundaryConditions_p [ddId].second;
 
-        Bool ok = deltaEq (vb->time()(row), expectedTime, .001);
+        if (rowId >= lastRow){
+            expected = averagingFactor_p * subchunkIndex * interval_p
+                        + (nRowsInPartialAverage - 1) * 0.5;
+        }
+        else {
+            expected = averagingFactor_p * subchunkIndex * interval_p
+                        + middleOfAveragingInterval_p;
+        }
+
+        Bool ok = deltaEq (vb->time ()(row), expected, .001);
 
         if (! ok){
 
-            throwError (String::format ("%f", expectedTime),
+            throwError (String::format ("%f", expected),
                         String::format ("%f", vb->time()(row)),
                         vb, rowId, row, subchunkIndex, "Time");
-
         }
     }
 
 private:
 
     Int averagingFactor_p;
+    EndBoundaryConditions endBoundaryConditions_p;
     Double interval_p;
     Double middleOfAveragingInterval_p;
 
 };
+
+
 
 template<typename T>
 class SimpleRowChecker : public RowChecker {
@@ -742,7 +867,7 @@ public:
 
     friend class TestSuite;
 
-    Tester ();
+    Tester (Int nRowsExpected = -1);
     Bool doTests (Int nArgs, char * args []);
 
 protected:
@@ -770,6 +895,9 @@ protected:
                 Int firstRow);
 
     void
+    checkRowCount (Int actualNumberOfRows);
+
+    void
     checkRows (VisBuffer2 * vb, VisibilityIterator2 * vi, Int subchunk,
                Int firstRow);
 
@@ -780,6 +908,7 @@ protected:
 
     void addCubeChecker (CubeChecker * cubeChecker);
     void addRowChecker (RowChecker * rowChecker);
+    void setExpectedRowCount (Int nRowsExpected);
 
     Bool isTestSelected (const Arguments & arguments, const String & testName) const;
 
@@ -793,6 +922,7 @@ private:
     vector<pair <String, String> > testResults_p;
     RowCheckers rowCheckers_p;
     MsFactory * msf_p;
+    Int nRowsExpected_p;
     Int nTestsAttempted_p;
     Int nTestsPassed_p;
 };
@@ -866,6 +996,48 @@ private:
     mutable Vector <Double> previousTime_p;
 };
 
+class UvwMotionGenerator : public Generator<Vector <Double> > {
+
+public:
+
+    typedef map <pair <Int, Int>, pair<Double, Double> > Velocity;
+
+    UvwMotionGenerator (const Velocity & velocity)
+    : velocity_p (velocity)
+    {}
+
+    UvwMotionGenerator (Double vU, Double vV, Int nAntennas)
+    {
+        for (Int a1 = 0; a1 < nAntennas; a1 ++){
+            for (Int a2 = 0; a2 < nAntennas; a2 ++){
+                velocity_p [make_pair (a1, a2)] = make_pair (vU, vV);
+            }
+        }
+    }
+
+    Vector<Double>
+    operator() (const FillState & fillState, Int /*channel*/, Int /*correlation*/) const
+    {
+        // Generate a ramp that increments every new set of baselines.
+
+        Vector<Double> uvw (3, 0);
+
+        Double t = fillState.time_p;
+
+        pair<Int,Int> baseline (fillState.antenna1_p, fillState.antenna2_p);
+
+        pair<Double, Double> v = velocity_p.at (baseline);
+
+        uvw (0) = t * v.first;
+        uvw (1) = t * v.second;
+
+        return uvw;
+    }
+
+private:
+
+    Velocity velocity_p;
+};
 
 ////////////////////////////////////////////////////////////
 //
@@ -890,6 +1062,7 @@ protected:
     void addRowChecker (RowChecker * checker) { getTester().addRowChecker (checker);}
     void checkMs (VisibilityIterator2 * vi) { getTester().checkMs (vi); }
     void clearCheckers () { getTester().clearCheckers(); }
+    void setExpectedRowCount (Int n) { getTester().setExpectedRowCount(n);}
 
     Arguments & getArguments () { return arguments_p;}
 
@@ -995,9 +1168,10 @@ protected:
         nAntennas_p = 4;
         nBaselines_p = ((nAntennas_p - 1) * nAntennas_p) / 2;
         msFactory->setTimeInfo (0, 120, interval_p);
-        msFactory->addSpectralWindows(1); // only on spw for now
+        msFactory->addSpectralWindows(1); // only one spw for now
         msFactory->addAntennas(nAntennas_p);
         msFactory->addFeeds (10); // needs antennas and spws to be setup first
+        msFactory->addWeightSpectrum (False);
 
         for (Int i = 0; i < 10; i++){
             msFactory->addField (String::format ("field%d", i), MDirection());
@@ -1084,21 +1258,25 @@ protected:
         addRowChecker (generateSimpleRowChecker ("fieldId", & VisBuffer2::fieldId, 7));
         addRowChecker (generateSimpleRowChecker ("stateId", & VisBuffer2::stateId, 17));
         addRowChecker (generateSimpleRowChecker ("processorId", & VisBuffer2::processorId, 18));
+        addRowChecker (new UvwCheckerDefault (averagingFactor, nBaselines_p,
+                                              lastRow, nRowsInPartialAverage));
 
         Double expectedDuration = interval * averagingFactor;
-        addRowChecker (generateSimpleRowChecker ("interval", & VisBuffer2::timeInterval,
-                                                 expectedDuration));
-        addRowChecker (new SimpleTimeChecker (averagingFactor, interval, expectedDuration));
+//        addRowChecker (generateSimpleRowChecker ("interval", & VisBuffer2::timeInterval,
+//                                                 expectedDuration));
+        addRowChecker (new SimpleIntervalChecker (averagingFactor, interval, lastRow, nRowsInPartialAverage));
+        addRowChecker (new SimpleTimeChecker (averagingFactor, interval, expectedDuration,
+                                              lastRow, nRowsInPartialAverage));
 
         addRowChecker (new SimpleExposureChecker (averagingFactor, interval, lastRow, nRowsInPartialAverage));
 
         addRowChecker (new SimpleTimeCentroidChecker (averagingFactor, interval, lastRow, nRowsInPartialAverage));
 
-        addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::sigma, "Sigma",
-                                               lastRow, nRowsInPartialAverage));
+        Double channelFraction = 1.0; // no flagged channels
         addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::weight, "Weight",
-                                               lastRow, nRowsInPartialAverage));
-
+                                               lastRow, nRowsInPartialAverage, channelFraction));
+        addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::sigma, "Sigma",
+                                               lastRow, nRowsInPartialAverage, channelFraction, True));
 
         AveragingParameters parameters (interval * averagingFactor,
                                         chunkInterval,
@@ -1106,8 +1284,9 @@ protected:
                                         AveragingOptions (AveragingOptions::AverageObserved |
                                                           AveragingOptions::AverageModel |
                                                           AveragingOptions::AverageCorrected |
-                                                          AveragingOptions::ModelUseWeights |
-                                                          AveragingOptions::CorrectedUseWeights));
+                                                          AveragingOptions::ObservedUseNoWeights |
+                                                          AveragingOptions::ModelUseNoWeights |
+                                                          AveragingOptions::CorrectedUseNoWeights));
         VisibilityIterator2 vi (AveragingVi2Factory (parameters, ms));
         vi.setWeightScaling (WeightScaling::generateUnityWeightScaling());
 
@@ -1140,7 +1319,6 @@ public:
 
     void execute ()
     {
-
         // The simple tests check averaging of different intervals
         // on a single spectral window.
 
@@ -1197,6 +1375,7 @@ protected:
         msFactory->addSpectralWindows(N_Windows); // only on spw for now
         msFactory->addAntennas(nAntennas_p);
         msFactory->addFeeds (10); // needs antennas and spws to be setup first
+        msFactory->addWeightSpectrum (False);
 
         for (Int i = 0; i < 10; i++){
             msFactory->addField (String::format ("field%d", i), MDirection());
@@ -1225,9 +1404,9 @@ protected:
                                      new GenerateConstant<Double> (interval_p));
         msFactory->setDataGenerator (MSMainEnums::INTERVAL,
                                      new GenerateConstant<Double> (interval_p));
-        msFactory->setDataGenerator (MSMainEnums::SIGMA,
-                                     new GenerateConstant<Float> (1.0f));
         msFactory->setDataGenerator (MSMainEnums::WEIGHT,
+                                     new GenerateConstant<Float> (1.0f));
+        msFactory->setDataGenerator (MSMainEnums::SIGMA,
                                      new GenerateConstant<Float> (1.0f));
 
         // For the data cubes fill it with a ramp.  The real part of the ramp will
@@ -1254,7 +1433,6 @@ protected:
         return make_pair (p.first, p.second);
     }
 
-
     void
     doSimpleTest (MeasurementSet * ms, Double interval, Int chunkInterval, Int averagingFactor)
     {
@@ -1264,15 +1442,14 @@ protected:
         Int nRowsPerWindow = nRows_p / N_Windows;
 
         for (Int i = 0; i < N_Windows; i++){
-            Int lastRow = nRowsPerWindow / averagingFactor * (i + 1); // ID of first row of last averaged VB
+            Int lastRow = (nRowsPerWindow / averagingFactor) * N_Windows + i * nBaselines_p; // ID of first row of last averaged VB
             Int nRowsInPartialAverage = (nRowsPerWindow % averagingFactor) / nBaselines_p;
 
             if (nRowsInPartialAverage != 0){
-                lastRow += i * nBaselines_p;
+                lastRow += i * nBaselines_p * N_Windows;
             }
             // remaining
             endBoundaryConditions.push_back (make_pair (lastRow, nRowsInPartialAverage));
-
         }
 
         clearCheckers();
@@ -1296,28 +1473,35 @@ protected:
         addRowChecker (generateSimpleRowChecker ("processorId", & VisBuffer2::processorId, 18));
 
         Double expectedDuration = interval * averagingFactor;
-        addRowChecker (generateSimpleRowChecker ("interval", & VisBuffer2::timeInterval,
-                                                 expectedDuration));
-        addRowChecker (new SimpleTimeChecker (averagingFactor, interval, expectedDuration));
+
+        addRowChecker (new SimpleIntervalChecker (averagingFactor, interval,
+                                              endBoundaryConditions));
+        addRowChecker (new SimpleTimeChecker (averagingFactor, interval, expectedDuration,
+                                              endBoundaryConditions));
 
         addRowChecker (new SimpleExposureChecker (averagingFactor, interval, endBoundaryConditions));
 
         addRowChecker (new SimpleTimeCentroidChecker (averagingFactor, interval, endBoundaryConditions));
 
-        addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::sigma, "Sigma",
-                                               endBoundaryConditions));
         addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::weight, "Weight",
-                                               endBoundaryConditions));
+                                               endBoundaryConditions, 1.0));
+        addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::sigma, "Sigma",
+                                               endBoundaryConditions, 1.0, True));
 
+        Block<Int> columns (3, 0);
+        columns [0] = MS::ARRAY_ID;
+        columns [1] = MS::FIELD_ID;
+        columns [2] = MS::TIME;
 
         AveragingParameters parameters (interval * averagingFactor,
                                         chunkInterval,
-                                        SortColumns (),
+                                        SortColumns (columns, False),
                                         AveragingOptions (AveragingOptions::AverageObserved |
                                                           AveragingOptions::AverageModel |
                                                           AveragingOptions::AverageCorrected |
-                                                          AveragingOptions::ModelUseWeights |
-                                                          AveragingOptions::CorrectedUseWeights));
+                                                          AveragingOptions::ObservedUseNoWeights |
+                                                          AveragingOptions::ModelUseNoWeights |
+                                                          AveragingOptions::CorrectedUseNoWeights));
 
         VisibilityIterator2 vi (AveragingVi2Factory (parameters, ms));
         vi.setWeightScaling (WeightScaling::generateUnityWeightScaling());
@@ -1495,6 +1679,8 @@ protected:
         auto_ptr<GenerateConstant<Bool> > generateFalse (new GenerateConstant<Bool> (False));
         msFactory->setDataGenerator(MSMainEnums::FLAG_ROW, generateFalse.get());
 
+        msFactory->setDataGenerator(MSMainEnums::TIME_CENTROID, new GenerateTime());
+
         auto_ptr<GenerateCheckerboardFlagCube>
         generateCheckerboardFlagCubes (new GenerateCheckerboardFlagCube());
 
@@ -1525,6 +1711,8 @@ protected:
 
 
         addRowChecker (generateConstantRowChecker (False, & VisBuffer2::flagRow, String ("FlagRow")));
+
+        addRowChecker (new SimpleTimeCentroidChecker());
 
         AveragingParameters parameters (interval * averagingFactor,
                                         chunkInterval,
@@ -1603,7 +1791,7 @@ protected:
         msFactory->addSpectralWindows(1); // only on spw for now
 
         msFactory->setDataGenerator(MSMainEnums::WEIGHT_SPECTRUM,
-                                    new GenerateConstant<Float> (1.0));
+                                    new GenerateConstant<Float> (0.1));
 
         msFactory->setDataGenerator(MSMainEnums::SIGMA,
                                     new GenerateConstant<Float> (1.0));
@@ -1639,12 +1827,12 @@ protected:
 
         addCubeChecker (new ComplexCubeRampChecker (averagingFactor, "Observed", & VisBuffer2::visCube,
                                                     lastRow, nRowsInPartialAverage));
-        addCubeChecker (new WeightChecker (averagingFactor));
+        addCubeChecker (new WeightChecker (averagingFactor * 0.1));
 
-        addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::sigma, "Sigma",
-                                               lastRow, nRowsInPartialAverage));
         addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::weight, "Weight",
-                                               lastRow, nRowsInPartialAverage));
+                                               lastRow, nRowsInPartialAverage, 1.0));
+        addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::sigma, "Sigma",
+                                               lastRow, nRowsInPartialAverage, 1.0, True));
 
         CountedPtr <WeightScaling> weightScaling = useDoubler ? generateWeightScaling (doubler)
                                                               : WeightScaling::generateIdentityWeightScaling();
@@ -1697,11 +1885,10 @@ public:
         auto_ptr<MeasurementSet> ms;
 
         {
-
-            printf ("... +++ Starting test using normal weight spectrum");
+            printf ("... +++ Starting test using normal weight spectrum\n");
 
             MeasurementSet * msTmp;
-            boost::tie (msTmp, nRows_p) = createMs (msName, 1.0f, 1000.0f);
+            boost::tie (msTmp, nRows_p) = createMs (msName, 2.0f, 1000.0f);
             ms.reset (msTmp);
 
             doWeightedTest (ms.get(), interval_p, 10, 1); // interval, chunkInterval, factor
@@ -1710,15 +1897,15 @@ public:
 
             doWeightedTest (ms.get(), interval_p, 12, 3);
 
-            printf ("... --- Completed test using normal weight spectrum");
+            printf ("... --- Completed test using normal weight spectrum\n");
         }
 
         {
 
-            printf ("... +++ Starting test using corrected weight spectrum");
+            printf ("... +++ Starting test using corrected weight spectrum\n");
 
             MeasurementSet * msTmp;
-            boost::tie (msTmp, nRows_p) = createMs (msName, 1000.0f, 1.0f);
+            boost::tie (msTmp, nRows_p) = createMs (msName, 1000.0f, 2.0f);
             ms.reset (msTmp);
 
             doCorrectedWeightingTest (ms.get(), interval_p, 10, 1); // interval, chunkInterval, factor
@@ -1727,7 +1914,7 @@ public:
 
             doCorrectedWeightingTest (ms.get(), interval_p, 12, 3);
 
-            printf ("... --- Completed test using corrected weight spectrum");
+            printf ("... --- Completed test using corrected weight spectrum\n");
         }
 
         printf ("--- ... completed WeightSelectionTests\n");
@@ -1861,7 +2048,8 @@ protected:
         Int nRowsInPartialAverage = (nRows_p % averagingFactor) / nBaselines_p;
             // remaining
 
-        addCubeChecker (new ComplexCubeRampChecker (averagingFactor, "Observed", & VisBuffer2::visCube,
+        addCubeChecker (new ComplexCubeRampChecker (averagingFactor, "Observed",
+                                                    & VisBuffer2::visCube,
                                                     lastRow, nRowsInPartialAverage));
         addCubeChecker (new ComplexCubeRampChecker (averagingFactor, "Corrected",
                                                     & VisBuffer2::visCubeCorrected,
@@ -1895,11 +2083,389 @@ private:
 
 };
 
+typedef map<pair<Int, Int>, pair<Double, Double> > Velocity;
 
 
+class HardUvwChecker : public RowChecker {
 
-Tester::Tester ()
-: nTestsAttempted_p (0),
+public:
+
+    HardUvwChecker (Double maxUvwDistance, const Velocity & velocity, Double lastTime)
+    : lastTime_p (lastTime),
+      maxUvwDistance_p (maxUvwDistance),
+      velocity_p (velocity)
+    {}
+
+    void checkRow (VisBuffer2 * vb, const VisibilityIterator2 * /*vi*/, Int rowId,
+                   Int row, Int subchunkIndex)
+    {
+        // N.B.: assumes deltaT between samples is 1.0
+
+        Int a1 = vb->antenna1() (row);
+        Int a2 = vb->antenna2() (row);
+        pair<Int, Int> baseline (a1, a2);
+        Double t = vb->time() (row);
+
+        pair<Double, Double> vUV = velocity_p [make_pair (a1, a2)];
+
+        Double v = sqrt (pow (vUV.first, 2) + pow (vUV.second, 2));
+
+        Int nAveraged = (v != 0) ? utilj::round (std::floor (maxUvwDistance_p / v)) + 1
+                                 : INT_MAX;
+
+        if (nAveraged + tBaseline_p [baseline] > lastTime_p){
+            nAveraged = utilj::round (lastTime_p - tBaseline_p [baseline]) + 1;
+        }
+
+        Double expected = (nAveraged - 1) * 0.5 + tBaseline_p [baseline];
+        Double actual = t;
+        Double delta = expected - actual;
+
+        if (abs (delta) > .01){
+
+            throwError (String::toString (expected), String::toString (actual),
+                        vb, rowId, row, subchunkIndex, "time",
+                        String::format ("baseline=(%d,%d)", a1, a2));
+        }
+
+        tBaseline_p [baseline] += nAveraged;
+
+    }
+
+
+private:
+
+    map <pair <Int, Int>, Double> tBaseline_p;
+    Double lastTime_p;
+    Double maxUvwDistance_p;
+    Velocity velocity_p;
+};
+
+class BaselineDependentAveraging : public TestSuite {
+
+public:
+
+    BaselineDependentAveraging (const Environment & environment,
+                                const Arguments & arguments,
+                                Tester & tester)
+
+    : TestSuite (environment, arguments, tester),
+      interval_p (1)
+    {}
+
+    void execute ()
+    {
+
+        // These tests check averaging of different intervals
+        // on a single spectral window.
+        //
+        // They should mimic the results from normal time-based averaging.
+
+        printf ("+++ Starting BaselineDependentAveraging ...\n");
+
+        String msName (getParameter ("msName", "AveragingTvi2.ms"));
+
+        {
+
+            printf ("+++ +++ Doing uniform baseline averaging ... \n");
+
+            auto_ptr<MeasurementSet> ms;
+
+            MeasurementSet * msTmp;
+            boost::tie (msTmp, nRows_p) = createMs (msName, 1, 0);
+            ms.reset (msTmp);
+
+            doSimpleTest (ms.get(), interval_p, 10, 1, 0.1); // interval, chunkInterval, factor
+
+            doSimpleTest (ms.get(), interval_p, 10, 2, 1.0);
+
+            doSimpleTest (ms.get(), interval_p, 12, 3, 2.0);
+
+            printf ("--- --- ... completed uniform baseline averaging ... \n");
+        }
+
+        {
+
+            printf ("+++ +++ Doing nonuniform baseline averaging ... \n");
+
+            auto_ptr<MeasurementSet> ms;
+
+            MeasurementSet * msTmp;
+
+            Velocity velocity;
+
+            for (Int a1 = 0; a1 < nAntennas_p; a1 ++){
+                for (Int a2 = 0; a2 < nAntennas_p; a2 ++){
+                    Double vV = 0;
+                    Double vU = a1;
+
+                    velocity [make_pair (a1, a2)] = make_pair (vU, vV);
+                }
+            }
+
+            boost::tie (msTmp, nRows_p) = createMs (msName, velocity);
+            ms.reset (msTmp);
+
+            doHarderTest (ms.get(), interval_p, 10, 1, 0.1, velocity); // interval, chunkInterval, factor
+
+            doHarderTest (ms.get(), interval_p, 10, 2, 1.0, velocity);
+
+            doHarderTest (ms.get(), interval_p, 12, 3, 2.0, velocity);
+
+            doHarderTest (ms.get(), interval_p, 12, 3, 3.0, velocity);
+
+            doHarderTest (ms.get(), interval_p, 12, 3, 4.0, velocity);
+
+            doHarderTest (ms.get(), interval_p, 12, 3, 1000, velocity);
+
+
+            printf ("--- --- ... completed nonuniform baseline averaging ... \n");
+        }
+
+
+        printf ("--- ... completed BaselineDependentAveraging\n");
+
+    }
+
+    static String getName () { return "BaselineDependentAveraging";}
+
+protected:
+
+    pair<MeasurementSet *,Int>
+    createMs (const String & msName, Double vU, Double vV)
+    {
+        nAntennas_p = 4;
+
+        Velocity velocity;
+
+        for (Int a1 = 0; a1 < nAntennas_p; a1 ++){
+            for (Int a2 = 0; a2 < nAntennas_p; a2 ++){
+                velocity [make_pair (a1, a2)] = make_pair (vU, vV);
+            }
+        }
+
+        return createMs (msName, velocity);
+    }
+
+
+    pair<MeasurementSet *,Int>
+    createMs (const String & msName, const Velocity & velocity)
+    {
+        system (String::format ("rm -r %s", msName.c_str()).c_str());
+
+        MsFactory * msFactory = new MsFactory (msName);
+
+        nAntennas_p = 4;
+        nBaselines_p = ((nAntennas_p - 1) * nAntennas_p) / 2;
+        msFactory->setTimeInfo (0, 120, interval_p);
+        msFactory->addSpectralWindows(1); // only one spw for now
+        msFactory->addAntennas(nAntennas_p);
+        msFactory->addFeeds (10); // needs antennas and spws to be setup first
+        msFactory->addWeightSpectrum (False);
+
+        for (Int i = 0; i < 10; i++){
+            msFactory->addField (String::format ("field%d", i), MDirection());
+        }
+
+        // For many of the columns, simply put in a distinct constant to see if
+        // the correct data is being processed as well as averaged properly.
+
+        msFactory->setDataGenerator (MSMainEnums::UVW,
+                                     new UvwMotionGenerator (velocity));
+
+        msFactory->setDataGenerator (MSMainEnums::SCAN_NUMBER,
+                                     new GenerateConstant<Int> (10));
+        msFactory->setDataGenerator (MSMainEnums::OBSERVATION_ID,
+                                     new GenerateConstant<Int> (11));
+        msFactory->setDataGenerator (MSMainEnums::ARRAY_ID,
+                                     new GenerateConstant<Int> (12));
+        msFactory->setDataGenerator (MSMainEnums::FEED1,
+                                     new GenerateConstant<Int> (9));
+        msFactory->setDataGenerator (MSMainEnums::FEED2,
+                                     new GenerateConstant<Int> (8));
+        msFactory->setDataGenerator (MSMainEnums::FIELD_ID,
+                                     new GenerateConstant<Int> (7));
+        msFactory->setDataGenerator (MSMainEnums::STATE_ID,
+                                     new GenerateConstant<Int> (17));
+        msFactory->setDataGenerator (MSMainEnums::PROCESSOR_ID,
+                                     new GenerateConstant<Int> (18));
+        msFactory->setDataGenerator (MSMainEnums::EXPOSURE,
+                                     new GenerateConstant<Double> (interval_p));
+        msFactory->setDataGenerator (MSMainEnums::INTERVAL,
+                                     new GenerateConstant<Double> (interval_p));
+        msFactory->setDataGenerator (MSMainEnums::SIGMA,
+                                     new GenerateConstant<Float> (1.0f));
+        msFactory->setDataGenerator (MSMainEnums::WEIGHT,
+                                     new GenerateConstant<Float> (1.0f));
+
+        // For the data cubes fill it with a ramp.  The real part of the ramp will
+        // be multiplied by the factor supplied in the constructor to check that
+        // there's no "crosstalk" between the columns.
+
+        msFactory->setDataGenerator(MSMainEnums::DATA, new GenerateRamp());
+
+        msFactory->setDataGenerator(MSMainEnums::CORRECTED_DATA, new GenerateRamp(2));
+
+        msFactory->setDataGenerator(MSMainEnums::MODEL_DATA, new GenerateRamp(3));
+
+        // Set all of the data to be unflagged.
+
+        msFactory->setDataGenerator(MSMainEnums::FLAG, new GenerateConstant<Bool> (False));
+        msFactory->setDataGenerator(MSMainEnums::FLAG_ROW, new GenerateConstant<Bool> (False));
+
+        // Set the time centroid to be the middle of the sample interval.
+
+        msFactory->setDataGenerator(MSMainEnums::TIME_CENTROID, new GenerateTimeCentroid ());
+
+        pair<MeasurementSet *, Int> p = msFactory->createMs ();
+
+        return make_pair (p.first, p.second);
+    }
+
+
+    void
+    doSimpleTest (MeasurementSet * ms, Double interval, Int chunkInterval, Int averagingFactor,
+                  Double maxUvwDistance)
+    {
+        printf ("\nStarting averaging of %d samples ...\n", averagingFactor);
+
+        clearCheckers();
+
+        Int lastRow = nRows_p / averagingFactor; // ID of first row of last averaged VB
+        Int nRowsInPartialAverage = (nRows_p % averagingFactor) / nBaselines_p;
+            // remaining
+
+        addCubeChecker (new ComplexCubeRampChecker (averagingFactor, "Observed", & VisBuffer2::visCube,
+                                                    lastRow, nRowsInPartialAverage));
+        addCubeChecker (new ComplexCubeRampChecker (averagingFactor, "Corrected",
+                                                    & VisBuffer2::visCubeCorrected,
+                                                    lastRow, nRowsInPartialAverage, 2));
+        addCubeChecker (new ComplexCubeRampChecker (averagingFactor, "Model",
+                                                    & VisBuffer2::visCubeModel,
+                                                    lastRow, nRowsInPartialAverage, 3));
+
+        addRowChecker (generateSimpleRowChecker ("scan", & VisBuffer2::scan, 10));
+        addRowChecker (generateSimpleRowChecker ("observationId", & VisBuffer2::observationId, 11));
+        addRowChecker (generateSimpleRowChecker ("arrayId", & VisBuffer2::arrayId, 12));
+        addRowChecker (generateSimpleRowChecker ("feed1", & VisBuffer2::feed1, 9));
+        addRowChecker (generateSimpleRowChecker ("feed2", & VisBuffer2::feed2, 8));
+        addRowChecker (generateSimpleRowChecker ("fieldId", & VisBuffer2::fieldId, 7));
+        addRowChecker (generateSimpleRowChecker ("stateId", & VisBuffer2::stateId, 17));
+        addRowChecker (generateSimpleRowChecker ("processorId", & VisBuffer2::processorId, 18));
+
+        Double expectedDuration = interval * averagingFactor;
+//        addRowChecker (generateSimpleRowChecker ("interval", & VisBuffer2::timeInterval,
+//                                                 expectedDuration));
+        addRowChecker (new SimpleIntervalChecker (averagingFactor, interval, lastRow, nRowsInPartialAverage));
+        addRowChecker (new SimpleTimeChecker (averagingFactor, interval, expectedDuration,
+                                              lastRow, nRowsInPartialAverage));
+
+        addRowChecker (new SimpleExposureChecker (averagingFactor, interval, lastRow, nRowsInPartialAverage));
+
+        addRowChecker (new SimpleTimeCentroidChecker (averagingFactor, interval, lastRow, nRowsInPartialAverage));
+
+        Double channelFraction = 1.0; // no flagged channels
+        addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::weight, "Weight",
+                                               lastRow, nRowsInPartialAverage, channelFraction));
+        addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::sigma, "Sigma",
+                                               lastRow, nRowsInPartialAverage, channelFraction, True));
+
+
+        AveragingParameters parameters (interval * averagingFactor,
+                                        chunkInterval,
+                                        SortColumns (),
+                                        AveragingOptions (AveragingOptions::BaselineDependentAveraging |
+                                                          AveragingOptions::AverageObserved |
+                                                          AveragingOptions::AverageModel |
+                                                          AveragingOptions::AverageCorrected |
+                                                          AveragingOptions::ObservedUseNoWeights |
+                                                          AveragingOptions::ModelUseNoWeights |
+                                                          AveragingOptions::CorrectedUseNoWeights),
+                                        maxUvwDistance);
+        VisibilityIterator2 vi (AveragingVi2Factory (parameters, ms));
+        vi.setWeightScaling (WeightScaling::generateUnityWeightScaling());
+
+        checkMs (& vi);
+
+        printf ("\n...completed averaging of %d samples ...\n", averagingFactor);
+    }
+
+    void
+    doHarderTest (MeasurementSet * ms, Double interval, Int chunkInterval, Int averagingFactor,
+                  Double maxUvwDistance, const Velocity & velocity)
+    {
+        printf ("\nStarting averaging with maxUvwDistance=%f ...\n", maxUvwDistance);
+
+        clearCheckers();
+
+//        Int lastRow = nRows_p / averagingFactor; // ID of first row of last averaged VB
+//        Int nRowsInPartialAverage = (nRows_p % averagingFactor) / nBaselines_p;
+            // remaining
+
+        addRowChecker (new HardUvwChecker (maxUvwDistance, velocity, 119));
+
+        setExpectedRowCount (getNRowsExpected (velocity, maxUvwDistance, 120));
+
+        AveragingParameters parameters (interval * averagingFactor * 10000,
+                                        chunkInterval * 10000,
+                                        SortColumns (),
+                                        AveragingOptions (AveragingOptions::BaselineDependentAveraging |
+                                                          AveragingOptions::AverageObserved |
+                                                          AveragingOptions::AverageModel |
+                                                          AveragingOptions::AverageCorrected |
+                                                          AveragingOptions::ObservedUseNoWeights |
+                                                          AveragingOptions::ModelUseNoWeights |
+                                                          AveragingOptions::CorrectedUseNoWeights),
+                                        maxUvwDistance);
+        VisibilityIterator2 vi (AveragingVi2Factory (parameters, ms));
+        vi.setWeightScaling (WeightScaling::generateUnityWeightScaling());
+
+        checkMs (& vi);
+
+        printf ("\n...completed averaging with maxUvwDistance=%f ...\n", maxUvwDistance);
+    }
+
+    Int
+    getNRowsExpected (const Velocity & velocity, Double maxUvwDistance, Int nRowsInput)
+    {
+        Int nRows = 0;
+
+        for (Int a1 = 0; a1 < nAntennas_p - 1; a1++){
+            for (Int a2 = a1 + 1; a2 < nAntennas_p; a2 ++){
+
+
+                pair<Double, Double> vB = velocity.at (make_pair (a1, a2));
+                Double v = sqrt (pow (vB.first, 2) + pow (vB.second, 2));
+
+                Int nAverages;
+                if (v != 0){
+                    Int nPerAverage = utilj::round (std::floor (maxUvwDistance / v)) + 1;
+                    nAverages = utilj::round (std::ceil (((double) nRowsInput) / nPerAverage));
+                }
+                else{
+                    nAverages = 1;
+                }
+
+                nRows += nAverages;
+            }
+        }
+
+        return nRows;
+    }
+
+
+private:
+
+    Int nAntennas_p;
+    Int nBaselines_p;
+    Double interval_p; // Time for each sample
+    Int nRows_p;
+
+};
+
+Tester::Tester (Int nRowsExpected)
+: nRowsExpected_p (nRowsExpected),
+  nTestsAttempted_p (0),
   nTestsPassed_p (0)
 {
     clearCheckers(False);
@@ -2015,6 +2581,8 @@ Tester::doTest (const Environment & environment, const Arguments & arguments)
     }
 
     testResults_p.push_back (make_pair (Test::getName(), failed ? "FAILED" : "passed"));
+
+    nRowsExpected_p = -1;
 }
 
 
@@ -2028,6 +2596,8 @@ Tester::doTests (Int nArgs, char * args [])
         Environment environment;
         Arguments arguments = parseArgs (nArgs, args);
 
+        doTest <SimpleTestsNWindows<2> > (environment, arguments);
+
         doTest <SimpleTests> (environment, arguments);
 
         doTest <WeightingTests> (environment, arguments);
@@ -2036,9 +2606,9 @@ Tester::doTests (Int nArgs, char * args [])
 
         doTest <CubeFlaggingTests> (environment, arguments);
 
-        doTest <SimpleTestsNWindows<2> > (environment, arguments);
-
         doTest <WeightSelectionTests> (environment, arguments);
+
+        doTest <BaselineDependentAveraging> (environment, arguments);
 
         if (nTestsAttempted_p == nTestsPassed_p){
 
@@ -2114,6 +2684,12 @@ Tester::parseArgs (int nArgs, char * args []) const
 }
 
 void
+Tester::setExpectedRowCount (Int n)
+{
+    nRowsExpected_p = n;
+}
+
+void
 Tester::checkMs (VisibilityIterator2 * vi)
 {
     VisBuffer2 * vb = vi->getVisBuffer();
@@ -2147,6 +2723,8 @@ Tester::checkMs (VisibilityIterator2 * vi)
         }
         chunk ++;
     }
+
+    checkRowCount (firstRow);
 }
 
 void
@@ -2197,6 +2775,25 @@ Tester::checkCubes (VisBuffer2 * vb, VisibilityIterator2 * vi, Int subchunk,
         }
     }
 }
+
+void
+Tester::checkRowCount (Int actualNumberOfRows)
+{
+    if (nRowsExpected_p >= 0){
+
+        if (actualNumberOfRows != nRowsExpected_p){
+
+            ThrowTestError (String::format ("Expected to process %d rows but received %d rows.",
+                                            nRowsExpected_p, actualNumberOfRows));
+        }
+
+        printf ("... Processed expected number of rows: %d\n", actualNumberOfRows);
+    }
+    else{
+        printf ("... Processed %d rows.\n", actualNumberOfRows);
+    }
+}
+
 
 void
 Tester::checkRows (VisBuffer2 * vb, VisibilityIterator2 * vi, Int subchunk,

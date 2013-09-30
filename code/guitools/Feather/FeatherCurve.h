@@ -28,17 +28,20 @@
 
 #include <qwt_plot.h>
 #include <limits>
+#include <casa/aipstype.h>
+#include <guitools/Feather/ColorProvider.h>
 class QwtPlotCurve;
-
+class QwtLegendItem;
 namespace casa {
 
 class FeatherPlot;
+class LegendCurve;
 
 /**
  * Represents a curve on one of the plots.
  */
 
-class FeatherCurve {
+class FeatherCurve : public ColorProvider {
 
 public:
 	FeatherCurve( FeatherPlot* plot, QwtPlot::Axis xAxis, QwtPlot::Axis yAxis, bool sumCurve);
@@ -50,6 +53,7 @@ public:
 	void setCurveData( const QVector<double>& xVals, const QVector<double>& yVals );
 	QVector<double> getXValues() const;
 	QVector<double> getYValues() const;
+	QColor getRectColor() const;
 
 	//Change the scale of existing data (Log<-->No Log)
 	void adjustData( bool uvLog, bool ampLog );
@@ -71,8 +75,8 @@ private:
 
 	bool isSumCurve() const;
 	bool isWeightCurve() const;
-	double logarithm( double value ) const;
-	void doLogs( double* values, int count ) const;
+	double logarithm( double value, Bool& valid ) const;
+	QList<int> doLogs( double* values, int count ) const;
 
 	void resetDataBounds();
 	bool scatterPlot;
@@ -88,11 +92,13 @@ private:
 	 * be done directly by taking log( sum).
 	 */
 	bool sumCurve;
+	bool firstTime;
 	double minX;
 	double maxX;
 	double minY;
 	double maxY;
-	QwtPlotCurve* plotCurve;
+	LegendCurve* plotCurve;
+	QColor functionColor;
 	QVector<double> xValues;
 	QVector<double> yValues;
 

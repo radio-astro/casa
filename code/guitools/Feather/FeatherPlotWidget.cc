@@ -166,6 +166,7 @@ void FeatherPlotWidget::setPlotColors( const QMap<CurveType,CurveDisplay>& color
 
 	//Reset the curve colors
 	resetColors();
+	plot->resetLegend();
 }
 
 
@@ -585,12 +586,12 @@ FeatherDataType::DataType FeatherPlotWidget::getDataTypeForCurve( CurveType cTyp
 	case FeatherCurveType::LOW_CONVOLVED_HIGH_WEIGHTED:
 		dataType = FeatherDataType::LOW_CONVOLVED_HIGH_WEIGHTED;
 		break;
-	case FeatherCurveType::LOW_CONVOLVED_DIRTY:
+	/*case FeatherCurveType::LOW_CONVOLVED_DIRTY:
 		dataType = FeatherDataType::LOW_CONVOLVED_DIRTY;
 		break;
 	case FeatherCurveType::LOW_CONVOLVED_DIRTY_WEIGHTED:
 		dataType = FeatherDataType::LOW_CONVOLVED_DIRTY_WEIGHTED;
-		break;
+		break;*/
 	case FeatherCurveType::HIGH_ORIGINAL:
 		dataType = FeatherDataType::HIGH;
 		break;
@@ -644,12 +645,12 @@ FeatherCurveType::CurveType FeatherPlotWidget::getCurveTypeForData( DataType dTy
 	case FeatherDataType::LOW_CONVOLVED_HIGH_WEIGHTED:
 		curveType = FeatherCurveType::LOW_CONVOLVED_HIGH_WEIGHTED;
 		break;
-	case FeatherDataType::LOW_CONVOLVED_DIRTY:
+	/*case FeatherDataType::LOW_CONVOLVED_DIRTY:
 		curveType = FeatherCurveType::LOW_CONVOLVED_DIRTY;
 		break;
 	case FeatherDataType::LOW_CONVOLVED_DIRTY_WEIGHTED:
 		curveType = FeatherCurveType::LOW_CONVOLVED_DIRTY_WEIGHTED;
-		break;
+		break;*/
 	case FeatherDataType::HIGH:
 		curveType = FeatherCurveType::HIGH_ORIGINAL;
 		break;

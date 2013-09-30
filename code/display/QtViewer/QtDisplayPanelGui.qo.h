@@ -337,7 +337,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//</group>
 
 		// add a new DD
-		virtual void addDD(String path, String dataType, String displayType, Bool autoRegister=True, Bool tmpDtata=False, std::tr1::shared_ptr<ImageInterface<Float> > img = std::tr1::shared_ptr<ImageInterface<Float> >());
+		virtual QtDisplayData* addDD(String path, String dataType, String displayType, Bool autoRegister=True, Bool tmpDtata=False, std::tr1::shared_ptr<ImageInterface<Float> > img = std::tr1::shared_ptr<ImageInterface<Float> >());
 		// go to a specifc channel
 		virtual void doSelectChannel(int channelIndex);
 
@@ -369,7 +369,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		void unlinkCursorTracking(QtDisplayPanelGui*);
 		void linkCursorTracking(QtDisplayPanelGui*,QColor);
-
 
 	signals:
 
@@ -582,6 +581,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		int movieLast;
 		int movieStart;
 		int movieStep;
+
 		QTimer movieTimer;
 		void setAnimationRate();
 		int getBoundedChannel( int channelNumber ) const;
@@ -704,6 +704,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//Change the image that is being viewed in the blink
 		//animator.
 		void setAnimatedImage( int index );
+		void createRGBImage( QtDisplayData* coordinateMaster,
+						QtDisplayData* redImage, QtDisplayData* greenImage,
+						QtDisplayData* blueImage );
+
 
 	public:
 

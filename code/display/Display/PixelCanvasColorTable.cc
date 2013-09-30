@@ -115,6 +115,102 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return dcmapMgr_.member(cmap);
 	}
 
+	uInt PixelCanvasColorTable::getColorAmount( const uInt* posMatrix, const uInt* endMatrix,
+			int shiftAmount, int colorCount )const{
+		uInt amountColor = 0;
+		const int MAX_COLOR = 255;
+		if ( posMatrix < endMatrix ){
+			uInt colorIndex = *posMatrix;
+
+			float percentColor = (colorIndex * 1.0f) / colorCount;
+			amountColor = static_cast<uInt>(percentColor * MAX_COLOR);
+
+			if ( shiftAmount > 0 ){
+				amountColor = amountColor << shiftAmount;
+			}
+		}
+		return amountColor;
+	}
+
+	void PixelCanvasColorTable::mapToColorRGB(const Colormap* map, Array<uInt>& outArray,
+	                                const Array<uInt>& inArrayRed,
+	                                const Array<uInt>& inArrayGreen,
+	                                const Array<uInt>& inArrayBlue) const {
+		// Figure out the size of the output array based on the sizes of
+		// the input arrays.
+		uInt redSize = inArrayRed.nelements();
+		uInt blueSize = inArrayBlue.nelements();
+		uInt greenSize = inArrayGreen.nelements();
+		Array<uInt> inArray;
+		if ( redSize > 0 ){
+			inArray = inArrayRed;
+		}
+		else if ( blueSize > 0 ){
+			inArray = inArrayBlue;
+		}
+		else {
+			inArray = inArrayGreen;
+		}
+		uInt count = inArray.nelements();
+		if(outArray.nelements() < count ) {
+			outArray.resize(inArray.shape());
+		}
+
+		//Initialize the pointers.
+		Bool inDel, outDel;
+		const uInt* inRed  =  inArrayRed.getStorage(inDel);
+		const uInt* inBlue = inArrayBlue.getStorage(inDel);
+		const uInt* inGreen = inArrayGreen.getStorage(inDel );
+		uInt* out = outArray.getStorage(outDel);
+
+		const uInt* endRed = inRed + inArrayRed.nelements();
+		const uInt* endBlue = inBlue + inArrayBlue.nelements();
+		const uInt* endGreen = inGreen + inArrayGreen.nelements();
+
+		uInt cmapsize = getColormapSize(map);
+		const uInt* inpRed  = inRed;
+		const uInt* inpBlue = inBlue;
+		const uInt* inpGreen = inGreen;
+		uInt* outp = out;
+
+		//Compute the combined color matrix.
+		uInt maxRed =0;
+		uInt maxBlue = 0;
+
+		for ( uInt i = 0; i < count; i++ ){
+			*outp = 0;
+			if ( *inpRed > maxRed ){
+				maxRed = *inpRed;
+			}
+			if ( *inpBlue > maxBlue ){
+				maxBlue = *inpBlue;
+			}
+
+			//Get the red, blue, and green amount based on the indices in
+			//the red, blue, and green matrices.
+			uInt amountRed = getColorAmount(inpRed, endRed, 16, cmapsize);
+			uInt amountGreen = getColorAmount(inpGreen, endGreen, 8, cmapsize);
+			uInt amountBlue = getColorAmount(inpBlue, endBlue, 0, cmapsize);
+
+			//Combine the individual colors.
+			*outp = amountRed + amountGreen + amountBlue;
+
+			//Increment the pointers;
+			inpRed++;
+			inpGreen++;
+			inpBlue++;
+			outp++;
+		}
+
+		//Free the storage
+		inArrayRed.freeStorage(inRed, inDel);
+		inArrayBlue.freeStorage(inBlue, inDel );
+		inArrayGreen.freeStorage(inGreen, inDel );
+
+		//Allocate the storage.
+		outArray.putStorage(out, outDel);
+	}
+
 
 } //# NAMESPACE CASA - END
 

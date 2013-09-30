@@ -2595,7 +2595,6 @@ namespace casa {
 			if( image==0 || padd == 0 ) return 0;
 
 			try {
-
 				SubImage<Float> subImg(*image, imgReg);
 				IPosition shp = image->shape();
 				IPosition sshp = subImg.shape();
@@ -2635,7 +2634,8 @@ namespace casa {
 				IPosition pos = padd->fixedPosition();
 
 				ImageStatistics<Float> stats(subImg, False);
-				if ( ! stats.setAxes(cursorAxes) ) return 0;
+				bool cursorAxesSet = stats.setAxes( cursorAxes );
+				if ( ! cursorAxesSet ) return 0;
 				stats.setList(True);
 				Vector<String> nm = cs.worldAxisNames();
 
@@ -2694,12 +2694,11 @@ namespace casa {
 					Double vel;
 					Double restFreq = spCoord.restFrequency();
 					if (downcase(zaxis).contains("freq")) {
-						if (spCoord.pixelToVelocity(vel, zIndex)) {
-							if (restFreq >0)
-								layerstats->push_back(RegionInfo::stats_t::value_type("Velocity",String::toString(vel)+"km/s"));
-							else
-								layerstats->push_back(RegionInfo::stats_t::value_type(zspKey,zspVal));
-
+						if (restFreq >0 && spCoord.pixelToVelocity(vel, zIndex)) {
+							layerstats->push_back(RegionInfo::stats_t::value_type("Velocity",String::toString(vel)+"km/s"));
+						}
+						else {
+							layerstats->push_back(RegionInfo::stats_t::value_type(zspKey,zspVal));
 							// --- this line was executed, but was a NOP in the old code --- <drs>
 							// layerstats->push_back(RegionInfo::image_stats_t::value_type("Doppler",MDoppler::showType(spCoord.velocityDoppler())));
 						}
@@ -2760,11 +2759,11 @@ namespace casa {
 
 			} catch (const casa::AipsError& err) {
 				std::string errMsg_ = err.getMesg();
-				// fprintf( stderr, "Region::getLayerStats( ): <AipsError> %s\n", errMsg_.c_str() );
+				//fprintf( stderr, "Region::getLayerStats( ): <AipsError> %s\n", errMsg_.c_str() );
 				return 0;
 			} catch (...) {
 				std::string errMsg_ = "Unknown error computing region statistics.";
-				// fprintf( stderr, "Region::getLayerStats( ): %s\n", errMsg_.c_str() );
+				//fprintf( stderr, "Region::getLayerStats( ): %s\n", errMsg_.c_str() );
 				return 0;
 			}
 		}

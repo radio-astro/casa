@@ -639,6 +639,14 @@ public:
   Int nPolarizations () const;
   Int nDataDescriptionIds () const;
 
+  // Determine whether WEIGHT_SPECTRUM exists.
+
+  Bool weightSpectrumExists() const;
+
+  // Determine whether WEIGHT_SPECTRUM exists.
+
+  Bool weightSpectrumCorrectedExists() const;
+
   //reference to actual ms in interator
 
   const MeasurementSet& ms() const;
@@ -1012,14 +1020,6 @@ protected:
   // Returns the nPol_p x curNumRow_p weight matrix.
 
   virtual void weight (Matrix<Float>& wt) const;
-
-  // Determine whether WEIGHT_SPECTRUM exists.
-
-  Bool existsWeightSpectrum() const;
-
-  // Determine whether WEIGHT_SPECTRUM exists.
-
-  Bool existsWeightSpectrumCorrected() const;
 
   // Return weightspectrum (a weight for each channel)
 

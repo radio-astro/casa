@@ -6,6 +6,9 @@
 #include <display/QtPlotter/SmoothPreferences.ui.h>
 #include <scimath/Mathematics/VectorKernel.h>
 namespace casa {
+
+class SmoothSpinBox;
+
 class SmoothPreferences : public QDialog
 {
     Q_OBJECT
@@ -33,6 +36,7 @@ private:
     Ui::SmoothPreferencesClass ui;
     QString smoothMethod;
     int smoothRadius;
+    SmoothSpinBox* smoothSpinBox;
     const QString SMOOTH_NONE;
     const QString SMOOTH_BOXCAR;
     const QString SMOOTH_HANNING;

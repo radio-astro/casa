@@ -45,6 +45,7 @@ public:
     QString getFilePathOutput() const;
     QString getFileDirty() const;
     bool isOutputSaved() const;
+    void updateOutput(const QString& directory, const QString& file );
 
 signals:
 	void imageFilesChanged();

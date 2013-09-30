@@ -109,7 +109,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 		_getLog().get(), False, AxesSpecifier(), _getStretch(), True
 	)));
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
-	const CoordinateSystem& subCoords = subImage->coordinates();
+	CoordinateSystem subCoords = subImage->coordinates();
 	Vector<Int> dirAxes = subCoords.directionAxesNumbers();
 	Int xAxis = dirAxes[0];
 	Int yAxis = dirAxes[1];
@@ -158,6 +158,21 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
                 << "two pixels of the edge of the image." << LogIO::EXCEPTION;
         }
     }
+    // rotation occurs about the reference pixel, so move the reference pixel to be
+    // the midpoint of the requested line segment
+    vector<Double> midpoint = (end + start)/2.0;
+    Vector<Double> newRefPix2 = subCoords.referencePixel();
+    newRefPix2[dirAxes[0]] = midpoint[0];
+    newRefPix2[dirAxes[1]] = midpoint[1];
+
+    Vector<Double> newRefVal;
+    subCoords.toWorld(newRefVal, newRefPix2);
+    subCoords.setReferencePixel(newRefPix2);
+    subCoords.setReferenceValue(newRefVal);
+    subImage->setCoordinateInfo(subCoords);
+    cout << "refpix " << newRefPix2 << endl;
+    cout << "refval " << newRefVal << endl;
+
 	// rotate the image through this angle, in the opposite direction.
 	*_getLog() << LogIO::NORMAL << "Rotating image by "
 		<< (paInRad*180/C::pi)
@@ -166,7 +181,6 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 	const DirectionCoordinate& dc1 = subCoords.directionCoordinate();
 	dc1.toWorld(worldStart, Vector<Double>(start));
 	dc1.toWorld(worldEnd, Vector<Double>(end));
-
 	std::auto_ptr<DirectionCoordinate> rotCoord(
 		dynamic_cast<DirectionCoordinate *>(
 			dc1.rotate(Quantity(paInRad, "rad"))
@@ -175,7 +189,6 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 	Vector<Double> startPixRot, endPixRot;
 	rotCoord->toPixel(startPixRot, worldStart);
 	rotCoord->toPixel(endPixRot, worldEnd);
-
 	AlwaysAssert(abs(startPixRot[1] - endPixRot[1]) < 1e-6, AipsError);
 	Double xdiff = fabs(end[0] - start[0]);
 	Double ydiff = fabs(end[1] - start[1]);
@@ -197,7 +210,8 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 			<< LogIO::POST;
 		ImagePadder padder(subImage);
 		padder.setPaddingPixels(nPixels);
-		imageToRotate.reset(padder.pad(True));
+		ImageInterface<Float>* padded = padder.pad(True);
+		imageToRotate.reset(padded);
 	}
 	IPosition blc(subImage->ndim(), 0);
 	IPosition trc = subShape - 1;
@@ -241,7 +255,6 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 	}
 	// done with this pointer
 	imageToRotate.reset();
-
 	Vector<Double> origStartPixel = Vector<Double>(subShape.size(), 0);
 	origStartPixel[xAxis] = start[0];
 	origStartPixel[yAxis] = start[1];

@@ -53,6 +53,7 @@ ImageAnalysis/ImageStatsCalculator.cc
 ImageAnalysis/ImageTransposer.cc
 ImageAnalysis/ImageTask.cc
 ImageAnalysis/PeakIntensityFluxDensityConverter.cc
+ImageAnalysis/ProfileFitResults.cc
 ImageAnalysis/PVGenerator.cc
 ImageAnalysis/SpectralCollapser.cc
 ImageAnalysis/SpectralFitter.cc
@@ -144,6 +145,7 @@ install (FILES
 	ImageAnalysis/MomentCalculator.h
 	ImageAnalysis/MomentCalculator.tcc
 	ImageAnalysis/PeakIntensityFluxDensityConverter.h
+	ImageAnalysis/ProfileFitResults.h
 	ImageAnalysis/PVGenerator.h
 	ImageAnalysis/SepImageConvolver.h
 	ImageAnalysis/SepImageConvolver.tcc

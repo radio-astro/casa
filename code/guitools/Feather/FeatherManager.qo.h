@@ -77,6 +77,7 @@ class FeatherManager : public QObject {
 public:
 	FeatherManager();
 	bool isReady() const ;
+	bool isSuccess() const;
 	bool loadImages( const QString& lowImagePath, const QString& highImagePath, LogIO* logger );
 	bool loadDirtyImage( const QString& dirtyImagePath);
 	void applyFeather( bool saveOutput, const QString& outputImagePath );
@@ -112,8 +113,8 @@ public:
 
 	FeatheredData getSDConvolvedIntOrig();
 	FeatheredData getSDConvolvedIntCut() const;
-	FeatheredData getSDConvolvedDirtyOrig();
-	FeatheredData getSDConvolvedDirtyCut() const;
+	//FeatheredData getSDConvolvedDirtyOrig();
+	//FeatheredData getSDConvolvedDirtyCut() const;
 	virtual ~FeatherManager();
 signals:
 	void featheringDone();
@@ -135,6 +136,7 @@ private:
 	LogIO* logger;
 	bool radialAxis;
 	bool channelsAveraged;
+	bool success;
 	int channelIndex;
 };
 

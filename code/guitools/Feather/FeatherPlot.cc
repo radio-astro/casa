@@ -38,14 +38,16 @@
 #include <qwt_symbol.h>
 #include <qwt_data.h>
 #include <qwt_scale_draw.h>
+#include <qwt_legend_item.h>
 
 namespace casa {
 
 const QString FeatherPlot::Y_EQUALS_X = "y=x";
 
 FeatherPlot::FeatherPlot(QWidget* parent):QwtPlot( parent ),
-	legend( NULL), lineThickness(1),
-	dotSize(1), AXIS_COUNT(3){
+	externalLegend( NULL), lineThickness(1),
+	dotSize(1), AXIS_COUNT(3),
+	MINIMUM_LEGEND_LINE_WIDTH(3){
 
 	scaleLogAmplitude = false;
 	scaleLogUV = false;
@@ -107,7 +109,7 @@ void FeatherPlot::setAxisLabels(){
 		distanceStr = "Log("+distanceStr+")";
 	}
 	distanceStr = distanceStr + "(m)";
-	const QString Y_UNITS = " (Jansky/Beam)";
+	const QString Y_UNITS = " (Jansky)";
 	if ( plotType==SCATTER_PLOT ){
 		axisLabels[QwtPlot::xBottom] = /*"Low Resolution " +*/ amplitudeStr + Y_UNITS;
 		axisLabels[QwtPlot::yLeft] = /*"High Resolution " +*/ amplitudeStr + Y_UNITS;
@@ -135,8 +137,8 @@ FeatherPlot::~FeatherPlot() {
 		delete axisWidgets[i];
 		axisWidgets[i] = NULL;
 	}
-	delete legend;
-	legend = NULL;
+	delete externalLegend;
+	externalLegend = NULL;
 }
 
 //--------------------------------------------------------------------------
@@ -182,19 +184,37 @@ void FeatherPlot::updateAxes(){
 //-----------------------------------------------------------------
 
 void FeatherPlot::clearLegend(){
-	if ( legend != NULL ){
+	if ( externalLegend != NULL ){
 		insertLegend( NULL, QwtPlot::ExternalLegend );
-		delete legend;
-		legend = NULL;
+		delete externalLegend;
+		externalLegend = NULL;
 	}
 }
 
+void FeatherPlot::resetLegend(){
+	setLegendSize();
+}
+
+void FeatherPlot::setLegendSize(){
+	if ( legendParent != NULL && externalLegend != NULL ){
+		int itemCount = externalLegend->itemCount();
+		int rowCount = static_cast<int>(itemCount / 4.0) + 1;
+		int height = rowCount * 25;
+		legendParent->setMinimumSize( 800, height);
+	}
+}
 
 void FeatherPlot::insertSingleLegend( QWidget* parent ){
-	if ( legend == NULL ){
-		legend = new QwtLegend( );
+	legendParent = parent;
+	if ( externalLegend == NULL ){
+		externalLegend = new QwtLegend( );
+		QPalette legendPalette = externalLegend->palette();
+		legendPalette.setColor( QPalette::Background, Qt::white );
+		externalLegend->setAutoFillBackground( true );
+		externalLegend->setPalette( legendPalette );
+		externalLegend->setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Minimum );
 	}
-	insertLegend( legend, QwtPlot::ExternalLegend );
+	insertLegend( externalLegend, QwtPlot::ExternalLegend );
 	if ( parent != NULL ){
 		QLayout* parentLayout = parent->layout();
 		if ( parentLayout == NULL ){
@@ -202,9 +222,12 @@ void FeatherPlot::insertSingleLegend( QWidget* parent ){
 		}
 		parentLayout->setContentsMargins(0,0,0,0);
 		parent->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred );
-		parent->setMinimumSize( 800, 75 );
-		//parent->setMaximumSize( 0, 75 );
-		parentLayout->addWidget( legend );
+		setLegendSize();
+		QSpacerItem* item1 = new QSpacerItem(5,5,QSizePolicy::Expanding, QSizePolicy::Preferred);
+		parentLayout->addItem( item1 );
+		parentLayout->addWidget( externalLegend );
+		QSpacerItem* item2 = new QSpacerItem(5,5,QSizePolicy::Expanding, QSizePolicy::Preferred);
+		parentLayout->addItem( item2 );
 		parent->setLayout( parentLayout );
 	}
 }
@@ -212,8 +235,8 @@ void FeatherPlot::insertSingleLegend( QWidget* parent ){
 
 void FeatherPlot::setLegendVisibility( bool visible ){
 	bool legendVisible = visible && !isScatterPlot();
-	if ( legend != NULL ){
-		legend->setVisible( legendVisible );
+	if ( externalLegend != NULL ){
+		externalLegend->setVisible( legendVisible );
 		update();
 	}
 }
@@ -276,6 +299,7 @@ void FeatherPlot::setCurveSize( int curveIndex ){
 	}
 	curves[curveIndex]->setCurveSize(isScatterPlot(), diagonalLine,
 			dotSize, lineThickness);
+
 }
 
 
@@ -283,6 +307,7 @@ void FeatherPlot::setLineThickness( int thickness ){
 	lineThickness = thickness;
 	for ( int i = 0; i < curves.size(); i++ ){
 		setCurveSize( i );
+
 	}
 }
 
@@ -334,6 +359,7 @@ void FeatherPlot::clearCurves(){
 
 void FeatherPlot::setFunctionColor( const QString& curveID, const QColor& color ){
 	int curveIndex = getCurveIndex( curveID );
+
 	if ( curveIndex >= 0 ){
 		bool diagonalLine = false;
 		if ( curveID == Y_EQUALS_X ){
@@ -426,14 +452,14 @@ void FeatherPlot::addCurve( QVector<double> xValues, QVector<double> yValues,
 	//We need to make a new curve
 	if ( curveIndex < 0 ){
 	    curve  = new FeatherCurve( this, QwtPlot::xBottom, yAxis, sumCurve );
-		if ( isScatterPlot() ){
+	    if ( isScatterPlot() ){
 			if ( axisWidgets[QwtPlot::yRight] != NULL ){
 				ExternalAxisWidgetRight* rightWidget = dynamic_cast<ExternalAxisWidgetRight*>(axisWidgets[QwtPlot::yRight]);
 				rightWidget->setUseLeftScale( true );
 			}
 			curve->initScatterPlot( dotSize );
 		}
-		curve->setTitle( curveTitle );
+	    curve->setTitle( curveTitle );
 	}
 	//We are just going to change the data in an existing curve
 	else {
@@ -442,10 +468,10 @@ void FeatherPlot::addCurve( QVector<double> xValues, QVector<double> yValues,
 
 	//Store the curve if it is not already there
 	if ( curveIndex < 0 ){
-		curves.append( curve );
-		int index = curves.size() - 1;
-		setFunctionColor( curveTitle, curveColor );
-		setCurveSize( index );
+		 curves.append( curve );
+		 setFunctionColor( curveTitle, curveColor );
+		 int index = curves.size() - 1;
+	     setCurveSize( index );
 	}
 
 	curve->setCurveData( xValues, yValues );

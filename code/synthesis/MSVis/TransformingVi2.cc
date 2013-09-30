@@ -652,7 +652,7 @@ TransformingVi2::weightSpectrum (Cube<Float> & wtsp)  const
 void
 TransformingVi2::weightSpectrumCorrected (Cube<Float> & wtsp)  const
 {
-     getVii()->weightSpectrum (wtsp);
+     getVii()->weightSpectrumCorrected (wtsp);
 }
 
 Bool

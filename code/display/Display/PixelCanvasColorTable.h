@@ -191,6 +191,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		                        const Array<uInt> & inArray, Bool rangeCheck = True) const = 0;
 		virtual void mapToColor(const Colormap * map, Array<uLong> & outArray,
 		                        const Array<uLong> & inArray, Bool rangeCheck = True) const = 0;
+		virtual void mapToColorRGB(const Colormap* map, Array<uInt>& outArray,
+						const Array<uInt>& inArrayRed, const Array<uInt>& inArrayGreen, const Array<uInt>& inArrayBlue) const;
 		// </group>
 
 		// same as above except the matrix is operated on in place.  Only unsigned
@@ -289,7 +291,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		PixelCanvasColorTable();
 
 	private:
-
+		uInt getColorAmount( const uInt* posMatrix, const uInt* endMatrix,
+					int shiftAmount, int colorCount )const;
 		// Pointer to the default colormap
 		Colormap* defaultColormap_;
 

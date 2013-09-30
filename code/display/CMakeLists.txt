@@ -77,6 +77,7 @@ qt4_wrap_cpp( outfiles_qoh
   QtViewer/TrackBox.qo.h
   QtViewer/ColorHistogram.qo.h
   QtViewer/FileBox.qo.h
+  QtViewer/InActiveDock.qo.h
   QtViewer/MakeMask.qo.h
   QtViewer/MakeRegion.qo.h
   QtViewer/QtAnnotatorGui.qo.h
@@ -466,6 +467,7 @@ casa_add_library( display
   QtPlotter/SearchMoleculesResultDisplayer.cc
   QtPlotter/LineOverlaysTab.cc
   QtPlotter/SmoothPreferences.cc
+  QtPlotter/SmoothSpinBox.cc
   QtPlotter/LineOverlaysSearchResultsDialog.cc
   QtPlotter/SearchMoleculesDialog.cc
   QtPlotter/SearchRedshiftDialog.cc
@@ -543,6 +545,7 @@ casa_add_library( display
   QtViewer/Preferences.cc
   QtViewer/ColorTransferWidget.cc
   QtViewer/DisplayDataHolder.cc
+  QtViewer/InActiveDock.cc
   QtViewer/ImageManager/ImageScroll.cc
   QtViewer/ImageManager/ImageManagerDialog.cc
   QtViewer/ImageManager/ImageView.cc

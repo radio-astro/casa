@@ -143,6 +143,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		bool isSkyCatalog() const;
 		bool isMS() const;
 
+
 		// Can the QDD display tracking information?
 		virtual Bool usesTracking() {
 			return !isEmpty() &&
@@ -276,6 +277,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual Bool setCMBrtCont(const Vector<Float>& params);
 		//</group>
 
+		//Return the name of the z-axis.
+		String getZAxisName();
 
 		//# (dk note: If you use this, you must assure you do not change it in ways
 		//# that will crash QDD.  Do not assume it is non-zero -- im_ may be zero if
@@ -290,6 +293,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void unlock( );
 		static const String WEDGE_LABEL_CHAR_SIZE;
 		static const String WEDGE_YES;
+
 
 		void init();
 		void initImage();

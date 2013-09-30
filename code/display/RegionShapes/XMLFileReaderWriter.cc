@@ -548,7 +548,7 @@ namespace casa {
 		return new QLabel("[no additional options]");
 	}
 
-	void XMLFileReaderWriter::setOptions(const QWidget* widget) { }
+	void XMLFileReaderWriter::setOptions(const QWidget* /*widget*/) { }
 
 	bool XMLFileReaderWriter::write(const vector<RegionShape*>& s) const {
 		QFile file(m_filename.c_str());

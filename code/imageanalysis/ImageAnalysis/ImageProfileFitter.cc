@@ -30,11 +30,15 @@
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Quanta/MVTime.h>
 // #include <casa/Utilities/Precision.h>
+//#include <casa/OS/Memory.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
 #include <scimath/Mathematics/Combinatorics.h>
+
+#include <imageanalysis/ImageAnalysis/ProfileFitResults.h>
+
 
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
@@ -64,7 +68,7 @@ ImageProfileFitter::ImageProfileFitter(
 	_deleteImageOnDestruct(False), _logResults(True), _polyOrder(-1),
 	_fitAxis(axis), _nGaussSinglets(ngauss), _nGaussMultiplets(0),
 	_nLorentzSinglets(0), _nPLPCoeffs(0), _nLTPCoeffs(0),
-	_minGoodPoints(0), _results(Record()),
+	_minGoodPoints(1), _results(Record()),
 	_nonPolyEstimates(SpectralList()), _goodAmpRange(Vector<Double>(0)),
 	_goodCenterRange(Vector<Double>(0)), _goodFWHMRange(Vector<Double>(0)),
 	_sigma(), _abscissaDivisor(1.0) {
@@ -246,7 +250,6 @@ Record ImageProfileFitter::fit() {
 		*_getLog() << "Exception during fit: " << x.getMesg()
 			<< LogIO::EXCEPTION;
 	}
-
 	ImageProfileFitterResults resultHandler(
 		_getLog(), _getImage()->coordinates(), &_fitters,
 		_nonPolyEstimates, _subImage, _polyOrder,
@@ -605,7 +608,7 @@ void ImageProfileFitter::_fitallprofiles() {
 	}
 	// Do fits
 	// FIXME give users the option to show a progress bar
-	Bool showProgress = False;
+	Bool showProgress = True;
 	if (_nonPolyEstimates.nelements() > 0) {
 		String doppler = "";
 		ImageUtilities::getUnitAndDoppler(
@@ -639,25 +642,7 @@ void ImageProfileFitter::_fitProfiles(
 	// Progress Meter
 
 	std::auto_ptr<ProgressMeter> pProgressMeter(0);
-	if (showProgress) {
-		Double nMin = 0.0;
-		Double nMax = 1.0;
-		for (uInt i=0; i<inShape.nelements(); i++) {
-			if ((Int)i != _fitAxis) {
-				nMax *= inShape(i);
-			}
-		}
-		ostringstream oss;
-		oss << "Fit profiles on axis " << _fitAxis+1;
-		pProgressMeter.reset(
-			new ProgressMeter(
-				nMin, nMax, String(oss),
-				String("Fits"),
-				String(""), String(""),
-				True, max(1,Int(nMax/20))
-			)
-		);
-	}
+
 	Lattice<Bool>* pFitMask = 0;
 	if (pFit.get() && pFit->hasPixelMask() && pFit->pixelMask().isWritable()) {
 		pFitMask = &(pFit->pixelMask());
@@ -699,10 +684,25 @@ void ImageProfileFitter::_fitProfiles(
 	IPosition fitterShape = inShape;
 	fitterShape[_fitAxis] = 1;
 	_fitters.resize(fitterShape);
+
 	Int nPoints = fitterShape.product();
-	uInt count = 0;
+
+	if (showProgress) {
+		ostringstream oss;
+		oss << "Fit profiles on axis " << _fitAxis+1;
+		pProgressMeter.reset(
+			new ProgressMeter(
+				0, nPoints, oss.str()
+			)
+		);
+	}
+
 	vector<IPosition> goodPos(0);
-	Bool checkMinPts = _minGoodPoints > 0 && _subImage->isMasked();
+	Bool checkMinPts = _subImage->isMasked();
+	Array<Bool> fitMask;
+	if (checkMinPts) {
+		fitMask = partialNTrue(_subImage->getMask(False), IPosition(1, _fitAxis)) >= _minGoodPoints;
+	}
 	SpectralList newEstimates = _nonPolyEstimates;
 
 	ImageFit1D<Float> fitter = (_sigma.get() == 0)
@@ -743,40 +743,32 @@ void ImageProfileFitter::_fitProfiles(
 			newEstimates.add(*polyEl);
 		}
 	}
+
+	Array<Double> (*xfunc)(const Array<Double>&) = 0;
+	Array<Double> (*yfunc)(const Array<Double>&) = 0;
+	if (_nLTPCoeffs > 0) {
+		if (! abscissaSet) {
+			xfunc = casa::log;
+		}
+		yfunc = casa::log;
+	}
 	uInt nOrigComps = newEstimates.nelements();
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
-
+	uInt mark = max(1000, pow(Int(10), (Int)log10(nPoints/100)));
 	for (inIter.reset(); !inIter.atEnd(); inIter++, nProfiles++) {
-		if (count % 1000 == 0 && count > 0) {
-			*_getLog() << LogIO::NORMAL << "Fitting profile number "
-				<< count << " of " << nPoints << LogIO::POST;
+		if (nProfiles % mark == 0 && nProfiles > 0 && showProgress) {
+			pProgressMeter->update(Double(nProfiles));
 		}
 		const IPosition& curPos = inIter.position();
-		if (checkMinPts) {
-			IPosition sliceShape = inShape;
-			sliceShape = 1;
-			sliceShape[_fitAxis] = inShape[_fitAxis];
-			if (
-				ntrue(_subImage->getMaskSlice(curPos, sliceShape, True))
-				< _minGoodPoints
-			) {
-				// not enough good points, just use the dummy fitter
-				// already in place and go to the next position
-				continue;
-			}
+		if (checkMinPts && ! fitMask(curPos)) {
+			continue;
 		}
 		fitter.clearList();
 		if (abscissaSet) {
 			fitter.setAbscissa(abscissaValues);
+			abscissaSet = False;
 		}
-		Array<Double> (*xfunc)(const Array<Double>&) = 0;
-		if (_nLTPCoeffs > 0 && ! abscissaSet) {
-			xfunc = casa::log;
-		}
-		Array<Double> (*yfunc)(const Array<Double>&) = 0;
-		if (_nLTPCoeffs > 0) {
-			yfunc = casa::log;
-		}
+
 		if (
 			! fitter.setData(
 				curPos, abcissaType, True, divisorPtr, xfunc, yfunc
@@ -806,7 +798,7 @@ void ImageProfileFitter::_fitProfiles(
 		catch (const AipsError& x) {
 			ok = False;
 		}
-		_fitters(curPos) = fitter;
+		_fitters(curPos).reset(new ProfileFitResults(fitter));
 		// Evaluate and fill
 		if (pFit || pResid) {
 			_updateModelAndResidual(
@@ -814,11 +806,6 @@ void ImageProfileFitter::_fitProfiles(
 				pFitMask, pResidMask, failData, failMask
 			);
 		}
-
-		if (showProgress) {
-			pProgressMeter->update(Double(nProfiles));
-		}
-		count++;
 	}
 }
 
@@ -911,7 +898,7 @@ void ImageProfileFitter::_setFitterElements(
 					}
 				}
 				if (
-					_fitters(*iter).getList().nelements() == nOrigComps
+					_fitters(*iter)->getList().nelements() == nOrigComps
 					&& ! larger
 				) {
 					minDist2 = dist2;
@@ -922,7 +909,7 @@ void ImageProfileFitter::_setFitterElements(
 					}
 				}
 			}
-			newEstimates = _fitters(nearest).getList();
+			newEstimates = _fitters(nearest)->getList();
 		}
 		fitter.setElements(newEstimates);
 	}
@@ -1030,7 +1017,7 @@ Bool ImageProfileFitter::_isPCFSolutionOK(
 	return True;
 }
 
-const Array<ImageFit1D<Float> >& ImageProfileFitter::getFitters() const{
+const Array<std::tr1::shared_ptr<ProfileFitResults> >& ImageProfileFitter::getFitters() const{
 	return _fitters;
 }
 
