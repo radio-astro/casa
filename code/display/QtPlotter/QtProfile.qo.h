@@ -251,6 +251,7 @@ namespace casa {
 		bool isSpectralAxis() const;
 		void initializeSpectralProperties();
 		void resetXUnits( bool spectralAxis);
+		void updateSpectralReferenceFrame();
 
 		/**
 		 * Returns false if first vector value is greater than the last
@@ -377,6 +378,7 @@ namespace casa {
 		static const QString CHANNEL;
 		static const QString OPTICAL;
 		static const QString AIR;
+		static const QString FRAME_REST;
 
 		class spectra_info {
 		public:

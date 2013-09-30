@@ -88,6 +88,7 @@ namespace casa {
 	const QString QtProfile::CHANNEL = "channel";
 	const QString QtProfile::OPTICAL = "optical";
 	const QString QtProfile::AIR = "air";
+	const QString QtProfile::FRAME_REST = "REST";
 
 	QtProfile::~QtProfile() {
 	}
@@ -163,8 +164,8 @@ namespace casa {
 		// get reference frame info for freq axis label
 		MFrequency::Types freqtype = determineRefFrame(img);
 		spcRefFrame = String(MFrequency::showType(freqtype));
-		Int frameindex=spcRef->findText(QString(spcRefFrame.c_str()));
-		spcRef->setCurrentIndex(frameindex);
+		updateSpectralReferenceFrame();
+
 		connect(bottomAxisCType, SIGNAL(currentIndexChanged(const QString &)),
 		        this, SLOT(changeCoordinateType(const QString &)));
 		connect(topAxisCType, SIGNAL( currentIndexChanged( const QString &)),
@@ -266,6 +267,34 @@ namespace casa {
 			bottomAxisCType->addItem( xUnitsList[i]);
 		}
 		restrictTopAxisOptions( false, bottomAxisCType->currentText() );
+	}
+
+	void QtProfile::updateSpectralReferenceFrame( ){
+		//Cannot convert from rest frame to other spectral frames without
+		//reloading the image.
+		bool restFrame = false;
+		if ( FRAME_REST.toStdString() == spcRefFrame.c_str()){
+			restFrame = true;
+		}
+		int restIndex = spcRef->findText( FRAME_REST );
+
+		//Add rest frame if it is not already there.
+		if ( restFrame ){
+			if ( restIndex == -1 ){
+				spcRef->addItem( FRAME_REST );
+			}
+		}
+		//Remove rest frame as an option to convert to.
+		else {
+			if ( restIndex >= 0 ){
+				spcRef->removeItem( restIndex );
+			}
+		}
+		//Update the combo with the current rest frame.
+		int restFrameIndex = spcRef->findText( spcRefFrame.c_str() );
+		spcRef->setCurrentIndex( restFrameIndex );
+		spcRef->setEnabled( !restFrame );
+		lineOverlaysHolder->setInitialReferenceFrame( spcRef->currentText() );
 	}
 
 
@@ -656,9 +685,8 @@ namespace casa {
 		// get reference frame info for frequency axis label
 		MFrequency::Types freqtype = determineRefFrame(img);
 		spcRefFrame = String(MFrequency::showType(freqtype));
-		Int frameindex=spcRef->findText(QString(spcRefFrame.c_str()));
-		spcRef->setCurrentIndex(frameindex);
-		lineOverlaysHolder->setInitialReferenceFrame( spcRef->currentText() );
+		updateSpectralReferenceFrame();
+
 
 		//YUnits
 		yUnit = QString(img->units().getName().chars());
