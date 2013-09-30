@@ -23,6 +23,14 @@ casa_add_dbus_proxy( session/DBusSession.proxy.h xml/DBusSession.interface.xml )
 casa_add_dbus_proxy( viewer/ViewerProxy.proxy.h xml/ViewerProxy.interface.xml )
 #casa_add_dbus_adaptor( viewer/ViewerAdaptor.adaptor.h xml/ViewerProxy.interface.xml )
 
+###
+### who know what is the right way to do this with C-MINUS-MAKE...
+###
+add_custom_target(install-dbus-session ALL
+    COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX}/../etc/dbus/session.d
+    COMMAND cp -f ${CMAKE_CURRENT_SOURCE_DIR}/etc/casa.conf ${CMAKE_INSTALL_PREFIX}/../etc/dbus
+)
+
 if (INTERACTIVE_ITERATION)
    casa_add_dbus_proxy( interfaces/SynthImager.proxy.h xml/SynthImager.interface.xml )
    casa_add_dbus_adaptor( interfaces/SynthImager.adaptor.h xml/SynthImager.interface.xml )
