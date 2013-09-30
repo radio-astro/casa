@@ -342,25 +342,9 @@ protected:
                                                                     : Matrix<Float> ()),
           weightSpectrumCorrectedOut (doing.weightSpectrumCorrected_p ? rowAveraged->weightSpectrumCorrected()
                                                                      : Matrix<Float> ()),
-          weightSpectrumIn (doing.weightSpectrum_p ? rowInput->weightSpectrum()
-                                                  : Matrix<Float> ()),
+          weightSpectrumIn (rowInput->weightSpectrum()),
           weightSpectrumOut (rowAveraged->weightSpectrum())
         {}
-
-        Double
-        getWeight (Int correlation, Int channel, Int nChannels)
-        {
-            Double theWeight;
-
-            if (usingWeightSpectrum_p){
-                theWeight = weightSpectrumIn (correlation, channel);
-            }
-            else{
-                theWeight = ((Double) weightIn (correlation)) / nChannels;
-            }
-
-            return theWeight;
-        }
 
         const Matrix<Complex> correctedIn;
         Matrix<Complex>       correctedOut;
@@ -838,9 +822,9 @@ VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
 
             if (! inputFlagged){
 
-                Double weight = accumulationParameters->getWeight (correlation, channel, nChannels);
+                Double weight = accumulationParameters->weightSpectrumIn (correlation, channel);
                 adjustedWeight (correlation) += weight;
-                accumulateElementForCube ((float) weight,1.0f, correlationFlagChanged,
+                accumulateElementForCube ((float) weight, 1.0f, correlationFlagChanged,
                                           accumulationParameters->weightOut (correlation));
             }
 
@@ -865,7 +849,7 @@ VbAvg::accumulateElementForCubes (AccumulationParameters * accumulationParameter
     // will return 1.0.  Otherwise if will return some function of the weight or weight-spectrum
     // (e.g., square, square-root, etc.).
 
-    Double weight = accumulationParameters->getWeight (correlation, channel, nChannels ());
+    Double weight = accumulationParameters->weightSpectrumIn (correlation, channel);
 
     Float weightCorrected =  1.0f;
 

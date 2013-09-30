@@ -2596,8 +2596,6 @@ Tester::doTests (Int nArgs, char * args [])
         Environment environment;
         Arguments arguments = parseArgs (nArgs, args);
 
-        doTest <SimpleTestsNWindows<2> > (environment, arguments);
-
         doTest <SimpleTests> (environment, arguments);
 
         doTest <WeightingTests> (environment, arguments);
@@ -2605,6 +2603,8 @@ Tester::doTests (Int nArgs, char * args [])
         doTest <RowFlaggingTests> (environment, arguments);
 
         doTest <CubeFlaggingTests> (environment, arguments);
+
+        doTest <SimpleTestsNWindows<2> > (environment, arguments);
 
         doTest <WeightSelectionTests> (environment, arguments);
 
