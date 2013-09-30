@@ -184,7 +184,7 @@ for info in [ (['dbus-daemon'],'dbus'),
         else:
             casa['helpers'][entry] = None
 
-        for srchdir in ['/bin', '/usr/bin', '/opt/local/bin', '/usr/lib/qt-4.3.4/dbus/bin', '/usr/lib64/qt-4.3.4/dbus/bin'] :
+        for srchdir in ['/usr/lib64/casa/01/bin', '/bin', '/usr/bin', '/opt/local/bin', '/usr/lib/qt-4.3.4/dbus/bin', '/usr/lib64/qt-4.3.4/dbus/bin'] :
             dd = srchdir + os.sep + exe
             if os.path.exists(dd) and os.access(dd,os.X_OK) :
                 casa['helpers'][entry] = dd
@@ -313,22 +313,14 @@ if os.path.exists( casa['dirs']['rc'] + '/prelude.py' ) :
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 ## on linux set up a dbus-daemon for casa because each
 ## x-server (e.g. Xvfb) gets its own dbus session...
+## 'session.conf' now included in casa tree...
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+dbus_conf = __casapath__ + "/etc/dbus/casa.conf"
 if os.uname()[0] == 'Linux' :
     if casa['helpers']['dbus'] is not None :
 
         argv_0_path = os.path.dirname(os.path.abspath(sys.argv[0]))
         dbus_path = os.path.dirname(os.path.abspath(casa['helpers']['dbus']))
-        dbus_conf = None
-
-        if argv_0_path == dbus_path :
-            dbus_conf = dbus_path
-            while dbus_conf != '/' and not os.path.basename(dbus_conf).startswith("lib") :
-                dbus_conf = os.path.dirname(dbus_conf)
-            if os.path.basename(dbus_conf).startswith("lib"):
-                dbus_conf = os.path.dirname(dbus_conf) + "/etc/dbus/session.conf"
-            else:
-                dbus_conf = None
 
         (r,w) = os.pipe( )
 
