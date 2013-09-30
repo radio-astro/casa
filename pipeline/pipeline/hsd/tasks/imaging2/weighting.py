@@ -146,8 +146,6 @@ class WeightMS(common.SingleDishTaskTemplate):
         if weight_tintsys:
             exposures = datatable.tb1.getcol('EXPOSURE').take(index_list)
             tsyss = datatable.tb1.getcol('TSYS').take(index_list)
-            # print exposures
-            # print tsyss
             for index in xrange(len(rows)):
                 row = rows[index]
                 exposure = exposures[index]

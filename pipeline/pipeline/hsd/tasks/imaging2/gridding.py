@@ -13,8 +13,6 @@ from .accumulator import Accumulator
 
 LOG = infrastructure.get_logger(__name__)
 
-NoData = common.NoData
-
 def gridding_factory(observing_pattern):
     LOG.info('ObsPattern = %s' % observing_pattern)
     if observing_pattern.upper() == 'RASTER':
@@ -149,7 +147,6 @@ class GriddingBase(common.SingleDishTaskTemplate):
         # 2008/09/20 Spacing should be identical between RA and DEC direction
         # Curvature has not been taken account
         dec_corr = 1.0 / math.cos(self.datatable.getcell('DEC',0) / 180.0 * 3.141592653)
-        #dec_corr = 1.0 / math.cos(decs[0] / 180.0 * 3.141592653)
 
         GridTable = self._group(index_list, rows, ants, ras, decs, stats, combine_radius, allowance_radius, grid_spacing, dec_corr)
         
@@ -189,7 +186,6 @@ class GriddingBase(common.SingleDishTaskTemplate):
         OutputTable = []
         
         # create storage for output
-        #StorageOut = numpy.ones((num_grid, self.nchan), dtype=numpy.float32) * NoData
         # 2011/11/12 DataIn and rowsSel are [list]
         IDX2StorageID = {}
         StorageID = 0
@@ -220,7 +216,6 @@ class GriddingBase(common.SingleDishTaskTemplate):
             if num_valid == 0:
                 # No valid Spectra at the position
                 RMS = 0.0
-                pass
             elif num_valid == 1:
                 # One valid Spectrum at the position
                 RMS = rmslist[0]

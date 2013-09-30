@@ -27,7 +27,6 @@ class SDApplyFlagResults(common.SingleDishResults):
         super(SDApplyFlagResults, self).merge_with_context(context)
 
     def _outcome_name(self):
-        # return [image.imagename for image in self.outcome]
         return ''
 
 
@@ -37,7 +36,6 @@ class SDApplyFlag(common.SingleDishTaskTemplate):
     def prepare(self):
         # for each data
         context = self.inputs.context
-        #datatable = context.observing_run.datatable_instance
         reduction_group = context.observing_run.reduction_group
         infiles = self.inputs.infiles
 
@@ -51,8 +49,6 @@ class SDApplyFlag(common.SingleDishTaskTemplate):
             filename = data.baselined_name
             srctype = data.calibration_strategy['srctype']
             self._apply_apriori_flags(filename, wvr_spws, srctype)
-
-        #num_data = len(context.observing_run)
 
         namer = filenamer.BaselineSubtractedTable()
 

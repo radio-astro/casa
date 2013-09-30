@@ -33,7 +33,6 @@ class ExportMSResults(common.SingleDishResults):
                 observing_run[i].exported_ms = None
 
     def _outcome_name(self):
-        # return [image.imagename for image in self.outcome]
         return self.outcome['outfiles']
 
 
@@ -69,7 +68,6 @@ class ExportMS(common.SingleDishTaskTemplate):
                     'outform': 'MS2',
                     'overwrite': True}
             job = casa_tasks.sdsave(**args)
-            # job = create_export_job(data, output_dir)
                     
             # execute job
             self._executor.execute(job)

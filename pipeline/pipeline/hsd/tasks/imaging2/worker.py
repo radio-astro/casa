@@ -63,7 +63,6 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
         datatable = context.observing_run.datatable_instance
         antenna_list = [context.observing_run.st_names.index(f) 
                         for f in infiles]
-        #vislist = [context.observing_run[i].exported_ms for i in antenna_list]
         vislist = [self.inputs.vislist[i] for i in antenna_list]
         srctype = self.inputs.onsourceid
         reference_data = context.observing_run[antenna_list[0]]
