@@ -1159,7 +1159,7 @@ class simobserve_noise(simobserve_unittest_base):
         res = simobserve(project=project,skymodel=skymodel,
                          setpointings=False,integration=self.tint,
                          obsmode='',sdantlist="",antennalist=antlist,
-                         thermalnoise=thermalnoise,tau0=self.tau0,
+                         thermalnoise=thermalnoise,user_pwv=self.pwv,
                          graphics=self.graphics)
         self.assertTrue(res)
         # check for output file
