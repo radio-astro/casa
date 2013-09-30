@@ -87,23 +87,20 @@ class SDApplyFlag(common.SingleDishTaskTemplate):
         return result
 
     def _apply_apriori_flags(self, filename, wvr_spws, on_source):
+        # flag WVR and off-source spectra        
         with casatools.TableReader(filename, nomodify=False) as tb:
-            # flag WVR spws
-            tsel = tb.query('IFNO IN %s' % (list(wvr_spws)))
-            nrow = tsel.nrows()
-            flags = numpy.ones((4, nrow), dtype=int)
-            tsel.putcol('FLAGROW', flags[0])
-            tsel.putcol('FLAGTRA', flags)
+            tsel = tb.query('SRCTYPE != %s || IFNO IN %s' % (on_source,list(wvr_spws)))
+            rows = tsel.rownumbers()
             tsel.close()
-            
-            # flag all reference (off source) data
-            tsel = tb.query('SRCTYPE != %s' % (on_source))
-            nrow = tsel.nrows()
-            for irow in xrange(nrow):
-                tsel.putcell('FLAGROW', irow, 1)
-                flags = tsel.getcell('FLAGTRA', irow)
-                flags[:] = 1
-                tsel.putcell('FLAGTRA', irow, flags)
+        if len(rows) == 0:
+            return
+        
+        args = {'infile': filename,
+                'mode': 'rowid',
+                'rows': list(rows)}
+        job = casa_tasks.sdflag2(**args)
+        self._executor.execute(job, merge=False)
+
 
     def _apply_baseline_flags(self, filename, bltable_name):
         if not os.path.exists(bltable_name):
@@ -117,11 +114,9 @@ class SDApplyFlag(common.SingleDishTaskTemplate):
         if len(rows) == 0:
             return
             
-        with casatools.TableReader(filename, nomodify=False) as tb:
-            tsel = tb.query('ROWNUMBER() IN %s' % (rows.tolist()), style='python')
-            for irow in xrange(tsel.nrows()):
-                tsel.putcell('FLAGROW', irow, 1)
-                channel_flag = tsel.getcell('FLAGTRA', irow)
-                channel_flag[:] = 1
-                tsel.putcell('FLAGTRA', irow, channel_flag)
-            tsel.close()
+        args = {'infile': filename,
+                'mode': 'rowid',
+                'rows': list(rows)}
+        job = casa_tasks.sdflag2(**args)
+        self._executor.execute(job, merge=False)
+        
