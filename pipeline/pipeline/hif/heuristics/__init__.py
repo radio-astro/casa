@@ -8,8 +8,12 @@ from .gaincal import MedianSNRNoAdapter
 from .bporder import BPOrder
 from .caltable import BandpassCaltable
 from .caltable import GaincalCaltable
+from .caltable import GainCurvestable
 from .caltable import FluxCaltable
 from .caltable import TsysCaltable
+from .caltable import OpCaltable
+from .caltable import RqCaltable
+from .caltable import SwpowCaltable
 from .caltable import AntposCaltable
 from .caltable import WvrgCaltable
 from .clean import CleanHeuristics

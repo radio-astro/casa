@@ -104,6 +104,26 @@ class GaincalCaltable(CaltableNamer):
             namer.method(task_args['method'])
 
 
+class GainCurvestable(CaltableNamer):
+    def get_namer(self):
+        return filenamer.GainCurvesCalibrationTable()
+
+
+class OpCaltable(CaltableNamer):
+    def get_namer(self):
+        return OpCalibrationTable()
+
+
+class RqCaltable(CaltableNamer):
+    def get_namer(self):
+        return filenamer.RqCalibrationTable()
+
+
+class SwpowCaltable(CaltableNamer):
+    def get_namer(self):
+        return filenamer.SwpowCalibrationTable()
+
+
 class TsysCaltable(CaltableNamer):
     def get_namer(self):
         return filenamer.TsysCalibrationTable()

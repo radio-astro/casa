@@ -15,15 +15,20 @@ import flagmanager_cli
 import fluxscale_cli
 import gaincal_cli
 import gencal_cli
+import hanningsmooth_cli
 import immath_cli
 import importasdm_cli
+import importevla_cli
 import listobs_cli
 import plotants_cli
 import plotbandpass_cli
 import plotcal_cli
 import plotms_cli
+import plotweather_cli
 import plotxy_cli
 import setjy_cli
+import split_cli
+import statwt_cli
 import wvrgcal_cli
 try:
     import sdcal2_cli
@@ -290,11 +295,17 @@ class CASATaskJobGenerator(object):
     def gencal(self, *v, **k):
         return self._get_job(gencal_cli.gencal_cli, *v, **k)
     
+    def hanningsmooth(self, *v, **k):
+        return self._get_job(hanningsmooth_cli.hanningsmooth_cli, *v, **k)
+
     def immath(self, *v, **k):
-        return self._get_job(immath_cli.immath_cli, *v, **k)
+        return self._get_job(immath_cli.immath_cli, *v, **k)    
 
     def importasdm(self, *v, **k):
         return self._get_job(importasdm_cli.importasdm_cli, *v, **k)
+    
+    def importevla(self, *v, **k):
+        return self._get_job(importevla_cli.importevla_cli, *v, **k)
 
     def listobs(self, *v, **k):
         return self._get_job(listobs_cli.listobs_cli, *v, **k)
@@ -311,11 +322,20 @@ class CASATaskJobGenerator(object):
     def plotms(self, *v, **k):
         return self._get_job(plotms_cli.plotms_cli, *v, **k)
 
+    def plotweather(self, *v, **k):
+        return self._get_job(plotweather_cli.plotweather_cli, *v, **k)
+
     def plotxy(self, *v, **k):
         return self._get_job(plotxy_cli.plotxy_cli, *v, **k)
 
     def setjy(self, *v, **k):
         return self._get_job(setjy_cli.setjy_cli, *v, **k)
+    
+    def split(self, *v, **k):
+        return self._get_job(split_cli.split_cli, *v, **k)
+    
+    def statwt(self, *v, **k):
+        return self._get_job(statwt_cli.statwt_cli, *v, **k)
 
     def wvrgcal(self, *v, **k):
         return self._get_job(wvrgcal_cli.wvrgcal_cli, *v, **k)

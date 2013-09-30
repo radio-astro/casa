@@ -23,7 +23,7 @@ class ChannelBandpassInputs(common.CommonBandpassInputs):
                  field=None, spw=None, antenna=None, intent=None,
                  # solution parameters
                  solint=None, combine=None, refant=None, minblperant=None,
-                 minsnr=None, solnorm=None, fillgaps=None, append=None,
+                 minsnr=None, solnorm=None, fillgaps=None, append=None, scan=None,
                  # preapply calibrations
                  opacity=None, parang=None,
                  # calibration target

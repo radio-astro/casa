@@ -15,7 +15,7 @@ from .fluxscale import Fluxcal
 from .fluxscale import Fluxscale
 from .fluxscale import GcorFluxscale
 from .fluxscale import NormaliseFlux
-from .gaincal import GaincalMode, GTypeGaincal, GSplineGaincal, TimeGaincal
+from .gaincal import GaincalMode, GTypeGaincal, GSplineGaincal, TimeGaincal, KTypeGaincal
 from .importdata import ImportData
 from .lowgainflag import Lowgainflag
 from .makecleanlist import MakeCleanList

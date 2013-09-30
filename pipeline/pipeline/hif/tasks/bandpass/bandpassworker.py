@@ -29,7 +29,7 @@ class BandpassWorkerInputs(common.CommonBandpassInputs):
                  solint=None, combine=None, refant=None, minblperant=None,
                  minsnr=None, solnorm=None, bandtype=None, fillgaps=None, 
                  degamp=None, degphase=None, visnorm=None, maskcenter=None,
-                 maskedge=None, append=None,
+                 maskedge=None, append=None, scan=None,
                  # preapply calibrations
                  opacity=None, parang=None,
                  # calibration target

@@ -437,6 +437,26 @@ class CalibrationTable(NamingTemplate):
         '''Set the filename extension as appropriate for a tsys calibration.
         ''' 
         return self.extension('tsyscal')
+    
+    def opac_cal(self):
+        '''Set the filename extension as appropriate for a opac calibration.
+        ''' 
+        return self.extension('opac')
+
+    def gc_cal(self):
+        '''Set the filename extension as appropriate for a gc calibration.
+        '''
+        return self.extension('gc')
+    
+    def rq_cal(self):
+        '''Set the filename extension as appropriate for a rq calibration.
+        '''
+        return self.extension('rq')
+
+    def swpow_cal(self):
+        '''Set the filename extension as appropriate for a swpow calibration.
+        '''
+        return self.extension('swpow')
 
     def wvrg_cal(self):
         '''Set the filename extension as appropriate for a wvr calibration.
@@ -632,6 +652,26 @@ class TsysCalibrationTable(CalibrationTable):
     def __init__(self, other=None):
         super(TsysCalibrationTable, self).__init__(other)
         self.tsys_cal()
+
+class OpCalibrationTable(CalibrationTable):
+    def __init__(self, other=None):
+        super(OpCalibrationTable, self).__init__(other)
+        self.opac_cal()
+
+class GainCurvesCalibrationTable(CalibrationTable):
+    def __init__(self, other=None):
+        super(GainCurvesCalibrationTable, self).__init__(other)
+        self.gc_cal()
+        
+class RqCalibrationTable(CalibrationTable):
+    def __init__(self, other=None):
+        super(RqCalibrationTable, self).__init__(other)
+        self.rq_cal()
+
+class SwpowCalibrationTable(CalibrationTable):
+    def __init__(self, other=None):
+        super(SwpowCalibrationTable, self).__init__(other)
+        self.swpow_cal()
 
 class WvrgCalibrationTable(CalibrationTable):
     def __init__(self, other=None):
