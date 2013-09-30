@@ -26,6 +26,7 @@ casa_add_python( tools tools_regressions_tests_python python/${PYTHONV}/regressi
   alma-m100-analysis.py
   alma-m100-analysis-hpc.py
   alma-ngc3256-analysis.py
+  alma-titan-ephemeris.py
   asdm-imexport+analysis.py
   async-segfault.py
   calstat_test.py

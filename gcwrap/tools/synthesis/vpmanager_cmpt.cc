@@ -352,14 +352,18 @@ vpmanager::setpbnumeric(const std::string& telescope, const std::string& otherte
 }
 
 ::casac::record*
-vpmanager::setpbimage(const std::string& telescope, const std::string& othertelescope, const bool dopb, const std::string& realimage, const std::string& imagimage, const std::string& compleximage)
+vpmanager::setpbimage(const std::string& telescope, const std::string& othertelescope, const bool dopb, const std::string& realimage, const std::string& imagimage, const std::string& compleximage, const std::vector<std::string>& antnames)
 {
 
   ::casac::record* r=0;
   try{
     casa::Record rec;
+    Vector <String> anames(toVectorString(antnames));
+    ////CAS-5666 go round
+    if(anames.nelements()==1 && anames[0]==casa::String(""))
+      anames[0]=casa::String("*");
     VPManager::Instance()->setpbimage(String(telescope), String(othertelescope), dopb, 
-		       String(realimage), String(imagimage), String(compleximage), rec);
+				      String(realimage), String(imagimage), String(compleximage), anames, rec);
     r=fromRecord(rec);
 
   } catch  (AipsError x) {

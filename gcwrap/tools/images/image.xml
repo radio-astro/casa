@@ -4084,7 +4084,7 @@ We use the Componentlist GUI to look at the strongest component.
         </param>
         <param type="int"  name="minpts">
             <description>Minimum number of unmasked points necessary to attempt fit.</description>
-            <value>0</value>
+            <value>1</value>
         </param>
         <param type="bool"  name="multifit">
             <description>If true, fit a profile along the desired axis at each pixel in the specified region. If false, average the non-fit axis pixels and do a single fit to that average profile. Default False.</description>

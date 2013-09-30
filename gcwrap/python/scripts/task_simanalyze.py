@@ -67,8 +67,8 @@ def simanalyze(
 
 
     saveinputs = myf['saveinputs']
-    saveinputs('simanalyze',fileroot+"/"+project+".simanalyze.last",
-               myparams=in_params)
+    saveinputs('simanalyze',fileroot+"/"+project+".simanalyze.last")
+#               myparams=in_params)
 
     if (not image) and (not analyze):
         casalog.post("No operation to be done. Exiting from task.", "WARN")
@@ -403,8 +403,8 @@ def simanalyze(
                         msg("assuming you know what you want, and using modelimage="+modelimage+" in deconvolution",priority="warn",origin='simanalyze')
                     elif len(featherimage) and tpimage != featherimage and \
                            tpimage != fileroot+"/"+featherimage:
-                        msg("featherimage parameter set to "+modelimage+" but also creating a new total power image "+tpimage,priority="warn",origin='simanalyze')
-                        msg("assuming you know what you want, and using featherimage="+featherimage+" in feathe",priority="warn",origin='simanalyze')
+                        msg("featherimage parameter set to "+featherimage+" but also creating a new total power image "+tpimage,priority="warn",origin='simanalyze')
+                        msg("assuming you know what you want, and using featherimage="+featherimage+" in feather",priority="warn",origin='simanalyze')
 #                    else:
 #                        # This forces to use TP image as a model for clean
 #                        if len(modelimage) <= 0:

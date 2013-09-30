@@ -584,7 +584,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         start -- First channel of the input spw.
             default: 0
 
-        width -- Number of input channels that are used to create an output channel.
+        width -- Width of input channels that are used to create an output channel. 
+                 Note that mstransform will only shift spws with channel widths of the same 
+                 sign in a single operation. If you are regridding spws with mixed positive 
+                 and negative channel widths, you should run this task separated for each group 
+                 of spws. You can verify the channel widths for your MS using listobs for example, 
+                 and looking at the SPW table, column ChanWid.
             default: 1
 
         nspw -- Number of output spws to create in the output MS/MMS (int). 

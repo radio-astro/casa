@@ -124,9 +124,10 @@ def simobserve(
 
 
         saveinputs = myf['saveinputs']
+        # something broken in saveinputs
+        in_params['antennalist']=''+in_params['antennalist']+''
         saveinputs('simobserve',fileroot+"/"+project+".simobserve.last",
                    myparams=in_params)
-
 
 
         if is_array_type(skymodel):
@@ -148,10 +149,9 @@ def simobserve(
                 msg("No sky input found.  At least one of skymodel or complist must exist.",priority="error")
 
 
-        ### WORKAROUND for wrong flux in COMP + SKY TP simulations
-        if (not uvmode) and (obsmode != "") and \
-           os.path.exists(skymodel) and os.path.exists(complist):
-            msg("Single dish simulation has a flux recovery issue using both skymodel an components list as an input.\nPlease generate compskymodel image first by obsmode='' and use the image as the skymodel input.\nSorry for the inconvenience.", priority="error")
+        ### WORKAROUND for wrong flux in COMP TP simulations
+        if (not uvmode) and (obsmode != "") and os.path.exists(complist):
+            msg("Single dish simulation has a flux recovery issue when using a components list as an input.\nPlease generate compskymodel image first by obsmode='' and use the image as the skymodel input.\nSorry for the inconvenience.", priority="error")
             return False
         ### End of WORKAROUND
 
@@ -288,6 +288,7 @@ def simobserve(
         # convert "alma;0.4arcsec" to an actual configuration
         if str.upper(antennalist[0:4]) == "ALMA":
 
+            resparsed=False
             # test for cycle 1
             q = re.compile('.*CYCLE.?1.?;(.*)')
             qq = q.match(antennalist.upper())
@@ -303,10 +304,29 @@ def simobserve(
                         conf = str(int(round(confnum)))
                         antennalist = repodir + "alma.cycle1." + conf + ".cfg"
                         msg("converted resolution to antennalist "+antennalist)
+                        resparsed=True
                     else:
-                        msg("failed to find antenna configuration repository at "+repodir,priority="warn")
+                        msg("failed to find antenna configuration repository at "+repodir,priority="error")
+            if not resparsed:
+                q = re.compile('.*CYCLE.?2.?;(.*)')
+                qq = q.match(antennalist.upper())
+                if qq:
+                    z = qq.groups()
+                    tail=z[0]
+                    tail=tail.lower()
+                    if util.isquantity(tail,halt=False):
+                        resl = qa.convert(tail,"arcsec")['value']
+                        if os.path.exists(repodir):
+                            confnum = 10.**(0.91-0.74*(resl*qa.convert(model_center,"GHz")['value']/345.))
+                            confnum = max(1,min(7,confnum))
+                            conf = str(int(round(confnum)))
+                            antennalist = repodir + "alma.cycle2." + conf + ".cfg"
+                            msg("converted resolution to antennalist "+antennalist)
+                            resparsed=True
+                        else:
+                            msg("failed to find antenna configuration repository at "+repodir,priority="error")
 
-            else: # assume FS
+            if not resparsed: # assume FS
                 tail = antennalist[5:]
                 if util.isquantity(tail,halt=False):
                     resl = qa.convert(tail,"arcsec")['value']
@@ -318,7 +338,7 @@ def simobserve(
                         antennalist = repodir + "alma.out" + conf + ".cfg"
                         msg("converted resolution to antennalist "+antennalist)
                     else:
-                        msg("failed to find antenna configuration repository at "+repodir,priority="warn")
+                        msg("failed to find antenna configuration repository at "+repodir,priority="error")
 
 
         # Search order is fileroot/ -> specified path -> repository
@@ -377,8 +397,8 @@ def simobserve(
                 if not components_only:
                     minsize = min(qa.convert(model_size[0],'arcsec')['value'],\
                                   qa.convert(model_size[1],'arcsec')['value'])
-                    if minsize < 2*pb:
-                        msg("skymodel should be larger than 2*primary beam. Your skymodel: %.3f arcsec < %.3f arcsec: 2*primary beam" % (minsize, 2*pb),priority="error")
+                    if minsize < 2.5*pb:
+                        msg("skymodel should be larger than 2.5*primary beam. Your skymodel: %.3f arcsec < %.3f arcsec: 2.5*primary beam" % (minsize, 2.5*pb),priority="error")
                     del minsize
         else:
             msg("Can't find antennalist",priority="error")
@@ -773,13 +793,19 @@ def simobserve(
 
             if hourangle=="transit":
                 haoffset=0.0
-            else:
+            else:                
+                haoffset="no"
                 # is this a time quantity?
-                if qa.compare(hourangle,"s"):
-                    haoffset=qa.convert(qa.quantity(hourangle),'s')['value']
-                else:
-                    haoffset=qa.convert(qa.quantity(hourangle+"h"),'s')['value']
-                    msg("You desire an hour angle of "+str(haoffset/3600.)+" hours",origin="simobserve")
+                if qa.isquantity(hourangle):
+                    if qa.compare(hourangle,"s"):
+                        haoffset=qa.convert(qa.quantity(hourangle),'s')['value']
+                elif qa.isquantity(hourangle+"h"):
+                    if qa.compare(hourangle+"h","s"):
+                        haoffset=qa.convert(qa.quantity(hourangle+"h"),'s')['value']
+            if haoffset=="no":
+                msg("Cannot interpret your hourangle parameter "+hourangle+" as a time quantity e.g. '5h', 30min'",origin="simobserve",priority="error")
+            else:
+                msg("You desire an hour angle of "+str(haoffset/3600.)+" hours",origin="simobserve")                    
 
             refdate=refdate+"/00:00:00"
             usehourangle=True

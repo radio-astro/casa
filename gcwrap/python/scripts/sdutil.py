@@ -253,6 +253,10 @@ class sdtask_template_imaging(sdtask_interface):
         self.is_table_opened = False
         self.is_imager_opened = False
         self.table, self.imager = gentools(['tb','im'])
+        # workaround for sdtpimaging
+        if not hasattr(self, 'infiles') and hasattr(self, 'infile'):
+            self.infiles = [self.infile]
+
         self.__set_infiles()
         self.__set_subtable_name()
 

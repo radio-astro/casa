@@ -84,9 +84,9 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001, mode="percen
                                 print "Reference file value: " + str(a[i])
                                 print "Input file value: " + str(b[i])
                                 if (mode=="percentage"):
-                                    print "tolerance in % should be " + str(100*abs(a[i]-b[i])/abs(a[i]))
+                                    print "Tolerance is {0}%; observed difference was {1} %".format (tolerance * 100, 100*abs(a[i]-b[i])/abs(a[i]))
                                 else:
-                                    print "absolute tolerance should be " + str(abs(a[i]-b[i]))
+                                    print "Absolute tolerance is {0}; observed difference: {1}".format (tolerance, (abs(a[i]-b[i])))
                                 differs = True
                                 rval = False
                                 break

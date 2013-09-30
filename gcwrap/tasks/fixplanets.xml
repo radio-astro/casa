@@ -29,6 +29,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                   The direction can either be given explicitly or as the path
                   to a JPL Horizons ephemeris (for an example of the format,
                   see directory data/ephemerides/JPL-Horizons/).
+                  Alternatively, the ephemeris table can also be provided as mime format file,
+                  i.e. a saved email as obtained via the commands (for example):
+                  import recipes.ephemerides.request as jplreq
+                  jplreq.request_from_JPL(objnam='Mars',startdate='2012-01-01',enddate='2013-12-31',
+                       date_incr='0.1 d', get_axis_orientation=False, get_axis_ang_orientation=True,
+                       get_sub_long=True, use_apparent=False, get_sep=False,
+                       return_address='YOUR_EMAIL_ADDESS', mailserver='YOUR_MAIL_SERVER_ADDRESS')
+
                   default= '' (use pointing table)
                   
                   example: 'J2000 19h30m00 -40d00m00'

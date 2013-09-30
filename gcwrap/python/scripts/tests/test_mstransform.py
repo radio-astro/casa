@@ -1498,7 +1498,7 @@ class test_timeaverage(test_base):
         self.tolerance['SIGMA'] = 10000          
         
         self.mode['TIME_CENTROID'] = "absolute"
-        self.tolerance['TIME_CENTROID'] = 0.0001        
+        self.tolerance['TIME_CENTROID'] = 0.01        
         
         self.mode['DATA'] = "absolute"
         self.tolerance['DATA'] = 2   

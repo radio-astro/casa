@@ -1,7 +1,7 @@
 from taskinit import *
 import shutil
 from parallel.parallel_task_helper import ParallelTaskHelper
-
+import recipes.ephemerides.JPLephem_reader2 as jplreader
 
 def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'):
     """
@@ -25,6 +25,13 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
                   The direction can either be given explicitly or as the path
                   to a JPL Horizons ephemeris (for an example of the format,
                   see directory data/ephemerides/JPL-Horizons/).
+                  Alternatively, the ephemeris table can also be provided as mime format file,
+                  i.e. a saved email as obtained via the commands (for example):
+                  import recipes.ephemerides.request as jplreq
+                  jplreq.request_from_JPL(objnam='Mars',startdate='2012-01-01',enddate='2014-12-31',
+                       date_incr='0.1 d', get_axis_orientation=False, get_axis_ang_orientation=True,
+                       get_sub_long=True, use_apparent=False, get_sep=False,
+                       return_address='YOUR_EMAIL_ADDESS', mailserver='YOUR_MAIL_SERVER_ADDRESS')
                   example: 'J2000 19h30m00 -40d00m00', default= '' (use pointing table)
 
     refant     -- if using pointing table information, use it from this antenna
@@ -226,13 +233,28 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
                 if(type(direction)==str):
                     dirstr = direction.split(' ')
                     if len(dirstr)==1: # an ephemeris table was given
-                        if(os.path.exists(dirstr[0]) and not os.path.isfile(dirstr[0])):
-                            theephemeris = dirstr[0]
+                        if(os.path.exists(dirstr[0])):
+                            if os.path.isfile(dirstr[0]): # it is a file, i.e. not a CASA table
+                                try: # a mime file maybe?
+                                    outdict=jplreader.readJPLephem(dirstr[0], '1.0')
+                                    if not jplreader.ephem_dict_to_table(outdict, dirstr[0]+".tab"):
+                                        raise ValueError, "Error converting dictionary to ephem table"
+                                except: # no it is not a mime file either
+                                    casalog.post("*** Error when interpreting parameter \'direction\':\n File given is not a valid JPL email mime format file.",
+                                                 'SEVERE')
+                                    return False
+                                else:
+                                    theephemeris = dirstr[0]+".tab"
+                                    casalog.post('Successfully converted mime format ephemeris to table '+theephemeris+'.\n Will use it with offset (0,0)', 'NORMAL')
+                            else: # not a file, assume it is a CASA table
+                                theephemeris = dirstr[0]
+                                casalog.post('Will use ephemeris table '+theephemeris+' with offset (0,0)', 'NORMAL')
+                            
                             thenewra_rad = 0.
                             thenewdec_rad = 0.
-                            casalog.post('Will use ephemeris table '+theephemeris+' with offset (0,0)', 'NORMAL')
+
                         else:
-                            casalog.post("*** Error when interpreting parameter \'direction\':\n string is neither a direction nor an ephemeris table.",
+                            casalog.post("*** Error when interpreting parameter \'direction\':\n string is neither a direction nor an existing file or table.",
                                          'SEVERE')
                             return False
                     else:

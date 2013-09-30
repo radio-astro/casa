@@ -1269,7 +1269,28 @@ class immoment_test2(unittest.TestCase):
         self.assertTrue((myia.shape() == [1,1,1,1]).all())
         myia.done()
         
-            
+    def test_region_selected_in_fits(self):
+        """Test that region selection happens in non-paged images, CAS-5278"""
+        myia = iatool()
+        test1 = "bb.im"
+        myia.fromshape(test1 ,[2, 2, 5])
+        bb = myia.getchunk()
+        for i in range(5):
+            bb[:,:,i] = 5
+        myia.putchunk(bb)
+        fits = "jj.fits"
+        myia.tofits(fits)
+        out1 = "myout1.im"
+        immoments(imagename=test1, outfile=out1, chans="0~2")
+        myia.open(out1)
+        aa = myia.getchunk()
+        out2 = "myout2.im"
+        immoments(imagename=fits, outfile=out2, chans="0~2")
+        myia.open(out2)
+        bb = myia.getchunk()
+        myia.done()
+        self.assertTrue((aa == bb).all())
+        
 def suite():
     return [immoment_test1,immoment_test2]        
     

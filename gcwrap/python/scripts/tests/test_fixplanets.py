@@ -87,10 +87,21 @@ class fixplanets_test1(unittest.TestCase):
             self.assertFalse(rval)
 
     def test8(self):
-        '''Does a fixplanets with ephemeris work'''
+        '''Does a fixplanets with an ephemeris work'''
         for myms in [outms,outms2]:
             rval = fixplanets(vis=myms, field='Titan', fixuvw=True,
-                              direction=os.environ.get('CASAPATH').split()[0] + '/data/ephemerides/JPL-Horizons/Titan_55437-56293dUTC.tab')
+                              direction=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/fixplanets/Titan_55437-56293dUTC.tab')
+                
+            self.assertTrue(rval)
+            self.assertTrue(os.path.exists(myms+'/FIELD/EPHEM0_Titan.tab'))
+
+    def test9(self):
+        '''Does a fixplanets with an ephemeris in mime format work'''
+        for myms in [outms,outms2]:
+            os.system('rm -rf titan.eml')
+            os.system('cp '+os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/fixplanets/titan.eml .')
+            rval = fixplanets(vis=myms, field='Titan', fixuvw=True,
+                              direction='titan.eml')
                 
             self.assertTrue(rval)
             self.assertTrue(os.path.exists(myms+'/FIELD/EPHEM0_Titan.tab'))
