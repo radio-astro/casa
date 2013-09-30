@@ -467,6 +467,7 @@ casa_add_library( display
   QtPlotter/SearchMoleculesResultDisplayer.cc
   QtPlotter/LineOverlaysTab.cc
   QtPlotter/SmoothPreferences.cc
+  QtPlotter/SmoothSpinBox.cc
   QtPlotter/LineOverlaysSearchResultsDialog.cc
   QtPlotter/SearchMoleculesDialog.cc
   QtPlotter/SearchRedshiftDialog.cc
