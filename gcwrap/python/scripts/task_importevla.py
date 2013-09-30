@@ -227,7 +227,6 @@ def importevla(
                 allflags[nflags] = flagz.copy()
                 nflags += 1
                 nflagz = 1
-                print allflags
                 
             else:
                 flagz['reason'] = 'CLIP_ZERO_RR'
