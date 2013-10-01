@@ -48,6 +48,27 @@ AveragingParameters::AveragingParameters (Double averagingInterval,
     validateOptions (); // Throws if error
 }
 
+AveragingParameters::AveragingParameters (const AveragingParameters & other)
+{
+    * this = other;
+}
+
+AveragingParameters &
+AveragingParameters::operator= (const AveragingParameters & other)
+{
+    if (this != & other){
+
+        averagingInterval_p = other.averagingInterval_p;
+        averagingOptions_p = other.averagingOptions_p;
+        chunkInterval_p = other.chunkInterval_p;
+        maxUvwDistance_p = other.maxUvwDistance_p;
+        sortColumns_p = other.sortColumns_p;
+        weightScaling_p = other.weightScaling_p;
+
+        validate ();
+    }
+}
+
 VisBufferComponents2
 AveragingParameters::allDataColumns () const
 {
@@ -96,6 +117,63 @@ AveragingParameters::getWeightScaling () const
 {
     return weightScaling_p;
 }
+
+void
+AveragingParameters::setChunkInterval (Double value)
+{
+    ThrowIf (value >= 0, "ChunkInterval must be >= 0.");
+
+    chunkInterval_p = value;
+}
+
+void
+AveragingParameters::setAveragingInterval (Double value)
+{
+    ThrowIf (value > 0, "AveragingInterval must be > 0.");
+
+    averagingInterval_p = value;
+}
+
+void
+AveragingParameters::setMaxUvwDistance (Double value)
+{
+    ThrowIf (value < 0, "MaxUvwDistance must be >= 0.");
+
+    maxUvwDistance_p = value;
+}
+
+void
+AveragingParameters::setOptions (const AveragingOptions & value)
+{
+    averagingOptions_p = value;
+
+    validateOptions ();
+}
+
+void
+AveragingParameters::setSortColumns (const SortColumns & value)
+{
+    sortColumns_p = value;
+}
+
+void
+AveragingParameters::setWeightScaling (WeightScaling * value)
+{
+    weightScaling_p = value;
+}
+
+void
+AveragingParameters::validate()
+{
+    Assert (averagingInterval_p > 0);
+    Assert (chunkInterval_p >= 0);
+    Assert (chunkInterval_p == 0 || chunkInterval_p >= averagingInterval_p);
+    Assert (! averagingOptions_p.contains (AveragingOptions::BaselineDependentAveraging) ||
+            maxUvwDistance_p > 0.001);
+
+    validateOptions (); // Throws if error
+}
+
 
 void
 AveragingParameters::validateOptions ()

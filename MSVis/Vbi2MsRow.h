@@ -49,11 +49,13 @@ public:
     Int antenna1 () const;
     Int antenna2 () const;
     Int arrayId () const;
+    Int correlationType () const;
     Int dataDescriptionId () const;
     Int feed1 () const;
     Int feed2 () const;
     Int fieldId () const;
     Int observationId () const;
+    Int rowId () const;
     Int processorId () const;
     Int scanNumber () const;
     Int stateId () const;
@@ -66,12 +68,14 @@ public:
     void setAntenna1 (Int);
     void setAntenna2 (Int);
     void setArrayId (Int);
+    void setCorrelationType (Int);
     void setDataDescriptionId (Int);
     void setFeed1 (Int);
     void setFeed2 (Int);
     void setFieldId (Int);
     void setObservationId (Int);
     void setProcessorId (Int);
+    void setRowId (Int);
     void setScanNumber (Int);
     void setStateId (Int);
     void setExposure (Double);
