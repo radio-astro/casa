@@ -905,8 +905,6 @@ class immoment_test2(unittest.TestCase):
             chan = 0
             current = imval( 'moment_test.mom0', box=sky, stokes=stokes, chans=str(chan) )
             orig    = imval( 'n1333_both.src.tmom0.all', box=sky, stokes=stokes, chans=str(chan) )
-            #print "CURRENT VLUE: ", current
-            #print "ORIG VaLUE:    ", orig
             if ( abs(current['data'][0]-orig['data'][0]) > err_margin ):
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']\
@@ -941,7 +939,10 @@ class immoment_test2(unittest.TestCase):
         got = "moment_test.mom1"
         difference = "first_moment_diff"
         try:
-            results=immoments( infile, moments=[1], axis='spec', chans='2~15', includepix=[0.02,100.0],excludepix=[-1],outfile = got )
+            results=immoments(
+                infile, moments=[1], axis='spec', chans='2~15',
+                includepix=[0.02,100.0],excludepix=[-1], outfile=got
+            )
         except Exception, e:
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
@@ -959,9 +960,7 @@ class immoment_test2(unittest.TestCase):
         stats = myia.statistics(list=True, verbose=True)
         myia.close()
         casalog.post("moment 1 difference image stats " + str(stats))
-        if (stats['sumsq'][0] != 0):
-            retValue['error_msgs'] += "\nError: first moment test did not produce expected image"
-            retValue['success']=False
+        self.assertTrue(stats['sumsq'][0] == 0)
 
         # Cleanup
         os.system('rm -rf first_moment_diff')
@@ -1191,9 +1190,7 @@ class immoment_test2(unittest.TestCase):
             myia.putchunk(pixels=aa, blc=[0, 0, i])
             f = str(fwhm) + "arcmin"
             myia.setrestoringbeam(major=f, minor=f, pa="0deg", channel=i)
-        print "*** ac"
         ret = myia.moments(moments=moments, axis=2)
-        print "*** ca"
         ret.done()
         myia.done()
         got = iatool()
@@ -1221,9 +1218,7 @@ class immoment_test2(unittest.TestCase):
             exp.open("exp." + im)
             shape = got.shape()
             gotpix = got.getchunk() * cc
-            print "min got " + str(gotpix.min())
             exppix = exp.getchunk() * cc
-            print "min exp " + str(exppix.min())
             got.done()
             exp.done()
             if (im == "weighted_dispersion_coord"):
@@ -1233,11 +1228,9 @@ class immoment_test2(unittest.TestCase):
             
             if (im == "weighted_coord"):                
                 mymax = abs((gotpix+1e-6)/(exppix+1e-6) - 1).max()
-                print "max " + str(mymax)
                 self.assertTrue(mymax < epsilon)
             else:
                 mymax = abs(gotpix - exppix).max()
-                print "max " + str(mymax)
                 self.assertTrue(mymax < epsilon)
         self.assertTrue(len(tb.showcache()) == 0)
 
@@ -1290,6 +1283,34 @@ class immoment_test2(unittest.TestCase):
         bb = myia.getchunk()
         myia.done()
         self.assertTrue((aa == bb).all())
+        
+    def test_minmax_coord(self):
+        """Verify CAS-5376, test min/max coords"""
+        myia = iatool()
+        for type in ["max", "min"]:
+            myia.fromshape("", [10, 10, 10])
+            vels = []
+            bb = myia.getchunk()
+            val = 1
+            if (type == "min"):
+                val = -1
+            for i in range(10):
+                world = myia.toworld([0, 0, i])['numeric']
+                vels.append(myia.coordsys().frequencytovelocity(world[2])[0])
+                for j in range(10):
+                    bb[i, j, i] = val
+            myia.putchunk(bb)
+            moments = 9
+            if type == "min":
+                moments = 11
+            kk = myia.moments(moments=moments)
+            myia.done()
+            self.assertTrue(kk.brightnessunit() == "km/s")
+            bb = kk.getchunk()
+            for i in range(10):
+                for j in range(10):
+                    self.assertTrue(abs(bb[i,j] - vels[i]) < 1e-4)
+            kk.done()
         
 def suite():
     return [immoment_test1,immoment_test2]        
