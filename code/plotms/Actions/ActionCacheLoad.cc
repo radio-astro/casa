@@ -28,7 +28,7 @@
 #include <plotms/Threads/CacheThread.h>
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
-#include <QDebug>
+
 namespace casa {
 
 ActionCacheLoad::ActionCacheLoad( Client* client )
@@ -76,17 +76,16 @@ void ActionCacheLoad::setUpWorkParameters(CacheThread* cacheThread, vector<PMS::
 			false,
 			&PMS_PP_Cache::notifyWatchers, paramsCache);*/
 	PlotMSPlotParameters& params = plot->parameters();
-	PMS_PP_MSData* paramsData = params.typedGroup<PMS_PP_MSData>();
+	 PMS_PP_MSData* paramsData = params.typedGroup<PMS_PP_MSData>();
 	if ( cacheThread != NULL ){
 		cacheThread->setLoad(true);
 		cacheThread->setCacheBase(&plot->cache());
-		//if ( cachedData.size() == 0 ){
+		if ( cachedData.size() == 0 ){
 			cacheThread->setAxesData( axes.size() );
-			/*
 		}
 		else {
 			cacheThread->setAxesData( cachedData );
-		}*/
+		}
 
 		cacheThread->setName( paramsData->filename() );
 		cacheThread->setSelection(  paramsData->selection() );
@@ -107,6 +106,10 @@ bool ActionCacheLoad::loadAxes() {
 		}
 		if ( axes.size() > 0 ){
 			axesLoaded = true;
+		}
+		//We also need to get the data-column,model,corrected,
+		if ( this->cachedData.size() == 0 ){
+			cachedData = plot->getCachedData();
 		}
 	}
 	return axesLoaded;
