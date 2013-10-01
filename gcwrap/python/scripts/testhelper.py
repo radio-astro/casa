@@ -19,7 +19,7 @@ A set of common helper functions for unit tests:
    create_input - Save the string in a text file with the given name           
 '''
 
-def compTables(referencetab, testtab, excludecols, tolerance=0.001, mode="percentage"):
+def compTables(referencetab, testtab, excludecols, tolerance=0.001, mode="percentage", startrow = 0, nrow = -1, rowincr = 1):
 
     """
     compTables - compare two CASA tables
@@ -51,7 +51,7 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001, mode="percen
             
             a = 0
             try:
-                a = tb.getcol(c)
+                a = tb.getcol(c,startrow=startrow,nrow=nrow,rowincr=rowincr)
             except:
                 rval = False
                 print 'Error accessing column ', c, ' in table ', referencetab
@@ -60,7 +60,7 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001, mode="percen
 
             b = 0
             try:
-                b = tb2.getcol(c)
+                b = tb2.getcol(c,startrow=startrow,nrow=nrow,rowincr=rowincr)
             except:
                 rval = False
                 print 'Error accessing column ', c, ' in table ', testtab
