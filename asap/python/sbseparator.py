@@ -20,7 +20,6 @@ class sbseparator:
     - Frequencies of IMAGE sideband cannot be reconstructed from
       information in scantable in sideband sparation. Frequency
       setting of SIGNAL sideband is stored in output table for now.
-    - Flag information (stored in FLAGTRA) is ignored.
 
     Example:
         # Create sideband separator instance whith 3 input data
