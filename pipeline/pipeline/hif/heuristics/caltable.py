@@ -111,7 +111,7 @@ class GainCurvestable(CaltableNamer):
 
 class OpCaltable(CaltableNamer):
     def get_namer(self):
-        return OpCalibrationTable()
+        return filenamer.OpCalibrationTable()
 
 
 class RqCaltable(CaltableNamer):
