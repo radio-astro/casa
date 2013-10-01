@@ -20,6 +20,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         * imsize (default value changed)
         * cell (default value changed)
         * spw (takes a list of integer)
+        * minweight (added)
         #####################################
 </description>
 
@@ -119,8 +120,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="double" name="minweight">
-            <shortdescription>Minimum weight level to use</shortdescription>
-            <description>Minimum weight level to use for weight correction and weight beased masking</description>
+            <shortdescription>Minimum weight ratio to use</shortdescription>
+            <description>Minimum weight ratio to the median of weight used in weight correction and weight beased masking</description>
             <allowed kind="range"> <value range="min">0</value> </allowed>
             <value>0.1</value>
     </param>
@@ -258,7 +259,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <example>
   Keyword arguments:
-        infiles -- a list of names of input SD (MS) dataset
+        infiles -- a list of names of input SD (MS) datasets
                 example: 'm100.PM01.ms'
                          ['m100.PM01.ms','m100.PM03.ms']; multiple MSes
         specunit -- units for spectral axis
@@ -309,8 +310,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          'GJINC'.
                    default: '-1' (use default for each gridfunction)
                    example: 3, '20arcsec', '3pixel'
-        minweight -- Minimum weight level to use for weight correction
-                     and weight based masking
+        minweight -- Minimum weight ratio to the median of weight used in 
+                     weight correction and weight based masking
                 default: 0.1
                 example: minweight = 0.
         outfile -- output image name
@@ -419,6 +420,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
         Reference: Mangum, et al. 2007, A&amp;A, 474, 679-687 
+
+        The parameter minweight defines a threshold of weight values 
+        to mask. The pixels in outfile whose weight is smaller than
+        minweight*median(weight) are masked out. The task also creates
+        a weight image with the name outfile.weight.
+
   </example>
 
 </task>
