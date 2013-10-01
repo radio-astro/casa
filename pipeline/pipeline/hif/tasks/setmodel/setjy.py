@@ -7,6 +7,7 @@ import re
 import string
 import types
 
+
 from ..common import commonfluxresults
 import pipeline.infrastructure.casatools as casatools
 import pipeline.domain as domain
@@ -24,7 +25,7 @@ LOG = infrastructure.get_logger(__name__)
 class SetjyInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None,
                  # standard setjy parameters 
-                 vis=None, field=None, spw=None, modimage=None, 
+                 vis=None, field=None, spw=None, model=None, 
                  scalebychan=None, fluxdensity=None, spix=None,
                  reffreq=None, standard=None,
                  # intent for calculating field name
