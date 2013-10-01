@@ -254,7 +254,7 @@ while len(a) > 0:
             if c == '--rcdir':
                 casa['dirs']['rc'] = casa['flags'][c]
 
-    elif c == '--no-dbus-conf' :
+    elif c == '--dbus-session-conf' :
         dbus_conf = None
 
     elif c.find('=') > 0 :
