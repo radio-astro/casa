@@ -869,6 +869,8 @@ protected:
 	Double timeBin_p;
 	String timespan_p;
 	vi::AveragingOptions timeAvgOptions_p;
+	Double maxuvwdistance_p;
+	uInt minbaselines_p;
 
 	// Weight Spectrum parameters
 	Bool usewtspectrum_p;

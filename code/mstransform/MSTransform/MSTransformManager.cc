@@ -163,6 +163,8 @@ void MSTransformManager::initialize()
 	timeBin_p = 0.0;
 	timespan_p = String("");
 	timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::Nothing);
+	maxuvwdistance_p = 0;
+	minbaselines_p = 0;
 
 	// Weight Spectrum parameters
 	usewtspectrum_p = False;
@@ -517,8 +519,12 @@ void MSTransformManager::parseFreqTransParams(Record &configuration)
 	if (exists >= 0)
 	{
 		configuration.get (exists, combinespws_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-				<< "Combine Spectral Windows is " << combinespws_p << LogIO::POST;
+
+		if (combinespws_p)
+		{
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+					<< "Combine Spectral Windows is activated" << LogIO::POST;
+		}
 	}
 
 	exists = configuration.fieldNumber ("ddistart");
@@ -750,8 +756,12 @@ void MSTransformManager::parseTimeAvgParams(Record &configuration)
 	if (exists >= 0)
 	{
 		configuration.get (exists, timeAverage_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-				<< "Time average is " << timeAverage_p << LogIO::POST;
+
+		if (timeAverage_p)
+		{
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+					<< "Time average is activated" << LogIO::POST;
+		}
 	}
 	else
 	{
@@ -777,6 +787,31 @@ void MSTransformManager::parseTimeAvgParams(Record &configuration)
 			return;
 		}
 
+		exists = configuration.fieldNumber ("maxuvwdistance");
+		if (exists >= 0)
+		{
+			String timebin;
+			configuration.get (exists, maxuvwdistance_p);
+
+			if (maxuvwdistance_p > 0)
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+						<< "Maximum UV distance for baseline-dependent time average is: " << maxuvwdistance_p << LogIO::POST;
+			}
+		}
+
+		exists = configuration.fieldNumber ("minbaselines");
+		if (exists >= 0)
+		{
+			String timebin;
+			configuration.get (exists, minbaselines_p);
+
+			if (minbaselines_p > 0)
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+						<< "Minimum number of baselines for time average: " << minbaselines_p << LogIO::POST;
+			}
+		}
 	}
 
 	return;
@@ -2348,7 +2383,7 @@ void MSTransformManager::checkDataColumnsToFill()
 								"Adding DATA column to output MS "<< LogIO::POST;
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
-			timeAvgOptions_p |= vi::AveragingOptions::ObservedUseNoWeights;
+			// timeAvgOptions_p |= vi::AveragingOptions::ObservedUseNoWeights;
 		}
 
 		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA)))
@@ -2363,7 +2398,7 @@ void MSTransformManager::checkDataColumnsToFill()
 								"Adding CORRECTED_DATA column to output MS "<< LogIO::POST;
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageCorrected;
-			timeAvgOptions_p |= vi::AveragingOptions::CorrectedUseNoWeights;
+			timeAvgOptions_p |= vi::AveragingOptions::CorrectedUseWeights;
 		}
 
 		if ((inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA))) or realmodelcol_p)
@@ -2437,7 +2472,7 @@ void MSTransformManager::checkDataColumnsToFill()
 								"Adding DATA column to output MS "<< LogIO::POST;
 
 			timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::AverageObserved);
-			timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::ObservedUseNoWeights);
+			// timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::ObservedUseNoWeights);
 		}
 		else
 		{
@@ -2501,7 +2536,7 @@ void MSTransformManager::checkDataColumnsToFill()
 								"Adding DATA column to output MS "<< LogIO::POST;
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
-			timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::ObservedUseNoWeights);
+			// timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::ObservedUseNoWeights);
 		}
 		else
 		{
@@ -2565,7 +2600,7 @@ void MSTransformManager::checkDataColumnsToFill()
 								"Adding DATA column to output MS "<< LogIO::POST;
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
-			timeAvgOptions_p |= vi::AveragingOptions::ObservedUseNoWeights;
+			// timeAvgOptions_p |= vi::AveragingOptions::ObservedUseNoWeights;
 		}
 		else
 		{
@@ -2588,7 +2623,7 @@ void MSTransformManager::checkDataColumnsToFill()
 								"Adding DATA column to output MS as DATA from input CORRECTED_DATA column"<< LogIO::POST;
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageCorrected;
-			timeAvgOptions_p |= vi::AveragingOptions::CorrectedUseNoWeights;
+			timeAvgOptions_p |= vi::AveragingOptions::CorrectedUseWeights;
 		}
 		else
 		{
@@ -2621,7 +2656,6 @@ void MSTransformManager::checkDataColumnsToFill()
 			}
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageModel;
-			timeAvgOptions_p |= vi::AveragingOptions::ModelUseNoWeights;
 		}
 		else
 		{
@@ -2716,7 +2750,8 @@ void MSTransformManager::generateIterator()
 
 	if (timeAverage_p)
 	{
-		vi::AveragingParameters parameters (timeBin_p, 0, vi::SortColumns (sortColumns_p,false), timeAvgOptions_p, 0);
+		if (maxuvwdistance_p > 0) timeAvgOptions_p |= vi::AveragingOptions::BaselineDependentAveraging;
+		vi::AveragingParameters parameters (timeBin_p, 0, vi::SortColumns (sortColumns_p,false), timeAvgOptions_p, maxuvwdistance_p);
 		visibilityIterator_p = new vi::VisibilityIterator2 (vi::AveragingVi2Factory (parameters, selectedInputMs_p));
 		visibilityIterator_p->setWeightScaling (vi::WeightScaling::generateUnityWeightScaling());
 	}
@@ -2737,6 +2772,7 @@ void MSTransformManager::fillOutputMs(vi::VisBuffer2 *vb)
 {
 	// Calculate number of rows to add to the output MS depending on the combination parameters
 	uInt rowsToAdd = 0;
+
 	if (combinespws_p)
 	{
 		// Fill baseline map using as key Ant1,Ant2,Scan and State,
@@ -2746,12 +2782,17 @@ void MSTransformManager::fillOutputMs(vi::VisBuffer2 *vb)
 		Vector<Int> antenna2 = vb->antenna2();
 		Vector<Int> scan = vb->scan();
 		Vector<Int> state = vb->stateId();
+		Int relativeTimeInMiliseconds = 0;
 		for (uInt row=0;row<antenna1.size();row++)
 		{
 			pair<Int,Int> baseline = std::make_pair(antenna1(row),antenna2(row));
-			pair<Int,Int> scanState = std::make_pair(scan(row),state(row));
-			baselineMap_p[std::make_pair(baseline,scanState)].push_back(row);
+
+			relativeTimeInMiliseconds = (Int)floor(1E3*(vb->time()(row) - vb->time()(0)));
+			pair<Int,Int> timeState = std::make_pair(relativeTimeInMiliseconds,state(row));
+
+			baselineMap_p[std::make_pair(baseline,timeState)].push_back(row);
 		}
+
 		rowsToAdd = baselineMap_p.size();
 
 		// Fill row index vector with to the first row for every element in the baseline map
@@ -3509,8 +3550,7 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 				}
 				else
 				{
-					transformCubeOfData(vb,rowRef,vb->visCubeCorrected(),
-							outputMsCols_p->correctedData(), outputFlagCol);
+					transformCubeOfData(vb,rowRef,vb->visCubeCorrected(),outputMsCols_p->correctedData(), outputFlagCol);
 				}
 
 				break;
