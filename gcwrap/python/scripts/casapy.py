@@ -209,6 +209,10 @@ print "CASA Version " + casa['build']['version'] + " (r" + casa['source']['revis
 
 a = [] + sys.argv             ## get a copy from goofy python
 a.reverse( )
+##
+## A session configuration 'casa.conf' now included in casa tree...
+##
+dbus_conf = __casapath__ + "/etc/dbus/casa.conf"
 __ipython_colors = 'LightBG'
 while len(a) > 0:
     c = a.pop()
@@ -249,6 +253,9 @@ while len(a) > 0:
             casa['flags'][c] = a.pop( )
             if c == '--rcdir':
                 casa['dirs']['rc'] = casa['flags'][c]
+
+    elif c == '--no-dbus-conf' :
+        dbus_conf = None
 
     elif c.find('=') > 0 :
         casa['flags'][c[0:c.find('=')]] = c[c.find('=')+1:]
@@ -313,9 +320,7 @@ if os.path.exists( casa['dirs']['rc'] + '/prelude.py' ) :
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 ## on linux set up a dbus-daemon for casa because each
 ## x-server (e.g. Xvfb) gets its own dbus session...
-## 'session.conf' now included in casa tree...
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-dbus_conf = __casapath__ + "/etc/dbus/casa.conf"
 if os.uname()[0] == 'Linux' :
     if casa['helpers']['dbus'] is not None :
 
