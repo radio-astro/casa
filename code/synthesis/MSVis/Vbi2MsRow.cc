@@ -56,6 +56,13 @@ Vbi2MsRow::arrayId () const
     return vbi2_p->arrayId () (row ());
 }
 
+Int
+Vbi2MsRow::correlationType () const
+{
+    return vbi2_p->correlationTypes () (row ());
+}
+
+
 template <typename T, typename U>
 void
 Vbi2MsRow::copyIf (Bool copyThis, Vbi2MsRow * other,
@@ -86,8 +93,10 @@ Vbi2MsRow::copy (Vbi2MsRow * other,
     setObservationId (other->observationId ());
     setProcessorId (other->processorId ());
     setRowFlag (other->isRowFlagged());
+    setRowId (other->rowId());
     setScanNumber (other->scanNumber ());
     setSigma (other->sigma ());
+    setSpectralWindow (other->spectralWindow());
     setStateId (other->stateId ());
     setTime (other->time ());
     setTimeCentroid (other->timeCentroid ());
@@ -194,6 +203,12 @@ Vbi2MsRow::interval () const
     return vbi2_p->timeInterval () (row ());
 }
 
+Int
+Vbi2MsRow::rowId () const
+{
+    return vbi2_p->rowIds() (row());
+}
+
 Float
 Vbi2MsRow::sigma (Int correlation) const
 {
@@ -255,6 +270,16 @@ Vbi2MsRow::setArrayId (Int value)
 }
 
 void
+Vbi2MsRow::setCorrelationType (Int value)
+{
+    AssertWritable();
+
+    vbi2_p->cache_p->corrType_p.getRef (False)(row ()) = value;
+}
+
+
+
+void
 Vbi2MsRow::setDataDescriptionId (Int value)
 {
     AssertWritable();
@@ -284,6 +309,14 @@ Vbi2MsRow::setFieldId (Int value)
     AssertWritable();
 
     vbi2_p->cache_p->fieldId_p.getRef (False)(row ()) = value;
+}
+
+void
+Vbi2MsRow::setRowId (Int value)
+{
+    AssertWritable();
+
+    vbi2_p->cache_p->rowIds_p.getRef (False) (row ()) = value;
 }
 
 void

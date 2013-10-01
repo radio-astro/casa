@@ -2201,7 +2201,7 @@ VisibilityIteratorImpl2::getRowIds (Vector<uInt> & rowIds) const
 
     if (cache_p.chunkRowIds_p.nelements() == 0){
 
-        // Create chunkRowIds_p as a map from chunk rows to MS rows.  This
+        // Create chunkRowIds_p as a "map" from chunk rows to MS rows.  This
         // needs to be created once per chunk since a new reference table is
         // created each time the MSIter moves to the next chunk.
 

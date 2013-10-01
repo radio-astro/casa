@@ -352,9 +352,9 @@ protected:
         Matrix<Complex>       modelOut;
         const Matrix<Complex> observedIn;
         Matrix<Complex>       observedOut;
-        Bool usingWeightSpectrum_p;
+        Bool                  usingWeightSpectrum_p;
         const Vector<Float>   weightIn;
-        Vector<Float>   weightOut;
+        Vector<Float>         weightOut;
         const Matrix<Float>   weightSpectrumCorrectedIn;
         Matrix<Float>         weightSpectrumCorrectedOut;
         const Matrix<Float>   weightSpectrumIn;
@@ -446,6 +446,7 @@ private:
     Double maxUvwDistance_p;
     Bool needIterationInfo_p;
     VisBufferComponents2 optionalComponentsToCopy_p;
+    Int rowIdGenerator_p;
     Double sampleInterval_p;
     Double startTime_p; // time of the first sample in average
     Vector<Double> timeFirst_p;
@@ -613,6 +614,7 @@ VbAvg::VbAvg (const AveragingParameters & averagingParameters)
   maxTimeDistance_p (averagingParameters.getAveragingInterval() * (0.999)),
         // Shrink it just a bit for roundoff
   maxUvwDistance_p (averagingParameters.getMaxUvwDistance()),
+  rowIdGenerator_p (0),
   usingUvwDistance_p (averagingParameters.getOptions().contains (AveragingOptions::BaselineDependentAveraging))
 {}
 
@@ -1459,6 +1461,10 @@ void
 VbAvg::setBufferToFill(VisBufferImpl2 * vb)
 {
     bufferToFill_p = vb;
+
+    // Set flag so that iteration information will be captured into
+    // this VB from the first input VB.
+
     needIterationInfo_p = True;
 }
 
@@ -1506,6 +1512,7 @@ VbAvg::setupArrays (Int nCorrelations, Int nChannels, Int nBaselines)
                                          FlagRow,
                                          ObservationId,
                                          ProcessorId,
+                                         RowIds,
                                          Scan,
                                          Sigma,
                                          SpectralWindows,
@@ -1577,30 +1584,7 @@ VbAvg::startChunk (ViImplementation2 * vi)
 
     // Set up the flags for row copying
 
-    optionalComponentsToCopy_p = VisBufferComponents2::these (Antenna1,
-                                                              Antenna2,
-                                                              ArrayId,
-                                                              CorrType,
-                                                              DataDescriptionIds,
-                                                              Exposure,
-                                                              Feed1,
-                                                              Feed2,
-                                                              FieldId,
-                                                              FlagCategory,
-                                                              FlagCube,
-                                                              FlagRow,
-                                                              ObservationId,
-                                                              ProcessorId,
-                                                              Scan,
-                                                              Sigma,
-                                                              SpectralWindows,
-                                                              StateId,
-                                                              Time,
-                                                              TimeCentroid,
-                                                              TimeInterval,
-                                                              Weight,
-                                                              Uvw,
-                                                              Unknown);
+    optionalComponentsToCopy_p = VisBufferComponents2::none();
 
     if (doing_p.observedData_p){
         optionalComponentsToCopy_p += VisibilityCubeObserved;
@@ -1621,12 +1605,12 @@ VbAvg::startChunk (ViImplementation2 * vi)
     if (doing_p.weightSpectrumCorrected_p){
         optionalComponentsToCopy_p += WeightSpectrumCorrected;
     }
-
 }
 
 void
 VbAvg::transferBaseline (MsRowAvg * rowAveraged)
 {
+    rowAveraged->setRowId (rowIdGenerator_p ++);
     bufferToFill_p->appendRow (rowAveraged, nBaselines (), optionalComponentsToCopy_p);
 
     rowAveraged->setBaselinePresent(False);

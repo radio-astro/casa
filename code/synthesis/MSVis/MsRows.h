@@ -151,6 +151,7 @@ public:
     virtual Int antenna1 () const = 0;
     virtual Int antenna2 () const = 0;
     virtual Int arrayId () const = 0;
+    virtual Int correlationType () const = 0;
     virtual Int dataDescriptionId () const = 0;
     virtual Int feed1 () const = 0;
     virtual Int feed2 () const = 0;
@@ -161,6 +162,7 @@ public:
     virtual Int stateId () const = 0;
     virtual Double exposure () const = 0;
     virtual Double interval () const = 0;
+    virtual Int rowId () const = 0;
     virtual Int spectralWindow () const = 0;
     virtual Double time () const = 0;
     virtual Double timeCentroid () const = 0;
@@ -168,6 +170,7 @@ public:
     virtual void setAntenna1 (Int) = 0;
     virtual void setAntenna2 (Int) = 0;
     virtual void setArrayId (Int) = 0;
+    virtual void setCorrelationType (Int) = 0;
     virtual void setDataDescriptionId (Int) = 0;
     virtual void setFeed1 (Int) = 0;
     virtual void setFeed2 (Int) = 0;
@@ -178,6 +181,7 @@ public:
     virtual void setStateId (Int) = 0;
     virtual void setExposure (Double) = 0;
     virtual void setInterval (Double) = 0;
+    virtual void setRowId (Int) = 0;
     virtual void setSigma (Int correlation, Float value) = 0;
     virtual void setSigma (const Vector<Float> &  value) = 0;
     virtual void setTime (Double) = 0;
