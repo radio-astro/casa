@@ -116,6 +116,15 @@ class test_base(unittest.TestCase):
             
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform)   
+        
+    def setUp_CAS_5013(self):
+
+        self.vis = 'ALMA-data-mst-science-testing-CAS-5013-one-baseline-one-timestamp.ms'
+        if os.path.exists(self.vis):
+           self.cleanup()
+            
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
+        default(mstransform)           
                
     def cleanup(self):
         os.system('rm -rf '+ self.vis)
@@ -1269,27 +1278,25 @@ class test_float_column(test_base):
         refnum = mytb.getcell('MEAS_FREQ_REF',0)
         mytb.close()
         self.assertEqual(refnum, 1)
-
-class test_timeaverage(test_base):
-
+        
+        
+class test_base_compare(test_base):        
+    
     def setUp(self):
         
-        self.setUp_4ants()
         self.outvis = ''
         self.refvis = ''
-        self.tmpvis = ''
         self.outvis_sorted = ''
-        self.refvis_sorted = ''
-        
+        self.refvis_sorted = ''     
+              
         self.subtables=['/ANTENNA','/DATA_DESCRIPTION','/FEED','/FIELD','/FLAG_CMD',
                         '/OBSERVATION','/POINTING','/POLARIZATION','/PROCESSOR','/STATE']
-        self.sortorder=['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME']      
+        self.sortorder=['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME']    
         
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
         os.system('rm -rf '+ self.outvis)
         os.system('rm -rf '+ self.refvis)
-        os.system('rm -rf '+ self.tmpvis)
         os.system('rm -rf '+ self.outvis_sorted)
         os.system('rm -rf '+ self.refvis_sorted)
         
@@ -1317,7 +1324,7 @@ class test_timeaverage(test_base):
         self.tolerance={}
         for col in self.columns:
             self.mode[col] = "absolute"
-            self.tolerance[col] = 0
+            self.tolerance[col] = 1E-6
 
         
     def compare_subtables(self):
@@ -1326,17 +1333,17 @@ class test_timeaverage(test_base):
             
         # Special case for SOURCE which contains many un-defined columns
         self.assertTrue(th.compTables(self.outvis_sorted+'/SOURCE',self.refvis_sorted+'/SOURCE', 
-                                      ['POSITION','TRANSITION','REST_FREQUENCY','SYSVEL'],0.000001,"absolute"))     
+                                      ['POSITION','TRANSITION','REST_FREQUENCY','SYSVEL','SOURCE_MODEL'],0.000001,"absolute"))     
         
-    def compare_main_table_columns(self):
+    def compare_main_table_columns(self,startrow = 0, nrow = -1, rowincr = 1):
         for col in self.columns:
             if col != "WEIGHT_SPECTRUM" and col != "FLAG_CATEGORY":
                     tmpcolumn = self.columns[:]
                     tmpcolumn.remove(col)
-                    self.assertTrue(th.compTables(self.refvis_sorted,self.outvis_sorted,tmpcolumn,self.tolerance[col],self.mode[col]))
+                    self.assertTrue(th.compTables(self.refvis_sorted,self.outvis_sorted,tmpcolumn,self.tolerance[col],self.mode[col],startrow,nrow,rowincr))
     
         
-    def post_process(self):
+    def post_process(self,startrow = 0, nrow = -1, rowincr = 1):
         
         # Sort the output MSs so that they can be compared
         self.sort()
@@ -1345,13 +1352,24 @@ class test_timeaverage(test_base):
         self.compare_subtables()
         
         # Compare columns from main table
-        self.compare_main_table_columns()
+        self.compare_main_table_columns(startrow,nrow,rowincr)        
+                      
+
+class test_timeaverage(test_base_compare):
+
+    def setUp(self):
+        super(test_timeaverage,self).setUp()
+        self.setUp_4ants()
+        self.outvis = 'test_timeaverage-mst.ms'
+        self.refvis = 'test_timeaverage-split.ms'
+        self.outvis_sorted = 'test_timeaverage-mst-sorted.ms'
+        self.refvis_sorted = 'test_timeaverage-split-sorted.ms'     
+        os.system('rm -rf test_timeaverage*')
+        
+    def tearDown(self):
+        super(test_timeaverage,self).tearDown()      
             
-    def test_timeaverage_data(self):
-        self.outvis = 'test_timeaverage_data-mst.ms'
-        self.refvis = 'test_timeaverage_data-split.ms'
-        self.outvis_sorted = 'test_timeaverage_data-mst-sorted.ms'
-        self.refvis_sorted = 'test_timeaverage_data-split-sorted.ms'        
+    def test_timeaverage_data(self):   
         
         mstransform(vis=self.vis,outputvis=self.outvis,datacolumn='DATA',timeaverage=True,timebin='30s')
         split(vis=self.vis,outputvis=self.refvis,datacolumn='DATA',timebin='30s')
@@ -1359,39 +1377,26 @@ class test_timeaverage(test_base):
         self.generate_tolerance_map()
 
         self.mode['UVW'] = "percentage"
-        self.tolerance['UVW'] = 0.15/100.0    
+        self.tolerance['UVW'] = 4.08E-3/100
         
-        self.mode['FLAG'] = "absolute"
-        self.tolerance['FLAG'] = 1
-        
-        self.mode['EXPOSURE'] = "absolute"
-        self.tolerance['EXPOSURE'] = 1.001
-        
-        self.mode['INTERVAL'] = "absolute" 
-        self.tolerance['INTERVAL'] = 1.0
-           
-        self.mode['TIME'] = "absolute"
-        self.tolerance['TIME'] = 1.5
+        self.mode['EXPOSURE'] = "percentage"
+        self.tolerance['EXPOSURE'] = 3.58E-5/100
         
         self.mode['TIME_CENTROID'] = "absolute"
-        self.tolerance['TIME_CENTROID'] = 1.075
+        self.tolerance['TIME_CENTROID'] = 2.77E-4
         
-        self.mode['DATA'] = "absolute"  
-        self.tolerance['DATA'] = 1.1
+        self.mode['DATA'] = "percentage"  
+        self.tolerance['DATA'] = 1.20E-5/100
         
         self.mode['WEIGHT'] = "percentage"
-        self.tolerance['WEIGHT'] = 100
+        self.tolerance['WEIGHT'] = 3.15E-3/100
         
-        self.mode['SIGMA'] = "absolute"
-        self.tolerance['SIGMA'] = 31
+        self.mode['SIGMA'] = "percentage"
+        self.tolerance['SIGMA'] = 35
 
         self.post_process()   
         
-    def test_timeaverage_model(self):
-        self.outvis = 'test_timeaverage_model-mst.ms'
-        self.refvis = 'test_timeaverage_model-split.ms'
-        self.outvis_sorted = 'test_timeaverage_model-mst-sorted.ms'
-        self.refvis_sorted = 'test_timeaverage_model-split-sorted.ms'        
+    def test_timeaverage_model(self):  
         
         mstransform(vis=self.vis,outputvis=self.outvis,datacolumn='MODEL',timeaverage=True,timebin='30s')
         split(vis=self.vis,outputvis=self.refvis,datacolumn='MODEL',timebin='30s')
@@ -1399,39 +1404,26 @@ class test_timeaverage(test_base):
         self.generate_tolerance_map()
 
         self.mode['UVW'] = "percentage"
-        self.tolerance['UVW'] = 0.15/100.0    
+        self.tolerance['UVW'] = 4.08E-3/100
         
-        self.mode['FLAG'] = "absolute"
-        self.tolerance['FLAG'] = 1
-        
-        self.mode['EXPOSURE'] = "absolute"
-        self.tolerance['EXPOSURE'] = 1.001
-        
-        self.mode['INTERVAL'] = "absolute" 
-        self.tolerance['INTERVAL'] = 1.0
-           
-        self.mode['TIME'] = "absolute"
-        self.tolerance['TIME'] = 1.5
+        self.mode['EXPOSURE'] = "percentage"
+        self.tolerance['EXPOSURE'] = 3.58E-5/100
         
         self.mode['TIME_CENTROID'] = "absolute"
-        self.tolerance['TIME_CENTROID'] = 1.075
+        self.tolerance['TIME_CENTROID'] = 2.77E-4
         
-        self.mode['DATA'] = "absolute"  
-        self.tolerance['DATA'] = 1.1
+        self.mode['DATA'] = "percentage"  
+        self.tolerance['DATA'] = 1.20E-5/100
         
         self.mode['WEIGHT'] = "percentage"
-        self.tolerance['WEIGHT'] = 100
+        self.tolerance['WEIGHT'] = 3.15E-3/100
         
-        self.mode['SIGMA'] = "absolute"
-        self.tolerance['SIGMA'] = 31
+        self.mode['SIGMA'] = "percentage"
+        self.tolerance['SIGMA'] = 35
 
         self.post_process()          
         
     def test_timeaverage_corrected(self):
-        self.outvis = 'test_timeaverage_corrected-mst.ms'
-        self.refvis = 'test_timeaverage_corrected-split.ms'
-        self.outvis_sorted = 'test_timeaverage_corrected-mst-sorted.ms'
-        self.refvis_sorted = 'test_timeaverage_corrected-split-sorted.ms'        
         
         mstransform(vis=self.vis,outputvis=self.outvis,datacolumn='CORRECTED',timeaverage=True,timebin='30s')
         split(vis=self.vis,outputvis=self.refvis,datacolumn='CORRECTED',timebin='30s')
@@ -1439,71 +1431,128 @@ class test_timeaverage(test_base):
         self.generate_tolerance_map()
 
         self.mode['UVW'] = "percentage"
-        self.tolerance['UVW'] = 0.15/100.0    
+        self.tolerance['UVW'] = 4.08E-3/100
         
-        self.mode['FLAG'] = "absolute"
-        self.tolerance['FLAG'] = 1
-        
-        self.mode['EXPOSURE'] = "absolute"
-        self.tolerance['EXPOSURE'] = 1.001
-        
-        self.mode['INTERVAL'] = "absolute" 
-        self.tolerance['INTERVAL'] = 1.0
-           
-        self.mode['TIME'] = "absolute"
-        self.tolerance['TIME'] = 1.5
+        self.mode['EXPOSURE'] = "percentage"
+        self.tolerance['EXPOSURE'] = 3.58E-5/100
         
         self.mode['TIME_CENTROID'] = "absolute"
-        self.tolerance['TIME_CENTROID'] = 1.075
+        self.tolerance['TIME_CENTROID'] = 2.77E-4
         
-        self.mode['DATA'] = "absolute"  
-        self.tolerance['DATA'] = 10
+        self.mode['DATA'] = "percentage"  
+        self.tolerance['DATA'] = 1.20E-5/100
         
         self.mode['WEIGHT'] = "percentage"
-        self.tolerance['WEIGHT'] = 100
+        self.tolerance['WEIGHT'] = 3.15E-3/100
         
-        self.mode['SIGMA'] = "absolute"
-        self.tolerance['SIGMA'] = 31
+        self.mode['SIGMA'] = "percentage"
+        self.tolerance['SIGMA'] = 35
 
         self.post_process()   
         
-    def test_timeaverage_and_combine_spws(self):
+    def test_timeaverage_baseline_dependent(self):
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn='DATA',timeaverage=True,timebin='10s',maxuvwdistance=1E5)
+        mstransform(vis=self.vis,outputvis=self.refvis,datacolumn='DATA',timeaverage=True,timebin='10s')
+        
+        self.generate_tolerance_map()  
+
+        self.post_process()         
+        
+        
+class test_timeaverage_and_combine_spws(test_base_compare):        
+    
+    def setUp(self):
+        super(test_timeaverage_and_combine_spws,self).setUp()
+        self.setUp_4ants()
         self.outvis = 'test_timeaverage_and_combine_spws_single_run.ms'
         self.tmpvis = 'test_timeaverage_and_combine_spws_1st_step.ms'
         self.refvis = 'test_timeaverage_and_combine_spws_2nd_step.ms'
         self.outvis_sorted = 'test_timeaverage_and_combine_spws_single_run_sorted.ms'
         self.refvis_sorted = 'test_timeaverage_and_combine_spws_2nd_step_sorted.ms'
+        os.system('rm -rf test_timeaverage_and_combine_spws*')
         
-        mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',antenna="0&&1",timerange='14:45:08.50~14:45:09.50',
+        
+    def tearDown(self):
+        super(test_timeaverage_and_combine_spws,self).tearDown()
+
+        
+    def test_timeaverage_and_combine_spws_one_baseline_one_timestep(self):
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',antenna="0&&1", timerange='14:45:08.50~14:45:9.50',
                     datacolumn='DATA',combinespws=True,timeaverage=True,timebin='2s')
-        mstransform(vis=self.vis,outputvis=self.tmpvis,spw='9,10',antenna="0&&1",timerange='14:45:08.50~14:45:09.50',
+        mstransform(vis=self.vis,outputvis=self.tmpvis,spw='9,10',antenna="0&&1", timerange='14:45:08.50~14:45:9.50',
                     datacolumn='DATA',timeaverage=True,timebin='2s')
         mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',combinespws=True)
         
         self.generate_tolerance_map()
-        
-        self.mode['UVW'] = "absolute"
-        self.tolerance['UVW'] = 0.000001
-        
-        self.mode['FLAG'] = "absolute"
-        self.tolerance['FLAG'] = 1     
-        
-        self.mode['EXPOSURE'] = "absolute"
-        self.tolerance['EXPOSURE'] = 10000    
-        
-        self.mode['WEIGHT'] = "absolute"
-        self.tolerance['WEIGHT'] = 10000           
-        
-        self.mode['SIGMA'] = "absolute"
-        self.tolerance['SIGMA'] = 10000          
-        
-        self.mode['TIME_CENTROID'] = "absolute"
-        self.tolerance['TIME_CENTROID'] = 0.01        
-        
-        self.mode['DATA'] = "absolute"
-        self.tolerance['DATA'] = 2   
 
-        self.post_process()         
+        self.post_process()           
+        
+    def test_timeaverage_and_combine_spws_one_baseline_two_timesteps(self):
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',antenna="0&&1", timerange='14:45:08.50~14:45:11.50',
+                    datacolumn='DATA',combinespws=True,timeaverage=True,timebin='2s')
+        mstransform(vis=self.vis,outputvis=self.tmpvis,spw='9,10',antenna="0&&1", timerange='14:45:08.50~14:45:11.50',
+                    datacolumn='DATA',timeaverage=True,timebin='2s')
+        mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',combinespws=True)
+        
+        self.generate_tolerance_map()      
+
+        self.post_process(nrow=1)         
+        
+    def test_timeaverage_and_combine_spws_two_baselines_one_timestep(self):
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',antenna="0&&1~2", timerange='14:45:08.50~14:45:9.50',
+                    datacolumn='DATA',combinespws=True,timeaverage=True,timebin='2s')
+        mstransform(vis=self.vis,outputvis=self.tmpvis,spw='9,10',antenna="0&&1~2", timerange='14:45:08.50~14:45:9.50',
+                    datacolumn='DATA',timeaverage=True,timebin='2s')
+        mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',combinespws=True)
+        
+        self.generate_tolerance_map()
+
+        self.post_process()        
+        
+    def test_timeaverage_and_combine_spws_two_baselines_two_timesteps(self):
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',antenna="0&&1~2", timerange='14:45:08.50~14:45:11.50',
+                    datacolumn='DATA',combinespws=True,timeaverage=True,timebin='2s')
+        mstransform(vis=self.vis,outputvis=self.tmpvis,spw='9,10',antenna="0&&1~2", timerange='14:45:08.50~14:45:11.50',
+                    datacolumn='DATA',timeaverage=True,timebin='2s')
+        mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',combinespws=True)
+        
+        self.generate_tolerance_map()
+
+        self.post_process(nrow=1)        
+        
+        
+class test_regridms_single_spw(test_base_compare):
+    '''Tests for regridms w/o combining SPWS'''
+       
+    def setUp(self):
+        super(test_regridms_single_spw,self).setUp()
+        self.setUp_CAS_5013()
+        self.outvis = 'test_regridms_single_spw_mst.ms'
+        self.refvis = 'test_regridms_single_spw_cvel.ms'
+        self.outvis_sorted = 'test_regridms_single_spw_mst_sorted.ms'
+        self.refvis_sorted = 'test_regridms_single_spw_cvel_sorted.ms'
+        os.system('rm -rf test_timeaverage_and_combine_spws*')        
+        
+    def tearDown(self):
+        super(test_regridms_single_spw,self).tearDown()
+        
+    def test_regrid_only_LSRK(self):
+        '''mstransform: Change ref. frame to LSRK''' 
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,regridms=True,datacolumn='ALL',
+                    field='Vy_CMa',spw='3',mode='frequency',nchan=3830,start='310427.353MHz',width='-244.149kHz',outframe='lsrk')
+        cvel(vis=self.vis,outputvis=self.refvis,
+             field='Vy_CMa',spw='3',mode='frequency',nchan=3830,start='310427.353MHz',width='-244.149kHz',outframe='lsrk')
+        
+        self.generate_tolerance_map()
+
+        self.post_process()          
+
 
 
 # Cleanup class 
@@ -1536,5 +1585,7 @@ def suite():
             test_WeightSpectrum,
             test_channelAverageByDefault,
             test_timeaverage,
+            test_timeaverage_and_combine_spws,
+            test_regridms_single_spw,
             test_float_column,
             Cleanup]
