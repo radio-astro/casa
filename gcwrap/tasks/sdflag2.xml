@@ -386,7 +386,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         mode='rowid'. Note this is an EXPERT mode.
 
         In mode='manual', the channel based flagging are invoked when regions
-        in channel, frequency, or velocity are soecufued to maskflag parameter. 
+        in channel, frequency, or velocity are specified to maskflag parameter. 
         Otherwise, the whole channels are flagged for the selected spectra.
         Note the mode='rowid' is an EXPERT mode since it might not be straight
         forward for general users to select data by row IDs in scantable.
@@ -409,8 +409,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         WARNING for overwrite option:
         Be sure 'outform' is the same as data format of input file when you
-        overwrite it. Since CASA 3.1, the default value of the option 'overwrite'
-        has been changed to True, thereby the current dataset (infile) is 
+        overwrite it. The default value of the option 'overwrite'
+        is True in this task, thereby the current dataset (infile) is 
         overwritten unless a different file name is set to outfile. 
         There is a known issue in overwriting infile. If 'outform' differs to the
         data format of infile, the data is overwritten with the new data format 

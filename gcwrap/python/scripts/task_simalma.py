@@ -544,7 +544,7 @@ def simalma(
                     msg("   simalma will proceed with a single total power antenna observing for %d minutes." % totaltime_min[i],priority="info")
                     tpnant=1
                     tptime_min=totaltime_min[i]
-                    antlist_tp=configfile                
+                    antlist_tp=configfile
 
             # print cycle and warn if mixed
             if cycles[i]>'-1':
@@ -603,7 +603,37 @@ def simalma(
             else:
                 msg("You have requested %d total power antennas (tpnant), but no finite integration (tptime) -- check your inputs; no Total Power will be simulated." % tpnant,priority="info")
 
-
+        ### WORKAROUND for wrong flux in COMP TP simulations
+        if (tpnant > 0) and os.path.exists(complist):
+            idx_min = pl.where(resols == min(resols))[0]
+            idx = idx_min[0] if len(idx_min) > 0 else 0
+            dummy_proj = "gen_skymodel"
+            errmsg = "You requested Single dish simulation with components list.\n"
+            errmsg += "Single dish simulation has flux recovery issue "+\
+                      "when using a components list as an input.\n"
+            errmsg += "Please generate compskymodel image first by task "+\
+                      "simobserve and use the image as the skymodel input. "
+            errmsg += "Sorry for the inconvenience.\n\n"
+            errmsg += "How to workaround the issue:\n"
+            errmsg += "1. Generate skymodel image by simobserve\n"
+            errmsg += ("\tsimobserve(project='%s', complist='%s', compwidth='%s', "\
+                       % (dummy_proj, complist, compwidth))
+            if os.path.exists(skymodel):
+                skysuffix = '.skymodel'
+                errmsg += ( "skymodel='%s', inbright='%s', indirection='%s', " \
+                            % (skymodel, inbright, indirection))
+                errmsg += ( "incell='%s', incenter='%s', inwidth='%s', " \
+                            % (skymodel, inbright, indirection, incell, incenter, inwidth) )
+            else:
+                skysuffix = '.compskymodel'
+            errmsg += ("setpointings=True, obsmode='', antennalist='%s', thermalnoise='')\n" \
+                       % antennalist[idx])
+            errmsg += "2. Use the generated skymodel image in project directory as an input of simalma.\n"
+            errmsg += ("\tsimalma(project='%s', skymodel='%s/%s', ....)" % \
+                       (project, dummy_proj, \
+                        get_data_prefix(antennalist[idx], dummy_proj)+skysuffix))
+            msg(errmsg,priority="error")
+        ### End of WORKAROUND
 
         # remove tp from configlist
         antennalist=pl.array(antennalist)
@@ -1179,7 +1209,9 @@ def simalma(
                 
 
                 # Analyze TP image
-                tpskymodel=fileroot+"/"+pref_tp+".skymodel"
+                tpskymodel = fileroot+"/"+pref_tp+".skymodel"
+                if components_only:
+                    tpskymodel = fileroot+"/"+pref_tp+".compskymodel"
 
                 msg(" ",priority="info")
                 msg("Analyzing TP image", priority="info")

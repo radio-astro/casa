@@ -917,7 +917,7 @@ def mstransform(
              timeaverage,        # time averaging --> split
              timebin,
              timespan,
-             quantize_c,
+             maxuvwdistance,
              minbaselines              
              ):
 
@@ -1055,7 +1055,7 @@ def mstransform(
             config['timeaverage'] = True
             config['timebin'] = timebin
             config['timespan'] = timespan
-            config['quantize_c'] = quantize_c
+            config['maxuvwdistance'] = maxuvwdistance
             config['minbaselines'] = minbaselines
         
         # Configure the tool and all the parameters
