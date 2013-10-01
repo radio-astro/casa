@@ -797,8 +797,9 @@ def simobserve(
                 haoffset="no"
                 # is this a time quantity?
                 if qa.isquantity(hourangle):
-                    if qa.compare(hourangle,"s"):
-                        haoffset=qa.convert(qa.quantity(hourangle),'s')['value']
+                    qha=qa.convert(hourangle,"s")
+                    if qa.compare(qha,"s"):
+                        haoffset=qa.convert(qha,'s')['value']
                 elif qa.isquantity(hourangle+"h"):
                     if qa.compare(hourangle+"h","s"):
                         haoffset=qa.convert(qa.quantity(hourangle+"h"),'s')['value']

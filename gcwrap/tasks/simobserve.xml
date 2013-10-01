@@ -64,6 +64,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
          That kind of regridding can be accomplished with the CASA toolkit.
     -------------------------------
     complist -- component list model of the sky, added to or instead of skymodel
+         see http://casaguides.nrao.edu/index.php?title=Simulation_Guide_Component_Lists_%28CASA_4.1%29
     compwidth -- bandwidth of components; if simulating from components only, 
          this defines the bandwidth of the MS and output images
     -------------------------------
