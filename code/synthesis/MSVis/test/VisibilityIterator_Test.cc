@@ -1476,7 +1476,7 @@ Weighting::nextSubchunk (VisibilityIterator2 & vi, VisBuffer2 * vb)
             }
 
             Float delta = abs ((sum - weight (correlation, row)) / weight (correlation, row));
-            TestErrorIf (delta > 1e5,
+            TestErrorIf (delta > 1e-5,
                          String::format ("Sum of weight spectrum != weight at"
                                          " row=%d, correlation=%d, delta=%f",
                                          row, correlation, delta));

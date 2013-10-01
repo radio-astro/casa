@@ -2014,8 +2014,11 @@ VisBufferImpl2::fillCubeModel (Cube <Complex> & value) const
             // to other virtual methods which can potentially access the modified model
             // field.
 
+            Bool wasWritable = state_p->isWritable_p;
+            state_p->isWritable_p = True;
             VisBuffer2Adapter vb2a (const_cast <VisBufferImpl2 *> (this));
             state_p->visModelData_p.getModelVis (vb2a);
+            state_p->isWritable_p = wasWritable;
         }
     }
     else{
