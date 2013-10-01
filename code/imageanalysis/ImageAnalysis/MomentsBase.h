@@ -340,7 +340,7 @@ enum MethodTypes {
    static Vector<Int> toMethodTypes (const String& methods);
 
 
-   virtual IPosition getShape() { return IPosition() ; } ;
+   virtual IPosition getShape() const { return IPosition(); };
 
 protected:
 

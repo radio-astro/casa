@@ -407,8 +407,7 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
 
 	// If the moment axis is a spectral axis, indicate we want to convert to velocity
 
-	convertToVelocity_p = False;
-	if (momentAxis_p == spectralAxis) convertToVelocity_p = True;
+	convertToVelocity_p = momentAxis_p == spectralAxis;
 	// Check the user's requests are allowed
 
 	if (!checkMethod()) {

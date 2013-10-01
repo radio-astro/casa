@@ -402,10 +402,11 @@ protected:
                PGPlotter& plotter) const;
                         
 // Compute the world coordinate for the given moment axis pixel   
-   Double getMomentCoord(MomentsBase<T>& iMom,
-                         Vector<Double>& pixelIn,
-                         Vector<Double>& worldOut,
-                         const Double momentPixel) const;
+   Double getMomentCoord(
+		   const MomentsBase<T>& iMom, Vector<Double>& pixelIn,
+		   Vector<Double>& worldOut, Double momentPIxel,
+		   Bool asVelocity=False
+	) const;
 
 // Examine a mask and determine how many segments of unmasked points
 // it consists of.    
@@ -445,7 +446,7 @@ protected:
    Vector<Int> selectMoments(MomentsBase<T>& iMom) const;
 
 // Fill the ouput moments array
-   void setCalcMoments (MomentsBase<T>& iMom,
+   void setCalcMoments (const MomentsBase<T>& iMom,
                         Vector<T>& calcMoments,
                         Vector<Bool>& calcMomentsMask,
                         Vector<Double>& pixelIn,
@@ -476,7 +477,7 @@ protected:
 
 // Set up separable moment axis coordinate vector and
 // conversion vectors if not separable
-   void setUpCoords (MomentsBase<T>& iMom,
+   void setUpCoords (const MomentsBase<T>& iMom,
                      Vector<Double>& pixelIn,
                      Vector<Double>& worldOut,
                      Vector<Double>& sepWorldCoord,
@@ -1146,10 +1147,10 @@ inline T MomentCalcBase<T>::convertF(const Float value)
 
 // Compute the world coordinate for the given moment axis pixel   
 template<class T>
-inline Double MomentCalcBase<T>::getMomentCoord(MomentsBase<T>& iMom,
+inline Double MomentCalcBase<T>::getMomentCoord(const MomentsBase<T>& iMom,
 						Vector<Double>& pixelIn,
-						Vector<Double>& worldOut,
-						const Double momentPixel) const
+						Vector<Double>& worldOut, Double momentPixel,
+						Bool asVelocity) const
 // 
 // Find the value of the world coordinate on the moment axis
 // for the given moment axis pixel value. 
@@ -1165,11 +1166,18 @@ inline Double MomentCalcBase<T>::getMomentCoord(MomentsBase<T>& iMom,
 // if the coordinate transformation fails or not
 //
 {
-   pixelIn(iMom.momentAxis_p) = momentPixel;
 // 
 // Should really check the result is True, but for speed ...
 //
+	pixelIn(iMom.momentAxis_p) = momentPixel;
    cSys_p.toWorld(worldOut, pixelIn);
+   if (asVelocity) {
+	   Double velocity;
+	   cSys_p.spectralCoordinate().frequencyToVelocity(
+			  velocity, worldOut(iMom.worldMomentAxis_p)
+	   );
+	   return velocity;
+   }
    return worldOut(iMom.worldMomentAxis_p);
 }
 

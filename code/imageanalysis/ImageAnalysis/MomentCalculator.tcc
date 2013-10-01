@@ -35,7 +35,6 @@
 #include <scimath/Fitting/NonLinearFitLM.h>
 #include <scimath/Functionals/Polynomial.h>
 #include <scimath/Functionals/CompoundFunction.h>
-//#include <images/Images/MomentsBase.h>
 #include <imageanalysis/ImageAnalysis/ImageMoments.h>
 #include <lattices/Lattices/LatticeStatsBase.h>
 #include <casa/BasicMath/Math.h>
@@ -85,8 +84,6 @@ uInt MomentCalcBase<T>::allNoise (T& dMean,
 
    const T rat = max(abs(dMin),abs(dMax)) / stdDeviation;
 
-//   cout << "min,max,mean,sigma,peakSNR,SNR=" << dMin << " " << dMax << " " << dMean
-//        << stdDeviation_p << " " << peakSNR << " " << rat << LogIO::POST;
    if (rat < peakSNR) {
       return 1;
    } else {
@@ -483,13 +480,10 @@ Bool MomentCalcBase<T>::fitGaussian (uInt& nFailed,
 
 // Return values of fit
    
-//   cout << "SOlution = " << solution << LogIO::POST;
-
    peak  = solution(0);
    pos   = solution(1);
    width = abs(solution(2));
    level = solution(3);
-
 
 // Return status
 
@@ -630,10 +624,6 @@ Bool MomentCalcBase<T>::getAutoGaussianGuess (T& peakGuess,
 // sampled and set its width to a few pixels.  Totally ridiculous.
                                             
    widthGuess = 5;
-                                            
-//   cout << "Guess: peak,pos,width=" << peakGuess << ", " << posGuess << "," <<
-//           widthGuess << LogIO::POST;
-
    return True;
 }
 
@@ -950,9 +940,6 @@ void MomentCalcBase<T>::getInterGaussianGuess(T& peakGuess,
    window(1) = min(nPts-1,window(1));
    
    plotter.sci(1);
-//   cout << "Guess:peak,pos,width=" << peakGuess << "," << posGuess
-//        << "," << widthGuess << LogIO::POST;   
-
 }
    
 
@@ -1204,7 +1191,7 @@ void MomentCalcBase<T>::setCoordinateSystem (CoordinateSystem& cSys,
 }
 
 template <class T>
-void MomentCalcBase<T>::setUpCoords (MomentsBase<T>& iMom,
+void MomentCalcBase<T>::setUpCoords (const MomentsBase<T>& iMom,
                                      Vector<Double>& pixelIn,
                                      Vector<Double>& worldOut,
                                      Vector<Double>& sepWorldCoord,
@@ -1460,7 +1447,7 @@ void MomentCalcBase<T>::yAutoMinMax(T& yMin,
 // Fill the ouput moments array
 template<class T>
 void MomentCalcBase<T>::setCalcMoments
-                       (MomentsBase<T>& iMom,
+                       (const MomentsBase<T>& iMom,
                         Vector<T>& calcMoments,
                         Vector<Bool>& calcMomentsMask,
                         Vector<Double>& pixelIn,
@@ -1488,7 +1475,6 @@ void MomentCalcBase<T>::setCalcMoments
 //   calcMoments The moments
 //
 {
-       
 // Short hand to fish ImageMoments enum values out   
 // Despite being our friend, we cannot refer to the
 // enum values as just, say, "AVERAGE"
@@ -1544,10 +1530,14 @@ void MomentCalcBase<T>::setCalcMoments
 // Coordinate of min/max value
 
    if (doCoord) {
-      calcMoments(IM::MAXIMUM_COORDINATE) =
-           getMomentCoord(iMom, pixelIn, worldOut, Double(iMax));                                     
-      calcMoments(IM::MINIMUM_COORDINATE) =
-           getMomentCoord(iMom, pixelIn, worldOut, Double(iMin));
+      calcMoments(IM::MAXIMUM_COORDINATE) = getMomentCoord(
+    		  iMom, pixelIn, worldOut, Double(iMax),
+    		  iMom.convertToVelocity_p
+      );
+      calcMoments(IM::MINIMUM_COORDINATE) = getMomentCoord(
+    		  iMom, pixelIn, worldOut, Double(iMin),
+    		  iMom.convertToVelocity_p
+      );
    } else {
       calcMoments(IM::MAXIMUM_COORDINATE) = 0.0;
       calcMoments(IM::MINIMUM_COORDINATE) = 0.0;
@@ -1794,7 +1784,7 @@ void MomentClip<T>::multiProcess(Vector<T>& moments,
                   coord = sepWorldCoord_p(i);              
                } else if (doCoordProfile_p) {
                   coord = this->getMomentCoord(iMom_p, pixelIn_p,
-                                         worldOut_p, Double(i));       
+                                         worldOut_p, Double(i));
                }
                this->accumSums(s0, s0Sq, s1, s2, iMin, iMax,     
                          dMin, dMax, i, profileIn(i), coord);
@@ -1853,7 +1843,7 @@ void MomentClip<T>::multiProcess(Vector<T>& moments,
                   coord = sepWorldCoord_p(i);              
                } else if (doCoordProfile_p) {
                   coord = this->getMomentCoord(iMom_p, pixelIn_p,
-                                         worldOut_p, Double(i));       
+                                         worldOut_p, Double(i));
                }
                this->accumSums(s0, s0Sq, s1, s2, iMin, iMax,     
                          dMin, dMax, i, profileIn(i), coord);
@@ -1980,7 +1970,6 @@ void MomentClip<T>::multiProcess(Vector<T>& moments,
          }
  
 // Find world coordinate of that pixel on the moment axis
-
          vMedian = this->getMomentCoord(iMom_p, pixelIn_p,
                                   worldOut_p, interpPixel);
       }   
@@ -2666,8 +2655,6 @@ Bool MomentWindow<T>::getBosmaWindow (Vector<Int>& window,
    yMean = 0;
    T oldYMean = 0;
    while (more) {
-
-//     cout << LogIO::NORMAL << "iMin,iMax,oldmean,tol=" << iMin << "," << iMax << $
    
 // Find mean outside of peak region
 
@@ -2932,7 +2919,7 @@ void MomentFit<T>::multiProcess(Vector<T>& moments,
             coord = sepWorldCoord_p(i);
          } else if (doCoordProfile_p) {
             coord = this->getMomentCoord(iMom_p, pixelIn_p, 
-                                   worldOut_p, Double(i));
+                                   worldOut_p,Double(i));
          }
          this->accumSums(s0, s0Sq, s1, s2, iMin, iMax,
                    dMin, dMax, i, gData(j), coord);
