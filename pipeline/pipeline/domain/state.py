@@ -203,7 +203,7 @@ class StateFactory(object):
                 self._constructor = StateALMACycle0
             else:
                 self._constructor = StateALMA
-        elif observatory == 'VLA':
+        elif (observatory == 'VLA' or observatory =='EVLA'):
             self._constructor = StateVLA
         else:
             raise KeyError('%s has no matching State class' % observatory)
