@@ -31,7 +31,7 @@ Fills the model column with the model visibilities.
 	<value></value>
     </param>
 
-    <param type="string" name="modimage" subparam="true">
+    <param type="string" name="model" subparam="true">
 	<description>File location for field model</description>
 	<value></value>
     </param>
@@ -104,7 +104,7 @@ Fills the model column with the model visibilities.
 		<default param="intent"><value type="string"></value></default>
 		<default param="spw"><value type="string"></value></default>
 	    <default param="reffile"><value type="string"></value></default>
-		<default param="modimage"><value type="string"></value></default>
+		<default param="model"><value type="string"></value></default>
 		<default param="standard"><value type="string"></value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
@@ -116,7 +116,7 @@ Fills the model column with the model visibilities.
 		<default param="spw"><value type="string"></value></default>
 	    <default param="reffile"><value type="string"></value></default>
 		<default param="standard"><value type="string"></value></default>
-		<default param="modimage"><value type="string"></value></default>
+		<default param="model"><value type="string"></value></default>
 	    </equals>
 	</when>
 
@@ -215,7 +215,7 @@ spw -- The list of spectral windows and channels for which bandpasses are
     default: ''
     example: '11,13,15,17'
 
-modimage -- Model image for setting model visibilities. Not fully
+model -- Model image for setting model visibilities. Not fully
     supported.
     default: ''
     example: see details in help for CASA setjy task
