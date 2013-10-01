@@ -336,7 +336,7 @@ public:
 
 
 // Get shape 
-   IPosition getShape() { return _image->shape() ; } ;
+   IPosition getShape() const { return _image->shape() ; } ;
 
    //Set an ImageMomentsProgressMonitor interested in getting updates on the
    //progress of the collapse process.

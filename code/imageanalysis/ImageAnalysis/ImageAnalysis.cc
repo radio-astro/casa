@@ -2757,8 +2757,7 @@ ImageInterface<Float> * ImageAnalysis::moments(
 		else {
 			x.reset(
 				SubImageFactory<Float>::createSubImage(
-					*_image, //*(ImageRegion::tweakedRegionRecord(&Region)),
-					Region,
+					*_image, Region,
 					mask, _log.get(), False, AxesSpecifier(), stretchMask
 				).cloneII()
 			);
