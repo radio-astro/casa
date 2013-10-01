@@ -118,11 +118,12 @@ def reduce(vis=[], infiles=[], procedure='procedure_hifcal.xml', context=None, n
                 result.accept(context)
             except:
                 LOG.error('Error executing pipeline task %s.' % task._hif_call)
-                LOG.info('Saving context...')
-                context.save()
                 traceback.print_exc()
                 return context
     except StopIteration:
         pass
+    finally:
+        LOG.info('Saving context...')
+        context.save()
         
     return context
