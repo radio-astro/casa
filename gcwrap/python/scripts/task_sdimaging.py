@@ -237,32 +237,32 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.imager_param['step'] = stepval
         self.imager_param['nchan'] = self.nchan
         
-        ### WORKAROUND for image unit ###
-        datacol_lookup = ['FLOAT_DATA', 'DATA']
-        self.tb_fluxunit = ''
-        for name in self.infiles:
-            self.open_table(name)
-            valid_cols = self.table.colnames()
-            datacol = ''
-            for colname in datacol_lookup:
-                if colname in valid_cols:
-                    datacol = colname
-                    break
+#         ### WORKAROUND for image unit ###
+#         datacol_lookup = ['FLOAT_DATA', 'DATA']
+#         self.tb_fluxunit = ''
+#         for name in self.infiles:
+#             self.open_table(name)
+#             valid_cols = self.table.colnames()
+#             datacol = ''
+#             for colname in datacol_lookup:
+#                 if colname in valid_cols:
+#                     datacol = colname
+#                     break
 
-            if len(datacol) == 0:
-                self.close_table()
-                raise Exception, "Could not find a column that stores data."
+#             if len(datacol) == 0:
+#                 self.close_table()
+#                 raise Exception, "Could not find a column that stores data."
 
-            datakw = self.table.getcolkeywords(datacol)
-            curr_fluxunit = datakw['UNIT'] if datakw.has_key('UNIT') else self.tb_fluxunit
+#             datakw = self.table.getcolkeywords(datacol)
+#             curr_fluxunit = datakw['UNIT'] if datakw.has_key('UNIT') else self.tb_fluxunit
 
-            if len(self.tb_fluxunit) == 0:
-                self.tb_fluxunit = curr_fluxunit
-            elif curr_fluxunit != self.tb_fluxunit:
-                self.close_table()
-                raise Exception, "Mixed flux unit in input MSes (%s and %s). You cannot image data sets with different flux units." % (self.tb_fluxunit, curr_fluxunit)
+#             if len(self.tb_fluxunit) == 0:
+#                 self.tb_fluxunit = curr_fluxunit
+#             elif curr_fluxunit != self.tb_fluxunit:
+#                 self.close_table()
+#                 raise Exception, "Mixed flux unit in input MSes (%s and %s). You cannot image data sets with different flux units." % (self.tb_fluxunit, curr_fluxunit)
 
-            self.close_table()
+#             self.close_table()
         ###
 
     def execute(self):
@@ -311,11 +311,10 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         weight_val = my_ia.getchunk()
         mask_pixels = numpy.where(weight_val <= self.minweight)
         weight_val[mask_pixels] = 0.
-        my_ia.putchunk(weight_val)
+        #my_ia.putchunk(weight_val)
         my_ia.close()
         # Modify default mask
         my_ia.open(self.outfile)
-        #mask_name = my_ia.maskhandler('default')
         my_ia.calcmask('%s>%f' % (weightfile.replace("/", "\/"),self.minweight), asdefault=True)
         my_ia.close()
         del weight_val, mask_pixels
