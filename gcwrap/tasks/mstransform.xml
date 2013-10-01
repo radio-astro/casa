@@ -208,7 +208,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </param>
 
         <param type="any" name="start" subparam="true">
-            <description>First channel in input to use.</description>
+            <description>First channel to use in the output spw (mode-dependant)</description>
             <any type="variant"/>
             <value type="int">0</value>
         </param>
@@ -581,26 +581,33 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         nchan -- Number of channels in the output spw (int).
             default: -1
 
-        start -- First channel of the input spw.
-            default: 0
+        start -- First channel to use in the output spw (depends on the mode)
+            default: 0 --> when mode='channel'
+
+            When mode='channel', 'start' means the first channel in the input spw
+            to use when creating the output spw. When mode='frequency',
+            'start' means the lowest frequency of the output spw. If this information
+            is not available, leave it blank and mstransform will calculate it.
 
         width -- Width of input channels that are used to create an output channel. 
-                 Note that mstransform will only shift spws with channel widths of the same 
-                 sign in a single operation. If you are regridding spws with mixed positive 
-                 and negative channel widths, you should run this task separated for each group 
-                 of spws. You can verify the channel widths for your MS using listobs for example, 
-                 and looking at the SPW table, column ChanWid.
             default: 1
 
+            Note that mstransform will only shift spws with channel widths of the same 
+            sign in a single operation. If you are regridding spws with mixed positive 
+            and negative channel widths, you should run this task separated for each 
+            group of spws. You can verify the channel widths for your MS using 
+            listobs for example, and looking at the SPW table, column ChanWid.
+            
         nspw -- Number of output spws to create in the output MS/MMS (int). 
-            default: 0
-            example: One can regrid the MS or not and further separate the
-                     output into a given number of spws. Internally, the framework
-                     will combine the selected spws before separating them so that
-                     channel gaps and overlaps are taken into account. This parameter
-                     will create a regular grid of spws in the output MS. If nchan
-                     is set, it will refer to the number of output channels in each
-                     of the separated spws.
+            default: 1  --> it means, do not separate the spws.
+
+            One can regrid the MS or not and further separate the
+            output into a given number of spws. Internally, the framework
+            will combine the selected spws before separating them so that
+            channel gaps and overlaps are taken into account. This parameter
+            will create a regular grid of spws in the output MS. If nchan
+            is set, it will refer to the number of output channels in each
+            of the separated spws.
 
         interpolation -- Spectral interpolation method.
             default: 'linear'
