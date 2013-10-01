@@ -289,9 +289,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value type="string"></value>
         </param>
 
-        <param type="double" name="quantize_c" subparam="true">
-            <description>(TBI) Quantize time_centroids to the nearest multiple of short time interval.</description>
-            <value type="double">0.01</value>
+        <param type="double" name="maxuvwdistance" subparam="true">
+            <description>Maximum separation of start-to-end baselines that can be included in an average.</description>
+            <value type="double">0.0</value>
         </param>
 
         <param type="int" name="minbaselines" subparam="true">
@@ -347,7 +347,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <equals type="bool" value="True">
                   <default param="timebin"><value type="string">0s</value></default>
                   <default param="timespan"><value type="string"></value></default>
-                  <default param="quantize_c"><value type="double">0.01</value></default>
+                  <default param="maxuvwdistance"><value type="double">0.0</value></default>
                   <default param="minbaselines"><value type="int">2</value></default>
             </equals>
           </when>
@@ -640,9 +640,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                        numbers when time averaging.
             timespan = 'state,scan'; same as above.
 
-        quantize_c -- (TBI) Quantize time_centroids to the nearest multiple of short
-                      time interval (double).
-            default: 0.01
+        maxuvwdistance -- Provide a maximum separation of start-to-end baselines 
+                          that can be included in an average.
+            default: 0.0
 
         minbaselines -- (TBI) Minimum number of baselines for averaging to start (int).
             default: 2
