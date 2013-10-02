@@ -181,8 +181,9 @@ int main(int argc, char **argv)
 	  			  CountedPtr<SIImageStore> subImStor=new SIImageStore(submod, subresid, subpsf, subwgt, subrestor);
 	  			  SynthesisImager subImgr;
 	  			  //can select the right channel to match subimage
-	  			  subImgr.selectData(msname, /*spw=*/"0", freqBeg, freqEnd, MFrequency::LSRK, /*field=*/"0", /*taql=*/"", /*antenna=*/"",  /*uvdist*/"", /*scan*/"", /*obs*/"",
-	  			    		/*timestr*/"", /*usescratch*/False, /*readonly*/False, True);
+	  			  subImgr.selectData(msname, /*spw=*/"0", freqBeg, freqEnd, MFrequency::LSRK, /*field=*/"0",  /*antenna=*/"",  /*timestr*/"", /*scan*/"", /*obs*/"", /*state*/"",/*uvdist*/"", 
+						     /*taql*/"", /*usescratch*/False, /*readonly*/False, /*incrmodel*/True);
+
 	  			  subImgr.defineImage(subImStor, "GridFT");
 	  			  subImgr.weight("natural");
 	  			  Record rec;
