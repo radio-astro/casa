@@ -61,12 +61,20 @@ class CommonBandpassInputs(commoncalinputs.CommonCalibrationInputs):
             for spw in self.ms.get_spectral_windows(self.spw):
                 for intent in preferred_intents:
                     if intent in spw.intents:
+                        if intent != preferred_intents[0]:
+                            LOG.warning('%s spw %s: %s not present, %s used instead' %
+                              (os.path.basename(self.vis), spw.id, 
+                              preferred_intents[0], intent))
                         return intent
             
         # spw was not set, so look through the spectral windows
         for intent in preferred_intents:
             for spw in self.ms.spectral_windows:
                 if intent in spw.intents:
+                    if intent != preferred_intents[0]:
+                        LOG.warning('%s %s: %s not present, %s used instead' %
+                          (os.path.basename(self.vis), spw.id, preferred_intents[0],
+                          intent))
                     return intent
                 
         # current fallback - return an empty intent
