@@ -99,7 +99,7 @@ class plotms_test1(test_base):
         self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat="jpg", 
-                          scriptclient=True, overwrite=True, showgui=False)   
+                          overwrite=True, showgui=False)   
         self.assertTrue(self.res)
         self.assertTrue(os.path.exists(self.plotfile_jpg), 'Plot was not created')
         print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
@@ -116,7 +116,7 @@ class plotms_test1(test_base):
         time.sleep(5)
         #First overwrite is turned on in case the plot file already exists.
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
-                          overwrite=True, scriptclient=True, showgui=False)
+                          overwrite=True, showgui=False)
         self.assertTrue(self.res)
         self.assertTrue( os.path.exists(self.plotfile_jpg), 'Plot was not created')
         self._checkPlotFile(60000)
@@ -134,7 +134,7 @@ class plotms_test1(test_base):
         self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         self.res = plotms(vis=self.ms,  plotfile=self.plotfile_jpg, expformat='jpg', 
-                          scriptclient=True, showgui=False, overwrite=True, selectdata=True, scan='2,4')
+                          showgui=False, overwrite=True, selectdata=True, scan='2,4')
         self.assertTrue(self.res)
         self.assertTrue(os.path.isfile(self.plotfile_jpg))
         plotSize = os.path.getsize(self.plotfile_jpg)
@@ -150,7 +150,7 @@ class plotms_test1(test_base):
         self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
-                          scriptclient=True, overwrite=True, showgui=False,
+                          overwrite=True, showgui=False,
                           customsymbol=True, symbolshape='diamond', symbolsize=5,
                           symbolcolor='00ff00', symbolfill='mesh3')   
         self.assertTrue(self.res)
@@ -168,7 +168,7 @@ class plotms_test1(test_base):
         self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
-                          scriptclient =True, overwrite=True, showgui=False)
+                          overwrite=True, showgui=False)
         self.assertTrue(self.res)
         self._checkPlotFile(60000)
 

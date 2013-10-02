@@ -28,7 +28,7 @@ def plotms(vis=None,
            showminorgrid=None, minorwidth=None, minorstyle=None,  minorcolor=None,    
            plotfile=None, expformat=None,
            highres=None, interactive=None, overwrite=None, 
-           scriptclient=None, showgui=None
+           showgui=None
 ):
 
 # we'll add these later
@@ -131,10 +131,7 @@ def plotms(vis=None,
                   default: True; example showgui=False
 
     coloraxis -- which axis to use for colorizing
-                     default: ''  (ignored - same as colorizing off)
-                     
-    scriptclient -- whether the client should be a GUI supporting full user-interaction or a scripting client
-                     default: False.  The default is a full GUI supporting user-interaction.               
+                     default: ''  (ignored - same as colorizing off)              
     
     title  -- title along top of plot (called "canvas" in some places)
     xlabel, ylabel -- text to label horiz. and vert. axes, with formatting (%% and so on)
@@ -194,12 +191,7 @@ def plotms(vis=None,
         #Determine whether this is going to be a scripting client or a full GUI supporting
         #user interaction.  This must be done before other properties are set because it affects
         #the constructor of plotms.
-        pm.setScriptClient( scriptclient )
-        if showgui:
-            pm.show()
-        else:
-            pm.hide()
-     
+        pm.setShowGui( showgui )
         pm.setPlotMSFilename(vis, False)
         pm.setPlotAxes(xaxis, yaxis, xdatacolumn, ydatacolumn, False)
         

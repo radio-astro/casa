@@ -686,12 +686,6 @@ Export plot as image Parameters
          <description>Overwrite plot file if it already exists?</description>
          <value>False</value>
      </param>
-   	<param type="bool" name="scriptclient">
-        <description>Specify a scripting client rather than a GUI client.</description>
-        <value>False</value>
-    </param>
-
-
 <!--
 ###############################################################################
     Misc Parameters
@@ -1429,8 +1423,7 @@ Constraints
                         default: false (e.g., for automated scripts to prevent blocking).
         overwrite -- Overwrite plot file if it already exists?
                      default: false
-        scriptclient -- Scripting client interface vs a GUI supporting user interaction.
-        			default: false
+      
 <!--
     
     showgui - Whether or not to display the plotting GUI

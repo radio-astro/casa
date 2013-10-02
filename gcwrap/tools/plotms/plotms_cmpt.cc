@@ -47,7 +47,7 @@ const unsigned int plotms::LAUNCH_TOTAL_WAIT_US    = 5000000;
 // Constructors/Destructors //
 
   plotms::plotms() : itsWatcher_(this),doIter_(True) {
-	  scriptClient = false;
+	  showGui = true;
 	  asyncCall = true;
   }
 
@@ -570,15 +570,8 @@ record* plotms::locateInfo() {
 }
 
 void plotms::update() {
-	/*if ( !scriptClient ){
-		cout << "Calling update asynchronously"<<endl;
-		callAsync(PlotMSDBusApp::METHOD_UPDATE);
-		//waitUntilIdle();
-	}
-	else {*/
 		QtDBusXmlApp::dbusXmlCallNoRet( dbus::FROM_NAME, app.dbusName(),
 				PlotMSDBusApp::METHOD_UPDATE, Record(), asyncCall );
-	//}
 }
 
 void plotms::waitUntilIdle() {
@@ -592,8 +585,8 @@ void plotms::waitUntilIdle() {
   return;
 }
 
-void plotms::show()   {
-	if ( !scriptClient ){
+/*void plotms::show()   {
+	if ( !showGui ){
 		callAsync(PlotMSDBusApp::METHOD_SHOW);
 	}
 	else {
@@ -603,14 +596,21 @@ void plotms::show()   {
 }
 
 void plotms::hide()   {
-	if ( !scriptClient ){
+	if ( !showGui ){
 		callAsync(PlotMSDBusApp::METHOD_HIDE);
 	}
 	else {
 		QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
 			            PlotMSDBusApp::METHOD_HIDE, Record(), asyncCall);
 	}
+}*/
+
+void plotms::setShowGui( bool showGui ){
+	this->showGui = showGui;
+	asyncCall = showGui;
 }
+
+
 
 bool plotms::save(const string& filename, const string& format, const bool highres, const bool interactive) {
     launchApp();
@@ -666,9 +666,9 @@ void plotms::launchApp() {
 
     if(!app.dbusName( ).empty() || !displaySet()) return;
     
-    String scriptGui;
-    if ( scriptClient ){
-    	scriptGui = "--script";
+    String scriptClient;
+    if ( !showGui ){
+    	scriptClient = "--nogui";
     }
 
     // Launch PlotMS application with the DBus switch.
@@ -694,7 +694,7 @@ void plotms::launchApp() {
                PlotMSDBusApp::APP_CASAPY_SWITCH.c_str(),
 	       nopop.c_str(),
                file.c_str(), filter.c_str(),
-	       iter.c_str(), scriptGui.c_str(),
+	       iter.c_str(), scriptClient.c_str(),
                NULL);
         
     } else {
@@ -881,10 +881,7 @@ void plotms::setYRange(const bool yautorange,  const double ymin, const double y
     
 }
 
-void plotms::setScriptClient( bool scriptClient ){
-	this->scriptClient = scriptClient;
-	asyncCall = !scriptClient;
-}
+
 
 // A _temporary_ method to enable turning off the iteration path
 bool plotms::enableIter(const bool enable) {

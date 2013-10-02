@@ -1634,33 +1634,6 @@ Execution Methods
   <returns />
 </method>
 
-<method type="function" name="show">
-  <keyword>show</keyword>
-
-  <shortdescription>Shows the plotms window.</shortdescription>
-  
-  <description />
-  
-  <input />
-  
-  <example />
-  
-  <returns />
-</method>
-
-<method type="function" name="hide">
-  <keyword>hide</keyword>
-
-  <shortdescription>Hides the plotms window.</shortdescription>
-  
-  <description />
-  
-  <input />
-  
-  <example />
-  
-  <returns />
-</method>
 
 <method type="function" name="save">
   <keyword>save</keyword>
@@ -1754,19 +1727,20 @@ State Methods
   </returns>
 </method>
 
-<method type="function" name="setScriptClient">
-  <keyword>setScriptClient</keyword>
+<method type="function" name="setShowGui">
+  <keyword>setShowGui</keyword>
   
-  <shortdescription>Determines whether the client is a GUI supporting user interaction or a non-interactive scripting client.</shortdescription>
+  <shortdescription>Show a GUI supporting user interaction.</shortdescription>
   
   <description />
   
   <input>
-    <param type="bool" name="scriptClient">
-      <description>If true, use a non-interactive scripting client, else provide a GUI supporting user interaction.</description>
+    <param type="bool" name="show">
+      <description>If true, provide a GUI supporting interaction, else operate in scripting mode.</description>
     </param>
   </input>
   <example />
+  
   <returns />
  
 </method>
