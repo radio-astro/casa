@@ -44,6 +44,12 @@ and then setting the sub-parameter {\it realmodelcol} to True. This will copy th
 column to a physical MODEL column in the MS main table. The virtual model column
 will be deleted afterwards.
 
+The user can control whether to create a WEIGHT_SPECTRUM column in the output MS or
+not. If the input MS does not have a WEIGHT_SPECTRUM, by setting the parameter
+{\it usewtspectrum} to True, the task will create a WEIGHT_SPECTRUM from the values
+in the WEIGHT column, such that each channel in the WEIGHT_SPECTRUM will get WEIGHT/nChannels.
+By default, {\it usewtspectrum} is set to False.
+
 \begin{verbatim}
     mstransform('uid.ms', outputvis='myout.ms', datacolumn='data', spw='0,3,5')
 \end{verbatim}
@@ -149,7 +155,19 @@ integers that will apply to each spw in the selection.
 
 A parameter called {\it useweights} controls the type of weights to use in the
 averaging. The options are flags that will consider the FLAG column and spectrum
-that will consider the WEIGHT_SPECTRUM column.
+that will consider the WEIGHT_SPECTRUM column per channel. The calculation is
+done as follows:
+
+\begin{verbatim}
+When using flags:
+    Avg = SUM(Chan_i*Flag_i)/SUM(Flag_i)     
+(where boolean values are converted to 0 for True and 1 for False)
+
+When using weights:
+    Avg = SUM(Chan_i*WeightSpectrum_i)/SUM(WeightSpectrum_i)     
+(using directly the WEIGHT_SPECTRUM values provided that they are already numerical)
+
+\end{verbatim}
 
 \begin{verbatim}
     mstransform('uid.ms', outputvis='myout.ms', datacolumn='data', spw='5', chanaverage=True, chanbin=2, useweights='flags')
@@ -201,9 +219,9 @@ requested column does not exist, it will exit with an error.
     mstransform('uid.ms', outputvis='myout.ms', hanning=True)
 \end{verbatim}
 
-\subsection{Time averaging - To be implemented}
+\subsection{Time averaging}
 % Add stuff in here
-%Similar to split, this task can average the MS in time, based on a set of parameters.
+Similar to split, this task can average the MS in time, based on a set of parameters....
 
 %timespan
 %minbaselines

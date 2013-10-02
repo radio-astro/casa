@@ -759,6 +759,7 @@ Bool MSTransformDataHandler::makeMSBasicStructure(	String& msname,
 	const Vector<MS::PredefinedColumns> colNamesTok = parseColumnNames(colname,ms_p);
 
 	if (!makeSelection())
+//	if (!makeSelectionNew())
 	{
 		ms_p = MeasurementSet();
 		return False;
@@ -848,6 +849,213 @@ Bool MSTransformDataHandler::isAllColumns(const Vector<MS::PredefinedColumns>& c
 	}
 
 	return (dCol && mCol && cCol);
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+Bool MSTransformDataHandler::makeSelectionNew()
+{
+
+	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
+
+	// VisSet/MSIter will check if the SORTED exists
+	// jagonzal (CAS-5327): Commenting this out, since this implies all sorts of memory leaks
+	// Block<Int> sort;
+	// ROVisibilityIterator(ms_p, sort);
+
+	const MeasurementSet *elms;
+	elms = &ms_p;
+	MeasurementSet sorted;
+	if (ms_p.keywordSet().isDefined("SORTED_TABLE"))
+	{
+		sorted = ms_p.keywordSet().asTable("SORTED_TABLE");
+
+		//If ms is not writable and sort is a subselection...use original ms
+		if (ms_p.nrow() == sorted.nrow()) elms = &sorted;
+	}
+
+	MSSelection thisSelection;
+	if (fieldid_p.nelements() > 0)
+	{
+		thisSelection.setFieldExpr(MSSelection::indexExprStr(fieldid_p));
+	}
+
+	if (spw_p.nelements() > 0)
+	{
+		thisSelection.setSpwExpr(MSSelection::indexExprStr(spw_p));
+	}
+
+	if (antennaSel_p)
+	{
+		if (antennaId_p.nelements() > 0)
+		{
+			thisSelection.setAntennaExpr(MSSelection::indexExprStr(antennaId_p));
+		}
+		if (antennaSelStr_p[0] != "")
+		{
+			thisSelection.setAntennaExpr(MSSelection::nameExprStr(antennaSelStr_p));
+		}
+
+	}
+
+	if (timeRange_p != "")
+	{
+		thisSelection.setTimeExpr(timeRange_p);
+	}
+
+
+	thisSelection.setUvDistExpr(uvrangeString_p);
+	thisSelection.setScanExpr(scanString_p);
+	thisSelection.setStateExpr(intentString_p);
+	thisSelection.setObservationExpr(obsString_p);
+
+	if (arrayExpr_p != "")
+	{
+		thisSelection.setArrayExpr(arrayExpr_p);
+	}
+
+	if (corrString_p != "")
+	{
+		thisSelection.setPolnExpr(corrString_p);
+	}
+
+	thisSelection.setTaQLExpr(taqlString_p);
+
+	TableExprNode exprNode = thisSelection.toTableExprNode(elms);
+	selTimeRanges_p = thisSelection.getTimeList();
+	selObsId_p = thisSelection.getObservationList();
+
+	// Get the list of DDI for the selected spws
+	spw2ddid_p = thisSelection.getSPWDDIDList(elms);
+
+	const MSDataDescription ddtable = elms->dataDescription();
+	ROScalarColumn<Int> polId(ddtable,MSDataDescription::columnName(MSDataDescription::POLARIZATION_ID));
+	const MSPolarization poltable = elms->polarization();
+	ROArrayColumn<Int> pols(poltable,MSPolarization::columnName(MSPolarization::CORR_TYPE));
+
+	// Get the list of DDI for the selected polarizations
+	Vector<Int> polDDIList = thisSelection.getDDIDList(elms);
+
+	// When polDDIList is empty, do not do an intersection
+	Bool doIntersection = true;
+
+	if (polDDIList.size() == 0){
+		doIntersection = false;
+	}
+
+	// intersection between selected DDI from spw selection and
+	// selected DDI from polarization selection
+	if (doIntersection) {
+		Vector<Int> intersectedDDI = set_intersection(spw2ddid_p, polDDIList);
+		uInt nddids = intersectedDDI.size();
+		if (nddids > 0){
+			spw2ddid_p.resize(nddids);
+			for (uInt ii = 0; ii < nddids; ++ii){
+				spw2ddid_p[ii] = intersectedDDI[ii];
+			}
+		}
+		else {
+			os 	<< LogIO::SEVERE << "None of the selected correlations are in spectral window "
+				<< LogIO::POST;
+		}
+	}
+
+
+	// This is actually the number of selected DDI
+	uInt nDDIs = spw2ddid_p.size();
+
+	inNumCorr_p.resize(nDDIs);
+	ncorr_p.resize(nDDIs);
+
+	// Map the correlations from input selected DDI to output
+	for (uInt k = 0; k < nDDIs; ++k)
+	{
+		Int ddid = spw2ddid_p[k];
+
+		// Number of input correlations for each DDI
+		// It reads the nelements of the CORR_TYPE column cell
+		inNumCorr_p[k] = pols(polId(ddid)).nelements();
+
+		// Corresponding number of output correlations for each DDI
+		ncorr_p[k] = inPolOutCorrToInCorrMap_p[polId(ddid)].nelements();
+		if (ncorr_p[k] == 0)
+		{
+			os 		<< LogIO::SEVERE
+					<< "None of the selected correlations are in spectral window "
+					<< spw_p[k] << LogIO::POST;
+			return false;
+		}
+	}
+
+
+	// Now remake the selected ms
+	if (!(exprNode.isNull()))
+	{
+		mssel_p = MeasurementSet((*elms)(exprNode));
+	}
+	else
+	{
+		// Null take all the ms ...setdata() blank means that
+		mssel_p = MeasurementSet((*elms));
+	}
+
+	if (mssel_p.nrow() == 0) return False;
+
+	// Setup antNewIndex_p now that mssel_p is ready.
+	if (antennaSel_p)
+	{
+		// Watch out! getAntenna*List() and getBaselineList() return negative numbers for negated antennas!
+		ROScalarColumn<Int> ant1c(mssel_p, MS::columnName(MS::ANTENNA1));
+		ROScalarColumn<Int> ant2c(mssel_p, MS::columnName(MS::ANTENNA2));
+		Vector<Int> selAnts(ant1c.getColumn());
+		uInt nAnts = selAnts.nelements();
+
+		selAnts.resize(2 * nAnts, True);
+		selAnts(Slice(nAnts, nAnts)) = ant2c.getColumn();
+		nAnts = GenSort<Int>::sort(selAnts, Sort::Ascending,Sort::NoDuplicates);
+		selAnts.resize(nAnts, True);
+		Int maxAnt = max(selAnts);
+
+		if (maxAnt < 0)
+		{
+			os 	<< LogIO::SEVERE
+				<< "The maximum selected antenna number, " << maxAnt
+				<< ", seems to be < 0."
+				<< LogIO::POST;
+			return False;
+		}
+
+		antNewIndex_p.resize(maxAnt + 1);
+		//So if you see -1 in the main, feed, or pointing tables, fix it
+		antNewIndex_p.set(-1);
+
+		Bool trivial = true;
+		for (uInt k = 0; k < nAnts; ++k)
+		{
+			trivial &= (selAnts[k] == static_cast<Int> (k));
+			antNewIndex_p[selAnts[k]] = k;
+		}
+		// It is possible to exclude baselines without excluding any antennas.
+		antennaSel_p = !trivial;
+	}
+	// This still gets tripped up by VLA:OUT.
+	else
+	{
+		// Make a default antNewIndex_p.
+		antNewIndex_p.resize(mssel_p.antenna().nrow());
+		indgen(antNewIndex_p);
+	}
+
+	if (mssel_p.nrow() < ms_p.nrow())
+	{
+		os 		<< LogIO::NORMAL
+				<< mssel_p.nrow() << " out of " << ms_p.nrow()
+				<< " rows are going to be considered due to the selection criteria."
+				<< LogIO::POST;
+	}
+
+	return True;
 }
 
 // -----------------------------------------------------------------------
@@ -1374,6 +1582,7 @@ Bool MSTransformDataHandler::fillSubTables(const Vector<MS::PredefinedColumns>& 
 
 	timer.mark();
 	if (!fillDDTables()) return False;
+//	if (!fillDDTablesNew()) return False;
 	os << LogIO::DEBUG1 << "fillDDTables took " << timer.real() << "s." << LogIO::POST;
 
 	// SourceIDs need to be re-mapped around here
@@ -1654,6 +1863,418 @@ Bool MSTransformDataHandler::fillFieldTable()
 	}
 
 	return True;
+}
+
+Bool MSTransformDataHandler::fillDDTablesNew()
+{
+	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
+
+	// Selected input MS SPW Table Columns (read-only)
+	ROMSSpWindowColumns inSpWCols(mssel_p.spectralWindow());
+
+	// SPW Table Columns of output MS (read-write)
+	MSSpWindowColumns& msSpW(msc_p->spectralWindow());
+
+	// Detect which optional columns of SPECTRAL_WINDOW are present.
+	// inSpWCols and msSpW should agree because addOptionalColumns() was done for
+	// SPECTRAL_WINDOW in fillAllTables() before making msc_p or calling fillDDTables
+	Bool haveSpwAN = inSpWCols.assocNature().hasContent();
+	Bool haveSpwASI = inSpWCols.assocSpwId().hasContent();
+	Bool haveSpwBN = inSpWCols.bbcNo().hasContent();
+	Bool haveSpwBS = inSpWCols.bbcSideband().hasContent();
+	Bool haveSpwDI = inSpWCols.dopplerId().hasContent();
+
+	// DATA_DESCRIPTION Table columns of output MS
+	MSDataDescColumns& msDD(msc_p->dataDescription());
+
+	// POLARIZATION Table columns of output MS
+	MSPolarizationColumns& msPol(msc_p->polarization());
+
+	//DATA_DESCRIPTION table of selected MS
+	const MSDataDescription ddtable = mssel_p.dataDescription();
+
+	// POLARIZATION_ID column of DD in selected MS
+	ROScalarColumn<Int> polId(ddtable,
+			MSDataDescription::columnName(MSDataDescription::POLARIZATION_ID));
+
+	// SPECTRAL_WINDOW_ID of selected SPWS
+	ROScalarColumn<Int> spwIds(ddtable,
+			MSDataDescription::columnName(MSDataDescription::SPECTRAL_WINDOW_ID));
+
+	// From the selected DDI, get the SPW_IDs for the output MS
+	Vector<Int> selectedSpwIds;
+	uInt nddid = spw2ddid_p.size();
+	selectedSpwIds.resize(nddid);
+	for (uInt row=0; row<spw2ddid_p.size(); ++row){
+		// These are the selected SPW_IDs based on the DDI
+		// They need to be re-indexed later
+		selectedSpwIds[row] = spwIds(spw2ddid_p[row]);
+	}
+
+	// Re-label the SPW_IDs (get new indices)
+	spwRelabel_p.resize(mscIn_p->spectralWindow().nrow());
+	spwRelabel_p.set(-1);
+
+	// Make map from input to output spws.
+	// spwRelabel_p has to be the SPECTRAL_WINDOW_ID not DDI
+	Bool dum;
+	Sort sortSpws(spw_p.getStorage(dum), sizeof(Int));
+	sortSpws.sortKey((uInt) 0, TpInt);
+	Vector<uInt> spwsortindex, spwuniqinds;
+	sortSpws.sort(spwsortindex, spw_p.nelements());
+	uInt nuniqSpws = sortSpws.unique(spwuniqinds, spwsortindex);
+	spw_uniq_p.resize(nuniqSpws);
+
+	for (uInt k = 0; k < nuniqSpws; ++k)
+	{
+		spw_uniq_p[k] = spw_p[spwuniqinds[k]];
+		spwRelabel_p[spw_uniq_p[k]] = k;
+	}
+	if (nuniqSpws < spw_p.nelements())
+	{
+		os 	<< LogIO::WARN
+			<< "Multiple channel ranges within an spw may not work.  SOME DATA MAY BE OMITTED!"
+			<< "\nConsider splitting them individually and optionally combining the output MSes with concat."
+			<< "\nEven then, expect problems if exporting to uvfits."
+			<< LogIO::POST;
+	}
+
+	// Make map from input to output spws.
+	// SPW_ID must NOT be unique, as it can repeat sometimes
+	Sort sortSpws1(selectedSpwIds.getStorage(dum), sizeof(Int));
+	sortSpws1.sortKey((uInt) 0, TpInt);
+	Vector<uInt> spwsortindex1;
+	sortSpws1.sort(spwsortindex1, selectedSpwIds.nelements());
+	uInt nSortedSpws = spwsortindex1.nelements();
+
+	// This table is only used to fill the DD output table at
+	// the end of this function
+	Vector<Int> newDDtable;
+	newDDtable.resize(mscIn_p->dataDescription().nrow());
+	newDDtable.set(-1);
+
+	// Re-index the SPW IDs for the output DD table
+	uInt spwindex = 0;
+	for (uInt k=0; k < nSortedSpws; ++k){
+		// k --> row number of output DD table
+		if (k == 0){
+			// do it only the first time
+			newDDtable[k] = spwindex;
+			++spwindex;
+			continue;
+		}
+
+		if (selectedSpwIds[k] == selectedSpwIds[k-1]){
+			newDDtable[k] = spwindex - 1;
+		}
+		else {
+			newDDtable[k] = spwindex;
+			++spwindex;
+		}
+	}
+
+	const MSPolarization poltable = mssel_p.polarization();
+	ROScalarColumn<Int> numCorr(poltable,MSPolarization::columnName(MSPolarization::NUM_CORR));
+	ROArrayColumn<Int> corrType(poltable,MSPolarization::columnName(MSPolarization::CORR_TYPE));
+	ROArrayColumn<Int> corrProd(poltable,MSPolarization::columnName(MSPolarization::CORR_PRODUCT));
+	ROScalarColumn<Bool> polFlagRow(poltable,MSPolarization::columnName(MSPolarization::FLAG_ROW));
+
+	inNumChan_p.resize(spw_p.nelements());
+
+	// Vector of POLARIZATION_ID column from selected MS
+	polID_p = polId.getColumn();
+	uInt nPol = polID_p.size();
+
+	// Map from output POLARIZATION_ID to input POLARIZATION_ID.
+	Vector<Int> selectedPolId(nPol);
+	for (uInt k = 0; k < nPol; ++k)
+	{
+		selectedPolId[k] = polID_p[k];
+	}
+
+	Vector<Int> newPolId(nddid);
+	for (uInt k = 0; k < nddid; ++k)
+	{
+		Bool found = false;
+
+		for (uInt j = 0; j < nPol; ++j)
+		{
+			// Get the POLARIZATION_ID of the intersected DDI
+			// from spw and polarization selections (spw2ddid_p)
+			if (selectedPolId[j] == polID_p[spw2ddid_p[k]])
+			{
+				// These should go to the POLARIZATION_ID column of the output MS
+				newPolId[k] = j;
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+		{
+			os	<< LogIO::SEVERE
+				<< "No polarization ID found for output polarization setup " << k
+				<< LogIO::POST;
+			return false;
+		}
+	}
+
+
+	// Get a unique sorted list of the POLARIZATION_ID
+	// of the selected DDI
+	Sort sort(selectedPolId.getStorage(dum), sizeof(Int));
+	sort.sortKey((uInt) 0, TpInt);
+	Vector<uInt> index, uniq;
+	sort.sort(index, selectedPolId.nelements());
+	nPol = sort.unique(uniq, index);
+
+	// Write to output MS POLARIZATION table
+	// This table should not be resized!!!
+	corrSlice_p.resize(nPol);
+	for (uInt outpid = 0; outpid < nPol; ++outpid)
+	{
+		uInt inpid = selectedPolId[outpid];
+		uInt ncorr = inPolOutCorrToInCorrMap_p[inpid].nelements();
+		const Vector<Int> inCT(corrType(inpid));
+
+		// ncorr will be 0 if none of the selected spws have this pid.
+		if (ncorr > 0 && ncorr < inCT.nelements())
+		{
+			keepShape_p = false;
+
+			// Check whether the requested correlations can be accessed by slicing.
+			// That means there must be a constant stride.  The most likely (only?)
+			// way to violate that is to ask for 3 out of 4 correlations.
+			if (ncorr > 2)
+			{
+				os 	<< LogIO::SEVERE
+					<< "Sorry, the requested correlation selection is not unsupported.\n"
+					<< "Try selecting fewer or all of the correlations."
+					<< LogIO::POST;
+				return false;
+			}
+
+			size_t increment = 2;
+			if (ncorr > 1)
+			{
+				increment = inPolOutCorrToInCorrMap_p[inpid][1] - inPolOutCorrToInCorrMap_p[inpid][0];
+			}
+			corrSlice_p[outpid] = Slice(inPolOutCorrToInCorrMap_p[inpid][0],ncorr,increment);
+		}
+		else
+		{
+			corrSlice_p[outpid] = Slice(0, ncorr);
+		}
+
+
+		// Add rows to POLARIZATION table of output MS
+		msOut_p.polarization().addRow();
+		msPol.numCorr().put(outpid, ncorr);
+		msPol.flagRow().put(outpid, polFlagRow(inpid));
+
+		Vector<Int> outCT;
+		const Matrix<Int> inCP(corrProd(inpid));
+		Matrix<Int> outCP;
+		outCT.resize(ncorr);
+		outCP.resize(2, ncorr);
+		for (uInt k = 0; k < ncorr; ++k)
+		{
+			Int inCorrInd = inPolOutCorrToInCorrMap_p[inpid][k];
+
+			outCT[k] = inCT[inCorrInd];
+			for (uInt feedind = 0; feedind < 2; ++feedind)
+			{
+				outCP(feedind, k) = inCP(feedind, inCorrInd);
+			}
+
+		}
+		msPol.corrType().put(outpid, outCT);
+		msPol.corrProduct().put(outpid, outCP);
+	}
+
+	// This sets the number of input channels for each spw. But
+	// it considers that a SPW ID contains only one set of channels.
+	// I hope this is true!!
+	// Write to SPECTRAL_WINDOW table
+	for (uInt k = 0; k < spw_p.nelements(); ++k)
+	{
+		inNumChan_p[k] = inSpWCols.numChan()(spw_p[k]);
+	}
+
+
+	Vector<Vector<Int> > spwinds_of_uniq_spws(nuniqSpws);
+	totnchan_p.resize(nuniqSpws);
+	for (uInt k = 0; k < nuniqSpws; ++k)
+	{
+		Int maxchan = 0;
+		uInt j = 0;
+
+		// Add rows to output MS SPW table
+		msOut_p.spectralWindow().addRow();
+
+		totnchan_p[k] = 0;
+		spwinds_of_uniq_spws[k].resize();
+		for (uInt spwind = 0; spwind < spw_p.nelements(); ++spwind)
+		{
+			if (spw_p[spwind] == spw_uniq_p[k])
+			{
+				Int highchan = nchan_p[spwind] * chanStep_p[spwind] + chanStart_p[spwind];
+
+				if (highchan > maxchan) maxchan = highchan;
+
+				totnchan_p[k] += nchan_p[spwind];
+
+				// The true is necessary to avoid scrambling previously assigned values.
+				spwinds_of_uniq_spws[k].resize(j + 1, true);
+
+				// Warning!  spwinds_of_uniq_spws[k][j] will compile without warning, but dump core at runtime.
+				(spwinds_of_uniq_spws[k])[j] = spwind;
+
+				++j;
+			}
+		}
+		if (maxchan > inSpWCols.numChan()(spw_uniq_p[k]))
+		{
+			os 	<< LogIO::SEVERE
+				<< " Channel settings wrong; exceeding number of channels in spw "
+				<< spw_uniq_p[k] << LogIO::POST;
+			return False;
+		}
+	}
+
+	// min_k is an index for getting an spw index via spw_uniq_p[min_k].
+	// k is an index for getting an spw index via spw_p[k].
+	for (uInt min_k = 0; min_k < nuniqSpws; ++min_k)
+	{
+		uInt k = spwinds_of_uniq_spws[min_k][0];
+
+		if (spwinds_of_uniq_spws[min_k].nelements() > 1 || nchan_p[k] != inSpWCols.numChan()(spw_p[k]))
+		{
+			Vector<Double> effBWIn = inSpWCols.effectiveBW()(spw_uniq_p[min_k]);
+			Int nOutChan = totnchan_p[min_k];
+			Vector<Double> chanFreqOut(nOutChan);
+			Vector<Double> chanFreqIn = inSpWCols.chanFreq()(spw_uniq_p[min_k]);
+			Vector<Double> chanWidthOut(nOutChan);
+			Vector<Double> chanWidthIn = inSpWCols.chanWidth()(spw_uniq_p[min_k]);
+			Vector<Double> spwResolOut(nOutChan);
+			Vector<Double> spwResolIn = inSpWCols.resolution()(spw_uniq_p[min_k]);
+			Vector<Double> effBWOut(nOutChan);
+			Int outChan = 0;
+
+			keepShape_p = false;
+
+			// The sign of CHAN_WIDTH defaults to +.  Its determination assumes that
+			// chanFreqIn is monotonic, but not that the sign of the chanWidthIn is correct.
+			Bool neginc = chanFreqIn[chanFreqIn.nelements() - 1] < chanFreqIn[0];
+
+			effBWOut.set(0.0);
+			Double totalBW = 0.0;
+			for (uInt rangeNum = 0; rangeNum < spwinds_of_uniq_spws[min_k].nelements(); ++rangeNum)
+			{
+				k = spwinds_of_uniq_spws[min_k][rangeNum];
+
+				Int span = chanStep_p[k] * widths_p[k];
+
+				for (Int j = 0; j < nchan_p[k]; ++j)
+				{
+					Int inpChan = chanStart_p[k] + j * span;
+
+					if (span > 1)
+					{
+						Int lastChan = inpChan + span - 1;
+
+						if (lastChan > chanEnd_p[k])
+						{
+							// The averaging width is not a factor of the number of
+							// selected input channels, so the last output bin receives
+							// fewer input channels than the other bins.
+							lastChan = chanEnd_p[k];
+
+							Int nchan = lastChan - inpChan + 1;
+							os 	<< LogIO::NORMAL
+								<< "The last output channel of spw "
+								<< spw_p[k] << " has only " << nchan
+								<< " input channel";
+							if (nchan > 1) os << "s.";
+							os << LogIO::POST;
+
+						}
+
+						chanFreqOut[outChan] = (chanFreqIn[inpChan]
+								+ chanFreqIn[lastChan]) / 2;
+
+						Double sep = chanFreqIn[lastChan] - chanFreqIn[inpChan];
+
+						if (neginc) sep = -sep;
+
+						// The internal abs is necessary because the sign of chanWidthIn may be wrong.
+						chanWidthOut[outChan] = sep + 0.5 * abs(chanWidthIn[inpChan] + chanWidthIn[lastChan]);
+						if (neginc) chanWidthOut[outChan] = -chanWidthOut[outChan];
+
+						spwResolOut[outChan] = 0.5 * (spwResolIn[inpChan] + spwResolIn[lastChan]) + sep;
+
+						for (Int avgChan = inpChan; avgChan <= lastChan; avgChan += chanStep_p[k])
+						{
+							effBWOut[outChan] += effBWIn[avgChan];
+						}
+
+					}
+					else
+					{
+						chanFreqOut[outChan] = chanFreqIn[inpChan];
+						spwResolOut[outChan] = spwResolIn[inpChan];
+						chanWidthOut[outChan] = chanWidthIn[inpChan];
+						effBWOut[outChan] = effBWIn[inpChan];
+					}
+					totalBW += effBWOut[outChan];
+					++outChan;
+				}
+			}
+			--outChan;
+
+			msSpW.chanFreq().put(min_k, chanFreqOut);
+			msSpW.refFrequency().put(min_k,min(chanFreqOut[0], chanFreqOut[chanFreqOut.size() - 1]));
+			msSpW.resolution().put(min_k, spwResolOut);
+			msSpW.numChan().put(min_k, nOutChan);
+			msSpW.chanWidth().put(min_k, chanWidthOut);
+			msSpW.effectiveBW().put(min_k, spwResolOut);
+			msSpW.totalBandwidth().put(min_k, totalBW);
+		}
+		else
+		{
+			msSpW.chanFreq().put(min_k, inSpWCols.chanFreq()(spw_p[k]));
+			msSpW.refFrequency().put(min_k, inSpWCols.refFrequency()(spw_p[k]));
+			msSpW.resolution().put(min_k, inSpWCols.resolution()(spw_p[k]));
+			msSpW.numChan().put(min_k, inSpWCols.numChan()(spw_p[k]));
+			msSpW.chanWidth().put(min_k, inSpWCols.chanWidth()(spw_p[k]));
+			msSpW.effectiveBW().put(min_k, inSpWCols.effectiveBW()(spw_p[k]));
+			msSpW.totalBandwidth().put(min_k,inSpWCols.totalBandwidth()(spw_p[k]));
+		}
+
+		msSpW.flagRow().put(min_k, inSpWCols.flagRow()(spw_p[k]));
+		msSpW.freqGroup().put(min_k, inSpWCols.freqGroup()(spw_p[k]));
+		msSpW.freqGroupName().put(min_k, inSpWCols.freqGroupName()(spw_p[k]));
+		msSpW.ifConvChain().put(min_k, inSpWCols.ifConvChain()(spw_p[k]));
+		msSpW.measFreqRef().put(min_k, inSpWCols.measFreqRef()(spw_p[k]));
+		msSpW.name().put(min_k, inSpWCols.name()(spw_p[k]));
+		msSpW.netSideband().put(min_k, inSpWCols.netSideband()(spw_p[k]));
+		if (haveSpwAN) msSpW.assocNature().put(min_k, inSpWCols.assocNature()(spw_p[k]));
+		if (haveSpwASI) msSpW.assocSpwId().put(min_k, inSpWCols.assocSpwId()(spw_p[k]));
+		if (haveSpwBN) msSpW.bbcNo().put(min_k, inSpWCols.bbcNo()(spw_p[k]));
+		if (haveSpwBS) msSpW.bbcSideband().put(min_k, inSpWCols.bbcSideband()(spw_p[k]));
+		if (haveSpwDI) msSpW.dopplerId().put(min_k, inSpWCols.dopplerId()(spw_p[k]));
+
+	}
+
+	// Write to the DATA_DESCRIPTION table of output MS
+	for (uInt dd=0; dd<nddid; ++dd){
+		msOut_p.dataDescription().addRow();
+		msDD.flagRow().put(dd, False);
+		msDD.polarizationId().put(dd, newPolId[dd]);
+		msDD.spectralWindowId().put(dd, newDDtable[dd]);
+	}
+
+
+	return true;
 }
 
 // -----------------------------------------------------------------------
@@ -1995,7 +2616,6 @@ Bool MSTransformDataHandler::fillDDTables()
 	return true;
 }
 
-
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
@@ -2285,7 +2905,6 @@ Bool MSTransformDataHandler::copySource()
 			Int inSidVal = inSId(inrn);
 			// -1 means the source is valid for any SPW.
 			Int inSPWVal = inSPW(inrn);
-
 			if (inSidVal >= maxSId)
 			{
 				os << LogIO::WARN << "Invalid SOURCE ID in SOURCE table row " << inrn << LogIO::POST;
