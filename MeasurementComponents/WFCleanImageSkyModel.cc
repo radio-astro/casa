@@ -171,7 +171,7 @@ Bool WFCleanImageSkyModel::solve(SkyEquation& se) {
   // The MFCleanImageSkyModel solve cleans all images in
   // parallel.
   if(!MFCleanImageSkyModel::solve(se)) {
-    os << "Wide-field clean failed" << LogIO::POST;
+    os << "Wide-field clean apparently failed to reach threshold" << LogIO::POST;
     return False;
   }
   
