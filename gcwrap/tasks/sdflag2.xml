@@ -116,7 +116,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="timerange" subparam="true">
-	    <description>selection string for selecting by time range (e.g., \'09:14:0~09:54:0\')</description>
+	    <description>Time range: \'\' ==> all,timerange=\'09:14:0~09:54:0\'</description>
 	    <value></value>
     </param>
 
@@ -300,11 +300,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         example: 'FLS3a*'
                         this selection is in addition to scans, timerange,
                         ifs, and pols
-                timerange -- selection string for selecting timerange
-                        default: '' (no timerange selection)
-                        example: '09:14:0~09:54:0'
-                        this selection is in addition to scans, fields, ifs,
-                        and pols
+                timerange -- Select data based on time range:
+                    default = '' (all); example,
+                    timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+                    Note: YYYY/MM/DD can be dropped as needed:
+                    timerange='09:14:0~09:54:0' # this time range
+                    timerange='09:44:00' # data within one integration of time
+                    timerange='&gt;10:24:00' # data after this time
+                    timerange='09:44:00+00:13:00' #data 13 minutes after time
                 ifs -- list of IF id numbers to select
                         default: [] (use all IFs)
                         example: [15]
