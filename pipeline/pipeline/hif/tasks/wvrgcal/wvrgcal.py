@@ -111,12 +111,19 @@ class WvrgcalInputs(basetask.StandardInputs):
 
     @property
     def qa2_bandpass_intent(self):
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('qa2_bandpass_intent')
+
+        if self._qa2_bandpass_intent is None:
+            # default is blank, which allows the bandpass task
+            # to select a sensible default if the dataset lacks
+            # data with BANDPASS intent
+            return ''
+
         return self._qa2_bandpass_intent
 
     @qa2_bandpass_intent.setter
     def qa2_bandpass_intent(self, value):
-        if value is None:
-            value = 'BANDPASS'
         self._qa2_bandpass_intent = value
 
     @property
