@@ -30,7 +30,7 @@
 #include <display/RegionShapes/RegionShape.h>
 #include <casa/Containers/Record.h>
 #include <display/Display/PanelDisplay.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 
 #include <utility>
 

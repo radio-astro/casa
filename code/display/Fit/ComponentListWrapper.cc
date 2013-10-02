@@ -141,7 +141,7 @@ namespace casa {
 		ImageInfo imageInformation = image->imageInfo();
 		bool hasBeam = imageInformation.hasBeam();
 		if ( hasBeam ) {
-			CoordinateSystem coordSystem = image->coordinates();
+			DisplayCoordinateSystem coordSystem = image->coordinates();
 			IPosition imageShape = image->shape();
 			GaussianBeam beam = imageInformation.restoringBeam( channel );
 			Angular2DGaussian originalBeam( majorAxis, minorAxis, positionAngle );
@@ -209,7 +209,7 @@ namespace casa {
 	        bool screenEstimates, RegionBox* screenBox ) const {
 		//The format of each line is
 		//peak intensity, peak x-pixel value, peak y-pixel value, major axis, minor axis, position angle, fixed
-		CoordinateSystem coordSystem = image->coordinates();
+		DisplayCoordinateSystem coordSystem = image->coordinates();
 		bool successfulWrite = true;
 		bool directionCoordinate = coordSystem.hasDirectionCoordinate();
 		if ( !directionCoordinate ) {
@@ -331,7 +331,7 @@ namespace casa {
 	        const QString& colorName) const {
 		int sourceCount = getSize();
 		QList<RegionShape*> fitList;
-		CoordinateSystem coordSystem = image->coordinates();
+		DisplayCoordinateSystem coordSystem = image->coordinates();
 
 		for (int index=0; index < sourceCount; index++) {
 			SkyComponent skyComponent = skyList.component( index );
@@ -367,7 +367,7 @@ namespace casa {
 	        int channelIndex, const QString& filePath ) const {
 		bool success = false;
 		int sourceCount = getSize();
-		CoordinateSystem coordSystem = image->coordinates();
+		DisplayCoordinateSystem coordSystem = image->coordinates();
 		IPosition imageShape = image->shape();
 		Vector<Stokes::StokesTypes> stokes;
 		CoordinateUtil::findStokesAxis(stokes, coordSystem);

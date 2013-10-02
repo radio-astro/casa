@@ -76,7 +76,7 @@ struct channelContribution;
 
 // Map definition
 typedef map<MS::PredefinedColumns,MS::PredefinedColumns> dataColMap;
-typedef map< pair< pair<Int,Int> , pair<Int,Int> >,vector<uInt> > baselineMap;
+typedef map< pair< pair<Int,Int> , Int >,vector<uInt> > baselineMap;
 typedef map<Int,map<uInt, uInt > > inputSpwChanMap;
 typedef map<Int,vector < channelContribution > >  inputOutputChanFactorMap;
 typedef map<Int,pair < spwInfo, spwInfo > > inputOutputSpwMap;

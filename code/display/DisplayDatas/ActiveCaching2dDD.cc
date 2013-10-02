@@ -40,7 +40,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-	ActiveCaching2dDD::ActiveCaching2dDD(const CoordinateSystem &coordsys,
+	ActiveCaching2dDD::ActiveCaching2dDD(const DisplayCoordinateSystem &coordsys,
 	                                     const Vector<Double> &pixblc,
 	                                     const Vector<Double> &pixtrc) :
 		CachingDisplayData(),
@@ -68,7 +68,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// MUST IMPLEMENT
 	}
 
-	ActiveCaching2dDD::ActiveCaching2dDD(const ActiveCaching2dDD &) {
+	ActiveCaching2dDD::ActiveCaching2dDD(const ActiveCaching2dDD &o) : CachingDisplayData(o) {
 		// MUST IMPLEMENT
 	}
 
@@ -554,7 +554,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 
-	void ActiveCaching2dDD::setCoordinateSystem(const CoordinateSystem &coordsys,
+	void ActiveCaching2dDD::setCoordinateSystem(const DisplayCoordinateSystem &coordsys,
 	        const Vector<Double> &pixblc,
 	        const Vector<Double> &pixtrc) {
 		itsCoordinateSystem = coordsys;
@@ -570,7 +570,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			                "ActiveCaching2dDD constructor"));
 		}
 
-		// convert CoordinateSystem to canonical units
+		// convert DisplayCoordinateSystem to canonical units
 		// SHOULD NOT DO THIS FOR LINEAR AXES!!!
 		/*
 		Vector<String> waxisunits = itsCoordinateSystem.worldAxisUnits();
@@ -651,7 +651,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return itsCoordinateSystem.increment();
 	}
 
-	void ActiveCaching2dDD::setSpectralFormatting  (CoordinateSystem& cSys,
+	void ActiveCaching2dDD::setSpectralFormatting  (DisplayCoordinateSystem& cSys,
 	        const String& doppler,
 	        const String& unit)
 //
@@ -662,7 +662,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	{
 		static LogIO os(LogOrigin("ActiveCaching2dDD", "setSpectralFormatting", WHERE));
 		String errorMsg;
-		if (!CoordinateUtil::setSpectralFormatting (errorMsg, cSys, unit, doppler)) {
+		if ( ! cSys.setSpectralFormatting( errorMsg, unit, doppler ) ) {
 			os << LogIO::WARN << "Failed to update SpectralCoordinate formatting because" << LogIO::POST;
 			os << errorMsg << LogIO::POST;
 		}

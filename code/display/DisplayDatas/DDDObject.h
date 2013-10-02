@@ -181,8 +181,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		               Double x, Double y);
 		// </group>
 
-		// Convert CoordinateSystem to screen pixels
-		void convertCoordinateSystem (CoordinateSystem& cSys, WorldCanvas* wcPtr) const;
+		// Convert DisplayCoordinateSystem to screen pixels
+		void convertCoordinateSystem (DisplayCoordinateSystem& cSys, WorldCanvas* wcPtr) const;
 
 		// Is the point on a handle
 		Bool onHandle(const Block<DDDHandle>& handles,

@@ -23,7 +23,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 #include "MomentSettingsWidgetOptical.qo.h"
-
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <display/QtPlotter/ProfileTaskMonitor.h>
 #include <QDir>
 
@@ -185,7 +185,7 @@ namespace casa {
 
 		// get the coo-sys
 		ImageInterface<Float> * image = const_cast<ImageInterface <Float>* > (taskMonitor->getImage().get());
-		CoordinateSystem cSys = image->coordinates();
+		DisplayCoordinateSystem cSys = image->coordinates();
 
 		// depending on the collapse type,
 		// insert the allowed error types

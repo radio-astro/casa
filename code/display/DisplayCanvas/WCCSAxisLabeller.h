@@ -1,4 +1,4 @@
-//# WCCSAxisLabeller.h: labelling axes using a CoordinateSystem on a WC
+//# WCCSAxisLabeller.h: labelling axes using a DisplayCoordinateSystem on a WC
 //# Copyright (C) 1999,2000,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -29,18 +29,18 @@
 #define TRIALDISPLAY_WCCSAXISLABELLER_H
 
 #include <casa/aips.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <display/DisplayCanvas/WCAxisLabeller.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>
-// Base class for WorldCanvas axis labelling using a CoordinateSystem.
+// Base class for WorldCanvas axis labelling using a DisplayCoordinateSystem.
 // </summary>
 //
 // <synopsis>
 // This (base) class adds to the interface of WCAxisLabeller functions
-// which support the use/provision of a CoordinateSystem to assist with
+// which support the use/provision of a DisplayCoordinateSystem to assist with
 // axis labelling.
 // </synopsis>
 
@@ -60,15 +60,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Destructor
 		virtual ~WCCSAxisLabeller();
 
-		// Install a CoordinateSystem.
+		// Install a DisplayCoordinateSystem.
 		//#dk note: See Bool useWCCS, below; in some cases the WorldCanvas's
 		//#   own CS is now used to draw labels, although the CS set here is
 		//#   still needed for certain things (default user interface, e.g.)
 		//#   when the WC is unknown.  (10/07)
-		virtual void setCoordinateSystem(const CoordinateSystem& coordsys);
+		virtual void setCoordinateSystem(const DisplayCoordinateSystem& coordsys);
 
-		// Get the CoordinateSystem.
-		virtual CoordinateSystem coordinateSystem() const {
+		// Get the DisplayCoordinateSystem.
+		virtual DisplayCoordinateSystem coordinateSystem() const {
 			return itsCoordinateSystem;
 		}
 
@@ -160,14 +160,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Int itsZIndex;
 
 		// Set spectral state onto given CS
-		void setSpectralState(CoordinateSystem& cs) const;
+		void setSpectralState(DisplayCoordinateSystem& cs) const;
 
 		// Set direction state onto given CS
-		void setDirectionState(CoordinateSystem& cs) const;
+		void setDirectionState(DisplayCoordinateSystem& cs) const;
 
 	private:
 
-		CoordinateSystem itsCoordinateSystem;
+		DisplayCoordinateSystem itsCoordinateSystem;
 		Bool itsHasCoordinateSystem;
 		String itsSpectralUnit;
 		String itsSpectralQuantity;

@@ -59,7 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual ~ScrollingRasterDD();
 
 		virtual void updateLattice(const Record &) {};
-		virtual void updateLattice(Array<Float> &, CoordinateSystem &);
+		virtual void updateLattice(Array<Float> &, DisplayCoordinateSystem &);
 
 		virtual String className() {
 			return String("ScrollingRasterDD");
@@ -92,7 +92,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	protected:
 		friend class ScrollingRasterDM;
 
-		virtual void updateLatticeConcat(Array<Float>* = NULL , CoordinateSystem* = NULL);
+		virtual void updateLatticeConcat(Array<Float>* = NULL , DisplayCoordinateSystem* = NULL);
 		virtual void initLattice(const Record &);
 		virtual void initLattice(const Float, const Float, const uInt);
 
@@ -139,7 +139,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Set Spectral preference -> not used here.
 		virtual void setSpectralPreference (
-		    CoordinateSystem& /*cSys*/, const String&, const String& ) {}
+		    DisplayCoordinateSystem& /*cSys*/, const String&, const String& ) {}
 
 		void setHeaderMin(Float x) {
 			itsHeaderMin = x;

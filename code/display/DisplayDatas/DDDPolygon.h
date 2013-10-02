@@ -37,7 +37,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/Unit.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <display/DisplayDatas/DDDObject.h>
 #include <display/DisplayDatas/DDDHandle.h>
 
@@ -148,8 +148,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		LogIO itsLogger;
 
-// CoordinateSystem in screen pixel coordinates
-		CoordinateSystem itsCoordinateSystem;
+// DisplayCoordinateSystem in screen pixel coordinates
+		DisplayCoordinateSystem itsCoordinateSystem;
 
 // pointer to world canvas (shallow copy)
 		WorldCanvas* itsWorldCanvasPtr;

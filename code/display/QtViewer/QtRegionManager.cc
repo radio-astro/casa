@@ -177,7 +177,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if(imreg.isWCRegion()) {
 
 			const WCRegion* wcreg=imreg.asWCRegionPtr();
-			CoordinateSystem csys;
+			DisplayCoordinateSystem csys;
 			{
 				/*List<QtDisplayData*> DDs = qdp_->registeredDDs();
 				ListIter<QtDisplayData*> qdds(DDs);
@@ -245,11 +245,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			TableRecord boxrec=wcreg->toRecord("");
 			const RecordInterface& blcrec=boxrec.asRecord("blc");
 			const RecordInterface& trcrec=boxrec.asRecord("trc");
-			CoordinateSystem *coords;
-			coords=CoordinateSystem::restore(boxrec,"coordinates");
-			//cout << "coords rect " << coords->nCoordinates() << endl;
-			Int dirInd=coords->findCoordinate(Coordinate::DIRECTION);
-			MDirection::Types dirType=coords->directionCoordinate(dirInd).directionType(True);
+			DisplayCoordinateSystem coords=DisplayCoordinateSystem::restore(boxrec,"coordinates");
+			//cout << "coords rect " << coords.nCoordinates() << endl;
+			Int dirInd=coords.findCoordinate(Coordinate::DIRECTION);
+			MDirection::Types dirType=coords.directionCoordinate(dirInd).directionType(True);
 			//Assuming x, y axes are dirInd and dirInd+1
 			Vector<Double> blc(2);
 			Vector<Double> trc(2);
@@ -284,12 +283,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		} else if((wcreg->type())== "WCPolygon") {
 			TableRecord polyrec=wcreg->toRecord("");
-			CoordinateSystem *coords;
-			coords=CoordinateSystem::restore(polyrec,"coordinates");
-			//cout << "coords polyg " << coords->nCoordinates() << endl;
+			DisplayCoordinateSystem coords=DisplayCoordinateSystem::restore(polyrec,"coordinates");
+			//cout << "coords polyg " << coords.nCoordinates() << endl;
 
-			Int dirInd=coords->findCoordinate(Coordinate::DIRECTION);
-			MDirection::Types dirType=coords->directionCoordinate(dirInd).directionType(True);
+			Int dirInd=coords.findCoordinate(Coordinate::DIRECTION);
+			MDirection::Types dirType=coords.directionCoordinate(dirInd).directionType(True);
 			Vector<Double> x;
 			Vector<Double> y;
 			const RecordInterface& subRecord0 = polyrec.asRecord("x");
@@ -359,7 +357,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			//QtDisplayData* qdd = qdds.getRight();
 
 			if( (qdd->imageInterface())) {
-				CoordinateSystem csys=(qdd->imageInterface())->coordinates();
+				DisplayCoordinateSystem csys=(qdd->imageInterface())->coordinates();
 				Int dirInd=csys.findCoordinate(Coordinate::DIRECTION);
 				MDirection::Types dirType=csys.directionCoordinate(dirInd).directionType(True);
 				if(type.contains("box")) {
@@ -1228,7 +1226,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if (reg && reg->isWCRegion()) {
 
 				const WCRegion* wcreg = reg->asWCRegionPtr();
-				CoordinateSystem csys;
+				DisplayCoordinateSystem csys;
 				csys = (qdd->imageInterface())->coordinates();
 				//cout << "before showreg csys" << endl;
 				Int dirInd =
@@ -1256,7 +1254,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (reg && reg->isWCRegion()) {
 
 			const WCRegion* wcreg = reg->asWCRegionPtr();
-			CoordinateSystem csys;
+			DisplayCoordinateSystem csys;
 			csys = (qdd->imageInterface())->coordinates();
 			//cout << "before showreg csys" << endl;
 			Int dirInd =
@@ -1896,7 +1894,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				zIndex = qdd->dd()->activeZIndex();
 
 				if ((qdd->imageInterface())) {
-					CoordinateSystem csys=(qdd->imageInterface())->coordinates();
+					DisplayCoordinateSystem csys=(qdd->imageInterface())->coordinates();
 					//Int dirInd=csys.findCoordinate(Coordinate::DIRECTION);
 					//MDirection::Types dirType=csys.directionCoordinate(dirInd)
 					//                      .directionType(True);

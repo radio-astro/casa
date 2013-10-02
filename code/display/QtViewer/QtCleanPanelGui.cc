@@ -33,7 +33,7 @@
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/QtMouseToolBar.qo.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeExpr.h>
 #include <lattices/Lattices/LCBox.h>

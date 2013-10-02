@@ -514,7 +514,7 @@ void MosaicFT::finalizeToSky()
     Int npol=1;
     Vector<Int> whichStokes(npol);
     if(stokes_p=="I" || stokes_p=="RR" || stokes_p=="LL" ||stokes_p=="XX" 
-       || stokes_p=="YY"){
+       || stokes_p=="YY" || stokes_p=="Q" || stokes_p=="U"){
       npol=1;
       whichStokes(0)=Stokes::type(stokes_p);
     }
@@ -1368,10 +1368,10 @@ void MosaicFT::getWeightImage(ImageInterface<Float>& weightImage,
 
 void MosaicFT::getFluxImage(ImageInterface<Float>& fluxImage) {
 
-  if (stokes_p=="QU"){
-    npol=2;
-    pbConvFunc_p->sliceFluxScale(npol);
+  if (stokes_p=="QU" || stokes_p=="Q" || stokes_p=="U"){
+    stokes_p=="QU" ? pbConvFunc_p->sliceFluxScale(2) : pbConvFunc_p->sliceFluxScale(1);
   }
+  
   IPosition inShape=(pbConvFunc_p->getFluxScaleImage()).shape();
   IPosition outShape=fluxImage.shape();
   if(outShape==inShape){

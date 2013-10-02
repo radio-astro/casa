@@ -26,7 +26,7 @@
 
 #include "MomentSettingsWidgetRadio.qo.h"
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
-
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <display/QtPlotter/ProfileTaskMonitor.h>
 #include <display/QtPlotter/ThresholdingBinPlotDialog.qo.h>
 #include <display/QtPlotter/conversion/Converter.h>
@@ -400,7 +400,7 @@ namespace casa {
 		// Get the spectral axis number.
 		// TODO: Generalize this to any hidden axis
 		std::tr1::shared_ptr<const ImageInterface<float> > image = taskMonitor->getImage();
-		CoordinateSystem cSys = image -> coordinates();
+		DisplayCoordinateSystem cSys = image -> coordinates();
 		int spectralAxisNumber = cSys.spectralAxisNumber();
 		if ( spectralAxisNumber < 0 ){
 			spectralAxisNumber = Util::getTabularFrequencyAxisIndex( image );

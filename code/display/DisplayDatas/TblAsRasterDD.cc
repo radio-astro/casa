@@ -226,7 +226,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // (Required) copy constructor
-	TblAsRasterDD::TblAsRasterDD(const TblAsRasterDD &) {
+	TblAsRasterDD::TblAsRasterDD(const TblAsRasterDD &o) : ActiveCaching2dDD(o) {
 	}
 
 // (Required) copy assignment

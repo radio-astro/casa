@@ -53,7 +53,7 @@ namespace casa {
     class QtPlotSvrMain : public QtPanelBase {
     Q_OBJECT
 	public:
-	    QtPlotSvrMain( QWidget *parent=0 ) : QtPanelBase( ) { }
+	    QtPlotSvrMain( QWidget */*parent*/=0 ) : QtPanelBase( ) { }
 
 	signals:
 	    void closing( bool );

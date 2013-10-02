@@ -716,7 +716,7 @@ namespace casa {
 
 			if ( wc_ == 0 || wc_->csMaster() == 0 ) return 0;
 
-			const CoordinateSystem &cs = wc_->coordinateSystem( );
+			const DisplayCoordinateSystem &cs = wc_->coordinateSystem( );
 			const Vector<String> &units = wc_->worldAxisUnits( );
 
 			Vector<Quantity> xv(_drawing_points_.size( ));
@@ -938,7 +938,7 @@ namespace casa {
 
 					Int nAxes = image->ndim( );
 					IPosition shp = image->shape( );
-					const CoordinateSystem &cs = image->coordinates( );
+					const DisplayCoordinateSystem &cs = image->coordinates( );
 
 					int zIndex = padd->activeZIndex( );
 					IPosition pos = padd->fixedPosition( );
@@ -1029,7 +1029,7 @@ namespace casa {
 			dispAxes.resize(2,True);
 
 			const Vector<String> &units = wc_->worldAxisUnits( );
-			const CoordinateSystem &cs = image->coordinates( );
+			const DisplayCoordinateSystem &cs = image->coordinates( );
 			Quantum<Vector<Double> > qx(x, units[0]), qy(y, units[1]);
 
 			ImageRegion *result = 0;

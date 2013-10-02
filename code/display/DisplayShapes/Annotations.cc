@@ -546,7 +546,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void Annotations::setShapeOptions(const uInt& toSet,
 	                                  const Record& newSettings) {
 		Bool updateReq = False;
-		if (toSet >= itsShapes.nelements() || toSet < 0 ) {
+		if (toSet >= itsShapes.nelements()) {
 			throw (AipsError("Bad call to setShapeOptions, bad shape index"));
 		} else {
 			try {
@@ -884,7 +884,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool Annotations::deleteShape(const uInt& toDel) {
 
-		if (toDel >= itsShapes.nelements() || toDel < 0) {
+		if (toDel >= itsShapes.nelements()) {
 			throw (AipsError("Annotations.cc - Shape index for deletion out of range"));
 		} else {
 

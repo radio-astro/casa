@@ -313,7 +313,7 @@ namespace casa {
 }
 
 
-std::ostream &operator<<( std::ostream &os, const casa::CoordinateSystem &cs ) {
+std::ostream &operator<<( std::ostream &os, const casa::DisplayCoordinateSystem &cs ) {
     casa::Vector<casa::String> names = cs.worldAxisNames( );
     casa::Vector<casa::String> units = cs.worldAxisUnits( );
     os << "[[" << cs.nWorldAxes( ) << "w," << cs.nPixelAxes( ) << "p]" << std::endl;
@@ -331,7 +331,7 @@ std::ostream &operator<<( std::ostream &os, const casa::CoordinateSystem &cs ) {
           case casa::Coordinate::DIRECTION:
             {
             const casa::DirectionCoordinate &coordinate = cs.directionCoordinate(coordNum);
-            os << "(" << i << ":" << coordNum << ":" << axisInCoord << ":" << cs.worldAxisToPixelAxis(i) << "P),direction) " << names[i] << "/" << units[i];
+            os << "(" << i << ":" << coordNum << ":" << axisInCoord << ":" << cs.worldAxisToPixelAxis(i) << "P),direction:" << casa::MDirection::showType(coordinate.directionType()) << ") " << names[i] << "/" << units[i];
             }
             break;
           case casa::Coordinate::SPECTRAL: 

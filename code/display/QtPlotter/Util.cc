@@ -25,6 +25,7 @@
 #include <display/QtPlotter/Util.h>
 #include <images/Images/ImageInterface.h>
 #include <coordinates/Coordinates/TabularCoordinate.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <assert.h>
 #include <cmath>
 #include <iostream>
@@ -227,7 +228,7 @@ namespace casa {
 
 	int Util::getTabularFrequencyAxisIndex(std::tr1::shared_ptr<const ImageInterface<Float> > img){
 		int tabIndex = -1;
-		const CoordinateSystem& cSys = img->coordinates();
+		const DisplayCoordinateSystem cSys = img->coordinates();
 		Int tabularCoordinateIndex = cSys.findCoordinate( Coordinate::TABULAR);
 		if ( tabularCoordinateIndex >= 0 ){
 			//Check to see if the units are frequency

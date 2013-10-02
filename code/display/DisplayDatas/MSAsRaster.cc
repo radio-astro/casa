@@ -37,7 +37,7 @@
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/TabularCoordinate.h>
@@ -1072,7 +1072,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 //--------------------------------------------------------------------------
-	CoordinateSystem MSAsRaster::setCS_() {
+	DisplayCoordinateSystem MSAsRaster::setCS_() {
 		// Update/set the (2d--canvas) coordinate system and extents.
 		// This gets set onto the WC before drawing
 		// (via ActiveCaching2dDD::sizeControl) to define the CS of the
@@ -1094,7 +1094,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         std::vector<Axis> ax(2);
         ax[0] = axisOn_(X);
         ax[1] = axisOn_(Y);
-		CoordinateSystem cs;
+		DisplayCoordinateSystem cs;
 
 		Vector<Double> linblc(2), lintrc(2);  // new max zoom extents.
 
@@ -2386,7 +2386,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
              pos_[axZ] = zIndex;
              if ( axZ == SP_W ) {
                   mspos_.sets(pos_[SP_W]);
-                  CoordinateSystem newcs = setCS_( );
+                  DisplayCoordinateSystem newcs = setCS_( );
                   wc.setCoordinateSystem(newcs);
              }
         }
@@ -4637,7 +4637,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// (time_, nAnt_, freq_, spwId_, scan_, field_, fieldName_, polName_)
 		// was gathered during findRanges_().
 
-		// Ideally, it would be collected into the DD's CoordinateSystem and
+		// Ideally, it would be collected into the DD's DisplayCoordinateSystem and
 		// used by the WADD (itsAxisLabeller) as well, but neither of these
 		// has the full generality needed yet.  E.g., the baseline-to-antennas
 		// translation _is_ in the CS already, but the lame results in axis
@@ -4804,7 +4804,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// (time_, nAnt_, freq_, spwId_, scan_, field_, fieldName_, polName_)
 		// was gathered during findRanges_().
 
-		// Ideally, it would be collected into the DD's CoordinateSystem and
+		// Ideally, it would be collected into the DD's DisplayCoordinateSystem and
 		// used by the WADD (itsAxisLabeller) as well, but neither of these
 		// has the full generality needed yet.  E.g., the baseline-to-antennas
 		// translation _is_ in the CS already, but the lame results in axis
@@ -5713,8 +5713,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		for(Double bsl=0.; bsl<nbslA_; bsl++) {
 			Double a1d, a2d;
 			a1a2_(a1d,a2d, bsl);
-			a1A_(bsl) = Int(a1d);
-			a2A_(bsl) = Int(a2d);
+			a1A_(int(bsl)) = Int(a1d);
+			a2A_(int(bsl)) = Int(a2d);
 		}
 
 		bslA_.resize(nAnt_+1, nAnt_+1);

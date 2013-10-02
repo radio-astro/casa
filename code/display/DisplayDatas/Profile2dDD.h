@@ -317,13 +317,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	private:
 
-		// Helper function. Initialise Profile2dDD with a CoordinateSystem
+		// Helper function. Initialise Profile2dDD with a DisplayCoordinateSystem
 		// put together from the parent DD
 		Bool createCoordinateSystem();
 
 		// Update the coordinate system of this Display Data and the axis
 		// labeller. Set new minimum and maximum Y values if necessary
-		Bool updateCoordinateSys(CoordinateSystem &cs);
+		Bool updateCoordinateSys(DisplayCoordinateSystem &cs);
 
 		// Extract the profile data from the provided pixel region and place
 		// it into itsData. The statistics used is determined by the

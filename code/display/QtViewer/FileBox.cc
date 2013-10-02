@@ -290,7 +290,7 @@ namespace casa {
 				zIndex = qdd->dd()->activeZIndex();
 
 				if ((qdd->imageInterface())) {
-					CoordinateSystem csys=(qdd->imageInterface())->coordinates();
+					DisplayCoordinateSystem csys=(qdd->imageInterface())->coordinates();
 					//Int dirInd=csys.findCoordinate(Coordinate::DIRECTION);
 					//MDirection::Types dirType=csys.directionCoordinate(dirInd)
 					//                      .directionType(True);
@@ -331,11 +331,11 @@ namespace casa {
 				//cout << "boxrec=" << boxrec << endl;
 				const RecordInterface& blcrec=boxrec.asRecord("blc");
 				const RecordInterface& trcrec=boxrec.asRecord("trc");
-				CoordinateSystem *coords;
-				coords=CoordinateSystem::restore(boxrec,"coordinates");
-				//cout << "coords rect " << coords->nCoordinates() << endl;
-				Int dirInd=coords->findCoordinate(Coordinate::DIRECTION);
-				//MDirection::Types dirType=coords->
+				DisplayCoordinateSystem coords;
+				coords=DisplayCoordinateSystem::restore(boxrec,"coordinates");
+				//cout << "coords rect " << coords.nCoordinates() << endl;
+				Int dirInd=coords.findCoordinate(Coordinate::DIRECTION);
+				//MDirection::Types dirType=coords.
 				//    directionCoordinate(dirInd).directionType(True);
 				//Assuming x, y axes are dirInd and dirInd+1
 				Vector<Double> blc(3);
@@ -369,7 +369,7 @@ namespace casa {
 				//cout << "wx:" << wx << endl;
 
 				/*
-				Int spcInd=coords->findCoordinate(Coordinate::SPECTRAL);
+				Int spcInd=coords.findCoordinate(Coordinate::SPECTRAL);
 				const RecordInterface& subRec0=blcrec.asRecord(j);
 				const RecordInterface& subRec1=trcrec.asRecord(j);
 				//cout << "subRec0=" << subRec0
@@ -402,12 +402,12 @@ namespace casa {
 			/*
 			else if((wcreg->type())== "WCPolygon" &&  tool.contains("olygon")){
 			   TableRecord polyrec=wcreg->toRecord("");
-			   CoordinateSystem *coords;
-			   coords=CoordinateSystem::restore(polyrec,"coordinates");
-			   //cout << "coords polyg " << coords->nCoordinates() << endl;
+			   DisplayCoordinateSystem *coords;
+			   coords=DisplayCoordinateSystem::restore(polyrec,"coordinates");
+			   //cout << "coords polyg " << coords.nCoordinates() << endl;
 
-			   //Int dirInd=coords->findCoordinate(Coordinate::DIRECTION);
-			   //MDirection::Types dirType=coords->
+			   //Int dirInd=coords.findCoordinate(Coordinate::DIRECTION);
+			   //MDirection::Types dirType=coords.
 			   //        directionCoordinate(dirInd).directionType(True);
 			   Vector<Double> x;
 			   Vector<Double> y;
@@ -504,7 +504,7 @@ namespace casa {
 			return;
 		}
 
-		CoordinateSystem csys=(qdd->imageInterface())->coordinates();
+		DisplayCoordinateSystem csys=(qdd->imageInterface())->coordinates();
 
 		//RegionManager rg(csys);
 		//UnitMap::putUser("pix", 1);
@@ -719,7 +719,7 @@ namespace casa {
 		if (reg && reg->isWCRegion()) {
 
 			const WCRegion* wcreg = reg->asWCRegionPtr();
-			CoordinateSystem csys;
+			DisplayCoordinateSystem csys;
 			//cout << "img=" << qdd->imageInterface() << endl;
 			csys = (qdd->imageInterface())->coordinates();
 			Int dirInd =
@@ -799,12 +799,10 @@ namespace casa {
 			TableRecord boxrec=wcreg->toRecord("");
 			const RecordInterface& blcrec=boxrec.asRecord("blc");
 			const RecordInterface& trcrec=boxrec.asRecord("trc");
-			CoordinateSystem *coords;
-			coords=CoordinateSystem::restore(boxrec,"coordinates");
-			//cout << "coords rect " << coords->nCoordinates() << endl;
-			Int dirInd=coords->findCoordinate(Coordinate::DIRECTION);
-			MDirection::Types dirType=coords->
-			                          directionCoordinate(dirInd).directionType(True);
+			DisplayCoordinateSystem coords=DisplayCoordinateSystem::restore(boxrec,"coordinates");
+			//cout << "coords rect " << coords.nCoordinates() << endl;
+			Int dirInd=coords.findCoordinate(Coordinate::DIRECTION);
+			MDirection::Types dirType=coords.directionCoordinate(dirInd).directionType(True);
 			//Assuming x, y axes are dirInd and dirInd+1
 			Vector<Double> blc(2);
 			Vector<Double> trc(2);
@@ -827,7 +825,7 @@ namespace casa {
 			}
 			/*
 			Vector<Int> chanRange(2);
-			Int spcInd=coords->findCoordinate(Coordinate::SPECTRAL);
+			Int spcInd=coords.findCoordinate(Coordinate::SPECTRAL);
 			//cout << "speInd=" << spcInd << endl;
 			if (blcrec.size() <= (uInt)spcInd || trcrec.size() <= (uInt)spcInd) {
 			   //set spectral range -1, -1 to indicate all chans
@@ -841,7 +839,7 @@ namespace casa {
 			   //cout << "spec1=" << specRec1 << endl;
 
 			   SpectralCoordinate spectralCoord =
-			     coords->spectralCoordinate(spcInd);
+			     coords.spectralCoordinate(spcInd);
 
 			   String error;
 			   Vector<String> units(1); units = "Hz";
@@ -914,12 +912,12 @@ namespace casa {
 		/*
 		    else if((wcreg->type())== "WCPolygon"){
 		      TableRecord polyrec=wcreg->toRecord("");
-		      CoordinateSystem *coords;
-		      coords=CoordinateSystem::restore(polyrec,"coordinates");
-		      //cout << "coords polyg " << coords->nCoordinates() << endl;
+		      DisplayCoordinateSystem *coords;
+		      coords=DisplayCoordinateSystem::restore(polyrec,"coordinates");
+		      //cout << "coords polyg " << coords.nCoordinates() << endl;
 
-		      Int dirInd=coords->findCoordinate(Coordinate::DIRECTION);
-		      MDirection::Types dirType=coords->
+		      Int dirInd=coords.findCoordinate(Coordinate::DIRECTION);
+		      MDirection::Types dirType=coords.
 		          directionCoordinate(dirInd).directionType(True);
 		      Vector<Double> x;
 		      Vector<Double> y;
@@ -940,13 +938,13 @@ namespace casa {
 		      }
 		      y = h.asQuantumVectorDouble().getValue(RegionShape::UNIT);
 		      ////
-		      //Int spcInd=coords->findCoordinate(Coordinate::SPECTRAL);
+		      //Int spcInd=coords.findCoordinate(Coordinate::SPECTRAL);
 		      //const RecordInterface& specRec0=blcrec.asRecord(spcInd);
 		      //const RecordInterface& specRec1=trcrec.asRecord(spcInd);
 		      ////cout << "spec0=" << specRec0 << endl;
 		      ////cout << "spec1=" << specRec1 << endl;
 		      //SpectralCoordinate spectralCoord =
-		      //     coords->spectralCoordinate(spcInd);
+		      //     coords.spectralCoordinate(spcInd);
 
 		      //String error;
 		      //Vector<String> units(1); units = "Hz";

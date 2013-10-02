@@ -92,7 +92,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// global options the BASIC way. Since aips++isn't multi-threaded,
 		// multiprocessing, etc. we can get away with it.
 
-		CoordinateSystem* WCCSNLAxisLabellerCoordinateSystem = NULL;
+		DisplayCoordinateSystem* WCCSNLAxisLabellerCoordinateSystem = NULL;
 //
 		Int WCCSNLAxisLabellerLongAxis = -1;
 		Int WCCSNLAxisLabellerLatAxis = -1;
@@ -108,7 +108,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Vector<Double> WCCSNLAxisLabellerRefPix(2);
 		Int WCCSNLAxisLabellerUIBase = 1;
 
-// The supplied CoordinateSystem should only have 2 Pixel axes, those being displayed
+// The supplied DisplayCoordinateSystem should only have 2 Pixel axes, those being displayed
 // The coordinate for these axes will always be supplied as a world coordinate
 
 		Vector<Bool> WCCSNLAxisLabellerPixelAxes(2, False);
@@ -125,7 +125,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Vector<Double> WCCSNLAxisLabellerWorldMin, WCCSNLAxisLabellerWorldMax;
 
 		// nlfunc is called from pgsbox to do world to/from pixel conversions.
-		// The version used here just passes the requests to the CoordinateSystem.
+		// The version used here just passes the requests to the DisplayCoordinateSystem.
 		// The return code is supposed to indicate whether the pixel or world
 		// values were invalid. We ignore that possibility since it isn't clear
 		// what that means. pgcrvl intentionally calls with pixel/world values
@@ -279,11 +279,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 // Ok we have now generated vWorldIn with absolute world coordinates
-// in the native units of the CoordinateSystem.
+// in the native units of the DisplayCoordinateSystem.
 //
 // For the first two pixel axes, world coordinates are provided.
 // For any other axes (movie, hidden) only pixel coordinates are known.
-// Now the CoordinateSystem that has been provided has had all pixel
+// Now the DisplayCoordinateSystem that has been provided has had all pixel
 // axes above 0 and 1 removed, with the replacement pixel value
 // set to the pixel coordinate.  This will be used in the toMix
 // conversions.
@@ -573,7 +573,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		try {
 
 			// Get a copy of the CS
-			CoordinateSystem cSys;
+			DisplayCoordinateSystem cSys;
 
 			if(useWCCS && wc->hasCS()) {
 
@@ -596,7 +596,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				// Set proper formatting, etc. onto the labelling cSys
 
-				CoordinateUtil::setNiceAxisLabelUnits(cSys);  // (overkill?)
+				cSys.setNiceAxisLabelUnits( );           // (overkill?)
 
 				setSpectralState(cSys);
 				setDirectionState(cSys);
@@ -988,7 +988,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 					}
 				} else if (zLabelType() == "world") {
-					CoordinateSystem cs = coordinateSystem();
+					DisplayCoordinateSystem cs = coordinateSystem();
 					// itsCoordinateSystem used advisedly here even when useWCCS==True:
 					// itsCoordinateSystem may have better information about our owner's
 					// 'movie axis' than the WC CS (esp. in the case where our 'owner'
@@ -1061,13 +1061,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 
-	void WCCSNLAxisLabeller::setCoordinateSystem(const CoordinateSystem& cSys) {
+	void WCCSNLAxisLabeller::setCoordinateSystem(const DisplayCoordinateSystem& cSys) {
 
 // Any DirectionCoordinate must be in degrees as this is assumed
 // in the binding to pgplot in this class. So make sure here.
 
-		CoordinateSystem cSys2(cSys);
-		CoordinateUtil::setDirectionUnit (cSys2, String("deg"));
+		DisplayCoordinateSystem cSys2(cSys);
+		cSys2.setDirectionUnit( "deg" );
 		WCCSAxisLabeller::setCoordinateSystem(cSys2);
 	}
 

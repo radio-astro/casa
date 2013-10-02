@@ -58,7 +58,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void TblAsRasterDM::cleanup() {
 	}
 
-	Bool TblAsRasterDM::drawIntoList(Display::RefreshReason reason,
+	Bool TblAsRasterDM::drawIntoList(Display::RefreshReason /*reason*/,
 	                                 WorldCanvasHolder &wcHolder) {
 
 		// which world canvas do we draw on?

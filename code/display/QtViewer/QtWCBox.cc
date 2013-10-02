@@ -28,7 +28,7 @@
 #include <display/QtViewer/QtWCBox.h>
 
 #include <casa/Arrays/ArrayLogical.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
@@ -64,7 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	QtWCBox::QtWCBox(const Vector<Quantum<Double> >& blc,
 	                 const Vector<Quantum<Double> >& trc,
-	                 const CoordinateSystem& cSys,
+	                 const DisplayCoordinateSystem& cSys,
 	                 const Vector<Int>& absRel)
 //
 // Constructor from Quantities.  blc and trc are in the
@@ -92,12 +92,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		if (itsBlc.nelements() > itsCSys.nPixelAxes()) {
 			msg = String("QtWCBox - you gave more values for the blc than ") +
-			      String("there are axes in the CoordinateSystem");
+			      String("there are axes in the DisplayCoordinateSystem");
 			throw (AipsError (msg));
 		}
 		if (itsTrc.nelements() > itsCSys.nPixelAxes()) {
 			msg = String("QtWCBox - you gave more values for the trc than ") +
-			      String("there are axes in the CoordinateSystem");
+			      String("there are axes in the DisplayCoordinateSystem");
 			throw (AipsError (msg));
 		}
 
@@ -115,7 +115,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 
-// Check units are consistent with the given CoordinateSystem
+// Check units are consistent with the given DisplayCoordinateSystem
 
 		unitInit();
 		checkUnits(itsPixelAxes, itsBlc, cSys);
@@ -134,7 +134,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	QtWCBox::QtWCBox(const Vector<Quantum<Double> >& blc,
 	                 const Vector<Quantum<Double> >& trc,
 	                 const IPosition& pixelAxes,
-	                 const CoordinateSystem& cSys,
+	                 const DisplayCoordinateSystem& cSys,
 	                 const Vector<Int>& absRel)
 //
 // Constructor from Quantities with specification of
@@ -166,7 +166,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		if (itsPixelAxes.nelements() > itsCSys.nPixelAxes()) {
 			msg = String("QtWCBox - you gave more pixel axes than ") +
-			      String("there are axes in the CoordinateSystem");
+			      String("there are axes in the DisplayCoordinateSystem");
 			throw (AipsError (msg));
 		}
 
@@ -179,7 +179,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			for (i=0; i<nAxes; i++) itsAbsRel(i) = RegionType::Abs;
 		}
 
-// Check units are consistent with the given CoordinateSystem
+// Check units are consistent with the given DisplayCoordinateSystem
 
 		unitInit();
 		checkUnits(itsPixelAxes, itsBlc, cSys);
@@ -195,7 +195,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	QtWCBox::QtWCBox(const LCRegion& region,
-	                 const CoordinateSystem& cSys)
+	                 const DisplayCoordinateSystem& cSys)
 //
 // Constructor from the bounding box of an LCRegion
 //
@@ -213,7 +213,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (start.nelements() != itsCSys.nPixelAxes() ||
 		        end.nelements() != itsCSys.nPixelAxes()) {
 			msg = String("QtWCBox - the dimensions of the LCRegion bounding box must ") +
-			      String("be the same as the number of pixel axes in the CoordinateSystem");
+			      String("be the same as the number of pixel axes in the DisplayCoordinateSystem");
 			throw (AipsError (msg));
 		}
 		unitInit();
@@ -370,7 +370,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return QtWCBox (blc, trc, pixelAxes, itsCSys, absRel);
 	}
 
-	QtWCBox* QtWCBox::fromBoxString (const String& str, const CoordinateSystem& csys,
+	QtWCBox* QtWCBox::fromBoxString (const String& str, const DisplayCoordinateSystem& csys,
 	                                 String& error) {
 		QtWCBox* pBox = 0;
 		String box = str;
@@ -499,8 +499,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			dirCoord=itsCSys.directionCoordinate(dirInd);
 		}
 
-		const uInt nAxes = itsPixelAxes.nelements();
-
 		String ret = "worldbox J2000 ";
 		for (Int j = 0; j < 2; j++) {
 			ostringstream tr;
@@ -613,7 +611,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                              const String&) {
 // Get coordinate system
 
-		CoordinateSystem* pCSys = CoordinateSystem::restore(rec,"coordinates");
+		DisplayCoordinateSystem pCSys = DisplayCoordinateSystem::restore(rec,"coordinates");
 		QtWCBox* pBox;
 
 // Define pixel units
@@ -696,10 +694,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Make box
 
-		pBox = new QtWCBox(blc, trc, pixelAxes, *pCSys, absRel);
+		pBox = new QtWCBox(blc, trc, pixelAxes, pCSys, absRel);
 
 //
-		delete pCSys;
 		return pBox;
 	}
 
@@ -737,7 +734,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//of couse, can change to use freq
 		Double a;
 		Double b;
-		if (wSp >= 0 & wSp < nAxes) {
+		if (wSp >= 0 & wSp < (int) nAxes) {
 			if (spCoord.toWorld(a, chanStart) &&
 			        spCoord.toWorld(b, chanEnd)) {
 				itsBlc(wSp).setUnit("s-1");
@@ -763,7 +760,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		const uInt nAxes = itsPixelAxes.nelements();
 
-		if (wSp >= 0 & wSp < nAxes) {
+		if (wSp >= 0 & wSp < (int) nAxes) {
 			//cout << "blc=" << itsBlc(wSp).getValue()
 			//     << " " << itsBlc(wSp).getUnit() << endl;
 			//cout << "trc=" << itsTrc(wSp).getValue()
@@ -796,7 +793,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		const uInt nAxes = itsPixelAxes.nelements();
 
-		if (wSt >= 0 && wSt <= nAxes) {
+		if (wSt >= 0 && wSt <= (int) nAxes) {
 			itsBlc(wSt) = Quantity(polStart, "pix");
 			itsTrc(wSt) = Quantity(polEnd, "pix");
 		}
@@ -815,7 +812,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		const uInt nAxes = itsPixelAxes.nelements();
 
-		if (wSt >= 0 && wSt <= nAxes) {
+		if (wSt >= 0 && wSt <= (int) nAxes) {
 			polStart = Int(itsBlc(wSt).getValue());
 			polEnd = Int(itsTrc(wSt).getValue());
 			return True;
@@ -844,7 +841,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Get a copy of the given coordinate system so we can mess about with it
 
-		CoordinateSystem cSysTmp(cSys);
+		DisplayCoordinateSystem cSysTmp(cSys);
 
 // World coordinate vectors
 
@@ -879,7 +876,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Convert to pixels for all pixel axes of cSysTmp for blc and trc
 
 		if (!cSysTmp.setWorldAxisUnits(blcUnits)) {
-			throw (AipsError ("QtWCBox:doToLCregion - blc units are inconsistent with CoordinateSystem"));
+			throw (AipsError ("QtWCBox:doToLCregion - blc units are inconsistent with DisplayCoordinateSystem"));
 		}
 		makeWorldAbsolute (wBlc, itsAbsRel, cSysTmp, latticeShape);
 		Vector<Double> pBlc;
@@ -888,7 +885,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 //
 		if (!cSysTmp.setWorldAxisUnits(trcUnits)) {
-			throw (AipsError ("QtWCBox:doToLCregion - trc units are inconsistent with CoordinateSystem"));
+			throw (AipsError ("QtWCBox:doToLCregion - trc units are inconsistent with DisplayCoordinateSystem"));
 		}
 		makeWorldAbsolute (wTrc, itsAbsRel, cSysTmp, latticeShape);
 		Vector<Double> pTrc;
@@ -947,10 +944,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void QtWCBox::checkUnits (const IPosition& pixelAxes,
 	                          const Vector<Quantum<Double> >& values,
-	                          const CoordinateSystem& cSys)
+	                          const DisplayCoordinateSystem& cSys)
 //
 // CHeck the units of the given quanta are consistent
-// with the CoordinateSystem.  The quanta are in the
+// with the DisplayCoordinateSystem.  The quanta are in the
 // order of the pixel axes.
 //
 	{

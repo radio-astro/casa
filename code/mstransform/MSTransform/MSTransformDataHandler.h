@@ -28,6 +28,7 @@
 
 // Measurement Set Selection
 #include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MeasurementSets/MSSelectionTools.h>
 
 // Needed by setupMS
 #include <tables/Tables.h>
@@ -144,6 +145,7 @@ public:
 
 	// Method that returns the selected ms (?! - but it's Boolean - RR)
 	Bool makeSelection();
+	Bool makeSelectionNew();
 
 	// This sets up a default new ms
 	// Declared static as it can be (and is) called directly from outside
@@ -177,6 +179,7 @@ public:
 	Bool fillSubTables(const Vector<MS::PredefinedColumns>& colNames);
 	Bool fillFieldTable();
 	Bool fillDDTables(); // Includes spw and pol
+	Bool fillDDTablesNew(); // Includes spw and pol
 
 	// Add optional columns to outTab if present in inTab and possColNames.
 	// beLazy should only be true if outTab is in its default state.
@@ -294,7 +297,7 @@ protected:
 
 	Vector<Int> selObsId_p; // List of selected OBSERVATION_IDs.
 	Vector<Int> polID_p; // Map from input DDID to input polID, filled in fillDDTables().
-	Vector<uInt> spw2ddid_p;
+	Vector<Int> spw2ddid_p;
 
 	// inCorrInd = outPolCorrToInCorrMap_p[polID_p[ddID]][outCorrInd]
 	Vector<Vector<Int> > inPolOutCorrToInCorrMap_p;

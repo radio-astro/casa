@@ -286,8 +286,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
-	void DSArrow::rotateAbout(const Float& angle, const Float& aboutX,
-	                          const Float& aboutY) {
+	void DSArrow::rotateAbout(const Float& /*angle*/, const Float& /*aboutX*/,
+	                          const Float& /*aboutY*/) {
 
 	}
 
@@ -317,7 +317,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		updateArrowHead();
 	}
 
-	void DSArrow::scale(const Float& scaleFactor) {
+	void DSArrow::scale(const Float& /*scaleFactor*/) {
 		throw(AipsError("DSArrow.cc - Scale NYI so far"));
 	}
 

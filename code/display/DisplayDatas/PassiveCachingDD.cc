@@ -68,8 +68,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return axisUnits;
 	}
 
-	const uInt PassiveCachingDD::nelements(const WorldCanvasHolder
-	                                       &wcHolder) const {
+	const uInt PassiveCachingDD::nelements(const WorldCanvasHolder &/*wcHolder*/) const {
 		return 0;
 	}
 
@@ -99,7 +98,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return buffer;
 	}
 
-	PassiveCachingDD::PassiveCachingDD(const PassiveCachingDD &) {
+	PassiveCachingDD::PassiveCachingDD(const PassiveCachingDD &o) : CachingDisplayData(o) {
 	}
 
 	void PassiveCachingDD::operator=(const PassiveCachingDD &) {

@@ -41,7 +41,7 @@
 #include <casa/BasicMath/Math.h>
 #include <measures/Measures/MFrequency.h>
 #include <measures/Measures/MDirection.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
@@ -66,7 +66,7 @@ using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-	static const Coordinate &axisToCoordinate( CoordinateSystem *csys, int axis ) {
+	static const Coordinate &axisToCoordinate( DisplayCoordinateSystem *csys, int axis ) {
 		int coord, axisInCoord;
 		csys->findPixelAxis(coord, axisInCoord, axis);
 		return csys->coordinate(coord);
@@ -181,7 +181,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Looking at related problems in WCCSNLAxisLabeller.cc has led me to believe that
 		// sometime the correct behavior depends on coordinate conversion failure...
 		// While this isn't desirable, resolving it may take a careful review of the
-		// way CoordinateSystem is used for display... <drs>
+		// way DisplayCoordinateSystem is used for display... <drs>
 		// if ( ! ok ) {
 		// 	cerr << "PrincipalAxesDD::linToFullWorld(...): " << itsCoordSys.errorMessage( ) << endl;
 		// }
@@ -729,7 +729,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		conformsToZIndex(*wCanvas);
 
 
-		CoordinateSystem wccs = itsCoordSys;
+		DisplayCoordinateSystem wccs = itsCoordSys;
 		if (wccs.nPixelAxes() > 2) {
 			const uInt startAxis = 2;
 			removePixelAxes (wccs, startAxis, itsFixedPosition);
@@ -1096,7 +1096,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Derived classes implement if applicable (at present, LatticePADDs
 		// will draw a beam ellipse if they have an image with beam data and
-		// the WorldCanvas CoordinateSystem is set for sky coordinates).
+		// the WorldCanvas DisplayCoordinateSystem is set for sky coordinates).
 		drawBeamEllipse_(wCanvas);
 
 	}
@@ -1168,7 +1168,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
-	void PrincipalAxesDD::setCoordinateSystem(const CoordinateSystem& coordsys) {
+	void PrincipalAxesDD::setCoordinateSystem(const DisplayCoordinateSystem& coordsys) {
 		itsCoordSys = coordsys;
 
 // make sure any DirectionCoordinate has radians as native units
@@ -1176,7 +1176,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		for (uInt i = 0; i < itsCoordSys.nCoordinates(); i++) {
 			if (itsCoordSys.type(i) == Coordinate::DIRECTION) {
-				CoordinateUtil::setDirectionUnit (itsCoordSys, String("rad"), Int(i));
+				itsCoordSys.setDirectionUnit( "rad", Int(i) );
 			}
 		}
 
@@ -1227,7 +1227,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Restore to original CS. All CSs are now the same and in the original order
 
 		restoreCoordinateSystem();
-		CoordinateSystem tCS = itsCoordSys;
+		DisplayCoordinateSystem tCS = itsCoordSys;
 
 // Fill in axis names if needed (I [nebk] doubt this code is needed)
 
@@ -1407,7 +1407,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsAddPixPos(index) = itsFixedPosition(index);
 		}
 
-// transpose pixel position and CoordinateSystem
+// transpose pixel position and DisplayCoordinateSystem
 
 		normalToTransposed(itsAddPixPos, itsTransPixelAxes);
 		itsCoordSys.transpose(itsTransWorldAxes, itsTransPixelAxes);
@@ -1441,11 +1441,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // itsAxisLabellers.nelements() may not be == nnew!!  )-;
 			itsAxisLabellers.resize(nnew, True);
 
-// Copy the CoordinateSystem for the Axis Labeller.
+// Copy the DisplayCoordinateSystem for the Axis Labeller.
 // We copy the working version which has been reordered to
 // the display axes order  and who knows what else done to it !
 
-			CoordinateSystem axisLabelCS = itsCoordSys;
+			DisplayCoordinateSystem axisLabelCS = itsCoordSys;
 
 			// Remove all hidden pixel axes and assign replacement value
 			// (the hidden axes values) to be used in coordinate conversions
@@ -1456,7 +1456,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Set default nice world axis units and velocity preference
 
-			CoordinateUtil::setNiceAxisLabelUnits(axisLabelCS);
+			axisLabelCS.setNiceAxisLabelUnits( );
 			const uInt nPixelAxes = axisLabelCS.nPixelAxes();
 
 			// Now prepare an AxisLabeller and CS for each plane of the movie axis
@@ -1467,7 +1467,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// and updating of the WC CS before each axis draw.
 
 			for (uInt index = 0; index < nnew; index++) {
-				CoordinateSystem tCS = axisLabelCS;
+				DisplayCoordinateSystem tCS = axisLabelCS;
 
 // Remove the movie pixel axis and assign replacement
 // value to the movie axis index
@@ -1543,7 +1543,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // N.B. If there is a world axis for which the  pixel axis has been
 // removed (e.g. a moment image), then we set worldAxes = F
 // for that axis.  This means the replacement pixel coordinate
-// stored in the CoordinateSystem will be used for computations
+// stored in the DisplayCoordinateSystem will be used for computations
 // via the toMix call.
 
 		itsWorldInTmp1(0) = world(0);
@@ -2326,7 +2326,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return rec;
 	}
 
-	void PrincipalAxesDD::setSpectralFormatting  (CoordinateSystem& cSys,
+	void PrincipalAxesDD::setSpectralFormatting  (DisplayCoordinateSystem& cSys,
 	        const String &doppler,
 	        const String &unit,
 	        const String &freq_sys) {
@@ -2334,12 +2334,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		String errorMsg;
 
 		if( doppler.length() > 0 && unit.length( ) > 0 &&
-		        ! CoordinateUtil::setSpectralFormatting(errorMsg, cSys, unit, doppler) ) {
+		        ! cSys.setSpectralFormatting(errorMsg, unit, doppler) ) {
 			os << LogIO::WARN
 			   << "Failed to update SpectralCoordinate formatting because"
 			   << errorMsg << LogIO::POST;
 		}
-		if( freq_sys.length( ) > 0 && ! CoordinateUtil::setSpectralConversion(errorMsg, cSys, freq_sys) ) {
+		if( freq_sys.length( ) > 0 && ! cSys.setSpectralConversion(errorMsg, freq_sys) ) {
 			os << LogIO::WARN
 			   << "Failed to update SpectralCoordinate reference frame because"
 			   << errorMsg << LogIO::POST;
@@ -2347,18 +2347,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 
-	void PrincipalAxesDD::setVelocityState (CoordinateSystem& cSys,
+	void PrincipalAxesDD::setVelocityState (DisplayCoordinateSystem& cSys,
 	                                        const String& doppler,
 	                                        const String& unit) {
 		static LogIO os(LogOrigin("PrincipleAxesDD", "setVelocityState", WHERE));
 		String errorMsg;
-		if (!CoordinateUtil::setVelocityState (errorMsg, cSys, unit, doppler)) {
+		if ( ! cSys.setVelocityState (errorMsg, unit, doppler) ) {
 			os << LogIO::WARN << "Failed to update SpectralCoordinate velocity state because" << LogIO::POST;
 			os << errorMsg << LogIO::POST;
 		}
 	}
 
-	void PrincipalAxesDD::removePixelAxes (CoordinateSystem& cSys,
+	void PrincipalAxesDD::removePixelAxes (DisplayCoordinateSystem& cSys,
 	                                       uInt startAxis,
 	                                       const IPosition& fixedPosition)
 //
@@ -2378,13 +2378,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				removeAxes(i) = j;
 				replacementValues(i) = fixedPosition(k);
 			}
-			CoordinateUtil::removePixelAxes(cSys, replacementValues,
-			                                removeAxes, True);
+			cSys.removePixelAxes( replacementValues, removeAxes, True );
 		}
 	}
 
 
-	Bool PrincipalAxesDD::canHaveVelocityUnit (const CoordinateSystem& cSys) const {
+	Bool PrincipalAxesDD::canHaveVelocityUnit (const DisplayCoordinateSystem& cSys) const {
 		Int after = -1;
 		Int iS = cSys.findCoordinate(Coordinate::SPECTRAL, after);
 		if (iS>=0) {
@@ -2397,7 +2396,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool PrincipalAxesDD::conformsToCS(const WorldCanvas &wc) {
 		// Is the DD is capable (in its current state) of drawing
-		// in the current CoordinateSystem of the WCH's WorldCanvas?
+		// in the current DisplayCoordinateSystem of the WCH's WorldCanvas?
 		// This implementation just checks for matching axis codes.
 		//
 		// This forms a part of the checks requested by DD::conformsTo(wch),
@@ -2455,7 +2454,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	{}
 
 
-	Vector<String> PrincipalAxesDD::worldToPixelAxisNames (const CoordinateSystem& cSys) const {
+	Vector<String> PrincipalAxesDD::worldToPixelAxisNames (const DisplayCoordinateSystem& cSys) const {
 //
 // Every pixel axs must have a world axis, so don't check for removal
 //

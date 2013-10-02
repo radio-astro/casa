@@ -454,7 +454,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	    Int nAxes = (im_!=0)? im_->ndim()  : cim_->ndim();
 	    IPosition shp = (im_!=0)? im_->shape() : cim_->shape();
-	    const CoordinateSystem& cs =  (im_ != 0) ? im_->coordinates() : cim_->coordinates();
+	    DisplayCoordinateSystem cs =  (im_ != 0) ? im_->coordinates() : cim_->coordinates();
 
 	    Int zIndex = padd->activeZIndex();
 	    IPosition pos = padd->fixedPosition();
@@ -579,7 +579,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Int _axis_h_ = padd->xlatePixelAxes(3);		// get first "hidden axis
 			String zaxis = padd->zaxisStr( );
 
-			const CoordinateSystem& cs = image->coordinates();
+			const DisplayCoordinateSystem& cs = image->coordinates();
 
 			Vector<String> axesNames = padd->worldToPixelAxisNames( cs );
 			String haxis = axesNames(_axis_h_);
@@ -622,12 +622,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				tPix(zPos) = zIndex;
 				if (!cs.toWorld(tWrld,tPix)) {
 				} else {
-					zLabel = ((CoordinateSystem)cs).format(tStr, Coordinate::DEFAULT, tWrld(zPos), zPos);
+					zLabel = ((DisplayCoordinateSystem)cs).format(tStr, Coordinate::DEFAULT, tWrld(zPos), zPos);
 					layerstats->push_back(viewer::RegionInfo::stats_t::value_type(zaxis,zLabel + tStr));
 
 					if (zUnit.length()>0) {
 						zspKey = "Spectral_Vale";
-						zspVal = ((CoordinateSystem)cs).format(zUnit,Coordinate::DEFAULT, tWrld(zPos), zPos)+zUnit;
+						zspVal = ((DisplayCoordinateSystem)cs).format(zUnit,Coordinate::DEFAULT, tWrld(zPos), zPos)+zUnit;
 					}
 				}
 			}
@@ -637,10 +637,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				if (!cs.toWorld(tWrld,tPix)) {
 				} else {
-					hLabel = ((CoordinateSystem)cs).format(tStr, Coordinate::DEFAULT, tWrld(hPos), hPos);
+					hLabel = ((DisplayCoordinateSystem)cs).format(tStr, Coordinate::DEFAULT, tWrld(hPos), hPos);
 					if (zUnit.length()>0) {
 						zspKey = "Spectral_Vale";
-						zspVal = ((CoordinateSystem)cs).format(zUnit, Coordinate::DEFAULT, tWrld(zPos), zPos)+zUnit;
+						zspVal = ((DisplayCoordinateSystem)cs).format(zUnit, Coordinate::DEFAULT, tWrld(zPos), zPos)+zUnit;
 					}
 				}
 			}
@@ -686,7 +686,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Double beamArea = 0;
 			ImageInfo ii = image->imageInfo();
 			GaussianBeam beam = ii.restoringBeam();
-			CoordinateSystem cSys = image->coordinates();
+			DisplayCoordinateSystem cSys = image->coordinates();
 			String imageUnits = image->units().getName();
 			imageUnits.upcase();
 
@@ -728,35 +728,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if( image == 0 ) return -1;
 
-		const CoordinateSystem* cs=0;
-		try {
-			cs = &(image->coordinates());
-		} catch(...) {
-			cs = 0;     // (necessity of try-catch is doubtful...).
-		}
-
-		if (cs==0) return -1;
+		const DisplayCoordinateSystem cs = image->coordinates();
 
 		try {
 			Int nAxes = image->ndim();
-			for(Int ax=0; ax<nAxes && ax<Int(cs->nWorldAxes()); ax++) {
+			for(Int ax=0; ax<nAxes && ax<Int(cs.nWorldAxes()); ax++) {
 				// coordno : type of coordinate
 				// axisincoord : index within the coordinate list defined by coordno
 				Int coordno, axisincoord;
-				cs->findWorldAxis(coordno, axisincoord, ax);
+				cs.findWorldAxis(coordno, axisincoord, ax);
 
-				//cout << "coordno=" << coordno << "  axisincoord : " << axisincoord << "  type : " << cs->showType(coordno) << endl;
+				//cout << "coordno=" << coordno << "  axisincoord : " << axisincoord << "  type : " << cs.showType(coordno) << endl;
 
-				if( cs->showType(coordno) == String("Direction") ) {
+				if( cs.showType(coordno) == String("Direction") ) {
 					// Check for Right Ascension and Declination
-					Vector<String> axnames = (cs->directionCoordinate(coordno)).axisNames(MDirection::DEFAULT);
+					Vector<String> axnames = (cs.directionCoordinate(coordno)).axisNames(MDirection::DEFAULT);
 					AlwaysAssert( axisincoord>=0 && axisincoord < (Int) axnames.nelements(), AipsError);
 					if( axnames[axisincoord] == axtype ) {
 						return ax;
 					}
 				} else {
 					// Check for Stokes and Spectral
-					if ( cs->showType(coordno)==axtype ) {
+					if ( cs.showType(coordno)==axtype ) {
 						return ax;
 					}
 				}
@@ -825,7 +818,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				Int nAxes = image->ndim( );
 				IPosition shp = image->shape( );
-				const CoordinateSystem &cs = image->coordinates( );
+				const DisplayCoordinateSystem &cs = image->coordinates( );
 
 				int zIndex = padd->activeZIndex( );
 				IPosition pos = padd->fixedPosition( );

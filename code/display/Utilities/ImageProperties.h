@@ -29,7 +29,7 @@
 #define DISPLAY_IMAGEINFO_H_
 #include <string>
 #include <casa/Arrays/Vector.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <components/ComponentModels/GaussianBeam.h>
 #include <images/Images/ImageInterface.h>
 
@@ -105,13 +105,13 @@ namespace casa {
 				return path_;
 			}
 
-			const CoordinateSystem &cs( ) const { return cs_; }
+			const DisplayCoordinateSystem &cs( ) const { return cs_; }
 
 			bool ok( ) const {
 				return status_ok;
 			}
 
-			// export required CoordinateSystem functions instead of returning a CoordinateSystem reference...
+			// export required DisplayCoordinateSystem functions instead of returning a DisplayCoordinateSystem reference...
 			int spectralAxisNumber() const {
 				return cs_.spectralAxisNumber( );
 			}
@@ -141,11 +141,18 @@ namespace casa {
 			Vector<double> dec_range;
 			std::vector<std::string> dec_range_str;
 			std::vector<GaussianBeam> restoring_beams;
-			CoordinateSystem cs_;
+			DisplayCoordinateSystem cs_;
 		};
 	}
 }
 
-std::ostream &operator<<( std::ostream &os, const casa::CoordinateSystem &cs );
+std::ostream &operator<<( std::ostream &os, const casa::DisplayCoordinateSystem &cs );
+
+std::ostream &operator<<( std::ostream &os, const casa::DisplayCoordinateSystem &cs );
+namespace casa {
+	namespace viewer {
+		inline std::ostream &operator<<( std::ostream &os, const casa::DisplayCoordinateSystem &cs ) { return ::operator<<(os,cs); }
+	}
+}
 
 #endif

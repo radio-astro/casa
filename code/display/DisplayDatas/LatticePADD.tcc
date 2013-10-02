@@ -531,7 +531,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // If pImage is now null, it means both region and mask are now unset
 // so we return to the base image
 
-				CoordinateSystem cSysOld = originalCoordinateSystem();
+				DisplayCoordinateSystem cSysOld = originalCoordinateSystem();
 				if (pImage) {
 					itsMaskedLatticePtr.reset(pImage);
 					itsDeleteMLPointer = True;
@@ -540,7 +540,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Transfer over the axis unit and velocity choices that
 // might have been set by PADD
 
-					CoordinateSystem cSys = pImage->coordinates();
+					DisplayCoordinateSystem cSys = pImage->coordinates();
 					transferPreferences(cSys, cSysOld);
 //
 					setCoordinateSystem(cSys);
@@ -551,7 +551,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Transfer over the axis unit and velocity choices that
 // might have been set by PADD
 
-					CoordinateSystem cSys = itsBaseImagePtr->coordinates();
+					DisplayCoordinateSystem cSys = itsBaseImagePtr->coordinates();
 					transferPreferences(cSys, cSysOld);
 //
 					setCoordinateSystem(cSys);
@@ -994,8 +994,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	template<class T>
-	Bool LatticePADisplayData<T>::transferPreferences (CoordinateSystem& cSysInOut,
-	        const CoordinateSystem& cSysIn) const {
+	Bool LatticePADisplayData<T>::transferPreferences (DisplayCoordinateSystem& cSysInOut,
+	        const DisplayCoordinateSystem& cSysIn) const {
 		if (cSysIn.nCoordinates()!=cSysInOut.nCoordinates()) return False;
 		if (cSysIn.nWorldAxes()!=cSysInOut.nWorldAxes()) return False;
 		if (cSysIn.nPixelAxes()!=cSysInOut.nPixelAxes()) return False;

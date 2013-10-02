@@ -114,6 +114,10 @@ public:
                          Double maxUvwDistance = 0,
                          WeightScaling * weightScalingForAveraging = 0);
 
+    AveragingParameters (const AveragingParameters & other);
+
+    AveragingParameters & operator= (const AveragingParameters & other);
+
     Double getAveragingInterval () const;
     Double getChunkInterval () const;
     Double getMaxUvwDistance () const;
@@ -121,8 +125,16 @@ public:
     const SortColumns & getSortColumns () const;
     WeightScaling * getWeightScaling () const;
 
+    void setAveragingInterval (Double);
+    void setChunkInterval (Double);
+    void setSortColumns (const SortColumns &);
+    void setOptions (const AveragingOptions &);
+    void setMaxUvwDistance (Double);
+    void setWeightScaling (WeightScaling *);
+
 private:
 
+    void validate ();
     void validateOptions ();
 
     Double averagingInterval_p;

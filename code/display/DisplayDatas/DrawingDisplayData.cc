@@ -273,7 +273,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		cerr << "double click on object " << objectID << " detected" << endl;
 	}
 
-	DrawingDisplayData::DrawingDisplayData(const DrawingDisplayData &/*other*/) {
+	DrawingDisplayData::DrawingDisplayData(const DrawingDisplayData &o) : PassiveCachingDD(o) {
 	}
 
 	void DrawingDisplayData::operator=(const DrawingDisplayData &/*other*/) {

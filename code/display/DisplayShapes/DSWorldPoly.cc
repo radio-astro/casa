@@ -36,7 +36,7 @@
 #include <display/Display/WorldCanvas.h>
 #include <casa/Arrays/ArrayMath.h>
 
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSWorldPoly::DSWorldPoly() :

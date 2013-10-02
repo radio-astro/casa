@@ -141,7 +141,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	DDDObject::DDDObject() {
 	}
 
-	DDDObject::DDDObject(const DDDObject &) {
+	DDDObject::DDDObject(const DDDObject &o) : WCRefreshEH(o), WCMotionEH(o), WCPositionEH(o) {
 	}
 
 	void DDDObject::operator=(const DDDObject &) {
@@ -216,7 +216,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 
-	void DDDObject::convertCoordinateSystem (CoordinateSystem& cSys, WorldCanvas* wcPtr) const {
+	void DDDObject::convertCoordinateSystem (DisplayCoordinateSystem& cSys, WorldCanvas* wcPtr) const {
 		uInt n = cSys.nPixelAxes();
 		static Vector<Float> screenShape(2);
 		static Vector<Double> imageShape(2);

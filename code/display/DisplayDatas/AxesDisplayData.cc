@@ -224,7 +224,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (txt=="<axis name>") {
 			txt = "";
 			if (wc!=0) {
-				const CoordinateSystem& wccs = wc->coordinateSystem();
+				const DisplayCoordinateSystem& wccs = wc->coordinateSystem();
 				if (&wccs!=0) {
 					txt = wccs.worldAxisNames()[0];
 					String u = wccs.worldAxisUnits()[0];
@@ -242,7 +242,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (txt=="<axis name>") {
 			txt = "";
 			if (wc!=0) {
-				const CoordinateSystem& wccs = wc->coordinateSystem();
+				const DisplayCoordinateSystem& wccs = wc->coordinateSystem();
 				if (&wccs!=0) {
 					txt = wccs.worldAxisNames()[1];
 					String u = wccs.worldAxisUnits()[1];
@@ -257,7 +257,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-	AxesDisplayData::AxesDisplayData(const AxesDisplayData &) {
+	AxesDisplayData::AxesDisplayData(const AxesDisplayData &o) : PassiveCachingDD(o) {
 	}
 
 	void AxesDisplayData::operator=(const AxesDisplayData &) {

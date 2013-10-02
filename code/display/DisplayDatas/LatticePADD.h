@@ -265,8 +265,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Bool isRegionDifferent (ImageRegion*& pRegion);
 
 		// Transfer preferences between CoordinateSystems
-		Bool transferPreferences (CoordinateSystem& cSysInOut,
-		                          const CoordinateSystem& cSysIn) const;
+		Bool transferPreferences (DisplayCoordinateSystem& cSysInOut,
+		                          const DisplayCoordinateSystem& cSysIn) const;
 
 		// Delete temporary image data
 		void delTmpImage();

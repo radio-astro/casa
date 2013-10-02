@@ -84,11 +84,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // (Required) copy constructor.
-	DisplayMethod::DisplayMethod(const DisplayMethod &other) {
+	DisplayMethod::DisplayMethod(const DisplayMethod &/*other*/) {
 	}
 
 // (Required) copy assignment.
-	void DisplayMethod::operator=(const DisplayMethod &other) {
+	void DisplayMethod::operator=(const DisplayMethod &/*other*/) {
 	}
 
 

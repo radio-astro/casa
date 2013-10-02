@@ -39,7 +39,7 @@
 #include <casa/BasicSL/Constants.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/QuantumHolder.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <images/Images/ImageUtilities.h>
 #include <display/Display/WorldCanvas.h>
 #include <display/Display/PixelCanvas.h>
@@ -86,14 +86,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		pCanvas->setColor(color());
 		pCanvas->setLineWidth(lineWidth());
 
-// Get CoordinateSystem.  Is ordered with x and y first
+// Get DisplayCoordinateSystem.  Is ordered with x and y first
 // Catch coordinate conversion errors and just don't draw
 
 		if (itsRecompute) {
 			try {
 				itsCoordinateSystem = itsWorldCanvasPtr->coordinateSystem();
 
-// Convert CoordinateSystem to screen pixels
+// Convert DisplayCoordinateSystem to screen pixels
 
 				convertCoordinateSystem(itsCoordinateSystem, itsWorldCanvasPtr);
 
@@ -512,7 +512,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	DDDPolygon::DDDPolygon()
 	{}
 
-	DDDPolygon::DDDPolygon(const DDDPolygon &)
+	DDDPolygon::DDDPolygon(const DDDPolygon &o) : DDDObject(o)
 	{}
 
 	void DDDPolygon::operator=(const DDDPolygon &)

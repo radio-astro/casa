@@ -48,7 +48,7 @@
 #include <display/Display/AttributeBuffer.h>
 #include <display/Display/WorldCanvas.h>
 #include <display/Display/PixelCanvas.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <casa/BasicSL/Complex.h>
 #include <casa/BasicSL/Constants.h>
 #include <cpgplot.h>
@@ -1304,7 +1304,7 @@ Bool WorldCanvas::drawBeamEllipse(Float major, Float minor,  Float pa,
 	if(rad!=majunit || rad!=minunit || rad!=paunit) return False;
 	// Check that passed units are angular.
 
-	CoordinateSystem* cs = itsCoordinateSystem;
+	DisplayCoordinateSystem* cs = itsCoordinateSystem;
 	if(cs==0) return False;
 	if(cs->nPixelAxes()<2) return False;	// (shouldn't happen).
 
@@ -2512,18 +2512,18 @@ void WorldCanvas::setLinearCoordinateSystem(const Vector<Double> &blc,
 	}
 }
 
-// Set and retrieve the CoordinateSystem of this WorldCanvas.
-void WorldCanvas::setCoordinateSystem(const CoordinateSystem &csys) {
+// Set and retrieve the DisplayCoordinateSystem of this WorldCanvas.
+void WorldCanvas::setCoordinateSystem(const DisplayCoordinateSystem &csys) {
 	if (itsCoordinateSystem) {
 		delete itsCoordinateSystem;
 	}
 	if (&csys) {
-		itsCoordinateSystem = new CoordinateSystem(csys);
+		itsCoordinateSystem = new DisplayCoordinateSystem(csys);
 	} else {
 		itsCoordinateSystem = 0;
 	}
 }
-const CoordinateSystem &WorldCanvas::coordinateSystem() const {
+const DisplayCoordinateSystem &WorldCanvas::coordinateSystem() const {
 	return *itsCoordinateSystem;
 }
 

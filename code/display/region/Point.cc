@@ -55,7 +55,7 @@ namespace casa {
 
 			if ( wc_ == 0 || wc_->csMaster() == 0 ) return 0;
 
-			const CoordinateSystem &cs = wc_->coordinateSystem( );
+			const DisplayCoordinateSystem &cs = wc_->coordinateSystem( );
 
 			double wx, wy;
 			try {

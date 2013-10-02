@@ -1,4 +1,4 @@
-//# WCCSAxisLabeller.cc: labelling axes using a CoordinateSystem on a WC
+//# WCCSAxisLabeller.cc: labelling axes using a DisplayCoordinateSystem on a WC
 //# Copyright (C) 1999,2000,2001,2002,2004
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -76,7 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	WCCSAxisLabeller::~WCCSAxisLabeller() {
 	}
 
-	void WCCSAxisLabeller::setCoordinateSystem(const CoordinateSystem& cSys) {
+	void WCCSAxisLabeller::setCoordinateSystem(const DisplayCoordinateSystem& cSys) {
 		itsCoordinateSystem = cSys;
 		itsHasCoordinateSystem = True;
 	}
@@ -473,7 +473,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 	{
 
-		CoordinateSystem cs;
+		DisplayCoordinateSystem cs;
 
 		if(useWCCS && wc!=0 && wc->hasCS()) {
 			cs = wc->coordinateSystem();
@@ -608,7 +608,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 
-	void WCCSAxisLabeller::setSpectralState (CoordinateSystem& cs) const {
+	void WCCSAxisLabeller::setSpectralState (DisplayCoordinateSystem& cs) const {
 		static LogIO os(LogOrigin("WCCSAxisLabeller", "setSpectralState", WHERE));
 
 // Set rest wavelength in SpectralCoordinate
@@ -633,8 +633,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Set the new rest frequency
 
-		if (!CoordinateUtil::setRestFrequency (errorMsg, cs,
-		                                       restQuant.getUnit(), restQuant.getValue())) {
+		if ( ! cs.setRestFrequency( errorMsg, restQuant.getUnit(), restQuant.getValue() ) ) {
 			//os << errorMsg << LogIO::EXCEPTION;
 			os << LogIO::WARN << errorMsg << LogIO::POST;
 		}
@@ -642,22 +641,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Set velocity and/or world unit state in SpectralCoordinate
 
-		if (!CoordinateUtil::setSpectralState (errorMsg, cs,
-		                                       itsSpectralUnit, itsSpectralQuantity)) {
+		if ( ! cs.setSpectralState( errorMsg, itsSpectralUnit, itsSpectralQuantity ) ) {
 			os << errorMsg << LogIO::EXCEPTION;
 		}
 
 // Set Spectral Conversion Layer
 
-		if (!CoordinateUtil::setSpectralConversion (errorMsg, cs,
-		        itsFrequencySystem)) {
+		if ( ! cs.setSpectralConversion( errorMsg, itsFrequencySystem ) ) {
 			os << errorMsg << LogIO::EXCEPTION;
 		}
 
 		// Set Spectral formatting (for movie axis labelling done via formatter)
 
-		if (!CoordinateUtil::setSpectralFormatting (errorMsg, cs,
-		        itsSpectralUnit, itsSpectralQuantity)) {
+		if ( ! cs.setSpectralFormatting( errorMsg, itsSpectralUnit, itsSpectralQuantity ) ) {
 			os << errorMsg << LogIO::EXCEPTION;
 		}
 
@@ -680,7 +676,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 
-	void WCCSAxisLabeller::setDirectionState (CoordinateSystem& cs) const {
+	void WCCSAxisLabeller::setDirectionState (DisplayCoordinateSystem& cs) const {
 		static  LogIO os(LogOrigin("WCCSAxisLabeller", "setDirectionState", WHERE));
 
 // The user given units are only used for relative labels

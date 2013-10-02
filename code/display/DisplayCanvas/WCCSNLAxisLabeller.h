@@ -35,13 +35,13 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>
-// Class which provides non-linear axis labelling using a CoordinateSystem.
+// Class which provides non-linear axis labelling using a DisplayCoordinateSystem.
 // </summary>
 //
 // <synopsis>
 // This class implements the interface defined in WCCSAxisLabeller to
 // provide arbitrary non-linear axis labelling, using coordinate
-// transformations provided by a supplied CoordinateSystem.
+// transformations provided by a supplied DisplayCoordinateSystem.
 //
 // </synopsis>
 
@@ -65,11 +65,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Invalidate/return any cached drawing list
 		virtual void invalidate();
 
-		// Install the CoordinateSystem to use
-		virtual void setCoordinateSystem(const CoordinateSystem &coordsys);
+		// Install the DisplayCoordinateSystem to use
+		virtual void setCoordinateSystem(const DisplayCoordinateSystem &coordsys);
 
 		// Set the world min and max ranges (and their associated units)
-		// to be used by the CoordinateSystem::toMix computations.
+		// to be used by the DisplayCoordinateSystem::toMix computations.
 		// If not specified with this function,
 		// -180->180, -90->90 for DirectionCoordinates used (rest
 		// don't matter).  Specifying this correctly can make the

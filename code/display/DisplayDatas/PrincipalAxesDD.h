@@ -32,7 +32,7 @@
 #include <casa/aips.h>
 
 // trial includes:
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 
 // display library includes:
 #include <display/DisplayDatas/DisplayData.h>
@@ -51,7 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	class WCPositionEvent;
 	class WCMotionEvent;
 	class WCRefreshEvent;
-	class CoordinateSystem;
+	class DisplayCoordinateSystem;
 	class WCCSNLAxisLabeller;
 	class PrincipalAxesDM;
 
@@ -101,7 +101,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		virtual void setSubstituteTitleText( const String text );
 		// Is the DD is capable (in its current state) of drawing
-		// in the current CoordinateSystem of the WCH's WorldCanvas?
+		// in the current DisplayCoordinateSystem of the WCH's WorldCanvas?
 		virtual Bool conformsToCS(const WorldCanvas &wc);
 
 		// Miscellaneous information supply routines
@@ -179,21 +179,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return dataDim();
 		}
 
-		// retrieve the CoordinateSystem
-		CoordinateSystem coordinateSystem() const {
+		// retrieve the DisplayCoordinateSystem
+		DisplayCoordinateSystem coordinateSystem() const {
 			return itsCoordSys;
 		}
 
-		// retrieve the original CoordinateSystem
-		CoordinateSystem originalCoordinateSystem() const {
+		// retrieve the original DisplayCoordinateSystem
+		DisplayCoordinateSystem originalCoordinateSystem() const {
 			return itsOrigCoordSys;
 		}
 
-		// set the CoordinateSystem and the original CoordinateSystem
-		void setCoordinateSystem(const CoordinateSystem &coordsys);
+		// set the DisplayCoordinateSystem and the original DisplayCoordinateSystem
+		void setCoordinateSystem(const DisplayCoordinateSystem &coordsys);
 
-		// set the CoordinateSystem to be the same as the original
-		// CoordinateSystem
+		// set the DisplayCoordinateSystem to be the same as the original
+		// DisplayCoordinateSystem
 		void restoreCoordinateSystem();
 
 		// set a Linear Coordinate in case of pixToWorld undefined for the
@@ -265,7 +265,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		const String &spectStr( ) const;
 
 		// Convert list of world axis names to pixel axis names
-		Vector<String> worldToPixelAxisNames (const CoordinateSystem& cSys) const;
+		Vector<String> worldToPixelAxisNames (const DisplayCoordinateSystem& cSys) const;
 
 		const String &spectralunitStr( ) const;
 		const static String HISTOGRAM_RANGE;
@@ -339,12 +339,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// </group>
 
 		// Set velocity state
-		void setVelocityState (CoordinateSystem& cSys,
+		void setVelocityState (DisplayCoordinateSystem& cSys,
 		                       const String& velTypeString,
 		                       const String& unitString);
 
 		// Set Spectral formatting
-		void setSpectralFormatting (CoordinateSystem& cSys,
+		void setSpectralFormatting (DisplayCoordinateSystem& cSys,
 		                            const String& velTypeString,
 		                            const String& unitString,
 		                            const String& frequency_system = "");
@@ -396,8 +396,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		uInt itsNumImages;
 
 		// This CS is the one we were constructed with
-		CoordinateSystem itsOrigCoordSys;
-		CoordinateSystem itsCoordSysBackup;
+		DisplayCoordinateSystem itsOrigCoordSys;
+		DisplayCoordinateSystem itsCoordSysBackup;
 
 		// This is the working CS which is transposed and has axes removed
 		// all over the place
@@ -410,7 +410,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// poorly modularized, and the DDs remain involved in too much of the
 		// _canvas's_ coordinate translation chores).
 
-		CoordinateSystem itsCoordSys;
+		DisplayCoordinateSystem itsCoordSys;
 
 		// List of AxisLabellers.
 		PtrBlock<void *> itsAxisLabellers;
@@ -423,7 +423,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// PositionTracking.    It is pretty much the same as itsOriginalCoordSys
 		// but the formtting and velocity state (if there is a SC) may differ
 
-		CoordinateSystem itsPosTrackCoordSys;
+		DisplayCoordinateSystem itsPosTrackCoordSys;
 		String itsSpectralUnit;
 		String itsSpectralQuantity;
 		Bool itsAbsolute;
@@ -459,10 +459,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Bool itsUsesAxisLabels;
 
 		// Find out if SpectralCoordinate can have velocity units
-		Bool canHaveVelocityUnit (const CoordinateSystem& cSys) const;
+		Bool canHaveVelocityUnit (const DisplayCoordinateSystem& cSys) const;
 
 		// Remove list of pixel axes from CS
-		void removePixelAxes (CoordinateSystem& cSys,
+		void removePixelAxes (DisplayCoordinateSystem& cSys,
 		                      uInt startAxis,
 		                      const IPosition& fixedPosition);
 
