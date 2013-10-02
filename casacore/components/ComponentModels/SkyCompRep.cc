@@ -224,7 +224,6 @@ void SkyCompRep::sample(Cube<Double>& samples, const Unit& reqUnit,
 			const MeasRef<MFrequency>& freqRef) const {
   const uInt nDirSamples = directions.nelements();
   const uInt nFreqSamples = frequencies.nelements();
-  
   Flux<Double> f = itsFlux.copy();
   f.convertUnit(reqUnit);
   Vector<Double> fluxVal(4);
@@ -237,18 +236,22 @@ void SkyCompRep::sample(Cube<Double>& samples, const Unit& reqUnit,
   Vector<Double> dirScales(nDirSamples);
   itsShapePtr->sample(dirScales, directions, dirRef,
  		      pixelLatSize, pixelLongSize);
-  Vector<Double> freqScales(nFreqSamples);
-  itsSpectrumPtr->sample(freqScales, frequencies, freqRef);
 
-  for (uInt f = 0; f < nFreqSamples; f++) {
-    const Double thisFreqScale = freqScales(f);
-    for (uInt d = 0; d < nDirSamples; d++) {
-      const Double thisScale = dirScales(d) * thisFreqScale;
-      samples(0, d, f) += thisScale * i;
-      samples(1, d, f) += thisScale * q;
-      samples(2, d, f) += thisScale * u;
-      samples(3, d, f) += thisScale * v;
-    }
+  Vector<Double> freqScales(nFreqSamples);
+
+  itsSpectrumPtr->sample(freqScales, frequencies, freqRef);
+  for (uInt d = 0; d < nDirSamples; d++) {
+	  const Double thisDirScale = dirScales(d);
+	  if (thisDirScale != 0) {
+		  for (uInt f = 0; f < nFreqSamples; f++) {
+			  const Double thisScale = thisDirScale* freqScales(f);
+
+			  samples(0, d, f) += thisScale * i;
+			  samples(1, d, f) += thisScale * q;
+			  samples(2, d, f) += thisScale * u;
+			  samples(3, d, f) += thisScale * v;
+		  }
+	  }
   }
 }
 
