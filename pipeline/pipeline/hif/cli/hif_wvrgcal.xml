@@ -119,7 +119,7 @@ a QA2 score based on its effect on the interferometric data.
 
     <param type="string" name="qa2_bandpass_intent">
         <description>Data intent to use for the bandpass calibration in the qa2 calculation</description>
-        <value>BANDPASS</value>
+        <value></value>
     </param>
 
     <param type="double" name="accept_threshold">
@@ -328,9 +328,11 @@ qa2_intent -- The list of data intents on which the wvr correction is to be
     example: 'PHASE'
 
 qa2_bandpass_intent -- The data intent to use for the bandpass calibration
-    in the qa2 calculation.
+    in the qa2 calculation. The default is blank to allow the 
+    underlying bandpass task to select a sensible intent if the dataset
+    lacks BANDPASS data.
 
-    default: 'BANDPASS'
+    default: ''
 
 accept_threshold -- The phase-rms improvement ratio
     (rms without wvr / rms with wvr) above which the wrvg file will be
