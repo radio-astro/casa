@@ -382,7 +382,7 @@ protected:
     void accumulateExposure (const VisBuffer2 *);
     void accumulateOneRow (MsRow * rowInput, MsRowAvg * rowAveraged,
                            const Subchunk & subchunk);
-    void accumulateRowData (MsRow * rowInput, MsRowAvg * rowAveraged, Float adjustedWeight);
+    void accumulateRowData (MsRow * rowInput, MsRowAvg * rowAveraged, Double adjustedWeight);
     void accumulateTimeCentroid (const VisBuffer2 * input);
     void captureIterationInfo (VisBufferImpl2 * dstVb, const VisBuffer2 * srcVb,
                                const Subchunk & subchunk);
@@ -935,7 +935,7 @@ VbAvg::accumulateRowDatum (const T & averagedValue, const T & inputValue, Bool r
 
 void
 VbAvg::accumulateRowData (MsRow * rowInput, MsRowAvg * rowAveraged,
-                          float adjustedWeight)
+                          Double adjustedWeight)
 {
 
     // Grab working copies of the values to be accumulated.
@@ -971,8 +971,9 @@ VbAvg::accumulateRowData (MsRow * rowInput, MsRowAvg * rowAveraged,
                                                           (rowInput->timeCentroid() - rowAveraged->timeFirst())* adjustedWeight,
                                                           flagChange));
 
+        Vector<Double> weightedUvw = rowInput->uvw() * adjustedWeight;
         rowAveraged->setUvw (accumulateRowDatum (rowAveraged->uvw (),
-                                                 rowInput->uvw(),
+                                                 weightedUvw,
                                                  flagChange));
 
         // Capture a couple pieces of data
@@ -1190,11 +1191,9 @@ VbAvg::finalizeRowData (MsRowAvg * msRow)
 
     if (n != 0){
 
-        Double oneOverN = 1.0 / n;
-
         msRow->setTimeCentroid (msRow->timeCentroid() / weight + msRow->timeFirst());
 
-        msRow->setUvw (msRow->uvw() * oneOverN);
+        msRow->setUvw (msRow->uvw() / weight);
 
         // Exposure is a simple sum, not an average so it is already
         // done at this point.
