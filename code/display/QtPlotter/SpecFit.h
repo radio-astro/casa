@@ -42,7 +42,7 @@ namespace casa {
 		Vector<Float> getYValues() const;
 		void setCurveName( QString curveName );
 		QString getCurveName() const;
-		bool isSpecFitFor( int pixelX, int pixelY ) const;
+		bool isSpecFitFor( int pixelX, int pixelY, int minX, int minY ) const;
 		void setFitCenter( int pixelX, int pixelY );
 		SpecFit& operator=(const SpecFit& other );
 		virtual ~SpecFit();

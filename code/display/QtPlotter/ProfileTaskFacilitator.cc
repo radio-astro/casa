@@ -62,11 +62,18 @@ namespace casa {
 		return taskMonitor->getFileName();
 	}
 
-	void ProfileTaskFacilitator::logWarning(String msg ) {
-		*logger << LogIO::WARN << msg << LogIO::POST;
+	void ProfileTaskFacilitator::logWarning(String msg, bool opticalSource ) {
+		//Only log if the source matches the mode we are in.
+		bool currentlyOptical = isOptical();
+		if ( currentlyOptical == opticalSource ){
+			*logger << LogIO::WARN << msg << LogIO::POST;
+		}
 	}
-	void ProfileTaskFacilitator::postStatus( String status ) {
-		taskMonitor->postStatus( status );
+	void ProfileTaskFacilitator::postStatus( String status, bool opticalSource ) {
+		bool currentlyOptical = isOptical();
+		if ( currentlyOptical == opticalSource ){
+			taskMonitor->postStatus( status );
+		}
 	}
 	Vector<Float> ProfileTaskFacilitator::getXValues() const {
 		return taskMonitor -> getXValues();

@@ -68,8 +68,8 @@ namespace casa {
 		virtual void plotMainCurve();
 
 		virtual QString getFileName();
-		virtual void logWarning(String msg );
-		virtual void postStatus( String status );
+		virtual void logWarning(String msg, bool opticalSource = false );
+		virtual void postStatus( String status, bool opticalSource = false );
 		virtual Vector<Float> getXValues() const;
 		virtual Vector<Float> getYValues() const;
 		virtual Vector<Float> getZValues() const;

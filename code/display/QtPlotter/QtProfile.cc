@@ -85,6 +85,7 @@ namespace casa {
 	const QString QtProfile::PLOT_TYPE_SUM = "Sum";
 	const QString QtProfile::FREQUENCY = "frequency";
 	const QString QtProfile::RADIO_VELOCITY = "radio velocity";
+	const QString QtProfile::VELOCITY = "velocity";
 	const QString QtProfile::CHANNEL = "channel";
 	const QString QtProfile::OPTICAL = "optical";
 	const QString QtProfile::AIR = "air";
@@ -146,19 +147,10 @@ namespace casa {
 		//User legend preferences
 		legendPreferencesDialog = new LegendPreferences( canvasHolder, this );
 
-
-		// read the preferred ctype from casarc
+		//X Axis Units
 		initializeXAxisUnits();
-		QString pref_ctype = read( ".freqcoord.type");
-		if (pref_ctype.size()>0) {
-			// change to the preferred ctype
-			updateAxisUnitCombo( pref_ctype, bottomAxisCType );
-			updateAxisUnitCombo( pref_ctype, topAxisCType );
-		}
+		setXAxisUnits();
 
-		ctypeUnit = String(bottomAxisCType->currentText().toStdString());
-		getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
-		pixelCanvas -> setToolTipXUnit( xaxisUnit.c_str());
 		initializeSpectralProperties();
 
 		// get reference frame info for freq axis label
@@ -267,6 +259,26 @@ namespace casa {
 			bottomAxisCType->addItem( xUnitsList[i]);
 		}
 		restrictTopAxisOptions( false, bottomAxisCType->currentText() );
+	}
+
+	void QtProfile::setXAxisUnits(){
+		QString pref_ctype = read( ".freqcoord.type");
+
+		//We can't use velocity with a tabular axis because the
+		//rest frequency is zero.
+		if ( !isSpectralAxis() && pref_ctype.indexOf(VELOCITY) >= 0){
+			pref_ctype="frequency [Hz]";
+		}
+
+		if (pref_ctype.size()>0) {
+			// change to the preferred ctype
+			updateAxisUnitCombo( pref_ctype, bottomAxisCType );
+			updateAxisUnitCombo( pref_ctype, topAxisCType );
+		}
+
+		ctypeUnit = String(bottomAxisCType->currentText().toStdString());
+		getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
+		pixelCanvas -> setToolTipXUnit( xaxisUnit.c_str());
 	}
 
 	void QtProfile::updateSpectralReferenceFrame( ){
@@ -641,7 +653,6 @@ namespace casa {
 			specFitSettingsWidget->reset( );
 			momentSettingsWidget->reset();
 		}
-
 		catch (AipsError x) {
 			String message = "Error when re-setting the profiler:\n" + x.getMesg();
 			*itsLog << LogIO::WARN << message << LogIO::POST;
@@ -716,6 +727,7 @@ namespace casa {
 	void QtProfile::initializeSpectralProperties(){
 		DisplayCoordinateSystem cSys = image->coordinates();
 		bool spectralAxis = cSys.hasSpectralAxis();
+
 		if ( spectralAxis ) {
 			SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
 			Converter::setSpectralCoordinate( spectralCoordinate );
@@ -1052,10 +1064,10 @@ namespace casa {
 		int index = axisUnitCombo->findText( textToMatch );
 		if (index > -1) {
 			axisUnitCombo->setCurrentIndex(index);
-		} else {
+		} /*else {
 			//
 			*itsLog << LogIO::WARN << "Can not switch profile to spectral quantity and unit: \"" << textToMatch.toStdString() << "\"!" << LogIO::POST;
-		}
+		}*/
 	}
 
 	bool QtProfile::isAxisAscending(const Vector<Float>& axisValues ) const {
@@ -2846,8 +2858,9 @@ namespace casa {
 	}
 
 	void QtProfile::processTrackRecord( const String& dataName, const String& positionInfo ) {
-		QString imageName( image->name().c_str());
-		if ( image != NULL && imageName.indexOf( dataName.c_str()) >= 0 ) {
+		QString imageName( image->name(true).c_str());
+		QString dataNameStr( dataName.c_str());
+		if ( image != NULL && dataNameStr.indexOf( imageName ) >= 0 ) {
 			QString posStr( positionInfo.c_str());
 			int pixelIndex = posStr.indexOf("Pixel:");
 			posStr = posStr.mid( pixelIndex );

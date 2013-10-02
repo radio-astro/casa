@@ -205,6 +205,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// "optical velocity [m/s]" --> "optical velocity" and "m/s"
 		void distributeTypeUnit() ;
+
+		static const String FRAME_REST;
 	};
 
 

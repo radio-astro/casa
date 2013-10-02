@@ -120,7 +120,7 @@ namespace casa {
 		QString imageYUnits;
 		QList<QList<SpecFit*> > curveList;
 		int SUM_FIT_INDEX;
-
+		bool viewerSettingsWritten;
 		volatile bool fitCancelled;
 	};
 }

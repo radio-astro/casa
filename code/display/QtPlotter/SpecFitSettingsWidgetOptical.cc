@@ -67,7 +67,7 @@ namespace casa {
 			fitter    = new SpectralFitter();
 		} catch (AipsError x) {
 			String message = "Error when starting the profiler:\n";
-			logWarning(message);
+			logWarning(message,true);
 		}
 	}
 
@@ -84,14 +84,14 @@ namespace casa {
 
 		if (startStr.isEmpty()) {
 			msg = String("No start value specified!");
-			logWarning(msg);
-			postStatus(msg);
+			logWarning(msg,true);
+			postStatus(msg,true);
 			return;
 		}
 		if (endStr.isEmpty()) {
 			msg = String("No end value specified!");
-			logWarning( msg );
-			postStatus(msg);
+			logWarning( msg, true );
+			postStatus(msg, true);
 			return;
 		}
 
@@ -99,15 +99,15 @@ namespace casa {
 		if (ui.startValueFit->validator()->validate(startStr, pos) != QValidator::Acceptable) {
 			String startString(startStr.toStdString());
 			msg = String("Start value not correct: ") + startString;
-			logWarning( msg );
-			postStatus(msg);
+			logWarning( msg, true );
+			postStatus(msg, true );
 			return;
 		}
 		if (ui.endValueFit->validator()->validate(endStr, pos) != QValidator::Acceptable) {
 			String endString(endStr.toStdString());
 			msg = String("Start value not correct: ") + endString;
-			logWarning(msg);
-			postStatus(msg);
+			logWarning(msg, true);
+			postStatus(msg, true);
 			return;
 		}
 
@@ -133,8 +133,8 @@ namespace casa {
 		// make sure something should be fitted at all
 		if (!doFitGauss && !doFitPoly) {
 			msg = String("There is nothing to fit!");
-			logWarning( msg );
-			postStatus( msg );
+			logWarning( msg, true );
+			postStatus( msg, true );
 			return;
 		}
 
@@ -145,7 +145,7 @@ namespace casa {
 		Vector<Float> z_eval = getZValues();
 		if (!fitter->fit(z_xval, z_yval, z_eval, startVal, endVal, doFitGauss, doFitPoly, polyN, msg)) {
 			msg = String("Data could not be fitted!");
-			postStatus(msg);
+			postStatus(msg, true);
 		} else {
 			String xaxisUnit = getXAxisUnit();
 			QString yUnit = getYUnit();
@@ -157,8 +157,8 @@ namespace casa {
 				// report problems
 				if (z_yfit.size()<1) {
 					msg = String("There exist no fit values!");
-					logWarning( msg );
-					postStatus(msg);
+					logWarning( msg, true );
+					postStatus(msg, true);
 					return;
 				}
 
@@ -167,7 +167,7 @@ namespace casa {
 				QString fitName = fileName + "FIT" + startStr + "-" + endStr + QString(xaxisUnit.c_str());
 				pixelCanvas->addPolyLine(z_xfit, z_yfit, fitName, QtCanvas::CURVE_TRADITIONAL );
 			}
-			postStatus((fitter->report(*logger, xaxisUnit, String(yUnit.toLatin1().data()), String(yUnitPrefix.toLatin1().data()))).c_str());
+			postStatus((fitter->report(*logger, xaxisUnit, String(yUnit.toLatin1().data()), String(yUnitPrefix.toLatin1().data()))).c_str(), true);
 		}
 
 	}

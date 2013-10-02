@@ -39,9 +39,10 @@ namespace casa {
 		return false;
 	}
 
-	bool SpecFit::isSpecFitFor( int pixelX, int pixelY ) const {
+	bool SpecFit::isSpecFitFor( int pixelX, int pixelY,
+			int minX, int minY ) const {
 		bool correctCenter = false;
-		if ( centerX == pixelX && centerY == pixelY ) {
+		if ( centerX +minX == pixelX && centerY+minY == pixelY ) {
 			correctCenter = true;
 		}
 		return correctCenter;
