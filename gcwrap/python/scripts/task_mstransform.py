@@ -1051,7 +1051,7 @@ def mstransform(
             config['veltype'] = veltype
             
         if timeaverage:
-            casalog.post('Time averaging is not yet implemented', 'WARN')
+            casalog.post('Parse time averaging parameters')
             config['timeaverage'] = True
             config['timebin'] = timebin
             config['timespan'] = timespan

@@ -342,6 +342,7 @@ vector<double> msmetadata::chanwidths(int spw, const string& unit) {
 bool msmetadata::close() {
 	_FUNC2(
 		_msmd.reset(0);
+		_ms.reset(0);
 		return true;
 	)
 	return false;
@@ -373,6 +374,7 @@ vector<int> msmetadata::datadescids(int spw, int pol) {
 bool msmetadata::done() {
 	_FUNC2(
 		_msmd.reset(0);
+		_ms.reset(0);
 		return true;
 	)
 	return false;

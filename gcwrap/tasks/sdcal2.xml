@@ -26,7 +26,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="calmode">
-	    <description>SD calibration mode ("ps","tsys","apply","ps,apply","ps,tsys,apply")</description>
+	    <description>SD calibration mode ("ps","otf","otfraster","tsys","apply",and their possible combinations)</description>
 	    <value>ps</value>
 	    <allowed kind="enum">
 	    <value>ps</value>
