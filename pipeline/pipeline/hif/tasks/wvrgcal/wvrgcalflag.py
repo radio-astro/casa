@@ -1,11 +1,11 @@
 from __future__ import absolute_import
 import copy
-import re
 import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 
+from .. import bandpass
 from . import wvrgcal
 from . import resultobjects
 from . import wvrgcalflagsetter
@@ -27,30 +27,51 @@ class WvrgcalflagInputs(wvrgcal.WvrgcalInputs):
       flag_hi=None, fhi_limit=None, fhi_minsample=None):
 	self._init_properties(vars())
 
-    # qa2_intent setter overrides version in WvrgcalInputs with a 
+    # qa2_intent setter/getter overrides version in WvrgcalInputs with a 
     # different default 
-    @wvrgcal.WvrgcalInputs.qa2_intent.setter
-    def qa2_intent(self, value):
-        if value is None:
-            value = 'PHASE,BANDPASS'
+    @property
+    def qa2_intent(self):
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('qa2_intent')
+
+        if self._qa2_intent is None:
+            value = 'PHASE'
+        else:
+            value = self._qa2_intent
 
         # ensure that qa2_intent includes flag_intent otherwise 
         # the results for flag_intent will not be calculated
         value_set = set(value.split(','))
-        value_set.update(self.flag_intent.split(','))
+        temp = self.flag_intent
+        value_set.update(temp.split(','))
         value = ','.join(value_set)
+        return value
+
+    @qa2_intent.setter
+    def qa2_intent(self, value):
         self._qa2_intent = value
 
     @property
     def flag_intent(self):
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('flag_intent')
+
+        if self._flag_intent is None:
+            # default to the intent that would be used for bandpass
+            # calibration
+            bp_inputs = bandpass.PhcorBandpass.Inputs(
+              context=self.context,
+              vis=self.vis,
+              intent=None)
+            value = bp_inputs.intent
+            return value
+
         return self._flag_intent
 
     @flag_intent.setter
     def flag_intent(self, value):
-        if value is None:
-            value = 'BANDPASS'
         self._flag_intent = value
-
+ 
     # flag high outlier
     @property
     def flag_hi(self):
@@ -89,6 +110,7 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
     def prepare(self):
         inputs = self.inputs
         jobs = []
+
         # scratch area where hif_wvrgcal can store its B calibration 
         # result
         inputs.context.scratch = {}
@@ -217,11 +239,15 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
         intent_list = self.inputs.flag_intent.split(',')
         intent_fields = set()
         for intent in intent_list:
-            re_intent = intent.replace('*', '.*')
-            intent_fields.update(
-              [(fld.name,fld.id) for fld in fields if
-              re.search(pattern=re_intent, string=str(fld.intents))])
-        intent_fields = list(intent_fields)
+            intent_fields = [(fld.name,fld.id) for fld in fields if intent
+              in fld.intents]
+            if intent_fields:
+                LOG.info('flagging views will use %s data' % intent)
+            else:
+                LOG.warning('no data for intent %s' % intent)
+        if not intent_fields:
+            LOG.warning('no data fits flag_intent %s, no flagging will be done' %
+              self.inputs.flag_intent)
 
         for description in result.qa2.descriptions():
             add = False
