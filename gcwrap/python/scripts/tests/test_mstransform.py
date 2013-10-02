@@ -1395,9 +1395,10 @@ class test_timeaverage(test_base_compare):
         self.outvis_sorted = 'test_timeaverage-mst-sorted.ms'
         self.refvis_sorted = 'test_timeaverage-split-sorted.ms'     
         os.system('rm -rf test_timeaverage*')
+        flagdata(vis=self.vis,mode='unflag')
         
     def tearDown(self):
-        super(test_timeaverage,self).tearDown()      
+        super(test_timeaverage,self).tearDown()   
             
     def test_timeaverage_data(self):   
         
@@ -1490,10 +1491,10 @@ class test_timeaverage(test_base_compare):
         self.post_process()         
         
         
-class test_timeaverage_and_combine_spws(test_base_compare):        
+class test_multiple_transformations(test_base_compare):        
     
     def setUp(self):
-        super(test_timeaverage_and_combine_spws,self).setUp()
+        super(test_multiple_transformations,self).setUp()
         self.setUp_4ants()
         self.outvis = 'test_timeaverage_and_combine_spws_single_run.ms'
         self.tmpvis = 'test_timeaverage_and_combine_spws_1st_step.ms'
@@ -1503,9 +1504,9 @@ class test_timeaverage_and_combine_spws(test_base_compare):
         os.system('rm -rf test_timeaverage_and_combine_spws*')
                 
     def tearDown(self):
-        super(test_timeaverage_and_combine_spws,self).tearDown()
+        super(test_multiple_transformations,self).tearDown()
         
-    def test_timeaverage_and_combine_spws_one_baseline_one_timestep(self):
+    def test_timeaverage_2x_and_combine_two_spws_one_baseline_one_timestep(self):
         
         mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',antenna="0&&1", timerange='14:45:08.50~14:45:9.50',
                     datacolumn='DATA',combinespws=True,timeaverage=True,timebin='2s')
@@ -1517,7 +1518,7 @@ class test_timeaverage_and_combine_spws(test_base_compare):
 
         self.post_process()           
         
-    def test_timeaverage_and_combine_spws_one_baseline_two_timesteps(self):
+    def test_timeaverage_2x_and_combine_two_spws_one_baseline_two_timesteps(self):
         
         mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',antenna="0&&1", timerange='14:45:08.50~14:45:11.50',
                     datacolumn='DATA',combinespws=True,timeaverage=True,timebin='2s')
@@ -1527,9 +1528,9 @@ class test_timeaverage_and_combine_spws(test_base_compare):
         
         self.generate_tolerance_map()      
 
-        self.post_process(nrow=1)         
+        self.post_process()         
         
-    def test_timeaverage_and_combine_spws_two_baselines_one_timestep(self):
+    def test_timeaverage_2x_and_combine_two_spws_two_baselines_one_timestep(self):
         
         mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',antenna="0&&1~2", timerange='14:45:08.50~14:45:9.50',
                     datacolumn='DATA',combinespws=True,timeaverage=True,timebin='2s')
@@ -1541,7 +1542,7 @@ class test_timeaverage_and_combine_spws(test_base_compare):
 
         self.post_process()        
         
-    def test_timeaverage_and_combine_spws_two_baselines_two_timesteps(self):
+    def test_timeaverage_2x_and_combine_two_spws_two_baselines_two_timesteps(self):
         
         mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',antenna="0&&1~2", timerange='14:45:08.50~14:45:11.50',
                     datacolumn='DATA',combinespws=True,timeaverage=True,timebin='2s')
@@ -1551,7 +1552,89 @@ class test_timeaverage_and_combine_spws(test_base_compare):
         
         self.generate_tolerance_map()
 
-        self.post_process(nrow=1)        
+        self.post_process()    
+        
+    def test_timeaverage_2x_and_combine_two_spws_two_baselines(self):
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',antenna="0&&1~2", 
+                    datacolumn='DATA',combinespws=True,timeaverage=True,timebin='2s')
+        mstransform(vis=self.vis,outputvis=self.tmpvis,spw='9,10',antenna="0&&1~2", 
+                    datacolumn='DATA',timeaverage=True,timebin='2s')
+        mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',combinespws=True)
+        
+        self.generate_tolerance_map()
+
+        self.post_process()
+        
+    def test_timeaverage_30x_and_combine_two_spws_two_baselines(self):
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',antenna="0&&1~2", 
+                    datacolumn='DATA',combinespws=True,timeaverage=True,timebin='30s')
+        mstransform(vis=self.vis,outputvis=self.tmpvis,spw='9,10',antenna="0&&1~2", 
+                    datacolumn='DATA',timeaverage=True,timebin='30s')
+        mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',combinespws=True)
+        
+        self.generate_tolerance_map()
+
+        self.post_process()
+        
+    def test_timeaverage_2x_and_combine_two_spws_four_baselines(self):
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',
+                    datacolumn='DATA',combinespws=True,timeaverage=True,timebin='2s')
+        mstransform(vis=self.vis,outputvis=self.tmpvis,spw='9,10',
+                    datacolumn='DATA',timeaverage=True,timebin='2s')
+        mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',combinespws=True)
+        
+        self.generate_tolerance_map()
+
+        self.post_process()   
+        
+    def test_timeaverage_30x_and_combine_two_spws_four_baselines(self):
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',
+                    datacolumn='DATA',combinespws=True,timeaverage=True,timebin='30s')
+        mstransform(vis=self.vis,outputvis=self.tmpvis,spw='9,10',
+                    datacolumn='DATA',timeaverage=True,timebin='30s')
+        mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',combinespws=True)
+        
+        self.generate_tolerance_map()
+
+        self.post_process()        
+        
+    def test_timeaverage_2x_and_combine_seven_spws_four_baselines(self):
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,spw='8~15',
+                    datacolumn='DATA',combinespws=True,timeaverage=True,timebin='2s')
+        mstransform(vis=self.vis,outputvis=self.tmpvis,spw='8~15',
+                    datacolumn='DATA',timeaverage=True,timebin='2s')
+        mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',combinespws=True)
+        
+        self.generate_tolerance_map()
+
+        self.post_process()   
+        
+    def test_timeaverage_30x_and_combine_seven_spws_four_baselines(self):
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,spw='8~15',
+                    datacolumn='DATA',combinespws=True,timeaverage=True,timebin='30s')
+        mstransform(vis=self.vis,outputvis=self.tmpvis,spw='8~15',
+                    datacolumn='DATA',timeaverage=True,timebin='30s')
+        mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',combinespws=True)
+        
+        self.generate_tolerance_map()
+
+        self.post_process()          
+        
+    def test_timeaverage_and_channel_average(self):
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn='DATA',timeaverage=True,timebin='2s',chanaverage=True,chanbin=2)
+        mstransform(vis=self.vis,outputvis=self.tmpvis,datacolumn='DATA',timeaverage=True,timebin='2s')
+        mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',chanaverage=True,chanbin=2)
+        
+        self.generate_tolerance_map()
+
+        self.post_process()           
         
         
 class test_regridms_single_spw(test_base_compare):
@@ -1883,8 +1966,8 @@ def suite():
             test_WeightSpectrum,
             test_channelAverageByDefault,
             test_timeaverage,
-            test_timeaverage_and_combine_spws,
+            test_multiple_transformations,
             test_regridms_single_spw,
             test_float_column,
-            test_spw_poln,
+            #test_spw_poln,
             Cleanup]

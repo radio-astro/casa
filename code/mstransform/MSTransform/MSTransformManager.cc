@@ -787,10 +787,25 @@ void MSTransformManager::parseTimeAvgParams(Record &configuration)
 			return;
 		}
 
+		exists = configuration.fieldNumber ("timespan");
+		if (exists >= 0)
+		{
+			configuration.get (exists, timespan_p);
+
+			if (!timespan_p.contains("scan") and !timespan_p.contains("state"))
+			{
+				timespan_p = String("");
+			}
+			else
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+						<< "Time span is " << timespan_p << LogIO::POST;
+			}
+		}
+
 		exists = configuration.fieldNumber ("maxuvwdistance");
 		if (exists >= 0)
 		{
-			String timebin;
 			configuration.get (exists, maxuvwdistance_p);
 
 			if (maxuvwdistance_p > 0)
@@ -803,7 +818,6 @@ void MSTransformManager::parseTimeAvgParams(Record &configuration)
 		exists = configuration.fieldNumber ("minbaselines");
 		if (exists >= 0)
 		{
-			String timebin;
 			configuration.get (exists, minbaselines_p);
 
 			if (minbaselines_p > 0)
@@ -1706,13 +1720,13 @@ void MSTransformManager::regridAndCombineSpwSubtable()
 // Auxiliary method common whenever re-gridding is necessary (with or without combining the SPWs)
 // -----------------------------------------------------------------------
 void MSTransformManager::regridSpwAux(	Int spwId,
-											Vector<Double> &originalCHAN_FREQ,
-											Vector<Double> &originalCHAN_WIDTH,
-											Vector<Double> &inputCHAN_FREQ,
-											Vector<Double> &inputCHAN_WIDTH,
-											Vector<Double> &regriddedCHAN_FREQ,
-											Vector<Double> &regriddedCHAN_WIDTH,
-											string msg)
+										Vector<Double> &originalCHAN_FREQ,
+										Vector<Double> &originalCHAN_WIDTH,
+										Vector<Double> &inputCHAN_FREQ,
+										Vector<Double> &inputCHAN_WIDTH,
+										Vector<Double> &regriddedCHAN_FREQ,
+										Vector<Double> &regriddedCHAN_WIDTH,
+										string msg)
 {
 
     // Print characteristics of input SPW
@@ -2786,11 +2800,8 @@ void MSTransformManager::fillOutputMs(vi::VisBuffer2 *vb)
 		for (uInt row=0;row<antenna1.size();row++)
 		{
 			pair<Int,Int> baseline = std::make_pair(antenna1(row),antenna2(row));
-
 			relativeTimeInMiliseconds = (Int)floor(1E3*(vb->time()(row) - vb->time()(0)));
-			pair<Int,Int> timeState = std::make_pair(relativeTimeInMiliseconds,state(row));
-
-			baselineMap_p[std::make_pair(baseline,timeState)].push_back(row);
+			baselineMap_p[std::make_pair(baseline,relativeTimeInMiliseconds)].push_back(row);
 		}
 
 		rowsToAdd = baselineMap_p.size();
