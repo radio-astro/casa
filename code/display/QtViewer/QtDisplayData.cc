@@ -465,15 +465,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		IPosition shape = (im_!=0)? im_->shape() : cim_->shape();
 		Block<uInt> axs(ndim);
 
-		const CoordinateSystem* cs=0;
-		try {
-			cs = &((im_!=0)? im_->coordinates() : cim_->coordinates());
-		}
-		// (Is there perhaps a problem retrieving
-		//  a CS from FITS or miriad images?)
-		catch(...) {
-			cs = 0;
-		}	// (In case there is).
+		DisplayCoordinateSystem cs = (im_!=0) ? im_->coordinates() : cim_->coordinates();
 
 		getInitialAxes_(axs, shape, cs);
 		//#dk  getInitialAxes(axs, shape);
@@ -1596,10 +1588,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	  if(dd_==0 || (im_==0 && cim_==0)) return -1;
 
-	  const CoordinateSystem* cs=0;
-	  try { cs = &((im_!=0)? im_->coordinates() : cim_->coordinates());  }
-	  catch(...) { cs = 0;  }	// (necessity of try-catch is doubtful...).
-	  if(cs==0) return -1;
+	  DisplayCoordinateSystem cs= ((im_!=0)? im_->coordinates() : cim_->coordinates());
 
 	  Int nAxes = (im_!=0)? im_->ndim() : cim_->ndim();
 	  for(Int ax=0; ax<nAxes && ax<Int(cs->nWorldAxes()); ax++) {
@@ -1628,33 +1617,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if(dd_==0 || (im_==0 && cim_==0)) return -1;
 
-		const CoordinateSystem* cs=0;
-		try {
-			cs = &((im_!=0)? im_->coordinates() : cim_->coordinates());
-		} catch(...) {
-			cs = 0;     // (necessity of try-catch is doubtful...).
-		}
-		if(cs==0) return -1;
+		DisplayCoordinateSystem cs = ( im_ != 0 )? im_->coordinates() : cim_->coordinates();
 
 		try {
 
 			Int nAxes = (im_!=0)? im_->ndim() : cim_->ndim();
-			for(Int ax=0; ax<nAxes && ax<Int(cs->nWorldAxes()); ax++) {
+			for(Int ax=0; ax<nAxes && ax<Int(cs.nWorldAxes()); ax++) {
 				// coordno : type of coordinate
 				// axisincoord : index within the coordinate list defined by coordno
 				Int coordno, axisincoord;
-				cs->findWorldAxis(coordno, axisincoord, ax);
+				cs.findWorldAxis(coordno, axisincoord, ax);
 
-				//cout << "coordno=" << coordno << "  axisincoord : " << axisincoord << "  type : " << cs->showType(coordno) << endl;
+				//cout << "coordno=" << coordno << "  axisincoord : " << axisincoord << "  type : " << cs.showType(coordno) << endl;
 
-				if( cs->showType(coordno) == String("Direction") ) {
+				if( cs.showType(coordno) == String("Direction") ) {
 					// Check for Right Ascension and Declination
-					Vector<String> axnames = (cs->directionCoordinate(coordno)).axisNames(MDirection::DEFAULT);
+					Vector<String> axnames = (cs.directionCoordinate(coordno)).axisNames(MDirection::DEFAULT);
 					AlwaysAssert( axisincoord>=0 && axisincoord < static_cast<int>(axnames.nelements()), AipsError);
 					if( axnames[axisincoord] == axtype ) {
 						return ax;
 					}
-				} else if(cs->showType(coordno)==axtype) { // Check for Stokes and Spectral
+				} else if(cs.showType(coordno)==axtype) { // Check for Stokes and Spectral
 					return ax;
 				}
 			}//end of for ax
@@ -1677,7 +1660,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	        Bool allAxes) {
 		// Convert 2-D 'pseudoregion' (or 'mouse region' Record, from the region
 		// mouse tools) to a full Image Region, with same dimensionality as the
-		// DD's Lattice (and relative to its CoordinateSystem).
+		// DD's Lattice (and relative to its DisplayCoordinateSystem).
 		// Return value is 0 if the conversion can't be made or does not apply
 		// to this DD for any reason (ignored by non-Lattice DDs, e.g.).
 		//
@@ -1727,8 +1710,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			Int nAxes                   = (im_!=0)? im_->ndim()  : cim_->ndim();
 			IPosition shp               = (im_!=0)? im_->shape() : cim_->shape();
-			const CoordinateSystem& cs  = (im_!=0)? im_->coordinates() :
-			                              cim_->coordinates();
+			DisplayCoordinateSystem cs  = (im_!=0)? im_->coordinates() : cim_->coordinates();
 
 			//Int zIndex = mouseRegion.asInt("zindex");  // (following is preferable).
 			Int zIndex            = padd->activeZIndex();
@@ -2039,10 +2021,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			//cout << "twoD.shape()=" << shp2 << endl;
 			 */
 
-			const CoordinateSystem& cs =
-			    (im_ != 0) ? im_->coordinates() : cim_->coordinates();
-			String unit =
-			    (im_ != 0) ? im_->units().getName() : cim_->units().getName();
+			DisplayCoordinateSystem cs = (im_ != 0) ? im_->coordinates() : cim_->coordinates();
+			String unit = (im_ != 0) ? im_->units().getName() : cim_->units().getName();
 
 			IPosition pos = padd->fixedPosition();
 
@@ -2072,11 +2052,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				tPix(zPos) = zIndex;
 				if (!cs.toWorld(tWrld,tPix)) {
 				} else {
-					zLabel = ((CoordinateSystem)cs).format(tStr,
+					zLabel = ((DisplayCoordinateSystem)cs).format(tStr,
 					                                       Coordinate::DEFAULT, tWrld(zPos), zPos);
 					zLabel += tStr + "  ";
 					if (zUnit.length()>0) {
-						zValue = "Spectral_Vale="+((CoordinateSystem)cs).format(zUnit,
+						zValue = "Spectral_Vale="+((DisplayCoordinateSystem)cs).format(zUnit,
 						         Coordinate::DEFAULT, tWrld(zPos), zPos)+zUnit+ " ";
 					}
 				}
@@ -2086,11 +2066,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				//cout << "tPix=" << tPix << endl;
 				if (!cs.toWorld(tWrld,tPix)) {
 				} else {
-					hLabel = ((CoordinateSystem)cs).format(tStr,
+					hLabel = ((DisplayCoordinateSystem)cs).format(tStr,
 					                                       Coordinate::DEFAULT, tWrld(hPos), hPos);
 					hLabel += tStr + "  ";
 					if (zUnit.length()>0) {
-						zValue = "Spectral_Vale="+((CoordinateSystem)cs).format(zUnit,
+						zValue = "Spectral_Vale="+((DisplayCoordinateSystem)cs).format(zUnit,
 						         Coordinate::DEFAULT, tWrld(zPos), zPos)+zUnit+ " ";
 					}
 				}
@@ -2147,7 +2127,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Double beamArea = 0;
 			ImageInfo ii = im_->imageInfo();
 			GaussianBeam beam = ii.restoringBeam();
-			CoordinateSystem cSys = im_->coordinates();
+			DisplayCoordinateSystem cSys = im_->coordinates();
 			String imageUnits = im_->units().getName();
 			imageUnits.upcase();
 
@@ -2189,7 +2169,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			//     << " hPos=" << hPos << " hIndex=" << hIndex << endl;
 			Bool statsOk =
 
-			    stats.getLayerStats(layerStats, beamArea, zPos, zIndex, hPos, hIndex);
+		    stats.getLayerStats(layerStats, beamArea, zPos, zIndex, hPos, hIndex);
 			//cout << layerStats << endl;
 			if (!statsOk) {
 				cout << "stats not ok" << endl;
@@ -2412,8 +2392,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-	void QtDisplayData::getInitialAxes_(Block<uInt>& axs, const IPosition& shape,
-	                                    const CoordinateSystem* cs) {
+	void QtDisplayData::getInitialAxes_( Block<uInt>& axs, const IPosition& shape,
+	                                     const DisplayCoordinateSystem &cs ) {
 		// Heuristic used internally to set initial axes to display on X, Y and Z,
 		// for PADDs.  (Lifted bodily from GTkDD.  Should refactor down to DD
 		//  level, rather than repeat the code.  GTk layer disappearing, though).
@@ -2441,31 +2421,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		Int spaxis = -1;	// axis number of a non-degenerate
 		// spectral axis (-1 if none).
-		if(cs!=0) {
 
-			// First, ensure that a non-degenerate Spectral axis is
-			// at least on the animator (if not on display).  (Added 8/06)
+		// First, ensure that a non-degenerate Spectral axis is
+		// at least on the animator (if not on display).  (Added 8/06)
 
-			for(uInt axno=0; axno<ndim && axno<cs->nWorldAxes(); axno++) {
+		for(uInt axno=0; axno<ndim && axno<cs.nWorldAxes(); axno++) {
 
-				Int coordno, axisincoord;
-				cs->findWorldAxis(coordno, axisincoord, axno);
-				// (It would be convenient if more methods in CS were in
-				//  terms of 'axno' rather than 'coordno', so these two
-				//  lines didn't constantly have to be repeated...).
+			Int coordno, axisincoord;
+			cs.findWorldAxis(coordno, axisincoord, axno);
+			// (It would be convenient if more methods in CS were in
+			//  terms of 'axno' rather than 'coordno', so these two
+			//  lines didn't constantly have to be repeated...).
 
-				if( cs->showType(coordno)=="Spectral" && shape(axs[axno])>1 ) {
-					spaxis = axno;
-					if(spaxis>2) {
-						axs[spaxis]=2;
-						axs[2]=spaxis;
-					}
-					// Swap spectral axis onto animator.
-					break;
+			if( cs.showType(coordno)=="Spectral" && shape(axs[axno])>1 ) {
+				spaxis = axno;
+				if(spaxis>2) {
+					axs[spaxis]=2;
+					axs[2]=spaxis;
 				}
+				// Swap spectral axis onto animator.
+				break;
 			}
 		}
-
 
 
 		for(uInt i=0; i<3; i++) if(shape(axs[i])<=4 && axs[i]!=uInt(spaxis)) {
@@ -2554,8 +2531,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			Int nAxes = (im_!=0)? im_->ndim()  : cim_->ndim();
 			IPosition shp = (im_!=0)? im_->shape() : cim_->shape();
-			const CoordinateSystem& cs =
-			    (im_ != 0) ? im_->coordinates() : cim_->coordinates();
+			DisplayCoordinateSystem cs = (im_ != 0) ? im_->coordinates() : cim_->coordinates();
 
 			Int zIndex = padd->activeZIndex();
 			IPosition pos = padd->fixedPosition();

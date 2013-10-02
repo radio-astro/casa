@@ -80,7 +80,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// </group>
 
 		// irrelevant in this part of the tree
-		virtual void setActiveImage(uInt zindex) {
+		virtual void setActiveImage(uInt /*zindex*/) {
 			return;
 		};
 

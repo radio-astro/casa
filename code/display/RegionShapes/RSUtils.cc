@@ -74,13 +74,13 @@ namespace casa {
 	const String RSUtils::PIXEL = "PIXEL";
 
 
-	bool RSUtils::hasDirectionCoordinate(const CoordinateSystem& cs) {
+	bool RSUtils::hasDirectionCoordinate(const DisplayCoordinateSystem& cs) {
 		for(unsigned int i = 0; i < cs.nCoordinates(); i++)
 			if(cs.type(i) == Coordinate::DIRECTION) return true;
 		return false;
 	}
 
-	MDirection::Types RSUtils::worldSystem(const CoordinateSystem& cs) {
+	MDirection::Types RSUtils::worldSystem(const DisplayCoordinateSystem& cs) {
 		unsigned int dind;
 		for(dind = 0; dind < cs.nCoordinates(); dind++)
 			if(cs.type(dind) == Coordinate::DIRECTION) break;
@@ -115,7 +115,7 @@ namespace casa {
 			pixelY.resize(worldY.getValue().size());
 
 		const Vector<String>& units = wch.worldCanvas()->worldAxisUnits();
-		const CoordinateSystem& cs = wch.worldCanvas()->coordinateSystem();
+		const DisplayCoordinateSystem& cs = wch.worldCanvas()->coordinateSystem();
 		MDirection::Types wcSys = worldSystem(cs);
 
 		Quantum<Vector<Double> > q(Vector<Double>(2), RegionShape::UNIT);
@@ -195,7 +195,7 @@ namespace casa {
 			worldY.getValue().resize(pixelY.size());
 
 		const Vector<String>& units = wch.worldCanvas()->worldAxisUnits();
-		const CoordinateSystem& cs = wch.worldCanvas()->coordinateSystem();
+		const DisplayCoordinateSystem& cs = wch.worldCanvas()->coordinateSystem();
 		MDirection::Types wcSys = worldSystem(cs);
 
 		Quantum<Vector<Double> > q(Vector<Double>(2), RegionShape::UNIT);
@@ -278,7 +278,7 @@ namespace casa {
 		Quantum<Vector<Double> > world(Vector<Double>(2), units(0));
 		Vector<Double> linear(2);
 
-		const CoordinateSystem& cs = wch.worldCanvas()->coordinateSystem();
+		const DisplayCoordinateSystem& cs = wch.worldCanvas()->coordinateSystem();
 		MDirection::Types wcSys = worldSystem(cs);
 		bool convert = wcSys != fromSys;
 
@@ -451,7 +451,7 @@ namespace casa {
 		if(linearX.size() != pixelX.size()) linearX.resize(pixelX.size());
 		if(linearY.size() != pixelY.size()) linearY.resize(pixelY.size());
 
-		const CoordinateSystem& cs = wch.worldCanvas()->coordinateSystem();
+		const DisplayCoordinateSystem& cs = wch.worldCanvas()->coordinateSystem();
 
 		Vector<double> linear(2), world(cs.nWorldAxes()), world2(2), pixel(2);
 		bool wasError = false;
@@ -644,7 +644,7 @@ namespace casa {
 		if(linearX.size() != pixelX.size()) pixelX.resize(linearX.size());
 		if(linearY.size() != pixelY.size()) pixelY.resize(linearY.size());
 
-		const CoordinateSystem& cs = wch.worldCanvas()->coordinateSystem();
+		const DisplayCoordinateSystem& cs = wch.worldCanvas()->coordinateSystem();
 
 		Vector<double> linear(2), world(cs.nWorldAxes(), 0), world2(2), pixel(2);
 

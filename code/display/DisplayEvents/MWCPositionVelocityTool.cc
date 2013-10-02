@@ -27,7 +27,7 @@
 #include <iostream>
 #include <iomanip>
 #include <casa/Arrays/ArrayMath.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <display/Display/WorldCanvas.h>
 #include <display/Display/PixelCanvas.h>
 #include <display/DisplayEvents/MWCPositionVelocityTool.h>

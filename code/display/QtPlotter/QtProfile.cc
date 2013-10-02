@@ -311,7 +311,7 @@ namespace casa {
 	MFrequency::Types QtProfile::determineRefFrame(std::tr1::shared_ptr<ImageInterface<Float> > img, bool check_native_frame ) {
 		MFrequency::Types freqtype;
 
-		CoordinateSystem cSys=img->coordinates();
+		DisplayCoordinateSystem cSys=img->coordinates();
 		Int specAx=cSys.findCoordinate(Coordinate::SPECTRAL);
 		if ( specAx < 0 ) {
 			int tabIndex = Util::getTabularFrequencyAxisIndex( img );
@@ -559,7 +559,7 @@ namespace casa {
 	bool QtProfile::isSpectralAxis() const {
 		bool spectralAxis = true;
 		if ( image ){
-			const CoordinateSystem& cSys = image->coordinates();
+			const DisplayCoordinateSystem& cSys = image->coordinates();
 			if ( !cSys.hasSpectralAxis()){
 				spectralAxis = false;
 			}
@@ -714,7 +714,7 @@ namespace casa {
 	}
 
 	void QtProfile::initializeSpectralProperties(){
-		CoordinateSystem cSys = image->coordinates();
+		DisplayCoordinateSystem cSys = image->coordinates();
 		bool spectralAxis = cSys.hasSpectralAxis();
 		if ( spectralAxis ) {
 			SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
@@ -751,7 +751,7 @@ namespace casa {
 
 		int tabularIndex = Util::getTabularFrequencyAxisIndex( image );
 		if ( tabularIndex >= 0 ){
-			CoordinateSystem& cSys = const_cast<CoordinateSystem&>(image->coordinates());
+			DisplayCoordinateSystem cSys = image->coordinates( );
 			TabularCoordinate tabCoordinate = cSys.tabularCoordinate( tabularIndex );
 			Vector<Double> worlds = tabCoordinate.worldValues();
 			MFrequency::Types mFrequency = getReferenceFrame();
@@ -887,7 +887,7 @@ namespace casa {
 		stringToPlotType(text, itsPlotType);
 
 		// get the coo-sys
-		CoordinateSystem cSys = image->coordinates();
+		DisplayCoordinateSystem cSys = image->coordinates();
 		yUnit = QString(image->units().getName().chars());
 
 		switch (itsPlotType) {
@@ -1072,7 +1072,7 @@ namespace casa {
 
 	int QtProfile::getChannelCount( ImageAnalysis* analysis ){
 		std::tr1::shared_ptr<const ImageInterface<float> > img(analysis->getImage());
-		CoordinateSystem cSys = img->coordinates();
+		DisplayCoordinateSystem cSys = img->coordinates();
 		Int spectralIndex = cSys.spectralAxisNumber();
 		IPosition imgShape = img->shape();
 		int channelCount = -1;
@@ -1478,7 +1478,7 @@ namespace casa {
 
 	bool QtProfile::exportFITSSpectrum(QString &fn) {
 		// get the image coo and the spectral axis therein
-		CoordinateSystem cSys = image->coordinates();
+		DisplayCoordinateSystem cSys = image->coordinates();
 		Int wCoord = cSys.findCoordinate(Coordinate::SPECTRAL);
 		Vector<Int> pCoord = cSys.pixelAxes(wCoord);
 
@@ -1504,7 +1504,7 @@ namespace casa {
 		}
 
 		// create a new coo and add the spectral one
-		CoordinateSystem csysProfile = CoordinateSystem();
+		DisplayCoordinateSystem csysProfile = DisplayCoordinateSystem();
 		csysProfile.addCoordinate(cSys.spectralCoordinate(wCoord));
 
 		// if necessary, add a quality coordinate
@@ -1843,7 +1843,7 @@ namespace casa {
 		}
 
 		// get the coo-sys
-		CoordinateSystem cSys = image->coordinates();
+		DisplayCoordinateSystem cSys = image->coordinates();
 
 		// add the 'no error' option
 		if (errorMode->findText("no error") < 0)
@@ -2232,7 +2232,7 @@ namespace casa {
 	int QtProfile::getFreqProfileTabularIndex(ImageAnalysis* analysis ) {
 		Int whichTabular = -1;
 		std::tr1::shared_ptr<const ImageInterface<Float> > img = analysis->getImage();
-		const CoordinateSystem& cSys = img->coordinates();
+		const DisplayCoordinateSystem& cSys = img->coordinates();
 		if ( !cSys.hasSpectralAxis() ){
 			whichTabular = Util::getTabularFrequencyAxisIndex( img );
 		}
@@ -2242,7 +2242,7 @@ namespace casa {
 	bool QtProfile::setErrorPlotting( const Vector<double> &wxv, const Vector<double> &wyv ) {
 		bool ok = true;
 		// get the coordinate system
-		CoordinateSystem cSys = image->coordinates();
+		DisplayCoordinateSystem cSys = image->coordinates();
 		int tabularIndex = getFreqProfileTabularIndex(analysis);
 		switch (itsErrorType) {
 		case QtProfile::PNOERROR:

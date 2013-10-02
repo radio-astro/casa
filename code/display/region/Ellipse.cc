@@ -60,7 +60,7 @@ namespace casa {
 
 			if ( wc_ == 0 || wc_->csMaster() == 0 ) return 0;
 
-			const CoordinateSystem &cs = wc_->coordinateSystem( );
+			const DisplayCoordinateSystem &cs = wc_->coordinateSystem( );
 
 			double wx, wy;
 			try {
@@ -296,7 +296,7 @@ namespace casa {
 
 					Int nAxes = image->ndim( );
 					IPosition shp = image->shape( );
-					const CoordinateSystem &cs = image->coordinates( );
+					const DisplayCoordinateSystem &cs = image->coordinates( );
 
 					int zIndex = padd->activeZIndex( );
 					IPosition pos = padd->fixedPosition( );
@@ -409,7 +409,7 @@ namespace casa {
 			MDirection::Types cccs = current_casa_coordsys( );
 
 			const Vector<String> &units = wc_->worldAxisUnits( );
-			const CoordinateSystem &cs = image->coordinates( );
+			const DisplayCoordinateSystem &cs = image->coordinates( );
 			Vector<Quantum<Double> > qblc, qcenter;
 			qblc.resize(2);
 			qcenter.resize(2);

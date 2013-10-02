@@ -234,7 +234,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Bool arrangeQueryTable();
 
 		// holder for the current coordinate system
-		CoordinateSystem itsCoord;
+		DisplayCoordinateSystem itsCoord;
 		Vector<Double> itsLinblc, itsLintrc;
 
 		// update/set the coordinate system

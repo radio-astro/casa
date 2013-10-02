@@ -55,7 +55,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 
-	Bool SkyCatOverlayDM::drawIntoList(Display::RefreshReason reason,
+	Bool SkyCatOverlayDM::drawIntoList(Display::RefreshReason /*reason*/,
 	                                   WorldCanvasHolder &wcHolder) {
 		// Locate the WorldCanvas to draw upon
 		WorldCanvas *wc = wcHolder.worldCanvas();
@@ -152,7 +152,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		lat_rad.resize(latVec.nelements());
 
 		// ASSUMPTION: assume that WorldCanvas units are radians - this
-		// will be fixed when WorldCanvas learns about CoordinateSystem.
+		// will be fixed when WorldCanvas learns about DisplayCoordinateSystem.
 
 		Quantity longQnt,latQnt;
 		Unit wcUnit("rad");

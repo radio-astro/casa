@@ -429,7 +429,7 @@ namespace casa {
 		String regionName;
 		String channelStr = String::toString( channel ) + "~" + String::toString( channel );
 		String stokesStr;
-		CoordinateSystem cSys = image->coordinates();
+		DisplayCoordinateSystem cSys = image->coordinates();
 
 		uInt channelCount = 1;
 
@@ -671,7 +671,7 @@ namespace casa {
 	void FindSourcesDialog::setImage( ImageTask::shCImFloat img ) {
 		image = img;
 		if ( image != NULL ) {
-			const CoordinateSystem cSys = image->coordinates();
+			const DisplayCoordinateSystem cSys = image->coordinates();
 			Vector<String> axisNames = cSys.worldAxisNames();
 			if ( axisNames.size() >= 2 ) {
 				QTableWidgetItem* raHeaderItem = new QTableWidgetItem(axisNames[0].c_str());

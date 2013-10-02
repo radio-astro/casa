@@ -29,7 +29,7 @@
 #include <display/Display/PixelCanvas.h>
 #include <display/DisplayEvents/MWCEllipseTool.h>
 #include <casa/BasicMath/Math.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

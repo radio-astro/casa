@@ -372,7 +372,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void PSPixelCanvas::drawImage(const Int &X, const Int &Y,
 	                              const Matrix<uInt> &data,
 	                              const Matrix<Bool> &mask,
-	                              Bool opaqueMask) {
+	                              Bool /*opaqueMask*/) {
 		uInt nx = data.nrow();
 		uInt ny = data.ncolumn();
 		Display::ColorModel cm = PSpcctbl()->colorModel();
@@ -641,10 +641,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 	}
 
-	void PSPixelCanvas::bufferComponent(const Matrix<uInt> &data,
-	                                    const Int &x, const Int &y,
+	void PSPixelCanvas::bufferComponent(const Matrix<uInt> &/*data*/,
+	                                    const Int &/*x*/, const Int &/*y*/,
 	                                    const Display::ColorComponent
-	                                    &colorcomponent) {
+	                                    &/*colorcomponent*/) {
 		cerr << "PSPixelCanvas::bufferComponent(..., colorcomponent) NYI" << endl;
 	}
 

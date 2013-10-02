@@ -54,7 +54,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	class WCResampleHandler;
 	class WCDataScaleHandler;
 	class WCPGFilter;
-	class CoordinateSystem;
+	class DisplayCoordinateSystem;
 	class DisplayData;
 
 // <summary>
@@ -625,7 +625,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// possible of restoring beam information as stored in an image header.
 		//
 		// It does nothing unless the axes on display map to the two axes of a
-		// DirectionCoordinate within the WC CS (WorldCanvas::itsCoordinateSystem).
+		// DirectionCoordinate within the WC CS (WorldCanvas::itsDisplayCoordinateSystem).
 		// Center location cx,cy is specified as a fraction of WC draw area:
 		// (0,0) is blc, (1,1) is trc; they default to (.1, .1).
 		//
@@ -977,16 +977,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		// </group>
 
-		// Set and retrieve the CoordinateSystem of this WorldCanvas.  Set
-		// with 0 and the WorldCanvas loses its CoordinateSystem!
+		// Set and retrieve the DisplayCoordinateSystem of this WorldCanvas.  Set
+		// with 0 and the WorldCanvas loses its DisplayCoordinateSystem!
 		//#
 		//#dk note 9/07 -- Yes, isn't that exciting, esp. since subsequent calls
 		//# to coordinateSystem() will SEGV, and no method was provided to
 		//# even test for it....  hasCS() added to somewhat bandage over this
 		//# hazard...
 		// <group>
-		void setCoordinateSystem(const CoordinateSystem &csys);
-		const CoordinateSystem &coordinateSystem() const;
+		void setCoordinateSystem(const DisplayCoordinateSystem &csys);
+		const DisplayCoordinateSystem &coordinateSystem() const;
 		Bool hasCS() const {
 			return itsCoordinateSystem!=0;
 		}
@@ -1305,9 +1305,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Bool itsRefreshHeld;
 		Display::RefreshReason itsHeldReason;
 
-		// The CoordinateSystem for this WorldCanvas.  New addition, only
+		// The DisplayCoordinateSystem for this WorldCanvas.  New addition, only
 		// supported and used by "new" classes.
-		CoordinateSystem *itsCoordinateSystem;
+		DisplayCoordinateSystem *itsCoordinateSystem;
 
 		// This state is set True when the pointer is in this WC and a pointer
 		// button is pressed (with no buttons pressed previously).  When True,

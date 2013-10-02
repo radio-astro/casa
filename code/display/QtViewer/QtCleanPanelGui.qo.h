@@ -32,7 +32,7 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Containers/Record.h>
 #include <casa/Arrays/Vector.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 
 #include <graphics/X11/X_enter.h>
@@ -140,7 +140,7 @@ namespace casa {
 		QtDisplayData* maskdd_;			// later: to display clean region.
 		std::string axis_change;
 
-		CoordinateSystem csys_p;
+		DisplayCoordinateSystem csys_p;
 		DirectionCoordinate dirCoord_p;
 
 	};

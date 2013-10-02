@@ -473,7 +473,7 @@ namespace casa {
 
 	SpectralCoordinate SpecFitSettingsWidgetRadio::getSpectralCoordinate() const {
 		std::tr1::shared_ptr<const ImageInterface<Float> > img = this->getImage();
-		CoordinateSystem cSys = img->coordinates();
+		DisplayCoordinateSystem cSys = img->coordinates();
 		SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
 		return spectralCoordinate;
 	}
@@ -518,7 +518,7 @@ namespace casa {
 
 			//Get the fit axis, which is right now hard-coded to be the
 			//spectral axis.
-			CoordinateSystem cSys = image -> coordinates();
+			DisplayCoordinateSystem cSys = image -> coordinates();
 			Int spectralAxisNumber = cSys.spectralAxisNumber();
 
 			//Initialize the fitter
@@ -914,7 +914,7 @@ namespace casa {
 		QString xAxisUnit = pixelCanvas->getUnits();
 
 		std::tr1::shared_ptr<const casa::ImageInterface<float> > img = /*const_cast<ImageInterface<float>* >(*/taskMonitor->getImage()/*.get())*/;
-		CoordinateSystem cSys = img->coordinates();
+		DisplayCoordinateSystem cSys = img->coordinates();
 		int axisCount = cSys.nPixelAxes();
 		IPosition imPos(axisCount);
 		Bool velocityUnits;

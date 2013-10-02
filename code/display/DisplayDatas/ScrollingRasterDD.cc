@@ -42,7 +42,7 @@
 #include <display/DisplayCanvas/WCSimpleResampleHandler.h>
 #include <display/Display/Attribute.h>
 
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -94,7 +94,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		recreateEmptyLattices();
 
-		CoordinateSystem newcsys;
+		DisplayCoordinateSystem newcsys;
 
 		//LinearCoordinate lc(itsLatticeConcatPtr->ndim());
 		LinearCoordinate lc(4);
@@ -187,7 +187,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		setupElements();
 	}
 
-	void ScrollingRasterDD::updateLattice(Array<Float> &arr, CoordinateSystem &csys) {
+	void ScrollingRasterDD::updateLattice(Array<Float> &arr, DisplayCoordinateSystem &csys) {
 #ifdef CDEBUG
 		cerr << "ScrollingRasterDD::updateLattice(arr, csys) called." << endl;
 #endif
@@ -209,7 +209,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void ScrollingRasterDD::updateLatticeConcat(Array<Float>* arr,
-	        CoordinateSystem* csys) {
+	        DisplayCoordinateSystem* csys) {
 #ifdef CDEBUG
 		cerr << "ScrollingRasterDD::updateLatticeConcat(arr = " << arr
 		     << ", csys = " << csys << ") called." << endl;
@@ -632,7 +632,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // (Required) copy constructor.
-	ScrollingRasterDD::ScrollingRasterDD(const ScrollingRasterDD &/*other*/) {
+	ScrollingRasterDD::ScrollingRasterDD(const ScrollingRasterDD &o) : PrincipalAxesDD(o) {
 	}
 
 // (Required) copy assignment.

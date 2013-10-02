@@ -31,7 +31,7 @@
 #include <display/QtPlotter/ProfileTaskFacilitator.h>
 #include <display/QtPlotter/GaussianEstimateDialog.qo.h>
 #include <casa/Containers/Record.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 
 namespace casa {
 

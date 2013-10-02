@@ -34,7 +34,7 @@
 #include <display/Display/WorldCanvas.h>
 #include <casa/Arrays/ArrayMath.h>
 
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -404,7 +404,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			        wcs.getRight()->inDrawArea(Int(endXPos+0.5), Int(endYPos+0.5))) {
 
 
-				const CoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
+				const DisplayCoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
 
 
 				if (test) {
@@ -427,7 +427,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				if (wcs.getRight()->inWC(Int(startXPos+0.5), Int(startYPos+0.5)) &&
 				        wcs.getRight()->inWC(Int(endXPos+0.5), Int(endYPos+0.5))) {
 
-					const CoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
+					const DisplayCoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
 					if (test) {
 						toReturn = wcs.getRight();
 						success = True;

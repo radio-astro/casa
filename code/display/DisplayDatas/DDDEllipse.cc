@@ -39,7 +39,7 @@
 #include <casa/BasicSL/Constants.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/QuantumHolder.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <images/Images/ImageUtilities.h>
 #include <display/Display/WorldCanvas.h>
 #include <display/Display/PixelCanvas.h>
@@ -90,7 +90,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	DDDEllipse::~DDDEllipse()
 	{}
 
-	void DDDEllipse::draw(const Display::RefreshReason &reason,
+	void DDDEllipse::draw(const Display::RefreshReason &/*reason*/,
 	                      WorldCanvas* pWorldCanvas) {
 
 		// dk note:  Most of the tests below should be more general and on higher
@@ -215,7 +215,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-	void DDDEllipse::operator()(const WCRefreshEvent& ev) {
+	void DDDEllipse::operator()(const WCRefreshEvent& /*ev*/) {
 		/*
 		// This stuff is handled in the draw() routine.
 		// This routine could now be eliminated. (dk)
@@ -224,7 +224,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		   if (ev.reason()==Display::LinearCoordinateChange ||
 		       ev.reason()==Display::PixelCoordinateChange) {
 
-		// This means a zoom or a resize.  Get CoordinateSystem
+		// This means a zoom or a resize.  Get DisplayCoordinateSystem
 
 		      // (dk note: assuming WC CS existed was causing crashes...)
 		      if(&(ev.worldCanvas()->coordinateSystem())==0) return;
@@ -751,7 +751,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	DDDEllipse::DDDEllipse()
 	{}
 
-	DDDEllipse::DDDEllipse(const DDDEllipse &)
+	DDDEllipse::DDDEllipse(const DDDEllipse &o) : DDDObject(o)
 	{}
 
 	void DDDEllipse::operator=(const DDDEllipse &)

@@ -28,6 +28,7 @@
 #include <images/Images/ImageInterface.h>
 #include <display/Slicer/SliceAxisDraw.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <synthesis/MSVis/UtilJ.h>
 #include <qwt_plot_curve.h>
 #include <QFile>
@@ -457,7 +458,7 @@ namespace casa {
 	}
 
 	void SlicePlot::updateChannel( int channel ) {
-		CoordinateSystem cSys = image->coordinates();
+		DisplayCoordinateSystem cSys = image->coordinates();
 		int coordCount = image->ndim();
 		coords.resize( coordCount );
 		for ( int i = 0; i < coordCount; i++ ) {

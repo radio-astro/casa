@@ -1152,7 +1152,7 @@ namespace casa {
 
 				MDirection::Types cccs = current_casa_coordsys( );
 				MDirection::Types input_direction = string_to_casa_coordsys(coordsys);
-				//		const CoordinateSystem &cs = wc_->coordinateSystem( );
+				//		const DisplayCoordinateSystem &cs = wc_->coordinateSystem( );
 
 				Vector<Double> worldv(2);
 				Vector<Double> linearv(2);
@@ -1522,7 +1522,7 @@ namespace casa {
 
 			if ( wc_ == 0 || wc_->csMaster() == 0 ) return MDirection::J2000;
 
-			const CoordinateSystem &cs = wc_->coordinateSystem( );
+			const DisplayCoordinateSystem &cs = wc_->coordinateSystem( );
 			int index = cs.findCoordinate(Coordinate::DIRECTION);
 			if ( index < 0 ) {
 				// no direction coordinate...
@@ -1636,7 +1636,7 @@ namespace casa {
 			double world_x1, world_y1;
 			linear_to_world( wc, lin_x1, lin_y1, world_x1, world_y1 );
 
-			const CoordinateSystem &cs = wc->coordinateSystem( );
+			const DisplayCoordinateSystem &cs = wc->coordinateSystem( );
 
 			static Vector<Double> pixelv(2);	// avoid vector allocation for each conversion
 			static Vector<Double> worldv(2);
@@ -1674,7 +1674,7 @@ namespace casa {
 			static Vector<Double> pixelv(2);	// avoid vector allocation for each conversion
 			static Vector<Double> worldv(2);
 
-			const CoordinateSystem &cs = wc->coordinateSystem( );
+			const DisplayCoordinateSystem &cs = wc->coordinateSystem( );
 
 			// BEGIN - critical section
 
@@ -1956,7 +1956,7 @@ namespace casa {
 			if ( wc == 0 )
 				throw internal_error( "coordinate transformation without coordinate system" );
 
-			const CoordinateSystem &cs = wc->coordinateSystem( );
+			const DisplayCoordinateSystem &cs = wc->coordinateSystem( );
 
 			static Vector<Double> pixelv(2);	// avoid vector allocation for each conversion
 			static Vector<Double> worldv(2);
@@ -1989,7 +1989,7 @@ namespace casa {
 			if ( wc == 0 )
 				throw internal_error( "coordinate transformation without coordinate system" );
 
-			const CoordinateSystem &cs = wc->coordinateSystem( );
+			const DisplayCoordinateSystem &cs = wc->coordinateSystem( );
 
 			static Vector<Double> pixelv(2);	// avoid vector allocation for each conversion
 			static Vector<Double> worldv(2);
@@ -2077,7 +2077,7 @@ namespace casa {
 			linear_to_pixel( wc, lin_x1, lin_y1, lin_x2, lin_y2, pixel_x1, pixel_y1, pixel_x2, pixel_y2 );
 		}
 
-		MDirection::Types get_coordinate_type( const CoordinateSystem &cs ) {
+		MDirection::Types get_coordinate_type( const DisplayCoordinateSystem &cs ) {
 			for ( uInt i=0; i < cs.nCoordinates(); ++i )
 				if ( cs.type(i) == Coordinate::DIRECTION )
 					return cs.directionCoordinate(i).directionType(true);
@@ -2088,7 +2088,7 @@ namespace casa {
 			if( image==0 || padd == 0 ) return 0;
 			try {
 				// store the coordinate system and the axis names
-				const CoordinateSystem& cs = image->coordinates();
+				const DisplayCoordinateSystem& cs = image->coordinates();
 				Vector<String> nm	     = cs.worldAxisNames();
 				Vector<String> axesNames   = padd->worldToPixelAxisNames( cs );
 
@@ -2140,7 +2140,7 @@ namespace casa {
 							// in case that the spectral axis is displayed on x or y,
 							// the format() throws an exception and prevents the centering
 							// copied from 'getLayerStats'.
-							zspVal = ((CoordinateSystem)cs).format(zUnit,Coordinate::DEFAULT, tWrld(zPos), zPos)+zUnit;
+							zspVal = ((DisplayCoordinateSystem)cs).format(zUnit,Coordinate::DEFAULT, tWrld(zPos), zPos)+zUnit;
 						}
 					}
 				}
@@ -2150,10 +2150,10 @@ namespace casa {
 
 					if (!cs.toWorld(tWrld,tPix)) {
 					} else {
-						hLabel = ((CoordinateSystem)cs).format(tStr, Coordinate::DEFAULT, tWrld(hPos), hPos);
+						hLabel = ((DisplayCoordinateSystem)cs).format(tStr, Coordinate::DEFAULT, tWrld(hPos), hPos);
 						if (zUnit.length()>0) {
 							zspKey = "Spectral_Vale";
-							zspVal = ((CoordinateSystem)cs).format(zUnit, Coordinate::DEFAULT, tWrld(zPos), zPos)+zUnit;
+							zspVal = ((DisplayCoordinateSystem)cs).format(zUnit, Coordinate::DEFAULT, tWrld(zPos), zPos)+zUnit;
 						}
 					}
 				}
@@ -2618,7 +2618,7 @@ namespace casa {
 				Int _axis_h_ = shp.size( ) > 3 ? padd->xlatePixelAxes(3) : -1;		// get first "hidden axis
 				String zaxis = padd->zaxisStr( );
 
-				const CoordinateSystem& cs = image->coordinates();
+				const DisplayCoordinateSystem& cs = image->coordinates();
 
 				Vector<String> axesNames = padd->worldToPixelAxisNames( cs );
 				String haxis = _axis_h_ >= 0 ? axesNames(_axis_h_) : "";
@@ -2661,12 +2661,12 @@ namespace casa {
 					tPix(zPos) = zIndex;
 					if (!cs.toWorld(tWrld,tPix)) {
 					} else {
-						zLabel = ((CoordinateSystem)cs).format(tStr, Coordinate::DEFAULT, tWrld(zPos), zPos);
+						zLabel = ((DisplayCoordinateSystem)cs).format(tStr, Coordinate::DEFAULT, tWrld(zPos), zPos);
 						layerstats->push_back(RegionInfo::stats_t::value_type(zaxis,zLabel + tStr));
 
 						if (zUnit.length()>0) {
 							zspKey = "Spectral_Value";
-							zspVal = ((CoordinateSystem)cs).format(zUnit,Coordinate::DEFAULT, tWrld(zPos), zPos)+zUnit;
+							zspVal = ((DisplayCoordinateSystem)cs).format(zUnit,Coordinate::DEFAULT, tWrld(zPos), zPos)+zUnit;
 						}
 					}
 				}
@@ -2676,10 +2676,10 @@ namespace casa {
 
 					if (!cs.toWorld(tWrld,tPix)) {
 					} else {
-						hLabel = ((CoordinateSystem)cs).format(tStr, Coordinate::DEFAULT, tWrld(hPos), hPos);
+						hLabel = ((DisplayCoordinateSystem)cs).format(tStr, Coordinate::DEFAULT, tWrld(hPos), hPos);
 						if (zUnit.length()>0) {
 							zspKey = "Spectral_Value";
-							zspVal = ((CoordinateSystem)cs).format(zUnit, Coordinate::DEFAULT, tWrld(zPos), zPos)+zUnit;
+							zspVal = ((DisplayCoordinateSystem)cs).format(zUnit, Coordinate::DEFAULT, tWrld(zPos), zPos)+zUnit;
 						}
 					}
 				}
@@ -2731,7 +2731,7 @@ namespace casa {
 				Double beamArea = 0;
 				ImageInfo ii = image->imageInfo();
 				GaussianBeam beam = ii.restoringBeam(zIndex);
-				CoordinateSystem cSys = image->coordinates();
+				DisplayCoordinateSystem cSys = image->coordinates();
 				std::string imageUnits = image->units().getName();
 				std::transform( imageUnits.begin(), imageUnits.end(), imageUnits.begin(), ::toupper );
 
@@ -2772,35 +2772,28 @@ namespace casa {
 
 			if( image == 0 ) return -1;
 
-			const CoordinateSystem* cs=0;
-			try {
-				cs = &(image->coordinates());
-			} catch(...) {
-				cs = 0;     // (necessity of try-catch is doubtful...).
-			}
-
-			if (cs==0) return -1;
+			DisplayCoordinateSystem cs=image->coordinates( );
 
 			try {
 				Int nAxes = image->ndim();
-				for(Int ax=0; ax<nAxes && ax<Int(cs->nWorldAxes()); ax++) {
+				for(Int ax=0; ax<nAxes && ax<Int(cs.nWorldAxes()); ax++) {
 					// coordno : type of coordinate
 					// axisincoord : index within the coordinate list defined by coordno
 					Int coordno, axisincoord;
-					cs->findWorldAxis(coordno, axisincoord, ax);
+					cs.findWorldAxis(coordno, axisincoord, ax);
 
-					//cout << "coordno=" << coordno << "  axisincoord : " << axisincoord << "  type : " << cs->showType(coordno) << endl;
+					//cout << "coordno=" << coordno << "  axisincoord : " << axisincoord << "  type : " << cs.showType(coordno) << endl;
 
-					if( cs->showType(coordno) == "Direction" ) {
+					if( cs.showType(coordno) == "Direction" ) {
 						// Check for Right Ascension and Declination
-						Vector<String> axnames = (cs->directionCoordinate(coordno)).axisNames(MDirection::DEFAULT);
+						Vector<String> axnames = (cs.directionCoordinate(coordno)).axisNames(MDirection::DEFAULT);
 						AlwaysAssert( axisincoord>=0 && axisincoord < (int) axnames.nelements(), AipsError);
 						if( axnames[axisincoord] == axtype.c_str() ) {
 							return ax;
 						}
 					} else {
 						// Check for Stokes and Spectral
-						if ( cs->showType(coordno) == axtype.c_str() ) {
+						if ( cs.showType(coordno) == axtype.c_str() ) {
 							return ax;
 						}
 					}

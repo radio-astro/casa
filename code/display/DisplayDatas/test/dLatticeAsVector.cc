@@ -31,7 +31,7 @@
 #include <images/Images/TempImage.h>
 #include <images/Images/PagedImage.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
 		ImageInterface<Float>* pImage2 = 0;
 		if (in.empty()) {
 			IPosition shape;
-			CoordinateSystem cSys;
+			DisplayCoordinateSystem cSys;
 			Int nDim = 0;
 			if (nz==1) {
 				shape = IPosition(2, nx, ny);
@@ -160,7 +160,7 @@ int main(int argc, char **argv) {
 			cout << "Loaded Image \"" << fileName << "\"" << endl;
 		}
 //
-		const CoordinateSystem cSys = pImage->coordinates();
+		const DisplayCoordinateSystem cSys = pImage->coordinates();
 		const uInt nDim = pImage->ndim();
 		if (nDim < 2) {
 			throw(AipsError("image has less than two dimensions"));

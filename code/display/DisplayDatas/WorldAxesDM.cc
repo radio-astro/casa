@@ -33,7 +33,7 @@
 #include <wcslib/cel.h>
 */
 #include <coordinates/Coordinates/CoordinateUtil.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
@@ -105,7 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// global options the BASIC way. Since aipsview isn't multi-threaded,
 		// multiprocessing, etc. we can get away with it.
 		// static AxisGlobalOptions *gOptions_=NULL;
-		CoordinateSystem* WADMAxisLabellerCoordinateSystem = NULL;
+		DisplayCoordinateSystem* WADMAxisLabellerCoordinateSystem = NULL;
 		Vector<Double> WADMvWorldIn, WADMvWorldOut;
 		Int WADMAxisLabellerLongCoord = -1, WADMAxisLabellerLatCoord = -1;
 		struct celprm *WADMAxisLabellerCelPrm = 0;
@@ -367,10 +367,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// 1. retrieve coordsys from WorldCanvas, and select appropriate units
-		CoordinateSystem* pCS;
+		DisplayCoordinateSystem* pCS;
 		if (&(wc->coordinateSystem())) {
 			//if (0) {
-			pCS = new CoordinateSystem(wc->coordinateSystem());
+			pCS = new DisplayCoordinateSystem(wc->coordinateSystem());
 		} else {
 			// do nothing!
 			return False;
@@ -383,7 +383,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			switch(pCS->type(i)) {
 //
 			case Coordinate::DIRECTION: {
-				CoordinateUtil::setDirectionUnit (*pCS, String("deg"), Int(i));
+				pCS->setDirectionUnit ( "deg", Int(i) );
 			}
 			break;
 			case Coordinate::SPECTRAL: {
@@ -393,8 +393,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Set velocity and/or world unit state in SpectralCoordinate
 
 				String errorMsg;
-				if (!CoordinateUtil::setSpectralState (errorMsg, *pCS, parent->spectralUnit(),
-				                                       parent->velocityType())) {
+				if ( ! pCS->setSpectralState( errorMsg, parent->spectralUnit( ),parent->velocityType( ) ) ) {
 // What to do with error ?
 				}
 

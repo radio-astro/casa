@@ -32,7 +32,7 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Containers/List.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <display/Utilities/DisplayOptions.h>
 #include <display/Utilities/DlTarget.h>
 #include <display/Display/WorldCanvasHolder.h>
@@ -163,7 +163,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // ultimately use wcslib for any needed sky projection).  It defines the
 // current 2D surface on display within some nD world space, as parameterized
 // by the X and Y linear coordinates.  State for this purpose includes the
-// 'WorldCanvas CoordinateSystem' or 'WCCS' (WorldCanvas::itsCoordinateSystem)
+// 'WorldCanvas DisplayCoordinateSystem' or 'WCCS' (WorldCanvas::itsCoordinateSystem)
 // plus 'axis codes' (which have the odd Attribute names
 // '{x,y}axiscode (required match)').  They are intended to define the
 // coordinate values and types for the world space currently of interest.

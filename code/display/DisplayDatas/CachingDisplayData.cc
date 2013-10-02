@@ -248,7 +248,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsCachingState = caching;
 	}
 
-	CachingDisplayData::CachingDisplayData(const CachingDisplayData &) {
+	CachingDisplayData::CachingDisplayData(const CachingDisplayData &o) : DisplayData(o) {
 	}
 
 	void CachingDisplayData::operator=(const CachingDisplayData &) {

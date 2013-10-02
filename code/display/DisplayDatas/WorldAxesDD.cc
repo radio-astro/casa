@@ -126,7 +126,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return buffer;
 	}
 
-	WorldAxesDD::WorldAxesDD(const WorldAxesDD& ) {
+	WorldAxesDD::WorldAxesDD(const WorldAxesDD &o) : AxesDisplayData(o) {
 	}
 
 	void WorldAxesDD::operator=(const WorldAxesDD& ) {
@@ -137,7 +137,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	String WorldAxesDD::axisText(const WorldCanvas *wc, const uInt axisNo) const {
 		//cerr << "WADD::axisText(wc, " << axisNo << ") called." << endl;
-		const CoordinateSystem &wcCS = wc->coordinateSystem();
+		const DisplayCoordinateSystem &wcCS = wc->coordinateSystem();
 		//cerr << "wc csys has " << wcCS.nCoordinates() << " coordinates." << endl;
 		//cerr << "  of which No = " << wcCS.findCoordinate(Coordinate::SPECTRAL)
 		//     << " is spectral. " << endl;

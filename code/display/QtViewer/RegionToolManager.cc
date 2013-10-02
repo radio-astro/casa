@@ -41,6 +41,7 @@
 #include <algorithm>
 
 #include <display/Utilities/ImageProperties.h>
+#include <casa/Quanta/QLogical.h>
 
 namespace casa {
 	namespace viewer {
@@ -505,7 +506,9 @@ namespace casa {
 				IPosition shape(2);
 				shape[0] = dd->dataShape( )(0);
 				shape[1] = dd->dataShape( )(1);
-				RegionTextList rlist( path, qdd->imageProperties( ).cs( ), qdd->imageProperties( ).shape( ) );
+				DisplayCoordinateSystem matched_cs = qdd->imageProperties( ).cs( );
+				matched_cs.match(wc->coordinateSystem( ));
+				RegionTextList rlist( path, matched_cs, qdd->imageProperties( ).shape( ) );
 				Vector<AsciiAnnotationFileLine> aaregions = rlist.getLines( );
 				for ( unsigned int i=0; i < aaregions.size( ); ++i ) {
 					if ( aaregions[i].getType( ) != AsciiAnnotationFileLine::ANNOTATION ) continue;
@@ -600,18 +603,37 @@ namespace casa {
 					}
 					break;
 					case AnnotationBase::RECT_BOX: {
-						if ( points.size( ) != 2 ) {
+						if ( points.size( ) != 4 ) {
 							panel->logIO( ) << LogIO::WARN
 											<< "box region has wrong number of points returned..."
 											<< LogIO::POST;
 							continue;
 						}
 
+						Quantity blcx, blcy, trcx, trcy;
 						double lblcx, lblcy, ltrcx, ltrcy;
+
+						// JIRA: CAS-5276
+						// It seems like the annotations library is returning points for a box
+						// with the X & Y flipped... at least as far as the test example in this
+						// ticket are concerned... exchanging 'first' and 'second' below *OR*
+						// flipping RA and DEC in the viewer results in the image being loaded
+						// correctly...
+						blcx = points[0].first;
+						blcy = points[0].second;
+						trcx = points[0].first;
+						trcy = points[0].second;
+						for ( unsigned int x=1; x < points.size( ); ++x ) {
+							if ( points[x].first < blcx ) blcx = points[x].first;
+							if ( points[x].second < blcy ) blcy = points[x].second;
+							if ( points[x].first > trcx ) blcx = points[x].first;
+							if ( points[x].second > trcy ) blcy = points[x].second;
+						}
+
 						try {
-							viewer::world_to_linear( wc, points[0].first.getValue(units[0]), points[0].second.getValue(units[1]),
-							                         points[1].first.getValue(units[0]), points[1].second.getValue(units[1]),
-							                         lblcx, lblcy, ltrcx, ltrcy );
+                            viewer::world_to_linear( wc, blcx.getValue(units[0]), blcy.getValue(units[1]),
+                                                     trcx.getValue(units[0]), trcy.getValue(units[1]),
+                                                     lblcx, lblcy, ltrcx, ltrcy );
 						} catch( casa::viewer::internal_error err ) {
 							panel->logIO( ) << LogIO::WARN
 											<< "box region "

@@ -364,7 +364,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // (Required) copy constructor
-	TblAsContourDD::TblAsContourDD(const TblAsContourDD &) {
+	TblAsContourDD::TblAsContourDD(const TblAsContourDD &o) : ActiveCaching2dDD(o) {
 	}
 
 // (Required) copy assignment

@@ -29,7 +29,7 @@
 
 #include <casa/aips.h>
 #include <display/DisplayDatas/ActiveCaching2dDD.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <display/DisplayCanvas/WCCSNLAxisLabeller.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -185,7 +185,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// The actual colorbar data
 		Matrix<Float> itsColorbar;
 		// the local coordinate system - gets exported to the parent DD
-		CoordinateSystem itsCoordinateSystem;
+		DisplayCoordinateSystem itsCoordinateSystem;
 
 		DlHandle<DisplayData> ihandle_;
 	};

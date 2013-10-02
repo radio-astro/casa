@@ -1,7 +1,7 @@
 #include "SpectralPositioningWidget.qo.h"
 #include <display/QtPlotter/Util.h>
 #include <display/QtPlotter/ProfileTaskMonitor.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <images/Images/ImageInterface.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Quanta/MVAngle.h>
@@ -376,7 +376,7 @@ namespace casa {
 		//ImageInterface<float>* image = const_cast<ImageInterface<float>* >(profileTaskMonitor->getImage());
 		std::tr1::shared_ptr<ImageInterface<Float> > image(std::tr1::const_pointer_cast<ImageInterface<Float> >(profileTaskMonitor->getImage()));
 
-		CoordinateSystem cSys = image -> coordinates();
+		DisplayCoordinateSystem cSys = image -> coordinates();
 		int nAxes = cSys.nPixelAxes();
 		for ( int i = 0; i < pixelX.size(); i++ ) {
 			Vector<double> sourcePt( nAxes );

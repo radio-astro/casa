@@ -380,7 +380,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// update/set the (2d--canvas) coordinate system from the current MS
 		// selection and display axes.
-		CoordinateSystem setCS_();
+		DisplayCoordinateSystem setCS_();
 
 		// Extract the hypercube buffer of visibilities for the requested
 		// MS selection and axis settings (the most time-consuming operation).
@@ -1381,7 +1381,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// This labels the axes.  An actual CachingDisplayData itself, contained
 		// within MSAsRaster and controlled through it.  MSAsRaster propagates
 		// getOptions and setOptions calls and draw commands to it, and sets the
-		// WC CoordinateSystem which it uses.
+		// WC DisplayCoordinateSystem which it uses.
 		WorldAxesDD itsAxisLabeller;
 
 		// A private internal colormap for showing colors for various conditions

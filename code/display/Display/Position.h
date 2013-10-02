@@ -27,7 +27,7 @@
 
 #ifndef CASA_DISPLAY_POSITION_H
 #define CASA_DISPLAY_POSITION_H
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 
 namespace casa {
 	namespace viewer {
@@ -42,19 +42,19 @@ namespace casa {
 		public:
 			Position( ) { }
 			// Later this could check for consistency between the coordinate and the system...
-			Position( const CoordinateSystem &cs, const Quantity &x, const Quantity &y ) : csys_(cs), coord_(2) {
+			Position( const DisplayCoordinateSystem &cs, const Quantity &x, const Quantity &y ) : csys_(cs), coord_(2) {
 				coord_(0) = x;
 				coord_(1) = y;
 			}
 			// Later this could check for consistency between the coordinate and the system...
-			Position( const CoordinateSystem &cs, const Quantity &x, const Quantity &y, const Quantity &z ) : csys_(cs), coord_(3) {
+			Position( const DisplayCoordinateSystem &cs, const Quantity &x, const Quantity &y, const Quantity &z ) : csys_(cs), coord_(3) {
 				coord_(0) = x;
 				coord_(1) = y;
 				coord_(2) = z;
 			}
 			Position( const Position &that ) : csys_(that.csys_), coord_(that.coord_) { }
 
-			const CoordinateSystem &csys( ) const {
+			const DisplayCoordinateSystem &csys( ) const {
 				return csys_;
 			}
 			const Vector<Quantity> &coord( ) const {
@@ -64,7 +64,7 @@ namespace casa {
 			void show( std::ostream &out ) const;
 
 		protected:
-			CoordinateSystem csys_;
+			DisplayCoordinateSystem csys_;
 			Vector<Quantity> coord_;
 		};
 

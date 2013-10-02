@@ -33,7 +33,7 @@
 #include <casa/Quanta/QuantumHolder.h>
 #include <casa/Quanta/UnitMap.h>
 
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 
 #include <display/Display/PixelCanvas.h>
 #include <display/Display/PanelDisplay.h>
@@ -478,7 +478,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		while(!wcs.atEnd() && !success) {
 			// Test all points.
-			const CoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
+			const DisplayCoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
 			if (!test) {
 				pointsuccess = False;
 			}
@@ -508,7 +508,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			pointsuccess = True;
 
 			while(!wcs.atEnd() && !success) {
-				const CoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
+				const DisplayCoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
 				if (!test) {
 					pointsuccess = False;
 				}
@@ -551,7 +551,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if (wcs.getRight()->inWC(Int(xPos+0.5), Int(yPos+0.5)) &&
 			        wcs.getRight()->inDrawArea(Int(xPos+0.5), Int(yPos+0.5))) {
 
-				const CoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
+				const DisplayCoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
 
 				if (test) {
 					toReturn = wcs.getRight();
@@ -572,7 +572,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			while(!wcs.atEnd() && !success) {
 				if (wcs.getRight()->inWC(Int(xPos+0.5), Int(yPos+0.5))) {
 
-					const CoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
+					const DisplayCoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
 
 					if (test) {
 						toReturn = wcs.getRight();
@@ -659,7 +659,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		wcs.toStart();
 
 		while (!wcs.atEnd() && !success) {
-			const CoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
+			const DisplayCoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
 			if (!test) {
 				currentOK = False;
 			}
@@ -696,7 +696,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			wcs.toStart();
 
 			while(!wcs.atEnd() && !success) {
-				const CoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
+				const DisplayCoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
 				if (!test) {
 					currentOK = False;
 				}
@@ -791,7 +791,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				if (wcs.getRight()->inWC(Int(pix(0)+0.5), Int(pix(1)+0.5)) &&
 				        (wcs.getRight()->inDrawArea(Int(pix(0)+0.5), Int(pix(1)+0.5)))) {
 
-					const CoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
+					const DisplayCoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
 					if (test) {
 						toReturn = wcs.getRight();
 						success = True;
@@ -811,7 +811,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			while(!wcs.atEnd() && !success) {
 				if (wcs.getRight()->worldToPix(wcent, pix)) {
 					if (wcs.getRight()->inWC(Int(pix(0)+0.5), Int(pix(1)+0.5))) {
-						const CoordinateSystem* test =
+						const DisplayCoordinateSystem* test =
 						    &(wcs.getRight()->coordinateSystem());
 
 						if (test) {

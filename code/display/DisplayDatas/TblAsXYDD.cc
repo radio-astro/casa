@@ -226,7 +226,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // (Required) copy constructor
-	TblAsXYDD::TblAsXYDD(const TblAsXYDD &) {
+	TblAsXYDD::TblAsXYDD(const TblAsXYDD &o) : ActiveCaching2dDD(o) {
 	}
 
 // (Required) copy assignment

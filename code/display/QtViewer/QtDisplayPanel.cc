@@ -533,7 +533,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if ( wc == 0 || wc->csMaster() == 0 ) return MDirection::J2000;
 
-		const CoordinateSystem &cs = wc->coordinateSystem( );
+		const DisplayCoordinateSystem &cs = wc->coordinateSystem( );
 		int index = cs.findCoordinate(Coordinate::DIRECTION);
 		if ( index < 0 ) {
 			// no direction coordinate...

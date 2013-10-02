@@ -99,7 +99,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // (Required) copy constructor.
-	CachingDisplayMethod::CachingDisplayMethod(const CachingDisplayMethod &) {
+	CachingDisplayMethod::CachingDisplayMethod(const CachingDisplayMethod &o) : DisplayMethod(o) {
 	}
 
 // (Required) copy assignment.

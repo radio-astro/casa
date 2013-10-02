@@ -185,8 +185,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return isInside;
 	}
 
-	void DisplayShape::rotateAbout(const Float& angle, const Float& aboutX,
-	                               const Float& aboutY) {
+	void DisplayShape::rotateAbout(const Float& /*angle*/, const Float& /*aboutX*/,
+	                               const Float& /*aboutY*/) {
 
 		// Nothing yet. If it is ever decided that handles should be
 		// rotated with object, this should happen here.
@@ -567,7 +567,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
-	Bool DisplayShape::removeHandle(const Vector<Float>& getRidOf) {
+	Bool DisplayShape::removeHandle(const Vector<Float>& /*getRidOf*/) {
 
 		return False;
 	}

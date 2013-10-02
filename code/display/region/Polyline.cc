@@ -995,7 +995,7 @@ namespace casa {
 		AnnotationBase *Polyline::annotation( ) const {
 			if ( wc_ == 0 || wc_->csMaster() == 0 ) return 0;
 
-			const CoordinateSystem &cs = wc_->coordinateSystem( );
+			const DisplayCoordinateSystem &cs = wc_->coordinateSystem( );
 			const Vector<String> &units = wc_->worldAxisUnits( );
 
 			Vector<Quantity> xv(_drawing_points_.size( ));

@@ -31,7 +31,7 @@
 #include <casa/aips.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Containers/Record.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <display/Display/DParameterChoice.h>
 #include <display/Display/DParameterRange.h>
 #include <casa/BasicMath/Math.h>
@@ -158,7 +158,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Convert 2-D 'pseudoregion' (or 'mouse region' Record, from the region
 		// mouse tools) to a full Image Region, with same number of axes as the
-		// DD's Lattice (and relative to its CoordinateSystem).
+		// DD's Lattice (and relative to its DisplayCoordinateSystem).
 		// Return value is 0 if the conversion can't be made or does not apply
 		// to this DD for any reason (ignored by non-Lattice DDs, e.g.).
 		//
@@ -413,7 +413,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Spectral [/ Direction] axes (users expect their spectral axes on Z, e.g.)
 		//# (Lifted bodily from GTkDD).
 		virtual void getInitialAxes_(Block<uInt>& axs, const IPosition& shape,
-		                             const CoordinateSystem* cs=0);
+		                             const DisplayCoordinateSystem &cs);
 
 		// Set named colormap onto underlying dd (called from public setOptions()).
 		// Pass "" to remove/delete any existing colormap for the QDD.

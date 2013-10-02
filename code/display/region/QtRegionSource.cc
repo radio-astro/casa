@@ -340,7 +340,7 @@ namespace casa {
 
 		void QtRegionSourceKernel::load_crtf_regions( WorldCanvas *wc, const QString &path ) {
 			// find viewers's coordinate system type...
-			const CoordinateSystem &viewer_cs = wc->coordinateSystem( );
+			const DisplayCoordinateSystem &viewer_cs = wc->coordinateSystem( );
 			MDirection::Types cstype = get_coordinate_type( viewer_cs );
 			if ( cstype == MDirection::EXTRA ) return;
 

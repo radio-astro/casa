@@ -332,7 +332,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // (Required) copy constructor.
-	PrincipalAxesDM::PrincipalAxesDM(const PrincipalAxesDM &) {
+	PrincipalAxesDM::PrincipalAxesDM(const PrincipalAxesDM &o) : DisplayMethod(o) {
 	}
 
 // (Required) copy assignment.

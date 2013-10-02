@@ -132,7 +132,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // (Required) copy constructor.
-	PassiveTableDD::PassiveTableDD(const PassiveTableDD &) {
+	PassiveTableDD::PassiveTableDD(const PassiveTableDD &o) : PassiveCachingDD(o) {
 	}
 
 // (Required) copy assignment.

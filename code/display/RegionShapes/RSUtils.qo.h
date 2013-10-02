@@ -78,7 +78,7 @@ namespace casa {
 		// Returns whether or not the given coordinate system has a direction
 		// coordinate or not.
 		// <group>
-		static bool hasDirectionCoordinate(const CoordinateSystem& cs);
+		static bool hasDirectionCoordinate(const DisplayCoordinateSystem& cs);
 		static bool hasDirectionCoordinate(const WorldCanvas* wc) {
 			return wc != NULL && hasDirectionCoordinate(wc->coordinateSystem());
 		}
@@ -88,7 +88,7 @@ namespace casa {
 		// </group>
 
 		// Returns the world system type for the given coordinate system.
-		static MDirection::Types worldSystem(const CoordinateSystem& cs);
+		static MDirection::Types worldSystem(const DisplayCoordinateSystem& cs);
 
 		// Returns the world system type for the given WorldCanvas.
 		static MDirection::Types worldSystem(const WorldCanvas* wc) {

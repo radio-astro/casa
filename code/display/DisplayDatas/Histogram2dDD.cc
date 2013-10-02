@@ -81,7 +81,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			lintrc(1) = lintrc(1) / bwidth * 4;
 		}
 
-		CoordinateSystem newcsys;
+		DisplayCoordinateSystem newcsys;
 		Vector<String> names(2);
 		names(0) = "Data value";
 		names(1) = "Number";
@@ -165,7 +165,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// MUST IMPLEMENT
 	}
 
-	Histogram2dDD::Histogram2dDD(const Histogram2dDD &) {
+	Histogram2dDD::Histogram2dDD(const Histogram2dDD &o) : ActiveCaching2dDD(o) {
 		// MUST IMPLEMENT
 	}
 

@@ -238,6 +238,7 @@ casa_add_library( display
   Display/Options.cc
   Display/AttValBase.cc
   Display/Position.cc
+  Display/DisplayCoordinateSystem.cc
   DisplayCanvas/DefaultWCCoordinateHandler.cc
   DisplayCanvas/DefaultWCSizeControlHandler.cc
   DisplayCanvas/WCAxisLabeller.cc

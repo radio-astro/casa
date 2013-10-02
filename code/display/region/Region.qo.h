@@ -42,7 +42,7 @@
 #include <casaqt/QtUtilities/QtId.h>
 #include <stdexcept>
 #include <QObject>
-
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <display/region/QtRegionState.qo.h>
 #include <display/region/RegionEnums.h>
 #include <casadbus/types/nullptr.h>
@@ -119,7 +119,7 @@ namespace casa {
 		void pixel_offset_to_linear_offset( WorldCanvas *wc_, double, double, double &, double & );
 		void linear_offset_to_pixel_offset( WorldCanvas *wc_, double, double, double &, double & );
 
-		MDirection::Types get_coordinate_type( const CoordinateSystem &wc );
+		MDirection::Types get_coordinate_type( const DisplayCoordinateSystem &wc );
 
 		class ImageRegion_state {
 		public:

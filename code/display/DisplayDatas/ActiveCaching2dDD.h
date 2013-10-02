@@ -29,7 +29,7 @@
 #define TRIALDISPLAY_ACTIVECACHING2DDD_H
 
 #include <casa/aips.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <display/DisplayDatas/CachingDisplayData.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -49,7 +49,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	public:
 
-		// Constructor.  Caller must provide a CoordinateSystem, and the
+		// Constructor.  Caller must provide a DisplayCoordinateSystem, and the
 		// pixel range (via <src>pixelblc</src> and <src>pixeltrc</src>)
 		// over which the DisplayData is expected to function.  The primary
 		// use of <src>pixelblc</src> and <src>pixeltrc</src> is to provide
@@ -57,7 +57,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// have only two world and pixel axes, otherwise an exception is
 		// thrown, and likewise, <src>pixblc</src> and <src>pixtrc</src>
 		// must both be of length two.
-		ActiveCaching2dDD(const CoordinateSystem &coordsys,
+		ActiveCaching2dDD(const DisplayCoordinateSystem &coordsys,
 		                  const Vector<Double> &pixblc,
 		                  const Vector<Double> &pixtrc);
 
@@ -133,8 +133,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// (Required) copy assignment.
 		void operator=(const ActiveCaching2dDD &other);
 
-		// Install a CoordinateSystem and limits.
-		void setCoordinateSystem(const CoordinateSystem &coordsys,
+		// Install a DisplayCoordinateSystem and limits.
+		void setCoordinateSystem(const DisplayCoordinateSystem &coordsys,
 		                         const Vector<Double> &pixblc,
 		                         const Vector<Double> &pixtrc);
 
@@ -155,8 +155,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return itsShowWorldCoordinate;
 		}
 
-		// Store the 2d CoordinateSystem here.
-		CoordinateSystem itsCoordinateSystem;
+		// Store the 2d DisplayCoordinateSystem here.
+		DisplayCoordinateSystem itsCoordinateSystem;
 
 		// Store the 2d pixel corners here.
 		Vector<Double> itsPixelBlc, itsPixelTrc;
@@ -174,7 +174,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Bool itsFractionalPixels;
 
 		// Set Spectral formatting
-		void setSpectralFormatting (CoordinateSystem& cSys,
+		void setSpectralFormatting (DisplayCoordinateSystem& cSys,
 		                            const String& velTypeString,
 		                            const String& unitString);
 

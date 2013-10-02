@@ -62,7 +62,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		DSEllipse(other) {
 	}
 
-	void DSCircle::changePoint(const Vector<Float> &newPos, const Int nPoint) {
+	void DSCircle::changePoint(const Vector<Float> &newPos, const Int /*nPoint*/) {
 		changePoint(newPos);
 	}
 

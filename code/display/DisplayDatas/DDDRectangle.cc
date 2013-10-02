@@ -272,7 +272,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	DDDRectangle::DDDRectangle() {
 	}
 
-	DDDRectangle::DDDRectangle(const DDDRectangle &) {
+	DDDRectangle::DDDRectangle(const DDDRectangle &o) : DDDObject(o) {
 	}
 
 	void DDDRectangle::operator=(const DDDRectangle &) {

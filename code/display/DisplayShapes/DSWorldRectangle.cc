@@ -34,7 +34,7 @@
 #include <casa/Arrays/ArrayMath.h>
 
 #include <images/Images/ImageUtilities.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Logging/LogIO.h>

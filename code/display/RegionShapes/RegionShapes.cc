@@ -39,7 +39,7 @@ namespace casa {
 // Macros for coordinate conversions //
 
 #define _RSCOORDSTART(n)                                                      \
-    const CoordinateSystem& cs = m_lastWCH->worldCanvas()->coordinateSystem();\
+    const DisplayCoordinateSystem& cs = m_lastWCH->worldCanvas()->coordinateSystem();\
     MDirection::Types wcSys = RSUtils::worldSystem(cs);                       \
                                                                               \
     bool isValid = true;                                                      \
@@ -1334,7 +1334,7 @@ namespace casa {
         !toPixel && toSys == m_worldSystem)) {                                \
         getPolygonCoordinates(x,y,""); return; }                              \
                                                                               \
-    const CoordinateSystem& cs = m_lastWCH->worldCanvas()->coordinateSystem();\
+    const DisplayCoordinateSystem& cs = m_lastWCH->worldCanvas()->coordinateSystem();\
     MDirection::Types wcSys = RSUtils::worldSystem(cs);                       \
                                                                               \
     bool isValid = true;                                                      \
@@ -3099,7 +3099,7 @@ namespace casa {
     MDirection::Types toSys;                                                  \
     if(!toPixel && !MDirection::getType(toSys, toSystem)) return 0;           \
                                                                               \
-    const CoordinateSystem& cs = m_lastWCH->worldCanvas()->coordinateSystem();\
+    const DisplayCoordinateSystem& cs = m_lastWCH->worldCanvas()->coordinateSystem();\
     MDirection::Types wcSys = RSUtils::worldSystem(cs);                       \
                                                                               \
     bool isValid = true;                                                      \

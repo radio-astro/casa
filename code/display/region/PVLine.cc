@@ -313,7 +313,7 @@ namespace casa {
 
 			if ( wc_ == 0 || wc_->csMaster() == 0 ) return 0;
 
-			const CoordinateSystem &cs = wc_->coordinateSystem( );
+			const DisplayCoordinateSystem &cs = wc_->coordinateSystem( );
 
 			double wpt1_x, wpt1_y, wpt2_x, wpt2_y;
 			try {
@@ -638,7 +638,7 @@ namespace casa {
 
 					Int nAxes = image->ndim( );
 					IPosition shp = image->shape( );
-					const CoordinateSystem &cs = image->coordinates( );
+					const DisplayCoordinateSystem &cs = image->coordinates( );
 
 					int zIndex = padd->activeZIndex( );
 					IPosition pos = padd->fixedPosition( );
@@ -737,7 +737,7 @@ namespace casa {
 			dispAxes.resize(2,True);
 
 			const Vector<String> &units = wc_->worldAxisUnits( );
-			const CoordinateSystem &cs = image->coordinates( );
+			const DisplayCoordinateSystem &cs = image->coordinates( );
 			Vector<Quantum<Double> > qblc, qtrc;
 			qblc.resize(2);
 			qtrc.resize(2);
@@ -760,7 +760,7 @@ namespace casa {
 		RegionInfo *PVLine::newInfoObject( ImageInterface<Float> *image, PrincipalAxesDD *dd ) {
 
 			// cannot create P/V raster for an image without a spectral axis...
-			const CoordinateSystem &cs = image->coordinates( );
+			const DisplayCoordinateSystem &cs = image->coordinates( );
 			if ( dd->hasMovieDimension( ) == false || cs.hasSpectralAxis( ) == false ) return 0;
 
 			RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();

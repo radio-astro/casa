@@ -31,7 +31,7 @@
 
 //# Includes
 #include <casa/aips.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <display/Display/DisplayCoordinateSystem.h>
 #include <images/Regions/WCRegion.h>
 #include <lattices/Lattices/RegionType.h>
 #include <casa/Arrays/Vector.h>
@@ -56,7 +56,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// <group>
 		QtWCBox(const Vector<Quantum<Double> >& blc,
 		        const Vector<Quantum<Double> >& trc,
-		        const CoordinateSystem& cSys,
+		        const DisplayCoordinateSystem& cSys,
 		        const Vector<Int>& absRel);
 		// </group>
 
@@ -67,15 +67,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		QtWCBox(const Vector<Quantum<Double> >& blc,
 		        const Vector<Quantum<Double> >& trc,
 		        const IPosition& pixelAxes,
-		        const CoordinateSystem& cSys,
+		        const DisplayCoordinateSystem& cSys,
 		        const Vector<Int>& absRel);
 		// </group>
 
 		// Construct from the bounding box of an  <src>LCRegion</src>.
 		QtWCBox(const LCRegion& region,
-		        const CoordinateSystem& cSys);
+		        const DisplayCoordinateSystem& cSys);
 
-		// Copy constructor (reference semantics [except for <src>CoordinateSystem</src>])
+		// Copy constructor (reference semantics [except for <src>DisplayCoordinateSystem</src>])
 		QtWCBox (const QtWCBox& other);
 
 		// Destructor
@@ -96,7 +96,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Make a new box from the given axesin this box.
 		QtWCBox splitBox (const IPosition& axes) const;
 
-		// Convert to an LCRegion using the supplied <src>CoordinateSystem</src>
+		// Convert to an LCRegion using the supplied <src>DisplayCoordinateSystem</src>
 		// and shape.
 		virtual LCRegion* doToLCRegion (const CoordinateSystem& cSys,
 		                                const IPosition& latticeShape,
@@ -122,7 +122,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Convert from/to boxit format string
 		String toBoxString() const;
 		static QtWCBox* fromBoxString(const String&,
-		                              const CoordinateSystem& cSys, String& err);
+		                              const DisplayCoordinateSystem& cSys, String& err);
 
 		// FIXME: refactor to someplace more appropriate
 		// get/set chan extension
@@ -140,15 +140,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Vector<Quantum<Double> > itsBlc;
 		Vector<Quantum<Double> > itsTrc;
 		IPosition itsPixelAxes;
-		CoordinateSystem itsCSys;
+		DisplayCoordinateSystem itsCSys;
 		Vector<Int> itsAbsRel;
 		Bool itsNull;
 
 
-// Check units of quanta are consistent with CoordinateSystem
+// Check units of quanta are consistent with DisplayCoordinateSystem
 		void checkUnits (const IPosition& pixelAxes,
 		                 const Vector<Quantum<Double> >& values,
-		                 const CoordinateSystem& cSys);
+		                 const DisplayCoordinateSystem& cSys);
 
 // Convert relative pixels to absolute or fill in defaults
 		void convertPixel(Double& pixel,

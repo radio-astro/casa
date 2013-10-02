@@ -191,7 +191,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool Profile2dDD::createCoordinateSystem()
 //
-// We are going to construct a CoordinateSystem for this
+// We are going to construct a DisplayCoordinateSystem for this
 // DD.  It holds a coordinate for the profile axis (X on plot)
 // and a LinearCoordinate for the intensity (Y on plot).
 // It may hold extra coordinates if available (e.g. a SpectralCoordinate
@@ -201,11 +201,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Retrieve CoordinateSystem from parent CS
 
-		const CoordinateSystem& cSysDD(itsDD->coordinateSystem());
+		const DisplayCoordinateSystem& cSysDD(itsDD->coordinateSystem());
 
 // Make empty output CS
 
-		CoordinateSystem cSysOut;
+		DisplayCoordinateSystem cSysOut;
 
 // Copy the ObsInfo
 
@@ -279,7 +279,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Remove pixel and world axes other than the profile axis.  Use the
 // reference value for replacement for now.
 
-			CoordinateUtil::removeAxes(cSysOut, worldReplacement, axes, True);
+			cSysOut.removeAxes(worldReplacement, axes, True);
 		}
 
 
@@ -289,7 +289,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (cSysOut.nCoordinates()==3) {
 			axes.resize();
 			axes = cSysOut.worldAxes(2);
-			CoordinateUtil::removeAxes(cSysOut, worldReplacement, axes, True);
+			cSysOut.removeAxes(worldReplacement, axes, True);
 		}
 
 // Set the coordinate system of this DD (which will live in ActiveCaching2D) and the
@@ -738,7 +738,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// create data-profile-CS record structure
 		Record profCSRec;
-		CoordinateSystem cs(itsAxisLabeller.coordinateSystem());
+		DisplayCoordinateSystem cs(itsAxisLabeller.coordinateSystem());
 
 		// remove the profile linear axis (coordinate 1, axis 0)
 
@@ -1005,7 +1005,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 
-	Bool Profile2dDD::updateCoordinateSys(CoordinateSystem &cs) {
+	Bool Profile2dDD::updateCoordinateSys(DisplayCoordinateSystem &cs) {
 
 // update cs of axis labeller
 
@@ -1067,7 +1067,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// labeller. This cs will contain a linear coordinate with two
 			// world axes.
 
-			CoordinateSystem tmpCS;
+			DisplayCoordinateSystem tmpCS;
 			if (rec.asString(0) == "pixel") {
 
 				String xname = itsCoordinateSystem.coordinate(0).worldAxisNames()(0);
@@ -1202,7 +1202,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		ActiveCaching2dDD::notifyUnregister(wcHolder, ignoreRefresh);
 	}
 
-	Profile2dDD::Profile2dDD(const Profile2dDD &) {
+	Profile2dDD::Profile2dDD(const Profile2dDD &o ) : ActiveCaching2dDD(o), WCMotionEH(o), WCPositionEH(o){
 		// MUST IMPLEMENT
 	}
 
