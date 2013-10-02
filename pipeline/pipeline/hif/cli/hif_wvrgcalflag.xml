@@ -114,17 +114,17 @@ Generate a gain table based on Water Vapour Radiometer data, interpolating over 
 
     <param type="string" name="flag_intent">
         <description>Data intents to use in detecting and flagging bad wvr antennas</description>
-        <value>BANDPASS</value>
+        <value></value>
     </param>
 
     <param type="string" name="qa2_intent">
         <description>Data intents to use in estimating the effectiveness of the wvr correction</description>
-        <value>PHASE,BANDPASS</value>
+        <value>BANDPASS,PHASE</value>
     </param>
 
     <param type="string" name="qa2_bandpass_intent">
         <description>Data intent to use for the bandpass calibration in the qa2 calculation</description>
-        <value>BANDPASS</value>
+        <value></value>
     </param>
 
     <param type="double" name="accept_threshold">
@@ -342,7 +342,7 @@ minnumants -- Minimum number of nearby antennas (up to 3) used for
     default: 2
     example: 3
 
-flag_intent -- The data intents on whose wvr correction results the search
+flag_intent -- The data intent(s) on whose wvr correction results the search
     for bad wvr antennas is to be based.
 
     A 'flagging view' will be calculated for each specified intent, in each
@@ -352,7 +352,12 @@ flag_intent -- The data intents on whose wvr correction results the search
     ['ANTENNA', 'TIME'], showing the phase noise after the wvr
     correction has been applied.
 
-    default 'BANDPASS'
+    If flag_intent is left blank, the default, the flagging views will be
+    derived from data with the default bandpass calibration intent i.e.
+    the first in the list BANDPASS, PHASE, AMPLITUDE for which the
+    measurement set has data.
+
+    default ''
 
 qa2_intent -- The list of data intents on which the wvr correction is to be
     tried as a means of estimating its effectiveness.
@@ -374,11 +379,14 @@ qa2_intent -- The list of data intents on which the wvr correction is to be
     'accept_threshold' then the wvr calibration file is not made available 
     for merging into the context for use in the subsequent reduction.
 
-    default: 'PHASE'
-    example: 'BANDPASS,AMPLITUDE'
+    default: 'BANDPASS,PHASE'
 
 qa2_bandpass_intent -- The data intent to use for the bandpass calibration
-    in the qa2 calculation.
+    in the qa2 calculation. The default is blank to allow the
+    underlying bandpass task to select a sensible intent if the dataset
+    lacks BANDPASS data.
+
+    default: ''
 
 accept_threshold -- The phase-rms improvement ratio 
     (rms without wvr / rms with wvr) above which the wrvg file will be 
