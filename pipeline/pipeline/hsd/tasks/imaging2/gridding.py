@@ -50,9 +50,7 @@ class GriddingBase(common.SingleDishTaskTemplate):
     def prepare(self):
         start = time.time()
         inputs = self.inputs
-        context = inputs.context
-        self.datatable = context.observing_run.datatable_instance
-        self.datatable_name = self.datatable.plaintable
+        context = self.context
         if type(inputs.antennaid) == int:
             self.antenna = [inputs.antennaid]
         else:
@@ -120,12 +118,13 @@ class GriddingBase(common.SingleDishTaskTemplate):
         # need opened table to call taql, so we use table object that 
         # datatable holds.
         table = self.datatable.tb1
+        datatable_name = self.datatable.plaintable
 
         # TaQL command to make a view from DataTable that is physically 
         # separated to two tables named RO and RW, respectively. 
         # Note that TaQL accesses DataTable on disk, not on memory. 
         #taqlstring = 'USING STYLE PYTHON SELECT ROWNUMBER() AS ID, RO.ROW, RO.ANTENNA, RO.RA, RO.DEC, RO.TSYS, RO.EXPOSURE, RW.STATISTICS[0] AS STAT, RW.FLAG_SUMMARY FROM "%s" RO, "%s" RW WHERE IF==%s && POL == %s && ANTENNA IN %s'%(os.path.join(self.datatable_name,'RO'),os.path.join(self.datatable_name,'RW'),self.spw,self.pol,list(self.antenna))
-        taqlstring = 'USING STYLE PYTHON SELECT ROWNUMBER() AS ID FROM "%s" WHERE IF==%s && POL == %s && ANTENNA IN %s'%(os.path.join(self.datatable_name,'RO'),self.spw,self.pol,list(self.antenna))
+        taqlstring = 'USING STYLE PYTHON SELECT ROWNUMBER() AS ID FROM "%s" WHERE IF==%s && POL == %s && ANTENNA IN %s'%(os.path.join(datatable_name,'RO'),self.spw,self.pol,list(self.antenna))
         if self.srctype is not None:
             taqlstring += ' && SRCTYPE==%s'%(self.srctype)
 
@@ -261,6 +260,14 @@ class RasterGridding(GriddingBase):
         # (RAcenter, DECcenter) to be the center of the grid
         NGridRA = int((MaxRA - MinRA) / (GridSpacing * DecCorrection)) + 1
         NGridDEC = int((MaxDEC - MinDEC) / GridSpacing) + 1
+        if NGridRA % 2 == 0:
+            NGridRA += 2
+        else:
+            NGridRA += 1
+        if NGridDEC % 2 == 0:
+            NGridDEC += 2
+        else:
+            NGridDEC += 1
         MinRA = (MinRA + MaxRA) / 2.0 - (NGridRA - 1) / 2.0 * GridSpacing * DecCorrection
         MinDEC = (MinDEC + MaxDEC) / 2.0 - (NGridDEC - 1) / 2.0 * GridSpacing
 

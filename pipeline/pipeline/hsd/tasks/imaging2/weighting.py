@@ -115,7 +115,7 @@ class WeightMS(common.SingleDishTaskTemplate):
         spwid = self.inputs.spwid
         srctype = self.inputs.onsourceid
 
-        datatable = self.inputs.context.observing_run.datatable_instance
+        datatable = self.datatable
         
         # get corresponding datatable rows
         datatable_name = datatable.plaintable

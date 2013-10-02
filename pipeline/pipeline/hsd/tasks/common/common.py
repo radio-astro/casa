@@ -125,6 +125,18 @@ class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
         super(SingleDishTaskTemplate,self).__init__(inputs)
         self._setup_datatable()
         self._inspect_casa_version()
+        
+    @property
+    def context(self):
+        return self.inputs.context
+    
+    @property
+    def datatable(self):
+        observing_run = self.context.observing_run
+        if hasattr(observing_run, 'datatable_instance'):
+            return observing_run.datatable_instance
+        else:
+            return None
 
     def _setup_datatable(self):
         pass

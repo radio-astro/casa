@@ -59,8 +59,8 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
         return result
 
     def _do_imaging(self, infiles, spwlist, imagename, edge):
-        context = self.inputs.context
-        datatable = context.observing_run.datatable_instance
+        context = self.context
+        datatable = self.datatable
         antenna_list = [context.observing_run.st_names.index(f) 
                         for f in infiles]
         vislist = [self.inputs.vislist[i] for i in antenna_list]
@@ -114,6 +114,27 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
     
         nx = int((ra_max - ra_min) / (cell_in_deg * dec_correction)) + 1
         ny = int((dec_max - dec_min) / cell_in_deg) + 1
+        
+        # Adjust nx and ny to be even number for performance (which is 
+        # recommended by imager). 
+        # Also increase nx and ny  by 2 if they are even number. 
+        # This is due to a behavior of the imager. The imager configures 
+        # direction axis as follows:
+        #     reference value: phasecenter
+        #           increment: cellx, celly
+        #     reference pixel: ceil((nx-1)/2), ceil((ny-1)/2)
+        # It means that reference pixel will not be map center if nx/ny 
+        # is even number. It results in asymmetric area coverage on both 
+        # sides of the reference pixel, which may miss certain range of 
+        # (order of 1 pixel) observed area near the edge. 
+        if nx % 2 == 0:
+            nx += 2
+        else:
+            nx += 1
+        if ny % 2 == 0:
+            ny += 2
+        else:
+            ny += 1
     
         # increase nx and ny to reduce the effect of edges
         margin = 3
