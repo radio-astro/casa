@@ -59,7 +59,6 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
          casapy = false, debug = false,
          nopopups = false;
     bool showGui = true;
-    bool scriptClient = false;
   
     // Parse arguments.
     String arg, arg2, arg3;
@@ -80,12 +79,9 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
            ARG_LOGFILTER = PlotMSDBusApp::APP_LOGFILTER_SWITCH,
            ARG_NOITERPLOT = "--noiter",
            ARG_NOPOPUPS = "--nopopups",
-    	   ARG_SHOWGUI = "--nogui",
-    	   ARG_SCRIPTCLIENT = "--script";
-   //Note:  script controls whether to use the scripting version with no
-   //user controls or whether to use the interactive version with user controls.
-   //With either the script or user control version it is possible to show the
-   //plots on the screen or not (nogui).
+    	   ARG_SHOWGUI = "--nogui";
+
+
            
     const vector<String>& selectFields = PlotMSSelection::fieldStrings(),
                           averagingFields = PlotMSAveraging::fieldStrings();
@@ -161,9 +157,6 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
                  << "\n* " << ARG_SHOWGUI << "\n           "
                  << "Run without showing anything on the screen"
 
-                 << "\n* " << ARG_SCRIPTCLIENT << "\n           "
-                 << "Run using the scripting interface rather than as a GUI interactive user controls."
-            
                  << endl;
             return 0;
         }
@@ -190,11 +183,7 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
         } else if (arg2 == ARG_SHOWGUI){
         	showGui = false;
         continue;
-        } else if (arg2 == ARG_SCRIPTCLIENT ){
-        	scriptClient = true;
-        	continue;
         }
-
         else if(arg2 == ARG_DEBUG1 || arg2 == ARG_DEBUG2) {
             debug = true;
 	    continue;                        
@@ -277,10 +266,10 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
         params.setCachedImageSizeToResolution();
     
     // Set up plotms object.
-    PlotMSApp plotmsapp(params, casapy, !scriptClient );
-    if(!casapy){
+    PlotMSApp plotmsapp(params, casapy, showGui );
+   /* if(!casapy){
     	plotmsapp.showGUI(showGui); // don't automatically show for casapy
-    }
+    }*/
     if (nopopups)
       plotmsapp.its_want_avoid_popups = true;
     

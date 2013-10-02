@@ -245,6 +245,8 @@ void PlotMSApp::initialize(bool connectToDBus, bool userGui ) {
         itsDBus_ = new PlotMSDBusApp(*this);
         itsDBus_->connectToDBus();
     }
+
+    showGUI( userGui );
 }
 
 

@@ -39,15 +39,11 @@
 
 int main(int /*argc*/, char** /*argv[]*/) {
 
-	bool showGui = true;
-
 	String dataPath = tUtil::getFullPath( "pm_ngc5921.ms" );
     cout << "tSymbol using data from "<<dataPath.c_str()<<endl;
 
     // Set up plotms object.
     PlotMSApp app(false, false);
-
-    app.showGUI( showGui );
 
 
     // Set up parameters for plot.
@@ -83,10 +79,10 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool ok = app.save(format, interactive );
 	cout << "tSymbol:: Result of save="<<ok<<endl;
     
-	ok = tUtil::checkFile( outFile, 170000, 180000, -1 );
+	ok = tUtil::checkFile( outFile, 130000, 140000, -1 );
 	cout << "tSymbol:: Result of save file check="<<ok<<endl;
 
-	return tUtil::exitMain( showGui );
+	return tUtil::exitMain( false );
 
 }
 

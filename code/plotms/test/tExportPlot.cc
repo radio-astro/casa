@@ -37,15 +37,11 @@
 #include <QApplication>
 int main(int /*argc*/, char** /*argv[]*/) {
 
-	bool showGui = false;
-
 	String dataPath = tUtil::getFullPath( "pm_ngc5921.ms" );
     cout << "tExport using data from "<<dataPath.c_str()<<endl;
 
     // Set up plotms object.
     PlotMSApp app(false, false);
-
-    app.showGUI( showGui );
 
 
     // Set up parameters for plot.
@@ -70,6 +66,6 @@ int main(int /*argc*/, char** /*argv[]*/) {
     
 	ok = tUtil::checkFile( outFile, 160000, 170000, -1 );
 	cout << "tExport:: Result of save file check="<<ok<<endl;
-	return tUtil::exitMain( showGui );
+	return tUtil::exitMain( false );
 }
 

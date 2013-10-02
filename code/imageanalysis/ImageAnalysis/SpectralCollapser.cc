@@ -377,8 +377,13 @@ void SpectralCollapser::_setUp(){
 	// get the pixel axis number of the spectral axis
 	CoordinateSystem cSys = _image->coordinates();
 	Int specAx = cSys.findCoordinate(Coordinate::SPECTRAL);
-	if (specAx < 0)
-		*_log << LogIO::EXCEPTION << "No spectral axis in image: " << _image->name() << LogIO::POST;
+	if (specAx < 0){
+		specAx = cSys.findCoordinate(Coordinate::TABULAR);
+		if ( specAx < 0 ){
+			*_log << LogIO::WARN << "No spectral axis in image: " << _image->name() << LogIO::POST;
+			return;
+		}
+	}
 	Vector<Int> nPixelSpec = cSys.pixelAxes(specAx);
 	_specAxis = IPosition(1, nPixelSpec(0));
 
@@ -554,9 +559,9 @@ Bool SpectralCollapser::_moments(const ImageInterface<Float> *image, const Vecto
    blc(_specAxis(0))=(uInt)startIndex;
    trc(_specAxis(0))=(uInt)endIndex;
    const LCSlicer region(blc, trc);
-   cout << "before getregion()" << endl;
+   //cout << "before getregion()" << endl;
    //ImageRegion mask = fitsImage.getRegion(fitsImage.getDefaultMask(), RegionHandler::Masks);
-   cout << "after getregion()" << endl;
+   //cout << "after getregion()" << endl;
    SubImage<Float> subImage(*image, ImageRegion(region));
    ImageMoments<Float> moment(subImage, *_log, True, True);
    if (!moment.setMoments(momentVec)) {
@@ -567,6 +572,7 @@ Bool SpectralCollapser::_moments(const ImageInterface<Float> *image, const Vecto
 	   moment.setMomentAxis(_specAxis(0));
    }
    catch (const AipsError& exc) {
+	   String errorMsg = exc.getMesg();
 	   *_log << LogIO::SEVERE << exc.getMesg() << LogIO::POST;
 	   return False;
    }
