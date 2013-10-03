@@ -278,15 +278,15 @@ namespace casa {
 	}
 
 
-	bool QtCanvas::duplicateCurve( QString& targetLabel ) {
-		bool duplicateCurve = false;
+	int QtCanvas::duplicateCurve( QString& targetLabel ) {
+		int duplicateCurve = -1;
 		//Duplicate curves will have a number in brackets after their name such as <3>
 		stripCurveTitleNumbers( targetLabel );
 		for ( int i = 0; i < static_cast<int>(curveMap.size()); i++ ) {
 			QString curveLabel = curveMap[i].getLegend();
 			stripCurveTitleNumbers( curveLabel );
 			if ( targetLabel == curveLabel ) {
-				duplicateCurve = true;
+				duplicateCurve = i;
 				break;
 			}
 		}
@@ -296,18 +296,23 @@ namespace casa {
 	void QtCanvas::setCurveData(int id, const CurveData &data, const ErrorData &error,
 	                            const QString& lbl, ColorCategory level ) {
 		QString curveLabel = lbl;
-		bool dupeCurve = duplicateCurve( curveLabel );
-		if ( !dupeCurve ) {
-			QColor curveColor = getDiscreteColor( level, id );
-			CanvasCurve curve( data, error, curveLabel, curveColor, level );
-			//Make sure the curve is in the same units as the canvas is using.
-			if ( yUnitDisplay != yUnitImage ) {
-				curve.scaleYValues( yUnitImage, yUnitDisplay, getUnits() );
-			}
-			curveMap[id]     = curve;
-			refreshPixmap();
-			emit curvesChanged();
+
+		//If the curve is already there we will replace it (curve may have
+		//different data but the same name, for example, a new multifit curve)
+		int curveIndex = duplicateCurve( curveLabel );
+		if ( curveIndex != -1 ){
+			id = curveIndex;
 		}
+
+		QColor curveColor = getDiscreteColor( level, id );
+		CanvasCurve curve( data, error, curveLabel, curveColor, level );
+		//Make sure the curve is in the same units as the canvas is using.
+		if ( yUnitDisplay != yUnitImage ) {
+			curve.scaleYValues( yUnitImage, yUnitDisplay, getUnits() );
+		}
+		curveMap[id]     = curve;
+		refreshPixmap();
+		emit curvesChanged();
 	}
 
 	void QtCanvas::setDataRange() {

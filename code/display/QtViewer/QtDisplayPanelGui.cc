@@ -2314,7 +2314,8 @@ void QtDisplayPanelGui::showImageProfile() {
 						pdd->checkAxis();
 					}
 				} else {
-					if (pdd->getAxisIndex(String("Spectral")) != -1){
+					if (pdd->getAxisIndex(String("Spectral")) != -1 ||
+							pdd->getAxisIndex(String("Tabular")) != -1){
 						OverplotInterface overlap( pdd->name().c_str(), img );
 						overlays.append( overlap );
 					}

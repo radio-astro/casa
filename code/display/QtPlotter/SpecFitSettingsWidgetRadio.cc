@@ -118,7 +118,7 @@ namespace casa {
 		  gaussEstimateDialog( this ), SUM_FIT_INDEX(-1) {
 		ui.setupUi(this);
 
-
+		viewerSettingsWritten = false;
 		progressDialog.setModal( true );
 		connect( &progressDialog, SIGNAL(canceled()), this, SLOT(cancelFit()));
 
@@ -544,6 +544,7 @@ namespace casa {
 			}
 
 			//Do the fit.
+			viewerSettingsWritten = false;
 			specFitThread = new SpecFitThread( fitter );
 			connect( specFitThread, SIGNAL(finished()), this, SLOT(fitDone()));
 			specFitThread->setStartValue( startVal );
@@ -672,35 +673,29 @@ namespace casa {
 					}
 				}
 
-				//Go through each of the fits.  This could be 1 if multifit is not
-				//checked.  On the other hand it could be hundreds if multifit is checked.
-				std::vector<bool> successVector;
-				succeeded.tovector( successVector );
-				for ( int i = 0; i < static_cast<int>(successVector.size()); i++ ) {
-					if ( fitCancelled ) {
-						break;
-					}
-					//The fit succeeded.
-					if ( successVector[i] ) {
-						//Initialize a SpecFit curve for the fit.
-						bool success = processFitResults( xValues, xValuesPix );
-						if ( !success ) {
-							QString msg( "Fit returned invalid value(s).");
-							Util::showUserMessage( msg, this );
-							//In the case of a multi-fit, we exit if one doesn't work.
-							fitCancelled = true;
-						}
+				//Go through the fits.
+
+				if ( !fitCancelled ) {
+
+					//Initialize SpecFit curves for the fit.
+					bool success = processFitResults( xValues, xValuesPix );
+					if ( !success ) {
+						QString msg( "Fit returned invalid value(s).");
+						Util::showUserMessage( msg, this );
+						fitCancelled = true;
 					}
 
 					if ( newData ) {
 						finishedProgress = finishedProgress + progressIncrement;
 						progressDialog.setValue( static_cast<int>(finishedProgress) );
 					}
+
 				}
 
 				if ( newData ) {
 					progressDialog.setValue( PROGRESS_END );
 				}
+
 				if ( !fitCancelled ) {
 					if ( !ui.multiFitCheckBox->isChecked() ) {
 						drawCurves(SUM_FIT_INDEX,SUM_FIT_INDEX);
@@ -736,11 +731,15 @@ namespace casa {
 		//Make sure we are in our selected rectangular region before
 		//going to the trouble of trying to find the curves to draw.
 		if ( curveList.size() > 0 ) {
+			Vector<double> xPixels;
+			Vector<double> yPixels;
+			int minX = std::numeric_limits<int>::max();
+			int minY = std::numeric_limits<int>::max();
 			if ( pixelX != SUM_FIT_INDEX  && pixelY != SUM_FIT_INDEX ) {
-				Vector<double> xPixels;
-				Vector<double> yPixels;
 				taskMonitor->getPixelBounds( xPixels, yPixels );
-				if ( xPixels.size() < 2 || yPixels.size() < 2 ) {
+				int xCount = xPixels.size();
+				int yCount = yPixels.size();
+				if ( xCount < 2 || yCount < 2 ) {
 					return;
 				}
 				if ( pixelX < xPixels[0] || pixelX > xPixels[1] ) {
@@ -748,6 +747,18 @@ namespace casa {
 				}
 				if ( pixelY < yPixels[0] || pixelY > yPixels[1] ) {
 					return;
+				}
+
+				for ( int i = 0; i < xCount; i++ ){
+					if ( xPixels[i]< minX){
+						minX = static_cast<int>(xPixels[i]);
+					}
+				}
+
+				for ( int i = 0; i < yCount; i++ ){
+					if ( yPixels[i] < minY ){
+						minY = static_cast<int>(yPixels[i]);
+					}
 				}
 			}
 
@@ -762,10 +773,10 @@ namespace casa {
 					Vector<Float> yCumValues(xValues.size(), 0);
 					bool curveAdded = false;
 					for ( int i = 0; i < curves.size(); i++ ) {
-						if ( !ui.multiFitCheckBox->isChecked() ||
-						        curves[i]->isSpecFitFor( pixelX,pixelY)) {
-							curves[i]->evaluate( xValues );
 
+						if ( !ui.multiFitCheckBox->isChecked() ||
+						        curves[i]->isSpecFitFor( pixelX,pixelY,minX,minY)) {
+							curves[i]->evaluate( xValues );
 							Vector<Float> yValues = curves[i]->getYValues();
 							QString curveName = curves[i]->getCurveName();
 
@@ -793,11 +804,14 @@ namespace casa {
 
 		//Iterate through all the fits and post the results
 		Array<std::tr1::shared_ptr<ProfileFitResults> > image1DFitters = fitter-> getFitters();
-		Array<std::tr1::shared_ptr<ProfileFitResults> >::iterator iterend( image1DFitters.end());
+		IPosition shape = image1DFitters.shape();
 		uint fitIndex = 0;
 		bool successfulFit = false;
-		for ( Array<std::tr1::shared_ptr<ProfileFitResults> >::iterator iter = image1DFitters.begin(); iter != iterend; ++iter ) {
-            std::tr1::shared_ptr<ProfileFitResults> image1DFitter = *iter;
+        IPosition axisPath = IPosition::makeAxisPath(image1DFitters.ndim());
+        ArrayPositionIterator myiter(image1DFitters.shape(), axisPath, False);
+        for (myiter.reset(); ! myiter.pastEnd(); myiter.next()) {
+        	const IPosition pos = myiter.pos();
+           	std::tr1::shared_ptr<ProfileFitResults> image1DFitter = image1DFitters(pos);
             if (! image1DFitter) {
                 continue;
             }
@@ -809,9 +823,8 @@ namespace casa {
 			int centerX = SUM_FIT_INDEX;
 			int centerY = SUM_FIT_INDEX;
 			if ( ui.multiFitCheckBox->isChecked() ) {
-				Vector<Double> fitCenter = fitter->getPixelCenter(fitIndex);
-				centerX = static_cast<int>(fitCenter[0]);
-				centerY = static_cast<int>(fitCenter[1]);
+				centerX = pos[0];
+				centerY = pos[1];
 			}
 			fitIndex++;
 
@@ -1053,16 +1066,19 @@ namespace casa {
 				QString msg("The output file did not exist.\n  Please check it has been specified correctly.");
 				Util::showUserMessage ( msg, this);
 			} else {
-				//If possible add the viewer settings to the output log.
-				QString viewerSettings = settingsToString();
-				if ( !outputLogFile.open( QIODevice::Append | QIODevice::Text)) {
-					qDebug() << "Could not write to the output log file";
-				} else {
-					//Write the viewer settings to the log file
-					QTextStream out(&outputLogFile );
-					out << viewerSettings;
-					out.flush();
-					outputLogFile.close();
+				if ( !viewerSettingsWritten ){
+					//If possible add the viewer settings to the output log.
+					QString viewerSettings = settingsToString();
+					if ( !outputLogFile.open( QIODevice::Append | QIODevice::Text)) {
+						qDebug() << "Could not write to the output log file";
+					} else {
+						//Write the viewer settings to the log file
+						QTextStream out(&outputLogFile );
+						out << viewerSettings;
+						out.flush();
+						outputLogFile.close();
+					}
+					viewerSettingsWritten = true;
 				}
 
 				if ( !outputLogFile.open( QIODevice::ReadOnly) ) {

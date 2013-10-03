@@ -49,6 +49,7 @@
 #include <display/DisplayCanvas/WCCSAxisLabeller.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+	const String WCCSAxisLabeller::FRAME_REST = "REST";
 
 	WCCSAxisLabeller::WCCSAxisLabeller() :
 		useWCCS(False),
@@ -327,15 +328,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				frequencySystem.define("dlformat", "axislabelfrequencysystem");
 				frequencySystem.define("listname", "spectral reference");
 				frequencySystem.define("ptype", "choice");
+				bool spectralAxisExists = itsCoordinateSystem.hasSpectralAxis();
+				bool restFrame = false;
+				String defaultFreq = itsFrequencySystem;
+				if ( spectralAxisExists ){
+					SpectralCoordinate specAxis = itsCoordinateSystem.spectralCoordinate();
+					MFrequency::Types type = specAxis.frequencySystem();
+					if ( type == MFrequency::REST){
+						restFrame = true;
+						defaultFreq = FRAME_REST;
+					}
+				}
 				Vector<String> vunits(5);
-				vunits(0) = "LSRK";
-				vunits(1) = "LSRD";
-				vunits(2) = "BARY";
-				vunits(3) = "GEO";
-				vunits(4) = "TOPO";
+
+				if ( !restFrame ){
+					vunits(0) = "LSRK";
+					vunits(1) = "LSRD";
+					vunits(2) = "BARY";
+					vunits(3) = "GEO";
+					vunits(4) = "TOPO";
+				}
+				else {
+					vunits.resize(1);
+					vunits(0) = "REST";
+				}
+
 				frequencySystem.define("popt", vunits);
-				frequencySystem.define("default", itsFrequencySystem);
-				frequencySystem.define("value", itsFrequencySystem);
+				frequencySystem.define("default", defaultFreq);
+				frequencySystem.define("value", defaultFreq);
 				frequencySystem.define("allowunset", False);
 				rec.defineRecord("axislabelfrequencysystem", frequencySystem);
 			}

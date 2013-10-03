@@ -292,6 +292,7 @@ namespace casa {
 		                         const QString& label );
 		void adjustTopAxisSettings();
 		void initializeXAxisUnits();
+		void setXAxisUnits();
 		void initSmoothing();
 		void setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit );
 		void toggleAction( QAction* action );
@@ -375,6 +376,7 @@ namespace casa {
 		static const QString PLOT_TYPE_SUM;
 		static const QString FREQUENCY;
 		static const QString RADIO_VELOCITY;
+		static const QString VELOCITY;
 		static const QString CHANNEL;
 		static const QString OPTICAL;
 		static const QString AIR;

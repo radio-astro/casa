@@ -69,16 +69,14 @@ namespace casa {
 				//ImageInterface<Float>* img = const_cast<ImageInterface <Float>* >(taskMonitor->getImage().get());
 				std::tr1::shared_ptr<ImageInterface<Float> > img(std::tr1::const_pointer_cast<ImageInterface<Float> >(taskMonitor->getImage()));
 				collapser = new SpectralCollapser(img, String(QDir::tempPath().toStdString()));
-
+				changeCollapseType();
+				changeCollapseError();
 			}
 
 		} catch (AipsError x) {
 			String message = "Error when re-setting the profiler:\n" + x.getMesg();
-			logWarning( message );
+			logWarning( message, true );
 		}
-
-		changeCollapseType();
-		changeCollapseError();
 	}
 
 	void MomentSettingsWidgetOptical::collapseImage() {
@@ -93,14 +91,14 @@ namespace casa {
 
 		if (startStr.isEmpty()) {
 			msg = String("No start value specified!");
-			logWarning( msg );
-			postStatus(msg);
+			logWarning( msg, true );
+			postStatus(msg, true);
 			return;
 		}
 		if (endStr.isEmpty()) {
 			msg = String("No end value specified!");
-			logWarning(msg);
-			postStatus(msg);
+			logWarning(msg, true);
+			postStatus(msg, true);
 			return;
 		}
 
@@ -108,15 +106,15 @@ namespace casa {
 		if (ui.startValue->validator()->validate(startStr, pos) != QValidator::Acceptable) {
 			String startString(startStr.toStdString());
 			msg = String("Start value not correct: ") + startString;
-			logWarning( msg );
-			postStatus(msg);
+			logWarning( msg, true );
+			postStatus(msg, true);
 			return;
 		}
 		if (ui.endValue->validator()->validate(endStr, pos) != QValidator::Acceptable) {
 			String endString(endStr.toStdString());
 			msg = String("Start value not correct: ") + endString;
-			logWarning( msg );
-			postStatus(msg);
+			logWarning( msg, true );
+			postStatus(msg, true);
 			return;
 		}
 
@@ -131,11 +129,11 @@ namespace casa {
 
 		if (ok) {
 			*logger << msg << LogIO::POST;
-			postStatus(msg);
+			postStatus(msg, true);
 		} else {
 			msg = String("Problem collapsing the image: ") + msg;
-			logWarning( msg );
-			postStatus( msg );
+			logWarning( msg, true );
+			postStatus( msg, true );
 			return;
 		}
 		taskMonitor->imageCollapsed(outname, "image", "raster", True, True);
