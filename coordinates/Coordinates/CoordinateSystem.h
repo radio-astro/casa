@@ -812,6 +812,8 @@ public:
 
    Bool hasDirectionCoordinate() const;
 
+   // Get the pixel axis numbers of the direction coordinate in this object.
+   // The order of the returned axis numbers is always longitude axis first, latitude axis second.
    Vector<Int> directionAxesNumbers() const;
 
    String stokesAtPixel(const uInt pixel) const;
