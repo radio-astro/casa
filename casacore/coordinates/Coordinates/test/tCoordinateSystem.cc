@@ -331,9 +331,7 @@ int main()
     	  CoordinateSystem csys = CoordinateUtil::defaultCoords(4);
     	  AlwaysAssert(csys.isDirectionAbscissaLongitude(), AipsError);
     	  Vector<Int> worldOrder(4);
-    	  for (uInt i=0; i<4; i++) {
-    		  worldOrder[i] = i;
-    	  }
+    	  indgen(worldOrder);
     	  Vector<Int> pixelOrder = worldOrder.copy();
     	  pixelOrder[0] = 1;
     	  pixelOrder[1] = 0;
@@ -354,8 +352,37 @@ int main()
     		  AlwaysAssert(False, AipsError);
     	  }
     	  catch (const AipsError& x) {}
-      }
+    	  csys = CoordinateUtil::defaultCoords(4);
+    	  indgen(pixelOrder);
+    	  pixelOrder[0] = 1;
+    	  pixelOrder[1] = 2;
+    	  pixelOrder[2] = 0;
+    	  csys.transpose(worldOrder, pixelOrder);
+    	  AlwaysAssert(! csys.isDirectionAbscissaLongitude(), AipsError);
+    	  csys = CoordinateUtil::defaultCoords(4);
+    	  indgen(pixelOrder);
+    	  pixelOrder[1] = 2;
+    	  pixelOrder[2] = 1;
+    	  csys.transpose(worldOrder, pixelOrder);
+    	  AlwaysAssert(csys.isDirectionAbscissaLongitude(), AipsError);
 
+      }
+      {
+    	  cout << "*** test directionAxesNumbers" << endl;
+    	  CoordinateSystem csys = CoordinateUtil::defaultCoords(4);
+    	  Vector<Int> dan = csys.directionAxesNumbers();
+    	  AlwaysAssert(dan[0] == 0 && dan[1] == 1, AipsError);
+    	  Vector<Int> worldOrder(4);
+    	  indgen(worldOrder);
+    	  Vector<Int> pixelOrder = worldOrder.copy();
+    	  pixelOrder[0] = 1;
+    	  pixelOrder[1] = 3;
+    	  pixelOrder[3] = 0;
+    	  csys.transpose(worldOrder, pixelOrder);
+    	  dan = csys.directionAxesNumbers();
+    	  AlwaysAssert(dan[0] == 3 && dan[1] == 0, AipsError);
+
+      }
 
    } catch (const AipsError& x) {
       cerr << "Error " << x.getMesg() << endl;
