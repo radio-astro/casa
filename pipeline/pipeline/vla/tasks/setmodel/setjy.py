@@ -21,10 +21,11 @@ import pipeline.infrastructure.utils as utils
 LOG = infrastructure.get_logger(__name__)
 
 
+
 class SetjyInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None,
                  # standard setjy parameters 
-                 vis=None, field=None, spw=None, modimage=None, 
+                 vis=None, field=None, spw=None, model=None, 
                  scalebychan=None, fluxdensity=None, spix=None,
                  reffreq=None, standard=None,
                  # intent for calculating field name
@@ -57,6 +58,13 @@ class SetjyInputs(basetask.StandardInputs):
         fields = self.ms.get_fields(intent=self.intent)
         field_names = set([f.name for f in fields])
         return ','.join(field_names)
+    
+        # fields with different intents may have the same name. Check for this
+        # and return the IDs if necessary
+        if len(unique_field_names) is len(field_ids):
+            return ','.join(unique_field_names)
+        else:
+            return ','.join([str(i) for i in field_ids])
 
     @field.setter
     def field(self, value):
@@ -91,7 +99,13 @@ class SetjyInputs(basetask.StandardInputs):
                 reader.next()
         
                 for row in reader:
-                    (ms_name, field_id, spw_id, I, Q, U, V) = row
+                    try:
+                        (ms_name, field_id, spw_id, I, Q, U, V, comment) = row
+                    except ValueError:
+                        LOG.warning('Invalid flux statement in %s: \'%s'
+                                    '\'' % (self.reffile, row))
+                        continue
+
                     if os.path.basename(ms_name) != self.ms.basename:
                         continue
 
@@ -238,11 +252,17 @@ class SetjyInputs(basetask.StandardInputs):
         
     def to_casa_args(self):
         d = super(SetjyInputs, self).to_casa_args()
-        for ignore in ('intent', 'reffile'):
-            if ignore in d:
+        # Filter out reffile. Note that the , is required
+	for ignore in ('reffile',):
+	    if ignore in d:
                 del d[ignore]
-        return d
 
+        # Enable intent selection in CASA. Convert to CASA intent if
+	# necessary. Not required here.
+	# d['intent'] = utils.to_CASA_intent (self.ms, d['intent'])
+	d['selectdata'] = True
+
+        return d
 
 class Setjy(basetask.StandardTaskTemplate):
     Inputs = SetjyInputs
@@ -273,11 +293,10 @@ class Setjy(basetask.StandardTaskTemplate):
         # Return early if the field has no data of the required intent. This
         # could be the case when given multiple MSes, one of which could be
         # without an amplitude calibrator for instance.
-
-        #if not inputs.ms.get_fields(inputs.field, intent=inputs.intent):
-        #    LOG.warning('Field(s) \'%s\' in %s have no data with intent %s' % 
-        #                (inputs.field, inputs.ms.basename, inputs.intent))
-        #    return result
+        if not inputs.ms.get_fields(inputs.field, intent=inputs.intent):
+            LOG.warning('Field(s) \'%s\' in %s have no data with intent %s' % 
+                        (inputs.field, inputs.ms.basename, inputs.intent))
+            return result
 
         # get the spectral windows for the spw inputs argument
         spws = [spw for spw in inputs.ms.get_spectral_windows(inputs.spw)]
@@ -294,8 +313,6 @@ class Setjy(basetask.StandardTaskTemplate):
             jobs = []
             for spw in spws:
                 inputs.spw = spw.id
-
-                #inputs.fluxdensity=-1  #Force to use -1
                 task_args = inputs.to_casa_args()
                 jobs.append(casa_tasks.setjy(**task_args))
                 
@@ -319,7 +336,6 @@ class Setjy(basetask.StandardTaskTemplate):
             jobs = self._merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
             for job in jobs:
                 self._executor.execute(job)
-            
 
         # higher-level tasks may run multiple Setjy tasks before running
         # analyse, so we also tag the end of our jobs so we can identify the

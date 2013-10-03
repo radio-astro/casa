@@ -445,8 +445,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
             intent = '',
             scan = testgainscans,
             flagbackup = False,
-            calwt = False,
-            gaincurve = False)
+            calwt = False)
         
         applycal_task = applycal.Applycal(applycal_inputs)
         

@@ -59,8 +59,7 @@ class Applycals(basetask.StandardTaskTemplate):
             spw = '',
             intent = '',
             flagbackup = False,
-            calwt = False,
-            gaincurve = False)
+            calwt = False)
         
         applycal_task = applycal.Applycal(applycal_inputs)
         

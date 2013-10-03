@@ -22,6 +22,7 @@ results = task.execute(dry_run=dry_run)
 from __future__ import absolute_import
 import types
 import math
+import pickle
 
 import pipeline.infrastructure.casatools as casatools
 import numpy
@@ -35,12 +36,12 @@ import pipeline.infrastructure.utils as utils
 from pipeline.hif.tasks.common import commonfluxresults
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
-from . import setjy
+from pipeline.vla.tasks.setmodel import setjy
 
 from pipeline.vla.tasks.vlautils import VLAUtils
 
-#import pipeline.domain.measures as measures
-#import pipeline.extern.asizeof as asizeof
+import pipeline.domain.measures as measures
+import pipeline.extern.asizeof as asizeof
 
 
 LOG = infrastructure.get_logger(__name__)
@@ -211,17 +212,6 @@ class SetModel(basetask.StandardTaskTemplate):
         vlainputs = VLAUtils.Inputs(context)
         vlautils = VLAUtils(vlainputs)
         
-        
-        #fields_list = map(str, list(set(itertools.chain.from_iterable(standard_source_fields))))
-        #spws_list = map(str, list(set(itertools.chain.from_iterable(field_spws))))
-        
-        #model_images = [for i in
-        
-        #setjyinputs = setjy.Setjy.Inputs(self.inputs.context,
-        #     field=fields_list, spw=spws_list, modimage=modimage, fluxdensity=-1)
-             
-        
-        
         for i, fields in enumerate(standard_source_fields):
             for myfield in fields:
                 spws = field_spws[myfield]
@@ -241,51 +231,31 @@ class SetModel(basetask.StandardTaskTemplate):
                     LOG.info("Setting model for field "+str(myfield)+" spw "+str(myspw)+" using "+model_image)
                     
                     try:
-                        #LOG.info('Context size: %s' % str(measures.FileSize(asizeof.asizeof(context), measures.FileSizeUnits.BYTES)))
-                        setjy_result = self._do_setjy(str(myfield), str(myspw), model_image, -1)
-                        #Need to add this line back in when calling vla.tasks.setjy
-                        #result.measurements.update(setjy_result.measurements)
-                    except Exception, e:
-                        # something has gone wrong, return an empty result
-                        LOG.error('Unable to complete flux scaling operation')
-                        LOG.exception(e)
-                        return result
-        
-        
-        
-        '''
-        for i, fields in enumerate(standard_source_fields):
-            for myfield in fields:
-                spws = field_spws[myfield]
-                #spws = [1,2,3]
-                for myspw in spws:
-                    reference_frequency = center_frequencies[myspw]
-                    EVLA_band = vlautils.find_EVLA_band(reference_frequency)
-                    LOG.info("Center freq for spw "+str(myspw)+" = "+str(reference_frequency)+", observing band = "+EVLA_band)
-                    model_image = standard_source_names[i] + '_' + EVLA_band + '.im'
-
-                    #Double check, but the fluxdensity=-1 should not matter since
-                    #  the model image take precedence
-                    
-                    LOG.info("Setting model for field "+str(myfield)+" spw "+str(myspw)+" using "+model_image)
-                    
-                    try:
                         LOG.info('Context size: %s' % str(measures.FileSize(asizeof.asizeof(context), measures.FileSizeUnits.BYTES)))
                         setjy_result = self._do_setjy(str(myfield), str(myspw), model_image, -1)
-                        result.measurements.update(setjy_result.measurements)
+                        
                     except Exception, e:
                         # something has gone wrong, return an empty result
                         LOG.error('Unable to complete flux scaling operation')
                         LOG.exception(e)
-                        return result
-        '''        
+                        #return result
+                            
+                    try:
+                        #Need to add this line back in when calling vla.tasks.setjy
+                        result.measurements.update(setjy_result[0].measurements)
+                        #print setjy_result.__dict__
+                    except Exception, e:
+                        LOG.error('Unable to add setjy measurements to the result')
+                        LOG.exception(e)
+                               
         return result
 
     def analyse(self, result):
         return result
 
-    def _do_setjy(self, field, spw, modimage, fluxdensity):
+    def _do_setjy(self, field, spw, model, fluxdensity):
         
+        '''
         task_args = {'vis'            : self.inputs.vis,
                      'field'          : field,
                      'spw'            : spw,
@@ -302,8 +272,13 @@ class SetModel(basetask.StandardTaskTemplate):
         job = casa_tasks.setjy(**task_args)
             
         return self._executor.execute(job)
+        '''
         
-        #setjyinputs = setjy.Setjy.Inputs(self.inputs.context,
-        #     field=field, spw=spw, modimage=modimage, fluxdensity=fluxdensity)
-        #setjytask = setjy.Setjy(setjyinputs)
-        #return self._executor.execute(setjytask, True)
+        setjyinputs = setjy.Setjy.Inputs(self.inputs.context,
+             field=field, spw=spw, model=model, fluxdensity=fluxdensity)
+        setjytask = setjy.Setjy(setjyinputs)
+        setjy_result = self._executor.execute(setjytask, True)
+        
+        #pickle.dump(setjy_result, open("setjy_result.p", "wb"))
+        
+        return setjy_result

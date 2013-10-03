@@ -359,8 +359,7 @@ class Finalcals(basetask.StandardTaskTemplate):
             scan = calibrator_scan_select_string,
             intent = '',
             flagbackup = False,
-            calwt = False,
-            gaincurve = False)
+            calwt = False)
         
         applycal_task = applycal.Applycal(applycal_inputs)
         
@@ -618,8 +617,6 @@ class Finalcals(basetask.StandardTaskTemplate):
                      'gainfield'      : [''],
                      'interp'         : [''],
                      'spwmap'         : [],
-                     'gaincurve'      : False,
-                     'opacity'        : [],
                      'parang'         : False,
                      'async'          : False}
         

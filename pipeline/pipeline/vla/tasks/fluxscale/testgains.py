@@ -191,8 +191,6 @@ class Testgains(basetask.StandardTaskTemplate):
                      'gainfield'    : [''],
                      'interp'       : [''],
                      'spwmap'       : [],
-                     'gaincurve'    : False,
-                     'opacity'      : [],
                      'parang'       : False,
                      'async'        : False}
 
