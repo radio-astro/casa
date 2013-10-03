@@ -84,7 +84,7 @@ void AnnVector::_init(
 }
 
 Vector<MDirection> AnnVector::getEndPoints() const {
-	return _getConvertedDirections();
+	return getConvertedDirections();
 }
 
 ostream& AnnVector::print(ostream &os) const {
@@ -96,7 +96,6 @@ ostream& AnnVector::print(ostream &os) const {
 	_printPairs(os);
 	return os;
 }
-
 
 }
 

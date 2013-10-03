@@ -58,6 +58,7 @@ public:
 
 	typedef vector<float> RGB;
 
+	// The pairs have longitude as the first member and latitude as the second
 	typedef Vector<std::pair<Quantity,Quantity> > Direction;
 
 	enum Type {
@@ -275,6 +276,10 @@ public:
 		ostream& os, const FontStyle fs
 	);
 
+	static ostream& print(
+		ostream& os, const Direction d
+	);
+
 	// Get a list of the user-friendly color names supported
 	static std::list<std::string> colorChoices();
 
@@ -285,9 +290,11 @@ public:
 		return _csys;
 	}
 
-	inline Direction getDirections() const {
-		return _convertedDQs;
-	}
+	// DEPRECATED Please use getConvertedDirections()
+	// the pair elements have longitude as the first member and latitude as the second.
+	// FIXME make this return of vector of MVDirections
+	// Returns the same angles as getConvertedDirections()
+	Direction getDirections() const;
 
 	// get the frequency limits converted to the spectral frame of the coordinate
 	// system of this object. An empty Vector implies all applicable frequencies
@@ -310,6 +317,11 @@ public:
 		const String& dopplerString,
 		const Quantity& restfreq
 	);
+
+	// same as getDirections, only returns proper MDirections
+	inline const Vector<MDirection>& getConvertedDirections() const {
+		return _convertedDirections;
+	}
 
 protected:
 
@@ -353,9 +365,7 @@ protected:
 
 	virtual void _printPairs(ostream& os) const;
 
-	inline const Vector<MDirection>& _getConvertedDirections() const {
-		return _convertedDirections;
-	}
+
 
 	inline const IPosition& _getDirectionAxes() const {
 		return _directionAxes;
@@ -409,7 +419,6 @@ private:
 	map<Keyword, String> _params;
 	Bool _printGlobals;
 	vector<Int> _labelOff;
-    Direction _convertedDQs;
 
 	static Bool _doneUnitInit, _doneColorInit;
 	static map<String, LineStyle> _lineStyleMap;
@@ -433,8 +442,6 @@ private:
 
 	static void _initTypeMap();
 
-
-
 	void _checkAndConvertFrequencies();
 
 	String _printFreqRange() const;
@@ -456,6 +463,10 @@ inline ostream &operator<<(ostream& os, const AnnotationBase::FontStyle& fs) {
 };
 
 inline ostream &operator<<(ostream& os, const map<AnnotationBase::Keyword, String>& x) {
+	return AnnotationBase::print(os, x);
+};
+
+inline ostream &operator<<(ostream& os, const AnnotationBase::Direction x) {
 	return AnnotationBase::print(os, x);
 };
 

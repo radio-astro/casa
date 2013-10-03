@@ -73,7 +73,7 @@ AnnCircle& AnnCircle::operator= (
 
 
 MDirection AnnCircle::getCenter() const {
-	return _getConvertedDirections()[0];
+	return getConvertedDirections()[0];
 }
 
 Quantity AnnCircle::getRadius() const {
@@ -102,7 +102,7 @@ void AnnCircle::_init(const Quantity& xcenter, const Quantity& ycenter) {
 
 	_checkAndConvertDirections(String(__FUNCTION__), _inputCenter);
 
-	Vector<Double> coords = _getConvertedDirections()[0].getAngle("rad").getValue();
+	Vector<Double> coords = getConvertedDirections()[0].getAngle("rad").getValue();
 
 	Vector<Quantity> center(2);
 

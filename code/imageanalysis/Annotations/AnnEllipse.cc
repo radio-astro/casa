@@ -95,7 +95,7 @@ Bool AnnEllipse::operator== (
 }
 
 MDirection AnnEllipse::getCenter() const {
-	return _getConvertedDirections()[0];
+	return getConvertedDirections()[0];
 }
 
 Quantity AnnEllipse::getSemiMajorAxis() const {
@@ -158,7 +158,7 @@ void AnnEllipse::_init(
 
 	_checkAndConvertDirections(String(__FUNCTION__), _inputCenter);
 
-	Vector<Double> coords = _getConvertedDirections()[0].getAngle("rad").getValue();
+	Vector<Double> coords = getConvertedDirections()[0].getAngle("rad").getValue();
 
 	Vector<Quantity> qCenter(2);
 	qCenter[0] = Quantity(coords[0], "rad");

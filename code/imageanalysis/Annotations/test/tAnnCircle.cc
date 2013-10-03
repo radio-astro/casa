@@ -31,6 +31,8 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 
+#include <iomanip>
+
 #include <casa/namespace.h>
 
 int main () {
@@ -293,6 +295,10 @@ int main () {
 					ynew
 				), AipsError
 			);
+			std::pair<Quantity, Quantity>  centerQ = circle.getDirections()[0];
+			AlwaysAssert(near(centerQ.first.getValue("rad"), xnew, 1e-15), AipsError);
+			AlwaysAssert(near(centerQ.second.getValue("rad"), ynew, 1e-15), AipsError);
+
 			TableRecord regionRec = circle.asRecord();
 			QuantumHolder qh;
 			String err;

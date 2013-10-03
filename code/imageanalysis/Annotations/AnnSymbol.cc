@@ -94,7 +94,7 @@ void AnnSymbol::_init(const Quantity& x, const Quantity& y) {
 }
 
 MDirection AnnSymbol::getDirection() const {
-	return _getConvertedDirections()[0];
+	return getConvertedDirections()[0];
 }
 
 AnnSymbol::Symbol AnnSymbol::getSymbol() const {
