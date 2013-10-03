@@ -991,7 +991,6 @@ install ( FILES
           Utilities/dtor.h
           Utilities/ImageProperties.h
           Utilities/Lowlevel.h
-          Utilities/RecordUtils.h
           Utilities/StatusSink.h
           Utilities/StringUtil.h
           Utilities/VOID.h
