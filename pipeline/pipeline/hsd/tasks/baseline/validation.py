@@ -81,7 +81,10 @@ class ValidateLineResults(common.SingleDishResults):
 
     def merge_with_context(self, context):
         super(ValidateLineResults, self).merge_with_context(context)
-        
+        # replace and export datatable to merge updated data with context
+        datatable = self.outcome.pop('datatable')
+        datatable.exportdata(minimal=True)
+
     def _outcome_name(self):
         return ''
 
@@ -110,7 +113,8 @@ class ValidateLineSinglePointing(common.SingleDishTaskTemplate):
         if len(window) != 0:
             LOG.info('Skip clustering analysis since predefined line window is set.')
             outcome = {'lines': [],
-                       'cluster_info': {}}
+                       'cluster_info': {},
+                       'datatable': self.datatable}
             result = ValidateLineResults(task=self.__class__,
                                          success=True,
                                          outcome=outcome)
@@ -159,7 +163,8 @@ class ValidateLineSinglePointing(common.SingleDishTaskTemplate):
                     self.datatable.putcell('MASKLIST',row,detect_signal[0][2])
                     self.datatable.putcell('NOCHANGE',row,False)
         outcome = {'lines': lines,
-                   'cluster_info': {}}
+                   'cluster_info': {},
+                   'datatable': self.datatable}
         result = ValidateLineResults(task=self.__class__,
                                      success=True,
                                      outcome=outcome)
@@ -207,7 +212,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         if len(window) != 0:
             LOG.info('Skip clustering analysis since predefined line window is set.')
             outcome = {'lines': [],
-                       'cluster_info': {}}
+                       'cluster_info': {},
+                       'datatable': self.datatable}
             result = ValidateLineResults(task=self.__class__,
                                          success=True,
                                          outcome=outcome)
@@ -297,7 +303,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         if Npos == 0: 
             #return lines, {}
             outcome = {'lines': [],
-                       'cluster_info': {}}
+                       'cluster_info': {},
+                       'datatable': self.datatable}
             result = ValidateLineResults(task=self.__class__,
                                          success=True,
                                          outcome=outcome)
@@ -469,7 +476,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         LOG.info('Clustering: Merging End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
         
         outcome = {'lines': lines,
-                   'cluster_info': self.cluster_info}
+                   'cluster_info': self.cluster_info,
+                   'datatable': self.datatable}
         result = ValidateLineResults(task=self.__class__,
                                      success=True,
                                      outcome=outcome)

@@ -9,8 +9,9 @@ import time
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.casatools as casatools
+from pipeline.domain import DataTable
 from .. import common
-from .worker import SDBaselineWorker
+from . import maskline
 from .fitting import FittingFactory
 from . import utils
 
@@ -87,7 +88,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
         reduction_group = context.observing_run.reduction_group
         infiles = inputs.infiles
         iflist = inputs.iflist
-        antennalist = inputs.antennalist
+        #antennalist = inputs.antennalist
         pollist = inputs.pollist
         st_names = context.observing_run.st_names
         file_index = [st_names.index(infile) for infile in infiles]
@@ -132,14 +133,22 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 continue
 
                 
-            beam_size = st.beam_size[spwid]
+            #beam_size = st.beam_size[spwid]
             srctype = st.calibration_strategy['srctype']
             _file_index = set(file_index) & set([m.antenna for m in group_desc])
             files = files | _file_index
-            pattern = st.pattern[spwid][pols[0]]
+            #pattern = st.pattern[spwid][pols[0]]
             index_list = numpy.where(numpy.logical_and(ifnos == spwid, srctypes==srctype))[0]
-            worker = SDBaselineWorker(context, iteration, spwid, nchan, beam_size, srctype, list(_file_index), index_list, window, edge, broadline, pattern)
-            (detected_lines, cluster_info) = self._executor.execute(worker, merge=False)
+            maskline_inputs = maskline.MaskLine.Inputs(context, list(_file_index), spwid, iteration, 
+                                                       index_list, window, edge, broadline)
+            maskline_task = maskline.MaskLine(maskline_inputs)
+            maskline_result = self._executor.execute(maskline_task, merge=True)
+            #worker = SDBaselineWorker(context, iteration, spwid, nchan, beam_size, srctype, list(_file_index), index_list, window, edge, broadline, pattern)
+            #(detected_lines, cluster_info) = self._executor.execute(worker, merge=False)
+            detected_lines = maskline_result.outcome['detected_lines']
+            cluster_info = maskline_result.outcome['cluster_info']
+            #datatable.importdata(datatable.plaintable, minimal=False)
+            datatable = DataTable(datatable.plaintable)
 
             #LOG.info('detected_lines=%s'%(detected_lines))
             #LOG.info('cluster_info=%s'%(cluster_info))
