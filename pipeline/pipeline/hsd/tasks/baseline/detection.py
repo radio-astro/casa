@@ -12,19 +12,64 @@ from . import rules
 
 LOG = infrastructure.get_logger(__name__)
 
-class DetectLine(object):
+class DetectLineInputs(common.SingleDishInputs):
+    def __init__(self, context, grid_table, spectra, window=None, edge=None, broadline=None):
+        self._init_properties(vars())
+        
+    @property
+    def window(self):
+        return [] if self._window is None else self._window
+    
+    @window.setter
+    def window(self, value):
+        self._window = value
+        
+    @property
+    def edge(self):
+        return (0,0) if self._edge is None else self._edge
+    
+    @edge.setter
+    def edge(self, value):
+        self._edge = value
+        
+    @property
+    def broadline(self):
+        return False if self._broadline is None else self._broadline
+    
+    @broadline.setter
+    def broadline(self, value):
+        self._broadline = value
+        
+class DetectLineResults(common.SingleDishResults):
+    def __init__(self, task=None, success=None, outcome=None):
+        super(DetectLineResults, self).__init__(task, success, outcome)
+
+    def merge_with_context(self, context):
+        super(DetectLineResults, self).merge_with_context(context)
+        
+    def _outcome_name(self):
+        return ''
+
+class DetectLine(common.SingleDishTaskTemplate):
+    Inputs = DetectLineInputs
     #LineFinder = heuristics.AsapLineFinder
     LineFinder = heuristics.HeuristicsLineFinder
     ThresholdFactor = 3.0
 
-    def __init__(self, datatable):
-        self.datatable = datatable
-        self.lf = self.LineFinder()
+    def __init__(self, inputs):
+        super(DetectLine, self).__init__(inputs)
+        self.line_finder = self.LineFinder()
 
-    def execute(self, grid_table, spectra, window=[], edge=(0, 0), broadline=True, LogLevel='info'):
+    def prepare(self):
         """
         The process finds emission lines and determines protection regions for baselinefit
         """
+        spectra = self.inputs.spectra
+        grid_table = self.inputs.grid_table
+        window = self.inputs.window
+        edge = self.inputs.edge
+        broadline = self.inputs.broadline
+        
         detect_signal = {}
 
         #(nchan,nrow) = spectra.shape
@@ -33,7 +78,7 @@ class DetectLine(object):
         # Pre-Defined Spectrum Window
         if len(window) != 0:
             LOG.info('Skip line detection since line window is set.')
-            tROW = self.datatable.getcol('RA')
+            tRA = self.datatable.getcol('RA')
             tDEC = self.datatable.getcol('DEC')
             for row in xrange(nrow):
                 detect_signal[row] = [tRA[row], tDEC[row], window]
@@ -67,13 +112,13 @@ class DetectLine(object):
 
         # 2011/05/17 TN
         # Switch to use either ASAP linefinder or John's linefinder
-        if self.lf.__class__.__name__ == 'AsapLineFinder':
+        if self.line_finder.__class__.__name__ == 'AsapLineFinder':
             #LF = heuristics.AsapLineFinder()
             ### 2011/05/23 for linefinder2
             Thre = [Threshold, Threshold * sqrt(2)]
             if broadline: (Start, Binning) = (0, 1)
             else: (Start, Binning) = (1, 1)
-        elif self.lf.__class__.__name__ == 'HeuristicsLineFinder':
+        elif self.line_finder.__class__.__name__ == 'HeuristicsLineFinder':
             #LF = heuristics.HeuristicsLineFinder()
             ### 2011/05/23 for linefinder2
             #Thre = [Threshold * self.ThresholdFactor, Threshold * math.sqrt(2) * self.ThresholdFactor]
@@ -95,7 +140,7 @@ class DetectLine(object):
         AvgLimit = [MinFWHM * 16, MinFWHM * 4, MinFWHM]
 
         # Create progress timer
-        Timer = common.ProgressTimer(80, nrow, LogLevel)
+        Timer = common.ProgressTimer(80, nrow, LOG.level)
 
         for row in xrange(nrow):
             # Countup progress timer
@@ -129,7 +174,19 @@ class DetectLine(object):
         del Timer
 
         #LOG.debug('DetectSignal = %s'%(detect_signal))
-        return detect_signal
+        result = DetectLineResults(task=self.__class__,
+                                   success=True,
+                                   outcome=detect_signal)
+                
+        if self.context.subtask_counter is 0: 
+            result.stage_number = self.context.task_counter - 1
+        else:
+            result.stage_number = self.context.task_counter 
+                
+        return result
+    
+    def analyse(self, result):
+        return result
 
     def _detect(self, spectrum, start, end, binning, threshold, box_size, min_nchan, avg_limit, tweak, edge):
         protected = []
@@ -151,13 +208,13 @@ class DetectLine(object):
             LOG.trace('threshold (S/N per channel)=%.1f,' % threshold[y] \
                            + 'min_nchan for detection=%d, running mean box size (in fraction of spectrum)=%s, ' % (min_nchan, box_size[y]) \
                            + 'upper limit for averaging=%s channels, edges to be dropped=[%s, %s]' % (avg_limit[y], EdgeL, EdgeR) )
-            line_ranges = self.lf(spectrum=spectrum,
-                                  threshold=threshold[y], 
-                                  box_size=box_size[y], 
-                                  min_nchan=min_nchan, 
-                                  avg_limit=avg_limit[y], 
-                                  tweak=True,
-                                  edge=(int((EdgeL+Bin-1)/Bin), int((EdgeR+Bin-1)/Bin)))
+            line_ranges = self.line_finder(spectrum=spectrum,
+                                           threshold=threshold[y], 
+                                           box_size=box_size[y], 
+                                           min_nchan=min_nchan, 
+                                           avg_limit=avg_limit[y], 
+                                           tweak=True,
+                                           edge=(int((EdgeL+Bin-1)/Bin), int((EdgeR+Bin-1)/Bin)))
             # len(line_ranges) is twice of number of lines detected
             # since line_ranges is a flat list of left/right edges of 
             # detected line regions. 

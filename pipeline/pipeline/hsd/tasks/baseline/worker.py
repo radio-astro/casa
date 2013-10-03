@@ -11,9 +11,9 @@ import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.basetask as basetask
-from .simplegrid import SimpleGridding
-from .detection import DetectLine
-from .validation import ValidateLine
+from . import simplegrid
+from . import detection
+from . import validation
 from .fitting import FittingFactory
 from . import utils
 from .. import common
@@ -40,6 +40,10 @@ class SDBaselineWorker(object):
 
         if dry_run:
             return [], {}
+        
+        context = self.context
+
+        self._executor = basetask.Executor(context, dry_run)
 
         start_time = time.time()
 
@@ -48,7 +52,6 @@ class SDBaselineWorker(object):
         spwid = self.spwid
         nchan = self.nchan
         beam_size = self.beam_size
-        srctype = self.srctype
         file_index = self.file_index
         index_list = self.index_list
         window = self.window
@@ -73,9 +76,11 @@ class SDBaselineWorker(object):
 
         # simple gridding
         t0 = time.time()
-        simple_grid = SimpleGridding(datatable, spwid, srctype, grid_size, 
-                                     files_to_grid, nplane=3)
-        (spectra, grid_table) = simple_grid.execute()
+        gridding_inputs = simplegrid.SimpleGridding.Inputs(context, file_index, spwid)
+        gridding_task = simplegrid.SimpleGridding(gridding_inputs)
+        gridding_result = self._executor.execute(gridding_task, merge=True)
+        spectra = gridding_result.outcome['spectral_data']
+        grid_table = gridding_result.outcome['grid_table']
         t1 = time.time()
 
         # return empty result if grid_table is empty
@@ -89,8 +94,10 @@ class SDBaselineWorker(object):
 
         # line finding
         t0 = time.time()
-        line_finder = DetectLine(datatable)
-        detect_signal = line_finder.execute(grid_table, spectra, window, edge, broadline)
+        detection_inputs = detection.DetectLine.Inputs(context, grid_table, spectra, window, edge, broadline)
+        line_finder = detection.DetectLine(detection_inputs)
+        detection_result = self._executor.execute(line_finder, merge=True)
+        detect_signal = detection_result.outcome
         t1 = time.time()
 
         LOG.trace('detect_signal=%s'%(detect_signal))
@@ -98,11 +105,13 @@ class SDBaselineWorker(object):
 
         # line validation
         t0 = time.time()
-        line_validator = ValidateLine(datatable)
-        #validator_class = ValidationFactory(observing_pattern)
-        #line_validator = validator_class(datatable)
+        validator_cls = validation.ValidationFactory(observing_pattern)
+        validation_inputs = validator_cls.Inputs(context, grid_table, detect_signal, spwid, index_list, iteration, grid_size, grid_size, window, edge)
+        line_validator = validator_cls(validation_inputs)
         LOG.trace('len(index_list)=%s'%(len(index_list)))
-        lines, cluster_info = line_validator.execute(grid_table, detect_signal, spwid, nchan, index_list, window, observing_pattern, grid_size, grid_size, iteration)
+        validation_result = self._executor.execute(line_validator, merge=True)
+        lines = validation_result.outcome['lines']
+        cluster_info = validation_result.outcome['cluster_info']
         t1 = time.time()
 
         #LOG.debug('lines=%s'%(lines))

@@ -9,65 +9,173 @@ import numpy.linalg as LA
 
 import pipeline.infrastructure as infrastructure
 from . import rules
+from .. import common
 
 LOG = infrastructure.get_logger(__name__)
 
-class ValidateLineSinglePointing(object):
+def ValidationFactory(pattern):
+    if pattern == 'RASTER':
+        return ValidateLineRaster
+    elif pattern == 'SINGLE-POINT' or pattern == 'MULTI-POINT':
+        return ValidateLineSinglePointing
+    else:
+        raise ValueError, 'Invalid observing pattern'
 
-    def __init__(self, datatable):
-        self.datatable = datatable
-        self.cluster_info = {}
+class ValidateLineInputs(common.SingleDishInputs):
+    def __init__(self, context, grid_table, detect_signal, spwid, index_list, iteration, 
+                 grid_ra, grid_dec,
+                 window=None, edge=None, nsigma=None, xorder=None, yorder=None, broad_component=None):
+        self._init_properties(vars())
+        
+    @property
+    def window(self):
+        return [] if self._window is None else self._window
+    
+    @window.setter
+    def window(self, value):
+        self._window = value
+        
+    @property
+    def edge(self):
+        return (0,0) if self._edge is None else self._edge
+    
+    @edge.setter
+    def edge(self, value):
+        self._edge = value
 
-    def execute(self, ResultTable, DetectSignal, vIF, nChan, idxList, GridSpaceRA, GridSpaceDEC, ITER, Nsigma=3.0, Xorder=-1, Yorder=-1, BroadComponent=False, LogLevel=2, LogFile=False, ShowPlot=True, FigFileDir=False, FigFileRoot=False):
+    @property
+    def nsigma(self):
+        return 3.0 if self._nsigma is None else self._nsigma
+    
+    @nsigma.setter
+    def nsigma(self, value):
+        self._nsigma = value
+        
+    @property
+    def xorder(self):
+        return -1 if self._xorder is None else self._xorder
+    
+    @xorder.setter
+    def xorder(self, value):
+        self._xorder = value
+
+    @property
+    def yorder(self):
+        return -1 if self._yorder is None else self._yorder
+    
+    @yorder.setter
+    def yorder(self, value):
+        self._yorder = value
+        
+    @property
+    def broad_component(self):
+        return False if self._broad_component is None else self._broad_component
+    
+    @broad_component.setter
+    def broad_component(self, value):
+        self._broad_component = value
+
+class ValidateLineResults(common.SingleDishResults):
+    def __init__(self, task=None, success=None, outcome=None):
+        super(ValidateLineResults, self).__init__(task, success, outcome)
+
+    def merge_with_context(self, context):
+        super(ValidateLineResults, self).merge_with_context(context)
+        
+    def _outcome_name(self):
+        return ''
+
+class ValidateLineSinglePointing(common.SingleDishTaskTemplate):
+    Inputs = ValidateLineInputs
+
+    def prepare(self):
         """
         ValidateLine class for single-pointing or multi-pointing (collection of 
         fields with single-pointing). Accept all detected lines without 
         clustering analysis.
 
-         DetectSignal = {ID1: [RA, DEC, [[LineStartChannel1, LineEndChannel1],
+         detect_signal = {ID1: [RA, DEC, [[LineStartChannel1, LineEndChannel1],
                                          [LineStartChannel2, LineEndChannel2],
                                          [LineStartChannelN, LineEndChannelN]]],
                          IDn: [RA, DEC, [[LineStartChannel1, LineEndChannel1],
                                          [LineStartChannelN, LineEndChannelN]]]}
 
-        Lines: output parameter
+        lines: output parameter
            [LineCenter, LineWidth, Validity]  OK: Validity = True; NG: Validity = False
         """
+        window = self.inputs.window
+        LOG.debug('window=%s'%(window))
+
+        # for Pre-Defined Spectrum Window
+        if len(window) != 0:
+            LOG.info('Skip clustering analysis since predefined line window is set.')
+            outcome = {'lines': [],
+                       'cluster_info': {}}
+            result = ValidateLineResults(task=self.__class__,
+                                         success=True,
+                                         outcome=outcome)
+                
+            if self.context.subtask_counter is 0: 
+                result.stage_number = self.context.task_counter - 1
+            else:
+                result.stage_number = self.context.task_counter 
+                
+            return result
+
         # Dictionary for final output
-        Lines = []
+        lines = []
 
         LOG.info('Accept all detected lines without clustering analysis.')
 
+        iteration = self.inputs.iteration
+        index_list = self.inputs.index_list
+        detect_signal = self.inputs.detect_signal
+
         # First cycle
-        #if len(ResultTable) == 0:
-        if ITER == 0:
-            for row in idxList:
+        #if len(grid_table) == 0:
+        if iteration == 0:
+            for row in index_list:
                 mask_list = self.datatable.getcell('MASKLIST',row)
                 no_change = self.datatable.getcell('NOCHANGE',row)
-                #LOG.debug('DataTable = %s, DetectSignal = %s, OldFlag = %s' % (mask_list, DetectSignal[row][2], no_change))
-                self.datatable.putcell('MASKLIST',row,DetectSignal[row][2])
+                #LOG.debug('DataTable = %s, detect_signal = %s, OldFlag = %s' % (mask_list, detect_signal[row][2], no_change))
+                self.datatable.putcell('MASKLIST',row,detect_signal[row][2])
                 self.datatable.putcell('NOCHANGE',row,False)
 
         # Iteration case
         else:
-            for row in idxList:
+            for row in index_list:
                 mask_list = self.datatable.getcell('MASKLIST',row)
                 no_change = self.datatable.getcell('NOCHANGE',row)
-                #LOG.debug('DataTable = %s, DetectSignal = %s, OldFlag = %s' % (mask_list, DetectSignal[0][2], no_change))
-                if mask_list == DetectSignal[0][2]:
+                #LOG.debug('DataTable = %s, detect_signal = %s, OldFlag = %s' % (mask_list, detect_signal[0][2], no_change))
+                if mask_list == detect_signal[0][2]:
                     if type(no_change) != int:
                         # 2013/05/17 TN
-                        # Put ITER itself instead to subtract 1 since
+                        # Put iteration itself instead to subtract 1 since
                         # iteration counter is incremented *after* the
                         # baseline subtraction in refactorred code.
-                        #self.datatable.putcell('NOCHANGE',row,ITER - 1)
-                        self.datatable.putcell('NOCHANGE',row,ITER)
+                        #self.datatable.putcell('NOCHANGE',row,iteration - 1)
+                        self.datatable.putcell('NOCHANGE',row,iteration)
                 else:
-                    self.datatable.putcell('MASKLIST',row,DetectSignal[0][2])
+                    self.datatable.putcell('MASKLIST',row,detect_signal[0][2])
                     self.datatable.putcell('NOCHANGE',row,False)
-        return Lines, {}
+        outcome = {'lines': lines,
+                   'cluster_info': {}}
+        result = ValidateLineResults(task=self.__class__,
+                                     success=True,
+                                     outcome=outcome)
+                
+        if self.context.subtask_counter is 0: 
+            result.stage_number = self.context.task_counter - 1
+        else:
+            result.stage_number = self.context.task_counter 
+                
+        return result
+    
+    def analyse(self, result):
+        return result
 
-class ValidateLineRaster(object):
+class ValidateLineRaster(common.SingleDishTaskTemplate):
+    Inputs = ValidateLineInputs
 
     CLUSTER_WHITEN = 1.0
 
@@ -78,26 +186,50 @@ class ValidateLineRaster(object):
     MinFWHM = rules.LineFinderRule['MinFWHM']
     MaxFWHM = rules.LineFinderRule['MaxFWHM']
 
-    def __init__(self, datatable):
-        self.datatable = datatable
-        self.cluster_info = {}
-
-    def execute(self, ResultTable, DetectSignal, vIF, nChan, idxList, GridSpaceRA, GridSpaceDEC, ITER, Nsigma=3.0, Xorder=-1, Yorder=-1, BroadComponent=False, LogLevel=2, LogFile=False, ShowPlot=True, FigFileDir=False, FigFileRoot=False):
+    def prepare(self):
         """
         2D fit line characteristics calculated in Process3
-        Sigma clipping iterations will be applied if Nsigma is positive
+        Sigma clipping iterations will be applied if nsigma is positive
         order < 0 : automatic determination of fitting order (max = 5)
 
-         DetectSignal = {ID1: [RA, DEC, [[LineStartChannel1, LineEndChannel1],
+         detect_signal = {ID1: [RA, DEC, [[LineStartChannel1, LineEndChannel1],
                                          [LineStartChannel2, LineEndChannel2],
                                          [LineStartChannelN, LineEndChannelN]]],
                          IDn: [RA, DEC, [[LineStartChannel1, LineEndChannel1],
                                          [LineStartChannelN, LineEndChannelN]]]}
 
-        Lines: output parameter
+        lines: output parameter
            [LineCenter, LineWidth, Validity]  OK: Validity = True; NG: Validity = False
         """
+        window = self.inputs.window
 
+        # for Pre-Defined Spectrum Window
+        if len(window) != 0:
+            LOG.info('Skip clustering analysis since predefined line window is set.')
+            outcome = {'lines': [],
+                       'cluster_info': {}}
+            result = ValidateLineResults(task=self.__class__,
+                                         success=True,
+                                         outcome=outcome)
+                
+            if self.context.subtask_counter is 0: 
+                result.stage_number = self.context.task_counter - 1
+            else:
+                result.stage_number = self.context.task_counter 
+                
+            return result
+
+        iteration = self.inputs.iteration
+        grid_table = self.inputs.grid_table
+        detect_signal = self.inputs.detect_signal
+        index_list = self.inputs.index_list
+        grid_ra = self.inputs.grid_ra
+        grid_dec = self.inputs.grid_dec
+        nsigma = self.inputs.nsigma
+        broad_component = self.inputs.broad_component
+        xorder = self.inputs.xorder
+        yorder = self.inputs.yorder
+        nchan = self.datatable.getcell('NCHAN', index_list[0])
 
         #Abcissa = self.Abcissa[vIF]
         
@@ -110,19 +242,18 @@ class ValidateLineRaster(object):
         #tDEC = self.datatable.getcol('DEC')
         tSFLAG = self.datatable.getcol('FLAG_SUMMARY')
         
-        TotalLines = 0
+        Totallines = 0
         RMS0 = 0.0
-        #nChan = self.datatable.getcell('NCHAN',idxList[0])
-        #nChan = self.context.observing_run[0].spectral_window[vIF].nchan
-        Lines = []
+        lines = []
+        self.cluster_info = {}
 
         # First cycle
-        #if len(ResultTable) == 0:
-        #    ROWS = idxList
+        #if len(grid_table) == 0:
+        #    ROWS = index_list
         # Iteration case
         #else:
-        #    ROWS = range(len(ResultTable))
-        ROWS = range(len(ResultTable))
+        #    ROWS = range(len(grid_table))
+        ROWS = range(len(grid_table))
 
         # RASTER CASE
         # Read data from Table to generate ID -> RA, DEC conversion table
@@ -130,22 +261,22 @@ class ValidateLineRaster(object):
         dummy = []
         flag = 1
         Npos = 0
-        #MaxLines = 0
+        #Maxlines = 0
         ### 2011/05/13 Calculate median line width
         Width = []
 
         for row in ROWS:
-            #if len(DetectSignal[row][2]) > MaxLines: MaxLines = len(DetectSignal[row][2])
-            #MaxLines = max(MaxLines, len(DetectSignal[row][2]))
+            #if len(detect_signal[row][2]) > Maxlines: Maxlines = len(detect_signal[row][2])
+            #Maxlines = max(Maxlines, len(detect_signal[row][2]))
 
-            if DetectSignal[row][2][0][0] != -1: Npos += 1
+            if detect_signal[row][2][0][0] != -1: Npos += 1
 
-            for line in DetectSignal[row][2]:
+            for line in detect_signal[row][2]:
                 # Check statistics flag added by G.K. 2008/1/17
                 # Bug fix 2008/5/29
-                if (line[0] != line[1]) and ((len(ResultTable) == 0 and tSFLAG[row] == 1) or len(ResultTable) != 0):
-                    #Region.append([row, line[0], line[1], DetectSignal[row][0], DetectSignal[row][1], flag])
-                    Region.append([row, line[0], line[1], DetectSignal[row][0], DetectSignal[row][1], flag])
+                if (line[0] != line[1]) and ((len(grid_table) == 0 and tSFLAG[row] == 1) or len(grid_table) != 0):
+                    #Region.append([row, line[0], line[1], detect_signal[row][0], detect_signal[row][1], flag])
+                    Region.append([row, line[0], line[1], detect_signal[row][0], detect_signal[row][1], flag])
                     ### 2011/05/17 make cluster insensitive to the line width
                     dummy.append([float(line[1] - line[0]) / self.CLUSTER_WHITEN, 0.5 * float(line[0] + line[1])])
                     #dummy.append([float(line[1] - line[0]), (line[0] + line[1]) / 2.0])
@@ -159,50 +290,63 @@ class ValidateLineRaster(object):
         #LOG.debug('dummy = %s' % dummy)
         #LOG.debug('Width = %s' % Width)
         del dummy#, Width
-        #LOG.debug('MaxLines = %s' % MaxLines)
+        #LOG.debug('Maxlines = %s' % Maxlines)
         LOG.debug('Npos = %s' % Npos)
         ###LOG.debug('MedianWidth = %s' % MedianWidth)
         # 2010/6/9 for non-detection
-        if Npos == 0: return Lines, {}
+        if Npos == 0: 
+            #return lines, {}
+            outcome = {'lines': [],
+                       'cluster_info': {}}
+            result = ValidateLineResults(task=self.__class__,
+                                         success=True,
+                                         outcome=outcome)
+                
+            if self.context.subtask_counter is 0: 
+                result.stage_number = self.context.task_counter - 1
+            else:
+                result.stage_number = self.context.task_counter 
+                
+            return result
 
         # 2008/9/20 Dec Effect was corrected
-        PosList = numpy.array([numpy.take(self.datatable.getcol('RA'),idxList),
-                               numpy.take(self.datatable.getcol('DEC'),idxList)])
+        PosList = numpy.array([numpy.take(self.datatable.getcol('RA'),index_list),
+                               numpy.take(self.datatable.getcol('DEC'),index_list)])
         #DecCorrection = 1.0 / math.cos(tDEC[0] / 180.0 * 3.141592653)
         DecCorrection = 1.0 / math.cos(PosList[1][0] / 180.0 * 3.141592653)
-        GridSpaceRA *= DecCorrection
+        grid_ra *= DecCorrection
         # Calculate Parameters for Gridding
-        #PosList = numpy.array([numpy.take(tRA,idxList),
-        #                    numpy.take(tDEC,idxList)])
+        #PosList = numpy.array([numpy.take(tRA,index_list),
+        #                    numpy.take(tDEC,index_list)])
 
         wra = PosList[0].max() - PosList[0].min()
         wdec = PosList[1].max() - PosList[1].min()
         cra = PosList[0].min() + wra/2.0
         cdec = PosList[1].min() + wdec/2.0
-        # 2010/6/11 +1.0 -> +1.01: if wra is n x GridSpaceRA (n is a integer), int(wra/GridSpaceRA) is not n in some cases because of the lack of accuracy.
-        nra = 2 * (int((wra/2.0 - GridSpaceRA/2.0)/GridSpaceRA) + 1) + 1
-        ndec = 2 * (int((wdec/2.0 - GridSpaceDEC/2.0)/GridSpaceDEC) + 1) + 1
-        x0 = cra - GridSpaceRA/2.0 - GridSpaceRA*(nra-1)/2.0
-        y0 = cdec - GridSpaceDEC/2.0 - GridSpaceDEC*(ndec-1)/2.0
+        # 2010/6/11 +1.0 -> +1.01: if wra is n x grid_ra (n is a integer), int(wra/grid_ra) is not n in some cases because of the lack of accuracy.
+        nra = 2 * (int((wra/2.0 - grid_ra/2.0)/grid_ra) + 1) + 1
+        ndec = 2 * (int((wdec/2.0 - grid_dec/2.0)/grid_dec) + 1) + 1
+        x0 = cra - grid_ra/2.0 - grid_ra*(nra-1)/2.0
+        y0 = cdec - grid_dec/2.0 - grid_dec*(ndec-1)/2.0
         LOG.debug('Grid = %d x %d\n' % (nra, ndec))
         self.cluster_info['grid'] = {}
         self.cluster_info['grid']['ra_min'] = x0
         self.cluster_info['grid']['dec_min'] = y0
-        self.cluster_info['grid']['grid_ra'] = GridSpaceRA
-        self.cluster_info['grid']['grid_dec'] = GridSpaceDEC
+        self.cluster_info['grid']['grid_ra'] = grid_ra
+        self.cluster_info['grid']['grid_dec'] = grid_dec
 
         # Create Space for storing the list of spectrum (ID) in the Grid
         # 2013/03/27 TN
-        # Grid2SpectrumID stores index of idxList instead of row numbers 
-        # that are held by idxList.
+        # Grid2SpectrumID stores index of index_list instead of row numbers 
+        # that are held by index_list.
         #Grid2SpectrumID = []
         #for x in range(nra):
         #    Grid2SpectrumID.append([])
         #    for y in range(ndec):
         #        Grid2SpectrumID[x].append([])
         Grid2SpectrumID = [[[] for y in xrange(ndec)] for x in xrange(nra)]
-        for i in range(len(idxList)):
-            Grid2SpectrumID[int((PosList[0][i] - x0)/GridSpaceRA)][int((PosList[1][i] - y0)/GridSpaceDEC)].append(i)
+        for i in range(len(index_list)):
+            Grid2SpectrumID[int((PosList[0][i] - x0)/grid_ra)][int((PosList[1][i] - y0)/grid_dec)].append(i)
 
         ProcEndTime = time.time()
         LOG.info('Clustering: Initialization End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
@@ -212,20 +356,20 @@ class ValidateLineRaster(object):
         ProcStartTime = time.time()
         LOG.info('K-mean Clustering Analaysis Start')
 
-        (Ncluster, BestLines, BestCategory, Region) = self.clustering_analysis(Region, Region2, Nsigma)
+        (Ncluster, Bestlines, BestCategory, Region) = self.clustering_analysis(Region, Region2, nsigma)
 
         ProcEndTime = time.time()
-        #LOG.info('Final: Ncluster = %s, Score = %s, Lines = %s' % (Ncluster, BestScore, Lines))
+        #LOG.info('Final: Ncluster = %s, Score = %s, lines = %s' % (Ncluster, BestScore, lines))
         LOG.info('K-mean Cluster Analaysis End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
 
-        # Sort Lines and Category by LineCenter: Lines[][0]
-        LineIndex = numpy.argsort([line[0] for line in BestLines[:Ncluster]])
-        Lines = [BestLines[i] for i in LineIndex]
+        # Sort lines and Category by LineCenter: lines[][0]
+        LineIndex = numpy.argsort([line[0] for line in Bestlines[:Ncluster]])
+        lines = [Bestlines[i] for i in LineIndex]
 
         ### 2011/05/17 Scaling back the line width
         Region2[:,0] = Region2[:,0] * self.CLUSTER_WHITEN
         for Nc in range(Ncluster):
-            Lines[Nc][1] *= self.CLUSTER_WHITEN
+            lines[Nc][1] *= self.CLUSTER_WHITEN
 
         LineIndex2 = numpy.argsort(LineIndex)
         #for i in range(len(BestCategory)): category[i] = LineIndex2[BestCategory[i]]
@@ -235,7 +379,7 @@ class ValidateLineRaster(object):
         ProcStartTime = time.time()
         LOG.info('Clustering: Detection Stage Start')
 
-        (GridCluster, GridMember) = self.detection_stage(Ncluster, nra, ndec, x0, y0, GridSpaceRA, GridSpaceDEC, category, Region, DetectSignal)
+        (GridCluster, GridMember) = self.detection_stage(Ncluster, nra, ndec, x0, y0, grid_ra, grid_dec, category, Region, detect_signal)
 
         ProcEndTime = time.time()
         LOG.info('Clustering: Detection Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
@@ -244,7 +388,7 @@ class ValidateLineRaster(object):
         ProcStartTime = time.time()
         LOG.info('Clustering: Validation Stage Start')
 
-        (GridCluster, GridMember, Lines) = self.validation_stage(GridCluster, GridMember, Lines, ITER)
+        (GridCluster, GridMember, lines) = self.validation_stage(GridCluster, GridMember, lines, iteration)
         
         ProcEndTime = time.time()
         LOG.info('Clustering: Validation Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
@@ -259,7 +403,7 @@ class ValidateLineRaster(object):
         ProcStartTime = time.time()
         LOG.info('Clustering: Smoothing Stage Start')
 
-        (GridCluster, Lines) = self.smoothing_stage(GridCluster, Lines)
+        (GridCluster, lines) = self.smoothing_stage(GridCluster, lines)
 
         ProcEndTime = time.time()
         LOG.info('Clustering: Smoothing Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
@@ -268,7 +412,7 @@ class ValidateLineRaster(object):
         ProcStartTime = time.time()
         LOG.info('Clustering: Final Stage Start')
 
-        (RealSignal, Lines) = self.final_stage(GridCluster, GridMember, Region, Region2, Lines, category, GridSpaceRA, GridSpaceDEC, BroadComponent, Xorder, Yorder, x0, y0, Nsigma, nChan, Grid2SpectrumID, idxList, PosList)
+        (RealSignal, lines) = self.final_stage(GridCluster, GridMember, Region, Region2, lines, category, grid_ra, grid_dec, broad_component, xorder, yorder, x0, y0, nsigma, nchan, Grid2SpectrumID, index_list, PosList)
 
         ProcEndTime = time.time()
         LOG.info('Clustering: Final Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
@@ -278,9 +422,9 @@ class ValidateLineRaster(object):
         LOG.info('Clustering: Merging Start')
         # RealSignal should have all row's as its key
         tmp_index = 0
-        for row in idxList:
+        for row in index_list:
             if RealSignal.has_key(row):
-                signal = self.__merge_lines(RealSignal[row][2], nChan)
+                signal = self.__merge_lines(RealSignal[row][2], nchan)
             else:
                 signal = [[-1,-1]]
                 #RealSignal[row] = [PosList[0][tmp_index], PosList[1][tmp_index], signal]
@@ -301,16 +445,16 @@ class ValidateLineRaster(object):
             tNOCHANGE = self.datatable.tb2.getcell('NOCHANGE',row)
             #LOG.debug('DataTable = %s, RealSignal = %s' % (tMASKLIST, signal))
             if tMASKLIST == signal:
-                #LOG.debug('No update on row %s: iter is %s'%(row,ITER))
+                #LOG.debug('No update on row %s: iter is %s'%(row,iteration))
                 #if type(tNOCHANGE) != int:
                 if tNOCHANGE < 0:
                     # 2013/05/17 TN
-                    # Put ITER itself instead to subtract 1 since iteration
+                    # Put iteration itself instead to subtract 1 since iteration
                     # counter is incremented *after* baseline subtraction
                     # in refactorred code.
-                    #self.datatable.tb2.putcell('NOCHANGE',row,ITER - 1)
-                    #self.datatable.tb2.putcell('NOCHANGE', row, ITER)
-                    self.datatable.putcell('NOCHANGE', row, ITER)
+                    #self.datatable.tb2.putcell('NOCHANGE',row,iteration - 1)
+                    #self.datatable.tb2.putcell('NOCHANGE', row, iteration)
+                    self.datatable.putcell('NOCHANGE', row, iteration)
             else:
                 #self.datatable.putcell('NOCHANGE',row,False)
                 #self.datatable.tb2.putcell('MASKLIST',row,numpy.array(RealSignal[row][2]))
@@ -324,13 +468,27 @@ class ValidateLineRaster(object):
         ProcEndTime = time.time()
         LOG.info('Clustering: Merging End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
         
-        return Lines, self.cluster_info
+        outcome = {'lines': lines,
+                   'cluster_info': self.cluster_info}
+        result = ValidateLineResults(task=self.__class__,
+                                     success=True,
+                                     outcome=outcome)
+                
+        if self.context.subtask_counter is 0: 
+            result.stage_number = self.context.task_counter - 1
+        else:
+            result.stage_number = self.context.task_counter 
+                
+        return result
+    
+    def analyse(self, result):
+        return result
 
-    def clustering_analysis(self, Region, Region2, Nsigma):
+    def clustering_analysis(self, Region, Region2, nsigma):
         MedianWidth = numpy.median(Region2[:,0])
         LOG.trace('MedianWidth = %s' % MedianWidth)
 
-        #MaxCluster = int(min(rules.ClusterRule['MaxCluster'], max(MaxLines + 1, (Npos ** 0.5)/2)))
+        #MaxCluster = int(min(rules.ClusterRule['MaxCluster'], max(Maxlines + 1, (Npos ** 0.5)/2)))
         MaxCluster = int(rules.ClusterRule['MaxCluster'])
         LOG.info('Maximum number of clusters (MaxCluster) = %s' % MaxCluster)
         # Whiten is no more necessary 2007/2/12
@@ -379,7 +537,7 @@ class ValidateLineRaster(object):
                     # Clear Flag
                     for i in xrange(len(Region)): Region[i][5] = 1
 
-                    # Nsigma clipping/flagging with cluster distance 
+                    # nsigma clipping/flagging with cluster distance 
                     # (set flag to 0)
                     Outlier = 0.0
                     #MaxDistance = []
@@ -387,13 +545,13 @@ class ValidateLineRaster(object):
                         ValueList = distance[(category == Nc).nonzero()[0]]
                         Stddev = ValueList.std()
                         ### 2011/05/17 Strict the threshold
-                        Threshold = ValueList.mean() + Stddev * Nsigma
-                        #Threshold = Stddev * Nsigma
+                        Threshold = ValueList.mean() + Stddev * nsigma
+                        #Threshold = Stddev * nsigma
                         LOG.trace('Cluster Clipping Threshold = %s, Stddev = %s' % (Threshold, Stddev))
                         ### 2011/05/17 clipping iteration
                         #ValueList = ValueList.take((ValueList < Threshold).nonzero())[0]
                         #Stddev = ValueList.std()
-                        #Threshold = Stddev * Nsigma
+                        #Threshold = Stddev * nsigma
                         del ValueList
                         #LOG.debug('Cluster Clipping Threshold = %s, Stddev = %s' % (Threshold, Stddev))
                         for i in ((distance * (category == Nc)) > Threshold).nonzero()[0]:
@@ -405,7 +563,7 @@ class ValidateLineRaster(object):
                     LOG.trace('MemberRate = %f' % MemberRate)
 
                     # Calculate Cluster Characteristics
-                    Lines = []
+                    lines = []
                     for NN in xrange(NclusterNew):
 #                        LineCenterList = []
 #                        LineWidthList = []
@@ -413,7 +571,7 @@ class ValidateLineRaster(object):
 #                            if category[x] == NN and Region[x][5] != 0:
 #                                LineCenterList.append(Region2[x][1])
 #                                LineWidthList.append(Region2[x][0])
-#                        Lines.append([numpy.median(numpy.array(LineCenterList)), numpy.median(numpy.array(LineWidthList)), True, MaxDistance[NN]])
+#                        lines.append([numpy.median(numpy.array(LineCenterList)), numpy.median(numpy.array(LineWidthList)), True, MaxDistance[NN]])
                         MaxDistance = max(distance * ((distance < Threshold) * (category == NN)))
                         # Region2: numpy.array
                         # [[line_center0, line_width0], 
@@ -423,8 +581,8 @@ class ValidateLineRaster(object):
                                    if category[x] == NN and Region[x][5] != 0]
                         properties = Region2.take(indices, axis=0)
                         median_props = numpy.median(properties, axis=0)
-                        Lines.append([median_props[1], median_props[0], True, MaxDistance])
-                    LOG.trace('Lines = %s' % Lines)
+                        lines.append([median_props[1], median_props[0], True, MaxDistance])
+                    LOG.trace('lines = %s' % lines)
 
                     # Rating
                     ### 2011/05/16 modified for line-width variation
@@ -445,14 +603,14 @@ class ValidateLineRaster(object):
                         BestCategory = category.copy()
                         BestCodebook = codebook.copy()
                         BestRegion = Region[:]
-                        BestLines = Lines[:]
+                        Bestlines = lines[:]
                     elif Score < BestScore:
                         BestNcluster = NclusterNew
                         BestScore = Score
                         BestCategory = category.copy()
                         BestCodebook = codebook.copy()
                         BestRegion = Region[:]
-                        BestLines = Lines[:]
+                        Bestlines = lines[:]
                 # TN refactoring
                 # TmpList is no more used.
                 #TmpList.append([NclusterNew, Score, codebook])
@@ -468,38 +626,38 @@ class ValidateLineRaster(object):
         #Ncluster = BestNcluster
         #Region = BestRegion
         #category = BestCategory[:]
-        Lines = [[book[1], book[0], True] for book in BestCodebook[:Ncluster]]
-        LOG.debug('Final: Ncluster = %s, Score = %s, Category = %s, CodeBook = %s, Lines = %s' % (Ncluster, BestScore, category, BestCodebook, Lines))
+        lines = [[book[1], book[0], True] for book in BestCodebook[:Ncluster]]
+        LOG.debug('Final: Ncluster = %s, Score = %s, Category = %s, CodeBook = %s, lines = %s' % (Ncluster, BestScore, category, BestCodebook, lines))
         self.cluster_info['cluster_score'] = [ListNcluster, ListScore]
         self.cluster_info['detected_lines'] = Region2
-        self.cluster_info['cluster_property'] = BestLines
+        self.cluster_info['cluster_property'] = Bestlines
         self.cluster_info['cluster_scale'] = self.CLUSTER_WHITEN
         #SDP.ShowClusterScore(ListNcluster, ListScore, ShowPlot, FigFileDir, FigFileRoot)
-        #SDP.ShowClusterInChannelSpace(Region2, BestLines, self.CLUSTER_WHITEN, ShowPlot, FigFileDir, FigFileRoot)
-        LOG.info('Final: Ncluster = %s, Score = %s, Lines = %s' % (Ncluster, BestScore, Lines))
+        #SDP.ShowClusterInchannelSpace(Region2, Bestlines, self.CLUSTER_WHITEN, ShowPlot, FigFileDir, FigFileRoot)
+        LOG.info('Final: Ncluster = %s, Score = %s, lines = %s' % (Ncluster, BestScore, lines))
 
-        return (BestNcluster, BestLines, BestCategory, BestRegion)
+        return (BestNcluster, Bestlines, BestCategory, BestRegion)
 
-    def detection_stage(self, Ncluster, nra, ndec, x0, y0, GridSpaceRA, GridSpaceDEC, category, Region, DetectSignal):
+    def detection_stage(self, Ncluster, nra, ndec, x0, y0, grid_ra, grid_dec, category, Region, detect_signal):
         # Create Grid Parameter Space (Ncluster * nra * ndec)
         GridCluster = numpy.zeros((Ncluster, nra, ndec), dtype=numpy.float32)
         GridMember = numpy.zeros((nra, ndec))
 
         # Set Cluster on the Plane
-        for row in xrange(len(DetectSignal)):
+        for row in xrange(len(detect_signal)):
             # Check statistics flag added by G.K. 2008/1/17
             # Bug fix 2008/5/29
             #if DataTable[row][DT_SFLAG] == 1:
-            # ResultTable is always created 
-            #if ((len(ResultTable) == 0 and tSFLAG[row] == 1) or len(ResultTable) != 0):
+            # grid_table is always created 
+            #if ((len(grid_table) == 0 and tSFLAG[row] == 1) or len(grid_table) != 0):
                 #print 'nra, ndec, row', nra, ndec, row
-                #print 'GridMember', int((DetectSignal[row][0] - x0)/GridSpaceRA)
-                #print 'GridMember', int((DetectSignal[row][1] - y0)/GridSpaceDEC)
-            GridMember[int((DetectSignal[row][0] - x0)/GridSpaceRA)][int((DetectSignal[row][1] - y0)/GridSpaceDEC)] += 1
+                #print 'GridMember', int((detect_signal[row][0] - x0)/grid_ra)
+                #print 'GridMember', int((detect_signal[row][1] - y0)/grid_dec)
+            GridMember[int((detect_signal[row][0] - x0)/grid_ra)][int((detect_signal[row][1] - y0)/grid_dec)] += 1
         for i in xrange(len(category)):
             if Region[i][5] == 1:
                 try:
-                    GridCluster[category[i]][int((Region[i][3] - x0)/GridSpaceRA)][int((Region[i][4] - y0)/GridSpaceDEC)] += 1.0
+                    GridCluster[category[i]][int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)] += 1.0
                 except IndexError:
                     pass
 
@@ -528,7 +686,7 @@ class ValidateLineRaster(object):
         
         return (GridCluster, GridMember)
 
-    def validation_stage(self, GridCluster, GridMember, Lines, ITER):
+    def validation_stage(self, GridCluster, GridMember, lines, iteration):
                 # Effective if number of spectrum which contains feature belongs to the cluster is greater or equal to the half number of spectrum in the Grid
 
         (Ncluster,nra,ndec) = GridCluster.shape
@@ -541,29 +699,29 @@ class ValidateLineRaster(object):
                     elif GridMember[x][y] == 1 and GridCluster[Nc][x][y] > 0.9:
                         # 2013/05/20 TN
                         # Temporal workaround that line validation fails on
-                        # test data if ITER is consistently handled.
-                        #if ITER == 0: GridCluster[Nc][x][y] = 0.5
+                        # test data if iteration is consistently handled.
+                        #if iteration == 0: GridCluster[Nc][x][y] = 0.5
                         #else: GridCluster[Nc][x][y] = 1.0
                         GridCluster[Nc][x][y] = 1.0
                     # if the size of population is enough large, validate it as a special case 2007/09/05
                     # 2013/05/20 TN
                     # Temporal workaround that line validation fails on
-                    # test data if ITER is consistently handled.
-                    #elif ITER == 0:
+                    # test data if iteration is consistently handled.
+                    #elif iteration == 0:
                     #    GridCluster[Nc][x][y] = max(min(GridCluster[Nc][x][y] / sqrt(GridMember[x][y]) - 1.0, 3.0), GridCluster[Nc][x][y] / float(GridMember[x][y]))
                     else: GridCluster[Nc][x][y] = min(GridCluster[Nc][x][y] / sqrt(GridMember[x][y]), 3.0)
                     #else: GridCluster[Nc][x][y] = max(min(GridCluster[Nc][x][y] / GridMember[x][y]**0.5 - 1.0, 3.0), GridCluster[Nc][x][y] / float(GridMember[x][y]))
                     # normarize validity
                     #else: GridCluster[Nc][x][y] /= float(GridMember[x][y])
 
-            if ((GridCluster[Nc] > self.Questionable)*1).sum() == 0: Lines[Nc][2] = False
+            if ((GridCluster[Nc] > self.Questionable)*1).sum() == 0: lines[Nc][2] = False
 
         threshold = [self.Valid, self.Marginal, self.Questionable]
         self.__update_cluster_flag('validation', GridCluster, threshold, 10)
         
-        return (GridCluster, GridMember, Lines)
+        return (GridCluster, GridMember, lines)
 
-    def smoothing_stage(self, GridCluster, Lines):
+    def smoothing_stage(self, GridCluster, lines):
         # Rating:  [0.0, 0.4, 0.5, 0.4, 0.0]
         #          [0.4, 0.7, 1.0, 0.7, 0.4]
         #          [0.5, 1.0, 6.0, 1.0, 0.5]
@@ -573,7 +731,7 @@ class ValidateLineRaster(object):
         (Ncluster,nra,ndec) = GridCluster.shape
         GridScore = numpy.zeros((2, nra, ndec), dtype=numpy.float32)
         for Nc in xrange(Ncluster):
-            if Lines[Nc][2] != False:
+            if lines[Nc][2] != False:
                 GridScore[:] = 0.0
                 for x in xrange(nra):
                     range_x = range(-min(2,x),0) + range(1,min(3,nra-x))
@@ -616,35 +774,35 @@ class ValidateLineRaster(object):
                 LOG.trace('Score :  GridScore[%s][0] = %s' % (Nc, GridScore[0]))
                 LOG.trace('Rating:  GridScore[%s][1] = %s' % (Nc, GridScore[1]))
                 GridCluster[Nc] = GridScore[0] / GridScore[1]
-            if ((GridCluster[Nc] > self.Questionable)*1).sum() < 0.1: Lines[Nc][2] = False
+            if ((GridCluster[Nc] > self.Questionable)*1).sum() < 0.1: lines[Nc][2] = False
 
         threshold = [self.Valid, self.Marginal, self.Questionable]
         self.__update_cluster_flag('smoothing', GridCluster, threshold, 100)
         
-        return (GridCluster, Lines)
+        return (GridCluster, lines)
 
-    def final_stage(self, GridCluster, GridMember, Region, Region2, Lines, category, GridSpaceRA, GridSpaceDEC, BroadComponent, Xorder, Yorder, x0, y0, Nsigma, nChan, Grid2SpectrumID, idxList, PosList):
+    def final_stage(self, GridCluster, GridMember, Region, Region2, lines, category, grid_ra, grid_dec, broad_component, xorder, yorder, x0, y0, nsigma, nchan, Grid2SpectrumID, index_list, PosList):
                 
         (Ncluster, nra, ndec) = GridCluster.shape
-        Xorder0 = Xorder
-        Yorder0 = Yorder
+        xorder0 = xorder
+        yorder0 = yorder
 
         # Dictionary for final output
         RealSignal = {}
 
-        #HalfGrid = (GridSpaceRA ** 2 + GridSpaceDEC ** 2) ** 0.5 / 2.0
-        HalfGrid = 0.5 * sqrt(GridSpaceRA*GridSpaceRA + GridSpaceDEC*GridSpaceDEC)
+        #HalfGrid = (grid_ra ** 2 + grid_dec ** 2) ** 0.5 / 2.0
+        HalfGrid = 0.5 * sqrt(grid_ra*grid_ra + grid_dec*grid_dec)
 
         LOG.info('Ncluster=%s'%(Ncluster))
         
         # Clean isolated grids
         for Nc in xrange(Ncluster):
             #print '\nNc=', Nc
-            if Lines[Nc][2] != False:
+            if lines[Nc][2] != False:
                 Plane = (GridCluster[Nc] > self.Marginal) * 1
                 if Plane.sum() == 0:
-                    Lines[Nc][2] = False
-                    #print 'Lines[Nc][2] -> False'
+                    lines[Nc][2] = False
+                    #print 'lines[Nc][2] -> False'
                     continue
                 Original = GridCluster[Nc].copy()
                 # Clear GridCluster Nc-th plane
@@ -748,22 +906,22 @@ class ValidateLineRaster(object):
                     # Use the data for fit if GridCluster[Nc][x][y] > self.Valid
                     # Not use for fit but apply the value at the border if GridCluster[Nc][x][y] > self.Marginal
 
-                    # 2009/9/10 duplication of the position was taken into account (BroadComponent=True)
+                    # 2009/9/10 duplication of the position was taken into account (broad_component=True)
                     Bfactor = 1.0
-                    if BroadComponent: Bfactor = 2.0
+                    if broad_component: Bfactor = 2.0
                     # Determine fitting order if not specified
-                    #if Xorder < 0: Xorder0 = min(((numpy.sum(ValidPlane, axis=0) > 0.5)*1).sum() - 1, 5)
-                    #if Yorder < 0: Yorder0 = min(((numpy.sum(ValidPlane, axis=1) > 0.5)*1).sum() - 1, 5)
-                    if Xorder < 0: Xorder0 = int(min(((numpy.sum(ValidPlane, axis=0) > 0.5)*1).sum()/Bfactor - 1, 5))
-                    if Yorder < 0: Yorder0 = int(min(((numpy.sum(ValidPlane, axis=1) > 0.5)*1).sum()/Bfactor - 1, 5))
-                    #if Xorder < 0: Xorder0 = min(max(max(xlist) - min(xlist), 0), 5)
-                    #if Yorder < 0: Yorder0 = min(max(max(ylist) - min(ylist), 0), 5)
-                    LOG.trace('(X,Y)order = (%d, %d)' % (Xorder0, Yorder0))
+                    #if xorder < 0: xorder0 = min(((numpy.sum(ValidPlane, axis=0) > 0.5)*1).sum() - 1, 5)
+                    #if yorder < 0: yorder0 = min(((numpy.sum(ValidPlane, axis=1) > 0.5)*1).sum() - 1, 5)
+                    if xorder < 0: xorder0 = int(min(((numpy.sum(ValidPlane, axis=0) > 0.5)*1).sum()/Bfactor - 1, 5))
+                    if yorder < 0: yorder0 = int(min(((numpy.sum(ValidPlane, axis=1) > 0.5)*1).sum()/Bfactor - 1, 5))
+                    #if xorder < 0: xorder0 = min(max(max(xlist) - min(xlist), 0), 5)
+                    #if yorder < 0: yorder0 = min(max(max(ylist) - min(ylist), 0), 5)
+                    LOG.trace('(X,Y)order = (%d, %d)' % (xorder0, yorder0))
 
                     # clear Flag
                     for i in xrange(len(category)): Region[i][5] = 1
 
-                    if Xorder0 < 0 or Yorder0 < 0:
+                    if xorder0 < 0 or yorder0 < 0:
                         SingularMatrix = True
                         ExceptionLinAlg = False
                     else:
@@ -773,9 +931,9 @@ class ValidateLineRaster(object):
                     while ExceptionLinAlg:
                         FitData = []
                         ### 2011/05/15 One parameter (Width, Center) for each spectra
-                        #Region format:([row, line[0], line[1], DetectSignal[row][0], DetectSignal[row][1], flag])
+                        #Region format:([row, line[0], line[1], detect_signal[row][0], detect_signal[row][1], flag])
                         dummy = [tuple(Region[i][:5]) for i in xrange(len(category))
-                                 if category[i] == Nc and Region[i][5] == 1 and SubPlane[int((Region[i][3] - x0)/GridSpaceRA)][int((Region[i][4] - y0)/GridSpaceDEC)] > self.Valid]
+                                 if category[i] == Nc and Region[i][5] == 1 and SubPlane[int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)] > self.Valid]
                         (Lrow, Lmin, Lmax, LRA, LDEC) = dummy[0]
                         for i in xrange(1,len(dummy)):
                             if Lrow == dummy[i][0]:
@@ -790,20 +948,20 @@ class ValidateLineRaster(object):
                         # make arrays for coefficient calculation
                         # Matrix    MM x A = B  ->  A = MM^-1 x B
                         # It is OK to prepare storage outside the loop 
-                        # since Xorder0 and Yorder0 will not change inside 
-                        # the loop. Whenever Xorder0 or Yorder0 changes, 
+                        # since xorder0 and yorder0 will not change inside 
+                        # the loop. Whenever xorder0 or yorder0 changes, 
                         # exit the loop. See code below.
-                        M0 = numpy.zeros((Xorder0 * 2 + 1) * (Yorder0 * 2 + 1), dtype=numpy.float64)
-                        B0 = numpy.zeros((Xorder0 + 1) * (Yorder0 + 1), dtype=numpy.float64)
-                        B1 = numpy.zeros((Xorder0 + 1) * (Yorder0 + 1), dtype=numpy.float64)
-                        MM0 = numpy.zeros([(Xorder0 + 1) * (Yorder0 + 1), (Xorder0 + 1) * (Yorder0 + 1)], dtype=numpy.float64)
+                        M0 = numpy.zeros((xorder0 * 2 + 1) * (yorder0 * 2 + 1), dtype=numpy.float64)
+                        B0 = numpy.zeros((xorder0 + 1) * (yorder0 + 1), dtype=numpy.float64)
+                        B1 = numpy.zeros((xorder0 + 1) * (yorder0 + 1), dtype=numpy.float64)
+                        MM0 = numpy.zeros([(xorder0 + 1) * (yorder0 + 1), (xorder0 + 1) * (yorder0 + 1)], dtype=numpy.float64)
                         for iteration in xrange(3):
                             LOG.trace('2D Fit Iteration = %d' % iteration)
 
                             ### Commented out three lines 2011/05/15
                             # FitData format: [Width, Center, RA, DEC]
                             #for i in range(len(category)):
-                            #    if category[i] == Nc and Region[i][5] == 1 and SubPlane[int((Region[i][3] - x0)/GridSpaceRA)][int((Region[i][4] - y0)/GridSpaceDEC)] > self.Valid:
+                            #    if category[i] == Nc and Region[i][5] == 1 and SubPlane[int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)] > self.Valid:
                             #        FitData.append((Region2[i][0], Region2[i][1], Region[i][3], Region[i][4]))
 
                             # TN refactoring
@@ -829,18 +987,18 @@ class ValidateLineRaster(object):
                                 (Width, Center, x, y, flag) = FitData[eff]
                                 yk = 1.0
                                 idx = 0
-                                for k in xrange(Yorder0 * 2 + 1):
+                                for k in xrange(yorder0 * 2 + 1):
                                     xjyk = yk
-                                    for j in xrange(Xorder0 * 2 + 1):
+                                    for j in xrange(xorder0 * 2 + 1):
                                         M0[idx] += xjyk
                                         xjyk *= x
                                         idx += 1
                                     yk *= y
                                 yk = 1.0
                                 idx = 0
-                                for k in xrange(Yorder0 + 1):
+                                for k in xrange(yorder0 + 1):
                                     xjyk = yk
-                                    for j in xrange(Xorder0 + 1):
+                                    for j in xrange(xorder0 + 1):
                                         B0[idx] += xjyk * Center
                                         B1[idx] += xjyk * Width
                                         xjyk *= x
@@ -848,13 +1006,13 @@ class ValidateLineRaster(object):
                                     yk *= y
 
                             # make Matrix MM0,MM1 and calculate A0,A1
-                            for K in xrange((Xorder0 + 1) * (Yorder0 + 1)):
-                                k0 = K % (Xorder0 + 1)
-                                k1 = int(K / (Xorder0 + 1))
-                                for J in xrange((Xorder0 + 1) * (Yorder0 + 1)):
-                                    j0 = J % (Xorder0 + 1)
-                                    j1 = int(J / (Xorder0 + 1))
-                                    MM0[J, K] = M0[j0 + k0 + (j1 + k1) * (Xorder0 * 2 + 1)]
+                            for K in xrange((xorder0 + 1) * (yorder0 + 1)):
+                                k0 = K % (xorder0 + 1)
+                                k1 = int(K / (xorder0 + 1))
+                                for J in xrange((xorder0 + 1) * (yorder0 + 1)):
+                                    j0 = J % (xorder0 + 1)
+                                    j1 = int(J / (xorder0 + 1))
+                                    MM0[J, K] = M0[j0 + k0 + (j1 + k1) * (xorder0 * 2 + 1)]
                             ExceptionLinAlg = False
                             try:
                                 A0 = LA.solve(MM0, B0)
@@ -866,11 +1024,11 @@ class ValidateLineRaster(object):
                                 A1 = LA.solve(MM0, B1)
                             #except LinAlgError:
                             except:
-                                if Xorder0 != 0 or Yorder0 != 0:
+                                if xorder0 != 0 or yorder0 != 0:
                                     ExceptionLinAlg = True
-                                    LOG.trace('Xorder0,Yorder0 = %s,%s' % (Xorder0, Yorder0))
-                                    Xorder0 = max(Xorder0 - 1, 0)
-                                    Yorder0 = max(Yorder0 - 1, 0)
+                                    LOG.trace('xorder0,yorder0 = %s,%s' % (xorder0, yorder0))
+                                    xorder0 = max(xorder0 - 1, 0)
+                                    yorder0 = max(yorder0 - 1, 0)
                                 else:
                                     SingularMatrix = True
                                 break
@@ -884,18 +1042,18 @@ class ValidateLineRaster(object):
                             # following clipping stage. So, evalueate Diff 
                             # only once here and reuse it in clipping.
                             for (Width, Center, x, y, flag) in FitData:
-                                (Fit0, Fit1) = _eval_poly(Xorder0+1, Yorder0+1, x, y, A0, A1)
+                                (Fit0, Fit1) = _eval_poly(xorder0+1, yorder0+1, x, y, A0, A1)
                                 Fit0 -= Center
                                 Fit1 -= Width
                                 Diff.append(sqrt(Fit0*Fit0 + Fit1*Fit1))
-                            #if len(Diff) > 1: Threshold = numpy.array(Diff).mean() + numpy.array(Diff).std() * Nsigma
+                            #if len(Diff) > 1: Threshold = numpy.array(Diff).mean() + numpy.array(Diff).std() * nsigma
                             #if len(Diff) > 1:
                             if len(effective) > 1:
                                 npdiff = numpy.array(Diff)[effective]
                                 Threshold = npdiff.mean()
                                 #Threshold += npdiff.std()
-                                Threshold += sqrt(numpy.square(npdiff - Threshold).mean()) * Nsigma
-                            #if len(Diff) > 1: Threshold = numpy.array(Diff).std() * Nsigma
+                                Threshold += sqrt(numpy.square(npdiff - Threshold).mean()) * nsigma
+                            #if len(Diff) > 1: Threshold = numpy.array(Diff).std() * nsigma
                             else: Threshold *= 2.0
                             LOG.trace('Diff = %s' % [Diff[i] for i in effective])
                             LOG.trace('2D Fit Threshold = %s' % Threshold)
@@ -914,17 +1072,17 @@ class ValidateLineRaster(object):
 
                             LOG.trace('2D Fit Flagged/All = (%s, %s)' % (NFlagged, Number))
                             #2009/10/15 compare the number of the remainder and fitting order
-                            if (Number - NFlagged) <= max(Xorder0, Yorder0) or Number == NFlagged:
+                            if (Number - NFlagged) <= max(xorder0, yorder0) or Number == NFlagged:
                                 SingularMatrix = True
                                 break
                     # Iteration End
-                    ### 2011/05/15 Fitting is no longer (Width, Center) but (minChan, maxChan)
+                    ### 2011/05/15 Fitting is no longer (Width, Center) but (minchan, maxChan)
 
                     # FitData: [(Width, Center, RA, DEC)]
                     if not SingularMatrix:
                         FitData = []
                         for i in range(len(category)):
-                            if category[i] == Nc and Region[i][5] == 1 and SubPlane[int((Region[i][3] - x0)/GridSpaceRA)][int((Region[i][4] - y0)/GridSpaceDEC)] > self.Valid:
+                            if category[i] == Nc and Region[i][5] == 1 and SubPlane[int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)] > self.Valid:
                                 #FitData.append((Region2[i][0], Region2[i][1], Region[i][3], Region[i][4]))
                                 FitData.append(tuple(Region2[i][:5]))
                         if len(FitData) == 0: continue
@@ -934,9 +1092,9 @@ class ValidateLineRaster(object):
                             for y in xrange(ndec):
                                 if ValidPlane[x][y] == 1:
                                     for PID in Grid2SpectrumID[x][y]:
-                                        ID = idxList[PID]
-                                        ### 2011/05/15 (Width, Center) -> (minChan, maxChan)
-                                        (Chan1, Chan0) = _eval_poly(Xorder0+1, Yorder0+1, PosList[0][PID], PosList[1][PID], A0, A1) 
+                                        ID = index_list[PID]
+                                        ### 2011/05/15 (Width, Center) -> (minchan, maxChan)
+                                        (Chan1, Chan0) = _eval_poly(xorder0+1, yorder0+1, PosList[0][PID], PosList[1][PID], A0, A1) 
                                         Fit0 = 0.5 * (Chan0 + Chan1)
                                         Fit1 = (Chan1 - Chan0) + 1.0
                                         LOG.trace('Fit0, Fit1 = %s, %s' % (Fit0, Fit1))
@@ -948,10 +1106,10 @@ class ValidateLineRaster(object):
                                             #Allowance = min(Fit1 / 2.0 * 2.0, MaxFWHM / 2.0)
                                             ### 2011/11/22 Allowance is too narrow for new line finding algorithm
                                             Allowance = min(Fit1 + 5.0, self.MaxFWHM / 2.0)
-                                            ### 2011/10/21 left side mask exceeded nChan
-                                            Protect = [min(max(int(Fit0 - Allowance), 0), nChan - 1), min(int(Fit0 + Allowance), nChan - 1)]
+                                            ### 2011/10/21 left side mask exceeded nchan
+                                            Protect = [min(max(int(Fit0 - Allowance), 0), nchan - 1), min(int(Fit0 + Allowance), nchan - 1)]
                                             #Allowance = Fit1 / 2.0 * 1.5
-                                            #Protect = [max(int(Fit0 - Allowance - 0.5), 0), min(int(Fit0 + Allowance + 0.5), nChan - 1)]
+                                            #Protect = [max(int(Fit0 - Allowance - 0.5), 0), min(int(Fit0 + Allowance + 0.5), nchan - 1)]
                                             LOG.trace('0 Allowance = %s Protect = %s' % (Allowance, Protect))
                                             if RealSignal.has_key(ID):
                                                 RealSignal[ID][2].append(Protect)
@@ -962,7 +1120,7 @@ class ValidateLineRaster(object):
                                     # but use the nearest value in Valid Plane
                                     # Search the nearest Valid Grid
                                     Nearest = []
-                                    square_aspect = GridSpaceRA / GridSpaceDEC
+                                    square_aspect = grid_ra / grid_dec
                                     square_aspect *= square_aspect
                                     Dist2 = numpy.inf
                                     for xx in range(nra):
@@ -972,8 +1130,8 @@ class ValidateLineRaster(object):
                                                 if Dist2 > Dist3:
                                                     Nearest = [xx, yy]
                                                     Dist2 = Dist3
-                                    (RA0, DEC0) = (x0 + GridSpaceRA * (x + 0.5), y0 + GridSpaceDEC * (y + 0.5))
-                                    (RA1, DEC1) = (x0 + GridSpaceRA * (Nearest[0] + 0.5), y0 + GridSpaceDEC * (Nearest[1] + 0.5))
+                                    (RA0, DEC0) = (x0 + grid_ra * (x + 0.5), y0 + grid_dec * (y + 0.5))
+                                    (RA1, DEC1) = (x0 + grid_ra * (Nearest[0] + 0.5), y0 + grid_dec * (Nearest[1] + 0.5))
 
                                     # Setup the position near the border
                                     RA2 = RA1 - (RA1 - RA0) * HalfGrid / sqrt(Dist2)
@@ -981,11 +1139,11 @@ class ValidateLineRaster(object):
                                     LOG.trace('[X,Y],[XX,YY] = [%d,%d],%s' % (x,y,Nearest))
                                     LOG.trace('(RA0,DEC0),(RA1,DEC1),(RA2,DEC2) = (%.5f,%.5f),(%.5f,%.5f),(%.5f,%.5f)' % (RA0,DEC0,RA1,DEC1,RA2,DEC2))
                                     # Calculate Fit and apply same value to all the spectra in the Blur Grid
-                                    ### 2011/05/15 (Width, Center) -> (minChan, maxChan)
+                                    ### 2011/05/15 (Width, Center) -> (minchan, maxChan)
                                     # Border case
-                                    #(Chan0, Chan1) = _eval_poly(Xorder0+1, Yorder0+1, RA2, DEC2, A0, A1)
+                                    #(Chan0, Chan1) = _eval_poly(xorder0+1, yorder0+1, RA2, DEC2, A0, A1)
                                     # Center case
-                                    (Chan1, Chan0) = _eval_poly(Xorder0+1, Yorder0+1, RA1, DEC1, A0, A1)
+                                    (Chan1, Chan0) = _eval_poly(xorder0+1, yorder0+1, RA1, DEC1, A0, A1)
                                     Fit0 = 0.5 * (Chan0 + Chan1)
                                     Fit1 = (Chan1 - Chan0)
                                     LOG.trace('Fit0, Fit1 = %s, %s' % (Fit0, Fit1))
@@ -997,14 +1155,14 @@ class ValidateLineRaster(object):
                                         #Allowance = min(Fit1 / 2.0 * 2.0, MaxFWHM / 2.0)
                                         ### 2011/11/22 Allowance is too narrow for new line finding algorithm
                                         Allowance = min(Fit1 + 5.0, self.MaxFWHM / 2.0)
-                                        ### 2011/10/21 left side mask exceeded nChan
-                                        Protect = [min(max(int(Fit0 - Allowance), 0), nChan - 1), min(int(Fit0 + Allowance), nChan - 1)]
+                                        ### 2011/10/21 left side mask exceeded nchan
+                                        Protect = [min(max(int(Fit0 - Allowance), 0), nchan - 1), min(int(Fit0 + Allowance), nchan - 1)]
                                         #Allowance = Fit1 / 2.0 * 1.5
-                                        #Protect = [max(int(Fit0 - Allowance + 0.5), 0), min(int(Fit0 + Allowance + 0.5), nChan - 1)]
+                                        #Protect = [max(int(Fit0 - Allowance + 0.5), 0), min(int(Fit0 + Allowance + 0.5), nchan - 1)]
 
                                         LOG.trace('1 Allowance = %s Protect = %s' % (Allowance, Protect))
                                         for PID in Grid2SpectrumID[x][y]:
-                                            ID = idxList[PID]
+                                            ID = index_list[PID]
                                             if RealSignal.has_key(ID):
                                                 RealSignal[ID][2].append(Protect)
                                             else:
@@ -1012,7 +1170,7 @@ class ValidateLineRaster(object):
                                     else: continue
                     # for Plot
                     if not SingularMatrix: GridCluster[Nc] += BlurPlane
-                if ((GridCluster[Nc] > 0.5)*1).sum() < self.Questionable: Lines[Nc][2] = False
+                if ((GridCluster[Nc] > 0.5)*1).sum() < self.Questionable: lines[Nc][2] = False
                 for x in range(nra):
                     for y in range(ndec):
                         #if GridCluster[Nc][x][y] > 0.5: GridCluster[Nc][x][y] = 1.0
@@ -1024,7 +1182,7 @@ class ValidateLineRaster(object):
         threshold = [1.5, 0.5, 0.5, 0.5]
         self.__update_cluster_flag('final', GridCluster, threshold, 1000)
         
-        return (RealSignal, Lines)
+        return (RealSignal, lines)
 
     def __merge_lines(self, lines, nchan):
         nlines = len(lines)
@@ -1071,53 +1229,6 @@ class ValidateLineRaster(object):
         self.cluster_info['cluster_flag'] = cluster_flag
         self.cluster_info['%s_threshold'%(stage)] = threshold
         
-
-
-def ValidationFactory(pattern):
-    if pattern == 'RASTER':
-        return ValidateLineRaster
-    elif pattern == 'SINGLE-POINT' or pattern == 'MULTI-POINT':
-        return ValidateLineSinglePointing
-    else:
-        raise ValueError, 'Invalid observing pattern'
-            
-class ValidateLine(object):
-    
-    Patterns = {'SINGLE-POINT': ValidateLineSinglePointing,
-                'MULTI-POINT': ValidateLineSinglePointing,
-                'RASTER': ValidateLineRaster}
-
-    def __init__(self, datatable):
-        self.datatable = datatable
-        self.cluster_info = {}
-
-    def execute(self, ResultTable, DetectSignal, vIF, nChan, idxList, SpWin, Pattern, GridSpaceRA, GridSpaceDEC, ITER, Nsigma=3.0, Xorder=-1, Yorder=-1, BroadComponent=False, LogLevel=2, LogFile=False, ShowPlot=True, FigFileDir=False, FigFileRoot=False):
-        """
-        2D fit line characteristics calculated in Process3
-        Sigma clipping iterations will be applied if Nsigma is positive
-        order < 0 : automatic determination of fitting order (max = 5)
-        SpWin: Pre-Defined Spectrum Window
-         DetectSignal = {ID1: [RA, DEC, [[LineStartChannel1, LineEndChannel1],
-                                         [LineStartChannel2, LineEndChannel2],
-                                         [LineStartChannelN, LineEndChannelN]]],
-                         IDn: [RA, DEC, [[LineStartChannel1, LineEndChannel1],
-                                         [LineStartChannelN, LineEndChannelN]]]}
-
-        Lines: output parameter
-           [LineCenter, LineWidth, Validity]  OK: Validity = True; NG: Validity = False
-        """
-
-        # for Pre-Defined Spectrum Window
-        if len(SpWin) != 0:
-            LOG.info('Skip clustering analysis since predefined line window is set.')
-            return SpWin, {}
-
-        # generate worker instance depending on observing pattern
-        worker_cls = self.Patterns[Pattern]
-        worker = worker_cls(self.datatable)
-        return worker.execute(ResultTable, DetectSignal, vIF, nChan, idxList, GridSpaceRA, GridSpaceDEC, ITER, Nsigma=3.0, Xorder=-1, Yorder=-1, BroadComponent=False, LogLevel=2, LogFile=False, ShowPlot=True, FigFileDir=False, FigFileRoot=False)
-        self.cluster_info = worker.cluster_info
-
 def convolve2d( data, kernel, mode='nearest', cval=0.0 ):
     """
     2d convolution function.

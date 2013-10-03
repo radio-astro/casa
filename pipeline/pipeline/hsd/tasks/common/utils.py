@@ -5,6 +5,8 @@ import os
 import numpy
 import contextlib
 
+from logging import CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
+
 LogLevelMap = {'critical': 0,
                'error': 0,
                'warning': 1,
@@ -12,6 +14,14 @@ LogLevelMap = {'critical': 0,
                'debug': 3,
                'todo': 4,
                'trace': 4}
+
+LogLevelMap2 = {'critical': CRITICAL, # 50
+                'error': ERROR,       # 40
+                'warning': WARNING,   # 30
+                'info': INFO,         # 20
+                'debug': DEBUG,       # 10
+                'todo': NOTSET,       # 0
+                'trace': NOTSET }     # 0
 
 def asdm_name(scantable_object):
     """
@@ -44,16 +54,20 @@ class ProgressTimer(object):
         self.maxCount = maxCount
         self.curCount = 0
         self.scale = float(length)/float(maxCount)
-        self.LogLevel = LogLevelMap[LogLevel] if LogLevelMap.has_key(LogLevel) else 2
-        if self.LogLevel <= 2:
+        if isinstance(LogLevel, str):
+            self.LogLevel = LogLevelMap2[LogLevel] if LogLevelMap2.has_key(LogLevel) else INFO
+        else:
+            # should be integer
+            self.LogLevel = LogLevel
+        if self.LogLevel >= INFO:
             print '\n|' + '='*((length-8)/2) + ' 100% ' + '='*((length-8)/2) + '|'
 
     def __del__(self):
-        if self.LogLevel <= 2:
+        if self.LogLevel >= INFO:
             print '\n'
 
     def count(self, increment=1):
-        if self.LogLevel <= 2:
+        if self.LogLevel >= INFO:
             self.curCount += increment
             newLevel = int(self.curCount * self.scale)
             if newLevel != self.currentLevel:
