@@ -283,6 +283,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.imager.defineimage(**self.imager_param)#self.__get_param())
         self.imager.setoptions(ftmachine='sd', gridfunction=self.gridfunction)
         self.imager.setsdoptions(pointingcolumntouse=self.pointingcolumn, convsupport=self.convsupport, truncate=self.truncate, gwidth=self.gwidth, jwidth=self.jwidth, minweight = 0.)
+        #self.imager.setsdoptions(pointingcolumntouse=self.pointingcolumn, convsupport=self.convsupport, truncate=self.truncate, gwidth=self.gwidth, jwidth=self.jwidth, minweight = self.minweight)
         self.imager.makeimage(type='singledish', image=self.outfile)
         weightfile = self.outfile+".weight"
         self.imager.makeimage(type='coverage', image=weightfile)
@@ -312,6 +313,10 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         my_ia.open(weightfile)
         weight_val = my_ia.getchunk()
         valid_pixels = numpy.where(weight_val > 0.0)
+        if valid_pixels == 0:
+            my_ia.close()
+            casalog.post("All pixels weight zero. This indicates no data in MS is in image area. Mask will not be set. Please check your image parameters.","WARN")
+            return
         median_weight = numpy.median(weight_val[valid_pixels])
         casalog.post("Median of weight in the map is %f" % median_weight, \
                      "INFO")

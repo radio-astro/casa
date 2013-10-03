@@ -299,7 +299,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="any" name="scans">
-      <description>A scan or list of scans for which to display solutions.  Default = all.</description>
+      <description>A scan or list of scans for which to display solutions.  Default = all. Does not work with overlay="time".</description>
       <any type="variant" limittypes="int string list"/>
       <value type="string"></value>
     </param>
