@@ -8,6 +8,7 @@ import matplotlib.dates as dates
 import matplotlib.pyplot as pyplot
 import matplotlib.ticker as ticker
 import pylab
+import numpy as np
 
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure as infrastructure
@@ -21,6 +22,7 @@ import pipeline.infrastructure.utils as utils
 LOG = infrastructure.get_logger(__name__)
 DISABLE_PLOTMS = True
 
+ticker.TickHelper.MAXTICKS = 10000
 
 class SummaryDisplayInputs(basetask.StandardInputs):
     def __init__(self, context, vis=None, output=None):
@@ -224,8 +226,6 @@ class ElVsTimeChart(object):
                            parameters={'vis' : self.ms.basename})
 
 
-
-
 class FieldVsTimeChartInputs(basetask.StandardInputs):
     def __init__(self, context, vis=None, output=None):
         self._init_properties(vars())
@@ -249,13 +249,14 @@ class FieldVsTimeChartInputs(basetask.StandardInputs):
 class FieldVsTimeChart(object):
     Inputs = FieldVsTimeChartInputs
 
-    _intent_colours = {'AMPLITUDE'  : 'red',
-                       'ATMOSPHERE' : 'orange',
-                       'BANDPASS'   : 'yellow',
-                       'PHASE'      : 'green',
-                       'POINTING'   : 'blue',
-                       'TARGET'     : 'indigo',
-                       'WVR'        : 'violet',
+    _intent_colours = {'AMPLITUDE'  : 'green',
+                       'ATMOSPHERE' : 'magenta',
+                       'BANDPASS'   : 'red',
+                       'PHASE'      : 'cyan',
+                       'POINTING'   : 'yellow',
+                       'SIDEBAND'   : 'orange',
+                       'TARGET'     : 'blue',
+                       'WVR'        : 'lime',
                        'UNKNOWN'    : 'grey',  }
     
     def __init__(self, inputs):
@@ -263,6 +264,9 @@ class FieldVsTimeChart(object):
 
     def plot(self):
         ms = self.inputs.ms
+
+        obs_start = utils.get_epoch_as_datetime(ms.start_time)
+        obs_end = utils.get_epoch_as_datetime(ms.end_time)
         
         filename = self.inputs.output
         if os.path.exists(filename):
@@ -272,17 +276,10 @@ class FieldVsTimeChart(object):
                                parameters={'vis' : ms.basename})
             return plot
         
-        mt = casatools.measures
-        qt = casatools.quanta
-        
         f = pylab.figure()
         pylab.clf()
         pylab.axes([0.1,0.15,0.8,0.7])
-        start_date = qt.time(mt.getvalue(ms.start_time)['m0'], 
-                             form=['dmy','no_time','clean'])
-
-        datemin = None
-        datemax = None
+        ax = pylab.gca()
 
         for nfield, field in enumerate(ms.fields):
             for scan in [scan for scan in ms.scans
@@ -301,57 +298,28 @@ class FieldVsTimeChart(object):
                     ys = y0
                     ye = y0 + height
                     for colour in colours:
-                        pylab.gca().fill([x0, x1, x1, x0], 
-                                         [ys, ys, ye, ye],
-                                         facecolor=colour, 
-                                         edgecolor=colour)
+                        ax.fill([x0, x1, x1, x0], 
+                                [ys, ys, ye, ye],
+                                facecolor=colour, 
+                                edgecolor=colour)
                         ys += height
                         ye += height
 
-                    datemin = x0 if datemin is None else min(datemin, x0)
-                    datemax = x0 if datemax is None else max(datemax, x1)
+        # set the labelling of the time axis
+        self._set_time_axis(figure=f, ax=ax, datemin=obs_start, datemax=obs_end)
 
-        # set the limits of the plot to whole hours
-        datemin = datemin.replace(minute=0, second=0, microsecond=0)
-        datemax = datemax + datetime.timedelta(hours=1)
-        datemax = datemax.replace(minute=0, second=0, microsecond=0)
-        pylab.gca().set_xlim(datemin, datemax)
-
-        if datemax - datemin < datetime.timedelta(1, 0, 0):
-            # scales if observation spans less than a day
-            hours = dates.HourLocator(interval=1)
-            minutes = dates.MinuteLocator(interval=10)
-            pylab.gca().xaxis.set_major_locator(hours)
-            pylab.gca().xaxis.set_major_formatter(dates.DateFormatter('%Hh%Mm'))
-            pylab.gca().xaxis.set_minor_locator(minutes)
-
-            pylab.gca().set_xlabel('Time (after start %s)' % start_date)        
-        else:    
-            # spans more than a day
-            days = dates.DayLocator()
-            hours = dates.HourLocator()
-            pylab.gca().xaxis.set_major_locator(days)
-            pylab.gca().xaxis.set_major_formatter(dates.DateFormatter('%Y-%m-%d:%Hh'))
-            pylab.gca().xaxis.set_minor_locator(hours)
-
-            pylab.gca().set_xlabel('Time')        
-
-        f.autofmt_xdate()
-
-        # set FIELD_ID axis to have integer ticks
-        majorLocator = ticker.MultipleLocator(1)
-        pylab.gca().yaxis.set_major_locator(majorLocator)
-        pylab.gca().yaxis.set_minor_locator(ticker.NullLocator())
+        # set FIELD_ID axis ticks etc.
+        if nfield < 11:
+            majorLocator = ticker.FixedLocator(np.arange(0, nfield+1))
+        else:
+            majorLocator = ticker.FixedLocator(np.arange(0, nfield+1, 5))
+        ax.yaxis.set_major_locator(majorLocator)
+        ax.yaxis.set_minor_locator(ticker.MultipleLocator(1))
+        ax.grid(True)
 
         pylab.ylabel('Field ID')
         majorFormatter = ticker.FormatStrFormatter('%d')
-        pylab.gca().yaxis.set_major_formatter(majorFormatter)
-
-        # could use field name but the field names can be truncated by falling 
-        # off the left-hand side of the plot. Needs some work with axes..
-#        pylab.ylabel('Field')
-#        locs, _ = pylab.yticks()
-#        pylab.yticks(locs, [ms.get_field(loc).name for loc in locs])
+        ax.yaxis.set_major_formatter(majorFormatter)
 
         # plot key
         self._plot_key()
@@ -367,7 +335,6 @@ class FieldVsTimeChart(object):
         
         return plot
 
-    
     def _plot_key(self):
         pylab.axes([0.1,0.8,0.8,0.2])
         lims = pylab.axis()
@@ -392,6 +359,50 @@ class FieldVsTimeChart(object):
         if not colours:
             colours.append(self._intent_colours['UNKNOWN'])
         return colours
+
+    @staticmethod
+    def _set_time_axis(figure, ax, datemin, datemax):
+        border = datetime.timedelta(minutes=5)
+        ax.set_xlim(datemin-border, datemax+border)
+
+        if datemax - datemin < datetime.timedelta(seconds=7200):
+            # scales if observation spans less than 2 hours
+            quarterhours = dates.MinuteLocator(interval=15)
+            minutes = dates.MinuteLocator(interval=5)
+            ax.xaxis.set_major_locator(quarterhours)
+            ax.xaxis.set_major_formatter(dates.DateFormatter('%Hh%Mm'))
+            ax.xaxis.set_minor_locator(minutes)
+        elif datemax - datemin < datetime.timedelta(seconds=21600):
+            # scales if observation spans less than 6 hours
+            halfhours = dates.MinuteLocator(interval=30)
+            minutes = dates.MinuteLocator(interval=10)
+            ax.xaxis.set_major_locator(halfhours)
+            ax.xaxis.set_major_formatter(dates.DateFormatter('%Hh%Mm'))
+            ax.xaxis.set_minor_locator(minutes)
+        elif datemax - datemin < datetime.timedelta(days=1):
+            # scales if observation spans less than a day
+            hours = dates.HourLocator(interval=1)
+            minutes = dates.MinuteLocator(interval=10)
+            ax.xaxis.set_major_locator(hours)
+            ax.xaxis.set_major_formatter(dates.DateFormatter('%Hh%Mm'))
+            ax.xaxis.set_minor_locator(minutes)
+        elif datemax - datemin < datetime.timedelta(days=7):
+            # spans more than a day, less than a week
+            days = dates.DayLocator()
+            hours = dates.HourLocator(np.arange(0,25,6))
+            ax.xaxis.set_major_locator(days)
+            ax.xaxis.set_major_formatter(dates.DateFormatter('%Y-%m-%d:%Hh'))
+            ax.xaxis.set_minor_locator(hours)
+        else:    
+            # spans more than a week
+            months = dates.MonthLocator(bymonthday=1, interval=3)
+            mondays = dates.WeekdayLocator(dates.MONDAY)
+            ax.xaxis.set_major_locator(months)
+            ax.xaxis.set_major_formatter(dates.DateFormatter('%Y-%m'))
+            ax.xaxis.set_minor_locator(mondays)
+
+        ax.set_xlabel('Time')
+        figure.autofmt_xdate()
 
 
 class IntentVsTimeChartInputs(basetask.StandardInputs):
@@ -424,7 +435,7 @@ class IntentVsTimeChart(object):
                        'POINTING'   : ('yellow', 25),
                        'SIDEBAND'   : ('orange', 30),
                        'TARGET'     : ('blue', 0),
-                       'WVR'        : ('violet', 35)}
+                       'WVR'        : ('lime', 35)}
     
     def __init__(self, inputs):
         self.inputs = inputs
@@ -439,30 +450,33 @@ class IntentVsTimeChart(object):
         ms = self.inputs.ms        
         obs_start = utils.get_epoch_as_datetime(ms.start_time)
         obs_end = utils.get_epoch_as_datetime(ms.end_time)
-        obs_duration = obs_end - obs_start
     
         for scan in ms.scans:
-            scan_start = self._in_minutes(
-                    utils.get_epoch_as_datetime(scan.start_time) - obs_start)
-            scan_end = self._in_minutes(
-                    utils.get_epoch_as_datetime(scan.end_time) - obs_start)
-            scan_duration = scan_end - scan_start
+            scan_start = utils.get_epoch_as_datetime(scan.start_time)
+            scan_end = utils.get_epoch_as_datetime(scan.end_time)
             for intent in scan.intents:
                 if intent not in IntentVsTimeChart._intent_colours:
                     continue
                 (colour, scan_y) = IntentVsTimeChart._intent_colours[intent]
-                ax.broken_barh([(scan_start, scan_duration)], (scan_y, 5), 
-                               facecolors=colour)
+                ax.fill([scan_start, scan_end, scan_end, scan_start], 
+                        [scan_y, scan_y, scan_y+5, scan_y+5],
+                        facecolor=colour)
+
                 ax.annotate('%s' % scan.id, (scan_start, scan_y+6))
     
         ax.set_ylim(0, 42.5)
-        ax.set_xlim(-1, self._in_minutes(obs_duration)+1)
-        ax.set_xlabel('Minutes since start of observation')
         ax.set_yticks([2.5,7.5,12.5,17.5,22.5,27.5,32.5,37.5])
-        ax.set_yticklabels(['SCIENCE', 'PHASE', 'BANDPASS', 'AMPLITUDE', 'ATMOSPHERE', 'POINTING', 'SIDEBAND', 'WVR'])
+        ax.set_yticklabels(['SCIENCE', 'PHASE', 'BANDPASS', 'AMPLITUDE',
+          'ATMOSPHERE', 'POINTING', 'SIDEBAND', 'WVR'])
+
+        # set the labelling of the time axis
+        FieldVsTimeChart._set_time_axis(figure=fig, ax=ax, datemin=obs_start,
+          datemax=obs_end)
         ax.grid(True)
     
-        pyplot.title('Measurement set: '+ ms.basename +' - Start time:'+obs_start.strftime('%Y-%m-%dT%H:%M:%S') + ' End time:'+obs_end.strftime('%Y-%m-%dT%H:%M:%S'), fontsize = 12)
+        pyplot.title('Measurement set: ' + ms.basename + ' - Start time:' +
+          obs_start.strftime('%Y-%m-%dT%H:%M:%S') + ' End time:' + 
+          obs_end.strftime('%Y-%m-%dT%H:%M:%S'), fontsize = 12)
     
         fig.savefig(self.inputs.output)
         pylab.close()
@@ -478,7 +492,6 @@ class IntentVsTimeChart(object):
                            x_axis='Time',
                            y_axis='Intent',
                            parameters={'vis' : self.inputs.ms.basename})
-
 
 
 class PWVChart(object):
