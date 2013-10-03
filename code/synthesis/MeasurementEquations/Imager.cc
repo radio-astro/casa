@@ -3115,7 +3115,7 @@ Bool Imager::makeimage(const String& type, const String& image,
 	  msunit = dataColDesc.keywordSet().asString("UNIT");
       }
     } else if ( ms_p->tableDesc().isColumn("FLOAT_DATA")) {
-      msunit = ms_p->columnUnit(MS::DATA);
+      msunit = ms_p->columnUnit(MS::FLOAT_DATA);
       if (msunit == String("")) {
 	ColumnDesc dataColDesc(ms_p->tableDesc().columnDesc("FLOAT_DATA"));
 	if (dataColDesc.keywordSet().isDefined("UNIT"))

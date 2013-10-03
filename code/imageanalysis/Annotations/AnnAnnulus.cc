@@ -101,7 +101,7 @@ Bool AnnAnnulus::operator==(const AnnAnnulus& other) {
 
 
 MDirection AnnAnnulus::getCenter() const {
-	return _getConvertedDirections()[0];
+	return getConvertedDirections()[0];
 }
 
 Vector<Quantity> AnnAnnulus::getRadii() const {
@@ -138,7 +138,7 @@ void AnnAnnulus::_init() {
 
 	_checkAndConvertDirections(String(__FUNCTION__), inputCenter);
 
-	Vector<Double> coords = _getConvertedDirections()[0].getAngle("rad").getValue();
+	Vector<Double> coords = getConvertedDirections()[0].getAngle("rad").getValue();
 
 	Vector<Quantity> qCenter(2);
 	qCenter[0] = Quantity(coords[0], "rad");
@@ -148,7 +148,6 @@ void AnnAnnulus::_init() {
 	WCDifference annulus(outer, inner);
 	_setDirectionRegion(annulus);
 	_extend();
-
 }
 
 }

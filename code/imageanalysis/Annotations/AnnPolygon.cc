@@ -167,7 +167,7 @@ AnnPolygon& AnnPolygon::operator= (
 }
 
 Vector<MDirection> AnnPolygon::getCorners() const {
-	return _getConvertedDirections();
+	return getConvertedDirections();
 }
 
 ostream& AnnPolygon::print(ostream &os) const {
@@ -189,7 +189,7 @@ void AnnPolygon::worldVertices(vector<Quantity>& x, vector<Quantity>& y) const {
 	const IPosition dirAxes = _getDirectionAxes();
 	String xUnit = csys.worldAxisUnits()[dirAxes[0]];
 	String yUnit = csys.worldAxisUnits()[dirAxes[1]];
-	Vector<MDirection> corners = _getConvertedDirections();
+	Vector<MDirection> corners = getConvertedDirections();
 	x.resize(corners.size());
 	y.resize(corners.size());
 	for (uInt i=0; i<corners.size(); i++) {
@@ -345,7 +345,7 @@ void AnnPolygon::_init() {
 	_checkAndConvertDirections(String(__FUNCTION__), corners);
 	Vector<Double> xv(_origXPos.size()), yv(_origYPos.size());
 	for (uInt i=0; i<xv.size(); i++) {
-		Vector<Double> coords = _getConvertedDirections()[i].getAngle("rad").getValue();
+		Vector<Double> coords = getConvertedDirections()[i].getAngle("rad").getValue();
 		xv[i] = coords[0];
 		yv[i] = coords[1];
 	}

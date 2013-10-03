@@ -80,9 +80,8 @@ void AnnText::_init(const Quantity& x, const Quantity& y) {
 	);
 }
 
-
 MDirection AnnText::getDirection() const {
-	return _getConvertedDirections()[0];
+	return getConvertedDirections()[0];
 }
 
 String AnnText::getText() const {
@@ -96,7 +95,6 @@ ostream& AnnText::print(ostream &os) const {
 	_printPairs(os);
 	return os;
 }
-
 
 }
 

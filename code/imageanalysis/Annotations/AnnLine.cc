@@ -85,7 +85,7 @@ AnnLine& AnnLine::operator= (
 }
 
 Vector<MDirection> AnnLine::getEndPoints() const {
-	return _getConvertedDirections();
+	return getConvertedDirections();
 }
 
 ostream& AnnLine::print(ostream &os) const {

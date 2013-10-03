@@ -927,6 +927,15 @@ ostream& AnnotationBase::print(
 	return os;
 }
 
+ostream& AnnotationBase::print(
+	ostream& os, const Direction d
+) {
+	for (uInt i=0; i<d.size(); i++) {
+		os << i << ": " << d[i].first << ", " << d[i].second << endl;
+	}
+	return os;
+}
+
 void AnnotationBase::_printPairs(ostream &os) const {
 	map<Keyword, String> x = _params;
 	if (! _printGlobals) {
@@ -1019,10 +1028,6 @@ void AnnotationBase::_checkAndConvertDirections(
 	const String& origin, const AnnotationBase::Direction& quantities
 ) {
 	_checkMixed(origin, quantities);
-	_convertedDQs.resize(quantities.size());
-	_convertedDQs = quantities;
-	String xUnit = _csys.worldAxisUnits()[_directionAxes[0]];
-	String yUnit = _csys.worldAxisUnits()[_directionAxes[1]];
 
 	MDirection::Types csysDirectionRefFrame = _csys.directionCoordinate().directionType(False);
 	Bool needsConverting = _directionRefFrame != csysDirectionRefFrame;
@@ -1031,28 +1036,25 @@ void AnnotationBase::_checkAndConvertDirections(
 		_convertedDirections[i] = _directionFromQuantities(quantities(i).first, quantities(i).second);
 		if (needsConverting) {
 			_convertedDirections[i] = MDirection::Convert(_convertedDirections[i], csysDirectionRefFrame)();
-			Vector<Double> dv = _convertedDirections[i].getAngle(xUnit).getValue();
-			Quantity longitude(dv[0], xUnit);
-			Quantity latitude(dv[1], xUnit);
-			if (xUnit != yUnit) {
-				latitude.convert(yUnit);
-			}
-			_convertedDQs[i] = std::pair<Quantity, Quantity>(
-				latitude, longitude
-			);
-		}
-		else {
-			if (_convertedDQs[i].first.getUnit() != xUnit) {
-				_convertedDQs[i].first.convert(xUnit);
-			}
-			if (_convertedDQs[i].second.getUnit() != yUnit) {
-				_convertedDQs[i].second.convert(yUnit);
-			}
 		}
 	}
 	// check this now because if converting from world to pixel fails when
 	// regions are being formed, it will wreak havoc
+
 	_testConvertToPixel();
+}
+
+AnnotationBase::Direction AnnotationBase::getDirections() const {
+	Direction res(_convertedDirections.size());
+	for (uInt i=0; i<res.size(); i++) {
+		Quantum<Vector<Double> > angles = _convertedDirections[i].getAngle();
+		String unit = angles.getUnit();
+		Vector<Double> vals = angles.getValue();
+		res[i].first = Quantity(vals[0], unit);
+		res[i].second = Quantity(vals[1], unit);
+
+	}
+	return res;
 }
 
 void AnnotationBase::_initColors() {

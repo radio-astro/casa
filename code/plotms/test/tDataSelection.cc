@@ -36,7 +36,6 @@
 
 int main(int /*argc*/, char** /*argv[]*/) {
 
-	bool showGui = true;
 
 	//Path for data
 	String dataPath = tUtil::getFullPath( "pm_ngc5921.ms");
@@ -44,7 +43,6 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
     // Set up plotms object.
     PlotMSApp app(false, false );
-    app.showGUI( showGui );
 
     // Set up parameters for plot.
     PlotMSPlotParameters plotParams = PlotMSOverPlot::makeParameters(&app);
@@ -71,7 +69,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool ok = app.save(format, interactive );
 	cout << "tDataSelection - result of save="<<ok<<endl;
     
-	bool okOutput = tUtil::checkFile( outFile, 80000, 90000, -1 );
+	bool okOutput = tUtil::checkFile( outFile, 70000, 80000, -1 );
 	cout << "tDataSelection - result of first saved file check="<<okOutput<<endl;
 	if ( okOutput ){
 		cout << "tDataSelection Pass!"<<endl;
@@ -79,6 +77,6 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	else {
 		cout << "tDataSelection Fail!"<<endl;
 	}
-	return tUtil::exitMain( showGui );
+	return tUtil::exitMain( false );
 }
 
