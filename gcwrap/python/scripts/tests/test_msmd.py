@@ -424,6 +424,10 @@ class msmd_test(unittest.TestCase):
         """ Test nfields()"""
         self.assertTrue(self.md.nfields() == 6)
      
+    def test_nobservations(self):
+        """ Test nfields()"""
+        self.assertTrue(self.md.nobservations() == 1)
+     
     def test_nscans(self):
         """ Test nscans()"""
         self.assertTrue(self.md.nscans() == 32)

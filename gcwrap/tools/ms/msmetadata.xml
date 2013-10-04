@@ -770,6 +770,19 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
+        <method type="function" name="nobservations">
+            <shortdescription>Get the number of observations associated with the MS from the OBSERVATIONS table.</shortdescription>
+            <returns type="int"/>
+            <description>
+                Get the number of observations associated with the MS from the OBSERVATIONS table.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    number_of_obs_ids = msmd.nobservations()
+    msmd.done()
+            </example>
+        </method>
+        
         <method type="function" name="nspw">
             <shortdescription>Get the number of spectral windows associated with the MS.</shortdescription>
             <input>

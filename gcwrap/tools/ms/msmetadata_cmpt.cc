@@ -609,6 +609,13 @@ int msmetadata::nfields() {
 
 }
 
+int msmetadata::nobservations() {
+	_FUNC(
+		return _msmd->nObservations();
+	)
+	return 0;
+}
+
 int msmetadata::nscans() {
 	_FUNC(
 		return _msmd->nScans();
