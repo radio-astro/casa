@@ -38,6 +38,7 @@
 #include <synthesis/MSVis/VisBuffer2.h>
 
 #include <boost/noncopyable.hpp>
+#include <boost/tuple/tuple.hpp>
 #include <map>
 #include <vector>
 
@@ -61,7 +62,6 @@ class ChannelSelectorCache;
 class SpectralWindowChannelsCache;
 class SpectralWindowChannels;
 class SubtableColumns;
-
 
 // <summary>
 // VisibilityIterator2 iterates through one or more readonly MeasurementSets
@@ -579,6 +579,8 @@ public:
 
 protected:
 
+    typedef boost::tuple <Vector<Int>, Vector<Int>, Vector<Int>, Vector<Int> > ChannelInfo;
+
     void addDataSelection (const MeasurementSet & ms);
 
     void allSpectralWindowsSelected (Vector<Int> & spectralWindows,
@@ -608,10 +610,16 @@ protected:
     const ChannelSelector *
     createDefaultChannelSelector (Double time, Int msId, Int spectralWindowId);
 
-    virtual const vi::ChannelSelector * determineChannelSelection (Double time);
+    virtual const vi::ChannelSelector * determineChannelSelection (Double time, Int spectralWindowId = -1) const;
 
     Slice findChannelsInRange (Double lowerFrequency, Double upperFrequency,
-                               const vi::SpectralWindowChannels & spectralWindowChannels);
+                               const vi::SpectralWindowChannels & spectralWindowChannels) const;
+
+    ChannelInfo
+    getChannelInformation(Bool now) const;
+
+    ChannelInfo
+    getChannelInformationUsingFrequency (Bool now) const;
 
     // Methods to get the data out of a table column according to whatever selection
     // criteria (e.g., slicing) is in effect.
@@ -665,11 +673,11 @@ protected:
     vi::ChannelSelector *
     makeChannelSelectorC (const FrequencySelection & selection,
                           Double time, Int msId, Int spectralWindowId,
-                          Int polarizationId);
+                          Int polarizationId) const;
 
     vi::ChannelSelector *
     makeChannelSelectorF (const FrequencySelection & selection,
-                          Double time, Int msId, Int spectralWindowId);
+                          Double time, Int msId, Int spectralWindowId) const;
 
     MFrequency::Convert makeFrequencyConverter (Double time, Int otherFrameOfReference,
                                                 Bool toObservedFrame) const;
@@ -705,7 +713,6 @@ protected:
     // probably forgot to apply the changes.
 
     virtual void throwIfPendingChanges ();
-
 
     // Returns true if the named column uses a tiled data manager in the specified MS
 
