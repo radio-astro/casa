@@ -107,6 +107,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
          This is likely not the best choice, so you are encouraged to 
          measure RMS yourself in an off-source region using the viewer.
 
+    dryrun=True is an advanced technical mode only useful for interferometric 
+         (not single dish) data. 
+
     -------------------------------
     Output produced: (not all will always exist, depending on input parameters)
     To support different runs with different arrays, the names have the
@@ -357,8 +360,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>True</value>
     </param>
 
-    <param type="bool" name="dryrun">
-      <description>only print information about cleaning, not run it [experimental]</description>
+    <param type="bool" name="dryrun" visibility="hidden">
+      <description>only print information [experimental; only for interfermetric data]</description>
       <value>False</value>
     </param>
 
