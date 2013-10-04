@@ -689,6 +689,8 @@ Bool MSTransformDataHandler::getCorrMaps(	MSSelection& mssel,
 											Vector<Vector<Int> >& outToIn,
 											const Bool areSelecting)
 {
+
+	// ?? This always returns true!!!?!!
 	Bool cando = true;
 
 	// The total number of polids
@@ -697,7 +699,6 @@ Bool MSTransformDataHandler::getCorrMaps(	MSSelection& mssel,
 	// Nominally empty selection for all polids
 	outToIn.resize(npol);
 	outToIn.set(Vector<Int> ());
-
 	if (areSelecting)
 	{
 		// Get the corr indices as an ordered map
@@ -758,8 +759,8 @@ Bool MSTransformDataHandler::makeMSBasicStructure(	String& msname,
 	// Watch out!  This throws an AipsError if ms_p doesn't have the requested columns.
 	const Vector<MS::PredefinedColumns> colNamesTok = parseColumnNames(colname,ms_p);
 
-	if (!makeSelection())
-//	if (!makeSelectionNew())
+//	if (!makeSelection())
+	if (!makeSelectionNew())
 	{
 		ms_p = MeasurementSet();
 		return False;
@@ -1581,8 +1582,8 @@ Bool MSTransformDataHandler::fillSubTables(const Vector<MS::PredefinedColumns>& 
 
 
 	timer.mark();
-	if (!fillDDTables()) return False;
-//	if (!fillDDTablesNew()) return False;
+//	if (!fillDDTables()) return False;
+	if (!fillDDTablesNew()) return False;
 	os << LogIO::DEBUG1 << "fillDDTables took " << timer.real() << "s." << LogIO::POST;
 
 	// SourceIDs need to be re-mapped around here
