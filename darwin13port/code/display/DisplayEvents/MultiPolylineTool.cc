@@ -64,22 +64,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// finish building the polygon...
 		// could still be needed for flagging measurement sets...
 		if ( ev.modifiers( ) & Display::KM_Double_Click )  {
-			if ( memory::nullptr.check(building_polyline) == false ) {
+			if ( memory::anullptr.check(building_polyline) == false ) {
 				// upon double-click close polyline if there are at least 2 vertices...
 				// otherwise, add another vertex...
 				if ( building_polyline->numVertices( ) >= 2 ) {
 					// greater than 3 because the last vertex is pre-loaded
 					// and adjusted as the user moves the mouse...
 					building_polyline->polylineComplete( );
-					building_polyline = memory::nullptr;
+					building_polyline = memory::anullptr;
 
 					// avoid degenerate polygons...
-					if ( memory::nullptr.check(creating_region) == false ) {
+					if ( memory::anullptr.check(creating_region) == false ) {
 						if ( creating_region->degenerate( ) ) {
 							viewer::Region *nix = creating_region.get( );
 							rfactory->revokeRegion(nix);
 						}
-						creating_region = memory::nullptr;
+						creating_region = memory::anullptr;
 						viewer::Region::creatingRegionEnd( );
 					}
 					refresh( );
@@ -109,7 +109,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// constructing a polyline...
-		if ( memory::nullptr.check(building_polyline) == false ) {
+		if ( memory::anullptr.check(building_polyline) == false ) {
 			building_polyline->addVertex( linx1, liny1, true );
 			building_polyline->addVertex( linx1, liny1 );
 			refresh( );
@@ -128,7 +128,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// check for click within one (or more) regions...
-		resizing_region = memory::nullptr;
+		resizing_region = memory::anullptr;
 		moving_regions.clear( );			// ensure that moving state is clear...
 		for ( polygonlist::iterator iter = polygons.begin(); iter != polygons.end(); ++iter ) {
 			if ( (*iter)->clickWithin( linx1, liny1 ) )
@@ -161,7 +161,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return;
 		}
 
-		if ( memory::nullptr.check(building_polyline) == false ) {
+		if ( memory::anullptr.check(building_polyline) == false ) {
 			building_polyline->addVertex( linx, liny, true );
 			refresh( );
 			return;
@@ -169,7 +169,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		bool refresh_needed = false;
 		bool region_selected = false;
-		if ( memory::nullptr.check(resizing_region) == false ) {
+		if ( memory::anullptr.check(resizing_region) == false ) {
 			// resize the rectangle
 			double linx1, liny1;
 			try {
@@ -184,7 +184,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		std::tr1::shared_ptr<viewer::Region> creation(viewer::Region::creatingRegion( ));
-		if ( memory::nullptr.check(creation) || checkType(creation->type( )) ) {
+		if ( memory::anullptr.check(creation) || checkType(creation->type( )) ) {
 			int size = selected_regions.size( );
 			for ( polylinelist::reverse_iterator iter = polylines.rbegin(); iter != polylines.rend(); ++iter ) {
 				unsigned int result = (*iter)->mouseMovement(linx,liny,size > 0);
@@ -251,9 +251,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void MultiPolylineTool::keyReleased(const WCPositionEvent &ev) {
 
-		if ( memory::nullptr.check(resizing_region) == false ) {
+		if ( memory::anullptr.check(resizing_region) == false ) {
 			// resize finished
-			resizing_region = memory::nullptr;
+			resizing_region = memory::anullptr;
 		}
 
 		if ( moving_regions.size( ) > 0 ) {
@@ -298,7 +298,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	void MultiPolylineTool::otherKeyPressed(const WCPositionEvent &ev) {
-		if ( memory::nullptr.check(creating_region) == false &&
+		if ( memory::anullptr.check(creating_region) == false &&
 		        ev.key( ) != Display::K_Escape ) {
 			// when creating a polyline, non-escape keys are ignored...
 			return;
@@ -315,14 +315,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			uInt x = ev.pixX();
 			uInt y = ev.pixY();
 
-			resizing_region = memory::nullptr;
+			resizing_region = memory::anullptr;
 			moving_regions.clear( );		// ensure that moving state is clear...
-			if ( memory::nullptr.check(creating_region) == false ) {
+			if ( memory::anullptr.check(creating_region) == false ) {
 				viewer::Region *nix = creating_region.get( );
 				rfactory->revokeRegion(nix);
 				viewer::Region::creatingRegionEnd( );
-				creating_region = memory::nullptr;
-				building_polyline = memory::nullptr;
+				creating_region = memory::anullptr;
+				building_polyline = memory::anullptr;
 			}
 
 			double linx, liny;

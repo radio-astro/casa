@@ -52,7 +52,7 @@
 
 #include <casa/Quanta/MVAngle.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 namespace casa {
 	namespace viewer {
@@ -459,7 +459,7 @@ namespace casa {
 
 			draw_pv_line( pc, weaklySelected( ) || marked( ) );
 
-			if ( (selected || draw_cursor_point) && memory::nullptr.check( creating_region ) ) {
+			if ( (selected || draw_cursor_point) && memory::anullptr.check( creating_region ) ) {
 
 				int s = 4;
 				int x1, y1, x2, y2;

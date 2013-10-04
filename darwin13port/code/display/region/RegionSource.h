@@ -29,7 +29,7 @@
 #ifndef REGION_REGIONSOURCE_H_
 #define REGION_REGIONSOURCE_H_
 #include <list>
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 #include <display/region/RegionCreator.h>
 #include <display/Utilities/dtor.h>
 #include <display/Display/MouseToolState.h>

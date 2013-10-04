@@ -130,13 +130,13 @@ public:
   virtual void reset() = 0;
 
   // Return the 32-random bits as an unsigned integer
-  virtual uInt asuInt() = 0;
+  virtual casa::uInt asuInt() = 0;
 
   // Return random bits converted to either a Float or a Double. The returned
   // value x is in the range 1.0 > x >= 0.0 
   // <group>
-  Float asFloat();
-  Double asDouble();
+  casa::Float asFloat();
+  casa::Double asDouble();
   // </group>
 };
 
@@ -237,19 +237,19 @@ public:
   virtual void reset();
 
   // Return the 32-random bits as an unsigned integer
-  virtual uInt asuInt();
+  virtual casa::uInt asuInt();
 
 private:
-  uInt itsInitSeed;     //# used to reset the generator
-  Int itsInitTblEntry;
+  casa::uInt itsInitSeed;     //# used to reset the generator
+  casa::Int itsInitTblEntry;
   
-  uInt* itsStatePtr;
-  uInt* itsAuxStatePtr;
-  Short itsStateSize;
-  Short itsAuxSize;
-  uInt lcgRecurr;
-  Short itsJ;
-  Short itsK;
+  casa::uInt* itsStatePtr;
+  casa::uInt* itsAuxStatePtr;
+  casa::Short itsStateSize;
+  casa::Short itsAuxSize;
+  casa::uInt lcgRecurr;
+  casa::Short itsJ;
+  casa::Short itsK;
 };
 
 // <summary> Multiplicative linear congruential generator </summary>
@@ -311,7 +311,7 @@ public:
   virtual ~MLCG();
 
   // Return the 32-random bits as an unsigned integer
-  virtual uInt asuInt();
+  virtual casa::uInt asuInt();
   
   // Resets the random number generator. After calling this function the random
   // numbers generated will be the same as if the object had just been

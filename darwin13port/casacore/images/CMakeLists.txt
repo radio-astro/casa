@@ -10,7 +10,7 @@ else (APPLE)
     FLEX_TARGET (ImageExprGram Images/ImageExprGram.ll ${CMAKE_CURRENT_BINARY_DIR}/ImageExprGram.lcc COMPILE_FLAGS "-PImageExprGram")
 endif (APPLE)
 
-include_directories (${CMAKE_CURRENT_BINARY_DIR})
+include_directories (${CMAKE_CURRENT_BINARY_DIR} ${Boost_INCLUDE_DIR} )
 
 add_library (casa_images
 Regions/WCEllipsoid.cc

@@ -105,7 +105,6 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Regex.h>
   
-#include <images/Images/ImageStatistics.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
@@ -113,6 +112,7 @@
 #include <lattices/Lattices/LCSlicer.h>
 #include <lattices/Lattices/LCBox.h>
 #include <casa/System/PGPlotter.h>
+#include <images/Images/ImageStatistics.h>
 
 #include <casa/iostream.h>
 

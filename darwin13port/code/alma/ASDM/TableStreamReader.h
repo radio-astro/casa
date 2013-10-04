@@ -73,14 +73,17 @@ namespace asdm {
       std::string xmlPartMIMEHeader = "CONTENT-ID: <HEADER.XML>\n\n";
       CharComparator comparator(&tableFile, 10000);
       std::istreambuf_iterator<char> BEGIN(tableFile.rdbuf());
-      std::istreambuf_iterator<char> END;
-      std::istreambuf_iterator<char> it = std::search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator);
-      if ((it == END) || (tableFile.tellg() > 10000)) { 
+      tableFile.seekg(10000);
+      std::istreambuf_iterator<char> END(tableFile.rdbuf());
+      std::string theString(BEGIN, END);
+      tableFile.seekg(0);
+      std::string::iterator it = std::search(theString.begin(), theString.end(), xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator);
+      if ((it == theString.end()) || (tableFile.tellg() > 10000)) { 
 	tableFile.seekg(0);
 	xmlPartMIMEHeader = "CONTENT-ID: <HEADER.XML>\r\n\r\n";
-	it = BEGIN;
-	it = std::search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator);
-	if ((it == END) || (tableFile.tellg() > 10000)) 
+	it = theString.begin();
+	it = std::search(theString.begin(), theString.end(), xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator);
+	if ((it == theString.end()) || (tableFile.tellg() > 10000)) 
 	  throw asdm::ConversionException("failed to detect the beginning of the XML header.", T::name());
       }
       // Locate the binaryPartMIMEHeader while accumulating the characters of the xml header.	
@@ -88,8 +91,8 @@ namespace asdm {
       std::string xmlHeader;
       CharCompAccumulator compaccumulator(&xmlHeader, &tableFile, 100000);
       ++it;
-      it = std::search(it, END, binPartMIMEHeader.begin(), binPartMIMEHeader.end(), compaccumulator);
-      if ((it == END) || (tableFile.tellg() > 100000)) 
+      it = std::search(it, theString.end(), binPartMIMEHeader.begin(), binPartMIMEHeader.end(), compaccumulator);
+      if ((it == theString.end()) || (tableFile.tellg() > 100000)) 
 	throw asdm::ConversionException("failed to detect the beginning of the binary part", T::name());
       ++it;
       xmlHeader.erase(xmlHeader.end() - (binPartMIMEHeader.size() + 1), xmlHeader.end());

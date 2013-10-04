@@ -46,7 +46,6 @@
 #include <components/ComponentModels/SkyCompRep.h>
 #include <imageanalysis/ImageAnalysis/ImageFitter.h>
 #include <display/DisplayDatas/PrincipalAxesDD.h>
-#include <casadbus/types/nullptr.h>
 #include <math.h>
 #include <algorithm>
 #include <casa/BasicMath/Functors.h>
@@ -56,7 +55,8 @@
 
 #include <display/region/QtRegionDock.qo.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
+#include <casadbus/types/nullptr.h>
 
 
 extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char *func ) {
@@ -809,7 +809,7 @@ namespace casa {
 			for ( std::list<std::tr1::shared_ptr<RegionInfo> >::iterator iter = info->begin( ); iter != info->end( ); ++iter ) {
 				std::tr1::shared_ptr<RegionInfo::stats_t> stats = (*iter)->list( );
 
-				if (memory::nullptr.check(stats))
+				if (memory::anullptr.check(stats))
 					continue;
 
 				// output label....

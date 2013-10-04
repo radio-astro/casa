@@ -215,7 +215,7 @@ namespace casa {
 				pc->drawFilledRectangle( x-1-inc, y-1-inc, x+1+inc, y+1+inc );
 			}
 
-			if ( memory::nullptr.check( creating_region ) ) {
+			if ( memory::anullptr.check( creating_region ) ) {
 				pushDrawingEnv(region::DotLine,1);
 				if ( weaklySelected( ) || marked( ) ) {
 					// Switching to a circle seemed good, but the rendering of a circle

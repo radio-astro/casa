@@ -37,7 +37,7 @@
 #include <components/ComponentModels/ComponentType.h>
 #include <casa/namespace.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 namespace casa {
 

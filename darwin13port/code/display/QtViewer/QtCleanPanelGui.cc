@@ -50,7 +50,7 @@
 #include <casa/fstream.h>
 #include <casa/sstream.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 namespace casa {
 

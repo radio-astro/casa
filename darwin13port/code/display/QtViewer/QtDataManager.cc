@@ -58,7 +58,7 @@
 #include <QTextStream>
 #include <graphics/X11/X_exit.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN

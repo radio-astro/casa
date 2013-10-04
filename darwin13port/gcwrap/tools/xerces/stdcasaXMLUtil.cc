@@ -230,20 +230,22 @@ bool stdcasaXMLUtil::readXML(record &itsRecord,  const Wrapper4InputSource &xmlS
     //const char* xmlFile = fileName.c_str();
     XMLCh tempStr[100];
     XMLString::transcode("LS", tempStr, 99);
-    DOMImplementation *impl = DOMImplementationRegistry::getDOMImplementation(tempStr);
-    DOMBuilder* parser = ((DOMImplementationLS*)impl)->createDOMBuilder(DOMImplementationLS::MODE_SYNCHRONOUS, 0);
+    DOMImplementationLS *impl = DOMImplementationRegistry::getDOMImplementation(tempStr);
+    DOMLSParser* parser = impl->createLSParser(DOMImplementationLS::MODE_SYNCHRONOUS, 0);
     // optionally you can set some features on this builder
+    /*
     if(parser->canSetFeature(XMLUni::fgDOMValidation, true))
         parser->setFeature(XMLUni::fgDOMValidation, true);
     if(parser->canSetFeature(XMLUni::fgDOMNamespaces, true))
         parser->setFeature(XMLUni::fgDOMNamespaces, true);
     if(parser->canSetFeature(XMLUni::fgDOMDatatypeNormalization, true))
         parser->setFeature(XMLUni::fgDOMDatatypeNormalization, true);
+	*/
 
     DOMDocument *doc = 0;
     vector<string> paramOrder;
     try {
-        doc = parser->parse(xmlSource);
+        doc = parser->parse(&xmlSource);
         if(doc){
             DOMElement *theMethod = doc->getDocumentElement();
             XMLCh *theTask = XMLString::transcode("task");

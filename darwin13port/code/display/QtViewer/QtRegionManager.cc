@@ -51,7 +51,7 @@
 #include <display/DisplayDatas/LatticeAsRaster.h>
 #include <casa/Utilities/CountedPtr.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN

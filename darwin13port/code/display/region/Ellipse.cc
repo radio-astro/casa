@@ -37,7 +37,7 @@
 #include <imageanalysis/Annotations/AnnEllipse.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 namespace casa {
 	namespace viewer {
@@ -156,7 +156,7 @@ namespace casa {
 			if (getDrawCenter())
 				drawCenter( center_x_, center_y_, center_delta_x_, center_delta_y_);
 
-			if ( selected && memory::nullptr.check( creating_region ) ) {
+			if ( selected && memory::anullptr.check( creating_region ) ) {
 
 				// draw outline rectangle for resizing the ellipse...
 				pushDrawingEnv(region::DotLine);

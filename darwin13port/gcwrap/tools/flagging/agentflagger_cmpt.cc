@@ -34,8 +34,8 @@ agentflagger::agentflagger()
 {
 	try
 	{
-		logger_p = new LogIO(LogOrigin("agentflagger","",WHERE));
 		agentflagger_p = new AgentFlagger();
+		logger_p = new LogIO(LogOrigin("agentflagger","",WHERE));
 
 	} catch (AipsError x) {
 		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

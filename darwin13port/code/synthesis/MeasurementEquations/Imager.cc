@@ -2760,7 +2760,7 @@ Bool Imager::uvrange(const Double& uvmin, const Double& uvmax)
      MeasurementSet* mssel_p2;
 
      // Apply the TAQL selection string, to remake the selected MS
-     String parseString="select from $1 where (SQUARE(UVW[1]) + SQUARE(UVW[2]))*" + strInvLambda + " > " + strUVmin + " &&  (SQUARE(UVW[1]) + SQUARE(UVW[2]))*" + strInvLambda + " < " + strUVmax ;
+     String parseString="select from $1 where (SQUARE(UVW[1]) + SQUARE(UVW[2]))*" + strInvLambda + " > " + String(strUVmin.str()) + " &&  (SQUARE(UVW[1]) + SQUARE(UVW[2]))*" + strInvLambda + " < " + String(strUVmax.str()) ;
 
      mssel_p2=new MeasurementSet(tableCommand(parseString,*mssel_p));
      AlwaysAssert(mssel_p2, AipsError);

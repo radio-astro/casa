@@ -115,7 +115,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if(!interactionPending) {
 			interactionPending = true;
 			pushDetails( );
-			if ( memory::nullptr.check(callback) == false )
+			if ( memory::anullptr.check(callback) == false )
 				callback->interactionRequired(interactionPending);
 		}
 		cout << "UU : about to wait" << endl;
@@ -127,7 +127,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		cout << "UU : returned from wait" << endl;
 		if (updateNeeded) {
 			updateNeeded = false;
-			if ( memory::nullptr.check(callback) == false )
+			if ( memory::anullptr.check(callback) == false )
 				callback->interactionRequired(false);
 			pushDetails();
 		}

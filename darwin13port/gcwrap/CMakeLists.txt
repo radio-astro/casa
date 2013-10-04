@@ -186,7 +186,8 @@ if( APPLE )
         endif()
     elseif( CMAKE_SYSTEM MATCHES ^Darwin-10 OR
 		CMAKE_SYSTEM MATCHES ^Darwin-11 OR
-		CMAKE_SYSTEM MATCHES ^Darwin-12 )
+		CMAKE_SYSTEM MATCHES ^Darwin-12 OR
+		CMAKE_SYSTEM MATCHES ^Darwin-13)
         if( NOT arch )
         	set( arch darwin64 )
         endif()
@@ -214,6 +215,12 @@ if( APPLE )
 	            if(CMAKE_SYSTEM MATCHES ^Darwin-11)
                     set ( casa_packages /opt/casa/darwin11 )
                     set( PYTHON_ROOT_DIR /opt/casa/darwin11 )
+	            elseif(CMAKE_SYSTEM MATCHES ^Darwin-12)
+                    set ( casa_packages /opt/casa/darwin12 )
+                    set( PYTHON_ROOT_DIR /opt/casa/darwin12 )
+	            elseif(CMAKE_SYSTEM MATCHES ^Darwin-13)
+                    set ( casa_packages /opt/casa/darwin12 )
+                    set( PYTHON_ROOT_DIR /opt/casa/darwin12 )
 	            else()
                     set ( casa_packages /opt/casa/darwin10-64b )
                     set( PYTHON_ROOT_DIR /opt/casa/darwin10-64b )
@@ -291,7 +298,7 @@ if( APPLE )
         endif( )
     endif( )
 
-    set( python_version 2.6 )
+    set( python_version 2.7 )
 
 elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
 
@@ -308,7 +315,7 @@ elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
 	        set( dbusxx dbus-c++ )
             set( casa_packages /usr/lib64/casapy )
 	        set( qt4 system-qt )
-            set( python_version 2.6 )
+            set( python_version 2.7 )
         endif( )
         if( NOT arch )
     	    set( arch linux_64b )
@@ -324,7 +331,7 @@ elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
         set( dbusxx dbus-c++ )
         set( casa_packages /usr/lib/casapy )
         set( qt4 system-qt )
-        set( python_version 2.6 )
+        set( python_version 2.7 )
 
     endif()
 else()
@@ -712,7 +719,7 @@ endif()
 if( NOT PYTHON_FOUND )
 
   if ( NOT PYTHON_LIBNAME )
-    set( _names 2.6 2.7 2.5.2 2.5 )
+    set( _names 2.7 2.6 2.5.2 2.5 )
     # (The library named libpython.2.5.2.dylib seems to exist only in the CASA world.)
   else()
     set( _names ${PYTHON_LIBNAME} )
@@ -769,9 +776,7 @@ endif()
 # the location of python...
 #
 if( APPLE )
-    if ( NOT CMAKE_SYSTEM MATCHES ^Darwin-12 )
        set( python_prefix ${casa_packages} )
-    endif()
 endif()
 
 
@@ -1007,8 +1012,8 @@ casa_find( XERCES
   CPP_VERSION XERCES_FULLVERSIONDOT 
   RUN_VERSION "gXercesMajVersion << '.' << gXercesMinVersion << '.' << gXercesRevision" 
 )
-if( XERCES_VERSION VERSION_EQUAL   3.0 OR
-    XERCES_VERSION VERSION_GREATER 3.0 )
+if( XERCES_VERSION VERSION_EQUAL   3.2 OR
+    XERCES_VERSION VERSION_GREATER 3.2 )
   message( FATAL_ERROR "Xerces version (${XERCES_VERSION}) is too recent! Must be earlier than 3.0." )
 endif()
 
@@ -1047,11 +1052,14 @@ if( Boost_VERSION GREATER 103499 )
   if( NOT Boost_FOUND )
     message( FATAL_ERROR "Boost-system could not be found. Please check!" )
   endif()
+  set(Boost_INCLUDE_DIRS ${Boost_INCLUDE_DIR}/boost)
+  include_directories(${Boost_INCLUDE_DIRS})
 endif() 
 
 if( NOT Boost_VERSION GREATER 104099 AND NOT CASA_IGNORE_VERSION )
   message( FATAL_ERROR "Boost version (${Boost_VERSION}) is too old! Must be 104100 (1.41.0) or newer. Please check!" )
 endif()
+
 
 #
 # RPFITS (Fortran)

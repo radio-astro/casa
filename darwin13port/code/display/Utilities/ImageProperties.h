@@ -33,7 +33,7 @@
 #include <components/ComponentModels/GaussianBeam.h>
 #include <images/Images/ImageInterface.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 namespace casa {
 	namespace viewer {

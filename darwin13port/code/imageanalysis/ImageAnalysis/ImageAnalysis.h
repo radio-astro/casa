@@ -41,7 +41,7 @@
 #include <measures/Measures/Stokes.h>
 
 #include <memory>
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 namespace casa {
 

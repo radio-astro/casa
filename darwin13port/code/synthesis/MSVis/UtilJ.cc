@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <math.h>
 #include <fstream>
+#include <unistd.h>
 
 using std::max;
 using std::min;

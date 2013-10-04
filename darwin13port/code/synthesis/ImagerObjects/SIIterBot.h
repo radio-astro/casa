@@ -44,7 +44,7 @@
 
 // Include files for the DBus Service
 //#include <casadbus/interfaces/SynthImager.adaptor.h>
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 #ifdef INTERACTIVE_ITERATION
 #include <casadbus/interfaces/SynthImager.adaptor.h>

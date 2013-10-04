@@ -32,7 +32,7 @@
 #include <display/region/RegionEnums.h>
 #include <display/Slicer/ImageSlice.qo.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 class QwtPlotCurve;
 

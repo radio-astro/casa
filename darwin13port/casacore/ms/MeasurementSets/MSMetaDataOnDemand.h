@@ -32,7 +32,7 @@
 #include <measures/Measures/MPosition.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 
-#include <tr1/memory>
+#include <boost/tr1/memory.hpp>
 
 namespace casa {
 

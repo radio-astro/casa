@@ -45,11 +45,11 @@
 #include <display/Display/DisplayCoordinateSystem.h>
 #include <display/region/QtRegionState.qo.h>
 #include <display/region/RegionEnums.h>
-#include <casadbus/types/nullptr.h>
 
 #include <casa/Arrays/Vector.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
+#include <casadbus/types/nullptr.h>
 
 extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char *func );
 #define DISPLAY_PURE_VIRTUAL(FUNCTION,RESULT) \
@@ -348,7 +348,7 @@ namespace casa {
 				creating_region = r;
 			}
 			static void creatingRegionEnd( ) {
-				creating_region = memory::nullptr;
+				creating_region = memory::anullptr;
 			}
 
 			//Histogram functionality

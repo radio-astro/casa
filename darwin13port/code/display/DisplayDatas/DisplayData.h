@@ -39,7 +39,7 @@
 #include <display/Display/AttValBase.h>
 #include <display/DisplayEvents/DisplayEH.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

@@ -509,7 +509,7 @@ message ( STATUS "casa_packages=${casa_packages} (second)" )
 set( boost_components regex program_options filesystem thread serialization)
 find_package( Boost REQUIRED ${boost_components} )
 
-message( STATUS "Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}; Boost_LIBRARIES=${Boost_LIBRARIES}")
+message( STATUS "Boost_INCLUDE_DIR=${Boost_INCLUDE_DIR}; Boost_LIBRARIES=${Boost_LIBRARIES}")
 
 if( NOT Boost_FOUND )
   message( FATAL_ERROR "Boost could not be found. Please check!" )
@@ -527,6 +527,8 @@ if( Boost_VERSION GREATER 103499 )
   set( boost_components regex program_options filesystem system )
   find_package( Boost REQUIRED ${boost_components} )
 
+  set(Boost_INCLUDE_DIRS ${Boost_INCLUDE_DIR}/boost)
+  include_directories(${Boost_INCLUDE_DIRS} )
   if( NOT Boost_FOUND )
     message( FATAL_ERROR "Boost-system could not be found. Please check!" )
   endif()
@@ -822,6 +824,7 @@ else( )
     PROGRAMS dbuspp-xml2cpp
     DEPENDS ${dbus_depends}
   )
+  message( STATUS "DBUSPP_INCLUDE_DIR:  ${DBUSPP_INCLUDE_DIRS} " )
   set( dbus-xml-2-cxx ${DBUSPP_dbuspp-xml2cpp_EXECUTABLE} )
   set( DBUS_INCLUDE_DIRS ${DBUSPP_INCLUDE_DIRS} )
   set( DBUS_LIBRARIES ${DBUSPP_LIBRARIES} )

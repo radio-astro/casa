@@ -21,7 +21,10 @@ if [ $OSTYPE = "Darwin" ]; then
     if [ $OSVERS -eq "12" ]; then
 	casa3party="/opt/casa/darwin12"
     fi
-    p_root=${casa3party}/Library/Frameworks/Python.framework/Versions/2.6
+    if [ $OSVERS -eq "13" ]; then
+	casa3party="/opt/casa/darwin12"
+    fi
+    p_root=${casa3party}/Library/Frameworks/Python.framework/Versions/2.7
 else 
     isapple="F"
     casa3party="/usr/lib/casapy"
@@ -100,10 +103,11 @@ export CASAPATH="$a_root $a_arch $a_site $a_host"
 export DISPLAY=${DISPLAY=:0.0}
 
 if [ $installed_from_rpm = "T" ]; then
-    export PATH="${a_root}/bin:${p_root}/bin:/bin:/sbin:/usr/bin:/usr/sbin"
+    export PATH="${a_root}/bin:${p_root}/bin:$PATH"
 else
-    export PATH="${a_root}/${a_arch}/bin:${p_root}/bin:/bin:/sbin:/usr/bin:/usr/sbin"
+    export PATH="${a_root}/${a_arch}/bin:${p_root}/bin:$PATH"
 fi
+#export PATH=$PATH:/Users/wyoung/nraovao/vao/voclient/bin
 # echo "DEBUG: PATH = ${PATH}"
 
 export PGPLOT_DIR="${casa3party}/lib"
@@ -218,7 +222,7 @@ if [ ${_dodebug} = "T" ]; then
     echo
     exec -a ${DEBUGGER}  ${DEBUGGER} ${PYTHONEXECUTABLE}
 else
-    exec -a python ${PYTHONEXECUTABLE} -W ignore::DeprecationWarning ${casapy_command} $*
+    exec -a ${PYTHONEXECUTABLE} ${PYTHONEXECUTABLE} -W ignore::DeprecationWarning ${casapy_command} $*
 fi
 
 #

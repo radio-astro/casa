@@ -897,7 +897,7 @@ PBMath1D::apply(SkyComponent& in,
     Quantity sep =  mvd1.separation(mvd2, "'"); 
     double r = sep.getValue("'") * frequency.getValue("Hz") / 1.0e+9;  // arcminutes * GHz
 
-    Complex taper;
+    DComplex taper;
 
     if (r > maximumRadius_p.getValue("'")) {
       compFlux(pol) = 0.0;

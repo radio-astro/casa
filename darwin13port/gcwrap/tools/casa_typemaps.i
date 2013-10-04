@@ -419,9 +419,9 @@ if($1){
 %typemap(in) std::vector<double> & {
    std::vector<int> shape;
   
-   if(!$1)
-      $1 = new std::vector<double>(0);
-   else
+//   if(!$1)
+ //     $1 = new std::vector<double>(0);
+  // else
       $1->resize(0);
    if(casac::pyarray_check($input)){
       //cerr << "numpy2vec" << endl;
@@ -443,9 +443,9 @@ if($1){
 }
 
 %typemap(in) std::vector<bool> & {
-   if(!$1)
-      $1 = new std::vector<bool>(0);
-   else
+//   if(!$1)
+ //     $1 = new std::vector<bool>(0);
+  // else
       $1->resize(0);
    std::vector<int> shape;
 
@@ -473,9 +473,9 @@ if($1){
 
 
 %typemap(in) std::vector<int> & {
-   if(!$1)
-      $1 = new std::vector<int>(0);
-   else
+//   if(!$1)
+ //     $1 = new std::vector<int>(0);
+  // else
       $1->resize(0);
    std::vector<int> shape;
 
@@ -500,9 +500,9 @@ if($1){
 }
 
 %typemap(in) std::vector<long long> & {
-   if(!$1)
-      $1 = new std::vector<long long>(0);
-   else
+//   if(!$1)
+ //     $1 = new std::vector<long long>(0);
+  // else
       $1->resize(0);
    std::vector<int> shape;
 
@@ -528,9 +528,9 @@ if($1){
 
 
 %typemap(in) std::vector<long> & {
-   if(!$1)
-      $1 = new std::vector<long>(0);
-   else
+//   if(!$1)
+ //     $1 = new std::vector<long>(0);
+   //else
       $1->resize(0);
    std::vector<int> shape;
 

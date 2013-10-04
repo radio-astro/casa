@@ -70,7 +70,7 @@
 #include <graphics/X11/X_exit.h>
 #include <display/QtPlotter/QtProfileGUI.ui.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 inline void initPlotterResource() {
 	Q_INIT_RESOURCE(QtPlotter);

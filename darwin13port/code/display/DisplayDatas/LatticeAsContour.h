@@ -38,7 +38,7 @@
 #include <display/DisplayDatas/LatticePADD.h>
 #include <display/Display/DParameterRange.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

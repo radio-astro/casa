@@ -36,7 +36,7 @@
 
 #include <xercesc/dom/DOMImplementation.hpp>
 #include <xercesc/dom/DOMImplementationLS.hpp>
-#include <xercesc/dom/DOMWriter.hpp>
+#include <xercesc/dom/DOMLSSerializer.hpp>
 #include <xercesc/framework/LocalFileFormatTarget.hpp>
 #include <xercesc/parsers/XercesDOMParser.hpp>
 
@@ -326,11 +326,14 @@ bool TBView::saveToFile(String file) {
             }
 
              // output to file
-            DOMWriter* writer = impl->createDOMWriter();
+            DOMLSSerializer* writer = impl->createLSSerializer();
+	    DOMLSOutput *output = impl->createLSOutput();
             LocalFileFormatTarget fileTarget(file.c_str());
-            writer->setEncoding(TBConstants::xstr("UTF-8"));
-            writer->writeNode(&fileTarget, *doc);
-            
+	    output->setByteStream(&fileTarget);
+            //writer->setEncoding(TBConstants::xstr("UTF-8"));
+            //writer->writeNode(&fileTarget, *doc);
+	    writer->write(doc, output);
+	    output->release();
             writer->release();
             doc->release();
             return true;

@@ -51,7 +51,7 @@
 #include <display/Utilities/Lowlevel.h>
 #include <set>
 #include <list>
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN

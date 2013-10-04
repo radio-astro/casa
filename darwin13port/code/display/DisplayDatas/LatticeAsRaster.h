@@ -33,7 +33,7 @@
 #include <casa/Arrays/Array.h>
 #include <display/DisplayDatas/LatticePADD.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

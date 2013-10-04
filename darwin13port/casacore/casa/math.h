@@ -44,6 +44,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     using std::isinf;
     using std::isfinite;
 } //# NAMESPACE CASA - END
+#define sincos __sincos
 #endif
 
 #if defined(AIPS_SGI) || defined(AIPS_SUN_NATIVE) 

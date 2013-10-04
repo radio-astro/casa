@@ -540,6 +540,7 @@ casac::variant *fromValueHolder(const ValueHolder &theVH){
 	casac::variant *theV(0);
         if(!theVH.isNull()){
 	  switch(theVH.dataType()){
+		  cerr << theVH.dataType() << endl;
             case TpBool :
 	         theV = new casac::variant(theVH.asBool());
                  break;

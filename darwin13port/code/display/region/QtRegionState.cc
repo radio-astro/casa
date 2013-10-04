@@ -292,7 +292,7 @@ namespace casa {
 			QtRegionStats *first = dynamic_cast<QtRegionStats*>(statistics_group->widget(firstIndex));
 			if ( first == 0 ) throw internal_error( );
 			std::list<std::tr1::shared_ptr<RegionInfo> >::iterator stat_iter = stats->begin();
-			if ( ! memory::nullptr.check((*stat_iter)->list( )) ) {
+			if ( ! memory::anullptr.check((*stat_iter)->list( )) ) {
 				if ( first->updateStatisticsInfo( *stat_iter ) == false )
 					statisticsUpdate( first, *stat_iter );
 			}
@@ -307,7 +307,7 @@ namespace casa {
 			for ( int i=1; i < statistics_group->count() && ++stat_iter != stats->end(); ++i ) {
 				QtRegionStats *cur = dynamic_cast<QtRegionStats*>(statistics_group->widget(i));
 				if ( cur == 0 ) throw internal_error( );
-				if ( ! memory::nullptr.check((*stat_iter)->list( )) ) {
+				if ( ! memory::anullptr.check((*stat_iter)->list( )) ) {
 					if ( cur->updateStatisticsInfo( *stat_iter ) == false )
 						statisticsUpdate( cur, *stat_iter );
 				}
@@ -377,7 +377,7 @@ namespace casa {
 			QtRegionStats *first = dynamic_cast<QtRegionStats*>(centers_group->widget(0));
 			if ( first == 0 ) throw internal_error( );
 			std::list<std::tr1::shared_ptr<RegionInfo> >::iterator center_iter = centers->begin();
-			if ( ! memory::nullptr.check((*center_iter)->list( )) ) {
+			if ( ! memory::anullptr.check((*center_iter)->list( )) ) {
 				if ( first->updateStatisticsInfo( *center_iter ) == false )
 					statisticsUpdate( first, *center_iter );
 			}
@@ -387,7 +387,7 @@ namespace casa {
 			for ( int i=1; i < centers_group->count() && ++center_iter != centers->end(); ++i ) {
 				QtRegionStats *cur = dynamic_cast<QtRegionStats*>(centers_group->widget(i));
 				if ( cur == 0 ) throw internal_error( );
-				if ( ! memory::nullptr.check((*center_iter)->list( )) ) {
+				if ( ! memory::anullptr.check((*center_iter)->list( )) ) {
 					if ( first->updateStatisticsInfo( *center_iter ) == false )
 						statisticsUpdate(cur, *center_iter );
 				}

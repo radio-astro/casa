@@ -27,6 +27,7 @@
 #ifndef QTDBUSAPP_QO_H_
 #define QTDBUSAPP_QO_H_
 
+#include <unistd.h>
 #include <set>
 #include <string>
 #include <QString>

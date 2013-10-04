@@ -396,7 +396,7 @@ protected:
                        PGPlotter& plotter);
 
 // Convert a <tt>T</tt> to a <tt>Float</tt> for plotting
-   static Float convertT (const T value) {return Float(real(value));};
+   static Float convertT (const T value) {return Float((Float)real(Float(value)));};
 
 // Convert a <tt>Float</tt> (from plotting) to a <tt>T</tt> 
    static T convertF (const Float value) {return T(value);};

@@ -32,7 +32,7 @@
 #include <list>
 #include <string>
 #include <images/Images/ImageStatistics.h>
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 namespace casa {
 

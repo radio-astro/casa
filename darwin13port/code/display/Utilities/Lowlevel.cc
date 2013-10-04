@@ -36,6 +36,7 @@
 #include <libgen.h>
 #include <QApplication>
 #include <errno.h>
+#include <unistd.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 	namespace viewer { //# NAMESPACE VIEWER - BEGIN

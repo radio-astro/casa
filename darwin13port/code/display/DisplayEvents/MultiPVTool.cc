@@ -102,7 +102,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// check for click within one (or more) regions...
-		resizing_region = memory::nullptr;
+		resizing_region = memory::anullptr;
 		moving_regions.clear( );			// ensure that moving state is clear...
 		for ( pvlinelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter ) {
 			if ( (*iter)->clickWithin( linx1, liny1 ) )
@@ -136,7 +136,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		bool refresh_needed = false;
 		bool region_selected = false;
-		if ( memory::nullptr.check(resizing_region) == false ) {
+		if ( memory::anullptr.check(resizing_region) == false ) {
 			// resize the rectangle
 			double linx1, liny1;
 			try {
@@ -150,7 +150,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		std::tr1::shared_ptr<viewer::Region> creation(viewer::Region::creatingRegion( ));
-		if ( memory::nullptr.check(creation) || checkType(creation->type( )) ) {
+		if ( memory::anullptr.check(creation) || checkType(creation->type( )) ) {
 			int size = selected_regions.size( );
 			pvlinelist processing = rectangles;
 			for ( pvlinelist::reverse_iterator iter = processing.rbegin(); iter != processing.rend(); ++iter ) {
@@ -198,17 +198,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void MultiPVTool::keyReleased(const WCPositionEvent &ev) {
 
 		// avoid degenerate rectangles...
-		if ( memory::nullptr.check(creating_region) == false ) {
+		if ( memory::anullptr.check(creating_region) == false ) {
 			viewer::Region::creatingRegionEnd( );
 			if ( creating_region->degenerate( ) ) {
 				viewer::Region *nix = creating_region.get( );
 				rfactory->revokeRegion(nix);
 				if ( creating_region == resizing_region ) {
-					resizing_region = memory::nullptr;
+					resizing_region = memory::anullptr;
 					resizing_region_handle = 0;
 				}
 			}
-			creating_region = memory::nullptr;
+			creating_region = memory::anullptr;
 		}
 
 		// 	Bool wasActive = itsActive;
@@ -251,9 +251,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return;
 		}
 
-		if ( memory::nullptr.check(resizing_region) == false ) {
+		if ( memory::anullptr.check(resizing_region) == false ) {
 			// resize finished
-			resizing_region = memory::nullptr;
+			resizing_region = memory::anullptr;
 		}
 
 		if ( moving_regions.size( ) > 0 ) {
@@ -315,7 +315,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			uInt x = ev.pixX();
 			uInt y = ev.pixY();
 
-			resizing_region = memory::nullptr;
+			resizing_region = memory::anullptr;
 			moving_regions.clear( );		// ensure that moving state is clear...
 
 			double linx, liny;
@@ -966,7 +966,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if ( type( ) != POINTTOOL )
 			resizing_region_handle = 1;
 		else
-			resizing_region = memory::nullptr;
+			resizing_region = memory::anullptr;
 
 		set(x,y, x,y);
 		moving_regions.clear( );		// ensure that moving state is clear...

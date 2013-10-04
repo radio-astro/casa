@@ -23,7 +23,7 @@
 #include <casa/namespace.h>
 
 #include <memory>
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 using namespace std;
 

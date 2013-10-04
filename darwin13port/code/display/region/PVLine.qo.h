@@ -35,7 +35,7 @@
 #include <casa/BasicSL/String.h>
 #include <list>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 namespace casa {
 

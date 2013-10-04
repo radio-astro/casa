@@ -29,7 +29,7 @@ another visibility file.
 </description>
 <input>
 	<param type="string" name="vis" mustexist="true">
-		<description>Name of input visibility file</description>
+		<shortdescription>A short Name of input visibility file</shortdescription>
 		<value></value>
 	</param>
 

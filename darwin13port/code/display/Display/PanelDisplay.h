@@ -29,7 +29,7 @@
 #define TRIALDISPLAY_PANELDISPLAY_H
 
 #include <casa/aips.h>
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 #include <casa/Containers/List.h>
 #include <casa/Containers/RecordInterface.h>
 #include <casa/Containers/SimOrdMap.h>

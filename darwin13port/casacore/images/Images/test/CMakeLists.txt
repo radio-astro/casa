@@ -23,7 +23,7 @@ endforeach (file)
 
 set (tests
 dImageInterface
-dImageStatistics
+#dImageStatistics
 dImageSummary
 dPagedImage
 tExtendImage

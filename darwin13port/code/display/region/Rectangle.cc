@@ -43,7 +43,7 @@
 #include <display/DisplayDatas/MSAsRaster.h>
 #include <display/DisplayErrors.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 namespace casa {
 	namespace viewer {
@@ -375,7 +375,7 @@ namespace casa {
 			if (getDrawCenter())// && markCenter())
 				drawCenter( center_x_, center_y_, center_delta_x_, center_delta_y_);
 
-			if ( selected && memory::nullptr.check( creating_region ) ) {
+			if ( selected && memory::anullptr.check( creating_region ) ) {
 				Int w = x2 - x1;
 				Int h = y2 - y1;
 

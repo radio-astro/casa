@@ -37,7 +37,7 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Containers/Record.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 class QDoubleValidator;
 

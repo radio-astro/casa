@@ -41,7 +41,7 @@
 
 #include <QtCore/qmath.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 namespace casa {
 	namespace viewer {
@@ -735,7 +735,7 @@ namespace casa {
 				y1 = y2;
 			}
 
-			if ( selected && memory::nullptr.check( creating_region ) ) {
+			if ( selected && memory::anullptr.check( creating_region ) ) {
 
 				// get bounding rectangle...
 				double blc_x, blc_y, trc_x, trc_y;

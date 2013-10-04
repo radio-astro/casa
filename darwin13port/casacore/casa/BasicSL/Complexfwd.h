@@ -42,9 +42,12 @@
 
 // <group name=Complexfwd>
 
+#include <complex>
+/*
 namespace std {
   template<class T> class complex;
 }
+*/
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

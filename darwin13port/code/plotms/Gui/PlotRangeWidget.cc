@@ -259,10 +259,10 @@ void PlotRangeWidget::setRange(bool isDate, bool isCustom, double from,
     stackedWidget->setCurrentIndex(isDate ? 1 : 0);
     custom->setChecked(isCustom);
     
-    bool changed = isDate != this->isDate() || isCustom != this->isCustom();
-    if(!changed) {
+    bool amchanged = isDate != this->isDate() || isCustom != this->isCustom();
+    if(!amchanged) {
         prange_t range = getRange();
-        changed = from != range.first || to != range.second;
+        amchanged = from != range.first || to != range.second;
     }
     
     if(isDate) {
@@ -292,8 +292,8 @@ void PlotRangeWidget::setRange(bool isDate, bool isCustom, double from,
     from_ = from;
     to_ = to;
     
+    if(amchanged) emit changed();
     blockSignals(false);
-    if(changed) emit this->changed();
 }
 
 

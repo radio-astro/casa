@@ -28,7 +28,7 @@
 
 #ifndef __casadbus_nullptr_h__
 #define __casadbus_nullptr_h__
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 namespace casa {
 
@@ -43,7 +43,7 @@ namespace casa {
 		void do_init( ) { }
 	};
 
-	extern _nullptr_t_ nullptr;
+	extern _nullptr_t_ anullptr;
 
 	static class nullptr_init_ {
 	    public:

@@ -809,7 +809,8 @@ vector<TBKeyword*>* TBTableDriverDirect::getKeywords(RecordInterface& kws) {
 		try {
 		d = new TBDataRecord(kws.asRecord(rfid));
 		} catch (...) {
-		
+                  TableRecord* tr = static_cast<TableRecord*>(&kws);
+		  d = new TBDataRecord(tr->asRecord(rfid));
 		}
 	}
         else if(t == TpArrayBool) {

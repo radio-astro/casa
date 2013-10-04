@@ -31,8 +31,8 @@
 namespace casa {
     namespace memory {
 
-	_nullptr_t_ nullptr;
+	_nullptr_t_ anullptr;
 	unsigned int nullptr_init_::count = 0;
-	void nullptr_init_::do_init( ) { nullptr.do_init( ); }
+	void nullptr_init_::do_init( ) { anullptr.do_init( ); }
     }
 }

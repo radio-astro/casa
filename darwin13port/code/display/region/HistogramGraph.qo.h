@@ -30,7 +30,7 @@
 #include <QtGui/QWidget>
 #include <display/region/HistogramGraph.ui.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 namespace casa {
 

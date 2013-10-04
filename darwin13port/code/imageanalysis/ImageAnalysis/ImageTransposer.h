@@ -31,7 +31,7 @@
 
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
 #include <memory>
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 namespace casa {
 class ImageTransposer : public ImageTask {

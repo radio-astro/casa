@@ -2680,7 +2680,7 @@ def imagetest(which=None, size=[32,32,8]):
             mask = myim.getregion(r3, getmask=true)
             if (len(pixels)==0 or len(mask)==0):
                 fail('geregion failed to get r3')
-            ok = myim.putregion(pixelmask=mask, region=r3)
+            ok = myim.putregion(pixels=pixels, pixelmask=mask, region=r3)
             if not ok:
                 stop('putregion 1 failed')
             pixels2 = myim.getregion(r3)

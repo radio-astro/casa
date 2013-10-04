@@ -34,9 +34,9 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/DataType.h>
 #include <casa/Logging/LogIO.h>
-#include <lattices/Lattices/LatticeStatistics.h>
 #include <scimath/Mathematics/NumericTraits.h>
 #include <casa/iosstrfwd.h>
+#include <lattices/Lattices/LatticeStatistics.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

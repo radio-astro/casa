@@ -31,7 +31,7 @@
 #include <display/QtViewer/ImageManager/ImageView.qo.h>
 #include <casa/BasicSL/String.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 namespace casa {
 

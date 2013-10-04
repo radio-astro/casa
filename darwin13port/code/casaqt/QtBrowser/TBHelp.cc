@@ -155,7 +155,7 @@ bool TBHelp::rebuild() {
     if(lname == TBConstants::HELP_XML_HELP) {
        DOMImplementation* impl=DOMImplementationRegistry::getDOMImplementation(
                                     XMLString::transcode("LS"));
-        DOMWriter* writer = ((DOMImplementationLS*)impl)->createDOMWriter();
+        DOMLSSerializer* writer = ((DOMImplementationLS*)impl)->createLSSerializer();
         ofstream index;
         index.open((helpdir + TBConstants::HELP_INDEX).c_str());
         index << header1 << "Home" << header2;
@@ -229,7 +229,7 @@ bool TBHelp::rebuild() {
                     DOMNodeList* t = e->getChildNodes();
                     for(unsigned int m = 0; m < t->getLength(); m++) {
                         DOMNode* n = t->item(m);
-                        XMLCh* ch = writer->writeToString(*n);
+                        XMLCh* ch = writer->writeToString(n);
                         if(ch != NULL) {
                             chst = XMLString::transcode(ch);
                             ss2 << chst;

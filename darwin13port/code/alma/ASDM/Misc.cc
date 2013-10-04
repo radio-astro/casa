@@ -173,7 +173,7 @@ namespace asdm {
 
   void ASDMUtils::DotXMLFilter::operator()(directory_entry& p) {
     if (!extension(p).compare(".xml")) {
-      filenames->push_back(p.string());
+      filenames->push_back(p.path().string());
     }
   }
  

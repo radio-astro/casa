@@ -229,8 +229,10 @@ Quantum<Qtype> max(const Quantum<Qtype> &left, const Quantum<Qtype> &other);
 // <group name="foreign">
 Int ceil(const Int &val);
 Int floor(const Int &val);
+/*
 Float real(const Float &val);
 Double real(const Double&val);
+*/
 Array<Complex> operator *(const Array<Complex> &in, Double f);
 Array<Complex> operator /(const Array<Complex> &in, Double f);
 Array<DComplex> operator *(const Array<DComplex> &in, Double f);

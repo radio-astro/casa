@@ -45,10 +45,10 @@
 #include <display/QtViewer/QtDisplayPanel.qo.h>
 #include <display/QtViewer/DisplayDataHolder.h>
 #include <display/region/QtRegionDock.qo.h>
-#include <display/Utilities/Lowlevel.h>
 #include <display/DisplayDatas/DisplayDataOptions.h>
 #include <display/Utilities/ImageProperties.h>
 #include <display/Utilities/StatusSink.h>
+#include <display/Utilities/Lowlevel.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

@@ -40,7 +40,7 @@
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/ds9/ds9writer.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 namespace casa {
 	namespace viewer {
@@ -603,7 +603,7 @@ namespace casa {
 			}
 			if ( complete ) pc->drawLine( x1, y1, first_x, first_y );
 
-			if ( selected && memory::nullptr.check( creating_region ) ) {
+			if ( selected && memory::anullptr.check( creating_region ) ) {
 
 				// get bounding rectangle...
 				double blc_x, blc_y, trc_x, trc_y;

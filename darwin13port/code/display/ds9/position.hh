@@ -44,7 +44,7 @@
 
 # ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
-#   define YY_NULL nullptr
+#   define YY_NULL anullptr
 #  else
 #   define YY_NULL 0
 #  endif

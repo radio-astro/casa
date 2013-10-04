@@ -27,7 +27,7 @@
 
 #include <QString>
 #include <casa/Arrays/Vector.h>
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 class QWidget;
 

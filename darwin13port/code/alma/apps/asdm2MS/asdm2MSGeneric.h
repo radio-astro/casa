@@ -383,7 +383,7 @@ template <class	T, class R, class RFilter>
 	    std::ostringstream oss;
 	    oss.str("");
 	    oss << "Appended " << filteredRows.size() << " rows to the MS SYSPOWER table." << endl;
-	    LogSink::postGlobally(LogMessage(oss.str(), LogOrigin((boost::filesystem::path(getexepath())).filename(), WHERE),
+	    LogSink::postGlobally(LogMessage(oss.str(), LogOrigin((boost::filesystem::path(getexepath())).string(), WHERE),
 					     LogMessage::NORMAL
 					     )
 				  );	
@@ -431,7 +431,7 @@ template <class	T, class R, class RFilter>
 	    std::ostringstream oss;
 	    oss.str("");
 	    oss << "Appended " << filteredRows.size() << " rows to the MS SYSPOWER table." << endl;
-	    LogSink::postGlobally(LogMessage(oss.str(), LogOrigin((boost::filesystem::path(getexepath())).filename(), WHERE),
+	    LogSink::postGlobally(LogMessage(oss.str(), LogOrigin((boost::filesystem::path(getexepath())).string(), WHERE),
 					     LogMessage::NORMAL
 					     )
 				  );	

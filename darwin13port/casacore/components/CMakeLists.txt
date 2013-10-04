@@ -2,6 +2,8 @@
 # CASA Components
 #
 
+include_directories (${CMAKE_CURRENT_BINARY_DIR}  ${Boost_INCLUDE_DIR} )
+
 add_library (casa_components
 SpectralComponents/CompiledSpectralElement.cc
 SpectralComponents/GaussianMultipletSpectralElement.cc

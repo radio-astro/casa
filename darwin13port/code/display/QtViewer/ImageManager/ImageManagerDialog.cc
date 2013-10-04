@@ -34,7 +34,7 @@
 #include <QDebug>
 #include <QMessageBox>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 namespace casa {
 

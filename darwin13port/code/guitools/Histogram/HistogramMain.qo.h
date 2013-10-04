@@ -33,7 +33,7 @@
 #include <guitools/Histogram/SaveHistogramWidget.qo.h>
 
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 class QCloseEvent;
 

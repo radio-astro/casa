@@ -59,13 +59,13 @@
 #include <images/Regions/RegionHandler.h>
 #include <images/Images/ImageInterface.h>
 #include <display/ds9/ds9parser.h>
-#include <casadbus/types/nullptr.h>
 #include <display/DisplayErrors.h>
 
 #include <QtCore/QPoint>
 #include <QtGui/QToolTip>
 
 #include <iostream>
+#include <casadbus/types/nullptr.h>
 using namespace std;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -2769,7 +2769,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // revoke region from region source...
 	void QtDisplayPanel::revokeRegion( viewer::Region *r ) {
 		std::tr1::shared_ptr<RegionTool> tool = toolmgr->tool(r->type( ));
-		if ( memory::nullptr.check(tool) == false )
+		if ( memory::anullptr.check(tool) == false )
 			tool->revokeRegion( r );
 	}
 

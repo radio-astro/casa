@@ -47,6 +47,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <set>
+#include <unistd.h>
 
 
 namespace casa {

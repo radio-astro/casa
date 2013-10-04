@@ -2165,7 +2165,7 @@ Int BasePlot::createXTENS(Vector<String> &datastr)
          ostringstream dtype;
          dtype << xtens_p[i].dataType();
          BasePlotError(String("DataType of TaQL expression (") + 
-               dtype + String(") is not plottable"));
+               String(dtype) + String(") is not plottable"));
       }
       
    }
@@ -2196,7 +2196,7 @@ Int BasePlot::createYTENS(Vector<String> &datastr)
          ostringstream dtype;
          dtype << ytens_p[i].dataType();
          BasePlotError(String("DataType of TaQL expression (") + 
-              dtype + String(") is not plottable"));
+              String(dtype) + String(") is not plottable"));
       }
       
       IndCnt_p[i] = nip_p;/* since flags pertain only to y data */

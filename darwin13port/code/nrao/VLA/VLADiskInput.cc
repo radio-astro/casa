@@ -35,6 +35,7 @@
 #include <casa/iostream.h>
 #include <arpa/inet.h>
 #include <casa/stdlib.h>
+#include <unistd.h>
 
 #ifndef MAX_LOGICAL_RECORD_SIZE
 #define MAX_LOGICAL_RECORD_SIZE 850000u

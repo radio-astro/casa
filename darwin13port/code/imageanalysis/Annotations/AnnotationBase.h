@@ -28,9 +28,8 @@
 #ifndef ANNOTATIONS_ANNOTATIONBASE_H
 #define ANNOTATIONS_ANNOTATIONBASE_H
 
-#include <coordinates/Coordinates/CoordinateSystem.h>
 #include <boost/regex.hpp>
-
+#include <coordinates/Coordinates/CoordinateSystem.h>
 #include <measures/Measures/Stokes.h>
 
 

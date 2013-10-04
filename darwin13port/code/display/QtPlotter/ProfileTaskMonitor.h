@@ -30,7 +30,7 @@
 #include <casa/Arrays/Vector.h>
 #include <measures/Measures/MFrequency.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 namespace casa {
 

@@ -31,7 +31,7 @@
 #include <casa/BasicSL/String.h>
 
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 namespace casa {
 

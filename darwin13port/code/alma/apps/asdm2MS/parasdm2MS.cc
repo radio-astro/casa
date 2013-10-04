@@ -4138,7 +4138,7 @@ void partitionMS(vector<int> SwIds,
   for (int i=0; i<SwIds.size(); i++) {
     ostringstream oss;
     oss<< SwIds.at(i);
-    string msname_suffix = ".SpW"+oss;
+    string msname_suffix = ".SpW"+oss.str();
     //cerr<<"msname_prefix="<<msname_suffix<<endl;
     for (map<AtmPhaseCorrection, string>::iterator iter = msNames.begin(); iter != msNames.end(); ++iter) {
       msFillers[iter->first] = new ASDM2MSFiller(msNames[iter->first]+msname_suffix,
@@ -4453,7 +4453,8 @@ int main(int argc, char *argv[]) {
       string dummyMSName = vm["ms-directory-prefix"].as< string >();
       dummyMSName = lrtrim(dummyMSName);
       if (boost::algorithm::ends_with(dummyMSName, "/")) dummyMSName.erase(dummyMSName.size()-1);
-      boost::filesystem::path msPath(lrtrim(dummyMSName),&boost::filesystem::no_check);
+      //boost::filesystem::path msPath(lrtrim(dummyMSName),&boost::filesystem::no_check);
+      boost::filesystem::path msPath(lrtrim(dummyMSName));
       string msDirectory = msPath.branch_path().string();
       msDirectory = lrtrim(msDirectory);
       if (msDirectory.size() == 0) msDirectory = ".";

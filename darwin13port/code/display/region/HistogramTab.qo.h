@@ -29,7 +29,7 @@
 #include <QtGui/QWidget>
 #include <display/region/HistogramTab.ui.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 namespace casa {
 

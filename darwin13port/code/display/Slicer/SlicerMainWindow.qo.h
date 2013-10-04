@@ -30,7 +30,7 @@
 #include <display/Slicer/SlicerMainWindow.ui.h>
 #include <display/Slicer/SlicePlot.qo.h>
 
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 class QCursor;
 

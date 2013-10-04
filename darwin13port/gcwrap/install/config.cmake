@@ -319,6 +319,7 @@ macro( casa_find package )
     endif()
   endforeach()
   set( _prefix_hints ${_trimmed_prefix_hints} )
+  message(STATUS ${_prefix_hints})
   ##
   ## strip out ignored paths for standard paths...
   ##

@@ -30,7 +30,7 @@
 #include <guitools/Histogram/RangeControlsWidget.ui.h>
 
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
-#include <tr1/memory>
+#include <tr1/memory.hpp>
 
 using namespace std;
 
