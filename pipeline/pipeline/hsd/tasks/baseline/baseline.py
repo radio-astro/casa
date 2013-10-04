@@ -1,19 +1,14 @@
 from __future__ import absolute_import
 
-import os
-import math
-#from math import cos, sqrt, exp
 import numpy
-import time
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.sdfilenamer as filenamer
-import pipeline.infrastructure.casatools as casatools
-from pipeline.domain import DataTable
+
 from .. import common
 from . import maskline
-from .fitting import FittingFactory
-from . import utils
+#from .fitting import FittingFactory
+from . import fitting
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -133,22 +128,16 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 continue
 
                 
-            #beam_size = st.beam_size[spwid]
             srctype = st.calibration_strategy['srctype']
             _file_index = set(file_index) & set([m.antenna for m in group_desc])
             files = files | _file_index
-            #pattern = st.pattern[spwid][pols[0]]
             index_list = numpy.where(numpy.logical_and(ifnos == spwid, srctypes==srctype))[0]
             maskline_inputs = maskline.MaskLine.Inputs(context, list(_file_index), spwid, iteration, 
                                                        index_list, window, edge, broadline)
             maskline_task = maskline.MaskLine(maskline_inputs)
             maskline_result = self._executor.execute(maskline_task, merge=True)
-            #worker = SDBaselineWorker(context, iteration, spwid, nchan, beam_size, srctype, list(_file_index), index_list, window, edge, broadline, pattern)
-            #(detected_lines, cluster_info) = self._executor.execute(worker, merge=False)
             detected_lines = maskline_result.outcome['detected_lines']
             cluster_info = maskline_result.outcome['cluster_info']
-            #datatable.importdata(datatable.plaintable, minimal=False)
-            datatable = DataTable(datatable.plaintable)
 
             #LOG.info('detected_lines=%s'%(detected_lines))
             #LOG.info('cluster_info=%s'%(cluster_info))
@@ -158,51 +147,23 @@ class SDBaseline(common.SingleDishTaskTemplate):
             namer.spectral_window(spwid)
 
             # fit order determination and fitting
-            fitter_cls = FittingFactory.get_fitting_class(fitfunc)
-            fitter = fitter_cls(datatable)
+            fitter_cls = fitting.FittingFactory.get_fitting_class(fitfunc)
 
             # loop over file
             for idx in _file_index:
-                st = context.observing_run[idx]
-                filename_in = st.name
-                filename_out = st.baselined_name
-                if not os.path.exists(filename_out):
-                    with casatools.TableReader(filename_in) as tb:
-                        copied = tb.copy(filename_out, deep=True, valuecopy=True, returnobject=True)
-                        copied.close()
-                asdm = common.asdm_name(st)
-                namer.asdm(asdm)
-                namer.antenna_name(st.antenna.name)
-                bltable_name = namer.get_filename()
                 iteration = group_desc.get_iteration(idx, spwid)
-                LOG.debug('iteration (antenna %s, spw %s): %s'%(idx,spwid,iteration))
-                if iteration == 0:
-                    utils.createExportTable(bltable_name)
-                ant_indices = numpy.where(antennas.take(index_list)==idx)[0]
-                ant_indices = index_list.take(ant_indices)
-                for pol in pols:
-                    time_table = datatable.get_timetable(idx, spwid, pol)
-                    pol_indices = numpy.where(polnos.take(ant_indices)==pol)[0]
-                    pol_indices = ant_indices.take(pol_indices)
-                    #LOG.debug('pol_indices=%s'%(list(pol_indices)))
-                    t0 = time.time()
-                    fitter.setup(filename_in, filename_out, bltable_name, time_table, pol_indices, nchan, edge, fitorder)
-                    self._executor.execute(fitter, merge=False)
-                    t1 = time.time()
-                    LOG.debug('PROFILE baseline ant%s spw%s pol%s: elapsed time is %s sec'%(idx,spwid,pol,t1-t0))
-
-                # output summary of baseline fitting
-                BaselineSummary.summary(bltable_name, st.basename, spwid, iteration, edge, datatable, ant_indices, nchan)
-
-
-            #for f in _file_index:
-            #    name = context.observing_run[f].baselined_name
+                fitter_inputs = fitter_cls.Inputs(context, idx, spwid, pols, iteration, 
+                                                  fitorder, edge)
+                fitter = fitter_cls(fitter_inputs)
+                fitter_result = self._executor.execute(fitter, merge=True)
+                
             name_list = [context.observing_run[f].baselined_name
                          for f in _file_index]
             baselined.append({'name': name_list, 'index': list(_file_index),
                               'spw': spwid, 'pols': pols,
                               'lines': detected_lines,
                               'clusters': cluster_info})
+            LOG.debug('cluster_info=%s'%(cluster_info))
 
         outcome = {'datatable': datatable,
                    'baselined': baselined,
@@ -221,88 +182,4 @@ class SDBaseline(common.SingleDishTaskTemplate):
     def analyse(self, result):
         return result
 
-
-class BaselineSummary(object):
-    @staticmethod
-    def summary(tablename, stname, spw, iteration, edge, datatable, index_list, nchan):
-        header = 'Summary of cspline_baseline for %s (spw%s, iter%s)'%(stname, spw, iteration)
-        separator = '=' * len(header)
-        LOG.info(separator)
-        LOG.info(header)
-        LOG.info(separator)
-
-        # edge channels dropped
-        LOG.info('1) Number of edge channels dropped')
-        LOG.info('')
-        LOG.info('\t left edge: %s channels'%(edge[0]))
-        LOG.info('\tright edge: %s channels'%(edge[1]))
-        LOG.info('')
-
-        # line masks
-        LOG.info('2) Masked fraction on each channel')
-        LOG.info('')
-        histogram = numpy.zeros(nchan, dtype=float)
-        nrow = len(index_list)
-        for idx in index_list:
-            masklist = datatable.getcell('MASKLIST', idx)
-            for mask in masklist:
-                start = mask[0]
-                end = mask[1] + 1
-                for ichan in xrange(start, end):
-                    histogram[ichan] += 1.0
-        nonzero_channels = histogram.nonzero()[0]
-        if len(nonzero_channels) > 0:
-            dnz = nonzero_channels[1:] - nonzero_channels[:-1]
-            mask_edges = numpy.where(dnz > 1)[0]
-            start_chan = nonzero_channels.take([0]+(mask_edges+1).tolist())
-            end_chan = nonzero_channels.take(mask_edges.tolist()+[-1])
-            merged_start_chan = [start_chan[0]]
-            merged_end_chan = []
-            for i in xrange(1, len(start_chan)):
-                if start_chan[i] - end_chan[i-1] > 4:
-                    merged_start_chan.append(start_chan[i])
-                    merged_end_chan.append(end_chan[i-1])
-            merged_end_chan.append(end_chan[-1])
-            LOG.info('channel|fraction')
-            LOG.info('-------|---------')
-            if merged_start_chan[0] > 0:
-                LOG.info('%7d|%9.1f%%'%(0, 0))
-                LOG.info('       ~')
-                LOG.info('       ~')
-            #for ichan in xrange(len(histogram)):
-            for i in xrange(len(merged_start_chan)):
-                for j in xrange(max(0,merged_start_chan[i]-1), min(nchan,merged_end_chan[i]+2)):
-                    LOG.info('%7d|%9.1f%%'%(j, histogram[j]/nrow*100.0))
-                if merged_end_chan[i] < nchan-2:
-                    LOG.info('       ~')
-                    LOG.info('       ~')
-            if merged_end_chan[-1] < nchan-2:
-                LOG.info('%7d|%9.1f%%'%(nchan-1, 0))
-        else:
-            LOG.info('\tNo line mask')
-        LOG.info('')
-            
-        BaselineSummary.cspline_summary(tablename)
-
-        footer = separator
-        LOG.info(footer)
-
-    @staticmethod
-    def cspline_summary(tablename):
-        # number of segments for cspline_baseline
-        with casatools.TableReader(tablename) as tb:
-            nrow = tb.nrows()
-            num_segments = [tb.getcell('Sections', irow).shape[0] \
-                            for irow in xrange(nrow)]
-        unique_values = numpy.unique(num_segments)
-        max_segments = max(unique_values) + 2
-        LOG.info('3) Frequency distribution for number of segments')
-        LOG.info('')
-        LOG.info('# of segments|frequency')
-        LOG.info('-------------|---------')
-        #for val in unique_values:
-        for val in xrange(1, max_segments):
-            count = num_segments.count(val)
-            LOG.info('%13d|%9d'%(val, count))
-        LOG.info('')
 
