@@ -225,6 +225,10 @@ public:
 	// is empty, a list of all field names will be returned.
 	virtual vector<String> getFieldNamesForFieldIDs(const vector<uInt>& fieldIDs) = 0;
 
+	virtual std::map<String, std::set<Int> > getIntentToFieldsMap() = 0;
+
+	virtual std::map<String, std::set<Int> > getIntentToScansMap() = 0;
+
 	// Get the fields which fail into the specified time range (center-tol to center+tol)
 	virtual std::set<Int> getFieldsForTimes(Double center, Double tol) = 0;
 

@@ -94,7 +94,12 @@ public:
 
 
 	// get a set of intents corresponding to a specified field
-	virtual std::set<String> getIntentsForField(Int fieldID);
+	std::set<String> getIntentsForField(Int fieldID);
+
+	std::map<String, std::set<Int> > getIntentToFieldsMap();
+
+	std::map<String, std::set<Int> > getIntentToScansMap();
+
 
 	// get the number of fields.
 	uInt nFields();
