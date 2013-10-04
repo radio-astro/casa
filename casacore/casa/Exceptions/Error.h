@@ -62,6 +62,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 #define AssertAlways(c) { if (! (c)) {casa::AipsError::throwIf (True, "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }}
 
+#define WarnCc(m)\
+{\
+    LogIO   os(LogOrigin("", __func__, __LINE__, WHERE));\
+    os << LogIO::WARN << m << LogIO::POST;\
+}
+
+
+// Asserts when in debug build and issues a warning message to the log in release.
+#if defined (NDEBUG)
+#define AssertOrWarn(c,m) {assert (c);}
+#else
+#define AssertOrWarn(c,m)\
+{ if (! (c)) {\
+    WarnCc (m);\
+  }\
+}
+#endif
+
 #if defined (NDEBUG)
 #    define ThrowCc(m) \
     { AipsError anAipsError ((m), __FILE__, __LINE__);\
@@ -75,8 +93,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #define ThrowIfError(c,m) {if (c) {casa::AipsError::throwIfError (True, (m), __FILE__, __LINE__, __PRETTY_FUNCTION__);}}
 
 #define Rethrow(e,m) {throw casa::AipsError::repackageAipsError ((e),(m),__FILE__,__LINE__, __PRETTY_FUNCTION__);}
-
-
 
 // <summary>Base class for all AIPS++ library errors</summary>
 // <use visibility=export>
