@@ -18,7 +18,7 @@ Flag antennas with low gain.
 
     <param type="string" name="intent" subparam="true">
         <description>Data intent whose gains are to checked</description>
-        <value>BANDPASS</value>
+        <value></value>
     </param>
 
     <param type="string" name="spw" subparam="true">
@@ -29,6 +29,11 @@ Flag antennas with low gain.
     <param type="string" name="refant" subparam="true">
         <description>Reference antenna names</description>
         <value></value>
+    </param>
+
+    <param type="int" name="minblperant" subparam="true">
+        <description>Minimum baselines per antenna required for solve</description>
+        <value>4</value>
     </param>
 
     <param type="bool" name="flag_nmedian" subparam="true">
@@ -66,9 +71,10 @@ Flag antennas with low gain.
             <equals type="string" value="automatic" />
             <equals type="string" value="interactive">
                 <default param="vis"><value type="stringArray"></value></default>
-                <default param="intent"><value type="string">BANDPASS</value></default>
+                <default param="intent"><value type="string"></value></default>
                 <default param="spw"><value type="string"></value></default>
                 <default param="refant"><value type="string"></value></default>
+                <default param="minblperant"><value type="int">4</value></default>
                 <default param="flag_nmedian"><value type="bool">True</value></default>
                 <default param="fnm_limit"><value type="float">0.5</value></default>
                 <default param="dryrun"><value type="bool">False</value></default>
@@ -76,9 +82,10 @@ Flag antennas with low gain.
             </equals>
             <equals type="string" value="getinputs">
                 <default param="vis"><value type="stringArray"></value></default>
-                <default param="intent"><value type="string">BANDPASS</value></default>
+                <default param="intent"><value type="string"></value></default>
                 <default param="spw"><value type="string"></value></default>
                 <default param="refant"><value type="string"></value></default>
+                <default param="minblperant"><value type="int">4</value></default>
                 <default param="flag_nmedian"><value type="bool">True</value></default>
                 <default param="fnm_limit"><value type="float">0.5</value></default>
             </equals>
@@ -119,6 +126,16 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
    default: 'automatic'.
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
+
+intent -- The data intent to be checked for antennas with low gain. The
+          default is blank, which causes the task to select the first
+          intent in the list ['BANDPASS', 'PHASE', 'AMPLITUDE'] for which
+          data are found.
+    default ''
+
+minblperant -- Minimum number of baselines required per antenna for each solve
+    Antennas with fewer baselines are excluded from solutions.
+    default: 4
 
 flag_nmedian -- True to flag figures of merit greater than fnm_limit * median
                 if fnm_limit &gt; 1 or lower than fnm_limit * median if
