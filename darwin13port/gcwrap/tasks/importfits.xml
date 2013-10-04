@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+      <task type="function" name="importfits" category="import/export">
+	<shortdescription>Convert an image FITS file into a CASA image</shortdescription>
+	<description>Convert an image FITS file into a CASA image
+	</description>
+	<input>
+		<param type="string" mustexist="true" name="fitsimage">
+			<description>Name of input image FITS file</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="imagename">
+			<description>Name of output CASA image</description>
+			<value></value>
+		</param>
+
+		<param type="int" name="whichrep">
+			<description>If fits image has multiple coordinate reps, choose one.</description>
+			<value>0</value>
+		</param>
+
+		<param type="int" name="whichhdu">
+			<description>If its file contains multiple images,, choose one.</description>
+			<value>0</value>
+		</param>
+
+		<param type="bool" name="zeroblanks">
+			<description>Set blanked pixels to zero (not NaN)</description>
+			<value>True</value>
+		</param>
+
+		<param type="bool" name="overwrite">
+			<description>Overwrite pre-existing imagename</description>
+			<value>False</value>
+		</param>
+
+		<param type="bool" name="defaultaxes">
+			<description>Add the default 4D coordinate axes where they are missing</description>
+			<value>False</value>
+		</param>
+
+		<param type="variant" name="defaultaxesvalues">
+			<description>List of values to assign to added degenerate axes when defaultaxes==True (ra,dec,freq,stokes)</description>
+			<value>[]</value>
+		</param>
+	</input>
+
+<example>
+
+   importfits(fitsimage='ngc3256.fits', imagename='ngc3256.im', overwrite=True) 
+
+ </example>
+ </task>
+ </casaxml>

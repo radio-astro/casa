@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the task interface to ia.subimage -->
+<!--                                                          -->
+
+<task type="function" name="imsubimage" category="analysis">
+    <shortdescription>Create a (sub)image from a region of the image</shortdescription>
+    <input>
+        <param type="string"  name="imagename" mustexist="true">
+            <description>Input image name.  Default is unset.</description>
+            <value/>
+        </param>
+        <param type="string"  name="outfile">
+            <description>Output image name.  Default is unset.</description>
+            <value/>
+        </param>
+            <param type="string" name="box">
+            <description>Optional direction plane box ("blcx, blcy, trcx trcy").</description>
+            <value/>
+            <example>box="100,100,200,200"</example>
+        </param>
+        <param type="string" name="region" subparam="true">
+            <description>Region specification. See help par.region. Default is to not use a region.</description>
+            <value/>
+            <example>region="my.rgn"</example>
+        </param>
+        <param type="string" name="chans">
+           <description>Channel range specification. See help par.chans.</description>
+           <value/>
+           <example>chans="5~20"</example>
+        </param>
+        <param type="string" name="stokes">
+            <description>Optional contiguous stokes planes specification.</description>
+            <value/>
+            <example>stokes="iq"</example>
+        </param>
+        <param type="any"  name="mask">
+            <any type="variant"/>
+            <description>Mask to use. See help par.mask. Default is none.</description>
+            <value type="string"/>
+        </param>
+        <param type="bool"  name="dropdeg">
+            <description>Drop degenerate axes</description>
+            <value>False</value>
+        </param>
+        <param type="bool"  name="overwrite" subparam="true">
+            <description>Overwrite (unprompted) pre-existing output file?</description>
+            <value>False</value>
+        </param>
+        <param type="bool"  name="verbose">
+            <description>Post additional informative messages to the logger</description>
+            <value>True</value>
+        </param>
+        <param type="bool"  name="stretch" subparam="true">
+            <description>Stretch the mask if necessary and possible? </description>
+            <value>False</value>
+        </param>
+        <constraints>
+            <when param="box">
+                <equals type="string" value="">
+                    <default param="region">
+                        <value>""</value>
+                    </default>
+                </equals>
+            </when>
+            <when param="mask">
+                <notequals type="string" value="">
+                    <default param="stretch">
+                        <value>False</value>
+                    </default>
+                </notequals>
+            </when>
+        </constraints>
+    </input>
+    <returns type="image"/>
+    <example>
+PARAMETER SUMMARY
+imagename        Name of the input image
+outfile          Name of output file. Must be specified.
+box              Direction plane box specification, "blcx, blcy, trcx, trcy". Only one box
+                 may be specified. If not specified, region is used if specified. If region
+                 is also not specified, entire directional plane unioned with any chans and
+                 stokes specification determines the region.
+region           Region specification. See help par.region. Default is to not use a region. Do not
+                 specify both region and box/chans/stokes as that will result in an error.
+chans            Optional contiguous frequency channel number specification. Not used if
+                 region is specified. See "help par.chans" for examples.  Default is all channels.
+stokes           Contiguous stokes planes specification. Not used if region is specified.
+                 Default is all stokes.
+mask             Mask to use. See help par.mask. Default ("") is none.
+dropdeg          If True, all degenerate axes in the input image will be excluded in the output image.
+overwrite        If True, a pre-existing file of the same name as outfile will be overwritten.
+verbose          Post additional informative messages to the logger.
+stretch          Stretch the input mask if necessary and possible. Only used if a mask is specified.
+                 See help par.stretch.
+
+OVERVIEW
+
+This task copies all or part of the image to a new image specified by outfile.
+
+Sometimes it is useful to drop axes of length one (degenerate axes).
+Set {\stfaf dropdeg} equal to True if you want to do this.
+
+The output mask is the combination (logical OR) of the default input
+\pixelmask\ (if any) and the OTF mask.  Any other input \pixelmasks\
+will not be copied.  Use function <link
+anchor="images:image.maskhandler.function">maskhandler</link> if you
+need to copy other masks too.
+
+If the mask has fewer dimensions than the image and if the shape
+of the dimensions the mask and image have in common are the same,
+the mask will automatically have the missing dimensions added so
+it conforms to the image.
+
+If stretch is true and if the number of mask dimensions is less than
+or equal to the number of image dimensions and some axes in the
+mask are degenerate while the corresponding axes in the image are not,
+the mask will be stetched in the degenerate dimensions. For example,
+if the input image has shape [100, 200, 10] and the input
+mask has shape [100, 200, 1] and stretch is true, the mask will be
+stretched along the third dimension to shape [100, 200, 10]. However if
+the mask is shape [100, 200, 2], stretching is not possible and an
+error will result.
+
+EXAMPLES
+
+# make a subimage containing only channels 4 to 6 of the original image,
+imsubimage(imagename="my.im", outfile="first.im", chans="4~6")
+
+# Same as above command, just specifying chans in an alternate, more verbose
+# way
+imsubimage(imagename="my.im", outfile="second.im", chans="range=[4pix,6pix]")
+
+# Same as the above command, but even more verbose way of specifying the spectral
+# selection. Assumes the direction axes are axes numbers 0 and 1.
+ia.open("my.im")
+shape = ia.shape()
+axes = ia.coordsys().names()
+ia.done()
+xmax = shape[axes.index("Right Ascension")] - 1
+ymax = shape[axes.index("Declination")] - 1
+reg = "box[[0pix,0pix],[" + str(xmax) + "pix, " + str(ymax) + "pix]] range=[4pix,6pix]"
+imsubimage(imagename="my.im", outfile="third.im", region=reg)
+
+</example>
+
+</task>
+
+</casaxml>

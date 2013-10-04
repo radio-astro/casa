@@ -1,0 +1,225 @@
+#! /bin/bash
+startDir=$(pwd)
+#
+#This is a shell script for running the casapy.py script
+#it's adapted from the mac python script and no doubt will
+#be freely adjusted for linux.
+#
+#Set the location of the 3rd party software we will need
+#
+OSTYPE=$(uname -s)
+if [ $OSTYPE = "Darwin" ]; then
+    isapple="T"
+    installed_from_rpm="F"   
+    OSVERS=$(uname -r | awk -F. '{print $1}')
+    if [ $OSVERS -eq "10" ]; then
+	casa3party="/opt/casa/darwin10-64b"
+    fi
+    if [ $OSVERS -eq "11" ]; then
+        casa3party="/opt/casa/darwin11"
+    fi
+    if [ $OSVERS -eq "12" ]; then
+	casa3party="/opt/casa/darwin12"
+    fi
+    p_root=${casa3party}/Library/Frameworks/Python.framework/Versions/2.6
+else 
+    isapple="F"
+    casa3party="/usr/lib/casapy"
+    CPU=$(uname -p)
+    if [ "${CPU}" = "x86_64" ]; then
+	casa3party="@casa_packages@"
+    fi
+    p_root=${casa3party}
+    if [[ "$CASAPATH" =~ /usr/lib* ]]; then
+        installed_from_rpm="T"
+    else
+        installed_from_rpm="F"   
+    fi
+fi
+
+# echo "DEBUG: isapple = $isapple"
+# echo "DEBUG: installed_from_rpm = $installed_from_rpm"
+
+a_site="socorro"
+
+_dorsync="F"
+if [ "$1" = "--rsync" ]; then
+    _dorsync="T"
+fi
+
+_dodebug="F"
+if [ "$1" = "--debug" ]; then
+    _dodebug="T"
+fi
+
+if [ $installed_from_rpm = "T" ]; then
+    prefix=`echo ${CASAPATH} | awk '{printf "%s", $1}'`
+else
+    prefix=`echo ${CASAPATH} | awk '{printf "%s/%s", $1,$2}'`
+fi
+# echo "DEBUG: prefix = $prefix"
+
+a_root=`echo ${CASAPATH} | awk '{print $1}'`
+a_host=$(hostname -s)
+a_arch=`echo ${CASAPATH} | awk '{print $2}'`
+a_site="${a_site}-${a_arch}"
+p_bind=${p_root}/bin
+p_libd=${p_root}/lib/python@python_version@
+
+if [ $isapple = 'T' ]; then
+    export PYTHONEXECUTABLE=${p_root}/Resources/Python.app/Contents/MacOS/Python
+    export TERMINFO="${casa3party}/lib/terminfo"
+    unset  LD_LIBRARY_PATH
+    export LC_CTYPE=en_US.UTF-8
+    export DYLD_FRAMEWORK_PATH="${casa3party}/Library/Frameworks"
+    p_path=${p_bind}:${p_libd}:${p_libd}/plat-mac:${p_libd}/plat-darwin:${p_bind}/lib-scriptpackages:${p_libd}/lib-tk:${p_libd}/lib-dynload:${p_libd}/site-packages:${p_libd}/site-packages/Numeric:${p_libd}/site-packages/PyObjC
+else
+    export PYTHONEXECUTABLE=${p_root}/bin/python
+    export TERMINFO="/usr/share/terminfo"
+    p_path=${p_bind}:${p_libd}:${casa3party}/lib/python26.zip:${p_libd}/plat-linux2:${p_libd}/lib-tk:${p_libd}/lib-dynload:${p_libd}/site-packages:${p_libd}/site-packages/Numeric
+fi
+
+if [ ! ${DEBUGGER} ]; then
+   DEBUGGER="gdb"
+fi
+
+
+if [ $installed_from_rpm = "T" ]; then
+    export   __CASAPY_PYTHONDIR=${prefix}/lib/python@python_version@
+else
+    export   __CASAPY_PYTHONDIR=${prefix}/python/@python_version@
+fi
+p_path=${__CASAPY_PYTHONDIR}:${__CASAPY_PYTHONDIR}/regressions/admin:${p_path}
+# echo "DEBUG: __CASAPY_PYTHONDIR = $__CASAPY_PYTHONDIR"
+# echo "DEBUG: p_path = $p_path"
+
+export PYTHONHOME=${p_root}
+export PYTHONPATH=${p_path}:${PYTHONPATH}
+export CASAPATH="$a_root $a_arch $a_site $a_host"
+# echo "DEBUG: CASAPATH = ${CASAPATH}"
+export DISPLAY=${DISPLAY=:0.0}
+
+if [ $installed_from_rpm = "T" ]; then
+    export PATH="${a_root}/bin:${p_root}/bin:/bin:/sbin:/usr/bin:/usr/sbin"
+else
+    export PATH="${a_root}/${a_arch}/bin:${p_root}/bin:/bin:/sbin:/usr/bin:/usr/sbin"
+fi
+# echo "DEBUG: PATH = ${PATH}"
+
+export PGPLOT_DIR="${casa3party}/lib"
+export LESS=${LESS="-X"}
+#
+###### Technically, DYLD_LIBRARY_PATH should not need to be set
+######  but somehow the inherited environment of the async processes
+######  needs it to find Qt and friends.
+
+if [ ${#PGPLOT_DIR} -gt 112 ]
+then
+    echo
+    echo
+    echo "======================================================================"
+    echo
+    echo "WARNING: The runtime for PGPLOT limits path lengths to 112 characters."
+    echo "WARNING: The current CASA application location"
+    echo "WARNING:   " ${prefix}
+    echo "WARNING:     results in a path that is " ${#PGPLOT_DIR} " characters."
+    echo "WARNING: You may experience problems with the CASA viewer and imager."
+    echo "WARNING: Please exit CASA, then move the CASA application"
+    echo "WARNING:  to /Applications and try again."
+    echo
+    echo "======================================================================"
+    echo
+    echo
+fi
+
+# Source possible local CASA initialization files.
+for ci in \
+    ${a_root}/.casainit.sh \
+    ${a_root}/aips++local.sh \
+    ${a_root}/${a_arch}/aips++local.sh \
+    ${a_root}/${a_arch}/${a_site}/aips++local.sh \
+    ${a_root}/${a_arch}/${a_site}/${a_host}/aips++local.sh \
+    ${HOME}/.aips++local.sh \
+    ${HOME}/.casainit
+do
+    if  [ -r $ci ]; then
+	$verbose && echo "sourcing $ci"
+	. $ci
+    fi
+done
+
+
+if [ "$_dorsync" = "T" ]; then
+    casapy_ddir=${a_root}/data
+    if (( ${#casapy_ddir} > 0 )); then
+	mkdir -p "$casapy_ddir"
+	cd "$casapy_ddir" && echo "=== cd: "$(pwd)" ==="
+	echo "==================================="
+	echo "Updating data repository...."
+	rsync -avz rsync.aoc.nrao.edu::casadata . 2>/dev/null
+	echo "... data repository update complete"
+	echo "==================================="
+    fi
+    cd -
+fi
+
+#
+# Here we check that both dbus launchctl processes are running, if not shutdown the orphan and proceed
+#
+if [ ${isapple} = "T" ]; then
+    _checkdbus=$(launchctl list | grep freedesktop | wc -l | tr -d ' ')
+    if [ "${_checkdbus}" -eq "1" ]; then
+        _dbusctl=$(launchctl list | grep freedesktop | awk '{print $3}')
+        launchctl remove ${_dbusctl}
+    fi
+    launchctl load ${casa3party}/Library/LaunchDaemons/org.freedesktop.dbus-system.plist
+    launchctl load ${casa3party}/Library/LaunchAgents/org.freedesktop.dbus-session.plist
+    
+    if (( ${#casapy_wdir} > 0 )); then
+	mkdir -p "$casapy_wdir"
+	cd "$casapy_wdir" && echo "=== cd: "$(pwd)" ==="
+	echo "==="
+    else
+	cd $startDir
+    fi
+    casapy_opts=$(defaults read edu.nrao.casa.macosx.casapy casapy.opts        2>/dev/null)
+    casapy_wdir=$(defaults read edu.nrao.casa.macosx.casapy casapy.working.dir 2>/dev/null)
+fi
+
+echo
+echo "========================================="
+echo "The start-up time of CASA may vary"
+echo "depending on whether the shared libraries"
+echo "are cached or not."
+echo "========================================="
+echo
+
+
+# This bit of code, copies the old casapy.log file to one with a 
+# date string based on the last entry and then blows away the casapy.log
+# after creating a hard link
+
+if [[ -f casapy.log ]]; then
+    ln casapy.log casapy.$(tail -n 1 casapy.log | cut -c 1-19 | tr ' ' T).log && rm casapy.log
+fi
+
+if [ $installed_from_rpm = "T" ]; then
+    casapy_command="${prefix}/lib/python@python_version@/casapy.py"
+else
+    casapy_command="${prefix}/python/@python_version@/casapy.py"
+fi
+# echo "DEBUG: casapy_command = $casapy_command"
+
+#exec -a pythonw /opt/casa/darwin11/bin/pythonw -W ignore::DeprecationWarning -m cProfile -o stats.prof ${prefix}/python/@python_version@/casapy.py $*
+if [ ${_dodebug} = "T" ]; then
+    echo
+    echo "Debugger run command is: run -W ignore::DeprecationWarning ${casapy_command} $*"
+    echo
+    echo
+    exec -a ${DEBUGGER}  ${DEBUGGER} ${PYTHONEXECUTABLE}
+else
+    exec -a python ${PYTHONEXECUTABLE} -W ignore::DeprecationWarning ${casapy_command} $*
+fi
+
+#
+# O_o

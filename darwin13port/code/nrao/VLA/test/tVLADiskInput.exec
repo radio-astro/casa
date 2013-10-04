@@ -1,0 +1,18 @@
+#!/bin/sh
+#-----------------------------------------------------------------------------
+# Usage: tVLADiskInput.exec
+#-----------------------------------------------------------------------------
+# This script executes the program tMSConcat to test if new the
+# measurement set concatrenation is working.
+# $Id$
+#-----------------------------------------------------------------------------
+
+  if [ "$CASAPATH" = "" ]
+  then
+     echo "UNTESTED: tVLADiskInput (CASAPATH not defined)"
+     exit 3
+  fi
+  DATAFILE=`echo $CASAPATH | awk '{printf("%s/data/nrao/VLA/vlafiller_test/XH98109_1.vla",$1)}'`
+  cp $DATAFILE ./file1.vla
+  tVLADiskInput
+  rm -rf file1.vla

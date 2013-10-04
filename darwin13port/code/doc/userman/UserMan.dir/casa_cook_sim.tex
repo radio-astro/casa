@@ -1,0 +1,411 @@
+% STM 2007-04-13  split from previous version
+% STM 2007-10-11  add into beta
+% STM 2007-10-22  put in appendix for Beta Release
+% RI  2009-12-17  Release 0 (3.0.0) draft
+% STM 2009-12-21  Release 0 (3.0.0) final
+% RI 2010-04-10 Release 3.0.1
+
+\chapter[Simulation]{Simulation}
+\label{chapter:sim}
+
+{\bfseries New in 4.1:}
+Task {\tt simalma} uses {\tt feather} to combine interferometer and total
+power data sets.
+
+%% {\bfseries New in 4.0:}
+%% \begin{itemize}
+%% \item A new task {\tt simalma} to simulate ALMA observations
+%%   (experimental).
+%% \item Task {\tt simdata} is removed.
+%% \end{itemize}
+
+%% {\bfseries Important note on task names:}
+%% Users are encouraged to use {\tt simobserve} and {\tt simanalyze}.  The combined task {\tt simdata} is still present, but will be removed in the future.
+
+The tasks available for simulating observations are:
+\begin{itemize}
+\item {\tt simobserve} --- simulate an interferometer or total power
+observation (\S~\ref{section:sim.almasimmos})
+\item {\tt simanalyze} --- image and analyze simulated data sets
+(\S~\ref{section:sim.almasimmos})
+\item {\tt simalma} --- (experimental) simulate an ALMA observation
+including the 12-m interferometric array, the 7-m ACA, and total power
+measurements. Generate a combined image from the simulated data sets
+(\S~\ref{section:sim.simalma})
+\end{itemize}
+
+The capability of simulating observations and data sets from the JVLA
+and ALMA are an important use-case for CASA.  This not only allows one
+to get an idea of the capabilities of these instruments for doing
+science, but also provides benchmarks for the performance and utility
+of the software to process ``realistic'' data sets (with
+atmospheric and instrumental effects).  Simulations can
+also be used to tune parameters of the data reduction and therefore
+help optimizing the process.
+CASA can calculate
+visibilities (create a measurement set) for any interferometric array,
+and calculate and apply calibration tables representing some of the
+most important corrupting effects. {\tt simobserve} can also simulate
+total power observations, which can be combined with interferometric
+data in {\tt simanalyze} (i.e. one would run {\tt simobserve} twice,
+{\tt simanalyze} once).
+The task {\tt simalma} is an experimental task to simulate an ALMA
+observation, including ALMA 12-m, ACA 7-m and total power arrays, and
+generate a combined image.
+
+
+\begin{wrapfigure}{r}{2.5in}
+ \begin{boxedminipage}{2.5in}
+    \centerline{\bf Inside the Toolkit:}
+    The simulator methods are in the {\tt sm} tool.
+    Many of the other tools are also helpful when
+    constructing and analyzing simulations.
+ \end{boxedminipage}
+\end{wrapfigure}
+
+CASA's simulation capabilities continue to be improved with each CASA release.
+For the most current information, please refer to
+\url{http://www.casaguides.nrao.edu}, and click on
+``Simulating Observations in CASA''.
+%
+Following general CASA practice, the greatest flexibility and richest
+functionality is at the Toolkit level.  The most commonly used
+procedures for interferometric and single dish simulation are
+encapsulated in the {\tt simobserve} task.
+
+{\bf ALERT}: 
+Antenna configurations of ALMA in Cycle 2 are under discussion, and
+the configuration files for Cycle 2 are not yet distributed within
+CASA 4.1 package. The configuration files and the way to simulate
+Cycle 2 observations will be provided in CASA Guide home page, once
+the details of observation settings of Cycle 2 is defined. 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Simulating ALMA observations with {\tt simobserve} and {\tt simanalyze}}
+\label{section:sim.almasimmos}
+
+The {\tt simobserve} inputs are (submenus expand slightly differently for thermalnoise=manual and single dish observing):
+\small
+\begin{verbatim}
+project             =      'sim'        #  root prefix for output file names
+skymodel            =         ''        #  model image to observe
+     inbright       =         ''        #  scale surface brightness of brightest pixel e.g. "1.2Jy/pixel"
+     indirection    =         ''        #  set new direction e.g. "J2000 19h00m00 -40d00m00"
+     incell         =         ''        #  set new cell/pixel size e.g. "0.1arcsec"
+     incenter       =         ''        #  set new frequency of center channel e.g. "89GHz" (required even for 2D model)
+     inwidth        =         ''        #  set new channel width e.g. "10MHz" (required even for 2D model)
+
+complist            =         ''        #  componentlist to observe
+     compwidth      =     '8GHz'        #  bandwidth of components
+
+setpointings        =       True        
+     integration    =      '10s'        #  integration (sampling) time
+     direction      =         ''        #  "J2000 19h00m00 -40d00m00" or "" to center on model
+     mapsize        =   ['', '']        #  angular size of map or "" to cover model
+     maptype        =     'ALMA'        #  hexagonal, square (raster), ALMA, etc
+     pointingspacing =         ''       #  spacing in between pointings or "0.25PB" or "" for Nyquist
+
+obsmode             =      'int'        #  observation mode to simulate
+                                        #   [int(interferometer)|sd(singledish)|""(none)]
+     antennalist    = 'alma.out10.cfg'  #  interferometer antenna position file
+     refdate        = '2014/05/21'      #  date of observation - not critical unless concatting
+                                        #   simulations
+     hourangle      =  'transit'        #  hour angle of observation center e.g. -3:00:00, or "transit"
+     totaltime      =    '7200s'        #  total time of observation or number of repetitions
+     caldirection   =         ''        #  pt source calibrator [experimental]
+     calflux        =      '1Jy'        
+
+thermalnoise        = 'tsys-atm'        #  add thermal noise: [tsys-atm|tsys-manual|""]
+     user_pwv       =        1.0        #  Precipitable Water Vapor in mm
+     t_ground       =      269.0        #  ambient temperature
+     seed           =      11111        #  random number seed
+
+leakage             =        0.0        #  cross polarization (interferometer only)
+graphics            =     'both'        #  display graphics at each stage to [screen|file|both|none]
+verbose             =      False        
+overwrite           =       True        #  overwrite files starting with $project
+async               =      False        #  If true the taskname must be started using simobserve(...)
+\end{verbatim}
+\normalsize
+
+This task takes an input model image or list of components, plus a
+list of antennas (locations and sizes), and simulates a particular
+observation (specified by mosaic setup and observing cycles and
+times).  The output is a measurement set suitable for further analysis in CASA.
+
+The {\tt simanalyze} inputs are:
+\small
+\begin{verbatim}
+project             =      'sim'        #  root prefix for output file names
+image               =       True        #  (re)image $project.*.ms to $project.image
+     vis            =  'default'        #  Measurement Set(s) to image
+     modelimage     =         ''        #  prior image to use in clean e.g. existing single dish image
+     imsize         =          0        #  output image size in pixels (x,y) or 0 to match model
+     imdirection    =         ''        #  set output image direction, (otherwise center on the model)
+     cell           =         ''        #  cell size with units or "" to equal model
+     niter          =        500        #  maximum number of iterations (0 for dirty image)
+     threshold      =   '0.1mJy'        #  flux level (+units) to stop cleaning
+     weighting      =  'natural'        #  weighting to apply to visibilities
+     mask           =         []        #  Cleanbox(es), mask image(s), region(s), or a level
+     outertaper     =         []        #  uv-taper on outer baselines in uv-plane
+     stokes         =        'I'        #  Stokes params to image
+
+analyze             =       True        #  (only first 6 selected outputs will be displayed)
+     showuv         =       True        #  display uv coverage
+     showpsf        =       True        #  display synthesized (dirty) beam (ignored in single dish simulation)
+     showmodel      =       True        #  display sky model at original resolution
+     showconvolved  =      False        #  display sky model convolved with output beam
+     showclean      =       True        #  display the synthesized image
+     showresidual   =      False        #  display the clean residual image (ignored in single dish simulation)
+     showdifference =       True        #  display difference between output cleaned image and input
+                                        #   model sky image convolved with output clean beam
+     showfidelity   =       True        #  display fidelity
+
+graphics            =     'both'        #  display graphics at each stage to [screen|file|both|none]
+verbose             =      False        
+overwrite           =       True        #  overwrite files starting with $project
+async               =      False        #  If true the taskname must be started using simanalyze(...)
+\end{verbatim}
+\normalsize
+
+This task analyzes one or more measurement sets - interferometric and/or single dish.
+The output is a synthesized image created from those visibilities, a difference image
+between the synthesized image and your sky model convolved with the
+output synthesized beam, and a fidelity image. (see ALMA memo 398 for
+description of fidelity, which is approximately the output image
+divided by the difference between input and output)
+
+%% The combined task {\tt simdata} is modular: one can
+%% modify one's sky model, predict visibilities, corrupt the Measurement
+%% Set, re-image, and analyze the result all separately, provided in a
+%% few cases the filenames are set correctly.  
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Simulating ALMA observations with {\tt simalma}}
+\label{section:sim.simalma}
+
+The task {\tt simalma} simulates an ALMA observation by ALMA 12-m, ACA-7m
+and total power arrays.
+It takes an input model image or a list of components, plus
+configurations of ALMA antennas (locations and sizes), and simulates a
+particular ALMA observation (specified by mosaic setup and
+observing cycles and times).  The outputs are measurement sets.
+The task optionally generates synthesized images from the measurement
+sets as {\tt simanalyze} does. 
+
+Technically speaking, {\tt simalma} internally
+calls {\tt simobserve} and {\tt simanalyze} as many times as necessary
+to simulate and analyze an ALMA observation.
+Some of the simulation ({\tt simobserve}) and imaging 
+({\tt simanalyze}) parameters are automatically set to values typical
+of ALMA observations in {\tt simalma} (see
+\S~\ref{section:sim.simalma.casa410} for more details). 
+Thus, it has a simpler task interface compared to {\tt simobserve} plus
+{\tt simanalyze} at the cost of limited flexibility. 
+If you want to have more control on simulation setup, it is available
+by manually running {\tt simobserve} and {\tt simanalyze} multiple
+times or by using {\tt sm} tools.
+
+{\bf ALERT}: 
+Note that {\tt simalma} is an experimental task. Simulation settings in
+detail may differ from the actual observations in Cycle 1 and 2, as the optimal
+strategy for combining ALMA 12-m, ACA-7m and total power array data is under
+investigation.
+
+%% Note that {\tt simalma} is an experimental task. 
+%% Simulation settings in the task may differ from the actual observations
+%% in Cycle 1. Developers are continuing efforts to implement the setup
+%% of ALMA Cycle 1 observations, but details of ACA observation
+%% strategies are under discussion as of the end of CASA 4.0.0
+%% development cycle (September, 2012).
+
+The {\tt simalma} inputs are:
+\small
+\begin{verbatim}
+project             =         ''        #  root prefix for output file names
+skymodel            =         ''        #  model image to observe
+     inbright       =         ''        #  scale surface brightness of brightest pixel e.g.
+                                        #  "1.2Jy/pixel"
+     indirection    =         ''        #  set new direction e.g. "J2000 19h00m00 -40d00m00"
+     incell         =         ''        #  set new cell/pixel size e.g. "0.1arcsec"
+     incenter       =         ''        #  set new frequency of center channel e.g. "89GHz"
+                                        #  (required even for 2D model)
+     inwidth        =         ''        #  set new channel width e.g. "10MHz" (required even
+                                        #  for 2D model)
+complist            =         ''        #  componentlist to observe
+     compwidth      =     '8GHz'        #  bandwidth of components
+
+setpointings        =       True        
+     integration    =      '10s'        #  integration (sampling) time
+     direction      =         ''        #  "J2000 19h00m00 -40d00m00" or "" to center on model
+     mapsize        =   ['', '']        #  angular size of map or "" to cover model
+
+antennalist         = 'alma_cycle1_1.cfg' #  antenna position file of ALMA 12m array
+hourangle           =  'transit'        #  hour angle of observation center e.g. -3:00:00, or "transit"
+totaltime           =    '7200s'        #  total time of observation or number of repetitions
+acaratio            =        3.0        #  Ratio of the total observation time for ACA in
+                                        #  relation to 12-m array or 0 for no ACA
+     acaconfig      =         ''        #  Antenna configuration of ACA 7-m array
+                                        #  [""|"cycle1"|"i"|"ns"]
+
+pwv                 =        0.0        #  Precipitable Water Vapor in mm. 0 for noise-free
+                                        #  simulation
+image               =       True        #  image $project.*.ms to $project.image
+     imsize         =          0        #  output image size in pixels (x,y) or 0 to match model
+     imdirection    =         ''        #  set output image direction, (otherwise center on the model)
+     cell           =         ''        #  cell size with units or "" to equal model
+     niter          =        500        #  maximum number of iterations (0 for dirty image)
+     threshold      =   '0.1mJy'        #  flux level (+units) to stop cleaning
+
+graphics            =     'both'        #  display graphics at each stage to [screen|file|both|none]
+verbose             =      False        
+overwrite           =      False        #  overwrite files starting with $project
+async               =      False        #  If true the taskname must be started using simalma(...)
+\end{verbatim}
+%% $
+\normalsize
+
+The task {\tt simalma} is designed as a task that is invoked only once for
+a simulation setup. 
+It always sets up skymodel and pointings, and invokes a simulated
+observation of ALMA 12-m array.
+That means that {\tt simalma} is not supposed to be run multiple times for a
+project, unlike {\tt simobserve} and {\tt simanalyze}. 
+The task {\tt simalma} may ignore or overwrite the old results when it is
+run more than once with the same project name. 
+
+There are options in {\tt simalma} to simulate
+observation of ACA 7-m and total power arrays, to apply thermal noise, and/or
+to generate images from simulated measurement sets. 
+Observations of ACA 7-m and total power arrays are simulated when
+$ {\tt acaratio} \, > \, 0 $, 
+while they are skipped and only ALMA 12-m array is simulated when
+$ {\tt acaratio} \, = \, 0 $.
+Thermal noise is added to visibilities when $ {\tt pwv} \, > \, 0 $.
+The ATM atmospheric model is constructed from the characteristics of
+the ALMA site and a user defined Precipitable Water Vapour ({\tt pwv})
+value. 
+Set $ {\tt pwv} \, = \, 0 $ to omit the thermal noise. 
+Finally, when {\tt image = True}, synthesized images are generated
+from the simulated measurement sets.
+
+\subsection{Implementation of {\tt simalma} in CASA 4.1.0}
+\label{section:sim.simalma.casa410}
+
+As mentioned in the previous section, {\tt simalma} automatically sets
+some of the simulation and imaging parameters to values typical of ALMA
+observations. The implementations of antenna configurations, pointings,
+integration time, and imaging in CASA 4.1.0 are described in this
+section.
+
+\smallskip
+{\bf Antenna Configuration}:
+
+The configuration of the ALMA 12-m array is defined by the {\tt antennalist}
+parameter. As with {\tt simobserve}, you can specify either the name of an antenna configuration
+file or a desired resolution, e.g., {\tt `alma-cycle1;5arcsec'}. 
+When observations by ACA are requested ($ {\tt acaratio} \, > \, 0 $), 
+the configuration of the ACA 7-m array is defined by the {\tt acaconfig}
+parameter. Available configurations are, {\tt `'} (default),
+{\tt `cycle1'} (to use {\tt aca\_cycle1.cfg}),
+{\tt `i'} ({\tt aca.i.cfg}), or
+{\tt `ns'} ({\tt aca.ns.cfg}). The default
+configuration of the ACA 7-m array is set to {\tt aca\_cycle1.cfg}
+when the ALMA 12-m array ({\tt antennalist}) is in one of the Cycle 1
+configurations, or to {\tt aca.i.cfg} otherwise.
+Finally, the location of the ACA total power array is
+taken from a file, {\tt aca.tp.cfg}, and only the first antenna
+in the list is simulated.
+
+
+\medskip
+{\bf Field Setup}:
+
+There are two ways to setup pointings, i.e., Rectangle Setup and
+Multi-Pointing.
+
+In the Rectangle Setups, pointings are automatically calculated from
+the pointing centre ({\tt direction}) and the map size.
+A rectangular map region is covered by a hexagonal grid
+({\tt maptype = `alma'}) with Nyquist sampling, i.e.,
+$ 0.48\, {\rm PB} $ spacing (where
+$ {\rm PB} \, \equiv \, 1.2 \, \lambda / D $), 
+in both ALMA 12-m and ACA 7-m array simulations.
+A slightly larger area is mapped in ACA total 
+power simulations for later combination with interferometer 
+visibilities. The map area is extended by $ 1 \, {\rm PB} $
+in each direction and
+covered by a lattice grid with $ 0.225\, {\rm PB} $ spacing.
+
+In Multi-Pointing, a list of pointings is
+defined in the {\tt direction} parameter or read from a file (when
+{\tt setpointings = False}). The ALMA 12-m and ACA 7-m arrays observe
+the specified directions.
+The ACA total power simulations map either
+(1) square regions of $ 2\, {\rm PB} $ extent centred at each of the
+pointings, or 
+(2) a rectangle region that covers all the pointings.
+Either (1) or (2), whichever can be done with the smaller
+number of points, is selected. The pointing spacing in total power
+simulations is, again, $  0.225\, {\rm PB} $ in lattice grids.
+
+
+\medskip
+{\bf Integration time}:
+
+The total observation time of the ALMA 12-m array is defined by the
+{\tt totaltime} parameter, while that of the ACA 7-m and total power
+arrays is defined by $ {\tt totaltime} \, \times \, {\tt acaratio} $.
+Set $ {\tt acaratio} \, = 0 $ or $ 3 $ for Cycle 1 simulations.
+In general, the integration time (dump interval) of simulations is
+defined by the {\tt integration} parameter with an exception.
+Since the ACA total power array always observes larger areas compared
+to the ALMA 12-m and ACA 7-m arrays, it is possible that the ACA total power array
+can not cover all pointings in the given observation time 
+($ {\tt totaltime} \, \times \, {\tt acaratio} $). 
+In such a case, the integration time in total power simulation is scaled
+so that the all pointings are observed at least once in its
+observation time, i.e., 
+${\tt integration\_TP} \, = \, {\tt totaltime} \, \times \, {\tt acaratio}
+\, / \, ( ${\tt the number of total power pointings}$ ) $.
+
+
+\medskip
+{\bf Imaging and combination of ALMA with ACA}:
+%% % 4.0
+%% {\bf Imaging}:
+%%
+%% The CLEAN algorithm is used in {\tt simalma} to generate images
+%% from visibilities. The visibilities are weighted to UV-plane using
+%% Briggs weighting.
+%% When ACA observations are simulated, the image generated from ACA 7-m
+%% and total power simulations is taken as a model image of CLEAN in
+%% combined imaging.
+
+% 4.1
+The CLEAN algorithm is used in {\tt simalma} to generate images
+from visibilities. The visibilities are weighted to UV-plane using
+Briggs weighting.
+
+When ACA observations are simulated, visibilities of ACA 7-m are
+weighted by the relative sensitivities to ALMA 12-m visibilities, 
+and both data sets are concatenated before imaging. 
+The relative weight of ACA 7-m visibilities is defined in proportion
+to the difference of beam area, i.e., $ (7/12)^2 \, = \, 0.34 $.
+This is because {\tt simalma} uses a bandwidth and an integration time
+common to both ALMA 12-m and ACA 7-m simulations.
+
+The interferometer and total power images are combined using 
+{\tt feather} task when $ {\tt acaratio} \, > \, 0 $. 
+The total power image is scaled by the interferometer primary beam
+coverage before combination. 
+%This is to fit the the sensitivity of
+%total power image to that of interferometer image that is combined. 
+The final image product is the combined image corrected for the
+interferometer primary beam coverage. The output image of the
+{\tt feather} task is divided by the interferometer primary beam
+coverage in the final step.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

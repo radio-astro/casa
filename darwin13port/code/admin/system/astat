@@ -1,0 +1,102 @@
+#!/bin/sh
+#-----------------------------------------------------------------------------
+# astat: Collate AIPS++ revision statistics from an 'alog' report
+#-----------------------------------------------------------------------------
+#
+#   Copyright (C) 1994,1997
+#   Associated Universities, Inc. Washington DC, USA.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#
+#   Correspondence concerning AIPS++ should be addressed as follows:
+#          Internet email: aips2-request@nrao.edu.
+#          Postal address: AIPS++ Project Office
+#                          National Radio Astronomy Observatory
+#                          520 Edgemont Road
+#                          Charlottesville, VA 22903-2475 USA
+#
+#-----------------------------------------------------------------------------
+# Usage: alog [parameters] | astat
+#-----------------------------------------------------------------------------
+# sed/awk filter which collates revision statistics for each programmer from
+# an 'alog' report.  It reports separately the number of new files checked in,
+# revisions of previously checked in files, and the total of these.
+#
+# For each revision made (but not for the initial checkin) RCS provides a
+# rough indication of the extent of the change by reporting the number of
+# lines added and the number of lines deleted.  Cumulative totals for these
+# are provided in the output, but note that these numbers can be misleading.
+# Large values may, for example, result from checking in a changed PostScript
+# file, or test program output.
+#
+# Example:
+#
+#    alog -b --package=aips | astat
+#
+#    Collects statistics for the "aips" package for the latest AIPS++ major
+#    version.
+#
+# Notes:
+#    1) The AIPS++ master and slave RCS files contain only the current and
+#       preceeding versions.  The archive in Charlottesville contains all
+#       versions up to the base release of the current major version.
+#
+#    2) Account names for some checkins from remote sites have been normalized
+#       to standard form.
+#
+#    3) Only a fraction of the efforts of AIPS++ workers is reflected in the
+#       checkin statistics.  This fraction may be quite low for some but high
+#       for others.
+#
+# Original: 1994/02/10 by Mark Calabretta, ATNF
+# $Id$
+#-----------------------------------------------------------------------------
+
+  sed -n -e '/^date: /{s/;  state: Exp;//;s/  lines://;s/^.*author: //p;}' | \
+     sed -e 's/^dls/dshone/' \
+         -e 's/^gvd/gvandiep/' \
+         -e 's/^hjv/hvosmeij/' \
+         -e 's/^hr/hravlin/' \
+         -e 's/^kamran/ktavakol/' \
+         -e 's/^olnon/folnon/' \
+         -e 's/^rmarston/rmarson/' \
+         -e 's/^sanjay/sbhatnag/' \
+         -e 's/^tcornwell/tcornwel/' | \
+     sort | \
+     awk \
+       'BEGIN { \
+           user = "" ; new = 0 ; revs = 0 ; plus = 0 ; minus = 0 ; \
+           print "aips2prg   total   new  revs    plus   minus" ; \
+           print "--------   -----   ---  ----    ----   -----" \
+        } \
+        user == "" { \
+           user = $1 \
+        } \
+        user == $1 { \
+           if (NF == 1) { \
+              new++ ; \
+           } else { \
+              revs++ ; plus += $2 ; minus += $3 \
+           } \
+        } \
+        user != $1 { \
+           print sprintf("%-8s%8d%6d%6d%8d%8d",user,new+revs,new,revs,plus,minus) ; \
+           if (NF == 1) { \
+              user = $1 ; new = 1 ; revs = 0 ; plus = 0 ; minus = 0 \
+           } else { \
+              user = $1 ; new = 0 ; revs = 1 ; plus = $2 ; minus = $3 \
+           } \
+        } \
+        END { print sprintf("%-8s%8d%6d%6d%8d%8d",user,new+revs,new,revs,plus,minus) }'

@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<task type="function" name="tclean" category="imaging" visibility="experimental">
+
+  <shortdescription>Construct and deconvolve images</shortdescription>
+
+  <description>Form images from visibilities. Handles continuum and spectral line cubes.</description>
+
+  <input>
+
+<!--============================================== -->
+<!--                            Data Selection Parameters                                            -->
+<!--============================================== -->
+
+    <param type="any" name="vis" kind="ms" mustexist="true">
+    <description>Name of input visibility file(s)</description>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="any" name="field">
+      <description>field(s) to select</description>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="any" name="spw">
+      <description>spw(s) to select</description>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
+    </param>
+
+
+<!--============================================== -->
+<!--                            Image Definition Parameters                                         -->
+<!--============================================== -->
+
+    <param type="string" name="outlierfile">
+      <description>Name of outlier-field image definitions</description>
+      <value type="string"></value>
+    </param>
+
+    <param type="any" name="imagename" required="true">
+      <description>Pre-name of output images</description>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="int" name="nchan">
+      <description>Number of channels in the output image</description>
+      <value type="int">1</value>
+    </param>
+
+    <param type="any" name="imsize">
+      <description>Number of pixels</description>
+      <any type="variant" limittypes="int intArray"/>
+      <value type="intArray">1,1</value>
+    </param>
+
+
+<!--============================================== -->
+<!--                            Imaging/Gridding Parameters                                                      -->
+<!--============================================== -->
+
+    <param type="string" name="ftmachine">
+            <description>Name of FT machine during gridding</description>
+	    <value type="string">ft</value>
+    </param>
+
+    <param type="string" name="startmodel">
+            <description>Name of starting model image</description>
+	    <value type="string"></value>
+    </param>
+
+<!--============================================== -->
+<!--                            Deconvolution Parameters                                            -->
+<!--============================================== -->
+
+    <param type="string" name="algo">
+            <description>Name of minor cycle algorithm</description>
+	    <value type="string">test</value>
+    </param>
+
+<!--============================================== -->
+<!--                            Iteration Control Parameters                                         -->
+<!--============================================== -->
+    <param type="int" name="niter">
+      <description>Maximum number of iterations</description>
+      <value type="int">500</value>
+    </param>
+
+    <param type="int" name="cycleniter">
+      <description>Maximum number of minor-cycle iterations before triggering a major cycle</description>
+      <value type="int">-1</value>
+    </param>
+
+    <param type="double" name="cyclefactor" subparam="true">
+      <description>Scaling on PSF sidelobe level to compute the minor-cycle stopping threshold.</description>
+      <value type="double">1.0</value>
+    </param>
+
+    <param type="double" name="minpsffraction" subparam="true">
+      <description>PSF fraction that marks the max depth of cleaning in the minor cycle </description>
+      <value type="double">0.05</value>
+    </param>
+
+    <param type="double" name="maxpsffraction" subparam="true">
+      <description>PSF fraction that marks the minimum depth of cleaning in the minor cycle </description>
+      <value type="double">0.8</value>
+    </param>
+
+    <param type="double" name="threshold">
+      <description>Stopping threshold (number, in units of Jy)</description>
+      <value type="double">0.0</value>
+    </param>
+
+    <param type="double" name="loopgain">
+      <description>Loop gain</description>
+      <value type="double">0.1</value>
+    </param>
+
+
+
+<!--============================================== -->
+<!--                            Other Operational Parameters                                       -->
+<!--============================================== -->
+    <param type="bool" name="usescratch">
+	    <description>True if to save model visibilities in MODEL_DATA column</description>
+	    <value type="bool">False</value>
+    </param>
+
+    <param type="bool" name="interactive">
+	    <description>True to be able to modify masks and parameters at runtime</description>
+	    <value type="bool">False</value>
+    </param>
+
+    <param type="string" name="clusterdef">
+            <description>Name of a file that contains the cluster definition</description>
+	    <value type="string"></value>
+    </param>
+
+<!--=============================================== -->
+<!--===============  Constraints                        ============== -->
+
+   <constraints>
+     <when param="cycleniter">
+       <notequals type="int" value="-1">
+	 <default param="cyclefactor"><value>1.0</value></default>
+	 <default param="minpsffraction"><value>0.05</value></default>
+	 <default param="maxpsffraction"><value>0.8</value></default>
+       </notequals>
+     </when>
+
+   </constraints>
+
+  </input>
+  
+  <returns type="void"/>
+
+  <example>
+
+       This is an empty task. 
+       It is meant only to build/test/maintain the interface for the refactored imaging code. 
+       When ready, it will be offered to users for testing.
+
+  </example>
+
+</task>
+
+</casaxml>

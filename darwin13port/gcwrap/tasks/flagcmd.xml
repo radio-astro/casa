@@ -1,0 +1,764 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="flagcmd" category="data editing">
+        <shortdescription>Flagging task based on batches of flag-commands</shortdescription>
+        <description>
+        The flagcmd task allows several batch-operations using flag commands.
+
+        Flag commands follow the mode and parameter names from the flagdata task
+        (also explained below).  The available modes are: manual, clip, shadow, quack, 
+        elevation,  tfcrop, rflag, extend and unflag.
+
+        The flagcmd task will flag data based on the commands input on inpmode :
+            table = input from FLAG_CMD table in MS
+            list  = input from text file or list of strings given in inpfile
+            xml   = input from Flag.xml in the MS given by vis
+
+        Batch operations include : apply/unapply/list/plot/clear/extract
+
+        </description>
+        <input>
+                <param type="string" name="vis" mustexist="true">
+                        <description>Name of MS file or calibration table to flag</description>
+                        <value></value>
+                </param>
+
+                <param type="string" name="inpmode">
+                        <description>Input mode for flag commands(table/list/xml)</description>
+                        <value>table</value>
+                        <allowed kind="enum">
+                        <value>table</value>
+                        <value>list</value>
+                        <value>xml</value>
+                        </allowed>
+                </param>
+
+                <param type="any" name="inpfile" subparam="true">
+                        <description>Source of flag commands</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string"></value>
+                </param>
+                <param type="intArray" name="tablerows" subparam="true">
+                        <description>Rows of inpfile to read</description>
+                        <value type="vector"></value>
+                </param>
+                <param type="any" name="reason" subparam="true">
+                        <description>Select by REASON types</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string">any</value>
+                </param>
+                <param type="bool" name="useapplied" subparam="true">
+                        <description>Select commands whose rows have APPLIED column set to True</description>
+                        <value>False</value>
+                </param>
+                
+                <param type="double" name="tbuff" subparam="true">
+                        <description>Time buffer (sec) to pad flags</description>
+                        <value>0.0</value>
+                </param>
+
+                <param type="string" name="ants" subparam="true">
+                        <description>Allowed flag antenna names to select by</description>
+                        <value></value>
+                </param>
+
+                <param type="string" name="action">
+                        <description>Action to perform in MS and/or in inpfile (apply/unapply/list/plot/clear/extract)</description>
+                        <value>apply</value>
+                        <allowed kind="enum">
+                        <value>apply</value>
+                        <value>unapply</value>
+                        <value>list</value>
+                        <value>plot</value>
+                        <value>clear</value>
+                        <value>extract</value>
+                        </allowed>
+                </param>
+
+                <param type="bool" name="flagbackup" subparam="true">
+                        <description>Automatically backup the FLAG column before execution</description>
+                        <value>True</value>
+                </param>
+
+                <param type="bool" name="clearall" subparam="true">
+                        <description>Delete all rows from FLAG_CMD</description>
+                        <value>False</value>
+                </param>
+
+                <param type="intArray" name="rowlist" subparam="true">
+                        <description>FLAG_CMD rows to clear</description>
+                        <value type="vector"></value>
+                </param>
+
+            <param type="string" name="plotfile" subparam="true">
+                    <description>Name of output file to save plot</description>
+                    <value></value>
+            </param>
+
+            <param type="bool" name="savepars">
+                <description>Save flag commands to the MS or to a file</description>
+                <value>False</value>
+            </param>
+            <param type="string" name="outfile" subparam="true">
+                    <description>Name of output file to save commands</description>
+                    <value></value>
+            </param>
+
+
+                <constraints>
+                    <when param="inpmode">
+                            <equals value="table">
+                                    <default param="inpfile"><value type="string"></value></default>
+                                    <default param="tablerows"><value type="vector"></value></default>
+                                    <default param="reason"><value type="string">any</value></default>
+                                    <default param="useapplied"><value type="bool">False</value></default>
+                            </equals>
+                            <equals value="list">
+                                    <default param="inpfile"><value type="string"></value></default>
+                                    <default param="reason"><value type="string">any</value></default>
+                            </equals>
+                            <equals value="xml">
+                                    <default param="tbuff"><value>0.0</value></default>
+                                    <default param="ants"><value type="string"></value></default>
+                                    <default param="reason"><value type="string">any</value></default>
+                            </equals>
+                    </when>
+
+                    <when param="action">
+                            <equals value="apply">
+                                    <default param="flagbackup"><value>True</value></default>
+                            </equals>
+                            <equals value="unapply">
+                                    <default param="flagbackup"><value>True</value></default>
+                            </equals>
+                            <equals value="list"></equals>
+                            <equals value="plot">
+                                    <default param="plotfile"><value type="string"></value></default>
+                            </equals>
+                            <equals value="clear">
+                                    <default param="clearall"><value>False</value></default>
+                                    <default param="rowlist"><value type="vector"></value></default>
+                            </equals>
+                    </when>
+                                        
+                    <when param="savepars">
+                        <equals type="bool" value="False" />
+                        <equals type="bool" value="True">
+                            <default param="outfile"><value type="string"></value></default>
+                        </equals>
+                    </when>
+                    
+                </constraints>
+        </input>
+<returns type="void"/>
+
+<example>
+
+    Flag commands follow the mode and parameter names from the flagdata task
+    (also explained below).  The available modes are: manual, clip, shadow, quack, 
+    elevation,  tfcrop, rflag, extend and unflag.
+
+    The flagcmd task will flag data based on the commands input on inpmode:
+        table = input from FLAG_CMD table in MS
+        list  = input from a file, list of files or a (Python) list of command strings
+        xml   = input from Flag.xml in the MS given by vis (only for EVLA MSs)
+
+    Batch operations include : apply/unapply/list/plot/clear/extract
+
+    IMPORTANT: The FLAG_CMD sub-table is meant only for meta-data selections such as online flags.
+               Using it to save other parameters (from modes such as clip, quack, shadow, etc) is
+               possible but carries a risk that in future releases these parameters maybe renamed
+               or changed their default values. Use it at your own risk! There will be no automatic
+               way to rename any parameter that changes in the future.
+               
+    NOTE on flagging calibration tables.
+    -----------------------------------
+    
+    It is possible to flag cal tables using this task, although we recommend using the flagdata
+    task for this.
+    
+    When using this task to flag cal tables, only the 'apply' and 'list' actions are supported. 
+    Because cal tables do not have a FLAG_CMD sub-table, the default inpmode='table' can only 
+    be used if an MS is given in the 'inpfile' parameter so that flags from the MS are applied to 
+    the cal table. Otherwise, the flag commands must be given using inpmode='list', either from a 
+    file(s) or from a list of strings. See below for more information about these parameters. 
+    Data selection for calibration tables is limited to field, scan, antenna, time, spw and
+    observation. If the calibration table was created before CASA 4.1, this task will create 
+    a dummy OBSERVATION column and OBSERVATION sub-table in the input calibration table to
+    adapt it to the new cal table format.
+
+
+    Keyword arguments:
+
+    vis -- Name of input visibility file or calibration table.
+            default: '' (none) 
+            example1: vis='uid___A002_X2a5c2f_X54.ms' or
+            example2: vis='cal-X54.B1'
+
+    -- INPUT of flag commands --
+
+    inpmode -- Input mode for flag commands.
+            options: 'table','list','xml'
+            default: 'table'
+
+       inpmode "table" --  input commands from FLAG_CMD table of MS.
+   
+          inpfile -- path to MS containing FLAG_CMD
+               default: '' (read from FLAG_CMD table in the MS specified via 'vis')
+
+               Main use is to read flags from internal FLAG_CMD,
+               but by setting inpfile to a different MS you can 
+               use this to copy the flags from one MS to another.
+               
+               One use case is to read the flag commands from an MS given in
+               inpfile and apply them to a cal table given in vis. Example:
+             
+             flagcmd(vis='cal-X54.B1', inpmode='table', inpfile='uid___A002_X2a5c2f_X54.ms', action='apply')
+
+          tablerows -- list of rows of the FLAG_CMD table to read
+               default: [] (read all rows)
+               example: [0,1,2,10]
+
+               NOTE: currently only takes integer lists, not
+               parseable strings with ranges.  Use the Python
+               range function to generate ranges, e.g.
+                  tablerows = range(0,30) + range(50,55)
+               instead of '0~29,50~54' for now.
+   
+          reason -- select flag commands based on REASON(s) 
+               default: 'any' (all flags regardless of reason)
+                        can be a string, or list of strings
+               example: reason='FOCUS_ERROR'
+                        reason=['FOCUS_ERROR','SUBREFLECTOR_ERROR']
+
+               NOTE: what is within the string is literally
+               mateched, e.g. reason='' matches only blank reasons, 
+               and reason = 'FOCUS_ERROR,SUBREFLECTOR_ERROR'
+               matches this compound reason string only
+
+          useapplied -- select the flag commands of rows that have column APPLIED=True
+               options: True,False
+               default: False   
+
+               If useapplied=True it will read in both applied and
+               unapplied flags.
+
+               IMPORTANT: The APPLIED column is set to True after a flag command is applied
+                          to the MS. In order to re-apply the same flag command, this
+                          parameter should be set to True. 
+
+
+       inpmode "list" -- input commands from an ASCII file, a list of files or via a list of strings.
+                         NOTE: You can only apply the flags from a list; you will not be able
+                               to unapply them. Transfer the flag commands to the FLAG_CMD table
+                               if you want to unapply the flags. For this, see action='list' below.
+   
+          inpfile -- name of an ASCII file, list of files or a list of Python strings to apply to
+                     MS or cal table.
+               default: '' 
+               options: [] with flag commands or 
+                        [] with filenames or 
+                        '' with a filename.
+
+                  IMPORTANT: string values must contain quotes around them or the parser
+                             will not work. The parser evaluates the commands in the list
+                             and considers only existing Python types.
+
+                  example1: the following commands can be saved to a file or group of files
+                            and given to the task (e.g. save it to flags.txt).
+                  
+                     scan='1~3' mode='manual'
+                     mode='clip' clipminmax=[0,2] correlation='ABS_XX' clipoutside=False
+                     spw='9' mode='tfcrop' correlation='ABS_YY' ntime=51.0
+                     mode='extend' extendpols=True
+
+                    flagcmd(vis, inpmode='list',inpfile='flags.txt') or
+                    flagcmd(vis, inpmode='list', inpfile=['onlineflags.txt','flags.txt'])
+
+
+               example2: the same commands can be written in a Python list of strings and given
+                             to the task.
+                     cmd=["scan='1~3' mode='manual'", 
+                          "mode='clip' clipminmax=[0,2] correlation='ABS_XX' clipoutside=False",
+                          "spw='9' mode='tfcrop' correlation='ABS_YY' ntime=51.0",
+                          "mode='extend' extendpols=True"]
+
+                     flagcmd(vis, inpmode='list',inpfile=cmd)                    
+
+
+          reason -- select flag commands to apply, based on REASON(s) 
+               default: 'any' (all flags regardless of reason)
+                        can be a string, or list of strings
+               example: reason='FOCUS_ERROR'
+                        reason=['FOCUS_ERROR','SUBREFLECTOR_ERROR']
+
+               If inpfile is a list of files, the reasons given in this
+               parameter will apply to all the files.
+
+               NOTE: what is within the string is literally
+               mateched, e.g. reason='' matches only blank reasons, 
+               and reason = 'FOCUS_ERROR,SUBREFLECTOR_ERROR'
+               matches this compound reason string only
+
+   
+       inpmode "xml" -- input online flags from Flag.xml file in the MS. This mode
+                        is not available for cal tables. This works only for MSs 
+                        imported using importevla. It will not work for ALMA MSs.
+                        NOTE: You can only apply the flags from a XML file; you will not be able
+                              to unapply them. Transfer the flag commands to the FLAG_CMD table
+                              if you want to unapply the flags. For this, see action='list' below.
+   
+          tbuff -- (float) time padding buffer (seconds, default=1.0)
+   
+          ants -- select flags based on antenna, 
+                    e.g. antenna='ea01'
+               default: '' (all flags regardless of antenna)
+   
+          reason -- select flag commands based on REASON(s), 
+               default: 'Any' (all flags regardless of reason)
+                        can be a string, or list of strings
+               example: reason='FOCUS_ERROR'
+                        reason=['FOCUS_ERROR','SUBREFLECTOR_ERROR']
+
+               NOTE: what is within the string is literally
+               mateched, e.g. reason='' matches only blank reasons, 
+               and reason = 'FOCUS_ERROR,SUBREFLECTOR_ERROR'
+               matches this compound reason string only
+
+    --ACTIONS--
+
+    action -- operation to perform on MS and/or in flag commands from inpfile.
+            options: 'apply','clear','list','plot','unapply','extract'
+            default: 'apply'
+
+       action "apply" --  apply flags to MS or cal table.
+   
+          This operation will apply the commands chosen by inpmode.       
+          If inpmode='table' it will set the APPLIED column to True.
+          
+          flagbackup -- Automatically backup MS/cal table FLAG column before applying.
+               options: True,False
+               default: True
+
+   
+       action "unapply" --  unapply flags in MS. (Not available for cal tables).
+
+          This operation will unapply the commands chosen by inpmode='table' ONLY.
+          After unapplying the commands, the task will update the APPLIED column to False. 
+             
+          flagbackup -- Automatically backup MS FLAG column before unapplying?
+               options: True,False
+               default: True
+
+
+       action "list" --  list and/or save flag commands. 
+
+          This operation will list the commands chosen by inpmode on the screen
+          and save them to the MS or to a file without applying. It will save the commands
+          to outfile if the parameter savepars is set to True. If outfile is None, it
+          will save the commands to the MS given in 'vis'.
+
+
+       action "plot" --  plot flags (ant vs. time). (Not available for cal tables)
+
+          This operation will plot the flags chosen by inpmode to a 
+          matplotlib gui or to a file.  These will be sorted by
+          antenna vs. time.  Most useful for showing the online
+          flags.
+
+          plotfile -- output plot file
+               default: '' (plot to matplotlib window)
+
+               WARNING: will only reliably plot individual flags
+               per antenna and timerange (e.g. direct from xml)
+   
+       action "clear" --  clear flags from FLAG_CMD in MS. (Not available for cal tables)
+
+          This operation will delete the selected flag rows from
+          the internal FLAG_CMD table of the MS.
+
+          NOTE: choosing this option will disregard anything you
+          set in inpmode and will always work on the FLAG_CMD table
+          in vis.
+
+          clearall -- really clear all flags?
+               default: False (will not clear)
+
+          rowlist -- list of FLAG_CMD rows to clear
+               default: [] (all flags in table)
+               example: [0,1,2,10]
+
+               NOTE: currently only takes integer lists, not
+               parseable strings with ranges.  Use the Python
+               range function to generate ranges, e.g.
+                  rowlist = range(0,30) + range(50,55)
+               instead of '0~29,50~54' for now.
+   
+          WARNING: this can be dangerous, and you must set clearall=True 
+          to use this!!! This will delete the specified rows from the 
+          internal FLAG_CMD table for vis regardless of what mode is set
+          to (useful for when you import from xml or file), and decide to 
+          redo it). This action will NOT unapply the commands.
+
+
+       action "extract" -- extract internal flag dictionary. (Not available for cal tables)
+
+          This option will return the internal flagging dictionary to
+          python.
+
+
+    savepars -- Save the flag commands to the FLAG_CMD table of the MS or to an output text file.
+            default: False
+            options: True/False
+            
+            outfile -- Name of output file to save the flag commands.
+                default: ' '; it will save the commands in the FLAG_CMD table of the MS.
+                example: outfile='flags.txt' will save the parameters in a text file.
+
+     ===========================================================================
+
+     -- Internal FLAG_CMD input 'inpmode' useage --
+
+        (For inpmode='table')
+
+       * It is a good idea to use action='list' first to see what is there
+        before doing anything else, e.g.
+        
+          inpmode = 'table'
+          action = 'list'
+
+       * To apply the flags stored in the FLAG_CMD table in the MS,
+        simply set inpmode='table' and action='apply'. This is the default setup 
+        of flagcmd. Note that when a flag command is applied, the corresponding APPLIED 
+        column cell will be updated to True.
+
+          inpmode = 'table'
+          action = 'apply'
+          useapplied = False
+
+       * To re-apply the flags stored in the FLAG_CMD table in the MS,
+        inpmode='table', action='apply' and useapplied=True. 
+
+          inpmode = 'table'
+          action = 'apply'
+          useapplied = True
+        
+
+       * To merely save to FLAG_CMD but not apply, then
+        
+          inpmode = 'table'
+          inpfile = 'other.ms'
+          action = 'list'
+          
+       * To save commands from a file into the MS without applying.
+        
+          inpmode = 'list'
+          inpfile = 'flags.txt'
+          action = 'list'
+
+        If you need to select only certain rows from the FLAG_CMD table,
+        use the tablerows parameter to control this.  Currently this must
+        be a list of individual row numbers (0-based), e.g.
+
+          tablerows = [0,1,2,3,10,11]
+
+        or
+
+          tablerows = range(29)
+
+        NOTE: the useapplied=True/False tag is important if you are
+        going to (re)apply flags marked as APPLIED True in FLAG_CMD. 
+        It is common to have a "failed" flagging operation mark the flags
+        as already applied and then they don't show up when you re-run
+        (e.g. in 'list').  Set useapplied=True so that it will use these
+        anyway.
+        
+       * To apply the flag commands from an MS to a calibration table.
+       
+       vis = 'mycaltable'
+       inpmode = 'table'
+       inpfile = 'myMS.ms' 
+       action = 'apply'
+       
+
+     -- Online flag input inpmode useage --
+
+        (For inpmode='xml')
+
+       * To list the online flags stored in the Flag.xml file in the
+         MS, simply set:
+
+          inpmode = 'xml'
+          action = 'list'
+          savepars = False
+
+       * It is then straightforward to save these to FLAG_CMD
+
+          inpmode = 'xml'
+          action = 'list'
+          savepars = True
+
+       * To directly apply the online flags stored in the Flag.xml file in the
+        MS, set inpmode='xml' and desired buffer, e.g.
+
+          inpmode = 'xml'
+          tbuff = 1.0    # pad flag times by 1 sec
+          action = 'apply'
+          set savepars to save or not the commands in the MS
+
+       * You can also specify a set of reasons (a comma separated list)
+        for flags to apply, e.g.
+        
+          reason = 'FOCUS_ERROR,SUBREFLECTOR_ERROR'   # select these flags
+          reason = 'ANTENNA_NOT_ON_SOURCE'
+
+        NOTE: The online flag time buffer tbuff is specified in
+        seconds, but in fact should be keyed to the intrinsic online 
+        integration time.  This is particularly true for EVLA data,
+        were a tbuff value of 0.5x to 1.5x the integration time is
+        needed (currently you should use 1.5x for data taken in
+        early 2011 or before).
+
+        Because the Flag.xml is copied to the MS by importevla,
+        you can re-apply the online flags with an increased tbuff
+        simply by running with inpmode='xml' and optype='apply', e.g.
+
+          inpmode = 'xml'
+          tbuff = 15.0    # pad flag times by 15 sec for 10sec integrations
+          optype = 'apply'
+
+        if you originally used a smaller value (e.g. 1.0) by mistake
+        or you want to try longer values.  Note these will be added to
+        the FLAG_CMD table which you would have to clean up manually
+        if you care about this.
+
+
+     -- Flag command useage --
+
+        (For inpmode='list')
+
+       * For example, a series of commands might be:
+
+          antenna='ea01' timerange='00:00:00~01:00:00'
+          antenna='ea11' timerange='00:00:00~03:00:00' spw='0~4'
+          mode='clip' clipminmax=[0,5] correlation='ABS_ALL'
+          mode='quack' quackmode='end' quackinterval=1.0
+          mode='shadow'
+
+        Any other mode can also use selection (see the help of flagdata):
+
+          mode='shadow' antenna='ea01,ea02,ea03'
+          mode='quack' quackmode='end' quackinterval=1.0 antenna='ea22'
+
+        These commands can be saved in an ASCII file, e.g. "myflags.txt"
+        and input using inpmode='list', e.g.
+
+          flagcmd(vis='myvis.ms',inpmode='list',inpfile='myflags.txt')
+
+        or input from the interface
+
+          flagcmd(vis='myvis.ms',inpmode='list',
+                  inpfile=["mode='shadow'",
+                           "mode='clip' clipminmax=[0,5] correlation='ABS_ALL'",
+                           "mode='quack' quackmode='end' quackinterval=1.0",
+                           "antenna='ea01' timerange='00:00:00~01:00:00'",
+                           "antenna='ea11' timerange='00:00:00~03:00:00' spw='0~4'"])
+
+
+     -- ACTIONs --
+
+        The action parameter controls what flagcmd will actually do with the
+        flag commands:
+
+        * action = 'apply'
+
+          This will apply the selected commands to the data.
+          
+          If inpmode='table' and inpfile='' then the APPLIED column in FLAG_CMD
+          will be set to True.
+
+        * action = 'unapply'
+
+          This will unapply any commands on the selected data that
+          come from the FLAG_CMD table.
+
+        * action = 'list'
+
+          List what is selected and or save in the MS or in a file. It is wise to do 
+          this first before doing any other action. It will list the output in the logger 
+          and save them to the FLAG_CMD table of the MS when savepars=True and outfile = '' or 
+          to a file if outfile is non-blank.
+
+        * action = 'plot'
+
+          Will pop up a little matplotlib GUI (if outfile='') or plot to a
+          file.  Currently only gives an antenna vs time plot, mostly useful
+          for looking at the online flags.
+
+        * action = 'clear'
+          
+          DANGER! This can be used to totally delete rows from the FLAG_CMD
+          table. It ignores what inpmode is pointing to and always works
+          on FLAG_CMD.  Use at your own peril but sometimes you need to just
+          blow that table away, e.g.
+
+            vis = msfile
+            optype = 'clear'
+            rowlist = []          # all rows
+            clearall = True       # disarm the safety
+          
+          Note you have to explicitly set clearall=True to arm the deletion
+          (a minimal precaution).
+
+        * action = 'extract'
+
+          This option will return the internal flagging dictionary to
+          python.  This will allow a power-user to manipulate these
+          commands directly (e.g. for plotting etc.).  For example,
+
+          myflagd = flagcmd(vis=msfile,useapplied=True,action='extract')
+
+          will extract all the commands (including those already applied)
+          in the FLAG_CMD MS table.
+
+          NOTE: There is no extant description of the format of this
+          dictionary, as it is an internal device used by the flagcmd
+          task. This action is provided for the convenience of
+          advanced users.
+
+
+     ------- FLAG COMMAND SYNTAX -------
+
+        The command syntax is based on the flagdata parameters.
+
+        Basic Syntax Rules
+        
+          Commands are a string (which may contain internal "strings") consisting of
+          KEY=VALUE pairs separated by whitespace (see examples below). 
+
+          NOTE: There should be no whitespace between KEY=VALUE or within each KEY or 
+          VALUE, since the simple parser first breaks command lines on whitespace, 
+          then on "=". 
+        
+          Each key should only appear once on a given command line/string
+        
+          There is an implicit "mode" for each command, with the default
+          being 'manual' if not given.
+
+          Comment lines can start with '#' and will be ignored.
+        
+        
+        1. Data selection parameters (used by all flagging modes)
+        
+          timerange=''
+          antenna=''
+          spw=''
+          correlation=''
+          field=''
+          scan=''
+          feed=''
+          array=''
+          uvrange=''
+          intent=''
+          observation=''
+        
+          Note: a command consisting only of selection key-value pairs is a 
+          basic "manual" operation, ie. flag the data meeting the selection.
+          
+        
+        2. Modes specific parameters with default values (for further details and updated
+           default values, refer to the task flagdata).
+          
+          2.1 Mode manual.
+              autocorr=False
+
+          2.2 Mode clip.
+              datacolumn='DATA'
+              clipminmax=[]  
+              clipoutside=True
+              channelavg=False  
+              clipzeros=False
+              
+          2.3 Mode shadow.
+              tolerance=0.0
+              addantenna=''
+              
+          2.4 Mode quack.
+              quackinterval=1.0     
+              quackmode='beg' 
+              quackincrement=False
+              
+          2.5 Mode elevation.
+              lowerlimit=0.0
+              upperlimit=90.0
+              
+          2.6 Mode tfcrop.
+              ntime='scan'
+              combinescans=False
+              datacolumn='DATA' 
+              timecutoff=4.0 
+              freqcutoff=3.0
+              timefit='line'
+              freqfit='poly'
+              maxnpieces=7 
+              flagdimension='freqtime' 
+              usewindowstats='none'
+              halfwin=1 
+              extendflags=True
+         
+          2.7 Mode extend.
+              ntime='scan'
+              combinescans=False
+              extendpols=True
+              growtime=50.0
+              growfreq=50.0
+              growaround=False
+              flagneartime=False
+              flagnearfreq=False
+ 
+          2.8 Mode rflag.
+              ntime='scan'
+              combinescans=False
+              datacolumn='DATA'
+              winsize=3
+              timedev=''
+              freqdev=''
+              timedevscale=5.0
+              freqdevscale=5.0
+              spectralmax=1000000.0
+              spectralmin=0.0
+              extendflags=True
+              
+          2.9 Mode unflag.
+              
+              
+        3. Basic elaboration options for online and interface use
+        
+          id=''              # flag ID tag (not necessary)
+          reason=''          # reason string for flag
+          flagtime=''        # a timestamp for when this flag was generated (for 
+                               user history use)
+        
+                               NOTE: there is no flagtime column in FLAG_CMD at
+                               this time, but we will propose to add this as an
+                               optional column
+
+           NOTE: These are currently ignored and not used.
+        
+        4. Extended elaboration options for online and interface use 
+           Note: these are FLAG_CMD columns, but their use is not clear but included
+           here for compatibility and future expansion
+        
+          level=N            # flagging "level" for flags with same reason
+          severity=N         # Severity code for the flag, on a scale of 0-10 in order 
+                               of increasing severity; user specified
+        
+
+</example>
+</task>
+</casaxml>

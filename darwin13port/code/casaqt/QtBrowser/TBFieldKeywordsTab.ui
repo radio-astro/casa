@@ -1,0 +1,59 @@
+<ui version="4.0" >
+ <class>FieldKeywordsTab</class>
+ <widget class="QWidget" name="FieldKeywordsTab" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>624</width>
+    <height>477</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Field KeywordsTab</string>
+  </property>
+  <layout class="QGridLayout" >
+   <property name="margin" >
+    <number>0</number>
+   </property>
+   <property name="spacing" >
+    <number>0</number>
+   </property>
+   <item row="0" column="0" >
+    <widget class="QSplitter" name="splitter" >
+     <property name="orientation" >
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <widget class="QTreeWidget" name="fieldKeywords" >
+      <property name="indentation" >
+       <number>20</number>
+      </property>
+      <column>
+       <property name="text" >
+        <string>Field / Keyword</string>
+       </property>
+      </column>
+      <column>
+       <property name="text" >
+        <string>Type</string>
+       </property>
+      </column>
+      <column>
+       <property name="text" >
+        <string>Value</string>
+       </property>
+      </column>
+      <column>
+       <property name="text" >
+        <string>Extra Information</string>
+       </property>
+      </column>
+     </widget>
+     <widget class="QWidget" native="1" name="widget" />
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

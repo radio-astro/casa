@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema elementFormDefault="qualified" targetNamespace="http://casa.nrao.edu/schema/psetTypes.html" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:editix="http://casa.nrao.edu/schema/psetTypes.html">
+	<xsd:element name="casaxml">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="task" maxOccurs="unbounded"/>
+				<xsd:element ref="tool" maxOccurs="unbounded"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="tool">
+		<xsd:complexType mixed="true">
+			<xsd:sequence>
+				<xsd:element ref="keyword" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element ref="code" minOccurs="0"/>
+				<xsd:element ref="shortdescription"/>
+				<xsd:element ref="description" minOccurs="0"/>
+				<xsd:element ref="example" minOccurs="0"/>
+				<xsd:element ref="needs" minOccurs="0"/>
+				<xsd:element ref="comment" minOccurs="0"/>
+				<xsd:element ref="comments" minOccurs="0"/>
+				<xsd:element ref="method" maxOccurs="unbounded"/>
+			</xsd:sequence>
+			<xsd:attribute name="name" type="xsd:string" use="required"/>
+			<xsd:attribute name="module" type="xsd:string" use="required"/>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="method">
+		<xsd:complexType mixed="true">
+			<xsd:sequence>
+				<xsd:element ref="comments" minOccurs="0"/>
+				<xsd:element ref="return" minOccurs="0"/>
+				<xsd:element ref="keyword" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element ref="shortdescription" minOccurs="0"/>
+				<xsd:element ref="description" minOccurs="0"/>
+				<xsd:element ref="output" minOccurs="0"/>
+				<xsd:element ref="input" minOccurs="0"/>
+				<xsd:element ref="returns" minOccurs="0"/>
+				<xsd:element ref="example" minOccurs="0" maxOccurs="unbounded"/>
+			</xsd:sequence>
+			<xsd:attribute name="type" type="xsd:string" use="required"/>
+			<xsd:attribute name="name" type="xsd:string" use="required"/>
+			<xsd:attribute name="direction" type="xsd:string"/>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="example">
+		<xsd:complexType mixed="true">
+			<xsd:sequence>
+				<xsd:element ref="comments" minOccurs="0"/>
+				<xsd:element ref="link" minOccurs="0" maxOccurs="unbounded"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="returns">
+		<xsd:complexType mixed="true">
+			<xsd:sequence>
+				<xsd:element ref="any" minOccurs="0"/>
+				<xsd:element ref="shortdescription" minOccurs="0"/>
+				<xsd:element ref="description" minOccurs="0"/>
+			</xsd:sequence>
+			<xsd:attribute name="type" type="xsd:string"/>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="input">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="value" minOccurs="0"/>
+				<xsd:element ref="param" minOccurs="0" maxOccurs="unbounded"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="description">
+		<xsd:complexType mixed="true">
+			<xsd:sequence>
+				<xsd:element ref="li" minOccurs="0"/>
+				<xsd:element ref="B" minOccurs="0"/>
+				<xsd:element ref="sup" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element ref="sub" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element ref="link" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element ref="I" minOccurs="0" maxOccurs="unbounded"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="shortdescription">
+		<xsd:complexType mixed="true">
+			<xsd:sequence>
+				<xsd:element ref="link" minOccurs="0" maxOccurs="unbounded"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="param">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="allowed" minOccurs="0"/>
+				<xsd:element ref="choice" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element ref="any" minOccurs="0"/>
+				<xsd:element ref="description" minOccurs="0"/>
+				<xsd:element ref="range" minOccurs="0"/>
+				<xsd:element ref="descrition" minOccurs="0"/>
+				<xsd:element ref="value" minOccurs="0" maxOccurs="unbounded"/>
+			</xsd:sequence>
+			<xsd:attribute name="type" type="xsd:string" use="required"/>
+			<xsd:attribute name="name" type="xsd:string" use="required"/>
+			<xsd:attribute name="direction" type="xsd:string"/>
+			<xsd:attribute name="units" type="xsd:string"/>
+			<xsd:attribute name="mustexist" type="xsd:string"/>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="value">
+		<xsd:complexType mixed="true">
+			<xsd:sequence>
+				<xsd:element ref="value" minOccurs="0" maxOccurs="unbounded"/>
+			</xsd:sequence>
+			<xsd:attribute name="type" type="xsd:string"/>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="any">
+		<xsd:complexType>
+			<xsd:attribute name="type" type="xsd:string" use="required"/>
+			<xsd:attribute name="limittypes" type="xsd:string"/>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="code">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="include"/>
+				<xsd:element ref="private"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="private">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="include"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="include" type="xsd:string"/>
+	<xsd:element name="keyword" type="xsd:string"/>
+	<xsd:element name="choice" type="xsd:string"/>
+	<xsd:element name="link">
+		<xsd:complexType>
+			<xsd:simpleContent>
+				<xsd:extension base="xsd:string">
+					<xsd:attribute name="anchor" type="xsd:string" use="required"/>
+				</xsd:extension>
+			</xsd:simpleContent>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="return">
+		<xsd:complexType>
+			<xsd:attribute name="type" type="xsd:string" use="required"/>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="allowed">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="value" maxOccurs="unbounded"/>
+			</xsd:sequence>
+			<xsd:attribute name="kind" type="xsd:string"/>
+			<xsd:attribute name="type" type="xsd:string"/>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="comments">
+		<xsd:complexType mixed="true">
+			<xsd:sequence>
+				<xsd:element ref="link" minOccurs="0"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="range">
+		<xsd:complexType>
+			<xsd:attribute name="min" type="xsd:string" use="required"/>
+			<xsd:attribute name="max" type="xsd:string" use="required"/>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="output">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="param" maxOccurs="unbounded"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="sub" type="xsd:string"/>
+	<xsd:element name="sup" type="xsd:string"/>
+	<xsd:element name="needs" type="xsd:string"/>
+	<xsd:element name="comment">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="method"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="descrition" type="xsd:string"/>
+	<xsd:element name="task">
+		<xsd:complexType mixed="true">
+			<xsd:sequence>
+				<xsd:element ref="shortdescription" maxOccurs="unbounded"/>
+				<xsd:element ref="input"/>
+				<xsd:element ref="output" minOccurs="0"/>
+				<xsd:element ref="returns" minOccurs="0"/>
+				<xsd:element ref="description" minOccurs="0"/>
+				<xsd:element ref="example"/>
+			</xsd:sequence>
+			<xsd:attribute name="type" type="xsd:string" use="required"/>
+			<xsd:attribute name="name" type="xsd:string" use="required"/>
+			<xsd:attribute name="category" type="xsd:string" use="required"/>
+			<xsd:attribute name="visibility" type="xsd:string"/>
+			<xsd:attribute name="async" type="xsd:string"/>
+			<xsd:attribute name="startup" type="xsd:string"/>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="constraints">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="when" minOccurs="0" maxOccurs="unbounded"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="when">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="notequals" minOccurs="0"/>
+				<xsd:element ref="equals" minOccurs="0" maxOccurs="unbounded"/>
+			</xsd:sequence>
+			<xsd:attribute name="param" type="xsd:string" use="required"/>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="equals">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="description" minOccurs="0"/>
+				<xsd:element ref="value" minOccurs="0"/>
+				<xsd:element ref="default" minOccurs="0" maxOccurs="unbounded"/>
+			</xsd:sequence>
+			<xsd:attribute name="type" type="xsd:string"/>
+			<xsd:attribute name="value" type="xsd:string" use="required"/>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="default">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="description" minOccurs="0"/>
+				<xsd:element ref="value"/>
+			</xsd:sequence>
+			<xsd:attribute name="param" type="xsd:string" use="required"/>
+			<xsd:attribute name="type" type="xsd:string"/>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="notequals">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="default" maxOccurs="unbounded"/>
+			</xsd:sequence>
+			<xsd:attribute name="type" type="xsd:string"/>
+			<xsd:attribute name="value" type="xsd:string" use="required"/>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name="em" type="xsd:string"/>
+</xsd:schema>

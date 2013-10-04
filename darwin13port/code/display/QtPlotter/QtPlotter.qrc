@@ -1,0 +1,32 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file>images/zoomin.png</file>
+    <file>images/zoomout.png</file>
+    <file>images/zoomi.png</file>
+    <file>images/zoomo.png</file>
+    <file>images/zoomn.png</file>
+	 <file>images/prev.png</file>
+    <file>images/next.png</file>
+    <file>images/tick.png</file>
+    <file>images/cross.png</file>
+    <file>images/leftarrow.png</file>
+    <file>images/rightarrow.png</file>
+    <file>images/uparrow.png</file>
+    <file>images/downarrow.png</file>
+    <file>images/print.png</file>
+    <file>images/save.png</file>
+    <file>images/settings.png</file>
+    <file>images/printExp.png</file>
+    <file>images/saveExp.png</file>
+    <file>images/saveGraphic.png</file>
+    <file>images/nrao.png</file>
+    <file>images/write.png</file>
+    <file>images/open.png</file>
+    <file>images/colorWheel.png</file>
+    <file>images/legend.png</file>
+    <file>images/windowing.png</file>
+    <file>images/annotationText.png</file>
+    <file>images/rangeSelection.png</file>
+    <file>images/channelSelection.png</file>
+</qresource>
+</RCC>
