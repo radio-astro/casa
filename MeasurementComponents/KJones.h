@@ -111,8 +111,12 @@ public:
   virtual Type type() { return VisCal::K; };
 
   // Return type name as string
-  virtual String typeName()     { return "K Jones"; };
-  virtual String longTypeName() { return "K Jones (single-band delay)"; };
+  virtual String typeName()     { return ( (isSolved() && combspw()) ? 
+					   "KMBD Jones" : 
+					   "K Jones" ); };
+  virtual String longTypeName() { return ( (isSolved() && combspw()) ? 
+					   "KMBD Jones (multi-band delay)" : 
+					   "K Jones (single-band delay)"  ); };
 
   // Type of Jones matrix according to nPar()
   virtual Jones::JonesType jonesType() { return Jones::Diagonal; };
@@ -201,6 +205,10 @@ public:
   virtual Bool phandonly() { return False; };
 
 protected:
+
+  // Local implementation of selfSolveOne 
+  //   This traps combine='spw', which isn't supported yet
+  virtual void selfSolveOne(VisBuffGroupAcc& vbga);
 
   // FFT solver for on VB, that collapses baselines and cross-hands first
   virtual void solveOneVB(const VisBuffer& vb);
