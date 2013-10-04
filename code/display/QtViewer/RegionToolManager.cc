@@ -42,6 +42,7 @@
 
 #include <display/Utilities/ImageProperties.h>
 #include <casa/Quanta/QLogical.h>
+#include <casa/Quanta/MVAngle.h>
 
 namespace casa {
 	namespace viewer {
@@ -492,501 +493,511 @@ namespace casa {
 			}
 		}
 
-		void RegionToolManager::loadRegions( const std::string &path, const std::string &/*type*/ ) {
+        template <typename V> const V &pairindex( const std::pair<V,V> &p, unsigned int i )
+            { return (i==0) ? p.first : p.second; }
 
-			bool first_trip = true;
-			ListIter<WorldCanvas* > wcs = pd->wcs();
-			for ( wcs.toStart(); ! wcs.atEnd(); wcs.step( ) ) {
-				WorldCanvas *wc = wcs.getRight();
-				if ( wc == 0 ) continue;
-				DisplayData *dd = wc->csMaster( );
-				QtDisplayData *qdd = panel->displayPanel( )->getDD(dd);
-				if ( qdd == 0 ) continue;
-				const Vector<String> &units = wc->worldAxisUnits( );
-				IPosition shape(2);
-				shape[0] = dd->dataShape( )(0);
-				shape[1] = dd->dataShape( )(1);
-				DisplayCoordinateSystem matched_cs = qdd->imageProperties( ).cs( );
-				matched_cs.match(wc->coordinateSystem( ));
-				RegionTextList rlist( path, matched_cs, qdd->imageProperties( ).shape( ) );
-				Vector<AsciiAnnotationFileLine> aaregions = rlist.getLines( );
-				for ( unsigned int i=0; i < aaregions.size( ); ++i ) {
-					if ( aaregions[i].getType( ) != AsciiAnnotationFileLine::ANNOTATION ) continue;
-					const AnnotationBase* ann = aaregions[i].getAnnotationBase();
-					const AnnRegion *reg = dynamic_cast<const AnnRegion*>(ann);
-					AnnotationBase::Direction points = ann->getDirections( );
-					switch ( ann->getType( ) ) {
-					case AnnotationBase::SYMBOL: {
-						if ( points.size( ) != 1 ) {
-							panel->logIO( ) << LogIO::WARN
-											<< "symbol region has wrong number of points returned..."
-											<< LogIO::POST;
-							continue;
-						}
+        void RegionToolManager::loadRegions( const std::string &path, const std::string &/*type*/ ) {
 
-						double lcx, lcy;
-						try {
-							viewer::world_to_linear( wc, points[0].first.getValue(units[0]), points[0].second.getValue(units[1]), lcx, lcy );
-						} catch( casa::viewer::internal_error err ) {
-							panel->logIO( ) << LogIO::WARN
-											<< "symbol region "
-											<< err.what( )
-											<< LogIO::POST;
-							continue;
-						} catch(...) {
-							continue;
-						}
+            bool first_trip = true;
+            ListIter<WorldCanvas* > wcs = pd->wcs();
+            for ( wcs.toStart(); ! wcs.atEnd(); wcs.step( ) ) {
+                WorldCanvas *wc = wcs.getRight();
+                if ( wc == 0 ) continue;
+                DisplayData *dd = wc->csMaster( );
+                QtDisplayData *qdd = panel->displayPanel( )->getDD(dd);
+                if ( qdd == 0 ) continue;
+                const Vector<String> &units = wc->worldAxisUnits( );
+                IPosition shape(2);
+                shape[0] = dd->dataShape( )(0);
+                shape[1] = dd->dataShape( )(1);
+                DisplayCoordinateSystem matched_cs = qdd->imageProperties( ).cs( );
+                unsigned int xindex = 0, yindex = 1;
+                matched_cs.match(wc->coordinateSystem( ));
+                if ( matched_cs.isDirectionAbscissaLongitude( ) == false ) {
+                     xindex = 1;
+                     yindex = 0;
+                }
+                RegionTextList rlist( path, matched_cs, qdd->imageProperties( ).shape( ) );
+                Vector<AsciiAnnotationFileLine> aaregions = rlist.getLines( );
+                for ( unsigned int i=0; i < aaregions.size( ); ++i ) {
+                    if ( aaregions[i].getType( ) != AsciiAnnotationFileLine::ANNOTATION ) continue;
+                    const AnnotationBase* ann = aaregions[i].getAnnotationBase();
+                    const AnnRegion *reg = dynamic_cast<const AnnRegion*>(ann);
+                    AnnotationBase::Direction points = ann->getDirections( );
+                    switch ( ann->getType( ) ) {
+                    case AnnotationBase::SYMBOL: {
+                        if ( points.size( ) != 1 ) {
+                            panel->logIO( ) << LogIO::WARN
+                                            << "symbol region has wrong number of points returned..."
+                                            << LogIO::POST;
+                            continue;
+                        }
 
-						double px, py;
-						try {
-							viewer::linear_to_pixel( wc, lcx, lcy, px, py );
-						} catch( casa::viewer::internal_error err ) {
-							panel->logIO( ) << LogIO::WARN
-											<< "symbol region "
-											<< err.what( )
-											<< LogIO::POST;
-							continue;
-						} catch(...) {
-							continue;
-						}
+                        double lcx, lcy;
+                        try {
+                            viewer::world_to_linear( wc, points[0].first.getValue(units[0]), points[0].second.getValue(units[1]), lcx, lcy );
+                        } catch( casa::viewer::internal_error err ) {
+                            panel->logIO( ) << LogIO::WARN
+                                            << "symbol region "
+                                            << err.what( )
+                                            << LogIO::POST;
+                            continue;
+                        } catch(...) {
+                            continue;
+                        }
 
-						// region is outside of our pixel canvas area
-						if ( (int) px < 0 || (int) px > shape[0] ||
-						        (int) py < 0 || (int) py > shape[1] ) {
-							panel->logIO( ) << LogIO::WARN
-											<< "symbol region is outside of display area"
-											<< LogIO::POST;
-							continue;
-						}
+                        double px, py;
+                        try {
+                            viewer::linear_to_pixel( wc, lcx, lcy, px, py );
+                        } catch( casa::viewer::internal_error err ) {
+                            panel->logIO( ) << LogIO::WARN
+                                            << "symbol region "
+                                            << err.what( )
+                                            << LogIO::POST;
+                            continue;
+                        } catch(...) {
+                            continue;
+                        }
 
-						std::vector<std::pair<double,double> > linear_pts(2);
-						linear_pts[0].first = lcx;
-						linear_pts[0].second = lcy;
-						linear_pts[1].first = lcx;
-						linear_pts[1].second = lcy;
-						AnnotationBase::LineStyle ls = ann->getLineStyle( );
-						AnnotationBase::FontStyle fs = ann->getFontStyle( );
-						tool_map::iterator ptit = tools.find(PointTool);
-						if ( ptit == tools.end( ) ) continue;
-						String pos = ann->getLabelPosition( );
+                        // region is outside of our pixel canvas area
+                        if ( (int) px < 0 || (int) px > shape[0] ||
+                                (int) py < 0 || (int) py > shape[1] ) {
+                            panel->logIO( ) << LogIO::WARN
+                                            << "symbol region is outside of display area"
+                                            << LogIO::POST;
+                            continue;
+                        }
 
-						const AnnSymbol *sym_obj = dynamic_cast<const AnnSymbol*>(ann);
-						if ( sym_obj == 0 ) continue;
+                        std::vector<std::pair<double,double> > linear_pts(2);
+                        linear_pts[0].first = lcx;
+                        linear_pts[0].second = lcy;
+                        linear_pts[1].first = lcx;
+                        linear_pts[1].second = lcy;
+                        AnnotationBase::LineStyle ls = ann->getLineStyle( );
+                        AnnotationBase::FontStyle fs = ann->getFontStyle( );
+                        tool_map::iterator ptit = tools.find(PointTool);
+                        if ( ptit == tools.end( ) ) continue;
+                        String pos = ann->getLabelPosition( );
 
-						AnnSymbol::Symbol sym = sym_obj->getSymbol( );
-						PointMarkerState pms( sym == AnnSymbol::TRIANGLE_DOWN ?  QtMouseToolNames::SYM_DOWN_RIGHT_ARROW :
-						                      sym == AnnSymbol::TRIANGLE_UP ?    QtMouseToolNames::SYM_UP_LEFT_ARROW :
-						                      sym == AnnSymbol::TRIANGLE_LEFT ?  QtMouseToolNames::SYM_DOWN_LEFT_ARROW :
-						                      sym == AnnSymbol::TRIANGLE_RIGHT ? QtMouseToolNames::SYM_UP_RIGHT_ARROW :
-						                      sym == AnnSymbol::PLUS ?           QtMouseToolNames::SYM_PLUS :
-						                      sym == AnnSymbol::X ?              QtMouseToolNames::SYM_X :
-						                      sym == AnnSymbol::CIRCLE ?         QtMouseToolNames::SYM_CIRCLE :
-						                      sym == AnnSymbol::DIAMOND ?        QtMouseToolNames::SYM_DIAMOND :
-						                      sym == AnnSymbol::THIN_DIAMOND ?   QtMouseToolNames::SYM_DIAMOND :
-						                      sym == AnnSymbol::SQUARE ?         QtMouseToolNames::SYM_SQUARE :
-						                      QtMouseToolNames::SYM_DOT, sym_obj->getSymbolSize( ) );
+                        const AnnSymbol *sym_obj = dynamic_cast<const AnnSymbol*>(ann);
+                        if ( sym_obj == 0 ) continue;
 
-						(*ptit).second->create( region::PointRegion, wc, linear_pts,
-						                        ann->getLabel( ), ( pos == "left" ? region::LeftText :
-						                                pos == "right" ? region::RightText :
-						                                pos == "bottom" ? region::BottomText : region::TopText ),
-						                        ann->getLabelOffset( ),
-						                        ann->getFont( ), ann->getFontSize( ),
-						                        (fs == AnnotationBase::BOLD ? region::BoldText : 0) |
-						                        (fs == AnnotationBase::ITALIC ? region::ItalicText : 0) |
-						                        (fs == AnnotationBase::ITALIC_BOLD ? (region::BoldText | region::ItalicText) : 0 ),
-						                        ann->getLabelColorString( ), ann->getColorString( ),
-						                        ( ls == AnnotationBase::DASHED ? region::DashLine :
-						                          ls == AnnotationBase::DOTTED ? region::DotLine : region::SolidLine ),
-						                        ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), &pms );
+                        AnnSymbol::Symbol sym = sym_obj->getSymbol( );
+                        PointMarkerState pms( sym == AnnSymbol::TRIANGLE_DOWN ?  QtMouseToolNames::SYM_DOWN_RIGHT_ARROW :
+                                              sym == AnnSymbol::TRIANGLE_UP ?    QtMouseToolNames::SYM_UP_LEFT_ARROW :
+                                              sym == AnnSymbol::TRIANGLE_LEFT ?  QtMouseToolNames::SYM_DOWN_LEFT_ARROW :
+                                              sym == AnnSymbol::TRIANGLE_RIGHT ? QtMouseToolNames::SYM_UP_RIGHT_ARROW :
+                                              sym == AnnSymbol::PLUS ?           QtMouseToolNames::SYM_PLUS :
+                                              sym == AnnSymbol::X ?              QtMouseToolNames::SYM_X :
+                                              sym == AnnSymbol::CIRCLE ?         QtMouseToolNames::SYM_CIRCLE :
+                                              sym == AnnSymbol::DIAMOND ?        QtMouseToolNames::SYM_DIAMOND :
+                                              sym == AnnSymbol::THIN_DIAMOND ?   QtMouseToolNames::SYM_DIAMOND :
+                                              sym == AnnSymbol::SQUARE ?         QtMouseToolNames::SYM_SQUARE :
+                                              QtMouseToolNames::SYM_DOT, sym_obj->getSymbolSize( ) );
 
-					}
-					break;
-					case AnnotationBase::RECT_BOX: {
-						if ( points.size( ) != 4 ) {
-							panel->logIO( ) << LogIO::WARN
-											<< "box region has wrong number of points returned..."
-											<< LogIO::POST;
-							continue;
-						}
+                        (*ptit).second->create( region::PointRegion, wc, linear_pts,
+                                                ann->getLabel( ), ( pos == "left" ? region::LeftText :
+                                                        pos == "right" ? region::RightText :
+                                                        pos == "bottom" ? region::BottomText : region::TopText ),
+                                                ann->getLabelOffset( ),
+                                                ann->getFont( ), ann->getFontSize( ),
+                                                (fs == AnnotationBase::BOLD ? region::BoldText : 0) |
+                                                (fs == AnnotationBase::ITALIC ? region::ItalicText : 0) |
+                                                (fs == AnnotationBase::ITALIC_BOLD ? (region::BoldText | region::ItalicText) : 0 ),
+                                                ann->getLabelColorString( ), ann->getColorString( ),
+                                                ( ls == AnnotationBase::DASHED ? region::DashLine :
+                                                  ls == AnnotationBase::DOTTED ? region::DotLine : region::SolidLine ),
+                                                ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), &pms );
 
-						Quantity blcx, blcy, trcx, trcy;
-						double lblcx, lblcy, ltrcx, ltrcy;
+                    }
+                    break;
+                    case AnnotationBase::RECT_BOX: {
+                        if ( points.size( ) != 4 ) {
+                            panel->logIO( ) << LogIO::WARN
+                                            << "box region has wrong number of points returned..."
+                                            << LogIO::POST;
+                            continue;
+                        }
 
-						// JIRA: CAS-5276
-						// It seems like the annotations library is returning points for a box
-						// with the X & Y flipped... at least as far as the test example in this
-						// ticket are concerned... exchanging 'first' and 'second' below *OR*
-						// flipping RA and DEC in the viewer results in the image being loaded
-						// correctly...
-						blcx = points[0].first;
-						blcy = points[0].second;
-						trcx = points[0].first;
-						trcy = points[0].second;
-						for ( unsigned int x=1; x < points.size( ); ++x ) {
-							if ( points[x].first < blcx ) blcx = points[x].first;
-							if ( points[x].second < blcy ) blcy = points[x].second;
-							if ( points[x].first > trcx ) blcx = points[x].first;
-							if ( points[x].second > trcy ) blcy = points[x].second;
-						}
+                        Quantity blcx, blcy, trcx, trcy;
+                        double lblcx, lblcy, ltrcx, ltrcy;
 
-						try {
+                        // JIRA: CAS-5276
+                        // It seems like the annotations library is returning points for a box
+                        // with the X & Y flipped... at least as far as the test example in this
+                        // ticket are concerned... exchanging 'first' and 'second' below *OR*
+                        // flipping RA and DEC in the viewer results in the image being loaded
+                        // correctly...
+                        blcx = pairindex(points[0],xindex);
+                        blcy = pairindex(points[0],yindex);
+                        trcx = blcx;
+                        trcy = blcy;
+                        for ( unsigned int x=1; x < points.size( ); ++x ) {
+                            Quantity xvalue = pairindex(points[x],xindex);
+                            Quantity yvalue = pairindex(points[x],yindex);
+                            if ( xvalue < blcx ) blcx = xvalue;
+                            if ( yvalue < blcy ) blcy = yvalue;
+                            if ( xvalue > trcx ) trcx = xvalue;
+                            if ( yvalue > trcy ) trcy = yvalue;
+                        }
+
+                        try {
                             viewer::world_to_linear( wc, blcx.getValue(units[0]), blcy.getValue(units[1]),
                                                      trcx.getValue(units[0]), trcy.getValue(units[1]),
                                                      lblcx, lblcy, ltrcx, ltrcy );
-						} catch( casa::viewer::internal_error err ) {
-							panel->logIO( ) << LogIO::WARN
-											<< "box region "
-											<< err.what( )
-											<< LogIO::POST;
-							continue;
-						} catch(...) {
-							continue;
-						}
+                        } catch( casa::viewer::internal_error err ) {
+                            panel->logIO( ) << LogIO::WARN
+                                            << "box region "
+                                            << err.what( )
+                                            << LogIO::POST;
+                            continue;
+                        } catch(...) {
+                            continue;
+                        }
 
-						double pblcx, pblcy, ptrcx, ptrcy;
-						try {
-							viewer::linear_to_pixel( wc, lblcx, lblcy, ltrcx, ltrcy, pblcx, pblcy, ptrcx, ptrcy );
-						} catch( casa::viewer::internal_error err ) {
-							panel->logIO( ) << LogIO::WARN
-											<< "box region "
-											<< err.what( )
-											<< LogIO::POST;
-							continue;
-						} catch (...) {
-							continue;
-						}
+                        double pblcx, pblcy, ptrcx, ptrcy;
+                        try {
+                            viewer::linear_to_pixel( wc, lblcx, lblcy, ltrcx, ltrcy, pblcx, pblcy, ptrcx, ptrcy );
+                        } catch( casa::viewer::internal_error err ) {
+                            panel->logIO( ) << LogIO::WARN
+                                            << "box region "
+                                            << err.what( )
+                                            << LogIO::POST;
+                            continue;
+                        } catch (...) {
+                            continue;
+                        }
 
-						// region is outside of our pixel canvas area
-						if ( (int) pblcx < 0 || (int) pblcx > shape[0] ||
-						        (int) pblcy < 0 || (int) pblcy > shape[1] ||
-						        (int) ptrcx < 0 || (int) ptrcx > shape[0] ||
-						        (int) ptrcy < 0 || (int) ptrcy > shape[1] ) {
-							panel->logIO( ) << LogIO::WARN
-											<< "box region is outside of display area"
-											<< LogIO::POST;
-							continue;
-						}
+                        // region is outside of our pixel canvas area
+                        if ( (int) pblcx < 0 || (int) pblcx > shape[0] ||
+                                (int) pblcy < 0 || (int) pblcy > shape[1] ||
+                                (int) ptrcx < 0 || (int) ptrcx > shape[0] ||
+                                (int) ptrcy < 0 || (int) ptrcy > shape[1] ) {
+                            panel->logIO( ) << LogIO::WARN
+                                            << "box region is outside of display area"
+                                            << LogIO::POST;
+                            continue;
+                        }
 
-						std::vector<std::pair<double,double> > linear_pts(2);
-						linear_pts[0].first = lblcx;
-						linear_pts[0].second = lblcy;
-						linear_pts[1].first = ltrcx;
-						linear_pts[1].second = ltrcy;
-						AnnotationBase::LineStyle ls = ann->getLineStyle( );
-						AnnotationBase::FontStyle fs = ann->getFontStyle( );
-						tool_map::iterator rtit = tools.find(RectTool);
-						if ( rtit == tools.end( ) ) continue;
-						String pos = ann->getLabelPosition( );
-						(*rtit).second->create( region::RectRegion, wc, linear_pts,
-						                        ann->getLabel( ), ( pos == "left" ? region::LeftText :
-						                                pos == "right" ? region::RightText :
-						                                pos == "bottom" ? region::BottomText : region::TopText ),
-						                        ann->getLabelOffset( ),
-						                        ann->getFont( ), ann->getFontSize( ),
-						                        (fs == AnnotationBase::BOLD ? region::BoldText : 0) |
-						                        (fs == AnnotationBase::ITALIC ? region::ItalicText : 0) |
-						                        (fs == AnnotationBase::ITALIC_BOLD ? (region::BoldText | region::ItalicText) : 0 ),
-						                        ann->getLabelColorString( ), ann->getColorString( ),
-						                        ( ls == AnnotationBase::DASHED ? region::DashLine :
-						                          ls == AnnotationBase::DOTTED ? region::DotLine : region::SolidLine ),
-						                        ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), 0 );
-					}
+                        std::vector<std::pair<double,double> > linear_pts(2);
+                        linear_pts[0].first = lblcx;
+                        linear_pts[0].second = lblcy;
+                        linear_pts[1].first = ltrcx;
+                        linear_pts[1].second = ltrcy;
+                        AnnotationBase::LineStyle ls = ann->getLineStyle( );
+                        AnnotationBase::FontStyle fs = ann->getFontStyle( );
+                        tool_map::iterator rtit = tools.find(RectTool);
+                        if ( rtit == tools.end( ) ) continue;
+                        String pos = ann->getLabelPosition( );
+                        (*rtit).second->create( region::RectRegion, wc, linear_pts,
+                                                ann->getLabel( ), ( pos == "left" ? region::LeftText :
+                                                        pos == "right" ? region::RightText :
+                                                        pos == "bottom" ? region::BottomText : region::TopText ),
+                                                ann->getLabelOffset( ),
+                                                ann->getFont( ), ann->getFontSize( ),
+                                                (fs == AnnotationBase::BOLD ? region::BoldText : 0) |
+                                                (fs == AnnotationBase::ITALIC ? region::ItalicText : 0) |
+                                                (fs == AnnotationBase::ITALIC_BOLD ? (region::BoldText | region::ItalicText) : 0 ),
+                                                ann->getLabelColorString( ), ann->getColorString( ),
+                                                ( ls == AnnotationBase::DASHED ? region::DashLine :
+                                                  ls == AnnotationBase::DOTTED ? region::DotLine : region::SolidLine ),
+                                                ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), 0 );
+                    }
 
-					break;
-					case AnnotationBase::ELLIPSE: {
-						if ( points.size( ) != 1 ) {
-							panel->logIO( ) << LogIO::WARN
-											<< "ellipse region has wrong number of points returned..."
-											<< LogIO::POST;
-							continue;
-						}
+                    break;
+                    case AnnotationBase::ELLIPSE: {
+                        if ( points.size( ) != 1 ) {
+                            panel->logIO( ) << LogIO::WARN
+                                            << "ellipse region has wrong number of points returned..."
+                                            << LogIO::POST;
+                            continue;
+                        }
 
-						const AnnEllipse *el = dynamic_cast<const AnnEllipse*>(ann);
+                        const AnnEllipse *el = dynamic_cast<const AnnEllipse*>(ann);
 
-						double pos_angle = el->getPositionAngle( ).getValue("deg");
+                        double pos_angle = el->getPositionAngle( ).getValue("deg");
 
-						while ( pos_angle < 0 ) pos_angle += 360;
-						while ( pos_angle >= 360 ) pos_angle -= 360;
+                        while ( pos_angle < 0 ) pos_angle += 360;
+                        while ( pos_angle >= 360 ) pos_angle -= 360;
 
-						// 90 deg around 0 & 180 deg
-						bool x_is_major = ((pos_angle > 45.0 && pos_angle < 135.0) ||
-						                   (pos_angle > 225.0 && pos_angle < 315.0));
+                        // 90 deg around 0 & 180 deg
+                        bool x_is_major = ((pos_angle > 45.0 && pos_angle < 135.0) ||
+                                           (pos_angle > 225.0 && pos_angle < 315.0));
 
-						Quantity qblcx, qblcy, qtrcx, qtrcy;
-						Quantity major_inc = el->getSemiMajorAxis( );
-						Quantity minor_inc = el->getSemiMinorAxis( );
-						Quantity centerx = points[0].first;
-						Quantity centery = points[0].second;
-						try {
-							if ( x_is_major ) {
-								qblcx = centerx - major_inc;
-								qblcy = centery - minor_inc;
-								qtrcx = centerx + major_inc;
-								qtrcy = centery + minor_inc;
-							} else {
-								qblcx = centerx - minor_inc;
-								qblcy = centery - major_inc;
-								qtrcx = centerx + minor_inc;
-								qtrcy = centery + major_inc;
-							}
-						} catch( AipsError e ) {
-							panel->status( e.getMesg( ), "error" );
-							continue;
-						} catch(...) {
-							continue;
-						}
+                        Quantity qblcx, qblcy, qtrcx, qtrcy;
+                        Quantity major_inc = el->getSemiMajorAxis( );
+                        Quantity minor_inc = el->getSemiMinorAxis( );
+                        Quantity centerx = pairindex(points[0],xindex);
+                        Quantity centery = pairindex(points[0],yindex);
+                        try {
+                            if ( x_is_major ) {
+                                qblcx = centerx - major_inc;
+                                qblcy = centery - minor_inc;
+                                qtrcx = centerx + major_inc;
+                                qtrcy = centery + minor_inc;
+                            } else {
+                                qblcx = centerx - minor_inc;
+                                qblcy = centery - major_inc;
+                                qtrcx = centerx + minor_inc;
+                                qtrcy = centery + major_inc;
+                            }
+                        } catch( AipsError e ) {
+                            panel->status( e.getMesg( ), "error" );
+                            continue;
+                        } catch(...) {
+                            continue;
+                        }
 
 
-						double lblcx, lblcy, ltrcx, ltrcy;
-						try {
-							viewer::world_to_linear( wc, qblcx.getValue(units[0]), qblcy.getValue(units[1]),
-							                         qtrcx.getValue(units[0]), qtrcy.getValue(units[1]),
-							                         lblcx, lblcy, ltrcx, ltrcy );
-						} catch( casa::viewer::internal_error err ) {
-							panel->logIO( ) << LogIO::WARN
-											<< "ellipse region "
-											<< err.what( )
-											<< LogIO::POST;
-							continue;
-						} catch(...) {
-							continue;
-						}
+                        double lblcx, lblcy, ltrcx, ltrcy;
+                        try {
+                            viewer::world_to_linear( wc, qblcx.getValue(units[0]), qblcy.getValue(units[1]),
+                                                     qtrcx.getValue(units[0]), qtrcy.getValue(units[1]),
+                                                     lblcx, lblcy, ltrcx, ltrcy );
+                        } catch( casa::viewer::internal_error err ) {
+                            panel->logIO( ) << LogIO::WARN
+                                            << "ellipse region "
+                                            << err.what( )
+                                            << LogIO::POST;
+                            continue;
+                        } catch(...) {
+                            continue;
+                        }
 
-						double pblcx, pblcy, ptrcx, ptrcy;
-						try {
-							viewer::linear_to_pixel( wc, lblcx, lblcy, ltrcx, ltrcy, pblcx, pblcy, ptrcx, ptrcy );
-						} catch( casa::viewer::internal_error err ) {
-							panel->logIO( ) << LogIO::WARN
-											<< "ellipse region "
-											<< err.what( )
-											<< LogIO::POST;
-							continue;
-						} catch(...) {
-							continue;
-						}
+                        double pblcx, pblcy, ptrcx, ptrcy;
+                        try {
+                            viewer::linear_to_pixel( wc, lblcx, lblcy, ltrcx, ltrcy, pblcx, pblcy, ptrcx, ptrcy );
+                        } catch( casa::viewer::internal_error err ) {
+                            panel->logIO( ) << LogIO::WARN
+                                            << "ellipse region "
+                                            << err.what( )
+                                            << LogIO::POST;
+                            continue;
+                        } catch(...) {
+                            continue;
+                        }
 
-						// region is outside of our pixel canvas area
-						if ( (int) pblcx < 0 || (int) pblcx > shape[0] ||
-						        (int) pblcy < 0 || (int) pblcy > shape[1] ||
-						        (int) ptrcx < 0 || (int) ptrcx > shape[0] ||
-						        (int) ptrcy < 0 || (int) ptrcy > shape[1] ) {
-							panel->logIO( ) << LogIO::WARN
-											<< "ellipse region is outside of display area"
-											<< LogIO::POST;
-							continue;
-						}
+                        // region is outside of our pixel canvas area
+                        if ( (int) pblcx < 0 || (int) pblcx > shape[0] ||
+                                (int) pblcy < 0 || (int) pblcy > shape[1] ||
+                                (int) ptrcx < 0 || (int) ptrcx > shape[0] ||
+                                (int) ptrcy < 0 || (int) ptrcy > shape[1] ) {
+                            panel->logIO( ) << LogIO::WARN
+                                            << "ellipse region is outside of display area"
+                                            << LogIO::POST;
+                            continue;
+                        }
 
-						std::vector<std::pair<double,double> > linear_pts(2);
-						linear_pts[0].first = lblcx;
-						linear_pts[0].second = lblcy;
-						linear_pts[1].first = ltrcx;
-						linear_pts[1].second = ltrcy;
-						AnnotationBase::LineStyle ls = ann->getLineStyle( );
-						AnnotationBase::FontStyle fs = ann->getFontStyle( );
-						tool_map::iterator elit = tools.find(EllipseTool);
-						if ( elit == tools.end( ) ) continue;
-						String pos = ann->getLabelPosition( );
-						(*elit).second->create( region::EllipseRegion, wc, linear_pts,
-						                        ann->getLabel( ), ( pos == "left" ? region::LeftText :
-						                                pos == "right" ? region::RightText :
-						                                pos == "bottom" ? region::BottomText : region::TopText ),
-						                        ann->getLabelOffset( ),
-						                        ann->getFont( ), ann->getFontSize( ),
-						                        (fs == AnnotationBase::BOLD ? region::BoldText : 0) |
-						                        (fs == AnnotationBase::ITALIC ? region::ItalicText : 0) |
-						                        (fs == AnnotationBase::ITALIC_BOLD ? (region::BoldText | region::ItalicText) : 0 ),
-						                        ann->getLabelColorString( ), ann->getColorString( ),
-						                        ( ls == AnnotationBase::DASHED ? region::DashLine :
-						                          ls == AnnotationBase::DOTTED ? region::DotLine : region::SolidLine ),
-						                        ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), 0 );
-					}
-					break;
-					case AnnotationBase::POLYGON: {
-						if ( points.size( ) <= 2 ) {
-							panel->logIO( ) << LogIO::WARN
-											<< "polygon region has wrong number of points returned..."
-											<< LogIO::POST;
-							continue;
-						}
+                        std::vector<std::pair<double,double> > linear_pts(2);
+                        linear_pts[0].first = lblcx;
+                        linear_pts[0].second = lblcy;
+                        linear_pts[1].first = ltrcx;
+                        linear_pts[1].second = ltrcy;
+                        AnnotationBase::LineStyle ls = ann->getLineStyle( );
+                        AnnotationBase::FontStyle fs = ann->getFontStyle( );
+                        tool_map::iterator elit = tools.find(EllipseTool);
+                        if ( elit == tools.end( ) ) continue;
+                        String pos = ann->getLabelPosition( );
+                        (*elit).second->create( region::EllipseRegion, wc, linear_pts,
+                                                ann->getLabel( ), ( pos == "left" ? region::LeftText :
+                                                        pos == "right" ? region::RightText :
+                                                        pos == "bottom" ? region::BottomText : region::TopText ),
+                                                ann->getLabelOffset( ),
+                                                ann->getFont( ), ann->getFontSize( ),
+                                                (fs == AnnotationBase::BOLD ? region::BoldText : 0) |
+                                                (fs == AnnotationBase::ITALIC ? region::ItalicText : 0) |
+                                                (fs == AnnotationBase::ITALIC_BOLD ? (region::BoldText | region::ItalicText) : 0 ),
+                                                ann->getLabelColorString( ), ann->getColorString( ),
+                                                ( ls == AnnotationBase::DASHED ? region::DashLine :
+                                                  ls == AnnotationBase::DOTTED ? region::DotLine : region::SolidLine ),
+                                                ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), 0 );
+                    }
+                    break;
+                    case AnnotationBase::POLYGON: {
+                        if ( points.size( ) <= 2 ) {
+                            panel->logIO( ) << LogIO::WARN
+                                            << "polygon region has wrong number of points returned..."
+                                            << LogIO::POST;
+                            continue;
+                        }
 
-						std::vector<std::pair<double,double> > linear_pts(points.size( ));
+                        std::vector<std::pair<double,double> > linear_pts(points.size( ));
 
-						bool error = false;
-						try {
-							for ( unsigned int i = 0; i < points.size( ); ++i ) {
-								double lx, ly;
-								try {
-									viewer::world_to_linear( wc, points[i].first.getValue(units[0]), points[i].second.getValue(units[1]), lx, ly );
-								} catch( casa::viewer::internal_error err ) {
-									panel->logIO( ) << LogIO::WARN
-													<< "polygon region "
-													<< err.what( )
-													<< LogIO::POST;
-									throw;
-								} catch(...) {
-									throw;
-								}
+                        bool error = false;
+                        try {
+                            for ( unsigned int i = 0; i < points.size( ); ++i ) {
+                                double lx, ly;
+                                try {
+                                    viewer::world_to_linear( wc, pairindex(points[i],xindex).getValue(units[0]), pairindex(points[i],yindex).getValue(units[1]), lx, ly );
+                                } catch( casa::viewer::internal_error err ) {
+                                    panel->logIO( ) << LogIO::WARN
+                                                    << "polygon region "
+                                                    << err.what( )
+                                                    << LogIO::POST;
+                                    throw;
+                                } catch(...) {
+                                    throw;
+                                }
 
-								double px, py;
-								try {
-									viewer::linear_to_pixel( wc, lx, ly, px, py );
-								} catch( casa::viewer::internal_error err ) {
-									panel->logIO( ) << LogIO::WARN
-													<< "polygon region "
-													<< err.what( )
-													<< LogIO::POST;
-									throw;
-								} catch (...) {
-									throw;
-								}
+                                double px, py;
+                                try {
+                                    viewer::linear_to_pixel( wc, lx, ly, px, py );
+                                } catch( casa::viewer::internal_error err ) {
+                                    panel->logIO( ) << LogIO::WARN
+                                                    << "polygon region "
+                                                    << err.what( )
+                                                    << LogIO::POST;
+                                    throw;
+                                } catch (...) {
+                                    throw;
+                                }
 
-								// region is outside of our pixel canvas area
-								if ( (int) px < 0 || (int) px > shape[0] ||
-									 (int) py < 0 || (int) py > shape[1] ) {
-									error = false;
-									panel->logIO( ) << LogIO::WARN
-													<< "polygon region is outside of display area"
-													<< LogIO::POST;
-									throw viewer::internal_error("poly point outside of canvas");
-								}
+                                // region is outside of our pixel canvas area
+                                if ( (int) px < 0 || (int) px > shape[0] ||
+                                     (int) py < 0 || (int) py > shape[1] ) {
+                                    error = false;
+                                    panel->logIO( ) << LogIO::WARN
+                                                    << "polygon region is outside of display area"
+                                                    << LogIO::POST;
+                                    throw viewer::internal_error("poly point outside of canvas");
+                                }
 
-								linear_pts[i].first = lx;
-								linear_pts[i].second = ly;
-							}
-						} catch (...) {
-							// here we are catching the rethrows from above... to 'continue' with
-							// the outer loop above...
-							continue;
-						}
-						AnnotationBase::LineStyle ls = ann->getLineStyle( );
-						AnnotationBase::FontStyle fs = ann->getFontStyle( );
+                                linear_pts[i].first = lx;
+                                linear_pts[i].second = ly;
+                            }
+                        } catch (...) {
+                            // here we are catching the rethrows from above... to 'continue' with
+                            // the outer loop above...
+                            continue;
+                        }
+                        AnnotationBase::LineStyle ls = ann->getLineStyle( );
+                        AnnotationBase::FontStyle fs = ann->getFontStyle( );
 
-						tool_map::iterator plyit = tools.find(PolyTool);
-						if ( plyit == tools.end( ) ) continue;
-						String pos = ann->getLabelPosition( );
-						(*plyit).second->create( region::PolyRegion, wc, linear_pts,
-												 ann->getLabel( ), ( pos == "left" ? region::LeftText :
-																	 pos == "right" ? region::RightText :
-																	 pos == "bottom" ? region::BottomText : region::TopText ),
-												 ann->getLabelOffset( ),
-												 ann->getFont( ), ann->getFontSize( ),
-												 (fs == AnnotationBase::BOLD ? region::BoldText : 0) |
-												 (fs == AnnotationBase::ITALIC ? region::ItalicText : 0) |
-												 (fs == AnnotationBase::ITALIC_BOLD ? (region::BoldText | region::ItalicText) : 0 ),
-												 ann->getLabelColorString( ), ann->getColorString( ),
-												 ( ls == AnnotationBase::DASHED ? region::DashLine :
-												   ls == AnnotationBase::DOTTED ? region::DotLine : region::SolidLine ),
-												 ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), 0 );
-					}
-					break;
-					case AnnotationBase::POLYLINE: {
-						if ( points.size( ) <= 1 ) {
-							panel->logIO( ) << LogIO::WARN
-											<< "polyline region has wrong number of points returned..."
-											<< LogIO::POST;
-							continue;
-						}
+                        tool_map::iterator plyit = tools.find(PolyTool);
+                        if ( plyit == tools.end( ) ) continue;
+                        String pos = ann->getLabelPosition( );
+                        (*plyit).second->create( region::PolyRegion, wc, linear_pts,
+                                                 ann->getLabel( ), ( pos == "left" ? region::LeftText :
+                                                                     pos == "right" ? region::RightText :
+                                                                     pos == "bottom" ? region::BottomText : region::TopText ),
+                                                 ann->getLabelOffset( ),
+                                                 ann->getFont( ), ann->getFontSize( ),
+                                                 (fs == AnnotationBase::BOLD ? region::BoldText : 0) |
+                                                 (fs == AnnotationBase::ITALIC ? region::ItalicText : 0) |
+                                                 (fs == AnnotationBase::ITALIC_BOLD ? (region::BoldText | region::ItalicText) : 0 ),
+                                                 ann->getLabelColorString( ), ann->getColorString( ),
+                                                 ( ls == AnnotationBase::DASHED ? region::DashLine :
+                                                   ls == AnnotationBase::DOTTED ? region::DotLine : region::SolidLine ),
+                                                 ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), 0 );
+                    }
+                    break;
+                    case AnnotationBase::POLYLINE: {
+                        if ( points.size( ) <= 1 ) {
+                            panel->logIO( ) << LogIO::WARN
+                                            << "polyline region has wrong number of points returned..."
+                                            << LogIO::POST;
+                            continue;
+                        }
 
-						std::vector<std::pair<double,double> > linear_pts(points.size( ));
+                        std::vector<std::pair<double,double> > linear_pts(points.size( ));
 
-						bool error = false;
-						try {
-							for ( unsigned int i = 0; i < points.size( ); ++i ) {
-								double lx, ly;
-								try {
-									viewer::world_to_linear( wc, points[i].first.getValue(units[0]), points[i].second.getValue(units[1]), lx, ly );
-								} catch( casa::viewer::internal_error err ) {
-									panel->logIO( ) << LogIO::WARN
-													<< "polyline region "
-													<< err.what( )
-													<< LogIO::POST;
-									throw;
-								} catch(...) {
-									throw;
-								}
+                        bool error = false;
+                        try {
+                            for ( unsigned int i = 0; i < points.size( ); ++i ) {
+                                double lx, ly;
+                                try {
+                                    viewer::world_to_linear( wc, pairindex(points[i],xindex).getValue(units[0]), pairindex(points[i],yindex).getValue(units[1]), lx, ly );
+                                } catch( casa::viewer::internal_error err ) {
+                                    panel->logIO( ) << LogIO::WARN
+                                                    << "polyline region "
+                                                    << err.what( )
+                                                    << LogIO::POST;
+                                    throw;
+                                } catch(...) {
+                                    throw;
+                                }
 
-								double px, py;
-								try {
-									viewer::linear_to_pixel( wc, lx, ly, px, py );
-								} catch( casa::viewer::internal_error err ) {
-									panel->logIO( ) << LogIO::WARN
-													<< "polyline region "
-													<< err.what( )
-													<< LogIO::POST;
-									throw;
-								} catch (...) {
-									throw;
-								}
+                                double px, py;
+                                try {
+                                    viewer::linear_to_pixel( wc, lx, ly, px, py );
+                                } catch( casa::viewer::internal_error err ) {
+                                    panel->logIO( ) << LogIO::WARN
+                                                    << "polyline region "
+                                                    << err.what( )
+                                                    << LogIO::POST;
+                                    throw;
+                                } catch (...) {
+                                    throw;
+                                }
 
-								// region is outside of our pixel canvas area
-								if ( (int) px < 0 || (int) px > shape[0] ||
-									 (int) py < 0 || (int) py > shape[1] ) {
-									error = false;
-									panel->logIO( ) << LogIO::WARN
-													<< "polyline region is outside of display area"
-													<< LogIO::POST;
-									throw viewer::internal_error("poly point outside of canvas");
-								}
+                                // region is outside of our pixel canvas area
+                                if ( (int) px < 0 || (int) px > shape[0] ||
+                                     (int) py < 0 || (int) py > shape[1] ) {
+                                    error = false;
+                                    panel->logIO( ) << LogIO::WARN
+                                                    << "polyline region is outside of display area"
+                                                    << LogIO::POST;
+                                    throw viewer::internal_error("poly point outside of canvas");
+                                }
 
-								linear_pts[i].first = lx;
-								linear_pts[i].second = ly;
-							}
-						} catch (...) {
-							// here we are catching the rethrows from above... to 'continue' with
-							// the outer loop above...
-							continue;
-						} 
-						AnnotationBase::LineStyle ls = ann->getLineStyle( );
-						AnnotationBase::FontStyle fs = ann->getFontStyle( );
+                                linear_pts[i].first = lx;
+                                linear_pts[i].second = ly;
+                            }
+                        } catch (...) {
+                            // here we are catching the rethrows from above... to 'continue' with
+                            // the outer loop above...
+                            continue;
+                        } 
+                        AnnotationBase::LineStyle ls = ann->getLineStyle( );
+                        AnnotationBase::FontStyle fs = ann->getFontStyle( );
 
-						tool_map::iterator plyit = tools.find(PolylineTool);
-						if ( plyit == tools.end( ) ) continue;
-						String pos = ann->getLabelPosition( );
-						(*plyit).second->create( region::PolylineRegion, wc, linear_pts,
-						                         ann->getLabel( ), ( pos == "left" ? region::LeftText :
-						                                 pos == "right" ? region::RightText :
-						                                 pos == "bottom" ? region::BottomText : region::TopText ),
-						                         ann->getLabelOffset( ),
-						                         ann->getFont( ), ann->getFontSize( ),
-						                         (fs == AnnotationBase::BOLD ? region::BoldText : 0) |
-						                         (fs == AnnotationBase::ITALIC ? region::ItalicText : 0) |
-						                         (fs == AnnotationBase::ITALIC_BOLD ? (region::BoldText | region::ItalicText) : 0 ),
-						                         ann->getLabelColorString( ), ann->getColorString( ),
-						                         ( ls == AnnotationBase::DASHED ? region::DashLine :
-						                           ls == AnnotationBase::DOTTED ? region::DotLine : region::SolidLine ),
-						                         ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), 0 );
-					}
-					break;
+                        tool_map::iterator plyit = tools.find(PolylineTool);
+                        if ( plyit == tools.end( ) ) continue;
+                        String pos = ann->getLabelPosition( );
+                        (*plyit).second->create( region::PolylineRegion, wc, linear_pts,
+                                                 ann->getLabel( ), ( pos == "left" ? region::LeftText :
+                                                         pos == "right" ? region::RightText :
+                                                         pos == "bottom" ? region::BottomText : region::TopText ),
+                                                 ann->getLabelOffset( ),
+                                                 ann->getFont( ), ann->getFontSize( ),
+                                                 (fs == AnnotationBase::BOLD ? region::BoldText : 0) |
+                                                 (fs == AnnotationBase::ITALIC ? region::ItalicText : 0) |
+                                                 (fs == AnnotationBase::ITALIC_BOLD ? (region::BoldText | region::ItalicText) : 0 ),
+                                                 ann->getLabelColorString( ), ann->getColorString( ),
+                                                 ( ls == AnnotationBase::DASHED ? region::DashLine :
+                                                   ls == AnnotationBase::DOTTED ? region::DotLine : region::SolidLine ),
+                                                 ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), 0 );
+                    }
+                    break;
 
-					case AnnotationBase::CIRCLE:
-						if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region type (circle) encountered...\n" );
-						break;
-					case AnnotationBase::CENTER_BOX:
-						if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region type (center box) encountered...\n" );
-						break;
-					case AnnotationBase::LINE:
-						if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region type (line) encountered...\n" );
-						break;
-					case AnnotationBase::VECTOR:
-						if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region type (vector) encountered...\n" );
-						break;
-					case AnnotationBase::TEXT:
-						if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region type (text) encountered...\n" );
-						break;
-					case AnnotationBase::ROTATED_BOX:
-						if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region type (rotated box) encountered...\n" );
-						break;
-					case AnnotationBase::ANNULUS:
-						if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region type (annulus) encountered...\n" );
-						break;
-					default:
-						if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region (of unknown type) encountered...\n" );
-					}
-				}
-				first_trip = false;
-			}
-		}
+                    case AnnotationBase::CIRCLE:
+                        if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region type (circle) encountered...\n" );
+                        break;
+                    case AnnotationBase::CENTER_BOX:
+                        if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region type (center box) encountered...\n" );
+                        break;
+                    case AnnotationBase::LINE:
+                        if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region type (line) encountered...\n" );
+                        break;
+                    case AnnotationBase::VECTOR:
+                        if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region type (vector) encountered...\n" );
+                        break;
+                    case AnnotationBase::TEXT:
+                        if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region type (text) encountered...\n" );
+                        break;
+                    case AnnotationBase::ROTATED_BOX:
+                        if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region type (rotated box) encountered...\n" );
+                        break;
+                    case AnnotationBase::ANNULUS:
+                        if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region type (annulus) encountered...\n" );
+                        break;
+                    default:
+                        if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region (of unknown type) encountered...\n" );
+                    }
+                }
+                first_trip = false;
+            }
+        }
 
 		std::tr1::shared_ptr<RegionTool> RegionToolManager::tool( region::RegionTypes type ) {
 			switch ( type ) {
