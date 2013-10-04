@@ -718,6 +718,7 @@ void testIt(MSMetaData& md) {
 				}
 				std::set<Int> got = md.getScansForIntent(*intent);
 				AlwaysAssert(md.getScansForIntent(*intent) == expec, AipsError);
+				AlwaysAssert(md.getIntentToScansMap()[*intent] == expec, AipsError);
 			}
 		}
 		{
@@ -896,29 +897,30 @@ void testIt(MSMetaData& md) {
 			}
 		}
 		{
-			cout << "*** test getFieldsForIntent()" << endl;
+			cout << "*** test getFieldsForIntent() and getIntentToFieldsMap()" << endl;
+			std::map<String, std::set<Int> > mymap = md.getIntentToFieldsMap();
 			std::set<String> intents = md.getIntents();
 			for (
-					std::set<String>::const_iterator intent=intents.begin();
-					intent!=intents.end(); intent++
+				std::set<String>::const_iterator intent=intents.begin();
+				intent!=intents.end(); intent++
 			) {
 				std::set<Int> expec;
 				if (
-						*intent=="CALIBRATE_AMPLI#ON_SOURCE"
+					*intent=="CALIBRATE_AMPLI#ON_SOURCE"
 				) {
 					expec.insert(2);
 				}
 				else if (
-						*intent=="CALIBRATE_BANDPASS#ON_SOURCE"
-								|| *intent=="CALIBRATE_SIDEBAND_RATIO#OFF_SOURCE"
-										|| *intent=="CALIBRATE_SIDEBAND_RATIO#ON_SOURCE"
+					*intent=="CALIBRATE_BANDPASS#ON_SOURCE"
+						|| *intent=="CALIBRATE_SIDEBAND_RATIO#OFF_SOURCE"
+						|| *intent=="CALIBRATE_SIDEBAND_RATIO#ON_SOURCE"
 				) {
 					expec.insert(0);
 				}
 				else if (
-						*intent=="CALIBRATE_ATMOSPHERE#OFF_SOURCE"
-								|| *intent=="CALIBRATE_ATMOSPHERE#ON_SOURCE"
-										|| *intent=="CALIBRATE_WVR#OFF_SOURCE"
+					*intent=="CALIBRATE_ATMOSPHERE#OFF_SOURCE"
+						|| *intent=="CALIBRATE_ATMOSPHERE#ON_SOURCE"
+							|| *intent=="CALIBRATE_WVR#OFF_SOURCE"
 				) {
 					Int mine[] = {0, 2, 3, 4, 5};
 					expec.insert(mine, mine+5);
@@ -947,6 +949,7 @@ void testIt(MSMetaData& md) {
 					md.getFieldsForIntent(*intent) == expec,
 					AipsError
 				);
+				AlwaysAssert(mymap[*intent] == expec, AipsError);
 			}
 		}
 		{

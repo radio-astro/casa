@@ -1570,6 +1570,26 @@ std::set<Int> MSMetaDataOnDemand::getFieldsForIntent(const String& intent) {
 	return intentToFieldsMap[intent];
 }
 
+std::map<String, std::set<Int> > MSMetaDataOnDemand::getIntentToFieldsMap() {
+	vector<std::set<String> > fieldToIntentsMap;
+	std::map<String, std::set<Int> > intentToFieldsMap;
+	_getFieldsAndIntentsMaps(
+		fieldToIntentsMap, intentToFieldsMap
+	);
+	return intentToFieldsMap;
+}
+
+std::map<String, std::set<Int> > MSMetaDataOnDemand::getIntentToScansMap() {
+	std::map<Int, std::set<String> > scanToIntentsMap;
+	std::map<String, std::set<Int> > intentToScansMap;
+	_getScansAndIntentsMaps(
+		scanToIntentsMap,
+		intentToScansMap
+	);
+	return intentToScansMap;
+}
+
+
 Bool MSMetaDataOnDemand::_hasIntent(const String& intent) {
 	std::set<String> uniqueIntents = getIntents();
 	return uniqueIntents.find(intent) != uniqueIntents.end();
