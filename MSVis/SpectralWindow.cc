@@ -159,6 +159,13 @@ SpectralWindow::frequencyMeasureReference () const
 }
 
 Int
+SpectralWindow::id () const
+{
+    return id_p;
+}
+
+
+Int
 SpectralWindow::ifConversionChain () const
 {
     return ifConversionChain_p;

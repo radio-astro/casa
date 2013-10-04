@@ -143,6 +143,7 @@ public:
     const_iterator end () const;
     Int getNChannels (Int spectralWindowId) const;
     set<int> getSelectedWindows () const;
+    size_t size () const;
     String toString () const;
 
 //**********************************************************************
