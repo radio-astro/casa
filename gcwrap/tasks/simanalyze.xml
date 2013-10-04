@@ -48,7 +48,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         to be deconvolved in "vis". NOTE: This is not the original skymodel
         that was used in simobserve or simalma.  It is recommended to 
         leave this blank unless the user is familiar with using a prior 
-        in clean deconvolution. (see casaguides)
+        in clean deconvolution. (see casaguides) NOTE 2: modelimage will 
+        not be used if the MS to be imaged is total power.
        
       * uses Cotton-Schwab clean for single fields and Mosaic gridding
         for multiple fields (with Clark PSF calculation in minor cycles).
