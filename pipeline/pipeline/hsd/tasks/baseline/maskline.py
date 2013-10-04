@@ -1,21 +1,12 @@
 from __future__ import absolute_import
 
-#import os
-#import math
-#from math import cos, sqrt, exp
-#import numpy
 import time
 
 import pipeline.infrastructure as infrastructure
-#import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.casatools as casatools
-#import pipeline.infrastructure.imagelibrary as imagelibrary
-#import pipeline.infrastructure.basetask as basetask
 from . import simplegrid
 from . import detection
 from . import validation
-#from .fitting import FittingFactory
-#from . import utils
 from .. import common
 
 LOG = infrastructure.get_logger(__name__)
@@ -62,46 +53,20 @@ class MaskLineResults(common.SingleDishResults):
 
 class MaskLine(common.SingleDishTaskTemplate):
     Inputs = MaskLineInputs
-#     def __init__(self, context, iteration, spwid, nchan, beam_size, srctype, file_index, index_list, window, edge, broadline, observing_pattern):
-#         self.context = context
-#         self.datatable = self.context.observing_run.datatable_instance
-#         self.iteration = iteration
-#         self.spwid = spwid
-#         self.nchan = nchan
-#         self.beam_size = beam_size
-#         self.srctype = srctype
-#         self.file_index = file_index
-#         self.index_list = index_list
-#         self.window = window
-#         self.edge = edge
-#         self.broadline = broadline
-#         self.observing_pattern = observing_pattern
 
     def prepare(self):
-    #def execute(self, dry_run=True):
-
-        #if dry_run:
-        #    return [], {}
-        
         context = self.context
-
-        #self._executor = basetask.Executor(context, dry_run)
 
         start_time = time.time()
 
-        #datatable = self.datatable
         iteration = self.inputs.iteration
         spwid = self.inputs.spwid
-        #nchan = self.nchan
-        #beam_size = self.beam_size
         file_index = self.inputs.antennalist
         index_list = self.inputs.index_list
         window = self.inputs.window
         edge = self.inputs.edge
         broadline = self.inputs.broadline
-        #observing_pattern = self.observing_pattern
         reference_data = context.observing_run[file_index[0]]
-        #nchan = reference_data.spectral_window[spwid].nchan
         beam_size = casatools.quanta.convert(reference_data.beam_size[spwid], 'deg')['value']
         observing_pattern = reference_data.pattern[spwid][0]
         
@@ -111,14 +76,9 @@ class MaskLine(common.SingleDishTaskTemplate):
         files_to_grid = dict(zip(file_index, filenames_work))
 
         LOG.debug('files_to_grid=%s'%(files_to_grid))
-        
-        # spectral window
-        #spw = reference_data.spectral_window[spwid]
-        #nchan = spw.nchan
-        
+                
         # beam size
-        #grid_size = casatools.quanta.convert(reference_data.beam_size[spwid], 'deg')['value']
-        grid_size = casatools.quanta.convert(beam_size, 'deg')['value']
+        grid_size = beam_size
 
         # simple gridding
         t0 = time.time()
