@@ -40,6 +40,7 @@
 #include <ms/MeasurementSets/MSMetaDataOnDemand.h>
 
 #include <stdcasa/cboost_foreach.h>
+#include <boost/regex.hpp>
 
 #include <boost/iterator/counting_iterator.hpp>
 
@@ -398,13 +399,22 @@ vector<int> msmetadata::fdmspws() {
 	return vector<int>();
 }
 
-variant* msmetadata::fieldsforintent(const string& intent, const bool asnames) {
-	_FUNC(
-		std::set<Int> ids = _msmd->getFieldsForIntent(intent);
+variant* msmetadata::fieldsforintent(
+	const string& intent, const bool asnames, const bool regex
+) {
+	//_FUNC(
+		std::set<Int> ids;
+		if (regex) {
+			std::map<String COMMA std::set<Int> > mymap = _msmd->getIntentToFieldsMap();
+			ids = _idsFromRegex(mymap, intent);
+		}
+		else {
+			ids = _msmd->getFieldsForIntent(intent);
+		}
 		variant *x;
 		if (ids.size() == 0) {
-			*_log << LogIO::WARN << "Intent " << intent
-				<< " does not exist in this dataset." << LogIO::POST;
+			*_log << LogIO::WARN << "No intent " << (regex ? "matching '" : "'")
+				<< intent << "' exists in this dataset." << LogIO::POST;
 			x = asnames
 				? new variant(vector<string>(0))
 				: new variant(vector<int>(0));
@@ -415,7 +425,7 @@ variant* msmetadata::fieldsforintent(const string& intent, const bool asnames) {
 				: new variant(_setIntToVectorInt(ids));
 		}
 		return x;
-	)
+	//)
 	return 0;
 }
 
@@ -709,9 +719,21 @@ vector<int> msmetadata::scansforfield(const variant& field) {
 	return vector<int>();
 }
 
-vector<int> msmetadata::scansforintent(const string& intent) {
+vector<int> msmetadata::scansforintent(const string& intent, bool regex) {
 	_FUNC(
-		return _setIntToVectorInt(_msmd->getScansForIntent(intent));
+		if (regex) {
+			std::map<String COMMA std::set<Int> > mymap = _msmd->getIntentToScansMap();
+			std::set<Int> ids = _idsFromRegex(mymap, intent);
+			ThrowIf(
+				ids.size() == 0,
+				"No intent matching '" + intent
+				+ "' is present in this dataset."
+			);
+			return _setIntToVectorInt(ids);
+		}
+		else {
+			return _setIntToVectorInt(_msmd->getScansForIntent(intent));
+		}
 	)
 	return vector<int>();
 }
@@ -1008,6 +1030,21 @@ void msmetadata::_checkPolId(int id, bool throwIfNegative) const {
 		+ String::toString((int)_msmd->nPol())
 	);
 }
+
+std::set<Int> msmetadata::_idsFromRegex(
+	const std::map<String, std::set<Int> >& mymap, const String& regex
+) const {
+	std::set<Int> ids;
+	boost::regex re;
+	re.assign(regex);
+	foreach_(std::pair<String COMMA std::set<Int> > kv, mymap) {
+		if (boost::regex_match(kv.first, re)) {
+			ids.insert(kv.second.begin(), kv.second.end());
+		}
+	}
+	return ids;
+}
+
 
 } // casac namespace
 

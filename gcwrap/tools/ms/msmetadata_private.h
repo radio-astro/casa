@@ -32,3 +32,6 @@ void _checkSpwId(int id, bool throwIfNegative) const;
 
 void _checkPolId(int id, bool throwIfNegative) const;
 
+std::set<int> _idsFromRegex(
+	const std::map<casa::String, std::set<int> >& mymap, const casa::String& regex
+) const;

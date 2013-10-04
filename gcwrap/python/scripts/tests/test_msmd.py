@@ -148,6 +148,12 @@ class msmd_test(unittest.TestCase):
                 expec = numpy.array([4, 5])
             got = self.md.fieldsforintent(intent)
             self.assertTrue((got == expec).all())
+        self.assertTrue(
+            (
+             self.md.fieldsforintent('.*WVR.*')
+             == numpy.array([0, 1, 2, 3, 4, 5])
+            ).all()
+        )
 
     def test_fieldsforname(self):
         """Test fieldforname()"""
@@ -504,8 +510,18 @@ class msmd_test(unittest.TestCase):
                 ])
             else:
                 expec = numpy.array([12, 16, 20, 23, 27, 30])
-            got = self.md.scansforintent(i)
+            got = self.md.scansforintent(i, regex=False)
             self.assertTrue((got == expec).all())
+        self.assertTrue(
+            (
+             self.md.scansforintent('.*WVR.*', regex=True)
+             == numpy.array([
+                    1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+                    11, 13, 14, 15, 17, 18, 19, 21,
+                    22, 24, 25, 26, 28, 29, 31, 32
+                ])
+            ).all()
+        )
         
     def test_scansforspw(self):
         """Test scansforspw()"""

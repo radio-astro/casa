@@ -10,6 +10,7 @@ namespace casa {
 	class MSMetaData;
 	class MeasurementSet;
 	class LogIO;
+	class String;
 };
 
 
