@@ -179,8 +179,6 @@ public:
     // </group>
 
     const Array<std::tr1::shared_ptr<ProfileFitResults> >& getFitters() const;
-    // Returns the center, in pixels of the indexth fit.
-    const Vector<Double> getPixelCenter( uint index ) const;
 
     //Converts a pixel value into a world value either in velocity, wavelength, or
     //frequency units.  If the tabular index >= 0, it uses the tabular index for conversion
@@ -267,7 +265,7 @@ private:
 
     Bool _isPCFSolutionOK(const PCFSpectralElement *const &pcf) const;
 
-    Vector< Vector<Double> > _pixelPositions;
+    // Vector< Vector<Double> > _pixelPositions;
 
     void _setAbscissaDivisorIfNecessary(const Vector<Double>& abscissaValues);
 
