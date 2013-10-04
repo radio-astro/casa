@@ -64,15 +64,16 @@ class PhcorBandpass(bandpassworker.BandpassWorker):
         inputs = self.inputs
 
         phaseup_inputs = gaincal.GTypeGaincal.Inputs(inputs.context,
-            vis      = inputs.vis,
-            field    = inputs.field,
-            spw      = self._get_phaseup_spw(),
-            antenna  = inputs.antenna,
-            intent   = inputs.intent,
-            solint   = inputs.phaseupsolint,
-            refant   = inputs.refant,
-            calmode  = 'p',
-            minsnr   = inputs.minsnr)
+            vis         = inputs.vis,
+            field       = inputs.field,
+            spw         = self._get_phaseup_spw(),
+            antenna     = inputs.antenna,
+            intent      = inputs.intent,
+            solint      = inputs.phaseupsolint,
+            refant      = inputs.refant,
+            minblperant = inputs.minblperant,
+            calmode     = 'p',
+            minsnr      = inputs.minsnr)
 
         phaseup_task = gaincal.GTypeGaincal(phaseup_inputs)
         
