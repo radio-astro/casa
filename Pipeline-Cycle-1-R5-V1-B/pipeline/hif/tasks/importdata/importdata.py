@@ -477,9 +477,10 @@ class ImportData(basetask.StandardTaskTemplate):
         vis = self._asdm_to_vis_filename(asdm)
         outfile = os.path.join(inputs.output_dir,
                                os.path.basename(asdm) + "_flagtemplate.txt")
-	f = open (outfile, "w")
-	f.writelines(['# User flagging commands file'])
-	f.close()
+	if inputs.overwrite or not os.path.exists(outfile): 
+	    f = open (outfile, "w")
+	    f.writelines(['# User flagging commands file'])
+	    f.close()
 
 
 def get_setjy_results(mses):
