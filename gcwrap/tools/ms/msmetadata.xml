@@ -449,6 +449,10 @@ windows in the dataset and close the tool.
                     <description>If true, return the field names. If false, return the zero-based field IDs.</description>
                     <value>false</value>
                 </param>
+                <param type="bool" direction="in" name="regex">
+                    <description>If true, intent will be interpreted as a regular expression and all intents matching it will be used, else it is interpreted as a literal string.</description>
+                    <value>true</value>
+                </param>
             </input>
             <returns type="any"/>
             <description>
@@ -457,9 +461,11 @@ windows in the dataset and close the tool.
             <example>
     msmd.open("my.ms")
     # get the field names for intent "observe target"
-    field_names = msmd.fieldsforintent("observe target", True)
-    # get the field IDs for scan number "observe target"
-    field_IDs = msmd.fieldsforintent("observe target", False)
+    field_names = msmd.fieldsforintent("observe target", True, regex=False)
+    # get the field IDs for intent "observe target"
+    field_IDs = msmd.fieldsforintent("observe target", False, regex=False)
+    # get all field IDs for all intents which contain 'WVR'
+    field_IDs = msmd.fieldsforIntent(".*WVR.*, regex=True)
     msmd.done()
             </example>
         </method>
@@ -770,6 +776,19 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
+        <method type="function" name="nobservations">
+            <shortdescription>Get the number of observations associated with the MS from the OBSERVATIONS table.</shortdescription>
+            <returns type="int"/>
+            <description>
+                Get the number of observations associated with the MS from the OBSERVATIONS table.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    number_of_obs_ids = msmd.nobservations()
+    msmd.done()
+            </example>
+        </method>
+        
         <method type="function" name="nspw">
             <shortdescription>Get the number of spectral windows associated with the MS.</shortdescription>
             <input>
@@ -943,6 +962,10 @@ windows in the dataset and close the tool.
                     <description>Intent (case-sensitive) for which to return the scan numbers.</description>
                     <value>-1</value>
                 </param>
+                <param type="bool" direction="in" name="regex">
+                    <description>If true, intent will be interpreted as a regular expression and all intents matching it will be used, else it is interpreted as a literal string.</description>
+                    <value>true</value>
+                </param>
             </input>
             <returns type="intArray"/>
             <description>
@@ -951,7 +974,9 @@ windows in the dataset and close the tool.
             <example>
     msmd.open("my.ms")
     # get the scan numbers associated with intent "detect planet X"
-    scan_numbers = msmd.scansforintent("detect planet X")
+    scan_numbers = msmd.scansforintent("detect planet X", regex=False)
+    # got all the scan numbers associated with all intents which contain 'WVR'
+    scan_numbers = msmd.scansforintent(".*WVR.*", regex=True)
     msmd.done()
             </example>
         </method>
@@ -1094,6 +1119,10 @@ windows in the dataset and close the tool.
                     <description>Intent (case sensitive) for which to return the spectral window IDs.</description>
                     <value/>
                 </param>
+                <param type="bool" direction="in" name="regex">
+                    <description>If true, intent will be interpreted as a regular expression and all intents matching it will be used, else it is interpreted as a literal string.</description>
+                    <value>true</value>
+                </param>
             </input>
             <returns type="intArray"/>
             <description>
@@ -1103,6 +1132,9 @@ windows in the dataset and close the tool.
     msmd.open("my.ms")
     # get the spectral window IDs associated with "MY COOL INTENT"
     spws = msmd.spwsforintent("MY COOL INTENT")
+    # got all the spw IDs associated with all intents which contain 'WVR'
+    scan_numbers = msmd.spwsforintent(".*WVR.*", regex=True)
+    msmd.done()
     msmd.done()
             </example>
         </method>

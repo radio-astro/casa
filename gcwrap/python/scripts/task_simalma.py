@@ -629,7 +629,7 @@ def simalma(
             errmsg += ("setpointings=True, obsmode='', antennalist='%s', thermalnoise='')\n" \
                        % antennalist[idx])
             errmsg += "2. Use the generated skymodel image in project directory as an input of simalma.\n"
-            errmsg += ("\tsimalma(project='%s', skymodel='%s/%s', ....)" % \
+            errmsg += ("\tsimalma(project='%s', skymodel='%s/%s', complist='', ....)" % \
                        (project, dummy_proj, \
                         get_data_prefix(antennalist[idx], dummy_proj)+skysuffix))
             msg(errmsg,priority="error")

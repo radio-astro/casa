@@ -33,7 +33,6 @@ def simanalyze(
 #def simanalyze(project='sim', image=True, imagename='default', skymodel='', vis='default', modelimage='', imsize=[128, 128], imdirection='', cell='', interactive=False, niter=0, threshold='0.1mJy', weighting='natural', mask=[], outertaper=[''], stokes='I', featherimage='', analyze=False, showuv=True, showpsf=True, showmodel=True, showconvolved=False, showclean=True, showresidual=False, showdifference=True, showfidelity=True, graphics='both', verbose=False, overwrite=True, dryrun=False):
 
 
-
     # Collect a list of parameter values to save inputs
     in_params =  locals()
 
@@ -443,7 +442,7 @@ def simanalyze(
                            cell_asec[1] > sfcell_asec:
                         # imregrid() may not work properly for regrid of
                         # small to large cell
-                        msg("The requested cell size is too large to invoke SF gridding. Please set cell size <= %f arcsec or grid TP MS '%s' manually" % (sfcell_arcsec, tpmstoimage),priority="error",origin='simanalyze')
+                        msg("The requested cell size is too large to invoke SF gridding. Please set cell size <= %f arcsec or grid TP MS '%s' manually" % (sfcell_asec, tpmstoimage),priority="error",origin='simanalyze')
 
                     sfsupport = 4
                     temp_out = tpimage+"0"

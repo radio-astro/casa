@@ -145,6 +145,79 @@ class test_base(unittest.TestCase):
         os.system('rm -rf '+ self.vis)
 
 
+class test_base_compare(test_base):        
+    
+    def setUp(self):
+        
+        self.outvis = ''
+        self.refvis = ''
+        self.outvis_sorted = ''
+        self.refvis_sorted = ''     
+              
+        self.subtables=['/ANTENNA','/DATA_DESCRIPTION','/FEED','/FIELD','/FLAG_CMD',
+                        '/OBSERVATION','/POINTING','/POLARIZATION','/PROCESSOR','/STATE']
+        self.sortorder=['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME']    
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outvis)
+        os.system('rm -rf '+ self.refvis)
+        os.system('rm -rf '+ self.outvis_sorted)
+        os.system('rm -rf '+ self.refvis_sorted)
+        
+    def sort(self):
+        myms = mstool()
+        
+        myms.open(self.outvis)
+        myms.sort(self.outvis_sorted,self.sortorder)
+        myms.done()
+        
+        myms.open(self.refvis)
+        myms.sort(self.refvis_sorted,self.sortorder)
+        myms.done()
+        
+    def generate_tolerance_map(self):
+        
+        # Get column names
+        mytb = tbtool()
+        mytb.open(self.refvis)
+        self.columns = mytb.colnames()
+        mytb.close()
+        
+        # Define default tolerance
+        self.mode={}
+        self.tolerance={}
+        for col in self.columns:
+            self.mode[col] = "absolute"
+            self.tolerance[col] = 1E-6
+        
+    def compare_subtables(self):
+        for subtable in self.subtables:
+            self.assertTrue(th.compTables(self.outvis_sorted+subtable,self.refvis_sorted+subtable, [],0.000001,"absolute"))
+            
+        # Special case for SOURCE which contains many un-defined columns
+        self.assertTrue(th.compTables(self.outvis_sorted+'/SOURCE',self.refvis_sorted+'/SOURCE', 
+                                      ['POSITION','TRANSITION','REST_FREQUENCY','SYSVEL','SOURCE_MODEL'],0.000001,"absolute"))     
+        
+    def compare_main_table_columns(self,startrow = 0, nrow = -1, rowincr = 1):
+        for col in self.columns:
+            if col != "WEIGHT_SPECTRUM" and col != "FLAG_CATEGORY":
+                    tmpcolumn = self.columns[:]
+                    tmpcolumn.remove(col)
+                    self.assertTrue(th.compTables(self.refvis_sorted,self.outvis_sorted,tmpcolumn,self.tolerance[col],self.mode[col],startrow,nrow,rowincr))
+            
+    def post_process(self,startrow = 0, nrow = -1, rowincr = 1):
+        
+        # Sort the output MSs so that they can be compared
+        self.sort()
+        
+        # Compare results for subtables
+        self.compare_subtables()
+        
+        # Compare columns from main table
+        self.compare_main_table_columns(startrow,nrow,rowincr)        
+                      
+
 class test_Combspw1(test_base):
     ''' Tests for combinespws parameter'''
     
@@ -155,7 +228,7 @@ class test_Combspw1(test_base):
         os.system('rm -rf '+ self.vis)
         os.system('rm -rf '+ self.outputms)
         os.system('rm -rf inpmms*.*ms combcvel*ms list.obs')
-                
+                        
     def test_combspw1_1(self):
         '''mstransform: Combine four spws into one'''
         
@@ -821,7 +894,7 @@ class test_Columns(test_base):
 #          self.setUp_ngc5921()
 #          self.outputms = "col1.ms"
 #          mstransform(vis=self.vis, outputvis=self.outputms, datacolumn='all', realmodelcol=True)
-#                              
+#                               
 #          self.assertTrue(os.path.exists(self.outputms))
 #          mcol = th.getColDesc(self.outputms, 'MODEL_DATA')
 #          mkeys = mcol.keys()
@@ -1310,81 +1383,6 @@ class test_float_column(test_base):
         self.assertEqual(refnum, 1)
         
         
-class test_base_compare(test_base):        
-    
-    def setUp(self):
-        
-        self.outvis = ''
-        self.refvis = ''
-        self.outvis_sorted = ''
-        self.refvis_sorted = ''     
-              
-        self.subtables=['/ANTENNA','/DATA_DESCRIPTION','/FEED','/FIELD','/FLAG_CMD',
-                        '/OBSERVATION','/POINTING','/POLARIZATION','/PROCESSOR','/STATE']
-        self.sortorder=['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME']    
-        
-    def tearDown(self):
-        os.system('rm -rf '+ self.vis)
-        os.system('rm -rf '+ self.outvis)
-        os.system('rm -rf '+ self.refvis)
-        os.system('rm -rf '+ self.outvis_sorted)
-        os.system('rm -rf '+ self.refvis_sorted)
-        
-    def sort(self):
-        myms = mstool()
-        
-        myms.open(self.outvis)
-        myms.sort(self.outvis_sorted,self.sortorder)
-        myms.done()
-        
-        myms.open(self.refvis)
-        myms.sort(self.refvis_sorted,self.sortorder)
-        myms.done()
-        
-    def generate_tolerance_map(self):
-        
-        # Get column names
-        mytb = tbtool()
-        mytb.open(self.refvis)
-        self.columns = mytb.colnames()
-        mytb.close()
-        
-        # Define default tolerance
-        self.mode={}
-        self.tolerance={}
-        for col in self.columns:
-            self.mode[col] = "absolute"
-            self.tolerance[col] = 1E-6
-
-        
-    def compare_subtables(self):
-        for subtable in self.subtables:
-            self.assertTrue(th.compTables(self.outvis_sorted+subtable,self.refvis_sorted+subtable, [],0.000001,"absolute"))
-            
-        # Special case for SOURCE which contains many un-defined columns
-        self.assertTrue(th.compTables(self.outvis_sorted+'/SOURCE',self.refvis_sorted+'/SOURCE', 
-                                      ['POSITION','TRANSITION','REST_FREQUENCY','SYSVEL','SOURCE_MODEL'],0.000001,"absolute"))     
-        
-    def compare_main_table_columns(self,startrow = 0, nrow = -1, rowincr = 1):
-        for col in self.columns:
-            if col != "WEIGHT_SPECTRUM" and col != "FLAG_CATEGORY":
-                    tmpcolumn = self.columns[:]
-                    tmpcolumn.remove(col)
-                    self.assertTrue(th.compTables(self.refvis_sorted,self.outvis_sorted,tmpcolumn,self.tolerance[col],self.mode[col],startrow,nrow,rowincr))
-    
-        
-    def post_process(self,startrow = 0, nrow = -1, rowincr = 1):
-        
-        # Sort the output MSs so that they can be compared
-        self.sort()
-        
-        # Compare results for subtables
-        self.compare_subtables()
-        
-        # Compare columns from main table
-        self.compare_main_table_columns(startrow,nrow,rowincr)        
-                      
-
 class test_timeaverage(test_base_compare):
 
     def setUp(self):
@@ -1675,7 +1673,48 @@ class test_spw_poln(test_base):
         os.system('rm -rf '+ self.vis)
         os.system('rm -rf '+ self.outputms)
         os.system('rm -rf list.obs')
+
+    def test_corr_selection(self):
+        '''mstransform: verify correct re-indexing of sub-tables'''
+        self.outputms = '3cLL.ms'
         
+        # It will select spws 1,2,3, polids=1,2,3 but each with 1 NUM_CORR only
+        mstransform(vis=self.vis, outputvis=self.outputms, datacolumn='data', correlation='LL')
+        
+        # Verify the input versus the output
+        myms = mstool()
+        myms.open(self.vis)
+        myms.msselect({'polarization':'LL'})
+        inp_nrow = myms.nrow()
+        inp_spwlist = myms.getspectralwindowinfo()
+        myms.close()
+        
+        myms.open(self.outputms)
+        out_nrow = myms.nrow()
+        out_spwlist = myms.getspectralwindowinfo()
+        myms.close()
+        
+        self.assertEqual(inp_nrow, out_nrow)
+
+        # Verify that DATA_DESCRIPTION table is properly re-indexed.
+        dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')            
+        self.assertEqual(dd_col.keys().__len__(), 3, 'Wrong number of rows in DD table')    
+        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r3'][0], 2,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
+
+        pol_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'POLARIZATION_ID')            
+        self.assertEqual(pol_col['r1'][0], 1,'Error in POLARIZATION_ID of DATA_DESCRIPTION table')
+        self.assertEqual(pol_col['r2'][0], 2,'Error in POLARIZATION_ID of DATA_DESCRIPTION table')
+        self.assertEqual(pol_col['r3'][0], 3,'Error in POLARIZATION_ID of DATA_DESCRIPTION table')
+ 
+        # Verify that POLARIZATION table is not re-sized.
+        corr_col = th.getVarCol(self.outputms+'/POLARIZATION', 'NUM_CORR') 
+        self.assertEqual(corr_col.keys().__len__(), 4, 'Wrong number of rows in POLARIZATION table') 
+        
+        listobs(self.outputms, listfile='list.obs')
+        self.assertTrue(os.path.exists('list.obs'), 'Probable error in sub-table re-indexing')
+   
     def test_repeated_spwid(self):
         '''mstransform: split one spw ID mapping to two DDI'''
         # MS looks like this:
@@ -1698,7 +1737,6 @@ class test_spw_poln(test_base):
         
         myms.open(self.outputms)
         out_nrow = myms.nrow()
-        # re-indexing of tables needs to be fixed first
         out_spwlist = myms.getspectralwindowinfo()
         myms.close()
         
@@ -1739,7 +1777,6 @@ class test_spw_poln(test_base):
         
         myms.open(self.outputms)
         out_nrow = myms.nrow()
-        # re-indexing of tables needs to be fixed first
         out_spwlist = myms.getspectralwindowinfo()
         myms.close()
         
@@ -1768,7 +1805,6 @@ class test_spw_poln(test_base):
         
         myms.open(self.outputms)
         out_nrow = myms.nrow()
-        # re-indexing of tables needs to be fixed first
         out_spwlist = myms.getspectralwindowinfo()
         myms.close()
         
@@ -1789,7 +1825,6 @@ class test_spw_poln(test_base):
 
         myms.open(self.outputms)
         out_nrow = myms.nrow()
-        # re-indexing of tables needs to be fixed first
         out_spwlist = myms.getspectralwindowinfo()
         myms.close()        
         self.assertEqual(inp_nrow, out_nrow)
@@ -1903,7 +1938,7 @@ class test_spw_poln(test_base):
 #         # spw=0 contains two DD in DATA_DESCRIPTION table
 #         mstransform(vis=self.vis, outputvis=self.outputms, datacolumn='data', spw='0,1',
 #                     createmms=True, separationaxis='spw')
-#         
+#          
 #         # Verify the input versus the output
 #         myms = mstool()
 #         myms.open(self.vis)
@@ -1911,25 +1946,25 @@ class test_spw_poln(test_base):
 #         inp_nrow = myms.nrow()
 #         inp_spwlist = myms.getspectralwindowinfo()
 #         myms.close()
-# 
+#  
 #         myms.open(self.outputms)
 #         out_nrow = myms.nrow()
 #         out_spwlist = myms.getspectralwindowinfo()
 #         myms.close()        
 #         self.assertEqual(inp_nrow, out_nrow)
-#         
+#          
 #         # Verify that DATA_DESCRIPTION table is properly re-indexed.
 #         dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')            
 #         self.assertEqual(dd_col.keys().__len__(), 3, 'Wrong number of rows in DD table')    
 #         self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
 #         self.assertEqual(dd_col['r2'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
 #         self.assertEqual(dd_col['r3'][0], 1,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
-# 
+#  
 #         pol_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'POLARIZATION_ID')            
 #         self.assertEqual(pol_col['r1'][0], 0,'Error in POLARIZATION_ID of DATA_DESCRIPTION table')
 #         self.assertEqual(pol_col['r2'][0], 1,'Error in POLARIZATION_ID of DATA_DESCRIPTION table')
 #         self.assertEqual(pol_col['r3'][0], 2,'Error in POLARIZATION_ID of DATA_DESCRIPTION table')
-# 
+#  
 #         # Verify that POLARIZATION table is not re-sized.
 #         corr_col = th.getVarCol(self.outputms+'/POLARIZATION', 'NUM_CORR') 
 #         self.assertEqual(corr_col.keys().__len__(), 4, 'Wrong number of rows in POLARIZATION table')    
@@ -1969,5 +2004,5 @@ def suite():
             test_multiple_transformations,
             test_regridms_single_spw,
             test_float_column,
-            #test_spw_poln,
+            test_spw_poln,
             Cleanup]
