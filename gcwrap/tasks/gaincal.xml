@@ -203,7 +203,6 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 	</param>
    <constraints>
 	<when param="selectdata">
-		<equals type="bool" value="False"/>
 		<equals type="bool" value="True">
 			<default param="timerange"><value type="string"/></default>
 			<default param="uvrange"><value type="string"/></default>
@@ -212,6 +211,7 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 			<default param="observation"><value type="string"/></default>
 			<default param="msselect"><value type="string"/></default>
 		</equals>
+		<equals type="bool" value="False"/>
 	</when>
 	<when param="gaintype">
 		<equals value="G"/>
