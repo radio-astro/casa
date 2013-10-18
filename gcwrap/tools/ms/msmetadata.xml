@@ -1119,6 +1119,10 @@ windows in the dataset and close the tool.
                     <description>Intent (case sensitive) for which to return the spectral window IDs.</description>
                     <value/>
                 </param>
+                <param type="bool" direction="in" name="regex">
+                    <description>If true, intent will be interpreted as a regular expression and all intents matching it will be used, else it is interpreted as a literal string.</description>
+                    <value>true</value>
+                </param>
             </input>
             <returns type="intArray"/>
             <description>
@@ -1128,6 +1132,9 @@ windows in the dataset and close the tool.
     msmd.open("my.ms")
     # get the spectral window IDs associated with "MY COOL INTENT"
     spws = msmd.spwsforintent("MY COOL INTENT")
+    # got all the spw IDs associated with all intents which contain 'WVR'
+    scan_numbers = msmd.spwsforintent(".*WVR.*", regex=True)
+    msmd.done()
     msmd.done()
             </example>
         </method>

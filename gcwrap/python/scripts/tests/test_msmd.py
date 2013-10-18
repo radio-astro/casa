@@ -689,6 +689,16 @@ class msmd_test(unittest.TestCase):
                     ]
                 )
             self.assertTrue((got == expec).all())
+            
+            got = self.md.spwsforintent('.*WVR.*', regex=True)
+            expec = numpy.array(
+                [
+                    0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+                    10, 11, 12, 13, 14, 15, 16,
+                    17, 18, 19, 20, 21, 22, 23, 24
+                 ]
+            )
+            self.assertTrue((got == expec).all())
 
     def test_spwsforscan(self):
         """Test spwsforscan()"""

@@ -724,11 +724,6 @@ vector<int> msmetadata::scansforintent(const string& intent, bool regex) {
 		if (regex) {
 			std::map<String COMMA std::set<Int> > mymap = _msmd->getIntentToScansMap();
 			std::set<Int> ids = _idsFromRegex(mymap, intent);
-			ThrowIf(
-				ids.size() == 0,
-				"No intent matching '" + intent
-				+ "' is present in this dataset."
-			);
 			return _setIntToVectorInt(ids);
 		}
 		else {
@@ -816,14 +811,21 @@ variant* msmetadata::spwsforbaseband(int bb, const string& sqldmode) {
 	return 0;
 }
 
-vector<int> msmetadata::spwsforintent(const string& intent) {
+vector<int> msmetadata::spwsforintent(const string& intent, bool regex) {
 	_FUNC(
-		vector<int> x = _setUIntToVectorInt(_msmd->getSpwsForIntent(intent));
-		if (x.size() == 0) {
-			*_log << LogIO::WARN << "Intent " << intent
-				<< " does not exist in this dataset." << LogIO::POST;
+		if (regex) {
+			std::map<String COMMA std::set<uInt> > mymap = _msmd->getIntentToSpwsMap();
+			std::set<Int> ids = _idsFromRegex(mymap, intent);
+			return _setIntToVectorInt(ids);
 		}
-		return x;
+		else {
+			vector<int> x = _setUIntToVectorInt(_msmd->getSpwsForIntent(intent));
+			if (x.size() == 0) {
+				*_log << LogIO::WARN << "Intent " << intent
+					<< " does not exist in this dataset." << LogIO::POST;
+			}
+			return x;
+		}
 	)
 	return vector<int>();
 }
@@ -1045,6 +1047,19 @@ std::set<Int> msmetadata::_idsFromRegex(
 	return ids;
 }
 
+std::set<Int> msmetadata::_idsFromRegex(
+	const std::map<String, std::set<uInt> >& mymap, const String& regex
+) const {
+	std::set<Int> ids;
+	boost::regex re;
+	re.assign(regex);
+	foreach_(std::pair<String COMMA std::set<uInt> > kv, mymap) {
+		if (boost::regex_match(kv.first, re)) {
+			ids.insert(kv.second.begin(), kv.second.end());
+		}
+	}
+	return ids;
+}
 
 } // casac namespace
 
