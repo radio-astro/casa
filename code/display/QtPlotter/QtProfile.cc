@@ -1026,11 +1026,13 @@ namespace casa {
 				spcRef->setCurrentIndex(index);
 		}
 
-		if (qSpcTypeUnit != bottomAxisCType->currentText()) {
+		//Removed so that is a new image comes in the bottom axis will
+		//retain the units already set.
+		/*if (qSpcTypeUnit != bottomAxisCType->currentText()) {
 			// if necessary, change the unit and the spectral quantity
 			updateAxisUnitCombo( qSpcTypeUnit, bottomAxisCType );
 
-		}
+		}*/
 
 		if (spcRval != cSysRval) {
 			// if necessary, change the rest freq./wavel.
