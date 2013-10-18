@@ -24,6 +24,7 @@
 //#
 
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Quanta/QLogical.h>
 #include <images/Images/ImageBeamSet.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 
@@ -298,8 +299,9 @@ const GaussianBeam& ImageBeamSet::getMinAreaBeamForPol(IPosition& pos,
 	return _beams(pos);
 }
 
-const GaussianBeam& ImageBeamSet::getMedianAreaBeamForPol(IPosition& pos,
-		uInt stokes) const {
+const GaussianBeam& ImageBeamSet::getMedianAreaBeamForPol(
+	IPosition& pos, uInt stokes
+) const {
 	pos.resize(2);
 	pos = _beams.shape() - 1;
 	if (nstokes() > 1) {
@@ -327,14 +329,17 @@ GaussianBeam ImageBeamSet::getCommonBeam() const {
 	if (allTrue(_beams == _beams(IPosition(2, 0)))) {
 		return _beams(IPosition(2, 0));
 	}
-	Array<GaussianBeam>::const_iterator end = _beams.end();
+	BeamIter end = _beams.end();
 	Bool largestBeamWorks = True;
 	Angular2DGaussian junk;
 	GaussianBeam problemBeam;
 	Double myMajor = _maxBeam.getMajor("arcsec");
 	Double myMinor = _maxBeam.getMinor("arcsec");
-	for (Array<GaussianBeam>::const_iterator iBeam = _beams.begin();
-			iBeam != end; iBeam++) {
+
+	for (
+		BeamIter iBeam = _beams.begin();
+		iBeam != end; iBeam++
+	) {
 		if (*iBeam != _maxBeam && !iBeam->isNull()) {
 			myMajor = max(myMajor, iBeam->getMajor("arcsec"));
 			myMinor = max(myMinor, iBeam->getMinor("arcsec"));
@@ -442,6 +447,37 @@ GaussianBeam ImageBeamSet::getCommonBeam() const {
 	return newBeamSet.getCommonBeam();
 }
 
+const GaussianBeam ImageBeamSet::getSmallestMinorAxisBeam() const {
+	BeamIter ibend = _beams.end();
+	Bool found = False;
+	Quantity minAxis;
+	GaussianBeam res = *(_beams.begin());
+	for (
+		BeamIter ibeam = _beams.begin();
+		ibeam != ibend; ++ibeam
+	) {
+		if (found) {
+			Quantity test = ibeam->getMinor();
+			if (
+				test < minAxis
+				|| (
+					test == minAxis
+					&& ibeam->getArea(_DEFAULT_AREA_UNIT) < res.getArea(_DEFAULT_AREA_UNIT)
+				)
+			) {
+				minAxis = test;
+				res = *ibeam;
+			}
+		}
+		else if (! ibeam->isNull()) {
+			minAxis = ibeam->getMinor();
+			res = *ibeam;
+			found = True;
+		}
+	}
+	return res;
+}
+
 void ImageBeamSet::_transformEllipseByScaling(Double& transformedMajor,
 		Double& transformedMinor, Double& transformedPA, Double major,
 		Double minor, Double pa, Double xScaleFactor, Double yScaleFactor) {
@@ -504,9 +540,11 @@ void ImageBeamSet::_calculateAreas() {
 		_areaUnit =
 				(Quantity(Quantity(1, _areaUnit) * Quantity(1, _areaUnit)).getUnit());
 		Array<Double>::iterator iareas = _areas.begin();
-		Array<GaussianBeam>::const_iterator ibend = _beams.end();
-		for (Array<GaussianBeam>::const_iterator ibeam = _beams.begin();
-				ibeam != ibend; ++ibeam, ++iareas) {
+		BeamIter ibend = _beams.end();
+		for (
+			BeamIter ibeam = _beams.begin();
+			ibeam != ibend; ++ibeam, ++iareas
+		) {
 			*iareas = ibeam->getArea(_areaUnit);
 		}
 		Double minArea, maxArea;

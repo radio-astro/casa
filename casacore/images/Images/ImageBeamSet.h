@@ -85,6 +85,8 @@ class CoordinateSystem;
 class ImageBeamSet {
 public:
 
+	typedef Array<GaussianBeam>::const_iterator BeamIter;
+
 	// Construct an empty beam set.
 	ImageBeamSet();
 
@@ -249,6 +251,10 @@ public:
 	// largest area. Otherwise, the returned beam may or may not be the smallest possible beam to which all the beams in the set
 	// can be convolved.
 	GaussianBeam getCommonBeam() const;
+
+	// Get the beam that has the smallest minor axis. If multiple beams have the smallest minor axis,
+	// the beam in this subset with the smallest area will be returned.
+	const GaussianBeam getSmallestMinorAxisBeam() const;
 
 private:
 
