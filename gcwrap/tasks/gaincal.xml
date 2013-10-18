@@ -285,7 +285,7 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
                 intent='*BANDPASS*'  (selects data labelled with
                                       BANDPASS intent)
       selectdata -- Other data selection parameters
-              default: False 
+              default: True 
 
               Must set selectdata=True to use the following selections:
 
