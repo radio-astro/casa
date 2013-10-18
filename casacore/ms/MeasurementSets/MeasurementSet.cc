@@ -36,6 +36,7 @@
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MFrequency.h>
 #include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MeasurementSets/MSSelectionTools.h>
 #include <tables/Tables/TableInfo.h>
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -992,6 +993,7 @@ Record MeasurementSet::msseltoindex(const String& spw, const String& field,
   thisSelection.setUvDistExpr(uvrange);
   thisSelection.setObservationExpr(observation);
   thisSelection.setTaQLExpr(taql);
+  //  thisSelection.setPolnExpr(String("*"));
   TableExprNode exprNode=thisSelection.toTableExprNode(this);
   Vector<Int> fieldlist=thisSelection.getFieldList();
   Vector<Int> spwlist=thisSelection.getSpwList();
@@ -1002,8 +1004,13 @@ Record MeasurementSet::msseltoindex(const String& spw, const String& field,
   Matrix<Int> chanlist=thisSelection.getChanList();
   Matrix<Int> baselinelist=thisSelection.getBaselineList();
   Vector<Int> ddIDList=thisSelection.getDDIDList();
+  Vector<Int> spwDDIDList=thisSelection.getSPWDDIDList();
   OrderedMap<Int, Vector<Int > > polMap=thisSelection.getPolMap();
   OrderedMap<Int, Vector<Vector<Int> > > corrMap=thisSelection.getCorrMap();
+  Vector<Int> allDDIDList;
+  allDDIDList = set_intersection(ddIDList, spwDDIDList);
+
+  //  cerr << ddIDList << endl << spwDDIDList << endl << allDDIDList << endl;
 
   retval.define("spw", spwlist);
   retval.define("field", fieldlist);
@@ -1013,7 +1020,10 @@ Record MeasurementSet::msseltoindex(const String& spw, const String& field,
   retval.define("antenna2", antenna2list);
   retval.define("baselines", baselinelist);
   retval.define("channel", chanlist);
-  retval.define("dd", ddIDList);
+  
+  retval.define("poldd", ddIDList);
+  retval.define("spwdd", spwDDIDList);
+  retval.define("dd", spwDDIDList);
   //  retval.define("polmap",polMap);
   // retrval.define("corrmap",corrMap);
 
