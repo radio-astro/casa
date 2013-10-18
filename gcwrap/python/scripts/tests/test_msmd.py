@@ -917,6 +917,13 @@ class msmd_test(unittest.TestCase):
         self.assertTrue((got == expec/1e6).all())
         self.assertRaises(Exception, self.md.chanwidths, 50);
         self.assertRaises(Exception, self.md.chanwidths, -2);
+        
+        self.md.close()
+        self.assertRaises(Exception, self.md.chanwidths, 1)
+        self.assertRaises(Exception, self.md.chanfreqs, 1)
+        self.assertRaises(Exception, self.md.meanfreq, 1)
+        self.assertRaises(Exception, self.md.sideband, 1)
+        self.assertRaises(Exception, self.md.effexposuretime)
 
     def test_datadescids(self):
         """Test datadescids()"""

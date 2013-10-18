@@ -325,7 +325,7 @@ vector<int> msmetadata::chanavgspws() {
 }
 
 vector<double> msmetadata::chanfreqs(int spw, const string& unit) {
-	_FUNC2 (
+	_FUNC (
 		_checkSpwId(spw, True);
 		return _msmd->getChanFreqs()[spw].getValue(Unit(unit)).tovector();
 	)
@@ -333,7 +333,7 @@ vector<double> msmetadata::chanfreqs(int spw, const string& unit) {
 }
 
 vector<double> msmetadata::chanwidths(int spw, const string& unit) {
-	_FUNC2 (
+	_FUNC (
 		_checkSpwId(spw, True);
 		return _msmd->getChanWidths()[spw].getValue(Unit(unit)).tovector();
 	)
@@ -382,9 +382,11 @@ bool msmetadata::done() {
 }
 
 record* msmetadata::effexposuretime() {
-	return fromRecord(
-		QuantumHolder(_msmd->getEffectiveTotalExposureTime()).toRecord()
-	);
+	_FUNC(
+		return fromRecord(
+			QuantumHolder(_msmd->getEffectiveTotalExposureTime()).toRecord()
+		);
+	)
 	return 0;
 }
 
@@ -551,7 +553,7 @@ vector<string> msmetadata::intentsforspw(int spw) {
 }
 
 double msmetadata::meanfreq(int spw, const string& unit) {
-	_FUNC2 (
+	_FUNC (
 		_checkSpwId(spw, True);
 		return _msmd->getMeanFreqs()[spw].getValue(Unit(unit));
 	)
@@ -603,7 +605,7 @@ int msmetadata::nbaselines() {
 }
 
 int msmetadata::nchan(int spw) {
-	_FUNC2 (
+	_FUNC (
 		_checkSpwId(spw, True);
 		return _msmd->nChans()[spw];
 	)
@@ -759,7 +761,7 @@ vector<int> msmetadata::scansforstate(const int state) {
 }
 
 int msmetadata::sideband(int spw) {
-	_FUNC2 (
+	_FUNC (
 		_checkSpwId(spw, True);
 		return _msmd->getNetSidebands()[spw];
 	)
