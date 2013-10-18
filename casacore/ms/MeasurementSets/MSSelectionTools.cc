@@ -237,7 +237,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     retval.define("channel", chanlist);
     retval.define("poldd",ddIDList);
     retval.define("spwdd",spwDDIDList);
-    retval.define("dd",allDDIDList);
+    retval.define("dd",spwDDIDList);
     retval.define("stateid",stateIDList);
     retval.define("observationid",observationIDList);
 
