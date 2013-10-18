@@ -132,8 +132,10 @@ void MSTransformManager::initialize()
 	inputOutputScanIntentIndexMap_p.clear();
 	inputOutputFieldIndexMap_p.clear();
 	inputOutputSPWIndexMap_p.clear();
+	inputOutputDDIndexMap_p.clear();
 	inputOutputAntennaIndexMap_p.clear();
 	outputInputSPWIndexMap_p.clear();
+//	outputInputDDIndexMap_p.clear();
 
 	// Frequency transformation parameters
 	nspws_p = 1;
@@ -1284,18 +1286,63 @@ void MSTransformManager::initDataSelectionParams()
 	{
 		mssel.setSpwExpr(spwSelection_p);
 		Matrix<Int> spwchan = mssel.getChanList(inputMs_p);
+
+		// Get the DD IDs of this spw selection
+		Vector<Int> spwddi = mssel.getSPWDDIDList(inputMs_p);
+
+		// Take into account the polarization selections
+		if (!polarizationSelection_p.empty()){
+			mssel.setPolnExpr(polarizationSelection_p);
+			Vector<Int> polddi = mssel.getDDIDList(inputMs_p);
+			if (polddi.size() > 0){
+				// make an intersection
+				Vector<Int> commonDDI = set_intersection(spwddi, polddi);
+				uInt nddids = commonDDI.size();
+				if (nddids > 0){
+					spwddi.resize(nddids);
+					for (uInt ii = 0; ii < nddids; ++ii){
+						spwddi[ii] = commonDDI[ii];
+					}
+				}
+			}
+		}
+
+		uInt nddi = spwddi.size();
+		Int ddid;
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 				<< "Selected SPWs Ids are " << spwchan << LogIO::POST;
+		// Example of MS with repeated SPW ID in DD table:
+		// DD	POL		SPW
+		//	0	0		0 (RR)
+		//	1	1		0 (LL)
+		//	2	2		1 (RR,LL)
+		//	3	3		2 (RR,LL,RL,LR)
+		// example of selection: spw=0,1 correlation=RR, so selected DDs are
+		//	DD	POL		SPW
+		//	0	0		0
+		//	2	2		1
+
+		// Do the mapping of DD between input and output
+		for(uInt selection_ii=0;selection_ii<nddi;selection_ii++)
+		{
+			// Get dd id and set the input-output dd map
+			// This will only be used to write the DD ids in the main table
+			ddid = spwddi[selection_ii];
+			inputOutputDDIndexMap_p[ddid] = selection_ii + ddiStart_p;
+		}
 
 	    IPosition shape = spwchan.shape();
 	    uInt nSelections = shape[0];
 		Int spw,channelStart,channelStop,channelStep,channelWidth;
 		if (channelSelector_p == NULL) channelSelector_p = new vi::FrequencySelectionUsingChannels();
+
+		// Do the spw mapping between input and output
 		for(uInt selection_i=0;selection_i<nSelections;selection_i++)
 		{
 			// Get spw id and set the input-output spw map
 			spw = spwchan(selection_i,0);
 			inputOutputSPWIndexMap_p[spw] = selection_i + ddiStart_p;
+
 			outputInputSPWIndexMap_p[selection_i] = spw;
 
 			// Set the channel selection ()
@@ -1307,6 +1354,7 @@ void MSTransformManager::initDataSelectionParams()
 			channelSelector_p->add (spw, channelStart, channelWidth,channelStep);
 		}
 	}
+
 	// jagonzal: must fill numOfSelChanMap_p
 	else
 	{
@@ -1384,6 +1432,24 @@ void MSTransformManager::initDataSelectionParams()
 		if (channelSelector_p == NULL) channelSelector_p = new vi::FrequencySelectionUsingChannels();
 
 		channelSelector_p->addCorrelationSlices(correlationSlices);
+
+		// Get the DDs related to the polarization selection
+		// when there is no spw selection
+		if (spwSelection_p.empty()){
+			Vector<Int> polddids = mssel.getDDIDList(inputMs_p);
+
+			// Make the in/out DD mapping
+			uInt nddids = polddids.size();
+			Int dd;
+			for(uInt ii=0;ii<nddids;ii++)
+			{
+				// Get dd id and set the input-output dd map
+				dd = polddids[ii];
+				inputOutputDDIndexMap_p[dd] = ii + ddiStart_p;
+			}
+
+		}
+
 	}
 
 	return;
@@ -2835,6 +2901,7 @@ void MSTransformManager::fillOutputMs(vi::VisBuffer2 *vb)
     fillDataCols(vb,rowRef);
 	fillIdCols(vb,rowRef);
 
+
     return;
 
 }
@@ -2940,6 +3007,7 @@ void MSTransformManager::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 }
 
 // ----------------------------------------------------------------------------------------
+// ISn't this comment wrong??? DD depends on SPW
 // Fill auxiliary (meta data) columns which don't depend on the SPW (merely consist of Ids)
 // ----------------------------------------------------------------------------------------
 void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
@@ -3122,15 +3190,15 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 			writeVector(vb->stateId(),outputMsCols_p->stateId(),rowRef,nspws_p);
 		}
 
-		// Spectral Window
-		if (inputOutputSPWIndexMap_p.size())
+		// Data Description ID
+		if (inputOutputDDIndexMap_p.size())
 		{
-			reindexVector(vb->spectralWindows(),tmpVectorInt,inputOutputSPWIndexMap_p,True);
+			reindexVector(vb->dataDescriptionIds(),tmpVectorInt,inputOutputDDIndexMap_p,True);
 			writeRollingVector(tmpVectorInt,outputMsCols_p->dataDescId(),rowRef,nspws_p);
 		}
 		else
 		{
-			tmpVectorInt = vb->spectralWindows()(0);
+			tmpVectorInt = vb->dataDescriptionIds()(0);
 			writeRollingVector(tmpVectorInt,outputMsCols_p->dataDescId(),rowRef,nspws_p);
 		}
 

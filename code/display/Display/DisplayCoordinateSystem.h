@@ -64,6 +64,10 @@ namespace casa {
             unsigned int nPixelAxes() const { return cs_.nPixelAxes( ); }
             unsigned int nWorldAxes() const { return cs_.nWorldAxes( ); }
 
+            // is the first direction axis RA or Dec...
+            bool isDirectionAbscissaLongitude( ) const
+                { return cs_.isDirectionAbscissaLongitude( ); }
+
             ObsInfo obsInfo() const
                 { return cs_.obsInfo( ); }
             void setObsInfo(const ObsInfo &obsinfo)

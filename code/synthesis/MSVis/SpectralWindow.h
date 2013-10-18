@@ -62,6 +62,7 @@ public:
     const_iterator end () const;
     const SpectralChannel & get (Int i) const;
 
+    Int id () const;
     Bool isFlagged () const;
     Int frequencyGroup () const;
     String frequencyGroupName () const;

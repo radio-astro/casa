@@ -67,7 +67,7 @@ DelayFFT::DelayFFT(Double f0, Double df, Double padBW,
   df_(df),
   padBW_(padBW),
   nCorr_(V.shape()(0)),
-  nPadChan_(Int(padBW/df)),
+  nPadChan_(Int(0.5+padBW/df)),
   nElem_(V.shape()(2)),
   refant_(-1),  // ok?
   Vpad_(),
@@ -93,13 +93,16 @@ DelayFFT::DelayFFT(Double f0, Double df, Double padBW,
   df_(df),
   padBW_(padBW),
   nCorr_(nCorr),
-  nPadChan_(Int(padBW/df)),
+  nPadChan_(Int(0.5+padBW/df)),
   nElem_(nElem),
   refant_(refant), 
   Vpad_(),
   delay_(),
   flag_()
 {
+
+  //  cout << "ctor0: " << f0 << " " << df << " " << padBW << " " << nPadChan_ << endl;
+  //  cout << "ctor0: " << f0_ << " " << df_ << " " << padBW_ << " " << nPadChan_ << endl;
 
   Vpad_.resize(nCorr_,nPadChan_,nElem_);
   Vpad_.set(v0);
@@ -114,7 +117,7 @@ DelayFFT::DelayFFT(Double f0, Double df, Double padBW,
   df_(vb.frequency()(1)/1.e9-f0_),
   padBW_(padBW),
   nCorr_(0),    // set in body
-  nPadChan_(Int(padBW/df_)),
+  nPadChan_(Int(0.5+padBW/df_)),
   nElem_(vb.numberAnt()), // antenna-based
   refant_(refant),
   Vpad_(),
@@ -123,6 +126,7 @@ DelayFFT::DelayFFT(Double f0, Double df, Double padBW,
 {
 
   //  cout << "DelayFFT(vb)..." << endl;
+  //  cout << "ctor1: " << f0_ << " " << df_ << " " << padBW_ << " " << nPadChan_ << endl;
 
   // VB facts
   Int nCorr=vb.nCorr();
@@ -233,6 +237,9 @@ void DelayFFT::add(const DelayFFT& other) {
   //  cout << "DelayFFT::add(x)..." << endl;
 
   IPosition osh=other.Vpad_.shape();
+
+  //  cout << "add: " << nPadChan_ << " " << other.nPadChan_ << endl;
+
 
   AlwaysAssert( (other.nCorr_==nCorr_), AipsError);
   AlwaysAssert( (other.nPadChan_<=nPadChan_), AipsError);
@@ -707,6 +714,20 @@ KcrossJones::KcrossJones(const Int& nAnt) :
 KcrossJones::~KcrossJones() {
   if (prtlev()>2) cout << "Kx::~Kx()" << endl;
 }
+
+void KcrossJones::selfSolveOne(VisBuffGroupAcc& vbga) {
+
+  // Trap MBD attempt (NYI)
+  if (vbga.nBuf()!=1) 
+    throw(AipsError("KcrossJones does not yet support MBD"));
+  //    this->solveOneVBmbd(vbga);
+
+  // otherwise, call the single-VB solver with the first VB in the vbga
+  else
+    this->solveOneVB(vbga(0));
+
+}
+
 
 // Do the FFTs
 void KcrossJones::solveOneVB(const VisBuffer& vb) {
