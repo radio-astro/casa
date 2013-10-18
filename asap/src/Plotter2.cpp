@@ -54,19 +54,51 @@ Plotter2ViewportInfo::Plotter2ViewportInfo() {
 
     hasDataRange = false;
 
-    nMajorTickWithinTickNumsX = 2;
-    nMajorTickWithinTickNumsY = 2;
     isAutoTickIntervalX = true;
     isAutoTickIntervalY = true;
+    majorTickIntervalX = 0.1;
+    majorTickIntervalY = 0.1;
+    nMajorTickWithinTickNumsX = 2;
+    nMajorTickWithinTickNumsY = 2;
+    nMinorTickWithinMajorTicksX = 5;
+    nMinorTickWithinMajorTicksY = 5;
 
-    numLocationX = "l";
-    numLocationY = "b";
+    numLocationX = "b";
+    numLocationY = "l";
 
     fontSizeDef = 1.0;
 
-    vpBColor = -1; // transparent (<0)
-
     vData.clear();
+    vRect.clear();
+
+    labelXString = "";
+    labelXPosX = 0.5;
+    labelXPosY = 0.05;
+    labelXAngle = 0.0;
+    labelXFJust = 0.5;
+    labelXSize = fontSizeDef * 1.1;
+    labelXColor = 1;
+    labelXBColor = 0;
+
+    labelYString = "";
+    labelYPosX = 0.05;
+    labelYPosY = 0.5;
+    labelYAngle = 90.0;
+    labelYFJust = 0.5;
+    labelYSize = fontSizeDef * 1.1;
+    labelYColor = 1;
+    labelYBColor = 0;
+
+    titleString = "";
+    titlePosX = 0.5;
+    titlePosY = 0.95;
+    titleAngle = 0.0;
+    titleFJust = 0.5;
+    titleSize = fontSizeDef * 1.5;
+    titleColor = 1;
+    titleBColor = 0;
+
+    vpBColor = -1; // transparent (<0)
 }
 
 Plotter2ViewportInfo::~Plotter2ViewportInfo() {
@@ -135,36 +167,32 @@ std::vector<float> Plotter2ViewportInfo::getRangeY() {
 void Plotter2ViewportInfo::adjustTickInterval() {
     if (hasDataRange) {
 	if (isAutoTickIntervalX) {
-	    adjustTickIntervalX();
+	    adjustTickIntervalX(vpRangeXMin, vpRangeXMax);
 	}
 	if (isAutoTickIntervalY) {
-	    adjustTickIntervalY();
+	    adjustTickIntervalY(vpRangeYMin, vpRangeYMax);
 	}
     }
-}
-
-void Plotter2ViewportInfo::adjustTickIntervalX() {
-    adjustTickIntervalX(vpRangeXMin, vpRangeXMax);
 }
 
 void Plotter2ViewportInfo::adjustTickIntervalX(const float xmin, const float xmax) {
     majorTickIntervalX = (float)pow(10.0, ceil(log10((xmax - xmin)/10.0)));
-    if ((xmax - xmin) / majorTickIntervalX < 2.0) {
-        majorTickIntervalX /= 10.0;
+    if ((xmax - xmin) / majorTickIntervalX < 4.0) {
+        majorTickIntervalX /= 2.0;
     }
-    nMinorTickWithinMajorTicksX = 5;
-}
-
-void Plotter2ViewportInfo::adjustTickIntervalY() {
-    adjustTickIntervalY(vpRangeYMin, vpRangeYMax);
+    if ((xmax - xmin) / majorTickIntervalX < 4.0) {
+        majorTickIntervalX /= 2.0;
+    }
 }
 
 void Plotter2ViewportInfo::adjustTickIntervalY(const float ymin, const float ymax) {
     majorTickIntervalY = (float)pow(10.0, ceil(log10((ymax - ymin)/10.0)));
-    if ((ymax - ymin) / majorTickIntervalY < 2.0) {
-        majorTickIntervalY /= 10.0;
+    if ((ymax - ymin) / majorTickIntervalY < 4.0) {
+        majorTickIntervalY /= 2.0;
     }
-    nMinorTickWithinMajorTicksY = 5;
+    if ((ymax - ymin) / majorTickIntervalY < 4.0) {
+        majorTickIntervalY /= 2.0;
+    }
 }
 
 void Plotter2ViewportInfo::setData(const std::vector<float>& inXData, const std::vector<float>& inYData, const int id) {
@@ -204,6 +232,9 @@ void Plotter2ViewportInfo::setData(const std::vector<float>& inXData, const std:
     } else {
         info->hasData = true;
     }
+
+    adjustRange();
+    adjustTickInterval();
 }
 
 void Plotter2ViewportInfo::updateXDataRange(const float data) {
@@ -346,36 +377,139 @@ bool Plotter2::getHasDefaultViewport() {
 }
 
 int Plotter2::getCurrentViewportId() {
-  return currentViewportId;
+    return currentViewportId;
 }
 
 void Plotter2::getViewInfo() {
-    std::cout << "===================" << std::endl << std::flush;
+    std::string colorNames[16] = {"white", "black", "red", "green", 
+			  	  "blue", "cyan", "magenta", "yellow", 
+				  "orange", "yellowgreen", "emerald", "skyblue", 
+				  "purple", "pink", "gray", "lightgray"};
+    std::string lstyleNames[6] = {"", "solid", "dashed", "dash-dotted", "dotted", "dash-dot-dot-dotted"};
+    std::string fstyleNames[5] = {"", "solid", "outline", "hatched", "crosshatched"};
+
     for (unsigned int i = 0; i < vInfo.size(); ++i) {
-        std::cout << "[" << i << "]  " << std::endl;
-        std::cout << "vpPos:  ";
-	std::cout << "xmin=" << vInfo[i].vpPosXMin << ", ";
-	std::cout << "xmax=" << vInfo[i].vpPosXMax << ", ";
-	std::cout << "ymin=" << vInfo[i].vpPosYMin << ", ";
-	std::cout << "ymax=" << vInfo[i].vpPosYMax << std::endl;
+        std::cout << "Viewport [ID = " << i << "] (" << (i+1) << "/" << vInfo.size() << ") ";
+	std::cout << "=============================================================" << std::endl;
 
-        std::cout << "vpRange:  ";
-	std::cout << "xmin=" << vInfo[i].vpRangeXMin << ", ";
-	std::cout << "xmax=" << vInfo[i].vpRangeXMax << ", ";
-	std::cout << "ymin=" << vInfo[i].vpRangeYMin << ", ";
-	std::cout << "ymax=" << vInfo[i].vpRangeYMax << std::endl;;
+	std::cout << "  Visible: " << (vInfo[i].showViewport ? "Yes" : "No") << std::endl;
 
-	std::cout << "vdatasize=" << vInfo[i].vData.size() << std::endl;
-        for (unsigned int j = 0; j < vInfo[i].vData.size(); ++j) {
-	    std::cout << "vdataxdatasize=" << vInfo[i].vData[j].xData.size() << ", ";
-  	    for (unsigned int k = 0; k < vInfo[i].vData[j].xData.size(); ++k) {
-	        std::cout << "(" << vInfo[i].vData[j].xData[k] << ", ";
-	        std::cout << vInfo[i].vData[j].yData[k] << ") ";
-	    }
-            std::cout << std::endl;
+        std::cout << "  Position in Window Coordinate: ";
+	std::cout << "X(left=" << vInfo[i].vpPosXMin << ",right=" << vInfo[i].vpPosXMax << "), ";
+	std::cout << "Y(bottom=" << vInfo[i].vpPosYMin << ",top=" << vInfo[i].vpPosYMax << ")" << std::endl;
+
+        std::cout << "  Display Range: ";
+	std::cout << "X(" << (vInfo[i].isAutoRangeX ? "automatic" : "manual") << ", ";
+	std::cout << "min=" << vInfo[i].vpRangeXMin << ", max=" << vInfo[i].vpRangeXMax << "), ";
+	std::cout << "Y(" << (vInfo[i].isAutoRangeY ? "automatic" : "manual") << ", ";
+	std::cout << "min=" << vInfo[i].vpRangeYMin << ", max=" << vInfo[i].vpRangeYMax << ")" << std::endl;
+
+	std::cout << "  Numbering/Ticks:" << std::endl;
+	std::cout << "    X(" << ((vInfo[i].numLocationX == "b") ? "bottom" : ((vInfo[i].numLocationX == "t") ? "top" : (vInfo[i].numLocationX + " [*INVAILD*]"))) << ", interval[" << (vInfo[i].isAutoTickIntervalX ? "automatic" : "manual") << ", ";
+	std::cout << "numbering=" << (vInfo[i].majorTickIntervalX * vInfo[i].nMajorTickWithinTickNumsX) << ", ";
+	std::cout << "majortick=" << vInfo[i].majorTickIntervalX << ", ";
+	std::cout << "minortick=" << (vInfo[i].majorTickIntervalX / vInfo[i].nMinorTickWithinMajorTicksX) << "])" << std::endl;
+	std::cout << "    Y(" << ((vInfo[i].numLocationY == "l") ? "left" : ((vInfo[i].numLocationY == "r") ? "right" : (vInfo[i].numLocationY + " [*INVAILD*]"))) << ", interval[" << (vInfo[i].isAutoTickIntervalY ? "automatic" : "manual") << ", ";
+	std::cout << "numbering=" << (vInfo[i].majorTickIntervalY * vInfo[i].nMajorTickWithinTickNumsY) << ", ";
+	std::cout << "majortick=" << vInfo[i].majorTickIntervalY << ", ";
+	std::cout << "minortick=" << (vInfo[i].majorTickIntervalY / vInfo[i].nMinorTickWithinMajorTicksY) << "])" << std::endl;
+
+	std::cout << "  X Label: ";
+	if (vInfo[i].labelXString != "") {
+ 	    std::cout << "\"" << vInfo[i].labelXString << "\"" << std::endl;
+	    std::cout << "    position=(" << vInfo[i].labelXPosX << "," << vInfo[i].labelXPosY << "), ";
+	    std::cout << "justification=" << vInfo[i].labelXFJust << ", ";
+	    std::cout << "angle=" << vInfo[i].labelXAngle << "deg, ";
+	    std::cout << "fontsize=" << vInfo[i].labelXSize << std::endl;
+	} else {
+	    std::cout << "No" << std::endl;
 	}
-        std::cout << "===================" << std::endl << std::flush;
+
+	std::cout << "  Y Label: ";
+	if (vInfo[i].labelYString != "") {
+ 	    std::cout << "\"" << vInfo[i].labelYString << "\"" << std::endl;
+	    std::cout << "    position=(" << vInfo[i].labelYPosX << "," << vInfo[i].labelYPosY << "), ";
+	    std::cout << "justification=" << vInfo[i].labelYFJust << ", ";
+	    std::cout << "angle=" << vInfo[i].labelYAngle << "deg, ";
+	    std::cout << "fontsize=" << vInfo[i].labelYSize << std::endl;
+	} else {
+	    std::cout << "No" << std::endl;
+	}
+
+	std::cout << "  Title: ";
+	if (vInfo[i].titleString != "") {
+ 	    std::cout << "\"" << vInfo[i].titleString << "\"" << std::endl;
+	    std::cout << "    position=(" << vInfo[i].titlePosX << "," << vInfo[i].titlePosY << "), ";
+	    std::cout << "justification=" << vInfo[i].titleFJust << ", ";
+	    std::cout << "angle=" << vInfo[i].titleAngle << "deg, ";
+	    std::cout << "fontsize=" << vInfo[i].titleSize << std::endl;
+	} else {
+	    std::cout << "No" << std::endl;
+	}
+
+	std::cout << "  Background Color = ";
+	if (vInfo[i].vpBColor < 0) {
+	    std::cout << "transparent" << std::endl;
+	} else if (vInfo[i].vpBColor < 16) {
+	    std::cout << colorNames[vInfo[i].vpBColor] << std::endl;
+	} else {
+	    std::cout << "index:" << vInfo[i].vpBColor << " [INVAILD VALUE!]" << std::endl;
+	}
+
+        for (unsigned int j = 0; j < vInfo[i].vData.size(); ++j) {
+	    std::cout << "  Dataset [ID = " << j << "] (" << (j+1) << "/" << vInfo[i].vData.size() << ") ";
+	    std::cout << "----------------------------------------------" << std::endl;
+
+	    bool showDataset = (vInfo[i].vData[j].drawLine || vInfo[i].vData[j].drawMarker);
+	    bool showViewport = vInfo[i].showViewport;
+	    std::cout << "    Visible: " << (showViewport ? "" : "(");
+	    std::cout << (showDataset ? "Yes" : "No") << (showViewport ? "" : ")") << std::endl;
+	    std::cout << "    Number of Data Points: " << vInfo[i].vData[j].xData.size() << std::endl;
+	    if (vInfo[i].vData[j].drawLine) {
+	        std::cout << "    Line: color=";
+		if (vInfo[i].vData[j].lineColor < 0) {
+		  int defaultColorIdx = (j + 1) % 15 + 1;
+		    std::cout << "default(" << colorNames[defaultColorIdx] << ")";
+		} else if (vInfo[i].vData[j].lineColor < 16) {
+		    std::cout << colorNames[vInfo[i].vData[j].lineColor];
+		} else {
+		    std::cout << "index:" << vInfo[i].vData[j].lineColor << " [*INVAILD*]";
+		}
+		std::cout << ", width=" << vInfo[i].vData[j].lineWidth;
+		std::cout << ", style=" << lstyleNames[vInfo[i].vData[j].lineStyle] << std::endl;
+	    }
+	    if (vInfo[i].vData[j].drawMarker) {
+	        std::cout << "    Marker: color=";
+		if (vInfo[i].vData[j].markerColor < 0) {
+		    std::cout << "default";
+		} else if (vInfo[i].vData[j].markerColor < 16) {
+		    std::cout << colorNames[vInfo[i].vData[j].markerColor];
+		} else {
+		    std::cout << "index:" << vInfo[i].vData[j].markerColor << " [*INVAILD*]";
+		}
+		std::cout << ", shape=" << vInfo[i].vData[j].markerType;
+		std::cout << ", size=" << vInfo[i].vData[j].markerSize << std::endl;
+	    }
+
+	}
+
+	for (unsigned int j = 0; j < vInfo[i].vRect.size(); ++j) {
+	    std::cout << "  XMask [ID = " << j << "] (" << (j+1) << "/" << vInfo[i].vRect.size() << ") ";
+	    std::cout << "----------------------------------------------" << std::endl;
+	    std::cout << "    Range: (min=" << vInfo[i].vRect[j].xmin << ", max=" << vInfo[i].vRect[j].xmax << ")" << std::endl;
+	    std::cout << "    Attributes: (color=" << colorNames[vInfo[i].vRect[j].color];
+	    std::string fstyle = fstyleNames[vInfo[i].vRect[j].fill];
+	    std::cout << ", fillstyle=" << fstyle;
+	    if (fstyle == "outline") {
+	        std::cout << ", outlinewidth=" << vInfo[i].vRect[j].width;
+	    }
+	    if ((fstyle == "hatched")||(fstyle == "crosshatched")) {
+	        std::cout << ", hatchspacing=" << vInfo[i].vRect[j].hsep;
+	    }
+	    std::cout << ")" << std::endl;
+	}
     }
+    std::cout << "=====================================================================================" << std::endl << std::flush;
 }
 
 void Plotter2::setRange(const float xmin, const float xmax, const float ymin, const float ymax, const int inVpid) {
@@ -789,10 +923,11 @@ void Plotter2::setMaskX(const float xmin, const float xmax, const int color, con
     Plotter2RectInfo ri;
     ri.xmin  = xmin;
     ri.xmax  = xmax;
-    std::vector<float> yrange = vi->getRangeY();
-    float yexcess = 0.1*(yrange[1] - yrange[0]);
-    ri.ymin  = yrange[0] - yexcess;
-    ri.ymax  = yrange[1] + yexcess;
+    //y-range of xmask should be calculated in plot().
+    //std::vector<float> yrange = vi->getRangeY();
+    //float yexcess = 0.1*(yrange[1] - yrange[0]);
+    //ri.ymin  = yrange[0] - yexcess;
+    //ri.ymax  = yrange[1] + yexcess;
     ri.color = color;
     ri.fill  = fill;
     ri.width = width;
@@ -1008,9 +1143,6 @@ void Plotter2::plot() {
 
 	    // setup viewport
             cpgsvp(vi.vpPosXMin, vi.vpPosXMax, vi.vpPosYMin, vi.vpPosYMax);
-  	    vi.adjustRange();
-  	    vi.adjustTickInterval();
-
 	    cpgswin(vi.vpRangeXMin, vi.vpRangeXMax, vi.vpRangeYMin, vi.vpRangeYMax);
 
 	    // background color (default is transparent)
@@ -1060,6 +1192,12 @@ void Plotter2::plot() {
 	        delete [] pydata;
 	    }
 
+	    //calculate y-range of xmasks
+	    std::vector<float> yrange = vi.getRangeY();
+	    float yexcess = 0.1*(yrange[1] - yrange[0]);
+	    float xmaskymin = yrange[0] - yexcess;
+	    float xmaskymax = yrange[1] + yexcess;
+
 	    // masks
 	    for (unsigned int j = 0; j < vi.vRect.size(); ++j) {
                 cpgstbg(0); // reset background colour to the initial one (white)
@@ -1081,10 +1219,10 @@ void Plotter2::plot() {
 	        mxdata[1] = ri.xmax;
 	        mxdata[2] = ri.xmax;
 	        mxdata[3] = ri.xmin;
-	        mydata[0] = ri.ymin;
-	        mydata[1] = ri.ymin;
-	        mydata[2] = ri.ymax;
-	        mydata[3] = ri.ymax;
+	        mydata[0] = xmaskymin;
+	        mydata[1] = xmaskymin;
+	        mydata[2] = xmaskymax;
+	        mydata[3] = xmaskymax;
                 cpgpoly(4, mxdata, mydata);
 	    }
 
@@ -1101,16 +1239,16 @@ void Plotter2::plot() {
 
 	    // viewport outline, ticks and number labels
 	    std::string numformatx, numformaty;
-	    if (vi.numLocationX == "l") {
+	    if (vi.numLocationX == "b") {
 	        numformatx = "N";
-	    } else if (vi.numLocationX == "r") {
+	    } else if (vi.numLocationX == "t") {
 	        numformatx = "M";
 	    } else if (vi.numLocationX == "") {
 	        numformatx = "";
 	    }
-	    if (vi.numLocationY == "b") {
+	    if (vi.numLocationY == "l") {
 	        numformaty = "NV";
-	    } else if (vi.numLocationY == "t") {
+	    } else if (vi.numLocationY == "r") {
 	        numformaty = "MV";
 	    } else if (vi.numLocationY == "") {
 	        numformaty = "";

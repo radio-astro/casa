@@ -147,9 +147,7 @@ private:
     void updateAllDataRanges();
     void adjustRangeX(float* xmin, float* xmax);
     void adjustRangeY(float* ymin, float* ymax);
-    void adjustTickIntervalX();
     void adjustTickIntervalX(const float xmin, const float xmax);
-    void adjustTickIntervalY();
     void adjustTickIntervalY(const float ymin, const float ymax);
 };
 

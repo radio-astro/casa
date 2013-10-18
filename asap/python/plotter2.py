@@ -92,7 +92,7 @@ class plotter2:
     
     def set_range(self, xmin, xmax, ymin, ymax, vpid=None):
         """\
-        set 2D range of area to be displayed in a viewport.
+        set 2D range to be displayed in the specified viewport.
         by default, the display range is set automatically. 
 
         Parameter:
@@ -108,7 +108,7 @@ class plotter2:
         
     def set_xrange(self, xmin, xmax, vpid=None):
         """\
-        set x range of area to be displayed in a viewport.
+        set x range to be displayed in the specified viewport.
         by default, the display range is set automatically. 
 
         Parameter:
@@ -122,7 +122,7 @@ class plotter2:
     
     def set_yrange(self, ymin, ymax, vpid=None):
         """\
-        set y range of area to be displayed in a viewport.
+        set y range to be displayed in the specified viewport.
         by default, the display range is set automatically. 
 
         Parameter:
@@ -136,8 +136,8 @@ class plotter2:
 
     def get_xrange(self, vpid=None):
         """\
-        returns x range of display area of the specified viewport in
-        a shape of (xmin, xmax). 
+        returns x range of displayed region of the specified viewport 
+        as a list of [xmin, xmax]. 
 
         Parameter:
             vpid: viewport id. when unset, operation is applied to 
@@ -148,8 +148,8 @@ class plotter2:
     
     def get_yrange(self, vpid=None):
         """\
-        returns y range of display area of the specified viewport in
-        a shape of (ymin, ymax). 
+        returns y range of displayed region in the specified viewport
+        as a list of [ymin, ymax]. 
 
         Parameter:
             vpid: viewport id. when unset, operation is applied to 
@@ -160,10 +160,11 @@ class plotter2:
     
     def set_autorange(self, vpid=None):
         """\
-        set 2D range of display area of the specified viewport to be
-        automatic depending on the given data.
-        the x range will be the exact range of the x values of data,
-        whereas y range has a margin of 10% of the range of y values of data. 
+        set the 2-Dimensional range of displayed area of the specified
+        viewport to automatically enclose the given data.
+        the x range will be from the minimum up to the maximum value
+        of the given x values, whereas y range has margins of 10% of
+        the y value range both at the top and the bottom sides. 
 
         Parameter:
             vpid: viewport id. when unset, operation is applied to 
@@ -174,9 +175,8 @@ class plotter2:
 
     def set_xautorange(self, vpid=None):
         """\
-        set x range of display area of the specified viewport to be
-        automatic depending on the given data.
-        the x range will be the exact range of the x values of data,
+        set x range of displayed area of the specified viewport to 
+        automatically enclose the given data with no margins. 
 
         Parameter:
             vpid: viewport id. when unset, operation is applied to 
@@ -187,9 +187,9 @@ class plotter2:
     
     def set_yautorange(self, vpid=None):
         """\
-        set y range of display area of the specified viewport to be
-        automatic depending on the given data.
-        the y range has a margin of 10% of the range of y values of data. 
+        set y range of displayed area of the specified viewport to 
+        automatically enclose the given data with margins of 10% of
+        the y value range both at the top and the bottom sides. 
 
         Parameter:
             vpid: viewport id. when unset, operation is applied to 
@@ -340,14 +340,15 @@ class plotter2:
         change line attributes.
 
         Parameters:
-            color: line color specified by color name. available colors 
-                   can be listed via list_colornames().
-            width: line width. default is 1.
-            style: line style. available styles can be listed via
-                   list_linestyles().
+            color:  line color specified by color name. available colors 
+                    can be listed via list_colornames().
+            width:  line width. default is 1.
+            style:  line style. available styles can be listed via
+                    list_linestyles().
             vpid:   viewport id. when not given, the last viewport
-                    will be the target. 
-            dataid: dataset id. when not given, the last dataset used.
+                    will be the target of operation. 
+            dataid: dataset id. when not given, the last dataset for the
+                    specified viewport is the target.
         """
         if width  is None: width  = 1
         if style  is None: style  = "solid"
@@ -476,8 +477,8 @@ class plotter2:
             posx:  x position of label string in window coordinate.
                    default is the center of x axis.
             posy:  y position of label string.
-            vpid:   viewport id. when not given, the last viewport
-                    will be the target. 
+            vpid:  viewport id. when not given, the last viewport
+                   will be the target. 
         """
         if style is None: style = ""
         if size  is None: size  = 1.1
@@ -586,33 +587,39 @@ class plotter2:
     def get_vinfo(self):
         self._plotter.get_vinfo()
 
-    def get_colorindex(self, colorname):
+    @classmethod
+    def get_colorindex(cls, colorname):
         """\
-        (for internal use)
         convert the given color name into color index used in PGPLOT.
         """
         name = colorname.strip().lower()
+        available_color = True
 
-        if name == "white":       idx = 0  # our definition of bgcolor
-        if name == "black":       idx = 1  # our definition of fgcolor
-        if name == "red":         idx = 2
-        if name == "green":       idx = 3
-        if name == "blue":        idx = 4
-        if name == "cyan":        idx = 5
-        if name == "magenta":     idx = 6
-        if name == "yellow":      idx = 7
-        if name == "orange":      idx = 8
-        if name == "yellowgreen": idx = 9
-        if name == "emerald":     idx = 10
-        if name == "skyblue":     idx = 11
-        if name == "purple":      idx = 12
-        if name == "pink":        idx = 13
-        if name == "gray":        idx = 14
-        if name == "lightgray":   idx = 15
+        if   name == "white":       idx =  0  # our definition of bgcolor
+        elif name == "black":       idx =  1  # our definition of fgcolor
+        elif name == "red":         idx =  2
+        elif name == "green":       idx =  3
+        elif name == "blue":        idx =  4
+        elif name == "cyan":        idx =  5
+        elif name == "magenta":     idx =  6
+        elif name == "yellow":      idx =  7
+        elif name == "orange":      idx =  8
+        elif name == "yellowgreen": idx =  9
+        elif name == "emerald":     idx = 10
+        elif name == "skyblue":     idx = 11
+        elif name == "purple":      idx = 12
+        elif name == "pink":        idx = 13
+        elif name == "gray":        idx = 14
+        elif name == "lightgray":   idx = 15
+        else: available_color = False
 
-        return idx
+        if (available_color):
+            return idx
+        else:
+            raise ValueError("Unavailable colour name.")
 
-    def list_colornames(self):
+    @classmethod
+    def list_colornames(cls):
         """\
         list the available color names.
         """
@@ -635,20 +642,28 @@ class plotter2:
         print " (15) lightgray"
         print "---------------------------------"
 
-    def get_linestyleindex(self, fstyle):
+    @classmethod
+    def get_linestyleindex(cls, fstyle):
         """\
-        (for internal use)
         convert the given line style into style index used in PGPLOT.
         """
         style = fstyle.strip().lower()
-        if style == "solid":        idx = 1
-        if style == "outline":      idx = 2
-        if style == "hatched":      idx = 3
-        if style == "crosshatched": idx = 4
+        available_style = True
         
-        return idx
+        if   style == "solid":               idx = 1
+        elif style == "dashed":              idx = 2
+        elif style == "dash-dotted":         idx = 3
+        elif style == "dotted":              idx = 4
+        elif style == "dash-dot-dot-dotted": idx = 5
+        else: available_style = False
+
+        if (available_style):
+            return idx
+        else:
+            raise ValueError("Unavailable line style.")
     
-    def list_linestyles(self):
+    @classmethod
+    def list_linestyles(cls):
         """\
         list the available line styles.
         """
@@ -660,20 +675,27 @@ class plotter2:
         print "  (5) dash-dot-dot-dotted"
         print "------------------------------"
 
-    def get_fillstyleindex(self, fstyle):
+    @classmethod
+    def get_fillstyleindex(cls, fstyle):
         """\
-        (for internal use)
         convert the given fill style into style index used in PGPLOT.
         """
         style = fstyle.strip().lower()
-        if style == "solid":        idx = 1
-        if style == "outline":      idx = 2
-        if style == "hatched":      idx = 3
-        if style == "crosshatched": idx = 4
+        available_style = True
         
-        return idx
+        if   style == "solid":        idx = 1
+        elif style == "outline":      idx = 2
+        elif style == "hatched":      idx = 3
+        elif style == "crosshatched": idx = 4
+        else: available_style = False
+
+        if (available_style):
+            return idx
+        else:
+            raise ValueError("Unavailable fill style.")
     
-    def list_fillstyles(self):
+    @classmethod
+    def list_fillstyles(cls):
         """\
         list the available fill styles.
         """
