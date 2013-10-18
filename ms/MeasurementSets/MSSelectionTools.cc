@@ -226,7 +226,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     OrderedMap<Int, Vector<Int > > polMap=thisSelection.getPolMap();
     OrderedMap<Int, Vector<Vector<Int> > > corrMap=thisSelection.getCorrMap();
     Vector<Int> allDDIDList;
-    allDDIDList = set_intersection(ddIDList, spwDDIDList);
+    if (ddIDList.nelements() == 0) allDDIDList = spwDDIDList;
+    else if (spwDDIDList.nelements() == 0) allDDIDList = ddIDList;
+    else allDDIDList = set_intersection(ddIDList, spwDDIDList);
 
     retval.define("spw", spwlist);
     retval.define("field", fieldlist);
@@ -237,7 +239,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     retval.define("channel", chanlist);
     retval.define("poldd",ddIDList);
     retval.define("spwdd",spwDDIDList);
-    retval.define("dd",spwDDIDList);
+    retval.define("dd",allDDIDList);
     retval.define("stateid",stateIDList);
     retval.define("observationid",observationIDList);
 
