@@ -823,7 +823,7 @@ void MSMetaDataOnDemand::_getFieldsAndSpwMaps(
 	}
 }
 
-std::set<uInt> MSMetaDataOnDemand::getSpwsForField(const Int fieldID) {
+std::set<uInt> MSMetaDataOnDemand::getSpwsForField(Int fieldID) {
 	if (! _hasFieldID(fieldID)) {
 		return std::set<uInt>();
 	}
@@ -836,15 +836,18 @@ std::set<uInt> MSMetaDataOnDemand::getSpwsForField(const Int fieldID) {
 std::set<uInt> MSMetaDataOnDemand::getSpwsForField(const String& fieldName) {
 	uInt myNFields = nFields();
 	vector<String> fieldNames = _getFieldNames();
-
+	std::set<uInt> spws;
 	for (uInt i=0; i<myNFields; i++) {
 		if (fieldNames[i] == fieldName) {
-			return getSpwsForField(i);
+			std::set<uInt> myspws = getSpwsForField(i);
+			spws.insert(myspws.begin(), myspws.end());
 		}
 	}
-	throw AipsError(
-		_ORIGIN + "field (" + fieldName + " does not exist"
+	ThrowIf(
+		spws.empty(),
+		_ORIGIN + "field (" + fieldName + " does not exist."
 	);
+	return spws;
 }
 
 vector<String> MSMetaDataOnDemand::_getFieldNames() {
