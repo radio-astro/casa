@@ -3546,6 +3546,7 @@ Bool MSTransformDataHandler::mergeDDISubTables(Vector<String> filenames)
 	MSDataDescColumns ddiCols_0(ddiTable_0);
 
 	uInt rowIndex = ddiTable_0.nrow();
+
 	for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
 	{
 		String filename_i = filenames(subms_index);
@@ -3555,11 +3556,15 @@ Bool MSTransformDataHandler::mergeDDISubTables(Vector<String> filenames)
 
 		ddiTable_0.addRow(dditable_i.nrow());
 
+
 		for (uInt subms_row_index=0;subms_row_index<dditable_i.nrow();subms_row_index++)
 		{
+			// get the last spw id entered in the 0th DD table
+			uInt spwid = ddiCols_0.spectralWindowId().get(rowIndex-1);
+
 			ddiCols_0.flagRow().put(rowIndex,ddicols_i.flagRow()(subms_row_index));
 			ddiCols_0.polarizationId().put(rowIndex,ddicols_i.polarizationId()(subms_row_index));
-			ddiCols_0.spectralWindowId().put(rowIndex,rowIndex);
+			ddiCols_0.spectralWindowId().put(rowIndex,spwid+1);
 			rowIndex += 1;
 		}
 	}
