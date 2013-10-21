@@ -94,7 +94,13 @@ public:
 
 
 	// get a set of intents corresponding to a specified field
-	virtual std::set<String> getIntentsForField(Int fieldID);
+	std::set<String> getIntentsForField(Int fieldID);
+
+	std::map<String, std::set<Int> > getIntentToFieldsMap();
+
+	std::map<String, std::set<Int> > getIntentToScansMap();
+
+	std::map<String, std::set<uInt> > getIntentToSpwsMap();
 
 	// get the number of fields.
 	uInt nFields();
@@ -313,6 +319,8 @@ private:
 	std::tr1::shared_ptr<Vector<Double> > _times;
 	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > _scanToTimesMap;
 	std::map<String, std::set<Int> > _intentToFieldIDMap, _intentToScansMap;
+	std::map<String, std::set<uInt> > _intentToSpwsMap;
+
 	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > _fieldToTimesMap;
 	std::tr1::shared_ptr<std::map<Double, std::set<Int> > > _timeToFieldsMap;
 
@@ -404,6 +412,9 @@ private:
 
 	static uInt _sizeof(vector<std::set<Int> >& v);
 
+	static uInt _sizeof(std::map<String, std::set<uInt> >& map);
+
+
 	void _getFieldsAndSpwMaps(
 		std::map<Int, std::set<uInt> >& fieldToSpwMap,
 		vector<std::set<Int> >& spwToFieldMap
@@ -432,6 +443,11 @@ private:
 	void _getScansAndIntentsMaps(
 		std::map<Int, std::set<String> >& scanToIntentsMap,
 		std::map<String, std::set<Int> >& intentToScansMap
+	);
+
+	void _getSpwsAndIntentsMaps(
+		vector<std::set<String> >& spwToIntentsMap,
+		std::map<String, std::set<uInt> >& intentToSpwsMap
 	);
 
 	void _getFieldsAndScansMaps(

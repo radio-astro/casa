@@ -40,6 +40,7 @@
 #include <ms/MeasurementSets/MSMetaDataOnDemand.h>
 
 #include <stdcasa/cboost_foreach.h>
+#include <boost/regex.hpp>
 
 #include <boost/iterator/counting_iterator.hpp>
 
@@ -324,7 +325,7 @@ vector<int> msmetadata::chanavgspws() {
 }
 
 vector<double> msmetadata::chanfreqs(int spw, const string& unit) {
-	_FUNC2 (
+	_FUNC (
 		_checkSpwId(spw, True);
 		return _msmd->getChanFreqs()[spw].getValue(Unit(unit)).tovector();
 	)
@@ -332,7 +333,7 @@ vector<double> msmetadata::chanfreqs(int spw, const string& unit) {
 }
 
 vector<double> msmetadata::chanwidths(int spw, const string& unit) {
-	_FUNC2 (
+	_FUNC (
 		_checkSpwId(spw, True);
 		return _msmd->getChanWidths()[spw].getValue(Unit(unit)).tovector();
 	)
@@ -381,9 +382,11 @@ bool msmetadata::done() {
 }
 
 record* msmetadata::effexposuretime() {
-	return fromRecord(
-		QuantumHolder(_msmd->getEffectiveTotalExposureTime()).toRecord()
-	);
+	_FUNC(
+		return fromRecord(
+			QuantumHolder(_msmd->getEffectiveTotalExposureTime()).toRecord()
+		);
+	)
 	return 0;
 }
 
@@ -398,13 +401,22 @@ vector<int> msmetadata::fdmspws() {
 	return vector<int>();
 }
 
-variant* msmetadata::fieldsforintent(const string& intent, const bool asnames) {
-	_FUNC(
-		std::set<Int> ids = _msmd->getFieldsForIntent(intent);
+variant* msmetadata::fieldsforintent(
+	const string& intent, const bool asnames, const bool regex
+) {
+	//_FUNC(
+		std::set<Int> ids;
+		if (regex) {
+			std::map<String COMMA std::set<Int> > mymap = _msmd->getIntentToFieldsMap();
+			ids = _idsFromRegex(mymap, intent);
+		}
+		else {
+			ids = _msmd->getFieldsForIntent(intent);
+		}
 		variant *x;
 		if (ids.size() == 0) {
-			*_log << LogIO::WARN << "Intent " << intent
-				<< " does not exist in this dataset." << LogIO::POST;
+			*_log << LogIO::WARN << "No intent " << (regex ? "matching '" : "'")
+				<< intent << "' exists in this dataset." << LogIO::POST;
 			x = asnames
 				? new variant(vector<string>(0))
 				: new variant(vector<int>(0));
@@ -415,7 +427,7 @@ variant* msmetadata::fieldsforintent(const string& intent, const bool asnames) {
 				: new variant(_setIntToVectorInt(ids));
 		}
 		return x;
-	)
+	//)
 	return 0;
 }
 
@@ -541,7 +553,7 @@ vector<string> msmetadata::intentsforspw(int spw) {
 }
 
 double msmetadata::meanfreq(int spw, const string& unit) {
-	_FUNC2 (
+	_FUNC (
 		_checkSpwId(spw, True);
 		return _msmd->getMeanFreqs()[spw].getValue(Unit(unit));
 	)
@@ -593,7 +605,7 @@ int msmetadata::nbaselines() {
 }
 
 int msmetadata::nchan(int spw) {
-	_FUNC2 (
+	_FUNC (
 		_checkSpwId(spw, True);
 		return _msmd->nChans()[spw];
 	)
@@ -607,6 +619,13 @@ int msmetadata::nfields() {
 	)
 	return 0;
 
+}
+
+int msmetadata::nobservations() {
+	_FUNC(
+		return _msmd->nObservations();
+	)
+	return 0;
 }
 
 int msmetadata::nscans() {
@@ -702,9 +721,16 @@ vector<int> msmetadata::scansforfield(const variant& field) {
 	return vector<int>();
 }
 
-vector<int> msmetadata::scansforintent(const string& intent) {
+vector<int> msmetadata::scansforintent(const string& intent, bool regex) {
 	_FUNC(
-		return _setIntToVectorInt(_msmd->getScansForIntent(intent));
+		if (regex) {
+			std::map<String COMMA std::set<Int> > mymap = _msmd->getIntentToScansMap();
+			std::set<Int> ids = _idsFromRegex(mymap, intent);
+			return _setIntToVectorInt(ids);
+		}
+		else {
+			return _setIntToVectorInt(_msmd->getScansForIntent(intent));
+		}
 	)
 	return vector<int>();
 }
@@ -735,7 +761,7 @@ vector<int> msmetadata::scansforstate(const int state) {
 }
 
 int msmetadata::sideband(int spw) {
-	_FUNC2 (
+	_FUNC (
 		_checkSpwId(spw, True);
 		return _msmd->getNetSidebands()[spw];
 	)
@@ -787,14 +813,21 @@ variant* msmetadata::spwsforbaseband(int bb, const string& sqldmode) {
 	return 0;
 }
 
-vector<int> msmetadata::spwsforintent(const string& intent) {
+vector<int> msmetadata::spwsforintent(const string& intent, bool regex) {
 	_FUNC(
-		vector<int> x = _setUIntToVectorInt(_msmd->getSpwsForIntent(intent));
-		if (x.size() == 0) {
-			*_log << LogIO::WARN << "Intent " << intent
-				<< " does not exist in this dataset." << LogIO::POST;
+		if (regex) {
+			std::map<String COMMA std::set<uInt> > mymap = _msmd->getIntentToSpwsMap();
+			std::set<Int> ids = _idsFromRegex(mymap, intent);
+			return _setIntToVectorInt(ids);
 		}
-		return x;
+		else {
+			vector<int> x = _setUIntToVectorInt(_msmd->getSpwsForIntent(intent));
+			if (x.size() == 0) {
+				*_log << LogIO::WARN << "Intent " << intent
+					<< " does not exist in this dataset." << LogIO::POST;
+			}
+			return x;
+		}
 	)
 	return vector<int>();
 }
@@ -1000,6 +1033,34 @@ void msmetadata::_checkPolId(int id, bool throwIfNegative) const {
 		+ " out of range, must be less than "
 		+ String::toString((int)_msmd->nPol())
 	);
+}
+
+std::set<Int> msmetadata::_idsFromRegex(
+	const std::map<String, std::set<Int> >& mymap, const String& regex
+) const {
+	std::set<Int> ids;
+	boost::regex re;
+	re.assign(regex);
+	foreach_(std::pair<String COMMA std::set<Int> > kv, mymap) {
+		if (boost::regex_match(kv.first, re)) {
+			ids.insert(kv.second.begin(), kv.second.end());
+		}
+	}
+	return ids;
+}
+
+std::set<Int> msmetadata::_idsFromRegex(
+	const std::map<String, std::set<uInt> >& mymap, const String& regex
+) const {
+	std::set<Int> ids;
+	boost::regex re;
+	re.assign(regex);
+	foreach_(std::pair<String COMMA std::set<uInt> > kv, mymap) {
+		if (boost::regex_match(kv.first, re)) {
+			ids.insert(kv.second.begin(), kv.second.end());
+		}
+	}
+	return ids;
 }
 
 } // casac namespace

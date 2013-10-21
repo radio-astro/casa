@@ -194,6 +194,11 @@ FrequencySelectionUsingChannels::getNChannels (Int spectralWindowId) const
     return result;
 }
 
+size_t
+FrequencySelectionUsingChannels::size () const
+{
+    return elements_p.size();
+}
 
 
 String

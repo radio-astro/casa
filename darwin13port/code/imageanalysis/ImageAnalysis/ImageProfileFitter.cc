@@ -516,14 +516,6 @@ Bool ImageProfileFitter::_inVelocitySpace() const {
 		&& Quantity(1, _xUnit).isConform("m/s");
 }
 
-const Vector<Double> ImageProfileFitter::getPixelCenter( uint index ) const {
-	Vector<Double> pos;
-	if ( index < _pixelPositions.size()){
-		pos = _pixelPositions[index];
-	}
-	return pos;
-}
-
 Double ImageProfileFitter::getWorldValue(
     double pixelVal, const IPosition& imPos, const String& units,
     bool velocity, bool wavelength, int tabularIndex, MFrequency::Types freqType ) const {

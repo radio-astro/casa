@@ -193,10 +193,8 @@ void ImageProfileFitterResults::_marshalFitResults(
 		? &csysSub.stokesCoordinate() : 0;
 	IPosition pixel;
 	Vector<Double> world;
-	//directionInfo.resize(returnDirection ? _fitters->size() : 0);
 	String latitude, longitude;
 	Double increment = fabs(_fitAxisIncrement());
-	Vector<std::tr1::shared_ptr<ProfileFitResults> >::const_iterator end = _fitters->end();
 	for (
 		inIter.reset();
 		! inIter.atEnd();

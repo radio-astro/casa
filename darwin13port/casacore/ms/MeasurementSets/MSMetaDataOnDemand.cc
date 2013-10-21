@@ -646,6 +646,22 @@ uInt MSMetaDataOnDemand::_sizeof(std::map<String, std::set<Int> >& m) {
 	return size;
 }
 
+
+uInt MSMetaDataOnDemand::_sizeof(std::map<String, std::set<uInt> >& m) {
+	uInt setssize = 0;
+	uInt size = 0;
+	std::map<String, std::set<uInt> >::const_iterator end = m.end();
+	for (
+		std::map<String, std::set<uInt> >::const_iterator iter=m.begin();
+		iter!=end; iter++
+	) {
+		size += iter->first.size();
+		setssize += iter->second.size();
+	}
+	size += sizeof(uInt) * setssize;
+	return size;
+}
+
 uInt MSMetaDataOnDemand::_sizeof(std::map<Double, std::set<Int> >& m) {
 	uInt setssize = 0;
 	uInt size = sizeof(Double) * m.size();
@@ -1570,6 +1586,36 @@ std::set<Int> MSMetaDataOnDemand::getFieldsForIntent(const String& intent) {
 	return intentToFieldsMap[intent];
 }
 
+std::map<String, std::set<Int> > MSMetaDataOnDemand::getIntentToFieldsMap() {
+	vector<std::set<String> > fieldToIntentsMap;
+	std::map<String, std::set<Int> > intentToFieldsMap;
+	_getFieldsAndIntentsMaps(
+		fieldToIntentsMap, intentToFieldsMap
+	);
+	return intentToFieldsMap;
+}
+
+std::map<String, std::set<Int> > MSMetaDataOnDemand::getIntentToScansMap() {
+	std::map<Int, std::set<String> > scanToIntentsMap;
+	std::map<String, std::set<Int> > intentToScansMap;
+	_getScansAndIntentsMaps(
+		scanToIntentsMap,
+		intentToScansMap
+	);
+	return intentToScansMap;
+}
+
+std::map<String, std::set<uInt> > MSMetaDataOnDemand::getIntentToSpwsMap() {
+	vector<std::set<String> > spwToIntentsMap;
+	std::map<String, std::set<uInt> > intentToSpwsMap;
+	_getSpwsAndIntentsMaps(
+		spwToIntentsMap,
+		intentToSpwsMap
+	);
+	return intentToSpwsMap;
+}
+
+
 Bool MSMetaDataOnDemand::_hasIntent(const String& intent) {
 	std::set<String> uniqueIntents = getIntents();
 	return uniqueIntents.find(intent) != uniqueIntents.end();
@@ -1889,17 +1935,22 @@ void MSMetaDataOnDemand::_getUnflaggedRowStats(
 	}
 }
 
-vector<std::set<String> > MSMetaDataOnDemand::_getSpwToIntentsMap() {
-	if (! _spwToIntentsMap.empty()) {
-		return _spwToIntentsMap;
+void MSMetaDataOnDemand::_getSpwsAndIntentsMaps(
+	vector<std::set<String> >& spwToIntentsMap,
+	std::map<String, std::set<uInt> >& intentToSpwsMap
+) {
+	if (! _spwToIntentsMap.empty() && ! _intentToSpwsMap.empty()) {
+		spwToIntentsMap = _spwToIntentsMap;
+		intentToSpwsMap = _intentToSpwsMap;
 	}
+	spwToIntentsMap.clear();
+	intentToSpwsMap.clear();
 	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw;
 	vector<SpwProperties> spwInfo = _getSpwInfo(
 		avgSpw, tdmSpw, fdmSpw, wvrSpw, sqldSpw
 	);
 	std::set<String> emptySet;
 	vector<SpwProperties>::const_iterator end = spwInfo.end();
-	vector<std::set<String> > spwToIntentsMap;
 	for (
 		vector<SpwProperties>::const_iterator iter=spwInfo.begin();
 		iter!=end; iter++
@@ -1911,7 +1962,8 @@ vector<std::set<String> > MSMetaDataOnDemand::_getSpwToIntentsMap() {
 	_getStateToIntentsMap(stateToIntentsMap, uniqueIntents);
 	if (uniqueIntents.size() == 0) {
 		_spwToIntentsMap = spwToIntentsMap;
-		return spwToIntentsMap;
+		_intentToSpwsMap = intentToSpwsMap;
+		return;
 	}
 	std::tr1::shared_ptr<Vector<Int> > dataDescIDs = _getDataDescIDs();
 	Vector<Int>::const_iterator curDDID = dataDescIDs->begin();
@@ -1922,14 +1974,29 @@ vector<std::set<String> > MSMetaDataOnDemand::_getSpwToIntentsMap() {
 	while (curDDID!=endDDID) {
 		uInt spw = dataDescToSpwMap[*curDDID];
 		std::set<String> intents = stateToIntentsMap[*curState];
+		std::set<String>::const_iterator beginIntent = intents.begin();
 		std::set<String>::const_iterator endIntent = intents.end();
-		spwToIntentsMap[spw].insert(intents.begin(), endIntent);
+		spwToIntentsMap[spw].insert(beginIntent, endIntent);
+		std::set<String>::const_iterator curIntent = beginIntent;
+		while (curIntent != endIntent) {
+			intentToSpwsMap[*curIntent].insert(spw);
+			curIntent++;
+		}
 		curDDID++;
 		curState++;
 	}
-	if (_cacheUpdated(_sizeof(spwToIntentsMap))) {
+	if (_cacheUpdated(_sizeof(spwToIntentsMap) + _sizeof(intentToSpwsMap))) {
 		_spwToIntentsMap = spwToIntentsMap;
+		_intentToSpwsMap = intentToSpwsMap;
 	}
+}
+
+vector<std::set<String> > MSMetaDataOnDemand::_getSpwToIntentsMap() {
+	vector<std::set<String> > spwToIntentsMap;
+	std::map<String, std::set<uInt> > intentToSpwsMap;
+	_getSpwsAndIntentsMaps(
+		spwToIntentsMap, intentToSpwsMap
+	);
 	return spwToIntentsMap;
 }
 

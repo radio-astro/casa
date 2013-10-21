@@ -224,9 +224,29 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
     // Update MS as needed.
     const PMS_PP_MSData* d = parameters().typedGroup<PMS_PP_MSData>();
     bool dataSuccess = d->isSet();
+    if(dataSuccess && (updateFlag & PMS_PP::UPDATE_MSDATA)){
+    	bool fileExists = true;
+    	String fileName = d->filename();
+    	ifstream ifile( fileName.c_str() );
+    	if ( !ifile ){
+    		fileExists = false;
+    	}
+    	else {
+    		ifile.close();
+    	}
 
-    if(dataSuccess && (updateFlag & PMS_PP::UPDATE_MSDATA))
-        dataSuccess = updateData();
+    	if ( fileExists ){
+    		dataSuccess = updateData();
+    	}
+    	else {
+    		String errorMessage( "Please check that the file ");
+    		errorMessage.append( fileName );
+    		errorMessage.append( " is valid.");
+    		itsParent_->getLogger()->postMessage(PMS::LOG_ORIGIN, PMS::LOG_ORIGIN_PLOT, errorMessage, PlotLogger::MSG_WARN);
+    		itsParent_->showWarning(errorMessage, "Data Not Loaded");
+    		dataSuccess = false;
+    	}
+    }
 
     // If something went wrong, clear the cache and plots.
     if(!dataSuccess) {

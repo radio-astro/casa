@@ -148,6 +148,12 @@ class msmd_test(unittest.TestCase):
                 expec = numpy.array([4, 5])
             got = self.md.fieldsforintent(intent)
             self.assertTrue((got == expec).all())
+        self.assertTrue(
+            (
+             self.md.fieldsforintent('.*WVR.*')
+             == numpy.array([0, 1, 2, 3, 4, 5])
+            ).all()
+        )
 
     def test_fieldsforname(self):
         """Test fieldforname()"""
@@ -424,6 +430,10 @@ class msmd_test(unittest.TestCase):
         """ Test nfields()"""
         self.assertTrue(self.md.nfields() == 6)
      
+    def test_nobservations(self):
+        """ Test nfields()"""
+        self.assertTrue(self.md.nobservations() == 1)
+     
     def test_nscans(self):
         """ Test nscans()"""
         self.assertTrue(self.md.nscans() == 32)
@@ -500,8 +510,18 @@ class msmd_test(unittest.TestCase):
                 ])
             else:
                 expec = numpy.array([12, 16, 20, 23, 27, 30])
-            got = self.md.scansforintent(i)
+            got = self.md.scansforintent(i, regex=False)
             self.assertTrue((got == expec).all())
+        self.assertTrue(
+            (
+             self.md.scansforintent('.*WVR.*', regex=True)
+             == numpy.array([
+                    1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+                    11, 13, 14, 15, 17, 18, 19, 21,
+                    22, 24, 25, 26, 28, 29, 31, 32
+                ])
+            ).all()
+        )
         
     def test_scansforspw(self):
         """Test scansforspw()"""
@@ -668,6 +688,16 @@ class msmd_test(unittest.TestCase):
                         17, 18, 19, 20, 21, 22, 23, 24
                     ]
                 )
+            self.assertTrue((got == expec).all())
+            
+            got = self.md.spwsforintent('.*WVR.*', regex=True)
+            expec = numpy.array(
+                [
+                    0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+                    10, 11, 12, 13, 14, 15, 16,
+                    17, 18, 19, 20, 21, 22, 23, 24
+                 ]
+            )
             self.assertTrue((got == expec).all())
 
     def test_spwsforscan(self):
@@ -887,6 +917,13 @@ class msmd_test(unittest.TestCase):
         self.assertTrue((got == expec/1e6).all())
         self.assertRaises(Exception, self.md.chanwidths, 50);
         self.assertRaises(Exception, self.md.chanwidths, -2);
+        
+        self.md.close()
+        self.assertRaises(Exception, self.md.chanwidths, 1)
+        self.assertRaises(Exception, self.md.chanfreqs, 1)
+        self.assertRaises(Exception, self.md.meanfreq, 1)
+        self.assertRaises(Exception, self.md.sideband, 1)
+        self.assertRaises(Exception, self.md.effexposuretime)
 
     def test_datadescids(self):
         """Test datadescids()"""

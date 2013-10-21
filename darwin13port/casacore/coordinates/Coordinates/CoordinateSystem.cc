@@ -4688,7 +4688,6 @@ Vector<Int> CoordinateSystem::getWorldAxesOrder(
 
 Bool CoordinateSystem::isDirectionAbscissaLongitude() const {
 	Vector<Int> dirPixelAxes = directionAxesNumbers();
-	cout << "dirPixelAxes" << dirPixelAxes << endl;
 	ThrowIf(
 		dirPixelAxes(0) == -1 || dirPixelAxes(1) == -1,
 		"The pixel axes for the DirectionCoordinate have been removed"
