@@ -2,11 +2,13 @@ import shutil
 import unittest
 import os
 import filecmp
+import pprint
 from tasks import *
 from taskinit import *
 from __main__ import default
 import exceptions
 from parallel.parallel_task_helper import ParallelTaskHelper
+from IPython.kernel.core.display_formatter import PPrintDisplayFormatter
 
 #
 # Test of flagdata modes
@@ -56,6 +58,9 @@ print 'flagdata tests will use data from '+datapath
 if os.environ.has_key('BYPASS_PARALLEL_PROCESSING'):
     ParallelTaskHelper.bypassParallelProcessing(1)
 
+# Local copy of the agentflagger tool
+aflocal = casac.agentflagger()
+
 # Base class which defines setUp functions
 # for importing different data sets
 class test_base(unittest.TestCase):
@@ -73,8 +78,8 @@ class test_base(unittest.TestCase):
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         
+        self.unflag_ms()
         default(flagdata)
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
 
     def setUp_ngc5921(self):
         '''VLA data set, scan=1~7, spw=0 63 chans, RR,LL'''
@@ -88,8 +93,8 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
+        self.unflag_ms()
         default(flagdata)
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
 
     def setUp_alma_ms(self):
         '''ALMA MS, scan=1,8,10 spw=0~3 4,128,128,1 chans, I,XX,YY'''
@@ -104,24 +109,8 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
+        self.unflag_ms()
         default(flagdata)
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
-
-# Seems to be a corrupted MS. Replaced by the one in setUp_alma_ms
-#     def setUp_flagdatatest_alma(self):
-#         self.vis = "flagdatatest-alma.ms"
-#         if testmms:
-#             self.vis = 'flagdatatest-alma.mms'
-# 
-#         if os.path.exists(self.vis):
-#             print "The MS is already around, just unflag"
-#         else:
-#             print "Moving data..."
-#             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
-# 
-#         os.system('rm -rf ' + self.vis + '.flagversions')
-#         default(flagdata)
-#         flagdata(vis=self.vis, mode='unflag', savepars=False)
 
     def setUp_data4tfcrop(self):
         '''EVLA MS, 4 ants, scan=30,31 spw=0~15, 64 chans, RR,RL,LR,LL'''
@@ -136,8 +125,8 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
+        self.unflag_ms()
         default(flagdata)
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
 
     def setUp_shadowdata2(self):
         '''CASA simulation data set. scan=0 spw=0, 2 chans, RR,LL'''
@@ -167,8 +156,8 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
+        self.unflag_ms()
         default(flagdata)
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
         
     def setUp_mwa(self):
         '''MWA data set, scan=1 spw=0, 11 chans, XX,XY,YX,YY'''
@@ -183,8 +172,8 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
+        self.unflag_ms()
         default(flagdata)
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)        
 
     def setUp_wtspec(self):
         # Four rows, 2 ants, 1 spw, 31 chans, 2 pols, WEIGHT_SPECTRUM col
@@ -199,8 +188,8 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
+        self.unflag_ms()
         default(flagdata)
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)        
 
     def setUp_floatcol(self):
         # 15 rows, 3 scans, 9 spw, mixed chans, XX,YY, FLOAT_DATA col
@@ -215,8 +204,8 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
+        self.unflag_ms()
         default(flagdata)
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)        
 
     def setUp_tsys_case(self):
         self.vis = "X7ef.tsys"
@@ -231,8 +220,8 @@ class test_base(unittest.TestCase):
                         "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()
+        default(flagdata)
 
     def setUp_bpass_case(self):
         self.vis = "cal.fewscans.bpass"
@@ -245,9 +234,9 @@ class test_base(unittest.TestCase):
                         os.environ.get('CASAPATH').split()[0] +
                         "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
-        os.system('rm -rf ' + self.vis + '.flagversions')
-        
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        os.system('rm -rf ' + self.vis + '.flagversions')        
+        self.unflag_ms()        
+        default(flagdata)
 
     def setUp_newcal(self):
         '''New cal table format from 4.1 onwards'''
@@ -262,9 +251,17 @@ class test_base(unittest.TestCase):
                         "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()        
+        default(flagdata)
 
+    def unflag_ms(self):
+        aflocal.open(self.vis)
+        aflocal.selectdata()
+        agentUnflag={'apply':True,'mode':'unflag'}
+        aflocal.parseagentparameters(agentUnflag)
+        aflocal.init()
+        aflocal.run(writeflags=True)
+        aflocal.done()
 
 class test_tfcrop(test_base):
     """flagdata:: Test of mode = 'tfcrop'"""
@@ -377,7 +374,8 @@ class test_tfcrop(test_base):
         self.assertEqual(pre['spw']['0']['flagged'], 27768)
         self.assertEqual(pre['spw']['0']['total'], 274944)
         
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+#        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()
         
         # Now, extend the flags automatically and compare
         flagdata(vis=self.vis, mode='tfcrop', spw='0', extendflags=True, flagbackup=False)
@@ -428,7 +426,8 @@ class test_rflag(test_base):
         # (2) Test rflag output written to cmd file via mode='rflag' and 'savepars' 
         #      and then read back in via list mode. 
         #      Also test the 'savepars' when timedev and freqdev are specified differently...
-        flagdata(vis=self.vis,mode='unflag', flagbackup=False)
+#        flagdata(vis=self.vis,mode='unflag', flagbackup=False)
+        self.unflag_ms()
         flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='', \
                       freqdev=[],action='calculate',savepars=True,outfile='outcmd.txt',
                       extendflags=False);
@@ -463,7 +462,8 @@ class test_rflag(test_base):
                  extendpols=True, flagbackup=False)
         pre = flagdata(vis=self.vis, mode='summary', spw='9,10')
 
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+#        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()
         
         # Automatically extend the flags by default
         flagdata(vis=self.vis, mode='rflag', spw='9,10', flagbackup=False)
@@ -665,10 +665,7 @@ class test_flagmanager(test_base):
 
     def test_CAS2701(self):
         """flagmanager: Do not allow flagversion=''"""
-        
-        # Create a local copy of the tool
-        aflocal = casac.agentflagger()
-        
+                
         aflocal.open(self.vis)
         l = len(aflocal.getflagversionlist())
         aflocal.done()
@@ -964,7 +961,8 @@ class test_selections(test_base):
         self.assertEqual(res0['flagged'], 453060, 'Only channels 1~10 should be flagged')
         
         # Unflag
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+#        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()
         ures = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(ures['flagged'], 0)
         
@@ -992,11 +990,13 @@ class test_selections(test_base):
         flagdata(vis=self.vis, correlation='LL', savepars=False, flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 98217)
         test_eq(flagdata(vis=self.vis, mode='summary', correlation='RR'), 1427139, 0)
-        flagdata(vis=self.vis, mode='unflag', savepars=False, flagbackup=False)
+#        flagdata(vis=self.vis, mode='unflag', savepars=False, flagbackup=False)
+        self.unflag_ms()
         flagdata(vis=self.vis, correlation='LL,RR', savepars=False, flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
         
-        flagdata(vis=self.vis, mode='unflag', savepars=False, flagbackup=False)
+#        flagdata(vis=self.vis, mode='unflag', savepars=False, flagbackup=False)
+        self.unflag_ms()
         flagdata(vis=self.vis, mode='clip', correlation='NORM_RR,LL', clipminmax=[0.,3.],
                  flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
@@ -1037,7 +1037,8 @@ class test_selections(test_base):
         flagdata(vis=self.vis, correlation='LL,LR', savepars=False, flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 98217)
         test_eq(flagdata(vis=self.vis, mode='summary', correlation='RR'), 1427139, 0)
-        flagdata(vis=self.vis, mode='unflag', savepars=False, flagbackup=False)
+#        flagdata(vis=self.vis, mode='unflag', savepars=False, flagbackup=False)
+        self.unflag_ms()
         flagdata(vis=self.vis, correlation='LL,RR,RL', savepars=False, flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
         
@@ -1293,7 +1294,8 @@ class test_selections2(test_base):
         self.assertEqual(res['total'], 28500)
 
         # integer
-        flagdata(vis=self.vis, mode='unflag', savepars=False)
+#        flagdata(vis=self.vis, mode='unflag', savepars=False)
+        self.unflag_ms()
         flagdata(vis=self.vis, observation=1, savepars=False)
         res = flagdata(vis=self.vis, mode='summary',observation='1')
         self.assertEqual(res['flagged'], 28500)
@@ -1368,8 +1370,19 @@ class test_list_file(test_base):
         self.setUp_ngc5921()
         
     def tearDown(self):
-        pass
-#        os.system('rm -rf list*.txt list*.tmp')
+        os.system('rm -rf list*.txt list*.tmp')
+
+#     def extract_reports(self, report_list):        
+#         summary_list = []
+#         
+#         # Extract only the type 'summary' reports
+#         nreps = report_list.keys()
+#         for rep in range(len(nreps)):
+#             repname = 'report'+str(rep);
+#             if(report_list[repname]['type']=='summary'):
+#                   summary_list.append(report_list[repname]);
+#                   
+#         return summary_list
 
     def test_file1(self):
         '''flagdata: apply flags from a list and do not save'''
@@ -1461,7 +1474,8 @@ class test_list_file(test_base):
         self.assertEqual(res['scan']['1']['flagged'], 568134, 'Should flag reason=SCAN_1')
         
         # No reason selection
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+#        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()
         flagdata(vis=self.vis, mode='list', inpfile=filename, flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary', scan='1~4')
         self.assertEqual(res['scan']['1']['flagged'], 568134)
@@ -1504,7 +1518,6 @@ class test_list_file(test_base):
         self.assertEqual(res['scan']['7']['flagged'], 190512)
         self.assertEqual(res['total'],2854278)
         self.assertEqual(res['flagged'],2765718)
-
                
     def test_reason1(self):
         '''flagdata: add_reason to FLAG_CMD'''
@@ -1580,7 +1593,8 @@ class test_list_file(test_base):
         self.assertEqual(res['flagged'], 762048+142884+190512)
         
         # Apply flag cmds on NONE reason
-        flagdata(vis=self.vis, mode='unflag')
+#        flagdata(vis=self.vis, mode='unflag')
+        self.unflag_ms()
         flagdata(vis=self.vis, mode='list', inpfile=[filename1,filename2], reason='NONE',
                  flagbackup=False)
         
@@ -1603,6 +1617,57 @@ class test_list_file(test_base):
         # Compare output with input. The output should have quotes around manualflag
         self.assertFalse(filecmp.cmp(filename, outname, 1), 'Files should not be equal')
 
+#     def test_file_summary1(self):
+#         '''flagdata: summary commands in list mode'''
+#         myinput = "mode='manual' scan='2'\n"\
+#                   "mode='summary' name='Scan2'\n"\
+#                   "mode='clip' clipzeros=True\n"\
+#                   "mode='summary' name='Zeros'"
+#         filename = 'listsumm1.txt'
+#         create_input(myinput, filename)
+#         summary_stats_list = flagdata(vis=self.vis, mode='list', inpfile=filename, flagbackup=False)
+#         
+#         # Extract only the type 'summary' reports into a list
+#         summary_reps = self.extract_reports(summary_stats_list)
+# 
+#         for ind in range(0,len(summary_reps)):        
+#             flagcount = summary_reps[ind]['flagged'];
+#             totalcount = summary_reps[ind]['total'];         
+#             # From the second summary onwards, subtract counts from the previous one :)
+#             if ( ind > 0 ):
+#                  flagcount = flagcount - summary_reps[ind-1]['flagged'];
+#         
+#             print "Summary ", ind , "(" , summary_reps[ind]['name']  , ") :  Flagged : " , flagcount , " out of " , totalcount ;   
+#         
+#         self.assertEqual(summary_reps[0]['flagged'],238140, 'Should show only scan=2 flagged')    
+#         self.assertEqual(summary_reps[1]['flagged']-summary_reps[0]['flagged'],0, 'Should not flag any zeros')    
+# 
+#     def test_file_summary2(self):
+#         '''flagdata: compare summaries from a list with individual reports'''
+#         myinput = ["scan='1~3' mode='manual'",
+#                    "mode='summary' name='SCANS123'",
+#                    "scan='5' mode='manualflag'",
+#                    "#scan='4'",
+#                    "mode='summary' name='SCAN5'"]
+#         
+#         summary_stats_list = flagdata(vis=self.vis, mode='list', inpfile=myinput, flagbackup=False)
+#         summary_reps = self.extract_reports(summary_stats_list)
+#         
+#         # Unflag and flag scan=1~3
+#         self.unflag_ms()
+#         flagdata(vis=self.vis, scan='1~3', flagbackup=False)
+#         rscan123 = flagdata(vis=self.vis, mode='summary')
+#         # Unflag and flag scan=5
+#         self.unflag_ms()
+#         flagdata(vis=self.vis, scan='5', flagbackup=False)
+#         rscan5 = flagdata(vis=self.vis, mode='summary')
+#         
+#         # Compare
+#         self.assertEqual(summary_reps[0]['flagged'],rscan123['flagged'], 'scan=1~3 should be flagged')
+#         self.assertEqual(summary_reps[1]['flagged'],rscan5['flagged']+rscan123['flagged'],\
+#                          'scan=1~3,5 should be flagged')
+#         self.assertEqual(summary_reps[1]['flagged']-summary_reps[0]['flagged'],rscan5['flagged'],\
+#                          'scan=5 should be flagged')
 
 class test_list_list(test_base):
     """Test of mode = 'list' using input list"""
@@ -1652,7 +1717,8 @@ class test_list_list(test_base):
         res1 = flagdata(vis=self.vis, mode='summary')
         
         # Unflag and save in flagcmd using the cmd mode
-        flagdata(vis=self.vis, mode='unflag',flagbackup=False)
+#        flagdata(vis=self.vis, mode='unflag',flagbackup=False)
+        self.unflag_ms()
         flagcmd(vis=self.vis, inpmode='list', inpfile=myinput)
         res2 = flagdata(vis=self.vis, mode='summary')
 
@@ -1683,7 +1749,8 @@ class test_list_list(test_base):
         self.assertEqual(res['scan']['1']['flagged'], 568134, 'Should flag reason=SCAN_1')
         
         # No reason selection
-        flagdata(vis=self.vis, mode='unflag',flagbackup=False)
+#        flagdata(vis=self.vis, mode='unflag',flagbackup=False)
+        self.unflag_ms()
         flagdata(vis=self.vis, mode='list', inpfile=myinput, flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 568134)
@@ -1830,7 +1897,8 @@ class test_CASA_4_0_bug_fix(test_base):
         flagdata(vis=self.vis,mode='clip', flagbackup=False)
         summary_ref = flagdata(vis=self.vis,mode='summary', spw='2,3')
         
-        flagdata(vis=self.vis,mode='unflag', flagbackup=False)
+#        flagdata(vis=self.vis,mode='unflag', flagbackup=False)
+        self.unflag_ms()
         flagdata(vis=self.vis,mode='list',inpfile=["uvrange='<2Klambda'","mode='clip'"],
                  flagbackup=False)
         summary_out = flagdata(vis=self.vis,mode='summary', spw='2,3')
@@ -1858,7 +1926,8 @@ class test_CASA_4_0_bug_fix(test_base):
         flagdata(vis=self.vis,mode='quack',quackinterval=1, flagbackup=False)
         summary_one = flagdata(vis=self.vis,mode='summary', spw='8')
         
-        flagdata(vis=self.vis,mode='unflag', flagbackup=False)
+#        flagdata(vis=self.vis,mode='unflag', flagbackup=False)
+        self.unflag_ms()
         flagdata(vis=self.vis,mode='quack', flagbackup=False)
         summary_default = flagdata(vis=self.vis,mode='summary', spw='8')
         
@@ -2049,7 +2118,8 @@ class test_tsys(test_base):
         self.assertEqual(res['correlation']['Sol2']['flagged'], 750)
 
         # Get the same results when flagging using a file
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+#        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()
         myinput = "mode='clip' datacolumn='FPARAM' correlation='Sol1' clipzeros=True clipminmax=[0.,600.]\n"\
                 "mode='extend' extendpols=True growfreq=0.0 growtime=0.0"
         filename = 'callist.txt'
@@ -2263,7 +2333,8 @@ class test_tsys(test_base):
         self.assertEqual(res['flagged'],18432)
         
         # Run for one spw only
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+#        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()
         flagdata(vis=self.vis, mode='manual', timerange="03:50:00~04:10:00", spw='1',
                  flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
@@ -2274,7 +2345,8 @@ class test_tsys(test_base):
         self.assertEqual(res['flagged'],4608)
          
         # Now check that the same is flagged using scan selection
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+#        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()
         flagdata(vis=self.vis, mode='manual', scan='14,17', spw='1',
                  flagbackup=False)
         res1=flagdata(vis=self.vis, mode='summary')
@@ -2452,8 +2524,6 @@ class test_bandpass(test_base):
         os.system('rm -rf cal.fewscans.bpass*')
         self.setUp_bpass_case()
         
-        # Create a local copy of the tool
-        aflocal = casac.agentflagger()
         flagmanager(vis=self.vis, mode='list')
         aflocal.open(self.vis)
         self.assertEqual(len(aflocal.getflagversionlist()), 2)
@@ -2603,7 +2673,8 @@ class test_newcal(test_base):
         self.assertEqual(res['flagged'],108)
         
         # Check that obs=0 is scan=1
-        res=flagdata(vis=self.vis, mode='unflag')
+#        flagdata(vis=self.vis, mode='unflag')
+        self.unflag_ms()
         flagdata(vis=self.vis, scan='1', flagbackup=False)                
         res=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['observation']['0']['flagged'],108)
