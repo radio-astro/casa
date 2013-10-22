@@ -280,6 +280,26 @@ class MeasurementSet(object):
         else:
             return None
 
+    def get_scans(self, scan_id=None, scan_intent=None):
+        pool = self.scans
+
+        if scan_id is not None:
+            # encase raw numbers in a tuple
+            if not isinstance(scan_id, collections.Sequence):
+                field_id = (scan_id,)
+            pool = [f for f in pool if f.id in field_id]
+
+        if scan_intent is not None:
+            if type(scan_intent) in types.StringTypes:
+                if scan_intent in ('', '*'):
+                    # empty string equals all intents for CASA
+                    scan_intent = ','.join(self.intents)
+                scan_intent = scan_intent.split(',')
+            scan_intent = set(scan_intent) 
+            pool = [s for s in pool if not s.intents.isdisjoint(scan_intent)]
+
+        return pool
+
     def get_data_description(self, spw=None, id=None):
         match = None
         if spw is not None:
