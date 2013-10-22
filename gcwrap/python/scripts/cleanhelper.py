@@ -325,7 +325,7 @@ class cleanhelper:
         self.imageids={}
         if(type(phasecenters) == str):
             phasecenters=[phasecenters]
-        if(type(phasecenters) == int):
+        if(type(phasecenters) == int or type(phasecenters) == float ):
             phasecenters=[phasecenters]
         self._casalog.post('Number of phase centers: ' + str(len(phasecenters)),
                            'DEBUG1')
@@ -839,7 +839,7 @@ class cleanhelper:
             ia.close()
             ia.removefile('__temp_mask')
             ia.open(outputmask)
-            outim = ia.regrid(outfile='__temp_mask',shape=shp,axes=[0,1], csys=self.csys,overwrite=True, asvelocity=False)
+            outim = ia.regrid(outfile='__temp_mask',shape=shp,axes=[3,0,1], csys=self.csys,overwrite=True, asvelocity=False)
             outim.done(verbose=False)
             ia.done(verbose=False)
             ia.removefile(outputmask)
@@ -865,20 +865,19 @@ class cleanhelper:
         self.csys=ia.coordsys().torecord()
         # keep this info for reading worldbox
         self.csysorder=ia.coordsys().coordinatetype()
-        ia.close()
-
-        self.setReferenceFrameLSRK( outputmask )
-                
-#        mycsys=ia.coordsys()
-#        if mycsys.torecord()['spectral2']['conversion']['system']!=maskframe:
-#            mycsys.setreferencecode(maskframe,'spectral',True)
-#        self.csys=mycsys.torecord()
-#        if self.csys['spectral2']['conversion']['system']!=maskframe:
-#            self.csys['spectral2']['conversion']['system']=maskframe
-#        ia.setcoordsys(self.csys)
-#        #ia.setcoordsys(mycsys.torecord())
 #        ia.close()
 
+#        self.setReferenceFrameLSRK( outputmask )
+                
+        mycsys=ia.coordsys()
+        if mycsys.torecord()['spectral2']['conversion']['system']!=maskframe:
+            mycsys.setreferencecode(maskframe,'spectral',True)
+        self.csys=mycsys.torecord()
+        if self.csys['spectral2']['conversion']['system']!=maskframe:
+            self.csys['spectral2']['conversion']['system']=maskframe
+        ia.setcoordsys(self.csys)
+        #ia.setcoordsys(mycsys.torecord())
+#        ia.close()
 
         if(len(maskimage) > 0):
             for ima in maskimage :
@@ -979,6 +978,7 @@ class cleanhelper:
         ## CAS-5221
         self.setReferenceFrameLSRK( outputmask )
         #Done with making masks
+
 
     def datselweightfilter(self, field, spw, timerange, uvrange, antenna,scan,
                            wgttype, robust, noise, npixels, mosweight,
@@ -1790,7 +1790,7 @@ class cleanhelper:
             tmpshp[1]=shp[1]
             if len(oldshp)==4: # include spectral axis for regrid
               tmpshp[3]=shp[3]
-              ib=ia.regrid(outfile='__looloo', shape=tmpshp, axes=[0,1,3], csys=self.csys, overwrite=True, asvelocity=False)
+              ib=ia.regrid(outfile='__looloo', shape=tmpshp, axes=[3,0,1], csys=self.csys, overwrite=True, asvelocity=False)
             else:
               ib=ia.regrid(outfile='__looloo', shape=tmpshp, axes=[0,1], csys=self.csys, overwrite=True, asvelocity=False)
 
