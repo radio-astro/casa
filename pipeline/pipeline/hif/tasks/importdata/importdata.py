@@ -209,8 +209,6 @@ class ImportData(basetask.StandardTaskTemplate):
             
         # launch an import job for each ASDM we need to convert 
         for asdm in to_convert:
-	    if inputs.save_flagonline:
-	        self._make_template_flagfile (asdm)
             self._do_importasdm(asdm)
 
         # calculate the filenames of the resultant measurement sets
@@ -454,6 +452,9 @@ class ImportData(basetask.StandardTaskTemplate):
         outfile = os.path.join(inputs.output_dir,
                                os.path.basename(asdm) + "_flagonline.txt")
 
+	if inputs.save_flagonline:
+	    self._make_template_flagfile(asdm)
+
         task = casa_tasks.importasdm(asdm=asdm,
                                      vis=vis,
                                      savecmds=inputs.save_flagonline,
@@ -463,6 +464,7 @@ class ImportData(basetask.StandardTaskTemplate):
                                      overwrite=inputs.overwrite)
 
         self._executor.execute(task)
+
 
         asdm_source = os.path.join(asdm, 'Source.xml')
         if os.path.exists(asdm_source):
@@ -474,12 +476,15 @@ class ImportData(basetask.StandardTaskTemplate):
 
     def _make_template_flagfile(self, asdm):
         inputs = self.inputs        
-        vis = self._asdm_to_vis_filename(asdm)
         outfile = os.path.join(inputs.output_dir,
                                os.path.basename(asdm) + "_flagtemplate.txt")
-	f = open (outfile, "w")
-	f.writelines(['# User flagging commands file'])
-	f.close()
+
+	# Create a new file if overwrite is true and the file
+	# does not already exist.
+	if inputs.overwrite or not os.path.exists(outfile):
+	    f = open (outfile, "w")
+	    f.writelines(['# User flagging commands file'])
+	    f.close()
 
 
 def get_setjy_results(mses):
