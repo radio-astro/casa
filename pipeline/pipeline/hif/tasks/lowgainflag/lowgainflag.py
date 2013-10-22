@@ -25,7 +25,7 @@ LOG = infrastructure.get_logger(__name__)
 class LowgainflagInputs(commoncalinputs.CommonCalibrationInputs):
 
     def __init__(self, context, output_dir=None, vis=None, 
-      intent=None, spw=None, refant=None, minblperant=None,
+      intent=None, spw=None, refant=None, 
       flagcmdfile=None, flag_nmedian=None, fnm_limit=None,
       niter=None):
 
@@ -98,7 +98,7 @@ class Lowgainflag(basetask.StandardTaskTemplate):
         # view of the data that is the basis for flagging.
         datainputs = LowgainflagWorkerInputs(context=inputs.context,
           output_dir=inputs.output_dir, vis=inputs.vis, intent=inputs.intent,
-          spw=inputs.spw, refant=inputs.refant, minblperant=inputs.minblperant)
+          spw=inputs.spw, refant=inputs.refant)
         datatask = LowgainflagWorker(datainputs)
 
         # Construct the task that will set any flags raised in the
@@ -139,14 +139,14 @@ class Lowgainflag(basetask.StandardTaskTemplate):
 
 class LowgainflagWorkerInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None, 
-      intent=None, spw=None, refant=None, minblperant=None):
+      intent=None, spw=None, refant=None):
         self._init_properties(vars())
 
         self.gacal_inputs = gaincal.GTypeGaincal.Inputs(
           context=context, vis=vis,
           intent=intent, spw=spw,
           refant=refant, calmode='a', minsnr=2.0,
-          solint='inf', gaintype='T', minblperant=minblperant)
+          solint='inf', gaintype='T')
 
     @property
     def caltable(self):
@@ -168,7 +168,7 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
         bpcal_inputs = bandpass.PhcorBandpass.Inputs(
           context=inputs.context, vis=inputs.vis,
           intent=inputs.intent, spw=inputs.spw, 
-          refant=inputs.refant, minblperant=inputs.minblperant)
+          refant=inputs.refant)
         bpcal_task = bandpass.PhcorBandpass(bpcal_inputs)
         bpcal = self._executor.execute(bpcal_task, merge=True)
 
@@ -176,7 +176,7 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
         gpcal_inputs = gaincal.GTypeGaincal.Inputs(
           context=inputs.context, vis=inputs.vis,
           intent=inputs.intent, spw=inputs.spw,
-          refant=inputs.refant, minblperant=inputs.minblperant,
+          refant=inputs.refant,
           calmode='p', minsnr=2.0, solint='int', gaintype='G')
         gpcal_task = gaincal.GTypeGaincal(gpcal_inputs)
         gpcal = self._executor.execute(gpcal_task, merge=True)
@@ -185,7 +185,7 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
         gacal_inputs = gaincal.GTypeGaincal.Inputs(
           context=inputs.context, vis=inputs.vis,
           intent=inputs.intent, spw=inputs.spw,
-          refant=inputs.refant, minblperant=inputs.minblperant,
+          refant=inputs.refant,
           calmode='a', minsnr=2.0, solint='inf', gaintype='T')
         gacal_task = gaincal.GTypeGaincal(gacal_inputs)
         gacal = self._executor.execute(gacal_task, merge=True)
