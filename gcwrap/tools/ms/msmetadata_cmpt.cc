@@ -121,6 +121,16 @@ vector<int> msmetadata::almaspws(
 	return vector<int>();
 }
 
+vector<casa::String> msmetadata::_vectorStdStringToVectorString(
+	const vector<std::string>& inset
+) {
+	vector<String> outset;
+	foreach_(string el, inset) {
+		outset.push_back(el);
+	}
+	return outset;
+}
+
 vector<int> msmetadata::antennaids(const variant& names) {
 	_FUNC(
 		vector<String> myNames;
@@ -129,14 +139,7 @@ vector<int> msmetadata::antennaids(const variant& names) {
 			myNames.push_back(names.toString());
 		}
 		else if (type == variant::STRINGVEC) {
-			vector<string> tmp = names.toStringVec();
-			vector<string>::const_iterator end = tmp.end();
-			for (
-				vector<string>::const_iterator iter=tmp.begin();
-				iter!=end; iter++
-			) {
-				myNames.push_back(*iter);
-			}
+			myNames = _vectorStdStringToVectorString(names.toStringVec());
 		}
 		else {
 			*_log << "Unsupported type for parameter names. Must be either a string or string array"
@@ -247,6 +250,66 @@ record* msmetadata::antennaposition(const variant& which) {
 		return fromRecord(outRec);
 	)
 	return 0;
+}
+
+vector<string> msmetadata::antennastations(const variant& ants) {
+	_FUNC(
+		variant::TYPE type = ants.type();
+		if (type == variant::INT) {
+			vector<uInt> ids;
+			int id = ants.toInt();
+			if (id >= 0) {
+				ids.push_back(id);
+			}
+			return _vectorStringToStdVectorString(
+				_msmd->getAntennaStations(ids)
+			);
+		}
+		else if (type == variant::INTVEC) {
+			vector<Int> ids = ants.toIntVec();
+			if (ids.empty() || (ids.size() == 1 && ids[0] < 0)) {
+				return _vectorStringToStdVectorString(
+					_msmd->getAntennaStations(vector<uInt>())
+				);
+			}
+			else if (min(Vector<Int>(ids)) < 0) {
+				throw AipsError("No antenna ID may be less than zero when multiple IDs specified.");
+			}
+			else {
+				return _vectorStringToStdVectorString(
+					_msmd->getAntennaStations(
+						_vectorIntToVectorUInt(ants.toIntVec())
+					)
+				);
+			}
+		}
+		else if (type == variant::STRING) {
+			vector<String> names(1, String(ants.toString()));
+			return _vectorStringToStdVectorString(
+				_msmd->getAntennaStations(names)
+			);
+		}
+		else if (type == variant::STRINGVEC) {
+			return _vectorStringToStdVectorString(
+				_msmd->getAntennaStations(
+					_vectorStdStringToVectorString(
+						ants.toStringVec()
+					)
+				)
+			);
+		}
+		else if (type == variant::BOOLVEC) {
+			return _vectorStringToStdVectorString(
+				_msmd->getAntennaStations(vector<uInt>())
+			);
+		}
+		else {
+			throw AipsError(
+				"Unsupported type (" + ants.typeString() + ") for ants."
+			);
+		}
+	)
+	return vector<string>();
 }
 
 variant* msmetadata::bandwidths(const variant& spws) {
