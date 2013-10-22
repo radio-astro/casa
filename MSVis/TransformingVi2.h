@@ -324,7 +324,6 @@ public:
 
     virtual IPosition visibilityShape () const;
 
-
     // Return weight
 
     virtual void weight (Matrix<Float> & wtmat) const;
@@ -470,7 +469,7 @@ public:
 
     virtual Int nAntennas () const;
     virtual Int nDataDescriptionIds () const;
-    virtual Int nPolarizations () const;
+    virtual Int nPolarizationIds () const;
     virtual Int nRowsInChunk () const; // number rows in current chunk
     virtual Int nRowsViWillSweep () const; // number of rows in all selected ms's
     virtual Int nSpectralWindows () const;

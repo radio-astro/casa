@@ -43,7 +43,7 @@ FinalTvi2::configureNewSubchunk ()
                                           getSubchunkId (),
                                           nRows(),
                                           nChannels,
-                                          getVii()->nPolarizations(),
+                                          getVii()->nPolarizationIds(),
                                           getVii()->getCorrelations(),
                                           getVii()->getWeightScaling());
 }

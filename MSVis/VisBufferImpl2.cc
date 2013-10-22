@@ -438,7 +438,7 @@ VisBufferImpl2::copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent,
                       vb->isNewFieldId (),
                       vb->isNewSpectralWindow (),
                       vb->getSubchunk (),
-                      vb->getCorrelationNumbers(),
+                      vb->getCorrelationTypes(),
                       vb->getWeightScaling());
 
     if(dirDependent){
@@ -708,7 +708,7 @@ VisBufferImpl2::getChannelNumbers (Int rowInBuffer) const
 }
 
 Vector<Int>
-VisBufferImpl2::getCorrelationNumbers () const
+VisBufferImpl2::getCorrelationTypes () const
 {
     return state_p->correlations_p;
 }

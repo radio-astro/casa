@@ -705,10 +705,10 @@ VisibilityIterator2::nDataDescriptionIds () const
 }
 
 Int
-VisibilityIterator2::nPolarizations () const
+VisibilityIterator2::nPolarizationIds () const
 {
     CheckImplementationPointerR ();
-    return impl_p->nPolarizations ();
+    return impl_p->nPolarizationIds ();
 }
 
 Int

@@ -696,20 +696,34 @@ VisibilityIteratorImpl2::getColumnRows (const ROArrayColumn<T> & column,
                                             Array<T> & array) const
 {
     const ChannelSlicer & slicer = channelSelector_p->getSlicer();
-    column.getSliceForRows (rowBounds_p.subchunkRows_p,
-                            slicer.getSlicerInCoreRep(),
-                            array);
+    column.getColumnCells (rowBounds_p.subchunkRows_p,
+                           slicer.getSlicerInCoreRep(),
+                           array,
+                           True);
 }
 
 template <typename T>
 void
 VisibilityIteratorImpl2::getColumnRowsMatrix (const ROArrayColumn<T> & column,
-                                                  Matrix<T> & array) const
+                                              Matrix<T> & array,
+                                              Bool correlationSlicing) const
 {
-    column.getColumnCells (rowBounds_p.subchunkRows_p, array, True);
+    if (correlationSlicing){
+
+        const ChannelSlicer & slicer = channelSelector_p->getSlicer();
+        const ChannelSubslicer subslicer = slicer.getSubslicer (0); // has to be at least one
+        const Slice & correlationSlice = subslicer.getSlice (0); // first one is correlation in this case
+
+        Vector<Slice> coreSlicerElement (1, correlationSlice);
+        Vector<Vector <Slice> > coreSlicer (1, coreSlicerElement);
+
+        column.getColumnCells (rowBounds_p.subchunkRows_p, coreSlicer, array, True);
+    }
+    else{
+
+        column.getColumnCells (rowBounds_p.subchunkRows_p, array, True);
+    }
 }
-
-
 
 template <typename T>
 void
@@ -775,7 +789,7 @@ VisibilityIteratorImpl2::VisibilityIteratorImpl2 (VisibilityIterator2 * vi,
   msIndex_p (0),
   msIterAtOrigin_p (False),
   msIter_p (0),
-  nPolarizations_p (-1),
+  nCorrelations_p (-1),
   nRowBlocking_p (0),
   reportingFrame_p (VisBuffer2::FrameNotSpecified),
   sortColumns_p (sortColumns),
@@ -1547,12 +1561,13 @@ VisibilityIteratorImpl2::configureNewSubchunk ()
 
     // Set flags for current subchunk
 
-    nPolarizations_p = subtableColumns_p->polarization ().numCorr ()(msIter_p->polarizationId ());
+    Vector<Int> correlations = channelSelector_p->getCorrelations();
+    nCorrelations_p = correlations.nelements();
 
     String msName = ms().tableName ();
     vb_p->configureNewSubchunk (msId (), msName, isNewMs (), isNewArrayId (), isNewFieldId (),
                                 isNewSpectralWindow (), subchunk_p, rowBounds_p.subchunkNRows_p,
-                                channelSelector_p->getNFrequencies(), nPolarizations_p,
+                                channelSelector_p->getNFrequencies(), nCorrelations_p,
                                 channelSelector_p->getCorrelations(),
                                 weightScaling_p);
 
@@ -1597,7 +1612,7 @@ VisibilityIteratorImpl2::determineChannelSelection (Double time, Int spectralWin
     }
     else{
         newSelector = makeChannelSelectorF (selection, time, msId (),
-                                            spectralWindowId);
+                                            spectralWindowId, polarizationId());
     }
 
     // Cache it for possible future use.  The cache may hold multiple equivalent
@@ -1647,7 +1662,15 @@ VisibilityIteratorImpl2::makeChannelSelectorC (const FrequencySelection & select
 
     // Install the polarization selections
 
-    slices.setSubslicer (0, ChannelSubslicer (selection.getCorrelationSlices (polarizationId)));
+    Vector<Slice> correlationSlices = selection.getCorrelationSlices (polarizationId);
+    if (correlationSlices.empty()){
+
+        Int nCorrelations = subtableColumns_p->polarization ().numCorr ().get (polarizationId);
+
+        correlationSlices = Vector<Slice> (1, Slice (0, nCorrelations));
+    }
+
+    slices.setSubslicer (0, ChannelSubslicer (correlationSlices));
 
     // Create and install the frequency selections
 
@@ -1668,7 +1691,8 @@ VisibilityIteratorImpl2::makeChannelSelectorC (const FrequencySelection & select
 
 ChannelSelector *
 VisibilityIteratorImpl2::makeChannelSelectorF (const FrequencySelection & selectionIn,
-                                               Double time, Int msId, Int spectralWindowId) const
+                                               Double time, Int msId, Int spectralWindowId,
+                                               Int polarizationId) const
 {
     // Make a ChannelSelector from a frame-based frequency selection.
 
@@ -1713,6 +1737,20 @@ VisibilityIteratorImpl2::makeChannelSelectorF (const FrequencySelection & select
     // different channel intervals along the channel axis.
 
     ChannelSlicer slices (2);
+
+    // Install the polarization selections
+
+    Vector<Slice> correlationSlices = selection.getCorrelationSlices (polarizationId);
+    if (correlationSlices.empty()){
+
+        Int nCorrelations;
+        subtableColumns_p->polarization ().numCorr ().get (polarizationId, nCorrelations);
+
+        correlationSlices = Vector<Slice> (1, Slice (0, nCorrelations));
+    }
+
+    slices.setSubslicer (0, ChannelSubslicer (correlationSlices));
+
     ChannelSubslicer frequencyAxis (frequencySlices.size());
 
     for (Int i = 0; i < (int) frequencySlices.size(); i++){
@@ -2249,7 +2287,7 @@ VisibilityIteratorImpl2::flag (Matrix<Bool> & flags) const
             Bool flagIt = flagCube (0, channel, row);
 
             for (Int correlation = 1;
-                 correlation < nPolarizations_p && not flagIt;
+                 correlation < nCorrelations_p && not flagIt;
                  correlation ++){
 
                 flagIt = flagCube (correlation, channel, row);
@@ -2391,7 +2429,7 @@ VisibilityIteratorImpl2::floatData (Cube<Float> & fcube) const
 void
 VisibilityIteratorImpl2::uvw (Matrix<Double> & uvwmat) const
 {
-    getColumnRowsMatrix (columns_p.uvw_p, uvwmat);
+    getColumnRowsMatrix (columns_p.uvw_p, uvwmat, False);
 }
 
 // Fill in parallactic angle.
@@ -2534,13 +2572,13 @@ VisibilityIteratorImpl2::hourang (Double time) const
 void
 VisibilityIteratorImpl2::sigma (Matrix<Float> & sigma) const
 {
-    getColumnRowsMatrix (columns_p.sigma_p, sigma);
+    getColumnRowsMatrix (columns_p.sigma_p, sigma, True);
 }
 
 void
 VisibilityIteratorImpl2::weight (Matrix<Float> & wt) const
 {
-    getColumnRowsMatrix (columns_p.weight_p, wt);
+    getColumnRowsMatrix (columns_p.weight_p, wt, True);
 }
 
 Bool
@@ -2687,7 +2725,7 @@ VisibilityIteratorImpl2::nDataDescriptionIds () const
 }
 
 Int
-VisibilityIteratorImpl2::nPolarizations () const
+VisibilityIteratorImpl2::nPolarizationIds () const
 {
     return subtableColumns_p->polarization ().nrow ();
 }
@@ -2803,7 +2841,7 @@ VisibilityIteratorImpl2::visibilityShape() const
 {
 
     IPosition result (3,
-                      nPolarizations_p,
+                      nCorrelations_p,
                       channelSelector_p->getNFrequencies(),
                       rowBounds_p.subchunkNRows_p);
 
@@ -2830,7 +2868,7 @@ VisibilityIteratorImpl2::jonesC(Vector<SquareMatrix<complex<float>, 2> >& cjones
 //{
 //
 //    Int nFrequencies = channelSelector_p->getNFrequencies();
-//    Int nPolarizations = nPolarizations_p;
+//    Int nPolarizations = nCorrelations_p;
 //    Int nRows = this->nRows();
 //
 //    // The flag matrix is expected to have dimensions [nF, nR].
