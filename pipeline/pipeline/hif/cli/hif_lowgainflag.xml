@@ -31,11 +31,6 @@ Flag antennas with low gain.
         <value></value>
     </param>
 
-    <param type="int" name="minblperant" subparam="true">
-        <description>Minimum baselines per antenna required for solve</description>
-        <value>4</value>
-    </param>
-
     <param type="bool" name="flag_nmedian" subparam="true">
         <description>True to flag values higher (limit&gt;1) or lower (limit&lt;1) than fnm_limit * median</description>
         <value>True</value>
@@ -74,7 +69,6 @@ Flag antennas with low gain.
                 <default param="intent"><value type="string"></value></default>
                 <default param="spw"><value type="string"></value></default>
                 <default param="refant"><value type="string"></value></default>
-                <default param="minblperant"><value type="int">4</value></default>
                 <default param="flag_nmedian"><value type="bool">True</value></default>
                 <default param="fnm_limit"><value type="float">0.5</value></default>
                 <default param="dryrun"><value type="bool">False</value></default>
@@ -85,7 +79,6 @@ Flag antennas with low gain.
                 <default param="intent"><value type="string"></value></default>
                 <default param="spw"><value type="string"></value></default>
                 <default param="refant"><value type="string"></value></default>
-                <default param="minblperant"><value type="int">4</value></default>
                 <default param="flag_nmedian"><value type="bool">True</value></default>
                 <default param="fnm_limit"><value type="float">0.5</value></default>
             </equals>
@@ -132,10 +125,6 @@ intent -- The data intent to be checked for antennas with low gain. The
           intent in the list ['BANDPASS', 'PHASE', 'AMPLITUDE'] for which
           data are found.
     default ''
-
-minblperant -- Minimum number of baselines required per antenna for each solve
-    Antennas with fewer baselines are excluded from solutions.
-    default: 4
 
 flag_nmedian -- True to flag figures of merit greater than fnm_limit * median
                 if fnm_limit &gt; 1 or lower than fnm_limit * median if
