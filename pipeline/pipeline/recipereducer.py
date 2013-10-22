@@ -44,7 +44,7 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.casataskdict as casataskdict
 import pipeline.infrastructure.launcher as launcher
 
-LOG = logging.get_logger(__file__)
+LOG = logging.get_logger(__name__)
 
 recipes_dir = os.path.join(os.path.dirname(__file__), 'recipes')
 
