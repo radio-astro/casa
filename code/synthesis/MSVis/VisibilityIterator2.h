@@ -633,10 +633,11 @@ public:
   virtual void setWeightScaling (CountedPtr<WeightScaling> weightscaling);
   virtual Bool hasWeightScaling () const;
 
-  // Return number of spws, polids, ddids
+  // Return number of spws, polids, ddids for the current MS
 
   Int nSpectralWindows () const;
-  Int nPolarizations () const;
+  Int nPolarizationIds () const; // number of different polarization configurations
+                                 // (i.e., length of polarization subtable)
   Int nDataDescriptionIds () const;
 
   // Determine whether WEIGHT_SPECTRUM exists.

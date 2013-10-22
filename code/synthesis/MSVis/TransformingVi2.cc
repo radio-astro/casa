@@ -388,9 +388,9 @@ TransformingVi2::nDataDescriptionIds ()  const
 }
 
 Int
-TransformingVi2::nPolarizations ()  const
+TransformingVi2::nPolarizationIds ()  const
 {
-    return getVii()->nPolarizations ();
+    return getVii()->nPolarizationIds ();
 }
 
 Int

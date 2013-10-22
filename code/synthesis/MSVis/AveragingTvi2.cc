@@ -1336,7 +1336,7 @@ VbAvg::captureIterationInfo (VisBufferImpl2 * dstVb, const VisBuffer2 * srcVb,
                              srcVb->isNewFieldId(),
                              srcVb->isNewSpectralWindow(),
                              subchunk,
-                             srcVb->getCorrelationNumbers (),
+                             srcVb->getCorrelationTypes (),
                              CountedPtr <WeightScaling> (0));
 
     // Request info from the VB which will cause it to be filled
