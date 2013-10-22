@@ -154,6 +154,15 @@ vector<Quantum<Vector<Double> > > MSMetaData::_getAntennaOffsets(
 	return antennaOffsets;
 }
 
+vector<String> MSMetaData::_getAntennaStationNames(
+	const MeasurementSet& ms
+) {
+	String antStationColName = MSAntenna::columnName(MSAntennaEnums::STATION);
+	return ROScalarColumn<String>(
+		ms.antenna(), antStationColName
+	).getColumn().tovector();
+}
+
 vector<String> MSMetaData::_getAntennaNames(
 	map<String, uInt>& namesToIDs, const MeasurementSet& ms
 ) {

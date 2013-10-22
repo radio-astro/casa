@@ -1043,6 +1043,27 @@ void testIt(MSMetaData& md) {
 			cout << "*** test getAntennaOffset()" << endl;
 			cout << md.getAntennaOffset(2) << endl;
 		}
+		{
+			cout << "*** test getAntennaStations()" << endl;
+			vector<uInt> ids(3);
+			ids[0] = 2;
+			ids[1] = 4;
+			ids[2] = 3;
+			vector<String> stations = md.getAntennaStations(ids);
+			AlwaysAssert(
+				stations[0] == "A077" && stations[1] == "A082"
+				&& stations[2] == "A137", AipsError
+			);
+			vector<String> names(3);
+			names[0] = "DV02";
+			names[1] = "DV05";
+			names[2] = "DV03";
+			stations = md.getAntennaStations(names);
+			AlwaysAssert(
+				stations[0] == "A077" && stations[1] == "A082"
+				&& stations[2] == "A137", AipsError
+			);
+		}
 		/*
 		{
 			cout << "*** test getExposuresForTimes()" << endl;
@@ -1226,7 +1247,7 @@ void testIt(MSMetaData& md) {
 					uInt spw = mypair.first;
 					uInt pol = mypair.second;
 					Int dataDesc = iter->second;
-					AlwaysAssert(spw == dataDesc, AipsError);
+					AlwaysAssert((Int)spw == dataDesc, AipsError);
 					AlwaysAssert(pol == (spw == 0 ? 1 : 0), AipsError);
 				}
 			}
