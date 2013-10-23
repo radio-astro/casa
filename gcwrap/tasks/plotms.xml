@@ -103,6 +103,8 @@ MS Parameters
       <value>delay</value><value>del</value>
       <value>opac</value><value>opacity</value>
       <value>swp</value><value>swpower</value><value>switchedpower</value>
+      <value>radialvelocity</value>
+      <value>rho</value>
     </allowed>
   </param>
   
@@ -154,6 +156,8 @@ MS Parameters
       <value>flag</value>
       <value>azimuth</value>
       <value>elevation</value>
+      <value>radialvelocity</value>
+      <value>rho</value>
       <value>hourang</value><value>hourangle</value>
       <value>parang</value><value>parangle</value><value>parallacticangle</value>
       <value>antenna</value><value>ant</value>

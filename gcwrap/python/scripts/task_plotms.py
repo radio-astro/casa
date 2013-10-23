@@ -157,6 +157,8 @@ def plotms(vis=None,
         synonyms['vel'] = 'velocity'
         synonyms['correlation'] = 'corr'
         synonyms['ant1'] = 'antenna1'
+        synonyms['radialvelocity']='Radial Velocity'
+        synonyms['rho']='Distance(rho)'
         synonyms['weight'] = 'wt'
         synonyms['ant2'] = 'antenna2'
         synonyms['uvdistl'] = synonyms['uvdist_l']='uvwave'
