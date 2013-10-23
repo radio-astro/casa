@@ -34,7 +34,10 @@ try:
     import sdcal2_cli
 except:
     import sdcal_cli as sdcal2_cli
-import sdflag2_cli as sdflag2_cli
+try:
+    import sdflag2_cli as sdflag2_cli
+except:
+    import sdflag_cli as sdflag2_cli
 import sdsave_cli as sdsave_cli
 
 from . import casatools
