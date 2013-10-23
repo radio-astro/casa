@@ -34,10 +34,12 @@ void _checkSpwId(int id, bool throwIfNegative) const;
 
 void _checkPolId(int id, bool throwIfNegative) const;
 
-std::set<int> _idsFromRegex(
-	const std::map<casa::String, std::set<int> >& mymap, const casa::String& regex
+std::set<int> _idsFromExpansion(
+	const std::map<casa::String, std::set<int> >& mymap, const casa::String& matchString
 ) const;
 
-std::set<int> _idsFromRegex(
-	const std::map<casa::String, std::set<uint> >& mymap, const casa::String& regex
+std::set<int> _idsFromExpansion(
+	const std::map<casa::String, std::set<uint> >& mymap, const casa::String& matchString
 ) const;
+
+static std::string _escapeExpansion(const casa::String& stringToEscape);
