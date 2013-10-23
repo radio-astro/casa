@@ -125,6 +125,11 @@ class FittingBase(common.SingleDishTaskTemplate):
         bltable_name = self.inputs.bltable
         if iteration == 0:
             utils.createExportTable(bltable_name)
+            
+        if not os.path.exists(filename_out):
+            with casatools.TableReader(filename_in) as tb:
+                copied = tb.copy(filename_out, deep=True, valuecopy=True, returnobject=True)
+                copied.close()    
 
         #time_table = self.time_table
         #index_list = self.index_list
@@ -156,6 +161,8 @@ class FittingBase(common.SingleDishTaskTemplate):
         dummy_scan = utils.create_dummy_scan(filename_in, datatable, rows_to_process)
         
         _polnos = polnos.take(rows_to_process)
+        index_list_total = []
+
         for pol in pollist:
             time_table = datatable.get_timetable(antennaid, spwid, pol)
             member_list = time_table[timetable_index]
@@ -164,7 +171,7 @@ class FittingBase(common.SingleDishTaskTemplate):
 
             # working with spectral data in scantable
             nrow_total = len(index_list_per_pol)
-    
+                
             # Create progress timer
             Timer = common.ProgressTimer(80, nrow_total, LOG.level)
     
@@ -199,8 +206,10 @@ class FittingBase(common.SingleDishTaskTemplate):
                 nrow = len(rows)
                 LOG.debug('nrow = %s'%(nrow))
                 LOG.debug('len(idxs) = %s'%(len(idxs)))
-                index_list = []
                 updated = []
+                
+                index_list = []
+
                 for i in xrange(nrow):
                     row = rows[i]
                     idx = idxs[i]
@@ -250,8 +259,10 @@ class FittingBase(common.SingleDishTaskTemplate):
                     # cleanup blfile
                     os.system('rm -rf %s'%(blfile))
                 
+                index_list_total.extend(index_list)
+                
         outcome = {'bltable': bltable_name,
-                   'index_list': index_list}
+                   'index_list': index_list_total}
         result = FittingResults(task=self.__class__,
                                 success=True,
                                 outcome=outcome)

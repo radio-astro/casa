@@ -178,6 +178,8 @@ class DetectLine(common.SingleDishTaskTemplate):
                                    success=True,
                                    outcome=detect_signal)
                 
+        result.task = self.__class__
+                
         if self.context.subtask_counter is 0: 
             result.stage_number = self.context.task_counter - 1
         else:

@@ -92,7 +92,18 @@ class MaskLine(common.SingleDishTaskTemplate):
         # return empty result if grid_table is empty
         if len(grid_table) == 0:
             LOG.warn('Line detection/validation will not be done since grid table is empty. Maybe all the data are flagged out in the previous step.')
-            return [], {}
+            outcome = {'detected_lines': [],
+                       'cluster_info': {}}
+            result = MaskLineResults(task=self.__class__,
+                                     success=True,
+                                     outcome=outcome)
+            result.task = self.__class__
+                
+            if self.inputs.context.subtask_counter is 0: 
+                result.stage_number = self.inputs.context.task_counter - 1
+            else:
+                result.stage_number = self.inputs.context.task_counter 
+            return result
         
         LOG.trace('len(grid_table)=%s, spectra.shape=%s'%(len(grid_table),list(spectra.shape)))
         LOG.trace('grid_table=%s'%(grid_table))
@@ -133,6 +144,7 @@ class MaskLine(common.SingleDishTaskTemplate):
         result = MaskLineResults(task=self.__class__,
                                   success=True,
                                   outcome=outcome)
+        result.task = self.__class__
                 
         if self.inputs.context.subtask_counter is 0: 
             result.stage_number = self.inputs.context.task_counter - 1

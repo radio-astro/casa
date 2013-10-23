@@ -119,6 +119,8 @@ class ValidateLineSinglePointing(common.SingleDishTaskTemplate):
                                          success=True,
                                          outcome=outcome)
                 
+            result.task = self.__class__
+                
             if self.context.subtask_counter is 0: 
                 result.stage_number = self.context.task_counter - 1
             else:
@@ -168,6 +170,8 @@ class ValidateLineSinglePointing(common.SingleDishTaskTemplate):
         result = ValidateLineResults(task=self.__class__,
                                      success=True,
                                      outcome=outcome)
+                
+        result.task = self.__class__
                 
         if self.context.subtask_counter is 0: 
             result.stage_number = self.context.task_counter - 1
@@ -308,6 +312,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
             result = ValidateLineResults(task=self.__class__,
                                          success=True,
                                          outcome=outcome)
+                
+            result.task = self.__class__
                 
             if self.context.subtask_counter is 0: 
                 result.stage_number = self.context.task_counter - 1
@@ -481,6 +487,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         result = ValidateLineResults(task=self.__class__,
                                      success=True,
                                      outcome=outcome)
+                
+        result.task = self.__class__
                 
         if self.context.subtask_counter is 0: 
             result.stage_number = self.context.task_counter - 1
