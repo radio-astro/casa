@@ -4020,7 +4020,7 @@ Bool Imager::makePBImage(const CoordinateSystem& imageCoord,
   String telName=telescopeName;
   if(telName=="ALMA" &&  diam < 12.0)
     telName="ACA";
-  cerr << "Telescope Name is " << telName<< endl;
+  //cerr << "Telescope Name is " << telName<< endl;
   PBMath::CommonPB whichPB;
   PBMath::enumerateCommonPB(telName, whichPB);  
   PBMath myPB;
