@@ -51,6 +51,7 @@ public:
 	virtual ~CacheThread();
 protected:
 	virtual bool doWork();
+	virtual void finished(){}
 private:
 	CacheThread( const CacheThread& other );
 	CacheThread operator=( const CacheThread& other );

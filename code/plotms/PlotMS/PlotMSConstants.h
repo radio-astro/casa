@@ -117,9 +117,11 @@ public:
 	      FLAG,FLAG_ROW,
 	      UVDIST,UVDIST_L,U,V,W,UWAVE,VWAVE,WWAVE,
 	      AZ0,EL0,HA0,PA0,
-	      ANTENNA,AZIMUTH,ELEVATION,PARANG,
+	      ANTENNA,AZIMUTH,ELEVATION,
+	      PARANG,
 	      GAMP,GPHASE,GREAL,GIMAG,
 	      DELAY,SWP,TSYS,OPAC,
+	      RADIAL_VELOCITY, RHO,
 	      NONE)
 
     PMS_ENUM2(Axis, axes, axesStrings, axis,
@@ -132,7 +134,7 @@ public:
 	      "Azimuth","Elevation","HourAngle","ParAngle",
 	      "Antenna","Ant-Azimuth","Ant-Elevation","Ant-ParAngle",
 	      "GainAmp","GainPhase","GainReal","GainImag",
-	      "Delay","SwPower","Tsys","Opac",
+	      "Delay","SwPower","Tsys","Opac","Radial Velocity", "Distance(rho)",
 	      "None")
 
     // </group>

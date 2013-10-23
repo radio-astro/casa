@@ -43,7 +43,7 @@ namespace casa {
 
 //# Forward Declarations
 class PlotMSCacheBase;
-class PlotMSPlot;
+class PlotMSPlotter;
 
 // Subclass of PlotMSThread for loading axes in a PlotMSCache.
 class PlotMSCacheThread : public PlotMSThread {
@@ -56,26 +56,8 @@ class PlotMSCacheThread : public PlotMSThread {
     friend class PlotMSCacheThreadHelper;
     
 public:
-    // LOADING constructor which takes the PlotMSPlot, the PlotMSData, the axes
-    // and data columns, the averaging, a flag for whether to call setupPlot
-    // after the loading, and optional post-thread method parameters.
-   /* PlotMSCacheThread(PlotMSPlot* plot, PlotMSCacheBase* cache,
-		      const vector<PMS::Axis>& axes, 
-		      const vector<PMS::DataColumn>& data2,
-		      const String& msname, 
-		      const PlotMSSelection& selection, 
-		      const PlotMSAveraging& averaging, 
-		      const PlotMSTransformations& transformations, 
-		      bool setupPlot = false,
-		      PMSPTMethod postThreadMethod = NULL,
-		      PMSPTObject postThreadObject = NULL);*/
-    
-    // RELEASING constructor which takes the PlotMSPlot, the axes, and optional
-    // post-thread method parameters.
-    /*PlotMSCacheThread(PlotMSPlot* plot, const vector<PMS::Axis>& axes,
-            PMSPTMethod postThreadMethod = NULL,
-            PMSPTObject postThreadObject = NULL);*/
-    PlotMSCacheThread(QtProgressWidget* progress,
+
+    PlotMSCacheThread(QtProgressWidget* progress, PlotMSPlotter* plotter,
                 PMSPTMethod postThreadMethod = NULL,
                 PMSPTObject postThreadObject = NULL);
     
@@ -109,8 +91,8 @@ private:
     PlotMSCacheThread( const PlotMSCacheThread& other );
     PlotMSCacheThread operator=( const PlotMSCacheThread& other );
 
-    // Plot.
-    PlotMSPlot* itsPlot_;
+    // Plotter
+    PlotMSPlotter* itsPlotter_;
     
     // Data.
     PlotMSCacheBase* itsCache_;
@@ -138,17 +120,7 @@ private:
     
     // Last set status.
     String itsLastStatus_;
-    
-
-    
-    // Error message, if there was one (otherwise empty).
-    String itsCacheError_;
-    
-
 };
-
-
-
 
 }
 

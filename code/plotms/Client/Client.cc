@@ -77,6 +77,11 @@ bool Client::exportToFormat(const PlotExportFormat& format){
 	bool success = itsPlotter_->exportPlot( format );
 	return success;
 }
+
+void Client::setCommonAxes( bool commonX, bool commonY ){
+	itsPlotter_->setCommonAxisX( commonX );
+	itsPlotter_->setCommonAxisY( commonY );
+}
 }
 
 

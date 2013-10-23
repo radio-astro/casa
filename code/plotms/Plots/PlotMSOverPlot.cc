@@ -286,6 +286,7 @@ bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
     itsTCLParams_.updateIteration = ((updateFlag & PMS_PP::UPDATE_ITERATION) &&
                                      ((itsPlots_.size() != rows) ||
                                       (itsPlots_[0].size() != cols)));
+    itsParent_->setCommonAxes(iter->isCommonAxisX(), iter->isCommonAxisY());
 
     // Update cache if needed
     if(data->isSet() && (updateFlag & PMS_PP::UPDATE_MSDATA ||

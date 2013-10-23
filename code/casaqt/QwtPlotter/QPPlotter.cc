@@ -31,6 +31,7 @@
 #include <casaqt/QtUtilities/QtUtilities.h>
 #include <graphics/GenericPlotter/PlotCanvasLayout.h>
 #include <casaqt/QwtPlotter/QPCanvas.qo.h>
+#include <casaqt/QwtPlotter/QPAxis.qo.h>
 #include <casaqt/QwtPlotter/QPFactory.h>
 #include <casaqt/QwtPlotter/QPPanel.qo.h>
 
@@ -103,7 +104,6 @@ QPPlotter::QPPlotter(PlotCanvasLayoutPtr layout, int logEventFlags,
     
     if(!m_layout.null()) {
         bool valid = m_layout->isValid();
-        
         if(valid) {
             vector<PlotCanvasPtr> canvases = layout->allCanvases();
             QPCanvas* c;
@@ -450,7 +450,8 @@ void QPPlotter::setupCanvasFrame() {
         // single layout
         QtUtilities::putInFrame(canvasFrame,
                 dynamic_cast<QPCanvas*>(l->canvas().operator->()));
-    } else if(g != NULL) {
+    }
+    else if(g != NULL) {
         // grid layout
         QGridLayout* qgl = new QGridLayout(canvasFrame);
         qgl->setContentsMargins(0, 0, 0, 0);
@@ -458,15 +459,41 @@ void QPPlotter::setupCanvasFrame() {
         
         PlotGridCoordinate coord(0, 0);
         QPCanvas* c;
-        for(unsigned int i = 0; i < g->rows(); i++) {
+        int rowCount = g->rows();
+        int colCount = g->cols();
+
+        int startCols = 0;
+        if ( commonAxisY ){
+        	colCount = colCount + 1;
+        	startCols = 1;
+        	//Add in external y axes.
+        	for ( int i = 0; i < rowCount; i++ ){
+        		QPAxis* axis = new QPAxis( this );
+        		qgl->addWidget(axis, i, 0 );
+        	}
+        }
+
+        //Add in the graphs.
+        for(int i = 0; i < rowCount; i++) {
             coord.row = i;
-            for(unsigned int j = 0; j < g->cols(); j++) {
+            //First column is reserved for external y axis, if there is one.
+            //for(unsigned int j = 0; j < colCount; j++) {
+            for(int j = startCols; j < colCount; j++) {
                 coord.col = j;
                 c = dynamic_cast<QPCanvas*>(g->canvasAt(coord).operator->());
                 qgl->addWidget(c, i, j);
             }
         }
-    } else {
+
+        //Add in external x-axes
+        if ( commonAxisX ){
+        	for ( int j = startCols; j < colCount; j++ ){
+        		QPAxis* axis = new QPAxis( this );
+        		qgl->addWidget( axis, rowCount, j );
+        	}
+        }
+    }
+    else {
         // error?
     }
     

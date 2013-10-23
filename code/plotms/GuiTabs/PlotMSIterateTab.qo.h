@@ -75,7 +75,8 @@ private:
     
 
 private slots:
-	
+	//The number of rows or columns in the grid has changed
+	void gridChanged();
 };
 
 

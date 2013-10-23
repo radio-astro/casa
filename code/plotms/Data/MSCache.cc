@@ -120,6 +120,9 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 	// TBD: Consolidate count/loadChunks methods?
 
 	Vector<Int> nIterPerAve;
+
+
+
 	if ( (averaging_.time() && averaging_.timeValue()>0.0) ||
 			averaging_.baseline() ||
 			averaging_.antenna() ||
@@ -137,7 +140,6 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 		countChunks(viter,thread);
 		trapExcessVolume(pendingLoadAxes_);
 		loadChunks(viter,loadAxes,loadData,averaging_,thread);
-
 	}
 
 	// Remember # of VBs per Average
@@ -510,7 +512,6 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 	break;
       }
 			 */
-
 			for(unsigned int i = 0; i < loadAxes.size(); i++) {
 				//	cout << PMS::axis(loadAxes[i]) << " ";
 				loadAxis(vb, chunk, loadAxes[i], loadData[i]);
@@ -526,7 +527,6 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 			}
 		}
 	}
-
 }
 
 void MSCache::loadChunks(ROVisibilityIterator& vi,
@@ -688,6 +688,7 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 
 			for(unsigned int i = 0; i < loadAxes.size(); i++) {
 				loadAxis(avb, chunk, loadAxes[i], loadData[i]);
+
 			}
 		}
 		else {
@@ -705,8 +706,6 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 	}
 
 	//  cout << boolalpha << "goodChunk_ = " << goodChunk_ << endl;
-
-
 }
 
 void MSCache::forceVBread(VisBuffer& vb,
@@ -1159,6 +1158,7 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 		el0_(vbnum) = azel(1);
 		break;
 	}
+
 	case PMS::HA0:
 		ha0_(vbnum) = vb.hourang(vb.time()(0))*12/C::pi;  // in hours
 		break;
@@ -1180,6 +1180,20 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 		*el_[vbnum] = azel.row(1);
 		break;
 	}
+	case PMS::RADIAL_VELOCITY: {
+		Int fieldId = vb.fieldId();
+		const ROMSFieldColumns& fieldColumns = vb.msColumns().field();
+		MRadialVelocity radVelocity = fieldColumns.radVelMeas(fieldId, vb.time()(0));
+		radialVelocity_(vbnum) = radVelocity.get("AU/d").getValue( "km/s");
+		break;
+	}
+	case PMS::RHO:{
+		Int fieldId = vb.fieldId();
+		const ROMSFieldColumns& fieldColumns = vb.msColumns().field();
+		Quantity rhoQuantity = fieldColumns.rho(fieldId, vb.time()(0));
+		rho_(vbnum ) = rhoQuantity.getValue( "km");
+		break;
+	}
 	case PMS::PARANG:
 		*parang_[vbnum] = vb.feed_pa(vb.time()(0))*(180.0/C::pi);  // in degrees
 		break;
@@ -1194,7 +1208,20 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 	}
 }
 
-
+bool MSCache::isEphemeris(){
+	setUpVisIter(filename_,selection_,True,True,True);
+	ROVisIterator& viter(*rvi_p);
+	VisBuffer vb( viter );
+	Int fieldId = vb.fieldId();
+	const ROMSFieldColumns& fieldColumns = vb.msColumns().field();
+	String ephemerisExists = fieldColumns.ephemPath( fieldId );
+	bool ephemerisAvailable = true;
+	if ( ephemerisExists.empty()){
+		ephemerisAvailable = false;
+	}
+	vb.detachFromVisIter();
+	return ephemerisAvailable;
+}
 
 
 void MSCache::flagToDisk(const PlotMSFlagging& flagging,
