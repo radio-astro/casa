@@ -602,9 +602,48 @@ public:
     : std::vector <SpectralWindowChannel> (size)
     {}
 
+    const_iterator
+    lower_bound (Double frequency) const
+    {
+        const_iterator result = end();
+
+        for (const_iterator i = begin(); i != end(); i++){
+
+            if (frequency <= i->getFrequency() + 0.5 * i->getWidth() &&
+                i->getFrequency() - 0.5 * i->getWidth() <= frequency){
+                result = i;
+                break;
+
+            }
+        }
+
+        return result;
+    }
+
+    const_iterator
+    upper_bound (Double frequency) const
+    {
+        const_iterator result = end();
+
+        for (const_iterator i = end() - 1; i >= begin(); i --){
+
+            if (frequency >= i->getFrequency() - 0.5 * i->getWidth() &&
+                frequency <= i->getFrequency() + 0.5 * i->getWidth()){
+                result = i;
+                break;
+
+            }
+        }
+
+        return result;
+    }
+
+
 private:
 
 };
+
+
 
 class SpectralWindowChannelsCache {
 
@@ -1820,50 +1859,26 @@ VisibilityIteratorImpl2::findChannelsInRange (Double lowerFrequency, Double uppe
         return Slice (0, 0); // value indicating no slice
     }
 
-    // Find the first channel to include in the Slice.  The lower_bound method
-    // returns the first channel >= to the target.
+    // Find the first and last channels to include in the Slice.
 
-    Iterator lower = lower_bound (spectralWindowChannels.begin(),
-                                  spectralWindowChannels.end(),
-                                  lowerFrequency);
+    Iterator lower = spectralWindowChannels.lower_bound (lowerFrequency);
 
-    Assert (lower != spectralWindowChannels.end());
+    if (lower ==  spectralWindowChannels.end()){
 
-    if (lower != spectralWindowChannels.begin()){
+        // The lower frequency is below the window so choose the lowest
+        // frequency as the start.
 
-        Iterator previous = lower - 1;
-        if (previous->getFrequency() + 0.5 * previous->getWidth() > lowerFrequency){
-
-            lower = previous;
-
-        }
+        lower = spectralWindowChannels.begin();
     }
 
-    // Find the ending channel to include in the Slice.  The upper_bound method
-    // finds the first value > the target.
+    Iterator upper = spectralWindowChannels.upper_bound (upperFrequency);
 
-    Iterator upper = upper_bound (spectralWindowChannels.begin(),
-                                  spectralWindowChannels.end(),
-                                  upperFrequency);
+    if (upper == spectralWindowChannels.end() && upper >= lower){
 
-    if (upper == spectralWindowChannels.end()){
+        // The upper frequency is above the window so choose the highest
+        // freuqency as the end.
+
         upper = spectralWindowChannels.end() - 1;
-    }
-    else{
-        upper -= 1; // upper_bound finds value strictly > than target.
-    }
-
-    // Adjust the upper limit if the channel just outside the window overlaps
-    // the upper frequency by 1/2 a channel width.
-
-    Iterator next = upper + 1;
-    if (next != spectralWindowChannels.end()){
-
-        if (next->getFrequency() - 0.5 * next->getWidth() < upperFrequency){
-
-            upper = next;
-
-        }
     }
 
     // Create a slice.  If the frequencies are running high to low then
