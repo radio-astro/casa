@@ -312,8 +312,9 @@ namespace casa{
 		    //		    twoDPBSq_l *= ftATermSq_l;//*conj(ftATerm_l);
 
 		    // To accumulate avgPB2, call this function. 
-		    Bool PBSQ = False;
-		    if(PBSQ) makePBSq(twoDPBSq_l); // UUU uncommented
+		    // PBSQWeight
+		    Bool PBSQ = True;
+		    if(PBSQ) makePBSq(twoDPBSq_l); 
 		    
 
 		    //
