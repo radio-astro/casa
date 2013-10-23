@@ -1,0 +1,107 @@
+<%!
+rsc_path = "../"
+import os
+
+import itertools
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.infrastructure.renderer.logger as logger
+import pipeline.infrastructure.displays as displays
+%>
+<%inherit file="t2-4m_details-base.html"/>
+
+<%block name="header" />
+
+<%block name="title">Stage ${hr.get_stage_number(result)} Task Details</%block>
+
+<h1>Stage ${hr.get_stage_number(result)}: ${hr.get_task_description(result)}</h1>
+
+<%
+try:
+    stage_number = hr.get_stage_number(result)
+    stage_dir = os.path.join(pcontext.report_dir,'stage%d'%(stage_number))
+    if not os.path.exists(stage_dir):
+        os.mkdir(stage_dir)
+   
+    plot_groups_list = []
+    for r in result:
+
+        baseline_result = r.outcome['baseline']
+           
+        plots = []
+        for br in baseline_result:
+            inputs = displays.ClusterDisplay.Inputs(pcontext,result=br)
+            task = displays.ClusterDisplay(inputs)
+            plots.append(task.plot())
+    
+        plot_groups = logger.PlotGroup.create_plot_groups(plots)
+        for plot_group in plot_groups:
+            renderer = hr.PlotGroupRenderer(pcontext, result, plot_group)
+            plot_group.filename = renderer.filename
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+        plot_groups_list.append(plot_groups)
+    
+except Exception, e:
+    print 'hsd_flagbaseline html template exception:', e
+    raise e
+%>
+
+<ul>
+	<li>Initial display: most important details</li>
+	<ul>
+		<li>Heuristics parameters</li>
+		% if plot_groups_list:
+		<li>Plots</li>
+		<ul>
+		
+		<ul>
+			% for plot_group in plot_groups:
+				<li>
+					<a class="replace" href="${os.path.join(dirname, plot_group.filename)}">${plot_group.title}</a>
+				</li>
+			% endfor
+		</ul>
+                % else:
+                No Images
+		% endif
+		<li>Images</li>
+		<li>Tables</li>
+	</ul>
+	<li>Display maximum detail in this panel, similar to previous incarnation of pipeline; use different background colour; back button will go back to initial display</li>
+</ul>
+
+<table class="one-column-emphasis" summary="Input parameters">
+	<caption>Input parameters</caption>
+    <colgroup>
+    	<col class="oce-first" />
+    </colgroup>
+	<tbody>
+		% for k, v in result.inputs.iteritems():
+		<tr>
+		  <td>${str(k)}</th>
+		  <td>${str(v)}</td>
+		</tr>
+		% endfor
+	</tbody>
+</table>
+
+<table class="one-column-emphasis" summary="Input parameters">
+	<caption>Timing details</caption>
+    <colgroup>
+    	<col class="oce-first" />
+    </colgroup>
+	<tbody>
+		<tr>
+		  <td>Start time</th>
+		  <td>${result.timestamps.start}</td>
+		</tr>
+		<tr>
+		  <td>End</th>
+		  <td>${result.timestamps.end}</td>
+		</tr>
+		<tr>
+		  <td>Duration</th>
+		  <td>${str(result.timestamps.end - result.timestamps.start)}</td>
+		</tr>
+	</tbody>
+</table>

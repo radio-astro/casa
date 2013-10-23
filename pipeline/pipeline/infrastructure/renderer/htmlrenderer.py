@@ -166,6 +166,9 @@ def get_task_description(result_obj):
 
     if task_cls is hsd.tasks.SDFlagData:
         return 'Flag data by Tsys, weather, and statistics of spectra'
+    
+    if task_cls is hsd.tasks.SDFlagBaseline:
+        return 'Iterative execution of baseline subtraction and flagging'
 
     if task_cls is hsd.tasks.SDPlotFlagBaseline:
         return 'Plot whole spectra with baseline fit and flag result'
@@ -2447,6 +2450,7 @@ renderer_map = {
         hsd.tasks.SDFlagData     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagdata.html'),
         hsd.tasks.SDImaging      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html'),
         hsd.tasks.SDImaging2     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html'),
+        hsd.tasks.SDFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagbaseline.html'),
         hsd.tasks.SDPlotFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_plotflagbaseline.html')
     }
 }

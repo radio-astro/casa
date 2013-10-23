@@ -36,6 +36,7 @@ CasaTaskDict = {
                    'hsd_imaging2'      : 'SDImaging2',
                    'hsd_baseline'     : 'SDBaseline',
                    'hsd_flagdata'     : 'SDFlagData',
+                   'hsd_flagbaseline' : 'SDFlagBaseline',
                    'hsd_plotflagbaseline': 'SDPlotFlagBaseline',
                    'hsd_reduce'       : 'SDReduction'
                }
@@ -81,6 +82,7 @@ classToCASATask = {
     hsd_tasks.SDImaging2 : 'hsd_imaging2',
     hsd_tasks.SDBaseline : 'hsd_baseline',
     hsd_tasks.SDFlagData : 'hsd_flagdata',
+    hsd_tasks.SDFlagBaseline : 'hsd_flagbaseline',
     hsd_tasks.SDPlotFlagBaseline : 'hsd_plotflagbaseline',
     hsd_tasks.SDReduction : 'hsd_reduce'
 }
