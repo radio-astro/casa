@@ -1745,16 +1745,32 @@ namespace casa{
     }
     
     
+    IPosition pos(4); pos=0;
     
     /* compute 3-vector feed efields for the two polarizations */
-    if ((whichPoln == Stokes::RR) || (whichPoln == Stokes::XX))
-      Efield(a, Pr, Er); 
-    else if ((whichPoln == Stokes::LL) || (whichPoln == Stokes::YY))
-      Efield(a, Pl, El); 
-    else
-      {Efield(a, Pr, Er); Efield(a, Pl, El);}
+    Efield(a, Pr, Er); 
+    Efield(a, Pl, El);
+    if ((whichPoln == Stokes::RR) || (whichPoln == Stokes::XX)){
+      pos(2)=0;
+    }
+    else if ((whichPoln == Stokes::LL) || (whichPoln == Stokes::YY)){
+      pos(2)=3;
+    }
+    else if ((whichPoln == Stokes::RL) || (whichPoln == Stokes::XY)){ 
+      pos(2)=1;
+    }
+    else if ((whichPoln == Stokes::LR) || (whichPoln == Stokes::YX)){ 
+      pos(2)=2;
+    }
 
-    ap->aperture->set(Complex(0.0));
+    // set only the affected plane to zero
+    for(j = 0; j < ap->nx; j++){
+      pos(0)= j;
+      for(i = 0; i < ap->ny; i++){
+	pos(1)= i;
+	ap->aperture->putAt(Complex(0.),pos);
+      }
+    }
     
     os = ap->oversamp;
     nx = ap->nx*os;
@@ -1770,7 +1786,6 @@ namespace casa{
     
     eps = dx/4.0;
     
-    IPosition pos(4);
     //    shape = ap->aperture->shape();
 
     
@@ -1817,7 +1832,7 @@ namespace casa{
     //    Complex Er[3], El[3];
     Complex E1[3];
     Double dx, dy, x0, y0, x, y, r2, Rhole, Rant, R2, H2, eps;
-    Complex rr, rl, lr, ll, tmp;
+    Complex rr, rl, lr, ll, xx, xy, yx, yy, tmp;
     Double L, amp, dP, dA, dO, x1, y1, dx1, dy1, dx2, dy2, phase;
     Int nx, ny, os;
     Int niter=6;
@@ -1913,19 +1928,23 @@ namespace casa{
       tracepol(Er, ray, E1);
       Exr = fp*amp*E1[0];
       Eyr = fp*amp*E1[1];
-      // 	    rr = Exr - 1.0i*Eyr;
-      // 	    rl = Exr + 1.0i*Eyr;
-      rr = Exr - Iota*Eyr;
-      rl = Exr + Iota*Eyr;
 
       tracepol(El, ray, E1);
       Exl = fp*amp*E1[0];
       Eyl = fp*amp*E1[1];
-      // 	    lr = Exl - 1.0i*Eyl;
-      // 	    ll = Exl + 1.0i*Eyl;
+
+      rr = Exr - Iota*Eyr;
+      rl = Exr + Iota*Eyr;
+
       lr = Exl - Iota*Eyl;
       ll = Exl + Iota*Eyl;
-      
+
+
+      xx = Exl;
+      xy = Complex(0.);
+      yx = Complex(0.);
+      yy = Eyr;
+
       // 	    pos(0)=(Int)((j/os) - (25.0/dy/os)/2 + shape(0)/2 - 0.5);
       // 	    pos(1)=(Int)((i/os) - (25.0/dx/os)/2 + shape(1)/2 - 0.5);
       // Following 3 lines go with ANT tag in VLACalc.....
@@ -1935,20 +1954,56 @@ namespace casa{
       // Following 2 lines go with the PIX tag in VLACalc...
       pos(0)=(Int)((j/os));
       pos(1)=(Int)((i/os));
-      pos(2)=0;
       pos(3)=0;
-      
-      if ((whichPoln==Stokes::RR) || (whichPoln==Stokes::XX))
-	{tmp=ap->aperture->getAt(pos);ap->aperture->putAt(tmp+rr,pos);}
 
-      if ((whichPoln==Stokes::RL) || (whichPoln==Stokes::XY))
-	{tmp=ap->aperture->getAt(pos);ap->aperture->putAt(tmp+rl,pos);}
+      if (whichPoln==Stokes::RR){
+	pos(2)=0;
+	tmp=ap->aperture->getAt(pos);
+	ap->aperture->putAt(tmp+rr,pos);
+      }
 
-      if ((whichPoln==Stokes::LR) || (whichPoln==Stokes::YX))
-	{tmp=ap->aperture->getAt(pos);ap->aperture->putAt(tmp+lr,pos);}
+      else if (whichPoln==Stokes::RL){
+	pos(2)=1;
+	tmp=ap->aperture->getAt(pos);
+	ap->aperture->putAt(tmp+rl,pos);
+      }
 
-      if ((whichPoln==Stokes::LL) || (whichPoln==Stokes::YY))
-	{tmp=ap->aperture->getAt(pos);ap->aperture->putAt(tmp+ll,pos);}
+      else if (whichPoln==Stokes::LR){
+	pos(2)=2;
+	tmp=ap->aperture->getAt(pos);
+	ap->aperture->putAt(tmp+lr,pos);
+      }
+
+      else if (whichPoln==Stokes::LL){
+	pos(2)=3;
+	tmp=ap->aperture->getAt(pos); 
+	ap->aperture->putAt(tmp+ll,pos); 
+      }
+
+      else if (whichPoln==Stokes::XX){
+	pos(2)=0;
+	tmp=ap->aperture->getAt(pos);
+	ap->aperture->putAt(tmp+xx,pos);
+      }
+
+      else if (whichPoln==Stokes::XY){
+	pos(2)=1;
+	tmp=ap->aperture->getAt(pos);
+	ap->aperture->putAt(tmp+xy,pos);
+      }
+
+      else if (whichPoln==Stokes::YX){
+	pos(2)=2;
+	tmp=ap->aperture->getAt(pos);
+	ap->aperture->putAt(tmp+yx,pos);
+      }
+
+      else if (whichPoln==Stokes::YY){
+	pos(2)=3;
+	tmp=ap->aperture->getAt(pos); 
+	ap->aperture->putAt(tmp+yy,pos); 
+      }
+
     nextpoint:
       if(ray)  deleteRay(ray);
       if(rayx) deleteRay(rayx);

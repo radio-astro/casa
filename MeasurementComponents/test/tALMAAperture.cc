@@ -52,15 +52,15 @@
 #include <components/ComponentModels/SpectralIndex.h>
 #include <components/ComponentModels/SkyComponent.h>
 
-#include <synthesis/MeasurementComponents/SkyJones.h>
-#include <synthesis/MeasurementComponents/PBMath.h>
+#include <synthesis/TransformMachines/SkyJones.h>
+#include <synthesis/TransformMachines/PBMath.h>
 #include <casa/BasicSL/String.h>
 
 #include <synthesis/MSVis/VisSet.h>
 #include <synthesis/MSVis/VisBuffer.h>
 #include <synthesis/MSVis/VisibilityIterator.h>
 
-#include <synthesis/MeasurementComponents/ALMAAperture.h>
+#include <synthesis/TransformMachines/ALMAAperture.h>
 
 
 #include <casa/namespace.h>
@@ -74,6 +74,7 @@ int main()
     CoordinateSystem coordsys;
     CoordinateSystem coordsys3;
     CoordinateSystem coordsys3Big;
+    CoordinateSystem coordsys3BigHiRes;
     CoordinateSystem coordsys3Small;
     {
       Matrix<Double> xform(2,2);                                    
@@ -87,7 +88,13 @@ int main()
       DirectionCoordinate dirCoordsBig(MDirection::J2000,                  
 				       Projection(Projection::SIN),        
 				       135*C::pi/180.0, 60*C::pi/180.0,    
-				       -5.*C::pi/180.0/3600.0, 5.*C::pi/180.0/3600.0,        
+				       -5*C::pi/180.0/3600.0, 5*C::pi/180.0/3600.0,        
+				       xform,                              
+				       63.5, 63.5);  
+      DirectionCoordinate dirCoordsBig2(MDirection::J2000,                  
+				       Projection(Projection::SIN),        
+				       135*C::pi/180.0, 60*C::pi/180.0,    
+				       -10*C::pi/180.0/3600.0, 10*C::pi/180.0/3600.0,        
 				       xform,                              
 				       63.5, 63.5);  
       DirectionCoordinate dirCoordsSmall(MDirection::J2000,                  
@@ -152,6 +159,11 @@ int main()
       coordsys3Big.addCoordinate(spectralCoords3);      
       coordsys3Big.setObsInfo(myObsInfo);
 
+      coordsys3BigHiRes.addCoordinate(dirCoordsBig2);
+      coordsys3BigHiRes.addCoordinate(stokesCoordsGood);
+      coordsys3BigHiRes.addCoordinate(spectralCoords3);      
+      coordsys3BigHiRes.setObsInfo(myObsInfo);
+
       coordsys3Small.addCoordinate(dirCoordsSmall);
       coordsys3Small.addCoordinate(stokesCoordsGood);
       coordsys3Small.addCoordinate(spectralCoords3);      
@@ -161,15 +173,17 @@ int main()
     String name("tab1");
     TiledShape ts(IPosition(4,128,128,1,1));
     TiledShape ts2(IPosition(4,128,128,4,1));
+    TiledShape ts3(IPosition(4,10*128,10*128,4,1));
 
     PagedImage<Complex> im1(ts, coordsys, name);
     PagedImage<Float> im2(ts, coordsys, "tab2");
     PagedImage<Complex> im3(ts2, coordsys3, "tab3");
     PagedImage<Float> im4(ts2, coordsys3, "tab4");
+    PagedImage<Complex> im5(ts3, coordsys3, "tab5");
 
-    im1.set(Complex(1.0,1.0));
+    im1.set(Complex(1.0,0.0));
     im2.set(0.0);
-    im3.set(Complex(1.0,1.0));
+    im3.set(Complex(1.0,0.0));
     im4.set(0.0);
     
     ///////////////////////////////////////////
@@ -369,7 +383,7 @@ int main()
 	Int count2 = 0;
 
 	for(vi.originChunks();vi.moreChunks();vi.nextChunk()) {
-	  cout << "next chunk" << endl;
+	  //cout << "next chunk" << endl;
 	  for(vi.origin();vi.more();vi++) {
 
 	    if(vb.spectralWindow()<4){ // i.e. not a WVR SPW for this dataset
@@ -382,46 +396,46 @@ int main()
 		Int cfKey5 = ALMAAperture::cFKeyFromAntennaTypes(ALMAAperture::antTypeFromName("DA"),ALMAAperture::antTypeFromName("DA"));
 
 		PagedImage<Complex> im5(ts2, coordsys3, "pb_squintDVDV");
-		im5.set(Complex(1.0,1.0));
+		im5.set(Complex(1.0,0.0));
 		apB.applySky(im5, vb, True, cfKey);
 		
 		PagedImage<Complex> im6(ts2, coordsys3, "pb_nosquintDVDV");
-		im6.set(Complex(1.0,1.0));
+		im6.set(Complex(1.0,0.0));
 		apB.applySky(im6, vb, False, cfKey);
 		
 		PagedImage<Complex> im7(ts2, coordsys3, "pb_squintDVPM");
-		im7.set(Complex(1.0,1.0));
+		im7.set(Complex(1.0,0.0));
 		apB.applySky(im7, vb, True, cfKey2);
 		
 		PagedImage<Complex> im8(ts2, coordsys3, "pb_nosquintDVPM");
-		im8.set(Complex(1.0,1.0));
+		im8.set(Complex(1.0,0.0));
 		apB.applySky(im8, vb, False, cfKey2);
 		
 		PagedImage<Complex> im9(ts2, coordsys3, "pb_squintPMPM");
-		im9.set(Complex(1.0,1.0));
+		im9.set(Complex(1.0,0.0));
 		apB.applySky(im9, vb, True, cfKey3);
 		
 		PagedImage<Complex> im10(ts2, coordsys3, "pb_nosquintPMPM");
-		im10.set(Complex(1.0,1.0));
+		im10.set(Complex(1.0,0.0));
 		apB.applySky(im10, vb, False, cfKey3);
 		
 		PagedImage<Complex> im11(ts2, coordsys3, "pb_squintDVDA");
-		im11.set(Complex(1.0,1.0));
+		im11.set(Complex(1.0,0.0));
 		apB.applySky(im11, vb, True, cfKey4);
 		
 		PagedImage<Complex> im12(ts2, coordsys3, "pb_squintDADA");
-		im12.set(Complex(1.0,1.0));
+		im12.set(Complex(1.0,0.0));
 		apB.applySky(im12, vb, True, cfKey5);
 		
 		PagedImage<Complex> im13(ts2, coordsys3Big, "pb_squintDVDABig");
-		im13.set(Complex(1.0,1.0));
+		im13.set(Complex(1.0,0.0));
 		apB.applySky(im13, vb, True, cfKey4);
 		
 		PagedImage<Complex> im14(ts2, coordsys3Small, "pb_squintDVDASmall");
-		im14.set(Complex(1.0,1.0));
+		im14.set(Complex(1.0,0.0));
 		apB.applySky(im14, vb, True, cfKey4);
 
-		count2++;
+ 		count2++;
 		
 	      }
 	      else if(count2>200 && vb.fieldId()!=1){ // pick later occurance (to vary PA) but avoid Mars because it has invalid coords 
@@ -437,19 +451,19 @@ int main()
 		Int cfKey8 = ALMAAperture::cFKeyFromAntennaTypes(ALMAAperture::antTypeFromName("CM"),ALMAAperture::antTypeFromName("CM"));
 		
 		PagedImage<Complex> im15(ts2, coordsys3, "pb2_squintDVDA");
-		im15.set(Complex(1.0,1.0));
+		im15.set(Complex(1.0,0.0));
 		apB.applySky(im15, vb, True, cfKey4);
 		
 		PagedImage<Complex> im16(ts2, coordsys3, "pb2_squintDADA");
-		im16.set(Complex(1.0,1.0));
+		im16.set(Complex(1.0,0.0));
 		apB.applySky(im16, vb, True, cfKey5);
 		
 		PagedImage<Complex> im17(ts2, coordsys3Big, "pb2_squintDVDABig");
-		im17.set(Complex(1.0,1.0));
+		im17.set(Complex(1.0,0.0));
 		apB.applySky(im17, vb, True, cfKey4);
 		
 		PagedImage<Complex> im18(ts2, coordsys3Small, "pb2_squintDVDASmall");
-		im18.set(Complex(1.0,1.0));
+		im18.set(Complex(1.0,0.0));
 		apB.applySky(im18, vb, True, cfKey4);
 
 		PagedImage<Float> im18b(ts2, coordsys3Small, "pb2_squintDVDASmall_float");
@@ -461,51 +475,51 @@ int main()
 		cout << "Now using ray tracing ..." << endl;
 
 		PagedImage<Complex> im19(ts2, coordsys3, "pb2_squintDVDVray");
-		im19.set(Complex(1.0,1.0));
+		im19.set(Complex(1.0,0.0));
 		apB.applySky(im19, vb, True, cfKey7, True);
 		
-		PagedImage<Complex> im21(ts2, coordsys3Big, "pb2_squintDVDVBigray");
-		im21.set(Complex(1.0,1.0));
+		PagedImage<Complex> im21(ts3, coordsys3BigHiRes, "pb2_squintDVDVBigrayHiRes");
+		im21.set(Complex(1.0,0.0));
 		apB.applySky(im21, vb, True, cfKey7, True);
 		
 		PagedImage<Complex> im22(ts2, coordsys3Small, "pb2_squintDVDVSmallray");
-		im22.set(Complex(1.0,1.0));
+		im22.set(Complex(1.0,0.0));
 		apB.applySky(im22, vb, True, cfKey7, True);
 
 		PagedImage<Complex> im23(ts2, coordsys3, "pb2_squintDADAray");
-		im23.set(Complex(1.0,1.0));
+		im23.set(Complex(1.0,0.0));
 		apB.applySky(im23, vb, True, cfKey5, True);
 		
 		PagedImage<Complex> im24(ts2, coordsys3Big, "pb2_squintDADABigray");
-		im24.set(Complex(1.0,1.0));
+		im24.set(Complex(1.0,0.0));
 		apB.applySky(im24, vb, True, cfKey5, True);
 		
 		PagedImage<Complex> im25(ts2, coordsys3Small, "pb2_squintDADASmallray");
-		im25.set(Complex(1.0,1.0));
+		im25.set(Complex(1.0,0.0));
 		apB.applySky(im25, vb, True, cfKey5, True);
 
 		PagedImage<Complex> im26(ts2, coordsys3, "pb2_squintPMPMray");
-		im26.set(Complex(1.0,1.0));
+		im26.set(Complex(1.0,0.0));
 		apB.applySky(im26, vb, True, cfKey6, True);
 		
 		PagedImage<Complex> im27(ts2, coordsys3Big, "pb2_squintPMPMBigray");
-		im27.set(Complex(1.0,1.0));
+		im27.set(Complex(1.0,0.0));
 		apB.applySky(im27, vb, True, cfKey6, True);
 		
 		PagedImage<Complex> im28(ts2, coordsys3Small, "pb2_squintPMPMSmallray");
-		im28.set(Complex(1.0,1.0));
+		im28.set(Complex(1.0,0.0));
 		apB.applySky(im28, vb, True, cfKey6, True);
 
 		PagedImage<Complex> im29(ts2, coordsys3, "pb2_squintCMCMray");
-		im29.set(Complex(1.0,1.0));
+		im29.set(Complex(1.0,0.0));
 		apB.applySky(im29, vb, True, cfKey8, True);
 		
 		PagedImage<Complex> im30(ts2, coordsys3Big, "pb2_squintCMCMBigray");
-		im30.set(Complex(1.0,1.0));
+		im30.set(Complex(1.0,0.0));
 		apB.applySky(im30, vb, True, cfKey8, True);
 		
 		PagedImage<Complex> im31(ts2, coordsys3Small, "pb2_squintCMCMSmallray");
-		im31.set(Complex(1.0,1.0));
+		im31.set(Complex(1.0,0.0));
 		apB.applySky(im31, vb, True, cfKey8, True);
 
 		count2++;		
