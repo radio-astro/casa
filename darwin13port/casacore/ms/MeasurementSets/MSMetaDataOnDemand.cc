@@ -595,7 +595,7 @@ void MSMetaDataOnDemand::_getScansAndIntentsMaps(
 	}
 }
 
-uInt MSMetaDataOnDemand::_sizeof(std::map<Int, std::set<String> >& m) {
+uInt MSMetaDataOnDemand::_sizeof(const std::map<Int, std::set<String> >& m) {
 	uInt size = sizeof(Int) * m.size();
 	std::map<Int, std::set<String> >::const_iterator end = m.end();
 	for (
@@ -613,7 +613,7 @@ uInt MSMetaDataOnDemand::_sizeof(std::map<Int, std::set<String> >& m) {
 	return size;
 }
 
-uInt MSMetaDataOnDemand::_sizeof(vector<std::set<String> >& m) {
+uInt MSMetaDataOnDemand::_sizeof(const vector<std::set<String> >& m) {
 	uInt size = sizeof(Int) * m.size();
 	vector<std::set<String> >::const_iterator end = m.end();
 	for (
@@ -631,7 +631,20 @@ uInt MSMetaDataOnDemand::_sizeof(vector<std::set<String> >& m) {
 	return size;
 }
 
-uInt MSMetaDataOnDemand::_sizeof(std::map<String, std::set<Int> >& m) {
+
+uInt MSMetaDataOnDemand::_sizeof(const vector<String>& m) {
+	vector<String>::const_iterator end = m.end();
+	uInt size = 0;
+	for (
+		vector<String>::const_iterator iter=m.begin();
+		iter!=end; iter++
+	) {
+		size += iter->length();
+	}
+	return size;
+}
+
+uInt MSMetaDataOnDemand::_sizeof(const std::map<String, std::set<Int> >& m) {
 	uInt setssize = 0;
 	uInt size = 0;
 	std::map<String, std::set<Int> >::const_iterator end = m.end();
@@ -647,7 +660,7 @@ uInt MSMetaDataOnDemand::_sizeof(std::map<String, std::set<Int> >& m) {
 }
 
 
-uInt MSMetaDataOnDemand::_sizeof(std::map<String, std::set<uInt> >& m) {
+uInt MSMetaDataOnDemand::_sizeof(const std::map<String, std::set<uInt> >& m) {
 	uInt setssize = 0;
 	uInt size = 0;
 	std::map<String, std::set<uInt> >::const_iterator end = m.end();
@@ -662,7 +675,7 @@ uInt MSMetaDataOnDemand::_sizeof(std::map<String, std::set<uInt> >& m) {
 	return size;
 }
 
-uInt MSMetaDataOnDemand::_sizeof(std::map<Double, std::set<Int> >& m) {
+uInt MSMetaDataOnDemand::_sizeof(const std::map<Double, std::set<Int> >& m) {
 	uInt setssize = 0;
 	uInt size = sizeof(Double) * m.size();
 	std::map<Double, std::set<Int> >::const_iterator end = m.end();
@@ -676,7 +689,7 @@ uInt MSMetaDataOnDemand::_sizeof(std::map<Double, std::set<Int> >& m) {
 	return size;
 }
 
-uInt MSMetaDataOnDemand::_sizeof(std::map<Int, std::set<Double> >& m) {
+uInt MSMetaDataOnDemand::_sizeof(const std::map<Int, std::set<Double> >& m) {
 	uInt setssize = 0;
 	uInt size = sizeof(Int) * m.size();
 	std::map<Int, std::set<Double> >::const_iterator end = m.end();
@@ -823,7 +836,7 @@ void MSMetaDataOnDemand::_getFieldsAndSpwMaps(
 	}
 }
 
-std::set<uInt> MSMetaDataOnDemand::getSpwsForField(const Int fieldID) {
+std::set<uInt> MSMetaDataOnDemand::getSpwsForField(Int fieldID) {
 	if (! _hasFieldID(fieldID)) {
 		return std::set<uInt>();
 	}
@@ -836,15 +849,18 @@ std::set<uInt> MSMetaDataOnDemand::getSpwsForField(const Int fieldID) {
 std::set<uInt> MSMetaDataOnDemand::getSpwsForField(const String& fieldName) {
 	uInt myNFields = nFields();
 	vector<String> fieldNames = _getFieldNames();
-
+	std::set<uInt> spws;
 	for (uInt i=0; i<myNFields; i++) {
 		if (fieldNames[i] == fieldName) {
-			return getSpwsForField(i);
+			std::set<uInt> myspws = getSpwsForField(i);
+			spws.insert(myspws.begin(), myspws.end());
 		}
 	}
-	throw AipsError(
-		_ORIGIN + "field (" + fieldName + " does not exist"
+	ThrowIf(
+		spws.empty(),
+		_ORIGIN + "field (" + fieldName + " does not exist."
 	);
+	return spws;
 }
 
 vector<String> MSMetaDataOnDemand::_getFieldNames() {
@@ -920,7 +936,7 @@ void MSMetaDataOnDemand::_getScansAndSpwMaps(
 	}
 }
 
-uInt MSMetaDataOnDemand::_sizeof(std::map<Int, std::set<uInt> >& map) {
+uInt MSMetaDataOnDemand::_sizeof(const std::map<Int, std::set<uInt> >& map) {
 	uInt size = 0;
 	std::map<Int, std::set<uInt> >::const_iterator end = map.end();
 	for (
@@ -934,7 +950,7 @@ uInt MSMetaDataOnDemand::_sizeof(std::map<Int, std::set<uInt> >& map) {
 	return size;
 }
 
-uInt MSMetaDataOnDemand::_sizeof(std::map<Int, std::set<Int> >& map) {
+uInt MSMetaDataOnDemand::_sizeof(const std::map<Int, std::set<Int> >& map) {
 	uInt size = 0;
 	std::map<Int, std::set<Int> >::const_iterator end = map.end();
 	for (
@@ -948,7 +964,7 @@ uInt MSMetaDataOnDemand::_sizeof(std::map<Int, std::set<Int> >& map) {
 	return size;
 }
 
-uInt MSMetaDataOnDemand::_sizeof(vector<std::set<Int> >& v) {
+uInt MSMetaDataOnDemand::_sizeof(const vector<std::set<Int> >& v) {
 	uInt size = 0;
 	vector<std::set<Int> >::const_iterator end = v.end();
 	for (
@@ -1079,6 +1095,38 @@ vector<uInt> MSMetaDataOnDemand::getAntennaIDs(
 		ids.push_back(pair->second);
 	}
 	return ids;
+}
+
+vector<String> MSMetaDataOnDemand::getAntennaStations(const vector<uInt>& antennaIDs) {
+	vector<String> allStations = _getStationNames();
+	if (antennaIDs.empty()) {
+		return allStations;
+	}
+	_hasAntennaID(max(Vector<uInt>(antennaIDs)));
+	vector<String> myStationNames;
+	vector<uInt>::const_iterator end = antennaIDs.end();
+	for (
+		vector<uInt>::const_iterator iter=antennaIDs.begin();
+		iter!=end; iter++
+	) {
+		myStationNames.push_back(allStations[*iter]);
+	}
+	return myStationNames;
+}
+
+vector<String> MSMetaDataOnDemand::getAntennaStations(const vector<String>& antennaNames) {
+	return getAntennaStations(getAntennaIDs(antennaNames));
+}
+
+vector<String> MSMetaDataOnDemand::_getStationNames() {
+	if (! _stationNames.empty()) {
+		return _stationNames;
+	}
+	vector<String> stationNames = MSMetaData::_getAntennaStationNames(*_ms);
+	if (_cacheUpdated(_sizeof(stationNames))) {
+		_stationNames = stationNames;
+	}
+	return stationNames;
 }
 
 std::set<uInt> MSMetaDataOnDemand::getTDMSpw() {
@@ -2217,6 +2265,18 @@ Bool MSMetaDataOnDemand::_hasStateID(const Int stateID) {
 	return _uniqueStateIDs.find(stateID) != _uniqueStateIDs.end();
 
 }
+
+void MSMetaDataOnDemand::_hasAntennaID(Int antennaID) {
+	ThrowIf(
+		antennaID >= (Int)nAntennas(),
+		_ORIGIN + "Requested antenna ID "
+		+ String::toString(antennaID)
+		+ " is greater than or equal to the number of records ("
+		+ String::toString(nAntennas())
+		+ ") in this MS's ANTENNA table"
+	);
+}
+
 
 }
 

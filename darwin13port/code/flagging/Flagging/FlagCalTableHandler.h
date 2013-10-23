@@ -190,7 +190,7 @@ public:
 
     virtual void setFillable (Bool isFillable) {}
     virtual const Vector<Int> & dataDescriptionIds () const {Vector<Int> dummy; return dummy;}
-    virtual Vector<Int> getCorrelationNumbers () const {Vector<Int> dummy; return dummy;}
+    virtual Vector<Int> getCorrelationTypes () const {Vector<Int> dummy; return dummy;}
     virtual void validateShapes () const {}
 
     virtual Float getWeightScaled (Int row) const { return 0;}

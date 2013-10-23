@@ -66,6 +66,9 @@ def create_input1(str_text, filename):
 # Path for data
 datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/flagdata/"
 
+# Local copy of the agentflagger tool
+aflocal = casac.agentflagger()
+
 # Base class which defines setUp functions
 # for importing different data sets
 class test_base(unittest.TestCase):
@@ -79,7 +82,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()        
         default(flagcmd)
 
     def setUp_multi(self):
@@ -92,7 +95,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()        
         default(flagcmd)
 
     def setUp_alma_ms(self):
@@ -106,7 +109,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()        
         default(flagcmd)
         
     def setUp_evla(self):
@@ -119,7 +122,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()        
         default(flagcmd)
         
     def setUp_shadowdata(self):
@@ -132,7 +135,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()        
         default(flagcmd)
         
     def setUp_data4rflag(self):
@@ -145,7 +148,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()        
         default(flagcmd)
 
     def setUp_bpass_case(self):
@@ -160,8 +163,17 @@ class test_base(unittest.TestCase):
                         "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()        
         default(flagcmd)
+
+    def unflag_ms(self):
+        aflocal.open(self.vis)
+        aflocal.selectdata()
+        agentUnflag={'apply':True,'mode':'unflag'}
+        aflocal.parseagentparameters(agentUnflag)
+        aflocal.init()
+        aflocal.run(writeflags=True)
+        aflocal.done()
         
 class test_manual(test_base):
     '''Test manual selections'''
@@ -960,8 +972,7 @@ class test_cmdbandpass(test_base):
                 
     def test_flagbackup(self):
         '''Flagcmd: backup cal table flags'''
-        # Create a local copy of the tool
-        aflocal = casac.agentflagger()
+
         flagmanager(vis=self.vis, mode='list')
         aflocal.open(self.vis)
         self.assertEqual(len(aflocal.getflagversionlist()), 2)
@@ -1066,7 +1077,6 @@ class cleanup(test_base):
         os.system('rm -rf shadowtest*.ms*')
         os.system('rm -rf tosr0001_scan3*.ms*')
         os.system('rm -rf cal.fewscans.bpass*')
-
 
     def test1(self):
         '''flagcmd: Cleanup'''

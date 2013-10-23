@@ -525,6 +525,8 @@ def flagdata(vis,
             # Number of commands in dictionary
             vrows = flagcmd.keys()
             casalog.post('There are %s cmds in dictionary of mode %s'%(vrows.__len__(),mode),'DEBUG1')
+            
+        modified_flagcmd = flagcmd
 
         # Setup global parameters in the agent's dictionary
         apply = True        
@@ -562,7 +564,7 @@ def flagdata(vis,
 
             # CAS-3959 Handle channel selection at the FlagAgent level
             agent_pars['spw'] = spw
-            casalog.post('Parsing the parameters for the %s mode'%mode)
+            casalog.post('Parsing the parameters for the %s mode'%mode, 'DEBUG1')
             if (not aflocal.parseagentparameters(agent_pars)):
                 casalog.post('Failed to parse parameters for mode %s' %mode, 'ERROR')
                 
@@ -603,7 +605,9 @@ def flagdata(vis,
             aflocal.selectdata(unionpars);
 
             # Parse the parameters for each agent in the list
-            fh.parseAgents(aflocal, flagcmd, [], apply, writeflags, display)
+            # Get the returned modified dictionary of flag commands which
+            # is needed by the rflag agent, when present in a list
+            modified_flagcmd = fh.parseAgents(aflocal, flagcmd, [], apply, writeflags, display)
 
         # Do display if requested
         if display != '':
@@ -652,7 +656,7 @@ def flagdata(vis,
         ## Pull out RFlag outputs. There will be outputs only if writeflags=False
         if (mode == 'rflag' or mode== 'list') and (writeflags==False):  
             pprint.pprint(summary_stats_list)
-            fh.parseRFlagOutputFromSummary(mode,summary_stats_list, flagcmd)
+            fh.parseRFlagOutputFromSummary(mode,summary_stats_list, modified_flagcmd)
 
         # Save the current parameters/list to FLAG_CMD or to output
         if savepars:  

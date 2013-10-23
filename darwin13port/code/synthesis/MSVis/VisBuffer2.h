@@ -262,7 +262,7 @@ public:
     // The frequency index is the zero-based index along the frequency axis of
     // a visibility cube.
 
-    virtual Vector<Int> getCorrelationNumbers () const = 0;
+    virtual Vector<Int> getCorrelationTypes () const = 0;
     virtual Double getFrequency (Int rowInBuffer, Int frequencyIndex,
                                  Int frame = FrameNotSpecified) const = 0;
     virtual const Vector<Double> & getFrequencies (Int rowInBuffer,
@@ -490,7 +490,9 @@ public:
     virtual Int nChannels () const = 0;
 
     // Returns the number of correlations along the visCube
-    // correlation axis.
+    // correlation axis.  This comes from the "channel" selection and thus can
+    // be anything positive integer (e.g., user could select the same
+    // correlation more than once).
 
     virtual Int nCorrelations () const = 0;
 

@@ -3192,6 +3192,7 @@ ms::msseltoindex(const std::string& vis, const ::casac::variant& spw,
 		 const ::casac::variant& time, 
 		 const ::casac::variant& scan, const ::casac::variant& uvrange,
                  const ::casac::variant& observation,
+		 const ::casac::variant& polarization,
 		 const std::string& taql){
   casac::record* rstat(0);
   try {
@@ -3203,6 +3204,7 @@ ms::msseltoindex(const std::string& vis, const ::casac::variant& spw,
 					toCasaString(time),toCasaString(scan),
 					toCasaString(uvrange),
                                         toCasaString(observation),
+					toCasaString(polarization),
 					String(taql));
     rstat = fromRecord(selected); 
 					
@@ -3850,6 +3852,13 @@ ms::ngetdata(const std::vector<std::string>& items, const bool ifraxis, const in
 		rec.define(item,weight);
 		break;
 	      }
+	    // case MSS::UVW:
+	    //   {
+	    // 	Vector<RigidVector<double, 3> > uvw;
+	    // 	uvw = itsVI->uvw(uvw);
+	    // 	rec.define(item,uvw);
+	    // 	break;
+	    //   }
 	      
 	    default:
 	      {

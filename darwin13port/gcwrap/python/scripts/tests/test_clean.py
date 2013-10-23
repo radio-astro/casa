@@ -872,7 +872,7 @@ class clean_multiterm_multifield_test(unittest.TestCase):
         stat3 = imstat('try_uvsub_3.image.tt0')
         
         print "Peak positions : ", stat1['maxpos'] , stat2['maxpos'] , stat3 ['maxpos']
-        
+
         rstate = rstate & all(stat1['maxpos']==numpy.array([50,50,0,0]))
         rstate = rstate & all(stat1['maxpos']==numpy.array([50,50,0,0]))
         rstate = rstate & all(stat1['maxpos']==numpy.array([50,50,0,0]))
@@ -883,10 +883,10 @@ class clean_multiterm_multifield_test(unittest.TestCase):
         
         print "Corner RMS : ", statcorner1['rms'] , statcorner2['rms'] , statcorner3 ['rms']
         
-        rstate = rstate & (statcorner1['rms'] > 0.049 and statcorner1['rms'] < 0.05)
-        rstate = rstate & (statcorner2['rms'] > 0.0021 and statcorner2['rms'] < 0.0022)
-        rstate = rstate & (statcorner3['rms'] > 0.0021 and statcorner3['rms'] < 0.0022)
-        
+        rstate = rstate & (float(statcorner1['rms']) > 0.049 and float(statcorner1['rms']) < 0.05)
+        rstate = rstate & (float(statcorner2['rms']) > 0.0020 and float(statcorner2['rms']) < 0.0022)
+        rstate = rstate & (float(statcorner3['rms']) > 0.0020 and float(statcorner3['rms']) < 0.0022)
+
         self.assertTrue( rstate )
         
 #########################################################

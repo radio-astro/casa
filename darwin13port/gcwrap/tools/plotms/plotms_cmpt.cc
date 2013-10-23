@@ -607,6 +607,13 @@ void plotms::hide()   {
 
 void plotms::setShowGui( bool showGui ){
 	this->showGui = showGui;
+	if ( showGui ){
+		//This is needed in the case where the is running plotms
+		//from casapy.  If the user closes plotms, and then calls
+		//the constructor again, plotms will not be shown without
+		//this line.
+		callAsync(PlotMSDBusApp::METHOD_SHOW);
+	}
 	asyncCall = showGui;
 }
 
