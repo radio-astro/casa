@@ -150,7 +150,7 @@ class msmd_test(unittest.TestCase):
             self.assertTrue((got == expec).all())
         self.assertTrue(
             (
-             self.md.fieldsforintent('.*WVR.*')
+             self.md.fieldsforintent('*WVR*')
              == numpy.array([0, 1, 2, 3, 4, 5])
             ).all()
         )
@@ -510,11 +510,11 @@ class msmd_test(unittest.TestCase):
                 ])
             else:
                 expec = numpy.array([12, 16, 20, 23, 27, 30])
-            got = self.md.scansforintent(i, regex=False)
+            got = self.md.scansforintent(i)
             self.assertTrue((got == expec).all())
         self.assertTrue(
             (
-             self.md.scansforintent('.*WVR.*', regex=True)
+             self.md.scansforintent('*WVR*')
              == numpy.array([
                     1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
                     11, 13, 14, 15, 17, 18, 19, 21,
@@ -690,7 +690,7 @@ class msmd_test(unittest.TestCase):
                 )
             self.assertTrue((got == expec).all())
             
-            got = self.md.spwsforintent('.*WVR.*', regex=True)
+            got = self.md.spwsforintent('*WVR*')
             expec = numpy.array(
                 [
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
