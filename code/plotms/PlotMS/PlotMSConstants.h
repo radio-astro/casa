@@ -134,7 +134,7 @@ public:
 	      "Azimuth","Elevation","HourAngle","ParAngle",
 	      "Antenna","Ant-Azimuth","Ant-Elevation","Ant-ParAngle",
 	      "GainAmp","GainPhase","GainReal","GainImag",
-	      "Delay","SwPower","Tsys","Opac","Radial Velocity", "Distance(rho)",
+	      "Delay","SwPower","Tsys","Opac","Radial Velocity [km/s]", "Distance (rho) [km]",
 	      "None")
 
     // </group>
