@@ -144,6 +144,13 @@ public:
 	// get the antenna ID for the antenna with the specified name.
 	vector<uInt> getAntennaIDs(	const vector<String>& antennaNames);
 
+	// get the antenna stations for the specified antenna IDs
+	vector<String> getAntennaStations(const vector<uInt>& antennaIDs);
+
+	// get the antenna stations for the specified antenna names
+	vector<String> getAntennaStations(const vector<String>& antennaNames);
+
+
 	// ALMA-specific. get set of spectral windows used for TDM. These are windows that have
 	// 64, 128, or 256 channels
 	std::set<uInt> getTDMSpw();
@@ -314,7 +321,7 @@ private:
 	vector<std::set<Int> > _spwToFieldIDsMap, _spwToScansMap;
 	std::map<Int, std::set<Int> > _scanToStatesMap, _scanToFieldsMap, _fieldToScansMap,
 		_fieldToStatesMap, _stateToFieldsMap;
-	vector<String> _fieldNames, _antennaNames, _observatoryNames;
+	vector<String> _fieldNames, _antennaNames, _observatoryNames, _stationNames;
 	std::map<String, uInt> _antennaNameToIDMap;
 	std::tr1::shared_ptr<Vector<Double> > _times;
 	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > _scanToTimesMap;
@@ -362,9 +369,11 @@ private:
 
 	Bool _hasIntent(const String& intent);
 
-	Bool _hasFieldID(const Int fieldID);
+	Bool _hasFieldID(Int fieldID);
 
-	Bool _hasStateID(const Int stateID);
+	Bool _hasStateID(Int stateID);
+
+	void _hasAntennaID(Int antennaID);
 
 	vector<std::set<String> > _getSpwToIntentsMap();
 
@@ -406,13 +415,13 @@ private:
 		std::set<uInt>& sqldSpw
 	);
 
-	static uInt _sizeof(std::map<Int, std::set<uInt> >& map);
+	static uInt _sizeof(const std::map<Int, std::set<uInt> >& map);
 
-	static uInt _sizeof(std::map<Int, std::set<Int> >& map);
+	static uInt _sizeof(const std::map<Int, std::set<Int> >& map);
 
-	static uInt _sizeof(vector<std::set<Int> >& v);
+	static uInt _sizeof(const vector<std::set<Int> >& v);
 
-	static uInt _sizeof(std::map<String, std::set<uInt> >& map);
+	static uInt _sizeof(const std::map<String, std::set<uInt> >& map);
 
 
 	void _getFieldsAndSpwMaps(
@@ -430,15 +439,18 @@ private:
 		std::map<String, std::set<Int> >& intentToFieldsMap
 	);
 
-	static uInt _sizeof(std::map<Int, std::set<String> >& m);
+	static uInt _sizeof(const std::map<Int, std::set<String> >& m);
 
-	static uInt _sizeof(std::map<String, std::set<Int> >& m);
+	static uInt _sizeof(const std::map<String, std::set<Int> >& m);
 
-	static uInt _sizeof(vector<std::set<String> >& m);
+	static uInt _sizeof(const vector<std::set<String> >& m);
 
-	static uInt _sizeof(std::map<Int, std::set<Double> >& m);
+	static uInt _sizeof(const vector<String>& m);
 
-	static uInt _sizeof(std::map<Double, std::set<Int> >& m);
+
+	static uInt _sizeof(const std::map<Int, std::set<Double> >& m);
+
+	static uInt _sizeof(const std::map<Double, std::set<Int> >& m);
 
 	void _getScansAndIntentsMaps(
 		std::map<Int, std::set<String> >& scanToIntentsMap,
@@ -470,6 +482,8 @@ private:
 	std::map<Int, uInt> _getDataDescIDToPolIDMap();
 
 	vector<String> _getFieldNames();
+
+	vector<String> _getStationNames();
 
 	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > _getScanToTimesMap();
 

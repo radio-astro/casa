@@ -165,6 +165,12 @@ public:
 	// get the antenna ID for the antenna with the specified name.
 	virtual vector<uInt> getAntennaIDs(const vector<String>& antennaName) = 0;
 
+	// get the antenna stations for the specified antenna IDs
+	virtual vector<String> getAntennaStations(const vector<uInt>& antennaIDs) = 0;
+
+	// get the antenna stations for the specified antenna names
+	virtual vector<String> getAntennaStations(const vector<String>& antennaNames) = 0;
+
 	// ALMA-specific. Get set of spectral windows used for TDM. These are windows that have
 	// 64, 128, or 256 channels
 	virtual std::set<uInt> getTDMSpw() = 0;
@@ -420,6 +426,10 @@ protected:
 	static vector<Quantum<Vector<Double> > > _getAntennaOffsets(
 		const vector<MPosition>& antennaPositions,
 		const MPosition& observatoryPosition
+	);
+
+	static vector<String> _getAntennaStationNames(
+		const MeasurementSet& ms
 	);
 
 	static std::map<Int, uInt> _toUIntMap(const Vector<Int>& v);
