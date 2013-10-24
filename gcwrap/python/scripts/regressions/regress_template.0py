@@ -30,7 +30,7 @@ pipeline.workdir ='./g192'
 pipeline.fill['tasks' = ['importvla']
 pipeline.fill['verify'] = verify.fill
 
-pipeline.flag['tasks' = ['tflagdata']
+pipeline.flag['tasks' = ['flagdata']
 pipeline.flag['verify'] = verify.flag
 
 pipeline.calibrate['tasks' = ['setjy', 'gaincal', 'bandpass', 'fluxscale', 'applycal']

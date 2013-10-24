@@ -48,7 +48,7 @@ class regressverify :
 	def flag(self) :
 		rstat = True
 		print "Starting flagging verification"
-		flagsummary = tflagdata('ngc5921.ms',mode='summary')
+		flagsummary = flagdata('ngc5921.ms',mode='summary')
 		if(flagsummary['flagged'] != 203994) :
 		   rstat = false
 		   print 'flagged failed got ', flagsummary['flagged'], ' expected 203994'
@@ -138,9 +138,9 @@ pipeline.fill['listobs']['args'] = {'vis':'ngc5921.ms',
 
 pipeline.fill['verify'] = verify.fill
 
-pipeline.flag['tasks'] = ['tflagdata']
-pipeline.flag['tflagdata'] = {}
-pipeline.flag['tflagdata']['args'] = {'vis':'ngc5921.ms',
+pipeline.flag['tasks'] = ['flagdata']
+pipeline.flag['flagdata'] = {}
+pipeline.flag['flagdata']['args'] = {'vis':'ngc5921.ms',
 									'mode':'manual',
 									'autocorr':True}
 pipeline.flag['verify'] = verify.flag

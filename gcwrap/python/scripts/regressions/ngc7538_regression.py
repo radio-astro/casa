@@ -25,8 +25,8 @@ print '--Observation summary--'
 listobs(vis='ngc7538.ms')
 #listtime = time.time()
 print '--Flag auto-correlations--'
-default('tflagdata')
-tflagdata(vis='ngc7538.ms', mode='manual', autocorr=True)
+default('flagdata')
+flagdata(vis='ngc7538.ms', mode='manual', autocorr=True)
 flagtime = time.time()
 print '--Setjy--'
 default('setjy')

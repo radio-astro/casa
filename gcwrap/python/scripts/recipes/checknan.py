@@ -39,7 +39,7 @@ def CheckColsForNan(msname='',fix=False,colnames=[],timeinterval=1000):
                                    through the MS (remember, chunks of this size are read 
                                    into python).
     Alternate (recommended) way to flag NaNs from data columns :
-        tflagdata(vis=ms, mode='clip')    
+        flagdata(vis=ms, mode='clip')    
     """
     ms = casac.ms()
 

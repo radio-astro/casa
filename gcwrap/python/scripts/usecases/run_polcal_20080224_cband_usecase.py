@@ -425,7 +425,7 @@ if ( myquackinterval > 0.0 ):
     # First quack the data
     #
     print '--Flagdata--'
-    default('tflagdata')
+    default('flagdata')
     
     print "Quacking scan beginnings using interval "+str(myquackinterval)
     
@@ -438,7 +438,7 @@ if ( myquackinterval > 0.0 ):
     quackinterval = myquackinterval
     
     saveinputs('flagdata',prefix+'.flagdata.quack.saved')
-    tflagdata()
+    flagdata()
     
     #
     # Use Flagmanager to save a copy of the flags so far
@@ -460,7 +460,7 @@ if ( myquackinterval > 0.0 ):
 #
 if (flagants != '' and not flagants.isspace() ):
     print '--Flagdata--'
-    default('tflagdata')
+    default('flagdata')
     
     print "Flag all data to AN "+flagants
     
@@ -472,7 +472,7 @@ if (flagants != '' and not flagants.isspace() ):
     antenna = flagants
     
     saveinputs('flagdata',prefix+'.flagdata.ants.saved')
-    tflagdata()
+    flagdata()
     
     #
     # Use Flagmanager to save a copy of the flags so far
