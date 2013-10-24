@@ -4945,8 +4945,8 @@ int main(int argc, char *argv[]) {
 	    eulmat(PSI, THETA, PHI, matrix3x3);
 	    matvec(matrix3x3, cartesian1, cartesian2);
 	    spher(cartesian2, spherical2);
-	    direction_[2*iMSPointingRow]  = spherical2[0];
-	    direction_[2*iMSPointingRow+1]= spherical2[1];
+	    direction_[2*iMSPointingRow]  = spherical2[0] + encoder.at(j).at(0).get() - pointingDirection.at(j).at(0).get() ;
+	    direction_[2*iMSPointingRow+1]= spherical2[1] + encoder.at(j).at(1).get() - pointingDirection.at(j).at(1).get() ;;
 
 	    // TARGET
 	    target_[2*iMSPointingRow]     = target.at(j).at(0).get();
