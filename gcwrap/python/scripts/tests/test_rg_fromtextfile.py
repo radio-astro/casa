@@ -249,7 +249,22 @@ class rg_fromtextfile_test(unittest.TestCase):
         zz.done()
         self.ia.done()
         
-        
+    def test_rotbox(self):
+        """Test rotbox when specified in pixels (CAS-5723)"""
+        self.ia.fromshape("",[200,200])
+        reg = rg.fromtext(
+            "rotbox [ [ 60pix , 50pix ] , [ 30pix , 30pix ] , 30deg ]",
+            csys=self.ia.coordsys().torecord(),shape=self.ia.shape()
+        )
+        self.assertTrue(self.ia.statistics(region=reg)['npts'] == 901)
+        csys = self.ia.coordsys()
+        csys.setreferencevalue([800,70*60])
+        self.ia.setcoordsys(csys.torecord())
+        reg = rg.fromtext(
+            "rotbox [ [ 60pix , 50pix ] , [ 30pix , 30pix ] , 30deg ]",
+            csys=self.ia.coordsys().torecord(),shape=self.ia.shape()
+        )
+        self.assertTrue(self.ia.statistics(region=reg)['npts'] == 901)
 
 def suite():
     return [rg_fromtextfile_test]
