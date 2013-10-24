@@ -224,26 +224,8 @@ def readFile(inputfile):
                 continue  
             uppercmd = cmd.replace('true','True')
             cmd = uppercmd.replace('false','False')      
-            
-            # Fix the missing quotes around some strings coming from importevla
-#             if cmd.__contains__('mode') and cmd.__contains__('shadow'):
-#                 newcmd = cmd.replace("mode=shadow","mode='shadow'")
-#                 cmd = newcmd
-#             if cmd.__contains__('mode') and cmd.__contains__('clip'):
-#                 newcmd = cmd.replace("mode=clip","mode='clip'")
-#                 cmd = newcmd
-#             if cmd.__contains__('correlation=') and cmd.__contains__('ABS_LL'):
-#                 newcmd = cmd.replace("correlation=ABS_LL","correlation='ABS_LL'")
-#                 cmd = newcmd
-#             if cmd.__contains__('correlation=') and cmd.__contains__('ABS_RR'):
-#                 newcmd = cmd.replace("correlation=ABS_RR","correlation='ABS_RR'")
-#                 cmd = newcmd
-#             if cmd.__contains__('correlation=') and cmd.__contains__('ABS_ALL'):
-#                 newcmd = cmd.replace("correlation=ABS_ALL","correlation='ABS_ALL'")
-#                 cmd = newcmd
-                
+                            
             cmdlist.append(cmd)
-
 
     except:
         casalog.post('Error reading lines from file '+ff.name, 'SEVERE')
@@ -302,10 +284,14 @@ def parseDictionary(cmdlist, reason='any', shadow=True):
             continue
         if cmd == '':
             continue
-        # TO Be allowed later
-        if cmd.__contains__('summary'):
-            casalog.post('Mode summary is not allowed in list operation', 'WARN')
-            continue
+
+        uppercmd = cmd.replace('true','True')
+        cmd = uppercmd.replace('false','False')      
+
+        # CAS-5368, allow summary in list mode
+#        if cmd.__contains__('summary'):
+#            casalog.post('Mode summary is not allowed in list operation', 'WARN')
+#            continue
 
         mode = ''
         antenna = ''
@@ -611,7 +597,8 @@ def parseAgents(aflocal, flagdict, myrows, apply, writeflags, display=''):
         # Hold the name of the agent and the cmd row number
         mode = cmd['mode']
         agent_name = mode.capitalize()+'_'+str(row)
-        cmd['name'] = agent_name
+            
+        cmd['agentname'] = agent_name
         
         # Remove the data selection parameters if there is only one agent for performance reasons.
         # Explanation: if only one agent exists and the data selection parameters are parsed to it, 
@@ -634,7 +621,8 @@ def parseAgents(aflocal, flagdict, myrows, apply, writeflags, display=''):
             casalog.post('Failed to parse parameters of mode %s in row %s' %(mode,row), 'WARN')
             continue
                                     
-    return True
+#    return True
+    return myflagcmd
 
 # TO BE VERIFIED. May not be needed
 def evalParams(params):
@@ -1111,7 +1099,6 @@ def readFlagCmdTable(msfile, rows=[], applied=True, reason='any'):
                 rowl.append(i)
         rowlist = rowl
 
-    print rowlist
     Ncmds = 0
     myflagcmd = {}
     
