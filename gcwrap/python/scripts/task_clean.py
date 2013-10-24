@@ -211,7 +211,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         scan=''
         observation = ''
         intent=''
-
+       
     try:
         # Create a new imager tool
         imCln=imtool();
@@ -262,7 +262,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         ###### should be removed when the ticket is fixed
         ###rough estimates for pol will overestimate it for cases like RRLL
         localnpol=len(str(stokes))
-        maximsize=max(imsize) if(type(imsize)==list) else imsize
+        maximsize=max(imsize) if(type(imsize)==list or type(imsize)==tuple) else imsize
         imvol=localnchan*maximsize*maximsize*localnpol
         if((imvol > 60e6) and (not usescratch)):
             casalog.post("please set usescratch=True for large images till we fix a problem of saving large images in the virtual model_data column", "ERROR")
