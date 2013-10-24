@@ -221,6 +221,29 @@ windows in the dataset and close the tool.
             </example>
         </method>
 
+        <method type="function" name="antennastations">
+            <shortdescription>Get the station names of the specified antennas.</shortdescription>
+            <input>
+                <param type="any" direction="in" name="which">
+                    <any type="variant" limittypes="int string intarray stringarray"/>
+                    <description>Zero-based antenna ID(s) in the ANTENNA table or antenna name(s). Single numeric id less than zero retrieves all station names.</description>
+                    <value type="int">-1</value>
+                </param>
+            </input>
+            <returns type="stringarray"/>
+            <description>
+                Get the station names of the specified antennas.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get all station names
+    stations = msmd.antennastations(-1)
+    # get the stations of the antennas named DV07 and DV01
+    stations = msmd.antennaposition(["DV07", "DV01"])
+    msmd.done()
+            </example>
+        </method>
+
         <method type="function" name="bandwidths">
             <shortdescription>Get the bandwidths in Hz for the specified spectral windows. If spw less than zero, return bandwidths for all spectral windows.</shortdescription>
             <input>
