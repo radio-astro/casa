@@ -1394,7 +1394,7 @@ QtDisplayData* QtDisplayPanelGui::addDD(String path, String dataType, String dis
 	} else {
 		dd =new QtDisplayData( this, path, dataType, displayType);
 		dd->setImage( img );
-		dd->initImage();
+		// dd->initImage();
 		dd->init();
 		dd = processDD( path, dataType, displayType, autoRegister,
 				-1, false, false, false, dd );
@@ -1624,7 +1624,7 @@ void QtDisplayPanelGui::loadRegions( const QString &path, const QString &type ) 
 }
 void QtDisplayPanelGui::loadRegions( const std::string &path, const std::string &type ) {
 	if ( logger_did_region_warning == false ) {
-		logger << LogIO::WARN
+		logger << LogIO::NORMAL
 				<< "currently only supports rectangle, ellipse, symbol (somewhat), and polygon region shapes"
 				<< LogIO::POST;
 		logger_did_region_warning = true;
