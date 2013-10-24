@@ -269,13 +269,21 @@ namespace casa{
     //
     // Accumulate apertures for a list of PA
     //
+    Vector<Int> poln(4);
+    poln(0) = Stokes::XX;
+    poln(1) = Stokes::XY;
+    poln(2) = Stokes::YX;
+    poln(3) = Stokes::YY;
+
     for(uInt ipa=0;ipa<paList.nelements();ipa++)
       {
 	pa = paList[ipa];
 
 	ap.pa=pa;
 	ap.aperture->set(0.0);
-	BeamCalc::Instance()->calculateAperture(&ap);
+	for(uInt i=0; i<4; i++){
+	  BeamCalc::Instance()->calculateApertureLinPol(&ap, poln(i));
+	}
 	//
 	// Set the phase of the aperture function to zero if doSquint==F
 	// Poln. axis indices
@@ -322,11 +330,7 @@ namespace casa{
       }
     *(ap.aperture) = tmpAperture;
     tmpAperture.resize(IPosition(1,1));//Release temp. store.
-    Vector<Int> poln(4);
-    poln(0) = Stokes::XX;
-    poln(1) = Stokes::XY;
-    poln(2) = Stokes::YX;
-    poln(3) = Stokes::YY;
+
     StokesCoordinate polnCoord(poln);
     SpectralCoordinate spectralCoord(MFrequency::TOPO,Freq,1.0,0.0);
     //    uvCoords.addCoordinate(dirCoord);
@@ -346,7 +350,6 @@ namespace casa{
   }
 
 
-  // actually used in tALMAAperture:
   void ALMACalcIlluminationConvFunc::regridAperture(CoordinateSystem& skyCS,
 						    IPosition& skyShape,
 						    TempImage<Complex>& /*uvGrid*/,
@@ -414,7 +417,7 @@ namespace casa{
     poln(3) = Stokes::YY;
 
     for(uInt i=0; i<4; i++){
-      BeamCalc::Instance()->calculateAperture(&ap, poln(i));
+      BeamCalc::Instance()->calculateApertureLinPol(&ap, poln(i));
     }
 
     //
