@@ -274,7 +274,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <!-- TIME AVERAGING parameters -->
     <param type="bool" name="timeaverage">
-        <description>Average data in time. (to be implemented)</description>
+        <description>Average data in time.</description>
         <value>False</value>
     </param>
     
@@ -292,11 +292,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <param type="double" name="maxuvwdistance" subparam="true">
             <description>Maximum separation of start-to-end baselines that can be included in an average.</description>
             <value type="double">0.0</value>
-        </param>
-
-        <param type="int" name="minbaselines" subparam="true">
-            <description>(TBI) Minimum number of baselines for averaging to start.</description>
-            <value type="int">2</value>
         </param>
     
     <constraints>
@@ -348,7 +343,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                   <default param="timebin"><value type="string">0s</value></default>
                   <default param="timespan"><value type="string"></value></default>
                   <default param="maxuvwdistance"><value type="double">0.0</value></default>
-                  <default param="minbaselines"><value type="int">2</value></default>
             </equals>
           </when>
     </constraints>
@@ -357,8 +351,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <example>
 
     Experimental version of task mstransform.
-
-    NOTE: TBI means to-be-implemented.
 
     The task mstransform can do the same functionalities available
     in cvel, partition, hanningsmooth and split without the need to read and write
@@ -369,7 +361,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     * ability to create an output MS or MMS
     * spw combination and separation
     * channel averaging taking weights into account
-    * time averaging taking a minimum number of baselines (TBI)
+    * time averaging
     * reference frame transformation
     * Hanning smoothing
     
@@ -651,8 +643,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                           that can be included in an average.
             default: 0.0
 
-        minbaselines -- (TBI) Minimum number of baselines for averaging to start (int).
-            default: 2
 
 ------ EXAMPLES ------
 
@@ -681,7 +671,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 combinespws=True, regridms=True, mode="channel", outframe="BARY",
                 phasecenter="J2000 18h25m56.09 -12d04m28.20", hanning = True)
 
-
+7) Apply time averaging using a bin of 30 seconds on the default CORRECTED column.
+    mstransform(vis='g19_d2usb_targets_line.ms', outputvis='test5.ms', timeaverage=True,
+                timebin='30s')
 
 
 </example> 

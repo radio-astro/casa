@@ -1004,8 +1004,7 @@ def mstransform(
              timeaverage,        # time averaging --> split
              timebin,
              timespan,
-             maxuvwdistance,
-             minbaselines              
+             maxuvwdistance
              ):
 
     ''' This task can replace split, cvel, partition and hanningsmooth '''
@@ -1143,7 +1142,7 @@ def mstransform(
             config['timebin'] = timebin
             config['timespan'] = timespan
             config['maxuvwdistance'] = maxuvwdistance
-            config['minbaselines'] = minbaselines
+#            config['minbaselines'] = minbaselines
         
         # Configure the tool and all the parameters
         
