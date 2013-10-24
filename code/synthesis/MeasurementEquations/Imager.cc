@@ -2987,6 +2987,10 @@ Bool Imager::makeimage(const String& type, const String& image,
 	this->unlock();
 	ROMSAntennaColumns ac(ms_p->antenna());
 	Double dishDiam=ac.dishDiameter()(0);
+	if(!allEQ(ac.dishDiameter().getColumn(), dishDiam))
+	  os << LogIO::WARN
+         << "The MS has multiple antenna diameters ..PB could be wrong "
+	 << LogIO::POST;
         return this->makePBImage(coordsys, telescope_p, image, False, dishDiam);
       }
       else{
