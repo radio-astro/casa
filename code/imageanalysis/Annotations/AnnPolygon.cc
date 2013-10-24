@@ -14,7 +14,6 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-
 #include <imageanalysis/Annotations/AnnPolygon.h>
 
 #include <casa/Quanta/QMath.h>
@@ -308,8 +307,8 @@ void AnnPolygon::_initCenterRectCorners(
 	Quantity wy = _lengthToAngle(widthy, dirAxes[1])/2;
 
 	Vector<MDirection> corners(4);
-	MDirection center(centerx, centery, _getDirectionRefFrame());
-	for (uInt i=0; i<4; i++) {
+    MDirection center = _directionFromQuantities(centerx, centery);
+    for (uInt i=0; i<4; i++) {
 		corners[i] = MDirection(center);
 		Int xsign = i == 0 || i == 3 ? -1 : 1;
 		Int ysign = i == 0 || i == 1 ? -1 : 1;
