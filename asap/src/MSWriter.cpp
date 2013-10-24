@@ -2498,9 +2498,6 @@ void MSWriter::fillSource()
   STMolecules stm = table_->molecules() ;
 
   Int srcId = 0 ;
-  Vector<Double> restFreq ;
-  Vector<String> molName ;
-  Vector<String> fMolName ;
 
   // row based
   TableRow row( msSrc ) ;
@@ -2557,6 +2554,9 @@ void MSWriter::fillSource()
       Table t1 = iter1.table() ;
 
       // get necessary information
+      Vector<Double> restFreq ;
+      Vector<String> molName ;
+      Vector<String> fMolName ;
       ROScalarColumn<uInt> molIdCol( t1, "MOLECULE_ID" ) ;
       uInt molId = molIdCol( 0 ) ;
       stm.getEntry( restFreq, molName, fMolName, molId ) ;
@@ -2567,10 +2567,9 @@ void MSWriter::fillSource()
       *numlineRF = numFreq ;
 
       // REST_FREQUENCY
-      *restfreqRF = restFreq ;
+      restfreqRF.define(restFreq);
 
       // TRANSITION
-      //*transitionRF = fMolName ;
       Vector<String> transition ;
       if ( fMolName.size() != 0 ) {
         transition = fMolName ;
@@ -2582,11 +2581,11 @@ void MSWriter::fillSource()
         transition.resize( numFreq ) ;
         transition = "" ;
       }
-      *transitionRF = transition ;
+      transitionRF.define(transition);
 
-      // SYSVEL 
+      // SYSVEL
       Vector<Double> sysvelArr( numFreq, srcVel ) ;
-      *sysvelRF = sysvelArr ;
+      sysvelRF.define(sysvelArr);
 
       //
       // ITERATION: IFNO

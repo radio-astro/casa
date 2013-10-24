@@ -369,6 +369,7 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
 
     // target spectral data
     on = spCol(irow);
+    //os_ << "on=" << on[0] << LogIO::POST;
     calibrator_->setSource(on);
 
     // interpolation
@@ -382,7 +383,7 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
       interpolatorS_->setY(ya, skyIdx.nelements());
       iOff[ichan] = interpolatorS_->interpolate(t0);
     }
-    //os_ << "iOff=" << iOff << LogIO::POST;
+    //os_ << "iOff=" << iOff[0] << LogIO::POST;
     calibrator_->setReference(iOff);
     
     Float *Y = new Float[nchanSp];
@@ -419,18 +420,18 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
         iTsys = tsysInRow[0];
       }
       else {
-        for (uInt ichan = 0; ichan < nchanTsys; ++ichan)
+        for (uInt ichan = 0; ichan < tsysInRow.nelements(); ++ichan)
           iTsys[ichan] = tsysInRow[ichan];
       }
     } 
-    //os_ << "iTsys=" << iTsys << LogIO::POST;
+    //os_ << "iTsys=" << iTsys[0] << LogIO::POST;
     calibrator_->setScaler(iTsys);
   
     // do calibration
     calibrator_->calibrate();
 
     // update table
-    //os_ << "calibrated=" << calibrator_->getCalibrated() << LogIO::POST; 
+    //os_ << "calibrated=" << calibrator_->getCalibrated()[0] << LogIO::POST; 
     spCol.put(irow, calibrator_->getCalibrated());
     if (filltsys)
       tsysCol.put(irow, iTsys);
