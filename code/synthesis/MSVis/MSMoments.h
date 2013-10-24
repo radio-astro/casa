@@ -172,7 +172,7 @@ public:
    MSMoments(const MSMoments<T>& other);
    
    // Destructor
-   ~MSMoments();
+   virtual ~MSMoments();
    
    // Assignment operator.
    MSMoments<T> &operator=(const MSMoments<T> &other); 
@@ -215,7 +215,7 @@ public:
 
 
    // Get shape 
-   IPosition getShape() ;
+   IPosition getShape() const ;
 
 private:
 
