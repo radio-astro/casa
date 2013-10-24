@@ -166,7 +166,7 @@ void MSTransformManager::initialize()
 	timespan_p = String("");
 	timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::Nothing);
 	maxuvwdistance_p = 0;
-	minbaselines_p = 0;
+//	minbaselines_p = 0;
 
 	// Weight Spectrum parameters
 	usewtspectrum_p = False;
@@ -817,7 +817,7 @@ void MSTransformManager::parseTimeAvgParams(Record &configuration)
 			}
 		}
 
-		exists = configuration.fieldNumber ("minbaselines");
+/*		exists = configuration.fieldNumber ("minbaselines");
 		if (exists >= 0)
 		{
 			configuration.get (exists, minbaselines_p);
@@ -827,7 +827,7 @@ void MSTransformManager::parseTimeAvgParams(Record &configuration)
 				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 						<< "Minimum number of baselines for time average: " << minbaselines_p << LogIO::POST;
 			}
-		}
+		}*/
 	}
 
 	return;
