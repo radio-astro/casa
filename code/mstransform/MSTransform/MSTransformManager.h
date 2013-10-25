@@ -61,6 +61,9 @@
 // To apply 1D interpolations
 #include <scimath/Mathematics/InterpolateArray1D.h>
 
+// Buffer handling classes
+#include <mstransform/MSTransform/MSTransformBufferImpl.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // MS Transform Framework utilities
@@ -262,6 +265,8 @@ struct spwInfo {
 class MSTransformManager
 {
 
+	friend class MSTransformBufferImpl;
+
 public:
 
 	MSTransformManager();
@@ -276,9 +281,21 @@ public:
 	void setup();
 	void close();
 
+	void setupBufferTransformations(vi::VisBuffer2 *vb);
+	void fillOutputMs(vi::VisBuffer2 *vb);
+
+	// For buffer handling classes (MSTransformIterator)
+
+	// Needed by MSTransformIteratorFactory
 	vi::VisibilityIterator2 * getVisIter() {return visibilityIterator_p;}
 
-	void fillOutputMs(vi::VisBuffer2 *vb);
+	// Needed by MSTransformIterator
+	MeasurementSet * getOutputMs () {return outputMs_p;};
+	String getOutputMsName () {return outMsName_p;};
+
+	// Needed by MSTransformBuffer
+	vi::VisBuffer2 * getVisBuffer() {return visibilityIterator_p->getVisBuffer();}
+
 
 
 protected:
@@ -345,24 +362,49 @@ protected:
 	void fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef);
 	void fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef);
 
-	template <class T> void fillAndReindexScalar(	T inputScalar,
-													Vector<T> &outputVector,
-													map<Int,Int> &inputOutputIndexMap);
+	// Methods to transform and write vectors
+
+	template <class T> void transformAndWriteNotReindexableVector(	const Vector<T> &inputVector,
+																	Vector<T> &outputVector,
+																	Bool constant,
+																	ScalarColumn<T> &outputCol,
+																	RefRows &rowReference);
+
+	template <class T> void transformAndWriteReindexableVector(	const Vector<T> &inputVector,
+																Vector<T> &outputVector,
+																Bool constant,
+																map<Int,Int> &inputOutputIndexMap,
+																ScalarColumn<T> &outputCol,
+																RefRows &rowReference);
+
+	Bool transformDDIVector(const Vector<Int> &inputVector,Vector<Int> &outputVector);
+	template <class T> Bool transformNotReindexableVector(	const Vector<T> &inputVector,
+															Vector<T> &outputVector,
+															Bool constant);
+
+	template <class T> Bool transformReindexableVector(	const Vector<T> &inputVector,
+														Vector<T> &outputVector,
+														Bool constant,
+														map<Int,Int> &inputOutputIndexMap);
+
 	template <class T> void mapAndReindexVector(	const Vector<T> &inputVector,
 													Vector<T> &outputVector,
-													map<Int,Int> &inputOutputIndexMap,
-													Bool constant=False);
+													map<Int,Int> &inputOutputIndexMap);
 	template <class T> void reindexVector(	const Vector<T> &inputVector,
 											Vector<T> &outputVector,
-											map<Int,Int> &inputOutputIndexMap,
-											Bool constant=False);
+											map<Int,Int> &inputOutputIndexMap);
+	template <class T> void mapVector(	const Vector<T> &inputVector,
+										Vector<T> &outputVector);
+	void mapAndAverageVector(	const Vector<Double> &inputVector,
+								Vector<Double> &outputVector);
 
-	template <class T> void mapVector(const Vector<T> &inputVector, Vector<T> &outputVector);
+	void mapAndAverageVector(	const Vector<Bool> &inputVector,
+								Vector<Bool> &outputVector);
+
+	// Methods to transform and write matrix
+
+
 	template <class T> void mapMatrix(const Matrix<T> &inputMatrix, Matrix<T> &outputMatrix);
-	template <class T> void mapAndAverageVector(	const Vector<T> &inputVector,
-													Vector<T> &outputVector,
-													Bool convolveFlags=False,
-													vi::VisBuffer2 *vb=NULL);
 	template <class T> void mapAndAverageMatrix(	const Matrix<T> &inputMatrix,
 													Matrix<T> &outputMatrix,
 													Bool convolveFlags=False,
@@ -371,23 +413,13 @@ protected:
 														Matrix<T> &outputMatrix,
 														map<Int,T> scaleMap,
 														Vector<Int> spws);
-
-	template <class T> void writeVector(	const Vector<T> &inputVector,
-											ScalarColumn<T> &outputCol,
-											RefRows &rowRef,
-											uInt nBlocks);
-	template <class T> void writeRollingVector(	Vector<T> &inputVector,
-												ScalarColumn<T> &outputCol,
-												RefRows &rowRef,
-												uInt nBlocks);
-	template <class T> void writeVectorBlock(	const Vector<T> &inputVector,
-												ScalarColumn<T> &outputCol,
-												RefRows &rowRef,
-												uInt offset);
 	template <class T> void writeMatrix(	const Matrix<T> &inputMatrix,
 											ArrayColumn<T> &outputCol,
 											RefRows &rowRef,
 											uInt nBlocks);
+
+	// Methods to transform and write cubes
+
 	template <class T> void writeCube(	const Cube<T> &inputCube,
 										ArrayColumn<T> &outputCol,
 										RefRows &rowRef);
@@ -424,6 +456,8 @@ protected:
 												const Cube<T> &inputDataCube,
 												ArrayColumn<T> &outputDataCol,
 												ArrayColumn<Bool> *outputFlagCol);
+
+	// Methods to transform data in cubes
 
 	void addWeightSpectrumContribution(	Double &weight,
 										uInt &pol,
@@ -813,6 +847,7 @@ protected:
 													Vector<T> &outputDataStripe,
 													Vector<Bool> &outputFlagsStripe);
 
+
 	// MS specification parameters
 	String inpMsName_p;
 	String outMsName_p;
@@ -871,10 +906,13 @@ protected:
 	String timespan_p;
 	vi::AveragingOptions timeAvgOptions_p;
 	Double maxuvwdistance_p;
-//	uInt minbaselines_p;
+	// uInt minbaselines_p;
 
 	// Weight Spectrum parameters
 	Bool usewtspectrum_p;
+
+	// Buffer handling parameters
+	Bool bufferMode_p;
 
 	// MS-related members
 	MSTransformDataHandler *dataHandler_p;
@@ -931,6 +969,9 @@ protected:
 	Bool inputWeightSpectrumAvailable_p;
 	Bool combinationOfSPWsWithDifferentExposure_p;
 	Cube<Float> weightSpectrumCube_p;
+
+	// Buffer handling members
+	uInt nRowsToAdd_p;
 
 	// Logging
 	LogIO logger_p;
