@@ -31,6 +31,7 @@
 #include <plotms/Client/ClientFactory.h>
 #include <plotms/Actions/ActionFactory.h>
 #include <plotms/Actions/ActionCacheLoad.h>
+#include <plotms/Plots/PlotMSPlotParameterGroups.h>
 
 #include <QDebug>
 
@@ -110,6 +111,8 @@ void PlotMSApp::parametersHaveChanged(const PlotMSWatchedParameters& params,
                 if(!canv[i].null())
                     canv[i]->setCachedAxesStackImageSize(cis.first,cis.second);
         }*/
+
+
         if ( itsPlotter_ != NULL ){
         	itsPlotter_->setCanvasCachedAxesStackImageSize( cis.first, cis.second );
         }
@@ -218,6 +221,10 @@ bool PlotMSApp::updateCachePlot( PlotMSPlot* plot,
 	 loadCacheAction.setSetupPlot( setupPlot );
 	 bool result = loadCacheAction.doAction( this );
 	 return result;
+}
+
+void PlotMSApp::setCommonAxes(bool commonX, bool commonY ){
+	itsPlotter_->setCommonAxes( commonX, commonY );
 }
 // Private Methods //
 

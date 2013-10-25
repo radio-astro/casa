@@ -570,7 +570,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	dpSaveAct_ ->setToolTip("Save Display Panel State to File");
 	profileAct_->setToolTip("Open the Spectral Profile Tool");
 	momentsCollapseAct_->setToolTip("Calculate Moments/Collapse the Image Cube along the Spectral Axis.");
-	histogramAct_->setToolTip("Histogram Functionality");
+	histogramAct_->setToolTip("Histogram Statistical Analysis Tool");
 	fitAct_->setToolTip( "Interactive 2D Fitting");
 	dpRstrAct_ ->setToolTip("Restore Display Panel State from File");
 	// rgnMgrAct_ ->setToolTip("Save/Control Regions");
@@ -1394,7 +1394,7 @@ QtDisplayData* QtDisplayPanelGui::addDD(String path, String dataType, String dis
 	} else {
 		dd =new QtDisplayData( this, path, dataType, displayType);
 		dd->setImage( img );
-		dd->initImage();
+		// dd->initImage();
 		dd->init();
 		dd = processDD( path, dataType, displayType, autoRegister,
 				-1, false, false, false, dd );
@@ -1624,7 +1624,7 @@ void QtDisplayPanelGui::loadRegions( const QString &path, const QString &type ) 
 }
 void QtDisplayPanelGui::loadRegions( const std::string &path, const std::string &type ) {
 	if ( logger_did_region_warning == false ) {
-		logger << LogIO::WARN
+		logger << LogIO::NORMAL
 				<< "currently only supports rectangle, ellipse, symbol (somewhat), and polygon region shapes"
 				<< LogIO::POST;
 		logger_did_region_warning = true;

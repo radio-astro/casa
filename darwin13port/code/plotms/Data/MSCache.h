@@ -82,7 +82,9 @@ protected:
   virtual void loadIt(vector<PMS::Axis>& loadAxes,
 		      vector<PMS::DataColumn>& loadData,
 		      /*PlotMSCacheThread**/ThreadCommunication* thread = NULL);
-
+  //Returns whether or not the ephemeris data has been
+    //attached to a field - radial velocity and rho.
+  virtual bool isEphemeris();
 private:
     
   // Forbid copy for now
@@ -138,6 +140,8 @@ private:
 			  Bool flag,
 			  PlotMSIndexer* indexer);
   
+
+
 
   // A container for channel averaging bounds
   Vector<Matrix<Int> > chanAveBounds_p;

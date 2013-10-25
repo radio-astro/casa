@@ -465,20 +465,21 @@ vector<int> msmetadata::fdmspws() {
 }
 
 variant* msmetadata::fieldsforintent(
-	const string& intent, const bool asnames, const bool regex
+	const string& intent, const bool asnames
 ) {
 	//_FUNC(
 		std::set<Int> ids;
-		if (regex) {
+		Bool expand = intent.find('*') != std::string::npos;
+		if (expand) {
 			std::map<String COMMA std::set<Int> > mymap = _msmd->getIntentToFieldsMap();
-			ids = _idsFromRegex(mymap, intent);
+			ids = _idsFromExpansion(mymap, intent);
 		}
 		else {
 			ids = _msmd->getFieldsForIntent(intent);
 		}
 		variant *x;
 		if (ids.size() == 0) {
-			*_log << LogIO::WARN << "No intent " << (regex ? "matching '" : "'")
+			*_log << LogIO::WARN << "No intent " << (expand ? "matching '" : "'")
 				<< intent << "' exists in this dataset." << LogIO::POST;
 			x = asnames
 				? new variant(vector<string>(0))
@@ -784,11 +785,12 @@ vector<int> msmetadata::scansforfield(const variant& field) {
 	return vector<int>();
 }
 
-vector<int> msmetadata::scansforintent(const string& intent, bool regex) {
+vector<int> msmetadata::scansforintent(const string& intent) {
 	_FUNC(
-		if (regex) {
+		Bool expand = intent.find('*') != std::string::npos;
+		if (expand) {
 			std::map<String COMMA std::set<Int> > mymap = _msmd->getIntentToScansMap();
-			std::set<Int> ids = _idsFromRegex(mymap, intent);
+			std::set<Int> ids = _idsFromExpansion(mymap, intent);
 			return _setIntToVectorInt(ids);
 		}
 		else {
@@ -876,11 +878,12 @@ variant* msmetadata::spwsforbaseband(int bb, const string& sqldmode) {
 	return 0;
 }
 
-vector<int> msmetadata::spwsforintent(const string& intent, bool regex) {
+vector<int> msmetadata::spwsforintent(const string& intent) {
 	_FUNC(
-		if (regex) {
+		Bool expand = intent.find('*') != std::string::npos;
+		if (expand) {
 			std::map<String COMMA std::set<uInt> > mymap = _msmd->getIntentToSpwsMap();
-			std::set<Int> ids = _idsFromRegex(mymap, intent);
+			std::set<Int> ids = _idsFromExpansion(mymap, intent);
 			return _setIntToVectorInt(ids);
 		}
 		else {
@@ -1098,12 +1101,12 @@ void msmetadata::_checkPolId(int id, bool throwIfNegative) const {
 	);
 }
 
-std::set<Int> msmetadata::_idsFromRegex(
-	const std::map<String, std::set<Int> >& mymap, const String& regex
+std::set<Int> msmetadata::_idsFromExpansion(
+	const std::map<String, std::set<Int> >& mymap, const String& matchString
 ) const {
 	std::set<Int> ids;
 	boost::regex re;
-	re.assign(regex);
+	re.assign(_escapeExpansion(matchString));
 	foreach_(std::pair<String COMMA std::set<Int> > kv, mymap) {
 		if (boost::regex_match(kv.first, re)) {
 			ids.insert(kv.second.begin(), kv.second.end());
@@ -1112,12 +1115,12 @@ std::set<Int> msmetadata::_idsFromRegex(
 	return ids;
 }
 
-std::set<Int> msmetadata::_idsFromRegex(
-	const std::map<String, std::set<uInt> >& mymap, const String& regex
+std::set<Int> msmetadata::_idsFromExpansion(
+	const std::map<String, std::set<uInt> >& mymap, const String& matchString
 ) const {
 	std::set<Int> ids;
 	boost::regex re;
-	re.assign(regex);
+	re.assign(_escapeExpansion(matchString));
 	foreach_(std::pair<String COMMA std::set<uInt> > kv, mymap) {
 		if (boost::regex_match(kv.first, re)) {
 			ids.insert(kv.second.begin(), kv.second.end());
@@ -1125,6 +1128,20 @@ std::set<Int> msmetadata::_idsFromRegex(
 	}
 	return ids;
 }
+
+std::string msmetadata::_escapeExpansion(const casa::String& stringToEscape) {
+	const boost::regex esc("[\\^\\.\\$\\|\\(\\)\\[\\]\\+\\?\\/\\\\]");
+	const std::string rep("\\\\\\1");
+	std::string result = regex_replace(
+		stringToEscape, esc, rep, boost::match_default | boost::format_sed
+	);
+	const boost::regex expand("\\*");
+	const std::string rep1(".*");
+	return regex_replace(
+		result, expand, rep1, boost::match_default | boost::format_sed
+	);
+}
+
 
 } // casac namespace
 

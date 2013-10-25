@@ -11,124 +11,9 @@
 #
 #  Todd R. Hunter  February 2013
 #
-# To test:
-#  os.system('buildmytasks')
-#  execfile('mytasks.py')
+# To test:  see plotbandpass_regression.py
 #
-# In a single line:
-# os.system('buildmytasks');execfile('mytasks.py');os.chdir('/net/yildun/export/data_1/thunter/alma/data/SciVer/TWHya')
-#
-# Some regression commands to run after making major changes:
-# Note: the reason that we call plotbandpass2 here is because you cannot define a
-#    private task with the same name as an existing casa task.  So I test it with
-#    the buildmytasks approach under the name plotbandpass2, then when I am happy, 
-#    I copy task_plotbandpass2.py and plotbandpass2.xml to task_plotbandpass.py 
-#    and plotbandpass.xml.  I then commit these to the CSV cvs server in order to 
-#    get an automatic version number updated.  Finally, I copy these files to my
-#    checkout of the casa trunk and do an svn commit there.
-# ALMA data:
-#    casa 3.3 tables
-# cd /net/yildun/export/data_1/thunter/alma/data/SciVer/TWHya
-# plotbandpass2('bandpass.bcal',showtsky=F,xaxis='freq',yaxis='amp',overlay='antenna',spw='',field='')
-# plotbandpass2('bandpass.bcal',showtsky=F,xaxis='freq',yaxis='amp',overlay='antenna,time',spw='',field='')
-# plotbandpass2('bandpass.bcal',showtsky=F,xaxis='freq',yaxis='both',phase=[-180,180],plotrange=[0,0,0,2])
-# plotbandpass2('bandpass.bcal',showtsky=F,xaxis='freq',yaxis='amp',overlay='antenna',spw='',field='',chanrange='1200~2000')
-# plotbandpass2('bandpass.bcal',showatm=T,xaxis='chan',yaxis='amp',overlay='antenna',spw='',field='',plotrange=[1200,2000,0,0])
-# plotbandpass2('bandpass.bcal',showatm=T,xaxis='chan',yaxis='amp',spw='',field='',plotrange=[1200,3840,0,0])
-# plotbandpass2('bandpass.bcal',showtsky=F,xaxis='chan',yaxis='amp',overlay='antenna',spw='',field='',showatm=T)
-# plotbandpass2('bandpass.bcal',showtsky=F,xaxis='freq',yaxis='phase',overlay='antenna',spw='',field='')
-# plotbandpass2('bandpass.bcal',showtsky=F,xaxis='freq',yaxis='phase',overlay='antenna',spw='',field='',chanrange='1200~1800')
-# plotbandpass2('bandpass.bcal',overlay='antenna',yaxis='amp',field='0~1,4',xaxis='freq',showtsky=T)
-# plotbandpass2('bandpass.bcal',overlay='baseband',yaxis='amp',field='0~1,4',xaxis='freq',showtsky=T)
-# plotbandpass2('bandpass_b_skipspw19high.bcal',yaxis='amp',field='0',xaxis='freq',caltable2='bandpass_bpoly_skipspw19high.bcal',showpoints=True,spw=0,figfile='bpoly_overlay')
-# plotbandpass2('bandpass_b_skipspw19high.bcal',yaxis='phase',field='0',xaxis='freq',caltable2='bandpass_bpoly_skipspw19high.bcal',showpoints=True,spw=0,figfile='bpoly_overlay',caltable3='bandpass_bpoly_skipspw19high.bcal')
-# plotbandpass2('bandpass_b_skipspw19high.bcal',yaxis='both',field='0',xaxis='freq',caltable2='bandpass_bpoly_skipspw19high.bcal',showpoints=True,spw=0,figfile='bpoly_overlay',caltable3='bandpass_bpoly_skipspw19high.bcal')
-# plotbandpass2('X3c1.tsys.fdm',overlay='antenna',yaxis='amp',field='1',xaxis='chan',figfile='tsys.png',showtsky=T) 
-# plotbandpass2('X3c1.tsys.fdm',overlay='antenna',yaxis='amp',field='1',xaxis='chan',figfile='tsys.png',poln='y') 
-# plotbandpass2('X3c1.tsys',overlay='antenna',yaxis='amp',field='0~1,4',xaxis='chan',figfile='tsys.png')
-# plotbandpass2('X3c1.tsys',overlay='antenna',yaxis='amp',field='0~1,4',xaxis='chan',figfile='tsys.png',showBasebandNumber=T,basebands=[1,4,3,2])
-# plotbandpass2('X3c1.tsys',overlay='time',yaxis='amp',field='2',xaxis='chan')
-# plotbandpass2('X3c1.tsys',overlay='',yaxis='amp',field='',xaxis='freq',showfdm=True)
-# plotbandpass2('X3c1.tsys',overlay='',yaxis='amp',field='2',xaxis='freq',chanrange='45~65')
-# plotbandpass2('bandpass_bpoly_skipspw19high.bcal')
-# plotbandpass2('bandpass.bcal',caltable2='bandpass.bcal_smooth',xaxis='freq')  
-# plotbandpass2('bandpass.bcal',caltable2='bandpass.bcal_smooth',yaxis='phase', xaxis='freq')
-# plotbandpass2('bandpass.bcal',caltable2='bandpass.bcal_smooth',xaxis='freq',chanrange='1000~3000')
-# plotbandpass2('bandpass.bcal',caltable2='bandpass.bcal_smooth',xaxis='freq',showtsky=T)
-# plotbandpass2('bandpass.bcal',caltable2='bandpass.bcal_smooth',xaxis='freq',poln='x',showflagged=True) 
-# plotbandpass2('bandpass.bcal',caltable2='bandpass.bcal_smooth',xaxis='freq',poln='x',showflagged=True, showtsky=T)
-# plotbandpass2(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',    yaxis='amp',xaxis='freq',figfile='tsys.png') 
-# plotbandpass2(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',    yaxis='amp',xaxis='freq',figfile='tsys.png', showtsky=T)  
-# plotbandpass2(caltable='X3c1.tsys',    caltable2='X3c1.tsys.fdm',yaxis='amp',xaxis='freq',figfile='tsys.png')
-# plotbandpass2(caltable='X3c1.tsys',    caltable2='X3c1.tsys.fdm',yaxis='amp',xaxis='freq',figfile='tsys.png', showtsky=T) 
-# plotbandpass2(caltable='X3c1.tsys',caltable2='X3c1.tsys.fdm',    yaxis='both',xaxis='freq',figfile='tsys.png',chanrange='1000~3000')
-# plotbandpass2(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',    yaxis='both',xaxis='freq',figfile='tsys.png',chanrange='1000~3000')
-# plotbandpass2(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',    yaxis='both',xaxis='freq',figfile='tsys.png',chanrange='1000~3000',showtsky=T) 
-# plotbandpass2(caltable='X3c1.tsys',    caltable2='X3c1.tsys.fdm',yaxis='both',xaxis='freq',figfile='tsys.png')  
-# plotbandpass2(caltable='X3c1.tsys',    caltable2='X3c1.tsys.fdm',yaxis='both',xaxis='freq',figfile='tsys.png', showtsky=T)  
-# plotbandpass2(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',    yaxis='both',xaxis='freq',figfile='tsys.png',zoom='intersect')
-# plotbandpass2(caltable='X3c1.tsys',    caltable2='X3c1.tsys.fdm',yaxis='both',xaxis='freq',figfile='tsys.png',zoom='intersect')
-# plotbandpass2(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',yaxis='amp',xaxis='freq',figfile='tsys.png',poln='XX') 
-# plotbandpass2(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',yaxis='amp',field='1',xaxis='freq',figfile='tsys.png',poln='YY',zoom='intersect')
-# plotbandpass2(caltable='X3c1.tsys.fdm',caltable2='X3c1.tsys',yaxis='amp',field='1',xaxis='freq',figfile='tsys.png',poln='YY',zoom='intersect',showatm=T)
-# plotbandpass2(caltable='X3c1.tsys.fdm',yaxis='amp',field='1',xaxis='chan',figfile='tsys.png',poln='YY',zoom='intersect',showatm=T,showimage=T)
-#
-# tests for multi-field solution overlay: in SciVer/TWHya
-# plotbandpass2('band7multi_a6p7_titan.bcal',caltable2='band7multi_b.bcal',debug=F,xaxis='freq',yaxis='amp',chanrange='')
-# plotbandpass2(caltable='band7multi_b.bcal',caltable3='band7multi_bpoly_a6p7_titan.bcal',caltable2='band7multi_bpoly.bcal',xaxis='freq',yaxis='both')
-#
-# ALMA data, casa 3.4 tables:
-# os.system('buildmytasks');execfile('mytasks.py');os.chdir('/lustre/naasc/thunter/alma/SV_data_TWHya/3.4guide')
-# cd /lustre/naasc/thunter/alma/SV_data_TWHya/3.4guide
-# plotbandpass2(caltable='bandpass_all_bpoly_dv04',xaxis='freq',yaxis='both')       
-# plotbandpass2(caltable='bandpass_all_b_odd_dv04',caltable2='bandpass_all_bpoly_dv04',xaxis='freq',yaxis='both')
-# ALMA data, FDM+TDM in same caltable
-# plotbandpass2(caltable='bandpass_all_b_odd_dv04',xaxis='freq',yaxis='phase',chanrange='', showatm=True)
-# plotbandpass2(caltable='bandpass_all_b_odd_dv04',xaxis='freq',yaxis='amp',chanrange='', channeldiff=5)
-#
-# ALMA 1-pol data:
-# cd /lustre/naasc/thunter/singlePol
-# plotbandpass2('uid___A002_X494155_X23a.ms.split.bandpass',xaxis='freq')
-#
-# ALMA 4-pol data:
-# cd /lustre/naasc/thunter/cycle1/4pol/
-# plotbandpass2('uid___A002_X60e47a_X8a6.ms.spw0_2_4_6.solintinf_7_8125MHz.bcal.s8_2.tbl',xaxis='freq')
-#
-# EVLA dual-pol data:
-# os.system('buildmytasks');execfile('mytasks.py');os.chdir('/lustre/naasc/thunter/evla/10C-186/K_BnA_cont')
-#  cd /lustre/naasc/thunter/evla/10C-186/K_BnA_cont
-#  new style table from 4.1.0
-#  plotbandpass2('bandpass_4.1.0.bcal',poln='',yaxis='amp',overlay='spw',xaxis='freq')
-#  plotbandpass2('bandpass_4.1.0.bcal',poln='',yaxis='amp',xaxis='freq',channeldiff=5)
-#  old style 3.3 tables
-#  plotbandpass2('bandpasspcal.bcal',poln='',yaxis='amp',overlay='spw',xaxis='freq')
-#  plotbandpass2('bandpasspcal.bcal',poln='',yaxis='amp',overlay='baseband',xaxis='freq')
-#  plotbandpass2('bandpasspcal.bcal',poln='',yaxis='amp',overlay='time',xaxis='freq')
-#  plotbandpass2('bandpasspcal.bcal',poln='',yaxis='both')
-#  plotbandpass2('bandpasspcal.bcal',poln='',yaxis='phase',overlay='antenna')
-#  plotbandpass2('bandpasspcal.bcal',poln='',yaxis='amp',overlay='antenna', chanrange='0~30',xaxis='freq')
-#  plotbandpass2('bandpasspcal.bcal',poln='',yaxis='both',showatm=T)
-#  plotbandpass2('bandpasspcal.bcal',poln='LL',yaxis='both')
-#
-# EVLA single-pol data:
-#  cd /lustre/naasc/thunter/evla/AB1346/g19.36
-#  new style table from 4.1.0
-#   N/A
-#  old style 3.3 tables
-#  plotbandpass2('bandpass.bcal',yaxis='amp',xaxis='freq',overlay='spw')
-#  plotbandpass2('bandpass.bcal',yaxis='phase',xaxis='freq',overlay='baseband')
-#  plotbandpass2('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
-#  plotbandpass2('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq', showatm=T)
-#  plotbandpass2('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
-#  plotbandpass2('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq',showatm=T)
-#
-# SMA data
-# cd /net/yildun/export/data_1/thunter/sma/ngc6334_SM2_filler/
-# plotbandpass2('sm2_rx0.usb.if2.tsys.ms.bandpass.bcal')
-# plotbandpass2('sm2_rx0.usb.if2.tsys.ms.bandpass.bcal',overlay='baseband',xaxis='freq',figfile='sma.png')
-# plotbandpass2('sm2_rx0.usb.if2.tsys.ms.bandpass.bcal',overlay='baseband',xaxis='chan',figfile='sma.png')
-#
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.32 2013/10/03 18:16:44 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.34 2013/10/23 14:29:49 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -204,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.32 2013/10/03 18:16:44 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.34 2013/10/23 14:29:49 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -1100,6 +985,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         fstringLimit = 12 # character length of multi-field overlay title string
     
     xframe = xframeStart
+    previousSubplot = xframe
     alreadyPlottedAmp = False  # needed for (overlay='baseband', yaxis='both')
     xcolor = 'b'
     ycolor = 'g'
@@ -1213,8 +1099,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         except:
             print "caltable = localhost:%s" % (caltable)
   
-    if (len(caltable) > 100):
-        caltableTitle = '...' + caltable[-100:]
+    if (len(caltable) > 90):
+        caltableTitle = '...' + caltable[-90:]
     else:
         caltableTitle = caltable
     names = mytb.colnames()
@@ -1847,7 +1733,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                 print "scans to plot for spw %d: %s" % (myspw, scansToPlotPerSpw[myspw])
             if (scansToPlotPerSpw[myspw] == []):
                 indexDelete = np.where(spwsToPlot==myspw)[0][0]
-                spwsToPlot = np.delete(spwsToPlot, indexDelete)
+                if (len(indexDelete) > 0):
+                    indexDelete = [0]
+                    spwsToPlot = np.delete(spwsToPlot, indexDelete)
         print "spwsToPlot = ", spwsToPlot
     casalogPost(debug,"scans to plot: %s" % (str(scansToPlot)))
     casalogPost(debug,"UT times to plot: %s" % (timerangeListTimesString))
@@ -2161,6 +2049,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                     if (debug):
                         print "v) incrementing xframe to %d" % xframe
                     adesc = pb.subplot(xframe)
+                    previousSubplot = xframe
                     if (ispw==originalSpw[ispw]):
                         # all this was added mistakenly here.  If it causes a bug, remove it.
                         if (overlayTimes and len(fieldsToPlot) > 1):
@@ -2280,6 +2169,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                     myUniqueColor = []
 # #                  print "w) incrementing xframe to %d" % xframe
                     adesc = pb.subplot(xframe)
+                    previousSubplot = xframe
                     if (ispw==originalSpw[ispw]):
                           pb.title("%sspw%d,  field %d: %s%s" % (antennaString,ispw,
                                  uniqueFields[fieldIndex],fieldString,timeString), size=titlesize)
@@ -2551,7 +2441,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
   
     TDMisSecond = False
     pagectr = 0
-    drewAtmosphereOnFlaggedAntenna = True  # may not be necessary, but just to be safe
+    drewAtmosphere = False
     newpage = 1
     pages =  []
     xctr = 0
@@ -3050,8 +2940,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
           
                               # draw labels
                               # try adding the following 'if' statement on Jun 18, 2013; it works.
-                              if (drewAtmosphereOnFlaggedAntenna==False or overlayAntennas==False):
-                                  drewAtmosphereOnFlaggedAntenna = True
+                              if (drewAtmosphere==False or overlayAntennas==False):
+                                  drewAtmosphere = True
                                   if (debug): print "drawOverlayTimeLegends loc 1"
                                   drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,
                                                          caltable,titlesize,fieldIndicesToPlot,
@@ -3147,7 +3037,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                               newylimits = [LARGE_POSITIVE, LARGE_NEGATIVE]
                     else: # (myap == 0)
                       if (overlayTimes == False or mytime==firstTimeMatch):
-                        if ((overlaySpws == False and overlayBasebands==False) or spwctr == 0 or spwctr>len(spwsToPlot)):
+#                        if ((overlaySpws == False and overlayBasebands==False) or spwctr == 0 or spwctr>len(spwsToPlot)):
                           if (overlayAntennas==False or xctr==firstUnflaggedAntennaToPlot
                               or xctr>antennasToPlot[-1]):  # 2012-05-24, to fix the case where all ants flagged on one timerange
                               xframe += 1
@@ -3164,8 +3054,10 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                           print "$$$$$$$$$$$$$$$$$$$$$$$  ready to plot amp on xframe %d" % (xframe)
 # #     # #            print ",,,,,,,,,,,,,,,, Starting with newylimits = ", newylimits
                       adesc = pb.subplot(xframe)
+                      if (previousSubplot != xframe):
+                          drewAtmosphere = False
+                      previousSubplot = xframe
                       alreadyPlottedAmp = True  # needed for (overlay='baseband', yaxis='both')
-                      drewAtmosphereOnFlaggedAntenna = False
                       pb.hold(overlayAntennas or overlayTimes or overlaySpws or overlayBasebands)
                       gampx = np.abs(gplotx)
                       if (nPolarizations == 2):
@@ -3849,6 +3741,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                            xant==antennasToPlot[-1] and doneOverlayTime and mytime==nUniqueTimes-1)
                           ):
                           if ((showatm or showtsky) and len(atmString) > 0): 
+                              drewAtmosphere = True
                               DrawAtmosphere(showatm, showtsky, subplotRows, atmString,
                                              mysize, TebbSky, plotrange, xaxis, atmchan,
                                              atmfreq, transmission, subplotCols,
@@ -4009,7 +3902,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                       if (debug):
                           print "$$$$$$$$$$$$$$$$$$$$$$$  ready to plot phase on xframe %d" % (xframe)
                       adesc = pb.subplot(xframe)
-                      drewAtmosphereOnFlaggedAntenna = False
+                      if (previousSubplot != xframe):
+                          drewAtmosphere = False
+                      previousSubplot = xframe
                       pb.hold(overlayAntennas or overlayTimes)
                       gphsx = np.arctan2(np.imag(gplotx),np.real(gplotx))*180.0/math.pi
                       if (nPolarizations == 2):
@@ -4618,6 +4513,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                           (xant==antennasToPlot[-1] and doneOverlayTime)
                           ):
                           if ((showatm or showtsky) and len(atmString)>0):
+                              drewAtmosphere = True
                               DrawAtmosphere(showatm, showtsky, subplotRows, atmString,
                                              mysize, TebbSky, plotrange, xaxis, atmchan,
                                              atmfreq, transmission, subplotCols,

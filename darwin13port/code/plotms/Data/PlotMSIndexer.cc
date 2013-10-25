@@ -741,6 +741,12 @@ void PlotMSIndexer::setMethod(CacheMemPtr& getmethod,PMS::Axis axis) {
   case PMS::EL0:
     getmethod = &PlotMSCacheBase::getEl0;
     break;
+  case PMS::RADIAL_VELOCITY:
+	  getmethod = &PlotMSCacheBase::getRadialVelocity0;
+	  break;
+  case PMS::RHO:
+	  getmethod = &PlotMSCacheBase::getRHO0;
+	  break;
   case PMS::HA0:
     getmethod = &PlotMSCacheBase::getHA0;
     break;
@@ -849,6 +855,8 @@ void PlotMSIndexer::setIndexer(IndexerMethPtr& indexmethod,PMS::Axis axis) {
     // chunk-dep geometry
   case PMS::AZ0:
   case PMS::EL0:
+  case PMS::RADIAL_VELOCITY:
+  case PMS::RHO:
   case PMS::HA0:
   case PMS::PA0:
     indexmethod = &PlotMSIndexer::getIndex0000;

@@ -208,6 +208,7 @@ namespace casa
 
     Int calculateAperture(ApertureCalcParams *ap);
     Int calculateAperture(ApertureCalcParams *ap, const Int& whichStokes);
+    Int calculateApertureLinPol(ApertureCalcParams *ap, const Int& whichStokes);
 
   protected:
     BeamCalc();
@@ -223,6 +224,12 @@ namespace casa
 			  Complex *Er, Complex *El,
 			  const Int &i, const Int &j,
 			  const Int& whichStokes);
+  void computePixelValuesLinPol(const ApertureCalcParams *ap, 
+				const calcAntenna *a, const Pathology *p,
+				const Double &L0,
+				Complex *Ex, Complex *Ey,
+				const Int &i, const Int &j,
+				const Int& whichStokes);
     //normalizes a "vector" of 3 Doubles in the vector sense
     inline void norm3(Double *v)
     {

@@ -220,6 +220,10 @@ public:
     virtual void removeLastPanel() = 0;
     
     
+    //Use a common x-/y- axis when plotting multiple graphs.
+    void setCommonAxisX(Bool commonAxis );
+    void setCommonAxisY(Bool commonAxis );
+
     // Plotting Functionality methods //
     
     // Returns the implementation of this plotter.
@@ -291,6 +295,8 @@ public:
 protected:
     // Logger.
     PlotLoggerPtr m_logger;
+    Bool commonAxisX;
+    Bool commonAxisY;
 };
 typedef CountedPtr<Plotter> PlotterPtr;
 

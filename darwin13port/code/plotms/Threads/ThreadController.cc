@@ -109,7 +109,9 @@ void ThreadController::finishProgress() {
 }
 
 void ThreadController::finished(){
-	postThreadMethod();
+	if ( getResult() ){
+		postThreadMethod();
+	}
 }
 
 void ThreadController::setStatus(const String& /*status*/){

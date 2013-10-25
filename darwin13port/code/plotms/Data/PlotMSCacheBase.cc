@@ -192,6 +192,31 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
       }
     }
     
+    bool ephemerisX = isEphemerisAxis( currentX_);
+    bool ephemerisY = isEphemerisAxis( currentY_);
+    if ( ephemerisX || ephemerisY ){
+    	bool ephemerisAvailable = isEphemeris();
+    	if ( !ephemerisAvailable ){
+    		String axisName;
+    		if ( ephemerisX ){
+    			axisName.append( PMS::axis( currentX_));
+    		}
+    		if ( ephemerisY ){
+    			if ( ephemerisX ){
+    				axisName.append( " and ");
+    			}
+    			axisName.append( PMS::axis( currentY_));
+    		}
+    		String errorMessage( "Not loading axis "+axisName+
+    	    		  " because ephemeris data is not available for this ms.");
+    		logWarn( "load", errorMessage);
+    		if ( thread != NULL ){
+    			thread->setError( errorMessage );
+    		}
+    		throw AipsError(errorMessage );
+    	}
+    }
+
   }
 
   // TBD:  move down to where we are surer something good will happen?
@@ -229,10 +254,13 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
   // already in load list, 2) not loaded, or 3) loaded but with different
   // data column (if applicable).
   bool found; PMS::Axis axis; PMS::DataColumn dc;
+
   for(unsigned int i = 0; i < axes.size(); i++) {
     found = false;
     axis = axes[i];
     
+
+
     // add to pending list
     pendingLoadAxes_[axis]=true;
 
@@ -246,6 +274,15 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
       if(loadAxes[j] == axis) found = true;
     if(found) continue;
     
+    //If ephemeris data is not available we should not axes associated
+    //with ephemeris data.
+    bool ephemerisAvailable = isEphemeris();
+    if ( !ephemerisAvailable ){
+    	if ( axis == PMS::RADIAL_VELOCITY || axis == PMS::RHO ){
+    		continue;
+    	}
+    }
+
     // 2)  already loaded?
     if(!loadedAxes_[axis]) {
       loadAxes.push_back(axis);
@@ -407,6 +444,8 @@ void PlotMSCacheBase::release(const vector<PMS::Axis>& axes) {
 
 	case PMS::AZ0: az0_.resize(0); break;
 	case PMS::EL0: el0_.resize(0); break;
+	case PMS::RADIAL_VELOCITY: radialVelocity_.resize(0); break;
+	case PMS::RHO: rho_.resize(0); break;
 	case PMS::HA0: ha0_.resize(0); break;
 	case PMS::PA0: pa0_.resize(0); break;
 
@@ -438,9 +477,20 @@ void PlotMSCacheBase::release(const vector<PMS::Axis>& axes) {
     if(!dataLoaded_) nChunk_ = 0;
 }
 
+bool PlotMSCacheBase::isEphemerisAxis( PMS::Axis axis ) const {
+	bool ephemerisAxis = false;
+	if ( axis == PMS::RADIAL_VELOCITY || axis == PMS::RHO ){
+		ephemerisAxis = true;
+	}
+	return ephemerisAxis;
+}
+
 void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange, Bool globalYRange) {
 
+
+
   logLoad("Setting up iteration indexing (if necessary), and calculating plot ranges.");
+
 
    // cout << "############ PlotMSCacheBase::setUpIndexer: " << PMS::axis(iteraxis)
     //     << " cacheReady() = " << boolalpha << cacheReady() << endl;
@@ -647,6 +697,8 @@ void PlotMSCacheBase::increaseChunks(Int nc) {
 
   az0_.resize(nChunk_,True);
   el0_.resize(nChunk_,True);
+  radialVelocity_.resize(nChunk_,True);
+  rho_.resize(nChunk_,True);
   ha0_.resize(nChunk_,True);
   pa0_.resize(nChunk_,True);
   
@@ -775,6 +827,8 @@ void PlotMSCacheBase::setAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
   case PMS::HA0:
   case PMS::PA0:
   case PMS::TSYS:
+  case PMS::RADIAL_VELOCITY:
+  case PMS::RHO:
   case PMS::NONE:
     break;
   }
@@ -943,6 +997,8 @@ unsigned int PlotMSCacheBase::nPointsForAxis(PMS::Axis axis) const {
         
     case PMS::AZ0:           return az0_.size();
     case PMS::EL0:           return el0_.size();
+    case PMS::RADIAL_VELOCITY:  return radialVelocity_.size();
+    case PMS::RHO: 			 return rho_.size();
     case PMS::HA0:           return ha0_.size();
     case PMS::PA0:           return pa0_.size();
 

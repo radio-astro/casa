@@ -30,10 +30,12 @@ class cleanhelper:
         ####
         if((type(imtool) != str) and (len(vis) !=0)):
             # for multi-mses input (not fully implemented yet)
-            if(type(vis)==list):
-                self.initmultims(imtool, vis, usescratch)
-            else:
-                self.initsinglems(imtool, vis, usescratch)
+            if(type(vis)!=list):
+                vis=[vis]
+                self.sortedvisindx=[0]
+            self.initmultims(imtool, vis, usescratch)
+        #    else:
+        #        self.initsinglems(imtool, vis, usescratch)
         #self.maskimages={}
         self.maskimages=odict()
         self.finalimages={}
@@ -1053,6 +1055,10 @@ class cleanhelper:
         ############################################################
         # Not sure I need this now.... Nov 15, 2010
         vislist.reverse()
+        writeaccess=True
+        for i in vislist: 
+            writeaccess=writeaccess and os.access(self.vis[i], os.W_OK)
+        #if any ms is readonly then no model will be stored, MSs will be in readmode only...but clean can proceed
         for i in vislist:
           # select apropriate parameters
           selectedparams=self._selectlistinputs(len(vislist),i,self.paramlist)
@@ -1064,19 +1070,19 @@ class cleanhelper:
           inintent = selectedparams['intent']
           inuvrange=selectedparams['uvrange'] 
 
-          if len(self.vis)==1:
+          #if len(self.vis)==1:
             #print "single ms case"
-            self.im.selectvis(nchan=nchan,start=start,step=width,field=field,
-                              spw=inspw,time=intimerange, baseline=inantenna,
-                              scan=inscan, observation=inobs, intent=inintent, uvrange=inuvrange,
-                              usescratch=usescratch)
-          else:
+          #  self.im.selectvis(nchan=nchan,start=start,step=width,field=field,
+          #                    spw=inspw,time=intimerange, baseline=inantenna,
+          #                    scan=inscan, observation=inobs, intent=inintent, uvrange=inuvrange,
+          #                    usescratch=usescratch)
+          #else:
             #print "multims case: selectvis for vis[",i,"]: spw,field=", inspw, self.fieldindex[i]
-            self.im.selectvis(vis=self.vis[i],nchan=nchan,start=start,step=width,
-                              field=self.fieldindex[i], spw=inspw,time=intimerange,
-                              baseline=inantenna, scan=inscan,
-                              observation=inobs, intent=inintent,
-                              uvrange=inuvrange, usescratch=usescratch)
+          self.im.selectvis(vis=self.vis[i],nchan=nchan,start=start,step=width,
+                            field=self.fieldindex[i], spw=inspw,time=intimerange,
+                            baseline=inantenna, scan=inscan,
+                            observation=inobs, intent=inintent,
+                            uvrange=inuvrange, usescratch=usescratch, writeaccess=writeaccess)
 
     # private function for datsel and datweightfilter
     def _selectlistinputs(self,nvis,indx,params):

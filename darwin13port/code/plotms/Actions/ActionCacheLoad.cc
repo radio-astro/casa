@@ -55,7 +55,7 @@ void ActionCacheLoad::setSetupPlot( bool setUp ){
 }
 
 
-bool ActionCacheLoad::isAxesValid( vector<pair<PMS::Axis,unsigned int > > cacheAxes, int axisIndex ) const {
+bool ActionCacheLoad::isAxesValid( vector<pair<PMS::Axis,unsigned int > > /*cacheAxes*/, int /*axisIndex*/ ) const {
 	bool valid = true;
 	/*if ( cacheAxes.size() > 0 ){
 		for(unsigned int j = 0; j < cacheAxes.size(); j++){

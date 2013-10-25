@@ -153,26 +153,37 @@ else:
    # 11 Apr 2011 (UR). Changed the simulated MS, with both pointings off-source.
    # These are pixel values at the center of the source, pixel 256, 315
    # Test 1
-   correct_cs_intensity = 0.692243
-   correct_cs_avgpb = 0.705166
+   #correct_cs_intensity = 0.692243
+   #correct_cs_avgpb = 0.705166
    # Test 2
-   correct_mtmfs_intensity = 0.908868
-   correct_mtmfs_alpha = -0.0037804
-   correct_mtmfs_coeffpb_0 = 0.999975
-   correct_mtmfs_coeffpb_1 = 0.705602
+   #correct_mtmfs_intensity = 0.908868
+   #correct_mtmfs_alpha = -0.0037804
+   #correct_mtmfs_coeffpb_0 = 0.999975
+   #correct_mtmfs_coeffpb_1 = 0.705602
 
    # 10 Sept 2013 (UR). 
    ## Removed CF rotation (changed from 5.0 to 360.0), and using PB=sqrt(sum_pbsq)
    ## Removed test for coeffPB_1, since this is no longer correct 
    # These are pixel values at the center of the source, pixel 256, 315
    # Test 1
-   correct_cs_intensity = 0.67087
-   correct_cs_avgpb = 0.695073
+   #correct_cs_intensity = 0.67087
+   #correct_cs_avgpb = 0.695073
    # Test 2
-   correct_mtmfs_intensity = 0.679821
-   correct_mtmfs_alpha = 0.036
-   correct_mtmfs_avgPB_tt0 = 0.695073  # avgPB_tt0
+   #correct_mtmfs_intensity = 0.679821
+   #correct_mtmfs_alpha = 0.036
+   #correct_mtmfs_avgPB_tt0 = 0.695073  # avgPB_tt0
 ##   correct_mtmfs_coeffpb_1 = 0.705602   ## Make this avgPB_tt1
+
+   # 24 Oct 2013 (UR). 
+   ## Switched to using PBSQ. Search for 'PBSQWeight' in the code. (0.69*0.69 = 0.476)
+   # These are pixel values at the center of the source, pixel 256, 315
+   # Test 1
+   correct_cs_intensity = 0.66764
+   correct_cs_avgpb = 0.48338
+   # Test 2
+   correct_mtmfs_intensity = 0.68578
+   correct_mtmfs_alpha = 0.002019
+   correct_mtmfs_avgPB_tt0 = 0.48338  # avgPB_tt0
 
 
 ###################################################

@@ -140,19 +140,19 @@ def load_ngc4826(prefix,msname,caltable):
     ##########################################################################
     # Flag end channels
     print '--Flagdata--'
-    default('tflagdata')
+    default('flagdata')
     print ""
     print "Flagging edge channels in all spw"
     print "  0~3:0~1;62~63 , 4~11:0~1;30~31, 12~15:0~1;62~63 "
     print ""
-    tflagdata(vis=msname, mode='manual',
+    flagdata(vis=msname, mode='manual',
              spw='0~3:0;1;62;63,4~11:0;1;30;31,12~15:0;1;62;63')
     # Flag correlator glitch
     print ""
     print "Flagging bad correlator field 8 antenna 3&9 spw 15 all channels"
     print "  timerange 1998/04/16/06:19:00.0~1998/04/16/06:20:00.0"
     print ""
-    tflagdata(vis=msname, mode='manual', field='8', spw='15', antenna='3&9', timerange='1998/04/16/06:19:00.0~1998/04/16/06:20:00.0')
+    flagdata(vis=msname, mode='manual', field='8', spw='15', antenna='3&9', timerange='1998/04/16/06:19:00.0~1998/04/16/06:20:00.0')
     print "Completed pre-calibration flagging"
     ##########################################################################
     # Use Flagmanager to save a copy of the flags so far

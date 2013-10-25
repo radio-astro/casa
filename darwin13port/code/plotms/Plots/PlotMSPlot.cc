@@ -243,7 +243,6 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
     		errorMessage.append( fileName );
     		errorMessage.append( " is valid.");
     		itsParent_->getLogger()->postMessage(PMS::LOG_ORIGIN, PMS::LOG_ORIGIN_PLOT, errorMessage, PlotLogger::MSG_WARN);
-    		itsParent_->showWarning(errorMessage, "Data Not Loaded");
     		dataSuccess = false;
     	}
     }

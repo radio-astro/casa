@@ -389,12 +389,6 @@ protected:
 	// return a string representing a pixel value, precision 1.
 	static String _printPixel(const Double& d);
 
-	// get the direction reference frame of the input region (not the coordinate system)
-	MDirection::Types _getDirectionRefFrame() const {
-		return _directionRefFrame;
-	}
-
-
 private:
 	Type _type;
 	MDirection::Types _directionRefFrame;

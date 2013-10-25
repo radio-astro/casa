@@ -24,8 +24,8 @@ default('listobs')
 listobs(vis='g192_a.ms')
 #listtime = time.time()
 print '--Flag auto-correlations--'
-default('tflagdata')
-tflagdata(vis='g192_a.ms',mode='manual',autocorr=True)
+default('flagdata')
+flagdata(vis='g192_a.ms',mode='manual',autocorr=True)
 flagtime = time.time()
 print '--Setjy--'
 default('setjy')
@@ -86,7 +86,7 @@ splitsrctime = time.time()
 
 print '--Flag bad time range--'
 #flag data in the specified time range for the source and spw
-tflagdata(vis="g192_src.split.ms", field="0", spw="0", 
+flagdata(vis="g192_src.split.ms", field="0", spw="0", 
 	  timerange="2003/04/26/02:45:00.0~2003/04/26/02:46:30.0")
 flagsrctime=time.time()
 
@@ -246,7 +246,7 @@ print >>logfile,'Total CPU        time was: '+str(endProc - startProc)
 print >>logfile,'Processing rate MB/s  was: '+str(634.9/(endTime - startTime))
 print >>logfile,'* Breakdown:                           *'
 print >>logfile,'*   import       time was: '+str(importtime-startTime)
-print >>logfile,'*   tflagdata    time was: '+str(flagtime-importtime)
+print >>logfile,'*   flagdata    time was: '+str(flagtime-importtime)
 print >>logfile,'*   setjy        time was: '+str(setjytime-flagtime)
 print >>logfile,'*   gencal       time was: '+str(gencaltime-setjytime)
 print >>logfile,'*   gaincal      time was: '+str(gaintime-gencaltime)

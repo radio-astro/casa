@@ -510,7 +510,7 @@ namespace casa {
 		if ( !ui.contourRadio->isChecked() ){
 			contextMenu.addAction( &contourAction );
 		}
-		if ( !isViewed() && ui.rasterRadio->isChecked() ){
+		if ( !isViewed() && ui.rasterRadio->isChecked() && isRegistered() ){
 			contextMenu.addAction( &viewAction );
 		}
 		contextMenu.addAction( &closeAction );

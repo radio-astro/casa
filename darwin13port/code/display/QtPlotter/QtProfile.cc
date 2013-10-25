@@ -454,8 +454,8 @@ namespace casa {
 
 	void QtProfile::exportProfile() {
 		QString filterString = tr("FITS files (*.fits);;Text files (*.txt);;Vector Graphic Plotter files(*.plt)");
-		QFileDialog fd( this, tr("Export profile"),
-				                QString() );
+		QString currentDirectory = QDir::currentPath();
+		QFileDialog fd( this, tr("Export profile"), currentDirectory );
 		fd.setFileMode( QFileDialog::AnyFile );
 		fd.setNameFilter( filterString );
 		if ( fd.exec() ) {

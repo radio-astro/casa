@@ -1054,7 +1054,7 @@ Calibrater::correct(String mode)
         vi.origin();
 
         // Pass each timestamp (VisBuffer) to VisEquation for correction
-        Bool calwt(calWt());
+
         Vector<Bool> uncalspw(vi.numberSpw());	// Used to accumulate error messages
         uncalspw.set(False);		        // instead of bombing the user
                                         // in a loop.
@@ -1066,11 +1066,8 @@ Calibrater::correct(String mode)
                 uInt spw = vb->spectralWindow();
                 if (ve_p->spwOK(spw)){
 
-                    // If we are going to update the weights, reset them first
-                    // TBD: move this to VisEquation::correct?
-                    if (calwt){
-                        vb->resetWeightMat();
-                    }
+		    // Re-initialize weights from sigma column
+		    vb->resetWeightMat();
 
 		    // throws exception if nothing to apply
                     ve_p->correct(*vb,trialmode);
@@ -1080,8 +1077,7 @@ Calibrater::correct(String mode)
 		      
 		      if (upmode.contains("CAL")) {
 			vi.setVis (vb->visCube(), whichOutCol);
-			if (calwt)
-			  vi.setWeightMat(vb->weightMat()); // Write out weight col, if it has changed
+			vi.setWeightMat(vb->weightMat()); 
 		      }
 		      
 		      if (upmode.contains("FLAG"))
@@ -2718,9 +2714,7 @@ CorrectorVp::doProcessingImpl (ProcessingType processingType,
 
         // If the VB's spectral window can be calibrated, then do so.
 
-        if (calculateWeights_p){
-            inputVbPtr->resetWeightMat();
-        }
+        inputVbPtr->resetWeightMat();
 
         calibrater_p->ve_p->correct(* inputVbPtr);    // throws exception if nothing to apply
 
@@ -2759,9 +2753,7 @@ CorrectorVp::doProcessingImpl (ProcessingType processingType,
 
         // Write out weight col, if it has changed
 
-        if (calculateWeights_p){
-            inputVbPtr->dirtyComponentsAdd (VisBufferComponents::WeightMat);
-        }
+	inputVbPtr->dirtyComponentsAdd (VisBufferComponents::WeightMat);
 
         VpData output;
         VpPort outputPort = getOutputs () [0];

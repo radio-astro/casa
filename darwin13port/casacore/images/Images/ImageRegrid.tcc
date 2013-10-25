@@ -29,49 +29,19 @@
 #include <images/Images/ImageRegrid.h>
 
 #include <casa/Arrays/ArrayAccessor.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Arrays/Cube.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Containers/Block.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <coordinates/Coordinates/ObsInfo.h>
-#include <images/Images/TempImage.h>
-#include <images/Regions/ImageRegion.h>
 #include <images/Images/SubImage.h>
-#include <lattices/Lattices/ArrayLattice.h>
-#include <lattices/Lattices/MaskedLattice.h> 
-#include <lattices/Lattices/LatticeStepper.h>
-#include <lattices/Lattices/LatticeNavigator.h>
-#include <lattices/Lattices/LatticeIterator.h>
-#include <lattices/Lattices/LCSlicer.h>
-#include <lattices/Lattices/TempLattice.h>
-#include <lattices/Lattices/TiledShape.h>
-#include <lattices/Lattices/TiledLineStepper.h>
-#include <lattices/Lattices/SubLattice.h>
-#include <lattices/Lattices/LCRegion.h>
+#include <images/Images/TempImage.h>
 #include <lattices/Lattices/LatticeUtilities.h>
-#include <scimath/Mathematics/InterpolateArray1D.h>
-#include <scimath/Mathematics/Interpolate2D.h>
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MFrequency.h>
 #include <measures/Measures/MCDirection.h>
 #include <measures/Measures/MCFrequency.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/OS/Timer.h>
-#include <casa/Quanta/MVDirection.h>
+#include <scimath/Mathematics/InterpolateArray1D.h>
 #include <casa/System/ProgressMeter.h>
-#include <casa/Utilities/Assert.h>
 
 #include <casa/sstream.h>
 #include <casa/fstream.h>
-
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -163,7 +133,71 @@ void ImageRegrid<T>::regrid(
 
 	// Check user pixel axes specifications
 
-	checkAxes(outPixelAxes, inShape, outShape, pixelAxisMap1, outCoords);
+	_checkAxes(outPixelAxes, inShape, outShape, pixelAxisMap1, outCoords);
+
+	{
+		// warn if necessary, CAS-5110
+		Vector<Int> dirAxes = outCoords.directionAxesNumbers();
+		Bool regridDirAxis = False;
+		for (uInt i=0; i<outPixelAxes.size(); i++) {
+			for (uInt j=0; j<dirAxes.size(); j++) {
+				if (outPixelAxes[i] == dirAxes[j]) {
+					regridDirAxis = True;
+					break;
+				}
+			}
+			if (regridDirAxis) {
+				break;
+			}
+		}
+		if (regridDirAxis) {
+			const ImageInfo info = inImage.imageInfo();
+			Quantity inbeam;
+			const DirectionCoordinate dc = inImage.coordinates().directionCoordinate();
+			Vector<Double> inc = dc.increment();
+			Vector<String> units = dc.worldAxisUnits();
+			Quantity inpix = min(Quantity(inc[0], units[0]), Quantity(inc[1], units[1]));
+			Bool hasBeam = info.hasBeam();
+			if (hasBeam) {
+				inbeam = info.hasSingleBeam()
+					? info.restoringBeam().getMinor()
+					: info.getBeamSet().getSmallestMinorAxisBeam().getMinor();
+			}
+			else {
+				inbeam = inpix;
+			}
+			const DirectionCoordinate dcout = outImage.coordinates().directionCoordinate();
+			inc = dcout.increment();
+			units = dcout.worldAxisUnits();
+			Quantity outpix = min(Quantity(inc[0], units[0]), Quantity(inc[1], units[1]));
+			if (
+				(
+					method == Interpolate2D::NEAREST && inbeam/inpix < Quantity(5, "")
+					&& outpix/inpix > Quantity(0.5, "")
+				)
+				|| (
+					method == Interpolate2D::LINEAR && inbeam/inpix < Quantity(3, "")
+					&& outpix/inpix > Quantity(0.75, "")
+				)
+				|| (
+					method == Interpolate2D::CUBIC && inbeam/inpix < Quantity(3, "")
+					&& outpix/inpix > Quantity(1, "")
+				)
+			) {
+				LogIO log;
+				log << LogOrigin("ImageRegrid", __FUNCTION__) << LogIO::WARN
+					<< "You are regridding an image which either doesn't have a "
+					<< "beam specified, or whose beam is not well sampled by the "
+					<< "pixel size.  Total flux can be lost when regridding such "
+					<< "images, especially when the new pixel size is larger than "
+					<< "the old pixel size. It is recommended to check the total "
+					<< "flux of your input and output image, and if necessary "
+					<< "rebin the input to have smaller pixels." << LogIO::POST;
+			}
+
+		}
+	}
+
 	const uInt nOutRegridPixelAxes = outPixelAxes.nelements();
 	if (itsShowLevel>0) {
 		cerr << "outPixelAxes = " << outPixelAxes << endl;
@@ -1994,7 +2028,7 @@ void ImageRegrid<T>::make1DCoordinateGrid (Block<Float>& outX,
 
 
 template<class T>
-void ImageRegrid<T>::checkAxes(IPosition& outPixelAxes,
+void ImageRegrid<T>::_checkAxes(IPosition& outPixelAxes,
                                const IPosition& inShape,
                                const IPosition& outShape,
                                const Vector<Int>& pixelAxisMap1,

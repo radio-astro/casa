@@ -23,7 +23,7 @@ or off.
 \item Separation of spectral windows, which does not have an independent
 boolean switch, but it can be independently applied when regridms=True and
 the nspw parameter is set to > 1.
-\item Time averaging.
+\item Time averaging, similar to split.
 
 \end{enumerate}
 
@@ -37,7 +37,11 @@ Task mstransform behaves like split in all cases that concern sub-table re-index
 and selection. It does not support multiple channel selections, which are separated by
 a semi-colon. If there is an spw selection, it will re-index the spws starting from 0.
 
-A datacolumn specifies which column will be used for the transformations. It is
+The mstransform task is able to work with MSs that contain spectral windows with 
+different polarization shapes. Split cannot handle such MSs, but this was overcome 
+in mstransform.
+
+A data column specifies which column will be used for the transformations. It is
 possible to make real a virtual MODEL column, by setting the parameter
 {\it datacolumn} to any of the values 'model', 'all' or 'data,model,corrected'
 and then setting the sub-parameter {\it realmodelcol} to True. This will copy the virtual
@@ -221,7 +225,9 @@ requested column does not exist, it will exit with an error.
 
 \subsection{Time averaging}
 % Add stuff in here
-Similar to split, this task can average the MS in time, based on a set of parameters....
+Similar to split, this task can average the MS in time, based on a width given by the
+{\it timebin} parameter and the optional {\it timespan, maxuvwdistance}
+parameters.
 
 %timespan
 %minbaselines
@@ -275,7 +281,11 @@ mstransform(vis='inp.ms', outputvis='out.ms', tileshape=[4,64,1024])
 \begin{verbatim}
 mstransform(vis='inp.ms', outputvis='out.ms', spw='0', regridms=True, nchan=10, nspw=5)
 \end{verbatim}
-
+\item Apply time averaging on the default CORRECTED column using a maximum separation of start-to-end 
+baselines that can be included in the average.
+\begin{verbatim}
+mstransform(vis='inp.ms', outputvis='out.ms', timeaverage=True, timebin='10s', maxuvwdistance=1E5)
+\end{verbatim}
 
 
 \end{enumerate}
@@ -288,8 +298,12 @@ selection, set also {\it combinespws} to True because cvel always combines the s
 spws.
 
   \item[Q2: How to run mstransform like split and the width parameter?] \hfill 
-  To do channel average, set {\it chanaverage} to True and set {\it chanbin} to the
+  To do channel average, set {\it chanaverage} to True and set {\it chanbin} to
   the same value of the {\it width} parameter in split.
 
+  \item[Q3: How to run mstransform like split and the timebin parameter?] \hfill 
+  To do time average, set {\it timeaverage} to True and set {\it timebin} to
+  the same value of the {\it timebin} parameter in split.
+\item[]
 \end{description}
 

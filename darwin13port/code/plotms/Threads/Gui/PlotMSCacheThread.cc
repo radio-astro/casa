@@ -27,7 +27,7 @@
 #include <plotms/Threads/Gui/PlotMSCacheThread.qo.h>
 
 #include <plotms/Gui/PlotMSPlotter.qo.h>
-#include <plotms/PlotMS/PlotMS.h>
+//#include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Data/PlotMSCacheBase.h>
 #include <QDebug>
@@ -38,9 +38,10 @@ namespace casa {
 // PLOTMSCACHETHREAD DEFINITIONS //
 ///////////////////////////////////
 
-PlotMSCacheThread::PlotMSCacheThread(QtProgressWidget* progress,
+PlotMSCacheThread::PlotMSCacheThread(QtProgressWidget* progress, PlotMSPlotter* plotter,
         PMSPTMethod postThreadMethod, PMSPTObject postThreadObject) :
-        PlotMSThread( progress, postThreadMethod, postThreadObject ){
+        PlotMSThread( progress, postThreadMethod, postThreadObject ),
+        itsPlotter_( plotter ){
 }
 
 
@@ -87,12 +88,19 @@ void PlotMSCacheThread::setProgressAndStatus(unsigned int progress,
 
 void PlotMSCacheThread::threadFinished() {
     finalizeProgress();
-    
     // Show error message if one occurred, and say the thread was canceled so
     // that the plot won't update the display.
-    if(!itsCacheError_.empty()) {
-        itsPlot_->parent()->showError(itsCacheError_,
-                itsLoad_ ? "Load Error" : "Release Error");
+    bool success = getResult();
+    if( !success ) {
+    	String errorOperation( "Load Error ");
+    	if ( !itsLoad_ ){
+    		errorOperation = "ReleaseError";
+    	}
+        //itsPlot_->parent()->showError(error,
+        //        itsLoad_ ? "Load Error" : "Release Error");
+    	if ( itsPlotter_ != NULL ){
+    		itsPlotter_->showError( error, errorOperation, false);
+    	}
         wasCanceled_ = true;
     }
     

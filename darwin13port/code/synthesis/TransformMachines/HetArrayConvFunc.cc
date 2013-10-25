@@ -54,9 +54,11 @@
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/SubLattice.h>
 #include <lattices/Lattices/LCBox.h>
+#include <lattices/Lattices/LatticeConcat.h>
 #include <lattices/Lattices/LatticeExpr.h>
 #include <lattices/Lattices/LatticeCache.h>
 #include <lattices/Lattices/LatticeFFT.h>
+
 
 #include <ms/MeasurementSets/MSColumns.h>
 
@@ -409,21 +411,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       coords.replaceCoordinate(spCoord, spind);
 
       IPosition pbShape(4, convSize_p, convSize_p, 1, nBeamChans);
-      TempImage<Complex> twoDPB(pbShape, coords);    
+      //TempImage<Complex> twoDPB(pbShape, coords);    
     
       
-      TempLattice<Complex> convFuncTemp(TiledShape(IPosition(5, convSize_p, convSize_p, nBeamPols, nBeamChans, ndishpair), IPosition(5, convSize_p, convSize_p, 1, 1, 1)));
-      TempLattice<Complex> weightConvFuncTemp(TiledShape(IPosition(5, convSize_p, convSize_p, nBeamPols, nBeamChans, ndishpair), IPosition(5, convSize_p, convSize_p, 1, 1, 1)));
+      TempLattice<Complex> convFuncTemp(TiledShape(IPosition(5, convSize_p/4, convSize_p/4, nBeamPols, nBeamChans, ndishpair), IPosition(5, convSize_p/4, convSize_p/4, 1, 1, 1)), 0);
+      TempLattice<Complex> weightConvFuncTemp(TiledShape(IPosition(5, convSize_p/4, convSize_p/4, nBeamPols, nBeamChans, ndishpair), IPosition(5, convSize_p/4, convSize_p/4, 1, 1, 1)), 0);
 	//convFunc_p.resize(IPosition(5, convSize_p, convSize_p, nBeamPols, nBeamChans, ndishpair));
        
       // convFunc_p=0.0;
       //weightConvFunc_p.resize(IPosition(5, convSize_p, convSize_p, nBeamPols, nBeamChans, ndishpair));
       //weightConvFunc_p=0.0;
       IPosition begin(5, 0, 0, 0, 0, 0);
-      //IPosition end(5, convFuncTemp.shape()[0]-1,  convFuncTemp.shape()[1]-1, nBeamPols-1, nBeamChans-1, 0);
+      IPosition end(5, convFuncTemp.shape()[0]-1,  convFuncTemp.shape()[1]-1, nBeamPols-1, nBeamChans-1, 0);
       FFTServer<Float, Complex> fft(IPosition(2, convSize_p, convSize_p));
-      TempImage<Complex> pBScreen(TiledShape(pbShape, IPosition(4, convSize_p, convSize_p, 1, 1)), coords);
-      TempImage<Complex> pB2Screen(TiledShape(pbShape, IPosition(4, convSize_p, convSize_p, 1, 1)), coords);
+      //TempImage<Complex> pBScreen(TiledShape(pbShape, IPosition(4, convSize_p, convSize_p, 1, 1)), coords, 0);
+      //TempImage<Complex> pB2Screen(TiledShape(pbShape, IPosition(4, convSize_p, convSize_p, 1, 1)), coords, 0);
+      TempImage<Complex> pBScreen(TiledShape(pbShape), coords, 0);
+      TempImage<Complex> pB2Screen(TiledShape(pbShape), coords, 0);
       IPosition start(4, 0, 0, 0, 0);
       convSupport_p.resize(ndishpair);
       for (uInt k=0; k < ndish; ++k){
@@ -442,6 +446,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 for (Int kk=0; kk < nBeamChans; ++kk){
 	   blcin[3]=kk;
 	   trcin[3]=kk;
+	   //cerr << "Doing channel " << kk << endl;
 	   Slicer slin(blcin, trcin, Slicer::endIsLast);
 	   SubImage<Complex> subim(pBScreen, slin, True);
 	   subim.set(Complex(1.0, 0.0));
@@ -465,8 +470,64 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	   subim2.copyData((LatticeExpr<Complex>) (iif(abs(subim2)> 25e-4, subim2, 0)));
 	    LatticeFFT::cfft2d(subim);
 	    LatticeFFT::cfft2d(subim2);
+
+	    /////////////////////////////
+	    Float maxVal=max(abs(subim)).getFloat();
+	    subim.copyData((LatticeExpr<Complex>) (subim/maxVal));
+
+	    ///////////////////////////
+
 	 }
-	 //tim.show("after apply+apply2+masking+fft ");
+	 /*
+	 if(nBeamChans >1){
+	   Slicer slin(blcin, trcin, Slicer::endIsLast);
+	   SubImage<Complex> origPB(pBScreen, slin, False);
+	   IPosition elshape= origPB.shape();
+	   Matrix<Complex> i1=origPB.get(True);
+	   SubImage<Complex> origPB2(pB2Screen, slin, False);
+	   Matrix<Complex> i2=origPB2.get(True);
+	   Int cenX=i1.shape()(0)/2;
+	   Int cenY=i1.shape()(1)/2;
+	   
+	   for (Int kk=0; kk < (nBeamChans-1); ++kk){
+	     Double fratio=beamFreqs(kk)/beamFreqs(nBeamChans-1);
+	     cerr << "fratio " << fratio << endl;
+	     blcin[3]=kk;
+	     trcin[3]=kk;
+	     //Slicer slout(blcin, trcin, Slicer::endIsLast);
+	     Matrix<Complex> o1(i1.shape(), Complex(0.0));
+	     Matrix<Complex> o2(i2.shape(), Complex(0.0));
+	     for (Int yy=0;  yy < i1.shape()(1); ++yy){
+	       //Int nyy= (Double(yy-cenY)*fratio) + cenY; 
+	       Double nyy= (Double(yy-cenY)/fratio) + cenY;
+	       Double cyy=ceil(nyy);
+	       Double fyy= floor(nyy);
+	       Int iy=nyy > fyy+0.5 ? cyy : fyy; 
+	       if(cyy <2*cenY && fyy >=0.0)
+		 for(Int xx=0; xx < i1.shape()(0); ++ xx){
+		   //Int nxx= Int(Double(xx-cenX)*fratio) + cenX; 
+		   Double nxx= Int(Double(xx-cenX)/fratio) + cenX;
+		    Double cxx=ceil(nxx);
+		    Double fxx= floor(nxx);
+		    Int ix=nxx > fxx+0.5 ? cxx : fxx ;
+		   if(cxx < 2*cenX && fxx >=0.0 ){
+		     //Double dist=sqrt((nxx-cxx)*(nxx-cxx)+(nyy-cyy)*(nyy-cyy))/sqrt(2.0);
+		     //o1(xx, yy)=float(1-dist)*i1(fxx, fyy)+ dist*i1(cxx,cyy);
+		     o1(xx, yy)=i1( ix, iy);
+		     //o2(xx, yy)=i2(nxx, nyy);
+		     //o2(xx, yy)=float(1-dist)*i2(fxx, fyy)+ dist*i2(cxx,cyy);
+		     o2(xx, yy)=i2(ix, iy);
+		   }
+		 }
+	     }
+	     pBScreen.putSlice(o1.reform(elshape), blcin);
+	     pB2Screen.putSlice(o2.reform(elshape), blcin);
+	   }
+
+	 }
+	 */
+	   
+	     //tim.show("after apply+apply2+masking+fft ");
 	 //tim.mark();
 	 //LatticeFFT::cfft2d(pBScreen);
 	 //LatticeFFT::cfft2d(pB2Screen);
@@ -481,14 +542,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  //pB2Screen.put(lala.reform(IPosition(4, convSize_p, convSize_p, 1, 1)));
 	  
 	  //////////*****************
-	  if(0){
+	  /*if(0){
 	    ostringstream os1;
 	    os1 << "PB_field_" << Int(thePix_p[0]) << "_" << Int(thePix_p[1]) << "_antpair_" << k <<"_"<<j ;
 	    PagedImage<Float> thisScreen(pbShape, coords, String(os1));
 	    LatticeExpr<Float> le(abs(pBScreen));
 	    thisScreen.copyData(le);
 	  
-	  }
+	    }*/
 	  ////////*****************/
 	 
 	  //tim.show("after FFT ");
@@ -498,13 +559,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    plane=plane+ndish-jj-1;
 	  plane=plane+j;
 	  begin[4]=plane;
-	  //end[4]=plane;
+	  end[4]=plane;
+	  Slicer slplane(begin, end, Slicer::endIsLast);
 	  //cerr <<  "SHAPES " << convFunc_p(begin, end).shape() << "  " << pBScreen.get(False).shape() << " begin and end " << begin << "    " << end << endl;
 	  //convFunc_p(begin, end).copyMatchingPart(pBScreen.get(False));
 	  //weightConvFunc_p(begin, end).copyMatchingPart(pB2Screen.get(False));
-	  convFuncTemp.putSlice(pBScreen.get(False), begin);
-	  weightConvFuncTemp.putSlice(pB2Screen.get(False), begin);
+	  IPosition blcQ(4, pbShape(0)/8*3, pbShape(1)/8*3, 0, 0);
+	  IPosition trcQ(4,  pbShape(0)/8*5-1, pbShape(1)/8*5-1, nBeamPols-1, nBeamChans-1);
+	  Slicer slQ(blcQ, trcQ, Slicer::endIsLast);
+	  {
+	    SubImage<Complex>  pBSSub(pBScreen, slQ, False);
+	    SubLattice<Complex> cFTempSub(convFuncTemp,  slplane, True);
+	    LatticeConcat<Complex> lc(4);
+	    lc.setLattice(pBSSub);
+	    //cerr << "SHAPES " << cFTempSub.shape() << "   " <<  lc.shape() << endl;
+	    cFTempSub.copyData(lc);
+	  }
+	  {
+	    SubImage<Complex>  pB2SSub(pB2Screen, slQ, False);
+	    SubLattice<Complex> cFTempSub2(weightConvFuncTemp,  slplane, True);
+	    LatticeConcat<Complex> lc(4);
+	    lc.setLattice(pB2SSub);
+	    cFTempSub2.copyData(lc);
+	    //weightConvFuncTemp.putSlice(pB2Screen.get(False), begin);
 
+	  }
 	  //	  supportAndNormalize(plane, convSampling);
 	  supportAndNormalizeLatt( plane, convSampling, convFuncTemp,  weightConvFuncTemp);
 
@@ -522,11 +601,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       convFunctions_p[actualConvIndex_p]= new Array<Complex>();
       convWeights_p[actualConvIndex_p]= new Array<Complex>();
       Int newConvSize=2*(max(convSupport_p)+2)*convSampling;
-      if(newConvSize < convSize_p){
-	IPosition blc(5, (convSize_p/2)-(newConvSize/2),
-		      (convSize_p/2)-(newConvSize/2),0,0,0);
-	IPosition trc(5, (convSize_p/2)+(newConvSize/2-1),
-		      (convSize_p/2)+(newConvSize/2-1), nBeamPols-1, nBeamChans-1,ndishpair-1);
+      //cerr << "new ConvSize " << newConvSize << endl;
+      Int lattSize=convFuncTemp.shape()(0);
+      if(newConvSize < lattSize){
+	IPosition blc(5, (lattSize/2)-(newConvSize/2),
+		      (lattSize/2)-(newConvSize/2),0,0,0);
+	IPosition trc(5, (lattSize/2)+(newConvSize/2-1),
+		      (lattSize/2)+(newConvSize/2-1), nBeamPols-1, nBeamChans-1,ndishpair-1);
 	IPosition shp(5, newConvSize, newConvSize, nBeamPols, nBeamChans, ndishpair);
 	
 	convFunctions_p[actualConvIndex_p]= new Array<Complex>(IPosition(5, newConvSize, newConvSize, nBeamPols, nBeamChans, ndishpair ));
@@ -538,8 +619,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	weightConvFunc_p.resize();
       }
       else{
-	(*convFunctions_p[actualConvIndex_p])=convFunc_p;
-	(*convWeights_p[actualConvIndex_p])=weightConvFunc_p;
+	(*convFunctions_p[actualConvIndex_p])=convFuncTemp.get();
+	(*convWeights_p[actualConvIndex_p])=weightConvFuncTemp.get();
       }
 
     }
@@ -826,14 +907,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Int convSupport=-1;
 	IPosition begin(5, 0, 0, 0, 0, plane);
 	IPosition shape(5, convFuncLat.shape()[0],  convFuncLat.shape()[1], 1, 1, 1);
+	//Int convSize=convSize_p;
+	Int convSize=shape(0);
 	Matrix<Complex> convPlane=convFuncLat.getSlice(begin, shape, True);
 	Float maxAbsConvFunc=max(amplitude(convPlane));
 	Float minAbsConvFunc=min(amplitude(convPlane));
 	Bool found=False;
 	Int trial=0;
-	for (trial=convSize_p/2-2;trial>0;trial--) {
+	for (trial=convSize/2-2;trial>0;trial--) {
 	  //Searching down a diagonal
-	  if(abs(convPlane(convSize_p/2-trial,convSize_p/2-trial)) >  (1.0e-2*maxAbsConvFunc)) {
+	  if(abs(convPlane(convSize/2-trial,convSize/2-trial)) >  (1.0e-2*maxAbsConvFunc)) {
 	    found=True;
 	    trial=Int(sqrt(2.0*Float(trial*trial)));
 	    break;
@@ -843,17 +926,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-2*maxAbsConvFunc)) 
 	  found=True;
 	  // if it drops by more than 2 magnitudes per pixel
-	  trial=( (10*convSampling) < convSize_p) ? 5*convSampling : (convSize_p/2 - 4*convSampling);
+	  trial=( (10*convSampling) < convSize) ? 5*convSampling : (convSize/2 - 4*convSampling);
 	}
        
 				 
 	if(found) {
 	  if(trial < 5*convSampling) 
-	    trial= ( (10*convSampling) < convSize_p) ? 5*convSampling : (convSize_p/2 - 4*convSampling);
+	    trial= ( (10*convSampling) < convSize) ? 5*convSampling : (convSize/2 - 4*convSampling);
 	  convSupport=Int(0.5+Float(trial)/Float(convSampling))+1;
 	  //support is really over the edge
-	  if( (convSupport*convSampling) >= convSize_p/2){
-	    convSupport=convSize_p/2/convSampling-1;
+	  if( (convSupport*convSampling) >= convSize/2){
+	    convSupport=convSize/2/convSampling-1;
 	  }
 	}
 	else {
@@ -883,9 +966,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
     
 	*/
+	//cerr << "convSize_p " << convSize_p <<  " convSize " << convSize << endl; 
 	if(convSupport >0){
-	  IPosition blc(2, -convSupport*convSampling+convSize_p/2, -convSupport*convSampling+convSize_p/2);
-	  IPosition trc(2, convSupport*convSampling+convSize_p/2, convSupport*convSampling+convSize_p/2);
+	  IPosition blc(2, -convSupport*convSampling+convSize/2, -convSupport*convSampling+convSize/2);
+	  IPosition trc(2, convSupport*convSampling+convSize/2, convSupport*convSampling+convSize/2);
 	  for (Int chan=0; chan < convFuncLat.shape()[3]; ++chan){
 	    begin[3]=chan;
 	    //end[3]=chan;

@@ -971,7 +971,7 @@ def parseRFlagOutputFromSummary(mode,summary_stats_list, flagcmd):
           If filename is not specified, make one up.
     (2) modify entries in 'cmdline' so that it is ready for savepars. 
           This is to ensure that 'savepars' saves the contents of the threshold-files
-          and not just the file-names. It has to save it in the form that tflagdata 
+          and not just the file-names. It has to save it in the form that flagdata 
           accepts inline : e.g.  timedev=[[1,10,0.1],[1,11,0.07]] . This way, the user
           need not keep track of threshold text files if they use 'savepars' with action='apply'.
     """
@@ -3850,7 +3850,7 @@ def extractRFlagOutputFromSummary(mode,summary_stats_list, flagcmd):
           If filename is not specified, make one up.
     (2) modify entries in 'cmdline' so that it is ready for savepars. 
           This is to ensure that 'savepars' saves the contents of the threshold-files
-          and not just the file-names. It has to save it in the form that tflagdata 
+          and not just the file-names. It has to save it in the form that flagdata 
           accepts inline : e.g.  timedev=[[1,10,0.1],[1,11,0.07]] . This way, the user
           need not keep track of threshold text files if they use 'savepars' with action='apply'.
     """

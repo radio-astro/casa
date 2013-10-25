@@ -331,10 +331,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if (doWideBandPBCorrection_p)
 	  for(uInt taylor=0;taylor<nterms_p;taylor++)
 	    {
-	      // Divide by PB
-	      normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)1);// normtype 1 divides by weightImageVec and ignores wegithsVec
-	      // Divide by sqrt(PB)
-	      //normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)4);
+	      // Divide by PB  ////// PBWeight
+	      //normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)1);// normtype 1 divides by weightImageVec and ignores wegithsVec
+	      // Divide by sqrt(PB)  ////// PBSQWeight
+	      normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)4);
 	    }
       }
     else 
@@ -385,10 +385,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	for(uInt taylor=0;taylor<nterms_p;taylor++)
 	  {
-	    //Mulitply by PB
-	    normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)3); // normtype 3 multiplies the model image with the pb
-	    //Mulitply by sqrt(PB)
-	    //normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)5); 
+	    //Mulitply by PB  ///// PBWeight
+	    //normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)3); // normtype 3 multiplies the model image with the pb
+	    //Mulitply by sqrt(PB) //// PBSQWeight
+	    normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)5); 
 	    
 	  }
       }

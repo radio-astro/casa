@@ -1262,16 +1262,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Normalize the model image by the sensitivity image only.
 	// No local implementation -- call FTMachine version
 
-	// Divide by avgPB
+	// Divide by avgPB ///// PBWeight
 	//
-	normalizeImage( *(modelImageVec[0]) , weightsVec[0],  *(weightImageVec[0]), 
-			False, (Float)pbLimit_p, (Int)1);
+	//normalizeImage( *(modelImageVec[0]) , weightsVec[0],  *(weightImageVec[0]), 
+	//		False, (Float)pbLimit_p, (Int)1);
 
 	//
-	// Divide by sqrt(avgPB)
+	// Divide by sqrt(avgPB) ////// PBSQWeight
 	//
-	// normalizeImage( *(modelImageVec[0]) , weightsVec[0],  *(weightImageVec[0]), 
-	// 		False, (Float)pbLimit_p, (Int)4);
+	 normalizeImage( *(modelImageVec[0]) , weightsVec[0],  *(weightImageVec[0]), 
+	 		False, (Float)pbLimit_p, (Int)4);
       }
     log_p << "Total flux in model image (after avgPB normalization): " 
 	  << sum((*(modelImageVec[0])).get()) << LogIO::POST;
@@ -1286,11 +1286,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Multiply the flat-sky model by the PB.
     // No local implementation -- call FTMachine version
     if(doPBCorrection)
-      // Multiply by avgPB
-      normalizeImage( *(modelImageVec[0]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pbLimit_p, (Int)3);
+      // Multiply by avgPB ///////  PBWeight
+      //normalizeImage( *(modelImageVec[0]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pbLimit_p, (Int)3);
       
-      // Multiply by sqrt(avgPB)
-      //normalizeImage( *(modelImageVec[0]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pbLimit_p, (Int)5);
+      // Multiply by sqrt(avgPB) ///// PBSQWeight
+      normalizeImage( *(modelImageVec[0]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pbLimit_p, (Int)5);
   }
   //
   //------------------------------------------------------------------------------

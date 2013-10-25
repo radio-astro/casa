@@ -1936,15 +1936,19 @@ void CubeSkyEquation::tmpWBNormalizeImage(Bool& dopsf, const Float& pbLimit)
 	      {
 		if (((NewMultiTermFT *)ft_)->getDOPBCorrection())
 		  {
-		    //le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/(sqrt(*ggSSliceVec)), 0.0)); // The negative sign is in FTM::normalizeImage()
-		     le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/((*ggSSliceVec)), 0.0)); // The negative sign is in FTM::normalizeImage()
+		    ////// PBSQWeight
+		    le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/(sqrt(*ggSSliceVec)), 0.0)); // The negative sign is in FTM::normalizeImage()
+		    ///// PBWeight
+		    //le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/((*ggSSliceVec)), 0.0)); // The negative sign is in FTM::normalizeImage()
 		    gSSliceVec->copyData(le);
 		  }
 	      }
 	    else
 	      {
-		//le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/(sqrt(*ggSSliceVec)), 0.0)); // The negative sign is in FTM::normalizeImage()
-		le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/((*ggSSliceVec)), 0.0)); // The negative sign is in FTM::normalizeImage()
+		////// PBSQWeight
+		le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/(sqrt(*ggSSliceVec)), 0.0)); // The negative sign is in FTM::normalizeImage()
+		////// PBWeight
+		//le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/((*ggSSliceVec)), 0.0)); // The negative sign is in FTM::normalizeImage()
 		gSSliceVec->copyData(le);
 	      }
 	    

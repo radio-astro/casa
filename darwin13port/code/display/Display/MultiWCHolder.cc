@@ -105,7 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		hold();
 		ListIter<DisplayData *> localDDLI(itsDDList);
-		if ( position <= 0 ) {
+		if ( position < 0 ) {
 			localDDLI.toEnd();
 		} else {
 			int i = 0;

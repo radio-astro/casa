@@ -239,7 +239,7 @@ LibAIR::AntSetWeight limitedNearestAnt(const LibAIR::antpos_t &pos,
   LibAIR::AntSetD::const_iterator s=dist.begin();
   for (size_t j=0; j<n; ++j)
   {
-    if(s->first <= maxdist_m)
+    if(s!=dist.end() and s->first <= maxdist_m)
     {
       total+=s->first;
       ++s;
@@ -278,10 +278,7 @@ void flagInterp(const casa::MeasurementSet &ms,
       i!=wvrflag.end(); 
       ++i)
   {
-//     LibAIR::AntSetWeight near=LibAIR::linNearestAnt(apos, 
-// 						    *i, 
-// 						    wvrflag_s, 
-// 						    3);
+
     LibAIR::AntSetWeight near=limitedNearestAnt(apos, 
 						*i, 
 						wvrflag_s, 
