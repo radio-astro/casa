@@ -752,6 +752,12 @@ public:
 
   void writeBackChanges (VisBuffer2 *);
 
+  // jagonzal (to be reviewed by jjacobs): Allow to access implementation object
+  // so that we don't have to create a dummy one in the factory methods of
+  // MSTransformIterator, thus avoiding overheads.
+
+  ViImplementation2 * getImpl() const;
+
 //**********************************************************************
 // Internal methods below this line
 //**********************************************************************
@@ -773,8 +779,6 @@ protected:
                   const SortColumns & sortColumns,
                   Double timeInterval,
                   Bool writable);
-
-  ViImplementation2 * getImpl() const;
 
 //     +------------------+
 //     |                  |
