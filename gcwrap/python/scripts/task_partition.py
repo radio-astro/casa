@@ -168,7 +168,7 @@ def partition(vis,
     try:
         param_names = partition.func_code.co_varnames[:partition.func_code.co_argcount]
         param_vals = [eval(p) for p in param_names]
-        casalog.post('Updating the history in the output')
+        casalog.post('Updating the history of the output MS','DEBUG1')
         write_history(mslocal, outputvis, 'partition', param_names,
                       param_vals, casalog)
     except Exception, instance:
