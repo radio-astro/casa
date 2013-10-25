@@ -36,7 +36,7 @@
 
 	<param type="string" name="intents" subparam="true">
 	    <description>List of intents of scans to be flagged</description>
-	    <value>*POINTING*,*FOCUS*,*ATMOSPHERE*,*SIDEBAND_RATIO*</value>
+	    <value>POINTING,FOCUS,ATMOSPHERE,SIDEBAND</value>
 	</param>
 
 	<param type="bool" name="edgespw">
@@ -118,7 +118,7 @@
 	    <when param="scan">
 	        <equals type="bool" value="True">
 		    <default param="scannumber"><value type="string"></value></default>
-		    <default param="intents"><value type="string">*POINTING*,*FOCUS*,*ATMOSPHERE*,*SIDEBAND_RATIO*</value></default>
+		    <default param="intents"><value type="string">POINTING,FOCUS,ATMOSPHERE,SIDEBAND</value></default>
 	        </equals>
 	        <equals type="bool" value="False">
 	        </equals>
@@ -196,7 +196,7 @@ scannumber -- A string containing a  comma delimited list of scans to be
 intents -- A string containing a comma delimited list of intents against
     which the scans to be flagged are matched.
     example: '*BANDPASS*'
-    default: '*POINTING*,*FOCUS*,*ATMOSPHERE*,*SIDEBAND_RATIO*'
+    default: 'POINTING,FOCUS,ATMOSPHERE,SIDEBAND'
 
 edgespw -- Flag the edge spectral window channels.
     default: True
