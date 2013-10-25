@@ -174,16 +174,26 @@ else:
    #correct_mtmfs_avgPB_tt0 = 0.695073  # avgPB_tt0
 ##   correct_mtmfs_coeffpb_1 = 0.705602   ## Make this avgPB_tt1
 
-   # 24 Oct 2013 (UR). 
+   # 24 Oct 2013 (UR). -- This is with an oversampling of 50.
    ## Switched to using PBSQ. Search for 'PBSQWeight' in the code. (0.69*0.69 = 0.476)
    # These are pixel values at the center of the source, pixel 256, 315
    # Test 1
-   correct_cs_intensity = 0.66764
-   correct_cs_avgpb = 0.48338
+   #correct_cs_intensity = 0.66764
+   #correct_cs_avgpb = 0.48338
    # Test 2
-   correct_mtmfs_intensity = 0.68578
-   correct_mtmfs_alpha = 0.002019
-   correct_mtmfs_avgPB_tt0 = 0.48338  # avgPB_tt0
+   #correct_mtmfs_intensity = 0.68578
+   #correct_mtmfs_alpha = 0.002019
+   #correct_mtmfs_avgPB_tt0 = 0.48338  # avgPB_tt0
+
+   # 25 Oct 2013 (UR). -- This is with DEFAULT oversampling (20)
+   # These are pixel values at the center of the source, pixel 256, 315
+   # Test 1
+   correct_cs_intensity = 0.671525
+   correct_cs_avgpb = 0.4836
+   # Test 2
+   correct_mtmfs_intensity = 0.6818
+   correct_mtmfs_alpha = 0.0188
+   correct_mtmfs_avgPB_tt0 = 0.4836
 
 
 ###################################################
