@@ -39,6 +39,9 @@ def simobserve(
         pbcoeff = 1.13 ##  PB defined as pbcoeff*lambda/d
         nyquist = 0.5/pbcoeff ## Nyquist spacing = PB*nyquist
 
+        gridratio_int = 1./pl.sqrt(3) # times lambda/d
+        gridratio_tp  = 1./3
+
         relmargin = .5  # number of PB between edge of model and ptg centers
         scanlength = 1  # number of integrations per scan
 
@@ -540,8 +543,11 @@ def simobserve(
             util.msg("calculating map pointings centered at "+str(dir0),origin='simobserve')
 
             if len(pointingspacing) < 1:
-                # ALMA OT uses lambda/d/sqrt(3)
-                pointingspacing = "%fPB" % (1./pl.sqrt(3)/pbcoeff) 
+                if uvmode:
+                    # ALMA OT uses lambda/d/sqrt(3)
+                    pointingspacing = "%fPB" % (gridratio_int/pbcoeff) 
+                else:
+                    pointingspacing = "%fPB" % (gridratio_tp/pbcoeff) 
             if str.upper(pointingspacing)=="NYQUIST":
                 pointingspacing="%fPB" % nyquist
             q = re.compile('(\d+.?\d+)\s*PB')
