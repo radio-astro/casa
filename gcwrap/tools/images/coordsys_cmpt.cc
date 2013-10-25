@@ -2508,16 +2508,24 @@ coordsys::settelescope(const std::string& telescope)
   *itsLog << LogOrigin("coordsys", "settelescope");
 
   ObsInfo obsInfo = itsCoordSys->obsInfo();
+
   obsInfo.setTelescope(telescope);
-  itsCoordSys->setObsInfo(obsInfo);
-  //
+
   casa::MPosition pos;
   if (!MeasTable::Observatory(pos, telescope)) {
     *itsLog << LogIO::WARN
-	    << "This telescope is not known to the casapy system" << endl;
-    *itsLog << "You can request that it be added" << LogIO::POST;
+	    << "This telescope and its position is not known to the casapy system." << endl
+	    << "You can request that it be added by contacting the NRAO helpdesk" << endl
+	    << "or you can make a modified copy of data/geodetic/Observatories and make an entry in .casarc of the format: " << endl  
+	    << "measures.observatory.directory: <absolute path to the directory containing table Observatories>" 
+	    << LogIO::POST;
   }
-  rstat = true;
+  else{
+    rstat = true;
+    obsInfo.setTelescopePosition(pos);
+  }
+
+  itsCoordSys->setObsInfo(obsInfo);
 
   return rstat;
 }
