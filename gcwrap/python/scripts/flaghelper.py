@@ -598,7 +598,7 @@ def parseAgents(aflocal, flagdict, myrows, apply, writeflags, display=''):
         mode = cmd['mode']
         agent_name = mode.capitalize()+'_'+str(row)
             
-        cmd['agentname'] = agent_name
+        cmd['name'] = agent_name
         
         # Remove the data selection parameters if there is only one agent for performance reasons.
         # Explanation: if only one agent exists and the data selection parameters are parsed to it, 
