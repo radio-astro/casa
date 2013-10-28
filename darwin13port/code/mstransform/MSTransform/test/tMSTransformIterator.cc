@@ -332,6 +332,9 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 	vi::VisibilityIterator2 *visIter = new vi::VisibilityIterator2 (factory);
 	vi::VisBuffer2 *visBuffer = visIter->getVisBuffer();
 
+	// Access Transformed SPW sub-tables
+	MSSpectralWindow transformedSpwTable =  visIter->ms().spectralWindow();
+
 	visIter->originChunks();
 	visIterRef.originChunks();
 	while (visIter->moreChunks() and visIterRef.moreChunks() and keepIterating)
@@ -631,7 +634,6 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 	cout << RESET << endl;
 
 	delete visIter;
-
 	return keepIterating;
 }
 
