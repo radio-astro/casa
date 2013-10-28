@@ -1934,8 +1934,8 @@ class test_CASA_4_0_bug_fix(test_base):
         self.assertEqual(summary_one['flagged'],summary_default['flagged'],'Error in quack mode with quack interval 1')
         
     def test_alias(self):
-        '''flagdata: Test tflagdata alias'''
-        res = tflagdata(vis=self.vis, mode='summary', spw='1')['flagged']
+        '''flagdata: Test flagdata alias'''
+        res = flagdata(vis=self.vis, mode='summary', spw='1')['flagged']
         self.assertEqual(res, 0)
         
     def test_spw_freq1(self):

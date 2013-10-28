@@ -163,7 +163,7 @@ else:
     plotxy(vis=msnameB,spw='0',field='0420+417,0518+165,0134+329',selectdata=T,correlation='RR,LL',interactive=F,figfile='at166B.plotxy.initial.spw0.png');
     plotxy(vis=msnameB,spw='1',field='0420+417,0518+165,0134+329',selectdata=T,correlation='RR,LL',interactive=F,figfile='at166B.plotxy.initial.spw1.png'); 
     print "--Flagdata--"
-    tflagdata(vis=msnameB,antenna='VA01',timerange='1994/07/25/14:21:10.0~14:21:20.0',mode='manual')
+    flagdata(vis=msnameB,antenna='VA01',timerange='1994/07/25/14:21:10.0~14:21:20.0',mode='manual')
 
 #--> Variations: plot on different axes (e.g., phase vs. time, real vs imag, amp/phase vs. uvdist) 
 #-->             plot model data for calibrators 

@@ -300,11 +300,11 @@ listobs()
 #
 print '--Flag auto-correlations--'
 
-default(tflagdata)
+default(flagdata)
 vis = msfile
 mode = 'manual'
 autocorr = True
-tflagdata()
+flagdata()
 
 #
 #=====================================================================
@@ -537,7 +537,7 @@ flagmanager()
 # You can use Flagdata to explicitly clip the data also
 #
 print '--Flagdata--'
-default('tflagdata')
+default('flagdata')
 
 vis = msfile
 
@@ -551,16 +551,16 @@ clipoutside = False
 field = '1331+305'
 correlation = 'ABS_RR,LL'
 clipminmax = [0.0,0.75]
-tflagdata()
+flagdata()
 
 correlation = 'ABS_RL,LR'
 clipminmax = [0.0,0.055]
-tflagdata()
+flagdata()
 
 field = '0137+331'
 correlation = 'ABS_RR,LL'
 clipminmax = [0.0,0.55]
-tflagdata()
+flagdata()
 
 # You can also do the antenna edits on 0137+331 and JUPITER
 # with flagdata

@@ -280,7 +280,7 @@ print '--Flagdata--'
 
 
 # Use flagdata() in vector mode
-default('tflagdata')
+default('flagdata')
 vis = msfile1
 mode = 'list'
 
@@ -334,7 +334,7 @@ inpfile=flagcmds
 # Finally, apply all the flag specifications
 #
 
-tflagdata()
+flagdata()
 
 
 # Record flagging completion time
@@ -582,7 +582,7 @@ print '--Flagdata--'
 #   final image RMS.
 #
 
-default('tflagdata')
+default('flagdata')
 vis = msfile2
 mode = 'list'
 
@@ -639,7 +639,7 @@ inpfile=flagcmds
 # Finally, apply all the flag specifications
 #
 
-tflagdata()
+flagdata()
 
 # Record flagging completion time
 if benchmarking:
