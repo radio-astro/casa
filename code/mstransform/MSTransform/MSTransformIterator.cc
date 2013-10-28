@@ -63,6 +63,7 @@ MSTransformIterator::~MSTransformIterator()
 		// ~MSTransformManager => ~VisibilityIterator2 => ~VisibilityIteratorImpl2
 		delete manager_p;
 
+		Table::relinquishAutoLocks(True);
 		Table::deleteTable(outputMSName,True);
 	}
 

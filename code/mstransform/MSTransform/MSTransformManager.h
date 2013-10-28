@@ -378,28 +378,151 @@ protected:
 																RefRows &rowReference);
 
 	Bool transformDDIVector(const Vector<Int> &inputVector,Vector<Int> &outputVector);
-	template <class T> Bool transformNotReindexableVector(	const Vector<T> &inputVector,
-															Vector<T> &outputVector,
-															Bool constant);
 
-	template <class T> Bool transformReindexableVector(	const Vector<T> &inputVector,
-														Vector<T> &outputVector,
-														Bool constant,
-														map<Int,Int> &inputOutputIndexMap);
-
-	template <class T> void mapAndReindexVector(	const Vector<T> &inputVector,
-													Vector<T> &outputVector,
-													map<Int,Int> &inputOutputIndexMap);
-	template <class T> void reindexVector(	const Vector<T> &inputVector,
-											Vector<T> &outputVector,
-											map<Int,Int> &inputOutputIndexMap);
-	template <class T> void mapVector(	const Vector<T> &inputVector,
-										Vector<T> &outputVector);
 	void mapAndAverageVector(	const Vector<Double> &inputVector,
 								Vector<Double> &outputVector);
 
 	void mapAndAverageVector(	const Vector<Bool> &inputVector,
 								Vector<Bool> &outputVector);
+
+	// Templates methods to transform vectors that must be available for MSTransformBuffer
+
+	template <class T> Bool transformNotReindexableVector(	const Vector<T> &inputVector,
+															Vector<T> &outputVector,
+															Bool constant)
+	{
+		Bool transformed = True;
+
+		if (combinespws_p)
+		{
+			if (constant)
+			{
+				outputVector = inputVector(0);
+			}
+			else
+			{
+				mapVector(inputVector,outputVector);
+			}
+		}
+		else
+		{
+			transformed = False;
+		}
+
+		return transformed;
+	};
+
+	template <class T> Bool transformReindexableVector(	const Vector<T> &inputVector,
+														Vector<T> &outputVector,
+														Bool constant,
+														map<Int,Int> &inputOutputIndexMap)
+	{
+		Bool transformed = True;
+
+		if (inputOutputIndexMap.size())
+		{
+			if (constant)
+			{
+				outputVector = inputOutputIndexMap[inputVector(0)];
+			}
+			else if (combinespws_p)
+			{
+				mapAndReindexVector(inputVector,outputVector,inputOutputIndexMap);
+			}
+			else
+			{
+				reindexVector(inputVector,outputVector,inputOutputIndexMap);
+			}
+		}
+		else
+		{
+			transformed = transformNotReindexableVector(inputVector,outputVector,constant);
+		}
+
+		return transformed;
+	};
+
+	template <class T> void mapAndReindexVector(	const Vector<T> &inputVector,
+													Vector<T> &outputVector,
+													map<Int,Int> &inputOutputIndexMap)
+	{
+		if (nspws_p <2)
+		{
+			for (uInt index=0; index<rowIndex_p.size();index++)
+			{
+				outputVector(index) = inputOutputIndexMap[inputVector(rowIndex_p[index])];
+			}
+		}
+		else
+		{
+			uInt absoluteIndex = 0;
+			for (uInt index=0; index<rowIndex_p.size();index++)
+			{
+				for (uInt spwIndex=0;spwIndex < nspws_p; spwIndex++)
+				{
+					outputVector(absoluteIndex) = inputOutputIndexMap[inputVector(rowIndex_p[index])];
+					absoluteIndex += 1;
+				}
+			}
+		}
+
+		return;
+	}
+
+
+	template <class T> void reindexVector(	const Vector<T> &inputVector,
+											Vector<T> &outputVector,
+											map<Int,Int> &inputOutputIndexMap)
+	{
+		if (nspws_p <2)
+		{
+			for (uInt index=0; index<inputVector.shape()[0];index++)
+			{
+				outputVector(index) = inputOutputIndexMap[inputVector(index)];
+			}
+		}
+		else
+		{
+			uInt absoluteIndex = 0;
+			for (uInt index=0; index<inputVector.shape()[0];index++)
+			{
+				for (uInt spwIndex=0;spwIndex < nspws_p; spwIndex++)
+				{
+					outputVector(absoluteIndex) = inputOutputIndexMap[inputVector(index)];
+					absoluteIndex += 1;
+				}
+			}
+		}
+
+		return;
+	};
+
+	template <class T> void mapVector(	const Vector<T> &inputVector,
+										Vector<T> &outputVector)
+	{
+		if (nspws_p < 2)
+		{
+			for (uInt index=0; index<rowIndex_p.size();index++)
+			{
+				outputVector(index) = inputVector(rowIndex_p[index]);
+			}
+		}
+		else
+		{
+			uInt absoluteIndex = 0;
+			for (uInt index=0; index<rowIndex_p.size();index++)
+			{
+				for (uInt spwIndex=0;spwIndex < nspws_p; spwIndex++)
+				{
+					outputVector(absoluteIndex) = inputVector(rowIndex_p[index]);
+					absoluteIndex += 1;
+				}
+			}
+		}
+
+
+		return;
+	}
 
 	// Methods to transform and write matrix
 
