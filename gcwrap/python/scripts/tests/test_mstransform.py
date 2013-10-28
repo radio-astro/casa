@@ -1427,7 +1427,7 @@ class test_timeaverage(test_base_compare):
         self.tolerance['TIME_CENTROID'] = 2.77E-4
         
         self.mode['DATA'] = "percentage"  
-        self.tolerance['DATA'] = 1.20E-5/100
+        self.tolerance['DATA'] = 2.27E-5/100
         
         self.mode['WEIGHT'] = "percentage"
         self.tolerance['WEIGHT'] = 3.15E-3/100
@@ -1481,7 +1481,7 @@ class test_timeaverage(test_base_compare):
         self.tolerance['TIME_CENTROID'] = 2.77E-4
         
         self.mode['DATA'] = "percentage"  
-        self.tolerance['DATA'] = 1.20E-5/100
+        self.tolerance['DATA'] = 2.34E-5/100
         
         self.mode['WEIGHT'] = "percentage"
         self.tolerance['WEIGHT'] = 3.15E-3/100
