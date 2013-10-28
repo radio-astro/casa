@@ -69,13 +69,42 @@ PlotMSIterateTab::PlotMSIterateTab(PlotMSPlotTab* tab, PlotMSPlotter* parent)
 
     // Connect widgets.
     connect(iterationAxisChooser, SIGNAL(currentIndexChanged(int)), SIGNAL(changed()) );
-    connect(nColsSpinBox, SIGNAL(valueChanged(int)),  SIGNAL(changed()) );
-    connect(nRowsSpinBox, SIGNAL(valueChanged(int)),  SIGNAL(changed()) );
+    connect(nColsSpinBox, SIGNAL(valueChanged(int)),  SLOT(gridChanged()) );
+    connect(nRowsSpinBox, SIGNAL(valueChanged(int)),  SLOT(gridChanged()) );
+    //connect(sharedXCheck, SIGNAL(stateChanged(int)), SIGNAL(changed()));
+    //connect(sharedYCheck, SIGNAL(stateChanged(int)), SIGNAL(changed()));
     
-    
+    QLayout* iterLayout = layout();
+    iterLayout->removeWidget( sharedXCheck );
+    iterLayout->removeWidget( sharedYCheck );
+    iterLayout->removeWidget( commonAxisLabel );
+    sharedXCheck->setParent( NULL );
+    sharedYCheck->setParent( NULL );
+    commonAxisLabel->setParent( NULL );
 }
 
+void PlotMSIterateTab::gridChanged(){
+	int rowCount = nRowsSpinBox->value();
+	//Common x-axis
+	if ( rowCount <= 1 ){
+		sharedXCheck->setEnabled( false );
+		sharedXCheck->setChecked( false );
+	}
+	else {
+		sharedXCheck->setEnabled( true );
+	}
 
+	//Common y-axis
+	int colCount = nColsSpinBox->value();
+	if ( colCount <= 1 ){
+		sharedYCheck->setEnabled( false );
+		sharedYCheck->setChecked( false );
+	}
+	else {
+		sharedYCheck->setEnabled( true );
+	}
+	emit changed();
+}
 
 
 PlotMSIterateTab::~PlotMSIterateTab() { }
@@ -106,6 +135,8 @@ void PlotMSIterateTab::getValue(PlotMSPlotParameters& params) const   {
 	
 	d->setNumColumns( nColsSpinBox->value() );
 	d->setNumRows( nRowsSpinBox->value() );
+	d->setCommonAxisX( sharedXCheck->isChecked());
+	d->setCommonAxisY( sharedYCheck->isChecked());
 }
 
 
@@ -128,6 +159,8 @@ void PlotMSIterateTab::setValue(const PlotMSPlotParameters& params) {
   
   nRowsSpinBox->setValue( d->numRows() );
   nColsSpinBox->setValue( d->numColumns() );
+  sharedXCheck->setChecked( d->isCommonAxisX() );
+  sharedYCheck->setChecked( d->isCommonAxisY() );
 }
 
 
@@ -146,6 +179,10 @@ void PlotMSIterateTab::update(const PlotMSPlot& plot) {
 	highlightWidgetText(iterationAxisChooserLabel, d->iterationAxis() != d2->iterationAxis() );
 	highlightWidgetText(columnsLabel,  d->numColumns() != d2->numColumns() );
 	highlightWidgetText(rowsLabel,     d->numRows() != d2->numRows() );
+	bool commonXChange = d->isCommonAxisX() != d2->isCommonAxisX();
+	bool commonYChange = d->isCommonAxisY() != d2->isCommonAxisY();
+	highlightWidgetText(commonAxisLabel, commonXChange || commonYChange );
+
 
 #if (1)  // turn on for testing, off for demo - somehow thisis crashing
 	highlightWidgetText(HorizAxisSharingGroup, d->xAxisScaleMode() != d2->xAxisScaleMode());

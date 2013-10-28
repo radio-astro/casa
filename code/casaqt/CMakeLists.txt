@@ -67,6 +67,7 @@ qt4_wrap_cpp( outfiles_qoh
   QtUtilities/QtPanelBase.qo.h
   QtUtilities/QtPlotWidget.qo.h
   QtUtilities/QtProgressWidget.qo.h
+  QwtPlotter/QPAxis.qo.h
   QwtPlotter/QPCanvasHelpers.qo.h
   QwtPlotter/QPCanvas.qo.h
   QwtPlotter/QPLayeredCanvas.qo.h
@@ -190,6 +191,7 @@ casa_add_library( casaqt
   QtUtilities/QtProgressWidget.cc
   QtUtilities/QtUtilities.cc
   QwtPlotter/QPAnnotation.cc
+  QwtPlotter/QPAxis.cc
   QwtPlotter/QPBarPlot.cc
   QwtPlotter/QPCanvas.cc
   QwtPlotter/QPCanvasHelpers.cc
@@ -298,6 +300,7 @@ install (FILES
 	)
 install (FILES
 	QwtPlotter/QPAnnotation.h
+	QwtPlotter/QPAxis.qo.h
 	QwtPlotter/QPBarPlot.h
 	QwtPlotter/QPCanvas.qo.h
 	QwtPlotter/QPCanvasHelpers.qo.h

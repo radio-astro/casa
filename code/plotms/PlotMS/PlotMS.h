@@ -163,6 +163,7 @@ public:
     // (public for now, while it's experimental)
 	bool its_want_avoid_popups;
 	bool updateCachePlot( PlotMSPlot* plot, void (*f)(void*, bool), bool setupPlot);
+	void setCommonAxes(bool commonX, bool commonY );
 private:
     // Plotter GUI.
     //PlotMSPlotter* itsPlotter_;

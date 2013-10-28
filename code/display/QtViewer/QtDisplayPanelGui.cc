@@ -570,7 +570,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	dpSaveAct_ ->setToolTip("Save Display Panel State to File");
 	profileAct_->setToolTip("Open the Spectral Profile Tool");
 	momentsCollapseAct_->setToolTip("Calculate Moments/Collapse the Image Cube along the Spectral Axis.");
-	histogramAct_->setToolTip("Histogram Functionality");
+	histogramAct_->setToolTip("Histogram Statistical Analysis Tool");
 	fitAct_->setToolTip( "Interactive 2D Fitting");
 	dpRstrAct_ ->setToolTip("Restore Display Panel State from File");
 	// rgnMgrAct_ ->setToolTip("Save/Control Regions");

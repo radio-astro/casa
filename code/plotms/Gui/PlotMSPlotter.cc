@@ -135,11 +135,11 @@ ThreadController* PlotMSPlotter::getThreadController( PlotMSAction::Type type,
 		if ( postThreadObject == NULL ){
 			PlotMSPlotParameters params = getPlotParameters();
 			PMS_PP_Cache* paramsCache = params.typedGroup<PMS_PP_Cache>();
-			controller = new PlotMSCacheThread(itsThreadProgress_,
+			controller = new PlotMSCacheThread(itsThreadProgress_,this,
 					&PMS_PP_Cache::notifyWatchers, paramsCache);
 		}
 		else {
-			controller = new PlotMSCacheThread( itsThreadProgress_, postThreadMethod,
+			controller = new PlotMSCacheThread( itsThreadProgress_, this, postThreadMethod,
 					postThreadObject );
 		}
 	}
@@ -733,8 +733,10 @@ bool PlotMSPlotter::exportPlot(
 
 void PlotMSPlotter::currentThreadFinished() {
     // Run post-thread method as needed.
-    itsCurrentThread_->postThreadMethod();
-    
+	if ( itsCurrentThread_!= NULL && ! itsCurrentThread_->wasCanceled() ){
+		itsCurrentThread_->postThreadMethod();
+	}
+
     // Clean up current thread.
     delete itsCurrentThread_;
     itsCurrentThread_ = NULL;

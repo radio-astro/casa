@@ -132,7 +132,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Get CS
 
-			const CoordinateSystem& cSys = lam->coordinateSystem();
+			const DisplayCoordinateSystem& cSys = lam->coordinateSystem();
 			const Vector<Double>& inc = cSys.increment();
 
 // Draw markers

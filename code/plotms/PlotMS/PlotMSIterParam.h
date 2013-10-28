@@ -63,8 +63,11 @@ public:
   String iterAxisStr() const { return PMS::axis(iterAxis_); };
   Bool xSelfScale() const { return xSelfScale_; };
   Bool ySelfScale() const { return ySelfScale_; };
+  Bool isCommonAxisX() const { return commonAxisX_; };
+  Bool isCommonAxisY() const {return commonAxisY_; };
   Int Nx() const { return Nx_;};
   Int Ny() const { return Ny_;};
+
   // </group>
   
   
@@ -74,6 +77,8 @@ public:
   void setIterAxis(String iterAxisStr) { iterAxis_ = PMS::axis(iterAxisStr=="" ? "None" : iterAxisStr); };
   void setXSelfScale(Bool xSelfScale) { xSelfScale_ = xSelfScale; };
   void setYSelfScale(Bool ySelfScale) { ySelfScale_ = ySelfScale; };
+  void setCommonAxisX(Bool commonAxisX ){commonAxisX_ = commonAxisX; };
+  void setCommonAxisY(Bool commonAxisY ){commonAxisY_ = commonAxisY; };
   void setNx(Int nx) { Nx_ = max(nx,1); };
   void setNy(Int ny) { Ny_ = max(ny,1); };
   // </group>
@@ -99,6 +104,10 @@ private:
 
   // Self-scale the X and Y axes
   Bool xSelfScale_, ySelfScale_;
+
+  //Whether to use a common axis when the grid consists of
+  //multiple plots.
+  Bool commonAxisX_, commonAxisY_;
 
   // The number of plots in X and Y
   Int Nx_,Ny_;

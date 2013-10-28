@@ -296,6 +296,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if ( csMasterDD != NULL ){
 			masterFound = csMasterDD->sizeControl(*this, sizeControlAtts);
 		}
+		else if ( controllingDD != NULL ){
+			//If the master image is unregistered, it will no longer be in the world canvas,
+			//i.e., csMasterDD will be NULL.  However, it should still be the controllinDD for
+			//this class so we put it back in the world canvas for size control.
+			worldCanvas()->csMaster() = controllingDD;
+			masterFound =controllingDD->sizeControl(*this, sizeControlAtts);
+		}
 
 		// Even if master role is already taken, all sizeControl routines are still
 		// executed, to give give the DDs a chance to do minor adjustments (to

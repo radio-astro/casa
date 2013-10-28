@@ -63,7 +63,10 @@ public:
 	//Retrieve flagging information specified by the client.
 	virtual PlotMSFlagging getFlagging() const = 0;
 
+	//In the case of a grid of plots whether to use common x- or y- axes.
+	virtual void setCommonAxes( bool commonX, bool commonY );
 
+	//Flagging
 	virtual void setFlagging(PlotMSFlagging flag) = 0;
 	virtual PlotMSPlotParameters getPlotParameters() const = 0;
 

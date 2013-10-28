@@ -188,6 +188,9 @@ public:
   // These are array-global (one value per chunk)
   inline Double getAz0(Int chnk,Int irel) { return az0_(chnk);  (void)irel; };
   inline Double getEl0(Int chnk,Int irel) { return el0_(chnk);  (void)irel; };
+  inline Double getRadialVelocity0(Int chnk, Int irel){ return radialVelocity_(chnk); (void)irel;};
+  inline Double getRHO0(Int chnk, Int irel){return rho_(chnk); (void)irel; };
+
   inline Double getHA0(Int chnk,Int irel) { return ha0_(chnk);  (void)irel; };
   inline Double getPA0(Int chnk,Int irel) { return pa0_(chnk);  (void)irel; };
 
@@ -225,6 +228,8 @@ protected:
   void deleteCache();
   void deleteIndexer();
 
+  virtual bool isEphemeris() {return false;};
+  bool isEphemerisAxis( PMS::Axis axis ) const;
   // Set the net axes mask (defines how to collapse flags for the chosen plot axes)
   void setAxesMask(PMS::Axis axis,Vector<Bool>& axismask);
 
@@ -314,6 +319,8 @@ protected:
   PtrBlock<Vector<Int>*> antenna_;
   PtrBlock<Vector<Double>*> az_,el_;
 
+
+  Vector<Double> radialVelocity_, rho_;
   Vector<Double> az0_,el0_,ha0_,pa0_;
 
   PtrBlock<Array<Float>*> par_;

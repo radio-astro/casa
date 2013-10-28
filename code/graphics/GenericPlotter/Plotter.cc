@@ -200,6 +200,14 @@ void Plotter::setCanvas(PlotCanvasPtr canvas) {
         setCanvasLayout(PlotCanvasLayoutPtr(new PlotLayoutSingle(canvas)));
 }
 
+void Plotter::setCommonAxisX(Bool commonAxis ){
+	commonAxisX = commonAxis;
+}
+
+void Plotter::setCommonAxisY(Bool commonAxis ){
+	commonAxisY = commonAxis;
+}
+
 LogMessage::Priority Plotter::logFilterMinPriority() const {
     return logger()->filterMinPriority(); }
 void Plotter::setLogFilterMinPriority(PlotLogMessage::Priority minPriority) {

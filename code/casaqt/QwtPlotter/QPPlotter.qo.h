@@ -48,6 +48,7 @@ class QPPlotter : public QWidget, Ui::PlotterUI, public Plotter {
     Q_OBJECT
     
     friend class QPCanvas;
+    friend class QPAxis;
     
 public:
     // Static //
