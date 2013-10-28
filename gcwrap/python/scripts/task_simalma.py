@@ -70,7 +70,7 @@ def simalma(
         # the grid spacing is defined in terms of lambda/d times these factors
         # ALMA OT uses lambda/d/sqrt(3)
         gridratio_int = 1./pl.sqrt(3) # 0.5 is nyquist 
-        gridratio_tp  = 1./2.5 
+        gridratio_tp  = 1./3
 
         # number of 12m primary beams to pad the total power image during
         # the gridding stage (i.e. even larger pad than the padding 
