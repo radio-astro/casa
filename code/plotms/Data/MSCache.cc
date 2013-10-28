@@ -823,6 +823,7 @@ void MSCache::discernData(vector<PMS::Axis> loadAxes,
 
 
 
+
 void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 		PMS::DataColumn data) {
 
@@ -964,9 +965,15 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 	case PMS::AMP: {
 		switch(data) {
 		case PMS::DATA: {
-
-			*amp_[vbnum] = amplitude(vb.visCube());
-
+			MeasurementSet ms( filename_);
+			//Please see CAS-5730.  For single dish data, absolute value of
+			//points should not be plotted.
+			if ( ms.isColumn( MS::FLOAT_DATA ) ){
+				*amp_[vbnum]=real(vb.visCube());
+			}
+			else {
+				*amp_[vbnum] = amplitude(vb.visCube());
+			}
 			// TEST fft on freq axis to get delay
 			if (False) {
 
