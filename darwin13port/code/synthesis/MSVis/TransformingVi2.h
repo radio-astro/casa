@@ -551,9 +551,14 @@ protected:
     ViImplementation2 * getVii () const;
     void setVisBuffer (VisBuffer2 * vb);
 
+    // jagonzal (to be reviewed by jjacobs): I need to set inputVii_p to NULL from
+    // MSTransformIterator destructor because MSTransformIteratorFactory is borrowing
+    // the ViImplementation2 from the input iterator, which is deleted in the first
+    // steps of the MSTransformIterator destructor.
+    ViImplementation2 * inputVii_p;
+
 private:
 
-    ViImplementation2 * inputVii_p;
     VisBuffer2 * vb_p;
     VisibilityIterator2 * vi_p; // [use] The container
     CountedPtr<WeightScaling> weightScaling_p;

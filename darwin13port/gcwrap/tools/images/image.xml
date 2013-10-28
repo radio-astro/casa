@@ -3544,8 +3544,8 @@ ia.close()
 <description>
 
 This method deconvolves (a
-record representation of) a Componentlist \tool\ from the restoring
-beam, returning (a record representation of) a new Componentlist \tool.
+record representation of) a Componentlist tool from the restoring
+beam, returning (a record representation of) a new Componentlist tool.
 If there is no restoring beam, a fail is generated.
 
 Currently, only deconvolution of Gaussian components is supported.
@@ -6108,7 +6108,7 @@ ia.close()
 
 This function applies a model of the sky to the image. You can add or
 subtract the model which is contained in a
-<link anchor="componentmodels:componentlist">Componentlist</link> \tool.
+<link anchor="componentmodels:componentlist">Componentlist</link> tool.
 
 The pixel values are only changed where the total mask
 (combination of the default \pixelmask\ [if any] and the OTF mask)

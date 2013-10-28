@@ -23,6 +23,9 @@ casa_add_library( mstransform
  MSTransform/MSTransformManager.cc
  MSTransform/MSTransformDataHandler.cc
  MSTransform/MSTransformRegridder.cc
+ MSTransform/MSTransformBufferImpl.cc
+ MSTransform/MSTransformIterator.cc
+ MSTransform/MSTransformIteratorFactory.cc
 )
 
 install (FILES
@@ -30,6 +33,11 @@ install (FILES
 	MSTransform/MSTransformManager.h
 	MSTransform/MSTransformDataHandler.h
 	MSTransform/MSTransformRegridder.h
+	MSTransform/MSTransformBufferImpl.h
+	MSTransform/MSTransformIterator.h
+	MSTransform/MSTransformIteratorFactory.h
 	DESTINATION include/casacode/mstransform/MSTransform
 	)
+
+casa_add_test( mstransform MSTransform/test/tMSTransformIterator.cc )
 

@@ -124,8 +124,6 @@ const Vector<MS::PredefinedColumns>& MSTransformDataHandler::parseColumnNames(St
 		return my_colNameVect;
 	}
 
-	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
-
 	uInt nNames;
 
 	if(col.contains("ALL"))
@@ -144,6 +142,11 @@ const Vector<MS::PredefinedColumns>& MSTransformDataHandler::parseColumnNames(St
 	// Whether or not the MS has the columns is checked by verifyColumns().
 	// Unfortunately it cannot be done here because this is a static method.
 
+
+	/*
+	 * jagonzal: Redundant logging message (this info is already provided by MSTransformManager)
+	 *
+	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
 	// "NONE" is used by the destructor
 	if(col != "NONE")
 	{
@@ -155,6 +158,7 @@ const Vector<MS::PredefinedColumns>& MSTransformDataHandler::parseColumnNames(St
 
 		os << " column" << (my_colNameVect.nelements() > 1 ? "s." : ".") << LogIO::POST;
 	}
+	*/
 
 	my_colNameStr = col;
 	return my_colNameVect;
@@ -229,6 +233,9 @@ const Vector<MS::PredefinedColumns>& MSTransformDataHandler::parseColumnNames(St
 	}
 	if (nFound == 0) throw(AipsError("Did not find and select any data columns."));
 
+	/*
+	 * jagonzal: Redundant logging message (this info is already provided by MSTransformManager)
+	 *
 	os << LogIO::NORMAL << "Using ";
 
 	for (uInt i = 0; i < nFound; ++i)
@@ -237,6 +244,7 @@ const Vector<MS::PredefinedColumns>& MSTransformDataHandler::parseColumnNames(St
 	}
 
 	os << "column" << (nFound > 1 ? "s." : ".") << LogIO::POST;
+	*/
 
 	my_colNameStr = col;
 
@@ -745,7 +753,8 @@ void MSTransformDataHandler::selectTime(Double timeBin, String timerng)
 Bool MSTransformDataHandler::makeMSBasicStructure(	String& msname,
 													String& colname,
 													const Vector<Int>& tileShape,
-													const String& combine)
+													const String& combine,
+													Table::TableOption option)
 {
 	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
 
@@ -1067,12 +1076,13 @@ MeasurementSet* MSTransformDataHandler::setupMS(	const String& MSFileName, const
                                 					const Int nCorr, const String& telescop,
                                 					const Vector<MS::PredefinedColumns>& colNames,
                                 					const Int obstype,const Bool compress,
-                                					const asdmStManUseAlternatives asdmStManUse)
+                                					const asdmStManUseAlternatives asdmStManUse,
+                                					Table::TableOption option)
  {
 	//Choose an appropriate tileshape
 	IPosition dataShape(2, nCorr, nchan);
 	IPosition tileShape = MSTileLayout::tileShape(dataShape, obstype, telescop);
-	return setupMS(MSFileName, nchan, nCorr, colNames, tileShape.asVector(),compress, asdmStManUse);
+	return setupMS(MSFileName, nchan, nCorr, colNames, tileShape.asVector(),compress, asdmStManUse,option);
  }
 
 // -----------------------------------------------------------------------
@@ -1082,7 +1092,8 @@ MeasurementSet* MSTransformDataHandler::setupMS(	const String& MSFileName, const
                                 					const Int nCorr,
                                 					const Vector<MS::PredefinedColumns>& colNamesTok,
                                 					const Vector<Int>& tshape, const Bool compress,
-                                					const asdmStManUseAlternatives asdmStManUse)
+                                					const asdmStManUseAlternatives asdmStManUse,
+                                					Table::TableOption option)
  {
 	if (tshape.nelements() != 3) throw(AipsError("TileShape has to have 3 elements "));
 
@@ -1176,7 +1187,7 @@ MeasurementSet* MSTransformDataHandler::setupMS(	const String& MSFileName, const
 		td.defineHypercolumn("TiledSigma", 2,stringToVector(MS::columnName(MS::SIGMA)));
 	}
 
-	SetupNewTable newtab(MSFileName, td, Table::New);
+	SetupNewTable newtab(MSFileName, td, option);
 
 	uInt cache_val = 32768;
 
@@ -1278,7 +1289,7 @@ MeasurementSet* MSTransformDataHandler::setupMS(	const String& MSFileName, const
 	MeasurementSet *ms = new MeasurementSet(newtab, lock);
 
 	// Set up the sub-tables for the UVFITS MS (we make new tables with 0 rows)
-	Table::TableOption option = Table::New;
+	// Table::TableOption option = Table::New;
 	createSubtables(*ms, option);
 
 	// Set the TableInfo

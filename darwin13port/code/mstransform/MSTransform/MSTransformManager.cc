@@ -166,7 +166,7 @@ void MSTransformManager::initialize()
 	timespan_p = String("");
 	timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::Nothing);
 	maxuvwdistance_p = 0;
-//	minbaselines_p = 0;
+	// minbaselines_p = 0;
 
 	// Weight Spectrum parameters
 	usewtspectrum_p = False;
@@ -242,6 +242,10 @@ void MSTransformManager::initialize()
 	writeOutputFlagsPlaneSlices_p = NULL;
 	writeOutputFlagsPlaneReshapedSlices_p = NULL;
 
+	// Buffer handling members
+	bufferMode_p = False;
+	nRowsToAdd_p = 0;
+
 	return;
 }
 
@@ -275,60 +279,81 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 				<< "Input file name is " << inpMsName_p << LogIO::POST;
 	}
 
-	exists = configuration.fieldNumber ("outputms");
+	exists = configuration.fieldNumber ("buffermode");
 	if (exists >= 0)
 	{
-		configuration.get (exists, outMsName_p);
+		configuration.get (exists, bufferMode_p);
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-				<< "Output file name is " << outMsName_p << LogIO::POST;
+				<< "Buffer mode is on " << LogIO::POST;
 	}
 
-	exists = configuration.fieldNumber ("datacolumn");
-	if (exists >= 0)
+	if (bufferMode_p)
 	{
-		configuration.get (exists, datacolumn_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-				<< "Data column is " << datacolumn_p << LogIO::POST;
-	}
+		datacolumn_p = "ALL";
 
-	exists = configuration.fieldNumber ("realmodelcol");
-	if (exists >= 0)
-	{
-		configuration.get (exists, realmodelcol_p);
-		if (realmodelcol_p)
+		exists = configuration.fieldNumber ("outputms");
+		if (exists >= 0)
 		{
+			configuration.get (exists, outMsName_p);
+		}
+	}
+	else
+	{
+		exists = configuration.fieldNumber ("outputms");
+		if (exists >= 0)
+		{
+			configuration.get (exists, outMsName_p);
+			logger_p 	<< LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+						<< "Output file name is " << outMsName_p << LogIO::POST;
+		}
+
+		exists = configuration.fieldNumber ("datacolumn");
+		if (exists >= 0)
+		{
+			configuration.get (exists, datacolumn_p);
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-					<< "MODEL column will be made real in the output MS " << LogIO::POST;
+					<< "Data column is " << datacolumn_p << LogIO::POST;
 		}
-	}
 
-	exists = configuration.fieldNumber ("usewtspectrum");
-	if (exists >= 0)
-	{
-		configuration.get (exists, usewtspectrum_p);
-		if (usewtspectrum_p)
+		exists = configuration.fieldNumber ("realmodelcol");
+		if (exists >= 0)
 		{
+			configuration.get (exists, realmodelcol_p);
+			if (realmodelcol_p)
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+						<< "MODEL column will be made real in the output MS " << LogIO::POST;
+			}
+		}
+
+		exists = configuration.fieldNumber ("usewtspectrum");
+		if (exists >= 0)
+		{
+			configuration.get (exists, usewtspectrum_p);
+			if (usewtspectrum_p)
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+						<< "WEIGHT_SPECTRUM will be written in output MS " << LogIO::POST;
+			}
+		}
+
+		exists = configuration.fieldNumber ("tileshape");
+		if (exists >= 0)
+		{
+			if ( configuration.type(exists) == casa::TpInt )
+			{
+				Int mode;
+				configuration.get (exists, mode);
+				tileShape_p = Vector<Int>(1,mode);
+			}
+			else if ( configuration.type(exists) == casa::TpArrayInt)
+			{
+				configuration.get (exists, tileShape_p);
+			}
+
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-					<< "WEIGHT_SPECTRUM will be written in output MS " << LogIO::POST;
+					<< "Tile shape is " << tileShape_p << LogIO::POST;
 		}
-	}
-
-	exists = configuration.fieldNumber ("tileshape");
-	if (exists >= 0)
-	{
-		if ( configuration.type(exists) == casa::TpInt )
-		{
-			Int mode;
-			configuration.get (exists, mode);
-			tileShape_p = Vector<Int>(1,mode);
-		}
-		else if ( configuration.type(exists) == casa::TpArrayInt)
-		{
-			configuration.get (exists, tileShape_p);
-		}
-
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-				<< "Tile shape is " << tileShape_p << LogIO::POST;
 	}
 
 	return;
@@ -549,8 +574,12 @@ void MSTransformManager::parseFreqTransParams(Record &configuration)
 	if (exists >= 0)
 	{
 		configuration.get (exists, hanningSmooth_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-				<< "Hanning Smooth is " << hanningSmooth_p << LogIO::POST;
+
+		if (hanningSmooth_p)
+		{
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+					<< "Hanning Smooth is activated" << LogIO::POST;
+		}
 	}
 
 	return;
@@ -817,7 +846,8 @@ void MSTransformManager::parseTimeAvgParams(Record &configuration)
 			}
 		}
 
-/*		exists = configuration.fieldNumber ("minbaselines");
+		/*
+		exists = configuration.fieldNumber ("minbaselines");
 		if (exists >= 0)
 		{
 			configuration.get (exists, minbaselines_p);
@@ -827,7 +857,8 @@ void MSTransformManager::parseTimeAvgParams(Record &configuration)
 				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 						<< "Minimum number of baselines for time average: " << minbaselines_p << LogIO::POST;
 			}
-		}*/
+		}
+		*/
 	}
 
 	return;
@@ -884,12 +915,29 @@ void MSTransformManager::open()
 	dataHandler_p->selectTime(timeBin_p,timeSelection_p);
 
 	// Create output MS structure
-	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-			<< "Create output MS structure" << LogIO::POST;
+	if (not bufferMode_p)
+	{
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+				<< "Create output MS structure" << LogIO::POST;
+	}
+	else
+	{
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+				<< "Create transformed MS Subtables to be stored in memory" << LogIO::POST;
+	}
+
 
 	//jagonzal (CAS-5174)dataHandler_p->fillMainTable_p = False;
 	Bool selectionOk = False;
-	selectionOk = dataHandler_p->makeMSBasicStructure(outMsName_p,datacolumn_p,tileShape_p,timespan_p);
+	if (not bufferMode_p)
+	{
+		selectionOk = dataHandler_p->makeMSBasicStructure(outMsName_p,datacolumn_p,tileShape_p,timespan_p);
+	}
+	else
+	{
+		selectionOk = dataHandler_p->makeMSBasicStructure(outMsName_p,datacolumn_p,tileShape_p,timespan_p,Table::Scratch);
+	}
+
 	if (!selectionOk)
 	{
 		logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
@@ -2459,8 +2507,17 @@ void MSTransformManager::checkDataColumnsToFill()
 				mainColSet = True;
 			}
 			dataColMap_p[MS::DATA] = MS::DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-								"Adding DATA column to output MS "<< LogIO::POST;
+
+			if (not bufferMode_p)
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
+									"Adding DATA column to output MS "<< LogIO::POST;
+			}
+			else
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
+									"DATA column present in input MS will be available from MSTransformBuffer "<< LogIO::POST;
+			}
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
 			// timeAvgOptions_p |= vi::AveragingOptions::ObservedUseNoWeights;
@@ -2474,8 +2531,17 @@ void MSTransformManager::checkDataColumnsToFill()
 				mainColSet = True;
 			}
 			dataColMap_p[MS::CORRECTED_DATA] = MS::CORRECTED_DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-								"Adding CORRECTED_DATA column to output MS "<< LogIO::POST;
+
+			if (not bufferMode_p)
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
+									"Adding CORRECTED_DATA column to output MS "<< LogIO::POST;
+			}
+			else
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
+									"CORRECTED_DATA column present in input MS will be available from MSTransformBuffer "<< LogIO::POST;
+			}
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageCorrected;
 			timeAvgOptions_p |= vi::AveragingOptions::CorrectedUseWeights;
@@ -2493,13 +2559,29 @@ void MSTransformManager::checkDataColumnsToFill()
 
 			if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
 			{
-				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-									"Adding MODEL_DATA column to output MS "<< LogIO::POST;
+				if (not bufferMode_p)
+				{
+					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
+										"Adding MODEL_DATA column to output MS "<< LogIO::POST;
+				}
+				else
+				{
+					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
+										"MODEL_DATA column present in input MS will be available from MSTransformBuffer "<< LogIO::POST;
+				}
 			}
 			else
 			{
-				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-							"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column"<< LogIO::POST;
+				if (not bufferMode_p)
+				{
+					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
+										"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column "<< LogIO::POST;
+				}
+				else
+				{
+					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
+										"MODEL_DATA column present in input MS will be available from MSTransformBuffer "<< LogIO::POST;
+				}
 			}
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageModel;
@@ -2846,9 +2928,9 @@ void MSTransformManager::generateIterator()
 }
 
 // -----------------------------------------------------------------------
-// Fill output MS with data from an input VisBuffer
+//
 // -----------------------------------------------------------------------
-void MSTransformManager::fillOutputMs(vi::VisBuffer2 *vb)
+void MSTransformManager::setupBufferTransformations(vi::VisBuffer2 *vb)
 {
 	// Calculate number of rows to add to the output MS depending on the combination parameters
 	uInt rowsToAdd = 0;
@@ -2886,24 +2968,41 @@ void MSTransformManager::fillOutputMs(vi::VisBuffer2 *vb)
 		rowsToAdd = vb->nRows();
 	}
 
-	uInt currentRows = outputMs_p->nrow();
-	RefRows rowRef( currentRows, currentRows + rowsToAdd - 1);
-
 	// Initialize reference frame transformation parameters
 	if (refFrameTransformation_p)
 	{
 		initFrequencyTransGrid(vb);
 	}
 
-	// NOTE: Don't spend time initializing because we are going to re-write everything
-	outputMs_p->addRow(rowRef.nrows()*nspws_p,False);
-
-    fillDataCols(vb,rowRef);
-	fillIdCols(vb,rowRef);
-
+	// Calculate total number for rows to add
+	nRowsToAdd_p = rowsToAdd*nspws_p;
 
     return;
 
+}
+
+// -----------------------------------------------------------------------
+// Fill output MS with data from an input VisBuffer
+// -----------------------------------------------------------------------
+void MSTransformManager::fillOutputMs(vi::VisBuffer2 *vb)
+{
+	setupBufferTransformations(vb);
+
+	if (not bufferMode_p)
+	{
+		// Create RowRef object to fill new rows
+		uInt currentRows = outputMs_p->nrow();
+		RefRows rowRef( currentRows, currentRows + nRowsToAdd_p/nspws_p - 1);
+
+		// Add new rows to output MS
+		outputMs_p->addRow(nRowsToAdd_p,False);
+
+		// Fill new rows
+	    fillDataCols(vb,rowRef);
+		fillIdCols(vb,rowRef);
+	}
+
+    return;
 }
 
 // -----------------------------------------------------------------------
@@ -3007,85 +3106,78 @@ void MSTransformManager::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 }
 
 // ----------------------------------------------------------------------------------------
-// ISn't this comment wrong??? DD depends on SPW
 // Fill auxiliary (meta data) columns which don't depend on the SPW (merely consist of Ids)
 // ----------------------------------------------------------------------------------------
 void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 {
 	// Declare common auxiliary variables
-	Vector<Int> tmpVectorInt(rowRef.nrow(),0);
+	RefRows absoluteRefRows(rowRef.firstRow(),rowRef.firstRow()+nRowsToAdd_p-1);
+	Vector<Int> tmpVectorInt(nRowsToAdd_p,0);
+	Vector<Double> tmpVectorDouble(nRowsToAdd_p,0.0);
+	Vector<Bool> tmpVectorBool(nRowsToAdd_p,False);
+
+	// Special case for Data description Id
+	if (transformDDIVector(vb->dataDescriptionIds(),tmpVectorInt))
+	{
+		outputMsCols_p->dataDescId().putColumnCells(absoluteRefRows,tmpVectorInt);
+	}
+	else
+	{
+		outputMsCols_p->dataDescId().putColumnCells(absoluteRefRows,vb->dataDescriptionIds());
+	}
+
+	// Re-indexable Columns
+	transformAndWriteReindexableVector(	vb->observationId(),tmpVectorInt,True,
+										inputOutputObservationIndexMap_p,
+										outputMsCols_p->observationId(),absoluteRefRows);
+	transformAndWriteReindexableVector(	vb->arrayId(),tmpVectorInt,True,
+										inputOutputArrayIndexMap_p,
+										outputMsCols_p->arrayId(),absoluteRefRows);
+	transformAndWriteReindexableVector(	vb->fieldId(),tmpVectorInt,True,
+										inputOutputFieldIndexMap_p,
+										outputMsCols_p->fieldId(),absoluteRefRows);
+	transformAndWriteReindexableVector(	vb->stateId(),tmpVectorInt,!timespan_p.contains("state"),
+										inputOutputScanIntentIndexMap_p,
+										outputMsCols_p->stateId(),absoluteRefRows);
+	transformAndWriteReindexableVector(	vb->antenna1(),tmpVectorInt,False,
+										inputOutputAntennaIndexMap_p,
+										outputMsCols_p->antenna1(),absoluteRefRows);
+	transformAndWriteReindexableVector(	vb->antenna2(),tmpVectorInt,False,
+										inputOutputAntennaIndexMap_p,
+										outputMsCols_p->antenna2(),absoluteRefRows);
+
+	// Not Re-indexable Columns
+	transformAndWriteNotReindexableVector(vb->scan(),tmpVectorInt,!timespan_p.contains("scan"),outputMsCols_p->scanNumber(),absoluteRefRows);
+	transformAndWriteNotReindexableVector(vb->processorId(),tmpVectorInt,False,outputMsCols_p->processorId(),absoluteRefRows);
+	transformAndWriteNotReindexableVector(vb->feed1(),tmpVectorInt,False,outputMsCols_p->feed1(),absoluteRefRows);
+	transformAndWriteNotReindexableVector(vb->feed2(),tmpVectorInt,False,outputMsCols_p->feed2(),absoluteRefRows);
+	transformAndWriteNotReindexableVector(vb->time(),tmpVectorDouble,False,outputMsCols_p->time(),absoluteRefRows);
+	transformAndWriteNotReindexableVector(vb->timeCentroid(),tmpVectorDouble,False,outputMsCols_p->timeCentroid(),absoluteRefRows);
+	transformAndWriteNotReindexableVector(vb->timeInterval(),tmpVectorDouble,False,outputMsCols_p->interval(),absoluteRefRows);
+
+	// Special case for vectors that have to be averaged
+	if (combinespws_p)
+	{
+		mapAndAverageVector(vb->flagRow(),tmpVectorBool);
+		outputMsCols_p->flagRow().putColumnCells(absoluteRefRows, tmpVectorBool);
+
+		// jagonzal: We average exposures by default, if they are the same we obtain the same results
+		mapAndAverageVector(vb->exposure(),tmpVectorDouble);
+		outputMsCols_p->exposure().putColumnCells(absoluteRefRows, tmpVectorDouble);
+	}
+	else
+	{
+		outputMsCols_p->flagRow().putColumnCells(absoluteRefRows, vb->flagRow());
+		outputMsCols_p->exposure().putColumnCells(absoluteRefRows, vb->exposure());
+	}
 
 	if (combinespws_p)
 	{
-		// Declare extra auxiliary variables
-		Vector<Double> tmpVectorDouble(rowRef.nrow(),0.0);
-		Vector<Bool> tmpVectorBool(rowRef.nrow(),False);
-		Matrix<Float> tmpMatrixFloat(IPosition(2,vb->nCorrelations(),rowRef.nrow()),0.0);
+		Matrix<Double> tmpUvw(IPosition(2,3,rowRef.nrows()),0.0);
+		Matrix<Float> tmpMatrixFloat(IPosition(2,vb->nCorrelations(),rowRef.nrows()),0.0);
 
-		// Observation
-		mapAndReindexVector(vb->observationId(),tmpVectorInt,inputOutputObservationIndexMap_p,True);
-		writeVector(tmpVectorInt,outputMsCols_p->observationId(),rowRef,nspws_p);
-
-		// Array Id
-		mapAndReindexVector(vb->arrayId(),tmpVectorInt,inputOutputArrayIndexMap_p,True);
-		writeVector(tmpVectorInt,outputMsCols_p->arrayId(),rowRef,nspws_p);
-
-		// Field Id
-		mapAndReindexVector(vb->fieldId(),tmpVectorInt,inputOutputFieldIndexMap_p,True);
-		writeVector(tmpVectorInt,outputMsCols_p->fieldId(),rowRef,nspws_p);
-
-		// Scan -> SCAN is not re-indexed in old split
-		// mapAndReindexVector(vb->scan(),tmpVectorInt,inputOutputScanIndexMap_p,!timespan_p.contains("scan"));
-		// outputMsCols_p->scanNumber().putColumnCells(rowRef,tmpVectorInt);
-
-		// State
-		mapAndReindexVector(vb->stateId(),tmpVectorInt,inputOutputScanIntentIndexMap_p,!timespan_p.contains("state"));
-		writeVector(tmpVectorInt,outputMsCols_p->stateId(),rowRef,nspws_p);
-
-		// Spectral Window
-		tmpVectorInt = ddiStart_p;
-		writeRollingVector(tmpVectorInt,outputMsCols_p->dataDescId(),rowRef,nspws_p);
-
-		// Non re-indexable vector columns
-		mapVector(vb->scan(),tmpVectorInt);
-		writeVector(tmpVectorInt,outputMsCols_p->scanNumber(),rowRef,nspws_p);
-		mapVector(vb->antenna1(),tmpVectorInt);
-		writeVector(tmpVectorInt,outputMsCols_p->antenna1(),rowRef,nspws_p);
-		mapVector(vb->antenna2(),tmpVectorInt);
-		writeVector(tmpVectorInt,outputMsCols_p->antenna2(),rowRef,nspws_p);
-		mapVector(vb->feed1(),tmpVectorInt);
-		writeVector(tmpVectorInt,outputMsCols_p->feed1(),rowRef,nspws_p);
-		mapVector(vb->feed2(),tmpVectorInt);
-		writeVector(tmpVectorInt,outputMsCols_p->feed2(),rowRef,nspws_p);
-		mapVector(vb->processorId(),tmpVectorInt);
-		writeVector(tmpVectorInt,outputMsCols_p->processorId(),rowRef,nspws_p);
-		mapVector(vb->time(),tmpVectorDouble);
-		writeVector(tmpVectorDouble,outputMsCols_p->time(),rowRef,nspws_p);
-		mapVector(vb->timeCentroid(),tmpVectorDouble);
-		writeVector(tmpVectorDouble,outputMsCols_p->timeCentroid(),rowRef,nspws_p);
-		mapVector(vb->timeInterval(),tmpVectorDouble);
-		writeVector(tmpVectorDouble,outputMsCols_p->interval(),rowRef,nspws_p);
-
-		// Non re-indexable matrix columns
-		Matrix<Double> tmpUvw(IPosition(2,3,rowRef.nrow()),0.0);
 		mapMatrix(vb->uvw(),tmpUvw);
 		writeMatrix(tmpUvw,outputMsCols_p->uvw(),rowRef,nspws_p);
-
-		// Averaged vector columns
-		mapAndAverageVector(vb->flagRow(),tmpVectorBool);
-		writeVector(tmpVectorBool,outputMsCols_p->flagRow(),rowRef,nspws_p);
-
-		if (combinationOfSPWsWithDifferentExposure_p)
-		{
-			tmpVectorDouble = 0;
-			mapAndAverageVector(vb->exposure(),tmpVectorDouble);
-			writeVector(tmpVectorDouble,outputMsCols_p->exposure(),rowRef,nspws_p);
-		}
-		else
-		{
-			mapVector(vb->exposure(),tmpVectorDouble);
-			writeVector(tmpVectorDouble,outputMsCols_p->exposure(),rowRef,nspws_p);
-		}
 
 		if (channelAverage_p)
 		{
@@ -3133,101 +3225,7 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 	}
 	else
 	{
-		// Observation
-		if (inputOutputObservationIndexMap_p.size())
-		{
-			reindexVector(vb->observationId(),tmpVectorInt,inputOutputObservationIndexMap_p,True);
-			writeVector(tmpVectorInt,outputMsCols_p->observationId(),rowRef,nspws_p);
-		}
-		else
-		{
-			writeVector(vb->observationId(),outputMsCols_p->observationId(),rowRef,nspws_p);
-		}
-
-		// Array
-		if (inputOutputArrayIndexMap_p.size())
-		{
-			reindexVector(vb->arrayId(),tmpVectorInt,inputOutputArrayIndexMap_p,True);
-			writeVector(tmpVectorInt,outputMsCols_p->arrayId(),rowRef,nspws_p);
-		}
-		else
-		{
-			writeVector(vb->arrayId(),outputMsCols_p->arrayId(),rowRef,nspws_p);
-		}
-
-		// Field
-		if (inputOutputFieldIndexMap_p.size())
-		{
-			reindexVector(vb->fieldId(),tmpVectorInt,inputOutputFieldIndexMap_p,True);
-			writeVector(tmpVectorInt,outputMsCols_p->fieldId(),rowRef,nspws_p);
-		}
-		else
-		{
-			writeVector(vb->fieldId(),outputMsCols_p->fieldId(),rowRef,nspws_p);
-		}
-
-		// Scan -> SCAN is not re-indexed in old split
-		/*
-		if (inputOutputScanIndexMap_p.size())
-		{
-			reindexVector(vb->scan(),tmpVectorInt,inputOutputScanIndexMap_p,!timespan_p.contains("scan"));
-			outputMsCols_p->scanNumber().putColumnCells(rowRef,tmpVectorInt);
-		}
-		else
-		{
-			outputMsCols_p->scanNumber().putColumnCells(rowRef,vb->scan());
-		}
-		*/
-
-		// State
-		if (inputOutputScanIntentIndexMap_p.size())
-		{
-			reindexVector(vb->stateId(),tmpVectorInt,inputOutputScanIntentIndexMap_p,!timespan_p.contains("state"));
-			writeVector(tmpVectorInt,outputMsCols_p->stateId(),rowRef,nspws_p);
-		}
-		else
-		{
-			writeVector(vb->stateId(),outputMsCols_p->stateId(),rowRef,nspws_p);
-		}
-
-		// Data Description ID
-		if (inputOutputDDIndexMap_p.size())
-		{
-			reindexVector(vb->dataDescriptionIds(),tmpVectorInt,inputOutputDDIndexMap_p,True);
-			writeRollingVector(tmpVectorInt,outputMsCols_p->dataDescId(),rowRef,nspws_p);
-		}
-		else
-		{
-			tmpVectorInt = vb->dataDescriptionIds()(0);
-			writeRollingVector(tmpVectorInt,outputMsCols_p->dataDescId(),rowRef,nspws_p);
-		}
-
-		// Antenna
-		if (inputOutputAntennaIndexMap_p.size())
-		{
-			reindexVector(vb->antenna1(),tmpVectorInt,inputOutputAntennaIndexMap_p,False);
-			writeVector(tmpVectorInt,outputMsCols_p->antenna1(),rowRef,nspws_p);
-			reindexVector(vb->antenna2(),tmpVectorInt,inputOutputAntennaIndexMap_p,False);
-			writeVector(tmpVectorInt,outputMsCols_p->antenna2(),rowRef,nspws_p);
-		}
-		else
-		{
-			writeVector(vb->antenna1(),outputMsCols_p->antenna1(),rowRef,nspws_p);
-			writeVector(vb->antenna2(),outputMsCols_p->antenna2(),rowRef,nspws_p);
-		}
-
-		// Non re-indexable columns
-		writeVector(vb->scan(),outputMsCols_p->scanNumber(),rowRef,nspws_p);
-
-		writeVector(vb->feed1(),outputMsCols_p->feed1(),rowRef,nspws_p);
-		writeVector(vb->feed2(),outputMsCols_p->feed2(),rowRef,nspws_p);
-		writeVector(vb->processorId(),outputMsCols_p->processorId(),rowRef,nspws_p);
-		writeVector(vb->time(),outputMsCols_p->time(),rowRef,nspws_p);
-		writeVector(vb->timeCentroid(),outputMsCols_p->timeCentroid(),rowRef,nspws_p);
-		writeVector(vb->timeInterval(),outputMsCols_p->interval(),rowRef,nspws_p);
-		writeVector(vb->exposure(),outputMsCols_p->exposure(),rowRef,nspws_p);
 		writeMatrix(vb->uvw(),outputMsCols_p->uvw(),rowRef,nspws_p);
-		writeVector(vb->flagRow(),outputMsCols_p->flagRow(),rowRef,nspws_p);
 
 		Matrix<Float> weights = vb->weight();
 		if (channelAverage_p)
@@ -3264,76 +3262,172 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 	return;
 }
 
-// -----------------------------------------------------------------------
-// Fill the output vector with an input scalar
-// re-indexed according to the data selection
-// -----------------------------------------------------------------------
-template <class T> void MSTransformManager::fillAndReindexScalar(	T inputScalar,
-																		Vector<T> &outputVector,
-																		map<Int,Int> &inputOutputIndexMap)
+// ------------------------------------------------------------------------------------
+//
+// ------------------------------------------------------------------------------------
+template <class T> void MSTransformManager::transformAndWriteNotReindexableVector(	const Vector<T> &inputVector,
+																					Vector<T> &outputVector,
+																					Bool constant,
+																					ScalarColumn<T> &outputCol,
+																					RefRows &rowReference)
 {
-	if (inputOutputIndexMap.size())
+	Bool transformed = transformNotReindexableVector(inputVector,outputVector,constant);
+
+	if (transformed)
 	{
-		outputVector = inputOutputIndexMap[inputScalar];
+		outputCol.putColumnCells(rowReference, outputVector);
 	}
 	else
 	{
-		outputVector = inputScalar;
+		outputCol.putColumnCells(rowReference, inputVector);
 	}
 
 	return;
-}
+};
 
-// -----------------------------------------------------------------------
-// Fill the output vector with the data from an input vector mapped in
-// (SPW,Scan,State) tuples, and re-indexed according to the data selection
-// -----------------------------------------------------------------------
-template <class T> void MSTransformManager::mapAndReindexVector(const Vector<T> &inputVector,
-																	Vector<T> &outputVector,
-																	map<Int,Int> &inputOutputIndexMap,
-																	Bool constant)
+// ------------------------------------------------------------------------------------
+//
+// ------------------------------------------------------------------------------------
+template <class T> void MSTransformManager::transformAndWriteReindexableVector(	const Vector<T> &inputVector,
+															Vector<T> &outputVector,
+															Bool constant,
+															map<Int,Int> &inputOutputIndexMap,
+															ScalarColumn<T> &outputCol,
+															RefRows &rowReference)
 {
-	if (constant)
+	Bool transformed = transformReindexableVector(inputVector,outputVector,constant,inputOutputIndexMap);
+
+	if (transformed)
 	{
-		fillAndReindexScalar(inputVector(0),outputVector,inputOutputIndexMap);
+		outputCol.putColumnCells(rowReference, outputVector);
 	}
 	else
 	{
-		if (inputOutputIndexMap.size())
+		outputCol.putColumnCells(rowReference, inputVector);
+	}
+
+	return;
+};
+
+// ------------------------------------------------------------------------------------
+//
+// ------------------------------------------------------------------------------------
+Bool MSTransformManager::transformDDIVector(const Vector<Int> &inputVector,Vector<Int> &outputVector)
+{
+	Bool transformed = True;
+
+	if (combinespws_p)
+	{
+		if (nspws_p <2)
 		{
+			outputVector = ddiStart_p;
+		}
+		else
+		{
+			uInt absoluteIndex = 0;
 			for (uInt index=0; index<rowIndex_p.size();index++)
 			{
-				outputVector(index) = inputOutputIndexMap[inputVector(rowIndex_p[index])];
+				for (uInt spwIndex=0;spwIndex < nspws_p; spwIndex++)
+				{
+					outputVector(absoluteIndex) = ddiStart_p + spwIndex;
+					absoluteIndex += 1;
+				}
 			}
+		}
+	}
+	else
+	{
+		transformed = transformReindexableVector(inputVector,outputVector,True,inputOutputDDIndexMap_p);
+	}
+
+	return transformed;
+}
+
+// ------------------------------------------------------------------------------------
+//
+// ------------------------------------------------------------------------------------
+template <class T> Bool MSTransformManager::transformNotReindexableVector(	const Vector<T> &inputVector,
+																			Vector<T> &outputVector,
+																			Bool constant)
+{
+	Bool transformed = True;
+
+	if (combinespws_p)
+	{
+		if (constant)
+		{
+			outputVector = inputVector(0);
 		}
 		else
 		{
 			mapVector(inputVector,outputVector);
 		}
 	}
-
-	return;
-}
-
-// -----------------------------------------------------------------------
-// Fill the output vector with the data from an input
-// vector re-indexed according to the data selection
-// -----------------------------------------------------------------------
-template <class T> void MSTransformManager::reindexVector(	const Vector<T> &inputVector,
-																Vector<T> &outputVector,
-																map<Int,Int> &inputOutputIndexMap,
-																Bool constant)
-{
-	if (constant)
+	else
 	{
-		T value = inputOutputIndexMap[inputVector(0)];
-		outputVector = value;
+		transformed = False;
+	}
+
+	return transformed;
+};
+
+// ------------------------------------------------------------------------------------
+//
+// ------------------------------------------------------------------------------------
+template <class T> Bool MSTransformManager::transformReindexableVector(	const Vector<T> &inputVector,
+																		Vector<T> &outputVector,
+																		Bool constant,
+																		map<Int,Int> &inputOutputIndexMap)
+{
+	Bool transformed = True;
+
+	if (inputOutputIndexMap.size())
+	{
+		if (constant)
+		{
+			outputVector = inputOutputIndexMap[inputVector(0)];
+		}
+		else if (combinespws_p)
+		{
+			mapAndReindexVector(inputVector,outputVector,inputOutputIndexMap);
+		}
+		else
+		{
+			reindexVector(inputVector,outputVector,inputOutputIndexMap);
+		}
 	}
 	else
 	{
-		for (uInt index=0; index<inputVector.shape()[0];index++)
+		transformed = transformNotReindexableVector(inputVector,outputVector,constant);
+	}
+
+	return transformed;
+};
+
+// ------------------------------------------------------------------------------------
+//
+// ------------------------------------------------------------------------------------
+template <class T> void MSTransformManager::mapAndReindexVector(	const Vector<T> &inputVector,
+																	Vector<T> &outputVector,
+																	map<Int,Int> &inputOutputIndexMap)
+{
+	if (nspws_p <2)
+	{
+		for (uInt index=0; index<rowIndex_p.size();index++)
 		{
-			outputVector(index) = inputOutputIndexMap[inputVector(index)];
+			outputVector(index) = inputOutputIndexMap[inputVector(rowIndex_p[index])];
+		}
+	}
+	else
+	{
+		uInt absoluteIndex = 0;
+		for (uInt index=0; index<rowIndex_p.size();index++)
+		{
+			for (uInt spwIndex=0;spwIndex < nspws_p; spwIndex++)
+			{
+				outputVector(absoluteIndex) = inputOutputIndexMap[inputVector(rowIndex_p[index])];
+				absoluteIndex += 1;
+			}
 		}
 	}
 
@@ -3341,15 +3435,147 @@ template <class T> void MSTransformManager::reindexVector(	const Vector<T> &inpu
 }
 
 // ------------------------------------------------------------------------------------
-// Fill the data from an input vector with shape [nBaselinesxnSPWsxnScans/nStates]
-// into an output vector with shape [nBaselinesxnScans/nStates]
+//
+// ------------------------------------------------------------------------------------
+template <class T> void MSTransformManager::reindexVector(	const Vector<T> &inputVector,
+															Vector<T> &outputVector,
+															map<Int,Int> &inputOutputIndexMap)
+{
+	if (nspws_p <2)
+	{
+		for (uInt index=0; index<inputVector.shape()[0];index++)
+		{
+			outputVector(index) = inputOutputIndexMap[inputVector(index)];
+		}
+	}
+	else
+	{
+		uInt absoluteIndex = 0;
+		for (uInt index=0; index<inputVector.shape()[0];index++)
+		{
+			for (uInt spwIndex=0;spwIndex < nspws_p; spwIndex++)
+			{
+				outputVector(absoluteIndex) = inputOutputIndexMap[inputVector(index)];
+				absoluteIndex += 1;
+			}
+		}
+	}
+
+	return;
+};
+
+// ------------------------------------------------------------------------------------
+//
 // ------------------------------------------------------------------------------------
 template <class T> void MSTransformManager::mapVector(	const Vector<T> &inputVector,
-															Vector<T> &outputVector)
+														Vector<T> &outputVector)
 {
-	for (uInt index=0; index<rowIndex_p.size();index++)
+	if (nspws_p < 2)
 	{
-		outputVector(index) = inputVector(rowIndex_p[index]);
+		for (uInt index=0; index<rowIndex_p.size();index++)
+		{
+			outputVector(index) = inputVector(rowIndex_p[index]);
+		}
+	}
+	else
+	{
+		uInt absoluteIndex = 0;
+		for (uInt index=0; index<rowIndex_p.size();index++)
+		{
+			for (uInt spwIndex=0;spwIndex < nspws_p; spwIndex++)
+			{
+				outputVector(absoluteIndex) = inputVector(rowIndex_p[index]);
+				absoluteIndex += 1;
+			}
+		}
+	}
+
+
+	return;
+}
+
+// ------------------------------------------------------------------------------------
+//
+// ------------------------------------------------------------------------------------
+void MSTransformManager::mapAndAverageVector(	const Vector<Double> &inputVector,
+												Vector<Double> &outputVector)
+{
+	Double average;
+	vector<uInt> baselineRows;
+	uInt row, counts, absoluteIndex = 0;
+	for (baselineMap::iterator iter = baselineMap_p.begin(); iter != baselineMap_p.end(); iter++)
+	{
+		// Get baseline rows vector
+		baselineRows = iter->second;
+
+		// Compute combined value from each SPW
+		counts = 0;
+
+		for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
+		{
+			row = *iter;
+			if (counts == 0)
+			{
+				average = inputVector(row);
+			}
+			else
+			{
+				average += inputVector(row);
+			}
+
+			counts += 1;
+		}
+
+		// Normalize value
+		if (counts) average /= counts;
+
+		// Set value in output vector
+		for (uInt spwIndex=0;spwIndex < nspws_p; spwIndex++)
+		{
+			outputVector(absoluteIndex) = average;
+			absoluteIndex += 1;
+		}
+	}
+
+	return;
+}
+
+// ------------------------------------------------------------------------------------
+//
+// ------------------------------------------------------------------------------------
+void MSTransformManager::mapAndAverageVector(	const Vector<Bool> &inputVector,
+												Vector<Bool> &outputVector)
+{
+	Bool average;
+	vector<uInt> baselineRows;
+	uInt row, counts, absoluteIndex = 0;
+	for (baselineMap::iterator iter = baselineMap_p.begin(); iter != baselineMap_p.end(); iter++)
+	{
+		// Get baseline rows vector
+		baselineRows = iter->second;
+
+		// Compute combined value from each SPW
+		counts = 0;
+
+		for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
+		{
+			row = *iter;
+			if (counts == 0)
+			{
+				average = inputVector(row);
+			}
+			else
+			{
+				average &= inputVector(row);
+			}
+		}
+
+		// Set value in output vector
+		for (uInt spwIndex=0;spwIndex < nspws_p; spwIndex++)
+		{
+			outputVector(absoluteIndex) = average;
+			absoluteIndex += 1;
+		}
 	}
 
 	return;
@@ -3359,8 +3585,7 @@ template <class T> void MSTransformManager::mapVector(	const Vector<T> &inputVec
 // Fill the data from an input matrix with shape [nCol,nBaselinesxnSPWsxnScans/nStates]
 // into an output matrix with shape [nCol,nBaselinesxnScans/nStates]
 // ------------------------------------------------------------------------------------
-template <class T> void MSTransformManager::mapMatrix(	const Matrix<T> &inputMatrix,
-															Matrix<T> &outputMatrix)
+template <class T> void MSTransformManager::mapMatrix(	const Matrix<T> &inputMatrix,Matrix<T> &outputMatrix)
 {
 	// Get number of columns
 	uInt nCols = outputMatrix.shape()(0);
@@ -3371,41 +3596,6 @@ template <class T> void MSTransformManager::mapMatrix(	const Matrix<T> &inputMat
 		{
 			outputMatrix(col,index) = inputMatrix(col,rowIndex_p[index]);
 		}
-	}
-
-	return;
-}
-
-// -----------------------------------------------------------------------------------
-// Fill the data from an input vector with shape [nBaselinesxnSPWs] into an
-// output vector with shape [nBaselines] averaging the values from all SPWS
-// -----------------------------------------------------------------------------------
-template <class T> void MSTransformManager::mapAndAverageVector(const Vector<T> &inputVector,
-																	Vector<T> &outputVector,
-																	Bool convolveFlags,
-																	vi::VisBuffer2 *vb)
-{
-	uInt row;
-	uInt baseline_index = 0;
-	vector<uInt> baselineRows;
-	uInt counts = 0;
-	for (baselineMap::iterator iter = baselineMap_p.begin(); iter != baselineMap_p.end(); iter++)
-	{
-		// Get baseline rows vector
-		baselineRows = iter->second;
-
-		// Compute combined value from each SPW
-		counts = 0;
-		for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
-		{
-			row = *iter;
-			outputVector(baseline_index) += inputVector(row);
-			counts += 1;
-		}
-
-		if (counts) outputVector(baseline_index) /= counts;
-
-		baseline_index += 1;
 	}
 
 	return;
@@ -3702,82 +3892,6 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 
 	return;
 }
-
-// -----------------------------------------------------------------------
-// Generic method to write a Vector from a VisBuffer into a ScalarColumn
-// -----------------------------------------------------------------------
-template <class T> void MSTransformManager::writeVector(	const Vector<T> &inputVector,
-																ScalarColumn<T> &outputCol,
-																RefRows &rowRef,
-																uInt nBlocks)
-{
-	if (nBlocks == 1)
-	{
-		 outputCol.putColumnCells(rowRef, inputVector);
-	}
-	else
-	{
-		uInt offset = 0;
-		Vector<T> block(nBlocks);
-		for (uInt index=0;index<inputVector.size();index++)
-		{
-			block = inputVector(index);
-			writeVectorBlock(block,outputCol,rowRef,offset);
-			offset += nBlocks;
-		}
-	}
-
-	return;
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-template <class T> void MSTransformManager::writeRollingVector(	Vector<T> &inputVector,
-																	ScalarColumn<T> &outputCol,
-																	RefRows &rowRef,
-																	uInt nBlocks)
-{
-	if (nBlocks == 1)
-	{
-		 outputCol.putColumnCells(rowRef, inputVector);
-	}
-	else
-	{
-		T value = inputVector(0);
-		Vector<T> block(nBlocks);
-		for (uInt block_index=0;block_index<nBlocks;block_index++)
-		{
-			block(block_index) = value;
-			value += 1;
-		}
-
-		uInt offset = 0;
-		for (uInt index=0;index<inputVector.size();index++)
-		{
-			writeVectorBlock(block,outputCol,rowRef,offset);
-			offset += nBlocks;
-		}
-	}
-
-	return;
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-template <class T> void MSTransformManager::writeVectorBlock(	const Vector<T> &inputVector,
-																	ScalarColumn<T> &outputCol,
-																	RefRows &rowRef,
-																	uInt offset)
-{
-	uInt startRow_i = rowRef.firstRow()+offset;
-	RefRows rowRef_i(startRow_i, startRow_i+inputVector.size()-1);
-	outputCol.putColumnCells(rowRef_i, inputVector);
-
-	return;
-}
-
 
 // -----------------------------------------------------------------------
 // Generic method to write a Matrix from a VisBuffer into a ArrayColumn
@@ -5087,6 +5201,7 @@ template <class T> void MSTransformManager::averageSmoothRegrid(Int inputSpw,
 
 	return;
 }
-
+template Bool MSTransformManager::transformNotReindexableVector(	const Vector<double> &inputVector, Vector<double> &outputVector, Bool constant);
+template Bool MSTransformManager::transformNotReindexableVector(	const Vector<int> &inputVector, Vector<int> &outputVector, Bool constant);
 
 } //# NAMESPACE CASA - END

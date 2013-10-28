@@ -501,7 +501,6 @@ class MSTHelper(ParallelTaskHelper):
             
                     try:
                         # The dictionary with selected indices
-                        print scans, spws
                         seldict = self._msTool.msseltoindex(vis=self._arg['vis'],scan=scans,spw=spws)
                     except:
                         self._msTool.close()

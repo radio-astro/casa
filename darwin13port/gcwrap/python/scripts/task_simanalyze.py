@@ -447,6 +447,8 @@ def simanalyze(
                     sfsupport = 4
                     temp_out = tpimage+"0"
                     temp_cell = [sfcell, sfcell]
+                    # too small - is imsize too small to start with?
+                    # needs to cover all pointings.
                     temp_imsize = [int(pl.ceil(cell_asec[0]/sfcell_asec*imsize[0])),
                                    int(pl.ceil(cell_asec[1]/sfcell_asec*imsize[1]))]
                     msg("Using predefined algorithm to define grid parameters.",origin='simanalyze')
@@ -497,6 +499,7 @@ def simanalyze(
 
                         # Define PSF of image
                         qpb = beam=qa.quantity(pb_asec,"arcsec")
+                        # TODO get the sampling from the ms and put it in here
                         qpsf0 = myutil.sfBeam1d(qpb, cell=temp_cell[0],
                                               convsupport=sfsupport)
                         qpsf1 = myutil.sfBeam1d(qpb, cell=temp_cell[1],

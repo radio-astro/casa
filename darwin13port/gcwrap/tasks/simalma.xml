@@ -93,7 +93,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
          sampling.
        * The total power array maps a slightly (+1 primary beam) larger area 
          than the 12m array does, to improve later image combination. 
-         It samples the region with lattice grids of spacing 0.36 lambda/D.
+         It samples the region with lattice grids of spacing 0.33 lambda/D.
 
     ptgfile -- a text file specifying directions in the same 
          format as the example, and optional integration times, e.g.
