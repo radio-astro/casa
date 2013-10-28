@@ -188,12 +188,22 @@ else:
    # 25 Oct 2013 (UR). -- This is with DEFAULT oversampling (20)
    # These are pixel values at the center of the source, pixel 256, 315
    # Test 1
-   correct_cs_intensity = 0.671525
-   correct_cs_avgpb = 0.4836
+   #correct_cs_intensity = 0.671525
+   #correct_cs_avgpb = 0.4836
    # Test 2
-   correct_mtmfs_intensity = 0.6818
-   correct_mtmfs_alpha = 0.0188
-   correct_mtmfs_avgPB_tt0 = 0.4836
+   #correct_mtmfs_intensity = 0.6818
+   #correct_mtmfs_alpha = 0.0188
+   #correct_mtmfs_avgPB_tt0 = 0.4836
+
+   # 28 Oct 2013 (UR). After fixing more PBSQ and sqrt errors.
+   # These are pixel values at the center of the source, pixel 256, 315
+   # Test 1
+   correct_cs_intensity = 0.6710
+   correct_cs_avgpb = 0.4830
+   # Test 2
+   correct_mtmfs_intensity = 0.6803
+   correct_mtmfs_alpha = 0.0360
+   correct_mtmfs_avgPB_tt0 = 0.4830
 
 
 ###################################################
