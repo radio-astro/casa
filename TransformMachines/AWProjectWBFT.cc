@@ -374,7 +374,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			       /sumwt_l
 			       );
 
-	wtImIter.rwCursor() = sqrt( fabs(wtImIter.rwCursor()) );
+	////////////////////	wtImIter.rwCursor() = sqrt( fabs(wtImIter.rwCursor()) );
 
 	//	Double maxval = fabs( max( wtImIter.rwCursor() ) );
 	//	sumwt_l = getSumOfCFWeights()(pol_l,chan_l);

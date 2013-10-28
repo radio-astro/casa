@@ -313,7 +313,7 @@ namespace casa{
 
 		    // To accumulate avgPB2, call this function. 
 		    // PBSQWeight
-		    Bool PBSQ = True;
+		    Bool PBSQ = False;
 		    if(PBSQ) makePBSq(twoDPBSq_l); 
 		    
 
