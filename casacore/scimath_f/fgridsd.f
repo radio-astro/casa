@@ -79,7 +79,8 @@ C
       do irow=rbeg, rend
          if(rflag(irow).eq.0) then
          call sgridsd(xy(1,irow), sampling, pos, loc, off)
-         if (ogridsd(nx, ny, loc, support)) then
+C          if (ogridsd(nx, ny, loc, support)) then
+         if (ogridsd(nx, ny, loc, 0)) then
             ir=1
             norm=-(support+1)*sampling+off(1)
             rloc(2)=-(support+1)*sampling+off(2)
@@ -119,19 +120,24 @@ C
 C                        do iy=-support,support
                         do iy=1,2*support+1
                            ay=yloc(iy)
+                           if ((ay.ge.1).and.(ay.le.ny)) then
 C                           do ix=-support,support
-                           do ix=1,2*support+1
-                              ax=xloc(ix)
-                              wt=convFunc(irad(ir))
-                              grid(ax,ay,apol,achan)=
-     $                             grid(ax,ay,apol,achan)+
-     $                             nvalue*wt
-                              wgrid(ax,ay,apol,achan)=
-     $                          wgrid(ax,ay,apol,achan)+
-     $                          weight(ichan,irow)*wt
-                              norm=norm+wt
-                              ir=ir+1
-                           end do
+                              do ix=1,2*support+1
+                                 ax=xloc(ix)
+                                 if ((ax.ge.1).and.(ax.le.nx)) then
+                                    ir = (iy-1)*(2*support+1) + ix
+                                    wt=convFunc(irad(ir))
+                                    grid(ax,ay,apol,achan)=
+     $                                   grid(ax,ay,apol,achan)+
+     $                                   nvalue*wt
+                                    wgrid(ax,ay,apol,achan)=
+     $                                   wgrid(ax,ay,apol,achan)+
+     $                                   weight(ichan,irow)*wt
+                                    norm=norm+wt
+                                 end if
+C                                  ir=ir+1
+                              end do
+                           end if
                         end do
                         sumwt(apol,achan)=sumwt(apol,achan)+
      $                       weight(ichan,irow)*norm
@@ -176,6 +182,8 @@ C
       integer apol, achan
       real wt, wtx, wty
 
+      integer ax, ay
+
       if(irow.ge.0) then
          rbeg=irow+1
          rend=irow+1
@@ -187,7 +195,8 @@ C
       do irow=rbeg, rend
          if(rflag(irow).eq.0) then
          call sgridsd(xy(1, irow), sampling, pos, loc, off)
-         if (ogridsd(nx, ny, loc, support)) then
+C          if (ogridsd(nx, ny, loc, support)) then
+         if (ogridsd(nx, ny, loc, 0)) then
             do ichan=1, nvischan
                achan=chanmap(ichan)+1
                if((achan.ge.1).and.(achan.le.nchan)) then
@@ -198,13 +207,19 @@ C
                         nvalue=0.0
                         do iy=-support,support
                            rloc(2)=sampling*iy+off(2)
-                           do ix=-support,support
-                              rloc(1)=sampling*ix+off(1)
-                              irad=sqrt(rloc(1)**2+rloc(2)**2)+1
-                              wt=convFunc(irad)
-                              nvalue=nvalue+wt*
-     $                             grid(loc(1)+ix,loc(2)+iy,apol,achan)
-                           end do
+                           ay=loc(2)+iy
+                           if ((ay.ge.1).and.(ay.le.ny)) then
+                              do ix=-support,support
+                                 ax=loc(1)+ix
+                                 if ((ax.ge.1).and.(ax.le.nx)) then
+                                    rloc(1)=sampling*ix+off(1)
+                                    irad=sqrt(rloc(1)**2+rloc(2)**2)+1
+                                    wt=convFunc(irad)
+                                    nvalue=nvalue+wt*
+     $                                   grid(ax,ay,apol,achan)
+                                 end if
+                              end do
+                           end if
                         end do
                         values(ipol,ichan,irow)=conjg(nvalue)
                      end if
@@ -305,7 +320,8 @@ C
       do irow=rbeg, rend
          if(rflag(irow).eq.0) then
          call sgridsd(xy(1,irow), sampling, pos, loc, off)
-         if (ogridsd(nx, ny, loc, support)) then
+C          if (ogridsd(nx, ny, loc, support)) then
+         if (ogridsd(nx, ny, loc, 0)) then
             ir=1
             norm=-(support+1)*sampling+off(1)
             rloc(2)=-(support+1)*sampling+off(2)
@@ -339,19 +355,22 @@ C
 C                        do iy=-support,support
                         do iy=1,2*support+1
                            ay=yloc(iy)
-C                           do ix=-support,support
+                           if ((ay.ge.1).and.(ay.le.ny)) then
+C                            do ix=-support,support
                            do ix=1,2*support+1
                               ax=xloc(ix)
+                              if ((ax.ge.1).and.(ax.le.nx)) then
+                              ir = (iy-1)*(2*support+1) + ix
                               wt=convFunc(irad(ir))
                               grid(ax,ay,apol,achan)=
      $                             grid(ax,ay,apol,achan)+
      $                             weight(ichan,irow)*wt*
      $                             conjg(values(ipol,ichan,irow))
                               wgrid(ax,ay,apol,achan)=
-     $                          wgrid(ax,ay,apol,achan)+
-     $                          weight(ichan,irow)*wt
+     $                             wgrid(ax,ay,apol,achan)+
+     $                             weight(ichan,irow)*wt
                               norm=norm+wt
-                              ir=ir+1
+C                              ir=ir+1
 C-------------------------------------------------------------------
 C update variables for clipping
 C-------------------------------------------------------------------
@@ -378,7 +397,9 @@ C-------------------------------------------------------------------
                                  end if
                               end if
 C-------------------------------------------------------------------
+                              end if
                            end do
+                           end if
                         end do
                         sumwt(apol,achan)=sumwt(apol,achan)+
      $                       weight(ichan,irow)*norm
