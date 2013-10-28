@@ -81,12 +81,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void applySky(ImageInterface<Float>& outputImage,
 			  const VisBuffer& vb, 
 			  const Bool doSquint=True,
-			  const Int& cfKey=0){
+			  const Int& cfKey=0,
+			  const Double freqVal=-1.0){
       applySky(outputImage, vb, doSquint, cfKey, False);};
     virtual void applySky(ImageInterface<Complex>& outputImage,
 			  const VisBuffer& vb, 
 			  const Bool doSquint=True,
-			  const Int& cfKey=0){
+			  const Int& cfKey=0,
+			  const Double freqVal=-1.0){
       applySky(outputImage, vb, doSquint, cfKey, False);};
 
     void applySky(ImageInterface<Float>& outputImage,

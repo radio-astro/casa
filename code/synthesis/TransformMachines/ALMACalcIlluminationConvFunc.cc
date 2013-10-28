@@ -123,7 +123,7 @@ namespace casa{
     MEpoch obsTime(vb.msColumns().timeQuant()(0));
     String antType = ALMAAperture::antTypeStrFromType(ALMAAperture::antennaTypesFromCFKey(cfKey)[0]); // take the first antenna
     String antType2 = ALMAAperture::antTypeStrFromType(ALMAAperture::antennaTypesFromCFKey(cfKey)[1]); // take the first antenna
-    cout << "cfkey, type1, type2 " << cfKey << " " << antType << " " << antType2 << endl;
+    //cout << "cfkey, type1, type2 " << cfKey << " " << antType << " " << antType2 << endl;
     Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), "ALMA", antType, obsTime, otherAntRayPath_p);
 
     regridAperture(skyCS, skyShape, uvGrid, vb, doSquint, bandID);
@@ -269,13 +269,21 @@ namespace casa{
     //
     // Accumulate apertures for a list of PA
     //
+    Vector<Int> poln(4);
+    poln(0) = Stokes::XX;
+    poln(1) = Stokes::XY;
+    poln(2) = Stokes::YX;
+    poln(3) = Stokes::YY;
+
     for(uInt ipa=0;ipa<paList.nelements();ipa++)
       {
 	pa = paList[ipa];
 
 	ap.pa=pa;
 	ap.aperture->set(0.0);
-	BeamCalc::Instance()->calculateAperture(&ap);
+	for(uInt i=0; i<4; i++){
+	  BeamCalc::Instance()->calculateApertureLinPol(&ap, poln(i));
+	}
 	//
 	// Set the phase of the aperture function to zero if doSquint==F
 	// Poln. axis indices
@@ -322,11 +330,7 @@ namespace casa{
       }
     *(ap.aperture) = tmpAperture;
     tmpAperture.resize(IPosition(1,1));//Release temp. store.
-    Vector<Int> poln(4);
-    poln(0) = Stokes::XX;
-    poln(1) = Stokes::XY;
-    poln(2) = Stokes::YX;
-    poln(3) = Stokes::YY;
+
     StokesCoordinate polnCoord(poln);
     SpectralCoordinate spectralCoord(MFrequency::TOPO,Freq,1.0,0.0);
     //    uvCoords.addCoordinate(dirCoord);
@@ -344,6 +348,7 @@ namespace casa{
     
     ftAperture(*(ap.aperture));
   }
+
 
   void ALMACalcIlluminationConvFunc::regridAperture(CoordinateSystem& skyCS,
 						    IPosition& skyShape,
@@ -374,7 +379,7 @@ namespace casa{
     
     Freq = freqQ.getValue();
     ap.freq = Freq/1E9;
-    
+
     IPosition imsize(skyShape);
 
     CoordinateSystem uvCoords = makeUVCoords(skyCoords,imsize,freqQ.getValue());
@@ -397,13 +402,24 @@ namespace casa{
     ap.aperture->resize(apertureShape);
     ap.dx = abs(incr(0)*Lambda); ap.dy = abs(incr(1)*Lambda);
     
+    //cout << " dx dy " << ap.dx << " " << ap.dy << endl;
+
     ap.x0 = -(ap.nx/2)*ap.dx; 
     ap.y0 = -(ap.ny/2)*ap.dy;
     
     ap.pa=pa;
     ap.aperture->set(0.0);
-    BeamCalc::Instance()->calculateAperture(&ap);
-    
+
+    Vector<Int> poln(4);
+    poln(0) = Stokes::XX;
+    poln(1) = Stokes::XY;
+    poln(2) = Stokes::YX;
+    poln(3) = Stokes::YY;
+
+    for(uInt i=0; i<4; i++){
+      BeamCalc::Instance()->calculateApertureLinPol(&ap, poln(i));
+    }
+
     //
     // Set the phase of the aperture function to zero if doSquint==F
     // Poln. axis indices
@@ -434,7 +450,6 @@ namespace casa{
 		Complex val, Xval, Yval;
 		Float phase;
 		val = ap.aperture->getAt(tndx);
-		Xval = ap.aperture->getAt(PolnXIndex);
 		Yval = ap.aperture->getAt(PolnYIndex);
 		phase = arg(Xval);  Xval=Complex(cos(phase),sin(phase));
 		phase = arg(Yval);  Yval=Complex(cos(phase),sin(phase));
@@ -446,11 +461,6 @@ namespace casa{
 	      }
     }
     
-    Vector<Int> poln(4);
-    poln(0) = Stokes::XX;
-    poln(1) = Stokes::XY;
-    poln(2) = Stokes::YX;
-    poln(3) = Stokes::YY;
     StokesCoordinate polnCoord(poln);
     SpectralCoordinate spectralCoord(MFrequency::TOPO,Freq,1.0,0.0);
     
@@ -463,6 +473,7 @@ namespace casa{
     //
     // Now FT the re-gridded Fourier plane to get the primary beam.
     //
+
     ftAperture(*(ap.aperture));
     
   }
@@ -488,20 +499,34 @@ namespace casa{
     outImg.setCoordinateInfo(outCS);
 
     ndx(3)=0;
-    for(ndx(2)=0;ndx(2)<imsize(2);ndx(2)++) // The poln axes
-      {
-	for(s=0;s<inShape(2);s++) if (inStokes(s) == outStokes(ndx(2))) break;
-	
-	for(ndx(0)=0;ndx(0)<imsize(0);ndx(0)++)
-	  for(ndx(1)=0;ndx(1)<imsize(1);ndx(1)++)
-	    {
-	      Complex cval;
-	      inNdx = ndx; inNdx(2)=s;
-	      cval = inImg.getAt(inNdx);
-	      if (Square) cval = cval*conj(cval);
-	      outImg.putAt(cval*outImg.getAt(ndx),ndx);
-	    }
+    for(ndx(2)=0;ndx(2)<imsize(2);ndx(2)++){ // The poln axes
+      Bool found = False;
+      for(s=0;s<inShape(2);s++){
+	if (inStokes(s) == outStokes(ndx(2))){
+	  found = True;
+	  break;
+	}
       }
+
+      if(found){
+	for(ndx(0)=0;ndx(0)<imsize(0);ndx(0)++){
+	  for(ndx(1)=0;ndx(1)<imsize(1);ndx(1)++){
+	    Complex cval;
+	    inNdx = ndx; inNdx(2)=s;
+	    cval = inImg.getAt(inNdx);
+	    if (Square){
+	      cval = cval*conj(cval);
+	    }
+	    outImg.putAt(cval*outImg.getAt(ndx),ndx);
+	  }
+	}
+      }
+      else{
+	cerr << "Stokes " << outStokes(ndx(2)) << " not found in response image " << endl;
+      }	
+
+    }
+
   }
 
   void ALMACalcIlluminationConvFunc::fillVP(ImageInterface<Complex>& inImg,
@@ -648,24 +673,25 @@ namespace casa{
     tmp = buf;
 
     t(0)=t(1)=t(2)=t(3)=0;
-    t(2)=0;n0(2)=0;n1(2)=0; //XX
-    for(  n0(0)=n1(0)=t(0)=0;n0(0)<shape(0);n0(0)++,n1(0)++,t(0)++)
-      for(n0(1)=n1(1)=t(1)=0;n0(1)<shape(1);n0(1)++,n1(1)++,t(1)++)
+
+    t(2)=0; n0(2)=0; n1(2)=0; //XX
+    for( n0(0)=n1(0)=t(0)=0; n0(0)<shape(0); n0(0)++,n1(0)++,t(0)++)
+      for(n0(1)=n1(1)=t(1)=0; n0(1)<shape(1); n0(1)++,n1(1)++,t(1)++)
 	buf(t) = (tmp(n0)*conj(tmp(n1)));
 
-    t(2)=1;n0(2)=3;n1(2)=0; //XY
-    for(  n0(0)=n1(0)=t(0)=0;n0(0)<shape(0);n0(0)++,n1(0)++,t(0)++)
-      for(n0(1)=n1(1)=t(1)=0;n0(1)<shape(1);n0(1)++,n1(1)++,t(1)++)
+    t(2)=1;n0(2)=1;n1(2)=1; //XY
+    for(n0(0)=n1(0)=t(0)=0; n0(0)<shape(0); n0(0)++,n1(0)++,t(0)++)
+      for(n0(1)=n1(1)=t(1)=0; n0(1)<shape(1); n0(1)++,n1(1)++,t(1)++)
 	buf(t) = (tmp(n0)*conj(tmp(n1)));
 
-    t(2)=2;n0(2)=0;n1(2)=3; //YX
-    for(  n0(0)=n1(0)=t(0)=0;n0(0)<shape(0);n0(0)++,n1(0)++,t(0)++)
-      for(n0(1)=n1(1)=t(1)=0;n0(1)<shape(1);n0(1)++,n1(1)++,t(1)++)
+    t(2)=2;n0(2)=2;n1(2)=2; //YX
+    for(n0(0)=n1(0)=t(0)=0; n0(0)<shape(0); n0(0)++,n1(0)++,t(0)++)
+      for(n0(1)=n1(1)=t(1)=0; n0(1)<shape(1); n0(1)++,n1(1)++,t(1)++)
 	buf(t) = (tmp(n0)*conj(tmp(n1)));
 
     t(2)=3;n0(2)=3;n1(2)=3; //YY
-    for(  n0(0)=n1(0)=t(0)=0;n0(0)<shape(0);n0(0)++,n1(0)++,t(0)++)
-      for(n0(1)=n1(1)=t(1)=0;n0(1)<shape(1);n0(1)++,n1(1)++,t(1)++)
+    for(n0(0)=n1(0)=t(0)=0; n0(0)<shape(0); n0(0)++,n1(0)++,t(0)++)
+      for(n0(1)=n1(1)=t(1)=0; n0(1)<shape(1); n0(1)++,n1(1)++,t(1)++)
 	buf(t) = (tmp(n0)*conj(tmp(n1)));
     /*
     sliceStart0(3)=0; sliceStart1(3)=0;
