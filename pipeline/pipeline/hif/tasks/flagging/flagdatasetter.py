@@ -35,17 +35,12 @@ class FlagdataSetterInputs(basetask.StandardInputs):
         :param reason: string specifying subset of flagcmds to apply
         :type reason: string
         """        
-        # set the properties to the values given as input arguments
         self._init_properties(vars())
 
     @property
     def inpfile(self):
         if type(self.table) is types.ListType:
             return self._handle_multiple_vis('inpfile')
-        
-#        if self._inpfile is None:
-#            table_root = os.path.splitext(self.table)[0]
-#            return '%s_flagcmds.txt' % table_root
         return self._inpfile
 
     @inpfile.setter
