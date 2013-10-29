@@ -37,50 +37,36 @@ try:
             plots.append(displays.ImageDisplay().plot(pcontext, r,
               reportdir=plots_dir))
 
-            # plot Tsys spectra of interest
-            for description in r.descriptions():
-                spw = r.last(description).spw
-                data = r.last(description).data
-                flaglast = r.last(description).flag
-                flagfirst = r.first(description).flag
-                xtitle = r.last(description).axes[0].name
-                xdata = r.last(description).axes[0].data
-                ytitle = r.last(description).axes[1].name
-                ydata = r.last(description).axes[1].data
-            
-                # get antenna/time of flagged Tsys
-                grid = np.indices(np.shape(data))
-                flaggrid0 = grid[0][(flagfirst==False) & (flaglast==True)]
-                flaggrid1 = grid[1][(flagfirst==False) & (flaglast==True)]
+            # plot Tsys spectra that were flagged
+            for flagcmd in r.flagcmds():
+                for description in r.descriptions():
+                    tsysspectra = r.first(description).children.get(
+                      'tsysspectra')
+                    if tsysspectra is None:
+                        continue
 
-                medians = r.last(description).children.get('tsysmedians')
-                tsysspectra = r.first(description).children.get('tsysspectra')
-                if medians is not None and tsysspectra is not None:
-                    # if the merit position was flagged then display the
-                    # tsys overlaid on median tsys
-
-                    # first, find the flagged tsys spectrum
                     for tsys_desc in tsysspectra.descriptions():
                         tsysspectrum = tsysspectra.first(tsys_desc)
 
-                        # plot flagged Tsys spectra
-                        for i,fg0 in enumerate(flaggrid0):
-                            fg1 = flaggrid1[i]
+                        if not flagcmd.match(tsysspectrum):
+                            continue
 
-                            if (tsysspectrum.ant[0], tsysspectrum.time) == \
-                              (fg0, ydata[fg1]):
+                        # have found flagged spectrum, now get
+                        # associated median spectrum
+                        medians = r.last(description).children.get(
+                          'tsysmedians')
 
-                                # second, find the associated median
-                                for median_desc in medians.descriptions():
-                                    median_spectrum = medians.first(median_desc)
-                                    if median_spectrum.ant is None or \
-                                      median_spectrum.ant[0]==tsysspectrum.ant[0]:
-                                        plots.append(displays.SliceDisplay().plot(
-                                          context=pcontext, results=tsysspectra,
-                                          description_to_plot=tsys_desc,
-                                          overplot_spectrum=median_spectrum,
-                                          reportdir=plots_dir, plotbad=False))
-                                        break
+                        for median_desc in medians.descriptions():
+                            median_spectrum = medians.first(median_desc)
+                            if median_spectrum.ant is None or \
+                              median_spectrum.ant[0]==tsysspectrum.ant[0]:
+                                # do the plot
+                                plots.append(displays.SliceDisplay().plot(
+                                  context=pcontext, results=tsysspectra,
+                                  description_to_plot=tsys_desc,
+                                  overplot_spectrum=median_spectrum,
+                                  reportdir=plots_dir, plotbad=False))
+                                break
 
     # Group the Plots by axes and plot types; each logical grouping will
     # be contained in a PlotGroup
