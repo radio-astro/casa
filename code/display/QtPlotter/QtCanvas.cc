@@ -750,7 +750,15 @@ namespace casa {
 	}
 
 	void QtCanvas::mousePressEvent(QMouseEvent *event) {
-		if ( currentMode == NULL ) {
+		if ( currentMode != NULL ){
+			if ( currentMode->isMode(CanvasMode::MODE_CONTEXTMENU)) {
+				if ( event->button() == Qt::LeftButton || event->modifiers() != Qt::NoModifier){
+					contextMenu.hide();
+					currentMode = NULL;
+				}
+			}
+		}
+		if ( currentMode == NULL ){
 			currentMode = modeFactory->getModeForEvent( event );
 		}
 
@@ -797,6 +805,7 @@ namespace casa {
 
 
 	void QtCanvas::mouseReleaseEvent(QMouseEvent *event) {
+
 		if ( currentMode != NULL ) {
 			currentMode->mouseReleaseEvent( event );
 			currentMode = NULL;
