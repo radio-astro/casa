@@ -410,7 +410,8 @@ unsigned int STSideBandSep::setupShift()
   // Initialize shift values
   initshift();
 
-  const bool setImg = ( doboth_ && (imgShift_.size() == 0) );
+//   const bool setImg = ( doboth_ && (imgShift_.size() == 0) );
+  const bool setImg = (imgShift_.size() == 0);
   // Select IFs
   for (unsigned int itab = 0; itab < ntable_; itab++ ){
     os << "Table " << itab << LogIO::POST;
