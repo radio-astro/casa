@@ -53,6 +53,7 @@ macro( casa_add_tasks module _target )
     list( APPEND _all_tasks ${_base} )
 
     set( _cli ${CMAKE_CURRENT_BINARY_DIR}/${_base}_cli.py )
+    set( _mxml ${CMAKE_CURRENT_BINARY_DIR}/${_base}.xml)
     set( _pg  ${CMAKE_CURRENT_BINARY_DIR}/${_base}_pg.py )
     set( _py  ${CMAKE_CURRENT_BINARY_DIR}/${_base}.py )
 
@@ -60,21 +61,24 @@ macro( casa_add_tasks module _target )
     set( _xsl ${CMAKE_SOURCE_DIR}/install/casa2pycli.xsl )
     add_custom_command(
       OUTPUT ${_cli}
-      COMMAND ${SAXON} -o ${_cli} ${_xml} ${_xsl} 
+      COMMAND mergeparams ${CMAKE_SOURCE_DIR}/xml/params.xml ${_xml} > ${_mxml}
+      COMMAND ${SAXON} -o ${_cli} ${_mxml} ${_xsl} 
       DEPENDS ${_xml} ${_xsl} )
 
     # Create _pg.py
     set( _xsl ${CMAKE_SOURCE_DIR}/install/casa2pypg.xsl )
     add_custom_command(
       OUTPUT ${_pg}
-      COMMAND ${SAXON} -o ${_pg} ${_xml} ${_xsl} 
+      COMMAND mergeparams ${CMAKE_SOURCE_DIR}/xml/params.xml ${_xml} > ${_mxml}
+      COMMAND ${SAXON} -o ${_pg} ${_mxml} ${_xsl} 
       DEPENDS ${_xml} ${_xsl} )
 
     # Create .py
     set( _xsl ${CMAKE_SOURCE_DIR}/install/casa2pyimp.xsl )
     add_custom_command(
       OUTPUT ${_py}
-      COMMAND ${SAXON} -o ${_py} ${_xml} ${_xsl}
+      COMMAND mergeparams ${CMAKE_SOURCE_DIR}/xml/params.xml ${_xml} > ${_mxml}
+      COMMAND ${SAXON} -o ${_py} ${_mxml} ${_xsl}
       DEPENDS ${_xml} ${_xsl} )
 
     # Create intermediate file for the generation of tasks.py and tasksinfo.py
@@ -82,7 +86,8 @@ macro( casa_add_tasks module _target )
     set( _out ${_base}_tasksinfo.py )
     add_custom_command( 
       OUTPUT ${_out}
-      COMMAND ${SAXON} -o ${_out} ${_xml} ${_xsl}
+      COMMAND mergeparams ${CMAKE_SOURCE_DIR}/xml/params.xml ${_xml} > ${_mxml}
+      COMMAND ${SAXON} -o ${_out} ${_mxml} ${_xsl}
       COMMAND echo >> ${_out}
       DEPENDS ${_xml} ${_xsl}
       )

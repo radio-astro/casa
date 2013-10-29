@@ -1183,21 +1183,6 @@ add_custom_target( doc DEPENDS taskref_html taskref_pdf casaref_html casaref_pdf
 configure_file( apps/casapy/casapy ${CMAKE_CURRENT_BINARY_DIR}/preprocessed/casapy @ONLY )
 configure_file( apps/casapy/casa ${CMAKE_CURRENT_BINARY_DIR}/preprocessed/casa @ONLY )
 
-#casa_add_executable(tools mergeparams apps/mergeparams/mergeparams.cc)
-add_executable( mergeparams apps/mergeparams/mergeparams.cc )
-include_directories( ${XERCES_INCLUDE_DIRS} )
-target_link_libraries( mergeparams ${XERCES_LIBRARIES} )
-link_directories( ${XERCES_LIBRARIES} )
-install( TARGETS mergeparams RUNTIME DESTINATION bin )
-
-if( APPLE )
-# On Mac, things are installed here too.
-   install( TARGETS mergeparams RUNTIME DESTINATION apps/mergeparams.app/Contents/MacOS )
-endif()
-
-#add_library( mergeparams ${XERCES_LIBRARY} )
-add_dependencies( inst mergeparams )
-
 install( PROGRAMS
          install/buildmytasks
          install/xmlgenpy
