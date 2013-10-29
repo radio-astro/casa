@@ -158,7 +158,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         ydata = matrix.axes[1].data 
         spw = matrix.spw
         table = matrix.filename
-        cell_index = matrix.cell_index
+        pol = matrix.pol
 
         # Initialize flags
         newflags = []
@@ -218,8 +218,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                               reason='stage%s' % self.inputs.context.stage,
                               filename=table, rulename=rulename,
                               spw=spw, axisnames=[xtitle, ytitle],
-                              flagcoords=flagcoord,
-                              cell_index=cell_index))
+                              flagcoords=flagcoord, pol=pol))
   
                         # Flag the view.
                         flag[i2flag, j2flag] = True
@@ -250,8 +249,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                               reason='stage%s' % self.inputs.context.stage,
                               filename=table, rulename=rulename,
                               spw=spw, axisnames=[xtitle, ytitle],
-                              flagcoords=flagcoord,
-                              cell_index=cell_index))
+                              flagcoords=flagcoord, pol=pol))
 
                         # Flag the view.
                         flag[i2flag, j2flag] = True
@@ -282,8 +280,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                               reason='stage%s' % self.inputs.context.stage,
                               filename=table, rulename=rulename,
                               spw=spw, axisnames=[xtitle, ytitle],
-                              flagcoords=flagcoord, 
-                              cell_index=cell_index))
+                              flagcoords=flagcoord, pol=pol))
 
                         # Flag the view.
                         flag[i2flag, j2flag] = True
@@ -309,8 +306,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                               reason='stage%s' % self.inputs.context.stage,
                               filename=table, rulename=rulename, spw=spw,
                               axisnames=[xtitle, ytitle],
-                              flagcoords=flagcoord,
-                              cell_index=cell_index))
+                              flagcoords=flagcoord, pol=pol))
 
                         # Flag the view
                         flag[i2flag, j2flag] = True
@@ -336,8 +332,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                               reason='stage%s' % self.inputs.context.stage,
                               filename=table, rulename=rulename,
                               spw=spw, axisnames=[xtitle, ytitle],
-                              flagcoords=flagcoord,
-                              cell_index=cell_index))
+                              flagcoords=flagcoord, pol=pol))
 
                         # Flag the view
                         flag[i2flag, j2flag] = True
@@ -376,8 +371,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                                       reason='stage%s' % self.inputs.context.stage,
                                       filename=table, rulename=rulename,
                                       spw=spw, axisnames=[xtitle,ytitle],
-                                      flagcoords=flagcoord,
-                                      cell_index=cell_index))
+                                      flagcoords=flagcoord, pol=pol))
 
                                 # Flag the view
                                 flag[i2flag, j2flag] = True
@@ -410,8 +404,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                                       reason='stage%s' % self.inputs.context.stage,
                                       filename=table, rulename=rulename, spw=spw,
                                       axisnames=[xtitle, ytitle],
-                                      flagcoords=flagcoord,
-                                      cell_index=cell_index))
+                                      flagcoords=flagcoord, pol=pol))
 
                                 # Flag the view.
                                 flag[i2flag, j2flag] = True
@@ -447,8 +440,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                               reason='stage%s' % self.inputs.context.stage,
                               filename=table, rulename=rulename,
                               spw=spw, axisnames=[xtitle, ytitle],
-                              flagcoords=flagcoord,
-                              cell_index=cell_index,
+                              flagcoords=flagcoord, pol=pol,
                               extendfields=self.inputs.extendfields))
 
                         # Flag the view.
