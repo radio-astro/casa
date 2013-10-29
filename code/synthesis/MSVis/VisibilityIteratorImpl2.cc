@@ -944,11 +944,11 @@ VisibilityIteratorImpl2::initialize (const Block<const MeasurementSet *> &mss)
 
 VisibilityIteratorImpl2::~VisibilityIteratorImpl2 ()
 {
-    if (channelSelectorCache_p != NULL) delete channelSelectorCache_p;
-    if (frequencySelections_p != NULL) delete frequencySelections_p;
-    if (spectralWindowChannelsCache_p != NULL) delete spectralWindowChannelsCache_p;
-    if (subtableColumns_p != NULL) delete subtableColumns_p;
-    if (vb_p != NULL) delete vb_p;
+    delete channelSelectorCache_p;
+    delete frequencySelections_p;
+    delete spectralWindowChannelsCache_p;
+    delete subtableColumns_p;
+    delete vb_p;
 }
 
 VisibilityIteratorImpl2::Cache::Cache()

@@ -67,11 +67,9 @@ MSTransformIterator::~MSTransformIterator()
 		Table::deleteTable(outputMSName,True);
 	}
 
-	// Now the parent class destructor (~TransformingVi2) is called:
-	// ~TransformingVi2 => ~ViImplementation2
-	// Therefore we have to add a != NULL statement in the TransformingVi2 destructor
-	// But apparently the base class ViImplementation2 pointer is not set to NULL when
-	// the VisibilityIteratorImpl2 pointer is deleted, so we have to do it manually here
+	// Now the parent class destructor (~TransformingVi2) is called, which deletes the inner
+	// ViImplementation2 object. However it has been already deleted by the MSTRansformManager
+	// destructor, so we set it to null here to avoid problems.
 	inputVii_p = NULL;
 
 	return;
