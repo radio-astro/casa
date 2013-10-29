@@ -96,6 +96,9 @@ class VLAT;
 
 } // end namespace asyncio
 
+// Forward declarations outside namespace vi
+class MSTransformIteratorFactory;
+
 namespace vi {
 
 class FrequencySelection;
@@ -392,6 +395,8 @@ class VisibilityIterator2 : private boost::noncopyable
     friend class asyncio::VLAT; // allow VI lookahead thread class to access protected
                                 // functions VLAT should not access private parts,
                                 // especially variables
+    friend class casa::MSTransformIteratorFactory;
+
 public:
 
 
@@ -752,12 +757,6 @@ public:
 
   void writeBackChanges (VisBuffer2 *);
 
-  // jagonzal (to be reviewed by jjacobs): Allow to access implementation object
-  // so that we don't have to create a dummy one in the factory methods of
-  // MSTransformIterator, thus avoiding overheads.
-
-  ViImplementation2 * getImpl() const;
-
 //**********************************************************************
 // Internal methods below this line
 //**********************************************************************
@@ -1100,6 +1099,8 @@ protected:
   // advance the iteration
 
   void originChunks(Bool forceRewind);
+
+  ViImplementation2 * getImpl() const;
 
 private:
 

@@ -47,8 +47,8 @@ TransformingVi2::TransformingVi2 (VisibilityIterator2 * vi, ViImplementation2 * 
 
 TransformingVi2::~TransformingVi2 ()
 {
-    if (inputVii_p != NULL) delete inputVii_p;
-    if (vb_p != NULL) delete vb_p;
+    delete inputVii_p;
+    delete vb_p;
 }
 
 void
