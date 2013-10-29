@@ -230,8 +230,9 @@ class MeasurementSetReader(object):
         
         # populate ms properties with results of table readers 
         ms.antenna_array = AntennaTable.get_antenna_array(ms)
-        ms.frequency_groups = SpectralWindowTable.get_frequency_groups(ms)        
+        ms.frequency_groups = SpectralWindowTable.get_frequency_groups(ms)  
         ms.data_descriptions = DataDescriptionTable.get_descriptions(ms)
+        ms.polarizations = PolarizationTable.get_polarizations(ms)
         for dd in ms.data_descriptions:
             with utils.open_ms(ms.name) as openms:
                 openms.selectinit(dd.id)
@@ -541,6 +542,44 @@ class DataDescriptionTable(object):
             dd_ids = range(len(spw_ids))
 
             rows = zip(dd_ids, spw_ids, pol_ids)
+            return rows
+
+
+class PolarizationTable(object):
+    @staticmethod
+    def get_polarizations(ms):
+        # read the polarization table and create the objects
+        polarizations = [PolarizationTable._create_pol_description(*row) 
+                        for row in PolarizationTable._read_table(ms)]
+            
+        return polarizations            
+        
+    @staticmethod
+    def _create_pol_description(id, num_corr, corr_type, corr_product, flag):
+        return domain.Polarization(id, num_corr, corr_type, corr_product, flag)
+    
+    @staticmethod
+    def _read_table(ms):
+        """Read the POLARIZATION table of the given measurement set.
+        """
+        LOG.debug('Analysing POLARIZATION table')
+        ms = _get_ms_name(ms)
+        polarization_table = os.path.join(ms, 'POLARIZATION')        
+        with utils.open_table(polarization_table) as table:
+            num_corrs = table.getcol('NUM_CORR')
+            vcorr_types = table.getvarcol('CORR_TYPE')
+            vcorr_products = table.getvarcol('CORR_PRODUCT')
+            flag_rows = table.getcol('FLAG_ROW')
+
+            rowids = []
+            corr_types = []
+            corr_products = []
+            for i in range(table.nrows()):
+                rowids.append(i)
+                corr_types.append(vcorr_types['r%s'%(i+1)])
+                corr_products.append(vcorr_products['r%s'%(i+1)])
+
+            rows = zip(rowids, num_corrs, corr_types, corr_products, flag_rows)
             return rows
 
 
