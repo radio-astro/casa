@@ -4899,8 +4899,8 @@ ImageAnalysis::newimagefromarray(const String& outfile,
 				IPosition(pixelsArray.ndim(), 1));
         outImage->flush();
 	} catch (AipsError x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+		*_log << "Exception Reported: " << x.getMesg()
+				<< LogIO::EXCEPTION;
 	}
     outImage->flush();
 	return outImage.release();
