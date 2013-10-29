@@ -65,7 +65,7 @@ class ResultBase(object):
 class ImageResult(ResultBase):
     def __init__(self, filename, data, datatype, axes, flag=None, nodata=None,
                  intent=None, field_id=None, field_name=None, spw=None,
-                 pol=None, ant=None, cell_index=None, units=None, time=None):
+                 pol=None, ant=None, units=None, time=None):
         self.filename = filename
         self.data = data
         self.axes = axes
@@ -86,7 +86,6 @@ class ImageResult(ResultBase):
         self.intent = intent
         self.spw = spw
         self.pol = pol
-        self.cell_index = cell_index
         self.ant = ant
         self.units = units
         self.time = time
