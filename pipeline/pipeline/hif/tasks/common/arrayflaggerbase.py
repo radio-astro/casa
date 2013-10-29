@@ -41,18 +41,18 @@ class FlagCmd(object):
         Added detailed docs here.
     """
     def __init__(self, filename, rulename, spw, antenna=None, axisnames=None,
-      flagcoords=None, intent=None, cell_index=None, ruleaxis=None,
+      flagcoords=None, intent=None, pol=None, ruleaxis=None,
       flagchannels=None, channel_axis=None, reason=None,
       extendfields=None):
-#        print 'FlagCmd intent %s spw%s antenna%s axisnames%s flagcoords%s cell_index%s flagchannels%s reason%s' % (
-#          intent, spw, antenna, axisnames, flagcoords, cell_index, flagchannels,
+#        print 'FlagCmd intent %s spw%s antenna%s axisnames%s flagcoords%s pol%s flagchannels%s reason%s' % (
+#          intent, spw, antenna, axisnames, flagcoords, pol, flagchannels,
 #          reason)
 
         self.filename = filename
         self.rulename = rulename
         self.intent = intent
         self.spw = spw
-        self.cell_index = cell_index
+        self.pol = pol
         self.ruleaxis = ruleaxis
         self.flagchannels = flagchannels
         self.axisnames = axisnames
@@ -104,10 +104,8 @@ class FlagCmd(object):
 
             flagcmd = flagcmd[:-1] + ":%s'" % ';'.join(rangestrs)
 
-        if cell_index == 0:
-            flagcmd += " correlation='XX'"
-        elif cell_index == 1:
-            flagcmd += " correlation='YY'"
+        if pol is not None:
+            flagcmd += " correlation='%s'" % pol
 
         flagcmd += " reason='%s'" % reason
 
@@ -137,16 +135,6 @@ class FlagCmd(object):
         self.flagcmd = flagcmd
 #        print 'flagcmd', flagcmd
 
-    def __repr__(self):
-        # Format the FlagCmd for the terminal.
-        if self.filename is not None:
-            basename = os.path.basename(self.filename)
-        else:
-            basename = None
-        s = 'FlagCmd: filename-%s flagcmd-%s' % (basename, self.flagcmd)
-
-        return s
-
     def match(self, spectrum):
         """Return True if the FlagCmd operates on this SpectrumResult.
         """
@@ -159,6 +147,8 @@ class FlagCmd(object):
         if self.flag_time is not None:
             match = match and (self.flag_time > spectrum.time-0.5 and
               self.flag_time < spectrum.time + 0.5)
+        if self.pol is not None:
+            match = match and (self.pol == spectrum.pol)
         return match
 
     def match_image(self, image):
@@ -172,6 +162,17 @@ class FlagCmd(object):
             match = match and ('ANTENNA' in str(self.axisnames))
         if self.flag_time is not None:
             match = match and ('TIME' in self.axisnames)
-        if self.cell_index is not None:
-            match = match and (self.cell_index == image.cell_index)
+        if self.pol is not None:
+            match = match and (self.pol == image.pol)
         return match
+
+    def __repr__(self):
+        # Format the FlagCmd for the terminal.
+        if self.filename is not None:
+            basename = os.path.basename(self.filename)
+        else:
+            basename = None
+        s = 'FlagCmd: filename-%s flagcmd-%s' % (basename, self.flagcmd)
+
+        return s
+
