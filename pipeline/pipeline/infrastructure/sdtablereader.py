@@ -604,8 +604,8 @@ class VirtualMeasurementSetFiller(object):
 
         return data_descriptions
 
-ANTENNA_LIST = { 'DV[0-5][0-9]': 12.0,
-                 'DA[0-5][0-9]': 12.0,
+ANTENNA_LIST = { 'DV[0-6][0-9]': 12.0,
+                 'DA[0-6][0-9]': 12.0,
                  'PM0[1-4]': 12.0,
                  'CM[0-1][0-9]': 7.0,
                  'APEX': 12.0,
