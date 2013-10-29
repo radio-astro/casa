@@ -62,7 +62,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
         context = self.inputs.context
         refantfield = context.evla['msinfo'][m.name].calibrator_field_select_string
-        refantobj = findrefant.RefAntHeuristics(vis=self.inputs.vis,field=refantfield,geometry=True,flagging=False, intent='', spw='')
+        refantobj = findrefant.RefAntHeuristics(vis=self.inputs.vis,field=refantfield,geometry=True,flagging=True, intent='', spw='')
         
         RefAntOutput=refantobj.calculate()
         
