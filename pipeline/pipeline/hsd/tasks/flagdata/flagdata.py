@@ -156,7 +156,7 @@ class SDFlagData(common.SingleDishTaskTemplate):
             # selection by infiles
             _file_index = set(file_index) & set([m.antenna for m in group_desc])
             if len(_file_index) < 1:
-                Log.debug('Skip reduction group %d'%(group_id))
+                LOG.debug('Skip reduction group %d'%(group_id))
                 continue
             # accumulate files IDs processed
             files = files | _file_index
@@ -178,7 +178,7 @@ class SDFlagData(common.SingleDishTaskTemplate):
 
             # skip polarizations not included in pollist
             if pollist is not None and len(pols)==0:
-                LOG.info('Skip pols %s (not in pollist)'%(str(fist_member.pols)))
+                LOG.info('Skip pols %s (not in pollist)'%(str(first_member.pols)))
                 continue
 
             nchan = group_desc.nchan
