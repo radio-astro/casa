@@ -224,15 +224,16 @@ class FlagDeterVLAInputs( flagdeterbase.FlagDeterBaseInputs ):
 
         # Initialize the public member variables of the inherited class
         # FlagDeterBaseInputs()
+	
+	super( FlagDeterVLAInputs, self ).__init__( context, vis=vis,
+		    output_dir=output_dir, flagbackup=flagbackup, autocorr=autocorr,
+		    shadow=shadow, scan=scan, scannumber=scannumber, intents=intents,
+		    edgespw=edgespw, fracspw=fracspw, online=online,
+		    fileonline=fileonline, template=template, filetemplate=filetemplate )
 
         self._init_properties(vars())
         
-#        super( FlagDeterVLAInputs, self ).__init__( context, vis=vis,
-#            output_dir=output_dir, flagbackup=flagbackup, autocorr=autocorr,
-#            shadow=shadow, scan=scan, scannumber=scannumber, intents=intents,
-#            edgespw=edgespw, fracspw=fracspw, online=online,
-#            fileonline=fileonline, template=template, filetemplate=filetemplate )
-#
+
         
 
 # ------------------------------------------------------------------------------

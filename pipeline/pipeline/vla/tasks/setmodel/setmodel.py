@@ -232,7 +232,7 @@ class SetModel(basetask.StandardTaskTemplate):
                     
                     try:
                         LOG.info('Context size: %s' % str(measures.FileSize(asizeof.asizeof(context), measures.FileSizeUnits.BYTES)))
-                        setjy_result = self._do_setjy(str(myfield), str(myspw), model_image, -1)
+                        setjy_result = self._do_setjy(str(myfield), str(myspw), model_image, -1, '')
                         
                     except Exception, e:
                         # something has gone wrong, return an empty result
@@ -253,7 +253,7 @@ class SetModel(basetask.StandardTaskTemplate):
     def analyse(self, result):
         return result
 
-    def _do_setjy(self, field, spw, model, fluxdensity):
+    def _do_setjy(self, field, spw, model, fluxdensity, intent):
         
         '''
         task_args = {'vis'            : self.inputs.vis,
@@ -275,7 +275,7 @@ class SetModel(basetask.StandardTaskTemplate):
         '''
         
         setjyinputs = setjy.Setjy.Inputs(self.inputs.context,
-             field=field, spw=spw, model=model, fluxdensity=fluxdensity)
+             field=field, spw=spw, model=model, intent=intent, fluxdensity=fluxdensity)
         setjytask = setjy.Setjy(setjyinputs)
         setjy_result = self._executor.execute(setjytask, True)
         

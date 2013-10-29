@@ -62,9 +62,11 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
         context = self.inputs.context
         refantfield = context.evla['msinfo'][m.name].calibrator_field_select_string
-        refantobj = findrefant.RefAntHeuristics(vis=self.inputs.vis,field=refantfield,geometry=True,flagging=True, intent='', spw='')
+        refantobj = findrefant.RefAntHeuristics(vis=self.inputs.vis,field=refantfield,geometry=True,flagging=False, intent='', spw='')
         
         RefAntOutput=refantobj.calculate()
+        
+        print "RefAntOutput: ", RefAntOutput
         
         gtype_delaycal_result = self._do_gtype_delaycal(caltable=gtypecaltable, context=context, RefAntOutput=RefAntOutput)
         
