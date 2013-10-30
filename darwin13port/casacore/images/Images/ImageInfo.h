@@ -224,12 +224,12 @@ public:
    // Additional consistency checks are done when this object is added via
    // ImageInterface<T>::setImageInfo().
    void setBeam(
-   	const Int channel, const Int stokes, const Quantity& major,
+   	Int channel, Int stokes, const Quantity& major,
    	const Quantity& minor, const Quantity& pa
    );
 
    void setBeam(
-   	const Int channel, const Int stokes, const GaussianBeam& beam
+   	Int channel, Int stokes, const GaussianBeam& beam
    );
 
    // </group>
@@ -245,20 +245,6 @@ public:
    // Does this object contain one or more beams?
    Bool hasBeam() const
      { return ! _beams.empty(); }
-
-   /*
-   // <group>
-   // Number of channels and stokes in beam set. Note these methods will always return a
-   // mininimum of 1 even if the beam set was constructed with either nchan or nstokes equal
-   // to 0 so these methods should not be used by themselves for the determination of the
-   // actual number of channels or stokes in the image.
-   uInt nChannels() const
-     { return _beams.nchan(); }
-   uInt nStokes() const
-     { return _beams.nstokes(); }
-   // </group>
-    *
-    */
 
     // initialize all per-plane beams to the same value
     void setAllBeams(
@@ -346,6 +332,11 @@ public:
     // Otherwise give an error showing msg1 only.
     static void logMessage(Bool& warn, LogIO& os, Bool relax,
                            const String& msg1, const String msg2=String());
+
+    // get the beam area in terms of pixel size of the specified DirectionCoordinate
+    Double getBeamAreaInPixels(
+    	Int channel, Int stokes, const DirectionCoordinate& dc
+    ) const;
 
 private:
     ImageBeamSet _beams;

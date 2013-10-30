@@ -1647,7 +1647,8 @@ image* image::transpose(
 		Record returnRecord, compListRecord;
 		String error;
 
-		Vector<String> allowFluxUnits(1, "Jy.km/s");
+		Vector<String> allowFluxUnits(2, "Jy.km/s");
+		allowFluxUnits[1] = "K.rad2";
 		FluxRep<Double>::setAllowedUnits(allowFluxUnits);
 
 		if (!compList.toRecord(error, compListRecord)) {

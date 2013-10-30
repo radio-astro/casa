@@ -161,7 +161,7 @@ VisibilityIterator2::construct (const VisBufferComponents2 * prefetchColumns,
 
 VisibilityIterator2::~VisibilityIterator2 ()
 {
-	if (impl_p != NULL) delete impl_p;
+	delete impl_p;
 }
 
 void

@@ -31,9 +31,6 @@
 
 namespace casa {
 
-// Forward declarations
-class MSTransformManager;
-
 class MSTransformBufferImpl : public vi::VisBufferImpl2
 {
 

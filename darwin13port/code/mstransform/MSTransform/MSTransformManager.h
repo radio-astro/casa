@@ -61,10 +61,10 @@
 // To apply 1D interpolations
 #include <scimath/Mathematics/InterpolateArray1D.h>
 
-// Buffer handling classes
-#include <mstransform/MSTransform/MSTransformBufferImpl.h>
-
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+// Forward declarations
+class MSTransformBufferImpl;
 
 // MS Transform Framework utilities
 namespace MSTransformations

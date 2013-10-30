@@ -524,7 +524,7 @@ if( Boost_VERSION GREATER 103499 )
     unset( Boost_FOUND )
     unset( Boost_INCLUDE_DIR CACHE )
   endif()
-  set( boost_components regex program_options filesystem system )
+  set( boost_components regex program_options filesystem system thread )
   find_package( Boost REQUIRED ${boost_components} )
 
   set(Boost_INCLUDE_DIRS ${Boost_INCLUDE_DIR}/boost)

@@ -152,7 +152,8 @@ ComponentList ImageFitter::fit() {
 	);
 	myStats.setAxes(_getImage()->coordinates().directionAxesNumbers());
 	inputStats = myStats.statistics();
-	Vector<String> allowFluxUnits(1, "Jy.km/s");
+	Vector<String> allowFluxUnits(2, "Jy.km/s");
+	allowFluxUnits[1] = "K.rad2";
 	FluxRep<Double>::setAllowedUnits(allowFluxUnits);
 	FluxRep<Float>::setAllowedUnits(allowFluxUnits);
 	String resultsString = _resultsHeader();
@@ -502,7 +503,7 @@ void ImageFitter::_finishConstruction(const String& estimatesFilename) {
 	// check units
 	Quantity q = Quantity(1, _bUnit);
 	Bool unitOK = q.isConform("Jy/rad2")
-		|| q.isConform("Jy*m/s/rad2");
+		|| q.isConform("Jy*m/s/rad2") || q.isConform("K");
 	if (! unitOK) {
 		Vector<String> angUnits(2, "beam");
 		angUnits[1] = "pixel";
@@ -512,6 +513,7 @@ void ImageFitter::_finishConstruction(const String& estimatesFilename) {
 				if (
 					Quantity(1, _bUnit).isConform("Jy/rad2")
 					|| Quantity(1, _bUnit).isConform("Jy*m/s/rad2")
+					|| Quantity(1, _bUnit).isConform("K")
 				) {
 					unitOK = True;
 				}
@@ -625,16 +627,12 @@ void ImageFitter::_setFluxes() {
 	_minorAxes.resize(ncomps);
 	Vector<Quantity> fluxQuant;
 	Double rmsPeak = Vector<Double>(_residStats.asArrayDouble("rms"))[0];
-	Quantity rmsPeakError(
-		rmsPeak,
-		_bUnit
-	);
-	Quantity intensityToFluxConversion = _bUnit.contains("/beam")
-    	? Quantity(1.0, "beam")
-    	: Quantity(1.0, "pixel");
+	Quantity rmsPeakError(rmsPeak, _bUnit);
 	Quantity resArea = _getImage()->coordinates().directionCoordinate().getPixelArea();
-
-    if (intensityToFluxConversion.getUnit() == "beam") {
+	if (
+		_bUnit.contains("/beam")
+		|| (Quantity(1, _bUnit).isConform("K") && _getImage()->imageInfo().hasBeam())
+	) {
         try {
             Unit unit = resArea.getUnit();
             resArea = Quantity(
@@ -711,9 +709,21 @@ void ImageFitter::_setFluxes() {
 			&& rmsPeakErrorValue > peakErrorFromFluxErrorValue
 		) {
 			const GaussianShape *gaussShape = static_cast<const GaussianShape *>(compShape);
-			Quantity compArea = gaussShape->getArea();
-			Quantity rmsFluxError = rmsPeakError*compArea/resArea;
-			rmsFluxError.convert(_fluxDensityErrors[i].getUnit());
+			Quantity rmsFluxError;
+			if (rmsPeakError.isConform("K")) {
+				Double fracMajor = (gaussShape->majorAxisError()/_majorAxes[i]).getValue("");
+				Double fracMinor = (gaussShape->minorAxisError()/_minorAxes[i]).getValue("");
+				Double fracPI = (rmsPeakError/_peakIntensities[i]).getValue("");
+				Double fracError = sqrt(
+					fracMinor*fracMinor + fracMajor*fracMajor + fracPI*fracPI
+				);
+				rmsFluxError = fracError*_fluxDensities[i];
+			}
+			else {
+				Quantity compArea = gaussShape->getArea();
+				rmsFluxError = rmsPeakError*compArea/resArea;
+				rmsFluxError.convert(_fluxDensityErrors[i].getUnit());
+			}
 			_fluxDensityErrors[i].setValue(
 				max(
 					_fluxDensityErrors[i].getValue(),
@@ -1024,10 +1034,46 @@ String ImageFitter::_fluxToString(uInt compNumber) const {
 	Quantity fluxDensity = _fluxDensities[compNumber];
 	Quantity fluxDensityError = _fluxDensityErrors[compNumber];
 	Vector<String> polarization = _curResults.getStokes(compNumber);
+	Quantity intensityToFluxConversion = _bUnit.contains("/beam")
+	    	? Quantity(1.0, "beam")
+	    	: Quantity(1.0, "pixel");
 
+	String baseUnit = "Jy";
+	Bool hasTemperatureUnits = fluxDensity.isConform("K*rad2");
+	if (hasTemperatureUnits) {
+		String areaUnit = "beam";
+		if (_getImage()->imageInfo().hasBeam()) {
+			Double beamArea = _getImage()->imageInfo().restoringBeam(
+				_chanPixNumber, _stokesPixNumber
+			).getArea("rad2");
+			fluxDensity /= Quantity(beamArea, "rad2");
+			fluxDensity.setUnit("K.beam");
+			fluxDensityError /= Quantity(beamArea, "rad2");
+			fluxDensityError.setUnit("K.beam");
+			areaUnit = "beam";
+		}
+		else {
+			if (_minorAxes[compNumber] > Quantity(1.0, "rad")) {
+				areaUnit = "rad2";
+			}
+			else if (_minorAxes[compNumber] > Quantity(1.0, "deg")) {
+				areaUnit = "deg2";
+			}
+			else if (_minorAxes[compNumber] > Quantity(1.0, "arcmin")) {
+				areaUnit = "arcmin2";
+			}
+			else if (_minorAxes[compNumber] > Quantity(1.0, "arcsec")) {
+				areaUnit = "arcsec2";
+			}
+		}
+		baseUnit = "K." + areaUnit;
+		intensityToFluxConversion.setUnit(areaUnit);
+	}
+	String usedPrefix;
 	String unit;
 	for (uInt i=0; i<unitPrefix.size(); i++) {
-		unit = unitPrefix[i] + "Jy";
+		usedPrefix = unitPrefix[i];
+		unit = usedPrefix + baseUnit;
 		if (fluxDensity.getValue(unit) > 1) {
 			fluxDensity.convert(unit);
 			fluxDensityError.convert(unit);
@@ -1038,16 +1084,11 @@ String ImageFitter::_fluxToString(uInt compNumber) const {
 	fd[0] = fluxDensity.getValue();
 	fd[1] = fluxDensityError.getValue();
 	Quantity peakIntensity = _peakIntensities[compNumber];
-	Quantity intensityToFluxConversion = _bUnit.contains("/beam")
-    	? Quantity(1.0, "beam")
-    	: Quantity(1.0, "pixel");
-
 	Quantity tmpFlux = peakIntensity * intensityToFluxConversion;
-	tmpFlux.convert("Jy");
+	tmpFlux.convert(baseUnit);
 
 	Quantity peakIntensityError = _peakIntensityErrors[compNumber];
 	Quantity tmpFluxError = peakIntensityError * intensityToFluxConversion;
-
 	uInt precision = 0;
 	fluxes << "Flux ---" << endl;
 
@@ -1062,25 +1103,28 @@ String ImageFitter::_fluxToString(uInt compNumber) const {
 			fluxes << " " << fluxDensity.getUnit() << " (fixed)" << endl;
 		}
 		else {
-			fluxes << " +/- " << fluxDensityError.getValue() << " "
-				<< fluxDensity.getUnit() << endl;
+			fluxes << " +/- " << fluxDensityError << endl;
 		}
 	}
-
 	for (uInt i=0; i<unitPrefix.size(); i++) {
-		String unit = unitPrefix[i] + tmpFlux.getUnit();
+		usedPrefix = unitPrefix[i];
+		String unit = usedPrefix + tmpFlux.getUnit();
 		if (tmpFlux.getValue(unit) > 1) {
 			tmpFlux.convert(unit);
 			tmpFluxError.convert(unit);
 			break;
 		}
 	}
+	//peakIntensity = tmpFlux/intensityToFluxConversion;
 	peakIntensity = Quantity(
 		tmpFlux.getValue(),
 		tmpFlux.getUnit() + "/" + intensityToFluxConversion.getUnit()
 	);
 	peakIntensityError = Quantity(tmpFluxError.getValue(), peakIntensity.getUnit());
-
+	if (hasTemperatureUnits) {
+		peakIntensity.setUnit(usedPrefix + "K");
+		peakIntensityError.setUnit(usedPrefix + "K");
+	}
 	Vector<Double> pi(2);
 	pi[0] = peakIntensity.getValue();
 	pi[1] = peakIntensityError.getValue();
@@ -1091,8 +1135,7 @@ String ImageFitter::_fluxToString(uInt compNumber) const {
 		fluxes << " " << peakIntensity.getUnit() << " (fixed)" << endl;
 	}
 	else {
-		fluxes << " +/- " << peakIntensityError.getValue() << " "
-			<< peakIntensity.getUnit() << endl;
+		fluxes << " +/- " << peakIntensityError << endl;
 	}
 	fluxes << "       --- Polarization: " << _getStokes() << endl;
 	return fluxes.str();
@@ -1411,7 +1454,6 @@ void ImageFitter::_fitsky(
 		*_getLog() << LogIO::WARN << fitter.errorMessage() << LogIO::POST;
 		return;
 	}
-
 	Vector<SkyComponent> result(_doZeroLevel ? nModels - 1 : nModels);
 	Double facToJy;
 	uInt j = 0;
@@ -1439,6 +1481,7 @@ void ImageFitter::_fitsky(
 			String error;
 			Record r;
 			result(j).flux().toRecord(error, r);
+
             try {
                 _encodeSkyComponentError(
 				    *_getLog(), result(j), facToJy, allAxesSubImage,
