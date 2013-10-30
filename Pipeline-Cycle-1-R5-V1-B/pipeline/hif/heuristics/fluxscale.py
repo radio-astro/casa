@@ -29,8 +29,16 @@ def antenna(ms, refsource, refant, peak_frac=0.7):
     try:
         # frequencies are set to dummy values, we are only
         # interested in the object size
+        # source_name must be a name, not an ID
+        if refsource.isdigit():
+            fields = ms.get_fields()
+            name = [f.name for f in fields if f.id==int(refsource)]
+            name = name[0]
+        else:
+            name = refsource
+
         rtn = ss_setjy.solar_system_setjy().solar_system_fd(
-          source_name=refsource,
+          source_name=name,
           MJDs=[obs_time['value']], frequencies=[[1.e9,1.1e9]],
           observatory='ALMA', casalog=casatools.casalog)
         calibrator_size = max(rtn[3][0][:2])
