@@ -31,7 +31,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="any" name="region">
-        <description>Image Region or name.  Use viewer</description>
+        <description>Region over which to get values. See help par.region.</description>
 	<any type='variant' limittype='string stringArray'/>
         <value type='string'/>
     </param>
@@ -99,10 +99,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <example>
      The data point(s) to be retrieved are those found in the specified
      region, which may be:
-        1. A region file or text string (see help par.region), with the following caveats:
-           * The region must be rectangular (eg, not circular, elliptical, or polyagonal)
+        1. A region file or text string (see help par.region), with the following caveat:
            * If the specified region is complex (eg, a union or intersection of multiple regions,
              only the first simple region in this set is used.
+           * If the region is not rectangular, then the rectangular region that circumscribes the
+             specified region (ie the bounding box) is used to retrieve values, since the returned
+             arrays must be rectangular. The resulting mask values in this case are the result of
+             anding the image mask values with the specified region mask values, eg
+             if a pixel falls outside the specified region but within the bounding box, its returned
+             mask value will be false even if its image mask value is true.
         2. A region specified by a set of rectangular
            pixel coordinates, the channel ranges and/or the Stokes.
 
@@ -155,7 +160,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         axes         - List the data stored in each axis of the data block.
         unit         - unit of the returned data values.
     	data         - data value(s) found in the given region
-    	mask         - mask value(s) found in the given region
+    	mask         - mask value(s) found in the given region. See important
+                       note above regarding returned mask values for
+                       non-rectangular regions.
 
         NOTE: The data returned is in the same order as it is internally
         stored, typically RA, DEC, spectral, stokes. Also both the data
