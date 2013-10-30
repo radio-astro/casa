@@ -5,6 +5,7 @@ import numpy
 
 import pipeline.infrastructure as infrastructure
 from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import casatools
 from .. import common
 
 LOG = infrastructure.get_logger(__name__)
@@ -60,6 +61,7 @@ class ExportMS(common.SingleDishTaskTemplate):
             data = context.observing_run[index]
             # create job
             infile = data.baselined_name
+            self._modify_molecules(infile)
             asdm_name = common.asdm_name(data)
             antenna_name = data.antenna.name
             outfile = os.path.join(output_dir, '.'.join([asdm_name, antenna_name, 'ms']))
@@ -89,4 +91,16 @@ class ExportMS(common.SingleDishTaskTemplate):
     def analyse(self, result):
         return result
 
-    
+    def _modify_molecules(self, infile):
+        molecules_table = os.path.join(infile, 'MOLECULES')
+        with casatools.TableReader(molecules_table, nomodify=False) as tb:
+            nrow = tb.nrows()
+            rest_freqs = [tb.getcell('RESTFREQUENCY',irow) for irow in xrange(nrow)]
+            max_length = max(map(len, rest_freqs))
+            for irow in xrange(nrow):
+                if len(rest_freqs[irow]) < max_length:
+                    zero_restfreqs = numpy.zeros(max_length, dtype=rest_freqs[irow].dtype)
+                    nonames = ['none'] * max_length
+                    tb.putcell('RESTFREQUENCY', irow, zero_restfreqs) 
+                    tb.putcell('NAME', irow, nonames)
+                    tb.putcell('FORMATTEDNAME', irow, nonames)
