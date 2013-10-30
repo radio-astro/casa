@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>491</width>
+    <height>235</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,6 +19,18 @@
    </property>
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
+     <property name="minimumSize">
+      <size>
+       <width>455</width>
+       <height>220</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>500</width>
+       <height>230</height>
+      </size>
+     </property>
      <widget class="QWidget" name="page"/>
      <widget class="QWidget" name="page_2"/>
     </widget>

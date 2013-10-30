@@ -122,6 +122,7 @@ namespace casa {
 
 		QtRegionStats::QtRegionStats( QWidget *parent ) : QWidget(parent), container_(0), next_(0), stats_box_(0) {
 			layout_ = new QVBoxLayout(this);
+            layout_->setContentsMargins(0,0,0,0);
 			// stats_box_ = new qt::image_stats_t(fields,this);
 		}
 
@@ -162,12 +163,16 @@ namespace casa {
 		}
 
 		void QtRegionStats::setCenterBackground(QString background) {
-			qt::statfield_list_t::iterator fitter = fields.begin( );
-			while ( fitter != fields.end( )) {
-				QString labelStyle( "QLabel{background-color: "+background +";}");
-				(*fitter).second->setStyleSheet( labelStyle );
-				++fitter;
-			}
+            ///////// the display widget has switched from an
+            ///////// un-editable entry widget to a label widget
+            ///////// so it does not need to have its background
+            ///////// changed...
+			// qt::statfield_list_t::iterator fitter = fields.begin( );
+			// while ( fitter != fields.end( )) {
+			// 	QString labelStyle( "QLabel{background-color: "+background +";}");
+			// 	(*fitter).second->setStyleSheet( labelStyle );
+			// 	++fitter;
+			// }
 		}
 
 		void QtRegionStats::disableNextButton( ) {

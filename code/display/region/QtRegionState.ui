@@ -755,7 +755,7 @@
            <number>1</number>
           </property>
           <property name="maximum">
-           <number>10</number>
+           <number>9</number>
           </property>
          </widget>
         </widget>
@@ -1408,10 +1408,16 @@
        <string>Fit</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
+       <property name="spacing">
+        <number>-1</number>
+       </property>
+       <property name="margin">
+        <number>0</number>
+       </property>
        <item>
         <widget class="QStackedWidget" name="centers_group">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>210</verstretch>
           </sizepolicy>
@@ -1419,7 +1425,13 @@
          <property name="minimumSize">
           <size>
            <width>0</width>
-           <height>260</height>
+           <height>205</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>207</height>
           </size>
          </property>
          <property name="currentIndex">
@@ -1431,6 +1443,12 @@
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
           <widget class="QPushButton" name="imfit_fit">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>20</height>
+            </size>
+           </property>
            <property name="text">
             <string>gaussfit</string>
            </property>
@@ -1438,6 +1456,12 @@
          </item>
          <item>
           <widget class="QCheckBox" name="skycomp_chk">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>20</height>
+            </size>
+           </property>
            <property name="text">
             <string>sky component</string>
            </property>
@@ -1448,6 +1472,12 @@
          </item>
          <item>
           <widget class="QCheckBox" name="markcenter_chk">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>20</height>
+            </size>
+           </property>
            <property name="text">
             <string>mark center</string>
            </property>
@@ -1458,6 +1488,12 @@
          </item>
          <item>
           <widget class="QComboBox" name="center_color">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>20</height>
+            </size>
+           </property>
            <property name="currentIndex">
             <number>3</number>
            </property>
@@ -1522,6 +1558,19 @@
           </spacer>
          </item>
         </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>
