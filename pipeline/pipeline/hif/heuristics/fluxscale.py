@@ -43,7 +43,6 @@ def antenna(ms, refsource, refant, peak_frac=0.7):
           observatory='ALMA', casalog=casatools.casalog)
         calibrator_size = max(rtn[3][0][:2])
     except:
-        raise
         calibrator_size = None
 
     if calibrator_size is None or calibrator_size==0.0:
