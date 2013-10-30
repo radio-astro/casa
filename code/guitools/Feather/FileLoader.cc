@@ -102,6 +102,10 @@ FileLoader::FileLoader(QWidget *parent)
 	//Non-stokes Axis low res
 	//ui.lowResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/Feather43/gbt43Jy.im");
 	//ui.highResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/Feather43/vla43.im");
+
+	//Stable 4.2 Testing
+	//ui.lowResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/FeatherJuergan/gbt43Jy.im");
+	//ui.highResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/FeatherJuergan/vla43.im");
 }
 
 

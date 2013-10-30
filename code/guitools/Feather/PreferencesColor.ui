@@ -63,7 +63,7 @@
           <item row="1" column="0">
            <widget class="QLabel" name="label_5">
             <property name="text">
-             <string>Weighted/Scaled:</string>
+             <string>Weighted &amp; Scaled:</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -89,7 +89,7 @@
           <item row="3" column="0">
            <widget class="QLabel" name="label_9">
             <property name="text">
-             <string>Convolved with High, Weighted:</string>
+             <string>Convolved with High, Weighted &amp; Scaled:</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
