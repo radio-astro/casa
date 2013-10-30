@@ -87,11 +87,13 @@ namespace casa {
 	QVector<int> RegionBox::getActualTRC( const Vector<int>& imageBLC, const Vector<int>& imageTRC, bool* valid ) const {
 		//For the top right, we take the minimum of the image and region trc.
 		QVector<int> actualTRC(2);
-		actualTRC[0] = qMin( imageTRC[0], regionBoxTRC[0] );
-		actualTRC[1] = qMin( imageTRC[1], regionBoxTRC[1] );
 		*valid = false;
-		if ( isInImage( actualTRC, imageBLC, imageTRC ) ) {
-			*valid = true;
+		if ( imageTRC.size() >= 2 && regionBoxTRC.size() >= 2 ){
+			actualTRC[0] = qMin( imageTRC[0], regionBoxTRC[0] );
+			actualTRC[1] = qMin( imageTRC[1], regionBoxTRC[1] );
+			if ( isInImage( actualTRC, imageBLC, imageTRC ) ) {
+				*valid = true;
+			}
 		}
 		return actualTRC;
 	}
