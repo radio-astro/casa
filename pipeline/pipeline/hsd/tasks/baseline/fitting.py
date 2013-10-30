@@ -126,7 +126,7 @@ class FittingBase(common.SingleDishTaskTemplate):
         if iteration == 0:
             utils.createExportTable(bltable_name)
             
-        if not os.path.exists(filename_out):
+        if iteration == 0 or not os.path.exists(filename_out):
             with casatools.TableReader(filename_in) as tb:
                 copied = tb.copy(filename_out, deep=True, valuecopy=True, returnobject=True)
                 copied.close()    
