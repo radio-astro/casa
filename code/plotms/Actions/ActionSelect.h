@@ -42,7 +42,7 @@ protected:
 			int canvasIndex, vector<PlotRegion>& regions, bool showUnflagged, bool showFlagged ) = 0;
 	virtual string getOperationLabel() const = 0;
 	virtual void redrawPlots(PlotMSPlot* plot, vector<PlotCanvasPtr>& visibleCanv  );
-
+	virtual void addRedrawPlot( PlotMSPlot* plot );
 private:
 	// Keep list of plots that have to be redrawn.
 	vector<PlotMSPlot*> flaggedPlots;

@@ -135,21 +135,22 @@ bool ActionSelect::doActionSpecific(PlotMSApp* plotms){
 
 			// If this plot was flagged/unflagged, add it to the redraw
 			// list.
-			//if(itsType_ == SEL_FLAG || itsType_ == SEL_UNFLAG)
-			flaggedPlots.push_back(plot);
+			addRedrawPlot( plot );
+
 		}
 
 		redrawPlots( plot, visibleCanv);
-
-
 	}
 	return true;
+}
+
+void ActionSelect::addRedrawPlot( PlotMSPlot* plot ){
+	flaggedPlots.push_back( plot );
 }
 
 void ActionSelect::redrawPlots(PlotMSPlot* plot, vector<PlotCanvasPtr>& visibleCanv  ){
 	// For a flag/unflag, need to tell the plots to redraw themselves,
 	// and clear selected regions.
-
 	bool hold = client->allDrawingHeld();
 	if(!hold) client->holdDrawing();
 
