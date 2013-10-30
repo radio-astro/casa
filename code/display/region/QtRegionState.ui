@@ -1408,16 +1408,7 @@
        <string>Fit</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>3</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
+       <property name="margin">
         <number>0</number>
        </property>
        <item>
@@ -1449,6 +1440,12 @@
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
           <widget class="QPushButton" name="imfit_fit">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>20</height>
+            </size>
+           </property>
            <property name="text">
             <string>gaussfit</string>
            </property>
@@ -1456,6 +1453,12 @@
          </item>
          <item>
           <widget class="QCheckBox" name="skycomp_chk">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>20</height>
+            </size>
+           </property>
            <property name="text">
             <string>sky component</string>
            </property>
@@ -1466,6 +1469,12 @@
          </item>
          <item>
           <widget class="QCheckBox" name="markcenter_chk">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>20</height>
+            </size>
+           </property>
            <property name="text">
             <string>mark center</string>
            </property>
@@ -1476,6 +1485,12 @@
          </item>
          <item>
           <widget class="QComboBox" name="center_color">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>20</height>
+            </size>
+           </property>
            <property name="currentIndex">
             <number>3</number>
            </property>
