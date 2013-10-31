@@ -97,6 +97,10 @@ class CASALogHandler(logging.Handler):
         return 'INFO'
 
 
+# This format is more useful when debugging as it gives more details on who
+# emitted the message. Try it!
+#               format='%(asctime)s %(name)s %(funcName)s\n%(levelname)s: %(message)s',
+
 def get_logger(name, 
                format='%(asctime)s %(levelname)s: %(message)s',
                datefmt='%Y-%m-%d %H:%M:%S',
@@ -157,16 +161,15 @@ def get_logger(name,
         if self.isEnabledFor(TODO):
             self._log(TODO, msg, args, **kwargs)
 
-    
     logger.trace = types.MethodType(trace, logger)
     logger.todo = types.MethodType(todo, logger)
     
-    logger.setLevel(logging_level)  
+    logger.setLevel(logging_level)
     fmt = logging.Formatter(format, datefmt)  
     logger.propagate = propagate  
   
     # Remove existing handlers, otherwise multiple handlers can accrue  
-    for hdlr in logger.handlers:  
+    for hdlr in logger.handlers[:]:  
         logger.removeHandler(hdlr)  
   
     # Add handlers. Add NullHandler if no file or stream output so that  
@@ -189,22 +192,28 @@ def get_logger(name,
         logger.addHandler(hdlr)  
 
     hdlr = CASALogHandler()
-    hdlr.setLevel(level)
+#     hdlr.setLevel(level)
     logger.addHandler(hdlr)
 
     _loggers.append(logger)  
+    
     return logger
 
-def set_logging_level(level='info'):
+def set_logging_level(logger=None, level='info'):
     level_no = LOGGING_LEVELS.get(level, logging.NOTSET)
-    module = sys.modules[__name__]
-    setattr(module, 'logging_level', level_no)
 
-    for logger in _loggers:
+    if logger is not None:
         logger.setLevel(level_no)
         
-    casa_level = CASALogHandler.get_casa_priority(level_no)
-    casatools.log.filter(casa_level)
+    else:
+        module = sys.modules[__name__]
+        setattr(module, 'logging_level', level_no)
+    
+        for logger in _loggers:
+            logger.setLevel(level_no)
+            
+    #     casa_level = CASALogHandler.get_casa_priority(level_no)
+    #     casatools.log.filter(casa_level)
     
 
 def add_handler(handler):

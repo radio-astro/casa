@@ -236,7 +236,7 @@ class Pipeline(object):
         :type ignore_casa_version: boolean
         """        
         # configure logging with the preferred log level
-        logging.set_logging_level(loglevel)
+        logging.set_logging_level(level=loglevel)
 
         # Prevent users from running the pipeline on old or incompatible
         # versions of CASA by comparing the CASA subversion revision against
