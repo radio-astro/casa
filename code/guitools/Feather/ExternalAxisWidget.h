@@ -58,6 +58,7 @@ protected:
 	QString axisLabel;
 	const int AXIS_SMALL_SIDE;
 	const int MARGIN;
+	const int MIN_START_Y;
 
 private:
 	void drawBackBone( QPainter* painter );

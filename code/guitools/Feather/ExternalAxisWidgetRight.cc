@@ -29,6 +29,7 @@
 #include <qwt_plot.h>
 #include <qwt_plot_canvas.h>
 #include <qwt_scale_div.h>
+#include <qwt_text_label.h>
 
 namespace casa {
 
@@ -44,15 +45,22 @@ void ExternalAxisWidgetRight::setUseLeftScale( bool b ){
 }
 
 int ExternalAxisWidgetRight::getStartY() const {
-	QwtPlotCanvas* canvas = plot->canvas();
-	int canvasHeight = canvas->height();
-	int heightDiff =  height() - canvas->height();
-	const int MIN = 22;
-	if ( canvasHeight < MIN ){
-		heightDiff = MIN;
+
+	QwtTextLabel* titleText = plot->titleLabel();
+
+	QRect titleRect = titleText->textRect();
+	//We should use heightDiff = height() - canvas->height()
+	//But because the main canvas is not laid out yet when this
+	//gets drawn, canvas->height gives a bogus value.  Thus, we
+	//are using the height of the plot title plus margins instead.
+	int heightDiff =  titleRect.height() + 7;
+	if ( heightDiff < MIN_START_Y ){
+		heightDiff = MIN_START_Y;
 	}
 	return heightDiff;
 }
+
+
 
 void ExternalAxisWidgetRight::defineAxis( QLine& axisLine ){
 	const int MARGIN = 1;
@@ -118,20 +126,7 @@ void ExternalAxisWidgetRight::drawTicks( QPainter* painter, int tickLength ){
 
 void ExternalAxisWidgetRight::drawAxisLabel( QPainter* painter ){
 	 QFont font = painter->font();
-
-	 bool logScale = false;
-	 if ( axisLabel.indexOf( "Log") != -1 ){
-		 logScale = true;
-	 }
-	 int unitIndex = axisLabel.indexOf( "(");
-	 if ( logScale ){
-	 	 unitIndex = axisLabel.indexOf( ")")+1;
-	 }
-	 QString mainLabel = axisLabel.left( unitIndex ).trimmed();
-	 QString unitLabel;
-	 if ( logScale ){
-		 unitLabel = axisLabel.right( axisLabel.size() - unitIndex );
-	 }
+	 QString mainLabel = axisLabel.trimmed();
 
 	 painter->rotate(90);
 
@@ -142,14 +137,6 @@ void ExternalAxisWidgetRight::drawAxisLabel( QPainter* painter ){
 	 painter->drawText( xPosition, yPosition, fontBoundingRect.width(), fontBoundingRect.height(),
 				  Qt::AlignHCenter|Qt::AlignTop, mainLabel);
 
-	 //Draw the units
-	 if ( unitLabel.length() > 0 ){
-		 fontBoundingRect = QFontMetrics(font).boundingRect( unitLabel );
-		 yPosition = startY;
-		 xPosition = (height() - fontBoundingRect.width())/2;
-		 painter->drawText( xPosition, yPosition, fontBoundingRect.width(),
-				  fontBoundingRect.height(), Qt::AlignHCenter|Qt::AlignTop, unitLabel);
-	 }
 	 painter->rotate(-90);
 }
 

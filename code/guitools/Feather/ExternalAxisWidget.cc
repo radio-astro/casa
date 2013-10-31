@@ -32,7 +32,7 @@
 namespace casa {
 
 ExternalAxisWidget::ExternalAxisWidget(QWidget* parent) :QWidget( parent ),
-		plot( NULL ), AXIS_SMALL_SIDE(100), MARGIN(5),
+		plot( NULL ), AXIS_SMALL_SIDE(100), MARGIN(5), MIN_START_Y(22),
 		FONT_SIZE(8), FONT_SIZE_AXIS_LABEL(8){
 }
 
@@ -42,7 +42,7 @@ void ExternalAxisWidget::setPlot( QwtPlot* plotOwner ){
 }
 
 int ExternalAxisWidget::getStartY() const {
-	return 0;
+	return MIN_START_Y;
 }
 
 double ExternalAxisWidget::getTickStartPixel( QwtPlot::Axis axis ){
@@ -133,6 +133,7 @@ int ExternalAxisWidget::getTickIncrement( int tickCount ) const {
 void ExternalAxisWidget::paintEvent( QPaintEvent* event ){
 	QWidget::paintEvent( event );
 	if ( plot != NULL ){
+
 		QPainter painter( this );
 		QPen pen( Qt::black );
 		pen.setWidth( 2 );
