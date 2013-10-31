@@ -111,8 +111,10 @@ void FeatherThread::run(){
 }
 
 bool FeatherThread::collectLowDirtyData(){
+
 	bool lowDirtyLoaded = setWorkerImages( lowImage, dirtyImage );
 	if ( lowDirtyLoaded ){
+		featherWorker->clearWeightFlags();
 		Vector<Float> uX;
 		Vector<Float> uY;
 		Vector<Float> vX;

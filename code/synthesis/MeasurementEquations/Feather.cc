@@ -334,6 +334,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       yamp.resize();
       yamp=(Float(1.0) - yampInt)*Float(sdScale_p);
     }
+
       xamp.resize();
       xamp=(Float(1.0) - xampInt)*Float(sdScale_p);
       
@@ -342,6 +343,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void Feather::getFeatheredCutSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial){
 
     getFTCutSDImage(ux, xamp, uy,yamp, radial);
+
     xamp *=sdScale_p;
     if(yamp.nelements() >0)
       yamp *=sdScale_p;
@@ -357,6 +359,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     else
       getCutXY(ux, xamp, uy, yamp, *cwHighIm_p);
+  }
+
+  void Feather::clearWeightFlags(){
+    cweightCalced_p=False;
+    cweightApplied_p = False;
   }
 
   void Feather::applyFeather(){

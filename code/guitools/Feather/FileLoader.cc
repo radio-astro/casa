@@ -106,6 +106,7 @@ FileLoader::FileLoader(QWidget *parent)
 	//Stable 4.2 Testing
 	//ui.lowResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/FeatherJuergan/gbt43Jy.im");
 	//ui.highResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/FeatherJuergan/vla43.im");
+	//ui.dirtyImageLineEdit->setText("/home/uniblab/casa/trunk/test/FeatherJuergan/dirty.im");
 }
 
 
