@@ -165,8 +165,6 @@ class AgentFlagger(basetask.StandardTaskTemplate):
         # online flags  
         if 'mode' not in agent_cmd:
             agent_cmd['mode'] = 'manual'
-	if 'autocorr' in agent_cmd:
-	    agent_cmd['autocorr'] = True
 
         casatools.agentflagger.parseagentparameters(agent_cmd)
 
@@ -322,9 +320,11 @@ class AgentFlagger(basetask.StandardTaskTemplate):
         d = {}
         for arg in re.split('\s+', cmdstring.strip()):
             k, v = re.split('=', arg, maxsplit=1)
+            # convert boolean strings to boolean objects
+            v = True if v in ('True', '"True"', "'True'") else v
+            v = False if v in ('False', '"False"', "'False'") else v
             d[k] = v
         return d
-
 
 
 class ALMAAgentFlaggerInputs(AgentFlaggerInputs):
