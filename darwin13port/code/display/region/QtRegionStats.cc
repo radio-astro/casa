@@ -122,6 +122,7 @@ namespace casa {
 
 		QtRegionStats::QtRegionStats( QWidget *parent ) : QWidget(parent), container_(0), next_(0), stats_box_(0) {
 			layout_ = new QVBoxLayout(this);
+            layout_->setContentsMargins(0,0,0,0);
 			// stats_box_ = new qt::image_stats_t(fields,this);
 		}
 

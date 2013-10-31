@@ -78,6 +78,7 @@ scripts/task_browsetable.py
 scripts/task_calstat.py
 scripts/task_caltabconvert.py
 scripts/task_clean.py
+scripts/task_gnuclean.py
 scripts/task_clearcal.py
 scripts/task_clearplot.py
 scripts/task_clearstat.py

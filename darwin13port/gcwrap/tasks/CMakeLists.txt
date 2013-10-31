@@ -10,6 +10,7 @@ browsetable.xml
 calstat.xml
 caltabconvert.xml
 clean.xml
+gnuclean.xml
 clearcal.xml
 clearplot.xml
 clearstat.xml
