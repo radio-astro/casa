@@ -219,6 +219,7 @@ namespace casa {
 
 			// adjust this coordinate system to match the 'other' coordinate system
 			void match( const DisplayCoordinateSystem &other );
+            Vector<int> transposeShape( const Vector<int> &original_shape, bool world=true );
 
         private:
             CoordinateSystem cs_;

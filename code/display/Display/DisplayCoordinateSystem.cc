@@ -115,4 +115,21 @@ namespace casa {
 			transpose(it->first,it->second);
 		}
 	}
+
+    Vector<int> DisplayCoordinateSystem::transposeShape( const Vector<int> &shape, bool world ) {
+        Vector<int> result(shape.size());
+        std::copy(shape.begin(), shape.end(), result.begin( ));
+		for ( transposition_log_t::const_iterator it=transposition_log.begin( );
+			  it != transposition_log.end( ); ++it ) {
+            const Vector<int> &index = world ? it->first : it->second;
+            Vector<int> orig(result.size( ));
+            std::copy( result.begin(), result.end(), orig.begin( ));
+            for ( int i=0; i < (int) result.size( ); ++i ) {
+                if ( i != index[i] ) {
+                    result[i] = orig[index[i]];
+                }
+            }
+        }
+        return result;
+    }
 }
