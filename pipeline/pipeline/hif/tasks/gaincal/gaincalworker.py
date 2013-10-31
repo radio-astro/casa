@@ -45,6 +45,11 @@ class GaincalWorker(basetask.StandardTaskTemplate):
     def prepare(self):
         # create a local variable for the inputs associated with this instance
         inputs = self.inputs
+
+        # make a note of the current inputs state before we start fiddling
+        # with it. This origin will be attached to the final CalApplication.
+        origin = callibrary.CalAppOrigin(task=GaincalWorker, 
+                                         inputs=inputs.to_casa_args())
         
         # make fast the caltable name by manually setting it to its current 
         # value. This makes the caltable name permanent, so we can 
@@ -109,7 +114,7 @@ class GaincalWorker(basetask.StandardTaskTemplate):
                                      caltype='gaincal',
                                      gainfield='nearest')
 
-        calapp = callibrary.CalApplication(calto, calfrom)
+        calapp = callibrary.CalApplication(calto, calfrom, origin)
 
         result = common.GaincalResults(pool=[calapp])
 

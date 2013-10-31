@@ -51,6 +51,11 @@ class BandpassWorker(basetask.StandardTaskTemplate):
     def prepare(self):
         # create a local variable for the inputs associated with this instance
         inputs = self.inputs
+
+        # make a note of the current inputs state before we start fiddling
+        # with it. This origin will be attached to the final CalApplication.
+        origin = callibrary.CalAppOrigin(task=BandpassWorker, 
+                                         inputs=inputs.to_casa_args())
         
         # make fast the caltable name by manually setting it to its current 
         # value. This makes the caltable name permanent, so we can 
@@ -105,7 +110,7 @@ class BandpassWorker(basetask.StandardTaskTemplate):
         # name, leaving spwmap, interp, etc. at their default values.
         calfrom = callibrary.CalFrom(inputs.caltable, caltype='bandpass')
 
-        calapp = callibrary.CalApplication(calto, calfrom)
+        calapp = callibrary.CalApplication(calto, calfrom, origin)
 
         result = common.BandpassResults(pool=[calapp])
 

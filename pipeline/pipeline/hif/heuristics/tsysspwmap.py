@@ -23,7 +23,7 @@ import pipeline.infrastructure.utils as utils
 
 LOG = infrastructure.get_logger(__name__)
 
-class SpwMap:
+class SpwMap(object):
     """
     This object is basically set up to hold the information needed 
     """
@@ -33,7 +33,7 @@ class SpwMap:
         self.mapsToSpw = []
         self.bbNo = None
         
-class SpwInfo:
+class SpwInfo(object):
     def __init__(self, mstable, spwId) :
         self.setTableAndSpwId(mstable,spwId)
 
@@ -73,11 +73,11 @@ def trimSpwmap(spwMap) :
     return spwMap[:i]
         
         
-def tsysspwmap(vis,tsystable,trim=True,relax=False, tsysChanTol=1):
+def tsysspwmap(ms, tsystable, trim=True, relax=False, tsysChanTol=1):
     """
     Generate default spwmap for ALMA Tsys, including TDM->FDM associations
     Input:
-     vis        the target MeasurementSet 
+     ms        the target MeasurementSet object 
      tsystable  the input Tsys caltable (w/ TDM Tsys measurements)
      trim       if True (the default), return minimum-length spwmap;
                     otherwise the spwmap will be exhaustive and include
@@ -119,6 +119,7 @@ def tsysspwmap(vis,tsystable,trim=True,relax=False, tsysChanTol=1):
 
     # Now loop through the main table's spectral window table
     # to map the spectral windows as desired.
+    vis = ms.name
     with casatools.TableReader ("%s/SPECTRAL_WINDOW" % vis) as table:
         it = table.nrows()
 
@@ -159,9 +160,13 @@ def tsysspwmap(vis,tsystable,trim=True,relax=False, tsysChanTol=1):
                 spwWithoutMatch.append(i)
             applyCalSpwMap.append(int(useSpw))        
 
-        if len(spwWithoutMatch) != 0:
-            no_match = utils.commafy(spwWithoutMatch, False)
-            LOG.warning('No Tsys match found for spws %s.' % no_match) 
+    science_window_ids = [spw.id for spw in ms.get_spectral_windows(science_windows_only=True)]
+    unmatched_science_spws = set(spwWithoutMatch).intersection(science_window_ids)
+
+    if len(unmatched_science_spws) != 0:
+        no_match = utils.commafy(unmatched_science_spws, False)
+        LOG.warning('No Tsys match found for spws %s.' % no_match) 
+
     if trim :
         LOG.info('Computed tsysspwmap is: '+str(trimSpwmap(applyCalSpwMap)))
         return trimSpwmap(applyCalSpwMap)

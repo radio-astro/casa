@@ -19,13 +19,17 @@ LOG = logging.get_logger(__name__)
 CalToArgs = collections.namedtuple('CalToArgs',
                                    ['vis','spw','field','intent','antenna'])
 
+# struct used to link calapplication to the task and inputs that created it
+CalAppOrigin = collections.namedtuple('CalAppOrigin', ['task', 'inputs'])
+
 
 class CalApplication(object):
-    def __init__(self, calto, calfrom):
+    def __init__(self, calto, calfrom, origin=None):
         self.calto = calto
         if type(calfrom) is not types.ListType:
             calfrom = [calfrom]
         self.calfrom = calfrom
+        self.origin = origin
 
     @staticmethod
     def from_export(s):
@@ -478,9 +482,8 @@ class CalToIdAdapter(object):
 
     def __repr__(self):
         return ('CalToIdAdapter(ms=\'%s\', field=\'%s\', intent=\'%s\', ' 
-                'spw=\'%s\', antenna=\'%s\')' % (self.ms.name, self.field,
-                                                 self.intent, self.spw, 
-                                                 self.antenna))
+                'spw=%s, antenna=%s)' % (self.ms.name, self.field,
+                                         self.intent, self.spw, self.antenna))
 
 
 # CalState extends defaultdict. For defaultdicts to be pickleable, their 
@@ -737,28 +740,6 @@ class CalLibrary(object):
         LOG.debug('Applied calibration state:\n'
                   '%s' % self.applied.as_applycal())
 
-
-
-def _gen_hash(o):
-    """
-    Makes a hash from a dictionary, list, tuple or set to any level, that 
-    contains only other hashable types (including any lists, tuples, sets,
-    and dictionaries).
-    """
-    LOG.trace('_gen_hash(%s)' % str(o))
-    if isinstance(o, set) or isinstance(o, tuple) or isinstance(o, list):        
-        return tuple([_gen_hash(e) for e in o])    
-    
-    elif not isinstance(o, dict):
-        h = hash(o)
-        LOG.trace('Hash: %s=%s' % (o, h))
-        return hash(o)
-    
-    new_o = copy.deepcopy(o)
-    for k, v in new_o.items():
-        new_o[k] = _gen_hash(v)
-    
-    return hash(tuple(frozenset(new_o.items())))
 
 ### single dish specific
 

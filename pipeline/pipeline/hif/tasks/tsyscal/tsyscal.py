@@ -71,6 +71,11 @@ class Tsyscal(basetask.StandardTaskTemplate):
     def prepare(self):
         inputs = self.inputs
 
+        # make a note of the current inputs state before we start fiddling
+        # with it. This origin will be attached to the final CalApplication.
+        origin = callibrary.CalAppOrigin(task=Tsyscal, 
+                                         inputs=inputs.to_casa_args())
+
         # construct the Tsys cal file
         gencal_args = inputs.to_casa_args()
         gencal_job = casa_tasks.gencal(**gencal_args)
@@ -85,14 +90,14 @@ class Tsyscal(basetask.StandardTaskTemplate):
 
         LOG.todo('tsysspwmap heuristic re-reads measurement set!')
         LOG.todo('tsysspwmap heuristic won\'t handle missing file')
-        spwmap = tsysspwmap(vis=inputs.vis, tsystable=gencal_args['caltable'],
+        spwmap = tsysspwmap(ms=inputs.ms, tsystable=gencal_args['caltable'],
                             tsysChanTol=inputs.chantol)
 
         callist = []
         calto = callibrary.CalTo(vis=inputs.vis)
         calfrom = callibrary.CalFrom(gencal_args['caltable'], caltype='tsys',
           gainfield='nearest', spwmap=spwmap, interp='linear,linear')
-        calapp = callibrary.CalApplication(calto, calfrom)
+        calapp = callibrary.CalApplication(calto, calfrom, origin)
         callist.append(calapp)
 
         return resultobjects.TsyscalResults(pool=callist)
