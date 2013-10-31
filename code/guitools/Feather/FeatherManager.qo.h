@@ -44,11 +44,11 @@ namespace casa {
 
 //FeatherWorker3 ( SD convolved with Int synthesized beam, INT )
 //- SD convolved with INT synthesized beam							//getFTCutSDImage
-//- SD convolved with INT synthesized beam; weighted and scaled		//getFeatheredCutInt
+//- SD convolved with INT synthesized beam; weighted and scaled		//getFeatheredCutSD
 
 //FeatherWorker4 ( SD convolved with DIRTY beam, DIRTY )
 //- SD convolved with DIRTY beam									//getFTCutSDImage
-//- SD convolved with DIRTY beam, weighted and scaled				//getFeatheredCutInt
+//- SD convolved with DIRTY beam, weighted and scaled				//getFeatheredCutSD
 
 //FeatherWorker5 ( SD, INT Convolved with SD resolution (beam) )
 //- INT convolved with SD resolution (beam)							//getFTCutIntImage
