@@ -84,39 +84,47 @@ class MeasurementSetReader(object):
                 antennas = ms.get_antenna(ant_ids)
 
                 # get the data descriptions for this scan
-                scan_data_desc_id = set(data_desc_id_col[scan_mask])                
+                scan_data_desc_id = set(data_desc_id_col[scan_mask])
                 data_descriptions = [ms.get_data_description(id=i) 
                                      for i in scan_data_desc_id]
 
-                raw_midpoints = list(time_col[scan_mask])
-                unique_midpoints = set(raw_midpoints)
-                exposures = list(exposure_col[scan_mask])
+                # times are specified per data description, so we must
+                # re-mask and calculate times per dd
+                scan_times = {}  
+                for dd in data_descriptions:
+                    dd_mask = (scan_number_col==scan_id) & (data_desc_id_col==dd.id)
 
-                # get the exposure times that correspond to the unique midpoint
-                # times that we just found 
-                exposure_for_midpoints = []
-                for midpoint in unique_midpoints:
-                    idx = raw_midpoints.index(midpoint)
-                    exposure_for_midpoints.append(exposures[idx])
-                    
-                scan_times = []
-                for raw_midpoint, exposure in zip(unique_midpoints, 
-                                                  exposure_for_midpoints):
-                    # measurement set spec states that exposure is recorded in 
-                    # seconds
-                    exposure = qt.quantity(exposure, 's')
-                    half_exposure = qt.div(exposure, 2)
-                    
-                    # add and subtract half the exposure to get the start and
-                    # end times for the exposure
-                    midpoint_epoch = qt.quantity(raw_midpoint, time_unit)
-                    start_epoch = qt.sub(midpoint_epoch, half_exposure)
-                    end_epoch = qt.add(midpoint_epoch, half_exposure)
-                    
-                    start = mt.epoch(time_ref, start_epoch)
-                    end = mt.epoch(time_ref, end_epoch)
-                    
-                    scan_times.append((start, end, exposure))
+                    raw_midpoints = list(time_col[dd_mask])
+                    unique_midpoints = set(raw_midpoints)
+                    exposures = list(exposure_col[dd_mask])
+    
+                    # get the exposure times that correspond to the unique midpoint
+                    # times that we just found 
+                    exposure_for_midpoints = []
+                    for midpoint in unique_midpoints:
+                        idx = raw_midpoints.index(midpoint)
+                        exposure_for_midpoints.append(exposures[idx])
+                        
+                    dd_times = []
+                    for raw_midpoint, exposure in zip(unique_midpoints, 
+                                                      exposure_for_midpoints):
+                        # measurement set spec states that exposure is recorded in 
+                        # seconds
+                        exposure = qt.quantity(exposure, 's')
+                        half_exposure = qt.div(exposure, 2)
+                        
+                        # add and subtract half the exposure to get the start and
+                        # end times for the exposure
+                        midpoint_epoch = qt.quantity(raw_midpoint, time_unit)
+                        start_epoch = qt.sub(midpoint_epoch, half_exposure)
+                        end_epoch = qt.add(midpoint_epoch, half_exposure)
+                        
+                        start = mt.epoch(time_ref, start_epoch)
+                        end = mt.epoch(time_ref, end_epoch)
+                        
+                        dd_times.append((start, end, exposure))
+
+                    scan_times[dd] = dd_times
 
                 scan = domain.Scan(id=scan_id, states=states, fields=fields,
                     data_descriptions=data_descriptions, antennas=antennas,
@@ -230,7 +238,7 @@ class MeasurementSetReader(object):
         
         # populate ms properties with results of table readers 
         ms.antenna_array = AntennaTable.get_antenna_array(ms)
-        ms.frequency_groups = SpectralWindowTable.get_frequency_groups(ms)  
+        ms.frequency_groups = SpectralWindowTable.get_frequency_groups(ms)
         ms.data_descriptions = DataDescriptionTable.get_descriptions(ms)
         ms.polarizations = PolarizationTable.get_polarizations(ms)
         for dd in ms.data_descriptions:

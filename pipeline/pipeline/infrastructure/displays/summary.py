@@ -287,23 +287,22 @@ class FieldVsTimeChart(object):
                 colours = self._get_colours(scan.intents)
 
                 # all 'datetime' objects are in UTC.
-                for (start, end, _) in scan.scan_times:
-                    x0 = utils.get_epoch_as_datetime(start)
-                    x1 = utils.get_epoch_as_datetime(end)
-                    
-                    y0 = nfield-0.5
-                    y1 = nfield+0.5
+                x0 = utils.get_epoch_as_datetime(scan.start_time)
+                x1 = utils.get_epoch_as_datetime(scan.end_time)
+                
+                y0 = nfield-0.5
+                y1 = nfield+0.5
 
-                    height = (y1 - y0) / float(len(colours))
-                    ys = y0
-                    ye = y0 + height
-                    for colour in colours:
-                        ax.fill([x0, x1, x1, x0], 
-                                [ys, ys, ye, ye],
-                                facecolor=colour, 
-                                edgecolor=colour)
-                        ys += height
-                        ye += height
+                height = (y1 - y0) / float(len(colours))
+                ys = y0
+                ye = y0 + height
+                for colour in colours:
+                    ax.fill([x0, x1, x1, x0], 
+                            [ys, ys, ye, ye],
+                            facecolor=colour, 
+                            edgecolor=colour)
+                    ys += height
+                    ye += height
 
         # set the labelling of the time axis
         self._set_time_axis(figure=f, ax=ax, datemin=obs_start, datemax=obs_end)

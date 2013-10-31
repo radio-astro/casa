@@ -20,8 +20,20 @@ class Scan(object):
         self.states = set(states)
         self.data_descriptions = set(data_descriptions)
         
-        self.scan_times = sorted(scan_times,
-                                 key=lambda t:utils.get_epoch_as_datetime(t[0]))
+        self.scan_times = {}
+        for dd, dd_times in scan_times.items():
+            self.scan_times[dd] = sorted(dd_times,
+                                         key=lambda t:utils.get_epoch_as_datetime(t[0]))
+
+        # set start time as earliest time over all data descriptions
+        min_times = sorted([v[0] for v in self.scan_times.values()],
+                           key=lambda t:utils.get_epoch_as_datetime(t[0]))
+        self.__start_time = min_times[0][0]
+        
+        # set end time as latest time over all data descriptions
+        max_times = sorted([v[-1] for v in self.scan_times.values()],
+                            key=lambda t:utils.get_epoch_as_datetime(t[1]))
+        self.__end_time = max_times[-1][1]
 
     def __repr__(self):
         mt = casatools.measures
@@ -29,17 +41,17 @@ class Scan(object):
                 'end=\'{end}\' duration=\'{duration}\'>'.format(
                     id=self.id,
                     intents=','.join(self.intents),
-                    start=mt.show(self.start_time), 
-                    end=mt.show(self.end_time), 
+                    start=utils.get_epoch_as_datetime(self.start_time), 
+                    end=utils.get_epoch_as_datetime(self.end_time), 
                     duration=str(self.time_on_source)))
 
     @property
     def start_time(self):
-        return self.scan_times[0][0]
+        return self.__start_time
 
     @property
     def end_time(self):
-        return self.scan_times[-1][1]
+        return self.__end_time
 
     @property
     def time_on_source(self):
@@ -50,20 +62,28 @@ class Scan(object):
         end = utils.get_epoch_as_datetime(self.end_time)
         return end - start
 
-    @property
-    def mean_exposure(self):
-        qt = casatools.quanta
-        return qt.div(self.time_on_source, len(self.scan_times))
-
-    @property
-    def max_exposure(self):
-        qt = casatools.quanta
-        max_exposure = self.scan_times[0][2]
-        for exposure in [s[2] for s in self.scan_times]:
-            if qt.gt(exposure, max_exposure):
-                max_exposure = exposure
-        return max_exposure
+    def mean_interval(self, spw_id):
+        """
+        Return the mean interval for this scan for the given spectral window.
+        """         
+        dds_with_spw = [dd for dd in self.data_descriptions
+                        if spw_id == dd.spw.id]
+        if not dds_with_spw:
+            raise ValueError('Scan %s not linked to spectral '
+                             'window %s' % (self.id, spw_id))
         
+        # I don't think it's possible to have the same spw associated with
+        # a scan more than once via multiple data descriptions, but assert
+        # just in case
+        assert len(dds_with_spw) is 1, ('Expected 1 data description for spw '
+                                        '%s but got %s' % (spw_id, 
+                                                           len(dds_with_spw)))
+
+        times_for_spw = self.scan_times[dds_with_spw[0]]
+        start = utils.get_epoch_as_datetime(times_for_spw[0][0])
+        end = utils.get_epoch_as_datetime(times_for_spw[-1][1])
+        return (end - start) / len(times_for_spw)
+
     @property
     def spws(self):
         return set([dd.spw for dd in self.data_descriptions])
