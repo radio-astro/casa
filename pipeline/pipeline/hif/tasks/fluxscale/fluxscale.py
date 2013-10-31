@@ -1,7 +1,9 @@
 from __future__ import absolute_import
+import ast
 import re
 import types
-import ast
+
+import numpy
 
 import pipeline.domain as domain
 from pipeline.hif.tasks.common import commonfluxresults
@@ -235,16 +237,27 @@ class Fluxscale(basetask.StandardTaskTemplate):
                         'fields in caltable?')
             return result
 
-        # fields in the fluxscale output dictionary are identified by a 
-        # numeric field ID  
-        for field_id in [key for key in output if re.match('\d+', key)]:
-            spw_flux = [(ms.get_spectral_window(spw), flux) 
-                        for spw,flux in zip(output['spwID'], 
-                                            output[field_id]['fluxd'])
-                        if flux != -1]            
+        no_result = numpy.array([-1.,-1.,-1.,-1.])
+        no_result_fn = lambda (spw, flux): not numpy.array_equal(no_result, 
+                                                                 flux)
 
-            for (spw, flux_i) in spw_flux:
-                flux = domain.FluxMeasurement(spw=spw, I=flux_i)
+        # fields in the fluxscale output dictionary are identified by a 
+        # numeric field ID                  
+        for field_id in [key for key in output if re.match('\d+', key)]:
+            # flux values themselves are now held at the same dictionary
+            # level as field names, spwidx, etc. The only way to identify
+            # them is by a numeric key corresponding to the spw.
+            flux_for_field = output[field_id]
+            flux_for_spws = [(spw, flux_for_field[spw]['fluxd'])
+                             for spw in flux_for_field 
+                             if spw.isdigit()]
+
+            # filter out the [-1,-1,-1,-1] results
+            spw_flux = filter(no_result_fn, flux_for_spws)
+
+            for (spw, [i, q, u, v]) in spw_flux:
+                spw = ms.get_spectral_window(spw)
+                flux = domain.FluxMeasurement(spw=spw, I=i, Q=q, U=u, V=v)
                 result.measurements[field_id].append(flux)
 
         return result
