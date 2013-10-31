@@ -24,17 +24,17 @@ total_keys = {
 	'TARGET'       : 'Target'
 }
 
-def agent_header1(agent):
+def template_agent_header1(agent):
 	span = 'col' if agent in ('online','template') else 'row'
 	return '<th %sspan=2>%s</th>' % (span, agent_description[agent])
 
-def agent_header2(agent):
+def template_agent_header2(agent):
 	if agent in ('online', 'template'):
 		return '<th>File</th><th>Number of Statements</th>'
 	else:
 		return ''		
 
-def get_flagging_agents(agents):
+def get_template_agents(agents):
 	return [a for a in agents if a in ('online', 'template')]
 
 
@@ -102,7 +102,7 @@ def agent_data(agent, ms):
 		relpath = os.path.join('stage%s' % result.stage_number, flagfile)
 		abspath = os.path.join(pcontext.report_dir, relpath)
 		if os.path.exists(abspath):
-			num_lines = sum(1 for line in open(abspath))
+			num_lines = sum(1 for line in open(abspath) if not line.startswith('#'))
 			return ('<td><a class="replace-pre" href="%s">%s</a></td>'
 					'<td>%s</td>' % (relpath, flagfile, num_lines))
 		else:
@@ -112,7 +112,7 @@ def agent_data(agent, ms):
 
 def agent_td(agent, ms):
 	if agent not in flags[ms]:
-		return '<td></td>' 
+		return '<td><i class="icon-remove"></td>' 
 	else:
 		return '<td><i class="icon-ok"></i></td>'		
 
@@ -121,16 +121,17 @@ def agent_td(agent, ms):
 <%block name="title">Deterministic Flagging</%block>
 
 <div class="row-fluid">
-	<h2>Active flagging agents</h2>
+	<h2>Flagging agents</h2>
 	<table class="table table-bordered table-striped">
-		<caption>Active flagging agents per measurement set.</caption>	   
+		<caption>Flagging agent status per measurement set.</caption>	   
 		<thead>
 			<tr>
 				<th>Measurement Set</th>
 % for agent in agents[1:]:
 				<th>${agent_description[agent]}</th>
 % endfor
-			</tr>	
+				<th>Agent Commands</th>
+			</tr>				
 		</thead>
 		<tbody>
 % for ms in flags.keys():
@@ -139,6 +140,7 @@ def agent_td(agent, ms):
 	% for agent in agents[1:]:
 				${agent_td(agent, ms)}
 	% endfor
+				<td><a class="replace-pre" href="${os.path.relpath(flagcmds[ms], pcontext.report_dir)}">View</a></td>
 			</tr>
 % endfor
 		</tbody>
@@ -146,7 +148,7 @@ def agent_td(agent, ms):
 </div>
 
 <%
-flagging_agents = get_flagging_agents(agents)
+flagging_agents = get_template_agents(agents)
 mses = [m for m in flags.keys() if 'online' in flags[m] or 'template' in flags[m]]
 %>
 % if mses:
@@ -158,12 +160,12 @@ mses = [m for m in flags.keys() if 'online' in flags[m] or 'template' in flags[m
 			<tr>
 				<th rowspan="2">Measurement Set</th>
 	% for agent in flagging_agents:
-				${agent_header1(agent)}
+				${template_agent_header1(agent)}
 	% endfor
 			</tr>	
 			<tr>
 	% for agent in flagging_agents:
-				${agent_header2(agent)}
+				${template_agent_header2(agent)}
 	% endfor
 			</tr>			
 		</thead>
@@ -180,7 +182,6 @@ mses = [m for m in flags.keys() if 'online' in flags[m] or 'template' in flags[m
 	</table>
 </div>
 % endif
-
 
 <div class="row-fluid">
 	<h2>Flagged data summary</h2>
@@ -243,7 +244,7 @@ mses = [m for m in flags.keys() if 'online' in flags[m] or 'template' in flags[m
 	% for plot in flagplots:
 		<li class="span3">
 		  	<div class="thumbnail">
-				<a href="${os.path.relpath(plot.basename, pcontext.report_dir)}" 
+				<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}" 
 				   class="fancybox">
 					<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 						 title="Flagging Reason vs Time for ${plot.parameters['vis']}"

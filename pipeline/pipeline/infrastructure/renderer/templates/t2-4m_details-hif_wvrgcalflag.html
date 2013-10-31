@@ -169,10 +169,10 @@ caltables are presented below.</p>
 %endif
 
 %if baseline_summary_plots:
-	<h3>Phase correction vs baseline length</h3>
+	<h3>Phase correction vs distance to reference antenna</h3>
 
 	<p>One plot is generated per scan, with data plotted per correlation and antenna 
-	as a function of mean baseline length for that antenna.</p>
+	as a function of distance from the reference antenna.</p>
 
 	<p>The lower panel of these plots presents the median absolute deviation of the gaincal 
 	corrections with and without WVR correction applied. The upper panel data are based on the RMS of the
@@ -211,8 +211,9 @@ caltables are presented below.</p>
 			                    </a>
 							</h4>
 							
-	                        <p>Phase offset vs mean baseline and improvement vs mean baseline
-	                        before and after WVR application for spectral window 
+	                        <p>Phase offset (lower) and improvement ratio (upper) 
+	                        vs distance to the reference antenna before and after 
+	                        WVR application for spectral window 
 	                        ${plot.parameters['spw']}, all antennas.
 	                        </p>
 	                    </div>

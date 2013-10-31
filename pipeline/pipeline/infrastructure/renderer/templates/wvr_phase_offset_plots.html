@@ -98,7 +98,7 @@ $(document).ready(function () {
 			<fieldset>
 				<legend>Antenna Filter</legend>
 				<select id="select-ant" class="select2" multiple style="width:100%" placeholder="Show all antennas">
-					% for ant in sorted(list(set([p.parameters['ant'] for p in plots]))):
+					% for ant in antennas:
 					<option>${ant}</option>
 					% endfor
 		       	</select>
@@ -124,7 +124,7 @@ $(document).ready(function () {
 						   alt="">
 					</img>
 				</a>
-					<p class="text-center">${plot.parameters['ant']} spw ${plot.parameters['spw']}</p>
+					<p class="text-center">${plot.parameters['ant'][0]} spw ${plot.parameters['spw']}</p>
 			</div>
 		</li>
 	% endfor

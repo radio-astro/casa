@@ -136,6 +136,21 @@ class AntennaArray(object):
 
         return (x_offset, y_offset)
     
+    def get_baseline(self, antenna1, antenna2):
+        if isinstance(antenna1, str) and isinstance(antenna2, str):            
+            attr_getter = lambda antenna: antenna.name
+        elif isinstance(antenna1, int) and isinstance(antenna2, int):            
+            attr_getter = lambda antenna: antenna.id
+        else:
+            raise TypeError
+            
+        matching = [b for b in self.baselines
+                    if attr_getter(b.antenna1) in (antenna1, antenna2)
+                    and attr_getter(b.antenna2) in (antenna1, antenna2)]
+        if matching:
+            return matching[0]
+        return None
+    
     def add_antenna(self, antenna):
         self.antennas.append(antenna)
 

@@ -27,6 +27,7 @@ import pipeline.infrastructure.casataskdict as casataskdict
 import pipeline.infrastructure.displays.bandpass as bandpass
 import pipeline.infrastructure.displays.clean as clean
 import pipeline.infrastructure.displays.flagging as flagging
+import pipeline.infrastructure.displays.gaincal as gaincal
 import pipeline.infrastructure.displays.image as image
 import pipeline.infrastructure.displays.summary as summary
 import pipeline.infrastructure.displays.slice as slicedisplay
@@ -127,6 +128,10 @@ def get_task_description(result_obj):
 
     if task_cls is hsd.tasks.SDExportData:
         return 'Single-dish SDExportData'
+
+    if task_cls in (hif.tasks.TimeGaincal, hif.tasks.GaincalMode,
+                    hif.tasks.GTypeGaincal, hif.tasks.GSplineGaincal):
+        return 'Gain calibration'
 
     if task_cls is hif.tasks.Tsyscal:
         return 'Calculate Tsys calibration'
@@ -1264,11 +1269,11 @@ class T2_4MDetailsWvrgcalflagRenderer(T2_4MDetailsDefaultRenderer):
                                          key=lambda p: int(p.parameters['spw']))
 
             # generate the phase offset summary plots
-            phase_offset_summary_plotter = wvr.WVRSummaryChart(context, result)
+            phase_offset_summary_plotter = wvr.WVRPhaseOffsetSummaryPlot(context, result)
             phase_offset_summary_plots[vis] = phase_offset_summary_plotter.plot()
 
             # generate the per-antenna phase offset plots
-            phase_offset_plotter = wvr.WVRChart(context, result)            
+            phase_offset_plotter = wvr.WVRPhaseOffsetPlot(context, result)            
             phase_offset_plots = phase_offset_plotter.plot() 
             # write the html for each MS to disk
             renderer = WvrgcalflagPhaseOffsetPlotRenderer(context, result, 
@@ -1353,6 +1358,13 @@ class WvrgcalflagPhaseOffsetPlotRenderer(object):
         self.plots = plots
         self.ms = os.path.basename(self.result.inputs['vis'])
 
+        # put this code here to save overcomplicating the template
+        antenna_names = set()
+        for plot in plots:
+            antenna_names.update(set(plot.parameters['ant']))
+        antenna_names = sorted(list(antenna_names))
+        self.antenna_names = antenna_names
+        
         # all values set on this dictionary will be written to the JSON file
         d = {}
         for plot in plots:
@@ -1384,6 +1396,7 @@ class WvrgcalflagPhaseOffsetPlotRenderer(object):
         return {'pcontext'   : self.context,
                 'result'     : self.result,
                 'plots'      : self.plots,
+                'antennas'   : self.antenna_names,
                 'dirname'    : self.dirname,
                 'json'       : self.json}
 
@@ -1480,6 +1493,129 @@ class WvrgcalflagPhaseOffsetVsBaselinePlotRenderer(object):
         t = TemplateFinder.get_template(self.template)
         return t.render(**display_context)
 
+
+class T2_4MDetailsGaincalRenderer(T2_4MDetailsDefaultRenderer):
+    GaincalApplication = collections.namedtuple('GaincalApplication', 
+                                                'ms gaintable calmode solint intent spw') 
+
+    def __init__(self, template='t2-4m_details-hif_gaincal.html', 
+                 always_rerender=False):
+        # set the name of our specialised Mako template via the superclass
+        # constructor 
+        super(T2_4MDetailsGaincalRenderer, self).__init__(template,
+                                                              always_rerender)
+
+    def get_display_context(self, context, results):
+        # get the standard Mako context from the superclass implementation 
+        super_cls = super(T2_4MDetailsGaincalRenderer, self)
+        ctx = super_cls.get_display_context(context, results)
+
+        stage_dir = os.path.join(context.report_dir, 
+                                 'stage%d' % results.stage_number)
+        if not os.path.exists(stage_dir):
+            os.mkdir(stage_dir)
+
+        applications = []
+        structure_plots = {}
+        for result in results:
+            vis = os.path.basename(result.inputs['vis'])
+            ms = context.observing_run.get_ms(vis)
+
+            applications.extend(self.get_gaincal_applications(result, ms))
+
+            # generate the phase structure plots
+            structure_plotter = gaincal.RMSOffsetVsRefAntDistanceChart(context, result)
+            structure_plots[vis] = structure_plotter.plot()
+
+#             # write the html for each MS to disk
+#             renderer = GaincalPhaseStructureRenderer(context, result, 
+#                                                      structure_plots[vis])
+#             with renderer.get_file() as fileobj:
+#                 fileobj.write(renderer.render())        
+
+            # get the first scan for the PHASE intent(s)
+#             first_phase_scan = ms.get_scans(scan_intent='PHASE')[0]
+#             scan_id = first_phase_scan.id
+#             LOG.trace('Using scan %s for phase structure summary '
+#                       'plots' % first_phase_scan.id)
+#             structure_summary_plots[vis] = [p for p in structure_plots
+#                                             if scan_id in set(p.parameters['scan'].split(','))]
+            
+        # add the PlotGroups to the Mako context. The Mako template will parse
+        # these objects in order to create links to the thumbnail pages we
+        # just created
+        ctx.update({'applications'            : applications,
+                    'structure_plots'         : structure_plots,
+                    'dirname'                 : stage_dir})
+
+        return ctx
+    
+    def get_gaincal_applications(self, result, ms):
+        applications = []
+        
+        calmode_map = {'p':'Phase only',
+                       'a':'Amplitude only',
+                       'ap':'Phase and amplitude'}
+        
+        for calapp in result.final:
+            solint = calapp.origin.inputs['solint']
+
+            if solint == 'inf':
+                solint = 'Infinite'
+            
+            # Convert solint=int to a real integration time. 
+            # solint is spw dependent; science windows usually have the same
+            # integration time, though that's not guaranteed by the MS.
+            if solint == 'int':
+                from_intent = calapp.origin.inputs['intent']
+                
+                # from_intent is given in CASA intents, ie. *AMPLI*, *PHASE*
+                # etc. We need this in pipeline intents.
+                pipeline_intent = utils.to_pipeline_intent(ms, from_intent)
+                scans = ms.get_scans(scan_intent=pipeline_intent)
+
+                spw_ids = [int(spw) for spw in calapp.spw.split(',')]                
+                
+                all_solints = set()
+                for spw_id in spw_ids:                    
+                    spw_solints = set([scan.mean_interval(spw_id) 
+                                       for scan in scans])
+                    all_solints.update(spw_solints)
+                
+                in_secs = ['%0.2fs' % (dt.seconds + dt.microseconds * 1e-6) 
+                           for dt in all_solints]  
+                solint = 'Per integration (%s)' % utils.commafy(in_secs, quotes=False, conjunction='or')
+            
+            gaintable = os.path.basename(calapp.gaintable)
+            spw = ', '.join(calapp.spw.split(','))
+
+            to_intent = ', '.join(calapp.intent.split(','))
+            if to_intent == '':
+                to_intent = 'ALL'
+
+            calmode = calapp.origin.inputs['calmode']
+            calmode = calmode_map.get(calmode, calmode)
+            a = T2_4MDetailsGaincalRenderer.GaincalApplication(ms.basename,
+                                                               gaintable,
+                                                               solint,
+                                                               calmode,
+                                                               to_intent,
+                                                               spw)
+            applications.append(a)
+
+        return applications
+
+
+class GaincalPhaseStructureRenderer(WvrgcalflagPhaseOffsetVsBaselinePlotRenderer):
+    template = 'wvr_phase_offset_vs_baseline_plots.html'
+
+    def __init__(self, context, result, plots):
+        super(GaincalPhaseStructureRenderer, self).__init__(context, result, plots)
+         
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('phase_structure-%s.html' % self.ms)
+        return filename
 
 
 class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
@@ -1951,7 +2087,7 @@ class T2_4MDetailsAgentFlaggerRenderer(T2_4MDetailsDefaultRenderer):
 
     def __init__(self, template='t2-4m_details-hif_flagdeteralma.html', 
                  always_rerender=False):
-       super(T2_4MDetailsAgentFlaggerRenderer, self).__init__(template,
+        super(T2_4MDetailsAgentFlaggerRenderer, self).__init__(template,
                                                                always_rerender)
 
     def get_display_context(self, context, result):
@@ -1976,15 +2112,31 @@ class T2_4MDetailsAgentFlaggerRenderer(T2_4MDetailsDefaultRenderer):
                     LOG.trace('Copying %s to %s' % (src, weblog_dir))
                     shutil.copy(src, weblog_dir)
 
-        # collect the agent names
-        agent_names = set()
+        flagcmd_files = {}
         for r in result:
-            agent_names.update([s['name'] for s in r.summaries])
+            # write final flagcmds to a file
+            ms = context.observing_run.get_ms(inputs['vis'])
+            flagcmds_filename = '%s-agent_flagcmds.txt' % ms.basename
+            flagcmds_path = os.path.join(weblog_dir, flagcmds_filename)
+            with open(flagcmds_path, 'w') as flagcmds_file:
+                terminated = '\n'.join(r.flagcmds)
+                flagcmds_file.write(terminated)
 
-        # get agent names in execution order
-        order = ['before', 'online', 'template', 'autocorr', 'shadow', 
-                 'intents', 'edgespw']
-        agents = [s for s in order if s in agent_names]
+            flagcmd_files[ms.basename] = flagcmds_path
+
+#         # collect the agent names
+#         agent_names = set()
+#         for r in result:
+#             agent_names.update([s['name'] for s in r.summaries])
+# 
+#         # get agent names in execution order
+#         order = ['before', 'online', 'template', 'autocorr', 'shadow', 
+#                  'intents', 'edgespw']
+#         agents = [s for s in order if s in agent_names]
+
+        # return all agents so we get ticks and crosses against each one
+        agents = ['before', 'online', 'template', 'autocorr', 'shadow', 
+                  'intents', 'edgespw']
 
         flagplots = [self.flagplot(r, context) for r in result]
         # plot object may be None if plot failed to generate
@@ -1993,6 +2145,7 @@ class T2_4MDetailsAgentFlaggerRenderer(T2_4MDetailsDefaultRenderer):
         ctx.update({'flags'     : flag_totals,
                     'agents'    : agents,
                     'dirname'   : weblog_dir,
+                    'flagcmds'  : flagcmd_files,
                     'flagplots' : flagplots})
 
         return ctx
@@ -2421,6 +2574,8 @@ renderer_map = {
         # hif.tasks.Bandpass       : T2_3MDetailsBandpassRenderer(),
     },
     T2_4MDetailsRenderer : {
+        hif.tasks.AgentFlagger   : T2_4MDetailsAgentFlaggerRenderer(),
+        hif.tasks.ALMAAgentFlagger : T2_4MDetailsAgentFlaggerRenderer(),
         hif.tasks.Atmflag        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_atmflag.html'),
         hif.tasks.Bandpass       : T2_4MDetailsBandpassRenderer(),
         hif.tasks.Bandpassflagchans: T2_4MDetailsBandpassFlagRenderer(),
@@ -2428,15 +2583,15 @@ renderer_map = {
         hif.tasks.CleanList      : T2_4MDetailsCleanRenderer(),
         hif.tasks.FluxcalFlag    : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_fluxcalflag.html'),
         hif.tasks.Fluxscale      : T2_4MDetailsDefaultRenderer('t2-4m_details-fluxscale.html'),
+        hif.tasks.Gaincal        : T2_4MDetailsGaincalRenderer(),
         hif.tasks.GcorFluxscale  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_gfluxscale.html'),
         hif.tasks.ImportData     : T2_4MDetailsImportDataRenderer(),
-        hif.tasks.AgentFlagger   : T2_4MDetailsAgentFlaggerRenderer(),
-        hif.tasks.ALMAAgentFlagger : T2_4MDetailsAgentFlaggerRenderer(),
         hif.tasks.Lowgainflag    : T2_4MDetailsLowgainFlagRenderer(),
         hif.tasks.MakeCleanList  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_makecleanlist.html'),
         hif.tasks.NormaliseFlux  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_normflux.html'),
         hif.tasks.RefAnt         : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_refant.html'),
         hif.tasks.Setjy          : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_setjy.html'),
+        hif.tasks.TimeGaincal    : T2_4MDetailsGaincalRenderer(),
         hif.tasks.Tsyscal        : T2_4MDetailsTsyscalRenderer(),
         hif.tasks.Tsysflag       : T2_4MDetailsTsyscalFlagRenderer(),
         hif.tasks.Tsysflagchans  : T2_4MDetailsTsyscalFlagRenderer('t2-4m_details-hif_tsysflagchans.html'),

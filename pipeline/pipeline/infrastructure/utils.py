@@ -9,9 +9,13 @@ import itertools
 import math
 import operator
 import os
+try:
+    import cPickle as pickle
+except:
+    import pickle
 import platform
 import re
-import sys
+import string
 import StringIO
 import types
 
@@ -53,7 +57,7 @@ open_image = context_manager_factory(casatools.image)
 open_ms = context_manager_factory(casatools.ms)
 
 
-def commafy(l, quotes=True, multi_prefix='', separator=', '):
+def commafy(l, quotes=True, multi_prefix='', separator=', ', conjunction='and'):
     '''
     Return the textual description of the given list.
     
@@ -76,9 +80,9 @@ def commafy(l, quotes=True, multi_prefix='', separator=', '):
             return '%s' % l[0]
     if length is 2:
         if quotes:
-            return '%s\'%s\' and \'%s\'' % (multi_prefix, l[0], l[1])
+            return '%s\'%s\' %s \'%s\'' % (multi_prefix, l[0], conjunction, l[1])
         else:
-            return '%s%s and %s' % (multi_prefix, l[0], l[1])
+            return '%s%s %s %s' % (multi_prefix, l[0], conjunction, l[1])
     else:
         if quotes:
             return '%s\'%s\'%s%s' % (multi_prefix, l[0], separator, commafy(l[1:], separator=separator, quotes=quotes))
@@ -86,10 +90,19 @@ def commafy(l, quotes=True, multi_prefix='', separator=', '):
             return '%s%s%s%s' % (multi_prefix, l[0], separator, commafy(l[1:], separator=separator, quotes=quotes))
 
 def find_ranges(data):
+    if isinstance(data, str):
+        # barf if channel ranges are also in data, eg. 23:1~10,24
+        if ':' in data:
+            return data
+
+        data = range_to_list(data)
+        if len(data) is 0:
+            return ''
+
     try:
-        integers = [int(d) for d in data.split(',')]
+        integers = [int(d) for d in data]
     except ValueError:
-        return data
+        return ','.join(data)
 
     s = sorted(integers)
     ranges = []
@@ -222,6 +235,22 @@ def to_CASA_intent(ms, intents):
         # replace the CASA arg with *INTENT1*,*INTENT2*, etc.
         return ','.join(['*{0}*'.format(intent) for intent in intents])
 
+def to_pipeline_intent(ms, intent):
+    """
+    Convert CASA intents back into obs modes, then into a pipeline intent.
+    """
+    casa_intents = set([i.strip('*') for i in intent.split(',') if i is not None])
+
+    state = ms.states[0]
+
+    pipeline_intents = set()
+    for casa_intent in casa_intents:
+        matching = [pipeline_intent for mode, pipeline_intent in state.obs_mode_mapping.items()
+                    if casa_intent in mode]
+        pipeline_intents.update(set(matching))
+
+    return ','.join(pipeline_intents)
+
 def stringSplitByNumbers(x):
     r = re.compile('(\d+)')
     l = r.split(x)
@@ -349,3 +378,65 @@ class memoized(object):
         '''Support instance methods.'''
         return functools.partial(self.__call__, obj)
     
+    
+def areEqual(a, b):
+    """
+    Return True if the contents of the given arrays are equal.
+    """
+    return len(a) == len(b) and len(a) == sum([1 for i,j in zip(a,b) if i==j])
+    
+def pickle_copy(original):
+    stream = StringIO.StringIO()
+    pickle.dump(original, stream, -1)
+    # rewind to the start of the 'file', allowing it to be read in its
+    # entirety - otherwise we get an EOFError
+    stream.seek(0)
+    copy = pickle.load(stream)
+    return copy
+
+def gen_hash(o):
+    """
+    Makes a hash from a dictionary, list, tuple or set to any level, that 
+    contains only other hashable types (including any lists, tuples, sets,
+    and dictionaries).
+    """
+    LOG.trace('gen_hash(%s)' % str(o))
+    if isinstance(o, set) or isinstance(o, tuple) or isinstance(o, list):        
+        return tuple([gen_hash(e) for e in o])    
+    
+    elif not isinstance(o, dict):
+        h = hash(o)
+        LOG.trace('Hash: %s=%s' % (o, h))
+        return hash(o)
+    
+    new_o = copy.deepcopy(o)
+    for k, v in new_o.items():
+        new_o[k] = gen_hash(v)
+    
+    return hash(tuple(frozenset(new_o.items())))
+
+def range_to_list(arg):
+    if arg == '':
+        return []
+
+    # recognise but suppress the mode-switching tokens
+    TILDE = pyparsing.Suppress('~')
+
+    # recognise '123' as a number, converting to an integer
+    number = pyparsing.Word(pyparsing.nums).setParseAction(lambda tokens : int(tokens[0]))
+
+    # convert '1~10' to a range
+    rangeExpr = number('start') + TILDE + number('end')
+    rangeExpr.setParseAction(lambda tokens : range(tokens.start, tokens.end+1))
+
+    casa_chars = ''.join([c for c in string.printable 
+                          if c not in ',;"/' + string.whitespace]) 
+    textExpr = pyparsing.Word(casa_chars)
+
+    # numbers can be expressed as ranges or single numbers
+    atomExpr = rangeExpr | number | textExpr
+    
+    # we can have multiple items separated by commas
+    atoms = pyparsing.delimitedList(atomExpr, delim=',')('atoms')
+
+    return list(atoms.parseString(str(arg)))
