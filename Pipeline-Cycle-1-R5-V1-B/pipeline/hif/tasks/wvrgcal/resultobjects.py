@@ -28,6 +28,7 @@ class WvrgcalResult(basetask.Results):
 
         # section for qa2 results
         self.qa2 = commonresultobjects.Qa2Result()
+        self.qa2.vis = None
 
         # results used to calculate the qa2 results
         self.bandpass_result = None
