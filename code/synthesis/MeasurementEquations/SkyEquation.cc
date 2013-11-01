@@ -1652,8 +1652,10 @@ void SkyEquation::checkVisIterNumRows(ROVisibilityIterator& vi){
   vi.origin();
   Int nAnt=vb->numberAnt();
   if(nAnt >1){
-    if (vb->nRow() < (nAnt*(nAnt-1)/4)){
-      vi.setRowBlocking( nAnt*(nAnt-1)/2+nAnt);
+    //    if (vb->nRow() < (nAnt*(nAnt-1)/4))
+    {
+      cerr << "#### Setting row blocking to " << 40*nAnt*(nAnt-1)/2+nAnt << endl;
+      vi.setRowBlocking( 40*nAnt*(nAnt-1)/2+nAnt);
       vi.originChunks();
       vi.origin();
     }

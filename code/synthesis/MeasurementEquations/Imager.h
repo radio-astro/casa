@@ -42,6 +42,7 @@
 #include <measures/Measures/MRadialVelocity.h>
 
 #include <synthesis/TransformMachines/FTMachine.h>
+#include <synthesis/TransformMachines/cDataToGridImpl.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 
 #include <synthesis/MeasurementComponents/CleanImageSkyModel.h>
@@ -90,6 +91,12 @@ class Imager
   // Destructor
   virtual ~Imager();
   
+  void setGridder(ComplexGridder fC, DComplexGridder fD) 
+  {
+    complexGridder_ptr=fC; dcomplexGridder_ptr=fD;
+    cerr << "ImagerfC = " << &complexGridder_ptr << " ImagerfD = " << &dcomplexGridder_ptr << endl;
+  };
+
   // open all the subtables as userNoReadLock
   virtual Bool openSubTables();
 
@@ -946,6 +953,9 @@ protected:
   //numthreads
   Int numthreads_p;
   Bool avoidTempLatt_p;
+  ComplexGridder complexGridder_ptr; 
+  DComplexGridder dcomplexGridder_ptr;
+
 };
 
 

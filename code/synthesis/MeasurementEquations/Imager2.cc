@@ -32,6 +32,7 @@
 #include <casa/iostream.h>
 #include <synthesis/MeasurementEquations/Imager.h>
 #include <synthesis/MeasurementComponents/EPJones.h>
+#include <synthesis/TransformMachines/cDataToGridImpl.h>
 
 #include <ms/MeasurementSets/MSHistoryHandler.h>
 
@@ -191,6 +192,7 @@
 #include <limits>
 
 #include <synthesis/TransformMachines/AWProjectFT.h>
+#include <synthesis/TransformMachines/ProtoVR.h>
 #include <synthesis/TransformMachines/AWProjectWBFT.h>
 #include <synthesis/TransformMachines/MultiTermFT.h>
 #include <synthesis/TransformMachines/NewMultiTermFT.h>
@@ -2812,7 +2814,7 @@ Bool Imager::createFTMachine()
   //===============================================================
   // A-Projection FTMachine code start here
   //===============================================================
-  else if ((ftmachine_p == "awproject") || (ftmachine_p == "mawproject")){
+  else if ((ftmachine_p == "awproject") || (ftmachine_p == "mawproject") || (ftmachine_p=="protoft")){
     if (wprojPlanes_p<=1)
       {
 	os << LogIO::NORMAL
@@ -2851,7 +2853,25 @@ Bool Imager::createFTMachine()
     //
     // Construct the appropriate re-sampler.
     //
-    CountedPtr<VisibilityResamplerBase> visResampler = new AWVisResampler();
+    CountedPtr<VisibilityResamplerBase> visResampler;
+    if (ftmachine_p=="protoft") 
+      {
+	// ComplexGridder fC = cDataToGridImpl_p;
+	// DComplexGridder fD = cDataToGridImpl_p;
+	// setGridder(fC,fD);
+
+	// void (*fC)(Complex* gridStore, Int* gridShape, VBStore& vbs,
+	// 	   Matrix<Double>& sumwt, const Bool& dopsf,
+	// 	   const Int* polMap_ptr, const Int *chanMap_ptr,
+	// 	   const Double *uvwScale_ptr, const Double *offset_ptr,
+	// 	   const Double *dphase_ptr,
+	// 	   Int XThGrid, Int YThGrid)=cDataToGridImpl_p;
+	visResampler = new ProtoVR();
+	cerr << "fc = " << complexGridder_ptr << " " << dcomplexGridder_ptr << endl;
+
+	((ProtoVR *)&*visResampler)->setGridder(complexGridder_ptr,dcomplexGridder_ptr);
+      }
+    else visResampler = new AWVisResampler();
     //    CountedPtr<VisibilityResamplerBase> visResampler = new VisibilityResampler();
 
     //
@@ -3884,7 +3904,7 @@ void Imager::makeVisSet(MeasurementSet& ms,
     sort[3] = MS::TIME;
   }
   Matrix<Int> noselection;
-  Double timeInterval=0.0;
+  Double timeInterval=20.0;
   //if you want to use scratch col...make sure they are there
   if(useModelCol_p){
     //VisSet(ms,sort,noselection,useModelCol_p,timeInterval,compress);

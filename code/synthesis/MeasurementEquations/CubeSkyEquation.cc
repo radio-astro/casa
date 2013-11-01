@@ -706,6 +706,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     //ROVisIter& vi=*rvi_p;
     //Lets get the channel selection for later use
     //    Timers tGetChanSel=Timers::getTime();
+
     rvi_p->getChannelSelection(blockNumChanGroup_p, blockChanStart_p,
                                blockChanWidth_p, blockChanInc_p, blockSpw_p);
     //    Timers tCheckVisRows=Timers::getTime();
@@ -1718,8 +1719,8 @@ CubeSkyEquation::getFreqRange(ROVisibilityIterator& vi,
     Block<Vector<Int> > nchanb;
     Block<Vector<Int> > incrb=blockChanInc_p;
     vi.getSpwInFreqRange(spwb, startb, nchanb, start, end, chanwidth);
-    cerr << "CSE: " << start << " " << end << " " << chanwidth << endl
-     	 << "     " << spwb[0] << " " << startb[0] << " " << nchanb[0] << " " << incrb[0] << endl;
+    // cerr << "CSE: " << start << " " << end << " " << chanwidth << endl
+    //  	 << "     " << spwb[0] << " " << startb[0] << " " << nchanb[0] << " " << incrb[0] << endl;
     if(spwb.nelements()==0)
         return False;
 

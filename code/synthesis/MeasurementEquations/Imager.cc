@@ -206,6 +206,8 @@ Imager::Imager()
   lockCounter_p=0;
   numMS_p=0;
   defaults();
+  complexGridder_ptr=NULL; 
+  dcomplexGridder_ptr=NULL;
 };
 
 
@@ -306,6 +308,9 @@ traceEvent(1,"Entering imager::defaults",25);
   avoidTempLatt_p=False;
   mssFreqSel_p.resize();
   mssChanSel_p.resize();
+  complexGridder_ptr=NULL; 
+  dcomplexGridder_ptr=NULL;
+
 #ifdef PABLO_IO
   traceEvent(1,"Exiting imager::defaults",24);
 #endif
@@ -333,6 +338,8 @@ Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
   numMS_p=1;
   defaults();
   latestObsInfo_p=ObsInfo();
+  complexGridder_ptr=NULL; 
+  dcomplexGridder_ptr=NULL;
 }
 
 
@@ -355,6 +362,8 @@ Imager::Imager(MeasurementSet& theMS, Bool compress)
   defaults();
 
   latestObsInfo_p=ObsInfo();
+  complexGridder_ptr=NULL; 
+  dcomplexGridder_ptr=NULL;
 }
 
 Imager::Imager(const Imager & other)
@@ -889,6 +898,7 @@ Bool Imager::defineImage(const Int nx, const Int ny,
   //Clear the sink 
   logSink_p.clearLocally();
   LogIO os(LogOrigin("imager", "defineimage()"), logSink_p);
+  
   if(cellx.getValue() == 0.0  || celly.getValue()==0.0)
 	 throw(AipsError("Infinite resolution not possible... please do let us know what you are drinking"));
   os << LogIO::NORMAL << "Defining image properties:"; // Loglevel INFO
@@ -1321,6 +1331,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
   logSink_p.clearLocally();
   LogIO os(LogOrigin("imager", "data selection"), logSink_p);
 
+
   if(ms_p.null()) {
     os << LogIO::SEVERE << "Program logic error: MeasurementSet pointer ms_p not yet set"
        << LogIO::EXCEPTION;
@@ -1339,6 +1350,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 
   nullSelect_p=False;
   String local_spwstring(spwstring);
+
   if (local_spwstring  == "") local_spwstring="*";
   try {
     
@@ -1492,6 +1504,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     // TT: Added sorting option in getChanList call 
     //     to accomodate changes related CAS-2521
     Matrix<Int> chansels=thisSelection.getChanList(NULL, 1, True);
+
     mssChanSel_p.assign(chansels);
     mssFreqSel_p.resize();
     mssFreqSel_p=thisSelection.getChanFreqList(NULL, True);

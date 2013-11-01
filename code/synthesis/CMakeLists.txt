@@ -34,6 +34,8 @@ casa_add_library( synthesis
   TransformMachines/AWProjectFT.cc
   TransformMachines/AWProjectWBFT.cc
   TransformMachines/AWVisResampler.cc
+  TransformMachines/ProtoVR.cc
+  TransformMachines/cDataToGridImpl.cc
   TransformMachines/BeamCalc.cc
   TransformMachines/BeamCalcParams.cc
   TransformMachines/DBeamSkyJones.cc
@@ -699,6 +701,8 @@ install (FILES
         TransformMachines/AWProjectFT.h
         TransformMachines/AWProjectWBFT.h
 	TransformMachines/AWVisResampler.h
+	TransformMachines/ProtoVR.h
+	TransformMachines/cDataToGridImpl.h
 	TransformMachines/AzElAperture.h
 	TransformMachines/EVLAAperture.h
 	TransformMachines/EVLAConvFunc.h
