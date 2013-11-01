@@ -107,7 +107,6 @@ class PlotMSPlotTab : public PlotMSTab, Ui::PlotTab,
     friend class PlotMSOverPlot;
     friend class PlotMSPlot;
     friend class PlotMSPlotter;
-    friend class PlotMSIterPlot;
     
 public:
     // Constructor which takes the parent plotter.

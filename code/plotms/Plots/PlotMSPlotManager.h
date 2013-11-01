@@ -36,12 +36,9 @@ namespace casa {
 
 //# Forward Declararations
 class PlotMSApp;
-  //-class PlotMSMultiPlot;
 class PlotMSPlot;
 class PlotMSPlotManagerWatcher;
 class PlotMSPlotParameters;
-  //-class PlotMSSinglePlot;
-class PlotMSIterPlot;
 class PlotMSOverPlot;
 
 
@@ -100,11 +97,6 @@ public:
     // plotter, and returns a pointer to it.  If parameters are given, they are
     // used; otherwise the defaults are used.
     PlotMSOverPlot* addOverPlot(const PlotMSPlotParameters* p = NULL);
-    
-    // These are now deprecated and will throw an exception...
-    PlotMSPlot* addSinglePlot(const PlotMSPlotParameters* p = NULL);
-    PlotMSPlot* addMultiPlot(const PlotMSPlotParameters* p = NULL);
-    PlotMSPlot* addIterPlot(const PlotMSPlotParameters* p = NULL);
 
     // Clears out all plots and canvases.
     void clearPlotsAndCanvases();

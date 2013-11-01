@@ -37,7 +37,7 @@
 #include <plotms/GuiTabs/PlotMSTransformationsTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
-#include <plotms/Plots/PlotMSIterPlot.h>
+#include <plotms/Plots/PlotMSPlot.h>
 #include <QDebug>
 namespace casa {
 
@@ -582,10 +582,8 @@ void PlotMSPlotTab::goClicked() {
         
         if(index == newSinglePlot || index == newMultiPlot) {
             // this will update the go chooser as necessary
-            PlotMSPlot* plot = index == newSinglePlot ?
-                               (PlotMSPlot*)itsPlotManager_.addSinglePlot() :
-                               (PlotMSPlot*)itsPlotManager_.addIterPlot();
-            
+            PlotMSPlot* plot = (PlotMSPlot*)itsPlotManager_.addOverPlot();
+
             // switch to new plot if needed
             if(itsCurrentPlot_ != NULL) {
                 for(unsigned int i = 0; i < itsPlotManager_.numPlots(); i++) {

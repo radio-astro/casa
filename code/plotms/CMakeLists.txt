@@ -169,7 +169,6 @@ casa_add_library( plotms
   PlotMS/PlotMSSelection.cc
   PlotMS/PlotMSTransformations.cc
   PlotMS/PlotMSWatchedParameters.cc
-  Plots/PlotMSIterPlot.cc
   Plots/PlotMSPage.cc
   Plots/PlotMSPlot.cc
   Plots/PlotMSPlotManager.cc
@@ -241,7 +240,6 @@ INSTALL (FILES
 
 INSTALL (FILES
         Plots/PlotMSOverPlot.h
-        Plots/PlotMSIterPlot.h
         Plots/PlotMSPage.h
         Plots/PlotMSPlot.h
         Plots/PlotMSPlotManager.h
