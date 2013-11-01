@@ -245,26 +245,23 @@ namespace casa {
 			double xoffset = size[0] / 2.0;
 			double yoffset = size[1] / 2.0;
 
+			std::tr1::shared_ptr<RegionTool> creator = toolmgr->tool(region::RectRegion);
 			if ( xoffset > 1.0 || yoffset > 1.0 ) {
 				// size is big enough to make a rectangle... perhaps we should require bigger size...
 				// 'width' is the line width... need to thread that through...
-				const RegionCreator::creator_list_type &rect_creators = RegionCreator::findCreator( region::RectRegion );
-				if ( rect_creators.size( ) > 0 && center.size( ) >= 2  && size.size( ) >= 2 ) {
-					std::vector<std::pair<double,double> > pts(2);
-					pts[0].first  = center[0] - xoffset;
-					pts[0].second = center[1] - yoffset;
-					pts[1].first  = center[0] + xoffset;
-					pts[1].second = center[1] + yoffset;
-					rect_creators.front( )->create( region::RectRegion, wc_, pts, text, region::TopText, std::vector<int>(2,0),
-					                                font, 11, 0, color, color, region::SolidLine, 1, false, 0 );
-				}
+				std::vector<std::pair<double,double> > pts(2);
+				pts[0].first  = center[0] - xoffset;
+				pts[0].second = center[1] - yoffset;
+				pts[1].first  = center[0] + xoffset;
+				pts[1].second = center[1] + yoffset;
+				creator->create( region::RectRegion, wc_, pts, text, region::TopText, std::vector<int>(2,0),
+								 font, 11, 0, color, color, region::SolidLine, 1, false, 0 );
 			} else {
-				const RegionCreator::creator_list_type &rect_creators = RegionCreator::findCreator( region::PointRegion );
 				std::vector<std::pair<double,double> > pts(2);
 				pts[0].first  = pts[1].first = center[0];
 				pts[0].second = pts[1].second = center[1];
-				rect_creators.front( )->create( region::PointRegion, wc_, pts, text, region::TopText, std::vector<int>(2,0),
-				                                font, 11, 0, color, color, region::SolidLine, 1, false, 0 );
+				creator->create( region::PointRegion, wc_, pts, text, region::TopText, std::vector<int>(2,0),
+								 font, 11, 0, color, color, region::SolidLine, 1, false, 0 );
 			}
 
 		}
@@ -273,14 +270,12 @@ namespace casa {
 void ds9context::create ## NAME ## Cmd( const Vector& center, int /*size*/, const char* color, int* /*dash*/,		\
 				    int /*width*/, const char* font, const char* text, unsigned short /*prop*/,						\
 				    const char* /*comment*/, const std::list<Tag>& /*tag*/ ) {										\
-    const RegionCreator::creator_list_type &point_creators = RegionCreator::findCreator( region::PointRegion );		\
-    if ( point_creators.size( ) > 0 && center.size( ) >= 2 ) {														\
+    std::tr1::shared_ptr<RegionTool> creator = toolmgr->tool(region::PointRegion);									\
 	std::vector<std::pair<double,double> > pts(2);																	\
 	pts[0].first  = pts[1].first = center[0];																		\
 	pts[0].second = pts[1].second = center[1];																		\
-	point_creators.front( )->create( region::PointRegion, wc_, pts, text, region::TopText, std::vector<int>(2,0),	\
+	creator->create( region::PointRegion, wc_, pts, text, region::TopText, std::vector<int>(2,0),					\
 					 font, 11, 0, color, color, region::SolidLine, 1, false, 0 );									\
-    }																												\
 }
 
 		DEFINE_POINT_COMMAND(BoxPoint)
@@ -296,35 +291,30 @@ void ds9context::create ## NAME ## Cmd( const Vector& center, int /*size*/, cons
 		                                   const char* text, unsigned short /*prop*/, const char* /*comment*/,
 		                                   const std::list<Tag>& /*tag*/ ) {
 			// 'width' is the line width... need to thread that through...
-			const RegionCreator::creator_list_type &ellipse_creators = RegionCreator::findCreator( region::EllipseRegion );
-			if ( ellipse_creators.size( ) > 0 && center.size( ) >= 2  && radius.size( ) >= 2 ) {
-				std::vector<std::pair<double,double> > pts(2);
-				double xoffset = radius[0];
-				double yoffset = radius[1];
-				pts[0].first  = center[0] - xoffset;
-				pts[0].second = center[1] - yoffset;
-				pts[1].first  = center[0] + xoffset;
-				pts[1].second = center[1] + yoffset;
-				ellipse_creators.front( )->create( region::EllipseRegion, wc_, pts, text, region::TopText, std::vector<int>(2,0),
-				                                   font, 11, 0, color, color, region::SolidLine, 1, false, 0 );
-			}
+			std::tr1::shared_ptr<RegionTool> creator = toolmgr->tool(region::EllipseRegion);
+			std::vector<std::pair<double,double> > pts(2);
+			double xoffset = radius[0];
+			double yoffset = radius[1];
+			pts[0].first  = center[0] - xoffset;
+			pts[0].second = center[1] - yoffset;
+			pts[1].first  = center[0] + xoffset;
+			pts[1].second = center[1] + yoffset;
+			creator->create( region::EllipseRegion, wc_, pts, text, region::TopText, std::vector<int>(2,0),
+							 font, 11, 0, color, color, region::SolidLine, 1, false, 0 );
 		}
 
 		void ds9context::createCircleCmd( const Vector& center, double radius, const char* color, int* /*dash*/,
 		                                  int /*width*/, const char* font, const char* text, unsigned short /*prop*/,
 		                                  const char* /*comment*/, const std::list<Tag>& /*tag*/ ) {
 			// 'width' is the line width... need to thread that through...
-			const RegionCreator::creator_list_type &ellipse_creators = RegionCreator::findCreator( region::EllipseRegion );
-			if ( ellipse_creators.size( ) > 0 && center.size( ) >= 2 ) {
-				std::vector<std::pair<double,double> > pts(2);
-				pts[0].first  = center[0] - radius;
-				pts[0].second = center[1] - radius;
-				pts[1].first  = center[0] + radius;
-				pts[1].second = center[1] + radius;
-				ellipse_creators.front( )->create( region::EllipseRegion, wc_, pts, text, region::TopText, std::vector<int>(2,0),
-				                                   font, 11, 0, color, color, region::SolidLine, 1, false, 0 );
-			}
-
+			std::tr1::shared_ptr<RegionTool> creator = toolmgr->tool(region::EllipseRegion);
+			std::vector<std::pair<double,double> > pts(2);
+			pts[0].first  = center[0] - radius;
+			pts[0].second = center[1] - radius;
+			pts[1].first  = center[0] + radius;
+			pts[1].second = center[1] + radius;
+			creator->create( region::EllipseRegion, wc_, pts, text, region::TopText, std::vector<int>(2,0),
+                             font, 11, 0, color, color, region::SolidLine, 1, false, 0 );
 		}
 
 		void ds9context::createPolygonCmd( const Vector& /*center*/, const Vector& /*bb*/, const char* /*color*/, int* /*dash*/,
@@ -335,18 +325,16 @@ void ds9context::create ## NAME ## Cmd( const Vector& center, int /*size*/, cons
 		                                   int /*width*/, const char* font, const char* text, unsigned short /*prop*/,
 		                                   const char* /*comment*/, const std::list<Tag>& /*tag*/ ) {
 			// 'width' is the line width... need to thread that through...
-			const RegionCreator::creator_list_type &poly_creators = RegionCreator::findCreator( region::PolyRegion );
-			if ( poly_creators.size( ) > 0 && verts.size( ) >= 3 ) {
-				int count = 0;
-				std::vector<std::pair<double,double> > pts(verts.size( ));
-				for ( std::list<Vertex>::const_iterator it=verts.begin( ); it != verts.end(); ++it ) {
-					if ( (*it).size( ) < 2 ) return;
-					pts[count].first = (*it)[0];
-					pts[count++].second = (*it)[1];
-				}
-				poly_creators.front( )->create( region::PolyRegion, wc_, pts, text, region::TopText, std::vector<int>(2,0),
-				                                font, 11, 0, color, color, region::SolidLine, 1, false, 0 );
+			std::tr1::shared_ptr<RegionTool> creator = toolmgr->tool(region::PolyRegion);
+			int count = 0;
+			std::vector<std::pair<double,double> > pts(verts.size( ));
+			for ( std::list<Vertex>::const_iterator it=verts.begin( ); it != verts.end(); ++it ) {
+				if ( (*it).size( ) < 2 ) return;
+				pts[count].first = (*it)[0];
+				pts[count++].second = (*it)[1];
 			}
+			creator->create( region::PolyRegion, wc_, pts, text, region::TopText, std::vector<int>(2,0),
+							 font, 11, 0, color, color, region::SolidLine, 1, false, 0 );
 		}
 
 	}

@@ -105,6 +105,7 @@ namespace casa {
 			QtMouseToolNames::PointRegionSymbols marker_;
 
 		private:
+			virtual bool output_region( ds9writer &out, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) const;
 			void draw_arrow( PixelCanvas *, int /*x*/, int /*y*/, int /*xsign*/, int /*ysign*/,
 			                 int /*scale_unit*/, int /*scale*/ );
 

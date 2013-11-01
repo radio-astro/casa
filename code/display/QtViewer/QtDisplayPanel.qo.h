@@ -565,6 +565,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		virtual void setBlen_(Int len);
 
+		viewer::RegionToolManager *toolMgr( ) { return toolmgr; }
 
 	signals:
 
