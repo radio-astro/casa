@@ -20,23 +20,29 @@ class Scan(object):
         self.states = set(states)
         self.data_descriptions = set(data_descriptions)
         
-        self.scan_times = {}
+        sorted_scan_times = {}
         for dd, dd_times in scan_times.items():
-            self.scan_times[dd] = sorted(dd_times,
-                                         key=lambda t:utils.get_epoch_as_datetime(t[0]))
+            sorted_scan_times[dd] = sorted(dd_times,
+                                           key=lambda t:utils.get_epoch_as_datetime(t[0]))
 
         # set start time as earliest time over all data descriptions
-        min_times = sorted([v[0] for v in self.scan_times.values()],
+        min_times = sorted([v[0] for v in sorted_scan_times.values()],
                            key=lambda t:utils.get_epoch_as_datetime(t[0]))
         self.__start_time = min_times[0][0]
         
         # set end time as latest time over all data descriptions
-        max_times = sorted([v[-1] for v in self.scan_times.values()],
+        max_times = sorted([v[-1] for v in sorted_scan_times.values()],
                             key=lambda t:utils.get_epoch_as_datetime(t[1]))
         self.__end_time = max_times[-1][1]
 
+        # calculate mean intervals for each spectral window observed by this scan
+        spw_ids = [dd.spw.id for dd in data_descriptions]
+        self.__mean_intervals = dict((spw_id, 
+                                      self.__calculate_mean_interval(sorted_scan_times, 
+                                                                     spw_id))
+                                     for spw_id in spw_ids)
+
     def __repr__(self):
-        mt = casatools.measures
         return ('<Scan #{id}: intents=\'{intents}\' start=\'{start}\' '
                 'end=\'{end}\' duration=\'{duration}\'>'.format(
                     id=self.id,
@@ -63,8 +69,11 @@ class Scan(object):
         return end - start
 
     def mean_interval(self, spw_id):
+        return self.__mean_intervals[spw_id]
+
+    def __calculate_mean_interval(self, scan_times, spw_id):
         """
-        Return the mean interval for this scan for the given spectral window.
+        Calculate the mean interval for this scan for the given spectral window.
         """         
         dds_with_spw = [dd for dd in self.data_descriptions
                         if spw_id == dd.spw.id]
@@ -79,10 +88,12 @@ class Scan(object):
                                         '%s but got %s' % (spw_id, 
                                                            len(dds_with_spw)))
 
-        times_for_spw = self.scan_times[dds_with_spw[0]]
+        times_for_spw = scan_times[dds_with_spw[0]]
         start = utils.get_epoch_as_datetime(times_for_spw[0][0])
         end = utils.get_epoch_as_datetime(times_for_spw[-1][1])
-        return (end - start) / len(times_for_spw)
+        mean = (end - start) / len(times_for_spw)
+        print 'start:%s end:%s mean:%s' % (start, end, mean)
+        return mean
 
     @property
     def spws(self):
