@@ -26,8 +26,29 @@ $(document).ready(function() {
         var spw = o.data("spw");
         o.data("callback", createSpwSetter(spw));
     });
+
+    $(".fancybox").fancybox({
+        type: 'image',
+        prevEffect: 'none',
+        nextEffect: 'none',
+        loop: false,
+        helpers: {
+            title: {
+                type: 'outside'
+            },
+            thumbs: {
+                width: 50,
+                height: 50,
+            }
+        }
+    });
 });
 </script>
+
+<p>This task generates a T<sub>sys</sub> calibration table, mapping each 
+science spectral window to the T<sub>sys</sub> window that overlaps in 
+frequency.</p>
+
 <h2>Plots</h2>
 % for ms in summary_plots:
     <h4><a class="replace"
@@ -38,17 +59,23 @@ $(document).ready(function() {
             % if os.path.exists(plot.thumbnail):
             <li class="span3">
                 <div class="thumbnail">
-                    <a href="${os.path.relpath(os.path.join(dirname, 'tsys_%s.html' % ms), pcontext.report_dir)}"
-                       class="replace"
-                       data-spw="${plot.parameters['spw']}">
+                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+                       class="fancybox"
+                       rel="tsys-summary-${ms}">
                         <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                             title="Click to show Tsys plots for Spectral Window ${plot.parameters['spw']}"
+                             title="T<sub>sys</sub> summary for Spectral Window ${plot.parameters['spw']}"
                              data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
                         </img>
                     </a>
 
                     <div class="caption">
-                        <h4>Spectral Window ${plot.parameters['spw']}</h4>
+                    	<h4>
+							<a href="${os.path.relpath(os.path.join(dirname, 'tsys_%s.html' % ms), pcontext.report_dir)}"
+	                       	   class="replace"
+	                           data-spw="${plot.parameters['spw']}">
+	                           Spectral Window ${plot.parameters['spw']}
+	                        </a>
+                        </h4>
 
                         <p>Plot of time-averaged T<sub>sys</sub> for spectral
                             window ${plot.parameters['spw']} (T<sub>sys</sub>
