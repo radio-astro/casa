@@ -37,6 +37,7 @@
 
 #include <imageanalysis/Annotations/AnnSymbol.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
+#include <display/ds9/ds9writer.h>
 
 namespace casa {
 	namespace viewer {
@@ -317,6 +318,11 @@ namespace casa {
 			// just accelerates matters (MK)
 			return new std::list<std::tr1::shared_ptr<RegionInfo> >( );
 		}
+
+		bool Point::output_region( ds9writer &out, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) const {
+			return out.point(wc_,pts);
+		}
+
 	}
 
 }

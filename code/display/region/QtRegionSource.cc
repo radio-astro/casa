@@ -324,7 +324,7 @@ namespace casa {
 					if ( type.compare("CASA region file") == 0 ) {
 						load_crtf_regions( wc_, path );
 					} else if ( type.compare("DS9 region file") == 0 ) {
-						casa::viewer::ds9context context( wc_ );
+						casa::viewer::ds9context context( wc_, panel_->displayPanel( )->toolMgr( ) );
 						casa::viewer::ds9parser parser;
 						parser.parse_file( context, path.toAscii( ).constData( ) );
 					} else {
