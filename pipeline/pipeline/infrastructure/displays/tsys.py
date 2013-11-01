@@ -59,9 +59,9 @@ class TsysSummaryChart(object):
 
         figfile = self.get_figfile()
 
-        # plotbandpass injects spw ID and t0 into every plot filename
+        # plotbandpass injects spw ID and t00 into every plot filename
         root, ext = os.path.splitext(figfile)
-        real_figfile = '%s.spw%0.2d.t0%s' % (root, tsys_spw, ext)
+        real_figfile = '%s.spw%0.2d.t00%s' % (root, tsys_spw, ext)
         
         wrapper = logger.Plot(real_figfile,
                               x_axis='freq',
