@@ -85,6 +85,12 @@ namespace casa{
     ctmp.put(theImg);
   }
   void storeArrayAsImage(String fileName, const CoordinateSystem& coord,
+			 const Array<DComplex>& theImg)
+  {
+    PagedImage<DComplex> ctmp(theImg.shape(), coord, fileName);
+    ctmp.put(theImg);
+  }
+  void storeArrayAsImage(String fileName, const CoordinateSystem& coord,
 			 const Array<Float>& theImg)
   {
     PagedImage<Float> ctmp(theImg.shape(), coord, fileName);

@@ -426,6 +426,8 @@ namespace casa{
     rbeg = vbs.beginRow_p;
     rend = vbs.endRow_p;
     
+    //    cerr << "gridshape = " << grid.shape() << " ";
+
     nx = grid.shape()[0]; ny = grid.shape()[1]; 
     nGridPol = grid.shape()[2]; nGridChan = grid.shape()[3];
 
@@ -567,6 +569,8 @@ namespace casa{
 		      timer_p.mark();
 		      sgrid(pos,loc,off, phasor, irow, vbs.uvw_p, dphase_p[irow], freq[ichan], 
 			    uvwScale_p, offset_p, sampling);
+
+
 		      runTimeG5_p += timer_p.real();
 		      
 		      if (onGrid(nx, ny, nw, loc, support)) 
@@ -593,6 +597,7 @@ namespace casa{
 				      norm = 0.0;
 				      // Loop over all relevant elements of the Mueller matrix for the polarization
 				      // ipol.
+
 				      for (uInt mRow=0;mRow<conjMNdx[ipol].nelements(); mRow++) 
 					{
 					  Complex* convFuncV;
@@ -620,6 +625,9 @@ namespace casa{
 					  // file (FortanizedLoopsToGrid.cc) has the interface code to call the inner 
 					  // loops re-written in FORTRAN (in synthesis/fortran/faccumulateOnGrid.f)
 
+					  // if (ichan==32) cout << irow << " " << ichan << " " << vbs.uvw_p(0,irow) << " " << vbs.uvw_p(1,irow)
+					  //      << " " << pos[0] << " " <<  pos[1] << " " << " " << loc[0] << " " << loc[1]
+					  //      << " " << phasor << " " << nvalue << endl;
 timer_p.mark();
 					  // norm += accumulateOnGrid(grid,convFuncV,nvalue,dataWVal,
 					  // 			   support,sampling,
@@ -641,7 +649,7 @@ runTimeG7_p += timer_p.real();
 	    } // End chan-loop
 	}
     } // End row-loop
-    // exit(0);
+    //    if (max(sumwt) > 0) exit(0);
     runTimeG_p = timer_p.real() + runTimeG1_p + runTimeG2_p + runTimeG3_p + runTimeG4_p + runTimeG5_p + runTimeG6_p + runTimeG7_p;
     T *tt=(T *)gridStore;
     grid.putStorage(tt,gDummy);

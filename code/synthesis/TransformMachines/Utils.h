@@ -54,6 +54,7 @@ namespace casa
   void storeImg(String fileName,ImageInterface<Complex>& theImg, Bool writeReIm=False);
   void storeImg(String fileName,ImageInterface<Float>& theImg);
   void storeArrayAsImage(String fileName, const CoordinateSystem& coords, const Array<Complex>& cf);
+  void storeArrayAsImage(String fileName, const CoordinateSystem& coords, const Array<DComplex>& cf);
   void storeArrayAsImage(String fileName, const CoordinateSystem& coords, const Array<Float>& cf);
 			 
   Bool isVBNaN(const VisBuffer& vb, String& mesg);

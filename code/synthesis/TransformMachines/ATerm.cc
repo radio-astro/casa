@@ -36,6 +36,29 @@
 //
 namespace casa{
   
+  ATerm::ATerm()
+  : CFTerms()
+  {
+    Int userValue;
+
+    cachedOverSampling_p=OVERSAMPLING;
+    userValue = SynthesisUtils::getenv("ATerm.OVERSAMPLING",OVERSAMPLING);
+    if (userValue != cachedOverSampling_p)
+      {
+	cachedOverSampling_p = userValue;
+	cerr << "Oversampling set to " << cachedOverSampling_p << endl;
+      }
+
+
+    cachedConvSize_p=CONVSIZE;
+    userValue = SynthesisUtils::getenv("ATerm.CONVSIZE",CONVSIZE);
+    if (userValue != cachedConvSize_p)
+      {
+	cachedConvSize_p = userValue;
+	cerr << "ConvFuncSize set to " << cachedConvSize_p << endl;
+      }
+  };
+
   Int ATerm::makePBPolnCoords(const VisBuffer&vb,
 			      const Int& convSize,
 			      const Int& convSampling,
@@ -98,27 +121,29 @@ namespace casa{
     return NPol;
   }
 
-  Int ATerm::getConvSize() 
+  inline Int ATerm::getConvSize() 
   {
-    Int defaultConvSize=CONVSIZE, userValue;
-    userValue = SynthesisUtils::getenv("ATerm.CONVSIZE",CONVSIZE);
-    if (userValue != defaultConvSize)
-      {
-	defaultConvSize = userValue;
-	cerr << "ConvFuncSize set to " << defaultConvSize << endl;
-      }
-    return defaultConvSize;
+    return cachedConvSize_p;
+    // Int defaultConvSize=CONVSIZE, userValue;
+    // userValue = SynthesisUtils::getenv("ATerm.CONVSIZE",CONVSIZE);
+    // if (userValue != defaultConvSize)
+    //   {
+    // 	defaultConvSize = userValue;
+    // 	cerr << "ConvFuncSize set to " << defaultConvSize << endl;
+    //   }
+    // return defaultConvSize;
   };
 
-  Int ATerm::getOversampling() 
+  inline Int ATerm::getOversampling() 
   {
-    Int defaultOversampling=OVERSAMPLING, userValue;
-    userValue = SynthesisUtils::getenv("ATerm.OVERSAMPLING",OVERSAMPLING);
-    if (userValue != defaultOversampling)
-      {
-	defaultOversampling = userValue;
-	cerr << "Oversampling set to " << defaultOversampling << endl;
-      }
-    return defaultOversampling;
+    return cachedOverSampling_p;
+    // Int defaultOversampling=OVERSAMPLING, userValue;
+    // userValue = SynthesisUtils::getenv("ATerm.OVERSAMPLING",OVERSAMPLING);
+    // if (userValue != defaultOversampling)
+    //   {
+    // 	defaultOversampling = userValue;
+    // 	cerr << "Oversampling set to " << defaultOversampling << endl;
+    //   }
+    // return defaultOversampling;
   }
 };

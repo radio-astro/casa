@@ -491,27 +491,28 @@ namespace casa{
     Int n=cfCells_p.nelements();
     if (doAlloc) st.CFBStorage = (CFCStruct *)malloc(n*sizeof(CFCStruct));
     CountedPtr<CFCell> *cfstore=cfCells_p.getStorage(dummy);
-    for (int i=0;i<n;i++)
+    for (Int i=0;i<n;i++)
       {
 	//	  st.CFBStorage[i]=(CFCStruct *)malloc(sizeof(CFCStruct));
 	(cfstore[i]).operator->()->getAsStruct(st.CFBStorage[i]);
       }
     //	st.CFBStorage[i] = (cfstore[i]).operator->()->getStorage()->getStorage(dummy);
     
-    if (doAlloc) st.pointingOffset=(Double *)malloc(pointingOffset_p.nelements());
-    for (int i=0;i<pointingOffset_p.nelements();i++) st.pointingOffset[i]=pointingOffset_p[i];
+    if (doAlloc) st.pointingOffset=(Double *)malloc(pointingOffset_p.nelements()*sizeof(Double));
+    for (uInt i=0;i<pointingOffset_p.nelements();i++) st.pointingOffset[i]=pointingOffset_p[i];
 
-    if (doAlloc) st.freqValues=(Double *)malloc(freqValues_p.nelements());
-    for (int i=0;i<freqValues_p.nelements();i++) st.freqValues[i]=freqValues_p[i];
+    if (doAlloc) st.freqValues=(Double *)malloc(freqValues_p.nelements()*sizeof(Double));
+    for (uInt i=0;i<freqValues_p.nelements();i++) st.freqValues[i]=freqValues_p[i];
 
-    if (doAlloc) st.wValues=(Double *)malloc(wValues_p.nelements());
-    for (int i=0;i<wValues_p.nelements();i++) st.wValues[i]=wValues_p[i];
+    if (doAlloc) st.wValues=(Double *)malloc(wValues_p.nelements()*sizeof(Double));
+    for (uInt i=0;i<wValues_p.nelements();i++) st.wValues[i]=wValues_p[i];
 
     ASSIGNVVofI(st.muellerElements, muellerElements_p, doAlloc);
     ASSIGNVVofI(st.muellerElementsIndex, muellerElementsIndex_p,doAlloc);
     ASSIGNVVofI(st.conjMuellerElements, conjMuellerElements_p,doAlloc);
     ASSIGNVVofI(st.conjMuellerElementsIndex, conjMuellerElementsIndex_p,doAlloc);
 
+    //    cerr << "muellerElementsIndex_p = " << muellerElementsIndex_p << " " << conjMuellerElementsIndex_p << endl;
     st.nMueller = muellerElements_p.nelements();
     
     Vector<Vector<Int> > freqNdx, conjFreqNdx;

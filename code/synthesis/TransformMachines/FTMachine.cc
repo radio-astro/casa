@@ -1161,7 +1161,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool useCorrected= !(vi.msColumns().correctedData().isNull());
     if((type==FTMachine::CORRECTED) && (!useCorrected))
       type=FTMachine::OBSERVED;
-    cerr << "Type0 " << type << endl;
+
     // Loop over the visibilities, putting VisBuffers
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin(); vi.more(); vi++) {

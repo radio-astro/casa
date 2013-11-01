@@ -32,6 +32,7 @@
 #include <synthesis/TransformMachines/CFStore.h>
 #include <synthesis/TransformMachines/VBStore.h>
 #include <synthesis/TransformMachines/VisibilityResampler.h>
+#include <synthesis/TransformMachines/cDataToGridImpl.h>
 #include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
@@ -45,11 +46,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
   public: 
     ProtoVR(): VisibilityResampler(),
-		      cached_phaseGrad_p(),
-                      cached_PointingOffset_p()
-    {cached_PointingOffset_p.resize(2);cached_PointingOffset_p=-1000.0;runTimeG_p=runTimeDG_p=0.0;};
+	       cached_phaseGrad_p(),
+	       cached_PointingOffset_p(), vbStore_p(), myBLCX(), myTRCX(), myBLCY(), myTRCY()
+    {cached_PointingOffset_p.resize(2);cached_PointingOffset_p=-1000.0;runTimeG_p=runTimeDG_p=0.0; vbStore_p.init();
+      griddedData_dptr=NULL, griddedData2_dptr=NULL, sumWt_dptr=NULL; gridShape_dptr=NULL;subGridShape_dptr=NULL; gridHits_dptr=NULL;};
     //    ProtoVR(const CFStore& cfs): VisibilityResampler(cfs)      {}
     virtual ~ProtoVR()                                         {};
+
+    void setGridder(ComplexGridder fC, DComplexGridder fD) 
+    {
+      complexGridder_ptr=fC; dcomplexGridder_ptr=fD;
+      cerr << "fC = " << &complexGridder_ptr << " fD = " << &dcomplexGridder_ptr << endl;
+    };
 
     virtual VisibilityResamplerBase* clone()
     {return new ProtoVR(*this);}
@@ -154,6 +162,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void GridToData(VBStore& vbs,const Array<Complex>& griddedData); 
     //    virtual void GridToData(VBStore& vbs, Array<Complex>& griddedData); 
   protected:
+    void initializePutBuffers(const Array<DComplex>& /*griddedData*/,
+				      const Matrix<Double>& /*sumwt*/) 
+    {// cerr << "### Send DImage Bufs to device" << endl;
+    }
+
+    void initializePutBuffers(const Array<Complex>& /*griddedData*/,
+				      const Matrix<Double>& /*sumwt*/)
+    {// cerr << "### Send Image Bufs to device" << endl;
+    }
+
+    void initializeDataBuffers(VBStore& /*vbs*/);
+
     virtual Complex getConvFuncVal(const Cube<Double>& convFunc, const Matrix<Double>& uvw, 
 				   const Int& irow, const Vector<Int>& pixel)
     {
@@ -198,11 +218,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   const Complex* convFuncV, 
 			   const Int *cfInc_p,
 			   Complex nvalue,Double wVal, 
-			   Int* scaledSupport_ptr, Float* scaledSampling_ptr, 
+			   Int *supBLC_ptr, Int *supTRC_ptr,//Int* scaledSupport_ptr, 
+			   Float* scaledSampling_ptr, 
 			   Double* off_ptr, Int* convOrigin_ptr, 
 			   Int* cfShape, Int* loc_ptr, Int* iGrdpos_ptr,
 			   Bool finitePointingOffset,
-			   Bool doPSFOnly);
+			   Bool doPSFOnly, Bool& foundPeak);
   template <class T>
   void accumulateFromGrid(T& nvalue, const T* __restrict__& grid, 
   			  Vector<Int>& iGrdPos,
@@ -215,11 +236,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   			  Double& sinDPA, Double& cosDPA,
   			  Bool& finitePointingOffset, 
   			  Matrix<Complex>& cached_phaseGrad_p);
+    
+    void DataToGrid(Array<DComplex>& griddedData, VBStore& vbs, Matrix<Double>& sumwt,
+		    const Bool& dopsf,Bool useConjFreqCF=False);
+    void DataToGrid(Array<Complex>& griddedData, VBStore& vbs, Matrix<Double>& sumwt,
+    		    const Bool& dopsf,Bool useConjFreqCF=False);
 
-    virtual void DataToGrid(Array<DComplex>& griddedData, VBStore& vbs, Matrix<Double>& sumwt,
-    			    const Bool& dopsf,Bool useConjFreqCF=False);
-    virtual void DataToGrid(Array<Complex>& griddedData, VBStore& vbs, Matrix<Double>& sumwt,
-			    const Bool& dopsf,Bool useConjFreqCF=False);
     //
     //------------------------------------------------------------------------------
     //----------------------------Private parts-------------------------------------
@@ -235,7 +257,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int gridInc_p[4], cfInc_p[4];
     Matrix<Complex> cached_phaseGrad_p;
     Vector<Double> cached_PointingOffset_p;
+    VBStore vbStore_p;
 
+    Complex *griddedData_dptr;
+    DComplex *griddedData2_dptr;
+    Int *gridShape_dptr; uInt *subGridShape_dptr;
+    Double *sumWt_dptr;
+    Int *polMap_dptr, *chanMap_dptr, *gridHits_dptr;
+    Double *uvwScale_dptr, *offset_dptr, *dphase_dptr;
+
+    Matrix<uInt> myBLCX, myBLCY, myTRCX, myTRCY;
+
+    Bool computeSupport(const VBStore& vbs, 
+			const Int& XThGrid, const Int& YThGrid,
+			const Int support[2], const Float sampling[2],
+			const Double pos[2], const Int loc[3],
+			Float iblc[2], Float itrc[2]);
     //
     // Re-sample the griddedData on the VisBuffer (a.k.a de-gridding).
     //
@@ -243,16 +280,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void DataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
 			  VBStore& vbs, 
 			  Matrix<Double>& sumwt,
-			  const Bool& dopsf
+			  const Bool& dopsf,
+			  Int XThGrid=0, Int YThGrid=0
 			  // Int& rowBegin, Int& rowEnd,
 			  // Int& startChan, Int& endChan,
 			  // Int& nDataPol, Int& nDataChan,
 			  // Int& vbSpw,
 			  // const Bool accumCFs
 			  );
+    template <class T>
+    void cudaDataToGridImpl_p(Array<T>& griddedData, 
+			      VBStore& vbs, Matrix<Double>& sumwt,
+			      const Bool dopsf,
+			      const Int* polMap_ptr, const Int *chanMap_ptr,
+			      const Double *uvwScale_ptr, const Double *offset_ptr,
+			      const Double *dphase_ptr, Int XThGrid, Int YThGrid);
     // void DataToGridImpl_p(Array<T>& griddedData, VBStore& vb,  
     // 			  Matrix<Double>& sumwt,const Bool& dopsf,
     // 			  Bool /*useConjFreqCF*/);
+
+    virtual void GatherGrids(Array<DComplex>& griddedData, Matrix<Double>& sumwt);
+    virtual void GatherGrids(Array<Complex>& griddedData, Matrix<Double>& sumwt);
 
     void sgrid(Double pos[2], Int loc[3], Double off[3], 
     	       Complex& phasor, const Int& irow, const Matrix<Double>& uvw, 
@@ -359,6 +407,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // 			  const Vector<Int>& convOrigin,
     // 			  const Double& cfRefFreq,
     // 			  const Double& imRefFreq);
+    ComplexGridder complexGridder_ptr; 
+    DComplexGridder dcomplexGridder_ptr;
   };
 }; //# NAMESPACE CASA - END
 

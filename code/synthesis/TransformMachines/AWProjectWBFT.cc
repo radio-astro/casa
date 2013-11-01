@@ -582,7 +582,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // This calls the overloadable method normalizeImage() which
     // normalizes the raw image by the sensitivty pattern (avgPB_p).
     //
+    Timer tim;
+    tim.mark();
     AWProjectFT::getImage(weights,fftNormalization);
+    log_l << "getImage time = " << tim.all() << endl;
+    log_l << "Run time = " << runTime1_p << endl;
+    runTime1_p=0.0;
     // if (makingPSF)
     //   {
     //     String name("psf.im");
@@ -1373,7 +1378,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 << " C " << runTime1_p 
     	 << endl;
     visResampler_p->runTimeG_p=visResampler_p->runTimeG1_p=visResampler_p->runTimeG2_p=visResampler_p->runTimeG3_p=visResampler_p->runTimeG4_p=visResampler_p->runTimeG5_p=visResampler_p->runTimeG6_p=visResampler_p->runTimeG7_p=0.0;
-    runTime1_p=0;
+    //    runTime1_p=0;
   }
   //
   //---------------------------------------------------------------
@@ -1385,6 +1390,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Grid the weighted convolution function as well
     //
     LogIO log_l(LogOrigin("AWProjectFT", "resampleCFToGrid[R&D]"));
+    //    log_l << "Doing CF accumulation" << LogIO::POST;
+    //    return;
     //
     // Now rotate and put the rotated convolution weight function
     // in rotatedCFWts_l object.
@@ -1418,8 +1425,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // wtsGrid.get(gwts, removeDegenerateAxis);
     Int nDataChan = vbs.flagCube_p.shape()[1];
     
+    //    cerr << sumCFWeight << endl;
     vbs.startChan_p = 0; vbs.endChan_p = nDataChan;
-    visResamplerWt_p->DataToGrid(gwts, vbs, sumCFWeight, dopsf_l); 
+    for (Int i=0;i<sumCFWeight.shape()(0);i++)
+      for (Int j=0;j<sumCFWeight.shape()(1);j++)
+    	if (sumCFWeight(i,j) == 0.0)
+	  visResamplerWt_p->DataToGrid(gwts, vbs, sumCFWeight, dopsf_l); 
   }
   //
   //---------------------------------------------------------------
@@ -1428,7 +1439,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					 VBStore& vbs, const VisBuffer& vb, 
 					 Bool& dopsf) 
   {
+    Timer tim;
     AWProjectFT::resampleDataToGrid(griddedData_l,vbs,vb,dopsf);
+    tim.mark();
+    runTime1_p+=tim.all();
     if (!avgPBReady_p)
       {
 	//

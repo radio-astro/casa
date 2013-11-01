@@ -105,7 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   struct CFBStruct {
     CFCStruct *CFBStorage;
-    int shape[3];
+    int shape[3]; // nchan x nW x nPol
     Double *freqValues, *wValues, *pointingOffset;
     Double fIncr, wIncr;
     Int **muellerElementsIndex, **muellerElements, 

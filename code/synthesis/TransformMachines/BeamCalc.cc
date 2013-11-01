@@ -44,6 +44,13 @@
 #ifdef HAS_OMP
 #include <omp.h>
 #endif
+#if ((__GNUC__ >= 4) && (__GNUC_MINOR__ >= 4))
+#define GCC44x 1
+#else
+#define GCC44x 0
+#endif
+
+
 using namespace std;
 namespace casa{
 
@@ -1783,7 +1790,7 @@ namespace casa{
       {
 	for(i = 0; i < nx; i++)
 	  {
-	    computePixelValues(ap, a, p, L0, Er, El, i,j,whichPoln);
+	    computePixelValues(ap, a, p, L0, Er, El, i,j,localWhichPoln);
 	  }
       }
     }

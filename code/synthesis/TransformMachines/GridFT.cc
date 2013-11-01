@@ -700,7 +700,6 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   Matrix<Float> elWeight;
   interpolateFrequencyTogrid(vb, *imagingweight,data, flags, elWeight, type);
 
-
   Bool iswgtCopy;
   const Float *wgtStorage;
   wgtStorage=elWeight.getStorage(iswgtCopy);

@@ -131,8 +131,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // These are no-ops for unithreaded samplers.
     //
     virtual void init(const Bool& doublePrecision) {(void)doublePrecision;};
-    virtual void GatherGrids(Array<DComplex>& griddedData, Matrix<Double>& sumwt) {(void)griddedData;(void)sumwt;};
-    virtual void GatherGrids(Array<Complex>& griddedData, Matrix<Double>& sumwt) {(void)griddedData;(void)sumwt;};
+    virtual void GatherGrids(Array<DComplex>& griddedData, Matrix<Double>& sumwt) {cerr << "DGG" << endl; (void)griddedData;(void)sumwt;};
+    virtual void GatherGrids(Array<Complex>& griddedData, Matrix<Double>& sumwt) {cerr << " GG" << endl; (void)griddedData;(void)sumwt;};
     virtual void initializePutBuffers(const Array<DComplex>& griddedData,
 				      const Matrix<Double>& sumwt) {(void)griddedData;(void)sumwt;};
     virtual void initializePutBuffers(const Array<Complex>& griddedData,

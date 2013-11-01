@@ -34,7 +34,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class VBStore
   {
   public:
-    VBStore():dopsf_p(False) {};
+    VBStore():dopsf_p(False) {visCube_dptr=NULL;}
     ~VBStore() {};
     inline Int nRow()              {return nRow_p;};
     inline Int beginRow()          {return beginRow_p;}
@@ -53,6 +53,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Quantity pa()                  {return paQuant_p;}
     const VisBuffer& vb()          {return *vb_p;}
     Double imRefFreq()             {return imRefFreq_p;}
+
+    void init() {visCube_dptr=NULL;nRow_p=beginRow_p=endRow_p=0;dataShape.resize(0);convFunc[0]=convFunc[1]=NULL;}
 
     void reference(const VBStore& other)
     {
@@ -103,6 +105,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CFBStruct cfBSt_p;
     Bool accumCFs_p;
     Matrix<uInt> BLCXi, BLCYi, TRCXi, TRCYi;
+    IPosition dataShape;
+    //
+    //======================================================
+    //
+    Int *corrType_dptr, *antenna1_dptr, *antenna2_dptr;
+    Bool *rowFlag_dptr;
+    Double *vbFreq_dptr;
+    
+    Complex *visCube_dptr, *modelCube_dptr, *correctedCube_dptr;
+    Bool *flagCube_dptr;
+    
+    Double *uvw_mat_dptr;
+    Float *imagingWeight_mat_dptr;
+    uInt *BLCXi_mat_dptr, *BLCYi_mat_dptr, *TRCXi_mat_dptr, *TRCYi_mat_dptr;
+    CFBStruct *cfBStr_dptr;
+    Float *sampling_dptr;
+    Int *support_dptr;
+    Complex *convFunc[2];
+    Complex **convFunc_dptr;
+    Int *cfShape_dptr;
+    Int *subGridShape_dptr, *gridShape_dptr;
+    Double *sumWt_dtpr;
   };
 
 } //# NAMESPACE CASA - END
