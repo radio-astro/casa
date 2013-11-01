@@ -85,9 +85,9 @@ def commafy(l, quotes=True, multi_prefix='', separator=', ', conjunction='and'):
             return '%s%s %s %s' % (multi_prefix, l[0], conjunction, l[1])
     else:
         if quotes:
-            return '%s\'%s\'%s%s' % (multi_prefix, l[0], separator, commafy(l[1:], separator=separator, quotes=quotes))
+            return '%s\'%s\'%s%s' % (multi_prefix, l[0], separator, commafy(l[1:], separator=separator, quotes=quotes, conjunction=conjunction))
         else: 
-            return '%s%s%s%s' % (multi_prefix, l[0], separator, commafy(l[1:], separator=separator, quotes=quotes))
+            return '%s%s%s%s' % (multi_prefix, l[0], separator, commafy(l[1:], separator=separator, quotes=quotes, conjunction=conjunction))
 
 def find_ranges(data):
     if isinstance(data, str):
