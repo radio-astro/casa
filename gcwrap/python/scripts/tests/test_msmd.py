@@ -105,6 +105,15 @@ class msmd_test(unittest.TestCase):
         got = self.md.antennaids([names[4], names[0], names[7]])
         self.assertTrue((got == expec).all())
         
+        got = self.md.antennaids()        
+        expec = range(self.md.nantennas())
+        self.assertTrue((got == expec).all())
+        
+        got = self.md.antennaids(["DV12", "DA*", "DV1*"])
+        expec =  [ 8, 0,  1,  7,  9, 10, 11, 12, 13, 14]
+        self.assertTrue((got == expec).all())
+
+        
     def test_chanavgspws(self):
         """Test chanavgspws()"""
         got = self.md.chanavgspws()

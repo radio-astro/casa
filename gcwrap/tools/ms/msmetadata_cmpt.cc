@@ -135,7 +135,12 @@ vector<int> msmetadata::antennaids(const variant& names) {
 	_FUNC(
 		vector<String> myNames;
 		variant::TYPE type = names.type();
-		if (type == variant::STRING) {
+		if (type == variant::BOOLVEC) {
+			Vector<Int> x(_msmd->nAntennas());
+			indgen(x, 0);
+			return x.tovector();
+		}
+		else if (type == variant::STRING) {
 			myNames.push_back(names.toString());
 		}
 		else if (type == variant::STRINGVEC) {
@@ -145,7 +150,32 @@ vector<int> msmetadata::antennaids(const variant& names) {
 			*_log << "Unsupported type for parameter names. Must be either a string or string array"
 				<< LogIO::EXCEPTION;
 		}
-		return _vectorUIntToVectorInt(_msmd->getAntennaIDs(myNames));
+
+		vector<String> allNames COMMA foundNames;
+		set<String> foundSet;
+		foreach_(String name, myNames) {
+			Bool expand = name.find('*') != std::string::npos;
+			if (expand) {
+				if (allNames.empty()) {
+					std::map<String COMMA uInt> namesToIDsMap;
+					allNames = _msmd->getAntennaNames(namesToIDsMap);
+				}
+				vector<String> matches = _match(allNames, name);
+				foreach_(String match, matches) {
+					if (foundSet.find(match) == foundSet.end()) {
+						foundNames.push_back(match);
+						foundSet.insert(match);
+					}
+				}
+			}
+			else {
+				if (foundSet.find(name) == foundSet.end()) {
+					foundNames.push_back(name);
+					foundSet.insert(name);
+				}
+			}
+		}
+		return _vectorUIntToVectorInt(_msmd->getAntennaIDs(foundNames));
 	)
 	return vector<int>();
 }
@@ -154,7 +184,10 @@ vector<string> msmetadata::antennanames(const variant& antennaids) {
 	_FUNC(
 		vector<uInt> myIDs;
 		variant::TYPE type = antennaids.type();
-		if (type == variant::INT) {
+		if (type == variant::BOOLVEC) {
+			// do nothing, all names will be returned.
+		}
+		else if (type == variant::INT) {
 			Int id = antennaids.toInt();
 			if (id < 0) {
 				*_log << "Antenna ID must be nonnegative."
@@ -467,7 +500,7 @@ vector<int> msmetadata::fdmspws() {
 variant* msmetadata::fieldsforintent(
 	const string& intent, const bool asnames
 ) {
-	//_FUNC(
+	_FUNC(
 		std::set<Int> ids;
 		Bool expand = intent.find('*') != std::string::npos;
 		if (expand) {
@@ -491,7 +524,7 @@ variant* msmetadata::fieldsforintent(
 				: new variant(_setIntToVectorInt(ids));
 		}
 		return x;
-	//)
+	)
 	return 0;
 }
 
@@ -1103,7 +1136,7 @@ void msmetadata::_checkPolId(int id, bool throwIfNegative) const {
 
 std::set<Int> msmetadata::_idsFromExpansion(
 	const std::map<String, std::set<Int> >& mymap, const String& matchString
-) const {
+) {
 	std::set<Int> ids;
 	boost::regex re;
 	re.assign(_escapeExpansion(matchString));
@@ -1117,7 +1150,7 @@ std::set<Int> msmetadata::_idsFromExpansion(
 
 std::set<Int> msmetadata::_idsFromExpansion(
 	const std::map<String, std::set<uInt> >& mymap, const String& matchString
-) const {
+) {
 	std::set<Int> ids;
 	boost::regex re;
 	re.assign(_escapeExpansion(matchString));
@@ -1127,6 +1160,21 @@ std::set<Int> msmetadata::_idsFromExpansion(
 		}
 	}
 	return ids;
+}
+
+
+std::vector<casa::String> msmetadata::_match(
+	const vector<casa::String>& candidates, const casa::String& matchString
+) {
+	vector<casa::String> matches;
+	boost::regex re;
+	re.assign(_escapeExpansion(matchString));
+	foreach_(casa::String candidate, candidates) {
+		if (boost::regex_match(candidate, re)) {
+			matches.push_back(candidate);
+		}
+	}
+	return matches;
 }
 
 std::string msmetadata::_escapeExpansion(const casa::String& stringToEscape) {
