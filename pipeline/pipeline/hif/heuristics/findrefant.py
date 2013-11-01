@@ -481,7 +481,7 @@ class RefAntGeometry:
 		# MSes.  Therefore, these names will be capitalized here.
 
 		rRow = range( len( info['name'] ) )
-		for r in rRow: info['name'][r] = info['name'][r].upper()
+		#for r in rRow: info['name'][r] = info['name'][r].upper()
 
 
 		# Return the antenna information
