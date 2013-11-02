@@ -274,14 +274,14 @@ void plotms::setPlotMSIterate(const std::string& iteraxis,
     PlotMSIterParam iter;
     
     iter.setIterAxis(iteraxis);
-    if (iteraxis=="") {
+    /*if (iteraxis=="") {
       iter.setXSelfScale(False);
       iter.setYSelfScale(False);
     }
     else {
       iter.setXSelfScale(xselfscale);
       iter.setYSelfScale(yselfscale);
-    }
+    }*/
 
     // Only if iteration enabled...
     if (doIter_)
