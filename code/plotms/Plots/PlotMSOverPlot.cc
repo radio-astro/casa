@@ -283,10 +283,21 @@ bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
     // Resize if iteration parameters have changed
     uInt rows = iter->numRows();
     uInt cols = iter->numColumns();
+    PMS_PP_Axes *axes = itsParams_.typedGroup<PMS_PP_Axes>();
+    bool commonAxisX = iter->isCommonAxisX();
+    bool commonAxisY = iter->isCommonAxisY();
+    PlotAxis locationAxisX = axes->xAxis();
+    PlotAxis locationAxisY = axes->yAxis();
     itsTCLParams_.updateIteration = ((updateFlag & PMS_PP::UPDATE_ITERATION) &&
                                      ((itsPlots_.size() != rows) ||
-                                      (itsPlots_[0].size() != cols)));
-    itsParent_->setCommonAxes(iter->isCommonAxisX(), iter->isCommonAxisY());
+                                      (itsPlots_[0].size() != cols)) ||
+                                      (itsParent_->isCommonAxisX() != commonAxisX) ||
+                                      (itsParent_->isCommonAxisY() != commonAxisY) ||
+                                      (itsParent_->getAxisLocationX() != locationAxisX) ||
+                                      (itsParent_->getAxisLocationY() != locationAxisY));
+    itsParent_->setCommonAxes( commonAxisX, commonAxisY);
+
+    itsParent_->setAxisLocation( locationAxisX, locationAxisY);
 
     // Update cache if needed
     if(data->isSet() && (updateFlag & PMS_PP::UPDATE_MSDATA ||
@@ -473,22 +484,20 @@ bool PlotMSOverPlot::updateCanvas() {
                 }
 
                 // Show/hide axes
-                bool showx = set && canv->xAxisShown();
-                bool showy = set && canv->yAxisShown();
+
                 canvas->showAllAxes(false);
-                // If using global scale, we only want to draw an X axis
-                // for the bottom plots and a Y axis for left plots;
-                // otherwise, draw an X and Y axis for every plot
-                //if(iter->xAxisScaleMode() == PMS_PP_Iteration::GLOBAL) {
-                //    if(r == (rows-1)) canvas->showAxis(cx, showx);
-                //} else {
-                    canvas->showAxis(cx, showx);
-                //}
-                //if(iter->yAxisScaleMode() == PMS_PP_Iteration::GLOBAL) {
-                //    if(c == 0) canvas->showAxis(cy, showy);
-                //} else {
-                    canvas->showAxis(cy, showy);
-                //}
+                //ShowX and showY determine whether axes are visible at
+                //all.  For visible axes, there is the option of sharing
+                //them (common) or for each plot to manage its own.  However,
+                //that will be taken care of in the plotter.
+                bool showX = set && canv->xAxisShown();
+                bool showY = set && canv->yAxisShown();
+                canvas->showAxis(cx, showX);
+                canvas->showAxis(cy, showY);
+                bool commonX = iter->isCommonAxisX();
+                bool commonY = iter->isCommonAxisY();
+                canvas->setCommonAxes( commonX, commonY );
+
 
                 // Legend
                 canvas->showLegend(set && canv->legendShown(),
@@ -551,6 +560,7 @@ bool PlotMSOverPlot::updateDisplay() {
         PMS_PP_Axes *axes = itsParams_.typedGroup<PMS_PP_Axes>();
         PMS_PP_Display *display = itsParams_.typedGroup<PMS_PP_Display>();
         if(cache == NULL || axes == NULL || display == NULL) return false;
+
         MaskedScatterPlotPtr plot;
         uInt nIter = itsCache_->nIter();
         uInt rows = itsPlots_.size();
@@ -741,8 +751,8 @@ void PlotMSOverPlot::updatePlots() {
 bool PlotMSOverPlot::updateIndexing() {
     PMS_PP_Iteration *iter = itsParams_.typedGroup<PMS_PP_Iteration>();
     itsCache_->setUpIndexer(iter->iterationAxis(),
-                            iter->globalXRange(),
-                            iter->globalYRange());
+                            iter->isGlobalScaleX(),
+                            iter->isGlobalScaleY());
     return true;
 }
 

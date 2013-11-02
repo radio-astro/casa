@@ -190,6 +190,11 @@ casa_add_library( casaqt
   QtUtilities/QtPlotWidget.cc
   QtUtilities/QtProgressWidget.cc
   QtUtilities/QtUtilities.cc
+  QtUtilities/Axis/ExternalAxisWidget.cc
+  QtUtilities/Axis/ExternalAxisWidgetLeft.cc
+  QtUtilities/Axis/ExternalAxisWidgetRight.cc
+  QtUtilities/Axis/ExternalAxisWidgetTop.cc
+  QtUtilities/Axis/ExternalAxisWidgetBottom.cc
   QwtPlotter/QPAnnotation.cc
   QwtPlotter/QPAxis.cc
   QwtPlotter/QPBarPlot.cc
@@ -296,6 +301,11 @@ install (FILES
 	QtUtilities/QtPlotWidget.qo.h
 	QtUtilities/QtProgressWidget.qo.h
 	QtUtilities/QtUtilities.h
+	QtUtilities/Axis/ExternalAxisWidget.h
+	QtUtilities/Axis/ExternalAxisWidgetLeft.h
+	QtUtilities/Axis/ExternalAxisWidgetRight.h
+	QtUtilities/Axis/ExternalAxisWidgetTop.h
+	QtUtilities/Axis/ExternalAxisWidgetBottom.h
 	DESTINATION include/casacode/casaqt/QtUtilities
 	)
 install (FILES

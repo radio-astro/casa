@@ -32,7 +32,7 @@
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
-
+#include <QDebug>
 namespace casa {
 
 //////////////////////////////////
@@ -71,16 +71,18 @@ PlotMSIterateTab::PlotMSIterateTab(PlotMSPlotTab* tab, PlotMSPlotter* parent)
     connect(iterationAxisChooser, SIGNAL(currentIndexChanged(int)), SIGNAL(changed()) );
     connect(nColsSpinBox, SIGNAL(valueChanged(int)),  SLOT(gridChanged()) );
     connect(nRowsSpinBox, SIGNAL(valueChanged(int)),  SLOT(gridChanged()) );
-    //connect(sharedXCheck, SIGNAL(stateChanged(int)), SIGNAL(changed()));
-    //connect(sharedYCheck, SIGNAL(stateChanged(int)), SIGNAL(changed()));
+    connect(globalXCheck, SIGNAL(stateChanged(int)), SLOT(globalChanged()));
+    connect(globalYCheck, SIGNAL(stateChanged(int)), SLOT(globalChanged()));
+    connect(sharedXCheck, SIGNAL(stateChanged(int)), SIGNAL(changed()));
+    connect(sharedYCheck, SIGNAL(stateChanged(int)), SIGNAL(changed()));
     
-    QLayout* iterLayout = layout();
+    /*QLayout* iterLayout = layout();
     iterLayout->removeWidget( sharedXCheck );
     iterLayout->removeWidget( sharedYCheck );
     iterLayout->removeWidget( commonAxisLabel );
     sharedXCheck->setParent( NULL );
     sharedYCheck->setParent( NULL );
-    commonAxisLabel->setParent( NULL );
+    commonAxisLabel->setParent( NULL );*/
 }
 
 void PlotMSIterateTab::gridChanged(){
@@ -89,9 +91,14 @@ void PlotMSIterateTab::gridChanged(){
 	if ( rowCount <= 1 ){
 		sharedXCheck->setEnabled( false );
 		sharedXCheck->setChecked( false );
+		globalXCheck->setEnabled( false );
+		globalXCheck->setChecked( false );
 	}
 	else {
-		sharedXCheck->setEnabled( true );
+		globalXCheck->setEnabled( true );
+		if ( globalXCheck->isChecked()){
+			sharedXCheck->setEnabled( true );
+		}
 	}
 
 	//Common y-axis
@@ -99,10 +106,21 @@ void PlotMSIterateTab::gridChanged(){
 	if ( colCount <= 1 ){
 		sharedYCheck->setEnabled( false );
 		sharedYCheck->setChecked( false );
+		globalYCheck->setEnabled( false );
+		globalYCheck->setChecked( false );
 	}
 	else {
-		sharedYCheck->setEnabled( true );
+		globalYCheck->setEnabled( true );
+		if ( globalYCheck->isChecked()){
+			sharedYCheck->setEnabled( true );
+		}
 	}
+	emit changed();
+}
+
+void PlotMSIterateTab::globalChanged(){
+	sharedYCheck->setEnabled( globalYCheck->isChecked());
+	sharedXCheck->setEnabled( globalXCheck->isChecked());
 	emit changed();
 }
 
@@ -121,20 +139,12 @@ void PlotMSIterateTab::getValue(PlotMSPlotParameters& params) const   {
 	
     d->setIterationAxis(
            PMS::axis(iterationAxisChooser->currentText().toStdString()) );
-           
-           
-	if      (VertAxisRadio_common->isChecked())  
-		d->setYAxisScaleMode( PMS_PP_Iteration::GLOBAL );
-	else if (VertAxisRadio_indiv->isChecked())  
-		d->setYAxisScaleMode( PMS_PP_Iteration::SELF );
-		
-	if      (HorizAxisRadio_common->isChecked())  
-		d->setXAxisScaleMode( PMS_PP_Iteration::GLOBAL );
-	else if (HorizAxisRadio_indiv->isChecked())  
-		d->setXAxisScaleMode( PMS_PP_Iteration::SELF );
-	
+
 	d->setNumColumns( nColsSpinBox->value() );
 	d->setNumRows( nRowsSpinBox->value() );
+	d->setGlobalScaleX( globalXCheck->isChecked());
+	d->setGlobalScaleY( globalYCheck->isChecked());
+
 	d->setCommonAxisX( sharedXCheck->isChecked());
 	d->setCommonAxisY( sharedYCheck->isChecked());
 }
@@ -146,21 +156,12 @@ void PlotMSIterateTab::setValue(const PlotMSPlotParameters& params) {
   const PMS_PP_Iteration* d = params.typedGroup<PMS_PP_Iteration>();
   
   PlotMSTab::setChooser(iterationAxisChooser, PMS::axis(d->iterationAxis()));
-  
-  switch (d->xAxisScaleMode())   {
-  case PMS_PP_Iteration::GLOBAL:  HorizAxisRadio_common->setChecked(true); break;
-  case PMS_PP_Iteration::SELF:   HorizAxisRadio_indiv->setChecked(true); break;
-  }
-  
-  switch (d->yAxisScaleMode())   {
-  case PMS_PP_Iteration::GLOBAL:  VertAxisRadio_common->setChecked(true); break;
-  case PMS_PP_Iteration::SELF:   VertAxisRadio_indiv->setChecked(true); break;
-  }
-  
   nRowsSpinBox->setValue( d->numRows() );
   nColsSpinBox->setValue( d->numColumns() );
   sharedXCheck->setChecked( d->isCommonAxisX() );
   sharedYCheck->setChecked( d->isCommonAxisY() );
+  globalXCheck->setChecked( d->isGlobalScaleX() );
+  globalYCheck->setChecked( d->isGlobalScaleY() );
 }
 
 
@@ -181,13 +182,10 @@ void PlotMSIterateTab::update(const PlotMSPlot& plot) {
 	highlightWidgetText(rowsLabel,     d->numRows() != d2->numRows() );
 	bool commonXChange = d->isCommonAxisX() != d2->isCommonAxisX();
 	bool commonYChange = d->isCommonAxisY() != d2->isCommonAxisY();
+	bool globalXChange = d->isGlobalScaleX() != d2->isGlobalScaleX();
+	bool globalYChange = d->isGlobalScaleY() != d2->isGlobalScaleY();
 	highlightWidgetText(commonAxisLabel, commonXChange || commonYChange );
-
-
-#if (1)  // turn on for testing, off for demo - somehow thisis crashing
-	highlightWidgetText(HorizAxisSharingGroup, d->xAxisScaleMode() != d2->xAxisScaleMode());
-	highlightWidgetText(VertAxisSharingGroup, d->yAxisScaleMode() != d2->yAxisScaleMode());	
-#endif
+	highlightWidgetText(globalAxisLabel, globalXChange || globalYChange );
 }
 
 } //namespace

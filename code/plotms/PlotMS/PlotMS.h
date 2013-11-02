@@ -164,6 +164,11 @@ public:
 	bool its_want_avoid_popups;
 	bool updateCachePlot( PlotMSPlot* plot, void (*f)(void*, bool), bool setupPlot);
 	void setCommonAxes(bool commonX, bool commonY );
+	bool isCommonAxisX() const;
+	bool isCommonAxisY() const;
+	void setAxisLocation( PlotAxis locationX, PlotAxis locationY );
+	PlotAxis getAxisLocationX() const;
+	PlotAxis getAxisLocationY() const;
 private:
     // Plotter GUI.
     //PlotMSPlotter* itsPlotter_;

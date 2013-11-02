@@ -65,6 +65,12 @@ public:
 
 	//In the case of a grid of plots whether to use common x- or y- axes.
 	virtual void setCommonAxes( bool commonX, bool commonY );
+	virtual bool isCommonAxisX() const;
+	virtual bool isCommonAxisY() const;
+
+	virtual void setAxisLocation( PlotAxis locationX, PlotAxis locationY );
+	virtual PlotAxis getAxisLocationX() const;
+	virtual PlotAxis getAxisLocationY() const;
 
 	//Flagging
 	virtual void setFlagging(PlotMSFlagging flag) = 0;

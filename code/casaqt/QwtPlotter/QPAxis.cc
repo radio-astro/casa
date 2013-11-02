@@ -30,6 +30,10 @@
 #include <casaqt/QwtPlotter/QPAxis.qo.h>
 #include <casaqt/QwtPlotter/QPCanvas.qo.h>
 #include <casaqt/QtUtilities/QtLayeredLayout.h>
+#include <casaqt/QtUtilities/Axis/ExternalAxisWidgetLeft.h>
+#include <casaqt/QtUtilities/Axis/ExternalAxisWidgetRight.h>
+#include <casaqt/QtUtilities/Axis/ExternalAxisWidgetTop.h>
+#include <casaqt/QtUtilities/Axis/ExternalAxisWidgetBottom.h>
 #include <casaqt/QwtPlotter/QPAnnotation.h>
 #include <casaqt/QwtPlotter/QPFactory.h>
 #include <casaqt/QwtPlotter/QPPlotter.qo.h>
@@ -44,20 +48,6 @@ namespace casa {
 // QPAXIS DEFINITIONS //
 //////////////////////////
 
-// Macros to reset tool stacks as needed.
-#define PRE_REPLOT                                                            \
-    vector<prange_t> preAxes(4);                                              \
-    preAxes[0] = axisRange(X_BOTTOM); preAxes[1] = axisRange(X_TOP);          \
-    preAxes[2] = axisRange(Y_LEFT); preAxes[3] = axisRange(Y_RIGHT);
-
-#define POST_REPLOT                                                           \
-    vector<prange_t> postAxes(4);                                             \
-    postAxes[0] = axisRange(X_BOTTOM); postAxes[1] = axisRange(X_TOP);        \
-    postAxes[2] = axisRange(Y_LEFT); postAxes[3] = axisRange(Y_RIGHT);        \
-    if(preAxes[0] != postAxes[0] || preAxes[1] != postAxes[1] ||              \
-       preAxes[2] != postAxes[2] || preAxes[3] != postAxes[3])                \
-        resetMouseTools();
-
 
 
 // Static //
@@ -67,27 +57,6 @@ double QPAxis::zOrder = 1;
 const String QPAxis::CLASS_NAME = "QPAxis";
 const String QPAxis::DRAW_NAME = "drawItems";
 const String QPAxis::EXPORT_NAME = "export";
-
-
-
-bool QPAxis::exportPlotter(QPPlotter* plotter, const PlotExportFormat& fmt) {
-	
-  //printf("\n>>> DSW QPC ExPr \n");
-    vector<PlotCanvasPtr> canvases;
-    if(plotter != NULL && !plotter->canvasLayout().null())
-        canvases = plotter->canvasLayout()->allCanvases();
-    return exportCanvases(canvases, fmt, NULL, plotter);
-}
-
-
-
-bool QPAxis::exportCanvas(QPCanvas* canvas, const PlotExportFormat& format) {
-    
-    vector<PlotCanvasPtr> canvases(1, PlotCanvasPtr(canvas, false));
-    return exportCanvases(canvases, format, canvas, NULL);
-}
-
-
 
 
 /* static (for now. someday maybe make method of QPAxis, repl grabCanvas with self - dsw) */
@@ -472,47 +441,72 @@ PlotAxis QPAxis::axisIndex(unsigned int i) {
 
 // Constructors/Destructors //
 
-QPAxis::QPAxis(QPPlotter* parent) : m_parent(parent), m_canvas(NULL),
+QPAxis::QPAxis(PlotAxis plotAxis, QPPlotter* parent) : m_parent(parent),// m_canvas(NULL),
         m_axesRatioLocked(false), m_axesRatios(4, 1), //m_stackCache(m_canvas.canvas()),
-        m_autoIncColors(false), m_picker(m_canvas.canvas()),
-        m_mouseFilter(m_canvas.canvas()) //m_legendFontSet(false),
+        //m_autoIncColors(false), /*m_picker(m_canvas.canvas())*/,
+        //m_mouseFilter(m_canvas.canvas()), //m_legendFontSet(false),
         /*, m_ignoreNextRelease(false), m_timer(this),
-        m_clickEvent(NULL)*/ {
+        m_clickEvent(NULL)*/
+        axisWidget( NULL ){
     logObject(CLASS_NAME, this, true);
-    m_inDraggingMode = false;
+
+    axisType = QPOptions::axis(plotAxis);
+    //m_inDraggingMode = false;
     setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    //setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     setFocusPolicy(Qt::StrongFocus);
     
-    QtLayeredLayout* ll = new QtLayeredLayout(this);
-    ll->setContentsMargins(0, 0, 0, 0);
-    ll->addWidget(&m_canvas);
+    QSizePolicy sizePolicy( QSizePolicy::Preferred, QSizePolicy::Preferred );
+    //Make the external axis we will be using
+    if ( plotAxis  == Y_LEFT ){
+    	axisWidget = new ExternalAxisWidgetLeft( this );
+    	sizePolicy.setHorizontalPolicy( QSizePolicy::Fixed );
+    }
+    else if ( plotAxis == X_BOTTOM ){
+    	axisWidget = new ExternalAxisWidgetBottom( this );
+    	sizePolicy.setVerticalPolicy( QSizePolicy::Fixed );
+    }
+    else if ( plotAxis == Y_RIGHT ){
+    	axisWidget = new ExternalAxisWidgetRight( this );
+    	sizePolicy.setHorizontalPolicy( QSizePolicy::Fixed );
+    }
+    else if ( plotAxis == X_TOP ){
+    	axisWidget = new ExternalAxisWidgetTop( this );
+    	sizePolicy.setVerticalPolicy( QSizePolicy::Fixed );
+    }
+    else {
+    	qDebug() << "QPAxis: unsupported axis"<< plotAxis;
+    }
+    setSizePolicy( sizePolicy );
+    if ( axisWidget != NULL ){
+    	QSize axisWidgetMin = axisWidget->minimumSize();
+    	setMinimumSize( axisWidgetMin.width(), axisWidgetMin.height() );
+    }
     
+    if ( axisWidget != NULL ){
+    	QtLayeredLayout* ll = new QtLayeredLayout(this);
+    	ll->setContentsMargins(0, 0, 0, 0);
+    	ll->addWidget(axisWidget);
+    }
+
 
     setCursor(NORMAL_CURSOR);
     
-    /*m_picker.setSelectionFlags(QwtPicker::RectSelection |
-                               QwtPicker::DragSelection);
-    m_picker.setRubberBand(QwtPicker::RectRubberBand);
-    m_picker.setRubberBandPen(QPen(Qt::NoPen));
-    m_picker.setTrackerMode(QwtPicker::AlwaysOff);
-    
-    m_mouseFilter.turnTracking(true);
-    connect(&m_mouseFilter, SIGNAL(mouseMoveEvent(QMouseEvent*)),
-            SLOT(trackerMouseEvent(QMouseEvent*)));
-    */
+
+
     m_dateFormat = Plotter::DEFAULT_DATE_FORMAT;
     m_relativeDateFormat = Plotter::DEFAULT_RELATIVE_DATE_FORMAT;
-    for(int i = 0; i < QwtPlot::axisCnt; i++) {
+    /*for(int i = 0; i < QwtPlot::axisCnt; i++) {
         m_scaleDraws[i] = new QPScaleDraw(&m_canvas, QwtPlot::Axis(i));
         m_scaleDraws[i]->setDateFormat(m_dateFormat);
         m_scaleDraws[i]->setRelativeDateFormat(m_relativeDateFormat);
         m_canvas.setAxisScaleDraw(QwtPlot::Axis(i), m_scaleDraws[i]);
-    }
+    }*/
     
-    m_canvas.enableAxis(QwtPlot::xBottom, false);
-    m_canvas.enableAxis(QwtPlot::yLeft, false);
-    m_canvas.setAutoReplot(true);
+
+    //m_canvas.enableAxis(QwtPlot::xBottom, false);
+    //m_canvas.enableAxis(QwtPlot::yLeft, false);
+    //m_canvas.setAutoReplot(true);
     
     //connect(&m_picker, SIGNAL(selected(const QwtDoubleRect&)),
       //      this, SLOT(regionSelected(const QwtDoubleRect&)));
@@ -536,172 +530,163 @@ pair<int, int> QPAxis::size() const {
     return pair<int, int>(QWidget::width(), QWidget::height()); }
 
 String QPAxis::title() const {
-    return m_canvas.title().text().toStdString(); }
+    //return m_canvas.title().text().toStdString();
+	return "";
+}
 
-void QPAxis::setTitle(const String& title) {
-    const char* c = title.c_str();   
-    m_canvas.setTitle(c); 
+void QPAxis::setTitle(const String& /*title*/) {
+    /*const char* c = title.c_str();
+    m_canvas.setTitle(c); */
 }
 
 PlotFontPtr QPAxis::titleFont() const {
-    QwtText t = m_canvas.title();
-    return new QPFont(t.font(), t.color());
+    //QwtText t = m_canvas.title();
+    //return new QPFont(t.font(), t.color());
+	return PlotFontPtr();
 }
 
 
 
-void QPAxis::setTitleFont(const PlotFont& font) {
-    QPFont f(font);
-    QwtText t = m_canvas.title();
-    t.setFont(f.asQFont());
-    t.setColor(f.asQColor());
-    m_canvas.setTitle(t);
+void QPAxis::setTitleFont(const PlotFont& /*font*/) {
+
 }
 
 
 
 PlotAreaFillPtr QPAxis::background() const {
-    return new QPAreaFill(m_canvas.canvas()->palette().brush(
+    /*return new QPAreaFill(m_canvas.canvas()->palette().brush(
                           QPalette::Window));
+                          */
+	return PlotAreaFillPtr();
 }
 
 
 
-void QPAxis::setBackground(const PlotAreaFill& areaFill) {
-    QPAreaFill a(areaFill);    
+void QPAxis::setBackground(const PlotAreaFill& /*areaFill*/) {
+    /*QPAreaFill a(areaFill);
     QPalette p = m_canvas.canvas()->palette();
     p.setBrush(QPalette::Window, a.asQBrush());
-    m_canvas.canvas()->setPalette(p);
+    m_canvas.canvas()->setPalette(p);*/
 }
 
 
 
 PlotCursor QPAxis::cursor() const {
-    return QPOptions::cursor(m_canvas.cursor().shape()); 
+    //return QPOptions::cursor(m_canvas.cursor().shape());
+	return PlotCursor();
 }
 
 
-
-void QPAxis::setCursor(PlotCursor cursor) {
-    
-    QWidget::setCursor(QPOptions::cursor(cursor));
-    m_canvas.canvas()->setCursor(QPOptions::cursor(cursor)); 
+void QPAxis::setCursor(PlotCursor /*cursor*/) {
 }
 
 
 void QPAxis::refresh() {
-    logMethod(CLASS_NAME, "refresh", true);
+   /* logMethod(CLASS_NAME, "refresh", true);
     PRE_REPLOT
     m_canvas.replot();
     POST_REPLOT
-    logMethod(CLASS_NAME, "refresh", false);
+    logMethod(CLASS_NAME, "refresh", false);*/
 }
 
 
-void QPAxis::refresh(int drawLayersFlag) {
-    logMethod(CLASS_NAME, "refresh(int)", true);
-    
-    if(drawLayersFlag != 0) {
-        PRE_REPLOT
-        m_canvas.setLayersChanged(drawLayersFlag);
-        m_canvas.replot();
-        POST_REPLOT
-    }
-    logMethod(CLASS_NAME, "refresh(int)", false);
+void QPAxis::refresh(int /*drawLayersFlag*/) {
+
 }
 
 
 
 PlotAxisBitset  QPAxis::shownAxes() const {
     PlotAxisBitset axes = 0;
-    for(int i = 0; i < QwtPlot::axisCnt; i++) {
-        if(m_canvas.axisEnabled(i))
-            axes |= (PlotAxisBitset)QPOptions::axis(QwtPlot::Axis(i));
-    }
+    axes |= (PlotAxisBitset)QPOptions::axis(axisType);
     return axes;
 }
 
 
 
-void QPAxis::showAxes(PlotAxisBitset axes) {
-    bool show;
-    for(int i = 0; i < QwtPlot::axisCnt /* 4 */;  i++) {
-        show = axes & QPOptions::axis(QwtPlot::Axis(i));
+void QPAxis::showAxes(PlotAxisBitset /*axes*/) {
+    /*bool show;
+    for(int i = 0; i < QwtPlot::axisCnt;  i++) {
+    show = axes & QPOptions::axis(QwtPlot::Axis(i));
         m_canvas.enableAxis(QwtPlot::Axis(i), show);
-    }
+    }*/
+}
+
+
+PlotAxisScale QPAxis::axisScale(PlotAxis /*axis*/) const   {
+    //return m_scaleDraws[QPOptions::axis(axis)]->scale();
+	return NORMAL;
+}
+
+
+void QPAxis::setAxisScale(PlotAxis /*axis*/, PlotAxisScale /*scale*/) {
+    //m_scaleDraws[QPOptions::axis(axis)]->setScale(scale);
+}
+
+
+bool QPAxis::axisReferenceValueSet(PlotAxis /*axis*/) const {
+    return false;
+}
+
+
+double QPAxis::axisReferenceValue(PlotAxis /*axis*/) const {
+    return -1;
+}
+
+
+void QPAxis::setAxisReferenceValue(PlotAxis /*axis*/, bool /*on*/, double /*value*/) {
+    //m_scaleDraws[QPOptions::axis(axis)]->setReferenceValue(on, value);
+}
+
+
+bool QPAxis::cartesianAxisShown(PlotAxis /*axis*/) const {
+   // return m_canvas.cartesianAxisShown(axis);
+	return false;
 }
 
 
 
-PlotAxisScale QPAxis::axisScale(PlotAxis axis) const   {
-    return m_scaleDraws[QPOptions::axis(axis)]->scale(); 
-}
-
-
-
-void QPAxis::setAxisScale(PlotAxis axis, PlotAxisScale scale) {
-    m_scaleDraws[QPOptions::axis(axis)]->setScale(scale); 
-}
-
-
-
-bool QPAxis::axisReferenceValueSet(PlotAxis axis) const {
-    return m_scaleDraws[QPOptions::axis(axis)]->referenceValueSet(); 
-}
-
-
-
-double QPAxis::axisReferenceValue(PlotAxis axis) const {
-    return m_scaleDraws[QPOptions::axis(axis)]->referenceValue(); 
-}
-
-
-
-void QPAxis::setAxisReferenceValue(PlotAxis axis, bool on, double value) {
-    m_scaleDraws[QPOptions::axis(axis)]->setReferenceValue(on, value); 
-}
-
-
-
-bool QPAxis::cartesianAxisShown(PlotAxis axis) const {
-    return m_canvas.cartesianAxisShown(axis); 
-}
-
-
-
-void QPAxis::showCartesianAxis(PlotAxis mirrorAxis, PlotAxis secondaryAxis,
-                                 bool show, bool hideNormalAxis) {
-    m_canvas.showCartesianAxis(mirrorAxis, secondaryAxis, show);
-    showAxis(mirrorAxis, !hideNormalAxis);
+void QPAxis::showCartesianAxis(PlotAxis /*mirrorAxis*/, PlotAxis /*secondaryAxis*/,
+                                 bool /*show*/, bool /*hideNormalAxis*/) {
+    /*m_canvas.showCartesianAxis(mirrorAxis, secondaryAxis, show);
+    showAxis(mirrorAxis, !hideNormalAxis);*/
 }
 
 
 
 String QPAxis::axisLabel(PlotAxis axis) const {
-    return m_canvas.axisTitle(QPOptions::axis(axis)).text().toStdString(); 
+    //return m_canvas.axisTitle(QPOptions::axis(axis)).text().toStdString();
+	String axisLabel;
+	if ( axisWidget != NULL && QPOptions::axis(axisType) == axis ){
+		axisLabel= axisWidget->getAxisLabel().toStdString();
+	}
+	return axisLabel;
 }
 
 
 
 
 void QPAxis::setAxisLabel(PlotAxis axis, const String& title) {
-/*DSW HACK*/ /*no, won't compiel*/  // m_canvas.setColor(Qt::blue);
-
-    m_canvas.setAxisTitle(QPOptions::axis(axis), title.c_str());
-    m_canvas.enableAxis(QPOptions::axis(axis));
+	if ( axisWidget != NULL ){
+		if ( QPOptions::axis(axisType) == axis ){
+			axisWidget->setAxisLabel( title.c_str() );
+		}
+	}
 }
 
-PlotFontPtr QPAxis::axisFont(PlotAxis a) const {
+PlotFontPtr QPAxis::axisFont(PlotAxis /*a*/) const {
     
-    QwtText t = m_canvas.axisTitle(QPOptions::axis(a));
+    /*QwtText t = m_canvas.axisTitle(QPOptions::axis(a));
     return new QPFont(t.font(), t.color());
+    */
+	return PlotFontPtr();
 }
 
 
 
-void QPAxis::setAxisFont(PlotAxis axis, const PlotFont& font) {
+void QPAxis::setAxisFont(PlotAxis /*axis*/, const PlotFont& /*font*/) {
     
-    if(font != *axisFont(axis)) {
+    /*if(font != *axisFont(axis)) {
         QPFont f(font);
         QwtText t = m_canvas.axisTitle(QPOptions::axis(axis));
         t.setFont(f.asQFont());
@@ -710,20 +695,21 @@ void QPAxis::setAxisFont(PlotAxis axis, const PlotFont& font) {
         f.setBold(false);
         m_canvas.setAxisFont(QPOptions::axis(axis), f.asQFont());
         if(!t.isEmpty()) m_canvas.enableAxis(QPOptions::axis(axis));
-    }
+    }*/
 }
 
 
 
-bool QPAxis::colorBarShown(PlotAxis axis) const {
-    return m_canvas.axisWidget(QPOptions::axis(axis))->isColorBarEnabled(); 
+bool QPAxis::colorBarShown(PlotAxis /*axis*/) const {
+    //return m_canvas.axisWidget(QPOptions::axis(axis))->isColorBarEnabled();
+	return false;
 }
 
 
 
-void QPAxis::showColorBar(bool show, PlotAxis axis) {
+void QPAxis::showColorBar(bool /*show*/, PlotAxis /*axis*/) {
     
-    QwtScaleWidget* scale = m_canvas.axisWidget(QPOptions::axis(axis));
+    /*QwtScaleWidget* scale = m_canvas.axisWidget(QPOptions::axis(axis));
     
     if(!show) {
         scale->setColorBarEnabled(false);
@@ -757,30 +743,33 @@ void QPAxis::showColorBar(bool show, PlotAxis axis) {
     m_canvas.enableAxis(QPOptions::axis(axis), true);
     if(v.first != v.second) setAxisRange(axis, v.first, v.second);
     else                    setAxisRange(axis, v.first - 0.5, v.second + 0.5);
+    */
 }
 
 
-prange_t QPAxis::axisRange(PlotAxis axis) const {
+prange_t QPAxis::axisRange(PlotAxis /*axis*/) const {
     
-    const QwtScaleDiv* div = m_canvas.axisScaleDiv(QPOptions::axis(axis));
+/*    const QwtScaleDiv* div = m_canvas.axisScaleDiv(QPOptions::axis(axis));
 #if QWT_VERSION < 0x050200
     return prange_t(div->lBound(), div->hBound());
 #else
     return prange_t(div->lowerBound(), div->upperBound());
 #endif
+*/
+	return prange_t(0,0);
 }
 
 
 
-void QPAxis::setAxisRange(PlotAxis axis, double from, double to) {
-    setAxesRanges(axis, from, to, axis, from, to);
+void QPAxis::setAxisRange(PlotAxis /*axis*/, double /*from*/, double /*to*/) {
+    //setAxesRanges(axis, from, to, axis, from, to);
 }
 
 
 
-void QPAxis::setAxesRanges(PlotAxis xAxis, double xFrom, double xTo,
-        PlotAxis yAxis, double yFrom, double yTo) {
-    logMethod(CLASS_NAME, "setAxesRanges", true);
+void QPAxis::setAxesRanges(PlotAxis /*xAxis*/, double /*xFrom*/, double /*xTo*/,
+        PlotAxis /*yAxis*/, double /*yFrom*/, double /*yTo*/) {
+    /*logMethod(CLASS_NAME, "setAxesRanges", true);
     if(xTo == xFrom && yTo == yFrom) {
         logMethod(CLASS_NAME, "setAxesRanges", false);
         return;
@@ -842,23 +831,25 @@ void QPAxis::setAxesRanges(PlotAxis xAxis, double xFrom, double xTo,
     m_canvas.setAutoReplot(autoreplot);
     if(changed && autoreplot) m_canvas.replot();
     
-    logMethod(CLASS_NAME, "setAxesRanges", false);
+    logMethod(CLASS_NAME, "setAxesRanges", false);*/
 }
 
 
 
 bool QPAxis::axesAutoRescale() const {
-    return !m_axesRatioLocked &&
+    /*return !m_axesRatioLocked &&
            m_canvas.axisAutoScale(QPOptions::axis(X_BOTTOM)) &&
            m_canvas.axisAutoScale(QPOptions::axis(X_TOP)) &&
            m_canvas.axisAutoScale(QPOptions::axis(Y_LEFT)) &&
            m_canvas.axisAutoScale(QPOptions::axis(Y_RIGHT));
+           */
+	return false;
 }
 
 
 
-void QPAxis::setAxesAutoRescale(bool autoRescale) {
-    if(autoRescale) {
+void QPAxis::setAxesAutoRescale(bool /*autoRescale*/) {
+    /*if(autoRescale) {
         m_canvas.setAxisAutoScale(QPOptions::axis(X_BOTTOM));
         m_canvas.setAxisAutoScale(QPOptions::axis(X_TOP));
         m_canvas.setAxisAutoScale(QPOptions::axis(Y_LEFT));
@@ -884,13 +875,13 @@ void QPAxis::setAxesAutoRescale(bool autoRescale) {
         }
 
         m_canvas.setAutoReplot(replot);
-    }
+    }*/
 }
 
 
 
 void QPAxis::rescaleAxes() {
-    logMethod(CLASS_NAME, "rescaleAxes", true);
+    /*logMethod(CLASS_NAME, "rescaleAxes", true);
     m_axesRatioLocked = false;
     m_canvas.setAxisAutoScale(QPOptions::axis(X_BOTTOM));
     m_canvas.setAxisAutoScale(QPOptions::axis(X_TOP));
@@ -902,19 +893,20 @@ void QPAxis::rescaleAxes() {
         m_canvas.replot();    
         POST_REPLOT
     }
-    logMethod(CLASS_NAME, "rescaleAxes", false);
+    logMethod(CLASS_NAME, "rescaleAxes", false);*/
 }
 
 
 
 bool QPAxis::axesRatioLocked() const {
-    return m_axesRatioLocked; 
+    //return m_axesRatioLocked;
+	return false;
 }
 
 
 
-void QPAxis::setAxesRatioLocked(bool locked) {
-    m_axesRatioLocked = locked;
+void QPAxis::setAxesRatioLocked(bool /*locked*/) {
+    /*m_axesRatioLocked = locked;
     setAxesAutoRescale(false);
     
     if(!m_axesRatioLocked) return;
@@ -931,7 +923,7 @@ void QPAxis::setAxesRatioLocked(bool locked) {
             size = div->range();
             m_axesRatios[i] = size / xSize;
         }
-    }
+    }*/
 }
 
 
@@ -962,288 +954,97 @@ void QPAxis::setCachedAxesStackImageSize(int /*width*/, int /*height*/) {
 }
 
 
-bool QPAxis::plotItem(PlotItemPtr item, PlotCanvasLayer layer) {
-    logMethod(CLASS_NAME, "plotItem", true);
-    if(item.null() || !item->isValid()) {
-        logMethod(CLASS_NAME, "plotItem", false);
-        return false;
-    }
-    
-    bool createdQPI;
-    QPPlotItem* qitem = QPPlotItem::cloneItem(item, &createdQPI);
-    if(qitem == NULL) {
-        logMethod(CLASS_NAME, "plotItem", false);
-        return false;
-    }
-    if(createdQPI) item = qitem;
-    
-    bool replot = m_canvas.autoReplot();
-    m_canvas.setAutoReplot(false);
-    
-    // Make sure it's not already on canvas.
-    int foundMain = -1, foundLayer = -1;
-    for(unsigned int i = 0; foundMain == -1 && i < m_plotItems.size(); i++)
-        if(m_plotItems[i].second == qitem) foundMain = (int)i;
-    if(foundMain == -1)
-        for(unsigned int i=0; foundLayer== -1 && i< m_layeredItems.size(); i++)
-            if(m_layeredItems[i].second == qitem) foundLayer = (int)i;
-    
-    if(foundMain > -1 || foundLayer > -1) {
-        if((foundMain > -1 && layer == MAIN) ||
-           (foundLayer > -1 && layer == ANNOTATION)) {
-            m_canvas.setAutoReplot(replot);
-            logMethod(CLASS_NAME, "plotItem", false);
-            return true;
-        }
-        
-        // we need to switch layers
-        removePlotItem(item);
-    }
-    
-    // Autoincrement colors for plots.
-    ScatterPlot* sp;
-    if(m_autoIncColors && ((sp = dynamic_cast<ScatterPlot*>(&*item)) != NULL)){
-        QPLine line = sp->line();
-        QPSymbol symbol = sp->symbol();
-        
-        int ri;
-        bool contains = true;
-        unsigned int i;
-        while(contains) {
-            ri = rand() % QPPlotter::GLOBAL_COLORS.size();
-
-            i = 0;
-            for(; i < m_usedColors.size(); i++) {
-                if(m_usedColors[i] == ri) break;
-            }
-            contains = (i < m_usedColors.size());
-        }
-        
-	QString eh = QPPlotter::GLOBAL_COLORS[ri];
-        QPColor color(eh);
-        line.setColor(color);
-        symbol.setColor(color);
-        sp->setLine(line);
-        sp->setSymbol(symbol);
-    }
-    
-    // Update title font for legend.
-    QwtText t = qitem->qwtTitle();
-    /*if(m_legendFontSet) {
-        t.setFont(m_legendFont.asQFont());
-        t.setColor(m_legendFont.asQColor());
-        qitem->setQwtTitle(t);
-    } else {
-        m_legendFont.setAsQFont(t.font());
-        m_legendFont.setAsQColor(t.color());
-        m_legendFontSet = true;
-    }*/
-    
-    PlotAxis xAxis = item->xAxis(), yAxis = item->yAxis();
-    if(!cartesianAxisShown(xAxis)) 
-        m_canvas.enableAxis(QPOptions::axis(xAxis), true);
-    if(!cartesianAxisShown(yAxis)) 
-        m_canvas.enableAxis(QPOptions::axis(yAxis), true);
-    
-    qitem->setZ(zOrder++);
-    //qitem->attach(this, layer);
-    
-    if(layer == MAIN)
-        m_plotItems.push_back(pair<PlotItemPtr, QPPlotItem*>(item, qitem));
-    else
-        m_layeredItems.push_back(pair<PlotItemPtr, QPPlotItem*>(item, qitem));
-    m_canvas.setLayerChanged(layer);
-    
-    if(replot) {
-        PRE_REPLOT
-        m_canvas.replot();
-        POST_REPLOT
-    }    
-    m_canvas.setAutoReplot(replot);
-    
-    logMethod(CLASS_NAME, "plotItem", false);
+bool QPAxis::plotItem(PlotItemPtr /*item*/, PlotCanvasLayer /*layer*/) {
     return true;
 }
 
 
 
 vector<PlotItemPtr> QPAxis::allPlotItems() const {
-    
-    vector<PlotItemPtr> v(m_plotItems.size() + m_layeredItems.size());
-    unsigned int i = 0, n = m_plotItems.size();
-    for(; i < m_plotItems.size(); i++) v[i] = m_plotItems[i].first;
-    for(; i < v.size(); i++) v[i] = m_layeredItems[i - n].first;
+    vector<PlotItemPtr> v(0);
     return v;
 }
 
 
-
-vector<PlotItemPtr> QPAxis::layerPlotItems(PlotCanvasLayer layer) const {
-    vector<PlotItemPtr> v((layer == MAIN) ? m_plotItems.size() :
-                                            m_layeredItems.size());
-    if(layer == MAIN) {
-        for(unsigned int i = 0; i < v.size(); i++)
-            v[i] = m_plotItems[i].first;
-    } else {
-        for(unsigned int i = 0; i < v.size(); i++)
-            v[i] = m_layeredItems[i].first;
-    }
+vector<PlotItemPtr> QPAxis::layerPlotItems(PlotCanvasLayer /*layer*/) const {
+    vector<PlotItemPtr> v(0);
     return v;
 }
-
 
 
 unsigned int QPAxis::numPlotItems() const {
-    return m_plotItems.size(); 
+    return 0;
 }
 
 
-
-unsigned int QPAxis::numLayerPlotItems(PlotCanvasLayer layer) const {
+unsigned int QPAxis::numLayerPlotItems(PlotCanvasLayer /*layer*/) const {
     
-    if(layer == MAIN) return m_plotItems.size();
-    else              return m_layeredItems.size();
+   return 0;
 }
 
 
 
-void QPAxis::removePlotItems(const vector<PlotItemPtr>& items) {
-    logMethod(CLASS_NAME, "removePlotItems", true);
-    bool replot = m_canvas.autoReplot();
-    m_canvas.setAutoReplot(false);
-    for(unsigned int i = 0; i < items.size(); i++) {
-        if(items[i].null()) continue;
-        for(unsigned int j = 0; j < m_plotItems.size(); j++) {
-            if(items[i] == m_plotItems[j].first) {
-                //m_plotItems[j].second->detach();
-                m_plotItems.erase(m_plotItems.begin() + j);
-                m_canvas.setLayerChanged(MAIN);
-                break;
-            }
-        }
-        for(unsigned int j = 0; j < m_layeredItems.size(); j++) {
-            if(items[i] == m_layeredItems[j].first) {
-                //m_layeredItems[j].second->detach();
-                m_layeredItems.erase(m_layeredItems.begin() + j);
-                m_canvas.setLayerChanged(ANNOTATION);
-                break;
-            }
-        }
-    }
-    if(replot) {
-        PRE_REPLOT
-        m_canvas.replot();
-        POST_REPLOT
-    }
-    m_canvas.setAutoReplot(replot);
-    logMethod(CLASS_NAME, "removePlotItems", false);
+void QPAxis::removePlotItems(const vector<PlotItemPtr>& /*items*/) {
+
 }
 
 
 
 void QPAxis::clearPlotItems() {
-    logMethod(CLASS_NAME, "clearPlotItems", true);
-    bool replot = m_canvas.autoReplot();
-    m_canvas.setAutoReplot(false);
-    for(unsigned int i = 0; i < m_plotItems.size(); i++)
-        //m_plotItems[i].second->detach();
-    for(unsigned int i = 0; i < m_layeredItems.size(); i++)
-        //m_layeredItems[i].second->detach();
-    m_plotItems.clear();
-    m_layeredItems.clear();
-    m_canvas.setAllLayersChanged();
-    
-    if(replot) {
-        PRE_REPLOT
-        m_canvas.replot();
-        POST_REPLOT
-    }
-    
-    m_usedColors.resize(0);
-    m_canvas.setAutoReplot(replot);
-    logMethod(CLASS_NAME, "clearPlotItems", false);
 }
 
 
 
 void QPAxis::clearPlots() {
-    PlotCanvas::clearPlots();
-    m_usedColors.resize(0);
+    //PlotCanvas::clearPlots();
+    //m_usedColors.resize(0);
 }
 
 
 
-void QPAxis::clearLayer(PlotCanvasLayer layer) {
-    logMethod(CLASS_NAME, "clearLayer", true);
-    bool autoreplot = m_canvas.autoReplot();
-    m_canvas.setAutoReplot(false);
-    if(layer == MAIN) {
-        for(unsigned int i = 0; i < m_plotItems.size(); i++)
-            //m_plotItems[i].second->detach();
-        m_plotItems.clear();    
-    } else {
-        for(unsigned int i = 0; i < m_layeredItems.size(); i++)
-            //m_layeredItems[i].second->detach();
-        m_layeredItems.clear();    
-    }
-    m_canvas.setLayerChanged(layer);
-    
-    if(autoreplot) {
-        PRE_REPLOT
-        m_canvas.replot();
-        POST_REPLOT
-    }
-    
-    m_canvas.setAutoReplot(autoreplot);
-    m_usedColors.resize(0);
-    logMethod(CLASS_NAME, "clearLayer", false);
+void QPAxis::clearLayer(PlotCanvasLayer /*layer*/) {
 }
-
 
 
 void QPAxis::holdDrawing() {
-        m_canvas.holdDrawing(); 
+       // m_canvas.holdDrawing();
 }
 
 void QPAxis::releaseDrawing() {
-    logMethod(CLASS_NAME, "releaseDrawing", true);
+    /*logMethod(CLASS_NAME, "releaseDrawing", true);
     PRE_REPLOT
     m_canvas.releaseDrawing();
     POST_REPLOT
-    logMethod(CLASS_NAME, "releaseDrawing", false);
+    logMethod(CLASS_NAME, "releaseDrawing", false);*/
 }
 
 
 
 bool QPAxis::drawingIsHeld() const   {
-    return m_canvas.drawingIsHeld(); 
+    //return m_canvas.drawingIsHeld();
+	return false;
 }
 
 
 
-void QPAxis::setSelectLineShown(bool shown) {
-    if(shown != selectLineShown()) {
-        QPen p = m_picker.rubberBandPen();
-        p.setStyle(shown ? Qt::SolidLine : Qt::NoPen);
-        m_picker.setRubberBandPen(p);
-    }
+void QPAxis::setSelectLineShown(bool /*shown*/) {
 }
 
 PlotLinePtr QPAxis::selectLine() const {
-    return new QPLine(m_picker.rubberBandPen()); }
+    return PlotLinePtr();
+}
 
-void QPAxis::setSelectLine(const PlotLine& line) {
-    if(line != *selectLine())
-        m_picker.setRubberBandPen(QPLine(line).asQPen());
+void QPAxis::setSelectLine(const PlotLine& /*line*/) {
+
 }
 
 
-bool QPAxis::gridShown(bool* xMajor, bool* xMinor, bool* yMajor,
-        bool* yMinor) const {
+bool QPAxis::gridShown(bool* /*xMajor*/, bool* /*xMinor*/, bool* /*yMajor*/,
+        bool* /*yMinor*/) const {
             
     bool ret = false;
     
-    bool tmp = m_canvas.grid().xEnabled();
+    /*bool tmp = m_canvas.grid().xEnabled();
     ret |= tmp;
     if(xMajor != NULL) *xMajor = tmp;
     
@@ -1255,76 +1056,64 @@ bool QPAxis::gridShown(bool* xMajor, bool* xMinor, bool* yMajor,
     
     ret |= tmp = m_canvas.grid().yMinEnabled();
     if(yMinor != NULL) *yMinor = tmp;
-    
+    */
     return ret;
 }
 
-void QPAxis::showGrid(bool xMajor, bool xMinor, bool yMajor,bool yMinor) {
-    m_canvas.grid().enableX(xMajor);
+void QPAxis::showGrid(bool /*xMajor*/, bool /*xMinor*/, bool /*yMajor*/,bool /*yMinor*/) {
+    /*m_canvas.grid().enableX(xMajor);
     m_canvas.grid().enableXMin(xMinor);
     m_canvas.grid().enableY(yMajor);
-    m_canvas.grid().enableYMin(yMinor);
+    m_canvas.grid().enableYMin(yMinor);*/
 }
-
 
 
 PlotLinePtr QPAxis::gridMajorLine() const {
-    return new QPLine(m_canvas.grid().majPen()); 
+    //return new QPLine(m_canvas.grid().majPen());
+	return PlotLinePtr();
 }
 
 
-
-void QPAxis::setGridMajorLine(const PlotLine& line) {
-    if(line != *gridMajorLine()) {
+void QPAxis::setGridMajorLine(const PlotLine& /*line*/) {
+    /*if(line != *gridMajorLine()) {
         QPLine l(line);
         
         m_canvas.grid().enableX(l.style() != PlotLine::NOLINE);
         m_canvas.grid().enableY(l.style() != PlotLine::NOLINE);
         m_canvas.grid().setMajPen(l.asQPen());
-    }
+    }*/
 }
 
 
 
 PlotLinePtr QPAxis::gridMinorLine() const {
-    return new QPLine(m_canvas.grid().minPen()); }
+    //return new QPLine(m_canvas.grid().minPen());
+	return PlotLinePtr();
+}
 
-void QPAxis::setGridMinorLine(const PlotLine& line) {
-    if(line != *gridMinorLine()) {
+void QPAxis::setGridMinorLine(const PlotLine& /*line*/) {
+    /*if(line != *gridMinorLine()) {
         QPLine l(line);
         
         m_canvas.grid().enableXMin(l.style() != PlotLine::NOLINE);
         m_canvas.grid().enableYMin(l.style() != PlotLine::NOLINE);
         m_canvas.grid().setMinPen(l.asQPen());
-    }
+    }*/
 }
 
 
-
-/*bool QPAxis::legendShown() const {
-    return m_legend->legendShown(); 
-}*/
-
-
-
-/*void QPAxis::showLegend(bool on, LegendPosition pos) {
-    m_legend->showLegend(on);
-    m_legend->setPosition(pos);
-}*/
 
 
 
 
 bool QPAxis::autoIncrementColors() const {
-    return m_autoIncColors; 
+    return false;
 }
 
 
-
-void QPAxis::setAutoIncrementColors(bool autoInc) {
-    m_autoIncColors = autoInc; 
+void QPAxis::setAutoIncrementColors(bool /*autoInc*/) {
+   // m_autoIncColors = autoInc;
 }
-
 
 
 bool QPAxis::exportToFile(const PlotExportFormat& /*format*/) {
@@ -1351,12 +1140,12 @@ const String& QPAxis::dateFormat() const {
 
 
 
-void QPAxis::setDateFormat(const String& dateFormat)   {
+void QPAxis::setDateFormat(const String& /*dateFormat*/)   {
     
-    if(m_dateFormat == dateFormat) return;
+   /* if(m_dateFormat == dateFormat) return;
     m_dateFormat = dateFormat;
     for(int i = 0; i < QwtPlot::axisCnt; i++)
-        m_scaleDraws[i]->setDateFormat(m_dateFormat);
+        m_scaleDraws[i]->setDateFormat(m_dateFormat);*/
 }
 
 
@@ -1367,83 +1156,19 @@ const String& QPAxis::relativeDateFormat() const {
 
 
 
-void QPAxis::setRelativeDateFormat(const String& dateFormat)   {
+void QPAxis::setRelativeDateFormat(const String& /*dateFormat*/)   {
     
-    if(m_relativeDateFormat == dateFormat) return;
+    /*if(m_relativeDateFormat == dateFormat) return;
     m_relativeDateFormat = dateFormat;
     for(int i = 0; i < QwtPlot::axisCnt; i++)
-        m_scaleDraws[i]->setRelativeDateFormat(m_relativeDateFormat);
+        m_scaleDraws[i]->setRelativeDateFormat(m_relativeDateFormat);*/
 }
 
 
 
 PlotCoordinate QPAxis::convertCoordinate(const PlotCoordinate& coord,
-                                 PlotCoordinate::System newSystem) const  {
-                                     
-    if(coord.system() == newSystem) return coord;
-    
-    if(coord.system() == PlotCoordinate::WORLD) {
-        if(newSystem == PlotCoordinate::NORMALIZED_WORLD) {
-            prange_t range = axisRange(X_BOTTOM);
-            double x = (coord.x() - range.first)/(range.second - range.first);            
-            range = axisRange(Y_LEFT);
-            double y = (coord.y() - range.first)/(range.second - range.first);
-            
-            return PlotCoordinate(x, y, newSystem);
-            
-        } 
-        else if(newSystem == PlotCoordinate::PIXEL) {
-            QwtScaleMap map = m_canvas.canvasMap(QwtPlot::xBottom);
-            double x = map.xTransform(coord.x());
-            map = m_canvas.canvasMap(QwtPlot::yLeft);
-            double y = map.xTransform(coord.y());
-            
-            return PlotCoordinate(x, y, newSystem);
-        }
-        
-    } 
-    else if(coord.system() == PlotCoordinate::NORMALIZED_WORLD) {
-        if(newSystem == PlotCoordinate::WORLD ||
-           newSystem == PlotCoordinate::PIXEL) {
-            prange_t range = axisRange(X_BOTTOM);
-            double x = (coord.x()*(range.first - range.second)) + range.first;
-            range = axisRange(Y_LEFT);
-            double y = (coord.y()*(range.first - range.second)) + range.first;
-            
-            if(newSystem == PlotCoordinate::PIXEL) {
-                QwtScaleMap map = m_canvas.canvasMap(QwtPlot::xBottom);
-                x = map.xTransform(x);
-                map = m_canvas.canvasMap(QwtPlot::yLeft);
-                y = map.xTransform(y);
-            }
-            
-            return PlotCoordinate(x, y, newSystem);
-
-        }
-        
-    } 
-    else if(coord.system() == PlotCoordinate::PIXEL) {
-        if(newSystem == PlotCoordinate::WORLD ||
-           newSystem == PlotCoordinate::NORMALIZED_WORLD) {
-            QwtScaleMap map = m_canvas.canvasMap(QwtPlot::xBottom);
-            double x = map.invTransform(coord.x());
-            map = m_canvas.canvasMap(QwtPlot::yLeft);
-            double y = map.invTransform(coord.y());
-            
-            if(newSystem == PlotCoordinate::NORMALIZED_WORLD) {
-                prange_t r = axisRange(X_BOTTOM);
-                x = (x - r.first) / (r.second - r.first);
-                r = axisRange(Y_LEFT);
-                y = (y - r.first) / (r.second - r.first);
-            }
-            
-            return PlotCoordinate(x, y, newSystem);
-        }
-        
-    }
-    
-    // somehow invalid
-    return coord;
+                                 PlotCoordinate::System /*newSystem*/) const  {
+	return coord;
 }
 
 
@@ -1465,44 +1190,6 @@ vector<double> QPAxis::textWidthHeightDescent(const String& text,
 PlotFactory* QPAxis::implementationFactory() const {
     return new QPFactory();
 }
-
-
-
-QPLayeredCanvas& QPAxis::asQwtPlot() {
-    return m_canvas; 
-}
-
-
-
-const QPLayeredCanvas& QPAxis::asQwtPlot() const {
-    return m_canvas; 
-}
-
-
-
-QwtPlotPicker& QPAxis::getSelecter() {
-    return m_picker; 
-}
-
-
-
-void QPAxis::reinstallTrackerFilter() {
-    m_canvas.canvas()->removeEventFilter(&m_mouseFilter);
-    m_canvas.canvas()->installEventFilter(&m_mouseFilter);
-}
-
-
-
-QSize QPAxis::sizeHint() const {
-    return m_canvas.sizeHint();
-}
-
-
-
-QSize QPAxis::minimumSizeHint() const {
-    return m_canvas.minimumSizeHint();
-}
-
 
 
 
@@ -1560,7 +1247,7 @@ const QPAxesCache& QPAxis::axesCache() const   {
 
 
 
-void QPAxis::mousePressEvent(QMouseEvent* event) {
+/*void QPAxis::mousePressEvent(QMouseEvent* event) {
 
     PlotMouseEvent::Button t = PlotMouseEvent::SINGLE;
     if(event->button() == Qt::RightButton) t = PlotMouseEvent::CONTEXT;
@@ -1569,11 +1256,11 @@ void QPAxis::mousePressEvent(QMouseEvent* event) {
     PlotCoordinate pcoord = globalPosToPixelCoord(event);
     if(notifyPressHandlers(t, pcoord)) event->accept();
     else                               event->ignore();
-}
+}*/
 
 
 
-void QPAxis::mouseReleaseEvent(QMouseEvent* event) {
+/*void QPAxis::mouseReleaseEvent(QMouseEvent* event) {
 
     PlotMouseEvent::Button t = PlotMouseEvent::SINGLE;
     if(event->button() == Qt::RightButton) t = PlotMouseEvent::CONTEXT;
@@ -1583,28 +1270,15 @@ void QPAxis::mouseReleaseEvent(QMouseEvent* event) {
     bool accept = notifyReleaseHandlers(t, pcoord);
     accept |= notifyClickHandlers(t, pcoord);
     
-    /*
-    if(event->button() == Qt::LeftButton) {
-        if(!m_ignoreNextRelease) {
-            m_timer.start(QApplication::doubleClickInterval());
-            m_clickEvent = event;
-        }
-        m_ignoreNextRelease = false;
-        
-    } else if(event->button() == Qt::RightButton ||
-              event->button() == Qt::MidButton) {
-        // Also send a click event
-        accept |= notifyClickHandlers(t, pcoord);
-    }
-    */
+
     
     if(accept) event->accept();
     else       event->ignore();
-}
+}*/
 
 
 
-void QPAxis::mouseDoubleClickEvent(QMouseEvent* event) {
+/*void QPAxis::mouseDoubleClickEvent(QMouseEvent* event) {
 
     PlotCoordinate pcoord = globalPosToPixelCoord(event);
     
@@ -1614,138 +1288,27 @@ void QPAxis::mouseDoubleClickEvent(QMouseEvent* event) {
     
     if(accept) event->accept();
     else       event->ignore();
+}*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void QPAxis::setPlot( QwtPlot* plot ){
+	if ( axisWidget != NULL ){
+		axisWidget->setPlot( plot );
+	}
 }
-
-
-
-void QPAxis::trackerMouseEvent(QMouseEvent* event) {
-    PlotMouseEvent::Button t = PlotMouseEvent::SINGLE;
-    if(event->button() == Qt::RightButton) t = PlotMouseEvent::CONTEXT;
-    else if(event->button() == Qt::MidButton) t = PlotMouseEvent::MIDDLE;
-    
-    PlotCoordinate pcoord = globalPosToPixelCoord(event);
-    
-    if(m_canvas.canvas()->cursor().shape()!= QPOptions::cursor(NORMAL_CURSOR)){
-        QRect crect(m_canvas.canvas()->parentWidget()->mapToGlobal(
-                    m_canvas.canvas()->pos()), m_canvas.canvas()->size());
-        if(crect.contains(event->globalPos()))
-            QWidget::setCursor(m_canvas.canvas()->cursor());
-        else unsetCursor();
-    } else unsetCursor();
-    
-    bool accept = notifyMoveHandlers(t, pcoord);
-    
-    // Also notify drag handlers if necessary.
-    if(m_inDraggingMode) accept |= notifyDragHandlers(t, pcoord);
-    
-    if(accept) event->accept();
-    else       event->ignore();
-}
-
-
-
-void QPAxis::keyReleaseEvent(QKeyEvent* event) {
-    int key = event->key();
-    QString text = event->text();
-    Qt::KeyboardModifiers mods = QApplication::keyboardModifiers();
-    
-    char c = ' ';
-    vector<PlotKeyEvent::Modifier> modifiers;
-    bool accept = false;
-    
-    if (key >= Qt::Key_F1 && key <= Qt::Key_F35) {
-        modifiers.push_back(PlotKeyEvent::F);
-        int i = key - Qt::Key_F1;
-        c = '1' + i;
-        accept = true;
-
-    } 
-    else if ((key >= Qt::Key_0 && key <= Qt::Key_9) ||
-              (key >= Qt::Key_A && key <= Qt::Key_Z)) {        
-        if(mods.testFlag(Qt::ControlModifier))
-            modifiers.push_back(PlotKeyEvent::CONTROL);
-        if(mods.testFlag(Qt::AltModifier))
-            modifiers.push_back(PlotKeyEvent::ALT);
-        if(mods.testFlag(Qt::ShiftModifier))
-            modifiers.push_back(PlotKeyEvent::SHIFT);
-        
-        int i;        
-        if(key >= Qt::Key_0 && key <= Qt::Key_9) {
-            i = key - Qt::Key_0;
-            c = '0' + i;
-        } else {
-            i = key - Qt::Key_A;
-            c = 'a' + i;
-        }
-        accept = true;
-        
-    } 
-    else if (key == Qt::Key_Space)  {
-        c = ' ';
-        accept=true; 
-    }
-    
-    
-    if(accept) accept = notifyKeyHandlers(c, modifiers);
-    
-    if(accept) event->accept();
-    else       event->ignore();
-}
-
-
-
-void QPAxis::wheelEvent(QWheelEvent* event) {
-    int delta = (event->delta() / 8) / 15;
-    PlotCoordinate pcoord = globalPosToPixelCoord(event);
-    
-    if(notifyWheelHandlers(delta, pcoord)) event->accept();
-    else                                   event->ignore();
-}
-
-
-
-void QPAxis::resizeEvent(QResizeEvent* event) {
-    QSize o = event->oldSize(), n = event->size();
-    if(notifyResizeHandlers(o.width(), o.height(), n.width(), n.height()))
-        event->accept();
-    else event->ignore();
-}
-
-
-// Private Methods //
-
-PlotCoordinate QPAxis::globalPosToPixelCoord(int x, int y) {
-    QRect rect = m_canvas.canvas()->contentsRect();
-    QPoint p = m_canvas.canvas()->mapToGlobal(rect.topLeft());
-    return PlotCoordinate(x - p.x(), y - p.y(), PlotCoordinate::PIXEL);
-}
-
-
-// Private Slots //
-
-void QPAxis::regionSelected(const QwtDoubleRect& region) {
-    // wtf?
-    double l = (region.left() < region.right())? region.left(): region.right(),
-           r = (region.right() > region.left())? region.right(): region.left(),
-           t = (region.top() > region.bottom())? region.top(): region.bottom(),
-           b = (region.bottom() < region.top())? region.bottom(): region.top();
-           
-           /*
-    if(!region.isValid()) {
-        // It was really a click.
-        PlotCoordinate wcoord(l, t, PlotCoordinate::WORLD);
-        notifyClickHandlers(PlotMouseEvent::SINGLE, wcoord);
-
-    } else {
-    */
-    if(region.isValid()) {
-        PlotRegion wreg(PlotCoordinate(l, t, PlotCoordinate::WORLD),
-                        PlotCoordinate(r, b, PlotCoordinate::WORLD));
-        notifySelectHandlers(wreg);
-    }
-}
-
-
 
 }
 

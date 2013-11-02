@@ -51,6 +51,7 @@ namespace casa {
 
 //# Forward declarations
 class QPPlotter;
+class AxisListener;
 
 
 // Implementation of PlotCanvas for the Qwt plotter.  Mainly consists of
@@ -415,7 +416,11 @@ public:
     
     // Overrides QWidget::minimumSizeHint() to return an invalid size.
     QSize minimumSizeHint() const;
-    
+
+    virtual void setCommonAxes( bool commonX, bool commonY );
+    void addAxisListener( AxisListener* listener );
+    void clearAxisListeners();
+
 protected:
     // Sets the parent QPPlotter to the given.  This MUST be done when a canvas
     // is added to the plotter so that it can use the plotter's logger if
@@ -480,6 +485,10 @@ private:
     
     // Whether the axes ratio is locked or not.
     bool m_axesRatioLocked;
+
+    bool isCommonAxis( PlotAxis axis ) const;
+    bool commonX;
+    bool commonY;
     
     // Used for recalculating axes ranges if the ratio is locked.
     vector<double> m_axesRatios;
@@ -510,6 +519,8 @@ private:
     // Flag for whether we're in mouse dragging mode or not.
     bool m_inDraggingMode;
     
+    QList<AxisListener*> axisListeners;
+
     /*
     // For catching single vs. double clicks.
     // <group>

@@ -453,6 +453,8 @@ public:
     // <group>
     static QwtPlot::Axis axis(PlotAxis a);
     static PlotAxis axis(QwtPlot::Axis a);
+    static bool isAxisX( PlotAxis a );
+
     // </group>
     
     // Converts between Qt's cursors and CASA's.

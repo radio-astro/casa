@@ -31,11 +31,15 @@ namespace casa {
 ///////////////////////////////////////
 // PLOTMSITERATIONPARM DEFINITIONS //
 ///////////////////////////////////////
-
+const String PlotMSIterParam::GLOBAL_SCALE_X="globalScaleX";
+const String PlotMSIterParam::GLOBAL_SCALE_Y="globalScaleY";
+const String PlotMSIterParam::COMMON_AXIS_X="commonAxisX";
+const String PlotMSIterParam::COMMON_AXIS_Y="commonAxisY";
 
 // Non-Static //
 
-PlotMSIterParam::PlotMSIterParam() { setDefaults(); }
+PlotMSIterParam::PlotMSIterParam()
+	{ setDefaults(); }
 PlotMSIterParam::~PlotMSIterParam() { }
 
 
@@ -48,17 +52,27 @@ void PlotMSIterParam::fromRecord(const RecordInterface& record) {
   if (record.isDefined("iterAxis"))
     setIterAxis(record.asString("iterAxis"));
 
-  if (record.isDefined("xSelfScale"))
-    setXSelfScale(record.asBool("xSelfScale"));
-
-  if (record.isDefined("ySelfScale"))
-    setYSelfScale(record.asBool("ySelfScale"));
-
   if (record.isDefined("Nx"))
     setNx(record.asInt("Nx"));
 
   if (record.isDefined("Ny"))
     setNy(record.asInt("Ny"));
+
+  if (record.isDefined(GLOBAL_SCALE_X)){
+      setNx(record.asBool(GLOBAL_SCALE_X));
+  }
+
+  if (record.isDefined(GLOBAL_SCALE_Y)){
+      setNy(record.asBool(GLOBAL_SCALE_Y));
+  }
+
+  if (record.isDefined(COMMON_AXIS_X)){
+      setNx(record.asBool(COMMON_AXIS_X));
+  }
+
+  if (record.isDefined(COMMON_AXIS_Y)){
+      setNy(record.asBool(COMMON_AXIS_Y));
+  }
 
 }
 
@@ -67,8 +81,10 @@ Record PlotMSIterParam::toRecord() const {
   // Fill a record 
   Record rec(Record::Variable);
   rec.define("iterAxis",iterAxisStr());  // as String
-  rec.define("xSelfScale",xSelfScale_);
-  rec.define("ySelfScale",ySelfScale_);
+  rec.define(COMMON_AXIS_X, commonAxisX_);
+  rec.define(COMMON_AXIS_Y, commonAxisY_);
+  rec.define(GLOBAL_SCALE_X, globalScaleX_);
+  rec.define(GLOBAL_SCALE_Y, globalScaleY_);
   rec.define("Nx",Nx_);
   rec.define("Ny",Ny_);
 
@@ -82,21 +98,24 @@ Record PlotMSIterParam::toRecord() const {
 bool PlotMSIterParam::operator==(const PlotMSIterParam& other) const {
 
   return (iterAxis_ == other.iterAxis_ &&
-	  xSelfScale_ == other.xSelfScale_ &&
-	  ySelfScale_ == other.ySelfScale_ &&
 	  Nx_ == other.Nx_ && 
-	  Ny_ == other.Ny_);
+	  Ny_ == other.Ny_) &&
+	  commonAxisX_ == other.commonAxisX_ &&
+	  commonAxisY_ == other.commonAxisY_ &&
+	  globalScaleX_ == other.globalScaleX_ &&
+	  globalScaleY_ == other.globalScaleY_;
 }
 
 
 void PlotMSIterParam::setDefaults() {    
 
   setIterAxis(PMS::NONE);  // No iteration
-  setXSelfScale(False);
-  setYSelfScale(False);
   setNx(1);
   setNy(1);
-
+  setGlobalScaleX(False);
+  setGlobalScaleY(False);
+  setCommonAxisX(False);
+  setCommonAxisY(False);
 }
 
 String PlotMSIterParam::summary() const {
@@ -106,10 +125,13 @@ String PlotMSIterParam::summary() const {
 
   ss << "Iteration parameters:" << endl;
   ss << " Iteration Axis = " << iterAxisStr() << endl;
-  ss << " X self-scale   = " << xSelfScale_ << endl;
-  ss << " Y self-scale   = " << ySelfScale_ << endl;
+
   ss << " Nx             = " << Nx_ << endl;
   ss << " Ny             = " << Ny_ << endl;
+  ss << " Global Scale X  = " << globalScaleX_ << endl;
+  ss << " Global Scale Y  = " << globalScaleY_ << endl;
+  ss << " Common Axis X   = " << commonAxisX_ << endl;
+  ss << " Common Axis Y   = " << commonAxisY_ << endl;
   return ss.str();
 }
   

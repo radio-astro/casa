@@ -122,6 +122,7 @@ QPPlotter::QPPlotter(PlotCanvasLayoutPtr layout, int logEventFlags,
 
 QPPlotter::~QPPlotter() {
     logObject(CLASS_NAME, this, false);
+
 }
 
 
@@ -440,7 +441,9 @@ void QPPlotter::setupCanvasFrame() {
         while((canvasFrame->layout()->takeAt(0)) != 0);
         delete canvasFrame->layout();
     }
-    
+
+    clearExternalAxes();
+
     m_layout->attach(this);
     
     // add canvases to frame
@@ -461,35 +464,86 @@ void QPPlotter::setupCanvasFrame() {
         QPCanvas* c;
         int rowCount = g->rows();
         int colCount = g->cols();
-
         int startCols = 0;
+        int startRows = 0;
+        if ( commonAxisX ){
+        	if ( axisLocationX == X_TOP ){
+        		startRows = 1;
+        		rowCount = rowCount + 1;
+        	}
+        }
+
+
         if ( commonAxisY ){
-        	colCount = colCount + 1;
-        	startCols = 1;
+
+        	int axisColumn = colCount;
+        	if ( axisLocationY == Y_LEFT ){
+        		startCols = 1;
+        		axisColumn = 0;
+        		colCount = colCount + 1;
+        	}
+
         	//Add in external y axes.
-        	for ( int i = 0; i < rowCount; i++ ){
-        		QPAxis* axis = new QPAxis( this );
-        		qgl->addWidget(axis, i, 0 );
+        	for ( int i = startRows; i < rowCount; i++ ){
+
+        		QPAxis* axis = new QPAxis( axisLocationY, this);
+
+        		//Use the plot in the first column as the reference
+        		//plot for drawing the common axis.
+        		coord.row = i - startRows;
+        		coord.col = 0;
+
+        		QPCanvas* associatedCanvas = dynamic_cast<QPCanvas*>(g->canvasAt(coord).operator->());
+        		if ( associatedCanvas != NULL ){
+        			QPLayeredCanvas& associatedPlot = associatedCanvas->asQwtPlot();
+        			axis->setPlot( &associatedPlot );
+        			associatedCanvas->addAxisListener( axis );
+        		}
+
+        		axis->setMinimumSize( 10, 100 );
+
+        		qgl->addWidget(axis, i, axisColumn );
+        		externalAxes.append( axis );
         	}
         }
 
         //Add in the graphs.
-        for(int i = 0; i < rowCount; i++) {
-            coord.row = i;
+        for(int i = startRows; i < rowCount; i++) {
+            coord.row = i - startRows;
             //First column is reserved for external y axis, if there is one.
-            //for(unsigned int j = 0; j < colCount; j++) {
             for(int j = startCols; j < colCount; j++) {
-                coord.col = j;
+                coord.col = j - startCols;
+
                 c = dynamic_cast<QPCanvas*>(g->canvasAt(coord).operator->());
+
                 qgl->addWidget(c, i, j);
             }
         }
 
         //Add in external x-axes
         if ( commonAxisX ){
+        	int axisRow = rowCount;
+        	if (axisLocationX == X_TOP ){
+        		axisRow = 0;
+        	}
         	for ( int j = startCols; j < colCount; j++ ){
-        		QPAxis* axis = new QPAxis( this );
-        		qgl->addWidget( axis, rowCount, j );
+        		QPAxis* axis = new QPAxis( axisLocationX, this );
+
+        		//Use the plot in the first row as the reference
+        		//plot for drawing the common axis.
+        		coord.row = 0;
+        		coord.col = j-startCols;
+
+        		QPCanvas* associatedCanvas = dynamic_cast<QPCanvas*>(g->canvasAt(coord).operator->());
+        		if ( associatedCanvas != NULL ){
+        			QwtPlot& associatedPlot = associatedCanvas->asQwtPlot();
+        			axis->setPlot( &associatedPlot );
+        			associatedCanvas->addAxisListener( axis );
+        		}
+
+        		axis->setMinimumSize( 100, 10 );
+        		qgl->addWidget( axis, axisRow, j );
+        		externalAxes.append( axis );
         	}
         }
     }
@@ -629,6 +683,32 @@ void QPPlotter::exportCanvases() {
     format.location = filename.toStdString();
     
     exportToFile(format);
+}
+
+void QPPlotter::clearExternalAxes(){
+	//Loop through the canvases and remove the axis listeners.
+	PlotLayoutGrid* g = dynamic_cast<PlotLayoutGrid*>(&(*m_layout));
+	if ( g != NULL ){
+		for ( int i = 0; i < static_cast<int>(g->rows()); i++ ){
+			for ( int j = 0; j < static_cast<int>(g->cols()); j++ ){
+				PlotGridCoordinate coord(i,j);
+				QPCanvas* canvas = dynamic_cast<QPCanvas*>(g->canvasAt(coord).operator->());
+				canvas->clearAxisListeners();
+			}
+		}
+	}
+
+
+	//Remove the external axes from the layout and delete them.
+	QGridLayout* qgl = dynamic_cast<QGridLayout*>(canvasFrame->layout());
+	while ( !externalAxes.isEmpty() ){
+		QPAxis* externalAxis = externalAxes.takeFirst();
+		if ( qgl != NULL ){
+
+			qgl->removeWidget( externalAxis );
+		}
+		delete externalAxis;
+	}
 }
 
 }

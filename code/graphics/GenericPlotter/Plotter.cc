@@ -208,6 +208,28 @@ void Plotter::setCommonAxisY(Bool commonAxis ){
 	commonAxisY = commonAxis;
 }
 
+
+bool Plotter::isCommonAxisX() const {
+	return commonAxisX;
+}
+
+bool Plotter::isCommonAxisY() const {
+	return commonAxisY;
+}
+
+void Plotter::setAxisLocation( PlotAxis xLocation, PlotAxis yLocation ){
+	axisLocationX = xLocation;
+	axisLocationY = yLocation;
+}
+
+PlotAxis Plotter::getAxisLocationX() const {
+	return axisLocationX;
+}
+
+PlotAxis Plotter::getAxisLocationY() const {
+	return axisLocationY;
+}
+
 LogMessage::Priority Plotter::logFilterMinPriority() const {
     return logger()->filterMinPriority(); }
 void Plotter::setLogFilterMinPriority(PlotLogMessage::Priority minPriority) {

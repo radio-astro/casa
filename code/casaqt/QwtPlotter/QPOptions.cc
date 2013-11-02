@@ -390,6 +390,13 @@ QwtPlot::Axis  QPOptions::axis(PlotAxis a)    {
         }
 }
 
+bool QPOptions::isAxisX( PlotAxis a ){
+	bool horizontal = false;
+	if ( a == X_BOTTOM || a == X_TOP ){
+		horizontal = true;
+	}
+	return horizontal;
+}
     
 
 PlotAxis  QPOptions::axis(QwtPlot::Axis a)    {
