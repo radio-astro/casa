@@ -584,7 +584,7 @@
 
 	    spix -- Spectral index for fluxdensity:
 		       S = fluxdensity * (freq/reffreq)**spix
-		Default: 0 (no effect)
+		Default: 0.0 (no effect)
 		Only used if fluxdensity is being used.
 		N.B.: If fluxdensity is positive, and spix is nonzero, then reffreq
 		      must be set too!  (See below)
