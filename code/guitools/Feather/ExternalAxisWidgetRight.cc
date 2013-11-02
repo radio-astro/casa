@@ -45,22 +45,28 @@ void ExternalAxisWidgetRight::setUseLeftScale( bool b ){
 }
 
 int ExternalAxisWidgetRight::getStartY() const {
-
-	QwtTextLabel* titleText = plot->titleLabel();
-
-	QRect titleRect = titleText->textRect();
-	//We should use heightDiff = height() - canvas->height()
-	//But because the main canvas is not laid out yet when this
-	//gets drawn, canvas->height gives a bogus value.  Thus, we
-	//are using the height of the plot title plus margins instead.
-	int heightDiff =  titleRect.height() + 7;
+	int plotHeight = height();
+	int canvasHeight = getCanvasHeight();
+	int heightDiff = plotHeight - canvasHeight;
 	if ( heightDiff < MIN_START_Y ){
 		heightDiff = MIN_START_Y;
 	}
 	return heightDiff;
 }
 
+int ExternalAxisWidgetRight::getCanvasHeight() const {
+	//We should use canvas->height()
+	//But because the main canvas is not laid out yet when this
+	//gets drawn, canvas->height gives a bogus value.  Thus, we
+	//are using plot->height() - (height of the plot title plus margins) instead.
 
+	int plotHeight = height();
+	QwtTextLabel* titleText = plot->titleLabel();
+	QRect titleRect = titleText->textRect();
+	int titleHeight =  titleRect.height() + 7;
+	int canvasHeight = plotHeight - titleHeight;
+	return canvasHeight;
+}
 
 void ExternalAxisWidgetRight::defineAxis( QLine& axisLine ){
 	const int MARGIN = 1;
@@ -114,11 +120,12 @@ void ExternalAxisWidgetRight::drawTicks( QPainter* painter, int tickLength ){
 	//Now figure out the yIncrement, how far apart the ticks should be.
 	double tickDistance = getTickDistance( axisScale );
 	double yIncrement = getTickIncrement( tickDistance, axisScale );
+
 	for ( int i = 0; i < originalTickCount; i = i + tickIncrement ){
 		//Sometimes the automatic tick system puts uneven number of ticks in.
 		//Definitely weird - but that is why the incrementCount;
 		int incrementCount = qRound((axisTicks[i] - axisTicks[0]) / tickDistance);
-		double tickPosition = startPixelY + incrementCount * yIncrement;
+		double tickPosition = startPixelY +incrementCount * yIncrement;
 		int tickIndex = originalTickCount - i - 1;
 		drawTick( painter, tickPosition, axisTicks[tickIndex], tickLength);
 	}

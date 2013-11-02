@@ -143,6 +143,7 @@ void PreferencesColor::setCurveDefaults(){
 	curvePreferences[FeatherCurveType::DISH_DIAMETER]->setScatterEligible( false );
 	curvePreferences[FeatherCurveType::WEIGHT_LOW]->setScatterEligible( false );
 	curvePreferences[FeatherCurveType::WEIGHT_HIGH]->setScatterEligible( false );
+	curvePreferences[FeatherCurveType::SUM_LOW_HIGH]->setScatterEligible( false );
 }
 
 void PreferencesColor::setRadialPlot( bool radial ){

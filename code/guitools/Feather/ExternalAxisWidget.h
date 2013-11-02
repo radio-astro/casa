@@ -49,6 +49,7 @@ protected:
 	virtual void drawTicks( QPainter* painter, int tickLength ) = 0;
 	virtual void defineAxis( QLine& axisLine ) = 0;
 	virtual void drawAxisLabel( QPainter* painter ) = 0;
+	virtual int getCanvasHeight() const;
 	virtual int getStartY() const;
 	int getTickIncrement( int tickCount ) const;
 	double getTickStartPixel( QwtPlot::Axis axis );

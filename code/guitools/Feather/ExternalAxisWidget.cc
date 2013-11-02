@@ -62,7 +62,7 @@ double ExternalAxisWidget::getTickStartPixel( QwtPlot::Axis axis ){
 
 	int canvasBound = width();
 	if ( axis != QwtPlot::xBottom ){
-		canvasBound = height() - getStartY();
+		canvasBound = getCanvasHeight() - getStartY();
 	}
 	double startPixel = canvasBound * endDistancePercentage;
 	if ( axis != QwtPlot::xBottom ){
@@ -89,13 +89,19 @@ double ExternalAxisWidget::getTickIncrement( double tickDistance, QwtPlot::Axis 
 	double axisExtent = scaleDiv->upperBound() - scaleDiv->lowerBound();
 	double tickPercentage = tickDistance / axisExtent;
 
-	int canvasLimit = width();
+	QwtPlotCanvas* canvas = plot->canvas();
+	int canvasLimit = canvas->width();
 	if ( axis != QwtPlot::xBottom ){
-		canvasLimit = height();
+		canvasLimit = getCanvasHeight();
 	}
 
 	double xIncrement = canvasLimit * tickPercentage;
 	return xIncrement;
+}
+
+int ExternalAxisWidget::getCanvasHeight() const {
+	QwtPlotCanvas* canvas = plot->canvas();
+	return canvas->height();
 }
 
 int ExternalAxisWidget::getTickIncrement( int tickCount ) const {
