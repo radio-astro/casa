@@ -127,7 +127,8 @@
 			<description>Specified flux density [I,Q,U,V]; (-1 will lookup values)</description>
 			<value type="int">-1</value>
 		</param>
-                <param type="any" name="spix" subparam="true">
+                <!--<param type="any" name="spix" subparam="true">-->
+                <param type="double" name="spix" subparam="true">
                         <any type="variant" limittypes="double doubleArray"/>
 			<description>Spectral index of fluxdensity</description>
 			<value type="double">0.0</value>
@@ -234,7 +235,8 @@
                       <default param="fluxdensity"><value type="vector">
                            <value>1</value><value>0</value><value>0</value><value>0</value>
                            </value></default>
-                      <default param="spix"><value type="doubleArray"></value></default>
+                      <!--<default param="spix"><value type="doubleArray"></value></default>-->
+                      <default param="spix"><value type="double">0.0</value></default>
                       <default param="reffreq"><value type="string">1GHz</value></default> 
                       <!-- comment out until polarization fraction is implemented...
                       <default param="polindex"><value type="doubleArray"></value></default>
