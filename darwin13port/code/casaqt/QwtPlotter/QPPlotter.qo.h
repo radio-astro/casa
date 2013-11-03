@@ -40,6 +40,7 @@ namespace casa {
 
 //# Forward Declarations
 class QPCanvas;
+class QPAxis;
 class PlotFactory;
 
 // Implementation of Plotter for Qwt plotter.  A QWidget that can be used as a
@@ -250,6 +251,7 @@ private:
     String m_relativeDateFormat;
     // </group>
     
+    QList<QPAxis*> externalAxes;
     
     // Sets up the canvas QFrame for the current layout.
     void setupCanvasFrame();
@@ -257,6 +259,7 @@ private:
     // Initializes GUI (to be called from constructors).
     void initialize();
     
+    void clearExternalAxes();
     
     // Static //
     

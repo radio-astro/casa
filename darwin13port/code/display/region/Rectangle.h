@@ -133,6 +133,8 @@ namespace casa {
 			double handle_delta_x, handle_delta_y;
 
 		private:
+			virtual bool output_region( ds9writer &out, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) const;
+
 			bool within_vertex_handle( double x, double y ) const;
 			unsigned int check_handle( double x, double y ) const;
 

@@ -1,4 +1,4 @@
-//# Copyright (C) 2009
+//# Copyright (C) 2005
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,42 +23,28 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef PLOTMSACTIONCACHELOAD_H_
-#define PLOTMSACTIONCACHELOAD_H_
+#ifndef EXTERNALAXISWIDGETRIGHT_H_
+#define EXTERNALAXISWIDGETRIGHT_H_
 
-#include <plotms/Actions/ActionCache.h>
-
+#include <casaqt/QtUtilities/Axis/ExternalAxisWidget.h>
 
 namespace casa {
 
-class PlotMSPlot;
-
-class ActionCacheLoad  : public ActionCache {
+class ExternalAxisWidgetRight : public ExternalAxisWidget {
 public:
-	ActionCacheLoad( Client* client );
-	ActionCacheLoad( Client* client, PlotMSPlot* plot,
-			PMSPTMethod postThreadMethod);
-	//ActionCacheLoad( Client* client, PlotMSPlot* plot, bool interactive );
-	//ActionCacheLoad( Client* client, PlotMSPlot* plot );, itsCache_,
-						   /* axes, data,
-						    d->filename(),
-						    d->selection(),
-						    d->averaging(),
-						    d->transformations(),
-						    false,
-						    &PlotMSOverPlot::cacheLoaded, this);)*/
-	void setSetupPlot( bool setUp );
-
-	virtual ~ActionCacheLoad();
+	ExternalAxisWidgetRight(QWidget* parent );
+	void setUseLeftScale( bool b );
+	virtual ~ExternalAxisWidgetRight();
 protected:
-	virtual bool loadAxes();
-	virtual bool isAxesValid( vector<pair<PMS::Axis,unsigned int > > cacheAxes, int axisIndex ) const;
-	virtual void setUpWorkParameters(CacheThread* cacheThread, vector<PMS::Axis>& axes );
+	virtual void defineAxis( QLine& axisLine );
+	virtual void drawTicks( QPainter* painter, int tickLength );
+	virtual void drawAxisLabel( QPainter* painter );
+	virtual int getStartY() const;
 private:
-	void initialize();
-	vector<PMS::DataColumn> cachedData;
-	bool setupPlot;
+
+	bool useLeftScale;
+	void drawTick( QPainter* painter, double yPixel, double value, int tickLength);
 };
 
 } /* namespace casa */
-#endif /* PLOTMSACTIONCACHELOAD_H_ */
+#endif /* EXTERNALAXISWIDGETRIGHT_H_ */

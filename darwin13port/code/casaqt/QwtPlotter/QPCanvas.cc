@@ -35,6 +35,7 @@
 #include <casaqt/QwtPlotter/QPPlotter.qo.h>
 #include <casaqt/QwtPlotter/QPRasterPlot.h>
 #include <casaqt/QwtPlotter/QPShape.h>
+#include <casaqt/QwtPlotter/AxisListener.h>
 
 #include <qwt_scale_widget.h>
 
@@ -476,6 +477,9 @@ QPCanvas::QPCanvas(QPPlotter* parent) : m_parent(parent), m_canvas(this),
         m_clickEvent(NULL)*/ {
     logObject(CLASS_NAME, this, true);
     
+    commonX = false;
+    commonY = false;
+
     setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     setFocusPolicy(Qt::StrongFocus);
@@ -630,6 +634,20 @@ void QPCanvas::showAxes(PlotAxisBitset axes) {
     }
 }
 
+void QPCanvas::setCommonAxes( bool commonX, bool commonY ){
+	for(int i = 0; i < QwtPlot::axisCnt; i++){
+		PlotAxis axis = axisIndex(i);
+		if ( QPOptions::isAxisX(axis) ){
+			m_scaleDraws[i]->setInvisible( commonX );
+		}
+		else {
+			m_scaleDraws[i]->setInvisible( commonY );
+		}
+	}
+
+	this->commonX = commonX;
+	this->commonY = commonY;
+}
 
 
 PlotAxisScale QPCanvas::axisScale(PlotAxis axis) const   {
@@ -641,6 +659,9 @@ PlotAxisScale QPCanvas::axisScale(PlotAxis axis) const   {
 void QPCanvas::setAxisScale(PlotAxis axis, PlotAxisScale scale) {
     m_scaleDraws[QPOptions::axis(axis)]->setScale(scale); 
 }
+
+
+
 
 
 
@@ -680,13 +701,36 @@ String QPCanvas::axisLabel(PlotAxis axis) const {
     return m_canvas.axisTitle(QPOptions::axis(axis)).text().toStdString(); 
 }
 
+bool QPCanvas::isCommonAxis( PlotAxis axis ) const{
+	bool common = false;
+	bool horizontal = QPOptions::isAxisX( axis );
+	if ( commonX && horizontal ){
+		common = true;
+	}
+	else if ( commonY && !horizontal ){
+		common = true;
+	}
+	return common;
+}
 
+void QPCanvas::addAxisListener( AxisListener* listener ){
+	axisListeners.append( listener );
+}
+
+void QPCanvas::clearAxisListeners(){
+	axisListeners.clear();
+}
 
 
 void QPCanvas::setAxisLabel(PlotAxis axis, const String& title) {
-/*DSW HACK*/ /*no, won't compiel*/  // m_canvas.setColor(Qt::blue);
-
-    m_canvas.setAxisTitle(QPOptions::axis(axis), title.c_str());
+	String actualTitle(title);
+	if ( (commonX || commonY) && isCommonAxis( axis ) ){
+		actualTitle = "";
+		for ( int i = 0; i < axisListeners.size(); i++ ){
+			axisListeners[i]->setAxisLabel(axis, title );
+		}
+	}
+    m_canvas.setAxisTitle(QPOptions::axis(axis), actualTitle.c_str());
     m_canvas.enableAxis(QPOptions::axis(axis));
 }
 

@@ -1,4 +1,4 @@
-//# Copyright (C) 2009
+//# Copyright (C) 2008
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,42 +23,30 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef PLOTMSACTIONCACHELOAD_H_
-#define PLOTMSACTIONCACHELOAD_H_
+#ifndef AXISLISTENER_H_
+#define AXISLISTENER_H_
 
-#include <plotms/Actions/ActionCache.h>
-
+#include <casaqt/QwtPlotter/QPOptions.h>
+#include <casa/BasicSL/String.h>
 
 namespace casa {
 
-class PlotMSPlot;
+/**
+ * Interface implemented by classes wanting to receive notice when the label
+ * on a plot axis changes.
+ */
 
-class ActionCacheLoad  : public ActionCache {
+class AxisListener {
 public:
-	ActionCacheLoad( Client* client );
-	ActionCacheLoad( Client* client, PlotMSPlot* plot,
-			PMSPTMethod postThreadMethod);
-	//ActionCacheLoad( Client* client, PlotMSPlot* plot, bool interactive );
-	//ActionCacheLoad( Client* client, PlotMSPlot* plot );, itsCache_,
-						   /* axes, data,
-						    d->filename(),
-						    d->selection(),
-						    d->averaging(),
-						    d->transformations(),
-						    false,
-						    &PlotMSOverPlot::cacheLoaded, this);)*/
-	void setSetupPlot( bool setUp );
-
-	virtual ~ActionCacheLoad();
-protected:
-	virtual bool loadAxes();
-	virtual bool isAxesValid( vector<pair<PMS::Axis,unsigned int > > cacheAxes, int axisIndex ) const;
-	virtual void setUpWorkParameters(CacheThread* cacheThread, vector<PMS::Axis>& axes );
-private:
-	void initialize();
-	vector<PMS::DataColumn> cachedData;
-	bool setupPlot;
+	/**
+	 * Set a new plot axis label.
+	 * @param axis the axis where the label change is ocurring.
+	 * @param title the new label for the axis.
+	 */
+	virtual void setAxisLabel(PlotAxis axis, const String& title) = 0;
+	virtual ~AxisListener(){}
+	AxisListener(){}
 };
 
-} /* namespace casa */
-#endif /* PLOTMSACTIONCACHELOAD_H_ */
+}
+#endif /* AXISLISTENER_H_ */

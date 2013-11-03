@@ -238,6 +238,7 @@ public:
     // Shows/hides the given axis.
     // DEFAULT IMPLEMENTATION.
     virtual void showAxis(PlotAxis axis, bool show = true);
+    virtual void setCommonAxes( bool commonX, bool commonY ) = 0;
     
     // Convenience method for showing/hiding two axes at once.
     // DEFAULT IMPLEMENTATION.

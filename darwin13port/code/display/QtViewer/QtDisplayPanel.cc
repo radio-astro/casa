@@ -2754,7 +2754,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				wc_ = wcl.getRight( );
 			}
 			if ( wc_ ) {
-				casa::viewer::ds9context context( wc_ );
+				casa::viewer::ds9context context( wc_, toolmgr );
 				casa::viewer::ds9parser parser;
 				try {
 					parser.parse_file( context, path.c_str( ) );

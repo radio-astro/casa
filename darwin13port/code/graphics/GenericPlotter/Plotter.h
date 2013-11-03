@@ -223,6 +223,11 @@ public:
     //Use a common x-/y- axis when plotting multiple graphs.
     void setCommonAxisX(Bool commonAxis );
     void setCommonAxisY(Bool commonAxis );
+    bool isCommonAxisX() const;
+    bool isCommonAxisY() const;
+    void setAxisLocation( PlotAxis xLocation, PlotAxis yLocation );
+    PlotAxis getAxisLocationX() const;
+    PlotAxis getAxisLocationY() const;
 
     // Plotting Functionality methods //
     
@@ -297,6 +302,8 @@ protected:
     PlotLoggerPtr m_logger;
     Bool commonAxisX;
     Bool commonAxisY;
+    PlotAxis axisLocationX;
+    PlotAxis axisLocationY;
 };
 typedef CountedPtr<Plotter> PlotterPtr;
 

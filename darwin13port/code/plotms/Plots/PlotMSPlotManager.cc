@@ -28,7 +28,6 @@
 
 //#include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
-#include <plotms/Plots/PlotMSIterPlot.h>
 #include <plotms/Plots/PlotMSOverPlot.h>
 
 namespace casa {
@@ -97,24 +96,6 @@ const vector<PlotMSPlotParameters*>& PlotMSPlotManager::plotParameters() const{
 PlotMSPlotParameters* PlotMSPlotManager::plotParameters(unsigned int index) {
     if(index >= itsPlotParameters_.size()) return NULL;
     else return itsPlotParameters_[index];
-}
-
-PlotMSPlot* PlotMSPlotManager::addIterPlot(
-    const PlotMSPlotParameters* /*params*/) {
-    throw(AipsError("IterPlot deprecated"));
-    return NULL;
-}
-
-PlotMSPlot* PlotMSPlotManager::addSinglePlot(
-    const PlotMSPlotParameters* /*params*/) {
-    throw(AipsError("SinglePlot deprecated!"));
-    return NULL;
-}
-
-PlotMSPlot* PlotMSPlotManager::addMultiPlot(
-    const PlotMSPlotParameters* /*params*/) {
-    throw(AipsError("MultiPlot deprecated!"));
-    return NULL;
 }
 
 PlotMSOverPlot* PlotMSPlotManager::addOverPlot(

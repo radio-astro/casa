@@ -1238,11 +1238,6 @@ class PMS_PP_Iteration : public PlotMSPlotParameters::Group {
 
 
 public:
-	enum AxisScaleMode   {
-		GLOBAL,
-		SELF
-	};
-
 
 	/* Constructor which takes a factory */
 	PMS_PP_Iteration (PlotFactoryPtr factory);
@@ -1344,9 +1339,8 @@ public:
 	}
 	void setCommonAxisX( bool commonAxis ){
 		if ( isCommonAxisX() != commonAxis ){
-			int rowCount = numRows();
 			bool validValue = false;
-			if ( rowCount > 1 ){
+			if ( isGlobalScaleX()){
 				validValue = true;
 			}
 			else if ( !commonAxis ){
@@ -1363,9 +1357,8 @@ public:
 	}
 	void setCommonAxisY( bool commonAxis ){
 		if ( isCommonAxisY() != commonAxis ){
-			int colCount = numColumns();
 			bool validValue = false;
-			if ( colCount > 1 ){
+			if ( isGlobalScaleY() ){
 				validValue = true;
 			}
 			else if ( !commonAxis ){
@@ -1377,72 +1370,50 @@ public:
 			}
 		}
 	}
-
-	Bool globalXRange() const {
-		return !itsIterParam_.xSelfScale(); }
-
-	//       return itsXAxisScaleMode_==PMS_PP_Iteration::GLOBAL; };
-
-	Bool globalYRange() const {
-		return !itsIterParam_.ySelfScale(); }
-	//       return itsYAxisScaleMode_==PMS_PP_Iteration::GLOBAL; };
-
-	AxisScaleMode xAxisScaleMode() const {
-		//          return itsXAxisScaleMode_;
-		return (itsIterParam_.xSelfScale() ?
-				PMS_PP_Iteration::SELF :
-				PMS_PP_Iteration::GLOBAL);
-	}
-
-	void setXAxisScaleMode(AxisScaleMode value) {
-		//          if (itsXAxisScaleMode_ != value) {
-		//               itsXAxisScaleMode_ = value;
-		if (xAxisScaleMode()!=value) {
-			switch (value) {
-			case PMS_PP_Iteration::SELF:
-				itsIterParam_.setXSelfScale(True);
-				break;
-			case PMS_PP_Iteration::GLOBAL:
-				itsIterParam_.setXSelfScale(False);
-				break;
-			}
-			updated();
+	Bool isGlobalScaleX() const {
+			return itsIterParam_.isGlobalAxisX();
 		}
-	}
-
-
-	AxisScaleMode yAxisScaleMode() const {
-		//          return itsYAxisScaleMode_;
-		return (itsIterParam_.ySelfScale() ?
-				PMS_PP_Iteration::SELF :
-				PMS_PP_Iteration::GLOBAL);
-
-	}
-	void setYAxisScaleMode (AxisScaleMode value) {
-		//          if (itsYAxisScaleMode_ != value) {
-		//               itsYAxisScaleMode_ = value;
-		if (yAxisScaleMode()!=value) {
-			switch (value) {
-			case PMS_PP_Iteration::SELF:
-				itsIterParam_.setYSelfScale(True);
-				break;
-			case PMS_PP_Iteration::GLOBAL:
-				itsIterParam_.setYSelfScale(False);
-				break;
+		void setGlobalScaleX( bool globalAxis ){
+			if ( isGlobalScaleX() != globalAxis ){
+				int rowCount = numRows();
+				bool validValue = false;
+				if ( rowCount > 1 ){
+					validValue = true;
+				}
+				else if ( !globalAxis ){
+					validValue = true;
+				}
+				if ( validValue ){
+					itsIterParam_.setGlobalScaleX( globalAxis );
+					updated();
+				}
 			}
-			updated();
 		}
-	}
+		Bool isGlobalScaleY() const {
+			return itsIterParam_.isGlobalAxisY();
+		}
+		void setGlobalScaleY( bool globalAxis ){
+			if ( isGlobalScaleY() != globalAxis ){
+				int colCount = numColumns();
+				bool validValue = false;
+				if ( colCount > 1 ){
+					validValue = true;
+				}
+				else if ( !globalAxis ){
+					validValue = true;
+				}
+				if ( validValue ){
+					itsIterParam_.setGlobalScaleY( globalAxis );
+					updated();
+				}
+			}
+		}
+
 
 private:
 	/* Parameters' values */
 	PlotMSIterParam itsIterParam_;
 
-	/*
-     PMS::Axis itsIterationAxis_;
-     AxisScaleMode itsXAxisScaleMode_;
-     AxisScaleMode itsYAxisScaleMode_;
-	 */
 	int itsNumRows_;
 	int itsNumColumns_;
 

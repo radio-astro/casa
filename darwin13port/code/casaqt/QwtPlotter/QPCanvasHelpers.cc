@@ -88,6 +88,24 @@ void QPScaleDraw::setScale(PlotAxisScale scale) {
 	}
 }
 
+void QPScaleDraw::setInvisible( bool invisible ){
+	this->invisible = invisible;
+}
+
+void QPScaleDraw::draw(QPainter* painter, const QPalette& palette) const {
+	if ( !invisible ){
+		QwtScaleDraw::draw( painter, palette );
+	}
+}
+
+int QPScaleDraw::extent( const QPen& pen, const QFont& font ) const{
+	int extent = 0;
+	if ( !invisible ){
+		extent = QwtScaleDraw::extent( pen, font );
+	}
+	return extent;
+}
+
 const String& QPScaleDraw::dateFormat() const { return m_dateFormat; }
 void QPScaleDraw::setDateFormat(const String& newFormat) {
 	if(newFormat != m_dateFormat) {
@@ -425,8 +443,8 @@ QPCartesianAxis::~QPCartesianAxis() { }
 
 
 void QPCartesianAxis::draw_(QPainter* painter, const QwtScaleMap& xMap,
-                  const QwtScaleMap& yMap, const QRect& drawRect,
-                  unsigned int drawIndex, unsigned int drawCount) const {
+                  const QwtScaleMap& yMap, const QRect& /*drawRect*/,
+                  unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
 	
     QwtScaleDraw* s = const_cast<QwtScaleDraw*>(&m_scaleDraw);
     if(m_axis == QwtPlot::yLeft || m_axis == QwtPlot::yRight) 

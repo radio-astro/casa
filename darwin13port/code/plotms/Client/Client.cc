@@ -82,6 +82,27 @@ void Client::setCommonAxes( bool commonX, bool commonY ){
 	itsPlotter_->setCommonAxisX( commonX );
 	itsPlotter_->setCommonAxisY( commonY );
 }
+
+bool Client::isCommonAxisX() const {
+	return itsPlotter_->isCommonAxisX();
+}
+
+bool Client::isCommonAxisY() const {
+	return itsPlotter_->isCommonAxisY();
+}
+
+void Client::setAxisLocation( PlotAxis locationX, PlotAxis locationY ){
+	itsPlotter_->setAxisLocation( locationX, locationY );
+}
+
+PlotAxis Client::getAxisLocationX() const {
+	return itsPlotter_->getAxisLocationX();
+}
+
+PlotAxis Client::getAxisLocationY() const {
+	return itsPlotter_->getAxisLocationY();
+}
+
 }
 
 

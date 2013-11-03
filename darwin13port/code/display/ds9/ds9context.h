@@ -5,6 +5,7 @@
 #include <list>
 #include <measures/Measures/MDirection.h>
 #include <display/Display/WorldCanvas.h>
+#include <display/QtViewer/RegionToolManager.qo.h>
 
 namespace casa {
 	namespace viewer {
@@ -83,7 +84,10 @@ namespace casa {
 
 		class ds9context {
 		public:
-			ds9context( WorldCanvas *wc ) : wc_(wc) { }
+			ds9context( WorldCanvas *wc, RegionToolManager *mgr ) : wc_(wc), toolmgr(mgr) { }
+
+			std::tr1::shared_ptr<RegionTool> tool ( region::RegionTypes t )
+				{ return toolmgr->tool(t); }
 
 			double mapAngleFromRef(double /*angle*/, CoordSystem /*sys*/, SkyFrame /*sky*/) {
 				return 0;
@@ -237,6 +241,7 @@ namespace casa {
 
 		private:
 			WorldCanvas *wc_;
+			RegionToolManager *toolmgr;
 		};
 	}
 }

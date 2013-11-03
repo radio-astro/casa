@@ -83,6 +83,9 @@ namespace casa {
 			void drawRegion( bool );
 			/* void drawHandles( ); */
 
+		private:
+			bool output_region( ds9writer &out, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) const;
+
 		};
 	}
 }

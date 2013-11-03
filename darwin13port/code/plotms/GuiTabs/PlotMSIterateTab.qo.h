@@ -77,6 +77,8 @@ private:
 private slots:
 	//The number of rows or columns in the grid has changed
 	void gridChanged();
+	//Whether to use a single global axis has changed.
+	void globalChanged();
 };
 
 

@@ -226,6 +226,26 @@ bool PlotMSApp::updateCachePlot( PlotMSPlot* plot,
 void PlotMSApp::setCommonAxes(bool commonX, bool commonY ){
 	itsPlotter_->setCommonAxes( commonX, commonY );
 }
+
+bool PlotMSApp::isCommonAxisX() const {
+	return itsPlotter_->isCommonAxisX();
+}
+
+bool PlotMSApp::isCommonAxisY() const {
+	return itsPlotter_->isCommonAxisY();
+}
+
+void PlotMSApp::setAxisLocation( PlotAxis locationX, PlotAxis locationY ){
+	itsPlotter_->setAxisLocation( locationX, locationY );
+}
+
+PlotAxis PlotMSApp::getAxisLocationX() const {
+	return itsPlotter_->getAxisLocationX();
+}
+
+PlotAxis PlotMSApp::getAxisLocationY() const {
+	return itsPlotter_->getAxisLocationY();
+}
 // Private Methods //
 
 void PlotMSApp::initialize(bool connectToDBus, bool userGui ) {
