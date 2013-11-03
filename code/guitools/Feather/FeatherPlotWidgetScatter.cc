@@ -234,7 +234,7 @@ void FeatherPlotWidgetScatter::zoom90Other( double dishPosition ){
 	pair<double,double> xMinMax = getMaxMin( scaledXVals, xScatter );
 	double xMin = xMinMax.first;
 	double xMax = xMinMax.second;
-	double yMin = 10000000000;
+	double yMin = std::numeric_limits<float>::max();
 	double yMax = -1 * yMin;
 
 	//Compute the corresponding yValues, storing them in a map,

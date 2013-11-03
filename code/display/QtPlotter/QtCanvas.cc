@@ -319,6 +319,7 @@ namespace casa {
 		//if (autoScaleX == 0 && autoScaleY == 0)
 		//	return;
 
+
 		Double xmin = 1000000000000000000000000.;
 		Double xmax = -xmin;
 		Double ymin = 1000000000000000000000000.;
@@ -342,6 +343,7 @@ namespace casa {
 		//if (autoScaleX) {
 		settings.setMinX(QtPlotSettings::xBottom, xmin);
 		settings.setMaxX(QtPlotSettings::xBottom, xmax);
+
 		settings.setMinX(QtPlotSettings::xTop, topAxisRange.first );
 		settings.setMaxX(QtPlotSettings::xTop, topAxisRange.second );
 		//}
@@ -437,7 +439,13 @@ namespace casa {
 				max = values[i];
 			}
 		}
+
 		adjustExtremes( &min, &max );
+
+
+		//We have to reset the range so the units on the top axis don't appear
+		//unzoomed where the ones on the bottom axis are zoomed.
+		zoomNeutral();
 
 		//Switch the min and max if we need to draw the labels on the top
 		//axis in descending order.
