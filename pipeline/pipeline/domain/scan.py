@@ -92,7 +92,6 @@ class Scan(object):
         start = utils.get_epoch_as_datetime(times_for_spw[0][0])
         end = utils.get_epoch_as_datetime(times_for_spw[-1][1])
         mean = (end - start) / len(times_for_spw)
-        print 'start:%s end:%s mean:%s' % (start, end, mean)
         return mean
 
     @property
