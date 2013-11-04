@@ -1128,7 +1128,7 @@ void msmetadata::_checkSpwId(int id, bool throwIfNegative) const {
 void msmetadata::_checkPolId(int id, bool throwIfNegative) const {
 	ThrowIf(
 		id >= (int)_msmd->nPol() || (throwIfNegative && id < 0),
-		"Spectral window ID " + String::toString(id)
+		"Polarization ID " + String::toString(id)
 		+ " out of range, must be less than "
 		+ String::toString((int)_msmd->nPol())
 	);
