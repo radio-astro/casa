@@ -51,7 +51,7 @@ class FluxCalibrationResults(basetask.Results):
 
             # Start the measurement addition process by first collecting the
             # spw IDs to which these measurements apply..
-            spw_ids = sorted([m.spw.id for m in measurements])
+            spw_ids = sorted([m.spw_id for m in measurements])
 
             # A single field identifier could map to multiple field objects,
             # but the flux should be the same for all, hence we iterate..
@@ -59,7 +59,7 @@ class FluxCalibrationResults(basetask.Results):
                 # .. removing any existing measurements in these spws from
                 # these native fields..
                 map(field.flux_densities.remove,
-                    [m for m in field.flux_densities if m.spw.id in spw_ids])    
+                    [m for m in field.flux_densities if m.spw_id in spw_ids])    
                 
                 # .. and then updating with our new values
                 field.flux_densities.update(measurements)
@@ -74,8 +74,8 @@ class FluxCalibrationResults(basetask.Results):
             # the measurements may refer to spectral windows in other
             # measurement sets, so we replace them with spectral windows from 
             # this measurement set, identified by the same ID
-            spw = ms.get_spectral_window(fm.spw.id)
-            m = domain.FluxMeasurement(spw, I=fm.I, Q=fm.Q, U=fm.U, V=fm.V)                
+            spw_id = ms.get_spectral_window(fm.spw_id)
+            m = domain.FluxMeasurement(spw_id, I=fm.I, Q=fm.Q, U=fm.U, V=fm.V)                
             native_measurements.append(m)
                 
         return native_measurements
@@ -83,11 +83,11 @@ class FluxCalibrationResults(basetask.Results):
     def __repr__(self):
         s = 'Flux calibration results for %s:\n' % os.path.basename(self.vis)
         for field, flux_densities in self.measurements.items():
-            flux_by_spw = sorted(flux_densities, key=lambda f: f.spw.id)                    
+            flux_by_spw = sorted(flux_densities, key=lambda f: f.spw_id)                    
             # rather complicated string format to display something like:
             # 0841+708 spw #0: I=3.2899 Jy; Q=0 Jy; U=0 Jy; V=0 Jy
             lines = ['\t{field} spw #{spw}: I={I}; Q={Q}; U={U}; V={V}\n'.format(
-                    field=field, spw=flux.spw.id, 
+                    field=field, spw=flux.spw_id, 
                     I=str(flux.I), Q=str(flux.Q), U=str(flux.U), V=str(flux.V)) 
                     for flux in flux_by_spw]
             s += ''.join(lines)

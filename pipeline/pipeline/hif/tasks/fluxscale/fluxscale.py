@@ -255,9 +255,8 @@ class Fluxscale(basetask.StandardTaskTemplate):
             # filter out the [-1,-1,-1,-1] results
             spw_flux = filter(no_result_fn, flux_for_spws)
 
-            for (spw, [i, q, u, v]) in spw_flux:
-                spw = ms.get_spectral_window(spw)
-                flux = domain.FluxMeasurement(spw=spw, I=i, Q=q, U=u, V=v)
+            for (spw_id, [i, q, u, v]) in spw_flux:
+                flux = domain.FluxMeasurement(spw_id=spw_id, I=i, Q=q, U=u, V=v)
                 result.measurements[field_id].append(flux)
 
         return result

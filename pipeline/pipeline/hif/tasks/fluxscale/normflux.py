@@ -121,20 +121,20 @@ class NormaliseFlux(basetask.StandardTaskTemplate):
             all_fds = list(itertools.chain(*all_fds))
 
             # find which spws these measurements have been taken in 
-            spw_ids = set([fd.spw.id for fd in all_fds])
+            spw_ids = set([fd.spw_id for fd in all_fds])
 
             averaged = collections.defaultdict(list)
             for spw_id in spw_ids:
                 # get the FluxMeasurements for all spectral windows with the
                 # current spw ID and average them together
                 fds_in_spw = [fd for fd in all_fds 
-                  if fd.spw.id == spw_id]
+                  if fd.spw_id == spw_id]
                 print 'normflux', spw_id, fds_in_spw
                 if not fds_in_spw:
                     continue
 
                 # ugly hack: get spw from first flux density measurement 
-                fd_sum = domain.FluxMeasurement(fds_in_spw[0].spw,
+                fd_sum = domain.FluxMeasurement(fds_in_spw[0].spw_id,
                   I=measures.FluxDensity(0))
                 for fd in fds_in_spw:
                     fd_sum = fd_sum + fd

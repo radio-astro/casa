@@ -647,14 +647,13 @@ def read_fluxes(ms):
         # extract the spw id from the element text. I assume the format uses
         # underscores, eg. 'SpectralWindow_13'
         spw_id = string.split(spw_id, '_')[1]
-        spw = ms.get_spectral_window(spw_id)
 
         source = ms.sources[int(source_id)]
 
         # we are mapping to spw rather than frequency, so should only take 
         # one flux density. 
         iquv = to_jansky(flux_text)[0]
-        m = domain.FluxMeasurement(spw, *iquv)
+        m = domain.FluxMeasurement(spw_id, *iquv)
         result[source].append(m)
 
     return result
@@ -830,8 +829,7 @@ def import_flux(output_dir, observing_run, filename=None):
                     continue
                 
                 fields = ms.get_fields(field_id)
-                spw = ms.get_spectral_window(spw_id)
-                measurement = domain.FluxMeasurement(spw, I, Q, U, V)
+                measurement = domain.FluxMeasurement(spw_id, I, Q, U, V)
     
                 # A single field identifier could map to multiple field objects,
                 # but the flux should be the same for all, so we iterate..
@@ -839,10 +837,10 @@ def import_flux(output_dir, observing_run, filename=None):
                     # .. removing any existing measurements in these spws from
                     # these fields..
                     map(field.flux_densities.remove,
-                        [m for m in field.flux_densities if m.spw.id is spw_id])    
+                        [m for m in field.flux_densities if m.spw_id is spw_id])    
                      
                     # .. and then updating with our new values
-                    LOG.trace('Adding %s to %s' % (measurement, spw))
+                    LOG.trace('Adding %s to spw %s' % (measurement, spw_id))
                     field.flux_densities.add(measurement)
                     counter += 1
             except:

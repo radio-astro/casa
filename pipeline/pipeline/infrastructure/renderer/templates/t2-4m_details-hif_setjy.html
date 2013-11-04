@@ -29,11 +29,11 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 	<tbody>
 %for single_result in result:
 	%for field in single_result.measurements:
-		%for flux in sorted(single_result.measurements[field], key=lambda m: m.spw.id):
+		%for flux in sorted(single_result.measurements[field], key=lambda m: m.spw_id):
 		<tr>
 			<td>${os.path.basename(single_result.vis)}</td>
 			<td>${field}</td>
-			<td>${flux.spw.id}</td>
+			<td>${flux.spw_id}</td>
 			<td>${str(flux.I)}</td>
 			<td>${str(flux.Q)}</td>
 			<td>${str(flux.U)}</td>

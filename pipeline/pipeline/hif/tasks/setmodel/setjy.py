@@ -324,10 +324,10 @@ class Setjy(basetask.StandardTaskTemplate):
 #                     field_idx = l.index(field)                                    
                     try:
                         (I,Q,U,V) = inputs.fluxdensity
-                        flux = domain.FluxMeasurement(spw=spw, I=I, Q=Q, U=U, V=V)
+                        flux = domain.FluxMeasurement(spw_id=spw.id, I=I, Q=Q, U=U, V=V)
                     except:
                         I = inputs.fluxdensity
-                        flux = domain.FluxMeasurement(spw=spw, I=I)
+                        flux = domain.FluxMeasurement(spw_id=spw.id, I=I)
                     result.measurements[field].append(flux)
 
             # merge identical jobs into one job with a multi-spw argument
@@ -368,13 +368,12 @@ class Setjy(basetask.StandardTaskTemplate):
                         field = self.inputs.ms.get_fields(field_id)[0]
                         
                         spw_id = log_entry['spw']
-                        spw = self.inputs.ms.get_spectral_window(spw_id)
  
                         I = log_entry['I']
                         Q = log_entry['Q']
                         U = log_entry['U']
                         V = log_entry['V']                        
-                        flux = domain.FluxMeasurement(spw=spw, 
+                        flux = domain.FluxMeasurement(spw_id=spw_id, 
                                                       I=I, Q=Q, U=U, V=V)
                        
                         # .. and here's that check for previously recorded

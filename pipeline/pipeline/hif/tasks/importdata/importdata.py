@@ -452,8 +452,8 @@ class ImportData(basetask.StandardTaskTemplate):
         outfile = os.path.join(inputs.output_dir,
                                os.path.basename(asdm) + "_flagonline.txt")
 
-	if inputs.save_flagonline:
-	    self._make_template_flagfile(asdm)
+        if inputs.save_flagonline:
+            self._make_template_flagfile(asdm)
 
         task = casa_tasks.importasdm(asdm=asdm,
                                      vis=vis,
@@ -479,12 +479,11 @@ class ImportData(basetask.StandardTaskTemplate):
         outfile = os.path.join(inputs.output_dir,
                                os.path.basename(asdm) + "_flagtemplate.txt")
 
-	# Create a new file if overwrite is true and the file
-	# does not already exist.
-	if inputs.overwrite or not os.path.exists(outfile):
-	    f = open (outfile, "w")
-	    f.writelines(['# User flagging commands file'])
-	    f.close()
+        # Create a new file if overwrite is true and the file
+        # does not already exist.
+        if inputs.overwrite or not os.path.exists(outfile):
+            with open(outfile, 'w') as f:
+                f.writelines(['# User flagging commands file'])
 
 
 def get_setjy_results(mses):
@@ -494,7 +493,7 @@ def get_setjy_results(mses):
         science_spws = ms.get_spectral_windows(science_windows_only=True)
 
         for source, measurements in read_fluxes(ms).items():
-            m = [m for m in measurements if m.spw in science_spws]
+            m = [m for m in measurements if m.spw_id in science_spws]
 
             # import flux values for all fields and intents so that we can 
             # compare them to the fluxscale-derived values later in the run
@@ -536,14 +535,13 @@ def read_fluxes(ms):
         # extract the spw id from the element text. I assume the format uses
         # underscores, eg. 'SpectralWindow_13'
         spw_id = string.split(spw_id, '_')[1]
-        spw = ms.get_spectral_window(spw_id)
 
         source = ms.sources[int(source_id)]
 
         # we are mapping to spw rather than frequency, so should only take 
         # one flux density. 
         iquv = to_jansky(flux_text)[0]
-        m = domain.FluxMeasurement(spw, *iquv)
+        m = domain.FluxMeasurement(spw_id, *iquv)
         result[source].append(m)
 
     return result
@@ -639,7 +637,7 @@ def export_flux_from_context(context, filename=None):
                 for flux in field.flux_densities:
                     (I, Q, U, V) = flux.casa_flux_density
                     comment = 'intent=' + ','.join(sorted(field.intents))
-                    writer.writerow((ms.basename, field.id, flux.spw.id, 
+                    writer.writerow((ms.basename, field.id, flux.spw_id, 
                                      I, Q, U, V, comment))
                     counter += 1
 
@@ -677,13 +675,13 @@ def export_flux_from_result(results, context, filename='flux.csv'):
             for field_id, measurements in setjy_result.measurements.items():
                 for m in measurements:
 
-                    prefix = '%s,%s,%s' % (ms_basename, field_id, m.spw.id)
+                    prefix = '%s,%s,%s' % (ms_basename, field_id, m.spw_id)
                     exists = False
                     for row in existing:
                         if row.startswith(prefix):
                             LOG.info('Not overwriting flux data for %s field %s '
                                      'spw %s in %s' % (ms_basename, field_id, 
-                                                       m.spw.id, 
+                                                       m.spw_id, 
                                                        os.path.basename(abspath)))
                             exists = True
 
@@ -694,7 +692,7 @@ def export_flux_from_result(results, context, filename='flux.csv'):
                         field = ms.get_fields(field_id)[0]
                         comment = 'intent=' + ','.join(sorted(field.intents))
                         
-                        writer.writerow((ms_basename, field_id, m.spw.id, 
+                        writer.writerow((ms_basename, field_id, m.spw_id, 
                                          I, Q, U, V, comment))
                         counter += 1
 
@@ -731,8 +729,7 @@ def import_flux(output_dir, observing_run, filename=None):
                     continue
 
                 fields = ms.get_fields(field_id)
-                spw = ms.get_spectral_window(spw_id)
-                measurement = domain.FluxMeasurement(spw, I, Q, U, V)
+                measurement = domain.FluxMeasurement(spw_id, I, Q, U, V)
 
                 # A single field identifier could map to multiple field objects,
                 # but the flux should be the same for all, so we iterate..
@@ -740,10 +737,10 @@ def import_flux(output_dir, observing_run, filename=None):
                     # .. removing any existing measurements in these spws from
                     # these fields..
                     map(field.flux_densities.remove,
-                        [m for m in field.flux_densities if m.spw.id is spw_id])    
+                        [m for m in field.flux_densities if m.spw_id is spw_id])    
 
                     # .. and then updating with our new values
-                    LOG.trace('Adding %s to %s' % (measurement, spw))
+                    LOG.trace('Adding %s to spw %s' % (measurement, spw_id))
                     field.flux_densities.add(measurement)
                     counter += 1
             except:
@@ -760,7 +757,7 @@ def import_flux(output_dir, observing_run, filename=None):
                 if field.flux_densities is None:
                     continue
                 for flux in field.flux_densities:
-                    if flux.spw.id not in science_spw_ids:
+                    if flux.spw_id not in science_spw_ids:
                         continue
                     result.measurements[field.name].append(flux)
             results.append(result)
