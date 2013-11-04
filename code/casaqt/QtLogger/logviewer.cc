@@ -180,7 +180,7 @@ void LogViewer::closeEvent(QCloseEvent *e)
         e->ignore();
 }
 
-void LogViewer::moveEvent(QMoveEvent *e)
+void LogViewer::moveEvent(QMoveEvent */*e*/)
 {
     QSettings settings("NRAO", "casa");
     settings.setValue("logPos", pos());
@@ -687,7 +687,7 @@ void LogViewer::filePrintPdf()
 
 
 #define TIME_LIMIT_IN_MILLISECONDS	(1000)
-void LogViewer::fileChanged(const QString& fileName)
+void LogViewer::fileChanged(const QString& /*fileName*/)
 {
 	if (!logStream->eof()) {
 		unsigned int current_offset = logStream->tellg( );

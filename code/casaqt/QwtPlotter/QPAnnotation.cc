@@ -214,8 +214,8 @@ const QwtText& QPAnnotation::asQwtText() const { return m_label; }
 // Protected Methods //
 
 void QPAnnotation::draw_(QPainter* painter, const QwtScaleMap& xMap,
-        const QwtScaleMap& yMap, const QRect& canvasRect,
-        unsigned int drawIndex, unsigned int drawCount) const {
+        const QwtScaleMap& yMap, const QRect& /*canvasRect*/,
+        unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
     logMethod("draw_", true);
     if(!m_label.isEmpty() && m_canvas != NULL) {
         painter->save();

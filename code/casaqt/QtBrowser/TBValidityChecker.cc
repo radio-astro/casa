@@ -87,7 +87,7 @@ void TBValidityChecker::setupTests() {
 
 // Private Slots //
 
-void TBValidityChecker::tableChanged(QString nt) {
+void TBValidityChecker::tableChanged(QString /*nt*/) {
     testTable->clear();
     testTable->setRowCount(0);
     testTable->setColumnCount(0);

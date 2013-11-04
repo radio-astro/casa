@@ -564,7 +564,7 @@ void TBTableDriverDirect::loadArray(TBArrayData* d, unsigned int r,
 vector<int> TBTableDriverDirect::dimensionsOf(unsigned int col) {
     vector<int> d;
     
-    if(col < 0 || col >= fields.size()) return d;
+    if(col >= fields.size()) return d;
     
     String type = fields.at(col)->getType();
     if(!TBConstants::typeIsArray(type)) return d;

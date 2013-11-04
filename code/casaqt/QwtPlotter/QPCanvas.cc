@@ -431,6 +431,10 @@ bool QPCanvas::exportCanvases  (
         case PlotExportFormat::PDF:
                 ret=exportPostscript(format, qcanvases);
                 break;
+        case PlotExportFormat::TEXT:
+        case PlotExportFormat::NUM_FMTS:
+        		qDebug() << "Exporting canvas in format: "<< format.type<<" is not supported.";
+        		break;
         
     }
     

@@ -173,13 +173,13 @@ TBData* TBTable::dataAt(unsigned int row, unsigned int col) {
     if(row >= data.size())
         row -= rowIndex;
     
-    if(ready&& 0<= row && row < data.size() && 0 <= col && col < fields.size())
+    if(ready&& row < data.size() && col < fields.size())
         return data.at(row)->at(col);
     else return NULL;
 }
 
 vector<int> TBTable::dataDimensionsAt(unsigned int col) {
-    if(ready && 0 <= col && col < fields.size())
+    if(ready && col < fields.size())
         return driver->dimensionsOf(col);
     else return vector<int>();
 }
@@ -276,7 +276,7 @@ bool TBTable::releaseArray(unsigned int row, unsigned int col) {
 }
 
 Result TBTable::editData(unsigned int row, unsigned int col, TBData* newVal) {
-    if(ready && 0 <= row && (int)row < totalRows && 0 <= col &&
+    if(ready && (int)row < totalRows &&
        col < fields.size()) {
         return driver->editData(row, col, newVal);
     } else return Result("Invalid indices.", false);
@@ -284,7 +284,7 @@ Result TBTable::editData(unsigned int row, unsigned int col, TBData* newVal) {
 
 Result TBTable::editArrayData(unsigned int row, unsigned int col,
                              vector<int> coords, TBData* newVal, bool oneDim) {
-    if(ready && 0 <= row && (int)row < totalRows && 0 <= col &&
+    if(ready && (int)row < totalRows &&
        col < fields.size() && coords.size() > 0) {
         if(oneDim && coords.size() > 1) coords.erase(coords.begin());
         return driver->editData(row, col, newVal, &coords);
@@ -389,8 +389,8 @@ TBPlotData* TBTable::plotRows(PlotParams& x, PlotParams& y, int rowFrom,
                       ProgressHelper* ph) {
 
     TBPlotData* data = new TBPlotData();
-    if(ready && (x.rowNumbers || 0 <= x.colIndex < fields.size()) &&
-       (y.rowNumbers || 0 <= y.colIndex < fields.size()) &&
+    if(ready && (x.rowNumbers || x.colIndex < fields.size()) &&
+       (y.rowNumbers || y.colIndex < fields.size()) &&
        0<= rowFrom && rowFrom < totalRows && 0 <= rowTo && rowTo < totalRows &&
        rowFrom <= rowTo && 0 < rowInterval <= (rowTo - rowFrom + 1)) {
 
@@ -521,9 +521,9 @@ TBPlotData* TBTable::plotIndices(PlotParams& dp, int axis, bool x, int row,
                       TBFilterRuleSequence* rules, ProgressHelper* ph) {
 
     TBPlotData* data = new TBPlotData();
-    if(ready && (dp.rowNumbers || 0 <= dp.colIndex < fields.size()) &&
+    if(ready && (dp.rowNumbers || dp.colIndex < fields.size()) &&
        0<= row && row < totalRows && 
-       (axis == -1 || 0 <= axis && axis <= dp.slice.size())) {
+       (axis == -1 || 0 <= axis && axis <= static_cast<int>(dp.slice.size()))) {
 
         int n = 1;
         
