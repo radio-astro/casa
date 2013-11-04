@@ -167,15 +167,25 @@ class Fluxboot(basetask.StandardTaskTemplate):
                 
         for field_id in dictkeys:        
             sourcename = fluxscale_result[field_id]['fieldName']
-            flux_d = list(fluxscale_result[field_id]['fluxd'])
-            flux_d_err = list(fluxscale_result[field_id]['fluxdErr'])
-            spwslist  = list(fluxscale_result['spwID'])
+            secondary_keys = fluxscale_result[field_id].keys()
+            secondary_keys_to_remove=['fitRefFreq', 'spidxerr', 'spidx', 'fitFluxd', 'fieldName', 'fitFluxdErr']
+            spwkeys = [spw_id for spw_id in secondary_keys if spw_id not in secondary_keys_to_remove]
+            
+            for spw_id in spwkeys:
+                flux_d = list(fluxscale_result[field_id][spw_id]['fluxd'])
+                flux_d_err = list(fluxscale_result[field_id][spw_id]['fluxdErr'])
+                #spwslist  = list(int(spw_id))
+                
+            
+                #flux_d = list(fluxscale_result[field_id]['fluxd'])
+                #flux_d_err = list(fluxscale_result[field_id]['fluxdErr'])
+                #spwslist  = list(fluxscale_result['spwID'])
         
-            for i in range(0,len(flux_d)):
-                if (flux_d[i] != -1.0):
-                    sources.append(sourcename)
-                    flux_densities.append([float(flux_d[i]), float(flux_d_err[i])])
-                    spws.append(spwslist[i])
+                for i in range(0,len(flux_d)):
+                    if (flux_d[i] != -1.0 and flux_d[i] != 0.0):
+                        sources.append(sourcename)
+                        flux_densities.append([float(flux_d[i]), float(flux_d_err[i])])
+                        spws.append(int(spw_id))
         
         self.inputs.sources = sources
         self.inputs.flux_densities = flux_densities
