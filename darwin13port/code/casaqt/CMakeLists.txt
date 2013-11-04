@@ -337,6 +337,7 @@ casa_add_executable( casaqt casaprogresstimer apps/casaprogresstimer/casaprogres
 casa_add_executable( casaqt qcasabrowser apps/qcasabrowser/qcasabrowser.cc )
 casa_add_executable( casaqt qwtplottertest apps/qwtplottertest/qwtplottertest.cc )
 casa_add_executable( casaqt mergeparams apps/mergeparams/mergeparams.cc )
+#casa_add_executable( casaqt genparams apps/genparams/genparams.cc )
 
 install( PROGRAMS apps/qcasabrowser/casabrowser DESTINATION bin )
 casa_add_assay( casaqt QtProgressMeter/test/tProgressMeter.cc )
