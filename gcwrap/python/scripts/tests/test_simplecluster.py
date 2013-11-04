@@ -579,9 +579,9 @@ class test_uvcont_mms(test_simplecluster):
 
         uvcontsub(vis=self.vis,field = 'N5921*',fitspw='0:4~6;50~59',spw = '0',solint = 'int',fitorder = 0,want_cont = True) 
         
-        compare_cont = testhelper.compTables(self.ref[0],self.vis+".cont",['FLAG_CATEGORY'])
+        compare_cont = testhelper.compTables(self.ref[0],self.vis+".cont",['FLAG_CATEGORY','WEIGHT','SIGMA'])
         self.assertTrue(compare_cont)
-        compare_contsub = testhelper.compTables(self.ref[1],self.vis+".contsub",['FLAG_CATEGORY'])
+        compare_contsub = testhelper.compTables(self.ref[1],self.vis+".contsub",['FLAG_CATEGORY','WEIGHT','SIGMA'])
         self.assertTrue(compare_contsub)             
 
 class testJobData(unittest.TestCase):
