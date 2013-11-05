@@ -333,7 +333,13 @@ def _getProjectSummary(pprObject):
 
 def _getProjectStructure(pprObject):
 
-    ppr_project = pprObject.SciPipeRequest.ProjectStructure.AlmaStructure
+    # backwards compatibility test
+    ppr_project = pprObject.SciPipeRequest.ProjectStructure
+    try:
+        entityid = ppr_project.OUSStatusRef.getAttribute('entityId')
+    except Exception, e:
+        ppr_project = ppr_project.AlmaStructure
+
     structureList = []
     structureList.append (('ous_entity_type', ('ObsUnitSet Entity Type: ',
         ppr_project.ObsUnitSetRef.getAttribute('entityTypeName'))))
