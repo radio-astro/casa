@@ -146,6 +146,7 @@ private:
 	CurveType getCurveTypeForData( DataType dType );
 
     QString plotTitle;
+    double dishPosition;
     const int MARKER_WIDTH;
     QwtPlotPicker* zoomer;
     QwtPlotMarker* diameterMarker;

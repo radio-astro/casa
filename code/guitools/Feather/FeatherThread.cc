@@ -111,8 +111,10 @@ void FeatherThread::run(){
 }
 
 bool FeatherThread::collectLowDirtyData(){
+
 	bool lowDirtyLoaded = setWorkerImages( lowImage, dirtyImage );
 	if ( lowDirtyLoaded ){
+		featherWorker->clearWeightFlags();
 		Vector<Float> uX;
 		Vector<Float> uY;
 		Vector<Float> vX;
@@ -173,10 +175,10 @@ bool FeatherThread::collectLowDirtyData(){
 
 
 bool FeatherThread::collectConvolvedData( DataTypes original, DataTypes cut){
-	//Now we compute the "______ Convolved with Low" and the
-	//"________ Convolved with Low, Weighted and Scaled".  The assumption is
-	//that the INT beam has been replaced with the _____ Beam convolved with
-	//the low beam.
+	//Now we compute the "LOW Convolved ______________" and the
+	//"LOW Convolved with _______________, Weighted and Scaled".  The assumption is
+	//that the SD beam has been replaced with the low data convolved with
+	//the _________ beam.
 	bool success = false;
 	try {
 		Vector<Float> uX;
@@ -184,20 +186,20 @@ bool FeatherThread::collectConvolvedData( DataTypes original, DataTypes cut){
 		Vector<Float> vX;
 		Vector<Float> vY;
 		FeatheredData convolveIntOriginal;
-		featherWorker->getFTCutIntImage( uX, uY, vX, vY, radial );
+		featherWorker->getFTCutSDImage(uX, uY, vX, vY, radial );
 		convolveIntOriginal.setU( uX, uY );
 		convolveIntOriginal.setV( vX, vY );
 		dataMap.insert( original, convolveIntOriginal );
 
 		FeatheredData convolveIntOriginalWeighted;
-		featherWorker->getFeatheredCutINT( uX, uY, vX, vY, radial );
+		featherWorker->getFeatheredCutSD( uX, uY, vX, vY, radial );
 		convolveIntOriginalWeighted.setU( uX, uY );
 		convolveIntOriginalWeighted.setV( vX, vY );
 		dataMap.insert( cut, convolveIntOriginalWeighted );
 		success = true;
 	}
 	catch( AipsError& error ){
-		errorMessage = "Could not get data for convolved image with the low reolution beam.";
+		errorMessage = "Could not get data for low resolution data convolved with beam.";
 		if ( logger != NULL ){
 			(*logger)<<LogIO::WARN<< errorMessage.toStdString() << "  "<<error.getMesg().c_str()<<LogIO::POST;
 		}
@@ -212,23 +214,31 @@ bool FeatherThread::isSuccess() const {
 bool FeatherThread::collectLowHighData(){
 	bool lowHighLoaded = setWorkerImages( lowImage, highImage );
 	if ( lowHighLoaded ){
-
-		//Initialize the weight Data
 		Vector<Float> uX;
 		Vector<Float> uY;
 		Vector<Float> vX;
 		Vector<Float> vY;
-		FeatheredData sdWeight;
-		featherWorker->getFeatherSD( uX, uY, vX, vY, radial );
-		sdWeight.setU( uX, uY );
-		sdWeight.setV( vX, vY );
-		dataMap.insert( SD_WEIGHT, sdWeight );
-		FeatheredData intWeight;
-		featherWorker->getFeatherINT( uX, uY, vX, vY, radial );
-		intWeight.setU( uX, uY );
-		intWeight.setV( vX, vY );
-		dataMap.insert( INT_WEIGHT, intWeight );
+		try {
+			//Initialize the weight Data
+			FeatheredData sdWeight;
+			featherWorker->getFeatherSD( uX, uY, vX, vY, radial );
+			sdWeight.setU( uX, uY );
+			sdWeight.setV( vX, vY );
 
+			dataMap.insert( SD_WEIGHT, sdWeight );
+			FeatheredData intWeight;
+			featherWorker->getFeatherINT( uX, uY, vX, vY, radial );
+			intWeight.setU( uX, uY );
+			intWeight.setV( vX, vY );
+			dataMap.insert( INT_WEIGHT, intWeight );
+		}
+		catch( AipsError& error ){
+			lowHighLoaded = false;
+			errorMessage = "Could not convolve high image with low beam.";
+			if ( logger != NULL ){
+				(*logger)<<LogIO::WARN<< errorMessage.toStdString() << "  "<<error.getMesg().c_str()<<LogIO::POST;
+			}
+		}
 		//Initialize the cut data
 		FeatheredData sdCut;
 		featherWorker->getFeatheredCutSD( uX, uY, vX, vY, radial );
@@ -280,12 +290,12 @@ bool FeatherThread::collectLowHighData(){
 			}
 		}
 
-		ImageInterface<float>* newLow = FeatherThread::makeConvolvedImage( lowImage, highImage );
-		if ( newLow != NULL ){
+		ImageInterface<float>* convolvedImage = FeatherThread::makeConvolvedImage( lowImage, highImage );
+		if ( convolvedImage != NULL ){
 			featherWorker->setINTImage( *highImage );
-			featherWorker->setSDImage( *newLow );
+			featherWorker->setSDImage( *convolvedImage );
 			lowHighLoaded = collectConvolvedData(LOW_CONVOLVED_HIGH, LOW_CONVOLVED_HIGH_WEIGHTED );
-			delete newLow;
+			delete convolvedImage;
 		}
 		else {
 			errorMessage = "Could not convolve low data with high beam.";

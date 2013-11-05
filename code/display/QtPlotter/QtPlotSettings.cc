@@ -43,6 +43,8 @@ namespace casa {
 		minY = TICK_MIN;
 		maxY = TICK_MAX;
 		numYTicks = TICK_COUNT;
+		minPercentage = 0;
+		maxPercentage = 0;
 	}
 
 
@@ -121,16 +123,24 @@ namespace casa {
 
 
 
-	void QtPlotSettings::adjust( const QString& topUnits, const QString& bottomUnits,
+	void QtPlotSettings::adjust( const QString& /*topUnits*/, const QString& /*bottomUnits*/,
 	                             bool autoScaleX, bool autoScaleY) {
 		if ( autoScaleX ) {
 			//Adjust the bottom axis allowing it to set the number of ticks.
-			pair<double,double> percentChange=adjustAxis( minX[0], maxX[0], numXTicks);
+
+			pair<double,double> percentChange=adjustAxis( minX[xBottom], maxX[xBottom], numXTicks);
+			if ( percentChange.first > 0 ){
+				minPercentage = percentChange.first;
+			}
+			if ( percentChange.second > 0 ){
+				maxPercentage = percentChange.second;
+			}
 
 			//Adjust the top axis using the same number of ticks.  Use a
 			//converter to get its min and max based on the min and max of
 			//the bottom axis.
-			adjustAxisTop( minX[1], maxX[1], topUnits, bottomUnits, percentChange);
+
+			adjustAxisTop( minX[xTop], maxX[xTop]);
 		}
 
 		if ( autoScaleY ) {
@@ -164,19 +174,15 @@ namespace casa {
 		return percentageChange;
 	}
 
-	void QtPlotSettings::adjustAxisTop(double &min, double &max,
-	    const QString& /*topUnits*/, const QString& /*bottomUnits*/, pair<double,double> percentChange ) {
-
-		double minPercent = percentChange.first;
-		double maxPercent = percentChange.second;
+	void QtPlotSettings::adjustAxisTop(double &min, double &max) {
 
 		//The calculation below, based on percentages is being used rather than
 		//using a converter because of CAS-5175.  The problem was that the
 		//converter could not distinguish between optical velocity in km/sec
 		//and radio velocity in km/sec since the units were the same.
 		double topRange = maxX[QtPlotSettings::xTop] - minX[QtPlotSettings::xTop];
-		min = minX[QtPlotSettings::xTop] - minPercent * topRange;
-		max = maxX[QtPlotSettings::xTop] + maxPercent * topRange;
+		min = minX[QtPlotSettings::xTop] - minPercentage * topRange;
+		max = maxX[QtPlotSettings::xTop] + maxPercentage * topRange;
 
 
 		//Top axis is not channels
@@ -208,6 +214,7 @@ namespace casa {
 	}
 
 	void QtPlotSettings::setMinX( AxisIndex index, double value ) {
+
 		minX[static_cast<int>(index)] = value;
 		/*if ( index == QtPlotSettings::xBottom ) {
 			originalMinX = value;

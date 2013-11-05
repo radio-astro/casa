@@ -265,13 +265,17 @@ void PlotHolder::updateScatterData( ){
 
 
 void PlotHolder::dishDiameterXChanged( double value ){
+
 	plots[SLICE_X]->setDishDiameter( value );
 	plots[SLICE_DISTANCE]->setDishDiameter( value );
+	plots[SCATTER_X]->setDishDiameter( value );
+	plots[SCATTER_DISTANCE]->setDishDiameter( value );
 }
 
 
 void PlotHolder::dishDiameterYChanged( double value ){
 	plots[SLICE_Y]->setDishDiameter( value );
+	plots[SCATTER_Y]->setDishDiameter( value );
 }
 
 //----------------------------------------------------------------------

@@ -282,7 +282,14 @@ namespace casa {
 	}
 
 	void AnimatorHolder::setChannelZAxis( const QString& zAxisTitle ){
-		channelGroupBox->setTitle( zAxisTitle);
+		//The label of the z-axis should mirror the display options z-axis,
+		//except in the case of Frequency where it should say Channels.
+		if ( !zAxisTitle.startsWith( "Freq")){
+			channelGroupBox->setTitle( zAxisTitle);
+		}
+		else {
+			channelGroupBox->setTitle( "Channels");
+		}
 	}
 
 	void AnimatorHolder::setModeEnabled( int imageCount ) {

@@ -332,19 +332,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else{
       getCutXY(ux, xampInt, uy, yampInt, *cwImage_p);
       yamp.resize();
-      yamp=(Float(1.0) - yampInt)*Float(sdScale_p);
+      yamp=(Float(1.0) - yampInt)*Float(sdScale_p*hBeam_p.getArea("arcsec2")/lBeam_p.getArea("arcsec2"));
     }
+
       xamp.resize();
-      xamp=(Float(1.0) - xampInt)*Float(sdScale_p);
+      xamp=(Float(1.0) - xampInt)*Float(sdScale_p*hBeam_p.getArea("arcsec2")/lBeam_p.getArea("arcsec2"));
       
 
   }
   void Feather::getFeatheredCutSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial){
 
     getFTCutSDImage(ux, xamp, uy,yamp, radial);
-    xamp *=sdScale_p;
+    xamp *=Float(sdScale_p*hBeam_p.getArea("arcsec2")/lBeam_p.getArea("arcsec2"));
+
     if(yamp.nelements() >0)
-      yamp *=sdScale_p;
+      yamp *=Float(sdScale_p*hBeam_p.getArea("arcsec2")/lBeam_p.getArea("arcsec2"));
   }
   
   void Feather::getFeatheredCutINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial){
@@ -357,6 +359,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     else
       getCutXY(ux, xamp, uy, yamp, *cwHighIm_p);
+  }
+
+  void Feather::clearWeightFlags(){
+    cweightCalced_p=False;
+    cweightApplied_p = False;
   }
 
   void Feather::applyFeather(){
@@ -712,7 +719,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //ImageUtilities::copyMask(featherImage, *lowIm_p, "mask0", maskofLow, AxesSpecifier());
      Imager::copyMask(featherImage, *lowIm_p, maskofLow); 
     }
-
+    
     return true;
   }
 
