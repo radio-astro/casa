@@ -78,7 +78,7 @@ vector<int> TBArray::getDimensions() { return vector<int>(dimensions); }
 unsigned int TBArray::dim() { return dimensions.size(); }
 
 int TBArray::dimensionAt(unsigned int i) {
-    if(0 <= i < dimensions.size()) return dimensions.at(i);
+    if(i < dimensions.size()) return dimensions.at(i);
     else return -1;
 }
 

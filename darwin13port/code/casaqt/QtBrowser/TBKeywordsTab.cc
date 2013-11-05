@@ -199,7 +199,7 @@ void TBTableKeywordsTab::showWidgetInSplitter(QWidget* widget) {
 
 // Private Slots //
 
-void TBTableKeywordsTab::doubleClicked(int row, int col) {
+void TBTableKeywordsTab::doubleClicked(int row, int /*col*/) {
     String type = table->keyword(row)->getType();
     if(TBConstants::typeIsTable(type)) {
         ttabs->getBrowser()->openTable(table->keyword(
@@ -371,7 +371,7 @@ void TBFieldKeywordsTab::showWidgetInSplitter(QWidget* widget) {
     rightWidget->show();
 }
 
-void TBFieldKeywordsTab::doubleClicked(QTreeWidgetItem* item, int col) {
+void TBFieldKeywordsTab::doubleClicked(QTreeWidgetItem* item, int /*col*/) {
     QTreeWidgetItem* parent = item->parent();
     if(parent == NULL) return;
     int row = parent->indexOfChild(item);

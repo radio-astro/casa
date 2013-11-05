@@ -85,7 +85,7 @@ void QtIndexChooser::setType(Type type, bool resizeToHint) {
     }
 }
 
-void QtIndexChooser::setName(unsigned int index, const String& name) {
+void QtIndexChooser::setName(unsigned int /*index*/, const String& /*name*/) {
     if(itsType_ != NAME) return;
     // TODO
 }

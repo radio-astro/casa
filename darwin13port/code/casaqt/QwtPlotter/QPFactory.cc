@@ -284,7 +284,7 @@ PlotLinePtr QPFactory::defaultLegendLine(bool smartDelete) {
     return PlotLinePtr(l, smartDelete);
 }
 
-PlotAreaFillPtr QPFactory::defaultLegendAreaFill(bool smartDelete) {
+PlotAreaFillPtr QPFactory::defaultLegendAreaFill(bool /*smartDelete*/) {
     return new QPAreaFill(QApplication::palette().brush(QPalette::Window));
 }
 

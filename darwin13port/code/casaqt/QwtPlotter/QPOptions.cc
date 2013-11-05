@@ -52,7 +52,7 @@ QPColor::QPColor(const PlotColorPtr color) : m_color() {
     if(!color.null()) operator=(*color);
 }
 
-QPColor::QPColor(const QPColor& color) : m_color(color.asQColor()) { }
+QPColor::QPColor(const QPColor& color) : PlotColor(), m_color(color.asQColor()) { }
 
 QPColor::~QPColor() { }
 
@@ -134,7 +134,7 @@ QPFont::QPFont(const PlotFontPtr font) {
     if(!font.null()) operator=(*font);
 }
 
-QPFont::QPFont(const QPFont& font) : m_font(font.asQFont()),
+QPFont::QPFont(const QPFont& font) : PlotFont(), m_font(font.asQFont()),
         m_color(font.color()) { }
 
 QPFont::~QPFont() { }

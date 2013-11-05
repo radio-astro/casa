@@ -250,7 +250,9 @@ class CasaRegression:
 	#CALL TEST SCRIPT (Determine if a regression test or a unit test to determine the proper test method)
 	#UNIT TEST
 	if script.startswith("test_"):
-	    p = subprocess.Popen( [ casapy, '-c', "runUnitTest.main(['" + script + "'])" ],
+	    p = subprocess.Popen( [ casapy,'-cd', self._path['test'],
+                                '--eval=' + self._path['casa'] + '/build/init.pl',
+                                '--tmpdir=' + self._path['tmp'], '-c', "runUnitTest.main(['" + script + "'])" ],
                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT );
 
 	#REGRESSION TEST

@@ -230,7 +230,7 @@ XMLtoken* TBHomeParser::parseToken(String* xml, int level) {
     return token;
 }
 
-void TBHomeParser::parseAttributes(XMLtoken* token,String* attrPtr,int level) {
+void TBHomeParser::parseAttributes(XMLtoken* token,String* attrPtr,int /*level*/) {
     String attr = *attrPtr;
     while(attr.length() > 0) {
         unsigned int i = attr.find('=');
@@ -846,8 +846,8 @@ void TBXercesSAXParser::endDocument() {
     }
 }
     
-void TBXercesSAXParser::startElement(const XMLCh* const uri,
-                                     const XMLCh* const localname,
+void TBXercesSAXParser::startElement(const XMLCh* const /*uri*/,
+                                     const XMLCh* const /*localname*/,
                                      const XMLCh* const qname,
                                      const Attributes& attrs) {
     char* chst = XMLString::transcode(qname);
@@ -995,8 +995,8 @@ void TBXercesSAXParser::startElement(const XMLCh* const uri,
     }
 }
     
-void TBXercesSAXParser::endElement(const XMLCh* const uri,
-                                   const XMLCh* const localname,
+void TBXercesSAXParser::endElement(const XMLCh* const /*uri*/,
+                                   const XMLCh* const /*localname*/,
                                    const XMLCh* const qname) {
     char* chst = XMLString::transcode(qname);
     String name(chst);
@@ -1015,7 +1015,7 @@ void TBXercesSAXParser::endElement(const XMLCh* const uri,
 }
 
 void TBXercesSAXParser::characters(const XMLCh* const chars,
-                                   const unsigned int length) {
+                                   const unsigned int /*length*/) {
     char* chst = XMLString::transcode(chars);
     String str(chst);
     XMLString::release(&chst);

@@ -51,7 +51,7 @@ class QPCanvas;
 
 // Abstract superclass for any layered item that will be drawn on a
 // QPLayeredCanvas.
-class QPLayerItem : public virtual QwtPlotItem {
+class QPLayerItem : public QwtPlotItem {
     friend class QPCanvas;
     friend class QPLayeredCanvas;
     friend class QPDrawThread;

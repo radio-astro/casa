@@ -72,7 +72,7 @@ const QString rsrcPath = ":/images/win";
 namespace casa {
 
 
-FileCatalog::FileCatalog(QString logFile, QWidget *parent)
+FileCatalog::FileCatalog(QString /*logFile*/, QWidget *parent)
     : QMainWindow(parent), 
       canDel(0), canNew(0), canOpen(0), canGo(0), hasSelected(0),
       copyName(""), currentLogRow(),

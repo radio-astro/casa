@@ -431,6 +431,8 @@ QPCartesianAxis::QPCartesianAxis(QwtPlot::Axis master, QwtPlot::Axis slave) :
       case QwtPlot::yRight:   m_scaleDraw.setAlignment(QwtScaleDraw::RightScale);  break;
       case QwtPlot::xTop:     m_scaleDraw.setAlignment(QwtScaleDraw::TopScale);    break;
       case QwtPlot::xBottom:  m_scaleDraw.setAlignment(QwtScaleDraw::BottomScale); break;
+      default:
+    	  qDebug() << "Unrecognized Axis: "<<master;
     }
     
     setZ(BASE_Z_CARTAXIS);

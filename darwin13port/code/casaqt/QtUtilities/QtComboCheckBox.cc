@@ -61,7 +61,7 @@ void QtComboCheckBoxDelegate::paint(QPainter* painter,
 }
 
 QWidget* QtComboCheckBoxDelegate::createEditor(QWidget* parent,
-        const QStyleOptionViewItem& option, const QModelIndex& index) const {
+        const QStyleOptionViewItem& option, const QModelIndex& /*index*/) const {
     QCheckBox* b = new QCheckBox(parent);
     b->resize(option.rect.size());
     b->setFocusPolicy(Qt::StrongFocus);
@@ -137,7 +137,7 @@ void QtComboCheckBox::toggleIndex(int index, bool toggled) {
 }
 
 
-void QtComboCheckBox::paintEvent(QPaintEvent* event) {
+void QtComboCheckBox::paintEvent(QPaintEvent* /*event*/) {
     QStylePainter painter(this);
     painter.setPen(palette().color(QPalette::Text));
 
