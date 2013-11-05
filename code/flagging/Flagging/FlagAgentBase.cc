@@ -429,6 +429,7 @@ FlagAgentBase::runCore()
 			// clipping
 			case IN_ROWS:
 			{
+				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p));
 				iterateInRows();
 				break;
 			}
@@ -1256,6 +1257,13 @@ FlagAgentBase::setAgentParameters(Record config)
 			// Request to pre-load WeightSpectrum
 			flagDataHandler_p->preLoadColumn(vi::WeightSpectrum);
 		}
+		else if (dataColumn_p.compare("WEIGHT") == 0)
+		{
+			dataReference_p = WEIGHT_SPECTRUM;
+
+			// Request to pre-load WeightSpectrum instead of Weight
+			flagDataHandler_p->preLoadColumn(vi::WeightSpectrum);
+		}
 		else if (dataColumn_p.compare("FLOAT_DATA") == 0)
 
 		{
@@ -1307,6 +1315,7 @@ FlagAgentBase::setAgentParameters(Record config)
 		if (	(dataColumn_p.compare("FPARAM") == 0) or
 				(dataColumn_p.compare("SNR") == 0) or
 				(dataColumn_p.compare("WEIGHT_SPECTRUM") == 0) or
+				(dataColumn_p.compare("WEIGHT") == 0) or
 				(dataColumn_p.compare("FLOAT_DATA") == 0))
 		{
 			// Check if expression is one of the supported operators
@@ -1318,7 +1327,7 @@ FlagAgentBase::setAgentParameters(Record config)
 				*logger_p 	<< LogIO::WARN
 							<< " Unsupported visibility expression: " << expression_p
 							<< "; selecting REAL by default. "
-							<< " Complex operators are not supported for FPARAM/SNR/WEIGHT_SPECTRUM"
+							<< " Complex operators are not supported for FPARAM/SNR/WEIGHT_SPECTRUM/WEIGHT"
 							<< LogIO::POST;
 
 				String new_expression;

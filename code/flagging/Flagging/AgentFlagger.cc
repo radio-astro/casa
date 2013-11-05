@@ -1097,7 +1097,7 @@ AgentFlagger::validateDataColumn(String datacol)
 		if (datacol.compare("DATA") == 0 or datacol.compare("CORRECTED") == 0 or
 				datacol.compare("MODEL") == 0 or datacol.compare("RESIDUAL") == 0 or
 				datacol.compare("RESIDUAL_DATA") == 0 or datacol.compare("WEIGHT_SPECTRUM") == 0 or
-				datacol.compare("FLOAT_DATA") == 0)
+				datacol.compare("WEIGHT") == 0 or datacol.compare("FLOAT_DATA") == 0)
 		{
 			checkcol = fdh_p->checkIfColumnExists(datacol);
 		}
