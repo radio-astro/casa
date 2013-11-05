@@ -30,6 +30,7 @@
 #include <synthesis/TransformMachines/cDataToGridImpl.h>
 #include <synthesis/TransformMachines/ProtoVR.h>
 #include <synthesis/TransformMachines/Utils.h>
+#include <synthesis/MSVis/UtilJ.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <casa/OS/Timer.h>
@@ -398,11 +399,18 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
 	  gridCoords(k,1)=j;
 	  k++;
 	}
+      Block<Matrix<Double> > sumWt_th(NBlocks);
+      for (Int i=0; i < NBlocks; i++)
+	{
+	  sumWt_th[i].resize(sumwt.shape());
+	  sumWt_th[i].set(0.0);
+	}
       //      Timer timer;
 
 #ifdef HAS_OMP
       Nth=min(max(1,NBlocks),omp_get_max_threads()-2);
 #endif
+      Nth=16;
 
 //      timer.mark();
       //
@@ -414,38 +422,42 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
       Double *uvwScale_ptr=uvwScale_p.getStorage(Dummy), 
 	*offset_ptr=offset_p.getStorage(Dummy), 
 	*dphase_ptr=dphase_p.getStorage(Dummy);
+      
+      Bool sumWtBool;
 
-#pragma omp parallel shared(gridCoords,polMap_ptr,chanMap_ptr, uvwScale_ptr, offset_ptr, dphase_ptr) num_threads(Nth)
+#pragma omp parallel shared(gridCoords,polMap_ptr,chanMap_ptr, uvwScale_ptr, offset_ptr, dphase_ptr, sumWt_th) private(sumWtBool) num_threads(Nth)
       {
-	Matrix<Double> tmpSumWt(sumwt.shape());
-#pragma omp for nowait
+	//	Matrix<Double> tmpsumwt(sumwt.shape());
+#pragma omp for nowait schedule(static,16)
       for (Int i=0;i<NBlocks;i++)
-	  {
-	    tmpSumWt=0.0;
-	    //	    DataToGridImpl_p(gridStore, gridShape, vbs, tmpSumWt,dopsf,i,j);
+	{
+	  //tmpsumwt=0.0;
 
-	    cDataToGridImpl_p((DComplex *)gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
-	    		      polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
-	    		      dphase_ptr, gridCoords(i,0), gridCoords(i,1));
-	    // if (isGridSinglePrecision)
-	    //   complexGridder_ptr((Complex *)gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
-	    // 			 polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
-	    // 			 dphase_ptr, gridCoords(i,0), gridCoords(i,1));
-	    // else
-	      // dcomplexGridder_ptr((DComplex *)gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
-	      // 			  polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
-	      // 			  dphase_ptr, gridCoords(i,0), gridCoords(i,1));
+	  //DataToGridImpl_p(gridStore, gridShape, vbs, tmpSumWt,dopsf,i,j);
+
+	  cDataToGridImpl_p(gridStore, gridShape, &vbs, &(sumWt_th[i]), dopsf, 
+			    polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
+			    dphase_ptr, gridCoords(i,0), gridCoords(i,1));
+	  // if (isGridSinglePrecision)
+	  //   complexGridder_ptr((Complex *)gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
+	  // 			 polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
+	  // 			 dphase_ptr, gridCoords(i,0), gridCoords(i,1));
+	  // else
+
+	  // dcomplexGridder_ptr((DComplex *)gridStore, gridShape, &vbs, &sumwt, dopsf, 
+	  // 			  polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
+	  // 			  dphase_ptr, gridCoords(i,0), gridCoords(i,1));
 			    
+	  //	    DataToGridImpl_p(gridStore, gridShape, vbs, tmpSumWt,dopsf,gridCoords(i,0), gridCoords(i,1));
 
-
-	    //	    DataToGridImpl_p(gridStore, gridShape, vbs, tmpSumWt,dopsf,gridCoords(i,0), gridCoords(i,1));
 // #ifdef HAS_OMP
 // 	    threadID=omp_get_thread_num();
 // #endif
-	    //cerr << "Thread ID(DC) = " << threadID << " SumWT = " << tmpSumWt << " " << sumwt << endl;
-	    sumwt += tmpSumWt;
-	  }
+	  //cerr << "Thread ID(DC) = " << threadID << " SumWT = " << tmpSumWt << " " << sumwt << endl;
+	  //sumwt += tmpsumwt;
+	}
       }
+      for (Int i=0; i < NBlocks; i++) sumwt=sumwt+sumWt_th[i];
       //      cerr << "Timer: " << timer.all() << endl;
     }
 
@@ -466,12 +478,18 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
 	  gridCoords(k,1)=j;
 	  k++;
 	}
+      Block<Matrix<Double> > sumWt_th(NBlocks);
+      for (Int i=0; i < NBlocks; i++)
+	{
+	  sumWt_th[i].resize(sumwt.shape());
+	  sumWt_th[i].set(0.0);
+	}
       //      Timer timer;
 
 #ifdef HAS_OMP
       Nth=min(max(1,NBlocks),omp_get_max_threads()-2);
 #endif
-      cerr << "####Firing " << Nth << " threads " << NBlocks << endl;
+      Nth=16;
 
 //      timer.mark();
       //
@@ -483,34 +501,35 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
       Double *uvwScale_ptr=uvwScale_p.getStorage(Dummy), 
 	*offset_ptr=offset_p.getStorage(Dummy), 
 	*dphase_ptr=dphase_p.getStorage(Dummy);
+      
+      Bool sumWtBool;
 
-#pragma omp parallel shared(gridCoords,polMap_ptr,chanMap_ptr, uvwScale_ptr, offset_ptr, dphase_ptr) num_threads(Nth)
+#pragma omp parallel shared(gridCoords,polMap_ptr,chanMap_ptr, uvwScale_ptr, offset_ptr, dphase_ptr, sumWt_th) private(sumWtBool) num_threads(Nth)
       {
-	Matrix<Double> tmpSumWt(sumwt.shape());
-#pragma omp for nowait
+	//Matrix<Double> tmpSumWt(sumwt.shape());
+#pragma omp for nowait schedule(static,16)
       for (Int i=0;i<NBlocks;i++)
 	  {
-	    tmpSumWt=0.0;
-	    //	    DataToGridImpl_p(gridStore, gridShape, vbs, tmpSumWt,dopsf,i,j);
+	    //tmpSumWt=0.0;
+	    //DataToGridImpl_p(gridStore, gridShape, vbs, tmpSumWt,dopsf,i,j);
 
-	    cDataToGridImpl_p((Complex *)gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
+	    cDataToGridImpl_p(gridStore, gridShape, &vbs, &sumWt_th[i], dopsf, 
 	    		      polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
 	    		      dphase_ptr, gridCoords(i,0), gridCoords(i,1));
 	    // complexGridder_ptr(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
 	    // 		      polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
 	    // 		      dphase_ptr, gridCoords(i,0), gridCoords(i,1));
 
-
-
-
 	    //	    DataToGridImpl_p(gridStore, gridShape, vbs, tmpSumWt,dopsf,gridCoords(i,0), gridCoords(i,1));
+
 // #ifdef HAS_OMP
 // 	    threadID=omp_get_thread_num();
 // #endif
 	    //cerr << "Thread ID(C) = " << threadID << " SumWT = " << tmpSumWt << " " << sumwt << endl;
-	    sumwt += tmpSumWt;
+	    //sumwt += tmpSumWt;
 	  }
       }
+      for (Int i=0; i < NBlocks; i++) sumwt=sumwt+sumWt_th[i];
       //      cerr << "Timer: " << timer.all() << endl;
     }
 
@@ -550,7 +569,7 @@ void ProtoVR::DataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
   Double pos[2], off[3];
   Int igrdpos[4];
   
-  Complex phasor, nvalue, wt;
+  Complex phasor=Complex(1.0,0.0), nvalue, wt;
   Complex norm;
   Int cfShape[4];
   Bool Dummy;
@@ -794,7 +813,8 @@ void ProtoVR::sgrid(Double pos[2], Int loc[3],
   
   pos[2]=sqrt(abs(scale[2]*uvw_l[2]*freq/C::c))+offset[2];
   loc[2]=SynthesisUtils::nint(pos[2]);
-  off[2]=0;
+  pos[2]=0.0;loc[2]=0;
+  off[2]=0.0;
   
   for(Int idim=0;idim<2;idim++)
     {
@@ -804,16 +824,16 @@ void ProtoVR::sgrid(Double pos[2], Int loc[3],
       off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]);
     }
   
-  if (dphase != 0.0)
-    {
-      phase=-2.0*C::pi*dphase*freq/C::c;
-      Double sp,cp;
-      sincos(phase,&sp,&cp);
-      //      phasor=Complex(cos(phase), sin(phase));
-      phasor=Complex(cp,sp);
-    }
-  else
-    phasor=Complex(1.0);
+  // if (dphase != 0.0)
+  //   {
+  //     phase=-2.0*C::pi*dphase*freq/C::c;
+  //     Double sp,cp;
+  //     sincos(phase,&sp,&cp);
+  //     //      phasor=Complex(cos(phase), sin(phase));
+  //     phasor=Complex(cp,sp);
+  //   }
+  // else
+  //   phasor=Complex(1.0);
   // cerr << "### " << pos[0] << " " << offset[0] << " " << loc[0] << " " << off[0] << " " << uvw_l[0] << endl;
   // exit(0);
 }

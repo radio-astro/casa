@@ -35,9 +35,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   			 const Double *dphase_ptr, Int XThGrid=0, Int YThGrid=0);
 
   void csgrid(Double pos[2], Int loc[3], Double off[3], Complex& phasor, 
-	      const Int& irow, const Matrix<Double>& uvw, const Double& dphase, 
+	      const Int& irow, const Double* uvw, const Double& dphase, 
 	      const Double& freq, const Double* scale, const Double* offset,
-	      const Float sampling[2]);
+	      const Float sampling[2],const Bool& accumCFs);
 
   Bool ccomputeSupport(const VBStore* vbs, const Int& XThGrid, const Int& YThGrid,
 		       const Int support[2], const Float sampling[2],

@@ -2269,7 +2269,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //  
   void AWProjectFT::makeThGridCoords(VBStore& vbs, const Vector<Int>& gridShape)
   {
-    Float NBlocksX=14.0*10, NBlocksY=1.0;
+    Float NBlocksX=1024.0, NBlocksY=1.0;
     Float dNx=(gridShape(0)/NBlocksX), dNy=(gridShape(1)/NBlocksY);
     Int GNx=SynthesisUtils::nint(gridShape(0)/dNx),
       GNy=SynthesisUtils::nint(gridShape(1)/dNy);
@@ -2293,9 +2293,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     BLCX0=0;
     BLCY0=0;
-    TRCX0=gridShape(0)-1;
-    TRCY0=gridShape(1)-1;
-
+    TRCX0=gridShape(0);
+    TRCY0=gridShape(1);
 
     dNx = abs(BLCX0-TRCX0)/NBlocksX;
     dNy = abs(BLCY0-TRCY0)/NBlocksY;
@@ -2304,8 +2303,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	{
 	  vbs.BLCXi(i,j)=BLCX0+SynthesisUtils::nint(i*dNx);
 	  vbs.BLCYi(i,j)=BLCY0+SynthesisUtils::nint(j*dNy);
-	  vbs.TRCXi(i,j)=BLCX0+SynthesisUtils::nint((i+1)*dNx-1.0);
-	  vbs.TRCYi(i,j)=BLCY0+SynthesisUtils::nint((j+1)*dNy-1.0);
+	  vbs.TRCXi(i,j)=BLCX0+SynthesisUtils::nint((i+1)*dNx);
+	  vbs.TRCYi(i,j)=BLCY0+SynthesisUtils::nint((j+1)*dNy);
 	  //	  cerr << vbs.BLCXi(i,j) << " " << vbs.BLCYi(i,j) << " " << vbs.TRCXi(i,j) << " " << vbs.TRCYi(i,j) << endl;;
 	}
 

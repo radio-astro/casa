@@ -42,7 +42,7 @@ void cDataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
   Double pos[2], off[3];
   Int igrdpos[4];
   
-  Complex phasor, nvalue, wt;
+  Complex phasor=Complex(1.0,0.0), nvalue, wt;
   Complex norm;
   Int cfShape[4];
   Bool Dummy;
@@ -51,6 +51,8 @@ void cDataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
   Float * imgWts_ptr = vbs->imagingWeight_p.getStorage(Dummy);
   Complex * visCube_ptr = vbs->visCube_p.getStorage(Dummy);
   Double *sumWt_ptr=sumwt->getStorage(Dummy);
+  const Double *uvw_ptr=vbs->uvw_p.getStorage(Dummy);
+  Double *freq=vbs->freq_p.getStorage(Dummy);
 
   //  Vector<Double> pointingOffset(cfb.getPointingOffset());
   // Double *pointingOffset_ptr=vbs->cfBSt_p.pointingOffset,
@@ -68,7 +70,6 @@ void cDataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
   nGridPol=gridShape[2]; nGridChan=gridShape[3];
   Bool gDummy;
   
-  Double *freq=vbs->freq_p.getStorage(Dummy);
   
   cacheAxisIncrements(gridShape, gridInc_l);
 
@@ -125,12 +126,11 @@ void cDataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
 		      
 		      sampling[0] = sampling[1] = SynthesisUtils::nint(s);
 		      
-		      const Double *uvw_ptr=vbs->uvw_p.getStorage(Dummy);
 			// *uvwScale_ptr=uvwScale_p.getStorage(Dummy),
 			// *offset_ptr=offset_p.getStorage(Dummy);;
 		      
-		      csgrid(pos,loc,off, phasor, irow, vbs->uvw_p, dphase_ptr[irow], freq[ichan], 
-			    uvwScale_ptr, offset_ptr, sampling);
+		      csgrid(pos,loc,off, phasor, irow, uvw_ptr, dphase_ptr[irow], freq[ichan], 
+			     uvwScale_ptr, offset_ptr, sampling,accumCFs);
 		      
 		      Float cfblc[2], cftrc[2];
 		      //		    pos[0]=1024.1;pos[1]=1025.6;
@@ -216,7 +216,7 @@ void cDataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
 					  norm += caccumulateOnGrid(gridStore, gridInc_l, cached_PhaseGrad_ptr, 
 								   cachedPhaseGradNX, cachedPhaseGradNY,
 								   convFuncV, cfInc_l, nvalue,dataWVal,
-								   iblc,itrc,/*support,*/ sampling, off, 
+								   iblc,itrc,sampling, off, 
 								   convOrigin, cfShape, loc, igrdpos,
 								   finitePointingOffsets,psfOnly,foundCFPeak);
 					}
@@ -246,22 +246,27 @@ void cDataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
 //---------------------------------------------------------------------------------
 //
 void csgrid(Double pos[2], Int loc[3], Double off[3], Complex& phasor, 
-	   const Int& irow, const Matrix<Double>& uvw, const Double& dphase, 
+	   const Int& irow, const Double* uvw_ptr, const Double& dphase, 
 	   const Double& freq, const Double* scale, const Double* offset,
-	   const Float sampling[2])
+	    const Float sampling[2],const Bool& accumCFs)
 {
   Double phase;
   //Vector<Double> uvw_l(3,0); // This allows gridding of weights
   Double uvw_l[3]={0.0,0.0,0.0}; // This allows gridding of weights
-  Bool dd;
-  const Double *uvw_ptr=uvw.getStorage(dd);
+  //  Bool dd;
+  //  const Double *uvw_ptr=uvw.getStorage(dd);
   // centered on the uv-origin
   //  if (uvw.nelements() > 0) for(Int i=0;i<3;i++) uvw_l[i]=uvw(i,irow);
-  if (uvw.nelements() > 0) for(Int i=0;i<3;i++) uvw_l[i]=uvw_ptr[i+irow*3];
-  
-  pos[2]=sqrt(abs(scale[2]*uvw_l[2]*freq/C::c))+offset[2];
-  loc[2]=SynthesisUtils::nint(pos[2]);
-  off[2]=0;
+
+  //  if (uvw.nelements() > 0) for(Int i=0;i<3;i++) uvw_l[i]=uvw_ptr[i+irow*3];
+  if (!accumCFs) for(Int i=0;i<3;i++) uvw_l[i]=uvw_ptr[i+irow*3];
+
+
+  // pos[2]=sqrt(abs(scale[2]*uvw_l[2]*freq/C::c))+offset[2];
+  // loc[2]=SynthesisUtils::nint(pos[2]);
+  pos[2]=0.0; loc[2]=0;
+
+  off[2]=0.0;
   
   for(Int idim=0;idim<2;idim++)
     {
@@ -271,16 +276,18 @@ void csgrid(Double pos[2], Int loc[3], Double off[3], Complex& phasor,
       off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]);
     }
   
-  if (dphase != 0.0)
-    {
-      phase=-2.0*C::pi*dphase*freq/C::c;
-      Double sp,cp;
-      sincos(phase,&sp,&cp);
-      //      phasor=Complex(cos(phase), sin(phase));
-      phasor=Complex(cp,sp);
-    }
-  else
-    phasor=Complex(1.0);
+  // if (dphase != 0.0)
+  //   {
+  //     phase=-2.0*C::pi*dphase*freq/C::c;
+  //     Double sp,cp;
+  //     sincos(phase,&sp,&cp);
+  //     //      phasor=Complex(cos(phase), sin(phase));
+  //     phasor=Complex(cp,sp);
+  //   }
+  // else
+  //   phasor=Complex(1.0);
+
+
   // cerr << "### " << pos[0] << " " << offset[0] << " " << loc[0] << " " << off[0] << " " << uvw_l[0] << endl;
   // exit(0);
 }
