@@ -50,6 +50,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Feather(const ImageInterface<Float>& SDImage, const ImageInterface<Float>& INTImage, Float sdScale=1.0);
     //Destructor
     virtual ~Feather();
+
+    //Clear the weight flags.  Used when changing between the
+    //SDimage and the dirty image.
+    void clearWeightFlags();
+
     //set the SDimage and Int images 
     void setSDScale(Float sdscale=1.0);
     void setSDImage(const ImageInterface<Float>& SDImage);
