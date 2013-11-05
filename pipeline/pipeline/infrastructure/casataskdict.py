@@ -10,7 +10,7 @@ CasaTaskDict = {
 		   'hif_clean'        : 'Clean', 
 		   'hif_cleanlist'    : 'CleanList', 
                    'hif_exportdata'   : 'ExportData',
-                   'hif_flagdata'     : 'FlagDeterALMA',
+                   'hif_flagdata'     : 'ALMAAgentFlagger',
                    'hif_fluxcalflag'  : 'FluxcalFlag',
                    'hif_gaincal'      : 'Gaincal',
                    'hif_gfluxscale'   : 'GcorFluxscale',
