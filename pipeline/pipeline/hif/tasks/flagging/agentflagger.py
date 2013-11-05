@@ -165,6 +165,8 @@ class AgentFlagger(basetask.StandardTaskTemplate):
         # online flags  
         if 'mode' not in agent_cmd:
             agent_cmd['mode'] = 'manual'
+        if 'autocorr' not in agent_cmd:
+            agent_cmd['autocorr'] = True
 
         casatools.agentflagger.parseagentparameters(agent_cmd)
 
