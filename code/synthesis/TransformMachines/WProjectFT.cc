@@ -533,9 +533,12 @@ Array<Complex>* WProjectFT::getDataPointer(const IPosition& centerLoc2D,
 #define sectgwgridd sectgwgridd_
 #define sectgwgrids sectgwgrids_
 #define sectdwgrid sectdwgrid_
+#define locuvw locuvw_
 #endif
 
 extern "C" { 
+  void locuvw(const Double*, const Double*, const Double*, const Int*, const Double*, const Double*, const Int*, 
+	      Int*, Int*, Complex*, const Int*, const Int*, const Double*);
   //Double precision gridding
   void gwgrid(const Double*,
 	      Double*,
@@ -840,7 +843,9 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   Int * locstor=loc.getStorage(del);
   Int * offstor=off.getStorage(del);
   const Double *dpstor=dphase.getStorage(del);
+  Double cinv=Double(1.0)/C::c;
   Int irow;
+  Int dow=1;
   Int nth=1;
 #ifdef HAS_OMP
   if(numthreads_p >0){
@@ -852,13 +857,14 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   nth=min(4,nth);
 #endif
 
-#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor) shared(startRow, endRow) num_threads(nth)  
+#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor, cinv, dow) shared(startRow, endRow) num_threads(nth)  
 {
 #pragma omp for
   for (irow=startRow; irow<=endRow;irow++){
-    locateuvw(uvwstor,dpstor, visfreqstor, nvc, scalestor, offsetstor, csamp, 
-	      locstor, 
-	      offstor, phasorstor, irow, True);
+    //locateuvw(uvwstor,dpstor, visfreqstor, nvc, scalestor, offsetstor, csamp, 
+    //	      locstor, 
+    //	      offstor, phasorstor, irow, True);
+    locuvw(uvwstor, dpstor, visfreqstor, &nvc, scalestor, offsetstor, &csamp, locstor, offstor, phasorstor, &irow, &dow, &cinv);
   }  
 
  }//end pragma parallel
@@ -1130,14 +1136,17 @@ void WProjectFT::get(VisBuffer& vb, Int row)
   }
   nth=min(4,nth);
 #endif
+  Int dow=1;
+  Double cinv=Double(1.0)/C::c;
 
-#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor) shared(startRow, endRow) num_threads(nth) 
+#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor, dow, cinv) shared(startRow, endRow) num_threads(nth) 
   {
 #pragma omp for
     for (irow=startRow; irow<=endRow; ++irow){
-      locateuvw(uvwstor,dpstor, visfreqstor, nvc, scalestor, offsetstor, csamp, 
+      /*locateuvw(uvwstor,dpstor, visfreqstor, nvc, scalestor, offsetstor, csamp, 
 		locstor, 
-		offstor, phasorstor, irow, True);
+		offstor, phasorstor, irow, True);*/
+      locuvw(uvwstor, dpstor, visfreqstor, &nvc, scalestor, offsetstor, &csamp, locstor, offstor, phasorstor, &irow, &dow, &cinv);
   }  
 
   }//end pragma parallel
