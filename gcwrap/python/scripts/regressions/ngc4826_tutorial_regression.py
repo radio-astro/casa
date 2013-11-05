@@ -1418,7 +1418,7 @@ testvers = 'CASA Version 3.0.2 (build #11306)'
 clean_image_max = 1.615747
 clean_offsrc_rms = 0.058497
 clean_offline_rms = 0.055416
-clean_momentzero_max = 151.66
+clean_momentzero_max = 159.22
 clean_momentzero_rms = 14.31
 #
 #  32 bits gets 423.6954 and 64 bits gets 422.142792
@@ -1436,9 +1436,9 @@ model_pbcor_sum = 75.92 # was 66.88 Peak hits a channel better?
 # jiggled around a fair bit.  The median is _not_ affected by the two spurious
 # blobs at 501.64 km/s, though.  (Verified by doing imstat with a tight polygon
 # region.)
-clean_offsrc_rms = 0.0604
-clean_offline_rms = 0.0625
-clean_momentzero_rms = 14.05
+clean_offsrc_rms = 0.0557
+clean_offline_rms = 0.0550
+clean_momentzero_rms = 14.57
 # The chanwidth is ~16 km/s.
 clean_momentone_median = 435.368103
 
