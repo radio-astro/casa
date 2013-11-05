@@ -214,23 +214,31 @@ bool FeatherThread::isSuccess() const {
 bool FeatherThread::collectLowHighData(){
 	bool lowHighLoaded = setWorkerImages( lowImage, highImage );
 	if ( lowHighLoaded ){
-
-		//Initialize the weight Data
 		Vector<Float> uX;
 		Vector<Float> uY;
 		Vector<Float> vX;
 		Vector<Float> vY;
-		FeatheredData sdWeight;
-		featherWorker->getFeatherSD( uX, uY, vX, vY, radial );
-		sdWeight.setU( uX, uY );
-		sdWeight.setV( vX, vY );
-		dataMap.insert( SD_WEIGHT, sdWeight );
-		FeatheredData intWeight;
-		featherWorker->getFeatherINT( uX, uY, vX, vY, radial );
-		intWeight.setU( uX, uY );
-		intWeight.setV( vX, vY );
-		dataMap.insert( INT_WEIGHT, intWeight );
+		try {
+			//Initialize the weight Data
+			FeatheredData sdWeight;
+			featherWorker->getFeatherSD( uX, uY, vX, vY, radial );
+			sdWeight.setU( uX, uY );
+			sdWeight.setV( vX, vY );
 
+			dataMap.insert( SD_WEIGHT, sdWeight );
+			FeatheredData intWeight;
+			featherWorker->getFeatherINT( uX, uY, vX, vY, radial );
+			intWeight.setU( uX, uY );
+			intWeight.setV( vX, vY );
+			dataMap.insert( INT_WEIGHT, intWeight );
+		}
+		catch( AipsError& error ){
+			lowHighLoaded = false;
+			errorMessage = "Could not convolve high image with low beam.";
+			if ( logger != NULL ){
+				(*logger)<<LogIO::WARN<< errorMessage.toStdString() << "  "<<error.getMesg().c_str()<<LogIO::POST;
+			}
+		}
 		//Initialize the cut data
 		FeatheredData sdCut;
 		featherWorker->getFeatheredCutSD( uX, uY, vX, vY, radial );

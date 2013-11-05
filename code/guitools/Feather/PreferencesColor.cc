@@ -146,11 +146,11 @@ void PreferencesColor::setCurveDefaults(){
 	curvePreferences[FeatherCurveType::SUM_LOW_HIGH]->setScatterEligible( false );
 }
 
-void PreferencesColor::setRadialPlot( bool radial ){
-	curvePreferences[FeatherCurveType::WEIGHT_LOW]->setEnabled( !radial );
-	if (radial ){
+void PreferencesColor::setRadialPlot( bool /*radial*/ ){
+	//qcurvePreferences[FeatherCurveType::WEIGHT_LOW]->setEnabled( !radial );
+	/*if (radial ){
 		curvePreferences[FeatherCurveType::WEIGHT_LOW]->setDisplayed( false );
-	}
+	}*/
 }
 
 void PreferencesColor::addCurvePreferences(){
