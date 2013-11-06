@@ -326,7 +326,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       uy.resize();
       yamp.resize();
       getRadialCut(xampInt, *cwImage_p);
-      getRadialUVval(xamp.shape()[0], cwImage_p->shape(), cwImage_p->coordinates(), ux);
+      getRadialUVval(xampInt.shape()[0], cwImage_p->shape(), cwImage_p->coordinates(), ux);
 	
     }
     else{
