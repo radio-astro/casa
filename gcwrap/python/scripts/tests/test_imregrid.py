@@ -978,6 +978,38 @@ class imregrid_test(unittest.TestCase):
         self.assertTrue((xx.shape() == shape).all())
         xx.done()
         
+    def test_template_stokes_length_and_input_stokes_length_gt_1(self):
+        myia = self._myia
+        my_image = numpy.zeros([128,128,32,4])
+        os.system("rm -rf fake.image")
+        myia.fromarray(
+            outfile="fake.image",
+            pixels=my_image,
+            overwrite=True
+        )
+        myia.close()
+
+        my_image = numpy.zeros([128,128,32,3])
+        os.system("rm -rf fake_2.image")
+        myia.fromarray(
+            outfile="fake_2.image",
+            pixels=my_image,
+            overwrite=True
+        )
+        myia.close()
+
+        output = "dummy.image"
+        os.system("rm -rf " + output)
+        imregrid(
+            imagename = "fake.image",
+            template="fake_2.image",
+            output=output,
+            axes=[0,1,2]
+        )
+        myia.open(output)
+        self.assertTrue(myia.shape()[3] == 4)
+        myia.done()
+        
 def suite():
     return [imregrid_test]
     

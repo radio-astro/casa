@@ -20,6 +20,7 @@
 
 casa_add_python( tools tools_recipes_python python/${PYTHONV}/recipes
   almahelpers.py
+  almapolhelpers.py
   automask.py
   benchmark.py
   checknan.py

@@ -326,9 +326,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          try averaging
                 WARNING: 'fsotf' is not implemented yet
             &gt;&gt;&gt; calmode expandable parameter
-                 fraction -- Edge marking parameter for 'otf' and 'otfraster'.
+                 fraction -- Edge marker parameter of 'otf' and 'otfraster'.
                              specify a number of OFF scans as a fraction of 
-                             total number of data points. 
+                             total number of data points. In 'otfraster' 
+                             mode, fraction * (number of samples per row) 
+                             points are marked as OFF in both sides of the 
+                             row (decimal fraction is rounded down). Thus, 
+                             at most twice of the fraction given by the 
+                             parameter will be marked as OFF in total. 
+                             In 'otf' mode, the number given by rounding 
+                             down fraction * (number of samples) is used 
+                             as criterion of iterative marking. Therefore, 
+                             resulting total number of OFFs will be 
+                             slightly larger than that value.   
                          default: '10%'
                          options: '20%' in string style or float value less 
                                   than 1.0 (e.g. 0.15).
@@ -484,7 +494,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         explicit OFF scans. If the observing pattern is 'raster', you 
         should use the 'otfraster' mode to calibrate data. Otherwise, the 
         'otf' mode should be used. For detail about edge marking, see 
-        online help of sd.edgemarker module.
+        inline help of sd.edgemarker module and its methods.
 
         WARNING for the GBT raw SDFITS format data as input:
         SDtasks are able to handle GBT raw SDFITS format data since the 

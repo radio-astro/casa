@@ -64,7 +64,7 @@ def simalma(
         maptype_tp = 'square'
 
         # time ratios for 12extended, 12compact,7m, and TP:
-        default_timeratio = [1,0.5,4,8]
+        default_timeratio = [1,0.5,2,4]
 
         # pbgridratio_tp = 0.25  # ->  would be gridratio_tp = 1/3.4
         # the grid spacing is defined in terms of lambda/d times these factors

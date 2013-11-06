@@ -68,6 +68,8 @@ antennalist="alma;0.5arcsec"
 if noise:
     thermalnoise = 'tsys-atm'  #w/ noise 
     user_pwv=3.0
+else:
+    thermalnoise=""
 
 if not l.has_key('interactive'): interactive=False
 if interactive:
@@ -117,6 +119,8 @@ sdant = 0
 if noise:
     thermalnoise = 'tsys-atm'  #w/ noise 
     user_pwv=3.0
+else:
+    thermalnoise=""
 
 if not l.has_key('interactive'): interactive=False
 if interactive:
@@ -167,6 +171,8 @@ antennalist="aca.i.cfg"
 if noise:
     thermalnoise = 'tsys-atm'  #w/ noise 
     user_pwv=3.0
+else:
+    thermalnoise=""
 
 if not l.has_key('interactive'): interactive=False
 if interactive:
@@ -201,7 +207,7 @@ else:
 imsize = [512,512]
 #imdirection = 'B1950 23h59m59.96 -34d59m59.50'
 cell = '0.2arcsec'
-# 201320826 new default is feather not sd as model, so specify that 
+# 201320826 new default is feather not sd as model, so specify modelimage
 modelimage='$project.sd.image'
 
 analyze = True
