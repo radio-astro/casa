@@ -38,16 +38,7 @@ ExternalAxisWidgetLeft::ExternalAxisWidgetLeft(QWidget* parent):
 	setFixedWidth( AXIS_SMALL_SIDE );
 }
 
-int ExternalAxisWidgetLeft::getStartY() const {
-	QwtPlotCanvas* canvas = plot->canvas();
-	int canvasHeight = canvas->height();
-	int heightDiff =  height() - canvas->height();
-	const int MIN = 22;
-	if ( canvasHeight < MIN ){
-		heightDiff = MIN;
-	}
-	return heightDiff;
-}
+
 
 void ExternalAxisWidgetLeft::defineAxis( QLine& line ){
 	const int MARGIN = 1;
@@ -79,6 +70,16 @@ void ExternalAxisWidgetLeft::drawTick( QPainter* painter, float yPixel, double v
 	painter->drawText( labelStart, position, numberStr);
 }
 
+int ExternalAxisWidgetLeft::getStartY() const {
+	QwtPlotCanvas* canvas = plot->canvas();
+	int canvasHeight = canvas->height();
+	int heightDiff =  height() - canvas->height();
+	if ( canvasHeight < MIN_START_Y ){
+		heightDiff = MIN_START_Y;
+	}
+	return heightDiff;
+}
+
 void ExternalAxisWidgetLeft::drawTicks( QPainter* painter, int tickLength ){
 
 	//Figure out how far out to start drawing ticks.
@@ -106,16 +107,8 @@ void ExternalAxisWidgetLeft::drawTicks( QPainter* painter, int tickLength ){
 
 void ExternalAxisWidgetLeft::drawAxisLabel( QPainter* painter ){
 	  QFont font = painter->font();
-	  bool logScale = false;
-	  if ( axisLabel.indexOf( "Log") != -1 ){
-		  logScale = true;
-	  }
-	  int unitIndex = axisLabel.indexOf( "(");
-	  if ( logScale ){
-		  unitIndex = axisLabel.indexOf( ")")+1;
-	  }
-	  QString mainLabel = axisLabel.left( unitIndex ).trimmed();
-	  QString unitLabel = axisLabel.right( axisLabel.size() - unitIndex );
+	  QString mainLabel = axisLabel.trimmed();
+
 	  painter->rotate(-90);
 
 	  //Draw the main label
@@ -124,13 +117,6 @@ void ExternalAxisWidgetLeft::drawAxisLabel( QPainter* painter ){
 	  int xPosition = -height() + (height() - fontBoundingRect.width())/2;
 	  painter->drawText( xPosition, yPosition, fontBoundingRect.width(),
 			  fontBoundingRect.height(), Qt::AlignHCenter|Qt::AlignTop, mainLabel);
-
-	  //Draw the units
-	  fontBoundingRect = QFontMetrics(font).boundingRect( unitLabel );
-	  yPosition = yPosition + fontBoundingRect.height();
-	  xPosition = -height() + (height() - fontBoundingRect.width())/2;
-	  painter->drawText( xPosition, yPosition, fontBoundingRect.width(),
-			  fontBoundingRect.height(), Qt::AlignHCenter|Qt::AlignTop, unitLabel);
 
 	  painter->rotate(90);
 }

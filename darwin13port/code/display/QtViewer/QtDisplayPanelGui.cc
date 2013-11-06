@@ -816,7 +816,8 @@ void QtDisplayPanelGui::showColorHistogram(QtDisplayData* displayData ) {
 		connect( qdo_, SIGNAL(dataOptionsTabChanged(const QString&)),
 				this, SLOT( updateColorHistogram(const QString&)));
 	}
-	colorHistogram->show();
+	colorHistogram->showNormal();	// (Magic formula to bring a window up,
+	colorHistogram->raise();
 	colorHistogram->setDisplayData( displayData );
 }
 
@@ -848,8 +849,8 @@ void QtDisplayPanelGui::showHistogram() {
 		}
 	}
 
-
-	histogrammer->show();
+	histogrammer->showNormal();	// (Magic formula to bring a window up,
+	histogrammer->raise();
 }
 
 void QtDisplayPanelGui::hideHistogram() {
@@ -1042,7 +1043,8 @@ void QtDisplayPanelGui::initFit2DTool() {
 
 
 void QtDisplayPanelGui::showFitInteractive() {
-	fitTool->show();
+	fitTool->showNormal();	// (Magic formula to bring a window up,
+	fitTool->raise();
 }
 
 void QtDisplayPanelGui::hideFit2DTool() {
@@ -2310,7 +2312,8 @@ void QtDisplayPanelGui::showImageProfile() {
 						QMessageBox::warning( this, "Channel Image Problem", "The z-axis of the channel image is not frequency.");
 					} else {
 						profileDD_ = pdd;
-						profile_->show();
+						profile_->showNormal();
+						profile_->raise();
 						pdd->checkAxis();
 					}
 				} else {
@@ -3222,6 +3225,7 @@ void QtDisplayPanelGui::showImageManager() {
 		updateViewedImage();
 
 	}
-	imageManagerDialog->show();
+	imageManagerDialog->showNormal();
+	imageManagerDialog->raise();
 }
 }

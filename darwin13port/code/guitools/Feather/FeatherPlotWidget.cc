@@ -281,26 +281,31 @@ double FeatherPlotWidget::getDishDiameter() const {
 }
 
 void FeatherPlotWidget::setDishDiameter( double position, bool scale ){
-	//Set the size
-	QwtSymbol symbol = diameterMarker->symbol();
-	int canvasHeight = height();
-	symbol.setSize( 2 * canvasHeight );
-	diameterMarker->setSymbol( symbol );
-
-	//Set the position
 	if ( position >= 0 ){
-		if ( scale ){
-			if ( plot->isLogUV() ){
-				position = qLn(position) / qLn( 10 );
+		dishPosition = position;
+	}
+	if ( diameterMarker != NULL ){
+		//Set the size
+		QwtSymbol symbol = diameterMarker->symbol();
+		int canvasHeight = height();
+		symbol.setSize( 2 * canvasHeight );
+		diameterMarker->setSymbol( symbol );
+
+		//Set the position
+		if ( position >= 0 ){
+			if ( scale ){
+				if ( plot->isLogUV() ){
+					position = qLn(position) / qLn( 10 );
+				}
+			}
+			diameterMarker->setXValue( position );
+			bool markerDisplayed = curvePreferences[FeatherCurveType::DISH_DIAMETER].isDisplayed();
+			if ( !plot->isScatterPlot() && markerDisplayed ){
+				diameterMarker->show();
 			}
 		}
-		diameterMarker->setXValue( position );
-		bool markerDisplayed = curvePreferences[FeatherCurveType::DISH_DIAMETER].isDisplayed();
-		if ( !plot->isScatterPlot() && markerDisplayed ){
-			diameterMarker->show();
-		}
+		plot->replot();
 	}
-	plot->replot();
 }
 
 
@@ -333,14 +338,8 @@ void FeatherPlotWidget::initializeZooming(){
 void FeatherPlotWidget::zoomRectangleSelected( const QwtDoubleRect& zoomRect ){
 	if ( zoomRect.width() > 0 && zoomRect.height() > 0 ){
 		double minX = zoomRect.x();
-		if ( minX < 0 ){
-			minX = 0;
-		}
 		double maxX = minX + zoomRect.width();
 		double minY = zoomRect.y();
-		if ( minY < 0 ){
-			minY = 0;
-		}
 		double maxY = minY + zoomRect.height();
 
 		//If we are using a log scale on either axis, we need to convert
@@ -446,18 +445,15 @@ void FeatherPlotWidget::changeZoom90(bool zoom ){
 		double dishPosition = 0;
 		if ( diameterMarker != NULL ){
 			dishPosition = diameterMarker->xValue();
-			dishPosition = dishPosition + dishPosition / 3;
+
 			//If we are using a log scale on the x-axis, we need to undo the log.
 			if ( plot->isLogUV() ){
 				dishPosition = qPow( 10, dishPosition );
 			}
+			dishPosition = dishPosition + dishPosition / 3;
 		}
-		if ( dishPosition == 0 ){
-			pair<double,double> minMaxPair =
-					getMaxMin( plotData[FeatherDataType::LOW_WEIGHTED].second, FeatherCurveType::LOW_WEIGHTED );
-			dishPosition = minMaxPair.second / 3;
-		}
-		zoom90Other( dishPosition );
+		double zoomLocation = this->dishPosition + this->dishPosition / 3;
+		zoom90Other( zoomLocation );
 	}
 	else {
 		zoomNeutral();

@@ -26,6 +26,7 @@
 #include "ActionLocate.h"
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Data/PlotMSIndexer.h>
+
 namespace casa {
 
 ActionLocate::ActionLocate( Client* client )
@@ -34,7 +35,10 @@ ActionLocate::ActionLocate( Client* client )
 }
 
 void ActionLocate::redrawPlots(PlotMSPlot* /*plot*/){
-	//Empty because it doesn't need to redraw.
+
+}
+
+void ActionLocate::addRedrawPlot( PlotMSPlot* /*plot*/ ){
 }
 PlotLogMessage* ActionLocate::doFlagOperation( PlotMSPlot* plot,
 		int canvasIndex, vector<PlotRegion>& regions,

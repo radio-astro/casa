@@ -36,6 +36,7 @@ public:
 
 	virtual ~ActionLocate();
 protected:
+	virtual void addRedrawPlot( PlotMSPlot* plot );
 	virtual void redrawPlots(PlotMSPlot* plot);
 	virtual string getOperationLabel() const;
 	virtual PlotLogMessage* doFlagOperation( PlotMSPlot* plot, int canvasIndex,

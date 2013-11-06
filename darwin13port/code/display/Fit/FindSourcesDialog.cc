@@ -734,7 +734,9 @@ namespace casa {
 	QString FindSourcesDialog::getRegionString() const {
 		QString str;
 		if ( regions.contains( currentRegionId)) {
-			str = regions[currentRegionId]->toStringLabelled(blcVector, trcVector);
+			if ( regions[currentRegionId] != NULL ){
+				str = regions[currentRegionId]->toStringLabelled(blcVector, trcVector);
+			}
 		}
 		return str;
 	}

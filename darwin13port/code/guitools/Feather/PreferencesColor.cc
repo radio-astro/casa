@@ -111,9 +111,9 @@ void PreferencesColor::setCurveDefaults(){
 	curvePreferences[FeatherCurveType::WEIGHT_LOW]->setName( "Weight Low" );
 	curvePreferences[FeatherCurveType::WEIGHT_HIGH]->setName( "Weight High" );
 	curvePreferences[FeatherCurveType::LOW_ORIGINAL]->setName( "Low Data" );
-	curvePreferences[FeatherCurveType::LOW_WEIGHTED]->setName( "Low Data, Weighted/Scaled");
+	curvePreferences[FeatherCurveType::LOW_WEIGHTED]->setName( "Low Data, Weighted & Scaled");
 	curvePreferences[FeatherCurveType::LOW_CONVOLVED_HIGH]->setName("Low Data x High Beam");
-	curvePreferences[FeatherCurveType::LOW_CONVOLVED_HIGH_WEIGHTED]->setName("Low Data x High Beam, Weighted/Scaled");
+	curvePreferences[FeatherCurveType::LOW_CONVOLVED_HIGH_WEIGHTED]->setName("Low Data x High Beam, Weighted & Scaled");
 	//curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY]->setName("Low x Dirty");
 	//curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY_WEIGHTED]->setName( "Low x Dirty, Weighted/Scaled");
 	curvePreferences[FeatherCurveType::HIGH_ORIGINAL]->setName( "High Data");
@@ -143,13 +143,14 @@ void PreferencesColor::setCurveDefaults(){
 	curvePreferences[FeatherCurveType::DISH_DIAMETER]->setScatterEligible( false );
 	curvePreferences[FeatherCurveType::WEIGHT_LOW]->setScatterEligible( false );
 	curvePreferences[FeatherCurveType::WEIGHT_HIGH]->setScatterEligible( false );
+	curvePreferences[FeatherCurveType::SUM_LOW_HIGH]->setScatterEligible( false );
 }
 
-void PreferencesColor::setRadialPlot( bool radial ){
-	curvePreferences[FeatherCurveType::WEIGHT_LOW]->setEnabled( !radial );
-	if (radial ){
+void PreferencesColor::setRadialPlot( bool /*radial*/ ){
+	//qcurvePreferences[FeatherCurveType::WEIGHT_LOW]->setEnabled( !radial );
+	/*if (radial ){
 		curvePreferences[FeatherCurveType::WEIGHT_LOW]->setDisplayed( false );
-	}
+	}*/
 }
 
 void PreferencesColor::addCurvePreferences(){

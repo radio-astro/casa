@@ -581,9 +581,9 @@ Bool ImageRegridder::_doImagesOverlap(
 			dc1, dirShape1
 		);
 		overlap = _doRectanglesIntersect(corners0, corners1);
-	}
-	if (! overlap) {
-		return False;
+		if (! overlap) {
+			return False;
+		}
 	}
 	if (
 		csys0.hasSpectralAxis()
