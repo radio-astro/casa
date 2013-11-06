@@ -117,7 +117,6 @@ endProc = time.clock()
 
 test_name = """simdata observation of M51 (total power)"""
 
-#ia.open(project+"/"+project + '.aca.tp.image')
 ia.open(project+"/"+project + '.sd.image')
 m51sd_stats=ia.statistics(verbose=False,list=False)
 ia.close()
@@ -139,14 +138,19 @@ ia.close()
 #              'rms': 0.39420992,
 #              'sigma': 0.36188505,
 #              'sum': 40982.74700824} 
-# update after mask to TP image (r26597)
+# # update after mask to TP image (r26597)
+# refstats = {'max': 3.760463,
+#              'min': -0.63766569,
+#              'rms': 0.4169735,
+#              'sigma': 0.37817003,
+#              'sum':  40972.22263158}
+# update after fix to null pixel isuue (r27041)
 refstats = {'max': 3.760463,
              'min': -0.63766569,
-             'rms': 0.4169735,
-             'sigma': 0.37817003,
-             'sum':  40972.22263158}
+             'rms': 0.40548718,
+             'sigma': 0.37000663,
+             'sum':  41420.88008615}
 
-#ia.open(project+"/"+project + '.aca.tp.diff')
 ia.open(project+"/"+project + '.sd.diff')
 m51sd_diffstats=ia.statistics(verbose=False,list=False)
 ia.close()
@@ -174,12 +178,18 @@ ia.close()
 #              'rms': 0.14784159,
 #              'sigma': 0.14695927,
 #              'sum':  4228.50428399}
-# update after mask to TP image (r26597)
+# # update after mask to TP image (r26597)
+# diffstats = {'max': 1.19147229,
+#              'min': -0.69741619,
+#              'rms': 0.1786425,
+#              'sigma': 0.17307631,
+#              'sum': 10320.91638317}
+# update after fix to null pixel isuue (r27041)
 diffstats = {'max': 1.19147229,
              'min': -0.69741619,
-             'rms': 0.1786425,
-             'sigma': 0.17307631,
-             'sum': 10320.91638317}
+             'rms': 0.17808262,
+             'sigma': 0.1733555,
+             'sum': 10178.15341685}
 
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,

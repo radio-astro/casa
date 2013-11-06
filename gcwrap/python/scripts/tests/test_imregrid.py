@@ -965,6 +965,18 @@ class imregrid_test(unittest.TestCase):
         myia.done()
         zz.done()
 
+    def test_linear_overlap(self):
+        """Test that overlapping linear coordinates works, CAS-5767"""
+        myia = self._myia
+        myia.open(datapath + "lin_template.im")
+        csys = myia.coordsys().torecord()
+        shape = myia.shape()
+        myia.done()
+        myia.open(datapath + "lin_source.im")
+        xx = myia.regrid(axes=[0,1], csys=csys, shape=shape)
+        myia.done()
+        self.assertTrue((xx.shape() == shape).all())
+        xx.done()
         
 def suite():
     return [imregrid_test]
