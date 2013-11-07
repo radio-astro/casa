@@ -635,7 +635,7 @@ void STSideBandSep::shiftTimeInGriddedST(const CountedPtr<Scantable> &stab)
   }
   // Rows in gridded table usually sorted by DIRECTION
   const Table& tab = stab->table();
-  ROScalarColumn<Double> mjdCol( tab, "TIME");
+  ScalarColumn<Double> mjdCol( tab, "TIME");
   ROScalarColumn<Double> intCol( tab, "INTERVAL");
   ROArrayColumn<Double> dirCol( tab, "DIRECTION");
   Matrix<Double> direction = dirCol.getColumn();
