@@ -192,7 +192,7 @@ Bool SDGrid::changed(const VisBuffer& /*vb*/) {
 }
 
 //----------------------------------------------------------------------
-SDGrid::SDGrid(const SDGrid& other)
+SDGrid::SDGrid(const SDGrid& other):FTMachine()
 {
   operator=(other);
 }

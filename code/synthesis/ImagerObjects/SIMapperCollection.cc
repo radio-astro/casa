@@ -387,7 +387,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     				fields.resize(nfields, True);
 		   */
-		  Int msid = vb.msId();
+		  //Int msid = vb.msId();
 		  for (uInt k=0; k < itsMappers.nelements(); ++k){
 			  Record rec;
 			  Bool iscomp=itsMappers[k]->getCLRecord(rec);
@@ -422,7 +422,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
-  void SIMapperCollection::finalizeDegrid(const vi::VisBuffer2& vb)
+  void SIMapperCollection::finalizeDegrid(const vi::VisBuffer2& /*vb*/)
   {
 	  for (uInt k=0; k < itsMappers.nelements(); ++k)
 	  {
@@ -432,7 +432,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   /////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////
-  void SIMapperCollection::finalizeDegrid(const VisBuffer& vb)
+  void SIMapperCollection::finalizeDegrid(const VisBuffer& /*vb*/)
     {
   	  for (uInt k=0; k < itsMappers.nelements(); ++k)
   	  {

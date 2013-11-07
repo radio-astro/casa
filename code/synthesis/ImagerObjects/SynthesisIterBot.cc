@@ -149,7 +149,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   
 	bool SynthesisIterBot::cleanComplete() {
-		bool returnValue;
+		bool returnValue=False;
 		try {
 			//Float peakResidual = itsLoopController.getPeakResidual(); // This should go..
 			if ( itsLoopController )

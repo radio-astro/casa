@@ -72,7 +72,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       currentVBS_p=0;
     }
 
-    MultiThreadedVisibilityResampler(const MultiThreadedVisibilityResampler& other){copy(other);};
+    MultiThreadedVisibilityResampler(const MultiThreadedVisibilityResampler& other) : VisibilityResamplerBase() {copy(other);};
 
     // This version will make a clone with shared data buffers (the
     // complex grids and the sum-of-weights arrays).
