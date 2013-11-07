@@ -286,11 +286,20 @@ namespace LibAIR {
 			  
 
   InterpArrayData *loadWVRData(const casa::MeasurementSet &ms, std::vector<size_t>& sortedI, 
-			       std::set<int>& flaggedantsInMain)
+			       std::set<int>& flaggedantsInMain, double requiredUnflaggedFraction)
   {
     std::set<size_t> dsc_ids=WVRDataDescIDs(ms);
     AntSet wvrants=WVRAntennas(ms);
     const size_t nWVRs=wvrants.size();
+
+    if(requiredUnflaggedFraction<0.){
+      std::cout << "WARNING: Negative required fraction of unflagged data points. Will assume 0." << std::endl;
+      requiredUnflaggedFraction=0.;
+    }
+    if(requiredUnflaggedFraction>1.){
+      std::cout << "WARNING: Required fraction of unflagged data points > 1. Will assume 1." << std::endl;
+      requiredUnflaggedFraction=1.;
+    }
 
     casa::ROScalarColumn<casa::Double> maintime(ms, 
 						casa::MS::columnName(casa::MS::TIME)); 
@@ -342,6 +351,7 @@ namespace LibAIR {
     int counter = -1;
 
     std::vector<size_t> nunflagged(nWVRs, 0);
+    std::vector<size_t> ntotal(nWVRs, 0);
 
     casa::ROArrayColumn<casa::Complex> indata(ms, 
 					      casa::MS::columnName(casa::MS::DATA));
@@ -383,6 +393,8 @@ namespace LibAIR {
 	    counter++;
 	  }
 
+	  ntotal[a1(i)]++;
+
 	  casa::Array<casa::Bool> fl;
 	  inflags.get(i, fl, ::casa::True);
  
@@ -421,23 +433,41 @@ namespace LibAIR {
       if(nunflagged[i]>0)
       {
 	allFlagged=false;
+	break;
       }
     }
     if(!allFlagged)
     {
+      allFlagged = true;
       for(size_t i=0; i<nWVRs; i++)
       {
 	if(nunflagged[i]==0)
 	{
-	  std::cout << "All WVR data for antenna " << i << " is flagged." << std::endl;
+	  std::cout << "All WVR data points for antenna " << i << " are flagged." << std::endl;
 	  flaggedantsInMain.insert(i);
 	}
+	else if(nunflagged[i]<requiredUnflaggedFraction * ntotal[i])
+	{
+	  std::cout << "The fraction of good (unflagged) WVR data points for antenna " << i
+		    << " is " << nunflagged[i] << " out of " << ntotal[i]
+		    << ". This is below the required " << requiredUnflaggedFraction*100.
+		    << "%. Antenna will be flagged." << std::endl;
+	  flaggedantsInMain.insert(i);
+	}
+	else{
+	  allFlagged=false;
+	}
+      }
+      if(allFlagged)
+      {
+	throw LibAIR::MSInputDataError("All antennas needed to be flagged.");
       }
     }
     else
     {
       throw LibAIR::MSInputDataError("All WVR data points are flagged.");
     }
+
 
     return res.release();
     
