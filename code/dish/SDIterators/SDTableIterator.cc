@@ -131,9 +131,10 @@ SDTableIterator::SDTableIterator(const String &tableName, const Record &selectio
 }
 
 SDTableIterator::SDTableIterator(const SDTableIterator& other)
-    : hasOutputCols_(False), tab_(0), thisRow_(0), axes_(0), headerCopier_(0),
-      rwHeaderCopier_(0), otherCopiers_(0), rwOtherCopiers_(0),
-      otherCopiersMap_(-1), rwTableRow_(0), oldTableRow_(0), tableRow_(0)
+  : SDIterator(other), hasOutputCols_(False), tab_(0), thisRow_(0),
+    axes_(0), headerCopier_(0), rwHeaderCopier_(0), otherCopiers_(0),
+    rwOtherCopiers_(0), otherCopiersMap_(-1), rwTableRow_(0), oldTableRow_(0),
+    tableRow_(0)
 {
     initStatics();
     tab_ = new Table(*other.tab_);
@@ -147,9 +148,9 @@ SDTableIterator::SDTableIterator(const SDTableIterator& other)
 }
 
 SDTableIterator::SDTableIterator(const SDTableIterator& other, const Record& selection)
-    : hasOutputCols_(False), tab_(0), thisRow_(0), axes_(0), headerCopier_(0),
-      rwHeaderCopier_(0), otherCopiers_(0), rwOtherCopiers_(0),
-      otherCopiersMap_(-1), rwTableRow_(0), oldTableRow_(0), tableRow_(0)
+  : SDIterator(other), hasOutputCols_(False), tab_(0), thisRow_(0), axes_(0),
+    headerCopier_(0), rwHeaderCopier_(0), otherCopiers_(0), rwOtherCopiers_(0),
+    otherCopiersMap_(-1), rwTableRow_(0), oldTableRow_(0), tableRow_(0)
 {
     initStatics();
     tab_ = new Table(*(other.tab_));

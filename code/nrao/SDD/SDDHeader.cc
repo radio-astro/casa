@@ -35,9 +35,6 @@
 
 // Vector<uInt> SDDHeader::nchars_p;
 
-unsigned long linfinity[2] = {0x7ff00000, 0x00000000};
-#define DINFINITY (*(double *)linfinity)
-
 SDDHeader::SDDHeader() 
     : preamble_p(0), hdu_p(0), isOtf_p(False), nvectors_p(0)
 {
@@ -198,7 +195,7 @@ void SDDHeader::empty()
     hdu_p->reshape(1, headlen);
     // how many doubles to set to default values
     uInt ndoubles = headlen / sizeof(double);
-    for (uInt i = 0;i<ndoubles;i++) hdu_p->asdouble(i) = DINFINITY;
+    for (uInt i = 0;i<ndoubles;i++) hdu_p->asdouble(i) = std::numeric_limits<double>::infinity();
 
     // do the strings separately
     for (uInt j = 0;j<LAST_STRING;j++) {
@@ -263,7 +260,7 @@ Bool SDDHeader::put(StringHeader field, const String& value)
 {
     uInt nchar = nchars_p(field);
     uInt offset = strOffset_p(field);
-    if (offset < 0 || nchar < value.length()) return False;
+    if (nchar < value.length()) return False;
 
     for (uInt i=0;i<nchar && i<value.length();i++) {
 	if (value[i] != '\0') (*hdu_p)[offset+i] = value[i];
@@ -390,7 +387,7 @@ Bool SDDHeader::put(EngineeringParameters field, const Double& value)
 Double SDDHeader::get(GreenBank field) const
 {
     // class 9, NRAO, non-12m
-    Double tmp = DINFINITY;
+    Double tmp = std::numeric_limits<double>::infinity();
     if (isNRAO() && !is12m()) tmp = getFromClass(9, field);
     return tmp;
 }
@@ -406,7 +403,7 @@ Bool SDDHeader::put(GreenBank field, const Double& value)
 Double SDDHeader::get(Tucson field) const
 {
     // class 9, 12m
-    Double tmp = DINFINITY;
+    Double tmp = std::numeric_limits<double>::infinity();
     if (is12m()) tmp = getFromClass(9, field);
     return tmp;
 }
@@ -459,7 +456,7 @@ Bool SDDHeader::put(ReductionParameters field, const Double& value)
 Double SDDHeader::get(OriginalPhaseBlock field, uInt whichBlock) const
 {
     // original class 11, first, does this really exist
-    Double tmp = DINFINITY;
+    Double tmp = std::numeric_limits<double>::infinity();
     if (whichBlock < get(NOSWVAR)) {
 	// there are 3 Doubles per each class 11 block
 	uInt fieldOffset = 3*whichBlock;
@@ -528,7 +525,7 @@ Bool SDDHeader::put(NewPhaseBlockBasics field, const Double& value)
 Double SDDHeader::get(NewPhaseBlock field, uInt whichBlock) const
 {
     // new class 11, first, does this really exist
-    Double tmp = DINFINITY;
+    Double tmp = std::numeric_limits<double>::infinity();
     if (whichBlock < (get(NOSWVAR) + get(NOSWVARF))) {
 	// there are 6 Doubles per each new class 11 block
 	uInt fieldOffset = 6*whichBlock;
@@ -600,7 +597,7 @@ Bool SDDHeader::put(NewPhaseBlockStrings field, const String& value,
 
 Double SDDHeader::getFromClass(uInt whichClass, uInt offset) const
 {
-    Double tmp = DINFINITY;
+    Double tmp = std::numeric_limits<double>::infinity();
     if (Int(whichClass) < (*preamble_p)(0) && whichClass < 15) {
 	offset = offset + (*preamble_p)(whichClass);
 	if (Int(offset) < (*preamble_p)(whichClass+1)) 

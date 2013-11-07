@@ -53,7 +53,8 @@ VLASourceFilter::VLASourceFilter(const String& sourceName,
 }
 
 VLASourceFilter::VLASourceFilter(const VLASourceFilter& other) 
-  :itsSource(other.itsSource),
+  :VLAFilter(),
+   itsSource(other.itsSource),
    itsQual(other.itsQual),
    itsKeepBlanks(other.itsKeepBlanks)
 {

@@ -57,7 +57,8 @@ VLAFrequencyFilter::VLAFrequencyFilter(const MVFrequency& centreFrequency,
 }
 
 VLAFrequencyFilter::VLAFrequencyFilter(const VLAFrequencyFilter& other) 
-  :itsTopEdge(other.itsTopEdge),
+  : VLAFilter(),
+  itsTopEdge(other.itsTopEdge),
    itsBottomEdge(other.itsBottomEdge)
 {
   DebugAssert(ok(), AipsError);

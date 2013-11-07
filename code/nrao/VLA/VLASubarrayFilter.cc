@@ -45,7 +45,8 @@ VLASubarrayFilter::VLASubarrayFilter(const uInt subArray)
 }
 
 VLASubarrayFilter::VLASubarrayFilter(const VLASubarrayFilter& other) 
-  :itsArray(other.itsArray)
+  :VLAFilter(),
+  itsArray(other.itsArray)
 {
   DebugAssert(ok(), AipsError);
 }
