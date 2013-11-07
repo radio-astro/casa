@@ -318,20 +318,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    const Vector<Quantity>& restFreq,
 				    const Int facets,
 				    const String ftmachine, 
-				    const Int nTaylorTerms,
-				    const Quantity& refFreq,
+				    const Int /*nTaylorTerms*/,
+				    const Quantity& /*refFreq*/,
 				    const Projection& projection,
 				    const Quantity& distance,
 				    const MFrequency::Types& freqFrame,
-				    const Bool trackSource, 
-				    const MDirection& trackDir, 
+				    const Bool /*trackSource*/, 
+				    const MDirection& /*trackDir*/, 
 				    const Bool overwrite,
 				     const Float padding, 
 				     const Bool useAutocorr, 
 				     const Bool useDoublePrec, 
 				     const Int wprojplanes, 
 				     const String convFunc, 
-				    const String startmodel)
+				    const String /*startmodel*/)
 {
     LogIO os( LogOrigin("SynthesisImager","defineImage",WHERE) );
     if(mss_p.nelements() ==0)

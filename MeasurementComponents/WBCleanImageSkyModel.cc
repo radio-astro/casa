@@ -470,7 +470,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 } // END OF SOLVE
 
 
-Float WBCleanImageSkyModel::saveCurrentModels()
+void WBCleanImageSkyModel::saveCurrentModels()
 {
   
   for(Int thismodel=0;thismodel<nfields_p;thismodel++)
@@ -484,6 +484,7 @@ Float WBCleanImageSkyModel::saveCurrentModels()
 	  image(index).put(tempMod);
 	}           
     }// end of model loop
+  
 }// end of saveCurrentModels
 
 
@@ -753,7 +754,7 @@ Bool WBCleanImageSkyModel::calculateCoeffResiduals()
 
     }//end of field loop
   os << "Converting final residuals to 'coefficient residuals', for restoration" << LogIO::POST;
-
+  return True;
 }//end of calculateCoeffResiduals
 
 /***********************************************************************/

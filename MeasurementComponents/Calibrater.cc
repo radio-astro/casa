@@ -1158,7 +1158,7 @@ Calibrater::configureForCorrection ()
     // utilize async i/o.  This is in addition to the global setting which
     // must also be enabled to use async i/o (see VisibilityIterator.{cc,h}).
 
-    Bool isEnabled;
+    Bool isEnabled=False; // Initializing to False to get rid of Warning.  Jim, please check if this is what you intended. It was earlier " Bool isEnabled; ". 
     //UNUSED: Bool foundSetting = AipsrcValue<Bool>::find (isEnabled, "Calibrater.asyncio", False);
 
     // isEnabled = ! foundSetting || isEnabled; // let global flag call shots if setting not present
