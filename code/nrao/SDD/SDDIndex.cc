@@ -32,6 +32,7 @@
 #include <casa/BasicMath/Math.h>
 #include <casa/BasicSL/Constants.h>
 #include <casa/Exceptions/Error.h>
+#include <limits>
 
 Block<String> SDDIndexRep::posCodeMap_p;
 Block<String> SDDIndexRep::obsModeMap_p;
