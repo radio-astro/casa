@@ -195,7 +195,7 @@ class WVRPhaseVsBaselineChart(WVRPlotBase):
                             baseline_data_after = self.get_data_object(selection_after, 
                                                                        corr_id)
 
-                        except ValueError:
+                        except (ValueError, KeyError):
                             # We can't construct data objects for completely
                             # flagged selections 
                             LOG.debug('Could not evaluate data for %s '
@@ -223,6 +223,11 @@ class WVRPhaseVsBaselineChart(WVRPlotBase):
         self._max_ratio = max(ratios)
         LOG.trace('Maximum phase ratio for %s = %s' % (self.ms.basename, 
                                                        self._max_ratio))
+
+        distances = [w.x for w in self._wrappers]
+        self._max_distance = max(distances)
+        LOG.trace('Maximum distance for %s = %s' % (self.ms.basename, 
+                                                    self._max_distance))
 
         plots = []
         for spw in spws:
@@ -306,9 +311,7 @@ class WVRPhaseVsBaselineChart(WVRPlotBase):
                 plots.append(p)
                 legend.append('%s %s' % (corr_axis, 'after'))
         
-        max_baseline = max([b.length for b in self.ms.antenna_array.baselines])
-        max_baseline_m = float(max_baseline.to_units(measures.DistanceUnits.METRE))
-        ax1.set_xlim(0, max_baseline_m)
+        ax1.set_xlim(0, self._max_distance)
         ax1.set_ylim(0, self._max_ratio)
         ax2.set_ylim(0, self._max_phase_offset)
     

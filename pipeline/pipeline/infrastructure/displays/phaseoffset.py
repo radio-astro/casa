@@ -165,8 +165,13 @@ class PhaseOffsetPlot(object):
         corr_axes = corr_axes.pop()
         
         autoscale_yaxis_range = [-200, 200]
-    
+
         fig, axes = common.subplots(1, num_scans, sharey=True)
+        
+        # if num_scans is 1, axes will be a scalar instead of a list
+        if not isinstance(axes, (tuple, list, numpy.ndarray)):
+            axes = [axes]
+            
         for axis in axes:
             axis.xaxis.set_ticks_position('none')
             axis.yaxis.set_ticks_position('none')
@@ -191,9 +196,42 @@ class PhaseOffsetPlot(object):
                 plots = []
                 legends = []
                 for state, state_data in self.data:
-                    data = state_data.filter(scan=[scan.id], 
-                                             antenna=[antenna.id], 
-                                             spw=[spw.id])
+                    try:
+                        data = state_data.filter(scan=[scan.id], 
+                                                 antenna=[antenna.id], 
+                                                 spw=[spw.id])
+                    except KeyError:
+                        # scan/antenna/id not in caltable, probably flagged.
+                        
+                        # create fake masked slices and data arrays so we can 
+                        # plot flagged annotation 
+                        class dummy(object):
+                            pass
+                        
+                        dummy_slice = dummy()
+                        dummy_slice.start = 0
+                        dummy_slice.stop = 1
+
+                        dummy_time = dummy()
+                        start_dt = utils.get_epoch_as_datetime(scan.start_time)
+                        end_dt = utils.get_epoch_as_datetime(scan.end_time)
+                        dummy_time.time = [matplotlib.dates.date2num(start_dt), 
+                                           matplotlib.dates.date2num(end_dt)]
+
+                        dummy_data = numpy.ma.MaskedArray(data=[0,1],
+                                                          mask=True)
+ 
+                        axis.plot_date(dummy_time.time, dummy_data, '.')
+                        p, = axis.plot_date(dummy_time.time, dummy_data)
+
+                        self._plot_flagged_data(dummy_time, dummy_slice, axis,
+                                                True, annotation='NO DATA')
+                        
+                        axis.set_xlim(dummy_time.time[0], dummy_time.time[-1])
+                        axis.set_ylim(autoscale_yaxis_range)
+                        
+                        continue
+                    
                     for corr_idx, corr_axis in enumerate(corr_axes):
                         if len(data.time) is 0:
                             LOG.info('No data to plot for antenna %s scan %s corr %s' % (antenna.name, scan.id, corr_axis))
@@ -334,7 +372,8 @@ class PhaseOffsetPlot(object):
             return wrapper            
         return None
     
-    def _plot_flagged_data(self, data, masked_slice, axis, annotate=True):
+    def _plot_flagged_data(self, data, masked_slice, axis, annotate=True,
+                           annotation='FLAGGED'):
         """
         Plot flagged data.
         
@@ -362,5 +401,5 @@ class PhaseOffsetPlot(object):
         axis.add_patch(rect)
         
         if annotate:
-            axis.text(start + width/2, 0.5, 'FLAGGED', color='k', transform=trans,
+            axis.text(start + width/2, 0.5, annotation, color='k', transform=trans,
                       size=10, ha='center', va='center', rotation=90)                            
