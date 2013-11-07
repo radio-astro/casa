@@ -115,6 +115,14 @@ const Vector<Int> & MSTransformBufferImpl::dataDescriptionIds () const
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
+const Vector<Int> & MSTransformBufferImpl::spectralWindows () const
+{
+	return dataDescriptionIds_p;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
 const Vector<Int> & MSTransformBufferImpl::observationId () const
 {
 	if (not observationIdOk_p)
@@ -523,8 +531,33 @@ const Matrix<Float> & MSTransformBufferImpl::sigma () const
 // -----------------------------------------------------------------------
 const Cube<Bool> & MSTransformBufferImpl::flagCube () const
 {
-	if (not flagCubeOk_p)
+	if (manager_p->noFrequencyTransformations_p)
 	{
+		return manager_p->getVisBuffer()->flagCube();
+	}
+	else if (not flagCubeOk_p)
+	{
+		if (manager_p->dataColumnAvailable_p)
+		{
+			visCube();
+		}
+		else if (manager_p->correctedDataColumnAvailable_p)
+		{
+			visCubeCorrected();
+		}
+		else if (manager_p->modelDataColumnAvailable_p)
+		{
+			visCubeModel();
+		}
+		else if (manager_p->floatDataColumnAvailable_p)
+		{
+			visCubeFloat();
+		}
+		else
+		{
+			manager_p->logger_p << LogIO::EXCEPTION << LogOrigin("MSTransformBufferImpl", __FUNCTION__)
+					<< "No data columns available to provide a transformed FlagCube" << LogIO::POST;
+		}
 
 		flagCubeOk_p = True;
 	}
@@ -537,9 +570,34 @@ const Cube<Bool> & MSTransformBufferImpl::flagCube () const
 // -----------------------------------------------------------------------
 const Cube<Complex> & MSTransformBufferImpl::visCube () const
 {
-	if (not visCubeOk_p)
+	if ( (not manager_p->dataColumnAvailable_p) and (not manager_p->getVisBuffer()->modelDataIsVirtual()) )
 	{
+		manager_p->logger_p << LogIO::EXCEPTION << LogOrigin("MSTransformBufferImpl", __FUNCTION__)
+				<< "visCube requested but DATA column not present in input MS" << LogIO::POST;
+	}
 
+	if (manager_p->noFrequencyTransformations_p)
+	{
+		return manager_p->getVisBuffer()->visCube();
+	}
+	else if (not visCubeOk_p)
+	{
+		visCube_p.resize(getShape(),False);
+		manager_p->visCube_p = &visCube_p;
+
+		flagCube_p.resize(getShape(),False);
+		manager_p->flagCube_p = &flagCube_p;
+
+		RefRows dummyRefRows(0,0);
+		ArrayColumn<Complex> dummyDataCol;
+
+		manager_p->dataBuffer_p = MSTransformations::visCube;
+		manager_p->transformCubeOfData(	manager_p->getVisBuffer(),
+										dummyRefRows,
+										manager_p->getVisBuffer()->visCube(),
+										dummyDataCol,
+										NULL);
+		flagCubeOk_p = True;
 		visCubeOk_p = True;
 	}
 
@@ -551,9 +609,34 @@ const Cube<Complex> & MSTransformBufferImpl::visCube () const
 // -----------------------------------------------------------------------
 const Cube<Complex> & MSTransformBufferImpl::visCubeCorrected () const
 {
-	if (not visCubeCorrectedOk_p)
+	if (not manager_p->correctedDataColumnAvailable_p)
 	{
+		manager_p->logger_p << LogIO::EXCEPTION << LogOrigin("MSTransformBufferImpl", __FUNCTION__)
+				<< "visCubeCorrected requested but CORRECTED_DATA column not present in input MS" << LogIO::POST;
+	}
 
+	if (manager_p->noFrequencyTransformations_p)
+	{
+		return manager_p->getVisBuffer()->visCubeCorrected();
+	}
+	else if (not visCubeCorrectedOk_p)
+	{
+		visCubeCorrected_p.resize(getShape(),False);
+		manager_p->visCubeCorrected_p = &visCubeCorrected_p;
+
+		flagCube_p.resize(getShape(),False);
+		manager_p->flagCube_p = &flagCube_p;
+
+		RefRows dummyRefRows(0,0);
+		ArrayColumn<Complex> dummyDataCol;
+
+		manager_p->dataBuffer_p = MSTransformations::visCubeCorrected;
+		manager_p->transformCubeOfData(	manager_p->getVisBuffer(),
+											dummyRefRows,
+											manager_p->getVisBuffer()->visCubeCorrected(),
+											dummyDataCol,
+											NULL);
+		flagCubeOk_p = True;
 		visCubeCorrectedOk_p = True;
 	}
 
@@ -565,8 +648,34 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeCorrected () const
 // -----------------------------------------------------------------------
 const Cube<Complex> & MSTransformBufferImpl::visCubeModel () const
 {
-	if (not visCubeModelOk_p)
+	if (not manager_p->modelDataColumnAvailable_p)
 	{
+		manager_p->logger_p << LogIO::EXCEPTION << LogOrigin("MSTransformBufferImpl", __FUNCTION__)
+				<< "visCubeModel requested but MODEL_DATA column not present in input MS" << LogIO::POST;
+	}
+
+	if (manager_p->noFrequencyTransformations_p)
+	{
+		return manager_p->getVisBuffer()->visCubeModel();
+	}
+	else if (not visCubeModelOk_p)
+	{
+		visCubeModel_p.resize(getShape(),False);
+		manager_p->visCubeModel_p = &visCubeModel_p;
+
+		flagCube_p.resize(getShape(),False);
+		manager_p->flagCube_p = &flagCube_p;
+
+		RefRows dummyRefRows(0,0);
+		ArrayColumn<Complex> dummyDataCol;
+
+		manager_p->dataBuffer_p = MSTransformations::visCubeModel;
+		manager_p->transformCubeOfData(	manager_p->getVisBuffer(),
+										dummyRefRows,
+										manager_p->getVisBuffer()->visCubeModel(),
+										dummyDataCol,
+										NULL);
+		flagCubeOk_p = True;
 		visCubeModelOk_p= True;
 	}
 
@@ -578,8 +687,34 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeModel () const
 // -----------------------------------------------------------------------
 const Cube<Float> & MSTransformBufferImpl::visCubeFloat () const
 {
-	if (not visCubeFloatOk_p)
+	if (not manager_p->floatDataColumnAvailable_p)
 	{
+		manager_p->logger_p << LogIO::EXCEPTION << LogOrigin("MSTransformBufferImpl", __FUNCTION__)
+				<< "visCubeFloat requested but FLOAT_DATA column not present in input MS" << LogIO::POST;
+	}
+
+	if (manager_p->noFrequencyTransformations_p)
+	{
+		return manager_p->getVisBuffer()->visCubeFloat();
+	}
+	else if (not visCubeFloatOk_p)
+	{
+		visCubeFloat_p.resize(getShape(),False);
+		manager_p->visCubeFloat_p = &visCubeFloat_p;
+
+		flagCube_p.resize(getShape(),False);
+		manager_p->flagCube_p = &flagCube_p;
+
+		RefRows dummyRefRows(0,0);
+		ArrayColumn<Float> dummyDataCol;
+
+		manager_p->dataBuffer_p = MSTransformations::visCubeFloat;
+		manager_p->transformCubeOfData(	manager_p->getVisBuffer(),
+										dummyRefRows,
+										manager_p->getVisBuffer()->visCubeFloat(),
+										dummyDataCol,
+										NULL);
+		flagCubeOk_p = True;
 		visCubeFloatOk_p = True;
 	}
 
@@ -593,6 +728,50 @@ const Cube<Float> & MSTransformBufferImpl::weightSpectrum () const
 {
 	if (not weightSpectrumOk_p)
 	{
+		if (manager_p->inputWeightSpectrumAvailable_p)
+		{
+			if (manager_p->noFrequencyTransformations_p)
+			{
+				return manager_p->getVisBuffer()->weightSpectrum();
+			}
+			else
+			{
+				weightSpectrum_p.resize(getShape(),False);
+				manager_p->weightSpectrum_p = &weightSpectrum_p;
+
+				RefRows dummyRefRows(0,0);
+				ArrayColumn<Float> dummyDataCol;
+
+		    	// Unset all the weights-based operations
+		    	manager_p->setWeightBasedTransformations(MSTransformations::flat);
+
+		    	// Transform weights
+				manager_p->dataBuffer_p = MSTransformations::weightSpectrum;
+				manager_p->transformCubeOfData(	manager_p->getVisBuffer(),
+												dummyRefRows,
+												manager_p->getVisBuffer()->weightSpectrum(),
+												dummyDataCol,
+												NULL);
+
+		    	// Reset all the weights-based operations
+				manager_p->setWeightBasedTransformations(manager_p->weightmode_p);
+			}
+		}
+		// Fill WEIGHT_SPECTRUM with transformed WEIGHTS
+		else
+		{
+			weightSpectrum_p.resize(getShape(),False);
+			for (uInt row=0; row < nRows_p; row++)
+			{
+				Double scaleFactor = 1.0/nChannels_p;
+				Matrix<Float> weightSpectrumPlane = weightSpectrum_p.xyPlane(row);
+				for (uInt pol = 0; pol < nCorrelations_p; pol++)
+				{
+					weightSpectrumPlane.row(pol) = scaleFactor*weight_p(pol,row);
+				}
+			}
+		}
+
 		weightSpectrumOk_p = True;
 	}
 
@@ -604,8 +783,21 @@ const Cube<Float> & MSTransformBufferImpl::weightSpectrum () const
 // -----------------------------------------------------------------------
 const Array<Bool> & MSTransformBufferImpl::flagCategory () const
 {
-	if (not flagCategoryOk_p)
+	if (not manager_p->inputFlagCategoryAvailable_p)
 	{
+		manager_p->logger_p << LogIO::EXCEPTION << LogOrigin("MSTransformBufferImpl", __FUNCTION__)
+				<< "FlagCategory requested but FLAG_CATEGORY column not present in input MS" << LogIO::POST;
+	}
+
+	if (manager_p->noFrequencyTransformations_p)
+	{
+		return manager_p->getVisBuffer()->flagCategory();
+	}
+	else if (not flagCategoryOk_p)
+	{
+		uInt nCategories = manager_p->getVisBuffer()->flagCategory().shape()(2); // [nC,nF,nCategories,nR]
+		IPosition flagCategoryShape(4,nCorrelations_p,nChannels_p,nCategories,nRows_p);
+		flagCategory_p.resize(flagCategoryShape,False);
 		flagCategoryOk_p = True;
 	}
 
@@ -619,6 +811,10 @@ IPosition MSTransformBufferImpl::getShape () const
 {
 	if (not shapeOk_p)
 	{
+		shape_p = manager_p->getShape();
+		nRows_p = shape_p(2);
+		nChannels_p = shape_p(1);
+		nCorrelations_p = shape_p(0);
 		shapeOk_p = True;
 	}
 
@@ -632,7 +828,7 @@ Int MSTransformBufferImpl::nRows () const
 {
 	if (not nRowsOk_p)
 	{
-		nRows_p = manager_p->nRowsToAdd_p;
+		getShape();
 		nRowsOk_p = True;
 	}
 
@@ -646,6 +842,7 @@ Int MSTransformBufferImpl::nChannels () const
 {
 	if (not nChannelsOk_p)
 	{
+		getShape();
 		nChannelsOk_p = True;
 	}
 
@@ -659,6 +856,7 @@ Int MSTransformBufferImpl::nCorrelations () const
 {
 	if (not nCorrelationsOk_p)
 	{
+		getShape();
 		nCorrelationsOk_p  = True;
 	}
 
@@ -672,7 +870,7 @@ Int MSTransformBufferImpl::nAntennas () const
 {
 	if (not nAntennasOk_p)
 	{
-
+		nAntennasOk_p = manager_p->getVisBuffer()->nAntennas();
 		nAntennasOk_p = True;
 	}
 

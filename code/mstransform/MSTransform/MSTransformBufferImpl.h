@@ -43,6 +43,7 @@ public:
 
 	// Re-indexable Vectors
     const Vector<Int> & dataDescriptionIds () const; // [nR]
+    const Vector<Int> & spectralWindows () const; // [nR]
     const Vector<Int> & observationId () const; // [nR]
     const Vector<Int> & arrayId () const; // [nR]
     const Vector<Int> & fieldId () const; // [nR]
