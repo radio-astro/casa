@@ -52,7 +52,11 @@ namespace casa {
 		int getLowerBoundChannel() const;
 		int getUpperBoundChannel() const;
 		int getChannelCount() const;
+
 		void setChannelZAxis( const QString& zAxisTite );
+		void hideChannel( ) { channelGroupBox->setChecked(false); }
+		void showChannel( ) { channelGroupBox->setChecked(true); }
+
 		~AnimatorHolder();
 
 		void dismiss( );

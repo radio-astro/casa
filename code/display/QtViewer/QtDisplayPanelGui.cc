@@ -1804,6 +1804,11 @@ void QtDisplayPanelGui::updateViewedImage(){
 		if ( animationHolder != NULL ){
 			String zAxisName = newViewedImage->getZAxisName();
 			animationHolder->setChannelZAxis( zAxisName.c_str());
+			if ( animationHolder->getChannelCount( ) <= 1 ) {
+				animationHolder->hideChannel( );
+			} else {
+				animationHolder->showChannel( );
+			}
 		}
 	}
 }
