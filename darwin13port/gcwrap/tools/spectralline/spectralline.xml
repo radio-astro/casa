@@ -88,7 +88,6 @@ splattotable does this conversion.
             <value/>
         </param>
     </input>
-    <returns type="spectralline"/>
     <description>
     This method reads a spectral line list(s) downloaded from Splatalogue (www.splatalogue.net) and loads it into a CASA table which
     can be queried via eg this tool's search function.
@@ -98,7 +97,7 @@ splattotable does this conversion.
     The downloaded files must be in a specific format for this method to succeed. The columns are the
     important things; one can filter the results as one desires using Splatalogue, but the particular columns must be present as described
     below. The columns which must be present in the downloaded file in this exact order are: "Species", "NRAO Recommended", "Chemical Name",
-    "Freq in GHz", "Resolved QNs", "CDMS/JPL Intensity", "S<sub>ij</sub>^<sup>2</sup>; (D<sup>2</sup>)",
+    "Freq in GHz", "Resolved QNs", "CDMS/JPL Intensity", "S<sub>ij</sub>\^<sup>2</sup>; (D<sup>2</sup>)",
     "Log<sub>10</sub> (A<sub>ij</sub>)", "E<sub>L</sub> (K)", "E<sub>U</sub> (K)", "Linelist". In order to get these columns in this order, one should
     select exactly the following items on the Splatalogue search interface. Under "Specify Ranges" one should select "GHz" for the frequency unit.
     Under "Line Strength Display" select exactly "CDMS/JPL Intensity",
@@ -111,12 +110,11 @@ splattotable does this conversion.
     This method returns an open spectralline tool which references the new table. The new table can also be opened by 
     a spectralline tool using the open method (eg sl.open(tablename)). 
     </description>
+    <returns type="spectralline"/>
     <example>
-\begin{verbatim}
 newsl = sl.splattotable("mysplatlist.txt", "mynewsl.tbl")
 # search the new spectral line tool
 newsl.search([0,1000])
-\end{verbatim}
     </example>
 </method>
 
@@ -137,7 +135,6 @@ newsl.search([0,1000])
     if the table was successfully opened.
     </description>
     <example>
-    \begin{verbatim}
     # open user created spectral line table
     isopen = sl.open("mysplat.tbl")
     if (isopen)
@@ -147,7 +144,6 @@ newsl.search([0,1000])
     isopen = sl.open()
     if (isopen)
       sl.search([0,1000])
-    \end{verbatim}
     </example>
 </method>
 
@@ -159,9 +155,7 @@ newsl.search([0,1000])
     </description>
     <returns type="bool"/>
     <example>
-    \begin{verbatim}
     sl.close()
-    \end{verbatim}
     </example>
 </method>
 
@@ -173,9 +167,7 @@ newsl.search([0,1000])
     </description>
     <returns type="bool"/>
     <example>
-    \begin{verbatim}
     sl.done()
-    \end{verbatim}
     </example>
 </method>
 
@@ -209,23 +201,23 @@ newsl.search([0,1000])
             <value/>
         </param>
         <param type="doubleArray" name="intensity">
-            <description>CDMS/JPL intensity range. -1 -> do not use an intensity range.</description>
+            <description>CDMS/JPL intensity range. -1 -\&amp;  do not use an intensity range.</description>
             <value>-1</value>
         </param>
         <param type="doubleArray" name="smu2">
-            <description>S*mu*mu range in Debye**2. -1 -> do not use an S*mu*mu range.</description>
+            <description>S*mu*mu range in Debye**2. -1 -\&amp;  do not use an S*mu*mu range.</description>
             <value>-1</value>
         </param>
         <param type="doubleArray" name="loga">
-            <description>log(A) (Einstein coefficient) range. -1 -> do not use a loga range.</description>
+            <description>log(A) (Einstein coefficient) range. -1 -\&amp;  do not use a loga range.</description>
             <value>-1</value>
         </param>
         <param type="doubleArray" name="el">
-            <description>Lower energy state range in Kelvin. -1 -> do not use an el range.</description>
+            <description>Lower energy state range in Kelvin. -1 -\&amp;  do not use an el range.</description>
             <value>-1</value>
         </param>
         <param type="doubleArray" name="eu">
-            <description>Upper energy state range in Kelvin. -1 -> do not use an eu range.</description>
+            <description>Upper energy state range in Kelvin. -1 -\&amp;  do not use an eu range.</description>
             <value>-1</value>
         </param>
          <param type="bool" name="rrlinclude">
@@ -263,7 +255,6 @@ newsl.search([0,1000])
     it with the results.
     </description>
     <example>
-    \begin{verbatim}
     sl.open("myspectrallines.tbl")
     # do a search postponing listing the results to the logger.
     slrestool = sl.search(outfile="myresults.tbl", freqrange = [200,300], species=['HOCN', 'HOCO+'])
@@ -272,7 +263,6 @@ newsl.search([0,1000])
     # or one could also do the following after exiting and restarting casapy
     sl.open("myresults.tbl")
     sl.list()
-    \end{verbatim}
     </example>
 </method>
 

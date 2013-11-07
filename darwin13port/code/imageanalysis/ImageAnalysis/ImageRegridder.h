@@ -99,10 +99,12 @@ public:
 	// a NULL pointer is returned and pointer deletion is performed internally.
 	std::tr1::shared_ptr<ImageInterface<Float> > regrid(Bool wantReturn) const;
 
+	// regrid the spectral axis in velocity space rather than frequency space?
 	void setSpecAsVelocity(Bool v) { _specAsVelocity = v; }
 
 	inline String getClass() const { return _class; }
 
+	// Set interpolation method.
 	void setMethod(const String& method) { _method = Interpolate2D::stringToMethod(method); }
 
 	void setMethod(Interpolate2D::Method method) { _method = method; }

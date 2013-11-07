@@ -214,7 +214,7 @@ Valid TaQL strings must satisfy the following conditions.
 {\tt 'AMPLITUDE(DATA[1:2,1])'} results in a Double array (valid).\\
 {\tt 'MEAN(AMPLITUDE(DATA[1:2,1]))'} results in a Double scalar (valid).\\
 {\tt 'DATA[1,1]'} results in a Complex scalar (NOT valid).\\
-{\tt 'AMPLITUDE(DATA[1,1])&lt;10'} results in a Bool scalar (NOT valid).
+{\tt 'AMPLITUDE(DATA[1,1])\&lt;10'} results in a Bool scalar (NOT valid).
 \item All TaQL functions resulting in Double Scalars/Arrays are allowed,
 except for those involving an explicit collapse axis (means,sums,etc..).
 Note that these functions are different from mean,sum,etc.. which
@@ -245,44 +245,44 @@ Plotting options ('poption' entries) are listed below.
    	                           by the user as a plot colour]
                              If the plotcolour field is left out from 'poption',
                              colours are chosen automatically.
-    multicolour [ False ] :  True -> Each channel,pol appears in a different colour.
-                             False -> Data from all pols and channels appear  
+    multicolour [ False ] :  True -\&gt; Each channel,pol appears in a different colour.
+                             False -\&gt; Data from all pols and channels appear  
                              in the same colour. Different colours
                              appear for different layers (overplot). 
                              or data from different tables.
-    timeplot [ False ] :     True -> Turn on date/time formatting for the x-axis.
-    overplot [ False ] :     True -> Overlay on an existing plot. All layers will
+    timeplot [ False ] :     True -\&gt; Turn on date/time formatting for the x-axis.
+    overplot [ False ] :     True -\&gt; Overlay on an existing plot. All layers will
                              remain active for data editing via flagging. Labels 
                              will be those of the top-most layer.
-                             False -> Replace an existing plot with a new one.
+                             False -\&gt; Replace an existing plot with a new one.
                              In the case of an existing stack of plots, the
                              top-most layer is replaced. For example, this can be
                              used to modify the colour of the top-most layer
                              without creating an additional layer.
-    py_plotsymbol [ , ] :    Plot markers. Options for matplotlib are
+    py\_plotsymbol [ , ] :    Plot markers. Options for matplotlib are
                              [[,]:pixel, [.]:point, [o]:circle, [x]:cross, 
-                             [+]:plus, [^]:triangle up, [v]:triangle down,
-                             [&lt;]:triangle left, [&gt;]:triangle right,
+                             [+]:plus, [\^]:triangle up, [v]:triangle down,
+                             [\&lt;]:triangle left, [\&gt;]:triangle right,
                              [-]:solid line, [--]:dashed line, [-.]:dash-dot line,
                              [:]:dotted line, [s]:square, [D]:diamond, 
                              [d]:thin diamond, [1]:tripod down, [2]:tripod up,
                              [3]:tripod left, [4]:tripod right, [h]:hexagon,
                              [H]:rotated hexagon, [p]:pentagon, 
-                             [|]:vertical line symbol, [_]:horizontal line symbol.
+                             [|]:vertical line symbol, [\_]:horizontal line symbol.
     markersize [ 10.0 ] :    The size (in pixels) of the markers being plotted.  
-                             Markers are specified by the py_plotsymbol option.
+                             Markers are specified by the py\_plotsymbol option.
                              For example, '+', 'o', and 'd'
     linewidth [ 2.0 ]        The width of the lines that are drawn, lines are
-                             if the py_plotsymbol chosen is a line.  For example,
+                             if the py\_plotsymbol chosen is a line.  For example,
                              '-', '--', and ':'.
     plotrange [ ]  :         Only data within this specific range of values 
                              [xmin,xmax,ymin,ymax] will be plotted. 
                              Default is the data range.
-    showflags [ 0 ] :        True -> Plot only unflagged data.
-                             False -> Plot only flagged data.
+    showflags [ 0 ] :        True -\&gt; Plot only unflagged data.
+                             False -\&gt; Plot only flagged data.
     crossdirection [ False ] : Applies only with CROSS-plots on table ArrayColumns.
-                             False -> use column number as the x-axis (ex. channel no.).
-                             True -> use row number as the x-axis (ex. polarization no.).
+                             False -\&gt; use column number as the x-axis (ex. channel no.).
+                             True -\&gt; use row number as the x-axis (ex. polarization no.).
     pointlabels [ ] :        Data points can be annotated by supplying a
                              list of labels. If N labels are supplied, the
                              first N data points plotted will be annotated.
@@ -831,9 +831,9 @@ indexing into a stored history of marked flag-regions).
 </method>
 
     <method type="function" name="restoreflagversion">
-<shortdescription>Restore flags from a saved flag_version. 
+<shortdescription>Restore flags from a saved flag\_version. 
  			   </shortdescription>
-   <description>  Restore flags from a saved flag_version. 
+   <description>  Restore flags from a saved flag\_version. 
  This applies to the last opened Tables
 
 
@@ -861,9 +861,9 @@ indexing into a stored history of marked flag-regions).
 
 
     <method type="function" name="deleteflagversion">
-   <shortdescription>  Delete a saved flag_version. 
+   <shortdescription>  Delete a saved flag\_version. 
  			   </shortdescription>
-<description>   Delete a saved flag_version. 
+<description>   Delete a saved flag\_version. 
    			 This applies to the last opened Tables
 </description>
 <input>
@@ -876,10 +876,10 @@ indexing into a stored history of marked flag-regions).
 
 </method>
     <method type="function" name="getflagversionlist">
-   <shortdescription>  Print out a list of saved flag_versions. 
+   <shortdescription>  Print out a list of saved flag\_versions. 
  			   </shortdescription>
 <description> 
-  Print out a list of saved flag_versions. 
+  Print out a list of saved flag\_versions. 
    			 This applies to the last opened Tables
 </description>
 <input>

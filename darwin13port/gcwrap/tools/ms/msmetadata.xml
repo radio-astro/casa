@@ -128,7 +128,7 @@ windows in the dataset and close the tool.
             <shortdescription>Get the zero-based antenna ID for the specfied antenna name.</shortdescription>
              <input>
                 <param type="any" direction="in" name="name">
-                    <description>Antenna names (string or string array) for which to get the corresponding IDs.</description>
+                    <description>Antenna names (string or string array) for which to get the corresponding IDs. Note that * matches any number of characters of all character classes.</description>
                     <value type="string"/>
                     <any type="variant" limittypes="string stringArray"/>
                     <value/>
@@ -136,7 +136,8 @@ windows in the dataset and close the tool.
             </input>
             <returns type="intArray"/>
             <description>
-                Get the zero-based antenna IDs for the specfied antenna names.
+                Get the zero-based antenna IDs for the specfied antenna names. An array of unique IDs in order of the specified names is returned.
+                If not specified, all IDs are returned.
             </description>
             <example>
     msmd.open("my.ms")
@@ -158,7 +159,8 @@ windows in the dataset and close the tool.
             </input>
             <returns type="stringArray"/>
             <description>
-                Get the name of the antenna for the specfied zero-based antenna ID.
+                Get the name of the antenna for the specfied zero-based antenna ID. If antennaids is not specified,
+                all antenna names are returned.
             </description>
             <example>
     msmd.open("my.ms")
@@ -427,7 +429,7 @@ windows in the dataset and close the tool.
             <description>
                 Get the effective exposure time (equivalent to what might be more commonly known as total integration
                 time or total sample time) is calculated by summing over all rows in the main MS table, excluding
-                autocorrelations or rows where FLAG_ROW is false, thusly:
+                autocorrelations or rows where FLAG\_ROW is false, thusly:
                 
                 sum[over i] (exposure[i]*sum[over j](UFBW[i, j])/ncorrelations[i] )/ nmaxbaselines
                 
@@ -674,7 +676,7 @@ windows in the dataset and close the tool.
             <shortdescription>Get an array of the unique intents for the specified spectral window ID.</shortdescription>
              <input>
                 <param type="int" direction="in" name="spw">
-                    <description>Spectral window ID (>=0) for which to return the intents.</description>
+                    <description>Spectral window ID (\&gt;=0) for which to return the intents.</description>
                     <value>-1</value>
                 </param>
             </input>
@@ -1083,7 +1085,7 @@ windows in the dataset and close the tool.
             <shortdescription>Get the spws associated with the specified baseband or dictionary that maps baseband to spws.</shortdescription>
             <input>
                 <param type="int" direction="in" name="baseband">
-                    <description>Baseband number. If &lt;0, return a dictionary mapping basebands to spws.</description>
+                    <description>Baseband number. If \&lt;0, return a dictionary mapping basebands to spws.</description>
                     <value>-1</value>
                 </param>
                 <param type="string" direction="in" name="sqldmode">
@@ -1269,7 +1271,7 @@ windows in the dataset and close the tool.
         <method type="function" name="wvrspws">
             <shortdescription>Get an array of spectral window IDs used for WVR. These are windows that have 4 channels.</shortdescription>
             <input>
-                <param type="bool" direction="in" name="compliment">
+                <param type="bool" direction="in" name="complement">
                     <description>If True, return all non-wvr spws.</description>
                     <value>-false</value>
                 </param>
@@ -1278,7 +1280,7 @@ windows in the dataset and close the tool.
             <description>
                 <!-- DEPRECATED. USE almaspws(wvr=True) INSTEAD. -->
                 Get an array of spectral window IDs used for WVR. These are windows that have 4 channels.
-                If complement is True, return the compliment set instead (all non-wvr spw IDs).
+                If complement is True, return the complement set instead (all non-wvr spw IDs).
             </description>
             <example>
     msmd.open("my.ms")

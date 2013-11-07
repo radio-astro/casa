@@ -1417,7 +1417,7 @@ testdate = '2010-04-29 (RR)'
 testvers = 'CASA Version 3.0.2 (build #11306)'
 clean_image_max = 1.615747
 clean_offsrc_rms = 0.058497
-clean_offline_rms = 0.055416
+clean_offline_rms = 0.0599
 clean_momentzero_max = 159.22
 clean_momentzero_rms = 14.31
 #
@@ -1456,7 +1456,7 @@ model_pbcor_sum = 72.72
 ## channel frequencies, instead of center of the first input channel in each
 ## output channel.
 clean_image_max = 1.4647
-clean_momentone_median = 424.40
+clean_momentone_median = 415.9
 clean_momentone_planezero = 690.6068
 clean_momentone_planelast = 121.6911
 

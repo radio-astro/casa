@@ -105,6 +105,15 @@ class msmd_test(unittest.TestCase):
         got = self.md.antennaids([names[4], names[0], names[7]])
         self.assertTrue((got == expec).all())
         
+        got = self.md.antennaids()        
+        expec = range(self.md.nantennas())
+        self.assertTrue((got == expec).all())
+        
+        got = self.md.antennaids(["DV12", "DA*", "DV1*"])
+        expec =  [ 8, 0,  1,  7,  9, 10, 11, 12, 13, 14]
+        self.assertTrue((got == expec).all())
+
+        
     def test_chanavgspws(self):
         """Test chanavgspws()"""
         got = self.md.chanavgspws()
@@ -815,9 +824,9 @@ class msmd_test(unittest.TestCase):
             32, 33, 34, 35, 36, 37, 38, 39
         ])
         self.assertTrue((got == expec).all())
-        got = self.md.wvrspws(False)
+        got = self.md.wvrspws(complement=False)
         self.assertTrue((got == expec).all())
-        got = self.md.wvrspws(True)
+        got = self.md.wvrspws(complement=True)
         expec = range(1, 25)
         self.assertTrue((got == expec).all())
 

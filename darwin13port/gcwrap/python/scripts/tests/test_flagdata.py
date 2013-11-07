@@ -8,7 +8,7 @@ from taskinit import *
 from __main__ import default
 import exceptions
 from parallel.parallel_task_helper import ParallelTaskHelper
-from IPython.kernel.core.display_formatter import PPrintDisplayFormatter
+#from IPython.kernel.core.display_formatter import PPrintDisplayFormatter
 
 #
 # Test of flagdata modes
@@ -253,7 +253,24 @@ class test_base(unittest.TestCase):
         os.system('rm -rf ' + self.vis + '.flagversions')
         self.unflag_ms()        
         default(flagdata)
+        
+    def setUp_weightcol(self):
+        '''Small MS with two rows and WEIGHT column'''
+        datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/mstransform/"
 
+        inpvis = "combine-1-timestamp-2-SPW-no-WEIGHT_SPECTRUM-Same-Exposure.ms"
+        self.vis = "msweight.ms"
+        
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + datapath + inpvis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        self.unflag_ms()        
+        default(flagdata)
+        
     def unflag_ms(self):
         aflocal.open(self.vis)
         aflocal.selectdata()
@@ -262,6 +279,7 @@ class test_base(unittest.TestCase):
         aflocal.init()
         aflocal.run(writeflags=True)
         aflocal.done()
+        
 
 class test_tfcrop(test_base):
     """flagdata:: Test of mode = 'tfcrop'"""
@@ -595,8 +613,6 @@ class test_flagmanager(test_base):
     def test1m(self):
         '''flagmanager test1m: mode=list, flagbackup=True/False'''
         
-        # Create a local copy of the tool
-        aflocal = casac.agentflagger()
         flagmanager(vis=self.vis, mode='list')
         aflocal.open(self.vis)
         self.assertEqual(len(aflocal.getflagversionlist()), 2)
@@ -1055,114 +1071,6 @@ class test_selections(test_base):
         self.assertEqual(res['scan']['7']['flagged'], 190512)
         self.assertEqual(res['flagged'], 238140+47628+476280+190512)
 
-# The flagdatatest-alma.ms seems to be corrupted as suggested
-# by D. Petry, email from 23 Aug 2013 and CAS-4885. Replace it with another
-# ALMA dataset. The same tests are done in test_alma using the
-# new data set.
-
-# class test_selections_alma(test_base):
-#     # Test various selections for alma data 
-# 
-#     def setUp(self):
-#         self.setUp_flagdatatest_alma()
-# 
-#     def test_scanitent(self):
-#         '''flagdata: scanintent selection'''
-#         # flag POINTING CALIBRATION scans 
-#         # (CALIBRATE_POINTING_.. from STATE table's OBS_MODE)
-#         flagdata(vis=self.vis, intent='CAL*POINT*', savepars=False)
-#         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 377280, 26200)
-#         
-#     def test_wvr(self):
-#         '''flagdata: flag WVR correlation'''
-#         flagdata(vis=self.vis, correlation='I', savepars=False, flagbackup=False)
-#         test_eq(flagdata(vis=self.vis, mode='summary', spw='4'),22752, 22752)
-# 
-#     def test_abs_wvr(self):
-#         '''flagdata: clip ABS_WVR'''
-#         flagdata(vis=self.vis, mode='clip',clipminmax=[0,50], correlation='ABS_WVR', savepars=False,
-#                  flagbackup=False)
-#         test_eq(flagdata(vis=self.vis, mode='summary', spw='4'),22752, 22752)
-#         
-#     def test_abs_i(self):
-#         '''flagdata: clip ABS_I. Do not flag WVR'''
-#         flagdata(vis=self.vis, mode='clip', clipminmax=[0,50], correlation='ABS_I', savepars=False,
-#                  flagbackup=False)
-#         test_eq(flagdata(vis=self.vis, mode='summary'),1154592, 0)
-# 
-#     def test_abs_all(self):
-#         '''flagdata: clip ABS ALL. Do not flag WVR'''
-#         flagdata(vis=self.vis, mode='clip', clipminmax=[0,1], correlation='ABS ALL', savepars=False,
-#                  flagbackup=False)
-#         test_eq(flagdata(vis=self.vis, mode='summary'),1154592, 130736)
-#         test_eq(flagdata(vis=self.vis, mode='summary', correlation='I'),22752, 0)
-# 
-#     def test_spw(self):
-#         '''flagdata: flag various spw'''
-#         # Test that a white space in the spw parameter is taken correctly
-#         flagdata(vis=self.vis, mode='manual', spw='1,3, 4', savepars=False,
-#                  flagbackup=False)
-#         res = flagdata(vis=self.vis, mode='summary', spw='0,1,4')
-#         self.assertEqual(res['spw']['0']['flagged'], 0, 'spw=0 should not be flagged')
-#         self.assertEqual(res['spw']['1']['flagged'], 552960, 'spw=1 should be fully flagged')
-#         self.assertEqual(res['spw']['4']['flagged'], 22752, 'spw=4 should not be flagged')
-#         self.assertEqual(res['spw']['4']['total'], 22752, 'spw=4 should not be flagged')
-#         
-#     def test_null_intent_selection1(self):
-#         '''flagdata: handle unknown scan intent in list mode'''
-#         
-#         myinput = ["intent='FOCUS'",   # non-existing intent
-#                  "intent='CALIBRATE_POINTING_ON_SOURCE'", # scan=1
-#                  "intent='CALIBRATE_AMPLI_ON_SOURCE'", # scan=2
-#                  "intent='CALIBRATE_AMPLI_ON_SOURC'",
-#                  "intent='*DELAY*'"] # non-existing
-#        
-#         flagdata(vis=self.vis, mode='list', inpfile=myinput, flagbackup=False)
-#         res = flagdata(vis=self.vis, mode='summary',scan='1,2')
-#         self.assertEqual(res['flagged'], 80184+96216)
-#         self.assertEqual(res['total'], 80184+96216)
-#         
-#     def test_unknown_intent(self):
-#         '''flagdata: CAS-3712, handle unknown value in intent expression'''
-#         flagdata(vis=self.vis,intent='*POINTING*,*ATM*',flagbackup=False)
-#         
-#         # Only POINTING scan exists. *ATM* should not raise a NULL MS selection
-#         res = flagdata(vis=self.vis, mode='summary', scan='1')
-#         self.assertEqual(res['flagged'], 80184)
-#         self.assertEqual(res['total'], 80184)
-#         
-#     def test_autocorr_wvr(self):
-#         '''flagdata: CAS-5286, do not flag auto-correlations in WVR data'''
-#         flagdata(vis=self.vis,autocorr=True,flagbackup=False)
-#         res = flagdata(vis=self.vis, mode='summary', spw='0,4')
-#         
-#         # spw='4' contains the WVR data
-#         self.assertEqual(res['spw']['4']['flagged'], 0)
-#         self.assertEqual(res['spw']['0']['flagged'], 276480)
-# 
-#     def test_autocorr_wvr_list(self):
-#         '''flagdata: CAS-5485 flag autocorrs in list mode'''
-#         mycmd = ["mode='manual' antenna='DV01'",
-#                  "mode='manual' autocorr=True"]
-#         
-#         # The first cmd only flags cross-correlations of DV01
-#         # The second cmd only flags auto-corrs of all antennas
-#         # that have processor type=CORRELATOR. The radiometer
-#         # data should not be flagged, which is in spw=4
-#         res = flagdata(vis=self.vis, mode='list', inpfile=mycmd, flagbackup=False)
-#         res = flagdata(vis=self.vis, mode='summary',basecnt=True)
-#         
-#         # These are the auto-correlations not flagged in the list flagging.
-#         # Verify that the non-flagged points are those from the WVR data
-#         wvr1 = res['baseline']['DV01&&DV01']['total'] - res['baseline']['DV01&&DV01']['flagged']
-#         wvr2 = res['baseline']['DV02&&DV02']['total'] - res['baseline']['DV02&&DV02']['flagged']
-#         wvr3 = res['baseline']['PM03&&PM03']['total'] - res['baseline']['PM03&&PM03']['flagged']
-#         wvrspw= res['spw']['4']['total']
-#         
-#         self.assertEqual(wvrspw, wvr1+wvr2+wvr3, 'Auto-corr of WVR data should not be flagged')
-#         self.assertEqual(res['antenna']['DV01']['flagged'],565920)
-#         self.assertEqual(res['antenna']['DV01']['total'],573504)
-#         self.assertEqual(res['spw']['4']['flagged'], 0)
 
 class test_alma(test_base):
     # Test various flagging on alma data 
@@ -1372,17 +1280,17 @@ class test_list_file(test_base):
     def tearDown(self):
         os.system('rm -rf list*.txt list*.tmp')
 
-#     def extract_reports(self, report_list):        
-#         summary_list = []
-#         
-#         # Extract only the type 'summary' reports
-#         nreps = report_list.keys()
-#         for rep in range(len(nreps)):
-#             repname = 'report'+str(rep);
-#             if(report_list[repname]['type']=='summary'):
-#                   summary_list.append(report_list[repname]);
-#                   
-#         return summary_list
+    def extract_reports(self, report_list):        
+        summary_list = []
+        
+        # Extract only the type 'summary' reports
+        nreps = report_list.keys()
+        for rep in range(len(nreps)):
+            repname = 'report'+str(rep);
+            if(report_list[repname]['type']=='summary'):
+                  summary_list.append(report_list[repname]);
+                  
+        return summary_list
 
     def test_file1(self):
         '''flagdata: apply flags from a list and do not save'''
@@ -1617,6 +1525,7 @@ class test_list_file(test_base):
         # Compare output with input. The output should have quotes around manualflag
         self.assertFalse(filecmp.cmp(filename, outname, 1), 'Files should not be equal')
 
+# Uncomment when CAS-5368 is implemented
 #     def test_file_summary1(self):
 #         '''flagdata: summary commands in list mode'''
 #         myinput = "mode='manual' scan='2'\n"\
@@ -2684,12 +2593,10 @@ class test_newcal(test_base):
 # CAS-5044
 class test_weight_spectrum(test_base):
     """flagdata:: Test flagging WEIGHT_SPECTRUM column"""
-    
-    def setUp(self):
-        self.setUp_wtspec()
-        
+                                                
     def test_clipzeros_weight(self):
         '''flagdata: datacolumn=WEIGHT_SPECTRUM, clip zeros'''
+        self.setUp_wtspec()
         flagdata(vis=self.vis, mode='clip', datacolumn='weight_SPECTRUM', 
                  clipzeros=True, flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
@@ -2699,6 +2606,7 @@ class test_weight_spectrum(test_base):
         
     def test_clip_range(self):
         '''flagdata: datacolumn=WEIGHT_SPECTRUM, flag a range'''
+        self.setUp_wtspec()
         flagdata(vis=self.vis, mode='clip', datacolumn='WEIGHT_SPECTRUM', 
                  clipminmax=[0,2.1], spw='0:1~29', flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
@@ -2709,6 +2617,7 @@ class test_weight_spectrum(test_base):
 
     def test_clip_chanavg(self):
         '''flagdata: datacolumn=WEIGHT_SPECTRUM, channel average'''
+        self.setUp_wtspec()
         flagdata(vis=self.vis, mode='clip', spw='0:1~29',datacolumn='WEIGHT_SPECTRUM', 
                  clipminmax=[0,2.1], channelavg=True, flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
@@ -2721,6 +2630,7 @@ class test_weight_spectrum(test_base):
 
     def test_clip_onepol(self):
         '''flagdata: datacolumn=WEIGHT_SPECTRUM, one polarization'''
+        self.setUp_wtspec()
         flagdata(vis=self.vis, mode='clip', datacolumn='WEIGHT_SPECTRUM', 
                  clipminmax=[0,2.04], correlation='RR', clipzeros=True, flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
@@ -2731,11 +2641,85 @@ class test_weight_spectrum(test_base):
 
     def test_tfcrop_weight(self):
         '''flagdata: datacolumn=WEIGHT_SPECTRUM, run tfcrop'''
+        self.setUp_wtspec()
         flagdata(vis=self.vis, mode='tfcrop', datacolumn='WEIGHT_SPECTRUM', 
                  flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'],16)
+        
+    def test_weight1(self):
+        '''flagdata: use datacolumn='WEIGHT' and clip spw=0'''
+        self.setUp_weightcol()
+        flagdata(vis=self.vis, mode='clip', datacolumn='WEIGHT', 
+                 clipminmax=[0,50.0], flagbackup=False)
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'],31)
+        self.assertEqual(res['spw']['0']['flagged'],31)
+        
+    def test_weight2(self):
+        '''flagdata: use datacolumn='WEIGHT' and clip inside'''
+        self.setUp_weightcol()
+        flagdata(vis=self.vis, mode='clip', datacolumn='WEIGHT', 
+                 clipminmax=[0,50.0], clipoutside=False, flagbackup=False)
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'],31)
+        self.assertEqual(res['spw']['1']['flagged'],31)
 
+    def test_weight3(self):
+        '''flagdata: clip using datacolumn='WEIGHT' and channelavg=True'''
+        self.setUp_weightcol()
+        flagdata(vis=self.vis, mode='clip', datacolumn='WEIGHT', 
+                 clipminmax=[0,50.0], clipoutside=True, channelavg=True, flagbackup=False)
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'],31)
+        self.assertEqual(res['spw']['0']['flagged'],31)
+
+    def test_weight4(self):
+        '''flagdata: clip using datacolumn='WEIGHT' and select some channels'''
+        self.setUp_weightcol()
+        flagdata(vis=self.vis, mode='clip', datacolumn='WEIGHT', spw='0,1:1~10', 
+                 clipminmax=[0,31.0], clipoutside=True, flagbackup=False)
+        res = flagdata(vis=self.vis, mode='summary', spwchan=True)
+        self.assertEqual(res['flagged'],41)
+        self.assertEqual(res['spw']['0']['flagged'],31)
+        self.assertEqual(res['spw:channel']['1:0']['flagged'],0)
+        self.assertEqual(res['spw:channel']['1:1']['flagged'],1)
+        self.assertEqual(res['spw:channel']['1:2']['flagged'],1)
+        self.assertEqual(res['spw:channel']['1:3']['flagged'],1)
+        self.assertEqual(res['spw:channel']['1:4']['flagged'],1)
+        self.assertEqual(res['spw:channel']['1:5']['flagged'],1)
+        self.assertEqual(res['spw:channel']['1:6']['flagged'],1)
+        self.assertEqual(res['spw:channel']['1:7']['flagged'],1)
+        self.assertEqual(res['spw:channel']['1:8']['flagged'],1)
+        self.assertEqual(res['spw:channel']['1:9']['flagged'],1)
+        self.assertEqual(res['spw:channel']['1:10']['flagged'],1)
+        
+    def test_weight5(self):
+        '''flagdata: clip using WEIGHT, then using WEIGHT_SPECTRUM'''
+        self.setUp_weightcol()
+        flagdata(vis=self.vis, flagbackup=False, mode='clip', datacolumn='WEIGHT',
+                 clipminmax=[0.0, 50.0])
+        
+        res = flagdata(vis=self.vis, mode='summary', spwchan=True)        
+        self.assertEqual(res['flagged'],31)
+        self.assertEqual(res['spw']['0']['flagged'],31)
+
+        # Unflag, run mstransform to create a WEIGHT_SPECTRUM and flag again
+        self.unflag_ms()
+        mstransform(vis=self.vis, outputvis='weight_spectrum.ms',datacolumn='all',
+                    usewtspectrum=True)
+        
+        # divide WEIGHT clipmax by the number of channels
+        newmax = 50./31
+        flagdata(vis='weight_spectrum.ms', flagbackup=False, mode='clip', 
+                 datacolumn='WEIGHT_SPECTRUM', clipminmax=[0.0, newmax])
+        res = flagdata(vis='weight_spectrum.ms', mode='summary', spwchan=True)        
+        self.assertEqual(res['flagged'],31)
+        self.assertEqual(res['spw']['0']['flagged'],31)
+        
+        self.addCleanup(shutil.rmtree, 'weight_spectrum.ms',True)
+
+        
 class test_float_column(test_base):
     """flagdata:: Test flagging FLOAT_DATA column"""
     
@@ -2817,7 +2801,6 @@ class test_float_column(test_base):
         
         self.assertTrue(filecmp.cmp(filename, 'outfakefield.txt', 1), 'Files should be equal')
 
-
 # Cleanup class 
 class cleanup(test_base):
     
@@ -2835,11 +2818,11 @@ class cleanup(test_base):
         os.system('rm -rf list*txt*')
         os.system('rm -rf fourrows*')
         os.system('rm -rf SDFloatColumn*')
+        os.system('rm -rf *weight*ms*')
 
     def test_runTest(self):
         '''flagdata: Cleanup'''
         pass
-
 
 def suite():
     return [test_tfcrop,

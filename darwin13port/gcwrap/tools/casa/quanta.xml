@@ -1625,10 +1625,10 @@ constants gets a named constant quantity. Names (no-case, minimax) are:
         h     Planck const              6.62608e-34 J.s
         HI    HI line                   1420.41 MHz
         R     gas const                 8.31451 J/K/mol
-        NA    Avogadro #                6.02214e+23 mol-1
+        NA    Avogadro number           6.02214e+23 mol-1
         e     electron charge           1.60218e-19 C
         mp    proton mass               1.67262e-27 kg
-        mp_me mp/me                     1836.15 
+        mp\_me mp/me                     1836.15 
         mu0   permeability vac.         1.25664e-06 H/m
         eps0  permittivity vac.         1.60218e-19 C
         k     Boltzmann const           1.38066e-23 J/K
@@ -1637,7 +1637,7 @@ constants gets a named constant quantity. Names (no-case, minimax) are:
         re    electron radius           2.8179e-15 m
         a0    Bohr's radius             5.2918e-11 m
         R0    solar radius              6.9599e+08 m
-        k2    IAU grav. const^2         0.000295912 AU3/d2/S0
+        k2    IAU grav. const\^2         0.000295912 AU3/d2/S0
 
 </description>
 <example>
@@ -2093,7 +2093,7 @@ print qa.getformat('long')
      </param>
 
      <param type="int" direction="in" name="prec">
-     <description># digits in fractional part of output string for dms,hms</description>
+     <description>digits in fractional part of output string for dms,hms</description>
      <value>2</value>
      </param>
 

@@ -920,11 +920,24 @@ class imval_test(unittest.TestCase):
         myia = iatool()
         myia.open(image_file)
         mycsys = myia.coordsys()
+        myia.done()
         expected = mycsys.toworld([45,45,0,5])['numeric']
         got = myimval["coords"][5,5]
         diff = got - expected
         # not 0 because of 32 bit precision issues
         self.assertTrue(max(abs(diff)) < 1e-16)
+        
+    def test_non_rect_region(self):
+        """ verify imval works on non-rectangular regions, CAS-5734"""
+        myia = iatool()
+        imagename = "xxyy.im"
+        myia.fromshape(imagename, [20,20,4,10])
+        myia.done()
+        ret = imval(
+            imagename, region="circle[[0:0:20,-0.05.00],4arcmin]"
+        )
+        self.assertTrue(ret['data'].shape == (9, 9, 4, 10))
+        
         
     
 def suite():
