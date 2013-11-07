@@ -286,8 +286,8 @@ class MeasurementSet(object):
         if scan_id is not None:
             # encase raw numbers in a tuple
             if not isinstance(scan_id, collections.Sequence):
-                field_id = (scan_id,)
-            pool = [f for f in pool if f.id in field_id]
+                scan_id = (scan_id,)
+            pool = [s for s in pool if s.id in scan_id]
 
         if scan_intent is not None:
             if type(scan_intent) in types.StringTypes:
