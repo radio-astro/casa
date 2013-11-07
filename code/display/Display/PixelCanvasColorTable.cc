@@ -140,7 +140,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// the input arrays.
 		uInt redSize = inArrayRed.nelements();
 		uInt blueSize = inArrayBlue.nelements();
-		uInt greenSize = inArrayGreen.nelements();
+		//uInt greenSize = inArrayGreen.nelements();
 		Array<uInt> inArray;
 		if ( redSize > 0 ){
 			inArray = inArrayRed;

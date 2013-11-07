@@ -162,7 +162,7 @@ namespace casa {
 
 		}
 
-		void QtRegionStats::setCenterBackground(QString background) {
+		void QtRegionStats::setCenterBackground(QString /*background*/) {
             ///////// the display widget has switched from an
             ///////// un-editable entry widget to a label widget
             ///////// so it does not need to have its background

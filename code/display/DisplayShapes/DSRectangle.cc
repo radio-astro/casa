@@ -184,7 +184,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return itsAngle;
 	}
 
-	void DSRectangle::addPoint(const Vector<Float>& toAdd) {
+	void DSRectangle::addPoint(const Vector<Float>& /*toAdd*/) {
 		throw(AipsError("DSRectangle.cc - Can't add points to a rectangle."));
 	}
 
