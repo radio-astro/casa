@@ -2017,7 +2017,7 @@ void
 AveragingTvi2::validateInputVi (ViImplementation2 *)
 {
     // Validate that the input VI is compatible with this VI.
-#warning "Implement AveragingTvi2::validateInputVi"
+  //#warning "Implement AveragingTvi2::validateInputVi"
 }
 
 } // end namespace vi

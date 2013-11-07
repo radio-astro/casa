@@ -108,7 +108,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  nData, sumwtChan, sumwtsqChan, sumInverseVarianceChan);
 
 }
-void VisSetUtil::Sensitivity(ROVisIter &vi, Matrix<Double>& mssFreqSel,
+void VisSetUtil::Sensitivity(ROVisIter &vi, Matrix<Double>& /*mssFreqSel*/,
 			     Matrix<Int>& mssChanSel,
 			     Quantity& pointsourcesens, 
 			     Double& relativesens, 
@@ -168,7 +168,7 @@ void VisSetUtil::Sensitivity(ROVisIter &vi, Matrix<Double>& mssFreqSel,
       for (vi.origin();vi.more();vi++) 
 	{
 	  Int nRow=vb.nRow();
-	  Int nChan=vb.nChannel();
+	  vb.nChannel();
 	  Int spwIndex;
 	  spw=vb.spectralWindow();
 	  spwIndex=-1;
@@ -225,7 +225,7 @@ void VisSetUtil::Sensitivity(ROVisIter &vi, Matrix<Double>& mssFreqSel,
   if (totalRows == 0)
     os << "Cannot calculate sensitivty:  No unflagged rows found" << LogIO::EXCEPTION;
 
-  for (Int spwndx=0; spwndx<bwList.nelements(); spwndx++)
+  for (uInt spwndx=0; spwndx<bwList.nelements(); spwndx++)
     {
       // cerr << spwndx << " " << bwList(spwndx) << " " << nData(spwndx) << endl;
       // cerr << spwndx << " " << spwIntegTime(spwndx) << " " << endl;
@@ -262,7 +262,7 @@ void VisSetUtil::Sensitivity(ROVisIter &vi, Matrix<Double>& mssFreqSel,
 
   //  cerr << "sumwt, sumwtsq, nd: " << sumwt << " " << sumwtsq << " " << nd << endl;
   relativesens=sqrt(nd*sumwtsq)/sumwt;
-  Double naturalsens=1.0/sqrt(sumInverseVariance);
+  //Double naturalsens=1.0/sqrt(sumInverseVariance);
   Double KB=1.3806488e-23;
   pointsourcesens=Quantity((10e26*2*KB*relativesens/sqrt(nBaselines*effectiveIntegration*effectiveBandwidth)), "Jy m^2/K");
 
