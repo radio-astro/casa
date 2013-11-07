@@ -63,12 +63,12 @@ inline std::string PTR NAME( int i ) {					\
 }									\
 inline std::string PTR long ## NAME( long long  l ) {					\
     char buff[256];							\
-    sprintf( buff, "%ld", l );						\
+    sprintf( buff, "%lld", l );						\
     return NEW std::string( (const char *) buff );			\
 }									\
 inline std::string PTR NAME( long long l ) {					\
     char buff[256];							\
-    sprintf( buff, "%ld", l );						\
+    sprintf( buff, "%lld", l );						\
     return NEW std::string( (const char *) buff );			\
 }									\
 inline std::string PTR double ## NAME( double d ) {			\
