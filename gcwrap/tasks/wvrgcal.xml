@@ -102,6 +102,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </allowed>
       </param>
 
+      <param type="double" name="mingoodfrac">
+	<description>If the fraction of unflagged data for an antenna is below this value (0. to 1.), the antenna is flagged.</description>
+	<value>0.8</value>
+      </param>
+      
 
 
       <!-- ================================================================= -->
@@ -192,6 +197,10 @@ WVRGCAL correction should not be used.
 
   minnumants -- minimum number of near antennas required for interpolation
 	        default: 2
+
+  mingoodfrac -- If the fraction of unflagged data for an antenna is below this value (0. to 1.), 
+                 the antenna is flagged.
+                 default: 0.8
 
   </description>
 
