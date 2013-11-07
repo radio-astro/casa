@@ -113,6 +113,27 @@ private:
 		 Double &xmin, Double &xmax,
 		 Double &ymin, Double &ymax);
 
+  /** 
+   * Shift TIME in gridded scantable for future imaging
+   * 
+   * STGrid sets the identical time for all rows in scantable
+   * which is reasonable thing to do in position based averaging.
+   * However, this prevents CASA from finding proper pointing
+   * per spectra once the gridded scantable is converted to
+   * measurement set (MS). It is because MS does not
+   * have ability to store per spectra pointing information.
+   * MS stores pointing information in a subtable, POINTING,
+   * with corresponding TIME when an antenna pointed the direction.
+   * The pointing direction corresponding to a spectra is resolved
+   * in MS by interpolating DIRECTION in POINTING subtable in TIME
+   * the spectra is observed. If there are multiple match,
+   * the first match is adopted. Therefore, gridded table (whose TIME
+   * is set to a single value) is misunderstood in MS that all data
+   * come from a single pointing.
+   * The function workarounds this defect by artificially shifting
+   * TIME by INTERVAL in each row.
+   **/
+  void shiftTimeInGriddedST(const CountedPtr<Scantable> &stab);
   /**
    * Actual calculation of frequencies of image sideband
    **/

@@ -573,6 +573,8 @@ ScantableWrapper STSideBandSep::gridTable()
   gridder.grid();
   const int itp = (tp_ == Table::Memory ? 0 : 1);
   ScantableWrapper gtab = gridder.getResultAsScantable(itp);
+  // WORKAROUND : Shift TIME for proper pointing resolution in future imaging.
+  shiftTimeInGriddedST(gtab.getCP());
   return gtab;
 };
 
@@ -600,6 +602,70 @@ void STSideBandSep::mapExtent(vector< CountedPtr<Scantable> > &tablist,
     xmax = max(xmax, amax);
     ymin = min(ymin, bmin);
     ymax = max(ymax, bmax);
+  }
+};
+
+// STGrid sets the identical time for all rows in scantable
+// which is reasonable thing to do in position based averaging.
+// However, this prevents CASA from finding proper pointing
+// per spectra once the gridded scantable is converted to
+// measurement set (MS). It is because MS does not
+// have ability to store per spectra pointing information.
+// MS stores pointing information in a subtable, POINTING,
+// with corresponding TIME when an antenna pointed the direction.
+// The pointing direction corresponding to a spectra is resolved
+// in MS by interpolating DIRECTION in POINTING subtable in TIME
+// the spectra is observed. If there are multiple match,
+// the first match is adopted. Therefore, gridded table (whose TIME
+// is set to a single value) is misunderstood in MS that all data
+// come from a single pointing.
+// The function workarounds this defect by artificially shifting
+// TIME by INTERVAL in each row.
+void STSideBandSep::shiftTimeInGriddedST(const CountedPtr<Scantable> &stab)
+{
+  LogIO os(LogOrigin("STSideBandSep", "shiftTimeInGriddedST()", WHERE));
+  // Gridded table usually has an IF and a BEAM.
+  {
+    std::vector<uint> bmnos = stab->getBeamNos();
+    if (bmnos.size() > 1)
+      throw( AipsError("Multiple BEAMNOs found in the scantable. This may not a gridded table") );
+    std::vector<uint> ifnos = stab->getIFNos();
+    if (ifnos.size() > 1)
+      throw( AipsError("Multiple IFNOs found in the scantable. This may not a gridded table") );
+  }
+  // Rows in gridded table usually sorted by DIRECTION
+  const Table& tab = stab->table();
+  ROScalarColumn<Double> mjdCol( tab, "TIME");
+  ROScalarColumn<Double> intCol( tab, "INTERVAL");
+  ROArrayColumn<Double> dirCol( tab, "DIRECTION");
+  Matrix<Double> direction = dirCol.getColumn();
+  Vector<Double> ra( direction.row(0) );
+  Vector<Double> dec( direction.row(1) );
+  Double prevTime, prevInt, prevRA(ra[0]), prevDec(dec[0]);
+  mjdCol.get(0, prevTime);
+  intCol.get(0, prevInt);
+  Double currInt, currRA, currDec;
+  Double dx(xtol_*0.95), dy(ytol_*0.95);
+  Double secToDay(1./24./3600.);
+  for (int irow = 0; irow < stab->nrow(); ++irow){
+    currRA = ra[irow];
+    currDec = dec[irow];
+    if ((prevRA+dx-currRA)*(currRA-prevRA+dx)>=0 &&
+	(prevDec+dy-currDec)*(currDec-prevDec+dy)>=0) {
+      // the same time stamp as the previous row
+      mjdCol.put(irow, prevTime);
+      // remember the longest interval
+      intCol.get(irow, currInt);
+      if (currInt > prevInt) prevInt = currInt;
+    } else {
+      // a new direction. need to set new time stamp.
+      prevTime += prevInt*secToDay;
+      mjdCol.put(irow, prevTime);
+      // new interval and direction
+      intCol.get(irow, prevInt);
+      prevRA = currRA;
+      prevDec = currDec;
+    }
   }
 };
 
