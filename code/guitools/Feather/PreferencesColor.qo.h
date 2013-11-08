@@ -54,7 +54,7 @@ public:
     QList<CurveType> getScatterYCurve() const;
 
     void setDirtyEnabled( bool enabled );
-    void setRadialPlot( bool radial );
+
     ~PreferencesColor();
 
 signals:

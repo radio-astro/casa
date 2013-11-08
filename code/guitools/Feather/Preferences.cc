@@ -109,10 +109,8 @@ void Preferences::initializeCustomSettings(){
 	displayXPlots = settings.value( DISPLAY_X_PLOTS, displayXPlots ).toBool();
 	logAmplitude = settings.value( LOG_AMPLITUDE, logAmplitude ).toBool();
 	logUV = settings.value( LOG_UV, logUV ).toBool();
-	//xAxisUV = settings.value( DISPLAY_X_AXIS_UV, xAxisUV ).toBool();
-	xAxisUV = true;
-	//planeAveraged = settings.value(PLANE_AVERAGED, planeAveraged ).toBool();
-	planeAveraged = false;
+	xAxisUV = settings.value( DISPLAY_X_AXIS_UV, xAxisUV ).toBool();
+	planeAveraged = settings.value(PLANE_AVERAGED, planeAveraged ).toBool();
 }
 
 void Preferences::planeModeChanged(){
