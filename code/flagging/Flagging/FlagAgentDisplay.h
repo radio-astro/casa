@@ -85,35 +85,61 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Plotter members
     FlagPlotServerProxy *dataplotter_p;  
     FlagPlotServerProxy *reportplotter_p;
-    Vector<dbus::variant> panels_p, report_panels_p;
-    char *dock_xml_p, *report_dock_xml_p;
-    Bool showBandpass_p;
+
+    // GUI parameters
+    String userChoice_p;
+    String userFixA1_p, userFixA2_p;
+
+    Int skipScan_p, skipSpw_p, skipField_p;
 
     // Control parameters
-    Bool stopAndExit_p;
     Bool pause_p;
-    Bool dataDisplay_p, reportDisplay_p; // show per chunk plots and/or end-of-MS plots
-    Bool reportReturn_p;
-    String reportFormat_p;
-    
+
     // visBuffer state variables
     Int fieldId_p;
     String fieldName_p;
     Int scanStart_p;
     Int scanEnd_p;
     Int spwId_p;
-    String antenna1_p;
-    String antenna2_p;
-    
     uInt nPolarizations_p;
     Vector<Double> freqList_p;
+    String antenna1_p;
+    String antenna2_p;
+
+    Bool dataDisplay_p, reportDisplay_p; // show per chunk plots and/or end-of-MS plots
+    String reportFormat_p;
+    Bool stopAndExit_p;
+    Bool reportReturn_p;
+    Bool showBandpass_p;
+
+    Vector<dbus::variant> panels_p, report_panels_p;
+    char *dock_xml_p, *report_dock_xml_p;
+//    Bool showBandpass_p;
+
+    // Control parameters
+//    Bool stopAndExit_p;
+//    Bool pause_p;
+//    Bool dataDisplay_p, reportDisplay_p; // show per chunk plots and/or end-of-MS plots
+//    Bool reportReturn_p;
+//    String reportFormat_p;
     
+    // visBuffer state variables
+//    Int fieldId_p;
+//    String fieldName_p;
+//    Int scanStart_p;
+//    Int scanEnd_p;
+//    Int spwId_p;
+//    String antenna1_p;
+//    String antenna2_p;
+    
+//    uInt nPolarizations_p;
+//    Vector<Double> freqList_p;
     
     // GUI parameters
-    String userChoice_p;
-    String userFixA1_p, userFixA2_p;
+//    String userChoice_p;
+//    String userFixA1_p, userFixA2_p;
     
-    Int skipScan_p, skipSpw_p, skipField_p;
+//    Int skipScan_p, skipSpw_p, skipField_p;
 
     Vector<String> plotColours_p;
     

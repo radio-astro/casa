@@ -85,9 +85,9 @@ FlagMSHandler::open()
 	// File the baseline to Ant1xAnt2 map
 	String baseline;
 	std::pair<Int,Int> ant1ant2;
-	for (Int ant1Idx=0;ant1Idx<antennaNames_p->size();ant1Idx++)
+	for (Int ant1Idx=0;ant1Idx < static_cast<Int>(antennaNames_p->size());ant1Idx++)
 	{
-		for (Int ant2Idx=ant1Idx+1;ant2Idx<antennaNames_p->size();ant2Idx++)
+		for (Int ant2Idx=ant1Idx+1;ant2Idx < static_cast<Int>(antennaNames_p->size());ant2Idx++)
 		{
 			ant1ant2.first = ant1Idx;
 			ant1ant2.second = ant2Idx;
@@ -491,7 +491,7 @@ FlagMSHandler::generateIterator()
 // therefore this step will in practice do nothing , because the spw and channel lists are empty too.
 // -----------------------------------------------------------------------
 void
-FlagMSHandler::applyChannelSelection(vi::VisibilityIterator2 *visIter)
+FlagMSHandler::applyChannelSelection(vi::VisibilityIterator2 * /*visIter*/)
 {
 	// Apply channel selection (in row selection cannot be done with MSSelection)
 	// NOTE: Each row of the Matrix has the following elements: SpwID StartCh StopCh Step
@@ -834,7 +834,8 @@ bool
 FlagMSHandler::summarySignal()
 {
 	Double progress = 100.0* ((Double) processedRows / (Double) selectedMeasurementSet_p->nrow());
-	if ((progress >= summaryThreshold_p) or (logger_p->priority() >= LogIO::DEBUG1))
+//	if ((progress >= summaryThreshold_p) or (logger_p->priority() >= LogIO::DEBUG1))
+	if ((progress >= summaryThreshold_p) or (logger_p->priority() >= LogMessage::DEBUG1))
 	{
 		summaryThreshold_p += 10;
 		printChunkSummary_p = true;
