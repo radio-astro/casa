@@ -336,8 +336,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Cube<CountedPtr<CFCell> >& getStorage() {return cfCells_p;};
     void makePersistent(const char *dir);
     
+    void primeTheCache();
     void initMaps(const VisBuffer& vb,const Matrix<Double>& freqSelection,const Double& imRefFreq);
-    
+    void initPolMaps(PolMapType& polMap, PolMapType& conjPolMap);
     //
     // For CUDA kernel
     //
@@ -362,7 +363,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       cfbSt.shape[0]=cfbSt.shape[1]=cfbSt.shape[2]=0;
       cfbSt.fIncr=cfbSt.wIncr=0.0;
     }
+    void fill(const Int& nx, const Int& ny, 
+	      const Vector<Double>& freqValues,
+	      const Vector<Double>& wValues,
+	      const PolMapType& muellerElements);
     
+    IPosition getShape() {return cfCells_p.shape();}
     //
     //============================= Protected Parts ============================
     //------------------------------------------------------------------
