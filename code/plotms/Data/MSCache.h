@@ -64,7 +64,7 @@ public:
   virtual ~MSCache();
 
   // Identify myself
-  PlotMSCacheBase::Type cacheType() { return PlotMSCacheBase::MS; };
+  PlotMSCacheBase::Type cacheType() const { return PlotMSCacheBase::MS; };
 
   // Access to channel averaging bounds
   Matrix<Int>& chanAveBounds(Int spw) { return chanAveBounds_p(spw); };
