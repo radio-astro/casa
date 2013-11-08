@@ -271,7 +271,7 @@ namespace casa {
 
 		if ( fds[0].revents ) {
 			char buf[1024];
-			ssize_t len = read( _leave_pipe[0], buf, sizeof(buf) );
+			/*ssize_t len = */ read( _leave_pipe[0], buf, sizeof(buf) );
 		}
 
 		for (wi = _watches.begin(); wi != _watches.end();) {
