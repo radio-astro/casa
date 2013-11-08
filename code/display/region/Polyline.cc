@@ -91,7 +91,7 @@ namespace casa {
 			initPlot();
 		}
 
-		RegionInfo * Polyline::newInfoObject( std::tr1::shared_ptr<ImageInterface<Float> > image, PrincipalAxesDD * ) {
+		RegionInfo * Polyline::newInfoObject( ImageInterface<Float>* image, PrincipalAxesDD * ) {
 			SliceRegionInfo* sliceRegion = NULL;
 			if ( image != NULL ) {
 				RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();
@@ -99,7 +99,8 @@ namespace casa {
 				SlicePlot* slicePlot = NULL;
 				if ( !slicePlots.contains(key)) {
 					slicePlot = new SlicePlot();
-					slicePlot->setImage( image );
+					std::tr1::shared_ptr<ImageInterface<Float> > imagePtr( image );
+					slicePlot->setImage( /*image*/imagePtr );
 					setPlotLineColor( slicePlot );
 					slicePlots.insert( key , slicePlot );
 				}

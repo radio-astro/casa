@@ -322,7 +322,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void emitOptionsChanged( Record changedOpts );
 		void setPlotTitle();
 
-		virtual void done();
+
 
 
 		virtual void checkAxis();
@@ -453,7 +453,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		static bool globalColorSettings;
 		bool setColorBarOptions( Record& opts, Record& chgdOpts );
 		void checkGlobalChange( Record& chgdOpts );
-
+		void done();
 		//If global color settings is checked and a new QtDisplayData is added,
 		//it should pick up the global color settings already in place.
 		void initGlobalColorSettings();

@@ -338,24 +338,27 @@ void FeatherPlotWidget::initializeZooming(){
 void FeatherPlotWidget::zoomRectangleSelected( const QwtDoubleRect& zoomRect ){
 	if ( zoomRect.width() > 0 && zoomRect.height() > 0 ){
 		double minX = zoomRect.x();
-		double maxX = minX + zoomRect.width();
+		double rectWidth = zoomRect.width();
+		double maxX = minX + rectWidth;
 		double minY = zoomRect.y();
-		double maxY = minY + zoomRect.height();
+		double rectHeight = zoomRect.height();
+		double maxY = minY + rectHeight;
 
 		//If we are using a log scale on either axis, we need to convert
 		//the rectangle bounds back to a normal scale.
+		const int BASE = 10;
 		if ( plot->isLogUV() ){
 			if ( !plot->isScatterPlot() ){
-				minX = qPow( 10, minX);
-				maxX = qPow( 10, maxX);
+				minX = qPow( BASE, minX);
+				maxX = qPow( BASE, maxX);
 			}
 		}
 		if ( plot->isLogAmplitude() ){
-			minY = qPow( 10, minY );
-			maxY = qPow( 10, maxY );
+			minY = qPow( BASE, minY );
+			maxY = qPow( BASE, maxY );
 			if ( plot->isScatterPlot() ){
-				minX = qPow( 10, minX);
-				maxX = qPow( 10, maxX);
+				minX = qPow( BASE, minX );
+				maxX = qPow( BASE, maxX);
 			}
 		}
 
@@ -397,21 +400,14 @@ void FeatherPlotWidget::initializeSumData( QVector<double>& sumX, QVector<double
 	sumY.resize( countX );
 	for ( int i = 0; i < countX; i++ ){
 		sumX[i] = singleDishX[i];
-		if ( !logScale ){
-			sumY[i] = singleDishY[i] + interferometerY[i];
-		}
-		else {
+		sumY[i] = singleDishY[i] + interferometerY[i];
+
+		if ( logScale ){
 			//Occasionally we are getting single dish or interferometer
 			//values of zero.  We assume these are bad and are ignoring them.
-			double logSingleDish = singleDishY[i];
-			if ( logSingleDish > 0 ){
-				logSingleDish = qLn( singleDishY[i]) / qLn( 10 );
+			if ( sumY[i] > 0 ){
+				sumY[i] = qLn( sumY[i]) / qLn( 10 );
 			}
-			double logInterferometer = interferometerY[i];
-			if ( logInterferometer > 0 ){
-				logInterferometer = qLn( interferometerY[i]) / qLn(10 );
-			}
-			sumY[i] = logSingleDish + logInterferometer;
 		}
 	}
 }

@@ -143,15 +143,10 @@ void PreferencesColor::setCurveDefaults(){
 	curvePreferences[FeatherCurveType::DISH_DIAMETER]->setScatterEligible( false );
 	curvePreferences[FeatherCurveType::WEIGHT_LOW]->setScatterEligible( false );
 	curvePreferences[FeatherCurveType::WEIGHT_HIGH]->setScatterEligible( false );
-	curvePreferences[FeatherCurveType::SUM_LOW_HIGH]->setScatterEligible( false );
+
 }
 
-void PreferencesColor::setRadialPlot( bool /*radial*/ ){
-	//qcurvePreferences[FeatherCurveType::WEIGHT_LOW]->setEnabled( !radial );
-	/*if (radial ){
-		curvePreferences[FeatherCurveType::WEIGHT_LOW]->setDisplayed( false );
-	}*/
-}
+
 
 void PreferencesColor::addCurvePreferences(){
 	addCurvePreference( ui.weightLowPreferences, FeatherCurveType::WEIGHT_LOW );
@@ -261,6 +256,16 @@ void PreferencesColor::populateScatterAxisY(){
 				ui.scatterYAxisList->setItemSelected( item, true );
 			}
 			currentRow++;
+		}
+	}
+
+	//We still might now have anything selected, so we just default in such
+	//a case to the first item in the list.
+	QList<QListWidgetItem*> selectedNames = ui.scatterYAxisList->selectedItems();
+	if ( selectedNames.size() == 0 ){
+		QListWidgetItem* item = ui.scatterYAxisList->item(0);
+		if ( item != NULL ){
+			ui.scatterYAxisList->setItemSelected( item, true );
 		}
 	}
 }

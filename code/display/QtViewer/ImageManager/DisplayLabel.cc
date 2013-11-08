@@ -50,7 +50,10 @@ DisplayLabel::DisplayLabel(int characterCount, QWidget *parent)
 	setSizePolicy( QSizePolicy::Fixed, QSizePolicy::Fixed );
 }
 
-
+QString DisplayLabel::getText() const {
+	QString plainText = toPlainText();
+	return plainText;
+}
 
 void DisplayLabel::setBackgroundColor( ){
 	QPalette pal = palette();

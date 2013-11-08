@@ -107,8 +107,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		ListIter<DisplayData *> localDDLI(itsDDList);
 		if ( position < 0 ) {
 			localDDLI.toEnd();
-		} else {
+		}
+		else {
 			int i = 0;
+			localDDLI.toStart();
 			while ( i < position ) {
 				localDDLI++;
 				i++;
@@ -123,24 +125,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// contours, vectors, etc are not displayed separately so the index needs
 		//to take that into account.
 		if ( isBlinkDD(&displaydata) ){
-			int index = 0;
-			++itsBLength;
+
+			itsBLength++;
 			itsBlinkDDs.resize( itsBLength, True );
-			ListIter<DisplayData *> iter(itsDDList);
-			iter.toStart();
-			while (!iter.atEnd()) {
-				DisplayData* dd = iter.getRight();
-				if ( dd ) {
-					itsBlinkDDs[index] = dd;
-					Attribute bIndexAtt(itsBIndexName, index );
-					dd->setRestriction( bIndexAtt );
-					if ( dd->classType() == Display::Raster ) {
-						index++;
-					}
-				}
-				iter++;
-			}
 		}
+
+		ListIter<DisplayData *> iter(itsDDList);
+		iter.toStart();
+		int index = 0;
+		while (!iter.atEnd()) {
+			DisplayData* dd = iter.getRight();
+			if ( dd ){
+				if ( isBlinkDD( dd) ) {
+					itsBlinkDDs[index] = dd;
+
+				}
+				Attribute bIndexAtt(itsBIndexName, index );
+				dd->setRestriction( bIndexAtt );
+				if ( isBlinkDD(dd)){
+					index++;
+				}
+			}
+			iter++;
+		}
+
 		refresh();
 		release();
 	}
@@ -170,27 +178,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					dd->removeRestriction(itsBIndexName);
 					// No point in leaving blink restriction hanging on the dd.
 
-					Bool found=False;
+					bool found=false;
+
 					for(Int ddBIndex=0; ddBIndex<itsBLength; ddBIndex++) {
 						DisplayData* searchDD =
 						    static_cast<DisplayData*>(itsBlinkDDs[ddBIndex]);
 
-						if(found) {
+
+						if(dd==searchDD) {
+							// dd found in blinkDD list--it will be removed.
+							found=true;
+
+							if(itsBIndex>ddBIndex){
+
+								itsBIndex--;
+							}
+						}
+						else if(found) {
 
 							// DDs past the one being removed move back in the blinkDD list.
 							// Their bIndex restriction must also be decremented.
 
+
 							Int newddBIndex=ddBIndex-1;
+
 							itsBlinkDDs[newddBIndex]=searchDD;
 							Attribute bIndexAtt(itsBIndexName, newddBIndex);
 							searchDD->setRestriction(bIndexAtt);
+
 						}
 
-						else if(dd==searchDD) {
-							// dd found in blinkDD list--it will be removed.
-							found=True;
-							if(itsBIndex>ddBIndex) itsBIndex--;
-						}
 					}
 					// itsBIndex is communicated to the animator, and becomes the
 					// WCH blink restriction setting.  It should be decremented
@@ -199,12 +216,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 					if(found) {		// (should be True).
 						itsBLength--;
+						if ( itsBLength >= 0 ){
+							itsBlinkDDs[itsBLength] = NULL;
+						}
 						itsBIndex = max(0, min(itsBLength-1, itsBIndex));
+						// Assure itsBIndex is in proper range
+						break;
 					}
-				}
-				// Assure itsBIndex is in proper range
 
-				break;
+				}
 			}
 
 			else localDDLI++;
@@ -225,6 +245,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			localDDLI.removeRight();
 			if(isBlinkDD(dd)) dd->removeRestriction(itsBIndexName);
 		}
+
 		itsBLength = itsBIndex = 0;
 		refresh();
 		release();

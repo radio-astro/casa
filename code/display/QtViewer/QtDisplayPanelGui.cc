@@ -1395,12 +1395,15 @@ int QtDisplayPanelGui::getBoundedChannel( int channelNumber ) const {
 	}
 	return boundedChannel;
 }
-void QtDisplayPanelGui::addDDSlot(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img) {
-	std::tr1::shared_ptr<ImageInterface<Float> > imgPtr(img);
-	addDD( path, dataType, displayType, autoRegister, tmpData, imgPtr );
+void QtDisplayPanelGui::addDDSlot(String path, String dataType, String displayType,
+		Bool autoRegister, Bool tmpData, std::tr1::shared_ptr<ImageInterface<Float> > img) {
+	//std::tr1::shared_ptr<ImageInterface<Float> > imgPtr(img);
+	addDD( path, dataType, displayType, autoRegister, tmpData, img );
+
 }
 
-QtDisplayData* QtDisplayPanelGui::addDD(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, std::tr1::shared_ptr<ImageInterface<Float> > img) {
+QtDisplayData* QtDisplayPanelGui::addDD(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData,
+		std::tr1::shared_ptr<ImageInterface<Float> > img) {
 	// create a new DD
 	QtDisplayData* dd = NULL;
 	if ( ! img ) {
@@ -1408,7 +1411,7 @@ QtDisplayData* QtDisplayPanelGui::addDD(String path, String dataType, String dis
 	} else {
 		dd =new QtDisplayData( this, path, dataType, displayType);
 		dd->setImage( img );
-		// dd->initImage();
+		dd->initImage();
 		dd->init();
 		dd = processDD( path, dataType, displayType, autoRegister,
 				-1, false, false, false, dd );
@@ -1619,7 +1622,6 @@ Bool QtDisplayPanelGui::removeDD(QtDisplayData*& qdd) {
 		}
 
 		notifyDDRemoval( qdd );
-		qdd->done();
 		delete qdd;
 		qdd = NULL;
 		updateFrameInformation();
@@ -2300,8 +2302,8 @@ void QtDisplayPanelGui::showImageProfile() {
 								profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
 						connect( pdd, SIGNAL(spectrumChanged(String, String, String )),
 								profile_, SLOT(changeSpectrum(String, String, String )));
-						connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool, ImageInterface<Float>* )),
-								this, SLOT(addDDSlot(String, String, String, Bool, Bool, ImageInterface<Float>*)));
+						connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool, std::tr1::shared_ptr<ImageInterface<Float> > )),
+								this, SLOT(addDDSlot(String, String, String, Bool, Bool, std::tr1::shared_ptr<ImageInterface<Float> >)));
 						connect(profile_, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
 						connect( this, SIGNAL(frameChanged(int)), profile_, SLOT(frameChanged(int)));
 						connect( profile_, SIGNAL(movieChannel(int,int)), this, SLOT(movieChannels(int, int)));
