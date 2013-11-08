@@ -20,7 +20,7 @@ from pipeline.hif.tasks import bandpass
 from pipeline.hif.tasks import applycal
 from pipeline.vla.heuristics import getCalFlaggedSoln, getBCalStatistics
 from pipeline.vla.tasks.setmodel.setmodel import find_standards, standard_sources
-from . import setjy
+from . import vlasetjy
 import pipeline.hif.heuristics.findrefant as findrefant
 
 from pipeline.vla.tasks.vlautils import VLAUtils
