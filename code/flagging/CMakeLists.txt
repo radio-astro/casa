@@ -74,7 +74,7 @@ install (FILES
 	Flagging/FlagReport.h
 	Flagging/FlagVersion.h
 	Flagging/Flagger.h
-	Flagging/LFPlotServerProxy.h
+	Flagging/FlagPlotServerProxy.h
 	Flagging/RFABase.h
 	Flagging/RFADiffBase.h
 	Flagging/RFAFlagCubeBase.h

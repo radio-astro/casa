@@ -32,7 +32,7 @@
 
 //#include <ms/MeasurementSets/MSColumns.h>
 
-#include <flagging/Flagging/LFPlotServerProxy.h>
+#include <flagging/Flagging/FlagPlotServerProxy.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
