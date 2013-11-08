@@ -61,7 +61,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //-------------------------------------------------------------------------
     void makePersistent(const char *dir,const char *qualifier="");
     //-------------------------------------------------------------------------
+    void primeTheCFB();
+    //-------------------------------------------------------------------------
     void initMaps(const VisBuffer& vb, const Matrix<Double>& freqSelection, const Double& imRefFreq);
+    //-------------------------------------------------------------------------
+    void initPolMaps(PolMapType& polMap, PolMapType& conjPolMap);
     //-------------------------------------------------------------------------
     Bool null() {return (storage_p.size() == 0);};
     //-------------------------------------------------------------------------
@@ -109,6 +113,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Int>& getAnt1List() {return ant1_p;};
     Vector<Int>& getAnt2List() {return ant2_p;};
     Vector<Quantity> getPAList() {return pa_p;};
+    IPosition getShape() {return storage_p.shape();}
 
   protected:
 

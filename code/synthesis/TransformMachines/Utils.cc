@@ -929,7 +929,7 @@ namespace casa{
     Double minVal=1e20; 
     Int i=0;
 
-    for (index=0;index<diff.nelements();index++)
+    for (index=0;index<(Int)diff.nelements();index++)
       if (diff[index] < minVal) {minVal=diff[index];i=index;}
     index=i;
     return list(index);
@@ -951,6 +951,22 @@ namespace casa{
     //
     // Int ndx=min(freqValues_p.nelements()-1,max(0,SynthesisUtils::nint((freqVal-freqValues_p[0])/freqValIncr_p)));
     // return ndx;
+  }
+
+  template <class T>
+  T SynthesisUtils::stdNearestValue(const vector<T>& list, const T& val, Int& index)
+  {
+    vector<T> diff=list;
+    for (uInt i=0;i<list.size();i++)
+      diff[i] = fabs(list[i] - val);
+    
+    T minVal=std::numeric_limits<T>::max();//1e20; 
+    Int i=0;
+
+    for (index=0;index<(Int)diff.size();index++)
+      if (diff[index] < minVal) {minVal=diff[index];i=index;}
+    index=i;
+    return list[index];
   }
 
   CoordinateSystem SynthesisUtils::makeUVCoords(CoordinateSystem& imageCoordSys,
@@ -1054,5 +1070,48 @@ namespace casa{
 //     else : 
 //         return True
   }
+
+  // template<class Iterator>
+  // Iterator SynthesisUtils::Unique(Iterator first, Iterator last)
+  // {
+  //   while (first != last)
+  //     {
+  //       Iterator next(first);
+  //       last = std::remove(++next, last, *first);
+  //       first = next;
+  //     }
+    
+  //   return last;
+  // }
+
+
+  template <class Iterator>
+  Iterator SynthesisUtils::Unique(Iterator first, Iterator last)
+  {
+    while (first != last)
+      {
+	Iterator next(first);
+        last = std::remove(++next, last, *first);
+        first = next;
+      }
+    
+    return last;
+  }
+
+
+  template
+  std::vector<Double>::iterator SynthesisUtils::Unique(std::vector<Double>::iterator first, std::vector<Double>::iterator last);
+  template
+  std::vector<Float>::iterator SynthesisUtils::Unique(std::vector<Float>::iterator first, std::vector<Float>::iterator last);
+  template
+  std::vector<Int>::iterator SynthesisUtils::Unique(std::vector<Int>::iterator first, std::vector<Int>::iterator last);
+
+  template 
+  Double SynthesisUtils::stdNearestValue(const vector<Double>& list, const Double& val, Int& index);
+  template 
+  Float SynthesisUtils::stdNearestValue(const vector<Float>& list, const Float& val, Int& index);
+  template 
+  Int SynthesisUtils::stdNearestValue(const vector<Int>& list, const Int& val, Int& index);
+
 
 } // namespace casa
