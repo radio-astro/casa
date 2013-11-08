@@ -160,8 +160,8 @@ namespace casa{
     memCache2_p[0].primeTheCFB();
     memCacheWt2_p[0].primeTheCFB();
 
-    memCache2_p[0].show("CF Cache: ");
-    memCacheWt2_p[0].show("WTCF Cache: ");
+    // memCache2_p[0].show("CF Cache: ");
+    // memCacheWt2_p[0].show("WTCF Cache: ");
 
     Double memUsed0,memUsed1;
     memUsed0=memCache2_p[0].memUsage()/1024;
