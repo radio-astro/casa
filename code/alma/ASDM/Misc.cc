@@ -284,7 +284,8 @@ namespace asdm {
     return result;
   }
 
-  bool ASDMUtils::hasChild(xmlDocPtr doc, xmlNodePtr node, const xmlChar* childName) {
+  bool ASDMUtils::hasChild(xmlDocPtr , // doc
+			   xmlNodePtr node, const xmlChar* childName) {
     node = node->xmlChildrenNode;
 
     while (node != NULL) {
@@ -376,7 +377,7 @@ namespace asdm {
   }
 
   string ASDMUtils::pathToxslTransform( const string& xsltFilename) {
-    char * envVars[] = {"INTROOT", "ACSROOT"};
+    const char * envVars[] = {"INTROOT", "ACSROOT"};
     char * rootDir_p;
     for (unsigned int i = 0; i < sizeof(envVars) / sizeof(char *) ; i++) 
       if ((rootDir_p = getenv(envVars[i])) != 0) {
@@ -568,41 +569,34 @@ namespace asdm {
     return output;  // for multiple << operators.
   }
 
-  CharComparator::CharComparator(std::ifstream * is_p, off_t limit):is_p(is_p), limit(limit){asdmDebug_p = getenv("ASDM_DEBUG");}
+  CharComparator::CharComparator(std::ifstream * is_p, off_t limit):is_p(is_p), limit(limit){;}
 
   bool CharComparator::operator() (char cl, char cr) {
-    if (asdmDebug_p) cout << "Entering CharComparator::operator()" << endl;
     if (is_p && is_p->tellg() > limit) 
       return true;
     else 
       return toupper(cl) == cr;
-    if (asdmDebug_p) cout << "Exiting CharComparator::operator()" << endl;
   }
 
-  CharCompAccumulator::CharCompAccumulator(std::string* accumulator_p, std::ifstream * is_p, off_t limit): accumulator_p(accumulator_p),
+  CharCompAccumulator::CharCompAccumulator(std::string* , //accumulator
+					   std::ifstream * is_p, off_t limit): accumulator_p(accumulator_p),
 													 is_p(is_p),
-													   limit(limit) {nEqualChars = 0; asdmDebug_p = getenv("ASDM_DEBUG");}
+													 limit(limit) {;}
   bool CharCompAccumulator::operator()(char cl, char cr) {
-    if (asdmDebug_p) cout << "Entering CharCompAccumulator::operator()" << endl;
     bool result = false;
     // Are we beyond the limit ?
     if (is_p && is_p->tellg() > limit) 
       result = true;      // Yes
     else {                // No
-      if (toupper(cl) == toupper(cr)) {
+      if (toupper(cl) == cr) {
 	result = true;
-	nEqualChars++;
       }
       else {
-	if (nEqualChars > 0) {
-	  accumulator_p->erase(accumulator_p->end() - nEqualChars + 1, accumulator_p->end());
-	  nEqualChars = 0;
-	}
+	if (accumulator_p->size() > 0) accumulator_p->erase();
 	result = false;
       }
       accumulator_p->push_back(cl);
     }
-    if (asdmDebug_p) cout << "Exiting CharCompAccumulator::operator()" << endl;
     return result;
   }  
   
