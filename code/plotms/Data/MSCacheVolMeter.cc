@@ -37,7 +37,7 @@
 #include <scimath/Mathematics/FFTServer.h>
 #include <ms/MeasurementSets/MSColumns.h> 	 
 #include <synthesis/MSVis/VisSet.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer2.h>
 #include <synthesis/MSVis/VisBufferUtil.h>
 #include <plotms/Data/PlotMSVBAverager.h>
 #include <plotms/PlotMS/PlotMS.h>
@@ -147,8 +147,8 @@ void MSCacheVolMeter::add(Int DDID,Int nRows) {
 	nRowsPerDDID_(DDID)+=nRows;
 }
 
-void MSCacheVolMeter::add(const VisBuffer& vb) {
-	this->add(vb.dataDescriptionId(),vb.nRow());
+void MSCacheVolMeter::add(const vi::VisBuffer2& vb) {
+	this->add(vb.dataDescriptionIds()(0),vb.nRows());
 }
 
 String MSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesmask) {
@@ -215,6 +215,7 @@ String MSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesma
 			case PMS::PHASE:
 			case PMS::REAL:
 			case PMS::IMAG:
+            case PMS::WTxAMP:
 				axisVol=sizeof(Float)*sum(nRowsPerDDID_*nChanPerDDID_*nCorrPerDDID_);
 				break;
 			case PMS::FLAG:
@@ -256,7 +257,6 @@ String MSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesma
 			case PMS::TSYS:
 			case PMS::OPAC:
 			case PMS::NONE:
-			case PMS::WTxAMP:
 				break;
 			} // switch
 			totalVol+=axisVol;

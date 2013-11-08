@@ -33,10 +33,12 @@
 #include <casa/aips.h>
 #include <casa/Arrays.h>
 #include <casa/Containers/Block.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer2.h>
 
 
 namespace casa {
+
+class MeasurementSet;
 
 class MSCacheVolMeter {
 
@@ -53,7 +55,7 @@ public:
   void reset();
 
   // add in via a VisBuffer
-  void add(const VisBuffer& vb);
+  void add(const vi::VisBuffer2& vb);
 
   // add in via counts
   void add(Int DDID,Int nRows);

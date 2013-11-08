@@ -36,9 +36,12 @@
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeFFT.h>
 #include <scimath/Mathematics/FFTServer.h>
-#include <ms/MeasurementSets/MSColumns.h> 	 
+#include <ms/MeasurementSets/MSColumns.h>
+#include <ms/MeasurementSets/MSSelection.h>
 #include <synthesis/MSVis/VisSet.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer2.h>
+#include <synthesis/MSVis/VisibilityIterator2.h>
+#include <mstransform/MSTransform/MSTransformIteratorFactory.h>
 #include <synthesis/MSVis/VisBufferUtil.h>
 #include <plotms/Data/PlotMSVBAverager.h>
 #include <plotms/Data/MSCacheVolMeter.h>
@@ -47,6 +50,8 @@
 #include <measures/Measures/Stokes.h>
 
 namespace casa {
+
+using namespace vi;
 
 MSCache::MSCache(PlotMSApp* parent):
 		  PlotMSCacheBase(parent)
@@ -106,121 +111,121 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 	}
 
 	setUpVisIter(filename_,selection_,True,True,True);
-	ROVisIterator& viter(*rvi_p);
 
-	if (averaging_.channel())
-		viter.setChanAveBounds(averaging_.channelValue(),chanAveBounds_p);
-	else
-		viter.setChanAveBounds(-1.0,chanAveBounds_p);
+    // TBF: Is this needed for flagging?
+// 	if (averaging_.channel())
+// 		vi_p->setChanAveBounds(averaging_.channelValue(),chanAveBounds_p);
+// 	else
+// 		vi_psetChanAveBounds(-1.0,chanAveBounds_p);
 
 	// Remember how many antennas there are
 	//   (should remove this)
-	nAnt_ = viter.numberAnt();
+	nAnt_ = vi_p->getVisBuffer()->nAntennas();
 
 	// TBD: Consolidate count/loadChunks methods?
-
-	Vector<Int> nIterPerAve;
-
-
-
-	if ( (averaging_.time() && averaging_.timeValue()>0.0) ||
-			averaging_.baseline() ||
-			averaging_.antenna() ||
-			averaging_.spw() ) {
-
-		countChunks(viter,nIterPerAve,averaging_,thread);
-		trapExcessVolume(pendingLoadAxes_);
-		loadChunks(viter,averaging_,nIterPerAve,
-				loadAxes,loadData,thread);
-
-	}
-	else {
-
-		// supports only channel averaging...
-		countChunks(viter,thread);
-		trapExcessVolume(pendingLoadAxes_);
-		loadChunks(viter,loadAxes,loadData,averaging_,thread);
-	}
+    Vector<Int> nIterPerAve;
+    if(//(averaging_.time() && averaging_.timeValue() > 0.0) ||
+       averaging_.baseline() ||
+       averaging_.antenna() ||
+       averaging_.spw() ) {
+        countChunks(*vi_p, nIterPerAve, averaging_, thread);
+        trapExcessVolume(pendingLoadAxes_);
+        loadChunks(*vi_p, averaging_, nIterPerAve,
+                   loadAxes, loadData, thread);
+    }
+    else {
+        // supports other averaging
+ 		countChunks(*vi_p, thread);
+        trapExcessVolume(pendingLoadAxes_);
+        loadChunks(*vi_p, loadAxes, loadData, averaging_, thread);
+    }
 
 	// Remember # of VBs per Average
 	nVBPerAve_.resize();
-	if (nIterPerAve.nelements()>0)
+	if (nIterPerAve.nelements() > 0)
 		nVBPerAve_ = nIterPerAve;
 	else {
 		nVBPerAve_.resize(nChunk_);
 		nVBPerAve_.set(1);
 	}
 
-	if (rvi_p)
-		delete rvi_p;
-	wvi_p=NULL;
-	rvi_p=NULL;
-
+	if(vi_p)
+		delete vi_p;
+	vi_p = NULL;
 }
 
 void MSCache::setUpVisIter(const String& msname,
-		const PlotMSSelection& selection,
-		Bool readonly,
-		Bool chanselect,
-		Bool corrselect) {
+                           const PlotMSSelection& selection,
+                           Bool readonly,
+                           Bool /*chanselect*/,
+                           Bool /*corrselect*/) {
+    Record configuration;
+    // Selection
+    configuration.define("inputms", msname);
+    configuration.define("field", selection.field());
+    configuration.define("spw", selection.spw());
+    configuration.define("timerange", selection.timerange());
+    configuration.define("uvrange", selection.uvrange());
+    configuration.define("antenna", selection.antenna());
+    configuration.define("scan", selection.scan());
+    configuration.define("correlation", selection.corr());
+    configuration.define("array", selection.array());
+    configuration.define("observation", selection.observation());
+    // TBF: does the configuration support 'msselect' queries?
+    //configuration.define("???", selection_.msselect());
+    // Averaging
+    if(averaging_.channel()) {
+        configuration.define("chanaverage", true);
+        configuration.define("chanbin", int(averaging_.channelValue()));
+    }
+    if(averaging_.time()) {
+        configuration.define("timeaverage", true);
+        configuration.define("timebin", averaging_.timeStr()+"s");
+        String timespan = "";
+        if(averaging_.scan()) {
+            timespan += "scan";
+        }
+        // TBF: NYI
+        //if(averaging_.field()) {
+        //    if(averaging_.scan()) timespan += ",";
+        //   timespan += "field";
+        //}
+        configuration.define("timespan", timespan);
+    }
+    // TBF: Inconceivably, this doesn't mean what I thought it meant
+    //configuration.define("combinespws", averaging_.spw());
+    // Transformations
+    configuration.define("outframe", transformations_.frameStr());
+    // TBF: does the configuration support "TRUE" velocity definition?
+    configuration.define("veltype", transformations_.veldefStr());
+    configuration.define("restfreq",
+                         String::toString(transformations_.restFreq())+"MHz");
+    // TBF: the configuration needs an absolute phase center, not an offset from
+    //      the current phase center
+    //configuration.define("phasecenter", ???);
 
-	Bool combscan(averaging_.scan());
-	Bool combfld(averaging_.field());
-	Bool combspw(averaging_.spw());
+    MSTransformIteratorFactory factory(configuration);
+    vi_p = new vi::VisibilityIterator2 (factory);
+    vi_p->originChunks();
+    vi_p->origin();
 
-	Int nsortcol(4+Int(!combscan));  // include room for scan
-	Block<Int> columns(nsortcol);
-	Int i(0);
-	Double iterInterval(0.0);
-	if (averaging_.time())
-		iterInterval= averaging_.timeValue();
-
-	columns[i++]=MS::ARRAY_ID;
-	if (!combscan) columns[i++]=MS::SCAN_NUMBER;  // force scan boundaries
-	if (!combfld) columns[i++]=MS::FIELD_ID;      // force field boundaries
-	if (!combspw) columns[i++]=MS::DATA_DESC_ID;  // force spw boundaries
-	columns[i++]=MS::TIME;
-	if (combspw || combfld) iterInterval=DBL_MIN;  // force per-timestamp chunks
-	if (combfld) columns[i++]=MS::FIELD_ID;      // effectively ignore field boundaries
-	if (combspw) columns[i++]=MS::DATA_DESC_ID;  // effectively ignore spw boundaries
-
-
-	// Now open the MS, select on it, make the VisIter
-
-	Table::TableOption tabopt(Table::Update);
-	if (readonly) tabopt=Table::Old;
-
-	MeasurementSet ms(msname,
-			TableLock(TableLock::AutoLocking), tabopt), selms;
-
-	// Apply selection
-	Vector<Vector<Slice> > chansel;
-	Vector<Vector<Slice> > corrsel;
-	selection.apply(ms,selms,chansel,corrsel);
-
-	// setup the volume meter
-	vm_.reset();
-	vm_= MSCacheVolMeter(ms,averaging_,chansel,corrsel);
-
-	if (readonly) {
-		// Readonly version, for caching
-		rvi_p = new ROVisIterator(selms,columns,iterInterval);
-		wvi_p =NULL;
-	}
-	else {
-		// Writable, e.g. for flagging
-		wvi_p = new VisIterator(selms,columns,iterInterval);
-		rvi_p = wvi_p;  // const access
-	}
-
-	// Apply chan/corr selction
-	if (chanselect) rvi_p->selectChannel(chansel);
-	if (corrselect) rvi_p->selectCorrelation(corrsel);
-
+    {
+        Table::TableOption tabopt(Table::Update);
+        if (readonly) tabopt = Table::Old;
+        MeasurementSet ms(msname, TableLock(TableLock::AutoLocking), tabopt);
+        MeasurementSet selms;
+        // Apply selection
+        Vector<Vector<Slice> > chansel;
+        Vector<Vector<Slice> > corrsel;
+        selection.apply(ms,selms,chansel,corrsel);
+        // setup the volume meter
+        vm_.reset();
+        vm_ = MSCacheVolMeter(ms,averaging_,chansel,corrsel);
+    }
 }
 
-void MSCache::countChunks(ROVisibilityIterator& vi,
-		ThreadCommunication* thread ) {
+void MSCache::countChunks(VisibilityIterator2& vi,
+                          ThreadCommunication* thread ) {
 	if (thread!=NULL) {
 		thread->setStatus("Establishing cache size.  Please wait...");
 		thread->setAllowedOperations(false,false,false);
@@ -228,11 +233,11 @@ void MSCache::countChunks(ROVisibilityIterator& vi,
 
 	// This is the old way, with no averaging over chunks.
 
-	VisBuffer vb(vi);
+	VisBuffer2 *vb = vi.getVisBuffer();
 
 	vi.originChunks();
 	vi.origin();
-	//  refTime_p=86400.0*floor(vb.time()(0)/86400.0);
+	//  refTime_p=86400.0*floor(vb->time()(0)/86400.0);
 
 	// Count number of chunks.
 	int chunk = 0;
@@ -248,9 +253,9 @@ void MSCache::countChunks(ROVisibilityIterator& vi,
 			}
 		}
 
-		for (vi.origin(); vi.more(); vi++) {
+		for (vi.origin(); vi.more(); vi.next()) {
 			++chunk;
-			vm_.add(vb);
+			vm_.add(*vb);
 		}
 	}
 	if(chunk != nChunk_) increaseChunks(chunk);
@@ -260,9 +265,9 @@ void MSCache::countChunks(ROVisibilityIterator& vi,
 }
 
 
-void MSCache::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,
-		const PlotMSAveraging& averaging,
-		ThreadCommunication* thread) {
+void MSCache::countChunks(VisibilityIterator2& vi, Vector<Int>& nIterPerAve,
+                          const PlotMSAveraging& averaging,
+                          ThreadCommunication* thread) {
 	if (thread!=NULL) {
 		thread->setStatus("Establishing cache size.  Please wait...");
 		thread->setAllowedOperations(false,false,false);
@@ -274,15 +279,15 @@ void MSCache::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,
 	Bool combfld(averaging_.field());
 	Bool combspw(averaging_.spw());
 
-	VisBuffer vb(vi);
-
 	vi.originChunks();
 	vi.origin();
+
+	VisBuffer2 *vb = vi.getVisBuffer();
 
 	nIterPerAve.resize(100);
 	nIterPerAve=0;
 
-	Double time0(86400.0*floor(vb.time()(0)/86400.0));
+	Double time0(86400.0*floor(vb->time()(0)/86400.0));
 	//  refTime_p=time0;
 	Double time1(0.0),time(0.0);
 
@@ -297,11 +302,7 @@ void MSCache::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,
 	if (averaging.time())
 		interval= averaging.timeValue();
 	Double avetime1(-1.0);
-
-	vi.originChunks();
-	vi.origin();
 	stringstream ss;
-
 	for (vi.originChunks(); vi.moreChunks(); vi.nextChunk(),chunk++) {
 		if (thread!=NULL) {
 			if (thread->wasCanceled()) {
@@ -314,22 +315,22 @@ void MSCache::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,
 		}
 
 		Int iter(0);
-		for (vi.origin(); vi.more();vi++,iter++) {
+		for (vi.origin(); vi.more(); vi.next(),iter++) {
 
-			time1=vb.time()(0);  // first time in this vb
-			thisscan=vb.scan()(0);
-			thisfld=vb.fieldId();
-			thisspw=vb.spectralWindow();
-			thisddid=vb.dataDescriptionId();
+			time1=vb->time()(0);  // first time in this vb
+			thisscan = vb->scan()(0);
+			thisfld = vb->fieldId()(0);
+			thisspw = vb->spectralWindows()(0);
+			thisddid = vb->dataDescriptionIds()(0);
 
 			// New chunk means new ave interval, IF....
 			if ( // (!combfld && !combspw) ||                // not combing fld nor spw, OR
-					((time1-avetime1)>interval) ||         // (combing fld and/or spw) and solint exceeded, OR
-					((time1-avetime1)<0.0) ||                // a negative time step occurs, OR
-					(!combscan && (thisscan!=lastscan)) ||   // not combing scans, and new scan encountered OR
-					(!combspw && (thisspw!=lastspw)) ||      // not combing spws, and new spw encountered  OR
-					(!combfld && (thisfld!=lastfld)) ||      // not combing fields, and new field encountered OR
-					(ave==-1))  {                            // this is the first interval
+                ((time1-avetime1)>interval) ||         // (combing fld and/or spw) and solint exceeded, OR
+                ((time1-avetime1)<0.0) ||                // a negative time step occurs, OR
+                (!combscan && (thisscan!=lastscan)) ||   // not combing scans, and new scan encountered OR
+                (!combspw && (thisspw!=lastspw)) ||      // not combing spws, and new spw encountered  OR
+                (!combfld && (thisfld!=lastfld)) ||      // not combing fields, and new field encountered OR
+                (ave==-1))  {                            // this is the first interval
 
 				if (verby) {
 					ss << "--------------------------------\n";
@@ -363,7 +364,7 @@ void MSCache::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,
 			}
 
 			// Keep track of the maximum # of rows that might get averaged
-			maxAveNRows=max(maxAveNRows,vb.nRow());
+			maxAveNRows=max(maxAveNRows,vb->nRows());
 
 
 			// Increment chunk-per-sol count for current solution
@@ -371,15 +372,15 @@ void MSCache::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,
 
 			if (verby) {
 				ss << "          ck=" << chunk << " " << avetime1-time0 << "\n";
-				time=vb.time()(0);
+				time=vb->time()(0);
 				ss  << "                 " << "vb=" << iter << " ";
-				ss << "ar=" << vb.arrayId() << " ";
-				ss << "sc=" << vb.scan()(0) << " ";
-				if (!combfld) ss << "fl=" << vb.fieldId() << " ";
-				if (!combspw) ss << "sp=" << vb.spectralWindow() << " ";
+				ss << "ar=" << vb->arrayId()(0) << " ";
+				ss << "sc=" << vb->scan()(0) << " ";
+				if (!combfld) ss << "fl=" << vb->fieldId()(0) << " ";
+				if (!combspw) ss << "sp=" << vb->spectralWindows()(0) << " ";
 				ss << "t=" << floor(time-time0)  << " (" << floor(time-avetime1) << ") ";
-				if (combfld) ss << "fl=" << vb.fieldId() << " ";
-				if (combspw) ss << "sp=" << vb.spectralWindow() << " ";
+				if (combfld) ss << "fl=" << vb->fieldId()(0) << " ";
+				if (combspw) ss << "sp=" << vb->spectralWindows()(0) << " ";
 				ss << "\n";
 
 			}
@@ -422,21 +423,21 @@ void MSCache::trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes) {
 }
 
 
-void MSCache::loadChunks(ROVisibilityIterator& vi,
-		const vector<PMS::Axis> loadAxes,
-		const vector<PMS::DataColumn> loadData,
-		const PlotMSAveraging& averaging,
-		ThreadCommunication* thread) {
+void MSCache::loadChunks(VisibilityIterator2& vi,
+                         const vector<PMS::Axis>& loadAxes,
+                         const vector<PMS::DataColumn>& loadData,
+                         const PlotMSAveraging& averaging,
+                         ThreadCommunication* thread) {
 
 	// permit cancel in progress meter:
 	if(thread != NULL)
 		thread->setAllowedOperations(false,false,true);
 
 	logLoad("Loading chunks......");
-	VisBuffer vb(vi);
+	VisBuffer2 *vb = vi.getVisBuffer();
 
 	// Initialize the freq/vel calculator (in case we use it)
-	vbu_=VisBufferUtil(vb);
+	//vbu_=VisBufferUtil(*vb);
 
 	Int chunk = 0;
 	chshapes_.resize(4,nChunk_);
@@ -444,7 +445,7 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 	goodChunk_.set(False);
 	double progress;
 	for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
-		for(vi.origin(); vi.more(); vi++) {
+		for(vi.origin(); vi.more(); vi.next()) {
 			// If a thread is given, check if the user canceled.
 			if(thread != NULL && thread->wasCanceled()) {
 				dataLoaded_ = false;
@@ -459,24 +460,24 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 
 
 			// Force data I/O so that shifting averaging will work, if nec.
-			forceVBread(vb,loadAxes,loadData);
+			forceVBread(*vb, loadAxes, loadData);
 
 			// Adjust the visibility phase by phase-center shift
-			vb.phaseCenterShift(transformations_.xpcOffset(),
-					transformations_.ypcOffset());
+			//vb->phaseCenterShift(transformations_.xpcOffset(),
+            //                     transformations_.ypcOffset());
 
 
 			// Do channel averaging, if required
 			if (averaging.channel() && averaging.channelValue()>0.0) {
 				// Delegate actual averaging to the VisBuffer:
-				vb.channelAve(chanAveBounds_p(vb.spectralWindow()));
+				//vb->channelAve(chanAveBounds_p(vb->spectralWindows()(0)));
 			}
 
 			// Cache the data shapes
-			chshapes_(0,chunk)=vb.nCorr();
-			chshapes_(1,chunk)=vb.nChannel();
-			chshapes_(2,chunk)=vb.nRow();
-			chshapes_(3,chunk)=vi.numberAnt();
+			chshapes_(0,chunk) = vb->nCorrelations();
+			chshapes_(1,chunk) = vb->nChannels();
+			chshapes_(2,chunk) = vb->nRows();
+			chshapes_(3,chunk) = vb->nAntennas();
 			goodChunk_(chunk)=True;
 
 			/*  not yet!
@@ -496,10 +497,10 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 	case PMS::VWAVE:
 	case PMS::WWAVE: {
 	  // Invert sign when U<0
-	  Vector<Double> uM(vb.uvwMat().row(0));
+	  Vector<Double> uM(vb->uvwMat().row(0));
 	  for (uInt iu=0;iu<uM.nelements();++iu)
 	    if (uM(iu)<0.0) {
-	      Vector<Double> uvw(vb.uvwMat().column(iu));
+	      Vector<Double> uvw(vb->uvwMat().column(iu));
 	      uvw*=-1.0;
 	    }
 	  break;
@@ -514,7 +515,7 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 			 */
 			for(unsigned int i = 0; i < loadAxes.size(); i++) {
 				//	cout << PMS::axis(loadAxes[i]) << " ";
-				loadAxis(vb, chunk, loadAxes[i], loadData[i]);
+				loadAxis(*vb, chunk, loadAxes[i], loadData[i]);
 			}
 			//cout << endl;
 			chunk++;
@@ -529,12 +530,12 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 	}
 }
 
-void MSCache::loadChunks(ROVisibilityIterator& vi,
-		const PlotMSAveraging& averaging,
-		const Vector<Int>& nIterPerAve,
-		const vector<PMS::Axis> loadAxes,
-		const vector<PMS::DataColumn> loadData,
-		ThreadCommunication* thread) {
+void MSCache::loadChunks(VisibilityIterator2& vi,
+                         const PlotMSAveraging& averaging,
+                         const Vector<Int>& nIterPerAve,
+                         const vector<PMS::Axis>& loadAxes,
+                         const vector<PMS::DataColumn>& loadData,
+                         ThreadCommunication* thread) {
 
 	// permit cancel in progress meter:
 	if(thread != NULL)
@@ -544,10 +545,12 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 
 	Bool verby(False);
 
-	VisBuffer vb(vi);
+    vi.originChunks();
+    vi.origin();
+	VisBuffer2 *vb = vi.getVisBuffer();
 
 	// Initialize the freq/vel calculator (in case we use it)
-	vbu_=VisBufferUtil(vb);
+	//vbu_=VisBufferUtil(*vb);
 
 	chshapes_.resize(4,nChunk_);
 	goodChunk_.resize(nChunk_);
@@ -557,7 +560,7 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 	vi.origin();
 
 
-	Double time0=86400.0*floor(vb.time()(0)/86400.0);
+	Double time0=86400.0*floor(vb->time()(0)/86400.0);
 	for (Int chunk=0;chunk<nChunk_;++chunk) {
 
 		// If a thread is given, check if the user canceled.
@@ -573,7 +576,7 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 					" / " + String::toString(nChunk_) + ".");
 
 		// Arrange to accumulate many VBs into one
-		PlotMSVBAverager pmsvba(vi.numberAnt(),vi.existsWeightSpectrum());
+		PlotMSVBAverager pmsvba(vb->nAntennas(), vi.weightSpectrumExists());
 
 		// Tell averager if we are averaging baselines together
 		pmsvba.setBlnAveraging(averaging.baseline());
@@ -591,31 +594,31 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 		for (Int iter=0;iter<nIterPerAve(chunk);++iter) {
 
 			// Force read on required stuff
-			forceVBread(vb,loadAxes,loadData);
+			forceVBread(*vb,loadAxes,loadData);
 
 			if (verby) {
 				ss << "ck=" << chunk << " vb=" << iter << " (" << nIterPerAve(chunk) << ");  "
-						<< "sc=" << vb.scan()(0) << " "
-						<< "time=" << vb.time()(0)-time0 << " "
-						<< "fl=" << vb.fieldId() << " "
-						<< "sp=" << vb.spectralWindow() << " ";
+                   << "sc=" << vb->scan()(0) << " "
+                   << "time=" << vb->time()(0)-time0 << " "
+                   << "fl=" << vb->fieldId()(0) << " "
+                   << "sp=" << vb->spectralWindows()(0) << " ";
 			}
 
 			// Adjust the visibility phase by phase-center shift
-			vb.phaseCenterShift(transformations_.xpcOffset(),
-					transformations_.ypcOffset());
+			//vb->phaseCenterShift(transformations_.xpcOffset(),
+            //                     transformations_.ypcOffset());
 
 			// Do channel averaging, if required
 			if (averaging.channel() && averaging.channelValue()>0.0) {
 				// Delegate actual averaging to the VisBuffer:
-				vb.channelAve(chanAveBounds_p(vb.spectralWindow()));
+				//vb->channelAve(chanAveBounds_p(vb->spectralWindows()(0)));
 			}
 
 			// Accumulate into the averager
-			pmsvba.accumulate(vb);
+			pmsvba.accumulate(*vb);
 
 			// Advance to next VB
-			vi++;
+			vi.next();
 
 			if (verby) ss << " next VB ";
 
@@ -636,20 +639,20 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 		pmsvba.finalizeAverage();
 
 		// The averaged VisBuffer
-		VisBuffer& avb(pmsvba.aveVisBuff());
+		VisBuffer2& avb = pmsvba.aveVisBuff();
 
 		// Only if the average yielded some data
-		if (avb.nRow()>0) {
+		if (avb.nRows()>0) {
 
 			// Form Stokes parameters, if requested
-			if (transformations_.formStokes())
-				avb.formStokes();
+			//if (transformations_.formStokes())
+			//	avb.formStokes();
 
 			// Cache the data shapes
-			chshapes_(0,chunk)=avb.nCorr();
-			chshapes_(1,chunk)=avb.nChannel();
-			chshapes_(2,chunk)=avb.nRow();
-			chshapes_(3,chunk)=vi.numberAnt();
+			chshapes_(0,chunk)=avb.nCorrelations();
+			chshapes_(1,chunk)=avb.nChannels();
+			chshapes_(2,chunk)=avb.nRows();
+			chshapes_(3,chunk)=vi.getVisBuffer()->nAntennas();
 			goodChunk_(chunk)=True;
 
 			/*  not yet
@@ -669,10 +672,10 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 	case PMS::VWAVE:
 	case PMS::WWAVE: {
 	  // Invert sign when U<0
-	  Vector<Double> uM(avb.uvwMat().row(0));
+	  Vector<Double> uM(avb.uvw().row(0));
 	  for (uInt iu=0;iu<uM.nelements();++iu)
 	    if (uM(iu)<0.0) {
-	      Vector<Double> uvw(avb.uvwMat().column(iu));
+	      Vector<Double> uvw(avb.uvw().column(iu));
 	      uvw*=-1.0;
 	    }
 	  break;
@@ -708,9 +711,9 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 	//  cout << boolalpha << "goodChunk_ = " << goodChunk_ << endl;
 }
 
-void MSCache::forceVBread(VisBuffer& vb,
-		vector<PMS::Axis> loadAxes,
-		vector<PMS::DataColumn> loadData) {
+void MSCache::forceVBread(VisBuffer2& vb,
+                          const vector<PMS::Axis> &loadAxes,
+                          const vector<PMS::DataColumn> &loadData) {
 
 	// pre-load requisite pieces of VisBuffer for averaging
 	for(unsigned int i = 0; i < loadAxes.size(); i++) {
@@ -725,21 +728,21 @@ void MSCache::forceVBread(VisBuffer& vb,
 				break;
 			}
 			case PMS::MODEL: {
-				vb.modelVisCube();
+				vb.visCubeModel();
 				break;
 			}
 			case PMS::CORRECTED: {
-				vb.correctedVisCube();
+				vb.visCubeCorrected();
 				break;
 			}
 			case PMS::CORRMODEL: {
-				vb.correctedVisCube();
-				vb.modelVisCube();
+				vb.visCubeCorrected();
+				vb.visCubeModel();
 				break;
 			}
 			case PMS::DATAMODEL: {
 				vb.visCube();
-				vb.modelVisCube();
+				vb.visCubeModel();
 				break;
 			}
 			default:
@@ -758,9 +761,9 @@ void MSCache::forceVBread(VisBuffer& vb,
 
 }
 
-void MSCache::discernData(vector<PMS::Axis> loadAxes,
-		vector<PMS::DataColumn> loadData,
-		PlotMSVBAverager& vba) {
+void MSCache::discernData(const vector<PMS::Axis>& loadAxes,
+                          const vector<PMS::DataColumn>& loadData,
+                          PlotMSVBAverager& vba) {
 
 	// Turn off
 	vba.setNoData();
@@ -824,8 +827,8 @@ void MSCache::discernData(vector<PMS::Axis> loadAxes,
 
 
 
-void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
-		PMS::DataColumn data) {
+void MSCache::loadAxis(VisBuffer2& vb, Int vbnum, PMS::Axis axis,
+                       PMS::DataColumn data) {
 
 	switch(axis) {
 
@@ -834,7 +837,7 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 		break;
 
 	case PMS::FIELD:
-		field_(vbnum) = vb.fieldId();
+		field_(vbnum) = vb.fieldId()(0);
 		break;
 
 	case PMS::TIME: // assumes time unique in VB
@@ -846,33 +849,32 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 		break;
 
 	case PMS::SPW:
-		spw_(vbnum) = vb.spectralWindow();
+		spw_(vbnum) = vb.spectralWindows()(0);
 		break;
 
 	case PMS::CHANNEL:
-		*chan_[vbnum] = vb.channel();
+        chan_[vbnum]->resize(vb.nChannels());
+		*chan_[vbnum] = vb.getChannelNumbers(0);
 		break;
 
 	case PMS::FREQUENCY: {
-		// Convert freq to desired frame
 		//      cout << "Loading FREQUENCY" << endl;
-		vbu_.convertFrequency(*freq_[vbnum],vb,transformations_.frame());
-		(*freq_[vbnum])/=1.0e9; // in GHz
+        *freq_[vbnum] = vb.getFrequencies(0/*, transformations_.frame()*/) / 1.0e9;
 		break;
 	}
 	case PMS::VELOCITY: {
 		// Convert freq in the vb to velocity
-		vbu_.toVelocity(*vel_[vbnum],
-				vb,
-				transformations_.frame(),
-				MVFrequency(transformations_.restFreqHz()),
-				transformations_.veldef());
+// 		vbu_.toVelocity(*vel_[vbnum],
+//                         vb,
+//                         transformations_.frame(),
+//                         MVFrequency(transformations_.restFreqHz()),
+//                         transformations_.veldef());
 		(*vel_[vbnum])/=1.0e3;  // in km/s
 		break;
 	}
 
 	case PMS::CORR:
-		*corr_[vbnum] = vb.corrType();
+		*corr_[vbnum] = vb.getCorrelationTypes();
 		break;
 
 	case PMS::ANTENNA1:
@@ -884,9 +886,9 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 	case PMS::BASELINE: {
 		Vector<Int> a1(vb.antenna1());
 		Vector<Int> a2(vb.antenna2());
-		baseline_[vbnum]->resize(vb.nRow());
+		baseline_[vbnum]->resize(vb.nRows());
 		Vector<Int> bl(*baseline_[vbnum]);
-		for (Int irow=0;irow<vb.nRow();++irow) {
+		for (Int irow=0;irow<vb.nRows();++irow) {
 			if (a1(irow)<0) a1(irow)=chshapes_(3,0);
 			if (a2(irow)<0) a2(irow)=chshapes_(3,0);
 			bl(irow)=(chshapes_(3,0)+1)*a1(irow) - (a1(irow) * (a1(irow) + 1)) / 2 + a2(irow);
@@ -894,42 +896,42 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 		break;
 	}
 	case PMS::UVDIST: {
-		Array<Double> u(vb.uvwMat().row(0));
-		Array<Double> v(vb.uvwMat().row(1));
+		Array<Double> u(vb.uvw().row(0));
+		Array<Double> v(vb.uvw().row(1));
 		*uvdist_[vbnum] = sqrt(u*u+v*v);
 		break;
 	}
 	case PMS::U:
-		*u_[vbnum] = vb.uvwMat().row(0);
+		*u_[vbnum] = vb.uvw().row(0);
 		break;
 	case PMS::V:
-		*v_[vbnum] = vb.uvwMat().row(1);
+		*v_[vbnum] = vb.uvw().row(1);
 		break;
 	case PMS::W:
-		*w_[vbnum] = vb.uvwMat().row(2);
+		*w_[vbnum] = vb.uvw().row(2);
 		break;
 	case PMS::UVDIST_L: {
-		Array<Double> u(vb.uvwMat().row(0));
-		Array<Double> v(vb.uvwMat().row(1));
+		Array<Double> u(vb.uvw().row(0));
+		Array<Double> v(vb.uvw().row(1));
 		Vector<Double> uvdistM = sqrt(u*u+v*v);
 		uvdistM /=C::c;
-		uvdistL_[vbnum]->resize(vb.nChannel(),vb.nRow());
+		uvdistL_[vbnum]->resize(vb.nChannels(),vb.nRows());
 		Vector<Double> uvrow;
-		for (Int irow=0;irow<vb.nRow();++irow) {
+		for (Int irow=0;irow<vb.nRows();++irow) {
 			uvrow.reference(uvdistL_[vbnum]->column(irow));
 			uvrow.set(uvdistM(irow));
-			uvrow*=vb.frequency();
+			uvrow *= vb.getFrequencies(0);
 		}
 		break;
 	}
 
 	case PMS::UWAVE: {
-		Vector<Double> uM(vb.uvwMat().row(0));
+		Vector<Double> uM(vb.uvw().row(0));
 		uM/=C::c;
-		uwave_[vbnum]->resize(vb.nChannel(),vb.nRow());
+		uwave_[vbnum]->resize(vb.nChannels(),vb.nRows());
 		Vector<Double> urow;
-		Vector<Double> freq(vb.frequency());
-		for (Int irow=0;irow<vb.nRow();++irow) {
+		Vector<Double> freq(vb.getFrequencies(0));
+		for (Int irow=0;irow<vb.nRows();++irow) {
 			urow.reference(uwave_[vbnum]->column(irow));
 			urow.set(uM(irow));
 			urow*=freq;
@@ -937,12 +939,12 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 		break;
 	}
 	case PMS::VWAVE: {
-		Vector<Double> vM(vb.uvwMat().row(1));
+		Vector<Double> vM(vb.uvw().row(1));
 		vM/=C::c;
-		vwave_[vbnum]->resize(vb.nChannel(),vb.nRow());
+		vwave_[vbnum]->resize(vb.nChannels(),vb.nRows());
 		Vector<Double> vrow;
-		Vector<Double> freq(vb.frequency());
-		for (Int irow=0;irow<vb.nRow();++irow) {
+		Vector<Double> freq(vb.getFrequencies(0));
+		for (Int irow=0;irow<vb.nRows();++irow) {
 			vrow.reference(vwave_[vbnum]->column(irow));
 			vrow.set(vM(irow));
 			vrow*=freq;
@@ -950,12 +952,12 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 		break;
 	}
 	case PMS::WWAVE: {
-		Vector<Double> wM(vb.uvwMat().row(2));
+		Vector<Double> wM(vb.uvw().row(2));
 		wM/=C::c;
-		wwave_[vbnum]->resize(vb.nChannel(),vb.nRow());
+		wwave_[vbnum]->resize(vb.nChannels(),vb.nRows());
 		Vector<Double> wrow;
-		Vector<Double> freq(vb.frequency());
-		for (Int irow=0;irow<vb.nRow();++irow) {
+		Vector<Double> freq(vb.getFrequencies(0));
+		for (Int irow=0;irow<vb.nRows();++irow) {
 			wrow.reference(wwave_[vbnum]->column(irow));
 			wrow.set(wM(irow));
 			wrow*=freq;
@@ -1026,19 +1028,19 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 
 		}
 		case PMS::MODEL: {
-			*amp_[vbnum] = amplitude(vb.modelVisCube());
+			*amp_[vbnum] = amplitude(vb.visCubeModel());
 			break;
 		}
 		case PMS::CORRECTED: {
-			*amp_[vbnum] = amplitude(vb.correctedVisCube());
+			*amp_[vbnum] = amplitude(vb.visCubeCorrected());
 			break;
 		}
 		case PMS::CORRMODEL: {
-			*amp_[vbnum] = amplitude(vb.correctedVisCube() - vb.modelVisCube());
+			*amp_[vbnum] = amplitude(vb.visCubeCorrected() - vb.visCubeModel());
 			break;
 		}
 		case PMS::DATAMODEL: {
-			*amp_[vbnum] = amplitude(vb.visCube() - vb.modelVisCube());
+			*amp_[vbnum] = amplitude(vb.visCube() - vb.visCubeModel());
 			break;
 		}
 		}
@@ -1051,20 +1053,20 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 			break;
 		}
 		case PMS::MODEL: {
-			*pha_[vbnum] = phase(vb.modelVisCube()) * 180.0 / C::pi;
+			*pha_[vbnum] = phase(vb.visCubeModel()) * 180.0 / C::pi;
 			break;
 		}
 		case PMS::CORRECTED: {
-			*pha_[vbnum] = phase(vb.correctedVisCube()) * 180.0 / C::pi;
+			*pha_[vbnum] = phase(vb.visCubeCorrected()) * 180.0 / C::pi;
 			break;
 		}
 		case PMS::CORRMODEL: {
-			*pha_[vbnum] = phase(vb.correctedVisCube() - vb.modelVisCube()) *
+			*pha_[vbnum] = phase(vb.visCubeCorrected() - vb.visCubeModel()) *
 					180.0 / C::pi;
 			break;
 		}
 		case PMS::DATAMODEL: {
-			*pha_[vbnum] = phase(vb.visCube() - vb.modelVisCube()) * 180 / C::pi;
+			*pha_[vbnum] = phase(vb.visCube() - vb.visCubeModel()) * 180 / C::pi;
 			break;
 		}
 		}
@@ -1078,19 +1080,19 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 			break;
 		}
 		case PMS::MODEL: {
-			*real_[vbnum] = real(vb.modelVisCube());
+			*real_[vbnum] = real(vb.visCubeModel());
 			break;
 		}
 		case PMS::CORRECTED: {
-			*real_[vbnum] = real(vb.correctedVisCube());
+			*real_[vbnum] = real(vb.visCubeCorrected());
 			break;
 		}
 		case PMS::CORRMODEL: {
-			*real_[vbnum] = real(vb.correctedVisCube()) - real(vb.modelVisCube());
+			*real_[vbnum] = real(vb.visCubeCorrected()) - real(vb.visCubeModel());
 			break;
 		}
 		case PMS::DATAMODEL: {
-			*real_[vbnum] = real(vb.visCube()) - real(vb.modelVisCube());
+			*real_[vbnum] = real(vb.visCube()) - real(vb.visCubeModel());
 			break;
 		}
 		}
@@ -1103,19 +1105,19 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 			break;
 		}
 		case PMS::MODEL: {
-			*imag_[vbnum] = imag(vb.modelVisCube());
+			*imag_[vbnum] = imag(vb.visCubeModel());
 			break;
 		}
 		case PMS::CORRECTED: {
-			*imag_[vbnum] = imag(vb.correctedVisCube());
+			*imag_[vbnum] = imag(vb.visCubeCorrected());
 			break;
 		}
 		case PMS::CORRMODEL: {
-			*imag_[vbnum] = imag(vb.correctedVisCube()) - imag(vb.modelVisCube());
+			*imag_[vbnum] = imag(vb.visCubeCorrected()) - imag(vb.visCubeModel());
 			break;
 		}
 		case PMS::DATAMODEL: {
-			*imag_[vbnum] = imag(vb.visCube()) - imag(vb.modelVisCube());
+			*imag_[vbnum] = imag(vb.visCube()) - imag(vb.visCubeModel());
 			break;
 		}
 		}
@@ -1130,7 +1132,7 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 		break;
 
 	case PMS::WT: {
-		*wt_[vbnum] = vb.weightMat();
+		*wt_[vbnum] = vb.weight();
 		break;
 	}
 	case PMS::WTxAMP: {
@@ -1139,28 +1141,30 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 			*wtxamp_[vbnum] = amplitude(vb.visCube());
 			break;
 		case PMS::MODEL:
-			*wtxamp_[vbnum] = amplitude(vb.modelVisCube());
+			*wtxamp_[vbnum] = amplitude(vb.visCubeModel());
 			break;
 		case PMS::CORRECTED:
-			*wtxamp_[vbnum] = amplitude(vb.correctedVisCube());
+			*wtxamp_[vbnum] = amplitude(vb.visCubeCorrected());
 			break;
 		case PMS::CORRMODEL:
-			*wtxamp_[vbnum] = amplitude(vb.correctedVisCube() - vb.visCube());
+			*wtxamp_[vbnum] = amplitude(vb.visCubeCorrected() - vb.visCube());
 			break;
 		case PMS::DATAMODEL:
-			*wtxamp_[vbnum] = amplitude(vb.visCube() - vb.modelVisCube());
+			*wtxamp_[vbnum] = amplitude(vb.visCube() - vb.visCubeModel());
 			break;
 		}
-		uInt nchannels = vb.nChannel();
+		uInt nchannels = vb.nChannels();
 		Cube<Float> wtA(*wtxamp_[vbnum]);
 		for(uInt c = 0; c < nchannels; ++c) {
-			wtA.xzPlane(c) = wtA.xzPlane(c) * vb.weightMat();
+			wtA.xzPlane(c) = wtA.xzPlane(c) * vb.weight();
 		}
 	}
 	case PMS::AZ0:
 	case PMS::EL0: {
-		Vector<Double> azel;
-		vb.azel0Vec(vb.time()(0),azel);
+		MDirection azelMeas = vb.azel0(vb.time()(0));
+        Vector<double> azel;
+        azel.resize(2);
+        azel = azelMeas.getAngle("deg").getValue();
 		az0_(vbnum) = azel(0);
 		el0_(vbnum) = azel(1);
 		break;
@@ -1181,28 +1185,32 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 	}
 	case PMS::AZIMUTH:
 	case PMS::ELEVATION: {
+        Vector<MDirection> azelMeas = vb.azel(vb.time()(0));
 		Matrix<Double> azel;
-		vb.azelMat(vb.time()(0),azel);
+        azel.resize(2, azelMeas.nelements());
+        for(size_t iant = 0; iant < azelMeas.nelements(); ++iant) {
+            azel.column(iant) = azelMeas(iant).getAngle("deg").getValue();
+        }
 		*az_[vbnum] = azel.row(0);
 		*el_[vbnum] = azel.row(1);
 		break;
 	}
 	case PMS::RADIAL_VELOCITY: {
-		Int fieldId = vb.fieldId();
-		const ROMSFieldColumns& fieldColumns = vb.msColumns().field();
+		Int fieldId = vb.fieldId()(0);
+		const ROMSFieldColumns& fieldColumns = vi_p->subtableColumns().field();
 		MRadialVelocity radVelocity = fieldColumns.radVelMeas(fieldId, vb.time()(0));
 		radialVelocity_(vbnum) = radVelocity.get("AU/d").getValue( "km/s");
 		break;
 	}
 	case PMS::RHO:{
-		Int fieldId = vb.fieldId();
-		const ROMSFieldColumns& fieldColumns = vb.msColumns().field();
+		Int fieldId = vb.fieldId()(0);
+		const ROMSFieldColumns& fieldColumns = vi_p->subtableColumns().field();
 		Quantity rhoQuantity = fieldColumns.rho(fieldId, vb.time()(0));
 		rho_(vbnum ) = rhoQuantity.getValue( "km");
 		break;
 	}
 	case PMS::PARANG:
-		*parang_[vbnum] = vb.feed_pa(vb.time()(0))*(180.0/C::pi);  // in degrees
+		*parang_[vbnum] = vb.feedPa(vb.time()(0))*(180.0/C::pi);  // in degrees
 		break;
 
 	case PMS::ROW:
@@ -1217,16 +1225,14 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 
 bool MSCache::isEphemeris(){
 	setUpVisIter(filename_,selection_,True,True,True);
-	ROVisIterator& viter(*rvi_p);
-	VisBuffer vb( viter );
-	Int fieldId = vb.fieldId();
-	const ROMSFieldColumns& fieldColumns = vb.msColumns().field();
+	VisBuffer2 *vb = vi_p->getVisBuffer();
+	Int fieldId = vb->fieldId()(0);
+	const ROMSFieldColumns& fieldColumns = vi_p->subtableColumns().field();
 	String ephemerisExists = fieldColumns.ephemPath( fieldId );
 	bool ephemerisAvailable = true;
 	if ( ephemerisExists.empty()){
 		ephemerisAvailable = false;
 	}
-	vb.detachFromVisIter();
 	return ephemerisAvailable;
 }
 
@@ -1252,10 +1258,10 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 	// Establish a scope in which the VisBuffer is properly created/destroyed
 	{
 		setUpVisIter(filename_,selection_,False,selectchan,selectcorr);
-		VisBuffer vb(*wvi_p);
+		VisBuffer2 *vb = vi_p->getVisBuffer();
 
-		wvi_p->originChunks();
-		wvi_p->origin();
+		vi_p->originChunks();
+		vi_p->origin();
 
 		Int iflag(0);
 		for (Int ichk=0;ichk<nChunk_;++ichk) {
@@ -1263,10 +1269,10 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 			if (ichk!=flchunks(order[iflag])) {
 				// Step over current chunk
 				for (Int i=0;i<nVBPerAve_(ichk);++i) {
-					wvi_p->operator++();
-					if (!wvi_p->more() && wvi_p->moreChunks()) {
-						wvi_p->nextChunk();
-						wvi_p->origin();
+					vi_p->next();
+					if (!vi_p->more() && vi_p->moreChunks()) {
+						vi_p->nextChunk();
+						vi_p->origin();
 					}
 				}
 			}
@@ -1279,24 +1285,24 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 				for (Int i=0;i<nVBPerAve_(ichk);++i) {
 
 					// Refer to VB pieces we need
-					Cube<Bool> vbflag(vb.flagCube());
-					Vector<Bool> vbflagrow(vb.flagRow());
-					Vector<Int> corrType(vb.corrType());
-					Vector<Int> channel(vb.channel());
-					Vector<Int> a1(vb.antenna1());
-					Vector<Int> a2(vb.antenna2());
+					Cube<Bool> vbflag(vb->flagCube());
+					Vector<Bool> vbflagrow(vb->flagRow());
+					Vector<Int> corrType(vb->getCorrelationTypes());
+					Vector<Int> channel(vb->getChannelNumbers(0));
+					Vector<Int> a1(vb->antenna1());
+					Vector<Int> a2(vb->antenna2());
 					Int ncorr=corrType.nelements();
 					Int nchan=channel.nelements();
-					Int nrow=vb.nRow();
+					Int nrow=vb->nRows();
 
 					if (False) {
 						Int currChunk=flchunks(order[iflag]);
 						Double time=getTime(currChunk,0);
 						Int spw=Int(getSpw(currChunk,0));
 						Int field=Int(getField(currChunk,0));
-						ss << "Time diff: " << time-vb.time()(0) << " "  << time << " " << vb.time()(0) << "\n";
-						ss << "Spw diff:  " << spw-vb.spectralWindow() << " " << spw << " " << vb.spectralWindow() << "\n";
-						ss << "Field diff:  " << field-vb.fieldId() << " " << field << " " << vb.fieldId() << "\n";
+						ss << "Time diff: " << time-vb->time()(0) << " "  << time << " " << vb->time()(0) << "\n";
+						ss << "Spw diff:  " << spw-vb->spectralWindows()(0) << " " << spw << " " << vb->spectralWindows()(0) << "\n";
+						ss << "Field diff:  " << field-vb->fieldId()(0) << " " << field << " " << vb->fieldId()(0) << "\n";
 					}
 
 					// Apply all flags in this chunk to this VB
@@ -1321,8 +1327,8 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 						if (netAxesMask_(1) && !flagging.channel()) {
 							Int ichan=indexer->getIndex0100(currChunk,irel);
 							if (averaging_.channel() && averaging_.channelValue()>0) {
-								Int start=chanAveBounds_p(vb.spectralWindow())(ichan,2);
-								Int n=chanAveBounds_p(vb.spectralWindow())(ichan,3)-start+1;
+								Int start=chanAveBounds_p(vb->spectralWindows()(0))(ichan,2);
+								Int n=chanAveBounds_p(vb->spectralWindows()(0))(ichan,3)-start+1;
 								chan=Slice(start,n,1);
 							}
 							else
@@ -1382,14 +1388,14 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 					}
 
 					// Put the flags back into the MS
-					wvi_p->setFlag(vbflag);
-					if (!flag) wvi_p->setFlagRow(vbflagrow);
+					vi_p->writeFlag(vbflag);
+					if (!flag) vi_p->writeFlagRow(vbflagrow);
 
 					// Advance to the next vb
-					wvi_p->operator++();
-					if (!wvi_p->more() && wvi_p->moreChunks()) {
-						wvi_p->nextChunk();
-						wvi_p->origin();
+					vi_p->next();
+					if (!vi_p->more() && vi_p->moreChunks()) {
+						vi_p->nextChunk();
+						vi_p->origin();
 					}
 				}  // VBs in this averaging chunk
 
@@ -1408,13 +1414,11 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 	}
 
 	// Delete the VisIter so lock is released
-	if (wvi_p)
-		delete wvi_p;
-	wvi_p=NULL;
-	rvi_p=NULL;
+	if (vi_p)
+		delete vi_p;
+	vi_p=NULL;
 
 	logFlag(ss.str());
-
 }
 
 }

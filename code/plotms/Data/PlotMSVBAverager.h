@@ -29,10 +29,12 @@
 #define PLOTMSVBAVERAGER_H
 
 #include <casa/aips.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer2.h>
 #include <synthesis/MSVis/CalVisBuffer.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+using vi::VisBuffer2;
 
 // <summary>
 // A class to average VisBuffers for PlotMS
@@ -99,7 +101,7 @@ public:
   inline void setDoUVW() {doUVW_p=True;};
 
   // Accumulate a VisBuffer
-  inline void accumulate (VisBuffer& vb) { antAve_p ? antAccumulate(vb) : simpAccumulate(vb); };
+  inline void accumulate (const VisBuffer2& vb) { antAve_p ? antAccumulate(vb) : simpAccumulate(vb); };
 
   // Finalize averaging, and return the result
   void finalizeAverage();
@@ -107,8 +109,8 @@ public:
   // Return a reference to the result
   // TBD: is it ok to return a CVB as a VB reference?  (do I need an
   //      explicit cast here?
-  VisBuffer& aveVisBuff() { return avBuf_p; }
-  CalVisBuffer& aveCalVisBuff() { return avBuf_p; }
+  VisBuffer2& aveVisBuff() { return *avBuf_p; }
+  //CalVisBuffer& aveCalVisBuff() { return avBuf_p; }
 
 private:
   // Prohibit null constructor, copy constructor and assignment for now
@@ -121,14 +123,14 @@ private:
 
   // Initialize the next accumulation interval
   //  (should this be public?)
-  void initialize(VisBuffer& vb);
+  void initialize(const VisBuffer2& vb);
 
   // Different accumulate versions
-  void simpAccumulate (VisBuffer& vb);  // ordinary
-  void antAccumulate (VisBuffer& vb);   // antenna-based averaging version
+  void simpAccumulate (const VisBuffer2& vb);  // ordinary
+  void antAccumulate (const VisBuffer2& vb);   // antenna-based averaging version
 
   // Verify zero or two crosshands present (if antAve_p)
-  void verifyCrosshands(VisBuffer& vb);
+  void verifyCrosshands(const VisBuffer2& vb);
 
   // Hash function to return the row offset for an interferometer (ant1, ant2)
   Int baseline(const Int& ant1, const Int& ant2);
@@ -168,7 +170,8 @@ private:
   Bool doVC_p,doMVC_p,doCVC_p,doUVW_p,doWC_p;
 
   // Accumulation buffer
-  CalVisBuffer avBuf_p;
+  //CalVisBuffer avBuf_p;
+  VisBuffer2 *avBuf_p;
 
   // Keep track of initialization state
   Bool initialized_p;
