@@ -622,6 +622,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		AnimatorHolder* animationHolder;
 		bool adjust_channel_animator;
+		bool adjust_image_animator;
 		int animationImageIndex;
 
 		HistogramMain* histogrammer;
