@@ -231,13 +231,15 @@ Record parseConfiguration(int argc, char **argv)
 			{
 				configuration.define ("inputms", filename);
 				configuration.define ("spw", "8,9,10,11");
-				configuration.define ("antenna", "1&&2");
-				configuration.define ("combinespws", True);
-				configuration.define ("regridms", True);
+				configuration.define ("antenna", "0&&1");
+				configuration.define ("combinespws", False);
+				configuration.define ("regridms", False);
 				configuration.define ("mode", "channel");
 				configuration.define ("width", "2");
-				configuration.define ("timeaverage", True);
+				configuration.define ("timeaverage", False);
 				configuration.define ("timebin", "30s");
+				configuration.define ("chanaverage", True);
+				configuration.define ("chanbin", 2);
 			}
 			else
 			{
@@ -289,13 +291,14 @@ String produceTmpTransformedMSToCompare(Record configuration)
 	return tmpFileName;
 }
 
-template <class T> Int compareVector(const Vector<T> &inp,const Vector<T> &ref)
+template <class T> Int compareVector(const Vector<T> &inp,const Vector<T> &ref,Float tolerance = FLT_EPSILON)
 {
 	Int res = -1;
+	uInt nRowsToCompare = min(ref.size(),inp.size());
 
-	for (uInt index=0;index < inp.size(); index++)
+	for (uInt index=0;index < nRowsToCompare; index++)
 	{
-		if (inp(index) != ref(index))
+		if (abs(inp(index) - ref(index)) > tolerance )
 		{
 			res = index;
 			break;
@@ -305,18 +308,21 @@ template <class T> Int compareVector(const Vector<T> &inp,const Vector<T> &ref)
 	return res;
 }
 
-template <class T> IPosition compareCube(const Cube<T> &inp,const Cube<T> &ref)
+template <class T> IPosition compareCube(const Cube<T> &inp,const Cube<T> &ref,Float tolerance = FLT_EPSILON)
 {
 	IPosition res;
-	IPosition shape = ref.shape();
-	cout << shape << endl;
-	for (uInt row=0;row < shape(2); row++)
+	IPosition shape = inp.shape();
+
+	uInt nRowsToCompare = min(inp.shape()(2),ref.shape()(2));
+
+
+	for (uInt row=0;row < nRowsToCompare; row++)
 	{
 		for (uInt chan=0;chan < shape(1); chan++)
 		{
 			for (uInt corr=0;corr < shape(0); corr++)
 			{
-				if (inp(corr,chan,row) != ref(corr,chan,row))
+				if (abs(inp(corr,chan,row) - ref(corr,chan,row)) > tolerance )
 				{
 					res = IPosition(3,corr,chan,row);
 					break;
@@ -348,7 +354,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 	sortCols[5] = MS::DATA_DESC_ID;
 	sortCols[6] = MS::TIME;
 	vi::VisibilityIterator2 visIterRef(ms,vi::SortColumns (sortCols,false));
-	visIterRef.setRowBlocking(ms.nrow());
+	//visIterRef.setRowBlocking(ms.nrow());
 	vi::VisBuffer2 *visBufferRef = visIterRef.getVisBuffer();
 
 	// Prepare transforming buffer
@@ -374,7 +380,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 
 
 			// Re-indexable Vectors
-			row = compareVector(visBuffer->dataDescriptionIds(),visBufferRef->dataDescriptionIds());
+			row = compareVector(visBuffer->dataDescriptionIds(),visBufferRef->dataDescriptionIds(),0);
 			if (row >= 0)
 			{
 				cout << RED;
@@ -382,7 +388,6 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 						<< " transformBuffer=" << visBuffer->dataDescriptionIds()
 						<< " transformFile=" << visBufferRef->dataDescriptionIds() << endl;
 				keepIterating = False;
-				break;
 			}
 			else
 			{
@@ -390,7 +395,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout << "=>dataDescriptionIds match" << endl;
 			}
 
-			row = compareVector(visBuffer->spectralWindows(),visBufferRef->spectralWindows());
+			row = compareVector(visBuffer->spectralWindows(),visBufferRef->spectralWindows(),0);
 			if (row >= 0)
 			{
 				cout << RED;
@@ -398,15 +403,14 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 						<< " transformBuffer=" << visBuffer->spectralWindows()
 						<< " transformFile=" << visBufferRef->spectralWindows() << endl;
 				keepIterating = False;
-				break;
 			}
 			else
 			{
 				cout << GREEN;
-				cout << "=>dataDescriptionIds match" << endl;
+				cout << "=>spectralWindows match" << endl;
 			}
 
-			row = compareVector(visBuffer->observationId(),visBufferRef->observationId());
+			row = compareVector(visBuffer->observationId(),visBufferRef->observationId(),0);
 			if (row >= 0)
 			{
 				cout << RED;
@@ -414,7 +418,6 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 						<< " transformBuffer=" << visBuffer->observationId()(row)
 						<< " transformFile=" << visBufferRef->observationId()(row)<< endl;
 				keepIterating = False;
-				break;
 			}
 			else
 			{
@@ -423,7 +426,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 
-			row = compareVector(visBuffer->arrayId(),visBufferRef->arrayId());
+			row = compareVector(visBuffer->arrayId(),visBufferRef->arrayId(),0);
 			if (row >= 0)
 			{
 				cout << RED;
@@ -431,7 +434,6 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 						<< " transformBuffer=" << visBuffer->arrayId()(row)
 						<< " transformFile=" << visBufferRef->arrayId()(row) << endl;
 				keepIterating = False;
-				break;
 			}
 			else
 			{
@@ -440,7 +442,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 
-			row = compareVector(visBuffer->fieldId(),visBufferRef->fieldId());
+			row = compareVector(visBuffer->fieldId(),visBufferRef->fieldId(),0);
 			if (row >= 0)
 			{
 				cout << RED;
@@ -448,7 +450,6 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 						<< " transformBuffer=" << visBuffer->fieldId()(row)
 						<< " transformFile=" << visBufferRef->fieldId()(row) << endl;
 				keepIterating = False;
-				break;
 			}
 			else
 			{
@@ -457,7 +458,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 
-			row = compareVector(visBuffer->stateId(),visBufferRef->stateId());
+			row = compareVector(visBuffer->stateId(),visBufferRef->stateId(),0);
 			if (row >= 0)
 			{
 				cout << RED;
@@ -465,7 +466,6 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 						<< " transformBuffer=" << visBuffer->stateId()(row)
 						<< " transformFile=" << visBufferRef->stateId()(row) << endl;
 				keepIterating = False;
-				break;
 			}
 			else
 			{
@@ -474,7 +474,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 
-			row = compareVector(visBuffer->antenna1(),visBufferRef->antenna1());
+			row = compareVector(visBuffer->antenna1(),visBufferRef->antenna1(),0);
 			if (row >= 0)
 			{
 				cout << RED;
@@ -482,7 +482,6 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 						<< " transformBuffer=" << visBuffer->antenna1()(row)
 						<< " transformFile=" << visBufferRef->antenna1()(row) << endl;
 				keepIterating = False;
-				break;
 			}
 			else
 			{
@@ -491,7 +490,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 
-			row = compareVector(visBuffer->antenna2(),visBufferRef->antenna2());
+			row = compareVector(visBuffer->antenna2(),visBufferRef->antenna2(),0);
 			if (row >= 0)
 			{
 				cout << RED;
@@ -499,7 +498,6 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 						<< " transformBuffer=" << visBuffer->antenna2()(row)
 						<< " transformFile=" << visBufferRef->antenna2()(row) << endl;
 				keepIterating = False;
-				break;
 			}
 			else
 			{
@@ -509,7 +507,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 
 			// Not-Re-indexable Vectors
 
-			row = compareVector(visBuffer->scan(),visBufferRef->scan());
+			row = compareVector(visBuffer->scan(),visBufferRef->scan(),0);
 			if (row >= 0)
 			{
 				cout << RED;
@@ -517,7 +515,6 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 						<< " transformBuffer=" << visBuffer->scan()(row)
 						<< " transformFile=" << visBufferRef->scan()(row)<< endl;
 				keepIterating = False;
-				break;
 			}
 			else
 			{
@@ -526,7 +523,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 
-			row = compareVector(visBuffer->processorId(),visBufferRef->processorId());
+			row = compareVector(visBuffer->processorId(),visBufferRef->processorId(),0);
 			if (row >= 0)
 			{
 				cout << RED;
@@ -534,7 +531,6 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 						<< " transformBuffer=" << visBuffer->processorId()(row)
 						<< " transformFile=" << visBufferRef->processorId()(row) << endl;
 				keepIterating = False;
-				break;
 			}
 			else
 			{
@@ -543,7 +539,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 
-			row = compareVector(visBuffer->feed1(),visBufferRef->feed1());
+			row = compareVector(visBuffer->feed1(),visBufferRef->feed1(),0);
 			if (row >= 0)
 			{
 				cout << RED;
@@ -551,7 +547,6 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 						<< " transformBuffer=" << visBuffer->feed1()(row)
 						<< " transformFile=" << visBufferRef->feed1()(row) << endl;
 				keepIterating = False;
-				break;
 			}
 			else
 			{
@@ -560,7 +555,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 
-			row = compareVector(visBuffer->feed2(),visBufferRef->feed2());
+			row = compareVector(visBuffer->feed2(),visBufferRef->feed2(),0);
 			if (row >= 0)
 			{
 				cout << RED;
@@ -568,7 +563,6 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 						<< " transformBuffer=" << visBuffer->feed2()(row)
 						<< " transformFile=" << visBufferRef->feed2()(row) << endl;
 				keepIterating = False;
-				break;
 			}
 			else
 			{
@@ -577,7 +571,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 
-			row = compareVector(visBuffer->time(),visBufferRef->time());
+			row = compareVector(visBuffer->time(),visBufferRef->time(),DBL_EPSILON );
 			if (row >= 0)
 			{
 				cout << RED;
@@ -585,7 +579,6 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 						<< " transformBuffer=" << visBuffer->time()(row)
 						<< " transformFile=" << visBufferRef->time()(row) << endl;
 				keepIterating = False;
-				break;
 			}
 			else
 			{
@@ -594,7 +587,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 
-			row = compareVector(visBuffer->timeCentroid(),visBufferRef->timeCentroid());
+			row = compareVector(visBuffer->timeCentroid(),visBufferRef->timeCentroid(),DBL_EPSILON );
 			if (row >= 0)
 			{
 				cout << RED;
@@ -602,7 +595,6 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 						<< " transformBuffer=" << visBuffer->timeCentroid()(row)
 						<< " transformFile=" << visBufferRef->timeCentroid()(row) << endl;
 				keepIterating = False;
-				break;
 			}
 			else
 			{
@@ -611,7 +603,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 
-			row = compareVector(visBuffer->timeInterval(),visBufferRef->timeInterval());
+			row = compareVector(visBuffer->timeInterval(),visBufferRef->timeInterval(),DBL_EPSILON);
 			if (row >= 0)
 			{
 				cout << RED;
@@ -619,7 +611,6 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 						<< " transformBuffer=" << visBuffer->timeInterval()(row)
 						<< " transformFile=" << visBufferRef->timeInterval()(row) << endl;
 				keepIterating = False;
-				break;
 			}
 			else
 			{
@@ -629,7 +620,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 
 
 			// Average-able vectors
-			row = compareVector(visBuffer->exposure(),visBufferRef->exposure());
+			row = compareVector(visBuffer->exposure(),visBufferRef->exposure(),DBL_EPSILON);
 			if (row >= 0)
 			{
 				cout << RED;
@@ -637,7 +628,6 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 						<< " transformBuffer=" << visBuffer->exposure()(row)
 						<< " transformFile=" << visBufferRef->exposure()(row) << endl;
 				keepIterating = False;
-				break;
 			}
 			else
 			{
@@ -646,7 +636,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 
-			row = compareVector(visBuffer->flagRow(),visBufferRef->flagRow());
+			row = compareVector(visBuffer->flagRow(),visBufferRef->flagRow(),0);
 			if (row >= 0)
 			{
 				cout << RED;
@@ -654,7 +644,6 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 						<< " transformBuffer=" << visBuffer->flagRow()(row)
 						<< " transformFile=" << visBufferRef->flagRow()(row) << endl;
 				keepIterating = False;
-				break;
 			}
 			else
 			{
@@ -662,7 +651,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout 	<< "=>flagRow match" << endl;
 			}
 
-			pos = compareCube(visBuffer->visCube(),visBufferRef->visCube());
+			pos = compareCube(visBuffer->visCube(),visBufferRef->visCube(),FLT_EPSILON);
 			if (pos.size() == 3)
 			{
 				cout << RED;
@@ -671,12 +660,182 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 						<< " transformBuffer=" << visBuffer->visCube()(pos)
 						<< " transformFile=" << visBufferRef->visCube()(pos) << endl;
 				keepIterating = False;
-				break;
 			}
 			else
 			{
 				cout << GREEN;
 				cout 	<< "=>visCube match" << endl;
+			}
+
+			pos = compareCube(visBuffer->visCubeCorrected(),visBufferRef->visCubeCorrected(),FLT_EPSILON);
+			if (pos.size() == 3)
+			{
+				cout << RED;
+				cout << " visCubeCorrected does not match in position (row,chan,corr)="
+						<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
+						<< " transformBuffer=" << visBuffer->visCubeCorrected()(pos)
+						<< " transformFile=" << visBufferRef->visCubeCorrected()(pos) << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout 	<< "=>visCubeCorrected match" << endl;
+			}
+
+			pos = compareCube(visBuffer->visCubeModel(),visBufferRef->visCubeModel(),FLT_EPSILON);
+			if (pos.size() == 3)
+			{
+				cout << RED;
+				cout << " visCubeModel does not match in position (row,chan,corr)="
+						<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
+						<< " transformBuffer=" << visBuffer->visCubeModel()(pos)
+						<< " transformFile=" << visBufferRef->visCubeModel()(pos) << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout 	<< "=>visCubeModel match" << endl;
+			}
+
+			Double time0 = visBufferRef->time()(0);
+
+			row = compareVector(visBuffer->feedPa(time0),visBufferRef->feedPa(time0),1E-3);
+			if (row >= 0)
+			{
+				cout << RED;
+				cout << " feedPa does not match in row "<< row
+						<< " transformBuffer=" << visBuffer->feedPa(time0)(row)
+						<< " transformFile=" << visBufferRef->feedPa(time0)(row) << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout 	<< "=>feedPa match" << endl;
+			}
+
+			if (abs(visBuffer->parang0(time0)-visBufferRef->parang0(time0)) > 1E-3)
+			{
+				cout << RED;
+				cout << " parang0 does not match in row "<< 0
+						<< " transformBuffer=" << visBuffer->parang0(time0)
+						<< " transformFile=" << visBufferRef->parang0(time0) << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout 	<< "=>parang0 match" << endl;
+			}
+
+
+			row = compareVector(visBuffer->parang(time0),visBufferRef->parang(time0),1E-3);
+			if (row >= 0)
+			{
+				cout << RED;
+				cout << " parang does not match in row "<< row
+						<< " transformBuffer=" << visBuffer->parang(time0)(row)
+						<< " transformFile=" << visBufferRef->parang(time0)(row) << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout 	<< "=>parang match" << endl;
+			}
+
+			// TODO: This is just a non-crash test, there is not == operator for MDirection
+			visBuffer->azel0(time0);
+			visBuffer->azel(time0);
+			///////////////////////////////////////////////////////////////////////////////
+
+			if (abs(visBuffer->hourang(time0)-visBufferRef->hourang(time0)) > 1E-3)
+			{
+				cout << RED;
+				cout << " hourang does not match in row "<< 0
+						<< " transformBuffer=" << visBuffer->hourang(time0)
+						<< " transformFile=" << visBufferRef->hourang(time0) << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout 	<< "=>hourang match" << endl;
+			}
+
+			if (abs(visBuffer->getFrequency(0,0)-visBufferRef->getFrequency(0,0)) > 1E-3)
+			{
+				cout << RED;
+				cout << " getFrequency does not match in row "<< 0
+						<< " transformBuffer=" << visBuffer->getFrequency(0,0)
+						<< " transformFile=" << visBufferRef->getFrequency(0,0) << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout 	<< "=>getFrequency match" << endl;
+			}
+
+			row = compareVector(visBuffer->getFrequencies(0),visBufferRef->getFrequencies(0));
+			if (row >= 0)
+			{
+				cout << RED;
+				cout << " getFrequencies does not match in row "<< row
+						<< " transformBuffer=" << visBuffer->getFrequencies(0)(row)
+						<< " transformFile=" << visBufferRef->getFrequencies(0)(row) << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout 	<< "=>getFrequencies match" << endl;
+			}
+
+			if (abs(visBuffer->getChannelNumber(0,0)-visBufferRef->getChannelNumber(0,0)) > 0)
+			{
+				cout << RED;
+				cout << " getChannelNumber does not match in row "<< 0
+						<< " transformBuffer=" << visBuffer->getChannelNumber(0,0)
+						<< " transformFile=" << visBufferRef->getChannelNumber(0,0) << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout 	<< "=>getChannelNumber match" << endl;
+			}
+
+			row = compareVector(visBuffer->getChannelNumbers(0),visBufferRef->getChannelNumbers(0),0);
+			if (row >= 0)
+			{
+				cout << RED;
+				cout << " getChannelNumbers does not match in row "<< row
+						<< " transformBuffer=" << visBuffer->getChannelNumbers(0)(row)
+						<< " transformFile=" << visBufferRef->getChannelNumbers(0)(row) << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout 	<< "=>getChannelNumbers match" << endl;
+			}
+
+			row = compareVector(visBuffer->rowIds(),visBufferRef->rowIds(),0);
+			if (row >= 0)
+			{
+				cout << RED;
+				cout << " rowIds does not match in row "<< row
+						<< " transformBuffer=" << visBuffer->rowIds()(row)
+						<< " transformFile=" << visBufferRef->rowIds()(row) << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout 	<< "=>rowIds match" << endl;
 			}
 
 			visIter->next();

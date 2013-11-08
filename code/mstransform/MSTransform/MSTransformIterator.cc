@@ -81,6 +81,7 @@ MSTransformIterator::~MSTransformIterator()
 void MSTransformIterator::originChunks ()
 {
 	buffer_p->resetState();
+	buffer_p->setRowIdOffset(0);
 	getVii()->originChunks();
 	return;
 }
@@ -135,6 +136,7 @@ Bool MSTransformIterator::more () const
 void MSTransformIterator::next ()
 {
 	buffer_p->resetState();
+	buffer_p->shiftRowIdOffset(manager_p->nRowsToAdd_p);
 	getVii()->next();
 	return;
 }

@@ -40,6 +40,8 @@ public:
 	~MSTransformBufferImpl() {};
 
 	void resetState();
+	void setRowIdOffset(uInt rowOffset) {rowIdOffset_p = rowOffset;}
+	void shiftRowIdOffset(Int nRows) {rowIdOffset_p += nRows;}
 
 	// Re-indexable Vectors
     const Vector<Int> & dataDescriptionIds () const; // [nR]
@@ -81,10 +83,28 @@ public:
 	Int nCorrelations () const;
 	Int nAntennas () const;
 
+	// For plotms
+    const Vector<Float> & feedPa (Double time) const; // [nA]
+    Float parang0(Double time) const;
+    const Vector<Float> & parang(Double time) const; // [nA]
+    MDirection azel0(Double time) const;
+    const Vector<MDirection> & azel(Double time) const; // [nA]
+    Double hourang(Double time) const;
+
+    Vector<Int> getCorrelationTypes () const;
+
+    Double getFrequency (Int rowInBuffer, Int frequencyIndex, Int frame = FrameNotSpecified) const;
+    const Vector<Double> & getFrequencies (Int rowInBuffer,Int frame = FrameNotSpecified) const;
+    Int getChannelNumber (Int rowInBuffer, Int frequencyIndex) const;
+    const Vector<Int> & getChannelNumbers (Int rowInBuffer) const;
+
+    const Vector<uInt> & rowIds () const;
 
 private:
 
 	MSTransformManager *manager_p;
+	ArrayColumn<Double> spwFrequencies_p;
+	uInt rowIdOffset_p;
 
 	mutable Vector<Int> observationId_p;
 	mutable Vector<Int> arrayId_p;
@@ -92,6 +112,7 @@ private:
 	mutable Vector<Int> stateId_p;
 	mutable Vector<Int> fieldId_p;
 	mutable Vector<Int> dataDescriptionIds_p;
+	mutable Vector<Int> spectralWindows_p;
 	mutable Vector<Int> processorId_p;
 	mutable Vector<Int> antenna1_p;
 	mutable Vector<Int> antenna2_p;
@@ -112,6 +133,12 @@ private:
 	mutable Cube<Float> visCubeFloat_p;
 	mutable Cube<Float> weightSpectrum_p;
 	mutable Array<Bool> flagCategory_p;
+	mutable Vector<Float> feedPa_p;
+	mutable Vector<Float> parang_p;
+	mutable Vector<MDirection> azel_p;
+	mutable Vector<Double> frequencies_p;
+	mutable Vector<Int> channelNumbers_p;
+	mutable Vector<uInt> rowIds_p;
 	mutable IPosition shape_p;
 	mutable uInt nRows_p;
 	mutable uInt nChannels_p;
@@ -124,6 +151,7 @@ private:
 	mutable Bool stateIdOk_p;
 	mutable Bool fieldIdOk_p;
 	mutable Bool dataDescIdOk_p;
+	mutable Bool spectralWindowsOk_p;
 	mutable Bool processorIdOk_p;
 	mutable Bool antenna1Ok_p;
 	mutable Bool antenna2Ok_p;
@@ -144,6 +172,12 @@ private:
 	mutable Bool visCubeFloatOk_p;
 	mutable Bool weightSpectrumOk_p;
 	mutable Bool flagCategoryOk_p;
+	mutable Bool feedPaOk_p;
+	mutable Bool parangOk_p;
+	mutable Bool azelOk_p;
+	mutable Bool frequenciesOk_p;
+	mutable Bool channelNumbersOk_p;
+	mutable Bool rowIdsOk_p;
 	mutable Bool shapeOk_p;
 	mutable Bool nRowsOk_p;
 	mutable Bool nChannelsOk_p;
@@ -156,6 +190,7 @@ private:
 	mutable Bool stateIdTransformed_p;
 	mutable Bool fieldIdTransformed_p;
 	mutable Bool dataDescIdTransformed_p;
+	mutable Bool spectralWindowsTransformed_p;
 	mutable Bool processorIdTransformed_p;
 	mutable Bool antenna1Transformed_p;
 	mutable Bool antenna2Transformed_p;
@@ -166,6 +201,12 @@ private:
 	mutable Bool timeCentroidTransformed_p;
 	mutable Bool timeIntervalTransformed_p;
 	mutable Bool exposureTransformed_p;
+	mutable Bool feedPaTransformed_p;
+	mutable Bool parangTransformed_p;
+	mutable Bool azelTransformed_p;
+	mutable Bool frequenciesTransformed_p;
+	mutable Bool channelNumbersTransformed_p;
+	mutable Bool rowIdsTransformed_p;
 
 };
 
