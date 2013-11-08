@@ -1,0 +1,723 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% JO  2010-10-12 doc created for CASA 3.1.0
+% JO  2013-04-24 updated "pix"
+
+
+\chapter[Appendix: CASA Region File Format]
+         {Appendix: CASA Region File Format}
+\label{chapter:regionformat}
+
+
+The CASA region file format provides a flexible, easily edited set of
+region definitions which are accepted across CASA tasks.  Region files
+may be written by hand or using the CASA {\tt viewer}.
+
+{\bf Alert:} Whereas the region format is supported by all the data
+  processing tasks, the {\tt viewer} implementation is still limited
+  to rectangles, ellipses, and some markers.
+
+
+For a file to be recognized as a valid CASA region text file, the
+first line must contain the string:\\
+
+{\tt 
+\#CRTF
+}
+
+
+"CRTF" stands for "CASA Region Text Format".  One may also include an
+optional version number at the end of the string, so it reads
+{\tt \#CRTFv0}; this indicates the version of the format
+definition.
+
+Region files have two different kinds of definitions, {\it "regions"} and
+{\it "annotations"}, each of which is one line long. To indicate an
+annotation, a line must begin with {\tt "ann"}.  Lines that begin with the
+comment character (\#) are not considered for processing or display.
+
+The second line of a file may define global parameters that are to be
+used for all regions and annotations in that file, in which case the
+line starts with the word {\tt "global"}.  The parameters set here may
+also be overridden by keywords in a specific line, in which case the
+keywords pertain only to that one line.
+
+\begin{itemize}
+
+\item {\bf Regions:} all regions are considered by tasks.  They will
+  be displayed by visualization tasks as well as used to create masks,
+  etc., as appropriate.
+
+\item {\bf Annotations:} these are used by display tasks, and are for
+  visual reference only.
+
+\end{itemize}
+
+\section{Region definitions}
+
+
+All regions lines will follow this general arrangement:\\
+
+{\tt \{shape\} \{additional parameter=value pairs\} }
+
+The possible parameter/value pairs are described in more detail below.
+Note that most parameters beyond the shape and its coordinates can be
+defined globally.
+
+Possible units for coordinates are:
+
+
+\begin{itemize}
+\item {\it sexagesimal}, e.g. {\tt 18h12m24s} for right ascension or {\tt -03.47.27.1} for declination
+\item {\it decimal degrees}, e.g. {\tt 140.0342deg} for both RA and Dec
+\item {\it radians}, e.g. {\tt 2.37666rad} for both RA and Dec 
+\item {\it pixels}, e.g. {\tt 204pix}
+\end{itemize}
+
+
+Possible units of length are:
+
+
+\begin{itemize}
+\item {\it degrees}, e.g. {\tt 23deg}
+\item {\it arcminutes}, e.g. {\tt 23arcmin}
+\item {\it arcseconds}, e.g. {\tt 23arcsec}
+\item {\it radians}, e.g. {\tt 0.00035rad}
+\item {\it pixels}, e.g. {\tt 23pix}
+
+\end{itemize}
+
+{\it Units must always be included when defining a region.} 
+
+\section{Allowed shapes}
+
+\begin{itemize}
+
+\item {\bf Rectangular box}; the two coordinates are two opposite corners:\\
+
+{\tt box[[x1, y1], [x2, y2]]}
+
+\item {\bf Center box}; [x, y] define the center point of the box and [x\_width, y\_width] the width of the sides:\\
+
+{\tt centerbox[[x, y], [x\_width, y\_width]]}
+
+\item {\bf Rotated box}; [x, y] define the center point of the box; [x\_width, y\_width] the width of the sides; rotang the rotation angle:\\
+
+{\tt rotbox[[x, y], [x\_width, y\_width], rotang]}
+
+\item {\bf Polygon}; there could be many [x, y] corners; note that the last point 
+will connect with the first point to close the polygon:\\
+
+{\tt poly[[x1, y1], [x2, y2], [x3, y3], ...]}
+
+\item {\it Circle}; center of the circle [x,y], r is the radius:\\
+
+{\tt circle[[x, y], r]}
+
+\item {\it Annulus}; center of the circle is [x, y], [r1, r2] are inner and outer radii:\\
+
+{\tt annulus[[x, y], [r1, r2]]}
+
+\item {\it Ellipse}; center of the ellipse is [x, y]; semi-major and semi-minor axes are [bmaj, bmin]; position angle of the major axis is pa:\\
+
+{\tt ellipse[[x, y], [bmaj, bmin], pa]}
+
+\end{itemize}
+
+\section{Annotation definitions}
+
+In addition to the definitions for regions [above], the following are always treated as annotations:
+
+\begin{itemize}
+
+\item {\it Line}; coordinates define the end points of the line:\\
+
+{\tt line[[x1, y1], [x2, y2]]}
+
+\item {\it Vector}; coordinates define end points; second coordinate pair is location of tip of arrow:\\
+
+{\tt vector[[x1, y1], [x2, y2]]}
+
+\item {\it Text}; coordinates define leftmost point of text string:\\
+
+{\tt text[[x, y], 'my text']
+
+\item Symbol}; coordinates define location of symbol (see Sec.\,\ref{sec:regions.symbols} for a list of allowed symbols):\\
+
+{\tt symbol[[x, y], \{symbol\}]}
+
+\end{itemize}
+
+\section{Global definitions}
+
+Definitions to be used throughout the region file are placed on a line
+beginning with {\bf 'global'}, usually at the top of the file.  These
+definitions may also be used on any individual region or annotation
+line; in this case, the value defined on that line will override the
+predefined global (but only for that line).  If a {\it 'global'} line occurs
+later in the file, subsequent lines will obey those definitions.
+
+\begin{itemize}
+
+\item {\it Coordinate reference frame:}
+\begin{itemize}
+
+\item Possible values: J2000, JMEAN, JTRUE, APP, B1950, B1950\_VLA, BMEAN, BTRUE, GALACTIC, HADEC, AZEL, AZELSW, AZELNE, AZELGEO, AZELSWGEO, AZELNEGEO, JNAT, ECLIPTIC, MECLIPTIC, TECLIPTIC, SUPERGAL, ITRF, TOPO, ICRS 
+
+\item Default: image value\\
+
+{\tt coord = J2000}
+
+\end{itemize}
+
+
+\item {\it Frequency/velocity axis:}
+
+\begin{itemize}
+
+\item Possible values: REST, LSRK, LSRD, BARY, GEO, TOPO, GALACTO, LGROUP, CMB
+\item Default: image value\\
+
+{\tt frame=TOPO}
+\end{itemize}
+
+
+\item {\it Frequency/velocity range:}
+\begin{itemize}
+
+\item Possible units: GHz, MHz, kHz, km/s, Hz, channel, chan (=channel)
+\item Default: image range\\
+
+{\tt range=[min, max]}
+
+\end{itemize}
+
+\item {\it Correlation axis:}
+
+\begin{itemize}
+\item Possible values: I, Q, U, V, RR, RL, LR, LL, XX, XY, YX, YY, RX,
+  RY, LX, LY, XR, XL, YR, YL, PP, PQ, QP, QQ, RCircular, LCircular,
+  Linear, Ptotal, Plinear, PFtotal, PFlinear, Pangle 
+\item Default: all planes present in image\\
+
+{\tt corr=[X, Y]}
+
+\end{itemize}
+
+
+
+\item {\it Velocity calculation:}
+
+\begin{itemize}
+
+\item Possible values: RADIO, OPTICAL, Z, BETA, GAMMA
+\item Default: image value\\
+
+{\tt veltype=RADIO}
+
+\end{itemize}
+
+\item {\it Rest frequency:}
+
+\begin{itemize}
+\item Default: image value\\
+
+{\tt restfreq=1.42GHz}
+
+\end{itemize}
+
+\item {\it Line characteristics:}
+
+\begin{itemize}
+\item Possible values: any line style recognized by matplotlib: '\verb=-='=solid, '\verb=--='=dashed, '\verb=:='=dotted
+\item Default: linewidth=1, linestyle='\verb=-='\\
+
+{\tt 
+linewidth=1\\
+linestyle='-'\\
+}
+
+\end{itemize}
+
+
+
+\item {\it Symbol characteristics:}
+
+\begin{itemize}
+\item Symbol syze and thickness:\\
+
+{\tt 
+symsize = 1\\ 
+symthick = 1
+}
+\end{itemize}
+
+\item {\it Region, symbol, and text color:}
+\begin{itemize}
+
+\item Possible values: any color recognized by matplotlib, including hex values
+\item Default: color=green\\
+
+{\tt color=red}
+
+\end{itemize}
+
+\item {\it Text font characteristics:}
+
+\begin{itemize}
+
+\item Possible values: see Sect.\,\ref{sec:regions.fonts}.
+   
+\item 'usetex' is a boolean parameter that determines whether or not the text line should be interpreted as LaTeX, and would require working LaTeX, dvipng, and Ghostscript installations (equivalent to the text.usetex parameter in matplotlib).\\
+
+{\tt
+font=Helvetica\\ 
+fontsize=10pt \\
+fontstyle=bold\\
+usetex=True/False\\
+}
+
+\end{itemize}
+
+
+
+\item {\it Label position:}
+
+\begin{itemize}
+    \item Possible values: 'left', 'right', 'top', 'bottom'
+    \item Default: 'top' 
+
+{\tt
+labelpos='right'
+}
+\end{itemize}
+
+\item {\it Label color:}
+
+  \begin{itemize}
+    \item Default: color of associated region.
+    \item Allowed values: same as values for region colors. 
+
+{\tt 
+labelcolor='green'
+}
+\end{itemize}
+
+
+\item {\it Label offset:}
+
+\begin{itemize}
+
+    \item Default: [0,0].
+    \item Allowed values: any positive or negative number, in units of pixels. 
+
+{\tt
+labeloff=[1, 1]
+}
+
+\end{itemize}
+
+\end{itemize}
+
+\section{Allowed additional parameters}
+
+These must be defined per region line:
+
+\begin{itemize}
+
+\item {\it Labels:} text label for a region; should be placed so text
+  does not overlap with region boundary\\
+
+{\tt label='string'}
+
+\item {\it "OR/NOT" operators:} A "+" at the beginning of a line will
+  flag it with a boolean "OR" (default), and a "-" will flag it with a
+  boolean "NOT".  Overlapping regions will be treated according to
+  their sequence in the file; i.e., ((((entireImage OR line1) OR
+  line2) NOT line3) OR line4).  This allows some flexibility in
+  building "non-standard" regions.  Note that a task (e.g., clean)
+  will still consider all lines: if one wishes to remove a region from
+  consideration, it should be commented out ("\#").
+
+\item Default: OR (+)
+
+\end{itemize}
+
+\section{Examples}
+
+A file with both global definitions and per-line definitions:
+
+{\tt
+\#CRTFv0\\
+global coord=B1950\_VLA, frame=BARY, corr=[I, Q], color=blue
+
+\# A simple circle region:\\
+circle[[18h12m24s, -23d11m00s], 2.3arcsec]
+
+\# A box region, this one only for annotation:\\
+ann box[[140.0342deg, -12.34243deg], [140.0360deg, -12.34320deg]]
+
+\# A rotated box region, for a particular range of velocities:\\
+rotbox[[12h01m34.1s, 12d23m33s], [3arcmin, 1arcmin], 12deg], range=[-1240km/s, 1240km/s]
+
+\# An annular region, overriding some of the global defaults:\\
+annulus[[17h51m03.2s, -45d17m50s], [0.10deg, 4.12deg]], corr=[I,Q,U,V], color=red, label='My label here'
+
+\# Cuts an ellipse out of the previous regions, but only for Q and a particular frequency range:\\
+-ellipse[[17:51:03.2, -45.17.50], [0.25deg, 1.34deg], 45rad], range=[1.420GHz, 1.421GHz], corr=[Q], color=green, label='Removed this'
+
+\# A diamond marker, in J2000 coordinates:\\
+symbol[[32.1423deg, 12.1412deg], D], linewidth=2, coord=J2000, symsize=2
+
+}
+
+\section{Fonts and Symbols}
+
+\subsection{Allowed symbols}
+\label{sec:regions.symbols}
+
+\begin{tabbing}
+'.' \=   point marker \\
+',' \=   pixel marker\\
+'o' \=   circle marker\\
+'v' \=   triangle\_down marker\\
+'\verb=^=' \=   triangle\_up marker\\
+'$<$' \=   triangle\_left marker\\
+'$>$' \=   triangle\_right marker\\
+'1' \=   tri\_down marker\\
+'2' \=   tri\_up marker\\
+'3' \=   tri\_left marker\\
+'4' \=   tri\_right marker\\
+'s' \=   square marker\\
+'p' \=   pentagon marker\\
+'*' \=   star marker\\
+'h' \=   hexagon1 marker\\
+'H' \=   hexagon2 marker\\
+'+' \=   plus marker\\
+'x' \=   x marker\\
+'D' \=   diamond marker\\
+'d' \=   thin\_diamond marker\\
+'\verb=|=' \=   vline marker\\
+'\_' \=   hline marker\\
+\end{tabbing}
+
+
+\subsection{Allowed fonts}
+\label{sec:regions.fonts}
+
+\subsubsection{Allowed fonts for Linux}
+
+"Century Schoolbook L", 
+"Console", 
+"Courier", 
+"Courier 10 Pitch",  
+"Cursor", 
+"David CLM",  
+"DejaVu LGC Sans",  
+"DejaVu LGC Sans Condensed",  
+"DejaVu LGC Sans Light", 
+"DejaVu LGC Sans Mono", 
+"DejaVu LGC Serif", 
+"DejaVu LGC Serif Condensed",  
+"Dingbats", 
+"Drugulin CLM",  
+"East Syriac Adiabene",  
+"Ellinia CLM", 
+"Estrangelo Antioch",  
+"Estrangelo Edessa", 
+"Estrangelo Nisibin", 
+"Estrangelo Nisibin Outline",  
+"Estrangelo Talada", 
+"Fangsong ti", 
+"Fixed [Sony]", 
+"Fixed [Eten]", 
+"Fixed [Misc]", 
+"Fixed [MNKANAME]", 
+"Frank Ruehl CLM", 
+"fxd", 
+"Goha-Tibeb Zemen",  
+"goth\_p", 
+"Gothic [Shinonome]",  
+"Gothic [mplus]", 
+"hlv", 
+"hlvw", 
+"KacstArt",  
+"KacstBook", 
+"KacstDecorative", 
+"KacstDigital", 
+"KacstFarsi", 
+"KacstLetter", 
+"KacstPoster", 
+"KacstQura", 
+"KacstQuraFixed",  
+"KacstQuran", 
+"KacstTitle", 
+"KacstTitleL", 
+"Liberation Mono",  
+"Liberation Sans", 
+"Liberation Serif", 
+"LKLUG", 
+"Lohit Bengali",  
+"Lohit Gujarati", 
+"Lohit Hindi", 
+"Lohit Kannada", 
+"Lohit Malayalam", 
+"Lohit Oriya", 
+"Lohit Punjabi", 
+"Lohit Tamil", 
+"Lohit Telugu", 
+"LucidaTypewriter",  
+"Luxi Mono", 
+"Luxi Sans", 
+"Luxi Serif", 
+"Marumoji", 
+"Miriam CLM", 
+"Miriam Mono CLM",  
+"MiscFixed", 
+"Monospace", 
+"Nachlieli CLM",  
+"Nimbus Mono L", 
+"Nimbus Roman No9 L",  
+"Nimbus Sans L", 
+"Nimbus Sans L Condensed",  
+"PakTypeNaqsh", 
+"PakTypeTehreer", 
+"qub", 
+"Sans Serif",  
+"Sazanami Gothic",  
+"Sazanami Mincho", 
+"Serif", 
+"Serto Batnan",  
+"Serto Jerusalem", 
+"Serto Jerusalem Outline",  
+"Serto Mardin", 
+"Standard Symbols L",  
+"sys", 
+"URW Bookman L",  
+"URW Chancery L", 
+"URW Gothic L", 
+"URW Palladio L", 
+"Utopia", 
+"Yehuda CLM",  
+
+
+\subsubsection{Allowed fonts for MacOS X}
+"Abadi MT Condensed Light", 
+"Adobe Caslon Pro", 
+"Adobe Garamond Pro", 
+"Al Bayan", 
+"American Typewriter",  
+"Andale Mono", 
+"Apple Braille", 
+"Apple Chancery", 
+"Apple LiGothic", 
+"Apple LiSung", 
+"Apple Symbols", 
+"AppleGothic", 
+"AppleMyungjo", 
+"Arial", 
+"Arial Black",  
+"Arial Hebrew", 
+"Arial Narrow", 
+"Arial Rounded MT Bold",  
+"Arial Unicode MS", 
+"Arno Pro", 
+"Ayuthaya", 
+"Baghdad", 
+"Baskerville",  
+"Baskerville Old Face",  
+"Batang", 
+"Bauhaus 93", 
+"Bell Gothic Std",  
+"Bell MT", 
+"Bernard MT Condensed",  
+"BiauKai", 
+"Bickham Script Pro",  
+"Big Caslon", 
+"Birch Std", 
+"Blackoak Std",  
+"Book Antiqua", 
+"Bookman Old Style",  
+"Bookshelf Symbol 7", 
+"Braggadocio", 
+"Britannic Bold",  
+"Brush Script MT", 
+"Brush Script Std", 
+"Calibri", 
+"Calisto MT",  
+"Cambria", 
+"Candara", 
+"Century", 
+"Century Gothic",  
+"Century Schoolbook",  
+"Chalkboard", 
+"Chalkduster", 
+"Chaparral Pro", 
+"Charcoal CY", 
+"Charlemagne Std",  
+"Cochin", 
+"Colonna MT",  
+"Comic Sans MS",  
+"Consolas", 
+"Constantia", 
+"Cooper Black", 
+"Cooper Std", 
+"Copperplate", 
+"Copperplate Gothic Bold",  
+"Copperplate Gothic Light", 
+"Corbel", 
+"Corsiva Hebrew",  
+"Courier", 
+"Courier New",  
+"Curlz MT", 
+"DecoType Naskh",  
+"Desdemona", 
+"Devanagari MT",  
+"Didot", 
+"Eccentric Std",  
+"Edwardian Script ITC",  
+"Engravers MT", 
+"Euphemia UCAS", 
+"Eurostile", 
+"Footlight MT Light",  
+"Franklin Gothic Book",  
+"Franklin Gothic Medium", 
+"Futura", 
+"Garamond", 
+"Garamond Premier Pro",  
+"GB18030 Bitmap", 
+"Geeza Pro", 
+"Geneva", 
+"Geneva CY",  
+"Georgia", 
+"Giddyup Std",  
+"Gill Sans", 
+"Gill Sans MT", 
+"Gill Sans Ultra Bold", 
+"Gloucester MT Extra Condensed",  
+"Goudy Old Style", 
+"Gujarati MT", 
+"Gulim", 
+"GungSeo", 
+"Gurmukhi MT",  
+"Haettenschweiler",  
+"Harrington", 
+"HeadLineA", 
+"Hei", 
+"Heiti SC",  
+"Heiti TC", 
+"Helvetica", 
+"Helvetica CY",  
+"Helvetica Neue",  
+"Herculanum"
+"Hiragino Kaku Gothic Pro",  
+"Hiragino Kaku Gothic ProN",  
+"Hiragino Kaku Gothic Std",  
+"Hiragino Kaku Gothic StdN",  
+"Hiragino Maru Gothic Pro",  
+"Hiragino Maru Gothic ProN",  
+"Hiragino Mincho Pro",  
+"Hiragino Mincho ProN",  
+"Hiragino Sans GB",  
+"Hobo Std",  
+"Hoefler Text",  
+"Impact",  
+"Imprint MT Shadow",  
+"InaiMathi",  
+"Kai",  
+"Kailasa",  
+"Kino MT",  
+"Kokonor",  
+"Kozuka Gothic Pro",  
+"Kozuka Mincho Pro",  
+"Krungthep",  
+"KufiStandardGK",  
+"Letter Gothic Std",  
+"LiHei Pro",  
+"LiSong Pro",  
+"Lithos Pro",  
+"Lucida Blackletter",  
+"Lucida Bright",  
+"Lucida Calligraphy",  
+"Lucida Console",  
+"Lucida Fax",  
+"Lucida Grande",  
+"Lucida Handwriting",  
+"Lucida Sans",  
+"Lucida Sans Typewriter",  
+"Lucida Sans Unicode",  
+"Marker Felt",  
+"Marlett",  
+"Matura MT Script Capitals",  
+"Meiryo",  
+"Menlo",  
+"Mesquite Std",  
+"Microsoft Sans Serif",  
+"Minion Pro",  
+"Mistral",  
+"Modern No. 20",  
+"Monaco",  
+"Monotype Corsiva",  
+"Monotype Sorts",  
+"MS Gothic",  
+"MS Mincho",  
+"MS PGothic",  
+"MS PMincho",  
+"MS Reference Sans Serif",  
+"MS Reference Specialty",  
+"Mshtakan",  
+"MT Extra",  
+"Myriad Pro",  
+"Nadeem",  
+"New Peninim MT",  
+"News Gothic MT",  
+"Nueva Std",  
+"OCR A Std",  
+"Onyx",  
+"Optima",  
+"Orator Std",  
+"Osaka",  
+"Papyrus",  
+"PCMyungjo",  
+"Perpetua",  
+"Perpetua Titling MT",  
+"PilGi",  
+"Plantagenet Cherokee",  
+"Playbill",  
+"PMingLiU",  
+"Poplar Std",  
+"Prestige Elite Std",  
+"Raanana",  
+"Rockwell",  
+"Rockwell Extra Bold",  
+"Rosewood Std",  
+"Sathu",  
+"Silom",  
+"SimSun",  
+"Skia",  
+"Stencil",  
+"Stencil Std",  
+"STFangsong",  
+"STHeiti",  
+"STKaiti",  
+"STSong",  
+"Symbol",  
+"Tahoma",  
+"Tekton Pro",  
+"Thonburi",  
+"Times",  
+"Times New Roman",  
+"Trajan Pro",  
+"Trebuchet MS",  
+"Tw Cen MT",  
+"Verdana",  
+"Webdings",  
+"Wide Latin",  
+"Wingdings",  
+"Wingdings 2",  
+"Wingdings 3",  
+"Zapf Dingbats",  
+"Zapfino"
+

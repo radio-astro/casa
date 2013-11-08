@@ -1,0 +1,206 @@
+//# MWCEllipseTool.h: Base class for MultiWorldCanvas event-based ellipse tools
+//# Copyright (C) 2000,2001,2002
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This library is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU Library General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or (at your
+//# option) any later version.
+//#
+//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# License for more details.
+//#
+//# You should have received a copy of the GNU Library General Public License
+//# along with this library; if not, write to the Free Software Foundation,
+//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning AIPS++ should be addressed as follows:
+//#        Internet email: aips2-request@nrao.edu.
+//#        Postal address: AIPS++ Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
+//# $Id$
+
+#ifndef TRIALDISPLAY_MWCELLIPSETOOL_H
+#define TRIALDISPLAY_MWCELLIPSETOOL_H
+
+#include <casa/aips.h>
+#include <display/DisplayEvents/MultiWCTool.h>
+#include <display/DisplayEvents/DTVisible.h>
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
+// <summary>
+// Base class for MultiWorldCanvas event-based ellipse tools
+// </summary>
+//
+// <use visibility=export>
+//
+// <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
+// </reviewed>
+//
+// <prerequisites>
+//   <li> WCTool
+// </prerequisites>
+//
+// <etymology>
+// MWCEllipseTool stands for MultiWorldCanvas Ellipse Tool
+// </etymology>
+//
+// <synopsis>
+// This class adds to its base WCTool to provide a tool for drawing,
+// resizing and moving ellipses on a WorldCanvas.  While MWCEllipseTool
+// is not abstract, it performs no useful function.  The programmer
+// should derive from this class, and implement the functions
+// doubleInside and doubleOutside, which are called when the user
+// double-clicks the key or mouse button inside or outside an existing
+// ellipse respectively.  It is up to the programmer to decide what
+// double clicks inside and outside the ellipse correspond to,
+// although it is recommended that a double click inside correspond to
+// the main action of the tool, and a double click outside correspond
+// to a secondary action of the tool, if indeed a secondary action
+// exists.
+//
+// The ellipse is drawn by dragging the mouse from one corner to
+// the diagonally opposite corner.  Once constructed, the ellipse
+// can be resized by dragging its corners, or relocated by dragging
+// inside the ellipse.  The ellipse is removed from the display
+// when the Esc key is pressed.
+// </synopsis>
+//
+// <example>
+// </example>
+//
+// <motivation>
+// Many activities on the WorldCanvas will be based on the user drawing
+// a ellipse, and then proceeding to some action with that ellipse.
+// </motivation>
+
+	class MWCEllipseTool : public MultiWCTool, public DTVisible {
+
+	public:
+
+		// Constructor
+		MWCEllipseTool(Display::KeySym keysym = Display::K_Pointer_Button1,
+		               const Bool persistent = False);
+
+		// Destructor
+		virtual ~MWCEllipseTool();
+
+		// Switch the tool off - this erases the ellipse, if any,
+		// and calls the base class disable.
+		virtual void disable();
+
+		// reset to non-existent, non-active ellipse.
+		// Refreshes if necessary to erase (unless skipRefresh==True  In
+		// that case, the caller should do the refresh itself).
+		// (Does not unregister from WCs or disable future event handling).
+		virtual void reset(Bool skipRefresh=False);
+
+		// Is a ellipse currently defined?
+		//virtual Bool rectangleDefined() { return itsRectangleExists;  }
+		virtual Bool ellipseDefined() {
+			return itsEllipseExists;
+		}
+
+
+	protected:
+
+		// Functions called by the base class event handling operators--and
+		// normally only those.  This is the input that controls the ellipse's
+		// appearance and action.  When the ellipse is ready and double-click
+		// is received, the doubleInside/Outside routine will be invoked.
+		// <group>
+		virtual void keyPressed(const WCPositionEvent &ev);
+		virtual void keyReleased(const WCPositionEvent &ev);
+		virtual void otherKeyPressed(const WCPositionEvent &ev);
+		virtual void moved(const WCMotionEvent &/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
+		// </group>
+
+		// draw the ellipse (if any) on the object's currently active WC.
+		// Only to be called by the base class refresh event handler.  Derived
+		// objects should use refresh() if they need to redraw, but even that
+		// is normally handled automatically.
+		virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
+
+		// Output callback functions--to be overridden in derived class.
+		// Called when there is a double click inside/outside the ellipse
+		// <group>
+		virtual void doubleInside() { };
+		virtual void doubleOutside() { };
+		// </group>
+
+		// Called when a ellipse is ready and not being
+		// edited.  (Unused so far on the glish level (12/01)).
+		virtual void ellipseReady() { };
+		//virtual void rectangleReady() { };
+
+
+		// Retrieve the ellipse coordinates, in screen pixels.
+		// Anchor (if applicable) is (x1,y1).  Valid during the output callbacks;
+		// to be used by them, as well as internally.
+		virtual void get(Int &x1, Int &y1, Int &x2, Int &y2) const ;
+
+	private:
+
+		// set the pixel coordinates of the ellipse
+		virtual void set(const Int &x1, const Int &y1,
+		                 const Int &x2, const Int &y2);
+
+		// get only the anchor point
+		virtual void get(Int &x1, Int &y1) const;
+
+
+		// does the ellipse persist after double clicks (until a new one
+		// is started)?
+		Bool itsEllipsePersistent;
+		//Bool itsRectanglePersistent;
+
+		// do we have a ellipse yet?
+		// (if True, itsCurrentWC, itsEmitted, P1, and P2 are valid)
+		Bool itsEllipseExists;
+		//Bool itsRectangleExists;
+
+		// was the button pressed in the ellipse (or, if none, in an active WC)
+		// and not yet released/reset?
+		Bool itsActive;
+
+		// (valid only if itsActive==True):
+		// True = being moved     False = being resized
+		Bool itsMoving;
+
+		// (valid only if itsEllipseExists==True)
+		// Has doubleInside/Outside been called for this ellipse?  If so, a
+		// key press outside the ellipse will start a new ellipse, as if
+		// itsEllipseExists were False.
+		// However, a key press inside the ellipse will reset
+		// itsEmitted to False, allowing the ellipse to be reused
+		// (possibly moved or resized, and emitted again).
+		Bool itsEmitted;
+
+		// (Linear) coordinates of the ellipse (invariant over zooms, but not
+		// coordinate system changes.  To do: support the WorldCoordinateChange
+		// refresh reason, and reset this tool when it occurs).
+		Vector<Double> itsP1, itsP2;
+
+		// storage of the handle (pixel) coordinates
+		Vector<Int> itsHX, itsHY;
+
+		// position that move started from
+		Int itsBaseMoveX, itsBaseMoveY;
+
+		// store the times of the last two presses here:
+		Double itsLastPressTime, its2ndLastPressTime;
+
+	};
+
+
+} //# NAMESPACE CASA - END
+
+#endif
+
+

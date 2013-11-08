@@ -1,0 +1,25 @@
+== General Questions (in no particular order)
+* Important to have a "tracker" options?  (i.e., the current mouse position in
+  world coordinates is displayed near the mouse).
+* Is locate functionality appropriate in the plotter, or would that be better
+  left to the calling application?  I.e., have the plotter return the selected
+  region and then let the caller deal with it.
+
+== To Do (in no particular order)
+* Sharing axes (i.e. two y axes but one x-axis)
+  * Easiest solution: two canvases, hide axis on one of them
+  * Complication: selecting regions across both?
+    => Provide support for "mirrored" selection?
+* Additional plot types
+  => function plots
+* Blocking interactive calls, i.e. getSelectedRegion() which blocks until the
+  user selects a region and then returns it.
+* Raster plots with non-uniform data distribution
+* PlotRasterMatrixData with different origins
+  
+== Qwt Implementation (in no particular order)
+* Signals and slots for QPPlotter and QPCanvas
+
+== Tangentially-Related Issues (in no particular order)
+* Python interface
+* Event loops (IPC?)

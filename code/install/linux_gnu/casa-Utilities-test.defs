@@ -1,0 +1,6 @@
+LVL  := $(C++OPTLVL)
+LVL0 := -O0
+ 
+tFallible := 0
+ 
+C++OPTLVL = $(LVL$($*))

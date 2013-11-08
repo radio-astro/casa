@@ -1,0 +1,96 @@
+#!/bin/sh
+#-----------------------------------------------------------------------------
+# reap: Collate and disseminate AIPS++ weekly reports
+#-----------------------------------------------------------------------------
+#   Copyright (C) 1996,1997,2002
+#   Associated Universities, Inc. Washington DC, USA.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#
+#   Correspondence concerning AIPS++ should be addressed as follows:
+#          Internet email: aips2-request@nrao.edu.
+#          Postal address: AIPS++ Project Office
+#                          National Radio Astronomy Observatory
+#                          520 Edgemont Road
+#                          Charlottesville, VA 22903-2475 USA
+#
+#-----------------------------------------------------------------------------
+# Usage: reap
+#-----------------------------------------------------------------------------
+# reap collates and disseminates AIPS++ reports.  It maintains a timestamp
+# file within the AIPS++ mail folder, collects all reports newer than the
+# timestamp, strips out the mail headers, concatenates them and posts the
+# result to the aips2-weekly-reports exploder.  It is invoked regularly by an
+# AIPS++ administrator cron job.
+#
+# Options:
+#    none
+#
+# Status returns:
+#    0:  success
+#    1:  initialization error
+#
+# Original: 1996/05/05 by Mark Calabretta, ATNF
+# $Id$
+#-----------------------------------------------------------------------------
+# The AIPS++ administrator's mail directory.
+  MAIL=/export/aips++/Mail
+
+# Check that the folder exists.
+  if [ ! -d "$MAIL/aips2-reports" ]
+  then
+     echo "reap: aips2-reports mail folder not found, abort!" 1>&2
+     exit 1
+  fi
+
+# Get a list of new mail.
+  cd $MAIL/aips2-reports || exit 1
+
+  if [ -f .reap.time ]
+  then
+#    Use the timestamp file.
+     NEWER="-newer .reap.time"
+  else
+     NEWER=""
+  fi
+
+  LIST=`find . -name "[0-9]*" $NEWER -print | 
+        sed -e 's#^./##' |
+        sort -n`
+  touch .reap.time
+
+  [ "$LIST" = "" ] && exit 0
+
+# Strip out the mail headers, concatenate the messages, and post the result.
+  {
+     echo "To: aips2-weekly-reports@nrao.edu"
+     echo "Subject: Concatenated weekly reports"
+     echo ""
+
+     awk '
+        BEGIN {file = FILENAME ; body = 0}
+        {
+           if (file != FILENAME) {
+              file = FILENAME ; 
+              body = 0 ;
+              printf("\n----------------------------------------") ;
+              printf("----------------------------------------\n") ;
+           }
+        }
+        /^[ 	]*$/ {body = 1}
+        {if (body) print $0}' $LIST
+  } | /usr/lib/sendmail -t
+
+  exit 0

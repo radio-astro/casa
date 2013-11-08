@@ -1,0 +1,68 @@
+#!/bin/sh
+#-----------------------------------------------------------------------------
+# asco: Report AIPS++ sources currently checked out
+#-----------------------------------------------------------------------------
+#
+#   Copyright (C) 1995,1999
+#   Associated Universities, Inc. Washington DC, USA.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#
+#   Correspondence concerning AIPS++ should be addressed as follows:
+#          Internet email: aips2-request@nrao.edu.
+#          Postal address: AIPS++ Project Office
+#                          National Radio Astronomy Observatory
+#                          520 Edgemont Road
+#                          Charlottesville, VA 22903-2475 USA
+#
+#-----------------------------------------------------------------------------
+# Usage: asco
+#-----------------------------------------------------------------------------
+# asco reports AIPS++ sources currently checked out.  A general
+# summary is logged in aips2-inhale and sent to aips2-cop. Personal
+# summaries are sent to each user who has a file locked.
+#
+# Options:
+#   none
+#
+# Status returns:
+#    0:  success
+#    1:  initialization error
+#
+# Notes:
+#    1) This is intended for the use of a cron job run regularly by aips2adm
+#       in Charlottesville.
+#
+# Original: 1995/03/20 by Mark Calabretta, ATNF
+# $Id$
+#=============================================================================
+# Produce a general summary.
+  TMPFILE=/tmp/alog.$$
+  trap "rm -f $TMPFILE" 0 1 2 3 15
+  alog -m -L -t 2>&1 | \
+     tee $TMPFILE | \
+        mail -s "AIPS++ sources currently checked out" aips2-inhale aips2-cop
+
+# Produce personalized summaries.
+  LOCKERS=`sed -n -e 's/Revision .* locked by \(.*\)$/\1/p' $TMPFILE | \
+              sort -u`
+  rm -f $TMPFILE
+  for LOCKER in $LOCKERS
+  do
+     alog -m -L -t -l$LOCKER 2>&1 | \
+        mail -s "AIPS++ sources currently locked by $LOCKER" $LOCKER
+  done
+
+  exit 0
