@@ -709,6 +709,9 @@ static void defineOptions(boost::program_options::options_description &desc,
     ("minnumants",
      value<int>()->default_value(2),
      "minimum number of near antennas (up to 3) required for interpolation")
+    ("mingoodfrac",
+     value<double>()->default_value(0.8),
+     "If the fraction of unflagged data for an antenna is below this value (0. to 1.), the antenna is flagged.")
     ;
   p.add("ms", -1);
 }
@@ -795,7 +798,8 @@ int main(int argc,  char* argv[])
 
      std::vector<size_t> sortedI; // to be filled with the time-sorted row number index
      std::set<int> flaggedantsInMain; // the antennas totally flagged in the MS main table
-     boost::scoped_ptr<LibAIR::InterpArrayData> d (LibAIR::loadWVRData(ms, sortedI, flaggedantsInMain));
+     boost::scoped_ptr<LibAIR::InterpArrayData> d (LibAIR::loadWVRData(ms, sortedI, flaggedantsInMain,
+								       vm["mingoodfrac"].as<double>()));
 
      interpwvrs.insert(flaggedantsInMain.begin(),flaggedantsInMain.end()); // for flagInterp()
      wvrflag.insert(flaggedantsInMain.begin(),flaggedantsInMain.end());

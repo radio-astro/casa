@@ -4808,7 +4808,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  // also create the reference for storage in the "Done" table
 	  outFrame = MFrequency::Ref(theFrame, MeasFrame(theFieldDir, mObsPos, theObsTime));
 
-	  for(uInt i=0; i<oldNUM_CHAN; i++){
+	  for(Int i=0; i<oldNUM_CHAN; i++){
 	    transNewXin[i] = freqTrans(newXin[i]).get(unit).getValue();
 	    transCHAN_WIDTH[i] = freqTrans(newXin[i] +
 					   oldCHAN_WIDTH[i]/2.).get(unit).getValue()

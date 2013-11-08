@@ -458,7 +458,9 @@ void PlotLogger::SET_EVENT_PRIORITY(int event, LogMessage::Priority priority) {
 class NullLogFilter : public LogFilterInterface {
 public:
     NullLogFilter() { }
-    NullLogFilter(const NullLogFilter& copy)   { (void)copy; }
+  NullLogFilter(const NullLogFilter& copy): 
+    LogFilterInterface()
+    { (void)copy; }
     ~NullLogFilter() { }
     LogFilterInterface* clone()   const { 
             return new NullLogFilter(); 

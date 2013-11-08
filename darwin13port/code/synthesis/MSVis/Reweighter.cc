@@ -379,7 +379,7 @@ Bool Reweighter::reweight(String& colname, const String& combine)
      }
     }
     else { // no selection == all 
-     for (uInt i = 0; i < viIn.nCorr(); i++) selcorrs.push_back(i);
+      for (Int i = 0; i < viIn.nCorr(); i++) selcorrs.push_back(static_cast<uInt>(i));
     } 
 
     StatWT statwt(viIn, dataColStrToEnum(colname), fitspw_p, outspw_p, dorms_p,

@@ -214,7 +214,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 				rc(viewer::getrc()), rcid_(rcstr), use_new_regions(true),
 				showdataoptionspanel_enter_count(0),
 				/*controlling_dd(0),*/ preferences(0),
-				animationHolder( NULL ), histogrammer( NULL ), colorHistogram( NULL ),
+				animationHolder( NULL ), adjust_channel_animator(true), histogrammer( NULL ), colorHistogram( NULL ),
 				fitTool( NULL ), sliceTool( NULL ), imageManagerDialog(NULL),
 				clean_tool(0), regionDock_(0),
 				status_bar_timer(new QTimer( )),
@@ -1194,6 +1194,7 @@ QtDisplayData* QtDisplayPanelGui::createDD( String path, String dataType,
 		bool masterCoordinate, bool masterSaturation, bool masterHue,
 		const viewer::DisplayDataOptions &ddo,
 		const viewer::ImageProperties &props ) {
+	adjust_channel_animator = true;
 	QtDisplayData* qdd = new QtDisplayData( this, path, dataType, displayType, ddo, props );
 	return processDD( path, dataType, displayType, autoRegister,
 			insertPosition, masterCoordinate, masterSaturation, masterHue, qdd, ddo  );
@@ -1804,6 +1805,14 @@ void QtDisplayPanelGui::updateViewedImage(){
 		if ( animationHolder != NULL ){
 			String zAxisName = newViewedImage->getZAxisName();
 			animationHolder->setChannelZAxis( zAxisName.c_str());
+			if ( adjust_channel_animator ) {
+				adjust_channel_animator = false;
+				if ( animationHolder->getChannelCount( ) <= 1 ) {
+					animationHolder->hideChannel( );
+				} else {
+					animationHolder->showChannel( );
+				}
+			}
 		}
 	}
 }

@@ -177,7 +177,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					itsHandlesMade = True;
 				}
 			}
-			pix->drawText(itsCenter[0], itsCenter[1], itsString->value(),
+			pix->drawText(static_cast<int>(itsCenter[0]), static_cast<int>(itsCenter[1]), itsString->value(),
 			              itsAngle->value(), toEnum(itsAlignment->keyValue()));
 
 			DisplayShape::draw(pix);
@@ -270,15 +270,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	}
 
-	void DSText::changePoint(const Vector<Float>& newPos) {
+	void DSText::changePoint(const Vector<Float>& /*newPos*/) {
 	}
 
-	void DSText::changePoint(const Vector<Float>& newPos, const Int nPoint) {
+	void DSText::changePoint(const Vector<Float>& /*newPos*/, const Int /*nPoint*/) {
 	}
 
 	void DSText::scale(const Float& scaleFactor) {
 		if ((itsFontSize->value() * scaleFactor) > 4)
-			itsFontSize->setValue(itsFontSize->value() * scaleFactor);
+			itsFontSize->setValue( static_cast<int>(itsFontSize->value() * scaleFactor));
 
 		itsValidPositions = False;
 	}

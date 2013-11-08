@@ -92,7 +92,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   /* NOT USING cycleNiter and cycleThreshold */
-  void SDAlgorithmTest::takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int &iterdone )
+  void SDAlgorithmTest::takeOneStep( Float loopgain, Int /*cycleNiter*/, Float /*cycleThreshold*/, Float &peakresidual, Float &modelflux, Int &iterdone )
   {
     /*
     findNextComponent();

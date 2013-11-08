@@ -978,7 +978,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Vector<Int> inStokes, outStokes(1);
       index = coords.findCoordinate(Coordinate::STOKES);
       inStokes = coords.stokesCoordinate(index).stokes();
-      for (Int i=0; i<inStokes.nelements(); i++)
+      for (uInt i=0; i<inStokes.nelements(); i++)
 	{
 	  outStokes(0)=inStokes(i);
 	  // Make a temp. image with a single Stokes along Pol. axis.
@@ -1635,7 +1635,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  Vector<Int> inStokes, outStokes(1);
 	  index = coords.findCoordinate(Coordinate::STOKES);
 	  inStokes = coords.stokesCoordinate(index).stokes();
-	  for (Int i=0; i<inStokes.nelements(); i++)
+	  for (uInt i=0; i<inStokes.nelements(); i++)
 	    {
 	      outStokes(0)=inStokes(i);
 	      // Make a temp. image with a single Stokes along Pol. axis.
@@ -3803,8 +3803,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LatticeIterator<Float> liy(avgPB,lsx);
     for(lix.reset();!lix.atEnd();lix++) 
       {
-	Int pol=lix.position()(2);
-	Int chan=lix.position()(3);
+	// UNUSED  Int pol=lix.position()(2);
+	// UNUSED  Int chan=lix.position()(3);
 	//	lix.rwCursor()=weights(pol,chan);
 	lix.rwCursor()=liy.rwCursor();
       }

@@ -35,6 +35,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	PCRefreshEH::PCRefreshEH() {
 	}
 
+	PCRefreshEH::PCRefreshEH( const PCRefreshEH& /*other*/ ){
+
+	}
+
 	void PCRefreshEH::operator ()(const PCRefreshEvent &) {
 	}
 

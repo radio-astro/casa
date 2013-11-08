@@ -179,7 +179,7 @@ public:
 
     // Toggle use of corrected data if available.  Default is a no-op,
     // that returns False.
-    virtual Bool useCorrectedData(Bool correctedData)
+    virtual Bool useCorrectedData(Bool /*correctedData*/)
     { return False;}
 
     // query whether corrected data is being used.  Default is False.

@@ -305,10 +305,34 @@ template <class T> Int compareVector(const Vector<T> &inp,const Vector<T> &ref)
 	return res;
 }
 
+template <class T> IPosition compareCube(const Cube<T> &inp,const Cube<T> &ref)
+{
+	IPosition res;
+	IPosition shape = ref.shape();
+	cout << shape << endl;
+	for (uInt row=0;row < shape(2); row++)
+	{
+		for (uInt chan=0;chan < shape(1); chan++)
+		{
+			for (uInt corr=0;corr < shape(0); corr++)
+			{
+				if (inp(corr,chan,row) != ref(corr,chan,row))
+				{
+					res = IPosition(3,corr,chan,row);
+					break;
+				}
+			}
+		}
+	}
+
+	return res;
+}
+
 Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, String tmpFileName)
 {
 	// Declare tmp variables
 	Int chunk = 0,buffer = 0,row = 0;
+	IPosition pos;
 	Bool keepIterating = True;
 
 	// Open up transformed file
@@ -357,6 +381,22 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout 	<< " dataDescriptionIds does not match in row " << row
 						<< " transformBuffer=" << visBuffer->dataDescriptionIds()
 						<< " transformFile=" << visBufferRef->dataDescriptionIds() << endl;
+				keepIterating = False;
+				break;
+			}
+			else
+			{
+				cout << GREEN;
+				cout << "=>dataDescriptionIds match" << endl;
+			}
+
+			row = compareVector(visBuffer->spectralWindows(),visBufferRef->spectralWindows());
+			if (row >= 0)
+			{
+				cout << RED;
+				cout 	<< " spectralWindows does not match in row " << row
+						<< " transformBuffer=" << visBuffer->spectralWindows()
+						<< " transformFile=" << visBufferRef->spectralWindows() << endl;
 				keepIterating = False;
 				break;
 			}
@@ -622,6 +662,22 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout 	<< "=>flagRow match" << endl;
 			}
 
+			pos = compareCube(visBuffer->visCube(),visBufferRef->visCube());
+			if (pos.size() == 3)
+			{
+				cout << RED;
+				cout << " visCube does not match in position (row,chan,corr)="
+						<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
+						<< " transformBuffer=" << visBuffer->visCube()(pos)
+						<< " transformFile=" << visBufferRef->visCube()(pos) << endl;
+				keepIterating = False;
+				break;
+			}
+			else
+			{
+				cout << GREEN;
+				cout 	<< "=>visCube match" << endl;
+			}
 
 			visIter->next();
 			visIterRef.next();

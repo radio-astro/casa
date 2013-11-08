@@ -2283,7 +2283,7 @@ VisBufferImpl2::fillImagingWeight (Matrix<Float> & value) const
     ThrowIf (weightGenerator.getType () == "none",
              "Bug check: Imaging weight generator not set");
 
-#warning "Rework logic so that called code is not expecting a flag matrix."
+    //#warning "Rework logic so that called code is not expecting a flag matrix."
 
     value.resize (IPosition (2, nChannels(), nRows()));
 

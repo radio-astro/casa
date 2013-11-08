@@ -450,7 +450,7 @@ namespace casa {
 			return result;
 		}
 
-		bool Ellipse::output_region( ds9writer &out, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) const {
+		bool Ellipse::output_region( ds9writer &out, WorldCanvas */*wc*/, const std::vector<std::pair<double,double> > &pts ) const {
 			return out.ellipse(wc_,pts);
 		}
 

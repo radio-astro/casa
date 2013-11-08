@@ -619,8 +619,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		viewer::Region* findRegion( int id );
 
 		viewer::Preferences *preferences;
+
 		AnimatorHolder* animationHolder;
+		bool adjust_channel_animator;
 		int animationImageIndex;
+
 		HistogramMain* histogrammer;
 		ColorHistogram* colorHistogram;
 		Fit2DTool* fitTool;

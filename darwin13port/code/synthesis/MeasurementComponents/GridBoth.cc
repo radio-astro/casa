@@ -132,7 +132,7 @@ GridBoth& GridBoth::operator=(const GridBoth& other)
 };
 
 //----------------------------------------------------------------------
-GridBoth::GridBoth(const GridBoth& other)
+  GridBoth::GridBoth(const GridBoth& other):FTMachine()
 {
   operator=(other);
 }

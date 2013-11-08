@@ -47,7 +47,7 @@ VLACalibratorFilter::VLACalibratorFilter(const Char calcode)
 }
 
 VLACalibratorFilter::VLACalibratorFilter(const VLACalibratorFilter& other) 
-  :itsCode(other.itsCode)
+  :VLAFilter(), itsCode(other.itsCode)
 {
   DebugAssert(ok(), AipsError);
 }
