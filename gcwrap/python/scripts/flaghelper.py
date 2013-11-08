@@ -10,9 +10,7 @@ import copy
 from taskinit import *
 from tasks import *
 import flagdata as flagdata
-
-# Remove this once CASA moves to Python 2.7+
-from OrderedDictionary import OrderedDict
+from collections import OrderedDict
 
 '''
 A set of helper functions for the tasks flagdata and flagcmd.
