@@ -10,7 +10,7 @@ from .flagging import Uncalspw
 from .flagging import Checkflag
 from .rqcal import Rqcal
 from .swpowcal import Swpowcal
-from .setmodel import SetModel, Setjy
+from .setmodel import SetModel, VLASetjy
 from .priorcals import Priorcals
 from .testBPdcals import testBPdcals
 from .semiFinalBPdcals import semiFinalBPdcals

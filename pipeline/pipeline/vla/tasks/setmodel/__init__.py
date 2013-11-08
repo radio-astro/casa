@@ -1,5 +1,5 @@
 from __future__ import absolute_import
 
-from .setjy import Setjy
+from .vlasetjy import VLASetjy
 from .setmodel import SetModel
 from .fluxgains import Fluxgains

@@ -36,7 +36,7 @@ import pipeline.infrastructure.utils as utils
 from pipeline.hif.tasks.common import commonfluxresults
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
-from pipeline.vla.tasks.setmodel import setjy
+from pipeline.vla.tasks.setmodel import vlasetjy
 
 from pipeline.vla.tasks.vlautils import VLAUtils
 
@@ -274,9 +274,9 @@ class SetModel(basetask.StandardTaskTemplate):
         return self._executor.execute(job)
         '''
         
-        setjyinputs = setjy.Setjy.Inputs(self.inputs.context,
+        setjyinputs = vlasetjy.VLASetjy.Inputs(self.inputs.context,
              field=field, spw=spw, model=model, intent=intent, fluxdensity=fluxdensity)
-        setjytask = setjy.Setjy(setjyinputs)
+        setjytask = vlasetjy.VLASetjy(setjyinputs)
         setjy_result = self._executor.execute(setjytask, True)
         
         #pickle.dump(setjy_result, open("setjy_result.p", "wb"))

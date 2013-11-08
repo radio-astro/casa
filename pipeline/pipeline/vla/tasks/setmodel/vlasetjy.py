@@ -22,7 +22,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 
-class SetjyInputs(basetask.StandardInputs):
+class VLASetjyInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None,
                  # standard setjy parameters 
                  vis=None, field=None, spw=None, model=None, 
@@ -251,7 +251,7 @@ class SetjyInputs(basetask.StandardInputs):
         self._standard = value
         
     def to_casa_args(self):
-        d = super(SetjyInputs, self).to_casa_args()
+        d = super(VLASetjyInputs, self).to_casa_args()
         # Filter out reffile. Note that the , is required
 	for ignore in ('reffile',):
 	    if ignore in d:
@@ -264,8 +264,8 @@ class SetjyInputs(basetask.StandardInputs):
 
         return d
 
-class Setjy(basetask.StandardTaskTemplate):
-    Inputs = SetjyInputs
+class VLASetjy(basetask.StandardTaskTemplate):
+    Inputs = VLASetjyInputs
 
     # SetJy outputs different log messages depending on the type of amplitude
     # calibrator. These two patterns match the formats we've seen so far
@@ -387,7 +387,7 @@ class Setjy(basetask.StandardTaskTemplate):
             # Yes, this else belongs to the for loop! This will execute when
             # no break occurs 
             else:
-                LOG.error('Could not find start of setjy task in CASA log. '
+                LOG.error('Could not find start of vlasetjy task in CASA log. '
                           'Too many sources, or operating in dry-run mode?')
 
         return result
@@ -396,7 +396,7 @@ class Setjy(basetask.StandardTaskTemplate):
         return result
 
     def _add_marker_to_casa_log(self):
-        comment = 'Setjy marker: %s' %  datetime.datetime.now()
+        comment = 'VLASetjy marker: %s' %  datetime.datetime.now()
         comment_job = casa_tasks.comment(comment, False)
         self._executor.execute(comment_job)
         return comment
