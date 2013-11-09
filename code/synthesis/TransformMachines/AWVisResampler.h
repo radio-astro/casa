@@ -144,9 +144,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   Complex& nvalue,
 			   Double& wVal, Vector<Int>& scaledSupport, 
 			   Vector<Float>& scaledSampling, Vector<Double>& off,
-			   Vector<Int>& convOrigin, Vector<Int>& cfShape,
+			   Vector<Int>& convOrigin, Vector<Int>& /*cfShape*/,
 			   Vector<Int>& loc, Vector<Int>& igrdpos, 
-			   Double& sinDPA, Double& cosDPA,
+			   Double& /*sinDPA*/, Double& /*cosDPA*/,
 			   Bool& finitePointingOffset, Bool dopsf);
   template <class T>
   void XInnerLoop(const Int *scaleSupport, const Float* scaledSampling,

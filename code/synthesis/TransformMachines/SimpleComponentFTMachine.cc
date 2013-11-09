@@ -160,7 +160,7 @@ void SimpleComponentFTMachine::get(VisBuffer& vb, SkyComponent& component,
 #pragma omp parallel default(none)  firstprivate(npart, npol, nChan, modData, corrType, nRowp, dphase, invLambda) shared(startrow,  dVisp) num_threads(npart)
   {
 #pragma omp for
-    for (Int k = 0; k < npart; ++k) {
+    for (uInt k = 0; k < npart; ++k) {
     
 
     

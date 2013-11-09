@@ -415,7 +415,7 @@ namespace casa{
 
 		    resizeCF(cfBuf, xSupport, ySupport, sampling,0.0);
 
-		    log_l << "Support: " << xSupport << " pixels" << LogIO::POST;
+		    log_l << "CF Support: " << xSupport << " (" << xSupportWt << ") " << "pixels" <<  LogIO::POST;
 
 		    // cfb.getCFCellPtr(freqValues(inu), wValues(iw), muellerElement)->storage_p->assign(cfBuf);
 		    // ftRef(0)=cfBuf.shape()(0)/2-1;
@@ -728,7 +728,7 @@ namespace casa{
     //
     // Determine the "Mueller Matrix" (called PolOuterProduct here for
     // a better name) elements to use based on the sky-Stokes planes
-    // requested).  PolOuterProduct::makePolMap() makes the
+    // requested.  PolOuterProduct::makePolMap() makes a
     // Matrix<Int>.  The elements of this matrix has the index of the
     // convolution function for the pol. product.  Unused elements are
     // set to -1.  The physical definition of the PolOuterProduct
@@ -736,13 +736,14 @@ namespace casa{
     // (http://arxiv.org/abs/0805.0834).
     //
     // First detemine the list of Stokes requested.  Then convert the
-    // requested Stokes to the appropriate Pol cross product.  When
-    // the off-diagonal elements of the outer product are significant,
-    // this will lead to more than one outer product element per
+    // requested Stokes to the appropriate Pol cross-product.  When
+    // the off-diagonal elements of the outer-product are significant,
+    // this will lead to more than one outer-product element per
     // Stokes.  
     //
-    // The code below still assume a diagonally dominant outer
-    // product.  After the debugging phase is over, the
+    // The code below still assume a diagonally dominant
+    // outer-product.  This probably OK for antena arrays. After the
+    // debugging phase is over, the
     // Vector<PolOuterProduct::CrossCircular> should become
     // Matrix<PolOuterProduct> and PolOuterProduct should be
     // "templated" to be of type Circular or Linear.
@@ -755,6 +756,8 @@ namespace casa{
     polIndexMap = pop->getPol2CFMat();
     conjPolMap = pop->getConjPolMat();
     conjPolIndexMap = pop->getConjPol2CFMat();
+
+    //    cerr << "AWCF: " << polMap << endl << polIndexMap << endl << conjPolMap << endl << conjPolIndexMap << endl;
     
     // for(uInt ip=0;ip<pp.nelements();ip++)
     // 	pp(ip)=translateStokesToCrossPol(skyStokes(ip));
@@ -951,7 +954,7 @@ namespace casa{
     //
     // Timer tim;
     // tim.mark();
-    if (found = findSupport(func,threshold,convFuncOrigin,R))
+    if ((found = findSupport(func,threshold,convFuncOrigin,R)))
       xSupport=ySupport=Int(0.5+Float(R)/sampling)+1;
     // tim.show("findSupport:");
 
@@ -979,7 +982,7 @@ namespace casa{
     
     Bool found = setUpCFSupport(func, xSupport, ySupport, sampling,peak);
 
-    Int supportBuffer = aTerm_p->getOversampling()*2;
+    Int supportBuffer = aTerm_p->getOversampling();
     Int bot=(Int)(ConvFuncOrigin-sampling*xSupport-supportBuffer),//-convSampling/2, 
       top=(Int)(ConvFuncOrigin+sampling*xSupport+supportBuffer);//+convSampling/2;
     //    bot *= 2; top *= 2;

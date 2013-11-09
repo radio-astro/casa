@@ -45,10 +45,10 @@
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 //
-#define CONVSIZE (1024*2)
-#define CONVWTSIZEFACTOR sqrt(2.0)
-#define OVERSAMPLING 10
-#define THRESHOLD 1E-3
+// #define CONVSIZE (1024*2)
+// #define CONVWTSIZEFACTOR sqrt(2.0)
+// #define OVERSAMPLING 10
+// #define THRESHOLD 1E-3
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   template<class T> class ImageInterface;
@@ -82,14 +82,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  const VisBuffer& vb, 
 			  const Bool doSquint=True,
 			  const Int& cfKey=0,
-			  const Double freqVal=-1.0){
-      applySky(outputImage, vb, doSquint, cfKey, False);};
+			  const Double freqVal=-1.0)
+    {(void)freqVal;applySky(outputImage, vb, doSquint, cfKey, False);};
     virtual void applySky(ImageInterface<Complex>& outputImage,
 			  const VisBuffer& vb, 
 			  const Bool doSquint=True,
 			  const Int& cfKey=0,
-			  const Double freqVal=-1.0){
-      applySky(outputImage, vb, doSquint, cfKey, False);};
+			  const Double freqVal=-1.0)
+    {(void)freqVal;applySky(outputImage, vb, doSquint, cfKey, False);};
 
     void applySky(ImageInterface<Float>& outputImage,
 		  const VisBuffer& vb, 
@@ -106,10 +106,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     virtual void setPolMap(const Vector<Int>& polMap) {polMap_p.resize(0);polMap_p=polMap;};
     virtual void getPolMap(Vector<Int>& polMap) {polMap.resize(0);polMap=polMap_p;};
-    virtual Int getConvSize() {return CONVSIZE;};
-    virtual Int getOversampling() {return OVERSAMPLING;}
-    virtual Float getConvWeightSizeFactor() {return CONVWTSIZEFACTOR;};
-    virtual Float getSupportThreshold() {return THRESHOLD;};
+    // virtual Int getConvSize() {return CONVSIZE;};
+    // virtual Int getOversampling() {return OVERSAMPLING;}
+    // virtual Float getConvWeightSizeFactor() {return CONVWTSIZEFACTOR;};
+    // virtual Float getSupportThreshold() {return THRESHOLD;};
 
     // tell the antenna type number for each antenna in the antenna table
     Vector<ALMAAntennaType> antTypeMap(const VisBuffer& vb);
