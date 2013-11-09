@@ -1015,7 +1015,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   Int HetArrayConvFunc::checkPBOfField(const VisBuffer& vb, 
-					Vector<Int>& rowMap){
+				       Vector<Int>& /*rowMap*/){
     
     toPix(vb);
     Vector<Int> pixdepoint(2);

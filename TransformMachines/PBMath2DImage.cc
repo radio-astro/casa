@@ -328,7 +328,7 @@ PBMath2DImage::applyJonesFast(const Float*& reJones,
   Bool delin, delout;
   Complex *outstor=out.getStorage(delout);
   const Complex *instor=in.getStorage(delin);
-  Int ind0, ind1, ind2, ind3; 
+  //Int ind0, ind1, ind2, ind3; 
   // Loop through x, y coordinates of this cube
   Matrix<Complex> cmat(2,2);
   IPosition sp0(4, 0, 0, polmap(3), 0);

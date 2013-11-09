@@ -287,7 +287,7 @@ namespace casa{
     index = uvCoords.findCoordinate(Coordinate::LINEAR);
     LinearCoordinate lc=uvCoords.linearCoordinate(index);
     Vector<Double> uvIncr = lc.increment();
-    Double Lambda = C::c/freqHi;
+    //Double Lambda = C::c/freqHi;
     
     index = uvCoords.findCoordinate(Coordinate::STOKES);
     Int inStokes = uvCoords.stokesCoordinate(index).stokes()(0);

@@ -635,16 +635,20 @@ void BeamSkyJones::setPBMath(const String &telescope, PBMath &myPBMath,
 	      if (myAntennaIDs_p[i]==-1 && antennaID==-1 &&
 	          myFeedIDs_p[i]==-1 && feedID==-1)
 		     continue;  // to speed things up
-	      if (myAntennaIDs_p[i]!=-1 && antennaID==-1)
+	      if ((myAntennaIDs_p[i]!=-1) && (antennaID==-1))
+		{
 	          if (myFeedIDs_p[i]!=-1) myAntennaIDs_p[i]=-1;
 		      // now it's valid for all antennae and a given feed
 		      // and will be replaced later
 		  else doRemove=True;
-              if (myFeedIDs_p[i]!=-1 && feedID==-1)
+		}
+              if ((myFeedIDs_p[i]!=-1) && (feedID==-1))
+		{
 	          if (myAntennaIDs_p[i]!=-1) myFeedIDs_p[i]=-1;
 		      // now it's valid for all feeds at a given antenna
 		      // and will be replaced later
                   else doRemove=True;
+		}
               if (doRemove) {
 	          myTelescopes_p.remove(i,False);
 	          myAntennaIDs_p.remove(i,False);

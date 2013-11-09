@@ -123,7 +123,11 @@ namespace casa{
     MEpoch obsTime(vb.msColumns().timeQuant()(0));
     String antType = ALMAAperture::antTypeStrFromType(ALMAAperture::antennaTypesFromCFKey(cfKey)[0]); // take the first antenna
     String antType2 = ALMAAperture::antTypeStrFromType(ALMAAperture::antennaTypesFromCFKey(cfKey)[1]); // take the first antenna
-    //cout << "cfkey, type1, type2 " << cfKey << " " << antType << " " << antType2 << endl;
+    
+    antType=String("DA");
+    antType2 = antType;
+
+    cout << "cfkey, type1, type2 " << cfKey << " " << antType << " " << antType2 << endl;
     Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), "ALMA", antType, obsTime, otherAntRayPath_p);
 
     regridAperture(skyCS, skyShape, uvGrid, vb, doSquint, bandID);
@@ -465,6 +469,8 @@ namespace casa{
     SpectralCoordinate spectralCoord(MFrequency::TOPO,Freq,1.0,0.0);
     
     index = uvCoords.findCoordinate(Coordinate::STOKES);
+    Int inStokes = uvCoords.stokesCoordinate(index).stokes()(0);
+
     uvCoords.replaceCoordinate(polnCoord,index);
     index = uvCoords.findCoordinate(Coordinate::SPECTRAL);
     uvCoords.replaceCoordinate(spectralCoord,index);
@@ -473,6 +479,10 @@ namespace casa{
     //
     // Now FT the re-gridded Fourier plane to get the primary beam.
     //
+    cout << "**Writing ALMA Apertures for Pol " << inStokes << " to disk" << endl;
+    String rname("aperture_pol"+String::toString(inStokes)+".im");
+    storeImg(rname, *(ap.aperture) , True);
+    cout << "Done writing apertures to disk" << endl;
 
     ftAperture(*(ap.aperture));
     
