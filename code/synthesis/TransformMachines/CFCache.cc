@@ -134,6 +134,33 @@ namespace casa{
   //
   //-----------------------------------------------------------------------
   //
+  void CFCache::summary(CFStoreCacheType2& memStore)
+  {
+    LogOrigin logOrigin("CFCache", "initCache2");
+    LogIO log_l(logOrigin);
+
+    IPosition cfsShp=memStore.shape();
+    Int ipol=0;
+    for(Int iBL=0; iBL<cfsShp(0); iBL++)
+      for(Int iPA=0; iPA<cfsShp(1); iPA++)
+	{
+	  IPosition cfbShp=memStore[0].getCFBuffer(iPA,iBL)->getShape();
+	  for (Int iw; iw<cfbShp[1]; iw++)
+	    {
+	      log_l << "Support Size (w: "<< iw << ",C): ";
+	      {
+		for (Int inu; inu<cfbShp[0]; inu++)
+		  {
+		    log_l << memStore[0].getCFBuffer(iPA, iBL)->getCFCellPtr(inu, iw, ipol)->xSupport_p << " ";
+		  }
+		log_l << LogIO::POST;
+	      }
+	    }
+	}
+  }
+  //
+  //-----------------------------------------------------------------------
+  //
   void CFCache::initCache2()
   {
     LogOrigin logOrigin("CFCache", "initCache2");
