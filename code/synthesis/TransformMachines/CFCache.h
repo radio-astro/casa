@@ -271,6 +271,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool avgPBReady(const String& qualifier=String("")) 
     {return (avgPBReady_p && (avgPBReadyQualifier_p == qualifier));};
 
+    void summary(CFStoreCacheType2& memCache);
+
     CFStoreCacheType2 memCache2_p, memCacheWt2_p;
 
   private:
