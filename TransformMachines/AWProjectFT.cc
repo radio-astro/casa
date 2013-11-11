@@ -1136,23 +1136,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     if (!cfCache_p->OTODone())
       {
-	PolMapType polMat, conjPolMat, pNdx, cpNdx;
 	Vector<Int> visPolMap(vb.corrType());
-	polMat = pop_p->makePolMat(visPolMap,polMap);
-	conjPolMat = pop_p->makeConjPolMat(visPolMap,polMap);
+
+	// PolMapType polMat, conjPolMat;
+	// polMat = pop_p->makePolMat(visPolMap,polMap);
+	// conjPolMat = pop_p->makeConjPolMat(visPolMap,polMap);
+
+	PolMapType pNdx, cpNdx;
 	pNdx = pop_p->makePol2CFMat(visPolMap,polMap);
 	cpNdx = pop_p->makeConjPol2CFMat(visPolMap,polMap);
     
 	cfCache_p->initPolMaps(pNdx,cpNdx);
 
-	cerr << "AWPFT: " 
-	     << pop_p->getPolMat() << endl 
-	     << pop_p->getPol2CFMat() << endl 
-	     << pop_p->getConjPolMat() << endl 
-	     << pop_p->getConjPol2CFMat() << endl;
+	cfs2_p->initMaps(vb,spwFreqSel_p,imRefFreq_p);
+	cfwts2_p->initMaps(vb,spwFreqSel_p,imRefFreq_p);
       }
-
-
     //
     // Load the average PB (sensitivity pattern) from the cache.  If
     // not found in the cache, make one and cache it.
@@ -1168,65 +1166,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     if (cfSource != CFDefs::MEMCACHE)
       {
-	//
-	// Compute the aggregate memory used by the cached convolution
-	// functions.
-	//
-	// Int maxMemoryMB=HostInfo::memoryTotal(true)/1024;
-	// String unit(" KB");
-	// Float memoryKB=0;
-	// memoryKB=(Float)cfCache_p->size();
+	cfs2_p->makePersistent(cfCache_p->getCacheDir().c_str());
+	cfwts2_p->makePersistent(cfCache_p->getCacheDir().c_str(),"WT");
+	Double memUsed=cfs2_p->memUsage();
+	String unit(" KB");
+	memUsed = (Int)(memUsed/1024.0+0.5);
+	if (memUsed > 1024) {memUsed /=1024; unit=" MB";}
+	log_l << "Convolution function memory footprint:" 
+	      << (Int)(memUsed) << unit << " out of a maximum of "
+	      << HostInfo::memoryTotal(true)/1024 << " MB" << LogIO::POST;
 	
-	// memoryKB = Int(memoryKB/1024.0+0.5);
-	// if (memoryKB > 1024) {memoryKB /=1024; unit=" MB";}
-	
-	// log_l << "Memory used in gridding functions = "
-	//       << (Int)(memoryKB+0.5) << unit << " out of a maximum of "
-	//       << maxMemoryMB << " MB" << LogIO::POST;
 	//
-	// Show the list of support sizes along the w-axis for the current PA.
+	// Initialize any internal maps that may be used later for
+	// efficient access.
 	//
-
-	{	
-	  // log_l << "Convolution support:" <<endl;
-	  // IPosition cfsShape = cfs2_p->getStorage().shape();
-	  // for (Int ib=0;ib<cfsShape(0); ib++)
-	  //   for(int it=0;it<cfsShape(1); it++)
-	  //     {
-	  // 	IPosition cfbShape = cfs2_p->getStorage()(ib,it)->getStorage().shape();
-	  // 	for(int ip=0;ip<cfbShape(2); ip++)
-	  // 	  for(Int ich=0;ich<cfbShape(0);ich++)
-	  // 	    {
-	  // 	      for(Int iw=0;iw<cfbShape(1); iw++)
-	  // 		{		      
-	  // 		  log_l << "   CFB[" << ib << "," << it << "] " 
-	  // 			<< "CFC[" << ich << "," << iw << "," << ip << "]: " 
-	  // 			<< cfs2_p->getStorage()(ib,it)->getStorage()(ich,iw,ip)->xSupport_p
-	  // 			<< " pixels in Fourier plane" << LogIO::POST;
-	  // 		}
-	  // 	    }
-	  //     }
-
-	  cfs2_p->makePersistent(cfCache_p->getCacheDir().c_str());
-	  cfwts2_p->makePersistent(cfCache_p->getCacheDir().c_str(),"WT");
-	  Double memUsed=cfs2_p->memUsage();
-	  String unit(" KB");
-	  memUsed = (Int)(memUsed/1024.0+0.5);
-	  if (memUsed > 1024) {memUsed /=1024; unit=" MB";}
-	  log_l << "Convolution function memory footprint:" 
-		<< (Int)(memUsed) << unit << " out of a maximum of "
-		<< HostInfo::memoryTotal(true)/1024 << " MB" << LogIO::POST;
-	  
-	  //
-	  // Initialize any internal maps that may be used later for
-	  // efficient access.
-	  //
-	  cfs2_p->initMaps(vb,spwFreqSel_p,imRefFreq_p);
-	  cfwts2_p->initMaps(vb,spwFreqSel_p,imRefFreq_p);
-	}
+	cfs2_p->initMaps(vb,spwFreqSel_p,imRefFreq_p);
+	cfwts2_p->initMaps(vb,spwFreqSel_p,imRefFreq_p);
       }
-	  cfs2_p->initMaps(vb,spwFreqSel_p,imRefFreq_p);
-	  cfwts2_p->initMaps(vb,spwFreqSel_p,imRefFreq_p);
+
     // cfs2_p->makePersistent("test.cf");
     // cfwts2_p->makePersistent("test.wtcf");
   }
