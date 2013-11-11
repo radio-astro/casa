@@ -77,11 +77,11 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
         # field
         target_sources = [v for v in reference_data.source.values() 
                           if 'TARGET' in v.intents]
-        source_name = target_sources[0].name.replace(' ', '_')
+        source_name = target_sources[0].name
         field = '%s*' % (source_name)
     
         # baseline
-        baseline = '0&&&'
+        #baseline = '0&&&'
     
         # cellx and celly
         grid_size = reference_data.beam_size[spwid]
@@ -193,7 +193,7 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
         with temporary_filename(temporary_name) as name:
             # imaging
             for (vis, spw) in zip(vislist, spwlist):
-                im.selectvis(vis=vis, spw=spw)
+                im.selectvis(vis=vis, spw=spw, field=field)
             im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly, stokes=stokes,
                            phasecenter=phasecenter, mode=mode, start=start,
                            nchan=nchan, step=step, restfreq=restfreq,
