@@ -42,6 +42,7 @@ scripts/importarchive.py
 scripts/listing.py
 scripts/mindpipes.py
 scripts/ngc5921_usecase.py
+scripts/OrderedDictionary.py
 scripts/odict.py
 scripts/parallel_go.py
 scripts/parallelSplit.py
