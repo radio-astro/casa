@@ -118,7 +118,8 @@ class SDImaging(common.SingleDishTaskTemplate):
                 # source name
                 target_sources = [v for v in st.source.values() \
                                   if 'TARGET' in v.intents]
-                source_name = target_sources[0].name.replace(' ','_')
+                original_source_name = target_sources[0].name
+                source_name = original_source_name.replace(' ','_')
 
                 # filenames for gridding
                 data_name = lambda x: x.baselined_name \
@@ -155,7 +156,11 @@ class SDImaging(common.SingleDishTaskTemplate):
                                  name, indices, filenames, spwid, pols,
                                  edge, validsps, rmss)
 
-                
+                # edit image header
+                with casatools.TableReader(imagename, nomodify=False) as tb:
+                    imageinfo = {'imagetype': 'Intensity',
+                                 'objectname': original_source_name}
+                    tb.putkeyword('imageinfo', imageinfo)
                 
                 if imagename is not None:
                     image_item = imagelibrary.ImageItem(imagename=imagename,
