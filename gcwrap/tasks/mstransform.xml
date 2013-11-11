@@ -318,7 +318,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </param>
 
         <param type="double" name="maxuvwdistance" subparam="true">
-            <description>Maximum separation of start-to-end baselines that can be included in an average.</description>
+            <description>Maximum separation of start-to-end baselines that can be included in an average. (meters)</description>
             <value type="double">0.0</value>
         </param>
     
@@ -625,8 +625,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         timebin -- Bin width for time averaging.
             default: '1s'
 
-        timespan -- Let time bins span changes in scan and/or state.
+        timespan -- Let time bins span changes in scan and/or state. State is equivalent
+                    to the scan intents. For example, one may have a collection of scans pointing 
+                    at the source, and others pointing at the calibrator, so averaging across 
+                    state would average observation and calibration data. 
             default: '' (separate time bins by both of the above)
+            options: 'scan', 'state', 'state,scan'
+
             examples: 
             timespan = 'scan'; can be useful when the scan number
                        goes up with each integration as in many WSRT MSs.
@@ -635,8 +640,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             timespan = 'state,scan'; same as above.
 
         maxuvwdistance -- Provide a maximum separation of start-to-end baselines 
-                          that can be included in an average.
-            default: 0.0
+                          that can be included in an average. (int)
+            default: 0.0 (given in meters)
 
 
 ------ EXAMPLES ------
