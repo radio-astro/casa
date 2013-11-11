@@ -271,7 +271,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool avgPBReady(const String& qualifier=String("")) 
     {return (avgPBReady_p && (avgPBReadyQualifier_p == qualifier));};
 
-    void summary(CFStoreCacheType2& memCache);
+    void summary(CFStoreCacheType2& memCache, Bool cfsInfo=True);
 
     CFStoreCacheType2 memCache2_p, memCacheWt2_p;
 
@@ -304,7 +304,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      Float convSampling);
     CFStoreCacheType& getMEMCacheObj(const String& nameQualifier);
 
-    void fillCFSFromDisk(const Directory dirObj, const String& pattern, CFStoreCacheType2& memStore);
+    void fillCFSFromDisk(const Directory dirObj, const String& pattern, CFStoreCacheType2& memStore, Bool showInfo=False);
 
     Bool avgPBReady_p;
     String avgPBReadyQualifier_p;
