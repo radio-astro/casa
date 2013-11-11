@@ -379,7 +379,7 @@ class wvrgcal_test(unittest.TestCase):
         self.assertTrue(self.rval)
 
     def test17(self):
-        '''Test 17:  wvrgcal4quasar_10s.ms, two antennas flagged in main table, one only partially'''
+        '''Test 17:  wvrgcal4quasar_10s.ms, two antennas flagged in main table, one only partially, use of mingoodfrac'''
         myvis = self.vis_g
         os.system('rm -rf myinput2.ms comp.W')
         os.system('cp -R ' + myvis + ' myinput.ms')
@@ -390,7 +390,7 @@ class wvrgcal_test(unittest.TestCase):
         flagdata(vis='myinput.ms', mode='manual', antenna='DA41&&*')
         flagdata(vis='myinput.ms', mode='manual', antenna='CM01&&*', scan='1') # antenna 0, scan 1 only!
         
-        rvaldict2 = wvrgcal(vis="myinput.ms", caltable='comp.W', toffset=-1.)
+        rvaldict2 = wvrgcal(vis="myinput.ms", caltable='comp.W', toffset=-1., mingoodfrac=0.5)
 
         print rvaldict
         print rvaldict2
