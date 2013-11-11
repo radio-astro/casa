@@ -85,6 +85,7 @@
 #include <images/Images/ImageExprParse.h>
 #include <imageanalysis/ImageAnalysis/ImageFFT.h>
 #include <images/Images/ImageFITSConverter.h>
+#include <images/Regions/WCEllipsoid.h>
 #include <imageanalysis/ImageAnalysis/ImageHistograms.h>
 #include <imageanalysis/ImageAnalysis/ImageMoments.h>
 #include <images/Images/ImageOpener.h>
@@ -133,6 +134,7 @@
 
 #include <iostream>
 using namespace std;
+#include <boost/math/constants/constants.hpp>
 
 namespace casa { //# name space casa begins
 
@@ -5275,7 +5277,7 @@ Bool ImageAnalysis::getFreqProfile(
 		const Int& whichLinear, const String& xunits,
 		const String& specFrame, const Int &combineType,
 		const Int& whichQuality, const String& restValue,
-		Int beamChannel)
+		Int beamChannel, const String& shape)
 {
 	*_log << LogOrigin("ImageAnalysis", __FUNCTION__);
 	Vector<Double> xy(2);
@@ -5386,19 +5388,53 @@ Bool ImageAnalysis::getFreqProfile(
 
 	// create the image region for
 	// a rectangle
-	if (n == 2) { // rectangle
-		Vector<Quantity> blc(2);
-		Vector<Quantity> trc(2);
-		if (xytype.contains("wor")) {
+	if (n == 2) { // rectangle or ellipse
+		if ( shape == "rectangle" ){
 
-			blc(0) = Quantity(x[0], "rad");
-			blc(1) = Quantity(y[0], "rad");
-			trc(0) = Quantity(x[1], "rad");
-			trc(1) = Quantity(y[1], "rad");
-			Vector<Int> pixax(2);
-			pixax(0) = dirPixelAxis[0];
-			pixax(1) = dirPixelAxis[1];
-			imagreg = regMan.wbox(blc, trc, pixax, cSys);
+			if (xytype.contains("wor")) {
+				Vector<Quantity> blc(2);
+				Vector<Quantity> trc(2);
+				blc(0) = Quantity(x[0], "rad");
+				blc(1) = Quantity(y[0], "rad");
+				trc(0) = Quantity(x[1], "rad");
+				trc(1) = Quantity(y[1], "rad");
+				Vector<Int> pixax(2);
+				pixax(0) = dirPixelAxis[0];
+				pixax(1) = dirPixelAxis[1];
+
+				imagreg = regMan.wbox(blc, trc, pixax, cSys);
+			}
+		}
+		else if ( shape == "ellipse"){
+			Vector<Quantity> center(2);
+			Vector<Quantity> radius(2);
+			if ( xytype.contains("wor")){
+
+				center[0] = Quantity( (x[0]+x[1])/2, "rad" );
+				center[1] = Quantity( (y[0]+y[1])/2, "rad" );
+				Quantity pa( 0, "rad");
+				double sideA = abs(x[1] - x[0]) / 2;
+				double sideB = abs(y[1] - y[0]) / 2;
+				if ( sideA < sideB ){
+					double tmp = sideA;
+					sideA = sideB;
+					sideB = tmp;
+					const Double PI_OVER_2 = boost::math::constants::pi<Double>() * 0.5;
+					pa.setValue( PI_OVER_2 );
+				}
+				radius[0] = Quantity( sideA, "rad" );
+				radius[1] = Quantity( sideB, "rad" );
+
+				Vector<Int> pixax(2);
+				pixax(0) = dirPixelAxis[0];
+				pixax(1) = dirPixelAxis[1];
+				imagreg = regMan.wellipse( center[0], center[1],
+						radius[0],radius[1], pa, pixax(0), pixax(1),
+						cSys, "abs");
+			}
+		}
+		else {
+			cout << "getFreqProfile:: unrecognized shape="<<shape.c_str()<<" for vector of size 2"<<endl;
 		}
 	}
 	// create the image region for
