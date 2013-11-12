@@ -180,6 +180,17 @@ vector<String> MSMetaData::_getAntennaNames(
 	return names.tovector();
 }
 
+
+Quantum<Vector<Double> > MSMetaData::_getAntennaDiameters(
+	const MeasurementSet& ms
+) {
+	String antDiamColName = MSAntenna::columnName(MSAntennaEnums::DISH_DIAMETER);
+	ROScalarColumn<Double> diamCol(ms.antenna(), antDiamColName);
+	Vector<Double> diams = diamCol.getColumn();
+	String unit = *diamCol.keywordSet().asArrayString("QuantumUnits").begin();
+	return Quantum<Vector<Double> >(diams, unit);
+}
+
 std::map<Int, std::set<Int> > MSMetaData::_getScanToStatesMap(
 	const Vector<Int>& scans, const Vector<Int>& states
 ) {

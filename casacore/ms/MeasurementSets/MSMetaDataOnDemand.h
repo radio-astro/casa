@@ -150,6 +150,8 @@ public:
 	// get the antenna stations for the specified antenna names
 	vector<String> getAntennaStations(const vector<String>& antennaNames);
 
+	// get the antenna diameters
+	Quantum<Vector<Double> > getAntennaDiameters();
 
 	// ALMA-specific. get set of spectral windows used for TDM. These are windows that have
 	// 64, 128, or 256 channels
@@ -333,6 +335,7 @@ private:
 
 	vector<MPosition> _observatoryPositions, _antennaPositions;
 	vector<Quantum<Vector<Double> > > _antennaOffsets;
+	Quantum<Vector<Double> > _antennaDiameters;
 	Matrix<Bool> _uniqueBaselines;
 	Quantity _exposureTime;
 	Double _nUnflaggedACRows, _nUnflaggedXCRows;
@@ -446,6 +449,8 @@ private:
 	static uInt _sizeof(const vector<std::set<String> >& m);
 
 	static uInt _sizeof(const vector<String>& m);
+
+	static uInt _sizeof(const Quantum<Vector<Double> >& m);
 
 
 	static uInt _sizeof(const std::map<Int, std::set<Double> >& m);
