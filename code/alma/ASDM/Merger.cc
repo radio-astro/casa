@@ -167,6 +167,8 @@ namespace asdm {
 
 		Merger::mergeSysPowerPtr = &Merger::mergeSysPower;
 
+		Merger::mergeCalAppPhasePtr = &Merger::mergeCalAppPhase;
+
 	}
 	
 	Merger::~Merger() {
@@ -304,6 +306,8 @@ namespace asdm {
 
 		hasMergedSysPower = false;
 
+		hasMergedCalAppPhase = false;
+
 
 		mergeSBSummary( );
 
@@ -431,6 +435,8 @@ namespace asdm {
 
 		mergeSysPower( );
 
+		mergeCalAppPhase( );
+
 
 		postMergeSBSummary( );
 
@@ -557,6 +563,8 @@ namespace asdm {
 		postMergeScale( );
 
 		postMergeSysPower( );
+
+		postMergeCalAppPhase( );
 			
 	}
 	
@@ -637,6 +645,7 @@ namespace asdm {
 			
 		
 			ConfigDescriptionRow * retRow = ds1->getConfigDescription().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 			
 			tagTag.insert(make_pair(rows2.at(i)->getConfigDescriptionId().toString(), retRow->getConfigDescriptionId()));
@@ -767,6 +776,7 @@ namespace asdm {
 			
 		
 			AntennaRow * retRow = ds1->getAntenna().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 			
 			tagTag.insert(make_pair(rows2.at(i)->getAntennaId().toString(), retRow->getAntennaId()));
@@ -829,6 +839,7 @@ namespace asdm {
 			
 		
 			DataDescriptionRow * retRow = ds1->getDataDescription().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 			
 			tagTag.insert(make_pair(rows2.at(i)->getDataDescriptionId().toString(), retRow->getDataDescriptionId()));
@@ -877,6 +888,7 @@ namespace asdm {
 			
 		
 			SourceRow * retRow = ds1->getSource().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 			
 			idId.insert(make_pair("Source_"+Integer::toString(rows2.at(i)->getSourceId()), retRow->getSourceId()));
@@ -930,6 +942,7 @@ namespace asdm {
 			
 		
 			FeedRow * retRow = ds1->getFeed().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 			
 			idId.insert(make_pair("Feed_"+Integer::toString(rows2.at(i)->getFeedId()), retRow->getFeedId()));
@@ -1041,6 +1054,7 @@ namespace asdm {
 			
 		
 			FreqOffsetRow * retRow = ds1->getFreqOffset().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -1085,6 +1099,7 @@ namespace asdm {
 			
 		
 			ReceiverRow * retRow = ds1->getReceiver().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 			
 			idId.insert(make_pair("Receiver_"+Integer::toString(rows2.at(i)->getReceiverId()), retRow->getReceiverId()));
@@ -1118,6 +1133,7 @@ namespace asdm {
 			
 		
 			DopplerRow * retRow = ds1->getDoppler().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 			
 			idId.insert(make_pair("Doppler_"+Integer::toString(rows2.at(i)->getDopplerId()), retRow->getDopplerId()));
@@ -1195,6 +1211,7 @@ namespace asdm {
 			
 		
 			CalDeviceRow * retRow = ds1->getCalDevice().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -1246,6 +1263,7 @@ namespace asdm {
 			
 		
 			FocusRow * retRow = ds1->getFocus().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -1276,6 +1294,7 @@ namespace asdm {
 			
 		
 			HistoryRow * retRow = ds1->getHistory().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -1327,6 +1346,7 @@ namespace asdm {
 			
 		
 			PointingRow * retRow = ds1->getPointing().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -1386,6 +1406,7 @@ namespace asdm {
 			
 		
 			SysCalRow * retRow = ds1->getSysCal().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -1443,6 +1464,7 @@ namespace asdm {
 			
 		
 			TotalPowerRow * retRow = ds1->getTotalPower().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -1473,6 +1495,7 @@ namespace asdm {
 			
 		
 			WeatherRow * retRow = ds1->getWeather().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -1522,6 +1545,7 @@ namespace asdm {
 			
 		
 			WVMCalRow * retRow = ds1->getWVMCal().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -1577,6 +1601,7 @@ namespace asdm {
 			
 		
 			ExecBlockRow * retRow = ds1->getExecBlock().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 			
 			tagTag.insert(make_pair(rows2.at(i)->getExecBlockId().toString(), retRow->getExecBlockId()));
@@ -1631,6 +1656,7 @@ namespace asdm {
 			
 		
 			ScanRow * retRow = ds1->getScan().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -1661,6 +1687,7 @@ namespace asdm {
 			
 		
 			SubscanRow * retRow = ds1->getSubscan().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -1718,6 +1745,7 @@ namespace asdm {
 			
 		
 			MainRow * retRow = ds1->getMain().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -1755,6 +1783,7 @@ namespace asdm {
 			
 		
 			FocusModelRow * retRow = ds1->getFocusModel().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 			
 			idId.insert(make_pair("FocusModel_"+Integer::toString(rows2.at(i)->getFocusModelId()), retRow->getFocusModelId()));
@@ -1804,6 +1833,7 @@ namespace asdm {
 			
 		
 			GainTrackingRow * retRow = ds1->getGainTracking().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -1841,6 +1871,7 @@ namespace asdm {
 			
 		
 			PointingModelRow * retRow = ds1->getPointingModel().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 			
 			idId.insert(make_pair("PointingModel_"+Integer::toString(rows2.at(i)->getPointingModelId()), retRow->getPointingModelId()));
@@ -1883,6 +1914,7 @@ namespace asdm {
 			
 		
 			CalAmpliRow * retRow = ds1->getCalAmpli().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -1949,6 +1981,7 @@ namespace asdm {
 			
 		
 			CalPhaseRow * retRow = ds1->getCalPhase().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -1987,6 +2020,7 @@ namespace asdm {
 			
 		
 			CalSeeingRow * retRow = ds1->getCalSeeing().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -2025,6 +2059,7 @@ namespace asdm {
 			
 		
 			CalPositionRow * retRow = ds1->getCalPosition().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -2063,6 +2098,7 @@ namespace asdm {
 			
 		
 			CalPointingRow * retRow = ds1->getCalPointing().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -2101,6 +2137,7 @@ namespace asdm {
 			
 		
 			CalPointingModelRow * retRow = ds1->getCalPointingModel().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -2139,6 +2176,7 @@ namespace asdm {
 			
 		
 			CalHolographyRow * retRow = ds1->getCalHolography().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -2177,6 +2215,7 @@ namespace asdm {
 			
 		
 			CalAtmosphereRow * retRow = ds1->getCalAtmosphere().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -2215,6 +2254,7 @@ namespace asdm {
 			
 		
 			CalCurveRow * retRow = ds1->getCalCurve().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -2319,6 +2359,7 @@ namespace asdm {
 			
 		
 			CalFocusRow * retRow = ds1->getCalFocus().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -2357,6 +2398,7 @@ namespace asdm {
 			
 		
 			CalDelayRow * retRow = ds1->getCalDelay().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -2409,6 +2451,7 @@ namespace asdm {
 			
 		
 			CalBandpassRow * retRow = ds1->getCalBandpass().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -2447,6 +2490,7 @@ namespace asdm {
 			
 		
 			CalFluxRow * retRow = ds1->getCalFlux().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -2485,6 +2529,7 @@ namespace asdm {
 			
 		
 			CalFocusModelRow * retRow = ds1->getCalFocusModel().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -2523,6 +2568,7 @@ namespace asdm {
 			
 		
 			CalGainRow * retRow = ds1->getCalGain().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -2561,6 +2607,7 @@ namespace asdm {
 			
 		
 			CalPrimaryBeamRow * retRow = ds1->getCalPrimaryBeam().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -2599,6 +2646,7 @@ namespace asdm {
 			
 		
 			CalWVRRow * retRow = ds1->getCalWVR().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -2683,6 +2731,7 @@ namespace asdm {
 			
 		
 			DelayModelRow * retRow = ds1->getDelayModel().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -2716,6 +2765,7 @@ namespace asdm {
 			
 		
 			FlagRow * retRow = ds1->getFlag().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 			
 			tagTag.insert(make_pair(rows2.at(i)->getFlagId().toString(), retRow->getFlagId()));
@@ -2819,6 +2869,7 @@ namespace asdm {
 			
 		
 			SysPowerRow * retRow = ds1->getSysPower().add(row);
+			if (false) cout << (unsigned long long) retRow;
 		
 		}
 	
@@ -2830,6 +2881,45 @@ namespace asdm {
 		cout << "Entering Merger::postMergeSysPower" << endl;
 	
 		cout << "Exiting Merger::postMergeSysPower" << endl;
+	}			
+
+	void Merger::mergeCalAppPhase() {
+		cout << "Entering Merger::mergeCalAppPhase" << endl;
+		if (hasMergedCalAppPhase) return;
+	
+		vector <CalAppPhaseRow *> rows2 = ds2->getCalAppPhase().get();
+		for (unsigned int i = 0; i < rows2.size(); i++) {
+			CalAppPhaseRow * row = ds1->getCalAppPhase().newRow(rows2.at(i));
+		
+			
+				
+				
+			Tag calDataIdTag = getTag(row->getCalDataId(), mergeCalDataPtr);
+			row->setCalDataId(calDataIdTag);
+				
+			
+		
+			
+				
+				
+			Tag calReductionIdTag = getTag(row->getCalReductionId(), mergeCalReductionPtr);
+			row->setCalReductionId(calReductionIdTag);
+				
+			
+		
+			CalAppPhaseRow * retRow = ds1->getCalAppPhase().add(row);
+			if (false) cout << (unsigned long long) retRow;
+		
+		}
+	
+		hasMergedCalAppPhase = true;
+		cout << "Exiting Merger::mergeCalAppPhase" << endl;
+	}
+	
+	void Merger::postMergeCalAppPhase() {
+		cout << "Entering Merger::postMergeCalAppPhase" << endl;
+	
+		cout << "Exiting Merger::postMergeCalAppPhase" << endl;
 	}			
 
 
