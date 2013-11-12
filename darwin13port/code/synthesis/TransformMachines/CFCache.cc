@@ -134,22 +134,36 @@ namespace casa{
   //
   //-----------------------------------------------------------------------
   //
-  void CFCache::summary(CFStoreCacheType2& memStore)
+  void CFCache::summary(CFStoreCacheType2& memStore, Bool cfsInfo)
   {
-    LogOrigin logOrigin("CFCache", "initCache2");
+    LogOrigin logOrigin("CFCache", "summary");
     LogIO log_l(logOrigin);
 
-    IPosition cfsShp=memStore.shape();
+    IPosition cfsShp=memStore[0].getShape();
     Int ipol=0;
+
+    if (cfsInfo)
+      {
+	log_l << "PA: ";
+	for (Int iBL=0; iBL<cfsShp(0); iBL++)
+	  for (Int iPA=0; iPA<cfsShp(1); iPA++)
+	    {
+	      Quantity pa; Int ant1, ant2;
+	      memStore[0].getParams(pa, ant1, ant2, iPA, iBL);
+	      log_l << pa.getValue("deg") << " ";
+	    }
+	log_l << LogIO::POST;
+      }
+
     for(Int iBL=0; iBL<cfsShp(0); iBL++)
       for(Int iPA=0; iPA<cfsShp(1); iPA++)
 	{
 	  IPosition cfbShp=memStore[0].getCFBuffer(iPA,iBL)->getShape();
-	  for (Int iw; iw<cfbShp[1]; iw++)
+	  for (Int iw=0; iw<cfbShp[1]; iw++)
 	    {
 	      log_l << "Support Size (w: "<< iw << ",C): ";
 	      {
-		for (Int inu; inu<cfbShp[0]; inu++)
+		for (Int inu=0; inu<cfbShp[0]; inu++)
 		  {
 		    log_l << memStore[0].getCFBuffer(iPA, iBL)->getCFCellPtr(inu, iw, ipol)->xSupport_p << " ";
 		  }
@@ -182,8 +196,8 @@ namespace casa{
 					     " exists but is unreadable/unwriteable")));
       }
 
-    fillCFSFromDisk(dirObj,"CFS*", memCache2_p);
-    fillCFSFromDisk(dirObj,"WTCFS*", memCacheWt2_p);
+    fillCFSFromDisk(dirObj,"CFS*", memCache2_p, True);
+    fillCFSFromDisk(dirObj,"WTCFS*", memCacheWt2_p, False);
     memCache2_p[0].primeTheCFB();
     memCacheWt2_p[0].primeTheCFB();
 
@@ -193,12 +207,16 @@ namespace casa{
     Double memUsed0,memUsed1;
     memUsed0=memCache2_p[0].memUsage()/1024;
     memUsed1=memCacheWt2_p[0].memUsage()/1024;
+    summary(memCache2_p,True);
+    summary(memCacheWt2_p,False);
+
     log_l << "Total CF Cache memory footprint: " << (memUsed0+memUsed1) << " (" << memUsed0 << "," << memUsed1 << ") KB" << LogIO::POST;
   }
   //
   //-----------------------------------------------------------------------
   //
-  void CFCache::fillCFSFromDisk(const Directory dirObj, const String& pattern, CFStoreCacheType2& memStore)
+  void CFCache::fillCFSFromDisk(const Directory dirObj, const String& pattern, CFStoreCacheType2& memStore,
+				Bool showInfo)
   {
     LogOrigin logOrigin("CFCache", "fillCFSFromDisk");
     LogIO log_l(logOrigin);
@@ -212,9 +230,10 @@ namespace casa{
 	if (fileNames.nelements() > 0)
 	  {
 	    String CFCDir=dirObj.path().absoluteName();
-	    log_l << "No. of " << pattern << " found in " 
-		  << dirObj.path().originalName() << ": " 
-		  << fileNames.nelements() << LogIO::POST;
+	    if (showInfo)
+	      log_l << "No. of " << pattern << " found in " 
+		    << dirObj.path().originalName() << ": " 
+		    << fileNames.nelements() << LogIO::POST;
 
 	    //
 	    // Gather the list of PA values
@@ -267,7 +286,7 @@ namespace casa{
 		// memCache2_p) to add CFBuffer for the each entry in
 		// the paList.
 		//
-		log_l << "PA: " << paList_p[ipa] << endl;
+		//log_l << "PA: " << paList_p[ipa] << endl;
 		vector<String> fileNames(cfCacheTable_l[ipa].cfNameList);
 		
 		//		if (memStore.nelements() == 0) memStore.resize(1);
@@ -357,7 +376,8 @@ namespace casa{
 		  }
 		// cfb->show("cfb: ");
 
-		log_l << LogIO::POST;
+		//log_l << LogIO::POST;
+
 		// for (uInt inu=0; inu<fList.size(); inu++)
 		//   for (uInt im=0; im<mList.size(); im++)
 		//     for (uInt iw=0; iw<wList.size(); iw++)

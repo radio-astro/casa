@@ -10,7 +10,10 @@ import copy
 from taskinit import *
 from tasks import *
 import flagdata as flagdata
-from collections import OrderedDict
+# needed in Python 2.6
+from OrderedDictionary import OrderedDict
+# for Python 2.7
+#from collections import OrderedDict
 
 '''
 A set of helper functions for the tasks flagdata and flagcmd.

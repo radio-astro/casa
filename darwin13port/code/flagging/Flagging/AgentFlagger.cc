@@ -553,12 +553,14 @@ AgentFlagger::initAgents()
 	os<< LogIO::DEBUG1<< "There are initially "<< agents_config_list_p.size()<<
 			" agents in the list"<<LogIO::POST;
 
+    size_t list_size = agents_config_list_p.size();
+
 	// Check if list has a mixed state of apply and unapply parameters
 	// If the list contains apply=True and False, the apply=True list will
 	// be hidden in the debug.
+/*
 	Bool mixed = false;
 	Bool apply0;
-	size_t list_size = agents_config_list_p.size();
 	if (list_size > 1){
 		Record agent_rec = agents_config_list_p[0];
 		agent_rec.get("apply", apply0);
@@ -580,10 +582,11 @@ AgentFlagger::initAgents()
 	else if (list_size == 1){
 		mixed = false;
 	}
+*/
 
 	// Send the logging of the re-applying agents to the debug
 	// as we are only interested in seeing the unapply action (flagcmd)
-	uChar loglevel = LogIO::DEBUGGING;
+//	uChar loglevel = LogIO::DEBUGGING;
 	Bool retstate = true;
 
 	// Loop through the vector of agents
@@ -602,6 +605,7 @@ AgentFlagger::initAgents()
 		}
 
 		// Change the log level if apply=True in a mixed state
+/*
 		Bool apply = true;
 		if (agent_rec.isDefined("apply")) {
 			agent_rec.get("apply", apply);
@@ -610,6 +614,7 @@ AgentFlagger::initAgents()
 		if (mixed and apply){
 			agent_rec.define("loglevel", loglevel);
 		}
+*/
 
 		// Get the mode
 		String mode;
@@ -641,7 +646,7 @@ AgentFlagger::initAgents()
 
 		try
 		{
-			// jagonzal: CAS-3943 (flagdata seg-faults when non-existent data column is to be read)
+			// CAS-3943 (flagdata seg-faults when non-existent data column is to be read)
 			Bool createAgent = true;
 			if (((mode.compare("tfcrop") == 0 or mode.compare("rflag") == 0
 					or mode.compare("clip") == 0 or mode.compare("display") == 0))
