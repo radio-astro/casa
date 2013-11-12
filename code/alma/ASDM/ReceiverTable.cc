@@ -294,6 +294,7 @@ ReceiverRow* ReceiverTable::newRow(ReceiverRow* row) {
 	//
 
 	
+		
 	
 	
 		
@@ -369,6 +370,7 @@ ReceiverRow* ReceiverTable::newRow(ReceiverRow* row) {
 						// Otherwise we must autoincrement receiverId and
 						// insert a new ReceiverRow with this autoincremented value.
 						insertionId = i+1;
+
 						break;
 						
 						// And goto insertion
@@ -383,7 +385,8 @@ ReceiverRow* ReceiverTable::newRow(ReceiverRow* row) {
 			// cout << "Starting a new context " << k << endl;
 			ID_TIME_ROWS vv;
 			context[k] = vv;
-			insertionId = 0;
+
+			insertionId = 0;				
 		}
 		
 		
@@ -400,9 +403,11 @@ ReceiverRow* ReceiverTable::newRow(ReceiverRow* row) {
 		ReceiverRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
 		                                           // by passing true in the second parameter
 		                                           // whose value by default is false.
+                if (false) cout << (unsigned long long) dummy;
 	}
 	
 
+	
 
 
 	// 
@@ -673,7 +678,7 @@ ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeI
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<ReceiverTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:rcvr=\"http://Alma/XASDM/ReceiverTable\" xsi:schemaLocation=\"http://Alma/XASDM/ReceiverTable http://almaobservatory.org/XML/XASDM/3/ReceiverTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n");
+		buf.append("<ReceiverTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:rcvr=\"http://Alma/XASDM/ReceiverTable\" xsi:schemaLocation=\"http://Alma/XASDM/ReceiverTable http://almaobservatory.org/XML/XASDM/3/ReceiverTable.xsd\" schemaVersion=\"3\" schemaRevision=\"-1\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -795,7 +800,7 @@ ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeI
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<ReceiverTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:rcvr=\"http://Alma/XASDM/ReceiverTable\" xsi:schemaLocation=\"http://Alma/XASDM/ReceiverTable http://almaobservatory.org/XML/XASDM/3/ReceiverTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n";
+		oss << "<ReceiverTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:rcvr=\"http://Alma/XASDM/ReceiverTable\" xsi:schemaLocation=\"http://Alma/XASDM/ReceiverTable http://almaobservatory.org/XML/XASDM/3/ReceiverTable.xsd\" schemaVersion=\"3\" schemaRevision=\"-1\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='ReceiverTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";

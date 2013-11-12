@@ -332,11 +332,7 @@ SourceRow* SourceTable::newRow(SourceRow* row) {
 	//
 
 	
-	
-	
 		
-			
-
 	/** 
 	 * Returns a string built by concatenating the ascii representation of the
 	 * parameters values suffixed with a "_" character.
@@ -350,16 +346,7 @@ SourceRow* SourceTable::newRow(SourceRow* row) {
 			;
 		return ostrstr.str();	 	
 	 }
-
-	/**
-	 * Append a row to a SourceTable which has simply 
-	 * 1) an autoincrementable attribute  (sourceId) 
-	 * 2) a temporal attribute (timeInterval) in its key section.
-	 * 3) other attributes in the key section (defining a so called context).
-	 * If there is already a row in the table whose key section non including is equal to x's one and
-	 * whose value section is equal to x's one then return this row, otherwise add x to the collection
-	 * of rows.
-	 */
+	
 	SourceRow* SourceTable::add(SourceRow* x) {
 		// Get the start time of the row to be inserted.
 		ArrayTime startTime = x->getTimeInterval().getStart();
@@ -372,60 +359,41 @@ SourceRow* SourceTable::newRow(SourceRow* row) {
 						x->getSpectralWindowId()
 					   );
 					   
-
-		// Determine the insertion index for the row x, possibly returning a pointer to a row identical to x. 					   
+		if (name2id_m.find(x->getSourceName()) == name2id_m.end()) {
+			int dummy = name2id_m.size();
+			name2id_m[x->getSourceName()] = dummy;
+		}
+		
+		insertionId = name2id_m[x->getSourceName()];
 		if (context.find(k) != context.end()) {
-			// cout << "The context " << k << " already exists " << endl;
-			for (unsigned int i = 0; i < context[k].size(); i++) {
-				//cout << "Looking for a same starttime in i = " << i << endl;
-				for (unsigned int j=0; j<context[k][i].size(); j++) 
-					if (context[k][i][j]->getTimeInterval().getStart().equals(startTime)) {
-						if (
+			for (unsigned int j = 0; j < context[k].size(); j++) 
+				if ((context[k].size() > insertionId) && context[k][insertionId][j]->getTimeInterval().getStart().equals(startTime)) {
+					if(
 						
-						 (context[k][i][j]->getCode() == x->getCode())
+						 (context[k][insertionId][j]->getCode() == x->getCode())
 						 && 
 
-						 (context[k][i][j]->getDirection() == x->getDirection())
+						 (context[k][insertionId][j]->getDirection() == x->getDirection())
 						 && 
 
-						 (context[k][i][j]->getProperMotion() == x->getProperMotion())
+						 (context[k][insertionId][j]->getProperMotion() == x->getProperMotion())
 						 && 
 
-						 (context[k][i][j]->getSourceName() == x->getSourceName())
+						 (context[k][insertionId][j]->getSourceName() == x->getSourceName())
 						
 						) {
 							// cout << "A row equal to x has been found, I return it " << endl;
-							return context[k][i][j];
+							return context[k][insertionId][j];
 						}
-						
-						// Otherwise we must autoincrement sourceId and
-						// insert a new SourceRow with this autoincremented value.
-						insertionId = i+1;
-
-						
-						name2id_m[x->getSourceName()] = insertionId;
-						
-						break;
-						
-						// And goto insertion
-						// goto done;
-					}
-			}
-			//cout << "No row with the same start time than x, it will be inserted in row with id = 0" << endl;
-			// insertionId = 0;
+					else 
+						throw UniquenessViolationException();
+				}
 		}
 		else { // There is not yet a context ...
 			   // Create and initialize an entry in the context map for this combination....
 			// cout << "Starting a new context " << k << endl;
 			ID_TIME_ROWS vv;
 			context[k] = vv;
-
-		
-			if (name2id_m.find(x->getSourceName()) == name2id_m.end()) {
-				name2id_m[x->getSourceName()] = 0;
-			}
-			insertionId = name2id_m[x->getSourceName()];
-						
 		}
 		
 		
@@ -433,18 +401,16 @@ SourceRow* SourceTable::newRow(SourceRow* row) {
 		
 			if (insertionId >= (int) context[k].size()) context[k].resize(insertionId+1);
 			return insertByStartTime(x, context[k][insertionId]);
-	}
+	}	
 	
-		
-	
-		
 	void SourceTable::addWithoutCheckingUnique(SourceRow * x) {
 		SourceRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
 		                                           // by passing true in the second parameter
-		                                           // whose value by default is false.
-	}
-	
+		                                           // whose value by default is false
+                if (false) cout << (unsigned long long) dummy;
+	}				   
 
+	
 
 
 	// 

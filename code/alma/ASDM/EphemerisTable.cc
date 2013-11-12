@@ -306,6 +306,7 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 	//
 
 	
+		
 	
 		
 		
@@ -353,9 +354,11 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 		EphemerisRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
 		                                           // by passing true in the second parameter
 		                                           // whose value by default is false.
+                if (false) cout << (unsigned long long) dummy;
 	}
 	
 
+	
 
 
 	// 
@@ -371,7 +374,7 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 			
 			
 			
-	EphemerisRow*  EphemerisTable::checkAndAdd(EphemerisRow* x, bool skipCheckUniqueness) {
+	EphemerisRow*  EphemerisTable::checkAndAdd(EphemerisRow* x, bool ) {
 		string keystr = Key( 
 						x->getEphemerisId() 
 					   ); 
