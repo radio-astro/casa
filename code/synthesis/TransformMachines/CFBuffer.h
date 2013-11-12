@@ -175,7 +175,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // muellerElement: (i,j) of the Mueller Matrix
     CountedPtr<CFCell>& getCFCellPtr(const Double& freqVal, const Double& wValue, 
 				     const Int & muellerElement); 
+    CFCell& operator()(const Int& i, const Int& j, const Int& k) {return *cfCells_p(i,j,k);}
     CFCell& getCFCell(const Int& i, const Int& j, const Int& k);
+
     CountedPtr<CFCell >& getCFCellPtr(const Int& i, const Int& j, const Int& k);
     
     //=========================================================================

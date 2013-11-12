@@ -158,15 +158,15 @@ namespace casa{
     for(Int iBL=0; iBL<cfsShp(0); iBL++)
       for(Int iPA=0; iPA<cfsShp(1); iPA++)
 	{
-	  IPosition cfbShp=memStore[0].getCFBuffer(iPA,iBL)->getShape();
+	  CFBuffer& cfb=memStore[0](iPA,iBL);
+	  IPosition cfbShp=cfb.getShape();
 	  for (Int iw=0; iw<cfbShp[1]; iw++)
 	    {
-	      log_l << "Support Size (w: "<< iw << ",C): ";
+	      log_l << "Support Size (w: "<< iw <<",C): ";
 	      {
 		for (Int inu=0; inu<cfbShp[0]; inu++)
-		  {
-		    log_l << memStore[0].getCFBuffer(iPA, iBL)->getCFCellPtr(inu, iw, ipol)->xSupport_p << " ";
-		  }
+		    log_l << cfb(inu, iw, ipol).xSupport_p << " ";
+
 		log_l << LogIO::POST;
 	      }
 	    }

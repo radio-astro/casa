@@ -63,7 +63,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //-------------------------------------------------------------------------
     void primeTheCFB();
     //-------------------------------------------------------------------------
-    void initMaps(const VisBuffer& vb, const Matrix<Double>& freqSelection, const Double& imRefFreq);
+    void initMaps(const VisBuffer& vb, const Matrix<Double>& freqSelection, 
+		  const Double& imRefFreq);
     //-------------------------------------------------------------------------
     void initPolMaps(PolMapType& polMap, PolMapType& conjPolMap);
     //-------------------------------------------------------------------------
@@ -87,6 +88,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //-------------------------------------------------------------------------
     // Get CFBuffer by directly indexing in the list of CFBuffers
     CountedPtr<CFBuffer>& getCFBuffer(const Int& paNdx, const Int& antNdx);
+    CFBuffer& operator()(const Int& paNdx, const Int& antNdx) {return *storage_p(paNdx, antNdx);}
     void getParams(Quantity& pa, 
 		   Int& ant1, Int& ant2, 
 		   const Int& paNdx, const Int& antNdx);
@@ -115,9 +117,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Quantity> getPAList() {return pa_p;};
     IPosition getShape() {return storage_p.shape();}
 
+
   protected:
-
-
 
     Matrix<CountedPtr<CFBuffer > > storage_p;
     Vector<Int> ant1_p, ant2_p;
