@@ -609,7 +609,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
 
     if(tol < origwidth) tol=origwidth;
     chanFreqs.resize();
-    if(nchan >= (freq.nelements()-1)) { indgen(chanMap); chanFreqs=freq; return;}
+    if(nchan >= (Int)(freq.nelements()-1)) { indgen(chanMap); chanFreqs=freq; return;}
     if((nchan==0) || (freq.nelements()==1)) { chanFreqs=Vector<Double>(1, freq[0]);chanMap.set(0); return;}
 
     //readjust the tolerance...
@@ -641,7 +641,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
 
 
   Bool SimplePBConvFunc::checkPBOfField(const VisBuffer& vb){
-    Int fieldid=vb.fieldId();
+    //Int fieldid=vb.fieldId();
     String msid=vb.msName(True);
     /*
      if(convFunctionMap_p.ndefined() > 0){

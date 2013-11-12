@@ -33,6 +33,7 @@
 #include <display/QtPlotter/ProfileTaskFacilitator.h>
 #include <display/QtPlotter/MomentSettingsWidgetRadio.ui.h>
 #include <imageanalysis/ImageAnalysis/ImageMomentsProgressMonitor.h>
+#include <images/Images/ImageInterface.h>
 
 namespace casa {
 
@@ -55,7 +56,7 @@ namespace casa {
 		bool isTemporaryOutput() const {
 			return temporary;
 		}
-		ImageInterface<Float>* getImage() const {
+		std::tr1::shared_ptr<ImageInterface<Float> > getImage() const {
 			return image;
 		}
 
@@ -63,7 +64,7 @@ namespace casa {
 		String outputFileName;
 		bool temporary;
 
-		ImageInterface<Float>* image;
+		std::tr1::shared_ptr<ImageInterface<Float> > image;
 	};
 
 

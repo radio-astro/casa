@@ -213,8 +213,9 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 				annotAct_(0), mkRgnAct_(0), fboxAct_(0), cleanAct_(0), rgnMgrAct_(0), shpMgrAct_(0),
 				rc(viewer::getrc()), rcid_(rcstr), use_new_regions(true),
 				showdataoptionspanel_enter_count(0),
-				/*controlling_dd(0),*/ preferences(0),
-				animationHolder( NULL ), adjust_channel_animator(true), histogrammer( NULL ), colorHistogram( NULL ),
+				/*controlling_dd(0),*/ preferences(0), animationHolder( NULL ),
+				adjust_channel_animator(true), adjust_image_animator(true),
+				histogrammer( NULL ), colorHistogram( NULL ),
 				fitTool( NULL ), sliceTool( NULL ), imageManagerDialog(NULL),
 				clean_tool(0), regionDock_(0),
 				status_bar_timer(new QTimer( )),
@@ -1195,6 +1196,7 @@ QtDisplayData* QtDisplayPanelGui::createDD( String path, String dataType,
 		const viewer::DisplayDataOptions &ddo,
 		const viewer::ImageProperties &props ) {
 	adjust_channel_animator = true;
+	adjust_image_animator = true;
 	QtDisplayData* qdd = new QtDisplayData( this, path, dataType, displayType, ddo, props );
 	return processDD( path, dataType, displayType, autoRegister,
 			insertPosition, masterCoordinate, masterSaturation, masterHue, qdd, ddo  );
@@ -1317,6 +1319,15 @@ void QtDisplayPanelGui::updateFrameInformationImage(){
 		iter++;
 	}
 	animationHolder->setModeEnabled( uniqueImages.size() );
+	//Update the animator to reflect the current axis state.
+	if ( adjust_image_animator ) {
+		adjust_image_animator = false;
+		if ( animationHolder->getImageCount( ) <= 1 ) {
+			animationHolder->foldImage( );
+		} else {
+			animationHolder->unfoldImage( );
+		}
+	}
 }
 
 int QtDisplayPanelGui::numFrames( ) {
@@ -1384,12 +1395,15 @@ int QtDisplayPanelGui::getBoundedChannel( int channelNumber ) const {
 	}
 	return boundedChannel;
 }
-void QtDisplayPanelGui::addDDSlot(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img) {
-	std::tr1::shared_ptr<ImageInterface<Float> > imgPtr(img);
-	addDD( path, dataType, displayType, autoRegister, tmpData, imgPtr );
+void QtDisplayPanelGui::addDDSlot(String path, String dataType, String displayType,
+		Bool autoRegister, Bool tmpData, std::tr1::shared_ptr<ImageInterface<Float> > img) {
+	//std::tr1::shared_ptr<ImageInterface<Float> > imgPtr(img);
+	addDD( path, dataType, displayType, autoRegister, tmpData, img );
+
 }
 
-QtDisplayData* QtDisplayPanelGui::addDD(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, std::tr1::shared_ptr<ImageInterface<Float> > img) {
+QtDisplayData* QtDisplayPanelGui::addDD(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData,
+		std::tr1::shared_ptr<ImageInterface<Float> > img) {
 	// create a new DD
 	QtDisplayData* dd = NULL;
 	if ( ! img ) {
@@ -1397,7 +1411,7 @@ QtDisplayData* QtDisplayPanelGui::addDD(String path, String dataType, String dis
 	} else {
 		dd =new QtDisplayData( this, path, dataType, displayType);
 		dd->setImage( img );
-		// dd->initImage();
+		dd->initImage();
 		dd->init();
 		dd = processDD( path, dataType, displayType, autoRegister,
 				-1, false, false, false, dd );
@@ -1608,7 +1622,6 @@ Bool QtDisplayPanelGui::removeDD(QtDisplayData*& qdd) {
 		}
 
 		notifyDDRemoval( qdd );
-		qdd->done();
 		delete qdd;
 		qdd = NULL;
 		updateFrameInformation();
@@ -1801,16 +1814,16 @@ void QtDisplayPanelGui::updateViewedImage(){
 				this, SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )),
 				Qt::UniqueConnection );
 
-		//Up date the animator to reflect the current axis state.
+		//Update the animator to reflect the current axis state.
 		if ( animationHolder != NULL ){
 			String zAxisName = newViewedImage->getZAxisName();
 			animationHolder->setChannelZAxis( zAxisName.c_str());
 			if ( adjust_channel_animator ) {
 				adjust_channel_animator = false;
 				if ( animationHolder->getChannelCount( ) <= 1 ) {
-					animationHolder->hideChannel( );
+					animationHolder->foldChannel( );
 				} else {
-					animationHolder->showChannel( );
+					animationHolder->unfoldChannel( );
 				}
 			}
 		}
@@ -2289,8 +2302,8 @@ void QtDisplayPanelGui::showImageProfile() {
 								profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
 						connect( pdd, SIGNAL(spectrumChanged(String, String, String )),
 								profile_, SLOT(changeSpectrum(String, String, String )));
-						connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool, ImageInterface<Float>* )),
-								this, SLOT(addDDSlot(String, String, String, Bool, Bool, ImageInterface<Float>*)));
+						connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool, std::tr1::shared_ptr<ImageInterface<Float> > )),
+								this, SLOT(addDDSlot(String, String, String, Bool, Bool, std::tr1::shared_ptr<ImageInterface<Float> >)));
 						connect(profile_, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
 						connect( this, SIGNAL(frameChanged(int)), profile_, SLOT(frameChanged(int)));
 						connect( profile_, SIGNAL(movieChannel(int,int)), this, SLOT(movieChannels(int, int)));

@@ -73,7 +73,7 @@ public:
 
   // Identify myself
   //  pure virtual
-  virtual PlotMSCacheBase::Type cacheType()=0;
+  virtual PlotMSCacheBase::Type cacheType() const = 0;
 
   // Access to pol names
   virtual String polname(Int ipol)=0;

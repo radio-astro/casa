@@ -82,9 +82,11 @@ endmacro()
 # The same as CMAKE's built-in macro, but using a different naming convention
 # for the generated file
 #
-MACRO (CASA_QT4_WRAP_UI outfiles )
+MACRO (casa_qt4_wrap_ui outfiles )
   QT4_EXTRACT_OPTIONS(ui_files ui_options ${ARGN})
 
+  #message( STATUS "${ui_options} " )
+  #message( STATUS "${ui_files} " )
   FOREACH (it ${ui_files})
     GET_FILENAME_COMPONENT(outfile ${it} NAME_WE)
     GET_FILENAME_COMPONENT(infile ${it} ABSOLUTE)
@@ -103,14 +105,14 @@ MACRO (CASA_QT4_WRAP_UI outfiles )
       MAIN_DEPENDENCY ${infile})
     SET(${outfiles} ${${outfiles}} ${outfile})
   ENDFOREACH (it)
-ENDMACRO (CASA_QT4_WRAP_UI)
+ENDMACRO (casa_qt4_wrap_ui)
 
 #
 # Create .qrc.cc from .qrc
 # Same as CMake's built-in, except
 # the "-name" option to rcc is parametrized
 #
-MACRO (CASA_QT4_ADD_RESOURCES outfiles )
+MACRO (casa_qt4_add_resources outfiles )
   QT4_EXTRACT_OPTIONS(rcc_files rcc_options ${ARGN})
   
   FOREACH (it ${rcc_files})
@@ -139,4 +141,4 @@ MACRO (CASA_QT4_ADD_RESOURCES outfiles )
     SET(${outfiles} ${${outfiles}} ${outfile})
   ENDFOREACH (it)
   
-ENDMACRO (CASA_QT4_ADD_RESOURCES)
+ENDMACRO (casa_qt4_add_resources)

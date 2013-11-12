@@ -1579,7 +1579,7 @@ Bool MSConcat::copyPointing(const MSPointing& otherPoint,const
     // check antenna IDs
     Vector<Int> antennaIDs=pointCol.antennaId().getColumn();
     Bool idsOK = True;
-    uInt maxID = newAntIndices.nelements()-1;
+    Int maxID = static_cast<int> (newAntIndices.nelements()-1);
     for (Int k=origNRow; k <  (origNRow+rowToBeAdded); ++k){
       if(antennaIDs[k] < 0 || antennaIDs[k] > maxID){
 	idsOK = False;
@@ -1650,7 +1650,7 @@ Bool MSConcat::copyPointingB(MSPointing& otherPoint,const
     // check antenna IDs
     Vector<Int> antennaIDs=pointCol.antennaId().getColumn();
     Bool idsOK = True;
-    uInt maxID = newAntIndices.nelements()-1;
+    Int maxID = static_cast<int> (newAntIndices.nelements()-1);
     for (Int k=0; k < rowToBeAdded; k++){
       if(antennaIDs[k] < 0 || antennaIDs[k] > maxID){
 	idsOK = False;
@@ -1730,7 +1730,7 @@ Int MSConcat::copyObservation(const MSObservation& otherObs,
 
     // create final maps
     // map for first table
-    for(uInt i=0; i<originalNrow; i++){ // loop over rows of old first table
+    for(uInt i=0; i<static_cast<uInt> (originalNrow); i++){ // loop over rows of old first table
       if(tempObsIndex2.isDefined(i)){ // ID changed because of removal
 	  newObsIndexA_p.define(i,tempObsIndex2(i));
 	  doObsA_p = True;
@@ -2320,13 +2320,13 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
       vector<uInt> rowsToBeRemoved;
       Vector<Int> thisSPWIdB=sourceCol.spectralWindowId().getColumn();
 
-      for (uint j=0 ; j < numrows_this ; ++j){
+      for (int j=0 ; j < numrows_this ; ++j){
 	if(rowToBeRemoved(j)){
 	  continue;
 	}
 	// check if row j has an equivalent row somewhere else in the table
 	Int reftypej = solSystObjects_p(thisId(j));
-	for (uint k=j+1 ; k < numrows_this ; ++k){
+	for (int k=j+1 ; k < numrows_this ; ++k){
 	  if (!rowToBeRemoved(k)){
 	    if(thisSPWIdB(j)==thisSPWIdB(k)){ // the SPW id is the same
 	      Int reftypek = solSystObjects_p(thisId(k));
@@ -2390,10 +2390,10 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
       Bool rowsRenamed(False);
       Int nDistinctSources = newNumrows_this;
       Vector<Int> thisSourceId=sourceCol.sourceId().getColumn();
-      for (uint j=0 ; j < newNumrows_this ; ++j){
+      for (int j=0 ; j < newNumrows_this ; ++j){
 	// check if row j has an equivalent row somewhere down in the table
 	Int reftypej = solSystObjects_p(thisId(j));
-	for (uint k=j+1 ; k < newNumrows_this ; ++k){
+	for (int k=j+1 ; k < newNumrows_this ; ++k){
 	  if(thisSourceId(j)!=thisSourceId(k)){
 	    Int reftypek = solSystObjects_p(thisId(k));
 	    Bool sameSolSystObjects = ((reftypek==reftypej) && (reftypek>-1)) // object with solar syst ref frame
@@ -2655,7 +2655,7 @@ Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
       // cout << "counterpart found for other spw " << otherSpwId 
       //     << " found in this spw " << *newSpwPtr << endl;
       matchedSPW = True;
-      if(*newSpwPtr != otherSpwId){
+      if(*newSpwPtr != static_cast<int> (otherSpwId)){
 	newSPWIndex_p.define(otherSpwId, *newSpwPtr);
       }
     }      

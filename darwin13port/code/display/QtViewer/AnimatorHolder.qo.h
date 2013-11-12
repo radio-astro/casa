@@ -51,11 +51,16 @@ namespace casa {
 		int getRate( bool mode ) const;
 		int getLowerBoundChannel() const;
 		int getUpperBoundChannel() const;
+
 		int getChannelCount() const;
+		int getImageCount() const;
 
 		void setChannelZAxis( const QString& zAxisTite );
-		void hideChannel( ) { channelGroupBox->setChecked(false); }
-		void showChannel( ) { channelGroupBox->setChecked(true); }
+
+		void foldChannel( ) { channelGroupBox->setChecked(false); }
+		void unfoldChannel( ) { channelGroupBox->setChecked(true); }
+		void foldImage( ) { imageGroupBox->setChecked(false); }
+		void unfoldImage( ) { imageGroupBox->setChecked(true); }
 
 		~AnimatorHolder();
 

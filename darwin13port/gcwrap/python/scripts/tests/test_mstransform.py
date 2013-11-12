@@ -8,6 +8,7 @@ from __main__ import default
 import testhelper as th
 from recipes.listshapes import listshapes
 from parallel.parallel_task_helper import ParallelTaskHelper
+from unittest.case import expectedFailure
 
     
 # Define the root for the data files
@@ -480,27 +481,28 @@ class test_Regridms3(test_base):
         self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
 
 # Uncomment after seg fault is fixed
-#     def test_regrid3_2(self):
-#         '''mstransform: Combine spw and regrid MS with two spws, select one field and 2 spws'''
-#         # cvel: test8
-#         self.outputms = "reg32a.ms"
-#         mstransform(vis=self.vis, outputvis=self.outputms, combinespws=True, regridms=True, 
-#                     spw='0,1',field = '11',nchan=1, width=2, datacolumn='DATA')
-#         self.assertTrue(os.path.exists(self.outputms))
-#         
-#         ret = th.verifyMS(self.outputms, 1, 1, 0)
-#         self.assertTrue(ret[0],ret[1])  
-#         
-#         # Now, do only the regridding and do not combine spws
-#         outputms = "reg32b.ms"
-#         mstransform(vis=self.vis, outputvis=outputms, combinespws=False, regridms=True, 
-#                     spw='0,1',field = '11',nchan=1, width=2, datacolumn='DATA')
-#         self.assertTrue(os.path.exists(outputms))
-#         
-#         ret = th.verifyMS(outputms, 2, 1, 0)
-#         self.assertTrue(ret[0],ret[1])  
-#         ret = th.verifyMS(outputms, 2, 1, 1)
-#         self.assertTrue(ret[0],ret[1])  
+    @unittest.skip('Skip until seg fault in InterpolateArray1D.tcc is fixed.')
+    def test_regrid3_2(self):
+        '''mstransform: Combine spw and regrid MS with two spws, select one field and 2 spws'''
+        # cvel: test8
+        self.outputms = "reg32a.ms"
+        mstransform(vis=self.vis, outputvis=self.outputms, combinespws=True, regridms=True, 
+                    spw='0,1',field = '11',nchan=1, width=2, datacolumn='DATA')
+        self.assertTrue(os.path.exists(self.outputms))
+         
+        ret = th.verifyMS(self.outputms, 1, 1, 0)
+        self.assertTrue(ret[0],ret[1])  
+         
+        # Now, do only the regridding and do not combine spws
+        outputms = "reg32b.ms"
+        mstransform(vis=self.vis, outputvis=outputms, combinespws=False, regridms=True, 
+                    spw='0,1',field = '11',nchan=1, width=2, datacolumn='DATA')
+        self.assertTrue(os.path.exists(outputms))
+         
+        ret = th.verifyMS(outputms, 2, 1, 0)
+        self.assertTrue(ret[0],ret[1])  
+        ret = th.verifyMS(outputms, 2, 1, 1)
+        self.assertTrue(ret[0],ret[1])  
 
 
 class test_Hanning(test_base):

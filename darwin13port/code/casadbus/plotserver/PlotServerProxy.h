@@ -99,13 +99,13 @@ namespace casa {
 	//
 	// signals...
 	//
-	void button(const int32_t& panel, const std::string& name) { }
-	void check(const int32_t& panel, const std::string& name, const int32_t& state) { }
-	void radio(const int32_t& panel, const std::string& name, const bool& state) { }
-	void linetext(const int32_t& panel, const std::string& name, const std::string& text) { }
-	void slidevalue(const int32_t& panel, const std::string& name, const int32_t& value) { }
+	void button(const int32_t& /*panel*/, const std::string& /*name*/) { }
+	void check(const int32_t& /*panel*/, const std::string& /*name*/, const int32_t& /*state*/) { }
+	void radio(const int32_t& /*panel*/, const std::string& /*name*/, const bool& /*state*/) { }
+	void linetext(const int32_t& /*panel*/, const std::string& /*name*/, const std::string& /*text*/) { }
+	void slidevalue(const int32_t& /*panel*/, const std::string& /*name*/, const int32_t& /*value*/) { }
 	void exiting( ) { }
-	void closing(const int32_t& panel, const bool &gone) { }
+	void closing(const int32_t& /*panel*/, const bool& /*gone*/) { }
 
 
     };

@@ -556,7 +556,8 @@ AgentFlagger::initAgents()
 	// Check if list has a mixed state of apply and unapply parameters
 	// If the list contains apply=True and False, the apply=True list will
 	// be hidden in the debug.
-	Bool mixed, apply0;
+	Bool mixed = false;
+	Bool apply0;
 	size_t list_size = agents_config_list_p.size();
 	if (list_size > 1){
 		Record agent_rec = agents_config_list_p[0];

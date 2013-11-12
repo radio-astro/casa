@@ -120,8 +120,6 @@ void LattStatsSpecialize::accumulate (
 	const Float id = imag(datum);
 	const Double rm = real(mean);
 	const Double im = imag(mean);
-	const Double rnv = real(nvariance);
-	const Double inv = imag(nvariance);
 
 	if (real(useIt) > 0.5) {
 		nPts += Complex(1.0, 0.0);

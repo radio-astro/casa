@@ -136,10 +136,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		//If (there is nothing to display, and no master image has been
-		//designated) OR (the one that is going away is the CSMaster),
+		//                                                  designated)
+		//OR (the one that is going away is the CSMaster)
+		//OR (there is no master image designated and the one going
+		//                          away is in the canvas as CSMaster),
 		//tell the canvas there is no CS master.
+
 		if ( ( itsDisplayList.size() == 0 && controllingDD == NULL ) ||
-				controllingDD == &dData ){
+				controllingDD == &dData ||
+			(	worldCanvas()->isCSmaster(&dData) && controllingDD == NULL ) ){
 			worldCanvas()->csMaster() = NULL;
 		}
 

@@ -76,7 +76,6 @@ casa_add_library( tools
  casa/TSLogSink.cc
  components/componentlist_cmpt.cc
  flagging/flagger_cmpt.cc
- flagging/lightflagger_cmpt.cc
  flagging/agentflagger_cmpt.cc
  images/coordsys_cmpt.cc
  images/image_cmpt.cc
@@ -142,7 +141,6 @@ casa_add_tools( tools_swig tools_sources tools_py
  casa/quanta.xml
  components/componentlist.xml
  flagging/flagger.xml
- flagging/lightflagger.xml
  flagging/agentflagger.xml
  images/coordsys.xml
  images/image.xml

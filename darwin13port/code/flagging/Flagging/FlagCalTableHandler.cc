@@ -82,9 +82,9 @@ FlagCalTableHandler::open()
 	// File the baseline to Ant1xAnt2 map
 	String baseline;
 	std::pair<Int,Int> ant1ant2;
-	for (Int ant1Idx=0;ant1Idx<antennaNames_p->size();ant1Idx++)
+	for (Int ant1Idx=0;ant1Idx < static_cast<Int>(antennaNames_p->size());ant1Idx++)
 	{
-		for (Int ant2Idx=ant1Idx+1;ant2Idx<antennaNames_p->size();ant2Idx++)
+		for (Int ant2Idx=ant1Idx+1;ant2Idx < static_cast<Int>(antennaNames_p->size());ant2Idx++)
 		{
 			ant1ant2.first = ant1Idx;
 			ant1ant2.second = ant2Idx;
@@ -568,7 +568,7 @@ bool
 FlagCalTableHandler::summarySignal()
 {
 	Double progress = 100.0* ((Double) processedRows / (Double) selectedCalTable_p->nrow());
-	if ((progress >= summaryThreshold_p) or (logger_p->priority() >= LogIO::DEBUG1))
+	if ((progress >= summaryThreshold_p) or (logger_p->priority() >= LogMessage::DEBUG1))
 	{
 		summaryThreshold_p += 10;
 		printChunkSummary_p = true;
@@ -741,7 +741,7 @@ Vector<Int>& CTCache::correlationTypes()
 	return corrType_p;
 }
 
-Vector<Int>& CTCache::getChannelNumbers(Int rowInBuffer)
+Vector<Int>& CTCache::getChannelNumbers(Int /*rowInBuffer*/)
 {
 	if (!CTchannelOK_p)
 	{
@@ -754,7 +754,7 @@ Vector<Int>& CTCache::getChannelNumbers(Int rowInBuffer)
 	return channel_p;
 }
 
-Vector<Double>& CTCache::getFrequencies(Int rowInBuffer,Int frame)
+Vector<Double>& CTCache::getFrequencies(Int /*rowInBuffer*/, Int /*frame*/)
 {
 	if (!CTfrequencyOK_p)
 	{

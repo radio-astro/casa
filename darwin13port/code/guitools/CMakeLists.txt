@@ -60,6 +60,7 @@ qt4_wrap_cpp( outfiles_qoh
   )
 
 casa_qt4_wrap_ui( outfiles_ui
+  " "
   Feather/PlotHolder.ui
   Feather/FeatherMain.ui
   Feather/FileLoader.ui
@@ -81,8 +82,8 @@ casa_qt4_wrap_ui( outfiles_ui
   Histogram/FootPrintWidget.ui
   )
 
-casa_qt4_add_resources( outfiles_qrc Feather/Feather.qrc OPTIONS -name Feather )
-casa_qt4_add_resources( outfiles_qrc Histogram/Histogram.qrc OPTIONS -name Histogram )
+casa_qt4_add_resources( outfiles_qrc " " Feather/Feather.qrc OPTIONS -name Feather )
+casa_qt4_add_resources( outfiles_qrc " " Histogram/Histogram.qrc OPTIONS -name Histogram )
 #include_directories( ${CMAKE_CURRENT_BINARY_DIR}/guitools ) # for generated code
 
 casa_add_library( guitools

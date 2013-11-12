@@ -60,6 +60,7 @@ namespace casa {
 		bool isMasterSaturation() const;
 		bool isMasterCoordinate() const;
 		bool isEmpty() const;
+		bool isRaster() const;
 		QColor getDisplayedColor() const;
 
 		//Setters

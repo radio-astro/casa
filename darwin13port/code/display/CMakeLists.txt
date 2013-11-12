@@ -140,6 +140,8 @@ qt4_wrap_cpp( outfiles_qoh
   )
 
 casa_qt4_wrap_ui( outfiles_ui
+  " "
+  QtAutoGui/adjustmentBottom.ui
   QtAutoGui/adjustmentBottom.ui
   QtAutoGui/checkButtonItem.ui
   QtAutoGui/comboItem.ui
@@ -223,11 +225,11 @@ casa_qt4_wrap_ui( outfiles_ui
   Clean/ConfirmStop.ui
   )
 
-casa_qt4_add_resources( outfiles_qrc QtAutoGui/QtAutoGui.qrc OPTIONS -name QtAutoGui )
-casa_qt4_add_resources( outfiles_qrc QtPlotter/QtPlotter.qrc OPTIONS -name QtPlotter )
-casa_qt4_add_resources( outfiles_qrc QtPlotter/QtDrawer.qrc OPTIONS -name QtDrawer )
-casa_qt4_add_resources( outfiles_qrc QtViewer/QtViewer.qrc OPTIONS -name QtViewer )
-casa_qt4_add_resources( outfiles_qrc Slicer/Slicer.qrc OPTIONS -name Slicer )
+casa_qt4_add_resources( outfiles_qrc " " QtAutoGui/QtAutoGui.qrc OPTIONS -name QtAutoGui )
+casa_qt4_add_resources( outfiles_qrc " " QtPlotter/QtPlotter.qrc OPTIONS -name QtPlotter )
+casa_qt4_add_resources( outfiles_qrc " " QtPlotter/QtDrawer.qrc OPTIONS -name QtDrawer )
+casa_qt4_add_resources( outfiles_qrc " " QtViewer/QtViewer.qrc OPTIONS -name QtViewer )
+casa_qt4_add_resources( outfiles_qrc " " Slicer/Slicer.qrc OPTIONS -name Slicer )
 
 include_directories( ${CMAKE_CURRENT_BINARY_DIR}/QtAutoGui ) # for generated code
 

@@ -55,7 +55,7 @@
 #include <casa/OS/Timer.h>
 
 #define CONVSIZE (1024*2)
-#define OVERSAMPLING 2
+// #define OVERSAMPLING 2
 #define USETABLES 0           // If equal to 1, use tabulated exp() and
 			      // complex exp() functions.
 #define MAXPOINTINGERROR 250.0 // Max. pointing error in arcsec used to
@@ -143,8 +143,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (cachesize > hostRAM) cachesize=hostRAM;
     sigma=1.0;
     canComputeResiduals_p=DORES;
-    cfs2_p = new CFStore2;
-    cfwts2_p = new CFStore2;
+    // cfs2_p = &cfCache_p->memCache2_p[0];//new CFStore2;
+    // cfwts2_p =  &cfCache_p->memCacheWt2_p[0];//new CFStore2;
     pop_p->init();
     CFBuffer::initCFBStruct(cfbst_pub);
     //    rotatedConvFunc_p.data=new Array<Complex>();    
@@ -200,8 +200,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (cachesize > hostRAM) cachesize=hostRAM;
     sigma=1.0;
     canComputeResiduals_p=DORES;
-    cfs2_p = new CFStore2;
-    cfwts2_p = new CFStore2;
+    cfs2_p = CountedPtr<CFStore2>(&(cfCache_p->memCache2_p)[0],False);//new CFStore2;
+    cfwts2_p =  CountedPtr<CFStore2>(&cfCache_p->memCacheWt2_p[0],False);//new CFStore2;
+
     pop_p->init();
     useDoubleGrid_p=doublePrecGrid;
     //    rotatedConvFunc_p.data=new Array<Complex>();
@@ -227,8 +228,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     visResampler_p->init(useDoubleGrid_p);
     convSize=CONVSIZE;
     canComputeResiduals_p=DORES;
-    cfs2_p = new CFStore2;
-    cfwts2_p = new CFStore2;
+    cfs2_p = CountedPtr<CFStore2>(&cfCache_p->memCache2_p[0],False);//new CFStore2;
+    cfwts2_p =  CountedPtr<CFStore2>(&cfCache_p->memCacheWt2_p[0],False);//new CFStore2;
     pop_p->init();
   }
   //
@@ -952,6 +953,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int i,j,N = cfPolMap.nelements();
     for(i=0;i<N;i++)
       if (cfPolMap[i] > -1)
+	{
 	if      (visStokes[i] == Stokes::RR) 
 	  {
 	    conjPolMap[i]=-1;
@@ -976,6 +978,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    for(j=0;j<N;j++) if (visStokes[j] == Stokes::LR) break; 
 	    conjPolMap[i]=cfPolMap[j];
 	  }
+	}
   }
   //
   //---------------------------------------------------------------
@@ -1096,6 +1099,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     cfSource = visResampler_p->makeVBRow2CFMap(*cfs2_p,*convFuncCtor_p, vb,
 					       dPAQuant,
 					       chanMap,polMap,pointingOffset);
+
     if (cfSource == CFDefs::NOTCACHED)
       {
 	PolMapType polMat, polIndexMat, conjPolMat, conjPolIndexMat;
@@ -1126,6 +1130,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// 					   paChangeDetector.getParAngleTolerance(),
 	// 					   chanMap,polMap);
       }
+    //
+    // If one-time-operations in the CFCache not yet done, set the
+    // pol. index maps in the CFCache.
+    //
+    if (!cfCache_p->OTODone())
+      {
+	PolMapType polMat, conjPolMat, pNdx, cpNdx;
+	Vector<Int> visPolMap(vb.corrType());
+	polMat = pop_p->makePolMat(visPolMap,polMap);
+	conjPolMat = pop_p->makeConjPolMat(visPolMap,polMap);
+	pNdx = pop_p->makePol2CFMat(visPolMap,polMap);
+	cpNdx = pop_p->makeConjPol2CFMat(visPolMap,polMap);
+    
+	cfCache_p->initPolMaps(pNdx,cpNdx);
+
+	cerr << "AWPFT: " 
+	     << pop_p->getPolMat() << endl 
+	     << pop_p->getPol2CFMat() << endl 
+	     << pop_p->getConjPolMat() << endl 
+	     << pop_p->getConjPol2CFMat() << endl;
+      }
+
+
     //
     // Load the average PB (sensitivity pattern) from the cache.  If
     // not found in the cache, make one and cache it.
@@ -1198,6 +1225,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  cfwts2_p->initMaps(vb,spwFreqSel_p,imRefFreq_p);
 	}
       }
+	  cfs2_p->initMaps(vb,spwFreqSel_p,imRefFreq_p);
+	  cfwts2_p->initMaps(vb,spwFreqSel_p,imRefFreq_p);
     // cfs2_p->makePersistent("test.cf");
     // cfwts2_p->makePersistent("test.wtcf");
   }

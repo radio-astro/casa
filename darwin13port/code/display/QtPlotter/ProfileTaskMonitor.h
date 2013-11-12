@@ -60,7 +60,9 @@ namespace casa {
 		//Specific to Moments
 		virtual void persist( const QString& key, const QString& value ) = 0;
 		virtual QString read( const QString & key ) const = 0;
-		virtual void imageCollapsed(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img = NULL)=0;
+		virtual void imageCollapsed(String path, String dataType, String displayType,
+				Bool autoRegister, Bool tmpData,
+				std::tr1::shared_ptr<ImageInterface<Float> > img = std::tr1::shared_ptr<ImageInterface<Float> >())=0;
 		virtual void setPurpose( ProfileTaskMonitor::PURPOSE purpose ) = 0;
 
 		//Specific to Spectrum Position setting.

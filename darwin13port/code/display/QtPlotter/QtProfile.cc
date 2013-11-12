@@ -2851,7 +2851,8 @@ namespace casa {
 		return valueStr;
 	}
 
-	void QtProfile::imageCollapsed(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img) {
+	void QtProfile::imageCollapsed(String path, String dataType, String displayType, Bool autoRegister,
+			Bool tmpData, std::tr1::shared_ptr<ImageInterface<Float> > img) {
 		emit showCollapsedImg(path, dataType, displayType, autoRegister, tmpData, img);
 	}
 
@@ -2860,22 +2861,24 @@ namespace casa {
 	}
 
 	void QtProfile::processTrackRecord( const String& dataName, const String& positionInfo ) {
-		QString imageName( image->name(true).c_str());
-		QString dataNameStr( dataName.c_str());
-		if ( image != NULL && dataNameStr.indexOf( imageName ) >= 0 ) {
-			QString posStr( positionInfo.c_str());
-			int pixelIndex = posStr.indexOf("Pixel:");
-			posStr = posStr.mid( pixelIndex );
-			QStringList parts = posStr.split( " ");
-			if ( parts.size() > 2 ) {
-				QString pixelX = parts[1];
-				QString pixelY = parts[2];
-				bool validX = false;
-				int pixX = pixelX.toInt(&validX);
-				bool validY = false;
-				int pixY = pixelY.toInt( &validY);
-				if ( validX && validY ) {
-					pixelsChanged( pixX, pixY );
+		if ( image != NULL ){
+			QString imageName( image->name(true).c_str());
+			QString dataNameStr( dataName.c_str());
+			if ( dataNameStr.indexOf( imageName ) >= 0 ) {
+				QString posStr( positionInfo.c_str());
+				int pixelIndex = posStr.indexOf("Pixel:");
+				posStr = posStr.mid( pixelIndex );
+				QStringList parts = posStr.split( " ");
+				if ( parts.size() > 2 ) {
+					QString pixelX = parts[1];
+					QString pixelY = parts[2];
+					bool validX = false;
+					int pixX = pixelX.toInt(&validX);
+					bool validY = false;
+					int pixY = pixelY.toInt( &validY);
+					if ( validX && validY ) {
+						pixelsChanged( pixX, pixY );
+					}
 				}
 			}
 		}

@@ -60,7 +60,7 @@ public:
   virtual ~CalCache();
 
   // Identify myself
-  PlotMSCacheBase::Type cacheType() { return PlotMSCacheBase::CAL; };
+  PlotMSCacheBase::Type cacheType() const { return PlotMSCacheBase::CAL; };
 
   // Is the underlying table complex?
   inline Bool parsAreComplex() { return parsAreComplex_; };

@@ -52,6 +52,7 @@ qt4_wrap_cpp( outfiles_qoh
   )
 
 casa_qt4_wrap_ui( outfiles_ui
+  " "
   Gui/PlotMSAveragingWidget.ui
   Gui/PlotMSAxisWidget.ui
   Gui/PlotMSFlaggingWidget.ui
@@ -74,7 +75,7 @@ casa_qt4_wrap_ui( outfiles_ui
   GuiTabs/PlotMSTransformationsTab.ui
   )
 
-casa_qt4_add_resources( outfiles_qrc Gui/PlotMSPlotter.qrc OPTIONS -name Gui )
+casa_qt4_add_resources( outfiles_qrc " " Gui/PlotMSPlotter.qrc OPTIONS -name Gui )
 
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/Gui ) 
 # because the generated code contain relative paths to the source tree

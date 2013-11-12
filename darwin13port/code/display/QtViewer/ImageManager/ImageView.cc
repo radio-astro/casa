@@ -280,6 +280,19 @@ namespace casa {
 	}
 
 
+
+	bool ImageView::isRaster() const {
+		bool rasterImage = false;
+		if ( displayTypeLabel != NULL ){
+			QString displayString = displayTypeLabel->getText();
+			if ( displayString == displayTypeMap[DISPLAY_RASTER]){
+				rasterImage = true;
+			}
+		}
+		return rasterImage;
+	}
+
+
 	//---------------------------------------------------------------------------------
 	//                     Rest Frequency/Wavelength
 	//---------------------------------------------------------------------------------

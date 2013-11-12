@@ -537,12 +537,12 @@ PBMath1D::apply(const ImageInterface<Complex>& in,
     // RL beam, say. The latter is slightly smaller because of the
     // squint. Hence this code should be deprecated in favor of the
     // correct 2D version (when mosaicing in polarization)
-    if (doSquint == BeamSquint::RR ||
-	doSquint == BeamSquint::GOFIGURE && istokes == rrplane ) {
+    if ((doSquint == BeamSquint::RR) ||
+	((doSquint == BeamSquint::GOFIGURE) && (istokes == rrplane)) ) {
       xPixel = xSquintPixCache(0, ichan);
       yPixel = ySquintPixCache(0, ichan);
-    } else if (doSquint == BeamSquint::LL ||
-	doSquint == BeamSquint::GOFIGURE && istokes == llplane ) {
+    } else if ((doSquint == BeamSquint::LL) ||
+	       ((doSquint == BeamSquint::GOFIGURE) && (istokes == llplane)) ) {
       xPixel = xSquintPixCache(1, ichan);
       yPixel = ySquintPixCache(1, ichan);
     } else {
@@ -767,12 +767,12 @@ PBMath1D::apply(const ImageInterface<Float>& in,
     ix0 = loc(0);
 
     // determine the pointing: RR, LL, or Center?
-    if (doSquint == BeamSquint::RR ||
-	doSquint == BeamSquint::GOFIGURE && istokes == rrplane ) {
+    if ((doSquint == BeamSquint::RR) ||
+	((doSquint == BeamSquint::GOFIGURE) && (istokes == rrplane)) ) {
       xPixel = xSquintPixCache(0, ichan);
       yPixel = ySquintPixCache(0, ichan);
-    } else if (doSquint == BeamSquint::LL ||
-	doSquint == BeamSquint::GOFIGURE && istokes == llplane ) {
+    } else if ((doSquint == BeamSquint::LL) ||
+	       ((doSquint == BeamSquint::GOFIGURE) && (istokes == llplane ))) {
       xPixel = xSquintPixCache(1, ichan);
       yPixel = ySquintPixCache(1, ichan);
     } else {

@@ -183,7 +183,7 @@ void FeatherMain::preferencesChanged(){
 			ui.xGroupBox->setTitle( "Distance");
 		}
 		plotHolder->setXAxisUV( xAxisUV );
-		preferencesColor.setRadialPlot( !xAxisUV );
+
 		//We have to reset the data if we are changing from a uv to a
 		//radial plot
 		dataManager->setRadial( !xAxisUV );

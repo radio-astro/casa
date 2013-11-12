@@ -78,6 +78,7 @@ qt4_wrap_cpp( outfiles_qoh
   )
 
 casa_qt4_wrap_ui( outfiles_ui
+  " "
   QtBrowser/QCloseableWidget.ui
   QtBrowser/QProgressPanel.ui
   QtBrowser/TBArrayPanel.ui
@@ -116,9 +117,9 @@ casa_qt4_wrap_ui( outfiles_ui
   QwtPlotter/QPPlotter.ui
   )
 
-casa_qt4_add_resources( outfiles_qrc QtBrowser/actions.qrc OPTIONS -name QtBrowser )
-casa_qt4_add_resources( outfiles_qrc QtFileCatalog/filecatalog.qrc OPTIONS -name QtFileCatalog )
-casa_qt4_add_resources( outfiles_qrc QtLogger/logviewer.qrc OPTIONS -name QtLogger )
+casa_qt4_add_resources( outfiles_qrc " " QtBrowser/actions.qrc OPTIONS -name QtBrowser )
+casa_qt4_add_resources( outfiles_qrc " " QtFileCatalog/filecatalog.qrc OPTIONS -name QtFileCatalog )
+casa_qt4_add_resources( outfiles_qrc " " QtLogger/logviewer.qrc OPTIONS -name QtLogger )
 
 casa_add_library( casaqt
   ${outfiles_qoh} ${outfiles_ui} ${outfiles_qrc}

@@ -31,6 +31,13 @@ namespace casa
 MSTransformBufferImpl::MSTransformBufferImpl(MSTransformManager *manager)
 {
 	manager_p = manager;
+
+	MSSpectralWindow spwTable = manager_p->outputMs_p->spectralWindow();
+	MSSpWindowColumns spwCols(spwTable);
+	spwFrequencies_p.reference(spwCols.chanFreq());
+
+	rowIdOffset_p = 0;
+
 	return;
 }
 
@@ -45,6 +52,7 @@ void MSTransformBufferImpl::resetState()
 	stateIdOk_p = False;
 	fieldIdOk_p = False;
 	dataDescIdOk_p = False;
+	spectralWindowsOk_p = False;
 	processorIdOk_p = False;
 	antenna1Ok_p = False;
 	antenna2Ok_p = False;
@@ -64,6 +72,12 @@ void MSTransformBufferImpl::resetState()
 	visCubeModelOk_p = False;
 	visCubeFloatOk_p = False;
 	weightSpectrumOk_p = False;
+	feedPaOk_p = False;
+	parangOk_p = False;
+	azelOk_p = False;
+	frequenciesOk_p = False;
+	channelNumbersOk_p = False;
+	rowIdsOk_p = False;
 	shapeOk_p = False;
 	nRowsOk_p = False;
 	nChannelsOk_p = False;
@@ -76,6 +90,7 @@ void MSTransformBufferImpl::resetState()
 	stateIdTransformed_p = False;
 	fieldIdTransformed_p = False;
 	dataDescIdTransformed_p = False;
+	spectralWindowsTransformed_p = False;
 	processorIdTransformed_p = False;
 	antenna1Transformed_p = False;
 	antenna2Transformed_p = False;
@@ -86,6 +101,12 @@ void MSTransformBufferImpl::resetState()
 	timeCentroidTransformed_p = False;
 	timeIntervalTransformed_p = False;
 	exposureTransformed_p = False;
+	feedPaOk_p = False;
+	parangOk_p = False;
+	azelOk_p = False;
+	frequenciesTransformed_p = False;
+	channelNumbersTransformed_p = False;
+	rowIdsTransformed_p = False;
 
 	return;
 }
@@ -97,19 +118,53 @@ const Vector<Int> & MSTransformBufferImpl::dataDescriptionIds () const
 {
 	if (not dataDescIdOk_p)
 	{
-		dataDescriptionIds_p.resize(manager_p->nRowsToAdd_p,False);
+		getShape();
+		dataDescriptionIds_p.resize(nRows_p,False);
 
 		dataDescIdTransformed_p = manager_p->transformDDIVector(manager_p->getVisBuffer()->dataDescriptionIds(),
 																dataDescriptionIds_p);
+
+		if (not dataDescIdTransformed_p)
+		{
+			dataDescriptionIds_p = manager_p->getVisBuffer()->dataDescriptionIds();
+		}
+
 		dataDescIdOk_p = True;
 	}
 
-	if (not dataDescIdTransformed_p)
+	return dataDescriptionIds_p;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+const Vector<Int> & MSTransformBufferImpl::spectralWindows () const
+{
+	if (not spectralWindowsOk_p)
 	{
-		return manager_p->getVisBuffer()->dataDescriptionIds();
+		dataDescriptionIds();
+
+		getShape();
+		spectralWindows_p.resize(nRows_p,False);
+
+		if (not dataDescIdTransformed_p)
+		{
+			spectralWindows_p = manager_p->getVisBuffer()->spectralWindows();
+		}
+		else
+		{
+			for (uInt rowIdx = 0; rowIdx<nRows_p;rowIdx++)
+			{
+				spectralWindows_p(rowIdx) = dataDescriptionIds_p(rowIdx);
+			}
+
+			spectralWindowsTransformed_p = True;
+		}
+
+		spectralWindowsOk_p = True;
 	}
 
-	return dataDescriptionIds_p;
+	return spectralWindows_p;
 }
 
 // -----------------------------------------------------------------------
@@ -119,7 +174,8 @@ const Vector<Int> & MSTransformBufferImpl::observationId () const
 {
 	if (not observationIdOk_p)
 	{
-		observationId_p.resize(manager_p->nRowsToAdd_p,False);
+		getShape();
+		observationId_p.resize(nRows_p,False);
 
 		observationIdTransformed_p = manager_p->transformReindexableVector(	manager_p->getVisBuffer()->observationId(),
 																			observationId_p,
@@ -143,7 +199,8 @@ const Vector<Int> & MSTransformBufferImpl::arrayId () const
 {
 	if (not arrayIdOk_p)
 	{
-		arrayId_p.resize(manager_p->nRowsToAdd_p,False);
+		getShape();
+		arrayId_p.resize(nRows_p,False);
 
 		arrayIdTransformed_p = manager_p->transformReindexableVector(	manager_p->getVisBuffer()->arrayId(),
 																		arrayId_p,
@@ -167,7 +224,8 @@ const Vector<Int> & MSTransformBufferImpl::fieldId () const
 {
 	if (not fieldIdOk_p)
 	{
-		fieldId_p.resize(manager_p->nRowsToAdd_p,False);
+		getShape();
+		fieldId_p.resize(nRows_p,False);
 
 		fieldIdTransformed_p = manager_p->transformReindexableVector(	manager_p->getVisBuffer()->fieldId(),
 																		fieldId_p,
@@ -191,7 +249,8 @@ const Vector<Int> & MSTransformBufferImpl::stateId () const
 {
 	if (not stateIdOk_p)
 	{
-		stateId_p.resize(manager_p->nRowsToAdd_p,False);
+		getShape();
+		stateId_p.resize(nRows_p,False);
 
 		stateIdTransformed_p = manager_p->transformReindexableVector(	manager_p->getVisBuffer()->stateId(),
 																		stateId_p,
@@ -216,7 +275,8 @@ const Vector<Int> & MSTransformBufferImpl::antenna1 () const
 {
 	if (not antenna1Ok_p)
 	{
-		antenna1_p.resize(manager_p->nRowsToAdd_p,False);
+		getShape();
+		antenna1_p.resize(nRows_p,False);
 
 		antenna1Transformed_p = manager_p->transformReindexableVector(	manager_p->getVisBuffer()->antenna1(),
 																		antenna1_p,
@@ -240,7 +300,8 @@ const Vector<Int> & MSTransformBufferImpl::antenna2 () const
 {
 	if (not antenna2Ok_p)
 	{
-		antenna2_p.resize(manager_p->nRowsToAdd_p,False);
+		getShape();
+		antenna2_p.resize(nRows_p,False);
 
 		antenna2Transformed_p = manager_p->transformReindexableVector(	manager_p->getVisBuffer()->antenna2(),
 																		antenna2_p,
@@ -264,7 +325,8 @@ const Vector<Int> & MSTransformBufferImpl::scan () const
 {
 	if (not scanOk_p)
 	{
-		scan_p.resize(manager_p->nRowsToAdd_p,False);
+		getShape();
+		scan_p.resize(nRows_p,False);
 
 		scanTransformed_p = manager_p->transformNotReindexableVector(	manager_p->getVisBuffer()->scan(),
 																		scan_p,
@@ -287,7 +349,8 @@ const Vector<Int> & MSTransformBufferImpl::processorId () const
 {
 	if (not processorIdOk_p)
 	{
-		processorId_p.resize(manager_p->nRowsToAdd_p,False);
+		getShape();
+		processorId_p.resize(nRows_p,False);
 
 		processorIdTransformed_p = manager_p->transformNotReindexableVector(	manager_p->getVisBuffer()->processorId(),
 																				processorId_p,
@@ -310,7 +373,8 @@ const Vector<Int> & MSTransformBufferImpl::feed1 () const
 {
 	if (not feed1Ok_p)
 	{
-		feed1_p.resize(manager_p->nRowsToAdd_p,False);
+		getShape();
+		feed1_p.resize(nRows_p,False);
 
 		feed1Transformed_p = manager_p->transformNotReindexableVector(	manager_p->getVisBuffer()->feed1(),
 																		feed1_p,
@@ -333,7 +397,8 @@ const Vector<Int> & MSTransformBufferImpl::feed2 () const
 {
 	if (not feed2Ok_p)
 	{
-		feed2_p.resize(manager_p->nRowsToAdd_p,False);
+		getShape();
+		feed2_p.resize(nRows_p,False);
 
 		feed2Transformed_p = manager_p->transformNotReindexableVector(	manager_p->getVisBuffer()->feed2(),
 																		feed2_p,
@@ -356,7 +421,8 @@ const Vector<Double> & MSTransformBufferImpl::time () const
 {
 	if (not timeOk_p)
 	{
-		time_p.resize(manager_p->nRowsToAdd_p,False);
+		getShape();
+		time_p.resize(nRows_p,False);
 
 		timeTransformed_p = manager_p->transformNotReindexableVector(	manager_p->getVisBuffer()->time(),
 																		time_p,
@@ -379,7 +445,8 @@ const Vector<Double> & MSTransformBufferImpl::timeCentroid () const
 {
 	if (not timeCentroidOk_p)
 	{
-		timeCentroid_p.resize(manager_p->nRowsToAdd_p,False);
+		getShape();
+		timeCentroid_p.resize(nRows_p,False);
 
 		timeCentroidTransformed_p = manager_p->transformNotReindexableVector(	manager_p->getVisBuffer()->timeCentroid(),
 																				timeCentroid_p,
@@ -402,7 +469,8 @@ const Vector<Double> & MSTransformBufferImpl::timeInterval () const
 {
 	if (not timeIntervalOk_p)
 	{
-		timeInterval_p.resize(manager_p->nRowsToAdd_p,False);
+		getShape();
+		timeInterval_p.resize(nRows_p,False);
 
 		timeIntervalTransformed_p = manager_p->transformNotReindexableVector(	manager_p->getVisBuffer()->timeInterval(),
 																				timeInterval_p,
@@ -425,7 +493,8 @@ const Vector<Double> & MSTransformBufferImpl::exposure () const
 {
 	if (not exposureOk_p)
 	{
-		exposure_p.resize(manager_p->nRowsToAdd_p,False);
+		getShape();
+		exposure_p.resize(nRows_p,False);
 
 		if (manager_p->combinespws_p)
 		{
@@ -455,7 +524,8 @@ const Vector<Bool> & MSTransformBufferImpl::flagRow () const
 {
 	if (not flagRowOk_p)
 	{
-		flagRow_p.resize(manager_p->nRowsToAdd_p,False);
+		getShape();
+		flagRow_p.resize(nRows_p,False);
 
 		if (manager_p->combinespws_p)
 		{
@@ -615,10 +685,280 @@ const Array<Bool> & MSTransformBufferImpl::flagCategory () const
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
+const Vector<Float> & MSTransformBufferImpl::feedPa (Double time) const
+{
+	/*
+	if (not feedPaOk_p)
+	{
+		getShape();
+		feedPa_p.resize(nRows_p,False);
+
+		feedPaTransformed_p = manager_p->transformNotReindexableVector(	manager_p->getVisBuffer()->feedPa(time),
+																		feedPa_p,
+																		False);
+		feedPaOk_p = True;
+	}
+
+	if (not feedPaTransformed_p)
+	{
+		return manager_p->getVisBuffer()->feedPa(time);
+	}
+
+	return feedPa_p;
+	*/
+
+	return manager_p->getVisBuffer()->feedPa(time);
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+Float MSTransformBufferImpl::parang0 (Double time) const
+{
+	return manager_p->getVisBuffer()->parang0(time);
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+const Vector<Float> & MSTransformBufferImpl::parang(Double time) const
+{
+	/*
+	if (not parangOk_p)
+	{
+		getShape();
+		parang_p.resize(nRows_p,False);
+
+		parangTransformed_p = manager_p->transformNotReindexableVector(	manager_p->getVisBuffer()->parang(time),
+																		parang_p,
+																		False);
+		parangOk_p = True;
+	}
+
+	if (not parangTransformed_p)
+	{
+		return manager_p->getVisBuffer()->parang(time);
+	}
+
+	return parang_p;
+	*/
+
+	return manager_p->getVisBuffer()->parang(time);
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+MDirection MSTransformBufferImpl::azel0 (Double time) const
+{
+	return manager_p->getVisBuffer()->azel0(time);
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+const Vector<MDirection> & MSTransformBufferImpl::azel(Double time) const
+{
+	if (not azelOk_p)
+	{
+		getShape();
+		azel_p.resize(nRows_p,False);
+
+		azelTransformed_p = manager_p->transformNotReindexableVector(	manager_p->getVisBuffer()->azel(time),
+																		azel_p,
+																		False);
+		azelOk_p = True;
+	}
+
+	if (not azelTransformed_p)
+	{
+		return manager_p->getVisBuffer()->azel(time);
+	}
+
+	return azel_p;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+Double MSTransformBufferImpl::hourang(Double time) const
+{
+	return manager_p->getVisBuffer()->hourang(time);
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+Vector<Int> MSTransformBufferImpl::getCorrelationTypes () const
+{
+	return manager_p->getVisBuffer()->getCorrelationTypes();
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+Double MSTransformBufferImpl::getFrequency (Int rowInBuffer, Int frequencyIndex, Int frame) const
+{
+	Bool newFrequencies = 	manager_p->combinespws_p ||
+							manager_p->refFrameTransformation_p ||
+							manager_p->channelAverage_p ||
+							(manager_p->nspws_p > 1);
+
+	if (not newFrequencies)
+	{
+		return manager_p->getVisBuffer()->getFrequency (rowInBuffer,frequencyIndex,frame);
+	}
+
+	spectralWindows();
+	Vector<Double> frequencies = spwFrequencies_p(spectralWindows_p(rowInBuffer));
+	return frequencies(frequencyIndex);
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+const Vector<Double> & MSTransformBufferImpl::getFrequencies (Int rowInBuffer,Int frame) const
+{
+	if (not frequenciesOk_p)
+	{
+		Bool newFrequencies = 	manager_p->combinespws_p ||
+								manager_p->refFrameTransformation_p ||
+								manager_p->channelAverage_p ||
+								(manager_p->nspws_p > 1);
+
+		if (not newFrequencies)
+		{
+			frequenciesTransformed_p = False;
+		}
+		else
+		{
+			getShape();
+			frequencies_p.resize(nChannels_p,False);
+			Vector<Double> frequencies = spwFrequencies_p(spectralWindows_p(rowInBuffer));
+
+			for (uInt chanIdx = 0; chanIdx<nChannels_p;chanIdx++)
+			{
+				frequencies_p(chanIdx) = frequencies(chanIdx);
+			}
+
+			frequenciesTransformed_p = True;
+		}
+
+		frequenciesOk_p = True;
+	}
+
+	if (not frequenciesTransformed_p)
+	{
+		return manager_p->getVisBuffer()->getFrequencies(rowInBuffer,frame);
+	}
+
+	return frequencies_p;
+
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+Int MSTransformBufferImpl::getChannelNumber (Int rowInBuffer, Int frequencyIndex) const
+{
+	Bool newFrequencies = 	manager_p->combinespws_p ||
+							manager_p->refFrameTransformation_p ||
+							manager_p->channelAverage_p ||
+							(manager_p->nspws_p > 1);
+
+	if (not newFrequencies)
+	{
+		return manager_p->getVisBuffer()->getChannelNumber (rowInBuffer,frequencyIndex);
+	}
+
+	return frequencyIndex;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+const Vector<Int> & MSTransformBufferImpl::getChannelNumbers (Int rowInBuffer) const
+{
+	if (not channelNumbersOk_p)
+	{
+		Bool newFrequencies = 	manager_p->combinespws_p ||
+								manager_p->refFrameTransformation_p ||
+								manager_p->channelAverage_p ||
+								(manager_p->nspws_p > 1);
+
+		if (not newFrequencies)
+		{
+			channelNumbersTransformed_p = False;
+		}
+		else
+		{
+			getShape();
+			channelNumbers_p.resize(nChannels_p,False);
+
+			for (uInt chanIdx = 0; chanIdx<nChannels_p;chanIdx++)
+			{
+				channelNumbers_p(chanIdx) = chanIdx;
+			}
+
+			channelNumbersTransformed_p = True;
+		}
+
+		channelNumbersOk_p = True;
+	}
+
+	if (not channelNumbersTransformed_p)
+	{
+		return manager_p->getVisBuffer()->getChannelNumbers(rowInBuffer);
+	}
+
+	return channelNumbers_p;
+}
+
+const Vector<uInt> & MSTransformBufferImpl::rowIds () const
+{
+	if (not rowIdsOk_p)
+	{
+		Bool newFrequencies = 	manager_p->combinespws_p ||
+								manager_p->refFrameTransformation_p ||
+								manager_p->channelAverage_p ||
+								(manager_p->nspws_p > 1);
+
+		if (not newFrequencies)
+		{
+			rowIdsTransformed_p = False;
+		}
+		else
+		{
+			getShape();
+			rowIds_p.resize(nRows_p,False);
+
+			for (uInt rowIdx = 0; rowIdx<nRows_p;rowIdx++)
+			{
+				rowIds_p(rowIdx) = rowIdOffset_p + rowIdx;
+			}
+
+			rowIdsTransformed_p = True;
+		}
+
+		rowIdsOk_p = True;
+	}
+
+	if (not rowIdsTransformed_p)
+	{
+		return manager_p->getVisBuffer()->rowIds();
+	}
+
+	return rowIds_p;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
 IPosition MSTransformBufferImpl::getShape () const
 {
 	if (not shapeOk_p)
 	{
+		nAntennas_p = manager_p->getVisBuffer()->nAntennas();
 		shapeOk_p = True;
 	}
 
@@ -672,7 +1012,7 @@ Int MSTransformBufferImpl::nAntennas () const
 {
 	if (not nAntennasOk_p)
 	{
-
+		getShape();
 		nAntennasOk_p = True;
 	}
 

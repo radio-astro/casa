@@ -2546,12 +2546,11 @@ namespace casa {
 					std::map<String,bool>::iterator repeat = processed.find(full_image_name);
 					if (repeat != processed.end()) continue;
 					processed.insert(std::map<String,bool>::value_type(full_image_name,true));
-
 					if ( name_ == "polyline" ) {
-
 						RegionInfo *info = newInfoObject( image.get(), padd );
-						if ( info ) region_statistics->push_back( std::tr1::shared_ptr<RegionInfo>(info));
-
+						if ( info ){
+							region_statistics->push_back( std::tr1::shared_ptr<RegionInfo>(info));
+						}
 					} else if ( name_ == "p/v line" ) {
 
 						get_image_region( dd );
