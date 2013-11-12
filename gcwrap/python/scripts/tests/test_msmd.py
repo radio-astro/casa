@@ -112,7 +112,13 @@ class msmd_test(unittest.TestCase):
         got = self.md.antennaids(["DV12", "DA*", "DV1*"])
         expec =  [ 8, 0,  1,  7,  9, 10, 11, 12, 13, 14]
         self.assertTrue((got == expec).all())
-
+        
+        got = self.md.antennaids(["DV12", "DA*", "DV1*"], "1m", qa.quantity(15,"m"))
+        expec =  [ 8, 0,  1,  7,  9, 10, 11, 12, 13, 14]
+        self.assertTrue((got == expec).all())
+        
+        got = self.md.antennaids(["DV12", "DA*", "DV1*"], "1m", qa.quantity(2,"m"))
+        self.assertTrue(len(got) == 0)
         
     def test_chanavgspws(self):
         """Test chanavgspws()"""
