@@ -225,10 +225,13 @@
 #include "SysPowerTable.h"
 #include "SysPowerRow.h"
 
+#include "CalAppPhaseTable.h"
+#include "CalAppPhaseRow.h"
+
 
 
 /*\file "Merger.h"
-    \brief Generated from model's revision "1.61", branch "HEAD"
+    \brief Generated from model's revision "-1", branch ""
 */
 using namespace std;
 
@@ -375,6 +378,8 @@ namespace asdm {
 			bool hasMergedScale;	
 
 			bool hasMergedSysPower;	
+
+			bool hasMergedCalAppPhase;	
 			
 
 
@@ -567,6 +572,9 @@ namespace asdm {
 			void mergeSysPower();
 			void postMergeSysPower();			
 
+			void mergeCalAppPhase();
+			void postMergeCalAppPhase();			
+
 
 
 		void (Merger::*mergeSBSummaryPtr) () ;
@@ -694,6 +702,8 @@ namespace asdm {
 		void (Merger::*mergeScalePtr) () ;
 
 		void (Merger::*mergeSysPowerPtr) () ;
+
+		void (Merger::*mergeCalAppPhasePtr) () ;
 
 	};
 } // End namespace asdm
