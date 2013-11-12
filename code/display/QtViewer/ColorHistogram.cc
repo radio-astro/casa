@@ -265,9 +265,11 @@ namespace casa {
 
 		//Look to see if the power cycles have changed.
 		Record dataOptionsRecord = displayData->getOptions();
-		Record powerScaleRecord = dataOptionsRecord.asRecord( WCPowerScaleHandler::POWER_CYCLES );
-		float powerCycles = powerScaleRecord.asFloat( "value" );
-		resetPowerCycles( powerCycles );
+		if ( dataOptionsRecord.isDefined( WCPowerScaleHandler::POWER_CYCLES )){
+			Record powerScaleRecord = dataOptionsRecord.asRecord( WCPowerScaleHandler::POWER_CYCLES );
+			float powerCycles = powerScaleRecord.asFloat( "value" );
+			resetPowerCycles( powerCycles );
+		}
 
 		//Look to see if the min/max range have changed.
 		if ( dataOptionsRecord.isDefined(PrincipalAxesDD::HISTOGRAM_RANGE)) {
