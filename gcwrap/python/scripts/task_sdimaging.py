@@ -328,7 +328,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         my_ia.close()
         # Modify default mask
         my_ia.open(self.outfile)
-        my_ia.calcmask('%s>%f' % (weightfile.replace("/", "\/"),self.minweight), asdefault=True)
+        my_ia.calcmask("'%s'>%f" % (weightfile,self.minweight), asdefault=True)
         my_ia.close()
         masked_fraction = 100.*(1. - (weight_val.size - len(mask_pixels[0])) / float(len(valid_pixels[0])) )
         casalog.post("This amounts to %5.1f %% of the area with nonzero weight." % \
