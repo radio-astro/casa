@@ -436,11 +436,11 @@ void QPPlotter::setupCanvasFrame() {
     
     // remove the previous Qt layout, but do NOT delete the canvas children
     // as this will be taken care of by our smart pointers (hopefully)
-    if(canvasFrame->layout() != NULL) {
+    if(canvasFrame != NULL && canvasFrame->layout() != NULL) {
         while((canvasFrame->layout()->takeAt(0)) != 0);
         delete canvasFrame->layout();
     }
-    
+
     m_layout->attach(this);
     
     // add canvases to frame
@@ -480,8 +480,13 @@ void QPPlotter::setupCanvasFrame() {
             //for(unsigned int j = 0; j < colCount; j++) {
             for(int j = startCols; j < colCount; j++) {
                 coord.col = j;
-                c = dynamic_cast<QPCanvas*>(g->canvasAt(coord).operator->());
-                qgl->addWidget(c, i, j);
+                PlotCanvasPtr ptrCanvas = g->canvasAt( coord );
+                if ( !ptrCanvas.null()){
+                	//c = dynamic_cast<QPCanvas*>(g->canvasAt(coord).operator->());
+                	c = dynamic_cast<QPCanvas*>(ptrCanvas.operator->());
+                	qgl->addWidget(c, i, j);
+                }
+            
             }
         }
 

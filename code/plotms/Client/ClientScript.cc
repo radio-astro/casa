@@ -129,8 +129,8 @@ ThreadController* ClientScript::getThreadController( PlotMSAction::Type /*type*/
 	return NULL;
 }
 
-void ClientScript::showGUI( bool show ) {
-	itsPlotter_->showGUI(show);
+void ClientScript::showGUI( bool /*show*/ ) {
+	//itsPlotter_->showGUI(true);
 }
 
 void ClientScript::showMessage(const String& message, const String& title) {
