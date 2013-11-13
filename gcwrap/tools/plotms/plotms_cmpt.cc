@@ -47,7 +47,7 @@ const unsigned int plotms::LAUNCH_TOTAL_WAIT_US    = 5000000;
 
 // Constructors/Destructors //
 
-  plotms::plotms() : itsWatcher_(this),doIter_(True) {
+  plotms::plotms() : itsWatcher_(this){
 	  showGui = true;
 	  asyncCall = true;
 
@@ -287,7 +287,7 @@ void plotms::setPlotMSIterate(const std::string& iteraxis,
     }
 
     // Only if iteration enabled...
-    if (doIter_)
+    //if (doIter_)
       setPlotMSIterate_(iter, updateImmediately, plotIndex);
    
 }
@@ -687,7 +687,6 @@ void plotms::launchApp() {
 	pid_t pid = fork();
 	if(pid == 0) {
 		String scriptClient;
-		cout << "Launch app showGui="<<showGui<<endl;
 		if ( !showGui ){
 			scriptClient = "--nogui";
 		}
@@ -701,18 +700,12 @@ void plotms::launchApp() {
 
 		String nopop="--nopopups";
 
-		// If user has turned off iter, be sure not to launch with it
-		String iter="";
-		if (!doIter_){
-			iter="--noiter";
-		}
-
 		execlp(PlotMSDBusApp::APP_NAME.c_str(),
 				PlotMSDBusApp::APP_NAME.c_str(),
 				PlotMSDBusApp::APP_CASAPY_SWITCH.c_str(),
 				nopop.c_str(),
 				file.c_str(), filter.c_str(),
-				iter.c_str(), scriptClient.c_str(),
+				scriptClient.c_str(),
 				NULL);
 
 	} else {
@@ -904,7 +897,7 @@ void plotms::setYRange(const bool yautorange,  const double ymin, const double y
 
 
 // A _temporary_ method to enable turning off the iteration path
-bool plotms::enableIter(const bool enable) {
+/*bool plotms::enableIter(const bool enable) {
 
   // Do something only if changing state
   if (enable!=doIter_) {
@@ -925,7 +918,7 @@ bool plotms::enableIter(const bool enable) {
 
   return true;
 
-}
+}*/
 
 
 
