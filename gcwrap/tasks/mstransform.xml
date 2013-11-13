@@ -312,7 +312,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </param>
     
         <param type="any" name="timespan" subparam="true">
-            <description>Let time bins span changes in scan and/or state.</description>
+            <description>Span the timebin across scan, state or both.</description>
             <any type="variant" limittypes="string stringArray"/>
             <value type="string"></value>
         </param>
@@ -625,10 +625,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         timebin -- Bin width for time averaging.
             default: '1s'
 
-        timespan -- Let time bins span changes in scan and/or state. State is equivalent
-                    to the scan intents. For example, one may have a collection of scans pointing 
-                    at the source, and others pointing at the calibrator, so averaging across 
-                    state would average observation and calibration data. 
+        timespan -- Let the timebin span across scan, state or both.
+                    State is equivalent to sub-scans. One scan may have several
+                    state ids. For ALMA MSs, the sub-scans are limited to about
+                    32s duration each, therefore if you want to do time average
+                    with a timebin greater than 30s, set timespan='state' to allow
+                    for this. It is useful to use the msmd tool to get the number
+                    of states per scan. See help msmd.
+
             default: '' (separate time bins by both of the above)
             options: 'scan', 'state', 'state,scan'
 
