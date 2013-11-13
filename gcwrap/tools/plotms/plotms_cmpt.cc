@@ -27,6 +27,7 @@
 #include <plotms_cmpt.h>
 
 #include <stdcasa/StdCasa/CasacSupport.h>
+#include <display/QtViewer/QtApp.h>
 #include <dbus_cmpt.h>
 
 #include <unistd.h>
@@ -49,6 +50,7 @@ const unsigned int plotms::LAUNCH_TOTAL_WAIT_US    = 5000000;
   plotms::plotms() : itsWatcher_(this),doIter_(True) {
 	  showGui = true;
 	  asyncCall = true;
+
   }
 
   plotms::~plotms() { closeApp(); }
@@ -180,6 +182,7 @@ void plotms::setPlotMSSelection(const string& field, const string& spw,
         const string& antenna, const string& scan, const string& corr,
 	const string& array, const string& observation, const string& msselect,
         const bool updateImmediately, const int plotIndex) {
+	 launchApp();
     PlotMSSelection sel;
     
     sel.setField(field);
@@ -606,7 +609,13 @@ void plotms::hide()   {
 }*/
 
 void plotms::setShowGui( bool showGui ){
+	//Set the variable first so we instantiate the script/non-script
+	//client
 	this->showGui = showGui;
+	//When app is being launched, showGui determines whether it is
+	//a script client or not.  Afterward, it will just show the GUI
+	//if it has been closed by the user in non-scripting mode.
+	launchApp();
 	if ( showGui ){
 		//This is needed in the case where the is running plotms
 		//from casapy.  If the user closes plotms, and then calls
@@ -614,13 +623,12 @@ void plotms::setShowGui( bool showGui ){
 		//this line.
 		callAsync(PlotMSDBusApp::METHOD_SHOW);
 	}
-	asyncCall = showGui;
 }
 
 
 
 bool plotms::save(const string& filename, const string& format, const bool highres, const bool interactive) {
-    launchApp();
+	 launchApp();
     Record params;
     bool retValue;
     params.define(PlotMSDBusApp::PARAM_EXPORT_FILENAME, filename);
@@ -671,63 +679,68 @@ bool plotms::displaySet() {
 
 void plotms::launchApp() {
 
-    if(!app.dbusName( ).empty() || !displaySet()) return;
-    
-    String scriptClient;
-    if ( !showGui ){
-    	scriptClient = "--nogui";
-    }
+	if(!app.dbusName( ).empty() || !displaySet()) return;
 
-    // Launch PlotMS application with the DBus switch.
-    pid_t pid = fork();
-    if(pid == 0) {
 
-        String file = itsLogFilename_.empty() ? "" :
-                      PlotMSDBusApp::APP_LOGFILENAME_SWITCH + "=" +
-                      itsLogFilename_;
-        String filter = itsLogFilter_.empty() ? "" :
-                        PlotMSDBusApp::APP_LOGFILTER_SWITCH + "=" +
-                        itsLogFilter_;
 
-	String nopop="--nopopups";
+	// Launch PlotMS application with the DBus switch.
+	pid_t pid = fork();
+	if(pid == 0) {
+		String scriptClient;
+		cout << "Launch app showGui="<<showGui<<endl;
+		if ( !showGui ){
+			scriptClient = "--nogui";
+		}
+		asyncCall = showGui;
+		String file = itsLogFilename_.empty() ? "" :
+				PlotMSDBusApp::APP_LOGFILENAME_SWITCH + "=" +
+				itsLogFilename_;
+		String filter = itsLogFilter_.empty() ? "" :
+				PlotMSDBusApp::APP_LOGFILTER_SWITCH + "=" +
+				itsLogFilter_;
 
-	// If user has turned off iter, be sure not to launch with it
-	String iter="";
-	if (!doIter_)
-	  iter="--noiter";
+		String nopop="--nopopups";
 
-        execlp(PlotMSDBusApp::APP_NAME.c_str(),
-               PlotMSDBusApp::APP_NAME.c_str(),
-               PlotMSDBusApp::APP_CASAPY_SWITCH.c_str(),
-	       nopop.c_str(),
-               file.c_str(), filter.c_str(),
-	       iter.c_str(), scriptClient.c_str(),
-               NULL);
-        
-    } else {
+		// If user has turned off iter, be sure not to launch with it
+		String iter="";
+		if (!doIter_){
+			iter="--noiter";
+		}
 
-        app.dbusName( ) = to_string(QtDBusApp::generateServiceName(app.getName( ),pid));
-        
-        // Wait for it to have launched...
-        unsigned int slept = 0;
-        bool launched = false;
-        while(!launched && slept < LAUNCH_TOTAL_WAIT_US) {
-            usleep(LAUNCH_WAIT_INTERVAL_US);
-            launched = QtDBusApp::serviceIsAvailable(app.dbusName( ));
-            slept += LAUNCH_WAIT_INTERVAL_US;
-        }
-        
-        if(launched) {        
-            itsLogFilename_ = "";
-            itsLogFilter_ = "";
-            
-        } else {
-            app.dbusName( ) = "";
-            cerr << "ERROR: plotms application did not launch within specified"
-                    " time window.  Check running processes and try again if "
-                    "desired." << endl;
-        }
-    }
+		execlp(PlotMSDBusApp::APP_NAME.c_str(),
+				PlotMSDBusApp::APP_NAME.c_str(),
+				PlotMSDBusApp::APP_CASAPY_SWITCH.c_str(),
+				nopop.c_str(),
+				file.c_str(), filter.c_str(),
+				iter.c_str(), scriptClient.c_str(),
+				NULL);
+
+	} else {
+
+		app.dbusName( ) = to_string(QtDBusApp::generateServiceName(app.getName( ),pid));
+
+		QtApp::init();
+
+		// Wait for it to have launched...
+		unsigned int slept = 0;
+		bool launched = false;
+		while(!launched && slept < LAUNCH_TOTAL_WAIT_US) {
+			usleep(LAUNCH_WAIT_INTERVAL_US);
+			launched = QtDBusApp::serviceIsAvailable(app.dbusName( ));
+			slept += LAUNCH_WAIT_INTERVAL_US;
+		}
+
+		if(launched) {
+			itsLogFilename_ = "";
+			itsLogFilter_ = "";
+
+		} else {
+			app.dbusName( ) = "";
+			cerr << "ERROR: plotms application did not launch within specified"
+					" time window.  Check running processes and try again if "
+					"desired." << endl;
+		}
+	}
 }
 
 void plotms::closeApp() {
