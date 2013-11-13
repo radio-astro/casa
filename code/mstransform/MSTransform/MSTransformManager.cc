@@ -813,7 +813,8 @@ void MSTransformManager::parseTimeAvgParams(Record &configuration)
 			if (maxuvwdistance_p > 0)
 			{
 				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-						<< "Maximum UV distance for baseline-dependent time average is: " << maxuvwdistance_p << LogIO::POST;
+						<< "Maximum UV distance for baseline-dependent time average is: "
+						<< maxuvwdistance_p << " meters" << LogIO::POST;
 			}
 		}
 
