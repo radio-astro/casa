@@ -60,7 +60,7 @@ public:
 				LOW_CONVOLVED_HIGH_WEIGHTED, /*LOW_CONVOLVED_DIRTY, LOW_CONVOLVED_DIRTY_WEIGHTED,*/ END_DATA };
 	void setImages(ImageInterface<float>* lowImage, ImageInterface<float>* highImage, ImageInterface<float>* dirtyImage );
 	void setFeatherWorker( Feather* worker );
-	void setLogger( LogIO* logger );
+	static void setLogger( LogIO* logger );
 	void setRadial( bool radialPlot );
 	bool isSuccess() const;
 	QString getErrorMessage() const;
@@ -73,11 +73,11 @@ private:
 	FeatherThread operator=( const FeatherThread& other );
 	bool collectLowHighData();
 	bool collectLowDirtyData();
-	ImageInterface<float>* addMissingAxes( ImageInterface<float>* firstImage );
+	static ImageInterface<float>* addMissingAxes( ImageInterface<float>* firstImage );
 	bool collectConvolvedData( DataTypes original, DataTypes cut);
 	bool setWorkerImages( ImageInterface<float>* imageLow, ImageInterface<float>* imageHigh );
 	Feather* featherWorker;
-	LogIO* logger;
+	static LogIO* logger;
 	ImageInterface<float>* lowImage;
 	ImageInterface<float>* highImage;
 	ImageInterface<float>* dirtyImage;

@@ -445,7 +445,8 @@ bool FeatherManager::isSuccess() const {
 ImageInterface<float>* FeatherManager::getSinglePlaneImage( ImageInterface<float>* image ) const {
 	ImageInterface<float>* feedImage = NULL;
 	if ( image != NULL ){
-		ImageInterface<float>* imageCopy = thread->addMissingAxes(image);
+		FeatherThread::setLogger( logger );
+		ImageInterface<float>* imageCopy = FeatherThread::addMissingAxes(image);
 		if ( !channelsAveraged  ){
 			int channelCount = getPlaneCount( image );
 			bool channelsExceeded = false;

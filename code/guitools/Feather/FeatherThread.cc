@@ -35,6 +35,8 @@
 
 namespace casa {
 
+LogIO* FeatherThread::logger = NULL;
+
 FeatherThread::FeatherThread():
 				featherWorker(NULL),
 				lowImage(NULL), highImage(NULL), dirtyImage(NULL){
@@ -42,7 +44,6 @@ FeatherThread::FeatherThread():
 	fileSaved = true;
 	success = true;
 	featherWorker = new Feather();
-	logger = NULL;
 }
 
 FeatherThread::~FeatherThread(){
@@ -59,8 +60,8 @@ QString FeatherThread::getErrorMessage() const {
 	return errorMessage;
 }
 
-void FeatherThread::setLogger( LogIO* logger ){
-	this->logger = logger;
+void FeatherThread::setLogger( LogIO* loggerIO ){
+	logger = loggerIO;
 }
 
 void FeatherThread::setFeatherWorker( Feather* worker ){
@@ -324,8 +325,7 @@ ImageInterface<float>* FeatherThread::addMissingAxes( ImageInterface<float>* fir
 		if(CoordinateUtil::findStokesAxis(stokesvec, cSys) <0){
 			CoordinateUtil::addIAxis(cSys);
 			ImageUtilities::addDegenerateAxes (*logger, copyPtr, *firstCopy, "",
-					False, False,"I", False, False,
-					True);
+					False, False,"I", False, False, True);
 			firstCopy=CountedPtr<ImageInterface<Float> >(copyPtr.ptr(), False);
 		}
 		if(CoordinateUtil::findSpectralAxis(cSys) <0){
