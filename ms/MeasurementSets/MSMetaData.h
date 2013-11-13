@@ -171,6 +171,9 @@ public:
 	// get the antenna stations for the specified antenna names
 	virtual vector<String> getAntennaStations(const vector<String>& antennaNames) = 0;
 
+	// get the antenna diameters
+	virtual Quantum<Vector<Double> > getAntennaDiameters() = 0;
+
 	// ALMA-specific. Get set of spectral windows used for TDM. These are windows that have
 	// 64, 128, or 256 channels
 	virtual std::set<uInt> getTDMSpw() = 0;
@@ -429,6 +432,10 @@ protected:
 	);
 
 	static vector<String> _getAntennaStationNames(
+		const MeasurementSet& ms
+	);
+
+	static Quantum<Vector<Double> > _getAntennaDiameters(
 		const MeasurementSet& ms
 	);
 
