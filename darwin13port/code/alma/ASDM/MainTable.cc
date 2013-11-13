@@ -322,6 +322,7 @@ MainRow* MainTable::newRow(MainRow* row) {
 	//
 
 	
+		
 	
 		
 		
@@ -363,9 +364,11 @@ MainRow* MainTable::newRow(MainRow* row) {
 		MainRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
 		                                           // by passing true in the second parameter
 		                                           // whose value by default is false.
+                if (false) cout << (unsigned long long) dummy;
 	}
 	
 
+	
 
 
 	// 
@@ -381,7 +384,7 @@ MainRow* MainTable::newRow(MainRow* row) {
 			
 			
 			
-	MainRow*  MainTable::checkAndAdd(MainRow* x, bool skipCheckUniqueness) {
+	MainRow*  MainTable::checkAndAdd(MainRow* x, bool ) {
 		string keystr = Key( 
 						x->getConfigDescriptionId() 
 					   , 
@@ -561,7 +564,7 @@ MainRow* MainTable::newRow(MainRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<MainTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:main=\"http://Alma/XASDM/MainTable\" xsi:schemaLocation=\"http://Alma/XASDM/MainTable http://almaobservatory.org/XML/XASDM/3/MainTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n");
+		buf.append("<MainTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:main=\"http://Alma/XASDM/MainTable\" xsi:schemaLocation=\"http://Alma/XASDM/MainTable http://almaobservatory.org/XML/XASDM/3/MainTable.xsd\" schemaVersion=\"3\" schemaRevision=\"-1\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -683,7 +686,7 @@ MainRow* MainTable::newRow(MainRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<MainTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:main=\"http://Alma/XASDM/MainTable\" xsi:schemaLocation=\"http://Alma/XASDM/MainTable http://almaobservatory.org/XML/XASDM/3/MainTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n";
+		oss << "<MainTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:main=\"http://Alma/XASDM/MainTable\" xsi:schemaLocation=\"http://Alma/XASDM/MainTable http://almaobservatory.org/XML/XASDM/3/MainTable.xsd\" schemaVersion=\"3\" schemaRevision=\"-1\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='MainTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";

@@ -134,9 +134,9 @@ namespace casa{
   //
   //-----------------------------------------------------------------------
   //
-  void CFCache::summary(CFStoreCacheType2& memStore, Bool cfsInfo)
+  void CFCache::summarize(CFStoreCacheType2& memStore, const String& message, const Bool cfsInfo)
   {
-    LogOrigin logOrigin("CFCache", "summary");
+    LogOrigin logOrigin("CFCache", "summarize");
     LogIO log_l(logOrigin);
 
     IPosition cfsShp=memStore[0].getShape();
@@ -145,8 +145,8 @@ namespace casa{
     if (cfsInfo)
       {
 	log_l << "PA: ";
-	for (Int iBL=0; iBL<cfsShp(0); iBL++)
-	  for (Int iPA=0; iPA<cfsShp(1); iPA++)
+	for (Int iBL=0; iBL<cfsShp(1); iBL++)
+	  for (Int iPA=0; iPA<cfsShp(0); iPA++)
 	    {
 	      Quantity pa; Int ant1, ant2;
 	      memStore[0].getParams(pa, ant1, ant2, iPA, iBL);
@@ -154,19 +154,19 @@ namespace casa{
 	    }
 	log_l << LogIO::POST;
       }
-
-    for(Int iBL=0; iBL<cfsShp(0); iBL++)
-      for(Int iPA=0; iPA<cfsShp(1); iPA++)
+    log_l << message << LogIO::POST;
+    for(Int iBL=0; iBL<cfsShp(1); iBL++)
+      for(Int iPA=0; iPA<cfsShp(0); iPA++)
 	{
-	  IPosition cfbShp=memStore[0].getCFBuffer(iPA,iBL)->getShape();
+	  CFBuffer& cfb=memStore[0](iPA,iBL);
+	  IPosition cfbShp=cfb.getShape();
 	  for (Int iw=0; iw<cfbShp[1]; iw++)
 	    {
-	      log_l << "Support Size (w: "<< iw << ",C): ";
+	      log_l << "Support Size (w: "<< iw <<",C): ";
 	      {
 		for (Int inu=0; inu<cfbShp[0]; inu++)
-		  {
-		    log_l << memStore[0].getCFBuffer(iPA, iBL)->getCFCellPtr(inu, iw, ipol)->xSupport_p << " ";
-		  }
+		    log_l << cfb(inu, iw, ipol).xSupport_p << " ";
+
 		log_l << LogIO::POST;
 	      }
 	    }
@@ -207,8 +207,8 @@ namespace casa{
     Double memUsed0,memUsed1;
     memUsed0=memCache2_p[0].memUsage()/1024;
     memUsed1=memCacheWt2_p[0].memUsage()/1024;
-    summary(memCache2_p,True);
-    summary(memCacheWt2_p,False);
+    summarize(memCache2_p,   "CFS",   True);
+    summarize(memCacheWt2_p, "WTCFS", False);
 
     log_l << "Total CF Cache memory footprint: " << (memUsed0+memUsed1) << " (" << memUsed0 << "," << memUsed1 << ") KB" << LogIO::POST;
   }
@@ -254,9 +254,12 @@ namespace casa{
 	    sort( paList_p.begin(), paList_p.end() );
 	    paList_p.erase( unique( paList_p.begin(), paList_p.end() ), paList_p.end() );
 	    cfCacheTable_l.resize(paList_p.size());
-	    
-	    // For each CF, load the PA, Muelller element, WValue and the Ref. Freq. 
-	    // Insert these values in the lists in the cfCacheTable
+
+	    //	    
+	    // For each CF, load the PA, Muelller element, WValue and
+	    // the Ref. Freq.  Insert these values in the lists in the
+	    // cfCacheTable
+	    //
 	    Array<Complex> pixBuf;
 
 	    for (uInt i=0; i < fileNames.nelements(); i++)
@@ -269,7 +272,6 @@ namespace casa{
 
 		Int ipos; SynthesisUtils::stdNearestValue(paList_p, (Float)paVal,ipos);
 		uInt paPos=ipos;
-		//		cerr << paPos << " " << paList_p.size() << " " << i << endl;
 		  
 		if (paPos < paList_p.size())
 		  {
@@ -286,15 +288,11 @@ namespace casa{
 		// memCache2_p) to add CFBuffer for the each entry in
 		// the paList.
 		//
-		//log_l << "PA: " << paList_p[ipa] << endl;
 		vector<String> fileNames(cfCacheTable_l[ipa].cfNameList);
-		
-		//		if (memStore.nelements() == 0) memStore.resize(1);
 
 		Quantity paQuant(paList_p[ipa],"deg"), dPA(1.0,"deg");
 		memStore[0].resize(paQuant, dPA, 0,0);
 		CountedPtr<CFBuffer> cfb=memStore[0].getCFBuffer(paQuant, dPA, 0, 0);
-
 
 		//
 		// Get the list of f, w, mVals from cfCacheTable_l for
