@@ -129,7 +129,8 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regrid() const {
 	csysTo.setObsInfo(csysFrom.obsInfo());
 	std::set<Coordinate::Type> coordsToRegrid;
 	CoordinateSystem csys = ImageRegrid<Float>::makeCoordinateSystem(
-		*_getLog(), coordsToRegrid, csysTo, csysFrom, _axes, subImage.shape()
+		*_getLog(), coordsToRegrid, csysTo, csysFrom, _axes,
+		subImage.shape(), False
 	);
 
 	if (csys.nPixelAxes() != _shape.nelements()) {
