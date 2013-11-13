@@ -46,7 +46,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
 
         # field
         self.fieldid=-1
-        sourceid=-1
+        self.sourceid=-1
         self.open_table(self.field_table)
         field_names = self.table.getcol('NAME')
         source_ids = self.table.getcol('SOURCE_ID')
