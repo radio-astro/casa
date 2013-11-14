@@ -14,7 +14,7 @@ from . import h
 from . import hco
 from . import hif
 from . import hsd
-from . import vla
+from . import hifv
 
 from .infrastructure import Pipeline, Context
 
@@ -45,7 +45,7 @@ def _get_unified_task_module(packages):
             module.__dict__[k] = v
     return module
 
-tasks = _get_unified_task_module([h.tasks, hif.tasks, hco.tasks, hsd.tasks, vla.tasks])
+tasks = _get_unified_task_module([h.tasks, hif.tasks, hco.tasks, hsd.tasks, hifv.tasks])
 
 
 def show_weblog(context):
