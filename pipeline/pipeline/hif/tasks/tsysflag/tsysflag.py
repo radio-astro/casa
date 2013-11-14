@@ -14,6 +14,7 @@ from pipeline.hif.tasks.flagging.flagdatasetter import FlagdataSetter
 from .resultobjects import TsysflagResults
 from ..common import commonresultobjects
 from ..common import calibrationtableaccess as caltableaccess
+from ..common import commonhelpermethods
 from ..common import viewflaggers
 
 LOG = infrastructure.get_logger(__name__)
@@ -460,13 +461,13 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
         ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
 
         # Get antenna names, ids
-        antenna_name, antenna_ids = self._get_antenna_names(ms)
+        antenna_name, antenna_ids = commonhelpermethods.get_antenna_names(ms)
 
         # Get ids of fields for reference spectra
         referencefieldids = intent_ids(refintent, ms)
 
         # get names of correlation products
-        corr_type = self._get_corr_products(ms, spwid)
+        corr_type = commonhelpermethods.get_corr_products(ms, spwid)
 
         times = set()
 
@@ -643,10 +644,10 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
         ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
 
         # Get antenna names, ids
-        antenna_name, antenna_ids = self._get_antenna_names(ms)
+        antenna_name, antenna_ids = commonhelpermethods.get_antenna_names(ms)
 
         # get names of correlation products
-        corr_type = self._get_corr_products(ms, spwid)
+        corr_type = commonhelpermethods.get_corr_products(ms, spwid)
 
         times = set()
 
@@ -777,10 +778,10 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
         ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
 
         # Get antenna names, ids
-        antenna_name, antenna_ids = self._get_antenna_names(ms)
+        antenna_name, antenna_ids = commonhelpermethods.get_antenna_names(ms)
 
         # get names of correlation products
-        corr_type = self._get_corr_products(ms, spwid)
+        corr_type = commonhelpermethods.get_corr_products(ms, spwid)
 
         times = set()
 
@@ -901,10 +902,10 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
         ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
 
         # Get antenna names, ids
-        antenna_name, antenna_ids = self._get_antenna_names(ms)
+        antenna_name, antenna_ids = commonhelpermethods.get_antenna_names(ms)
 
         # get names of correlation products
-        corr_type = self._get_corr_products(ms, spwid)
+        corr_type = commonhelpermethods.get_corr_products(ms, spwid)
 
         times = set()
 
@@ -1013,27 +1014,3 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
 
             # add the view results to the class result structure
             self.result.addview(viewresult.description, viewresult)
-
-    def _get_antenna_names(self, ms):
-        """Get antenna names.
-        """
-        antenna_ids = [antenna.id for antenna in ms.antennas] 
-        antenna_ids.sort()
-        antenna_name = {}
-        for antenna_id in antenna_ids:
-            antenna_name[antenna_id] = [antenna.name for antenna in ms.antennas 
-              if antenna.id==antenna_id][0]
-
-        return antenna_name, antenna_ids
-
-    def _get_corr_products(self, ms, spwid):
-        """Get names of corr products stored in ms.
-        """
-        # get names of correlation products - really Tsys is associated with
-        # a single pol feed rather than the correlation of 2 feeds - but this
-        # may be better than nothing
-        datadescs = [dd for dd in ms.data_descriptions if dd.spw.id==spwid]
-        polarization = ms.polarizations[datadescs[0].pol_id]
-        corr_type = polarization.corr_type_string
-
-        return corr_type
