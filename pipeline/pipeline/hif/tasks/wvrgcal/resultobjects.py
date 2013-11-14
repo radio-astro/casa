@@ -51,6 +51,19 @@ class WvrgcalResult(basetask.Results):
               '%s\n%s' % (calapp.calto, calapp.calfrom))
             context.callibrary.add(calapp.calto, calapp.calfrom)
 
+        if self.wvrflag:
+            ms = context.observing_run.get_ms(name=self.vis)
+            if hasattr(ms, 'reference_antenna') and \
+              type(ms.reference_antenna) == types.StringType:
+                refant = ms.reference_antenna.split(',')
+                bad_antennas = set(self.wvrflag).intersection(refant)
+                if bad_antennas:
+                    LOG.warning('%s antennas with bad wvr removed from refant list: %s' %
+                      (os.path.basename(self.vis), list(bad_antennas)))
+                    for antenna in list(bad_antennas):
+                        refant.remove(antenna)
+                    ms.reference_antenna = ','.join(refant)
+
     def __repr__(self):
 
         # Format the Wvrgcal results.
@@ -69,29 +82,6 @@ class WvrgcalResult(basetask.Results):
 
 
 class WvrgcalflagResult(WvrgcalResult):
-
-    def merge_with_context(self, context):
-        if not self.final:
-            LOG.warning('No results to merge')
-            return
-
-        for calapp in self.final:
-            LOG.debug('Adding calibration to callibrary:\n'
-              '%s\n%s' % (calapp.calto, calapp.calfrom))
-            context.callibrary.add(calapp.calto, calapp.calfrom)
-
-        if self.wvrflag:
-            ms = context.observing_run.get_ms(name=self.vis)
-            if hasattr(ms, 'reference_antenna') and \
-              type(ms.reference_antenna) == types.StringType:
-                refant = ms.reference_antenna.split(',')
-                bad_antennas = set(self.wvrflag).intersection(refant)
-                if bad_antennas:
-                    LOG.warning('%s antennas with bad wvr removed from refant list: %s' %
-                      (os.path.basename(self.vis), list(bad_antennas)))
-                    for antenna in list(bad_antennas):
-                        refant.remove(antenna)
-                    ms.reference_antenna = ','.join(refant)
 
     def addflags(self, flags):
         self.flagging += flags
