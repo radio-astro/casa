@@ -49,7 +49,7 @@ def hifcal (vislist, importonly=True, pipelinemode='automatic', interactive=True
 	   raise Exception(IMPORT_ONLY)
     
         # Flag known bad data
-        hif_flagdata (pipelinemode=pipelinemode)
+        hifa_flagdata (pipelinemode=pipelinemode)
     
         # Flag lines in solar system calibrators and compute the default
 	# reference spectral window map.

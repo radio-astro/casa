@@ -7,7 +7,7 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_flagdata</Command>
+        <Command xmlns="">hifa_flagdata</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
