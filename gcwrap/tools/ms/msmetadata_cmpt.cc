@@ -35,6 +35,7 @@
 #include <casa/Containers/Record.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Quanta/QuantumHolder.h>
+#include <casa/Quanta/QLogical.h>
 #include <measures/Measures/MeasureHolder.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSMetaDataOnDemand.h>
@@ -131,9 +132,26 @@ vector<casa::String> msmetadata::_vectorStdStringToVectorString(
 	return outset;
 }
 
-vector<int> msmetadata::antennaids(const variant& names) {
+vector<int> msmetadata::antennaids(
+	const variant& names, const variant& mindiameter,
+	const variant& maxdiameter
+) {
 	_FUNC(
 		vector<String> myNames;
+		// because variants default to boolvecs even when we specify elsewise in the xml.
+		casa::Quantity mind = mindiameter.type() == variant::BOOLVEC ?
+		casa::Quantity(0, "m") : casaQuantity(mindiameter);
+		casa::Quantity maxd = maxdiameter.type() == variant::BOOLVEC ?
+		casa::Quantity(1, "pc") :casaQuantity(maxdiameter);
+
+		ThrowIf(
+			! mind.isConform("m"),
+			"mindiameter must have units of length"
+		);
+		ThrowIf(
+			! maxd.isConform("m"),
+			"maxdiameter must have units of length"
+		);
 		variant::TYPE type = names.type();
 		if (type == variant::BOOLVEC) {
 			Vector<Int> x(_msmd->nAntennas());
@@ -175,7 +193,24 @@ vector<int> msmetadata::antennaids(const variant& names) {
 				}
 			}
 		}
-		return _vectorUIntToVectorInt(_msmd->getAntennaIDs(foundNames));
+		vector<uInt> foundIDs = _msmd->getAntennaIDs(foundNames);
+		Quantum<Vector<Double> > diams = _msmd->getAntennaDiameters();
+		casa::Quantity maxAntD(max(diams.getValue()), diams.getUnit());
+		casa::Quantity minAntD(min(diams.getValue()), diams.getUnit());
+
+		if (mind > minAntD || maxd < maxAntD) {
+			vector<uInt> newList;
+			String unit = diams.getUnit();
+			Vector<Double> v = diams.getValue();
+			foreach_(uInt id, foundIDs) {
+				casa::Quantity d(v[id], unit);
+				if (d >= mind && d <= maxd) {
+					newList.push_back(id);
+				}
+			}
+			foundIDs = newList;
+		}
+		return _vectorUIntToVectorInt(foundIDs);
 	)
 	return vector<int>();
 }

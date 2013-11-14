@@ -312,13 +312,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </param>
     
         <param type="any" name="timespan" subparam="true">
-            <description>Let time bins span changes in scan and/or state.</description>
+            <description>Span the timebin across scan, state or both.</description>
             <any type="variant" limittypes="string stringArray"/>
             <value type="string"></value>
         </param>
 
         <param type="double" name="maxuvwdistance" subparam="true">
-            <description>Maximum separation of start-to-end baselines that can be included in an average.</description>
+            <description>Maximum separation of start-to-end baselines that can be included in an average. (meters)</description>
             <value type="double">0.0</value>
         </param>
     
@@ -625,8 +625,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         timebin -- Bin width for time averaging.
             default: '1s'
 
-        timespan -- Let time bins span changes in scan and/or state.
+        timespan -- Let the timebin span across scan, state or both.
+                    State is equivalent to sub-scans. One scan may have several
+                    state ids. For ALMA MSs, the sub-scans are limited to about
+                    32s duration each, therefore if you want to do time average
+                    with a timebin greater than 30s, set timespan='state' to allow
+                    for this. It is useful to use the msmd tool to get the number
+                    of states per scan. See help msmd.
+
             default: '' (separate time bins by both of the above)
+            options: 'scan', 'state', 'state,scan'
+
             examples: 
             timespan = 'scan'; can be useful when the scan number
                        goes up with each integration as in many WSRT MSs.
@@ -635,8 +644,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             timespan = 'state,scan'; same as above.
 
         maxuvwdistance -- Provide a maximum separation of start-to-end baselines 
-                          that can be included in an average.
-            default: 0.0
+                          that can be included in an average. (int)
+            default: 0.0 (given in meters)
 
 
 ------ EXAMPLES ------
