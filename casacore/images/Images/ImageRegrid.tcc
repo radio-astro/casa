@@ -637,9 +637,10 @@ Bool ImageRegrid<T>::insert (ImageInterface<T>& outImage,
 }
 
 template<class T> CoordinateSystem ImageRegrid<T>::makeCoordinateSystem(
-	LogIO& os, std::set<Coordinate::Type>& coordsToBeRegridded, const CoordinateSystem& cSysTo,
-	const CoordinateSystem& cSysFrom,
-	const IPosition& outPixelAxes, const IPosition& inShape
+	LogIO& os, std::set<Coordinate::Type>& coordsToBeRegridded,
+	const CoordinateSystem& cSysTo, const CoordinateSystem& cSysFrom,
+	const IPosition& outPixelAxes, const IPosition& inShape,
+	Bool giveStokesWarning
 ) {
 	coordsToBeRegridded.clear();
 	os << LogOrigin("ImageRegrid<T>", __FUNCTION__, WHERE);
@@ -668,7 +669,7 @@ template<class T> CoordinateSystem ImageRegrid<T>::makeCoordinateSystem(
 
 		// Stokes is never regridded
 		if (typeFrom == Coordinate::STOKES) {
-			if (outPixelAxes.size() > 0) {
+			if (outPixelAxes.size() > 0 && giveStokesWarning) {
 				os << LogIO::WARN << "A stokes coordinate cannot be regridded, ignoring" << LogIO::POST;
 			}
 			continue;
