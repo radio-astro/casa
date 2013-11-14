@@ -3,8 +3,7 @@ import sys
 
 import pipeline.h.cli.utils as utils
 
-
-def hif_flagdata(vis=None, autocorr=None, shadow=None, scan=None,
+def hifa_flagdata(vis=None, autocorr=None, shadow=None, scan=None,
                  scannumber=None, intents=None, edgespw=None, fracspw=None,
                  fracspwfps=None, online=None, fileonline=None, template=None,
                  filetemplate=None, pipelinemode=None, flagbackup=None, 
@@ -15,7 +14,6 @@ def hif_flagdata(vis=None, autocorr=None, shadow=None, scan=None,
     all_inputs = vars()
 
     # set the name of the pipeline task to execute 
-    #task_name = 'FlagDeterALMA'
     task_name = 'ALMAAgentFlagger'
 
     ##########################################################################
@@ -25,7 +23,7 @@ def hif_flagdata(vis=None, autocorr=None, shadow=None, scan=None,
     #                                                                        #
     ##########################################################################
     
-    # get the name of this function for the weblog, eg. 'hif_flagdata'
+    # get the name of this function for the weblog, eg. 'hifa_flagdata'
     fn_name = sys._getframe().f_code.co_name
 
     # get the context on which this task operates

@@ -9,8 +9,9 @@ from .clean import Clean
 from .cleanlist import CleanList
 from .exportdata import ExportData
 from .fluxcalflag import FluxcalFlag
-from .flagging import FlagDeterALMA
-from .flagging import AgentFlagger, ALMAAgentFlagger
+#from .flagging import FlagDeterALMA
+#from .flagging import AgentFlagger, ALMAAgentFlagger
+from .flagging import AgentFlagger
 from .fluxscale import Fluxcal
 from .fluxscale import Fluxscale
 from .fluxscale import GcorFluxscale

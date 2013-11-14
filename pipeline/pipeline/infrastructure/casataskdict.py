@@ -1,5 +1,6 @@
 import pipeline.hif.tasks as hif_tasks
 import pipeline.hsd.tasks as hsd_tasks
+import pipeline.hifa.tasks as hifa_tasks
 
 CasaTaskDict = {
                    'hif_antpos'       : 'Antpos',
@@ -10,7 +11,7 @@ CasaTaskDict = {
 		   'hif_clean'        : 'Clean', 
 		   'hif_cleanlist'    : 'CleanList', 
                    'hif_exportdata'   : 'ExportData',
-                   'hif_flagdata'     : 'ALMAAgentFlagger',
+                   'hifa_flagdata'    : 'ALMAAgentFlagger',
                    'hif_fluxcalflag'  : 'FluxcalFlag',
                    'hif_gaincal'      : 'Gaincal',
                    'hif_gfluxscale'   : 'GcorFluxscale',
@@ -44,9 +45,10 @@ CasaTaskDict = {
 
 
 classToCASATask = {
+    # ALMA interferometry tasks ---------------------------------------------
+    hifa_tasks.ALMAAgentFlagger : 'hifa_flagdata',
     # Interferometry tasks ---------------------------------------------------
     hif_tasks.Antpos : 'hif_antpos',
-    hif_tasks.ALMAAgentFlagger : 'hif_flagdata',
     hif_tasks.Applycal : 'hif_applycal',    
     hif_tasks.Atmflag : 'hif_atmflag',
     hif_tasks.Bandpass : 'hif_bandpass',

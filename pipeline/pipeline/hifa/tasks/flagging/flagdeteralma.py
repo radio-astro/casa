@@ -62,16 +62,13 @@
 
 from __future__ import absolute_import
 
-#import casac
-
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.domain.measures as measures
 
-from . import flagdeterbase 
+from pipeline.hif.tasks.flagging import flagdeterbase 
 
-#import pipeline.tasks.flagging.FlagDeterBase as gronk
 
 # ------------------------------------------------------------------------------
 

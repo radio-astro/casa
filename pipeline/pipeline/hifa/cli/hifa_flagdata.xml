@@ -4,7 +4,7 @@
 	 	 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd">
 
-<task type="function" name="hif_flagdata" category="pipeline">
+<task type="function" name="hifa_flagdata" category="pipeline">
 
 <shortdescription>Do basic flagging of a list of measurement sets</shortdescription>
 
@@ -163,7 +163,7 @@
 
 
 <example>
-The hif_flagdata data performs basic flagging operations on a list of
+The hifa_flagdata data performs basic flagging operations on a list of
 measurement sets.
 
 
@@ -252,7 +252,7 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Description
 
-The hif_flagdata data performs basic flagging operations on a list of measurements including:
+The hifa_flagdata data performs basic flagging operations on a list of measurements including:
 
 o autocorrelation data flagging
 o shadowed antenna data flagging
@@ -268,12 +268,12 @@ Examples
 
 1. Do basic flagging on a measurement set
     
-    hif_flagdata()
+    hifa_flagdata()
 
 2. Do basic flagging on a measurement set as well as flag pointing and
    atmosphere data
 
-    hif_flagdata(scan=True intent='*BANDPASS*')
+    hifa_flagdata(scan=True intent='BANDPASS')
 
 </example>
 

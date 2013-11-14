@@ -43,6 +43,7 @@ from . import qa2adapter
 from .. import utils
 import pipeline.hif as hif
 import pipeline.hsd as hsd
+import pipeline.hifa as hifa
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -81,7 +82,7 @@ def get_task_description(result_obj):
     if task_cls is hif.tasks.CleanList:
         return 'Calculate clean products'
 
-    if task_cls in (hif.tasks.FlagDeterALMA, hif.tasks.ALMAAgentFlagger):
+    if task_cls in (hifa.tasks.FlagDeterALMA, hifa.tasks.ALMAAgentFlagger):
         return 'ALMA deterministic flagging'
 
     if task_cls is hif.tasks.FluxcalFlag:
@@ -2575,7 +2576,7 @@ renderer_map = {
     },
     T2_4MDetailsRenderer : {
         hif.tasks.AgentFlagger   : T2_4MDetailsAgentFlaggerRenderer(),
-        hif.tasks.ALMAAgentFlagger : T2_4MDetailsAgentFlaggerRenderer(),
+        hifa.tasks.ALMAAgentFlagger : T2_4MDetailsAgentFlaggerRenderer(),
         hif.tasks.Atmflag        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_atmflag.html'),
         hif.tasks.Bandpass       : T2_4MDetailsBandpassRenderer(),
         hif.tasks.Bandpassflagchans: T2_4MDetailsBandpassFlagRenderer(),
