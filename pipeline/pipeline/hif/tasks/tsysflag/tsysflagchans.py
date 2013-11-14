@@ -23,7 +23,6 @@ class TsysflagchansInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, caltable=None, 
       intentgroups=None, metric=None,
-#      flagcmdfile=None,
       flag_edges=None, edge_limit=None, flag_sharps=None, sharps_limit=None,
       flag_sharps2=None, sharps2_limit=None, niter=None):
 
@@ -88,16 +87,6 @@ class TsysflagchansInputs(basetask.StandardInputs):
     @metric.setter
     def metric(self, value):
         self._metric = value
-
-#    @property
-#    def flagcmdfile(self):
-#        if self._flagcmdfile is None:
-#            return '%s_flagcmds.txt' % self.caltable
-#        return self._flagcmdfilefile
-
-#    @flagcmdfile.setter
-#    def flagcmdfile(self, value):
-#        self._flagcmdfile = value
 
     @property
     def flag_edges(self):
@@ -188,7 +177,6 @@ class Tsysflagchans(basetask.StandardTaskTemplate):
         # underlying data.
         flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context,
           vis=inputs.vis, table=inputs.caltable, inpfile=[])
-#          table=inputs.caltable, inpfile=inputs.flagcmdfile)
         flagsettertask = FlagdataSetter(flagsetterinputs)
 
 	# Translate the input flagging parameters to a more compact
@@ -488,21 +476,12 @@ class TsysflagchansWorker(basetask.StandardTaskTemplate):
                     times.update([row.get('TIME')])
 
         # get median Tsys in this spw
-#        spw_spectrumstack = None
         ant_spectrumstack = {}
         ant_flagstack = {}
 
         # accumulate results
         for description in tsysspectra.descriptions():
             tsysspectrum = tsysspectra.last(description)
-#            if spw_spectrumstack is None:
-#                spw_spectrumstack = tsysspectrum.data
-#                spw_flagstack = tsysspectrum.flag
-#            else:
-#                spw_spectrumstack = np.vstack((tsysspectrum.data,
-#                  spw_spectrumstack))
-#                spw_flagstack = np.vstack((tsysspectrum.flag,
-#                  spw_flagstack))
 
             for antenna_id in antenna_ids:
                 if tsysspectrum.ant[0] != antenna_id:
@@ -537,16 +516,6 @@ class TsysflagchansWorker(basetask.StandardTaskTemplate):
 
                 # add the view result to the class result structure
                 self.result.addview(viewresult.description, viewresult)
-
-#        # calculate median for spw
-#        if spw_spectrumstack is not None:
-#            stackmedian = np.zeros(np.shape(spw_spectrumstack)[1])
-#            stackmedianflag = np.ones(np.shape(spw_spectrumstack)[1], np.bool)
-#            for j in range(np.shape(spw_spectrumstack)[1]):
-#                valid_data = spw_spectrumstack[:,j][np.logical_not(spw_flagstack[:,j])]
-#                if len(valid_data):
-#                    stackmedian[j] = np.median(valid_data)
-#                    stackmedianflag[j] = False
 
     def calculate_antenna_diff_tsys(self, tsystable, spwid, intent, fieldids):
         """
