@@ -92,6 +92,14 @@ class ImageResult(ResultBase):
 
         self.children = {}
 
+    def setflags(self, axisname=None, indices=None):
+        """Set the flag array for specified axis values."""
+        if indices:
+            if self.axes[0].name==axisname:
+                self.flag[np.array(indices),:] = True
+            if self.axes[1].name==axisname:
+                self.flag[:,np.array(indices)] = True
+
 
 class SpectrumResult(ResultBase):
     def __init__(self, data, datatype, data_mad=None, axis=None, flag=None,
@@ -126,7 +134,7 @@ class SpectrumResult(ResultBase):
                 self.data_mad = data_mad
 
         if axis is None:
-            self.axis = ResultAxis('channel', '',
+            self.axis = ResultAxis('channel', None,
               np.arange(np.shape(self.data)[0]))
         else:
             self.axis = axis
