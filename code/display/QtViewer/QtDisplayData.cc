@@ -361,7 +361,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							panel_->logIO( ) << "generating temporary image \'" << outpath << "'" << LogIO::POST;
 							ImageRegridder regridder(im_, String(outpath), regrid_to->imageInterface( ) );
 							regridder.setMethod(method);
-							regridder.setSpecAsVelocity(False);
+							regridder.setSpecAsVelocity(True);
 							im_ = regridder.regrid(True);
 							// std::auto_ptr<ImageInterface<Float> > imptr(im_);
 						}
