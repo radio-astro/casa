@@ -11,6 +11,7 @@ from . import resultobjects
 from . import wvrgcalflagsetter
 
 from pipeline.hif.tasks.common import calibrationtableaccess
+from pipeline.hif.tasks.common import commonhelpermethods
 from pipeline.hif.tasks.common import viewflaggers
 
 LOG = infrastructure.get_logger(__name__)
@@ -224,6 +225,7 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
         wvrgcaltask = wvrgcal.Wvrgcal(wvrgcalinputs)
         result = self._executor.execute(wvrgcaltask, merge=True)
 
+        # cache bandpass and nowvr results for next call to wvrgcal
         self.result.bandpass_result = result.bandpass_result
         self.result.nowvr_result = result.nowvr_result
 
@@ -231,6 +233,9 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
 
     def analyse(self, result):
         inputs = self.inputs
+
+        # take note of any antennas flagged by wvrgcal itself
+        self.result.wvrflag = result.wvrflag
 
         # copy the views for the flag_intent from the QA2 section of the
         # wvrgcal result
@@ -258,7 +263,18 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
                     break
                 
             if add:
-                self.result.addview(description, result.qa2.last(description))
+                # set antennas specified by the wvrflag parameter in the 
+                # flagging image to show that these data are already 'flagged'
+                # (i.e. interpolated)
+                image = result.qa2.last(description)
+                ant_names, ant_ids = commonhelpermethods.get_antenna_names(ms)
+                wvrflagids = []
+                for ant_name in self.result.wvrflag:
+                    ant_id = [id for id in ant_names.keys() if 
+                      ant_names[id]==ant_name]
+                    wvrflagids += ant_id
+                image.setflags(axisname='Antenna', indices=wvrflagids)
+                self.result.addview(description, image)
  
         # populate other parts of result
         self.result.pool[:] = result.pool[:]
