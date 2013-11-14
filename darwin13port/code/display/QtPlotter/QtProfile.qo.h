@@ -254,6 +254,7 @@ namespace casa {
 		void initializeSpectralProperties();
 		void resetXUnits( bool spectralAxis);
 		void updateSpectralReferenceFrame();
+		String getRegionShape();
 
 		/**
 		 * Returns false if first vector value is greater than the last
@@ -283,10 +284,11 @@ namespace casa {
 		                                 const Int& whichStokes, const Int& whichTabular,
 		                                 const Int& whichLinear, const String& xunits,
 		                                 const String& specFrame, const Int &combineType,
-		                                 const Int& whichQuality, const String& restValue );
+		                                 const Int& whichQuality, const String& restValue,
+		                                 const String& shape);
 		bool assignFrequencyProfile( const Vector<double> &wxv, const Vector<double> &wyv,
 		                             const String& coordinateType, const String& xAxisUnit,
-		                             Vector<Float> &z_xval, Vector<Float> &z_yval );
+		                             Vector<Float> &z_xval, Vector<Float> &z_yval, const String& shape );
 		bool setErrorPlotting( const Vector<double> &wxv, const Vector<double> &wyv);
 		void storeCoordinates( const Vector<double> pxv, const Vector<double> pyv,
 		                       const Vector<double> wxv, const Vector<double> wyv );

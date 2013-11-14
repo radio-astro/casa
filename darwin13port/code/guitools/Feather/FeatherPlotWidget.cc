@@ -48,6 +48,12 @@ FeatherPlotWidget::FeatherPlotWidget(const QString& title, FeatherPlot::PlotType
 	resetPlot( plotType );
 
 	leftMouseMode = RECTANGLE_ZOOM;
+	zoomState = ZOOM_NEUTRAL;
+	zoomMinX = 0;
+	zoomMaxX = 0;
+	zoomMinY = 0;
+	zoomMaxY = 0;
+
 	zoomer = NULL;
 	diameterSelector = NULL;
 	diameterMarker = NULL;
@@ -149,7 +155,15 @@ void FeatherPlotWidget::setPlotColors( const QMap<CurveType,CurveDisplay>& color
 	//Because the visibility of the plot may have changed
 	//we need to erase and start over.
 	clearPlot();
-	addZoomNeutralCurves();
+	if ( zoomState == ZOOM_NEUTRAL ){
+		addZoomNeutralCurves();
+	}
+	else if ( zoomState == ZOOM_RECTANGLE ){
+		zoomRectangle( zoomMinX, zoomMaxX, zoomMinY, zoomMaxY );
+	}
+	else if ( zoomState == ZOOM_90 ){
+		changeZoom90( true );
+	}
 
 	//We also need to set the visibility of the dish diameter marker
 	//in case it has been turned on/off.
@@ -366,6 +380,7 @@ void FeatherPlotWidget::zoomRectangleSelected( const QwtDoubleRect& zoomRect ){
 		//the zoom, just update our own coordinates.
 		if ( plot->isScatterPlot() ){
 			plot->clearCurves();
+			setZoomRectangleState( minX, maxX, minY, maxY );
 			zoomRectangleOther( minX, maxX, minY, maxY );
 			plot->replot();
 		}
@@ -377,10 +392,21 @@ void FeatherPlotWidget::zoomRectangleSelected( const QwtDoubleRect& zoomRect ){
 }
 
 
+void FeatherPlotWidget::setZoomRectangleState( double minX, double maxX,
+		double minY, double maxY){
+	zoomState = ZOOM_RECTANGLE;
+	zoomMinX = minX;
+	zoomMaxX = maxX;
+	zoomMinY = minY;
+	zoomMaxY = maxY;
+}
+
+
 
 
 void FeatherPlotWidget::zoomRectangle( double minX, double maxX, double minY, double maxY){
 	plot->clearCurves();
+	setZoomRectangleState( minX, maxX, minY, maxY );
 	zoomRectangleOther( minX, maxX, minY, maxY);
 	initializeMarkers();
 	plot->replot();
@@ -449,10 +475,12 @@ void FeatherPlotWidget::changeZoom90(bool zoom ){
 			dishPosition = dishPosition + dishPosition / 3;
 		}
 		double zoomLocation = this->dishPosition + this->dishPosition / 3;
+		zoomState = ZOOM_90;
 		zoom90Other( zoomLocation );
 	}
 	else {
 		zoomNeutral();
+		zoomState = ZOOM_NEUTRAL;
 	}
 	initializeMarkers();
 	plot->replot();

@@ -513,10 +513,12 @@ void QPPlotter::setupCanvasFrame() {
             //First column is reserved for external y axis, if there is one.
             for(int j = startCols; j < colCount; j++) {
                 coord.col = j - startCols;
-
-                c = dynamic_cast<QPCanvas*>(g->canvasAt(coord).operator->());
-
-                qgl->addWidget(c, i, j);
+                PlotCanvasPtr ptrCanvas = g->canvasAt( coord );
+                if ( !ptrCanvas.null()){
+                	//c = dynamic_cast<QPCanvas*>(g->canvasAt(coord).operator->());
+                	c = dynamic_cast<QPCanvas*>(ptrCanvas.operator->());
+                	qgl->addWidget(c, i, j);
+                }
             }
         }
 

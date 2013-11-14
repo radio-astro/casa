@@ -47,6 +47,11 @@ namespace casa {
 		imageAnalysis->setMomentsProgressMonitor( this );
 	}
 
+	CollapseResult::CollapseResult( const String& outputName, bool tmp, ImageInterface<Float>* img ):
+				outputFileName(outputName),
+				temporary( tmp ),
+				image(img) {}
+
 	bool MomentCollapseThreadRadio::isSuccess() const {
 		bool success = false;
 		if ( collapseResults.size() > 0 && !collapseError ) {

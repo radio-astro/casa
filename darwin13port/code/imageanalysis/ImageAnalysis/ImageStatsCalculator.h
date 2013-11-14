@@ -150,6 +150,11 @@ private:
     	ImageRegion* pOldRegionRegion,
     	ImageRegion* pOldMaskRegion
     );
+
+    void _reportDetailedStats(
+    	const std::tr1::shared_ptr<const ImageInterface<Float> > tempIm,
+    	const Record& retval
+    );
 };
 }
 

@@ -46,10 +46,8 @@ namespace casa {
 	class CollapseResult {
 
 	public:
-		CollapseResult( const String& outputName, bool tmp, ImageInterface<Float>* img ):
-			outputFileName(outputName),
-			temporary( tmp ),
-			image(img) {}
+		CollapseResult( const String& outputName, bool tmp, ImageInterface<Float>* img );
+
 		String getOutputFileName() const {
 			return outputFileName;
 		}

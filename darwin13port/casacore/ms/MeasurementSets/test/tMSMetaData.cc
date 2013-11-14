@@ -1064,6 +1064,13 @@ void testIt(MSMetaData& md) {
 				&& stations[2] == "A137", AipsError
 			);
 		}
+		{
+			cout << "*** test getAntennaDiameters" << endl;
+			Quantum<Vector<Double> > antennaDiameters = md.getAntennaDiameters();
+			AlwaysAssert(
+				allEQ(antennaDiameters.getValue(), 12.0), AipsError
+			);
+		}
 		/*
 		{
 			cout << "*** test getExposuresForTimes()" << endl;

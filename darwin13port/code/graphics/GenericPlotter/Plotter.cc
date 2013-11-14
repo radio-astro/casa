@@ -166,7 +166,10 @@ String Plotter::formattedDateString(const String& format, double value,
 
 // Non-Static //
 
-Plotter::Plotter() { }
+Plotter::Plotter() {
+	commonAxisX = false;
+	commonAxisY = false;
+}
 
 Plotter::~Plotter() { }
 

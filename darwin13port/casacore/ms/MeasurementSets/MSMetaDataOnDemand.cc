@@ -644,6 +644,11 @@ uInt MSMetaDataOnDemand::_sizeof(const vector<String>& m) {
 	return size;
 }
 
+uInt MSMetaDataOnDemand::_sizeof(const Quantum<Vector<Double> >& m) {
+	return (sizeof(Double)+10)*m.getValue().size();
+}
+
+
 uInt MSMetaDataOnDemand::_sizeof(const std::map<String, std::set<Int> >& m) {
 	uInt setssize = 0;
 	uInt size = 0;
@@ -1128,6 +1133,18 @@ vector<String> MSMetaDataOnDemand::_getStationNames() {
 	}
 	return stationNames;
 }
+
+Quantum<Vector<Double> > MSMetaDataOnDemand::getAntennaDiameters() {
+	if (! _antennaDiameters.getValue().empty()) {
+		return _antennaDiameters;
+	}
+	Quantum<Vector<Double> > antennaDiameters = MSMetaData::_getAntennaDiameters(*_ms);
+	if (_cacheUpdated(_sizeof(antennaDiameters))) {
+		_antennaDiameters = antennaDiameters;
+	}
+	return antennaDiameters;
+}
+
 
 std::set<uInt> MSMetaDataOnDemand::getTDMSpw() {
 	if (! _tdmSpw.empty()) {

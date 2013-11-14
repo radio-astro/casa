@@ -286,6 +286,9 @@ class CasaRegression:
 	    elif line == 'OK':
 		# from UNIT TEST
 		self._state['result'] = 'pass'
+	    elif line.startswith("OK (SKIP="):
+		#from UNIT TEST (special cases with skipped tests)
+		self._state['result'] = 'pass'
             elif line == 'status = pass # execution status':
                 # from publish_summary
                 self._state['result'] = 'pass'
