@@ -130,7 +130,7 @@ def get_task_description(result_obj):
     if task_cls is hsd.tasks.SDExportData:
         return 'Single-dish SDExportData'
 
-    if task_cls in (hif.tasks.TimeGaincal, hif.tasks.GaincalMode,
+    if task_cls in (hifa.tasks.TimeGaincal, hif.tasks.GaincalMode,
                     hif.tasks.GTypeGaincal, hif.tasks.GSplineGaincal):
         return 'Gain calibration'
 
@@ -2592,7 +2592,7 @@ renderer_map = {
         hif.tasks.NormaliseFlux  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_normflux.html'),
         hif.tasks.RefAnt         : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_refant.html'),
         hif.tasks.Setjy          : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_setjy.html'),
-        hif.tasks.TimeGaincal    : T2_4MDetailsGaincalRenderer(),
+        hifa.tasks.TimeGaincal   : T2_4MDetailsGaincalRenderer(),
         hif.tasks.Tsyscal        : T2_4MDetailsTsyscalRenderer(),
         hif.tasks.Tsysflag       : T2_4MDetailsTsyscalFlagRenderer(),
         hif.tasks.Tsysflagchans  : T2_4MDetailsTsyscalFlagRenderer('t2-4m_details-hif_tsysflagchans.html'),

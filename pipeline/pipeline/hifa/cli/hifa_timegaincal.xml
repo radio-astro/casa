@@ -5,7 +5,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="hif_timegaincal" category="pipeline">
+<task type="function" name="hifa_timegaincal" category="pipeline">
 <shortdescription>Determine temporal gains from calibrator observations</shortdescription>
 <description>
 The time dependent complex gains for each antenna/spwid are determined
@@ -298,7 +298,7 @@ Examples
 1. Compute standard per scan gain solutions that will be used to calibrate
 the target.
 
-    hif_timegaincal()
+    hifa_timegaincal()
 
 
 </example> 

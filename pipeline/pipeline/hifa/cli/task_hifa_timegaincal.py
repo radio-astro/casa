@@ -5,7 +5,7 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hif_timegaincal(vis=None, calphasetable=None, targetphasetable=None,
+def hifa_timegaincal(vis=None, calphasetable=None, targetphasetable=None,
         amptable=None, field=None, intent=None, spw=None,
 	antenna=None, calsolint=None,
         targetsolint=None, combine=None, refant=None, solnorm=None,

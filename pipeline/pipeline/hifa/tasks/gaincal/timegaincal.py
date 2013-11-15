@@ -1,17 +1,19 @@
 from __future__ import absolute_import
 
 import types
-from . import common
-from . import gaincalworker
-from . import gaincalmode
-from . import gtypegaincal
+#from . import common
+from pipeline.hif.tasks.gaincal import common
+#from . import gaincalworker
+from pipeline.hif.tasks.gaincal import gaincalworker
+#from . import gaincalmode
+from pipeline.hif.tasks.gaincal import gaincalmode
+#from . import gtypegaincal
+from pipeline.hif.tasks.gaincal import gtypegaincal
 from pipeline.hif.heuristics import caltable as gcaltable
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
 
 LOG = infrastructure.get_logger(__name__)
-
-
 
 class TimeGaincalInputs(gaincalmode.GaincalModeInputs):
     def __init__(self, context, mode='gtype',  calphasetable=None,

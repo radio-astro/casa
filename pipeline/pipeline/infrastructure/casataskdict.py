@@ -21,7 +21,7 @@ CasaTaskDict = {
                    'hif_refant'       : 'RefAnt',
 		   'hif_restoredata'  : 'RestoreData',
                    'hif_setjy'        : 'Setjy',
-                   'hif_timegaincal'  : 'TimeGaincal',
+                   'hifa_timegaincal' : 'TimeGaincal',
                    'hif_tsyscal'      : 'Tsyscal',
                    'hif_tsysflag'     : 'Tsysflag',
                    'hif_tsysflagchans': 'Tsysflagchans',
@@ -47,6 +47,7 @@ CasaTaskDict = {
 classToCASATask = {
     # ALMA interferometry tasks ---------------------------------------------
     hifa_tasks.ALMAAgentFlagger : 'hifa_flagdata',
+    hifa_tasks.TimeGaincal : 'hifa_timegaincal',
     # Interferometry tasks ---------------------------------------------------
     hif_tasks.Antpos : 'hif_antpos',
     hif_tasks.Applycal : 'hif_applycal',    
@@ -67,7 +68,6 @@ classToCASATask = {
     hif_tasks.RefAnt : 'hif_refant',
     hif_tasks.RestoreData : 'hif_restoredata',
     hif_tasks.Setjy : 'hif_setjy',
-    hif_tasks.TimeGaincal : 'hif_timegaincal',
     hif_tasks.Tsyscal : 'hif_tsyscal',
     hif_tasks.Tsysflag : 'hif_tsysflag',
     hif_tasks.Tsysflagchans : 'hif_tsysflagchans',
