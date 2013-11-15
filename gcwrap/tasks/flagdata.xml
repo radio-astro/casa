@@ -8,37 +8,46 @@
     <task type="function" name="flagdata" category="editing">
         <shortdescription>All-purpose flagging task based on data-selections and flagging modes/algorithms.</shortdescription>
         <description>        
-            This task can flag a Measurement Set or a calibration table. It has 
-            two main types of operation. One type will read the parameters from 
-            the interface and flag using any of the various available modes. The 
-            other type will read the commands from a text file, a list of files or 
-            a Python list of strings, containing a list of flag commands (each line 
-            containing data selection parameters and any parameter specific for the 
-            mode being requested). Please see examples at the end of this help.
-            
-            It is also possible to only save the parameters set in the interface 
-            without flagging. The parameters can be saved in the FLAG_CMD sub-table 
-            or in a text file. Note that when saving to an external file, the parameters 
-            will be appended to the given file.
-            
-            The available flagging modes are: manual, clip, shadow, quack, elevation, 
-            tfcrop, rflag, extend, unflag and summary. For automatic flagging, it is 
-            recommended to combine auto-flag modes with extend, via the list mode.
+        This task can flag a Measurement Set or a calibration table. It has 
+        two main types of operation. One type will read the parameters from 
+        the interface and flag using any of the various available modes. The 
+        other type will read the commands from a text file, a list of files or 
+        a Python list of strings, containing a list of flag commands (each line 
+        containing data selection parameters and any parameter specific for the 
+        mode being requested). Please see examples at the end of this help.
+        
+        It is also possible to only save the parameters set in the interface 
+        without flagging. The parameters can be saved in the FLAG_CMD sub-table 
+        or in a text file. Note that when saving to an external file, the parameters 
+        will be appended to the given file.
+        
+        The available flagging modes are: manual, clip, shadow, quack, elevation, 
+        tfcrop, rflag, extend, unflag and summary. For automatic flagging, it is 
+        recommended to combine auto-flag modes with extend, via the list mode.
 
-            The current flags can be automatically backed up before applying new 
-            flags if the parameter flagbackup is set. Previous flag versions can be 
-            recovered using the flagmanager task.
-            
-            NOTE on flagging calibration tables.
-            -----------------------------------
-            
-            When the input is a calibration table, the modes 'elevation' and 'shadow'
-            will be disabled. Data selection for calibration tables is limited to field,
-            scan, time, antenna, spw  and observation. It is only possible to save the 
-            parameters to an external file. If the calibration table was created before
-            CASA 4.1, this task will create a dummy OBSERVATION column and OBSERVATION
-            sub-table in the input calibration table to adapt it to the new cal table
-            format.
+        The current flags can be automatically backed up before applying new 
+        flags if the parameter flagbackup is set. Previous flag versions can be 
+        recovered using the flagmanager task.
+        
+        NOTE on flagging calibration tables.
+        -----------------------------------
+        
+        When the input is a calibration table, the modes 'elevation' and 'shadow'
+        will be disabled. Data selection for calibration tables is limited to field,
+        scan, time, antenna, spw  and observation. It is only possible to save the 
+        parameters to an external file. If the calibration table was created before
+        CASA 4.1, this task will create a dummy OBSERVATION column and OBSERVATION
+        sub-table in the input calibration table to adapt it to the new cal table
+        format.
+        
+        Selecting antennas in some calibration tables have a different meaning compared
+        to selecting the MS. Some calibration tables such as the antenna-based ones,
+        created with some modes of gencal or polcal, have the ANTENNA2 column set to -1. 
+        This means that when selecting antenna='ANT', will select the whole ANT and not the
+        cross-correlations between ANT and the other antennas. Similarly, the baseline
+        syntax do not apply to this type of calibration tables. Those values
+        with ampersand do not have any meaning when selecting antenna/baselines
+        in antenna-based cal tables.
             
     The task will flag a subset of data based on the following modes of operation:
 
@@ -627,7 +636,7 @@
         example1: vis='uid___A002_X2a5c2f_X54.ms' or
         example2: vis='cal-X54.B1'
 
-        Any flagging will only be applied to the specified selection.
+        Any flagging will only be applied to the specified selections.
 
               antenna -- Select data based on baseline
                     default: '' (all); example: antenna='DV04&amp;DV06' baseline DV04-DV06
@@ -640,6 +649,9 @@
                                              and all other available antennas
                     antenna='0~2&amp;&amp;&amp;' # only the auto-correlation baselines for antennas 
                                                    in range 0~2
+
+                    Note that for some antenna-based calibration tables, selecting baselines with
+                    the &amp; syntax do not apply.
 
               spw -- Select data based on spectral window and channels
                     default: '' (all); example: spw='1'
@@ -793,15 +805,15 @@
         clip -- Clip data according to values of the following subparameters. The polarization
                 expression is given by the correlation parameter.
                     
-               channelavg -- Average data over (selected) channels? Channel
-                            selections are taken into account. Flagged channels
-                            are excluded from the average. The average is done
-                            after applying the specified clipexpr, i.e. scalar
-                            averaging.
+               channelavg -- Average data over the selected channels or not.
+                             Pre-flagged channels are excluded from the average. 
+                             The average is done after applying the expression
+                             given in the correlation parameter. This will do a scalar 
+                             averaging on the channels.
                     default: False
                     options: True,False
                     
-               clipminmax -- Range of data (Jy) that will NOT be flagged
+               clipminmax -- Range of data (Jy) that will NOT be flagged.
                     default: []; it will flag only NaN and Infs.
                     example: [0.0,1.5]
                     It will always flag the NaN/Inf data, even when a range is specified.
@@ -823,15 +835,15 @@
                     
                clipoutside -- Clip OUTSIDE the range?
                     default: True
-                    example: False; flag data WITHIN the range.
+                    example: False; flag data WITHIN the clipminmax range.
 
                clipzeros -- Clip zero-value data.
                     default: False
 
-        quack -- Option to remove specified part of scan beginning/end
+        quack -- Option to remove specified part of scan beginning/end.
 
                quackinterval -- Time in seconds from scan beginning/end to flag. Make time slightly 
-                                 smaller than the desired time.
+                                smaller than the desired time.
                     default: 0.0
                quackmode -- Quack mode
                     default: 'beg'
