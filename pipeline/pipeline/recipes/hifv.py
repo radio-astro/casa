@@ -166,7 +166,7 @@ def hifv_withplots (vislist, importonly=False, pipelinemode='automatic', interac
         # Initial test calibrations using bandpass and delay calibrators
         hifv_testBPdcals (pipelinemode=pipelinemode)
         h_save()
-        execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/recipes/vlaplots/testBPdcals_plots.py")
+        execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/recipes/vlaplots/testBPdcals_plots.py"))
     
 	# Identify and flag basebands with bad deformatters or rfi based on 
         # bp table amps and phases
@@ -183,7 +183,7 @@ def hifv_withplots (vislist, importonly=False, pipelinemode='automatic', interac
         # of the bandpass calibrator)
         hifv_semiFinalBPdcals(pipelinemode=pipelinemode)
         h_save()
-        execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/recipes/vlaplots/semifinalBPdcals_plots1.py")
+        execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/recipes/vlaplots/semifinalBPdcals_plots1.py"))
 
 	# Use flagdata rflag mode again on calibrators
         hifv_checkflag(pipelinemode=pipelinemode, checkflagmode='semi')
@@ -191,7 +191,7 @@ def hifv_withplots (vislist, importonly=False, pipelinemode='automatic', interac
         # Re-run semi-final delay and bandpass calibrations
         hifv_semiFinalBPdcals(pipelinemode=pipelinemode)
         h_save()
-        execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/recipes/vlaplots/semifinalBPdcals_plots2.py")
+        execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/recipes/vlaplots/semifinalBPdcals_plots2.py"))
         
         # Flag spws that have no calibration at this point
         hifv_uncalspw(pipelinemode=pipelinemode, delaycaltable='delay.k', bpcaltable='BPcal.b')
@@ -202,7 +202,7 @@ def hifv_withplots (vislist, importonly=False, pipelinemode='automatic', interac
         # Do test gain calibrations to establish short solint
         hifv_testgains (pipelinemode=pipelinemode)
         h_save()
-        execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/recipes/vlaplots/testgains_plots.py")
+        execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/recipes/vlaplots/testgains_plots.py"))
     
         # Make gain table for flux density bootstrapping
         # Make a gain table that includes gain and opacity corrections for final
@@ -213,12 +213,12 @@ def hifv_withplots (vislist, importonly=False, pipelinemode='automatic', interac
         # calibrators with a power-law and puts fit in model column
         hifv_fluxboot (pipelinemode=pipelinemode)
         h_save()
-        execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/recipes/vlaplots/fluxboot_plots.py")
+        execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/recipes/vlaplots/fluxboot_plots.py"))
     
         # Make the final calibration tables
         hifv_finalcals (pipelinemode=pipelinemode)
         h_save()
-        execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/recipes/vlaplots/finalcals_plots.py")
+        execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/recipes/vlaplots/finalcals_plots.py"))
     
         # Apply all the calibrations and check the calibrated data
         hifv_applycals (pipelinemode=pipelinemode)
@@ -229,7 +229,7 @@ def hifv_withplots (vislist, importonly=False, pipelinemode='automatic', interac
         # Now run all calibrated data, including the target, through rflag
         hifv_targetflag (pipelinemode=pipelinemode)
         h_save()
-        execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/recipes/vlaplots/targetflag_plots.py")
+        execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/recipes/vlaplots/targetflag_plots.py"))
     
         # Calculate data weights based on standard deviation within each spw
         hifv_statwt(pipelinemode=pipelinemode)
