@@ -61,7 +61,7 @@ macro( casa_add_tasks module _target )
     set( _xsl ${CMAKE_SOURCE_DIR}/install/casa2pycli.xsl )
     add_custom_command(
       OUTPUT ${_cli}
-      COMMAND mergeparams ${CMAKE_SOURCE_DIR}/xml/params.xml ${_xml} | sed -e 's/<iparam/<param/g' | sed -e 's^</iparam^</param^g' > ${_mxml}
+      COMMAND mergeparams ${CMAKE_SOURCE_DIR}/xml/params.xml ${_xml} | sed -e 's/<iparam/<param/g' | sed -e 's^</iparam^</param^g' |sed -e 's/xmlns=""//g'> ${_mxml}
       COMMAND ${SAXON} -o ${_cli} ${_mxml} ${_xsl} 
       DEPENDS ${_xml} ${_xsl} )
 
@@ -69,7 +69,7 @@ macro( casa_add_tasks module _target )
     set( _xsl ${CMAKE_SOURCE_DIR}/install/casa2pypg.xsl )
     add_custom_command(
       OUTPUT ${_pg}
-      COMMAND mergeparams ${CMAKE_SOURCE_DIR}/xml/params.xml ${_xml} | sed -e 's/<iparam/<param/g' | sed -e 's^</iparam^</param^g' > ${_mxml}
+      COMMAND mergeparams ${CMAKE_SOURCE_DIR}/xml/params.xml ${_xml} | sed -e 's/<iparam/<param/g' | sed -e 's^</iparam^</param^g' |sed -e 's/xmlns=""//g'> ${_mxml}
       COMMAND ${SAXON} -o ${_pg} ${_mxml} ${_xsl} 
       DEPENDS ${_xml} ${_xsl} )
 
@@ -77,7 +77,7 @@ macro( casa_add_tasks module _target )
     set( _xsl ${CMAKE_SOURCE_DIR}/install/casa2pyimp.xsl )
     add_custom_command(
       OUTPUT ${_py}
-      COMMAND mergeparams ${CMAKE_SOURCE_DIR}/xml/params.xml ${_xml} | sed -e 's/<iparam/<param/g' | sed -e 's^</iparam^</param^g' > ${_mxml}
+      COMMAND mergeparams ${CMAKE_SOURCE_DIR}/xml/params.xml ${_xml} | sed -e 's/<iparam/<param/g' | sed -e 's^</iparam^</param^g' |sed -e 's/xmlns=""//g'> ${_mxml}
       COMMAND ${SAXON} -o ${_py} ${_mxml} ${_xsl}
       DEPENDS ${_xml} ${_xsl} )
 
@@ -86,7 +86,7 @@ macro( casa_add_tasks module _target )
     set( _out ${_base}_tasksinfo.py )
     add_custom_command( 
       OUTPUT ${_out}
-      COMMAND mergeparams ${CMAKE_SOURCE_DIR}/xml/params.xml ${_xml} | sed -e 's/<iparam/<param/g' | sed -e 's^</iparam^</param^g' > ${_mxml}
+      COMMAND mergeparams ${CMAKE_SOURCE_DIR}/xml/params.xml ${_xml} | sed -e 's/<iparam/<param/g' | sed -e 's^</iparam^</param^g' |sed -e 's/xmlns=""//g'> ${_mxml}
       COMMAND ${SAXON} -o ${_out} ${_mxml} ${_xsl}
       COMMAND echo >> ${_out}
       DEPENDS ${_xml} ${_xsl}

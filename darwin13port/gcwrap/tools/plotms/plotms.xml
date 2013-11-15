@@ -1708,7 +1708,7 @@ State Methods
 </method>
 
 
-<method type="function" name="enableIter">
+<!--<method type="function" name="enableIter">
   <keyword>enableIter</keyword>
   
   <shortdescription>A _temporary_ method to enable toggling the interation infrastructure</shortdescription>
@@ -1725,7 +1725,7 @@ State Methods
   <returns type="bool">
     <description>True if save successful, false if not.</description>
   </returns>
-</method>
+</method> -->
 
 <method type="function" name="setShowGui">
   <keyword>setShowGui</keyword>

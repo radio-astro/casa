@@ -285,16 +285,16 @@ class sdcal2_exceptions(sdcal2_unittest_base,unittest.TestCase):
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 
-    def test_exception10(self):
-        """test_exception10: Empty iflist for Tsys calibration"""
-        try:
-            self.res=sdcal2(infile=self.rawfile,calmode='tsys',tsysiflist=[],outfile=self.outfile)
-            self.assertTrue(False,
-                            msg='The task must throw exception')
-        except Exception, e:
-            pos=str(e).find('You must specify iflist as a list of IFNOs for Tsys calibration.')
-            self.assertNotEqual(pos,-1,
-                                msg='Unexpected exception was thrown: %s'%(str(e)))
+#    def test_exception10(self):
+#        """test_exception10: Empty iflist for Tsys calibration"""
+#        try:
+#            self.res=sdcal2(infile=self.rawfile,calmode='tsys',tsysiflist=[],outfile=self.outfile)
+#            self.assertTrue(False,
+#                            msg='The task must throw exception')
+#        except Exception, e:
+#            pos=str(e).find('You must specify iflist as a list of IFNOs for Tsys calibration.')
+#            self.assertNotEqual(pos,-1,
+#                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test_exception11(self):
         """test_exception11: non-scantable input"""
@@ -527,6 +527,13 @@ class sdcal2_tsyscal(sdcal2_caltest_base,unittest.TestCase):
         self.assertTrue(os.path.exists(defaultname),
                         msg='Failed to generate default outfile name.')
         self._comparecal(defaultname, self.tsystable, 'TSYS')
+
+    def test_tsyscal03(self):
+        """test_tsyscal03: Auto-detect spws for atmcal"""
+        sdcal2(infile=self.rawfile,calmode=self.calmode,tsysiflist=self.tsysiflist,outfile=self.outfile)
+
+        self._comparecal(self.outfile, self.tsystable, 'TSYS')
+      
 
 ###
 # Test apply calibration

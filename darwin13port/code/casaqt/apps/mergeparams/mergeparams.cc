@@ -27,6 +27,8 @@ int main(int argc, char **argv){
    LocalFileInputSource xmlParams(xmlRPath, xmlParamFile);
    Wrapper4InputSource theParamXML(&xmlParamSource, false);
    Wrapper4InputSource theXML(&xmlSource, false);
+   std::cerr << argv[1] << std::endl;
+   std::cerr << argv[2] << std::endl;
    loopit(theParamXML, theXML);
 
    XMLString::release(&xmlFile);
@@ -76,8 +78,9 @@ int loopit(Wrapper4InputSource &theParams, Wrapper4InputSource &xmlSource){
 		     const XMLCh *paramName = nameParam->getNodeValue();
 		     if(!strcmp(aName, XMLString::transcode(paramName))){
 			     //std::cerr << " " << theParamAttributes->getLength() << " ";
+			     //std::cerr << aName << " ";
 			     for(XMLSize_t k=0; k<theParamAttributes->getLength(); k++){
-				     //std::cerr << " " << XMLString::transcode((theParamAttributes->item(k))->getNodeName());
+				 //std::cerr << " " << XMLString::transcode((theParamAttributes->item(k))->getNodeName());
 				 if(!((DOMElement *)theNode)->hasAttribute(theParamAttributes->item(k)->getNodeName())){
 					 DOMNode *thehit = theParamAttributes->item(k);
 					 const XMLCh *attr = thehit->getNodeName();
@@ -85,6 +88,7 @@ int loopit(Wrapper4InputSource &theParams, Wrapper4InputSource &xmlSource){
 					 ((DOMElement *)theNode)->setAttribute(attr, itsval);
 				 }
 		             }
+			     //std::cerr << std::endl;
 			     DOMNodeList *children = theNode->getChildNodes();
 			     DOMNodeList *paramChildren = paramNode->getChildNodes();
 			     //std::cerr << children->getLength() << std::endl;

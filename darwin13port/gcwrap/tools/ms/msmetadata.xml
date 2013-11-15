@@ -131,18 +131,30 @@ windows in the dataset and close the tool.
                     <description>Antenna names (string or string array) for which to get the corresponding IDs. Note that * matches any number of characters of all character classes.</description>
                     <value type="string"/>
                     <any type="variant" limittypes="string stringArray"/>
-                    <value/>
+                </param>
+                <param type="any" direction="in" name="mindiameter">
+                    <description>Minimum antenna diameter, expressed as a quantity.</description>
+                    <value type="string">0m</value>
+                    <any type="variant"/>
+                </param>
+                <param type="any" direction="in" name="maxdiameter">
+                    <description>Maximum antenna diameter, expressed as a quantity.</description>
+                    <value type="string">1pc</value>
+                    <any type="variant"/>
                 </param>
             </input>
             <returns type="intArray"/>
             <description>
-                Get the zero-based antenna IDs for the specfied antenna names. An array of unique IDs in order of the specified names is returned.
-                If not specified, all IDs are returned.
+                Get the zero-based antenna IDs for the specfied antenna names and the specified diameter
+                range. An array of unique IDs in order of the specified names is returned.
+                If no names and no diameter range is specified, all IDs are returned.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the zero-based antennaID for the antenna named "VB2"
+    # get the zero-based antenna IDs for the antenna named "VB2"
     antenna_id = msmd.antennaids("VB2")[0]
+    # get the zero-based antenna IDs for all antennas with diameters between 9m and 11m
+    antenna_ids = msmd.antennaids(mindiameter="9m", maxdiameter=qa.quantity("11m"))
     msmd.done()
             </example>
         </method>

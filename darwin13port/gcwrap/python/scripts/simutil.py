@@ -2933,7 +2933,7 @@ class simutil:
         if nstokes>1:
             os.rename(flat,flat+".tmp")
             po.open(flat+".tmp")
-            foo=po.stokesi(outfile=flat,stokes='I')
+            foo=po.stokesi(outfile=flat)
             foo.done()
             po.done()
             shutil.rmtree(flat+".tmp")

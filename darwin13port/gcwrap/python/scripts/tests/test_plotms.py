@@ -121,7 +121,7 @@ class plotms_test1(test_base):
         self.assertTrue( os.path.exists(self.plotfile_jpg), 'Plot was not created')
         self._checkPlotFile(60000)
         #Next, overwrite is turned off so the save should fail.
-        self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', scriptclient=True)
+        self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', showgui=False)
         self.assertFalse(self.res)
         
 

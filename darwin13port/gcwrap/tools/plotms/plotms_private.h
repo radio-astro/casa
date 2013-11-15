@@ -96,9 +96,5 @@ void setPlotMSIterate_(const PlotMSIterParam& iter,
 // Helper method for setting the flag extension.
 void setFlagging_(const PlotMSFlagging& flagging);
 
-
-
-// Bool that turns on iteration
-bool doIter_;
 bool showGui;
 bool asyncCall;

@@ -491,8 +491,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         approximate aperture efficiency conversion for the GBT data.
         If you give telescopeparm a list, then if the list has a single 
         float it is assumed to be the gain in Jy/K, if two or more elements 
-        they are assumed to be telescope diameter (m) and aperture efficiency
-        respectively.
+        they are assumed to be telescope diameter (m) and aperture
+        efficiency respectively.
 
         Note that sdcal assumes that the fluxunit is set correctly in
         the data already.  If not, then set telescopeparm='FIX' and it
@@ -501,11 +501,24 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         unit is missing, this task automatically fixes the default fluxunit
         to 'K' before the conversion.
 
-        Two new calmode, 'otf' and 'otfraster', are available. If you 
-        specify those modes, the task first try to define several scans 
+        For position switching calibration, the user should choose
+        appropriate calibration mode depending on the data. Use case
+        for each mode is as follows:
+
+            'ps': position switch (including OTF) with explicit
+                  reference (OFF) scans
+            'otf': non-raster OTF scan without explicit OFFs
+                   (e.g. Lissajous, double circule, etc.)
+                   intentds to calibrate fast scan data
+            'otfraster': raster OTF scan without explicit OFFs
+
+        So, if the data contains explicit reference scans, 'ps' should
+        be used. Otherwise, 'otfraster' and 'otf' are appropriate for
+        raster OTF and non-raster OTF, respectively. In 'otf' and
+        'otfraster' modes, the task first try to define several scans 
         near edge as OFF scans, then the data are calibrated using those 
         OFF scans. Those modes are designed for OTF observations without 
-        explicit OFF scans. If the observing pattern is 'raster', you 
+        explicit OFF scans. If the observing pattern is raster, you 
         should use the 'otfraster' mode to calibrate data. Otherwise, the 
         'otf' mode should be used. For detail about edge marking, see 
         inline help of sd.edgemarker module and its methods.

@@ -1,82 +1,84 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no" ?><casaxml><param mustexist="true" name="vis" type="string">
-			<description>Name of input visibility file</description>
-			<value/>
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<casaxml>
+	<param mustexist="true" name="vis" type="string">
+			<description >Name of input visibility file</description>
+			<value />
 		</param><param name="tablein" type="string">
-			<description>Input cumulative calibration table; use \'\' on first run</description>
-			<value/>
+			<description >Input cumulative calibration table; use \'\' on first run</description>
+			<value />
 		</param><param name="incrtable" type="string">
-			<description>Input incremental calibration table to add</description>
-			<value/>
+			<description >Input incremental calibration table to add</description>
+			<value />
 		</param><param name="caltable" type="string">
-			<description>Output (cumulative) calibration table</description>
-			<value/>
+			<description >Output (cumulative) calibration table</description>
+			<value />
 		</param><param name="field" type="stringArray">
-			<description>List of field names to process from tablein</description>
-			<value/>
+			<description >List of field names to process from tablein</description>
+			<value />
 		</param><param name="calfield" type="stringArray">
-			<description>List of field names to use from incrtable.</description>
-			<value/>
+			<description >List of field names to use from incrtable.</description>
+			<value />
 		</param><param name="interp" type="string">
-			<description>Interpolation mode to use for resampling incrtable solutions</description>
-			<value>linear</value>
-		</param><param name="accumtime" >
-			<any limittypes="double int" type="variant"/>
-			<description>Time-interval when create cumulative table</description>
-			<value type="double">1.0</value>
+			<description >Interpolation mode to use for resampling incrtable solutions</description>
+			<value >linear</value>
+		</param><param name="accumtime" type="any">
+			<any  limittypes="double int" type="variant"/>
+			<description >Time-interval when create cumulative table</description>
+			<value  type="double">1.0</value>
 		</param><param name="spwmap" type="intArray">
-			<description>Spectral window combinations to apply</description>
-			<value>-1</value>
+			<description >Spectral window combinations to apply</description>
+			<value >-1</value>
 		</param><param name="spw" type="string">
-		<description>Select spectral window/channels</description>
-		<value/>
+		<description >Select spectral window/channels</description>
+		<value />
 	</param><param name="intent" type="string">
-		<description>Select observing intent</description>
-		<value/>
+		<description >Select observing intent</description>
+		<value />
 	</param><param name="selectdata" type="bool">
-		<description>Other data selection parameters</description>
-		<value>True</value>
-	</param><param name="timerange" >
-		<description>Select data based on time range</description>
-		<value/>
-	</param><param name="uvrange" >
-		<description>Select data within uvrange (default units meters)</description>
-		<any type="variant"/>
-		<value type="string"/>
-	</param><param name="antenna" >
-		<description>Select data based on antenna/baseline</description>
-		<value/>
-	</param><param name="scan" >
-		<description>Scan number range</description>
-		<value/>
-	</param><param name="observation" >
-                <description>Select by observation ID(s)</description>
-		<any limittypes="string int" type="variant"/>
-		<value type="string"/>
-        </param><param name="msselect" >
-		<description>Optional complex data selection (ignore for now)</description>
-		<value/>
+		<description >Other data selection parameters</description>
+		<value >True</value>
+	</param><param name="timerange" type="string">
+		<description >Select data based on time range</description>
+		<value />
+	</param><param name="uvrange" type="any">
+		<description >Select data within uvrange (default units meters)</description>
+		<any  type="variant"/>
+		<value  type="string"/>
+	</param><param name="antenna" type="string">
+		<description >Select data based on antenna/baseline</description>
+		<value />
+	</param><param name="scan" type="string">
+		<description >Scan number range</description>
+		<value />
+	</param><param name="observation" type="any">
+                <description >Select by observation ID(s)</description>
+		<any  limittypes="string int" type="variant"/>
+		<value  type="string"/>
+        </param><param name="msselect" type="string">
+		<description >Optional complex data selection (ignore for now)</description>
+		<value />
 	</param><param name="docallib" type="bool">
-	        <description>Use callib or traditional cal apply parameters</description>
-	        <value>False</value>
-	</param><param name="callib" >
-	        <description>Cal Library filename</description>
-                <value type="string"/>
-	</param><param mustexist="false" name="gaintable" >
-		<description>Gain calibration table(s) to apply on the fly</description>
-		<value/>
-	</param><param name="gainfield" >
-		<description>Select a subset of calibrators from gaintable(s)</description>
-		<value/>
-	</param><param name="calwt" >
-		<description>Calibrate data weights per gaintable.</description>
-		<value>True</value>
+	        <description >Use callib or traditional cal apply parameters</description>
+	        <value >False</value>
+	</param><param name="callib" type="variant">
+	        <description >Cal Library filename</description>
+                <value  type="string"/>
+	</param><param mustexist="false" name="gaintable" type="stringArray">
+		<description >Gain calibration table(s) to apply on the fly</description>
+		<value />
+	</param><param name="gainfield" type="stringArray">
+		<description >Select a subset of calibrators from gaintable(s)</description>
+		<value />
+	</param><param name="calwt" type="boolArray">
+		<description >Calibrate data weights per gaintable.</description>
+		<value >True</value>
 	</param><param name="parang" type="bool">
-		<description>Apply parallactic angle correction</description>
-		<value>False</value>
+		<description >Apply parallactic angle correction</description>
+		<value >False</value>
 	</param><param name="applymode" type="string">
-		<description>Calibration mode: ""="calflag","trial","flagonly", or "calonly"</description>
-		<value/>
-		<allowed kind="enum">
+		<description >Calibration mode: ""="calflag","trial","flagonly", or "calonly"</description>
+		<value />
+		<allowed  kind="enum">
               		<value/>
 			<value>calflag</value>
 			<value>trial</value>
@@ -84,104 +86,93 @@
 			<value>calonly</value>
 		</allowed>
 	</param><param name="flagbackup" type="bool">
-		<description>Automatically back up the state of flags before the run?</description>
-		<value>True</value>
+		<description >Automatically back up the state of flags before the run?</description>
+		<value >True</value>
 	</param><param mustexist="true" name="asdm" type="string">
-      <description>Name of input ASDM directory</description>
-      <value/>
+      <description >Name of input ASDM directory</description>
+      <value />
     </param><param name="imagename" type="string">
-    <description>Pre-name of output images</description>
-    <value/>
+    <description >Pre-name of output images</description>
+    <value />
     </param><param name="mode" type="string">
-      <description>Spectral gridding type (mfs, channel, velocity, frequency)</description>
-      <value>mfs</value>
-      <allowed kind="enum">
+      <description >Spectral gridding type (mfs, channel, velocity, frequency)</description>
+      <value >mfs</value>
+      <allowed  kind="enum">
 	<value>mfs</value>
 	<value>channel</value>
 	<value>velocity</value>
 	<value>frequency</value>
       </allowed>
-    </param><param name="nchan" >
-    <description>Number of channels (planes) in output image</description>
-    <value>1</value>
-    </param><param name="start" >
-    <description>First channel in input to use</description>
-    <any type="variant"/>
-    <value type="int">0</value>
-    </param><param name="width" >
-    <description>Number of input channels to average</description>
-    <any type="variant"/>
-    <value type="int">1</value>
-    </param><param name="interpolation" >
-    <description>Spectral interpolation(nearest, linear, cubic)</description>
-    <value>linear</value>
-    <allowed kind="enum">
+    </param><param name="nchan" type="int">
+    <description >Number of channels (planes) in output image</description>
+    <value >1</value>
+    </param><param name="start" type="any">
+    <description >First channel in input to use</description>
+    <any  type="variant"/>
+    <value  type="int">0</value>
+    </param><param name="width" type="any">
+    <description >Number of input channels to average</description>
+    <any  type="variant"/>
+    <value  type="int">1</value>
+    </param><param name="interpolation" type="string">
+    <description >Spectral interpolation(nearest, linear, cubic)</description>
+    <value >linear</value>
+    <allowed  kind="enum">
       <value>nearest</value>
       <value>linear</value>
       <value>cubic</value>
       <value>spline</value>
     </allowed>
-    </param><param name="doconcat" >
-    <description>Concatenate multiple channels into single final image</description>
-    <value>True</value>
+    </param><param name="doconcat" type="bool">
+    <description >Concatenate multiple channels into single final image</description>
+    <value >True</value>
     </param><param name="psfmode" type="string">
-      <description>Method of PSF calculation to use during minor cycles</description>
-      <value>clark</value>
-      <allowed kind="enum">
+      <description >Method of PSF calculation to use during minor cycles</description>
+      <value >clark</value>
+      <allowed  kind="enum">
 	<value>clark</value>
         <value>clarkstokes</value>
 	<value>hogbom</value>
       </allowed>
     </param><param name="imagermode" type="string">
-      <description>Options: \'csclean\' or \'mosaic\', \' \', uses psfmode</description>
-      <value/>
-      <allowed kind="enum">
+      <description >Options: \'csclean\' or \'mosaic\', \' \', uses psfmode</description>
+      <value />
+      <allowed  kind="enum">
 	<value/>
 	<value>csclean</value>
 	<value>mosaic</value>
       </allowed>
-    </param><param name="cyclefactor" >
-    <description>change depth in between of csclean cycle</description>
-    <value>1.5</value>
-    </param><param name="cyclespeedup" >
-    <description>Cycle threshold doubles in this number of iteration</description>
-    <value>-1</value>
+    </param><param name="cyclefactor" type="double">
+    <description >change depth in between of csclean cycle</description>
+    <value >1.5</value>
+    </param><param name="cyclespeedup" type="int">
+    <description >Cycle threshold doubles in this number of iteration</description>
+    <value >-1</value>
     </param><param name="imsize" type="intArray">
-	    <description>x and y image size in pixels. Single value: same for both</description>
-	    <value type="vector">
+	    <description >x and y image size in pixels. Single value: same for both</description>
+	    <value  type="vector">
     <value>256</value><value>256</value>
     </value>
     </param><param name="cell" type="doubleArray" units="arcsec">
-    <description>x and y cell size(s). Default unit arcsec.</description>
-    <value type="vector"><value>1.0</value></value>
+    <description >x and y cell size(s). Default unit arcsec.</description>
+    <value  type="vector"><value>1.0</value></value>
     </param><param name="phasecenter" type="any">
-	    <description>Image center: direction or field index</description>
-	    <any type="variant"/>
-	    <value type="string"/>
+	    <description >Image center: direction or field index</description>
+	    <any  type="variant"/>
+	    <value  type="string"/>
     </param><param name="restfreq" type="string">
-	    <description>Rest frequency to assign to image (see help)</description>
-	    <value/>
+	    <description >Rest frequency to assign to image (see help)</description>
+	    <value />
     </param><param name="stokes" type="string">
-	    <description>Stokes params to image (eg I,IV, QU,IQUV); Current autoclean implementation requires Stokes="I".</description>
+	    <description >Stokes params to image (eg I,IV, QU,IQUV); Current autoclean implementation requires Stokes="I".</description>
+	    <value >I</value>
+    <allowed  kind="enum">
 	    <value>I</value>
-    <allowed kind="enum">
-	    <value>I</value>
-<!--   For now, autoclean isn't set up for the different polarizations.   -->
-<!--	    <value>IV</value>   -->
-<!--          <value>IQ</value>   -->
-<!--	    <value>QU</value>   -->
-<!--	    <value>IQUV</value>   -->
-<!--	    <value>RR</value>   -->
-<!--	    <value>LL</value>   -->
-<!--	    <value>RRLL</value>   -->
-<!--	    <value>XX</value>   -->
-<!--	    <value>YY</value>   -->
-<!--	    <value>XXYY</value>   -->
     </allowed>
     </param><param name="weighting" type="string">
-    <description>Weighting of uv (natural, uniform, briggs, ...)</description>
-    <value>natural</value>
-    <allowed kind="enum">
+    <description >Weighting of uv (natural, uniform, briggs, ...)</description>
+    <value >natural</value>
+    <allowed  kind="enum">
       <value>natural</value>
       <value>uniform</value>
       <value>briggs</value>
@@ -189,317 +180,317 @@
       <value>radial</value>
       <value>superuniform</value>
     </allowed>
-    </param><param name="robust" >
-    <description>Briggs robustness parameter</description>
-    <value>0.0</value>
-    <allowed kind="range">
+    </param><param name="robust" type="double">
+    <description >Briggs robustness parameter</description>
+    <value >0.0</value>
+    <allowed  kind="range">
       <value range="min">-2.0</value>
       <value range="max">2.0</value>
     </allowed>
-    </param><param name="noise" >
-    <description>noise parameter for briggs abs mode weighting</description>
-    <any type="variant"/>
-    <value type="string">1.0Jy</value>	    
-    </param><param name="npixels" >
-    <description>number of pixels for superuniform or briggs weighting</description>
-    <value>0</value>
+    </param><param name="noise" type="any">
+    <description >noise parameter for briggs abs mode weighting</description>
+    <any  type="variant"/>
+    <value  type="string">1.0Jy</value>	    
+    </param><param name="npixels" type="int">
+    <description >number of pixels for superuniform or briggs weighting</description>
+    <value >0</value>
     </param><param name="interactive" type="bool">
-    <description>use interactive clean (with GUI viewer)</description>
-    <value>False</value>
+    <description >use interactive clean (with GUI viewer)</description>
+    <value >False</value>
     </param><param name="mask" type="any">
-    <description>Initial cleanbox(es), mask image(s), and/or region(s)  used in cleaning</description>
-    <any type="variant"/>
-    <value type="stringArray"/>
+    <description >Initial cleanbox(es), mask image(s), and/or region(s)  used in cleaning</description>
+    <any  type="variant"/>
+    <value  type="stringArray"/>
     </param><param name="modelimage" type="string">
-    <description>Name of model image(s) to initialize cleaning</description>
-    <value/>
+    <description >Name of model image(s) to initialize cleaning</description>
+    <value />
     </param><param name="uvtaper" type="bool">
-	    <description>Apply additional uv tapering of visibilities</description>
-	    <value>False</value>
-    </param><param name="outertaper" >
-	    <description>uv-taper on outer baselines in uv-plane</description>
-	    <value type="vector">
+	    <description >Apply additional uv tapering of visibilities</description>
+	    <value >False</value>
+    </param><param name="outertaper" type="stringArray">
+	    <description >uv-taper on outer baselines in uv-plane</description>
+	    <value  type="vector">
 	      <value/>
 	    </value>
-    </param><param name="innertaper" >
-	    <description>uv-taper in center of uv-plane (not implemented)</description>
-	    <value>1.0</value>
+    </param><param name="innertaper" type="stringArray">
+	    <description >uv-taper in center of uv-plane (not implemented)</description>
+	    <value >1.0</value>
     </param><param name="niter" type="int">
-    <description>Max number of total clean cycles per channel</description> 
-    <value>500</value>
+    <description >Max number of total clean cycles per channel</description> 
+    <value >500</value>
     </param><param name="npercycle" type="int">  
-    <description>Clean iterations before adding new clean boxes</description>  
-    <value>100</value>  
+    <description >Clean iterations before adding new clean boxes</description>  
+    <value >100</value>  
     </param><param name="npercycle_speedup" type="double">  
-    <description>Increase npercycle by this factor if no new regions found.</description>  
-    <value>1.5</value>  
+    <description >Increase npercycle by this factor if no new regions found.</description>  
+    <value >1.5</value>  
     </param><param name="gain" type="double">
-    <description>Loop gain for cleaning</description>
-    <value>0.1</value>
+    <description >Loop gain for cleaning</description>
+    <value >0.1</value>
     </param><param name="pbcor" type="bool">
-	    <description>Output primary beam-corrected image</description>
-	    <value>False</value>
+	    <description >Output primary beam-corrected image</description>
+	    <value >False</value>
     </param><param name="minpb" type="double">
-    <description>Minimum PB level to use</description>
-    <value>0.1</value>
+    <description >Minimum PB level to use</description>
+    <value >0.1</value>
     </param><param name="clean_threshold" type="double" units="mJy">
-    <description>Flux level to stop cleaning.  Must include units.</description>
-    <value>0.0</value>
+    <description >Flux level to stop cleaning.  Must include units.</description>
+    <value >0.0</value>
     </param><param name="Nrms" type="double">
-    <description>Threshold to stop cleaning: current rms * Nrms</description>
-    <value>6</value>
+    <description >Threshold to stop cleaning: current rms * Nrms</description>
+    <value >6</value>
     </param><param name="eps_maxres" type="double">
-    <description>Stop cleaning if max abs(residual) changes by less than this factor</description>
-    <value>0.01</value>
+    <description >Stop cleaning if max abs(residual) changes by less than this factor</description>
+    <value >0.01</value>
     </param><param name="useabsresid" type="bool">
-    <description>If True, use absolute value of residual to test for clean convergence.</description>
-    <value>False</value>
+    <description >If True, use absolute value of residual to test for clean convergence.</description>
+    <value >False</value>
     </param><param name="allow_maxres_inc" type="int">
-    <description>Stop cleaning if max abs(residual) increases this many times (set to -1 to ignore)</description>
-    <value>3</value>
+    <description >Stop cleaning if max abs(residual) increases this many times (set to -1 to ignore)</description>
+    <value >3</value>
     </param><param name="island_rms" type="double">
-    <description>Threshold for islands when finding clean regions: current rms * island_rms</description>
-    <value>4</value>
+    <description >Threshold for islands when finding clean regions: current rms * island_rms</description>
+    <value >4</value>
     </param><param name="diag" type="bool">
-    <description>Count diagonal connection as same island?</description>
-    <value>False</value>
+    <description >Count diagonal connection as same island?</description>
+    <value >False</value>
     </param><param name="peak_rms" type="double">
-    <description>Threshold to add new clean box: peak in island must be at least current rms * peak_rms</description>
-    <value>6</value>
+    <description >Threshold to add new clean box: peak in island must be at least current rms * peak_rms</description>
+    <value >6</value>
     </param><param name="gain_threshold" type="double">
-    <description>Threshold to add new clean box: peak in island must be at least current max residual * gain_threshold</description>
-    <value>0.1</value>
+    <description >Threshold to add new clean box: peak in island must be at least current max residual * gain_threshold</description>
+    <value >0.1</value>
     </param><param name="Npeak" type="int">
-    <description>Max number of new clean regions to add in each iteration.</description>
-    <value>3</value>
-    <allowed kind="range">
+    <description >Max number of new clean regions to add in each iteration.</description>
+    <value >3</value>
+    <allowed  kind="range">
       <value range="min">1</value>
     </allowed>
     </param><param name="shape" type="int">
-    <description>Shape of clean regions: 0 for circles, 1 for boxes, 2 for both.</description>
-    <value>1</value>
-    <allowed kind="range">
+    <description >Shape of clean regions: 0 for circles, 1 for boxes, 2 for both.</description>
+    <value >1</value>
+    <allowed  kind="range">
       <value range="min">0</value>
       <value range="max">3</value>
     </allowed>
     </param><param name="boxstretch" type="int">
-    <description>Increase clean region size by this many pixels beyond island size.</description>
-    <value>1</value>
-    <allowed kind="range">
+    <description >Increase clean region size by this many pixels beyond island size.</description>
+    <value >1</value>
+    <allowed  kind="range">
       <value range="min">-1</value>
       <value range="max">6</value>
     </allowed>
     </param><param name="irregsize" type="int">
-    <description>For regions this large (in pixels), use irregular clean region.</description>
-    <value>100</value>
-    <allowed kind="range">
+    <description >For regions this large (in pixels), use irregular clean region.</description>
+    <value >100</value>
+    <allowed  kind="range">
       <value range="min">0</value>
     </allowed>
     </param><param name="solint" type="any">
-                <description>Solution interval in time[,freq]</description>
-                <any type="variant"/>
-                <value type="string">inf</value>
+                <description >Solution interval in time[,freq]</description>
+                <any  type="variant"/>
+                <value  type="string">inf</value>
         </param><param name="combine" type="string">
-                <description>Data axes which to combine for solve (obs, scan, spw, and/or field)</description>
-                <value>scan</value>
+                <description >Data axes which to combine for solve (obs, scan, spw, and/or field)</description>
+                <value >scan</value>
         </param><param name="refant" type="string">
-		<description>Reference antenna name(s)</description>
-		<value/>
+		<description >Reference antenna name(s)</description>
+		<value />
 	</param><param name="minblperant" type="int">
-		<description>Minimum baselines _per antenna_ required for solve</description>
-		<value>4</value>
+		<description >Minimum baselines _per antenna_ required for solve</description>
+		<value >4</value>
 	</param><param name="minsnr" type="double">
-		<description>Reject solutions below this SNR (only applies for bandtype = B)</description>
-		<value>3.0</value>
+		<description >Reject solutions below this SNR (only applies for bandtype = B)</description>
+		<value >3.0</value>
 	</param><param name="solnorm" type="bool">
-		<description>Normalize average solution amplitudes to 1.0 </description>
-		<value>False</value>
+		<description >Normalize average solution amplitudes to 1.0 </description>
+		<value >False</value>
 	</param><param name="bandtype" type="string">
-		<description>Type of bandpass solution (B or BPOLY)</description>
-		<value>B</value>
-		<allowed kind="enum">
+		<description >Type of bandpass solution (B or BPOLY)</description>
+		<value >B</value>
+		<allowed  kind="enum">
 			<value>B</value>
 			<value>BPOLY</value>
 		</allowed>
 	</param><param name="smodel" type="doubleArray">
-               <description>Point source Stokes parameters for source model.</description>
-               <value/>
+               <description >Point source Stokes parameters for source model.</description>
+               <value />
         </param><param name="append" type="bool">
-		<description>Append solutions to the (existing) table</description>
-		<value>False</value>
-	</param><param name="fillgaps" >
-		<description>Fill flagged solution channels by interpolation</description>
-		<value>0</value>
-	</param><param name="degamp" >
-		<description>Polynomial degree for BPOLY amplitude solution</description>
-		<value>3</value>
-	</param><param name="degphase" >
-		<description>Polynomial degree for BPOLY phase solution</description>
-		<value>3</value>
-	</param><param name="visnorm" >
-		<description>Normalize data prior to BPOLY solution</description>
-		<value>False</value>
-	</param><param name="maskcenter" >
-		<description>Number of channels to avoid in center of each band</description>
-		<value>0</value>
-	</param><param name="maskedge" >
-		<description>Fraction of channels to avoid at each band edge (in %)</description>
-		<value>5</value>
+		<description >Append solutions to the (existing) table</description>
+		<value >False</value>
+	</param><param name="fillgaps" type="int">
+		<description >Fill flagged solution channels by interpolation</description>
+		<value >0</value>
+	</param><param name="degamp" type="int">
+		<description >Polynomial degree for BPOLY amplitude solution</description>
+		<value >3</value>
+	</param><param name="degphase" type="int">
+		<description >Polynomial degree for BPOLY phase solution</description>
+		<value >3</value>
+	</param><param name="visnorm" type="bool">
+		<description >Normalize data prior to BPOLY solution</description>
+		<value >False</value>
+	</param><param name="maskcenter" type="int">
+		<description >Number of channels to avoid in center of each band</description>
+		<value >0</value>
+	</param><param name="maskedge" type="int">
+		<description >Fraction of channels to avoid at each band edge (in %)</description>
+		<value >5</value>
 	</param><param name="freqdep" type="bool">
-		<description>Solve for frequency dependent solutions</description>
-		<value>False</value>
+		<description >Solve for frequency dependent solutions</description>
+		<value >False</value>
 	</param><param name="calmode" type="string">
-                <description>Type of solution" (\'ap\', \'p\', \'a\')</description>
-                <value>ap</value>
-                <allowed kind="enum">
+                <description >Type of solution" (\'ap\', \'p\', \'a\')</description>
+                <value >ap</value>
+                <allowed  kind="enum">
                         <value>a</value>
                         <value>p</value>
                         <value>ap</value>
                 </allowed>
         </param><param name="regionfile" type="string">
-    <description>Output region file</description>
-    <value/>
+    <description >Output region file</description>
+    <value />
     </param><param name="threshold" type="double" units="mJy">
-    <description>Threshold value.  Must include units.</description>
-    <value>0.0</value>
+    <description >Threshold value.  Must include units.</description>
+    <value >0.0</value>
     </param><param name="maskname" type="string">
-    <description>Output mask name (optional).</description>
-    <value/>
+    <description >Output mask name (optional).</description>
+    <value />
     </param><param name="chanrange" type="string">
-    <description>Range of channel ids</description>
-    <value/>
+    <description >Range of channel ids</description>
+    <value />
     </param><param name="polrange" type="string">
-    <description>Range of polarization ids</description>
-    <value/>
+    <description >Range of polarization ids</description>
+    <value />
     </param><param name="minsize" type="int">
-    <description>Minimum number of pixels for a boxable island</description>
-    <value>2</value>
+    <description >Minimum number of pixels for a boxable island</description>
+    <value >2</value>
     </param><param name="overwrite" type="bool">
-    <description>Overwrite existing region file?</description>
-    <value>False</value>
+    <description >Overwrite existing region file?</description>
+    <value >False</value>
     </param><param kind="table" name="tablename" type="string">
-      <description>Name of input table</description>
-      <value/>
-    </param><param name="mightedit" >
-      <description>Warning: the GUI seems to ignore whether the table tool is opened read-only - just be careful, esp. if filtering.</description>
-      <value>False</value>
-    </param><param name="sortlist" >
-      <description>Columns to sort by (ascending)</description>
-      <any limittypes="string stringArray" type="variant"/>
-      <value type="string"/>
-    </param><param name="taql" >
-      <description>TaQL query string for prefiltering the table.</description>
-      <value/>
-    </param><param name="skipcols" >
-      <description>Columns to omit</description>
-      <any limittypes="string stringArray" type="variant"/>
-      <value type="string"/>
+      <description >Name of input table</description>
+      <value />
+    </param><param name="mightedit" type="bool">
+      <description >Warning: the GUI seems to ignore whether the table tool is opened read-only - just be careful, esp. if filtering.</description>
+      <value >False</value>
+    </param><param name="sortlist" type="any">
+      <description >Columns to sort by (ascending)</description>
+      <any  limittypes="string stringArray" type="variant"/>
+      <value  type="string"/>
+    </param><param name="taql" type="string">
+      <description >TaQL query string for prefiltering the table.</description>
+      <value />
+    </param><param name="skipcols" type="any">
+      <description >Columns to omit</description>
+      <any  limittypes="string stringArray" type="variant"/>
+      <value  type="string"/>
     </param><param name="axis" type="string">
-        <description>Which values to use</description>
-        <value type="string">amplitude</value>
-    </param><param name="datacolumn" >
-      <description>Which data column to use</description>
-      <value type="string">gain</value>
+        <description >Which values to use</description>
+        <value  type="string">amplitude</value>
+    </param><param name="datacolumn" type="string">
+      <description >Which data column to use</description>
+      <value  type="string">gain</value>
     </param><param name="useflags" type="bool">
-        <description>Take flagging into account? (not implemented)</description>
-        <value>True</value>
-        <example>useflags=True</example>
+        <description >Take flagging into account? (not implemented)</description>
+        <value >True</value>
+        <example >useflags=True</example>
     </param><param name="xstat" type="any">
-    	<description>Statistical information for the calibration table</description>
-	<any type="variant"/>
-	<value>{}</value>
+    	<description >Statistical information for the calibration table</description>
+	<any  type="variant"/>
+	<value >{}</value>
     </param><param name="caltabold" type="string">
-      <description>Name of the old-style caltable.</description>
-      <value/>
+      <description >Name of the old-style caltable.</description>
+      <value />
     </param><param name="ptype" type="string">
-      <description>Type of data in the new-format caltable ("complex" or "float"; default is "complex").</description>
-      <value>complex</value>
+      <description >Type of data in the new-format caltable ("complex" or "float"; default is "complex").</description>
+      <value >complex</value>
     </param><param name="caltabnew" type="string">
-      <description>Name of the new-style caltable.  If not specified, the suffix ".new" is appended to the name of old-style caltable.</description>
-      <value/>
+      <description >Name of the new-style caltable.  If not specified, the suffix ".new" is appended to the name of old-style caltable.</description>
+      <value />
     </param><param name="outlierfile" type="string">
-      <description>Text file with image names, sizes, centers for outliers</description>
-      <value/>
-    </param><param name="resmooth" >
-      <description>Re-restore the cube image to a common beam when True</description>
-      <value>False</value>
+      <description >Text file with image names, sizes, centers for outliers</description>
+      <value />
+    </param><param name="resmooth" type="bool">
+      <description >Re-restore the cube image to a common beam when True</description>
+      <value >False</value>
     </param><param name="gridmode" type="string">
-      <description>Gridding kernel for FFT-based transforms, default=\'\' None</description>
-      <value/>
-      <allowed kind="enum">
+      <description >Gridding kernel for FFT-based transforms, default=\'\' None</description>
+      <value />
+      <allowed  kind="enum">
 	<value/>
 	<value>widefield</value>
 	<value>aprojection</value>
 	<value>advancedaprojection</value> 
      </allowed>
-    </param><param name="wprojplanes" >
-      <description>Number of w-projection planes for convolution </description>
-      <value>1</value>
-    </param><param name="facets" >
-      <description>Number of facets along each axis (main image only)</description>
-      <value>1</value>
-    </param><param name="cfcache" >
-      <description>Convolution function cache directory</description>
-      <value>cfcache.dir</value>
-    </param><param name="rotpainc" >
-      <description>Parallactic angle increment (degrees) for OTF A-term rotation</description>
-      <value>5.0</value>
-    </param><param name="painc" >
-      <description>Parallactic angle increment (degrees) for computing A-term</description>
-      <value>360.0</value>
-    </param><param name="aterm" >
-      <description>Switch-on the A-Term?</description>
-      <value>True</value>
-    </param><param name="psterm" >
-      <description>Switch-on the PS-Term?</description>
-      <value>False</value>
-    </param><param name="mterm" >
-      <description>Switch-on the M-Term?</description>
-      <value>True</value>
-    </param><param name="wbawp" >
-      <description>Trigger the wide-band A-Projection algorithm?</description>
-      <value>False</value>
-    </param><param name="conjbeams" >
-      <description>Use frequency conjugate beams in WB A-Projection algorithm?</description>
-      <value>True</value>
-    </param><param name="epjtable" >
-      <description>Table of EP-Jones parameters</description>
-      <value type="string"/>
-    </param><param name="ftmachine" >
-      <description>Gridding method for the image</description>
-      <value>mosaic</value>
-      <allowed kind="enum">
+    </param><param name="wprojplanes" type="int">
+      <description >Number of w-projection planes for convolution </description>
+      <value >1</value>
+    </param><param name="facets" type="int">
+      <description >Number of facets along each axis (main image only)</description>
+      <value >1</value>
+    </param><param name="cfcache" type="string">
+      <description >Convolution function cache directory</description>
+      <value >cfcache.dir</value>
+    </param><param name="rotpainc" type="double">
+      <description >Parallactic angle increment (degrees) for OTF A-term rotation</description>
+      <value >5.0</value>
+    </param><param name="painc" type="double">
+      <description >Parallactic angle increment (degrees) for computing A-term</description>
+      <value >360.0</value>
+    </param><param name="aterm" type="bool">
+      <description >Switch-on the A-Term?</description>
+      <value >True</value>
+    </param><param name="psterm" type="bool">
+      <description >Switch-on the PS-Term?</description>
+      <value >False</value>
+    </param><param name="mterm" type="bool">
+      <description >Switch-on the M-Term?</description>
+      <value >True</value>
+    </param><param name="wbawp" type="bool">
+      <description >Trigger the wide-band A-Projection algorithm?</description>
+      <value >False</value>
+    </param><param name="conjbeams" type="bool">
+      <description >Use frequency conjugate beams in WB A-Projection algorithm?</description>
+      <value >True</value>
+    </param><param name="epjtable" type="string">
+      <description >Table of EP-Jones parameters</description>
+      <value  type="string"/>
+    </param><param name="ftmachine" type="string">
+      <description >Gridding method for the image</description>
+      <value >mosaic</value>
+      <allowed  kind="enum">
 	<value>ft</value>
 	<value>mosaic</value>
 	<value>sd</value>
 	<value>both</value>
 	<value>awproject</value>
       </allowed>
-    </param><param name="mosweight" >
-      <description>Individually weight the fields of the mosaic</description>
-      <value>False</value>
-    </param><param name="scaletype" >
-      <description>Controls scaling of pixels in the image plane. default=\'SAULT\'; example: scaletype=\'PBCOR\' Options: \'PBCOR\',\'SAULT\'</description>
-      <value>SAULT</value>
-      <allowed kind="enum">
+    </param><param name="mosweight" type="bool">
+      <description >Individually weight the fields of the mosaic</description>
+      <value >False</value>
+    </param><param name="scaletype" type="string">
+      <description >Controls scaling of pixels in the image plane. default=\'SAULT\'; example: scaletype=\'PBCOR\' Options: \'PBCOR\',\'SAULT\'</description>
+      <value >SAULT</value>
+      <allowed  kind="enum">
 	<value>SAULT</value>
 	<value>PBCOR</value>
       </allowed>
     </param><param name="multiscale" type="intArray">
-      <description>Deconvolution scales (pixels); [] = standard clean</description>
-      <value type="vector">
+      <description >Deconvolution scales (pixels); [] = standard clean</description>
+      <value  type="vector">
 	<value>0</value>
       </value>
-    </param><param name="negcomponent" >
-      <description>Stop cleaning if the largest scale finds this number of neg components</description>
-      <value>-1</value>
-    </param><param name="smallscalebias" >
-      <description>a bias to give more weight toward smaller scales</description>
-      <value>0.6</value>
-    </param><param ignorecase="true" name="outframe" >
-	    <description>velocity frame of output image </description>
-	    <value/>
-    <allowed kind="enum">
+    </param><param name="negcomponent" type="int">
+      <description >Stop cleaning if the largest scale finds this number of neg components</description>
+      <value >-1</value>
+    </param><param name="smallscalebias" type="double">
+      <description >a bias to give more weight toward smaller scales</description>
+      <value >0.6</value>
+    </param><param ignorecase="true" name="outframe" type="string">
+	    <description >velocity frame of output image </description>
+	    <value />
+    <allowed  kind="enum">
             <value>lsrk</value>
             <value>lsrd</value>
             <value>bary</value>
@@ -510,214 +501,2726 @@
             <value>cmb</value>
             <value/>
     </allowed>
-    </param><param ignorecase="true" name="veltype" >
-	    <description>velocity definition (radio, optical, true) </description>
-	    <value>radio</value>
-    <allowed kind="enum">
+    </param><param ignorecase="true" name="veltype" type="string">
+	    <description >velocity definition (radio, optical, true) </description>
+	    <value >radio</value>
+    <allowed  kind="enum">
             <value>radio</value>
             <value>optical</value>
             <value>true</value>
             <value>relativistic</value>
     </allowed>
     </param><param name="restoringbeam" type="stringArray">
-      <description>Output Gaussian restoring beam for CLEAN image</description>
-      <value/>
+      <description >Output Gaussian restoring beam for CLEAN image</description>
+      <value />
     </param><param name="usescratch" type="bool">
-	    <description>True if to save model visibilities in MODEL_DATA column</description>
-	    <value>False</value>
-    </param><param name="nterms" >
-	    <description>Number of Taylor coefficients to model the sky frequency dependence </description>
-	    <value>1</value>
-    </param><param name="reffreq" >
-	    <description>Reference frequency (nterms &gt; 1),\'\' uses central data-frequency</description>
-	    <value/>
-    </param><param name="chaniter" >    
-            <description>Clean each channel to completion (True), or all channels each cycle (False)</description>
-            <value>False</value> 
-    </param><param name="flatnoise" >
-      <description>Controls whether searching for clean components is done in a constant noise residual image (True) or in an optimal signal-to-noise residual image (False) </description>
-      <value>True</value>
-    </param><param name="allowchunk" >
-      <description>Divide large image cubes into channel chunks for deconvolution </description>
-       <value>False</value>
+	    <description >True if to save model visibilities in MODEL_DATA column</description>
+	    <value >False</value>
+    </param><param name="nterms" type="int">
+	    <description >Number of Taylor coefficients to model the sky frequency dependence </description>
+	    <value >1</value>
+    </param><param name="reffreq" type="string">
+	    <description >Reference frequency (nterms &gt; 1),\'\' uses central data-frequency</description>
+	    <value />
+    </param><param name="chaniter" type="bool">    
+            <description >Clean each channel to completion (True), or all channels each cycle (False)</description>
+            <value >False</value> 
+    </param><param name="flatnoise" type="bool">
+      <description >Controls whether searching for clean components is done in a constant noise residual image (True) or in an optimal signal-to-noise residual image (False) </description>
+      <value >True</value>
+    </param><param name="allowchunk" type="bool">
+      <description >Divide large image cubes into channel chunks for deconvolution </description>
+       <value >False</value>
      </param><param name="addmodel" type="bool">
-		<description>Add MODEL_DATA scratch column</description>
-		<value>False</value>
+		<description >Add MODEL_DATA scratch column</description>
+		<value >False</value>
 	</param><param name="concatvis" type="string">
-    <description>Name of output visibility file</description>
-    <value/>
+    <description >Name of output visibility file</description>
+    <value />
   </param><param name="freqtol" type="any">
-    <description>Frequency shift tolerance for considering data as the same spwid</description>
-    <any type="variant"/>
-    <value type="string"/>
+    <description >Frequency shift tolerance for considering data as the same spwid</description>
+    <any  type="variant"/>
+    <value  type="string"/>
   </param><param name="dirtol" type="any">
-    <description>Direction shift tolerance for considering data as the same field</description>
-    <any type="variant"/>
-    <value type="string"/>
+    <description >Direction shift tolerance for considering data as the same field</description>
+    <any  type="variant"/>
+    <value  type="string"/>
   </param><param name="respectname" type="bool">
-    <description>If true, fields with a different name are not merged even if their direction agrees</description>
-    <value>False</value>
+    <description >If true, fields with a different name are not merged even if their direction agrees</description>
+    <value >False</value>
   </param><param name="timesort" type="bool">
-    <description>If true, sort by TIME in ascending order</description>
-    <value>False</value>
+    <description >If true, sort by TIME in ascending order</description>
+    <value >False</value>
   </param><param name="copypointing" type="bool">
-    <description>Copy all rows of the POINTING table.</description>
-    <value>True</value>
+    <description >Copy all rows of the POINTING table.</description>
+    <value >True</value>
   </param><param name="visweightscale" type="doubleArray">
-    <description>List of the weight scaling factors to be applied to the individual MSs</description>
-    <value/>
+    <description >List of the weight scaling factors to be applied to the individual MSs</description>
+    <value />
   </param><param name="spwlist" type="any">
-    <description>Spectral window selection</description>
-    <any type="variant"/>
-    <value>""</value>
+    <description >Spectral window selection</description>
+    <any  type="variant"/>
+    <value >""</value>
   </param><param name="outputvis" type="string">
-    <description>Name of output visibility file</description>
-    <value/>
+    <description >Name of output visibility file</description>
+    <value />
   </param><param name="advise" type="bool">
-	  <description>Boolean to determine if advice on image cell is requested</description>
-	  <value>False</value>
+	  <description >Boolean to determine if advice on image cell is requested</description>
+	  <value >False</value>
 	</param><param name="passall" type="bool">
-	     <description>Pass through (write to output MS) non-selected data with no change</description>
-	     <value>False</value>
-	</param><param name="array" >
-	    <description>(sub)array indices</description>
-	    <value/>
+	     <description >Pass through (write to output MS) non-selected data with no change</description>
+	     <value >False</value>
+	</param><param name="array" type="string">
+	    <description >(sub)array indices</description>
+	    <value />
         </param><param name="hanning" type="bool">
-	    <description> If true, Hanning smooth data before regridding to remove Gibbs ringing.</description>
-	    <value>False</value>
+	    <description > If true, Hanning smooth data before regridding to remove Gibbs ringing.</description>
+	    <value >False</value>
         </param><param name="model" type="string">
-	    <description>Output image containing deconvolved point model</description>
-	    <value/>
+	    <description >Output image containing deconvolved point model</description>
+	    <value />
     </param><param name="psf" type="stringArray">
-	    <description>Point spread function (dirty beam)</description>
-	    <value/>
+	    <description >Point spread function (dirty beam)</description>
+	    <value />
     </param><param name="alg" type="string">
-    <description>Algorithm to use (clark, hogbom, multiscale, mem) </description>
-    <value>clark</value>
-    <allowed kind="enum">
+    <description >Algorithm to use (clark, hogbom, multiscale, mem) </description>
+    <value >clark</value>
+    <allowed  kind="enum">
 	    <value>clark</value>
 	    <value>hogbom</value>
 	    <value>mem</value>
 	    <value>multiscale</value>
     </allowed>
-    </param><param name="scales" >
-	    <description>scale sizes (pixels) to deconvolve</description>
-	    <value type="vector">
+    </param><param name="scales" type="intArray">
+	    <description >scale sizes (pixels) to deconvolve</description>
+	    <value  type="vector">
 	    <value>0</value><value>3</value><value>10</value>
     </value>
-    </param><param name="sigma" >
-	    <description>mem parameter: Expected noise in image</description>
-	    <value>0.0</value>
-    </param><param name="targetflux" >
-	    <description>mem parameter: Estimated total flux in image</description>
-	    <value>1.0</value>
-    </param><param name="prior" >
-	    <description>mem parameter: prior image for mem search</description>
-	    <value/>
+    </param><param name="sigma" type="double" units="mJy">
+	    <description >mem parameter: Expected noise in image</description>
+	    <value >0.0</value>
+    </param><param name="targetflux" type="double" units="Jy">
+	    <description >mem parameter: Estimated total flux in image</description>
+	    <value >1.0</value>
+    </param><param name="prior" type="string">
+	    <description >mem parameter: prior image for mem search</description>
+	    <value />
     </param><param name="otf" type="bool">
-		<description>Delete the on-the-fly model data keywords</description>
-		<value>True</value>
+		<description >Delete the on-the-fly model data keywords</description>
+		<value >True</value>
 	</param><param name="scr" type="bool">
-		<description>Delete the MODEL_DATA scr col (if it exists)</description>
-		<value>False</value>
+		<description >Delete the MODEL_DATA scr col (if it exists)</description>
+		<value >False</value>
 	</param><param name="archiveid" type="string">
-	    <description>the X0 in uid://X0/X1/X&lt;running&gt;</description>
-	    <value>S0</value>
+	    <description >the X0 in uid://X0/X1/X&lt;running&gt;</description>
+	    <value >S0</value>
     </param><param name="rangeid" type="string">
-	    <description>the X1 in uid://X0/X1/X&lt;running&gt;</description>
-	    <value>X1</value>
+	    <description >the X1 in uid://X0/X1/X&lt;running&gt;</description>
+	    <value >X1</value>
     </param><param name="subscanduration" type="string">
-	    <description>maximum duration of a subscan in the output ASDM</description>
-	    <value>24h</value>
+	    <description >maximum duration of a subscan in the output ASDM</description>
+	    <value >24h</value>
     </param><param name="sbduration" type="string">
-	    <description>maximum duration of a scheduling block (and therefore exec block) in the output ASDM</description>
-	    <value>2700s</value>
+	    <description >maximum duration of a scheduling block (and therefore exec block) in the output ASDM</description>
+	    <value >2700s</value>
     </param><param name="apcorrected" type="bool">
-	    <description>data to be marked as having atmospheric phase correction</description>
-	    <value>True</value>
+	    <description >data to be marked as having atmospheric phase correction</description>
+	    <value >True</value>
     </param><param name="verbose" type="bool">
-	    <description>produce log output</description>
-	    <value>True</value>
+	    <description >produce log output</description>
+	    <value >True</value>
     </param><param name="showversion" type="bool">
-	    <description>Report the version of ASDM class set being used</description>
-	    <value>True</value>
+	    <description >Report the version of ASDM class set being used</description>
+	    <value >True</value>
     </param><param name="useversion" type="string">
-	    <description>Selects the version of MS2asdm to be used (\'v3\' (default and only option presently))</description>
-	    <value>v3</value>
-	    <allowed kind="enum">
+	    <description >Selects the version of MS2asdm to be used (\'v3\' (default and only option presently))</description>
+	    <value >v3</value>
+	    <allowed  kind="enum">
 	      <value>v3</value>
 	      <value/>
 	    </allowed>
     </param><param name="fitsimage" type="string">
-		<description>Name of output image FITS file</description>
-		<value/>
+		<description >Name of output image FITS file</description>
+		<value />
 	</param><param name="velocity" type="bool">
-		<description>Use velocity (rather than frequency) as spectral axis</description>
-		<value>False</value>
+		<description >Use velocity (rather than frequency) as spectral axis</description>
+		<value >False</value>
 	</param><param name="optical" type="bool">
-		<description>Use the optical (rather than radio) velocity convention</description>
-		<value>False</value>
+		<description >Use the optical (rather than radio) velocity convention</description>
+		<value >False</value>
 	</param><param name="bitpix" type="int">
-		<description>Bits per pixel</description>
-		<value>-32</value>
-		<allowed kind="enum">
+		<description >Bits per pixel</description>
+		<value >-32</value>
+		<allowed  kind="enum">
 			<value>-32</value>
 			<value>16</value>
 		</allowed>
 	</param><param name="minpix" type="any">
-		<description>Minimum pixel value (if minpix &gt; maxpix, value is automatically determined)</description>
-		<any limittypes="int double" type="variant"/>
-		<value type="int">0</value>
+		<description >Minimum pixel value (if minpix &gt; maxpix, value is automatically determined)</description>
+		<any  limittypes="int double" type="variant"/>
+		<value  type="int">0</value>
 	</param><param name="maxpix" type="any">
-		<any limittypes="int double" type="variant"/>
-		<description>Maximum pixel value (if minpix &gt; maxpix, value is automatically determined)</description>
-		<value type="int">-1</value>
+		<any  limittypes="int double" type="variant"/>
+		<description >Maximum pixel value (if minpix &gt; maxpix, value is automatically determined)</description>
+		<value  type="int">-1</value>
 	</param><param name="dropstokes" type="bool">
-		<description>Drop the Stokes axis?</description>
-		<value>False</value>
+		<description >Drop the Stokes axis?</description>
+		<value >False</value>
 	</param><param name="stokeslast" type="bool">
-		<description>Put Stokes axis last in header?</description>
-		<value>True</value>
+		<description >Put Stokes axis last in header?</description>
+		<value >True</value>
 	</param><param name="history" type="bool">
-		<description>Write history to the FITS image?</description>
-		<value>True</value>
+		<description >Write history to the FITS image?</description>
+		<value >True</value>
 	</param><param name="dropdeg" type="bool">
-		<description>Drop all degenerate axes (e.g. Stokes and/or Frequency)?</description>
-		<value>False</value>
+		<description >Drop all degenerate axes (e.g. Stokes and/or Frequency)?</description>
+		<value >False</value>
 	</param><param name="fitsfile" type="string">
-		<description>Name of output UV FITS file</description>
-		<value/>
+		<description >Name of output UV FITS file</description>
+		<value />
 	</param><param name="avgchan" type="int">
-		<description>Channel averaging width (value &gt; 1 indicates averaging)</description>
-		<value>1</value>
+		<description >Channel averaging width (value &gt; 1 indicates averaging)</description>
+		<value >1</value>
 	</param><param name="writesyscal" type="bool">
-		<description>Write GC and TY tables, (Not yet available)</description>
-		<value>False</value>
+		<description >Write GC and TY tables, (Not yet available)</description>
+		<value >False</value>
 	</param><param name="multisource" type="bool">
-		<description>Write in multi-source format</description>
-		<value>True</value>
+		<description >Write in multi-source format</description>
+		<value >True</value>
 	</param><param name="combinespw" type="bool">
-		<description>Export the spectral windows as IFs</description>
-		<value>True</value>
+		<description >Export the spectral windows as IFs</description>
+		<value >True</value>
 	</param><param name="writestation" type="bool">
-		<description>Write station name instead of antenna name</description>
-		<value>True</value>
-	</param><param name="padwithflags" >
-		<description>Fill in missing data with flags to fit IFs</description>
-		<value>False</value>
+		<description >Write station name instead of antenna name</description>
+		<value >True</value>
+	</param><param name="padwithflags" type="bool">
+		<description >Fill in missing data with flags to fit IFs</description>
+		<value >False</value>
 	</param><param mustexist="true" name="highres" type="string">
-			<description>Name of high resolution (interferometer) image</description>
-			<value/>
+			<description >Name of high resolution (interferometer) image</description>
+			<value />
 		</param><param mustexist="true" name="lowres" type="string">
-			<description>Name of low resolution (single dish) image</description>
-			<value/>
+			<description >Name of low resolution (single dish) image</description>
+			<value />
 		</param><param name="sdfactor" type="double">
-			<description>Scale factor to apply to Single Dish image</description>
-			<value>1.0</value>
+			<description >Scale factor to apply to Single Dish image</description>
+			<value >1.0</value>
 		</param><param name="effdishdiam" type="double">
-			<description>New effective SingleDish diameter to use in m </description>
-			<value>-1.0</value>
+			<description >New effective SingleDish diameter to use in m </description>
+			<value >-1.0</value>
 		</param><param name="lowpassfiltersd" type="bool">
-			<description>Filter out the high spatial frequencies of the SD image</description>
-			<value>False</value>
-		</param></casaxml>
+			<description >Filter out the high spatial frequencies of the SD image</description>
+			<value >False</value>
+		</param><param name="matchstring" type="string">
+			<description >String to match in the documentation</description>
+			<value />
+		</param><param name="fixuvw" type="bool">
+      <description >recalc uvw?</description>
+      <value >False</value>
+    </param><param name="direction" type="any">
+      <description >if set, don\'t use pointing table but set direction to this value</description>
+      <any  type="variant"/>
+      <value  type="string"/>
+    </param><param name="reftime" type="string">
+        <description >if using pointing table information, use it from this timestamp (\'first\', \'median\', or YYYY/MM/DD/hh:mm:ss)</description>
+        <value >first</value>
+        <example >reftime='2012/07/11/08:41:32'</example>
+    </param><param name="refcode" type="string">
+      <description >reference frame to convert UVW coordinates to</description>
+      <value />
+    </param><param name="reuse" type="bool">
+      <description >base UVW calculation on the old values?</description>
+      <value >True</value>
+    </param><param name="inpmode" type="string">
+                        <description >Input mode for flag commands(table/list/xml)</description>
+                        <value >table</value>
+                        <allowed  kind="enum">
+                        <value>table</value>
+                        <value>list</value>
+                        <value>xml</value>
+                        </allowed>
+                </param><param name="inpfile" type="any">
+                        <description >Source of flag commands</description>
+                        <any  limittypes="string stringArray" type="variant"/>
+                        <value  type="string"/>
+                </param><param name="tablerows" type="intArray">
+                        <description >Rows of inpfile to read</description>
+                        <value  type="vector"/>
+                </param><param name="reason" type="any">
+                        <description >Select by REASON types</description>
+                        <any  limittypes="string stringArray" type="variant"/>
+                        <value  type="string">any</value>
+                </param><param name="useapplied" type="bool">
+                        <description >Select commands whose rows have APPLIED column set to True</description>
+                        <value >False</value>
+                </param><param name="tbuff" type="double">
+                        <description >Time buffer (sec) to pad flags</description>
+                        <value >0.0</value>
+                </param><param name="ants" type="string">
+                        <description >Allowed flag antenna names to select by</description>
+                        <value />
+                </param><param name="action" type="string">
+                        <description >Action to perform in MS and/or in inpfile (apply/unapply/list/plot/clear/extract)</description>
+                        <value >apply</value>
+                        <allowed  kind="enum">
+                        <value>apply</value>
+                        <value>unapply</value>
+                        <value>list</value>
+                        <value>plot</value>
+                        <value>clear</value>
+                        <value>extract</value>
+                        </allowed>
+                </param><param name="clearall" type="bool">
+                        <description >Delete all rows from FLAG_CMD</description>
+                        <value >False</value>
+                </param><param name="rowlist" type="intArray">
+                        <description >FLAG_CMD rows to clear</description>
+                        <value  type="vector"/>
+                </param><param name="plotfile" type="string">
+                    <description >Name of output file to save plot</description>
+                    <value />
+            </param><param name="savepars" type="bool">
+                <description >Save flag commands to the MS or to a file</description>
+                <value >False</value>
+            </param><param name="outfile" type="string">
+                    <description >Name of output file to save commands</description>
+                    <value />
+            </param><param name="autocorr" type="bool">
+                 <description >Flag only the auto-correlations</description>
+                  <value  type="bool">False</value>
+            </param><param name="correlation" type="any">
+                <description >Correlation: \'\' ==&gt; all, correlation=\'XX,YY\'</description>
+                <any  limittypes="string stringArray" type="variant"/>
+                <value  type="string"/>
+            </param><param name="feed" type="any">
+                <description >Multi-feed numbers: Not yet implemented</description>
+                <any  limittypes="string stringArray" type="variant"/>
+                <value  type="string"/>
+            </param><param name="clipminmax" type="any">
+                <description >Range to use for clipping</description>
+                <any  limittypes="doubleArray doubleArrayArray" type="variant"/>
+                <value  type="doubleArray"/>
+            </param><param name="clipoutside" type="any">
+                <description >Clip outside the range, or within it</description>
+                <any  limittypes="bool boolArray" type="variant"/>
+                <value  type="bool">True</value>
+            </param><param name="channelavg" type="any">
+                <description >Average over channels (scalar average)</description>
+                <any  limittypes="bool boolArray" type="variant"/>
+                <value  type="bool">False</value>
+            </param><param name="clipzeros" type="bool">
+                <description >Clip zero-value data</description>
+                <value  type="bool">False</value>
+            </param><param name="quackinterval" type="any">
+                <description >Quack n seconds from scan beginning or end</description>
+                <any  limittypes="double doubleArray" type="variant"/>
+                <value  type="double">1.0</value>
+            </param><param name="quackmode" type="any">
+                <description >Quack mode. \'beg\' ==&gt; first n seconds of scan.\'endb\' ==&gt; last n seconds of scan. \'end\' ==&gt; all but first n seconds of scan. \'tail\' ==&gt; all but last n seconds of scan.</description>
+                <any  limittypes="string stringArray" type="variant"/>
+                <value  type="string">beg</value>
+            </param><param name="quackincrement" type="any">
+                <description >Flag incrementally in time?</description>
+                <any  limittypes="bool boolArray" type="variant"/>
+                <value  type="bool">False</value>
+            </param><param name="tolerance" type="double">
+                <description >Amount of shadow allowed (in meters)</description>
+                <value >0.0</value>
+            </param><param name="addantenna" type="any">
+                <description >File name or dictionary with additional antenna names, positions and diameters</description>
+                <any  limittypes="string record" type="variant"/>
+                <value  type="string"/>
+            </param><param name="lowerlimit" type="double">
+                <description >Lower limiting elevation (in degrees)</description>
+                <value >0.0</value>
+            </param><param name="upperlimit" type="double">
+                <description >Upper limiting elevation (in degrees)</description>
+                <value >90.0</value>
+            </param><param name="ntime" type="any">
+                <description >Time-range to use for each chunk (in seconds or minutes)</description>
+                <any  limittypes="double string" type="variant"/>
+                <value  type="string">scan</value>
+            </param><param name="combinescans" type="bool">
+                <description >Accumulate data across scans depending on the value of ntime.</description>
+                <value >False</value>
+            </param><param name="timecutoff" type="double">
+                <description >Flagging thresholds in units of deviation from the fit</description>
+                <value >4.0</value>
+            </param><param name="freqcutoff" type="double">
+                <description >Flagging thresholds in units of deviation from the fit</description>
+                <value >3.0</value>
+            </param><param name="timefit" type="string">
+                <description >Fitting function for the time direction (poly/line)</description>
+                <value >line</value>
+            </param><param name="freqfit" type="string">
+                <description >Fitting function for the frequency direction (poly/line)</description>
+                <value >poly</value>
+            </param><param name="maxnpieces" type="int">
+                <description >Number of pieces in the polynomial-fits (for \'freqfit\' or \'timefit\' = \'poly\')</description>
+                <value >7</value>
+            </param><param name="flagdimension" type="string">
+                <description >Dimensions along which to calculate fits (freq/time/freqtime/timefreq)</description>
+                <value >freqtime</value>
+            </param><param name="usewindowstats" type="string">
+                <description >Calculate additional flags using sliding window statistics (none,sum,std,both)</description>
+                <value >none</value>
+            </param><param name="halfwin" type="int">
+                <description >Half-width of sliding window to use with \'usewindowstats\' (1,2,3).</description>
+                <value >1</value>
+            </param><param name="extendflags" type="bool">
+                <description >Extend flags along time, frequency and correlation.</description>
+                <value >True</value>
+            </param><param name="winsize" type="int">
+                <description >Number of timesteps in the sliding time window [aips:fparm(1)]</description>
+                <value >3</value>
+            </param><param name="timedev" type="any">
+                <description >Time-series noise estimate [aips:noise]</description>
+                <any  type="variant"/>
+                <value  type="string"/>
+            </param><param name="freqdev" type="any">
+                <description >Spectral noise estimate [aips:scutoff]</description>
+                <any  type="variant"/>
+                <value  type="string"/>
+            </param><param name="timedevscale" type="double">
+                <description >Threshold scaling for timedev [aips:fparm(9)]</description>
+                <value >5.0</value>
+            </param><param name="freqdevscale" type="double">
+                <description >Threshold scaling for freqdev [aips:fparm(10)]</description>
+                <value >5.0</value>
+            </param><param name="spectralmax" type="double">
+                <description >Flag whole spectrum if freqdev is greater than spectralmax [aips:fparm(6)]</description>
+                <value >1E6</value>
+            </param><param name="spectralmin" type="double">
+                <description >Flag whole spectrum if freqdev is less than spectralmin [aips:fparm(5)] </description>
+                <value >0.0</value>
+            </param><param name="extendpols" type="any">
+                <description >If any correlation is flagged, flag all correlations</description>
+                <value  type="bool">True</value>
+            </param><param name="growtime" type="double">
+                <description >Flag all \'ntime\' integrations if more than X% of the timerange is flagged (0-100)</description>
+                <value >50.0</value>
+            </param><param name="growfreq" type="double">
+                <description >Flag all selected channels if more than X% of the frequency range is flagged(0-100)</description>
+                <value >50.0</value>
+            </param><param name="growaround" type="bool">
+                <description >Flag data based on surrounding flags</description>
+                <value  type="bool">False</value>
+            </param><param name="flagneartime" type="bool">
+                <description >Flag one timestep before and after a flagged one (True/False)</description>
+                <value  type="bool">False</value>
+            </param><param name="flagnearfreq" type="bool">
+                <description >Flag one channel before and after a flagged one (True/False)</description>
+                <value  type="bool">False</value>
+            </param><param name="minrel" type="double">
+                <description >minimum number of flags (relative)</description>
+                <value  type="double">0.0</value>
+            </param><param name="maxrel" type="double">
+                <description >maximum number of flags (relative)</description>
+                <value  type="double">1.0</value>
+            </param><param name="minabs" type="int">
+                <description >minimum number of flags (absolute)</description>
+                <value  type="int">0</value>
+            </param><param name="maxabs" type="int">
+                <description >maximum number of flags (absolute). Use a negative value to indicate infinity.</description>
+                <value  type="int">-1</value>
+            </param><param name="spwchan" type="bool">
+                <description >Print summary of channels per spw</description>
+                <value  type="bool">False</value>
+            </param><param name="spwcorr" type="bool">
+                <description >Print summary of correlation per spw</description>
+                <value  type="bool">False</value>
+            </param><param name="basecnt" type="bool">
+                <description >Print summary counts per baseline</description>
+                <value  type="bool">False</value>
+            </param><param name="display" type="string">
+                <description >Display data and/or end-of-MS reports at runtime (data/report/both).</description>
+                <value  type="string"/>
+            </param><param name="cmdreason" type="string">
+                    <description >Reason to save to output file or to FLAG_CMD table.</description>
+                    <value />
+            </param><param name="versionname" type="string">
+                        <description >Flag version name</description>
+                        <value />
+                </param><param name="oldname" type="string">
+                        <description >Flag version to rename</description>
+                        <value />
+                </param><param name="comment" type="string">
+                        <description >Short description of a versionname</description>
+                        <value />
+                </param><param name="merge" type="string">
+                        <description >Merge option: replace will save or over-write the flags</description>
+                        <value >replace</value>
+                </param><param name="fluxtable" type="string">
+			<description >Name of output, flux-scaled calibration table</description>
+			<value />
+		</param><param name="reference" type="stringArray">
+			<description >Reference field name(s) (transfer flux scale FROM)</description>
+			<value />
+		</param><param name="transfer" type="stringArray">
+			<description >Transfer field name(s) (transfer flux scale TO), \'\' -&gt; all</description>
+			<value />
+		</param><param direction="in" name="listfile" type="string">
+  		   <description >Name of listfile that contains the fit information.  Default is '' (no file).</description>
+   		   <value />
+    		</param><param name="refspwmap" type="intArray">
+			<description >Scale across spectral window boundaries.  See help fluxscale</description>
+			<value >-1</value>
+		</param><param name="incremental" type="bool">
+			<description >incremental caltable</description>
+			<value >False</value>
+		</param><param name="fitorder" type="int">
+                        <description >order of spectral fitting</description>
+                        <value >1</value> 
+                </param><param name="fluxd" type="any">
+    	<description >Dictionary containing the transfer fluxes and their errors.</description>
+	<any  type="variant"/>
+	<value >{}</value>
+    </param><param name="complist" type="string">
+			<description >Name of component list</description>
+			<value />
+		</param><param name="preavg" type="double">
+		<description >Pre-averaging interval (sec) (rarely needed)</description>
+		<value >-1.0</value>
+	</param><param name="gaintype" type="string">
+		<description >Type of gain solution (G,T,GSPLINE,K,KCROSS)</description>
+		<value >G</value>
+		<allowed  kind="enum">
+			<value>G</value>
+			<value>T</value>
+			<value>GSPLINE</value>
+			<value>K</value>
+			<value>KCROSS</value>
+			<value>XY+QU</value>
+			<value>XYf+QU</value>
+		</allowed>
+	</param><param name="splinetime" type="double">
+		<description >Spline timescale(sec); All spw\'s are first averaged.</description>
+		<value >3600.0</value>
+	</param><param name="npointaver" type="int">
+		<description >The phase-unwrapping algorithm</description>
+		<value >3</value>
+	</param><param name="phasewrap" type="double">
+		<description >Wrap the phase for jumps greater than this value (degrees)</description>
+		<value >180.0</value>
+	</param><param name="caltype" type="string">
+			<description >The calibration type: \'amp\',\'ph\', \'sbd\',\'mbd\',\'antpos\',\'antposvla\',\'tsys\',\'evlagain\',\'opac\',\'gc\',\'gceff\',\'eff\'</description>
+			<value />
+                        <allowed  kind="enum">
+                            <value>amp</value>
+                            <value>ph</value>
+                            <value>sbd</value>
+                            <value>mbd</value>
+                            <value>antpos</value>
+                            <value>antposvla</value>
+                            <value>tsys</value>
+                            <value>evlagain</value>
+                            <value>swpow</value>
+                            <value>rq</value>
+                            <value>swp/rq</value>
+                            <value>opac</value>
+                            <value>gc</value>
+                            <value>gceff</value>
+                            <value>eff</value>
+                        </allowed>
+		</param><param name="pol" type="string">
+			<description >Calibration polarizations(s) selection</description>
+			<value />
+		</param><param name="parameter" type="doubleArray">
+			<description >The calibration values</description>
+			<value />
+		</param><param name="function" type="string">
+        <description >Function used to compute aggregation of pixel values.</description>
+        <value />
+        <example >function="max"</example>
+        <example >function="rms</example>
+        <example >function="mean"</example>
+    </param><param name="axes" type="variant">
+        <description >Zero-based axis number(s) or minimal match strings to collapse.</description>
+        <value >[0]</value>
+        <example >axis=2</example>
+    </param><param name="box" type="string">
+        <description >Optional direction plane box ("blcx, blcy, trcx trcy").</description>
+        <value />
+        <example >box="100,100,200,200"</example>
+    </param><param name="region" type="string">
+        <description >Region specification. See help par.region. Default is to not use a region.</description>
+        <value />
+        <example >region="my.rgn"</example>
+    </param><param name="chans" type="string">
+        <description >Optional zero-based contiguous frequency channel specification. See "help par.chans" for examples.</description>
+        <value />
+    </param><param direction="in" name="stretch" type="bool">
+        <description >Stretch the mask if necessary and possible? See help par.stretch </description>
+        <value >False</value>
+    </param><param name="linefile" type="string">
+    	<description >Output continuum-subtracted image file name</description>
+    	<value />
+        <example >outline=ngc5921_line.image</example>
+    </param><param name="contfile" type="string">
+    	<description >Output continuum image file name</description>
+    	<value />
+        <example >outcont=ngc5921_cont.image</example>
+    </param><param name="includepix" type="intArray">
+        <description >Range of pixel values to include for fitting.</description>
+        <value />
+        <example >includepix=[0.5,500]</example>
+    </param><param name="excludepix" type="intArray">
+        <description >Range of pixel values to exclude for fitting.</description>
+        <value />
+        <example >excludepix=[-500,.05]</example>
+    </param><param name="residual" type="string">
+        <description >Name of output residual image.</description>
+        <value />
+        <example >residual='ngc5921_fit_resid.im'</example>
+    </param><param name="estimates" type="string">
+        <description >Name of file containing initial estimates of component parameters.</description>
+        <value />
+        <example >estimates='ngc5921_fit_estimates.txt'</example>
+    </param><param name="logfile" type="string">
+        <description >Name of file to write fit results.</description>
+        <value />
+        <example >logfile="myimfitlog.txt"</example>
+    </param><param name="newestimates" type="string">
+        <description >File to write fit results which can be used as initial estimates for next run.</description>
+        <value />
+        <example >newestimates="myestimates.txt"</example>
+    </param><param direction="in" name="dooff" type="bool">
+        <description >Also fit a zero level offset? Default is False</description>
+        <value >False</value>
+    </param><param direction="in" name="offset" type="double">
+        <description >Initial estimate of zero-level offset. Only used if doff is True. Default is 0.0</description>
+        <value >0.0</value>
+    </param><param direction="in" name="fixoffset" type="bool">
+        <description >Keep the zero level offset fixed during fit? Default is False </description>
+        <value >False</value>
+    </param><param name="hdkey" type="string">
+    	<description >The associated keyword for modes add, del, get, or put. </description>
+        <value />
+        <example >hdkey'telescope'</example>
+    </param><param name="hdvalue" type="any">
+	<any  type="variant"/>
+    	<description >Value of keyword for modes add or put.</description>
+        <value  type="string"/>
+        <example >hdvalue='VLA'</example>
+    </param><param name="expr" type="string">
+		<description >Mathematical expression using images</description>
+		<value >IM0</value>
+		<example >expr='"sin(image1.im)+(image2.im*2)+real(image3.im)"'</example>
+	</param><param name="varnames" type="any">
+                <description >a list of variable names to use with the image files</description>
+                <any  limttypes="string stringArray" type="variant"/>
+                <value  type="string"/>
+        </param><param name="polithresh" type="string">
+            <description >Threshold in linear polarization intensity image below which to mask pixels.</description>
+            <value  type="string"/>
+        </param><param name="moments" type="intArray">
+        <description >List of moments you would like to compute</description>
+        <value >0</value>
+    </param><param direction="in" name="pbimage" type="any">
+            <any  type="variant"/>
+            <description >Name of the primary beam image which must exist or array of values for the pb response. Default ""</description>
+            <value >""</value>
+        </param><param direction="in" name="cutoff" type="double">
+            <description >PB cutoff. If mode is "d", all values less than this will be masked. If "m", all values greater will be masked. Less than 0, no cutoff. Default no cutoff</description>
+            <value >-1.0</value>
+        </param><param name="singledish" type="bool">
+          <description >Set true to output single-dish data format </description>
+          <value >False</value>
+    </param><param name="corr_mode" type="string">
+	    <description >specifies the correlation mode to be considered on input. A quoted string containing a sequence of ao, co, ac,or all separated by whitespaces is expected</description>
+	    <value >all</value>
+    </param><param name="srt" type="string">
+	    <description >specifies the spectral resolution type to be considered on input. A quoted string containing a sequence of fr, ca, bw, or all separated by whitespaces is expected</description>
+	    <value >all</value>
+    </param><param name="time_sampling" type="string">
+	    <description >specifies the time sampling (INTEGRATION and/or SUBINTEGRATION)  to be considered on input. A quoted string containing a sequence of i, si, or all separated by whitespaces is expected</description>
+	    <value >all</value>
+    </param><param name="ocorr_mode" type="string">
+	    <description >output data for correlation mode AUTO_ONLY (ao) or CROSS_ONLY (co) or CROSS_AND_AUTO (ca)</description>
+	    <value >ca</value>
+	    <allowed  kind="enum">
+	       <value>co</value>
+	       <value>ao</value>
+	       <value>ca</value>
+	    </allowed>
+    </param><param name="compression" type="bool">
+	    <description >Flag for turning on data compression</description>
+	    <value >False</value>
+    </param><param name="lazy" type="bool">
+	    <description >Make the MS DATA column read the ASDM Binary data directly (faster import, smaller MS)</description>
+	    <value >False</value>
+    </param><param name="asis" type="string">
+	    <description >Creates verbatim copies of the ASDMtables in the ouput measurement set.  Value given must be a string of table names separated by spaces; A * wildcard is allowed.</description>
+	    <value />
+    </param><param name="wvr_corrected_data" type="string">
+	    <description >Specifies which values are considerd in the SDM binary data to fill the DATA column in the MAIN table of the MS. Expected values for this option are: no, for uncorrected data (default), yes, for the corrected data, and both, for for corrected and uncorrected data. Note if both is selected two measurement sets are created, one with uncorrected data and the other with corrected data.  </description>
+	    <value >no</value>
+	    <allowed >
+	    <value>no</value>
+	    <value>yes</value>
+	    <value>both</value>
+	    </allowed>
+    </param><param name="scans" type="string">
+	    <description >processes only the specified scans. This value is a semicolon separated list of scan specifications. A scan specification consists in an exec bock index followed by the : character;  followed by a comma separated list of scan indexes or scan index ranges. A scan index is relative to the exec block it belongs to. Scan indexes are 1-based while exec blocks are 0-based. "0:1" or "2:2~6" or "0:1,1:2~6,8;2:,3:24~30" "1,2" are valid values for the option. "3:" alone will be interpreted as, all the scans of the exec block#3.  An scan index or a scan index range not preceded by an exec block index will be interpreted as, all the scans with such indexes in all the exec blocks.  By default all the scans are considered. </description>
+	    <value />
+    </param><param name="ignore_time" type="bool">
+      <description >All the rows of the tables Feed, History, Pointing, Source, SysCal, CalDevice, SysPower, and Weather are processed independently of the time range of the selected exec block / scan.</description>
+      <value >False</value>
+    </param><param name="process_syspower" type="bool">
+      <description > The SysPower table is processed if and only if this parameter is set to true.</description>
+      <value >True</value>
+    </param><param name="process_caldevice" type="bool">
+      <description >The CalDevice table is processed if and only if this parameter is set to true.</description>
+      <value >True</value>
+    </param><param name="process_pointing" type="bool">
+      <description >The Pointing table is processed if and only if this parameter is set to true.</description>
+      <value >True</value>
+    </param><param name="process_flags" type="bool">
+      <description >Create online flags in the FLAG_CMD sub-table.</description>
+      <value >True</value>
+    </param><param name="applyflags" type="bool">
+      <description >Apply the flags to the MS.</description>
+      <value >False</value>
+    </param><param name="savecmds" type="bool">
+        <description >Save flag commands to an ASCII file</description>
+        <value >True</value>
+    </param><param name="online" type="bool">
+	    <description >Create online flags</description>
+	    <value >True</value>
+    </param><param name="flagzero" type="bool">
+	    <description >Create flag commands for zero points</description>
+	    <value >True</value>
+    </param><param name="flagpol" type="bool">
+            <description >Create flag commands for cross-hand correlations</description>
+            <value >True</value>
+    </param><param name="shadow" type="bool">
+	    <description >Create flag commands for shadowed data</description>
+	    <value >True</value>
+    </param><param name="whichrep" type="int">
+			<description >If fits image has multiple coordinate reps, choose one.</description>
+			<value >0</value>
+		</param><param name="whichhdu" type="int">
+			<description >If its file contains multiple images,, choose one.</description>
+			<value >0</value>
+		</param><param name="zeroblanks" type="bool">
+			<description >Set blanked pixels to zero (not NaN)</description>
+			<value >True</value>
+		</param><param name="defaultaxes" type="bool">
+			<description >Add the default 4D coordinate axes where they are missing</description>
+			<value >False</value>
+		</param><param name="defaultaxesvalues" type="variant">
+			<description >List of values to assign to added degenerate axes when defaultaxes==True (ra,dec,freq,stokes)</description>
+			<value >[]</value>
+		</param><param mustexist="true" name="fitsidifile" type="stringArray">
+			<description >Name(s) of input FITS-IDI file(s)</description>
+			<value />
+		</param><param name="flagfile" type="any">
+			<description >Name of output visibility file (MS)</description>
+			<any  limittypes="string stringArray" type="variant"/>
+			<value  type="string"/>
+		</param><param name="antnamescheme" type="string">
+                  <description >VLA/EVLA/CARMA only; \'new\' or \'old\'; \'VA04\' or \'04\' for VLA ant 4</description>
+		  <value >old</value>
+		  <allowed  kind="enum">
+		  <value>old</value>
+		  <value>new</value>
+		  </allowed>
+		</param><param mustexist="true" name="archivefiles" type="stringArray">
+		   <description >Name of input VLA archive file(s)</description>
+		   <value />
+	   </param><param name="bandname" type="string">
+		   <description >VLA frequency band name:\'\'=&gt;obtain all bands in the archive file</description>
+		   <value />
+		   <allowed  kind="enum">
+			   <value>4</value>
+			   <value>P</value>
+			   <value>L</value>
+			   <value>S</value>
+			   <value>C</value>
+			   <value>X</value>
+			   <value>U</value>
+			   <value>K</value>
+			   <value>Ka</value>
+			   <value>Q</value>
+			   <value/>
+		   </allowed>
+	   </param><param name="frequencytol" type="double" units="Hz">
+		   <description >Frequency shift to define a unique spectra window (Hz)</description>
+		   <value >150000.0</value>
+	   </param><param name="project" type="string">
+		   <description >Project name: \'\' =&gt; all projects in files</description>
+		   <value />
+	   </param><param name="starttime" type="string">
+		   <description >start time to search for data</description>
+		   <value />
+	   </param><param name="stoptime" type="string">
+		   <description >end time to search for data</description>
+		   <value />
+	   </param><param name="applytsys" type="bool">
+		   <description >apply nominal sensistivity scaling to data and weights</description>
+		   <value >True</value>
+	   </param><param name="keepblanks" type="bool">
+		   <description >Fill scans with blank (empty) source names (e.g. tipping scans)</description>
+		   <value >False</value>
+	   </param><param name="evlabands" type="bool">
+		   <description >Use updated eVLA frequencies and bandwidths for bands and wavelengths</description>
+		   <value >False</value>
+	   </param><param name="end" type="doubleArray">
+            <description >The ending pixel in the direction plane (array of two values).</description>
+            <value />
+            <example >[200,300]</example>
+        </param><param name="unit" type="string">
+            <description >Unit for the offset axis in the resulting image. Must be a unit of angular measure.</description>
+            <value >arcsec</value>
+        </param><param name="output" type="string">
+    	<description >Name of the output image; \'\' =&gt; modify input image</description>
+    	<value />
+        <example >output='newframed.image</example>
+    </param><param name="epoch" type="string">
+        <description >Epoch to be associated with this image e.g \'2000/12/25/18:30:00.10\'</description>
+        <value />
+    </param><param name="template" type="any">
+        <any  type="variant"/>
+		<description >A dictionary, refcode, or name of an image that provides the output shape and coordinate system</description>
+		<value  type="string">get</value>
+	</param><param direction="in" name="asvelocity" type="bool">
+        <description >Regrid spectral axis in velocity space rather than frequency space?</description>
+        <value >True</value>
+     </param><param name="decimate" type="int">
+     <description >Decimation factor for coordinate grid computation</description>
+     <value >10</value>
+     </param><param name="replicate" type="bool">
+     <description >Replicate image rather than regrid?</description>
+     <value >False</value>
+     </param><param name="kernel" type="string">
+        <description >Type of kernel to use: gaussian or boxcar.</description>
+        <value >gauss</value>
+    </param><param name="major" type="any">
+	<description >Major axis for the kernels. Standard quantity representation. Must be specified for kernel="boxcar". Example: "4arcsec".</description>
+ 	<any  limittype="string int float record" type="variant"/>
+    	<value  type="string"/>
+    </param><param name="minor" type="any">
+	<description >Minor axis. Standard quantity representation. Must be specified for kernel="boxcar". Example: "2arcsec".</description>
+ 	<any  limittype="string int float record" type="variant"/>
+    	<value  type="string"/>
+    </param><param name="pa" type="any">
+	<description >Position angle used only for gaussian kernel. Standard quantity representation. Example: "40deg".</description>
+ 	<any  limittype="string int float record" type="variant"/>
+    	<value  type="string"/>
+    </param><param name="targetres" type="bool">
+        <description >If gaussian kernel, specified parameters are to be resolution of output image (True) or parameters of gaussian to convolve with input image (False).</description>
+
+        <value  type="bool">False</value>
+    </param><param name="beam" type="any">
+        <any  limittype="string record" type="variant"/>
+        <description >Alternate way of describing a Gaussian. If specified, must be a dictionary with keys "major", "minor", and "pa" (or "positionangle"). Do not specify beam if specifying major, minor, and pa. Example: Example: {"major": "5arcsec", "minor": "2arcsec", "pa": "20deg"}.</description>
+        <value  type="string"/>
+     </param><param name="listit" type="bool">
+        <description >Print stats and bounding box to logger?</description>
+        <value >True</value>
+    </param><param name="order" type="any">
+        <description >New zero-based axes order.</description>
+        <any  limittype="string stringArray int" type="variant"/>
+        <value  type="string"/>
+        <example >order="120"</example>
+        <example >order=120</example>
+        <example >order=["d", "f", "r"]</example>
+    </param><param name="blc" type="any">
+    	<description >Bottom-left corner of the bounding box that encloses the region being examined..</description>
+	<any  type="variant"/>
+	<value >{}</value>
+      </param><param name="trc" type="any">
+    	<description >top-right corner of the bounding box that encloses the region being examined.</description>
+	<any  type="variant"/>
+	<value >{}</value>
+      </param><param name="data" type="any">
+    	<description >The mask values found at the give point(s).</description>
+	<any  type="variant"/>
+	<value >{}</value>
+      </param><param name="raster" type="any">
+	    <description >(Optional)  Raster filename (string) or complete raster config dictionary. The allowed dictionary keys are file (string), scaling (numeric), range (2 element numeric vector), colormap (string), and colorwedge (bool).</description>
+	    <any  limittypes="string record" type="variant"/>
+			<value  type="record"/>
+	</param><param name="contour" type="any">
+	    <description >(Optional)  Contour filename (string) or complete contour config dictionary. The allowed dictionary keys are file (string), levels (numeric vector), unit (float), and base (float).</description>
+	    <any  limittypes="string record" type="variant"/>
+	    <value  type="record"/>
+	</param><param name="zoom" type="any">
+	    <description >(Optional)  zoom can specify intermental zoom (integer), zoom region read from a file (string) or dictionary specifying the zoom region. The dictionary can have two forms. It can be either a simple region specified with blc (2 element vector) and trc (2 element vector) [along with an optional coord key ("pixel" or "world"; pixel is the default) or a complete region rectangle e.g. loaded with "rg.fromfiletorecord( )". The dictionary can also contain a channel (integer) field which indicates which channel should be displayed.</description>
+			<any  limittypes="int string record" type="variant"/>
+			<value  type="int">1</value>
+		</param><param name="out" type="any">
+		    <description >(Optional)  Output filename or complete output config dictionary. If a string is passed, the file extension is used to determine the output type (jpg, pdf, eps, ps, png, xbm, xpm, or ppm). If a dictionary is passed, it can contain the fields, file (string), scale (float), dpi (int), or orient (landscape or portrait). The scale field is used for the bitmap formats (i.e. not ps or pdf) and the dpi parameter is used for scalable formats (pdf or ps).</description>
+		    <any  limittypes="string record" type="variant"/>
+		    <value  type="string"/>
+		</param><param name="pagerows" type="int">
+          <description >Rows per page</description>
+          <value >50</value>
+    </param><param direction="in" name="listunfl" type="bool">
+            <description >List unflagged row counts? If true, it can have significant negative performance impact.</description>
+            <value >False</value>
+        </param><param direction="in" name="cachesize" type="double">
+            <description >EXPERIMENTAL. Maximum size in megabytes of cache in which data structures can be held.</description>
+            <value >50</value>
+        </param><param name="createdict" type="bool">
+            <description >Create and return a dictionary with sub-MS information</description>
+            <value >False</value>
+        </param><param mustexist="true" name="sdm" type="string">
+      <description >Name of input SDM directory</description>
+      <value />
+    </param><param name="options" type="string">
+	    <description >List options: ap only </description>
+	    <value >ap</value>
+    </param><param name="average" type="string">
+	    <description >Averaging mode: ''==&gt;none (Not yet implemented)</description>
+          <value />
+	    <allowed  kind="enum">
+                <value/>
+                <value>none</value>
+                <value>time</value>
+                <value>chan</value>
+                <value>both</value>
+          </allowed>
+    </param><param name="showflags" type="bool">
+          <description >Show flagged data (Not yet implemented)</description>
+          <value >False</value>
+    </param><param name="inpimage" type="any">
+            <description >Name of input image.</description>
+            <any  limittypes="string stringArray" type="variant"/>
+            <value  type="string"/>
+            </param><param name="inpmask" type="any">
+              <any  limittypes="string stringArray" type="variant"/>
+              <description >mask(s) to be processed: image masks,T/F internal masks(Need to include parent image names),regions(for copy mode)</description>
+ 
+              <value  type="string"/>
+            </param><param name="inpfreqs" type="any">
+              <description >List of chans/freqs (in inpmask) to read masks from </description>
+              <any  limittypes="string intArray" type="variant"/>
+              <value  type="intArray"/>
+            </param><param name="outfreqs" type="any">
+              <description >List of chans/freqs (in output) on which to expand the mask</description>
+              <any  limittypes="string intArray" type="variant"/>
+              <value  type="intArray"/>
+            </param><param name="cleanbox" type="any">
+	    <description >clean box regions or file name or \'interactive\'</description>
+	    <any  type="variant"/>
+	    <value  type="record"/>
+    </param><param name="sdimage" type="string">
+	    <description >Input single dish image to use for model</description>
+	    <value />
+    </param><param name="rmode" subparam="yes" type="string">
+	    <description >Robustness mode (for Briggs weightting)</description>
+	    <value >norm</value>
+    <allowed  kind="enum">
+	    <value>none</value>
+	    <value>norm</value>
+	    <value>abs</value>
+    </allowed>
+    </param><param name="constrainflux" subparam="yes" type="bool">
+	    <description >Constrain image to match target flux </description>
+	    <value >False</value>
+    </param><param kind="ms" mustexist="true" name="infile" type="string">
+    	<description >Name of the input MS data</description>
+    	<value />
+        <example >infile='OrionS_rawACSmod'</example>
+    </param><param name="includemask" type="any">
+    	<description >Range of rows to include</description>
+	<any  limittypes="double doubleArray" type="variant"/>
+	<value  type="double">-1</value>
+    </param><param name="excludemask" type="any">
+    	<description >Range of rows to exclude</description>
+	<any  limittypes="double doubleArray" type="variant"/>
+	<value  type="double">-1</value>
+    </param><param name="createmms" type="bool">
+            <description >Create a multi-MS output.</description>
+            <value >False</value>
+        </param><param ignorecase="true" name="separationaxis" type="string">
+            <description >Axis to do parallelization across(scan,spw,both).</description>
+            <value >both</value>
+            <allowed  ignorecase="true" kind="enum">
+                <value>both</value>
+                <value>spw</value>
+                <value>scan</value>
+            </allowed>
+        </param><param name="numsubms" type="int">
+            <description >The number of Sub-MSs to create.</description>
+            <value >64</value>
+        </param><param name="parallel" type="bool">
+            <description >Create a multi-MS in parallel using simple_cluster.</description>
+            <value >False</value>
+        </param><param name="ddistart" type="int">
+            <description >For internal use only. Do not change it!</description>
+            <value >-1</value>
+        </param><param name="tileshape" type="intArray">
+        <description >List with 1 or 3 elements giving the tile shape of the disk data columns.</description>
+        <value  type="intArray">0</value>
+    </param><param name="realmodelcol" type="bool">
+            <description >Make real a virtual MODEL column.</description>
+            <value >False</value>
+        </param><param name="usewtspectrum" type="bool">
+        <description >Create a WEIGHT_SPECTRUM column in the output MS.</description>
+        <value >False</value>
+    </param><param name="combinespws" type="bool">
+        <description >Combine the input spws into a new output spw.</description>
+        <value >False</value>
+    </param><param name="chanaverage" type="bool">
+        <description >Average data in channels.</description>
+        <value >False</value>
+    </param><param name="chanbin" type="any">
+            <description >Width (bin) of input channels to average to form an output channel.</description>
+            <any  limittypes="int intArray" type="variant"/>            
+            <value  type="int">1</value>
+        </param><param name="useweights" type="string">
+            <description >Type of weights to use in average (flags/spectrum).</description>
+            <value  type="string">flags</value>
+              <allowed  ignorecase="True" kind="enum">
+                <value>flags</value>
+                <value>spectrum</value>
+              </allowed>
+        </param><param name="regridms" type="bool">
+        <description >Regrid the MS to a new spw, channel structure or frame.</description>
+        <value >False</value>
+    </param><param name="nspw" type="int">
+            <description >Number of output spws to create in output MS.</description>
+            <value  type="int">1</value>
+        </param><param name="timeaverage" type="bool">
+        <description >Average data in time.</description>
+        <value >False</value>
+    </param><param name="timebin" type="string">
+            <description >Bin width for time averaging.</description>     
+            <value  type="string">0s</value>
+        </param><param name="timespan" type="any">
+            <description >Let time bins span changes in scan and/or state.</description>
+            <any  limittypes="string stringArray" type="variant"/>
+            <value  type="string"/>
+        </param><param name="maxuvwdistance" type="double">
+            <description >Maximum separation of start-to-end baselines that can be included in an average.</description>
+            <value  type="double">0.0</value>
+        </param><param name="displaytype" type="string">
+			<description > (Optional)  Type of visual rendering (raster, contour, vector or marker).  lel  if an lel expression is given for infile  (advanced).</description>
+			<value >raster</value>
+		</param><param name="channel" type="int">
+			<description > (Optional)  access a specific channel in the image cube</description>
+			<value >0</value>
+		</param><param name="outscale" type="double">
+			<description > (Optional)  amount to scale output bitmap formats (non-PS, non-PDF)</description>
+			<value >1.0</value>
+		</param><param name="outdpi" type="int">
+			<description > (Optional)  output DPI for PS/PDF</description>
+			<value >300</value>
+		</param><param name="outformat" type="string">
+			<description > (Optional)  format of the output e.g. jpg or pdf (this is overridden by the output files extension</description>
+			<value >jpg</value>
+		</param><param name="outlandscape" type="bool">
+			<description > (Optional)  should the output mode be landscape (PS or PDF)</description>
+			<value >False</value>
+		</param><param name="gui" type="bool">
+			<description > (Optional)  Display the panel in a GUI.</description>
+			<value >True</value>
+		</param><param name="calmsselection" type="string">
+         <description >Cal Data Selection (\'none\', \'auto\', \'manual\')</description>
+        <value >none</value>
+        <allowed  ignorecase="true" kind="enum">
+          <value>none</value>
+          <value>auto</value>
+          <value>manual</value>
+        </allowed>
+    </param><param name="calmsname" type="string">
+			<description >Name of output measurement set</description>
+			<value />
+	    </param><param name="calscan" type="string">&gt;
+			<description >Select data by scan numbers</description>
+			<value />
+		</param><param name="calintent" type="string">&gt;
+			<description >Select data by scan intent</description>
+			<value />
+		</param><param name="scanintent" type="string">
+		<description >Select data by scan intent</description>
+		<value />
+	</param><param name="majorcycles" type="int">
+			<description >Number of major cycles</description>
+			<value >1</value>
+		</param><param name="clusterdef" type="string">
+			<description >File that contains cluster definition</description>
+			<value />
+		</param><param name="figfile" type="string">
+			<description >Save the plotted figure to this file</description>
+			<value />
+		</param><param name="yaxis" type="string">
+      <description >The quantity to plot on the y-axis ("amp", "phase", "both", "tsys", append "db" for dB).</description>
+      <value >amp</value>
+      <allowed  kind="enum">
+      <value>amp</value>
+      <value>ampdb</value>
+      <value>phase</value>
+      <value>tsys</value>
+      <value>both</value>
+      <value>bothdb</value>
+      <value>ap</value>
+      <value>apdb</value>
+      </allowed>
+    </param><param name="xaxis" type="string">
+      <description >The quantity to plot on the x-axis ("chan" or "freq").</description>
+      <value >chan</value>
+      <allowed  kind="enum">
+      <value>chan</value>
+      <value>freq</value>
+      </allowed>
+    </param><param name="plotrange" type="doubleArray">
+      <description >The axes limits to use [x0,x1,y0,y1].</description>
+      <value  type="doubleArray">0,0,0,0</value>
+    </param><param name="caltable2" type="string">
+      <description >A second cal table, of type BPOLY or B, to overlay on a B table</description>
+      <value />
+    </param><param name="overlay" type="string">
+      <description >Show multiple solutions in same frame in different colors (time, antenna, spw, baseband, or time,antenna)</description>
+      <value  type="string"/>
+      <allowed  kind="enum">
+         <value type="string"/>
+         <value>antenna</value>
+         <value>baseband</value>
+         <value>spw</value>
+         <value>time</value>
+         <value>antenna,time</value>
+         <value>time,antenna</value>
+      </allowed>
+    </param><param name="showflagged" type="bool">
+      <description >Show the values of the solution, even if flagged</description>
+      <value >False</value>
+    </param><param name="timeranges" type="string">
+      <description >Show only these timeranges, the first timerange being 0</description>
+      <value  type="string"/>
+    </param><param name="buildpdf" type="bool">
+      <description >If True, assemble all the pngs into a pdf</description>
+      <value >False</value>
+    </param><param name="caltable3" type="string">
+      <description >A third cal table, of type BPOLY, to overlay on the first two tables</description>
+      <value />
+    </param><param name="markersize" type="int">
+      <description >Size of points</description>
+      <value >3</value>
+    </param><param name="density" type="int">
+      <description >dpi to use in creating PNGs and PDFs (default=108)</description>
+      <value >108</value>
+    </param><param name="showpoints" type="any">
+      <description >Draw points for the data (default=F for amp, T for phase)</description>
+      <any  limittypes="string bool" type="variant"/>
+      <value  type="string">auto</value>
+    </param><param name="showlines" type="any">
+      <description >Draw lines connecting the data (default=T for amp, F for phase)</description>
+      <any  limittypes="string bool" type="variant"/>
+      <value  type="string">auto</value>
+    </param><param name="subplot" type="any">
+      <description >11,22,32 or 42 for RowsxColumns (default=22), any 3rd digit is ignored</description>
+      <any  limittypes="string int" type="variant"/>
+      <value  type="string">22</value>
+      <allowed  kind="enum">
+         <value>11</value>
+         <value>22</value>
+         <value>32</value>
+         <value>42</value>
+      </allowed>
+    </param><param name="poln" type="any">
+      <description >Polarizations to plot: "" = all, or "RR","RL","LR","LL","XX","XY","YX","YY","RR,LL","XX,YY"</description>
+      <any  limittypes="stringvec string list" type="variant"/>
+      <value  type="string"/>
+    </param><param name="showatm" type="bool">
+      <description >Compute and overlay the atmospheric transmission curve</description>
+      <value >False</value>
+    </param><param name="pwv" type="any">
+      <any  limittypes="double string" type="variant"/>
+      <description >Define the pwv to use for the showatm option: "auto" or value in mm</description>
+      <value  type="string">auto</value>
+    </param><param name="gs" type="string">
+      <description >For buildpdf=T, full path for ghostscript command (in case it is not found)</description>
+      <value >gs</value>
+    </param><param name="convert" type="string">
+      <description >For buildpdf=T, full path for the ImageMagick convert command (in case it is not found)</description>
+      <value >convert</value>
+    </param><param name="solutionTimeThresholdSeconds" type="double">
+      <description >Consider 2 solutions simultaneous if within this interval in seconds</description>
+      <value  type="double">30.0</value>
+    </param><param name="debug" type="bool">
+      <description >Print verbose messages for debugging purposes</description>
+      <value >False</value>
+    </param><param name="phase" type="any">
+      <description >The y-axis limits to use for phase plots when yaxis="both"</description>
+      <any  limittypes="intvec string" type="variant"/>
+      <value  type="string"/>
+    </param><param name="showtsky" type="bool"> 
+      <description >Compute and overlay the sky temperature curve instead of transmission</description>
+      <value >False</value>
+    </param><param name="showfdm" type="bool"> 
+      <description >when showing TDM spws, draw the locations of the corresponding FDM spws</description>
+      <value >False</value>
+    </param><param name="showatmfield" type="any"> 
+      <value  type="string"/>
+      <description >for overlay="time", use first observation of this fieldID or name</description>
+      <any  limittypes="int string" type="variant"/>
+    </param><param name="lo1" type="any">
+      <any  limittypes="string double" type="variant"/>
+      <description >specify the LO1 setting (in GHz) for the observation ('' = automatic)</description>
+      <value  type="string"/>
+    </param><param name="showimage" type="bool">
+      <description >also show the atmospheric curve for the image sideband (in black)</description>
+      <value >False</value>
+    </param><param name="showatmpoints" type="bool">
+      <description >Draw atmospheric curve with points instead of a line</description>
+      <value >False</value>
+    </param><param name="parentms" type="string">
+      <description >if showimage=T, name of the parent ms (only needed if the ms has been previously split)</description>
+      <value  type="string"/>
+    </param><param name="pdftk" type="string">
+      <description >For buildpdf=T, full path for pdftk command (in case it is not found)</description>
+      <value >pdftk</value>
+    </param><param name="channeldiff" type="any">
+      <any  limittypes="bool double" type="variant"/>
+      <description >Set to a value &gt; 0 (sigma) to plot derivatives of the solutions</description>
+      <value  type="bool">False</value>
+    </param><param name="edge" type="int">
+      <description >The number of edge channels to ignore in finding outliers (for channeldiff&gt;0)</description>
+      <value >8</value>
+    </param><param name="resample" type="int">
+      <description >The channel expansion factor to use when computing MAD of derivative (for channeldiff&gt;0)</description>
+      <value >1</value>
+    </param><param name="platformingThreshold" type="double">
+      <description >if platformingSigma=0, then declare platforming if the amplitude derivative exceeds this percentage of the median</description>
+      <value >10.0</value>
+    </param><param name="platformingSigma" type="double">
+      <description >declare platforming if the amplitude derivative exceeds this many times the MAD</description>
+      <value >10.0</value>
+    </param><param name="basebands" type="any">
+      <description >A baseband number or list of baseband numbers for which to display solutions.  Default = all.</description>
+      <any  limittypes="int string list" type="variant"/>
+      <value  type="string"/>
+    </param><param name="showBasebandNumber" type="bool">
+      <description >Put the baseband converter number (BBC_NO) in the title of each plot</description>
+      <value >False</value>
+    </param><param name="figfileSequential" type="bool">
+      <description >naming scheme for pngs: False: name by spw/antenna (default), True: figfile.000.png, figfile.001.png, etc.</description>
+      <value >False</value>
+    </param><param name="overplot" type="bool">
+			<description >Overplot solutions on existing display</description>
+			<value >False</value>
+		</param><param name="clearpanel" type="string">
+			<description >Specify if old plots are cleared or not (ignore)</description>
+			<value >Auto</value>
+			<allowed  kind="enum">
+				<value>Current</value>
+				<value>None</value>
+				<value>Auto</value>
+				<value>All</value>
+			</allowed>
+		</param><param name="iteration" type="string">
+			<description >Iterate plots on antenna,time,spw,field</description>
+			<value />
+		</param><param name="plotsymbol" type="string">
+			<description >pylab plot symbol</description>
+			<value >o</value>
+		</param><param name="plotcolor" type="string">
+			<description >initial plotting color</description>
+			<value >blue</value>
+		</param><param name="fontsize" type="double">
+			<description >Font size for labels</description>
+			<value >10.0</value>
+		</param><param name="showgui" type="bool">
+			<description >Show plot on gui</description>
+			<value >True</value>
+		</param><param name="xdatacolumn" type="string">
+      <description >data column to use for x-axis (blank for default/current)</description>
+      <value />
+      <allowed  kind="enum">
+        <value/>
+        <value>data</value>
+        <value>corrected</value>
+        <value>model</value>
+        <value>residual</value>
+        <value>corrected-model</value>
+        <value>data-model</value>
+      </allowed>
+    </param><param name="ydatacolumn" type="string">
+      <description >data column to use for y-axis (blank for default/current)</description>
+      <value />
+      <allowed  kind="enum">
+        <value/>
+        <value>data</value>
+        <value>corrected</value>
+        <value>model</value>
+        <value>residual</value>
+        <value>corrected-model</value>
+        <value>data-model</value>
+      </allowed>
+    </param><param name="averagedata" type="bool">
+    <description >data averaging parameters</description>
+    <value >True</value>
+  </param><param name="avgchannel" type="string">
+      <description >average over channel?  (blank = False, otherwise value in channels)</description>
+      <value />
+    </param><param name="avgtime" type="string">
+      <description >average over time? (blank = False, other value in seconds)</description>
+      <value />
+    </param><param name="avgscan" type="bool">
+      <description >only valid if time averaging is turned on.  average over scans?</description>
+      <value >False</value>
+    </param><param name="avgfield" type="bool">
+      <description >only valid if time averaging is turned on.  average over fields?</description>
+      <value >False</value>
+    </param><param name="avgbaseline" type="bool">
+      <description >average over all baselines?  (mutually exclusive with avgantenna)</description>
+      <value >False</value>
+    </param><param name="avgantenna" type="bool">
+      <description >average by per-antenna?  (mutually exclusive with avgbaseline)</description>
+      <value >False</value>
+    </param><param name="avgspw" type="bool">
+      <description >average over all spectral windows?</description>
+      <value >False</value>
+    </param><param name="scalar" type="bool">
+      <description >Do scalar averaging?</description>
+      <value >False</value>
+    </param><param name="transform" type="bool">
+    <description >transform data in various ways?</description>
+    <value >False</value>
+  </param><param name="freqframe" type="string">
+      <description >the frame in which to render frequency and velocity axes </description>
+      <value />
+      <allowed  kind="enum">
+        <value/>
+        <value>TOPO</value>
+        <value>GEO</value>
+        <value>BARY</value>
+        <value>LSRK</value>
+        <value>LSRD</value>
+      </allowed>
+    </param><param name="veldef" type="string">
+      <description >the definition in which to render velocity </description>
+      <value >RADIO</value>
+      <allowed  kind="enum">
+        <value>RADIO</value>
+        <value>OPTICAL</value>
+        <value>TRUE</value>
+      </allowed>
+    </param><param name="shift" type="doubleArray">
+       <description >Adjust phases by this phase center shift [dx,dy] (arcsec)</description>
+       <value  type="doubleArray"><value>0.0</value><value>0.0</value></value>
+    </param><param name="extendflag" type="bool">
+    <description >have flagging extend to other data points?</description>
+    <value >False</value>
+  </param><param name="extcorr" type="bool">
+      <description >extend flags based on correlation? </description>
+      <value >False</value>
+    </param><param name="extchannel" type="bool">
+      <description >extend flags based on channel?</description>
+      <value >False</value>
+    </param><param name="extspw" type="bool">
+      <description >extend flags based on spw?</description>
+      <value >False</value>
+    </param><param name="extantenna" type="string">
+      <description >extend flags based on antenna? (blank = none, \'all\' = all baselines, otherwise antenna-based value)</description>
+      <value />
+    </param><param name="exttime" type="bool">
+      <description >extend flags based on time (within scans)?</description>
+      <value >False</value>
+    </param><param name="extscans" type="bool">
+      <description >only valid if exttime is true.  extend flags based on scans?</description>
+      <value >False</value>
+    </param><param name="extfield" type="bool">
+      <description >only valid if exttime is true.  extend flags based on field?</description>
+      <value >False</value>
+    </param><param name="iteraxis" type="string">
+      <description >the axis over which to iterate</description>
+      <value />
+      <allowed  kind="enum">
+        <value/>
+        <value>scan</value>
+        <value>field</value>
+        <value>spw</value>
+        <value>baseline</value>
+        <value>antenna</value>
+      </allowed>
+   </param><param name="xselfscale" type="bool">
+       <description >Self-scale X axis in each plot </description>
+       <value >False</value>
+   </param><param name="yselfscale" type="bool">
+       <description >Self-scale Y axis in each plot </description>
+       <value >False</value>
+   </param><param name="customsymbol" type="bool">
+        <description >set a custom symbol for unflagged points</description>
+        <value >True</value>
+    </param><param name="symbolshape" type="string">
+        <description >shape of plotted unflagged symbols</description>
+        <value >autoscaling</value>
+        <allowed  kind="enum">
+            <value>nosymbol</value>
+            <value>autoscaling</value>
+            <value>circle</value>
+            <value>square</value>
+            <value>diamond</value>
+            <value>pixel</value>
+        </allowed>
+    </param><param name="symbolsize" type="int">
+        <description >size of plotted unflagged symbols</description>
+        <value >2</value>
+    </param><param name="symbolcolor" type="string">
+        <description >color of plotted unflagged symbols</description>
+        <value >0000ff</value>
+    </param><param name="symbolfill" type="string">
+        <description >fill type of plotted unflagged symbols</description>
+        <value >fill</value>
+        <allowed  kind="enum">
+            <value>fill</value>
+            <value>mesh1</value>
+            <value>mesh2</value>
+            <value>mesh3</value>
+            <value>nofill</value>
+        </allowed>
+    </param><param name="symboloutline" type="bool">
+        <description >selects outlining plotted unflagged points</description>
+        <value >False</value>
+    </param><param name="coloraxis" type="string">
+        <description >selects which data to use for colorizing</description>
+        <value />
+        <allowed  kind="enum">
+            <value/>
+            <value>scan</value>
+            <value>field</value>
+            <value>spw</value>
+            <value>antenna1</value><value>ant1</value>
+            <value>antenna2</value><value>ant2</value>
+            <value>baseline</value>
+            <value>channel</value><value>chan</value>
+            <value>corr</value>
+        </allowed>
+    </param><param name="customflaggedsymbol" type="bool">
+        <description >set a custom plot symbol for flagged points</description>
+        <value >False</value>
+    </param><param name="flaggedsymbolshape" type="string">
+        <description >shape of plotted flagged symbols</description>
+        <value >nosymbol</value>
+        <allowed  kind="enum">
+            <value>nosymbol</value>
+            <value>autoscaling</value>
+            <value>circle</value>
+            <value>square</value>
+            <value>diamond</value>
+            <value>pixel</value>
+        </allowed>
+    </param><param name="flaggedsymbolsize" type="int">
+        <description >size of plotted flagged symbols</description>
+        <value >2</value>
+    </param><param name="flaggedsymbolcolor" type="string">
+        <description >color of plotted flagged symbols</description>
+        <value >ff0000</value>
+    </param><param name="flaggedsymbolfill" type="string">
+        <description >fill type of plotted flagged symbols</description>
+        <value >fill</value>
+        <allowed  kind="enum">
+            <value>fill</value>
+            <value>mesh1</value>
+            <value>mesh2</value>
+            <value>mesh3</value>
+            <value>nofill</value>
+        </allowed>
+    </param><param name="flaggedsymboloutline" type="bool">
+        <description >selects outlining plotted flagged points</description>
+        <value >False</value>
+    </param><param name="title" type="string">    
+    <description >Title written along top of plot</description>
+    <value />
+  </param><param name="xlabel" type="string">    
+    <description >Text for horizontal axis. Blank for default.</description>
+    <value />
+  </param><param name="ylabel" type="string">    
+    <description >Text for vertical axis. Blank for default.</description>
+    <value />
+  </param><param name="showmajorgrid" type="bool">
+    <description >Show major grid lines (horiz and vert.)</description>
+    <value >False</value>
+</param><param name="majorwidth" type="int">
+    <description >Line width in pixels of major grid lines</description>
+    <value >1</value>
+</param><param name="majorstyle" type="string">
+    <description >Major grid line style: solid dash dot none</description>
+    <allowed  kind="enum">
+        <value/>
+        <value>solid</value>
+        <value>dash</value>
+        <value>dot</value>
+        <value>none</value>
+    </allowed>
+</param><param name="majorcolor" type="string">
+    <description >Color as name or hex code of major grid lines</description>
+    <value >B0B0B0</value>
+</param><param name="showminorgrid" type="bool">
+    <description >Show minor grid lines (horiz and vert.)</description>
+    <value >False</value>
+</param><param name="minorwidth" type="int">
+    <description >Line width in pixels of minor grid lines</description>
+    <value >1</value>
+</param><param name="minorstyle" type="string">
+    <description >Minor grid line style: solid dash dot none</description>
+    <allowed  kind="enum">
+        <value/>
+        <value>solid</value>
+        <value>dash</value>
+        <value>dot</value>
+        <value>none</value>
+    </allowed>
+</param><param name="minorcolor" type="string">
+    <description >Color as name or hex code of minor grid lines</description>
+    <value >D0D0D0</value>
+</param><param name="expformat" type="string">
+        <description >Export format type (jpg, png, ps, pdf, txt), if not provided, plotfile extension will be used.</description>
+        <allowed  kind="enum">
+            <value/>
+            <value>jpg</value>
+            <value>png</value>
+            <value>pdf</value>
+            <value>ps</value>
+            <value>txt</value>
+        </allowed>
+     </param><param name="plotxycomp" type="bool">
+    <description >use plotxy compliance parameters?</description>
+    <value >False</value>
+  </param><param name="crossscans" type="bool">
+      <description >PLOTXY COMPLIANCE PARAMETER; use avgscan instead</description>
+      <value >False</value>
+    </param><param name="crossbls" type="bool">
+      <description >PLOTXY COMPLIANCE PARAMETER; use avgbaseline instead</description>
+      <value >False</value>
+    </param><param name="extendcorr" type="string">
+      <description >PLOTXY COMPLIANCE PARAMETER; use extcorrelation instead</description>
+      <value />
+      <allowed  kind="enum">
+        <value/>
+        <value>all</value>
+        <value>half</value>
+      </allowed>
+    </param><param name="extendchan" type="string">
+      <description >PLOYXY COMPLIANCE PARAMETER; use extchanngel instead</description>
+      <value />
+      <allowed  kind="enum">
+        <value/>
+        <value>all</value>
+      </allowed>
+    </param><param name="extendspw" type="string">
+      <description >PLOTXY COMPLIANCE PARAMETER; use extspw instead</description>
+      <value />
+      <allowed  kind="enum">
+        <value/>
+        <value>all</value>
+      </allowed>
+    </param><param name="extendant" type="string">
+      <description >PLOTXY COMPLIANCE PARAMETER; use extantenna instead</description>
+      <value />
+      <allowed  kind="enum">
+        <value/>
+        <value>all</value>
+      </allowed>
+    </param><param name="extendtime" type="string">
+      <description >PLOTXY COMPLIANCE PARAMETER; use exttime, extscans, and extfield instead</description>
+      <value />
+      <allowed  kind="enum">
+        <value/>
+        <value>all</value>
+        <value>scan</value>
+        <value>field</value>
+      </allowed>
+    </param><param name="maxnpts" type="int">
+	<description >Maximum number of points per plot.</description>
+	<value >100000</value>
+      </param><param name="colors" type="stringArray">
+	<description >a list of matplotlib color codes</description>
+	<value  type="stringArray">
+	  <value type="string">r</value>
+	  <value type="string">y</value>
+	  <value type="string">g</value>
+	  <value type="string">b</value>
+	</value>
+      </param><param name="symb" type="string">
+	<description >A matplotlib plot symbol code</description>
+	<value >,</value>
+      </param><param name="ncycles" type="int">
+	<description >How many times to cycle through colors per plot.</description>
+	<value >1</value>
+      </param><param name="seasonal_weight" type="double">
+<description >weight of the seasonal model</description>
+<value >0.5</value>
+</param><param name="doPlot" type="bool">
+<description >set this to True to create a plot</description>
+<value >True</value>
+</param><param name="plotName" type="string">
+<description >(Optional) the name of the plot file</description>
+<value />
+</param><param name="averagemode" type="string">
+			<description >Select averaging type: \'vector\', \'scalar\'</description>
+			<value />
+			<allowed  kind="enum">
+			   <value/>
+			   <value>vector</value>
+			   <value>scalar</value>
+			</allowed>
+		</param><param name="crossarrays" type="bool">
+			<description >have averaging cross over arrays?</description>
+			<value >False</value>
+		</param><param name="stackspw" type="bool">
+			<description >stack multiple spw on top of each other?</description>
+			<value >False</value>
+		</param><param name="frame" type="string">
+			<description >frequency frame for spectral axis. see help for options</description>
+			<value />
+			<allowed  kind="enum">
+			   <value/>
+			   <value>LSRK</value>
+			   <value>REST</value>
+			   <value>TOPO</value>
+			   <value>LSRD</value>
+			   <value>BARY</value>
+			   <value>GEO</value>
+			   <value>GALACTO</value>
+			   <value>LGROUP</value>
+			   <value>CMB</value>
+			</allowed>
+		</param><param name="doppler" type="string">
+			<description >doppler mode. see help for options</description>
+			<value />
+			<allowed  kind="enum">
+			   <value/>
+			   <value>RADIO</value>
+			   <value>Z</value>
+			   <value>RATIO</value>
+			   <value>BETA</value>
+			   <value>GAMMA</value>
+			   <value>OPTICAL</value>
+			   <value>TRUE</value>
+			   <value>RELATIVISTIC</value>
+			</allowed>
+		</param><param name="linewidth" type="double">
+			<description >Width of plotted lines</description>
+			<value >1.0</value>
+		</param><param name="multicolor" type="string">
+			<description >Plot in different colors: Options: none, both, chan, corr</description>
+			<value >corr</value>
+			<allowed  kind="enum">
+			   <value>corr</value>
+			   <value>correlation</value>
+			   <value>none</value>
+			   <value>both</value>
+			   <value>chan</value>
+			   <value>channel</value>
+			</allowed>
+		</param><param name="selectplot" type="bool">
+			<description >Select additional plotting options (e.g, fontsize, title,etc)</description>
+			<value >False</value>
+		</param><param name="newplot" type="bool">
+			<description >Replace the last plot or not when overplotting</description>
+			<value >False</value>
+		</param><param name="skipnrows" type="int">
+			<description >Plot every nth point</description>
+			<value >0</value>
+		</param><param name="xlabels" type="string">
+			<description >Label for x-axis</description>
+			<value />
+		</param><param name="ylabels" type="string">
+			<description >Label for y-axis</description>
+			<value />
+		</param><param name="windowsize" type="double">
+			<description >Window size: not yet implemented</description>
+			<value >1.0</value>
+		</param><param name="poltype" type="string">
+		<description >Type of instrumental polarization solution (see help)</description>
+		<value >D+QU</value>
+		<allowed  kind="enum">
+			<value>D</value>
+			<value>Df</value>
+			<value>D+X</value>
+			<value>Df+X</value>
+			<value>D+QU</value>
+			<value>Df+QU</value>
+                        <value>Dgen</value>
+                        <value>Dfgen</value>
+                        <value>Dgen+X</value>
+                        <value>Dfgen+X</value>
+                        <value>Dgen+QU</value>
+                        <value>Dfgen+QU</value>
+                        <value>Dlls</value>
+                        <value>Dflls</value>
+			<value>X</value>
+			<value>Xf</value>
+			<value>Xj</value>
+		</allowed>
+	</param><param name="objname" type="string">
+	    <description >Object name</description>
+	    <value />
+	  </param><param name="standard" type="string">
+	    <description >Flux density standard</description>
+	    <value >Butler-JPL-Horizons 2010</value>
+	    <allowed  kind="enum">
+	      <value>Perley-Butler 2010</value>
+	      <value>Perley-Taylor 99</value>
+	      <value>Baars</value>
+	      <value>Perley 90</value>
+	      <value>Perley-Taylor 95</value>
+	      <value>Butler-JPL-Horizons 2010</value>
+	      <value>Butler-JPL-Horizons 2012</value>
+	    </allowed>
+	  </param><param name="minfreq" type="string">
+	    <description >Minimum frequency</description>
+	    <value />
+	  </param><param name="maxfreq" type="string">
+	    <description >Maximum frequency</description>
+	    <value />
+	  </param><param name="nfreqs" type="int">
+	    <description >Number of frequencies</description>
+	    <value >2</value>
+	  </param><param mustexist="false" name="prefix" type="string">
+	    <description >Prefix for the component list directory name.</description>
+	    <value />
+	  </param><param name="antennalist" type="string">
+	    <description >Plot for this configuration</description>
+	    <value />
+	  </param><param name="showplot" type="bool">
+	    <description >Plot S vs |u| to the screen?</description>
+	    <value >False</value>
+	  </param><param name="savefig" type="string">
+	    <description >Save a plot of S vs |u| to this filename</description>
+	    <value />
+	  </param><param name="include0amp" type="bool">
+	    <description >Force the amplitude axis to start at 0?</description>
+	    <value >False</value>
+	  </param><param name="include0bl" type="bool">
+	    <description >Force the baseline axis to start at 0?</description>
+	    <value >False</value>
+	  </param><param name="blunit" type="string">
+	    <description >unit of the baseline axis</description>
+	    <value />
+	    <allowed  kind="enum">
+	    <value/>
+	    <value>klambda</value>
+	    </allowed>
+	  </param><param name="showbl0flux" type="bool">
+	    <description >Print the zero baseline flux ?</description>
+	    <value >False</value>
+	  </param><param direction="in" name="rm" type="string">
+        <description >Output rotation measure image name. If not specified, no image is written.</description>
+        <value />
+    </param><param direction="in" name="rmerr" type="string">
+        <description >Output rotation measure error image name. If not specified, no image is written.</description>
+        <value />
+    </param><param direction="in" name="pa0" type="string">
+        <description >Output position angle (degrees) at zero wavelength image name. If not specified, no image is written.</description>
+        <value />
+    </param><param direction="in" name="pa0err" type="string">
+        <description >Output position angle (degrees) at zero wavelength error image name. If not specified, no image is written.</description>
+        <value />
+    </param><param direction="in" name="nturns" type="string">
+        <description >Output number of turns image name. If not specified, no image is written.</description>
+     <value />
+     </param><param direction="in" name="chisq" type="string">
+        <description >Output reduced chi squared image name. If not specified, no image is written.</description>
+        <value />
+     </param><param direction="in" name="rmfg" type="double">
+         <description >Foreground rotation measure in rad/m/m to subtract.</description>
+        <value >0.0</value>
+     </param><param direction="in" name="rmmax" type="double">
+        <description >Maximum rotation measure in rad/m/m for which to solve. IMPORTANT TO SPECIFY.</description>
+        <value >0.0</value>
+     </param><param direction="in" name="maxpaerr" type="double">
+        <description >Maximum input position angle error in degrees to allow in solution determination.</description>
+        <value >1e30</value>
+     </param><param name="tablenames" type="stringArray">
+			<description >Name of the tables</description>
+			<value />
+		</param><param name="fluxunit" type="string">
+	    <description >units for line flux (K,Jy) (''=current)</description>
+	    <value />
+    </param><param name="telescopeparm" subparam="true" type="any">
+	    <description >param of telescope for flux conversion</description>
+            <any  limittype="string doubleArray" type="variant"/>
+	    <value  type="string"/>
+    </param><param name="specunit" type="string">
+	<description >units for spectral axis (channel,km/s,GHz)</description>
+	<value />
+	<allowed  kind="enum">
+	    <value/>
+	    <value>channel</value>
+	    <value>km/s</value>
+	    <value>GHz</value>
+	    <value>MHz</value>
+	    <value>kHz</value>
+	    <value>Hz</value>
+        </allowed>
+    </param><param name="scanlist" type="intArray">
+	    <description >list of scans to use (e.g. [1,2,3,4])</description>
+	    <value />
+    </param><param name="iflist" type="intArray">
+	    <description >list of IF ids to select (e.g. [0,1])</description>
+	    <value />
+    </param><param name="pollist" type="intArray">
+            <description >list of polarization ids to select (e.g. [0,1])</description>
+            <value />
+    </param><param name="tau" type="double">
+            <description >atmospheric optical depth for correction</description>
+            <value >0.0</value>
+    </param><param name="masklist" type="any">
+            <description >list or string of mask regions to INCLUDE in BASELINE fit</description>
+            <any  limittype="string  doubleArray" type="variant"/>
+            <value  type="doubleArray"/>
+    </param><param name="maskmode" type="string">
+	    <description >mode of setting additional channel masks</description>
+	    <allowed  kind="enum">
+	        <value>auto</value>
+	        <value>list</value>
+	        <value>interact</value>
+	    </allowed>
+    </param><param name="thresh" subparam="true" type="double">
+	    <description >S/N threshold for linefinder</description>
+	    <value >5.0</value>
+    </param><param name="avg_limit" subparam="true" type="int">
+	    <description >channel averaging for broad lines</description>
+	    <value >4</value>
+    </param><param name="blfunc" type="string">
+	    <description >baseline model function</description>
+	    <value >poly</value>
+	    <allowed  kind="enum">
+	            <value>poly</value>
+	            <value>chebyshev</value>
+	            <value>cspline</value>
+	            <value>sinusoid</value>
+	    </allowed>
+    </param><param name="npiece" type="int">
+            <description >number of element polynomials of spline</description>
+            <value >2</value>
+    </param><param name="applyfft" type="bool">
+            <description >automatically set wave numbers of sinusoids</description>
+            <value >True</value>
+    </param><param name="fftmethod" type="string">
+            <description >method for automatically set wave numbers of sinusoids</description>
+            <value >fft</value>
+    </param><param name="fftthresh" type="any">
+            <description >threshold to select wave numbers of sinusoids</description>
+	    <value  type="double">3.0</value>
+    </param><param name="addwn" type="any">
+            <description >additional wave numbers to use</description>
+	    <value  type="vector"><value>0</value></value>
+    </param><param name="rejwn" type="any">
+            <description >wave numbers NOT to use</description>
+	    <value  type="vector"><value/></value>
+    </param><param name="clipthresh" type="double">
+            <description >clipping threshold for iterative fitting</description>
+            <value >3.0</value>
+    </param><param name="clipniter" type="int">
+            <description >maximum iteration number</description>
+            <value >0</value>
+    </param><param name="verify" type="bool">
+            <description >interactively verify the results of baseline fitting for each spectrum. (only for blfunc="poly")</description>
+            <value >False</value>
+    </param><param name="bloutput" type="bool">
+            <description >output fitting results to a text file</description>
+            <value >True</value>
+    </param><param name="blformat" type="string">
+            <description >format of the text file specified with bloutput</description>
+            <value />
+    </param><param name="showprogress" type="bool">
+            <description >show progress status for large data</description>
+            <value >True</value>
+    </param><param name="minnrow" type="int">
+            <description >minimum number of input spectra to show progress status</description>
+            <value >1000</value>
+    </param><param name="outform" type="string">
+	    <description >output file format (ASCII,MS,SDFITS,ASAP)</description>
+	    <value >ASAP</value>
+	    <allowed  kind="enum">
+	    <value>ASCII</value>
+	    <value>ascii</value>
+	    <value>MS</value>
+	    <value>ms</value>
+	    <value>MS2</value>
+	    <value>ms2</value>
+	    <value>SDFITS</value>
+	    <value>sdfits</value>
+	    <value>ASAP</value>
+	    <value>asap</value>
+	    </allowed>
+    </param><param name="plotlevel" type="int">
+	    <description >plot results (0=none,1+=some,&lt;0=hardcopy)</description>
+	    <value >0</value>
+    </param><param name="fraction" type="any">
+	    <description >fraction of the OFF data to mark</description>
+            <any  limittype="string double" type="variant"/>
+            <value  type="string">10%</value>
+    </param><param name="noff" type="int">
+	    <description >number of the OFF data to mark</description>
+            <value >-1</value>
+    </param><param name="elongated" type="bool">
+	    <description >whether observed area is elongated in one direction or not</description>
+            <value >False</value>
+    </param><param name="markonly" type="bool">
+	    <description >do calibration (False) or just mark OFF (True)</description>
+            <value >False</value>
+    </param><param name="plotpointings" type="bool">
+            <description >plot pointing direction for ON and OFF</description>
+            <value >False</value>
+    </param><param name="channelrange" type="intArray">
+            <description >channel range selection (e.g. [0,5000])</description>
+            <value />
+    </param><param name="scanaverage" type="bool">
+            <description >average integs within scans (True,False) </description>
+            <value >False</value>
+    </param><param name="tweight" type="string">
+            <description >weighting for time averaging</description>
+            <value >none</value>
+	    <allowed  kind="enum">
+	    <value>none</value>
+	    <value>var</value>
+	    <value>tsys</value>
+	    <value>tint</value>
+	    <value>tintsys</value>
+	    <value>median</value>
+            </allowed>
+    </param><param name="averageall" type="bool">
+            <description >set True only when averaging spectra with different spectral resolutions</description>
+            <value >False</value>
+    </param><param name="polaverage" type="bool">
+            <description >average over polarizations (True,False)</description>
+            <value >False</value>
+    </param><param name="pweight" type="string">
+            <description >weighting for polarization averaging</description>
+            <value >none</value>
+	    <allowed  kind="enum">
+	    <value>none</value>
+	    <value>var</value>
+	    <value>tsys</value>
+            </allowed>
+    </param><param name="tsysiflist" type="intArray">
+        <description >List of IFNOs for Tsys calibration.</description>
+        <value />
+    </param><param name="applytable" type="any">
+        <description >(List of) sky and/or tsys tables</description>
+        <any  limittype="string stringArray" type="variant"/>
+        <value  type="string"/>
+    </param><param name="ifmap" type="any">
+        <description >A dictionary indicating IFNO combinations to apply Tsys calibration to target. The key should be IFNO for Tsys calibration and its associated value must be a list of science IFNOs to be applied.</description>
+        <any  type="variant"/>
+        <value  type="dict">{}</value>
+    </param><param mustexist="True" name="infiles" type="stringArray">
+    <description >list of names of input SD dataset</description>
+    <value />
+    </param><param name="fitfunc" type="string">
+            <description >function for fitting</description>
+            <value >gauss</value>
+            <allowed  kind="enum">
+                    <value>gauss</value>
+                    <value>lorentz</value>
+            </allowed>
+    </param><param name="fitmode" type="string">
+            <description >mode for fitting</description>
+            <value >auto</value>
+    </param><param name="maskline" type="any">
+            <description >list of mask regions to INCLUDE in LINE fitting</description>
+            <any  limittype="intArray doubleArray" type="variant"/>
+            <value  type="intArray"/>
+    </param><param name="invertmask" type="bool">
+            <description >invert mask (EXCLUDE masklist instead)</description>
+            <value >False</value>
+    </param><param name="nfit" type="intArray">
+            <description >list of number of gaussian/lorentzian lines to fit in in maskline region (ignored when fitmode="auto")</description>
+            <value />
+    </param><param name="min_nchan" subparam="true" type="int">
+            <description >minimum number of consecutive channels for linefinder</description>
+            <value >3</value>
+    </param><param name="box_size" subparam="true" type="double">
+            <description >running mean box size</description>
+            <value >0.2</value>
+    </param><param name="maskflag" type="intArray">
+            <description >list of mask regions to flag/unflag</description>
+            <value />
+    </param><param name="flagrow" type="intArray">
+            <description >list of row numbers to apply row-based flagging/unflagging</description>
+            <value />
+    </param><param name="clip" type="bool">
+            <description >flag data outside a specified range</description>
+            <value >False</value>
+    </param><param name="flagmode" type="string">
+            <description >flag mode (flag,unflag)</description>
+            <value >flag</value>
+    </param><param name="unflag" type="bool">
+            <description >unflag selected data (False: flag, True: unflag)</description>
+            <value >False</value>
+    </param><param name="ifs" type="intArray">
+	    <shortdescription >list of IF id numbers to select (e.g. [0,1])</shortdescription>
+	    <value />
+    </param><param name="pols" type="any">
+	    <description >list of polarization by ids or names to select (e.g. [0,1])</description>
+            <any  limittype="intArray stringArray" type="variant"/>
+	    <value  type="intArray"/>
+    </param><param name="rows" type="intArray">
+            <description >list of row IDs to apply row-based flagging/unflagging (e.g., [0,3,5])</description>
+            <value />
+    </param><param name="ifno" type="int">
+      <description >IFNO for gridding</description>
+      <value >-1</value>
+    </param><param name="gridfunction" type="string">
+      <description >gridding function for imaging ("BOX","SF","PB","GAUSS","GJINC")</description>
+      <value >BOX</value>
+      <allowed  kind="enum">
+        <value>BOX</value>
+        <value>GAUSS</value>
+        <value>GJINC</value>
+        <value>PB</value>
+        <value>SF</value>
+        <value>box</value>
+        <value>gauss</value>
+        <value>gjinc</value>
+        <value>pb</value>
+        <value>sf</value>
+      </allowed>
+    </param><param name="convsupport" type="int">
+      <description >truncate of convolution kernel</description>
+      <value >-1</value>
+    </param><param name="truncate" type="any">
+      <description >truncation radius of convolution kernel</description>
+      <any  limittype="string int double" type="variant"/>
+      <value  type="int">-1</value>
+    </param><param name="gwidth" type="any">
+            <description >HWHM for gaussian</description>
+            <any  limittype="string int double" type="variant"/>
+            <value  type="int">-1</value>
+    </param><param name="jwidth" type="any">
+            <description >c-parameter for jinc function</description>
+            <any  limittype="string int double" type="variant"/>
+            <value  type="int">-1</value>
+    </param><param name="weight" type="string">
+      <description >weight type</description>
+      <value >UNIFORM</value>
+      <allowed  kind="enum">
+        <value>UNIFORM</value>
+        <value>TINT</value>
+        <value>TSYS</value>
+        <value>TINTSYS</value>
+        <value>uniform</value>
+        <value>tint</value>
+        <value>tsys</value>
+        <value>tintsys</value>
+      </allowed>
+    </param><param name="npix" type="any">
+      <description >number of pixels in x and y, symmetric for single value</description>
+      <any  limittype="int intArray" type="variant"/>
+      <value  type="int">-1</value>
+    </param><param name="center" type="any">
+      <description >Image center</description>
+      <any  limittype="string stringArray doubleArray" type="variant"/>
+      <value  type="string"/>
+    </param><param name="plot" type="bool">
+      <description >Plot result or not</description>
+      <value >False</value>
+    </param><param name="minweight" type="double">
+            <shortdescription >Minimum weight ratio to use</shortdescription>
+            <description >Minimum weight ratio to the median of weight used in weight correction and weight beased masking</description>
+            <allowed  kind="range"> <value range="min">0</value> </allowed>
+            <value >0.1</value>
+    </param><param name="dochannelmap" type="bool">
+            <description >True for channel map, False for total power imaging</description>
+            <value >False</value> 
+    </param><param name="step" type="double">
+            <description >width of each spectral channel (in units of specunit)</description>
+            <value >1</value>
+    </param><param name="ephemsrcname" type="string">
+	    <description >ephemeris source name</description>
+	    <value />
+    </param><param name="pointingcolumn" type="string">
+            <shortdescription >pointing data column to use [\'direction\'|\'target\'|\'pointing_offset\'|\'source_offset\'|\'encoder\']</shortdescription>
+            <description >pointing data column to use</description>
+            <value >direction</value>
+            <allowed  ignorecase="True" kind="enum">
+                <value>target</value>
+                <value>pointing_offset</value>
+                <value>source_offset</value>
+                <value>encoder</value>
+                <value>direction</value>
+            </allowed>
+    </param><param name="numpoly" type="int">
+            <description >order of polynomial fit</description>
+            <value >2</value>
+    </param><param name="beamsize" type="double">
+            <description >beam size</description>
+            <any  limittype="double string" type="variant"/>
+            <value  type="double">0.0</value>
+    </param><param name="smoothsize" type="any">
+            <description >size of smoothing beam</description>
+            <any  limittype="double string" type="variant"/>
+            <value  type="double">2.0</value> 
+    </param><param name="tmax" type="double">
+            <description >maximum value used for process</description>
+            <value >0.0</value>
+    </param><param name="tmin" type="double">
+            <description >minimum value used for process</description>
+            <value >0.0</value>
+    </param><param name="varlist" type="any">
+        <description >Dictionary of variables and their values used in expr.</description>
+        <any  limmittype="dict" type="variant"/>
+        <value  type="dict">{}</value>
+    </param><param name="beamlist" type="any">
+            <description >list or string of beam ids to select (e.g. [0,1])</description>
+            <any  limittype="string  intArray" type="variant"/>
+	    <value  type="intArray"/>
+    </param><param name="kwidth" type="int">
+            <description >width of spectral kernel in channels</description>
+            <value >5</value>
+    </param><param name="plottype" type="string">
+            <description >type of plot (spectra, totalpower, azel, pointing, grid)</description>
+            <value >spectra</value>
+            <allowed  kind="enum">
+            <value>pointing</value>
+            <value>azel</value>
+            <value>totalpower</value>
+            <value>spectra</value>
+            <value>grid</value>
+	    </allowed>
+    </param><param name="stack" type="string">
+            <description >code for stacking on single plot for spectral plotting</description>
+            <value >p</value>
+    </param><param name="panel" type="string">
+            <description >code for splitting into multiple panels for spectral plotting</description>
+            <value >i</value>
+    </param><param name="flrange" type="doubleArray">
+            <description >range for flux axis of plot for spectral plotting</description>
+            <value />
+    </param><param name="sprange" type="any">
+            <description >range for spectral axis of plot</description>
+            <any  limittype="intArray doubleArray" type="variant"/>
+            <value  type="doubleArray"/>
+    </param><param name="linecat" type="string">
+            <description >control for line catalog plotting for spectral plotting</description>
+            <value >none</value>
+    </param><param name="linedop" subparam="true" type="double">
+            <description >doppler offset for line catalog plotting (spectral plotting)</description>
+            <value >0.0</value>
+    </param><param name="colormap" type="string">
+            <description >the colours to be used for plot lines</description>
+            <value >none</value>
+    </param><param name="linestyles" type="string">
+            <description >the linestyles to be used for plot lines</description>
+            <value >none</value>
+    </param><param name="histogram" subparam="true" type="bool">
+            <description >plot histogram</description>
+            <value >False</value>
+    </param><param name="scanpattern" subparam="true" type="bool">
+            <description >plot scan patterns.</description>
+            <value >False</value>
+    </param><param name="header" type="bool">
+	    <description >print header information on the plot</description>
+	    <value >True</value>
+    </param><param name="headsize" subparam="true" type="int">
+            <description >header fontsize</description>
+            <value >9</value>
+    </param><param name="plotstyle" type="bool">
+	    <description >customise plot settings</description>
+	    <value >False</value>
+    </param><param name="margin" subparam="true" type="doubleArray">
+            <description >subplot margins in figure coordinate</description>
+            <value  type="vector"/>
+    </param><param name="legendloc" subparam="true" type="int">
+            <description >legend location</description>
+            <value >1</value>
+    </param><param name="chanwidth" type="string">
+	    <description >width of regridded channels</description>
+	    <value >5</value>
+    </param><param name="verifycal" type="bool">
+            <description >interactively verify the results of calibration</description>
+            <value >False</value>
+    </param><param name="verifysm" type="bool">
+            <description >interactively verify the results of smoothing for each spectrum. [not available for kernel="regrid"]</description>
+            <value >False</value>
+    </param><param name="verifybl" type="bool">
+            <description >interactively verify the results of baseline fitting for each spectrum. (only for blfunc="poly")</description>
+            <value >False</value>
+    </param><param name="verbosebl" type="bool">
+            <description >output fitting results to logger</description>
+            <value >True</value>
+    </param><param name="getpt" type="bool">
+            <description >fill DIRECTION column properly, or reuse POINTING table in original MS (only effective for MS input)</description>
+            <value >True</value>
+    </param><param name="factor" type="any">
+	    <description >scaling factor (float or float list)</description>
+            <any  limittype="string double doubleArray" type="variant"/>
+	    <value  type="double">1.0</value>
+    </param><param name="scaletsys" type="bool">
+            <description >scaling of associated Tsys</description>
+            <value >True</value>
+    </param><param name="format" type="string">
+            <description >format string to print statistic values</description>
+            <value >3.3f</value>
+    </param><param name="blpoly" type="int">
+	    <description >polynomial order for the baseline fit</description>
+             <value >1</value>
+    </param><param name="backup" type="bool">
+            <description >set True to create backup for input data</description>
+            <value >True</value>
+    </param><param name="flaglist" type="intArray">
+	    <description >list of scan numbers to flag (e.g. [[1,3], 80])</description>
+	    <value />
+    </param><param name="createimage" type="bool">
+            <description >do imaging?</description>
+            <value >False</value>
+    </param><param name="scalebychan" type="bool">
+		  <description >scale the flux density on a per channel basis or else on a per spw basis</description>
+		  <value >True</value>
+		</param><param name="modimage" type="string">
+			<description >File location for field model</description>
+			<value />
+		</param><param name="listmodels" type="bool">
+		  <description >List the available modimages for VLA calibrators or Tb models for Solar System objects</description>
+		  <value >False</value>
+		</param><param name="fluxdensity" type="any">
+			<any  limittypes="int intArray doubleArray" type="variant"/>
+			<description >Specified flux density [I,Q,U,V]; (-1 will lookup values)</description>
+			<value  type="int">-1</value>
+		</param><param name="spix" type="any">
+                        <any  limittypes="double doubleArray" type="variant"/>
+			<description >Spectral index of fluxdensity</description>
+			<value  type="double">0.0</value>
+		</param><param name="fluxdict" type="record">
+                       <description >output dictionary from fluxscale</description>
+                       <value  type="record"/>
+                </param><param name="polindex" type="doubleArray">
+			<description >Parameters of expansion of sqrt(Q^2+U^2) for linear polarization fraction</description>
+			<value />
+		</param><param name="polangle" type="doubleArray">
+			<description > Angle, angle derivative and higher-order w/freq</description>
+			<value />
+		</param><param name="useephemdir" type="bool">
+			<description >use directions in the ephemeris table</description>
+                        <value >False</value>
+                </param><param name="dryrun" type="bool">
+      <description >dryrun=True will only produce the informative report, not run simobserve/analyze</description>
+      <value >True</value>
+    </param><param name="skymodel" type="string">
+      <description >model image to observe</description>
+      <value  type="string"/>
+    </param><param name="inbright" type="string">
+       <description >scale surface brightness of brightest pixel e.g. "1.2Jy/pixel"</description>
+       <value  type="string"/>
+    </param><param name="indirection" type="string">
+      <description >set new direction e.g. "J2000 19h00m00 -40d00m00"</description>
+      <value  type="string"/>
+    </param><param name="incell" subparam="true" type="string">
+      <description >set new cell/pixel size e.g. "0.1arcsec"</description>
+      <value  type="string"/>
+    </param><param name="incenter" type="string">
+      <description >set new frequency of center channel e.g. "89GHz" (required even for 2D model)</description>
+      <value  type="string"/>
+    </param><param name="inwidth" type="string">
+      <description >set new channel width e.g. "10MHz" (required even for 2D model)</description>
+      <value  type="string"/>
+    </param><param name="compwidth" type="string">
+      <description >bandwidth of components</description>
+      <value >"8GHz"</value>
+    </param><param name="setpointings" type="bool">
+      <description />
+      <value >True</value>
+    </param><param name="ptgfile" type="string">
+      <description >list of pointing positions</description>
+      <value  type="string">$project.ptg.txt</value>
+    </param><param name="integration" type="string">
+      <description >integration (sampling) time</description>
+      <value >10s</value>
+    </param><param name="mapsize" type="stringArray">
+      <description >angular size of map or "" to cover model</description>
+      <value  type="vector">
+	<value type="string"/>
+	<value type="string"/>
+      </value>
+    </param><param name="maptype" type="string">
+      <description >hexagonal, square, etc</description>
+      <value  type="string">hexagonal</value>
+      <allowed  kind="enum">
+	<value type="string">hexagonal</value>
+	<value type="string">square</value>
+	<value type="string">hex</value>
+	<value type="string">ALMA</value>
+	<value type="string">alma</value>
+	<value type="string">ALMA-OT</value>
+      </allowed>
+    </param><param name="pointingspacing" type="string">
+      <description >spacing in between pointings or "0.25PB" or "" for 0.5 PB</description>
+      <value />
+    </param><param name="hourangle" type="string">
+      <description >hour angle of observation center e.g. -3:00:00, or "transit"</description>
+      <value >transit</value>
+    </param><param name="totaltime" type="stringArray">
+      <description >total time of observation; vector corresponding to antennalist</description>
+      <value  type="vector">
+	<value>20min</value>
+	<value>1h</value>
+      </value>
+    </param><param name="tpnant" type="int">
+      <description >Number of total power antennas to use (0-4)</description>
+      <value  type="int">0</value>
+      <allowed  kind="range">
+	<value range="min">0</value>
+	<value range="max">4</value>
+      </allowed>
+    </param><param name="tptime" type="string">
+      <description >total observation time for total power</description>
+      <value  type="string">0s</value>
+    </param><param name="thermalnoise" type="string">
+      <description >add thermal noise: [tsys-atm|tsys-manual|""]</description>
+      <value  type="string"/>
+      <allowed  kind="enum">
+	<value type="string"/>
+	<value type="string">tsys-atm</value>
+	<value type="string">tsys-manual</value>
+	<value type="string">False</value>
+	<value type="string">F</value>
+      </allowed>
+    </param><param name="user_pwv" type="double">
+      <description >Precipitable Water Vapor in mm</description>
+      <value >1.</value>
+      <allowed  kind="range"><value range="min">0</value></allowed>
+    </param><param name="t_ground" type="double">
+      <description >ambient temperature</description><value >270.</value>
+      <allowed  kind="range"><value range="min">0</value></allowed>
+    </param><param name="t_sky" type="double">
+       <description >atmospheric temperature</description>
+       <value >260.</value>
+      <allowed  kind="range"><value range="min">0</value></allowed>
+    </param><param name="tau0" type="double">
+      <description >zenith opacity</description><value >0.1</value>
+      <allowed  kind="range"><value range="min">0</value></allowed>
+    </param><param name="seed" type="int">
+      <description >random number seed</description><value >11111</value>
+    </param><param name="leakage" type="double">
+      <description >cross polarization (interferometer only)</description>
+      <value >0.0</value>
+      <allowed  kind="range"><value range="min">0</value></allowed>
+    </param><param name="image" type="bool">
+      <description >image simulated data</description>
+      <value >True</value>
+    </param><param name="imdirection" type="string">
+      <description >set output image direction, (otherwise center on the model)</description>
+      <value  type="string"/>
+    </param><param name="graphics" type="string">
+      <description >display graphics at each stage to [screen|file|both|none]</description>
+      <value  type="string">both</value>
+      <allowed  kind="enum">
+	<value>screen</value>
+	<value>file</value>
+	<value>both</value>
+	<value>none</value>
+	<value/>
+      </allowed>
+    </param><param name="featherimage" subparam="true" type="string">
+      <description >image (e.g. total power) to feather with new image</description>
+      <value />
+    </param><param name="analyze" type="bool">
+      <description >(only first 6 selected outputs will be displayed)</description>
+      <value >False</value>
+    </param><param name="sim_image" type="string">
+      <description >simulated image, created by this task or manually</description>
+      <value >$project/$project.image</value>
+    </param><param name="showuv" type="bool">
+      <description >display uv coverage</description>
+      <value >True</value>
+    </param><param name="showpsf" type="bool">
+      <description >display synthesized (dirty) beam (ignored in single dish simulation)</description>
+      <value >True</value>
+    </param><param name="showmodel" type="bool">
+      <description >display sky model at original resolution</description>
+      <value >True</value>
+    </param><param name="showconvolved" type="bool">
+      <description >display sky model convolved with output clean beam</description>
+      <value >False</value>
+    </param><param name="showclean" type="bool">
+      <description >display the synthesized image</description>
+      <value >True</value>
+    </param><param name="showresidual" type="bool">
+      <description >display the clean residual image (ignored in single dish simulation)</description>
+      <value >False</value>
+    </param><param name="showdifference" type="bool">
+      <description >display difference between output cleaned image and input model sky image convolved with output clean beam</description>
+      <value >True</value>
+    </param><param name="showfidelity" type="bool">
+      <description >display fidelity (see help)</description>
+      <value >True</value>
+    </param><param name="scanlength" type="variant">
+      <description >number of integrations or time per pointing</description>
+      <value  type="int">5</value>
+    </param><param name="relmargin" type="any">
+      <any  limittypes="double int" type="variant"/>
+      <description >space btw. pointings and edge, relative to pointingspacing</description>
+      <value  type="double">1.0</value>
+    </param><param name="caldirection" type="string">
+      <description >pt source calibrator [experimental]</description>
+      <value  type="string"/>
+    </param><param name="calflux" type="string">
+      <description />
+      <value >1Jy</value>
+    </param><param name="obsmode" type="string">
+      <description >observation mode to simulate [int(interferometer)|sd(singledish)|""(none)]</description>
+      <value >int</value>
+      <allowed  kind="enum">
+	<value type="string"/>
+	<value type="string">int</value>
+	<value type="string">sd</value>
+      </allowed>
+    </param><param name="refdate" type="string">
+      <description >date of observation - not critical unless concatting simulations</description>
+      <value >2014/01/01</value>
+    </param><param name="sdantlist" type="string">
+      <description >single dish antenna position file</description>
+      <value >aca.tp.cfg</value>
+    </param><param name="sdant" type="int">
+      <description >single dish antenna index in file</description>
+      <value >0</value>
+    </param><param name="freqrange" type="doubleArray">
+            <description >Frequency range in GHz.</description>
+            <value >84,90</value>
+        </param><param name="species" type="stringArray">
+            <description >Species to search for.</description>
+            <value />
+        </param><param name="reconly" type="bool">
+            <description >List only NRAO recommended frequencies.</description>
+            <value >False</value>
+        </param><param name="chemnames" type="stringArray">
+            <description >Chemical names to search for.</description>
+            <value />
+        </param><param name="qns" type="stringArray">
+            <description >Resolved quantum numbers to search for.</description>
+            <value />
+        </param><param name="intensity" type="doubleArray">
+            <description >CDMS/JPL intensity range. -1 -&gt; do not use an intensity range.</description>
+            <value >-1</value>
+        </param><param name="smu2" type="doubleArray">
+            <description >S*mu*mu range in Debye**2. -1 -&gt; do not use an S*mu*mu range.</description>
+            <value >-1</value>
+        </param><param name="loga" type="doubleArray">
+            <description >log(A) (Einstein coefficient) range. -1 -&gt; do not use a loga range.</description>
+            <value >-1</value>
+        </param><param name="el" type="doubleArray">
+            <description >Lower energy state range in Kelvin. -1 -&gt; do not use an el range.</description>
+            <value >-1</value>
+        </param><param name="eu" type="doubleArray">
+            <description >Upper energy state range in Kelvin. -1 -&gt; do not use an eu range.</description>
+            <value >-1</value>
+        </param><param name="rrlinclude" type="bool">
+            <description >Include RRLs in the result set?</description>
+            <value >True</value>
+        </param><param name="rrlonly" type="bool">
+            <description >Include only RRLs in the result set?</description>
+            <value >False</value>
+        </param><param name="smoothtype" type="string">
+			<description >Smoothing filter to use</description>
+			<value >median</value>
+			<allowed  kind="enum">
+			<value>median</value>
+			<value>mean</value>
+			</allowed>
+		</param><param name="smoothtime" type="any">
+			<description >Smoothing time (sec)</description>
+			<any  limittypes="double int" type="variant"/>
+			<value  type="double">60.0</value>
+		</param><param direction="in" name="ngauss" type="int">
+        <description >Number of Gaussian elements.  Default: 1.</description>
+        <value >1</value>
+        <example >ngauss=2</example>
+    </param><param direction="in" name="poly" type="int">
+        <description >Order of polynomial element.  Default: do not fit a polynomial (&lt;0).</description>
+        <value >-1</value>
+        <example >poly=4</example>
+    </param><param direction="in" name="minpts" type="int">
+        <description >Minimum number of unmasked points necessary to attempt fit.</description>
+        <value >1</value>
+    </param><param direction="in" name="multifit" type="bool">
+        <description >If true, fit a profile along the desired axis at each pixel in the specified region. If false, average the non-fit axis pixels and do a single fit to that average profile. Default False.</description>
+        <value >False</value>
+        <example >multifit=True</example>
+     </param><param direction="in" name="amp" type="string">
+        <description >Name of amplitude solution image. Default: do not write the image ("").</description>
+        <value />
+        <example >amp="amp"</example>
+    </param><param direction="in" name="amperr" type="string">
+        <description >Name of amplitude solution error image. Default: do not write the image ("").</description>
+        <value />
+        <example >amperr="ampErr"</example>
+    </param><param direction="in" name="centererr" type="string">
+        <description >Name of center solution error image. Default: do not write the image ("").</description>
+        <value />
+        <example >centererr="centerErr"</example>
+    </param><param direction="in" name="fwhm" type="string">
+        <description >Name of fwhm solution image. Default: do not write the image ("").</description>
+        <value />
+        <example >fwhm="fwhm"</example>
+    </param><param direction="in" name="fwhmerr" type="string">
+        <description >Name of fwhm solution error image. Default: do not write the image ("").</description>
+        <value />
+        <example >fwhmerr="fwhmErr"</example>
+    </param><param direction="in" name="integral" type="string">
+        <description >Prefix of ame of integral solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
+        <value />
+        <example >integral="integral"</example>
+    </param><param direction="in" name="integralerr" type="string">
+        <description >Prefix of name of integral error solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
+        <value />
+        <example >integralerr="integralErr"</example>
+    </param><param name="wantreturn" type="bool">
+        <description >Should a record summarizing the results be returned?</description>
+        <value >True</value>
+        <example >wantreturn=True</example>
+    </param><param direction="in" name="logresults" type="bool">
+        <description >Output results to logger?</description>
+        <value >True</value>
+    </param><param name="pampest" type="variant">
+        <any  limittypes="string double doubleArray int intArray" type="variant"/>
+        <description >Initial estimate of PCF profile (gaussian or lorentzian) amplitudes.</description>
+        <value  type="string"/>
+    </param><param name="pcenterest" type="variant">
+        <any  limittypes="string double doubleArray int intArray" type="variant"/>
+        <description >Initial estimate PCF profile centers, in pixels.</description>
+        <value  type="string"/>
+    </param><param name="pfwhmest" type="variant">
+        <any  limittypes="string double doubleArray int intArray" type="variant"/>
+        <description >Initial estimate PCF profile FWHMs, in pixels.</description>
+        <value  type="string"/>
+    </param><param direction="in" name="pfix" type="variant">
+        <any  limittypes="string stringArray" type="variant"/>
+        <description >PCF profile parameters to fix during fit.</description>
+        <value  type="string"/>
+    </param><param direction="in" name="gmncomps" type="variant">
+        <any  limittypes="int intArray" type="variant"/>
+        <description >Number of components in each gaussian multiplet to fit</description>
+        <value  type="int">0</value>
+    </param><param direction="in" name="gmampcon" type="variant">
+        <any  limittypes="string double doubleArray int intArray" type="variant"/>
+        <description >The amplitude ratio constraints for non-reference components to reference component in gaussian multiplets.</description>
+        <value  type="string"/>
+    </param><param direction="in" name="gmcentercon" type="variant">
+        <any  limittypes="string double doubleArray int intArray" type="variant"/>
+        <description >The center offset constraints (in pixels) for non-reference components to reference component in gaussian multiplets.</description>
+        <value  type="string"/>
+    </param><param direction="in" name="gmfwhmcon" type="variant">
+        <any  limittypes="string double doubleArray int intArray" type="variant"/>
+        <description >The FWHM  ratio constraints for non-reference components to reference component in gaussian multiplets.</description>
+        <value  type="string"/>
+    </param><param direction="in" name="gmampest" type="doubleArray">
+        <description >Initial estimate of individual gaussian amplitudes in gaussian multiplets.</description>
+        <value >0.0</value>
+    </param><param direction="in" name="gmcenterest" type="doubleArray">
+        <description >Initial estimate of individual gaussian centers in gaussian multiplets, in pixels.</description>
+        <value >0.0</value>
+    </param><param direction="in" name="gmfwhmest" type="doubleArray">
+        <description >Initial estimate of individual gaussian FWHMss in gaussian multiplets, in pixels.</description>
+        <value >0.0</value>
+    </param><param direction="in" name="gmfix" type="variant">
+        <any  limittypes="string stringArray" type="variant"/>
+        <description >Parameters of individual gaussians in gaussian multiplets to fix during fit.</description>
+        <value  type="string"/>
+    </param><param direction="in" name="pfunc" type="any">
+        <any  limittypes="string stringArray" type="variant"/>
+        <description >PCF singlet functions to fit. "gaussian" or "lorentzian" (minimal match supported). Unspecified means all gaussians.</description>
+        <value  type="string"/>
+    </param><param direction="in" name="goodamprange" type="doubleArray">
+        <description >Acceptable amplitude solution range. [0.0] =&gt; all amplitude solutions are acceptable.</description>
+        <value >0.0</value>
+    </param><param direction="in" name="goodcenterrange" type="doubleArray">
+        <description >Acceptable center solution range in pixels relative to region start. [0.0] =&gt; all center solutions are acceptable.</description>
+        <value >0.0</value>
+    </param><param direction="in" name="goodfwhmrange" type="doubleArray">
+        <description >Acceptable FWHM solution range in pixels. [0.0] =&gt; all FWHM solutions are acceptable.</description>
+        <value >0.0</value>
+    </param><param direction="in" name="outsigma" type="string">
+        <description >Name of output image used for standard deviation. Ignored if sigma is empty.</description>
+        <value />
+    </param><param direction="in" mustexist="true" name="filenames" type="stringArray">
+            <description >Files containing Splatalogue lists.</description>
+            <value />
+            <example >["mysplat1.txt", "mysplat2,txt"]</example>
+        </param><param direction="in" name="table" type="string">
+            <description >Output table name. Must be specified.</description>
+            <value />
+            <example >"mysplat.tbl"</example>
+        </param><param name="keepflags" type="bool">
+	  <description >If practical, keep *completely flagged rows* instead of dropping them.</description>
+	  <value >True</value>
+	</param><param name="keepmms" type="bool">
+	  <description >If the input is a multi-MS, make the output one, too. (experimental)</description>
+	  <value >False</value>
+	</param><param direction="in" name="spxtype" type="string">
+        <description >Type of function to fit. "plp" =&gt; power logarithmic polynomial, "ltp" =&gt; logarithmic transformed polynomial.</description>
+        <value >plp</value>
+     </param><param name="spxest" type="doubleArray">
+        <description >Initial estimates for the spectral index function coefficients.</description>
+        <value />
+    </param><param name="spxfix" type="boolArray">
+        <description >Fix the corresponding spectral index function coefficients during the fit. True=&gt;hold fixed.</description>
+        <value />
+    </param><param name="div" type="any">
+        <any  type="variant"/>
+        <description >Divisor (numerical value or quantity) to use in the logarithmic terms of the plp or ltp function. 0 =&gt; calculate a useful value on the fly.</description>
+        <value >0</value>
+    </param><param name="spxsol" type="string">
+        <description >Name of the spectral index function coefficient solution image to write.</description>
+        <value />
+    </param><param name="spxerr" type="string">
+        <description >Name of the spectral index function coefficient error image to write.</description>
+        <value />
+    </param><param name="dorms" type="bool">
+	  <description >Use rms instead of stddev?</description>
+	  <value >False</value>
+	</param><param name="byantenna" type="bool">
+	  <description >Estimate the noise per antenna -not implemented (vs. per baseline)</description>
+	  <value >False</value>
+	</param><param name="sepacs" type="bool">
+	  <description >If solving by antenna, treat autocorrs separately (not implemented)</description>
+	  <value >True</value>
+	</param><param name="fitspw" type="any">
+		<description >The signal-free spectral window:channels to estimate the scatter from</description>
+		<any  limittypes="string stringArray int intArray" type="variant"/>
+		<value  type="string"/>
+	</param><param name="fitcorr" type="any">
+		<description >The signal-free correlation(s) to estimate the scatter from (not implemented)</description>
+		<any  limittypes="string stringArray int intArray" type="variant"/>
+		<value  type="string"/>
+	</param><param name="minsamp" type="int">
+	  <description >Minimum number of unflagged visibilities for estimating the scatter</description>
+	  <value >2</value>
+	</param><param name="startmodel" type="string">
+            <description >Name of starting model image</description>
+	    <value  type="string"/>
+    </param><param name="algo" type="string">
+            <description >Name of minor cycle algorithm</description>
+	    <value  type="string">test</value>
+    </param><param name="cycleniter" type="int">
+      <description >Maximum number of minor-cycle iterations before triggering a major cycle</description>
+      <value  type="int">-1</value>
+    </param><param name="minpsffraction" type="double">
+      <description >PSF fraction that marks the max depth of cleaning in the minor cycle </description>
+      <value  type="double">0.05</value>
+    </param><param name="maxpsffraction" type="double">
+      <description >PSF fraction that marks the minimum depth of cleaning in the minor cycle </description>
+      <value  type="double">0.8</value>
+    </param><param name="loopgain" type="double">
+      <description >Loop gain</description>
+      <value  type="double">0.1</value>
+    </param><param name="testconcatvis" type="string">
+    <description >Name of output MS containing the merged subtables</description>
+    <value />
+  </param><param name="excludechans" type="bool">
+		<description >exclude Spectral window:channel selection in fitspw for fitting</description>
+		<value >False</value>
+	</param><param name="want_cont" type="bool">
+		<description >Create vis + ".cont" to hold the continuum estimate.</description>
+		<value >False</value>
+	</param><param name="comptype" type="string">
+		<description >component model type</description>
+		<value >P</value>
+		<allowed  kind="enum">
+                   <value>P</value>
+                   <value>G</value>
+                   <value>D</value>
+		</allowed>
+	</param><param name="sourcepar" type="doubleArray">
+		<description >Starting guess for component parameters</description>
+		<value >
+		   <value>1.0</value>
+		   <value>0.0</value>
+		   <value>0.0</value>
+	        </value>
+	</param><param name="varypar" type="boolArray">
+		<description >Control which parameters to let vary in the fit</description>
+		<value />
+	</param><param name="reverse" type="bool">
+			<description >reverse the operation (add rather than subtract)</description>
+			<value >False</value>
+		</param><param name="keepcopy" type="bool">
+    <description >If true, a copy of the input MSs is kept in their original place.</description>
+    <value >False</value>
+  </param><param name="listitems" type="stringArray">
+      <description >items to list ([] for all)</description>
+		 <value  type="stringArray">
+		   <value type="string">telescope</value>
+		   <value type="string">observer</value>
+		   <value type="string">project</value>
+		   <value type="string">field</value>
+		   <value type="string">freq_group_name</value>
+		   <value type="string">spw_name</value>
+		   <value type="string">schedule</value>
+		   <value type="string">schedule_type</value>
+		   <value type="string">release_date</value>
+		 </value>
+      <example >listitems = ['field', 'ptcs']; see help for list of keywords</example>
+    </param><param name="hdindex" type="string">
+        <description >keyword index to get/put, counting from zero. ''==&gt;all</description>
+        <value />
+        <example >hdindex='3'; see help for list of keywords</example>
+    </param><param name="pbmin" type="double">
+              <description >PB threshold below which to not correct</description>
+              <value >0.2</value>
+            </param><param name="chanlist" type="intArray">
+              <description >List of N channel ids</description>
+              <value  type="vector">
+		<value/>
+	      </value>
+            </param><param name="weightlist" type="doubleArray">
+              <description >List of N weights (relative)</description>
+              <value  type="vector">
+		<value/>
+	      </value>
+            </param><param name="calcerror" type="bool">
+              <description >Re-calculate spectral-index error image </description>
+              <value >False</value>
+            </param><param name="calready" type="bool">
+	    <description >Create scratch columns and store model visibilities so that selfcal can be run after clean</description>
+	    <value >False</value>
+    </param><param name="toffset" type="double">
+	<description >Time offset (sec) between interferometric and WVR data</description>
+	<value >0</value>
+      </param><param name="segsource" type="bool">
+	<description >Do a new coefficient calculation for each source</description>
+	<value >True</value>
+      </param><param name="sourceflag" type="stringArray">
+	<description >Flag the WVR data for these source(s) as bad and do not produce corrections for it (requires segsource=True)</description>
+	<value />
+      </param><param name="tie" type="stringArray">
+	<description >Prioritise tieing the phase of these sources as well as possible (requires segsource=True)</description>
+	<value />
+      </param><param name="nsol" type="int">
+	<description >Number of solutions for phase correction coefficients (nsol&gt;1 requires segsource=False)</description>
+	<value >1</value>
+      </param><param name="disperse" type="bool">
+	<description >Apply correction for dispersion</description>
+	<value >False</value>
+      </param><param name="wvrflag" type="stringArray">
+	<description >Flag the WVR data for these antenna(s) as bad and replace its data with interpolated values</description>
+	<value />
+      </param><param name="statfield" type="string">
+	<description >Compute the statistics (Phase RMS, Disc) on this field only</description>
+	<value />
+      </param><param name="statsource" type="string">
+	<description >Compute the statistics (Phase RMS, Disc) on this source only</description>
+	<value />
+      </param><param name="smooth" type="string">
+	<description >Smooth calibration solution on the given timescale</description>
+	<value />
+      </param><param name="scale" type="double">
+	<description >Scale the entire phase correction by this factor</description>
+	<value >1.</value>
+      </param><param name="reversespw" type="string">
+	<description >Reverse the sign of the correction for the listed SPWs (only needed for early ALMA data before Cycle 0)</description>
+	<value />
+      </param><param name="cont" type="bool">
+	<description >Estimate the continuum (e.g., due to clouds) (experimental)</description>
+	<value >False</value>
+      </param><param name="maxdistm" type="double">
+	<description >maximum distance (m) of an antenna used for interpolation for a flagged antenna</description>
+	<value >500.</value>
+      </param><param name="minnumants" type="int">
+	<description >minimum number of near antennas (up to 3) required for interpolation</description>
+	<value >2</value>
+        <allowed  kind="enum">
+            <value>1</value>
+            <value>2</value>
+            <value>3</value>
+        </allowed>
+      </param>
+      </casaxml>
+

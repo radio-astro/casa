@@ -258,7 +258,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  tsysiflist -- List of IFNOs for Tsys calibration. It does 
                                no effect if you don't want to do Tsys 
                                calibration.
-                         default: []
+                         default: [] (auto-detect tsys spws)
                  applytable -- List of sky/Tsys calibration tables you want to 
                                apply.
                          default: ''
@@ -319,12 +319,66 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         interferometry, i.e., generate caltables and apply them. Available 
         calibration modes are 'ps', 'otf', 'otfraster', and 'tsys'. Those 
         modes generates caltables for sky or Tsys calibration. Those 
-        caltables can be applied to the data by using calmode 'apply'. 
+        caltables can be applied to the data by using calmode 'apply'.
+
+        The above three calibration modes, 'ps', 'otf', and 'otfraster',
+        generate sky calibration tables. The user should choose
+        appropriate calibration mode depending on the data. Use case
+        for each mode is as follows:
+
+            'ps': position switch (including OTF) with explicit
+                  reference (OFF) scans
+            'otf': non-raster OTF scan without explicit OFFs
+                   (e.g. Lissajous, double circule, etc.)
+                   intentds to calibrate fast scan data
+            'otfraster': raster OTF scan without explicit OFFs
+
+        So, if the data contains explicit reference scans, 'ps' should
+        be used. Otherwise, 'otfraster' and 'otf' are appropriate for
+        raster OTF and non-raster OTF, respectively. In 'otf' and
+        'otfraster' modes, the task first try to define several scans 
+        near edge as OFF scans, then sky caltable is generated using those 
+        OFF scans. Those modes are designed for OTF observations without 
+        explicit OFF scans. If the observing pattern is raster, you 
+        should use the 'otfraster' mode to calibrate data. Otherwise, the 
+        'otf' mode should be used. For detail about edge marking, see 
+        inline help of sd.edgemarker module and its methods.
+  
         You can calibrate data on-the-fly like sdcal task by setting 
         calmode to a composite calmode string separated by comma. 
         For example, calmode='ps,apply' means doing sky calibration and 
         apply it on-the-fly. In this case, caltable is generated as a 
         temporary plain table and will be deleted at the end.
+        Allowed calibration modes in this task is as follows:
+  
+            ps
+                generate sky caltable using 'ps' mode
+            otf
+                generate sky caltable using 'otf' mode
+            otfraster
+                generate sky caltable using 'otfraster' mode
+            tsys
+                generate tsys caltable
+            apply
+                apply caltables specified by applytable parameter
+            ps,apply
+                generate temporary sky caltable using 'ps' mode and
+                apply it. also apply caltables specified by applytable 
+            ps,tsys,apply
+                generate temporary sky caltable using 'ps' mode as well
+                as temporary tsys caltable, and apply them. 
+            otf,apply
+                generate temporary sky caltable using 'otf' mode and
+                apply it. also apply caltables specified by applytable 
+            otf,tsys,apply
+                generate temporary sky caltable using 'otf' mode as well
+                as temporary tsys caltable, and apply them. 
+            otfraster,apply
+                generate temporary sky caltable using 'otfraster' mode
+                and apply it. also apply caltables specified by applytable 
+            otfraster,tsys,apply
+                generate temporary sky caltable using 'otfraster' mode
+                as well as temporary tsys caltable, and apply them. 
 
         There are several control parameters for sky/Tsys calibration and 
         application of caltables. See the above parameter description.
