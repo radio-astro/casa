@@ -27,6 +27,7 @@ __rethrow_casa_exceptions = True
 sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
 execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/h/cli/mytasks.py"))
 execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hif/cli/mytasks.py"))
+execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hifa/cli/mytasks.py"))
 
 # Pipeline imports
 import pipeline.infrastructure.casatools as casatools
