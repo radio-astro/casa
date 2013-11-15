@@ -471,11 +471,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    LatticeFFT::cfft2d(subim);
 	    LatticeFFT::cfft2d(subim2);
 
-	    /////////////////////////////
-	    Float maxVal=max(abs(subim)).getFloat();
-	    subim.copyData((LatticeExpr<Complex>) (subim/maxVal));
-
-	    ///////////////////////////
+       
 
 	 }
 	 /*
@@ -574,6 +570,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    lc.setLattice(pBSSub);
 	    //cerr << "SHAPES " << cFTempSub.shape() << "   " <<  lc.shape() << endl;
 	    cFTempSub.copyData(lc);
+	    //cFTempSub.copyData(pBScreen);
 	  }
 	  {
 	    SubImage<Complex>  pB2SSub(pB2Screen, slQ, False);
@@ -581,6 +578,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    LatticeConcat<Complex> lc(4);
 	    lc.setLattice(pB2SSub);
 	    cFTempSub2.copyData(lc);
+	    // cFTempSub2.copyData(pB2Screen);
 	    //weightConvFuncTemp.putSlice(pB2Screen.get(False), begin);
 
 	  }
