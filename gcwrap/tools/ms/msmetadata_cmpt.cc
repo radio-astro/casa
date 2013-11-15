@@ -521,6 +521,34 @@ record* msmetadata::effexposuretime() {
 	return 0;
 }
 
+record* msmetadata::exposuretime(int scan, int spwid, int polid) {
+	_FUNC(
+		_checkSpwId(spwid, True);
+		_checkPolId(polid, True);
+		std::map<std::pair<uInt COMMA uInt> COMMA Int> ddidMap = _msmd->getSpwIDPolIDToDataDescIDMap();
+		std::pair<uInt COMMA uInt> mykey;
+		mykey.first = spwid;
+		mykey.second = polid;
+		ThrowIf(
+			ddidMap.find(mykey) == ddidMap.end(),
+			"MS has no data description ID for spectral window ID "
+			+ String::toString(spwid) + " and polarization ID "
+			+ String::toString(polid)
+		);
+		uInt dataDescID = ddidMap[mykey];
+		std::map<Int COMMA casa::Quantity> map2 = _msmd->getFirstExposureTimeMap()[dataDescID];
+		ThrowIf(
+			map2.find(scan) == map2.end(),
+			"MS has no records for scan number " + String::toString(scan)
+			+ ", spectral window ID " + String::toString(spwid) + ", and polarization ID "
+			+ String::toString(polid)
+		);
+
+		return fromRecord(QuantumHolder(map2[scan]).toRecord());
+	)
+	return 0;
+}
+
 vector<int> msmetadata::fdmspws() {
 	_FUNC(
 			/*
