@@ -48,7 +48,7 @@ MSMetaDataOnDemand::MSMetaDataOnDemand(const MeasurementSet *const &ms, const Fl
 	: _ms(ms), _cacheMB(0), _maxCacheMB(maxCacheSizeMB), _nStates(0),
 	  _nACRows(0), _nXCRows(0), _nSpw(0), _nFields(0),
 	  _nAntennas(0), _nObservations(0), _nScans(0), _nArrays(0),
-	  _nrows(0), _nPol(0), _uniqueIntents(), _scanToSpwsMap(),
+	  _nrows(0), _nPol(0), _nDataDescIDs(0), _uniqueIntents(), _scanToSpwsMap(),
 	  _uniqueScanNumbers(),_uniqueFieldIDs(), _uniqueStateIDs(),
 	  _avgSpw(), _tdmSpw(),
 	  _fdmSpw(), _wvrSpw(), _sqldSpw(), _antenna1(), _antenna2(),
@@ -680,6 +680,20 @@ uInt MSMetaDataOnDemand::_sizeof(const std::map<String, std::set<uInt> >& m) {
 	return size;
 }
 
+uInt MSMetaDataOnDemand::_sizeof(const vector<std::map<Int, Quantity> >& m) {
+	uInt size = 0;
+	vector<std::map<Int, Quantity> >::const_iterator end = m.end();
+	uInt intsize = sizeof(Int);
+	uInt qsize = 20;
+	for (
+		vector<std::map<Int, Quantity> >::const_iterator iter = m.begin();
+		iter!=end; iter++
+	) {
+		size += iter->size()*(2*intsize + qsize);
+	}
+	return size;
+}
+
 uInt MSMetaDataOnDemand::_sizeof(const std::map<Double, std::set<Int> >& m) {
 	uInt setssize = 0;
 	uInt size = sizeof(Double) * m.size();
@@ -1016,6 +1030,13 @@ uInt MSMetaDataOnDemand::nAntennas() {
 	return nAnts;
 }
 
+uInt MSMetaDataOnDemand::nDataDescriptions() {
+	if (_nDataDescIDs == 0) {
+		_nDataDescIDs = _ms->dataDescription().nrow();
+	}
+	return _nDataDescIDs;
+}
+
 vector<String> MSMetaDataOnDemand::getAntennaNames(
 	std::map<String, uInt>& namesToIDsMap,
 	const vector<uInt>& antennaIDs
@@ -1100,6 +1121,20 @@ vector<uInt> MSMetaDataOnDemand::getAntennaIDs(
 		ids.push_back(pair->second);
 	}
 	return ids;
+}
+
+vector<std::map<Int, Quantity> > MSMetaDataOnDemand::getFirstExposureTimeMap() {
+	if (! _firstExposureTimeMap.empty()) {
+		return _firstExposureTimeMap;
+	}
+	vector<std::map<Int, Quantity> > firstExposureTimeMap = MSMetaData::_getFirstExposureTimeMap(
+		nDataDescriptions(), *_getScans(), *_getDataDescIDs(),
+		*_getTimes(), *_getExposureTimes()
+	);
+	if (_cacheUpdated(_sizeof(firstExposureTimeMap))) {
+		_firstExposureTimeMap = firstExposureTimeMap;
+	}
+	return firstExposureTimeMap;
 }
 
 vector<String> MSMetaDataOnDemand::getAntennaStations(const vector<uInt>& antennaIDs) {
@@ -1440,6 +1475,19 @@ std::tr1::shared_ptr<Vector<Double> > MSMetaDataOnDemand::_getTimes() {
 		_times = times;
 	}
 	return times;
+}
+
+std::tr1::shared_ptr<Quantum<Vector<Double> > > MSMetaDataOnDemand::_getExposureTimes() {
+	if (_exposures && ! _exposures->getValue().empty()) {
+		return _exposures;
+	}
+	std::tr1::shared_ptr<Quantum<Vector<Double> > > ex(
+		new Quantum<Vector<Double> >(MSMetaData::_getExposures(*_ms))
+	);
+	if (_cacheUpdated((20 + sizeof(Double))*ex->getValue().size())) {
+		_exposures = ex;
+	}
+	return ex;
 }
 
 std::tr1::shared_ptr<ArrayColumn<Bool> > MSMetaDataOnDemand::_getFlags() {
