@@ -1,0 +1,163 @@
+<ProcessingProcedure>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_importdata</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_flagdata</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_setmodel</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+    
+    <ProcessingCommand>
+        <Command xmlns="">hifv_priorcals</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_refant</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_testBPdcals</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_flagbaddef</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_uncalspw</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">delaycaltable</Keyword>
+                <Value xmlns="">'testdelay.k'</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">bpcaltable</Keyword>
+                <Value xmlns="">'testBPcal.b'</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_checkflag</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+    
+    <ProcessingCommand>
+        <Command xmlns="">hifv_semiFinalBPdcals</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+    
+    <ProcessingCommand>
+        <Command xmlns="">hifv_checkflag</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">checkflagmode</Keyword>
+                <Value xmlns="">'semi'</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+    
+    <ProcessingCommand>
+        <Command xmlns="">hifv_semiFinalBPdcals</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+    
+    <ProcessingCommand>
+        <Command xmlns="">hifv_uncalspw</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">delaycaltable</Keyword>
+                <Value xmlns="">'delay.k'</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">bpcaltable</Keyword>
+                <Value xmlns="">'BPcal.b'</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_solint/Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_testgains</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_fluxgains</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_fluxboot</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_finalcals</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_applycals</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+    
+    <ProcessingCommand>
+        <Command xmlns="">hifv_uncalspw</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">delaycaltable</Keyword>
+                <Value xmlns="">'finaldelay.k'</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">bpcaltable</Keyword>
+                <Value xmlns="">'finalBPcal.b'</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_targetflag</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_statwt</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+</ProcessingProcedure>
