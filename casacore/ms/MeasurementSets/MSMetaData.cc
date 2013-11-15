@@ -305,6 +305,14 @@ Vector<Double> MSMetaData::_getTimes(const MeasurementSet& ms) {
 	return ScalarColumn<Double>(ms, timeColName).getColumn();
 }
 
+
+Quantum<Vector<Double> > MSMetaData::_getExposures(const MeasurementSet& ms) {
+	String colName = MeasurementSet::columnName(MSMainEnums::EXPOSURE);
+	ScalarColumn<Double> exposure (ms, colName);
+	String unit = *exposure.keywordSet().asArrayString("QuantumUnits").begin();
+	return Quantum<Vector<Double> >(exposure.getColumn(), unit);
+}
+
 Vector<Double> MSMetaData::_getTimeCentroids(const MeasurementSet& ms) {
 	String timeCentroidColName = MeasurementSet::columnName(MSMainEnums::TIME_CENTROID);
 	return ScalarColumn<Double>(ms, timeCentroidColName).getColumn();
@@ -589,6 +597,37 @@ std::map<Int, vector<Double> > MSMetaData::_getScanToTimeRangeMap(
 		}
 	}
 	return out;
+}
+
+vector<std::map<Int, Quantity> > MSMetaData::_getFirstExposureTimeMap(
+	uInt nDataDescIDs, const Vector<Int>& scans,
+	const Vector<Int>& dataDescIDs, const Vector<Double>& times,
+	const Quantum<Vector<Double> >& exposureTimes
+) {
+	vector<std::map<Int, Quantity> > ret(nDataDescIDs);
+	vector<std::map<Int, Double> > tmap(nDataDescIDs);
+	Vector<Int>::const_iterator siter = scans.begin();
+	Vector<Int>::const_iterator send = scans.end();
+	Vector<Int>::const_iterator diter = dataDescIDs.begin();
+	Vector<Double>::const_iterator titer = times.begin();
+	Vector<Double> eTimes = exposureTimes.getValue();
+	String unit = exposureTimes.getUnit();
+	Vector<Double>::const_iterator eiter = eTimes.begin();
+	while (siter != send) {
+		std::map<Int, Quantity> mymap = ret[*diter];
+		if (
+			mymap.find(*siter) == mymap.end()
+			|| *titer < tmap[*diter][*siter]
+		) {
+			ret[*diter][*siter] = Quantity(*eiter, unit);
+			tmap[*diter][*siter] = *titer;
+		}
+		siter++;
+		diter++;
+		titer++;
+		eiter++;
+	}
+	return ret;
 }
 
 void MSMetaData::_getAntennas(
