@@ -521,15 +521,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     combinespws -- Combine the input spws into a new output spw.
         default: False
 
-                NOTE: Whenever the data to be combined has different EXPOSURE values 
-                      in the spectral windows, mstransform will use the WEIGHT_SPECTRUM 
-                      for the combination. If WEIGHT_SPECTRUM is not available, it will 
-                      use the values from the WEIGHT column. Each output channel is calculated 
-                      using the following equation:
+            NOTE: Whenever the data to be combined has different EXPOSURE values 
+                  in the spectral windows, mstransform will use the WEIGHT_SPECTRUM 
+                  for the combination. If WEIGHT_SPECTRUM is not available, it will 
+                  use the values from the WEIGHT column. Each output channel is calculated 
+                  using the following equation:
 
-              outputChannel_j = SUM(inputChannel_i*contributionFraction_i*inputWeightSpectrum_i) 
-                               ------------------------------------------------------------------
-                                     SUM(contributionFraction_i*inputWeightSpectrum_i)
+          outputChannel_j = SUM(inputChannel_i*contributionFraction_i*inputWeightSpectrum_i) 
+                           ------------------------------------------------------------------
+                                 SUM(contributionFraction_i*inputWeightSpectrum_i)
 
 --- Channel averaging parameters ---
     chanaverage -- Average data in channels. 
@@ -541,7 +541,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             default: 1 =&gt; no channel averaging.
             options: (int) or [int]
             example: chanbin=[2,3] =&gt; average 2 channels of 1st selected
-		          spectral window and 3 in the second one.
+		             spectral window and 3 in the second one.
 
         useweights -- Type of weights to use in average. It will apply to all spws.
             default: 'flags'
