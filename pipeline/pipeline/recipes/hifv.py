@@ -46,7 +46,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
 	   raise Exception(IMPORT_ONLY)
     
         # Flag known bad data
-        hifv_flagdata (pipelinemode=pipelinemode)
+        hifv_flagdata (pipelinemode=pipelinemode, scan=True)
     
         # Fill model columns for primary calibrators
         hifv_setmodel (pipelinemode=pipelinemode)

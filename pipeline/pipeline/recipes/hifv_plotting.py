@@ -2,11 +2,16 @@
 #B. Kent, August 2013
 #Updated Nov. 14, 2013
 
+import os
+import sys
+import math
+import numpy as np
+
 #MODIFY THESE TO THE PARENT DIRECTORY OF THE PIPELINE AND YOUR ASDM OR MS
 basedir = '/lustre/naasc/bkent/'
 #vis='13A-537.sb24066356.eb24324502.56514.05971091435'
-vis = raw_input("Enter SDM filename: ")
-vis=vis.rstrip('/')
+#vis = raw_input("Enter SDM filename: ")
+#vis=vis.rstrip('/')
 if vis.endswith('.ms'):
     vis = vis[:-3]
 vislist=[vis]
@@ -17,13 +22,11 @@ sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
 
 execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/h/cli/mytasks.py"))
 execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hif/cli/mytasks.py"))
+execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hsd/cli/mytasks.py"))
 execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hifv/cli/mytasks.py"))
 
 import pipeline
-import os
-import sys
-import math
-import numpy as np
+import pipeline.infrastructure.casatools as casatools
 
 #Initialize the context
 h_init()
@@ -38,7 +41,7 @@ h_save()
 #hifv_hanning()   #Remove this comment if you want to hanning smooth
 
 #Deterministic flagging
-hifv_flagdata()
+hifv_flagdata(scan=True)
 h_save()
 
 #Run setjy through the setmodel task
