@@ -159,7 +159,7 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_timegaincal</Command>
+        <Command xmlns="">hifa_timegaincal</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
