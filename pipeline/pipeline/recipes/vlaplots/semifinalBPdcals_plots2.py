@@ -1,3 +1,6 @@
+import pipeline
+import numpy as np
+
 context = pipeline.Pipeline(context='last').context
 
 m = context.observing_run.measurement_sets[0]
