@@ -875,16 +875,30 @@ void QtDisplayPanelGui::disconnectHistogram() {
 }
 
 void QtDisplayPanelGui::resetListenerImage() {
-	QtDisplayData* controllingDD = dd();
+	QtDisplayData* controllingDD = NULL;
+	if ( qdp_ != NULL ){
+		controllingDD = qdp_->getControllingDD();
+	}
+	if ( controllingDD == NULL ){
+		controllingDD = dd();
+	}
+
 	if ( controllingDD != NULL ) {
-		std::tr1::shared_ptr<ImageInterface<float> > img = /*pdd*/controllingDD->imageInterface();
+
+		std::tr1::shared_ptr<ImageInterface<float> > img = controllingDD->imageInterface();
 		if ( sliceTool != NULL ) {
-			sliceTool->setImage( img );
+			if ( img.get() != NULL ){
+				ImageInterface<float>* clonedImg = img.get()->cloneII();
+				sliceTool->setImage( clonedImg );
+			}
+			else {
+				sliceTool->setImage( NULL );
+			}
 		}
 
 		if ( histogrammer != NULL ) {
 			histogrammer->setImage( img );
-			const viewer::ImageProperties & imgProperties = /*pdd*/controllingDD->imageProperties( );
+			const viewer::ImageProperties & imgProperties = controllingDD->imageProperties( );
 			if ( imgProperties.hasSpectralAxis() ) {
 				int spectralAxisNum = imgProperties.spectralAxisNumber();
 				const Vector<int> imgShape = imgProperties.shape();
@@ -894,10 +908,12 @@ void QtDisplayPanelGui::resetListenerImage() {
 				histogrammer->setChannelCount( 1 );
 			}
 		}
-
 	} else {
 		if ( histogrammer != NULL ) {
 			histogrammer->setImage( std::tr1::shared_ptr<ImageInterface<Float> >() );
+		}
+		if ( sliceTool != NULL ){
+			sliceTool->setImage( NULL);
 		}
 
 	}
@@ -1679,7 +1695,7 @@ QtDisplayData* QtDisplayPanelGui::lookForExistingController() {
 		if ( pdd != 0 && pdd->isImage() ) {
 			std::tr1::shared_ptr<ImageInterface<float> > img = pdd->imageInterface( );
 			PanelDisplay* ppd = qdp_->panelDisplay( );
-			if ( ppd != 0 && ppd->isCSmaster(pdd->dd()) && img ) {
+			if ( ppd != 0 && /*ppd->isCSmaster(pdd->dd()) &&*/ img ) {
 				ctrld = pdd;
 				break;
 			}
@@ -2998,7 +3014,7 @@ void QtDisplayPanelGui::replaceControllingDD( QtDisplayData* oldControllingDD, Q
 
 		//qdp_->setControllingDD( newControllingDD );
 
-
+		resetListenerImage();
 		emit axisToolUpdate( newControllingDD );
 
 
