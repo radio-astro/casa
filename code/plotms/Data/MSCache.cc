@@ -1226,7 +1226,13 @@ bool MSCache::isEphemeris(){
 	if ( ephemerisExists.empty()){
 		ephemerisAvailable = false;
 	}
+
 	vb.detachFromVisIter();
+	//Release the lock.
+	if (rvi_p != NULL ){
+		delete rvi_p;
+		rvi_p=NULL;
+	}
 	return ephemerisAvailable;
 }
 
