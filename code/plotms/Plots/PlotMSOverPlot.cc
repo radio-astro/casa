@@ -301,14 +301,21 @@ bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
     itsParent_->setAxisLocation( locationAxisX, locationAxisY);
 
     // Update cache if needed
+    bool handled = true;
     if(data->isSet() && (updateFlag & PMS_PP::UPDATE_MSDATA ||
                          updateFlag & PMS_PP::UPDATE_CACHE)) {
-        return !updateCache();
+    	try {
+    		handled = !updateCache();
+    	}
+    	catch( AipsError& error ){
+    		cerr << "Could not update cache: "<<error.getMesg().c_str()<<endl;
+    		cacheLoaded_(false);
+    	}
     }
-
-    //itsTCLParams_.releaseWhenDone = false;
-    cacheLoaded_(false);
-    return true;
+    else {
+    	cacheLoaded_(false);
+    }
+    return handled;
 }
 
 PlotMSRegions PlotMSOverPlot::selectedRegions(
