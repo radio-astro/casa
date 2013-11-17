@@ -460,6 +460,37 @@ windows in the dataset and close the tool.
     msmd.done()
             </example>
         </method>
+        
+        <method type="function" name="exposuretime">
+            <shortdescription>Get the exposure time for the specified scan, spwid, and polarizaiton ID.</shortdescription>
+            <input>
+                <param type="int" direction="in" name="scan">
+                    <description>Scan number.</description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="spwid">
+                    <description>Spectral window ID.</description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="polid">
+                    <description>Polarization ID.</description>
+                    <value>0</value>
+                </param>
+            </input>
+            <returns type="record"/>
+            <description>
+                Get the exposure time for the specified scan, spwid, and polarizaiton ID. This is the exposure time
+                of the record with the lowest time stamp of the records associated with these parameters. Returns
+                a quantity dictionary.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the exposure time for scan 1, spwid 2, and polid 3
+    integration_time = msmd.getexposuretime(scan=1, spwid=2, polid=3)
+    msmd.done()
+            </example>
+        </method>
+        
         <method type="function" name="fdmspws">
             <shortdescription>Get an array of spectral window IDs used for FDM. These are windows that do not have 64, 128, or 256 channels.</shortdescription>
             <returns type="intArray"/>

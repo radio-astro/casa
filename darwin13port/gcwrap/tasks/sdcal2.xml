@@ -329,8 +329,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             'ps': position switch (including OTF) with explicit
                   reference (OFF) scans
             'otf': non-raster OTF scan without explicit OFFs
-                   (e.g. Lissajous, double circule, etc.)
-                   intentds to calibrate fast scan data
+                   (e.g. Lissajous, double circle, etc.)
+                   intends to calibrate fast scan data
             'otfraster': raster OTF scan without explicit OFFs
 
         So, if the data contains explicit reference scans, 'ps' should

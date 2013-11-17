@@ -14,9 +14,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
   <description>
-        ASAP SD spectral/row flagging task (based on the ALMATST5 recommendations):
+ASAP SD spectral/row flagging task (based on the ALMATST5 recommendations):
 
-        Task Version 2008-01-31 TT
+This task keeps all records in input dataset. Data selection parameters
+are used for selecting data to modify flag information.
+This behavior differs from the traditional flagging task, sdflag, in which
+selection parameters are interpreted as filtering parameters of which data
+to output.
+
+
 </description>
 
   <input>
