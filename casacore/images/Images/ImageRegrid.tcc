@@ -150,22 +150,15 @@ void ImageRegrid<T>::regrid(
 				break;
 			}
 		}
-		if (regridDirAxis) {
-			const ImageInfo info = inImage.imageInfo();
-			Quantity inbeam;
+		const ImageInfo info = inImage.imageInfo();
+		if (regridDirAxis && info.hasBeam()) {
 			const DirectionCoordinate dc = inImage.coordinates().directionCoordinate();
 			Vector<Double> inc = dc.increment();
 			Vector<String> units = dc.worldAxisUnits();
 			Quantity inpix = min(Quantity(inc[0], units[0]), Quantity(inc[1], units[1]));
-			Bool hasBeam = info.hasBeam();
-			if (hasBeam) {
-				inbeam = info.hasSingleBeam()
-					? info.restoringBeam().getMinor()
-					: info.getBeamSet().getSmallestMinorAxisBeam().getMinor();
-			}
-			else {
-				inbeam = inpix;
-			}
+			Quantity inbeam = info.hasSingleBeam()
+				? info.restoringBeam().getMinor()
+				: info.getBeamSet().getSmallestMinorAxisBeam().getMinor();
 			const DirectionCoordinate dcout = outImage.coordinates().directionCoordinate();
 			inc = dcout.increment();
 			units = dcout.worldAxisUnits();
@@ -186,8 +179,7 @@ void ImageRegrid<T>::regrid(
 			) {
 				LogIO log;
 				log << LogOrigin("ImageRegrid", __FUNCTION__) << LogIO::WARN
-					<< "You are regridding an image which either doesn't have a "
-					<< "beam specified, or whose beam is not well sampled by the "
+					<< "You are regridding an image whose beam is not well sampled by the "
 					<< "pixel size.  Total flux can be lost when regridding such "
 					<< "images, especially when the new pixel size is larger than "
 					<< "the old pixel size. It is recommended to check the total "
