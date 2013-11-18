@@ -1345,7 +1345,16 @@ namespace casa {
 	tR->setDirectionCode(directionCode);
 
 	asdm::SourceRow* tR2;
-	tR2 = tT.add(tR);
+	try{
+	  tR2 = tT.add(tR);
+	}
+	catch(asdm::UniquenessViolationException x){
+	  os << LogIO::WARN << "While creating ASDM:  UID \"" << getCurrentUid() 
+	     << "\" Source table: " <<  x.getMessage() << endl
+	     << "Will try to continue."
+	     << LogIO::POST;   
+	}
+
 	if(tR2 != tR){ // did not lead to the creation of a new tag
 	  os << LogIO::WARN << "Duplicate MS Source table row " << irow << ", source id " << sId << LogIO::POST;
 	}
