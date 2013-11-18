@@ -319,10 +319,10 @@ namespace casa {
 //                      Data Processing
 //-------------------------------------------------------------------
 
-	void SlicePlot::setImage( std::tr1::shared_ptr<ImageInterface<float> > img ) {
-		if ( img && image != img ) {
+	void SlicePlot::setImage( ImageInterface<float>* img ) {
+		if ( img != NULL && image.get() != img ) {
 			//Reset the image.  The units the image is using may have changed.
-			image = img;
+			image.reset(img);
 			Unit brightnessUnit = image->units();
 			String yAxisLabelStr = brightnessUnit.getName();
 			initAxisFont( QwtPlot::yLeft, yAxisLabelStr.c_str());
@@ -336,6 +336,18 @@ namespace casa {
 
 			//Reset the channel.
 			updateChannel( 0 );
+		}
+		else if ( img == NULL ){
+			image.reset();
+			delete imageAnalysis;
+			imageAnalysis = NULL;
+			clearCurvesAll();
+			QList<int> sliceKeys = sliceMap.keys();
+			for ( int i = 0; i < sliceKeys.size(); i++ ) {
+				ImageSlice* slice = sliceMap.take( sliceKeys[i]);
+				delete slice;
+			}
+
 		}
 	}
 
@@ -466,7 +478,13 @@ namespace casa {
 		}
 		if ( cSys.hasSpectralAxis() ) {
 			int index = cSys.spectralAxisNumber();
-			coords[index] = channel;
+			IPosition imageShape = image->shape();
+			if ( index < static_cast<int>(imageShape.size()) ){
+				int spectralCount = imageShape(index);
+				if ( channel < spectralCount ){
+					coords[index] = channel;
+				}
+			}
 		}
 		for ( QMap<int,ImageSlice*>::iterator it = sliceMap.begin(); it != sliceMap.end(); ++it ) {
 			(*it)->setCoords( coords );
@@ -578,6 +596,7 @@ namespace casa {
 			delete slice;
 		}
 		delete factory;
+		delete imageAnalysis;
 	}
 
 } /* namespace casa */

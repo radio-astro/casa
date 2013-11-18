@@ -93,7 +93,9 @@ namespace casa {
 			index = 0;
 		}
 		int actualIndex = initialStackIndex + index;
-		ui.stackedWidget->setCurrentIndex( actualIndex );
+		if ( 0<=actualIndex && actualIndex < ui.stackedWidget->count() ){
+			ui.stackedWidget->setCurrentIndex( actualIndex );
+		}
 	}
 
 

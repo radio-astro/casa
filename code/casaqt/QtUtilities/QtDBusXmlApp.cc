@@ -81,18 +81,26 @@ bool QtDBusXmlApp::dbusXmlCall(const String& from, const String& to,
 
         QDBusInterface iface(to.c_str(),serviceOwner(to),CASA_DBUS_XML_INTERFACE,connection());
 
-#if QT_VERSION >= 0x048500
+        Bool timeoutSet = False;
+        Bool qtTripped = False;
+#if QT_VERSION >= 0x040805
     if ( !methodIsAsync ){
     	iface.setTimeout (12000000); //Time out in milliseconds (Essentially infinite)
+    	timeoutSet = True;
     }
+    qtTripped = True;
 #endif
 
         if(methodIsAsync) {
             iface.call(QDBus::NoBlock, CASA_DBUS_XML_SLOT, xml.toXMLQString());
 
         } else {
-            if(retValue == NULL)
-                iface.call(CASA_DBUS_XML_SLOT, xml.toXMLQString());
+            if(retValue == NULL){
+            	QDBusReply<QString> reply = iface.call(CASA_DBUS_XML_SLOT, xml.toXMLQString());
+            	qDebug () << reply.error ();
+            	qDebug() << "Type="<<reply.error().type();
+            	qDebug() << "Timeout="<<iface.timeout()<<timeoutSet<<QT_VERSION <<" (A)";
+            }
             else {
 		QString slot(CASA_DBUS_XML_SLOT);
                 QDBusReply<QString> reply = iface.call(slot,xml.toXMLQString());
@@ -102,6 +110,8 @@ bool QtDBusXmlApp::dbusXmlCall(const String& from, const String& to,
                 else {
                 	qDebug () << reply.error ();
                 	qDebug() << "Type="<<reply.error().type();
+                	qDebug() << "Timeout="<<iface.timeout() << timeoutSet << " (B)";
+                	qDebug() << "QtTripped="<<qtTripped<<" version="<<QT_VERSION;
                 }
             }
         }

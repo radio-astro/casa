@@ -900,6 +900,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		displayDataHolder->setDDControlling( controllingDD );
 	}
 
+	QtDisplayData* QtDisplayPanel::getControllingDD() const {
+		return displayDataHolder->getDDControlling();
+	}
+
 
 	void QtDisplayPanel::registerAll( List<QtDisplayData*> registerDatas ) {
 		// Called externally (by gui, e.g.) to register all DDs created
