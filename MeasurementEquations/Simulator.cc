@@ -1187,7 +1187,7 @@ Bool Simulator::setnoise(const String& mode,
 
       if (pwv.getValue("mm")>0.) {
 	if (pwv.getValue("mm")>100.) 
-	  throw(AipsError(" you input PWV="+String(pwv.getValue("mm"))+"mm. The most common reason for this error is forgetting to set units, which default to meters"));
+	  throw(AipsError(" you input PWV="+String::toString(pwv.getValue("mm"))+"mm. The most common reason for this error is forgetting to set units, which default to meters"));
  
 	simpar.define ("mean_pwv", pwv.getValue("mm"));
       } else {

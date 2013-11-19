@@ -230,6 +230,7 @@ Bool MultiTermMatrixCleaner::buildImagePatches()
 
    //cout << "maxpos : " << globalmaxpos_p <<  "  blc : " << blc_p << " trc : " << trc_p << "  blcPsf : " << blcPsf_p << " trcPsf : " << trcPsf_p << endl;
 
+   return True;
 }
 
 
@@ -527,6 +528,8 @@ Int MultiTermMatrixCleaner::verifyScaleSizes()
 
     }
   os << "Scale sizes to be used for deconvolution : " << scaleSizes_p << LogIO::POST;
+
+  return scaleSizes_p.shape()(0);
 }
 
 /*************************************
@@ -1211,6 +1214,8 @@ Int MultiTermMatrixCleaner::updateRHS(Int ntaylor, Int scale, Float loopgain, Ve
 	     //	     residSub = residSub - smoothSub * loopgain * (matCoeffs_p[IND2(taylor2,maxscaleindex_p)])(globalmaxpos_p);
 	   }
     }
+    //
+    return 0;
 }/* end of updateRHS */
 
 
@@ -1459,6 +1464,8 @@ Int MultiTermMatrixCleaner::writeMatrixToDisk(String imagename, Matrix<Float>& t
       csys.addCoordinate(tab2);
       PagedImage<Float> limage(themat.shape(), csys, imagename);
       limage.put(themat);
+      //return value does not seemed to be used so will make compiler happy
+      return 1;
 }
 
 
