@@ -98,15 +98,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class MSSelectableTable
   {
   public:
+    enum MSSDataType {BASELINE_BASED=0, PURE_ANTENNA_BASED, REF_ANTENNA_BASED};
+
     MSSelectableTable()                       {};
-    MSSelectableTable(const Table& table)     {table_p = &table;}
+    MSSelectableTable(const Table& table)     {table_p = &table;};
     virtual ~MSSelectableTable()              {};
 
-    virtual void setTable(const Table& table) {table_p = &table;}
-    const Table* table()                      {return table_p;}
-    TableExprNode col(const String& colName)  {return table()->col(colName);}
+    virtual void setTable(const Table& table) {table_p = &table;};
+    const Table* table()                      {return table_p;};
+    TableExprNode col(const String& colName)  {return table()->col(colName);};
 
     virtual Bool isMS()                       = 0;
+    virtual MSSDataType dataType()            = 0;
     virtual const MSAntenna& antenna()        = 0;
     virtual const MSField& field()            = 0;
     virtual const MSSpectralWindow& spectralWindow() = 0;
@@ -198,13 +201,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MSInterface():msMainCols_p(NULL)                   {};
     MSInterface(const Table& table);
     virtual ~MSInterface()                             {if (msMainCols_p) delete msMainCols_p;};
-    virtual const MSAntenna& antenna()                 {return asMS()->antenna();}
-    virtual const MSField& field()                     {return asMS()->field();}
-    virtual const MSSpectralWindow& spectralWindow()   {return asMS()->spectralWindow();}
-    virtual const MSDataDescription& dataDescription() {return asMS()->dataDescription();}
-    virtual const MSObservation& observation()         {return asMS()->observation();}
-    virtual String columnName(MSMainEnums::PredefinedColumns nameEnum) {return MS::columnName(nameEnum);}
+    virtual const MSAntenna& antenna()                 {return asMS()->antenna();};
+    virtual const MSField& field()                     {return asMS()->field();};
+    virtual const MSSpectralWindow& spectralWindow()   {return asMS()->spectralWindow();};
+    virtual const MSDataDescription& dataDescription() {return asMS()->dataDescription();};
+    virtual const MSObservation& observation()         {return asMS()->observation();};
+    virtual String columnName(MSMainEnums::PredefinedColumns nameEnum) {return MS::columnName(nameEnum);};
     virtual Bool isMS()                                {return True;};
+    virtual MSSDataType dataType()                     {return MSSelectableTable::BASELINE_BASED;}
 
     virtual const MeasurementSet *asMS(){return static_cast<const MeasurementSet *>(table());};
     virtual MSSelectableMainColumn* mainColumns()
