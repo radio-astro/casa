@@ -248,6 +248,12 @@ recommended you specify both axes and shape to avoid any ambiguity.
          contains the spectral axis number of the input image, regrid the spectral axis of the input to
          match the spectral axis of the template.
          
+IMPORTANT NOTE ABOUT FLUX CONSERVATION
+in general regridding is inaccurate for images that the angular resolution is poorly
+sampled. A check is done for such cases and a warning message is emitted if a beam present.
+However, no such check is done if there is no beam present. To add a restoring beam to
+an image, use ia.setrestoringbeam().
+         
 Basic Examples
 
 # Regrid an image to the "B1950" or "GALACTIC" coordinate systems

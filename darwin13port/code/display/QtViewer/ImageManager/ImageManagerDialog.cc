@@ -172,13 +172,13 @@ namespace casa {
 			//See if there was an old master
 			QtDisplayData* oldMaster = displayedImages->getDDControlling();
 
-			emit masterCoordinateChanged( oldMaster, newMaster );
-
 			//So the QtDisplayPanelGui is updated.
 			allImages->setDDControlling( newMaster );
 
 			//So the QtDisplayPanel gets notified (does the real work)
 			displayedImages->setDDControlling( newMaster );
+
+			emit masterCoordinateChanged( oldMaster, newMaster );
 		}
 	}
 

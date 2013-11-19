@@ -1546,7 +1546,7 @@ class simutil:
                     obslon=qa.convert(obs['m0'],'deg')['value']
                     obsalt=qa.convert(obs['m2'],'m')['value']
                     if self.verbose:
-                        self.msg("converting local tangent plane coordinates to ITRF using observatory position = %d %d " % (obslat,obslon),origin="readantenna")
+                        self.msg("converting local tangent plane coordinates to ITRF using observatory position = %f %f " % (obslat,obslon),origin="readantenna")
                         #foo=self.getdatum(datum,verbose=True)
                     for i in range(len(inx)):
                         x,y,z = self.locxyz2itrf(obslat,obslon,obsalt,inx[i],iny[i],inz[i])

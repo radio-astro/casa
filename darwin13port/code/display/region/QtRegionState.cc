@@ -80,6 +80,7 @@ namespace casa {
 			frame_max->setFont(font);
 			region_mark->setFont(fontp);
 			region_annotation->setFont(fontp);
+			histogramTab = NULL;
 
 			if (  sym == QtMouseToolNames::SYM_UNKNOWN || sym == QtMouseToolNames::SYM_POINT_REGION_COUNT )
 				marker_group->hide( );
@@ -173,7 +174,10 @@ namespace casa {
 
 		void QtRegionState::updateStackOrder( int firstImage ){
 			statistics_group->setCurrentIndex( firstImage );
-			histogramTab->showGraph( firstImage );
+
+			if ( histogramTab != NULL ){
+				histogramTab->showGraph( firstImage );
+			}
 		}
 
 		int QtRegionState::getStackIndex() const {
@@ -271,6 +275,9 @@ namespace casa {
 				return;
 			}
 			int currentIndex = statistics_group->currentIndex();
+			if ( currentIndex < 0 ){
+				currentIndex = 0;
+			}
 			clearStatistics();
 
 			while ( (int)stats->size() > statistics_group->count() ) {
@@ -293,8 +300,9 @@ namespace casa {
 			if ( first == 0 ) throw internal_error( );
 			std::list<std::tr1::shared_ptr<RegionInfo> >::iterator stat_iter = stats->begin();
 			if ( ! memory::anullptr.check((*stat_iter)->list( )) ) {
-				if ( first->updateStatisticsInfo( *stat_iter ) == false )
+				if ( first->updateStatisticsInfo( *stat_iter ) == false ){
 					statisticsUpdate( first, *stat_iter );
+				}
 			}
 
 			if ( num < 2 ) {
@@ -308,8 +316,9 @@ namespace casa {
 				QtRegionStats *cur = dynamic_cast<QtRegionStats*>(statistics_group->widget(i));
 				if ( cur == 0 ) throw internal_error( );
 				if ( ! memory::anullptr.check((*stat_iter)->list( )) ) {
-					if ( cur->updateStatisticsInfo( *stat_iter ) == false )
+					if ( cur->updateStatisticsInfo( *stat_iter ) == false ){
 						statisticsUpdate( cur, *stat_iter );
+					}
 				}
 				prev->setNext( statistics_group, cur );
 				prev = cur;
@@ -318,7 +327,6 @@ namespace casa {
 
 			int statistics_count = statistics_group->count( );
 			if ( pre_dd_change_statistics_count < statistics_count && statistics_count > 0 ){
-				//statistics_group->setCurrentIndex(statistics_count-1);
 				if ( currentIndex >= 0 && currentIndex < statistics_count){
 					statistics_group->setCurrentIndex( currentIndex );
 				}
@@ -334,7 +342,8 @@ namespace casa {
 			if ( region_->type( ) != region::PolylineRegion &&
 			        region_->type( ) != region::PVLineRegion ) {
 				regionStats->updateStatistics( regionInfo );
-			} else {
+			}
+			else {
 				regionStats->updateStatistics( regionInfo, region_ );
 			}
 		}
