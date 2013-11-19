@@ -1793,6 +1793,24 @@ class test_clip(test_base):
         self.assertEqual(res['flagged'], 2199552)
         self.assertEqual(res['total'], 2199552)
 
+    def test_datacol_corrected(self):
+        ''''flagdata: clip CORRECTED data column'''
+        flagdata(vis=self.vis, flagbackup=False, mode='clip', datacolumn='CORRECTED',
+                 clipminmax=[0.,10.])
+        # only corrected column has amplitude above 10.0
+        res = flagdata(vis=self.vis, mode='summary', spw='5,9,10,11')
+        self.assertEqual(res['flagged'], 1142)
+        
+        # Make sure the corrected data was used, not the default data column
+        self.unflag_ms()
+        flagdata(vis=self.vis, flagbackup=False, mode='clip',
+                 clipminmax=[0.,10.])
+        
+        # should not flag anything
+        res = flagdata(vis=self.vis, mode='summary', spw='5,9,10,11')
+        self.assertEqual(res['flagged'], 0)
+                
+
 class test_CASA_4_0_bug_fix(test_base):
     """flagdata:: Regression test for the fixes introduced during the CASA 4.0 bug fix season"""
 
@@ -1974,7 +1992,8 @@ class test_tsys(test_base):
 
     def test_default_fparam(self):
         '''Flagdata: default data column FPARAM'''
-        flagdata(vis=self.vis, mode='clip', clipminmax=[0,500], flagbackup=False)
+        flagdata(vis=self.vis, mode='clip', clipminmax=[0,500], flagbackup=False,
+                 datacolumn='FPARAM')
         res=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 5325)
         
@@ -2073,16 +2092,17 @@ class test_tsys(test_base):
     def test_invalid_corr(self):
         '''Flagdata: default correlation should be REAL_ALL in this case'''
         flagdata(vis=self.vis, mode='clip', correlation='ABS_ALL',clipminmax=[0.,600.],
-                 flagbackup=False)
+                 flagbackup=False, datacolumn='FPARAM')
         res=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 1192.0)
         
-    def test_invalid_datacol(self):
-        '''Flagdata: invalid data column should fall back to default'''
+    def test_invalid_datacol_cal(self):
+        '''Flagdata: invalid data column should not fall back to default'''
         flagdata(vis=self.vis, mode='clip', clipminmax=[0.,600.],datacolumn='PARAMERR',
                  flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'], 1192.0)
+#        self.assertEqual(res['flagged'], 1192.0)
+        self.assertFalse(res['flagged']==1192.0)
                 
     def test_clip_fparam_all(self):
         """Flagdata:: Test cliping all calibration solution products of FPARAM 
@@ -2225,7 +2245,7 @@ class test_tsys(test_base):
     def test_tsys_time1(self):
         '''Flagdata: select a timerange'''
         flagdata(vis=self.vis, mode='clip', clipminmax=[-2000.,2000.], timerange="<03:50:00", 
-                 flagbackup=False)
+                 datacolumn='FPARAM', flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')['flagged']
         self.assertEqual(res, 5)
 
@@ -2288,16 +2308,18 @@ class test_bandpass(test_base):
 
     def test_default_cparam(self):
         '''Flagdata: flag CPARAM as the default column'''
-        flagdata(vis=self.vis, mode='clip', clipzeros=True, flagbackup=False)
+        flagdata(vis=self.vis, mode='clip', clipzeros=True, datacolumn='CPARAM', flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 11078.0, 'Should use CPARAM as the default column')
 
     def test_invalid_datacol(self):
-        '''Flagdata: invalid data column should fall back to default'''
+        '''Flagdata: invalid data column should not fall back to default'''
         flagdata(vis=self.vis, mode='clip', clipzeros=True, datacolumn='PARAMERR',
                  flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'], 11078.0)
+#        self.assertEqual(res['flagged'], 11078.0)
+        self.assertFalse(res['flagged']==11078.0)
+        
                         
     def test_manual_field_selection_for_bpass(self):
         """Flagdata:: Manually flag a bpass-based CalTable using field selection"""
@@ -2377,7 +2399,8 @@ class test_bandpass(test_base):
 
     def test_clip_one_list(self):
         '''Flagdata: Flag one solution using one command in a list'''
-        flagdata(vis=self.vis, mode='list', inpfile=["mode='clip' clipminmax=[0,3] correlation='REAL_Sol1'"],
+        flagdata(vis=self.vis, mode='list', inpfile=["mode='clip' clipminmax=[0,3] "\
+        "correlation='REAL_Sol1' datacolumn='CPARAM'"],
                  flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 309388)
@@ -2387,7 +2410,7 @@ class test_bandpass(test_base):
         """Flagdata:: Test rflag solution 2 of CPARAM column for bpass"""
 
         flagdata(vis=self.vis, mode='rflag', correlation='Sol2', flagbackup=False,
-                 extendflags=False)
+                 datacolumn='CPARAM', extendflags=False)
         summary=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(summary['flagged'], 13197)
         self.assertEqual(summary['correlation']['Sol1']['flagged'], 0)
@@ -2466,7 +2489,7 @@ class test_bandpass(test_base):
         '''Flagdata: clip a timerange from one field'''
         # this timerange corresponds to field 3C286_A
         flagdata(vis=self.vis, mode='clip', timerange='<14:12:52',clipzeros=True,
-                 clipminmax=[0.,0.35], flagbackup=False)
+                 clipminmax=[0.,0.35], datacolumn='CPARAM',flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['field']['3C286_A']['flagged'],2230)
         self.assertEqual(res['field']['3C286_B']['flagged'],0)
@@ -2478,7 +2501,7 @@ class test_bandpass(test_base):
         '''Flagdata: clip a timerange from another field'''
         # this timerange corresponds to field 3C286_D
         flagdata(vis=self.vis, mode='clip', timerange='>14:58:33.6',clipzeros=True,
-                 clipminmax=[0.,0.4], flagbackup=False)
+                 clipminmax=[0.,0.4], datacolumn='CPARAM',flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['field']['3C286_A']['flagged'],0)
         self.assertEqual(res['field']['3C286_B']['flagged'],0)
@@ -2489,7 +2512,7 @@ class test_bandpass(test_base):
     def test_cal_time_corr(self):
         '''Flagdata: select a timerange for one solution'''
         flagdata(vis=self.vis, mode='clip', clipminmax=[0.,0.4], timerange='14:23:50~14:48:40.8',
-                 correlation='Sol2',flagbackup=False)
+                 correlation='Sol2',datacolumn='CPARAM',flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['correlation']['Sol1']['flagged'], 0)
         self.assertEqual(res['correlation']['Sol2']['flagged'], 17)
@@ -2498,7 +2521,7 @@ class test_bandpass(test_base):
         # Check that the timerange selection was taken. Flag only the solution
         flagdata(vis=self.vis, mode='unflag', flagbackup=True)
         flagdata(vis=self.vis, mode='clip', clipminmax=[0.,0.4], correlation='Sol2', 
-                 flagbackup=False)
+                 datacolumn='CPARAM',flagbackup=False)
         res1=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res1['correlation']['Sol1']['flagged'], 0)
         self.assertEqual(res1['correlation']['Sol2']['flagged'], 22)
@@ -2525,7 +2548,7 @@ class test_newcal(test_base):
     def test_newcal_selection1(self):
         '''Flagdata: select one solution for one scan and spw'''
         flagdata(vis=self.vis, mode='clip', clipminmax=[0,0.1], correlation='Sol1', spw='0',
-                 scan='46', flagbackup=False)
+                 scan='46', datacolumn='CPARAM', flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['correlation']['Sol2']['flagged'], 0)
         self.assertEqual(res['correlation']['Sol1']['flagged'], 27)
@@ -2556,7 +2579,8 @@ class test_newcal(test_base):
         
     def test_newcal_clip(self):
         '''Flagdata: clip zeros in one solution'''
-        flagdata(vis=self.vis, mode='clip', clipzeros=True, correlation='Sol2', flagbackup=False)
+        flagdata(vis=self.vis, mode='clip', clipzeros=True, correlation='Sol2', 
+                 datacolumn='CPARAM',flagbackup=False)
         
         res=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['correlation']['Sol1']['flagged'],0)
@@ -2751,9 +2775,8 @@ class test_float_column(test_base):
 
     def test_clip_fchanavg(self):
         '''flagdata: datacolumn=FLOAT_DATA, channel average'''
-        # The task should assign the FLOAT_DATA column by default
         flagdata(vis=self.vis, mode='clip', spw='2', clipminmax=[0,3.9], 
-                 channelavg=True, flagbackup=False)
+                 channelavg=True, datacolumn='FLOAT_DATA',flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary',spw='2')
         # There is only one channel in each polarization
         self.assertEqual(res['flagged'],2)
@@ -2762,7 +2785,7 @@ class test_float_column(test_base):
     def test_clip_fchanavg_onepol(self):
         '''flagdata: datacolumn=FLOAT_DATA, one pol, channel average'''
         flagdata(vis=self.vis, mode='clip', spw='2', clipminmax=[0,3.9], 
-                 channelavg=True, correlation='YY', flagbackup=False, datacolumn='float')
+                 channelavg=True, correlation='YY', flagbackup=False, datacolumn='float_data')
         res = flagdata(vis=self.vis, mode='summary',spw='2')
         # There is only one channel in each polarization
         self.assertEqual(res['flagged'],1)

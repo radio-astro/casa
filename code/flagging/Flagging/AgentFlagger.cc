@@ -318,6 +318,7 @@ AgentFlagger::parseAgentParameters(Record agent_params)
 	String mode = "";
 	String agent_name = "";
 	Bool apply = true;
+    String datacolumn = "DATA";
 
 	// create a temporary vector of agents
 	std::vector<Record> listOfAgents;
@@ -352,14 +353,14 @@ AgentFlagger::parseAgentParameters(Record agent_params)
 	if (mode.compare("tfcrop") == 0 or mode.compare("clip") == 0 or mode.compare("rflag") == 0
 			or mode.compare("display") == 0){
 
-		String dc = "";
 		if (agentParams_p.isDefined("datacolumn"))
-			agentParams_p.get("datacolumn", dc);
+			agentParams_p.get("datacolumn", datacolumn);
 
-		os << LogIO::NORMAL << "Validating data column "<<dc<<" based on input type"<< LogIO::POST;
+		os << LogIO::NORMAL << "Validating data column "<<datacolumn<<" based on input type"<< LogIO::POST;
 
-		String datacolumn = validateDataColumn(dc);
-		if (datacolumn.compare("") == 0){
+		if(!validateDataColumn(datacolumn)){
+	        os << LogIO::WARN << "Data column "<< datacolumn << " does not exist in input data"
+	                << LogIO::POST;
 			return false;
 		}
 
@@ -1083,6 +1084,7 @@ AgentFlagger::isModeValid(String mode)
 // Check if datacolumn is valid for the current type of input
 // Return validated datacolumn
 // ---------------------------------------------------------------------
+/*
 String
 AgentFlagger::validateDataColumn(String datacol)
 {
@@ -1099,7 +1101,9 @@ AgentFlagger::validateDataColumn(String datacol)
 				datacol.compare("RESIDUAL_DATA") == 0 or datacol.compare("WEIGHT_SPECTRUM") == 0 or
 				datacol.compare("WEIGHT") == 0 or datacol.compare("FLOAT_DATA") == 0)
 		{
+		    cout <<"datacol="<<datacol<<endl;
 			checkcol = fdh_p->checkIfColumnExists(datacol);
+			cout <<"checkcol"<<checkcol<<endl;
 		}
 		if (!checkcol){
 			//Assign a default column for single-dish MSs
@@ -1135,7 +1139,52 @@ AgentFlagger::validateDataColumn(String datacol)
 
 	return ret;
 }
+*/
 
+Bool
+AgentFlagger::validateDataColumn(String datacol)
+{
+
+    String datacolumn = "";
+    Bool ret = false;
+    datacol.upcase();
+
+    LogIO os(LogOrigin("AgentFlagger", __FUNCTION__, WHERE));
+
+    // The validation depends on the type of input
+    if (isMS_p) {
+        if (datacol.compare("DATA") == 0)
+            datacolumn = "DATA";
+        else if(datacol.compare("CORRECTED") == 0)
+            datacolumn = "CORRECTED_DATA";
+        else if(datacol.compare("MODEL") == 0)
+            datacolumn = "MODEL_DATA";
+        else if(datacol.compare("RESIDUAL") == 0)
+            datacolumn = "RESIDUAL";
+        else if(datacol.compare("RESIDUAL_DATA") == 0)
+            datacolumn = "RESIDUAL_DATA";
+        else if(datacol.compare("FLOAT_DATA") == 0)
+            datacolumn = "FLOAT_DATA";
+        else if(datacol.compare("WEIGHT_SPECTRUM") == 0)
+            datacolumn = "WEIGHT_SPECTRUM";
+        else if(datacol.compare("WEIGHT") == 0)
+            datacolumn = "WEIGHT";
+        else
+            datacolumn = "";
+    }
+    else {
+        // cal tables
+        if (datacol.compare("FPARAM") == 0 or (datacol.compare("CPARAM") == 0) or
+                (datacol.compare("SNR") == 0))
+            datacolumn = datacol;
+    }
+
+    // Check if requested column exist
+    if (fdh_p->checkIfColumnExists(datacolumn))
+        ret = true;
+
+    return ret;
+}
 
 
 // ---------------------------------------------------------------------
