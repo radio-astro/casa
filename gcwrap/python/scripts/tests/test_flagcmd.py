@@ -920,8 +920,9 @@ class test_cmdbandpass(test_base):
         self.assertEqual(res['spw']['1']['flagged'], 83200)
 
     def test_default_cparam(self):
-        '''Flagcmd: flag CPARAM as the default column'''
-        flagcmd(vis=self.vis, inpmode='list', inpfile=["mode='clip' clipzeros=True"],
+        '''Flagcmd: flag CPARAM data column'''
+        flist = ["mode='clip' clipzeros=True datacolumn='CPARAM'"]
+        flagcmd(vis=self.vis, inpmode='list', inpfile=flist,
                 flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 11078, 'Should use CPARAM as the default column')
@@ -965,7 +966,8 @@ class test_cmdbandpass(test_base):
         
     def test_clip_one_list(self):
         '''Flagcmd: Flag one solution using one command in a list'''
-        flagcmd(vis=self.vis, inpmode='list', inpfile=["mode='clip' clipminmax=[0,3] correlation='REAL_Sol1'"])
+        flist = ["mode='clip' clipminmax=[0,3] correlation='REAL_Sol1' datacolumn='CPARAM'"]
+        flagcmd(vis=self.vis, inpmode='list', inpfile=flist)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 309388)
         self.assertEqual(res['correlation']['Sol2']['flagged'], 0)
@@ -1044,7 +1046,8 @@ class test_cmdbandpass(test_base):
     def test_cal_time_field(self):
         '''Flagcmd: clip a timerange from a field'''
         # this timerange corresponds to field 3C286_D
-        flags = "mode='clip' timerange='>14:58:33.6' clipzeros=True clipminmax=[0.,0.4]"
+        flags = "mode='clip' timerange='>14:58:33.6' clipzeros=True clipminmax=[0.,0.4]"\
+                " datacolumn='CPARAM'"
         
         # Apply the flags
         flagcmd(vis=self.vis, inpmode='list', inpfile=[flags], flagbackup=False)

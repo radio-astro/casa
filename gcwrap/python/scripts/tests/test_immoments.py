@@ -1311,6 +1311,30 @@ class immoment_test2(unittest.TestCase):
                 for j in range(10):
                     self.assertTrue(abs(bb[i,j] - vels[i]) < 1e-4)
             kk.done()
+            
+    def test_median_coord(self):
+        """Verify CAS-5570 fix for median"""
+        myia = iatool()
+        myia.fromshape("", [11, 1, 11])
+        cc = myia.getchunk()
+        vels = []
+        for i in range(11):
+            for j in range(11):
+                cc[i, 0, j] = (j - i + 5) % 11 + 1
+            world = myia.toworld([0, 0, i])['numeric']
+            vels.append(myia.coordsys().frequencytovelocity(world[2])[0])
+            
+        myia.putchunk(cc)
+        kk = myia.moments(moments=4, method="basic", includepix=[0,12])
+        bb = kk.getchunk()
+        myia.done()
+        kk.done()
+        for i in range(11):
+            self.assertTrue(abs(bb[i,0] - vels[i]) < 10)
+        
+                
+                
+        
         
 def suite():
     return [immoment_test1,immoment_test2]        
