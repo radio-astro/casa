@@ -67,7 +67,8 @@ namespace casa {
 		try {
 			if ( taskMonitor != NULL ) {
 				//ImageInterface<Float>* img = const_cast<ImageInterface <Float>* >(taskMonitor->getImage().get());
-				std::tr1::shared_ptr<ImageInterface<Float> > img(std::tr1::const_pointer_cast<ImageInterface<Float> >(taskMonitor->getImage()));
+				//std::tr1::shared_ptr<ImageInterface<Float> > img(std::tr1::const_pointer_cast<ImageInterface<Float> >(taskMonitor->getImage()));
+				std::tr1::shared_ptr<const ImageInterface<Float> > img = taskMonitor->getImage();
 				collapser = new SpectralCollapser(img, String(QDir::tempPath().toStdString()));
 				changeCollapseType();
 				changeCollapseError();

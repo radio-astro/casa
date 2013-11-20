@@ -866,7 +866,7 @@ namespace casa {
 
 		//Get Profile Flux density v/s coordinateType
 		bool ok = assignFrequencyProfile( wxv,wyv,
-				coordinateType,xaxisUnit,z_xval,z_yval, getRegionShape() );
+				coordinateType,xaxisUnit,z_xval,z_yval, getRegionShape());
 		if ( !ok ) {
 			return;
 		}
@@ -953,23 +953,28 @@ namespace casa {
 	void QtProfile::changeAxis(String xa, String ya, String za, std::vector<int> ) {
 
 		// the logic is as follows:
-		// "za" (the z-axis") MUST be named "Frequency"
+		// "za" (the z-axis") MUST be named "Frequency" or "Quality"
 		// "xa" and "ya" must contain EITHER "Right" and "Declination"
 		// OR "Latitude" and "Longitude".
 		// The order is not important, and "cb=1" marks "normal" order
 		// (xa=Ra/Lo, ya=Dec/La) while "cb=1" marks "not normal" order
 		// (xa=Dec/La, ya=Ra/Lo).
 		int cb = 0;
-		if (xa.contains("Decl") && ya.contains("Right"))
+		if (xa.contains("Decl") && ya.contains("Right")){
 			cb = -1;
-		if (xa.contains("Right") && ya.contains("Decl"))
+		}
+		if (xa.contains("Right") && ya.contains("Decl")){
 			cb = 1;
-		if (xa.contains("atitu") && ya.contains("ongitu"))
+		}
+		if (xa.contains("atitu") && ya.contains("ongitu")){
 			cb = -1;
-		if (xa.contains("ongitu") && ya.contains("atitu"))
+		}
+		if (xa.contains("ongitu") && ya.contains("atitu")){
 			cb = 1;
-		if (!za.contains("Freq"))
+		}
+		if (!za.contains("Freq") && !za.contains("Quality")){
 			cb = 0;
+		}
 
 		if (cb==0) {
 			// the current configuration can
@@ -1763,9 +1768,9 @@ namespace casa {
 		ts << "#coordinate: " << QString(coordinate.chars()) << "\n";
 		ts << "#xLabel: " << QString(ctypeUnit.chars()) << "\n";
 		ts << "#yLabel: " << "[" << yUnit << "] "<< plotMode->currentText() << "\n";
-		if (z_eval.size() > 0)
+		if (z_eval.size() > 0){
 			ts << "#eLabel: " << "[" << yUnit << "] " << errorMode->currentText() << "\n";
-
+		}
 
 
 
@@ -1794,9 +1799,15 @@ namespace casa {
 		ts << "\n";
 		ts << "# " << pixelCanvas->getCurveName(k) << "\n";
 		CurveData data = pixelCanvas->getCurveData(k);
+		ErrorData errorData = pixelCanvas->getCurveError(k);
 		int j = data.size() / 2;
+		int errorDataSize = errorData.size();
 		for (int m = 0; m < j; m++) {
-			ts << data[2 * m] << " " << scaleFactor*data[2 * m + 1] << "\n";
+			ts << data[2 * m] << " " << scaleFactor*data[2 * m + 1];
+			if ( errorDataSize > 0 ){
+				ts << " " << scaleFactor * errorData[2 * m + 1];
+			}
+			ts << "\n";
 		}
 	}
 
@@ -2481,17 +2492,17 @@ namespace casa {
 				case QtProfile::PMEAN:
 					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 					                        WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
-					                        (Int)QtProfile::MEAN, 0, 0, -1, shape);
+					                        (Int)QtProfile::MEAN, 0, "", -1, shape);
 					break;
 				case QtProfile::PMEDIAN:
 					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 					                        WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
-					                        (Int)QtProfile::MEDIAN, 0, 0, -1, shape);
+					                        (Int)QtProfile::MEDIAN, 0, "", -1, shape);
 					break;
 				case QtProfile::PSUM:
 					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 					                        WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
-					                        (Int)QtProfile::PSUM, 0, 0, -1, shape);
+					                        (Int)QtProfile::PSUM, 0, "", -1, shape);
 					break;
 				case QtProfile::PFLUX:
 					ok=getFrequencyProfileWrapper( ana, wxv, wyv, xval, yval,
@@ -2502,7 +2513,7 @@ namespace casa {
 				default:
 					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 					                        WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
-					                        (Int)QtProfile::MEAN, 0, 0, -1, shape);
+					                        (Int)QtProfile::MEAN, 0, "", -1, shape);
 					break;
 				}
 
@@ -2604,7 +2615,7 @@ namespace casa {
 			//using the x-values.
 			*ok=analysis->getFreqProfile( lastWX, lastWY, xval, yval,
 					WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, cTypeUnit, spcRefFrame,
-							(Int)QtProfile::MEAN, 0, 0, -1, getRegionShape());
+							(Int)QtProfile::MEAN, 0, "", -1, getRegionShape());
 			if ( *ok ){
 				unitPerChannel = qAbs(xval[0] - xval[1]) / z_xval.size();
 			}
@@ -2613,12 +2624,13 @@ namespace casa {
 	}
 
 	String QtProfile::getRegionShape(){
-		String shape( " ");
+		String shapeStr( " ");
 		std::map<int,spectra_info>::iterator iter = spectra_info_map.find( current_region_id );
 		if ( iter != spectra_info_map.end() ){
-			shape=spectra_info_map[current_region_id].shape().toStdString();
+			QString shapeString = spectra_info_map[current_region_id].shape();
+			shapeStr = shapeString.toStdString();
 		}
-		return shape;
+		return shapeStr;
 	}
 
 	bool QtProfile::isFrequencyMatch(){
