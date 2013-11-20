@@ -998,9 +998,11 @@ def select_by_timerange(data, timerange):
     if data is not None:
         tb.open(data)
         irow = 0
-        while (tb.getcell('FLAGROW') != 0
-               or all(tb.getcell('FLAGTRA') != 0)):
+        while (irow < tb.nrows() and
+               (tb.getcell('FLAGROW', irow) != 0
+               or all(tb.getcell('FLAGTRA', irow) != 0))):
             irow = irow + 1
+        irow %= tb.nrows()
         default_mjd = tb.getcell('TIME', irow)
         default_interval = tb.getcell('INTERVAL', irow)
         tb.close()
