@@ -566,7 +566,8 @@ def flagdata(vis,
             agent_pars['spw'] = spw
             casalog.post('Parsing the parameters for the %s mode'%mode, 'DEBUG1')
             if (not aflocal.parseagentparameters(agent_pars)):
-                casalog.post('Failed to parse parameters for mode %s' %mode, 'ERROR')
+#                casalog.post('Failed to parse parameters for mode %s' %mode, 'ERROR')
+                raise ValueError, 'Failed to parse parameters for mode %s' %mode
                 
             casalog.post('%s'%agent_pars, 'DEBUG')
        
@@ -578,7 +579,7 @@ def flagdata(vis,
                 raise Exception, 'There are no valid commands in list'
             
             unionpars = {}
-            # Do not crete union for a cal table
+            # Do not create union for a cal table
             if iscal:
                 if vrows.__len__() == 1:
                     unionpars = fh.parseSelectionPars(flagcmd[0]['command'])
@@ -721,6 +722,7 @@ def flagdata(vis,
     except Exception, instance:
         aflocal.done()
         casalog.post('%s'%instance,'ERROR')
+        return summary_stats
 
 
 # Helper functions

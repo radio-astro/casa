@@ -342,6 +342,8 @@ enum MethodTypes {
 
    virtual IPosition getShape() const { return IPosition(); };
 
+   Bool shouldConvertToVelocity() const { return convertToVelocity_p; }
+
 protected:
 
    LogIO os_p;

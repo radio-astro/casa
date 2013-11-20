@@ -488,11 +488,11 @@ class test_bpass(test_base):
         self.setUp_bpass_case()
 
     def test_default_cparam_bpass(self):
-        '''Flagdata: flag CPARAM as the default column'''
+        '''Flagdata: flag CPARAM data column'''
         aflocal = casac.agentflagger()
         aflocal.open(self.vis)
         aflocal.selectdata()
-        aflocal.parseclipparameters(clipzeros=True)
+        aflocal.parseclipparameters(clipzeros=True,datacolumn='CPARAM')
         aflocal.parsesummaryparameters()
         aflocal.init()
         summary = aflocal.run(writeflags=True)
@@ -636,7 +636,7 @@ class test_bpass(test_base):
         aflocal.open(self.vis)
         aflocal.selectdata()
         agentRflag={'apply':True,'mode':'rflag','correlation':correlation,
-                    'extendflags':False}
+                    'extendflags':False,'datacolumn':'CPARAM'}
         agentSummary={'apply':True,'mode':'summary'}
         aflocal.parseagentparameters(agentRflag)
         aflocal.parseagentparameters(agentSummary)

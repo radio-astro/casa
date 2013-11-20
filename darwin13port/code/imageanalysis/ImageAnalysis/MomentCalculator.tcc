@@ -1971,7 +1971,7 @@ void MomentClip<T>::multiProcess(Vector<T>& moments,
  
 // Find world coordinate of that pixel on the moment axis
          vMedian = this->getMomentCoord(iMom_p, pixelIn_p,
-                                  worldOut_p, interpPixel);
+                                  worldOut_p, interpPixel, iMom_p.shouldConvertToVelocity());
       }   
    }
  

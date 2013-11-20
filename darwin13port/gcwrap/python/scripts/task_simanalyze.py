@@ -6,6 +6,7 @@ import pylab as pl
 import pdb
 from sdimaging import sdimaging
 from imregrid import imregrid
+from immath import immath
 
 def simanalyze(
     project=None,
@@ -472,6 +473,33 @@ def simanalyze(
                               nchan=model_nchan, start=0, step=1, spw=[0])
                         if not os.path.exists(temp_out):
                             raise RuntimeError, "TP imaging failed."
+
+                        # Define PSF of image
+                        qpb = qa.quantity(pb_asec,"arcsec")
+                        # TODO get the sampling from the ms and put it in here
+                        qpsf0 = myutil.sfBeam1d(qpb, cell=temp_cell[0],
+                                              convsupport=sfsupport)
+                        qpsf1 = myutil.sfBeam1d(qpb, cell=temp_cell[1],
+                                              convsupport=sfsupport)
+                        imbeam['major'] = max(qpsf0, qpsf1)
+                        imbeam['minor'] = min(qpsf0, qpsf1)
+                        imbeam['positionangle'] = qa.quantity(pl.arctan(qa.getvalue(qa.div(qpsf1,qpsf0))), "rad")
+                        # Scale image by convolved beam / antenna primary beam
+                        beam_area_ratio = qa.getvalue(qa.convert(qpsf0, "arcsec")) \
+                                          * qa.getvalue(qa.convert(qpsf1, "arcsec")) \
+                                          / pb_asec**2
+                        msg("Scaling TP image intensity by %f." % (beam_area_ratio),origin='simanalyze')
+                        temp_in = temp_out
+                        temp_out = temp_out + ".scaled"
+                        immath(imagename=temp_in, mode='evalexpr', expr="IM0*%f" % (beam_area_ratio),
+                               outfile=temp_out)
+                        if not os.path.exists(temp_out):
+                            raise RuntimeError, "TP image scaling failed."
+                        ia.open(temp_out)
+                        beam = ia.restoringbeam()
+                        if len(beam) == 0: ia.setrestoringbeam(beam=imbeam)
+                        ia.close()
+                        
                     # Regrid TP image to final resolution
                     msg("Regridding TP image to final resolution",origin='simanalyze')
                     msg("- cell size (arecsec): [%s, %s]" % (cell[0], cell[1]),origin='simanalyze')
@@ -496,17 +524,6 @@ def simanalyze(
                              template=sdtemplate, output=tpimage,
                              overwrite=overwrite)
                         del newcsys, sdtemplate, incr, newincr, dir_idx
-
-                        # Define PSF of image
-                        qpb = beam=qa.quantity(pb_asec,"arcsec")
-                        # TODO get the sampling from the ms and put it in here
-                        qpsf0 = myutil.sfBeam1d(qpb, cell=temp_cell[0],
-                                              convsupport=sfsupport)
-                        qpsf1 = myutil.sfBeam1d(qpb, cell=temp_cell[1],
-                                              convsupport=sfsupport)
-                        imbeam['major'] = max(qpsf0, qpsf1)
-                        imbeam['minor'] = min(qpsf0, qpsf1)
-                        imbeam['positionangle'] = qa.quantity(pl.arctan(qa.getvalue(qa.div(qpsf1,qpsf0))), "rad")
                         del temp_out, temp_cell, temp_imsize, sfcell_asec, cell_asec
                 else: #PB grid
                     msg("Generating TP image using 'PB' kernel.",origin='simanalyze')

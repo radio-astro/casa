@@ -350,7 +350,7 @@ private:
 	// Check if mode is valid against a list of known modes
 	bool isModeValid(String mode);
 
-	String validateDataColumn(String datacol);
+	Bool validateDataColumn(String datacol);
 
 	// Sink used to store history
 	LogSink logSink_p;

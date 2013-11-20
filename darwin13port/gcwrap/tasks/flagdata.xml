@@ -824,11 +824,7 @@
                              'WEIGHT_SPECTRUM', 'FLOAT_DATA', 'FPARAM', 'CPARAM', 'SNR',
                              'WEIGHT'
                              
-                    NOTE1: by default for calibration tables, the framework will try to use FPARAM; 
-                          if that does not exist, it will try to use CPARAM. If none of them exist, it
-                          will give an error and exit.
-
-                    NOTE2: when datacolumn is WEIGHT, the task will internally use WEIGHT_SPECTRUM.
+                    NOTE: when datacolumn is WEIGHT, the task will internally use WEIGHT_SPECTRUM.
                            If WEIGHT_SPECTRUM does not exist, it will create one on-the-fly
                            based on the values of WEIGHT. The clipminmax values will be divided
                            by the number of channels and used to flag the data.
@@ -943,11 +939,6 @@
                     options: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL', 'RESIDUAL_DATA',
                              'WEIGHT_SPECTRUM', 'FLOAT_DATA', 'FPARAM', 'CPARAM', 'SNR'.
                              
-                    NOTE: by default for calibration tables, the framework will try to use FPARAM; 
-                          if that does not exist, it will try to use CPARAM. If none of them exist, it
-                          will give an error and exit.
-                    
-
                timecutoff -- Flag threshold in time. Flag all data-points further than N-stddev 
                              from the fit. This threshold catches time-varying RFI spikes (
                              narrow and broad-band), but will not catch RFI that is persistent in time.
@@ -1134,12 +1125,7 @@
                datacolumn -- Column to use for flagging.
                     default: 'DATA'
                     options: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL', 'RESIDUAL_DATA',
-                             'WEIGHT_SPECTRUM', 'FLOAT_DATA', 'FPARAM', 'CPARAM', 'SNR'.
-                             
-                    NOTE: by default for calibration tables, the framework will try to use FPARAM; 
-                          if that does not exist, it will try to use CPARAM. If none of them exist, it
-                          will give an error and exit.
-                    
+                             'WEIGHT_SPECTRUM', 'FLOAT_DATA', 'FPARAM', 'CPARAM', 'SNR'.                                                
 
                winsize -- number of timesteps in the sliding time window ( fparm(1) in AIPS ). 
                     default: 3
