@@ -1,0 +1,8 @@
+#! /bin/bash
+# -*- coding: utf-8 -*-
+
+script=$(basename "$0")
+bin_d=$(dirname "$0")
+prefix="${bin_d}/.."
+
+exec ${bin_d}/python "${prefix}/Resources/ipython/${script}" $*

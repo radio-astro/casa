@@ -1,0 +1,75 @@
+#! /bin/bash
+startDir=$(pwd)
+
+a_site="socorro"
+
+if [[ -L "$0"  ]]; then
+	real_me=$(stat -f %Y "$0")
+	myDir=$(dirname "$real_me")
+	echo -n '==>  '
+else
+	myDir=$(dirname "$0")
+fi
+
+prefix=$(dirname "${myDir}")
+#echo $prefix
+
+a_root="${prefix}"
+a_host=$(hostname -s)
+a_arch=$(uname -p)
+a_site="${a_site}-${a_arch}"
+a_arch="darwin"
+
+export CASAPATH="$a_root $a_arch $a_site $a_host"
+export PGPLOT_DIR="${prefix}/Resources/pgplot"
+export DISPLAY=${DISPLAY=:0.0}
+export PATH="${prefix}/MacOS:/bin:/sbin:/usr/bin:/usr/sbin"
+export DYLD_FRAMEWORK_PATH="${prefix}/Frameworks"
+export LESS=${LESS="-X"}
+unset    LD_LIBRARY_PATH
+export DYLD_LIBRARY_PATH="${prefix}/Frameworks:${prefix}/Frameworks/gcc42"
+#
+###### Technically, DYLD_LIBRARY_PATH should not need to be set
+######  but somehow the inherited environment of the async processes
+######  needs it to find Qt and friends.
+
+#echo $CASAPATH
+#echo $PATH
+
+if [ ${#PGPLOT_DIR} -gt 112 ]
+then
+	echo
+	echo
+	echo "======================================================================"
+	echo
+	echo "WARNING: The runtime for PGPLOT limits path lengths to 112 characters."
+	echo "WARNING: The current CASA application location"
+	echo "WARNING:   " ${prefix}
+	echo "WARNING:     results in a path that is " ${#PGPLOT_DIR} " characters."
+	echo "WARNING: You may experience problems with the CASA viewer and imager."
+	echo "WARNING: Please exit CASA, then move the CASA application"
+	echo "WARNING:  to /Applications and try again."
+	echo
+	echo "======================================================================"
+	echo
+	echo
+fi
+
+# Source possible local CASA initialization files.
+for ci in \
+	${a_root}/.casainit.sh \
+	${a_root}/aips++local.sh \
+	${a_root}/${a_arch}/aips++local.sh \
+	${a_root}/${a_arch}/${a_site}/aips++local.sh \
+	${a_root}/${a_arch}/${a_site}/${a_host}/aips++local.sh \
+	${HOME}/.aips++local.sh \
+	${HOME}/.casainit
+do
+  if  [ -r $ci ]; then
+	$verbose && echo "sourcing $ci"
+	. $ci
+  fi
+done
+
+
+exec ${prefix}/MacOS/qcasabrowser $@

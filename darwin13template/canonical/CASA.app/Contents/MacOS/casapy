@@ -1,0 +1,152 @@
+#! /bin/bash
+startDir=$(pwd)
+OSVERS=$(uname -r | awk -F. '{print $1}')
+#if [ $OSVERS != "10" ]; then
+#   echo "The version of CASA you have downloaded is incompatible with your OS"
+#   echo "I'm expecting to run on 10.6, snow leopard"
+#   exit
+#fi
+export LC_CTYPE=sv_US.UTF-8
+
+
+a_site="socorro"
+
+if [[ -L "$0"  ]]; then
+	real_me=$(stat -f %Y "$0")
+	myDir=$(dirname "$real_me")
+	echo -n '==>  '
+else
+	myDir=$(dirname "$0")
+fi
+
+prefix=$(dirname "${myDir}")
+echo $prefix
+
+a_root="${prefix}"
+a_host=$(hostname -s)
+a_arch=$(uname -p)
+a_site="${a_site}-${a_arch}"
+a_arch="darwin"
+
+p_root=${prefix}/Frameworks/Python.framework/Versions/2.7
+p_bind=${p_root}/MacOS
+p_libd=${p_root}/lib/python2.7
+p_path=${p_bind}:${p_libd}:${p_libd}/plat-mac:${p_libd}/plat-darwin:${p_bind}/lib-scriptpackages:${p_libd}/lib-tk:${p_libd}/lib-dynload:${p_libd}/site-packages:${p_libd}/site-packages/Numeric:${p_libd}/site-packages/PyObjC
+
+export   __CASAPY_PYTHONDIR=${prefix}/Resources/python
+p_path=${__CASAPY_PYTHONDIR}:${p_path}
+
+
+export PYTHONHOME=${p_root}
+export PYTHONPATH=${p_path}
+export PYTHONEXECUTABLE=${prefix}/Frameworks/Python.framework/Versions/2.7/Resources/Python.app/Contents/MacOS/Python
+export CASAPATH="$a_root $a_arch $a_site $a_host"
+export PGPLOT_DIR="${prefix}/Resources/pgplot"
+export DISPLAY=${DISPLAY=:0.0}
+export PATH="${prefix}/MacOS:/bin:/sbin:/usr/bin:/usr/sbin"
+export DYLD_FRAMEWORK_PATH="${prefix}/Frameworks"
+export LESS=${LESS="-X"}
+unset  LD_LIBRARY_PATH
+export DYLD_LIBRARY_PATH="${prefix}/Frameworks:${prefix}/Frameworks/gcc42"
+export TERMINFO="${prefix}/Resources/terminfo"
+unset DYLD_FALLBACK_LIBRARY_PATH
+unset DYLD_FALLBACK_FRAMEWORK_PATH
+#
+###### Technically, DYLD_LIBRARY_PATH should not need to be set
+######  but somehow the inherited environment of the async processes
+######  needs it to find Qt and friends.
+
+echo $CASAPATH
+echo $PATH
+echo $PYTHONPATH
+
+if [ ${#PGPLOT_DIR} -gt 112 ]
+then
+	echo
+	echo
+	echo "======================================================================"
+	echo
+	echo "WARNING: The runtime for PGPLOT limits path lengths to 112 characters."
+	echo "WARNING: The current CASA application location"
+	echo "WARNING:   " ${prefix}
+	echo "WARNING:     results in a path that is " ${#PGPLOT_DIR} " characters."
+	echo "WARNING: You may experience problems with the CASA viewer and imager."
+	echo "WARNING: Please exit CASA, then move the CASA application"
+	echo "WARNING:  to /Applications and try again."
+	echo
+	echo "======================================================================"
+	echo
+	echo
+fi
+
+# Source possible local CASA initialization files.
+for ci in \
+	${a_root}/.casainit.sh \
+	${a_root}/aips++local.sh \
+	${a_root}/${a_arch}/aips++local.sh \
+	${a_root}/${a_arch}/${a_site}/aips++local.sh \
+	${a_root}/${a_arch}/${a_site}/${a_host}/aips++local.sh \
+	${HOME}/.aips++local.sh \
+	${HOME}/.casainit
+do
+  if  [ -r $ci ]; then
+	$verbose && echo "sourcing $ci"
+	. $ci
+  fi
+done
+
+
+casapy_ddir=$(defaults read edu.nrao.casa.macosx.casapy casa.data.path		2>/dev/null)
+if (( ${#casapy_ddir} > 0 )); then
+	mkdir -p "$casapy_ddir"
+	cd "$casapy_ddir" && echo "=== cd: "$(pwd)" ==="
+	rsync -avz rsync.aoc.nrao.edu::casadata . 2>/dev/null
+	echo "=== data repository update complete"
+	echo "==================================="
+	cd -
+fi
+
+sed -i .bak -e "s,>/.*/Contents,>${prefix},g" ${prefix}/Library/LaunchDaemons/org.freedesktop.dbus-system.plist
+sed -i .bak -e "s,>/.*/Contents,>${prefix},g" ${prefix}/Library/LaunchAgents/org.freedesktop.dbus-session.plist
+sed -i .bak -e "s,--config-file=.*/Contents,--config-file=${prefix},g" ${prefix}/Library/LaunchDaemons/org.freedesktop.dbus-system.plist
+sed -i .bak -e "s,--config-file=.*/Contents,--config-file=${prefix},g" ${prefix}/Library/LaunchAgents/org.freedesktop.dbus-session.plist
+sed -i .bak -e "s,servicehelper>.*/Contents,servicehelper>${prefix},g" ${prefix}/Resources/dbus-1/system.conf
+sed -i .bak -e "s,pidfile>.*/Contents,pidfile>${prefix},g" ${prefix}/Resources/dbus-1/system.conf
+sed -i .bak -e "s,unix:path=.*/Contents,unix:path=${prefix},g" ${prefix}/Resources/dbus-1/system.conf
+launchctl load ${prefix}/Library/LaunchDaemons/org.freedesktop.dbus-system.plist
+launchctl load ${prefix}/Library/LaunchAgents/org.freedesktop.dbus-session.plist
+
+echo
+echo "========================================="
+echo "The start-up time of CASA may vary"
+echo "depending on whether the shared libraries"
+echo "are cached or not."
+echo "========================================="
+echo
+
+casapy_wdir=$(defaults read edu.nrao.casa.macosx.casapy casapy.working.dir 	2>/dev/null)
+if (( ${#casapy_wdir} > 0 )); then
+	mkdir -p "$casapy_wdir"
+	cd "$casapy_wdir" && echo "=== cd: "$(pwd)" ==="
+	echo "==="
+else
+	cd $startDir
+fi
+
+
+# This bit of code, copies the old casapy.log file to one with a 
+# date string based on the last entry and then blows away the casapy.log
+# after creating a hard link
+
+if [[ -f casapy.log ]]; then
+	ln casapy.log casapy.$(tail -n 1 casapy.log | cut -c 1-19 | tr ' ' T).log && rm casapy.log
+fi
+
+
+
+casapy_opts=$(defaults read edu.nrao.casa.macosx.casapy casapy.opts 		2>/dev/null)
+
+
+#exec -a casapy ${prefix}/MacOS/ipython -pylab
+#exec  -a casapy ${prefix}/MacOS/casaCpy $casapy_opts $*
+exec -a pythonw ${prefix}/MacOS/pythonw ${prefix}/Resources/python/casapy.py $*

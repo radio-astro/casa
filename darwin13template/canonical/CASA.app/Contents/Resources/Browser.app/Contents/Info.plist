@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleAllowMixedLocalizations</key>
+	<true/>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>applet</string>
+	<key>CFBundleIconFile</key>
+	<string>CASABrowser</string>
+	<key>CFBundleIdentifier</key>
+	<string>edu.nrao.casa.macosx.casapy</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>CASA Table Browser</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleSignature</key>
+	<string>cAsatAblebRowser</string>
+	<key>WindowState</key>
+	<dict>
+		<key>name</key>
+		<string>ScriptWindowState</string>
+		<key>positionOfDivider</key>
+		<real>274</real>
+		<key>savedFrame</key>
+		<string>77 390 439 460 0 0 1440 878 </string>
+		<key>selectedTabView</key>
+		<string>result</string>
+	</dict>
+</dict>
+</plist>
