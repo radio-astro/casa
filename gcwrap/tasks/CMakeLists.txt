@@ -49,6 +49,7 @@ importfitsidi.xml
 importgmrt.xml
 importuvfits.xml
 importvla.xml
+imrebin.xml
 imreframe.xml
 imregrid.xml
 imsmooth.xml

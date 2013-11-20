@@ -7260,7 +7260,7 @@ ia.close()
 
  
    <method type="function" name="rebin">
-   <shortdescription>rebin the image by the specified factors</shortdescription>
+   <shortdescription>Rebin an image by the specified integer factors</shortdescription>
    
 <input>
   
@@ -7273,7 +7273,7 @@ ia.close()
      </param>
   
      <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
+     <description>The region of interest.  See help par.region. Default is whole image.</description>
      <value></value>
      </param>
   
@@ -7323,9 +7323,7 @@ temporary image is deleted.
 
 Sometimes it is useful to drop axes of length one (degenerate axes). 
 Use the {\stfaf dropdeg} argument if you want to do this.  It will
-discard the axes from the input image.  Therefore the output shape and
-Coordinate System that you supply must be consistent with the input
-image after the degenerate axes are dropped. 
+discard the axes from the input image.  
 
 </description>
 
