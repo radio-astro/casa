@@ -372,6 +372,27 @@ class sdflag2_test_timerange(unittest.TestCase):
 
         # verification
         self.verify(self.infile, flag_row_expected)
+
+    def test12(self):
+        """test12: test with the data that all rows are flagged"""
+        # edit infile
+        table = gentools(['tb'])[0]
+        table.open(self.infile, nomodify=False)
+        flagrow = table.getcol('FLAGROW')
+        flagrow[:] = 1
+        table.putcol('FLAGROW', flagrow)
+        table.close()
+        
+        # all rows are flagged
+        T0 = '2006/01/19/01:52:05'
+        T1 = '2006/01/19/02:08:45'
+        timerange = '%s~%s'%(T0,T1)
+        flag_row_expected = numpy.array([True, True, True, True, True, True], dtype=bool)
+        sdflag2(infile=self.infile, mode='manual', timerange=timerange)
+
+        # verification
+        self.verify(self.infile, flag_row_expected)
+        
         
         
 def suite():
