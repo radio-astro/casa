@@ -29,8 +29,6 @@
 
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Quanta/MVTime.h>
-// #include <casa/Utilities/Precision.h>
-//#include <casa/OS/Memory.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
@@ -38,7 +36,6 @@
 #include <scimath/Mathematics/Combinatorics.h>
 
 #include <imageanalysis/ImageAnalysis/ProfileFitResults.h>
-
 
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
@@ -174,7 +171,6 @@ ImageProfileFitter::ImageProfileFitter(
 ImageProfileFitter::~ImageProfileFitter() {}
 
 Record ImageProfileFitter::fit() {
-
 	// do this check here rather than at construction because _polyOrder can be set
 	// after construction but before fit() is called
     _checkNGaussAndPolyOrder();
@@ -185,10 +181,13 @@ Record ImageProfileFitter::fit() {
     	std::auto_ptr<ImageInterface<Float> > clone(
     		_getImage()->cloneII()
     	);
-    	 _subImage.reset( new SubImage<Float>(SubImageFactory<Float>::createSubImage(
-    			*clone, *_getRegion(),
-    			_getMask(), 0, False, AxesSpecifier(), _getStretch()
-))
+    	_subImage.reset(
+    		new SubImage<Float>(
+    			SubImageFactory<Float>::createSubImage(
+    				*clone, *_getRegion(), _getMask(), 0,
+    				False, AxesSpecifier(), _getStretch()
+    			)
+    		)
     	);
     	if (_sigma.get()) {
     		if (! _sigmaName.empty()) {
@@ -601,12 +600,6 @@ void ImageProfileFitter::_fitallprofiles() {
 	// Do fits
 	// FIXME give users the option to show a progress bar
 	Bool showProgress = True;
-	if (_nonPolyEstimates.nelements() > 0) {
-		String doppler = "";
-		ImageUtilities::getUnitAndDoppler(
-			_xUnit, doppler, _fitAxis, cSys
-		);
-	}
 	_fitProfiles(
 		fitImage, residImage,
 		showProgress
@@ -643,7 +636,6 @@ void ImageProfileFitter::_fitProfiles(
 	if (pResid.get() && pResid->hasPixelMask() && pResid->pixelMask().isWritable()) {
 		pResidMask = &(pResid->pixelMask());
 	}
-	//
 	IPosition sliceShape(nDim, 1);
 	sliceShape(_fitAxis) = inShape(_fitAxis);
 	Array<Float> failData(sliceShape, NAN);
@@ -653,9 +645,14 @@ void ImageProfileFitter::_fitProfiles(
 
     String doppler = "";
 	CoordinateSystem csys = _subImage->coordinates();
-	ImageUtilities::getUnitAndDoppler(
-		_xUnit, doppler, _fitAxis, csys
-	);
+	if (_isSpectralIndex) {
+		_xUnit = csys.spectralCoordinate().worldAxisUnits()[0];
+	}
+	else {
+		ImageUtilities::getUnitAndDoppler(
+			_xUnit, doppler, _fitAxis, csys
+		);
+	}
 	String errMsg;
 	ImageFit1D<Float>::AbcissaType abcissaType;
 	String abscissaUnits = _isSpectralIndex ? "native" : "pix";
@@ -666,7 +663,6 @@ void ImageProfileFitter::_fitProfiles(
 	) {
 		*_getLog() << errMsg << LogIO::EXCEPTION;
 	}
-
 	IPosition inTileShape = _subImage->niceCursorShape();
 	TiledLineStepper stepper (_subImage->shape(), inTileShape, _fitAxis);
 	RO_MaskedLatticeIterator<Float> inIter(*_subImage, stepper);
@@ -688,7 +684,6 @@ void ImageProfileFitter::_fitProfiles(
 			)
 		);
 	}
-
 	vector<IPosition> goodPos(0);
 	Bool checkMinPts = _subImage->isMasked();
 	Array<Bool> fitMask;
@@ -697,7 +692,7 @@ void ImageProfileFitter::_fitProfiles(
 	}
 	SpectralList newEstimates = _nonPolyEstimates;
 
-	ImageFit1D<Float> fitter = (_sigma.get() == 0)
+	ImageFit1D<Float> fitter = (! _sigma)
 		? ImageFit1D<Float>(*_subImage, _fitAxis)
 		: ImageFit1D<Float>(*_subImage, *_sigma, _fitAxis);
 
@@ -713,9 +708,6 @@ void ImageProfileFitter::_fitProfiles(
 			abcissaType, True, 0
 		);
 		if (_isSpectralIndex) {
-			abscissaValues = fitter.makeAbscissa(
-				abcissaType, True, 0
-			);
 			_setAbscissaDivisorIfNecessary(abscissaValues);
 			if (_abscissaDivisor != 1) {
 				divisorPtr = &_abscissaDivisor;
@@ -735,7 +727,6 @@ void ImageProfileFitter::_fitProfiles(
 			newEstimates.add(*polyEl);
 		}
 	}
-
 	Array<Double> (*xfunc)(const Array<Double>&) = 0;
 	Array<Double> (*yfunc)(const Array<Double>&) = 0;
 	if (_nLTPCoeffs > 0) {
@@ -928,48 +919,53 @@ void ImageProfileFitter::_setAbscissaDivisorIfNecessary(
 void ImageProfileFitter::_flagFitterIfNecessary(
 	ImageFit1D<Float>& fitter
 ) const {
-	if (
-		! fitter.converged()
-		|| (
-			_goodAmpRange.size() == 0 && _goodCenterRange.size() == 0
-			&& _goodFWHMRange.size() == 0
-		)
-	) {
+	if (! fitter.converged()) {
 		return;
 	}
+	Bool checkComps = _goodAmpRange.size() > 0 || _goodCenterRange.size() > 0
+		|| _goodFWHMRange.size() > 0;
 	SpectralList solutions = fitter.getList(True);
 	for (uInt i=0; i<solutions.nelements(); i++) {
-		switch (solutions[i]->getType()) {
-		case SpectralElement::GAUSSIAN:
-		// allow fall through
-		case SpectralElement::LORENTZIAN: {
-			if (
-				! _isPCFSolutionOK(
-					dynamic_cast<
-						const PCFSpectralElement*
-					>(solutions[i])
-				)
-			) {
-				fitter.invalidate();
-				return;
-			}
-			break;
+		if (
+			anyTrue(isNaN(solutions[i]->get()))
+			|| anyTrue(isNaN(solutions[i]->getError()))
+		) {
+			fitter.invalidate();
+			return;
 		}
-		case SpectralElement::GMULTIPLET: {
-			const GaussianMultipletSpectralElement *gm = dynamic_cast<
-					const GaussianMultipletSpectralElement*
-				>(solutions[i]);
-			Vector<GaussianSpectralElement> gse = gm->getGaussians();
-			for (uInt j=0; j<gse.size(); j++) {
-				if (! _isPCFSolutionOK(&gse[i])) {
+		if (checkComps) {
+			switch (solutions[i]->getType()) {
+			case SpectralElement::GAUSSIAN:
+			// allow fall through
+			case SpectralElement::LORENTZIAN: {
+				if (
+					! _isPCFSolutionOK(
+						dynamic_cast<
+							const PCFSpectralElement*
+						>(solutions[i])
+					)
+				) {
 					fitter.invalidate();
 					return;
 				}
+				break;
 			}
-			break;
-		}
-		default:
-			continue;
+			case SpectralElement::GMULTIPLET: {
+				const GaussianMultipletSpectralElement *gm = dynamic_cast<
+					const GaussianMultipletSpectralElement*
+				>(solutions[i]);
+				Vector<GaussianSpectralElement> gse = gm->getGaussians();
+				for (uInt j=0; j<gse.size(); j++) {
+					if (! _isPCFSolutionOK(&gse[i])) {
+						fitter.invalidate();
+						return;
+					}
+				}
+				break;
+			}
+			default:
+				continue;
+			}
 		}
 	}
 }
