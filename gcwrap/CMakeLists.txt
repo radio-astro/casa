@@ -275,7 +275,7 @@ elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
   set( CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
 
   if( CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
-    set( casa_packages /usr/lib64/casapy )
+    set( casa_packages /usr/lib64/casa/01 )
     if( NOT arch )
     	set( arch linux_64b )
     endif()
