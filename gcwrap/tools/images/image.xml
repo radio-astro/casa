@@ -4465,7 +4465,10 @@ The same rules that apply to singlets when multifit=True apply to multiplets.
 LIMITING RANGES FOR SOLUTION PARAMETERS
 In cases of low (or no) signal to noise spectra, it is still possible for the fit to converge, but often to a
 nonsensical solution. The astronomer can use her knowledge of the source to filter out obviously bogus solutions.
-One can limit the ranges of solution parameters to known "good" values via the goodamprange, goodcenterrange, and goodfwhmrange
+Any solution which contains a NaN value as a value or error in any one of its parameters is automatically marked as
+invalid.
+
+One can also limit the ranges of solution parameters to known "good" values via the goodamprange, goodcenterrange, and goodfwhmrange
 parameters. Any combination can be specified and the limit constraints will be ANDed together. The ranges apply to all PCF components
 that might be fit; choosing ranges on a component by component basis is not supported. If specified,
 an array of exactly two numerical values must be given to indicate the range of acceptable solution values for
@@ -4492,6 +4495,9 @@ fixed during the fit in the plpfix or ltpfix array. If supplied, this array shou
 initial estimates array. A value
 of True means the corresponding coefficient will be held fixed during the fit. An empty array indicates that no
 parameters will be held fixed. This is the default.
+
+Because the logarithm of the ordinate values must be taken before fitting a logarithmic transformed polynomial,
+all non-positive pixel values are effectively masked for the purposes of fitting.
 
 INCLUDING STANDARD DEVIATIONS OF PIXEL VALUES
 If the standard deviations of the pixel values in the input image are known and they vary in the image (eg they are higher for pixels
@@ -4522,10 +4528,11 @@ axis having length of 1:
 
 attempted: a boolean array indicating which fits were attempted (eg if too few unmasked points, a fit will not be attempted).
 converged: a boolean array indicating which fits converged. False if the fit was not attempted.
-valid: a boolean array indicating which solutions fall within the specified valid ranges of parameter space
-niter: an int array indicating the number of iterations for each profile, &lt;0 if the fit did not converge
-ncomps: the number of components (gaussian singlets + lorentzian singlets + gaussian multiplets + polynomial) fit for the profile,
-        &lt;0 if the fit did not converge
+valid:     a boolean array indicating which solutions fall within the specified valid ranges of parameter space (see
+           section LIMITING RANGES FOR SOLUTION PARAMETERS for details).
+niter:     an int array indicating the number of iterations for each profile, &lt;0 if the fit did not converge
+ncomps:    the number of components (gaussian singlets + lorentzian singlets + gaussian multiplets + polynomial) fit for the profile,
+           &lt;0 if the fit did not converge
 direction: a string array containing the world direction coordinate for each profile
 
 There is a "type" array having number of dimensions equal to the number of dimensions in the above arrays plus one. The shape of
@@ -7594,7 +7601,6 @@ in general regridding is inaccurate for images that the angular resolution is po
 sampled. A check is done for such cases and a warning message is emitted if a beam present.
 However, no such check is done if there is no beam present. To add a restoring beam to
 an image, use ia.setrestoringbeam().
-         
 
 </description>
 

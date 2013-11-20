@@ -217,6 +217,9 @@ and a logarithmic transformed polynomial is simply the result of this equation a
 
 ln(y) = c0 + c1*ln(x) + c2*ln(x/D)**2 +  ... + cn*ln(x/D)**n
 
+Because the logarithm of the ordinate values must be taken before fitting a logarithmic transformed polynomial,
+all non-positive pixel values are effectively masked for the purposes of fitting.
+
 The coefficients of the two forms are equal to each other except that c0 in the second equation is equal to
 ln(c0) of the first. In the case of fitting a spectral index, which is traditionally represented as alpha, is
 equal to c1.
@@ -281,11 +284,11 @@ axis having length of 1:
 
 attempted: a boolean array indicating which fits were attempted (eg if too few unmasked points, a fit will not be attempted).
 converged: a boolean array indicating which fits converged. False if the fit was not attempted.
-valid: a boolean array indicating which solutions fall within the specified valid ranges of parameter space, not currently used for this task; all
-solutions are considered valid.
-niter: an int array indicating the number of iterations for each profile, &lt;0 if the fit did not converge
-ncomps: the number of components (gaussian singlets + lorentzian singlets + gaussian multiplets + polynomial) fit for the profile,
-        &lt;0 if the fit did not converge
+valid:     a boolean array indicating which solutions fall within the specified valid ranges of parameter space. Any solution for
+           which a value or error is NaN is automatically marked as invalid.
+niter:     an int array indicating the number of iterations for each profile, &lt;0 if the fit did not converge
+ncomps:    the number of components (gaussian singlets + lorentzian singlets + gaussian multiplets + polynomial) fit for the profile,
+           &lt;0 if the fit did not converge
 direction: a string array containing the world direction coordinate for each profile
 
 There is a "type" array having number of dimensions equal to the number of dimensions in the above arrays plus one. The shape of
