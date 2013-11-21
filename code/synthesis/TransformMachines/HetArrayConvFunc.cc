@@ -472,9 +472,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    LatticeFFT::cfft2d(subim2);
 
 	    /////////////////////////////
-	    Float maxVal=max(abs(subim)).getFloat();
-	    subim.copyData((LatticeExpr<Complex>) (subim/maxVal));
-
+	    //Float maxVal=max(abs(subim)).getFloat();
+	    //subim.copyData((LatticeExpr<Complex>) (subim/maxVal));
 	    ///////////////////////////
 
 	 }
