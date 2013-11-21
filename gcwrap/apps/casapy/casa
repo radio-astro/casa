@@ -210,7 +210,7 @@ function set_CASA_3RD_PARTY_DIRECTORY {
             result="$CASA_INSTALLATION_DIRECTORY"
         else
             if [ "`uname -p`" = "x86_64" ]; then
-                result="/usr/lib64/casapy"
+                result="/usr/lib64/casa/01"
             else
                 result="/usr/lib/casapy"
             fi
@@ -274,7 +274,7 @@ function set_CASAPY_SCRIPT {
     # Ignore any previous values.
     local result=""
     if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
-        result="${CASA_INSTALLATION_DIRECTORY}/python/2.6/casapy.py"
+        result="${CASA_INSTALLATION_DIRECTORY}/python/2.7/casapy.py"
     else
         case $OS_TYPE in
         "Darwin")
