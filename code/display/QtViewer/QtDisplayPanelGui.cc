@@ -213,8 +213,9 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 				annotAct_(0), mkRgnAct_(0), fboxAct_(0), cleanAct_(0), rgnMgrAct_(0), shpMgrAct_(0),
 				rc(viewer::getrc()), rcid_(rcstr), use_new_regions(true),
 				showdataoptionspanel_enter_count(0),
-				/*controlling_dd(0),*/ preferences(0),
-				animationHolder( NULL ), histogrammer( NULL ), colorHistogram( NULL ),
+				/*controlling_dd(0),*/ preferences(0), animationHolder( NULL ),
+				adjust_channel_animator(true), adjust_image_animator(true),
+				histogrammer( NULL ), colorHistogram( NULL ),
 				fitTool( NULL ), sliceTool( NULL ), imageManagerDialog(NULL),
 				clean_tool(0), regionDock_(0),
 				status_bar_timer(new QTimer( )),
@@ -875,30 +876,16 @@ void QtDisplayPanelGui::disconnectHistogram() {
 }
 
 void QtDisplayPanelGui::resetListenerImage() {
-	QtDisplayData* controllingDD = NULL;
-	if ( qdp_ != NULL ){
-		controllingDD = qdp_->getControllingDD();
-	}
-	if ( controllingDD == NULL ){
-		controllingDD = dd();
-	}
-
+	QtDisplayData* controllingDD = dd();
 	if ( controllingDD != NULL ) {
-
-		std::tr1::shared_ptr<ImageInterface<float> > img = controllingDD->imageInterface();
+		std::tr1::shared_ptr<ImageInterface<float> > img = /*pdd*/controllingDD->imageInterface();
 		if ( sliceTool != NULL ) {
-			if ( img.get() != NULL ){
-				ImageInterface<float>* clonedImg = img.get()->cloneII();
-				sliceTool->setImage( clonedImg );
-			}
-			else {
-				sliceTool->setImage( NULL );
-			}
+			sliceTool->setImage( img );
 		}
 
 		if ( histogrammer != NULL ) {
 			histogrammer->setImage( img );
-			const viewer::ImageProperties & imgProperties = controllingDD->imageProperties( );
+			const viewer::ImageProperties & imgProperties = /*pdd*/controllingDD->imageProperties( );
 			if ( imgProperties.hasSpectralAxis() ) {
 				int spectralAxisNum = imgProperties.spectralAxisNumber();
 				const Vector<int> imgShape = imgProperties.shape();
@@ -908,12 +895,10 @@ void QtDisplayPanelGui::resetListenerImage() {
 				histogrammer->setChannelCount( 1 );
 			}
 		}
+
 	} else {
 		if ( histogrammer != NULL ) {
 			histogrammer->setImage( std::tr1::shared_ptr<ImageInterface<Float> >() );
-		}
-		if ( sliceTool != NULL ){
-			sliceTool->setImage( NULL);
 		}
 
 	}
@@ -1210,6 +1195,8 @@ QtDisplayData* QtDisplayPanelGui::createDD( String path, String dataType,
 		bool masterCoordinate, bool masterSaturation, bool masterHue,
 		const viewer::DisplayDataOptions &ddo,
 		const viewer::ImageProperties &props ) {
+	adjust_channel_animator = true;
+	adjust_image_animator = true;
 	QtDisplayData* qdd = new QtDisplayData( this, path, dataType, displayType, ddo, props );
 	return processDD( path, dataType, displayType, autoRegister,
 			insertPosition, masterCoordinate, masterSaturation, masterHue, qdd, ddo  );
@@ -1332,6 +1319,15 @@ void QtDisplayPanelGui::updateFrameInformationImage(){
 		iter++;
 	}
 	animationHolder->setModeEnabled( uniqueImages.size() );
+	//Update the animator to reflect the current axis state.
+	if ( adjust_image_animator ) {
+		adjust_image_animator = false;
+		if ( animationHolder->getImageCount( ) <= 1 ) {
+			animationHolder->foldImage( );
+		} else {
+			animationHolder->unfoldImage( );
+		}
+	}
 }
 
 int QtDisplayPanelGui::numFrames( ) {
@@ -1695,7 +1691,7 @@ QtDisplayData* QtDisplayPanelGui::lookForExistingController() {
 		if ( pdd != 0 && pdd->isImage() ) {
 			std::tr1::shared_ptr<ImageInterface<float> > img = pdd->imageInterface( );
 			PanelDisplay* ppd = qdp_->panelDisplay( );
-			if ( ppd != 0 && /*ppd->isCSmaster(pdd->dd()) &&*/ img ) {
+			if ( ppd != 0 && ppd->isCSmaster(pdd->dd()) && img ) {
 				ctrld = pdd;
 				break;
 			}
@@ -1823,10 +1819,18 @@ void QtDisplayPanelGui::updateViewedImage(){
 				this, SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )),
 				Qt::UniqueConnection );
 
-		//Up date the animator to reflect the current axis state.
+		//Update the animator to reflect the current axis state.
 		if ( animationHolder != NULL ){
 			String zAxisName = newViewedImage->getZAxisName();
 			animationHolder->setChannelZAxis( zAxisName.c_str());
+			if ( adjust_channel_animator ) {
+				adjust_channel_animator = false;
+				if ( animationHolder->getChannelCount( ) <= 1 ) {
+					animationHolder->foldChannel( );
+				} else {
+					animationHolder->unfoldChannel( );
+				}
+			}
 		}
 	}
 }
@@ -3014,7 +3018,7 @@ void QtDisplayPanelGui::replaceControllingDD( QtDisplayData* oldControllingDD, Q
 
 		//qdp_->setControllingDD( newControllingDD );
 
-		resetListenerImage();
+
 		emit axisToolUpdate( newControllingDD );
 
 

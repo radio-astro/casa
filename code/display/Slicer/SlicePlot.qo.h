@@ -50,7 +50,7 @@ namespace casa {
 		SlicePlot(QWidget *parent = NULL, bool fullVersion = false );
 
 		//Data
-		void setImage( ImageInterface<float>* img );
+		void setImage( std::tr1::shared_ptr<ImageInterface<float> > img );
 		void updateChannel( int channel );
 		void setRegionSelected( int regionId, bool selected );
 
