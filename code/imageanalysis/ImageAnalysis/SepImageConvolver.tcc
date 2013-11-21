@@ -120,7 +120,7 @@ SepImageConvolver<T> &SepImageConvolver<T>::operator=(const SepImageConvolver<T>
 template <class T>
 void SepImageConvolver<T>::setKernel(uInt axis, const Vector<T>& kernel)
 {
-   checkAxis(axis);
+   _checkAxis(axis);
 //
    uInt n = itsVectorKernels.nelements() + 1;
    itsVectorKernels.resize(n, True);
@@ -134,7 +134,7 @@ void SepImageConvolver<T>::setKernel(uInt axis, VectorKernel::KernelTypes kernel
                                      const Quantum<Double>& width, Bool autoScale,
                                      Bool useImageShapeExactly, Double scale)
 {
-// Catch pixel units
+	// Catch pixel units
 
    UnitMap::putUser("pix",UnitVal(1.0), "pixel units");
    String sunit = width.getFullUnit().getName();
@@ -144,15 +144,14 @@ void SepImageConvolver<T>::setKernel(uInt axis, VectorKernel::KernelTypes kernel
       itsOs << LogIO::NORMAL;
       return;
    }
-//
-   checkAxis(axis);
-//
-// Convert width to pixels
-//
+   _checkAxis(axis);
+
+   // Convert width to pixels
+
    CoordinateSystem cSys = itsImagePtr->coordinates();
    Int worldAxis = cSys.pixelAxisToWorldAxis(axis);
    Double inc = cSys.increment()(worldAxis);
-//
+
    Unit unit = Unit(cSys.worldAxisUnits()(worldAxis));
    if (width.getFullUnit()!=unit) {
       itsOs << "Specified width units (" << width.getUnit() 
@@ -160,7 +159,7 @@ void SepImageConvolver<T>::setKernel(uInt axis, VectorKernel::KernelTypes kernel
             << unit.getName() << LogIO::EXCEPTION;
    }
    Double width2 = abs(width.getValue(unit)/inc);
-//
+
    itsOs.output() << "Axis " << axis+1<< " : setting width "
          << width << " = " << width2 << " pixels" << endl;
    itsOs <<  LogIO::NORMAL;
@@ -172,10 +171,10 @@ void SepImageConvolver<T>::setKernel(uInt axis, VectorKernel::KernelTypes kernel
                                      Double width, Bool autoScale, 
                                      Bool useImageShapeExactly, Double scale)
 {
-   checkAxis(axis);
-//
-// T can only be Float or Double
-//
+   _checkAxis(axis);
+
+   // T can only be Float or Double
+
    Bool peakIsUnity = !autoScale;
    uInt shape = itsImagePtr->shape()(axis);
    Vector<T> x = VectorKernel::make(kernelType, T(width), shape, 
@@ -184,7 +183,7 @@ void SepImageConvolver<T>::setKernel(uInt axis, VectorKernel::KernelTypes kernel
    uInt n = itsVectorKernels.nelements() + 1;
    itsVectorKernels.resize(n, True);
    itsVectorKernels[n-1] = new Vector<T>(x.copy());
-//
+
    itsAxes.resize(n, True);
    itsAxes(n-1) = axis;
 }
@@ -270,7 +269,7 @@ void SepImageConvolver<T>::convolve(ImageInterface<T>& imageOut)
                << "The tile shape is not integral along this axis, performance may degrade" 
                << LogIO::POST;
       }
-      smoothProfiles (imageOut, axis, *(itsVectorKernels[i]));
+      _smoothProfiles (imageOut, axis, *(itsVectorKernels[i]));
    }  
 }
 
@@ -287,7 +286,7 @@ void SepImageConvolver<T>::convolve()
 // We must replace masked pixels by zeros.  These reflect 
 // both the pixel mask and the region mask.  
  
-   zero();
+   _zero();
 
 // Smooth in situ.  
       
@@ -308,7 +307,7 @@ void SepImageConvolver<T>::convolve()
 
  
 template <class T>
-void SepImageConvolver<T>::zero()
+void SepImageConvolver<T>::_zero()
 {
    if (itsImagePtr->isMasked()) {
       itsOs << LogIO::NORMAL << "Zero masked pixels" << LogIO::POST;
@@ -341,7 +340,7 @@ void SepImageConvolver<T>::zero()
 }        
  
 template <class T>
-void SepImageConvolver<T>::smoothProfiles (ImageInterface<T>& in,
+void SepImageConvolver<T>::_smoothProfiles (ImageInterface<T>& in,
                                            const Int& axis,
                                            const Vector<T>& psf)
 {
@@ -383,7 +382,7 @@ void SepImageConvolver<T>::smoothProfiles (ImageInterface<T>& in,
 }
 
 template <class T>
-void SepImageConvolver<T>::checkAxis(uInt axis) 
+void SepImageConvolver<T>::_checkAxis(uInt axis)
 {
    if (axis>itsImagePtr->ndim()-1) {
       itsOs << "Given pixel axis " << axis 
@@ -398,7 +397,7 @@ void SepImageConvolver<T>::checkAxis(uInt axis)
 }
 
 template <class T>
-Bool SepImageConvolver<T>::isTempImage (const ImageInterface<Float>* pIm) const
+Bool SepImageConvolver<T>::_isTempImage (const ImageInterface<Float>* pIm) const
 {
    Bool isTemp = False;
    const TempImage<Float>* tmp = dynamic_cast<const TempImage<Float>*>(pIm);

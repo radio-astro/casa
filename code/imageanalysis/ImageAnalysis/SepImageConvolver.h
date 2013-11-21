@@ -152,10 +152,10 @@ private:
 
 //
 
-   void checkAxis(uInt axis);
-   Bool isTempImage (const ImageInterface<Float>* pIm) const;
-   void zero();
-   void smoothProfiles (ImageInterface<T>& in,
+   void _checkAxis(uInt axis);
+   Bool _isTempImage (const ImageInterface<Float>* pIm) const;
+   void _zero();
+   void _smoothProfiles (ImageInterface<T>& in,
                         const Int& axis,
                         const Vector<T>& psf);
 };
