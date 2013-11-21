@@ -9,7 +9,7 @@ import numpy as np
 import shutil
 from scipy import linalg
 from taskinit import *
-im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi,fn,imd=gentools()
+im,cb,ms,tb,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi,fn,imd=gentools()
 
 def widebandpbcor(vis='',
                   imagename='mfim',
