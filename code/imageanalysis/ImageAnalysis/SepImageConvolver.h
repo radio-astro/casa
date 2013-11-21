@@ -153,7 +153,6 @@ private:
 	Bool itsShowProgress;
 
 	void _checkAxis(uInt axis);
-	Bool _isTempImage (const ImageInterface<Float>* pIm) const;
 	void _zero();
 	void _smoothProfiles(
 		ImageInterface<T>& in, const Int& axis,

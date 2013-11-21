@@ -353,14 +353,5 @@ void SepImageConvolver<T>::_checkAxis(uInt axis) {
    }
 }
 
-template <class T>
-Bool SepImageConvolver<T>::_isTempImage (const ImageInterface<Float>* pIm) const {
-   Bool isTemp = False;
-   const TempImage<Float>* tmp = dynamic_cast<const TempImage<Float>*>(pIm);
-   if (tmp!=0) isTemp = True;
-   return isTemp;
-}
-
-
 } //# NAMESPACE CASA - END
 
