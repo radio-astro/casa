@@ -547,6 +547,10 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       doneMainConv_p[actualConvIndex_p]=True;
       
     }
+    else{
+      convSize_p=(*convSizes_p[actualConvIndex_p])[0];
+
+    }
 
     //Apply the shift phase gradient
     convFunc.resize();
