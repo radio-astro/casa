@@ -624,6 +624,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
     }
+    else{
+      convSize_p=max(*convSizes_p[actualConvIndex_p]);
+    }
     /*
     rowMap.resize(vb.nRow());
     for (Int k=0; k < vb.nRow(); ++k){

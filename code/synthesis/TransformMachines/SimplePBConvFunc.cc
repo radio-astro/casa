@@ -277,7 +277,6 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       // Make this a nice composite number, to speed up FFTs
       CompositeNumber cn(uInt(convSize_p*2.0));    
       convSize_p  = cn.nextLargerEven(Int(convSize_p));
-      //      cerr << "convSize : " << convSize_p << endl;
 
     }
     
@@ -402,7 +401,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       //tim.show("After applys ");
       
       
- 
+      /*
       if(0) {
 	CoordinateSystem ftCoords(coords);
 	directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
@@ -419,12 +418,13 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
 	LatticeExpr<Float> le(abs(twoDPB));
 		thisScreen.copyData(le);
       }
-      
+      */
       // Now FFT and get the result back
       LatticeFFT::cfft2d(twoDPB);
       LatticeFFT::cfft2d(twoDPB2);
       
       // Write out FT of screen as an image
+      /*
       if(0) {
 	CoordinateSystem ftCoords(coords);
 	directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
@@ -441,7 +441,8 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
 	LatticeExpr<Float> le(abs(twoDPB));
 	thisScreen.copyData(le);
       }
-    
+      */
+      convFunc_p.resize();
       convFunc_p=twoDPB.getSlice(IPosition(4,0,0,0,0), IPosition(4, convSize_p, convSize_p, 1, 1), True);
       
       //convFunc/=max(abs(convFunc));
@@ -535,8 +536,6 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       IPosition trc(4, (convSize_p/2)+(newConvSize/2-1),
 		      (convSize_p/2)+(newConvSize/2-1), 0, nBeamChans-1);
       convFunctions_p[actualConvIndex_p]->resize(IPosition(5, newConvSize, newConvSize, 1, nBeamChans,1));
-      //cerr << "convFunc shape " << (convFunctions_p[actualConvIndex_p])->shape() << 
-      //"  " << " twoDPB shape " <<twoDPB.get(False)(blc,trc).shape() << endl;
       convFunctions_p[actualConvIndex_p]->copyMatchingPart(twoDPB.get(False)(blc,trc)*Complex(1.0/pbSum,0.0));
       convSize_p=newConvSize;
       convWeights_p[actualConvIndex_p]->resize(IPosition(5, newConvSize, newConvSize, 1, nBeamChans,1));
@@ -546,6 +545,10 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       (*convSizes_p[actualConvIndex_p])[0]=convSize_p;
       doneMainConv_p[actualConvIndex_p]=True;
       
+    }
+    else{
+      convSize_p=(*convSizes_p[actualConvIndex_p])[0];
+
     }
 
     //Apply the shift phase gradient
@@ -577,6 +580,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
     		}
     	}
     }
+
     convFunc.putStorage(cv, copyconv);
     weightConvFunc.putStorage(wcv, copywgt);
     convsize.resize();
@@ -609,8 +613,8 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
 
     if(tol < origwidth) tol=origwidth;
     chanFreqs.resize();
-    if(nchan >= (freq.nelements()-1)) { indgen(chanMap); chanFreqs=freq; return;}
-    if((nchan==0) || (freq.nelements()==1)) { chanFreqs=Vector<Double>(1, freq[0]);chanMap.set(0); return;}
+    if(nchan >= Int(freq.nelements()-1)) { indgen(chanMap); chanFreqs=freq; return;}
+    if((nchan==0) || (freq.nelements()== uInt(1))) { chanFreqs=Vector<Double>(1, freq[0]);chanMap.set(0); return;}
 
     //readjust the tolerance...
     tol=(max(freq)-min(freq)+origwidth)/Double(nchan);
@@ -641,8 +645,8 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
 
 
   Bool SimplePBConvFunc::checkPBOfField(const VisBuffer& vb){
-    Int fieldid=vb.fieldId();
-    String msid=vb.msName(True);
+    //Int fieldid=vb.fieldId();
+    //String msid=vb.msName(True);
     /*
      if(convFunctionMap_p.ndefined() > 0){
       if (((fluxScale_p.shape()[3] != nchan_p) || (fluxScale_p.shape()[2] != npol_p)) && calcFluxScale_p){
