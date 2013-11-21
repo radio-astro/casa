@@ -2600,7 +2600,8 @@ Tester::doTests (Int nArgs, char * args [])
 
         doTest <WeightingTests> (environment, arguments);
 
-        doTest <RowFlaggingTests> (environment, arguments);
+        // RowFlagging is out these days
+        //doTest <RowFlaggingTests> (environment, arguments);
 
         doTest <CubeFlaggingTests> (environment, arguments);
 
