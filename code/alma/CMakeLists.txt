@@ -709,16 +709,16 @@ casa_add_executable( alma bdflags2MS
   apps/asdm2MS/bdflags2MS.cc
   )
 
-casa_add_executable( alma parasdm2MS
-  apps/asdm2MS/parasdm2MS.cc
-  apps/asdm2MS/ASDM2MSFiller.cc
-  apps/asdm2MS/BDF2AsdmStManIndex.cc
-  apps/asdm2MS/ASDMTableBase.cc
-  apps/asdm2MS/ASDMTables.cc
-  apps/asdm2MS/ASDMVerbatimFiller.cc
-  apps/asdm2MS/Name2Table.cc
-  apps/asdm2MS/UvwCoords.cc
-  )
+#casa_add_executable( alma parasdm2MS
+#  apps/asdm2MS/parasdm2MS.cc
+#  apps/asdm2MS/ASDM2MSFiller.cc
+#  apps/asdm2MS/BDF2AsdmStManIndex.cc
+#  apps/asdm2MS/ASDMTableBase.cc
+#  apps/asdm2MS/ASDMTables.cc
+#  apps/asdm2MS/ASDMVerbatimFiller.cc
+#  apps/asdm2MS/Name2Table.cc
+#  apps/asdm2MS/UvwCoords.cc
+#  )
 
 casa_add_assay(alma ASDMBinaries/test/tReadBigBDF.cc)
 casa_add_assay(alma ASDMBinaries/test/tReadAllBDFs.cc)
