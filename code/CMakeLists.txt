@@ -442,7 +442,7 @@ file( WRITE ${casaroot}/casainit.csh
 # Choose to have correct RPATHs both in the build tree and
 # in the install tree (at the cost of having to change the
 # rpath when installing)
-set( CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib )
+set( CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:arbitraryExtraPaddingToAllowForRpathGrowth" )
 set( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set( CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib )
 
