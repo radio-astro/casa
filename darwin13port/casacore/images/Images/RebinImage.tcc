@@ -46,17 +46,13 @@ RebinImage<T>::RebinImage (const ImageInterface<T>& image,
                            const IPosition& factors)
 : itsImagePtr (image.cloneII())
 {
-	if (
+	ThrowIf (
 		image.imageInfo().hasMultipleBeams()
 		&& image.coordinates().hasSpectralAxis()
-		&& factors[image.coordinates().spectralAxisNumber()] != 1
-	) {
-		LogIO log;
-		log << LogOrigin("RebinImage", __FUNCTION__)
-			<< "This image has multiple beams. The spectral axis cannot be rebinned"
-			<< LogIO::EXCEPTION;
-	}
-  itsRebinPtr = new RebinLattice<T>(image, factors);
+		&& factors[image.coordinates().spectralAxisNumber()] != 1,
+        "This image has multiple beams. The spectral axis cannot be rebinned"
+	);
+  itsRebinPtr.reset(new RebinLattice<T>(image, factors));
 //
   CoordinateSystem cSys = 
      CoordinateUtil::makeBinnedCoordinateSystem (factors, image.coordinates(), True);
@@ -73,14 +69,12 @@ RebinImage<T>::RebinImage (const RebinImage<T>& other)
 : ImageInterface<T> (other),
   itsImagePtr (other.itsImagePtr->cloneII())
 {
-  itsRebinPtr = new RebinLattice<T> (*other.itsRebinPtr);
+  itsRebinPtr.reset(new RebinLattice<T> (*other.itsRebinPtr));
 }
 
 template<class T>
 RebinImage<T>::~RebinImage()
 {
-  delete itsImagePtr;
-  delete itsRebinPtr;
 }
 
 template<class T>

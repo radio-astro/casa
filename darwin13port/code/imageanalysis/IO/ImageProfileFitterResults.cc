@@ -1241,7 +1241,7 @@ String ImageProfileFitterResults::_logTransPolyToString(
 ) const {
 	ostringstream summary;
 	summary << "    Type         : LOGARITHMIC TRANSFORMED POLYNOMIAL" << endl;
-	summary << "    Function     : c0 + ";
+	summary << "    Function     : ln(y) = c0";
 	uInt nElements = ltp.get().size();
 	for (uInt i=1; i<nElements; i++) {
 		summary << " + c" << i << "*ln(x/D)";

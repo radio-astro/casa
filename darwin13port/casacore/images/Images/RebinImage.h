@@ -31,6 +31,7 @@
 
 //# Includes
 #include <images/Images/ImageInterface.h>
+#include <tr1/memory.hpp>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -185,8 +186,8 @@ public:
 
 private:
   //# itsImagePtr points to the parent image.
-  ImageInterface<T>* itsImagePtr;
-  RebinLattice<T>*   itsRebinPtr;
+  std::tr1::shared_ptr<ImageInterface<T> > itsImagePtr;
+  std::tr1::shared_ptr<RebinLattice<T> >   itsRebinPtr;
 
   //# Make members of parent class known.
 public:

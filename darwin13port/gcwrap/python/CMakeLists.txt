@@ -120,6 +120,7 @@ scripts/task_importgmrt.py
 scripts/task_importuvfits.py
 scripts/task_importvla.py
 scripts/task_impv.py
+scripts/task_imrebin.py
 scripts/task_imreframe.py
 scripts/task_imregrid.py
 scripts/task_imsmooth.py
