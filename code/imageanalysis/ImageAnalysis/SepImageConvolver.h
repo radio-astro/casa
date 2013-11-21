@@ -94,73 +94,72 @@ template <class T> class SepImageConvolver
 public:
 
 
-// Constructor 
-   SepImageConvolver (ImageInterface<T>& image, LogIO &os, Bool showProgress);
+	// Constructor
+	SepImageConvolver (ImageInterface<T>& image, LogIO &os, Bool showProgress);
 
-// Copy constructor.  Uses reference semantics.
-   SepImageConvolver(const SepImageConvolver<T> &other);
+	// Copy constructor.  Uses reference semantics.
+	SepImageConvolver(const SepImageConvolver<T> &other);
 
-// Destructor
-  ~SepImageConvolver();
+	// Destructor
+	~SepImageConvolver();
 
-// Assignment operator. Uses reference semantics.
-   SepImageConvolver &operator=(const SepImageConvolver<T> &other);
+	// Assignment operator. Uses reference semantics.
+	SepImageConvolver &operator=(const SepImageConvolver<T> &other);
 
-// Set convolution kernel vector.  The specified axis is convolved
-// by the given kernel.
-   void setKernel(uInt axis, const Vector<T>& kernel);
+	// Set convolution kernel vector.  The specified axis is convolved
+	// by the given kernel.
+	void setKernel(uInt axis, const Vector<T>& kernel);
 
-// Set convolution kernel.  The specified axis is convolved
-// by the given kernel.  If autoScale is True then kernel volume is unity,
-// else kernel peak is 1 * scale. If useImageShapeExactly is True, the kernel
-// will be the shape of the axis, else it will be big enough 
-// to accomodate the kernel width (e.g. +/- 5sigma for Gaussian)
-// <group>
-   void setKernel(uInt axis, VectorKernel::KernelTypes kernelType,
-                  const Quantum<Double>& width, Bool autoScale,
-                  Bool useImageShapeExactly=True, Double scale=1.0);
-   void setKernel(uInt axis, VectorKernel::KernelTypes kernelType,
-                  Double width, Bool autoScale, 
-                  Bool useImageShapeExactly=True, Double scale=1.0);
-// </group>
+	// Set convolution kernel.  The specified axis is convolved
+	// by the given kernel.  If autoScale is True then kernel volume is unity,
+	// else kernel peak is 1 * scale. If useImageShapeExactly is True, the kernel
+	// will be the shape of the axis, else it will be big enough
+	// to accomodate the kernel width (e.g. +/- 5sigma for Gaussian)
+	// <group>
+	void setKernel(
+		uInt axis, VectorKernel::KernelTypes kernelType,
+		const Quantum<Double>& width, Bool autoScale,
+		Bool useImageShapeExactly=True, Double scale=1.0
+	);
 
-// Get the convolution kernel for the specified axis
-   Vector<T> getKernel(uInt axis);
+	void setKernel(
+		uInt axis, VectorKernel::KernelTypes kernelType,
+		Double width, Bool autoScale,
+		Bool useImageShapeExactly=True, Double scale=1.0
+	);
+	// </group>
 
-// Get the convolution kernel shape for the specified axis
-   uInt  getKernelShape(uInt axis);
+	// Get the convolution kernel for the specified axis
+	Vector<T> getKernel(uInt axis);
 
-// Perform the convolution either outputting to a new image
-// or in-situ.    The error checking for the
-// convolution parameters is done when you call this
-// function.  If outputting a new image, and it needs a mask and doesn't have one,
-// the it will be given one if possible and the input
-// mask will be transferred to the output.  Masked pixels
-// are zeroed before convolving
-// <group>
-   void convolve(ImageInterface<T>& imageOut);
-   void convolve();
-// </group>
+	// Get the convolution kernel shape for the specified axis
+	uInt  getKernelShape(uInt axis);
+
+	// Perform the convolution either outputting to a new image
+	// or in-situ.    The error checking for the
+	// convolution parameters is done when you call this
+	// function.  If outputting a new image, and it needs a mask and doesn't have one,
+	// the it will be given one if possible and the input
+	// mask will be transferred to the output.  Masked pixels
+	// are zeroed before convolving
+	void convolve(ImageInterface<T>& imageOut);
 
 
 private:
-   ImageInterface<T>* itsImagePtr;
-   LogIO itsOs;
-   Vector<uInt> itsAxes;
-   PtrBlock<Vector<T>* > itsVectorKernels;
-   Bool itsShowProgress;
+	ImageInterface<T>* itsImagePtr;
+	LogIO itsOs;
+	Vector<uInt> itsAxes;
+	PtrBlock<Vector<T>* > itsVectorKernels;
+	Bool itsShowProgress;
 
-//
-
-   void _checkAxis(uInt axis);
-   Bool _isTempImage (const ImageInterface<Float>* pIm) const;
-   void _zero();
-   void _smoothProfiles (ImageInterface<T>& in,
-                        const Int& axis,
-                        const Vector<T>& psf);
+	void _checkAxis(uInt axis);
+	Bool _isTempImage (const ImageInterface<Float>* pIm) const;
+	void _zero();
+	void _smoothProfiles(
+		ImageInterface<T>& in, const Int& axis,
+		const Vector<T>& psf
+	);
 };
-
-
 
 } //# NAMESPACE CASA - END
 
