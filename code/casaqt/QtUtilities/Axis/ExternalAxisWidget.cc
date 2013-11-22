@@ -32,7 +32,7 @@
 namespace casa {
 
 ExternalAxisWidget::ExternalAxisWidget(QWidget* parent) :QWidget( parent ),
-		plot( NULL ), AXIS_SMALL_SIDE(100), TICK_LENGTH(5), MARGIN(5),
+		plot( NULL ), AXIS_SMALL_SIDE(100), TICK_LENGTH(5), MARGIN(5), MIN_START_Y(22),
 		FONT_SIZE(8), FONT_SIZE_AXIS_LABEL(8){
 }
 
@@ -42,7 +42,7 @@ void ExternalAxisWidget::setPlot( QwtPlot* plotOwner ){
 }
 
 int ExternalAxisWidget::getStartY() const {
-	return 0;
+	return MIN_START_Y;
 }
 
 double ExternalAxisWidget::getTickStartPixel( QwtPlot::Axis axis ){
@@ -62,7 +62,7 @@ double ExternalAxisWidget::getTickStartPixel( QwtPlot::Axis axis ){
 
 	int canvasBound = width();
 	if ( axis != QwtPlot::xBottom && axis != QwtPlot::xTop ){
-		canvasBound = height() - getStartY();
+		canvasBound = getCanvasHeight() - getStartY();
 	}
 	double startPixel = canvasBound * endDistancePercentage;
 	if ( axis != QwtPlot::xBottom && axis != QwtPlot::xTop ){
@@ -84,6 +84,11 @@ double ExternalAxisWidget::getTickDistance(QwtPlot::Axis axis ){
 	return tickDistance;
 }
 
+int ExternalAxisWidget::getCanvasHeight() const {
+	QwtPlotCanvas* canvas = plot->canvas();
+	return canvas->height();
+}
+
 double ExternalAxisWidget::getTickIncrement( double tickDistance, QwtPlot::Axis axis ){
 	QwtScaleDiv* scaleDiv = plot->axisScaleDiv( axis );
 	double axisExtent = scaleDiv->upperBound() - scaleDiv->lowerBound();
@@ -91,7 +96,7 @@ double ExternalAxisWidget::getTickIncrement( double tickDistance, QwtPlot::Axis 
 
 	int canvasLimit = width();
 	if ( axis != QwtPlot::xBottom && axis != QwtPlot::xTop ){
-		canvasLimit = height();
+		canvasLimit = getCanvasHeight();
 	}
 
 	double xIncrement = canvasLimit * tickPercentage;

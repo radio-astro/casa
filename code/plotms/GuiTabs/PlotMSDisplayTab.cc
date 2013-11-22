@@ -71,6 +71,7 @@ PlotMSDisplayTab::PlotMSDisplayTab(PlotMSPlotTab* tab, PlotMSPlotter* parent) :
     colorizeChooser->addItem(PMS::axis(PMS::BASELINE).c_str());
     colorizeChooser->addItem(PMS::axis(PMS::CHANNEL).c_str());
     colorizeChooser->addItem(PMS::axis(PMS::CORR).c_str());
+    colorizeChooser->addItem(PMS::axis(PMS::TIME).c_str());
     // Old way, not used because non-index METADATA items don't work!
     //    for(unsigned int i = 0; i < PlotMSCache::N_METADATA; i++)
     //        colorizeChooser->addItem(PMS::axis(PlotMSCache::METADATA[i]).c_str());

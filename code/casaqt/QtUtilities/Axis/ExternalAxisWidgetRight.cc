@@ -29,14 +29,15 @@
 #include <qwt_plot.h>
 #include <qwt_plot_canvas.h>
 #include <qwt_scale_div.h>
+#include <qwt_text_label.h>
 
 namespace casa {
 
 ExternalAxisWidgetRight::ExternalAxisWidgetRight(QWidget* parent ) :
 	ExternalAxisWidget( parent ){
-	setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding );
-	//setFixedWidth( AXIS_SMALL_SIDE);
-	setMinimumWidth( 2 * AXIS_SMALL_SIDE/3 );
+	setSizePolicy( QSizePolicy::Fixed, QSizePolicy::MinimumExpanding );
+	setFixedWidth( AXIS_SMALL_SIDE);
+	//setMinimumWidth( 2 * AXIS_SMALL_SIDE/3 );
 	useLeftScale = false;
 }
 
@@ -45,15 +46,29 @@ void ExternalAxisWidgetRight::setUseLeftScale( bool b ){
 }
 
 int ExternalAxisWidgetRight::getStartY() const {
-	QwtPlotCanvas* canvas = plot->canvas();
-	int canvasHeight = canvas->height();
-	int heightDiff =  height() - canvas->height();
-	const int MIN = 22;
-	if ( canvasHeight < MIN ){
-		heightDiff = MIN;
+	int plotHeight = height();
+	int canvasHeight = getCanvasHeight();
+	int heightDiff = plotHeight - canvasHeight;
+	if ( heightDiff < MIN_START_Y ){
+		heightDiff = MIN_START_Y;
 	}
 	return heightDiff;
 }
+
+int ExternalAxisWidgetRight::getCanvasHeight() const {
+	//We should use canvas->height()
+	//But because the main canvas is not laid out yet when this
+	//gets drawn, canvas->height gives a bogus value.  Thus, we
+	//are using plot->height() - (height of the plot title plus margins) instead.
+
+	int plotHeight = height();
+	QwtTextLabel* titleText = plot->titleLabel();
+	QRect titleRect = titleText->textRect();
+	int titleHeight =  titleRect.height() + 7;
+	int canvasHeight = plotHeight - titleHeight;
+	return canvasHeight;
+}
+
 
 void ExternalAxisWidgetRight::defineAxis( QLine& axisLine ){
 	const int MARGIN = 1;
@@ -117,30 +132,25 @@ void ExternalAxisWidgetRight::drawTicks( QPainter* painter, int tickLength ){
 	}
 }
 
+
 void ExternalAxisWidgetRight::drawAxisLabel( QPainter* painter ){
 	 QFont font = painter->font();
+	 QString mainLabel = axisLabel.trimmed();
 
-	 bool logScale = false;
-	 if ( axisLabel.indexOf( "Log") != -1 ){
-		 logScale = true;
-	 }
-	 int unitIndex = axisLabel.indexOf( "(");
-	 if ( logScale ){
-	 	 unitIndex = axisLabel.indexOf( ")")+1;
-	 }
-	 QString mainLabel = axisLabel.left( unitIndex ).trimmed();
 	 painter->rotate(90);
+
 	 QRect fontBoundingRect = QFontMetrics(font).boundingRect( mainLabel );
-	 int yPosition = -5 * width() / 6;
+	 int startY = -2 * width() / 3;
+	 int yPosition = startY - fontBoundingRect.height();
 	 int xPosition = (height() - fontBoundingRect.width())/2;
 	 painter->drawText( xPosition, yPosition, fontBoundingRect.width(), fontBoundingRect.height(),
 				  Qt::AlignHCenter|Qt::AlignTop, mainLabel);
+
 	 painter->rotate(-90);
 }
 
 
 ExternalAxisWidgetRight::~ExternalAxisWidgetRight() {
-
 }
 
 } /* namespace casa */

@@ -35,7 +35,7 @@
 #include <plotms/Data/PlotMSCacheBase.h>
 #include <plotms/Data/MSCache.h>
 #include <plotms/Data/CalCache.h>
-//#include <casaqt/QwtPlotter/QPCanvas.qo.h>
+#include <QDebug>
 
 #include <algorithm>
 #include <cmath>
@@ -209,9 +209,8 @@ bool PlotMSOverPlot::assignCanvases(PlotMSPages &pages) {
 
     uInt rows = PMS_PP_RETCALL(itsParams_, PMS_PP_Iteration, numRows, 1);
     uInt cols = PMS_PP_RETCALL(itsParams_, PMS_PP_Iteration, numColumns, 1);
-    //if(rows != itsCanvases_.size() || cols != itsCanvases_[0].size()) {
-        resize(pages, rows, cols);
-    //}
+    resize(pages, rows, cols);
+
     PlotMSPage& page = pages[pages.currentPageNumber()];
     for(uInt r = 0; r < rows; ++r) {
         for(uInt c = 0; c < cols; ++c) {
@@ -395,17 +394,7 @@ bool PlotMSOverPlot::updateCache() {
         }
     }
 
-    /*if(THREADLOAD) {
-        PlotMSCacheThread *ct = new PlotMSCacheThread(
-            this, itsCache_, caxes, cdata, data->filename(), data->selection(),
-            data->averaging(), data->transformations(), true,
-            &PlotMSOverPlot::cacheLoaded, this);
-        //itsParent_->getPlotter()->doThreadedOperation(ct);
-    } else {*/
-        //itsCache_->load(caxes, cdata, data->filename(), data->selection(),
-        //                data->averaging(), data->transformations());
-        //this->cacheLoaded_(false);
-    //}
+
     bool result = itsParent_->updateCachePlot( this,
     		PlotMSOverPlot::cacheLoaded, true );
     return result;
@@ -762,11 +751,21 @@ void PlotMSOverPlot::logPoints() {
     stringstream ss;
     ss << "Plotting ";
     if(showUnflagged) {
-        ss << itsCache_->indexer(iter_).sizeUnmasked() << " unflagged"
-           << (showFlagged ? ", " : "");
+    	if ( itsCache_->nIter() > iter_ ){
+    		ss << itsCache_->indexer(iter_).sizeUnmasked() << " unflagged"
+    				<< (showFlagged ? ", " : "");
+    	}
+    	else {
+    		ss << "0 unflagged" <<(showFlagged ? ", " : "");
+    	}
     }
     if(showFlagged) {
-        ss << itsCache_->indexer(iter_).sizeMasked() << " flagged";
+    	if ( itsCache_->nIter() > iter_ ){
+    		ss << itsCache_->indexer(iter_).sizeMasked() << " flagged";
+    	}
+    	else {
+    		ss << "0 flagged";
+    	}
     }
     ss << " points.";
 
