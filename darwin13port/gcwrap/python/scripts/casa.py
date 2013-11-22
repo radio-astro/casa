@@ -59,11 +59,11 @@ imager = casac.imager()
 calibrater = casac.calibrater()
 ms = casac.ms()
 tableplot = casac.tableplot()
-msplot = casac.msplot()
+#msplot = casac.msplot()
 pmtool = casac.plotms()
 calplot = casac.calplot()
 table = casac.table()
-flagger = casac.flagger()
+#flagger = casac.flagger()
 agentflagger = casac.agentflagger()
 image = casac.image()
 imagepol = casac.imagepol()
@@ -134,7 +134,7 @@ from partition import partition
 from plotants import  plotants
 from plotcal import  plotcal
 from plotms import  plotms
-from plotxy import  plotxy
+#from plotxy import  plotxy
 from polcal import  polcal
 from rmtables import  rmtables
 from setjy import  setjy

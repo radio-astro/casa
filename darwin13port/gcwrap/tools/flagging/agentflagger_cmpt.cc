@@ -16,7 +16,6 @@
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Exceptions/Error.h>
 #include <flagging/Flagging/AgentFlagger.h>
-#include <flagging/Flagging/RFCommon.h>
 #include <casa/Containers/RecordInterface.h>
 #include <casa/Containers/Record.h>
 #include <casa/sstream.h>

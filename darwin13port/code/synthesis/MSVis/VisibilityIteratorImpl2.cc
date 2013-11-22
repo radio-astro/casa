@@ -802,16 +802,6 @@ VisibilityIteratorImpl2::putColumnRows (ScalarColumn<T> & column, const Vector <
     column.putColumnCells(rows, array);
 }
 
-//VisibilityIteratorImpl2::VisibilityIteratorImpl2 ()
-//: channelSelector_p (0),
-//  frequencySelections_p (0),
-//  frequencySelectionsPending_p (0),
-//  reportingFrame_p (VisBuffer2::FrameNotSpecified),
-//  vi_p (NULL),
-//  spectralWindowChannelsCache_p (0),
-//  tileCacheIsSet_p (0)
-//{}
-
 VisibilityIteratorImpl2::VisibilityIteratorImpl2 (VisibilityIterator2 * vi,
                                                   const Block<const MeasurementSet *> &mss,
                                                   const SortColumns & sortColumns,
@@ -2074,7 +2064,6 @@ VisibilityIteratorImpl2::setTileCache ()
                     ROTiledStManAccessor tacc (elms, columns[k], True);
                     tacc.setCacheSize (0, 1);
                     tileCacheIsSet_p[k] = True;
-                    //cerr << "set cache on kk " << kk << " vol " << columns[k] << "  " << refTables[kk] << endl;
                 }
             }
             else {
@@ -2104,10 +2093,7 @@ VisibilityIteratorImpl2::setTileCache ()
             }
         }
         catch (AipsError x) {
-            //  cerr << "Data man type " << dataManType << "  " << dataManType.contains ("Tiled") << "  && " << (!String (cdesc.dataManagerGroup ()).empty ()) << endl;
-            //  cerr << "Failed to set settilecache due to " << x.getMesg () << " column " << columns[k]  <<endl;
-            //It failed so leave the caching as is
-            continue;
+            continue; // It failed so leave the caching as is
         }
     }
 }
@@ -2167,23 +2153,6 @@ VisibilityIteratorImpl2::usesTiledDataManager (const String & columnName,
 
     return usesTiles;
 }
-
-//void
-//VisibilityIteratorImpl2::attachColumnsSafe (const Table & t)
-//{
-//    // Normally, the call to attachColumns is redirected back to the ROVI class.
-//    // This allows writable VIs to attach columns in both the read and write impls.
-//    // However, this referral to the ROVI doesn't work during construction of this
-//    // class (VIRI) since there is as yet no pointer to the object under construction.
-//    // In that case, simply perform it locally.
-//
-//    if (vi_p == NULL){
-//        attachColumns (t);
-//    }
-//    else{
-//        vi_p->attachColumns (t);
-//    }
-//}
 
 void
 VisibilityIteratorImpl2::attachColumns (const Table & t)
@@ -2451,9 +2420,8 @@ VisibilityIteratorImpl2::uvw (Matrix<Double> & uvwmat) const
 const Vector<Float> &
 VisibilityIteratorImpl2::feed_pa (Double time) const
 {
-    //  LogMessage message (LogOrigin ("VisibilityIteratorImpl2","feed_pa"));
-
     // Absolute UT
+
     Double ut = time;
 
     if (ut != cache_p.feedpaTime_p) {
@@ -2515,7 +2483,6 @@ VisibilityIteratorImpl2::parang (Double time) const
     return cache_p.parang_p;
 }
 
-
 // Fill in azimuth/elevation of the antennas.
 // Cloned from feed_pa, we need to check that this is all correct!
 const Vector<MDirection> &
@@ -2541,9 +2508,8 @@ VisibilityIteratorImpl2::azel (Double ut) const
 MDirection
 VisibilityIteratorImpl2::azel0(Double time) const
 {
-    //  LogMessage message (LogOrigin ("VisibilityIteratorImpl2","azel0"));
-
     // Absolute UT
+
     Double ut = time;
 
     if (ut != cache_p.azel0Time_p) {
@@ -2563,9 +2529,8 @@ VisibilityIteratorImpl2::azel0(Double time) const
 Double
 VisibilityIteratorImpl2::hourang (Double time) const
 {
-    //  LogMessage message (LogOrigin ("VisibilityIteratorImpl2","azel"));
-
     // Absolute UT
+
     Double ut = time;
 
     if (ut != cache_p.hourangTime_p) {
@@ -2878,45 +2843,6 @@ VisibilityIteratorImpl2::jonesC(Vector<SquareMatrix<complex<float>, 2> >& cjones
     cjones = msIter_p->CJones ();
 }
 
-//void
-//VisibilityIteratorImpl2::writeFlag (const Matrix<Bool> & flag)
-//{
-//
-//    Int nFrequencies = channelSelector_p->getNFrequencies();
-//    Int nPolarizations = nCorrelations_p;
-//    Int nRows = this->nRows();
-//
-//    // The flag matrix is expected to have dimensions [nF, nR].
-//
-//    ThrowIf ((int) flag.nrow() != nFrequencies || (int) flag.ncolumn() != nRows,
-//             String::format ("Shape mismatch: got [%d,%d]; expected [%d,%d]",
-//                             flag.nrow(), flag.ncolumn(), nFrequencies, nRows));
-//
-//    // Convert the flag matrix into the flag cube defined in the MS.  The flag
-//    // value for a (row,channel) will be copied into all of the polarizations.
-//
-//    Cube<Bool> flagCube;
-//
-//    flagCube.resize (nPolarizations, nFrequencies, nRows);
-//
-//    for (Int row = 0; row < nRows; row++) {
-//
-//        for (Int frequency = 0; frequency < nFrequencies; frequency ++) {
-//
-//            Bool flagValue = flag (frequency, row); // same value for all polarizations
-//
-//            for (Int polarization = 0; polarization < nPolarizations; polarization ++) {
-//
-//                flagCube (polarization, frequency, row) = flagValue;
-//            }
-//        }
-//    }
-//
-//    // Write the newly constructed flag cube into the MS.
-//
-//    writeFlag (flagCube);
-//}
-
 void
 VisibilityIteratorImpl2::writeFlag (const Cube<Bool> & flags)
 {
@@ -3166,7 +3092,6 @@ VisibilityIteratorImpl2::getChannelInformation (Bool now) const
 
         // Use the explicit channel-based selection to compute the result.
 
-
         spectralWindow.resize (frequencySelection->size());
         nChannels.resize (frequencySelection->size());
         firstChannel.resize (frequencySelection->size());
@@ -3219,8 +3144,6 @@ VisibilityIteratorImpl2::writeBackChanges (VisBuffer2 * vb)
 void
 VisibilityIteratorImpl2::initializeBackWriters ()
 {
-//    backWriters_p [Flag] =
-//        makeBackWriter (& VisibilityIteratorImpl2::writeFlag, & VisBuffer2::flag);
     backWriters_p [FlagCube] =
         makeBackWriter (& VisibilityIteratorImpl2::writeFlag, & VisBuffer2::flagCube);
     backWriters_p [FlagRow] =
@@ -3229,12 +3152,8 @@ VisibilityIteratorImpl2::initializeBackWriters ()
         makeBackWriter (& VisibilityIteratorImpl2::writeFlagCategory, & VisBuffer2::flagCategory);
     backWriters_p [Sigma] =
         makeBackWriter (& VisibilityIteratorImpl2::writeSigma, & VisBuffer2::sigma);
-//    backWriters_p [SigmaMat] =
-//        makeBackWriter (& VisibilityIteratorImpl2::writeSigmaMat, & VisBuffer2::sigmaMat);
     backWriters_p [Weight] =
         makeBackWriter (& VisibilityIteratorImpl2::writeWeight, & VisBuffer2::weight);
-//    backWriters_p [WeightMat] =
-//        makeBackWriter (& VisibilityIteratorImpl2::writeWeightMat, & VisBuffer2::weightMat);
     backWriters_p [WeightSpectrum] =
         makeBackWriter (& VisibilityIteratorImpl2::writeWeightSpectrum, & VisBuffer2::weightSpectrum);
 

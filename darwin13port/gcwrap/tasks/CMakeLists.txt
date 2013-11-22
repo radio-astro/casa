@@ -77,7 +77,7 @@ plotcal.xml
 plotms.xml
 plotuv.xml
 plotweather.xml
-plotxy.xml
+#plotxy.xml
 partition.xml
 polcal.xml
 predictcomp.xml

@@ -13,7 +13,7 @@ import pylab as pl
 #qatool = casac.homefinder.find_home_by_name('quantaHome')
 #qa = qatool.create()
 
-im, cb, ms, tb, fg, me, ia, po, sm, cl, cs, rg, sl, dc, vp, msmd, fi, fn, imd = gentools()
+im, cb, ms, tb, me, ia, po, sm, cl, cs, rg, sl, dc, vp, msmd, fi, fn, imd = gentools()
 
 
 # functions defined outside of the simutil class

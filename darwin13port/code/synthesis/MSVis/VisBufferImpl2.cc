@@ -393,6 +393,16 @@ VisBufferImpl2::copyComponents (const VisBuffer2 & otherRaw,
         setShape (otherRaw.nCorrelations(), otherRaw.nChannels(), otherRaw.nRows(), True);
     }
 
+    setIterationInfo (other->msId(),
+                      other->msName (),
+                      other->isNewMs (),
+                      other->isNewArrayId (),
+                      other->isNewFieldId (),
+                      other->isNewSpectralWindow (),
+                      other->getSubchunk (),
+                      other->getCorrelationTypes(),
+                      other->getWeightScaling());
+
     Bool wasFillable = isFillable();
     setFillable (True);
 
@@ -430,16 +440,6 @@ VisBufferImpl2::copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent,
                                      NRows, Feed1, Feed2, Unknown);
 
     copyComponents (* vb, components, allowShapeChange, fetchIfNeeded);
-
-    setIterationInfo (vb->msId(),
-                      vb->msName (),
-                      vb->isNewMs (),
-                      vb->isNewArrayId (),
-                      vb->isNewFieldId (),
-                      vb->isNewSpectralWindow (),
-                      vb->getSubchunk (),
-                      vb->getCorrelationTypes(),
-                      vb->getWeightScaling());
 
     if(dirDependent){
 
