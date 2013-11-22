@@ -412,7 +412,6 @@ namespace casa {
 		void storeActiveAnnotation( QMouseEvent* event );
 		void selectChannel( QMouseEvent* event );
 		void updateChannel( QMouseEvent* event );
-		void moveChannel( QMouseEvent* event );
 		void startRangeX( QMouseEvent* event );
 		void updateRangeX( QMouseEvent* event );
 		void endRangeX( QMouseEvent* event );
