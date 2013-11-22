@@ -226,11 +226,20 @@ bool PlotMSApp::updateCachePlot( PlotMSPlot* plot,
 void PlotMSApp::setCommonAxes(bool commonX, bool commonY ){
 	itsPlotter_->setCommonAxes( commonX, commonY );
 }
+
+bool PlotMSApp::isOperationCompleted() const {
+	return operationCompleted;
+}
+
+void PlotMSApp::setOperationCompleted( bool completed ){
+	operationCompleted = completed;
+}
 // Private Methods //
 
 void PlotMSApp::initialize(bool connectToDBus, bool userGui ) {
 
 	its_want_avoid_popups=false;
+	operationCompleted = true;
 	
     itsParameters_.addWatcher(this);
     ClientFactory::ClientType clientType = ClientFactory::GUI;

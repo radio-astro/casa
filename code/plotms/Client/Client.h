@@ -147,6 +147,7 @@ public:
 	virtual void releaseDrawing();
 	virtual bool allDrawingHeld() const;
 
+	virtual void setOperationCompleted( bool completed );
 	virtual void plot() = 0;
 	virtual void showGUI( bool show = true) = 0;
 	virtual int showAndExec(bool show = true);

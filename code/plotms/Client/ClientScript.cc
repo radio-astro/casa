@@ -84,6 +84,10 @@ bool ClientScript::isInteractive() const {
 	return false;
 }
 
+void ClientScript::setOperationCompleted( bool completed ){
+	plotController->setOperationCompleted( completed );
+}
+
 bool ClientScript::isMSSummaryVerbose() const {
 	return false;
 }

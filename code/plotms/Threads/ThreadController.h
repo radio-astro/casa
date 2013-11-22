@@ -100,6 +100,12 @@ public:
 	// post-thread method was not set in the constructor.
 	virtual void postThreadMethod();
 
+	//Returns the result of the background operation.
+	bool getResult() const;
+
+	//Returns any error from the background operation.
+	String getError() const;
+
 protected:
 
 	//Starts the thread
@@ -111,8 +117,7 @@ protected:
 	//Holds error messages
 	String error;
 
-	//Returns the result of the background operation.
-	bool getResult() const;
+
 
 	// Progress widget.
 	ProgressMonitor* itsProgressWidget_;

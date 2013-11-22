@@ -25,9 +25,9 @@
 //#
 //# $Id: $
 #include <plotms/Actions/PlotMSAction.h>
-//#include <plotms/Threads/ThreadController.h>
 #include <plotms/Threads/BackgroundThread.h>
 #include <plotms/Client/Client.h>
+#include <QDebug>
 namespace casa {
 
 //////////////////////////////
@@ -98,10 +98,20 @@ bool PlotMSAction::initiateWork( BackgroundThread* thread ){
 		client->doThreadedOperation( threadController );
 	}
 	else {
-		thread->run();
-		if( postThreadMethod != NULL && postThreadObject != NULL){
-		    (*postThreadMethod )(postThreadObject, false);
+		if ( client != NULL ){
+			client->setOperationCompleted( true );
 		}
+		thread->run();
+		bool operationCompleted = thread->getResult();
+		if ( client != NULL ){
+			client->setOperationCompleted( operationCompleted );
+		}	
+		if ( operationCompleted ){
+			if( postThreadMethod != NULL && postThreadObject != NULL){
+				(*postThreadMethod )(postThreadObject, false);
+			}
+		}
+
 	}
 	return true;
 }
