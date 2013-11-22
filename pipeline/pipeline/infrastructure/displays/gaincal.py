@@ -413,30 +413,89 @@ class GaincalPhaseOffsetPlotHelper(phaseoffset.PhaseOffsetPlotHelper):
 
 class GaincalPhaseOffsetPlot(phaseoffset.PhaseOffsetPlot):
     def __init__(self, context, result):
-        calapp = result.final[0]
+        # assume just one caltable - ie one calapp - to plot
+        calapp = [c for c in result.final
+                  if 'TARGET' in c.intent
+                  and 'p' == c.origin.inputs['calmode']][0]
         vis = os.path.basename(calapp.vis)
         ms = context.observing_run.get_ms(vis)
         plothelper = GaincalPhaseOffsetPlotHelper(context, result)        
         super(GaincalPhaseOffsetPlot, self).__init__(context, ms, plothelper, scan_intent='PHASE', score_retriever=common.NullScoreFinder())
 
 
-class GaincalAmpVsTimeSummaryChart(common.PlotcalXVsYSummaryChart):
-    xaxis = 'time'
-    yaxis = 'amp'
-    iteration = 'antenna'
+class GaincalSummaryChart(common.PlotcalSpwComposite):
+    """
+    Base class for executing plotcal per spw
+    """
+    def __init__(self, context, result, xaxis, yaxis, plotrange=[]):
+        # identify the phase-only solution for the target
+        calapps = [c for c in result.final
+                   if 'TARGET' in c.intent
+                   and 'p' == c.origin.inputs['calmode']]
 
+        assert len(calapps) is 1, 'Target phase solutions != 1'
+        calapp = calapps[0]
+        
+        # request plots per spw, overlaying all antennas
+        super(GaincalSummaryChart, self).__init__(
+                context, result, calapp, xaxis=xaxis, yaxis=yaxis, ant='', 
+                plotrange=plotrange)
+
+
+class GaincalDetailChart(common.PlotcalAntSpwComposite):
+    """
+    Base class for executing plotcal per spw and antenna
+    """
+    def __init__(self, context, result, xaxis, yaxis, plotrange=[]):
+        # identify the phase-only solution for the target
+        calapps = [c for c in result.final
+                   if 'TARGET' in c.intent
+                   and 'p' == c.origin.inputs['calmode']]
+
+        assert len(calapps) is 1, 'Target phase solutions != 1'
+        calapp = calapps[0]
+        
+        # request plots per spw, overlaying all antennas
+        super(GaincalDetailChart, self).__init__(
+                context, result, calapp, xaxis=xaxis, yaxis=yaxis, 
+                plotrange=plotrange)
+    
+
+class GaincalAmpVsTimeSummaryChart(GaincalSummaryChart):
+    """
+    Create an amplitude vs time plot for each spw, overplotting by antenna.
+    """
     def __init__(self, context, result):
-        super(GaincalAmpVsTimeSummaryChart, self).__init__(context, result)
+        super(GaincalAmpVsTimeSummaryChart, self).__init__(
+                context, result, xaxis='time', yaxis='amp')
 
 
-class GaincalPhaseVsTimeSummaryChart(common.PlotcalXVsYSummaryChart):
-    xaxis = 'time'
-    yaxis = 'phase'
-    iteration = 'antenna'
-
+class GaincalAmpVsTimeDetailChart(GaincalDetailChart):
+    """
+    Create a phase vs time plot for each spw/antenna combination.
+    """
     def __init__(self, context, result):
-        super(GaincalPhaseVsTimeSummaryChart, self).__init__(context, result)    
-      
+        # request plots per spw, overlaying all antennas
+        super(GaincalAmpVsTimeDetailChart, self).__init__(
+                context, result, xaxis='time', yaxis='amp')
 
 
+class GaincalPhaseVsTimeSummaryChart(GaincalSummaryChart):
+    """
+    Create a phase vs time plot for each spw, overplotting by antenna.
+    """
+    def __init__(self, context, result):
+        # request plots per spw, overlaying all antennas
+        super(GaincalPhaseVsTimeSummaryChart, self).__init__(
+                context, result, xaxis='time', yaxis='phase', plotrange=[0,0,-180,180])
+
+
+class GaincalPhaseVsTimeDetailChart(GaincalDetailChart):
+    """
+    Create a phase vs time plot for each spw/antenna combination.
+    """
+    def __init__(self, context, result):
+        # request plots per spw, overlaying all antennas
+        super(GaincalPhaseVsTimeDetailChart, self).__init__(
+                context, result, xaxis='time', yaxis='phase', plotrange=[0,0,-180,180])
 

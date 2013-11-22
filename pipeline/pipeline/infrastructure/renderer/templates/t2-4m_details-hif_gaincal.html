@@ -79,11 +79,63 @@ $(document).ready(function() {
 	</tbody>
 </table>
 
-% if structure_plots:
+% if structure_plots or phase_vs_time_plots or amp_vs_time_plots:
 <h2>Plots</h2>
 
+%if phase_vs_time_plots:
+	<h3>Phase vs time</h3>
+
+	<p>Plots show the phase correction to be applied to the target source. 
+	A plot is shown for each spectral window, with phase correction data points
+	plotted per antenna and correlation as a function of time.</p>
+
+	<p>Click the summary plots to enlarge them, or the spectral window heading to
+	see detailed plots per spectral window and antenna.</p> 
+
+	% for ms in phase_vs_time_plots:
+	    <h4>
+			<a class="replace"
+	           href="${os.path.relpath(os.path.join(dirname, 'phase_vs_time_%s.html' % ms), pcontext.report_dir)}">
+	            ${ms}
+	        </a>
+		</h4>
+	    <ul class="thumbnails">
+	        % for plot in phase_vs_time_plots[ms]:
+	            % if os.path.exists(plot.thumbnail):
+	            <li class="span3">
+	                <div class="thumbnail">
+	                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+	                       class="fancybox"
+	                       rel="phase_vs_time-${ms}">
+	                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+	                             title="Click to show phase vs time plot for Spectral Window ${plot.parameters['spw']}"
+	                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+	                        </img>
+	                    </a>
+	
+	                    <div class="caption">
+							<h4>
+			                    <a href="${os.path.relpath(os.path.join(dirname, 'phase_vs_time_%s.html' % ms), pcontext.report_dir)}"
+			                       class="replace"
+			                       data-spw="${plot.parameters['spw']}">
+				                   Spectral Window ${plot.parameters['spw']}
+			                    </a>
+							</h4>
+							
+	                        <p>Phase vs time for spectral window ${plot.parameters['spw']}, 
+	                        all antennas and correlations.
+	                        </p>
+	                    </div>
+	                </div>
+	            </li>
+	            % endif
+	        % endfor
+	    </ul>
+	%endfor
+%endif
+
 %if structure_plots:
-	<h3>Phase RMS vs distance to reference antenna</h3>
+	<h3>Phase structure: phase RMS vs distance to reference antenna</h3>
 
 	<p>Plots are generated per spectral window, with phase RMS data points per antenna and
 	correlation as a function of distance from the reference antenna. The phase RMS is calculated
@@ -109,16 +161,64 @@ $(document).ready(function() {
 	
 	                    <div class="caption">
 							<h4>
-			                    <a href="${os.path.relpath(os.path.join(dirname, 'phase_structure_%s.html' % ms), pcontext.report_dir)}"
+				                Spectral Window ${plot.parameters['spw']}
+							</h4>
+							
+	                        <p>RMS phase vs distance to reference antenna
+	                        for spectral window ${plot.parameters['spw']}, 
+	                        all antennas.
+	                        </p>
+	                    </div>
+	                </div>
+	            </li>
+	            % endif
+	        % endfor
+	    </ul>
+	%endfor
+%endif
+
+%if amp_vs_time_plots:
+	<h3>Amplitude vs time</h3>
+
+	<p>Plots show the amplitude calibration to be applied to the target source. 
+	A plot is shown for each spectral window, with amplitude correction data 
+	points per antenna and correlation as a function of time.</p>
+
+	<p>Click the summary plots to enlarge them, or the spectral window heading to
+	see detailed plots per spectral window and antenna.</p> 
+
+	% for ms in amp_vs_time_plots:
+	    <h4>
+			<a class="replace"
+	           href="${os.path.relpath(os.path.join(dirname, 'amp_vs_time_%s.html' % ms), pcontext.report_dir)}">
+	            ${ms}
+	        </a>
+		</h4>
+	    <ul class="thumbnails">
+	        % for plot in amp_vs_time_plots[ms]:
+	            % if os.path.exists(plot.thumbnail):
+	            <li class="span3">
+	                <div class="thumbnail">
+	                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+	                       class="fancybox"
+	                       rel="amp_vs_time-${ms}">
+	                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+	                             title="Click to show amplitude vs time plot for Spectral Window ${plot.parameters['spw']}"
+	                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+	                        </img>
+	                    </a>
+	
+	                    <div class="caption">
+							<h4>
+			                    <a href="${os.path.relpath(os.path.join(dirname, 'amp_vs_time_%s.html' % ms), pcontext.report_dir)}"
 			                       class="replace"
 			                       data-spw="${plot.parameters['spw']}">
 				                   Spectral Window ${plot.parameters['spw']}
 			                    </a>
 							</h4>
 							
-	                        <p>RMS phase vs distance to reference antenna
-	                        for spectral window ${plot.parameters['spw']}, 
-	                        all antennas.
+	                        <p>Amplitude vs time for spectral window ${plot.parameters['spw']}, 
+	                        all antennas and correlations.
 	                        </p>
 	                    </div>
 	                </div>

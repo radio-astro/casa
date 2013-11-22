@@ -1500,7 +1500,7 @@ class T2_4MDetailsGaincalRenderer(T2_4MDetailsDefaultRenderer):
                                                 'ms gaintable calmode solint intent spw') 
 
     def __init__(self, template='t2-4m_details-hif_gaincal.html', 
-                 always_rerender=False):
+                 always_rerender=True):
         # set the name of our specialised Mako template via the superclass
         # constructor 
         super(T2_4MDetailsGaincalRenderer, self).__init__(template,
@@ -1518,6 +1518,10 @@ class T2_4MDetailsGaincalRenderer(T2_4MDetailsDefaultRenderer):
 
         applications = []
         structure_plots = {}
+        amp_vs_time_summaries = {}
+        phase_vs_time_summaries = {}
+        amp_vs_time_details = {}
+        phase_vs_time_details = {}
         for result in results:
             vis = os.path.basename(result.inputs['vis'])
             ms = context.observing_run.get_ms(vis)
@@ -1525,14 +1529,28 @@ class T2_4MDetailsGaincalRenderer(T2_4MDetailsDefaultRenderer):
             applications.extend(self.get_gaincal_applications(result, ms))
 
             # generate the phase structure plots
-            structure_plotter = gaincal.RMSOffsetVsRefAntDistanceChart(context, result)
-            structure_plots[vis] = structure_plotter.plot()
+            plotter = gaincal.RMSOffsetVsRefAntDistanceChart(context, result)
+            structure_plots[vis] = plotter.plot()
 
-#             # write the html for each MS to disk
-#             renderer = GaincalPhaseStructureRenderer(context, result, 
-#                                                      structure_plots[vis])
-#             with renderer.get_file() as fileobj:
-#                 fileobj.write(renderer.render())        
+            # generate amp vs time plots
+            plotter = gaincal.GaincalAmpVsTimeSummaryChart(context, result)
+            amp_vs_time_summaries[vis] = plotter.plot()
+            plotter = gaincal.GaincalAmpVsTimeDetailChart(context, result)
+            amp_vs_time_details[vis] = plotter.plot()
+            renderer = GaincalAmpVsTimePlotRenderer(context, result, 
+                                                    amp_vs_time_details[vis])
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())        
+            
+            # generate phase vs time plots
+            plotter = gaincal.GaincalPhaseVsTimeSummaryChart(context, result)
+            phase_vs_time_summaries[vis] = plotter.plot()
+            plotter = gaincal.GaincalPhaseVsTimeDetailChart(context, result)
+            phase_vs_time_details[vis] = plotter.plot()
+            renderer = GaincalPhaseVsTimePlotRenderer(context, result, 
+                                                      phase_vs_time_details[vis])
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())        
 
             # get the first scan for the PHASE intent(s)
 #             first_phase_scan = ms.get_scans(scan_intent='PHASE')[0]
@@ -1545,9 +1563,11 @@ class T2_4MDetailsGaincalRenderer(T2_4MDetailsDefaultRenderer):
         # add the PlotGroups to the Mako context. The Mako template will parse
         # these objects in order to create links to the thumbnail pages we
         # just created
-        ctx.update({'applications'            : applications,
-                    'structure_plots'         : structure_plots,
-                    'dirname'                 : stage_dir})
+        ctx.update({'applications'        : applications,
+                    'structure_plots'     : structure_plots,
+                    'amp_vs_time_plots'   : amp_vs_time_summaries,
+                    'phase_vs_time_plots' : phase_vs_time_summaries,
+                    'dirname'             : stage_dir})
 
         return ctx
     
@@ -1607,16 +1627,90 @@ class T2_4MDetailsGaincalRenderer(T2_4MDetailsDefaultRenderer):
         return applications
 
 
-class GaincalPhaseStructureRenderer(WvrgcalflagPhaseOffsetVsBaselinePlotRenderer):
-    template = 'wvr_phase_offset_vs_baseline_plots.html'
+class GaincalPhaseVsTimePlotRenderer(object):
+    # take a look at WvrgcalflagPhaseOffsetVsBaselinePlotRenderer when we have
+    # scores and histograms to generate. there should be a common base class. 
+    template = 'generic_x_vs_y_detail_plots.html'
 
     def __init__(self, context, result, plots):
-        super(GaincalPhaseStructureRenderer, self).__init__(context, result, plots)
+        self.context = context
+        self.result = result
+        self.plots = plots
+        self.ms = os.path.basename(self.result.inputs['vis'])
+
+        # all values set on this dictionary will be written to the JSON file
+        d = {}
+        for plot in plots:
+            # calculate the relative pathnames as seen from the browser
+            thumbnail_relpath = os.path.relpath(plot.thumbnail,
+                                                self.context.report_dir)
+            image_relpath = os.path.relpath(plot.abspath,
+                                            self.context.report_dir)
+            spw_id = plot.parameters['spw']
+            ant_id = plot.parameters['ant']
+
+            # Javascript JSON parser doesn't like Javascript floating point 
+            # constants (NaN, Infinity etc.), so convert them to null. We  
+            # do not omit the dictionary entry so that the plot is hidden
+            # by the filters.
+#             if math.isnan(ratio) or math.isinf(ratio):
+#                 ratio = 'null'
+
+            d[image_relpath] = {'spw'       : str(spw_id),
+                                'ant'       : ant_id,
+                                'thumbnail' : thumbnail_relpath}
+
+        self.json = json.dumps(d)
          
+    def _get_display_context(self):
+        return {'pcontext'   : self.context,
+                'result'     : self.result,
+                'plots'      : self.plots,
+                'dirname'    : self.dirname,
+                'json'       : self.json,
+                'plot_title' : 'Phase vs time'}
+
+    @property
+    def dirname(self):
+        stage = 'stage%s' % self.result.stage_number
+        return os.path.join(self.context.report_dir, stage)
+    
     @property
     def filename(self):        
-        filename = filenamer.sanitize('phase_structure-%s.html' % self.ms)
+        filename = filenamer.sanitize('phase_vs_time-%s.html' % self.ms)
         return filename
+    
+    @property
+    def path(self):
+        return os.path.join(self.dirname, self.filename)
+    
+    def get_file(self, hardcopy=True):
+        if hardcopy and not os.path.exists(self.dirname):
+            os.makedirs(self.dirname)
+            
+        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
+        return contextlib.closing(file_obj)
+    
+    def render(self):
+        display_context = self._get_display_context()
+        t = TemplateFinder.get_template(self.template)
+        return t.render(**display_context)
+
+
+class GaincalAmpVsTimePlotRenderer(GaincalPhaseVsTimePlotRenderer):
+    # take a look at WvrgcalflagPhaseOffsetVsBaselinePlotRenderer when we have
+    # scores and histograms to generate. there should be a common base class. 
+    template = 'generic_x_vs_y_detail_plots.html'
+
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('amp_vs_time-%s.html' % self.ms)
+        return filename
+
+    def _get_display_context(self):
+        d = super(GaincalAmpVsTimePlotRenderer, self)._get_display_context()
+        d['plot_title'] = 'Amplitude vs time'
+        return d
 
 
 class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):

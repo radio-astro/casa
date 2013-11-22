@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import os
 
 import matplotlib
 import matplotlib.pyplot as pyplot
@@ -14,75 +15,150 @@ from pipeline.infrastructure import casa_tasks
 LOG = infrastructure.get_logger(__name__)
 
 
-class PlotcalXVsYSummaryChart(object):
-    xaxis = ''
-    yaxis = ''
-    iteration = ''
-    
-    def __init__(self, context, result):
-        self.context = context
-        self.result = result
-        self.ms = context.observing_run.get_ms(result.inputs['vis'])
+class PlotcalLeaf(object):
+    """
+    Class to execute plotcal and return a plot wrapper. It passes the spw and
+    ant arguments through to plotcal without further manipulation, creating
+    exactly one plot. 
+    """
+    def __init__(self, context, result, calapp, xaxis, yaxis, spw='', ant='',
+                 plotrange=[]):
+        self._context = context
+        self._result = result
+
+        self._calapp = calapp
+        self._caltable = calapp.gaintable   
+        self._vis = calapp.vis
+
+        self._xaxis = xaxis
+        self._yaxis = yaxis
+
+        self._spw = spw
+        self._intent = calapp.intent
+
+        # use antenna name rather than ID if possible
+        if ant != '':
+            ms = self._context.observing_run.get_ms(self._vis)
+            domain_antennas = ms.get_antenna(ant)
+            idents = [a.name if a.name else a.id for a in domain_antennas]
+            ant = ','.join(idents)
+        self._ant = ant
+
+        self._figfile = self._get_figfile()
+        self._plotrange = plotrange
 
     def plot(self):
-        for calapp in self.result.final:
-            self.caltable = calapp.gaintable   
-                     
-            wrapper = CaltableWrapper.from_caltable(calapp.gaintable)
-            caltable_spws = ','.join([str(spw) for spw in set(wrapper.spw)])
-            domain_spws = self.ms.get_spectral_windows(caltable_spws)
-            plots = [self.get_plot_wrapper(spw, calapp.intent)
-                     for spw in domain_spws]
+        plots = [self._get_plot_wrapper()]
         return [p for p in plots if p is not None]
 
-    def create_plot(self, figfile, spw):
-        task_args = {'caltable'  : self.caltable,
-                     'xaxis'     : self.xaxis,
-                     'yaxis'     : self.yaxis,
-                     'iteration' : self.iteration,
+    def _get_figfile(self):
+        fileparts = {
+            'caltable' : os.path.basename(self._calapp.gaintable),
+            'x'        : self._xaxis,
+            'y'        : self._yaxis,
+            'spw'      : '' if self._spw == '' else 'spw%s-' % self._spw,
+            'ant'      : '' if self._ant == '' else 'ant%s-' % self._ant.replace(',','_'),
+            'intent'   : '' if self._intent == '' else '%s-' % self._intent.replace(',','_')
+        }
+        png = '{caltable}-{spw}{ant}{intent}{y}_vs_{x}.png'.format(**fileparts)
+
+        return os.path.join(self._context.report_dir, 
+                            'stage%s' % self._result.stage_number,
+                            png)
+
+    def _get_plot_wrapper(self):
+        if not os.path.exists(self._figfile):
+            LOG.trace('Creating new plot: %s' % self._figfile)
+            try:
+                self._create_plot()
+            except Exception as ex:
+                LOG.error('Could not create plot %s' % self._figfile)
+                LOG.exception(ex)
+                return None
+
+        parameters={'vis'      : self._vis,
+                    'caltable' : self._caltable}        
+
+        for attr in ['spw', 'ant', 'intent']:
+            val = getattr(self, '_%s' % attr)
+            if val != '':
+                parameters[attr] = val 
+            
+        wrapper = logger.Plot(self._figfile,
+                              x_axis=self._xaxis,
+                              y_axis=self._yaxis,
+                              parameters=parameters)
+            
+        return wrapper
+
+    def _create_plot(self):
+        task_args = {'caltable'  : self._caltable,
+                     'xaxis'     : self._xaxis,
+                     'yaxis'     : self._yaxis,
                      'showgui'   : False,
-                     'spw'       : str(spw.id),
-                     'figfile'   : figfile}
+                     'spw'       : self._spw,
+                     'antenna'   : self._ant,
+                     'figfile'   : self._figfile,
+                     'plotrange' : self._plotrange}
 
         task = casa_tasks.plotcal(**task_args)
         task.execute(dry_run=False)
 
-    def get_figfile(self, spw, intent):
-        if intent != '':
-            intent = intent.replace(',','_')
-            intent += '-'
+
+class PlotcalComposite(object):
+    """
+    Base class to hold multiple PlotLeafs, thus generating multiple plots when
+    plot() is called.
+    """    
+    def __init__(self, children):
+        self._children = children
         
-        return os.path.join(self.context.report_dir, 
-                            'stage%s' % self.result.stage_number, 
-                            '%s-spw%s-%s_vs_%s-%ssummary.png' % (self.caltable, 
-                                                                 spw.id,
-                                                                 self.yaxis, 
-                                                                 self.xaxis,
-                                                                 intent))
+    def plot(self):
+        plots = []
+        for child in self._children:
+            plots.extend(child.plot())        
+        return [p for p in plots if p is not None]
 
-    def get_plot_wrapper(self, spw, intent):
-        figfile = self.get_figfile(spw, intent)
+    
+class PlotcalSpwComposite(PlotcalComposite):
+    """
+    Create a PlotLeaf for each spw in the caltable.
+    """
+    def __init__(self, context, result, calapp, xaxis, yaxis, ant='', 
+                 plotrange=[]):
+        wrapper = CaltableWrapper.from_caltable(calapp.gaintable)
+        caltable_spws = [spw for spw in set(wrapper.spw)]
+        children = [PlotcalLeaf(context, result, calapp, xaxis, yaxis,
+                                spw=spw, ant=ant, plotrange=plotrange)
+                    for spw in caltable_spws]
+        super(PlotcalSpwComposite, self).__init__(children)
 
-        wrapper = logger.Plot(figfile,
-                              x_axis=self.xaxis,
-                              y_axis=self.yaxis,
-                              parameters={'vis'      : self.ms.basename,
-                                          'caltable' : self.caltable,
-                                          'spw'      : spw.id,
-                                          'intent'   : intent})
 
-        if not os.path.exists(figfile):
-            LOG.trace('Summary plot for spw %s not found. Creating new '
-                      'plot: %s' % (spw.id, figfile))
-            try:
-                self.create_plot(figfile, spw)
-            except Exception as ex:
-                LOG.error('Could not create summary plot for spw %s'
-                          '' % spw.id)
-                LOG.exception(ex)
-                return None
-            
-        return wrapper
+class PlotcalAntComposite(PlotcalComposite):
+    """
+    Create a PlotLeaf for each antenna in the caltable.
+    """
+    def __init__(self, context, result, calapp, xaxis, yaxis, spw='',
+                 plotrange=[]):
+        wrapper = CaltableWrapper.from_caltable(calapp.gaintable)
+        caltable_antennas = [ant for ant in set(wrapper.antenna)]
+        children = [PlotcalLeaf(context, result, calapp, xaxis, yaxis,
+                                ant=ant, spw=spw, plotrange=plotrange)
+                    for ant in caltable_antennas]
+        super(PlotcalAntComposite, self).__init__(children)
+
+
+class PlotcalAntSpwComposite(PlotcalComposite):
+    """
+    Create a PlotLeaf for each spw and antenna in the caltable.
+    """
+    def __init__(self, context, result, calapp, xaxis, yaxis, plotrange=[]):
+        wrapper = CaltableWrapper.from_caltable(calapp.gaintable)
+        caltable_antennas = [ant for ant in set(wrapper.antenna)]        
+        children = [PlotcalSpwComposite(context, result, calapp, xaxis, yaxis,
+                                        ant=ant, plotrange=plotrange)
+                    for ant in caltable_antennas]
+        super(PlotcalAntSpwComposite, self).__init__(children)
 
 
 class CaltableWrapper(object):
