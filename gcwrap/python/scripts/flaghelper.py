@@ -1526,6 +1526,36 @@ def evaluateParameters(pardict):
     
     return cmddict
 
+def evaluateNumpyType(elem):
+    '''Evaluate if an element is of numpy type.
+       Cast it to the corresponding Python type
+       and return the casted value'''
+    
+    import numpy as np
+    
+    val = None
+    
+    if(isinstance(elem,np.int) or isinstance(elem,np.int8) or
+       isinstance(elem,np.int16) or isinstance(elem,np.int32) or
+       isinstance(elem,np.int64)):
+        val = int(elem)
+        
+    elif(isinstance(elem,np.float) or isinstance(elem,np.float16) or
+         isinstance(elem,np.float32) or isinstance(elem,np.float64) or
+         isinstance(elem,np.float128)):
+        val = float(elem)
+        
+    elif(isinstance(elem,np.double)):
+        val = float(elem)  
+        
+    else:
+        # it is none of the above numpy types
+        val = elem
+        
+    # return the casted element  
+    return val
+
+
 def parseXML(sdmfile, mytbuff):
     '''
 #   readflagxml: reads Antenna.xml and Flag.xml SDM tables and parses

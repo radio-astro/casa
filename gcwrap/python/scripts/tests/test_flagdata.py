@@ -427,6 +427,20 @@ class test_rflag(test_base):
         self.assertEqual(res['flagged'], 52411)
         self.assertEqual(res['antenna']['ea19']['flagged'], 24142)
         self.assertEqual(res['spw']['11']['flagged'], 0)
+        
+    def test_rflag_numpy_types(self):
+        '''flagdata:: mode = rflag : partially-specified thresholds using numpy types'''
+        # Results should be the same as in test_rflag2 above
+        import numpy as np
+        t1 = [np.int32(1), 10, np.float32(0.1)]
+        t2 = [1, np.int16(11), np.float64(0.07)]
+
+        flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[t1,t2], \
+                       freqdev=0.5, flagbackup=False, extendflags=False)
+        res = flagdata(vis=self.vis, mode='summary',spw='9,10,11')
+        self.assertEqual(res['flagged'], 52411)
+        self.assertEqual(res['antenna']['ea19']['flagged'], 24142)
+        self.assertEqual(res['spw']['11']['flagged'], 0)
 
     def test_rflag3(self):
         '''flagdata:: Test3 of mode = rflag : output/input via two methods'''
