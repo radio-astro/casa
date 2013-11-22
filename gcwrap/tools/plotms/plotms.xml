@@ -1630,8 +1630,9 @@ Execution Methods
 
   </input>
   <example />
-  
-  <returns />
+  <returns type="bool">
+    <description>True if the plot was successfully updated, false if not (for example with an invalid selection).</description>
+  </returns>
 </method>
 
 

@@ -572,9 +572,11 @@ record* plotms::locateInfo() {
     return fromRecord(result);
 }
 
-void plotms::update() {
-		QtDBusXmlApp::dbusXmlCallNoRet( dbus::FROM_NAME, app.dbusName(),
-				PlotMSDBusApp::METHOD_UPDATE, Record(), asyncCall );
+bool plotms::update() {
+	bool result;
+	QtDBusXmlApp::dbusXmlCall( dbus::FROM_NAME, app.dbusName(),
+				PlotMSDBusApp::METHOD_UPDATE, Record(), result );
+	return result;
 }
 
 void plotms::waitUntilIdle() {

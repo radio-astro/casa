@@ -187,9 +187,8 @@ def plotms(vis=None,
          #   tp.setgui( True )     ####  showgui );
         #else:
          #   tp.setgui( False )    
-
         vis = os.path.abspath(vis.strip())
-        
+    
         #Determine whether this is going to be a scripting client or a full GUI supporting
         #user interaction.  This must be done before other properties are set because it affects
         #the constructor of plotms.
@@ -277,21 +276,24 @@ def plotms(vis=None,
         pm.setYRange((yrange<=0.), plotrange[2],plotrange[3], False)
         
         # Update
-        pm.update()
-    
-        # write file if requested
-        casalog.post("Plot file " + plotfile, 'NORMAL')
-        if(plotfile != ""):
-            time.sleep(0.5)
-            if (pm.isDrawing()):
-                casalog.post("Will wait until drawing of the plot has completed before exporting it",'NORMAL')
-            while (pm.isDrawing()):
+        plotUpdated = pm.update()
+        if not plotUpdated:
+            casalog.post( "There was a problem updating the plot.")
+        else:
+            # write file if requested
+            casalog.post("Plot file " + plotfile, 'NORMAL')
+            if(plotfile != ""):
                 time.sleep(0.5)
-            casalog.post("Exporting the plot.",'NORMAL')
-            casalog.post("Calling pm.save,", 'NORMAL')
-            pm.save( plotfile, expformat, highres, interactive)
+                if (pm.isDrawing()):
+                    casalog.post("Will wait until drawing of the plot has completed before exporting it",'NORMAL')
+                    while (pm.isDrawing()):
+                        time.sleep(0.5)
+                casalog.post("Exporting the plot.",'NORMAL')
+                casalog.post("Calling pm.save,", 'NORMAL')
+                plotUpdated = pm.save( plotfile, expformat, highres, interactive)
     
     except Exception, instance:
+        plotUpdated = False
         print "Exception during plotms task: ", instance
         
-    return True
+    return plotUpdated
