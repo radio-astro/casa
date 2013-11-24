@@ -52,6 +52,7 @@ PlotMSIterateTab::PlotMSIterateTab(PlotMSPlotTab* tab, PlotMSPlotter* parent)
     iterationAxisChooser->addItem(PMS::axis(PMS::SPW).c_str());
     iterationAxisChooser->addItem(PMS::axis(PMS::BASELINE).c_str());
     iterationAxisChooser->addItem(PMS::axis(PMS::ANTENNA).c_str());
+    iterationAxisChooser->addItem(PMS::axis(PMS::TIME).c_str());
     /* not yet:
     iterationAxisChooser->addItem(PMS::axis(PMS::ANTENNA1).c_str());
     iterationAxisChooser->addItem(PMS::axis(PMS::ANTENNA2).c_str());

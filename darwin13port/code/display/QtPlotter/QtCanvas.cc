@@ -1815,20 +1815,17 @@ namespace casa {
 		if ( xcursor.isValid( )   ) {
 			update( );
 		}
-	}
-
-	void QtCanvas::moveChannel( QMouseEvent* event ) {
-		if ( xcursor.isValid( ) ) {
-			xcursor = QColor( );
+		if ( currentMode != NULL &&
+				currentMode->isMode( CanvasMode::MODE_CHANNEL) ){
 			QtPlotSettings currSettings = zoomStack[curZoom];
-			double dx = currSettings.spanX(QtPlotSettings::xBottom) / getRectWidth();
+			double dx = currSettings.spanX(QtPlotSettings::xBottom) /
+					getRectWidth();
 			float endChannelSelectValue = currSettings.getMinX(QtPlotSettings::xBottom ) + dx * (event->pos().x()-MARGIN_LEFT);
-
 			emit channelRangeSelect(channelSelectValue, endChannelSelectValue );
-			update();
+			channelSelectValue = endChannelSelectValue;
 		}
-
 	}
+
 
 	void QtCanvas::startRangeX( QMouseEvent* event ) {
 		xRangeMode    = true;

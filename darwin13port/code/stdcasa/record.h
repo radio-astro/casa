@@ -23,6 +23,7 @@ class record : public  rec_map {
 	typedef rec_map::value_type value_type;
 
 	record();
+        ~record(){}
 	record *clone() const { return new record(*this); }
 	int compare(const record*) const;
 

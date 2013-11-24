@@ -42,8 +42,7 @@ class FlagHelper(ParallelTaskHelper):
             for i in range(len(parname)):
                 newpar.append(fh.addAbsolutePath(parname[i]))
         
-        return newpar
-    
+        return newpar    
         
 #    @dump_args
     def setupCluster(self, thistask=''):
@@ -52,8 +51,24 @@ class FlagHelper(ParallelTaskHelper):
             thistask = 'flagdata'
             
         ParallelTaskHelper.__init__(self, task_name=thistask, args=self.__args)
-
-
+        
+#    @dump_args 
+    def setupRflag(self, devpar):
+        '''cast rflag's list parameters from numpy types to Python types
+        devpar --> list of numeric parameters or list of list
+                   such as timedev or freqdev'''
+        
+        nt = copy.deepcopy(devpar)
+        for i in range(len(nt)):
+            if (isinstance(nt[i],list)):
+                nnt = nt[i]
+                for j in range(len(nnt)):
+                    elem = fh.evaluateNumpyType(nnt[j])
+                    # write the casted element back  
+                    devpar[i][j] = elem
+        
+        
+# The flagdata task
 def flagdata(vis,
              mode,
              autocorr,      # mode manual parameter
@@ -435,6 +450,7 @@ def flagdata(vis,
             if newtime != 0.0:
                 # this means ntime='scan', the default
                 agent_pars['ntime'] = newtime
+                
             agent_pars['combinescans'] = combinescans   
             agent_pars['datacolumn'] = datacolumn.upper()
             agent_pars['winsize'] = winsize
@@ -451,6 +467,13 @@ def flagdata(vis,
                 timedev = fh.readRFlagThresholdFile(timedev,'timedev')
             if( type(freqdev) == str and writeflags == True):
                 freqdev = fh.readRFlagThresholdFile(freqdev,'freqdev')
+                
+            # Cast possible numpy types to Python types
+            if (isinstance(timedev, list) and len(timedev) > 0):
+                FHelper.setupRflag(timedev)
+            
+            if (isinstance(freqdev, list) and len(freqdev) > 0):
+                FHelper.setupRflag(freqdev)
 
             agent_pars['timedev'] = timedev
             agent_pars['freqdev'] = freqdev

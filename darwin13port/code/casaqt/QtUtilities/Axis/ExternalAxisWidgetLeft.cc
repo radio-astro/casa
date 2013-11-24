@@ -43,9 +43,8 @@ int ExternalAxisWidgetLeft::getStartY() const {
 	QwtPlotCanvas* canvas = plot->canvas();
 	int canvasHeight = canvas->height();
 	int heightDiff =  height() - canvas->height();
-	const int MIN = 22;
-	if ( canvasHeight < MIN ){
-		heightDiff = MIN;
+	if ( canvasHeight < MIN_START_Y ){
+		heightDiff = MIN_START_Y;
 	}
 	return heightDiff;
 }

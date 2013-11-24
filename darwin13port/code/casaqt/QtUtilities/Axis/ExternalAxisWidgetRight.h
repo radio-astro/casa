@@ -36,6 +36,7 @@ public:
 	void setUseLeftScale( bool b );
 	virtual ~ExternalAxisWidgetRight();
 protected:
+	virtual int getCanvasHeight() const;
 	virtual void defineAxis( QLine& axisLine );
 	virtual void drawTicks( QPainter* painter, int tickLength );
 	virtual void drawAxisLabel( QPainter* painter );
