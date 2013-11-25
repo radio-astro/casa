@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 from .importdata import SDImportData
+from .importdata2 import SDImportData2
 from .exportdata import SDExportData
 from .calsky import SDCalSky
 from .caltsys import SDCalTsys
