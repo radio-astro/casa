@@ -1,6 +1,7 @@
 import pipeline.hif.tasks as hif_tasks
 import pipeline.hsd.tasks as hsd_tasks
 import pipeline.hifa.tasks as hifa_tasks
+import pipeline.hifv.tasks as hifv_tasks
 
 CasaTaskDict = {
                    'hif_antpos'       : 'Antpos',
@@ -40,7 +41,24 @@ CasaTaskDict = {
                    'hsd_flagdata'     : 'SDFlagData',
                    'hsd_flagbaseline' : 'SDFlagBaseline',
                    'hsd_plotflagbaseline': 'SDPlotFlagBaseline',
-                   'hsd_reduce'       : 'SDReduction'
+                   'hsd_reduce'       : 'SDReduction',
+                   'hifv_importdata'  : 'VLAImportData',
+                   'hifv_flagdata'    : 'FlagDeterVLA',
+                   'hifv_setmodel'    : 'SetModel',
+                   'hifv_priorcals'   : 'Priorcals',
+                   'hifv_testBPdcals' : 'testBPdcals',
+                   'hifv_flagbaddef'  : 'FlagBadDeformatters',
+                   'hifv_uncalspw'    : 'Uncalspw',
+                   'hifv_checkflag'   : 'Checkflag',
+                   'hifv_semiFinalBPdcals' : 'semiFinalBPdcals',
+                   'hifv_solint'      : 'Solint',
+                   'hifv_testgains'   : 'Testgains',
+                   'hifv_fluxgains'   : 'Fluxgains',
+                   'hifv_fluxboot'    : 'Fluxboot',
+                   'hifv_finalcals'   : 'Finalcals',
+                   'hifv_applycals'   : 'Applycals',
+                   'hifv_targetflag'  : 'Targetflag',
+                   'hifv_statwt'      : 'Statwt'
                }
 
 
@@ -88,5 +106,23 @@ classToCASATask = {
     hsd_tasks.SDFlagData : 'hsd_flagdata',
     hsd_tasks.SDFlagBaseline : 'hsd_flagbaseline',
     hsd_tasks.SDPlotFlagBaseline : 'hsd_plotflagbaseline',
-    hsd_tasks.SDReduction : 'hsd_reduce'
+    hsd_tasks.SDReduction : 'hsd_reduce',
+    #VLA tasks
+    hifv_tasks.VLAImportData       : 'hifv_importdata',
+    hifv_tasks.FlagDeterVLA        : 'hifv_flagdata',
+    hifv_tasks.SetModel            : 'hifv_setmodel', 
+    hifv_tasks.Priorcals           : 'hifv_priorcals', 
+    hifv_tasks.testBPdcals         : 'hifv_testBPdcals',
+    hifv_tasks.FlagBadDeformatters : 'hifv_flagbaddef',
+    hifv_tasks.Uncalspw            : 'hifv_uncalspw',
+    hifv_tasks.Checkflag           : 'hifv_checkflag',
+    hifv_tasks.semiFinalBPdcals    : 'hifv_semiFinalBPdcals',
+    hifv_tasks.Solint              : 'hifv_solint', 
+    hifv_tasks.Testgains           : 'hifv_testgains',
+    hifv_tasks.Fluxgains           : 'hifv_fluxgains',
+    hifv_tasks.Fluxboot            : 'hifv_fluxboot', 
+    hifv_tasks.Finalcals           : 'hifv_finalcals',
+    hifv_tasks.Applycals           : 'hifv_applycals',
+    hifv_tasks.Targetflag          : 'hifv_targetflag',
+    hifv_tasks.Statwt              : 'hifv_statwt' 
 }
