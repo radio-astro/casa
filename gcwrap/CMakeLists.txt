@@ -31,6 +31,15 @@ set( CASA_MINOR_VERSION 2 )
 set( CASA_PATCH_VERSION 0 )
 set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}" )
 
+###
+### default name for casa-maintained dbus C++ library... (but could also be called just "dbus-cpp")
+###
+set( dbus-cpp-library-name casa-dbus-cpp )
+###
+### by default, look for Qt4 in the standard places... (with casa01-* RPMs and linux, we avoid system places)...
+###
+set( qt4 system-qt )
+
 enable_language (Fortran)
 
 # Define compiler paths on OSX 10.5. This must be done before invoking project()
@@ -272,21 +281,39 @@ if( APPLE )
 
 elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
 
-  set( CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
+    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
 
-  if( CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
-    set( casa_packages /usr/lib64/casa/01 )
-    if( NOT arch )
-    	set( arch linux_64b )
+    if( CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
+        if ( EXISTS /usr/lib64/casa/01/bin/qmake )
+            set( casa_packages /usr/lib64/casa/01 )
+	        set( dbusxx dbus-cpp )
+	        add_definitions( -DDBUS_CPP )
+	        set( qt4 casa-qt )
+            set( python_version 2.7 )
+        else( )
+	        set( dbusxx dbus-c++ )
+            set( casa_packages /usr/lib64/casapy )
+	        set( qt4 system-qt )
+            set( python_version 2.6 )
+        endif( )
+        if( NOT arch )
+    	    set( arch linux_64b )
+        endif()
+        set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -Wno-deprecated" )
+    else()
+        set( casa_packages /usr/lib/casapy )
+        if( NOT arch )
+            set( arch linux_gnu )
+        endif()
+        set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -Wno-deprecated -Woverloaded-virtual" )
+
+        set( dbusxx dbus-c++ )
+        set( casa_packages /usr/lib/casapy )
+        set( qt4 system-qt )
+        set( python_version 2.6 )
+
     endif()
-    set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -Wno-deprecated" )
-  else()
-    set( casa_packages /usr/lib/casapy )
-    if( NOT arch )
-        set( arch linux_gnu )
-    endif()
-    set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -Wno-deprecated -Woverloaded-virtual" )
-  endif()
+
 else()
   message( WARNING "Unsupported system: ${CMAKE_SYSTEM_NAME}" )
 endif()
@@ -786,42 +813,74 @@ casa_find( Java
 
 set( SAXON ${Java_java_EXECUTABLE} -jar ${CMAKE_SOURCE_DIR}/install/saxon8.jar )
 
-# C++ DBus
-#
-# The header file dbus/dbus-arch-deps.h exists on some but not all systems, in a directory
-# for itself
-#
-# Form all possible DBus prefixes and use them as hints to casa_find()
-#
-set( dbus_prefix "" )
-foreach( _p ${CMAKE_INSTALL_PREFIX} ${casa_packages}  /sw /opt/local /usr/local /opt /usr )
-  foreach( _l lib lib64 )
-    list( APPEND dbus_prefix ${_p}/dbus-1.0 )
-    list( APPEND dbus_prefix ${_p}/${_l}/dbus-1.0 )
-    list( APPEND dbus_prefix ${_p}/${_l}/qt-4.3.4/dbus )
-    list( APPEND dbus_prefix ${_p}/${_l}/qt-4.3.4/dbus/${_l}/dbus-1.0 )
+if ( ${dbusxx} STREQUAL dbus-c++ )
+  # C++ DBus
+  #
+  # The header file dbus/dbus-arch-deps.h exists on some but not all systems, in a directory
+  # for itself
+  #
+  # Form all possible DBus prefixes and use them as hints to casa_find()
+  #
+  set( dbus_prefix "" )
+  #foreach( _p ${casa_packages} ${CMAKE_INSTALL_PREFIX} /sw /opt/local /usr/local /opt /usr )
+  foreach( _p ${casa_packages} ${CMAKE_INSTALL_PREFIX} /sw /opt/local /usr/local /opt /usr )
+    foreach( _l lib lib64 )
+      list( APPEND dbus_prefix ${_p} )
+      list( APPEND dbus_prefix ${_p}/include )
+      list( APPEND dbus_prefix ${_p}/${_l}/dbus-1.0 )
+      list( APPEND dbus_prefix ${_p}/${_l}/qt-4.3.4/dbus )
+      list( APPEND dbus_prefix ${_p}/${_l}/qt-4.3.4/dbus/${_l}/dbus-1.0 )
+    endforeach()
   endforeach()
-endforeach()
 
-casa_find( DBUSARCH
-  INCLUDES dbus/dbus-arch-deps.h
-  PREFIX_HINTS ${DBUS_ARCH_DIR} ${dbus_prefix}
-  NO_CHECK   # This header does not compile if included directly
-  NO_REQUIRE
-)
-if( DBUSARCH_FOUND )
-  set( dbus_depends DBUSARCH )
-endif()
+  casa_find( DBUSXX_ARCH
+    INCLUDES dbus/dbus-arch-deps.h
+    PREFIX_HINTS /usr/lib64/dbus-1.0 ${DBUS_ARCH_DIR} ${dbus_prefix}
+    NO_CHECK   # This header does not compile if included directly
+    NO_REQUIRE
+    IGNORE /usr/lib64/casapy
+  )
+  if( DBUSXX_ARCH_FOUND )
+    set( dbus_depends DBUSXX_ARCH )
+  endif()
 
-casa_find( DBUS
-  INCLUDES dbus/dbus.h
-           dbus-c++/dbus.h
-  INCLUDES_SUFFIXES dbus-1.0 dbus-c++-1
-  PREFIX_HINTS ${DBUS_ROOT_DIR} ${dbus_prefix}
-  LIBS dbus-c++-1
-  PROGRAMS dbusxx-xml2cpp
-  DEPENDS ${dbus_depends}
-)
+  casa_find( DBUSXX
+    INCLUDES dbus/dbus.h
+             dbus-c++/dbus.h
+    INCLUDES_SUFFIXES dbus-1.0 dbus-c++-1
+    PREFIX_HINTS ${DBUS_ROOT_DIR} ${dbus_prefix}
+    LIBS dbus-c++-1
+    PROGRAMS dbusxx-xml2cpp
+    DEPENDS ${dbus_depends}
+    IGNORE /usr/lib64/casapy
+  )
+  set( dbus-xml-2-cxx ${DBUSXX_dbusxx-xml2cpp_EXECUTABLE} )
+  set( DBUS_INCLUDE_DIRS ${DBUSXX_INCLUDE_DIRS} )
+  set( DBUS_LIBRARIES ${DBUSXX_LIBRARIES} )
+else( )
+  casa_find( DBUSPP_ARCH
+    INCLUDES dbus/dbus-arch-deps.h
+    PREFIX_HINTS ${DBUS_ARCH_DIR} ${casa_packages}/lib/dbus-1.0 ${dbus-arch-path-guess}
+    NO_CHECK   # This header does not compile if included directly
+    NO_REQUIRE
+  )
+  if( DBUSPP_ARCH_FOUND )
+    set( dbus_depends DBUSPP_ARCH )
+  endif()
+
+  casa_find( DBUSPP
+    INCLUDES dbus/dbus.h
+             dbus-cpp/dbus.h
+    INCLUDES_SUFFIXES dbus-1.0 dbus-cpp
+    PREFIX_HINTS ${DBUS_ROOT_DIR} ${casa_packages}
+    LIBS ${dbus-cpp-library-name}
+    PROGRAMS dbuspp-xml2cpp
+    DEPENDS ${dbus_depends}
+  )
+  set( dbus-xml-2-cxx ${DBUSPP_dbuspp-xml2cpp_EXECUTABLE} )
+  set( DBUS_INCLUDE_DIRS ${DBUSPP_INCLUDE_DIRS} )
+  set( DBUS_LIBRARIES ${DBUSPP_LIBRARIES} )
+endif( )
 
 # ATM
 casa_find( ATM
