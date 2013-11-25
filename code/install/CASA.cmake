@@ -58,7 +58,7 @@ macro( casa_add_dbus_proxy _header _interface)
     add_custom_command( 
       OUTPUT ${_header}
       COMMAND mkdir -p ${_out_path}
-      COMMAND ${DBUS_dbusxx-xml2cpp_EXECUTABLE} ${_infile} --proxy=${_header}
+      COMMAND ${dbus-xml-2-cxx} ${_infile} --proxy=${_header}
       DEPENDS ${_infile}
       )
 endmacro()
