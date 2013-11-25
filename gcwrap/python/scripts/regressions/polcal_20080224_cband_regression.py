@@ -9,6 +9,7 @@
 # Updated      STM 2008-06-18 (Beta Patch 2.0) Format as regression      #
 # Updated      STM 2008-09-17 (Beta Patch 3.0) Use imval task            #
 # Updated      GAM 2013-05-15 Removed redundant gaincurve/opacity refs   #
+# Updated      GAM 2013-11-25 Removed (deprecated) plotxy clause
 #                                                                        #
 ##########################################################################
 
@@ -1134,65 +1135,6 @@ split()
 if benchmarking:
     split2time=time.time()
 
-#
-#=====================================================================
-#
-# Plot up the visibilities for the main calibrators
-#
-print '--Plotxy--'
-default('plotxy')
-
-vis = srcsplitms
-
-field = fluxcalfield
-spw = ''
-
-selectdata=True
-
-interactive=False
-
-correlation='RR LL'
-xaxis = 'time'
-yaxis = 'amp'
-figfile = prefix+'.split.'+field+'.plotxy.amptime.png'
-saveinputs('plotxy',prefix+'.plotxy.'+field+'.amptime.saved')
-plotxy()
-
-xaxis = 'uvdist'
-figfile = prefix+'.split.'+field+'.plotxy.ampuv.png'
-saveinputs('plotxy',prefix+'.plotxy.'+field+'.ampuv.saved')
-plotxy()
-
-correlation='RL LR'
-yaxis = 'phase'
-figfile = prefix+'.split.'+field+'.plotxy.rlphaseuv.png'
-saveinputs('plotxy',prefix+'.plotxy.'+field+'.rlphase.saved')
-plotxy()
-
-if ( polcalfield != fluxcalfield ):
-    # Now the poln calibrator
-    field = polcalfield
-
-    correlation='RR LL'
-    xaxis = 'time'
-    yaxis = 'amp'
-    figfile = prefix+'.split.'+field+'.plotxy.amptime.png'
-    saveinputs('plotxy',prefix+'.plotxy.'+field+'.amptime.saved')
-    plotxy()
-
-    xaxis = 'uvdist'
-    figfile = prefix+'.split.'+field+'.plotxy.ampuv.png'
-    saveinputs('plotxy',prefix+'.plotxy.'+field+'.ampuv.saved')
-    plotxy()
-    
-    correlation='RL LR'
-    yaxis = 'phase'
-    figfile = prefix+'.split.'+field+'.plotxy.rlphaseuv.png'
-    saveinputs('plotxy',prefix+'.plotxy.'+field+'.rlphase.saved')
-    plotxy()
-
-if benchmarking:
-    plotxyfinal2time=time.time()
 
 #
 #=====================================================================
@@ -1741,8 +1683,7 @@ if benchmarking:
         print >>logfile,'*   applycal     time was: '+str(correct2time-plotpcal2time)
     
     print >>logfile,'*   split        time was: '+str(split2time-correct2time)
-    print >>logfile,'*   plotxy       time was: '+str(plotxyfinal2time-split2time)
-    print >>logfile,'*   clean/stat   time was: '+str(clean2time-plotxyfinal2time)
+    print >>logfile,'*   clean/stat   time was: '+str(clean2time-split2time)
     print >>logfile,'*****************************************'
     print >>logfile,'sandrock (2008-06-17) wall time was: 255 seconds'
     print >>logfile,'sandrock (2008-06-17) CPU  time was: 233 seconds'
