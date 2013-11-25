@@ -483,7 +483,15 @@ class ImportData(basetask.StandardTaskTemplate):
         # does not already exist.
         if inputs.overwrite or not os.path.exists(outfile):
             with open(outfile, 'w') as f:
-                f.writelines(['# User flagging commands file'])
+                f.writelines(['# User flagging commands file\n'])
+                f.writelines(['#\n'])
+                f.writelines(['# Examples\n'])
+                f.writelines(['# Note: Do not put spaces inside the reason string !\n'])
+                f.writelines(['#\n'])
+                f.writelines(['# mode=manual correlation=YY antenna=DV01;DV08;DA43;DA48&DV23 spw=21:1920~2880  autocorr=False reason=\'bad_channels\'\n'])
+                f.writelines(['# mode=manual spw=\'25:0~3;122~127\' reason=\'stage8_2\'\n'])
+		f.writelines(['# mode=manual antenna=\'DV07\' timerange=\'2013/01/31/08:09:55.248~2013/01/31/08:10:01.296\' reason=\'quack\'\n']) 
+                f.writelines(['#\n'])
 
 
 def get_setjy_results(mses):
