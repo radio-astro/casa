@@ -317,12 +317,18 @@ ia.close()
 #              'rms': 0.01825624,
 #              'sigma': 0.01564628,
 #              'sum':  1124.31878767}
-# 20130917: update after mask to TP image (r26597)
-refstats = {'max': 0.13555302,
-             'min': -0.02538656,
-             'rms': 0.01750355,
-             'sigma': 0.01543498,
-             'sum':  986.6099945}
+# # 20130917: update after mask to TP image (r26597)
+# refstats = {'max': 0.13555302,
+#              'min': -0.02538656,
+#              'rms': 0.01750355,
+#              'sigma': 0.01543498,
+#              'sum':  986.6099945}
+# 20130917: after scaling of TP image (r27397)
+refstats = {'max': 0.13675605,
+             'min': -0.0241348,
+             'rms': 0.01804382,
+             'sigma': 0.01559417,
+             'sum':  1084.98577601}
 
 
 # # reference statistic values for diff image
@@ -362,12 +368,18 @@ refstats = {'max': 0.13555302,
 #              'rms': 0.00916257,
 #              'sigma': 0.00891475,
 #              'sum':  -253.00065438}
-# 20130917: update after mask to TP image (r26597)
-diffstats = {'max':  0.03913748,
-             'min': -0.06746214,
-             'rms': 0.0089601,
-             'sigma': 0.00890806,
-             'sum':  -115.29187211}
+# # 20130917: update after mask to TP image (r26597)
+# diffstats = {'max':  0.03913748,
+#              'min': -0.06746214,
+#              'rms': 0.0089601,
+#              'sigma': 0.00890806,
+#              'sum':  -115.29187211}
+# 20131120: after scaling of TP image (r27397)
+diffstats = {'max':  0.03733807,
+             'min': -0.06772561,
+             'rms': 0.00884163,
+             'sigma': 0.00865906,
+             'sum':  -213.66776456}
 
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,
