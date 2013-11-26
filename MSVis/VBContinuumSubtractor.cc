@@ -308,7 +308,7 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
           floatvs[c] = vizzes[c].real();
 
         fitter.setFunction(pnom);
-        realsolution = fitter.fit(unflaggedfreqs, floatvs, wt);
+        realsolution(Slice(0,locFitOrd+1,1)) = fitter.fit(unflaggedfreqs, floatvs, wt);
 
         // if(isnan(realsolution[0])){
         //   os << LogIO::DEBUG1 << "NaN found." << LogIO::POST;
@@ -340,7 +340,7 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
           floatvs[c] = vizzes[c].imag();
 
         fitter.setFunction(pnom);
-        imagsolution = fitter.fit(unflaggedfreqs, floatvs, wt);
+        imagsolution(Slice(0,locFitOrd+1,1)) = fitter.fit(unflaggedfreqs, floatvs, wt);
 
           
 
