@@ -1,6 +1,6 @@
 #!/bin/sh
 if [[ -L "$0" ]]; then
-	real_em=$(staty -f %Y "$0")
+	real_me=$(staty -f %Y "$0")
 	myDir=$(dirname "$real_me")
 else
 	myDir=$(dirname "$0")
