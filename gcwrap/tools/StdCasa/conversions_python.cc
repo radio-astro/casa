@@ -137,8 +137,8 @@ npycomplextostring(npy_clongdouble,"(%Lf,%Lf)")
     else {									\
 	NPYTYPE *from = data;							\
 	for ( std::vector<TYPE>::iterator to = ITR; from < END; ++from, ++to ) {\
-	    (*to).real() = (*from).real;					\
-	    (*to).imag() = (*from).imag;					\
+	    (*to).real((*from).real);					\
+	    (*to).imag((*from).imag);					\
 	}									\
     }
 
@@ -622,6 +622,12 @@ PyObject *record2pydict(const record &rec) {
 	    /*** need range check ***/						\
 	    VARIANT.place((int)ll_result,INDEX);				\
 	}									\
+    } else if ( PyNumber_Check(ele)) {						\
+	if(!strncmp(ele->ob_type->tp_name, "numpy.int", 9)){ \
+	   VARIANT.place((int)PyLong_AsLong(PyNumber_Long(ele)),INDEX);  		\
+	}else if(!strncmp(ele->ob_type->tp_name, "numpy.float", 11)){ \
+	   VARIANT.place(double(PyFloat_AsDouble(PyNumber_Float(ele))),INDEX);  		\
+	} \
     } else if ( PyFloat_Check(ele)) {						\
 	VARIANT.place(PyFloat_AsDouble(ele),INDEX);				\
     } else if ( PyComplex_Check(ele)) {						\
@@ -840,8 +846,9 @@ static int unmap_array_pylist( PyObject *array, std::vector<int> &shape, casac::
 		bool is_tuple = PyTuple_Check(ele) ? true : false;
 		int element_size = is_tuple ? PyTuple_Size(ele) : PyList_Size(ele);
 
-	      	if ( singleton_elements )
+	      	if ( singleton_elements ){
 		    return 0;
+		}
 		list_elements = true;
 		if ( number_elements < 0 )
 		    number_elements = element_size;
