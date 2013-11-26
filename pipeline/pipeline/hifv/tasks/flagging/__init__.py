@@ -7,3 +7,4 @@ from .flagbaddeformatters import FlagBadDeformatters
 from .uncalspw import Uncalspw
 from .checkflag import Checkflag
 from .targetflag import Targetflag
+from .hflag import Heuristicflag

@@ -56,10 +56,10 @@ class Priorcals(basetask.StandardTaskTemplate):
         #sw_result = self._do_swpowcal()
         antpos_result = self._do_antpos()
         
-        try:
-            result.merge_withcontext(self.inputs.context)
-        except:
-            LOG.error('No antenna position corrections.')
+        #try:
+        #    antpos_result.merge_withcontext(self.inputs.context)
+        #except:
+        #    LOG.error('No antenna position corrections.')
             
         return resultobjects.PriorcalsResults(pool=callist, gc_result=gc_result,
                                               oc_result=oc_result, rq_result=rq_result,
