@@ -60,7 +60,7 @@ casa_add_python( tools tools_regressions_python python/${PYTHONV}/regressions
   ori_hc3n_task_regression.py
   orion_regression.py
   ori_sio_task_regression.py
-  plotxy_regression.py
+#  plotxy_regression.py
   pointing_regression.py
   polcal_20080224_cband_regression.py
   sdtpimaging_regression.py
