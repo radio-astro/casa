@@ -473,9 +473,9 @@ if($1){
 
 
 %typemap(in) std::vector<int> & {
-//   if(!$1)
- //     $1 = new std::vector<int>(0);
-  // else
+   if(!$1)
+      $1 = new std::vector<int>(0);
+   else
       $1->resize(0);
    std::vector<int> shape;
 

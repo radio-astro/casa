@@ -65,53 +65,6 @@ default('split')
 split(vis='n1333.ms',outputvis='B0319_0317.ms',datacolumn='data',field='14',antenna='VA03 & VA17')
 splittime=time.time()
 
-print '--Plot antenna array and uv coverage--'
-default('plotxy')
-plotxy(vis='B0319_0317.ms',xaxis='x',subplot=121,markersize=8)
-plotxy(vis='B0319_0317.ms',xaxis='u',subplot=122,markersize=5)
-plotanttime=time.time()
-
-print '--Plot visibility phase/amp versus uv distance--'
-default('plotxy')
-plotxy(vis='B0319_0317.ms',xaxis='uvdist',yaxis='amp',
-       datacolumn='data',subplot=211,clearpanel='All')
-plotxy(vis='B0319_0317.ms',xaxis='uvdist',yaxis='phase',
-       datacolumn='data',subplot=212,clearpanel='Auto')
-plotuvdisttime=time.time()
-
-default('plotxy')
-plotxy(vis='B0319_0317.ms',xaxis='time',yaxis='amp',
-       datacolumn='data',subplot=211,clearpanel='All')
-plotxy(vis='B0319_0317.ms',xaxis='time',yaxis='phase',
-       datacolumn='data',subplot=212,clearpanel='Auto')
-plottimetime=time.time()
-
-default('plotxy')
-plotxy(vis='B0319_0317.ms',xaxis='channel',yaxis='amp',
-       datacolumn='data',subplot=211,clearpanel='All')
-plotxy(vis='B0319_0317.ms',xaxis='channel',yaxis='phase',
-       datacolumn='data',subplot=212,clearpanel='Auto')
-plotchanneltime=time.time()
-
-#Example data flagging
-#Non-interactive flagging has been removed from the plotxy task.
-#So this test as been temporarily removed.
-#default('flagxy')
-#plotxy(vis='B0319_0317.ms',xaxis='channel',yaxis='amp',datacolumn='data',
-#       flagregion=[58,65,0,2.],enableflag=True,flagmode='f',clearpanel=True)
-#plotxy(vis='B0319_0317.ms',xaxis='channel',yaxis='amp',datacolumn='data',
-#       flagregion=[0,3,0,2.],enableflag=True,flagmode='f',clearpanel=False)
-plotflagtime=time.time()
-
-#Example spectral averaging
-default('plotxy')
-plotxy(vis='B0319_0317.ms',xaxis='time',yaxis='amp',datacolumn='data',
-       subplot=111,clearpanel='All')
-plotxy(vis='B0319_0317.ms',xaxis='time',yaxis='amp',datacolumn='data',
-       subplot=111,spw='0~1:0~60^20',overplot=True,
-       plotsymbol='bo',clearpanel='All')
-plotavertime=time.time()
-
 #Calibrate data
 clearcal(vis='B0319_0317.ms')
 default('blcal')
@@ -126,35 +79,6 @@ default('applycal')
 applycal(vis='B0319_0317.ms',
 	 gaintable=['B0319.Mt','B0319.MFt'])
 calibratetime=time.time()
-
-#Compare observed 'data' and 'corrected' data
-default('plotxy')
-plotxy(vis='B0319_0317.ms',xaxis='uvdist',yaxis='amp',datacolumn='data',
-       plotsymbol=',',plotcolor='blue',subplot=121,clearpanel='All')
-plotxy(vis='B0319_0317.ms',xaxis='uvdist',yaxis='amp',datacolumn='corrected',
-       subplot=121,plotsymbol='+',plotcolor='red',overplot=True,clearpanel='Auto')
-#spectral average comparison, channel selection done with SPW selection
-default('plotxy')
-plotxy(vis='B0319_0317.ms',xaxis='uvdist',yaxis='amp',datacolumn='data',
-       subplot=122,plotsymbol=',',plotcolor='blue',spw='0~1:5~54^50')
-plotxy(vis='B0319_0317.ms',xaxis='uvdist',yaxis='amp',datacolumn='corrected',
-       subplot=122,plotsymbol='+',plotcolor='red',spw='0~1:5~54^50',
-       overplot=True)
-plotcomparetime=time.time()
-
-##Compare M,MF with K
-#plotxy('B0319_0317.ms','time','phase','data',nchan=1,start=5,width=50,plotsymbol='ro')
-#plotxy('B0319_0317.ms','time','phase','corrected',nchan=1,start=5,width=50,plotsymbol='bo',overplot=True)
-##Derive K
-#fringecal('B0319_0317.ms','B0319.K',solint=0.)
-#correct('B0319_0317.ms',gaintable='B0319.K')
-#plotxy('B0319_0317.ms','time','phase','corrected',nchan=1,start=5,width=50,plotsymbol='go',overplot=True)
-
-# M,MF is better in this case - re-correct the data
-#clearcal('B0319_0317.ms')
-#blcal('B0319_0317.ms',caltable='B0319.Mt',solint=3.)
-#blcal('B0319_0317.ms',caltable='B0319.MFt',solint=30000.,freqdep=True)
-#correct('B0319_0317.ms',gaintable=['B0319.Mt','B0319.MFt'])
 
 #Examine the calibration solutions
 default('plotcal')
@@ -173,26 +97,6 @@ plotcaltime=time.time()
 #plotcal('B0319.K','delay',subplot=121,plotsymbol='go',clearpanel=True)
 #plotcal('B0319.K','delayrate',subplot=122,plotsymbol='go',clearpanel=False)
 
-#Examine corrected data
-default('plotxy')
-plotxy(vis='B0319_0317.ms',xaxis='uvdist',yaxis='amp',datacolumn='corrected',
-       subplot=121,clearpanel='All')
-plotxy(vis='B0319_0317.ms',xaxis='uvdist',yaxis='phase',datacolumn='corrected',
-       subplot=122,clearpanel='Auto')
-
-default('plotxy')
-plotxy(vis='B0319_0317.ms',xaxis='time',yaxis='amp',datacolumn='corrected',
-       subplot=121,clearpanel='All')
-plotxy(vis='B0319_0317.ms',xaxis='time',yaxis='phase',datacolumn='corrected',
-       subplot=122,clearpanel='Auto')
-
-default('plotxy')
-plotxy(vis='B0319_0317.ms',xaxis='channel',yaxis='amp',datacolumn='corrected',
-       subplot=121,clearpanel='All')
-plotxy(vis='B0319_0317.ms',xaxis='channel',yaxis='phase',datacolumn='corrected',
-       subplot=122,clearpanel='Auto')
-plotcorrectedtime=time.time()
-
 # uv model fit the data
 default('uvmodelfit')
 uvmodelfit(vis='B0319_0317.ms',niter=5,comptype='P',
@@ -204,13 +108,6 @@ default('ft')
 ft(vis='B0319_0317.ms',complist='test.cl')
 fttime=time.time()
 
-# Plot
-default('plotxy')
-plotxy(vis='B0319_0317.ms',xaxis='uvdist',yaxis='amp',datacolumn='corrected',
-       spw='0~1:5~54^50',plotsymbol='b,',clearpanel='All')
-plotxy(vis='B0319_0317.ms',xaxis='uvdist',yaxis='amp',datacolumn='model',
-       spw='0~1:5~54^50',plotsymbol='ro',overplot=True,clearpanel='Auto')
-plotmodeltime=time.time()
 
 endProc = time.clock()
 endTime = time.time()
@@ -293,19 +190,10 @@ print >>logfile,'Total CPU        time was: '+str(endProc - startProc)
 print >>logfile,'* Breakdown:                           *'
 print >>logfile,'*   import       time was: '+str(importtime-startTime)
 print >>logfile,'*   split        time was: '+str(splittime-importtime)
-print >>logfile,'*   plotant      time was: '+str(plotanttime-splittime)
-print >>logfile,'*   plotuvdist   time was: '+str(plotuvdisttime-plotanttime)
-print >>logfile,'*   plottime     time was: '+str(plottimetime-plotuvdisttime)
-print >>logfile,'*   plotchannel  time was: '+str(plotchanneltime-plottimetime)
-print >>logfile,'*   plotflag     time was: '+str(plotflagtime-plotchanneltime)
-print >>logfile,'*   plotaverage  time was: '+str(plotavertime-plotflagtime)
-print >>logfile,'*   calibrate    time was: '+str(calibratetime-plotavertime)
-print >>logfile,'*   plotcompare  time was: '+str(plotcomparetime-calibratetime)
-print >>logfile,'*   plotcal      time was: '+str(plotcaltime-plotcomparetime)
-print >>logfile,'*   plotcorr     time was: '+str(plotcorrectedtime-plotcaltime)
-print >>logfile,'*   uvmodelfit   time was: '+str(uvmodelfittime-plotcorrectedtime)
+print >>logfile,'*   calibrate    time was: '+str(calibratetime-splittime)
+print >>logfile,'*   plotcal      time was: '+str(plotcaltime-calibratetime)
+print >>logfile,'*   uvmodelfit   time was: '+str(uvmodelfittime-plotcaltime)
 print >>logfile,'*   ft           time was: '+str(fttime-uvmodelfittime)
-print >>logfile,'*   plotmodel    time was: '+str(plotmodeltime-fttime)
 print >>logfile,'*****************************************'
 
 logfile.close()
