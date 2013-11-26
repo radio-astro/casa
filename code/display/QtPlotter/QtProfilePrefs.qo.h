@@ -91,6 +91,7 @@ namespace casa {
 		void accepted();
 		void rejected();
 		void adjustBoxes(int st);
+		void opticalStateChanged();
 
 	private:
 		void initializeConnections();

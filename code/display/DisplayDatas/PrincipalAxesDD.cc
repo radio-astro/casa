@@ -1679,8 +1679,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if ( itsUsesAxisLabels ){
 			if( csConformed_ && activeZIndex_>=0 &&
 					        uInt(activeZIndex_) < itsAxisLabellers.nelements() ) {
-				if (((WCAxisLabeller *)(itsAxisLabellers[activeZIndex_]))->
-						        axisLabelSwitch()) {
+				bool labelSwitch = ((WCAxisLabeller *)(itsAxisLabellers[activeZIndex_]))->axisLabelSwitch();
+				if (labelSwitch) {
 					ableToLabelAxis = true;
 				}
 			}
@@ -1712,9 +1712,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// (...but CS master with invalid blink restriction can still label--
 		// its labelling CS is more reliable than other DDs'....  This
 		// still needs work.  dk 12/04)
-
-		if (!((WCAxisLabeller *)(itsAxisLabellers[activeZIndex_]))->
-		        axisLabelSwitch()) {
+		bool labelSwitch = ((WCAxisLabeller *)(itsAxisLabellers[activeZIndex_]))->axisLabelSwitch();
+		if (!labelSwitch) {
 			return False;
 		}
 
@@ -1729,6 +1728,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			theLabeller->draw(ev);
 		} catch (const AipsError &x) {
 			if (&x) { // use x to avoid compiler warning
+				static LogIO os(LogOrigin("PrincipleAxesDD", "labelAxes", WHERE));
+				os << LogIO::WARN
+					<< "Could not label axes: "<< x.getMesg().c_str() << LogIO::POST;
 				return False;
 			}
 		}
