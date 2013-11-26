@@ -246,7 +246,7 @@ class cleanhelper_test(unittest.TestCase):
         box1=[np.int_(i) for i in ibmask[0]] 
         box2=[np.int_(i) for i in ibmask[1]] 
         numpyintmask=[box1,box2]
-        self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=fibmask)
+        self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=numpyintmask)
         self.assertTrue(os.path.exists(maskimage)," numpy.int box maskimage does not exist")
         retval=self.comparemask(maskimage, self.refpath+'ref-'+maskimage)
         self.assertTrue(retval,"test on numpy.int boxes failed")
@@ -256,8 +256,8 @@ class cleanhelper_test(unittest.TestCase):
         print "numpy.float boxes test"
         box1=[np.float_(i) for i in fibmask[0]]
         box2=[np.float_(i) for i in fibmask[1]]
-        numpyintmask=[box1,box2]
-        self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=fibmask)
+        numpyfloatmask=[box1,box2]
+        self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=numpyfloatmask)
         self.assertTrue(os.path.exists(maskimage)," numpy.float box maskimage does not exist")
         retval=self.comparemask(maskimage, self.refpath+'ref-'+maskimage)
         self.assertTrue(retval,"test on numpy.float boxes failed")
