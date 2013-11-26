@@ -63,11 +63,15 @@ def initcli() :
     hifpath = mypath+"/hif/cli/hif.py"
     hpath = mypath+"/h/cli/h.py"
     hsdpath = mypath+"/hsd/cli/hsd.py"
+    hifapath = mypath+"/hifa/cli/hifa.py"
+    hifvpath = mypath+"/hifv/cli/hifv.py"
     myglobals = sys._getframe(len(inspect.stack())-1).f_globals
 
     execfile(hpath, myglobals)
     execfile(hifpath, myglobals)
     execfile(hsdpath, myglobals)
+    execfile(hifapath, myglobals)
+    execfile(hifvpath, myglobals)
 
 
 # find pipeline revision using svnversion
