@@ -9,7 +9,7 @@ import os
 casaarch=os.getenv('CASAARCH')
 pyversion=os.getenv('PYVERSION')
 casasrc=os.getenv('CASASRC')
-for i in ['h', 'hif', 'hsd']:
+for i in ['h', 'hif', 'hsd', 'hifa', 'hifv']:
 	srcdir = casasrc + '/' + i + '/cli'
 	destdir = casaarch + '/pipeline/' + i + '/cli'
 	if(srcdir == destdir) :
