@@ -720,6 +720,14 @@ protected:
 													uInt startInputPos,
 													uInt outputPos,
 													uInt width);
+	template <class T> void cumSumKernel(	Vector<T> &inputData,
+											Vector<Bool> &inputFlags,
+											Vector<Float> &inputWeights,
+											Vector<T> &outputData,
+											Vector<Bool> &outputFlags,
+											uInt startInputPos,
+											uInt outputPos,
+											uInt width);
 
 	template <class T> void smooth(	Int inputSpw,
 									Vector<T> &inputDataStripe,

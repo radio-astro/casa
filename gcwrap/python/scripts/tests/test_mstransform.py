@@ -157,7 +157,7 @@ class test_base_compare(test_base):
         self.refvis_sorted = ''     
               
         self.subtables=['/ANTENNA','/DATA_DESCRIPTION','/FEED','/FIELD','/FLAG_CMD',
-                        '/OBSERVATION','/POINTING','/POLARIZATION','/PROCESSOR','/STATE']
+                        '/POINTING','/POLARIZATION','/PROCESSOR','/STATE']
         self.sortorder=['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME']    
         
     def tearDown(self):
@@ -199,11 +199,15 @@ class test_base_compare(test_base):
             
         # Special case for SOURCE which contains many un-defined columns
         self.assertTrue(th.compTables(self.outvis_sorted+'/SOURCE',self.refvis_sorted+'/SOURCE', 
-                                      ['POSITION','TRANSITION','REST_FREQUENCY','SYSVEL','SOURCE_MODEL'],0.000001,"absolute"))     
+                                      ['POSITION','TRANSITION','REST_FREQUENCY','SYSVEL','SOURCE_MODEL'],0.000001,"absolute"))
+        
+        # Special case for OBSERVATION which contains many un-defined columns
+        self.assertTrue(th.compTables(self.outvis_sorted+'/OBSERVATION',self.refvis_sorted+'/OBSERVATION', 
+                                      ['LOG','SCHEDULE'],0.000001,"absolute"))     
         
     def compare_main_table_columns(self,startrow = 0, nrow = -1, rowincr = 1):
         for col in self.columns:
-            if col != "WEIGHT_SPECTRUM" and col != "FLAG_CATEGORY":
+            if col != "WEIGHT_SPECTRUM" and col != "SIGMA" and col != "FLAG_CATEGORY":
                     tmpcolumn = self.columns[:]
                     tmpcolumn.remove(col)
                     self.assertTrue(th.compTables(self.refvis_sorted,self.outvis_sorted,tmpcolumn,self.tolerance[col],self.mode[col],startrow,nrow,rowincr))
@@ -1313,8 +1317,8 @@ class test_WeightSpectrum(test_base):
         mytb.close()  
         nchan = data.size   
         check_eq(nchan, 12)
-        check_eq(data[0][0][0].real, 0.0628, 0.0001)
-        check_eq(data[0][nchan-1][0].imag, -0.2508, 0.0001)
+        check_eq(data[0][0][0].real, 0.0893, 0.0001)
+        check_eq(data[0][nchan-1][0].imag, -0.2390, 0.0001)
                 
     def test_combineSPWDiffExpAndChanAvgWithWeightSpectrum(self):
         '''mstransform: Combine SPWs with different exposure and channel average using WEIGHT_SPECTRUM'''
@@ -1334,33 +1338,32 @@ class test_WeightSpectrum(test_base):
         mytb.close()  
         nchan = data.size   
         check_eq(nchan, 12)
-        check_eq(data[0][0][0].real, 0.0628, 0.0001)
-        check_eq(data[0][nchan-1][0].imag, -0.2508, 0.0001)
-
+        check_eq(data[0][0][0].real, 0.0893, 0.0001)
+        check_eq(data[0][nchan-1][0].imag, -0.2390, 0.0001)
         
-class test_channelAverageByDefault(test_base):
+class test_channelAverageByDefault(test_base_compare):
     
     def setUp(self):
+        super(test_channelAverageByDefault,self).setUp()
         self.setUp_almasim()
+        self.outvis = 'test_channelAverageByDefaultInVelocityMode-mst.ms'
+        self.refvis = 'test_channelAverageByDefaultInVelocityMode-cvel.ms'
+        self.outvis_sorted = 'test_channelAverageByDefaultInVelocityMode-mst-sorted.ms'
+        self.refvis_sorted = 'test_channelAverageByDefaultInVelocityMode-cvel-sorted.ms'     
+        os.system('rm -rf test_channelAverageByDefaultInVelocityMode*')
         
     def tearDown(self):
-        os.system('rm -rf '+ self.vis)
-        os.system('rm -rf '+ self.outvis)
+        super(test_channelAverageByDefault,self).tearDown()   
         
     def test_channelAverageByDefaultInVelocityMode(self):
         self.outvis = 'test_channelAverageByDefaultInVelocityMode.ms'
         
         mstransform(vis=self.vis,outputvis=self.outvis,regridms=True,combinespws=True,interpolation="linear",
-                    mode="velocity",veltype="optical",width='30km/s',restfreq='230GHz')
-        
-        mytb = tbtool()
-        mytb.open(self.outvis)
-        data = mytb.getcol('DATA')      
-        nchan = data.shape[1]
-        mytb.close() 
-        check_eq(nchan, 55)
-        check_eq(data[0][0][0].real, 0.0323, 0.0001)
-        check_eq(data[0][nchan-1][0].imag, 0.3296, 0.0001)
+                    mode="velocity",veltype="optical",width='30km/s',restfreq='230GHz',datacolumn='ALL')
+        cvel(vis=self.vis,outputvis=self.refvis,interpolation="linear",mode="velocity",veltype="optical",width='30km/s',restfreq='230GHz')
+
+        self.generate_tolerance_map()
+        self.post_process() 
 
  
 class test_float_column(test_base):

@@ -54,7 +54,8 @@ namespace MSTransformations
 	enum WeightingSetup {
 		spectrum,
 		flags,
-		flat
+		flat,
+		cumSum
 	};
 }
 
@@ -951,6 +952,12 @@ void MSTransformManager::close()
 // -----------------------------------------------------------------------
 void MSTransformManager::setup()
 {
+	// Check what columns have to filled
+	// CAS-5581 (jagonzal): Moving these methods here because we need to know if
+	// WEIGHT_SPECTRUM is available to configure the appropriate averaging kernel.
+	checkFillFlagCategory();
+	checkFillWeightSpectrum();
+
 	// Check if we really need to combine SPWs
 	if (combinespws_p)
 	{
@@ -1161,11 +1168,6 @@ void MSTransformManager::setup()
 		writeOutputPlanesFloat_p = &MSTransformManager::writeOutputPlanesInBlock;
 	}
 
-
-	// Check what columns have to filled
-	checkFillFlagCategory();
-	checkFillWeightSpectrum();
-
 	// Generate Iterator
 	setIterationApproach();
 	generateIterator();
@@ -1200,6 +1202,11 @@ void MSTransformManager::setWeightBasedTransformations(uInt mode)
 		{
 			averageKernelComplex_p = &MSTransformManager::flagAverageKernel;
 			averageKernelFloat_p = &MSTransformManager::flagAverageKernel;
+		}
+		else if (mode == MSTransformations::cumSum)
+		{
+			averageKernelComplex_p = &MSTransformManager::cumSumKernel;
+			averageKernelFloat_p = &MSTransformManager::cumSumKernel;
 		}
 		else
 		{
@@ -3556,7 +3563,7 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
     if (inputWeightSpectrumAvailable_p)
     {
     	// Unset all the weights-based operations
-    	setWeightBasedTransformations(MSTransformations::flat);
+    	setWeightBasedTransformations(MSTransformations::cumSum);
 
 		// Transform weights
     	transformCubeOfData(vb,rowRef,vb->weightSpectrum(),outputMsCols_p->weightSpectrum(),NULL);
@@ -3583,7 +3590,7 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		if (usewtspectrum_p)
 		{
 			// Unset all the weights-based operations
-			setWeightBasedTransformations(MSTransformations::flat);
+			setWeightBasedTransformations(MSTransformations::cumSum);
 
 			// jagonzal: I don't want to spend so much resources transforming and writing synthetic WEIGHT_SPECTRUM
 			transformCubeOfData(vb,rowRef,weightSpectrumCube_p,outputMsCols_p->weightSpectrum(),NULL);
@@ -4737,7 +4744,7 @@ template <class T> void MSTransformManager::simpleAverageKernel(Vector<T> &input
 	uInt pos = startInputPos + 1;
 	uInt counts = 1;
 	T avg = inputData(startInputPos);
-	while (pos < width)
+	while (counts < width)
 	{
 		avg += inputData(pos);
 		counts += 1;
@@ -4829,6 +4836,34 @@ template <class T> void MSTransformManager::weightAverageKernel(	Vector<T> &inpu
 
 	return;
 }
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformManager::cumSumKernel(	Vector<T> &inputData,
+															Vector<Bool> &inputFlags,
+															Vector<Float> &inputWeights,
+															Vector<T> &outputData,
+															Vector<Bool> &outputFlags,
+															uInt startInputPos,
+															uInt outputPos,
+															uInt width)
+{
+	uInt pos = startInputPos + 1;
+	uInt counts = 1;
+	T avg = inputData(startInputPos);
+	while (counts < width)
+	{
+		avg += inputData(pos);
+		counts += 1;
+		pos += 1;
+	}
+
+	outputData(outputPos) = avg;
+
+	return;
+}
+
 
 // -----------------------------------------------------------------------
 //
