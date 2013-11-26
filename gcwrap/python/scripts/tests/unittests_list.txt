@@ -6,6 +6,7 @@
 # The second column gives the name of the person responsible for each test
 # Do not include the suffix .py
 
+test_bandpass			gmoellen@aoc.nrao.edu
 test_boxit                      dmehring@nrao.edu
 test_calanalysis		jkern@nrao.edu
 test_caltabconvert		jkern@nrao.edu
@@ -25,6 +26,7 @@ test_fixvis                     dpetry@nrao.edu
 test_flagcmd                    scastro@eso.org
 test_flagdata                   scastro@eso.org
 test_fluxscale                  ttsutsum@nrao.edu
+test_gaincal			gmoellen@aoc.nrao.edu
 test_gencal                     ttsutsum@nrao.edu
 test_getchunk                   dmehring@nrao.edu
 test_hanningsmooth              scastro@eso.org
