@@ -126,20 +126,16 @@ public:
     // Returns the PlotMSPlotManager associated with this PlotMS.
     virtual PlotMSPlotManager& getPlotManager();
     
-    // See PlotMSPlotManager::addSinglePlot().
-   // virtual PlotMSPlot* addSinglePlot(const PlotMSPlotParameters* p = NULL);
-    
-    // See PlotMSPlotManager::addMultiPlot();
-    //PlotMSPlot* addMultiPlot(const PlotMSPlotParameters* p = NULL);
-
-    // See PlotMSPlotManager::addIterPlot();
-    //PlotMSPlot* addIterPlot(const PlotMSPlotParameters* p = NULL);
 
     // See PlotMSPlotManager::addOverPlot();
     virtual PlotMSOverPlot* addOverPlot(const PlotMSPlotParameters* p = NULL);
     
     virtual bool isDrawing() const;
     bool isClosed() const;
+    // Set whether the latest plot update was successful completed.  This
+    // may not be the case if an invalid selection was made.
+    void setOperationCompleted( bool completed );
+
 
     // save plot  to file using specified format. If interactive, pop up confirm window, if not, no confirm windowl
     bool save(const PlotExportFormat& format, const bool interactive);
@@ -155,6 +151,9 @@ public:
     bool isVisible(PlotCanvasPtr& canvas );
     bool exportToFormat(const PlotExportFormat& format);
     virtual Record locateInfo( Bool& success, String& errorMessage );
+    //Returns whether or not the latest plot update completed successfully.
+    //For example, if an invalid selection was made, the return value may be false.
+    bool isOperationCompleted() const;
     PlotterPtr getPlotter();
 public:
     // To allow normal error/warning/info popups, which block execution,
@@ -185,6 +184,11 @@ private:
     
     // DBus application, or NULL if one is not needed.
     PlotMSDBusApp* itsDBus_;
+
+	//Whether the most recent plot updated was successfully
+	//completed.  A null selection, for example, could result
+	//in an unsuccessful update.
+    bool operationCompleted;
 
     
     // Initializes a new PlotMS object, to be called from constructor.

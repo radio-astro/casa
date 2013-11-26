@@ -276,7 +276,7 @@ private:
     bool plotParameters(int& plotIndex) const;
     
     // Helper for updating.
-    void update();
+    bool update();
 
     // helper for saving
     bool _savePlot(const Record& parameters);

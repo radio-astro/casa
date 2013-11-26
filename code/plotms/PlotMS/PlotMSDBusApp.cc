@@ -221,7 +221,6 @@ void PlotMSDBusApp::plotsChanged(const PlotMSPlotManager& manager) {
 
 
 
-
 // Protected Methods //
 
 void PlotMSDBusApp::dbusRunXmlMethod(
@@ -682,18 +681,31 @@ void PlotMSDBusApp::dbusRunXmlMethod(
     else if(methodName == METHOD_SHOW || methodName == METHOD_HIDE) {
         itsPlotms_.showGUI(methodName == METHOD_SHOW);
         if(itsPlotms_.guiShown() && itsUpdateFlag_) {
-        	update();
+        	bool completed = update();
+        	if ( !completed ){
+        	    retValue.define( 0, false );
+        	}
         }
     }
     else if(methodName == METHOD_UPDATE) {
-        update();
-    } else if(methodName == METHOD_QUIT) {
+        bool successfulUpdate = update();
+        retValue.define( 0, successfulUpdate );
+
+    }
+    else if(methodName == METHOD_QUIT) {
     	itsPlotms_.quitApplication();
     }
     else if(methodName == METHOD_SAVE) {
-    	update();
-    	if (!_savePlot(parameters)) {
-    		callError = true;
+    	bool successfulUpdate = update();
+    	if ( !successfulUpdate ){
+    		retValue.define( 0, false );
+    	}
+    	else {
+    		bool plotSaved = _savePlot( parameters );
+    		retValue.define( 0, plotSaved );
+    		if ( !plotSaved ){
+    			callError = true;
+    		}
     	}
     }
     else if (methodName == METHOD_ISDRAWING) {
@@ -704,8 +716,12 @@ void PlotMSDBusApp::dbusRunXmlMethod(
     }
     else {
         log("Unknown method: " + methodName);
+        retValue.define( 0, false );
     }
-    if(callError) log("Method " + methodName + " was called incorrectly.");
+    if(callError){
+    	log("Method " + methodName + " was called incorrectly.");
+    	retValue.define( 0, false );
+    }
 }
 
 
@@ -830,10 +846,9 @@ bool PlotMSDBusApp::plotParameters(int& plotIndex) const {
     return resized;
 }
 
-void PlotMSDBusApp::update() {
+bool PlotMSDBusApp::update() {
 	// single threaded here
     itsUpdateFlag_ = false;
-    //itsPlotms_.showGUI(true);
     unsigned int n = itsPlotms_.getPlotManager().plotParameters().size();
     // update plot parameters
     PlotMSPlotParameters* p;
@@ -846,18 +861,21 @@ void PlotMSDBusApp::update() {
             p->releaseNotification();
         }
     }
-    
-    // check for added plots
-    if(itsPlotParams_.size() > n) {
-        vector<PlotMSPlotParameters> v(itsPlotParams_.size() - n,
+    bool successfulUpdate = itsPlotms_.isOperationCompleted();
+    if ( successfulUpdate ){
+    	// check for added plots
+    	if(itsPlotParams_.size() > n) {
+    		vector<PlotMSPlotParameters> v(itsPlotParams_.size() - n,
                 PlotMSPlotParameters(itsPlotms_.getPlotFactory()));
-        for(unsigned int i = 0; i < v.size(); i++)
-            v[i] = itsPlotParams_[i + n];
-        for(unsigned int i = 0; i < v.size(); i++){
-            //itsPlotms_.addSinglePlot(&v[i]);
-        	itsPlotms_.addOverPlot(&v[i]);
-        }
+    		for(unsigned int i = 0; i < v.size(); i++){
+    			v[i] = itsPlotParams_[i + n];
+    		}
+    		for(unsigned int i = 0; i < v.size(); i++){
+    			itsPlotms_.addOverPlot(&v[i]);
+    		}
+    	}
     }
+    return successfulUpdate;
 }
 
 }

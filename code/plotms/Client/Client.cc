@@ -61,6 +61,10 @@ PlotLoggerPtr Client::getLogger(){
 	return itsPlotter_->logger();
 }
 
+void Client::setOperationCompleted( bool /*completed*/ ){
+
+}
+
 void Client::setCanvasCachedAxesStackImageSize(int width, int height ){
 	itsPlotter_->setCanvasCachedAxesStackImageSize( width, height );
 }
