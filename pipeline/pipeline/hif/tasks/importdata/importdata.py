@@ -730,10 +730,9 @@ def import_flux(output_dir, observing_run, filename=None):
                 except KeyError:
                     # No MS registered by that name. This could be caused by a
                     # flux.csv from a previous run
-                    LOG.warning('%s refers to unregistered measurement set \'%s\'. '
-                                'Is %s stale?' % (filename, 
-                                                  ms_name, 
-                                                  os.path.basename(filename)))
+                    LOG.info('%s refers to unregistered measurement set \'%s\'. '
+                             'If this is a multi-ASDM run this to be expected.'
+                             '' % (filename, ms_name))
                     continue
 
                 fields = ms.get_fields(field_id)
