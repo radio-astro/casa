@@ -1251,6 +1251,7 @@ class T2_4MDetailsWvrgcalflagRenderer(T2_4MDetailsDefaultRenderer):
         flag_plots = {}
         phase_offset_summary_plots = {}
         baseline_summary_plots = {}
+        wvrinfos = {}
         for result in results:
             # if there's no WVR data, the pool will be empty
             if not result.pool:
@@ -1260,6 +1261,10 @@ class T2_4MDetailsWvrgcalflagRenderer(T2_4MDetailsDefaultRenderer):
             ms = context.observing_run.get_ms(vis)
 
             applications.extend(self.get_wvr_applications(result))
+            try:
+                wvrinfos[vis] = result.wvr_infos
+            except:
+                pass
             
             if result.view:
                 flag_plotter = image.ImageDisplay()
@@ -1309,6 +1314,7 @@ class T2_4MDetailsWvrgcalflagRenderer(T2_4MDetailsDefaultRenderer):
         # these objects in order to create links to the thumbnail pages we
         # just created
         ctx.update({'applications' : applications,
+                    'wvrinfos'     : wvrinfos,
                     'flag_plots' : flag_plots,
                     'phase_offset_summary_plots' : phase_offset_summary_plots,
                     'baseline_summary_plots' : baseline_summary_plots,
@@ -1500,7 +1506,7 @@ class T2_4MDetailsGaincalRenderer(T2_4MDetailsDefaultRenderer):
                                                 'ms gaintable calmode solint intent spw') 
 
     def __init__(self, template='t2-4m_details-hif_gaincal.html', 
-                 always_rerender=True):
+                 always_rerender=False):
         # set the name of our specialised Mako template via the superclass
         # constructor 
         super(T2_4MDetailsGaincalRenderer, self).__init__(template,
@@ -1627,7 +1633,7 @@ class T2_4MDetailsGaincalRenderer(T2_4MDetailsDefaultRenderer):
         return applications
 
 
-class GaincalPhaseVsTimePlotRenderer(object):
+class GenericPlotsRenderer(object):
     # take a look at WvrgcalflagPhaseOffsetVsBaselinePlotRenderer when we have
     # scores and histograms to generate. there should be a common base class. 
     template = 'generic_x_vs_y_detail_plots.html'
@@ -1697,7 +1703,19 @@ class GaincalPhaseVsTimePlotRenderer(object):
         return t.render(**display_context)
 
 
-class GaincalAmpVsTimePlotRenderer(GaincalPhaseVsTimePlotRenderer):
+class GaincalPhaseVsTimePlotRenderer(GenericPlotsRenderer):
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('phase_vs_time-%s.html' % self.ms)
+        return filename
+
+    def _get_display_context(self):
+        d = super(GaincalPhaseVsTimePlotRenderer, self)._get_display_context()
+        d['plot_title'] = 'Phase vs time'
+        return d
+    
+
+class GaincalAmpVsTimePlotRenderer(GenericPlotsRenderer):
     # take a look at WvrgcalflagPhaseOffsetVsBaselinePlotRenderer when we have
     # scores and histograms to generate. there should be a common base class. 
     template = 'generic_x_vs_y_detail_plots.html'
@@ -1718,6 +1736,10 @@ class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
     T2_4MDetailsBandpassRenderer generates the detailed T2_4M-level plots and
     output specific to the bandpass calibration task.
     """
+    BandpassApplication = collections.namedtuple('BandpassApplication', 
+                                                 'ms gaintable bandtype solint intent spw') 
+    PhaseupApplication = collections.namedtuple('PhaseupApplication', 
+                                                'ms calmode solint minblperant minsnr flagged phaseupbw') 
     
     def __init__(self, template='t2-4m_details-bandpass.html', 
                  always_rerender=False):
@@ -1746,30 +1768,229 @@ class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
         super_cls = super(T2_4MDetailsBandpassRenderer, self)
         ctx = super_cls.get_display_context(context, results)
 
+        stage_dir = os.path.join(context.report_dir, 
+                                 'stage%d' % results.stage_number)
+        if not os.path.exists(stage_dir):
+            os.mkdir(stage_dir)
+
         # generate the bandpass-specific plots, collecting the Plot objects
         # returned by the plot generator 
-        plots = []
-        for result in results:
-            inputs = bandpass.BandpassDisplay.Inputs(context, result)
-            task = bandpass.BandpassDisplay(inputs)
-            plots.append(task.plot())
+        applications = []
+        phaseup_applications = []
+        amp_refant = {}
+        amp_mode = {}
+        amp_details = {}
 
-        # Group the Plots by axes and plot types; each logical grouping will
-        # be contained in a PlotGroup  
-        plot_groups = logger.PlotGroup.create_plot_groups(plots)
-        # Write the thumbnail pages for each plot grouping to disk 
-        for plot_group in plot_groups:
-            renderer = PlotGroupRenderer(context, results, plot_group)
-            plot_group.filename = renderer.filename 
+        phase_refant = {}
+        phase_mode = {}
+        phase_details = {}
+
+        for result in results:
+            vis = os.path.basename(result.inputs['vis'])
+            ms = context.observing_run.get_ms(vis)
+            applications.extend(self.get_bandpass_applications(result, ms))
+            phaseup_applications.extend(self.get_phaseup_applications(result, ms))
+            ms_refant = ms.reference_antenna.split(',')[0]
+
+            # need two summary plots: one for the refant, one for the mode
+            plotter = bandpass.BandpassAmpVsFreqSummaryChart(context, result)
+            summaries = plotter.plot()
+            for_refant = [p for p in summaries 
+                          if p.parameters['ant'] == ms_refant]
+            amp_refant[vis] = [for_refant[0] if for_refant else None]
+
+            # replace mode with first non-refant plot until we have scores
+            LOG.todo('Replace bp summary plot with mode when scores are in place')
+            non_refants = [p for p in summaries
+                           if p.parameters['ant'] != ms_refant]
+            mode = [non_refants[0] if non_refants else None]
+            amp_mode[vis] = mode
+
+            # need two summary plots: one for the refant, one for the mode
+            plotter = bandpass.BandpassPhaseVsFreqSummaryChart(context, result)
+            summaries = plotter.plot()
+            for_refant = [p for p in summaries 
+                          if p.parameters['ant'] == ms_refant]
+            phase_refant[vis] = [for_refant[0] if for_refant else None]
+
+            non_refants = [p for p in summaries
+                           if p.parameters['ant'] != ms_refant]
+            mode = [non_refants[0] if non_refants else None]
+            phase_mode[vis] = mode
+
+            # make phase vs freq plots for all data 
+            plotter = bandpass.BandpassPhaseVsFreqDetailChart(context, result)
+            phase_details[vis] = plotter.plot()            
+            renderer = BandpassPhaseVsTimePlotRenderer(context, result, 
+                                                       phase_details[vis])            
             with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
+                fileobj.write(renderer.render())    
+                            
+            plotter = bandpass.BandpassAmpVsFreqDetailChart(context, result)
+            amp_details[vis] = plotter.plot()            
+            renderer = BandpassAmpVsTimePlotRenderer(context, result, 
+                                                     amp_details[vis])            
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())    
 
         # add the PlotGroups to the Mako context. The Mako template will parse
         # these objects in order to create links to the thumbnail pages we
         # just created
-        ctx.update({'plot_groups' : plot_groups })
+        ctx.update({'applications' : applications,
+                    'phaseup_applications' : phaseup_applications,
+                    'amp_mode'     : amp_mode,
+                    'amp_refant'   : amp_refant,
+                    'phase_mode'   : phase_mode,
+                    'phase_refant' : phase_refant,
+                    'dirname'      : stage_dir})
 
         return ctx
+
+    def get_phaseup_applications(self, result, ms):
+        # return early if phase-up was not activated
+        if result.inputs.get('phaseup', False) != True:
+            return []
+        
+        calmode_map = {'p':'Phase only',
+                       'a':'Amplitude only',
+                       'ap':'Phase and amplitude'}
+        
+        # identify phaseup from 'preceding' list attached to result
+        phaseup_calapps = [] 
+        for previous_result in result.preceding:
+            for calapp in previous_result:
+                l = [cf for cf in calapp.calfrom if cf.caltype == 'gaincal']
+                if l and calapp not in phaseup_calapps:
+                    phaseup_calapps.append(calapp)
+                
+        applications = []
+        for calapp in phaseup_calapps:
+            solint = calapp.origin.inputs['solint']
+
+            if solint == 'inf':
+                solint = 'Infinite'
+            
+            # Convert solint=int to a real integration time. 
+            # solint is spw dependent; science windows usually have the same
+            # integration time, though that's not guaranteed by the MS.
+            if solint == 'int':
+                from_intent = calapp.origin.inputs['intent']
+                
+                # from_intent is given in CASA intents, ie. *AMPLI*, *PHASE*
+                # etc. We need this in pipeline intents.
+                pipeline_intent = utils.to_pipeline_intent(ms, from_intent)
+                scans = ms.get_scans(scan_intent=pipeline_intent)
+
+                spw_ids = [int(spw) for spw in result.inputs['spw'].split(',')]                
+                
+                all_solints = set()
+                for spw_id in spw_ids:                    
+                    spw_solints = set([scan.mean_interval(spw_id) 
+                                       for scan in scans])
+                    all_solints.update(spw_solints)
+                
+                in_secs = ['%0.2fs' % (dt.seconds + dt.microseconds * 1e-6) 
+                           for dt in all_solints]  
+                solint = 'Per integration (%s)' % utils.commafy(in_secs, quotes=False, conjunction='or')
+            
+            calmode = calapp.origin.inputs.get('calmode', 'N/A')
+            calmode = calmode_map.get(calmode, calmode)
+            minblperant = calapp.origin.inputs.get('minblperant', 'N/A')
+            minsnr = calapp.origin.inputs.get('minsnr', 'N/A')
+            flagged = 'TODO'
+            phaseupbw = result.inputs.get('phaseupbw', 'N/A')
+
+            a = T2_4MDetailsBandpassRenderer.PhaseupApplication(ms.basename,
+                                                                calmode,
+                                                                solint,
+                                                                minblperant,
+                                                                minsnr,
+                                                                flagged,
+                                                                phaseupbw)
+            applications.append(a)
+
+        return applications
+    
+    def get_bandpass_applications(self, result, ms):
+        applications = []
+        
+        bandtype_map = {'B'    :'Channel',
+                        'BPOLY':'Polynomial'}                       
+        
+        for calapp in result.final:
+            solint = calapp.origin.inputs['solint']
+
+            if solint == 'inf':
+                solint = 'Infinite'
+            
+            # Convert solint=int to a real integration time. 
+            # solint is spw dependent; science windows usually have the same
+            # integration time, though that's not guaranteed by the MS.
+            if solint == 'int':
+                from_intent = calapp.origin.inputs['intent']
+                
+                # from_intent is given in CASA intents, ie. *AMPLI*, *PHASE*
+                # etc. We need this in pipeline intents.
+                pipeline_intent = utils.to_pipeline_intent(ms, from_intent)
+                scans = ms.get_scans(scan_intent=pipeline_intent)
+
+                spw_ids = [int(spw) for spw in calapp.spw.split(',')]                
+                
+                all_solints = set()
+                for spw_id in spw_ids:                    
+                    spw_solints = set([scan.mean_interval(spw_id) 
+                                       for scan in scans])
+                    all_solints.update(spw_solints)
+                
+                in_secs = ['%0.2fs' % (dt.seconds + dt.microseconds * 1e-6) 
+                           for dt in all_solints]  
+                solint = 'Per integration (%s)' % utils.commafy(in_secs, quotes=False, conjunction='or')
+            
+            gaintable = os.path.basename(calapp.gaintable)
+            spw = ', '.join(calapp.spw.split(','))
+
+            to_intent = ', '.join(calapp.intent.split(','))
+            if to_intent == '':
+                to_intent = 'ALL'
+
+            # TODO get this from the calapp rather than the top-level inputs?
+            bandtype = calapp.origin.inputs['bandtype']
+            bandtype = bandtype_map.get(bandtype, bandtype)
+            a = T2_4MDetailsBandpassRenderer.BandpassApplication(ms.basename,
+                                                                 gaintable,
+                                                                 bandtype,
+                                                                 solint,
+                                                                 to_intent,
+                                                                 spw)
+            applications.append(a)
+
+        return applications
+
+
+
+
+class BandpassAmpVsTimePlotRenderer(GenericPlotsRenderer):
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('amp_vs_time-%s.html' % self.ms)
+        return filename
+
+    def _get_display_context(self):
+        d = super(BandpassAmpVsTimePlotRenderer, self)._get_display_context()
+        d['plot_title'] = 'Amplitude vs time'
+        return d
+
+
+class BandpassPhaseVsTimePlotRenderer(GenericPlotsRenderer):
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('phase_vs_time-%s.html' % self.ms)
+        return filename
+
+    def _get_display_context(self):
+        d = super(BandpassPhaseVsTimePlotRenderer, self)._get_display_context()
+        d['plot_title'] = 'Phase vs time'
+        return d
 
 
 class T2_4MDetailsBandpassFlagRenderer(T2_4MDetailsDefaultRenderer):

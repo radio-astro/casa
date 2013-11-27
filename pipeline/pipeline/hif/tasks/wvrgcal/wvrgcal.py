@@ -1,9 +1,11 @@
 from __future__ import absolute_import
+import collections
 import numpy as np
 import os
 import shutil
 import types
 
+import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
@@ -17,6 +19,9 @@ from . import resultobjects
 from . import wvrg_qa2
 
 LOG = infrastructure.get_logger(__name__)
+
+WVRInfo = collections.namedtuple('WVRInfo',
+                                 'antenna wvr flag rms disc')
 
 
 class WvrgcalInputs(basetask.StandardInputs):
@@ -333,6 +338,8 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             wvrflag_set = set(result.wvrflag)
             wvrflag_set.update(job_wvrflag)
             result.wvrflag = list(wvrflag_set)
+
+            result.wvr_infos = self._get_wvrinfos(job_result)
  
         LOG.info('wvrgcal complete')
 
@@ -533,5 +540,21 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                       os.path.basename(new_caltable))
             return new_caltable
         
-        return caltable_namer
+        return caltable_namer    
+
+    def _get_wvrinfos(self, result):
+        to_microns = lambda x : measures.Distance(x, 
+                                                  measures.DistanceUnits.MICROMETRE)
+    
+        # copy result in case we need it unaltered elsewhere, then convert raw
+        # values to domain measures    
+        copied = dict(result)
+        copied['RMS_um'] = [to_microns(v) for v in copied['RMS_um']]
+        copied['Disc_um'] = [to_microns(v) for v in copied['Disc_um']]
+    
+        attrs = ['Name', 'WVR', 'Flag', 'RMS_um', 'Disc_um']
+        zipped = zip(*[copied.get(attr) for attr in attrs])
+        wvr_infos = [WVRInfo(*row) for row in zipped]
+        
+        return wvr_infos
     

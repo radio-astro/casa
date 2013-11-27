@@ -21,9 +21,9 @@ class ArcUnits(object):
 
 
 class DistanceUnits(object):
-    ANGSTROM          = { 'name' : 'ANGSTROM'          , 'symbol' : '\u212B' , 'metres' : decimal.Decimal('1e-10')              }
+    ANGSTROM          = { 'name' : 'ANGSTROM'          , 'symbol' : '\u212B', 'metres' : decimal.Decimal('1e-10')              }
     NANOMETRE         = { 'name' : 'NANOMETRE'         , 'symbol' : 'nm'     , 'metres' : decimal.Decimal('1e-9')               }
-    MICROMETRE        = { 'name' : 'MICROMETRE'        , 'symbol' : '\u03Bm' , 'metres' : decimal.Decimal('1e-6')               }
+    MICROMETRE        = { 'name' : 'MICROMETRE'        , 'symbol' : '\u00B5m', 'metres' : decimal.Decimal('1e-6')               }
     MILLIMETRE        = { 'name' : 'MILLIMETRE'        , 'symbol' : 'mm'     , 'metres' : decimal.Decimal('0.001')              }
     CENTIMETRE        = { 'name' : 'CENTIMETRE'        , 'symbol' : 'cm'     , 'metres' : decimal.Decimal('0.01')               }
     METRE             = { 'name' : 'METRE'             , 'symbol' : 'm'      , 'metres' : decimal.Decimal(1)                    }
@@ -84,7 +84,7 @@ class FrequencyUnits(object):
     ETAHERTZ   = { 'name' : 'ETAHERTZ'   , 'symbol' : 'EHz'      , 'hz' : decimal.Decimal('1e18')  }
     ZETTAHERTZ = { 'name' : 'ZETTAHERTZ' , 'symbol' : 'ZHz'      , 'hz' : decimal.Decimal('1e21')  }
     YOTTAHERTZ = { 'name' : 'YOTTAHERTZ' , 'symbol' : 'YHz'      , 'hz' : decimal.Decimal('1e24')  }        
-
+    
 
 class LinearVelocityUnits(object):
     METRES_PER_SECOND     = { 'name' : 'METRES_PER_SECOND'     , 'symbol' : 'm/s'  , 'mps' : decimal.Decimal(1)         }

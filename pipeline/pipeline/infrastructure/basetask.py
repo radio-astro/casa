@@ -284,9 +284,10 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
         """
         # get the signature of this Inputs class. We want to return a 
         # of dictionary of all kw argument names except self, the 
-        # pipeline-specific arguments (context, output_dir and run_qa2) and
+        # pipeline-specific arguments (context, output_dir, run_qa2 etc.) and
         # caltable.
-        skip = ['self', 'context', 'output_dir', 'run_qa2']
+        skip = ['self', 'context', 'output_dir', 'run_qa2', 'ms', 
+                'to_field', 'to_intent', 'calto', 'calstate']
         skip.extend(ignore)
         kw_names = [a for a in inspect.getargspec(self.__init__).args
                     if a not in skip]
@@ -294,10 +295,14 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
         for key in kw_names:
             d[key] = getattr(self, key)
 
-#         # add any read-only properties too
-#         predicate = lambda m : m.__class__.__name__ == 'property' and type(m.fset) is types.NoneType
-#         ro = [(n, p) for (n, p) in inspect.getmembers(self._active, 
-#                                                       predicate)]  
+        # add any read-only properties too
+        for k, v in inspect.getmembers(self.__class__, inspect.isdatadescriptor):
+            if k in d or k.startswith('_') or k in skip:
+                continue
+            try:
+                d[k] = v.fget(self)
+            except:
+                LOG.debug('Could not get input property %s' % k)
         
         return d
 
@@ -364,20 +369,7 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
         return pprint.pformat(self.as_dict())
 
     def as_dict(self):
-        # Our convention is that properties - as in, methods decorated with
-        # the @property decorator - hide instance values of the same name
-        # beginning with underscore. We detect this case and ask for the 
-        # result of the property method instead. This gives the calculated
-        # value rather than, say, the name of the heuristic handling that
-        # property.   
-        properties = {}
-        for k, v in self.__dict__.items():
-            if k in ('_context', '_my_vislist', VISLIST_RESET_KEY):
-                continue
-            v = getattr(self, k[1:]) if k[0] is '_' else v
-            k = k[1:] if k[0] is '_' else k
-            properties[k] = v
-        return properties
+        return utils.collect_properties(self)
 
 
 class ModeInputs(api.Inputs):
@@ -508,26 +500,14 @@ class ModeInputs(api.Inputs):
     def to_casa_args(self):
         return self._active.to_casa_args()
     
+    def as_dict(self):
+        props = utils.collect_properties(self._active)
+        props.update(utils.collect_properties(self))
+        return props  
+    
     def __repr__(self):
         # get the arguments for this class's contructor
-        properties = {}
-        for arg in [a for a in inspect.getargspec(self.__init__).args
-                    if a not in ('self','context')]:
-            properties[arg] = getattr(self, arg)
-
-        for k, v in self._active.__dict__.items():
-            if k in ('_context', 'self', '_my_vislist'):
-                continue
-            v = getattr(self._active, k[1:]) if k[0] is '_' else v
-            k = k[1:] if k[0] is '_' else k
-            properties[k] = v
-
-#             # add any read-only properties too
-#             predicate = lambda m : m.__class__.__name__ == 'property' and type(m.fset) is types.NoneType
-#             ro = [(n, p) for (n, p) in inspect.getmembers(self._active, 
-#                                                           predicate)]  
-        
-        return pprint.pformat(properties)
+        return pprint.pformat(self.as_dict())
 
     @classmethod
     def get_constructor_args(cls, ignore=('self','context')):

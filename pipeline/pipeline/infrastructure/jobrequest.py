@@ -42,6 +42,7 @@ import sdsave_cli as sdsave_cli
 
 from . import casatools
 from . import logging
+from . import utils
 
 LOG = logging.get_logger(__name__)
 
@@ -62,8 +63,6 @@ class JobRequest(object):
         map(lambda key: kw.pop(key), null_keywords)
 
         self.fn = fn
-        self.args = args
-        self.kw = kw
 
         # CASA tasks are instances rather than functions, whose execution
         # begins at __call__
@@ -82,6 +81,17 @@ class JobRequest(object):
         argnames = code.co_varnames[:argcount]
         fn_defaults = fn.func_defaults or list()
         argdefs = dict(zip(argnames[-len(fn_defaults):], fn_defaults))
+
+        # remove arguments that are not expected by the function, such as 
+        # pipeline variables that the CASA task is not expecting.
+        unexpected_kw = [k for k, v in kw.iteritems() if k not in argnames]
+        if unexpected_kw:
+            LOG.warning('Removing unexpected keywords from JobRequest: '
+                        '%s' % utils.commafy(unexpected_kw, quotes=False))
+            map(lambda key: kw.pop(key), unexpected_kw)
+
+        self.args = args
+        self.kw = kw
 
         def format_arg_value(arg_val):
             arg, val = arg_val

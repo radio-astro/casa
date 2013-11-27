@@ -56,7 +56,7 @@ class PlotcalLeaf(object):
             'caltable' : os.path.basename(self._calapp.gaintable),
             'x'        : self._xaxis,
             'y'        : self._yaxis,
-            'spw'      : '' if self._spw == '' else 'spw%s-' % self._spw,
+            'spw'      : '' if self._spw == '' else 'spw%0.2d-' % int(self._spw),
             'ant'      : '' if self._ant == '' else 'ant%s-' % self._ant.replace(',','_'),
             'intent'   : '' if self._intent == '' else '%s-' % self._intent.replace(',','_')
         }
@@ -96,7 +96,7 @@ class PlotcalLeaf(object):
                      'xaxis'     : self._xaxis,
                      'yaxis'     : self._yaxis,
                      'showgui'   : False,
-                     'spw'       : self._spw,
+                     'spw'       : str(self._spw),
                      'antenna'   : self._ant,
                      'figfile'   : self._figfile,
                      'plotrange' : self._plotrange}
@@ -105,7 +105,118 @@ class PlotcalLeaf(object):
         task.execute(dry_run=False)
 
 
-class PlotcalComposite(object):
+class PlotbandpassLeaf(object):
+    """
+    Class to execute plotbandpass and return a plot wrapper. It passes the spw
+    and ant arguments through to plotbandpass without further manipulation. More
+    than one plot may be created though not necessarily returned, as 
+    plotbandpass may create many plots depending on the input arguments. 
+    """
+    def __init__(self, context, result, calapp, xaxis, yaxis, spw='', ant='',
+                 overlay='', showatm=True):
+        self._context = context
+        self._result = result
+
+        self._calapp = calapp
+        self._caltable = calapp.gaintable   
+        self._vis = calapp.vis
+
+        self._xaxis = xaxis
+        self._yaxis = yaxis
+
+        self._spw = spw
+        self._intent = calapp.intent
+
+        # use antenna name rather than ID if possible
+        if ant != '':
+            ms = self._context.observing_run.get_ms(self._vis)
+            domain_antennas = ms.get_antenna(ant)
+            idents = [a.name if a.name else a.id for a in domain_antennas]
+            ant = ','.join(idents)
+        self._ant = ant
+
+        self._figfile = self._get_figfile()
+
+        # plotbandpass injects antenna name, spw ID and t0 into every plot filename
+        root, ext = os.path.splitext(self._figfile)
+        # if spw is '', the spw component will be set to the first spw 
+        if spw == '':
+            with casatools.TableReader(calapp.gaintable) as tb:
+                caltable_spws = set(tb.getcol('SPECTRAL_WINDOW_ID'))
+            spw = min(caltable_spws) 
+            
+        self._pb_figfile = '%s%s%s.t00%s' % (root, 
+                                             '.%s' % ant if ant else '',
+                                             '.spw%0.2d' % spw if spw else '',
+                                             ext)
+                
+        self._overlay = overlay
+        self._showatm = showatm
+        
+    def plot(self):
+        plots = [self._get_plot_wrapper()]
+        return [p for p in plots 
+                if p is not None
+                and os.path.exists(p.abspath)]
+
+    def _get_figfile(self):
+        fileparts = {
+            'caltable' : os.path.basename(self._calapp.gaintable),
+            'x'        : self._xaxis,
+            'y'        : self._yaxis,
+            'spw'      : '' if self._spw == '' else 'spw%s-' % self._spw,
+            'ant'      : '' if self._ant == '' else 'ant%s-' % self._ant.replace(',','_'),
+            'intent'   : '' if self._intent == '' else '%s-' % self._intent.replace(',','_')
+        }
+        png = '{caltable}-{spw}{ant}{intent}{y}_vs_{x}.png'.format(**fileparts)
+
+        return os.path.join(self._context.report_dir, 
+                            'stage%s' % self._result.stage_number,
+                            png)
+
+    def _get_plot_wrapper(self):
+        if not os.path.exists(self._pb_figfile):
+            LOG.trace('Creating new plot: %s' % self._pb_figfile)
+            try:
+                self._create_plot()
+            except Exception as ex:
+                LOG.error('Could not create plot %s' % self._pb_figfile)
+                LOG.exception(ex)
+                return None
+
+        parameters={'vis'      : self._vis,
+                    'caltable' : self._caltable}        
+
+        for attr in ['spw', 'ant', 'intent']:
+            val = getattr(self, '_%s' % attr)
+            if val != '':
+                parameters[attr] = val 
+            
+        wrapper = logger.Plot(self._pb_figfile,
+                              x_axis=self._xaxis,
+                              y_axis=self._yaxis,
+                              parameters=parameters)
+            
+        return wrapper
+
+    def _create_plot(self):
+        task_args = {'vis'         : self._vis,
+                     'caltable'    : self._caltable,
+                     'xaxis'       : self._xaxis,
+                     'yaxis'       : self._yaxis,
+                     'antenna'     : self._ant,
+                     'spw'         : self._spw,
+                     'overlay'     : self._overlay,
+                     'figfile'     : self._figfile,
+                     'showatm'     : self._showatm,
+                     'interactive' : False,
+                     'subplot'     : 11}
+
+        task = casa_tasks.plotbandpass(**task_args)
+        task.execute(dry_run=False)
+
+
+class LeafComposite(object):
     """
     Base class to hold multiple PlotLeafs, thus generating multiple plots when
     plot() is called.
@@ -120,45 +231,85 @@ class PlotcalComposite(object):
         return [p for p in plots if p is not None]
 
     
-class PlotcalSpwComposite(PlotcalComposite):
+class SpwComposite(LeafComposite):
+    
     """
     Create a PlotLeaf for each spw in the caltable.
     """
+
+    # reference to the PlotLeaf class to call
+    leaf_class = None
+    
     def __init__(self, context, result, calapp, xaxis, yaxis, ant='', 
-                 plotrange=[]):
-        wrapper = CaltableWrapper.from_caltable(calapp.gaintable)
-        caltable_spws = [spw for spw in set(wrapper.spw)]
-        children = [PlotcalLeaf(context, result, calapp, xaxis, yaxis,
-                                spw=spw, ant=ant, plotrange=plotrange)
-                    for spw in caltable_spws]
-        super(PlotcalSpwComposite, self).__init__(children)
+                 **kwargs):
+        with casatools.TableReader(calapp.gaintable) as tb:
+            table_spws = set(tb.getcol('SPECTRAL_WINDOW_ID'))
+        
+        caltable_spws = [int(spw) for spw in table_spws]
+        children = [self.leaf_class(context, result, calapp, xaxis, yaxis,
+                                    spw=spw, ant=ant, **kwargs)
+                                    for spw in caltable_spws]
+        super(SpwComposite, self).__init__(children)
 
 
-class PlotcalAntComposite(PlotcalComposite):
+class AntComposite(LeafComposite):
     """
     Create a PlotLeaf for each antenna in the caltable.
     """
+    # reference to the PlotLeaf class to call
+    leaf_class = None
+
     def __init__(self, context, result, calapp, xaxis, yaxis, spw='',
-                 plotrange=[]):
-        wrapper = CaltableWrapper.from_caltable(calapp.gaintable)
-        caltable_antennas = [ant for ant in set(wrapper.antenna)]
-        children = [PlotcalLeaf(context, result, calapp, xaxis, yaxis,
-                                ant=ant, spw=spw, plotrange=plotrange)
-                    for ant in caltable_antennas]
-        super(PlotcalAntComposite, self).__init__(children)
+                 **kwargs):
+        with casatools.TableReader(calapp.gaintable) as tb:
+            table_ants = set(tb.getcol('ANTENNA1'))
+        
+        caltable_antennas = [int(ant) for ant in table_ants]
+        children = [self.leaf_class(context, result, calapp, xaxis, yaxis,
+                                    ant=ant, spw=spw, **kwargs)
+                                    for ant in caltable_antennas]
+        super(AntComposite, self).__init__(children)
 
 
-class PlotcalAntSpwComposite(PlotcalComposite):
+class AntSpwComposite(LeafComposite):
     """
     Create a PlotLeaf for each spw and antenna in the caltable.
     """
-    def __init__(self, context, result, calapp, xaxis, yaxis, plotrange=[]):
-        wrapper = CaltableWrapper.from_caltable(calapp.gaintable)
-        caltable_antennas = [ant for ant in set(wrapper.antenna)]        
-        children = [PlotcalSpwComposite(context, result, calapp, xaxis, yaxis,
-                                        ant=ant, plotrange=plotrange)
-                    for ant in caltable_antennas]
-        super(PlotcalAntSpwComposite, self).__init__(children)
+    leaf_class = None
+
+    def __init__(self, context, result, calapp, xaxis, yaxis, **kwargs):
+        with casatools.TableReader(calapp.gaintable) as tb:
+            table_ants = set(tb.getcol('ANTENNA1'))
+        
+        caltable_antennas = [int(spw) for spw in table_ants]
+        children = [self.leaf_class(context, result, calapp, xaxis, yaxis,
+                                    ant=ant, **kwargs)
+                                    for ant in caltable_antennas]
+        super(AntSpwComposite, self).__init__(children)
+
+
+class PlotcalAntComposite(AntComposite):
+    leaf_class = PlotcalLeaf
+
+
+class PlotcalSpwComposite(SpwComposite):
+    leaf_class = PlotcalLeaf
+
+
+class PlotcalAntSpwComposite(AntSpwComposite):
+    leaf_class = PlotcalSpwComposite
+
+
+class PlotbandpassAntComposite(AntComposite):
+    leaf_class = PlotbandpassLeaf
+
+
+class PlotbandpassSpwComposite(SpwComposite):
+    leaf_class = PlotbandpassLeaf
+
+
+class PlotbandpassAntSpwComposite(AntSpwComposite):
+    leaf_class = PlotbandpassSpwComposite
 
 
 class CaltableWrapper(object):

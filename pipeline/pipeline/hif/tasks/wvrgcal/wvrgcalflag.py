@@ -188,7 +188,7 @@ class WvrgcalflagWorkerInputs(basetask.StandardInputs):
       disperse=None, wvrflag=None, hm_smooth=None, smooth=None,
       scale=None, maxdistm=None, minnumants=None, flag_intent=None,
       qa2_intent=None, qa2_bandpass_intent=None):
-	self._init_properties(vars())
+        self._init_properties(vars())
 
 
 class WvrgcalflagWorker(basetask.StandardTaskTemplate):
@@ -205,7 +205,6 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
     
     def prepare(self):
         inputs = self.inputs
-        jobs = []
 
         # calculate the wvrgcal with low value for accept_threshold to
         # ensure that the wvrgcal is always accepted into the context.
@@ -270,8 +269,8 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
                 ant_names, ant_ids = commonhelpermethods.get_antenna_names(ms)
                 wvrflagids = []
                 for ant_name in self.result.wvrflag:
-                    ant_id = [id for id in ant_names.keys() if 
-                      ant_names[id]==ant_name]
+                    ant_id = [id for id in ant_names if 
+                              ant_names[id]==ant_name]
                     wvrflagids += ant_id
                 image.setflags(axisname='Antenna', indices=wvrflagids)
                 self.result.addview(description, image)
@@ -282,5 +281,6 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
         self.result.vis = inputs.vis
         self.result.qa2 = result.qa2
         self.result.wvrflag = result.wvrflag
+        self.result.wvr_infos = result.wvr_infos
 
         return copy.deepcopy(self.result)

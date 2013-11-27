@@ -1,22 +1,240 @@
 <%!
 rsc_path = ""
-import operator
 import os
-
 import pipeline.infrastructure.renderer.htmlrenderer as hr
-import pipeline.infrastructure.utils as utils
 %>
 <%inherit file="t2-4m_details-base.html"/>
+<%block name="header" />
 
-<%block name="title">Phase-up bandpass calibration</%block>
+<%block name="title">Bandpass Calibration</%block>
 
-% if plot_groups:
+<script>
+$(document).ready(function() {
+    // return a function that sets the Ant text field to the given ant
+    var createAntSetter = function(ant) {
+        return function() {
+            // trigger a change event, otherwise the filters are not changed
+            $("#select-ant").select2("val", [ant]).trigger("change");
+        };
+    };
+
+    // create a callback function for each overview plot that will select the
+    // appropriate spw once the page has loaded
+    $(".thumbnail a").each(function (i, v) {
+        var o = $(v);
+        var ant = o.data("ant");
+        o.data("callback", createAntSetter(ant));
+    });
+
+    $(".fancybox").fancybox({
+        type: 'image',
+        prevEffect: 'none',
+        nextEffect: 'none',
+        loop: false,
+        helpers: {
+            title: {
+                type: 'outside'
+            },
+            thumbs: {
+                width: 50,
+                height: 50,
+            }
+        }
+    });
+});
+</script>
+
+
+<p>This task creates bandpass solutions for each measurement set.</p>
+
+<h2>Results</h2>
+
+%if phaseup_applications:
+<h4>Phase-up on bandpass calibrator</h4>
+<table class="table table-bordered" summary="Application Results">
+	<caption>Applied calibrations and parameters used for phase-up calibration</caption>
+    <thead>
+        <tr>
+            <th scope="col" rowspan="2">Measurement Set</th>
+			<th scope="col" colspan="6">Phase-up Solution Parameters</th>
+		</tr>
+		<tr>
+			<th>Type</th>
+            <th>Interval</th>
+			<th>Min Baselines per Antenna</th>
+			<th>Min SNR</th>
+			<th>% Flagged</th>
+			<th>Phase-up Bandwidth</th>
+        </tr>
+    </thead>
+	<tbody>
+% for application in phaseup_applications:
+		<tr>
+			<td>${application.ms}</td>
+		  	<td>${application.calmode}</td>
+		  	<td>${application.solint}</td>
+		  	<td>${application.minblperant}</td>
+		  	<td>${application.minsnr}</td>
+		  	<td>${application.flagged}</td>
+		  	<td>${application.phaseupbw}</td>
+		</tr>
+% endfor		
+	</tbody>
+</table>
+
+<h4>Bandpass calibration</h4>
+%endif
+
+<table class="table table-bordered" summary="Application Results">
+	<caption>Parameters used for bandpass calibration</caption>
+    <thead>
+        <tr>
+            <th scope="col" rowspan="2">Measurement Set</th>
+			<th scope="col" colspan="2">Solution Parameters</th>
+			<th scope="col" colspan="2">Applied To</th>
+            <th scope="col" rowspan="2">Calibration Table</th>
+		</tr>
+		<tr>
+			<th>Type</th>
+            <th>Interval</th>
+			<th>Scan Intent</th>
+			<th>Spectral Windows</th>
+        </tr>
+    </thead>
+	<tbody>
+% for application in applications:
+		<tr>
+			<td>${application.ms}</td>
+		  	<td>${application.bandtype}</td>
+		  	<td>${application.solint}</td>
+		  	<td>${application.intent}</td>
+		  	<td>${application.spw}</td>
+		  	<td>${application.gaintable}</td>
+		</tr>
+% endfor		
+	</tbody>
+</table>
+
+% if amp_refant or amp_mode:
 <h2>Plots</h2>
-<ul>
-	% for plot_group in plot_groups:
-		<li>
-			<a class="replace" href="${os.path.join(dirname, plot_group.filename)}">${plot_group.title}</a>
-		</li>
-	% endfor
-</ul>
-% endif
+
+<p>Plots show the bandpass correction applied to the target source. 
+The first two plots show amplitude vs frequency; one for the reference antenna
+and one for a typical antenna, identified the antenna with mode score.
+The third plot shows phase vs frequency for the typical antenna.
+</p>
+
+<p>Click the summary plots to enlarge them, or the plot title to see
+see detailed plots per spectral window and antenna.</p> 
+
+% for ms in amp_refant:		
+    <h4>
+		<a class="replace"
+           href="${os.path.relpath(os.path.join(dirname, 'amp_vs_time_%s.html' % ms), pcontext.report_dir)}">
+            ${ms}
+        </a>
+	</h4>
+    <ul class="thumbnails">
+        % for plot in amp_refant[ms]:
+            % if os.path.exists(plot.thumbnail):
+            <li class="span4">
+                <div class="thumbnail">
+                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+                       class="fancybox"
+                       rel="plots-${ms}">
+                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+                             title="Click to show amplitude vs time plot"
+                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+                        </img>
+                    </a>
+
+                    <div class="caption">
+						<h4>
+		                    <a href="${os.path.relpath(os.path.join(dirname, 'amp_vs_time_%s.html' % ms), pcontext.report_dir)}"
+		                       class="replace"
+		                       data-ant="${plot.parameters['ant']}">
+			                   Reference antenna: amplitude vs frequency
+		                    </a>
+						</h4>
+						
+                        <p>Amplitude vs frequency for the reference antenna 
+                        (${plot.parameters['ant']}), all spectral windows
+                        and correlations.
+                        </p>
+                    </div>
+                </div>
+            </li>
+            % endif
+        % endfor
+
+        % for plot in amp_mode[ms]:
+            % if os.path.exists(plot.thumbnail):
+            <li class="span4">
+                <div class="thumbnail">
+                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+                       class="fancybox"
+                       rel="plots-${ms}">
+                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+                             title="Click to show amplitude vs time plot"
+                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+                        </img>
+                    </a>
+
+                    <div class="caption">
+						<h4>
+		                    <a href="${os.path.relpath(os.path.join(dirname, 'amp_vs_time_%s.html' % ms), pcontext.report_dir)}"
+		                       class="replace"
+		                       data-ant="${plot.parameters['ant']}">
+			                   Typical antenna: amplitude vs frequency
+		                    </a>
+						</h4>
+						
+                        <p>Amplitude vs frequency for a typical antenna 
+                        (${plot.parameters['ant']}), all spectral windows
+                        and correlations.</p>
+                        <p>NB. random antenna until scores are working
+                        </p>
+                    </div>
+                </div>
+            </li>
+            % endif
+        % endfor
+
+        % for plot in phase_mode[ms]:
+            % if os.path.exists(plot.thumbnail):
+            <li class="span4">
+                <div class="thumbnail">
+                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+                       class="fancybox"
+                       rel="plots-${ms}">
+                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+                             title="Click to show phase vs time plot"
+                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+                        </img>
+                    </a>
+
+                    <div class="caption">
+						<h4>
+		                    <a href="${os.path.relpath(os.path.join(dirname, 'phase_vs_time_%s.html' % ms), pcontext.report_dir)}"
+		                       class="replace"
+		                       data-ant="${plot.parameters['ant']}">
+			                   Typical antenna: phase vs frequency
+		                    </a>
+						</h4>
+						
+                        <p>Phase vs frequency for a typical antenna 
+                        (${plot.parameters['ant']}), all spectral windows
+                        and correlations.</p>
+                        <p>NB. random antenna until scores are working
+                        </p>
+                    </div>
+                </div>
+            </li>
+            % endif
+        % endfor
+
+    </ul>
+
+%endfor
+
+%endif

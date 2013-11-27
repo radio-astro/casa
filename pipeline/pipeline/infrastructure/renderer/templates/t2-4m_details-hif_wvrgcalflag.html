@@ -52,6 +52,7 @@ subsequent pre-applys if it gives a tangible improvement.</p>
 
 <h2>Results</h2>
 % if applications:
+<h4>Flagging results and WVR application</h4>
 <table class="table table-bordered" summary="Flagging Results">
 	<caption>Flagging results and applications for WVR</caption>
     <thead>
@@ -73,6 +74,36 @@ subsequent pre-applys if it gives a tangible improvement.</p>
 % endfor		
 	</tbody>
 </table>
+
+<h4>CASA wvrgcal report</h4>
+<table class="table table-bordered table-condensed" summary="Antenna/WVR Information">
+	<caption>Antenna/WVR Information captured from CASA wvrgcal task</caption>
+    <thead>
+        <tr>
+            <th>Measurement Set</th>
+			<th>Antenna</th>
+			<th>WVR?</th>
+            <th>Flag?</th>
+            <th>RMS</th>
+            <th>Disc</th>
+		</tr>
+    </thead>
+	<tbody>
+% for ms in wvrinfos:
+	% for wvrinfo in wvrinfos[ms]:
+		<tr class="${'danger' if wvrinfo.flag else ''}">
+			<td>${ms}</td>
+		  	<td>${wvrinfo.antenna}</td>
+		  	<td><i class="icon-${'ok' if wvrinfo.wvr else 'remove'}"></i></td>
+		  	<td><i class="icon-${'ok' if wvrinfo.flag else 'remove'}"></i></td>
+		  	<td>${wvrinfo.rms}</td>
+		  	<td>${wvrinfo.disc}</td>
+		</tr>
+	%endfor
+% endfor		
+	</tbody>
+</table>
+
 % else:
 <p>This measurement set does not contain any WVR data.</p>
 % endif

@@ -5,6 +5,7 @@ import copy
 import datetime
 import decimal
 import functools
+import inspect
 import itertools
 import math
 import operator
@@ -24,7 +25,6 @@ import pipeline.extern.ps_mem as ps_mem
 
 from . import casatools
 from . import logging
-from . import jobrequest
 
 LOG = logging.get_logger(__name__)
 
@@ -289,6 +289,7 @@ def enable_memstats():
         return
     
     import pipeline.domain.measures as measures
+    import pipeline.infrastructure.jobrequest as jobrequest
     def get_hook_fn(msg):
         pid = os.getpid()
     
@@ -440,3 +441,19 @@ def range_to_list(arg):
     atoms = pyparsing.delimitedList(atomExpr, delim=',')('atoms')
 
     return list(atoms.parseString(str(arg)))
+
+def collect_properties(instance, ignore=[]):
+    """
+    Return the public properties of an object as a dictionary
+    """
+    skip = ['context', 'ms']
+    skip.extend(ignore)
+    properties = {}
+    for dd_name, dd in inspect.getmembers(instance.__class__, inspect.isdatadescriptor):
+        if dd_name.startswith('_') or dd_name in skip:
+            continue
+        try:
+            properties[dd_name] = dd.fget(instance)
+        except:
+            LOG.debug('Could not get input property %s' % dd_name)
+    return properties
