@@ -141,7 +141,16 @@ class test_base(unittest.TestCase):
            self.cleanup()
             
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
-        default(mstransform)           
+        default(mstransform)        
+        
+    def setUp_CAS_4850(self):
+
+        self.vis = 'CAS-4850-30s-limit-ALMA.ms'
+        if os.path.exists(self.vis):
+           self.cleanup()
+            
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
+        default(mstransform)     
                
     def cleanup(self):
         os.system('rm -rf '+ self.vis)
@@ -1501,11 +1510,32 @@ class test_timeaverage(test_base_compare):
         
         self.generate_tolerance_map()  
 
-        self.post_process()         
+        self.post_process()  
+        
+class test_timeaverage_limits(test_base):
+    
+    def setUp(self):
+        self.setUp_CAS_4850()
+        self.outvis = 'test_timeaverage_limits.ms'
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outvis)
+            
+    def test_CAS_4850(self):  
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn='DATA',timeaverage=True,timebin='40s')
+        
+        mytb = tbtool()
+        mytb.open(self.outvis)
+        interval = mytb.getcol('INTERVAL')      
+        print interval[0]
+        mytb.close()  
+        check_eq(interval[0] >= 40.0,True)
         
         
 class test_multiple_transformations(test_base_compare):        
-    
+
     def setUp(self):
         super(test_multiple_transformations,self).setUp()
         self.setUp_4ants()
@@ -2048,6 +2078,7 @@ def suite():
             test_WeightSpectrum,
             test_channelAverageByDefault,
             test_timeaverage,
+            test_timeaverage_limits,
             test_multiple_transformations,
             test_regridms_single_spw,
             test_float_column,
