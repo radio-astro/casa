@@ -453,8 +453,6 @@ display_debugging_message "SCRIPT_DIRECTORY = $SCRIPT_DIRECTORY"
 display_debugging_message "SCRIPT_NAME = $SCRIPT_NAME"
 display_debugging_message "STARTUP_DIRECTORY = $STARTUP_DIRECTORY"
 display_debugging_message "CASAPATH = $CASAPATH"
-display_debugging_message "LD_LIBRARY_PATH = $LD_LIBRARY_PATH"
-display_debugging_message "LD_PRELOAD = $LD_PRELOAD"
 
 
 remove_unwanted_shell_variables
@@ -464,6 +462,9 @@ remove_unwanted_shell_variables
 # Set a bunch of environment variables used by CASA.
 set_CASA_INSTALLATION_DIRECTORY
 set_CASA_3RD_PARTY_DIRECTORY
+export LD_LIBRARY_PATH="$CASA_3RD_PARTY_DIRECTORY/lib:$LD_LIBRARY_PATH"
+display_debugging_message "LD_LIBRARY_PATH = $LD_LIBRARY_PATH"
+display_debugging_message "LD_PRELOAD = $LD_PRELOAD"
 set_A_ARCH
 set_A_ROOT
 set_A_SITE
