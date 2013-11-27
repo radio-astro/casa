@@ -346,10 +346,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          'LGROUP','CMB'
                 default: ''; same as input data or 'LSRK' for multiple-MS inputs
                 example: frame='bary' for Barycentric frame 
-        phasecenter -- image phase center: direction measure or fieldid 
+        phasecenter -- image phase center: direction measure or field id 
                 default: '' (= the center of pointing directions in 
                              POINTING table of infiles)
-                example: 'J2000 13h44m00 -17d02m00', 'AZEL -123d48m29 15d41m41'
+                example: 6 (field id), 'J2000 13h44m00 -17d02m00',
+                         'AZEL -123d48m29 15d41m41'
         ephemsrcname -- ephemeris source name for moving source
                 default: ''
                 if the source name in the data matches one of the known 
