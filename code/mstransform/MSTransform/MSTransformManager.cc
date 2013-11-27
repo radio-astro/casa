@@ -794,6 +794,7 @@ void MSTransformManager::parseTimeAvgParams(Record &configuration)
 			String timebin;
 			configuration.get (exists, timebin);
 			timeBin_p=casaQuantity(timebin).get("s").getValue();
+
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 					<< "Time bin is " << timeBin_p << LogIO::POST;
 		}
@@ -818,6 +819,23 @@ void MSTransformManager::parseTimeAvgParams(Record &configuration)
 			{
 				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 						<< "Time span is " << timespan_p << LogIO::POST;
+			}
+
+			// CAS-4850 (jagonzal): For ALMA each bdf is limited to 30s, so we need to combine across state (i.e. su-scan)
+			if ((timeBin_p > 30.0) and !timespan_p.contains("state"))
+			{
+				MeasurementSet tmpMs(inpMsName_p,Table::Old);
+			    MSObservation observationTable = tmpMs.observation();
+			    MSObservationColumns observationCols(observationTable);
+			    String telescopeName = observationCols.telescopeName()(0);
+
+			    if (telescopeName.contains("ALMA"))
+			    {
+					logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+							<< "Operating with ALMA data, automatically adding state to timespan "<< endl
+							<< "In order to remove sub-scan boundaries which limit time average to 30s "<< LogIO::POST;
+					timespan_p += String(",state");
+			    }
 			}
 		}
 
