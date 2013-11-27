@@ -149,9 +149,11 @@ agentflagger::parseagentparameters(const ::casac::record& aparams)
 
 		Record agent_params = *toRecord(aparams);
 
+		/*
 		ostringstream oout;
                 agent_params.print(oout);
 		cerr << oout.str() << endl;
+		*/
 		if(agentflagger_p){
 			return agentflagger_p->parseAgentParameters(agent_params);
 		}
