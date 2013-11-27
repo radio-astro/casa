@@ -419,9 +419,11 @@ Bool toCasaVectorQuantity(const ::casac::variant& theval, casa::Vector<casa::Qua
 
 Record *toRecord(const ::casac::record &theRec){
     Record *transcribedRec = new Record();
+    // cerr << "calling toRecord" << endl;
     casac::rec_map::const_iterator rec_end = theRec.end();
     for(::casac::rec_map::const_iterator rec_it = theRec.begin(); rec_it != rec_end; ++rec_it){
 	//std::cerr << (*rec_it).first << " type is: " << (*rec_it).second.type() << std::endl;
+        // cerr << "record type " << (*rec_it).second.type() << endl;
         switch((*rec_it).second.type()){
             case ::casac::variant::RECORD :
                {
@@ -434,10 +436,14 @@ Record *toRecord(const ::casac::record &theRec){
               {transcribedRec->define(RecordFieldId((*rec_it).first), (*rec_it).second.toBool());}
                break;
             case ::casac::variant::LONG :
-              {transcribedRec->define(RecordFieldId((*rec_it).first), Int((*rec_it).second.getInt()));}
+              {transcribedRec->define(RecordFieldId((*rec_it).first), Int((*rec_it).second.getInt()));
+		      // cerr << (*rec_it).first << " " << (*rec_it).second.getInt() << endl;
+	      }
                break;
             case ::casac::variant::INT :
-              {transcribedRec->define(RecordFieldId((*rec_it).first), Int((*rec_it).second.getInt()));}
+              {transcribedRec->define(RecordFieldId((*rec_it).first), Int((*rec_it).second.getInt()));
+		      // cerr << (*rec_it).first << " " << (*rec_it).second.getInt() << endl;
+	      }
                break;
             case ::casac::variant::DOUBLE :
               transcribedRec->define(RecordFieldId((*rec_it).first), (*rec_it).second.getDouble());
@@ -474,6 +480,8 @@ Record *toRecord(const ::casac::record &theRec){
                                          iter != intArrend; ++iter)
                    *iter = intVec[i++];
                transcribedRec->define(RecordFieldId((*rec_it).first), intArr);
+
+		      // cerr << (*rec_it).first << " " << intArr << endl;
                }
                break;
             case ::casac::variant::LONGVEC :
@@ -488,6 +496,7 @@ Record *toRecord(const ::casac::record &theRec){
                                          iter != intArrend; ++iter)
                    *iter = longVec[i++];
                transcribedRec->define(RecordFieldId((*rec_it).first), intArr);
+		      // cerr << (*rec_it).first << " " << intArr << endl;
                }
                break;
             case ::casac::variant::DOUBLEVEC :
@@ -502,6 +511,7 @@ Record *toRecord(const ::casac::record &theRec){
                                          iter != doubleArrEnd; ++iter)
                    *iter = doubleVec[i++];
                transcribedRec->define(RecordFieldId((*rec_it).first), doubleArr);
+		      // cerr << (*rec_it).first << " " << doubleArr << endl;
                }
                break;
             case ::casac::variant::COMPLEXVEC :
@@ -529,7 +539,7 @@ Record *toRecord(const ::casac::record &theRec){
                }
                break;
             default :
-	       std::cerr << "Unknown type: " << (*rec_it).second.type() << std::endl;
+	       // std::cerr << "Unknown type: " << (*rec_it).second.type() << std::endl;
                break;
         }
     }

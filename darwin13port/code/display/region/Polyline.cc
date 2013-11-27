@@ -99,8 +99,8 @@ namespace casa {
 				SlicePlot* slicePlot = NULL;
 				if ( !slicePlots.contains(key)) {
 					slicePlot = new SlicePlot();
-					//std::tr1::shared_ptr<ImageInterface<Float> > imagePtr( image );
-					slicePlot->setImage( image->cloneII());
+					std::tr1::shared_ptr<ImageInterface<Float> > imagePtr( image );
+					slicePlot->setImage( /*image*/imagePtr );
 					setPlotLineColor( slicePlot );
 					slicePlots.insert( key , slicePlot );
 				}
@@ -132,9 +132,9 @@ namespace casa {
 			if ( wc_ != NULL  ) {
 				DisplayData* dd = wc_->csMaster();
 				if ( dd != NULL ) {
-					ImageInterface<float>* masterImage =dd->imageinterface().get();
+					std::tr1::shared_ptr<ImageInterface<float> > masterImage(dd->imageinterface());
 					if ( masterImage != NULL ) {
-						slicePlot->setImage( masterImage->cloneII() );
+						slicePlot->setImage( masterImage );
 						imageName = masterImage->name(true).c_str();
 					}
 				}

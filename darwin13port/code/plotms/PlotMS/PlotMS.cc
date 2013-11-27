@@ -246,11 +246,21 @@ PlotAxis PlotMSApp::getAxisLocationX() const {
 PlotAxis PlotMSApp::getAxisLocationY() const {
 	return itsPlotter_->getAxisLocationY();
 }
+
+bool PlotMSApp::isOperationCompleted() const {
+	return operationCompleted;
+}
+
+void PlotMSApp::setOperationCompleted( bool completed ){
+	operationCompleted = completed;
+}
+
 // Private Methods //
 
 void PlotMSApp::initialize(bool connectToDBus, bool userGui ) {
 
 	its_want_avoid_popups=false;
+	operationCompleted = true;
 	
     itsParameters_.addWatcher(this);
     ClientFactory::ClientType clientType = ClientFactory::GUI;

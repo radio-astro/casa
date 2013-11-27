@@ -85,8 +85,8 @@ casa_add_library( tools
  measures/measures_cmpt.cc
  ms/ms_cmpt.cc
  ms/msmetadata_cmpt.cc
- #ms/msplot_cmpt.cc
- #ms/MSPlot/MsPlot.cc
+ ms/msplot_cmpt.cc
+ ms/MSPlot/MsPlot.cc
  mstransformer/mstransformer_cmpt.cc
  nrao/vlafillertask_cmpt.cc
  plotms/plotms_cmpt.cc
@@ -148,7 +148,7 @@ casa_add_tools( tools_swig tools_sources tools_py
  images/imagepol.xml
  images/regionmanager.xml
  measures/measures.xml
- #ms/msplot.xml
+ ms/msplot.xml
  ms/ms.xml
  ms/msmetadata.xml
  mstransformer/mstransformer.xml

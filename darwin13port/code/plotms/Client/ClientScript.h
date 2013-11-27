@@ -113,6 +113,8 @@ public:
 
 	}
 
+	virtual void setOperationCompleted( bool completed );
+
 	//The client is responsible for doing threaded operations.  For a GUI
 	//client this will involve starting a background thread so that the GUI
 	//is not frozen.  For a script client, this may be a no-opt as the script

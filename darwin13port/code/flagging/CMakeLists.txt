@@ -19,22 +19,22 @@
 #
 
 casa_add_library( flagging
-#  Flagging/DDMapper.cc
-#  Flagging/ExtendFlagger.cc
-#  Flagging/Flagger.cc
+  Flagging/DDMapper.cc
+  Flagging/ExtendFlagger.cc
+  Flagging/Flagger.cc
   Flagging/AgentFlagger.cc
-#  Flagging/RFADiffBase.cc
-#  Flagging/RFAFlagCubeBase.cc
-#  Flagging/RFAMedianClip.cc
-#  Flagging/RFANewMedianClip.cc
-#  Flagging/RFASelector2.cc
-#  Flagging/RFASpectralRej.cc
-#  Flagging/RFAUVBinner.cc
-#  Flagging/RFChunkStats.cc
-#  Flagging/RFDataMapper.cc
-#  Flagging/RFFlagCube.cc
-#  Flagging/RFRowClipper.cc
-#  Flagging/RFFloatLattice.cc
+  Flagging/RFADiffBase.cc
+  Flagging/RFAFlagCubeBase.cc
+  Flagging/RFAMedianClip.cc
+  Flagging/RFANewMedianClip.cc
+  Flagging/RFASelector2.cc
+  Flagging/RFASpectralRej.cc
+  Flagging/RFAUVBinner.cc
+  Flagging/RFChunkStats.cc
+  Flagging/RFDataMapper.cc
+  Flagging/RFFlagCube.cc
+  Flagging/RFRowClipper.cc
+  Flagging/RFFloatLattice.cc
   Flagging/FlagDataHandler.cc
   Flagging/FlagMSHandler.cc
   Flagging/FlagCalTableHandler.cc
@@ -55,8 +55,8 @@ casa_add_library( flagging
    )
 
 install (FILES
-#	Flagging/DDMapper.h
-#	Flagging/ExtendFlagger.h
+	Flagging/DDMapper.h
+	Flagging/ExtendFlagger.h
 	Flagging/FlagAgentBase.h
 	Flagging/FlagAgentClipping.h
 	Flagging/FlagAgentDisplay.h
@@ -73,31 +73,31 @@ install (FILES
 	Flagging/FlagMSHandler.h
 	Flagging/FlagReport.h
 	Flagging/FlagVersion.h
-#	Flagging/Flagger.h
+	Flagging/Flagger.h
 	Flagging/FlagPlotServerProxy.h
-#	Flagging/RFABase.h
-#	Flagging/RFADiffBase.h
-#	Flagging/RFAFlagCubeBase.h
-#	Flagging/RFAFlagExaminer.h
-#	Flagging/RFAFlagExaminer.tcc
-#	Flagging/RFAMedianClip.h
-#	Flagging/RFANewMedianClip.h
-#	Flagging/RFASelector.h
-#	Flagging/RFASelector.tcc
-#	Flagging/RFASpectralRej.h
-#	Flagging/RFATimeFreqCrop.h
-#	Flagging/RFATimeFreqCrop.tcc
-#	Flagging/RFAUVBinner.h
-#	Flagging/RFChunkStats.h
-#	Flagging/RFChunkStats.tcc
-#	Flagging/RFCommon.h
-#	Flagging/RFCubeLattice.h
-#	Flagging/RFCubeLattice.tcc
-#	Flagging/RFDataMapper.h
-#	Flagging/RFFlagCube.h
-#	Flagging/RFFlagCube.tcc
-#	Flagging/RFFloatLattice.h
-#	Flagging/RFRowClipper.h
+	Flagging/RFABase.h
+	Flagging/RFADiffBase.h
+	Flagging/RFAFlagCubeBase.h
+	Flagging/RFAFlagExaminer.h
+	Flagging/RFAFlagExaminer.tcc
+	Flagging/RFAMedianClip.h
+	Flagging/RFANewMedianClip.h
+	Flagging/RFASelector.h
+	Flagging/RFASelector.tcc
+	Flagging/RFASpectralRej.h
+	Flagging/RFATimeFreqCrop.h
+	Flagging/RFATimeFreqCrop.tcc
+	Flagging/RFAUVBinner.h
+	Flagging/RFChunkStats.h
+	Flagging/RFChunkStats.tcc
+	Flagging/RFCommon.h
+	Flagging/RFCubeLattice.h
+	Flagging/RFCubeLattice.tcc
+	Flagging/RFDataMapper.h
+	Flagging/RFFlagCube.h
+	Flagging/RFFlagCube.tcc
+	Flagging/RFFloatLattice.h
+	Flagging/RFRowClipper.h
 	Flagging/SLog.h
 	Flagging/AgentFlagger.h
 	DESTINATION include/casacode/flagging/Flagging

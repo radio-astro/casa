@@ -521,7 +521,8 @@ namespace casa {
 	}
 
 	void QtProfile::setPreferences(bool inAutoX, bool inAutoY, int showGrid, int inMProf, int inRel,
-	                               bool showToolTips, bool showTopAxis, bool displayStepFunction, bool opticalFitter,
+	                               bool showToolTips, bool showTopAxis, bool displayStepFunction,
+	                               bool opticalFitter,
 	                               bool showChannelLine) {
 		bool update=false;
 		if ((lastPX.nelements() > 0) && ((inMProf!=stateMProf) || (inRel!=stateRel)))
@@ -530,11 +531,18 @@ namespace casa {
 		pixelCanvas->setAutoScaleY(inAutoY);
 		pixelCanvas->setShowGrid(showGrid);
 		pixelCanvas->setShowToolTips( showToolTips );
-		pixelCanvas->setShowTopAxis( showTopAxis );
 		pixelCanvas->setShowChannelLine( showChannelLine );
 		pixelCanvas ->setDisplayStepFunction( displayStepFunction );
+
+		if ( !opticalFitter ){
+			this->showTopAxis = showTopAxis;
+		}
+		else {
+			this->showTopAxis = false;
+		}
 		adjustTopAxisSettings();
-		this->showTopAxis = showTopAxis;
+		changeTopAxis();
+
 		stateMProf=inMProf;
 		stateRel  = inRel;
 
@@ -544,6 +552,9 @@ namespace casa {
 			specFitSettingsWidget->reset();
 			momentSettingsWidget->reset();
 			actionColors-> setVisible( !opticalFitter );
+			if ( opticalFitter ){
+				showTopAxis = false;
+			}
 		}
 
 		if (update) {
@@ -882,7 +893,6 @@ namespace casa {
 
 		// plot the graph
 		plotMainCurve();
-
 		addImageAnalysisGraph( wxv,wyv, ordersOfM );
 		storeCoordinates( pxv, pyv, wxv, wyv );
 
@@ -1028,17 +1038,18 @@ namespace casa {
 		if (qSpcSys != spcRef->currentText()) {
 			// if necessary, change the spectral frame
 			int index = spcRef->findText(qSpcSys);
-			if (index > -1)
+			if (index > -1){
 				spcRef->setCurrentIndex(index);
+			}
 		}
 
-		//Removed so that is a new image comes in the bottom axis will
-		//retain the units already set.
-		/*if (qSpcTypeUnit != bottomAxisCType->currentText()) {
+		//If the spectral unit in the data display options changes we should
+		//reset the units (CAS-5824).
+		if (qSpcTypeUnit != bottomAxisCType->currentText()) {
 			// if necessary, change the unit and the spectral quantity
 			updateAxisUnitCombo( qSpcTypeUnit, bottomAxisCType );
 
-		}*/
+		}
 
 		if (spcRval != cSysRval) {
 			// if necessary, change the rest freq./wavel.
@@ -2214,12 +2225,14 @@ namespace casa {
 	                                        const String& shape) {
 
 		Int whichTabular = getFreqProfileTabularIndex( analysis );
+
 		Bool ok = false;
 
 		switch (itsPlotType) {
 		case QtProfile::PMEAN:
 			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0, xaxisUnit, spcRefFrame,
+					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0,
+					xaxisUnit, spcRefFrame,
 					(Int)QtProfile::MEAN, 0, cSysRval, -1, shape );
 			break;
 		case QtProfile::PMEDIAN:

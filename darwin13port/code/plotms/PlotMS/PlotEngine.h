@@ -65,6 +65,7 @@ public:
 	virtual bool guiShown() const = 0;
 	virtual bool isClosed() const = 0;
 
+	virtual bool isOperationCompleted() const = 0;
 	virtual bool save(const PlotExportFormat& format, const bool interactive) = 0;
 	virtual PlotMSFlagging getFlagging() const = 0;
 	virtual void setFlagging(PlotMSFlagging flag) = 0;

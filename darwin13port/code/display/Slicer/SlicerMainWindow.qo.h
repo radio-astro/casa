@@ -54,7 +54,7 @@ namespace casa {
 		void addPolyLine(  int regionId, viewer::region::RegionChanges regionChanges,
 		                   const QList<double> & worldX, const QList<double> & worldY,
 		                   const QList<int> &pixelX, const QList<int> & pixelY, const QString& colorName );
-		void setImage( ImageInterface<float>* img );
+		void setImage( std::tr1::shared_ptr<ImageInterface<float> > img );
 		void setRegionSelected( int regionId, bool selected );
 		void setCurveColor( int id, const QString& color );
 		void updatePositionInformation( int id, const QVector<String>& info );

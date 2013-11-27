@@ -76,11 +76,15 @@ namespace casa {
 		toolTipsDefault = settings.value( TOOLTIPS, showToolTips ).toBool();
 		toolTipsCheckBox -> setChecked( toolTipsDefault );
 
-		topAxisDefault = settings.value( TOP_AXIS, showTopAxis ).toBool();
-		topAxisCheckBox -> setChecked( topAxisDefault );
-
 		opticalDefault = settings.value( OPTICAL, opticalFit ).toBool();
 		opticalSpecFitCheckBox -> setChecked( opticalDefault );
+
+		topAxisDefault = settings.value( TOP_AXIS, showTopAxis ).toBool();
+		if ( opticalDefault ){
+			topAxisDefault = false;
+			topAxisCheckBox->setEnabled( false );
+		}
+		topAxisCheckBox -> setChecked( topAxisDefault );
 
 		stepFunctionDefault = settings.value( STEP_FUNCTION, displayAsStepFunction ).toBool();
 		stepFunctionCheckBox->setChecked( stepFunctionDefault );
@@ -106,8 +110,17 @@ namespace casa {
 
 	void QtProfilePrefs::initializeConnections() {
 		connect(multiProf, SIGNAL(stateChanged(int)), this, SLOT(adjustBoxes(int)));
+		connect(opticalSpecFitCheckBox, SIGNAL(stateChanged(int)), this, SLOT(opticalStateChanged()));
 		connect(buttonBox, SIGNAL(accepted()), this, SLOT(accepted()));
 		connect(buttonBox, SIGNAL(rejected()), this, SLOT(rejected()));
+	}
+
+	void QtProfilePrefs::opticalStateChanged(){
+		bool opticalEnabled = opticalSpecFitCheckBox->isChecked();
+		topAxisCheckBox->setEnabled(!opticalEnabled  );
+		if ( opticalEnabled ){
+			topAxisCheckBox->setChecked( false );
+		}
 	}
 
 	void QtProfilePrefs::reset() {

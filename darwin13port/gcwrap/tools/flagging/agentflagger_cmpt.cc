@@ -33,8 +33,8 @@ agentflagger::agentflagger()
 {
 	try
 	{
-		agentflagger_p = new AgentFlagger();
 		logger_p = new LogIO(LogOrigin("agentflagger","",WHERE));
+		agentflagger_p = new AgentFlagger();
 
 	} catch (AipsError x) {
 		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -149,6 +149,9 @@ agentflagger::parseagentparameters(const ::casac::record& aparams)
 
 		Record agent_params = *toRecord(aparams);
 
+		ostringstream oout;
+                agent_params.print(oout);
+		cerr << oout.str() << endl;
 		if(agentflagger_p){
 			return agentflagger_p->parseAgentParameters(agent_params);
 		}
