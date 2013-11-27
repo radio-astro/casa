@@ -28,7 +28,7 @@ myf['__rethrow_casa_exceptions'] = True
 #__rethrow_casa_exceptions=True
 
 # Setup path
-sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
+#sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
 
 def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
     interactive=True):
@@ -184,7 +184,7 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
 	try:
 
 	    cInputs = pipeline.tasks.__dict__[taskname].Inputs
-            if taskname == 'ImportData' or taskname == 'RestoreData':
+            if taskname == 'ImportData' or taskname == 'RestoreData' or taskname == 'VLAImportData':
 	        task_args['vis'] = files
 	        task_args['session'] = sessions
             elif taskname == 'SDImportData':
@@ -208,6 +208,12 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
 		raise
 
             if taskname == 'ImportData' and importonly: 
+		casatools.post_to_log(
+		    "Terminating execution after running " + taskname,
+		    echo_to_screen=echo_to_screen)
+	        break
+            
+            if taskname == 'VLAImportData' and importonly: 
 		casatools.post_to_log(
 		    "Terminating execution after running " + taskname,
 		    echo_to_screen=echo_to_screen)
