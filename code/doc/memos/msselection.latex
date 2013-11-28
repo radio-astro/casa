@@ -10,9 +10,9 @@
 %\usepackage{MnSymbol,wasysym}
 \usepackage{marvosym}
 
-%\setlength{\textheight}{23.0cm}
+\setlength{\textheight}{23.0cm}
 \setlength{\textwidth}{15.00cm}
-%\setlength{\topmargin}{-1.5cm}
+\setlength{\topmargin}{-1.0cm}
 \setlength{\oddsidemargin}{0.75cm}
 \setlength{\evensidemargin}{0.5cm}
 %\setlength{\parskip}{5pt}
@@ -24,6 +24,12 @@
 %\topmargin -1.5cm
 %\textheight 23cm
 %\parskip 1ex    % White space between paragraphs amount
+\newcommand{\MSSelection}    {\htmladdnormallinkfoot{{\tt MSSelection}}{http://casa.nrao.edu/active/docs/doxygen/html/classcasa\_1\_1MSSelection.html}}
+\newcommand{\MSSelectionError} {\htmladdnormallinkfoot{{\tt MSSelectionError}}{http://casa.nrao.edu/active/docs/doxygen/html/classcasa\_1\_1MSSelectionError.html}}
+\newcommand{\MSSelectionErrorHandler} {\htmladdnormallinkfoot{{\tt MSSelectionErrorHandler}}{http://casa.nrao.edu/active/docs/doxygen/html/classcasa\_1\_1MSSelectionErrorHandler.html}}
+\newcommand{\CalTables} {\htmladdnormallinkfoot{{\tt CalTables}}{http://casa.nrao.edu/active/docs/doxygen/html/classcasa\_1\_1CalTable.html}}
+\newcommand{\PDFVersion} {\htmladdnormallinkfoot{PDF Version}{http://www.aoc.nrao.edu/~sbhatnag/misc/msselection.pdf}}
+
 \pagestyle{myheadings}
 
 \begin{document}
@@ -34,31 +40,40 @@
 \normalsize
 \markboth{MeasurementSet Selection Syntax}{S. Bhatnagar}
 \begin{center}
-  \htmladdnormallinkfoot{PDF
-    Version}{http://www.aoc.nrao.edu/~sbhatnag/misc/msselection.pdf}
+  \PDFVersion
 \end{center}
 
 \begin{abstract}
-This note describes the syntax for the various expressions for
-selecting data from the Measurement Set.  This is the syntax that is
-implemented in the {\tt MSSelection} module of CASA.  The syntax is
-derived from an \htmladdnormallinkfoot{earlier
-  note}{http://almasw.hq.eso.org/almasw/bin/view/OFFLINE/DataSelection}
-on syntax definition.  All expressions consist of a comma or
-semi-colon separated list of specifications.  Except channel
-selection, the final product of parsing the expressions is a Table
-Expression Node (TEN) which can be used to construct a selected
-Measurement Set.  Higher level global methods to return a selected MS,
-given the user supplied expressions, are also provided as part of the
-{\tt MSSelection} module.
+  This note describes the syntax for the various expressions for
+  selecting data from the Measurement Set.  This is the syntax that is
+  implemented in the \MSSelection\ module of CASA.  % The syntax is
+  % derived from an \htmladdnormallinkfoot{earlier
+  % note}{http://almasw.hq.eso.org/almasw/bin/view/OFFLINE/DataSelection}
+  % on syntax definition.
+  All expressions consist of a comma or
+  semi-colon separated list of specifications.  Except channel
+  selection, the final product of parsing the expressions is a Table
+  Expression Node (TEN) which can be used to construct a selected
+  Measurement Set.  Higher level global methods to return a selected
+  MS, given the user supplied expressions, are also provided as part
+  of the {\tt MSSelection} module.
 
-Error handling is done via the C++ exception handling mechanism.  The
-exceptions thrown by the {\tt MSSelection} module are of type {\tt
-  MSSelectionError} which is derived from {\tt AipsError} class.  The
-exceptions generated from each individual expression parser are
-further specializations of the {\tt MSSeletionError} class.
-Application layer code therefore can have a finer level control on
-error handling.
+  Error handling is done via the C++ exception handling mechanism.
+  The exceptions thrown by the {\tt MSSelection} module are of type
+  \MSSelectionError\ which is derived from {\tt AipsError} class.  The
+  exceptions generated from each individual expression parser are
+  further specializations of the {\tt MSSeletionError} class.
+  Application layer code therefore can have a finer level control on
+  error handling.  The module now also support externally plugable
+  error handlers of type \MSSelectionErrorHandler. This allows
+  application layer code to have control on resolution of the
+  exceptional states that may be reached during the parsing cycle.
+
+  After some internal re-factoring, the {\tt MSSelection} module can
+  also be used now for other tables that follow the general data base
+  design of the {\tt MeasurementSet}.  The CASA \CalTables\ is an
+  example which also uses the {\tt MSSelection} module for data
+  selection.
 \end{abstract}
 
 \section{General Syntax}
@@ -269,11 +284,12 @@ separated list of baseline specifications.
 \subsubsection{Antenna specification}
 
 An ANT can be given as a single \hyperref{string}{string (see Section
-}{}{Sec:STRINGS} (literal/pattern/regular expression), single integer
-ID, a range of integer IDs or a comma separated list of integers.  For
-VLA-specific reasons (see Section~\ref{VLACONVENTION}), {\bf only} for
-antenna specifications, integers are first converted to strings and
-matched against the antenna names.  E.g.
+}{)}{Sec:STRINGS} (literal/pattern/regular expression), single integer
+ID, a \hyperref{range}{range (see Section }{)}{Sec:RANGE} of integer
+IDs or a comma separated list of integers.  For VLA-specific reasons
+(see Section~\ref{VLACONVENTION}), {\bf only} for antenna
+specifications, integers are first converted to strings and matched
+against the antenna names.  E.g.
 
 \begin{itemize}
 \item {\tt VLA:N1} corresponds to antenna named "VLA:N1".
@@ -289,11 +305,12 @@ The precise logic applied to the antenna specification (ANT) is as
 follows:
 
 \begin{enumerate}
-\item If ANT is an integer index (or a list or range), it is first
-  used as a name (e.g. the index 1 is converted to a string "1" etc.)
-  and matched against the {\tt NAME} column of {\tt ANTENNA}
-  sub-table.  If no match is found, it is treated as an integer index
-  and matched against the antenna indices.
+\item If ANT is an integer index (or a list or \hyperref{range}{range
+    (see Section }{)}{Sec:RANGE}), it is first used as a name (e.g. the
+  index 1 is converted to a string "1" etc.)  and matched against the
+  {\tt NAME} column of {\tt ANTENNA} sub-table.  If no match is found,
+  it is treated as an integer index and matched against the antenna
+  indices.
 
 \item If ANT is a string which cannot be converted to an integer, it
   is first matched against the {\tt NAME} column of the {\tt ANTENNA}
@@ -524,7 +541,7 @@ and field codes before being used for matching.
 Since none of the following characters are used as part of the FIELD
 selection expressions, they can also be used as part of field names:
 ";", "\$", "\%", "!", "@", and "\#"\footnote{In case users loose their
-  patience with the NRAO Observataion Prepration Tool (NRAO OPT) and
+  patience with the NRAO Observation Preparation Tool (NRAO OPT) and
   start giving field names like ``{\tt @\#!\$\%;}'', to them we can say ``...we
   understand.'' {\bf \Smiley{}}}.
 
@@ -536,10 +553,11 @@ against the field code.  If still no field is selected, an exception
 of type MSSelectionFieldParseError is thrown.
 
 Field specifications can also be give by their integer IDs.  IDs can
-be a single ID or a range of IDs (N0$\sim$N1).  Field ID selection can
-also be done using a boolean expression.  For a field specification of
-the form "$>$ID", all field IDs greater than ID are selected.
-Similarly for "$<$ID" all field IDs smaller than ID are selected.
+be a single ID or a \hyperref{range}{range (see Section }{)}{Sec:RANGE}
+of IDs (N0$\sim$N1).  Field ID selection can also be done using a
+boolean expression.  For a field specification of the form "$>$ID",
+all field IDs greater than ID are selected.  Similarly for "$<$ID" all
+field IDs smaller than ID are selected.
 
 The field selection expression is a comma-separated list of field
 specifications.  E.g.
@@ -566,8 +584,9 @@ converted to internal Measurement Set units using the spectral window
 sensitive reference frequency.
 
 If only a single UVDIST is specified, all rows that exactly match the
-given UVDIST are selected.  When UVDIST is given as a range in the
-format N0$\sim$N1[UNIT] (where N0 and N1 are valid numbers), all rows
+given UVDIST are selected.  When UVDIST is given as a
+\hyperref{range}{range (see Section }{)}{Sec:RANGE} in the format
+N0$\sim$N1[UNIT] (where N0 and N1 are valid numbers), all rows
 corresponding to the uv-distance between N0 and N1 (N0 and N1
 included) are selected.
 
@@ -622,13 +641,13 @@ with the syntax for CHANSPEC list.
 
 Spectral windows (SPW) specification can be a single ID or a list of
 spectral window integer IDs, a spectral window name (as a literal
-\hyperref{string}{string (see Section
-}{}{Sec:STRINGS} (for exact match)/regular expression/pattern) or a reference
-frequency value (value with a unit).  A single frequency specification
-is used for exact match with the REF\_FREQUENCY column of the
-SPECTRAL\_WINDOW sub-table.  A range of frequencies are used to select
-all SPWs which are within the given range.  The allowed units are Hz,
-KHz, MHz, GHz or THz.
+\hyperref{string}{string (see Section }{)}{Sec:STRINGS} (for exact
+match)/regular expression/pattern) or a reference frequency value
+(value with a unit).  A single frequency specification is used for
+exact match with the REF\_FREQUENCY column of the SPECTRAL\_WINDOW
+sub-table.  A \hyperref{range}{range (see Section }{)}{Sec:RANGE} of
+frequencies are used to select all SPWs which are within the given
+range.  The allowed units are Hz, KHz, MHz, GHz or THz.
 
 SPWs can also be selected via a boolean expression for integer IDs.
 
@@ -673,18 +692,19 @@ Channel specification\footnote{\it MSSelection module is currently
 to as CHANSPEC in the following description) is a START,STOP,STEP
 tuple corresponding to the first frequency channel, the last frequency
 channel and the step size to increment from the first to the last
-channel.  The START and STOP part of the tuple can be range
-specification for the range [START, STOP] followed by an optional STEP
-size.
+channel.  The START and STOP part of the tuple can be
+\hyperref{range}{range (see Section }{)}{Sec:RANGE} specification for
+the range [START, STOP] followed by an optional STEP size.
 
 START and STOP part of the tuple can be specified as a single integer
-or physical quantity or as a range of integers or physical quantities.
-A single integer is treated as a channel index and the tuple
-corresponds to [ID,ID,1].  A single physical quantity is matched with
-the exact frequency value of the channels and tuple of matched channel
-index is constructed as [ID,ID,1].  A range of integers given as
-N0$\sim$N1 is used to construct a tuple [N0,N1,1].  Similarly for a
-range of physical quantities.
+or physical quantity or as a \hyperref{range}{range (see Section
+}{)}{Sec:RANGE} of integers or physical quantities.  A single integer
+is treated as a channel index and the tuple corresponds to [ID,ID,1].
+A single physical quantity is matched with the exact frequency value
+of the channels and tuple of matched channel index is constructed as
+[ID,ID,1].  A \hyperref{range}{range (see Section }{)}{Sec:RANGE} of
+integers given as N0$\sim$N1 is used to construct a tuple [N0,N1,1].
+Similarly for a range of physical quantities.
 
 If a START,STOP part of the tuple specification is followed by
 "\char94 STEP", the STEP is used as the third value of the tuple.
@@ -715,7 +735,7 @@ channel specifications.  E.g.
 \subsection{ Frequency Selection Syntax}
 
 The specifications for SPW and channels can be combined to form a
-fully qualified frequency selection expression in the form
+fully qualified frequency selection expression of the form
 SPWSPEC[:CHANSPEC] (square brackets indicate that :CHANSPEC is
 optional).  A frequency selection expression is a comma-separated list
 of SPWSPEC[:CHANSPEC] specifications.  Channel selections apply to all
@@ -847,10 +867,10 @@ based on these intents.
 
 The scan-intent selection expression is a comma-separated list of
 specifications.  Each specification can be a \hyperref{string}{string (see Section
-}{}{Sec:STRINGS} , an integer or an
-integer range.  As in other such expressions, a range $[N0,N1]$ can be
+}{)}{Sec:STRINGS} , an integer or an
+integer \hyperref{range}{range (see Section }{)}{Sec:RANGE}.  As in other such expressions, a range $[N0,N1]$ can be
 specified as {\tt N0$\sim$N1} (see Section~\ref{Sec:RANGE}).  \hyperref{String}{String (see Section
-}{}{Sec:STRINGS}  can
+}{)}{Sec:STRINGS}  can
 be regular expressions or patterns or quoted-strings for as-is
 matching (see Section~\ref{Sec:STRINGS}). 
 
@@ -953,30 +973,30 @@ The syntax for the specification of both these is therefore identical.
 
 \subsection{Syntax}
 
-Scan and Sub-array selection specification is a single integer (INT) or
-a range of integers(N0$\sim$N1).  Scans and sub-arrays can also be selected
-via boolean expressions of the type "$>$INT", "$>$=INT", "$<$INT" or
-"$<$=INT"\footnote{{\it Programmers note:}
-The getScanList() (getSubArrayList() for sub-arrays) method will
-return the list generated from INT,INT,... or INT$\sim$INT or "$<$INT"
-specification.  For "$>$INT" specification, the returned list will be
-number from INT part of "$>$INT" upto the maxScans (maxArrays for
-sub-arrays) set via MSSelection::setMaxScan()
-(MSSelection::setMaxArray() for sub-arrays).  The default value of
-maxScans/maxArrays is {\tt std::standard\_limits$<$int$>$::max()}
-(i.e. the maximum value an integer can take on a machine).  It is done
-this way since there is no efficient way of generating a list of
-SCAN/ARRAY IDs present in the data and "$>$INT" is an unbounded list
-of integers.  The list of scans IDs in the data can be {\bf probably}
-generated using the MSRange class - but I think it can be quite
-expensive.  So if it is necessary to know the precise list of scans
-selected using the "$>$INT" specification, the application programs
-will have to use MSRange class to get the range in the data.  An
-intersection of the list from MSRange and the list from
-MSSelection.getScanList() will be the actual selected scans
-(intersection of two CASA vectors can be done using the
-set\_intersection() global method in MSSelectionTools.h).
-}.
+Scan and Sub-array selection specification is a single integer (INT)
+or a \hyperref{range}{range (see Section }{)}{Sec:RANGE} of
+integers(N0$\sim$N1).  Scans and sub-arrays can also be selected via
+boolean expressions of the type "$>$INT", "$>$=INT", "$<$INT" or
+"$<$=INT"\footnote{{\it Programmers note:} The getScanList()
+  (getSubArrayList() for sub-arrays) method will return the list
+  generated from INT,INT,... or INT$\sim$INT or "$<$INT"
+  specification.  For "$>$INT" specification, the returned list will
+  be number from INT part of "$>$INT" upto the maxScans (maxArrays for
+  sub-arrays) set via MSSelection::setMaxScan()
+  (MSSelection::setMaxArray() for sub-arrays).  The default value of
+  maxScans/maxArrays is {\tt std::standard\_limits$<$int$>$::max()}
+  (i.e. the maximum value an integer can take on a machine).  It is
+  done this way since there is no efficient way of generating a list
+  of SCAN/ARRAY IDs present in the data and "$>$INT" is an unbounded
+  list of integers.  The list of scans IDs in the data can be {\bf
+    probably} generated using the MSRange class - but I think it can
+  be quite expensive.  So if it is necessary to know the precise list
+  of scans selected using the "$>$INT" specification, the application
+  programs will have to use MSRange class to get the range in the
+  data.  An intersection of the list from MSRange and the list from
+  MSSelection.getScanList() will be the actual selected scans
+  (intersection of two CASA vectors can be done using the
+  set\_intersection() global method in MSSelectionTools.h).  }.
 
 Full expression is a comma-separated list of any of the above index
 specifications.  E.g.
@@ -1017,13 +1037,14 @@ MSSelection{Time,Spw,UvDist,Antenna,Scan,Subarray,Poln,State}ParseError
 
 All parsing errors are reported by throwing the {\tt
   MSSelection\{Time, Spw, Field, UvDist, Antenna, Scan,
-  Subarray,Poln,State\}ParseError} exception.  All other forms of errors
-(e.g. illegal range specification N0$\sim$N1 where N0 $>$ N1) are
-reported by throwing an exception of type {\tt MSSelection\{Time, Spw,
-  Field, UvDist, Antenna, Scan, Subarray,Poln,State\}Error}.
+  Subarray,Poln,State\}ParseError} exception.  All other forms of
+errors (e.g. illegal \hyperref{range}{range (see Section
+}{)}{Sec:RANGE} specification N0$\sim$N1 where N0 $>$ N1) are reported
+by throwing an exception of type {\tt MSSelection\{Time, Spw, Field,
+  UvDist, Antenna, Scan, Subarray,Poln,State\}Error}.
 
 Hence, to catch all errors thrown from the MSSelection sub-system,
-catch the MSSelectionError object.  For more specific exception
+catch the \MSSelectionError\ object.  For more specific exception
 handling, catch the more qualified MSSelection*Error objects.  For
 catching only parsing errors, catch the MSSelection*ParseError object.
 As is obvious, any un-caught exception from the MSSelection sub-system
@@ -1044,7 +1065,7 @@ rule-resolution code.  However there are cases where instead of the
 throwing an exception, the errors must be collected as they occur and
 resolution of the error done at the end of the parsing cycle.  In the
 MSSelection module, this is achieved by handling the errors using an
-object of type {\tt MSSelectionErrorHanlder}\footnote{This is also the
+object of type \MSSelectionErrorHandler\footnote{This is also the
   base-class from which all specializations of the error handlers must
   be derived.}.  The default error
 handler that comes pre-installed in the modules simply throws an
@@ -1054,9 +1075,9 @@ To collect errors (and the error messages generated in the process) as
 they occur for later resolution, the client-side code can install a
 specialization of the error handler of type {\tt MSSelectionLogError},
 a derivative of the {\tt MSSelectionErrorHandler}, using the {\tt
-  MSSelection::setErrorHanlder()} method.  At the appropriate place in
+  MSSelection::setErrorHandler()} method.  At the appropriate place in
 the code, a call to {\tt MSSelectionErrorHandler::reportError()} can be
-called to display the collected error messages as warning
+made to display the collected error messages as warning
 messages. This behavior can be changed in a specialization of the {\tt
   MSSelectionErrorHandler} class by overloading the {\tt reportError}
 method.
