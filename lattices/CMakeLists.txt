@@ -60,6 +60,8 @@ LatticeMath/Fit2D.cc
 LatticeMath/LatticeFit.cc
 )
 
+set_target_properties( casa_lattices PROPERTIES SOVERSION ${casa_soversion} )
+
 target_link_libraries (
 casa_lattices
 casa_tables
