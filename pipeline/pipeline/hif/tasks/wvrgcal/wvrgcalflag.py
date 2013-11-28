@@ -281,6 +281,6 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
         self.result.vis = inputs.vis
         self.result.qa2 = result.qa2
         self.result.wvrflag = result.wvrflag
-        self.result.wvr_infos = result.wvr_infos
+        self.result.wvr_infos = getattr(result, 'wvr_infos', [])
 
         return copy.deepcopy(self.result)
