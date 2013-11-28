@@ -54,6 +54,10 @@ not. If the input MS does not have a WEIGHT_SPECTRUM, by setting the parameter
 in the WEIGHT column, such that each channel in the WEIGHT_SPECTRUM will get WEIGHT/nChannels.
 By default, {\it usewtspectrum} is set to False.
 
+The parameter {\it keepflags} from split is not available in mstransform. The
+behaviour in mstransform is to keep the flagged data  in the splitted output,
+which is the same default value of split.
+
 \begin{verbatim}
     mstransform('uid.ms', outputvis='myout.ms', datacolumn='data', spw='0,3,5')
 \end{verbatim}

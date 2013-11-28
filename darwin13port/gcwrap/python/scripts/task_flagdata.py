@@ -468,13 +468,6 @@ def flagdata(vis,
             if( type(freqdev) == str and writeflags == True):
                 freqdev = fh.readRFlagThresholdFile(freqdev,'freqdev')
                 
-            # Cast possible numpy types to Python types
-            if (isinstance(timedev, list) and len(timedev) > 0):
-                FHelper.setupRflag(timedev)
-            
-            if (isinstance(freqdev, list) and len(freqdev) > 0):
-                FHelper.setupRflag(freqdev)
-
             agent_pars['timedev'] = timedev
             agent_pars['freqdev'] = freqdev
             
