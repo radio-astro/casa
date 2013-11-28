@@ -195,6 +195,8 @@ aips.cc
 version.cc
 )
 
+set_target_properties( casa_casa PROPERTIES SOVERSION ${casa_soversion} )
+
 if (HDF5_FOUND)
     list (APPEND de_libraries ${HDF5_LIBRARIES})
 endif (HDF5_FOUND)
