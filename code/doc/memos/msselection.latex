@@ -35,7 +35,7 @@
 \begin{document}
 \title{MeasurementSet Selection Syntax}
 \author{S. Bhatnagar\\ NRAO, Socorro}
-\date{June 15, 2007\\{\small (Updated: June 14, 2013)}}
+\date{June 15, 2007\\{\small (Updated: Nov. 24, 2013)}}
 \maketitle
 \normalsize
 \markboth{MeasurementSet Selection Syntax}{S. Bhatnagar}
@@ -46,17 +46,13 @@
 \begin{abstract}
   This note describes the syntax for the various expressions for
   selecting data from the Measurement Set.  This is the syntax that is
-  implemented in the \MSSelection\ module of CASA.  % The syntax is
-  % derived from an \htmladdnormallinkfoot{earlier
-  % note}{http://almasw.hq.eso.org/almasw/bin/view/OFFLINE/DataSelection}
-  % on syntax definition.
-  All expressions consist of a comma or
-  semi-colon separated list of specifications.  Except channel
-  selection, the final product of parsing the expressions is a Table
-  Expression Node (TEN) which can be used to construct a selected
-  Measurement Set.  Higher level global methods to return a selected
-  MS, given the user supplied expressions, are also provided as part
-  of the {\tt MSSelection} module.
+  implemented in the \MSSelection\ module of CASACore.  All
+  expressions consist of a comma or semi-colon separated list of
+  specifications.  Except channel selection, the final product of
+  parsing the expressions is a Table Expression Node (TEN) which can
+  be used to construct a table with only the selected rows.  Higher
+  level global methods to return a selected table, given the user
+  supplied expressions, are also provided as part of this module.
 
   Error handling is done via the C++ exception handling mechanism.
   The exceptions thrown by the {\tt MSSelection} module are of type
@@ -66,15 +62,18 @@
   Application layer code therefore can have a finer level control on
   error handling.  The module now also support externally plugable
   error handlers of type \MSSelectionErrorHandler. This allows
-  application layer code to have control on resolution of the
-  exceptional states that may be reached during the parsing cycle.
+  application layer code to have control on the resolution mechanism
+  of the exceptional states that may be reached during the parsing
+  cycle.
 
-  After some internal re-factoring, the {\tt MSSelection} module can
-  also be used now for other tables that follow the general data base
-  design of the {\tt MeasurementSet}.  The CASA \CalTables\ is an
-  example which also uses the {\tt MSSelection} module for data
-  selection.
+  The {\tt MSSelection} module now can also be used for other tables
+  that follow the general data base design of the {\tt
+    MeasurementSet}.  The CASA \CalTables\ is an example which also
+  uses the {\tt MSSelection} module for data selection.
 \end{abstract}
+\newpage
+\tableofcontents
+\newpage
 
 \section{General Syntax}
 \label{Sec:GENERALSYNTAX}
