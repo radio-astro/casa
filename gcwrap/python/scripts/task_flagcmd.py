@@ -82,7 +82,8 @@ def flagcmd(
                         
             # Apply flag cmds
             if flagcmds.keys().__len__() == 0:
-                raise Exception, 'There is 0 flag cmds in input'
+                raise Exception, 'There are no unapplied flags in the input. '\
+                                'Set useapplied=True to also use the previously-applied flags.'
             
             # List flags on the screen/logger
             if action == 'list':
@@ -95,16 +96,8 @@ def flagcmd(
                 
             # Save the flag cmds to an output file
             if savepars:
-                # These cmds came from the internal FLAG_CMD, only list on the screen
-#                if outfile == '':
-#                    casalog.post('Saving to FLAG_CMD is not supported', 'WARN')
-#                        
-#                else:
-#                    casalog.post('Saving commands to ' + outfile)
                 fh.writeFlagCommands(vis, flagcmds, False, '', outfile, True)
-
-                                
-                                
+                                                                
         else:
             # Input vis is an MS
 
@@ -166,7 +159,6 @@ def flagcmd(
                     raise ValueError, "Unsupported action='unapply' for inpmode='list'"
     
                 # ##### TO DO: take time ranges calculation into account ??????
-                # Parse the input file
                 # Parse the input file
                 try:            
                     # Input commands are given in a list
@@ -248,7 +240,9 @@ def flagcmd(
             # Before performing any action on the flag cmds, check them! 
             vrows = myflagcmd.keys()   
             if vrows.__len__() == 0:
-                raise Exception, 'There are no flag commands in input'
+                raise Exception, 'There are no unapplied flags in the input. '\
+                    'Set useapplied=True to also use the previously-applied flags.'
+
             else:
                 casalog.post('Read ' + str(vrows.__len__())
                              + ' lines from input')
@@ -265,7 +259,6 @@ def flagcmd(
             if action == 'list':
     
                 # List the flag cmds on the screen
-#                listFlagCmd(myflagcmd, myoutfile='', listmode=listmode)
                 listFlagCommands(myflagcmd, listmode=listmode)
 
                 # Save the flag cmds to the outfile
@@ -481,6 +474,7 @@ def readFromTable(
         return
     
     myflagcmd = {}
+
     if nrows > 0:
         nflagd = 0
         if myflagrows.__len__() > 0:

@@ -765,10 +765,10 @@ def writeFlagCommands(msfile, flagdict, applied, add_reason, outfile, append=Tru
     # Append to a file   
     if outfile != '': 
         if append:
-            casalog.post('Will append commands to the file '+outfile)       
+#            casalog.post('Will append commands to the file '+outfile)       
             ffout = open(outfile, 'a')
         else:
-            casalog.post('Will save commands to the file '+outfile)       
+#            casalog.post('Will save commands to the file '+outfile)       
             os.system('rm -f '+outfile)
             ffout = open(outfile, 'w')
            
@@ -795,45 +795,6 @@ def writeFlagCommands(msfile, flagdict, applied, add_reason, outfile, append=Tru
                             v = v.strip("'")
                         cmdstr = "'"+v+"'"
                         cmdline = cmdline + k + '=' + str(cmdstr) + ' '
-
-#                     elif k == 'timedev' and isinstance(v,list):
-#                         #outer list, 
-#                         # timedev = [[1.0, 9.0, 0.038859101518873986], [1.0, 10.0, 0.16283325492625655]]
-#                         outstr = "["
-#                         for outv in v:
-#                             instr = "["
-#                             for inv in outv:
-#                                 instr = instr + str(inv) + ','
-#                             instr = instr.rstrip(',')
-#                             instr = instr + "],"
-#                             outstr = outstr + instr
-#                         outstr = outstr.rstrip(',')
-#                         outstr = outstr + ']'
-#                             
-#                         cmdline = cmdline + k + "=" + outstr + ' '
-# 
-#                     elif k == 'freqdev' and isinstance(v,list):
-#                         #outer list, 
-#                         # freqdev = [[1.0, 9.0, 0.038859101518873986], [1.0, 10.0, 0.16283325492625655]]
-#                         outstr = "["
-#                         for outv in v:
-#                             instr = "["
-#                             for inv in outv:
-#                                 instr = instr + str(inv) + ','
-#                             instr = instr.rstrip(',')
-#                             instr = instr + "],"
-#                             outstr = outstr + instr
-#                         outstr = outstr.rstrip(',')
-#                         outstr = outstr + ']'
-#                             
-#                         cmdline = cmdline + k + "=" + outstr + ' '
-# 
-#                     elif isinstance(v,list):
-#                         lstring = ''
-#                         for ll in v:
-#                             lstring = lstring + str(ll)+','
-#                         lstring = lstring.rstrip(',')
-#                         cmdline = cmdline + k + '=['+ lstring + '] '
                         
                     else:
                         cmdline = cmdline + k + '=' + str(v) + ' '
@@ -851,7 +812,7 @@ def writeFlagCommands(msfile, flagdict, applied, add_reason, outfile, append=Tru
     
     else:
         # Append new commands to existing FLAG_CMD table
-        casalog.post('Saving commands to the FLAG_CMD table')       
+#        casalog.post('Saving commands to the FLAG_CMD table')       
         cmdlist = []
         reasonlist = []
         for key in flagdict.keys():
@@ -877,45 +838,6 @@ def writeFlagCommands(msfile, flagdict, applied, add_reason, outfile, append=Tru
                         v = v.strip("'")
                     cmdstr = "'"+v+"'"
                     cmdline = cmdline + k + '=' + str(cmdstr) + ' '
-
-#                 elif k == 'timedev' and isinstance(v,list):
-#                     #outer list, 
-#                     # timedev = [[1.0, 9.0, 0.038859101518873986], [1.0, 10.0, 0.16283325492625655]]
-#                     outstr = "["
-#                     for outv in v:
-#                         instr = "["
-#                         for inv in outv:
-#                             instr = instr + str(inv) + ','
-#                         instr = instr.rstrip(',')
-#                         instr = instr + "],"
-#                         outstr = outstr + instr
-#                     outstr = outstr.rstrip(',')
-#                     outstr = outstr + ']'
-#                         
-#                     cmdline = cmdline + k + "=" + outstr + ' '
-# 
-#                 elif k == 'freqdev' and isinstance(v,list):
-#                     #outer list, 
-#                     # freqdev = [[1.0, 9.0, 0.038859101518873986], [1.0, 10.0, 0.16283325492625655]]
-#                     outstr = "["
-#                     for outv in v:
-#                         instr = "["
-#                         for inv in outv:
-#                             instr = instr + str(inv) + ','
-#                         instr = instr.rstrip(',')
-#                         instr = instr + "],"
-#                         outstr = outstr + instr
-#                     outstr = outstr.rstrip(',')
-#                     outstr = outstr + ']'
-#                         
-#                     cmdline = cmdline + k + "=" + outstr + ' '
-# 
-#                 elif isinstance(v,list):
-#                     lstring = ''
-#                     for ll in v:
-#                         lstring = lstring + str(ll)+','
-#                     lstring = lstring.rstrip(',')
-#                     cmdline = cmdline + k + '=['+ lstring + '] '
                     
                 else:
                     cmdline = cmdline + k + '=' + str(v) + ' '
