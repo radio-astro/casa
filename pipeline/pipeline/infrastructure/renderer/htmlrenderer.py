@@ -1797,26 +1797,24 @@ class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
             summaries = plotter.plot()
             for_refant = [p for p in summaries 
                           if p.parameters['ant'] == ms_refant]
-            amp_refant[vis] = [for_refant[0] if for_refant else None]
+            amp_refant[vis] = for_refant[0] if for_refant else None
 
             # replace mode with first non-refant plot until we have scores
             LOG.todo('Replace bp summary plot with mode when scores are in place')
             non_refants = [p for p in summaries
                            if p.parameters['ant'] != ms_refant]
-            mode = [non_refants[0] if non_refants else None]
-            amp_mode[vis] = mode
+            amp_mode[vis] = non_refants[0] if non_refants else None
 
             # need two summary plots: one for the refant, one for the mode
             plotter = bandpass.BandpassPhaseVsFreqSummaryChart(context, result)
             summaries = plotter.plot()
             for_refant = [p for p in summaries 
                           if p.parameters['ant'] == ms_refant]
-            phase_refant[vis] = [for_refant[0] if for_refant else None]
+            phase_refant[vis] = for_refant[0] if for_refant else None
 
             non_refants = [p for p in summaries
                            if p.parameters['ant'] != ms_refant]
-            mode = [non_refants[0] if non_refants else None]
-            phase_mode[vis] = mode
+            phase_mode[vis] = non_refants[0] if non_refants else None
 
             # make phase vs freq plots for all data 
             plotter = bandpass.BandpassPhaseVsFreqDetailChart(context, result)

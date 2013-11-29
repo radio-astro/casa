@@ -135,7 +135,10 @@ see detailed plots per spectral window and antenna.</p>
         </a>
 	</h4>
     <ul class="thumbnails">
-        % for plot in amp_refant[ms]:
+        % if amp_refant[ms]:
+        	<% 
+        		plot = amp_refant[ms]
+        	%>
             % if os.path.exists(plot.thumbnail):
             <li class="span4">
                 <div class="thumbnail">
@@ -165,9 +168,12 @@ see detailed plots per spectral window and antenna.</p>
                 </div>
             </li>
             % endif
-        % endfor
+        % endif
 
-        % for plot in amp_mode[ms]:
+        % if amp_mode[ms]:
+        	<% 
+        		plot = amp_mode[ms]
+        	%>
             % if os.path.exists(plot.thumbnail):
             <li class="span4">
                 <div class="thumbnail">
@@ -198,9 +204,12 @@ see detailed plots per spectral window and antenna.</p>
                 </div>
             </li>
             % endif
-        % endfor
+        % endif
 
-        % for plot in phase_mode[ms]:
+        % if phase_mode[ms]:
+        	<% 
+        		plot = phase_mode[ms]
+        	%>
             % if os.path.exists(plot.thumbnail):
             <li class="span4">
                 <div class="thumbnail">
@@ -231,7 +240,7 @@ see detailed plots per spectral window and antenna.</p>
                 </div>
             </li>
             % endif
-        % endfor
+        % endif
 
     </ul>
 
