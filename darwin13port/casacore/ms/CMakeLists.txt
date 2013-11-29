@@ -157,6 +157,8 @@ ${BISON_MSStateGram_OUTPUTS}
 ${FLEX_MSStateGram_OUTPUTS}
 )
 
+set_target_properties( casa_ms PROPERTIES SOVERSION ${casa_soversion} )
+
 target_link_libraries (
 casa_ms casa_measures
 ${Boost_LIBRARIES}

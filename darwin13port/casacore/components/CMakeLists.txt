@@ -47,6 +47,7 @@ ComponentModels/ComponentType2.cc
 )
 
 target_link_libraries (casa_components casa_coordinates ${GSL_LIBRARIES})
+set_target_properties( casa_components PROPERTIES SOVERSION ${casa_soversion} )
 
 install (
 TARGETS casa_components

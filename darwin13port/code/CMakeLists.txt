@@ -340,6 +340,20 @@ endif()
 dump( casaroot )
 dump( CMAKE_INSTALL_PREFIX )
 
+set( epochdelta 1385614800 )
+if ( EXISTS ${CMAKE_INSTALL_PREFIX}/${arch}/casa_sover.txt )
+    execute_process( COMMAND perl -e "while (<>) { chomp and print if (! m/^\#/ ) }" ${CMAKE_INSTALL_PREFIX}/${arch}/casa_sover.txt
+                     OUTPUT_VARIABLE __casa_soversion )
+elseif( EXISTS ${CMAKE_INSTALL_PREFIX}/casa_sover.txt )
+    execute_process( COMMAND perl -e "while (<>) { chomp and print if (! m/^#/ ) }" ${CMAKE_INSTALL_PREFIX}/casa_sover.txt
+                     OUTPUT_VARIABLE __casa_soversion )
+else( )
+    execute_process( COMMAND perl -e "$t=time( )-${epochdelta};$z=$t & 0xff; $y=($t>>8)&0xff; $x=($t>>16)&0xffff; print \"$x.$y.$z\""
+                     OUTPUT_VARIABLE __casa_soversion )
+endif( )
+set(casa_soversion ${__casa_soversion} CACHE STRING "version for shared objects")
+message( STATUS "shared object version number ${casa_soversion}" )
+
 set( RE_CMAKE "YES" CACHE STRING "are we rerunning cmake?" FORCE )
 
 #
@@ -442,7 +456,7 @@ file( WRITE ${casaroot}/casainit.csh
 # Choose to have correct RPATHs both in the build tree and
 # in the install tree (at the cost of having to change the
 # rpath when installing)
-set( CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:arbitraryExtraPaddingToAllowForRpathGrowth" )
+set( CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib )
 set( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set( CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib )
 

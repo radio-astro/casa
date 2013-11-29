@@ -143,6 +143,15 @@ class test_base(unittest.TestCase):
             
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform)           
+        
+    def setUp_CAS_4850(self):
+
+        self.vis = 'CAS-4850-30s-limit-ALMA.ms'
+        if os.path.exists(self.vis):
+           self.cleanup()
+            
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
+        default(mstransform)             
                
     def cleanup(self):
         os.system('rm -rf '+ self.vis)
@@ -158,7 +167,7 @@ class test_base_compare(test_base):
         self.refvis_sorted = ''     
               
         self.subtables=['/ANTENNA','/DATA_DESCRIPTION','/FEED','/FIELD','/FLAG_CMD',
-                        '/OBSERVATION','/POINTING','/POLARIZATION','/PROCESSOR','/STATE']
+                        '/POINTING','/POLARIZATION','/PROCESSOR','/STATE']
         self.sortorder=['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME']    
         
     def tearDown(self):
@@ -200,7 +209,11 @@ class test_base_compare(test_base):
             
         # Special case for SOURCE which contains many un-defined columns
         self.assertTrue(th.compTables(self.outvis_sorted+'/SOURCE',self.refvis_sorted+'/SOURCE', 
-                                      ['POSITION','TRANSITION','REST_FREQUENCY','SYSVEL','SOURCE_MODEL'],0.000001,"absolute"))     
+                                      ['POSITION','TRANSITION','REST_FREQUENCY','SYSVEL','SOURCE_MODEL'],0.000001,"absolute"))   
+        
+        # Special case for OBSERVATION which contains many un-defined columns
+        self.assertTrue(th.compTables(self.outvis_sorted+'/OBSERVATION',self.refvis_sorted+'/OBSERVATION', 
+                                      ['LOG','SCHEDULE'],0.000001,"absolute"))     
         
     def compare_main_table_columns(self,startrow = 0, nrow = -1, rowincr = 1):
         for col in self.columns:
@@ -1315,8 +1328,8 @@ class test_WeightSpectrum(test_base):
         mytb.close()  
         nchan = data.size   
         check_eq(nchan, 12)
-        check_eq(data[0][0][0].real, 0.0628, 0.0001)
-        check_eq(data[0][nchan-1][0].imag, -0.2508, 0.0001)
+        check_eq(data[0][0][0].real, 0.0893, 0.0001)
+        check_eq(data[0][nchan-1][0].imag, -0.2390, 0.0001)
                 
     def test_combineSPWDiffExpAndChanAvgWithWeightSpectrum(self):
         '''mstransform: Combine SPWs with different exposure and channel average using WEIGHT_SPECTRUM'''
@@ -1336,33 +1349,33 @@ class test_WeightSpectrum(test_base):
         mytb.close()  
         nchan = data.size   
         check_eq(nchan, 12)
-        check_eq(data[0][0][0].real, 0.0628, 0.0001)
-        check_eq(data[0][nchan-1][0].imag, -0.2508, 0.0001)
+        check_eq(data[0][0][0].real, 0.0893, 0.0001)
+        check_eq(data[0][nchan-1][0].imag, -0.2390, 0.0001)
 
         
-class test_channelAverageByDefault(test_base):
+class test_channelAverageByDefault(test_base_compare):
     
     def setUp(self):
+        super(test_channelAverageByDefault,self).setUp()
         self.setUp_almasim()
+        self.outvis = 'test_channelAverageByDefaultInVelocityMode-mst.ms'
+        self.refvis = 'test_channelAverageByDefaultInVelocityMode-cvel.ms'
+        self.outvis_sorted = 'test_channelAverageByDefaultInVelocityMode-mst-sorted.ms'
+        self.refvis_sorted = 'test_channelAverageByDefaultInVelocityMode-cvel-sorted.ms'     
+        os.system('rm -rf test_channelAverageByDefaultInVelocityMode*')
         
     def tearDown(self):
-        os.system('rm -rf '+ self.vis)
-        os.system('rm -rf '+ self.outvis)
+        super(test_channelAverageByDefault,self).tearDown()   
         
     def test_channelAverageByDefaultInVelocityMode(self):
         self.outvis = 'test_channelAverageByDefaultInVelocityMode.ms'
         
         mstransform(vis=self.vis,outputvis=self.outvis,regridms=True,combinespws=True,interpolation="linear",
-                    mode="velocity",veltype="optical",width='30km/s',restfreq='230GHz')
-        
-        mytb = tbtool()
-        mytb.open(self.outvis)
-        data = mytb.getcol('DATA')      
-        nchan = data.shape[1]
-        mytb.close() 
-        check_eq(nchan, 55)
-        check_eq(data[0][0][0].real, 0.0323, 0.0001)
-        check_eq(data[0][nchan-1][0].imag, 0.3296, 0.0001)
+                    mode="velocity",veltype="optical",width='30km/s',restfreq='230GHz',datacolumn='ALL')
+        cvel(vis=self.vis,outputvis=self.refvis,interpolation="linear",mode="velocity",veltype="optical",width='30km/s',restfreq='230GHz')
+
+        self.generate_tolerance_map()
+        self.post_process() 
 
  
 class test_float_column(test_base):
@@ -1420,7 +1433,7 @@ class test_timeaverage(test_base_compare):
         self.generate_tolerance_map()
 
         self.mode['UVW'] = "percentage"
-        self.tolerance['UVW'] = 4.08E-3/100
+        self.tolerance['UVW'] = 15.0/100
         
         self.mode['EXPOSURE'] = "percentage"
         self.tolerance['EXPOSURE'] = 3.58E-5/100
@@ -1501,6 +1514,28 @@ class test_timeaverage(test_base_compare):
         self.generate_tolerance_map()  
 
         self.post_process()         
+        
+class test_timeaverage_limits(test_base):
+    
+    def setUp(self):
+        self.setUp_CAS_4850()
+        self.outvis = 'test_timeaverage_limits.ms'
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outvis)
+            
+    def test_CAS_4850(self):  
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn='DATA',timeaverage=True,timebin='40s')
+        
+        mytb = tbtool()
+        mytb.open(self.outvis)
+        interval = mytb.getcol('INTERVAL')      
+        print interval[0]
+        mytb.close()  
+        check_eq(interval[0] >= 40.0,True)
+                
         
         
 class test_multiple_transformations(test_base_compare):        
@@ -2047,6 +2082,7 @@ def suite():
             test_WeightSpectrum,
             test_channelAverageByDefault,
             test_timeaverage,
+            test_timeaverage_limits,
             test_multiple_transformations,
             test_regridms_single_spw,
             test_float_column,

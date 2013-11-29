@@ -72,6 +72,34 @@ namespace MSTransformations
 {
 	// Returns 1/sqrt(wt) or -1, depending on whether wt is positive..
 	Double wtToSigma(Double wt);
+
+	enum InterpolationMethod {
+	    // nearest neighbour
+	    nearestNeighbour,
+	    // linear
+	    linear,
+	    // cubic
+	    cubic,
+	    // cubic spline
+	    spline,
+	    // fft shift
+	    fftshift
+	  };
+
+	enum WeightingSetup {
+		spectrum,
+		flags,
+		cumSum,
+		flat
+	};
+
+	enum dataCol {
+		visCube,
+		visCubeCorrected,
+		visCubeModel,
+		visCubeFloat,
+		weightSpectrum
+	  };
 }
 
 // Forward declarations
@@ -297,6 +325,7 @@ public:
 
 	// Needed by MSTransformBuffer
 	vi::VisBuffer2 * getVisBuffer() {return visibilityIterator_p->getVisBuffer();}
+	IPosition getShape();
 
 
 
@@ -354,6 +383,7 @@ protected:
 	// From selected MS
 	void checkFillFlagCategory();
 	void checkFillWeightSpectrum();
+	void checkDataColumnsAvailable();
 
 	// Iterator set-up
 	void checkDataColumnsToFill();
@@ -696,6 +726,28 @@ protected:
 																		Matrix<Float> &inputWeightsPlane,
 																		Vector<Float> &inputWeightsStripe);
 
+	void bufferOutputPlanes(	uInt row,
+								Matrix<Complex> &outputDataPlane,
+								Matrix<Bool> &outputFlagsPlane,
+								ArrayColumn<Complex> &outputDataCol,
+								ArrayColumn<Bool> &outputFlagCol);
+	void bufferOutputPlanes(	uInt row,
+								Matrix<Float> &outputDataPlane,
+								Matrix<Bool> &outputFlagsPlane,
+								ArrayColumn<Float> &outputDataCol,
+								ArrayColumn<Bool> &outputFlagCol);
+	void bufferOutputPlanesInSlices(	uInt row,
+										Matrix<Complex> &outputDataPlane,
+										Matrix<Bool> &outputFlagsPlane,
+										ArrayColumn<Complex> &outputDataCol,
+										ArrayColumn<Bool> &outputFlagCol);
+	void bufferOutputPlanesInSlices(	uInt row,
+										Matrix<Float> &outputDataPlane,
+										Matrix<Bool> &outputFlagsPlane,
+										ArrayColumn<Float> &outputDataCol,
+										ArrayColumn<Bool> &outputFlagCol);
+
+
 	void writeOutputPlanes(	uInt row,
 							Matrix<Complex> &outputDataPlane,
 							Matrix<Bool> &outputFlagsPlane,
@@ -879,6 +931,14 @@ protected:
 													uInt startInputPos,
 													uInt outputPos,
 													uInt width);
+	template <class T> void cumSumKernel(	Vector<T> &inputData,
+											Vector<Bool> &inputFlags,
+											Vector<Float> &inputWeights,
+											Vector<T> &outputData,
+											Vector<Bool> &outputFlags,
+											uInt startInputPos,
+											uInt outputPos,
+											uInt width);
 
 	template <class T> void smooth(	Int inputSpw,
 									Vector<T> &inputDataStripe,
@@ -1053,7 +1113,7 @@ protected:
 	vi::FrequencySelectionUsingChannels *channelSelector_p;
 
 	// Output MS structure related members
-	Bool fillFlagCategory_p;
+	Bool inputFlagCategoryAvailable_p;
 	Bool correctedToData_p;
 	dataColMap dataColMap_p;
 	MSMainEnums::PredefinedColumns mainColumn_p;
@@ -1097,6 +1157,19 @@ protected:
 
 	// Buffer handling members
 	uInt nRowsToAdd_p;
+	uInt dataBuffer_p;
+	uInt relativeRow_p;
+	Bool noFrequencyTransformations_p;
+	Bool dataColumnAvailable_p;
+	Bool correctedDataColumnAvailable_p;
+	Bool modelDataColumnAvailable_p;
+	Bool floatDataColumnAvailable_p;
+	Cube<Bool> *flagCube_p;
+	Cube<Complex> *visCube_p;
+	Cube<Complex> *visCubeCorrected_p;
+	Cube<Complex> *visCubeModel_p;
+	Cube<Float> *visCubeFloat_p;
+	Cube<Float> *weightSpectrum_p;
 
 	// Logging
 	LogIO logger_p;

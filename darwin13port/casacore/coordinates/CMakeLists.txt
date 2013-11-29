@@ -22,6 +22,7 @@ Coordinates/StokesCoordinate.cc
 Coordinates/TabularCoordinate.cc
 )
 
+set_target_properties( casa_coordinates PROPERTIES SOVERSION ${casa_soversion} )
 target_link_libraries (casa_coordinates casa_fits ${WCSLIB_LIBRARIES})
 
 install (TARGETS casa_coordinates

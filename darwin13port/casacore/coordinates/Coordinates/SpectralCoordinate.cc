@@ -1084,17 +1084,25 @@ void  SpectralCoordinate::setFrequencySystem(MFrequency::Types type, Bool verbos
       }
     }
 
-    if(_tabular.get()){ // we have a tabular spectral coordinate
+    if(pixelValues().nelements() > 1){ // we have a tabular spectral coordinate
       
       Vector<String> oldunits(worldAxisUnits());
       Vector<String> tmpunits(1,"Hz"); // need freqs in Hz for setTabulatedFrequencies
       setWorldAxisUnits(tmpunits);
-      Vector<Double> tpixels  = _tabular->pixelValues();
+      Vector<Double> tpixels = _tabular->pixelValues();
       Vector<Double> newFreqs(tpixels.size());
       toWorld(newFreqs, tpixels);
       _setTabulatedFrequencies(newFreqs);
       setWorldAxisUnits(oldunits);
 
+      Vector<Double> newCrval(1, newFreqs[0]);
+      setReferenceValue(newCrval);
+      if(tpixels[tpixels.size()-1]-tpixels[0] != 0.){
+	Vector<Double> newCdelt(1, (newFreqs[tpixels.size()-1]-newFreqs[0])/(tpixels[tpixels.size()-1]-tpixels[0]));
+	setIncrement(newCdelt); 
+      }
+      Vector<Double> newRefPix(1, tpixels[0]);
+      setReferencePixel(newRefPix);
     }
     else{ // not tabular: only need to change ctype, crval, cdelt
       Vector<Double> newCrval(1,0.);

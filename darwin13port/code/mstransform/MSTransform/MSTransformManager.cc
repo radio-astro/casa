@@ -37,25 +37,6 @@ namespace MSTransformations
 	Bool False = False;
 	Bool True = False;
 	Unit Hz(String("Hz"));
-
-	enum InterpolationMethod {
-	    // nearest neighbour
-	    nearestNeighbour,
-	    // linear
-	    linear,
-	    // cubic
-	    cubic,
-	    // cubic spline
-	    spline,
-	    // fft shift
-	    fftshift
-	  };
-
-	enum WeightingSetup {
-		spectrum,
-		flags,
-		flat
-	};
 }
 
 /////////////////////////////////////////////
@@ -192,7 +173,7 @@ void MSTransformManager::initialize()
 	channelSelector_p = NULL;
 
 	// Output MS structure related members
-	fillFlagCategory_p = False;
+	inputFlagCategoryAvailable_p = False;
 	inputWeightSpectrumAvailable_p = False;
 	correctedToData_p = False;
 	dataColMap_p.clear();
@@ -244,7 +225,13 @@ void MSTransformManager::initialize()
 
 	// Buffer handling members
 	bufferMode_p = False;
+	noFrequencyTransformations_p = False;
+	dataColumnAvailable_p = False;
+	correctedDataColumnAvailable_p = False;
+	modelDataColumnAvailable_p = False;
+	floatDataColumnAvailable_p = False;
 	nRowsToAdd_p = 0;
+	relativeRow_p = 0;
 
 	return;
 }
@@ -852,6 +839,23 @@ void MSTransformManager::parseTimeAvgParams(Record &configuration)
 			}
 		}
 
+		// CAS-4850 (jagonzal): For ALMA each bdf is limited to 30s, so we need to combine across state (i.e. su-scan)
+		if ((timeBin_p > 30.0) and !timespan_p.contains("state"))
+		{
+			MeasurementSet tmpMs(inpMsName_p,Table::Old);
+		    MSObservation observationTable = tmpMs.observation();
+		    MSObservationColumns observationCols(observationTable);
+		    String telescopeName = observationCols.telescopeName()(0);
+
+		    if (telescopeName.contains("ALMA"))
+		    {
+				logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+						<< "Operating with ALMA data, automatically adding state to timespan "<< endl
+						<< "In order to remove sub-scan boundaries which limit time average to 30s "<< LogIO::POST;
+				timespan_p += String(",state");
+		    }
+		}
+
 		exists = configuration.fieldNumber ("maxuvwdistance");
 		if (exists >= 0)
 		{
@@ -1017,6 +1021,12 @@ void MSTransformManager::close()
 // -----------------------------------------------------------------------
 void MSTransformManager::setup()
 {
+	// Check what columns have to filled
+	// CAS-5581 (jagonzal): Moving these methods here because we need to know if
+	// WEIGHT_SPECTRUM is available to configure the appropriate averaging kernel.
+	checkFillFlagCategory();
+	checkFillWeightSpectrum();
+
 	// Check if we really need to combine SPWs
 	if (combinespws_p)
 	{
@@ -1079,6 +1089,7 @@ void MSTransformManager::setup()
 	{
 		transformCubeOfDataComplex_p = &MSTransformManager::copyCubeOfData;
 		transformCubeOfDataFloat_p = &MSTransformManager::copyCubeOfData;
+		noFrequencyTransformations_p = True;
 	}
 
 	Bool spectralRegridding = combinespws_p or refFrameTransformation_p;
@@ -1213,8 +1224,16 @@ void MSTransformManager::setup()
 			tailOfChansforLastSpw_p = chansPerOutputSpw_p;
 		}
 
-		writeOutputPlanesComplex_p = &MSTransformManager::writeOutputPlanesInSlices;
-		writeOutputPlanesFloat_p = &MSTransformManager::writeOutputPlanesInSlices;
+		if (bufferMode_p)
+		{
+			writeOutputPlanesComplex_p = &MSTransformManager::bufferOutputPlanesInSlices;
+			writeOutputPlanesFloat_p = &MSTransformManager::bufferOutputPlanesInSlices;
+		}
+		else
+		{
+			writeOutputPlanesComplex_p = &MSTransformManager::writeOutputPlanesInSlices;
+			writeOutputPlanesFloat_p = &MSTransformManager::writeOutputPlanesInSlices;
+		}
 
 		separateSpwSubtable();
 
@@ -1223,20 +1242,80 @@ void MSTransformManager::setup()
 	}
 	else
 	{
-		writeOutputPlanesComplex_p = &MSTransformManager::writeOutputPlanesInBlock;
-		writeOutputPlanesFloat_p = &MSTransformManager::writeOutputPlanesInBlock;
+		if (bufferMode_p)
+		{
+			writeOutputPlanesComplex_p = &MSTransformManager::bufferOutputPlanes;
+			writeOutputPlanesFloat_p = &MSTransformManager::bufferOutputPlanes;
+		}
+		else
+		{
+			writeOutputPlanesComplex_p = &MSTransformManager::writeOutputPlanesInBlock;
+			writeOutputPlanesFloat_p = &MSTransformManager::writeOutputPlanesInBlock;
+		}
 	}
-
-
-	// Check what columns have to filled
-	checkFillFlagCategory();
-	checkFillWeightSpectrum();
 
 	// Generate Iterator
 	setIterationApproach();
 	generateIterator();
 
 	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+IPosition MSTransformManager::getShape()
+{
+	IPosition outputCubeShape(3);
+
+	// Cube level
+	if (combinespws_p)
+	{
+		outputCubeShape(0) = visibilityIterator_p->getVisBuffer()->nCorrelations();
+
+		if (nspws_p > 1)
+		{
+			outputCubeShape(1) = chansPerOutputSpw_p;
+			outputCubeShape(2) = nRowsToAdd_p*nspws_p;
+		}
+		else
+		{
+			outputCubeShape(1) = inputOutputSpwMap_p[0].second.NUM_CHAN;
+			outputCubeShape(2) = nRowsToAdd_p;
+		}
+
+	}
+	else if (refFrameTransformation_p)
+	{
+		Int inputSpw = visibilityIterator_p->getVisBuffer()->spectralWindows()(0);
+		outputCubeShape(0) = visibilityIterator_p->getVisBuffer()->nCorrelations();
+		outputCubeShape(1) = inputOutputSpwMap_p[inputSpw].second.NUM_CHAN;
+		outputCubeShape(2) = nRowsToAdd_p;
+
+	}
+	else if (channelAverage_p)
+	{
+		Int inputSpw = visibilityIterator_p->getVisBuffer()->spectralWindows()(0);
+		outputCubeShape(0) = visibilityIterator_p->getVisBuffer()->nCorrelations();
+		outputCubeShape(1) = numOfOutChanMap_p[inputSpw];
+		outputCubeShape(2) = nRowsToAdd_p;
+	}
+	else if (hanningSmooth_p)
+	{
+		outputCubeShape = visibilityIterator_p->getVisBuffer()->getShape();
+	}
+	else if (nspws_p > 1)
+	{
+		outputCubeShape(0) = visibilityIterator_p->getVisBuffer()->nCorrelations();
+		outputCubeShape(1) = chansPerOutputSpw_p;
+		outputCubeShape(2) = nRowsToAdd_p;
+	}
+	else
+	{
+		outputCubeShape = visibilityIterator_p->getVisBuffer()->getShape();
+	}
+
+	return outputCubeShape;
 }
 
 // -----------------------------------------------------------------------
@@ -1266,6 +1345,11 @@ void MSTransformManager::setWeightBasedTransformations(uInt mode)
 		{
 			averageKernelComplex_p = &MSTransformManager::flagAverageKernel;
 			averageKernelFloat_p = &MSTransformManager::flagAverageKernel;
+		}
+		else if (mode == MSTransformations::cumSum)
+		{
+			averageKernelComplex_p = &MSTransformManager::cumSumKernel;
+			averageKernelFloat_p = &MSTransformManager::cumSumKernel;
 		}
 		else
 		{
@@ -2471,10 +2555,10 @@ void MSTransformManager::calculateWeightAndSigmaFactors()
 // -----------------------------------------------------------------------
 void MSTransformManager::checkFillFlagCategory()
 {
-	fillFlagCategory_p = False;
+	inputFlagCategoryAvailable_p = False;
 	if (!selectedInputMsCols_p->flagCategory().isNull() && selectedInputMsCols_p->flagCategory().isDefined(0))
 	{
-		fillFlagCategory_p = True;
+		inputFlagCategoryAvailable_p = True;
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 				<< "Optional column FLAG_CATEGORY found in input MS will be written to output MS" << LogIO::POST;
 	}
@@ -2504,6 +2588,39 @@ void MSTransformManager::checkFillWeightSpectrum()
     				<< " Will fill output WEIGHT_SPECTRUM column using input WEIGHT column" << LogIO::POST;
 	}
 	*/
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformManager::checkDataColumnsAvailable()
+{
+	dataColumnAvailable_p = False;
+	correctedDataColumnAvailable_p = False;
+	modelDataColumnAvailable_p = False;
+	floatDataColumnAvailable_p = False;
+
+	if (!selectedInputMsCols_p->data().isNull() && selectedInputMsCols_p->data().isDefined(0))
+	{
+		dataColumnAvailable_p = True;
+	}
+
+	if (!selectedInputMsCols_p->correctedData().isNull() && selectedInputMsCols_p->correctedData().isDefined(0))
+	{
+		correctedDataColumnAvailable_p = True;
+	}
+
+	if (!selectedInputMsCols_p->modelData().isNull() && selectedInputMsCols_p->modelData().isDefined(0))
+	{
+		modelDataColumnAvailable_p = True;
+	}
+
+	if (!selectedInputMsCols_p->floatData().isNull() && selectedInputMsCols_p->floatData().isDefined(0))
+	{
+		floatDataColumnAvailable_p = True;
+	}
 
 	return;
 }
@@ -2954,6 +3071,15 @@ void MSTransformManager::setupBufferTransformations(vi::VisBuffer2 *vb)
 	// Calculate number of rows to add to the output MS depending on the combination parameters
 	uInt rowsToAdd = 0;
 
+	/*
+	cout 	<< " OBSERVATION_ID="<< vb->observationId()(0)
+			<< " ARRAY_ID="<< vb->arrayId()(0)
+			<< " SCAN_NUMBER="<< vb->scan()(0)
+			<< " STATE_ID="<< vb->stateId()(0)
+			<< " FIELD_ID="<< vb->fieldId()(0)
+			<< " DATA_DESC_ID="<< vb->dataDescriptionIds()  << endl;
+	*/
+
 	if (combinespws_p)
 	{
 		// Fill baseline map using as key Ant1,Ant2,Scan and State,
@@ -2968,6 +3094,13 @@ void MSTransformManager::setupBufferTransformations(vi::VisBuffer2 *vb)
 		{
 			pair<Int,Int> baseline = std::make_pair(antenna1(row),antenna2(row));
 			relativeTimeInMiliseconds = (Int)floor(1E3*(vb->time()(row) - vb->time()(0)));
+
+			/*
+			cout 	<< " antenna1(row)=" << antenna1(row)
+					<< " antenna2(row)=" << antenna2(row)
+					<< " time-stamp=" << relativeTimeInMiliseconds << endl;
+			*/
+
 			baselineMap_p[std::make_pair(baseline,relativeTimeInMiliseconds)].push_back(row);
 		}
 
@@ -2995,6 +3128,8 @@ void MSTransformManager::setupBufferTransformations(vi::VisBuffer2 *vb)
 
 	// Calculate total number for rows to add
 	nRowsToAdd_p = rowsToAdd*nspws_p;
+
+	// cout << "rowsToAdd=" << nRowsToAdd_p << endl;
 
     return;
 
@@ -3613,7 +3748,7 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
     if (inputWeightSpectrumAvailable_p)
     {
     	// Unset all the weights-based operations
-    	setWeightBasedTransformations(MSTransformations::flat);
+    	setWeightBasedTransformations(MSTransformations::cumSum);
 
 		// Transform weights
     	transformCubeOfData(vb,rowRef,vb->weightSpectrum(),outputMsCols_p->weightSpectrum(),NULL);
@@ -3640,7 +3775,7 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		if (usewtspectrum_p)
 		{
 			// Unset all the weights-based operations
-			setWeightBasedTransformations(MSTransformations::flat);
+			setWeightBasedTransformations(MSTransformations::cumSum);
 
 			// jagonzal: I don't want to spend so much resources transforming and writing synthetic WEIGHT_SPECTRUM
 			transformCubeOfData(vb,rowRef,weightSpectrumCube_p,outputMsCols_p->weightSpectrum(),NULL);
@@ -3742,14 +3877,18 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 	}
 
     // Special case for flag category
-    if (fillFlagCategory_p)
+    if (inputFlagCategoryAvailable_p)
     {
-    	if (combinespws_p)
+    	if (not noFrequencyTransformations_p)
     	{
-            IPosition shapeFlagCategory = vb->flagCategory().shape();
-            shapeFlagCategory(3) = rowRef.nrow();
-            Array<Bool> flagCategory(shapeFlagCategory,
-            		const_cast<Bool*>(vb->flagCategory().getStorage(MSTransformations::False)),SHARE);
+    		IPosition transformedCubeShape = getShape(); //[nC,nF,nR]
+    		IPosition inputFlagCategoryShape = vb->flagCategory().shape(); // [nC,nF,nCategories,nR]
+    		IPosition flagCategoryShape(4,	inputFlagCategoryShape(1),
+    										transformedCubeShape(2),
+    										inputFlagCategoryShape(2),
+    										transformedCubeShape(2));
+    		Array<Bool> flagCategory(flagCategoryShape,False);
+
         	outputMsCols_p->flagCategory().putColumnCells(rowRef, flagCategory);
     	}
     	else
@@ -3924,6 +4063,7 @@ template <class T> void MSTransformManager::combineCubeOfData(	vi::VisBuffer2 *v
 	Bool combinationOfSPWsWithDifferentExposure = False;
 	Double exposure = 0;
 
+	relativeRow_p = 0; // Initialize relative row for buffer mode
 	for (baselineMap::iterator iter = baselineMap_p.begin(); iter != baselineMap_p.end(); iter++)
 	{
 		// Initialize input plane
@@ -4109,7 +4249,7 @@ template <class T> void MSTransformManager::combineCubeOfData(	vi::VisBuffer2 *v
 		transformAndWritePlaneOfData(	0,rowRef.firstRow()+baseline_index*nspws_p,
 										inputPlaneData,inputPlaneFlags,inputPlaneWeights,
 										outputPlaneData,outputPlaneFlags,outputDataCol,outputFlagCol);
-
+		relativeRow_p += 1;
 		baseline_index += 1;
 	}
 
@@ -4284,6 +4424,7 @@ template <class T> void MSTransformManager::transformAndWriteCubeOfData(	Int inp
 	Matrix<Bool> outputPlaneFlags(outputPlaneShape);
 
 	// Iterate row by row in order to extract a plane
+	relativeRow_p = 0; // Initialize relative row for buffer mode
 	for (uInt rowIndex=0; rowIndex < nInputRows; rowIndex++)
 	{
 		// Initialize output flags plane
@@ -4298,6 +4439,8 @@ template <class T> void MSTransformManager::transformAndWriteCubeOfData(	Int inp
 		transformAndWritePlaneOfData(	inputSpw,rowRef.firstRow()+rowIndex*nspws_p,
 										inputPlaneData,inputPlaneFlags,inputPlaneWeights,
 										outputPlaneData,outputPlaneFlags,outputDataCol,outputFlagCol);
+
+		relativeRow_p += 1;
 	}
 
 	return;
@@ -4415,10 +4558,10 @@ template <class T> void MSTransformManager::transformAndWritePlaneOfData(	Int in
 //
 // -----------------------------------------------------------------------
 void MSTransformManager::writeOutputPlanes(	uInt row,
-												Matrix<Complex> &outputDataPlane,
-												Matrix<Bool> &outputFlagsPlane,
-												ArrayColumn<Complex> &outputDataCol,
-												ArrayColumn<Bool> &outputFlagCol)
+											Matrix<Complex> &outputDataPlane,
+											Matrix<Bool> &outputFlagsPlane,
+											ArrayColumn<Complex> &outputDataCol,
+											ArrayColumn<Bool> &outputFlagCol)
 {
 	(*this.*writeOutputPlanesComplex_p)(row,outputDataPlane,outputFlagsPlane,outputDataCol,outputFlagCol);
 	return;
@@ -4428,12 +4571,148 @@ void MSTransformManager::writeOutputPlanes(	uInt row,
 //
 // -----------------------------------------------------------------------
 void MSTransformManager::writeOutputPlanes(	uInt row,
+											Matrix<Float> &outputDataPlane,
+											Matrix<Bool> &outputFlagsPlane,
+											ArrayColumn<Float> &outputDataCol,
+											ArrayColumn<Bool> &outputFlagCol)
+{
+	(*this.*writeOutputPlanesFloat_p)(row,outputDataPlane,outputFlagsPlane,outputDataCol,outputFlagCol);
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformManager::bufferOutputPlanes(	uInt row,
+												Matrix<Complex> &outputDataPlane,
+												Matrix<Bool> &outputFlagsPlane,
+												ArrayColumn<Complex> &outputDataCol,
+												ArrayColumn<Bool> &outputFlagCol)
+{
+	switch (dataBuffer_p)
+	{
+		case MSTransformations::visCube:
+		{
+			visCube_p->xyPlane(relativeRow_p) = outputDataPlane;
+			break;
+		}
+		case MSTransformations::visCubeCorrected:
+		{
+			visCubeCorrected_p->xyPlane(relativeRow_p) = outputDataPlane;
+			break;
+		}
+		case MSTransformations::visCubeModel:
+		{
+			visCubeModel_p->xyPlane(relativeRow_p) = outputDataPlane;
+			break;
+		}
+		default:
+		{
+			visCube_p->xyPlane(relativeRow_p) = outputDataPlane;
+			break;
+		}
+	}
+
+	flagCube_p->xyPlane(relativeRow_p) = outputFlagsPlane;
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformManager::bufferOutputPlanes(	uInt row,
 												Matrix<Float> &outputDataPlane,
 												Matrix<Bool> &outputFlagsPlane,
 												ArrayColumn<Float> &outputDataCol,
 												ArrayColumn<Bool> &outputFlagCol)
 {
-	(*this.*writeOutputPlanesFloat_p)(row,outputDataPlane,outputFlagsPlane,outputDataCol,outputFlagCol);
+	switch (dataBuffer_p)
+	{
+		case MSTransformations::visCubeFloat:
+		{
+			visCubeFloat_p->xyPlane(relativeRow_p) = outputDataPlane;
+			flagCube_p->xyPlane(relativeRow_p) = outputFlagsPlane;
+			break;
+		}
+		case MSTransformations::weightSpectrum:
+		{
+			weightSpectrum_p->xyPlane(relativeRow_p) = outputDataPlane;
+			break;
+		}
+		default:
+		{
+			visCubeFloat_p->xyPlane(relativeRow_p) = outputDataPlane;
+			break;
+		}
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformManager::bufferOutputPlanesInSlices(	uInt row,
+														Matrix<Complex> &outputDataPlane,
+														Matrix<Bool> &outputFlagsPlane,
+														ArrayColumn<Complex> &outputDataCol,
+														ArrayColumn<Bool> &outputFlagCol)
+{
+	switch (dataBuffer_p)
+	{
+		case MSTransformations::visCube:
+		{
+
+			break;
+		}
+		case MSTransformations::visCubeCorrected:
+		{
+
+			break;
+		}
+		case MSTransformations::visCubeModel:
+		{
+
+			break;
+		}
+		default:
+		{
+
+			break;
+		}
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformManager::bufferOutputPlanesInSlices(	uInt row,
+														Matrix<Float> &outputDataPlane,
+														Matrix<Bool> &outputFlagsPlane,
+														ArrayColumn<Float> &outputDataCol,
+														ArrayColumn<Bool> &outputFlagCol)
+{
+	switch (dataBuffer_p)
+	{
+		case MSTransformations::visCubeFloat:
+		{
+
+			break;
+		}
+		case MSTransformations::weightSpectrum:
+		{
+
+			break;
+		}
+		default:
+		{
+
+			break;
+		}
+	}
 	return;
 }
 
@@ -4453,6 +4732,7 @@ template <class T> void MSTransformManager::writeOutputPlanesInBlock(	uInt row,
 
 	return;
 }
+
 
 // -----------------------------------------------------------------------
 //
@@ -4718,7 +4998,7 @@ template <class T> void MSTransformManager::simpleAverageKernel(Vector<T> &input
 	uInt pos = startInputPos + 1;
 	uInt counts = 1;
 	T avg = inputData(startInputPos);
-	while (pos < width)
+	while (counts < width)
 	{
 		avg += inputData(pos);
 		counts += 1;
@@ -4804,6 +5084,33 @@ template <class T> void MSTransformManager::weightAverageKernel(	Vector<T> &inpu
 	else
 	{
 		outputFlags(outputPos) = True;
+	}
+
+	outputData(outputPos) = avg;
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformManager::cumSumKernel(	Vector<T> &inputData,
+															Vector<Bool> &inputFlags,
+															Vector<Float> &inputWeights,
+															Vector<T> &outputData,
+															Vector<Bool> &outputFlags,
+															uInt startInputPos,
+															uInt outputPos,
+															uInt width)
+{
+	uInt pos = startInputPos + 1;
+	uInt counts = 1;
+	T avg = inputData(startInputPos);
+	while (counts < width)
+	{
+		avg += inputData(pos);
+		counts += 1;
+		pos += 1;
 	}
 
 	outputData(outputPos) = avg;
@@ -5069,7 +5376,5 @@ template <class T> void MSTransformManager::averageSmoothRegrid(Int inputSpw,
 
 	return;
 }
-template Bool MSTransformManager::transformNotReindexableVector(	const Vector<double> &inputVector, Vector<double> &outputVector, Bool constant);
-template Bool MSTransformManager::transformNotReindexableVector(	const Vector<int> &inputVector, Vector<int> &outputVector, Bool constant);
 
 } //# NAMESPACE CASA - END
