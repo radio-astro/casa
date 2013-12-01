@@ -47,12 +47,12 @@ done
 
 version=`cut -d '$' -f 1 Contents/Resources/VERSION | awk -F '.' '{printf "%2.1f.%d\n", $1/10, $2}'`
 echo version=`cut -d '$' -f 1 Contents/Resources/VERSION | awk -F '.' '{printf "%2.1f.%d", $1/10, $2}'`
+echo $version
 
 # copy all CASA dynamic libs
 cd ${workdir}/CASA.app/Contents/Frameworks
-echo $version
 
-for i in ${prefix}/${SVNVERSION}/darwin/lib/*.${version}.dylib ${prefix}/${SVNVERSION}/darwin/lib/lib{air_casawvr,atnf,asap,pyrap,mir,wcs}.dylib ${prefix}/${SVNVERSION}/darwin/lib/*_f.dylib ${prefix}/${SVNVERSION}/darwin/lib/libaatm.0.dylib ${prefix}/lib/libqwt.5.dylib  ${prefix}/${SVNVERSION}/darwin/lib/libcasa_*.dylib /usr/lib/libxslt.1.dylib
+for i in ${prefix}/${SVNVERSION}/darwin/lib/*.*.dylib ${prefix}/${SVNVERSION}/darwin/lib/lib{air_casawvr,atnf,asap,pyrap,mir,wcs}.dylib ${prefix}/${SVNVERSION}/darwin/lib/*_f.dylib ${prefix}/${SVNVERSION}/darwin/lib/libaatm.0.dylib ${prefix}/lib/libqwt.5.dylib  ${prefix}/${SVNVERSION}/darwin/lib/libcasa_*.dylib /usr/lib/libxslt.1.dylib
 do
 	dylib=$(basename $i)
 	echo $dylib >> /tmp/${tmpname}-casalibs
