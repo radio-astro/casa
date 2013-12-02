@@ -87,7 +87,8 @@ default(sdcal)
 infile = 'IRC+10216_rawACSmod'
 fluxunit = 'K'
 calmode = 'nod'
-scanlist = [229,230]
+#scanlist = [229,230]
+scanlist = [230,231]
 iflist = [3]
 scanaverage = False
 timeaverage = True # average in time
