@@ -860,7 +860,8 @@ clean(vis='ngc4826.tutorial.16apr98.src.split.ms',
 ### As we moved to clean by default in flat sigma rather than
 ### flat snr it converges less well
  ###     cyclefactor=1.5,niter=10000,threshold='45mJy',
-      cyclefactor=4,niter=10000,threshold='45mJy',
+      multiscale=[],
+      cyclefactor=2, niter=10000, threshold='140mJy',
       minpb=0.3,pbcor=False, usescratch=False)
 
 ### NOTE: mosaic data ...Sault weighting implies a noise unform image
