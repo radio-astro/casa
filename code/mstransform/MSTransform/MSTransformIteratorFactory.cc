@@ -67,7 +67,7 @@ MSTransformIteratorFactory::~MSTransformIteratorFactory()
 // -----------------------------------------------------------------------
 // InpVi is the VisibilityIterator in which the implementation provided is to be plugged
 // -----------------------------------------------------------------------
-vi::ViImplementation2 * MSTransformIteratorFactory::createVi(vi::VisibilityIterator2 * inpVi) const
+vi::ViImplementation2 * MSTransformIteratorFactory::createVi(vi::VisibilityIterator2 *) const
 {
 	// Create MSTransformManager
 	MSTransformManager *manager =  new MSTransformManager(configuration_p);

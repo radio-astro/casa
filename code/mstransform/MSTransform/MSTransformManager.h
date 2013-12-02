@@ -108,10 +108,10 @@ struct channelContribution;
 
 // Map definition
 typedef map<MS::PredefinedColumns,MS::PredefinedColumns> dataColMap;
-typedef map< pair< pair<Int,Int> , Int >,vector<uInt> > baselineMap;
-typedef map<Int,map<uInt, uInt > > inputSpwChanMap;
-typedef map<Int,vector < channelContribution > >  inputOutputChanFactorMap;
-typedef map<Int,pair < spwInfo, spwInfo > > inputOutputSpwMap;
+typedef map< pair< pair<uInt,uInt> , uInt >,vector<uInt> > baselineMap;
+typedef map<uInt,map<uInt, uInt > > inputSpwChanMap;
+typedef map<uInt,vector < channelContribution > >  inputOutputChanFactorMap;
+typedef map<uInt,pair < spwInfo, spwInfo > > inputOutputSpwMap;
 
 // Struct definition
 struct channelInfo {
@@ -405,7 +405,7 @@ protected:
 	template <class T> void transformAndWriteReindexableVector(	const Vector<T> &inputVector,
 																Vector<T> &outputVector,
 																Bool constant,
-																map<Int,Int> &inputOutputIndexMap,
+																map<uInt,uInt> &inputOutputIndexMap,
 																ScalarColumn<T> &outputCol,
 																RefRows &rowReference);
 
@@ -447,7 +447,7 @@ protected:
 	template <class T> Bool transformReindexableVector(	const Vector<T> &inputVector,
 														Vector<T> &outputVector,
 														Bool constant,
-														map<Int,Int> &inputOutputIndexMap)
+														map<uInt,uInt> &inputOutputIndexMap)
 	{
 		Bool transformed = True;
 
@@ -476,7 +476,7 @@ protected:
 
 	template <class T> void mapAndReindexVector(	const Vector<T> &inputVector,
 													Vector<T> &outputVector,
-													map<Int,Int> &inputOutputIndexMap)
+													map<uInt,uInt> &inputOutputIndexMap)
 	{
 		if (nspws_p <2)
 		{
@@ -504,7 +504,7 @@ protected:
 
 	template <class T> void reindexVector(	const Vector<T> &inputVector,
 											Vector<T> &outputVector,
-											map<Int,Int> &inputOutputIndexMap)
+											map<uInt,uInt> &inputOutputIndexMap)
 	{
 		if (nspws_p <2)
 		{
@@ -566,7 +566,7 @@ protected:
 													vi::VisBuffer2 *vb=NULL);
 	template <class T> void mapScaleAndAverageMatrix(	const Matrix<T> &inputMatrix,
 														Matrix<T> &outputMatrix,
-														map<Int,T> scaleMap,
+														map<uInt,T> scaleMap,
 														Vector<Int> spws);
 	template <class T> void writeMatrix(	const Matrix<T> &inputMatrix,
 											ArrayColumn<T> &outputCol,
@@ -638,13 +638,13 @@ protected:
 							const Cube<Float> &inputWeightsCube,
 							Matrix<Float> &inputWeightsPlane,
 							Double weight);
-	void dontfillWeightsPlane(	uInt pol,
-								uInt inputChannel,
-								uInt outputChannel,
-								uInt inputRow,
-								const Cube<Float> &inputWeightsCube,
-								Matrix<Float> &inputWeightsPlane,
-								Double weight) {return;}
+	void dontfillWeightsPlane(	uInt ,
+								uInt ,
+								uInt ,
+								uInt ,
+								const Cube<Float> &,
+								Matrix<Float> &,
+								Double ) {return;}
 	void (casa::MSTransformManager::*fillWeightsPlane_p)(	uInt pol,
 																uInt inputChannel,
 																uInt outputChannel,
@@ -657,10 +657,10 @@ protected:
 								uInt outputChannel,
 								Matrix<Float> &inputPlaneWeights,
 								Matrix<Double> &normalizingFactorPlane);
-	void dontNormalizeWeightsPlane(	uInt pol,
-									uInt outputChannel,
-									Matrix<Float> &inputPlaneWeights,
-									Matrix<Double> &normalizingFactorPlane) {return;}
+	void dontNormalizeWeightsPlane(	uInt ,
+									uInt ,
+									Matrix<Float> &,
+									Matrix<Double> &) {return;}
 	void (casa::MSTransformManager::*normalizeWeightsPlane_p)(	uInt pol,
 																	uInt outputChannel,
 																	Matrix<Float> &inputPlaneWeights,
@@ -700,9 +700,9 @@ protected:
 	void setWeightsPlaneByReference(	uInt inputRow,
 										const Cube<Float> &inputWeightsCube,
 										Matrix<Float> &inputWeightsPlane);
-	void dontsetWeightsPlaneByReference(	uInt inputRow,
-											const Cube<Float> &inputWeightsCube,
-											Matrix<Float> &inputWeightsPlane) {return;}
+	void dontsetWeightsPlaneByReference(	uInt ,
+											const Cube<Float> &,
+											Matrix<Float> &) {return;}
 	void (casa::MSTransformManager::*setWeightsPlaneByReference_p)(	uInt inputRow,
 																		const Cube<Float> &inputWeightsCube,
 																		Matrix<Float> &inputWeightsPlane);
@@ -719,9 +719,9 @@ protected:
 	void setWeightStripeByReference(	uInt corrIndex,
 										Matrix<Float> &inputWeightsPlane,
 										Vector<Float> &inputWeightsStripe);
-	void dontSetWeightStripeByReference(	uInt corrIndex,
-											Matrix<Float> &inputWeightsPlane,
-											Vector<Float> &inputWeightsStripe) {return;}
+	void dontSetWeightStripeByReference(	uInt ,
+											Matrix<Float> &,
+											Vector<Float> &) {return;}
 	void (casa::MSTransformManager::*setWeightStripeByReference_p)(	uInt corrIndex,
 																		Matrix<Float> &inputWeightsPlane,
 																		Vector<Float> &inputWeightsStripe);
@@ -782,10 +782,10 @@ protected:
 								ArrayColumn<Bool> &outputCol,
 								IPosition &outputPlaneShape,
 								uInt &outputRow);
-	void dontWriteOutputFlagsPlane(	Matrix<Bool> &outputPlane,
-									ArrayColumn<Bool> &outputCol,
-									IPosition &outputPlaneShape,
-									uInt &outputRow) {return;}
+	void dontWriteOutputFlagsPlane(	Matrix<Bool> &,
+									ArrayColumn<Bool> &,
+									IPosition &,
+									uInt &) {return;}
 
 	template <class T> void writeOutputPlanesInSlices(	uInt row,
 														Matrix<T> &outputDataPlane,
@@ -816,12 +816,12 @@ protected:
 										Slice &sliceY,
 										IPosition &outputPlaneShape,
 										uInt &outputRow);
-	void dontWriteOutputFlagsPlaneSlices(	Matrix<Bool> &outputPlane,
-											ArrayColumn<Bool> &outputDataCol,
-											Slice &sliceX,
-											Slice &sliceY,
-											IPosition &outputPlaneShape,
-											uInt &outputRow) {return;}
+	void dontWriteOutputFlagsPlaneSlices(	Matrix<Bool> &,
+											ArrayColumn<Bool> &,
+											Slice &,
+											Slice &,
+											IPosition &,
+											uInt &) {return;}
 	void (casa::MSTransformManager::*writeOutputFlagsPlaneReshapedSlices_p)(	Matrix<Bool> &outputPlane,
 																					ArrayColumn<Bool> &outputCol,
 																					Slice &sliceX,
@@ -834,12 +834,12 @@ protected:
 												Slice &sliceY,
 												IPosition &outputPlaneShape,
 												uInt &outputRow);
-	void dontWriteOutputPlaneReshapedSlices(	Matrix<Bool> &outputPlane,
-												ArrayColumn<Bool> &outputDataCol,
-												Slice &sliceX,
-												Slice &sliceY,
-												IPosition &outputPlaneShape,
-												uInt &outputRow) {return;}
+	void dontWriteOutputPlaneReshapedSlices(	Matrix<Bool> &,
+												ArrayColumn<Bool> &,
+												Slice &,
+												Slice &,
+												IPosition &,
+												uInt &) {return;}
 
 	void transformStripeOfData(	Int inputSpw,
 								Vector<Complex> &inputDataStripe,
@@ -908,23 +908,23 @@ protected:
 																	uInt outputPos,
 																	uInt width);
 	template <class T> void simpleAverageKernel(	Vector<T> &inputData,
-													Vector<Bool> &inputFlags,
-													Vector<Float> &inputWeights,
+													Vector<Bool> &,
+													Vector<Float> &,
 													Vector<T> &outputData,
-													Vector<Bool> &outputFlags,
+													Vector<Bool> &,
 													uInt startInputPos,
 													uInt outputPos,
 													uInt width);
 	template <class T> void flagAverageKernel(	Vector<T> &inputData,
 												Vector<Bool> &inputFlags,
-												Vector<Float> &inputWeights,
+												Vector<Float> &,
 												Vector<T> &outputData,
 												Vector<Bool> &outputFlags,
 												uInt startInputPos,
 												uInt outputPos,
 												uInt width);
 	template <class T> void weightAverageKernel(	Vector<T> &inputData,
-													Vector<Bool> &inputFlags,
+													Vector<Bool> &,
 													Vector<Float> &inputWeights,
 													Vector<T> &outputData,
 													Vector<Bool> &outputFlags,
@@ -932,25 +932,25 @@ protected:
 													uInt outputPos,
 													uInt width);
 	template <class T> void cumSumKernel(	Vector<T> &inputData,
-											Vector<Bool> &inputFlags,
-											Vector<Float> &inputWeights,
+											Vector<Bool> &,
+											Vector<Float> &,
 											Vector<T> &outputData,
-											Vector<Bool> &outputFlags,
+											Vector<Bool> &,
 											uInt startInputPos,
 											uInt outputPos,
 											uInt width);
 
-	template <class T> void smooth(	Int inputSpw,
+	template <class T> void smooth(	Int ,
 									Vector<T> &inputDataStripe,
 									Vector<Bool> &inputFlagsStripe,
-									Vector<Float> &inputWeightsStripe,
+									Vector<Float> &,
 									Vector<T> &outputDataStripe,
 									Vector<Bool> &outputFlagsStripe);
 
-	template <class T> void regrid(	Int inputSpw,
+	template <class T> void regrid(	Int ,
 									Vector<T> &inputDataStripe,
 									Vector<Bool> &inputFlagsStripe,
-									Vector<Float> &inputWeightsStripe,
+									Vector<Float> &,
 									Vector<T> &outputDataStripe,
 									Vector<Bool> &outputFlagsStripe);
 
@@ -996,7 +996,7 @@ protected:
 	template <class T> void interpol1D(	Int inputSpw,
 										Vector<T> &inputDataStripe,
 										Vector<Bool> &inputFlagsStripe,
-										Vector<Float> &inputWeightsStripe,
+										Vector<Float> &,
 										Vector<T> &outputDataStripe,
 										Vector<Bool> &outputFlagsStripe);
 
@@ -1053,18 +1053,18 @@ protected:
 	String observationSelection_p;
 
 	// Input-Output index maps
-	map<Int,Int> inputOutputObservationIndexMap_p;
-	map<Int,Int> inputOutputArrayIndexMap_p;
-	map<Int,Int> inputOutputScanIndexMap_p;
-	map<Int,Int> inputOutputScanIntentIndexMap_p;
-	map<Int,Int> inputOutputFieldIndexMap_p;
-	map<Int,Int> inputOutputSPWIndexMap_p;
-	map<Int,Int> inputOutputDDIndexMap_p;
-	map<Int,Int> inputOutputAntennaIndexMap_p;
-	map<Int,Int> outputInputSPWIndexMap_p;
+	map<uInt,uInt> inputOutputObservationIndexMap_p;
+	map<uInt,uInt> inputOutputArrayIndexMap_p;
+	map<uInt,uInt> inputOutputScanIndexMap_p;
+	map<uInt,uInt> inputOutputScanIntentIndexMap_p;
+	map<uInt,uInt> inputOutputFieldIndexMap_p;
+	map<uInt,uInt> inputOutputSPWIndexMap_p;
+	map<uInt,uInt> inputOutputDDIndexMap_p;
+	map<uInt,uInt> inputOutputAntennaIndexMap_p;
+	map<uInt,uInt> outputInputSPWIndexMap_p;
 
 	// Frequency transformation parameters
-	Int nspws_p;
+	uInt nspws_p;
 	Int ddiStart_p;
 	Bool combinespws_p;
 	Bool channelAverage_p;
@@ -1127,14 +1127,14 @@ protected:
 	inputSpwChanMap spwChannelMap_p;
 	inputOutputSpwMap inputOutputSpwMap_p;
 	inputOutputChanFactorMap inputOutputChanFactorMap_p;
-	map<Int,Int> freqbinMap_p;
-	map<Int,Int> numOfInpChanMap_p;
-	map<Int,Int> numOfSelChanMap_p;
-	map<Int,Int> numOfOutChanMap_p;
-	map<Int,Int> numOfCombInputChanMap_p;
-	map<Int,Int> numOfCombInterChanMap_p;
-	map<Int,Float> weightFactorMap_p;
-	map<Int,Float> sigmaFactorMap_p;
+	map<uInt,uInt> freqbinMap_p;
+	map<uInt,uInt> numOfInpChanMap_p;
+	map<uInt,uInt> numOfSelChanMap_p;
+	map<uInt,uInt> numOfOutChanMap_p;
+	map<uInt,uInt> numOfCombInputChanMap_p;
+	map<uInt,uInt> numOfCombInterChanMap_p;
+	map<uInt,Float> weightFactorMap_p;
+	map<uInt,Float> sigmaFactorMap_p;
 
 	// Reference Frame Transformation members
 	MFrequency::Types inputReferenceFrame_p;

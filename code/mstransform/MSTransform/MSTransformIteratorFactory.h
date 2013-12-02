@@ -148,7 +148,7 @@ public:
 protected:
 
 	void setConfiguration(Record &configuration);
-	vi::ViImplementation2 * createVi (vi::VisibilityIterator2 * inpVi) const;
+	vi::ViImplementation2 * createVi (vi::VisibilityIterator2 *) const;
 
 private:
 
