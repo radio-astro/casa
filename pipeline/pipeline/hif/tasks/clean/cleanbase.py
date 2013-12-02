@@ -430,7 +430,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             weighting=inputs.weighting, robust=inputs.robust,
             noise=inputs.noise, npixels=inputs.npixels,
             restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
-            mask=inputs.mask)
+            mask=inputs.mask, usescratch=True)
         self._executor.execute(job)
 
         # Store the  model image.
@@ -497,7 +497,7 @@ class CleanBase(basetask.StandardTaskTemplate):
 	    stokes=inputs.stokes,
             robust=inputs.robust, noise=inputs.noise,
             npixels=inputs.npixels, restoringbeam=inputs.restoringbeam,
-            uvrange=inputs.uvrange, mask=None)
+            uvrange=inputs.uvrange, mask=None, usescratch=True)
 
 	# Execute
         self._executor.execute(job)
