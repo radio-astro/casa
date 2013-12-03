@@ -2460,7 +2460,8 @@ Bool Imager::createFTMachine()
   LogIO os(LogOrigin("imager", "createFTMachine()", WHERE));
 
   // This next line is only a guess
-  Int numberAnt=((MeasurementSet&)*ms_p).antenna().nrow();
+  // Commented out as numberAnt is not actually used anywehere.
+  //Int numberAnt=((MeasurementSet&)*ms_p).antenna().nrow();
   
   
   

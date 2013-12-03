@@ -209,6 +209,7 @@ SDDataSampling& SDDataSampling::operator=(const SDDataSampling& other)
 
 //----------------------------------------------------------------------
 SDDataSampling::SDDataSampling(const SDDataSampling& other)
+  :DataSampling(other)
 {
   operator=(other);
 }
