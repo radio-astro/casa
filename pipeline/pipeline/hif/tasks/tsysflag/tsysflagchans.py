@@ -14,6 +14,7 @@ from pipeline.hif.tasks.flagging.flagdatasetter import FlagdataSetter
 from .resultobjects import TsysflagResults
 from ..common import commonresultobjects
 from ..common import calibrationtableaccess as caltableaccess
+from ..common import commonhelpermethods
 from ..common import viewflaggers
 
 LOG = infrastructure.get_logger(__name__)
@@ -349,12 +350,12 @@ class TsysflagchansWorker(basetask.StandardTaskTemplate):
         """
 
         ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
-        antenna_ids = [antenna.id for antenna in ms.antennas]
-        antenna_ids.sort()
-        antenna_name = {}
-        for antenna_id in antenna_ids:
-            antenna_name[antenna_id] = [antenna.name for antenna in ms.antennas
-              if antenna.id==antenna_id][0]
+
+        # Get antenna names, ids
+        antenna_name, antenna_ids = commonhelpermethods.get_antenna_names(ms)
+
+        # get names of correlation products
+        corr_type = commonhelpermethods.get_corr_products(ms, spwid)
 
         times = set()
 
@@ -363,16 +364,12 @@ class TsysflagchansWorker(basetask.StandardTaskTemplate):
         # already present when demanded.
         tsysspectra = TsysflagResults()
 
-        pols = []
+        pols = range(len(corr_type))
+
         for row in tsystable.rows:
             if row.get('SPECTRAL_WINDOW_ID') == spwid and \
               row.get('FIELD_ID') in fieldids:
 
-                # The Tsys array has 2 values for each result,
-                # presumably 1 number for each polarization.
-                # Assume this for now and check later. Pol IDs are
-                # unknown so store as '0' and '1'.
-                pols = range(np.shape(row.get('FPARAM'))[0])
                 for pol in pols:
                     tsysspectrum = commonresultobjects.SpectrumResult(
                       data=row.get('FPARAM')[pol,:,0],
@@ -436,12 +433,12 @@ class TsysflagchansWorker(basetask.StandardTaskTemplate):
         """
 
         ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
-        antenna_ids = [antenna.id for antenna in ms.antennas]
-        antenna_ids.sort()
-        antenna_name = {}
-        for antenna_id in antenna_ids:
-            antenna_name[antenna_id] = [antenna.name for antenna in ms.antennas
-              if antenna.id==antenna_id][0]
+
+        # Get antenna names, ids
+        antenna_name, antenna_ids = commonhelpermethods.get_antenna_names(ms)
+
+        # get names of correlation products
+        corr_type = commonhelpermethods.get_corr_products(ms, spwid)
 
         times = set()
 
@@ -450,16 +447,12 @@ class TsysflagchansWorker(basetask.StandardTaskTemplate):
         # already present when demanded.
         tsysspectra = TsysflagResults()
 
-        pols = []
+        pols = range(len(corr_type))
+
         for row in tsystable.rows:
             if row.get('SPECTRAL_WINDOW_ID') == spwid and \
               row.get('FIELD_ID') in fieldids:
 
-                # The Tsys array has 2 values for each result,
-                # presumably 1 number for each polarization.
-                # Assume this for now and check later. Pol IDs are
-                # unknown so store as '0' and '1'.
-                pols = range(np.shape(row.get('FPARAM'))[0])
                 for pol in pols:
                     tsysspectrum = commonresultobjects.SpectrumResult(
                       data=row.get('FPARAM')[pol,:,0],
@@ -534,12 +527,12 @@ class TsysflagchansWorker(basetask.StandardTaskTemplate):
         """
 
         ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
-        antenna_ids = [antenna.id for antenna in ms.antennas]
-        antenna_ids.sort()
-        antenna_name = {}
-        for antenna_id in antenna_ids:
-            antenna_name[antenna_id] = [antenna.name for antenna in ms.antennas
-              if antenna.id==antenna_id][0]
+
+        # Get antenna names, ids
+        antenna_name, antenna_ids = commonhelpermethods.get_antenna_names(ms)
+
+        # get names of correlation products
+        corr_type = commonhelpermethods.get_corr_products(ms, spwid)
 
         times = set()
 
@@ -548,16 +541,12 @@ class TsysflagchansWorker(basetask.StandardTaskTemplate):
         # already present when demanded.
         tsysspectra = TsysflagResults()
 
-        pols = []
+        pols = range(len(corr_type))
+
         for row in tsystable.rows:
             if row.get('SPECTRAL_WINDOW_ID') == spwid and \
               row.get('FIELD_ID') in fieldids:
 
-                # The Tsys array has 2 values for each result,
-                # presumably 1 number for each polarization.
-                # Assume this for now and check later. Pol IDs are
-                # unknown so store as '0' and '1'.
-                pols = range(np.shape(row.get('FPARAM'))[0])
                 for pol in pols:
                     tsysspectrum = commonresultobjects.SpectrumResult(
                       data=row.get('FPARAM')[pol,:,0],
@@ -653,12 +642,12 @@ class TsysflagchansWorker(basetask.StandardTaskTemplate):
         """
 
         ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
-        antenna_ids = [antenna.id for antenna in ms.antennas]
-        antenna_ids.sort()
-        antenna_name = {}
-        for antenna_id in antenna_ids:
-            antenna_name[antenna_id] = [antenna.name for antenna in ms.antennas
-              if antenna.id==antenna_id][0]
+
+        # Get antenna names, ids
+        antenna_name, antenna_ids = commonhelpermethods.get_antenna_names(ms)
+
+        # get names of correlation products
+        corr_type = commonhelpermethods.get_corr_products(ms, spwid)
 
         times = set()
 
@@ -667,16 +656,12 @@ class TsysflagchansWorker(basetask.StandardTaskTemplate):
         # already present when demanded.
         tsysspectra = collections.defaultdict(TsysflagResults)
 
-        pols = []
+        pols = range(len(corr_type))
+
         for row in tsystable.rows:
             if row.get('SPECTRAL_WINDOW_ID') == spwid and \
               row.get('FIELD_ID') in fieldids:
 
-                # The Tsys array has 2 values for each result,
-                # presumably 1 number for each polarization.
-                # Assume this for now and check later. Pol IDs are
-                # unknown so store as '0' and '1'.
-                pols = range(np.shape(row.get('FPARAM'))[0])
                 nchannels = np.shape(row.get('FPARAM'))[1]
                 for pol in pols:
                     tsysspectrum = commonresultobjects.SpectrumResult(
