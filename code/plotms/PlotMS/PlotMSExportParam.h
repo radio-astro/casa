@@ -1,4 +1,4 @@
-//# PlotMSIterateParam.h: Iteration parameters container
+//# PlotMSExportParam.h: Export parameters container
 //# Copyright (C) 2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,8 +24,8 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#ifndef PLOTMSITERPARAM_H_
-#define PLOTMSITERPARAM_H_
+#ifndef PLOTMSEXPORTPARAM_H_
+#define PLOTMSEXPORTPARAM_H_
 
 #include <plotms/PlotMS/PlotMSConstants.h>
 
@@ -33,20 +33,15 @@
 
 namespace casa {
 
-// Specifies iteration parameters for plotms
-class PlotMSIterParam {
+// Specifies export parameters for plotms
+class PlotMSExportParam {
 public:
-  // Static //
-
-  // None
-  
-  // Non-Static //
     
   // Constructor, which uses default values.
-  PlotMSIterParam();
+  PlotMSExportParam();
     
   // Destructor.
-  ~PlotMSIterParam();
+  ~PlotMSExportParam();
     
     
   // Converts this object to/from a record.  Each field will have a key that
@@ -59,35 +54,23 @@ public:
 
   // Convenience methods for returning the standard field values.
   // <group>
-  PMS::Axis iterAxis() const { return iterAxis_; };
-  String iterAxisStr() const { return PMS::axis(iterAxis_); };
-  Bool isCommonAxisX() const { return commonAxisX_; };
-  Bool isCommonAxisY() const {return commonAxisY_; };
-  Bool isGlobalAxisX() const { return globalScaleX_; };
-  Bool isGlobalAxisY() const { return globalScaleY_; };
-  Int Nx() const { return Nx_;};
-  Int Ny() const { return Ny_;};
-
+  PMS::ExportRange getExportRange() const { return exportRange_; };
   // </group>
   
   
   // Convenience methods for setting the standard field values.
   // <group>
-  void setIterAxis(PMS::Axis iterAxis) { iterAxis_ = iterAxis; };
-  void setIterAxis(String iterAxisStr) { iterAxis_ = PMS::axis(iterAxisStr=="" ? "None" : iterAxisStr); };
-  void setCommonAxisX(Bool commonAxisX ){commonAxisX_ = commonAxisX; };
-  void setCommonAxisY(Bool commonAxisY ){commonAxisY_ = commonAxisY; };
-  void setGlobalScaleX(Bool globalAxisX ){globalScaleX_ = globalAxisX; };
-  void setGlobalScaleY(Bool globalAxisY ){globalScaleY_ = globalAxisY; };
-  void setNx(Int nx) { Nx_ = max(nx,1); };
-  void setNy(Int ny) { Ny_ = max(ny,1); };
+  void setExportRange(PMS::ExportRange exportRange) {
+	  exportRange_ = exportRange;
+  };
+  void setExportRange(String exportRangeStr);
   // </group>
   
   
   // Equality operators.
   // <group>
-  bool operator==(const PlotMSIterParam& other) const;
-  bool operator!=(const PlotMSIterParam& other) const {
+  bool operator==(const PlotMSExportParam& other) const;
+  bool operator!=(const PlotMSExportParam& other) const {
     return !(operator==(other)); }
   // </group>
 
@@ -99,31 +82,11 @@ public:
   
 private:
 
-  // The Iteration axis
-  PMS::Axis iterAxis_;
-  static const String ITER_AXIS;
-
-  // global scale X and Y axes
-  Bool globalScaleX_, globalScaleY_;
-  static const String GLOBAL_SCALE_X;
-  static const String GLOBAL_SCALE_Y;
-
-  //Whether to use a common axis when the grid consists of
-  //multiple plots and the axis has a global scale.
-  Bool commonAxisX_, commonAxisY_;
-  static const String COMMON_AXIS_X;
-  static const String COMMON_AXIS_Y;
-
-
-  // The number of plots in X and Y
-  Int Nx_,Ny_;
-  static const String ROW_COUNT;
-  static const String COL_COUNT;
-
-
-    
+  // The export range
+  PMS::ExportRange exportRange_;
+  static const String EXPORT_RANGE;
 };
 
 }
 
-#endif /* PLOTMSITERPARAM_H_ */
+#endif /* PLOTMSEXPORTPARAM_H_ */

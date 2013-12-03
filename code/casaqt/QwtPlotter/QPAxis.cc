@@ -56,364 +56,104 @@ double QPAxis::zOrder = 1;
 
 const String QPAxis::CLASS_NAME = "QPAxis";
 const String QPAxis::DRAW_NAME = "drawItems";
-const String QPAxis::EXPORT_NAME = "export";
 
 
-/* static (for now. someday maybe make method of QPAxis, repl grabCanvas with self - dsw) */
+
+
+
+bool QPAxis::print( QPrinter& printer ){
+	 // Set orientation.
+	 bool continuePrinting = true;
+	 //printer.setOrientation(width() >= height() ?
+	  //                    QPrinter::Landscape : QPrinter::Portrait);
+
+	 PlotOperationPtr op = operationExport();
+	 bool wasCanceled = false;
+	 if(!op.null()){
+		 wasCanceled |= op->cancelRequested();
+	 }
+	 if(wasCanceled){
+		 continuePrinting = false;
+	 }
+	 else {
+		 print(printer);
+
+		 if(!op.null()){
+			 wasCanceled |= op->cancelRequested();
+		 }
+		 if(wasCanceled){
+			 continuePrinting = false;
+		 }
+	 }
+	 return continuePrinting;
+}
+
+const QPalette& QPAxis::palette() const {
+	return axisWidget->palette();
+}
+
+QPalette::ColorRole QPAxis::backgroundRole() const {
+	return axisWidget->backgroundRole();
+}
+
+bool QPAxis::print(  QPainter* painter, PlotAreaFillPtr paf, double widthRatio,
+		double heightRatio, QRect imageRect ){
+	PlotAreaFillPtr originalBackground = background();
+	setBackground(*paf);
+
+	QRect geom = geometry();
+	QRect printGeom = QRect((int)((geom.x() * widthRatio) + 0.5),
+	                          (int)((geom.y() * heightRatio) + 0.5),
+	                          (int)((geom.width() * widthRatio) + 0.5),
+	                          (int)((geom.height() * heightRatio) + 0.5));
+	printGeom &= imageRect;
+
+	PlotOperationPtr op = operationExport();
+	bool wasCanceled = false;
+	if (!op.null()){
+		wasCanceled |= op->cancelRequested();
+	}
+
+	if (!wasCanceled && axisWidget != NULL ){
+	    axisWidget->print(painter, printGeom);
+	    painter->drawRect( printGeom );
+
+	    setBackground(*originalBackground);
+
+	    if (!op.null()) wasCanceled |= op->cancelRequested();
+	}
+	return wasCanceled;
+}
+
+
 QImage QPAxis::grabImageFromCanvas(
-        const PlotExportFormat& format, 
-        QPCanvas* grabCanvas,
-        QPPlotter* grabPlotter
-        )   
-{
+        const PlotExportFormat& format )   {
 	QImage image;
-    
-    //image = QImage(width, height, QImage::Format_ARGB32);
-	
-    image = QPixmap::grabWidget(grabCanvas != NULL ?
+    /*image = QPixmap::grabWidget(grabCanvas != NULL ?
             &grabCanvas->asQwtPlot() :
-            grabPlotter->canvasWidget()).toImage();
+            grabPlotter->canvasWidget()).toImage();*/
+	image = QPixmap::grabWidget( axisWidget ).toImage();
 
-    /* (DSW) this commented-out code appears to have been for
-     *  producing screen capture images, but was buggy due to thread trouble,
-     * so was commented out svn rev 7788 by LG
-     */
-    //if(grabCanvas != NULL) grabCanvas->asQwtPlot().render(&image);
-    //else                   grabPlotter->render(&image);
-    
-    //QPainter::setRedirected(grabCanvas != NULL ?
-    //        (QWidget*)&grabCanvas->asQwtPlot() :
-    //        (QWidget*)grabPlotter->canvasWidget(), &image);
-    //if(grabCanvas != NULL) grabCanvas->asQwtPlot().repaint();
-    //else grabPlotter->canvasWidget()->repaint();
-    //QPainter::restoreRedirected(grabCanvas != NULL ?
-    //        (QWidget*)&grabCanvas->asQwtPlot() :
-    //        (QWidget*)grabPlotter->canvasWidget());
-    
-    
+
+
     // Scale to set width and height, if applicable.
     if (format.width > 0 && format.height > 0) {
         // size is specified
         image = image.scaled(format.width, format.height,
                 Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-    
+
     } else if (format.width > 0) {
-        // width is specified            
+        // width is specified
         image = image.scaledToWidth(format.width,
                 Qt::SmoothTransformation);
-    
+
     } else if (format.height > 0) {
-        //  height is specified            
+        //  height is specified
         image = image.scaledToHeight(format.height,
                 Qt::SmoothTransformation);
 	}
-    
     return image;
 }
-
-
-
-/* static */
-QImage QPAxis::produceHighResImage(
-        const PlotExportFormat& format,
-        vector<QPCanvas*> &qcanvases,
-        int width, 
-        int height,
-        bool &wasCanceled
-        )   
-{
-
-    // make sure both width and height are set
-    int widgetWidth  = width, 
-        widgetHeight = height;
-    if (format.width > 0)  width  = format.width;
-    if (format.height > 0) height = format.height;
-    QImage image = QImage(width, height, QImage::Format_ARGB32);
-    
-    // Fill with background color.
-    QPCanvas* canv = qcanvases[0];
-    image.fill(canv->palette().color(canv->backgroundRole()).rgba());
-    image.fill((uint)(-1));
-
-    // Change canvas' background color to white for a nice bright clean image file
-    //PlotAreaFillPtr  pAllWhite = QPFactory::areaFill("#f0822F");
-    //PlotFactory* f = implementationFactory();
-    PlotFactory* f = canv->implementationFactory();
-    PlotAreaFillPtr paf = f->areaFill(String("#ff77ff"));
-    delete f;
-    paf->setColor("#FFFFFF");
-
-    // Print each canvas.
-    QPainter painter(&image);
-    double widthRatio  = ((double)width)  / widgetWidth,
-           heightRatio = ((double)height) / widgetHeight;
-    QRect geom, printGeom, imageRect(0, 0, width, height);
-    QwtText title; 
-    QColor titleColor;
-    PlotOperationPtr op;
-
-    for (unsigned int i = 0; i < qcanvases.size(); i++) {
-        canv = qcanvases[i];
-        PlotAreaFillPtr originalBackground = canv->background();
-        canv->setBackground(*paf);
-
-        geom = canv->geometry();
-        printGeom = QRect((int)((geom.x() * widthRatio) + 0.5),
-                          (int)((geom.y() * heightRatio) + 0.5),
-                          (int)((geom.width() * widthRatio) + 0.5),
-                          (int)((geom.height() * heightRatio) + 0.5));
-        printGeom &= imageRect;
-        titleColor = canv->asQwtPlot().title().color();
-        
-        op = canv->operationExport();
-        if (!op.null()) wasCanceled |= op->cancelRequested();
-        if (wasCanceled) break;
-        canv->asQwtPlot().print(&painter, printGeom);
-        
-        // For bug where title color changes after a print.
-        title = canv->asQwtPlot().title();
-        if (title.color() != titleColor) {
-            title.setColor(titleColor);
-            canv->asQwtPlot().setTitle(title);
-        }
-
-        canv->setBackground(originalBackground);
-
-        if (!op.null()) wasCanceled |= op->cancelRequested();
-        if (wasCanceled) break;
-    }
-    
-    return image;
-}
-
-
-
-
-bool QPAxis::exportToImageFile(
-        const PlotExportFormat& format, 
-        vector<QPCanvas*> &qcanvases,
-        QPCanvas* grabCanvas,
-        QPPlotter* grabPlotter
-        )   
-{
-    
-    QImage image;
-    
-    int width  = grabCanvas != NULL ? grabCanvas->width()  : grabPlotter->width();
-    int height = grabCanvas != NULL ? grabCanvas->height() : grabPlotter->height();    
-    
-    // Remember the current background color, used for on-screen GUI
-    // We want to temporarily change this to white for making the image file.
-    // Later we will restore this color.
-    PlotAreaFillPtr normal_background;
-    if(grabCanvas != NULL)
-        normal_background = grabCanvas->background();
-    
-    
-    // Just grab the widget if: 1) screen resolution, or 2) high resolution
-    // but size is <= widget size or not set.
-    bool wasCanceled = false;
-    if(format.resolution == PlotExportFormat::SCREEN)    {
-        image=grabImageFromCanvas(format, grabCanvas, grabPlotter);
-    } 
-    else {
-        // High resolution, or format size larger than widget.
-        image=produceHighResImage(format, qcanvases, width, height,  wasCanceled);
-    }
-
-    // Set DPI.
-    if(!wasCanceled && format.dpi > 0) {
-        // convert dpi to dpm
-        int dpm = QPOptions::round((format.dpi / 2.54) * 100);
-        image.setDotsPerMeterX(dpm);
-        image.setDotsPerMeterY(dpm);
-    }
-    
-    
-    // Set output quality.
-    bool hires = (format.resolution == PlotExportFormat::HIGH);
-    int quality;    // see QImage.save official documentation for its meaning
-    switch (format.type)
-    {
-        case PlotExportFormat::JPG:
-                // JPEG quality ranges from 0 (crude 8x8 blocks) to 100 (best)
-                quality= (hires)? 99: 95;   // experimental; need user feedback 
-                break; 
-        
-        case PlotExportFormat::PNG:
-                // Compression is lossless.  "quality" is number of deflations.
-                // First one does great compression.  More buy only a small %.      
-                // Set to -1 for no compression.
-                quality=1; 
-                break; 
-        
-        default: 
-                quality=-1;  // no compression of undefined/unknown formats
-    }
-    
-    // Save to file.
-    bool save_ok;
-    save_ok= image.save(format.location.c_str(),
-          PlotExportFormat::exportFormat(format.type).c_str(), 
-          quality);
-    
-    // Restore background color
-    if(grabCanvas != NULL)
-        grabCanvas->setBackground(normal_background);
-    
-    return !wasCanceled && !image.isNull() && save_ok;
-}
-
-
-
-
-bool QPAxis::exportPostscript(
-        const PlotExportFormat& format, 
-        vector<QPCanvas*> &qcanvases
-        )
-{
-    // Set resolution.
-    QPrinter::PrinterMode mode = QPrinter::ScreenResolution;
-    if(format.resolution == PlotExportFormat::HIGH)
-        mode = QPrinter::HighResolution;
-    
-    // Set file.
-    QPrinter printer(mode);
-    switch (format.type)   {
-        case PlotExportFormat::PDF:
-                printer.setOutputFormat(QPrinter::PdfFormat);
-                break;
-        case PlotExportFormat::PS:
-                printer.setOutputFormat(QPrinter::PostScriptFormat);
-                break;
-        default: {}
-    }
-
-    printer.setOutputFileName(format.location.c_str());
-
-    
-    // Set output settings.
-    if(format.dpi > 0) printer.setResolution(format.dpi);
-        printer.setColorMode(QPrinter::Color);
-    
-    // Print each canvas.
-    bool flag = false;
-    QwtText title; QColor titleColor;
-    PlotOperationPtr op;
-    bool wasCanceled = false;
-    for(unsigned int i = 0; i < qcanvases.size(); i++) {
-        QPCanvas *canv = qcanvases[i];
-        
-        // don't do new page only for first non-null canvas
-        if(flag) printer.newPage();
-        flag = true;
-        
-        // Set orientation.
-        printer.setOrientation(canv->width() >= canv->height() ?
-                      QPrinter::Landscape : QPrinter::Portrait);
-              
-        titleColor = canv->asQwtPlot().title().color();
-
-
-        op = canv->operationExport();
-        if(!op.null()) wasCanceled |= op->cancelRequested();
-        if(wasCanceled) break;
-        canv->asQwtPlot().print(printer);
-        
-        // For bug where title color changes after a print.
-        title = canv->asQwtPlot().title();
-        if(title.color() != titleColor) {
-            title.setColor(titleColor);
-            canv->asQwtPlot().setTitle(title);
-        }
-        
-        if(!op.null()) wasCanceled |= op->cancelRequested();
-        if(wasCanceled) break;
-    }
-    
-    return !wasCanceled;
-
-}
-
-
-
-/* Formerly named exportHelper()  */
-bool QPAxis::exportCanvases  (
-		vector<PlotCanvasPtr>& /*canvases*/,
-        const PlotExportFormat& format, 
-        QPCanvas* grabCanvas,
-        QPPlotter* grabPlotter)     
-{
-    
-    if (format.location.empty() || ((format.type == PlotExportFormat::JPG ||
-       format.type == PlotExportFormat::PNG) && (grabCanvas == NULL &&
-       grabPlotter == NULL)))
-        return false;
-    
-    // Compile vector of unique, non-null QPAxises.
-    vector<QPCanvas*> qcanvases;
-    //QPCanvas* canv;
-    //bool found = false;
-    /*for(unsigned int i = 0; i < canvases.size(); i++) {
-        if(canvases[i].null()) continue;
-        canv = dynamic_cast<QPCanvas*>(&*canvases[i]);
-        if(canv == NULL) continue;
-        
-        found = false;
-        for(unsigned int j = 0; !found && j < qcanvases.size(); j++)
-            if(qcanvases[j] == canv) found = true;
-        if(!found) qcanvases.push_back(canv);
-    }
-    
-    if(qcanvases.size() == 0) return false;
-    
-    
-    // Compile vector of unique, non-null loggers for export event.
-    vector<PlotLoggerPtr> loggers;
-    PlotLoggerPtr logger;
-    for(unsigned int i = 0; i < qcanvases.size(); i++) {        
-        logger = qcanvases[i]->logger();
-        if(logger.null()) continue;
-        
-        found = false;
-        for(unsigned int j = 0; !found && j < loggers.size(); j++)
-            if(loggers[j] == logger) found = true;
-        if(!found) loggers.push_back(logger);
-    }
-    
-    
-    // Start logging.
-    for(unsigned int i = 0; i < loggers.size(); i++)
-        loggers[i]->markMeasurement(CLASS_NAME, EXPORT_NAME,
-                                    PlotLogger::EXPORT_TOTAL);
-        
-    bool ret = false;
-
-    switch (format.type)
-    {
-        case PlotExportFormat::JPG:
-        case PlotExportFormat::PNG:
-                ret=exportToImageFile(format, qcanvases, grabCanvas, grabPlotter);
-                break;
-        case PlotExportFormat::PS:
-        case PlotExportFormat::PDF:
-                ret=exportPostscript(format, qcanvases);
-                break;
-        case PlotExportFormat::TEXT:
-        case PlotExportFormat::NUM_FMTS:
-        	qDebug() << "Cannot export axis in format: "<<format.type;
-        	break;
-    }
-    
-
-    // End logging.
-    for(unsigned int i = 0; i < loggers.size(); i++)
-        loggers[i]->releaseMeasurement();
-    
-    return ret;*/
-    return false;
-}
-
 
 
 unsigned int QPAxis::axisIndex(PlotAxis a) {
@@ -441,38 +181,42 @@ PlotAxis QPAxis::axisIndex(unsigned int i) {
 
 // Constructors/Destructors //
 
-QPAxis::QPAxis(PlotAxis plotAxis, QPPlotter* parent) : m_parent(parent),// m_canvas(NULL),
-        m_axesRatioLocked(false), m_axesRatios(4, 1), //m_stackCache(m_canvas.canvas()),
-        //m_autoIncColors(false), /*m_picker(m_canvas.canvas())*/,
-        //m_mouseFilter(m_canvas.canvas()), //m_legendFontSet(false),
-        /*, m_ignoreNextRelease(false), m_timer(this),
-        m_clickEvent(NULL)*/
+QPAxis::QPAxis(PlotAxis plotAxis, QPPlotter* parent, QwtPlot* associatedPlot) : m_parent(parent),
+		// m_canvas(NULL),
+        m_axesRatioLocked(false), m_axesRatios(4, 1),
         axisWidget( NULL ){
     logObject(CLASS_NAME, this, true);
 
     axisType = QPOptions::axis(plotAxis);
-    //m_inDraggingMode = false;
     setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
-    //setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     setFocusPolicy(Qt::StrongFocus);
     
     QSizePolicy sizePolicy( QSizePolicy::Preferred, QSizePolicy::Preferred );
+    const int AXIS_SMALL_SIDE = 50;
     //Make the external axis we will be using
     if ( plotAxis  == Y_LEFT ){
-    	axisWidget = new ExternalAxisWidgetLeft( this );
+    	axisWidget = new ExternalAxisWidgetLeft( this, associatedPlot );
     	sizePolicy.setHorizontalPolicy( QSizePolicy::Fixed );
+    	setFixedWidth( AXIS_SMALL_SIDE );
+    	setMinimumWidth( AXIS_SMALL_SIDE );
     }
     else if ( plotAxis == X_BOTTOM ){
-    	axisWidget = new ExternalAxisWidgetBottom( this );
+    	axisWidget = new ExternalAxisWidgetBottom( this, associatedPlot );
     	sizePolicy.setVerticalPolicy( QSizePolicy::Fixed );
+    	setFixedHeight( AXIS_SMALL_SIDE );
+    	setMinimumHeight( AXIS_SMALL_SIDE );
     }
     else if ( plotAxis == Y_RIGHT ){
-    	axisWidget = new ExternalAxisWidgetRight( this );
+    	axisWidget = new ExternalAxisWidgetRight( this, associatedPlot );
     	sizePolicy.setHorizontalPolicy( QSizePolicy::Fixed );
+    	setFixedWidth( AXIS_SMALL_SIDE );
+    	setMinimumWidth( AXIS_SMALL_SIDE );
     }
     else if ( plotAxis == X_TOP ){
-    	axisWidget = new ExternalAxisWidgetTop( this );
+    	axisWidget = new ExternalAxisWidgetTop( this, associatedPlot );
     	sizePolicy.setVerticalPolicy( QSizePolicy::Fixed );
+    	setFixedHeight( AXIS_SMALL_SIDE );
+    	setMinimumHeight( AXIS_SMALL_SIDE );
     }
     else {
     	qDebug() << "QPAxis: unsupported axis"<< plotAxis;
@@ -492,26 +236,16 @@ QPAxis::QPAxis(PlotAxis plotAxis, QPPlotter* parent) : m_parent(parent),// m_can
 
     setCursor(NORMAL_CURSOR);
     
-
-
+    if ( axisWidget != NULL ){
+    	axisWidget ->setDateFormat ( Plotter::DEFAULT_DATE_FORMAT );
+    	axisWidget->setRelativeDateFormat( Plotter::DEFAULT_RELATIVE_DATE_FORMAT );
+    }
     m_dateFormat = Plotter::DEFAULT_DATE_FORMAT;
     m_relativeDateFormat = Plotter::DEFAULT_RELATIVE_DATE_FORMAT;
-    /*for(int i = 0; i < QwtPlot::axisCnt; i++) {
-        m_scaleDraws[i] = new QPScaleDraw(&m_canvas, QwtPlot::Axis(i));
-        m_scaleDraws[i]->setDateFormat(m_dateFormat);
-        m_scaleDraws[i]->setRelativeDateFormat(m_relativeDateFormat);
-        m_canvas.setAxisScaleDraw(QwtPlot::Axis(i), m_scaleDraws[i]);
-    }*/
-    
 
     //m_canvas.enableAxis(QwtPlot::xBottom, false);
     //m_canvas.enableAxis(QwtPlot::yLeft, false);
     //m_canvas.setAutoReplot(true);
-    
-    //connect(&m_picker, SIGNAL(selected(const QwtDoubleRect&)),
-      //      this, SLOT(regionSelected(const QwtDoubleRect&)));
-
-
 }
 
 QPAxis::~QPAxis() {
@@ -552,21 +286,25 @@ void QPAxis::setTitleFont(const PlotFont& /*font*/) {
 }
 
 
-
 PlotAreaFillPtr QPAxis::background() const {
-    /*return new QPAreaFill(m_canvas.canvas()->palette().brush(
-                          QPalette::Window));
-                          */
-	return PlotAreaFillPtr();
+	QPAreaFill* areaFill = NULL;
+	if ( axisWidget != NULL ){
+		QPalette pal = axisWidget->palette();
+		QBrush brush = pal.brush( QPalette::Window);
+		areaFill = new QPAreaFill( brush );
+	}
+	PlotAreaFillPtr fill(areaFill );
+	return fill;
 }
 
 
-
-void QPAxis::setBackground(const PlotAreaFill& /*areaFill*/) {
-    /*QPAreaFill a(areaFill);
-    QPalette p = m_canvas.canvas()->palette();
-    p.setBrush(QPalette::Window, a.asQBrush());
-    m_canvas.canvas()->setPalette(p);*/
+void QPAxis::setBackground(const PlotAreaFill& areaFill) {
+	if ( axisWidget != NULL ){
+		QPAreaFill a(areaFill);
+		QPalette p = axisWidget->palette();
+		p.setBrush(QPalette::Window, a.asQBrush());
+		axisWidget->setPalette( p );
+    }
 }
 
 
@@ -619,8 +357,11 @@ PlotAxisScale QPAxis::axisScale(PlotAxis /*axis*/) const   {
 }
 
 
-void QPAxis::setAxisScale(PlotAxis /*axis*/, PlotAxisScale /*scale*/) {
-    //m_scaleDraws[QPOptions::axis(axis)]->setScale(scale);
+void QPAxis::setAxisScale(PlotAxis axis, PlotAxisScale scale) {
+	QwtPlot::Axis dAxis = QPOptions::axis(axis);
+	if ( axisType == dAxis  && axisWidget != NULL ){
+		axisWidget->setAxisScale( scale );
+	}
 }
 
 
@@ -634,8 +375,11 @@ double QPAxis::axisReferenceValue(PlotAxis /*axis*/) const {
 }
 
 
-void QPAxis::setAxisReferenceValue(PlotAxis /*axis*/, bool /*on*/, double /*value*/) {
-    //m_scaleDraws[QPOptions::axis(axis)]->setReferenceValue(on, value);
+void QPAxis::setAxisReferenceValue(PlotAxis axis, bool on, double value) {
+	QwtPlot::Axis dAxis = QPOptions::axis(axis);
+	if ( axisType == dAxis  && axisWidget != NULL ){
+		axisWidget->setReferenceValue( on, value );
+	}
 }
 
 
@@ -652,18 +396,13 @@ void QPAxis::showCartesianAxis(PlotAxis /*mirrorAxis*/, PlotAxis /*secondaryAxis
     showAxis(mirrorAxis, !hideNormalAxis);*/
 }
 
-
-
 String QPAxis::axisLabel(PlotAxis axis) const {
-    //return m_canvas.axisTitle(QPOptions::axis(axis)).text().toStdString();
 	String axisLabel;
 	if ( axisWidget != NULL && QPOptions::axis(axisType) == axis ){
 		axisLabel= axisWidget->getAxisLabel().toStdString();
 	}
 	return axisLabel;
 }
-
-
 
 
 void QPAxis::setAxisLabel(PlotAxis axis, const String& title) {
@@ -683,29 +422,20 @@ PlotFontPtr QPAxis::axisFont(PlotAxis /*a*/) const {
 }
 
 
-
-void QPAxis::setAxisFont(PlotAxis /*axis*/, const PlotFont& /*font*/) {
-    
-    /*if(font != *axisFont(axis)) {
-        QPFont f(font);
-        QwtText t = m_canvas.axisTitle(QPOptions::axis(axis));
-        t.setFont(f.asQFont());
-        t.setColor(f.asQColor());
-        m_canvas.setAxisTitle(QPOptions::axis(axis), t);
-        f.setBold(false);
-        m_canvas.setAxisFont(QPOptions::axis(axis), f.asQFont());
-        if(!t.isEmpty()) m_canvas.enableAxis(QPOptions::axis(axis));
-    }*/
+void QPAxis::setAxisFont(PlotAxis axis, const PlotFont& font) {
+	if ( axisWidget != NULL ){
+		if ( QPOptions::axis(axisType) == axis ){
+			QPFont f( font );
+			axisWidget->setAxisFont( f.asQFont() );
+		}
+	}
 }
-
 
 
 bool QPAxis::colorBarShown(PlotAxis /*axis*/) const {
     //return m_canvas.axisWidget(QPOptions::axis(axis))->isColorBarEnabled();
 	return false;
 }
-
-
 
 void QPAxis::showColorBar(bool /*show*/, PlotAxis /*axis*/) {
     
@@ -760,11 +490,9 @@ prange_t QPAxis::axisRange(PlotAxis /*axis*/) const {
 }
 
 
-
 void QPAxis::setAxisRange(PlotAxis /*axis*/, double /*from*/, double /*to*/) {
     //setAxesRanges(axis, from, to, axis, from, to);
 }
-
 
 
 void QPAxis::setAxesRanges(PlotAxis /*xAxis*/, double /*xFrom*/, double /*xTo*/,
@@ -1123,13 +851,8 @@ bool QPAxis::exportToFile(const PlotExportFormat& /*format*/) {
 
 
 
-String QPAxis::fileChooserDialog(
-            const String& title,
-            const String& directory)    {
-            
-    QString filename = QFileDialog::getSaveFileName(this, title.c_str(),
-            directory.c_str());
-    return filename.toStdString();
+String QPAxis::fileChooserDialog(const String& /*title*/, const String& /*directory*/){
+	return "";
 }
 
 
@@ -1140,12 +863,11 @@ const String& QPAxis::dateFormat() const {
 
 
 
-void QPAxis::setDateFormat(const String& /*dateFormat*/)   {
-    
-   /* if(m_dateFormat == dateFormat) return;
-    m_dateFormat = dateFormat;
-    for(int i = 0; i < QwtPlot::axisCnt; i++)
-        m_scaleDraws[i]->setDateFormat(m_dateFormat);*/
+void QPAxis::setDateFormat(const String& dateFormat)   {
+	if ( axisWidget != NULL ){
+		axisWidget->setDateFormat( dateFormat );
+	}
+	m_dateFormat = dateFormat;
 }
 
 
@@ -1156,12 +878,11 @@ const String& QPAxis::relativeDateFormat() const {
 
 
 
-void QPAxis::setRelativeDateFormat(const String& /*dateFormat*/)   {
-    
-    /*if(m_relativeDateFormat == dateFormat) return;
-    m_relativeDateFormat = dateFormat;
-    for(int i = 0; i < QwtPlot::axisCnt; i++)
-        m_scaleDraws[i]->setRelativeDateFormat(m_relativeDateFormat);*/
+void QPAxis::setRelativeDateFormat(const String& dateFormat)   {
+	if ( axisWidget != NULL ){
+		axisWidget->setRelativeDateFormat( dateFormat );
+	}
+	m_relativeDateFormat = dateFormat;
 }
 
 
@@ -1246,69 +967,6 @@ const QPAxesCache& QPAxis::axesCache() const   {
 }*/
 
 
-
-/*void QPAxis::mousePressEvent(QMouseEvent* event) {
-
-    PlotMouseEvent::Button t = PlotMouseEvent::SINGLE;
-    if(event->button() == Qt::RightButton) t = PlotMouseEvent::CONTEXT;
-    else if(event->button() == Qt::MidButton) t = PlotMouseEvent::MIDDLE;
-
-    PlotCoordinate pcoord = globalPosToPixelCoord(event);
-    if(notifyPressHandlers(t, pcoord)) event->accept();
-    else                               event->ignore();
-}*/
-
-
-
-/*void QPAxis::mouseReleaseEvent(QMouseEvent* event) {
-
-    PlotMouseEvent::Button t = PlotMouseEvent::SINGLE;
-    if(event->button() == Qt::RightButton) t = PlotMouseEvent::CONTEXT;
-    else if(event->button() == Qt::MidButton) t = PlotMouseEvent::MIDDLE;
-    
-    PlotCoordinate pcoord = globalPosToPixelCoord(event);
-    bool accept = notifyReleaseHandlers(t, pcoord);
-    accept |= notifyClickHandlers(t, pcoord);
-    
-
-    
-    if(accept) event->accept();
-    else       event->ignore();
-}*/
-
-
-
-/*void QPAxis::mouseDoubleClickEvent(QMouseEvent* event) {
-
-    PlotCoordinate pcoord = globalPosToPixelCoord(event);
-    
-    // Send a double-click and a release event.
-    bool accept = notifyClickHandlers(PlotMouseEvent::DOUBLE, pcoord);
-    accept |= notifyReleaseHandlers(PlotMouseEvent::DOUBLE, pcoord);
-    
-    if(accept) event->accept();
-    else       event->ignore();
-}*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void QPAxis::setPlot( QwtPlot* plot ){
-	if ( axisWidget != NULL ){
-		axisWidget->setPlot( plot );
-	}
-}
 
 }
 

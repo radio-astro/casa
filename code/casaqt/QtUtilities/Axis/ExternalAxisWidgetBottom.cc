@@ -29,22 +29,35 @@
 #include <qwt_plot.h>
 #include <qwt_plot_canvas.h>
 #include <qwt_scale_div.h>
+#include <casaqt/QwtPlotter/QPCanvasHelpers.qo.h>
 
 namespace casa {
 
-ExternalAxisWidgetBottom::ExternalAxisWidgetBottom( QWidget* parent ):
-	ExternalAxisWidget( parent ){
+ExternalAxisWidgetBottom::ExternalAxisWidgetBottom( QWidget* parent, QwtPlot* plot ):
+	ExternalAxisWidget( parent, plot ){
 	//setFixedHeight( AXIS_SMALL_SIDE / 2 );
-	this->setMinimumHeight( AXIS_SMALL_SIDE / 2 );
+	setMinimumHeight( AXIS_SMALL_SIDE / 2 );
+	scaleDraw = new QPScaleDraw( NULL, QwtPlot::xBottom );
 	setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding );
 
 }
 
+int ExternalAxisWidgetBottom::getStartX() const {
+	int internalAxisWidth = 0;
+	QwtPlotCanvas* plotCanvas = plot->canvas();
+	if ( plotCanvas != NULL ){
+		internalAxisWidth = width() - plotCanvas->width();
+	}
+	return internalAxisWidth;
+}
+
 void ExternalAxisWidgetBottom::defineAxis( QLine& axisLine ){
-	int left = MARGIN;
+	int axisStart = getStartX();
+	int left = MARGIN + axisStart;
 	int right = width() - MARGIN;
 	int top = 1;
 	int bottom = 1;
+
 	QPoint firstPt( left, top );
 	QPoint secondPt( right, bottom );
 	axisLine.setP1( firstPt );
@@ -57,7 +70,14 @@ void ExternalAxisWidgetBottom::drawTick( QPainter* painter, double xPixel, doubl
 	int xPosition = static_cast<int>(xPixel);
 	painter->drawLine( xPosition, yEnd, xPosition, yEnd + tickLength  );
 	QFont font = painter->font();
+
 	QString tickLabel( QString::number( value ) );
+	if ( scaleDraw != NULL ){
+		QwtText tickText = scaleDraw->label( value );
+		tickLabel = tickText.text();
+	}
+
+
 	QRect fontBoundingRect = QFontMetrics(font).boundingRect( tickLabel );
 	int letterWidth = fontBoundingRect.width();
 	int letterHeight = fontBoundingRect.height();

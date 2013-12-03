@@ -32,9 +32,10 @@ namespace casa {
 
 class ExternalAxisWidgetTop : public ExternalAxisWidget {
 public:
-	ExternalAxisWidgetTop(QWidget* parent );
+	ExternalAxisWidgetTop(QWidget* parent, QwtPlot* plot );
 	virtual ~ExternalAxisWidgetTop();
 protected:
+	virtual int getStartX() const;
 	virtual void defineAxis( QLine& axisLine );
 	virtual void drawTicks( QPainter* painter, int tickLength);
 	virtual void drawAxisLabel( QPainter* painter );

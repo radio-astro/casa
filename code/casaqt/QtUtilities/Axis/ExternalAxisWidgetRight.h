@@ -32,7 +32,7 @@ namespace casa {
 
 class ExternalAxisWidgetRight : public ExternalAxisWidget {
 public:
-	ExternalAxisWidgetRight(QWidget* parent );
+	ExternalAxisWidgetRight(QWidget* parent, QwtPlot* plot );
 	void setUseLeftScale( bool b );
 	virtual ~ExternalAxisWidgetRight();
 protected:

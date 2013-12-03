@@ -28,7 +28,7 @@
 #define PLOTMSPLOTMANAGER_H_
 
 #include <graphics/GenericPlotter/PlotFactory.h>
-#include <plotms/Plots/PlotMSPage.h>
+#include <plotms/Plots/PlotMSPages.h>
 
 #include <casa/namespace.h>
 
@@ -100,7 +100,7 @@ public:
 
     // Clears out all plots and canvases.
     void clearPlotsAndCanvases();
-    
+
 private:
     // Parent.
     PlotMSApp* itsParent_;

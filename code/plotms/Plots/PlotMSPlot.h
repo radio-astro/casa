@@ -141,6 +141,7 @@ public:
     virtual bool prevIter() { return False;};
     virtual bool nextIter() { return False;};
     virtual bool lastIter() { return False;};
+    virtual bool setIter( int /*index*/ ){ return False; };
 
 
     // Implements PlotMSParametersWatcher::parametersHaveChanged().  Updates

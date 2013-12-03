@@ -200,6 +200,7 @@ casa_add_library( casaqt
   QwtPlotter/QPBarPlot.cc
   QwtPlotter/QPCanvas.cc
   QwtPlotter/QPCanvasHelpers.cc
+  QwtPlotter/QPExporter.cc
   QwtPlotter/QPData.cc
   QwtPlotter/QPFactory.cc
   QwtPlotter/QPImageCache.cc
@@ -315,10 +316,12 @@ install (FILES
 	QwtPlotter/QPCanvas.qo.h
 	QwtPlotter/QPCanvasHelpers.qo.h
 	QwtPlotter/QPData.h
+	QwtPlotter/QPExportCanvas.h
 	QwtPlotter/QPFactory.h
 	QwtPlotter/QPImageCache.h
 	QwtPlotter/QPLayeredCanvas.qo.h
 	QwtPlotter/QPOptions.h
+	QwtPlotter/QPExporter.h
 	QwtPlotter/QPPanel.qo.h
 	QwtPlotter/QPPlotItem.qo.h
 	QwtPlotter/QPPlotter.qo.h

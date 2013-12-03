@@ -50,23 +50,25 @@ public:
     // Destructor.
     ~PlotMSExportTab();
     
-    
     // Implements PlotMSTab::tabName().
     QString tabName() const { return "Export"; }
     
-    // Implements PlotMSPlotSubtab::getValue().  Does nothing.
-    void getValue(PlotMSPlotParameters& params) const { (void)params; }
+    // Implements PlotMSPlotSubtab::getValue().
+    void getValue(PlotMSPlotParameters& params) const;
     
-    // Implements PlotMSPlotSubtab::setValue().  Does nothing.
-    void setValue(const PlotMSPlotParameters& params) { (void)params; }
+    // Implements PlotMSPlotSubtab::setValue().
+    void setValue(const PlotMSPlotParameters& params);
     
-    // Implements PlotMSPlotSubtab::update().  Does nothing.
-    void update(const PlotMSPlot& plot) { (void)plot; }
+    // Implements PlotMSPlotSubtab::update().
+    void update(const PlotMSPlot& /*plot*/){}
     
     
     // See PlotMSTab::currentlySetExportFormat().
     PlotExportFormat currentlySetExportFormat() const;
     
+signals:
+	void exportRangeChanged();
+
 private:
     // Widget for file selection.
     QtFileWidget* itsFileWidget_;

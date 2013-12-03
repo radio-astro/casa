@@ -29,13 +29,15 @@
 #include <qwt_plot.h>
 #include <qwt_plot_canvas.h>
 #include <qwt_scale_div.h>
+#include <casaqt/QwtPlotter/QPCanvasHelpers.qo.h>
 
 namespace casa {
 
-ExternalAxisWidgetLeft::ExternalAxisWidgetLeft(QWidget* parent):
-	ExternalAxisWidget( parent ){
+ExternalAxisWidgetLeft::ExternalAxisWidgetLeft(QWidget* parent, QwtPlot* plot):
+	ExternalAxisWidget( parent, plot ){
 	setSizePolicy( /*QSizePolicy::Fixed*/QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding );
 	//setFixedWidth( AXIS_SMALL_SIDE );
+	scaleDraw = new QPScaleDraw( NULL, QwtPlot::yLeft );
 	setMinimumWidth( 2 * AXIS_SMALL_SIDE/3 );
 }
 
@@ -71,8 +73,12 @@ void ExternalAxisWidgetLeft::drawTick( QPainter* painter, float yPixel, double v
 
 	//Draw the tick label
 	QString numberStr = QString::number( value );
+	if ( scaleDraw != NULL ){
+		QwtText tickText = scaleDraw->label( value );
+		numberStr = tickText.text();
+	}
 	QFont font = painter->font();
-	QRect fontBoundingRect = QFontMetrics(font).boundingRect( numberStr );
+	QRect fontBoundingRect = QFontMetrics( font ).boundingRect( numberStr );
 	int labelStart = tickStart - fontBoundingRect.width() - 5;
 	int letterHeight = fontBoundingRect.height();
 	int position = static_cast<int>(yPixel + letterHeight/3);

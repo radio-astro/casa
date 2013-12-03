@@ -28,21 +28,56 @@
 #include <QDebug>
 #include <qwt_plot_canvas.h>
 #include <qwt_scale_div.h>
+#include <casaqt/QwtPlotter/QPCanvasHelpers.qo.h>
 
 namespace casa {
 
-ExternalAxisWidget::ExternalAxisWidget(QWidget* parent) :QWidget( parent ),
-		plot( NULL ), AXIS_SMALL_SIDE(100), TICK_LENGTH(5), MARGIN(5), MIN_START_Y(22),
-		FONT_SIZE(8), FONT_SIZE_AXIS_LABEL(8){
+ExternalAxisWidget::ExternalAxisWidget(QWidget* parent, QwtPlot* managedPlot) :QWidget( parent ),
+		plot( managedPlot ), scaleDraw(NULL),
+		AXIS_SMALL_SIDE(100), TICK_LENGTH(5),
+		MARGIN(5), MIN_START_Y(22){
+
+}
+
+void ExternalAxisWidget::setDateFormat(const String& newFormat){
+	if ( scaleDraw != NULL ){
+		scaleDraw->setDateFormat( newFormat );
+	}
 }
 
 
-void ExternalAxisWidget::setPlot( QwtPlot* plotOwner ){
-	plot = plotOwner;
+
+void ExternalAxisWidget::setRelativeDateFormat(const String& newFormat){
+	if ( scaleDraw != NULL ){
+		scaleDraw->setRelativeDateFormat( newFormat );
+	}
+}
+
+void ExternalAxisWidget::setAxisScale(PlotAxisScale scale){
+	if ( scaleDraw != NULL ){
+		scaleDraw->setScale( scale );
+	}
+}
+
+void ExternalAxisWidget::setReferenceValue(bool on, double value){
+	if ( scaleDraw != NULL ){
+			scaleDraw->setReferenceValue( on, value );
+		}
 }
 
 int ExternalAxisWidget::getStartY() const {
 	return MIN_START_Y;
+}
+
+int ExternalAxisWidget::getStartX() const {
+	return 0;
+}
+
+void ExternalAxisWidget::print( QPainter* painter, QRect imageRect ){
+	QPixmap pm = QPixmap::grabWidget( this );
+	if ( painter != NULL ){
+		painter->drawPixmap(imageRect, pm );
+	}
 }
 
 double ExternalAxisWidget::getTickStartPixel( QwtPlot::Axis axis ){
@@ -60,7 +95,7 @@ double ExternalAxisWidget::getTickStartPixel( QwtPlot::Axis axis ){
 		endDistancePercentage = lowerBoundDistance / axisExtent;
 	}
 
-	int canvasBound = width();
+	int canvasBound = width() - getStartX();
 	if ( axis != QwtPlot::xBottom && axis != QwtPlot::xTop ){
 		canvasBound = getCanvasHeight() - getStartY();
 	}
@@ -68,7 +103,14 @@ double ExternalAxisWidget::getTickStartPixel( QwtPlot::Axis axis ){
 	if ( axis != QwtPlot::xBottom && axis != QwtPlot::xTop ){
 		startPixel = getStartY() + startPixel;
 	}
+	else {
+		startPixel = getStartX() + startPixel;
+	}
 	return startPixel;
+}
+
+void ExternalAxisWidget::setAxisFont(const QFont& font){
+	axisFont = font;
 }
 
 double ExternalAxisWidget::getTickDistance(QwtPlot::Axis axis ){
@@ -149,9 +191,8 @@ void ExternalAxisWidget::paintEvent( QPaintEvent* event ){
 }
 
 void ExternalAxisWidget::drawTicks( QPainter* painter ){
-	QFont font = painter->font();
-	font.setPointSize( FONT_SIZE );
-	painter->setFont( font );
+	axisFont.setBold( false );
+	painter->setFont( axisFont );
 	drawTicks( painter, TICK_LENGTH  );
 }
 
@@ -162,9 +203,8 @@ void ExternalAxisWidget::drawBackBone( QPainter* painter ){
 }
 
 void ExternalAxisWidget::drawLabel( QPainter* painter ){
-	  QFont font("Helvetica [Cronyx]", FONT_SIZE_AXIS_LABEL );
-	  font.setBold( true );
-	  painter->setFont( font );
+	  axisFont.setBold( true );
+	  painter->setFont( axisFont );
 	  drawAxisLabel( painter );
 }
 

@@ -30,14 +30,16 @@
 #include <qwt_plot_canvas.h>
 #include <qwt_scale_div.h>
 #include <qwt_text_label.h>
+#include <casaqt/QwtPlotter/QPCanvasHelpers.qo.h>
 
 namespace casa {
 
-ExternalAxisWidgetRight::ExternalAxisWidgetRight(QWidget* parent ) :
-	ExternalAxisWidget( parent ){
+ExternalAxisWidgetRight::ExternalAxisWidgetRight(QWidget* parent, QwtPlot* plot ) :
+	ExternalAxisWidget( parent, plot ){
 	setSizePolicy( QSizePolicy::Fixed, QSizePolicy::MinimumExpanding );
 	setFixedWidth( AXIS_SMALL_SIDE);
 	//setMinimumWidth( 2 * AXIS_SMALL_SIDE/3 );
+	scaleDraw = new QPScaleDraw( NULL, QwtPlot::yRight );
 	useLeftScale = false;
 }
 
@@ -92,8 +94,12 @@ void ExternalAxisWidgetRight::drawTick( QPainter* painter, double yPixel, double
 
 	//Draw the tick label
 	QString numberStr = QString::number( value );
+	if ( scaleDraw != NULL ){
+		QwtText tickText = scaleDraw->label( value );
+		numberStr = tickText.text();
+	}
 	QFont font = painter->font();
-	QRect fontBoundingRect = QFontMetrics(font).boundingRect( numberStr );
+	QRect fontBoundingRect = QFontMetrics( font ).boundingRect( numberStr );
 	int labelStart = xEnd + 6;
 	int letterHeight = fontBoundingRect.height();
 	yPosition = static_cast<int>( yPixel + letterHeight/3);
@@ -139,7 +145,7 @@ void ExternalAxisWidgetRight::drawAxisLabel( QPainter* painter ){
 
 	 painter->rotate(90);
 
-	 QRect fontBoundingRect = QFontMetrics(font).boundingRect( mainLabel );
+	 QRect fontBoundingRect = QFontMetrics( font ).boundingRect( mainLabel );
 	 int startY = -2 * width() / 3;
 	 int yPosition = startY - fontBoundingRect.height();
 	 int xPosition = (height() - fontBoundingRect.width())/2;

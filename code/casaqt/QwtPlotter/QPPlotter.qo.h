@@ -39,6 +39,7 @@
 namespace casa {
 
 //# Forward Declarations
+class QPExportCanvas;
 class QPCanvas;
 class QPAxis;
 class PlotFactory;
@@ -122,6 +123,7 @@ public:
     // Implements Plotter::close().
     void close();
     
+    vector<QPExportCanvas*> getGridComponents();
     
     // Implements Plotter::canvasLayout().
     PlotCanvasLayoutPtr canvasLayout();
@@ -215,7 +217,7 @@ public:
     // Overrides QWidget::minimumSizeHint() to return an invalid size.
     QSize minimumSizeHint() const;
     
-    virtual bool exportPlot(const PlotExportFormat& format);
+    virtual bool exportPlot(const PlotExportFormat& format );
 
 protected:
     // For catching resize events.
@@ -260,6 +262,7 @@ private:
     void initialize();
     
     void clearExternalAxes();
+    void emptyLayout();
     
     // Static //
     

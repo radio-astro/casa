@@ -258,7 +258,8 @@ private slots:
     // the GUI to show which parameters have been changed (if any).
     void tabChanged();
 
-    
+    //Parameters for exporting the plot have changed.
+    void exportRangeChanged();
 };
 
 }
