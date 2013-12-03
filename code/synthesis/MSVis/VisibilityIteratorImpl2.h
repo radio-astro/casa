@@ -513,7 +513,7 @@ public:
     // Return number of spws, polids, ddids
 
     virtual Int nSpectralWindows () const;
-    virtual Int nPolarizations () const;
+    virtual Int nPolarizationIds () const;
     virtual Int nDataDescriptionIds () const;
 
     virtual MEpoch getEpoch () const;
@@ -629,7 +629,8 @@ protected:
 
     template <typename T>
     void
-    getColumnRowsMatrix (const ROArrayColumn<T> & column, Matrix<T> & array) const;
+    getColumnRowsMatrix (const ROArrayColumn<T> & column, Matrix<T> & array,
+                         Bool correlationSlicing) const;
 
     template <typename T>
     void getColumnRows (const ROScalarColumn<T> & column, Vector<T> & array) const;
@@ -677,7 +678,8 @@ protected:
 
     vi::ChannelSelector *
     makeChannelSelectorF (const FrequencySelection & selection,
-                          Double time, Int msId, Int spectralWindowId) const;
+                          Double time, Int msId, Int spectralWindowId,
+                          Int polarizationId) const;
 
     MFrequency::Convert makeFrequencyConverter (Double time, Int otherFrameOfReference,
                                                 Bool toObservedFrame) const;
@@ -911,7 +913,7 @@ protected:
     Bool                          msIterAtOrigin_p; // True if MS Iter is a start of first MS
     CountedPtr<MSIter>            msIter_p; // MS Iter that underlies the VI (sweeps in chunks)
     mutable MSDerivedValues       msd_p; // Helper class holding MS derived values.
-    Int                           nPolarizations_p;
+    Int                           nCorrelations_p;
     Int                           nRowBlocking_p; // suggested # of rows in a subchunk
     PendingChanges                pendingChanges_p; // holds pending changes to VI properties
     Int                           reportingFrame_p; // default frequency reporting (not selecting)

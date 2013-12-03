@@ -602,9 +602,48 @@ public:
     : std::vector <SpectralWindowChannel> (size)
     {}
 
+    const_iterator
+    lower_bound (Double frequency) const
+    {
+        const_iterator result = end();
+
+        for (const_iterator i = begin(); i != end(); i++){
+
+            if (frequency <= i->getFrequency() + 0.5 * i->getWidth() &&
+                i->getFrequency() - 0.5 * i->getWidth() <= frequency){
+                result = i;
+                break;
+
+            }
+        }
+
+        return result;
+    }
+
+    const_iterator
+    upper_bound (Double frequency) const
+    {
+        const_iterator result = end();
+
+        for (const_iterator i = end() - 1; i >= begin(); i --){
+
+            if (frequency >= i->getFrequency() - 0.5 * i->getWidth() &&
+                frequency <= i->getFrequency() + 0.5 * i->getWidth()){
+                result = i;
+                break;
+
+            }
+        }
+
+        return result;
+    }
+
+
 private:
 
 };
+
+
 
 class SpectralWindowChannelsCache {
 
@@ -696,20 +735,34 @@ VisibilityIteratorImpl2::getColumnRows (const ROArrayColumn<T> & column,
                                             Array<T> & array) const
 {
     const ChannelSlicer & slicer = channelSelector_p->getSlicer();
-    column.getSliceForRows (rowBounds_p.subchunkRows_p,
-                            slicer.getSlicerInCoreRep(),
-                            array);
+    column.getColumnCells (rowBounds_p.subchunkRows_p,
+                           slicer.getSlicerInCoreRep(),
+                           array,
+                           True);
 }
 
 template <typename T>
 void
 VisibilityIteratorImpl2::getColumnRowsMatrix (const ROArrayColumn<T> & column,
-                                                  Matrix<T> & array) const
+                                              Matrix<T> & array,
+                                              Bool correlationSlicing) const
 {
-    column.getColumnCells (rowBounds_p.subchunkRows_p, array, True);
+    if (correlationSlicing){
+
+        const ChannelSlicer & slicer = channelSelector_p->getSlicer();
+        const ChannelSubslicer subslicer = slicer.getSubslicer (0); // has to be at least one
+        const Slice & correlationSlice = subslicer.getSlice (0); // first one is correlation in this case
+
+        Vector<Slice> coreSlicerElement (1, correlationSlice);
+        Vector<Vector <Slice> > coreSlicer (1, coreSlicerElement);
+
+        column.getColumnCells (rowBounds_p.subchunkRows_p, coreSlicer, array, True);
+    }
+    else{
+
+        column.getColumnCells (rowBounds_p.subchunkRows_p, array, True);
+    }
 }
-
-
 
 template <typename T>
 void
@@ -749,16 +802,6 @@ VisibilityIteratorImpl2::putColumnRows (ScalarColumn<T> & column, const Vector <
     column.putColumnCells(rows, array);
 }
 
-//VisibilityIteratorImpl2::VisibilityIteratorImpl2 ()
-//: channelSelector_p (0),
-//  frequencySelections_p (0),
-//  frequencySelectionsPending_p (0),
-//  reportingFrame_p (VisBuffer2::FrameNotSpecified),
-//  vi_p (NULL),
-//  spectralWindowChannelsCache_p (0),
-//  tileCacheIsSet_p (0)
-//{}
-
 VisibilityIteratorImpl2::VisibilityIteratorImpl2 (VisibilityIterator2 * vi,
                                                   const Block<const MeasurementSet *> &mss,
                                                   const SortColumns & sortColumns,
@@ -775,7 +818,7 @@ VisibilityIteratorImpl2::VisibilityIteratorImpl2 (VisibilityIterator2 * vi,
   msIndex_p (0),
   msIterAtOrigin_p (False),
   msIter_p (0),
-  nPolarizations_p (-1),
+  nCorrelations_p (-1),
   nRowBlocking_p (0),
   reportingFrame_p (VisBuffer2::FrameNotSpecified),
   sortColumns_p (sortColumns),
@@ -1547,12 +1590,13 @@ VisibilityIteratorImpl2::configureNewSubchunk ()
 
     // Set flags for current subchunk
 
-    nPolarizations_p = subtableColumns_p->polarization ().numCorr ()(msIter_p->polarizationId ());
+    Vector<Int> correlations = channelSelector_p->getCorrelations();
+    nCorrelations_p = correlations.nelements();
 
     String msName = ms().tableName ();
     vb_p->configureNewSubchunk (msId (), msName, isNewMs (), isNewArrayId (), isNewFieldId (),
                                 isNewSpectralWindow (), subchunk_p, rowBounds_p.subchunkNRows_p,
-                                channelSelector_p->getNFrequencies(), nPolarizations_p,
+                                channelSelector_p->getNFrequencies(), nCorrelations_p,
                                 channelSelector_p->getCorrelations(),
                                 weightScaling_p);
 
@@ -1597,7 +1641,7 @@ VisibilityIteratorImpl2::determineChannelSelection (Double time, Int spectralWin
     }
     else{
         newSelector = makeChannelSelectorF (selection, time, msId (),
-                                            spectralWindowId);
+                                            spectralWindowId, polarizationId());
     }
 
     // Cache it for possible future use.  The cache may hold multiple equivalent
@@ -1647,7 +1691,15 @@ VisibilityIteratorImpl2::makeChannelSelectorC (const FrequencySelection & select
 
     // Install the polarization selections
 
-    slices.setSubslicer (0, ChannelSubslicer (selection.getCorrelationSlices (polarizationId)));
+    Vector<Slice> correlationSlices = selection.getCorrelationSlices (polarizationId);
+    if (correlationSlices.empty()){
+
+        Int nCorrelations = subtableColumns_p->polarization ().numCorr ().get (polarizationId);
+
+        correlationSlices = Vector<Slice> (1, Slice (0, nCorrelations));
+    }
+
+    slices.setSubslicer (0, ChannelSubslicer (correlationSlices));
 
     // Create and install the frequency selections
 
@@ -1668,7 +1720,8 @@ VisibilityIteratorImpl2::makeChannelSelectorC (const FrequencySelection & select
 
 ChannelSelector *
 VisibilityIteratorImpl2::makeChannelSelectorF (const FrequencySelection & selectionIn,
-                                               Double time, Int msId, Int spectralWindowId) const
+                                               Double time, Int msId, Int spectralWindowId,
+                                               Int polarizationId) const
 {
     // Make a ChannelSelector from a frame-based frequency selection.
 
@@ -1713,6 +1766,20 @@ VisibilityIteratorImpl2::makeChannelSelectorF (const FrequencySelection & select
     // different channel intervals along the channel axis.
 
     ChannelSlicer slices (2);
+
+    // Install the polarization selections
+
+    Vector<Slice> correlationSlices = selection.getCorrelationSlices (polarizationId);
+    if (correlationSlices.empty()){
+
+        Int nCorrelations;
+        subtableColumns_p->polarization ().numCorr ().get (polarizationId, nCorrelations);
+
+        correlationSlices = Vector<Slice> (1, Slice (0, nCorrelations));
+    }
+
+    slices.setSubslicer (0, ChannelSubslicer (correlationSlices));
+
     ChannelSubslicer frequencyAxis (frequencySlices.size());
 
     for (Int i = 0; i < (int) frequencySlices.size(); i++){
@@ -1782,50 +1849,26 @@ VisibilityIteratorImpl2::findChannelsInRange (Double lowerFrequency, Double uppe
         return Slice (0, 0); // value indicating no slice
     }
 
-    // Find the first channel to include in the Slice.  The lower_bound method
-    // returns the first channel >= to the target.
+    // Find the first and last channels to include in the Slice.
 
-    Iterator lower = lower_bound (spectralWindowChannels.begin(),
-                                  spectralWindowChannels.end(),
-                                  lowerFrequency);
+    Iterator lower = spectralWindowChannels.lower_bound (lowerFrequency);
 
-    Assert (lower != spectralWindowChannels.end());
+    if (lower ==  spectralWindowChannels.end()){
 
-    if (lower != spectralWindowChannels.begin()){
+        // The lower frequency is below the window so choose the lowest
+        // frequency as the start.
 
-        Iterator previous = lower - 1;
-        if (previous->getFrequency() + 0.5 * previous->getWidth() > lowerFrequency){
-
-            lower = previous;
-
-        }
+        lower = spectralWindowChannels.begin();
     }
 
-    // Find the ending channel to include in the Slice.  The upper_bound method
-    // finds the first value > the target.
+    Iterator upper = spectralWindowChannels.upper_bound (upperFrequency);
 
-    Iterator upper = upper_bound (spectralWindowChannels.begin(),
-                                  spectralWindowChannels.end(),
-                                  upperFrequency);
+    if (upper == spectralWindowChannels.end() && upper >= lower){
 
-    if (upper == spectralWindowChannels.end()){
+        // The upper frequency is above the window so choose the highest
+        // freuqency as the end.
+
         upper = spectralWindowChannels.end() - 1;
-    }
-    else{
-        upper -= 1; // upper_bound finds value strictly > than target.
-    }
-
-    // Adjust the upper limit if the channel just outside the window overlaps
-    // the upper frequency by 1/2 a channel width.
-
-    Iterator next = upper + 1;
-    if (next != spectralWindowChannels.end()){
-
-        if (next->getFrequency() - 0.5 * next->getWidth() < upperFrequency){
-
-            upper = next;
-
-        }
     }
 
     // Create a slice.  If the frequencies are running high to low then
@@ -2021,7 +2064,6 @@ VisibilityIteratorImpl2::setTileCache ()
                     ROTiledStManAccessor tacc (elms, columns[k], True);
                     tacc.setCacheSize (0, 1);
                     tileCacheIsSet_p[k] = True;
-                    //cerr << "set cache on kk " << kk << " vol " << columns[k] << "  " << refTables[kk] << endl;
                 }
             }
             else {
@@ -2051,10 +2093,7 @@ VisibilityIteratorImpl2::setTileCache ()
             }
         }
         catch (AipsError x) {
-            //  cerr << "Data man type " << dataManType << "  " << dataManType.contains ("Tiled") << "  && " << (!String (cdesc.dataManagerGroup ()).empty ()) << endl;
-            //  cerr << "Failed to set settilecache due to " << x.getMesg () << " column " << columns[k]  <<endl;
-            //It failed so leave the caching as is
-            continue;
+            continue; // It failed so leave the caching as is
         }
     }
 }
@@ -2114,23 +2153,6 @@ VisibilityIteratorImpl2::usesTiledDataManager (const String & columnName,
 
     return usesTiles;
 }
-
-//void
-//VisibilityIteratorImpl2::attachColumnsSafe (const Table & t)
-//{
-//    // Normally, the call to attachColumns is redirected back to the ROVI class.
-//    // This allows writable VIs to attach columns in both the read and write impls.
-//    // However, this referral to the ROVI doesn't work during construction of this
-//    // class (VIRI) since there is as yet no pointer to the object under construction.
-//    // In that case, simply perform it locally.
-//
-//    if (vi_p == NULL){
-//        attachColumns (t);
-//    }
-//    else{
-//        vi_p->attachColumns (t);
-//    }
-//}
 
 void
 VisibilityIteratorImpl2::attachColumns (const Table & t)
@@ -2249,7 +2271,7 @@ VisibilityIteratorImpl2::flag (Matrix<Bool> & flags) const
             Bool flagIt = flagCube (0, channel, row);
 
             for (Int correlation = 1;
-                 correlation < nPolarizations_p && not flagIt;
+                 correlation < nCorrelations_p && not flagIt;
                  correlation ++){
 
                 flagIt = flagCube (correlation, channel, row);
@@ -2391,16 +2413,15 @@ VisibilityIteratorImpl2::floatData (Cube<Float> & fcube) const
 void
 VisibilityIteratorImpl2::uvw (Matrix<Double> & uvwmat) const
 {
-    getColumnRowsMatrix (columns_p.uvw_p, uvwmat);
+    getColumnRowsMatrix (columns_p.uvw_p, uvwmat, False);
 }
 
 // Fill in parallactic angle.
 const Vector<Float> &
 VisibilityIteratorImpl2::feed_pa (Double time) const
 {
-    //  LogMessage message (LogOrigin ("VisibilityIteratorImpl2","feed_pa"));
-
     // Absolute UT
+
     Double ut = time;
 
     if (ut != cache_p.feedpaTime_p) {
@@ -2462,7 +2483,6 @@ VisibilityIteratorImpl2::parang (Double time) const
     return cache_p.parang_p;
 }
 
-
 // Fill in azimuth/elevation of the antennas.
 // Cloned from feed_pa, we need to check that this is all correct!
 const Vector<MDirection> &
@@ -2488,9 +2508,8 @@ VisibilityIteratorImpl2::azel (Double ut) const
 MDirection
 VisibilityIteratorImpl2::azel0(Double time) const
 {
-    //  LogMessage message (LogOrigin ("VisibilityIteratorImpl2","azel0"));
-
     // Absolute UT
+
     Double ut = time;
 
     if (ut != cache_p.azel0Time_p) {
@@ -2510,9 +2529,8 @@ VisibilityIteratorImpl2::azel0(Double time) const
 Double
 VisibilityIteratorImpl2::hourang (Double time) const
 {
-    //  LogMessage message (LogOrigin ("VisibilityIteratorImpl2","azel"));
-
     // Absolute UT
+
     Double ut = time;
 
     if (ut != cache_p.hourangTime_p) {
@@ -2534,13 +2552,13 @@ VisibilityIteratorImpl2::hourang (Double time) const
 void
 VisibilityIteratorImpl2::sigma (Matrix<Float> & sigma) const
 {
-    getColumnRowsMatrix (columns_p.sigma_p, sigma);
+    getColumnRowsMatrix (columns_p.sigma_p, sigma, True);
 }
 
 void
 VisibilityIteratorImpl2::weight (Matrix<Float> & wt) const
 {
-    getColumnRowsMatrix (columns_p.weight_p, wt);
+    getColumnRowsMatrix (columns_p.weight_p, wt, True);
 }
 
 Bool
@@ -2687,7 +2705,7 @@ VisibilityIteratorImpl2::nDataDescriptionIds () const
 }
 
 Int
-VisibilityIteratorImpl2::nPolarizations () const
+VisibilityIteratorImpl2::nPolarizationIds () const
 {
     return subtableColumns_p->polarization ().nrow ();
 }
@@ -2803,7 +2821,7 @@ VisibilityIteratorImpl2::visibilityShape() const
 {
 
     IPosition result (3,
-                      nPolarizations_p,
+                      nCorrelations_p,
                       channelSelector_p->getNFrequencies(),
                       rowBounds_p.subchunkNRows_p);
 
@@ -2824,45 +2842,6 @@ VisibilityIteratorImpl2::jonesC(Vector<SquareMatrix<complex<float>, 2> >& cjones
     cjones.resize (msIter_p->CJones ().nelements ());
     cjones = msIter_p->CJones ();
 }
-
-//void
-//VisibilityIteratorImpl2::writeFlag (const Matrix<Bool> & flag)
-//{
-//
-//    Int nFrequencies = channelSelector_p->getNFrequencies();
-//    Int nPolarizations = nPolarizations_p;
-//    Int nRows = this->nRows();
-//
-//    // The flag matrix is expected to have dimensions [nF, nR].
-//
-//    ThrowIf ((int) flag.nrow() != nFrequencies || (int) flag.ncolumn() != nRows,
-//             String::format ("Shape mismatch: got [%d,%d]; expected [%d,%d]",
-//                             flag.nrow(), flag.ncolumn(), nFrequencies, nRows));
-//
-//    // Convert the flag matrix into the flag cube defined in the MS.  The flag
-//    // value for a (row,channel) will be copied into all of the polarizations.
-//
-//    Cube<Bool> flagCube;
-//
-//    flagCube.resize (nPolarizations, nFrequencies, nRows);
-//
-//    for (Int row = 0; row < nRows; row++) {
-//
-//        for (Int frequency = 0; frequency < nFrequencies; frequency ++) {
-//
-//            Bool flagValue = flag (frequency, row); // same value for all polarizations
-//
-//            for (Int polarization = 0; polarization < nPolarizations; polarization ++) {
-//
-//                flagCube (polarization, frequency, row) = flagValue;
-//            }
-//        }
-//    }
-//
-//    // Write the newly constructed flag cube into the MS.
-//
-//    writeFlag (flagCube);
-//}
 
 void
 VisibilityIteratorImpl2::writeFlag (const Cube<Bool> & flags)
@@ -3113,7 +3092,6 @@ VisibilityIteratorImpl2::getChannelInformation (Bool now) const
 
         // Use the explicit channel-based selection to compute the result.
 
-
         spectralWindow.resize (frequencySelection->size());
         nChannels.resize (frequencySelection->size());
         firstChannel.resize (frequencySelection->size());
@@ -3166,8 +3144,6 @@ VisibilityIteratorImpl2::writeBackChanges (VisBuffer2 * vb)
 void
 VisibilityIteratorImpl2::initializeBackWriters ()
 {
-//    backWriters_p [Flag] =
-//        makeBackWriter (& VisibilityIteratorImpl2::writeFlag, & VisBuffer2::flag);
     backWriters_p [FlagCube] =
         makeBackWriter (& VisibilityIteratorImpl2::writeFlag, & VisBuffer2::flagCube);
     backWriters_p [FlagRow] =
@@ -3176,12 +3152,8 @@ VisibilityIteratorImpl2::initializeBackWriters ()
         makeBackWriter (& VisibilityIteratorImpl2::writeFlagCategory, & VisBuffer2::flagCategory);
     backWriters_p [Sigma] =
         makeBackWriter (& VisibilityIteratorImpl2::writeSigma, & VisBuffer2::sigma);
-//    backWriters_p [SigmaMat] =
-//        makeBackWriter (& VisibilityIteratorImpl2::writeSigmaMat, & VisBuffer2::sigmaMat);
     backWriters_p [Weight] =
         makeBackWriter (& VisibilityIteratorImpl2::writeWeight, & VisBuffer2::weight);
-//    backWriters_p [WeightMat] =
-//        makeBackWriter (& VisibilityIteratorImpl2::writeWeightMat, & VisBuffer2::weightMat);
     backWriters_p [WeightSpectrum] =
         makeBackWriter (& VisibilityIteratorImpl2::writeWeightSpectrum, & VisBuffer2::weightSpectrum);
 

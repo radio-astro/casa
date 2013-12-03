@@ -100,6 +100,8 @@ FrequencySelectionUsingChannels::add (Int spectralWindow, Int firstChannel,
 void
 FrequencySelectionUsingChannels::add (const MSSelection & msSelection)
 {
+    // Add in the frequency selection from the provided MSSelection object
+    //
     // Meanings of columns in the "matrix" (actually used as a parallel array)
 
     enum {SpectralWindowId, FirstChannel, StopChannel, Step};
@@ -116,8 +118,15 @@ FrequencySelectionUsingChannels::add (const MSSelection & msSelection)
              nChannels,
              channelList (row, Step));
     }
-}
 
+    // Extract and add the correlation selection.
+
+    Vector <Vector<Slice> > correlationSlices;
+    const_cast <MSSelection &> (msSelection).getCorrSlices (correlationSlices);
+
+    addCorrelationSlices (correlationSlices);
+
+}
 
 FrequencySelectionUsingChannels::const_iterator
 FrequencySelectionUsingChannels::begin () const

@@ -500,7 +500,7 @@ public:
 
     virtual Int nAntennas () const = 0;
     virtual Int nDataDescriptionIds () const = 0;
-    virtual Int nPolarizations () const = 0;
+    virtual Int nPolarizationIds () const = 0;
     virtual Int nRowsInChunk () const = 0; // number rows in current chunk
     virtual Int nRowsViWillSweep () const = 0; // number of rows in all selected ms's
     virtual Int nSpectralWindows () const = 0;

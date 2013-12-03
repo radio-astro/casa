@@ -63,6 +63,9 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+// Forward declarations
+class MSTransformBufferImpl;
+
 // MS Transform Framework utilities
 namespace MSTransformations
 {
