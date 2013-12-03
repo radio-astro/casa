@@ -15,7 +15,8 @@ def plotms(vis=None,
            freqframe=None,restfreq=None,veldef=None,shift=None,
            extendflag=None,
            extcorr=None, extchannel=None,
-           iteraxis=None,xselfscale=None,yselfscale=None,
+           iteraxis=None,iternx=None,iterny=None,xselfscale=None,yselfscale=None,
+           xsharedaxis=None, ysharedaxis=None,
            customsymbol=None, symbolshape=None, symbolsize=None,
            symbolcolor=None, symbolfill=None, symboloutline=None,
            coloraxis=None,
@@ -26,7 +27,7 @@ def plotms(vis=None,
            title=None, xlabel=None, ylabel=None,
            showmajorgrid=None, majorwidth=None, majorstyle=None,  majorcolor=None,    
            showminorgrid=None, minorwidth=None, minorstyle=None,  minorcolor=None,    
-           plotfile=None, expformat=None,
+           plotfile=None, expformat=None, exprange=None,
            highres=None, interactive=None, overwrite=None, 
            showgui=None
 ):
@@ -57,7 +58,21 @@ def plotms(vis=None,
         xdatacolumn, 
         ydatacolumn -- which data column to use for data axes
                        default: '' (uses PlotMS default/current set).
-                       
+    iteraxis -- what axis to iterate on when doing iteration plots
+                default: ''
+              &gt;&gt;&gt; iternx, iterny, xsharedaxis, ysharedaxis, xselfscale, yselfscale expandable parameters
+        iternx -- the number of rows in one page of an iteration plot
+                    default: 1.
+        iterny -- the number of cols in one page of an iteration plot.
+                    default: 1.
+        xselfscale -- use a common scale for the x-axis.
+                       default: False.
+        yselfscale -- use a common scale for the y-axis.
+                       default: False.
+        xsharedaxis -- use a common x-axis for vertically aligned plots.
+                        default: False.
+        ysharedaxis -- use a common y-axis for horizontally aligned plots.
+                        default: False.
     selectdata -- data selection parameters flag
                   (see help par.selectdata for more detailed information)
                   default: False
@@ -134,6 +149,7 @@ def plotms(vis=None,
                      default: ''  (ignored - same as colorizing off)              
     
     title  -- title along top of plot (called "canvas" in some places)
+    exprange -- whether to export all iteration plots or only the current one
     xlabel, ylabel -- text to label horiz. and vert. axes, with formatting (%% and so on)
     
     """
@@ -228,13 +244,23 @@ def plotms(vis=None,
         if extcorr:
             extcorrstr='all'
         pm.setFlagExtension(extendflag, extcorrstr, extchannel)
+        
+        # Export range
+        if (exprange == ""):
+            exprange='current'
+        pm.setExportRange(exprange)
 
         # Set stuff that informs the plot on additional axes
         #  (iteration, colorization, etc.)
         # (Iteration)
         if (iteraxis==""):
+            iternx = iterny=1
             xselfscale=yselfscale=False
-        pm.setPlotMSIterate(iteraxis,xselfscale,yselfscale,False);
+            xsharedaxis = ysharedaxis = False
+        pm.setPlotMSIterate(iteraxis,iternx,iterny,
+                            xselfscale,yselfscale,
+                            xsharedaxis,ysharedaxis,False);
+        
         # (Colorization)
         pm.setColorAxis(coloraxis,False)
 

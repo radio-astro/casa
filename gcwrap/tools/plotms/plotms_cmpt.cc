@@ -269,31 +269,32 @@ void plotms::setPlotMSTransformations(const std::string& freqframe,
 }
 
 void plotms::setPlotMSIterate(const std::string& iteraxis,
-			      const bool xselfscale,
-			      const bool yselfscale,
+				  const int iterRowCount, const int iterColCount,
+			      const bool xselfscale, const bool yselfscale,
+			      const bool commonAxisX, const bool commonAxisY,
 			      const bool updateImmediately, 
 			      const int plotIndex) {
 
     PlotMSIterParam iter;
-    
     iter.setIterAxis(iteraxis);
     if (iteraxis=="") {
-      //iter.setXSelfScale(False);
-      //iter.setYSelfScale(False);
+      iter.setNx( 1 );
+      iter.setNy( 1 );
       iter.setGlobalScaleX( False);
       iter.setGlobalScaleY( False);
+      iter.setCommonAxisX( False );
+      iter.setCommonAxisY( False );
     }
     else {
-      //iter.setXSelfScale(xselfscale);
-      //iter.setYSelfScale(yselfscale);
+    	iter.setNx( iterRowCount );
+    	iter.setNy( iterColCount );
     	iter.setGlobalScaleX( xselfscale);
     	iter.setGlobalScaleY( yselfscale);
+    	iter.setCommonAxisX( commonAxisX );
+    	iter.setCommonAxisY( commonAxisY );
     }
 
-    // Only if iteration enabled...
-    //if (doIter_)
-      setPlotMSIterate_(iter, updateImmediately, plotIndex);
-   
+    setPlotMSIterate_(iter, updateImmediately, plotIndex);
 }
 
 void plotms::setPlotMSTransformationsRec(const record& transformations, 
@@ -415,7 +416,18 @@ void plotms::setXAxisLabel(const string& text,  const bool updateImmediately, co
 }
 
 
-void plotms::setYAxisLabel(const string& text,  const bool updateImmediately, const int plotIndex) 
+
+void plotms::setExportRange(const string& range )
+{
+    launchApp();
+    Record params;
+    params.define(PlotMSDBusApp::PARAM_EXPORT_RANGE,  range);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, asyncCall);
+}
+
+void plotms::setYAxisLabel(const string& text,  const bool updateImmediately,
+		const int plotIndex)
 {
     launchApp();
     Record params;
@@ -631,7 +643,8 @@ void plotms::setShowGui( bool showGui ){
 
 
 
-bool plotms::save(const string& filename, const string& format, const bool highres, const bool interactive) {
+bool plotms::save(const string& filename, const string& format,
+		const bool highres, const bool interactive) {
 	 launchApp();
     Record params;
     bool retValue;
