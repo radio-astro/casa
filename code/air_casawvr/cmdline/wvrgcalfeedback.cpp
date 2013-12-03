@@ -38,7 +38,7 @@ namespace LibAIR {
 	     <<std::endl;
   }
 
-  void printBanner(std::ostream &os)
+  void printBanner(std::ostream& /*os*/)
   {
     std::cout<<std::endl
 	     <<"WVRGCAL  -- Version "
