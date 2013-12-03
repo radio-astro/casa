@@ -476,16 +476,13 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
         # already present when demanded.
         tsysspectra = collections.defaultdict(TsysflagResults)
 
-        pols = []
-                   
+        pols = range(len(corr_type))
+
         for row in tsystable.rows:
             if row.get('SPECTRAL_WINDOW_ID') == spwid and \
               row.get('FIELD_ID') in fieldids:
 
-                pols = range(np.shape(row.get('FPARAM'))[0])
-
-                for pol in pols:
-          
+                for pol in pols:          
                     tsysspectrum = commonresultobjects.SpectrumResult(
                       data=row.get('FPARAM')[pol,:,0],
                       flag=row.get('FLAG')[pol,:,0],
@@ -656,18 +653,13 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
         # already present when demanded.
         tsysspectra = collections.defaultdict(TsysflagResults)
 
-        pols = []
+        pols = range(len(corr_type))
+
         for row in tsystable.rows:
             if row.get('SPECTRAL_WINDOW_ID') == spwid and \
               row.get('FIELD_ID') in fieldids:
 
-                # The Tsys array has 2 values for each result,
-                # presumably 1 number for each polarization.
-                # Assume this for now and check later. Pol IDs are
-                # unknown so store as '0' and '1'.
-                pols = range(np.shape(row.get('FPARAM'))[0])
-                for pol in pols:
-          
+                for pol in pols:          
                     tsysspectrum = commonresultobjects.SpectrumResult(
                       data=row.get('FPARAM')[pol,:,0],
                       flag=row.get('FLAG')[pol,:,0],
@@ -790,16 +782,12 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
         # already present when demanded.
         tsysspectra = collections.defaultdict(TsysflagResults)
 
-        pols = []
+        pols = range(len(corr_type))
+
         for row in tsystable.rows:
             if row.get('SPECTRAL_WINDOW_ID') == spwid and \
               row.get('FIELD_ID') in fieldids:
 
-                # The Tsys array has 2 values for each result,
-                # presumably 1 number for each polarization.
-                # Assume this for now and check later. Pol IDs are
-                # unknown so store as '0' and '1'.
-                pols = range(np.shape(row.get('FPARAM'))[0])
                 for pol in pols:
                     tsysspectrum = commonresultobjects.SpectrumResult(
                       data=row.get('FPARAM')[pol,:,0],
@@ -864,6 +852,7 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
 
                 ant = tsysspectrum.ant
                 caltime = tsysspectrum.time
+
                 data[ant[0], caltime==times] = metric
                 flag[ant[0], caltime==times] = metricflag
 
@@ -914,16 +903,12 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
         # already present when demanded.
         tsysspectra = collections.defaultdict(TsysflagResults)
 
-        pols = []
+        pols = range(len(corr_type))
+
         for row in tsystable.rows:
             if row.get('SPECTRAL_WINDOW_ID') == spwid and \
               row.get('FIELD_ID') in fieldids:
 
-                # The Tsys array has 2 values for each result,
-                # presumably 1 number for each polarization.
-                # Assume this for now and check later. Pol IDs are
-                # unknown so store as '0' and '1'.
-                pols = range(np.shape(row.get('FPARAM'))[0])
                 for pol in pols:
                     tsysspectrum = commonresultobjects.SpectrumResult(
                       data=row.get('FPARAM')[pol,:,0],
