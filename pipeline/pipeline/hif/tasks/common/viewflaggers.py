@@ -533,6 +533,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
     def make_flag_rules (flag_edges=False, edge_limit=2.0,
       flag_minabs=False, fmin_limit=0.0,
       flag_nmedian=False, fnm_limit=0.0,
+      flag_hilo=False, fhl_limit=5.0, fhl_minsample=5, 
       flag_sharps=False, sharps_limit=0.05,
       flag_sharps2=False, sharps2_limit=0.05,
       flag_diffmad=False, diffmad_limit=10, diffmad_nchan_limit=4,
@@ -551,6 +552,9 @@ class VectorFlagger(basetask.StandardTaskTemplate):
             rules.append({'name':'min abs', 'limit':fmin_limit})
         if flag_nmedian:
             rules.append({'name':'nmedian', 'limit':fnm_limit})
+        if flag_hilo:
+            rules.append({'name':'outlier', 'limit':fhl_limit,
+              'minsample':fhl_minsample})
         if flag_sharps:
             rules.append({'name':'sharps', 'limit':sharps_limit})
         if flag_sharps2:
@@ -581,6 +585,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         xtitle = vector.axis.name
         xdata = vector.axis.data
         spw = vector.spw
+        pol = vector.pol
         antenna = vector.ant
         if antenna is not None:
             # deal with antenna id not name
@@ -705,6 +710,35 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                               flagchannels=channels_flagged,
                               channel_axis=vector.axis,
                               intent=intent))
+
+                elif rulename == 'outlier':
+                    minsample = rule['minsample']
+                    limit = rule['limit']
+
+                    # enough data for valid statistics?
+                    if len(valid_data) < minsample:
+                        continue
+  
+                    # get channels to flag
+                    flag_chan = (np.abs(data-data_median) > data_mad*limit) & np.logical_not(flag)
+
+                    # flag the 'view'
+                    rflag[flag_chan] = True
+
+                    # now compose a description of the flagging required on
+                    # the MS
+                    nchannels = len(rdata)
+                    channels = np.arange(nchannels)
+                    channels_flagged = channels[flag_chan]
+
+                    if len(channels_flagged) > 0:
+                        # Add new flag command to flag data underlying the
+                        # view.
+                        newflags.append(arrayflaggerbase.FlagCmd(
+                          reason='stage%s' % self.inputs.context.stage,
+                          filename=table, rulename=rulename,
+                          spw=spw, pol=pol, antenna=antenna,
+                          flagchannels=channels_flagged))
 
                 elif rulename == 'sharps':
                     limit = rule['limit']
@@ -839,7 +873,8 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                             newflags.append(arrayflaggerbase.FlagCmd(
                               reason='stage%s' % self.inputs.context.stage,
                               filename=table, rulename=rulename,
-                              spw=spw, antenna=antenna, flagchannels=channels_flagged))
+                              spw=spw, pol=pol, antenna=antenna,
+                              flagchannels=channels_flagged))
 
                 elif rulename == 'tmf':
                     frac_limit = rule['frac_limit']
@@ -866,7 +901,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                                 newflags.append(arrayflaggerbase.FlagCmd(
                                   reason='stage%s' % self.inputs.context.stage,
                                   filename=table, rulename=rulename,
-                                  spw=spw, antenna=antenna,
+                                  spw=spw, pol=pol, antenna=antenna,
                                   flagchannels=channels_flagged))
 
                 else:           
