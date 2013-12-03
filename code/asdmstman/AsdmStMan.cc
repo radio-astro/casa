@@ -372,7 +372,7 @@ void AsdmStMan::getFloat (const AsdmIndex& ix, Complex* buf, uInt bl, uInt spw)
   }
 }
 
-void AsdmStMan::getAuto (const AsdmIndex& ix, Complex* buf, uInt bl, uInt spw)
+void AsdmStMan::getAuto (const AsdmIndex& ix, Complex* buf, uInt bl, uInt /*spw*/)
 {
   // Get pointer to the data in the block.
   //  Float* data = (reinterpret_cast<Float*>(&(itsData[0])) +
