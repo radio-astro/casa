@@ -49,8 +49,8 @@ class CalibrationTableRow(object):
 
 
 class CalibrationTableDataFiller(object):
-    """CalibrationTableDataFiller contains methods to fill a CalibrationTableData
-    object.
+    """CalibrationTableDataFiller contains methods to fill a 
+    CalibrationTableData object.
     """
     @staticmethod
     def getcal(caltable, columns=[]):
