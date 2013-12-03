@@ -284,7 +284,7 @@ void flagInterp(const casa::MeasurementSet &ms,
 						wvrflag_s, 
 						3,
 						maxdist_m);
-    if(near.size()>= static_cast<uInt>(minnumants)){
+    if(near.size()>= static_cast<unsigned it>(minnumants)){
       LibAIR::interpBadAntW(d, 
 			    *i, 
 			    near);
