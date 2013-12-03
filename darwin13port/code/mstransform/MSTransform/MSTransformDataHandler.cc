@@ -754,7 +754,7 @@ Bool MSTransformDataHandler::makeMSBasicStructure(	String& msname,
 													String& colname,
 													const Vector<Int>& tileShape,
 													const String& combine,
-													Table::TableOption option)
+													Table::TableOption)
 {
 	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
 
@@ -1342,7 +1342,7 @@ void MSTransformDataHandler::createSubtables(MeasurementSet& ms, Table::TableOpt
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-Bool MSTransformDataHandler::fillSubTables(const Vector<MS::PredefinedColumns>& datacols)
+Bool MSTransformDataHandler::fillSubTables(const Vector<MS::PredefinedColumns>&)
 {
 	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
 	Bool success = true;

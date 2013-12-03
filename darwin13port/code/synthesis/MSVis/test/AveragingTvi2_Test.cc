@@ -355,7 +355,7 @@ public:
         Bool equal = True;
 
         for (Int i = 0; i < 3; i++){
-            equal = equal && actual (i) == expected(i);
+            equal = equal && abs (actual (i) - expected(i)) < 1e5;
         }
 
         if (! equal){

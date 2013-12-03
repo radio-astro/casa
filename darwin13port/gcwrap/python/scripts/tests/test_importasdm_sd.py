@@ -149,6 +149,10 @@ class asdmsd_import( unittest.TestCase ):
         items = { 0: 8.6276162900858246e10,
                   1: 8.6287882216325546e10 }
         self.__checkColumn( 'REFVAL', items, 'FREQUENCIES' )
+
+        # SCANNO (CAS-5841)
+        items = numpy.arange(1,7)
+        self.__checkValue('SCANNO', items)
         
     def __checkResult( self, result ):
         for key in result.keys():
@@ -190,6 +194,14 @@ class asdmsd_import( unittest.TestCase ):
             self.assertTrue( diff < 1.0e-8,
                              msg=msgTemplate.safe_substitute(table=table,column=column,row=key,diff=diff) )
 
-
+    def __checkValue(self, column, ref):
+        tb.open(asapname)
+        val = numpy.unique(tb.getcol(column))
+        print 'checking %s...'%(column)
+        print 'reference=%s'%(ref)
+        print 'resulting value=%s'%(val)
+        self.assertEqual(len(ref), len(val))
+        self.assertTrue(all(ref == val))
+            
 def suite():
     return [asdmsd_import]

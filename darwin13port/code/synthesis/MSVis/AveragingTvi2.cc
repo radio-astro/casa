@@ -965,7 +965,8 @@ VbAvg::accumulateRowData (MsRow * rowInput, MsRowAvg * rowAveraged,
         // interrelationship between weight and weightSpectrum.  The SIGMA column is
         // handled in finalizeBaseline for similar reasons.
 
-        rowAveraged->setRowFlag (accumulatorRowFlagged && rowFlagged);
+        accumulatorRowFlagged = accumulatorRowFlagged && rowFlagged;
+        rowAveraged->setRowFlag (accumulatorRowFlagged);
 
         rowAveraged->setExposure (accumulateRowDatum (rowAveraged->exposure(),
                                                       rowInput->exposure (),

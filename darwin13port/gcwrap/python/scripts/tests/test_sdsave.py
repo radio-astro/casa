@@ -243,7 +243,7 @@ class sdsave_test2(unittest.TestCase,sdsave_unittest_base):
 
         default(sdsave)
         self._setAttributes()
-        self.scanno=0
+        self.scanno=1
 
     def tearDown(self):
         if (os.path.exists(self.infile)):
@@ -1394,10 +1394,76 @@ class sdsave_flagging(unittest.TestCase,sdsave_unittest_base):
                                 msg='all FLAG values must be False in row %s'%(irow))
         finally:
             tb.close()        
-        
-            
+
+###
+# Test for scan number (CAS-5841)
+###
+class sdsave_scan_number(unittest.TestCase,sdsave_unittest_base):
+    """
+    Check scan number
+    """
+    # Input and output names
+    infile='OrionS_rawACSmod_cal2123.asap'
+    vis='OrionS_rawACSmod_cal2123.ms'
+    prefix=sdsave_unittest_base.taskname+'Test2'
+    outfile=prefix+'.asap'
+    outvis=prefix+'.ms'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.infile)):
+            shutil.copytree(self.datapath+self.infile, self.infile)
+        if (not os.path.exists(self.vis)):
+            shutil.copytree(self.datapath+self.vis, self.vis)
+
+        default(sdsave)
+        #self._setAttributes()
+        #self.scanno=0
+
+    def tearDown(self):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+        if (os.path.exists(self.vis)):
+            shutil.rmtree(self.vis)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def test_import(self):
+        """Test if SCANNO is consistent with original MS."""
+        self.res = sdsave(infile=self.vis, outfile=self.outfile,
+                          outform='ASAP')
+
+        # compare scan number
+        tb.open(self.vis)
+        scan_number_org = numpy.unique(tb.getcol('SCAN_NUMBER'))
+        tb.close()
+        tb.open(self.outfile)
+        scan_number = numpy.unique(tb.getcol('SCANNO'))
+        tb.close()
+        print 'scan_number_org=', scan_number_org
+        print 'scan_number=', scan_number
+        self.assertEqual(len(scan_number_org), len(scan_number))
+        self.assertTrue(all(scan_number_org == scan_number))
+
+    def test_export(self):
+        """Test if SCAN_NUMBER is consistent with original Scantable."""
+        self.res = sdsave(infile=self.infile, outfile=self.outvis,
+                          outform='MS2')
+
+        # compare scan number
+        tb.open(self.infile)
+        scan_number_org = numpy.unique(tb.getcol('SCANNO'))
+        tb.close()
+        tb.open(self.outvis)
+        scan_number = numpy.unique(tb.getcol('SCAN_NUMBER'))
+        tb.close()
+        print 'scan_number_org=', scan_number_org
+        print 'scan_number=', scan_number
+        self.assertEqual(len(scan_number_org), len(scan_number))
+        self.assertTrue(all(scan_number_org == scan_number))
+
 def suite():
     return [sdsave_test0,sdsave_test1,sdsave_test2,
             sdsave_test3,sdsave_test4,sdsave_test5,
             sdsave_test6,sdsave_test7,sdsave_storageTest,
-            sdsave_freq_labeling,sdsave_flagging]
+            sdsave_freq_labeling,sdsave_flagging,
+            sdsave_scan_number]
