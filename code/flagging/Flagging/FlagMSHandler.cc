@@ -834,7 +834,7 @@ bool
 FlagMSHandler::summarySignal()
 {
 	Double progress = 100.0* ((Double) processedRows / (Double) selectedMeasurementSet_p->nrow());
-	if ((progress >= summaryThreshold_p) or (logger_p->priority() >= LogIO::DEBUG1))
+	if ((progress >= summaryThreshold_p) || (logger_p->priority() >= LogMessage::DEBUG1))
 	{
 		summaryThreshold_p += 10;
 		printChunkSummary_p = true;
