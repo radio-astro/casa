@@ -45,7 +45,8 @@ class sdstat_worker(sdutil.sdtask_template):
                                                          self.restfreq)
         
         # scantable selection
-        sorg.set_selection(self.get_selector())
+        #sorg.set_selection(self.get_selector())
+        sorg.set_selection(self.get_selector_by_list())
 
 
         # this is bit tricky

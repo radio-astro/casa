@@ -168,7 +168,8 @@ class sdcal2_worker(sdutil.sdtask_template):
                 self.insitu = True
 
     def initialize_scan(self):
-        sel = self.get_selector()
+        #sel = self.get_selector()
+        sel = self.get_selector_by_list()
         if self.insitu:
             # update infile 
             storage = sd.rcParams['scantable.storage']

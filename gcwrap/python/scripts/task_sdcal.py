@@ -25,7 +25,8 @@ class sdcal_worker(sdutil.sdtask_template):
             raise Exception, 'Scantable data %s, is not found'
 
         # A scantable selection
-        sel = self.get_selector()
+        #sel = self.get_selector()
+        sel = self.get_selector_by_list()
         sorg.set_selection(sel)
         
         # Copy scantable when usign disk storage not to modify

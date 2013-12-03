@@ -34,7 +34,8 @@ class sdreduce_worker(sdutil.sdtask_template):
                                                          self.restfreq)
         
         # Apply selection
-        self.scan.set_selection(self.get_selector())
+        #self.scan.set_selection(self.get_selector())
+        self.scan.set_selection(self.get_selector_by_list())
 
     def execute(self):
         # calibration stage

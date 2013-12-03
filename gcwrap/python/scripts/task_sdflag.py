@@ -84,7 +84,8 @@ class sdflag_worker(sdutil.sdtask_template):
             sorg._summary()
 
         # data selection
-        sorg.set_selection(self.get_selector())
+        #sorg.set_selection(self.get_selector())
+        sorg.set_selection(self.get_selector_by_list())
         
         # Copy the original data (CAS-3987)
         if self.is_disk_storage \

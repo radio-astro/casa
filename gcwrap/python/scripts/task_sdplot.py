@@ -39,7 +39,8 @@ class sdplot_worker(sdutil.sdtask_template):
             self.pollist = sorg.parse_idx_selection("POL",self.pollist)
         if type(self.beamlist) == str:
             self.beamlist = sorg.parse_idx_selection("BEAM",self.beamlist)
-        sel = self.get_selector()
+        #sel = self.get_selector()
+        sel = self.get_selector_by_list()
         sorg.set_selection(sel)
         self.ssel=sel.__str__()
         del sel
