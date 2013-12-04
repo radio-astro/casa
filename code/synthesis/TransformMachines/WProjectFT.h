@@ -283,10 +283,6 @@ protected:
   Vector<Double> uvScale, uvOffset;
   Double savedWScale_p;
 
-  // Array for non-tiled gridding
-  Array<Complex> griddedData;
-  Array<DComplex> griddedData2;
-
 
   // Grid/degrid zero spacing points?
   Bool usezero_p;

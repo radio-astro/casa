@@ -185,9 +185,18 @@ void VisModelData::clearModel(const MeasurementSet& thems){
 	  newTab.rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
       }
   }
+  ////Cleaning out orphaned image disk models
+  String srctable=thems.source().tableName();
+  Vector<String> possibleFT(2); 
+  possibleFT(0)=srctable+"/FT_MODEL*";
+  possibleFT(1)=theParts[0]+"/FT_MODEL*";
   
-
-
+  Vector<String> ftmods=Directory::shellExpand(possibleFT);
+  for (uInt kk=0; kk < ftmods.nelements(); ++kk){
+    if(Table::canDeleteTable(ftmods[kk])){
+      Table::deleteTable(ftmods[kk]);
+    }
+  }
 
 }
   void VisModelData::clearModel(const MeasurementSet& thems, const String field, const String specwindows){
@@ -535,8 +544,6 @@ Bool VisModelData::isModelDefined(const Int fieldId, const MeasurementSet& thems
   }
 
   void VisModelData::putRecordByKey(MeasurementSet& theMS, const String& theKey, const TableRecord& theRec, const Int sourceRowNum){
-    //if image for a given key is on disk ...lets remove it
-    deleteDiskImage(theMS, theKey);
     //Prefer the Source table first    
     if( (sourceRowNum> -1) && Table::isReadable(theMS.sourceTableName()) && Int(theMS.source().nrow()) > sourceRowNum ){
       MSSource& mss=theMS.source();
@@ -658,6 +665,9 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     //  cerr << "keys " << k << "  is  " << newTab.rwKeywordSet().name(k) << " type " << newTab.rwKeywordSet().dataType(k) << endl;
     //}
     ////////////////////////
+    //if image for a given key is on disk and not incrementing ...lets remove it
+    if(!incremental) 
+      deleteDiskImage(newTab, elkey);
     putModelRecord(validfieldids, outRec, newTab);  
     //if(newTab.rwKeywordSet().isDefined(elkey))
     //	newTab.rwKeywordSet().removeField(elkey);
