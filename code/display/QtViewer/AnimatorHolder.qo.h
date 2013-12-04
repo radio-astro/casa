@@ -70,20 +70,69 @@ namespace casa {
 		void closeEvent ( QCloseEvent * event );
 
 	signals:
-		void goTo(int frame);
-		void frameNumberEdited( int frame );
-		void channelSelect( int channel );
-		void movieChannels( int currentFrame, bool direction, int stepSize, int frameStart, int frameEnd );
-		void stopMovie();
-		void setRate(int frame);
-		void toStart();
-		void revStep();
-		void revPlay();
-		void stop();
-		void fwdStep();
-		void fwdPlay();
-		void toEnd();
-		void setMode( bool mode );
+
+		//--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+		// animation for channels
+		//--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+		void setChannelMode( );
+/*goTo*///displayPanel
+		void goToChannel( int channel );
+/*frameNumberEdited*/
+		void channelNumEdited( int frame );
+/*channelSelect*/
+		void selectChannel( int channel );
+/*movieChannels*/
+		void channelMovieState( int currentFrame, bool direction, int stepSize, int frameStart, int frameEnd );
+/*stopMovie*///display
+		//void stopChannelMovie( );
+/*setRate*///displayPanel
+		void setChannelMovieRate( int frame );
+/*toStart*///displayPanel
+		void toChannelMovieStart( );
+/*revStep*///displayPanel
+		void revStepChannelMovie( );
+/*revPlay*/
+		void revPlayChannelMovie( );
+/*stop*///displayPanel
+		void stopChannelMovie( );
+/*fwdStep*///displayPanel
+		void fwdStepChannelMovie( );
+/*fwdPlay*/
+		void fwdPlayChannelMovie( );
+/*toEnd*///displayPanel
+		void toChannelMovieEnd( );
+
+		//--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+		// animation for images
+		//--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+		void setImageMode( );
+/*goTo*///displayPanel
+		void goToImage( int image );
+/*frameNumberEdited*/
+		void imageNumEdited( int frame );
+/*channelSelect*/
+		void selectImage( int channel );
+/*movieChannels*/
+		void imageMovieState( int currentFrame, bool direction, int stepSize, int frameStart, int frameEnd );
+/*stopMovie*/
+		void stopImageMovie( );
+/*setRate*///setImageMovieRate
+		void setImageMovieRate( int frame );
+/*toStart*///displayPanel
+		void toImageMovieStart( );
+/*revStep*///displayPanel
+		void revStepImageMovie( );
+/*revPlay*/
+		void revPlayImageMovie( );
+/*stop*///displayPanel
+		//void stopImageMovie( );
+/*fwdStep*///displayPanel
+		void fwdStepImageMovie( );
+/*fwdPlay*/
+		void fwdPlayImageMovie( );
+/*toEnd*///displayPanel
+		void toImageMovieEnd( );
+
 		void lowerBoundAnimatorImageChanged( int );
 		void upperBoundAnimatorImageChanged(int);
 		void stepSizeAnimatorImageChanged(int);
@@ -93,7 +142,7 @@ namespace casa {
 		void animationImageChanged(int);
 
 	private slots:
-		void goToChannel(int frame);
+		void gotochannel_p(int frame);
 		void setRateChannel(int frame);
 		void toStartChannel();
 		void frameNumberEditedChannel( int frame );
@@ -106,7 +155,7 @@ namespace casa {
 		void upperBoundChangedChannel(int);
 		void lowerBoundChangedChannel(int);
 		void stepSizeChangedChannel(int);
-		void goToImage(int frame);
+		void gotoimage_p(int frame);
 		void setRateImage(int frame);
 		void toStartImage();
 		void frameNumberEditedImage( int frame );
