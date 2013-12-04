@@ -397,20 +397,6 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 					mbpos == "bottom" ? Qt::BottomToolBarArea :
 							Qt::TopToolBarArea, mouseToolBar_);
 
-#if 0
-	//  addToolBarBreak();
-	QToolBar *atb =  addToolBar("another toolbar");
-	QToolButton *atb_play = new QToolButton(atb);
-	atb->addWidget(atb_play);
-	const QIcon icon4 = QIcon(QString::fromUtf8(":/icons/Anim4_Play.png"));
-	atb_play->setIcon(icon4);
-	atb_play->setIconSize(QSize(22, 22));
-	atb_play->resize(QSize(36, 36));
-	atb_play->setCheckable(True);
-	atb_play->setEnabled(True);
-	connect(atb_play, SIGNAL(clicked()),           SLOT(fwdPlay_()));
-#endif
-
 	// This tool bar is _public_; programmer can add custom interface to it.
 	customToolBar    = addToolBar("Custom Toolbar");
 	customToolBar->setObjectName("Custom Toolbar");
@@ -765,12 +751,16 @@ void QtDisplayPanelGui::initAnimationHolder() {
 		animationImageIndex = -1;
 
 		animationHolder = new AnimatorHolder( this, this );
-		connect(animationHolder, SIGNAL(revPlay()), SLOT(revPlay_()));
-		connect(animationHolder, SIGNAL(fwdPlay()), SLOT(fwdPlay_()));
-		connect(animationHolder, SIGNAL(setMode(bool)), this, SLOT(animationModeChanged(bool)));
-		connect(animationHolder, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
-		connect(animationHolder, SIGNAL(movieChannels(int,bool,int,int,int)), this, SLOT(movieChannels(int,bool,int,int,int)));
-		connect(animationHolder, SIGNAL(stopMovie()), this, SLOT(movieStop()));
+		connect(animationHolder, SIGNAL(revPlayChannelMovie()), SLOT(revPlayChannelMovie_()));
+		connect(animationHolder, SIGNAL(revPlayImageMovie()), SLOT(revPlayImageMovie_()));
+		connect(animationHolder, SIGNAL(fwdPlayChannelMovie()), SLOT(fwdPlayChannelMovie_()));
+		connect(animationHolder, SIGNAL(fwdPlayImageMovie()), SLOT(fwdPlayImageMovie_()));
+		connect(animationHolder, SIGNAL(setChannelMode( )), this, SLOT(to_channel_mode( )));
+		connect(animationHolder, SIGNAL(setImageMode( )), this, SLOT(to_image_mode( )));
+		connect(animationHolder, SIGNAL(selectChannel(int)), this, SLOT(doSelectChannel(int)));
+		connect(animationHolder, SIGNAL(channelMovieState(int,bool,int,int,int)), this, SLOT(movieChannels(int,bool,int,int,int)));
+		connect(animationHolder, SIGNAL(stopImageMovie()), this, SLOT(movieStop()));
+		connect(animationHolder, SIGNAL(stopChannelMovie()), this, SLOT(movieStop()));
 		connect(animationHolder, SIGNAL(animationImageChanged(int)), this, SLOT(animationImageChanged(int)));
 
 		// Set interface according to the initial state of underlying animator.

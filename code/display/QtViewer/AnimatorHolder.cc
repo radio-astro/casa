@@ -61,14 +61,30 @@ namespace casa {
         connect( this, SIGNAL(upperBoundAnimatorChannelChanged(int)), panel_->displayPanel( ), SLOT(upperBoundAnimatorChannelChanged(int)));
         connect( this, SIGNAL(lowerBoundAnimatorImageChanged(int)), panel_->displayPanel( ), SLOT(lowerBoundAnimatorImageChanged(int)));
         connect( this, SIGNAL(upperBoundAnimatorImageChanged(int)), panel_->displayPanel( ), SLOT(upperBoundAnimatorImageChanged(int)));
-        connect( this, SIGNAL(goTo(int)), panel_->displayPanel( ), SLOT(goTo(int)));
-        connect( this, SIGNAL(frameNumberEdited(int)), panel_->displayPanel( ), SLOT(goTo(int)));
-        connect( this,  SIGNAL(setRate(int)), panel_->displayPanel( ), SLOT(setRate(int)));
-        connect( this, SIGNAL(toStart()), panel_->displayPanel( ), SLOT(toStart()));
-        connect( this, SIGNAL(revStep()), panel_->displayPanel( ), SLOT(revStep()));
-        connect( this, SIGNAL(stop()), panel_->displayPanel( ), SLOT(stop()));
-        connect( this, SIGNAL(fwdStep()), panel_->displayPanel( ), SLOT(fwdStep()));
-        connect( this, SIGNAL(toEnd()), panel_->displayPanel( ), SLOT(toEnd()));
+
+		//--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+		// animation for channels
+		//--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        connect( this, SIGNAL(goToChannel(int)), panel_->displayPanel( ), SLOT(goToChannel(int)));
+        connect( this, SIGNAL(channelNumEdited(int)), panel_->displayPanel( ), SLOT(goToChannel(int)));
+        connect( this,  SIGNAL(setChannelMovieRate(int)), panel_->displayPanel( ), SLOT(setChannelMovieRate(int)));
+        connect( this, SIGNAL(toChannelMovieStart()), panel_->displayPanel( ), SLOT(toChannelMovieStart()));
+        connect( this, SIGNAL(revStepChannelMovie()), panel_->displayPanel( ), SLOT(revStepChannelMovie()));
+        connect( this, SIGNAL(stopChannelMovie()), panel_->displayPanel( ), SLOT(stopChannelMovie()));
+        connect( this, SIGNAL(fwdStepChannelMovie()), panel_->displayPanel( ), SLOT(fwdStepChannelMovie()));
+        connect( this, SIGNAL(toChannelMovieEnd()), panel_->displayPanel( ), SLOT(toChannelMovieEnd()));
+
+		//--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+		// animation for images
+		//--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        connect( this, SIGNAL(goToImage(int)), panel_->displayPanel( ), SLOT(goToImage(int)));
+        connect( this, SIGNAL(imageNumEdited(int)), panel_->displayPanel( ), SLOT(goToImage(int)));
+        connect( this,  SIGNAL(setImageMovieRate(int)), panel_->displayPanel( ), SLOT(setImageMovieRate(int)));
+        connect( this, SIGNAL(toImageMovieStart()), panel_->displayPanel( ), SLOT(toImageMovieStart()));
+        connect( this, SIGNAL(revStepImageMovie()), panel_->displayPanel( ), SLOT(revStepImageMovie()));
+        connect( this, SIGNAL(stopImageMovie()), panel_->displayPanel( ), SLOT(stopImageMovie()));
+        connect( this, SIGNAL(fwdStepImageMovie()), panel_->displayPanel( ), SLOT(fwdStepImageMovie()));
+        connect( this, SIGNAL(toImageMovieEnd()), panel_->displayPanel( ), SLOT(toImageMovieEnd()));
 
 		connect( this, SIGNAL(visibilityChanged(bool)), SLOT(handle_visibility(bool)) );
 
@@ -207,7 +223,7 @@ namespace casa {
             sizeGroupBox(channelGroupBox);
 
 			connect( channelGroupBox, SIGNAL(clicked()), this, SLOT(modeChange()));
-			connect(animatorChannel, SIGNAL(goTo(int)), this, SLOT(goToChannel(int)));
+			connect(animatorChannel, SIGNAL(goTo(int)), this, SLOT(gotochannel_p(int)));
 			connect(animatorChannel, SIGNAL(frameNumberEdited(int)), this, SLOT(frameNumberEditedChannel(int)));
 			connect(animatorChannel, SIGNAL(setRate(int)), this, SLOT(setRateChannel(int)));
 			connect(animatorChannel, SIGNAL(toStart()),  this, SLOT(toStartChannel()));
@@ -242,7 +258,7 @@ namespace casa {
             sizeGroupBox(imageGroupBox);
 
 			connect( imageGroupBox, SIGNAL(clicked()), this, SLOT(modeChange()));
-			connect(animatorImage, SIGNAL(goTo(int)), this, SLOT(goToImage(int)));
+			connect(animatorImage, SIGNAL(goTo(int)), this, SLOT(gotoimage_p(int)));
 			connect(animatorImage, SIGNAL(frameNumberEdited(int)), this, SLOT(frameNumberEditedImage(int)));
 			connect(animatorImage,  SIGNAL(setRate(int)), this, SLOT(setRateImage(int)));
 			connect(animatorImage, SIGNAL(toStart()), this, SLOT(toStartImage()));
@@ -416,39 +432,39 @@ namespace casa {
 
 //Channels
 
-	void AnimatorHolder::goToChannel(int frame) {
+	void AnimatorHolder::gotochannel_p(int frame) {
 		stopImagePlay();
 		if ( previousMode == CHANNEL_MODE ) {
-			emit goTo( frame );
+			emit goToChannel( frame );
 		} else {
-			emit channelSelect( frame );
+			emit selectChannel( frame );
 		}
 	}
 	void AnimatorHolder::setRateChannel(int rate) {
 		stopImagePlay();
-		emit setRate( rate );
+		emit setChannelMovieRate( rate );
 	}
 	void AnimatorHolder::frameNumberEditedChannel( int frame ) {
 		stopImagePlay();
 		if ( previousMode == CHANNEL_MODE ) {
-			emit frameNumberEdited( frame );
+			emit channelNumEdited( frame );
 		} else {
-			emit channelSelect( frame );
+			emit selectChannel( frame );
 		}
 	}
 	void AnimatorHolder::toStartChannel() {
 		stopImagePlay();
 		if ( previousMode == CHANNEL_MODE ) {
-			emit toStart();
+			emit toChannelMovieStart();
 		} else {
 			int startFrame = animatorChannel->getFrameStart();
-			emit channelSelect(startFrame);
+			emit selectChannel(startFrame);
 		}
 	}
 	void AnimatorHolder::revStepChannel() {
 		stopImagePlay();
 		if ( previousMode == CHANNEL_MODE ) {
-			emit revStep();
+			emit revStepChannelMovie();
 		} else {
 			int currentFrame = this->animatorChannel->getFrame();
 			int stepSize = animatorChannel->getStepSize();
@@ -459,13 +475,13 @@ namespace casa {
 				int maxFrame = animatorChannel->getFrameEnd();
 				currentFrame = maxFrame - diff;
 			}
-			emit channelSelect( currentFrame );
+			emit selectChannel( currentFrame );
 		}
 	}
 	void AnimatorHolder::revPlayChannel() {
 		stopImagePlay();
 		if ( previousMode == CHANNEL_MODE ) {
-			emit revPlay();
+			emit revPlayChannelMovie();
 		} else {
 			animatorChannel->setPlaying( -1 );
 			emitMovieChannels( false );
@@ -476,7 +492,7 @@ namespace casa {
 	void AnimatorHolder::fwdPlayChannel() {
 		stopImagePlay();
 		if ( previousMode == CHANNEL_MODE ) {
-			emit fwdPlay();
+			emit fwdPlayChannelMovie();
 		} else {
 			animatorChannel->setPlaying( 1 );
 			emitMovieChannels( true );
@@ -485,16 +501,16 @@ namespace casa {
 	void AnimatorHolder::stopChannel() {
 		stopImagePlay();
 		if ( previousMode == CHANNEL_MODE ) {
-			emit stop();
+			emit stopChannelMovie();
 		} else {
 			animatorChannel->setPlaying( 0 );
-			emit stopMovie();
+			emit stopChannelMovie();
 		}
 	}
 	void AnimatorHolder::fwdStepChannel() {
 		stopImagePlay();
 		if ( previousMode == CHANNEL_MODE ) {
-			emit fwdStep();
+			emit fwdStepChannelMovie();
 		} else {
 			int currentFrame = animatorChannel->getFrame();
 			int stepSize = animatorChannel->getStepSize();
@@ -505,16 +521,16 @@ namespace casa {
 				int minFrame = animatorChannel->getFrameStart();
 				currentFrame = minFrame + diff;
 			}
-			emit channelSelect( currentFrame );
+			emit selectChannel( currentFrame );
 		}
 	}
 	void AnimatorHolder::toEndChannel() {
 		stopImagePlay();
 		if ( previousMode == CHANNEL_MODE ) {
-			emit toEnd();
+			emit toChannelMovieEnd();
 		} else {
 			int lastFrame = this->animatorChannel->getFrameEnd();
-			emit channelSelect( lastFrame );
+			emit selectChannel( lastFrame );
 		}
 	}
 
@@ -532,50 +548,50 @@ namespace casa {
 
 //Images
 
-	void AnimatorHolder::goToImage(int frame) {
+	void AnimatorHolder::gotoimage_p(int frame) {
 		stopChannelPlay();
-		emit goTo( frame );
+		emit goToImage( frame );
 	}
 	void AnimatorHolder::setRateImage(int rate) {
 		stopChannelPlay();
-		emit setRate( rate );
+		emit setImageMovieRate( rate );
 	}
 
 	void AnimatorHolder::frameNumberEditedImage( int frame ) {
 		stopChannelPlay();
-		emit frameNumberEdited( frame );
+		emit imageNumEdited( frame );
 	}
 
 	void AnimatorHolder::toStartImage() {
 		stopChannelPlay();
-		emit toStart();
+		emit toImageMovieStart();
 	}
 	void AnimatorHolder::revStepImage() {
 		stopChannelPlay();
-		emit revStep();
+		emit revStepImageMovie();
 	}
 	void AnimatorHolder::revPlayImage() {
 		stopChannelPlay();
 		animatorImage->setPlaying( -1 );
-		emit revPlay();
+		emit revPlayImageMovie();
 	}
 
 	void AnimatorHolder::fwdPlayImage() {
 		stopChannelPlay();
 		animatorImage->setPlaying( 1 );
-		emit fwdPlay();
+		emit fwdPlayImageMovie();
 	}
 	void AnimatorHolder::stopImage() {
 		animatorImage->setPlaying( 0 );
-		emit stop();
+		emit stopImageMovie();
 	}
 	void AnimatorHolder::fwdStepImage() {
 		stopChannelPlay();
-		emit fwdStep();
+		emit fwdStepImageMovie();
 	}
 	void AnimatorHolder::toEndImage() {
 		stopChannelPlay();
-		emit toEnd();
+		emit toImageMovieEnd();
 	}
 
 	void AnimatorHolder::emitMovieChannels( bool direction ) {
@@ -583,7 +599,7 @@ namespace casa {
 		int currentFrame = frameStart;
 		int frameEnd = animatorChannel->getFrameEnd();
 		int stepSize = animatorChannel->getStepSize();
-		emit movieChannels( currentFrame, direction, stepSize, frameStart, frameEnd );
+		emit channelMovieState( currentFrame, direction, stepSize, frameStart, frameEnd );
 	}
 
 	void AnimatorHolder::stopImagePlay() {
@@ -637,9 +653,12 @@ namespace casa {
 				frame = animatorChannel->getFrame();
 				channelMode = BLINK_MODE;
 			}
-			emit setMode( channelMode );
-			emit setRate( rate );
-			emit goTo( frame );
+			if ( channelMode )
+				emit setChannelMode( );
+			else
+				emit setImageMode( );
+			emit setChannelMovieRate( rate );
+			emit goToChannel( frame );
 			previousMode = mode;
 		}
 	}

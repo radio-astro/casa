@@ -469,24 +469,48 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			setMode(downcase(mode)=="normal");
 		}
 
-		virtual void toStart() {
-			goTo(startFrame());
-		}
-		virtual void toEnd()   {
+		void toChannelMovieStart( ) { goTo( zStart( ) ); }
+		void toImageMovieStart( ) { goTo( bStart( ) ); }
+
+		virtual void toChannelMovieEnd()   {
+			setMode(true);
 			goTo(lastFrame());
 		}
-		virtual void revStep() {
+		virtual void toImageMovieEnd()   {
+			setMode(false);
+			goTo(lastFrame());
+		}
+		virtual void revStepChannelMovie( ) {
 			stop_();
+			setMode(true);
 			prev_();
 		}
-		virtual void fwdStep() {
+		virtual void revStepImageMovie( ) {
 			stop_();
+			setMode(false);
+			prev_();
+		}
+		virtual void fwdStepChannelMovie( ) {
+			stop_();
+			setMode(true);
 			next_();
 		}
-		virtual void revPlay();
-		virtual void stop();		// slots corresp. to tapedeck buttons.
-		virtual void fwdPlay();
-		virtual void setRate(int rate);
+		virtual void fwdStepImageMovie( ) {
+			stop_();
+			setMode(false);
+			next_();
+		}
+		virtual void revPlayChannelMovie( );
+		virtual void revPlayImageMovie( );
+		virtual void fwdPlayChannelMovie( );
+		virtual void fwdPlayImageMovie( );
+		virtual void stopChannelMovie( );		// slots corresp. to tapedeck buttons.
+		virtual void stopImageMovie( );
+
+		/**virtual void setRate(int rate);**/
+		void setChannelMovieRate(int);
+		void setImageMovieRate(int);
+
 		void lowerBoundAnimatorImageChanged( int );
 		void upperBoundAnimatorImageChanged(int);
 		void stepSizeAnimatorImageChanged(int);
@@ -494,6 +518,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void upperBoundAnimatorChannelChanged(int);
 		void stepSizeAnimatorChannelChanged(int);
 
+
+		void goToChannel( int channel ) { goToZ(channel); }
+		void goToImage( int image ) { goToB(image); }
 
 		virtual void goTo(int frm, bool channelFrame=false) {
 			if(modeZ() || channelFrame ) goToZ(frm);
