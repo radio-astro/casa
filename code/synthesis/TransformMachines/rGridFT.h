@@ -205,7 +205,7 @@ public:
 
   // Save and restore the GridFT to and from a record
   virtual Bool toRecord(String& error, RecordInterface& outRec, 
-			Bool withImage=False);
+			Bool withImage=False, const String diskimage="");
   virtual Bool fromRecord(String& error, const RecordInterface& inRec);
 
   // Can this FTMachine be represented by Fourier convolutions?

@@ -413,8 +413,12 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
 	    for (Int model=0; model < (sm_->numberOfModels());++model){
 	      Record ftrec;
 	      String error;
+	      String modImage=vi.ms().getPartNames()[0];
+	      if(!(vi.ms().source().isNull()))
+		modImage=(vi.ms()).source().tableName();
+	      modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
 	      //cerr << "in ftrec saving" << endl;
-	      if(!(ftm_p[model]->toRecord(error, ftrec, True)))
+	      if(!(ftm_p[model]->toRecord(error, ftrec, True, modImage)))
 		throw(AipsError("Error in record saving:  "+error));
 	      vi.putModel(ftrec, False, ((model>0) || incremental || (cubeSlice > 0)));
 	    }
@@ -848,8 +852,13 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 		      for (Int model=0; model < (sm_->numberOfModels());++model){
 			Record ftrec;
 			String error;
+			String modImage=wvi_p->ms().getPartNames()[0];
+			if(!(wvi_p->ms().source().isNull()))
+			  modImage=(wvi_p->ms()).source().tableName();
+			modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
+		       
 			//cerr << "in ftrec saving" << endl;
-			if(!(ftm_p[model]->toRecord(error, ftrec, True)))
+			if(!(ftm_p[model]->toRecord(error, ftrec, True, modImage)))
 			  throw(AipsError("Error in saving model;  "+error));
 			wvi_p->putModel(ftrec, False, ((model>0) || predictedComp || incremental || (cubeSlice >0)));
 		      }
@@ -1718,8 +1727,6 @@ CubeSkyEquation::getFreqRange(ROVisibilityIterator& vi,
     Block<Vector<Int> > nchanb;
     Block<Vector<Int> > incrb=blockChanInc_p;
     vi.getSpwInFreqRange(spwb, startb, nchanb, start, end, chanwidth);
-    cerr << "CSE: " << start << " " << end << " " << chanwidth << endl
-     	 << "     " << spwb[0] << " " << startb[0] << " " << nchanb[0] << " " << incrb[0] << endl;
     if(spwb.nelements()==0)
         return False;
 

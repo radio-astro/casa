@@ -674,7 +674,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //---------------------------------------------------------------------------------------------------
   //------------------------ To / From Records ---------------------------------------------------------
   //---------------------------------------------------------------------------------------------------
-  Bool NewMultiTermFT::toRecord(String& error, RecordInterface& outRec, Bool withImage) 
+  Bool NewMultiTermFT::toRecord(String& error, RecordInterface& outRec, Bool withImage, const String diskimage) 
   {
     if(dbg_p) cout << "MTFT :: toRecord for " << nterms_p << endl;
     Bool retval = True;
@@ -682,7 +682,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(uInt tix=0;tix<nterms_p;tix++)
       {
 	Record subFTContainer;
-	subftms_p[tix]->toRecord(error, subFTContainer,withImage);
+	String elimage="";
+	if(diskimage != ""){
+	  elimage=diskimage+String("_term_")+String::toString(tix);
+	}
+	subftms_p[tix]->toRecord(error, subFTContainer,withImage, elimage);
 	outRec.defineRecord("subftm_"+String::toString(tix),subFTContainer);
       }
     

@@ -2458,12 +2458,6 @@ Bool Imager::createFTMachine()
     useDoublePrecGrid=True;
 
   LogIO os(LogOrigin("imager", "createFTMachine()", WHERE));
-
-  // This next line is only a guess
-  // Commented out as numberAnt is not actually used anywehere.
-  //Int numberAnt=((MeasurementSet&)*ms_p).antenna().nrow();
-  
-  
   
 
   Float padding;
