@@ -84,6 +84,7 @@ public:
     static const String PARAM_WIDTH; // int or uInt
     static const String PARAM_EXPORT_FILENAME; // String
     static const String PARAM_EXPORT_FORMAT; //String
+    static const String PARAM_EXPORT_RANGE; //String
     static const String PARAM_EXPORT_HIGHRES; // bool
     static const String PARAM_EXPORT_INTERACTIVE; // bool
     static const String PARAM_EXPORT_ASYNC;  // bool

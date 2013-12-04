@@ -25,12 +25,13 @@
 //#
 //# $Id: $
 #include <plotms/GuiTabs/PlotMSExportTab.qo.h>
-
+#include <plotms/Plots/PlotMSPlot.h>
+#include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <casaqt/QtUtilities/QtEditingWidget.qo.h>
 #include <casaqt/QtUtilities/QtUtilities.h>
 #include <plotms/Actions/PlotMSAction.h>
 #include <plotms/Gui/PlotMSPlotter.qo.h>
-
+#include <QDebug>
 namespace casa {
 
 /////////////////////////////////
@@ -50,10 +51,21 @@ PlotMSExportTab::PlotMSExportTab(PlotMSPlotTab* plotTab,PlotMSPlotter* parent):
     for(unsigned int i = 0; i < formats.size(); i++)
         format->addItem(formats[i].c_str());
     
+    const vector<String>& exportRanges = PMS::exportRangeStrings();
+    for(unsigned int i = 0; i < exportRanges.size(); i++){
+    	this->
+    	exportRangeCombo->addItem(exportRanges[i].c_str());
+    }
+    exportRangeCombo->setCurrentIndex( PMS::DEFAULT_EXPORT_RANGE );
+
+
+    itsLabelDefaults_.insert(rangeLabel, rangeLabel->text());
+
     // Connect widgets.
     const QMap<PlotMSAction::Type, QAction*>& actMap=  parent->plotActionMap();
     connect(exportButton, SIGNAL(clicked()),
             actMap[PlotMSAction::PLOT_EXPORT], SLOT(trigger()));
+    connect(exportRangeCombo, SIGNAL(currentIndexChanged(int)), SIGNAL(exportRangeChanged()));
 }
 
 PlotMSExportTab::~PlotMSExportTab() { }
@@ -81,5 +93,28 @@ PlotExportFormat PlotMSExportTab::currentlySetExportFormat() const {
     
     return format;
 }
+
+// Implements PlotMSPlotSubtab::getValue().
+void PlotMSExportTab::getValue(PlotMSPlotParameters& params) const {
+	PMS_PP_Export* exportParams = params.typedGroup<PMS_PP_Export>();
+	 if ( exportParams == NULL ) {
+		 params.setGroup<PMS_PP_Export>();
+	     exportParams = params.typedGroup<PMS_PP_Export>();
+	 }
+
+	 int rangeIndex = exportRangeCombo->currentIndex();
+	 exportParams->setExportRange(static_cast<PMS::ExportRange>(rangeIndex));
+}
+
+// Implements PlotMSPlotSubtab::setValue().
+ void PlotMSExportTab::setValue(const PlotMSPlotParameters& params) {
+	 const PMS_PP_Export* exportParams = params.typedGroup<PMS_PP_Export>();
+	 if ( exportParams != NULL ){
+		 int exportIndex = exportParams->getExportRange();
+		 exportRangeCombo->setCurrentIndex( exportIndex );
+	 }
+}
+
+
 
 }

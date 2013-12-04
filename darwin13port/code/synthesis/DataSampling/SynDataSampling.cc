@@ -161,7 +161,8 @@ SynDataSampling& SynDataSampling::operator=(const SynDataSampling& other)
 };
 
 //----------------------------------------------------------------------
-SynDataSampling::SynDataSampling(const SynDataSampling& other)
+SynDataSampling::SynDataSampling(const SynDataSampling& other):
+    DataSampling(other)
 {
   operator=(other);
 }

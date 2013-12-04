@@ -189,14 +189,17 @@ class sdtask_template(sdtask_interface):
         # do nothing by default
         pass
         
-    def get_selector(self):
+    def get_selector_by_list(self):
         attributes = ['scanlist','iflist','pollist','beamlist',
                       'rowlist','field']
         for a in attributes:
             if not hasattr(self,a): setattr(self,a,None)
-        selector = get_selector(in_scans=self.scanlist, in_ifs=self.iflist,
-                                in_pols=self.pollist, in_beams=self.beamlist,
-                                in_rows=self.rowlist, in_field=self.field)
+        selector = get_selector_by_list(in_scans=self.scanlist,
+                                        in_ifs=self.iflist,
+                                        in_pols=self.pollist,
+                                        in_beams=self.beamlist,
+                                        in_rows=self.rowlist,
+                                        in_field=self.field)
 
         # CAS-5496 selection by timerange
         if hasattr(self, 'timerange') and len(self.timerange) > 0:
@@ -381,9 +384,9 @@ def assert_outfile_canoverwrite_or_nonexistent(outfile=None, outform=None, overw
 def get_listvalue(value):
     return _to_list(value, int) or []
 
-def get_selector(in_scans=None, in_ifs=None, in_pols=None, \
-                 in_field=None, in_beams=None, in_rows=None,
-                 in_timerange=None):
+def get_selector_by_list(in_scans=None, in_ifs=None, in_pols=None, \
+                         in_field=None, in_beams=None, in_rows=None,
+                         in_timerange=None):
     scans = get_listvalue(in_scans)
     ifs   = get_listvalue(in_ifs)
     pols  = get_listvalue(in_pols)

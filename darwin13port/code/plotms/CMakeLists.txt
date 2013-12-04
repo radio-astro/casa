@@ -162,6 +162,7 @@ casa_add_library( plotms
   PlotMS/PlotMS.cc
   PlotMS/PlotMSConstants.cc
   PlotMS/PlotMSDBusApp.cc
+  PlotMS/PlotMSExportParam.cc
   PlotMS/PlotMSFlagging.cc
   PlotMS/PlotMSIterParam.cc
   PlotMS/PlotMSLabelFormat.cc
@@ -171,6 +172,7 @@ casa_add_library( plotms
   PlotMS/PlotMSTransformations.cc
   PlotMS/PlotMSWatchedParameters.cc
   Plots/PlotMSPage.cc
+  Plots/PlotMSPages.cc
   Plots/PlotMSPlot.cc
   Plots/PlotMSPlotManager.cc
   Plots/PlotMSPlotParameterGroups.cc
@@ -228,6 +230,7 @@ INSTALL (FILES
         PlotMS/PlotMSAveraging.h
         PlotMS/PlotMSConstants.h
         PlotMS/PlotMSDBusApp.h
+        PlotMS/PlotMSExportParam.h
         PlotMS/PlotMSFlagging.h
         PlotMS/PlotMSIterParam.h
         PlotMS/PlotMSLabelFormat.h
@@ -242,6 +245,7 @@ INSTALL (FILES
 INSTALL (FILES
         Plots/PlotMSOverPlot.h
         Plots/PlotMSPage.h
+        Plots/PlotMSPages.h
         Plots/PlotMSPlot.h
         Plots/PlotMSPlotManager.h
         Plots/PlotMSPlotParameterGroups.h
@@ -255,3 +259,4 @@ casa_add_executable( plotms casaplotms apps/casaplotms/casaplotms.cc )
 casa_add_executable( plotms tExportPlot test/tExportPlot.cc )
 casa_add_executable( plotms tDataSelection test/tDataSelection.cc )
 casa_add_executable( plotms tSymbol test/tSymbol.cc )
+casa_add_executable( plotms tExportRange test/tExportRange.cc )

@@ -110,10 +110,9 @@ void PlotMSExportThread::threadFinished() {
                 "Export Success");
     	}
     	else {
-    		//itsPlot_->parent()->getPlotter()->showError(
     		itsPlotter_->showError(
                 "There was a problem exporting to file " + exportLocation +
-                "!", "Export Error", false);
+                ".", "Export Error", false);
     	}
     }
     itsMutex_.unlock();

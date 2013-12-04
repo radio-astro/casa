@@ -35,7 +35,8 @@ class sdfit_worker(sdutil.sdtask_template):
                                                          self.restfreq)
 
         # Select scan and field
-        sorg.set_selection(self.get_selector())
+        #sorg.set_selection(self.get_selector())
+        sorg.set_selection(self.get_selector_by_list())
 
         # this is bit tricky
         # set fluxunit here instead of self.set_to_scan

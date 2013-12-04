@@ -346,7 +346,7 @@ void MultiTermFT::initMaps(const VisBuffer& vb){
   //---------------------------------------------------------------------------------------------------
   //------------------------ To / From Records ---------------------------------------------------------
   //---------------------------------------------------------------------------------------------------
-  Bool MultiTermFT::toRecord(String& error, RecordInterface& outRec, Bool withImage) 
+Bool MultiTermFT::toRecord(String& error, RecordInterface& outRec, Bool withImage, const String diskimage) 
   {
     if(dbg_p) cout << "MTFT :: toRecord for term " << thisterm_p << endl;
     Bool retval = True;
@@ -356,10 +356,15 @@ void MultiTermFT::initMaps(const VisBuffer& vb){
       return False;
 
     Record subFTContainer;
-    subftm_p->toRecord(error, subFTContainer,withImage);
+    String elimage="";
+    if(diskimage != ""){
+      elimage=diskimage+String("_")+ String::toString(rand());
+      while(Table::isReadable(elimage))
+	    elimage=diskimage+String("_")+ String::toString(rand());
+    }
+    subftm_p->toRecord(error, subFTContainer,withImage, elimage);
     
     outRec.defineRecord("subftm",subFTContainer);
-    
     outRec.define("subftname", subFTMname_p);
     outRec.define("nterms",nterms_p);
     outRec.define("thisterm",thisterm_p);

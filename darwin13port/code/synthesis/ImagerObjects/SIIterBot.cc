@@ -93,7 +93,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
     
 	SIIterBot_state::~SIIterBot_state() {
-		fprintf( stderr, ">>>>>>\t\tSIIterBot_state::~SIIterBot_state(0x%x)\n", this );
+		fprintf( stderr, ">>>>>>\t\tSIIterBot_state::~SIIterBot_state(0x%p)\n", this );
 		fflush( stderr );
 	}
 
@@ -575,7 +575,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	SIIterBot_adaptor::~SIIterBot_adaptor() {
-		fprintf( stderr, ">>>>>>\t\tSIIterBot_adaptor::~SIIterBot_adaptor(0x%x)\n", this );
+		fprintf( stderr, ">>>>>>\t\tSIIterBot_adaptor::~SIIterBot_adaptor(0x%p)\n", this );
 		fflush( stderr );
 #ifdef INTERACTIVE_ITERATION
 		state->denyCallbacks(this);

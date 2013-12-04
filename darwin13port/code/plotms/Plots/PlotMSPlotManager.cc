@@ -25,10 +25,9 @@
 //#
 //# $Id: $
 #include <plotms/Plots/PlotMSPlotManager.h>
-
-//#include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSOverPlot.h>
+#include <QDebug>
 
 namespace casa {
 
@@ -84,6 +83,8 @@ PlotMSPlot* PlotMSPlotManager::plot(unsigned int index) {
     if(index >= itsPlots_.size()) return NULL;
     else return itsPlots_[index];
 }
+
+
 
 const PlotMSPlot* PlotMSPlotManager::plot(unsigned int index) const {
     if(index >= itsPlots_.size()) return NULL;
@@ -146,5 +147,6 @@ void PlotMSPlotManager::notifyWatchers() const {
     for(unsigned int i = 0; i < itsWatchers_.size(); i++)
         itsWatchers_[i]->plotsChanged(*this);
 }
+
 
 }

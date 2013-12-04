@@ -157,8 +157,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if (itsPixelInTmp2.nelements()!=nPixelAxes) itsPixelInTmp2.resize(nPixelAxes);
 
-		viewer::RangeLimiter<double> xLimiter;
-		viewer::RangeLimiter<double> yLimiter;
+		viewer::RangeLimiter<double> xLimiter = viewer::RangeLimiter<double>();
+		viewer::RangeLimiter<double> yLimiter = viewer::RangeLimiter<double>();
 		Vector<int> shape = dataShape( ).asVector( );
 		const Coordinate &xcoord = axisToCoordinate(&itsCoordSys,0);
 		if ( xcoord.type( ) == Coordinate::STOKES ) {

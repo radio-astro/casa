@@ -67,11 +67,10 @@ const String PlotMSDBusApp::PARAM_TRANSFORMATIONS = "transformations";
 const String PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY = "updateImmediately";
 const String PlotMSDBusApp::PARAM_WIDTH = "width";
 
-//const String PlotMSDBusApp::PARAM_EXPORT_FILENAME = "exportfilename";
 const String PlotMSDBusApp::PARAM_EXPORT_FILENAME = "plotfile";
 const String PlotMSDBusApp::PARAM_EXPORT_FORMAT = "expformat";
+const String PlotMSDBusApp::PARAM_EXPORT_RANGE = "exprange";
 const String PlotMSDBusApp::PARAM_EXPORT_HIGHRES = "highres";
-//const String PlotMSDBusApp::PARAM_EXPORT_HIGHRES = "exporthighres";
 const String PlotMSDBusApp::PARAM_EXPORT_INTERACTIVE = "exportinteractive";
 const String PlotMSDBusApp::PARAM_EXPORT_ASYNC = "exportasync";
 
@@ -366,6 +365,7 @@ void PlotMSDBusApp::dbusRunXmlMethod(
         } else callError = true;
         
     } 
+
     else if (methodName == METHOD_SETPLOTPARAMS)  {
         bool resized = plotParameters(index);
         PlotMSPlotParameters& ppp = itsPlotParams_[index];
@@ -405,7 +405,13 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             ppiter = ppp.typedGroup<PMS_PP_Iteration>();
         }
         
+        PMS_PP_Export* exportParams = ppp.typedGroup<PMS_PP_Export>();
+        if ( exportParams == NULL ){
+        	ppp.setGroup<PMS_PP_Export>();
+        	exportParams = ppp.typedGroup<PMS_PP_Export>();
+        }
         
+
         if(parameters.isDefined(PARAM_FILENAME) &&
            parameters.dataType(PARAM_FILENAME) == TpString){
             ppdata->setFilename(parameters.asString(PARAM_FILENAME));
@@ -437,8 +443,6 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             iter.fromRecord(parameters.asRecord(PARAM_ITERATE));
             ppiter->setIterParam(iter);
         }
-
-
         
         bool ok;
         PMS::Axis a;
@@ -598,6 +602,11 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             ppcan->showGridMinor(want);
         }
         
+        if (parameters.isDefined(PARAM_EXPORT_RANGE)  &&
+           parameters.dataType(PARAM_EXPORT_RANGE) == TpString)   {
+           String exportRangeStr = parameters.asString(PARAM_EXPORT_RANGE);
+           exportParams->setExportRange( exportRangeStr );
+        }
 
         if (parameters.isDefined(PARAM_MAJORCOLOR)  && 
            parameters.dataType(PARAM_MAJORCOLOR) == TpString)   {
@@ -756,6 +765,7 @@ bool PlotMSDBusApp::_savePlot(const Record& parameters) {
 	}
 
 	if (ok) {
+
 		String format;
 		PlotExportFormat::Type type;
 		if ( ! parameters.isDefined(PARAM_EXPORT_FORMAT)

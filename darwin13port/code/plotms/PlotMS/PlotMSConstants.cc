@@ -221,6 +221,7 @@ const bool PMS::DEFAULT_SHOWLEGEND = false;
 const PlotCanvas::LegendPosition PMS::DEFAULT_LEGENDPOSITION =
     PlotCanvas::INT_URIGHT;
 const bool PMS::DEFAULT_SHOW_GRID = false;
+const PMS::ExportRange PMS::DEFAULT_EXPORT_RANGE = PMS::PAGE_CURRENT;
 
 PlotLinePtr PMS::DEFAULT_GRID_LINE(PlotFactoryPtr factory) {
     static PlotLinePtr line = factory->line("gray");

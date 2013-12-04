@@ -202,7 +202,7 @@ public:
 
   // Save and restore the MosaicFT to and from a record
   Bool toRecord(String& error, RecordInterface& outRec, 
-		Bool withImage=False);
+		Bool withImage=False, const String diskimage="");
   Bool fromRecord(String& error, const RecordInterface& inRec);
   
   // Can this FTMachine be represented by Fourier convolutions?

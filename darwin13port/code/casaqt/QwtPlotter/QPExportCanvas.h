@@ -1,4 +1,4 @@
-//# Copyright (C) 2005
+//# Copyright (C) 2008
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,27 +23,34 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef CASAQT_EXTERNALAXISWIDGETBOTTOM_H_
-#define CASAQT_EXTERNALAXISWIDGETBOTTOM_H_
+#ifndef QPEXPORTCANVAS_H_
+#define QPEXPORTCANVAS_H_
 
-#include <casaqt/QtUtilities/Axis/ExternalAxisWidget.h>
+#include <graphics/GenericPlotter/PlotCanvas.h>
+#include <graphics/GenericPlotter/PlotFactory.h>
+#include <QPrinter>
 
 namespace casa {
+/**
+ * Interface implemented by classes that can export their draw
+ * area (QPAxis & QPCanvas).
+ */
 
-class ExternalAxisWidgetBottom : public ExternalAxisWidget {
+class QPExportCanvas : public PlotCanvas {
 public:
-	ExternalAxisWidgetBottom(QWidget* parent, QwtPlot* plot );
-
-	virtual ~ExternalAxisWidgetBottom();
-protected:
-	virtual int getStartX() const;
-	virtual void defineAxis( QLine& axisLine );
-	virtual void drawTicks( QPainter* painter, int tickLength);
-	virtual void drawAxisLabel( QPainter* painter );
-private:
-	void drawTick( QPainter* painter, double xPixel, double value, int tickLength);
-
+	QPExportCanvas(){}
+	virtual ~QPExportCanvas(){}
+	virtual bool print( QPrinter& printer ) = 0;
+	virtual bool print(  QPainter* painter, PlotAreaFillPtr paf, double widthRatio,
+			double heightRatio, QRect imageRect ) = 0;
+	virtual QImage  grabImageFromCanvas(const PlotExportFormat& format ) = 0;
+	virtual PlotLoggerPtr logger() const = 0;
+	virtual int canvasWidth() const = 0;
+	virtual int canvasHeight() const = 0;
+	virtual const QPalette& palette() const = 0;
+	virtual QPalette::ColorRole backgroundRole() const = 0;
+	virtual PlotFactory* implementationFactory() const = 0;
 };
 
-} /* namespace casa */
-#endif /* EXTERNALAXISWIDGETBOTTOM_H_ */
+}
+#endif /* QPEXPORTCANVAS_H_ */

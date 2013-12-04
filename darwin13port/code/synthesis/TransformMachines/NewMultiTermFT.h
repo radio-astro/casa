@@ -149,7 +149,8 @@ public:
   //  {throw(AipsError("NewMultiTermFT::getWeightImage() should not be called"));}
 
   // Save and restore the NewMultiTermFT to and from a record
-  virtual Bool toRecord(String& error, RecordInterface& outRec, Bool withImage=False);
+  virtual Bool toRecord(String& error, RecordInterface& outRec, Bool withImage=False,
+			const String diskimage="");
   virtual Bool fromRecord(String& error, const RecordInterface& inRec);
 
   // Various small inline functions

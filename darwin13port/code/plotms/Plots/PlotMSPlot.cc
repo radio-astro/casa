@@ -25,13 +25,11 @@
 //#
 //# $Id: $
 #include <plotms/Plots/PlotMSPlot.h>
-
-//#include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <plotms/Data/MSCache.h>
-//#include <casaqt/QwtPlotter/QPCanvas.qo.h>
-//#include <casaqt/QwtPlotter/QPPlotter.qo.h>
+#include <QDebug>
+
 
 namespace casa {
 
@@ -271,15 +269,54 @@ void PlotMSPlot::plotDataChanged() {
 }
 
 bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
-    vector<PlotCanvasPtr> canv = canvases();
-    if(canv.size() == 0) return true;
-    else if(canv.size() == 1){
-        return canv[0]->exportToFile(format);
+	vector<PlotCanvasPtr> canv = canvases();
+    bool exportSuccess = true;
+
+    //Determine how many pages we need to print.
+    int pageCount = 1;
+    PMS_PP_Export* exportParams = itsParams_.typedGroup<PMS_PP_Export>();
+    if ( exportParams != NULL ){
+    	PMS::ExportRange range = exportParams->getExportRange();
+    	if ( range == PMS::PAGE_ALL ){
+    	    pageCount = itsCache_->nIter();
+    	    float divResult = (pageCount * 1.0f) / canv.size();
+    	    pageCount = static_cast<int>(ceil( divResult ));
+    	}
     }
-    else {
-        bool success = itsParent_->exportToFormat( format );
-        return success;
+
+    //Store the current page.
+    Int currentIter = iter();
+
+    //Loop over all the iterations, exporting them
+    firstIter();
+    PlotExportFormat exportFormat( format );
+    String baseFileName = format.location;
+    String suffix = "";
+    int periodIndex = baseFileName.find_last_of( ".");
+    if ( periodIndex != static_cast<int>(String::npos) ){
+    	suffix = baseFileName.substr( periodIndex, baseFileName.size() - periodIndex);
+    	baseFileName = baseFileName.substr(0, periodIndex );
     }
+
+    for ( int i = 0; i < pageCount; i++ ){
+    	int canvasCount = canv.size();
+    	if ( i > 0 ){
+    		//Remove the last '.' from the storage location.
+    		String pageStr = String::toString( i+1 );
+    		exportFormat.location = baseFileName + pageStr + suffix;
+    	}
+    	if(canvasCount == 1){
+    		exportSuccess = canv[0]->exportToFile(exportFormat);
+    	}
+    	else if ( canvasCount > 1){
+    		exportSuccess = itsParent_->exportToFormat( exportFormat );
+    	}
+    	nextIter();
+    }
+
+    //Restore the current page
+    setIter( currentIter );
+    return exportSuccess;
 }
 
 void PlotMSPlot::exportToFormatCancel(){

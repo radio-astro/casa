@@ -25,12 +25,15 @@
 
 #ifndef CASAQT_EXTERNALAXIS_WIDGET_H_
 #define CASAQT_EXTERNALAXIS_WIDGET_H_
-
+#include <casaqt/QwtPlotter/QPOptions.h>
+#include <casa/BasicSL/String.h>
 #include <QWidget>
 #include <qwt_plot.h>
 
 
 namespace casa {
+
+class QPScaleDraw;
 
 /**
  * Base class for classes that use the QwtScaleDiv information
@@ -39,11 +42,24 @@ namespace casa {
 
 class ExternalAxisWidget : public QWidget {
 public:
-	ExternalAxisWidget(QWidget* parent);
+	ExternalAxisWidget(QWidget* parent, QwtPlot* plot);
 	void setAxisLabel( const QString& label );
 	QString getAxisLabel() const;
-	void setPlot( QwtPlot* canvas );
+
 	virtual void paintEvent( QPaintEvent* event );
+	void print( QPainter* painter, QRect imageRect );
+
+	//Date formats
+	void setDateFormat(const String& newFormat);
+	void setRelativeDateFormat(const String& newFormat);
+
+	//Axis scale
+	void setAxisScale(PlotAxisScale scale);
+	void setReferenceValue(bool on, double value);
+
+	//Axis font
+	void setAxisFont(const QFont& font);
+
 	virtual ~ExternalAxisWidget();
 
 protected:
@@ -52,12 +68,16 @@ protected:
 	virtual void drawAxisLabel( QPainter* painter ) = 0;
 	virtual int getCanvasHeight() const;
 	virtual int getStartY() const;
+	virtual int getStartX() const;
 	int getTickIncrement( int tickCount ) const;
 	double getTickStartPixel( QwtPlot::Axis axis );
 	double getTickDistance( QwtPlot::Axis axis );
 	double getTickIncrement( double tickDistance, QwtPlot::Axis axis );
 	QwtPlot* plot;
+	QPScaleDraw* scaleDraw;
 	QString axisLabel;
+
+
 	const int AXIS_SMALL_SIDE;
 	const int TICK_LENGTH;
 	const int MARGIN;
@@ -67,8 +87,8 @@ private:
 	void drawBackBone( QPainter* painter );
 	void drawTicks( QPainter* painter );
 	void drawLabel( QPainter* painter );
-	const int FONT_SIZE;
-	const int FONT_SIZE_AXIS_LABEL;
+	QFont axisFont;
+
 };
 
 } /* namespace casa */

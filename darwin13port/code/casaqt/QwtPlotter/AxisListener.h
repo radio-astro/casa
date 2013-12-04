@@ -32,8 +32,8 @@
 namespace casa {
 
 /**
- * Interface implemented by classes wanting to receive notice when the label
- * on a plot axis changes.
+ * Interface implemented by classes wanting to receive notice when a plot
+ * property changes.
  */
 
 class AxisListener {
@@ -44,6 +44,35 @@ public:
 	 * @param title the new label for the axis.
 	 */
 	virtual void setAxisLabel(PlotAxis axis, const String& title) = 0;
+	/**
+	 * New format for displaying dates.
+	 * @param dateFormat the new format to use for displaying dates.
+	 */
+	virtual void setDateFormat(const String& dateFormat) = 0;
+	/**
+	 * New format for displaying dates based off a given start position.
+	 * @param dateFormat the new format for displaying relative dates.
+	 */
+	virtual void setRelativeDateFormat(const String& dateFormat) = 0;
+	/**
+	 * Set a new scale for the plot axis (logarithmic, etc).
+	 * @param axis, the PlotAxis to which the scale applies.
+	 * @param scale, the new scale (linear, logarithmic, etc).
+	 */
+	virtual void setAxisScale(PlotAxis axis, PlotAxisScale scale) = 0;
+	/**
+	 * Set a starting value for an axis using a relative scale.
+	 * @param axis, the PlotAxis to which the base scale applies.
+	 * @param on, whether it should be used.
+	 * @param value, the starting value for the relative scale.
+	 */
+	virtual void setAxisReferenceValue(PlotAxis axis, bool on, double value) = 0;
+	/**
+	 * Set a font for use on an axis.
+	 * @param axis, the PlotAxis to which the font applies.
+	 * @param font, the font to use when drawing tick labels and axis labels.
+	 */
+	virtual void setAxisFont(PlotAxis axis, const PlotFont& font) = 0;
 	virtual ~AxisListener(){}
 	AxisListener(){}
 };

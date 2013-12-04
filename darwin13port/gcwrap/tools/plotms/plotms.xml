@@ -649,6 +649,16 @@ specifying multiple plots per page will be added here)
       <value />
     </param>
     
+    <param type="int" name="iterRowCount">
+      <description>Number of rows of iteration plots on a page.</description>
+      <value>1</value>
+    </param>
+
+    <param type="int" name="iterColCount">
+      <description>Number of columns of iteration plots on a page.</description>
+      <value>1</value>
+    </param>
+    
     <param type="bool" name="xselfscale">
       <description>Selfscale X axis</description>
       <value>false</value>
@@ -656,6 +666,16 @@ specifying multiple plots per page will be added here)
 
     <param type="bool" name="yselfscale">
       <description>Selfscale Y axis</description>
+      <value>false</value>
+    </param>
+    
+    <param type="bool" name="commonAxisX">
+      <description>Plots should share a common x-axis.</description>
+      <value>false</value>
+    </param>
+
+    <param type="bool" name="commonAxisY">
+      <description>Plots should share a common y-axis.</description>
       <value>false</value>
     </param>
 
@@ -734,6 +754,26 @@ Gets the MS transformations parameters for the plot at the given index as a reco
   </returns>
 </method>
 
+<method type="function" name="setExportRange">
+  <keyword>setExportRange</keyword>
+  
+  <shortdescription>Sets the export range.</shortdescription>
+  
+  <description>
+	Sets the export range (applies to iteration plots where there may be more than one page).
+  </description>
+  
+  <input>
+    <param type="string" name="range">
+      <description>Export range (or none).</description>
+      <value />
+    </param>
+  </input>
+  
+  <example />
+  
+  <returns />
+</method>
 
 <!--
 ###############################################################################

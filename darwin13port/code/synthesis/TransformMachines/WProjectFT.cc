@@ -1347,7 +1347,7 @@ void WProjectFT::getWeightImage(ImageInterface<Float>& weightImage,
 }
 
 Bool WProjectFT::toRecord(String& error,
-			  RecordInterface& outRec, Bool withImage)
+			  RecordInterface& outRec, Bool withImage, const String diskimage)
 {  
 
   /*
@@ -1363,7 +1363,7 @@ Bool WProjectFT::toRecord(String& error,
   if(wpConvFunc_p->toRecord(wpconvrec))
     outRec.defineRecord("wpconvfunc", wpconvrec);
   */
-  if(!FTMachine::toRecord(error, outRec, withImage))
+  if(!FTMachine::toRecord(error, outRec, withImage, diskimage))
     return False;
 
   outRec.define("uvscale", uvScale);
@@ -1438,7 +1438,7 @@ Bool WProjectFT::fromRecord(String& error,
   gridder=0;
     ///setup some of the parameters
   init();
-  if(inRec.isDefined("image")){
+  if(!cmplxImage_p.null()){
     //FTMachine::fromRecord would have recovered the image
     // Might be changing the shape of sumWeight
     

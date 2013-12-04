@@ -3813,7 +3813,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //---------------------------------------------------------------
   //
 Bool nPBWProjectFT::toRecord(String&, //error,
-			     RecordInterface& outRec, Bool withImage) 
+			     RecordInterface& outRec, Bool withImage, const String diskimage) 
 {    
     // Save the current nPBWProjectFT object to an output state record
     Bool retval = True;
@@ -3847,17 +3847,25 @@ Bool nPBWProjectFT::toRecord(String&, //error,
     outRec.define("centerloc", center_loc);
     outRec.define("offsetloc", offset_loc);
     outRec.define("sumofweights", sumWeight);
-    if(withImage && image)
-      { 
+    if(withImage && image ){
+      if(diskimage==""){ 
 	ImageInterface<Complex>& tempimage(*image);
 	Record imageContainer;
 	String error;
 	retval = (retval || tempimage.toRecord(error, imageContainer));
 	outRec.defineRecord("image", imageContainer);
       }
+      else{
+	PagedImage<Complex> tempImage(image->shape(), image->coordinates(), diskimage);
+	tempImage.copyData(*image);
+	outRec.define("diskimage", diskimage);
+      }
+    }
+    
     return retval;
-  }
+    
   //
+}
   //---------------------------------------------------------------
   //
 Bool nPBWProjectFT::fromRecord(String&, //error,
@@ -3902,7 +3910,7 @@ Bool nPBWProjectFT::fromRecord(String&, //error,
     offsetLoc=IPosition(ndim4, offset_loc(0), offset_loc(1), offset_loc(2), 
 			offset_loc(3));
     inRec.get("sumofweights", sumWeight);
-    if(inRec.nfields() > 12 )
+    if(inRec.isDefined("image"))
       {
 	Record imageAsRec=inRec.asRecord("image");
 	if(!image) image= new TempImage<Complex>(); 
@@ -3937,7 +3945,14 @@ Bool nPBWProjectFT::fromRecord(String&, //error,
 	  }
 	
 	AlwaysAssert(image, AipsError);
-      };
+      }
+    else if(inRec.isDefined("diskimage")){
+	String diskim;
+	inRec.get("diskimage", diskim);
+	image=new PagedImage<Complex>(diskim);
+    }
+    
+    
     return retval;
   }
   //

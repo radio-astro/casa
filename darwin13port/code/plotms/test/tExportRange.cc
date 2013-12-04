@@ -37,12 +37,14 @@
 #include <QApplication>
 
 /**
- * Tests whether a simple plot can be exported.
+ * Tests whether an iteration plot, with two pages, can be exported
+ * in a single pass.
  */
+
 int main(int /*argc*/, char** /*argv[]*/) {
 
 	String dataPath = tUtil::getFullPath( "pm_ngc5921.ms" );
-    cout << "tExport using data from "<<dataPath.c_str()<<endl;
+    cout << "tExportRange using data from "<<dataPath.c_str()<<endl;
 
     // Set up plotms object.
     PlotMSApp app(false, false);
@@ -57,19 +59,53 @@ int main(int /*argc*/, char** /*argv[]*/) {
         ppdata = plotParams.typedGroup<PMS_PP_MSData>();
     }
     ppdata->setFilename( dataPath );
+
+    //We are going to iterate over scan, using a shared axis and global
+    //scale with a 2 x 2 grid for the iteration.
+    PMS_PP_Iteration* iterationParams = plotParams.typedGroup<PMS_PP_Iteration>();
+    if ( iterationParams == NULL ){
+    	plotParams.setGroup<PMS_PP_Iteration>();
+    	iterationParams = plotParams.typedGroup<PMS_PP_Iteration>();
+    }
+    iterationParams->setIterationAxis( PMS::SCAN );
+    iterationParams->setNumRows( 2 );
+    iterationParams->setNumColumns( 2 );
+    iterationParams->setGlobalScaleX( true );
+    iterationParams->setGlobalScaleY( true );
+    iterationParams->setCommonAxisX( true );
+    iterationParams->setCommonAxisY( true );
+
+    //We want to print all (2) pages in the output.
+    PMS_PP_Export* exportParams = plotParams.typedGroup<PMS_PP_Export>();
+    if ( exportParams == NULL ){
+    	plotParams.setGroup<PMS_PP_Export>();
+    	exportParams = plotParams.typedGroup<PMS_PP_Export>();
+    }
+    exportParams->setExportRange( PMS::PAGE_ALL );
+
+    //Make the plot.
     app.addOverPlot( &plotParams );
 
-    String outFile( "/tmp/plotMSExportTest.jpg");
+    String outFile( "/tmp/plotMSExportRangeTest.jpg");
+    String outFile2( "/tmp/plotMSExportRangeTest2.jpg");
     tUtil::clearFile( outFile );
+    tUtil::clearFile( outFile2 );
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
 	bool interactive = false;
 	bool ok = app.save(format, interactive );
-	cout << "tExport:: Result of save="<<ok<<endl;
+	cout << "tExportRange:: Result of save="<<ok<<endl;
     
-	ok = tUtil::checkFile( outFile, 160000, 170000, -1 );
-	cout << "tExport:: Result of save file check="<<ok<<endl;
+
+	ok = tUtil::checkFile( outFile, 80000, 100000, -1 );
+	cout << "tExportRange:: Result of first save file check="<<ok<<endl;
+
+	//There should be 2 output files.
+	if ( ok ){
+		ok = tUtil::checkFile( outFile2, 80000, 100000, -1 );
+		cout << "tExportRange:  Result of second save file check="<<ok<<endl;
+	}
 	return tUtil::exitMain( false );
 }
 

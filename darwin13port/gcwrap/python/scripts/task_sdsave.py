@@ -30,7 +30,8 @@ class sdsave_worker(sdutil.sdtask_template):
                                  getpt=self.getpt)
 
         # scantable selection
-        self.scan.set_selection(self.get_selector())
+        #self.scan.set_selection(self.get_selector())
+        self.scan.set_selection(self.get_selector_by_list())
 
     def execute(self):
         # Apply averaging

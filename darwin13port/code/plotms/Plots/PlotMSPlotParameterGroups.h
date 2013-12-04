@@ -30,6 +30,7 @@
 #include <plotms/Plots/PlotMSPlotParameters.h>
 
 #include <plotms/PlotMS/PlotMSAveraging.h>
+#include <plotms/PlotMS/PlotMSExportParam.h>
 #include <plotms/PlotMS/PlotMSIterParam.h>
 #include <plotms/PlotMS/PlotMSSelection.h>
 #include <plotms/PlotMS/PlotMSTransformations.h>
@@ -79,7 +80,7 @@ public:
 	static const int UPDATE_DISPLAY;
 	// </group>
 
-	// Update flag for display group.
+	// Update flag for iteration group.
 	// <group>
 	static const String UPDATE_ITERATION_NAME;
 	static const int UPDATE_ITERATION;
@@ -1277,17 +1278,7 @@ public:
 	bool operator== (const Group & other) const;
 
 
-	/* deprecated...
-     bool enableIteration() const {
-          return itsEnableIteration_;
-     }
-     void setEnableIteration (const bool & value) {
-          if (itsEnableIteration_ != value) {
-               itsEnableIteration_ = value;
-               updated();
-          }
-     }
-	 */
+
 
 	const PlotMSIterParam& iterParam() const {
 		return itsIterParam_;
@@ -1300,13 +1291,10 @@ public:
 	}
 
 	PMS::Axis  iterationAxis() const {
-		//          return itsIterationAxis_;
 		return itsIterParam_.iterAxis();
 	}
 
 	void setIterationAxis (const PMS::Axis & value) {
-		//          if (itsIterationAxis_ != value) {
-		//               itsIterationAxis_ = value;
 		if (iterationAxis()!=value) {
 			itsIterParam_.setIterAxis(value);
 			updated();
@@ -1408,22 +1396,92 @@ public:
 				}
 			}
 		}
+private:
+	/* Parameters' values */
+	PlotMSIterParam itsIterParam_;
+	void setDefaults();
+};
+
+
+
+// Subclass of PlotMSPlotParameters::Group to handle export parameters.
+
+class PMS_PP_Export : public PlotMSPlotParameters::Group {
+
+public:
+
+	/* Constructor which takes a factory */
+	PMS_PP_Export (PlotFactoryPtr factory);
+
+	/* Copy constructor.  See operator=(). */
+	PMS_PP_Export (const PMS_PP_Export & copy);
+
+	~PMS_PP_Export();
+
+	/* Implements PlotMSPlotParameters::Group::clone(). */
+	Group *clone() const {
+		return new PMS_PP_Export (*this);
+	}
+
+	/* Implements PlotMSPlotParameters::Group::name(). */
+	const String & name() const {
+		static String groupName = /*PMS_PP::UPDATE_ITERATION_NAME;*/"Export";
+		return groupName;
+	}
+
+	/* Implements PlotMSPlotParameters::Group::toRecord(). */
+	Record toRecord() const;
+
+	/* Implements PlotMSPlotParameters::Group::fromRecord(). */
+	void fromRecord (const Record & record);
+
+	/* Implements PlotMSPlotParameters::Group::requiresRedrawOnChanged(). */
+	bool requiresRedrawOnChange() const {
+		return false;
+	}
+
+	/* Overrides PlotMSPlotParameters::Group::operator=(). */
+	Group & operator= (const Group & other);
+
+	/* Overrides PlotMSPlotParameters::Group::operator==(). */
+	bool operator== (const Group & other) const;
+
+
+	const PlotMSExportParam& getExportParam() const {
+		return itsExportParam_;
+	}
+	void setExportParam(PlotMSExportParam exportParam) {
+		if (itsExportParam_ != exportParam) {
+			itsExportParam_=exportParam;
+			updated();
+		}
+	}
+
+	PMS::ExportRange getExportRange() const {
+		return itsExportParam_.getExportRange();
+	}
+
+	void setExportRange (const PMS::ExportRange & value) {
+		if (getExportRange()!=value) {
+			itsExportParam_.setExportRange(value);
+			updated();
+		}
+	}
+
+
+	void setExportRange (string & value) {
+		itsExportParam_.setExportRange(value);
+		updated();
+	}
 
 
 private:
 	/* Parameters' values */
-	PlotMSIterParam itsIterParam_;
-
-	int itsNumRows_;
-	int itsNumColumns_;
+	PlotMSExportParam itsExportParam_;
 
 	/* Key strings for Record */
-	static const String REC_ITERPARAM;
-	static const String REC_ITERATIONAXIS;
-	static const String REC_NUMROWS;
-	static const String REC_NUMCOLUMNS;
-	static const String REC_XAXISSCALEMODE;
-	static const String REC_YAXISSCALEMODE;
+	static const String REC_EXPORT_RANGE;
+
 
 	void setDefaults();
 };

@@ -238,7 +238,14 @@ public:
               "SysCal", "Weather")
     // </group>
               
+
+   // Enum for export range.
+   // <group>
+   PMS_ENUM1(ExportRange, exportRanges, exportRangeStrings, exportRange, PAGE_CURRENT, PAGE_ALL)
+   PMS_ENUM2(ExportRange, exportRanges, exportRangeStrings, exportRange, "Current Page", "All Pages")
+   // </group>
               
+
     // Colorizing Values //
               
     // Returns the list of unique colors used to colorize plots.
@@ -278,6 +285,9 @@ public:
     static const String DEFAULT_TITLE_FORMAT;
     // </group>
     
+    // Default values for export range;
+    static const ExportRange DEFAULT_EXPORT_RANGE;
+
     // Default values for PMS_PP_Display.
     // <group>
     static PlotSymbolPtr DEFAULT_UNFLAGGED_SYMBOL(PlotFactoryPtr factory);

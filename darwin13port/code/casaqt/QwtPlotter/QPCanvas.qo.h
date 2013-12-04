@@ -29,12 +29,12 @@
 
 #ifdef AIPS_HAS_QWT
 
-#include <graphics/GenericPlotter/PlotCanvas.h>
 #include <graphics/GenericPlotter/PlotOptions.h>
 #include <graphics/GenericPlotter/PlotLogger.h>
 #include <graphics/GenericPlotter/Plotter.h>
 #include <casaqt/QwtPlotter/QPImageCache.h>
 #include <casaqt/QwtPlotter/QPLayeredCanvas.qo.h>
+#include <casaqt/QwtPlotter/QPExportCanvas.h>
 #include <casaqt/QwtPlotter/QPOptions.h>
 #include <casaqt/QwtPlotter/QPPlotItem.qo.h>
 
@@ -56,7 +56,7 @@ class AxisListener;
 
 // Implementation of PlotCanvas for the Qwt plotter.  Mainly consists of
 // wrappers and containers around a QwtPlot object.
-class QPCanvas : public QFrame, public PlotCanvas {
+class QPCanvas : public QFrame, public QPExportCanvas {
     Q_OBJECT
     
     friend class QPAxesCache;
@@ -72,23 +72,16 @@ public:
     static double zOrder;
     
     // Convenient access to class name (QPCanvas).
-    static const String CLASS_NAME;
+       static const String CLASS_NAME;
     
     // Convenient access to "origin" names for logging.
     // <group>
     static const String DRAW_NAME;
-    static const String EXPORT_NAME;
+
     // </group>
     
     
-    // Exports the given plotter to the given format.
-    static bool exportPlotter(QPPlotter* plotter,
-            const PlotExportFormat& format);
-    
-    // Exports the given canvas to the given format.
-    static bool exportCanvas(QPCanvas* canvas, const PlotExportFormat& format);
-    
-    
+
     // Non-Static //
     
     // Constructor which takes (optional) parent QPPlotter.
@@ -428,7 +421,7 @@ protected:
     void setQPPlotter(QPPlotter* parent);
     
     // Returns the parent's logger.
-    PlotLoggerPtr logger() const;
+    virtual PlotLoggerPtr logger() const;
     
     // See QPPlotter::logObject().  If called before setQPPlotter() is called,
     // creates a queue that is then posted when setQPPlotter() is called.
@@ -546,43 +539,25 @@ private:
         return globalPosToPixelCoord(event->globalX(), event->globalY()); }
     // </group>
     
-    
-    // Static //
-    
-    // Method for static exportPlotter() and exportCanvas() methods.
-    // (Formerly exportHelper.  "Helper" in a class or method name is a code smell!)
-    static bool exportCanvases(vector<PlotCanvasPtr>& canvases,
-            const PlotExportFormat& format, QPCanvas* grabCanvas,
-            QPPlotter* grabPlotter);
 
-	
-	
-	// Methods to perform particular types of exports - internal use only!
-	static 
-	bool  exportToImageFile(
-					const PlotExportFormat& format, 
-					vector<QPCanvas*> &qcanvases,
-					QPCanvas* grabCanvas,
-					QPPlotter* grabPlotter
-					);
-    static 
-    QImage produceHighResImage(
-					const PlotExportFormat& format,
-					vector<QPCanvas*> &qcanvases,
-					int width, int height,
-					bool &wasCanceled
-					);   
-    static 
-    QImage  grabImageFromCanvas(
-			        const PlotExportFormat& format, 
-			        QPCanvas* grabCanvas,
-			        QPPlotter* grabPlotter
-			        );
-    static 
-    bool   exportPostscript(
-			        const PlotExportFormat& format, 
-			        vector<QPCanvas*> &qcanvases
-			        );
+    virtual bool print( QPrinter& printer );
+    virtual bool print(  QPainter* painter, PlotAreaFillPtr paf, double widthRatio,
+    		double heightRatio, QRect imageRect );
+    virtual int canvasWidth() const{
+    	return width();
+    }
+    virtual int canvasHeight() const {
+    	return height();
+    }
+    virtual const QPalette& palette() const {
+    	return asQwtPlot().palette();
+    }
+    virtual QPalette::ColorRole backgroundRole() const{
+    	return asQwtPlot().backgroundRole();
+    }
+
+
+    QImage  grabImageFromCanvas( const PlotExportFormat& format );
 
     
     // Converts between axes bitset flags (1,2,4,8 in PlotAxis and vector indices (0-3).
@@ -602,6 +577,8 @@ private slots:
     
     // For catching mouse move events from the filter.
     void trackerMouseEvent(QMouseEvent* event);
+
+    void enableAxis( QwtPlot::Axis axis, bool enable );
 };
 
 }
