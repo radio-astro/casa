@@ -38,6 +38,7 @@ def caltabconvert( caltabold=None, vis=None, ptype=None, caltabnew=None ):
 	"""
 
 	try:
+		casalog.post("The caltabconvert task is deprecated and will be removed from CASA in v4.3.  Please re-generate your calibration using standard calibration tasks.",'WARN')
 		success = caltab_convert2( caltabold=caltabold, ms=vis,
 		    pType=ptype, caltabnew=caltabnew )
 		return success
