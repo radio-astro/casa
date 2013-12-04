@@ -366,8 +366,11 @@ SourceRow* SourceTable::newRow(SourceRow* row) {
 		
 		insertionId = name2id_m[x->getSourceName()];
 		if (context.find(k) != context.end()) {
-			for (unsigned int j = 0; j < context[k].size(); j++) 
-				if ((context[k].size() > insertionId) && context[k][insertionId][j]->getTimeInterval().getStart().equals(startTime)) {
+		  for (unsigned int j = 0; j < context[k][insertionId].size(); j++){
+		    cout << context[k][insertionId][j]->getTimeInterval().getStart().toFITS()
+			 << " , "
+			 << startTime.toFITS() << endl; 
+				if (context[k][insertionId][j]->getTimeInterval().getStart().equals(startTime)) {
 					if(
 						
 						 (context[k][insertionId][j]->getCode() == x->getCode())
@@ -388,6 +391,7 @@ SourceRow* SourceTable::newRow(SourceRow* row) {
 					else 
 						throw UniquenessViolationException();
 				}
+		  }
 		}
 		else { // There is not yet a context ...
 			   // Create and initialize an entry in the context map for this combination....
@@ -936,7 +940,7 @@ SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindo
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
       throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "Source");
     
-    const ByteOrder* byteOrder;
+    const ByteOrder* byteOrder=0;
     if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
       // Then it's an "old fashioned" MIME file for tables.
       // Just try to deserialize it with Big_Endian for the bytes ordering.
@@ -1243,7 +1247,7 @@ SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindo
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
       throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "Source");
     
-    const ByteOrder* byteOrder;
+    const ByteOrder* byteOrder=0;
     if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
       // Then it's an "old fashioned" MIME file for tables.
       // Just try to deserialize it with Big_Endian for the bytes ordering.
