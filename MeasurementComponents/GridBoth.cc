@@ -310,10 +310,16 @@ void GridBoth::getWeightImage(ImageInterface<Float>& weightImage, Matrix<Float>&
 
 // Both these need filling out!
 Bool GridBoth::toRecord(String& error, RecordInterface& outRec, 
-			Bool withImage) {
+			Bool withImage, const String diskimage ) {
   ok();
-  return synMachine_p->toRecord(error, outRec, withImage) && 
-    sdMachine_p->toRecord(error, outRec, withImage);
+  String im1=""; 
+  String im2="";
+  if(diskimage != ""){
+    im1=diskimage+"_synImage";
+    im2=diskimage+"_sdImage";
+  }
+  return synMachine_p->toRecord(error, outRec, withImage, im1) && 
+    sdMachine_p->toRecord(error, outRec, withImage, im2);
 }
 
 Bool GridBoth::fromRecord(String& error, const RecordInterface& inRec)

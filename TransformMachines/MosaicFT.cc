@@ -1607,11 +1607,11 @@ CountedPtr<TempImage<Float> >& MosaicFT::getConvWeightImage(){
 }
 
 Bool MosaicFT::toRecord(String&  error,
-			RecordInterface& outRec, Bool withImage)
+			RecordInterface& outRec, Bool withImage, const String diskimage)
 {  
   // Save the current MosaicFT object to an output state record
   Bool retval = True;
-  if(!FTMachine::toRecord(error, outRec, withImage))
+  if(!FTMachine::toRecord(error, outRec, withImage, diskimage))
     return False;
   
   if(sj_p){
@@ -1695,7 +1695,7 @@ Bool MosaicFT::fromRecord(String& error,
   inRec.get("convsupportplanes", convSupportPlanes_p);
   inRec.get("convsizeplanes", convSizePlanes_p);
   inRec.get("convRowMap",  convRowMap_p);
-  if(inRec.isDefined("image")){
+  if(!cmplxImage_p.null()){
     //FTMachine::fromRecord would have recovered the image
     // Might be changing the shape of sumWeight
     

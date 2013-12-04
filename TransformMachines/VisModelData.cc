@@ -103,9 +103,31 @@ void VisModelData::listModel(const MeasurementSet& thems){
     
 }
 
+void VisModelData::deleteDiskImage(MeasurementSet& theMS, const String& theKey){
+  TableRecord theRec;
+  if(!VisModelData::getModelRecord(theKey, theRec, theMS))
+    return;
+  if(theRec.isDefined("numft")){
+    Int numft=0;
+    numft=theRec.asInt("numft");
+    for (Int k=0; k < numft; ++k){
+      String ftname=String("ft_")+String::toString(k);
+      const Record& ftrec=theRec.asRecord(ftname);
+      if(ftrec.asRecord("container").isDefined("diskimage")){
+	String diskim=ftrec.asRecord("container").asString("diskimage");
+	if(Table::canDeleteTable(diskim))
+	  Table::deleteTable(diskim);
+      }
+
+    }
+  }
+
+
+}
 void VisModelData::removeRecordByKey(MeasurementSet& theMS, const String& theKey){
 
 
+  deleteDiskImage(theMS, theKey);
   if(Table::isReadable(theMS.sourceTableName()) &&theMS.source().nrow() > 0 ){
     if(theMS.source().keywordSet().isDefined(theKey)){
       Int rowid=theMS.source().keywordSet().asInt(theKey);
@@ -513,6 +535,8 @@ Bool VisModelData::isModelDefined(const Int fieldId, const MeasurementSet& thems
   }
 
   void VisModelData::putRecordByKey(MeasurementSet& theMS, const String& theKey, const TableRecord& theRec, const Int sourceRowNum){
+    //if image for a given key is on disk ...lets remove it
+    deleteDiskImage(theMS, theKey);
     //Prefer the Source table first    
     if( (sourceRowNum> -1) && Table::isReadable(theMS.sourceTableName()) && Int(theMS.source().nrow()) > sourceRowNum ){
       MSSource& mss=theMS.source();

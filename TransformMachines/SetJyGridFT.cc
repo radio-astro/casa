@@ -176,9 +176,9 @@ void SetJyGridFT::initializeToVis(ImageInterface<Complex>& image,
 }
 
 Bool SetJyGridFT::toRecord(String& error,
-		      RecordInterface& outRec, Bool withImage)
+			   RecordInterface& outRec, Bool withImage, const String diskimage)
 {
-  if(!GridFT::toRecord(error, outRec, withImage))
+  if(!GridFT::toRecord(error, outRec, withImage, diskimage))
     return False;
   outRec.define("freqscale", freqscale_p);
   outRec.define("scaleamp", scale_p);

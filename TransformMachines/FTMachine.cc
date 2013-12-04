@@ -50,6 +50,7 @@
 #include <synthesis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
+#include <images/Images/ImageUtilities.h>
 #include <casa/Containers/Block.h>
 #include <casa/Containers/Record.h>
 #include <casa/Arrays/ArrayIter.h>
@@ -951,16 +952,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
   Bool FTMachine::toRecord(String& error, RecordInterface& outRecord, 
-			   Bool withImage) {
+			   Bool withImage, const String diskimage) {
     // Save the FTMachine to a Record
     //
     outRecord.define("name", this->name());
     if(withImage){
-      
-      Record imrec;
-      if(image->toRecord(error, imrec))
-	outRecord.defineRecord("image", imrec);
-      
+      if(diskimage != ""){
+	try{
+	  PagedImage<Complex> imCopy(TiledShape(image->shape()), image->coordinates(), diskimage);
+	  imCopy.copyData(*image);
+	  ImageUtilities::copyMiscellaneous(imCopy, *image);
+	}
+	catch(...){
+	  throw(AipsError(String("Failed to save model image "+diskimage+String(" to disk")))); 
+	}
+	outRecord.define("diskimage", diskimage);
+	
+      }
+      else{
+	Record imrec;
+	if(image->toRecord(error, imrec))
+	  outRecord.defineRecord("image", imrec);
+      }
     }
     outRecord.define("nantenna", nAntenna_p);
     outRecord.define("distance", distance_p);
@@ -1032,10 +1045,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       image=&(*cmplxImage_p);
       const Record rec=inRecord.asRecord("image");
       if(!cmplxImage_p->fromRecord(error, rec))
-	return False;      
+	return False;   
       
     }
-    
+    else if(inRecord.isDefined("diskimage")){
+      String theDiskImage;
+      inRecord.get("diskimage", theDiskImage);
+      try{
+	cmplxImage_p=new PagedImage<Complex> (theDiskImage);
+	image=&(*cmplxImage_p);
+      }
+      catch(...){
+	throw(AipsError(String("Failure to load ")+theDiskImage+String(" image from disk")));
+      }
+    }
     nAntenna_p=inRecord.asuInt("nantenna");
     distance_p=inRecord.asDouble("distance");
     lastFieldId_p=inRecord.asInt("lastfieldid");
@@ -1688,7 +1711,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // storeImg(String("wt.im"),*(weightImageVec[0]));
     // storeImg(String("stokes.im"),*(resImageVec[0]));
 
-    cerr << "pblimit " << pbLimit_p << endl;
     normalizeImage( *(resImageVec[0]) , weightsVec[0], *(weightImageVec[0]) , dopsf, 
     		    //		    (Float)1e-03,
     		    (Float)pbLimit_p,
