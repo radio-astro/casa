@@ -462,6 +462,12 @@ protected:
   Bool canComputeResiduals_p;
   Bool toVis_p;
   Int numthreads_p;
+  
+  // Array for non-tiled gridding
+  // These are common to most FTmachines
+  Array<Complex> griddedData;
+  Array<DComplex> griddedData2;
+
 
   Float pbLimit_p;
   Vector<SkyJones *> sj_p;
