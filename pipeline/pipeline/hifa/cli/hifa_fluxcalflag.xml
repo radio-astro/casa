@@ -5,7 +5,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="hif_fluxcalflag" category="pipeline">
+<task type="function" name="hifa_fluxcalflag" category="pipeline">
 <shortdescription>Locate line regions in solar system flux calibrator spws</shortdescription>
 <description>
 Locate line regions in solar system flux calibrator spws
@@ -178,7 +178,7 @@ Examples
 
 1. Locate known lines in any solar system object flux calibrators. 
 
-    hif_fluxcalflag()
+    hifa_fluxcalflag()
 
 </example>
 

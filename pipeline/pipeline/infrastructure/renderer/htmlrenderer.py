@@ -85,7 +85,7 @@ def get_task_description(result_obj):
     if task_cls in (hifa.tasks.FlagDeterALMA, hifa.tasks.ALMAAgentFlagger):
         return 'ALMA deterministic flagging'
 
-    if task_cls is hif.tasks.FluxcalFlag:
+    if task_cls is hifa.tasks.FluxcalFlag:
         return 'Flag solar system flux calibrators'
 
     if task_cls is hif.tasks.GcorFluxscale:
@@ -2895,7 +2895,7 @@ renderer_map = {
         hif.tasks.Bandpassflagchans: T2_4MDetailsBandpassFlagRenderer(),
         hif.tasks.Clean          : T2_4MDetailsCleanRenderer(),
         hif.tasks.CleanList      : T2_4MDetailsCleanRenderer(),
-        hif.tasks.FluxcalFlag    : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_fluxcalflag.html'),
+        hifa.tasks.FluxcalFlag    : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_fluxcalflag.html'),
         hif.tasks.Fluxscale      : T2_4MDetailsDefaultRenderer('t2-4m_details-fluxscale.html'),
         hif.tasks.Gaincal        : T2_4MDetailsGaincalRenderer(),
         hif.tasks.GcorFluxscale  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_gfluxscale.html'),

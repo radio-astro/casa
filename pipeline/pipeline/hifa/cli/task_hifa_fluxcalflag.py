@@ -5,7 +5,7 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hif_fluxcalflag(vis=None, field=None, intent=None, spw=None,
+def hifa_fluxcalflag(vis=None, field=None, intent=None, spw=None,
               pipelinemode=None, threshold=None, appendlines=None,
 	      linesfiles=None, applyflags=None, dryrun=None,
 	      acceptresults=None):

@@ -13,7 +13,7 @@ CasaTaskDict = {
 		   'hif_cleanlist'    : 'CleanList', 
                    'hif_exportdata'   : 'ExportData',
                    'hifa_flagdata'    : 'ALMAAgentFlagger',
-                   'hif_fluxcalflag'  : 'FluxcalFlag',
+                   'hifa_fluxcalflag'  : 'FluxcalFlag',
                    'hif_gaincal'      : 'Gaincal',
                    'hif_gfluxscale'   : 'GcorFluxscale',
                    'hif_lowgainflag'  : 'Lowgainflag',
@@ -67,6 +67,7 @@ CasaTaskDict = {
 classToCASATask = {
     # ALMA interferometry tasks ---------------------------------------------
     hifa_tasks.ALMAAgentFlagger : 'hifa_flagdata',
+    hifa_tasks.FluxcalFlag : 'hifa_fluxcalflag',
     hifa_tasks.TimeGaincal : 'hifa_timegaincal',
     # Interferometry tasks ---------------------------------------------------
     hif_tasks.Antpos : 'hif_antpos',
@@ -78,7 +79,6 @@ classToCASATask = {
     hif_tasks.CleanList : 'hif_cleanlist',
     hif_tasks.ExportData : 'hif_exportdata',
     hif_tasks.Fluxcal : 'hif_fluxcal',
-    hif_tasks.FluxcalFlag : 'hif_fluxcalflag',
     hif_tasks.Fluxscale : 'hif_fluxscale',
     hif_tasks.Gaincal : 'hif_gaincal',
     hif_tasks.GcorFluxscale : 'hif_gfluxscale',

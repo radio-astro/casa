@@ -13,7 +13,7 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_fluxcalflag</Command>
+        <Command xmlns="">hifa_fluxcalflag</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
