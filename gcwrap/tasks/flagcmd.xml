@@ -12,7 +12,8 @@
 
     Flag commands follow the mode and parameter names from the flagdata task
     (also explained below).  The available modes are: manual, clip, shadow, quack, 
-    elevation,  tfcrop, rflag, extend and unflag.
+    elevation,  tfcrop, rflag and extend. The summary mode is not supported
+    in this task. Use the flagdata task for that.
 
     The flagcmd task will flag data based on the commands input on inpmode :
         table = input from FLAG_CMD table in MS

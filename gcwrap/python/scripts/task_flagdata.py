@@ -6,6 +6,8 @@ import copy
 import pprint
 import flaghelper as fh
 from parallel.parallel_task_helper import ParallelTaskHelper
+# this should be replaced when CASA really moves to Python 2.7
+from OrderedDictionary import OrderedDict
 
 debug = False
 
@@ -26,7 +28,7 @@ class FlagHelper(ParallelTaskHelper):
     def __init__(self, args={}):
         self.__args = args
     
-    @dump_args
+#    @dump_args
     def setupInputFile(self, parname):
         '''Create a temporary input file with
            absolute pathnames for other input files
@@ -128,6 +130,7 @@ def flagdata(vis,
              spwchan,
              spwcorr,
              basecnt,
+             name,
              action,           # run or not the tool
              display,
              flagbackup,
@@ -195,8 +198,9 @@ def flagdata(vis,
             orig_locals['freqdev'] = freqdev    
     
         FHelper.__init__(orig_locals)
-
-        FHelper.bypassParallelProcessing(1)
+        
+        # For tests only
+#        FHelper.bypassParallelProcessing(1)
 
         FHelper.setupCluster('flagdata')
         # (CAS-4119): Override summary minabs,maxabs,minrel,maxrel 
@@ -467,7 +471,7 @@ def flagdata(vis,
                 timedev = fh.readRFlagThresholdFile(timedev,'timedev')
             if( type(freqdev) == str and writeflags == True):
                 freqdev = fh.readRFlagThresholdFile(freqdev,'freqdev')
-                
+
             agent_pars['timedev'] = timedev
             agent_pars['freqdev'] = freqdev
             
@@ -495,6 +499,7 @@ def flagdata(vis,
             agent_pars['spwchan'] = spwchan
             agent_pars['spwcorr'] = spwcorr
             agent_pars['basecnt'] = basecnt
+            agent_pars['name'] = name
             
             # Disable writeflags and savepars
             writeflags = False
@@ -549,7 +554,7 @@ def flagdata(vis,
         
         # Hold the name of the agent
         agent_name = mode.capitalize()
-        agent_pars['name'] = agent_name
+        agent_pars['agentname'] = agent_name
         agent_pars['apply'] = apply      
                           
         ##########  Only save the parameters and exit; action = ''     
@@ -667,8 +672,7 @@ def flagdata(vis,
 
 
         # Now, deal with all the modes that return output.
-        # Summary : Currently, only one is allowed in the task
-        # Rflag : There can be many 'rflags' in the list mode.
+        # Rflag : There can be many 'rflags' in list mode.
 
         ## Pull out RFlag outputs. There will be outputs only if writeflags=False
         if (mode == 'rflag' or mode== 'list') and (writeflags==False):  
@@ -710,30 +714,50 @@ def flagdata(vis,
                 except Exception, instance:
                     casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
                                  'WARN')
-
-        # Pull out the 'summary' part of summary_stats_list.
-        # (This is the task, and there will be only one such dictionary.)
-        # After this step, the only thing left in summary_stats_list are the
-        # list of reports/views, if any.  Return it, if the user wants it.
-        if mode == 'summary':
-           if type(summary_stats_list) is dict:
-               nreps = summary_stats_list['nreport'];
+        
+        # Pull out the 'summary' reports of summary_stats_list.
+        if mode == 'summary' or mode == 'list':
+           ordered_summary_list = OrderedDict(summary_stats_list)
+           nreps = ordered_summary_list['nreport']
+           if nreps > 0:                   
                for rep in range(0,nreps):
-                    repname = "report"+str(rep);
-                    if summary_stats_list[repname]['type'] == "summary":
-                          summary_stats = summary_stats_list.pop(repname);
-                          summary_stats_list[repname] = {'type':'none','name':'none'};
-                          break;  # pull out only one summary.
-        
-           # Filter out baselines/antennas/fields/spws/... from summary_stats
-           # which do not fall within limits
-           summary_stats = filter_summary(summary_stats,minrel,maxrel,minabs,maxabs)
-        
-        # if (need to return the reports/views as well as summary_stats) :
-        #      return summary_stats , summary_stats_list;
-        # else :
-        #      return summary_stats;
-        return summary_stats
+                   repname = "report"+str(rep)
+                   if ordered_summary_list[repname]['type'] != "summary":
+                       ordered_summary_list.pop(repname)
+                   else:
+                       # apply requested filtering
+                       summary_stats = ordered_summary_list.pop(repname);
+                       summary_stats = filter_summary(summary_stats,minrel,maxrel,minabs,maxabs)
+                       # add filtered dictionary back
+                       ordered_summary_list[repname] = summary_stats
+
+               # Clean up the dictionary before returning it
+               ordered_summary_list.pop('type')
+               ordered_summary_list.pop('nreport')
+               
+               if len(ordered_summary_list) == 1:
+                   repkey = ordered_summary_list.keys()
+                   summary_stats_list = ordered_summary_list.pop(repkey[0])
+               else:                       
+                   # rename the keys of the dictionary according to
+                   # the number of reports left in dictionary
+                   counter = 0
+                   summary_reports = OrderedDict()
+                   for k in ordered_summary_list.iterkeys():
+                       repname = "report"+str(counter)
+                       summary_reports[repname] = ordered_summary_list[k]
+                       counter += 1
+                       
+                   summary_stats_list = dict(summary_reports)
+               
+           # for when there is no summary mode in a list
+           else:
+               summary_stats_list = {}  
+               
+        else:
+             summary_stats_list = {} 
+                   
+        return summary_stats_list
     
     except Exception, instance:
         aflocal.done()
