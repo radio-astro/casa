@@ -442,10 +442,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Image Scaling and offset
     Vector<Double> uvScale, uvOffset;
     
-    // Array for non-tiled gridding
-    Array<Complex> griddedData;
-    Array<DComplex> griddedData2;
-    
+   
     //    DirectionCoordinate directionCoord;
     MDirection::Convert* pointingToImage;
     

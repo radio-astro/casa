@@ -281,9 +281,7 @@ protected:
   Vector<Double> uvScale, uvOffset;
 
   // Array for non-tiled gridding
-  Array<Complex> griddedData;
   Array<Complex> griddedWeight;
-  Array<DComplex> griddedData2;
   Array<DComplex> griddedWeight2;
   // Pointing columns
   MSPointingColumns* mspc;

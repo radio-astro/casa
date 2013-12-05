@@ -1438,22 +1438,9 @@ Bool WProjectFT::fromRecord(String& error,
   gridder=0;
     ///setup some of the parameters
   init();
-  if(!cmplxImage_p.null()){
-    //FTMachine::fromRecord would have recovered the image
-    // Might be changing the shape of sumWeight
-    
-      ////if this FTMachine is a forward one then we need to go to the vis domain
-    if(!toVis_p){
-      IPosition gridShape(4, nx, ny, npol, nchan);
-      griddedData.resize(gridShape);
-      griddedData=Complex(0.0);
-    }
-    else{
-      prepGridForDegrid();
-    }
      
 
-  };
+  
   return retval;
 }
 

@@ -240,7 +240,6 @@ private:
   IPosition centerLoc, offsetLoc;
 
   // Array for non-tiled gridding
-  Array<Complex> griddedData;
   Array<Float> wGriddedData;
 
 

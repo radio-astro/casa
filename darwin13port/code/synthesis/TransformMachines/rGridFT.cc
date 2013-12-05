@@ -1277,26 +1277,7 @@ Bool rGridFT::fromRecord(String& error,
   machineName_p="rGridFT";
   ///setup some of the parameters
   init();
-  if(!cmplxImage_p.null()){
-    //FTMachine::fromRecord would have recovered the image
-    // Might be changing the shape of sumWeight
-
-    if(isTiled) {
-      lattice=CountedPtr<Lattice<Complex> >(image, False);
-    }
-    else {
-      // Make the grid the correct shape and turn it into an array lattice
-      // Check the section from the image BEFORE converting to a lattice 
-      if(!toVis_p){
-	IPosition gridShape(4, nx, ny, npol, nchan);
-	griddedData.resize(gridShape);
-	griddedData=Complex(0.0);
-      }
-      else{
-	prepGridForDegrid();
-      }
-    }
-  };
+ 
   return retval;
 }
 

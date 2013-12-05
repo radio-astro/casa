@@ -257,29 +257,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             localnchan=nchan
             localstart=start
             localwidth=width
-        ##### Warn that we cannot save model larger than 2GB in complex 
-        ##### Table record issue in SOURCE table---CAS 5425
-        ###### should be removed when the ticket is fixed
-        ###rough estimates for pol will overestimate it for cases like RRLL
-        localnpol=len(str(stokes))
-#        maximsize=max(imsize) if(type(imsize)==list or type(imsize)==tuple) else imsize
-
-        ## Remember... imsize can be an integer or a list or tuple or list of lists or tuples !
-        if  type(imsize)==list or type(imsize)==tuple :
-            if len(imsize)>0 and ( type( imsize[0] ) == list or type( imsize[0] ) == tuple ) :
-                maximsize=imsize[0][0]
-                for fldsize in imsize:
-                    maximsize = max( maximsize, max(fldsize) )
-            else:
-                maximsize = max(imsize)
-        else:
-            maximsize = imsize
-        
-        imvol=localnchan*maximsize*maximsize*localnpol
-        if((imvol > 60e6) and (not usescratch)):
-            casalog.post("please set usescratch=True for large images till we fix a problem of saving large images in the virtual model_data column", "ERROR")
-            raise ValueError,  'please set usescratch=True for large images till we fix a problem of saving large images in the virtual model_data column'
-        #######End of warn section for CAS-5425
         #setup for 'per channel' clean
         dochaniter=False
         #if interactive and chaniter:

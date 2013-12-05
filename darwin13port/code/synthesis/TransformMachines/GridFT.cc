@@ -342,9 +342,6 @@ void GridFT::prepGridForDegrid(){
   //if(!usePut2_p) griddedData.set(0);
   griddedData.set(Complex(0.0));
 
-  cerr << "gridShape " << griddedData.shape() << endl;
-  cerr << "image address " << image << endl;
-
   IPosition stride(4, 1);
   IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
   IPosition trc(blc+image->shape()-stride);
@@ -1368,7 +1365,7 @@ Bool GridFT::fromRecord(String& error,
   machineName_p="GridFT";
   ///setup some of the parameters
   init();
-  if(!cmplxImage_p.null()){
+  /*if(!cmplxImage_p.null()){
     //FTMachine::fromRecord would have recovered the image
     // Might be changing the shape of sumWeight
 
@@ -1387,7 +1384,7 @@ Bool GridFT::fromRecord(String& error,
 	prepGridForDegrid();
       }
     }
-  };
+    };*/
   return retval;
 }
 

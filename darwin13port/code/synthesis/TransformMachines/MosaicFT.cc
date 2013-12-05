@@ -1695,20 +1695,6 @@ Bool MosaicFT::fromRecord(String& error,
   inRec.get("convsupportplanes", convSupportPlanes_p);
   inRec.get("convsizeplanes", convSizePlanes_p);
   inRec.get("convRowMap",  convRowMap_p);
-  if(!cmplxImage_p.null()){
-    //FTMachine::fromRecord would have recovered the image
-    // Might be changing the shape of sumWeight
-    
-    ////if this FTMachine is a forward one then we need to go to the vis domain
-    if(!toVis_p){
-      IPosition gridShape(4, nx, ny, npol, nchan);
-      griddedData.resize(gridShape);
-      griddedData=Complex(0.0);
-    }
-    else{
-      prepGridForDegrid();
-    }
-  }
   inRec.get("stokes", stokes_p);
   if(inRec.isDefined("pbconvfunc")){
     Record subRec=inRec.asRecord("pbconvfunc");
