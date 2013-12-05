@@ -104,6 +104,10 @@ class PlotcalLeaf(object):
         task = casa_tasks.plotcal(**task_args)
         task.execute(dry_run=False)
 
+        # plotcal with time as x axis seems to leave matplotlib
+        # in an open state. Work around this by closing pyplot
+        # after each call.
+        pyplot.close()
 
 class PlotbandpassLeaf(object):
     """
