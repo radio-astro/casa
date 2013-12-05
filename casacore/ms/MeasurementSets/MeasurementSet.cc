@@ -981,7 +981,8 @@ void MeasurementSet::checkVersion()
 Record MeasurementSet::msseltoindex(const String& spw, const String& field, 
                                     const String& baseline, const String& time, 
                                     const String& scan, const String& uvrange, 
-                                    const String& observation, const String& taql)
+                                    const String& observation, const String& poln,
+				    const String& taql)
 {
   Record retval;
   MSSelection thisSelection;
@@ -992,8 +993,8 @@ Record MeasurementSet::msseltoindex(const String& spw, const String& field,
   thisSelection.setScanExpr(scan);
   thisSelection.setUvDistExpr(uvrange);
   thisSelection.setObservationExpr(observation);
+  thisSelection.setPolnExpr(poln);
   thisSelection.setTaQLExpr(taql);
-  //  thisSelection.setPolnExpr(String("*"));
   TableExprNode exprNode=thisSelection.toTableExprNode(this);
   Vector<Int> fieldlist=thisSelection.getFieldList();
   Vector<Int> spwlist=thisSelection.getSpwList();
@@ -1008,7 +1009,10 @@ Record MeasurementSet::msseltoindex(const String& spw, const String& field,
   OrderedMap<Int, Vector<Int > > polMap=thisSelection.getPolMap();
   OrderedMap<Int, Vector<Vector<Int> > > corrMap=thisSelection.getCorrMap();
   Vector<Int> allDDIDList;
-  allDDIDList = set_intersection(ddIDList, spwDDIDList);
+  if (ddIDList.nelements() == 0) allDDIDList = spwDDIDList;
+  else if (spwDDIDList.nelements() == 0) allDDIDList = ddIDList;
+  else allDDIDList = set_intersection(ddIDList, spwDDIDList);
+
 
   //  cerr << ddIDList << endl << spwDDIDList << endl << allDDIDList << endl;
 
@@ -1023,7 +1027,7 @@ Record MeasurementSet::msseltoindex(const String& spw, const String& field,
   
   retval.define("poldd", ddIDList);
   retval.define("spwdd", spwDDIDList);
-  retval.define("dd", spwDDIDList);
+  retval.define("dd", allDDIDList);
   //  retval.define("polmap",polMap);
   // retrval.define("corrmap",corrMap);
 

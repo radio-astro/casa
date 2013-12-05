@@ -48,7 +48,7 @@ MSMetaDataOnDemand::MSMetaDataOnDemand(const MeasurementSet *const &ms, const Fl
 	: _ms(ms), _cacheMB(0), _maxCacheMB(maxCacheSizeMB), _nStates(0),
 	  _nACRows(0), _nXCRows(0), _nSpw(0), _nFields(0),
 	  _nAntennas(0), _nObservations(0), _nScans(0), _nArrays(0),
-	  _nrows(0), _nPol(0), _uniqueIntents(), _scanToSpwsMap(),
+	  _nrows(0), _nPol(0), _nDataDescIDs(0), _uniqueIntents(), _scanToSpwsMap(),
 	  _uniqueScanNumbers(),_uniqueFieldIDs(), _uniqueStateIDs(),
 	  _avgSpw(), _tdmSpw(),
 	  _fdmSpw(), _wvrSpw(), _sqldSpw(), _antenna1(), _antenna2(),
@@ -595,7 +595,7 @@ void MSMetaDataOnDemand::_getScansAndIntentsMaps(
 	}
 }
 
-uInt MSMetaDataOnDemand::_sizeof(std::map<Int, std::set<String> >& m) {
+uInt MSMetaDataOnDemand::_sizeof(const std::map<Int, std::set<String> >& m) {
 	uInt size = sizeof(Int) * m.size();
 	std::map<Int, std::set<String> >::const_iterator end = m.end();
 	for (
@@ -613,7 +613,7 @@ uInt MSMetaDataOnDemand::_sizeof(std::map<Int, std::set<String> >& m) {
 	return size;
 }
 
-uInt MSMetaDataOnDemand::_sizeof(vector<std::set<String> >& m) {
+uInt MSMetaDataOnDemand::_sizeof(const vector<std::set<String> >& m) {
 	uInt size = sizeof(Int) * m.size();
 	vector<std::set<String> >::const_iterator end = m.end();
 	for (
@@ -631,7 +631,25 @@ uInt MSMetaDataOnDemand::_sizeof(vector<std::set<String> >& m) {
 	return size;
 }
 
-uInt MSMetaDataOnDemand::_sizeof(std::map<String, std::set<Int> >& m) {
+
+uInt MSMetaDataOnDemand::_sizeof(const vector<String>& m) {
+	vector<String>::const_iterator end = m.end();
+	uInt size = 0;
+	for (
+		vector<String>::const_iterator iter=m.begin();
+		iter!=end; iter++
+	) {
+		size += iter->length();
+	}
+	return size;
+}
+
+uInt MSMetaDataOnDemand::_sizeof(const Quantum<Vector<Double> >& m) {
+	return (sizeof(Double)+10)*m.getValue().size();
+}
+
+
+uInt MSMetaDataOnDemand::_sizeof(const std::map<String, std::set<Int> >& m) {
 	uInt setssize = 0;
 	uInt size = 0;
 	std::map<String, std::set<Int> >::const_iterator end = m.end();
@@ -647,7 +665,7 @@ uInt MSMetaDataOnDemand::_sizeof(std::map<String, std::set<Int> >& m) {
 }
 
 
-uInt MSMetaDataOnDemand::_sizeof(std::map<String, std::set<uInt> >& m) {
+uInt MSMetaDataOnDemand::_sizeof(const std::map<String, std::set<uInt> >& m) {
 	uInt setssize = 0;
 	uInt size = 0;
 	std::map<String, std::set<uInt> >::const_iterator end = m.end();
@@ -662,7 +680,21 @@ uInt MSMetaDataOnDemand::_sizeof(std::map<String, std::set<uInt> >& m) {
 	return size;
 }
 
-uInt MSMetaDataOnDemand::_sizeof(std::map<Double, std::set<Int> >& m) {
+uInt MSMetaDataOnDemand::_sizeof(const vector<std::map<Int, Quantity> >& m) {
+	uInt size = 0;
+	vector<std::map<Int, Quantity> >::const_iterator end = m.end();
+	uInt intsize = sizeof(Int);
+	uInt qsize = 20;
+	for (
+		vector<std::map<Int, Quantity> >::const_iterator iter = m.begin();
+		iter!=end; iter++
+	) {
+		size += iter->size()*(2*intsize + qsize);
+	}
+	return size;
+}
+
+uInt MSMetaDataOnDemand::_sizeof(const std::map<Double, std::set<Int> >& m) {
 	uInt setssize = 0;
 	uInt size = sizeof(Double) * m.size();
 	std::map<Double, std::set<Int> >::const_iterator end = m.end();
@@ -676,7 +708,7 @@ uInt MSMetaDataOnDemand::_sizeof(std::map<Double, std::set<Int> >& m) {
 	return size;
 }
 
-uInt MSMetaDataOnDemand::_sizeof(std::map<Int, std::set<Double> >& m) {
+uInt MSMetaDataOnDemand::_sizeof(const std::map<Int, std::set<Double> >& m) {
 	uInt setssize = 0;
 	uInt size = sizeof(Int) * m.size();
 	std::map<Int, std::set<Double> >::const_iterator end = m.end();
@@ -823,7 +855,7 @@ void MSMetaDataOnDemand::_getFieldsAndSpwMaps(
 	}
 }
 
-std::set<uInt> MSMetaDataOnDemand::getSpwsForField(const Int fieldID) {
+std::set<uInt> MSMetaDataOnDemand::getSpwsForField(Int fieldID) {
 	if (! _hasFieldID(fieldID)) {
 		return std::set<uInt>();
 	}
@@ -836,15 +868,18 @@ std::set<uInt> MSMetaDataOnDemand::getSpwsForField(const Int fieldID) {
 std::set<uInt> MSMetaDataOnDemand::getSpwsForField(const String& fieldName) {
 	uInt myNFields = nFields();
 	vector<String> fieldNames = _getFieldNames();
-
+	std::set<uInt> spws;
 	for (uInt i=0; i<myNFields; i++) {
 		if (fieldNames[i] == fieldName) {
-			return getSpwsForField(i);
+			std::set<uInt> myspws = getSpwsForField(i);
+			spws.insert(myspws.begin(), myspws.end());
 		}
 	}
-	throw AipsError(
-		_ORIGIN + "field (" + fieldName + " does not exist"
+	ThrowIf(
+		spws.empty(),
+		_ORIGIN + "field (" + fieldName + " does not exist."
 	);
+	return spws;
 }
 
 vector<String> MSMetaDataOnDemand::_getFieldNames() {
@@ -920,7 +955,7 @@ void MSMetaDataOnDemand::_getScansAndSpwMaps(
 	}
 }
 
-uInt MSMetaDataOnDemand::_sizeof(std::map<Int, std::set<uInt> >& map) {
+uInt MSMetaDataOnDemand::_sizeof(const std::map<Int, std::set<uInt> >& map) {
 	uInt size = 0;
 	std::map<Int, std::set<uInt> >::const_iterator end = map.end();
 	for (
@@ -934,7 +969,7 @@ uInt MSMetaDataOnDemand::_sizeof(std::map<Int, std::set<uInt> >& map) {
 	return size;
 }
 
-uInt MSMetaDataOnDemand::_sizeof(std::map<Int, std::set<Int> >& map) {
+uInt MSMetaDataOnDemand::_sizeof(const std::map<Int, std::set<Int> >& map) {
 	uInt size = 0;
 	std::map<Int, std::set<Int> >::const_iterator end = map.end();
 	for (
@@ -948,7 +983,7 @@ uInt MSMetaDataOnDemand::_sizeof(std::map<Int, std::set<Int> >& map) {
 	return size;
 }
 
-uInt MSMetaDataOnDemand::_sizeof(vector<std::set<Int> >& v) {
+uInt MSMetaDataOnDemand::_sizeof(const vector<std::set<Int> >& v) {
 	uInt size = 0;
 	vector<std::set<Int> >::const_iterator end = v.end();
 	for (
@@ -993,6 +1028,13 @@ uInt MSMetaDataOnDemand::nAntennas() {
 	uInt nAnts = _ms->antenna().nrow();
 	_nAntennas = nAnts;
 	return nAnts;
+}
+
+uInt MSMetaDataOnDemand::nDataDescriptions() {
+	if (_nDataDescIDs == 0) {
+		_nDataDescIDs = _ms->dataDescription().nrow();
+	}
+	return _nDataDescIDs;
 }
 
 vector<String> MSMetaDataOnDemand::getAntennaNames(
@@ -1080,6 +1122,64 @@ vector<uInt> MSMetaDataOnDemand::getAntennaIDs(
 	}
 	return ids;
 }
+
+vector<std::map<Int, Quantity> > MSMetaDataOnDemand::getFirstExposureTimeMap() {
+	if (! _firstExposureTimeMap.empty()) {
+		return _firstExposureTimeMap;
+	}
+	vector<std::map<Int, Quantity> > firstExposureTimeMap = MSMetaData::_getFirstExposureTimeMap(
+		nDataDescriptions(), *_getScans(), *_getDataDescIDs(),
+		*_getTimes(), *_getExposureTimes()
+	);
+	if (_cacheUpdated(_sizeof(firstExposureTimeMap))) {
+		_firstExposureTimeMap = firstExposureTimeMap;
+	}
+	return firstExposureTimeMap;
+}
+
+vector<String> MSMetaDataOnDemand::getAntennaStations(const vector<uInt>& antennaIDs) {
+	vector<String> allStations = _getStationNames();
+	if (antennaIDs.empty()) {
+		return allStations;
+	}
+	_hasAntennaID(max(Vector<uInt>(antennaIDs)));
+	vector<String> myStationNames;
+	vector<uInt>::const_iterator end = antennaIDs.end();
+	for (
+		vector<uInt>::const_iterator iter=antennaIDs.begin();
+		iter!=end; iter++
+	) {
+		myStationNames.push_back(allStations[*iter]);
+	}
+	return myStationNames;
+}
+
+vector<String> MSMetaDataOnDemand::getAntennaStations(const vector<String>& antennaNames) {
+	return getAntennaStations(getAntennaIDs(antennaNames));
+}
+
+vector<String> MSMetaDataOnDemand::_getStationNames() {
+	if (! _stationNames.empty()) {
+		return _stationNames;
+	}
+	vector<String> stationNames = MSMetaData::_getAntennaStationNames(*_ms);
+	if (_cacheUpdated(_sizeof(stationNames))) {
+		_stationNames = stationNames;
+	}
+	return stationNames;
+}
+
+Quantum<Vector<Double> > MSMetaDataOnDemand::getAntennaDiameters() {
+	if (! _antennaDiameters.getValue().empty()) {
+		return _antennaDiameters;
+	}
+	Quantum<Vector<Double> > antennaDiameters = MSMetaData::_getAntennaDiameters(*_ms);
+	if (_cacheUpdated(_sizeof(antennaDiameters))) {
+		_antennaDiameters = antennaDiameters;
+	}
+	return antennaDiameters;
+}
+
 
 std::set<uInt> MSMetaDataOnDemand::getTDMSpw() {
 	if (! _tdmSpw.empty()) {
@@ -1375,6 +1475,19 @@ std::tr1::shared_ptr<Vector<Double> > MSMetaDataOnDemand::_getTimes() {
 		_times = times;
 	}
 	return times;
+}
+
+std::tr1::shared_ptr<Quantum<Vector<Double> > > MSMetaDataOnDemand::_getExposureTimes() {
+	if (_exposures && ! _exposures->getValue().empty()) {
+		return _exposures;
+	}
+	std::tr1::shared_ptr<Quantum<Vector<Double> > > ex(
+		new Quantum<Vector<Double> >(MSMetaData::_getExposures(*_ms))
+	);
+	if (_cacheUpdated((20 + sizeof(Double))*ex->getValue().size())) {
+		_exposures = ex;
+	}
+	return ex;
 }
 
 std::tr1::shared_ptr<ArrayColumn<Bool> > MSMetaDataOnDemand::_getFlags() {
@@ -2217,6 +2330,18 @@ Bool MSMetaDataOnDemand::_hasStateID(const Int stateID) {
 	return _uniqueStateIDs.find(stateID) != _uniqueStateIDs.end();
 
 }
+
+void MSMetaDataOnDemand::_hasAntennaID(Int antennaID) {
+	ThrowIf(
+		antennaID >= (Int)nAntennas(),
+		_ORIGIN + "Requested antenna ID "
+		+ String::toString(antennaID)
+		+ " is greater than or equal to the number of records ("
+		+ String::toString(nAntennas())
+		+ ") in this MS's ANTENNA table"
+	);
+}
+
 
 }
 

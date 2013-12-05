@@ -165,6 +165,15 @@ public:
 	// get the antenna ID for the antenna with the specified name.
 	virtual vector<uInt> getAntennaIDs(const vector<String>& antennaName) = 0;
 
+	// get the antenna stations for the specified antenna IDs
+	virtual vector<String> getAntennaStations(const vector<uInt>& antennaIDs) = 0;
+
+	// get the antenna stations for the specified antenna names
+	virtual vector<String> getAntennaStations(const vector<String>& antennaNames) = 0;
+
+	// get the antenna diameters
+	virtual Quantum<Vector<Double> > getAntennaDiameters() = 0;
+
 	// ALMA-specific. Get set of spectral windows used for TDM. These are windows that have
 	// 64, 128, or 256 channels
 	virtual std::set<uInt> getTDMSpw() = 0;
@@ -324,6 +333,10 @@ public:
 
 	virtual std::map<std::pair<uInt, uInt>, Int> getSpwIDPolIDToDataDescIDMap() = 0;
 
+	// get a map of data desc ID, scan number pair to exposure time for the first time
+	// for that data desc ID, scan number pair
+	virtual vector<std::map<Int, Quantity> > getFirstExposureTimeMap() = 0;
+
 protected:
 
 	// (array_id, observation_id, scan_number, field_id) -> stuff mappings
@@ -386,6 +399,8 @@ protected:
 
 	static void _checkTolerance(const Double tol);
 
+	static Quantum<Vector<Double> > _getExposures(const MeasurementSet& ms);
+
 	static Vector<Double> _getTimes(const MeasurementSet& ms);
 
 	static Vector<Double> _getTimeCentroids(const MeasurementSet& ms);
@@ -420,6 +435,14 @@ protected:
 	static vector<Quantum<Vector<Double> > > _getAntennaOffsets(
 		const vector<MPosition>& antennaPositions,
 		const MPosition& observatoryPosition
+	);
+
+	static vector<String> _getAntennaStationNames(
+		const MeasurementSet& ms
+	);
+
+	static Quantum<Vector<Double> > _getAntennaDiameters(
+		const MeasurementSet& ms
 	);
 
 	static std::map<Int, uInt> _toUIntMap(const Vector<Int>& v);
@@ -482,6 +505,13 @@ protected:
 		const std::set<Int>& uniqueScans
 	);
 
+	// The structure has the data description ID as the vector index and the scan number as
+	// the map index
+	static vector<std::map<Int, Quantity> > _getFirstExposureTimeMap(
+		uInt nDataDescIDs, const Vector<Int>& scans,
+		const Vector<Int>& dataDescIDs, const Vector<Double>& times,
+		const Quantum<Vector<Double> >& exposureTimes
+	);
 
 private:
 

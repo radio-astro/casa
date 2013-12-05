@@ -442,9 +442,9 @@ Int64 ValueHolderRep::asInt64() const
   case TpInt64:
     return itsInt64;
   case TpFloat:
-    return itsFloat;
+    return static_cast<Int64> (itsFloat);
   case TpDouble:
-    return itsDouble;
+    return static_cast<Int64> (itsDouble);
   default:
     ;
   }

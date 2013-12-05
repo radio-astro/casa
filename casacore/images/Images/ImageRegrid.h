@@ -207,7 +207,8 @@ public:
 		  const CoordinateSystem& cSysTo,
 		  const CoordinateSystem& cSysFrom,
 		  const IPosition& axes,
-		  const IPosition& inShape=IPosition()
+		  const IPosition& inShape=IPosition(),
+		  Bool giveStokesWarning=True
   );
 
  private:
@@ -224,11 +225,13 @@ public:
 //  
   // Check shape and axes.  Exception if no good.  If pixelAxes
   // of length 0, set to all axes according to shape
-  void checkAxes(IPosition& outPixelAxes,
-                 const IPosition& inShape,
-                 const IPosition& outShape,
-                 const Vector<Int>& pixelAxisMap,
-                 const CoordinateSystem& outCoords);
+  void _checkAxes(
+		  IPosition& outPixelAxes,
+		  const IPosition& inShape,
+		  const IPosition& outShape,
+		  const Vector<Int>& pixelAxisMap,
+		  const CoordinateSystem& outCoords
+  );
 
   // Find maps between coordinate systems
   void findMaps (uInt nDim, 

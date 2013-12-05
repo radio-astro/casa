@@ -1043,6 +1043,34 @@ void testIt(MSMetaData& md) {
 			cout << "*** test getAntennaOffset()" << endl;
 			cout << md.getAntennaOffset(2) << endl;
 		}
+		{
+			cout << "*** test getAntennaStations()" << endl;
+			vector<uInt> ids(3);
+			ids[0] = 2;
+			ids[1] = 4;
+			ids[2] = 3;
+			vector<String> stations = md.getAntennaStations(ids);
+			AlwaysAssert(
+				stations[0] == "A077" && stations[1] == "A082"
+				&& stations[2] == "A137", AipsError
+			);
+			vector<String> names(3);
+			names[0] = "DV02";
+			names[1] = "DV05";
+			names[2] = "DV03";
+			stations = md.getAntennaStations(names);
+			AlwaysAssert(
+				stations[0] == "A077" && stations[1] == "A082"
+				&& stations[2] == "A137", AipsError
+			);
+		}
+		{
+			cout << "*** test getAntennaDiameters" << endl;
+			Quantum<Vector<Double> > antennaDiameters = md.getAntennaDiameters();
+			AlwaysAssert(
+				allEQ(antennaDiameters.getValue(), 12.0), AipsError
+			);
+		}
 		/*
 		{
 			cout << "*** test getExposuresForTimes()" << endl;
@@ -1226,7 +1254,7 @@ void testIt(MSMetaData& md) {
 					uInt spw = mypair.first;
 					uInt pol = mypair.second;
 					Int dataDesc = iter->second;
-					AlwaysAssert(spw == dataDesc, AipsError);
+					AlwaysAssert((Int)spw == dataDesc, AipsError);
 					AlwaysAssert(pol == (spw == 0 ? 1 : 0), AipsError);
 				}
 			}
@@ -1235,10 +1263,21 @@ void testIt(MSMetaData& md) {
 			cout << "*** test nPol()" << endl;
 			AlwaysAssert(md.nPol() == 2, AipsError);
 		}
+		{
 			cout << "*** test getSQLDSpw()" << endl;
 			std::set<uInt> res = md.getSQLDSpw();
 			AlwaysAssert(res.size() == 1 && *res.begin() == 3, AipsError);
+		}
 		{
+			cout << "*** test getFirstExposureTimeMap()" << endl;
+			vector<std::map<Int, Quantity> > mymap = md.getFirstExposureTimeMap();
+			AlwaysAssert(near(mymap[0][30].getValue("s"), 1.152), AipsError);
+			AlwaysAssert(near(mymap[10][17].getValue("s"), 1.008), AipsError)
+
+			cout << "mymap " << mymap[10][17] << endl;
+		}
+		{
+
 			cout << "*** cache size " << md.getCache() << endl;
 		}
 	}

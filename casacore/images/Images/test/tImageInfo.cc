@@ -37,10 +37,9 @@
 #include <casa/Quanta/QLogical.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/iostream.h>
-
+#include <coordinates/Coordinates/DirectionCoordinate.h>
 
 #include <casa/namespace.h>
-
 
 void equal (const ImageInfo& ii1, const ImageInfo& ii2)
 {
@@ -246,8 +245,35 @@ try {
 		myinfo.setBeams(bset3);
     	AlwaysAssert(myinfo.getBeamSet() == bset3, AipsError);
 
+    }
+    {
+    	cout << "*** Test getBeamAreaInPixels" << endl;
+    	ImageInfo myinfo;
+    	GaussianBeam beam(
+    		Quantity(4, "arcsec"), Quantity(2, "arcsec"), Quantity(30, "deg")
+    	);
+    	ImageBeamSet bset(10, 4, beam);
+    	bset.setBeam(2, 2,
+    		GaussianBeam(
+    			Quantity(5, "arcsec"), Quantity(3, "arcsec"),
+    			Quantity(30, "deg")
+    		)
+    	);
+    	myinfo.setBeams(bset);
+    	DirectionCoordinate dc;
+    	dc.setWorldAxisUnits(Vector<String>(2, "arcsec"));
+    	dc.setIncrement(Vector<Double>(2, 0.7));
+    	for (uInt i=0; i<10; i++) {
+    		for (uInt j=0; j<4; j++) {
+    			Double expec = (i == 2 && j == 2)
+    				? 34.686429656840772 : 18.499429150315081;
+    	    	AlwaysAssert(
+    	    		near(myinfo.getBeamAreaInPixels(i, j, dc), expec),
+    	    		AipsError
+    	    	);
 
-
+    		}
+    	}
     }
 } catch (const AipsError& x) {
   cout << "Caught error " << x.getMesg() << endl;

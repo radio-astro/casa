@@ -58,6 +58,8 @@ ${BISON_ImageExprGram_OUTPUTS}
 ${FLEX_ImageExprGram_OUTPUTS}
 )
 
+set_target_properties( casa_images PROPERTIES SOVERSION ${casa_soversion} )
+
 target_link_libraries (
 casa_images
 casa_mirlib

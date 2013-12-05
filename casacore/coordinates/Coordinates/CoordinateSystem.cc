@@ -659,23 +659,43 @@ void CoordinateSystem::subImageInSitu(const Vector<Float> &originShift,
         	SpectralCoordinate spCoord = spectralCoordinate(coordinate);
         	SpectralCoordinate::SpecType nativeType = spCoord.nativeType();
         	Vector<Double> newWorldValues(newShape[i]);
-        	for (
-        		uInt j=0; j< newWorldValues.size(); j++
-        	) {
+
+		// switch off reference conversion if necessary
+		MFrequency::Types baseType = spCoord.frequencySystem(False);
+		MFrequency::Types convType = spCoord.frequencySystem(True);
+		MEpoch convEpoch;
+		MPosition convPos;
+		MDirection convDir;
+		if(baseType!=convType){
+		  spCoord.getReferenceConversion(convType, convEpoch, convPos, convDir);
+		  spCoord.setReferenceConversion(baseType, convEpoch, convPos, convDir);
+		}
+        	for (uInt j=0; j< newWorldValues.size(); j++) {
         		Double pix = originShift[i] + j*pixincFac[i];
         		if (! spCoord.toWorld(newWorldValues[j], pix)) {
         			throw AipsError("Unable to convert tabular spectral coordinate");
         		}
         	}
+		// restore reference conversion
+		if(baseType!=convType){
+		  spCoord.setReferenceConversion(convType, convEpoch, convPos, convDir);
+		}
         	SpectralCoordinate newCoord(
-        		spCoord.frequencySystem(), newWorldValues, spCoord.restFrequency()
+        		baseType, newWorldValues, spCoord.restFrequency()
         	);
         	if (! newCoord.setNativeType(nativeType)) {
         		throw AipsError("Unable to set native type of tabular spectral coordinate.");
         	}
-        	replaceCoordinate(newCoord, coordinate);
+
+		// adding the conversion layer if one exists
+		if(!newCoord.setReferenceConversion(convType, convEpoch, convPos, convDir)){
+		  throw AipsError("Unable to set reference conversion layer of tabular spectral coordinate.");
+		}
+
         	crpix(i) = 0;
         	cdelt[i] = newCoord.increment()[0];
+
+        	replaceCoordinate(newCoord, coordinate);
         }
         else {
            AlwaysAssert(pixincFac(i) > 0, AipsError);
