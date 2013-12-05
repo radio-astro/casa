@@ -76,28 +76,28 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
 
-    <param type="intArray" name="scanlist">
-            <description>list of scans to use (e.g. [1,2,3,4])</description>
+    <param type="string" name="scan">
+            <description>select data based on scan numbers (e.g. \'21~23\')</description>
             <value></value>
     </param>
 
     <param type="string" name="field">
-            <description>string for selection by source name</description>
+            <description>string for selection by source name (e.g. \'3C2*\')</description>
             <value></value>
     </param>
 
-    <param type="intArray" name="iflist">
-            <description>list of IF ids to select (e.g. [0,1])</description>
+    <param type="string" name="spw">
+            <description>select data based on IF ids (spectral window) (e.g. \'3,5,7\')</description>
             <value></value>
     </param>
 
-    <param type="intArray" name="pollist">
-            <description>list of polarization ids to select (e.g. [0,1])</description>
+    <param type="string" name="pol">
+            <description>select data based on polarization ids (e.g.\'0,1\')</description>
             <value></value>
     </param>
 
     <param type="bool" name="scanaverage">
-            <description>average integs within scans (True,False) </description>
+            <description>average integrations within scans (True,False) </description>
             <value>False</value>
     </param>
 

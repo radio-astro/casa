@@ -9,7 +9,7 @@ from asap.scantable import is_scantable
 import sdutil
 
 @sdutil.sdtask_decorator
-def tsdstat(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, masklist, invertmask, interactive, outfile, format, overwrite):
+def tsdstat(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scan, field, spw, pol, scanaverage, timeaverage, tweight, polaverage, pweight, masklist, invertmask, interactive, outfile, format, overwrite):
     with sdutil.sdtask_manager(sdstat_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -35,6 +35,9 @@ class sdstat_worker(sdutil.sdtask_template):
         #load the data without averaging
         sorg = sd.scantable(self.infile,average=self.scanaverage,antenna=self.antenna)
 
+        # scantable selection
+        sorg.set_selection(self.get_selector(sorg))
+
         # collect data to restore
         self.restorer = sdutil.scantable_restore_factory(sorg,
                                                          self.infile,
@@ -44,16 +47,12 @@ class sdstat_worker(sdutil.sdtask_template):
                                                          self.doppler,
                                                          self.restfreq)
         
-        # scantable selection
-        #sorg.set_selection(self.get_selector())
-        sorg.set_selection(self.get_selector_by_list())
-
-
         # this is bit tricky
         # set fluxunit here instead of self.set_to_scan
         # and remove fluxunit attribute to disable additional
         # call of set_fluxunit in self.set_to_scan
         self.scan = sdutil.set_fluxunit(sorg, self.fluxunit, self.telescopeparm, False)
+
         self.fluxunit_saved = self.fluxunit
         del self.fluxunit
 

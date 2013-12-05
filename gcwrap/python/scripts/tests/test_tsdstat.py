@@ -367,13 +367,13 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
         """Test 7: maskllist (line) in specunit='channel' """
         tid="07"
         outfile = self.outroot+tid+self.outsuff
-        iflist = [2]
+        spw = '2'
         specunit = 'channel'
 
         masklist = self.linechan2
 
         currstat = tsdstat(infile=self.infile,specunit=specunit,outfile=outfile,
-                          iflist=iflist,masklist=masklist)
+                          spw=spw,masklist=masklist)
         # print "Statistics out of the current run:\n",currstat
 
         # Task sdstat returns a dictionary of statistic values
@@ -387,12 +387,12 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
         """Test 8: maskllist (line) in specunit='GHz' """
         tid="08"
         outfile = self.outroot+tid+self.outsuff
-        iflist = [2]
+        spw = '2'
         specunit = 'GHz'
 
-        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=iflist[0])
+        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=int(spw))
         currstat = tsdstat(infile=self.infile,specunit=specunit,outfile=outfile,
-                          iflist=iflist,masklist=masklist)
+                          spw=spw,masklist=masklist)
         # print "Statistics out of the current run:\n",currstat
 
         # Task sdstat returns a dictionary of statistic values
@@ -405,12 +405,12 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
         """Test 9: maskllist (line) in specunit='km/s' """
         tid="09"
         outfile = self.outroot+tid+self.outsuff
-        iflist = [2]
+        spw = '2'
         specunit = 'km/s'
 
-        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=iflist[0])
+        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=int(spw))
         currstat = tsdstat(infile=self.infile,specunit=specunit,outfile=outfile,
-                          iflist=iflist,masklist=masklist)
+                          spw=spw,masklist=masklist)
         # print "Statistics out of the current run:\n",currstat
 
         # Task sdstat returns a dictionary of statistic values
@@ -423,14 +423,14 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
         """Test 10: invert = True"""
         tid="10"
         outfile = self.outroot+tid+self.outsuff
-        iflist = [0]
+        spw = '0'
         specunit = 'channel'
 
         masklist = self.linechan0
         invert = True
 
         currstat = tsdstat(infile=self.infile,specunit=specunit,outfile=outfile,
-                          iflist=iflist,masklist=masklist,invertmask=invert)
+                          spw=spw,masklist=masklist,invertmask=invert)
         # print "Statistics out of the current run:\n",currstat
 
         # Task sdstat returns a dictionary of statistic values
@@ -467,7 +467,7 @@ class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
     testRF11 - testRF13 --- single element list (int, quantity w/o unit, dictionary)
     testRF21 - testRF23 --- single element list (float/int, quantity, dictionary)
     """
-    iflist = [0,2]
+    spw = '0,2'
     frf = [45.490e9, 44.075e9]
     irf = [45490000000, 44075000000]
     qurf = ['45490.MHz','44.075GHz']
@@ -513,12 +513,12 @@ class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
         tid = "RF01"
         infile = self.infile
         outfile = self.outroot+tid+self.outsuff
-        iflist = self.iflist
+        spw = self.spw
         specunit = 'km/s'
         restfreq = self.frf[1]
         
         print "Setting restfreq = %s" % (str(restfreq))
-        currstat = tsdstat(infile=self.infile,outfile=outfile,iflist=iflist,\
+        currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
                           specunit=specunit,restfreq=restfreq)
 
         # Task sdstat returns a dictionary of statistic values
@@ -534,12 +534,12 @@ class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
         tid = "RF02"
         infile = self.infile
         outfile = self.outroot+tid+self.outsuff
-        iflist = self.iflist
+        spw = self.spw
         specunit = 'km/s'
         restfreq = self.qurf[1]
 
         print "Setting restfreq = %s" % (str(restfreq))
-        currstat = tsdstat(infile=self.infile,outfile=outfile,iflist=iflist,\
+        currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
                           specunit=specunit,restfreq=restfreq)
 
         # Task sdstat returns a dictionary of statistic values
@@ -555,12 +555,12 @@ class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
         tid = "RF11"
         infile = self.infile
         outfile = self.outroot+tid+self.outsuff
-        iflist = self.iflist
+        spw = self.spw
         specunit = 'km/s'
         restfreq = [ self.irf[1] ]
 
         print "Setting restfreq = %s" % (str(restfreq))
-        currstat = tsdstat(infile=self.infile,outfile=outfile,iflist=iflist,\
+        currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
                           specunit=specunit,restfreq=restfreq)
 
         # Task sdstat returns a dictionary of statistic values
@@ -576,12 +576,12 @@ class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
         tid = "RF12"
         infile = self.infile
         outfile = self.outroot+tid+self.outsuff
-        iflist = self.iflist
+        spw = self.spw
         specunit = 'km/s'
         restfreq = [ self.qrf[1] ]
 
         print "Setting restfreq = %s" % (str(restfreq))
-        currstat = tsdstat(infile=self.infile,outfile=outfile,iflist=iflist,\
+        currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
                           specunit=specunit,restfreq=restfreq)
 
         # Task sdstat returns a dictionary of statistic values
@@ -597,12 +597,12 @@ class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
         tid = "RF13"
         infile = self.infile
         outfile = self.outroot+tid+self.outsuff
-        iflist = self.iflist
+        spw = self.spw
         specunit = 'km/s'
         restfreq = [ self.drf[1] ]
 
         print "Setting restfreq = %s" % (str(restfreq))
-        currstat = tsdstat(infile=self.infile,outfile=outfile,iflist=iflist,\
+        currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
                           specunit=specunit,restfreq=restfreq)
 
         # Task sdstat returns a dictionary of statistic values
@@ -618,12 +618,12 @@ class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
         tid = "RF21"
         infile = self.infile
         outfile = self.outroot+tid+self.outsuff
-        iflist = self.iflist
+        spw = self.spw
         specunit = 'km/s'
         restfreq = [ self.frf[0], self.irf[1] ]
 
         print "Setting restfreq = %s" % (str(restfreq))
-        currstat = tsdstat(infile=self.infile,outfile=outfile,iflist=iflist,\
+        currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
                           specunit=specunit,restfreq=restfreq)
 
         # Task sdstat returns a dictionary of statistic values
@@ -639,12 +639,12 @@ class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
         tid = "RF22"
         infile = self.infile
         outfile = self.outroot+tid+self.outsuff
-        iflist = self.iflist
+        spw = self.spw
         specunit = 'km/s'
         restfreq = [ self.qurf[0], self.qrf[1] ]
 
         print "Setting restfreq = %s" % (str(restfreq))
-        currstat = tsdstat(infile=self.infile,outfile=outfile,iflist=iflist,\
+        currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
                           specunit=specunit,restfreq=restfreq)
 
         # Task sdstat returns a dictionary of statistic values
@@ -660,12 +660,12 @@ class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
         tid = "RF23"
         infile = self.infile
         outfile = self.outroot+tid+self.outsuff
-        iflist = self.iflist
+        spw = self.spw
         specunit = 'km/s'
         restfreq = [ self.drf[1], self.drf[0] ]
 
         print "Setting restfreq = %s" % (str(restfreq))
-        currstat = tsdstat(infile=self.infile,outfile=outfile,iflist=iflist,\
+        currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
                           specunit=specunit,restfreq=restfreq)
 
         # Task sdstat returns a dictionary of statistic values
@@ -725,15 +725,15 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         """Storage Test MT: storage='memory' and insitu=T"""
         tid="MT"
         outfile = self.outroot+tid+self.outsuff
-        iflist = [2]
+        spw = '2'
         #specunit = 'GHz'
         specunit = 'km/s'
         restfreq = [44.075e9]
 
         sd.rcParams['scantable.storage'] = 'memory'
         initstat = tsdstat(infile=self.infile,specunit='',outfile=outfile+'.init',
-                          iflist=iflist,masklist=self.linechan2)
-        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=iflist[0],
+                          spw=spw,masklist=self.linechan2)
+        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=int(spw),
                                           restfreq=restfreq[0])
         sd.rcParams['scantable.storage'] = 'memory'
         sd.rcParams['insitu'] = True
@@ -741,12 +741,12 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         currstat = tsdstat(infile=self.infile,specunit=specunit,outfile=outfile,
-                          iflist=iflist,masklist=masklist,restfreq=restfreq)
+                          spw=spw,masklist=masklist,restfreq=restfreq)
         # print "Statistics out of the current run:\n",currstat
         
         sd.rcParams['scantable.storage'] = 'memory'
         newinstat = tsdstat(infile=self.infile,specunit='',outfile=outfile+'.newin',
-                          iflist=iflist,masklist=self.linechan2)
+                          spw=spw,masklist=self.linechan2)
 
         # Test input data
         compstats = self.ref_line2.keys()
@@ -766,15 +766,15 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         """Storage Test MF: storage='memory' and insitu=F"""
         tid="MF"
         outfile = self.outroot+tid+self.outsuff
-        iflist = [2]
+        spw = '2'
         #specunit = 'GHz'
         specunit = 'km/s'
         restfreq = [44.075e9]
 
         sd.rcParams['scantable.storage'] = 'memory'
         initstat = tsdstat(infile=self.infile,specunit='',outfile=outfile+'.init',
-                          iflist=iflist,masklist=self.linechan2)
-        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=iflist[0],
+                          spw=spw,masklist=self.linechan2)
+        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=int(spw),
                                           restfreq=restfreq[0])
         
         sd.rcParams['scantable.storage'] = 'memory'
@@ -783,12 +783,12 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         currstat = tsdstat(infile=self.infile,specunit=specunit,outfile=outfile,
-                          iflist=iflist,masklist=masklist,restfreq=restfreq)
+                          spw=spw,masklist=masklist,restfreq=restfreq)
         # print "Statistics out of the current run:\n",currstat
         
         sd.rcParams['scantable.storage'] = 'memory'
         newinstat = tsdstat(infile=self.infile,specunit='',outfile=outfile+'.newin',
-                          iflist=iflist,masklist=self.linechan2)
+                          spw=spw,masklist=self.linechan2)
 
         # Test input data
         compstats = self.ref_line2.keys()
@@ -808,15 +808,15 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         """Storage Test DT: storage='disk' and insitu=T"""
         tid="DT"
         outfile = self.outroot+tid+self.outsuff
-        iflist = [2]
+        spw = '2'
         #specunit = 'GHz'
         specunit = 'km/s'
         restfreq = [44.075e9]
 
         sd.rcParams['scantable.storage'] = 'memory'
         initstat = tsdstat(infile=self.infile,specunit='',outfile=outfile+'.init',
-                          iflist=iflist,masklist=self.linechan2)
-        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=iflist[0],
+                          spw=spw,masklist=self.linechan2)
+        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=int(spw),
                                           restfreq=restfreq[0])
         
         sd.rcParams['scantable.storage'] = 'disk'
@@ -825,12 +825,12 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         currstat = tsdstat(infile=self.infile,specunit=specunit,outfile=outfile,
-                          iflist=iflist,masklist=masklist,restfreq=restfreq)
+                          spw=spw,masklist=masklist,restfreq=restfreq)
         # print "Statistics out of the current run:\n",currstat
         
         sd.rcParams['scantable.storage'] = 'memory'
         newinstat = tsdstat(infile=self.infile,specunit='',outfile=outfile+'.newin',
-                          iflist=iflist,masklist=self.linechan2)
+                          spw=spw,masklist=self.linechan2)
 
         # Test input data
         compstats = self.ref_line2.keys()
@@ -850,15 +850,15 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         """Storage Test DF: storage='disk' and insitu=F"""
         tid="DF"
         outfile = self.outroot+tid+self.outsuff
-        iflist = [2]
+        spw = '2'
         #specunit = 'GHz'
         specunit = 'km/s'
         restfreq = [44.075e9]
 
         sd.rcParams['scantable.storage'] = 'memory'
         initstat = tsdstat(infile=self.infile,specunit='',outfile=outfile+'.init',
-                          iflist=iflist,masklist=self.linechan2)
-        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=iflist[0],
+                          spw=spw,masklist=self.linechan2)
+        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=int(spw),
                                           restfreq=restfreq[0])
         
         sd.rcParams['scantable.storage'] = 'disk'
@@ -867,12 +867,12 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
         currstat = tsdstat(infile=self.infile,specunit=specunit,outfile=outfile,
-                          iflist=iflist,masklist=masklist,restfreq=restfreq)
+                          spw=spw,masklist=masklist,restfreq=restfreq)
         # print "Statistics out of the current run:\n",currstat
         
         sd.rcParams['scantable.storage'] = 'memory'
         newinstat = tsdstat(infile=self.infile,specunit='',outfile=outfile+'.newin',
-                          iflist=iflist,masklist=self.linechan2)
+                          spw=spw,masklist=self.linechan2)
 
         # Test input data
         compstats = self.ref_line2.keys()
@@ -913,7 +913,7 @@ class sdstat_exceptions( sdstat_unittest_base, unittest.TestCase ):
 
     def testNoData(self):
         try:
-            res = tsdstat(infile=self.infile,iflist=99)
+            res = tsdstat(infile=self.infile,spw='99')
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
