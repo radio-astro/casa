@@ -628,6 +628,12 @@ PyObject *record2pydict(const record &rec) {
       static int M = 0; ++M; \
 	Py_complex c = PyComplex_AsCComplex(ele);				\
 	VARIANT.place(std::complex<double>(c.real, c.imag),INDEX);		\
+    } else if ( PyNumber_Check(ele)) {						\
+	if(!strncmp(ele->ob_type->tp_name, "numpy.int", 9)){ \
+	   VARIANT.place((int)PyLong_AsLong(PyNumber_Long(ele)),INDEX);  		\
+	}else if(!strncmp(ele->ob_type->tp_name, "numpy.float", 11)){ \
+	   VARIANT.place(double(PyFloat_AsDouble(PyNumber_Float(ele))),INDEX);  		\
+	} \
     } else if (PyString_Check(ele)) {						\
 	VARIANT.place(std::string(PyString_AsString(ele)),INDEX);		\
     }										\
