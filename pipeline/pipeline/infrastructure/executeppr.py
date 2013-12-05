@@ -184,7 +184,8 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
 	try:
 
 	    cInputs = pipeline.tasks.__dict__[taskname].Inputs
-            if taskname == 'ImportData' or taskname == 'RestoreData' or taskname == 'VLAImportData':
+            if taskname == 'ImportData' or taskname == 'RestoreData' or \
+	        taskname == 'ALMAImportData' or taskname == 'VLAImportData':
 	        task_args['vis'] = files
 	        task_args['session'] = sessions
             elif taskname == 'SDImportData':
@@ -208,6 +209,12 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
 		raise
 
             if taskname == 'ImportData' and importonly: 
+		casatools.post_to_log(
+		    "Terminating execution after running " + taskname,
+		    echo_to_screen=echo_to_screen)
+	        break
+
+            if taskname == 'ALMAImportData' and importonly: 
 		casatools.post_to_log(
 		    "Terminating execution after running " + taskname,
 		    echo_to_screen=echo_to_screen)

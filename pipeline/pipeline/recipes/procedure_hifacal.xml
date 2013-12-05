@@ -1,7 +1,7 @@
 <ProcessingProcedure>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_importdata</Command>
+        <Command xmlns="">hifa_importdata</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>

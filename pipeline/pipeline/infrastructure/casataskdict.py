@@ -12,8 +12,6 @@ CasaTaskDict = {
 		   'hif_clean'        : 'Clean', 
 		   'hif_cleanlist'    : 'CleanList', 
                    'hif_exportdata'   : 'ExportData',
-                   'hifa_flagdata'    : 'ALMAAgentFlagger',
-                   'hifa_fluxcalflag'  : 'FluxcalFlag',
                    'hif_gaincal'      : 'Gaincal',
                    'hif_gfluxscale'   : 'GcorFluxscale',
                    'hif_lowgainflag'  : 'Lowgainflag',
@@ -22,7 +20,6 @@ CasaTaskDict = {
                    'hif_refant'       : 'RefAnt',
 		   'hif_restoredata'  : 'RestoreData',
                    'hif_setjy'        : 'Setjy',
-                   'hifa_timegaincal' : 'TimeGaincal',
                    'hif_tsyscal'      : 'Tsyscal',
                    'hif_tsysflag'     : 'Tsysflag',
                    'hif_tsysflagchans': 'Tsysflagchans',
@@ -42,6 +39,10 @@ CasaTaskDict = {
                    'hsd_flagbaseline' : 'SDFlagBaseline',
                    'hsd_plotflagbaseline': 'SDPlotFlagBaseline',
                    'hsd_reduce'       : 'SDReduction',
+                   'hifa_importdata' : 'ALMAImportData',
+                   'hifa_flagdata'    : 'ALMAAgentFlagger',
+                   'hifa_fluxcalflag'  : 'FluxcalFlag',
+                   'hifa_timegaincal' : 'TimeGaincal',
                    'hifv_importdata'  : 'VLAImportData',
                    'hifv_flagdata'    : 'FlagDeterVLA',
                    'hifv_setmodel'    : 'SetModel',
@@ -66,6 +67,7 @@ CasaTaskDict = {
 
 classToCASATask = {
     # ALMA interferometry tasks ---------------------------------------------
+    hifa_tasks.ALMAImportData : 'hifa_importdata',
     hifa_tasks.ALMAAgentFlagger : 'hifa_flagdata',
     hifa_tasks.FluxcalFlag : 'hifa_fluxcalflag',
     hifa_tasks.TimeGaincal : 'hifa_timegaincal',

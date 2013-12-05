@@ -94,7 +94,7 @@ def get_task_description(result_obj):
     if task_cls is hif.tasks.GTypeGaincal:
         return 'G-type gain calibration'
 
-    if task_cls is hif.tasks.ImportData:
+    if task_cls in (hifa.tasks.ALMAImportData, hif.tasks.ImportData):
         names = []
         for result in result_obj:
             names.extend([ms.basename for ms in result.mses])
@@ -2900,6 +2900,7 @@ renderer_map = {
         hif.tasks.Gaincal        : T2_4MDetailsGaincalRenderer(),
         hif.tasks.GcorFluxscale  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_gfluxscale.html'),
         hif.tasks.ImportData     : T2_4MDetailsImportDataRenderer(),
+        hifa.tasks.ALMAImportData   : T2_4MDetailsImportDataRenderer(),
         hif.tasks.Lowgainflag    : T2_4MDetailsLowgainFlagRenderer(),
         hif.tasks.MakeCleanList  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_makecleanlist.html'),
         hif.tasks.NormaliseFlux  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_normflux.html'),
