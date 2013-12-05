@@ -26,12 +26,15 @@ LOG = infrastructure.get_logger(__name__)
 
 class ImportDataInputs(basetask.StandardInputs):
     def __init__(self, context=None, vis=None, output_dir=None,
-                 asis=None, session=None, overwrite=None, save_flagonline=None):
+                 asis=None, process_caldevice=None,
+		 session=None, overwrite=None, save_flagonline=None):
         self._init_properties(vars())
 
+    # This are ALMA specific settings. Make them generic at some point.
     asis = basetask.property_with_default('asis', 'Antenna Station Receiver CalAtmosphere')
     overwrite = basetask.property_with_default('overwrite', False)
     save_flagonline = basetask.property_with_default('save_flagonline', True)
+    process_caldevice = basetask.property_with_default('process_caldevice', False)
 
     @property
     def session(self):
@@ -459,7 +462,7 @@ class ImportData(basetask.StandardTaskTemplate):
                                      vis=vis,
                                      savecmds=inputs.save_flagonline,
                                      outfile=outfile,
-                                     process_caldevice=False,
+                                     process_caldevice=inputs.process_caldevice,
                                      asis=inputs.asis,
                                      overwrite=inputs.overwrite)
 

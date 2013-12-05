@@ -34,9 +34,14 @@
 	<value>Antenna Station Receiver CalAtmosphere</value>
     </param>
 
+    <param type="bool" name="process_caldevice" subparam="true">
+	<description>Import the caldevice table from the ASDM</description>
+	<value>False</value>
+    </param>
+
     <param type="bool" name="overwrite" subparam="true">
 	<description>Overwrite existing files on import</description>
-	<value>True</value>
+	<value>False</value>
     </param>
 
     <param type="bool" name="dryrun" subparam="true">
@@ -54,14 +59,16 @@
 	    <equals type="string" value="automatic">
 	    </equals>
 	    <equals type="string" value="interactive">
-		<default param="asis"><value type="string">Receiver CalAtmosphere</value></default>
-		<default param="overwrite"><value type="bool">True</value></default>
+		<default param="asis"><value type="string">Antenna Station Receiver CalAtmosphere</value></default>
+		<default param="process_caldevice"><value type="bool">False</value></default>
+		<default param="overwrite"><value type="bool">False</value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
-		<default param="asis"><value type="string">Receiver CalAtmosphere</value></default>
-		<default param="overwrite"><value type="bool">True</value></default>
+		<default param="asis"><value type="string">Antenna Station Receiver CalAtmosphere</value></default>
+		<default param="process_caldevice"><value type="bool">False</value></default>
+		<default param="overwrite"><value type="bool">False</value></default>
 	    </equals>
 	</when>
     </constraints>
@@ -110,11 +117,15 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 'interactive mode'
 
 asis -- ASDM tables to convert as is
-   default: 'Receiver CalAtmosphere'
+   default: 'Antenna Station Receiver CalAtmosphere'
    example: 'Receiver', ''
 
+process_caldevice -- Ingest the ASDM caldevice table
+   default: False
+   example: True
+
 overwrite -- Overwrite existing MSs on output.
-   default: True
+   default: False
 
 --- pipeline task execution modes
 
