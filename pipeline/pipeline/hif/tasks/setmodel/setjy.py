@@ -327,7 +327,7 @@ class Setjy(basetask.StandardTaskTemplate):
                     # the target intents that are present in the field.
                     input_intents = set(inputs.intent.split(',')) 
                     fields = inputs.ms.get_fields(field)
-                    assert(len(fields) is 1, 'Num fields != 1 with field=%s' % field)
+                    assert len(fields) is 1, 'Num fields != 1 with field=%s' % field
                     targeted_intents = fields[0].intents.intersection(input_intents) 
                     inputs.intent = ','.join(targeted_intents)
 
