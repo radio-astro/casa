@@ -192,6 +192,7 @@ void FeatherCurve::adjustData( bool uvLog, bool ampLog ){
 				}
 			}
 		}
+
 		for ( int i = 0; i < badYIndices.size(); i++ ){
 			if ( ! badIndices.contains( badYIndices[i])){
 				badIndices.append( badYIndices[i]);
@@ -266,9 +267,16 @@ void FeatherCurve::resetDataBounds(){
 	maxX = std::numeric_limits<float>::min();
 	minY = std::numeric_limits<float>::max();
 	maxY = std::numeric_limits<float>::min();
+
+	//However, if it is a sum curve, the values will already be logs
+	//so negative values are fine.
+	if ( sumCurve ){
+		maxX = -1 * minX;
+		maxY = -1 * minY;
+	}
 	for ( int i = 0; i < xValues.size(); i++ ){
 		float testValue = xValues[i];
-		if ( testValue < minX && testValue > 0 ){
+		if ( testValue < minX && (testValue > 0 || sumCurve) ){
 			minX = testValue;
 		}
 		if ( testValue > maxX ){
@@ -277,7 +285,7 @@ void FeatherCurve::resetDataBounds(){
 	}
 	for ( int j = 0; j < yValues.size(); j++ ){
 		float testValue = yValues[j];
-		if ( testValue < minY && testValue > 0 ){
+		if ( testValue < minY && (testValue > 0 || sumCurve) ){
 			minY = testValue;
 		}
 		if ( testValue > maxY ){

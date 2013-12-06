@@ -39,7 +39,9 @@
 namespace casa {
 
 //# Forward Declarations
+class QPExportCanvas;
 class QPCanvas;
+class QPAxis;
 class PlotFactory;
 
 // Implementation of Plotter for Qwt plotter.  A QWidget that can be used as a
@@ -48,6 +50,7 @@ class QPPlotter : public QWidget, Ui::PlotterUI, public Plotter {
     Q_OBJECT
     
     friend class QPCanvas;
+    friend class QPAxis;
     
 public:
     // Static //
@@ -120,6 +123,7 @@ public:
     // Implements Plotter::close().
     void close();
     
+    vector<QPExportCanvas*> getGridComponents();
     
     // Implements Plotter::canvasLayout().
     PlotCanvasLayoutPtr canvasLayout();
@@ -213,7 +217,7 @@ public:
     // Overrides QWidget::minimumSizeHint() to return an invalid size.
     QSize minimumSizeHint() const;
     
-    virtual bool exportPlot(const PlotExportFormat& format);
+    virtual bool exportPlot(const PlotExportFormat& format );
 
 protected:
     // For catching resize events.
@@ -249,6 +253,7 @@ private:
     String m_relativeDateFormat;
     // </group>
     
+    QList<QPAxis*> externalAxes;
     
     // Sets up the canvas QFrame for the current layout.
     void setupCanvasFrame();
@@ -256,6 +261,8 @@ private:
     // Initializes GUI (to be called from constructors).
     void initialize();
     
+    void clearExternalAxes();
+    void emptyLayout();
     
     // Static //
     

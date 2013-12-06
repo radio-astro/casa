@@ -205,6 +205,7 @@ class QPLayeredCanvas : public QwtPlot {
     
     friend class QPAxesCache;
     friend class QPCanvas;
+    friend class QPAxis;
     friend class QPPlotItem;
     friend class QPBaseItem;
     friend class QPLegendHolder;

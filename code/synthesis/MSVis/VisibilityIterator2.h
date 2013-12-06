@@ -96,6 +96,9 @@ class VLAT;
 
 } // end namespace asyncio
 
+// Forward declarations outside namespace vi
+class MSTransformIteratorFactory;
+
 namespace vi {
 
 class FrequencySelection;
@@ -392,6 +395,8 @@ class VisibilityIterator2 : private boost::noncopyable
     friend class asyncio::VLAT; // allow VI lookahead thread class to access protected
                                 // functions VLAT should not access private parts,
                                 // especially variables
+    friend class casa::MSTransformIteratorFactory;
+
 public:
 
 
@@ -633,10 +638,11 @@ public:
   virtual void setWeightScaling (CountedPtr<WeightScaling> weightscaling);
   virtual Bool hasWeightScaling () const;
 
-  // Return number of spws, polids, ddids
+  // Return number of spws, polids, ddids for the current MS
 
   Int nSpectralWindows () const;
-  Int nPolarizations () const;
+  Int nPolarizationIds () const; // number of different polarization configurations
+                                 // (i.e., length of polarization subtable)
   Int nDataDescriptionIds () const;
 
   // Determine whether WEIGHT_SPECTRUM exists.
@@ -772,8 +778,6 @@ protected:
                   const SortColumns & sortColumns,
                   Double timeInterval,
                   Bool writable);
-
-  ViImplementation2 * getImpl() const;
 
 //     +------------------+
 //     |                  |
@@ -1095,6 +1099,8 @@ protected:
   // advance the iteration
 
   void originChunks(Bool forceRewind);
+
+  ViImplementation2 * getImpl() const;
 
 private:
 

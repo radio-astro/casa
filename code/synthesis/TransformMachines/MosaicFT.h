@@ -202,7 +202,7 @@ public:
 
   // Save and restore the MosaicFT to and from a record
   Bool toRecord(String& error, RecordInterface& outRec, 
-		Bool withImage=False);
+		Bool withImage=False, const String diskimage="");
   Bool fromRecord(String& error, const RecordInterface& inRec);
   
   // Can this FTMachine be represented by Fourier convolutions?
@@ -281,9 +281,7 @@ protected:
   Vector<Double> uvScale, uvOffset;
 
   // Array for non-tiled gridding
-  Array<Complex> griddedData;
   Array<Complex> griddedWeight;
-  Array<DComplex> griddedData2;
   Array<DComplex> griddedWeight2;
   // Pointing columns
   MSPointingColumns* mspc;

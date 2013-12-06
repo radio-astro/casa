@@ -55,7 +55,7 @@
 #include <casa/OS/Timer.h>
 
 #define CONVSIZE (1024*2)
-#define OVERSAMPLING 2
+// #define OVERSAMPLING 2
 #define USETABLES 0           // If equal to 1, use tabulated exp() and
 			      // complex exp() functions.
 #define MAXPOINTINGERROR 250.0 // Max. pointing error in arcsec used to
@@ -143,8 +143,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (cachesize > hostRAM) cachesize=hostRAM;
     sigma=1.0;
     canComputeResiduals_p=DORES;
-    cfs2_p = new CFStore2;
-    cfwts2_p = new CFStore2;
+    // cfs2_p = &cfCache_p->memCache2_p[0];//new CFStore2;
+    // cfwts2_p =  &cfCache_p->memCacheWt2_p[0];//new CFStore2;
     pop_p->init();
     CFBuffer::initCFBStruct(cfbst_pub);
     //    rotatedConvFunc_p.data=new Array<Complex>();    
@@ -200,8 +200,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (cachesize > hostRAM) cachesize=hostRAM;
     sigma=1.0;
     canComputeResiduals_p=DORES;
-    cfs2_p = new CFStore2;
-    cfwts2_p = new CFStore2;
+    cfs2_p = CountedPtr<CFStore2>(&(cfCache_p->memCache2_p)[0],False);//new CFStore2;
+    cfwts2_p =  CountedPtr<CFStore2>(&cfCache_p->memCacheWt2_p[0],False);//new CFStore2;
+
     pop_p->init();
     useDoubleGrid_p=doublePrecGrid;
     //    rotatedConvFunc_p.data=new Array<Complex>();
@@ -227,8 +228,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     visResampler_p->init(useDoubleGrid_p);
     convSize=CONVSIZE;
     canComputeResiduals_p=DORES;
-    cfs2_p = new CFStore2;
-    cfwts2_p = new CFStore2;
+    cfs2_p = CountedPtr<CFStore2>(&cfCache_p->memCache2_p[0],False);//new CFStore2;
+    cfwts2_p =  CountedPtr<CFStore2>(&cfCache_p->memCacheWt2_p[0],False);//new CFStore2;
     pop_p->init();
   }
   //
@@ -952,6 +953,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int i,j,N = cfPolMap.nelements();
     for(i=0;i<N;i++)
       if (cfPolMap[i] > -1)
+	{
 	if      (visStokes[i] == Stokes::RR) 
 	  {
 	    conjPolMap[i]=-1;
@@ -976,6 +978,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    for(j=0;j<N;j++) if (visStokes[j] == Stokes::LR) break; 
 	    conjPolMap[i]=cfPolMap[j];
 	  }
+	}
   }
   //
   //---------------------------------------------------------------
@@ -1096,6 +1099,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     cfSource = visResampler_p->makeVBRow2CFMap(*cfs2_p,*convFuncCtor_p, vb,
 					       dPAQuant,
 					       chanMap,polMap,pointingOffset);
+
     if (cfSource == CFDefs::NOTCACHED)
       {
 	PolMapType polMat, polIndexMat, conjPolMat, conjPolIndexMat;
@@ -1127,6 +1131,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// 					   chanMap,polMap);
       }
     //
+    // If one-time-operations in the CFCache not yet done, set the
+    // pol. index maps in the CFCache.
+    //
+    if (!cfCache_p->OTODone())
+      {
+	Vector<Int> visPolMap(vb.corrType());
+
+	// PolMapType polMat, conjPolMat;
+	// polMat = pop_p->makePolMat(visPolMap,polMap);
+	// conjPolMat = pop_p->makeConjPolMat(visPolMap,polMap);
+
+	PolMapType pNdx, cpNdx;
+	pNdx = pop_p->makePol2CFMat(visPolMap,polMap);
+	cpNdx = pop_p->makeConjPol2CFMat(visPolMap,polMap);
+    
+	cfCache_p->initPolMaps(pNdx,cpNdx);
+
+	cfs2_p->initMaps(vb,spwFreqSel_p,imRefFreq_p);
+	cfwts2_p->initMaps(vb,spwFreqSel_p,imRefFreq_p);
+      }
+    //
     // Load the average PB (sensitivity pattern) from the cache.  If
     // not found in the cache, make one and cache it.
     //
@@ -1141,63 +1166,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     if (cfSource != CFDefs::MEMCACHE)
       {
-	//
-	// Compute the aggregate memory used by the cached convolution
-	// functions.
-	//
-	// Int maxMemoryMB=HostInfo::memoryTotal(true)/1024;
-	// String unit(" KB");
-	// Float memoryKB=0;
-	// memoryKB=(Float)cfCache_p->size();
+	cfs2_p->makePersistent(cfCache_p->getCacheDir().c_str());
+	cfwts2_p->makePersistent(cfCache_p->getCacheDir().c_str(),"WT");
+	Double memUsed=cfs2_p->memUsage();
+	String unit(" KB");
+	memUsed = (Int)(memUsed/1024.0+0.5);
+	if (memUsed > 1024) {memUsed /=1024; unit=" MB";}
+	log_l << "Convolution function memory footprint:" 
+	      << (Int)(memUsed) << unit << " out of a maximum of "
+	      << HostInfo::memoryTotal(true)/1024 << " MB" << LogIO::POST;
 	
-	// memoryKB = Int(memoryKB/1024.0+0.5);
-	// if (memoryKB > 1024) {memoryKB /=1024; unit=" MB";}
-	
-	// log_l << "Memory used in gridding functions = "
-	//       << (Int)(memoryKB+0.5) << unit << " out of a maximum of "
-	//       << maxMemoryMB << " MB" << LogIO::POST;
 	//
-	// Show the list of support sizes along the w-axis for the current PA.
+	// Initialize any internal maps that may be used later for
+	// efficient access.
 	//
-
-	{	
-	  // log_l << "Convolution support:" <<endl;
-	  // IPosition cfsShape = cfs2_p->getStorage().shape();
-	  // for (Int ib=0;ib<cfsShape(0); ib++)
-	  //   for(int it=0;it<cfsShape(1); it++)
-	  //     {
-	  // 	IPosition cfbShape = cfs2_p->getStorage()(ib,it)->getStorage().shape();
-	  // 	for(int ip=0;ip<cfbShape(2); ip++)
-	  // 	  for(Int ich=0;ich<cfbShape(0);ich++)
-	  // 	    {
-	  // 	      for(Int iw=0;iw<cfbShape(1); iw++)
-	  // 		{		      
-	  // 		  log_l << "   CFB[" << ib << "," << it << "] " 
-	  // 			<< "CFC[" << ich << "," << iw << "," << ip << "]: " 
-	  // 			<< cfs2_p->getStorage()(ib,it)->getStorage()(ich,iw,ip)->xSupport_p
-	  // 			<< " pixels in Fourier plane" << LogIO::POST;
-	  // 		}
-	  // 	    }
-	  //     }
-
-	  cfs2_p->makePersistent(cfCache_p->getCacheDir().c_str());
-	  cfwts2_p->makePersistent(cfCache_p->getCacheDir().c_str(),"WT");
-	  Double memUsed=cfs2_p->memUsage();
-	  String unit(" KB");
-	  memUsed = (Int)(memUsed/1024.0+0.5);
-	  if (memUsed > 1024) {memUsed /=1024; unit=" MB";}
-	  log_l << "Convolution function memory footprint:" 
-		<< (Int)(memUsed) << unit << " out of a maximum of "
-		<< HostInfo::memoryTotal(true)/1024 << " MB" << LogIO::POST;
-	  
-	  //
-	  // Initialize any internal maps that may be used later for
-	  // efficient access.
-	  //
-	  cfs2_p->initMaps(vb,spwFreqSel_p,imRefFreq_p);
-	  cfwts2_p->initMaps(vb,spwFreqSel_p,imRefFreq_p);
-	}
+	cfs2_p->initMaps(vb,spwFreqSel_p,imRefFreq_p);
+	cfwts2_p->initMaps(vb,spwFreqSel_p,imRefFreq_p);
       }
+
     // cfs2_p->makePersistent("test.cf");
     // cfwts2_p->makePersistent("test.wtcf");
   }
@@ -1262,16 +1248,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Normalize the model image by the sensitivity image only.
 	// No local implementation -- call FTMachine version
 
-	// Divide by avgPB
+	// Divide by avgPB ///// PBWeight
 	//
-	normalizeImage( *(modelImageVec[0]) , weightsVec[0],  *(weightImageVec[0]), 
-			False, (Float)pbLimit_p, (Int)1);
+	//normalizeImage( *(modelImageVec[0]) , weightsVec[0],  *(weightImageVec[0]), 
+	//		False, (Float)pbLimit_p, (Int)1);
 
 	//
-	// Divide by sqrt(avgPB)
+	// Divide by sqrt(avgPB) ////// PBSQWeight
 	//
-	// normalizeImage( *(modelImageVec[0]) , weightsVec[0],  *(weightImageVec[0]), 
-	// 		False, (Float)pbLimit_p, (Int)4);
+	 normalizeImage( *(modelImageVec[0]) , weightsVec[0],  *(weightImageVec[0]), 
+	 		False, (Float)pbLimit_p, (Int)4);
       }
     log_p << "Total flux in model image (after avgPB normalization): " 
 	  << sum((*(modelImageVec[0])).get()) << LogIO::POST;
@@ -1286,11 +1272,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Multiply the flat-sky model by the PB.
     // No local implementation -- call FTMachine version
     if(doPBCorrection)
-      // Multiply by avgPB
-      normalizeImage( *(modelImageVec[0]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pbLimit_p, (Int)3);
+      // Multiply by avgPB ///////  PBWeight
+      //normalizeImage( *(modelImageVec[0]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pbLimit_p, (Int)3);
       
-      // Multiply by sqrt(avgPB)
-      //normalizeImage( *(modelImageVec[0]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pbLimit_p, (Int)5);
+      // Multiply by sqrt(avgPB) ///// PBSQWeight
+      normalizeImage( *(modelImageVec[0]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pbLimit_p, (Int)5);
   }
   //
   //------------------------------------------------------------------------------

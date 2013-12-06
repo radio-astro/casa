@@ -158,7 +158,8 @@ namespace casa {
 		const void getPixelBounds(Vector<double>& pixelX, Vector<double>& pixelY) const;
 		void persist( const QString& key, const QString& value );
 		QString read( const QString & key ) const;
-		void imageCollapsed(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img);
+		void imageCollapsed(String path, String dataType, String displayType,
+				Bool autoRegister, Bool tmpData, std::tr1::shared_ptr<ImageInterface<Float> > img);
 		void setPosition( const QList<double>& xValues, const QList<double>& yValues );
 		void processTrackRecord( const String& dataName, const String& positionInfo );
 		virtual MFrequency::Types getReferenceFrame() const;
@@ -229,7 +230,8 @@ namespace casa {
 	signals:
 		void hideProfile();
 		void coordinateChange(const String&);
-		void showCollapsedImg(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img);
+		void showCollapsedImg(String path, String dataType, String displayType,
+				Bool autoRegister, Bool tmpData, std::tr1::shared_ptr<ImageInterface<Float> > img);
 		void channelSelect( int channelIndex );
 		void adjustPosition( double tlcx, double tlcy, double brcx, double brcy );
 		void movieChannel( int startChannel, int endChannel );
@@ -252,6 +254,7 @@ namespace casa {
 		void initializeSpectralProperties();
 		void resetXUnits( bool spectralAxis);
 		void updateSpectralReferenceFrame();
+		String getRegionShape();
 
 		/**
 		 * Returns false if first vector value is greater than the last
@@ -281,10 +284,11 @@ namespace casa {
 		                                 const Int& whichStokes, const Int& whichTabular,
 		                                 const Int& whichLinear, const String& xunits,
 		                                 const String& specFrame, const Int &combineType,
-		                                 const Int& whichQuality, const String& restValue );
+		                                 const Int& whichQuality, const String& restValue,
+		                                 const String& shape);
 		bool assignFrequencyProfile( const Vector<double> &wxv, const Vector<double> &wyv,
 		                             const String& coordinateType, const String& xAxisUnit,
-		                             Vector<Float> &z_xval, Vector<Float> &z_yval );
+		                             Vector<Float> &z_xval, Vector<Float> &z_yval, const String& shape );
 		bool setErrorPlotting( const Vector<double> &wxv, const Vector<double> &wyv);
 		void storeCoordinates( const Vector<double> pxv, const Vector<double> pyv,
 		                       const Vector<double> wxv, const Vector<double> wyv );

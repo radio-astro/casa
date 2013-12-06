@@ -38,6 +38,7 @@ namespace casa {
 
 FeatherManager::FeatherManager() :
 		lowResImage( NULL ), highResImage( NULL ), dirtyImage( NULL ),
+		highResFeedImage( NULL ), dirtyFeedImage( NULL ), lowResFeedImage( NULL ),
 		 thread( NULL), logger( NULL){
 	radialAxis = false;
 	channelIndex = 0;
@@ -84,8 +85,8 @@ bool FeatherManager::loadDirtyImage( const QString& dirtyImagePath ){
 bool FeatherManager::setEffectiveDishDiameter( float xDiam, float yDiam ){
 	bool valid = false;
 	if ( lowResImage != NULL ){
-		featherWorker->setINTImage( *highResImage );
-		featherWorker->setSDImage( *lowResImage );
+		featherWorker->setINTImage( *highResFeedImage );
+		featherWorker->setSDImage( *lowResFeedImage );
 		valid = featherWorker->setEffectiveDishDiam( xDiam, yDiam );
 	}
 	return valid;
@@ -103,11 +104,11 @@ void FeatherManager::applyFeather( bool saveOutput, const QString& outputImagePa
 		delete thread;
 		thread = NULL;
 	}
-	if ( highResImage != NULL && lowResImage != NULL ){
+	if ( highResFeedImage != NULL && lowResFeedImage != NULL ){
 		thread = new FeatherThread();
 		thread->setLogger( logger );
 		thread->setFeatherWorker( featherWorker );
-		thread->setImages( lowResImage, highResImage, dirtyImage );
+		thread->setImages( lowResFeedImage, highResFeedImage, dirtyFeedImage );
 		connect( thread, SIGNAL( finished() ), this, SLOT(featherDone()));
 		thread->setSaveOutput( saveOutput, outputImagePath );
 		thread->setRadial( radialAxis );
@@ -170,10 +171,19 @@ bool FeatherManager::isRadial() const {
 }
 
 void FeatherManager::setChannelsAveraged( bool averaged ){
-	channelsAveraged = averaged;
+	if ( channelsAveraged != averaged ){
+		resetBasicFeedImages();
+		resetDirtyFeedImage();
+		channelsAveraged = averaged;
+	}
 }
 void FeatherManager::setChannelIndex( int index ){
-	channelIndex = index;
+	if ( channelIndex != index ){
+		resetBasicFeedImages();
+		resetDirtyFeedImage();
+		channelIndex = index;
+	}
+
 }
 
 QString FeatherManager::getError() const {
@@ -206,10 +216,7 @@ bool FeatherManager::generateInputImage( QString highResImagePath, QString lowRe
 			lowResImage = new PagedImage<Float>(lowResLocation);
 			highResImage = new PagedImage<Float>(highResLocation);
 
-			//Even though the thread will reset the images, we put these in initially
-			//so we can get the effective dish diameter.
-			featherWorker->setINTImage( *highResImage );
-			featherWorker->setSDImage( *lowResImage );
+			resetBasicFeedImages();
 		}
 	}
 	catch (AipsError& x) {
@@ -221,6 +228,45 @@ bool FeatherManager::generateInputImage( QString highResImagePath, QString lowRe
 		success = false;;
 	}
 	return success;
+}
+
+void FeatherManager::resetBasicFeedImages(){
+	//Depending on whether the user has selected a single plane image
+	//or averaging, we may need to take a slice of the image;
+	//We clean up any previous slice here.
+	if ( highResFeedImage != NULL ){
+		delete highResFeedImage;
+		highResFeedImage = NULL;
+	}
+	if ( lowResFeedImage != NULL ){
+		delete lowResFeedImage;
+		lowResFeedImage = NULL;
+	}
+
+
+	//Even though the thread will reset the images, we put these in initially
+	//so we can get the effective dish diameter.
+	highResFeedImage = getSinglePlaneImage( highResImage );
+	lowResFeedImage = getSinglePlaneImage( lowResImage );
+
+	if ( highResFeedImage != NULL ){
+		featherWorker->setINTImage( *highResFeedImage );
+	}
+	if ( lowResFeedImage != NULL ){
+		featherWorker->setSDImage( *lowResFeedImage );
+	}
+}
+
+void FeatherManager::resetDirtyFeedImage(){
+	//Depending on whether the user has selected a single plane image
+	//or averaging, we may need to take a slice of the dirtyImage;
+	//We clean up any previous slice here.
+	if ( dirtyFeedImage != NULL ){
+		delete dirtyFeedImage;
+		dirtyFeedImage = NULL;
+	}
+
+	dirtyFeedImage = getSinglePlaneImage( dirtyImage );
 }
 
 bool FeatherManager::generateDirtyImage( QString dirtyImagePath ){
@@ -249,6 +295,8 @@ bool FeatherManager::generateDirtyImage( QString dirtyImagePath ){
 		}
 		else {
 			dirtyImage = new PagedImage<Float>(dirtyLocation);
+
+			resetDirtyFeedImage();
 		}
 	}
 	catch (AipsError& x) {
@@ -268,24 +316,35 @@ bool FeatherManager::generateDirtyImage( QString dirtyImagePath ){
 
 FeatheredData FeatherManager::getSDOrig() {
 	FeatheredData dataPair;
-	if ( lowResImage != NULL ){
-		dataPair = getConvolvedOrig( FeatherThread::SD_ORIGINAL, lowResImage );
+	/*if ( thread != NULL ){
+		dataPair = thread->dataMap[FeatherThread::SD_ORIGINAL];
+		qDebug() << "FeatherManager::getSDOrig empty="<<dataPair.isEmpty();
+	}*/
+
+	if ( lowResFeedImage != NULL ){
+		dataPair = getConvolvedOrig( lowResFeedImage );
 	}
 	return dataPair;
 }
 
 FeatheredData FeatherManager::getIntOrig() {
 	FeatheredData dataPair;
-	if ( highResImage != NULL ){
-		dataPair = getConvolvedOrig( FeatherThread::INT_ORIGINAL, highResImage );
+	/*if ( thread != NULL ){
+		dataPair = thread->dataMap[FeatherThread::INT_ORIGINAL];
+	}*/
+	if ( highResFeedImage != NULL ){
+		dataPair = getConvolvedOrig( highResFeedImage );
 	}
 	return dataPair;
 }
 
 FeatheredData FeatherManager::getDirtyOrig() {
 	FeatheredData dataPair;
-	if ( dirtyImage != NULL ){
-		dataPair = getConvolvedOrig( FeatherThread::DIRTY_ORIGINAL, dirtyImage );
+	/*if ( thread != NULL ){
+		dataPair = thread->dataMap[FeatherThread::DIRTY_ORIGINAL];
+	}*/
+	if ( dirtyFeedImage != NULL ){
+		dataPair = getConvolvedOrig( dirtyFeedImage );
 	}
 	return dataPair;
 }
@@ -331,16 +390,37 @@ FeatheredData FeatherManager::getDirtyCut() const {
 }
 FeatheredData FeatherManager::getIntConvolvedSDOrig() {
 	FeatheredData dataPair;
-	if ( highResImage != NULL ){
+	if ( highResFeedImage != NULL ){
 		ImageInterface<float>* highConvolved =
-			thread->makeConvolvedImage( highResImage, lowResImage );
+			thread->makeConvolvedImage( highResFeedImage, lowResFeedImage );
 		if ( highConvolved != NULL ){
-			dataPair = getConvolvedOrig( FeatherThread::INT_CONVOLVED_LOW, highConvolved );
+			//ImageInterface <Float>* highConvolvedFeed = getSinglePlaneImage( highConvolved );
+			//dataPair = getConvolvedOrig( highConvolvedFeed );
+			dataPair = getConvolvedOrig( highConvolved );
 			delete highConvolved;
+			//delete highConvolvedFeed;
 		}
 	}
 	return dataPair;
 }
+
+FeatheredData FeatherManager::getConvolvedOrig( ImageInterface<float>* image ) const {
+	FeatheredData dataPair;
+	Vector<Float> ux;
+	Vector<Float> xamp;
+	Vector<Float> uy;
+	Vector<Float> yamp;
+	if ( !radialAxis ){
+		Feather::getCutXY(ux, xamp, uy, yamp, *image);
+	}
+	else {
+		Feather::getRadialCut( ux, xamp, *image);
+	}
+	dataPair.setU( ux, xamp );
+	dataPair.setV( uy, yamp );
+	return dataPair;
+}
+
 FeatheredData FeatherManager::getIntConvolvedSDCut() const {
 	FeatheredData dataPair;
 	if ( thread != NULL ){
@@ -362,68 +442,58 @@ bool FeatherManager::isSuccess() const {
 	return success;
 }
 
-FeatheredData FeatherManager::getConvolvedOrig( FeatherThread::DataTypes dataType, ImageInterface<float>* image ) const {
-	FeatheredData dataPair;
+ImageInterface<float>* FeatherManager::getSinglePlaneImage( ImageInterface<float>* image ) const {
+	ImageInterface<float>* feedImage = NULL;
 	if ( image != NULL ){
-		int channelCount = getPlaneCount( image );
-		bool channelsExceeded = false;
-		if ( channelIndex >= channelCount ){
-			channelsExceeded = true;
-			if ( logger != NULL ){
-				(*logger)<< LogIO::WARN<<"\nAveraging channels for image "<<image->name().c_str()<<
-					" because channel index="<<channelIndex<<" is larger than maximum="<<channelCount
-					<<LogIO::POST;
-			}
-		}
-
-		if ( !channelsAveraged && !channelsExceeded ){
-			try {
-
-				/*TempImage<Float> imageCopy(image->shape(), image->coordinates(),0);
-				imageCopy.copyData(*image);
-				ImageUtilities::copyMiscellaneous(imageCopy, *image);*/
-				ImageInterface<float>* imageCopy = thread->addMissingAxes(image);
-
-				SubImage<Float>* channeledImage = SpectralImageUtil::getChannel(*imageCopy, channelIndex);
-				Vector<Float> ux;
-				Vector<Float> xamp;
-				Vector<Float> uy;
-				Vector<Float> yamp;
-				if ( !radialAxis ){
-					Feather::getCutXY(ux, xamp, uy, yamp, *channeledImage);
-				}
-				else {
-					Feather::getRadialCut( ux, xamp, *channeledImage);
-				}
-				dataPair.setU( ux, xamp );
-				dataPair.setV( uy, yamp );
-				delete channeledImage;
-				delete imageCopy;
-			}
-			catch( AipsError& error ){
+		FeatherThread::setLogger( logger );
+		ImageInterface<float>* imageCopy = FeatherThread::addMissingAxes(image);
+		if ( !channelsAveraged  ){
+			int channelCount = getPlaneCount( image );
+			bool channelsExceeded = false;
+			if ( channelIndex >= channelCount ){
 				channelsExceeded = true;
 				if ( logger != NULL ){
-					(*logger) << LogIO::WARN<<"\nAveraging channels for image "<<image->name()<<".  Error:"<<error.getMesg()
-						<<LogIO::POST;
+					(*logger)<< LogIO::WARN<<"\nAveraging channels for image "<<image->name().c_str()<<
+							" because channel index="<<channelIndex<<" is larger than maximum="<<channelCount
+							<<LogIO::POST;
+				}
+			}
+
+			if ( !channelsExceeded ){
+				try {
+
+					SubImage<Float>* channeledImage = SpectralImageUtil::getChannel(*imageCopy, channelIndex);
+					if ( channeledImage != NULL ){
+						feedImage = channeledImage;
+					}
+					else {
+						qDebug() << "Could not obtain image plane plainIndex="<<channelIndex;
+					}
+					delete imageCopy;
+				}
+				catch( AipsError& error ){
+					channelsExceeded = true;
+					if ( logger != NULL ){
+						(*logger) << LogIO::WARN<<"\nAveraging channels for image "<<image->name()<<".  Error:"<<error.getMesg()
+								<<LogIO::POST;
+					}
 				}
 			}
 		}
-		if ( channelsAveraged || channelsExceeded ){
-			if ( thread != NULL ){
-				dataPair = thread->dataMap[dataType];
-			}
+		else {
+			feedImage = imageCopy;
 		}
 	}
-	return dataPair;
+	return feedImage;
 }
 
 FeatheredData FeatherManager::getDirtyConvolvedSDOrig() {
 	FeatheredData dataPair;
-	if ( dirtyImage != NULL ){
+	if ( dirtyFeedImage != NULL ){
 		ImageInterface<float>* dirtyConvolved =
-			thread->makeConvolvedImage( dirtyImage, lowResImage );
+			thread->makeConvolvedImage( dirtyFeedImage, lowResFeedImage );
 		if ( dirtyConvolved != NULL ){
-			dataPair = getConvolvedOrig( FeatherThread::DIRTY_CONVOLVED_LOW, dirtyConvolved );
+			dataPair = getConvolvedOrig( dirtyConvolved );
 			delete dirtyConvolved;
 		}
 	}
@@ -439,11 +509,11 @@ FeatheredData FeatherManager::getDirtyConvolvedSDCut() const {
 
 FeatheredData FeatherManager::getSDConvolvedIntOrig(){
 	FeatheredData dataPair;
-	if ( lowResImage != NULL ){
+	if ( lowResFeedImage != NULL ){
 		ImageInterface<float>* sdConvolved =
-			thread->makeConvolvedImage( lowResImage, highResImage );
+			thread->makeConvolvedImage( lowResFeedImage, highResFeedImage );
 		if ( sdConvolved != NULL ){
-			dataPair = getConvolvedOrig( FeatherThread::LOW_CONVOLVED_HIGH, sdConvolved );
+			dataPair = getConvolvedOrig( sdConvolved );
 			delete sdConvolved;
 		}
 	}
@@ -478,6 +548,10 @@ FeatheredData FeatherManager::getSDConvolvedIntCut() const{
 FeatherManager::~FeatherManager() {
 	delete lowResImage;
 	delete highResImage;
+	delete dirtyImage;
+	delete highResFeedImage;
+	delete dirtyFeedImage;
+	delete lowResFeedImage;
 	delete thread;
 	delete featherWorker;
 }

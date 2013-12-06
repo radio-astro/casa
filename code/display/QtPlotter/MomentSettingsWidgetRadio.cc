@@ -47,6 +47,11 @@ namespace casa {
 		imageAnalysis->setMomentsProgressMonitor( this );
 	}
 
+	CollapseResult::CollapseResult( const String& outputName, bool tmp, ImageInterface<Float>* img ):
+				outputFileName(outputName),
+				temporary( tmp ),
+				image(img) {}
+
 	bool MomentCollapseThreadRadio::isSuccess() const {
 		bool success = false;
 		if ( collapseResults.size() > 0 && !collapseError ) {
@@ -142,14 +147,15 @@ namespace casa {
 			tmpFile = false;
 		}
 
-		//Append the channel and moment used to make it descriptive.
+		//Prepend the channel and moment used to make it descriptive.
 		//outName = outName + "_" + String(momentNames[moment].toStdString());
 		if ( channelStr != "") {
-			outName = outName + "_"+channelStr;
+			outName =  outName+"_"+channelStr;
 		}
 		if ( tmpFile ) {
 			outName = viewer::options.temporaryPath( outName );
 		}
+
 		return tmpFile;
 	}
 
@@ -494,7 +500,7 @@ namespace casa {
 			for ( int i = 0; i < static_cast<int>(results.size()); i++ ) {
 				String outName = results[i].getOutputFileName();
 				bool outputTemporary = results[i].isTemporaryOutput();
-				ImageInterface<Float>* newImage = results[i].getImage();
+				std::tr1::shared_ptr<ImageInterface<Float> > newImage = results[i].getImage();
 				taskMonitor->imageCollapsed(outName, "image", "raster", True, outputTemporary, newImage );
 			}
 			taskMonitor->setPurpose(ProfileTaskMonitor::MOMENTS_COLLAPSE );

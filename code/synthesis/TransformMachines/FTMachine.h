@@ -274,7 +274,7 @@ public:
 
   // Save and restore the FTMachine to and from a record
   virtual Bool toRecord(String& error, RecordInterface& outRecord, 
-			Bool withImage=False);
+			Bool withImage=False, const String diskimagename="");
   virtual Bool fromRecord(String& error, const RecordInterface& inRecord);
 
   // Has this operator changed since the last application?
@@ -402,6 +402,7 @@ protected:
   
   virtual void gridOk (Int gridsupport);
 
+  
   // setup multiple spectral window for cubes
   Block <Vector <Int> > multiChanMap_p;
   Vector<Int> selectedSpw_p;
@@ -461,9 +462,17 @@ protected:
   Bool canComputeResiduals_p;
   Bool toVis_p;
   Int numthreads_p;
+  
+  // Array for non-tiled gridding
+  // These are common to most FTmachines
+  Array<Complex> griddedData;
+  Array<DComplex> griddedData2;
+
 
   Float pbLimit_p;
   Vector<SkyJones *> sj_p;
+  //A holder for the complex image if nobody else is keeping it
+  CountedPtr<ImageInterface<Complex> > cmplxImage_p;
 
  private:
   //Some temporary wasteful function for swapping axes because we don't 
@@ -473,8 +482,7 @@ protected:
   void swapyz(Cube<Complex>& out, const Cube<Complex>& in);
   void swapyz(Cube<Bool>& out, const Cube<Bool>& in);
   void convUVW(Double& dphase, Vector<Double>& thisrow);
-  //A holder for the complex image if nobody else is keeping it
-  CountedPtr<ImageInterface<Complex> > cmplxImage_p;
+  
 };
 
 } //# NAMESPACE CASA - END

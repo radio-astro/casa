@@ -65,12 +65,9 @@ Bool MSTransformRegridder::combineSpws(	LogIO& os,
 		return True;
 	}
 
-	Bool allScratchColsPresent = False;
-
 	// Find all existing spws,
 	MSSpectralWindow spwtable = ms_p.spectralWindow();
 	Int origNumSPWs = spwtable.nrow();
-	Int newSPWId = origNumSPWs;
 
 	vector<Int> spwsToCombine;
 	Vector<Bool> includeIt(origNumSPWs, False);

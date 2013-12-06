@@ -120,7 +120,7 @@ public:
   void getWeightImage(ImageInterface<Float>&, Matrix<Float>&);
 
   // Save and restore the MultiTermFT to and from a record
-  virtual Bool toRecord(String& error, RecordInterface& outRec, Bool withImage=False);
+  virtual Bool toRecord(String& error, RecordInterface& outRec, Bool withImage=False, const String diskimage="");
   virtual Bool fromRecord(String& error, const RecordInterface& inRec);
 
   // Various small inline functions

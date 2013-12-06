@@ -135,7 +135,7 @@ FlagAgentBase::initialize()
    fieldSelection_p = String("");
    // NOTE (first implementation): According to MS selection syntax, spw must be at least *
    // but since we are parsing it only if it was provided it should not be a problem
-   // NOTE (after Dic 2011 testing): As far as I know spw selection does not have to be *
+   // NOTE (after Dec 2011 testing): As far as I know spw selection does not have to be *
    // (can be empty) and in fact applying a spw selection slows down the MSSelection class
    spwSelection_p = String("");
    uvwSelection_p = String("");
@@ -182,6 +182,7 @@ FlagAgentBase::initialize()
    threadId_p = 0;
 
    agentName_p = String("");
+   summaryName_p = String("");
    /// Flag/Unflag config
    writePrivateFlagCube_p = false;
    flag_p = true;
@@ -429,6 +430,7 @@ FlagAgentBase::runCore()
 			// clipping
 			case IN_ROWS:
 			{
+				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p));
 				iterateInRows();
 				break;
 			}
@@ -1110,16 +1112,28 @@ FlagAgentBase::setAgentParameters(Record config)
 
 	int exists;
 
-	exists = config.fieldNumber ("name");
-	if (exists >= 0)
-	{
-		agentName_p = config.asString("name");
-	}
-	else if (agentName_p.empty())
-	{
-		agentName_p = "FlagAgentUnknown";
-	}
-	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+    // Retrieve agent name
+    exists = config.fieldNumber ("agentname");
+    if (exists >= 0)
+    {
+        agentName_p = config.asString("agentname");
+    }
+    else if (agentName_p.empty())
+    {
+        agentName_p = "FlagAgentUnknown";
+    }
+    logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+
+    // Retrieve name for summary report
+    exists = config.fieldNumber ("name");
+    if (exists >= 0)
+    {
+        summaryName_p = config.asString("name");
+    }
+    else if (summaryName_p.empty())
+    {
+        summaryName_p = agentName_p;
+    }
 
 	// Retrieve mode
 	exists = config.fieldNumber ("mode");
@@ -1256,6 +1270,13 @@ FlagAgentBase::setAgentParameters(Record config)
 			// Request to pre-load WeightSpectrum
 			flagDataHandler_p->preLoadColumn(vi::WeightSpectrum);
 		}
+		else if (dataColumn_p.compare("WEIGHT") == 0)
+		{
+			dataReference_p = WEIGHT_SPECTRUM;
+
+			// Request to pre-load WeightSpectrum instead of Weight
+			flagDataHandler_p->preLoadColumn(vi::WeightSpectrum);
+		}
 		else if (dataColumn_p.compare("FLOAT_DATA") == 0)
 
 		{
@@ -1307,6 +1328,7 @@ FlagAgentBase::setAgentParameters(Record config)
 		if (	(dataColumn_p.compare("FPARAM") == 0) or
 				(dataColumn_p.compare("SNR") == 0) or
 				(dataColumn_p.compare("WEIGHT_SPECTRUM") == 0) or
+				(dataColumn_p.compare("WEIGHT") == 0) or
 				(dataColumn_p.compare("FLOAT_DATA") == 0))
 		{
 			// Check if expression is one of the supported operators
@@ -1318,7 +1340,7 @@ FlagAgentBase::setAgentParameters(Record config)
 				*logger_p 	<< LogIO::WARN
 							<< " Unsupported visibility expression: " << expression_p
 							<< "; selecting REAL by default. "
-							<< " Complex operators are not supported for FPARAM/SNR/WEIGHT_SPECTRUM"
+							<< " Complex operators are not supported for FPARAM/SNR/WEIGHT_SPECTRUM/WEIGHT"
 							<< LogIO::POST;
 
 				String new_expression;

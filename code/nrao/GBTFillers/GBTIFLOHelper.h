@@ -169,7 +169,7 @@ public:
 
     // reference channel is independent of phase and time
     // Channels are numbered from 0 in this scheme.
-    Double refChan(uInt whichFeed) const {return itsRefChan;}
+    Double refChan(uInt /*whichFeed*/) const {return itsRefChan;}
     // </group>
 
     // The LO1 file in use for each feed

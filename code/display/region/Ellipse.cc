@@ -36,6 +36,7 @@
 
 #include <imageanalysis/Annotations/AnnEllipse.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
+#include <display/ds9/ds9writer.h>
 
 #include <tr1/memory>
 
@@ -447,6 +448,10 @@ namespace casa {
 				result = new ImageRegion(ellipse);
 			} catch(...) { }
 			return result;
+		}
+
+		bool Ellipse::output_region( ds9writer &out, WorldCanvas */*wc*/, const std::vector<std::pair<double,double> > &pts ) const {
+			return out.ellipse(wc_,pts);
 		}
 
 	}

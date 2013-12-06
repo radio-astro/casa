@@ -454,14 +454,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// These react to fwd/reverse Play buttons.  They allow a single
 		// play button to be used to toggle between play and stop.
 		//<group>
-		virtual void fwdPlay_() {
-			if(qdp_->animating()>0) qdp_->stop();
-			else qdp_->fwdPlay();
+		virtual void fwdPlayChannelMovie_( ) {
+			if(qdp_->animating()>0) qdp_->stopChannelMovie( );
+			else qdp_->fwdPlayChannelMovie( );
+		}
+		virtual void fwdPlayImageMovie_( ) {
+			if(qdp_->animating()>0) qdp_->stopImageMovie( );
+			else qdp_->fwdPlayImageMovie( );
 		}
 
-		virtual void revPlay_() {
-			if(qdp_->animating()<0) qdp_->stop();
-			else qdp_->revPlay();
+		virtual void revPlayChannelMovie_( ) {
+			if(qdp_->animating()<0) qdp_->stopChannelMovie( );
+			else qdp_->revPlayChannelMovie( );
+		}
+		virtual void revPlayImageMovie_() {
+			if(qdp_->animating()<0) qdp_->stopImageMovie( );
+			else qdp_->revPlayImageMovie();
 		}
 		//</group>
 
@@ -573,6 +581,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		std::string rcid_;
 
 	private:
+		void animationModeChanged( bool modeZ);
+
 		bool use_new_regions;
 
 		//Animating the channel
@@ -619,8 +629,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		viewer::Region* findRegion( int id );
 
 		viewer::Preferences *preferences;
+
 		AnimatorHolder* animationHolder;
+		bool adjust_channel_animator;
+		bool adjust_image_animator;
 		int animationImageIndex;
+
 		HistogramMain* histogrammer;
 		ColorHistogram* colorHistogram;
 		Fit2DTool* fitTool;
@@ -649,6 +663,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		static std::string idGen( );
 
 	private slots:
+		void to_image_mode( ) { animationModeChanged(true); }
+		void to_channel_mode( ) { animationModeChanged(false); }
 		void loadRegions( const QString &path, const QString &type );
 		void incrementMovieChannel();
 		void clear_status_bar( );
@@ -667,7 +683,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void add2DFitOverlay( QList<RegionShape*> fitMarkers );
 		void remove2DFitOverlay( QList<RegionShape*> fitMarkers );
 		void addResidualFitImage( String path );
-		virtual void addDDSlot(String path, String dataType, String displayType, Bool autoRegister=True, Bool tmpData=False, ImageInterface<Float>* img = NULL);
+		virtual void addDDSlot(String path, String dataType, String displayType,
+				Bool autoRegister=True, Bool tmpData=False,
+				std::tr1::shared_ptr<ImageInterface<Float> > img = std::tr1::shared_ptr<ImageInterface<Float> >());
 		void sliceChanged( int regionId, viewer::region::RegionChanges change,
 		                   const QList<double> & worldX, const QList<double> & worldY,
 		                   const QList<int> &pixelX, const QList<int> & pixelY );
@@ -693,7 +711,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		 * in all the images. Channel animation should then take place.  Method
 		 * sets the mode, and then updates the channel count accordingly.
 		 */
-		void animationModeChanged( bool modeZ);
 		void animationImageChanged( int index );
 
 		void registerDD( QtDisplayData* dd, int position );

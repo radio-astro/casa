@@ -1213,7 +1213,7 @@ void rGridFT::getWeightImage(ImageInterface<Float>& weightImage, Matrix<Float>& 
 }
 
 Bool rGridFT::toRecord(String& error,
-		      RecordInterface& outRec, Bool withImage)
+		       RecordInterface& outRec, Bool withImage, const String diskimage)
 {
 
   
@@ -1222,7 +1222,7 @@ Bool rGridFT::toRecord(String& error,
   Bool retval = True;
 
   //save the base class variables
-  if(!FTMachine::toRecord(error, outRec, withImage))
+  if(!FTMachine::toRecord(error, outRec, withImage, diskimage))
     return False;
 
   //a call to init  will redo imagecache and gridder
@@ -1277,26 +1277,7 @@ Bool rGridFT::fromRecord(String& error,
   machineName_p="rGridFT";
   ///setup some of the parameters
   init();
-  if(inRec.isDefined("image")){
-    //FTMachine::fromRecord would have recovered the image
-    // Might be changing the shape of sumWeight
-
-    if(isTiled) {
-      lattice=CountedPtr<Lattice<Complex> >(image, False);
-    }
-    else {
-      // Make the grid the correct shape and turn it into an array lattice
-      // Check the section from the image BEFORE converting to a lattice 
-      if(!toVis_p){
-	IPosition gridShape(4, nx, ny, npol, nchan);
-	griddedData.resize(gridShape);
-	griddedData=Complex(0.0);
-      }
-      else{
-	prepGridForDegrid();
-      }
-    }
-  };
+ 
   return retval;
 }
 

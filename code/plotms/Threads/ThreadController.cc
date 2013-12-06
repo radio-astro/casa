@@ -71,7 +71,9 @@ bool ThreadController::getResult() const {
 	return success;
 }
 
-
+String ThreadController::getError() const {
+	return error;
+}
 
 void ThreadController::startThread(){
 	bgThread->run();
@@ -109,7 +111,9 @@ void ThreadController::finishProgress() {
 }
 
 void ThreadController::finished(){
-	postThreadMethod();
+	if ( getResult() ){
+		postThreadMethod();
+	}
 }
 
 void ThreadController::setStatus(const String& /*status*/){

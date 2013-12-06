@@ -54,6 +54,10 @@ public:
      */
     bool isEmpty() const;
 
+    /**
+     * Returns the text contents.
+     */
+    QString getText() const;
 
     ~DisplayLabel();
 

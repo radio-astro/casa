@@ -48,6 +48,12 @@ FeatherPlotWidget::FeatherPlotWidget(const QString& title, FeatherPlot::PlotType
 	resetPlot( plotType );
 
 	leftMouseMode = RECTANGLE_ZOOM;
+	zoomState = ZOOM_NEUTRAL;
+	zoomMinX = 0;
+	zoomMaxX = 0;
+	zoomMinY = 0;
+	zoomMaxY = 0;
+
 	zoomer = NULL;
 	diameterSelector = NULL;
 	diameterMarker = NULL;
@@ -149,7 +155,15 @@ void FeatherPlotWidget::setPlotColors( const QMap<CurveType,CurveDisplay>& color
 	//Because the visibility of the plot may have changed
 	//we need to erase and start over.
 	clearPlot();
-	addZoomNeutralCurves();
+	if ( zoomState == ZOOM_NEUTRAL ){
+		addZoomNeutralCurves();
+	}
+	else if ( zoomState == ZOOM_RECTANGLE ){
+		zoomRectangle( zoomMinX, zoomMaxX, zoomMinY, zoomMaxY );
+	}
+	else if ( zoomState == ZOOM_90 ){
+		changeZoom90( true );
+	}
 
 	//We also need to set the visibility of the dish diameter marker
 	//in case it has been turned on/off.
@@ -281,26 +295,31 @@ double FeatherPlotWidget::getDishDiameter() const {
 }
 
 void FeatherPlotWidget::setDishDiameter( double position, bool scale ){
-	//Set the size
-	QwtSymbol symbol = diameterMarker->symbol();
-	int canvasHeight = height();
-	symbol.setSize( 2 * canvasHeight );
-	diameterMarker->setSymbol( symbol );
-
-	//Set the position
 	if ( position >= 0 ){
-		if ( scale ){
-			if ( plot->isLogUV() ){
-				position = qLn(position) / qLn( 10 );
+		dishPosition = position;
+	}
+	if ( diameterMarker != NULL ){
+		//Set the size
+		QwtSymbol symbol = diameterMarker->symbol();
+		int canvasHeight = height();
+		symbol.setSize( 2 * canvasHeight );
+		diameterMarker->setSymbol( symbol );
+
+		//Set the position
+		if ( position >= 0 ){
+			if ( scale ){
+				if ( plot->isLogUV() ){
+					position = qLn(position) / qLn( 10 );
+				}
+			}
+			diameterMarker->setXValue( position );
+			bool markerDisplayed = curvePreferences[FeatherCurveType::DISH_DIAMETER].isDisplayed();
+			if ( !plot->isScatterPlot() && markerDisplayed ){
+				diameterMarker->show();
 			}
 		}
-		diameterMarker->setXValue( position );
-		bool markerDisplayed = curvePreferences[FeatherCurveType::DISH_DIAMETER].isDisplayed();
-		if ( !plot->isScatterPlot() && markerDisplayed ){
-			diameterMarker->show();
-		}
+		plot->replot();
 	}
-	plot->replot();
 }
 
 
@@ -333,30 +352,27 @@ void FeatherPlotWidget::initializeZooming(){
 void FeatherPlotWidget::zoomRectangleSelected( const QwtDoubleRect& zoomRect ){
 	if ( zoomRect.width() > 0 && zoomRect.height() > 0 ){
 		double minX = zoomRect.x();
-		if ( minX < 0 ){
-			minX = 0;
-		}
-		double maxX = minX + zoomRect.width();
+		double rectWidth = zoomRect.width();
+		double maxX = minX + rectWidth;
 		double minY = zoomRect.y();
-		if ( minY < 0 ){
-			minY = 0;
-		}
-		double maxY = minY + zoomRect.height();
+		double rectHeight = zoomRect.height();
+		double maxY = minY + rectHeight;
 
 		//If we are using a log scale on either axis, we need to convert
 		//the rectangle bounds back to a normal scale.
+		const int BASE = 10;
 		if ( plot->isLogUV() ){
 			if ( !plot->isScatterPlot() ){
-				minX = qPow( 10, minX);
-				maxX = qPow( 10, maxX);
+				minX = qPow( BASE, minX);
+				maxX = qPow( BASE, maxX);
 			}
 		}
 		if ( plot->isLogAmplitude() ){
-			minY = qPow( 10, minY );
-			maxY = qPow( 10, maxY );
+			minY = qPow( BASE, minY );
+			maxY = qPow( BASE, maxY );
 			if ( plot->isScatterPlot() ){
-				minX = qPow( 10, minX);
-				maxX = qPow( 10, maxX);
+				minX = qPow( BASE, minX );
+				maxX = qPow( BASE, maxX);
 			}
 		}
 
@@ -364,6 +380,7 @@ void FeatherPlotWidget::zoomRectangleSelected( const QwtDoubleRect& zoomRect ){
 		//the zoom, just update our own coordinates.
 		if ( plot->isScatterPlot() ){
 			plot->clearCurves();
+			setZoomRectangleState( minX, maxX, minY, maxY );
 			zoomRectangleOther( minX, maxX, minY, maxY );
 			plot->replot();
 		}
@@ -375,10 +392,21 @@ void FeatherPlotWidget::zoomRectangleSelected( const QwtDoubleRect& zoomRect ){
 }
 
 
+void FeatherPlotWidget::setZoomRectangleState( double minX, double maxX,
+		double minY, double maxY){
+	zoomState = ZOOM_RECTANGLE;
+	zoomMinX = minX;
+	zoomMaxX = maxX;
+	zoomMinY = minY;
+	zoomMaxY = maxY;
+}
+
+
 
 
 void FeatherPlotWidget::zoomRectangle( double minX, double maxX, double minY, double maxY){
 	plot->clearCurves();
+	setZoomRectangleState( minX, maxX, minY, maxY );
 	zoomRectangleOther( minX, maxX, minY, maxY);
 	initializeMarkers();
 	plot->replot();
@@ -398,21 +426,14 @@ void FeatherPlotWidget::initializeSumData( QVector<double>& sumX, QVector<double
 	sumY.resize( countX );
 	for ( int i = 0; i < countX; i++ ){
 		sumX[i] = singleDishX[i];
-		if ( !logScale ){
-			sumY[i] = singleDishY[i] + interferometerY[i];
-		}
-		else {
+		sumY[i] = singleDishY[i] + interferometerY[i];
+
+		if ( logScale ){
 			//Occasionally we are getting single dish or interferometer
 			//values of zero.  We assume these are bad and are ignoring them.
-			double logSingleDish = singleDishY[i];
-			if ( logSingleDish > 0 ){
-				logSingleDish = qLn( singleDishY[i]) / qLn( 10 );
+			if ( sumY[i] > 0 ){
+				sumY[i] = qLn( sumY[i]) / qLn( 10 );
 			}
-			double logInterferometer = interferometerY[i];
-			if ( logInterferometer > 0 ){
-				logInterferometer = qLn( interferometerY[i]) / qLn(10 );
-			}
-			sumY[i] = logSingleDish + logInterferometer;
 		}
 	}
 }
@@ -446,21 +467,20 @@ void FeatherPlotWidget::changeZoom90(bool zoom ){
 		double dishPosition = 0;
 		if ( diameterMarker != NULL ){
 			dishPosition = diameterMarker->xValue();
-			dishPosition = dishPosition + dishPosition / 3;
+
 			//If we are using a log scale on the x-axis, we need to undo the log.
 			if ( plot->isLogUV() ){
 				dishPosition = qPow( 10, dishPosition );
 			}
+			dishPosition = dishPosition + dishPosition / 3;
 		}
-		if ( dishPosition == 0 ){
-			pair<double,double> minMaxPair =
-					getMaxMin( plotData[FeatherDataType::LOW_WEIGHTED].second, FeatherCurveType::LOW_WEIGHTED );
-			dishPosition = minMaxPair.second / 3;
-		}
-		zoom90Other( dishPosition );
+		double zoomLocation = this->dishPosition + this->dishPosition / 3;
+		zoomState = ZOOM_90;
+		zoom90Other( zoomLocation );
 	}
 	else {
 		zoomNeutral();
+		zoomState = ZOOM_NEUTRAL;
 	}
 	initializeMarkers();
 	plot->replot();

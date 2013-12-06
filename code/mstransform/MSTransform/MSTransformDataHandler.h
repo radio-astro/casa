@@ -139,13 +139,13 @@ public:
 	Bool makeMSBasicStructure(	String& msname,
 								String& whichDataCol,
 								const Vector<Int>& tileShape = Vector<Int> (1, 0),
-								const String& combine = "");
+								const String& combine = "",
+								Table::TableOption option=Table::New);
 
 	Bool isAllColumns(const Vector<MS::PredefinedColumns>& colNames);
 
 	// Method that returns the selected ms (?! - but it's Boolean - RR)
 	Bool makeSelection();
-	Bool makeSelectionNew();
 
 	// This sets up a default new ms
 	// Declared static as it can be (and is) called directly from outside
@@ -154,14 +154,16 @@ public:
 									const Int npol, const String& telescop,
 									const Vector<MS::PredefinedColumns>& colNamesTok,
 									const Int obstype = 0, const Bool compress = False,
-									const asdmStManUseAlternatives asdmStManUse = DONT);
+									const asdmStManUseAlternatives asdmStManUse = DONT,
+									Table::TableOption option=Table::New);
 
 	// Same as above except allowing manual tileshapes
 	static MeasurementSet* setupMS(	const String& msname, const Int nchan,
 									const Int npol, const Vector<MS::PredefinedColumns>& colNamesTok,
 									const Vector<Int>& tileShape = Vector<Int> (1, 0),
 									const Bool compress = False,
-									const asdmStManUseAlternatives asdmStManUse = DONT);
+									const asdmStManUseAlternatives asdmStManUse = DONT,
+									Table::TableOption option=Table::New);
 
 
 	// The output MS must have (at least?) 1 of DATA, FLOAT_DATA, or LAG_DATA.
@@ -179,7 +181,6 @@ public:
 	Bool fillSubTables(const Vector<MS::PredefinedColumns>& colNames);
 	Bool fillFieldTable();
 	Bool fillDDTables(); // Includes spw and pol
-	Bool fillDDTablesNew(); // Includes spw and pol
 
 	// Add optional columns to outTab if present in inTab and possColNames.
 	// beLazy should only be true if outTab is in its default state.

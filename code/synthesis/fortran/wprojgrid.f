@@ -205,7 +205,8 @@ C      integer :: npoint
                rsupport=support(iloc(3))
 C               write(*,*) irow, ichan, iloc(3), rsupport 
                if (onmywgrid(loc(1, ichan, irow), nx, ny, wconvsize, 
-     $              x0, y0, nxsub, nysub, rsupport)) then
+     $              x0, y0, nxsub, nysub, rsupport, msupportx, msupporty
+     $         , psupportx, psupporty)) then
 CCC I thought removing the if in the inner loop will be faster
 CCC but not really as i have to calculate more conjg at this stage
 C                  npoint=rsupport*sampling+1
@@ -337,7 +338,8 @@ C      integer :: npoint
                iloc(3)=max(1, min(wconvsize, loc(3, ichan, irow)))
                rsupport=support(iloc(3))
                if (onmywgrid(loc(1, ichan, irow), nx, ny, wconvsize, 
-     $              x0, y0, nxsub, nysub, rsupport)) then
+     $              x0, y0, nxsub, nysub, rsupport, msupportx, 
+     $ msupporty, psupportx, psupporty)) then
 CCC I thought removing the if in the inner loop will be faster
 CCC but not really as i have to calculate more conjg at this stage
 C                  npoint=rsupport*sampling+1
@@ -365,18 +367,18 @@ C norm will be the value we would get for the peak
 C at the phase center. We will want to normalize 
 C the final image by this term.
                         norm=0.0
-                        msupporty=-rsupport
-                        psupporty=rsupport
-                        psupportx=rsupport
-                        msupportx=-rsupport
-                        if((loc(1, ichan, irow)-rsupport) .lt. x0) 
-     $                       msupportx=  -(loc(1, ichan, irow)-x0)
-                        if((loc(1, ichan, irow)+rsupport).ge.(x0+nxsub)) 
-     $                       psupportx=  x0+nxsub-loc(1, ichan, irow)-1   
-                        if((loc(2, ichan, irow)-rsupport) .lt. y0) 
-     $                       msupporty=  -(loc(2, ichan, irow)-y0)
-                        if((loc(2, ichan, irow)+rsupport).ge.(y0+nysub)) 
-     $                       psupporty=  y0+nysub-loc(2, ichan, irow)-1 
+C                        msupporty=-rsupport
+C                        psupporty=rsupport
+C                        psupportx=rsupport
+C                        msupportx=-rsupport
+C                        if((loc(1, ichan, irow)-rsupport) .lt. x0) 
+C     $                       msupportx=  -(loc(1, ichan, irow)-x0)
+C                        if((loc(1, ichan, irow)+rsupport).ge.(x0+nxsub)) 
+C     $                       psupportx=  x0+nxsub-loc(1, ichan, irow)-1   
+C                        if((loc(2, ichan, irow)-rsupport) .lt. y0) 
+C     $                       msupporty=  -(loc(2, ichan, irow)-y0)
+C                        if((loc(2, ichan, irow)+rsupport).ge.(y0+nysub)) 
+C     $                       psupporty=  y0+nysub-loc(2, ichan, irow)-1 
                         do iy=msupporty,psupporty
                            posy=loc(2, ichan, irow)+iy
                            iloc(2)=1+abs(iy*sampling+off(2, ichan,irow))
@@ -638,11 +640,18 @@ C      pos(3)=(scale(3)*uvw(3)*freq/c)+offset(3)+1.0;
       return
       end
       logical function onmywgrid(loc, nx, ny, nw, nx0, ny0, nxsub,nysub,
-     $     support)
+     $     support, msuppx, msuppy, psuppx, psuppy)
       implicit none
       integer, intent(in) :: nx, ny, nw, nx0, ny0, nxsub, nysub, loc(3), 
      $     support
+      integer, intent(out) :: msuppx, msuppy, psuppx, psuppy
       integer :: loc1sub, loc1plus, loc2sub, loc2plus
+      msuppx=merge(-support, -nx0+loc(1), loc(1)-support > nx0)
+      msuppy=merge(-support, -ny0+loc(2), loc(2)-support > ny0)
+      msuppx=merge(support, nx0+nxsub-loc(1) , (loc(1)+support) 
+     $ < (nx0+nxsub))
+      msuppy=merge(support, ny0+nysub-loc(2) , (loc(2)+support) 
+     $ < (ny0+nysub))
       loc1sub=loc(1)-support
       loc1plus=loc(1)+support
       loc2sub=loc(2)-support
@@ -651,8 +660,6 @@ C      pos(3)=(scale(3)*uvw(3)*freq/c)+offset(3)+1.0;
        onmywgrid=(support.gt.0).and. (loc(3).ge.1) .and. (loc(3).le.nw)
      $     .and. (loc1plus .ge. nx0) .and. (loc1sub 
      $     .le. (nx0+nxsub)) .and.(loc2plus .ge. ny0) .and. 
-     $     (loc2sub .le. (ny0+nysub)) .and. (loc1sub.ge.1)
-     $     .and.(loc1plus.le.nx).and.
-     $     (loc2sub.ge.1).and.(loc2plus.le.ny)
+     $     (loc2sub .le. (ny0+nysub))
        return
        end

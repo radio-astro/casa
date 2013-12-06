@@ -139,6 +139,7 @@ private:
 	void initializeZooming();
 	void initializeDiameterMarker();
 	void initializeDiameterSelector();
+	void setZoomRectangleState( double minX, double maxX, double minY, double maxY);
 
 	void removeMarkers();
 	void changeLeftMouseMode();
@@ -146,6 +147,7 @@ private:
 	CurveType getCurveTypeForData( DataType dType );
 
     QString plotTitle;
+    double dishPosition;
     const int MARKER_WIDTH;
     QwtPlotPicker* zoomer;
     QwtPlotMarker* diameterMarker;
@@ -154,6 +156,12 @@ private:
 
     enum LeftMouseMode { RECTANGLE_ZOOM, DIAMETER_SELECTION };
     LeftMouseMode leftMouseMode;
+    enum ZoomState { ZOOM_NEUTRAL, ZOOM_90, ZOOM_RECTANGLE };
+    ZoomState zoomState;
+    double zoomMinX;
+    double zoomMaxX;
+    double zoomMinY;
+    double zoomMaxY;
     Ui::FeatherPlotWidgetClass ui;
 };
 

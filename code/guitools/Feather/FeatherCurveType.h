@@ -43,7 +43,7 @@ public:
 	//First, we list things which will have legend items in the slice plot.
 	//Next, we list things in the slice plot that do not have legend items.
 	//Finally, we list items in the scatter plot
-	typedef enum CurveType {SUM_LOW_HIGH,  WEIGHT_LOW,
+	enum CurveType {SUM_LOW_HIGH,  WEIGHT_LOW,
 	    	WEIGHT_HIGH, LOW_ORIGINAL, LOW_WEIGHTED, LOW_CONVOLVED_HIGH,
 	    	LOW_CONVOLVED_HIGH_WEIGHTED,/*LOW_CONVOLVED_DIRTY,
 	    	LOW_CONVOLVED_DIRTY_WEIGHTED,*/ HIGH_ORIGINAL, HIGH_WEIGHTED,

@@ -29,6 +29,7 @@
 #include <qwt_plot.h>
 #include <qwt_plot_canvas.h>
 #include <qwt_scale_div.h>
+#include <qwt_text_label.h>
 
 namespace casa {
 
@@ -44,14 +45,27 @@ void ExternalAxisWidgetRight::setUseLeftScale( bool b ){
 }
 
 int ExternalAxisWidgetRight::getStartY() const {
-	QwtPlotCanvas* canvas = plot->canvas();
-	int canvasHeight = canvas->height();
-	int heightDiff =  height() - canvas->height();
-	const int MIN = 22;
-	if ( canvasHeight < MIN ){
-		heightDiff = MIN;
+	int plotHeight = height();
+	int canvasHeight = getCanvasHeight();
+	int heightDiff = plotHeight - canvasHeight;
+	if ( heightDiff < MIN_START_Y ){
+		heightDiff = MIN_START_Y;
 	}
 	return heightDiff;
+}
+
+int ExternalAxisWidgetRight::getCanvasHeight() const {
+	//We should use canvas->height()
+	//But because the main canvas is not laid out yet when this
+	//gets drawn, canvas->height gives a bogus value.  Thus, we
+	//are using plot->height() - (height of the plot title plus margins) instead.
+
+	int plotHeight = height();
+	QwtTextLabel* titleText = plot->titleLabel();
+	QRect titleRect = titleText->textRect();
+	int titleHeight =  titleRect.height() + 7;
+	int canvasHeight = plotHeight - titleHeight;
+	return canvasHeight;
 }
 
 void ExternalAxisWidgetRight::defineAxis( QLine& axisLine ){
@@ -106,11 +120,12 @@ void ExternalAxisWidgetRight::drawTicks( QPainter* painter, int tickLength ){
 	//Now figure out the yIncrement, how far apart the ticks should be.
 	double tickDistance = getTickDistance( axisScale );
 	double yIncrement = getTickIncrement( tickDistance, axisScale );
+
 	for ( int i = 0; i < originalTickCount; i = i + tickIncrement ){
 		//Sometimes the automatic tick system puts uneven number of ticks in.
 		//Definitely weird - but that is why the incrementCount;
 		int incrementCount = qRound((axisTicks[i] - axisTicks[0]) / tickDistance);
-		double tickPosition = startPixelY + incrementCount * yIncrement;
+		double tickPosition = startPixelY +incrementCount * yIncrement;
 		int tickIndex = originalTickCount - i - 1;
 		drawTick( painter, tickPosition, axisTicks[tickIndex], tickLength);
 	}
@@ -118,20 +133,7 @@ void ExternalAxisWidgetRight::drawTicks( QPainter* painter, int tickLength ){
 
 void ExternalAxisWidgetRight::drawAxisLabel( QPainter* painter ){
 	 QFont font = painter->font();
-
-	 bool logScale = false;
-	 if ( axisLabel.indexOf( "Log") != -1 ){
-		 logScale = true;
-	 }
-	 int unitIndex = axisLabel.indexOf( "(");
-	 if ( logScale ){
-	 	 unitIndex = axisLabel.indexOf( ")")+1;
-	 }
-	 QString mainLabel = axisLabel.left( unitIndex ).trimmed();
-	 QString unitLabel;
-	 if ( logScale ){
-		 unitLabel = axisLabel.right( axisLabel.size() - unitIndex );
-	 }
+	 QString mainLabel = axisLabel.trimmed();
 
 	 painter->rotate(90);
 
@@ -142,14 +144,6 @@ void ExternalAxisWidgetRight::drawAxisLabel( QPainter* painter ){
 	 painter->drawText( xPosition, yPosition, fontBoundingRect.width(), fontBoundingRect.height(),
 				  Qt::AlignHCenter|Qt::AlignTop, mainLabel);
 
-	 //Draw the units
-	 if ( unitLabel.length() > 0 ){
-		 fontBoundingRect = QFontMetrics(font).boundingRect( unitLabel );
-		 yPosition = startY;
-		 xPosition = (height() - fontBoundingRect.width())/2;
-		 painter->drawText( xPosition, yPosition, fontBoundingRect.width(),
-				  fontBoundingRect.height(), Qt::AlignHCenter|Qt::AlignTop, unitLabel);
-	 }
 	 painter->rotate(-90);
 }
 

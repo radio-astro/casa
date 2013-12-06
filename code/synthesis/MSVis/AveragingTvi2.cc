@@ -9,6 +9,10 @@
 #include <synthesis/MSVis/Vbi2MsRow.h>
 #include <synthesis/MSVis/UtilJ.h>
 #include <synthesis/MSVis/VisibilityIterator2.h>
+#include <boost/tuple/tuple.hpp>
+#include <set>
+
+using std::set;
 
 namespace casa {
 
@@ -295,6 +299,7 @@ public:
     MsRowAvg * getRowMutable (Int row);
     Bool isComplete () const;
     void markEmpty ();
+    int nSpectralWindowsInBuffer () const;
     void setBufferToFill (VisBufferImpl2 *);
     void startChunk (ViImplementation2 *);
 
@@ -361,7 +366,7 @@ protected:
         Matrix<Float>         weightSpectrumOut;
     };
 
-    Vector<Double> accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged);
+    pair<Bool, Vector<Double> > accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged);
     void accumulateElementForCubes (AccumulationParameters * accumulationParameters,
                                     Bool zeroAccumulation,
                                     Int correlation,
@@ -382,7 +387,8 @@ protected:
     void accumulateExposure (const VisBuffer2 *);
     void accumulateOneRow (MsRow * rowInput, MsRowAvg * rowAveraged,
                            const Subchunk & subchunk);
-    void accumulateRowData (MsRow * rowInput, MsRowAvg * rowAveraged, Double adjustedWeight);
+    void accumulateRowData (MsRow * rowInput, MsRowAvg * rowAveraged, Double adjustedWeight,
+                            Bool rowFlagged);
     void accumulateTimeCentroid (const VisBuffer2 * input);
     void captureIterationInfo (VisBufferImpl2 * dstVb, const VisBuffer2 * srcVb,
                                const Subchunk & subchunk);
@@ -665,7 +671,9 @@ VbAvg::accumulateOneRow (MsRow * rowInput, MsRowAvg * rowAveraged, const Subchun
     // adjusted for the flag cube.  Get the before and after weight accumulation
     // and the difference is the adjusted weight for this row.
 
-    Vector<Double> adjustedWeights = accumulateCubeData (rowInput, rowAveraged);
+    Vector<Double> adjustedWeights;
+    Bool rowFlagged;
+    boost::tie (rowFlagged, adjustedWeights) = accumulateCubeData (rowInput, rowAveraged);
 
     Double adjustedWeight = 0;
 
@@ -675,7 +683,7 @@ VbAvg::accumulateOneRow (MsRow * rowInput, MsRowAvg * rowAveraged, const Subchun
 
     // Accumulate the non matrix-valued data
 
-    accumulateRowData (rowInput, rowAveraged, adjustedWeight);
+    accumulateRowData (rowInput, rowAveraged, adjustedWeight, rowFlagged);
 
 }
 
@@ -754,12 +762,10 @@ VbAvg::accumulateElementForCube (const T & unweightedValue,
 }
 
 
-Vector<Double>
+pair<Bool, Vector<Double> >
 VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
 {
     // Accumulate the sums needed for averaging of cube data (e.g., visibility).
-
-    Bool inputRowFlagged = rowInput->isRowFlagged();
 
     const Matrix<Bool> inputFlags = rowInput->flags ();
     Matrix<Bool> averagedFlags = rowAveraged->flagsMutable ();
@@ -772,6 +778,7 @@ VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
     const Int nCorrelations = inputFlags.shape()(0);
 
     Vector<Double> adjustedWeight = Vector<Double> (nCorrelations, 0);
+    Bool rowFlagged = True;  // True if all correlations and all channels flagged
 
     for (Int channel = 0; channel < nChannels; channel ++){
 
@@ -782,7 +789,8 @@ VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
             // flagged data until the first unflagged datum appears.  Then restart the
             // accumulation with that datum.
 
-            Bool inputFlagged = inputFlags (correlation, channel) || inputRowFlagged;
+            Bool inputFlagged = inputFlags (correlation, channel);
+            rowFlagged = rowFlagged && inputFlagged;
             Bool accumulatorFlagged = averagedFlags (correlation, channel);
 
             if (! accumulatorFlagged && inputFlagged){
@@ -819,9 +827,6 @@ VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
             Bool correlationFlagChanged = correlationFlagged (correlation) && ! inputFlagged;
             correlationFlagged (correlation) = correlationFlagged (correlation) && inputFlagged;
 
-//            if (correlationFlagged (correlation) == inputFlagged ||
-//                correlationFlagChanged){
-
             if (! inputFlagged){
 
                 Double weight = accumulationParameters->weightSpectrumIn (correlation, channel);
@@ -835,7 +840,7 @@ VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
 
     delete accumulationParameters;
 
-    return adjustedWeight;
+    return std::make_pair (rowFlagged, adjustedWeight);
 }
 
 void
@@ -935,17 +940,16 @@ VbAvg::accumulateRowDatum (const T & averagedValue, const T & inputValue, Bool r
 
 void
 VbAvg::accumulateRowData (MsRow * rowInput, MsRowAvg * rowAveraged,
-                          Double adjustedWeight)
+                          Double adjustedWeight, Bool rowFlagged)
 {
 
     // Grab working copies of the values to be accumulated.
 
     Bool accumulatorRowFlagged = rowAveraged->isRowFlagged();
-    Bool inputRowFlagged = rowInput->isRowFlagged();
-    Bool flagChange = accumulatorRowFlagged != inputRowFlagged || // actual change
+    Bool flagChange = accumulatorRowFlagged != rowFlagged || // actual change
                       rowAveraged->countsBaseline() == 0; // first time
 
-    if (! accumulatorRowFlagged && inputRowFlagged){
+    if (! accumulatorRowFlagged && rowFlagged){
         // good accumulation, bad data --> skip it
     }
     else{
@@ -961,17 +965,31 @@ VbAvg::accumulateRowData (MsRow * rowInput, MsRowAvg * rowAveraged,
         // interrelationship between weight and weightSpectrum.  The SIGMA column is
         // handled in finalizeBaseline for similar reasons.
 
-        rowAveraged->setRowFlag (accumulatorRowFlagged && inputRowFlagged);
+        accumulatorRowFlagged = accumulatorRowFlagged && rowFlagged;
+        rowAveraged->setRowFlag (accumulatorRowFlagged);
 
         rowAveraged->setExposure (accumulateRowDatum (rowAveraged->exposure(),
                                                       rowInput->exposure (),
                                                       flagChange));
 
+        // While accumulating flagged values, the weights will be zero, so accumulate
+        // an arithmetic average until the accumulator becomes unflagged.
+
+        Double weightToUse;
+
+        if (accumulatorRowFlagged){
+            weightToUse = 1;
+        }
+        else{
+            weightToUse = adjustedWeight;
+        }
+
+        Double weightedTC = (rowInput->timeCentroid() - rowAveraged->timeFirst()) * weightToUse;
         rowAveraged->setTimeCentroid (accumulateRowDatum (rowAveraged->timeCentroid(),
-                                                          (rowInput->timeCentroid() - rowAveraged->timeFirst())* adjustedWeight,
+                                                          weightedTC,
                                                           flagChange));
 
-        Vector<Double> weightedUvw = rowInput->uvw() * adjustedWeight;
+        Vector<Double> weightedUvw = rowInput->uvw() * weightToUse;
         rowAveraged->setUvw (accumulateRowDatum (rowAveraged->uvw (),
                                                  weightedUvw,
                                                  flagChange));
@@ -1093,6 +1111,12 @@ VbAvg::finalizeAverages ()
 void
 VbAvg::finalizeBaseline (MsRowAvg * msRowAvg)
 {
+    // Software is no longer supposed to rely on the row flag.
+    // Setting it to false insures that legacy software will
+    // have to look at the flag cubes.
+
+    msRowAvg->setRowFlag(False);
+
     finalizeCubeData (msRowAvg);
 
     finalizeRowData (msRowAvg);
@@ -1190,6 +1214,14 @@ VbAvg::finalizeRowData (MsRowAvg * msRow)
     }
 
     if (n != 0){
+
+        if (weight == 0){
+
+            // The weights are all zero so compute an arithmetic average
+            // so that a somewhat value can go into these columns (i.e. rather than NaN).
+
+            weight = msRow->countsBaseline();
+        }
 
         msRow->setTimeCentroid (msRow->timeCentroid() / weight + msRow->timeFirst());
 
@@ -1298,7 +1330,7 @@ VbAvg::initializeBaseline (MsRow * rowInput, MsRowAvg * rowAveraged,
 
     // Flag everything to start with
 
-    rowAveraged->setRowFlag (True);
+    rowAveraged->setRowFlag (True); // only for use during row-value accumulation
     rowAveraged->setFlags(Matrix<Bool> (nCorrelations, nChannels, True));
     rowAveraged->correlationFlagsMutable() = Vector<Bool> (nCorrelations, True);
 
@@ -1325,6 +1357,21 @@ VbAvg::nBaselines () const
     return countsBaseline_p.nelements();
 }
 
+Int
+VbAvg::nSpectralWindowsInBuffer () const
+{
+    const Vector<Int> & windows = spectralWindows();
+    set <Int> s;
+
+    for (uInt i = 0; i < windows.nelements(); i ++){
+        s.insert (windows(i));
+    }
+
+    return (Int) s.size();
+
+}
+
+
 void
 VbAvg::captureIterationInfo (VisBufferImpl2 * dstVb, const VisBuffer2 * srcVb,
                              const Subchunk & subchunk)
@@ -1336,7 +1383,7 @@ VbAvg::captureIterationInfo (VisBufferImpl2 * dstVb, const VisBuffer2 * srcVb,
                              srcVb->isNewFieldId(),
                              srcVb->isNewSpectralWindow(),
                              subchunk,
-                             srcVb->getCorrelationNumbers (),
+                             srcVb->getCorrelationTypes (),
                              CountedPtr <WeightScaling> (0));
 
     // Request info from the VB which will cause it to be filled
@@ -1961,8 +2008,9 @@ AveragingTvi2::produceSubchunk ()
         const VisBuffer2 * vb = getVii()->getVisBuffer();
 
         vbAvg_p->accumulate (vb, subchunk_p);
+        Int nWindows = vbAvg_p->nSpectralWindowsInBuffer ();
 
-        if (vbToFill->appendSize() < nBaselines){
+        if (vbToFill->appendSize() < nBaselines * nWindows){
             getVii()->next();
         }
         else{
@@ -2017,7 +2065,7 @@ void
 AveragingTvi2::validateInputVi (ViImplementation2 *)
 {
     // Validate that the input VI is compatible with this VI.
-#warning "Implement AveragingTvi2::validateInputVi"
+  //#warning "Implement AveragingTvi2::validateInputVi"
 }
 
 } // end namespace vi

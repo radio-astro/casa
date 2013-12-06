@@ -30,6 +30,7 @@
 #include <ms/MeasurementSets/MSSelection.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/ArrayIO.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/LinearSearch.h>
@@ -817,7 +818,7 @@ CoordinateSystem MSMoments<T>::coordinates()
 }
 
 template<class T>
-IPosition MSMoments<T>::getShape()
+IPosition MSMoments<T>::getShape() const
 {
 //   // TODO: implement method to get shape of MS
   ROArrayColumn<Float> dataCol( *ms_p, "FLOAT_DATA" ) ;

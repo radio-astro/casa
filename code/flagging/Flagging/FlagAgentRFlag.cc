@@ -314,7 +314,8 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 			    uInt nDevs = shape[0];
 			    for(uInt dev_i=0;dev_i<nDevs;dev_i++)
 			    {
-			    	pair<Int,Int> field_spw = std::make_pair(freqdev(dev_i,0),freqdev(dev_i,1));
+			    	pair<Int,Int> field_spw = std::make_pair(static_cast<Int>(freqdev(dev_i,0)),
+			    			static_cast<Int>(freqdev(dev_i,1)));
 			    	field_spw_scutof_map_p[field_spw] = freqdev(dev_i,2);
 			    	user_field_spw_scutof_map_p[field_spw] = True;
 				*logger_p << LogIO::DEBUG1 << "freqdev matrix - field=" << freqdev(dev_i,0) << " spw=" << freqdev(dev_i,1) << " dev=" << freqdev(dev_i,2) << LogIO::POST;
@@ -341,7 +342,8 @@ void FlagAgentRFlag::setAgentParameters(Record config)
 
 Double FlagAgentRFlag::mean(vector<Double> &data,vector<Double> &counts)
 {
-	Double sumAvg,avg = 0;
+	Double sumAvg = 0;
+	Double avg = 0;
 
 	if (data.size() == 0)
 	{
@@ -374,7 +376,7 @@ void FlagAgentRFlag::noiseVsRef(vector<Double> &data, Double ref)
 
 Double FlagAgentRFlag::median(vector<Double> &data)
 {
-	Double med,medPoint;
+	Double med;
 	vector<Double> datacopy = data;
 	sort(data.begin(),data.end());
 
@@ -970,8 +972,8 @@ void FlagAgentRFlag::simpleMedian(	uInt timestep_i,
 	Complex visibility = Complex(0,0);
 	vector<Double> realVisForMedian;
 	vector<Double> imagVisForMedian;
-	Double realMedian = 0;
-	Double imagMedian = 0;
+//	Double realMedian = 0;
+//	Double imagMedian = 0;
 
 	for (uInt chan_j=0;chan_j<(uInt) nChannels;chan_j++)
 	{

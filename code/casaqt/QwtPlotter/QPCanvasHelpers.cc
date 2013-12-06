@@ -69,8 +69,12 @@ QPScaleDraw::QPScaleDraw(QwtPlot* parent, QwtPlot::Axis axis) :
 		m_dateFormat(Plotter::DEFAULT_DATE_FORMAT),
 		m_relativeDateFormat(Plotter::DEFAULT_RELATIVE_DATE_FORMAT),
 		m_referenceSet(false), m_referenceValue(0) {
-	parent->setAxisScaleDraw(axis, this);
+	if ( parent != NULL ){
+		parent->setAxisScaleDraw(axis, this);
+	}
 }
+
+
 
 QPScaleDraw::~QPScaleDraw() { }
 
@@ -78,14 +82,36 @@ PlotAxisScale QPScaleDraw::scale() const { return m_scale; }
 void QPScaleDraw::setScale(PlotAxisScale scale) {
 	if(scale != m_scale) {
 		m_scale = scale;
-		
-		if(m_scale == LOG10)
-			m_parent->setAxisScaleEngine(m_axis, new QwtLog10ScaleEngine());
-		else
-			m_parent->setAxisScaleEngine(m_axis, new QwtLinearScaleEngine());
-
-        if(m_parent->autoReplot()) m_parent->replot();
+		if ( m_parent != NULL ){
+			if(m_scale == LOG10){
+				m_parent->setAxisScaleEngine(m_axis, new QwtLog10ScaleEngine());
+			}
+			else {
+				m_parent->setAxisScaleEngine(m_axis, new QwtLinearScaleEngine());
+			}
+			if(m_parent->autoReplot()){
+				m_parent->replot();
+			}
+		}
 	}
+}
+
+void QPScaleDraw::setInvisible( bool invisible ){
+	this->invisible = invisible;
+}
+
+void QPScaleDraw::draw(QPainter* painter, const QPalette& palette) const {
+	if ( !invisible ){
+		QwtScaleDraw::draw( painter, palette );
+	}
+}
+
+int QPScaleDraw::extent( const QPen& pen, const QFont& font ) const{
+	int extent = 0;
+	if ( !invisible ){
+		extent = QwtScaleDraw::extent( pen, font );
+	}
+	return extent;
 }
 
 const String& QPScaleDraw::dateFormat() const { return m_dateFormat; }
@@ -413,6 +439,8 @@ QPCartesianAxis::QPCartesianAxis(QwtPlot::Axis master, QwtPlot::Axis slave) :
       case QwtPlot::yRight:   m_scaleDraw.setAlignment(QwtScaleDraw::RightScale);  break;
       case QwtPlot::xTop:     m_scaleDraw.setAlignment(QwtScaleDraw::TopScale);    break;
       case QwtPlot::xBottom:  m_scaleDraw.setAlignment(QwtScaleDraw::BottomScale); break;
+      default:
+    	  qDebug() << "Unrecognized Axis: "<<master;
     }
     
     setZ(BASE_Z_CARTAXIS);
@@ -425,8 +453,8 @@ QPCartesianAxis::~QPCartesianAxis() { }
 
 
 void QPCartesianAxis::draw_(QPainter* painter, const QwtScaleMap& xMap,
-                  const QwtScaleMap& yMap, const QRect& drawRect,
-                  unsigned int drawIndex, unsigned int drawCount) const {
+                  const QwtScaleMap& yMap, const QRect& /*drawRect*/,
+                  unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
 	
     QwtScaleDraw* s = const_cast<QwtScaleDraw*>(&m_scaleDraw);
     if(m_axis == QwtPlot::yLeft || m_axis == QwtPlot::yRight) 

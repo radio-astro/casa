@@ -443,7 +443,7 @@ Bool SpectralCollapser::_getQualitySubImg(const ImageInterface<Float>* image, co
 	return True;
 }
 
-Bool SpectralCollapser::_getQualitySubImgs(ImageTask::shCImFloat image, std::tr1::shared_ptr<SubImage<Float> >  subData, std::tr1::shared_ptr<SubImage<Float> >  subError) const{
+Bool SpectralCollapser::_getQualitySubImgs(ImageTask::shCImFloat image, std::tr1::shared_ptr<SubImage<Float> >&  subData, std::tr1::shared_ptr<SubImage<Float> >&  subError) const{
 
 	// check whether the image origin is FITS
 	const FITSQualityImage  * const qImg = dynamic_cast<const FITSQualityImage*const>(image.get());

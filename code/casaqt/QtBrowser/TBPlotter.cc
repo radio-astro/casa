@@ -458,7 +458,7 @@ void TBPlotter::doPlot(bool overplot) {
         if(xs.size() > 0) {
             xName += " [";
             for(unsigned int i = 0; i < xs.size(); i++) {
-	        if (i != xAxis) {
+	        if (i != static_cast<unsigned int>(xAxis)) {
 		  xName += TBConstants::itoa(xs.at(i));
 		} else {
 		  xName += "*";
@@ -474,7 +474,7 @@ void TBPlotter::doPlot(bool overplot) {
         if(ys.size() > 0) {
             yName += " [";
             for(unsigned int i = 0; i < ys.size(); i++) {
-	        if (i != yAxis) {
+	        if (i != static_cast<unsigned int>(yAxis)) {
 		  yName += TBConstants::itoa(ys.at(i));
 		} else {
 		  yName += "*";
@@ -742,7 +742,7 @@ void TBPlotter::openNewPlotter() {
     plotter->show();
 }
 
-void TBPlotter::tableOpened(String table, String fullpath) {
+void TBPlotter::tableOpened(String table, String /*fullpath*/) {
     tableChooser->addItem(table.c_str());
     tableChooser->setEnabled(true);
 }

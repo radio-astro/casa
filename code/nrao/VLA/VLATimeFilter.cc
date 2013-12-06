@@ -49,7 +49,8 @@ VLATimeFilter::VLATimeFilter(const MVEpoch& startTime, const MVEpoch& stopTime)
 }
 
 VLATimeFilter::VLATimeFilter(const VLATimeFilter& other) 
-  :itsStart(other.itsStart),
+  :VLAFilter(),
+   itsStart(other.itsStart),
    itsStop(other.itsStop)
 {
   DebugAssert(ok(), AipsError);

@@ -27,6 +27,7 @@
 #include <plotms/Data/PlotMSCacheBase.h>
 #include <plotms/Threads/ThreadCommunication.h>
 #include <synthesis/MSVis/UtilJ.h>
+#include <QDebug>
 
 namespace casa {
 
@@ -117,14 +118,17 @@ bool CacheThread::doWork(){
 		String error = "Error during cache ";
 		error += itsLoad ? "loading": "releasing";
 		error += ": " + err.getMesg();
+		qDebug() << error.c_str();
 		if ( threadController != NULL ){
 			threadController->setError( error );
 		}
 		success = false;
+
 	} catch(...) {
 		String error  = "Unknown error during cache ";
 		error += itsLoad ? "loading": "releasing";
 		error +="!";
+		qDebug() << error.c_str();
 		if ( threadController != NULL ){
 			threadController->setError( error );
 		}

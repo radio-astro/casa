@@ -3589,7 +3589,8 @@ int main(int argc, char *argv[]) {
       ("check-row-uniqueness", "The row uniqueness constraint will be checked in the tables where it's defined")
       ("bdf-slice-size", po::value<uint64_t>(&bdfSliceSizeInMb)->default_value(500),  "The maximum amount of memory expressed as an integer in units of megabytes (1024*1024) allocated for BDF data. The default is 500 (megabytes)") 
       //("parallel", "run with multithreading mode.")
-      ("lazy", "defers the production of the observational data in the MS Main table (DATA column) - Purely experimental, don't use in production !");
+      ("lazy", "defers the production of the observational data in the MS Main table (DATA column) - Purely experimental, don't use in production !")
+      ("with-pointing-correction", "add (ASDM::Pointing::encoder - ASDM::Pointing::pointingDirection) to the value to be written in MS::Pointing::direction - (related with JIRA tickets CSV-2878 and ICT-1532))");
 
     // Hidden options, will be allowed both on command line and
     // in config file, but will not be shown to the user.
@@ -3965,11 +3966,12 @@ int main(int argc, char *argv[]) {
     scansOptionInfo = "All scans of all exec blocks will be processed \n";
   }
 
-  bool	ignoreTime	   = vm.count("ignore-time") != 0;
-  bool	processSysPower	   = vm.count("no-syspower") == 0;
-  bool	processCalDevice   = vm.count("no-caldevice") == 0;
-  bool  processPointing	   = vm.count("no-pointing") == 0;
-  bool  processEphemeris   = vm.count("no-ephemeris") == 0;
+  bool	ignoreTime		= vm.count("ignore-time") != 0;
+  bool	processSysPower		= vm.count("no-syspower") == 0;
+  bool	processCalDevice	= vm.count("no-caldevice") == 0;
+  bool  processPointing		= vm.count("no-pointing") == 0;
+  bool  withPointingCorrection	= vm.count("with-pointing-correction") != 0;
+  bool  processEphemeris	= vm.count("no-ephemeris") == 0;
   //
   // Report the selection's parameters.
   //
@@ -3978,7 +3980,7 @@ int main(int argc, char *argv[]) {
   infostream << "Spectral resolution types requested : " << es_srt.str() << endl;
   infostream << "Time sampling requested : " << es_ts.str() << endl;
   infostream << "WVR uncorrected and|or corrected data requested : " << es_query_apc.str() << endl;
-  if (selectedScanRow_v.size()==0) { 
+  if (selectedScanRow_v.size() == 0) { 
     errstream.str("");
     errstream << "No scan number corresponding to your request. Can't go further.";
     error(errstream.str());
@@ -3994,6 +3996,7 @@ int main(int argc, char *argv[]) {
   if (!processSysPower)   infostream << "The SysPower table will not be processed." << endl;
   if (!processCalDevice)  infostream << "The CalDevice table will not be processed." << endl;
   if (!processPointing)   infostream << "The Pointing table will not be processed." << endl;
+  if (processPointing && withPointingCorrection ) infostream << "The correction (encoder - pointingDirection) will be applied" << endl;
   if (!processEphemeris)  infostream << "The Ephemeris table will not be processed." << endl;
 
   info(infostream.str());
@@ -4937,16 +4940,20 @@ int main(int argc, char *argv[]) {
 	    }
 
 	    // DIRECTION
-	    THETA = target.at(j).at(1).get();
-	    PHI   = -M_PI_2 - target.at(j).at(0).get();
-	    spherical1[0] = offset.at(j).at(0).get();
-	    spherical1[1] = offset.at(j).at(1).get();
+	    THETA			      = target.at(j).at(1).get();
+	    PHI				      = -M_PI_2 - target.at(j).at(0).get();
+	    spherical1[0]		      = offset.at(j).at(0).get();
+	    spherical1[1]		      = offset.at(j).at(1).get();
 	    rect(spherical1, cartesian1);
 	    eulmat(PSI, THETA, PHI, matrix3x3);
 	    matvec(matrix3x3, cartesian1, cartesian2);
 	    spher(cartesian2, spherical2);
-	    direction_[2*iMSPointingRow]  = spherical2[0];
-	    direction_[2*iMSPointingRow+1]= spherical2[1];
+	    direction_[2*iMSPointingRow]      = spherical2[0] ;
+	    direction_[2*iMSPointingRow+1]    = spherical2[1] ;
+	    if (withPointingCorrection) { // Cf CSV-2878 and ICT-1532
+	      direction_[2*iMSPointingRow]   += encoder.at(j).at(0).get() - pointingDirection.at(j).at(0).get();
+	      direction_[2*iMSPointingRow+1] += encoder.at(j).at(1).get() - pointingDirection.at(j).at(1).get() ;
+	    }
 
 	    // TARGET
 	    target_[2*iMSPointingRow]     = target.at(j).at(0).get();

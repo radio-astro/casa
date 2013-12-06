@@ -24,6 +24,7 @@
 //#
 #include "Preferences.qo.h"
 #include <QSettings>
+#include <QDebug>
 #include <limits>
 
 namespace casa {
@@ -53,7 +54,7 @@ Preferences::Preferences(QWidget *parent)
       displayLegend(true),
       logAmplitude(true),
       logUV(false),
-      xAxisUV(true),
+      xAxisUV(false),
       planeAveraged(true),
       planeIndex(0){
 
@@ -131,7 +132,9 @@ void Preferences::setPlaneCount( int planeCount ){
 	QString currentPlaneText = ui.planeLineEdit->text();
 	bool valid = false;
 	int currentPlane = currentPlaneText.toInt(&valid);
+
 	if ( currentPlane >= planeCount || !valid ){
+
 		ui.planeLineEdit->setText( "0");
 	}
 	QIntValidator* planeValidator = new QIntValidator( 0, planeCount - 1, this );
@@ -223,7 +226,7 @@ void Preferences::reset(){
 	else {
 		ui.singlePlaneRadio->setChecked( true );
 	}
-	ui.planeLineEdit->setText( "0");
+	ui.planeLineEdit->setText( QString::number(planeIndex) );
 	//Call axis changed to sync up the enable/disable state
 	xAxisChanged();
 	planeModeChanged();

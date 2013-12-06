@@ -283,7 +283,7 @@ public:
   virtual Int support(const VisBuffer& vb, const CoordinateSystem& cs)=0;
 
   virtual void setThreshold(const Float t){threshold_p=t;};
-  virtual const Float threshold(){return threshold_p;};
+  virtual Float threshold(){return  threshold_p;};
 
 
 protected:

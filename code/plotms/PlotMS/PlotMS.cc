@@ -31,6 +31,7 @@
 #include <plotms/Client/ClientFactory.h>
 #include <plotms/Actions/ActionFactory.h>
 #include <plotms/Actions/ActionCacheLoad.h>
+#include <plotms/Plots/PlotMSPlotParameterGroups.h>
 
 #include <QDebug>
 
@@ -110,6 +111,8 @@ void PlotMSApp::parametersHaveChanged(const PlotMSWatchedParameters& params,
                 if(!canv[i].null())
                     canv[i]->setCachedAxesStackImageSize(cis.first,cis.second);
         }*/
+
+
         if ( itsPlotter_ != NULL ){
         	itsPlotter_->setCanvasCachedAxesStackImageSize( cis.first, cis.second );
         }
@@ -219,11 +222,45 @@ bool PlotMSApp::updateCachePlot( PlotMSPlot* plot,
 	 bool result = loadCacheAction.doAction( this );
 	 return result;
 }
+
+void PlotMSApp::setCommonAxes(bool commonX, bool commonY ){
+	itsPlotter_->setCommonAxes( commonX, commonY );
+}
+
+bool PlotMSApp::isCommonAxisX() const {
+	return itsPlotter_->isCommonAxisX();
+}
+
+bool PlotMSApp::isCommonAxisY() const {
+	return itsPlotter_->isCommonAxisY();
+}
+
+void PlotMSApp::setAxisLocation( PlotAxis locationX, PlotAxis locationY ){
+	itsPlotter_->setAxisLocation( locationX, locationY );
+}
+
+PlotAxis PlotMSApp::getAxisLocationX() const {
+	return itsPlotter_->getAxisLocationX();
+}
+
+PlotAxis PlotMSApp::getAxisLocationY() const {
+	return itsPlotter_->getAxisLocationY();
+}
+
+bool PlotMSApp::isOperationCompleted() const {
+	return operationCompleted;
+}
+
+void PlotMSApp::setOperationCompleted( bool completed ){
+	operationCompleted = completed;
+}
+
 // Private Methods //
 
 void PlotMSApp::initialize(bool connectToDBus, bool userGui ) {
 
 	its_want_avoid_popups=false;
+	operationCompleted = true;
 	
     itsParameters_.addWatcher(this);
     ClientFactory::ClientType clientType = ClientFactory::GUI;

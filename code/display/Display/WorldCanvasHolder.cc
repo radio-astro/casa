@@ -136,10 +136,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		//If (there is nothing to display, and no master image has been
-		//designated) OR (the one that is going away is the CSMaster),
+		//                                                  designated)
+		//OR (the one that is going away is the CSMaster)
+		//OR (there is no master image designated and the one going
+		//                          away is in the canvas as CSMaster),
 		//tell the canvas there is no CS master.
+
 		if ( ( itsDisplayList.size() == 0 && controllingDD == NULL ) ||
-				controllingDD == &dData ){
+				controllingDD == &dData ||
+			(	worldCanvas()->isCSmaster(&dData) && controllingDD == NULL ) ){
 			worldCanvas()->csMaster() = NULL;
 		}
 
@@ -295,6 +300,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Bool masterFound = false;
 		if ( csMasterDD != NULL ){
 			masterFound = csMasterDD->sizeControl(*this, sizeControlAtts);
+		}
+		else if ( controllingDD != NULL ){
+			//If the master image is unregistered, it will no longer be in the world canvas,
+			//i.e., csMasterDD will be NULL.  However, it should still be the controllinDD for
+			//this class so we put it back in the world canvas for size control.
+			worldCanvas()->csMaster() = controllingDD;
+			masterFound =controllingDD->sizeControl(*this, sizeControlAtts);
 		}
 
 		// Even if master role is already taken, all sizeControl routines are still

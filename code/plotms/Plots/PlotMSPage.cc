@@ -25,9 +25,6 @@
 //#
 //# $Id: $
 #include <plotms/Plots/PlotMSPage.h>
-
-//#include <plotms/Gui/PlotMSPlotter.qo.h>
-//#include <plotms/GuiTabs/PlotMSToolsTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlot.h>
 
@@ -45,8 +42,6 @@ PlotMSPage::PlotMSPage(const PlotMSPage& copy) {
 PlotMSPage::~PlotMSPage() { }
 
 
-unsigned int PlotMSPage::pageNumber() const { return itsPageNum_; }
-
 unsigned int PlotMSPage::canvasRows() const { return itsCanvases_.size(); }
 unsigned int PlotMSPage::canvasCols() const {
     if(itsCanvases_.size() > 0) return itsCanvases_[0].size();
@@ -56,7 +51,6 @@ unsigned int PlotMSPage::canvasCols() const {
 
 PlotMSPage& PlotMSPage::operator=(const PlotMSPage& copy) {
     itsParent_ = copy.itsParent_;
-    itsPageNum_ = copy.itsPageNum_;
     itsCanvases_ = copy.itsCanvases_;
     itsCanvasOwners_ = copy.itsCanvasOwners_;
     return *this;
@@ -65,8 +59,8 @@ PlotMSPage& PlotMSPage::operator=(const PlotMSPage& copy) {
 
 // Private Methods //
 
-PlotMSPage::PlotMSPage(PlotMSPages& parent, unsigned int pageNumber) :
-        itsParent_(&parent), itsPageNum_(pageNumber) { }
+PlotMSPage::PlotMSPage(PlotMSPages& parent) :
+        itsParent_(&parent){ }
 
 
 void PlotMSPage::resize(unsigned int nrows, unsigned int ncols) {
@@ -155,89 +149,7 @@ void PlotMSPage::setupPage() {
     }
     plotter->setCanvasLayout(grid);
 }
-
-
-/////////////////////////////
-// PLOTMSPAGES DEFINITIONS //
-/////////////////////////////
-
-// Public Methods //
-
-PlotMSPages::PlotMSPages(const PlotMSPages& copy) {
-    operator=(copy); }
-
-PlotMSPages::~PlotMSPages() { }
-
-
-unsigned int PlotMSPages::currentPageNumber() const {
-    return itsCurrentPageNum_; }
-
-PlotMSPage PlotMSPages::currentPage() const {
-    return itsPages_[itsCurrentPageNum_]; }
-
-unsigned int PlotMSPages::totalPages() const { return itsPages_.size(); }
-
-
-PlotMSPages& PlotMSPages::operator=(const PlotMSPages& copy) {
-    itsManager_ = copy.itsManager_;
-    itsPages_ = copy.itsPages_;
-    itsCurrentPageNum_ = copy.itsCurrentPageNum_;
-    if(itsPages_.empty()) {
-        insertPage();
-        itsCurrentPageNum_ = 0;
-    }
-    return *this;
-}
-
-void PlotMSPages::firstPage() {
-    itsCurrentPageNum_ = 0;
-}
-
-void PlotMSPages::nextPage() {
-    if(itsCurrentPageNum_ < (totalPages() - 1)) {
-        ++itsCurrentPageNum_;
-    }
-}
-
-void PlotMSPages::previousPage() {
-    if(itsCurrentPageNum_ > 0) {
-        --itsCurrentPageNum_;
-    }
-}
-
-void PlotMSPages::lastPage() {
-    if(totalPages() > 0) {
-        itsCurrentPageNum_ = totalPages() - 1;
-    }
 }
 
 
-// Private Methods //
 
-PlotMSPages::PlotMSPages(PlotMSPlotManager& manager) : itsManager_(&manager),
-        itsCurrentPageNum_(0) {
-    insertPage(); }
-
-
-PlotMSPage PlotMSPages::insertPage(int index) {
-    PlotMSPage page(*this, index);
-    if(index >= 0 && (unsigned int)index < itsPages_.size()) {
-        itsPages_.insert(itsPages_.begin() + index, page);
-        if((unsigned int)index <= itsCurrentPageNum_) itsCurrentPageNum_++;
-    } else {
-        page.itsPageNum_ = itsPages_.size();
-        itsPages_.push_back(page);
-    }
-    return page;
-}
-
-void PlotMSPages::clearPages() {
-    itsManager_->plotter()->setCanvasLayout(PlotCanvasLayoutPtr());
-    for(unsigned int i = 0; i < itsPages_.size(); i++)
-        itsPages_[i].resize(0, 0);
-}
-
-void PlotMSPages::setupCurrentPage() {
-    itsPages_[itsCurrentPageNum_].setupPage(); }
-
-}

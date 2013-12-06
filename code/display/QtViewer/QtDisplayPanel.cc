@@ -182,7 +182,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Animation
 
 		connect(&tmr_, SIGNAL(timeout()),  SLOT(playStep_()));
-		setRate(animRate_);
+		setChannelMovieRate(animRate_);
+		setImageMovieRate(animRate_);
 
 
 		// Old-style 'connections' (registry of callbacks) with underlying canvases.
@@ -898,6 +899,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		displayDataHolder->setDDControlling( controllingDD );
+	}
+
+	QtDisplayData* QtDisplayPanel::getControllingDD() const {
+		return displayDataHolder->getDDControlling();
 	}
 
 
@@ -2228,13 +2233,42 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-	void QtDisplayPanel::revPlay() {
+	void QtDisplayPanel::revPlayChannelMovie( ) {
+		stop_();
+		setMode(true);
+		animating_ = -1;
+		tmr_.start();
+		emit animatorChange();
+	}
+	void QtDisplayPanel::revPlayImageMovie( ) {
+		stop_();
+		setMode(false);
 		animating_ = -1;
 		tmr_.start();
 		emit animatorChange();
 	}
 
-	void QtDisplayPanel::stop() {
+	void QtDisplayPanel::fwdPlayChannelMovie( ) {
+		stop_();
+		setMode(true);
+		animating_ = 1;
+		tmr_.start();
+		emit animatorChange();
+	}
+
+	void QtDisplayPanel::fwdPlayImageMovie( ) {
+		stop_();
+		setMode(false);
+		animating_ = 1;
+		tmr_.start();
+		emit animatorChange();
+	}
+
+	void QtDisplayPanel::stopChannelMovie() {
+		stop_();
+		emit animatorChange();
+	}
+	void QtDisplayPanel::stopImageMovie() {
 		stop_();
 		emit animatorChange();
 	}
@@ -2245,13 +2279,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 
-	void QtDisplayPanel::fwdPlay() {
-		animating_ = 1;
-		tmr_.start();
+	void QtDisplayPanel::setChannelMovieRate(int rate) {
+		animRate_ = max(minRate(), min(maxRate(),  rate  ));
+		tmr_.setInterval(1000/animRate_);
 		emit animatorChange();
 	}
-
-	void QtDisplayPanel::setRate(int rate) {
+	void QtDisplayPanel::setImageMovieRate(int rate) {
 		animRate_ = max(minRate(), min(maxRate(),  rate  ));
 		tmr_.setInterval(1000/animRate_);
 		emit animatorChange();
@@ -2613,7 +2646,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Int bind = bi.toInt(&ok);
 		if(ok) goToB(bind);
 		Int rate = rt.toInt(&ok);
-		if(ok) setRate(rate);
+		if(ok) {
+			setImageMovieRate(rate);
+			setChannelMovieRate(rate);
+		}
 
 		if(md!="#") setMode(md.toStdString());
 
@@ -2754,7 +2790,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				wc_ = wcl.getRight( );
 			}
 			if ( wc_ ) {
-				casa::viewer::ds9context context( wc_ );
+				casa::viewer::ds9context context( wc_, toolmgr );
 				casa::viewer::ds9parser parser;
 				try {
 					parser.parse_file( context, path.c_str( ) );

@@ -213,8 +213,9 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 				annotAct_(0), mkRgnAct_(0), fboxAct_(0), cleanAct_(0), rgnMgrAct_(0), shpMgrAct_(0),
 				rc(viewer::getrc()), rcid_(rcstr), use_new_regions(true),
 				showdataoptionspanel_enter_count(0),
-				/*controlling_dd(0),*/ preferences(0),
-				animationHolder( NULL ), histogrammer( NULL ), colorHistogram( NULL ),
+				/*controlling_dd(0),*/ preferences(0), animationHolder( NULL ),
+				adjust_channel_animator(true), adjust_image_animator(true),
+				histogrammer( NULL ), colorHistogram( NULL ),
 				fitTool( NULL ), sliceTool( NULL ), imageManagerDialog(NULL),
 				clean_tool(0), regionDock_(0),
 				status_bar_timer(new QTimer( )),
@@ -396,20 +397,6 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 					mbpos == "bottom" ? Qt::BottomToolBarArea :
 							Qt::TopToolBarArea, mouseToolBar_);
 
-#if 0
-	//  addToolBarBreak();
-	QToolBar *atb =  addToolBar("another toolbar");
-	QToolButton *atb_play = new QToolButton(atb);
-	atb->addWidget(atb_play);
-	const QIcon icon4 = QIcon(QString::fromUtf8(":/icons/Anim4_Play.png"));
-	atb_play->setIcon(icon4);
-	atb_play->setIconSize(QSize(22, 22));
-	atb_play->resize(QSize(36, 36));
-	atb_play->setCheckable(True);
-	atb_play->setEnabled(True);
-	connect(atb_play, SIGNAL(clicked()),           SLOT(fwdPlay_()));
-#endif
-
 	// This tool bar is _public_; programmer can add custom interface to it.
 	customToolBar    = addToolBar("Custom Toolbar");
 	customToolBar->setObjectName("Custom Toolbar");
@@ -570,7 +557,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	dpSaveAct_ ->setToolTip("Save Display Panel State to File");
 	profileAct_->setToolTip("Open the Spectral Profile Tool");
 	momentsCollapseAct_->setToolTip("Calculate Moments/Collapse the Image Cube along the Spectral Axis.");
-	histogramAct_->setToolTip("Histogram Functionality");
+	histogramAct_->setToolTip("Histogram Statistical Analysis Tool");
 	fitAct_->setToolTip( "Interactive 2D Fitting");
 	dpRstrAct_ ->setToolTip("Restore Display Panel State from File");
 	// rgnMgrAct_ ->setToolTip("Save/Control Regions");
@@ -764,12 +751,16 @@ void QtDisplayPanelGui::initAnimationHolder() {
 		animationImageIndex = -1;
 
 		animationHolder = new AnimatorHolder( this, this );
-		connect(animationHolder, SIGNAL(revPlay()), SLOT(revPlay_()));
-		connect(animationHolder, SIGNAL(fwdPlay()), SLOT(fwdPlay_()));
-		connect(animationHolder, SIGNAL(setMode(bool)), this, SLOT(animationModeChanged(bool)));
-		connect(animationHolder, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
-		connect(animationHolder, SIGNAL(movieChannels(int,bool,int,int,int)), this, SLOT(movieChannels(int,bool,int,int,int)));
-		connect(animationHolder, SIGNAL(stopMovie()), this, SLOT(movieStop()));
+		connect(animationHolder, SIGNAL(revPlayChannelMovie()), SLOT(revPlayChannelMovie_()));
+		connect(animationHolder, SIGNAL(revPlayImageMovie()), SLOT(revPlayImageMovie_()));
+		connect(animationHolder, SIGNAL(fwdPlayChannelMovie()), SLOT(fwdPlayChannelMovie_()));
+		connect(animationHolder, SIGNAL(fwdPlayImageMovie()), SLOT(fwdPlayImageMovie_()));
+		connect(animationHolder, SIGNAL(setChannelMode( )), this, SLOT(to_channel_mode( )));
+		connect(animationHolder, SIGNAL(setImageMode( )), this, SLOT(to_image_mode( )));
+		connect(animationHolder, SIGNAL(selectChannel(int)), this, SLOT(doSelectChannel(int)));
+		connect(animationHolder, SIGNAL(channelMovieState(int,bool,int,int,int)), this, SLOT(movieChannels(int,bool,int,int,int)));
+		connect(animationHolder, SIGNAL(stopImageMovie()), this, SLOT(movieStop()));
+		connect(animationHolder, SIGNAL(stopChannelMovie()), this, SLOT(movieStop()));
 		connect(animationHolder, SIGNAL(animationImageChanged(int)), this, SLOT(animationImageChanged(int)));
 
 		// Set interface according to the initial state of underlying animator.
@@ -816,7 +807,8 @@ void QtDisplayPanelGui::showColorHistogram(QtDisplayData* displayData ) {
 		connect( qdo_, SIGNAL(dataOptionsTabChanged(const QString&)),
 				this, SLOT( updateColorHistogram(const QString&)));
 	}
-	colorHistogram->show();
+	colorHistogram->showNormal();	// (Magic formula to bring a window up,
+	colorHistogram->raise();
 	colorHistogram->setDisplayData( displayData );
 }
 
@@ -848,8 +840,8 @@ void QtDisplayPanelGui::showHistogram() {
 		}
 	}
 
-
-	histogrammer->show();
+	histogrammer->showNormal();	// (Magic formula to bring a window up,
+	histogrammer->raise();
 }
 
 void QtDisplayPanelGui::hideHistogram() {
@@ -1042,7 +1034,8 @@ void QtDisplayPanelGui::initFit2DTool() {
 
 
 void QtDisplayPanelGui::showFitInteractive() {
-	fitTool->show();
+	fitTool->showNormal();	// (Magic formula to bring a window up,
+	fitTool->raise();
 }
 
 void QtDisplayPanelGui::hideFit2DTool() {
@@ -1192,6 +1185,8 @@ QtDisplayData* QtDisplayPanelGui::createDD( String path, String dataType,
 		bool masterCoordinate, bool masterSaturation, bool masterHue,
 		const viewer::DisplayDataOptions &ddo,
 		const viewer::ImageProperties &props ) {
+	adjust_channel_animator = true;
+	adjust_image_animator = true;
 	QtDisplayData* qdd = new QtDisplayData( this, path, dataType, displayType, ddo, props );
 	return processDD( path, dataType, displayType, autoRegister,
 			insertPosition, masterCoordinate, masterSaturation, masterHue, qdd, ddo  );
@@ -1314,6 +1309,15 @@ void QtDisplayPanelGui::updateFrameInformationImage(){
 		iter++;
 	}
 	animationHolder->setModeEnabled( uniqueImages.size() );
+	//Update the animator to reflect the current axis state.
+	if ( adjust_image_animator ) {
+		adjust_image_animator = false;
+		if ( animationHolder->getImageCount( ) <= 1 ) {
+			animationHolder->foldImage( );
+		} else {
+			animationHolder->unfoldImage( );
+		}
+	}
 }
 
 int QtDisplayPanelGui::numFrames( ) {
@@ -1381,12 +1385,15 @@ int QtDisplayPanelGui::getBoundedChannel( int channelNumber ) const {
 	}
 	return boundedChannel;
 }
-void QtDisplayPanelGui::addDDSlot(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img) {
-	std::tr1::shared_ptr<ImageInterface<Float> > imgPtr(img);
-	addDD( path, dataType, displayType, autoRegister, tmpData, imgPtr );
+void QtDisplayPanelGui::addDDSlot(String path, String dataType, String displayType,
+		Bool autoRegister, Bool tmpData, std::tr1::shared_ptr<ImageInterface<Float> > img) {
+	//std::tr1::shared_ptr<ImageInterface<Float> > imgPtr(img);
+	addDD( path, dataType, displayType, autoRegister, tmpData, img );
+
 }
 
-QtDisplayData* QtDisplayPanelGui::addDD(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, std::tr1::shared_ptr<ImageInterface<Float> > img) {
+QtDisplayData* QtDisplayPanelGui::addDD(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData,
+		std::tr1::shared_ptr<ImageInterface<Float> > img) {
 	// create a new DD
 	QtDisplayData* dd = NULL;
 	if ( ! img ) {
@@ -1605,7 +1612,6 @@ Bool QtDisplayPanelGui::removeDD(QtDisplayData*& qdd) {
 		}
 
 		notifyDDRemoval( qdd );
-		qdd->done();
 		delete qdd;
 		qdd = NULL;
 		updateFrameInformation();
@@ -1624,7 +1630,7 @@ void QtDisplayPanelGui::loadRegions( const QString &path, const QString &type ) 
 }
 void QtDisplayPanelGui::loadRegions( const std::string &path, const std::string &type ) {
 	if ( logger_did_region_warning == false ) {
-		logger << LogIO::WARN
+		logger << LogIO::NORMAL
 				<< "currently only supports rectangle, ellipse, symbol (somewhat), and polygon region shapes"
 				<< LogIO::POST;
 		logger_did_region_warning = true;
@@ -1783,7 +1789,12 @@ void QtDisplayPanelGui::updateViewedImage(){
 	}
 
 	//Update the title to the 'Channel' Animator if the axis changes type.
-	QtDisplayData* newViewedImage = qdp_->getChannelDD( -1 );
+	int lookUpIndex = -1;
+	if ( qdp_ != NULL && !qdp_->modeZ() ){
+		lookUpIndex = animationImageIndex;
+	}
+
+	QtDisplayData* newViewedImage = qdp_->getChannelDD( lookUpIndex );
 	if ( newViewedImage != NULL ){
 
 		//Disconnect listening to the previous 'channel' DD.
@@ -1798,10 +1809,18 @@ void QtDisplayPanelGui::updateViewedImage(){
 				this, SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )),
 				Qt::UniqueConnection );
 
-		//Up date the animator to reflect the current axis state.
+		//Update the animator to reflect the current axis state.
 		if ( animationHolder != NULL ){
 			String zAxisName = newViewedImage->getZAxisName();
 			animationHolder->setChannelZAxis( zAxisName.c_str());
+			if ( adjust_channel_animator ) {
+				adjust_channel_animator = false;
+				if ( animationHolder->getChannelCount( ) <= 1 ) {
+					animationHolder->foldChannel( );
+				} else {
+					animationHolder->unfoldChannel( );
+				}
+			}
 		}
 	}
 }
@@ -2278,8 +2297,8 @@ void QtDisplayPanelGui::showImageProfile() {
 								profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
 						connect( pdd, SIGNAL(spectrumChanged(String, String, String )),
 								profile_, SLOT(changeSpectrum(String, String, String )));
-						connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool, ImageInterface<Float>* )),
-								this, SLOT(addDDSlot(String, String, String, Bool, Bool, ImageInterface<Float>*)));
+						connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool, std::tr1::shared_ptr<ImageInterface<Float> > )),
+								this, SLOT(addDDSlot(String, String, String, Bool, Bool, std::tr1::shared_ptr<ImageInterface<Float> >)));
 						connect(profile_, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
 						connect( this, SIGNAL(frameChanged(int)), profile_, SLOT(frameChanged(int)));
 						connect( profile_, SIGNAL(movieChannel(int,int)), this, SLOT(movieChannels(int, int)));
@@ -2310,7 +2329,8 @@ void QtDisplayPanelGui::showImageProfile() {
 						QMessageBox::warning( this, "Channel Image Problem", "The z-axis of the channel image is not frequency.");
 					} else {
 						profileDD_ = pdd;
-						profile_->show();
+						profile_->showNormal();
+						profile_->raise();
 						pdd->checkAxis();
 					}
 				} else {
@@ -3222,6 +3242,7 @@ void QtDisplayPanelGui::showImageManager() {
 		updateViewedImage();
 
 	}
-	imageManagerDialog->show();
+	imageManagerDialog->showNormal();
+	imageManagerDialog->raise();
 }
 }

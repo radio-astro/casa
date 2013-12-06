@@ -336,7 +336,8 @@ public:
 	// Parse parameters for summary
 	bool parseSummaryParameters(String field, String spw, String array, String feed,
 			String scan, String antenna, String uvrange, String timerange, String correlation,
-       	    String intent, String observation, Bool spwchan, Bool spwcorr, Bool basecnt);
+       	    String intent, String observation, Bool spwchan, Bool spwcorr, Bool basecnt,
+       	    String name);
 
 private:
 
@@ -350,7 +351,7 @@ private:
 	// Check if mode is valid against a list of known modes
 	bool isModeValid(String mode);
 
-	String validateDataColumn(String datacol);
+	Bool validateDataColumn(String datacol);
 
 	// Sink used to store history
 	LogSink logSink_p;

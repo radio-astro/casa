@@ -517,7 +517,7 @@ namespace casa {
                      xindex = 1;
                      yindex = 0;
                 }
-                RegionTextList rlist( path, matched_cs, qdd->imageProperties( ).shape( ) );
+                RegionTextList rlist( path, matched_cs, matched_cs.transposeShape(qdd->imageProperties( ).shape( )) );
                 Vector<AsciiAnnotationFileLine> aaregions = rlist.getLines( );
                 for ( unsigned int i=0; i < aaregions.size( ); ++i ) {
                     if ( aaregions[i].getType( ) != AsciiAnnotationFileLine::ANNOTATION ) continue;

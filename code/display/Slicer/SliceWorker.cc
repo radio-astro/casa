@@ -103,17 +103,23 @@ namespace casa {
 
 	void SliceWorker::compute() {
 		Assert( imageAnalysis != NULL );
-		clearResults();
+		try {
+			clearResults();
 
-		int resultCount = getSegmentCount();
-		for ( int i = 0; i < resultCount; i++ ) {
-			Vector<double> xSegmentValues( 2 );
-			Vector<double> ySegmentValues( 2 );
-			xSegmentValues[0] = verticesX[i];
-			ySegmentValues[0] = verticesY[i];
-			xSegmentValues[1] = verticesX[i+1];
-			ySegmentValues[1] = verticesY[i+1];
-			computeSlice( xSegmentValues, ySegmentValues );
+			int resultCount = getSegmentCount();
+			for ( int i = 0; i < resultCount; i++ ) {
+				Vector<double> xSegmentValues( 2 );
+				Vector<double> ySegmentValues( 2 );
+				xSegmentValues[0] = verticesX[i];
+				ySegmentValues[0] = verticesY[i];
+				xSegmentValues[1] = verticesX[i+1];
+				ySegmentValues[1] = verticesY[i+1];
+				computeSlice( xSegmentValues, ySegmentValues );
+			}
+		}
+		catch( AipsError& error ){
+			String errorMesg = error.getMesg();
+			qDebug() << "Could not compute slice: "<<errorMesg.c_str();
 		}
 	}
 

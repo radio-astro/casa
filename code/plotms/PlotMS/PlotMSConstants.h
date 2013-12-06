@@ -117,9 +117,11 @@ public:
 	      FLAG,FLAG_ROW,
 	      UVDIST,UVDIST_L,U,V,W,UWAVE,VWAVE,WWAVE,
 	      AZ0,EL0,HA0,PA0,
-	      ANTENNA,AZIMUTH,ELEVATION,PARANG,
+	      ANTENNA,AZIMUTH,ELEVATION,
+	      PARANG,
 	      GAMP,GPHASE,GREAL,GIMAG,
 	      DELAY,SWP,TSYS,OPAC,
+	      RADIAL_VELOCITY, RHO,
 	      NONE)
 
     PMS_ENUM2(Axis, axes, axesStrings, axis,
@@ -132,7 +134,7 @@ public:
 	      "Azimuth","Elevation","HourAngle","ParAngle",
 	      "Antenna","Ant-Azimuth","Ant-Elevation","Ant-ParAngle",
 	      "GainAmp","GainPhase","GainReal","GainImag",
-	      "Delay","SwPower","Tsys","Opac",
+	      "Delay","SwPower","Tsys","Opac","Radial Velocity [km/s]", "Distance (rho) [km]",
 	      "None")
 
     // </group>
@@ -236,7 +238,14 @@ public:
               "SysCal", "Weather")
     // </group>
               
+
+   // Enum for export range.
+   // <group>
+   PMS_ENUM1(ExportRange, exportRanges, exportRangeStrings, exportRange, PAGE_CURRENT, PAGE_ALL)
+   PMS_ENUM2(ExportRange, exportRanges, exportRangeStrings, exportRange, "Current Page", "All Pages")
+   // </group>
               
+
     // Colorizing Values //
               
     // Returns the list of unique colors used to colorize plots.
@@ -276,6 +285,9 @@ public:
     static const String DEFAULT_TITLE_FORMAT;
     // </group>
     
+    // Default values for export range;
+    static const ExportRange DEFAULT_EXPORT_RANGE;
+
     // Default values for PMS_PP_Display.
     // <group>
     static PlotSymbolPtr DEFAULT_UNFLAGGED_SYMBOL(PlotFactoryPtr factory);

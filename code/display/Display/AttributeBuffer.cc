@@ -596,18 +596,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Clear the the non-permanent attributes from the buffer.
 
 	void AttributeBuffer::clear() {
-		uInt i = 0;
 
+
+		uInt i = 0;
+		vector<uInt> indicesToDelete;
 		while (i < attributes.nelements() ) {
 			if (!nonDeletable[i]) {
-				delete attributes[i];
-				// then remove, not the other way around...
-				attributes.remove(i);
-				nonDeletable.remove(i);
+				indicesToDelete.push_back(i);
 				// do not increment i!!!!
-			} else {
+			/*} else {
 				i++;
+			}*/
 			}
+			i++;
+		}
+
+		//Reverse order so we don't screw up the indices.
+		for ( int j = static_cast<int>(indicesToDelete.size() - 1); j >= 0; j-- ){
+			Attribute* attribute = attributes[j];
+			attributes.remove(j);
+			nonDeletable.remove(j);
+			delete attribute;
 		}
 	}
 

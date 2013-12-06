@@ -25,55 +25,78 @@
 //#
 //# $Id: $
 #include <plotms/PlotMS/PlotMSIterParam.h>
+#include <QDebug>
 
 namespace casa {
 
 ///////////////////////////////////////
 // PLOTMSITERATIONPARM DEFINITIONS //
 ///////////////////////////////////////
-
+const String PlotMSIterParam::ITER_AXIS = "iterAxis";
+const String PlotMSIterParam::GLOBAL_SCALE_X = "globalScaleX";
+const String PlotMSIterParam::GLOBAL_SCALE_Y = "globalScaleY";
+const String PlotMSIterParam::COMMON_AXIS_X = "commonAxisX";
+const String PlotMSIterParam::COMMON_AXIS_Y = "commonAxisY";
+const String PlotMSIterParam::ROW_COUNT = "Nx";
+const String PlotMSIterParam::COL_COUNT = "Ny";
 
 // Non-Static //
 
-PlotMSIterParam::PlotMSIterParam() { setDefaults(); }
+PlotMSIterParam::PlotMSIterParam()
+{ setDefaults(); }
 PlotMSIterParam::~PlotMSIterParam() { }
 
 
 void PlotMSIterParam::fromRecord(const RecordInterface& record) {    
 
-  // Set defaults first (in case any missing bits in record)
-  setDefaults();
+	// Set defaults first (in case any missing bits in record)
+	setDefaults();
 
-  // Set from the Record 
-  if (record.isDefined("iterAxis"))
-    setIterAxis(record.asString("iterAxis"));
+	// Set from the Record
+	if (record.isDefined(ITER_AXIS)){
+		setIterAxis(record.asString(ITER_AXIS));
+	}
 
-  if (record.isDefined("xSelfScale"))
-    setXSelfScale(record.asBool("xSelfScale"));
+	if (record.isDefined(ROW_COUNT)){
+		setNx(record.asInt(ROW_COUNT));
+	}
 
-  if (record.isDefined("ySelfScale"))
-    setYSelfScale(record.asBool("ySelfScale"));
+	if (record.isDefined(COL_COUNT)){
+		setNy(record.asInt(COL_COUNT));
+	}
 
-  if (record.isDefined("Nx"))
-    setNx(record.asInt("Nx"));
+	if (record.isDefined(GLOBAL_SCALE_X)){
+		setGlobalScaleX(record.asBool(GLOBAL_SCALE_X));
+	}
 
-  if (record.isDefined("Ny"))
-    setNy(record.asInt("Ny"));
+	if (record.isDefined(GLOBAL_SCALE_Y)){
+		setGlobalScaleY(record.asBool(GLOBAL_SCALE_Y));
+	}
+
+	if (record.isDefined(COMMON_AXIS_X)){
+		setCommonAxisX(record.asBool(COMMON_AXIS_X));
+	}
+
+	if (record.isDefined(COMMON_AXIS_Y)){
+		setCommonAxisY(record.asBool(COMMON_AXIS_Y));
+	}
 
 }
 
 Record PlotMSIterParam::toRecord() const {
 
-  // Fill a record 
-  Record rec(Record::Variable);
-  rec.define("iterAxis",iterAxisStr());  // as String
-  rec.define("xSelfScale",xSelfScale_);
-  rec.define("ySelfScale",ySelfScale_);
-  rec.define("Nx",Nx_);
-  rec.define("Ny",Ny_);
+	// Fill a record
+	Record rec(Record::Variable);
+	rec.define(ITER_AXIS,iterAxisStr());
+	rec.define(COMMON_AXIS_X, commonAxisX_);
+	rec.define(COMMON_AXIS_Y, commonAxisY_);
+	rec.define(GLOBAL_SCALE_X, globalScaleX_);
+	rec.define(GLOBAL_SCALE_Y, globalScaleY_);
+	rec.define(ROW_COUNT,Nx_);
+	rec.define(COL_COUNT,Ny_);
 
-  // Return it
-  return rec;
+	// Return it
+	return rec;
 
 }
 
@@ -81,37 +104,43 @@ Record PlotMSIterParam::toRecord() const {
 
 bool PlotMSIterParam::operator==(const PlotMSIterParam& other) const {
 
-  return (iterAxis_ == other.iterAxis_ &&
-	  xSelfScale_ == other.xSelfScale_ &&
-	  ySelfScale_ == other.ySelfScale_ &&
-	  Nx_ == other.Nx_ && 
-	  Ny_ == other.Ny_);
+	return (iterAxis_ == other.iterAxis_ &&
+			Nx_ == other.Nx_ &&
+			Ny_ == other.Ny_) &&
+			commonAxisX_ == other.commonAxisX_ &&
+			commonAxisY_ == other.commonAxisY_ &&
+			globalScaleX_ == other.globalScaleX_ &&
+			globalScaleY_ == other.globalScaleY_;
 }
 
 
 void PlotMSIterParam::setDefaults() {    
 
-  setIterAxis(PMS::NONE);  // No iteration
-  setXSelfScale(False);
-  setYSelfScale(False);
-  setNx(1);
-  setNy(1);
-
+	setIterAxis(PMS::NONE);  // No iteration
+	setNx(1);
+	setNy(1);
+	setGlobalScaleX(False);
+	setGlobalScaleY(False);
+	setCommonAxisX(False);
+	setCommonAxisY(False);
 }
 
 String PlotMSIterParam::summary() const {
 
-  stringstream ss;
-  ss << boolalpha;
+	stringstream ss;
+	ss << boolalpha;
 
-  ss << "Iteration parameters:" << endl;
-  ss << " Iteration Axis = " << iterAxisStr() << endl;
-  ss << " X self-scale   = " << xSelfScale_ << endl;
-  ss << " Y self-scale   = " << ySelfScale_ << endl;
-  ss << " Nx             = " << Nx_ << endl;
-  ss << " Ny             = " << Ny_ << endl;
-  return ss.str();
+	ss << "Iteration parameters:" << endl;
+	ss << " Iteration Axis = " << iterAxisStr() << endl;
+
+	ss << " Nx             = " << Nx_ << endl;
+	ss << " Ny             = " << Ny_ << endl;
+	ss << " Global Scale X  = " << globalScaleX_ << endl;
+	ss << " Global Scale Y  = " << globalScaleY_ << endl;
+	ss << " Common Axis X   = " << commonAxisX_ << endl;
+	ss << " Common Axis Y   = " << commonAxisY_ << endl;
+	return ss.str();
 }
-  
+
 
 }

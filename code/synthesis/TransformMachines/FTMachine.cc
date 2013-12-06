@@ -50,6 +50,7 @@
 #include <synthesis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
+#include <images/Images/ImageUtilities.h>
 #include <casa/Containers/Block.h>
 #include <casa/Containers/Record.h>
 #include <casa/Arrays/ArrayIter.h>
@@ -951,16 +952,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
   Bool FTMachine::toRecord(String& error, RecordInterface& outRecord, 
-			   Bool withImage) {
+			   Bool withImage, const String diskimage) {
     // Save the FTMachine to a Record
     //
     outRecord.define("name", this->name());
     if(withImage){
-      
-      Record imrec;
-      if(image->toRecord(error, imrec))
-	outRecord.defineRecord("image", imrec);
-      
+      if(diskimage != ""){
+	try{
+	  PagedImage<Complex> imCopy(TiledShape(toVis_p ? griddedData.shape(): image->shape()), image->coordinates(), diskimage);
+	  toVis_p ? imCopy.put(griddedData) : imCopy.copyData(*image);
+	  ImageUtilities::copyMiscellaneous(imCopy, *image);
+	}
+	catch(...){
+	  throw(AipsError(String("Failed to save model image "+diskimage+String(" to disk")))); 
+	}
+	outRecord.define("diskimage", diskimage);
+	
+      }
+      else{
+	Record imrec;
+	image->resize(TiledShape(griddedData.shape()));
+	image->put(griddedData);
+	if(image->toRecord(error, imrec))
+	  outRecord.defineRecord("image", imrec);
+      }
     }
     outRecord.define("nantenna", nAntenna_p);
     outRecord.define("distance", distance_p);
@@ -1026,16 +1041,44 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     uvwMachine_p=0; //when null it is reconstructed from mImage_p and mFrame_p
     //mFrame_p is not necessary as it is generated in initMaps from mLocation_p
+    inRecord.get("nx", nx);
+    inRecord.get("ny", ny);
+    inRecord.get("npol", npol);
+    inRecord.get("nchan", nchan);
+    inRecord.get("nvischan", nvischan);
+    inRecord.get("nvispol", nvispol);
     cmplxImage_p=NULL;
+    inRecord.get("tovis", toVis_p);
     if(inRecord.isDefined("image")){
       cmplxImage_p=new TempImage<Complex>();
       image=&(*cmplxImage_p);
+      
       const Record rec=inRecord.asRecord("image");
       if(!cmplxImage_p->fromRecord(error, rec))
-	return False;      
+	return False;   
       
     }
-    
+    else if(inRecord.isDefined("diskimage")){
+      String theDiskImage;
+      inRecord.get("diskimage", theDiskImage);
+      try{
+	cmplxImage_p=new PagedImage<Complex> (theDiskImage);
+	image=&(*cmplxImage_p);
+      }
+      catch(...){
+	throw(AipsError(String("Failure to load ")+theDiskImage+String(" image from disk")));
+      }
+    }
+    if(toVis_p && !cmplxImage_p.null()) {
+	griddedData.resize(image->shape());
+	griddedData=image->get();
+    }
+    else if(!toVis_p){
+      IPosition gridShape(4, nx, ny, npol, nchan);
+      griddedData.resize(gridShape);
+      griddedData=Complex(0.0);
+    }
+
     nAntenna_p=inRecord.asuInt("nantenna");
     distance_p=inRecord.asDouble("distance");
     lastFieldId_p=inRecord.asInt("lastfieldid");
@@ -1054,12 +1097,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       mImage_p=mh.asMDirection();
     }
     
-    inRecord.get("nx", nx);
-    inRecord.get("ny", ny);
-    inRecord.get("npol", npol);
-    inRecord.get("nchan", nchan);
-    inRecord.get("nvischan", nvischan);
-    inRecord.get("nvispol", nvispol);
+   
     { const Record rec=inRecord.asRecord("mlocation_rec");
       MeasureHolder mh;
       if(!mh.fromRecord(error, rec))
@@ -1106,7 +1144,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     inRecord.get("usedoublegrid", useDoubleGrid_p);
     inRecord.get("cfstokes", cfStokes_p);
     inRecord.get("polinuse", polInUse_p);
-    inRecord.get("tovis", toVis_p);
+    
     
     inRecord.get("sumweight", sumWeight);
     if(toVis_p){
@@ -1688,7 +1726,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // storeImg(String("wt.im"),*(weightImageVec[0]));
     // storeImg(String("stokes.im"),*(resImageVec[0]));
 
-    cerr << "pblimit " << pbLimit_p << endl;
     normalizeImage( *(resImageVec[0]) , weightsVec[0], *(weightImageVec[0]) , dopsf, 
     		    //		    (Float)1e-03,
     		    (Float)pbLimit_p,

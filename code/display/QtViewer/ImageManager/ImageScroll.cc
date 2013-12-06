@@ -117,7 +117,7 @@ namespace casa {
 		return orderIndex;
 	}
 
-	int ImageScroll::getRegisteredIndex( int dropIndex )const{
+	int ImageScroll::getRegisteredIndex( int dropIndex, bool rastersOnly )const{
 		int count = 0;
 		int totalCount = 0;
 		for( QList<ImageView*>::const_iterator iter = images.begin();
@@ -126,7 +126,9 @@ namespace casa {
 				break;
 			}
 			if ( (*iter)->isRegistered() ){
-				count++;
+				if (!rastersOnly || (*iter)->isRaster()){
+					count++;
+				}
 			}
 			totalCount++;
 		}
@@ -336,20 +338,22 @@ namespace casa {
 
 
 	void ImageScroll::setViewedImage( int registrationIndex ){
-		int regIndex = 0;
+
 		//We are in channel mode.  Viewed image will be the
 		//last registered image.
 		if ( registrationIndex < 0 ){
 			int registrationCount = getRegisteredCount();
 			registrationIndex = registrationCount - 1;
 		}
+
+		int rasterIndex = 0;
 		for ( QList<ImageView*>::iterator iter = images.begin(); iter != images.end(); iter++ ) {
 			bool currentlyViewed = false;
-			if ( (*iter)->isRegistered() ){
-				if ( regIndex == registrationIndex ){
+			if ( (*iter)->isRegistered() && (*iter)->isRaster()){
+				if ( rasterIndex == registrationIndex ){
 					currentlyViewed = true;
 				}
-				regIndex++;
+				rasterIndex++;
 			}
 			(*iter)->setViewedImage( currentlyViewed );
 		}
@@ -357,7 +361,7 @@ namespace casa {
 
 	void ImageScroll::viewImage( ImageView* imageView ){
 		int dropIndex = this->getIndex( imageView );
-		int registrationIndex = this->getRegisteredIndex( dropIndex );
+		int registrationIndex = this->getRegisteredIndex( dropIndex, true );
 		emit animateToImage( registrationIndex );
 	}
 

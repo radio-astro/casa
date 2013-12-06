@@ -48,6 +48,7 @@ protected:
 private:
 	CurveType xScatter;
 	QList<CurveType> yScatters;
+	bool isOverlap( double minX, double maxX, double minY, double maxY ) const;
 	QVector<double> populateVector(FeatherCurveType::CurveType curveType );
 	void addScatterCurve( const QVector<double>& xVals, const QVector<double>& yVals,
 			double dataLimit, FeatherCurveType::CurveType curveType, bool sumCurve );

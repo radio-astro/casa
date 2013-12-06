@@ -103,9 +103,31 @@ void VisModelData::listModel(const MeasurementSet& thems){
     
 }
 
+void VisModelData::deleteDiskImage(MeasurementSet& theMS, const String& theKey){
+  TableRecord theRec;
+  if(!VisModelData::getModelRecord(theKey, theRec, theMS))
+    return;
+  if(theRec.isDefined("numft")){
+    Int numft=0;
+    numft=theRec.asInt("numft");
+    for (Int k=0; k < numft; ++k){
+      String ftname=String("ft_")+String::toString(k);
+      const Record& ftrec=theRec.asRecord(ftname);
+      if(ftrec.asRecord("container").isDefined("diskimage")){
+	String diskim=ftrec.asRecord("container").asString("diskimage");
+	if(Table::canDeleteTable(diskim))
+	  Table::deleteTable(diskim);
+      }
+
+    }
+  }
+
+
+}
 void VisModelData::removeRecordByKey(MeasurementSet& theMS, const String& theKey){
 
 
+  deleteDiskImage(theMS, theKey);
   if(Table::isReadable(theMS.sourceTableName()) &&theMS.source().nrow() > 0 ){
     if(theMS.source().keywordSet().isDefined(theKey)){
       Int rowid=theMS.source().keywordSet().asInt(theKey);
@@ -163,9 +185,18 @@ void VisModelData::clearModel(const MeasurementSet& thems){
 	  newTab.rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
       }
   }
+  ////Cleaning out orphaned image disk models
+  String srctable=thems.source().tableName();
+  Vector<String> possibleFT(2); 
+  possibleFT(0)=srctable+"/FT_MODEL*";
+  possibleFT(1)=theParts[0]+"/FT_MODEL*";
   
-
-
+  Vector<String> ftmods=Directory::shellExpand(possibleFT);
+  for (uInt kk=0; kk < ftmods.nelements(); ++kk){
+    if(Table::canDeleteTable(ftmods[kk])){
+      Table::deleteTable(ftmods[kk]);
+    }
+  }
 
 }
   void VisModelData::clearModel(const MeasurementSet& thems, const String field, const String specwindows){
@@ -634,6 +665,9 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     //  cerr << "keys " << k << "  is  " << newTab.rwKeywordSet().name(k) << " type " << newTab.rwKeywordSet().dataType(k) << endl;
     //}
     ////////////////////////
+    //if image for a given key is on disk and not incrementing ...lets remove it
+    if(!incremental) 
+      deleteDiskImage(newTab, elkey);
     putModelRecord(validfieldids, outRec, newTab);  
     //if(newTab.rwKeywordSet().isDefined(elkey))
     //	newTab.rwKeywordSet().removeField(elkey);

@@ -158,7 +158,7 @@ public:
     virtual void copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent,
                                      Bool allowShapeChange = False, Bool fetchIfNeeded = True);
 
-    virtual Vector<Int> getCorrelationNumbers () const;
+    virtual Vector<Int> getCorrelationTypes () const;
     virtual String getFillErrorMessage () const;
     virtual Double getFrequency (Int rowInBuffer, Int frequencyIndex, Int frame = FrameNotSpecified) const;
     virtual const Vector<Double> & getFrequencies (Int rowInBuffer,

@@ -2458,11 +2458,6 @@ Bool Imager::createFTMachine()
     useDoublePrecGrid=True;
 
   LogIO os(LogOrigin("imager", "createFTMachine()", WHERE));
-
-  // This next line is only a guess
-  Int numberAnt=((MeasurementSet&)*ms_p).antenna().nrow();
-  
-  
   
 
   Float padding;
@@ -4018,6 +4013,9 @@ Bool Imager::makePBImage(const CoordinateSystem& imageCoord,
   Double freq  = spectralWorld(0);
   Quantity qFreq( freq, "Hz" );
   String telName=telescopeName;
+  if(telName=="ALMA" &&  diam < 12.0)
+    telName="ACA";
+  //cerr << "Telescope Name is " << telName<< endl;
   PBMath::CommonPB whichPB;
   PBMath::enumerateCommonPB(telName, whichPB);  
   PBMath myPB;

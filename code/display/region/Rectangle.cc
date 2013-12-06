@@ -683,7 +683,11 @@ namespace casa {
 			pts[0].second = blc_y;
 			pts[1].first = trc_x;
 			pts[1].second = trc_y;
-			out.rectangle(wc_,pts);
+			output_region(out,wc_,pts);
+		}
+
+		bool Rectangle::output_region( ds9writer &out, WorldCanvas */*wc*/, const std::vector<std::pair<double,double> > &pts ) const {
+			return out.rectangle(wc_,pts);
 		}
 
 	}

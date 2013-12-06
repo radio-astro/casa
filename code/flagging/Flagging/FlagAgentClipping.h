@@ -36,6 +36,9 @@ public:
 
 protected:
 
+	// Common functionality for each visBuffer (don't repeat at the row level)
+	void preProcessBuffer(const vi::VisBuffer2 &visBuffer);
+
 	// Compute flags afor a given mapped visibility point
 	bool computeInRowFlags(const vi::VisBuffer2 &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row);
 
@@ -57,8 +60,11 @@ private:
 	Bool clipoutside_p;
 	Bool channelavg_p;
 	Bool clipzeros_p;
+	Bool weightcol_p;
 	Float clipmin_p;
 	Float clipmax_p;
+	Float original_clipmin_p;
+	Float original_clipmax_p;
 
 	// Specialization for the clipping case
 	bool (casa::FlagAgentClipping::*checkVis_p)(Float);

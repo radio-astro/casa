@@ -282,6 +282,7 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 	//
 
 	
+		
 	
 		
 		  
@@ -305,9 +306,11 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 		FlagCmdRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
 		                                           // by passing true in the second parameter
 		                                           // whose value by default is false.
+                if (false) cout << (unsigned long long) dummy;
 	}
 	
 
+	
 
 
 	// 
@@ -320,7 +323,7 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 		
 		
 			
-	FlagCmdRow*  FlagCmdTable::checkAndAdd(FlagCmdRow* x, bool skipCheckUniqueness) {
+	FlagCmdRow*  FlagCmdTable::checkAndAdd(FlagCmdRow* x, bool) {
 		if (getRowByKey(
 		
 			x->getTimeInterval()
@@ -443,7 +446,7 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<FlagCmdTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:flgcmd=\"http://Alma/XASDM/FlagCmdTable\" xsi:schemaLocation=\"http://Alma/XASDM/FlagCmdTable http://almaobservatory.org/XML/XASDM/3/FlagCmdTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n");
+		buf.append("<FlagCmdTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:flgcmd=\"http://Alma/XASDM/FlagCmdTable\" xsi:schemaLocation=\"http://Alma/XASDM/FlagCmdTable http://almaobservatory.org/XML/XASDM/3/FlagCmdTable.xsd\" schemaVersion=\"3\" schemaRevision=\"-1\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -565,7 +568,7 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<FlagCmdTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:flgcmd=\"http://Alma/XASDM/FlagCmdTable\" xsi:schemaLocation=\"http://Alma/XASDM/FlagCmdTable http://almaobservatory.org/XML/XASDM/3/FlagCmdTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n";
+		oss << "<FlagCmdTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:flgcmd=\"http://Alma/XASDM/FlagCmdTable\" xsi:schemaLocation=\"http://Alma/XASDM/FlagCmdTable http://almaobservatory.org/XML/XASDM/3/FlagCmdTable.xsd\" schemaVersion=\"3\" schemaRevision=\"-1\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='FlagCmdTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -683,7 +686,7 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
       throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "FlagCmd");
     
-    const ByteOrder* byteOrder;
+    const ByteOrder* byteOrder=0;
     if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
       // Then it's an "old fashioned" MIME file for tables.
       // Just try to deserialize it with Big_Endian for the bytes ordering.
@@ -940,7 +943,7 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
       throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "FlagCmd");
     
-    const ByteOrder* byteOrder;
+    const ByteOrder* byteOrder=0;
     if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
       // Then it's an "old fashioned" MIME file for tables.
       // Just try to deserialize it with Big_Endian for the bytes ordering.

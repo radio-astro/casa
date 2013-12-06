@@ -318,6 +318,7 @@ AgentFlagger::parseAgentParameters(Record agent_params)
 	String mode = "";
 	String agent_name = "";
 	Bool apply = true;
+    String datacolumn = "DATA";
 
 	// create a temporary vector of agents
 	std::vector<Record> listOfAgents;
@@ -348,34 +349,35 @@ AgentFlagger::parseAgentParameters(Record agent_params)
 		return false;
 	}
 
+    // Name for the logging output
+    if (! agentParams_p.isDefined("agentname")){
+        agent_name = mode;
+        agent_name.capitalize();
+        agentParams_p.define("agentname", agent_name);
+    }
+
+    agentParams_p.get("agentname", agent_name);
+
+    os << LogIO::DEBUG1 << "Parsing parameters for agent: "<<mode<< LogIO::POST;
+
 	// Validate datacolumn
 	if (mode.compare("tfcrop") == 0 or mode.compare("clip") == 0 or mode.compare("rflag") == 0
 			or mode.compare("display") == 0){
 
-		String dc = "";
 		if (agentParams_p.isDefined("datacolumn"))
-			agentParams_p.get("datacolumn", dc);
+			agentParams_p.get("datacolumn", datacolumn);
 
-		os << LogIO::NORMAL << "Validating data column "<<dc<<" based on input type"<< LogIO::POST;
+		os << LogIO::NORMAL << "Validating data column "<<datacolumn<<" based on input type"<< LogIO::POST;
 
-		String datacolumn = validateDataColumn(dc);
-		if (datacolumn.compare("") == 0){
+		if(!validateDataColumn(datacolumn)){
+	        os << LogIO::WARN << "Data column "<< datacolumn << " does not exist in input data"
+	                << LogIO::POST;
 			return false;
 		}
 
 		os << LogIO::DEBUG1 << "Will use data column "<< datacolumn <<  LogIO::POST;
 		agentParams_p.define("datacolumn", datacolumn);
 	}
-
-	// Name for the logging output
-	if (! agentParams_p.isDefined("name")){
-		agent_name = mode;
-		agent_name.capitalize();
-		agentParams_p.define("name", agent_name);
-
-	}
-
-	agentParams_p.get("name", agent_name);
 
 	// Enforce a default value for the apply parameter
 	if (! agentParams_p.isDefined("apply")){
@@ -399,7 +401,7 @@ AgentFlagger::parseAgentParameters(Record agent_params)
 
 		combinescans_p = combinescans_p || combine;
 
-		os << LogIO::DEBUGGING << "max ntime="<<max_p<<" and combinescans="<<
+		os << LogIO::DEBUG2 << "max ntime="<<max_p<<" and combinescans="<<
 				combinescans_p << LogIO::POST;
 
 	}
@@ -454,7 +456,7 @@ AgentFlagger::parseAgentParameters(Record agent_params)
 				String name = agent_name;
 				name = name.append("_");
 				name = name.append(pol);
-				agentParams_p.define("name", name);
+				agentParams_p.define("agentname", name);
 				listOfAgents.push_back(agentParams_p);
 			}
 		}
@@ -553,41 +555,14 @@ AgentFlagger::initAgents()
 	os<< LogIO::DEBUG1<< "There are initially "<< agents_config_list_p.size()<<
 			" agents in the list"<<LogIO::POST;
 
-	// Check if list has a mixed state of apply and unapply parameters
-	// If the list contains apply=True and False, the apply=True list will
-	// be hidden in the debug.
-	Bool mixed, apply0;
-	size_t list_size = agents_config_list_p.size();
-	if (list_size > 1){
-		Record agent_rec = agents_config_list_p[0];
-		agent_rec.get("apply", apply0);
-		for (size_t j=1; j < list_size; j++)
-		{
-			Bool apply;
-			agent_rec = agents_config_list_p[j];
-			agent_rec.get("apply", apply);
-			if (apply0 != apply){
-				mixed = true;
-				os << LogIO::DEBUGGING << "List has a mixed state"<<LogIO::POST;
-				break;
-			}
-			else {
-				mixed = false;
-			}
-		}
-	}
-	else if (list_size == 1){
-		mixed = false;
-	}
+    size_t list_size = agents_config_list_p.size();
 
 	// Send the logging of the re-applying agents to the debug
 	// as we are only interested in seeing the unapply action (flagcmd)
-	uChar loglevel = LogIO::DEBUGGING;
 	Bool retstate = true;
 
 	// Loop through the vector of agents
 	for (size_t i=0; i < list_size; i++) {
-
 
 		// Get agent record
 		Record agent_rec = agents_config_list_p[i];
@@ -598,16 +573,6 @@ AgentFlagger::initAgents()
 			String str(os.str());
 			cout << str << endl;
 
-		}
-
-		// Change the log level if apply=True in a mixed state
-		Bool apply = true;
-		if (agent_rec.isDefined("apply")) {
-			agent_rec.get("apply", apply);
-		}
-
-		if (mixed and apply){
-			agent_rec.define("loglevel", loglevel);
 		}
 
 		// Get the mode
@@ -634,13 +599,13 @@ AgentFlagger::initAgents()
 
 		// Agent's name
 		String agent_name;
-		agent_rec.get("name",agent_name);
+		agent_rec.get("agentname",agent_name);
 
 		FlagAgentBase *fa = 0;
 
 		try
 		{
-			// jagonzal: CAS-3943 (flagdata seg-faults when non-existent data column is to be read)
+			// CAS-3943 (flagdata seg-faults when non-existent data column is to be read)
 			Bool createAgent = true;
 			if (((mode.compare("tfcrop") == 0 or mode.compare("rflag") == 0
 					or mode.compare("clip") == 0 or mode.compare("display") == 0))
@@ -693,10 +658,12 @@ AgentFlagger::initAgents()
 			continue;
 		}
 
+/*
 		// Get the last summary agent to list the results back to the task
 		if (mode.compare("summary") == 0) {
 			summaryAgent_p = (FlagAgentSummary *) fa;
 		}
+*/
 
 		// Get the display agent.
 		if (mode.compare("display") == 0){
@@ -744,8 +711,8 @@ AgentFlagger::run(Bool writeflags, Bool sequential)
 
 
 	// Use the maximum ntime of the list
-	os << LogIO::DEBUGGING << "ntime for all agents will be "<< max_p << LogIO::POST;
-	os << LogIO::DEBUGGING << "combinescans for all agents will be "<< combinescans_p << LogIO::POST;
+	os << LogIO::DEBUG2 << "ntime for all agents will be "<< max_p << LogIO::POST;
+	os << LogIO::DEBUG2 << "combinescans for all agents will be "<< combinescans_p << LogIO::POST;
 
 	// Report to return
 	FlagReport combinedReport;
@@ -1078,64 +1045,51 @@ AgentFlagger::isModeValid(String mode)
 	return ret;
 }
 
-// ---------------------------------------------------------------------
-// AgentFlagger::validateDataColumn
-// Check if datacolumn is valid for the current type of input
-// Return validated datacolumn
-// ---------------------------------------------------------------------
-String
+
+Bool
 AgentFlagger::validateDataColumn(String datacol)
 {
-	String ret = "";
-	Bool checkcol = false;
-	datacol.upcase();
 
-	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__, WHERE));
+    String datacolumn = "";
+    Bool ret = false;
+    datacol.upcase();
 
-	// The validation depends on the type of input
-	if (isMS_p) {
-		if (datacol.compare("DATA") == 0 or datacol.compare("CORRECTED") == 0 or
-				datacol.compare("MODEL") == 0 or datacol.compare("RESIDUAL") == 0 or
-				datacol.compare("RESIDUAL_DATA") == 0 or datacol.compare("WEIGHT_SPECTRUM") == 0 or
-				datacol.compare("FLOAT_DATA") == 0)
-		{
-			checkcol = fdh_p->checkIfColumnExists(datacol);
-		}
-		if (!checkcol){
-			//Assign a default column for single-dish MSs
-			if (fdh_p->checkIfColumnExists("FLOAT_DATA"))
-				ret = "FLOAT_DATA";
-			else
-				ret = "DATA";
-		}
-		else
-			ret = datacol;
-	}
-	else {
-		// Input is a calibration table
-		if (datacol.compare("FPARAM") == 0 or (datacol.compare("CPARAM") == 0) or
-				(datacol.compare("SNR") == 0)) {
-			checkcol = fdh_p->checkIfColumnExists(datacol);
-		}
-		if (!checkcol){
-			//Assign a default column
-			if (fdh_p->checkIfColumnExists("FPARAM"))
-				ret = "FPARAM";
-			else if (fdh_p->checkIfColumnExists("CPARAM"))
-				ret = "CPARAM";
-			else
-				ret = "";
-			os << LogIO::WARN <<"Only FPARAM, CPARAM and SNR are supported for cal tables"<<LogIO::POST;
+    LogIO os(LogOrigin("AgentFlagger", __FUNCTION__, WHERE));
 
-		}
-		if (checkcol)
-			ret = datacol;
+    // The validation depends on the type of input
+    if (isMS_p) {
+        if (datacol.compare("DATA") == 0)
+            datacolumn = "DATA";
+        else if(datacol.compare("CORRECTED") == 0)
+            datacolumn = "CORRECTED_DATA";
+        else if(datacol.compare("MODEL") == 0)
+            datacolumn = "MODEL_DATA";
+        else if(datacol.compare("RESIDUAL") == 0)
+            datacolumn = "RESIDUAL";
+        else if(datacol.compare("RESIDUAL_DATA") == 0)
+            datacolumn = "RESIDUAL_DATA";
+        else if(datacol.compare("FLOAT_DATA") == 0)
+            datacolumn = "FLOAT_DATA";
+        else if(datacol.compare("WEIGHT_SPECTRUM") == 0)
+            datacolumn = "WEIGHT_SPECTRUM";
+        else if(datacol.compare("WEIGHT") == 0)
+            datacolumn = "WEIGHT";
+        else
+            datacolumn = "";
+    }
+    else {
+        // cal tables
+        if (datacol.compare("FPARAM") == 0 or (datacol.compare("CPARAM") == 0) or
+                (datacol.compare("SNR") == 0))
+            datacolumn = datacol;
+    }
 
-	}
+    // Check if requested column exist
+    if (fdh_p->checkIfColumnExists(datacolumn))
+        ret = true;
 
-	return ret;
+    return ret;
 }
-
 
 
 // ---------------------------------------------------------------------
@@ -1173,7 +1127,7 @@ AgentFlagger::parseManualParameters(String field, String spw, String array,
 	agent_record.define("uvrange", uvrange);
 	agent_record.define("observation", observation);
 	agent_record.define("apply", apply);
-	agent_record.define("name", agent_name);
+	agent_record.define("agentname", agent_name);
 
 	agent_record.define("autocorr", autocorr);
 
@@ -1218,7 +1172,7 @@ AgentFlagger::parseClipParameters(String field, String spw, String array, String
 	agent_record.define("uvrange", uvrange);
 	agent_record.define("observation", observation);
 	agent_record.define("apply", apply);
-	agent_record.define("name", agent_name);
+	agent_record.define("agentname", agent_name);
 
 	agent_record.define("datacolumn", datacolumn);
 	agent_record.define("clipminmax", clipminmax);
@@ -1268,7 +1222,7 @@ AgentFlagger::parseQuackParameters(String field, String spw, String array, Strin
 	agent_record.define("uvrange", uvrange);
 	agent_record.define("observation", observation);
 	agent_record.define("apply", apply);
-	agent_record.define("name", agent_name);
+	agent_record.define("agentname", agent_name);
 
 	agent_record.define("quackmode", quackmode);
 	agent_record.define("quackinterval", quackinterval);
@@ -1314,7 +1268,7 @@ AgentFlagger::parseElevationParameters(String field, String spw, String array, S
 	agent_record.define("uvrange", uvrange);
 	agent_record.define("observation", observation);
 	agent_record.define("apply", apply);
-	agent_record.define("name", agent_name);
+	agent_record.define("agentname", agent_name);
 
 	agent_record.define("lowerlimit", lowerlimit);
 	agent_record.define("upperlimit", upperlimit);
@@ -1362,7 +1316,7 @@ AgentFlagger::parseTfcropParameters(String field, String spw, String array, Stri
 	agent_record.define("uvrange", uvrange);
 	agent_record.define("observation", observation);
 	agent_record.define("apply", apply);
-	agent_record.define("name", agent_name);
+	agent_record.define("agentname", agent_name);
 
 	agent_record.define("ntime", ntime);
 	agent_record.define("combinescans", combinescans);
@@ -1419,7 +1373,7 @@ AgentFlagger::parseExtendParameters(String field, String spw, String array, Stri
 	agent_record.define("uvrange", uvrange);
 	agent_record.define("observation", observation);
 	agent_record.define("apply", apply);
-	agent_record.define("name", agent_name);
+	agent_record.define("agentname", agent_name);
 
 	agent_record.define("ntime", ntime);
 	agent_record.define("combinescans", combinescans);
@@ -1450,7 +1404,7 @@ AgentFlagger::parseSummaryParameters(String field, String spw, String array,
 		String feed, String scan, String antenna,
 		String uvrange,  String timerange, String correlation,
 		String intent, String observation,
-		Bool spwchan, Bool spwcorr, Bool basecnt)
+		Bool spwchan, Bool spwcorr, Bool basecnt, String name)
 {
 
 	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
@@ -1474,11 +1428,12 @@ AgentFlagger::parseSummaryParameters(String field, String spw, String array,
 	agent_record.define("array", array);
 	agent_record.define("uvrange", uvrange);
 	agent_record.define("observation", observation);
-	agent_record.define("name", agent_name);
+	agent_record.define("agentname", agent_name);
 
 	agent_record.define("spwchan", spwchan);
 	agent_record.define("spwcorr", spwcorr);
 	agent_record.define("basecnt", basecnt);
+	agent_record.define("name", name);
 
 	// Call the main method
 	parseAgentParameters(agent_record);

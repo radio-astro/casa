@@ -84,6 +84,7 @@ public:
     static const String PARAM_WIDTH; // int or uInt
     static const String PARAM_EXPORT_FILENAME; // String
     static const String PARAM_EXPORT_FORMAT; //String
+    static const String PARAM_EXPORT_RANGE; //String
     static const String PARAM_EXPORT_HIGHRES; // bool
     static const String PARAM_EXPORT_INTERACTIVE; // bool
     static const String PARAM_EXPORT_ASYNC;  // bool
@@ -276,7 +277,7 @@ private:
     bool plotParameters(int& plotIndex) const;
     
     // Helper for updating.
-    void update();
+    bool update();
 
     // helper for saving
     bool _savePlot(const Record& parameters);

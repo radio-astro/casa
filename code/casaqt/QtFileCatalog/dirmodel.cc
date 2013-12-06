@@ -227,7 +227,7 @@ bool DirModel::insertRows (int row, int count, const QModelIndex &parent){
     endInsertRows();
     return true;
 }
-void DirModel::appendData(const QString &lines)
+void DirModel::appendData(const QString &/*lines*/)
 {
     int count = rowCount();
     //setupModelData(lines, rootItem);

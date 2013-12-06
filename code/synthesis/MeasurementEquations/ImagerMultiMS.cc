@@ -103,6 +103,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 << LogIO::POST;
       return False;
     }
+    if(intent != ""){
+       os << LogIO::WARN << "does not support INTENT selection here " 
+	 << LogIO::POST;
+    }
     MeasurementSet thisms(msname, TableLock(TableLock::AutoNoReadLocking), 
 			      Table::Old);
     SimpleSubMS splitter(thisms);

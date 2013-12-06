@@ -202,6 +202,7 @@ class VisModelData {
   //put the Record by key if sourcerownum=-1 then it is saved in the main table
   //this default should only be used  if the optional SOURCE table in non-existant
   static void putRecordByKey(MeasurementSet& theMS, const String& theKey, const TableRecord& theRec, const Int sourceRowNum=-1);
+  static void deleteDiskImage(MeasurementSet& theMS, const String& theKey);
   Block<Vector<CountedPtr<ComponentList> > > clholder_p;
   Block<Vector<CountedPtr<FTMachine> > > ftholder_p;
   Block<Vector<Double> > flatholder_p;

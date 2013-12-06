@@ -336,7 +336,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       //  coords.list(logIO(), MDoppler::RADIO, IPosition(), IPosition());
       
       IPosition pbShape(4, convSize_p, convSize_p, 1, nBeamChans);
-      Int memtobeused=-1;
+      Int memtobeused=0;
       Long memtot=HostInfo::memoryFree();
       //check for 32 bit OS and limit it to 2Gbyte
       if( sizeof(void*) == 4){
@@ -547,6 +547,10 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       doneMainConv_p[actualConvIndex_p]=True;
       
     }
+    else{
+      convSize_p=(*convSizes_p[actualConvIndex_p])[0];
+
+    }
 
     //Apply the shift phase gradient
     convFunc.resize();
@@ -598,7 +602,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
     
     Double origwidth=freq.nelements()==1 ? 1e12 : (max(freq)-min(freq))/(freq.nelements()-1);
     ///Fractional bandwidth which will trigger mutiple PB in one spw
-    Double tol=(max(freq))*0.5/1000;
+    Double tol=(max(freq))*0.5/100;
     
     Int nchan=Int(lround((max(freq)-min(freq))/tol));
    
@@ -609,7 +613,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
 
     if(tol < origwidth) tol=origwidth;
     chanFreqs.resize();
-    if(nchan >= (freq.nelements()-1)) { indgen(chanMap); chanFreqs=freq; return;}
+    if(nchan >= (Int)(freq.nelements()-1)) { indgen(chanMap); chanFreqs=freq; return;}
     if((nchan==0) || (freq.nelements()==1)) { chanFreqs=Vector<Double>(1, freq[0]);chanMap.set(0); return;}
 
     //readjust the tolerance...
@@ -618,16 +622,21 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
     for (Int k=0; k < nchan; ++k)
       chanFreqs[k]=minfreq-origwidth+tol/2.0+tol*Double(k);
     Int activechan=0;
-    chanMap.set(0);
+    chanMap.set(-1);
     for (uInt k=0; k < chanMap.nelements(); ++k){
      
-      while((activechan< nchan) && fabs(freq[k]-chanFreqs[activechan]) > (tol/2.0)){
+      while((activechan< nchan) && Float(fabs(freq[k]-chanFreqs[activechan])) > Float(tol/2.0)){
 	//		cerr << "k " << k << " atcivechan " << activechan << " comparison " 
 	//     << freq[k] << "    " << chanFreqs[activechan]  << endl;	
 	++activechan;
       }
       if(activechan != nchan)
 	chanMap[k]=activechan;
+      //////////////////
+      if(chanMap[k] < 0)
+	cerr << "freq diffs " << freq[k]-chanFreqs << "  TOL " << tol/2.0 << endl;
+
+      ///////////////////////////
       activechan=0;
     }
 
@@ -636,7 +645,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
 
 
   Bool SimplePBConvFunc::checkPBOfField(const VisBuffer& vb){
-    Int fieldid=vb.fieldId();
+    //Int fieldid=vb.fieldId();
     String msid=vb.msName(True);
     /*
      if(convFunctionMap_p.ndefined() > 0){

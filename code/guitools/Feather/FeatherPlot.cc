@@ -100,26 +100,33 @@ void FeatherPlot::resetPlotBounds(){
 void FeatherPlot::setAxisLabels(){
 	const QString AMPLITUDE = "Amplitude";
 	QString amplitudeStr = AMPLITUDE;
+	const QString Y_UNITS = "(Jansky)";
+	amplitudeStr = amplitudeStr + Y_UNITS;
 	if ( isLogAmplitude() ){
-		amplitudeStr = "Log("+amplitudeStr+")";
+		amplitudeStr = "Log["+amplitudeStr+"]";
 	}
+
 	const QString DISTANCE = "Distance";
 	QString distanceStr = DISTANCE;
-	if ( isLogUV()){
-		distanceStr = "Log("+distanceStr+")";
-	}
 	distanceStr = distanceStr + "(m)";
-	const QString Y_UNITS = " (Jansky)";
+	if ( isLogUV()){
+		distanceStr = "Log["+distanceStr+"]";
+	}
+
+
 	if ( plotType==SCATTER_PLOT ){
-		axisLabels[QwtPlot::xBottom] = /*"Low Resolution " +*/ amplitudeStr + Y_UNITS;
-		axisLabels[QwtPlot::yLeft] = /*"High Resolution " +*/ amplitudeStr + Y_UNITS;
+		axisLabels[QwtPlot::xBottom] = amplitudeStr;
+		axisLabels[QwtPlot::yLeft] = amplitudeStr;
 		axisLabels[QwtPlot::yRight] = axisLabels[QwtPlot::yLeft];
 	}
 	else {
 		axisLabels[QwtPlot::xBottom] = distanceStr;
-		axisLabels[QwtPlot::yLeft] = /*"Slice "+*/amplitudeStr + Y_UNITS;
+		axisLabels[QwtPlot::yLeft] = amplitudeStr;
 		axisLabels[QwtPlot::yRight] = "Weight "+AMPLITUDE;
 	}
+
+
+
 	if ( axisWidgets[QwtPlot::xBottom] != NULL ){
 		axisWidgets[QwtPlot::xBottom]->setAxisLabel(axisLabels[QwtPlot::xBottom]);
 	}

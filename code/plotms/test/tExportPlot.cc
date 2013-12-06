@@ -35,6 +35,10 @@
 #include <synthesis/MSVis/UtilJ.h>
 #include <casa/namespace.h>
 #include <QApplication>
+
+/**
+ * Tests whether a simple plot can be exported.
+ */
 int main(int /*argc*/, char** /*argv[]*/) {
 
 	String dataPath = tUtil::getFullPath( "pm_ngc5921.ms" );

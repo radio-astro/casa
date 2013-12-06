@@ -79,14 +79,14 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-	static std::string record_to_string( const Record &rec ) {
+	/*static std::string record_to_string( const Record &rec ) {
 		ostringstream os;
 		os << rec;
 		std::string result = os.str( );
 		// std::vector<char> r = std::for_each(result.begin( ),result.end( ),viewer::filter<char>('\n'));
 		// return std::string(r.begin(),r.end());
 		return std::for_each(result.begin( ),result.end( ),viewer::filter<char,std::string>('\n'));
-	}
+	}*/
 
 
 	template <typename T> class anylt {
@@ -361,7 +361,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							panel_->logIO( ) << "generating temporary image \'" << outpath << "'" << LogIO::POST;
 							ImageRegridder regridder(im_, String(outpath), regrid_to->imageInterface( ) );
 							regridder.setMethod(method);
-							regridder.setSpecAsVelocity(False);
+							regridder.setSpecAsVelocity(True);
 							im_ = regridder.regrid(True);
 							// std::auto_ptr<ImageInterface<Float> > imptr(im_);
 						}

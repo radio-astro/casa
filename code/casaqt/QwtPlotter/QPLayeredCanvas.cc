@@ -533,7 +533,7 @@ Bool QPLayeredCanvas::isDrawing() const {
 }
 
 void QPLayeredCanvas::printItems(QPainter* painter, const QRect& rect,
-        const QwtScaleMap maps[axisCnt], const QwtPlotPrintFilter& pf) const {
+        const QwtScaleMap maps[axisCnt], const QwtPlotPrintFilter& /*pf*/) const {
     m_parent->logMethod(CLASS_NAME, "printItems", true);
     
     // Determine total draw segments.

@@ -72,7 +72,7 @@ void QtPlotHistogram::draw(QPainter *painter, const QwtScaleMap &xMap,  const Qw
 
     painter->setPen(QPen(color_));
 
-    const int x0 = xMap.transform(baseline());
+    //const int x0 = xMap.transform(baseline());
     const int y0 = yMap.transform(baseline());
 
     for ( int i = 0; i < (int)iData.size(); i++ ) {

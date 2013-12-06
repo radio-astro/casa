@@ -25,7 +25,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 FlagAgentClipping::FlagAgentClipping(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube, Bool flag):
-		FlagAgentBase(dh,config,IN_ROWS,writePrivateFlagCube,flag)
+						FlagAgentBase(dh,config,IN_ROWS,writePrivateFlagCube,flag)
 {
 	setAgentParameters(config);
 
@@ -49,11 +49,11 @@ FlagAgentClipping::setAgentParameters(Record config)
 	exists = config.fieldNumber ("clipzeros");
 	if (exists >= 0)
 	{
-	        if( config.type(exists) != TpBool )
-	        {
-			 throw( AipsError ( "Parameter 'clipzeros' must be of type 'bool'" ) );
-	        }
-		
+		if( config.type(exists) != TpBool )
+		{
+			throw( AipsError ( "Parameter 'clipzeros' must be of type 'bool'" ) );
+		}
+
 		clipzeros_p = config.asBool("clipzeros");
 	}
 	else
@@ -67,11 +67,11 @@ FlagAgentClipping::setAgentParameters(Record config)
 	exists = config.fieldNumber ("clipoutside");
 	if (exists >= 0)
 	{
-	        if( config.type(exists) != TpBool )
-	        {
-			 throw( AipsError ( "Parameter 'clipoutside' must be of type 'bool'" ) );
-	        }
-		
+		if( config.type(exists) != TpBool )
+		{
+			throw( AipsError ( "Parameter 'clipoutside' must be of type 'bool'" ) );
+		}
+
 		clipoutside_p = config.asBool("clipoutside");
 	}
 	else
@@ -81,17 +81,24 @@ FlagAgentClipping::setAgentParameters(Record config)
 
 	*logger_p << logLevel_p << " clipoutside is " << clipoutside_p << LogIO::POST;
 
+	String datacol = "";
+	weightcol_p = false;
+	exists = config.fieldNumber ("datacolumn");
+	if (exists >= 0)
+	{
+		datacol = config.asString("datacolumn");
+	}
 
 	exists = config.fieldNumber ("clipminmax");
 	if (exists >= 0)
 	{
-	        if( config.type(exists) != TpArrayDouble && config.type(exists) != TpArrayFloat && config.type(exists) != TpArrayInt )
-	        {
-			 throw( AipsError ( "Parameter 'clipminmax' must be of type 'array double' : [minval,maxval]" ) );
-	        }
-		
+		if( config.type(exists) != TpArrayDouble && config.type(exists) != TpArrayFloat && config.type(exists) != TpArrayInt )
+		{
+			throw( AipsError ( "Parameter 'clipminmax' must be of type 'array double' : [minval,maxval]" ) );
+		}
+
 		Array<Double> cliprange = config.asArrayDouble("clipminmax");
-		if (cliprange.size()==2)
+		if (cliprange.size() == 2)
 		{
 			Bool deleteIt = False;
 			clipmin_p = cliprange.getStorage(deleteIt)[0];
@@ -100,12 +107,23 @@ FlagAgentClipping::setAgentParameters(Record config)
 			*logger_p << logLevel_p << " clipmax is " << clipmax_p << LogIO::POST;
 
 			clipminmax_p = true;
+
+			// for the moment, treat WEIGHT as if it was WEIGHT_SPECTRUM,
+			// so the clipminmax given by the user is divided by the
+			// number of channels inside preProcessBuffer()
+			if (datacol.compare("WEIGHT") == 0)
+			{
+				weightcol_p = true;
+				original_clipmin_p = clipmin_p;
+				original_clipmax_p = clipmax_p;
+			}
 		}
 		else
 		{
 			clipminmax_p = false;
 			*logger_p << logLevel_p << " clipminmax range not provided" << LogIO::POST;
 		}
+
 	}
 	else
 	{
@@ -163,11 +181,11 @@ FlagAgentClipping::setAgentParameters(Record config)
 	exists = config.fieldNumber ("channelavg");
 	if (exists >= 0)
 	{
-	        if( config.type(exists) != TpBool )
-	        {
-			 throw( AipsError ( "Parameter 'channelavg' must be of type 'bool'" ) );
-	        }
-		
+		if( config.type(exists) != TpBool )
+		{
+			throw( AipsError ( "Parameter 'channelavg' must be of type 'bool'" ) );
+		}
+
 		channelavg_p = config.asBool("channelavg");
 	}
 	else
@@ -181,9 +199,28 @@ FlagAgentClipping::setAgentParameters(Record config)
 	return;
 }
 
+void
+FlagAgentClipping::preProcessBuffer(const vi::VisBuffer2 &visBuffer)
+{
+
+	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
+
+	// Only done if datacolumn is WEIGHT
+	if (weightcol_p)
+	{
+		Int nChannels;
+		nChannels = visBuffer.nChannels();
+		clipmin_p = original_clipmin_p/nChannels;
+		clipmax_p = original_clipmax_p/nChannels;
+	}
+	*logger_p << LogIO::DEBUG1 << " clipmin is " << clipmin_p << LogIO::POST;
+	*logger_p << LogIO::DEBUG1 << " clipmax is " << clipmax_p << LogIO::POST;
+
+}
+
 bool
 FlagAgentClipping::computeInRowFlags(const vi::VisBuffer2 &/*visBuffer*/, VisMapper &visibilities,
-                                     FlagMapper &flags, uInt row)
+		FlagMapper &flags, uInt row)
 {
 	// Get flag cube size
 	Float visExpression;

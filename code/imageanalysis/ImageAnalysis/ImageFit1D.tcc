@@ -182,6 +182,9 @@ template <class T>  Bool ImageFit1D<T>::setData (
 	convertArray(y2, y);
 	if (yfunc) {
 		y2 = (*yfunc)(y2);
+		// in some cases, the supplied function will return NAN values, eg
+		// log(y) will return NAN for nonpositive y values. Just mask those.
+		mask = mask && ! isNaN(y2);
 	}
 	Vector<Double> w2(weights.shape());
 	convertArray(w2, weights);

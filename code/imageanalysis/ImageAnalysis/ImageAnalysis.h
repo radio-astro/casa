@@ -464,38 +464,12 @@ class ImageAnalysis
     Record* echo(Record& v, const Bool godeep = False);
 
 
-    //Functions to get you back a spectral profile at direction position x, y.
-    //x, y are to be in the world coord value or pixel value...user specifies
-    //by parameter xytype ("world" or "pixel").
-    //On success returns true
-    //return value of profile is in zyaxisval, zxaxisval contains the spectral
-    //values at which zyaxisval is evaluated its in the spectral type
-    //specified by specaxis...possibilities are "pixel", "frequency", "radio velocity"
-    //"optical velocity", "wavelength" or "air wavelength" (the code checks for the
-    //keywords "pixel", "freq", "vel", "optical", and "radio" in the string)
-    // if "vel" is found but no "radio" or "optical", the full relativistic velocity
-    // is generated (MFrequency::RELATIVISTIC)
-    // xunits determines the units of the x-axis values...default is "GHz" for
-    // freq and "km/s" for vel, "mm" for wavelength and "um" for "air wavelength"
-    //PLEASE note that the returned value of zyaxisval are the units of the image
-    //specframe can be a valid frame from MFrequency...i.e LSRK, LSRD etc...
-    Bool getFreqProfile(const Vector<Double>& xy,
-   		 Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
-   		 const String& xytype="world",
-   		 const String& specaxis="freq",
-   		 const Int& whichStokes=0,
-   		 const Int& whichTabular=-1,
-   		 const Int& whichLinear=0,
-   		 const String& xunits="",
-   		 const String& specframe="",
-   		 const Int& whichQuality=0,
-   		 const String& restValue="");
 
-    //how about using this ?
-    //for x.shape(xn) & y shape(yn)
-    //if xn == yn == 1, single point
-    //if xn == yn == 2, rectangle
-    //if (xn == yn) > 2, polygon (could originate from ellipse)
+
+    //The parameter shape is used to distinguish between an ellipitcal
+    //region and a rectangular region, both of which have Vectors of size 2.
+    //In other cases, the type of region is determined by the number of points
+    //passed in.
     Bool getFreqProfile(const Vector<Double>& x,
 			const Vector<Double>& y,
 			Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
@@ -509,7 +483,8 @@ class ImageAnalysis
 			const Int &combineType=0,
 			const Int& whichQuality=0,
 			const String& restValue="",
-			Int beamChannel = -1);
+			Int beamChannel = -1,
+			const String& shape="rectangle");
 
     // Return a record of the associates ImageInterface 
     Bool toRecord(RecordInterface& rec);
@@ -534,6 +509,33 @@ class ImageAnalysis
 
 
  private:
+    //Used for single point extraction.
+    //Functions to get you back a spectral profile at direction position x, y.
+     //x, y are to be in the world coord value or pixel value...user specifies
+     //by parameter xytype ("world" or "pixel").
+     //On success returns true
+     //return value of profile is in zyaxisval, zxaxisval contains the spectral
+     //values at which zyaxisval is evaluated its in the spectral type
+     //specified by specaxis...possibilities are "pixel", "frequency", "radio velocity"
+     //"optical velocity", "wavelength" or "air wavelength" (the code checks for the
+     //keywords "pixel", "freq", "vel", "optical", and "radio" in the string)
+     // if "vel" is found but no "radio" or "optical", the full relativistic velocity
+     // is generated (MFrequency::RELATIVISTIC)
+     // xunits determines the units of the x-axis values...default is "GHz" for
+     // freq and "km/s" for vel, "mm" for wavelength and "um" for "air wavelength"
+     //PLEASE note that the returned value of zyaxisval are the units of the image
+     //specframe can be a valid frame from MFrequency...i.e LSRK, LSRD etc...
+     Bool getFreqProfile(const Vector<Double>& xy,
+    		 Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
+    		 const String& xytype="world",
+    		 const String& specaxis="freq",
+    		 const Int& whichStokes=0,
+    		 const Int& whichTabular=-1,
+    		 const Int& whichLinear=0,
+    		 const String& xunits="",
+    		 const String& specframe="",
+    		 const Int& whichQuality=0,
+    		 const String& restValue="");
     
     std::tr1::shared_ptr<ImageInterface<Float> > _image;
     std::auto_ptr<LogIO> _log;

@@ -342,7 +342,6 @@ void GridFT::prepGridForDegrid(){
   //if(!usePut2_p) griddedData.set(0);
   griddedData.set(Complex(0.0));
 
-
   IPosition stride(4, 1);
   IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
   IPosition trc(blc+image->shape()-stride);
@@ -1297,7 +1296,7 @@ void GridFT::getWeightImage(ImageInterface<Float>& weightImage, Matrix<Float>& w
 }
 
 Bool GridFT::toRecord(String& error,
-		      RecordInterface& outRec, Bool withImage)
+		      RecordInterface& outRec, Bool withImage, const String diskimage)
 {
 
   
@@ -1306,7 +1305,7 @@ Bool GridFT::toRecord(String& error,
   Bool retval = True;
 
   //save the base class variables
-  if(!FTMachine::toRecord(error, outRec, withImage))
+  if(!FTMachine::toRecord(error, outRec, withImage, diskimage))
     return False;
 
   //a call to init  will redo imagecache and gridder
@@ -1366,7 +1365,7 @@ Bool GridFT::fromRecord(String& error,
   machineName_p="GridFT";
   ///setup some of the parameters
   init();
-  if(inRec.isDefined("image")){
+  /*if(!cmplxImage_p.null()){
     //FTMachine::fromRecord would have recovered the image
     // Might be changing the shape of sumWeight
 
@@ -1385,7 +1384,7 @@ Bool GridFT::fromRecord(String& error,
 	prepGridForDegrid();
       }
     }
-  };
+    };*/
   return retval;
 }
 

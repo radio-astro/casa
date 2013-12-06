@@ -25,11 +25,9 @@
 //#
 //# $Id: $
 #include <plotms/Plots/PlotMSPlotManager.h>
-
-//#include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
-#include <plotms/Plots/PlotMSIterPlot.h>
 #include <plotms/Plots/PlotMSOverPlot.h>
+#include <QDebug>
 
 namespace casa {
 
@@ -86,6 +84,8 @@ PlotMSPlot* PlotMSPlotManager::plot(unsigned int index) {
     else return itsPlots_[index];
 }
 
+
+
 const PlotMSPlot* PlotMSPlotManager::plot(unsigned int index) const {
     if(index >= itsPlots_.size()) return NULL;
     else return itsPlots_[index];
@@ -97,24 +97,6 @@ const vector<PlotMSPlotParameters*>& PlotMSPlotManager::plotParameters() const{
 PlotMSPlotParameters* PlotMSPlotManager::plotParameters(unsigned int index) {
     if(index >= itsPlotParameters_.size()) return NULL;
     else return itsPlotParameters_[index];
-}
-
-PlotMSPlot* PlotMSPlotManager::addIterPlot(
-    const PlotMSPlotParameters* /*params*/) {
-    throw(AipsError("IterPlot deprecated"));
-    return NULL;
-}
-
-PlotMSPlot* PlotMSPlotManager::addSinglePlot(
-    const PlotMSPlotParameters* /*params*/) {
-    throw(AipsError("SinglePlot deprecated!"));
-    return NULL;
-}
-
-PlotMSPlot* PlotMSPlotManager::addMultiPlot(
-    const PlotMSPlotParameters* /*params*/) {
-    throw(AipsError("MultiPlot deprecated!"));
-    return NULL;
 }
 
 PlotMSOverPlot* PlotMSPlotManager::addOverPlot(
@@ -165,5 +147,6 @@ void PlotMSPlotManager::notifyWatchers() const {
     for(unsigned int i = 0; i < itsWatchers_.size(); i++)
         itsWatchers_[i]->plotsChanged(*this);
 }
+
 
 }

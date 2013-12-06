@@ -35,7 +35,7 @@ using namespace CorrelationModeMod;
 #include "CStokesParameter.h"
 using namespace StokesParameterMod;
 
-#include "CFrequencyReferenceCode.h";
+#include "CFrequencyReferenceCode.h"
 using namespace FrequencyReferenceCodeMod;
 
 #include "CScanIntent.h"
@@ -369,7 +369,8 @@ int main (int argC, char* argV[]) {
   string appName = string(argV[0]);
   ofstream ofs;
 
-  LogSinkInterface& lsif = LogSink::globalSink();
+  //Commented out as lsif is never used. JSK Dec. 2013
+  //LogSinkInterface& lsif = LogSink::globalSink();
   po::variables_map vm;
 
   try {

@@ -62,9 +62,9 @@ using namespace std;
 namespace casa { //# NAMESPACE CASA - BEGIN
   
 	SynthesisIterBot::SynthesisIterBot() : actionRequestSync(new SIIterBot_callback( )),
-										   itsLoopController(new SIIterBot_state(actionRequestSync)),
-										   dbus_thread(NULL) {
-		fprintf( stderr, ">>>>>>\t\tSynthesisIterBot::~SynthesisIterBot(0x%x)\n", this );
+                                               itsLoopController(new SIIterBot_state(actionRequestSync)),
+                                               dbus_thread(NULL) {
+		fprintf( stderr, ">>>>>>\t\tSynthesisIterBot::~SynthesisIterBot(0x%p)\n", this );
 		fflush( stderr );
 	}
 
@@ -149,7 +149,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   
 	bool SynthesisIterBot::cleanComplete() {
-		bool returnValue;
+		bool returnValue=False;
 		try {
 			//Float peakResidual = itsLoopController.getPeakResidual(); // This should go..
 			if ( itsLoopController )

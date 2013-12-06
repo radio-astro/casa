@@ -319,6 +319,7 @@ namespace casa {
 		//if (autoScaleX == 0 && autoScaleY == 0)
 		//	return;
 
+
 		Double xmin = 1000000000000000000000000.;
 		Double xmax = -xmin;
 		Double ymin = 1000000000000000000000000.;
@@ -342,6 +343,7 @@ namespace casa {
 		//if (autoScaleX) {
 		settings.setMinX(QtPlotSettings::xBottom, xmin);
 		settings.setMaxX(QtPlotSettings::xBottom, xmax);
+
 		settings.setMinX(QtPlotSettings::xTop, topAxisRange.first );
 		settings.setMaxX(QtPlotSettings::xTop, topAxisRange.second );
 		//}
@@ -437,7 +439,13 @@ namespace casa {
 				max = values[i];
 			}
 		}
+
 		adjustExtremes( &min, &max );
+
+
+		//We have to reset the range so the units on the top axis don't appear
+		//unzoomed where the ones on the bottom axis are zoomed.
+		zoomNeutral();
 
 		//Switch the min and max if we need to draw the labels on the top
 		//axis in descending order.
@@ -750,7 +758,15 @@ namespace casa {
 	}
 
 	void QtCanvas::mousePressEvent(QMouseEvent *event) {
-		if ( currentMode == NULL ) {
+		if ( currentMode != NULL ){
+			if ( currentMode->isMode(CanvasMode::MODE_CONTEXTMENU)) {
+				if ( event->button() == Qt::LeftButton || event->modifiers() != Qt::NoModifier){
+					contextMenu.hide();
+					currentMode = NULL;
+				}
+			}
+		}
+		if ( currentMode == NULL ){
 			currentMode = modeFactory->getModeForEvent( event );
 		}
 
@@ -797,6 +813,7 @@ namespace casa {
 
 
 	void QtCanvas::mouseReleaseEvent(QMouseEvent *event) {
+
 		if ( currentMode != NULL ) {
 			currentMode->mouseReleaseEvent( event );
 			currentMode = NULL;
@@ -1798,20 +1815,17 @@ namespace casa {
 		if ( xcursor.isValid( )   ) {
 			update( );
 		}
-	}
-
-	void QtCanvas::moveChannel( QMouseEvent* event ) {
-		if ( xcursor.isValid( ) ) {
-			xcursor = QColor( );
+		if ( currentMode != NULL &&
+				currentMode->isMode( CanvasMode::MODE_CHANNEL) ){
 			QtPlotSettings currSettings = zoomStack[curZoom];
-			double dx = currSettings.spanX(QtPlotSettings::xBottom) / getRectWidth();
+			double dx = currSettings.spanX(QtPlotSettings::xBottom) /
+					getRectWidth();
 			float endChannelSelectValue = currSettings.getMinX(QtPlotSettings::xBottom ) + dx * (event->pos().x()-MARGIN_LEFT);
-
 			emit channelRangeSelect(channelSelectValue, endChannelSelectValue );
-			update();
+			channelSelectValue = endChannelSelectValue;
 		}
-
 	}
+
 
 	void QtCanvas::startRangeX( QMouseEvent* event ) {
 		xRangeMode    = true;

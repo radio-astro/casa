@@ -58,27 +58,24 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template <class T> 
-SepImageConvolver<T>::SepImageConvolver (ImageInterface<T>& image,
-                                         LogIO &os, Bool showProgress)
+SepImageConvolver<T>::SepImageConvolver(
+	ImageInterface<T>& image, LogIO &os, Bool showProgress
+)
 : itsImagePtr(image.cloneII()),
   itsOs(os),
   itsAxes(0),
   itsVectorKernels(0),
-  itsShowProgress(showProgress)
-{
-}
+  itsShowProgress(showProgress) {}
 
 template <class T>
 SepImageConvolver<T>::SepImageConvolver(const SepImageConvolver<T> &other)
-: itsImagePtr(0)
-{
+: itsImagePtr(0) {
    operator=(other);
 }
 
 
 template <class T> 
-SepImageConvolver<T>::~SepImageConvolver ()
-{
+SepImageConvolver<T>::~SepImageConvolver () {
    delete itsImagePtr;
    itsImagePtr = 0;
    const uInt n = itsVectorKernels.nelements();
@@ -88,24 +85,24 @@ SepImageConvolver<T>::~SepImageConvolver ()
    }
 }
 
-
 template <class T>
-SepImageConvolver<T> &SepImageConvolver<T>::operator=(const SepImageConvolver<T> &other)
-{
+SepImageConvolver<T> &SepImageConvolver<T>::operator=(
+	const SepImageConvolver<T> &other
+) {
    if (this != &other) {
       if (itsImagePtr!=0) delete itsImagePtr;
       itsImagePtr = other.itsImagePtr->cloneII();
-//
+
       itsOs = other.itsOs;
       itsAxes = other.itsAxes.copy();
       itsShowProgress = other.itsShowProgress;
-//
+
       const uInt n = itsVectorKernels.nelements();
       for (uInt i=0; i<n; i++) {
          delete itsVectorKernels[i];
          itsVectorKernels[i] = 0;
       }
-//
+
       const uInt n2 = other.itsVectorKernels.nelements();
       itsVectorKernels.resize(n2);
       for (uInt i=0; i<n2; i++) {      
@@ -118,10 +115,11 @@ SepImageConvolver<T> &SepImageConvolver<T>::operator=(const SepImageConvolver<T>
 
 
 template <class T>
-void SepImageConvolver<T>::setKernel(uInt axis, const Vector<T>& kernel)
-{
-   checkAxis(axis);
-//
+void SepImageConvolver<T>::setKernel(
+	uInt axis, const Vector<T>& kernel
+) {
+   _checkAxis(axis);
+
    uInt n = itsVectorKernels.nelements() + 1;
    itsVectorKernels.resize(n, True);
    itsVectorKernels[n-1] = new Vector<T>(kernel.copy());
@@ -130,11 +128,12 @@ void SepImageConvolver<T>::setKernel(uInt axis, const Vector<T>& kernel)
 }
 
 template <class T>
-void SepImageConvolver<T>::setKernel(uInt axis, VectorKernel::KernelTypes kernelType,  
-                                     const Quantum<Double>& width, Bool autoScale,
-                                     Bool useImageShapeExactly, Double scale)
-{
-// Catch pixel units
+void SepImageConvolver<T>::setKernel(
+	uInt axis, VectorKernel::KernelTypes kernelType,
+    const Quantum<Double>& width, Bool autoScale,
+    Bool useImageShapeExactly, Double scale
+) {
+	// Catch pixel units
 
    UnitMap::putUser("pix",UnitVal(1.0), "pixel units");
    String sunit = width.getFullUnit().getName();
@@ -144,15 +143,14 @@ void SepImageConvolver<T>::setKernel(uInt axis, VectorKernel::KernelTypes kernel
       itsOs << LogIO::NORMAL;
       return;
    }
-//
-   checkAxis(axis);
-//
-// Convert width to pixels
-//
+   _checkAxis(axis);
+
+   // Convert width to pixels
+
    CoordinateSystem cSys = itsImagePtr->coordinates();
    Int worldAxis = cSys.pixelAxisToWorldAxis(axis);
    Double inc = cSys.increment()(worldAxis);
-//
+
    Unit unit = Unit(cSys.worldAxisUnits()(worldAxis));
    if (width.getFullUnit()!=unit) {
       itsOs << "Specified width units (" << width.getUnit() 
@@ -160,7 +158,7 @@ void SepImageConvolver<T>::setKernel(uInt axis, VectorKernel::KernelTypes kernel
             << unit.getName() << LogIO::EXCEPTION;
    }
    Double width2 = abs(width.getValue(unit)/inc);
-//
+
    itsOs.output() << "Axis " << axis+1<< " : setting width "
          << width << " = " << width2 << " pixels" << endl;
    itsOs <<  LogIO::NORMAL;
@@ -168,14 +166,15 @@ void SepImageConvolver<T>::setKernel(uInt axis, VectorKernel::KernelTypes kernel
 }
 
 template <class T>
-void SepImageConvolver<T>::setKernel(uInt axis, VectorKernel::KernelTypes kernelType,  
-                                     Double width, Bool autoScale, 
-                                     Bool useImageShapeExactly, Double scale)
-{
-   checkAxis(axis);
-//
-// T can only be Float or Double
-//
+void SepImageConvolver<T>::setKernel(
+	uInt axis, VectorKernel::KernelTypes kernelType,
+    Double width, Bool autoScale,
+    Bool useImageShapeExactly, Double scale
+) {
+   _checkAxis(axis);
+
+   // T can only be Float or Double
+
    Bool peakIsUnity = !autoScale;
    uInt shape = itsImagePtr->shape()(axis);
    Vector<T> x = VectorKernel::make(kernelType, T(width), shape, 
@@ -184,50 +183,42 @@ void SepImageConvolver<T>::setKernel(uInt axis, VectorKernel::KernelTypes kernel
    uInt n = itsVectorKernels.nelements() + 1;
    itsVectorKernels.resize(n, True);
    itsVectorKernels[n-1] = new Vector<T>(x.copy());
-//
+
    itsAxes.resize(n, True);
    itsAxes(n-1) = axis;
 }
 
 
 template <class T>
-Vector<T> SepImageConvolver<T>::getKernel(uInt axis) 
-{
+Vector<T> SepImageConvolver<T>::getKernel(uInt axis) {
    for (uInt i=0; i<itsAxes.nelements(); i++) {
       if (axis==itsAxes(i)) {
          return *(itsVectorKernels[i]);
       }
    }
    itsOs << "There is no kernel for the specified axis" << LogIO::EXCEPTION;
-//
    return Vector<T>(0);
 }
 
 template <class T>
-uInt SepImageConvolver<T>::getKernelShape(uInt axis) 
-{
+uInt SepImageConvolver<T>::getKernelShape(uInt axis) {
    for (uInt i=0; i<itsAxes.nelements(); i++) {
       if (axis==itsAxes(i)) {
          return itsVectorKernels[i]->nelements();
       }
    }
    itsOs << "There is no kernel for the specified axis" << LogIO::EXCEPTION;
-//
    return 0;
 }
 
-
-  
-
 template <class T>
-void SepImageConvolver<T>::convolve(ImageInterface<T>& imageOut)
-{
+void SepImageConvolver<T>::convolve(ImageInterface<T>& imageOut) {
    const uInt nAxes = itsAxes.nelements();
    if (nAxes==0) {
       itsOs << "You haven't specified any axes to convolve" << LogIO::EXCEPTION;
    }
 
-// Some checks
+   // Some checks
 
    IPosition shape = itsImagePtr->shape();
    if (!shape.isEqual(imageOut.shape())) {
@@ -239,7 +230,7 @@ void SepImageConvolver<T>::convolve(ImageInterface<T>& imageOut)
             << LogIO::POST;
    }
 
-// Give the output image a mask if needed and make it the default
+   // Give the output image a mask if needed and make it the default
 
    if (itsImagePtr->isMasked() && !imageOut.isMasked()) {
       if (imageOut.canDefineRegion()) {
@@ -252,12 +243,12 @@ void SepImageConvolver<T>::convolve(ImageInterface<T>& imageOut)
       }
    }
 
-// First copy input to output. We must replace masked pixels by zeros.  These reflect 
-// both the pixel mask and the region mask.  We also set the output mask to the input mask
+   // First copy input to output. We must replace masked pixels by zeros.  These reflect
+   // both the pixel mask and the region mask.  We also set the output mask to the input mask
  
    LatticeUtilities::copyDataAndMask(itsOs, imageOut, *itsImagePtr, True);
 
-// Smooth in situ.  
+   // Smooth in situ.
       
    IPosition niceShape = imageOut.niceCursorShape();
    uInt axis = 0;
@@ -270,70 +261,36 @@ void SepImageConvolver<T>::convolve(ImageInterface<T>& imageOut)
                << "The tile shape is not integral along this axis, performance may degrade" 
                << LogIO::POST;
       }
-      smoothProfiles (imageOut, axis, *(itsVectorKernels[i]));
+      _smoothProfiles (imageOut, axis, *(itsVectorKernels[i]));
    }  
 }
-
-
-template <class T>
-void SepImageConvolver<T>::convolve()
-{
-   const uInt nAxes = itsAxes.nelements();
-   if (nAxes==0) {
-      itsOs << "You haven't specified any axes to convolve" << LogIO::EXCEPTION;
-   }
-   IPosition shape = itsImagePtr->shape();
-
-// We must replace masked pixels by zeros.  These reflect 
-// both the pixel mask and the region mask.  
- 
-   zero();
-
-// Smooth in situ.  
-      
-   IPosition niceShape = itsImagePtr->niceCursorShape();
-   uInt axis = 0;
-   for (uInt i=0; i<nAxes; i++) {
-      axis = itsAxes(i);
-      itsOs << LogIO::NORMAL << "Convolving axis " << axis+1 << LogIO::POST;
-      const Int n = shape(axis)/niceShape(axis);
-      if (n*niceShape(axis)!=shape(axis)) {
-         itsOs << LogIO::WARN 
-               << "The tile shape is not integral along this axis, performance may degrade" 
-               << LogIO::POST;
-      }
-      smoothProfiles (*itsImagePtr, axis, *(itsVectorKernels[i]));
-   }  
-}
-
  
 template <class T>
-void SepImageConvolver<T>::zero()
-{
+void SepImageConvolver<T>::_zero() {
    if (itsImagePtr->isMasked()) {
       itsOs << LogIO::NORMAL << "Zero masked pixels" << LogIO::POST;
-//
+
       LatticeIterator<T> iter(*itsImagePtr);
       Bool deleteData, deleteMask;
       IPosition shape = iter.rwCursor().shape();
       Array<T> data(shape);
       Array<Bool> mask(shape);
-//       
+
       for (iter.reset(); !iter.atEnd(); iter++) {
          shape = iter.rwCursor().shape();
          if (!data.shape().isEqual(shape)) data.resize(shape);
          if (!mask.shape().isEqual(shape)) mask.resize(shape);
-//
+
          itsImagePtr->getSlice(data, iter.position(), shape);
          itsImagePtr->getMaskSlice(mask, iter.position(), shape);
-//
+
          T* pData = data.getStorage(deleteData);
          const Bool* pMask = mask.getStorage(deleteMask);
-//
+
          for (Int i=0; i<shape.product(); i++) {
             if (!pMask[i]) pData[i] = 0.0;
          }
-//
+
          data.putStorage(pData, deleteData);
          mask.freeStorage(pMask, deleteMask);
       }
@@ -341,10 +298,10 @@ void SepImageConvolver<T>::zero()
 }        
  
 template <class T>
-void SepImageConvolver<T>::smoothProfiles (ImageInterface<T>& in,
-                                           const Int& axis,
-                                           const Vector<T>& psf)
-{
+void SepImageConvolver<T>::_smoothProfiles (
+	ImageInterface<T>& in, const Int& axis,
+	const Vector<T>& psf
+) {
   ProgressMeter* pProgressMeter = 0;
   if (itsShowProgress) {
      Double nMin = 0.0;
@@ -361,7 +318,7 @@ void SepImageConvolver<T>::smoothProfiles (ImageInterface<T>& in,
                                         String(""), String(""),
                                         True, max(1,Int(nMax/20)));   
   }
-// 
+
   TiledLineStepper navIn(in.shape(),
                          in.niceCursorShape(),
                          axis);
@@ -374,7 +331,7 @@ void SepImageConvolver<T>::smoothProfiles (ImageInterface<T>& in,
   while (!inIt.atEnd()) {
     conv.linearConv(result, inIt.vectorCursor());
     inIt.woVectorCursor() = result;
-//
+
     if (itsShowProgress) pProgressMeter->update(Double(i));
     inIt++;
     i++;
@@ -383,8 +340,7 @@ void SepImageConvolver<T>::smoothProfiles (ImageInterface<T>& in,
 }
 
 template <class T>
-void SepImageConvolver<T>::checkAxis(uInt axis) 
-{
+void SepImageConvolver<T>::_checkAxis(uInt axis) {
    if (axis>itsImagePtr->ndim()-1) {
       itsOs << "Given pixel axis " << axis 
             << " is greater than the number of axes in the image" << LogIO::EXCEPTION;
@@ -396,16 +352,6 @@ void SepImageConvolver<T>::checkAxis(uInt axis)
       }
    }
 }
-
-template <class T>
-Bool SepImageConvolver<T>::isTempImage (const ImageInterface<Float>* pIm) const
-{
-   Bool isTemp = False;
-   const TempImage<Float>* tmp = dynamic_cast<const TempImage<Float>*>(pIm);
-   if (tmp!=0) isTemp = True;
-   return isTemp;
-}
-
 
 } //# NAMESPACE CASA - END
 

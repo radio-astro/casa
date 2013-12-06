@@ -84,6 +84,10 @@ bool ClientScript::isInteractive() const {
 	return false;
 }
 
+void ClientScript::setOperationCompleted( bool completed ){
+	plotController->setOperationCompleted( completed );
+}
+
 bool ClientScript::isMSSummaryVerbose() const {
 	return false;
 }
@@ -129,8 +133,8 @@ ThreadController* ClientScript::getThreadController( PlotMSAction::Type /*type*/
 	return NULL;
 }
 
-void ClientScript::showGUI( bool show ) {
-	itsPlotter_->showGUI(show);
+void ClientScript::showGUI( bool /*show*/ ) {
+	//itsPlotter_->showGUI(show);
 }
 
 void ClientScript::showMessage(const String& message, const String& title) {

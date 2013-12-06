@@ -35,7 +35,7 @@ namespace casa {
 
 class FeatherDataType {
 public:
-	typedef enum DataType {WEIGHT_SD,WEIGHT_INT,
+	enum DataType {WEIGHT_SD,WEIGHT_INT,
 	    	    		LOW, LOW_WEIGHTED,
 	    	    		LOW_CONVOLVED_HIGH, LOW_CONVOLVED_HIGH_WEIGHTED,
 	    	    		//LOW_CONVOLVED_DIRTY, LOW_CONVOLVED_DIRTY_WEIGHTED,

@@ -67,6 +67,8 @@ AveragingParameters::operator= (const AveragingParameters & other)
 
         validate ();
     }
+
+    return *this;
 }
 
 VisBufferComponents2

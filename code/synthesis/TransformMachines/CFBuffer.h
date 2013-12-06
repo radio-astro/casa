@@ -175,7 +175,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // muellerElement: (i,j) of the Mueller Matrix
     CountedPtr<CFCell>& getCFCellPtr(const Double& freqVal, const Double& wValue, 
 				     const Int & muellerElement); 
+    CFCell& operator()(const Int& i, const Int& j, const Int& k) {return *cfCells_p(i,j,k);}
     CFCell& getCFCell(const Int& i, const Int& j, const Int& k);
+
     CountedPtr<CFCell >& getCFCellPtr(const Int& i, const Int& j, const Int& k);
     
     //=========================================================================
@@ -336,8 +338,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Cube<CountedPtr<CFCell> >& getStorage() {return cfCells_p;};
     void makePersistent(const char *dir);
     
+    void primeTheCache();
     void initMaps(const VisBuffer& vb,const Matrix<Double>& freqSelection,const Double& imRefFreq);
-    
+    void initPolMaps(PolMapType& polMap, PolMapType& conjPolMap);
     //
     // For CUDA kernel
     //
@@ -362,7 +365,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       cfbSt.shape[0]=cfbSt.shape[1]=cfbSt.shape[2]=0;
       cfbSt.fIncr=cfbSt.wIncr=0.0;
     }
+    void fill(const Int& nx, const Int& ny, 
+	      const Vector<Double>& freqValues,
+	      const Vector<Double>& wValues,
+	      const PolMapType& muellerElements);
     
+    IPosition getShape() {return cfCells_p.shape();}
     //
     //============================= Protected Parts ============================
     //------------------------------------------------------------------

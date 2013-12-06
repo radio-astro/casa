@@ -239,7 +239,7 @@ LibAIR::AntSetWeight limitedNearestAnt(const LibAIR::antpos_t &pos,
   LibAIR::AntSetD::const_iterator s=dist.begin();
   for (size_t j=0; j<n; ++j)
   {
-    if(s->first <= maxdist_m)
+    if(s!=dist.end() and s->first <= maxdist_m)
     {
       total+=s->first;
       ++s;
@@ -278,16 +278,13 @@ void flagInterp(const casa::MeasurementSet &ms,
       i!=wvrflag.end(); 
       ++i)
   {
-//     LibAIR::AntSetWeight near=LibAIR::linNearestAnt(apos, 
-// 						    *i, 
-// 						    wvrflag_s, 
-// 						    3);
+
     LibAIR::AntSetWeight near=limitedNearestAnt(apos, 
 						*i, 
 						wvrflag_s, 
 						3,
 						maxdist_m);
-    if(near.size()>=minnumants){
+    if(near.size()>= static_cast<unsigned int>(minnumants)){
       LibAIR::interpBadAntW(d, 
 			    *i, 
 			    near);
@@ -712,6 +709,9 @@ static void defineOptions(boost::program_options::options_description &desc,
     ("minnumants",
      value<int>()->default_value(2),
      "minimum number of near antennas (up to 3) required for interpolation")
+    ("mingoodfrac",
+     value<double>()->default_value(0.8),
+     "If the fraction of unflagged data for an antenna is below this value (0. to 1.), the antenna is flagged.")
     ;
   p.add("ms", -1);
 }
@@ -798,7 +798,8 @@ int main(int argc,  char* argv[])
 
      std::vector<size_t> sortedI; // to be filled with the time-sorted row number index
      std::set<int> flaggedantsInMain; // the antennas totally flagged in the MS main table
-     boost::scoped_ptr<LibAIR::InterpArrayData> d (LibAIR::loadWVRData(ms, sortedI, flaggedantsInMain));
+     boost::scoped_ptr<LibAIR::InterpArrayData> d (LibAIR::loadWVRData(ms, sortedI, flaggedantsInMain,
+								       vm["mingoodfrac"].as<double>()));
 
      interpwvrs.insert(flaggedantsInMain.begin(),flaggedantsInMain.end()); // for flagInterp()
      wvrflag.insert(flaggedantsInMain.begin(),flaggedantsInMain.end());

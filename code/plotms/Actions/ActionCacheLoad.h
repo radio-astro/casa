@@ -46,7 +46,7 @@ public:
 						    d->averaging(),
 						    d->transformations(),
 						    false,
-						    &PlotMSIterPlot::cacheLoaded, this);)*/
+						    &PlotMSOverPlot::cacheLoaded, this);)*/
 	void setSetupPlot( bool setUp );
 
 	virtual ~ActionCacheLoad();

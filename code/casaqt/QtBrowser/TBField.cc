@@ -88,7 +88,7 @@ String TBField::getWidth() { return width; }
 // Public Methods //
 
 TBKeyword* TBField::keywordAt(unsigned int i) {
-    if(0 <= i && i < keywords.size())
+    if(i < keywords.size())
         return keywords.at(i);
     else
         return NULL;

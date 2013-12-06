@@ -170,6 +170,7 @@ void FeatherMain::preferencesChanged(){
 	//Whether to use a u/v or radial axis
 	bool xAxisUV = preferences.isXAxisUV();
 	bool oldAxisUV = !dataManager->isRadial();
+	bool featherApplyNeeded = false;
 	if ( xAxisUV != oldAxisUV ){
 		//We only need one dish diameter box if we are plotting in
 		//radial distance.
@@ -182,11 +183,12 @@ void FeatherMain::preferencesChanged(){
 			ui.xGroupBox->setTitle( "Distance");
 		}
 		plotHolder->setXAxisUV( xAxisUV );
-		preferencesColor.setRadialPlot( !xAxisUV );
+
 		//We have to reset the data if we are changing from a uv to a
 		//radial plot
 		dataManager->setRadial( !xAxisUV );
-		featherImages();
+		//featherImages();
+		featherApplyNeeded = true;
 	}
 
 	//Single channel or averaged plane
@@ -203,8 +205,12 @@ void FeatherMain::preferencesChanged(){
 	}
 	if ( (oldAveraged != averaged) ||
 			(!averaged && (oldPlaneIndex != planeIndex)) ){
-		plotHolder->clearPlots();
-		resetData();
+		featherApplyNeeded = true;
+		//plotHolder->clearPlots();
+		//resetData();
+	}
+	if ( featherApplyNeeded ){
+		featherImages();
 	}
 
 
@@ -414,6 +420,7 @@ void FeatherMain::addOriginalDataToPlots(){
 
 
 	FeatheredData intOrig = dataManager->getIntOrig();
+	Vector<float> uY = intOrig.getUY();
 	plotHolder->setData( intOrig.getUX(), intOrig.getUY(),
 				intOrig.getVX(), intOrig.getVY(), FeatherDataType::HIGH );
 	if ( intOrig.isEmpty() ){

@@ -61,6 +61,10 @@ PlotLoggerPtr Client::getLogger(){
 	return itsPlotter_->logger();
 }
 
+void Client::setOperationCompleted( bool /*completed*/ ){
+
+}
+
 void Client::setCanvasCachedAxesStackImageSize(int width, int height ){
 	itsPlotter_->setCanvasCachedAxesStackImageSize( width, height );
 }
@@ -77,6 +81,32 @@ bool Client::exportToFormat(const PlotExportFormat& format){
 	bool success = itsPlotter_->exportPlot( format );
 	return success;
 }
+
+void Client::setCommonAxes( bool commonX, bool commonY ){
+	itsPlotter_->setCommonAxisX( commonX );
+	itsPlotter_->setCommonAxisY( commonY );
+}
+
+bool Client::isCommonAxisX() const {
+	return itsPlotter_->isCommonAxisX();
+}
+
+bool Client::isCommonAxisY() const {
+	return itsPlotter_->isCommonAxisY();
+}
+
+void Client::setAxisLocation( PlotAxis locationX, PlotAxis locationY ){
+	itsPlotter_->setAxisLocation( locationX, locationY );
+}
+
+PlotAxis Client::getAxisLocationX() const {
+	return itsPlotter_->getAxisLocationX();
+}
+
+PlotAxis Client::getAxisLocationY() const {
+	return itsPlotter_->getAxisLocationY();
+}
+
 }
 
 

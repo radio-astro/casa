@@ -7,12 +7,13 @@
 
 #include "FeatherPlotWidgetScatter.h"
 #include <QtCore/qmath.h>
+#include <limits>
 #include <QDebug>
 
 namespace casa {
 
 FeatherPlotWidgetScatter::FeatherPlotWidgetScatter(const QString& title, FeatherPlot::PlotType plotType, QWidget *parent):
-	FeatherPlotWidget( title, plotType,parent){
+			FeatherPlotWidget( title, plotType,parent){
 }
 
 void FeatherPlotWidgetScatter::addScatterCurve( const QVector<double>& xVals, const QVector<double>& yVals,
@@ -87,7 +88,12 @@ void FeatherPlotWidgetScatter::addZoomNeutralCurves(){
 		bool sumCurve = sumCurveX || sumCurveY;
 		double curveValueLimit = valueLimit;
 		if ( sumCurve && logAmplitude ){
-			curveValueLimit = qLn( valueLimit ) / qLn(10 );
+			if ( valueLimit > 0 ){
+				curveValueLimit = qLn( valueLimit ) / qLn(10 );
+			}
+			/*else {
+				qDebug() << "Scatter: Can't take the log of valueLimit="<<valueLimit;
+			}*/
 		}
 		addScatterCurve( scaledXVals, scaledYVals, curveValueLimit, yScatters[i], sumCurve );
 	}
@@ -95,6 +101,7 @@ void FeatherPlotWidgetScatter::addZoomNeutralCurves(){
 	//Append the diagonal line x=y
 	if ( curvePreferences[FeatherCurveType::X_Y].isDisplayed()){
 		QVector<double> scatterXValues;
+
 		for ( int i = 0; i < xVals.size(); i++ ){
 			double xValue = xVals[i];
 			//The x values will come already scaled.  We need to unscale them.
@@ -119,7 +126,12 @@ QVector<double> FeatherPlotWidgetScatter::scaleValues( const QVector<double>& va
 	QVector<double> scaledValues;
 	for ( int j = 0; j < values.size(); j++ ){
 		if (  plot->isLogAmplitude() ){
-			scaledValues.append( qLn( values[j]) / qLn( 10 ));
+			if ( values[j] > 0 ){
+				scaledValues.append( qLn( values[j]) / qLn( 10 ));
+			}
+			/*else {
+				qDebug() << "Scatter: ScaleValues j="<<j<<" couldn't take log value="<<values[j];
+			}*/
 		}
 		else {
 			scaledValues.append( values[j]);
@@ -141,7 +153,8 @@ QVector<double> FeatherPlotWidgetScatter::unscaleValues( const QVector<double>& 
 	return origValues;
 }
 
-QVector<double> FeatherPlotWidgetScatter::populateVector(FeatherCurveType::CurveType curveType){
+QVector<double> FeatherPlotWidgetScatter::populateVector(
+		FeatherCurveType::CurveType curveType){
 	DataType dType = getDataTypeForCurve( curveType );
 	QVector<double> values;
 	if ( dType != FeatherDataType::END_DATA ){
@@ -184,13 +197,15 @@ pair<QVector<double>, QVector<double> > FeatherPlotWidgetScatter::restrictData( 
 }
 
 pair<QVector<double>, QVector<double> > FeatherPlotWidgetScatter::restrictData(
-				const QVector<double>& sourceX, const QVector<double>& sourceY,
-				double minX, double maxX, double minY, double maxY){
+		const QVector<double>& sourceX, const QVector<double>& sourceY,
+		double minX, double maxX, double minY, double maxY){
+
 	QVector<double> restrictX;
 	QVector<double> restrictY;
 	int sourceCount = sourceY.size();
 	for ( int i = 0; i < sourceCount; i++ ){
 		if ( minX <= sourceX[i] && sourceX[i]<= maxX ){
+
 			if ( minY <= sourceY[i] && sourceY[i] <= maxY ){
 				restrictX.append( sourceX[i]);
 				restrictY.append( sourceY[i]);
@@ -201,28 +216,51 @@ pair<QVector<double>, QVector<double> > FeatherPlotWidgetScatter::restrictData(
 	return result;
 }
 
-
 void FeatherPlotWidgetScatter::zoom90Other( double dishPosition ){
-
 	int scatterYCount = yScatters.size();
 	if ( scatterYCount == 0 ){
 		return;
 	}
 
-	//The plot needs to have the same values in both directions.
-	pair<QVector<double>, QVector<double> > sdZoom = limitX( FeatherDataType::LOW_WEIGHTED, dishPosition );
-	pair<double,double> singleDishMinMax = getMaxMin( sdZoom.second, FeatherCurveType::LOW_WEIGHTED );
-	pair<QVector<double>, QVector<double> > intZoom = limitX( FeatherDataType::HIGH_WEIGHTED, dishPosition );
-	pair<double,double> interferometerMinMax = getMaxMin( intZoom.second, FeatherCurveType::HIGH_WEIGHTED );
-	double valueMax = qMin( singleDishMinMax.second, interferometerMinMax.second);
-	double valueMin = qMax( singleDishMinMax.first, interferometerMinMax.first );
-
-
-	QVector<double> xVals = populateVector( xScatter );
+	//Get the x values for the data we are plotting on the x-axis.
 	bool sumCurveX = FeatherCurveType::isSumCurve( xScatter );
-	if ( sumCurveX ){
-		xVals = unscaleValues( xVals );
+	FeatherDataType::DataType dataType = getDataTypeForCurve( xScatter );
+	if (sumCurveX ){
+		dataType = FeatherDataType::LOW_WEIGHTED;
 	}
+	pair<QVector<double>, QVector<double> > xyScatterX = plotData[dataType];
+	QVector<double> xVals = xyScatterX.first;
+	if ( sumCurveX ){
+		if ( plot->isLogUV() ){
+			for ( int j = 0; j < xVals.size(); j++ ){
+				xVals[j] = qPow( 10, xVals[j] );
+			}
+		}
+	}
+
+	//Get the y- amplitude values we will use for the scatter plot.
+	QVector<double> ampVals = populateVector( xScatter );
+	if ( sumCurveX ){
+		ampVals = unscaleValues( ampVals );
+	}
+
+	//Use only the x-values that don't exceed the dish diameter.
+	QVector<double> unscaledXVals;
+	int zoomEndIndex = 0;
+	for ( zoomEndIndex = 0; zoomEndIndex < xVals.size(); zoomEndIndex++ ){
+		if ( xVals[zoomEndIndex] >= dishPosition ){
+			break;
+		}
+		unscaledXVals.append( ampVals[zoomEndIndex]);
+	}
+	QVector<double> scaledXVals = scaleValues( unscaledXVals );
+
+	pair<double,double> xMinMax = getMaxMin( unscaledXVals, xScatter );
+	double xMin = xMinMax.first;
+	double xMax = xMinMax.second;
+
+	double yMin = std::numeric_limits<double>::max();
+	double yMax = -1 * yMin;
 
 	//Compute the corresponding yValues, storing them in a map,
 	//and using them to compute an upper limit on the data that will
@@ -231,52 +269,63 @@ void FeatherPlotWidgetScatter::zoom90Other( double dishPosition ){
 	for ( int i = 0; i < scatterYCount; i++ ){
 		bool sumCurveY = FeatherCurveType::isSumCurve(yScatters[i]);
 		QVector<double> yVals = populateVector( yScatters[i]);
+		QVector<double> scaledYVals;
+		for ( int j = 0; j < zoomEndIndex; j++ ){
+			scaledYVals.append( yVals[j]);
+		}
 		if ( sumCurveY ){
-			yVals = unscaleValues( yVals );
+			scaledYVals = unscaleValues( scaledYVals );
 		}
-		pair<QVector<double>, QVector<double> > restrictedVals = restrictData( xVals, yVals, valueMin, valueMax );
 
-		//The restrictedVals are not scaled, but they need to be for
-		//sum curves;
 		bool sumCurve = sumCurveX || sumCurveY;
-		QVector<double> scaledXVals = restrictedVals.first;
-		QVector<double> scaledYVals = restrictedVals.second;
+		QVector<Double> actualXVals = unscaledXVals;
 		if ( sumCurve ){
-			scaledXVals = scaleValues( scaledXVals );
 			scaledYVals = scaleValues( scaledYVals );
+			actualXVals = scaledXVals;
 		}
-		DataType dType = getDataTypeForCurve( yScatters[i]);
-		if ( sumCurve && dType == FeatherDataType::END_DATA ){
 
+
+		pair<double,double> yMinMax = getMaxMin( scaledYVals, yScatters[i] );
+		if ( yMinMax.first < yMin ){
+			yMin = yMinMax.first;
 		}
-		addPlotCurve( scaledXVals, scaledYVals, scatterAxis, yScatters[i], sumCurve );
+		if ( yMinMax.second > yMax ){
+			yMax = yMinMax.second;
+		}
+
+		addPlotCurve( actualXVals, scaledYVals, scatterAxis, yScatters[i], sumCurve );
 	}
 
 	//Append the diagonal line x=y
-	if ( curvePreferences[FeatherCurveType::X_Y].isDisplayed()){
+	if ( curvePreferences[FeatherCurveType::X_Y].isDisplayed() && isOverlap(xMin,xMax,yMin,yMax) ){
+
 		QVector<double> scatterXValues;
-		for ( int i = 0; i < xVals.size(); i++ ){
-			if ( valueMin<=xVals[i] && xVals[i]<=valueMax ){
-				double xValue = xVals[i];
-				//The x values are not scaled.  We need to them.
-				if ( FeatherCurveType::isSumCurve( xScatter) && plot->isLogAmplitude() ){
-					xValue = qLn( xValue ) / qLn( 10 );
-				}
-				scatterXValues.append( xValue);
-			}
-		}
-		scatterXValues.append(valueMin);
-		scatterXValues.append( valueMax );
+
+		scatterXValues.append(xMin);
+		scatterXValues.append(xMax );
 		QColor xyColor = curvePreferences[FeatherCurveType::X_Y].getColor();
 		plot->addDiagonal( scatterXValues, xyColor, scatterAxis );
 	}
 }
 
 
+
+
 void FeatherPlotWidgetScatter::resetColors(){
 	//plot->setFunctionColor( "", curvePreferences[FeatherCurveType::SCATTER_LOW_HIGH].getColor() );
 	plot->setFunctionColor( FeatherPlot::Y_EQUALS_X, curvePreferences[FeatherCurveType::X_Y].getColor());
 	FeatherPlotWidget::resetColors();
+}
+
+bool FeatherPlotWidgetScatter::isOverlap( double minX, double maxX, double minY, double maxY ) const {
+	bool overlap = false;
+	if ( minX <= minY && minY <= maxX){
+		overlap = true;
+	}
+	else if ( minX <= maxY && maxY <= maxX ){
+		overlap = true;
+	}
+	return overlap;
 }
 
 void FeatherPlotWidgetScatter::zoomRectangleOther( double minX, double maxX, double minY, double maxY ){
@@ -303,20 +352,22 @@ void FeatherPlotWidgetScatter::zoomRectangleOther( double minX, double maxX, dou
 		pair<QVector<double>, QVector<double> > restrictedVals =
 				restrictData( xVals, yVals, minX, maxX, minY, maxY );
 
+
 		//The restrictedVals are not scaled, but they need to be for
 		//sum curves;
-		bool sumCurve = sumCurveX || sumCurveY;
 		QVector<double> scaledXVals = restrictedVals.first;
 		QVector<double> scaledYVals = restrictedVals.second;
+		bool sumCurve = sumCurveX || sumCurveY;
 		if ( sumCurve ){
 			scaledXVals = scaleValues( scaledXVals );
 			scaledYVals = scaleValues( scaledYVals );
 		}
+
 		addPlotCurve( scaledXVals, scaledYVals, scatterAxis, yScatters[i], sumCurve );
 	}
 
 	//Append the diagonal line x=y
-	if ( curvePreferences[FeatherCurveType::X_Y].isDisplayed()){
+	if ( curvePreferences[FeatherCurveType::X_Y].isDisplayed() && isOverlap( minX, minX, minY, maxY)){
 		QVector<double> scatterXValues;
 		for ( int i = 0; i < xVals.size(); i++ ){
 			if ( minX<=xVals[i] && xVals[i]<=maxX ){
@@ -324,7 +375,12 @@ void FeatherPlotWidgetScatter::zoomRectangleOther( double minX, double maxX, dou
 					double xValue = xVals[i];
 					//The x values are not scaled.  We need to them.
 					if ( FeatherCurveType::isSumCurve( xScatter) && plot->isLogAmplitude() ){
-						xValue = qLn( xValue ) / qLn( 10 );
+						if ( xValue > 0 ){
+							xValue = qLn( xValue ) / qLn( 10 );
+						}
+						else {
+							//qDebug() << "Scatter diagonal log problem line i="<<i<<" xValue="<<xValue;
+						}
 					}
 					scatterXValues.append( xValue);
 				}

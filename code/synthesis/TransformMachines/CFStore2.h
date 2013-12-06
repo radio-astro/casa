@@ -61,7 +61,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //-------------------------------------------------------------------------
     void makePersistent(const char *dir,const char *qualifier="");
     //-------------------------------------------------------------------------
-    void initMaps(const VisBuffer& vb, const Matrix<Double>& freqSelection, const Double& imRefFreq);
+    void primeTheCFB();
+    //-------------------------------------------------------------------------
+    void initMaps(const VisBuffer& vb, const Matrix<Double>& freqSelection, 
+		  const Double& imRefFreq);
+    //-------------------------------------------------------------------------
+    void initPolMaps(PolMapType& polMap, PolMapType& conjPolMap);
     //-------------------------------------------------------------------------
     Bool null() {return (storage_p.size() == 0);};
     //-------------------------------------------------------------------------
@@ -83,6 +88,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //-------------------------------------------------------------------------
     // Get CFBuffer by directly indexing in the list of CFBuffers
     CountedPtr<CFBuffer>& getCFBuffer(const Int& paNdx, const Int& antNdx);
+    CFBuffer& operator()(const Int& paNdx, const Int& antNdx) {return *storage_p(paNdx, antNdx);}
     void getParams(Quantity& pa, 
 		   Int& ant1, Int& ant2, 
 		   const Int& paNdx, const Int& antNdx);
@@ -109,10 +115,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Int>& getAnt1List() {return ant1_p;};
     Vector<Int>& getAnt2List() {return ant2_p;};
     Vector<Quantity> getPAList() {return pa_p;};
+    IPosition getShape() {return storage_p.shape();}
+
 
   protected:
-
-
 
     Matrix<CountedPtr<CFBuffer > > storage_p;
     Vector<Int> ant1_p, ant2_p;

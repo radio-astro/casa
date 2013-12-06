@@ -45,17 +45,15 @@ namespace casa {
 	class CollapseResult {
 
 	public:
-		CollapseResult( const String& outputName, bool tmp, ImageInterface<Float>* img ):
-			outputFileName(outputName),
-			temporary( tmp ),
-			image(img) {}
+		CollapseResult( const String& outputName, bool tmp, ImageInterface<Float>* img );
+
 		String getOutputFileName() const {
 			return outputFileName;
 		}
 		bool isTemporaryOutput() const {
 			return temporary;
 		}
-		ImageInterface<Float>* getImage() const {
+		std::tr1::shared_ptr<ImageInterface<Float> > getImage() const {
 			return image;
 		}
 
@@ -63,7 +61,7 @@ namespace casa {
 		String outputFileName;
 		bool temporary;
 
-		ImageInterface<Float>* image;
+		std::tr1::shared_ptr<ImageInterface<Float> > image;
 	};
 
 

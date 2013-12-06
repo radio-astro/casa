@@ -63,7 +63,7 @@ namespace casa {
 		//Returns the number of registered images
 		int getRegisteredCount() const;
 		//Returns the registeration index of the image with open index given by dropIndex.
-		int getRegisteredIndex( int dropIndex )const;
+		int getRegisteredIndex( int dropIndex, bool rastersOnly = false )const;
 		//Returns the open index of the image.
 		int getIndex( ImageView* view );
 

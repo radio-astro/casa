@@ -29,11 +29,15 @@
 
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Data/PlotMSIndexer.h>
-//#include <casaqt/QwtPlotter/QPScatterPlot.h>
+
 
 #include <casa/namespace.h>
 
 namespace casa {
+
+class PMS_PP_Canvas;
+class PMS_PP_Axes;
+class PMS_PP_Iteration;
 
 class PlotMSOverPlot : public PlotMSPlot {
 public:
@@ -106,6 +110,7 @@ protected:
     bool nextIter();
     bool lastIter();
     bool resetIter();
+    bool setIter( int index );
     void recalculateIteration();
 
     void updatePlots();
@@ -128,6 +133,12 @@ private:
     PlotMSOverPlot(const PlotMSOverPlot&);
     PlotMSOverPlot& operator=(const PlotMSOverPlot&);
     // </group>
+
+    void clearCanvasProperties( int row, int col);
+    void setCanvasProperties (int row, int col, PlotAxis cx, PlotAxis cy,
+    		PMS::Axis x, PMS::Axis y, bool set, PMS_PP_Canvas *canv,
+    		uInt rows, uInt cols, PMS_PP_Axes *axes, PMS_PP_Iteration *iter,
+    		uInt iteration );
 
 public:
     static void cacheLoaded(void *obj, bool wasCanceled)

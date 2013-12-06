@@ -276,6 +276,7 @@ FreqOffsetRow* FreqOffsetTable::newRow(FreqOffsetRow* row) {
 	//
 
 	
+		
 	
 		
 		
@@ -331,9 +332,11 @@ FreqOffsetRow* FreqOffsetTable::newRow(FreqOffsetRow* row) {
 		FreqOffsetRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
 		                                           // by passing true in the second parameter
 		                                           // whose value by default is false.
+                if (false) cout << (unsigned long long) dummy;
 	}
 	
 
+	
 
 
 	// 
@@ -349,7 +352,7 @@ FreqOffsetRow* FreqOffsetTable::newRow(FreqOffsetRow* row) {
 			
 			
 			
-	FreqOffsetRow*  FreqOffsetTable::checkAndAdd(FreqOffsetRow* x, bool skipCheckUniqueness) {
+	FreqOffsetRow*  FreqOffsetTable::checkAndAdd(FreqOffsetRow* x, bool ) {
 		string keystr = Key( 
 						x->getAntennaId() 
 					   , 
@@ -543,7 +546,7 @@ FreqOffsetRow* FreqOffsetTable::newRow(FreqOffsetRow* row) {
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<FreqOffsetTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:frqoff=\"http://Alma/XASDM/FreqOffsetTable\" xsi:schemaLocation=\"http://Alma/XASDM/FreqOffsetTable http://almaobservatory.org/XML/XASDM/3/FreqOffsetTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n");
+		buf.append("<FreqOffsetTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:frqoff=\"http://Alma/XASDM/FreqOffsetTable\" xsi:schemaLocation=\"http://Alma/XASDM/FreqOffsetTable http://almaobservatory.org/XML/XASDM/3/FreqOffsetTable.xsd\" schemaVersion=\"3\" schemaRevision=\"-1\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -665,7 +668,7 @@ FreqOffsetRow* FreqOffsetTable::newRow(FreqOffsetRow* row) {
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<FreqOffsetTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:frqoff=\"http://Alma/XASDM/FreqOffsetTable\" xsi:schemaLocation=\"http://Alma/XASDM/FreqOffsetTable http://almaobservatory.org/XML/XASDM/3/FreqOffsetTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n";
+		oss << "<FreqOffsetTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:frqoff=\"http://Alma/XASDM/FreqOffsetTable\" xsi:schemaLocation=\"http://Alma/XASDM/FreqOffsetTable http://almaobservatory.org/XML/XASDM/3/FreqOffsetTable.xsd\" schemaVersion=\"3\" schemaRevision=\"-1\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='FreqOffsetTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -781,7 +784,7 @@ FreqOffsetRow* FreqOffsetTable::newRow(FreqOffsetRow* row) {
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
       throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "FreqOffset");
     
-    const ByteOrder* byteOrder;
+    const ByteOrder* byteOrder=0;
     if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
       // Then it's an "old fashioned" MIME file for tables.
       // Just try to deserialize it with Big_Endian for the bytes ordering.
@@ -1034,7 +1037,7 @@ FreqOffsetRow* FreqOffsetTable::newRow(FreqOffsetRow* row) {
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
       throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "FreqOffset");
     
-    const ByteOrder* byteOrder;
+    const ByteOrder* byteOrder=0;
     if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
       // Then it's an "old fashioned" MIME file for tables.
       // Just try to deserialize it with Big_Endian for the bytes ordering.

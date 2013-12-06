@@ -32,9 +32,7 @@
 #include <casa/BasicMath/Math.h>
 #include <casa/BasicSL/Constants.h>
 #include <casa/Exceptions/Error.h>
-
-unsigned long lquietnan[2] = {0x7fffffff, 0xffffffff};
-#define DQUIETNAN (*(double *)lquietnan)
+#include <limits>
 
 Block<String> SDDIndexRep::posCodeMap_p;
 Block<String> SDDIndexRep::obsModeMap_p;
@@ -248,16 +246,16 @@ void SDDIndexRep::setintPhase(Int new_intPhase)
 void SDDIndexRep::setLine()
 {
     isLine_p = True;
-    slewRate_p = DQUIETNAN;
-    intTime_p = DQUIETNAN;
+    slewRate_p = std::numeric_limits<double>::quiet_NaN();
+    intTime_p = std::numeric_limits<double>::quiet_NaN();
     hasChanged_p = True;
 }
 
 void SDDIndexRep::setCont()
 {
     isLine_p = False;
-    freqRes_p = DQUIETNAN;
-    restFreq_p = DQUIETNAN;
+    freqRes_p = std::numeric_limits<double>::quiet_NaN();
+    restFreq_p = std::numeric_limits<double>::quiet_NaN();
     hasChanged_p = True;
 }
 

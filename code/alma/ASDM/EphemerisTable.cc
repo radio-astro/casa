@@ -306,6 +306,7 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 	//
 
 	
+		
 	
 		
 		
@@ -353,9 +354,11 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 		EphemerisRow * dummy = checkAndAdd(x, true); // We require the check for uniqueness to be skipped.
 		                                           // by passing true in the second parameter
 		                                           // whose value by default is false.
+                if (false) cout << (unsigned long long) dummy;
 	}
 	
 
+	
 
 
 	// 
@@ -371,7 +374,7 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 			
 			
 			
-	EphemerisRow*  EphemerisTable::checkAndAdd(EphemerisRow* x, bool skipCheckUniqueness) {
+	EphemerisRow*  EphemerisTable::checkAndAdd(EphemerisRow* x, bool ) {
 		string keystr = Key( 
 						x->getEphemerisId() 
 					   ); 
@@ -806,7 +809,7 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
       throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "Ephemeris");
     
-    const ByteOrder* byteOrder;
+    const ByteOrder* byteOrder=0;
     if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
       // Then it's an "old fashioned" MIME file for tables.
       // Just try to deserialize it with Big_Endian for the bytes ordering.
@@ -1073,7 +1076,7 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
     if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
       throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "Ephemeris");
     
-    const ByteOrder* byteOrder;
+    const ByteOrder* byteOrder=0;
     if ( string("ASDMBinaryTable").compare((const char*) root_element->name) == 0) {
       // Then it's an "old fashioned" MIME file for tables.
       // Just try to deserialize it with Big_Endian for the bytes ordering.

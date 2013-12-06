@@ -295,7 +295,7 @@ void LogModel::appendData(const QString &data)
 	endInsertRows();
 }
 
-void LogModel::setupModelData(const QString &lines, LogItem *parent)
+void LogModel::setupModelData(const QString &lines, LogItem */*parent*/)
 {
 	appendData(lines);
 }

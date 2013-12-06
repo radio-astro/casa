@@ -107,7 +107,6 @@ class PlotMSPlotTab : public PlotMSTab, Ui::PlotTab,
     friend class PlotMSOverPlot;
     friend class PlotMSPlot;
     friend class PlotMSPlotter;
-    friend class PlotMSIterPlot;
     
 public:
     // Constructor which takes the parent plotter.
@@ -259,7 +258,8 @@ private slots:
     // the GUI to show which parameters have been changed (if any).
     void tabChanged();
 
-    
+    //Parameters for exporting the plot have changed.
+    void exportRangeChanged();
 };
 
 }

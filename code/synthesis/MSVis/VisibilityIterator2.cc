@@ -161,7 +161,7 @@ VisibilityIterator2::construct (const VisBufferComponents2 * prefetchColumns,
 
 VisibilityIterator2::~VisibilityIterator2 ()
 {
-    delete impl_p;
+	delete impl_p;
 }
 
 void
@@ -705,10 +705,10 @@ VisibilityIterator2::nDataDescriptionIds () const
 }
 
 Int
-VisibilityIterator2::nPolarizations () const
+VisibilityIterator2::nPolarizationIds () const
 {
     CheckImplementationPointerR ();
-    return impl_p->nPolarizations ();
+    return impl_p->nPolarizationIds ();
 }
 
 Int

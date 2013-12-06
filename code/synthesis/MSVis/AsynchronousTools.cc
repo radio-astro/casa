@@ -247,7 +247,7 @@ void
 Logger::log (const char * format, ...)
 {
     va_list vaList;
-    va_start (vaList, String::format);
+    va_start (vaList, format);
 
     char buffer[4096];
 

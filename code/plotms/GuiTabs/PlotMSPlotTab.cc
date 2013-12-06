@@ -37,7 +37,7 @@
 #include <plotms/GuiTabs/PlotMSTransformationsTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
-#include <plotms/Plots/PlotMSIterPlot.h>
+#include <plotms/Plots/PlotMSPlot.h>
 #include <QDebug>
 namespace casa {
 
@@ -186,7 +186,9 @@ PlotMSPlotParameters PlotMSPlotTab::currentlySetParameters() const {
     PlotMSPlotParameters params(itsPlotter_->getPlotFactory());
     if(itsCurrentParameters_ != NULL) params = *itsCurrentParameters_;
     
-    foreach(PlotMSPlotSubtab* tab, itsSubtabs_) tab->getValue(params);
+    foreach(PlotMSPlotSubtab* tab, itsSubtabs_){
+    	tab->getValue(params);
+    }
     
     return params;
 }
@@ -480,12 +482,20 @@ PlotMSExportTab*  PlotMSPlotTab::insertExportSubtab (int index){
           if (tab != NULL)
                break;
      }
-     if (tab == NULL)
-          tab = new PlotMSExportTab (this, itsPlotter_);
+     if (tab == NULL){
+        tab = new PlotMSExportTab (this, itsPlotter_);
+        connect( tab, SIGNAL(exportRangeChanged()), this, SLOT(exportRangeChanged()));
+     }
      insertSubtab (index, tab);
      return tab;
 }
 
+void PlotMSPlotTab::exportRangeChanged(){
+	PlotMSPlotParameters params = currentlySetParameters();
+	itsCurrentParameters_->holdNotification(this);
+	*itsCurrentParameters_ = params;
+	itsCurrentParameters_->releaseNotification();
+}
 
 PlotMSTransformationsTab*  PlotMSPlotTab::addTransformationsSubtab (){
      return insertTransformationsSubtab (itsSubtabs_.size ());
@@ -533,7 +543,9 @@ void PlotMSPlotTab::setupForPlot(PlotMSPlot* plot) {
     plot->setupPlotSubtabs(*this);
     // TODO update tool buttons
     
-    foreach(PlotMSPlotSubtab* tab, itsSubtabs_) tab->setValue(params);
+    foreach(PlotMSPlotSubtab* tab, itsSubtabs_){
+    	tab->setValue(params);
+    }
     
     itsUpdateFlag_ = oldupdate;
     
@@ -582,10 +594,8 @@ void PlotMSPlotTab::goClicked() {
         
         if(index == newSinglePlot || index == newMultiPlot) {
             // this will update the go chooser as necessary
-            PlotMSPlot* plot = index == newSinglePlot ?
-                               (PlotMSPlot*)itsPlotManager_.addSinglePlot() :
-                               (PlotMSPlot*)itsPlotManager_.addIterPlot();
-            
+            PlotMSPlot* plot = (PlotMSPlot*)itsPlotManager_.addOverPlot();
+
             // switch to new plot if needed
             if(itsCurrentPlot_ != NULL) {
                 for(unsigned int i = 0; i < itsPlotManager_.numPlots(); i++) {

@@ -208,7 +208,7 @@ public:
 
   // Save and restore the GridFT to and from a record
   virtual Bool toRecord(String& error, RecordInterface& outRec, 
-			Bool withImage=False);
+			Bool withImage=False, const String diskimage="");
   virtual Bool fromRecord(String& error, const RecordInterface& inRec);
 
   // Can this FTMachine be represented by Fourier convolutions?
@@ -271,10 +271,7 @@ protected:
   // Image Scaling and offset
   Vector<Double> uvScale, uvOffset;
 
-  // Array for non-tiled gridding
-  Array<Complex> griddedData;
-  Array<DComplex> griddedData2;
-
+ 
   Int priorCacheSize;
 
   // Grid/degrid zero spacing points?

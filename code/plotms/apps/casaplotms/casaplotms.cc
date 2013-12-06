@@ -29,9 +29,7 @@
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/PlotMS/PlotMSDBusApp.h>
-#include <plotms/Plots/PlotMSIterPlot.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
-//-#include <plotms/Plots/PlotMSSinglePlot.h>
 #include <plotms/Plots/PlotMSOverPlot.h>
 #include <casadbus/utilities/Diagnostic.h>
 
@@ -77,7 +75,6 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
            ARG_DEBUG2 = "--debug",
            ARG_LOGFILE = PlotMSDBusApp::APP_LOGFILENAME_SWITCH,
            ARG_LOGFILTER = PlotMSDBusApp::APP_LOGFILTER_SWITCH,
-           ARG_NOITERPLOT = "--noiter",
            ARG_NOPOPUPS = "--nopopups",
     	   ARG_SHOWGUI = "--nogui";
 
@@ -126,10 +123,9 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
             if(averagingFields.size() > 0)
                 cout << "\n     MS Averaging parameters for initial plot.";
             
-            cout << "\n* " << ARG_NOITERPLOT << "\n     "
-                 << "Disable iteration-capable plotting.  (Iteration is now enabled by default.)"
+
             
-		 << "\n* "  << ARG_NOPOPUPS  << "\n     "
+		 cout << "\n* "  << ARG_NOPOPUPS  << "\n     "
 		 << "Use logger and status bar instead of showing error messages in a popup."
 			     
                  << "\n* " << ARG_PIXELS1 << " or " << ARG_PIXELS2 << "\n     "
@@ -171,9 +167,7 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
         } else if(arg2 == ARG_PIXELS1 || arg2 == ARG_PIXELS2) {
             usePixels = true;
 	    continue;            
-        } else if(arg2 == ARG_NOITERPLOT) {
-	    throw(AipsError("The --noiter parameter is now deprecated."));
-	    continue;            
+
         } else if(arg2 == ARG_NOPOPUPS) {
             nopopups = true;
 	    continue;

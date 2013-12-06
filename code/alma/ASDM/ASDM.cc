@@ -4340,10 +4340,10 @@ namespace asdm {
 						throw ConversionException("An XSL transformation must be done on this '" + ((origin==ASDMUtils::EVLA) ? string("EVLA") : string("ALMA")) + "' dataset, but its file , '" + ASDMUtils::nameOfV2V3xslTransform(origin) + "' cannot be found.", "ASDM");
 					 
 					xslTransformer.setTransformation(xsltPath);
-					cout << "An XSL transformation will be done on this dataset using '" << xsltPath << "'." << endl;
+					//cout << "An XSL transformation will be done on this dataset using '" << xsltPath << "'." << endl;
 				}
 				else {
-					cout << "No transformation will be applied on this dataset." << endl;
+				  //cout << "No transformation will be applied on this dataset." << endl;
 				}
 				 
 				xmlDoc = getXSLTransformer()(fileName);

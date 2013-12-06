@@ -44,11 +44,11 @@ namespace casa {
 
 //FeatherWorker3 ( SD convolved with Int synthesized beam, INT )
 //- SD convolved with INT synthesized beam							//getFTCutSDImage
-//- SD convolved with INT synthesized beam; weighted and scaled		//getFeatheredCutInt
+//- SD convolved with INT synthesized beam; weighted and scaled		//getFeatheredCutSD
 
 //FeatherWorker4 ( SD convolved with DIRTY beam, DIRTY )
 //- SD convolved with DIRTY beam									//getFTCutSDImage
-//- SD convolved with DIRTY beam, weighted and scaled				//getFeatheredCutInt
+//- SD convolved with DIRTY beam, weighted and scaled				//getFeatheredCutSD
 
 //FeatherWorker5 ( SD, INT Convolved with SD resolution (beam) )
 //- INT convolved with SD resolution (beam)							//getFTCutIntImage
@@ -123,13 +123,19 @@ private slots:
 private:
 	FeatherManager( const FeatherManager& other );
 	FeatherManager operator=( const FeatherManager& other );
-	FeatheredData getConvolvedOrig( FeatherThread::DataTypes dataType, ImageInterface<float>* image ) const;
+	FeatheredData getConvolvedOrig( ImageInterface<float>* image ) const;
 	bool generateInputImage( QString highResImagePath, QString lowResImagePath);
 	bool generateDirtyImage( QString dirtyImagePath);
 	int getPlaneCount( ImageInterface<float>* image ) const;
+	ImageInterface<Float>* getSinglePlaneImage( ImageInterface<float>* image ) const;
+	void resetBasicFeedImages();
+	void resetDirtyFeedImage();
 	ImageInterface<Float>* lowResImage;
 	ImageInterface<Float>* highResImage;
 	ImageInterface<Float>* dirtyImage;
+	ImageInterface<Float>* highResFeedImage;
+	ImageInterface<Float>* dirtyFeedImage;
+	ImageInterface<Float>* lowResFeedImage;
 	Feather* featherWorker;
 	FeatherThread* thread;
 	QString errorMessage;
