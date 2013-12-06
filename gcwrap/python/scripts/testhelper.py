@@ -90,7 +90,7 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001, mode="percen
                                 differs = True
                                 rval = False
                                 break
-                        elif (isinstance(a[i],int)):
+                        elif (isinstance(a[i],int) or isinstance(a[i],np.int32)):
                             if (abs(a[i]-b[i]) > 0):
                                 print "Column " + c + " differs"
                                 print "Row=" + str(i)
