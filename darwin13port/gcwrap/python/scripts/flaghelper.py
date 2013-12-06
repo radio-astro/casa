@@ -599,7 +599,7 @@ def parseAgents(aflocal, flagdict, myrows, apply, writeflags, display=''):
         mode = cmd['mode']
         agent_name = mode.capitalize()+'_'+str(row)
             
-        cmd['name'] = agent_name
+        cmd['agentname'] = agent_name
         
         # Remove the data selection parameters if there is only one agent for performance reasons.
         # Explanation: if only one agent exists and the data selection parameters are parsed to it, 
@@ -615,7 +615,7 @@ def parseAgents(aflocal, flagdict, myrows, apply, writeflags, display=''):
                     cmd.pop(k)
 
         casalog.post('Parsing parameters of mode %s in row %s'%(mode,row), 'DEBUG')
-        casalog.post('%s'%cmd, 'DEBUG')
+        casalog.post('%s'%cmd, 'DEBUG')            
 
         # Parse the dictionary of parameters to the tool
         if (not aflocal.parseagentparameters(cmd)):
@@ -819,10 +819,16 @@ def writeFlagCommands(msfile, flagdict, applied, add_reason, outfile, append=Tru
             cmdline = ""
             reason = ""
             cmddict = flagdict[key]['command']
+            
             # Do not save reason in the COMMAND column
             if cmddict.has_key('reason'):
                 cmddict.pop('reason')
                 
+            # Summary cmds should not go to FLAG_CMD
+            if cmddict.has_key('mode') and cmddict['mode'] == 'summary':
+                casalog.post("Commands with mode='summary' are not allowed in the FLAG_CMD table", 'WARN')
+                continue
+            
             # Add to REASON column the user input reason if requested
             reason = flagdict[key]['reason']
             if reason2add:
@@ -838,7 +844,7 @@ def writeFlagCommands(msfile, flagdict, applied, add_reason, outfile, append=Tru
                         v = v.strip("'")
                     cmdstr = "'"+v+"'"
                     cmdline = cmdline + k + '=' + str(cmdstr) + ' '
-                    
+
                 else:
                     cmdline = cmdline + k + '=' + str(v) + ' '
                 
@@ -879,14 +885,16 @@ def writeFlagCommands(msfile, flagdict, applied, add_reason, outfile, append=Tru
         
         newrows = int(tblocal.nrows())
         newrows = newrows - nrows
-        casalog.post('Saved ' + str(newrows) + ' rows to FLAG_CMD')
+        if newrows == 0:
+            casalog.post('Did not save any rows to FLAG_CMD')
+        else:
+            casalog.post('Saved ' + str(newrows) + ' rows to FLAG_CMD')
         
         tblocal.close()
         
     return True
 
 
-# TODO: verify
 def parseRFlagOutputFromSummary(mode,summary_stats_list, flagcmd):
     """
     Function to pull out 'rflag' output from the long dictionary, and 
@@ -1477,7 +1485,6 @@ def evaluateNumpyType(elem):
     # return the casted element  
     return val
 
-
 def parseXML(sdmfile, mytbuff):
     '''
 #   readflagxml: reads Antenna.xml and Flag.xml SDM tables and parses
@@ -1739,6 +1746,7 @@ def parseXML(sdmfile, mytbuff):
         # Construct command strings (per input flag)
         cmddict = OrderedDict()
 #        cmd = "antenna='" + antname + "' timerange='" + timestr + "'"
+#        cmddict['mode'] = 'manual'
         cmddict['antenna'] = antname
         cmddict['timerange'] = timestr
         if spwstring != '':
@@ -3904,8 +3912,4 @@ def evalString(cmdline):
     
     return cmddict
 
-
-
-
-    
 

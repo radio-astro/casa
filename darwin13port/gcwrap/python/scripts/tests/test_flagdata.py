@@ -280,6 +280,17 @@ class test_base(unittest.TestCase):
         aflocal.run(writeflags=True)
         aflocal.done()
         
+    def extract_reports(self, report_list):        
+        summary_list = []
+        
+        # Extract only the type 'summary' reports
+        nreps = report_list.keys()
+        for rep in range(len(nreps)):
+            repname = 'report'+str(rep);
+            if(report_list[repname]['type']=='summary'):
+                  summary_list.append(report_list[repname]);
+                  
+        return summary_list
 
 class test_tfcrop(test_base):
     """flagdata:: Test of mode = 'tfcrop'"""
@@ -411,7 +422,7 @@ class test_rflag(test_base):
         self.setUp_data4tfcrop()
         
     def test_rflag1(self):
-        '''flagdata:: Test1 of mode = rflag : automatic thresholds'''
+        '''flagdata:: mode = rflag : automatic thresholds'''
         flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[], freqdev=[], flagbackup=False,
                  extendflags=False)
         res = flagdata(vis=self.vis, mode='summary',spw='7,9,10')
@@ -420,7 +431,7 @@ class test_rflag(test_base):
         self.assertEqual(res['spw']['7']['flagged'], 0)
 
     def test_rflag2(self):
-        '''flagdata:: Test2 of mode = rflag : partially-specified thresholds'''
+        '''flagdata:: mode = rflag : partially-specified thresholds'''
         flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[[1,10,0.1],[1,11,0.07]], \
                        freqdev=0.5, flagbackup=False, extendflags=False)
         res = flagdata(vis=self.vis, mode='summary',spw='9,10,11')
@@ -443,7 +454,7 @@ class test_rflag(test_base):
         self.assertEqual(res['spw']['11']['flagged'], 0)
 
     def test_rflag3(self):
-        '''flagdata:: Test3 of mode = rflag : output/input via two methods'''
+        '''flagdata:: mode = rflag : output/input via two methods'''
         # (1) Test input/output files, through the task, mode='rflag'
         # Files tdevfile.txt and fdevfile.txt are created in this step
         flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', 
@@ -471,7 +482,7 @@ class test_rflag(test_base):
         self.assertTrue(abs(res1['flagged']-39504.0)<10000)
 
     def test_rflag4(self):
-        '''flagdata:: Test4 of mode = rflag : correlation selection'''
+        '''flagdata:: mode = rflag : correlation selection'''
         flagdata(vis=self.vis, mode='rflag', spw='9,10', correlation='rr,ll', flagbackup=False,
                  extendflags=False)
         res = flagdata(vis=self.vis, mode='summary',spw='9,10')
@@ -547,7 +558,19 @@ class test_rflag(test_base):
         else:
             self.fail('Channel 51 extendpols failed') 
 
-
+    def test_rflag_summary_list(self):
+        '''flagdata: rflag and summaries in list mode'''
+        fcmd = ["mode='summary' spw='7,9,10' name='InitFlags'",
+                "mode='rflag' spw='9,10' timedev=[] freqdev=[] extendflags=False",
+                "mode='summary' spw='7,9,10' name='RflagFlags'"]
+        
+        res = flagdata(vis=self.vis, mode='list', inpfile=fcmd, flagbackup=False)
+        self.assertEqual(res['report0']['flagged'],0)
+        self.assertEqual(res['report1']['flagged'], 42728)
+        self.assertEqual(res['report1']['antenna']['ea19']['flagged'], 18411)
+        self.assertEqual(res['report1']['spw']['7']['flagged'], 0,)
+        
+        
 class test_shadow(test_base):
     def setUp(self):
         self.setUp_shadowdata2()
@@ -1134,7 +1157,7 @@ class test_alma(test_base):
         self.assertEqual(res['correlation']['XX']['flagged'], 568)
         self.assertEqual(res['correlation']['YY']['flagged'], 1283)
 
-    def test_spw(self):
+    def test_alma_spw(self):
         '''flagdata: flag various spw'''
         # Test that a white space in the spw parameter is taken correctly
         flagdata(vis=self.vis, mode='manual', spw='1,2, 3', savepars=False,
@@ -1293,18 +1316,6 @@ class test_list_file(test_base):
         
     def tearDown(self):
         os.system('rm -rf list*.txt list*.tmp')
-
-    def extract_reports(self, report_list):        
-        summary_list = []
-        
-        # Extract only the type 'summary' reports
-        nreps = report_list.keys()
-        for rep in range(len(nreps)):
-            repname = 'report'+str(rep);
-            if(report_list[repname]['type']=='summary'):
-                  summary_list.append(report_list[repname]);
-                  
-        return summary_list
 
     def test_file1(self):
         '''flagdata: apply flags from a list and do not save'''
@@ -1539,58 +1550,57 @@ class test_list_file(test_base):
         # Compare output with input. The output should have quotes around manualflag
         self.assertFalse(filecmp.cmp(filename, outname, 1), 'Files should not be equal')
 
-# Uncomment when CAS-5368 is implemented
-#     def test_file_summary1(self):
-#         '''flagdata: summary commands in list mode'''
-#         myinput = "mode='manual' scan='2'\n"\
-#                   "mode='summary' name='Scan2'\n"\
-#                   "mode='clip' clipzeros=True\n"\
-#                   "mode='summary' name='Zeros'"
-#         filename = 'listsumm1.txt'
-#         create_input(myinput, filename)
-#         summary_stats_list = flagdata(vis=self.vis, mode='list', inpfile=filename, flagbackup=False)
-#         
-#         # Extract only the type 'summary' reports into a list
-#         summary_reps = self.extract_reports(summary_stats_list)
-# 
-#         for ind in range(0,len(summary_reps)):        
-#             flagcount = summary_reps[ind]['flagged'];
-#             totalcount = summary_reps[ind]['total'];         
-#             # From the second summary onwards, subtract counts from the previous one :)
-#             if ( ind > 0 ):
-#                  flagcount = flagcount - summary_reps[ind-1]['flagged'];
-#         
-#             print "Summary ", ind , "(" , summary_reps[ind]['name']  , ") :  Flagged : " , flagcount , " out of " , totalcount ;   
-#         
-#         self.assertEqual(summary_reps[0]['flagged'],238140, 'Should show only scan=2 flagged')    
-#         self.assertEqual(summary_reps[1]['flagged']-summary_reps[0]['flagged'],0, 'Should not flag any zeros')    
-# 
-#     def test_file_summary2(self):
-#         '''flagdata: compare summaries from a list with individual reports'''
-#         myinput = ["scan='1~3' mode='manual'",
-#                    "mode='summary' name='SCANS123'",
-#                    "scan='5' mode='manualflag'",
-#                    "#scan='4'",
-#                    "mode='summary' name='SCAN5'"]
-#         
-#         summary_stats_list = flagdata(vis=self.vis, mode='list', inpfile=myinput, flagbackup=False)
-#         summary_reps = self.extract_reports(summary_stats_list)
-#         
-#         # Unflag and flag scan=1~3
-#         self.unflag_ms()
-#         flagdata(vis=self.vis, scan='1~3', flagbackup=False)
-#         rscan123 = flagdata(vis=self.vis, mode='summary')
-#         # Unflag and flag scan=5
-#         self.unflag_ms()
-#         flagdata(vis=self.vis, scan='5', flagbackup=False)
-#         rscan5 = flagdata(vis=self.vis, mode='summary')
-#         
-#         # Compare
-#         self.assertEqual(summary_reps[0]['flagged'],rscan123['flagged'], 'scan=1~3 should be flagged')
-#         self.assertEqual(summary_reps[1]['flagged'],rscan5['flagged']+rscan123['flagged'],\
-#                          'scan=1~3,5 should be flagged')
-#         self.assertEqual(summary_reps[1]['flagged']-summary_reps[0]['flagged'],rscan5['flagged'],\
-#                          'scan=5 should be flagged')
+    def test_file_summary1(self):
+        '''flagdata: summary commands in list mode'''
+        myinput = "mode='manual' scan='2'\n"\
+                  "mode='summary' name='Scan2'\n"\
+                  "mode='clip' clipzeros=True\n"\
+                  "mode='summary' name='Zeros'"
+        filename = 'listsumm1.txt'
+        create_input(myinput, filename)
+        summary_stats_list = flagdata(vis=self.vis, mode='list', inpfile=filename, flagbackup=False)
+
+        # Extract only the type 'summary' reports into a list
+        summary_reps = self.extract_reports(summary_stats_list)
+ 
+        for ind in range(0,len(summary_reps)):        
+            flagcount = summary_reps[ind]['flagged'];
+            totalcount = summary_reps[ind]['total'];         
+            # From the second summary onwards, subtract counts from the previous one :)
+            if ( ind > 0 ):
+                 flagcount = flagcount - summary_reps[ind-1]['flagged'];
+         
+            print "Summary ", ind , "(" , summary_reps[ind]['name']  , ") :  Flagged : " , flagcount , " out of " , totalcount ;   
+         
+        self.assertEqual(summary_reps[0]['flagged'],238140, 'Should show only scan=2 flagged')    
+        self.assertEqual(summary_reps[1]['flagged']-summary_reps[0]['flagged'],0, 'Should not flag any zeros')    
+ 
+    def test_file_summary2(self):
+        '''flagdata: compare summaries from a list with individual reports'''
+        myinput = ["scan='1~3' mode='manual'",
+                   "mode='summary' name='SCANS123'",
+                   "scan='5' mode='manualflag'",
+                   "#scan='4'",
+                   "mode='summary' name='SCAN5'"]
+         
+        summary_stats_list = flagdata(vis=self.vis, mode='list', inpfile=myinput, flagbackup=False)
+        summary_reps = self.extract_reports(summary_stats_list)
+         
+        # Unflag and flag scan=1~3
+        self.unflag_ms()
+        flagdata(vis=self.vis, scan='1~3', flagbackup=False)
+        rscan123 = flagdata(vis=self.vis, mode='summary')
+        # Unflag and flag scan=5
+        self.unflag_ms()
+        flagdata(vis=self.vis, scan='5', flagbackup=False)
+        rscan5 = flagdata(vis=self.vis, mode='summary')
+         
+        # Compare
+        self.assertEqual(summary_reps[0]['flagged'],rscan123['flagged'], 'scan=1~3 should be flagged')
+        self.assertEqual(summary_reps[1]['flagged'],rscan5['flagged']+rscan123['flagged'],\
+                         'scan=1~3,5 should be flagged')
+        self.assertEqual(summary_reps[1]['flagged']-summary_reps[0]['flagged'],rscan5['flagged'],\
+                         'scan=5 should be flagged')
 
 class test_list_list(test_base):
     """Test of mode = 'list' using input list"""
@@ -1700,30 +1710,6 @@ class test_list_list(test_base):
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 1663578)
               
-    # CAS-4974  
-#    def test_cmdreason1(self):
-#        '''flagdata: detect blank space in cmdreason. Catch exception'''
-#        outtxt = 'badreason.txt'
-#        flagdata(vis=self.vis, scan='1,3', action='calculate', savepars=True, outfile=outtxt, 
-#                 cmdreason='ODD SCANS')
-#        flagdata(vis=self.vis, scan='2,4', action='calculate', savepars=True, outfile=outtxt, 
-#                 cmdreason='EVEN SCANS')
-#        
-#        # Apply the cmd with blanks in reason. Catch the error.
-#        try:
-#            flagdata(vis=self.vis, mode='list', inpfile=outtxt, reason='ODD SCANS')
-#        except Exception, instance:
-#            print '*** Expected exception. \"%s\"'%instance
-#            res = flagdata(vis=self.vis, mode='summary')
-#            self.assertEqual(res['flagged'], 0)
-#    
-#        # Now apply the corrected version with underscores
-#        flagdata(vis=self.vis, mode='list', inpfile=outtxt, reason='ODD_SCANS')
-#        res = flagdata(vis=self.vis, mode='summary')
-#        self.assertEqual(res['scan']['1']['flagged'], 568134)
-#        self.assertEqual(res['scan']['3']['flagged'], 762048)
-#        self.assertEqual(res['flagged'], 568134+762048)
-
     # The new parser allows whitespaces in reason values. Change the test
     def test_cmdreason1(self):
         '''flagdata: allow whitespace in cmdreason'''
@@ -1753,6 +1739,23 @@ class test_list_list(test_base):
         self.assertEqual(res['scan']['1']['flagged'], 568134)
         self.assertEqual(res['scan']['3']['flagged'], 762048)
         self.assertEqual(res['flagged'], 568134+762048)
+        
+    def test_list_summary1(self):
+        '''flagdata: check names of multiple summaries in a list'''
+        myinput = ["scan='3' mode='manual'",
+                   "mode='summary' name='SCAN_3'",
+                   "scan='15' mode='manualflag'",  # provoke an error
+                   "#scan='4'",
+                   "mode='summary' name='SCAN15'"]
+         
+        summary_stats_list = flagdata(vis=self.vis, mode='list', inpfile=myinput, flagbackup=False)
+        summary_reps = self.extract_reports(summary_stats_list)
+                  
+        self.assertEqual(summary_reps[0]['scan']['3']['flagged'],
+                         summary_reps[0]['scan']['3']['total'])
+        self.assertEqual(summary_reps[0]['name'],'SCAN_3')
+        self.assertEqual(summary_reps[1]['name'],'SCAN15')
+        
     
 class test_clip(test_base):
     """flagdata:: Test of mode = 'clip'"""

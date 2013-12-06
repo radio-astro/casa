@@ -104,6 +104,7 @@ sdscale.xml
 sdsmooth.xml
 sdstat.xml
 sdtpimaging.xml
+tsdstat.xml
 setjy.xml
 ssoflux.xml
 simalma.xml

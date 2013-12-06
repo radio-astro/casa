@@ -365,6 +365,10 @@
                 <value type="bool">False</value>
             </param>
 
+            <param type="string" name="name" subparam="true">
+                <description>Name of this summary report (key in summary dictionary)</description>
+                <value>summary</value>
+            </param>
 
             <!-- ACTION parameters -->
             <param type="string" name="action">
@@ -601,6 +605,7 @@
                         <default param="spwchan"><value type="bool">False</value></default>
                         <default param="spwcorr"><value type="bool">False</value></default>
                         <default param="basecnt"><value type="bool">False</value></default>  
+                        <default param="name"><value type="string">summary</value></default>
                     </equals>
                 </when>
 
@@ -732,9 +737,7 @@
                 the parameters that are not present in the line. Each line will be taken 
                 as a command to the task. If data is pre-selected using any of the selection 
                 parameters, then flagging will apply only to that subset of the MS.
-                  
-                The summary mode is not allowed in the input list.
-                  
+                                    
                 For optimization, the task will create a union of the data selection parameters
                 present in the list and select only that portion of the MS.
 
@@ -1249,7 +1252,8 @@
 
         unflag -- Unflag according to the data selection specified.
 
-        summary -- List the number of rows and data points flagged.
+        summary -- List the number of rows and flagged data points for the MS's meta-data.
+	               The resulting summary will be returned as a Python dictionary.
                   
                minrel -- Minimum number of flags (relative) to include in histogram
                     default: 0.0
@@ -1273,16 +1277,35 @@
                basecnt -- list the number of flags per baseline
                     default: False
 
+               name -- Name for this summary, to be used as a key in the returned
+                       Python dictionary. It is possible to call the summary mode
+                       multiple times in list mode. When calling the summary mode as a 
+                       command in a list, one can give different names to each one of 
+                       them so that they can be easily pulled out of the summary's dictionary.
+                    default: 'summary'
+
                     In summary mode, the task returns a dictionary of flagging statistics.
-                    Example:
+	
+                    Example1:
 
                         s = flagdata(..., mode='summary')
 
                      Then s will be a dictionary which contains
                     s['total']   : total number of data
                     s['flagged'] : amount of flagged data
-                    
-        
+
+                    Exmaple2: two summary commands in list mode, intercalating a manual flagging command.
+	
+                        s = flagdata(..., mode='list', inpfile=["mode='summary' name='InitFlags'",
+                                                                "mode='manual' autocorr=True",
+                                                                "mode='summary' name='Autocorr'"])
+
+                    The dictionary returned in 's' will contain two dictionaries, one for each of the
+                    two summary modes. 
+
+                    s['report0']['name'] : 'InitFlags'
+                    s['report1']['name'] : 'Autocorr'
+			                            
 
     action -- Action to perform in MS/cal table or in the input list of parameters. 
         options: 'none', 'apply','calculate'
@@ -1346,8 +1369,6 @@
                              contains any reason, they will be replaced with this one. At the 
                              moment it is not possible to add more than one reason. 
 
-                             Whitespaces are not allowed in the reasons when saving to a file. 
-                             They will be replaced by underscores and a warning will be issued.
                     default: ' '; no reason will be added to output.
                     example: cmdreason='CLIP_ZEROS'
                 
