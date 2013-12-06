@@ -311,10 +311,24 @@ class Setjy(basetask.StandardTaskTemplate):
         for field in utils.safe_split(inputs.field):
             inputs.field = field
             jobs = []
-            for spw in spws:
+            for spw in spws:                
                 inputs.spw = spw.id
-                task_args = inputs.to_casa_args()
-                jobs.append(casa_tasks.setjy(**task_args))
+
+                orig_intent = inputs.intent
+                try:                
+                    # the field may not have all intents, which leads to its
+                    # deselection in the setjy data selection. Only list
+                    # the target intents that are present in the field.
+                    input_intents = set(inputs.intent.split(',')) 
+                    fields = inputs.ms.get_fields(field)
+                    assert(len(fields) is 1, 'Num fields != 1 with field=%s' % field)
+                    targeted_intents = fields[0].intents.intersection(input_intents) 
+                    inputs.intent = ','.join(targeted_intents)
+
+                    task_args = inputs.to_casa_args()
+                    jobs.append(casa_tasks.setjy(**task_args))
+                finally:
+                    inputs.intent = orig_intent
                 
                 # Flux densities coming from a non-lookup are added to the
                 # results so that user-provided calibrator fluxes are
