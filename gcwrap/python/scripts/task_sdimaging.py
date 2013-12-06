@@ -46,7 +46,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
 
         # field
         self.fieldid=-1
-        sourceid=-1
+        self.sourceid=-1
         self.open_table(self.field_table)
         field_names = self.table.getcol('NAME')
         source_ids = self.table.getcol('SOURCE_ID')
@@ -73,7 +73,8 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             source_ids = self.table.getcol('SOURCE_ID')
             for i in range(self.table.nrows()):
                 if self.sourceid == source_ids[i] \
-                       and self.table.iscelldefined('REST_FREQUENCY',i):
+                       and self.table.iscelldefined('REST_FREQUENCY',i) \
+                       and self.table.getcell('SPECTRAL_WINDOW_ID', i) in self.spw:
                     rf = self.table.getcell('REST_FREQUENCY',i)
                     if len(rf) > 0:
                         self.restfreq=self.table.getcell('REST_FREQUENCY',i)[0]
@@ -283,7 +284,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.imager.defineimage(**self.imager_param)#self.__get_param())
         self.imager.setoptions(ftmachine='sd', gridfunction=self.gridfunction)
         self.imager.setsdoptions(pointingcolumntouse=self.pointingcolumn, convsupport=self.convsupport, truncate=self.truncate, gwidth=self.gwidth, jwidth=self.jwidth, minweight = 0.)
-        #self.imager.setsdoptions(pointingcolumntouse=self.pointingcolumn, convsupport=self.convsupport, truncate=self.truncate, gwidth=self.gwidth, jwidth=self.jwidth, minweight = self.minweight)
+#         self.imager.setsdoptions(pointingcolumntouse=self.pointingcolumn, convsupport=self.convsupport, truncate=self.truncate, gwidth=self.gwidth, jwidth=self.jwidth, minweight = self.minweight)
         self.imager.makeimage(type='singledish', image=self.outfile)
         weightfile = self.outfile+".weight"
         self.imager.makeimage(type='coverage', image=weightfile)
@@ -313,7 +314,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         my_ia.open(weightfile)
         weight_val = my_ia.getchunk()
         valid_pixels = numpy.where(weight_val > 0.0)
-        if valid_pixels == 0:
+        if len(valid_pixels[0]) == 0:
             my_ia.close()
             casalog.post("All pixels weight zero. This indicates no data in MS is in image area. Mask will not be set. Please check your image parameters.","WARN")
             return
@@ -323,12 +324,12 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         casalog.post("Pixels in map with weight <= median(weight)*minweight = %f will be masked." % \
                      (median_weight*self.minweight),"INFO")
         mask_pixels = numpy.where(weight_val <= median_weight*self.minweight)
-        weight_val[mask_pixels] = 0.
+        #weight_val[mask_pixels] = 0.
         #my_ia.putchunk(weight_val)
         my_ia.close()
         # Modify default mask
         my_ia.open(self.outfile)
-        my_ia.calcmask('%s>%f' % (weightfile.replace("/", "\/"),self.minweight), asdefault=True)
+        my_ia.calcmask("'%s'>%f" % (weightfile,self.minweight), asdefault=True)
         my_ia.close()
         masked_fraction = 100.*(1. - (weight_val.size - len(mask_pixels[0])) / float(len(valid_pixels[0])) )
         casalog.post("This amounts to %5.1f %% of the area with nonzero weight." % \
@@ -479,7 +480,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         # POINTING extent
         qheight = my_qa.sub(ymax_g, ymin_g)
         width_rad = my_qa.convert(my_qa.sub(xmax_g, xmin_g), 'rad')['value'] * \
-                numpy.cos(my_qa.convert(qcenty, 'rad')['value'])
+                    numpy.cos(my_qa.convert(qcenty, 'rad')['value'])
         qwidth = my_qa.convert(my_qa.quantity(width_rad, 'rad'), base_unit[0])
         scenter = "%s %s %s" % (base_mref, my_qa.formxxx(qcentx, "hms"), \
                   my_qa.formxxx(qcenty, "dms"))

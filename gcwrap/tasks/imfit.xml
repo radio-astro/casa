@@ -210,6 +210,9 @@ for easier inspection using tool methods, eg
 
 cl.fromrecord(res['results'])
 
+although this will only work if the flux density units in the results dictionary are
+conformant with Jy.
+
 If dooff is True, in addtion to the specified number of
 gaussians, a zero-level offset will also be fit. The initial estimate for this
 offset is specified using the offset parameter. Units are assumed to be the
@@ -242,6 +245,20 @@ and has the option of either appending to or overwriting an existing file.
 The user has the option of writing the (convolved) parameters of a successful
 fit to a file which can be fed back to imfit as the estimates file for a
 subsequent run.
+
+SUPPORTED UNITS
+
+Currently only images with brightness units conformant with Jy, Jy.km/s, and K are fully
+supported for fitting. If your image has some other base brightness unit, imfit will assume
+that unit is equivalent to Jy/pixel and results will be calculated accordingly. For images
+with units of K, the flux density will be reported in the logger in some multiple of 
+K.beam if the image has a beam, but will be converted and written in the returned dictionary
+in units of K.rad.rad. Note also that converting the returned results subdirectionary to a
+component list via cl.fromrecord() currently only works properly if the flux density units
+in the results dictionary are conformant with Jy. If you need to be able to
+run cl.fromrecord() on the resulting dictionary you can first modify the flux density units
+by hand to be (some prefix)Jy and then run cl.fromrecord on that dictionary, bearing in mind
+your unit conversion.
 
 FITTING OVER MULTIPLE CHANNELS
 

@@ -35,7 +35,8 @@ class sdfit_worker(sdutil.sdtask_template):
                                                          self.restfreq)
 
         # Select scan and field
-        sorg.set_selection(self.get_selector())
+        #sorg.set_selection(self.get_selector())
+        sorg.set_selection(self.get_selector_by_list())
 
         # this is bit tricky
         # set fluxunit here instead of self.set_to_scan
@@ -127,7 +128,7 @@ class sdfit_worker(sdutil.sdtask_template):
                 # in auto mode, linelist will be detemined for each spectra
                 # otherwise, linelist will be the same for all spectra
                 if current_unit != 'channel':
-                    xx = self.scan._getabcisssa(irow)
+                    xx = self.scan._getabcissa(irow)
                     dbw = abs(xx[1]-xx[0])
                 self.__initial_guess(dbw,numfit,comps,irow)
             else:
@@ -358,8 +359,8 @@ class sdfit_worker(sdutil.sdtask_template):
         if mr: # a whole spectrum is flagged
             themask = False
         else:
-            msk = array(fitter.data._getmask(irow))
-            fmsk = array(fitter.mask)
+            msk = array(self.fitter.data._getmask(irow))
+            fmsk = array(self.fitter.mask)
             themask = logical_and(msk,fmsk)
             del msk, fmsk
         # plot masked region if any of channel is not in fit range.
@@ -377,9 +378,9 @@ class sdfit_worker(sdutil.sdtask_template):
         if ( fitted ):
             # plot residual
             if ( self.plotlevel==2 ):
-                plot_line(myp,x,fitter.get_residual(),themask,label=labels[2],color=7)
+                plot_line(myp,x,self.fitter.get_residual(),themask,label=labels[2],color=7)
             # plot fit
-            plot_line(myp,x,fitter.fitter.getfit(),themask,label=labels[3],color=2)
+            plot_line(myp,x,self.fitter.fitter.getfit(),themask,label=labels[3],color=2)
 
         if ( irow == 0 ):
                 tlab=self.fitter.data._getsourcename(self.fitter._fittedrow)

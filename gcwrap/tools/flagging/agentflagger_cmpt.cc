@@ -16,7 +16,6 @@
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Exceptions/Error.h>
 #include <flagging/Flagging/AgentFlagger.h>
-#include <flagging/Flagging/RFCommon.h>
 #include <casa/Containers/RecordInterface.h>
 #include <casa/Containers/Record.h>
 #include <casa/sstream.h>
@@ -571,7 +570,8 @@ agentflagger::parsesummaryparameters(
 		const std::string& observation,
 		const bool spwchan,
 		const bool spwcorr,
-		const bool basecnt)
+		const bool basecnt,
+		const std::string& name)
 {
 
 	try {
@@ -584,7 +584,7 @@ agentflagger::parsesummaryparameters(
 					String(feed),String(scan),String(antenna),
 					String(uvrange),String(timerange),String(correlation),
 					String(intent), String(observation), Bool(spwchan),
-					Bool(spwcorr), Bool(basecnt));
+					Bool(spwcorr), Bool(basecnt), String(name));
 
 		}
 

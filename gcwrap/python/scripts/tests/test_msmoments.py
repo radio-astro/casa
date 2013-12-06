@@ -27,24 +27,28 @@ class msmoments_unittest_base:
     taskname='msmoments'
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/msmoments/'
     place=5
+    tb = gentools(['tb'])[0]
     
     def _compare(self,tab,ref,unit):
-        cols=tab.getcolkeywords('FLOAT_DATA')
+        self.assertTrue(self.tb.open(tab),
+                        msg='Failed to open table %s'%(tab))
+        cols=self.tb.getcolkeywords('FLOAT_DATA')
+        sp=self.tb.getcell('FLOAT_DATA',0)
+        self.tb.close()
         if cols.has_key('QuantumUnits'):
             cunit=cols['QuantumUnits']
         else:
             cunit=cols['UNIT']
         self.assertEqual(cunit,unit,
                          msg='Unit %s is wrong (should be %s)'%(cunit,unit))
-        sp=tab.getcell('FLOAT_DATA',0)
         self.assertEqual(len(sp[0]),1,
                          msg='moment must be 1 per RR sectrum')
-        if sp[0][0] > 10.0:
-            while(sp[0][0]>10.0):
+        if abs(sp[0][0]) > 10.0:
+            while(abs(sp[0][0])>10.0):
                 sp[0][0] /= 10.0
                 ref[0] /= 10.0
-        elif sp[0][0] < 1.0:
-            while(sp[0][0]<1.0):
+        elif abs(sp[0][0]) < 1.0:
+            while(abs(sp[0][0])<1.0):
                 sp[0][0] *= 10.0
                 ref[0] *= 10.0
         #print sp[0][0], ref[0]
@@ -63,7 +67,7 @@ class msmoments_unittest_base:
                          msg='moment must be 1 per LL sectrum')
         self.assertAlmostEqual(sp[1][0],ref[1],self.place,
                                msg='LL value differ.')
-        tab.close()
+        #tab.close()
         
                 
 ###
@@ -192,19 +196,15 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
     rawfile='msmoments0.ms'
     prefix=msmoments_unittest_base.taskname+'Test1'
     outfile=prefix+'.ms'
-    _tb = None
 
     def setUp(self):
         self.res=None
-        self._tb = tbtool()
         if (not os.path.exists(self.rawfile)):
             shutil.copytree(self.datapath+self.rawfile, self.rawfile)
 
         default(msmoments)
 
     def tearDown(self):
-        self._tb.close()
-        del self._tb
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
@@ -220,15 +220,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         # the task doesn't return table anymore
         self.assertTrue(os.path.exists(self.outfile),
                         msg='Out put table does not exist.')
-        self.assertTrue(self._tb.open(self.outfile),
-                        msg='Failed to open output table')
-        self._compare(self._tb,refval,'K')
-#         # the task must return table object
-#         self.assertEqual(type(res),type(tb),
-#                          msg='Any error occurred during task execution')
-#         self.assertEqual(res.name().split('/')[-1],self.outfile,
-#                             msg='Returned table is wrong.')
-#         self._compare(res,refval,'K')
+        self._compare(self.outfile,refval,'K')
 
     def test101(self):
         """Test 101: Integrated intensity"""
@@ -239,9 +231,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         # the task doesn't return table anymore
         self.assertTrue(os.path.exists(self.outfile),
                         msg='Out put table does not exist.')
-        self.assertTrue(self._tb.open(self.outfile),
-                        msg='Failed to open output table')
-        self._compare(self._tb,refval,'K.km/s')
+        self._compare(self.outfile,refval,'K.km/s')
 
     def test102(self):
         """Test 102: Weighted coordinate (velocity field)"""
@@ -252,9 +242,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         # the task doesn't return table anymore
         self.assertTrue(os.path.exists(self.outfile),
                         msg='Out put table does not exist.')
-        self.assertTrue(self._tb.open(self.outfile),
-                        msg='Failed to open output table')
-        self._compare(self._tb,refval,'km/s')
+        self._compare(self.outfile,refval,'km/s')
 
     def test103(self):
         """Test 103: Weighted dispersion of coordinate (velocity dispersion)"""
@@ -265,9 +253,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         # the task doesn't return table anymore
         self.assertTrue(os.path.exists(self.outfile),
                         msg='Out put table does not exist.')
-        self.assertTrue(self._tb.open(self.outfile),
-                        msg='Failed to open output table')
-        self._compare(self._tb,refval,'km/s')
+        self._compare(self.outfile,refval,'km/s')
 
     def test104(self):
         """Test 104: Median"""
@@ -278,9 +264,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         # the task doesn't return table anymore
         self.assertTrue(os.path.exists(self.outfile),
                         msg='Out put table does not exist.')
-        self.assertTrue(self._tb.open(self.outfile),
-                        msg='Failed to open output table')
-        self._compare(self._tb,refval,'K')
+        self._compare(self.outfile,refval,'K')
 
     def test105(self):
         """Test 105: Median coordinate (fail at the moment)"""
@@ -309,9 +293,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         # the task doesn't return table anymore
         self.assertTrue(os.path.exists(self.outfile),
                         msg='Out put table does not exist.')
-        self.assertTrue(self._tb.open(self.outfile),
-                        msg='Failed to open output table')
-        self._compare(self._tb,refval,'K')
+        self._compare(self.outfile,refval,'K')
 
     def test107(self):
         """Test 107: Rms"""
@@ -322,9 +304,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         # the task doesn't return table anymore
         self.assertTrue(os.path.exists(self.outfile),
                         msg='Out put table does not exist.')
-        self.assertTrue(self._tb.open(self.outfile),
-                        msg='Failed to open output table')
-        self._compare(self._tb,refval,'K')
+        self._compare(self.outfile,refval,'K')
 
     def test108(self):
         """Test 108: Absolute mean deviation"""
@@ -335,9 +315,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         # the task doesn't return table anymore
         self.assertTrue(os.path.exists(self.outfile),
                         msg='Out put table does not exist.')
-        self.assertTrue(self._tb.open(self.outfile),
-                        msg='Failed to open output table')
-        self._compare(self._tb,refval,'K')
+        self._compare(self.outfile,refval,'K')
 
     def test109(self):
         """Test 109: Maximum value"""
@@ -348,22 +326,18 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         # the task doesn't return table anymore
         self.assertTrue(os.path.exists(self.outfile),
                         msg='Out put table does not exist.')
-        self.assertTrue(self._tb.open(self.outfile),
-                        msg='Failed to open output table')
-        self._compare(self._tb,refval,'K')
+        self._compare(self.outfile,refval,'K')
 
     def test110(self):
         """Test 110: Coordinate of maximum value"""
         moments=[9]
         postfix='.maximum_Coord'
-        refval=[45489389568.0, 45489410048.0]
+        refval=[5.71909856796, 5.59841299057]
         res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
         # the task doesn't return table anymore
         self.assertTrue(os.path.exists(self.outfile),
                         msg='Out put table does not exist.')
-        self.assertTrue(tb.open(self.outfile),
-                        msg='Failed to open output table')
-        self._compare(tb,refval,'km/s') #Hz?
+        self._compare(self.outfile,refval,'km/s') #Hz?
 
     def test111(self):
         """Test 111: Minimum value"""
@@ -374,22 +348,19 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         # the task doesn't return table anymore
         self.assertTrue(os.path.exists(self.outfile),
                         msg='Out put table does not exist.')
-        self.assertTrue(self._tb.open(self.outfile),
-                        msg='Failed to open output table')
-        self._compare(self._tb,refval,'K')
+        self._compare(self.outfile,refval,'K')
 
     def test112(self):
         """Test 112: Coordinate of minimum value"""
         moments=[11]
         postfix='.minimum_coord'
-        refval=[45514190848.0, 45464350720.0]
+        #refval=[45514190848.0, 45464350720.0]
+        refval=[-157.729125977, 170.736236572]
         res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
         # the task doesn't return table anymore
         self.assertTrue(os.path.exists(self.outfile),
                         msg='Out put table does not exist.')
-        self.assertTrue(self._tb.open(self.outfile),
-                        msg='Failed to open output table')
-        self._compare(self._tb,refval,'km/s')# Hz?
+        self._compare(self.outfile,refval,'km/s')# Hz?
 
     def test113(self):
         """Test 113: Multiple moments (mean + velocity field)"""
@@ -405,13 +376,9 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
             self.assertEqual(os.path.exists(name),True,
                              msg='%s must exist'%(name))
         # check moments[0] table
-        self.assertTrue(self._tb.open(self.outfile+postfix[0]),
-                        msg='Failed to open %s table' % postfix[0])
-        self._compare(self._tb,refval0,'K')
+        self._compare(self.outfile+postfix[0],refval0,'K')
         # check second moment
-        self.assertTrue(self._tb.open(self.outfile+postfix[1]),
-                        msg='Failed to open %s table' %  postfix[1])
-        self._compare(self._tb,refval1,'km/s')
+        self._compare(self.outfile+postfix[1],refval1,'km/s')
 
 def suite():
     return [msmoments_test0,msmoments_test1]

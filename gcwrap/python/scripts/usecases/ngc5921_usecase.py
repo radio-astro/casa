@@ -232,11 +232,11 @@ listobs()
 print '--Flag auto-correlations--'
 
 # Don't default this one either, there is only one parameter (vis)
-default('tflagdata')
+default('flagdata')
 vis = msfile
 mode = 'manual'
 autocorr = True
-tflagdata()
+flagdata()
 
 #
 #=====================================================================

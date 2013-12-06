@@ -318,6 +318,8 @@ class spxfit_test(unittest.TestCase):
                 rec = spxfit(imagename=imagename, spxtype="ltp", spxest=[0.4, 3])
             sols = rec['ltp']['solution'].ravel()
             self.assertTrue((abs(1 - sols/ltpest) < 0.1e-7).all())
+            print '*** xUnit ' + rec['xUnit']
+            self.assertTrue(rec['xUnit'] == "Hz")
         
         myia.addnoise(pars=[0, 0.001])
         for i in [0, 1]:
@@ -508,6 +510,25 @@ class spxfit_test(unittest.TestCase):
             got = res2['direction'][0,0,0,0]
             expec = res['direction'][pixel[0],pixel[1],0,0]
             self.assertTrue(got == expec)
+        
+
+    def test_ltpfit_with_negative_values(self):
+        """Test fitting of ltp when y values are negative returns something reasonable because of auto masking"""
+        global myia
+        myia.fromshape("", [1, 1, 10])
+        f = []
+        for i in range(10):
+            f.append(myia.toworld([0,0,i])['numeric'][2])
+        f = numpy.array(f)
+        vals = (f/f[0])**(3.0)
+        # add a negative value to the array to test that it's not used in the fit
+        vals[0] = -1
+        bb = myia.getchunk()
+        bb[0, 0, :] = vals
+        myia.putchunk(bb)
+        res = myia.fitprofile(spxtype="ltp",spxest=[0, 3],div=f[0])
+        myia.done()
+        self.assertTrue(abs(res['ltp']['solution'][0][0][0][1] - 3) < 0.01 )
         
 
 

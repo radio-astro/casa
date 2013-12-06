@@ -49,6 +49,7 @@ importfitsidi.xml
 importgmrt.xml
 importuvfits.xml
 importvla.xml
+imrebin.xml
 imreframe.xml
 imregrid.xml
 imsmooth.xml
@@ -75,7 +76,7 @@ plotcal.xml
 plotms.xml
 plotuv.xml
 plotweather.xml
-plotxy.xml
+#plotxy.xml
 partition.xml
 polcal.xml
 predictcomp.xml
@@ -102,6 +103,7 @@ sdscale.xml
 sdsmooth.xml
 sdstat.xml
 sdtpimaging.xml
+tsdstat.xml
 setjy.xml
 ssoflux.xml
 simalma.xml

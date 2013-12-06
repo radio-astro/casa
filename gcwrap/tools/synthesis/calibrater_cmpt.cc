@@ -795,11 +795,14 @@ casac::record* calibrater::fluxscale(
     Vector<Double> SFluxDErr(4,0);
     Vector<Double> numSoln(4,0);
 
-    IPosition oStart( 2, 0, 0 );
-    IPosition oEnd( 2, uiNumSPW-1, 0 );
+    //IPosition oStart( 2, 0, 0 );
+    //IPosition oEnd( 2, uiNumSPW-1, 0 );
+   
     for ( uInt t=0; t<uiNumTranMax; t++ ) {
 
-      oStart(1)=oEnd(1)=t;
+      //oStart(1)=oEnd(1)=t;
+      IPosition oStart( 2, 0, t );
+      IPosition oEnd( 2, uiNumSPW-1, t );
       
       // Re-structured output record to make
       // it similar to setjy output record
@@ -830,6 +833,7 @@ casac::record* calibrater::fluxscale(
           oSubRecord.defineRecord(String::toString<Int>(s), oSubSubRecord );
         } //for loop for spw
 	oSubRecord.define( "fieldName", oFieldName[t] );
+        //cerr<<"t="<<t<<" oFieldName="<<oFieldName[t]<<endl;
 	//oSubRecord.define( "fluxd", Vector<Double>(oFluxD.fd(oStart,oEnd)) );
 	//oSubRecord.define( "fluxdErr", Vector<Double>(oFluxD.fderr(oStart,oEnd)));
 	//oSubRecord.define( "numSol", Vector<Int>(oFluxD.numSol(oStart,oEnd)));

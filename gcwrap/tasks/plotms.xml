@@ -103,6 +103,8 @@ MS Parameters
       <value>delay</value><value>del</value>
       <value>opac</value><value>opacity</value>
       <value>swp</value><value>swpower</value><value>switchedpower</value>
+      <value>radialvelocity</value>
+      <value>rho</value>
     </allowed>
   </param>
   
@@ -154,6 +156,8 @@ MS Parameters
       <value>flag</value>
       <value>azimuth</value>
       <value>elevation</value>
+      <value>radialvelocity</value>
+      <value>rho</value>
       <value>hourang</value><value>hourangle</value>
       <value>parang</value><value>parangle</value><value>parallacticangle</value>
       <value>antenna</value><value>ant</value>
@@ -429,6 +433,16 @@ Iteration Parameters
       </allowed>
    </param>
 
+	<param type="int" name="iternx" subparam="true">
+       <description>Number of plot rows on each page. </description>
+       <value>1</value>
+   </param>
+
+   <param type="int" name="iterny" subparam="true">
+       <description>Number of plot columns on each page.</description>
+       <value>1</value>
+   </param>
+
    <param type="bool" name="xselfscale" subparam="true">
        <description>Self-scale X axis in each plot </description>
        <value>False</value>
@@ -436,6 +450,16 @@ Iteration Parameters
 
    <param type="bool" name="yselfscale" subparam="true">
        <description>Self-scale Y axis in each plot </description>
+       <value>False</value>
+   </param>
+   
+   <param type="bool" name="xsharedaxis" subparam="true">
+       <description>Plots should share a common x-axis. </description>
+       <value>False</value>
+   </param>
+
+   <param type="bool" name="ysharedaxis" subparam="true">
+       <description>Plots should share a common y-axis.</description>
        <value>False</value>
    </param>
 
@@ -566,7 +590,6 @@ Plot range Parameter
         </value>
     </param>
 
-
 <!--
 ###############################################################################
 Label Parameters
@@ -674,10 +697,19 @@ Export plot as image Parameters
             <value>txt</value>
         </allowed>
      </param>
+     <param type="string" name="exprange" subparam="true">
+        <description>Pages to export.</description>
+        <allowed kind="enum">
+            <value />
+            <value>current</value>
+            <value>all</value>
+        </allowed>
+     </param>
      <param type="bool" name="highres" subparam="true">
          <description>Use high resolution? Always true for jpg and png.</description>
          <value>False</value>
      </param>
+    
      <param type="bool" name="interactive" subparam="true">
          <description>Interactive mode (pop up confirmation window if true, set false for automated scripts to prevent blocking).</description>
          <value>False</value>
@@ -1003,11 +1035,18 @@ Constraints
     </when>
     <when param="iteraxis">
         <notequals type="string" value="">
+        	<default param="iternx"><value>1</value></default>
+        	<default param="iterny"><value>1</value></default>
             <default param="xselfscale"><value>False</value></default>
             <default param="yselfscale"><value>False</value></default>
+            <default param="xsharedaxis"><value>False</value></default>
+            <default param="ysharedaxis"><value>False</value></default>
         </notequals>
     </when>
-
+ 	<when param="exprange">
+        <notequals type="string" value="">
+        </notequals>
+    </when>
     <when param="customsymbol">
         <equals type="bool" value="True">
             <default param="symbolshape">
@@ -1053,6 +1092,7 @@ Constraints
     <when param="plotfile">
         <notequals type="string" value="">
             <default param="expformat"><value type="string"/></default>
+            <default param="exprange"><value type="string"/></default>
             <default param="highres"><value type="bool">False</value></default>
             <default param="interactive"><value type="bool">False</value></default>
             <default param="overwrite"><value type="bool">False</value></default>
@@ -1341,9 +1381,17 @@ Constraints
                 default: '' (no iteration)
                 options: 'scan','field','spw','baseline','antenna',''
       &gt;&gt;&gt; iteraxis expandable parameters
+      	iternx -- Number of rows per page.
+      			default: 1
+      	iterny -- Number of columns per page.
+      			default: 1
         xselfscale -- If true, self-scale each iterated plot on the x axis
         yselfscale -- If true, self-scale each iterated plot on the y axis
                       default: false, which will scale all plots globally
+        xsharedaxis -- If true, iterated plots should share a common x-axis.
+        			  default: false, each plot will have its own x-axis.
+        ysharedaxis -- If true, iterated plots should share a common y-axis.
+        			  default: false, each plot will have its own y-axis.              
 
     customsymbol -- If true, use a custom symbol for drawing unflagged points
                     default: True
@@ -1397,6 +1445,7 @@ Constraints
     xlabel -- text to label horizontal axis, with formatting using '%%' 
     ylabel -- text to label horizontal axis, with formatting using '%%' 
     
+    
     showmajorgrid  -- show major grid lines (horiz and vert.)
                   default: False.
       &gt;&gt;&gt;  major grid expandable parameters
@@ -1417,6 +1466,9 @@ Constraints
         expformat -- export format type; if 'txt' is used an ASCII dump of the plotted points is generated (also available in the export tab)
                      default:  ''   (plotfile extension will be used)
                      options: 'jpg', 'png', 'ps', 'pdf', 'txt'
+        exprange -- pages to export for iteration plots
+        			default:   ''
+        			options: 'current', 'all'             
         highres -- use high resolution? Always true for jpg and png.
                    default: false
         interactive  -- interactive mode? (pop up confirmation window)

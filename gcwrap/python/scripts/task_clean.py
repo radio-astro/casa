@@ -3,7 +3,7 @@ import shutil
 import numpy
 from taskinit import *
 from cleanhelper import *
-im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi,fn,imd=gentools()
+im,cb,ms,tb,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi,fn,imd=gentools()
 
 def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
           uvrange, antenna, scan, observation, intent, mode, resmooth,gridmode,
@@ -211,7 +211,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         scan=''
         observation = ''
         intent=''
-
+       
     try:
         # Create a new imager tool
         imCln=imtool();
@@ -257,17 +257,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             localnchan=nchan
             localstart=start
             localwidth=width
-        ##### Warn that we cannot save model larger than 2GB in complex 
-        ##### Table record issue in SOURCE table---CAS 5425
-        ###### should be removed when the ticket is fixed
-        ###rough estimates for pol will overestimate it for cases like RRLL
-        localnpol=len(str(stokes))
-        maximsize=max(imsize) if(type(imsize)==list) else imsize
-        imvol=localnchan*maximsize*maximsize*localnpol
-        if((imvol > 60e6) and (not usescratch)):
-            casalog.post("please set usescratch=True for large images till we fix a problem of saving large images in the virtual model_data column", "ERROR")
-            raise ValueError,  'please set usescratch=True for large images till we fix a problem of saving large images in the virtual model_data column'
-        #######End of warn section for CAS-5425
         #setup for 'per channel' clean
         dochaniter=False
         #if interactive and chaniter:
@@ -521,7 +510,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                          scan=scan, observation=str(observation),intent=intent,
                          usescratch=usescratch, nchan=visnchan,
                          start=visstart, width=1)
-
             imset.definemultiimages(rootname=rootname, imsizes=imsizes,
                                     cell=cell, stokes=stokes, mode=mode,
                                     spw=spw, nchan=imnchan, start=imstart,

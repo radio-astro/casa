@@ -128,20 +128,33 @@ windows in the dataset and close the tool.
             <shortdescription>Get the zero-based antenna ID for the specfied antenna name.</shortdescription>
              <input>
                 <param type="any" direction="in" name="name">
-                    <description>Antenna names (string or string array) for which to get the corresponding IDs.</description>
+                    <description>Antenna names (string or string array) for which to get the corresponding IDs. Note that * matches any number of characters of all character classes.</description>
                     <value type="string"/>
                     <any type="variant" limittypes="string stringArray"/>
-                    <value/>
+                </param>
+                <param type="any" direction="in" name="mindiameter">
+                    <description>Minimum antenna diameter, expressed as a quantity.</description>
+                    <value type="string">0m</value>
+                    <any type="variant"/>
+                </param>
+                <param type="any" direction="in" name="maxdiameter">
+                    <description>Maximum antenna diameter, expressed as a quantity.</description>
+                    <value type="string">1pc</value>
+                    <any type="variant"/>
                 </param>
             </input>
             <returns type="intArray"/>
             <description>
-                Get the zero-based antenna IDs for the specfied antenna names.
+                Get the zero-based antenna IDs for the specfied antenna names and the specified diameter
+                range. An array of unique IDs in order of the specified names is returned.
+                If no names and no diameter range is specified, all IDs are returned.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the zero-based antennaID for the antenna named "VB2"
+    # get the zero-based antenna IDs for the antenna named "VB2"
     antenna_id = msmd.antennaids("VB2")[0]
+    # get the zero-based antenna IDs for all antennas with diameters between 9m and 11m
+    antenna_ids = msmd.antennaids(mindiameter="9m", maxdiameter=qa.quantity("11m"))
     msmd.done()
             </example>
         </method>
@@ -158,7 +171,8 @@ windows in the dataset and close the tool.
             </input>
             <returns type="stringArray"/>
             <description>
-                Get the name of the antenna for the specfied zero-based antenna ID.
+                Get the name of the antenna for the specfied zero-based antenna ID. If antennaids is not specified,
+                all antenna names are returned.
             </description>
             <example>
     msmd.open("my.ms")
@@ -217,6 +231,29 @@ windows in the dataset and close the tool.
     antennna_position = msmd.antennaposition(3)
     # get the position of the antenna named DV07
     antennna_position = msmd.antennaposition("DV07")
+    msmd.done()
+            </example>
+        </method>
+
+        <method type="function" name="antennastations">
+            <shortdescription>Get the station names of the specified antennas.</shortdescription>
+            <input>
+                <param type="any" direction="in" name="which">
+                    <any type="variant" limittypes="int string intarray stringarray"/>
+                    <description>Zero-based antenna ID(s) in the ANTENNA table or antenna name(s). Single numeric id less than zero retrieves all station names.</description>
+                    <value type="int">-1</value>
+                </param>
+            </input>
+            <returns type="stringarray"/>
+            <description>
+                Get the station names of the specified antennas.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get all station names
+    stations = msmd.antennastations(-1)
+    # get the stations of the antennas named DV07 and DV01
+    stations = msmd.antennaposition(["DV07", "DV01"])
     msmd.done()
             </example>
         </method>
@@ -423,6 +460,37 @@ windows in the dataset and close the tool.
     msmd.done()
             </example>
         </method>
+        
+        <method type="function" name="exposuretime">
+            <shortdescription>Get the exposure time for the specified scan, spwid, and polarizaiton ID.</shortdescription>
+            <input>
+                <param type="int" direction="in" name="scan">
+                    <description>Scan number.</description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="spwid">
+                    <description>Spectral window ID.</description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="polid">
+                    <description>Polarization ID.</description>
+                    <value>0</value>
+                </param>
+            </input>
+            <returns type="record"/>
+            <description>
+                Get the exposure time for the specified scan, spwid, and polarizaiton ID. This is the exposure time
+                of the record with the lowest time stamp of the records associated with these parameters. Returns
+                a quantity dictionary.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the exposure time for scan 1, spwid 2, and polid 3
+    integration_time = msmd.getexposuretime(scan=1, spwid=2, polid=3)
+    msmd.done()
+            </example>
+        </method>
+        
         <method type="function" name="fdmspws">
             <shortdescription>Get an array of spectral window IDs used for FDM. These are windows that do not have 64, 128, or 256 channels.</shortdescription>
             <returns type="intArray"/>
@@ -449,14 +517,10 @@ windows in the dataset and close the tool.
                     <description>If true, return the field names. If false, return the zero-based field IDs.</description>
                     <value>false</value>
                 </param>
-                <param type="bool" direction="in" name="regex">
-                    <description>If true, intent will be interpreted as a regular expression and all intents matching it will be used, else it is interpreted as a literal string.</description>
-                    <value>true</value>
-                </param>
             </input>
             <returns type="any"/>
             <description>
-                Get an array of the unique fields for the specified intent.
+                Get an array of the unique fields for the specified intent. Note that * matches any number of characters of all character classes.
             </description>
             <example>
     msmd.open("my.ms")
@@ -465,7 +529,7 @@ windows in the dataset and close the tool.
     # get the field IDs for intent "observe target"
     field_IDs = msmd.fieldsforintent("observe target", False, regex=False)
     # get all field IDs for all intents which contain 'WVR'
-    field_IDs = msmd.fieldsforIntent(".*WVR.*, regex=True)
+    field_IDs = msmd.fieldsforIntent("*WVR*")
     msmd.done()
             </example>
         </method>
@@ -962,21 +1026,17 @@ windows in the dataset and close the tool.
                     <description>Intent (case-sensitive) for which to return the scan numbers.</description>
                     <value>-1</value>
                 </param>
-                <param type="bool" direction="in" name="regex">
-                    <description>If true, intent will be interpreted as a regular expression and all intents matching it will be used, else it is interpreted as a literal string.</description>
-                    <value>true</value>
-                </param>
             </input>
             <returns type="intArray"/>
             <description>
-                Get an array of the unique scan numbers associated with the specified intent.
+                Get an array of the unique scan numbers associated with the specified intent. The "*" character matches any number of characters from all character classes.
             </description>
             <example>
     msmd.open("my.ms")
     # get the scan numbers associated with intent "detect planet X"
     scan_numbers = msmd.scansforintent("detect planet X", regex=False)
     # got all the scan numbers associated with all intents which contain 'WVR'
-    scan_numbers = msmd.scansforintent(".*WVR.*", regex=True)
+    scan_numbers = msmd.scansforintent("*WVR*")
     msmd.done()
             </example>
         </method>
@@ -1119,21 +1179,17 @@ windows in the dataset and close the tool.
                     <description>Intent (case sensitive) for which to return the spectral window IDs.</description>
                     <value/>
                 </param>
-                <param type="bool" direction="in" name="regex">
-                    <description>If true, intent will be interpreted as a regular expression and all intents matching it will be used, else it is interpreted as a literal string.</description>
-                    <value>true</value>
-                </param>
             </input>
             <returns type="intArray"/>
             <description>
-                Get an array of the unique spectral window IDs for the specified intent.
+                Get an array of the unique spectral window IDs for the specified intent. The "*" character matches any number of characters from all character classes.
             </description>
             <example>
     msmd.open("my.ms")
     # get the spectral window IDs associated with "MY COOL INTENT"
     spws = msmd.spwsforintent("MY COOL INTENT")
     # got all the spw IDs associated with all intents which contain 'WVR'
-    scan_numbers = msmd.spwsforintent(".*WVR.*", regex=True)
+    scan_numbers = msmd.spwsforintent("*WVR*")
     msmd.done()
     msmd.done()
             </example>
@@ -1258,7 +1314,7 @@ windows in the dataset and close the tool.
         <method type="function" name="wvrspws">
             <shortdescription>Get an array of spectral window IDs used for WVR. These are windows that have 4 channels.</shortdescription>
             <input>
-                <param type="bool" direction="in" name="compliment">
+                <param type="bool" direction="in" name="complement">
                     <description>If True, return all non-wvr spws.</description>
                     <value>-false</value>
                 </param>
@@ -1267,7 +1323,7 @@ windows in the dataset and close the tool.
             <description>
                 <!-- DEPRECATED. USE almaspws(wvr=True) INSTEAD. -->
                 Get an array of spectral window IDs used for WVR. These are windows that have 4 channels.
-                If complement is True, return the compliment set instead (all non-wvr spw IDs).
+                If complement is True, return the complement set instead (all non-wvr spw IDs).
             </description>
             <example>
     msmd.open("my.ms")

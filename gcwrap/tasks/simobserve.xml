@@ -94,8 +94,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
          "ALMA" for the same hex algorithm as the ALMA Cycle 1 OT 
          or "ALMA2012" for the algorithm used in the Cycle 0 OT
     pointingspacing -- spacing in between beams e.g '1arcsec'
-         or "0.25PB" to use 1/4 of the primary beam FWHM, or 
-         "" will use Nyquist spacing, lambda/d/sqrt(3).
+         "0.25PB" to use 1/4 of the primary beam FWHM, 
+         "nyquist" will use lambda/d/2,
+         "" will use lambda/d/sqrt(3) for INT, lambda/d/3 for SD
     -------------------------------
     obsmode -- observation mode to calculate visibilities from a skymodel image
          (which may have been modified above), an optional component list, 
@@ -317,7 +318,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="pointingspacing" subparam="true">
-      <description>spacing in between pointings or "0.25PB" or "" for ALMA default lambda/D/sqrt(3)</description>
+      <description>spacing in between pointings or "0.25PB" or "" for ALMA default INT=lambda/D/sqrt(3), SD=lambda/D/3 </description>
       <value></value>
     </param>
 
@@ -382,7 +383,7 @@ it'll do them for the same amount of time -->
 
     <param type="string" name="sdantlist" subparam="true">
       <description>single dish antenna position file</description>
-      <value></value>
+      <value>aca.tp.cfg</value>
     </param>
 
     <param type="int" name="sdant" subparam="true">
@@ -529,7 +530,6 @@ it'll do them for the same amount of time -->
 	  <default param="calflux"><value type="string">1Jy</value></default>
 	</equals>
 	<equals type="string" value="sd">
-	  <!-- <default param="antennalist"><value type="string">aca.tp.cfg</value></default> -->
 	  <default param="sdantlist"><value type="string">aca.tp.cfg</value></default>
 	  <default param="sdant"><value type="int">0</value></default>
 	  <default param="refdate"><value type="string">2014/05/21</value></default>

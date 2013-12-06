@@ -291,8 +291,6 @@ class MSTHelper(ParallelTaskHelper):
             self._executionList.append(
                 simple_cluster.JobData(self._taskName, mmsCmd))
 
-
-
 #    @dump_args
     def _createSPWSeparationCommands(self):
         # This method is to generate a list of commands to partition
@@ -300,7 +298,7 @@ class MSTHelper(ParallelTaskHelper):
 
         # Get a unique list of selected spws        
         self._selectMS()
-        spwList = self._getSPWList()
+        spwList = self._getSPWUniqueList()
         numSubMS = self._arg['numsubms']
         numSubMS = min(len(spwList),numSubMS)
 
@@ -319,7 +317,13 @@ class MSTHelper(ParallelTaskHelper):
                 freqbinlist = self.__partition1(self.__origpars['chanbin'],numSubMS)
                 validbin = True
         
-        self.__ddistart = 0
+        # Calculate the ddistart for each engine. This will be used
+        # to calculate the DD IDs of the output main table of the subMSs
+        ddistartlist = self._calculateDDIstart({}, partitionedSPWs1)
+        if (len(ddistartlist) != len(partitionedSPWs1)):
+            casalog.post('Error calculating the ddistart indices','SEVERE')
+            raise
+        
         for output in xrange(numSubMS):
             mmsCmd = copy.copy(self._arg)
             mmsCmd['createmms'] = False
@@ -330,6 +334,7 @@ class MSTHelper(ParallelTaskHelper):
             if validbin:
                 mmsCmd['chanbin'] = freqbinlist[output]
                 
+            self.__ddistart = ddistartlist[output]
             mmsCmd['ddistart'] = self.__ddistart
             mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
                                   % (self.outputBase, output)
@@ -341,16 +346,16 @@ class MSTHelper(ParallelTaskHelper):
             self._executionList.append(
                 simple_cluster.JobData(self._taskName, mmsCmd))
             
-            # Increment ddistart
-            self.__ddistart = self.__ddistart + partitionedSPWs1[output].__len__()
-
 #    @dump_args
     def _createDefaultSeparationCommands(self):
+        
+        casalog.post('Partition per scan/spw will ignore NULL combinations of these two parameters.')
+
         # Separates in scan and spw axes
         self._selectMS()
             
         # Get the list of spectral windows as strings
-        spwList = self._getSPWList() 
+        spwList = self._getSPWUniqueList() 
         spwList = map(str,spwList)
 
         # Check if we can just divide on SPW or if we need to do SPW and scan
@@ -372,6 +377,9 @@ class MSTHelper(ParallelTaskHelper):
 
         partitionedSpws  = self.__partition1(spwList,numSpwPartitions)
         partitionedScans = self.__partition(scanList,numScanPartitions)
+        
+        # The same list but as a dictionary
+        str_partitionedScans = self.__partition1(scanList,numScanPartitions)
 
         # Validate the chanbin parameter when it is a list
         validbin = False
@@ -384,11 +392,16 @@ class MSTHelper(ParallelTaskHelper):
         # Add the channel selections back to the spw expressions
         newspwsel = self.createSPWExpression(partitionedSpws)
         
-        # Initial ddistart for sub-table consolidation
+        # Calculate the ddistart for the subMSs (for each engine)
+        ddistartlist = self._calculateDDIstart(str_partitionedScans, partitionedSpws)
+                
+        if (len(ddistartlist) != len(xrange(numSpwPartitions*numScanPartitions))):
+            casalog.post('Error calculating ddistart for the engines', 'SEVERE')
+            raise
+        
+        # Set the first DD ID for the sub-table consolidation
+        ddi0 = ddistartlist[0]
         self.__ddistart = 0
-
-        # Set the first spw ID for the sub-table consolidation
-        spwid0 = newspwsel[0/numScanPartitions]
         
         # index that composes the subms names (0000, 0001, etc.)
         sindex = 0
@@ -401,27 +414,23 @@ class MSTHelper(ParallelTaskHelper):
             for ss in scansellist:
                 selscan = selscan + ',' + ss
             selscan = selscan.lstrip(',')
-#            selscan = partitionedScans[output%numScanPartitions][0]
             if not self._scanspwSelection(selscan,
                                  str(newspwsel[output/numScanPartitions])):
                 continue
 
             # The first valid subMS must have DDI 0
-            if sindex == 0:
+            if sindex == 0:                 
                 self.__ddidict[0] = self.dataDir+'/%s.%04d.ms'%\
-                                    (self.outputBase, sindex)
+                                     (self.outputBase, sindex)
             else:                                           
-                spwid = newspwsel[output/numScanPartitions]
-                    
-                if spwid == spwid0:
-                    self.__ddistart = self.__ddistart
-                else:
-                    self.__ddistart = self.__ddistart + partitionedSpws[output/numScanPartitions].__len__()
-                    spwid0 = newspwsel[output/numScanPartitions]                
-                    # Dictionaries for sub-table consolidation
+                self.__ddistart = ddistartlist[output]
+                     
+                if self.__ddistart != ddi0:
+                    ddi0 = ddistartlist[output]          
+                    # Dictionary for sub-table consolidation
                     self.__ddidict[self.__ddistart] = self.dataDir+'/%s.%04d.ms'% \
                                                     (self.outputBase, sindex)
-                
+            
             mmsCmd = copy.copy(self._arg)
             mmsCmd['createmms'] = False           
             mmsCmd['scan'] = ParallelTaskHelper.listToCasaString \
@@ -457,10 +466,89 @@ class MSTHelper(ParallelTaskHelper):
         except:
             isSelected = False
             casalog.post('Ignoring NULL combination of scan=%s and spw=%s'% \
-                             (scan,spw),'WARN')
+                             (scan,spw),'DEBUG1')
         
         return isSelected
             
+#    @dump_args
+    def _calculateDDIstart(self, partedscans, partedspws):
+        '''Return list with DDI values for each partition (each engine).
+           It will return a list of ddistart values with the same size of 
+           the number of subMSs.
+        '''
+            
+        # Example of partedspws:
+        # create 2 subMss with spw=0,1,2 and spw=3
+        # partedSPWs = {0:['0','1','2'],1:['3']}
+        #
+        # create 3 subMSs with spw=0,1,2 spw=3 and spw=4,5
+        # partedSPWs = {0:['0','1','2'],1:['3'],2:['4','5']}
+                
+        hasscans = True
+        if len(partedscans) == 0:
+            scans = ''
+            hasscans = False
+
+        ddistartList = []
+               
+        # scan+spw separation axis 
+        if hasscans:
+            count = 0
+            for k,spws in partedspws.iteritems():
+                for ks,scans in partedscans.iteritems():
+                    if self._msTool is None:
+                        self._msTool = mstool()
+                        self._msTool.open(self._arg['vis'],nomodify=False)
+                    else:
+                        self._msTool.reset()
+            
+                    try:
+                        # The dictionary with selected indices
+                        seldict = self._msTool.msseltoindex(vis=self._arg['vis'],scan=scans,spw=spws)
+                    except:
+                        self._msTool.close()
+                        continue
+                                        
+                    # Get the selected DD IDs
+                    ddis = seldict['dd'].tolist()
+                    ddsize = ddis.__len__()
+                    if count == 0:
+                        ddistart = 0
+                        
+                    # Create a ddistart list
+                    ddistartList.append(ddistart)
+                ddistart = ddistart + ddsize
+                count = count + 1
+           
+        # spw separation axis 
+        else:
+            count = 0
+            for k,spws in partedspws.iteritems():
+                if self._msTool is None:
+                    self._msTool = mstool()
+                    self._msTool.open(self._arg['vis'],nomodify=False)
+                else:
+                    self._msTool.reset()
+        
+                try:
+                    # The dictionary with selected indices
+                    seldict = self._msTool.msseltoindex(vis=self._arg['vis'],scan=scans,spw=spws)
+                except:
+                    self._msTool.reset()
+                    continue
+                                    
+                # Get the selected DD IDs
+                ddis = seldict['dd'].tolist()
+                ddsize = ddis.__len__()
+                if count == 0:
+                    ddistart = 0
+                    
+                # Create a ddistart list
+                ddistartList.append(ddistart)
+                ddistart = ddistart + ddsize
+                count = count + 1
+                                                
+        return ddistartList
  
 #    @dump_args
     def _selectMS(self, doCalibrationSelection = False):
@@ -502,9 +590,9 @@ class MSTHelper(ParallelTaskHelper):
         return scanList
 
 #    @dump_args
-    def _getSPWList(self):
+    def _getSPWUniqueList(self):
         '''
-        This method returns the spectral window list from the current
+        This method returns a unique list of spectral windows from the current
         MS.  Be careful about having selection already done when you call this.
         '''
         if self._msTool is None:
@@ -637,6 +725,7 @@ class MSTHelper(ParallelTaskHelper):
         '''
         if self._arg['createmms']:
             casalog.post("Finalizing MMS structure")
+            
             if self._msTool:
                 self._msTool.close()
 
@@ -688,7 +777,7 @@ class MSTHelper(ParallelTaskHelper):
                                 
                 toUpdateList.sort()
                 casalog.post('List to consolidate %s'%toUpdateList,'DEBUG')
-                
+                                
                 # Consolidate the spw sub-tables to take channel selection
                 # or averages into account.
                 mtTool = casac.mstransformer()
@@ -749,7 +838,7 @@ class MSTHelper(ParallelTaskHelper):
     def createSPWExpression(self, partdict):
         ''' Creates the final spw expression that will be sent to the engines.
             This adds back the channel selections to their spw counterparts.
-           partdict --> dictionary from __partition2, such as:
+           partdict --> dictionary from __partition1, such as:
                         Ex: partdict = {0: ['0','1'], 1:['3','4','5']}
                             when selection is spw = '0,1:10~20,3,4,5'
                             and effective number of subMSs is 2.'''            
@@ -917,8 +1006,7 @@ def mstransform(
              timeaverage,        # time averaging --> split
              timebin,
              timespan,
-             maxuvwdistance,
-             minbaselines              
+             maxuvwdistance
              ):
 
     ''' This task can replace split, cvel, partition and hanningsmooth '''
@@ -1056,7 +1144,7 @@ def mstransform(
             config['timebin'] = timebin
             config['timespan'] = timespan
             config['maxuvwdistance'] = maxuvwdistance
-            config['minbaselines'] = minbaselines
+#            config['minbaselines'] = minbaselines
         
         # Configure the tool and all the parameters
         

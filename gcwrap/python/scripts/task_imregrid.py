@@ -74,61 +74,10 @@ def imregrid(
                         raise Exception("Found no axes to regrid!")
                     axestoregrid.sort()
                 if (len(shape) == 1 and shape[0] == -1):
-                    # CAS-4959, output shape should have template shape
-                    # for axes being regridded, input image shape for axes
-                    # not being regridded,
-                    # CAS-4960 in cases where the input image and template both have multiple stokes,
-                    # the number of pixels on the output stokes axis is to be the number of stokes the
-                    # input and template have in common
-                    shape = imshape
-                    targetaxesnames = image_csys.names()
-                    template_spectral_info = template_csys.findcoordinate("Spectral")
-                    template_has_spectral = template_spectral_info[0]
-                    template_spectral_axis = template_spectral_info[1][0]
-                    atr = axestoregrid[:]
-                    for i in range(len(imshape)):
-                        atr_count = 0
-                        for j in atr:
-                            if i == j:
-                                # axis numbers may not correspond so have to look for the template axis
-                                # location by the axis name, CAS-4960
-                                template_axis = template_csys.findaxisbyname(targetaxesnames[i])
-                                template_axis_length = tempshape[template_axis]
-                                if (
-                                    template_has_spectral
-                                    and template_spectral_axis == template_axis
-                                    and template_axis_length == 1
-                                ):
-                                    casalog.post(
-                                        "You've specified that you want to regrid the spectral axis without specifying "
-                                        "the output shape. Normally the length chosen would be that of the corresponding "
-                                        "template axis, however, the template spectral axis is degenerate and one cannot regrid "
-                                        "an axis such that its output length is one. So, removing axis " + str(j)
-                                        + " from the axes list and just copying the input spectral information to the output image",
-                                        "WARN"
-                                    )
-                                    shape[i] = imshape[i]
-                                    del axestoregrid[atr_count]
-                                else:
-                                    shape[i] = tempshape[template_axis]
-                                 
-                                break
-                            atr_count += 1;
-                    if (
-                        template_csys.findcoordinate("stokes")[0]
-                        and image_csys.findcoordinate("stokes")[0]
-                        and len(template_csys.stokes()) > 1
-                        and len(image_csys.stokes()) > 1
-                    ):
-                        # adjust stokes length to be equal to number of common stokes
-                        common_stokes_count = 0
-                        for image_stokes in image_csys.stokes():
-                            for template_stokes in template_csys.stokes():
-                                if image_stokes == template_stokes:
-                                    common_stokes_count += 1
-                                    break
-                        shape[image_csys.findaxisbyname("stokes")] = common_stokes_count
-                
+                    shape = _imregrid_handle_default_shape(
+                        imshape, image_csys, template_csys, 
+                        axestoregrid, tempshape, axes
+                    )
                 template_ia.done()
                 image_ia.done()
                 csys = template_csys
@@ -256,6 +205,80 @@ def _imregrid_to_new_ref_frame(
     rot.done()
     _myia.done()
     return True
-                    
+
+def _imregrid_handle_default_shape(
+    imshape, image_csys, template_csys, 
+    axestoregrid, tempshape, original_axes
+):
+    # CAS-4959, output shape should have template shape
+    # for axes being regridded, input image shape for axes
+    # not being regridded,
+    # CAS-4960 in cases where the input image and template both have multiple stokes,
+    # the number of pixels on the output stokes axis is to be the number of stokes the
+    # input and template have in common
+    shape = imshape
+    targetaxesnames = image_csys.names()
+    template_spectral_info = template_csys.findcoordinate("Spectral")
+    template_has_spectral = template_spectral_info[0]
+    template_spectral_axis = template_spectral_info[1][0]
+    atr = axestoregrid[:]
+    for i in range(len(imshape)):
+        atr_count = 0
+        for j in atr:
+            if i == j:
+                # axis numbers may not correspond so have to look for the template axis
+                # location by the axis name, CAS-4960
+                template_axis = template_csys.findaxisbyname(targetaxesnames[i])
+                template_axis_length = tempshape[template_axis]
+                if (
+                    template_has_spectral
+                    and template_spectral_axis == template_axis
+                    and template_axis_length == 1
+                ):
+                    casalog.post(
+                        "You've specified that you want to regrid the spectral axis without specifying "
+                        "the output shape. Normally the length chosen would be that of the corresponding "
+                        "template axis, however, the template spectral axis is degenerate and one cannot regrid "
+                        "an axis such that its output length is one. So, removing axis " + str(j)
+                        + " from the axes list and just copying the input spectral information to the output image",
+                        "WARN"
+                    )
+                    shape[i] = imshape[i]
+                    del axestoregrid[atr_count]
+                else:
+                    shape[i] = tempshape[template_axis]
+                 
+                break
+            atr_count += 1;
+    if (
+        template_csys.findcoordinate("stokes")[0]
+        and image_csys.findcoordinate("stokes")[0]
+        and len(template_csys.stokes()) > 1
+        and len(image_csys.stokes()) > 1
+    ):
+        stokes_axis = image_csys.findaxisbyname("stokes")
+        found = (
+            len(original_axes) == 0
+            or (len(original_axes) == 1 and original_axes[0] < 0)
+        )
+        if not found:
+            for axis in axestoregrid:
+                if axis == stokes_axis:
+                    found = True
+                    break
+        if found:
+            # adjust stokes length to be equal to number of common stokes
+            common_stokes_count = 0
+            for image_stokes in image_csys.stokes():
+                for template_stokes in template_csys.stokes():
+                    if image_stokes == template_stokes:
+                        common_stokes_count += 1
+                        break
+            shape[stokes_axis] = common_stokes_count
+        else:
+            shape[stokes_axis] = imshape[stokes_axis]
+    return shape
+
+    
         
         

@@ -35,6 +35,7 @@
 #include <casa/Containers/Record.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Quanta/QuantumHolder.h>
+#include <casa/Quanta/QLogical.h>
 #include <measures/Measures/MeasureHolder.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSMetaDataOnDemand.h>
@@ -121,28 +122,95 @@ vector<int> msmetadata::almaspws(
 	return vector<int>();
 }
 
-vector<int> msmetadata::antennaids(const variant& names) {
+vector<casa::String> msmetadata::_vectorStdStringToVectorString(
+	const vector<std::string>& inset
+) {
+	vector<String> outset;
+	foreach_(string el, inset) {
+		outset.push_back(el);
+	}
+	return outset;
+}
+
+vector<int> msmetadata::antennaids(
+	const variant& names, const variant& mindiameter,
+	const variant& maxdiameter
+) {
 	_FUNC(
 		vector<String> myNames;
+		// because variants default to boolvecs even when we specify elsewise in the xml.
+		casa::Quantity mind = mindiameter.type() == variant::BOOLVEC ?
+		casa::Quantity(0, "m") : casaQuantity(mindiameter);
+		casa::Quantity maxd = maxdiameter.type() == variant::BOOLVEC ?
+		casa::Quantity(1, "pc") :casaQuantity(maxdiameter);
+
+		ThrowIf(
+			! mind.isConform("m"),
+			"mindiameter must have units of length"
+		);
+		ThrowIf(
+			! maxd.isConform("m"),
+			"maxdiameter must have units of length"
+		);
 		variant::TYPE type = names.type();
-		if (type == variant::STRING) {
+		if (type == variant::BOOLVEC) {
+			Vector<Int> x(_msmd->nAntennas());
+			indgen(x, 0);
+			return x.tovector();
+		}
+		else if (type == variant::STRING) {
 			myNames.push_back(names.toString());
 		}
 		else if (type == variant::STRINGVEC) {
-			vector<string> tmp = names.toStringVec();
-			vector<string>::const_iterator end = tmp.end();
-			for (
-				vector<string>::const_iterator iter=tmp.begin();
-				iter!=end; iter++
-			) {
-				myNames.push_back(*iter);
-			}
+			myNames = _vectorStdStringToVectorString(names.toStringVec());
 		}
 		else {
 			*_log << "Unsupported type for parameter names. Must be either a string or string array"
 				<< LogIO::EXCEPTION;
 		}
-		return _vectorUIntToVectorInt(_msmd->getAntennaIDs(myNames));
+
+		vector<String> allNames COMMA foundNames;
+		set<String> foundSet;
+		foreach_(String name, myNames) {
+			Bool expand = name.find('*') != std::string::npos;
+			if (expand) {
+				if (allNames.empty()) {
+					std::map<String COMMA uInt> namesToIDsMap;
+					allNames = _msmd->getAntennaNames(namesToIDsMap);
+				}
+				vector<String> matches = _match(allNames, name);
+				foreach_(String match, matches) {
+					if (foundSet.find(match) == foundSet.end()) {
+						foundNames.push_back(match);
+						foundSet.insert(match);
+					}
+				}
+			}
+			else {
+				if (foundSet.find(name) == foundSet.end()) {
+					foundNames.push_back(name);
+					foundSet.insert(name);
+				}
+			}
+		}
+		vector<uInt> foundIDs = _msmd->getAntennaIDs(foundNames);
+		Quantum<Vector<Double> > diams = _msmd->getAntennaDiameters();
+		casa::Quantity maxAntD(max(diams.getValue()), diams.getUnit());
+		casa::Quantity minAntD(min(diams.getValue()), diams.getUnit());
+
+		if (mind > minAntD || maxd < maxAntD) {
+			vector<uInt> newList;
+			String unit = diams.getUnit();
+			Vector<Double> v = diams.getValue();
+			foreach_(uInt id, foundIDs) {
+				casa::Quantity d(v[id], unit);
+				if (d >= mind && d <= maxd) {
+					newList.push_back(id);
+				}
+			}
+			foundIDs = newList;
+		}
+		return _vectorUIntToVectorInt(foundIDs);
 	)
 	return vector<int>();
 }
@@ -151,7 +219,10 @@ vector<string> msmetadata::antennanames(const variant& antennaids) {
 	_FUNC(
 		vector<uInt> myIDs;
 		variant::TYPE type = antennaids.type();
-		if (type == variant::INT) {
+		if (type == variant::BOOLVEC) {
+			// do nothing, all names will be returned.
+		}
+		else if (type == variant::INT) {
 			Int id = antennaids.toInt();
 			if (id < 0) {
 				*_log << "Antenna ID must be nonnegative."
@@ -247,6 +318,66 @@ record* msmetadata::antennaposition(const variant& which) {
 		return fromRecord(outRec);
 	)
 	return 0;
+}
+
+vector<string> msmetadata::antennastations(const variant& ants) {
+	_FUNC(
+		variant::TYPE type = ants.type();
+		if (type == variant::INT) {
+			vector<uInt> ids;
+			int id = ants.toInt();
+			if (id >= 0) {
+				ids.push_back(id);
+			}
+			return _vectorStringToStdVectorString(
+				_msmd->getAntennaStations(ids)
+			);
+		}
+		else if (type == variant::INTVEC) {
+			vector<Int> ids = ants.toIntVec();
+			if (ids.empty() || (ids.size() == 1 && ids[0] < 0)) {
+				return _vectorStringToStdVectorString(
+					_msmd->getAntennaStations(vector<uInt>())
+				);
+			}
+			else if (min(Vector<Int>(ids)) < 0) {
+				throw AipsError("No antenna ID may be less than zero when multiple IDs specified.");
+			}
+			else {
+				return _vectorStringToStdVectorString(
+					_msmd->getAntennaStations(
+						_vectorIntToVectorUInt(ants.toIntVec())
+					)
+				);
+			}
+		}
+		else if (type == variant::STRING) {
+			vector<String> names(1, String(ants.toString()));
+			return _vectorStringToStdVectorString(
+				_msmd->getAntennaStations(names)
+			);
+		}
+		else if (type == variant::STRINGVEC) {
+			return _vectorStringToStdVectorString(
+				_msmd->getAntennaStations(
+					_vectorStdStringToVectorString(
+						ants.toStringVec()
+					)
+				)
+			);
+		}
+		else if (type == variant::BOOLVEC) {
+			return _vectorStringToStdVectorString(
+				_msmd->getAntennaStations(vector<uInt>())
+			);
+		}
+		else {
+			throw AipsError(
+				"Unsupported type (" + ants.typeString() + ") for ants."
+			);
+		}
+	)
+	return vector<string>();
 }
 
 variant* msmetadata::bandwidths(const variant& spws) {
@@ -390,6 +521,34 @@ record* msmetadata::effexposuretime() {
 	return 0;
 }
 
+record* msmetadata::exposuretime(int scan, int spwid, int polid) {
+	_FUNC(
+		_checkSpwId(spwid, True);
+		_checkPolId(polid, True);
+		std::map<std::pair<uInt COMMA uInt> COMMA Int> ddidMap = _msmd->getSpwIDPolIDToDataDescIDMap();
+		std::pair<uInt COMMA uInt> mykey;
+		mykey.first = spwid;
+		mykey.second = polid;
+		ThrowIf(
+			ddidMap.find(mykey) == ddidMap.end(),
+			"MS has no data description ID for spectral window ID "
+			+ String::toString(spwid) + " and polarization ID "
+			+ String::toString(polid)
+		);
+		uInt dataDescID = ddidMap[mykey];
+		std::map<Int COMMA casa::Quantity> map2 = _msmd->getFirstExposureTimeMap()[dataDescID];
+		ThrowIf(
+			map2.find(scan) == map2.end(),
+			"MS has no records for scan number " + String::toString(scan)
+			+ ", spectral window ID " + String::toString(spwid) + ", and polarization ID "
+			+ String::toString(polid)
+		);
+
+		return fromRecord(QuantumHolder(map2[scan]).toRecord());
+	)
+	return 0;
+}
+
 vector<int> msmetadata::fdmspws() {
 	_FUNC(
 			/*
@@ -402,20 +561,21 @@ vector<int> msmetadata::fdmspws() {
 }
 
 variant* msmetadata::fieldsforintent(
-	const string& intent, const bool asnames, const bool regex
+	const string& intent, const bool asnames
 ) {
-	//_FUNC(
+	_FUNC(
 		std::set<Int> ids;
-		if (regex) {
+		Bool expand = intent.find('*') != std::string::npos;
+		if (expand) {
 			std::map<String COMMA std::set<Int> > mymap = _msmd->getIntentToFieldsMap();
-			ids = _idsFromRegex(mymap, intent);
+			ids = _idsFromExpansion(mymap, intent);
 		}
 		else {
 			ids = _msmd->getFieldsForIntent(intent);
 		}
 		variant *x;
 		if (ids.size() == 0) {
-			*_log << LogIO::WARN << "No intent " << (regex ? "matching '" : "'")
+			*_log << LogIO::WARN << "No intent " << (expand ? "matching '" : "'")
 				<< intent << "' exists in this dataset." << LogIO::POST;
 			x = asnames
 				? new variant(vector<string>(0))
@@ -427,7 +587,7 @@ variant* msmetadata::fieldsforintent(
 				: new variant(_setIntToVectorInt(ids));
 		}
 		return x;
-	//)
+	)
 	return 0;
 }
 
@@ -721,11 +881,12 @@ vector<int> msmetadata::scansforfield(const variant& field) {
 	return vector<int>();
 }
 
-vector<int> msmetadata::scansforintent(const string& intent, bool regex) {
+vector<int> msmetadata::scansforintent(const string& intent) {
 	_FUNC(
-		if (regex) {
+		Bool expand = intent.find('*') != std::string::npos;
+		if (expand) {
 			std::map<String COMMA std::set<Int> > mymap = _msmd->getIntentToScansMap();
-			std::set<Int> ids = _idsFromRegex(mymap, intent);
+			std::set<Int> ids = _idsFromExpansion(mymap, intent);
 			return _setIntToVectorInt(ids);
 		}
 		else {
@@ -813,11 +974,12 @@ variant* msmetadata::spwsforbaseband(int bb, const string& sqldmode) {
 	return 0;
 }
 
-vector<int> msmetadata::spwsforintent(const string& intent, bool regex) {
+vector<int> msmetadata::spwsforintent(const string& intent) {
 	_FUNC(
-		if (regex) {
+		Bool expand = intent.find('*') != std::string::npos;
+		if (expand) {
 			std::map<String COMMA std::set<uInt> > mymap = _msmd->getIntentToSpwsMap();
-			std::set<Int> ids = _idsFromRegex(mymap, intent);
+			std::set<Int> ids = _idsFromExpansion(mymap, intent);
 			return _setIntToVectorInt(ids);
 		}
 		else {
@@ -1029,18 +1191,18 @@ void msmetadata::_checkSpwId(int id, bool throwIfNegative) const {
 void msmetadata::_checkPolId(int id, bool throwIfNegative) const {
 	ThrowIf(
 		id >= (int)_msmd->nPol() || (throwIfNegative && id < 0),
-		"Spectral window ID " + String::toString(id)
+		"Polarization ID " + String::toString(id)
 		+ " out of range, must be less than "
 		+ String::toString((int)_msmd->nPol())
 	);
 }
 
-std::set<Int> msmetadata::_idsFromRegex(
-	const std::map<String, std::set<Int> >& mymap, const String& regex
-) const {
+std::set<Int> msmetadata::_idsFromExpansion(
+	const std::map<String, std::set<Int> >& mymap, const String& matchString
+) {
 	std::set<Int> ids;
 	boost::regex re;
-	re.assign(regex);
+	re.assign(_escapeExpansion(matchString));
 	foreach_(std::pair<String COMMA std::set<Int> > kv, mymap) {
 		if (boost::regex_match(kv.first, re)) {
 			ids.insert(kv.second.begin(), kv.second.end());
@@ -1049,12 +1211,12 @@ std::set<Int> msmetadata::_idsFromRegex(
 	return ids;
 }
 
-std::set<Int> msmetadata::_idsFromRegex(
-	const std::map<String, std::set<uInt> >& mymap, const String& regex
-) const {
+std::set<Int> msmetadata::_idsFromExpansion(
+	const std::map<String, std::set<uInt> >& mymap, const String& matchString
+) {
 	std::set<Int> ids;
 	boost::regex re;
-	re.assign(regex);
+	re.assign(_escapeExpansion(matchString));
 	foreach_(std::pair<String COMMA std::set<uInt> > kv, mymap) {
 		if (boost::regex_match(kv.first, re)) {
 			ids.insert(kv.second.begin(), kv.second.end());
@@ -1062,6 +1224,35 @@ std::set<Int> msmetadata::_idsFromRegex(
 	}
 	return ids;
 }
+
+
+std::vector<casa::String> msmetadata::_match(
+	const vector<casa::String>& candidates, const casa::String& matchString
+) {
+	vector<casa::String> matches;
+	boost::regex re;
+	re.assign(_escapeExpansion(matchString));
+	foreach_(casa::String candidate, candidates) {
+		if (boost::regex_match(candidate, re)) {
+			matches.push_back(candidate);
+		}
+	}
+	return matches;
+}
+
+std::string msmetadata::_escapeExpansion(const casa::String& stringToEscape) {
+	const boost::regex esc("[\\^\\.\\$\\|\\(\\)\\[\\]\\+\\?\\/\\\\]");
+	const std::string rep("\\\\\\1");
+	std::string result = regex_replace(
+		stringToEscape, esc, rep, boost::match_default | boost::format_sed
+	);
+	const boost::regex expand("\\*");
+	const std::string rep1(".*");
+	return regex_replace(
+		result, expand, rep1, boost::match_default | boost::format_sed
+	);
+}
+
 
 } // casac namespace
 

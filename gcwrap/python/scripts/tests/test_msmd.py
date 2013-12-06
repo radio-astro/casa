@@ -105,6 +105,21 @@ class msmd_test(unittest.TestCase):
         got = self.md.antennaids([names[4], names[0], names[7]])
         self.assertTrue((got == expec).all())
         
+        got = self.md.antennaids()        
+        expec = range(self.md.nantennas())
+        self.assertTrue((got == expec).all())
+        
+        got = self.md.antennaids(["DV12", "DA*", "DV1*"])
+        expec =  [ 8, 0,  1,  7,  9, 10, 11, 12, 13, 14]
+        self.assertTrue((got == expec).all())
+        
+        got = self.md.antennaids(["DV12", "DA*", "DV1*"], "1m", qa.quantity(15,"m"))
+        expec =  [ 8, 0,  1,  7,  9, 10, 11, 12, 13, 14]
+        self.assertTrue((got == expec).all())
+        
+        got = self.md.antennaids(["DV12", "DA*", "DV1*"], "1m", qa.quantity(2,"m"))
+        self.assertTrue(len(got) == 0)
+        
     def test_chanavgspws(self):
         """Test chanavgspws()"""
         got = self.md.chanavgspws()
@@ -114,6 +129,14 @@ class msmd_test(unittest.TestCase):
         ])
         self.assertTrue((got == expec).all())
 
+    def test_exposuretime(self):
+        """Test exposuretime()"""
+        # no DDID for spwid=0, polid=0
+        self.assertRaises(Exception,self.md.exposuretime, scan=30, spwid=0, polid=0)
+        got = self.md.exposuretime(scan=30, spwid=0, polid=1)
+        self.assertTrue(got == qa.quantity("1.152s"))
+        got = self.md.exposuretime(scan=17, spwid=10, polid=0)
+        self.assertTrue(got == qa.quantity("1.008s"))
         
     def test_fdmspws(self):
         """Test fdmspws()"""
@@ -150,7 +173,7 @@ class msmd_test(unittest.TestCase):
             self.assertTrue((got == expec).all())
         self.assertTrue(
             (
-             self.md.fieldsforintent('.*WVR.*')
+             self.md.fieldsforintent('*WVR*')
              == numpy.array([0, 1, 2, 3, 4, 5])
             ).all()
         )
@@ -510,11 +533,11 @@ class msmd_test(unittest.TestCase):
                 ])
             else:
                 expec = numpy.array([12, 16, 20, 23, 27, 30])
-            got = self.md.scansforintent(i, regex=False)
+            got = self.md.scansforintent(i)
             self.assertTrue((got == expec).all())
         self.assertTrue(
             (
-             self.md.scansforintent('.*WVR.*', regex=True)
+             self.md.scansforintent('*WVR*')
              == numpy.array([
                     1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
                     11, 13, 14, 15, 17, 18, 19, 21,
@@ -690,7 +713,7 @@ class msmd_test(unittest.TestCase):
                 )
             self.assertTrue((got == expec).all())
             
-            got = self.md.spwsforintent('.*WVR.*', regex=True)
+            got = self.md.spwsforintent('*WVR*')
             expec = numpy.array(
                 [
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
@@ -815,9 +838,9 @@ class msmd_test(unittest.TestCase):
             32, 33, 34, 35, 36, 37, 38, 39
         ])
         self.assertTrue((got == expec).all())
-        got = self.md.wvrspws(False)
+        got = self.md.wvrspws(complement=False)
         self.assertTrue((got == expec).all())
-        got = self.md.wvrspws(True)
+        got = self.md.wvrspws(complement=True)
         expec = range(1, 25)
         self.assertTrue((got == expec).all())
 
@@ -942,6 +965,35 @@ class msmd_test(unittest.TestCase):
         got = md.datadescids(spw=10, pol=1)
         self.assertTrue(len(got) == 0)
         
+    def test_antennastations(self):
+        """Test antennastations()"""
+        md = self.md
+        got = md.antennastations()
+        expec = numpy.array([
+            'A075', 'A068', 'A077', 'A137', 'A082', 'A076', 'A021', 'A071',
+            'A011', 'A072', 'A025', 'A074', 'A069', 'A138', 'A053'
+        ])
+        self.assertTrue((got == expec).all())
+        got = md.antennastations(-1)
+        self.assertTrue((got == expec).all())
+        got = md.antennastations([-1])
+        self.assertTrue((got == expec).all())
+        got = md.antennastations([])
+        self.assertTrue((got == expec).all())
+        got = md.antennastations(2)
+        self.assertTrue((got == numpy.array(["A077"])).all())
+        self.assertRaises(Exception, md.antennastations, [2, -1])
+        got = md.antennastations([4, 2])
+        expec = numpy.array(['A082', 'A077'])
+        self.assertTrue((got == expec).all())
+        self.assertRaises(Exception, md.antennastations, [1, 20])
+        self.assertRaises(Exception, md.antennastations, 20)
+        got = md.antennastations('DV13')
+        expec = numpy.array(["A072"])
+        self.assertTrue((got == expec).all())
+        expec = numpy.array(["A072", "A075"])
+        got = md.antennastations(['DV13', 'DA43'])
+        self.assertTrue((got == expec).all())
 
 def suite():
     return [msmd_test]

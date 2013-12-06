@@ -85,7 +85,8 @@ default(sdcal)
 infile = 'OrionS_rawACSmod'
 fluxunit = 'K' 
 calmode = 'ps'
-scanlist = [20,21,22,23]
+#scanlist = [20,21,22,23]
+scanlist = [21,22,23,24]
 iflist = [0]
 scanaverage = False
 timeaverage = True # average in time

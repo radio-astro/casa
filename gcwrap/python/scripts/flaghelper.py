@@ -10,9 +10,10 @@ import copy
 from taskinit import *
 from tasks import *
 import flagdata as flagdata
-
-# Remove this once CASA moves to Python 2.7+
+# needed in Python 2.6
 from OrderedDictionary import OrderedDict
+# for Python 2.7
+#from collections import OrderedDict
 
 '''
 A set of helper functions for the tasks flagdata and flagcmd.
@@ -224,26 +225,8 @@ def readFile(inputfile):
                 continue  
             uppercmd = cmd.replace('true','True')
             cmd = uppercmd.replace('false','False')      
-            
-            # Fix the missing quotes around some strings coming from importevla
-#             if cmd.__contains__('mode') and cmd.__contains__('shadow'):
-#                 newcmd = cmd.replace("mode=shadow","mode='shadow'")
-#                 cmd = newcmd
-#             if cmd.__contains__('mode') and cmd.__contains__('clip'):
-#                 newcmd = cmd.replace("mode=clip","mode='clip'")
-#                 cmd = newcmd
-#             if cmd.__contains__('correlation=') and cmd.__contains__('ABS_LL'):
-#                 newcmd = cmd.replace("correlation=ABS_LL","correlation='ABS_LL'")
-#                 cmd = newcmd
-#             if cmd.__contains__('correlation=') and cmd.__contains__('ABS_RR'):
-#                 newcmd = cmd.replace("correlation=ABS_RR","correlation='ABS_RR'")
-#                 cmd = newcmd
-#             if cmd.__contains__('correlation=') and cmd.__contains__('ABS_ALL'):
-#                 newcmd = cmd.replace("correlation=ABS_ALL","correlation='ABS_ALL'")
-#                 cmd = newcmd
-                
+                            
             cmdlist.append(cmd)
-
 
     except:
         casalog.post('Error reading lines from file '+ff.name, 'SEVERE')
@@ -302,10 +285,14 @@ def parseDictionary(cmdlist, reason='any', shadow=True):
             continue
         if cmd == '':
             continue
-        # TO Be allowed later
-        if cmd.__contains__('summary'):
-            casalog.post('Mode summary is not allowed in list operation', 'WARN')
-            continue
+
+        uppercmd = cmd.replace('true','True')
+        cmd = uppercmd.replace('false','False')      
+
+        # CAS-5368, allow summary in list mode
+#        if cmd.__contains__('summary'):
+#            casalog.post('Mode summary is not allowed in list operation', 'WARN')
+#            continue
 
         mode = ''
         antenna = ''
@@ -611,7 +598,8 @@ def parseAgents(aflocal, flagdict, myrows, apply, writeflags, display=''):
         # Hold the name of the agent and the cmd row number
         mode = cmd['mode']
         agent_name = mode.capitalize()+'_'+str(row)
-        cmd['name'] = agent_name
+            
+        cmd['agentname'] = agent_name
         
         # Remove the data selection parameters if there is only one agent for performance reasons.
         # Explanation: if only one agent exists and the data selection parameters are parsed to it, 
@@ -627,14 +615,15 @@ def parseAgents(aflocal, flagdict, myrows, apply, writeflags, display=''):
                     cmd.pop(k)
 
         casalog.post('Parsing parameters of mode %s in row %s'%(mode,row), 'DEBUG')
-        casalog.post('%s'%cmd, 'DEBUG')
+        casalog.post('%s'%cmd, 'DEBUG')            
 
         # Parse the dictionary of parameters to the tool
         if (not aflocal.parseagentparameters(cmd)):
             casalog.post('Failed to parse parameters of mode %s in row %s' %(mode,row), 'WARN')
             continue
                                     
-    return True
+#    return True
+    return myflagcmd
 
 # TO BE VERIFIED. May not be needed
 def evalParams(params):
@@ -776,10 +765,10 @@ def writeFlagCommands(msfile, flagdict, applied, add_reason, outfile, append=Tru
     # Append to a file   
     if outfile != '': 
         if append:
-            casalog.post('Will append commands to the file '+outfile)       
+#            casalog.post('Will append commands to the file '+outfile)       
             ffout = open(outfile, 'a')
         else:
-            casalog.post('Will save commands to the file '+outfile)       
+#            casalog.post('Will save commands to the file '+outfile)       
             os.system('rm -f '+outfile)
             ffout = open(outfile, 'w')
            
@@ -806,45 +795,6 @@ def writeFlagCommands(msfile, flagdict, applied, add_reason, outfile, append=Tru
                             v = v.strip("'")
                         cmdstr = "'"+v+"'"
                         cmdline = cmdline + k + '=' + str(cmdstr) + ' '
-
-#                     elif k == 'timedev' and isinstance(v,list):
-#                         #outer list, 
-#                         # timedev = [[1.0, 9.0, 0.038859101518873986], [1.0, 10.0, 0.16283325492625655]]
-#                         outstr = "["
-#                         for outv in v:
-#                             instr = "["
-#                             for inv in outv:
-#                                 instr = instr + str(inv) + ','
-#                             instr = instr.rstrip(',')
-#                             instr = instr + "],"
-#                             outstr = outstr + instr
-#                         outstr = outstr.rstrip(',')
-#                         outstr = outstr + ']'
-#                             
-#                         cmdline = cmdline + k + "=" + outstr + ' '
-# 
-#                     elif k == 'freqdev' and isinstance(v,list):
-#                         #outer list, 
-#                         # freqdev = [[1.0, 9.0, 0.038859101518873986], [1.0, 10.0, 0.16283325492625655]]
-#                         outstr = "["
-#                         for outv in v:
-#                             instr = "["
-#                             for inv in outv:
-#                                 instr = instr + str(inv) + ','
-#                             instr = instr.rstrip(',')
-#                             instr = instr + "],"
-#                             outstr = outstr + instr
-#                         outstr = outstr.rstrip(',')
-#                         outstr = outstr + ']'
-#                             
-#                         cmdline = cmdline + k + "=" + outstr + ' '
-# 
-#                     elif isinstance(v,list):
-#                         lstring = ''
-#                         for ll in v:
-#                             lstring = lstring + str(ll)+','
-#                         lstring = lstring.rstrip(',')
-#                         cmdline = cmdline + k + '=['+ lstring + '] '
                         
                     else:
                         cmdline = cmdline + k + '=' + str(v) + ' '
@@ -862,17 +812,23 @@ def writeFlagCommands(msfile, flagdict, applied, add_reason, outfile, append=Tru
     
     else:
         # Append new commands to existing FLAG_CMD table
-        casalog.post('Saving commands to the FLAG_CMD table')       
+#        casalog.post('Saving commands to the FLAG_CMD table')       
         cmdlist = []
         reasonlist = []
         for key in flagdict.keys():
             cmdline = ""
             reason = ""
             cmddict = flagdict[key]['command']
+            
             # Do not save reason in the COMMAND column
             if cmddict.has_key('reason'):
                 cmddict.pop('reason')
                 
+            # Summary cmds should not go to FLAG_CMD
+            if cmddict.has_key('mode') and cmddict['mode'] == 'summary':
+                casalog.post("Commands with mode='summary' are not allowed in the FLAG_CMD table", 'WARN')
+                continue
+            
             # Add to REASON column the user input reason if requested
             reason = flagdict[key]['reason']
             if reason2add:
@@ -889,45 +845,6 @@ def writeFlagCommands(msfile, flagdict, applied, add_reason, outfile, append=Tru
                     cmdstr = "'"+v+"'"
                     cmdline = cmdline + k + '=' + str(cmdstr) + ' '
 
-#                 elif k == 'timedev' and isinstance(v,list):
-#                     #outer list, 
-#                     # timedev = [[1.0, 9.0, 0.038859101518873986], [1.0, 10.0, 0.16283325492625655]]
-#                     outstr = "["
-#                     for outv in v:
-#                         instr = "["
-#                         for inv in outv:
-#                             instr = instr + str(inv) + ','
-#                         instr = instr.rstrip(',')
-#                         instr = instr + "],"
-#                         outstr = outstr + instr
-#                     outstr = outstr.rstrip(',')
-#                     outstr = outstr + ']'
-#                         
-#                     cmdline = cmdline + k + "=" + outstr + ' '
-# 
-#                 elif k == 'freqdev' and isinstance(v,list):
-#                     #outer list, 
-#                     # freqdev = [[1.0, 9.0, 0.038859101518873986], [1.0, 10.0, 0.16283325492625655]]
-#                     outstr = "["
-#                     for outv in v:
-#                         instr = "["
-#                         for inv in outv:
-#                             instr = instr + str(inv) + ','
-#                         instr = instr.rstrip(',')
-#                         instr = instr + "],"
-#                         outstr = outstr + instr
-#                     outstr = outstr.rstrip(',')
-#                     outstr = outstr + ']'
-#                         
-#                     cmdline = cmdline + k + "=" + outstr + ' '
-# 
-#                 elif isinstance(v,list):
-#                     lstring = ''
-#                     for ll in v:
-#                         lstring = lstring + str(ll)+','
-#                     lstring = lstring.rstrip(',')
-#                     cmdline = cmdline + k + '=['+ lstring + '] '
-                    
                 else:
                     cmdline = cmdline + k + '=' + str(v) + ' '
                 
@@ -968,14 +885,16 @@ def writeFlagCommands(msfile, flagdict, applied, add_reason, outfile, append=Tru
         
         newrows = int(tblocal.nrows())
         newrows = newrows - nrows
-        casalog.post('Saved ' + str(newrows) + ' rows to FLAG_CMD')
+        if newrows == 0:
+            casalog.post('Did not save any rows to FLAG_CMD')
+        else:
+            casalog.post('Saved ' + str(newrows) + ' rows to FLAG_CMD')
         
         tblocal.close()
         
     return True
 
 
-# TODO: verify
 def parseRFlagOutputFromSummary(mode,summary_stats_list, flagcmd):
     """
     Function to pull out 'rflag' output from the long dictionary, and 
@@ -983,7 +902,7 @@ def parseRFlagOutputFromSummary(mode,summary_stats_list, flagcmd):
           If filename is not specified, make one up.
     (2) modify entries in 'cmdline' so that it is ready for savepars. 
           This is to ensure that 'savepars' saves the contents of the threshold-files
-          and not just the file-names. It has to save it in the form that tflagdata 
+          and not just the file-names. It has to save it in the form that flagdata 
           accepts inline : e.g.  timedev=[[1,10,0.1],[1,11,0.07]] . This way, the user
           need not keep track of threshold text files if they use 'savepars' with action='apply'.
     """
@@ -1111,7 +1030,6 @@ def readFlagCmdTable(msfile, rows=[], applied=True, reason='any'):
                 rowl.append(i)
         rowlist = rowl
 
-    print rowlist
     Ncmds = 0
     myflagcmd = {}
     
@@ -1538,6 +1456,35 @@ def evaluateParameters(pardict):
     
     return cmddict
 
+def evaluateNumpyType(elem):
+    '''Evaluate if an element is of numpy type.
+       Cast it to the corresponding Python type
+       and return the casted value'''
+    
+    import numpy as np
+    
+    val = None
+    
+    if(isinstance(elem,np.int) or isinstance(elem,np.int8) or
+       isinstance(elem,np.int16) or isinstance(elem,np.int32) or
+       isinstance(elem,np.int64)):
+        val = int(elem)
+        
+    elif(isinstance(elem,np.float) or isinstance(elem,np.float16) or
+         isinstance(elem,np.float32) or isinstance(elem,np.float64) or
+         isinstance(elem,np.float128)):
+        val = float(elem)
+        
+    elif(isinstance(elem,np.double)):
+        val = float(elem)  
+        
+    else:
+        # it is none of the above numpy types
+        val = elem
+        
+    # return the casted element  
+    return val
+
 def parseXML(sdmfile, mytbuff):
     '''
 #   readflagxml: reads Antenna.xml and Flag.xml SDM tables and parses
@@ -1799,6 +1746,7 @@ def parseXML(sdmfile, mytbuff):
         # Construct command strings (per input flag)
         cmddict = OrderedDict()
 #        cmd = "antenna='" + antname + "' timerange='" + timestr + "'"
+#        cmddict['mode'] = 'manual'
         cmddict['antenna'] = antname
         cmddict['timerange'] = timestr
         if spwstring != '':
@@ -3863,7 +3811,7 @@ def extractRFlagOutputFromSummary(mode,summary_stats_list, flagcmd):
           If filename is not specified, make one up.
     (2) modify entries in 'cmdline' so that it is ready for savepars. 
           This is to ensure that 'savepars' saves the contents of the threshold-files
-          and not just the file-names. It has to save it in the form that tflagdata 
+          and not just the file-names. It has to save it in the form that flagdata 
           accepts inline : e.g.  timedev=[[1,10,0.1],[1,11,0.07]] . This way, the user
           need not keep track of threshold text files if they use 'savepars' with action='apply'.
     """
@@ -3964,8 +3912,4 @@ def evalString(cmdline):
     
     return cmddict
 
-
-
-
-    
 

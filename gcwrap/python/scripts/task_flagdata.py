@@ -6,6 +6,8 @@ import copy
 import pprint
 import flaghelper as fh
 from parallel.parallel_task_helper import ParallelTaskHelper
+# this should be replaced when CASA really moves to Python 2.7
+from OrderedDictionary import OrderedDict
 
 debug = False
 
@@ -26,7 +28,7 @@ class FlagHelper(ParallelTaskHelper):
     def __init__(self, args={}):
         self.__args = args
     
-    @dump_args
+#    @dump_args
     def setupInputFile(self, parname):
         '''Create a temporary input file with
            absolute pathnames for other input files
@@ -42,8 +44,7 @@ class FlagHelper(ParallelTaskHelper):
             for i in range(len(parname)):
                 newpar.append(fh.addAbsolutePath(parname[i]))
         
-        return newpar
-    
+        return newpar    
         
 #    @dump_args
     def setupCluster(self, thistask=''):
@@ -52,8 +53,24 @@ class FlagHelper(ParallelTaskHelper):
             thistask = 'flagdata'
             
         ParallelTaskHelper.__init__(self, task_name=thistask, args=self.__args)
-
-
+        
+#    @dump_args 
+    def setupRflag(self, devpar):
+        '''cast rflag's list parameters from numpy types to Python types
+        devpar --> list of numeric parameters or list of list
+                   such as timedev or freqdev'''
+        
+        nt = copy.deepcopy(devpar)
+        for i in range(len(nt)):
+            if (isinstance(nt[i],list)):
+                nnt = nt[i]
+                for j in range(len(nnt)):
+                    elem = fh.evaluateNumpyType(nnt[j])
+                    # write the casted element back  
+                    devpar[i][j] = elem
+        
+        
+# The flagdata task
 def flagdata(vis,
              mode,
              autocorr,      # mode manual parameter
@@ -113,6 +130,7 @@ def flagdata(vis,
              spwchan,
              spwcorr,
              basecnt,
+             name,
              action,           # run or not the tool
              display,
              flagbackup,
@@ -180,8 +198,9 @@ def flagdata(vis,
             orig_locals['freqdev'] = freqdev    
     
         FHelper.__init__(orig_locals)
-
-        FHelper.bypassParallelProcessing(1)
+        
+        # For tests only
+#        FHelper.bypassParallelProcessing(1)
 
         FHelper.setupCluster('flagdata')
         # (CAS-4119): Override summary minabs,maxabs,minrel,maxrel 
@@ -435,6 +454,7 @@ def flagdata(vis,
             if newtime != 0.0:
                 # this means ntime='scan', the default
                 agent_pars['ntime'] = newtime
+                
             agent_pars['combinescans'] = combinescans   
             agent_pars['datacolumn'] = datacolumn.upper()
             agent_pars['winsize'] = winsize
@@ -479,6 +499,7 @@ def flagdata(vis,
             agent_pars['spwchan'] = spwchan
             agent_pars['spwcorr'] = spwcorr
             agent_pars['basecnt'] = basecnt
+            agent_pars['name'] = name
             
             # Disable writeflags and savepars
             writeflags = False
@@ -525,13 +546,15 @@ def flagdata(vis,
             # Number of commands in dictionary
             vrows = flagcmd.keys()
             casalog.post('There are %s cmds in dictionary of mode %s'%(vrows.__len__(),mode),'DEBUG1')
+            
+        modified_flagcmd = flagcmd
 
         # Setup global parameters in the agent's dictionary
         apply = True        
         
         # Hold the name of the agent
         agent_name = mode.capitalize()
-        agent_pars['name'] = agent_name
+        agent_pars['agentname'] = agent_name
         agent_pars['apply'] = apply      
                           
         ##########  Only save the parameters and exit; action = ''     
@@ -562,9 +585,10 @@ def flagdata(vis,
 
             # CAS-3959 Handle channel selection at the FlagAgent level
             agent_pars['spw'] = spw
-            casalog.post('Parsing the parameters for the %s mode'%mode)
+            casalog.post('Parsing the parameters for the %s mode'%mode, 'DEBUG1')
             if (not aflocal.parseagentparameters(agent_pars)):
-                casalog.post('Failed to parse parameters for mode %s' %mode, 'ERROR')
+#                casalog.post('Failed to parse parameters for mode %s' %mode, 'ERROR')
+                raise ValueError, 'Failed to parse parameters for mode %s' %mode
                 
             casalog.post('%s'%agent_pars, 'DEBUG')
        
@@ -576,7 +600,7 @@ def flagdata(vis,
                 raise Exception, 'There are no valid commands in list'
             
             unionpars = {}
-            # Do not crete union for a cal table
+            # Do not create union for a cal table
             if iscal:
                 if vrows.__len__() == 1:
                     unionpars = fh.parseSelectionPars(flagcmd[0]['command'])
@@ -603,7 +627,9 @@ def flagdata(vis,
             aflocal.selectdata(unionpars);
 
             # Parse the parameters for each agent in the list
-            fh.parseAgents(aflocal, flagcmd, [], apply, writeflags, display)
+            # Get the returned modified dictionary of flag commands which
+            # is needed by the rflag agent, when present in a list
+            modified_flagcmd = fh.parseAgents(aflocal, flagcmd, [], apply, writeflags, display)
 
         # Do display if requested
         if display != '':
@@ -646,13 +672,12 @@ def flagdata(vis,
 
 
         # Now, deal with all the modes that return output.
-        # Summary : Currently, only one is allowed in the task
-        # Rflag : There can be many 'rflags' in the list mode.
+        # Rflag : There can be many 'rflags' in list mode.
 
         ## Pull out RFlag outputs. There will be outputs only if writeflags=False
         if (mode == 'rflag' or mode== 'list') and (writeflags==False):  
             pprint.pprint(summary_stats_list)
-            fh.parseRFlagOutputFromSummary(mode,summary_stats_list, flagcmd)
+            fh.parseRFlagOutputFromSummary(mode,summary_stats_list, modified_flagcmd)
 
         # Save the current parameters/list to FLAG_CMD or to output
         if savepars:  
@@ -689,34 +714,55 @@ def flagdata(vis,
                 except Exception, instance:
                     casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
                                  'WARN')
-
-        # Pull out the 'summary' part of summary_stats_list.
-        # (This is the task, and there will be only one such dictionary.)
-        # After this step, the only thing left in summary_stats_list are the
-        # list of reports/views, if any.  Return it, if the user wants it.
-        if mode == 'summary':
-           if type(summary_stats_list) is dict:
-               nreps = summary_stats_list['nreport'];
+        
+        # Pull out the 'summary' reports of summary_stats_list.
+        if mode == 'summary' or mode == 'list':
+           ordered_summary_list = OrderedDict(summary_stats_list)
+           nreps = ordered_summary_list['nreport']
+           if nreps > 0:                   
                for rep in range(0,nreps):
-                    repname = "report"+str(rep);
-                    if summary_stats_list[repname]['type'] == "summary":
-                          summary_stats = summary_stats_list.pop(repname);
-                          summary_stats_list[repname] = {'type':'none','name':'none'};
-                          break;  # pull out only one summary.
-        
-           # Filter out baselines/antennas/fields/spws/... from summary_stats
-           # which do not fall within limits
-           summary_stats = filter_summary(summary_stats,minrel,maxrel,minabs,maxabs)
-        
-        # if (need to return the reports/views as well as summary_stats) :
-        #      return summary_stats , summary_stats_list;
-        # else :
-        #      return summary_stats;
-        return summary_stats
+                   repname = "report"+str(rep)
+                   if ordered_summary_list[repname]['type'] != "summary":
+                       ordered_summary_list.pop(repname)
+                   else:
+                       # apply requested filtering
+                       summary_stats = ordered_summary_list.pop(repname);
+                       summary_stats = filter_summary(summary_stats,minrel,maxrel,minabs,maxabs)
+                       # add filtered dictionary back
+                       ordered_summary_list[repname] = summary_stats
+
+               # Clean up the dictionary before returning it
+               ordered_summary_list.pop('type')
+               ordered_summary_list.pop('nreport')
+               
+               if len(ordered_summary_list) == 1:
+                   repkey = ordered_summary_list.keys()
+                   summary_stats_list = ordered_summary_list.pop(repkey[0])
+               else:                       
+                   # rename the keys of the dictionary according to
+                   # the number of reports left in dictionary
+                   counter = 0
+                   summary_reports = OrderedDict()
+                   for k in ordered_summary_list.iterkeys():
+                       repname = "report"+str(counter)
+                       summary_reports[repname] = ordered_summary_list[k]
+                       counter += 1
+                       
+                   summary_stats_list = dict(summary_reports)
+               
+           # for when there is no summary mode in a list
+           else:
+               summary_stats_list = {}  
+               
+        else:
+             summary_stats_list = {} 
+                   
+        return summary_stats_list
     
     except Exception, instance:
         aflocal.done()
         casalog.post('%s'%instance,'ERROR')
+        return summary_stats
 
 
 # Helper functions

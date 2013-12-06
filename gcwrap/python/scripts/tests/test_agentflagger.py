@@ -488,11 +488,11 @@ class test_bpass(test_base):
         self.setUp_bpass_case()
 
     def test_default_cparam_bpass(self):
-        '''Flagdata: flag CPARAM as the default column'''
+        '''Flagdata: flag CPARAM data column'''
         aflocal = casac.agentflagger()
         aflocal.open(self.vis)
         aflocal.selectdata()
-        aflocal.parseclipparameters(clipzeros=True)
+        aflocal.parseclipparameters(clipzeros=True,datacolumn='CPARAM')
         aflocal.parsesummaryparameters()
         aflocal.init()
         summary = aflocal.run(writeflags=True)
@@ -636,7 +636,7 @@ class test_bpass(test_base):
         aflocal.open(self.vis)
         aflocal.selectdata()
         agentRflag={'apply':True,'mode':'rflag','correlation':correlation,
-                    'extendflags':False}
+                    'extendflags':False,'datacolumn':'CPARAM'}
         agentSummary={'apply':True,'mode':'summary'}
         aflocal.parseagentparameters(agentRflag)
         aflocal.parseagentparameters(agentSummary)
@@ -700,6 +700,30 @@ class test_MS(test_base):
         self.assertEqual(summary['report0']['scan']['1']['flagged'], 192416)
         self.assertEqual(summary['report0']['scan']['8']['flagged'], 0)
         self.assertEqual(summary['report0']['flagged'], 192416)
+        
+    def test_summarylist1(self):
+        '''agentflagger: multiple summaries'''
+        aflocal = casac.agentflagger()
+        aflocal.open(self.vis)
+        aflocal.selectdata()
+        aflocal.parsesummaryparameters(name='summary_1')
+        aflocal.parsemanualparameters(intent='FOCUS') # non-existing intent
+        aflocal.parsesummaryparameters(name='summary_2')
+        aflocal.parsemanualparameters(spw='0') 
+        aflocal.parsesummaryparameters(name='summary_3')
+        aflocal.init()
+        summary = aflocal.run()
+        aflocal.done()
+        
+        # It creates 2 reports per summary agent. One is type='summary',
+        # ther other is type='plotpoints'
+        self.assertEqual(summary['report0']['name'],'summary_1')
+        self.assertEqual(summary['report2']['name'],'summary_2')
+        self.assertEqual(summary['report4']['name'],'summary_3')
+        self.assertEqual(summary['report0']['flagged'], 0)
+        self.assertEqual(summary['report2']['flagged'], 0)
+        self.assertEqual(summary['report4']['spw']['0']['flagged'], summary['report4']['spw']['0']['total'])
+
              
 class test_display(test_base):
     """AgentFlagger:: Automatic test to check basic behaviour of display GUI using pause=False option """

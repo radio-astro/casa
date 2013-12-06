@@ -7,15 +7,62 @@
 
     <task type="function" name="flagdata" category="editing">
         <shortdescription>All-purpose flagging task based on data-selections and flagging modes/algorithms.</shortdescription>
-        <description>
-            This task can flag a Measurement Set or a calibration table.
-            It has two main types of operation. One type
-            will read the parameters from the interface and flag
-            using any of the various available modes. Ther other type
-            will read the commands from text files or a Python list of strings,
-            containing a list of flag commands (each line containing data selection
-            parameters and any parameter specific for the mode being 
-            requested). Please see examples at the end of this help.
+        <description>        
+        This task can flag a Measurement Set or a calibration table. It has 
+        two main types of operation. One type will read the parameters from 
+        the interface and flag using any of the various available modes. The 
+        other type will read the commands from a text file, a list of files or 
+        a Python list of strings, containing a list of flag commands (each line 
+        containing data selection parameters and any parameter specific for the 
+        mode being requested). Please see examples at the end of this help.
+        
+        It is also possible to only save the parameters set in the interface 
+        without flagging. The parameters can be saved in the FLAG_CMD sub-table 
+        or in a text file. Note that when saving to an external file, the parameters 
+        will be appended to the given file.
+        
+        The available flagging modes are: manual, clip, shadow, quack, elevation, 
+        tfcrop, rflag, extend, unflag and summary. For automatic flagging, it is 
+        recommended to combine auto-flag modes with extend, via the list mode.
+
+        The current flags can be automatically backed up before applying new 
+        flags if the parameter flagbackup is set. Previous flag versions can be 
+        recovered using the flagmanager task.
+        
+        NOTE on flagging calibration tables.
+        -----------------------------------
+        
+        When the input is a calibration table, the modes 'elevation' and 'shadow'
+        will be disabled. Data selection for calibration tables is limited to field,
+        scan, time, antenna, spw  and observation. It is only possible to save the 
+        parameters to an external file. If the calibration table was created before
+        CASA 4.1, this task will create a dummy OBSERVATION column and OBSERVATION
+        sub-table in the input calibration table to adapt it to the new cal table
+        format.
+        
+        Selecting antennas in some calibration tables have a different meaning compared
+        to selecting the MS. Some calibration tables such as the antenna-based ones,
+        created with some modes of gencal or polcal, have the ANTENNA2 column set to -1. 
+        This means that when selecting antenna='ANT', will select the whole ANT and not the
+        cross-correlations between ANT and the other antennas. Similarly, the baseline
+        syntax do not apply to this type of calibration tables. Those values
+        with ampersand do not have any meaning when selecting antenna/baselines
+        in antenna-based cal tables.
+            
+    The task will flag a subset of data based on the following modes of operation:
+
+    list        = list of flagging commands to apply to MS/cal table
+    manual      = flagging based on specific selection parameters
+    clip        = clip data according to values
+    quack       = remove/keep specific time range at scan beginning/end
+    shadow      = remove antenna-shadowed data
+    elevation   = remove data below/above given elevations
+    tfcrop      = automatic identification of outliers on the time-freq plane
+    rflag       = automatic detection of outliers based on sliding-window RMS filters
+    extend      = extend and/or grow flags beyond what the basic algorithms detect
+    summary     = report the amount of flagged data
+    unflag      = unflag the specified data
+                
         </description>
 
         <input>
@@ -318,6 +365,10 @@
                 <value type="bool">False</value>
             </param>
 
+            <param type="string" name="name" subparam="true">
+                <description>Name of this summary report (key in summary dictionary)</description>
+                <value>summary</value>
+            </param>
 
             <!-- ACTION parameters -->
             <param type="string" name="action">
@@ -554,6 +605,7 @@
                         <default param="spwchan"><value type="bool">False</value></default>
                         <default param="spwcorr"><value type="bool">False</value></default>
                         <default param="basecnt"><value type="bool">False</value></default>  
+                        <default param="name"><value type="string">summary</value></default>
                     </equals>
                 </when>
 
@@ -582,59 +634,14 @@
 <returns type="void"/>
 <example>
 
-            This task can flag a Measurement Set or a calibration table. It has 
-            two main types of operation. One type will read the parameters from 
-            the interface and flag using any of the various available modes. The 
-            other type will read the commands from a text file, a list of files or 
-            a Python list of strings, containing a list of flag commands (each line 
-            containing data selection parameters and any parameter specific for the 
-            mode being requested). Please see examples at the end of this help.
-            
-            It is also possible to only save the parameters set in the interface 
-            without flagging. The parameters can be saved in the FLAG_CMD sub-table 
-            or in a text file. Note that when saving to an external file, the parameters 
-            will be appended to the given file.
-            
-            The available flagging modes are: manual, clip, shadow, quack, elevation, 
-            tfcrop, rflag, extend, unflag and summary. For automatic flagging, it is 
-            recommended to combine auto-flag modes with extend, via the list mode.
+----- Detailed description of keyword arguments -----
 
-            The current flags can be automatically backed up before applying new 
-            flags if the parameter flagbackup is set. Previous flag versions can be 
-            recovered using the flagmanager task.
-            
-            NOTE on flagging calibration tables.
-            -----------------------------------
-            
-            When the input is a calibration table, the modes 'elevation' and 'shadow'
-            will be disabled. Data selection for calibration tables is limited to field,
-            scan, time, antenna, spw  and observation. It is only possible to save the 
-            parameters to an external file. If the calibration table was created before
-            CASA 4.1, this task will create a dummy OBSERVATION column and OBSERVATION
-            sub-table in the input calibration table to adapt it to the new cal table
-            format.
-            
-The task will flag a subset of data based on the following modes of operation:
-
-    list        = list of flagging commands to apply to MS/cal table
-    manual      = flagging based on specific selection parameters
-    clip        = clip data according to values
-    quack       = remove/keep specific time range at scan beginning/end
-    shadow      = remove antenna-shadowed data
-    elevation   = remove data below/above given elevations
-    tfcrop      = automatic identification of outliers on the time-freq plane
-    rflag       = automatic detection of outliers based on sliding-window RMS filters
-    extend      = extend and/or grow flags beyond what the basic algorithms detect
-    summary     = report the amount of flagged data
-    unflag      = unflag the specified data
-
-    Keyword arguments:
     vis -- Name of input visibility file or calibration table.
         default: '' (none) 
         example1: vis='uid___A002_X2a5c2f_X54.ms' or
         example2: vis='cal-X54.B1'
 
-        Any flagging will only be applied to the specified selection.
+        Any flagging will only be applied to the specified selections.
 
               antenna -- Select data based on baseline
                     default: '' (all); example: antenna='DV04&amp;DV06' baseline DV04-DV06
@@ -647,6 +654,9 @@ The task will flag a subset of data based on the following modes of operation:
                                              and all other available antennas
                     antenna='0~2&amp;&amp;&amp;' # only the auto-correlation baselines for antennas 
                                                    in range 0~2
+
+                    Note that for some antenna-based calibration tables, selecting baselines with
+                    the &amp; syntax do not apply.
 
               spw -- Select data based on spectral window and channels
                     default: '' (all); example: spw='1'
@@ -727,9 +737,7 @@ The task will flag a subset of data based on the following modes of operation:
                 the parameters that are not present in the line. Each line will be taken 
                 as a command to the task. If data is pre-selected using any of the selection 
                 parameters, then flagging will apply only to that subset of the MS.
-                  
-                The summary mode is not allowed in the input list.
-                  
+                                    
                 For optimization, the task will create a union of the data selection parameters
                 present in the list and select only that portion of the MS.
 
@@ -800,15 +808,15 @@ The task will flag a subset of data based on the following modes of operation:
         clip -- Clip data according to values of the following subparameters. The polarization
                 expression is given by the correlation parameter.
                     
-               channelavg -- Average data over (selected) channels? Channel
-                            selections are taken into account. Flagged channels
-                            are excluded from the average. The average is done
-                            after applying the specified clipexpr, i.e. scalar
-                            averaging.
+               channelavg -- Average data over the selected channels or not.
+                             Pre-flagged channels are excluded from the average. 
+                             The average is done after applying the expression
+                             given in the correlation parameter. This will do a scalar 
+                             averaging on the channels.
                     default: False
                     options: True,False
                     
-               clipminmax -- Range of data (Jy) that will NOT be flagged
+               clipminmax -- Range of data (Jy) that will NOT be flagged.
                     default: []; it will flag only NaN and Infs.
                     example: [0.0,1.5]
                     It will always flag the NaN/Inf data, even when a range is specified.
@@ -816,23 +824,25 @@ The task will flag a subset of data based on the following modes of operation:
                datacolumn -- Column to use for clipping.
                     default: 'DATA'
                     options: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL', 'RESIDUAL_DATA',
-                             'WEIGHT_SPECTRUM', 'FLOAT_DATA', 'FPARAM', 'CPARAM', 'SNR'.
+                             'WEIGHT_SPECTRUM', 'FLOAT_DATA', 'FPARAM', 'CPARAM', 'SNR',
+                             'WEIGHT'
                              
-                    NOTE: by default for calibration tables, the framework will try to use FPARAM; 
-                          if that does not exist, it will try to use CPARAM. If none of them exist, it
-                          will give an error and exit.
+                    NOTE: when datacolumn is WEIGHT, the task will internally use WEIGHT_SPECTRUM.
+                           If WEIGHT_SPECTRUM does not exist, it will create one on-the-fly
+                           based on the values of WEIGHT. The clipminmax values will be divided
+                           by the number of channels and used to flag the data.
                     
                clipoutside -- Clip OUTSIDE the range?
                     default: True
-                    example: False; flag data WITHIN the range.
+                    example: False; flag data WITHIN the clipminmax range.
 
                clipzeros -- Clip zero-value data.
                     default: False
 
-        quack -- Option to remove specified part of scan beginning/end
+        quack -- Option to remove specified part of scan beginning/end.
 
                quackinterval -- Time in seconds from scan beginning/end to flag. Make time slightly 
-                                 smaller than the desired time.
+                                smaller than the desired time.
                     default: 0.0
                quackmode -- Quack mode
                     default: 'beg'
@@ -932,11 +942,6 @@ The task will flag a subset of data based on the following modes of operation:
                     options: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL', 'RESIDUAL_DATA',
                              'WEIGHT_SPECTRUM', 'FLOAT_DATA', 'FPARAM', 'CPARAM', 'SNR'.
                              
-                    NOTE: by default for calibration tables, the framework will try to use FPARAM; 
-                          if that does not exist, it will try to use CPARAM. If none of them exist, it
-                          will give an error and exit.
-                    
-
                timecutoff -- Flag threshold in time. Flag all data-points further than N-stddev 
                              from the fit. This threshold catches time-varying RFI spikes (
                              narrow and broad-band), but will not catch RFI that is persistent in time.
@@ -1123,12 +1128,7 @@ The task will flag a subset of data based on the following modes of operation:
                datacolumn -- Column to use for flagging.
                     default: 'DATA'
                     options: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL', 'RESIDUAL_DATA',
-                             'WEIGHT_SPECTRUM', 'FLOAT_DATA', 'FPARAM', 'CPARAM', 'SNR'.
-                             
-                    NOTE: by default for calibration tables, the framework will try to use FPARAM; 
-                          if that does not exist, it will try to use CPARAM. If none of them exist, it
-                          will give an error and exit.
-                    
+                             'WEIGHT_SPECTRUM', 'FLOAT_DATA', 'FPARAM', 'CPARAM', 'SNR'.                                                
 
                winsize -- number of timesteps in the sliding time window ( fparm(1) in AIPS ). 
                     default: 3
@@ -1252,7 +1252,8 @@ The task will flag a subset of data based on the following modes of operation:
 
         unflag -- Unflag according to the data selection specified.
 
-        summary -- List the number of rows and data points flagged.
+        summary -- List the number of rows and flagged data points for the MS's meta-data.
+	               The resulting summary will be returned as a Python dictionary.
                   
                minrel -- Minimum number of flags (relative) to include in histogram
                     default: 0.0
@@ -1276,16 +1277,35 @@ The task will flag a subset of data based on the following modes of operation:
                basecnt -- list the number of flags per baseline
                     default: False
 
+               name -- Name for this summary, to be used as a key in the returned
+                       Python dictionary. It is possible to call the summary mode
+                       multiple times in list mode. When calling the summary mode as a 
+                       command in a list, one can give different names to each one of 
+                       them so that they can be easily pulled out of the summary's dictionary.
+                    default: 'summary'
+
                     In summary mode, the task returns a dictionary of flagging statistics.
-                    Example:
+	
+                    Example1:
 
                         s = flagdata(..., mode='summary')
 
                      Then s will be a dictionary which contains
                     s['total']   : total number of data
                     s['flagged'] : amount of flagged data
-                    
-        
+
+                    Exmaple2: two summary commands in list mode, intercalating a manual flagging command.
+	
+                        s = flagdata(..., mode='list', inpfile=["mode='summary' name='InitFlags'",
+                                                                "mode='manual' autocorr=True",
+                                                                "mode='summary' name='Autocorr'"])
+
+                    The dictionary returned in 's' will contain two dictionaries, one for each of the
+                    two summary modes. 
+
+                    s['report0']['name'] : 'InitFlags'
+                    s['report1']['name'] : 'Autocorr'
+			                            
 
     action -- Action to perform in MS/cal table or in the input list of parameters. 
         options: 'none', 'apply','calculate'
@@ -1349,8 +1369,6 @@ The task will flag a subset of data based on the following modes of operation:
                              contains any reason, they will be replaced with this one. At the 
                              moment it is not possible to add more than one reason. 
 
-                             Whitespaces are not allowed in the reasons when saving to a file. 
-                             They will be replaced by underscores and a warning will be issued.
                     default: ' '; no reason will be added to output.
                     example: cmdreason='CLIP_ZEROS'
                 

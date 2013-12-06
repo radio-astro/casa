@@ -161,10 +161,10 @@ if(mystep in thesteps):
     if makeplots:
         for spw in ['1','3','5','7']:
             for name in basename:
-                plotcal(caltable='cal-tsys_'+name+'.calnew', xaxis='freq', yaxis='amp',
-                        spw=spw, subplot=421, overplot=False,
-                        iteration='antenna', plotrange=[0, 0, 40, 180], plotsymbol='.',
-                        figfile='cal-tsys_per_spw_'+spw+'_'+name+'.png')
+                plotbandpass(caltable='cal-tsys_'+name+'.calnew', xaxis='freq', yaxis='amp',
+                             spw=spw, overlay='time', # also try overlay='antenna'
+                             plotrange=[0, 0, 40, 180],
+                             figfile='cal-tsys_per_spw_'+spw+'_'+name+'.png', interactive=False)
 
     timing()
 
@@ -315,6 +315,7 @@ if(mystep in thesteps):
         plotcal(caltable = 'cal-ngc3256.G1', xaxis = 'time', yaxis = 'phase',
                 poln='Y', plotsymbol='o', plotrange = [0,0,-180,180], iteration = 'spw',
                 figfile='cal-phase_vs_time_YY.G1.png', subplot = 221)
+
     timing()
 
 # Bandpass calibration
@@ -335,9 +336,11 @@ if(mystep in thesteps):
              bandtype='B', fillgaps=1, refant = therefant, solnorm = T, append=True)
     
     if makeplots:
-        plotcal(caltable = 'cal-ngc3256.B1', xaxis='freq', yaxis='amp', spw='',
-                subplot=211, overplot=False, 
-                figfile='bandpass.B1.png', plotsymbol='.', timerange='')
+        plotbandpass(caltable = 'cal-ngc3256.B1', xaxis='freq', yaxis='phase', plotrange = [0,0,-70,70],
+                     overlay='antenna', figfile='bandpass.B1.png', interactive=False)
+
+        plotbandpass(caltable = 'cal-ngc3256.B1', xaxis='freq', yaxis='amp', overlay='antenna',
+                     figfile='bandpass.B2.png', interactive=False)
 
     timing()
 

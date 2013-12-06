@@ -36,9 +36,9 @@ pipeline.fill['importvla']['args'] = {'archivefiles':[datapath + 'AS758_C030425.
 				      'frequencytol':10000000.0}
 pipeline.fill['verify'] = verify.fill
 
-pipeline.flag['tasks'] = ['tflagdata']
-pipeline.flag['tflagdata'] = {}
-pipeline.flag['tflagdata']['args'] = {'vis':'g192_a.ms',
+pipeline.flag['tasks'] = ['flagdata']
+pipeline.flag['flagdata'] = {}
+pipeline.flag['flagdata']['args'] = {'vis':'g192_a.ms',
 									'mode':'manual',
 									'autocorr':True}
 pipeline.flag['verify'] = verify.flag

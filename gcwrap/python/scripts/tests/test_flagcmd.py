@@ -66,6 +66,9 @@ def create_input1(str_text, filename):
 # Path for data
 datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/flagdata/"
 
+# Local copy of the agentflagger tool
+aflocal = casac.agentflagger()
+
 # Base class which defines setUp functions
 # for importing different data sets
 class test_base(unittest.TestCase):
@@ -79,7 +82,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()        
         default(flagcmd)
 
     def setUp_multi(self):
@@ -92,7 +95,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()        
         default(flagcmd)
 
     def setUp_alma_ms(self):
@@ -106,7 +109,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()        
         default(flagcmd)
         
     def setUp_evla(self):
@@ -119,7 +122,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()        
         default(flagcmd)
         
     def setUp_shadowdata(self):
@@ -132,7 +135,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()        
         default(flagcmd)
         
     def setUp_data4rflag(self):
@@ -145,7 +148,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()        
         default(flagcmd)
 
     def setUp_bpass_case(self):
@@ -160,8 +163,17 @@ class test_base(unittest.TestCase):
                         "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()        
         default(flagcmd)
+
+    def unflag_ms(self):
+        aflocal.open(self.vis)
+        aflocal.selectdata()
+        agentUnflag={'apply':True,'mode':'unflag'}
+        aflocal.parseagentparameters(agentUnflag)
+        aflocal.init()
+        aflocal.run(writeflags=True)
+        aflocal.done()
         
 class test_manual(test_base):
     '''Test manual selections'''
@@ -908,8 +920,9 @@ class test_cmdbandpass(test_base):
         self.assertEqual(res['spw']['1']['flagged'], 83200)
 
     def test_default_cparam(self):
-        '''Flagcmd: flag CPARAM as the default column'''
-        flagcmd(vis=self.vis, inpmode='list', inpfile=["mode='clip' clipzeros=True"],
+        '''Flagcmd: flag CPARAM data column'''
+        flist = ["mode='clip' clipzeros=True datacolumn='CPARAM'"]
+        flagcmd(vis=self.vis, inpmode='list', inpfile=flist,
                 flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 11078, 'Should use CPARAM as the default column')
@@ -953,15 +966,15 @@ class test_cmdbandpass(test_base):
         
     def test_clip_one_list(self):
         '''Flagcmd: Flag one solution using one command in a list'''
-        flagcmd(vis=self.vis, inpmode='list', inpfile=["mode='clip' clipminmax=[0,3] correlation='REAL_Sol1'"])
+        flist = ["mode='clip' clipminmax=[0,3] correlation='REAL_Sol1' datacolumn='CPARAM'"]
+        flagcmd(vis=self.vis, inpmode='list', inpfile=flist)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 309388)
         self.assertEqual(res['correlation']['Sol2']['flagged'], 0)
                 
     def test_flagbackup(self):
         '''Flagcmd: backup cal table flags'''
-        # Create a local copy of the tool
-        aflocal = casac.agentflagger()
+
         flagmanager(vis=self.vis, mode='list')
         aflocal.open(self.vis)
         self.assertEqual(len(aflocal.getflagversionlist()), 2)
@@ -1033,7 +1046,8 @@ class test_cmdbandpass(test_base):
     def test_cal_time_field(self):
         '''Flagcmd: clip a timerange from a field'''
         # this timerange corresponds to field 3C286_D
-        flags = "mode='clip' timerange='>14:58:33.6' clipzeros=True clipminmax=[0.,0.4]"
+        flags = "mode='clip' timerange='>14:58:33.6' clipzeros=True clipminmax=[0.,0.4]"\
+                " datacolumn='CPARAM'"
         
         # Apply the flags
         flagcmd(vis=self.vis, inpmode='list', inpfile=[flags], flagbackup=False)
@@ -1066,7 +1080,6 @@ class cleanup(test_base):
         os.system('rm -rf shadowtest*.ms*')
         os.system('rm -rf tosr0001_scan3*.ms*')
         os.system('rm -rf cal.fewscans.bpass*')
-
 
     def test1(self):
         '''flagcmd: Cleanup'''

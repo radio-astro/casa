@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<task type="function" name="imrebin" category="analysis">
+
+    <shortdescription>Rebin an image by the specified integer factors</shortdescription>
+
+    <input>
+        <param type="string" name="imagename" mustexist="true">
+            <description>Name of the input image</description>
+            <value/>
+            <example>imagenam='ngc5921.im'</example>
+        </param>
+        <param type="string" direction="in" name="outfile">
+            <description>Output image name.</description>
+            <value/>
+        </param>
+        <param type="intArray"  name="bin">
+            <description>Binning factors for each axis</description>
+        </param>
+        <param type="any" direction="in" name="region">
+            <any type="variant"/>
+            <description>The region to rebin. Default is entire image. Do not specify region and box/chans simultaneously.</description>
+            <value>""</value>
+        </param>
+        <param type="string" direction="in" name="box" subparam="true">
+            <value></value>
+            <description>Box in directional plane to rebin. Default is to use the entire directional plane.</description>
+        </param>
+        <param type="string" direction="in" name="chans" subparam="true">
+            <description>Channels to rebin. See "help par.chans" for examples. Default is all channels</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="stokes" subparam="true">
+            <description>The correlations to include in the output. Default is all. Stokes planes cannot be rebinned.</description>
+            <value/>
+        </param>
+        <param type="string" direction="in" name="mask">
+            <description>Mask to use. See help par.mask. Default is none.</description>
+            <value/>
+        </param>
+        <param type="bool"  name="dropdeg">
+            <description>Drop degenerate axes?</description>
+            <value>False</value>
+        </param>
+        <param type="bool" direction="in" name="overwrite" subparam="true">
+            <description>Overwrite the output if it exists? Default False</description>
+            <value>False</value>
+        </param>
+       
+        <param type="bool" direction="in" name="stretch" subparam="true">
+            <description>Stretch the mask if necessary and possible? See help par.stretch </description>
+            <value>False</value>
+        </param>
+        <constraints>
+            <when param="outfile">
+                <notequals type="string" value="">
+                    <default param="overwrite">
+                        <value>False</value>
+                    </default>
+                </notequals>
+            </when>
+            <when param="region">
+                <equals type="string" value="">
+                    <default param="box">
+                        <value>""</value>
+                    </default>
+                    <default param="chans">
+                        <value>""</value>
+                    </default>
+                    <default param="stokes">
+                        <value>""</value>
+                    </default>
+                </equals>
+            </when>
+            <when param="mask">
+                <notequals type="string" value="">
+                   <default param="stretch"><value type="bool">False</value></default>
+             </notequals>
+         </when>
+        </constraints>
+    </input>
+    <returns type="bool"/>
+    <example>
+PARAMETER SUMMARY
+imagename        Name of the input (CASA, FITS, MIRIAD) image
+outfile          Name of output CASA image. Must be specified.
+bin              Array of binning factors for each axis, eg [2,3]
+region           Region to use. Do not specify region and box/chans/stokes simultaneously.
+                 See help par.region for details.
+box              Direction plane box specification, "blcx, blcy, trcx, trcy". Only one box
+                 may be specified. Default is entire directional plane.
+chans            Optional contiguous frequency channel number specification. See "help par.chans"
+                 for examples. Default is all channels.
+stokes           Stokes planes specification. Not used if region is specified. Default is all stokes.
+mask             Mask to use. See help par.mask. Default is none.
+dropdeg          Drop degenerate axes?
+overwrite        Should the image of the same name as specified in outfile be overwritten?
+                 If true, the file if it exists is automatically overwritten.
+stretch          Stretch the input mask if necessary and possible. See help par.mask.
+
+DESCRIPTION
+This application rebins the current image by the specified integer binning
+factors for each axis.  The output pixel value is just the average of the
+input pixel values. The output pixel will be masked bad if there
+were no good input pixels.  You cannot rebin a Stokes axis.
+
+Sometimes it is useful to drop axes of length one (degenerate axes). 
+Use the {\stfaf dropdeg} argument if you want to do this.  It will
+discard the axes from the input image.  
+
+
+EXAMPLE
+
+imrebin(imagename="my.im", outfile="rebinned.im", bin=[2,3])
+
+    </example>
+</task>
+</casaxml>

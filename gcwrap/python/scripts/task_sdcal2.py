@@ -1,7 +1,8 @@
 import os
 import re
+import numpy
 
-from taskinit import casalog
+from taskinit import casalog, gentools
 
 import asap as sd
 from asap.scantable import is_scantable
@@ -75,7 +76,8 @@ class sdcal2_worker(sdutil.sdtask_template):
             self.doapply = True
             self.skymode = self.calmode.split(sep)[0]
 
-        casalog.post('sky calibration mode: \'%s\''%(self.skymode), 'INFO')
+        if len(self.skymode) > 0:
+            casalog.post('sky calibration mode: \'%s\''%(self.skymode), 'INFO')
 
     def check_infile(self):
         if not is_scantable(self.infile):
@@ -133,8 +135,29 @@ class sdcal2_worker(sdutil.sdtask_template):
             self.check_ifmap()
             
     def check_tsysiflist(self):
+        #if len(self.tsysiflist) == 0:
+        #    raise Exception('You must specify iflist as a list of IFNOs for Tsys calibration.')
         if len(self.tsysiflist) == 0:
-            raise Exception('You must specify iflist as a list of IFNOs for Tsys calibration.')
+            tb = gentools(['tb'])[0]
+            if is_scantable(self.infile):
+                tb.open(self.infile)
+                tsel = tb.query('SRCTYPE==10 && NELEMENTS(TSYS)>1')
+                if tsel.nrows() == 0:
+                    tsel.close()
+                    tb.close()
+                    raise Exception('No Tsys calibration available in the data')
+                self.tsysiflist = numpy.unique(tsel.getcol('IFNO'))
+                tsel.close()
+                tb.close()
+            else:
+                # should be MS
+                try:
+                    tb.open(os.path.join(self.infile,'SYSCAL'))
+                except:
+                    return
+                self.tsysiflist = numpy.unique(tb.getcol('SPECTRAL_WINDOW_ID'))
+                tb.close()
+            casalog.post('tsysiflist is set to %s'%(self.tsysiflist.tolist()), 'INFO')
 
     def check_update(self):
         if len(self.outfile) == 0:
@@ -145,7 +168,8 @@ class sdcal2_worker(sdutil.sdtask_template):
                 self.insitu = True
 
     def initialize_scan(self):
-        sel = self.get_selector()
+        #sel = self.get_selector()
+        sel = self.get_selector_by_list()
         if self.insitu:
             # update infile 
             storage = sd.rcParams['scantable.storage']

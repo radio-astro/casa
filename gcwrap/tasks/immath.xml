@@ -222,10 +222,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ... 
                Not used in for cases of mode='poli' or mode='pola'
 
-    Available functions in the <i>expr</i> and <i>mask</i> paramters:
+    Available functions in the <i>expr</i> and <i>mask</i> parameters:
     pi(), e(), sin(), sinh(), asinh(), cos(), cosh(), tan(), tanh(),
     atan(), exp(), log(), log10(), pow(), sqrt(), complex(), conj()
-    real(), imag(), abs(), arg(), phase(), aplitude(), min(), max()
+    real(), imag(), abs(), arg(), phase(), amplitude(), min(), max()
     round(), isgn(), floor(), ceil(), rebin(), spectralindex(), pa(), 
     iif(), indexin(), replace(), ...
 

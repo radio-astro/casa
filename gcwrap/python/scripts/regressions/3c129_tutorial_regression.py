@@ -9,6 +9,7 @@
 # Modified/merge   STM          2008-07-31  Clean up                     #
 # Updated version  STM          2008-08-07  finishing touches            #
 # Updated version  GMoellenbrock2009-11-20  Add evlabands=F              #
+# Updated          GAM          2013-11-25  Commented plotxy calls
 #                                                                        #
 # Based on 2008 Synthesis Imaging Workshop script                        #
 #                                                                        #
@@ -17,7 +18,7 @@
 #      working directory that casapy was started in                      #
 #                                                                        #
 #    o This script has some interactive commands, such as with           #
-#      plotxy and the viewer.  If scriptmode=True, then this script      #
+#      the viewer.  If scriptmode=True, then this script      #
 #      will stop and require a carriage-return to continue at these      #
 #      points.                                                           #
 #                                                                        #
@@ -145,30 +146,14 @@ setjy(vis=msnameB,field='0518+165',modimage=fluxcaldir+'3C138_C.im',scalebychan=
 setjy(vis=msnameB,field='0134+329',modimage=fluxcaldir+'3C48_C.im',scalebychan=False,standard='Perley-Taylor 99') 
  
 #=====================================================================
-# Plot data and interactively edit 
-#  One spw at a time, calibrators only, RR, LL only 
-print "--Plotxy--"
-if scriptmode:
-    plotxy(vis=msnameB,spw='0',field='0420+417,0518+165,0134+329',selectdata=T,correlation='RR,LL');
-    print 'Plotting 0420+417,0518+165,0134+329 SPW 0'
-    print "  Note VA01 seems to be bad (low) on one integration of one scan"
-    print "  Mark, Locate, and Flag this"
-    user_check=raw_input('hit Return to continue script\n')
+# TBD: migrate plotxy calls to plotms?
 
-    plotxy(vis=msnameB,spw='1',field='0420+417,0518+165,0134+329',selectdata=T,correlation='RR,LL'); 
-    print 'Plotting 0420+417,0518+165,0134+329 SPW 1'
-    print "  Mark, Locate, and Flag bad VA01 integration in this SPW 1 also"
-    user_check=raw_input('hit Return to continue script\n')
-else:
-    plotxy(vis=msnameB,spw='0',field='0420+417,0518+165,0134+329',selectdata=T,correlation='RR,LL',interactive=F,figfile='at166B.plotxy.initial.spw0.png');
-    plotxy(vis=msnameB,spw='1',field='0420+417,0518+165,0134+329',selectdata=T,correlation='RR,LL',interactive=F,figfile='at166B.plotxy.initial.spw1.png'); 
-    print "--Flagdata--"
-    tflagdata(vis=msnameB,antenna='VA01',timerange='1994/07/25/14:21:10.0~14:21:20.0',mode='manual')
+#plotxy(vis=msnameB,spw='0',field='0420+417,0518+165,0134+329',selectdata=T,correlation='RR,LL',interactive=F,figfile='at166B.plotxy.initial.spw0.png');
+#plotxy(vis=msnameB,spw='1',field='0420+417,0518+165,0134+329',selectdata=T,correlation='RR,LL',interactive=F,figfile='at166B.plotxy.initial.spw1.png'); 
 
-#--> Variations: plot on different axes (e.g., phase vs. time, real vs imag, amp/phase vs. uvdist) 
-#-->             plot model data for calibrators 
-#-->             plot 3C129 data 
- 
+print "--Flagdata--"
+flagdata(vis=msnameB,antenna='VA01',timerange='1994/07/25/14:21:10.0~14:21:20.0',mode='manual')
+
 #=====================================================================
 # Solve for gains on calibrators 
 #  NB: reference phases to VA12; pre-apply parallactic angle correction 
@@ -262,24 +247,10 @@ applycal(vis=msnameB,field='0134+329',gaintable=['at166B.fcal','at166B.dcal','at
  
 #=====================================================================
 # Examine (edit?) calibrated data (calibrators) 
-print "--Plotxy (corrected)--"
-if scriptmode:
-    plotxy(vis=msnameB,datacolumn='corrected',field='0420+417,0518+165,0134+329',selectdata=T,correlation='RR,LL'); 
-    user_check=raw_input('hit Return to continue script\n')
-else:
-    plotxy(vis=msnameB,datacolumn='corrected',field='0420+417,0518+165,0134+329',selectdata=T,correlation='RR,LL',interactive=F,figfile='at166B.plotxy.final.png'); 
+#  TBD: migrate plotxy to plotms?
+#print "--Plotxy (corrected)--"
+#plotxy(vis=msnameB,datacolumn='corrected',field='0420+417,0518+165,0134+329',selectdata=T,correlation='RR,LL',interactive=F,figfile='at166B.plotxy.final.png'); 
 
-#--> Variations: plot on different axes (e.g., phase vs. time, real vs imag) 
-#-->             overlay model data for calibrators 
-#-->             plot 3C129 data 
-# For example: 
-# Examine cross-hand data (real vs. imag) 
-# plotxy(vis=msnameB,xaxis='real',yaxis='imag',datacolumn='corrected',selectdata=True,correlation='RL,LR',plotrange=[-0.5,0.5,-0.5,0.5],field = '0518+165'); 
-# plotxy(vis=msnameB,xaxis='real',yaxis='imag',datacolumn='corrected',selectdata=True,correlation='RL,LR',plotrange=[-0.5,0.5,-0.5,0.5],field = '0134+329'); 
-# plotxy(vis=msnameB,xaxis='real',yaxis='imag',datacolumn='corrected',selectdata=True,correlation='RL,LR',plotrange=[-0.5,0.5,-0.5,0.5],field = '0420+417'); 
- 
-#--> NB: RL and LR signal are complex conjugates of each other (Q+iU & Q-iU) 
- 
 #=====================================================================
 # do some simple imaging of each source 
 print "--Clean--"
@@ -349,23 +320,9 @@ setjy(vis=msnameC,field='0134+329',modimage=fluxcaldir+'3C48_C.im',scalebychan=F
 #=====================================================================
 # Plot data and interactively edit 
 #  One spw at a time, calibrators only, RR, LL only 
-print "--Plotxy--"
-if scriptmode:
-    plotxy(vis=msnameC,spw='0',field='0420+417,0518+165,0134+329',selectdata=T,correlation='RR,LL'); 
-    print 'Plotting 0420+417,0518+165,0134+329 SPW 0'
-    user_check=raw_input('hit Return to continue script\n')
-
-    plotxy(vis=msnameC,spw='1',field='0420+417,0518+165,0134+329',selectdata=T,correlation='RR,LL'); 
-    print 'Plotting 0420+417,0518+165,0134+329 SPW 1'
-    user_check=raw_input('hit Return to continue script\n')
-else:
-    plotxy(vis=msnameC,spw='0',field='0420+417,0518+165,0134+329',selectdata=T,correlation='RR,LL',interactive=F,figfile='at166C.plotxy.initial.spw0.png');
-    plotxy(vis=msnameC,spw='1',field='0420+417,0518+165,0134+329',selectdata=T,correlation='RR,LL',interactive=F,figfile='at166C.plotxy.initial.spw1.png'); 
- 
-#--> Variations: plot on different axes (e.g., phase vs. time, real vs imag, amp/phase vs. uvdist) 
-#-->             plot model data for calibrators (datacolumn='model') 
-#-->             plot 3C129 data 
-#-->             plot individual baselines (iteration='baseline') 
+#  TBD: migrage plotxy to plotms?
+#plotxy(vis=msnameC,spw='0',field='0420+417,0518+165,0134+329',selectdata=T,correlation='RR,LL',interactive=F,figfile='at166C.plotxy.initial.spw0.png');
+#plotxy(vis=msnameC,spw='1',field='0420+417,0518+165,0134+329',selectdata=T,correlation='RR,LL',interactive=F,figfile='at166C.plotxy.initial.spw1.png'); 
  
 # Solve for gains on calibrators 
 #  NB: reference phases to VA12; pre-apply parallactic angle correction 
@@ -453,22 +410,9 @@ applycal(vis=msnameC,field='0518+165',gaintable=['at166C.fcal','at166C.dcal','at
  
 #=====================================================================
 # Examine (edit?) calibrated data (calibrators) 
-print "--Plotxy (corrected)--"
-if scriptmode:
-    plotxy(vis=msnameC,datacolumn='corrected',field='0420+417,0518+165',selectdata=T,correlation='RR,LL'); 
-    user_check=raw_input('hit Return to continue script\n')
-else:
-    plotxy(vis=msnameC,datacolumn='corrected',field='0420+417,0518+165',selectdata=T,correlation='RR,LL',interactive=F,figfile='at166C.plotxy.final.png'); 
-
-#--> Variations: plot on different axes (e.g., phase vs. time, real vs imag) 
-#-->             overlay model data for calibrators 
-#-->             plot 3C129 data 
-# For example: 
-# Examine cross-hand data (real vs. imag) 
-# plotxy(vis=msnameC,xaxis='real',yaxis='imag',datacolumn='corrected',selectdata=True,correlation='RL,LR',plotrange=[-0.5,0.5,-0.5,0.5],field = '0518+165'); 
-# plotxy(vis=msnameC,xaxis='real',yaxis='imag',datacolumn='corrected',selectdata=True,correlation='RL,LR',plotrange=[-0.5,0.5,-0.5,0.5],field = '0420+417'); 
- 
-#--> NB: RL and LR signal are complex conjugates of each other (Q+iU & Q-iU) 
+# TBD: migrate plotxy to plotms
+#print "--Plotxy (corrected)--"
+#plotxy(vis=msnameC,datacolumn='corrected',field='0420+417,0518+165',selectdata=T,correlation='RR,LL',interactive=F,figfile='at166C.plotxy.final.png'); 
  
 #=====================================================================
 # do some simple imaging of each source 

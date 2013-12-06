@@ -6,7 +6,7 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 	    sourceflag=None, tie=None, nsol=None, disperse=None, 
 	    wvrflag=None, statfield=None, statsource=None, smooth=None,
 	    scale=None, reversespw=None,  cont=None, maxdistm=None,
-	    minnumants=None):
+	    minnumants=None, mingoodfrac=None):
 	"""
 	Generate a gain table based on Water Vapour Radiometer data.
 	Returns a dictionary containing the RMS of the path length variation
@@ -71,6 +71,10 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 
           minnumants -- minimum number of near antennas required for interpolation
 	                default: 2
+
+          mingoodfrac --- If the fraction of unflagged data for an antenna is below this value (0. to 1.),
+                          the antenna is flagged.
+			  default: 0.8
 
         """
 	#Python script
@@ -176,6 +180,9 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 		if (minnumants>=0):
 			execute_string+= ' --minnumants ' + str(minnumants)
 		
+		if (0.<=mingoodfrac and mingoodfrac<=1.):
+			execute_string+= ' --mingoodfrac ' + str(mingoodfrac)
+
 		theexecutable = 'wvrgcal'
 
 		execute_string = theexecutable+' '+execute_string

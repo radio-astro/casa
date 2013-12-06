@@ -326,7 +326,7 @@ class sdtpimaging_worker(sdutil.sdtask_template_imaging):
         #self.imager.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly,  phasecenter=phasecenter, spw=0, stokes=stokes, movingsource=ephemsrcname,restfreq=1.14e11)
         self.imager.setoptions(ftmachine='sd', gridfunction=self.gridfunction)
         #self.imager.setsdoptions(convsupport=5)
-        self.imager.setsdoptions(pointingcolumntouse=self.pointingcolumn)
+        self.imager.setsdoptions(pointingcolumntouse=self.pointingcolumn, convsupport=-1, truncate=-1, gwidth=-1, jwidth=-1)
         self.imager.makeimage(type='singledish-observed', image=self.outfile)
         #self.imager.makeimage(type='singledish', image=outfile)
         self.close_imager()

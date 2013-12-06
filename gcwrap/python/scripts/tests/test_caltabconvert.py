@@ -50,13 +50,13 @@ class caltabconvert_test(unittest.TestCase):
                                   caltabnew=self.out)
 
         if(self.rval):
-            self.rval = th.compTables(self.ref2, self.out,['WEIGHT', 'PARAMERR']) # WEIGHT column is empty
+            self.rval = th.compTables(self.ref2, self.out,['WEIGHT','SCAN_NUMBER','PARAMERR']) # WEIGHT column is empty
 
             self.rval = self.rval and th.compTables(self.ref2+'/ANTENNA', self.out+'/ANTENNA', [])
 
             self.rval = self.rval and th.compTables(self.ref2+'/FIELD', self.out+'/FIELD', [])
 
-            self.rval = self.rval and th.compTables(self.ref2+'/SPECTRAL_WINDOW', self.out+'/SPECTRAL_WINDOW', [])
+            self.rval = self.rval and th.compTables(self.ref2+'/SPECTRAL_WINDOW', self.out+'/SPECTRAL_WINDOW', ['CHAN_FREQ'])
                                                           
 
         self.assertTrue(self.rval)

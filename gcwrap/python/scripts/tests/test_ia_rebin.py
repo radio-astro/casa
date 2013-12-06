@@ -71,6 +71,7 @@ from tasks import *
 from taskinit import *
 from __main__ import *
 import unittest
+import numpy
 
 def alleqnum(x,num,tolerance=0):
     if len(x.shape)==1:
@@ -111,6 +112,7 @@ class ia_rebin_test(unittest.TestCase):
     
     def tearDown(self):
         self._myia.done()
+        self.assertTrue(len(tb.showcache()) == 0)
     
     def test_stretch(self):
         """ ia.rebin(): Test stretch parameter"""
@@ -119,14 +121,16 @@ class ia_rebin_test(unittest.TestCase):
         yy.fromshape(mymask, [200, 200, 1, 1])
         yy.addnoise()
         yy.done()
-        shape = [200,200,1,20]
-        yy.fromshape("", shape)
+        shape = [200,200,1,10]
+        imagename = "aa.im"
+        yy.fromshape(imagename, shape)
         yy.addnoise()
         self.assertRaises(
             Exception,
             yy.rebin, outfile="", bin=[2,2,1,1],
             mask=mymask + ">0", stretch=False
         )
+        
         zz = yy.rebin(
             outfile="", bin=[2,2,1,1],
             mask=mymask + ">0", stretch=True
@@ -134,6 +138,24 @@ class ia_rebin_test(unittest.TestCase):
         self.assertTrue(type(zz) == type(yy))
         yy.done()
         zz.done()
+        outfile = "ab.im"
+        self.assertFalse(
+            imrebin(
+                imagename=imagename, outfile=outfile, bin=[2,2,1,1],
+                mask=mymask + ">0", stretch=False, overwrite=True
+            )
+        )
+        self.assertTrue(
+            imrebin(
+                imagename=imagename, outfile=outfile, bin=[2,2,1,1],
+                mask=mymask + ">0", stretch=True, overwrite=True
+            )
+        )
+        yy.open(outfile)
+        print "shape " + str(yy.shape())
+        self.assertTrue((yy.shape() == [100, 100, 1, 10]).all())
+        yy.done()
+        
         
     def test_general(self):
         """ ia.rebin(): General tests"""
@@ -143,41 +165,73 @@ class ia_rebin_test(unittest.TestCase):
         shp2 = [20,40]
         d2 = myia.makearray(1.0, [shp2[0], shp2[1]])
         #
-        myim2 = myia.newimagefromarray(pixels=d2)
+        imagename = "st.im"
+        myim2 = myia.newimagefromarray(outfile=imagename, pixels=d2)
         self.assertTrue(myim2)
         
+        outfile = "gk.im"
         try:
             myim2b = true
-            myim2b = myim2.rebin(bin=[-100,2])
+            myim2b = myim2.rebin("", bin=[-100,2], overwrite=True)
         except Exception, e:
             myim2b = false
         self.assertFalse(myim2b)
         
-        myim2b = myim2.rebin("",bin=[2,2])
+        self.assertFalse(
+            imrebin(
+                imagename=imagename, outfile=outfile,
+                bin=[-100,2], overwrite=True
+            )
+        )
+        
+        myim2b = myim2.rebin("", bin=[2,2])
         self.assertTrue(myim2b)
         p = myim2b.getchunk()
         self.assertTrue(alleqnum(p,1.0,tolerance=0.0001))
-        #
-        ok = myim2.done() and myim2b.done()
-        self.assertTrue(ok)
+    
+        self.assertTrue(myim2.done() and myim2b.done())
         
+        self.assertTrue(
+            imrebin(
+                imagename=imagename, outfile=outfile, overwrite=True,
+                bin=[2,2]
+            )
+        )
+        myim2b.open(outfile)
+        p = myim2b.getchunk()
+        self.assertTrue(alleqnum(p,1.0,tolerance=0.0001))
+        myim2b.done()
+
     def test_multibeam(self):
         """Test multiple beams"""
         myia = self._myia
-        myia.fromshape("", [10, 10, 10])
+        imagename = "gd.im"
+        myia.fromshape(imagename, [10, 10, 10])
         myia.setrestoringbeam(
             major="4arcsec", minor="2arcsec", pa="0deg",
             channel=0, polarization=0
         )
         rebin = myia.rebin("", [2, 2, 1])
         self.assertTrue(rebin)
-        exception = False
-        try:
-            rebin = myia.rebin("", [2, 2, 2])
-        except:
-            exception = True
-        self.assertTrue(exception)
+        outfile = "dx.im"
+        self.assertTrue(
+            imrebin(
+                imagename=imagename, outfile=outfile,
+                bin=[2,2,1]
+            )
+        )
+        self.assertRaises(
+            Exception, myia.rebin, "", [2,2,2]
+        )
         rebin.done()
+        myia.done()
+        self.assertFalse(
+            imrebin(
+                imagename=imagename, outfile=outfile,
+                bin=[2,2,2]
+            )
+        )
+        
             
 def suite():
     return [ia_rebin_test]

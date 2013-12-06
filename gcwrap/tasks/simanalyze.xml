@@ -42,7 +42,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         interferometric and feather with your "featherimage".
 
       * Sometimes it is preferable to use a low resolution (single dish or 
-        interferometric) image as a prior model during clean deconvolution
+        synthesis) image as a prior model during clean deconvolution
         of a higher resolution interferometric MS.  That is accomplished 
         by putting the low-resolution image in "modelimage" and the MS
         to be deconvolved in "vis". NOTE: This is not the original skymodel
@@ -180,7 +180,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     
     <param type="intArray" name="imsize" subparam="true">
       <description>output image size in pixels (x,y) or 0 to match model</description>
-      <value type="vector"><value>128</value><value>128</value></value>
+      <value type="vector"><value>0</value><value>0</value></value>
     </param>
 
     <param type="string" name="imdirection" subparam="true">
@@ -249,7 +249,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="bool" name="pbcor" subparam="true">
-      <description>correct the output for primary beam response?</description>
+      <description>correct the output of synthesis images for primary beam response?</description>
       <value type="bool">True</value>
     </param>
 

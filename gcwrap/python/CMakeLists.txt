@@ -42,8 +42,8 @@ scripts/importarchive.py
 scripts/listing.py
 scripts/mindpipes.py
 scripts/ngc5921_usecase.py
-scripts/odict.py
 scripts/OrderedDictionary.py
+scripts/odict.py
 scripts/parallel_go.py
 scripts/parallelSplit.py
 scripts/parameter_check.py
@@ -119,6 +119,7 @@ scripts/task_importgmrt.py
 scripts/task_importuvfits.py
 scripts/task_importvla.py
 scripts/task_impv.py
+scripts/task_imrebin.py
 scripts/task_imreframe.py
 scripts/task_imregrid.py
 scripts/task_imsmooth.py
@@ -145,7 +146,7 @@ scripts/task_plotcal.py
 scripts/task_plotms.py
 scripts/task_plotuv.py
 scripts/task_plotweather.py
-scripts/task_plotxy.py
+#scripts/task_plotxy.py
 scripts/task_partition.py
 scripts/task_polcal.py
 scripts/task_predictcomp.py
@@ -171,6 +172,7 @@ scripts/task_sdscale.py
 scripts/task_sdsmooth.py
 scripts/task_sdstat.py
 scripts/task_sdtpimaging.py
+scripts/task_tsdstat.py
 scripts/task_setjy.py
 scripts/task_ssoflux.py
 scripts/task_simalma.py

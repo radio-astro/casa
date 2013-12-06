@@ -55,7 +55,8 @@ class sdmath_worker(sdutil.sdtask_template):
         self.__parse()
 
         # selector
-        sel = self.get_selector()
+        #sel = self.get_selector()
+        sel = self.get_selector_by_list()
 
         # actual operation
         scanlist = {}

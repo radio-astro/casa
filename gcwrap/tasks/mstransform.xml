@@ -9,9 +9,37 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
      <shortdescription>Split the MS, combine/separate/regrid spws and do channel and time averaging</shortdescription>
 
 <description>
-    mstransform is a task that can do the same functionalities available
-    in cvel, hanningsmooth, partition and split without the need to read and write
-    the output to disk multiple times. 
+    Experimental version of task mstransform.
+
+    The task mstransform can do the same functionalities available
+    in cvel, partition, hanningsmooth and split without the need to read and write
+    the output to disk multiple times. The main features of this task
+    are:
+    
+    * take an input MS or Multi-MS
+    * ability to create an output MS or MMS
+    * spw combination and separation
+    * channel averaging taking weights into account
+    * time averaging
+    * reference frame transformation
+    * Hanning smoothing
+    
+    All these transformations will be applied on the fly without any writing to
+    disk to optimize I/O. The user can ask to create a Multi-MS in parallel using CASA's 
+    cluster infrastructure using the parameters createmms and parallel. See simple_cluster 
+    for more information on the cluster infrastructure.
+
+    This task is implemented in a modular way to preserve the functionalities
+    available in the replaced tasks. One can choose which functionality to apply
+    or apply all of them by setting the corresponding parameters to True. Note 
+    that there is an order in which the transformations are applied to the data that 
+    makes logical sense on the point of view of the data analysis. 
+
+    This task can create a multi-MS as the output. General selection
+    parameters are included, and one or all of the various data columns
+    (DATA, LAG_DATA and/or FLOAT_DATA, and possibly MODEL_DATA and/or
+    CORRECTED_DATA) can be selected. It can also be used to create a normal
+    MS, split-based on the given data selection parameters.
 
 </description>
 
@@ -274,7 +302,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <!-- TIME AVERAGING parameters -->
     <param type="bool" name="timeaverage">
-        <description>Average data in time. (to be implemented)</description>
+        <description>Average data in time.</description>
         <value>False</value>
     </param>
     
@@ -284,19 +312,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </param>
     
         <param type="any" name="timespan" subparam="true">
-            <description>Let time bins span changes in scan and/or state.</description>
+            <description>Span the timebin across scan, state or both.</description>
             <any type="variant" limittypes="string stringArray"/>
             <value type="string"></value>
         </param>
 
         <param type="double" name="maxuvwdistance" subparam="true">
-            <description>Maximum separation of start-to-end baselines that can be included in an average.</description>
+            <description>Maximum separation of start-to-end baselines that can be included in an average. (meters)</description>
             <value type="double">0.0</value>
-        </param>
-
-        <param type="int" name="minbaselines" subparam="true">
-            <description>(TBI) Minimum number of baselines for averaging to start.</description>
-            <value type="int">2</value>
         </param>
     
     <constraints>
@@ -348,50 +371,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                   <default param="timebin"><value type="string">0s</value></default>
                   <default param="timespan"><value type="string"></value></default>
                   <default param="maxuvwdistance"><value type="double">0.0</value></default>
-                  <default param="minbaselines"><value type="int">2</value></default>
             </equals>
           </when>
     </constraints>
 
 </input>
-<example>
+<example>  
 
-    Experimental version of task mstransform.
-
-    NOTE: TBI means to-be-implemented.
-
-    The task mstransform can do the same functionalities available
-    in cvel, partition, hanningsmooth and split without the need to read and write
-    the output to disk multiple times. The main features of this task
-    are:
-    
-    * take an input MS or Multi-MS
-    * ability to create an output MS or MMS
-    * spw combination and separation
-    * channel averaging taking weights into account
-    * time averaging taking a minimum number of baselines (TBI)
-    * reference frame transformation
-    * Hanning smoothing
-    
-    All these transformations will be applied on the fly without any writing to
-    disk to optimize I/O. The user can ask to create a Multi-MS in parallel using CASA's 
-    cluster infrastructure using the parameters createmms and parallel. See simple_cluster 
-    for more information on the cluster infrastructure.
-
-    This task is implemented in a modular way to preserve the functionalities
-    available in the replaced tasks. One can choose which functionality to apply
-    or apply all of them by setting the corresponding parameters to True. Note 
-    that there is an order in which the transformations are applied to the data that 
-    makes logical sense on the point of view of the data analysis. 
-
-    This task can create a multi-MS as the output. General selection
-    parameters are included, and one or all of the various data columns
-    (DATA, LAG_DATA and/or FLOAT_DATA, and possibly MODEL_DATA and/or
-    CORRECTED_DATA) can be selected. It can also be used to create a normal
-    MS, split-based on the given data selection parameters.
-  
-
-    Keyword arguments:
+    Detailed description of keyword arguments:
 
 --- Input/Output parameters ---
     vis -- Name of input visibility file
@@ -534,15 +521,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     combinespws -- Combine the input spws into a new output spw.
         default: False
 
-                NOTE: Whenever the data to be combined has different EXPOSURE values 
-                      in the spectral windows, mstransform will use the WEIGHT_SPECTRUM 
-                      for the combination. If WEIGHT_SPECTRUM is not available, it will 
-                      use the values from the WEIGHT column. Each output channel is calculated 
-                      using the following equation:
+            NOTE: Whenever the data to be combined has different EXPOSURE values 
+                  in the spectral windows, mstransform will use the WEIGHT_SPECTRUM 
+                  for the combination. If WEIGHT_SPECTRUM is not available, it will 
+                  use the values from the WEIGHT column. Each output channel is calculated 
+                  using the following equation:
 
-              outputChannel_j = SUM(inputChannel_i*contributionFraction_i*inputWeightSpectrum_i) 
-                               ------------------------------------------------------------------
-                                     SUM(contributionFraction_i*inputWeightSpectrum_i)
+          outputChannel_j = SUM(inputChannel_i*contributionFraction_i*inputWeightSpectrum_i) 
+                           ------------------------------------------------------------------
+                                 SUM(contributionFraction_i*inputWeightSpectrum_i)
 
 --- Channel averaging parameters ---
     chanaverage -- Average data in channels. 
@@ -554,7 +541,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             default: 1 =&gt; no channel averaging.
             options: (int) or [int]
             example: chanbin=[2,3] =&gt; average 2 channels of 1st selected
-		          spectral window and 3 in the second one.
+		             spectral window and 3 in the second one.
 
         useweights -- Type of weights to use in average. It will apply to all spws.
             default: 'flags'
@@ -638,8 +625,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         timebin -- Bin width for time averaging.
             default: '1s'
 
-        timespan -- Let time bins span changes in scan and/or state.
+        timespan -- Let the timebin span across scan, state or both.
+                    State is equivalent to sub-scans. One scan may have several
+                    state ids. For ALMA MSs, the sub-scans are limited to about
+                    32s duration each, therefore if you want to do time average
+                    with a timebin greater than 30s, set timespan='state' to allow
+                    for this. It is useful to use the msmd tool to get the number
+                    of states per scan. See help msmd.
+
             default: '' (separate time bins by both of the above)
+            options: 'scan', 'state', 'state,scan'
+
             examples: 
             timespan = 'scan'; can be useful when the scan number
                        goes up with each integration as in many WSRT MSs.
@@ -648,11 +644,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             timespan = 'state,scan'; same as above.
 
         maxuvwdistance -- Provide a maximum separation of start-to-end baselines 
-                          that can be included in an average.
-            default: 0.0
+                          that can be included in an average. (int)
+            default: 0.0 (given in meters)
 
-        minbaselines -- (TBI) Minimum number of baselines for averaging to start (int).
-            default: 2
 
 ------ EXAMPLES ------
 
@@ -681,7 +675,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 combinespws=True, regridms=True, mode="channel", outframe="BARY",
                 phasecenter="J2000 18h25m56.09 -12d04m28.20", hanning = True)
 
-
+7) Apply time averaging using a bin of 30 seconds on the default CORRECTED column.
+    mstransform(vis='g19_d2usb_targets_line.ms', outputvis='test5.ms', timeaverage=True,
+                timebin='30s')
 
 
 </example> 

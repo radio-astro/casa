@@ -30,10 +30,12 @@ class cleanhelper:
         ####
         if((type(imtool) != str) and (len(vis) !=0)):
             # for multi-mses input (not fully implemented yet)
-            if(type(vis)==list):
-                self.initmultims(imtool, vis, usescratch)
-            else:
-                self.initsinglems(imtool, vis, usescratch)
+            if(type(vis)!=list):
+                vis=[vis]
+                self.sortedvisindx=[0]
+            self.initmultims(imtool, vis, usescratch)
+        #    else:
+        #        self.initsinglems(imtool, vis, usescratch)
         #self.maskimages={}
         self.maskimages=odict()
         self.finalimages={}
@@ -325,7 +327,7 @@ class cleanhelper:
         self.imageids={}
         if(type(phasecenters) == str):
             phasecenters=[phasecenters]
-        if(type(phasecenters) == int):
+        if(type(phasecenters) == int or type(phasecenters) == float ):
             phasecenters=[phasecenters]
         self._casalog.post('Number of phase centers: ' + str(len(phasecenters)),
                            'DEBUG1')
@@ -839,7 +841,7 @@ class cleanhelper:
             ia.close()
             ia.removefile('__temp_mask')
             ia.open(outputmask)
-            outim = ia.regrid(outfile='__temp_mask',shape=shp,axes=[0,1], csys=self.csys,overwrite=True, asvelocity=False)
+            outim = ia.regrid(outfile='__temp_mask',shape=shp,axes=[3,0,1], csys=self.csys,overwrite=True, asvelocity=False)
             outim.done(verbose=False)
             ia.done(verbose=False)
             ia.removefile(outputmask)
@@ -865,20 +867,19 @@ class cleanhelper:
         self.csys=ia.coordsys().torecord()
         # keep this info for reading worldbox
         self.csysorder=ia.coordsys().coordinatetype()
-        ia.close()
-
-        self.setReferenceFrameLSRK( outputmask )
-                
-#        mycsys=ia.coordsys()
-#        if mycsys.torecord()['spectral2']['conversion']['system']!=maskframe:
-#            mycsys.setreferencecode(maskframe,'spectral',True)
-#        self.csys=mycsys.torecord()
-#        if self.csys['spectral2']['conversion']['system']!=maskframe:
-#            self.csys['spectral2']['conversion']['system']=maskframe
-#        ia.setcoordsys(self.csys)
-#        #ia.setcoordsys(mycsys.torecord())
 #        ia.close()
 
+#        self.setReferenceFrameLSRK( outputmask )
+                
+        mycsys=ia.coordsys()
+        if mycsys.torecord()['spectral2']['conversion']['system']!=maskframe:
+            mycsys.setreferencecode(maskframe,'spectral',True)
+        self.csys=mycsys.torecord()
+        if self.csys['spectral2']['conversion']['system']!=maskframe:
+            self.csys['spectral2']['conversion']['system']=maskframe
+        ia.setcoordsys(self.csys)
+        #ia.setcoordsys(mycsys.torecord())
+#        ia.close()
 
         if(len(maskimage) > 0):
             for ima in maskimage :
@@ -980,6 +981,7 @@ class cleanhelper:
         self.setReferenceFrameLSRK( outputmask )
         #Done with making masks
 
+
     def datselweightfilter(self, field, spw, timerange, uvrange, antenna,scan,
                            wgttype, robust, noise, npixels, mosweight,
                            innertaper, outertaper, usescratch, nchan=-1, start=0, width=1):
@@ -1053,6 +1055,10 @@ class cleanhelper:
         ############################################################
         # Not sure I need this now.... Nov 15, 2010
         vislist.reverse()
+        writeaccess=True
+        for i in vislist: 
+            writeaccess=writeaccess and os.access(self.vis[i], os.W_OK)
+        #if any ms is readonly then no model will be stored, MSs will be in readmode only...but clean can proceed
         for i in vislist:
           # select apropriate parameters
           selectedparams=self._selectlistinputs(len(vislist),i,self.paramlist)
@@ -1064,19 +1070,19 @@ class cleanhelper:
           inintent = selectedparams['intent']
           inuvrange=selectedparams['uvrange'] 
 
-          if len(self.vis)==1:
+          #if len(self.vis)==1:
             #print "single ms case"
-            self.im.selectvis(nchan=nchan,start=start,step=width,field=field,
-                              spw=inspw,time=intimerange, baseline=inantenna,
-                              scan=inscan, observation=inobs, intent=inintent, uvrange=inuvrange,
-                              usescratch=usescratch)
-          else:
+          #  self.im.selectvis(nchan=nchan,start=start,step=width,field=field,
+          #                    spw=inspw,time=intimerange, baseline=inantenna,
+          #                    scan=inscan, observation=inobs, intent=inintent, uvrange=inuvrange,
+          #                    usescratch=usescratch)
+          #else:
             #print "multims case: selectvis for vis[",i,"]: spw,field=", inspw, self.fieldindex[i]
-            self.im.selectvis(vis=self.vis[i],nchan=nchan,start=start,step=width,
-                              field=self.fieldindex[i], spw=inspw,time=intimerange,
-                              baseline=inantenna, scan=inscan,
-                              observation=inobs, intent=inintent,
-                              uvrange=inuvrange, usescratch=usescratch)
+          self.im.selectvis(vis=self.vis[i],nchan=nchan,start=start,step=width,
+                            field=self.fieldindex[i], spw=inspw,time=intimerange,
+                            baseline=inantenna, scan=inscan,
+                            observation=inobs, intent=inintent,
+                            uvrange=inuvrange, usescratch=usescratch, writeaccess=writeaccess)
 
     # private function for datsel and datweightfilter
     def _selectlistinputs(self,nvis,indx,params):
@@ -1790,7 +1796,7 @@ class cleanhelper:
             tmpshp[1]=shp[1]
             if len(oldshp)==4: # include spectral axis for regrid
               tmpshp[3]=shp[3]
-              ib=ia.regrid(outfile='__looloo', shape=tmpshp, axes=[0,1,3], csys=self.csys, overwrite=True, asvelocity=False)
+              ib=ia.regrid(outfile='__looloo', shape=tmpshp, axes=[3,0,1], csys=self.csys, overwrite=True, asvelocity=False)
             else:
               ib=ia.regrid(outfile='__looloo', shape=tmpshp, axes=[0,1], csys=self.csys, overwrite=True, asvelocity=False)
 

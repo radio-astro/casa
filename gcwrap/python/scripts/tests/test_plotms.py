@@ -50,18 +50,18 @@ class test_base(unittest.TestCase):
             self._cleanUp()
             pm.setPlotMSFilename("")
 
-    def _checkPlotFile(self, minSize):
-        self.assertTrue(os.path.isfile(self.plotfile_jpg))
-        print 'File size is ', os.path.getsize(self.plotfile_jpg)
-        self.assertTrue(os.path.getsize(self.plotfile_jpg) > minSize)
-        if(self.plotfile_hash):
-            self.assertEqual(
-                sha.new(open(self.plotfile_jpg, 'r').read()).hexdigest(),
-                self.plotfile_hash
-            )
-        else:
+    def _checkPlotFile(self, minSize, plotfileName):
+        self.assertTrue(os.path.isfile(plotfileName))
+        print 'File size is ', os.path.getsize(plotfileName)
+        self.assertTrue(os.path.getsize(plotfileName) > minSize)
+        #if(self.plotfile_hash):
+        #    self.assertEqual(
+        #        sha.new(open(plotfileName, 'r').read()).hexdigest(),
+        #        self.plotfile_hash
+        #    )
+        #else:
             # store to check against following test results
-            self.plotfile_hash = sha.new(open(self.plotfile_jpg, 'r').read()).hexdigest()
+        #    self.plotfile_hash = sha.new(open(plotfileName, 'r').read()).hexdigest()
             
     
         
@@ -73,22 +73,7 @@ class plotms_test1(test_base):
     def tearDown(self):
        self.tearDowndata()
         
-    # This test does not work. It seems that the pm tool 
-    # does not draw anything on the GUI inside this script.
-    # It works manually inside casapy. ??????????
-#    def test000(self):
-#        '''Plotms 0: Write a jpg file using the pm tool'''
-#        self.assertFalse(self.display.startswith(':'),'DISPLAY not set, cannot run test')
-#        pm.setPlotMSFilename(self.ms)
-#        time.sleep(5)
-#        pm.show()
-#        time.sleep(5)
-#        while (pm.isDrawing()):
-#            time.sleep(0.5)
-#        pm.save(self.plotfile_jpg, format='jpg')
-#        self._waitForFile(self.plotfile_jpg, 10)
-
-#        self._checkPlotFile()
+  
         
     def test001(self):
         '''Plotms 1: Write a jpg file using the plotms task'''
@@ -103,7 +88,7 @@ class plotms_test1(test_base):
         self.assertTrue(self.res)
         self.assertTrue(os.path.exists(self.plotfile_jpg), 'Plot was not created')
         print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
-        self._checkPlotFile(60000)
+        self._checkPlotFile(60000, self.plotfile_jpg)
         
         
     def test002(self):
@@ -119,9 +104,9 @@ class plotms_test1(test_base):
                           overwrite=True, showgui=False)
         self.assertTrue(self.res)
         self.assertTrue( os.path.exists(self.plotfile_jpg), 'Plot was not created')
-        self._checkPlotFile(60000)
+        self._checkPlotFile(60000, self.plotfile_jpg)
         #Next, overwrite is turned off so the save should fail.
-        self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', scriptclient=True)
+        self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', showgui=False)
         self.assertFalse(self.res)
         
 
@@ -156,7 +141,7 @@ class plotms_test1(test_base):
         self.assertTrue(self.res)
         self.assertTrue(os.path.exists(self.plotfile_jpg), 'Plot was not created')
         print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
-        self._checkPlotFile(60000)
+        self._checkPlotFile(60000, self.plotfile_jpg)
         
 
     def test005(self):
@@ -170,13 +155,45 @@ class plotms_test1(test_base):
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
                           overwrite=True, showgui=False)
         self.assertTrue(self.res)
-        self._checkPlotFile(60000)
+        self._checkPlotFile(60000, self.plotfile_jpg)
 
         time.sleep(5)
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
                           overwrite=True, showgui=False)
         self.assertTrue(self.res)
-        self._checkPlotFile(60000)
+        self._checkPlotFile(60000, self.plotfile_jpg)
+        
+    def test006(self):
+        '''Plotms 6: Export an iteration plot consisting of two pages.'''
+        self.plotfile_jpg = self.outputDir + "testPlot006.jpg"
+        self.plotfile2_jpg = self.outputDir + "testPlot0062.jpg"
+        print 'Writing to ', self.plotfile_jpg, " and ", self.plotfile2_jpg
+        if os.path.exists( self.plotfile_jpg):
+            os.remove( self.plotfile_jpg)
+        if os.path.exists( self.plotfile2_jpg):
+            os.remove( self.plotfile2_jpg) 
+              
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        
+        '''Make 2 pages of 2x2 iteration plots over scan sharing common axes & scales'''
+        self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg,
+                          overwrite=True, showgui=False, expformat='jpg', 
+                          exprange='all', iteraxis='scan',
+                          xselfscale=True, yselfscale=True, 
+                          xsharedaxis=True, ysharedaxis=True,
+                          iternx=2, iterny=2)   
+        self.assertTrue(self.res)
+        
+        '''Check the first page got saved'''
+        self.assertTrue(os.path.exists(self.plotfile_jpg), 'Plot was not created')
+        print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
+        self._checkPlotFile(91000, self.plotfile_jpg)
+        
+        '''Check the second page got saved'''
+        self.assertTrue(os.path.exists(self.plotfile2_jpg), 'Plot2 was not created')
+        print 'Plot2 file size is ', os.path.getsize(self.plotfile2_jpg)
+        self._checkPlotFile(66000, self.plotfile2_jpg)    
 
 
 def suite():

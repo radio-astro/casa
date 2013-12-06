@@ -4,7 +4,7 @@ from odict import odict
 import numpy
 
 # The function that handles the imval task.
-def imval(imagename=None,region=None,box=None,chans=None,stokes=None):
+def imval(imagename, region, box, chans, stokes):
     # Blank return value.
     retValue = { 'blc':[], 'trc':[], 'unit': '', 'data': [], 'mask': []}
     casalog.origin('imval')
@@ -37,8 +37,6 @@ def imval(imagename=None,region=None,box=None,chans=None,stokes=None):
     myia = iatool()
     if ( len(box)<1 and len(chans)<1 and len(stokes)<1 and len(region)<1 ):
         try:
-            #print "GETTING SINGLE PIXEL VALUE"
-            # Open the image for processing!
             myia.open(imagename)
 
             # Get the default  pixelvalue() at the referencepixel pos.
@@ -125,7 +123,7 @@ def imval(imagename=None,region=None,box=None,chans=None,stokes=None):
         mycsys.torecord(), myia.shape(), box, chans,
         stokes, "a", region
     )
-    myia.done()
+    
 
     # Now that we know which axes we are using, and have the region
     # selected, lets get that stats!  NOTE: if you have axes size
@@ -134,66 +132,13 @@ def imval(imagename=None,region=None,box=None,chans=None,stokes=None):
         casalog.post( "Complex region found, only processing the first"\
                       " SIMPLE region found", "WARN" )
         reg=reg['regions']['*1']
-
-    # Make sure they are sorted first.
-    if (not reg.has_key("blc")):
-        print "*** in if"
-        try:
-            msg = "Specified region is not rectangular"
-            raise Exception, msg
-        except Exception, instance:
-            casalog.post("An error occurred: " + str(instance))
-            raise
-    reg['blc'].keys().sort()
-    reg['trc'].keys().sort()        
-
-    zeroblc=[]
-    blc_keys=reg['blc'].keys()
-    blc_keys.sort()        
-
-    for key in blc_keys:
-        value=reg['blc'][key]['value']
-        if ( reg['oneRel'] ):
-            #We need to conver to 0 relative!
-            value=value-1
-        if ( len( zeroblc ) > 0 ):
-            zeroblc.append(str(value)+str(reg['blc'][key]['unit'])+',' )
-        else:
-            zeroblc.append(str(value)+str(reg['blc'][key]['unit']) )
-
-    zerotrc=[]
-    trc_keys=reg['trc'].keys()
-    trc_keys.sort()
-    for key in trc_keys:
-        value=reg['trc'][key]['value']
-        if ( reg['oneRel'] ):
-            #We need to conver to 0 relative!
-            value=value-1
-        if ( len( zerotrc ) > 0 ):
-            zerotrc.append(str(value)+str(reg['trc'][key]['unit'])+',' )
-        else:
-            zerotrc.append(str(value)+str(reg['trc'][key]['unit']) )
-
-    casalog.post( 'Getting data values in region in blc='+str(zeroblc)+' trc='+str(zerotrc), 'NORMAL' )
-    casalog.post( "Getting data values for region: "+str(reg), 'NORMAL2' )
- 
+    myia.done()
     retValue = _imval_getregion( imagename, reg )
     retValue['axes']=axes
 
     casalog.post( 'imval task complete for region bound by blc='+str(retValue['blc'])+' and trc='+str(retValue['trc']), 'NORMAL1' )
     return retValue
                 
-
-#
-# Print out the returned results.
-# TODO -- finish this function
-def _imval_print( values, name ) :
-    print 'Results of imval task on ', name
-    print ''
-    print 'Region ---'
-    print '\t --\x1B[94m bottom-left corner (pixel) [blc]:    \x1B[0m', list(values['blc'])
-    print '\t --\x1B[94m top-right corner (pixel) [trc]:      \x1B[0m', list(values['trc'])
-
 #
 # Take the results from the ia.pixelvalue() function and
 # the position given to the function and turn the results
@@ -273,7 +218,7 @@ def _imval_get_single( box, chans, stokes, axes ):
 
 #
 # Use the ia.getregion() function to construct the requested data.
-def _imval_getregion( imagename="", region={} ):
+def _imval_getregion( imagename, region):
     retvalue= {}
     myia = iatool()
     try:
@@ -317,9 +262,9 @@ def _imval_getregion( imagename="", region={} ):
             'mask': mask_results, 'coords': outcoords
         }
     except Exception, instance:
-        myia.done()
         raise instance
-    myia.done()
+    finally:
+        myia.done()
     return retvalue
 
 def _imval_iterate(begins, ends, arrays=None, place=None, depth=0, count=None):

@@ -27,6 +27,7 @@
 #include <plotms_cmpt.h>
 
 #include <stdcasa/StdCasa/CasacSupport.h>
+#include <display/QtViewer/QtApp.h>
 #include <dbus_cmpt.h>
 
 #include <unistd.h>
@@ -46,9 +47,10 @@ const unsigned int plotms::LAUNCH_TOTAL_WAIT_US    = 5000000;
 
 // Constructors/Destructors //
 
-  plotms::plotms() : itsWatcher_(this),doIter_(True) {
+  plotms::plotms() : itsWatcher_(this){
 	  showGui = true;
 	  asyncCall = true;
+
   }
 
   plotms::~plotms() { closeApp(); }
@@ -180,6 +182,7 @@ void plotms::setPlotMSSelection(const string& field, const string& spw,
         const string& antenna, const string& scan, const string& corr,
 	const string& array, const string& observation, const string& msselect,
         const bool updateImmediately, const int plotIndex) {
+	 launchApp();
     PlotMSSelection sel;
     
     sel.setField(field);
@@ -266,27 +269,32 @@ void plotms::setPlotMSTransformations(const std::string& freqframe,
 }
 
 void plotms::setPlotMSIterate(const std::string& iteraxis,
-			      const bool xselfscale,
-			      const bool yselfscale,
+				  const int iterRowCount, const int iterColCount,
+			      const bool xselfscale, const bool yselfscale,
+			      const bool commonAxisX, const bool commonAxisY,
 			      const bool updateImmediately, 
 			      const int plotIndex) {
 
     PlotMSIterParam iter;
-    
     iter.setIterAxis(iteraxis);
     if (iteraxis=="") {
-      iter.setXSelfScale(False);
-      iter.setYSelfScale(False);
+      iter.setNx( 1 );
+      iter.setNy( 1 );
+      iter.setGlobalScaleX( False);
+      iter.setGlobalScaleY( False);
+      iter.setCommonAxisX( False );
+      iter.setCommonAxisY( False );
     }
     else {
-      iter.setXSelfScale(xselfscale);
-      iter.setYSelfScale(yselfscale);
+    	iter.setNx( iterRowCount );
+    	iter.setNy( iterColCount );
+    	iter.setGlobalScaleX( xselfscale);
+    	iter.setGlobalScaleY( yselfscale);
+    	iter.setCommonAxisX( commonAxisX );
+    	iter.setCommonAxisY( commonAxisY );
     }
 
-    // Only if iteration enabled...
-    if (doIter_)
-      setPlotMSIterate_(iter, updateImmediately, plotIndex);
-   
+    setPlotMSIterate_(iter, updateImmediately, plotIndex);
 }
 
 void plotms::setPlotMSTransformationsRec(const record& transformations, 
@@ -408,7 +416,18 @@ void plotms::setXAxisLabel(const string& text,  const bool updateImmediately, co
 }
 
 
-void plotms::setYAxisLabel(const string& text,  const bool updateImmediately, const int plotIndex) 
+
+void plotms::setExportRange(const string& range )
+{
+    launchApp();
+    Record params;
+    params.define(PlotMSDBusApp::PARAM_EXPORT_RANGE,  range);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, asyncCall);
+}
+
+void plotms::setYAxisLabel(const string& text,  const bool updateImmediately,
+		const int plotIndex)
 {
     launchApp();
     Record params;
@@ -606,14 +625,27 @@ void plotms::hide()   {
 }*/
 
 void plotms::setShowGui( bool showGui ){
+	//Set the variable first so we instantiate the script/non-script
+	//client
 	this->showGui = showGui;
-	asyncCall = showGui;
+	//When app is being launched, showGui determines whether it is
+	//a script client or not.  Afterward, it will just show the GUI
+	//if it has been closed by the user in non-scripting mode.
+	launchApp();
+	if ( showGui ){
+		//This is needed in the case where the is running plotms
+		//from casapy.  If the user closes plotms, and then calls
+		//the constructor again, plotms will not be shown without
+		//this line.
+		callAsync(PlotMSDBusApp::METHOD_SHOW);
+	}
 }
 
 
 
-bool plotms::save(const string& filename, const string& format, const bool highres, const bool interactive) {
-    launchApp();
+bool plotms::save(const string& filename, const string& format,
+		const bool highres, const bool interactive) {
+	 launchApp();
     Record params;
     bool retValue;
     params.define(PlotMSDBusApp::PARAM_EXPORT_FILENAME, filename);
@@ -664,63 +696,61 @@ bool plotms::displaySet() {
 
 void plotms::launchApp() {
 
-    if(!app.dbusName( ).empty() || !displaySet()) return;
-    
-    String scriptClient;
-    if ( !showGui ){
-    	scriptClient = "--nogui";
-    }
+	if(!app.dbusName( ).empty() || !displaySet()) return;
 
-    // Launch PlotMS application with the DBus switch.
-    pid_t pid = fork();
-    if(pid == 0) {
 
-        String file = itsLogFilename_.empty() ? "" :
-                      PlotMSDBusApp::APP_LOGFILENAME_SWITCH + "=" +
-                      itsLogFilename_;
-        String filter = itsLogFilter_.empty() ? "" :
-                        PlotMSDBusApp::APP_LOGFILTER_SWITCH + "=" +
-                        itsLogFilter_;
 
-	String nopop="--nopopups";
+	// Launch PlotMS application with the DBus switch.
+	pid_t pid = fork();
+	if(pid == 0) {
+		String scriptClient;
+		if ( !showGui ){
+			scriptClient = "--nogui";
+		}
+		asyncCall = showGui;
+		String file = itsLogFilename_.empty() ? "" :
+				PlotMSDBusApp::APP_LOGFILENAME_SWITCH + "=" +
+				itsLogFilename_;
+		String filter = itsLogFilter_.empty() ? "" :
+				PlotMSDBusApp::APP_LOGFILTER_SWITCH + "=" +
+				itsLogFilter_;
 
-	// If user has turned off iter, be sure not to launch with it
-	String iter="";
-	if (!doIter_)
-	  iter="--noiter";
+		String nopop="--nopopups";
 
-        execlp(PlotMSDBusApp::APP_NAME.c_str(),
-               PlotMSDBusApp::APP_NAME.c_str(),
-               PlotMSDBusApp::APP_CASAPY_SWITCH.c_str(),
-	       nopop.c_str(),
-               file.c_str(), filter.c_str(),
-	       iter.c_str(), scriptClient.c_str(),
-               NULL);
-        
-    } else {
+		execlp(PlotMSDBusApp::APP_NAME.c_str(),
+				PlotMSDBusApp::APP_NAME.c_str(),
+				PlotMSDBusApp::APP_CASAPY_SWITCH.c_str(),
+				nopop.c_str(),
+				file.c_str(), filter.c_str(),
+				scriptClient.c_str(),
+				NULL);
 
-        app.dbusName( ) = to_string(QtDBusApp::generateServiceName(app.getName( ),pid));
-        
-        // Wait for it to have launched...
-        unsigned int slept = 0;
-        bool launched = false;
-        while(!launched && slept < LAUNCH_TOTAL_WAIT_US) {
-            usleep(LAUNCH_WAIT_INTERVAL_US);
-            launched = QtDBusApp::serviceIsAvailable(app.dbusName( ));
-            slept += LAUNCH_WAIT_INTERVAL_US;
-        }
-        
-        if(launched) {        
-            itsLogFilename_ = "";
-            itsLogFilter_ = "";
-            
-        } else {
-            app.dbusName( ) = "";
-            cerr << "ERROR: plotms application did not launch within specified"
-                    " time window.  Check running processes and try again if "
-                    "desired." << endl;
-        }
-    }
+	} else {
+
+		app.dbusName( ) = to_string(QtDBusApp::generateServiceName(app.getName( ),pid));
+
+		QtApp::init();
+
+		// Wait for it to have launched...
+		unsigned int slept = 0;
+		bool launched = false;
+		while(!launched && slept < LAUNCH_TOTAL_WAIT_US) {
+			usleep(LAUNCH_WAIT_INTERVAL_US);
+			launched = QtDBusApp::serviceIsAvailable(app.dbusName( ));
+			slept += LAUNCH_WAIT_INTERVAL_US;
+		}
+
+		if(launched) {
+			itsLogFilename_ = "";
+			itsLogFilter_ = "";
+
+		} else {
+			app.dbusName( ) = "";
+			cerr << "ERROR: plotms application did not launch within specified"
+					" time window.  Check running processes and try again if "
+					"desired." << endl;
+		}
+	}
 }
 
 void plotms::closeApp() {
@@ -884,7 +914,7 @@ void plotms::setYRange(const bool yautorange,  const double ymin, const double y
 
 
 // A _temporary_ method to enable turning off the iteration path
-bool plotms::enableIter(const bool enable) {
+/*bool plotms::enableIter(const bool enable) {
 
   // Do something only if changing state
   if (enable!=doIter_) {
@@ -905,7 +935,7 @@ bool plotms::enableIter(const bool enable) {
 
   return true;
 
-}
+}*/
 
 
 

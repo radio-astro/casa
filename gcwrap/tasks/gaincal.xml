@@ -329,12 +329,16 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
                    calibrated amplitude and phase.  However,
                    at present GSPLINE is somewhat experimental.  Use with
                    caution and check solutions.
-              'K' solves for simple antenna-based single-band delays
+              'K' solves for simple antenna-based delays
                    via FFTs of the spectra on baselines to the
-                   reference antenna.  (This is not global fringe-fitting.)
+                   reference antenna.  (This is not global
+                   fringe-fitting.)  If combine includes 'spw',
+                   multi-band delays are determined; otherwise,
+                   per-spw single-band delays will be determined.
               'KCROSS' solves for a global cross-hand
                    delay.  Use parang=T and apply prior gain and
-                   bandpass solutions.
+                   bandpass solutions.   Multi-band delay solves
+                   (combine='spw') not yet supported for KCROSS.
       smodel -- Point source Stokes parameters for source model (experimental)
               default: [] (use MODEL_DATA column)
               example: [1,0,0,0] (I=1, unpolarized)
@@ -355,6 +359,9 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
                       boundaries
               Options: '','obs','scan','spw',field', or any comma-separated 
                        combination in a single string
+              For gaintype='K', if combine includes 'spw', multi-band
+               delays will be determined; otherwise, (per-spw)
+               single-band delays will be determined.
               example: combine='scan,spw'  --&gt; extend solutions over scan boundaries
                        (up to the solint), and combine spws for solving
       refant -- Reference antenna name(s); a prioritized list may be specified

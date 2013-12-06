@@ -92,6 +92,7 @@ msgs = ''
 twogim = "2g.im"
 twogest = "2g_estimates.txt"
 circular = "circular_gaussian.im"
+kimage = "bunitk.im"
 
 datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imfit/'
 
@@ -1459,6 +1460,44 @@ class imfit_test(unittest.TestCase):
         myia.open(datapath + "circular_gaussian.im")
         self.assertTrue(myia.fitcomponents())
         myia.done()
+        
+    def test_k_image(self):
+        """Test brightness units = K, CAS-5711"""
+        myia = iatool()
+        myia.open(datapath + kimage)
+        # we modify the image, so want to leave the original intact
+        sub = myia.subimage()
+        myia.done()
+        zz = sub.fitcomponents()
+        flux = zz['results']['component0']['flux']
+        self.assertTrue(near(flux['value'][0], 0.00028916, 1e-4))
+        self.assertTrue(near(flux['error'][0], 1.73518728e-08, 1e-4))
+        self.assertTrue(flux['unit'] == "K.rad.rad")
+        
+        sub.setbrightnessunit("Jy/beam")
+        zz = sub.fitcomponents()
+        flux = zz['results']['component0']['flux']
+        self.assertTrue(near(flux['value'][0], 60318.42427068, 1e-4))
+        self.assertTrue(near(flux['error'][0], 3.58921108, 1e-4))
+        self.assertTrue(flux['unit'] == "Jy")
+        
+        sub.setrestoringbeam(remove=T)
+        sub.setbrightnessunit("Jy/pixel")
+        zz = sub.fitcomponents()
+        flux = zz['results']['component0']['flux']
+        self.assertTrue(near(flux['value'][0], 12302316.98919902, 1e-4))
+        self.assertTrue(near(flux['error'][0], 732.04187606, 1e-4))
+        self.assertTrue(flux['unit'] == "Jy")
+        
+        sub.setbrightnessunit("K")
+        zz = sub.fitcomponents()
+        flux = zz['results']['component0']['flux']
+        self.assertTrue(near(flux['value'][0],  0.00028916, 1e-4))
+        self.assertTrue(near(flux['error'][0], 1.73518728e-08, 1e-4))
+        self.assertTrue(flux['unit'] == "K.rad.rad")
+        
+        sub.done()
+
 
 ia.close()
 

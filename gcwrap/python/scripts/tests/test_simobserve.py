@@ -231,7 +231,7 @@ class simobserve_sky(simobserve_unittest_base):
         self.refms_int = self.refpref_int+".ms"
 
     def tearDown(self):
-        if self.teardown:
+        if self.teardown and os.path.exists(self.project):
             shutil.rmtree(self.project)
         #pass
 
@@ -249,11 +249,12 @@ class simobserve_sky(simobserve_unittest_base):
         #ptgfile =   # necessary even if only modifymodel
         obsmode = ""
         antennalist="alma.out01.cfg" # necessary even if only modifymodel
+        sdantlist = ""
         res = simobserve(project=self.project,skymodel=skymodel,
                          inbright=inbright,indirection=indirection,
                          incell=incell,incenter=incenter,inwidth=inwidth,
                          setpointings=True,obsmode=obsmode,
-                         antennalist=antennalist,
+                         antennalist=antennalist,sdantlist=sdantlist,
                          thermalnoise="",graphics=self.graphics)
         self.assertTrue(res)
         # compare skymodel
@@ -268,9 +269,11 @@ class simobserve_sky(simobserve_unittest_base):
         maptype = "ALMA"
         obsmode = ""
         antennalist = "alma.out01.cfg"
+        sdantlist = ""
         res = simobserve(project=self.project,skymodel=skymodel,
                          setpointings=setpointings,maptype=maptype,
                          obsmode=obsmode,antennalist=antennalist,
+                         sdantlist=sdantlist,
                          thermalnoise="",graphics=self.graphics)
         self.assertTrue(res)
         # compare pointing files
@@ -286,9 +289,11 @@ class simobserve_sky(simobserve_unittest_base):
         maptype = "hexagonal"
         obsmode = ""
         antennalist = "aca.i.cfg"
+        sdantlist = ""
         res = simobserve(project=self.project,skymodel=skymodel,
                          setpointings=setpointings,maptype=maptype,
                          obsmode=obsmode,antennalist=antennalist,
+                         sdantlist=sdantlist,
                          thermalnoise="",graphics=self.graphics)
         self.assertTrue(res)
         # compare pointing files
@@ -326,13 +331,12 @@ class simobserve_sky(simobserve_unittest_base):
         integration = "4s"
         obsmode = "sd"
         sdantlist = self.sdantlist
-        totaltime = "144s"
-        thermalnoise = ""
+        totaltime = "576s"
         res = simobserve(project=self.project,skymodel=skymodel,
                          setpointings=setpointings,ptgfile=ptgfile,
                          integration=integration,obsmode=obsmode,
                          sdantlist=sdantlist,totaltime=totaltime,
-                         thermalnoise=thermalnoise,graphics=self.graphics)
+                         thermalnoise="",graphics=self.graphics)
         self.assertTrue(res)
         # compare output MS
         currms = self.project + "/" + \
@@ -365,11 +369,10 @@ class simobserve_sky(simobserve_unittest_base):
 #         skymodel = self.refmodel
 #         setpointings = False
 #         obsmode = ""
-#         thermalnoise = ""
 #         leakage = 0.5
 #         res = simobserve(project=self.project,skymodel=skymodel,
 #                          setpointings=setpointings,ptgfile=ptgfile,
-#                          obsmode=obsmode,thermalnoise=thermalnoise,
+#                          obsmode=obsmode,thermalnoise="",
 #                          leakage=leakage,graphics=self.graphics)
 
     def testSky_sdAll(self):
@@ -386,7 +389,7 @@ class simobserve_sky(simobserve_unittest_base):
         maptype = "square"
         obsmode = "sd"
         sdantlist = "aca.tp.cfg"
-        totaltime = "144s"
+        totaltime = "576s"
         res = simobserve(project=self.project,skymodel=skymodel,
                    inbright=inbright,indirection=indirection,
                    incell=incell,incenter=incenter,inwidth=inwidth,
@@ -476,7 +479,7 @@ class simobserve_comp(simobserve_unittest_base):
         self._copy_input(self.incomp)
 
     def tearDown(self):
-        if self.teardown:
+        if self.teardown and os.path.exists(self.project):
             shutil.rmtree(self.project)        
         #pass
 
@@ -487,10 +490,11 @@ class simobserve_comp(simobserve_unittest_base):
         compwidth = self.compwidth
         obsmode = ""
         antennalist="alma.out01.cfg" # necessary even if only modifymodel
+        sdantlist = ""
         res = simobserve(project=self.project,complist=complist,
                          compwidth = compwidth,
                          setpointings=True,obsmode=obsmode,
-                         antennalist=antennalist,
+                         antennalist=antennalist,sdantlist=sdantlist,
                          thermalnoise="",graphics=self.graphics)
         self.assertTrue(res)
         # compare compskymodel
@@ -506,10 +510,12 @@ class simobserve_comp(simobserve_unittest_base):
         maptype = "ALMA"
         obsmode = ""
         antennalist = "alma.out01.cfg"
+        sdantlist = ""
         res = simobserve(project=self.project,complist=complist,
                          compwidth = compwidth,
                          setpointings=setpointings,maptype=maptype,
                          obsmode=obsmode,antennalist=antennalist,
+                         sdantlist=sdantlist,
                          thermalnoise="",graphics=self.graphics)
         self.assertTrue(res)
         # compare pointing files
@@ -526,10 +532,12 @@ class simobserve_comp(simobserve_unittest_base):
         maptype = "hexagonal"
         obsmode = ""
         antennalist = "aca.i.cfg"
+        sdantlist = ""
         res = simobserve(project=self.project,complist=complist,
                          compwidth = compwidth,
                          setpointings=setpointings,maptype=maptype,
                          obsmode=obsmode,antennalist=antennalist,
+                         sdantlist=sdantlist,
                          thermalnoise="",graphics=self.graphics)
         self.assertTrue(res)
         # compare pointing files
@@ -571,13 +579,12 @@ class simobserve_comp(simobserve_unittest_base):
 #         obsmode = "sd"
 #         sdantlist = self.sdantlist
 #         totaltime = "144s"
-#         thermalnoise = ""
 #         res = simobserve(project=self.project,complist=complist,
 #                          compwidth = compwidth,
 #                          setpointings=setpointings,ptgfile=ptgfile,
 #                          integration=integration,obsmode=obsmode,
 #                          sdantlist=sdantlist,totaltime=totaltime,
-#                          thermalnoise=thermalnoise,graphics=self.graphics)
+#                          thermalnoise="",graphics=self.graphics)
 #         self.assertTrue(res)
 #         # compare output MS
 #         currms = self.project + "/" + \
@@ -613,12 +620,11 @@ class simobserve_comp(simobserve_unittest_base):
 #         compwidth = self.compwidth
 #         setpointings = False
 #         obsmode = ""
-#         thermalnoise = ""
 #         leakage = 0.5
 #         res = simobserve(project=self.project,complist=complist,
 #                          compwidth = compwidth,
 #                          setpointings=setpointings,ptgfile=ptgfile,
-#                          obsmode=obsmode,thermalnoise=thermalnoise,
+#                          obsmode=obsmode,thermalnoise="",
 #                          leakage=leakage,graphics=self.graphics)
 
 ##### TEMPORARY discarding due to the bug in simulator.
@@ -720,7 +726,7 @@ class simobserve_skycomp(simobserve_unittest_base):
         self._copy_input([self.incomp, self.inmodel])
 
     def tearDown(self):
-        if self.teardown:
+        if self.teardown and os.path.exists(self.project):
             shutil.rmtree(self.project)        
         #pass
 
@@ -734,10 +740,11 @@ class simobserve_skycomp(simobserve_unittest_base):
         #ptgfile =   # necessary even if only modifymodel
         obsmode = ""
         antennalist="alma.out01.cfg" # necessary even if only modifymodel
+        sdantlist = ""
         res = simobserve(project=self.project,skymodel=skymodel,
                          complist=complist,compwidth=compwidth,
                          setpointings=True,obsmode=obsmode,
-                         antennalist=antennalist,
+                         antennalist=antennalist,sdantlist=sdantlist,
                          thermalnoise="",graphics=self.graphics)
         self.assertTrue(res)
         # compare skymodel
@@ -755,10 +762,12 @@ class simobserve_skycomp(simobserve_unittest_base):
         maptype = "ALMA"
         obsmode = ""
         antennalist = "alma.out01.cfg"
+        sdantlist = ""
         res = simobserve(project=self.project,skymodel=skymodel,
                          complist=complist,compwidth=compwidth,
                          setpointings=setpointings,maptype=maptype,
                          obsmode=obsmode,antennalist=antennalist,
+                         sdantlist=sdantlist,
                          thermalnoise="",graphics=self.graphics)
         self.assertTrue(res)
         # compare pointing files
@@ -776,10 +785,12 @@ class simobserve_skycomp(simobserve_unittest_base):
         maptype = "hexagonal"
         obsmode = ""
         antennalist = "aca.i.cfg"
+        sdantlist = ""
         res = simobserve(project=self.project,skymodel=skymodel,
                          complist=complist,compwidth=compwidth,
                          setpointings=setpointings,maptype=maptype,
                          obsmode=obsmode,antennalist=antennalist,
+                         sdantlist=sdantlist,
                          thermalnoise="",graphics=self.graphics)
         self.assertTrue(res)
         # compare pointing files
@@ -823,13 +834,12 @@ class simobserve_skycomp(simobserve_unittest_base):
 #         obsmode = "sd"
 #         sdantlist = self.sdantlist
 #         totaltime = "144s"
-#         thermalnoise = ""
 #         res = simobserve(project=self.project,skymodel=skymodel,
 #                          complist=complist,compwidth=compwidth,
 #                          setpointings=setpointings,ptgfile=ptgfile,
 #                          integration=integration,obsmode=obsmode,
 #                          sdantlist=sdantlist,totaltime=totaltime,
-#                          thermalnoise=thermalnoise,graphics=self.graphics)
+#                          thermalnoise="",graphics=self.graphics)
 #         self.assertTrue(res)
 #         # compare output MS
 #         currms = self.project + "/" + \
@@ -867,12 +877,11 @@ class simobserve_skycomp(simobserve_unittest_base):
 #         compwidth = self.compwidth
 #         setpointings = False
 #         obsmode = ""
-#         thermalnoise = ""
 #         leakage = 0.5
 #         res = simobserve(project=self.project,skymodel=skymodel,
 #                          complist=complist,compwidth=compwidth,
 #                          setpointings=setpointings,ptgfile=ptgfile,
-#                          obsmode=obsmode,thermalnoise=thermalnoise,
+#                          obsmode=obsmode,thermalnoise="",
 #                          leakage=leakage,graphics=self.graphics)
 
 ##### TEMPORARY discarding due to the bug in simulator.

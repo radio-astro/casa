@@ -3544,8 +3544,8 @@ ia.close()
 <description>
 
 This method deconvolves (a
-record representation of) a Componentlist \tool\ from the restoring
-beam, returning (a record representation of) a new Componentlist \tool.
+record representation of) a Componentlist tool from the restoring
+beam, returning (a record representation of) a new Componentlist tool.
 If there is no restoring beam, a fail is generated.
 
 Currently, only deconvolution of Gaussian components is supported.
@@ -4465,7 +4465,10 @@ The same rules that apply to singlets when multifit=True apply to multiplets.
 LIMITING RANGES FOR SOLUTION PARAMETERS
 In cases of low (or no) signal to noise spectra, it is still possible for the fit to converge, but often to a
 nonsensical solution. The astronomer can use her knowledge of the source to filter out obviously bogus solutions.
-One can limit the ranges of solution parameters to known "good" values via the goodamprange, goodcenterrange, and goodfwhmrange
+Any solution which contains a NaN value as a value or error in any one of its parameters is automatically marked as
+invalid.
+
+One can also limit the ranges of solution parameters to known "good" values via the goodamprange, goodcenterrange, and goodfwhmrange
 parameters. Any combination can be specified and the limit constraints will be ANDed together. The ranges apply to all PCF components
 that might be fit; choosing ranges on a component by component basis is not supported. If specified,
 an array of exactly two numerical values must be given to indicate the range of acceptable solution values for
@@ -4492,6 +4495,9 @@ fixed during the fit in the plpfix or ltpfix array. If supplied, this array shou
 initial estimates array. A value
 of True means the corresponding coefficient will be held fixed during the fit. An empty array indicates that no
 parameters will be held fixed. This is the default.
+
+Because the logarithm of the ordinate values must be taken before fitting a logarithmic transformed polynomial,
+all non-positive pixel values are effectively masked for the purposes of fitting.
 
 INCLUDING STANDARD DEVIATIONS OF PIXEL VALUES
 If the standard deviations of the pixel values in the input image are known and they vary in the image (eg they are higher for pixels
@@ -4522,10 +4528,11 @@ axis having length of 1:
 
 attempted: a boolean array indicating which fits were attempted (eg if too few unmasked points, a fit will not be attempted).
 converged: a boolean array indicating which fits converged. False if the fit was not attempted.
-valid: a boolean array indicating which solutions fall within the specified valid ranges of parameter space
-niter: an int array indicating the number of iterations for each profile, &lt;0 if the fit did not converge
-ncomps: the number of components (gaussian singlets + lorentzian singlets + gaussian multiplets + polynomial) fit for the profile,
-        &lt;0 if the fit did not converge
+valid:     a boolean array indicating which solutions fall within the specified valid ranges of parameter space (see
+           section LIMITING RANGES FOR SOLUTION PARAMETERS for details).
+niter:     an int array indicating the number of iterations for each profile, &lt;0 if the fit did not converge
+ncomps:    the number of components (gaussian singlets + lorentzian singlets + gaussian multiplets + polynomial) fit for the profile,
+           &lt;0 if the fit did not converge
 direction: a string array containing the world direction coordinate for each profile
 
 There is a "type" array having number of dimensions equal to the number of dimensions in the above arrays plus one. The shape of
@@ -4704,6 +4711,8 @@ for easier inspection using tool methods, eg
 
 cl.fromrecord(res['results'])
 
+although this currently only works if the flux density units are conformant with Jy.
+
 If dooff is True, in addtion to the specified number of
 gaussians, a zero-level offset will also be fit. The initial estimate for this
 offset is specified using the offset parameter. Units are assumed to be the
@@ -4735,6 +4744,20 @@ and has the option of either appending to or overwriting an existing file.
 The user has the option of writing the (convolved) parameters of a successful
 fit to a file which can be fed back to fitcomponents() as the estimates file for a
 subsequent run.
+
+SUPPORTED UNITS
+
+Currently only images with brightness units conformant with Jy, Jy.km/s, and K are fully
+supported for fitting. If your image has some other base brightness unit, imfit will assume
+that unit is equivalent to Jy/pixel and results will be calculated accordingly. For images
+with units of K, the flux density will be reported in the logger in some multiple of 
+K.beam if the image has a beam, but will be converted and written in the returned dictionary
+in units of K.rad.rad. Note also that converting the returned results subdirectionary to a
+component list via cl.fromrecord() currently only works properly if the flux density units
+in the results dictionary are conformant with Jy. If you need to be able to
+run cl.fromrecord() on the resulting dictionary you can first modify the flux density units
+by hand to be (some prefix)Jy and then run cl.fromrecord on that dictionary, bearing in mind
+your unit conversion.
 
 FITTING OVER MULTIPLE CHANNELS
 
@@ -6108,7 +6131,7 @@ ia.close()
 
 This function applies a model of the sky to the image. You can add or
 subtract the model which is contained in a
-<link anchor="componentmodels:componentlist">Componentlist</link> \tool.
+<link anchor="componentmodels:componentlist">Componentlist</link> tool.
 
 The pixel values are only changed where the total mask
 (combination of the default \pixelmask\ [if any] and the OTF mask)
@@ -7244,7 +7267,7 @@ ia.close()
 
  
    <method type="function" name="rebin">
-   <shortdescription>rebin the image by the specified factors</shortdescription>
+   <shortdescription>Rebin an image by the specified integer factors</shortdescription>
    
 <input>
   
@@ -7257,7 +7280,7 @@ ia.close()
      </param>
   
      <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
+     <description>The region of interest.  See help par.region. Default is whole image.</description>
      <value></value>
      </param>
   
@@ -7307,9 +7330,7 @@ temporary image is deleted.
 
 Sometimes it is useful to drop axes of length one (degenerate axes). 
 Use the {\stfaf dropdeg} argument if you want to do this.  It will
-discard the axes from the input image.  Therefore the output shape and
-Coordinate System that you supply must be consistent with the input
-image after the degenerate axes are dropped. 
+discard the axes from the input image.  
 
 </description>
 
@@ -7572,6 +7593,12 @@ system (it won't be filled in for you).
 
 If an image has per-plane beams and one attempts to regrid the spectral axis,
 an exception is thrown.
+
+IMPORTANT NOTE ABOUT FLUX CONSERVATION
+in general regridding is inaccurate for images that the angular resolution is poorly
+sampled. A check is done for such cases and a warning message is emitted if a beam present.
+However, no such check is done if there is no beam present. To add a restoring beam to
+an image, use ia.setrestoringbeam().
 
 </description>
 

@@ -1238,6 +1238,11 @@ for the summary mode.
      <description>List the number of flags per baseline. Default: </description>
      <value>false</value>
      </param>
+
+     <param type="string" name="name">
+     <description>Name of this summary report. Default: summary </description>
+     <value></value>
+     </param>
      
 <!-- Selection parameters : end -->
      

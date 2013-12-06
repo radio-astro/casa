@@ -20,6 +20,8 @@ static std::vector<std::string> _setStringToVectorString(const std::set<casa::St
 
 static std::vector<std::string> _vectorStringToStdVectorString(const std::vector<casa::String>& inset);
 
+static std::vector<casa::String> _vectorStdStringToVectorString(const std::vector<std::string>& inset);
+
 static std::vector<int> _vectorUIntToVectorInt(const std::vector<casa::uInt>& inset);
 
 static std::vector<uint> _vectorIntToVectorUInt(const std::vector<casa::Int>& inset);
@@ -32,10 +34,16 @@ void _checkSpwId(int id, bool throwIfNegative) const;
 
 void _checkPolId(int id, bool throwIfNegative) const;
 
-std::set<int> _idsFromRegex(
-	const std::map<casa::String, std::set<int> >& mymap, const casa::String& regex
-) const;
+static std::set<int> _idsFromExpansion(
+	const std::map<casa::String, std::set<int> >& mymap, const casa::String& matchString
+);
 
-std::set<int> _idsFromRegex(
-	const std::map<casa::String, std::set<uint> >& mymap, const casa::String& regex
-) const;
+static std::set<int> _idsFromExpansion(
+	const std::map<casa::String, std::set<uint> >& mymap, const casa::String& matchString
+);
+
+static std::vector<casa::String> _match(
+	const vector<casa::String>& candidates, const casa::String& matchString
+);
+
+static std::string _escapeExpansion(const casa::String& stringToEscape);

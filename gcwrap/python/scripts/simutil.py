@@ -13,7 +13,7 @@ import pylab as pl
 #qatool = casac.homefinder.find_home_by_name('quantaHome')
 #qa = qatool.create()
 
-im, cb, ms, tb, fg, me, ia, po, sm, cl, cs, rg, sl, dc, vp, msmd, fi, fn, imd = gentools()
+im, cb, ms, tb, me, ia, po, sm, cl, cs, rg, sl, dc, vp, msmd, fi, fn, imd = gentools()
 
 
 # functions defined outside of the simutil class
@@ -1546,7 +1546,7 @@ class simutil:
                     obslon=qa.convert(obs['m0'],'deg')['value']
                     obsalt=qa.convert(obs['m2'],'m')['value']
                     if self.verbose:
-                        self.msg("converting local tangent plane coordinates to ITRF using observatory position = %d %d " % (obslat,obslon),origin="readantenna")
+                        self.msg("converting local tangent plane coordinates to ITRF using observatory position = %f %f " % (obslat,obslon),origin="readantenna")
                         #foo=self.getdatum(datum,verbose=True)
                     for i in range(len(inx)):
                         x,y,z = self.locxyz2itrf(obslat,obslon,obsalt,inx[i],iny[i],inz[i])
@@ -2933,7 +2933,7 @@ class simutil:
         if nstokes>1:
             os.rename(flat,flat+".tmp")
             po.open(flat+".tmp")
-            foo=po.stokesi(outfile=flat,stokes='I')
+            foo=po.stokesi(outfile=flat)
             foo.done()
             po.done()
             shutil.rmtree(flat+".tmp")

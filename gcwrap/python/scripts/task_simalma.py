@@ -64,13 +64,13 @@ def simalma(
         maptype_tp = 'square'
 
         # time ratios for 12extended, 12compact,7m, and TP:
-        default_timeratio = [1,0.5,4,8]
+        default_timeratio = [1,0.5,2,4]
 
         # pbgridratio_tp = 0.25  # ->  would be gridratio_tp = 1/3.4
         # the grid spacing is defined in terms of lambda/d times these factors
         # ALMA OT uses lambda/d/sqrt(3)
         gridratio_int = 1./pl.sqrt(3) # 0.5 is nyquist 
-        gridratio_tp  = 1./2.5 
+        gridratio_tp  = 1./3
 
         # number of 12m primary beams to pad the total power image during
         # the gridding stage (i.e. even larger pad than the padding 
@@ -1128,6 +1128,7 @@ def simalma(
 
                 # Generate TP image
                 msg(" ",priority=v_priority)
+                temp_out = fileroot+"/"+imagename_tp + '0'
                 if tp_kernel.upper() == 'SF':
                     msg("Generating TP image using 'SF' kernel.",\
                          priority=v_priority)
@@ -1136,7 +1137,7 @@ def simalma(
                     task_param['infiles'] = vis_tp
                     task_param['gridfunction'] = 'sf'
                     task_param['convsupport'] = 4
-                    task_param['outfile'] = fileroot+"/"+imagename_tp
+                    task_param['outfile'] = temp_out
                     task_param['imsize'] = imsize_tp
                     task_param['cell'] = cell_tp
                     task_param['phasecenter'] = model_refdir
@@ -1163,7 +1164,7 @@ def simalma(
                     task_param['gridfunction'] = 'gjinc'
                     task_param['gwidth'] = gwidth
                     task_param['jwidth'] = jwidth
-                    task_param['outfile'] = fileroot+"/"+imagename_tp
+                    task_param['outfile'] = temp_out
                     task_param['imsize'] = imsize_tp
                     # sdimaging doesn't actually take a quantity,
                     #cell_arcmin=qa.convert(cell_tp[0],'arcmin')['value']
@@ -1195,13 +1196,19 @@ def simalma(
                     # the acutal HWHM is 3.5% smaller
                     kernel_val = qa.convert(qhwhm, pbunit)['value']*0.965 
                     bmsize = qa.quantity(pl.sqrt(simpb_val**2+4.*kernel_val**2), pbunit)
+                beam_area_ratio = qa.getvalue(qa.convert(bmsize, 'arcsec'))**2 \
+                                  / qa.getvalue(qa.convert(PB12sim, 'arcsec'))**2
                 msg(" ",priority=v_priority)
                 msg("Setting estimated restoring beam to TP image: %s" % qa.tos(bmsize),\
                          priority=v_priority)
+                msg("Scaling TP image intensity by beam area before and after gridding: %f" % beam_area_ratio)
                 #print "- SimPB = %f%s" % (simpb_val, pbunit)
                 #print "- image kernel = %f%s" % (kernel_val, pbunit)
 
                 if not dryrun:
+                    immath(imagename=temp_out, mode='evalexpr',
+                           expr="IM0*%f" % (beam_area_ratio),
+                           outfile=fileroot+"/"+imagename_tp)
                     ia.open(fileroot+"/"+imagename_tp)
                     ia.setrestoringbeam(major=bmsize, minor=bmsize,
                                     pa=qa.quantity("0.0deg"))

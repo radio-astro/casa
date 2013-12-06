@@ -5,17 +5,46 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="partition" category="manipulation" visibility="experimental">
-     <shortdescription>Experimental task to produce multi-MSs using parallelism</shortdescription>
+<task type="function" name="partition" category="manipulation">
+     <shortdescription>Task to produce multi-MSs using parallelism</shortdescription>
 
 <description>
-
-<!-- THIS DOES NOT GET READ, PUT IT IN example! -->
 	Partition is a task to create a multi-MS out of an MS. General selection
     parameters are included, and one or all of the various data columns
     (DATA, LAG_DATA and/or FLOAT_DATA, and possibly MODEL_DATA and/or
     CORRECTED_DATA) can be selected. It can also be used to create a normal
 	MS, split based on the given data selection parameters.
+
+    The partition task creates a multi-MS using the parallelization framework.
+    If a cluster is not present, it will create a default cluster based on the
+    resources of the system. One can create a simple_cluster prior to running
+    partition by doing the following.
+
+    from simple_cluster import *
+    sc = simple_cluster()
+    sc.init_cluster('cluster-config.txt', 'test')
+
+    The file 'cluster-config.txt' contains information on the machine that will
+    be used for the cluster. Please see the help of simple_cluster for more information.	
+
+    A multi-MS is structured to have a reference MS on the top directory and a
+    sub-directory called SUBMSS, which contain each partitioned sub-MS. The
+    reference MS contains links to the sub-tables of the first sub-MS. The other
+    sub-MSs contain a copy of the sub-tables each. A multi-MS looks like this in disk.
+
+    ls ngc5921.mms
+    ANTENNA           FLAG_CMD     POLARIZATION  SPECTRAL_WINDOW  table.dat
+    DATA_DESCRIPTION  HISTORY      PROCESSOR     STATE            table.info
+    FEED              OBSERVATION  SORTED_TABLE  SUBMSS           WEATHER
+    FIELD             POINTING     SOURCE        SYSCAL
+
+    ls ngc5921.mms/SUBMSS/
+    ngc5921.0000.ms/  ngc5921.0002.ms/  ngc5921.0004.ms/  ngc5921.0006.ms/
+    ngc5921.0001.ms/  ngc5921.0003.ms/  ngc5921.0005.ms/
+
+    Inside casapy, one can use the task listpartition to list the information
+    from a multi-MS.
+  
 </description>
 
 <input>
@@ -156,49 +185,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 </input>
 
 <example>
-    Experimental version for use with parallelization framework.  
 
     From CASA 4.1.0 onwards, partition uses the MSTransform framework.
     See help mstransform for more details.
 
-    Partition is a task to create a multi-MS out of an MS. General selection
-    parameters are included, and one or all of the various data columns
-    (DATA, LAG_DATA and/or FLOAT_DATA, and possibly MODEL_DATA and/or
-    CORRECTED_DATA) can be selected. It can also be used to create a normal
-    MS, split based on the given data selection parameters.
-
-    The partition task creates a multi-MS using the parallelization framework.
-    If a cluster is not present, it will create a default cluster based on the
-    resources of the system. One can create a simple_cluster prior to running
-    partition by doing the following.
-
-    from simple_cluster import *
-    sc = simple_cluster()
-    sc.init_cluster('cluster-config.txt', 'test')
-
-    The file 'cluster-config.txt' contains information on the machine that will
-    be used for the cluster. Please see the help of simple_cluster for more information.	
-
-    A multi-MS is structured to have a reference MS on the top directory and a
-    sub-directory called SUBMSS, which contain each partitioned sub-MS. The
-    reference MS contains links to the sub-tables of the first sub-MS. The other
-    sub-MSs contain a copy of the sub-tables each. A multi-MS looks like this in disk.
-
-    ls ngc5921.mms
-    ANTENNA           FLAG_CMD     POLARIZATION  SPECTRAL_WINDOW  table.dat
-    DATA_DESCRIPTION  HISTORY      PROCESSOR     STATE            table.info
-    FEED              OBSERVATION  SORTED_TABLE  SUBMSS           WEATHER
-    FIELD             POINTING     SOURCE        SYSCAL
-
-    ls ngc5921.mms/SUBMSS/
-    ngc5921.0000.ms/  ngc5921t.0002.ms/  ngc5921.0004.ms/  ngc5921.0006.ms/
-    ngc5921.0001.ms/  ngc5921.0003.ms/  ngc5921.0005.ms/
-
-    Inside casapy, one can use the task listpartition to list the information
-    from a multi-MS.
-  
-
-    Keyword arguments:
+----- Detailed description of keyword arguments -----
     vis -- Name of input visibility file
         default: none; example: vis='ngc5921.ms'
 
@@ -244,7 +235,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             Otherwise the selected column will go to DATA (or
             FLOAT_DATA) in the output.
 
---- Data selection parameters (see help par.selectdata for more detailed
+---- Data selection parameters (see help par.selectdata for more detailed
     information)
 
     field -- Select field using field id(s) or field name(s).
