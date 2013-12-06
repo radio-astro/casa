@@ -324,7 +324,8 @@ void ASDMFiller::fill()
           for ( unsigned int ipol = 0 ; ipol < numPol ; ipol++ ) {
 
             // fill SCANNO, CYCLENO, IFNO, POLNO, and BEAMNO
-            setIndex( (uInt)scanno-1, (uInt)cycleno[scanno], ifno, ipol, beamno ) ;
+	    // CAS-5841: SCANNO should be consistent with ASDM scanNumber
+	    setIndex( (uInt)scanno, (uInt)cycleno[scanno], ifno, ipol, beamno ) ;
 
             // fill SPECTRA, FLAGTRA, TSYS
             setSpectrum( spectra.row(ipol), flagtra, tsys.row(ipol) ) ;

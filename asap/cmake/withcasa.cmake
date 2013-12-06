@@ -95,6 +95,19 @@ include( CASA )
 #
 set( CASACORE_PATHS "${casaroot}/${arch};${casaroot};/usr/local;/usr" )
 
+set( epochdelta 1385403204 )
+if ( EXISTS ${CMAKE_INSTALL_PREFIX}/${arch}/casa_sover.txt )
+    execute_process( COMMAND perl -e "while (<>) { chomp and print if (! m/^\#/ ) }" ${CMAKE_INSTALL_PREFIX}/${arch}/casa_sover.txt
+                     OUTPUT_VARIABLE __asap_soversion )
+elseif( EXISTS ${CMAKE_INSTALL_PREFIX}/casa_sover.txt )
+    execute_process( COMMAND perl -e "while (<>) { chomp and print if (! m/^#/ ) }" ${CMAKE_INSTALL_PREFIX}/casa_sover.txt
+                     OUTPUT_VARIABLE __asap_soversion )
+else( )
+    execute_process( COMMAND perl -e "$t=time( )-${epochdelta};$z=$t & 0xff; $y=($t>>8)&0xff; $x=($t>>16)&0xffff; print \"$x.$y.$z\""
+                     OUTPUT_VARIABLE __asap_soversion )
+endif( )
+set(asap_soversion ${__asap_soversion} CACHE STRING "version for shared objects")
+message( STATUS "shared object version number ${asap_soversion}" )
 
 #
 # Boost

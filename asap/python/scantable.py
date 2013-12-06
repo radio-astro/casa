@@ -1653,9 +1653,13 @@ class scantable(Scantable):
         if maskstring == "":
             maskstring = str(valid_ifs)[1:-1]
         ## split each selection "IF range[:CHAN range]"
-        sellist = maskstring.split(',')
+        # split maskstring by "<spaces>,<spaces>"
+        comma_sep = re.compile('\s*,\s*')
+        sellist = comma_sep.split(maskstring)
+        # separator by "<spaces>:<spaces>"
+        collon_sep = re.compile('\s*:\s*')
         for currselstr in sellist:
-            selset = currselstr.split(':')
+            selset = collon_sep.split(currselstr)
             # spw and mask string (may include ~, < or >)
             spwmasklist = self._parse_selection(selset[0], typestr='integer',
                                                 minval=min(valid_ifs),
@@ -1795,7 +1799,9 @@ class scantable(Scantable):
             minidx = min(idx)
             maxidx = max(idx)
             del idx
-        sellist = selexpr.split(',')
+        # split selexpr by "<spaces>,<spaces>"
+        comma_sep = re.compile('\s*,\s*')
+        sellist = comma_sep.split(selexpr)
         idxlist = []
         for currselstr in sellist:
             # single range (may include ~, < or >)
@@ -1828,7 +1834,9 @@ class scantable(Scantable):
             _parse_selection('<3;5~7;9',typestr='float',offset=0.5,minval=0)
             --> returns [[0.,2.5],[5.0,7.0],[9.,9.]]
         """
-        selgroups = selstr.split(';')
+        # split selstr by '<spaces>;<spaces>'
+        semi_sep = re.compile('\s*;\s*')
+        selgroups = semi_sep.split(selstr)
         sellists = []
         if typestr.lower().startswith('int'):
             formatfunc = int
@@ -1837,10 +1845,13 @@ class scantable(Scantable):
             formatfunc = float
         
         for currsel in  selgroups:
+            if currsel.strip() == '*' or len(currsel.strip()) == 0:
+                minsel = minval
+                maxsel = maxval
             if currsel.find('~') > 0:
                 # val0 <= x <= val1
                 minsel = formatfunc(currsel.split('~')[0].strip())
-                maxsel = formatfunc(currsel.split('~')[1].strip()) 
+                maxsel = formatfunc(currsel.split('~')[1].strip())
             elif currsel.strip().find('<=') > -1:
                 bound = currsel.split('<=')
                 try: # try "x <= val"

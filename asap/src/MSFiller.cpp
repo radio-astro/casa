@@ -1,4 +1,3 @@
-
 //
 // C++ Interface: MSFiller
 //
@@ -494,8 +493,8 @@ public:
   virtual void enterScanNo(const uInt /*recordNo*/, Int columnValue) {
     //printf("%u: ScanNo: %d\n", recordNo, columnValue);
     // put value
-    // scan number is 1-based in MS while 0-based in Scantable
-    *scanNoRF = (uInt)columnValue - 1 ;
+    // CAS-5841: SCANNO should be consistent with MS SCAN_NUMBER
+    *scanNoRF = (uInt)columnValue ;
   }
   virtual void leaveScanNo(const uInt /*recordNo*/, Int /*columnValue*/) {
     cycleNo = 0 ;

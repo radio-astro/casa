@@ -1728,7 +1728,7 @@ int Scantable::checkScanInfo(const std::vector<int>& scanlist) const
     // check each scan if other scan of the pair exist
     int nscan = scanlist.size();
     for (int i = 0; i < nscan; i++) {
-      Table subt = t( t.col("SCAN") == scanlist[i]+1 );
+      Table subt = t( t.col("SCAN") == scanlist[i] );
       if (subt.nrow()==0) {
         //cerr <<"Scan "<<scanlist[i]<<" cannot be found in the scantable."<<endl;
         LogIO os( LogOrigin( "Scantable", "checkScanInfo()", WHERE ) ) ;
@@ -1742,7 +1742,7 @@ int Scantable::checkScanInfo(const std::vector<int>& scanlist) const
       int laston1 = rec.asuInt("LASTON");
       if ( rec.asuInt("PROCSIZE")==2 ) {
         if ( i < nscan-1 ) {
-          Table subt2 = t( t.col("SCAN") == scanlist[i+1]+1 );
+	  Table subt2 = t( t.col("SCAN") == scanlist[i+1] );
           if ( subt2.nrow() == 0) {
             LogIO os( LogOrigin( "Scantable", "checkScanInfo()", WHERE ) ) ;
 
