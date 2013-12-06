@@ -308,13 +308,13 @@ class Setjy(basetask.StandardTaskTemplate):
 
         # loop over fields so that we can use Setjy for sources with different
         # standards
-	userintents = inputs.intent
+	#userintents = inputs.intent
         for field in utils.safe_split(inputs.field):
             inputs.field = field
 
 	    # Check that the field ids and intents match
-	    inputs.intent = ','.join([fintent for fintent in inputs.ms.get_fields(inputs.field)[0].intents \
-	       if fintent in userintents])
+	    #inputs.intent = ','.join([fintent for fintent in inputs.ms.get_fields(inputs.field)[0].intents \
+	       #if fintent in userintents])
 
             jobs = []
             for spw in spws:                
