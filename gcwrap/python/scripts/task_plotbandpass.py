@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.34 2013/10/23 14:29:49 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.37 2013/12/06 15:43:14 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.34 2013/10/23 14:29:49 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.37 2013/12/06 15:43:14 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -2339,11 +2339,11 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
           gain2 = {}
           if (ParType == 'Complex'):
 # #            gain2 = mytb.getcol('CPARAM')
-              for f in range(len(fields)):
+              for f in range(len(fields2)):
                   gain2[f] = mytb.getcell('CPARAM',f)
           else:
 # #            gain2 = mytb.getcol('FPARAM')
-              for f in range(len(fields)):
+              for f in range(len(fields2)):
                   if (tableFormat2 == 34):
                       gain2[f] = mytb.getcell('FPARAM',f)
                   else:
@@ -2833,8 +2833,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                       xfrequencies2.append(chanFreqGHz2[ispw][j])
 # #     # #                            print "appending %f to xfrequencies2" % (chanFreqGHz2[ispw][j])
 # #     # #                        else:
-# #     # #                            if (debug):  # The following crashes
-# #     # #                                print "********* flags2[0,%d,%d] = %d, showflagged=" % (j,i,flags2[0,j,i]), showflagged
+# #     # #                            if (debug):
+# #     # #                                print "********* flags2[%d][0][%d] = %d, showflagged=" % (i,j,flags2[i][0][j]), showflagged
                                   if (nPolarizations2 == 2):
                                       if (showflagged or (showflagged == False and flags2[i][1][j]==0)):
                                           gploty2.append(ggy2[i][j])
@@ -3037,7 +3037,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                               newylimits = [LARGE_POSITIVE, LARGE_NEGATIVE]
                     else: # (myap == 0)
                       if (overlayTimes == False or mytime==firstTimeMatch):
-#                        if ((overlaySpws == False and overlayBasebands==False) or spwctr == 0 or spwctr>len(spwsToPlot)):
+                        if ((overlaySpws == False and overlayBasebands==False) or spwctr == 0 or spwctr>len(spwsToPlot)):
                           if (overlayAntennas==False or xctr==firstUnflaggedAntennaToPlot
                               or xctr>antennasToPlot[-1]):  # 2012-05-24, to fix the case where all ants flagged on one timerange
                               xframe += 1
