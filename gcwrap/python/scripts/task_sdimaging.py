@@ -167,20 +167,20 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         # return a dictionary with keys 'center', 'width', 'height'
         imsize = self.imsize
         phasecenter = self.phasecenter
-        if len(self.phasecenter) == 0 or \
+        if self.phasecenter == "" or \
                len(self.imsize) == 0 or self.imsize[0] < 1:
             map_param = self._get_pointing_extent()
             # imsize
             if len(imsize) == 0 or imsize[0] < 1:
                 imsize = self._get_imsize(map_param['width'], map_param['height'], cellx, celly)
-                if len(self.phasecenter) > 0:
+                if self.phasecenter != "":
                     casalog.post("You defined phasecenter but not imsize. The image will cover as wide area as pointing in MS extends, but be centered at phasecenter. This could result in a strange image if your phasecenter is a part from the center of pointings", priority='warn')
                 if imsize[0] > 1024 or imsize[1] > 1024:
                     casalog.post("The calculated image pixel number is larger than 1024. It could take time to generate the image depending on your computer resource. Please wait...", priority='warn')
 
             # phasecenter
             # if empty, it should be determined here...
-            if len(self.phasecenter) == 0:
+            if self.phasecenter == "":
                 phasecenter = map_param['center']
 
         # imsize
@@ -425,7 +425,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         base_mref = dirinfo['MEASINFO']['Ref'] if dirinfo.has_key('MEASINFO') \
                     else 'J2000'
 
-        if len(self.phasecenter) > 0:
+        if type(self.phasecenter) == str and len(self.phasecenter) > 0:
             rf = self.phasecenter.split()[0]
             if rf != '' and rf != base_mref:
                 msg = "You are attempting to convert spatial coordinate frame. " +\
