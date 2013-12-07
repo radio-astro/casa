@@ -41,6 +41,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     CORRECTED_DATA) can be selected. It can also be used to create a normal
     MS, split-based on the given data selection parameters.
 
+    NOTE: when splitting the MS, any flagged data will be considered in
+          the output. This is similar to the 'keepflags=True' parameter
+          of split.
+
 </description>
 
 <input>

@@ -367,7 +367,7 @@
 
             <param type="string" name="name" subparam="true">
                 <description>Name of this summary report (key in summary dictionary)</description>
-                <value>summary</value>
+                <value>Summary</value>
             </param>
 
             <!-- ACTION parameters -->
@@ -605,7 +605,7 @@
                         <default param="spwchan"><value type="bool">False</value></default>
                         <default param="spwcorr"><value type="bool">False</value></default>
                         <default param="basecnt"><value type="bool">False</value></default>  
-                        <default param="name"><value type="string">summary</value></default>
+                        <default param="name"><value type="string">Summary</value></default>
                     </equals>
                 </when>
 
@@ -1282,7 +1282,7 @@
                        multiple times in list mode. When calling the summary mode as a 
                        command in a list, one can give different names to each one of 
                        them so that they can be easily pulled out of the summary's dictionary.
-                    default: 'summary'
+                    default: 'Summary'
 
                     In summary mode, the task returns a dictionary of flagging statistics.
 	

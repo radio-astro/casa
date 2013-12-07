@@ -75,6 +75,7 @@ class plotms_test1(test_base):
         
   
         
+            
     def test001(self):
         '''Plotms 1: Write a jpg file using the plotms task'''
         self.plotfile_jpg = self.outputDir + "testPlot001.jpg"
@@ -194,6 +195,25 @@ class plotms_test1(test_base):
         self.assertTrue(os.path.exists(self.plotfile2_jpg), 'Plot2 was not created')
         print 'Plot2 file size is ', os.path.getsize(self.plotfile2_jpg)
         self._checkPlotFile(66000, self.plotfile2_jpg)    
+
+    def test006(self):
+        '''Plotms 6: Check that setting an invalid selection returns false and allows a subsequenty plotms command in casapy'''
+        self.plotfile_jpg = self.outputDir + "testPlot006.jpg"
+        print 'Writing to ', self.plotfile_jpg
+        if os.path.exists( self.plotfile_jpg):
+            os.remove( self.plotfile_jpg)
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        '''Should not succeed because this is an invalid spw'''
+        self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
+                          overwrite=True, showgui=False, spw='500')
+        self.assertFalse(self.res)
+
+        '''Now we are setting a valid spw so it should work'''
+        self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
+                          overwrite=True, showgui=False)
+        self.assertTrue(self.res)
+        self._checkPlotFile(60000)
 
 
 def suite():
