@@ -123,7 +123,6 @@ Images/SubImage.h
 Images/SubImage.tcc
 Images/TempImage.h
 Images/TempImage.tcc
-Images/WCBox.h
 DESTINATION include/casacore/images/Images
 )
 
