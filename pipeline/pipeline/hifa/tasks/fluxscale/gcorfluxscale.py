@@ -6,11 +6,11 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 
-from .. import importdata
-from .. import gaincal
+from pipeline.hif.tasks import importdata
+from pipeline.hif.tasks import gaincal
 from ... import heuristics
-from ..common import commonfluxresults
-from . import fluxscale
+from pipeline.hif.tasks.common import commonfluxresults
+from pipeline.hif.tasks.fluxscale import fluxscale
 from pipeline.hif.tasks.setmodel import setjy
 
 LOG = infrastructure.get_logger(__name__)

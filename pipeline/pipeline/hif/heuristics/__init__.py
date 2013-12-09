@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from . import fluxscale
+#from . import fluxscale
 from . import findrefant
 
 from .bandpass import MedianSNR

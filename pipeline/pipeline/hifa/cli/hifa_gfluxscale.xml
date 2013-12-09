@@ -4,7 +4,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="hif_gfluxscale" category="pipeline">
+<task type="function" name="hifa_gfluxscale" category="pipeline">
 <shortdescription>Derive flux density scales from standard calibrators</shortdescription>
 <description>
 Derive the flux density scale from standard calibrators.
@@ -297,7 +297,7 @@ Examples
 1. Compute flux flux values for the phase calibrator using model data from
    the amplitude calibrator.
 
-   hif_gfluxscale ()
+   hifa_gfluxscale ()
 
 </example>
 

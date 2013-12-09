@@ -88,7 +88,7 @@ def get_task_description(result_obj):
     if task_cls is hifa.tasks.FluxcalFlag:
         return 'Flag solar system flux calibrators'
 
-    if task_cls is hif.tasks.GcorFluxscale:
+    if task_cls is hifa.tasks.GcorFluxscale:
         return 'Phased-up fluxscale'
 
     if task_cls is hif.tasks.GTypeGaincal:
@@ -2898,7 +2898,7 @@ renderer_map = {
         hifa.tasks.FluxcalFlag    : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_fluxcalflag.html'),
         hif.tasks.Fluxscale      : T2_4MDetailsDefaultRenderer('t2-4m_details-fluxscale.html'),
         hif.tasks.Gaincal        : T2_4MDetailsGaincalRenderer(),
-        hif.tasks.GcorFluxscale  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_gfluxscale.html'),
+        hifa.tasks.GcorFluxscale  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_gfluxscale.html'),
         hif.tasks.ImportData     : T2_4MDetailsImportDataRenderer(),
         hifa.tasks.ALMAImportData   : T2_4MDetailsImportDataRenderer(),
         hif.tasks.Lowgainflag    : T2_4MDetailsLowgainFlagRenderer(),

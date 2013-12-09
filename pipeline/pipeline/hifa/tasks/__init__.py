@@ -5,3 +5,4 @@ from .flagging import FlagDeterALMA
 from .flagging import ALMAAgentFlagger
 from .gaincal import TimeGaincal
 from .fluxcalflag import FluxcalFlag
+from .fluxscale import GcorFluxscale
