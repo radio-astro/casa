@@ -1028,8 +1028,7 @@ class test_SeparateSPWs(test_base):
         self.assertTrue(ret[0],ret[1])
 
     def test_CAS_5403_1(self):
-        '''mstransform: separate spw 0 into 4 spws and check that DDI subtable is reindexed properly
-                        and then check that DDI subtable is reindexed properly'''
+        '''mstransform: separate spw 0 into 4 spws and check that DDI subtable is reindexed properly'''
         self.outputms = "test_5403_1.ms"
         mstransform(vis=self.vis, outputvis=self.outputms,regridms=True,spw='0',nspw=4)
         self.assertTrue(os.path.exists(self.outputms))
@@ -1358,14 +1357,8 @@ class test_WeightSpectrum(test_base):
         mytb.close()
         nchan = data.size
         check_eq(nchan, 12)
-<<<<<<< .working
         check_eq(data[0][0][0].real, 0.0893, 0.0001)
         check_eq(data[0][nchan-1][0].imag, -0.2390, 0.0001)
-
-=======
-        check_eq(data[0][0][0].real, 0.0893, 0.0001)
-        check_eq(data[0][nchan-1][0].imag, -0.2390, 0.0001)
->>>>>>> .merge-right.r27547
 
 class test_channelAverageByDefault(test_base_compare):
 
@@ -1535,7 +1528,6 @@ class test_timeaverage_limits(test_base):
         self.setUp_CAS_4850()
         self.outvis = 'test_timeaverage_limits.ms'
 
-<<<<<<< .working
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
         os.system('rm -rf '+ self.outvis)
@@ -1552,25 +1544,6 @@ class test_timeaverage_limits(test_base):
         check_eq(interval[0] >= 40.0,True)
 
 
-
-=======
-    def tearDown(self):
-        os.system('rm -rf '+ self.vis)
-        os.system('rm -rf '+ self.outvis)
-
-    def test_CAS_4850(self):
-
-        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn='DATA',timeaverage=True,timebin='40s')
-
-        mytb = tbtool()
-        mytb.open(self.outvis)
-        interval = mytb.getcol('INTERVAL')
-        print interval[0]
-        mytb.close()
-        check_eq(interval[0] >= 40.0,True)
-
-
->>>>>>> .merge-right.r27547
 class test_multiple_transformations(test_base_compare):
 
     def setUp(self):
