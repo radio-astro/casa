@@ -1,15 +1,3 @@
-
-       New Development: Yes/No
-            JIRA Issue: No/Yes List JIRA ticket.
-        Ready for Test: Yes/No
-     Interface Changes: Yes/No
-What Interface Changed: Please list interface changes
-         Test Programs: List test programs
-  Put in Release Notes: Yes/No
-             Module(s): Module Names change impacts.
-           Description: Describe your changes here...
-
-	
 from taskinit import casalog
 
 import asap as sd
@@ -134,4 +122,3 @@ class sdsave_worker(sdutil.sdtask_template):
         if hasattr(self,'restore') and self.restore:
             casalog.post( "Restoring MOLECULE_ID column in %s "%self.infile )
             self.original_scan._setmolidcol_list(self.molids)
-            
