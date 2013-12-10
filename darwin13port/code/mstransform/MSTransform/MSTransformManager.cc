@@ -2341,7 +2341,7 @@ void MSTransformManager::reindexSysCalSubTable()
     }
     else
     {
-    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+    	logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformManager", __FUNCTION__)
     			<< "No SYSCAL sub-table found " << LogIO::POST;
     }
 
@@ -2366,8 +2366,8 @@ void MSTransformManager::reindexFreqOffsetSubTable()
     }
     else
     {
-    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-    			<< "No FREQ_OFF sub-table found " << LogIO::POST;
+    	logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformManager", __FUNCTION__)
+    			<< "No FREQ_OFFSET sub-table found " << LogIO::POST;
     }
 
     return;
