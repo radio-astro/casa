@@ -4463,9 +4463,11 @@ class scantable(Scantable):
             sel = self.get_row_selector(i)
             self.set_selection(basesel+sel)
             nans = numpy.isnan(self._getspectrum(0))
-        if numpy.any(nans):
-            bnans = [ bool(v) for v in nans]
-            self.flag(bnans)
+            if numpy.any(nans):
+                bnans = [ bool(v) for v in nans]
+                self.flag(bnans)
+        
+        self.set_selection(basesel)
 
     def get_row_selector(self, rowno):
         return selector(rows=[rowno])
