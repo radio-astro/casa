@@ -279,7 +279,7 @@ class Clean(cleanbase.CleanBase):
 	    LOG.info('    Residual max %s', residual_max)
 	    LOG.info('    Residual min %s', residual_min)
 	    if not bestrms:
-	        LOG.info('Rms estimate from dirty image is %s' * bestrms)
+	        LOG.info('Rms estimate from dirty image is %s' % bestrms)
 	        bestrms = non_cleaned_rms
 
 	    iterating = True; iter = 1
