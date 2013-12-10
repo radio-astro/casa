@@ -10,6 +10,8 @@ from ..clean import Clean
 from ..clean.resultobjects import CleanResult
 from .resultobjects import CleanListResult
 
+from pipeline.hif.heuristics import makecleanlist
+
 LOG = infrastructure.get_logger(__name__)
 
 
@@ -154,6 +156,13 @@ class CleanList(basetask.StandardTaskTemplate):
             full_image_target = dict(image_target)
             full_image_target['output_dir'] = inputs.output_dir
             full_image_target['vis'] = inputs.vis
+
+	    # set the imager mode here (temporarily ...)
+            clheuristics = makecleanlist.MakeCleanListHeuristics(
+                context=inputs.context, vislist=full_image_target['vis'], \
+                spw=full_image_target['spw'])
+            full_image_target['imagermode'] = clheuristics.imagermode ( \
+	        full_image_target['intent'], full_image_target['field'])
 
 	    # set the weighting values.
             full_image_target['weighting'] = inputs.weighting
