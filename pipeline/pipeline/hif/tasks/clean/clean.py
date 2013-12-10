@@ -116,6 +116,7 @@ class Clean(cleanbase.CleanBase):
 	    bestrms = None
             if inputs.imagermode == 'mosaic':
                 self._empty_pointing_table()
+	        LOG.info('Temporarily remove pointing table')
 	    else:
                 # Get an empirical noise estimate by generating Q image.
 		#    This heuristics is ALMA specific
@@ -154,6 +155,7 @@ class Clean(cleanbase.CleanBase):
             if inputs.imagermode == 'mosaic':
                 # restore POINTING table to input state
                 self._restore_pointing_table()
+	        LOG.info('Restored pointing table')
 
 	return result
 
