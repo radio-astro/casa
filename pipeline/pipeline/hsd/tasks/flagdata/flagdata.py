@@ -148,6 +148,7 @@ class SDFlagData(common.SingleDishTaskTemplate):
         st_names = context.observing_run.st_names
         file_index = [st_names.index(infile) for infile in infiles]
         flag_rule = inputs.FlagRuleDictionary
+        iteration = inputs.iteration
 
         # loop over reduction group
         files = set()
@@ -167,7 +168,7 @@ class SDFlagData(common.SingleDishTaskTemplate):
             spwid = first_member.spw
             #LOG.debug('spwid = %s'%(spwid))
             pols = first_member.pols
-            iteration = first_member.iteration[0]
+            ###iteration = first_member.iteration[0]
             if pollist is not None:
                 pols = list(set(pollist) & set(pols))
 

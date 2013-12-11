@@ -142,7 +142,9 @@ class SDFlagDataWorker(object):
                 LOG.info('Apply flags End: Elapse time = %.1f sec' % (t1 - t0))
                 
                 # generate summary plot
-                FigFileRoot = ("FlagStat_%s_spw%d_pol%d_it%d" % (st.antenna.name, spwid, pol, iteration))
+                #FigFileRoot = ("FlagStat_%s_spw%d_pol%d_it%d" % (st.antenna.name, spwid, pol, iteration))
+                st_prefix = st.name.rstrip('/').split('/')[-1].rstrip('\.asap').replace('\.', '_')
+                FigFileRoot = ("FlagStat_%s_spw%d_pol%d" % (st_prefix, spwid, pol))
                 time_gap = datatable.get_timegap(idx, spwid, pol)
                 # time_gap[0]: PosGap, time_gap[1]: TimeGap
                 t0 = time.time()
@@ -650,6 +652,16 @@ class SDFlagDataWorker(object):
             Filename = FigFileDir+FigFileRoot+'.html'
             relpath = os.path.basename(FigFileDir.rstrip("/")) ### stage#
             if os.access(Filename, os.F_OK): os.remove(Filename)
+            # Assuming single scantable, antenna, spw, and pol
+            ID = ids[0]
+            ant_id = DataTable.getcell('ANTENNA',ID)
+            st_row = DataTable.getcell('ROW',ID)
+            st_name = DataTable.getkeyword('FILENAMES')[ant_id]
+            st = self.context.observing_run[ant_id]
+            ant_name = st.antenna.name
+            pol = DataTable.getcell('POL',ID)
+            spw = DataTable.getcell('IF',ID)
+            
             Out = open(Filename, 'w')
             #print >> Out, '<html>\n<head>\n<style>'
             #print >> Out, '.ttl{font-size:20px;font-weight:bold;}'
@@ -658,7 +670,16 @@ class SDFlagDataWorker(object):
             #print >> Out, '.stc{font-size:16px;font-weight:normal;}'
             #print >> Out, '</style>\n</head>\n<body>'
             print >> Out, '<body>'
-            print >> Out, '<p class="ttl">Flagging Status</p>'
+            print >> Out, '<p class="ttl">Data Summary</p>'
+            # A table of data summary
+            print >> Out, '<table border="0"  cellpadding="3">'
+            print >> Out, '<tr align="left" class="stp"><th>%s</th><th>:</th><th>%s</th></tr>' % ('Name', st_name)
+            print >> Out, '<tr align="left" class="stp"><th>%s</th><th>:</th><th>%s</th></tr>' % ('Antenna', ant_name)
+            print >> Out, '<tr align="left" class="stp"><th>%s</th><th>:</th><th>%s</th></tr>' % ('Spw ID', spw)
+            print >> Out, '<tr align="left" class="stp"><th>%s</th><th>:</th><th>%s</th></tr>' % ('Pol', pol)
+            print >> Out, '</table>\n'
+            
+            print >> Out, '<HR><p class="ttl">Flagging Status</p>'
             # A table of flag statistics summary
             print >> Out, '<table border="1">'
             print >> Out, '<tr align="center" class="stt"><th>&nbsp</th><th>isActive?</th><th>SigmaThreshold<th>Flagged spectra</th><th>Flagged ratio(%)</th></tr>'
