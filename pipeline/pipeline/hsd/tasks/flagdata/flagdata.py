@@ -9,6 +9,7 @@ from pipeline.infrastructure import casa_tasks
 from .. import common
 
 from .worker import SDFlagDataWorker
+from .flagsummary import SDFlagSummary
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -199,7 +200,10 @@ class SDFlagData(common.SingleDishTaskTemplate):
             LOG.info("*"*60)
 
             worker = SDFlagDataWorker(context, datatable, iteration, spwid, nchan, pols, list(_file_index), flag_rule)
-            result = self._executor.execute(worker, merge=False)
+            thresholds = self._executor.execute(worker, merge=False)
+            # Summary
+            renderer = SDFlagSummary(context, datatable, spwid, pols, list(_file_index), thresholds, flag_rule)
+            result = self._executor.execute(renderer, merge=False)
             flagResult += result
             
             # Validation
