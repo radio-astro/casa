@@ -32,17 +32,17 @@ public:
   // @param[in] x pointer to horizontal data.
   // @param[in] y pointer to vertical data.
   // @param[in] n number of data.
-  void setData(T *x, U *y, unsigned int n);
+  virtual void setData(T *x, U *y, unsigned int n);
 
   // Set horizontal data (x).
   // @param[in] x pointer to horizontal data.
   // @param[in] n number of data.
-  void setX(T *x, unsigned int n);
+  virtual void setX(T *x, unsigned int n);
 
   // Set vertical data (y).
   // @param[in] y pointer to vertical data.
   // @param[in] n number of data.
-  void setY(U *y, unsigned int n);
+  virtual void setY(U *y, unsigned int n);
 
   // Reset object.
   void reset();
