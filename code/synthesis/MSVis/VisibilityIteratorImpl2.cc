@@ -1404,8 +1404,6 @@ VisibilityIteratorImpl2::originChunks (Bool forceRewind)
     }
 
     configureNewChunk ();
-
-    setTileCache ();
 }
 
 void
@@ -1997,6 +1995,8 @@ VisibilityIteratorImpl2::configureNewChunk ()
     if (msIter_p->newField () || msIterAtOrigin_p) {
         msd_p.setFieldCenter (msIter_p->phaseCenter ());
     }
+
+    setTileCache();
 }
 
 const MSDerivedValues &
@@ -2025,24 +2025,24 @@ VisibilityIteratorImpl2::setTileCache ()
 
     uInt startrow = msIter_p->table ().rowNumbers ()(0); // Get the first row number for this DDID.
 
-    if (tileCacheIsSet_p.nelements () != 8) {
+    vector<String> columns;
+    columns.push_back (MS::columnName (MS::CORRECTED_DATA));  // complex
+    columns.push_back (MS::columnName (MS::MODEL_DATA));      // complex
+    columns.push_back (MS::columnName (MS::FLAG));            // boolean
+    columns.push_back (MS::columnName (MS::WEIGHT_SPECTRUM)); // float
+    columns.push_back (MS::columnName (MS::WEIGHT));          // float
+    columns.push_back (MS::columnName (MS::SIGMA));           // float
+    columns.push_back (MS::columnName (MS::UVW));             // double
+
+    if (tileCacheIsSet_p.nelements () != columns.size()) {
+
         tileCacheIsSet_p.resize (8);
         tileCacheIsSet_p.set (False);
     }
 
-    Vector<String> columns (8);
-    columns (0) = MS::columnName (MS::DATA);            // complex
-    columns (1) = MS::columnName (MS::CORRECTED_DATA);  // complex
-    columns (2) = MS::columnName (MS::MODEL_DATA);      // complex
-    columns (3) = MS::columnName (MS::FLAG);            // boolean
-    columns (4) = MS::columnName (MS::WEIGHT_SPECTRUM); // float
-    columns (5) = MS::columnName (MS::WEIGHT);          // float
-    columns (6) = MS::columnName (MS::SIGMA);           // float
-    columns (7) = MS::columnName (MS::UVW);             // double
+    for (uInt k = 0; k < columns.size (); ++k) {
 
-    for (uInt k = 0; k < columns.nelements (); ++k) {
-
-        if (! cds.isDefined (columns (k)) || ! usesTiledDataManager (columns[k], theMs)){
+        if (! cds.isDefined (columns [k]) || ! usesTiledDataManager (columns[k], theMs)){
             continue;
         }
 
@@ -2061,6 +2061,16 @@ VisibilityIteratorImpl2::setTileCache ()
                 for (uInt kk = 0; kk < refTables.nelements (); ++kk) {
 
                     MeasurementSet elms (refTables[kk]);
+
+                    // Skip existing but empty WEIGHT_SPECTRUM column
+
+                    if (columns [k] == MS::columnName (MS::WEIGHT_SPECTRUM)){
+                        TableColumn tc (elms, columns [k]);
+                        if (! tc.hasContent()){
+                            continue;
+                        }
+                    }
+
                     ROTiledStManAccessor tacc (elms, columns[k], True);
                     tacc.setCacheSize (0, 1);
                     tileCacheIsSet_p[k] = True;
