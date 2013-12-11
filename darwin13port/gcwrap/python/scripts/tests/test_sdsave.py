@@ -1461,9 +1461,50 @@ class sdsave_scan_number(unittest.TestCase,sdsave_unittest_base):
         self.assertEqual(len(scan_number_org), len(scan_number))
         self.assertTrue(all(scan_number_org == scan_number))
 
+###
+# Test for splitant
+###
+class sdsave_test_splitant(unittest.TestCase,sdsave_unittest_base):
+    """
+    Read MS data, write various types of format.
+    """
+    # Input and output names
+    infile='OrionS_rawACSmod_cal2123.ms'
+    prefix=sdsave_unittest_base.taskname+'Test2'
+    outfile=prefix+'.asap'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.infile)):
+            shutil.copytree(self.datapath+self.infile, self.infile)
+        if (not os.path.exists(self.basefile)):
+            shutil.copytree(self.datapath+self.basefile, self.basefile)
+
+        default(sdsave)
+        self._setAttributes()
+        self.scanno=1
+
+    def tearDown(self):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+        if (os.path.exists(self.basefile)):
+            shutil.rmtree(self.basefile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def testSplitant(self):
+        """Test Splitant: test for splitant"""
+        self.res=sdsave(infile=self.infile,splitant=True,outfile=self.outfile,outform='ASAP')
+        outsplitfile = self.prefix+'_GBT.asap'
+        if (os.path.exists(outsplitfile)):
+            s1 = sd.scantable(outsplitfile, False)
+            s2 = sd.scantable(self.infile, False)
+            self.assertEqual(s1.nrow(), s2.nrow())
+            del s1, s2
+        
+
 def suite():
     return [sdsave_test0,sdsave_test1,sdsave_test2,
             sdsave_test3,sdsave_test4,sdsave_test5,
             sdsave_test6,sdsave_test7,sdsave_storageTest,
             sdsave_freq_labeling,sdsave_flagging,
-            sdsave_scan_number]
+            sdsave_scan_number, sdsave_test_splitant]
