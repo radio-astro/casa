@@ -91,7 +91,7 @@ ImageFitter::ImageFitter(
 	_excludePixelRange(excludepix), _estimates(), _fixed(0),
 	_fitDone(False), _noBeam(False),
 	_doZeroLevel(False), _zeroLevelIsFixed(False),
-	_fitConverged(Vector<Bool>(0)), _peakIntensities(),
+	_fitConverged(Vector<Bool>(0)), _peakIntensities(), _rms(0),
 	_writeControl(writeControl), _zeroLevelOffsetEstimate(0),
 	_zeroLevelOffsetSolution(0), _zeroLevelOffsetError(0),
 	_stokesPixNumber(-1), _chanPixNumber(-1) {
@@ -198,7 +198,7 @@ ComponentList ImageFitter::fit() {
 				);
 				zeroLevelOffsetEstimate = zeroLevelOffsetSolution;
 			}
-			chiSquared = fitter.chiSquared();
+			//_chiSquared = fitter.chiSquared();
 			fitter.residual(curResidPixels, curModelPixels, pixels);
 			// coordinates arean't important, just need the stats for a masked lattice.
 			TempImage<Float> residPlane(
@@ -328,6 +328,11 @@ void ImageFitter::getZeroLevelSolution(vector<Double>& solution, vector<Double>&
 	}
 	solution = _zeroLevelOffsetSolution;
 	error = _zeroLevelOffsetError;
+}
+
+void ImageFitter::setRMS(Double rms) {
+	ThrowIf(rms <= 0, "rms must be positive.");
+	_rms = rms;
 }
 
 void ImageFitter::_setIncludeExclude(Fit2D& fitter) const {
@@ -626,7 +631,7 @@ void ImageFitter::_setFluxes() {
 	_majorAxes.resize(ncomps);
 	_minorAxes.resize(ncomps);
 	Vector<Quantity> fluxQuant;
-	Double rmsPeak = Vector<Double>(_residStats.asArrayDouble("rms"))[0];
+	Double rmsPeak = ! near(_rms, 0.0) ? _rms : Vector<Double>(_residStats.asArrayDouble("rms"))[0];
 	Quantity rmsPeakError(rmsPeak, _bUnit);
 	Quantity resArea = _getImage()->coordinates().directionCoordinate().getPixelArea();
 	if (
@@ -743,7 +748,7 @@ void ImageFitter::_setSizes() {
 	_majorAxisErrors.resize(ncomps);
 	_minorAxisErrors.resize(ncomps);
 	_positionAngleErrors.resize(ncomps);
-	Double rmsPeak = Vector<Double>(_residStats.asArrayDouble("rms"))[0];
+	Double rmsPeak = ! near(_rms, 0.0) ? _rms : Vector<Double>(_residStats.asArrayDouble("rms"))[0];
 	Quantity rmsPeakError(rmsPeak, _bUnit);
 
 	Quantity xBeam;
@@ -1181,11 +1186,10 @@ String ImageFitter::_spectrumToString(uInt compNumber) const {
 SubImage<Float> ImageFitter::_createImageTemplate() const {
 	std::auto_ptr<ImageInterface<Float> > imageClone(_getImage()->cloneII());
 
-	SubImage<Float> x = SubImageFactory<Float>::createSubImage(
+	return SubImageFactory<Float>::createSubImage(
 		*imageClone, *_getRegion(), _getMask(), 0,
 		False, AxesSpecifier(), _getStretch()
 	);
-	return x;
 }
 
 void ImageFitter::_writeNewEstimatesFile() const {
