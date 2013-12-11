@@ -1119,7 +1119,6 @@ protected:
 	MSMainEnums::PredefinedColumns mainColumn_p;
 
 	// Frequency transformation members
-	Bool refFrameTransformation_p;
 	uInt chansPerOutputSpw_p;
 	uInt tailOfChansforLastSpw_p;
 	uInt interpolationMethod_p;
