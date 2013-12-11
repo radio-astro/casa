@@ -63,6 +63,8 @@
 #include <components/ComponentModels/SkyComponent.h>
 #include <measures/Measures/MeasureHolder.h>
 
+#include <stdcasa/cboost_foreach.h>
+
 using namespace std;
 
 namespace casac {
@@ -697,8 +699,8 @@ std::string componentlist::getlabel(const int which)
   std::string rstat("");
   try{
     if(itsList && itsBin){
-      const Int c = checkIndex(which, "getlabel");
-      rstat = itsList->component(c).label().c_str();
+      _checkIndex(which);
+      rstat = itsList->component(which).label().c_str();
     } else {
       *itsLog << LogIO::WARN
               << "componentlist is not opened, please open first" << LogIO::POST;
@@ -735,13 +737,13 @@ bool componentlist::setlabel(const int which, const std::string& value,
 
 std::vector<double> componentlist::getfluxvalue(const int which)
 {
-  itsLog->origin(LogOrigin("componentlist", "getfluxvalue"));
-
+  itsLog->origin(LogOrigin("componentlist", __FUNCTION__));
   std::vector<double> rstat(0);
   try{
     if(itsList && itsBin){
-      Int i = checkIndex(which, "getfluxvalue");
-      Vector<DComplex> fluxes = itsList->component(i).flux().value();
+      _checkIndex(which);
+      Vector<DComplex> fluxes = itsList->component(which).flux().value();
+
       Vector<Double> realfluxes(fluxes.nelements());
       for (uInt k=0; k < fluxes.nelements(); ++k){
         realfluxes[k]=real(fluxes[k]);
@@ -767,8 +769,8 @@ std::string componentlist::getfluxunit(const int which)
   std::string rstat("");
   try{
     if(itsList && itsBin){
-      Int i = checkIndex(which, "getfluxunit");
-      rstat=itsList->component(i).flux().unit().getName();
+      _checkIndex(which);
+      rstat=itsList->component(which).flux().unit().getName();
     }
     else{
       *itsLog << LogIO::WARN
@@ -803,93 +805,125 @@ std::string componentlist::getfluxpol(const int which)
   return rstat;
 }
 
-std::vector<double> componentlist::getfluxerror(const int which)
-{
-  itsLog->origin(LogOrigin("componentlist", "getfluxerror"));
-
-  // TODO : IMPLEMENT ME HERE !
-  std::vector<double> rstat(0);
-  try{
-    if(itsList && itsBin){
-      *itsLog << LogIO::WARN << "getfluxerror not implemented yet" << LogIO::POST;
-    } else {
-      *itsLog << LogIO::WARN
-              << "componentlist is not opened, please open first" << LogIO::POST;
-    }
-  }
-  catch (AipsError x){
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-    RETHROW(x)
-  }
-  return rstat;
+std::vector<double> componentlist::getfluxerror(const int which) {
+	itsLog->origin(LogOrigin("componentlist", __FUNCTION__));
+	try{
+		ThrowIf(
+			! itsList || ! itsBin,
+			"componentlist is not opened, please open first"
+		);
+		_checkIndex(which);
+		Vector<DComplex> fluxes = itsList->component(which).flux().errors();
+		vector<Double> realfluxes;
+		foreach_(DComplex flux, fluxes) {
+	        realfluxes.push_back(real(flux));
+		}
+		return realfluxes;
+	}
+	catch (const AipsError& x){
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	    RETHROW(x)
+	}
+	return vector<double>();
 }
 
-bool componentlist::setflux(const int which, const ::casac::variant& varvalue,
-                            const std::string& unit,
-                            const std::string& polarization,
-                            const ::casac::variant& error, const bool log)
-{
-  itsLog->origin(LogOrigin("componentlist", "setflux"));
+bool componentlist::setflux(
+	const int which, const ::casac::variant& varvalue,
+	const std::string& unit,
+	const std::string& polarization,
+	const ::casac::variant& error, const bool log
+) {
+	itsLog->origin(LogOrigin("componentlist", "setflux"));
 
-  bool rstat(false);
-  try{
-    if(itsList && itsBin){
-      Flux<Double> newFlux;
-      const ComponentType::Polarisation pol = (ComponentType::Polarisation)(checkFluxPol(polarization));
-      newFlux.setPol(pol);
+	bool rstat(false);
+	try{
+		ThrowIf(
+			! itsList || ! itsBin,
+			"componentlist is not opened, please open first"
+		);
+		Flux<Double> newFlux;
+		const ComponentType::Polarisation pol = (ComponentType::Polarisation)(checkFluxPol(polarization));
+		newFlux.setPol(pol);
 
-      const Unit fluxUnit(unit);
-      if (fluxUnit != Unit("Jy")) {
-        *itsLog << "The flux units must have the same dimensions as the Jansky"
-                << endl << "Flux not changed on any components"
-                << LogIO::EXCEPTION;
-      }
-      newFlux.setUnit(fluxUnit);
-      //Deal with the value...complex for nothing for now
-      Vector<Complex> value;
-      if( (varvalue.type()== ::casac::variant::INTVEC) || 
-          (varvalue.type()==::casac::variant::INT) ||
-          (varvalue.type()== ::casac::variant::DOUBLEVEC) ||
-          (varvalue.type()==::casac::variant::DOUBLE) || 
-          (varvalue.type()== ::casac::variant::COMPLEXVEC) ||
-          (varvalue.type()==::casac::variant::COMPLEX)){
-        Vector<DComplex> tmpintvec(varvalue.toComplexVec());
-        value.resize(tmpintvec.size());
-        convertArray(value, tmpintvec);
-      }
-      else{
-        throw(AipsError("Could not understand the type of flux value variable"));
-	  
-      }
+		const Unit fluxUnit(unit);
+		if (fluxUnit != Unit("Jy")) {
+			*itsLog << "The flux units must have the same dimensions as the Jansky"
+				<< endl << "Flux not changed on any components"
+				<< LogIO::EXCEPTION;
+		}
+		newFlux.setUnit(fluxUnit);
+		//Deal with the value...complex for nothing for now
+		Vector<Complex> value;
+		if( (varvalue.type()== ::casac::variant::INTVEC) ||
+				(varvalue.type()==::casac::variant::INT) ||
+				(varvalue.type()== ::casac::variant::DOUBLEVEC) ||
+				(varvalue.type()==::casac::variant::DOUBLE) ||
+				(varvalue.type()== ::casac::variant::COMPLEXVEC) ||
+				(varvalue.type()==::casac::variant::COMPLEX)
+		) {
+			Vector<DComplex> tmpintvec(varvalue.toComplexVec());
+			value.resize(tmpintvec.size());
+			convertArray(value, tmpintvec);
+		}
+		else{
+			throw(AipsError("Could not understand the type of flux value variable"));
+		}
+		variant::TYPE errorType = error.type();
+		Vector<DComplex> errs;
+		if(
+			(errorType == ::casac::variant::INTVEC) ||
+			(errorType == ::casac::variant::INT) ||
+			(errorType == ::casac::variant::DOUBLEVEC) ||
+			(errorType ==::casac::variant::DOUBLE) ||
+			(errorType == ::casac::variant::COMPLEXVEC) ||
+			(errorType ==::casac::variant::COMPLEX)
+		) {
+			Vector<DComplex> tmpError(error.toComplexVec());
+			ThrowIf(
+				tmpError.size() != value.size(),
+				"Error array must have same length as value array"
+			);
+			errs.resize(tmpError.size());
+			convertArray(errs, tmpError);
+		}
 
-      if ((value.size() == 1) &&  (pol == ComponentType::STOKES)) {
-        newFlux.setValue(real(value[0]));
-      } else if (value.size() == 4) {
-        Vector<Double> tmpC(4);
-        for(int i=0;i<4;i++){
-          tmpC[i] = real(value[i]);
-        }
-        newFlux.setValue(tmpC);
-      } else {
-        *itsLog << "The flux must have one or four elements," << endl
-                << "one element can only be used if the polarization is 'Stokes'."
-                << endl << "Flux not changed on any components"
-                << LogIO::EXCEPTION;
-      }
-      const Vector<Int> intVec = checkIndices(which, "setflux",
-                                              "Flux not changed on any components");
-      itsList->setFlux(intVec, newFlux);
-      rstat = true;
-    } else {
-      *itsLog << LogIO::WARN
-              << "componentlist is not opened, please open first" << LogIO::POST;
-    }
-  }
-  catch (AipsError x){
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-    RETHROW(x)
-  }
-  return rstat;
+		if ((value.size() == 1) &&  (pol == ComponentType::STOKES)) {
+			newFlux.setValue(real(value[0]));
+			if (errs.size() == 1) {
+				newFlux.setErrors(errs);
+			}
+		}
+		else if (value.size() == 4) {
+			Vector<Double> tmpC(4);
+			Vector<Double> tmpE(errs.size());
+			for(int i=0;i<4;i++) {
+				tmpC[i] = real(value[i]);
+				if (tmpE.size() == 4) {
+					tmpE[i] = real(errs[i]);
+				}
+			}
+			newFlux.setValue(tmpC);
+			if (tmpE.size() == 4) {
+				newFlux.setErrors(tmpE[0], tmpE[1], tmpE[2], tmpE[3]);
+			}
+		}
+		else {
+			*itsLog << "The flux must have one or four elements," << endl
+				<< "one element can only be used if the polarization is 'Stokes'."
+				<< endl << "Flux not changed on any components"
+				<< LogIO::EXCEPTION;
+		}
+		const Vector<Int> intVec = checkIndices(which, "setflux",
+				"Flux not changed on any components");
+		itsList->setFlux(intVec, newFlux);
+		rstat = true;
+
+	}
+	catch (AipsError x){
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x)
+	}
+	return rstat;
 }
 
 bool componentlist::convertfluxunit(const int which, const std::string& unit)
@@ -954,8 +988,8 @@ bool componentlist::convertfluxpol(const int which, const std::string& polarizat
   ::casac::record *retval = 0;
   try{
     if(itsList && itsBin){
-      const Int c = checkIndex(which, "getrefdir");
-      casa::MDirection refdir = itsList->component(c).shape().refDirection();
+      _checkIndex(which);
+      casa::MDirection refdir = itsList->component(which).shape().refDirection();
       ostringstream oss;
       refdir.print(oss);
       *itsLog << LogIO::NORMAL3 << String(oss) << LogIO::POST;
@@ -1031,8 +1065,8 @@ std::string componentlist::getrefdirframe(const int which)
   std::string rstat("");
   try{
     if(itsList && itsBin){
-      const Int c = checkIndex(which, "getrefdirframe");
-      casa::MDirection md = itsList->component(c).shape().refDirection();
+      _checkIndex(which);
+      casa::MDirection md = itsList->component(which).shape().refDirection();
       rstat = md.getRefString().c_str();
     } else {
       *itsLog << LogIO::WARN
@@ -1663,8 +1697,8 @@ bool componentlist::convertfrequnit(const int which, const std::string& unit)
   casac::record *rstat(0);
   try{
     if(itsList && itsBin){
-      Int c=checkIndex(which, "getcomponent");
-      const SkyComponent& listRef(itsList->component(c));
+      _checkIndex(which);
+      const SkyComponent& listRef(itsList->component(which));
       String error;
       Record leRec;
       if(!listRef.toRecord(error, leRec)){
@@ -1841,17 +1875,12 @@ int componentlist::checkFluxPol(const String& polString)
   return pol;
 }
 
-int componentlist::checkIndex(int which, const String& function) const
-{
-  itsLog->origin(LogOrigin("componentlist", function));
-
-  if (which < 0 || which >= static_cast<Int>(itsList->nelements())){
-    *itsLog << "Index out of range." << endl
-            << "The component number is less than one or greater than"
-            << " the list length"
-            << LogIO::EXCEPTION;
-  }
-  return which;
+void componentlist::_checkIndex(int which) const {
+	Int m = itsList->nelements() - 1;
+	ThrowIf(
+		which < 0 || which > m,
+		"Index out of range. The component number must be between 0 and " + String::toString(m)
+    );
 }
 
 } // casac namespace

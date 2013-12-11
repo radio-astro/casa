@@ -1495,8 +1495,7 @@ An integer between 0 and one less than the list length, inclusively</description
 
  
    <method type="function" name="getfluxerror">
-   <shortdescription>Get the error in the flux of the
-specified component {\bf (Not implemented yet)}</shortdescription>
+   <shortdescription>Get the error in the flux of the specified component</shortdescription>
    
   <keyword>getfluxerror</keyword>
   <description>
@@ -1516,7 +1515,7 @@ specified component {\bf (Not implemented yet)}</shortdescription>
   <input>
     
      <param type="int" name="which">
-     <description>An index specifying which component.
+     <description>Index specifying which component.
      An integer between 0 and one less than the list length, inclusively</description>
      </param>
   </input>
