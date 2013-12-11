@@ -1034,16 +1034,23 @@ class test_SeparateSPWs(test_base):
         self.assertTrue(os.path.exists(self.outputms))
 
         # DDI subtable should have 4 rows with the proper index
-        mytb = tbtool()
-        mytb.open(self.outputms + '/DATA_DESCRIPTION')
-        spwCol = mytb.getcol('SPECTRAL_WINDOW_ID')
-        mytb.close()
+        mytbSPW = tbtool()
+        mytbSPW.open(self.outputms + '/DATA_DESCRIPTION')
+        spwCol = mytbSPW.getcol('SPECTRAL_WINDOW_ID')
+        mytbSPW.close()
         nspw = spwCol.size
         check_eq(nspw, 4)
         check_eq(spwCol[0], 0)
         check_eq(spwCol[1], 1)
         check_eq(spwCol[2], 2)
         check_eq(spwCol[3], 3)
+        
+        # Check some values from main table
+        mytbMain = tbtool()
+        mytbMain.open(self.outputms)
+        data = mytbMain.getcol('DATA')
+        check_eq(data.shape,(4,16,4296))
+        mytbMain.close()
 
     def test_CAS_5403_2(self):
         '''mstransform: combine spw 0,1,2 into one spw and then break it doen in 4 spws.
