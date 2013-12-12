@@ -3071,15 +3071,6 @@ void MSTransformManager::setupBufferTransformations(vi::VisBuffer2 *vb)
 	// Calculate number of rows to add to the output MS depending on the combination parameters
 	uInt rowsToAdd = 0;
 
-	/*
-	cout 	<< " OBSERVATION_ID="<< vb->observationId()(0)
-			<< " ARRAY_ID="<< vb->arrayId()(0)
-			<< " SCAN_NUMBER="<< vb->scan()(0)
-			<< " STATE_ID="<< vb->stateId()(0)
-			<< " FIELD_ID="<< vb->fieldId()(0)
-			<< " DATA_DESC_ID="<< vb->dataDescriptionIds()  << endl;
-	*/
-
 	if (combinespws_p)
 	{
 		// Fill baseline map using as key Ant1,Ant2,Scan and State,
@@ -3094,13 +3085,6 @@ void MSTransformManager::setupBufferTransformations(vi::VisBuffer2 *vb)
 		{
 			pair<Int,Int> baseline = std::make_pair(antenna1(row),antenna2(row));
 			relativeTimeInMiliseconds = (Int)floor(1E3*(vb->time()(row) - vb->time()(0)));
-
-			/*
-			cout 	<< " antenna1(row)=" << antenna1(row)
-					<< " antenna2(row)=" << antenna2(row)
-					<< " time-stamp=" << relativeTimeInMiliseconds << endl;
-			*/
-
 			baselineMap_p[std::make_pair(baseline,relativeTimeInMiliseconds)].push_back(row);
 		}
 
@@ -3128,8 +3112,6 @@ void MSTransformManager::setupBufferTransformations(vi::VisBuffer2 *vb)
 
 	// Calculate total number for rows to add
 	nRowsToAdd_p = rowsToAdd*nspws_p;
-
-	// cout << "rowsToAdd=" << nRowsToAdd_p << endl;
 
     return;
 
@@ -3321,8 +3303,8 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 	}
 	else
 	{
-		outputMsCols_p->flagRow().putColumnCells(absoluteRefRows, vb->flagRow());
-		outputMsCols_p->exposure().putColumnCells(absoluteRefRows, vb->exposure());
+		transformAndWriteNotReindexableVector(vb->flagRow(),tmpVectorBool,False,outputMsCols_p->flagRow(),absoluteRefRows);
+		transformAndWriteNotReindexableVector(vb->exposure(),tmpVectorDouble,False,outputMsCols_p->exposure(),absoluteRefRows);
 	}
 
 	if (combinespws_p)

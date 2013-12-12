@@ -244,25 +244,21 @@ class imfit_test(unittest.TestCase):
         method = "test_fit_using_box"
         success = True
         global msgs
-        for i in range(4):
+        for i in range(3):
             test = 'fit_using_box, loop #' + str(i) + ': '
             # the regions and box that should be used all define the same region
             # so that the results are the same for each loop (which makes the
             # code more compact)
             # i = 0: use box= keyword
-            # i = 1: verify box is used when given both box and region
-            # i = 2: use region record
-            # i = 3: use named region (ie region record saved in image)
+            # i = 1: use region record
+            # i = 2: use named region (ie region record saved in image)
             if (i == 0):
                 box = "130,89,170,129"
                 region = ""
             elif (i == 1):
-                box = "130,89,170,129"
-                #region = rg.box([0,0,0,0],[2,2,0,0])
-            elif (i == 2):
                 box = ''
                 region = rg.box([130,89,0,0],[170,129,0,0])
-            elif (i == 3):
+            elif (i == 2):
                 box = ''
                 region = 'mybox'
     
@@ -319,7 +315,10 @@ class imfit_test(unittest.TestCase):
                 got = clist['component0']['shape']['majoraxiserror']['value']
                 expected = 0.0188108125957
                 epsilon = 1e-6
+                print "*** got, expect, epsilon " + str(got) + ", " + str(expected) + ", " + str(epsilon)
+
                 if (not near(got, expected, epsilon)):
+                    print "*** failed"
                     success = False
                     msgs += method + "Major axis error test failure, got " + str(got) + " expected " + str(expected) + "\n"
                 if (
@@ -1471,6 +1470,7 @@ class imfit_test(unittest.TestCase):
         zz = sub.fitcomponents()
         flux = zz['results']['component0']['flux']
         self.assertTrue(near(flux['value'][0], 0.00028916, 1e-4))
+        print "*** xx " + str(flux['error'][0])
         self.assertTrue(near(flux['error'][0], 1.73518728e-08, 1e-4))
         self.assertTrue(flux['unit'] == "K.rad.rad")
         
@@ -1498,8 +1498,31 @@ class imfit_test(unittest.TestCase):
         
         sub.done()
 
-
-ia.close()
+        myia.done()
+        
+    def test_rms(self):
+        '''Test rms parameter'''
+        def run_fitcomponents():
+            myia = iatool()
+            myia.open(noisy_image)
+            res = myia.fitcomponents(rms=5)
+            myia.done()
+            return res
+        def run_imfit():
+            default('imfit')
+            return imfit(imagename=noisy_image, rms=5)
+        mycl = cltool()
+        for i in [0 ,1]:
+            if (i == 0):
+                code = run_fitcomponents
+            else:
+                code = run_imfit
+            zz = code()
+            self._check_results(zz)
+            mycl.fromrecord(zz['results'])
+            got = mycl.getfluxerror(0)[0]
+            self.assertTrue(abs(got - 2514) < 1)
+            
 
         
 

@@ -124,6 +124,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <description>Stretch the mask if necessary and possible? See help par.stretch </description>
         <value>False</value>
     </param>
+    <param type="double" name="rms">
+        <description>RMS to use in calculation of various uncertainties, assumed to have units of the input image. If 0, the rms of the residual image is used.</description>
+        <value>0</value>
+    </param>
     <constraints>
         <when param="mask">
             <notequals type="string" value="">
@@ -190,9 +194,11 @@ offset           Initial estimate for the zero-level offset. Only used if dooff 
 fixoffset        Hold zero-level offset constant during fit? Only used if dooff is True.
 stretch          Stretch the input mask if necessary and possible. Only used if a mask is specified.
                  See help par.stretch.
+rms              RMS to use in calculation of various uncertainties, assumed to have units of the input
+                 image. If 0, the rms of the residual image is used.
 
 OVERVIEW
-imfit is used to fit one or more gaussians to sources in an image as
+This application is used to fit one or more gaussians to sources in an image as
 well as an optional zero-level offset. Fitting is limited to a single polarization
 but can be performed over several contiguous spectral channels.
 If the image has a clean beam, the report will contain both the convolved
@@ -315,10 +321,10 @@ ERROR ESTIMATES
 The reported estimated errors are the maxima from two methods. In the first method, errors are calculated
 according to the description given in AIPS++ Note 224: AIPS++ Least Squares Background available at
 http://www.astron.nl/casacore/trunk/casacore/doc/notes/224.html . In the second method (Condon et al
-1998AJ.115.1693; Richards et al. 1999MNRAS.306..954), the following algorithms are used to compute the
-various errors.
+1998AJ.115.1693; Richards et al. 1999MNRAS.306..954), the following algorithms are used to
+compute the various errors.
 
-R = rms of residual image
+R = user specified rms unless 0, in which case the rms of residual image in the region used for fitting
 P = fitted peak intensity
 S = P/R (signal to noise)
 
@@ -340,20 +346,20 @@ possible combinations of (FWHM major axis +/- major axis error), (FWHM minor axi
 and (position andle +/- position angle error).
 
 CAUTIONARY NOTES ON ERRORS
-imfit makes the following implicit assumptions:
+This application makes the following implicit assumptions:
 
 1. The noise associated with the pixels it is given to fit is truly random and gaussian
 2. There is no offset (constant (unless one is fit), gradient, or more complex function) in pixel values.
 3. The things that are trying to be fit are bona-fide gaussians.
 
 If any of these assumptions is not true, the errors reported will in general be lower limits. These
-assumptions do not hold if for example, there is structure in the noise of the image (eg the residual map produced
+assumptions do not hold if for example, there is structure in the noise of the image (eg the residual image produced
 by deconvolution has structure), the area being fit lies in a negative bowl, in extended emission, or on an image
 artifact (eg ripple), or the source(s) is nongaussian (eg a disk or more complex function convolved with a gaussian;
 just because something looks gaussian to the human image analysis system does not necessarily mean it is).
-In addition, in the case of an image produced from interferometric observations, the errors given are appropriate
-for good uv plane coverage. They may be a factor of two or more higher for sparse arrays or snapshots.
-In short, imfit is not a silver bullet for determining parameters in flawed images and reported errors
+In addition, in the case of an image produced from interferometric observations, the errors given are appropriate for
+good uv plane coverage. They may be a factor of two or more higher for sparse arrays or snapshots.
+In short, this application is not a silver bullet for determining parameters in flawed images and reported errors
 should be interpreted cautiously in the vast majority of all "real life" cases. The closer the source being fit is to
 fulfilling these assumptions the more realistic reported errors will be.
 

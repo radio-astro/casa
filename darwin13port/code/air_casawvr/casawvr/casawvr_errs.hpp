@@ -13,6 +13,7 @@
 #define _LIBAIR_CASAWVR_CASAWVR_ERR_HPP__
 
 #include <stdexcept>
+#include <string>
 
 namespace LibAIR {
 
@@ -22,8 +23,8 @@ namespace LibAIR {
   public:
 
     MSInputDataError(const std::string &s):
-      std::runtime_error("There is an error in the supplied input data which prevents the calculation\
- of the calibration: " + s)
+      std::runtime_error(std::string("There is an error in the supplied input data which prevents the calculation\
+ of the calibration: ") + s)
     {}
     
   };

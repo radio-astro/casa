@@ -146,6 +146,9 @@ public:
 	// an exception if the zero level was not fit for.
 	void getZeroLevelSolution(vector<Double>& solution, vector<Double>& error);
 
+	// set rms level for calculating uncertainties. If not positive, an exception is thrown.
+	void setRMS(Double rms);
+
 protected:
     virtual inline Bool _supportsMultipleRegions() {return True;}
 
@@ -162,7 +165,7 @@ private:
 		_fluxDensities, _majorAxes, _majorAxisErrors, _minorAxes, _minorAxisErrors,
 		_positionAngles, _positionAngleErrors;
 	Record _residStats, inputStats;
-	Double chiSquared;
+	Double /*_chiSquared,*/ _rms;
 	String _kludgedStokes;
 	CompListWriteControl _writeControl;
 	Vector<uInt> _chanVec;

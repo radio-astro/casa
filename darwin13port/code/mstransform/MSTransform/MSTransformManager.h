@@ -425,7 +425,7 @@ protected:
 	{
 		Bool transformed = True;
 
-		if (combinespws_p)
+		if ((combinespws_p) or (nspws_p >2))
 		{
 			if (constant)
 			{
@@ -451,7 +451,7 @@ protected:
 	{
 		Bool transformed = True;
 
-		if (inputOutputIndexMap.size())
+		if ((inputOutputIndexMap.size()) or (nspws_p >2))
 		{
 			if (constant)
 			{

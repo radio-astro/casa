@@ -921,8 +921,7 @@ int main(int argc,  char* argv[])
 	rval = 0;
 
 	try {
-	   rlist=LibAIR::doALMAAbsRet(inp,
-				      problemAnts);
+	   rlist=LibAIR::doALMAAbsRet(inp);
 	}
 	catch(const std::runtime_error rE){
 	   std::cerr << std::endl << "WARNING: problem while calculating coefficients:"
