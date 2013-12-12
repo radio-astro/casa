@@ -76,7 +76,7 @@ class Targetflag(basetask.StandardTaskTemplate):
                      'freqdevscale' : 4.0,
                      'action'       : 'apply',
                      'display'      : '',
-                     'extendflags'  : True,
+                     'extendflags'  : False,
                      'flagbackup'   : False,
                      'savepars'     : True}
                      
