@@ -109,6 +109,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="singlePlaneCheckBox">
+     <property name="text">
+      <string>Single Plane Images</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="standardButtons">
       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>

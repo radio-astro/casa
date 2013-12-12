@@ -144,6 +144,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//Manipulation of the QtDisplayData's.
 		DisplayDataHolder::DisplayDataIterator beginRegistered() const;
 		DisplayDataHolder::DisplayDataIterator endRegistered() const;
+		QtDisplayData* getRegistered( int index );
 		QtDisplayData* getDD( const std::string& name ) const;
 		QtDisplayData* getDD( const DisplayData *dd ) const;
 		DisplayDataHolder* getDataHolder() const;
