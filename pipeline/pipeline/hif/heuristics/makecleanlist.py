@@ -25,12 +25,10 @@ class MakeCleanListHeuristics(object):
             self.vislist = [vislist]
 
         # split spw into list of spw parameters for 'clean' 
-        #print 'heur', spw
         spwlist = spw.replace('[','').replace(']','').strip()
         spwlist = spwlist.split("','")
         spwlist[0] = spwlist[0].strip("'")
         spwlist[-1] = spwlist[-1].strip("'")
-        #print 'heur spwlist', spwlist
 
         # find all the spwids present in the list
         p=re.compile(r"[ ,]+(\d+)")
@@ -39,7 +37,6 @@ class MakeCleanListHeuristics(object):
             spwidsclean = p.findall(' %s' % spwclean)
             spwidsclean = map(int, spwidsclean)
             spwids.update(spwidsclean)
-        #print spwids 
 
         # calculate beam radius for all spwids, saves repetition later 
         self.beam_radius = {}
@@ -64,11 +61,9 @@ class MakeCleanListHeuristics(object):
             # use the smallest antenna diameter and the reference frequency
             # to estimate the primary beam radius -
             # radius of first null in arcsec = 1.22*lambda/D
-            #print spwid, ref_frequency, smallest_diameter
             self.beam_radius[spwid] = \
               (1.22 * (3.0e8/ref_frequency) / smallest_diameter) * \
               (180.0 * 3600.0 / math.pi)
-        #print self.beam_radius
 
     def field_intent_list(self, intent, field):
         intent_list = intent.split(',')
@@ -255,10 +250,10 @@ class MakeCleanListHeuristics(object):
         # convert to strings (CASA 4.0 returns as list for some reason
         # hence 0 index)
         if ref=='ICRS' or ref=='J2000' or ref=='B1950':
-            m0 = cqa.time(m0, prec=7)[0]
+            m0 = cqa.time(m0, prec=9)[0]
         else:
-            m0 = cqa.angle(m0)[0]
-        m1 = cqa.angle(m1)[0]
+            m0 = cqa.angle(m0, prec=8)[0]
+        m1 = cqa.angle(m1, prec=8)[0]
 
         if centreonly:
             return '%s %s %s' % (ref, m0, m1)
@@ -314,7 +309,6 @@ class MakeCleanListHeuristics(object):
     def imsize(self, fields, cell, beam, max_pixels=None):
         # get spread of beams
         ignore, xspread, yspread = self.phasecenter(fields, centreonly=False)
-        #print xspread, yspread
 
         cqa = casatools.quanta
 
@@ -351,7 +345,7 @@ class MakeCleanListHeuristics(object):
         nxpix = cleanhelper.cleanhelper.getOptimumSize(nxpix)
         nypix = cleanhelper.cleanhelper.getOptimumSize(nypix)
 
-        return (nxpix, nypix)
+        return [nxpix, nypix]
 
     def imagename(self, output_dir=None, intent=None, field=None, spwspec=None):
         try:
