@@ -174,7 +174,10 @@ class SDSpectralMapDisplay(SDImageDisplay):
         plot_objects = []
 
         antennas = [st.antenna.name for st in self.context.observing_run]
-        reference_scantable = self.context.observing_run[antennas.index(self.antenna)]
+        if self.antenna == 'COMBINED':
+            reference_scantable = self.context.observing_run[0]
+        else:
+            reference_scantable = self.context.observing_run[antennas.index(self.antenna)]
         is_baselined = reference_scantable.work_data != reference_scantable.name
         
         for pol in xrange(self.npol):
