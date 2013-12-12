@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import os
-import math
 import numpy
 import time
 
@@ -15,7 +14,6 @@ import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.casatools as casatools
 
 from . import SDFlagPlotter as SDP
-from .. import common
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -70,7 +68,14 @@ class SDFlagSummary(object):
             filename_in = st.name
             LOG.info("*** Summarizing table: %s ***" % (os.path.basename(filename_in)))
             for pol in pollist:
-                dt_idx = datatable.get_row_index(idx, spwid, pol)
+                time_table = datatable.get_timetable(idx, spwid, pol)               
+                # Select time gap list: 'subscan': large gap; 'raster': small gap
+                if flagRule['Flagging']['ApplicableDuration'] == "subscan":
+                    TimeTable = time_table[1]
+                else:
+                    TimeTable = time_table[0]
+                
+                dt_idx = numpy.array([chunks[1] for chunks in TimeTable]).flatten()
                 # generate summary plot
                 st_prefix = st.name.rstrip('/').split('/')[-1].rstrip('\.asap').replace('\.', '_')
                 FigFileRoot = ("FlagStat_%s_spw%d_pol%d" % (st_prefix, spwid, pol))
