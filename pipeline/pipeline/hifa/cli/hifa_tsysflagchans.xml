@@ -5,7 +5,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="hif_tsysflagchans" category="pipeline">
+<task type="function" name="hifa_tsysflagchans" category="pipeline">
 <shortdescription>Flag deviant channels in system temperature measurements</shortdescription>
 <description>
 Flag deviant channels in system temperature measurements.

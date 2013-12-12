@@ -4,18 +4,19 @@ import collections
 import numpy as np 
 import re
 
-from pipeline.hif.heuristics.tsysspwmap import tsysspwmap
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.utils as utils
+
 from pipeline.hif.tasks.flagging.flagdatasetter import FlagdataSetter
 
+from pipeline.hif.tasks.common import commonresultobjects
+from pipeline.hif.tasks.common import calibrationtableaccess as caltableaccess
+from pipeline.hif.tasks.common import commonhelpermethods
+from pipeline.hif.tasks.common import viewflaggers
+
 from .resultobjects import TsysflagResults
-from ..common import commonresultobjects
-from ..common import calibrationtableaccess as caltableaccess
-from ..common import commonhelpermethods
-from ..common import viewflaggers
 
 LOG = infrastructure.get_logger(__name__)
 

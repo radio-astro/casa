@@ -2,7 +2,8 @@ from __future__ import absolute_import
 import types
 
 from pipeline.hif.heuristics import caltable as caltable_heuristic
-from pipeline.hif.heuristics.tsysspwmap import tsysspwmap
+from pipeline.hifa.heuristics.tsysspwmap import tsysspwmap
+
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary

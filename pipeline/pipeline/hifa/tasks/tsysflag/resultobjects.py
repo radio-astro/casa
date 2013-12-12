@@ -1,7 +1,9 @@
 from __future__ import absolute_import
+
 import collections
 import copy
-from pipeline.hif.tasks.tsyscal import resultobjects 
+
+from pipeline.hifa.tasks.tsyscal import resultobjects 
 
 import pipeline.infrastructure as infrastructure
 

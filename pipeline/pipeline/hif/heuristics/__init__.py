@@ -24,5 +24,5 @@ from .solint import PhaseUpSolInt
 from .spw import BestSpwForBandpassHeuristic
 from .fieldnames import IntentFieldnames
 from .standard import Standard
-from .tsysspwmap import tsysspwmap
+#from .tsysspwmap import tsysspwmap
 from .wvrgcal import WvrgcalHeuristics

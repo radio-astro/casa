@@ -5,7 +5,7 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hif_tsyscal(vis=None, caltable=None, chantol=None, pipelinemode=None,
+def hifa_tsyscal(vis=None, caltable=None, chantol=None, pipelinemode=None,
     dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the

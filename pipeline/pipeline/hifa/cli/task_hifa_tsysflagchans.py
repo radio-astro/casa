@@ -5,7 +5,7 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hif_tsysflagchans(caltable=None, metric=None,
+def hifa_tsysflagchans(caltable=None, metric=None,
   intentgroups=None,
   flag_edges=None, edge_limit=None,
   flag_sharps=None, sharps_limit=None,

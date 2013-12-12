@@ -134,13 +134,13 @@ def get_task_description(result_obj):
                     hif.tasks.GTypeGaincal, hif.tasks.GSplineGaincal):
         return 'Gain calibration'
 
-    if task_cls is hif.tasks.Tsyscal:
+    if task_cls is hifa.tasks.Tsyscal:
         return 'Calculate Tsys calibration'
 
-    if task_cls is hif.tasks.Tsysflag:
+    if task_cls is hifa.tasks.Tsysflag:
         return 'Flag Tsys calibration'
 
-    if task_cls is hif.tasks.Tsysflagchans:
+    if task_cls is hifa.tasks.Tsysflagchans:
         return 'Flag channels of Tsys calibration'
 
     if task_cls is hif.tasks.Wvrgcal:
@@ -2900,10 +2900,10 @@ renderer_map = {
         hif.tasks.Bandpassflagchans: T2_4MDetailsBandpassFlagRenderer(),
         hif.tasks.Clean          : T2_4MDetailsCleanRenderer(),
         hif.tasks.CleanList      : T2_4MDetailsCleanRenderer(),
-        hifa.tasks.FluxcalFlag    : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_fluxcalflag.html'),
+        hifa.tasks.FluxcalFlag   : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_fluxcalflag.html'),
         hif.tasks.Fluxscale      : T2_4MDetailsDefaultRenderer('t2-4m_details-fluxscale.html'),
         hif.tasks.Gaincal        : T2_4MDetailsGaincalRenderer(),
-        hifa.tasks.GcorFluxscale  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_gfluxscale.html'),
+        hifa.tasks.GcorFluxscale : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_gfluxscale.html'),
         hif.tasks.ImportData     : T2_4MDetailsImportDataRenderer(),
         hifa.tasks.ALMAImportData   : T2_4MDetailsImportDataRenderer(),
         hif.tasks.Lowgainflag    : T2_4MDetailsLowgainFlagRenderer(),
@@ -2912,9 +2912,9 @@ renderer_map = {
         hif.tasks.RefAnt         : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_refant.html'),
         hif.tasks.Setjy          : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_setjy.html'),
         hifa.tasks.TimeGaincal   : T2_4MDetailsGaincalRenderer(),
-        hif.tasks.Tsyscal        : T2_4MDetailsTsyscalRenderer(),
-        hif.tasks.Tsysflag       : T2_4MDetailsTsyscalFlagRenderer(),
-        hif.tasks.Tsysflagchans  : T2_4MDetailsTsyscalFlagRenderer('t2-4m_details-hif_tsysflagchans.html'),
+        hifa.tasks.Tsyscal       : T2_4MDetailsTsyscalRenderer(),
+        hifa.tasks.Tsysflag      : T2_4MDetailsTsyscalFlagRenderer(),
+        hifa.tasks.Tsysflagchans : T2_4MDetailsTsyscalFlagRenderer('t2-4m_details-hif_tsysflagchans.html'),
         hif.tasks.Wvrgcal        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_wvrgcal.html'),
         hif.tasks.Wvrgcalflag    : T2_4MDetailsWvrgcalflagRenderer(),
         hsd.tasks.SDReduction    : T2_4MDetailsDefaultRenderer('t2-4-singledish.html'),
