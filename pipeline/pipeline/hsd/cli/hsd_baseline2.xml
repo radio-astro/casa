@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hsd_baseline2" category="pipeline">
+<shortdescription>Detect and validate spectral lines, subtract baseline by masking detected lines</shortdescription>
+<description>
+</description>
+<input>
+    <param type="string" name="fitfunc">
+        <description>Fitting function for baseline subtraction</description>
+	<value>cspline</value>
+	<allowed kind="enum">
+	    <value>cspline</value>
+	    <value>spline</value>
+	    <value>polynomial</value>
+	    <value>poly</value>
+	    <value>CSPLINE</value>
+	    <value>SPLINE</value>
+	    <value>POLYNOMIAL</value>
+	    <value>POLY</value>
+	</allowed>
+    </param>
+
+    <param type="int" name="fitorder">
+        <description>Fitting order for baseline subtraction</description>
+	<value>-1</value>
+    </param>
+    
+    <param type="intArray" name="linewindow">
+        <description>Pre-defined line window</description>
+	<value></value>
+    </param>
+
+    <param type="intArray" name="edge">
+        <description>Edge channels to be dropped</description>
+	<value></value>
+    </param>
+
+    <param type="bool" name="broadline">
+        <description>Try to detect broad component of the line</description>
+	<value>True</value>
+    </param>
+
+    <param type="string" name="pipelinemode">
+	<description>The pipeline operating mode</description>
+	<value>automatic</value>
+	<allowed kind="enum">
+	    <value>automatic</value>
+	    <value>interactive</value>
+	    <value>getinputs</value>
+	</allowed>
+    </param>
+
+    <param type="stringArray" name="infiles" subparam="true">
+        <description>List of input files to be calibrated (default all)</description>
+        <value></value>
+    </param>
+
+    <param type="intArray" name="iflist" subparam="true">
+        <description>List of spws to be calibrated (defalt all except wvr)</description>
+        <value></value>
+    </param>
+
+    <param type="intArray" name="pollist" subparam="true">
+        <description>List of polarizations to be calibrated (defalt all)</description>
+        <value></value>
+    </param>
+
+    <param type="bool" name="dryrun" subparam="true">
+	<description>Run the task (False) or display task command (True)</description>
+	<value>False</value>
+    </param>
+
+    <param type="bool" name="acceptresults" subparam="true">
+	<description>Add the results into the pipeline context</description>
+	<value>True</value>
+    </param>
+
+    <constraints>
+	<when param="pipelinemode">
+	    <equals type="string" value="automatic">
+	    </equals>
+	    <equals type="string" value="interactive">
+                <default param="infiles"><value type="stringArray"></value></default>
+                <default param="iflist"><value type="intArray"></value></default>
+                <default param="pollist"><value type="intArray"></value></default>
+		<default param="dryrun"><value type="bool">False</value></default>
+		<default param="acceptresults"><value type="bool">True</value></default>
+	    </equals>
+	    <equals type="string" value="getinputs">
+                <default param="infiles"><value type="stringArray"></value></default>
+                <default param="iflist"><value type="intArray"></value></default>
+                <default param="pollist"><value type="intArray"></value></default>
+	    </equals>
+	</when>
+    </constraints>
+
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+The hsd_baseline task subtracts baseline from calibrated spectra.
+By default, the task tries to find spectral line feature using
+line detection and validation algorithms. Then, the task puts a
+mask on detected lines and perform baseline subtraction. The user
+is able to turn off automatic line masking by setting linewindow
+parameter, which specifies pre-defined line window. 
+
+Fitting order is automatically determined by default. It can be
+disabled by specifying fitorder as non-negative value. In this case,
+the value specified by fitorder will be used.
+  
+Keyword arguments:
+
+---- pipeline parameter arguments which can be set in any pipeline mode
+fitfunc -- fitting function for baseline subtraction. You can choose
+   either cubic spline ('spline' or 'cspline') or polynomial ('polynomial'
+   or 'poly').
+   default: 'cspline'.
+
+fitorder -- Fitting order for polynomial. For cubic spline, it is used
+   to determine how much the spectrum is segmented into. Default (-1) is
+   to determine the order automatically.
+   default: -1 (auto determination)
+
+linewindow -- Pre-defined line window. If this is set, line detection and
+   validation is skipped and specified line windows are used for baseline
+   subtraction.
+   default: [] (do line detection and validation)
+   example:
+
+edge -- number of edge channels to be dropped from baseline subtraction.
+   the value must be a list with length of 2, whose values specifies
+   left and right edge channels respectively.
+   default: [] ([0,0])
+   example: [10,10]
+
+broadline -- Try to detect broad component of spectral line if True.
+   default: True
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the 
+   pipeline determines the values of all context defined pipeline inputs
+   automatically.  In 'interactive' mode the user can set the pipeline
+   context defined parameters manually.  In 'getinputs' mode the user
+   can check the settings of all pipeline parameters without running
+   the task.
+   default: 'automatic'.
+
+---- pipeline context defined parameter argument which can be set only in
+'interactive mode'
+
+infiles -- List of data files. These must be a name of Scantables that 
+   are registered to context via hsd_importdata task.
+   default: []
+   example: vis=['X227.PM01.asap', 'X227.PM02.asap']
+
+iflist -- Data selection by spw.
+   default: [] (all spws)
+   example: [3,4] (generate caltable for spw 3 and 4)
+
+pollist -- Data selection by pol.
+   default: [] (all polarizations)
+   example: [0] (generate caltable for pol 0)
+
+--- pipeline task execution modes
+
+dryrun -- Run the commands (True) or generate the commands to be run but
+   do not execute (False).
+   default: True
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+   reject them (False).
+   default: True
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+   the results object for the pipeline task is returned.
+
+
+Examples
+
+
+</example>
+</task>
+</casaxml>
