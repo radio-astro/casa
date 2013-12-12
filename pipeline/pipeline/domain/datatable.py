@@ -413,7 +413,7 @@ class DataTableImpl( object ):
             timegap = [mygap_s, mygap_l]
         return timegap
     
-    def _update_tsys(self, infile, tsystable, ifmap):
+    def _update_tsys(self,context, infile, tsystable, ifmap):
         with casatools.TableReader(tsystable) as tb:
             ifnos = tb.getcol('IFNO')
             polnos = tb.getcol('POLNO')
@@ -421,10 +421,25 @@ class DataTableImpl( object ):
             tsys = {}
             for i in xrange(tb.nrows()):
                 tsys[i] = tb.getcell('TSYS',i)
+        
         if_from = ifmap.keys()
         pollist = numpy.unique(polnos)
         file_list = self.getkeyword('FILENAMES').tolist()
         ant = file_list.index(os.path.basename(infile.rstrip('/')))
+        spw_atmcal = []
+        spw_target={}
+        for i in xrange(len(context.observing_run[0].spectral_window)):
+            if context.observing_run[0].spectral_window[i].is_atmcal:
+                spw_atmcal = context.observing_run[0].spectral_window[i]
+            elif context.observing_run[0].spectral_window[i].is_target:
+                spw_target[i] = context.observing_run[0].spectral_window[i]
+                LOG.debug('spw_target[i].freq_min %s' % spw_target[i].freq_min)
+        
+        LOG.debug('spw_atmcal.freq_min = %s' % spw_atmcal.freq_min)
+        step_atm = -spw_atmcal.increment
+        LOG.debug('step_atm = %s' % step_atm)
+        tsys_target = {}
+        atsys = []
         for ifno_from in if_from:
             for polno in pollist:
                 indices = numpy.where(numpy.logical_and(ifnos==ifno_from,polnos==polno))[0]
@@ -432,7 +447,17 @@ class DataTableImpl( object ):
                     continue
 
                 for ifno_to in ifmap[ifno_from]:
-                    atsys = [tsys[i].mean() for i in indices]
+                    target_start = (spw_target[ifno_to].freq_min - spw_atmcal.freq_min)/ step_atm
+                    target_end = (spw_target[ifno_to].freq_max - spw_atmcal.freq_min)/ step_atm
+                    LOG.debug('target_end - target_start = %s' % (int)(target_end - target_start))
+                    LOG.debug('indices = %s' % indices)
+                    for i in indices:
+                        for j in xrange((int)(target_end - target_start)):
+                            tsys_target[i] = tsys[i][(int)( target_start + j)]
+                    
+                    LOG.debug('tsys_target = %s' % tsys_target[0])
+                    atsys = [tsys_target[i].mean() for i in indices]
+                    LOG.debug('atsys = %s' % atsys)
                     rows = self.get_row_index(ant, ifno_to, polno)
                     if len(atsys) == 1:
                         for row in rows:
