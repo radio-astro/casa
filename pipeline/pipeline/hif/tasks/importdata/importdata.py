@@ -493,7 +493,7 @@ class ImportData(basetask.StandardTaskTemplate):
                 f.writelines(['#\n'])
                 f.writelines(['# mode=manual correlation=YY antenna=DV01;DV08;DA43;DA48&DV23 spw=21:1920~2880  autocorr=False reason=\'bad_channels\'\n'])
                 f.writelines(['# mode=manual spw=\'25:0~3;122~127\' reason=\'stage8_2\'\n'])
-		f.writelines(['# mode=manual antenna=\'DV07\' timerange=\'2013/01/31/08:09:55.248~2013/01/31/08:10:01.296\' reason=\'quack\'\n']) 
+                f.writelines(['# mode=manual antenna=\'DV07\' timerange=\'2013/01/31/08:09:55.248~2013/01/31/08:10:01.296\' reason=\'quack\'\n']) 
                 f.writelines(['#\n'])
 
 
@@ -501,10 +501,10 @@ def get_setjy_results(mses):
     results = []
     for ms in mses:
         result = commonfluxresults.FluxCalibrationResults(ms.name)
-        science_spws = ms.get_spectral_windows(science_windows_only=True)
+        science_spw_ids = [spw.id for spw in ms.get_spectral_windows()]
 
         for source, measurements in read_fluxes(ms).items():
-            m = [m for m in measurements if m.spw_id in science_spws]
+            m = [m for m in measurements if int(m.spw_id) in science_spw_ids]
 
             # import flux values for all fields and intents so that we can 
             # compare them to the fluxscale-derived values later in the run
