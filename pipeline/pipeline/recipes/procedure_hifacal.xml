@@ -25,19 +25,19 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_tsyscal</Command>
+        <Command xmlns="">hifa_tsyscal</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_tsysflag</Command>
+        <Command xmlns="">hifa_tsysflag</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_tsysflag</Command>
+        <Command xmlns="">hifa_tsysflag</Command>
         <ParameterSet>
             <Parameter>
                 <Keyword xmlns="">metric</Keyword>
@@ -59,7 +59,7 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_tsysflagchans</Command>
+        <Command xmlns="">hifa_tsysflagchans</Command>
         <ParameterSet>
             <Parameter>
                 <Keyword xmlns="">intentgroups</Keyword>
@@ -69,7 +69,7 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_tsysflag</Command>
+        <Command xmlns="">hifa_tsysflag</Command>
         <ParameterSet>
             <Parameter>
                 <Keyword xmlns="">metric</Keyword>
@@ -107,7 +107,7 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_tsysflagchans</Command>
+        <Command xmlns="">hifa_tsysflagchans</Command>
             <ParameterSet>
               <Parameter>
                   <Keyword xmlns="">metric</Keyword>
