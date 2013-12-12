@@ -440,6 +440,7 @@ class DataTableImpl( object ):
         LOG.debug('step_atm = %s' % step_atm)
         tsys_target = {}
         atsys = []
+        tsys_target_value =[]
         for ifno_from in if_from:
             for polno in pollist:
                 indices = numpy.where(numpy.logical_and(ifnos==ifno_from,polnos==polno))[0]
@@ -453,10 +454,10 @@ class DataTableImpl( object ):
                     LOG.debug('indices = %s' % indices)
                     for i in indices:
                         for j in xrange((int)(target_end - target_start)):
-                            tsys_target[i] = tsys[i][(int)( target_start + j)]
+                            tsys_target_value.append(tsys[i][(int)( target_start + j)])
+                        tsys_target.update({i:tsys_target_value})
                     
-                    LOG.debug('tsys_target = %s' % tsys_target[0])
-                    atsys = [tsys_target[i].mean() for i in indices]
+                    atsys = [numpy.mean(tsys_target[i]) for i in indices]
                     LOG.debug('atsys = %s' % atsys)
                     rows = self.get_row_index(ant, ifno_to, polno)
                     if len(atsys) == 1:
