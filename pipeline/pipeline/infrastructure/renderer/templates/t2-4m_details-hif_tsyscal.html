@@ -52,7 +52,7 @@ frequency.</p>
 <h2>Plots</h2>
 % for ms in summary_plots:
     <h4><a class="replace"
-           href="${os.path.relpath(os.path.join(dirname, 'tsys_%s.html' % ms), pcontext.report_dir)}">${ms}</a>
+           href="${os.path.relpath(os.path.join(dirname, summary_subpage[ms]), pcontext.report_dir)}">${ms}</a>
     </h4>
     <ul class="thumbnails">
         % for plot in summary_plots[ms]:
@@ -70,7 +70,7 @@ frequency.</p>
 
                     <div class="caption">
                     	<h4>
-							<a href="${os.path.relpath(os.path.join(dirname, 'tsys_%s.html' % ms), pcontext.report_dir)}"
+							<a href="${os.path.relpath(os.path.join(dirname, summary_subpage[ms]), pcontext.report_dir)}"
 	                       	   class="replace"
 	                           data-spw="${plot.parameters['spw']}">
 	                           Spectral Window ${plot.parameters['spw']}

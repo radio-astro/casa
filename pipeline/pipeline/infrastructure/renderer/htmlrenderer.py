@@ -2271,6 +2271,7 @@ class T2_4MDetailsTsyscalRenderer(T2_4MDetailsDefaultRenderer):
                                   'stage%s' % results.stage_number)
 
         summary_plots = {}
+        subpages = {}
         for result in results:
             plotter = tsys.TsysSummaryChart(context, result)
             plots = plotter.plot()
@@ -2286,9 +2287,13 @@ class T2_4MDetailsTsyscalRenderer(T2_4MDetailsDefaultRenderer):
             renderer = TsyscalPlotRenderer(context, result, plots, json_path)
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
+                # the filename is sanitised - the MS name is not. We need to
+                # map MS to sanitised filename for link construction.
+                subpages[ms] = renderer.filename
 
-        ctx.update({'summary_plots' : summary_plots,
-                    'dirname'       : weblog_dir})
+        ctx.update({'summary_plots'   : summary_plots,
+                    'summary_subpage' : subpages,
+                    'dirname'         : weblog_dir})
 
         return ctx
 
@@ -2429,7 +2434,7 @@ class T2_4MDetailsAgentFlaggerRenderer(T2_4MDetailsDefaultRenderer):
         flagcmd_files = {}
         for r in result:
             # write final flagcmds to a file
-            ms = context.observing_run.get_ms(inputs['vis'])
+            ms = context.observing_run.get_ms(r.inputs['vis'])
             flagcmds_filename = '%s-agent_flagcmds.txt' % ms.basename
             flagcmds_path = os.path.join(weblog_dir, flagcmds_filename)
             with open(flagcmds_path, 'w') as flagcmds_file:
