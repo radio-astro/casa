@@ -10,6 +10,7 @@ from .inspectdata import SDInspectData
 from .imaging import SDImaging
 from .imaging2 import SDImaging2
 from .baseline import SDBaseline
+from .baseline import SDBaseline2
 from .flagdata import SDFlagData
 from .flagbaseline import SDFlagBaseline
 from .flagbaseline import SDPlotFlagBaseline
