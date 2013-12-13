@@ -58,6 +58,7 @@ public:
 
 	void addCurve( QVector<double> xValues, QVector<double> yValues,
 			QColor curveColor, const QString& curveTitle, QwtPlot::Axis yAxis, bool sumCurve );
+	void addAxisTitle( QwtPlot::Axis axis, const QString& title );
 	void addDiagonal( QVector<double> xValues, QColor lineColor, QwtPlot::Axis yAxis );
 	void initializePlot( const QString& title, PlotType plotType );
 
@@ -92,6 +93,7 @@ private:
 	int getCurveIndex( const QString& curveTitle ) const;
 	void setCurveSize( int curveIndex );
 	void updateAxes();
+	void updateAxis( int index );
 	void setAxisLabels();
 	void adjustPlotBounds( std::pair<double,double> curveBounds, QwtPlot::Axis yAxis );
 	void resetPlotBounds();
@@ -114,6 +116,7 @@ private:
     QList<FeatherCurve*> curves;
 
     //External axis drawing support
+    QList<QString> axisTitles;
     QList<QString> axisLabels;
     QList<ExternalAxisWidget*> axisWidgets;
     QList<ExternalAxis*> axisBlanks;
