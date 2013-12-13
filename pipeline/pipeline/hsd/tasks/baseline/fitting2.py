@@ -5,6 +5,8 @@ import time
 import re
 import numpy
 
+import asap as sd
+
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.sdfilenamer as filenamer
@@ -28,7 +30,7 @@ class FittingFactory(object):
         
 class FittingInputs(common.SingleDishInputs):
     def __init__(self, context, antennaid, spwid, pollist, iteration, 
-                 fit_order=None, edge=None):
+                 fit_order=None, edge=None, outfile_suffix="_temp"):
         self._init_properties(vars())
         self._bltable = None
         
@@ -58,7 +60,8 @@ class FittingInputs(common.SingleDishInputs):
     
     @property
     def outfile(self):
-        return self.data_object.baselined_name
+        return self.data_object.name + self.outfile_suffix
+#         return self.data_object.baselined_name
     
     @property
     def bltable(self):
@@ -123,8 +126,8 @@ class FittingBase(common.SingleDishTaskTemplate):
         filename_out = self.inputs.outfile
         iteration = self.inputs.iteration
         bltable_name = self.inputs.bltable
-        if iteration == 0:
-            utils.createExportTable(bltable_name)
+#         if iteration == 0:
+#             utils.createExportTable(bltable_name)
             
         if iteration == 0 or not os.path.exists(filename_out):
             with casatools.TableReader(filename_in) as tb:
@@ -154,14 +157,16 @@ class FittingBase(common.SingleDishTaskTemplate):
         rows_to_process = numpy.where(numpy.logical_and(antennas == antennaid, 
                                                    numpy.logical_and(ifnos == spwid, srctypes==srctype)))[0]
 
-        blfile = filename_in.rstrip('/')+'.baseline.table'
-        os.system('rm -rf %s'%(blfile))
+#         blfile = filename_in.rstrip('/')+'.baseline.table'
+#         os.system('rm -rf %s'%(blfile))
 
         # dummy scantable for baseline subtraction
-        dummy_scan = utils.create_dummy_scan(filename_in, datatable, rows_to_process)
+#         dummy_scan = utils.create_dummy_scan(filename_in, datatable, rows_to_process)
         
         _polnos = polnos.take(rows_to_process)
         index_list_total = []
+        row_list_total = []
+        blinfo = []
 
         for pol in pollist:
             time_table = datatable.get_timetable(antennaid, spwid, pol)
@@ -172,9 +177,10 @@ class FittingBase(common.SingleDishTaskTemplate):
             # working with spectral data in scantable
             nrow_total = len(index_list_per_pol)
                 
-            # Create progress timer
-            Timer = common.ProgressTimer(80, nrow_total, LOG.level)
+#             # Create progress timer
+#             Timer = common.ProgressTimer(80, nrow_total, LOG.level)
     
+            LOG.info('Calculating Baseline Fitting Parameter...')
             LOG.info('Baseline Fit: background subtraction...')
             LOG.info('Processing %d spectra...'%(nrow_total))
     
@@ -206,9 +212,10 @@ class FittingBase(common.SingleDishTaskTemplate):
                 nrow = len(rows)
                 LOG.debug('nrow = %s'%(nrow))
                 LOG.debug('len(idxs) = %s'%(len(idxs)))
-                updated = []
+#                 updated = []
                 
                 index_list = []
+                row_list = []
 
                 for i in xrange(nrow):
                     row = rows[i]
@@ -217,9 +224,9 @@ class FittingBase(common.SingleDishTaskTemplate):
                     nochange = datatable.tb2.getcell('NOCHANGE',idx)
                     LOG.trace('row = %s, Flag = %s'%(row, nochange))
     
-                    # skip if no update on line window
-                    if nochange > 0:
-                        continue
+#                     # skip if no update on line window
+#                     if nochange > 0:
+#                         continue
     
                     # data to be fitted
                     sp = spectra[i]
@@ -242,27 +249,31 @@ class FittingBase(common.SingleDishTaskTemplate):
                     # fitting
                     polyorder = min(polyorder, max_polyorder)
                     mask_array[edge[0]:nchan-edge[1]] = 1
-                    (result, nmask) = self._calc_baseline_fit(dummy_scan, sp, polyorder, nchan, 0, edge, _masklist, blfile, win_polyorder, fragment, nwindow, mask_array)
-                    spectra[i] = result
+                    irow = len(row_list_total)+len(row_list)
+                    param = self._calc_baseline_param(irow, polyorder, nchan, 0, edge, _masklist, win_polyorder, fragment, nwindow, mask_array)
+                    blinfo.append(param)
                     index_list.append(idx)
-                    updated.append(i)
-    
-                # write data
-                with casatools.TableReader(filename_out, nomodify=False) as tb:
-                    for i in updated:
-                        tb.putcell('SPECTRA', rows[i], spectra[i])
-    
-                # update baseline table
-                if os.path.exists(blfile):
-                    self._update_bltable(bltable_name, blfile, datatable, index_list, nchan, edge, nwindow, fragment)
-    
-                    # cleanup blfile
-                    os.system('rm -rf %s'%(blfile))
-                
+                    row_list.append(row)
+
                 index_list_total.extend(index_list)
-                
+                row_list_total.extend(row_list)
+
+        # subtract baseline
+        LOG.info('Baseline Fit: background subtraction...')
+        LOG.info('Processing %d spectra...'%(len(row_list_total)))
+        LOG.info('rows = %s' % str(row_list_total))
+        st_out = sd.scantable(filename_out, average=False)
+        LOG.info('number of rows in scantable = %d' % st_out.nrow())
+        st_out.set_selection(rows=row_list_total)
+        LOG.info('number of rows in selected = %d' % st_out.nrow())
+        LOG.info('BLINFO=%s, %s, %s, .........' % (str(blinfo[0]), str(blinfo[1]), str(blinfo[2])))
+        st_out.sub_baseline(insitu=True, retfitres=False, blinfo=blinfo, bltable=bltable_name, overwrite=True)
+        st_out.set_selection()
+        st_out.save(filename_out, format='ASAP', overwrite=True)
+        
         outcome = {'bltable': bltable_name,
-                   'index_list': index_list_total}
+                   'index_list': index_list_total,
+                   'outtable': filename_out}
         result = FittingResults(task=self.__class__,
                                 success=True,
                                 outcome=outcome)
@@ -287,7 +298,7 @@ class FittingBase(common.SingleDishTaskTemplate):
         FittingSummary.summary(bltable, stname, spwid, iteration, edge, datatable, index_list, nchan)
         return result
 
-    def _calc_baseline_fit(self, scan, data, polyorder, nchan, modification, edge, masklist, blfile, win_polyorder, fragment, nwindow, mask):
+    def _calc_baseline_param(self, row_idx, polyorder, nchan, modification, edge, masklist, win_polyorder, fragment, nwindow, mask):
         # set edge mask
         #data[:edge[0]] = 0.0
         #data[nchan-edge[1]:] = 0.0
@@ -305,36 +316,25 @@ class FittingBase(common.SingleDishTaskTemplate):
         #else:
         #    nmask = int(nchan_without_edge - numpy.sum(mask[edge[0]:] * 1.0))
         num_mask = int(nchan_without_edge - numpy.sum(mask[edge[0]:nchan-edge[1]] * 1.0))
+        masklist_all = masklist.tolist()
+        if edge[0] > 0:
+            masklist_all.insert(0, [ 0, (edge[0]-1) ])
+        if edge[1] > 0:
+            masklist_all.append([ (nchan-edge[1]), (nchan-1) ])
 
         LOG.trace('nchan_without_edge, num_mask, diff=%s, %s'%(nchan_without_edge, num_mask))
 
-        outdata = self._fit(data, scan, polyorder, nchan, mask, edge, nchan_without_edge, num_mask, fragment, nwindow, win_polyorder, masklist, blfile)
-        outdata[:edge[0]] = 0.0
-        outdata[nchan-edge[1]:] = 0.0
+        outdata = self._get_param(row_idx, polyorder, nchan, mask, edge, nchan_without_edge, num_mask, fragment, nwindow, win_polyorder, masklist_all)
 
-        return (outdata, num_mask)
+        return outdata
 
 
 class CubicSplineFitting(FittingBase):
-    def _fit(self, data, scan, polyorder, nchan, mask, edge, nchan_without_edge, nchan_masked, fragment, nwindow, win_polyorder, masklist, blfile):
-        #mask[:edge[0]] = 0
-        #mask[nchan-edge[1]:] = 0
+    def _get_param(self, idx, polyorder, nchan, mask, edge, nchan_without_edge, nchan_masked, fragment, nwindow, win_polyorder, masklist):
         num_nomask = nchan_without_edge - nchan_masked
         num_pieces = max(int(min(polyorder * num_nomask / float(nchan_without_edge) + 0.5, 0.1 * num_nomask)), 1)
         LOG.trace('Cubic Spline Fit: Number of Sections = %d' % num_pieces)
-        scan._setspectrum(data, 0)
-        # 2013/05/08 TN
-        # insitu=False is slower since it needs to create scantable instance
-        # for output.
-        #outdata = numpy.array(scan.cspline_baseline(insitu=False, mask=mask, npiece=num_pieces, clipthresh=5.0, clipniter=self.ClipCycle, blfile=blfile)._getspectrum(0))
-        scan.cspline_baseline(insitu=True, mask=mask, npiece=num_pieces, clipthresh=5.0, clipniter=self.ClipCycle, blfile=blfile, csvformat=True)
-        outdata = numpy.array(scan._getspectrum(0))
-        return outdata
-
-    def _update_bltable(self, table_name, csvfile, datatable, index_list, nchan, edge, nwindow, fragment):
-        blgen = SplineBaselineTableGenerator()
-        blgen.import_csv(csvfile)
-        blgen.update_table(table_name, datatable, index_list)
+        return {'row': idx, 'masklist': masklist, 'npiece': num_pieces, 'blfunc': 'cspline', 'clipthresh': 5.0, 'clipniter': self.ClipCycle}
 
 
 class FittingSummary(object):
@@ -407,7 +407,9 @@ class FittingSummary(object):
         # number of segments for cspline_baseline
         with casatools.TableReader(tablename) as tb:
             nrow = tb.nrows()
-            num_segments = [tb.getcell('Sections', irow).shape[0] \
+#             num_segments = [tb.getcell('Sections', irow).shape[0] \
+#                             for irow in xrange(nrow)]
+            num_segments = [( len(tb.getcell('FUNC_PARAM', irow)) - 1 ) \
                             for irow in xrange(nrow)]
         unique_values = numpy.unique(num_segments)
         max_segments = max(unique_values) + 2
@@ -420,137 +422,3 @@ class FittingSummary(object):
             count = num_segments.count(val)
             LOG.info('%13d|%9d'%(val, count))
         LOG.info('')
-
-# class PolynomialFitting(FittingBase):
-#     def _fit(self, data, scan, polyorder, nchan, mask, edge, nchan_without_edge, nchan_masked, fragment, nwindow, win_polyorder, masklist, blfile):
-#         LOG.info('fragment, nwindow, win_polyorder = %s, %s, %s' % (fragment, nwindow, win_polyorder))
-#         LOG.info('Number of subdivided segments = %s'%(nwindow))
-# 
-#         # fit per fragments
-#         resultdata = []
-#         for win in xrange(nwindow):
-#             ledge = int(win * nchan_without_edge / (fragment * 2) + edge[0])
-#             redge = nchan - edge[1] - int(nchan_without_edge * (nwindow - 1 - win) / (fragment * 2))
-# 
-#             # check new edges are inside mask region or not
-#             masked = 0
-#             for [m0, m1] in masklist:
-#                 new_ledge = ledge
-#                 new_redge = redge
-#                 # all masked
-#                 if m0 <= ledge and redge <= m1:
-#                     new_ledge = m0 - (redge - ledge) / 2
-#                     new_redge = m1 + (redge - ledge) / 2
-#                     masked += redge - ledge
-#                 # mask inside windows
-#                 elif ledge < m0 and m1 < redge:
-#                     masked += (m1 - m0)
-#                     if m1 <= (redge + ledge) / 2:
-#                         new_ledge = ledge - (m1 - m0)
-#                         new_redge = redge
-#                     elif (ledge + redge) / 2 <= m0:
-#                         new_ledge = ledge
-#                         new_redge = redge + (m1 - m0)
-#                     else:
-#                         new_ledge = ledge - ((ledge + redge) / 2 - m0)
-#                         new_redge = redge - (m1 - (ledge + redge) / 2)
-#                 # left edge inside mask
-#                 elif m0 <= ledge and ledge < m1:
-#                     masked += (m1 - ledge)
-#                     if m1 <= (ledge + redge) / 2:
-#                         new_ledge = ledge - (m1 - m0)
-#                         new_redge = redge
-#                     else:
-#                         new_ledge = m0 - (redge - ledge) / 2
-#                         new_redge = redge + (m1 - (ledge + redge) / 2)
-#                 # right edge inside mask
-#                 elif m0 < redge and redge <= m1:
-#                     masked += (redge - m0)
-#                     if (ledge + redge) / 2 <= m0:
-#                         new_ledge = ledge
-#                         new_redge = redge + (m1 - m0)
-#                     else:
-#                         new_ledge = ledge - ((ledge + redge) / 2 - m0)
-#                         new_redge = m1 + (redge - ledge) / 2
-#                 ledge = new_ledge
-#                 redge = new_redge
-#             ledge = max(ledge, edge[0])
-#             redge = min(redge, nchan - edge[1])
-# 
-#             # Calculate positions for combining fragmented spectrum
-#             LOG.debug('nchan_without_edge=%s, ledge=%s, redge=%s'%(nchan_without_edge, ledge, redge))
-#             win_edge_ignore_l = int(nchan_without_edge / (fragment * win_polyorder))
-#             win_edge_ignore_r = win_edge_ignore_l
-#             pos_l0 = int(win * nchan_without_edge / (fragment * 2)) + nchan_without_edge / win_polyorder + ledge
-#             pos_l1 = int((win + 1) * nchan_without_edge / (fragment * 2)) - 1 - nchan_without_edge / fragment / win_polyorder + ledge
-#             pos_r0 = int((win + 1) * nchan_without_edge / (fragment * 2)) + nchan_without_edge / fragment / win_polyorder + ledge
-#             pos_r1 = int((win + 2) * nchan_without_edge / (fragment * 2)) - 1 - nchan_without_edge / fragment / win_polyorder + ledge
-#             dl = float(pos_l1 - pos_l0)
-#             dr = float(pos_r1 - pos_r0)
-#             if win == 0:
-#                 win_edge_ignore_l = 0
-#                 pos_l0 = edge[0]
-#                 pos_l1 = edge[0]
-#                 dl = 1.0
-#             if win == (nwindow - 1):
-#                 win_edge_ignore_r = 0
-#                 pos_r0 = nchan - edge[1]
-#                 pos_r1 = nchan - edge[1]
-#                 dr = 1.0
-# 
-#             nn_mask = float((pos_r1 - pos_l0) - mask[pos_l0:pos_r1].sum())
-#             dorder = int(max(1, ((pos_r1 - pos_l0 - nn_mask * 0.5) * win_polyorder / (pos_r1 - pos_l0) + 0.5)))
-#             LOG.debug('Revised edgemask = %s:%s  Adjust polyorder = %s' % (ledge, redge, dorder))
-#             LOG.debug('Segment %d: Revised edgemask = %s:%s  Adjust polyorder used in individual fit= %s' % (win, ledge, redge, dorder))
-# 
-#             start_time = time.time()
-#             LOG.debug('Fitting Start')
-#             edge_mask = scan.create_mask([0, redge-ledge])
-#             # 0 and (redge-ledge) are included in the fitting range
-#             scan._setspectrum(numpy.concatenate((data[ledge:redge],numpy.zeros(nchan+ledge-redge, dtype=numpy.float64))))
-#             tmp_mask = numpy.concatenate((mask[ledge:redge], numpy.zeros(nchan+ledge-redge, dtype=int)))
-#             # 2013/05/08 TN
-#             # insitu=False is slower since it needs to create scantable instance
-#             # for output.
-#             #tmpfit0 = scan.poly_baseline(order=dorder, mask=(tmp_mask & edge_mask), insitu=False, clipthresh=5.0, clipniter=self.ClipCycle, blfile=blfile)._getspectrum(0)
-#             #tmpfit = numpy.array(tmpfit0, dtype=numpy.float32)[:redge-ledge]
-#             scan.poly_baseline(order=dorder, mask=(tmp_mask & edge_mask), insitu=True, clipthresh=5.0, clipniter=self.ClipCycle, blfile=blfile, csvformat=True)
-#             tmpfit = numpy.array(scan._getspectrum(0), dtype=numpy.float32)[:redge-ledge]
-# 
-#             # Restore scan to the original position
-#             # 0 -> EdgeL
-#             resultdata.append(list(numpy.concatenate((numpy.zeros(ledge), tmpfit, numpy.zeros(nchan-redge)))))
-#             end_time = time.time()
-#             LOG.debug('Fitting End: Elapsed Time=%.1f'%(end_time-start_time))
-# 
-#             # window function: f(x) = -2x^3 + 2x^2 (0 <= x <= 1)
-#             for i in xrange(nchan):
-#                 if i < pos_l0:
-#                     resultdata[win][i] = 0.0
-#                 elif i <= pos_l1:
-#                     x = (i - pos_l0) / dl
-#                     resultdata[win][i] *= (-2.0 * x ** 3.0 + 3.0 * x ** 2.0)
-#                 elif i > pos_r1:
-#                     resultdata[win][i] = 0.0
-#                 elif i >= pos_r0:
-#                     x = (i - pos_r0) / dr
-#                     resultdata[win][i] *= (2.0 * x ** 3.0 - 3.0 * x ** 2.0 + 1.0)
-#         outdata = numpy.sum(resultdata, axis=0)
-#         outdata[:edge[0]] = 0.0
-#         outdata[nchan-edge[1]:] = 0.0
-# 
-#         return outdata
-# 
-#     def _update_bltable(self, table_name, csvfile, datatable, index_list, nchan, edge, nwindow, fragment):
-#         segments = []
-#         nchan_without_edge = nchan - sum(edge)
-#         for win in xrange(nwindow):
-#             ledge = int(win *  nchan_without_edge / (fragment * 2) + edge[0])
-#             redge = nchan - edge[1] - int(nchan_without_edge * (nwindow - 1 - win) / (fragment * 2))
-#             redge = min(redge, nchan-1)
-#             segments.append([ledge,redge])
-#         blgen = PolynomialBaselineTableGenerator(segments)
-#         blgen.import_csv(csvfile)
-#         blgen.update_table(table_name, datatable, index_list)
-#             
-

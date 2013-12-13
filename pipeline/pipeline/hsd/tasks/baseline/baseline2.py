@@ -1,5 +1,8 @@
 from __future__ import absolute_import
 
+import os
+import shutil
+import glob
 import numpy
 
 import pipeline.infrastructure as infrastructure
@@ -94,6 +97,14 @@ class SDBaseline(common.SingleDishTaskTemplate):
         fitorder = 'automatic' if inputs.fitorder is None or inputs.fitorder < 0 else inputs.fitorder
         fitfunc = 'spline' if inputs.fitfunc is None else inputs.fitfunc
         
+        dummy_suffix = "_temp"
+        # Clear-up old temporary scantables (but they really shouldn't exist)
+        remove_list = glob.glob("*"+dummy_suffix)
+        for dummy in remove_list:
+            LOG.debug("Removing old temprary file '%s'" % dummy)
+            shutil.rmtree(dummy)
+        del remove_list
+        
         baselined = []
 
         ifnos = numpy.array(datatable.getcol('IF'))
@@ -103,6 +114,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
 
         # loop over reduction group
         files = set()
+        files_temp = {}
         for (group_id,group_desc) in reduction_group.items():            
             # assume all members have same spw and pollist
             first_member = group_desc[0]
@@ -142,9 +154,9 @@ class SDBaseline(common.SingleDishTaskTemplate):
             #LOG.info('detected_lines=%s'%(detected_lines))
             #LOG.info('cluster_info=%s'%(cluster_info))
 
-            # filenamer
-            namer = filenamer.BaselineSubtractedTable()
-            namer.spectral_window(spwid)
+#             # filenamer
+#             namer = filenamer.BaselineSubtractedTable()
+#             namer.spectral_window(spwid)
 
             # fit order determination and fitting
             fitter_cls = fitting.FittingFactory.get_fitting_class(fitfunc)
@@ -153,9 +165,12 @@ class SDBaseline(common.SingleDishTaskTemplate):
             for idx in _file_index:
                 iteration = group_desc.get_iteration(idx, spwid)
                 fitter_inputs = fitter_cls.Inputs(context, idx, spwid, pols, iteration, 
-                                                  fitorder, edge)
+                                                  fitorder, edge, dummy_suffix)
                 fitter = fitter_cls(fitter_inputs)
                 fitter_result = self._executor.execute(fitter, merge=True)
+                # store temporal scantable name
+                if not files_temp.has_key(idx):
+                    files_temp[idx] = fitter_result.outcome.pop('outtable')
                 
             name_list = [context.observing_run[f].baselined_name
                          for f in _file_index]
@@ -164,6 +179,13 @@ class SDBaseline(common.SingleDishTaskTemplate):
                               'lines': detected_lines,
                               'clusters': cluster_info})
             LOG.debug('cluster_info=%s'%(cluster_info))
+
+        # replace working scantable with temporal baselined scantable
+        for file_idx, temp_name in files_temp.items():
+            blname = context.observing_run[file_idx].baselined_name
+            if os.path.exists(blname) and os.path.exists(temp_name):
+                shutil.rmtree(blname)
+            shutil.move(temp_name, blname)
 
         outcome = {'datatable': datatable,
                    'baselined': baselined,
