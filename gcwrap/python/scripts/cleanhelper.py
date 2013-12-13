@@ -54,13 +54,15 @@ class cleanhelper:
         self._casalog = casalog
         
     @staticmethod
-    def getspwtable(visname=''):
+    def getsubtable(visname='', subtab='SPECTRAL_WINDOW'):
+        """needed because mms has it somewhere else
+        """
         tb.open(visname)
-        spectable=string.split(tb.getkeyword('SPECTRAL_WINDOW'))
+        spectable=string.split(tb.getkeyword(subtab))
         if(len(spectable) ==2):
             spectable=spectable[1]
         else:
-            spectable=visname+"/SPECTRAL_WINDOW"
+            spectable=visname+"/"+subtab
         return spectable
 
     def initsinglems(self, imtool, vis, usescratch):
@@ -129,7 +131,7 @@ class cleanhelper:
               # empty string = select all (='*', for msselectindex)
               inspw='*'
             mssel=ms.msseltoindex(vis=visname,spw=inspw)
-            spectable=self.getspwtable(visname)
+            spectable=self.getsubtable(visname, "SPECTRAL_WINDOW")
             tb.open(spectable)
             chanfreqs=tb.getvarcol('CHAN_FREQ')
             kys = chanfreqs.keys()
@@ -1002,7 +1004,8 @@ class cleanhelper:
             
         self.fieldindex=ms.msseltoindex(self.vis,field=field)['field'].tolist()
         if(len(self.fieldindex)==0):
-            tb.open(self.vis+'/FIELD')
+            fieldtab=self.getsubtable(self.vis, 'FIELD')
+            tb.open(fieldtab)
             self.fieldindex=range(tb.nrows())
             tb.close()
         #weighting and tapering should be done together
@@ -1937,7 +1940,8 @@ class cleanhelper:
             fldid0=fldinds[0]
         if restf=='':
             #tb.open(self.vis+'/FIELD')
-            tb.open(self.vis[self.sortedvisindx[0]]+'/FIELD')
+            fldtab=self.getsubtable(self.vis[self.sortedvisindx[0]],'FIELD')
+            tb.open(fldtab)
             nfld = tb.nrows()
             if nfld >= fldid0:
               srcid=tb.getcell('SOURCE_ID',fldid0)
@@ -1949,7 +1953,8 @@ class cleanhelper:
             if srcid==-1:
                 raise TypeError, "Rest frequency info is not supplied"
             #tb.open(self.vis+'/SOURCE')
-            tb.open(self.vis[self.sortedvisindx[0]]+'/SOURCE')
+            sourcetab=self.getsubtable(self.vis[self.sortedvisindx[0]], 'SOURCE')
+            tb.open(sourcetab)
             tb2=tb.query('SOURCE_ID==%s' % srcid)
             tb.close()
             nsrc = tb2.nrows()
@@ -2007,7 +2012,7 @@ class cleanhelper:
         else:
             spw0=spwinds[0]
         #tb.open(self.vis+'/SPECTRAL_WINDOW')
-        spectable=self.getspwtable(self.vis[self.sortedvisindx[0]])
+        spectable=self.getsubtable(self.vis[self.sortedvisindx[0]], "SPECTRAL_WINDOW")
         tb.open(spectable)
         chanfreqscol=tb.getvarcol('CHAN_FREQ')
         chanwidcol=tb.getvarcol('CHAN_WIDTH')
@@ -2109,7 +2114,7 @@ class cleanhelper:
         ###############
         debug=False
         ###############
-        spectable=self.getspwtable(self.vis[self.sortedvisindx[0]])
+        spectable=self.getsubtable(self.vis[self.sortedvisindx[0]], "SPECTRAL_WINDOW")
         tb.open(spectable)
         chanfreqscol=tb.getvarcol('CHAN_FREQ')
         chanwidcol=tb.getvarcol('CHAN_WIDTH')
@@ -2182,7 +2187,8 @@ class cleanhelper:
 
         #get restfreq
         if restf=='':
-          tb.open(invis+'/FIELD')
+          fldtab=self.getsubtable(invis,'FIELD')
+          tb.open(fldtab)
           nfld=tb.nrows()
           try:
             if nfld >= selfield[0]:
@@ -2198,7 +2204,8 @@ class cleanhelper:
             if mode=='velocity':
               raise TypeError, "Rest frequency info is not supplied"
           try:
-            tb.open(invis+'/SOURCE')
+            srctab=self.getsubtable(invis, 'SOURCE')
+            tb.open(srctab)
             tb2=tb.query('SOURCE_ID==%s' % srcid)
             nsrc = tb2.nrows()
             if nsrc > 0 and tb2.iscelldefined('REST_FREQUENCY',0):
@@ -2441,7 +2448,7 @@ class cleanhelper:
                 except:
                     wset[i][j]=-1
         #print wset
-        spectable=self.getspwtable(self.vis[self.sortedvisindx[0]])
+        spectable=self.getsubtable(self.vis[self.sortedvisindx[0]], "SPECTRAL_WINDOW")
         tb.open(spectable)
         nr=tb.nrows()
         for i in range(len(wset)):
@@ -2595,13 +2602,15 @@ class cleanhelper:
             mdir = me.direction(mrf, ra, dec)
         else:
             #tb.open(self.vis+'/FIELD')
-            tb.open(self.vis[self.sortedvisindx[0]]+'/FIELD')
+            fldtab=self.getsubtable(self.vis[self.sortedvisindx[0]],'FIELD')
+            tb.open(fldtab)
             srcdir=tb.getcell('DELAY_DIR',dir)
             mrf=tb.getcolkeywords('DELAY_DIR')['MEASINFO']['Ref']
             tb.close()
             mdir = me.direction(mrf,str(srcdir[0][0])+'rad',str(srcdir[1][0])+'rad')
             #tb.open(self.vis+'/OBSERVATION')
-            tb.open(self.vis[self.sortedvisindx[0]]+'/OBSERVATION')
+            obstab=self.getsubtable(self.vis[self.sortedvisindx[0]],'OBSERVATION')
+            tb.open(obstab)
         telname=tb.getcell('TELESCOPE_NAME',0)
         # use time in main table instead?
         tmr=tb.getcell('TIME_RANGE',0)
@@ -2624,7 +2633,7 @@ class cleanhelper:
         (part copied from setChannelization)
         """
         #tb.open(self.vis+'/SPECTRAL_WINDOW')
-        spectable=self.getspwtable(self.vis[self.sortedvisindx[0]])
+        spectable=self.getsubtable(self.vis[self.sortedvisindx[0]], "SPECTRAL_WINDOW")
         tb.open(spectable)
         spwframe=tb.getcol('MEAS_FREQ_REF');
         tb.close()
