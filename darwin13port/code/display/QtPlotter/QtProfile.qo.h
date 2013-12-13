@@ -185,7 +185,8 @@ namespace casa {
 		void frameChanged( int );
 		void setPreferences(bool stateAutoX, bool stateAutoY, int showGrid,
 		                    int stateMProf, int stateRel, bool showToolTips, bool showTopAxis,
-		                    bool displayStepFunction, bool opticalFitter, bool showChannelLine );
+		                    bool displayStepFunction, bool opticalFitter,
+		                    bool showChannelLine, bool singleChannelImage );
 		void curveColorPreferences();
 		void legendPreferences();
 		void togglePalette( int modeIndex );
@@ -227,6 +228,11 @@ namespace casa {
 		void pixelsChanged(int, int );
 		void clearPaletteModes();
 
+		/**
+		 * Returns whether or not the image can be profiled.
+		 */
+		bool isImageSupported(std::tr1::shared_ptr<const ImageInterface<float> > img );
+
 	signals:
 		void hideProfile();
 		void coordinateChange(const String&);
@@ -235,6 +241,7 @@ namespace casa {
 		void channelSelect( int channelIndex );
 		void adjustPosition( double tlcx, double tlcy, double brcx, double brcy );
 		void movieChannel( int startChannel, int endChannel );
+		void reloadImages();
 
 	private:
 		void stringToPlotType(const QString &text,  QtProfile::PlotType &pType);
@@ -255,6 +262,7 @@ namespace casa {
 		void resetXUnits( bool spectralAxis);
 		void updateSpectralReferenceFrame();
 		String getRegionShape();
+		int computeCB( const String& xa, const String& ya, const String& za );
 
 		/**
 		 * Returns false if first vector value is greater than the last
@@ -320,6 +328,7 @@ namespace casa {
 		bool isFrequencyMatch();
 		bool isVelocityMatch();
 		int getChannelCount( ImageAnalysis* analysis );
+		int getChannelCount( std::tr1::shared_ptr<const ImageInterface<float> >& img);
 		ImageAnalysis* findImageWithMaximumChannels();
 		void restrictTopAxisOptions( bool restrictOptions, const QString& bottomUnits, bool allowFrequency = true,
 				bool allowVelocity=true );
@@ -373,6 +382,7 @@ namespace casa {
 		Int ordersOfM_;
 		Bool newCollapseVals;
 		bool showTopAxis;
+		bool showSingleChannelImage;
 
 		static const QString PLOT_TYPE_FLUX;
 		static const QString PLOT_TYPE_MEAN;
@@ -385,6 +395,9 @@ namespace casa {
 		static const QString OPTICAL;
 		static const QString AIR;
 		static const QString FRAME_REST;
+		static const QString IMAGE_MISSING_ERROR;
+		static const QString MISSING_REGION_ERROR;
+		static const QString NO_PROFILE_ERROR;
 
 		class spectra_info {
 		public:

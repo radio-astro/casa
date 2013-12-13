@@ -1462,15 +1462,15 @@ class sdsave_scan_number(unittest.TestCase,sdsave_unittest_base):
         self.assertTrue(all(scan_number_org == scan_number))
 
 ###
-# Test for splitant
+# Test for splitant (CAS-5842)
 ###
 class sdsave_test_splitant(unittest.TestCase,sdsave_unittest_base):
     """
     Read MS data, write various types of format.
     """
     # Input and output names
-    infile='OrionS_rawACSmod_cal2123.ms'
-    prefix=sdsave_unittest_base.taskname+'Test2'
+    infile='uid___A002_X6321c5_X3a7.ms'
+    prefix=sdsave_unittest_base.taskname+'TestSplitant'
     outfile=prefix+'.asap'
 
     def setUp(self):
@@ -1494,12 +1494,22 @@ class sdsave_test_splitant(unittest.TestCase,sdsave_unittest_base):
     def testSplitant(self):
         """Test Splitant: test for splitant"""
         self.res=sdsave(infile=self.infile,splitant=True,outfile=self.outfile,outform='ASAP')
-        outsplitfile = self.prefix+'_GBT.asap'
-        if (os.path.exists(outsplitfile)):
-            s1 = sd.scantable(outsplitfile, False)
-            s2 = sd.scantable(self.infile, False)
-            self.assertEqual(s1.nrow(), s2.nrow())
-            del s1, s2
+        outsplitfile1 = self.prefix+'_PM01.asap'
+        outsplitfile2 = self.prefix+'_PM04.asap'
+        if (os.path.exists(outsplitfile1)) and (os.path.exists(outsplitfile2)):
+            s0 = sd.scantable(self.infile, False)
+            s1 = sd.scantable(outsplitfile1, False)
+            s2 = sd.scantable(outsplitfile2, False)
+            
+            self.assertEqual(s0.nrow(), s1.nrow())
+            self.assertEqual(s0.nrow(), s2.nrow())
+
+            s0sp0 = s0.get_spectrum(0)
+            s1sp0 = s1.get_spectrum(0)
+            for i in range(len(s0sp0)):
+                self.assertEqual(s0sp0[i], s1sp0[i])
+            
+            del s0, s1, s2
         
 
 def suite():

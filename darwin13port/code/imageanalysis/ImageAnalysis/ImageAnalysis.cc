@@ -1231,11 +1231,8 @@ ImageInterface<Float>* ImageAnalysis::convolve2d(
     	*_log << "Major axis is less than minor axis"
     		<< LogIO::EXCEPTION;
     }
-	Bool autoScale;
-	if (scale > 0) {
-		autoScale = False;
-	} else {
-		autoScale = True;
+	Bool autoScale = scale <= 0;
+	if (autoScale) {
 		scale = 1.0;
 	}
 	// Check output file
@@ -1248,9 +1245,8 @@ ImageInterface<Float>* ImageAnalysis::convolve2d(
 	}
 
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_image, // *(ImageRegion::tweakedRegionRecord(&Region)),
-		Region,
-		mask, _log.get(), False, AxesSpecifier(), stretch
+		*_image, Region, mask, _log.get(), False,
+		AxesSpecifier(), stretch
 	);
 
 	// Convert inputs
@@ -1265,21 +1261,21 @@ ImageInterface<Float>* ImageAnalysis::convolve2d(
 
 	// Create output image and mask
 	IPosition outShape = subImage.shape();
-	PtrHolder<ImageInterface<Float> > imOut;
+	std::auto_ptr<ImageInterface<Float> > pImOut;
 	if (outFile.empty()) {
 		*_log << LogIO::NORMAL << "Creating (temp)image of shape "
 				<< outShape << LogIO::POST;
-		imOut.set(new TempImage<Float> (outShape, subImage.coordinates()));
-	} else {
+		pImOut.reset(new TempImage<Float> (outShape, subImage.coordinates()));
+	}
+	else {
 		*_log << LogIO::NORMAL << "Creating image '" << outFile
 				<< "' of shape " << outShape << LogIO::POST;
-		imOut.set(
+		pImOut.reset(
 			new PagedImage<Float> (
 				outShape, subImage.coordinates(), outFile
 			)
 		);
 	}
-	std::auto_ptr<ImageInterface<Float> > pImOut(imOut.ptr()->cloneII());
 	try {
 		Image2DConvolver<Float>::convolve(
 			*_log, *pImOut, subImage, kernelType, IPosition(axes),

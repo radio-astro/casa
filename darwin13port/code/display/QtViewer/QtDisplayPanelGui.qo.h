@@ -321,6 +321,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void showImageProfile();
 		virtual void hideImageProfile();
 		virtual void refreshImageProfile();
+		void resetImageProfile();
 
 		virtual void hideAllSubwindows();
 		virtual void hideImageMenus();
@@ -670,7 +671,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void clear_status_bar( );
 		void reset_status_bar( );
 		void controlling_dd_axis_change(String, String, String, std::vector<int> );
-		//void controlling_dd_update(QtDisplayData*);
+		void initializeProfile( );
 		void showHistogram();
 		void showSlicer();
 		void resetListenerImage();
