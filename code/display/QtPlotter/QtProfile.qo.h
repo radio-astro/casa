@@ -324,7 +324,8 @@ namespace casa {
 		void restrictTopAxisOptions( bool restrictOptions, const QString& bottomUnits, bool allowFrequency = true,
 				bool allowVelocity=true );
 		double getUnitsPerChannel( ImageAnalysis* analysis, bool* ok, const QString& matchUnits );
-
+		QString readTopAxis() const;
+		void persistTopAxis( const QString& units );
 		QList<OverplotAnalysis> *over;
 		const String WORLD_COORDINATES;
 		String coordinate;
@@ -373,6 +374,7 @@ namespace casa {
 		Int ordersOfM_;
 		Bool newCollapseVals;
 		bool showTopAxis;
+		static bool topAxisDefaultSet;
 
 		static const QString PLOT_TYPE_FLUX;
 		static const QString PLOT_TYPE_MEAN;
@@ -385,6 +387,8 @@ namespace casa {
 		static const QString OPTICAL;
 		static const QString AIR;
 		static const QString FRAME_REST;
+		static const QString PERSIST_FREQUENCY_BOTTOM;
+		static const QString PERSIST_FREQUENCY_TOP;
 
 		class spectra_info {
 		public:

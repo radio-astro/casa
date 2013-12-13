@@ -325,7 +325,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-		virtual void checkAxis();
+		virtual void checkAxis( bool updateUnits = true);
 
 
 		const String &getColormap( ) {

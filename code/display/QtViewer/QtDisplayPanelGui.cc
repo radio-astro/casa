@@ -2318,7 +2318,7 @@ void QtDisplayPanelGui::showImageProfile() {
 							connect( profileDD_, SIGNAL(spectrumChanged(String, String, String )),
 									profile_, SLOT(changeSpectrum(String, String, String )));
 						} else {
-							pdd->checkAxis();
+							//pdd->checkAxis();
 						}
 					}
 					if (pdd->getAxisIndex(String("Spectral")) == -1 &&
@@ -2331,7 +2331,7 @@ void QtDisplayPanelGui::showImageProfile() {
 						profileDD_ = pdd;
 						profile_->showNormal();
 						profile_->raise();
-						pdd->checkAxis();
+						pdd->checkAxis( false );
 					}
 				} else {
 					if (pdd->getAxisIndex(String("Spectral")) != -1 ||
