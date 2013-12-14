@@ -145,7 +145,6 @@ class sdsmooth_basicTest(sdsmooth_unittest_base,unittest.TestCase):
       sdstat(infile=outfile,masklist=basechan)
     """
     ### TODO:
-    ### - need checking for flag application
     ### - comparison with simple and known spectral shape
 
     # Input and output names
@@ -575,6 +574,48 @@ class sdsmooth_basicTest(sdsmooth_unittest_base,unittest.TestCase):
         self.assertEqual(nch_new,numpy.ceil(nch_old/self.regridw))
         self.assertAlmostEqual((ch0_new-refsc['ch0'])/refsc['ch0'],0.,places=5)
         self.assertAlmostEqual((incr_new-refsc['incr'])/refsc['incr'],0.,places=5)
+
+    def test13(self):
+        """Test 13: test flagged data kernel = 'boxcar' + kwidth = 16"""
+        tid="13"
+        outfile = self.outroot+tid+'.asap'
+        kernel = 'boxcar'
+        kwidth = 16
+
+        # flag line channels
+        from sdflag import sdflag
+        flag_line = []
+        for rg in self.linechan:
+            flag_line.append([rg[0]+kwidth, rg[1]-kwidth])
+        sdflag(infile=self.infile, maskflag=flag_line)
+
+        result =sdsmooth(infile=self.infile,outfile=outfile,
+                         kernel=kernel,kwidth=kwidth)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        # check flag in output scantable
+        scan = sd.scantable(outfile, average=False)
+        for irow in range(scan.nrow()):
+            mask0 = scan.get_mask(irow)
+            flag0 = [(not mmm) for mmm in mask0]
+            res_mask = scan.get_masklist(flag0)
+            del mask0, flag0
+            self.assertEqual(res_mask, flag_line,
+                             "unexpected flag range (row %d)" % irow)
+        del scan
+        
+        
+        # unflag line channels
+        sdflag(infile=outfile, maskflag = flag_line,flagmode='unflag')
+
+        ### reference values ( ASAP r2084 + CASA r14498)
+        refdic = {'linemax': 0,
+                  'baserms': 0.096009217202663422}
+        line_1 = []
+        for rg in flag_line:
+            line_1.append([rg[0]+kwidth, rg[1]-kwidth])
+        testval = self._getStats(outfile, line_1)
+        self._compareDictVal(testval, refdic)
 
 
 class sdsmooth_storageTest( sdsmooth_unittest_base, unittest.TestCase ):

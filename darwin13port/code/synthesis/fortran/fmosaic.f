@@ -759,7 +759,8 @@ C     the final image by this term.
                                     xind=iloc(1)+(convsize)/2+1
                                     cwt=convfunc(xind, yind, 
      $                                  aconvpol, aconvchan, aconvplane)
-C                          write(*,*) support, iloc 
+C                          write(*,*) support, iloc
+C      write(*,*) loc(1, ichan, irow)+ix,loc(2, ichan, irow)+iy,xind,yind
                                     grid(loc(1, ichan, irow)+ix,
      $                           loc(2, ichan, irow)+iy,apol,achan)=
      $                             grid(loc(1, ichan, irow)+ix,
@@ -1668,14 +1669,15 @@ C            end if
      $     support
       
       integer, intent(out) :: msuppx, msuppy, psuppx, psuppy
-      integer :: loc1sub, loc1plus, loc2sub, loc2plus
-   
+      integer :: loc1sub, loc1plus, loc2sub, loc2plus 
       msuppx=merge(-support, -nx0+loc(1), loc(1)-support > nx0)
       msuppy=merge(-support, -ny0+loc(2), loc(2)-support > ny0)
-      psuppx=merge(support, nx0+nxsub-loc(1) , (loc(1)+support) 
+      psuppx=merge(support, nx0+nxsub-loc(1)-1 , (loc(1)+support) 
      $ < (nx0+nxsub))
-      psuppy=merge(support, ny0+nysub-loc(2) , (loc(2)+support) 
+      psuppy=merge(support, ny0+nysub-loc(2)-1 , (loc(2)+support) 
      $ < (ny0+nysub))
+C      write(*,*) 'ny0,nysub,loc(2), psuppy',ny0,nysub,loc(2), psuppy,
+C     $ support, ((loc(2)+support) < (ny0+nysub))
       loc1sub=loc(1)-support
       loc1plus=loc(1)+support
       loc2sub=loc(2)-support

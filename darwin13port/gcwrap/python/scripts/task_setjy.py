@@ -106,6 +106,8 @@ def setjy_core(vis=None, field=None, spw=None,
                     casalog.post("No rows were selected.", "WARNING")
                     return True
                 else:
+                    if (not n_selected_rows):
+                        raise Exception, "No rows were selected. Please check your data selection"
                     myim.open(vis, usescratch=usescratch)
 
             else:
@@ -318,18 +320,26 @@ def findCalModels(target='CalModels',
 
 def nselrows(vis, field='', spw='', obs='', timerange='', scan='', intent='', usescratch=None):
 
+    # modified to use ms.msselect. If no row is selected ms.msselect will
+    # raise an exception  - TT 2013.12.13
     retval = 0
     myms = mstool()
 
-    msselargs = {'vis': vis}
+    #msselargs = {'vis': vis}
+    msselargs = {}
     if field:
         msselargs['field'] = field
     if spw:
         msselargs['spw'] = spw
+    if intent:
+       msselargs['scanintent'] = intent
+
   # only applicable for usescratch=T
     if usescratch:
         if obs:
-            msselargs['observation'] = obs
+            if not type(obs)==string:
+               sobs = str(obs)
+            msselargs['observation'] = sobs
         if timerange:
             msselargs['time'] = timerange
         if scan:
@@ -341,49 +351,60 @@ def nselrows(vis, field='', spw='', obs='', timerange='', scan='', intent='', us
         if scan: datasels.append('scan') 
         if obs: datasels.append('observation') 
         if len(datasels):
-            warnstr+=str(datasels)+' will be ignored for usescartch=T'
+            warnstr+=str(datasels)+' will be ignored for usescartch=False'
             casalog.post(warnstr,'WARN')
  
+    # === skip this use ms.msselect instead ====
     # ms.msseltoindex only goes by the subtables - it does NOT check
     # whether the main table has any rows matching the selection.
-    try:
-        selindices = myms.msseltoindex(**msselargs)
-    except Exception, instance:
-        casalog.post('nselrowscore exception: %s' % instance,'SEVERE')
-        raise instance
-    query = []
-    if field:
-        query.append("FIELD_ID in " + str(selindices['field'].tolist()))
-    if spw:
-        query.append("DATA_DESC_ID in " + str(selindices['spw'].tolist()))
-    if obs and usescratch:
-        query.append("OBSERVATION_ID in " + str(selindices['obsids'].tolist()))
+#    try:
+#        selindices = myms.msseltoindex(**msselargs)
+#        print "msselargs=",msselargs," selindices=",selindices
+#    except Exception, instance:
+#        casalog.post('nselrowscore exception: %s' % instance,'SEVERE')
+#        raise instance
+#    query = []
+#    if field:
+#        query.append("FIELD_ID in " + str(selindices['field'].tolist()))
+#    if spw:
+#        query.append("DATA_DESC_ID in " + str(selindices['spw'].tolist()))
+#    if obs and usescratch:
+#        query.append("OBSERVATION_ID in " + str(selindices['obsids'].tolist()))
 
     # I don't know why ms.msseltoindex takes a time argument 
     # - It doesn't seem to appear in the output.
     
-    if scan and usescratch:
-        query.append("SCAN_NUMBER in " + str(selindices['scan'].tolist()))
+#    if scan and usescratch:
+#        query.append("SCAN_NUMBER in " + str(selindices['scan'].tolist()))
+
+    #if timerange and usescratch:
+    #    query.append("TIME in [select TIME where 
 
     # for intent (OBS_MODE in STATE subtable), need a subquery part...
-    if intent:
-        query.append("STATE_ID in [select from ::STATE where OBS_MODE==pattern(\""+\
-                  intent+"\") giving [ROWID()]]")
-    mytb = tbtool()
-    mytb.open(vis)
+#    if intent:
+#        query.append("STATE_ID in [select from ::STATE where OBS_MODE==pattern(\""+\
+#                  intent+"\") giving [ROWID()]]")
+#    print "query=",query
+#    mytb = tbtool()
+#    mytb.open(vis)
+    myms = mstool()
+    myms.open(vis)
 
-    if (len(query)==0):
-        retval = mytb.nrows()
-        mytb.close()
+    if (len(msselargs)==0):
+        retval = myms.nrow()
+        myms.close()
     else:
         try:
-            st = mytb.query(' and '.join(query),style='python')  # Does style matter here?
-            retval = st.nrows()
-            st.close() # needed to clear tablecache? 
-            mytb.close()
+#            st = mytb.query(' and '.join(query),style='python')  # Does style matter here?
+#            retval = st.nrows()
+#            st.close() # needed to clear tablecache? 
+#            mytb.close()
+            myms.msselect(msselargs)
+            retval = myms.nrow()
+            myms.close()
         except Exception, instance:
             casalog.post('nselrowscore exception: %s' % instance,'SEVERE')
-            mytb.close()
+            myms.close()
             raise Exception, instance
 
     return retval
