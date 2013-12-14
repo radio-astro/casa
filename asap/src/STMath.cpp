@@ -2525,7 +2525,11 @@ CountedPtr< Scantable > STMath::smooth( const CountedPtr< Scantable >& in,
       flagCol.get(i, flag);
       convertArray(mask, flag);
       Vector<Float> specout;
-      mathutil::replaceMaskByZero(specout, mask);
+      //mathutil::replaceMaskByZero(specout, mask);
+      mathutil::replaceMaskByZero(spec, !mask);
+      //std::vector<bool> vmask;
+      //(!mask).tovector(vmask);
+      //mathutil::doZeroOrderInterpolation(spec, vmask);
       conv.linearConv(specout, spec);
       specCol.put(i, specout);
     }
