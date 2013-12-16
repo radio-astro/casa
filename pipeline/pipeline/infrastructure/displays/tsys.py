@@ -45,7 +45,7 @@ class TsysSummaryChart(object):
     def get_figfile(self):
         return os.path.join(self.context.report_dir, 
                             'stage%s' % self.result.stage_number, 
-                            'tsys-summary.png')
+                            'tsys-%s-summary.png' % self.ms.basename)
 
     def get_plot_wrapper(self, spw):
         try:
@@ -121,7 +121,7 @@ class TsysPerAntennaChart(object):
     def get_figfile(self):
         return os.path.join(self.context.report_dir, 
                             'stage%s' % self.result.stage_number, 
-                            'tsys.png')
+                            'tsys-%s.png' % self.ms.basename)
 
     def get_plot_wrapper(self, spw, antenna):
         # get the Tsys spw for this science spw
