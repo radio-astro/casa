@@ -143,8 +143,11 @@ class SDChannelMapDisplay(SDImageDisplay):
 
     def __valid_lines(self):
         reduction_group = self.context.observing_run.reduction_group
-        ant_index = [i for i in xrange(len(self.context.observing_run))
-                     if self.context.observing_run[i].antenna.name == self.antenna]
+        if self.antenna == 'COMBINED':
+            ant_index = range(len(self.context.observing_run))
+        else:
+            ant_index = [i for i in xrange(len(self.context.observing_run))
+                         if self.context.observing_run[i].antenna.name == self.antenna]
         mygroup = None
         for (k,v) in reduction_group.items():
             if v[0].spw == self.spw:
