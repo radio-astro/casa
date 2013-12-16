@@ -130,7 +130,7 @@ see detailed plots per spectral window and antenna.</p>
 % for ms in amp_refant:		
     <h4>
 		<a class="replace"
-           href="${os.path.relpath(os.path.join(dirname, 'amp_vs_time_%s.html' % ms), pcontext.report_dir)}">
+           href="${os.path.relpath(os.path.join(dirname, amp_subpages[ms]), pcontext.report_dir)}">
             ${ms}
         </a>
 	</h4>
@@ -153,7 +153,7 @@ see detailed plots per spectral window and antenna.</p>
 
                     <div class="caption">
 						<h4>
-		                    <a href="${os.path.relpath(os.path.join(dirname, 'amp_vs_time_%s.html' % ms), pcontext.report_dir)}"
+		                    <a href="${os.path.relpath(os.path.join(dirname, amp_subpages[ms]), pcontext.report_dir)}"
 		                       class="replace"
 		                       data-ant="${plot.parameters['ant']}">
 			                   Reference antenna: amplitude vs frequency
@@ -188,7 +188,7 @@ see detailed plots per spectral window and antenna.</p>
 
                     <div class="caption">
 						<h4>
-		                    <a href="${os.path.relpath(os.path.join(dirname, 'amp_vs_time_%s.html' % ms), pcontext.report_dir)}"
+		                    <a href="${os.path.relpath(os.path.join(dirname, amp_subpages[ms]), pcontext.report_dir)}"
 		                       class="replace"
 		                       data-ant="${plot.parameters['ant']}">
 			                   Typical antenna: amplitude vs frequency
@@ -224,7 +224,7 @@ see detailed plots per spectral window and antenna.</p>
 
                     <div class="caption">
 						<h4>
-		                    <a href="${os.path.relpath(os.path.join(dirname, 'phase_vs_time_%s.html' % ms), pcontext.report_dir)}"
+		                    <a href="${os.path.relpath(os.path.join(dirname, phase_subpages[ms]), pcontext.report_dir)}"
 		                       class="replace"
 		                       data-ant="${plot.parameters['ant']}">
 			                   Typical antenna: phase vs frequency
