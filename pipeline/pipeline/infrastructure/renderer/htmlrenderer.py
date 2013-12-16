@@ -1674,7 +1674,7 @@ class GenericPlotsRenderer(object):
                 'plots'      : self.plots,
                 'dirname'    : self.dirname,
                 'json'       : self.json,
-                'plot_title' : 'Phase vs time'}
+                'plot_title' : 'Phase vs time for %s' % self.ms}
 
     @property
     def dirname(self):
@@ -1711,7 +1711,7 @@ class GaincalPhaseVsTimePlotRenderer(GenericPlotsRenderer):
 
     def _get_display_context(self):
         d = super(GaincalPhaseVsTimePlotRenderer, self)._get_display_context()
-        d['plot_title'] = 'Phase vs time'
+        d['plot_title'] = 'Phase vs time for %s' % self.ms
         return d
     
 
@@ -1727,7 +1727,7 @@ class GaincalAmpVsTimePlotRenderer(GenericPlotsRenderer):
 
     def _get_display_context(self):
         d = super(GaincalAmpVsTimePlotRenderer, self)._get_display_context()
-        d['plot_title'] = 'Amplitude vs time'
+        d['plot_title'] = 'Amplitude vs time for %s' % self.ms
         return d
 
 
@@ -1780,10 +1780,12 @@ class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
         amp_refant = {}
         amp_mode = {}
         amp_details = {}
+        amp_vs_time_subpages = {}
 
         phase_refant = {}
         phase_mode = {}
         phase_details = {}
+        phase_vs_time_subpages = {}
 
         for result in results:
             vis = os.path.basename(result.inputs['vis'])
@@ -1823,6 +1825,7 @@ class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
                                                        phase_details[vis])            
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())    
+                phase_vs_time_subpages[ms.basename] = renderer.filename
                             
             plotter = bandpass.BandpassAmpVsFreqDetailChart(context, result)
             amp_details[vis] = plotter.plot()            
@@ -1830,17 +1833,22 @@ class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
                                                      amp_details[vis])            
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())    
+                # the filename is sanitised - the MS name is not. We need to
+                # map MS to sanitised filename for link construction.
+                amp_vs_time_subpages[ms.basename] = renderer.filename
 
         # add the PlotGroups to the Mako context. The Mako template will parse
         # these objects in order to create links to the thumbnail pages we
         # just created
-        ctx.update({'applications' : applications,
+        ctx.update({'applications'         : applications,
                     'phaseup_applications' : phaseup_applications,
-                    'amp_mode'     : amp_mode,
-                    'amp_refant'   : amp_refant,
-                    'phase_mode'   : phase_mode,
-                    'phase_refant' : phase_refant,
-                    'dirname'      : stage_dir})
+                    'amp_mode'             : amp_mode,
+                    'amp_refant'           : amp_refant,
+                    'phase_mode'           : phase_mode,
+                    'phase_refant'         : phase_refant,
+                    'amp_subpages'         : amp_vs_time_subpages,
+                    'phase_subpages'       : phase_vs_time_subpages,
+                    'dirname'              : stage_dir})
 
         return ctx
 
@@ -1975,7 +1983,7 @@ class BandpassAmpVsTimePlotRenderer(GenericPlotsRenderer):
 
     def _get_display_context(self):
         d = super(BandpassAmpVsTimePlotRenderer, self)._get_display_context()
-        d['plot_title'] = 'Amplitude vs time'
+        d['plot_title'] = 'Amplitude vs time for %s' % self.ms
         return d
 
 
@@ -1987,7 +1995,7 @@ class BandpassPhaseVsTimePlotRenderer(GenericPlotsRenderer):
 
     def _get_display_context(self):
         d = super(BandpassPhaseVsTimePlotRenderer, self)._get_display_context()
-        d['plot_title'] = 'Phase vs time'
+        d['plot_title'] = 'Phase vs time for %s' % self.ms
         return d
 
 
