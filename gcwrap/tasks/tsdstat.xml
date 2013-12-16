@@ -77,22 +77,26 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
     <param type="string" name="scan">
-            <description>select data based on scan numbers (e.g. \'21~23\')</description>
+	    <shortdescription>Select data by scan numbers (e.g. \'21~23\')</shortdescription>
+            <description>Select data by scan numbers</description>
             <value></value>
     </param>
 
     <param type="string" name="field">
-            <description>string for selection by source name (e.g. \'3C2*\')</description>
+            <shortdescription>Select field by ID(s) or name(s) (e.g. \'3C2*\')</shortdescription>
+	    <description>Select field by ID(s) or name(s)</description>
             <value></value>
     </param>
 
     <param type="string" name="spw">
-            <description>select data based on IF ids (spectral window) (e.g. \'3,5,7\')</description>
+            <shortdescription>Select data by IF ids (spectral window) (e.g. \'3,5,7\')</shortdescription>
+	    <description>Select data by IF ids (spectral window)</description>
             <value></value>
     </param>
 
     <param type="string" name="pol">
-            <description>select data based on polarization ids (e.g.\'0,1\')</description>
+            <shortdescription>Select data by polarization ids (e.g.\'0,1\')</shortdescription>
+            <description>Select data by polarization ids</description>
             <value></value>
     </param>
 

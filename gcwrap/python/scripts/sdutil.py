@@ -280,7 +280,28 @@ class sdtask_template(sdtask_interface):
             casalog.post('taql: \'%s\''%(selector.get_query()), priority='DEBUG')
 
         return selector
-                
+
+    def assert_no_channel_selection_in_spw(self, mode='result'):
+        """
+        Assert 'spw' does not have channel selection
+        Returns True if spw string does not have channel selecton
+        Returns False or raises an error if spw has channel selection
+
+        Available modes are
+            'result' : just returns the result (true or false)
+            'warn'   : warn user if channel selection is set
+            'error'  : raise an error if channel seledtion is set
+        """
+        if not hasattr(self, 'spw'): return True
+        has_chan = (self.spw.find(':') > -1)
+        if has_chan:
+            if mode.upper().startswith('E'):
+                raise Exception, "spw parameter should not contain channel selection."
+            elif mode.upper().startswith('W'):
+                casalog.post("Channel selection found in spw parameter. It would be ignored", priority='WARN')
+        
+        return has_chan
+        
         
     def set_to_scan(self):
         if hasattr(self,'fluxunit'):
