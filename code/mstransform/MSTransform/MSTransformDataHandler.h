@@ -215,6 +215,8 @@ public:
 	Bool copyState();
 	Bool copySyscal();
 	Bool copyWeather();
+	void copyMainTableKeywords (TableRecord& outKeys,
+			const TableRecord& inKeys);
 
 	// This falls between copyGenericSubtables() and the copiers for standard
 	// sub-tables like copyFeed().  It is for optional sub-tables like CALDEVICE

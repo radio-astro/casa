@@ -2917,14 +2917,18 @@ Bool MSTransformDataHandler::copyGenericSubtables()
 
 			if (inDesc.isColumn(name))
 			{
-				TableColumn outCol(msOut_p, name);
-				ROTableColumn inCol(mssel_p, name);
+			    TableColumn outCol(msOut_p, name);
+			    ROTableColumn inCol(mssel_p, name);
 
-				TableCopy::copySubTables(	outCol.rwKeywordSet(),
-											inCol.keywordSet(),
-											msOut_p.tableName(),
-											msOut_p.tableType(),
-											mssel_p);
+			    TableCopy::copySubTables(outCol.rwKeywordSet(),
+						     inCol.keywordSet(),
+						     msOut_p.tableName(),
+						     msOut_p.tableType(),
+						     mssel_p);
+			    // Copy the keywords if column is FLOAT_DATA
+			    if (name == "FLOAT_DATA")
+				copyMainTableKeywords(outCol.rwKeywordSet(), inCol.keywordSet());
+
 			}
 		}
 	}
@@ -3022,6 +3026,26 @@ Bool MSTransformDataHandler::mergeDDISubTables(Vector<String> filenames)
 	return True;
 }
 
+// -----------------------------------------------------------------------
+// Work-around to copy the keywords of the FLOAT_DATA column to the output MS
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::copyMainTableKeywords (TableRecord& outKeys,
+		const TableRecord& inKeys)
+{
+	for (uInt i=0; i<inKeys.nfields(); i++) {
+		if (inKeys.type(i) == TpString) {
+			// Add keywords for MAIN table columns such as FLOAT_DATA
+			String ikey = inKeys.name(i);
+			if (!outKeys.isDefined (ikey)) {
+				String keyval;
+				inKeys.get(ikey, keyval);
+				outKeys.define(ikey,keyval);
+			}
+
+		}
+
+	}
+}
 
 
 } //# NAMESPACE CASA - END
