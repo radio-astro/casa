@@ -229,7 +229,7 @@ class FittingBase(common.SingleDishTaskTemplate):
 #                         continue
     
                     # data to be fitted
-                    sp = spectra[i]
+#                     sp = spectra[i]
     
                     # mask lines
                     maxwidth = 1
@@ -266,7 +266,7 @@ class FittingBase(common.SingleDishTaskTemplate):
         LOG.info('number of rows in scantable = %d' % st_out.nrow())
         st_out.set_selection(rows=row_list_total)
         LOG.info('number of rows in selected = %d' % st_out.nrow())
-        LOG.info('BLINFO=%s, %s, %s, .........' % (str(blinfo[0]), str(blinfo[1]), str(blinfo[2])))
+        LOG.info('BLINFO=%s' % (str(blinfo)))
         st_out.sub_baseline(insitu=True, retfitres=False, blinfo=blinfo, bltable=bltable_name, overwrite=True)
         st_out.set_selection()
         st_out.save(filename_out, format='ASAP', overwrite=True)
@@ -316,18 +316,46 @@ class FittingBase(common.SingleDishTaskTemplate):
         #else:
         #    nmask = int(nchan_without_edge - numpy.sum(mask[edge[0]:] * 1.0))
         num_mask = int(nchan_without_edge - numpy.sum(mask[edge[0]:nchan-edge[1]] * 1.0))
-        masklist_all = masklist.tolist()
-        if edge[0] > 0:
-            masklist_all.insert(0, [ 0, (edge[0]-1) ])
-        if edge[1] > 0:
-            masklist_all.append([ (nchan-edge[1]), (nchan-1) ])
+        masklist_all = self._mask_to_masklist(mask)
 
         LOG.trace('nchan_without_edge, num_mask, diff=%s, %s'%(nchan_without_edge, num_mask))
 
         outdata = self._get_param(row_idx, polyorder, nchan, mask, edge, nchan_without_edge, num_mask, fragment, nwindow, win_polyorder, masklist_all)
 
         return outdata
-
+    
+    def _mask_to_masklist(self, mask):
+        """
+        Converts mask array to masklist
+        
+        Argument
+            mask : an array of channel mask in values 0 (rejected) or 1 (adopted)
+        """
+        nchan = len(mask)
+        istart = []
+        iend = []
+        if mask[0] == 1:
+            istart = [0]
+        for ichan in range(1, nchan):
+            switch = mask[ichan] - mask[ichan-1]
+            if switch == 0:
+                continue
+            elif switch == 1:
+                # start of mask channels (0 -> 1)
+                istart.append(ichan)
+            elif switch == -1:
+                # end of mask channels (1 -> 0)
+                iend.append(ichan-1)
+        if mask[nchan-1] == 1:
+            iend.append(nchan-1)
+        if len(istart) != len(iend):
+            raise RuntimeError, "Failed to get mask ranges. The lenght of start channels and end channels do not match."
+        masklist = []
+        for irange in range(len(istart)):
+            if istart[irange] > iend[irange]:
+                raise RuntimeError, "Failed to get mask ranges. A start channel index is larger than end channel."
+            masklist.append([istart[irange], iend[irange]])
+        return masklist
 
 class CubicSplineFitting(FittingBase):
     def _get_param(self, idx, polyorder, nchan, mask, edge, nchan_without_edge, nchan_masked, fragment, nwindow, win_polyorder, masklist):
