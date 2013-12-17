@@ -105,6 +105,7 @@ sdstat.xml
 sdtpimaging.xml
 tsdcal.xml
 tsdstat.xml
+tsdsave.xml
 setjy.xml
 ssoflux.xml
 simalma.xml
