@@ -402,11 +402,13 @@ public:
 
             const Slice & slice = correlationAxis.getSlice (i);
 
+            uInt n = 0;
             for (uInt j = 0;
-                 j < slice.length();
+                 n < slice.length();
                  j += slice.inc()){
 
                 correlations.push_back (j);
+                n ++;
 
             }
         }
