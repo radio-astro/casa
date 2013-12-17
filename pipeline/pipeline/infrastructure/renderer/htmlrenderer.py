@@ -44,6 +44,7 @@ from .. import utils
 import pipeline.hif as hif
 import pipeline.hsd as hsd
 import pipeline.hifa as hifa
+import pipeline.hifv as hifv
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -178,6 +179,12 @@ def get_task_description(result_obj):
 
     if task_cls is hsd.tasks.SDPlotFlagBaseline:
         return 'Plot whole spectra with baseline fit and flag result'
+    
+    #if task_cls in hifv.tasks.FlagDeterVLA:
+    #    return 'VLA deterministic flagging'
+    
+    if task_cls is hifv.tasks.Targetflag:
+        return 'Targetflag (all data through rflag)'
 
     if LOG.isEnabledFor(LOG.todo):
         LOG.todo('No task description for \'%s\'' % task_cls.__name__)
@@ -2934,7 +2941,8 @@ renderer_map = {
         hsd.tasks.SDImaging      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html'),
         hsd.tasks.SDImaging2     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html'),
         hsd.tasks.SDFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagbaseline.html'),
-        hsd.tasks.SDPlotFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_plotflagbaseline.html')
+        hsd.tasks.SDPlotFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_plotflagbaseline.html'),
+        hifv.tasks.Targetflag    : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_targetflag.html')
     }
 }
 
