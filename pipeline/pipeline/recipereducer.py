@@ -36,6 +36,7 @@ Example #5: process uid123.tar.gz with a log level of TRACE
     pipeline.recipereducer.reduce(vis=['uid123.tar.gz'], loglevel='trace') 
 
 """
+import ast
 import os
 import traceback
 import xml.etree.ElementTree as ElementTree
@@ -86,7 +87,7 @@ def _get_tasks(context, vis, infiles, procedure='procedure_hifa.xml'):
             for parameter in parameterset.findall('Parameter'):
                 argname = parameter.findtext('Keyword')
                 argval = parameter.findtext('Value')
-                task_args[argname] = argval
+                task_args[argname] = string_to_val(argval)
 
         task_inputs = task_class.Inputs(context, **task_args)
         task = task_class(task_inputs)
@@ -94,6 +95,19 @@ def _get_tasks(context, vis, infiles, procedure='procedure_hifa.xml'):
         # we yield rather than return so that the context can be updated
         # between task executions 
         yield task
+
+def string_to_val(s):
+    """
+    Convert a string to a Python data type.
+    """
+    try:
+        pyobj = ast.literal_eval(s)
+        # seems Tsys wants its groupintent as a string
+        if type(pyobj) in (list, tuple):
+            pyobj = s
+        return pyobj
+    except ValueError:
+        return s
 
 def _format_arg_value(arg_val):
     arg, val = arg_val
