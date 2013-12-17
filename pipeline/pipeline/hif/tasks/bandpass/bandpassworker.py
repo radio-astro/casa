@@ -141,10 +141,7 @@ class BandpassWorker(basetask.StandardTaskTemplate):
                                'stage%s' % stage_number,
                                'qa2')
 
-        # QA2 scores are deemed unreliable for Cycle 1, so turn them off.
-#         if self.inputs.run_qa2 is True:
-        LOG.todo('Re-enable bandpass QA2 analysis with meaningful scores')
-        if False:
+        if self.inputs.run_qa2 is True:
             if not os.path.exists(qa2_dir):
                 os.makedirs(qa2_dir)
     
