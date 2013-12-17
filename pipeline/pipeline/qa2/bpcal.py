@@ -151,10 +151,12 @@ def rms(data):
 #               Added call to bpcal_score() function.  Return value changed to
 #               a three-element tuple containing the bandpass statistics,
 #               scores, and plots dictionaries.
+# 2013 Dec 17 - Dirk Muders, MPIfR
+#               Made plotting optional.
 
 # ------------------------------------------------------------------------------
 
-def bpcal( in_table, out_dir, logobj='PYTHON' ):
+def bpcal( in_table, out_dir, logobj='PYTHON', create_plots=False ):
 
 	# Initialize the logger
 
@@ -217,12 +219,15 @@ def bpcal( in_table, out_dir, logobj='PYTHON' ):
 
 	# Create the bandpass calibration statistics plots
 
-	bpcal_plots = bpcal_plot( in_table, out_dir, bpcal_stats )
+        if (create_plots):
+	    bpcal_plots = bpcal_plot( in_table, out_dir, bpcal_stats )
 
-	msg = 'Bandpass calibration statistics plots created in '
-	msg += out_dir + ' ...'
-	origin = root
-	logger.info( msg, origin=origin )
+	    msg = 'Bandpass calibration statistics plots created in '
+	    msg += out_dir + ' ...'
+	    origin = root
+	    logger.info( msg, origin=origin )
+        else:
+            bpcal_plots = {}
 
 
 	# Print the last log message
