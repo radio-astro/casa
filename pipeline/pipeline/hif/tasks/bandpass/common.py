@@ -22,7 +22,8 @@ class CommonBandpassInputs(commoncalinputs.CommonCalibrationInputs):
     """
     
     combine = basetask.property_with_default('combine', 'scan')
-    run_qa2 = basetask.property_with_default('run_qa2', True, 'Perform QA2 analysis')
+    # Force to False for the time being.
+    run_qa2 = basetask.property_with_default('run_qa2', False, 'Perform QA2 analysis')
     solint  = basetask.property_with_default('solint', 'inf')
     solnorm = basetask.property_with_default('solnorm', True)
 
