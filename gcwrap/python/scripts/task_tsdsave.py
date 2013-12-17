@@ -5,7 +5,7 @@ from asap.scantable import is_scantable, is_ms
 import sdutil
 
 @sdutil.sdtask_decorator
-def tsdsave(infile, splitant, antenna, getpt, scan, field, spw, pol, restfreq, outfile, outform, overwrite):
+def tsdsave(infile, splitant, antenna, getpt, field, spw, timerange, scan, pol, beam, restfreq, outfile, outform, overwrite):
     with sdutil.sdtask_manager(sdsave_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
