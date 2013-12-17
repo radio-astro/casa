@@ -83,7 +83,9 @@ public:
 
 protected:
 
+    virtual int getUnderlyingCorrelation (Int spectralWindow, Int correlation);
     void setFactor (Int newFactor) { factor_p = newFactor;}
+    void setCorrelationSlices (const Vector <Vector <Slice> > & slices);
 
 private:
 
@@ -106,6 +108,7 @@ private:
                               Int correlation, Int channelOffset, Int channelIncrement,
                               const VisBuffer2 * vb);
 
+    Vector< Vector <Slice> > correlationSlices_p;
     Int factor_p;
     MsFactory * msf_p;
     const Int nAntennas_p;
@@ -183,6 +186,22 @@ private:
     Bool firstPass_p;
 
 };
+
+class BasicCorrelationSelection : public BasicChannelSelection
+{
+public:
+
+    BasicCorrelationSelection ();
+    ~BasicCorrelationSelection ();
+
+    virtual String name () const { return "BasicCorrelationSelection";}
+
+protected:
+
+private:
+
+};
+
 
 class Tester {
 public:
