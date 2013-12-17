@@ -410,8 +410,6 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
     ref2125 = {"nMAIN": 16, "nFOCUS": 1, "nFREQUENCIES": 8, "nMOLECULES": 2,\
                "SCANNOS": range(2), "FOCUS_IDS": range(1),\
                "FREQ_IDS": range(8),"MOLECULE_IDS": range(2)}
-    merge_uc = {'spunit': 'GHz', 'flunit': 'Jy',\
-                'frame': 'LSRD', 'doppler': 'OPTICAL'}
 
     def setUp( self ):
         # copy input scantables
@@ -424,6 +422,8 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
         self.insitu = sd.rcParams['insitu']
 
         default(sdcoadd)
+
+        self.merge_uc = self._get_unit_coord(self.inlist[0])
 
     def tearDown( self ):
         # restore settings
@@ -497,9 +497,7 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdcoadd(infiles=infiles,outfile=outfile,\
-                         fluxunit=fluxunit,specunit=specunit,\
-                         frame=frame,doppler=doppler)
+        result = sdcoadd(infiles=infiles,outfile=outfile)
 
         self.assertEqual(result,None)
         self.assertTrue(os.path.exists(outfile),msg="No output written")
@@ -528,9 +526,7 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdcoadd(infiles=infiles,outfile=outfile,\
-                         fluxunit=fluxunit,specunit=specunit,\
-                         frame=frame,doppler=doppler)
+        result = sdcoadd(infiles=infiles,outfile=outfile)
 
         self.assertEqual(result,None)
         self.assertTrue(os.path.exists(outfile),msg="No output written")
@@ -559,10 +555,8 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdcoadd(infiles=infiles,outfile=outfile,\
-                         fluxunit=fluxunit,specunit=specunit,\
-                         frame=frame,doppler=doppler)
-
+        result = sdcoadd(infiles=infiles,outfile=outfile)
+        
         self.assertEqual(result,None)
         self.assertTrue(os.path.exists(outfile),msg="No output written")
         # Test merged scantable
@@ -590,9 +584,7 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        result = sdcoadd(infiles=infiles,outfile=outfile,\
-                         fluxunit=fluxunit,specunit=specunit,\
-                         frame=frame,doppler=doppler)
+        result = sdcoadd(infiles=infiles,outfile=outfile)
 
         self.assertEqual(result,None)
         self.assertTrue(os.path.exists(outfile),msg="No output written")
