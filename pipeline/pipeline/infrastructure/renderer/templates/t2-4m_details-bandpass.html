@@ -56,14 +56,14 @@ $(document).ready(function() {
     <thead>
         <tr>
             <th scope="col" rowspan="2">Measurement Set</th>
-			<th scope="col" colspan="6">Phase-up Solution Parameters</th>
+			<th scope="col" colspan="5">Phase-up Solution Parameters</th>
+            <th scope="col" rowspan="2">% Flagged</th>
 		</tr>
 		<tr>
 			<th>Type</th>
             <th>Interval</th>
 			<th>Min Baselines per Antenna</th>
 			<th>Min SNR</th>
-			<th>% Flagged</th>
 			<th>Phase-up Bandwidth</th>
         </tr>
     </thead>
@@ -75,8 +75,8 @@ $(document).ready(function() {
 		  	<td>${application.solint}</td>
 		  	<td>${application.minblperant}</td>
 		  	<td>${application.minsnr}</td>
-		  	<td>${application.flagged}</td>
 		  	<td>${application.phaseupbw}</td>
+		  	<td>${application.flagged}</td>
 		</tr>
 % endfor		
 	</tbody>
