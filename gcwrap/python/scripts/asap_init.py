@@ -40,6 +40,7 @@ def asap_init():
     from sdsmooth_cli import sdsmooth_cli as sdsmooth
     from sdstat_cli import sdstat_cli as sdstat
     from sdtpimaging_cli import sdtpimaging_cli as sdtpimaging
+    from tsdcal_cli import tsdcal_cli as tsdcal
     myf['sd']=sd
     myf['sdbaseline']=sdbaseline
     myf['sdcal']=sdcal
@@ -61,3 +62,4 @@ def asap_init():
     myf['sdsmooth']=sdsmooth
     myf['sdstat']=sdstat
     myf['sdtpimaging']=sdtpimaging
+    myf['tsdcal']=tsdcal
