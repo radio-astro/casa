@@ -62,9 +62,15 @@ def _get_task_class(cli_command):
             return k
     raise KeyError, '%s not registered in casataskdict' % cli_command
 
-def _get_tasks(context, vis, infiles, procedure='procedure_hifa.xml'):
-    procedure_file = os.path.join(recipes_dir, procedure)
-    
+def _get_tasks(context, vis, infiles, procedure='procedure_hifacal.xml'):
+    # find the procedure file on disk, then fall back to the standard recipes
+    if os.path.exists(procedure):
+        procedure_file = os.path.abspath(procedure)
+    else:
+        procedure_file = os.path.join(recipes_dir, procedure)
+    if os.path.exists(procedure_file):
+        LOG.info('Using procedure file: %s' % procedure_file)
+
     processingprocedure = ElementTree.parse(procedure_file)
     if not processingprocedure:
         LOG.error('Could not parse procedure file at %s.\n'
@@ -117,8 +123,8 @@ def _as_task_call(task_class, task_args):
     kw_args = map(_format_arg_value, task_args.items())
     return '%s(%s)' % (task_class.__name__, ', '.join(kw_args))
             
-def reduce(vis=[], infiles=[], procedure='procedure_hifa.xml', context=None, name=None, 
-           loglevel='info'):
+def reduce(vis=[], infiles=[], procedure='procedure_hifacal.xml',
+           context=None, name=None, loglevel='info'):
     if context is None:
         name = name if name else _get_context_name(procedure)
         context = _create_context(loglevel=loglevel, name=name)
