@@ -185,6 +185,36 @@ namespace casa {
 
 
 
+    QtPixelCanvas::QtPixelCanvas( const QtPixelCanvas *other, QWidget *parent )  :
+		QWidget(parent),
+		PixelCanvas(other),
+		cache_label_and_axis(False),
+		frontBuffer_(0),
+		backBuffer_(0),
+		p_(), pw_(),
+		drawList_(0),
+		drawListNo_(0),
+		drawlists_(0),
+		itsDeviceForegroundColor("white"),
+		itsDeviceBackgroundColor("black"),
+		itsPen(QColor("white")),
+		clipRect_(0,0,1,1),
+		clipEnabled_(False),
+		holdcount_(0),
+		needsRefresh_(False),
+		allowBackToFront_(True),
+		saveBuf_(0) {
+
+		// This still does not match up the colormaps from what is displayed with "other"...
+		// Perhaps because the colormap is associated with the data objects... it will
+		// probably take more effort to ferret out what is displayed in "other" and what
+		// colormap is used to display it...
+		itspcctbl = new QtPCColorTable();
+		construct_( );
+		pcctbl()->registerColormap(colormap( ));
+
+    }
+
 	QtPixelCanvas::QtPixelCanvas(QWidget *parent) :
 		QWidget(parent),
 		PixelCanvas(),
@@ -205,6 +235,12 @@ namespace casa {
 		allowBackToFront_(True),
 		saveBuf_(0) {
 
+		itspcctbl = new QtPCColorTable();
+		construct_( );
+    }
+
+	void QtPixelCanvas::construct_( ) {
+
 // off -- never seems to work w/o great flicker...	//#dk
 //  QWidget::setAttribute(Qt::WA_PaintOnScreen);
 //        // (see paintEvent() comments...).
@@ -214,7 +250,6 @@ namespace casa {
 		setFocusPolicy(Qt::WheelFocus);	// allows kbd events.
 		setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-		itspcctbl = new QtPCColorTable();
 		itspcctbl->addResizeCallback((PixelCanvasColorTableResizeCB)
 		                             colorTableResizeCB, this);
 
@@ -1043,7 +1078,7 @@ namespace casa {
 		drawList_ = new QPicture;
 		p_begin_();				// begin painting on drawlist.
 
-		for(drawListNo_=0; validList(drawListNo_); drawListNo_++);
+		for(drawListNo_=0; validList(drawListNo_); drawListNo_++) {}
 		// Find first unused drawlist number.
 		drawlists_.define(drawListNo_, drawList_);
 		// Save new drawlist in the cache.
