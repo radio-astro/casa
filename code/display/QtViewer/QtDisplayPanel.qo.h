@@ -134,9 +134,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			friend class QtDisplayPanel;
 		};
 
-
-		QtDisplayPanel( QtDisplayPanelGui* panel, QWidget* parent=0,
+		QtDisplayPanel( QtDisplayPanelGui *panel, const QtDisplayPanel *other, QWidget* parent=0,
 		                const std::list<std::string> &args = std::list<std::string>( ) );
+		QtDisplayPanel( QtDisplayPanelGui *panel, QWidget* parent=0,
+		                const std::list<std::string> &args = std::list<std::string>( ) );
+
 		~QtDisplayPanel();
 
 		Bool isEmptyRegistered() const;
@@ -1088,6 +1090,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	private:
+		/**
+		 ** portion of construction shared by multiple constructor functions...
+		 */
+		void construct_( QtPixelCanvas *canvas, const std::list<std::string> &args );
 
 		/**
 		 * Sends a signal containing information about the data pinpointed by the mouse

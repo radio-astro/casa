@@ -111,6 +111,41 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return dpg;
 	}
 
+	QtDisplayPanelGui *QtViewer::createDPG(const QtDisplayPanelGui *other) {
+		// Create a main display panel Gui.
+		//
+		QtDisplayPanelGui* dpg = new QtDisplayPanelGui(other,0,"dpg",args_);
+		// don't need to worry about QtCleanPanelGui objs because they
+		// do not need to support cursor tracking and the P/V tool...
+		// although, there is nothing preventing QtCleanPanelGui objs
+		// being added to this list...
+		panels.push_back(dpg);
+
+		// Previously casaviewer.cc created a QtDisplayPanelGui directly,
+		// now it uses this function to ensure consistent behavior with
+		// creation of QtDisplayPanelGui objects...
+		if ( is_server_ ) {
+
+			dpg->setAttribute(Qt::WA_DeleteOnClose);
+			// Deletes this window (only) when user closes it.
+			// (Note that 'closed' Qt windows are not deleted by default --
+			// not unless this attribute is explicitly set).
+			//
+			// Noone will hold the dpg pointer (! -- at least in the current
+			// revision).  Essentially, the gui user manages dpg's storage....
+			//
+			// Note, however: DPGs do not have to be created via this routine.
+			// QtClean, e.g., constructs its own dpg directly, which does
+			// not delete on close, and which is re-opened on successive
+			// restarts of the Qt event loop.  In that case, QtClean manages
+			// its own dpg storage.
+
+			dpg->show();
+		}
+
+		return dpg;
+	}
+
 	void QtViewer::dpgDeleted( QtDisplayPanelGui *dpg ) {
 		panel_list_t::iterator iter = std::find(panels.begin( ), panels.end( ), dpg );
 		if ( iter != panels.end( ) ) panels.erase(iter);

@@ -204,6 +204,27 @@ std::string QtDisplayPanelGui::idGen( ) {
 	return "";
 }
 
+QtDisplayPanelGui::QtDisplayPanelGui( const QtDisplayPanelGui *other, QWidget *parent, std::string rcstr, const std::list<std::string> &args ) :
+				QtPanelBase(parent), logger(LogOrigin("CASA", "Viewer")), qdm_(0),qem_(0),qdo_(0),
+				colorBarsVertical_(True), v_(other->viewer()), qdp_(0), qpm_(0), qcm_(0), qap_(0), qfb_(0), qmr_(0), qrm_(0),
+				qsm_(0), qst_(0),
+				profile_(0), savedTool_(QtMouseToolNames::NONE),
+				profileDD_(0),
+				annotAct_(0), mkRgnAct_(0), fboxAct_(0), cleanAct_(0), rgnMgrAct_(0), shpMgrAct_(0),
+				rc(viewer::getrc()), rcid_(rcstr), use_new_regions(true),
+				showdataoptionspanel_enter_count(0),
+				/*controlling_dd(0),*/ preferences(0), animationHolder( NULL ),
+				adjust_channel_animator(true), adjust_image_animator(true),
+				histogrammer( NULL ), colorHistogram( NULL ),
+				fitTool( NULL ), sliceTool( NULL ), imageManagerDialog(NULL),
+				clean_tool(0), regionDock_(0),
+				status_bar_timer(new QTimer( )),
+				linkedCursorHandler(0), id_(idGen( )), autoDDOptionsShow(True) {
+
+     construct_(new QtDisplayPanel(this, other->displayPanel( ),0,args),args);
+
+}
+
 QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string rcstr, const std::list<std::string> &args ) :
 				QtPanelBase(parent), logger(LogOrigin("CASA", "Viewer")), qdm_(0),qem_(0),qdo_(0),
 				colorBarsVertical_(True), v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qfb_(0), qmr_(0), qrm_(0),
@@ -220,6 +241,13 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 				clean_tool(0), regionDock_(0),
 				status_bar_timer(new QTimer( )),
 				linkedCursorHandler(0), id_(idGen( )), autoDDOptionsShow(True) {
+
+    construct_(new QtDisplayPanel(this,0,args),args);
+}
+
+void QtDisplayPanelGui::construct_( QtDisplayPanel *newpanel, const std::list<std::string> &args ) {
+
+    qdp_ = newpanel;
 
 	// initialize the "pix" unit, et al...
 	QtWCBox::unitInit( );
@@ -245,10 +273,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		rc.put( "viewer." + rcid() + ".position.regions", default_dock_location );
 	}
 
-	qdp_ = new QtDisplayPanel(this,0,args);
 	displayDataHolder = new DisplayDataHolder();
-
-
 
 	if ( use_new_regions ) {
 		// -----
@@ -1900,7 +1925,7 @@ void QtDisplayPanelGui::hideAllSubwindows() {
 }
 
 QtDisplayPanelGui *QtDisplayPanelGui::createNewPanel( ) {
-	QtDisplayPanelGui *new_panel = v_->createDPG( );
+	QtDisplayPanelGui *new_panel = v_->createDPG( this );
 	new_panel->show( );
 	return new_panel;
 }

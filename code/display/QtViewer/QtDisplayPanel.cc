@@ -74,6 +74,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	const int QtDisplayPanel::TOP_MARGIN_SPACE_DEFAULT = 4;
 	const int QtDisplayPanel::RIGHT_MARGIN_SPACE_DEFAULT = 4;
 
+	QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui *panel, const QtDisplayPanel *other, QWidget *parent, const std::list<std::string> &args) :
+		QWidget(parent),
+		panel_(panel),
+		pd_(0), pc_(0),
+		//qdds_(),
+		toolmgr(0),
+		zoom_(0), panner_(0),
+		ocrosshair_(0), ortregion_(0), oelregion_(0), optregion_(0),
+		region_source_factory(0),
+		polyline_(0), rulerline_(0), pvtool_(0), snsFidd_(0), bncFidd_(0),
+		mouseToolNames_(),
+		tracking_(True),
+		modeZ_(True),
+		zLen_(1), bLen_(1),
+		zIndex_(0), bIndex_(0),
+		animRate_(10), minRate_(1), maxRate_(50), animating_(0),
+		blankCBPanel_(0), mainPanelSize_(1.),
+		hasRgn_(False), rgnExtent_(0), qsm_(0),
+		lastMotionEvent_(0), bkgdClrOpt_(0),
+		extChan_(""), extPol_(""), cursorBoundaryState(OUTSIDE_PLOT),
+		printStats(True), useRegion(False),PGP_MARGIN_UNIT(65),
+		zStart_(0), zEnd_(1), zStep_(1),
+		bStart_(0), bEnd_(1), bStep_(1) {
+
+        construct_(new QtPixelCanvas(other->pc_),args);
+
+    }
+
 	QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const std::list<std::string> &args) :
 		QWidget(parent),
 
@@ -99,12 +127,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		zStart_(0), zEnd_(1), zStep_(1),
 		bStart_(0), bEnd_(1), bStep_(1) {
 
+        construct_(new QtPixelCanvas(),args);
+    }
+
+    void QtDisplayPanel::construct_( QtPixelCanvas *canvas, const std::list<std::string> &args ) {
+
 		setWindowTitle("Viewer Display Panel");
 
 		bool use_new_regions = std::find(args.begin(),args.end(),"--oldregions") == args.end();
 
 		//pc_  = new QtPixelCanvas(this);
-		pc_ = new QtPixelCanvas();
+		pc_ = canvas;
 
 		// QDP's own widget just contains the pc_.
 

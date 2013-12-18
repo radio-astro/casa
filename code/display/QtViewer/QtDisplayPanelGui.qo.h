@@ -121,7 +121,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	protected:
 		friend class QtViewer;
-		QtDisplayPanelGui( QtViewer* v, QWidget* parent=0, std::string rcstr="dpg",
+		QtDisplayPanelGui( QtViewer *v, QWidget *parent=0, std::string rcstr="dpg",
+		                   const std::list<std::string> &args = std::list<std::string>( ) );
+		QtDisplayPanelGui( const QtDisplayPanelGui *other, QWidget *parent=0, std::string rcstr="dpg",
 		                   const std::list<std::string> &args = std::list<std::string>( ) );
 
 	public:
@@ -130,7 +132,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		~QtDisplayPanelGui();
 
 		// access to our viewer
-		QtViewer *viewer( ) {
+		QtViewer *viewer( ) const {
 			return v_;
 		}
 		int buttonToolState(const std::string &tool) const;
@@ -144,9 +146,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void status( const std::string &s, const std::string &type="info" );
 
 		// access to graphics panel 'base'....
-		QtDisplayPanel* displayPanel() {
-			return qdp_;
-		}
+		QtDisplayPanel* displayPanel() { return qdp_; }
+		const QtDisplayPanel* displayPanel() const { return qdp_; }
 
 		typedef std::list<viewer::Region*> region_list_t;
 		region_list_t regions( ) {
@@ -582,6 +583,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		std::string rcid_;
 
 	private:
+		/**
+		 ** portion of construction shared by multiple constructor functions...
+		 */
+		void construct_( QtDisplayPanel *newpanel, const std::list<std::string> &args );
+
 		void animationModeChanged( bool modeZ);
 
 		bool use_new_regions;

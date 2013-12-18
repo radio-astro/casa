@@ -66,6 +66,7 @@ namespace casa {
 
 
 		QtPixelCanvas(QWidget *parent=0);
+		QtPixelCanvas( const QtPixelCanvas *, QWidget *parent=0 );
 		~QtPixelCanvas();
 
 		void beginLabelAndAxisCaching( ) {
@@ -383,6 +384,10 @@ namespace casa {
 
 
 	private:
+		/**
+		 ** portion of construction shared by multiple constructor functions...
+		 */
+		void construct_( );
 
 		// Versions of p_.begin(currentPaintDevice_()) and p_.end() ,that just
 		// put p_ in desired state, without complaining if it was already there.
