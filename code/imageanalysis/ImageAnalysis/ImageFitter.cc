@@ -1593,8 +1593,7 @@ void ImageFitter::_fitskyExtractBeam(
 	Bool doRef = True;
 	Vector<Double> dParameters;
 	ImageUtilities::worldWidthsToPixel(
-		*_getLog(), dParameters,
-		wParameters, cSys, pixelAxes, doRef
+		dParameters, wParameters, cSys, pixelAxes, doRef
 	);
 	parameters.resize(6, True);
 	parameters(3) = dParameters(0);
@@ -1676,8 +1675,10 @@ void ImageFitter::_encodeSkyComponentError(
 			dParameters(4) = parameters(5);
 			// If flipped, it means pixel major axis morphed into world minor
 			// Put back any zero errors as well.
-			Bool flipped = ImageUtilities::pixelWidthsToWorld(os, wParameters,
-					dParameters, cSys, pixelAxes, False);
+			Bool flipped = ImageUtilities::pixelWidthsToWorld(
+				wParameters,
+				dParameters, cSys, pixelAxes, False
+			);
 			Quantum<Double> paErr(errors(5), Unit(String("rad")));
 			if (flipped) {
 				pS->setErrors(
@@ -1703,7 +1704,7 @@ void ImageFitter::_encodeSkyComponentError(
 	dParameters(3) = errors(2) == 0 ? 1e-8 : errors(2);
 	dParameters(4) = 0.0; // Pixel errors are in X/Y directions not along major axis
 	Bool flipped = ImageUtilities::pixelWidthsToWorld(
-			os, wParameters, dParameters,
+			wParameters, dParameters,
 			cSys, pixelAxes, False
 		);
 	// TSS::setRefDirErr interface has lat first

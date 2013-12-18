@@ -214,7 +214,7 @@ namespace casa {
             // from ImageUtilities...
             void worldWidthsToPixel( LogIO& os, Vector<double>& dParameters, const Vector<Quantum<Double> >& parameters,
                                      const IPosition& pixelAxes, bool doRef=false ) const {
-                ImageUtilities::worldWidthsToPixel( os, dParameters, parameters, cs_, pixelAxes, doRef );
+                ImageUtilities::worldWidthsToPixel(dParameters, parameters, cs_, pixelAxes, doRef );
             }
 
 			// adjust this coordinate system to match the 'other' coordinate system
