@@ -3933,10 +3933,12 @@ int main(int argc, char *argv[]) {
   // Let's verify immediately that if the lazy option has been set we have constant numPol x numCorr
   // on each Configuration Description.
   //
-  if (!checkForConstantNPolNChan(ds)) {
-    errstream.str("");
-    errstream << "Sorry, with this ASDM you cannot use the '--lazy' option because it has a varying number of polarizations and/or channels in some configuration description(s)." << endl;
-    error(errstream.str(), VARYINGNPOLNCHAN);
+  if (lazy && !checkForConstantNPolNChan(ds)) {
+    infostream.str("");
+    infostream << "NOTE: This ASDM cannot be imported in 'lazy' mode because it has a varying number of polarizations and/or channels in some configuration description(s)."
+	       << endl << "      *** Will switch to non-lazy import. ***" << endl;
+    warning(infostream.str());
+    lazy = false;
   }
 
   //
