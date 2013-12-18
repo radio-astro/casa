@@ -309,7 +309,11 @@ class sdtask_template(sdtask_interface):
             'error'  : raise an error if channel seledtion is set
         """
         if not hasattr(self, 'spw'): return True
+        # find pattern spw = 'spwID:channelRange'
         has_chan = (self.spw.find(':') > -1)
+        ## TODO: also need to do something with "###Hz" and "###km/s"?
+        #quantap = re.compile('[a-z]', re.IGNORECASE)
+        #has_chan = has_chan or len(quantap.findall(self.spw))
         if has_chan:
             if mode.upper().startswith('E'):
                 raise ValueError, "spw parameter should not contain channel selection."
