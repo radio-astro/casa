@@ -232,6 +232,20 @@ class sdtask_template(sdtask_interface):
                 
 
     def get_selector(self, scantb=None):
+        """
+        Get selector instance that select scan(s), IF(s), polarization(s),
+        beam(s), field(s), and timerange set to this class.
+        This method parses attributes of string selection parameter,
+        scan(no), spw, pol(no), and beam(no), and converts to lists of
+        selected IDs, scanlist, iflist, pollist, and beamlist. The lists
+        are saved as attributes of this class.
+        Available range of IDs and time are obtained from a scantable.
+
+        Parameter
+            scantb : input scantable instance to get ID and time range from.
+                     The scantable defined as self.scan is used if scantb
+                     is not defined (default).
+        """
         if not scantb:
             if hasattr(self,'scan') and isinstance(self.scan, scantable):
                 scantb = self.scan
@@ -265,7 +279,9 @@ class sdtask_template(sdtask_interface):
         # CAS-5496 selection by timerange
         if hasattr(self, 'timerange') and len(self.timerange) > 0:
             # base scantable
-            if hasattr(self, 'infile'):
+            if scantb:
+                base_table = scantb
+            elif hasattr(self, 'infile'):
                 base_table = self.infile
             elif hasattr(self, 'infiles'):
                 base_table = self.infiles[0]
@@ -281,7 +297,7 @@ class sdtask_template(sdtask_interface):
 
         return selector
 
-    def assert_no_channel_selection_in_spw(self, mode='result'):
+    def assert_no_channel_selection_in_spw(self, mode='warn'):
         """
         Assert 'spw' does not have channel selection
         Returns True if spw string does not have channel selecton
@@ -296,7 +312,7 @@ class sdtask_template(sdtask_interface):
         has_chan = (self.spw.find(':') > -1)
         if has_chan:
             if mode.upper().startswith('E'):
-                raise Exception, "spw parameter should not contain channel selection."
+                raise ValueError, "spw parameter should not contain channel selection."
             elif mode.upper().startswith('W'):
                 casalog.post("Channel selection found in spw parameter. It would be ignored", priority='WARN')
         

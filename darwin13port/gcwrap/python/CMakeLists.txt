@@ -175,6 +175,7 @@ scripts/task_sdstat.py
 scripts/task_sdtpimaging.py
 scripts/task_tsdcal.py
 scripts/task_tsdstat.py
+scripts/task_tsdsave.py
 scripts/task_setjy.py
 scripts/task_ssoflux.py
 scripts/task_simalma.py

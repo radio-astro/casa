@@ -331,8 +331,12 @@ def importasdm(
                 casalog.post(theexecutable
                              + ' terminated with exit code '
                              + str(exitcode), 'SEVERE')
-                raise Exception, \
-                    'ASDM conversion error, please check if it is a valid ASDM and that data/alma/asdm is up-to-date'
+                if exitcode==1024:
+                    raise Exception, \
+                          'The lazy option cannot be used with this ASDM (see log output). Please run with lazy=False.'
+                else:
+                    raise Exception, \
+                          'ASDM conversion error, please check if it is a valid ASDM and that data/alma/asdm is up-to-date'
         if compression:
                    # viso = viso + '.compressed'
             viso = viso.rstrip('.ms') + '.compressed.ms'

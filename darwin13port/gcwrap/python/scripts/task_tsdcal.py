@@ -6,7 +6,7 @@ from asap.scantable import is_scantable
 import sdutil
 
 @sdutil.sdtask_decorator
-def tsdcal(infile, antenna, fluxunit, telescopeparam, calmode, fraction, noff, width, elongated, markonly, plotpointings, scan, field, spw, pol, tau, verify, outfile, outform, overwrite, plotlevel):
+def tsdcal(infile, antenna, fluxunit, telescopeparam, field, spw, scan, pol, calmode, fraction, noff, width, elongated, markonly, plotpointings, tau, verify, outfile, outform, overwrite, plotlevel):
     with sdutil.sdtask_manager(sdcal_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -17,6 +17,9 @@ class sdcal_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):
         super(sdcal_worker,self).__init__(**kwargs)
         self.suffix = '_cal'
+        # Nothing to be done when calmode='none' and tau=0.0
+        if self.calmode=='none' and self.tau==0.0:
+            raise Exception, "No operation to be done for calmode='none' and tau=0.0. Exiting task."
 
     def initialize_scan(self):
         sorg=sd.scantable(self.infile,average=False,antenna=self.antenna)
