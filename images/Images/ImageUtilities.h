@@ -254,45 +254,24 @@ public:
     );
 // </group>
 
-    // moved from ImageAnalysis. this needs to be moved to a more appropriate class at some point
-    // Deconvolve from beam
-    // Returns True if the deconvolved source is a point source, False otherwise.
-    /*
-    static Bool deconvolveFromBeam(
-    	Angular2DGaussian& deconvolvedSize,
-    	const Angular2DGaussian& convolvedSize,
-        Bool& successFit, LogIO& os,
-        const GaussianBeam& beam, const Bool verbose=True
-    );
-    */
+    // Convert 2d shape from world (world parameters=x, y, major axis,
+    // minor axis, position angle) to pixel (major, minor, pa).
+    // Can handle quantum units 'pix'.  If one width is
+    // in pixel units both must be in pixel units.  pixelAxes describes which
+    // 2 pixel axes of the coordinate system our 2D shape is in.
+    // If axes are not from the same coordinate type units must be pixels.
+    // If doRef is True, then x and y are taken from the reference
+    // value rather than the parameters vector.
 
-    /*
-    static Bool deconvolveFromBeam(
-        Quantity& majorFit, Quantity& minorFit,
-        Quantity& paFit, casa::Bool& successFit, casa::LogIO& os,
-        const Vector<Quantity>& sourceIn, const GaussianBeam& beam,
-        const Bool verbose=True
+    // On input, pa is N->E (at ref pix) for celestial planes.
+    // Otherwise pa is in pixel coordinate system +x -> +y
+    // On output, pa (radians) is positive +x -> +y in pixel frame
+    static void worldWidthsToPixel(
+    	Vector<Double>& dParameters,
+    	const Vector<Quantum<Double> >& parameters,
+    	const CoordinateSystem& cSys,
+    	const IPosition& pixelAxes, Bool doRef=False
     );
-    */
-
-//
-// Convert 2d shape from world (world parameters=x, y, major axis, 
-// minor axis, position angle) to pixel (major, minor, pa).  
-// Can handle quantum units 'pix'.  If one width is 
-// in pixel units both must be in pixel units.  pixelAxes describes which
-// 2 pixel axes of the coordinate system our 2D shape is in.
-// If axes are not from the same coordinate type units must be pixels.
-// If doRef is True, then x and y are taken from the reference
-// value rather than the parameters vector.
-//
-// On input, pa is N->E (at ref pix) for celestial planes.
-// Otherwise pa is in pixel coordinate system +x -> +y
-// On output, pa (radians) is positive +x -> +y in pixel frame
-   static void worldWidthsToPixel (LogIO& os, Vector<Double>& dParameters,
-                                   const Vector<Quantum<Double> >& parameters,
-                                   const CoordinateSystem& cSys,
-                                   const IPosition& pixelAxes,
-                                   Bool doRef=False); 
 
 
 // Convert 2d shape  from pixels (parameters=x,y, major axis, 
@@ -305,12 +284,13 @@ public:
 // On input pa is positive for +x -> +y in pixel frame
 // On output pa is positive N->E
 // Returns True if major/minor exchanged themselves on conversion to world.
-   static Bool pixelWidthsToWorld (LogIO& os,
-                                   GaussianBeam& wParameters,
-                                   const Vector<Double>& pParameters,
-                                   const CoordinateSystem& cSys,
-                                   const IPosition& pixelAxes,
-                                   Bool doRef=False); 
+    static Bool pixelWidthsToWorld(
+    	GaussianBeam& wParameters,
+    	const Vector<Double>& pParameters,
+    	const CoordinateSystem& cSys,
+    	const IPosition& pixelAxes,
+    	Bool doRef=False
+    );
 
    // write the specified image and add the specified pixels to it.
    // Currently no checks are done to ensure the pixel array size and
@@ -341,26 +321,28 @@ private:
 // On input pa is positive for +x -> +y in pixel frame
 // On output pa is positive N->E
 // Returns True if major/minor exchanged themselves on conversion to world.
-   static Bool skyPixelWidthsToWorld (LogIO& os,
-                                      GaussianBeam& wParameters,
-                                      const CoordinateSystem& cSys,
-                                      const Vector<Double>& pParameters,
-                                      const IPosition& pixelAxes, Bool doRef);
+    static Bool _skyPixelWidthsToWorld(
+    	GaussianBeam& wParameters,
+    	const CoordinateSystem& cSys,
+    	const Vector<Double>& pParameters,
+    	const IPosition& pixelAxes, Bool doRef
+    );
 
 // Convert a length and position angle in world units (for a non-coupled 
 // coordinate) to pixels. The length is in some 2D plane in the 
 // CoordinateSystem specified  by pixelAxes.
-   static Double worldWidthToPixel (LogIO& os, Double positionAngle,
-                                    const Quantum<Double>& length,
-                                    const CoordinateSystem& cSys,
-                                    const IPosition& pixelAxes);
+    static Double _worldWidthToPixel (
+    	Double positionAngle,
+    	const Quantum<Double>& length,
+    	const CoordinateSystem& cSys,
+    	const IPosition& pixelAxes
+    );
 
-
-
-   static Quantum<Double> pixelWidthToWorld (LogIO& os, Double positionAngle,
-                                             Double length,
-                                             const CoordinateSystem& cSys,
-                                             const IPosition& pixelAxes);
+    static Quantum<Double> _pixelWidthToWorld (
+    	Double positionAngle, Double length,
+    	const CoordinateSystem& cSys,
+    	const IPosition& pixelAxes
+    );
 };
 
 
