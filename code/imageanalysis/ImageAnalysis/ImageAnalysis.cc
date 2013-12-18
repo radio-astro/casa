@@ -5269,6 +5269,8 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 }
 
 
+
+
 Bool ImageAnalysis::getFreqProfile(
 		const Vector<Double>& x, const Vector<Double>& y,
 		Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
@@ -5412,25 +5414,39 @@ Bool ImageAnalysis::getFreqProfile(
 
 				center[0] = Quantity( (x[0]+x[1])/2, "rad" );
 				center[1] = Quantity( (y[0]+y[1])/2, "rad" );
-				Quantity pa( 0, "rad");
-				double sideA = abs(x[1] - x[0]) / 2;
-				double sideB = abs(y[1] - y[0]) / 2;
-				if ( sideA < sideB ){
-					double tmp = sideA;
-					sideA = sideB;
-					sideB = tmp;
-					const Double PI_OVER_2 = boost::math::constants::pi<Double>() * 0.5;
-					pa.setValue( PI_OVER_2 );
+
+
+				int directionIndex = cSys.findCoordinate(Coordinate::DIRECTION);
+				MDirection::Types type = MDirection::N_Types;
+				if ( directionIndex >= 0 ){
+					uInt dirIndex = static_cast<uInt>(directionIndex);
+					type = cSys.directionCoordinate(dirIndex).directionType(true);
 				}
-				radius[0] = Quantity( sideA, "rad" );
-				radius[1] = Quantity( sideB, "rad" );
+
+				Vector<Double> qCenter(2);
+				qCenter[0] = center[0].getValue();
+				qCenter[1] = center[1].getValue();
+				MDirection mdcenter( Quantum<Vector<Double> >(qCenter,"rad"), type );
+				Vector<Double> blc_rad_x(2);
+				blc_rad_x[0] = x[0];
+				blc_rad_x[1] = center[1].getValue();
+				MDirection mdblc_x( Quantum<Vector<Double> >(blc_rad_x,"rad"),type );
+
+				Vector<Double> blc_rad_y(2);
+				blc_rad_y[0] = center[0].getValue();
+				blc_rad_y[1] = y[0];
+				MDirection mdblc_y( Quantum<Vector<Double> >(blc_rad_y,"rad"),type );
+
+				double xdistance = mdcenter.getValue( ).separation(mdblc_x.getValue( ));
+				double ydistance = mdcenter.getValue( ).separation(mdblc_y.getValue( ));
+				radius[0] = Quantity(xdistance,"rad");
+				radius[1] = Quantity(ydistance,"rad");
 
 				Vector<Int> pixax(2);
 				pixax(0) = dirPixelAxis[0];
 				pixax(1) = dirPixelAxis[1];
-				imagreg = regMan.wellipse( center[0], center[1],
-						radius[0],radius[1], pa, pixax(0), pixax(1),
-						cSys, "abs");
+				WCEllipsoid* ellipsoid = new WCEllipsoid( center, radius, IPosition(dirPixelAxis), cSys);
+				imagreg = new ImageRegion( ellipsoid );
 			}
 		}
 		else {
