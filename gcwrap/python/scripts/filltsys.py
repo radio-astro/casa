@@ -551,8 +551,9 @@ class TsysFiller( TsysFillerBase ):
             else:
                 newtsys = tsys
             stab.putcell( 'TSYS', irow, newtsys )
-            #tptab.putcell( 'TSYS', irow, newtsys.mean() )
-            tptab.putcell( 'TSYS', irow, numpy.median(newtsys) )
+            if tptab.nrows() > 0:
+                #tptab.putcell( 'TSYS', irow, newtsys.mean() )
+                tptab.putcell( 'TSYS', irow, numpy.median(newtsys) )
 
         stab.close()
         ttab.close()
