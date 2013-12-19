@@ -28,6 +28,7 @@
 #include <synthesis/CalTables/CTPatchedInterp.h>
 #include <synthesis/CalTables/CTIter.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
+#include <casa/OS/Path.h>
 #include <casa/Utilities/GenSort.h>
 #include <casa/aips.h>
 
@@ -542,10 +543,17 @@ Bool CTPatchedInterp::interpolate(Int msobs, Int msfld, Int msspw, Double time, 
     // Call fully _patched_ time-interpolator, keeping track of 'newness'
     //  fills timeResult_/timeResFlag_ implicitly
     ip(0)=iMSElem;
-    if (freq>0.0)
-      newcal|=tI_(ip)->interpolate(time,freq);
-    else
-      newcal|=tI_(ip)->interpolate(time);
+    
+    if (!tI_(ip)) {
+      //cout << "Flagging: " << ip << endl;
+      newcal=True;
+    }
+    else {
+      if (freq>0.0)
+	newcal|=tI_(ip)->interpolate(time,freq);
+      else
+	newcal|=tI_(ip)->interpolate(time);
+    }
   }
 
   // Whole result referred to time result:
@@ -584,17 +592,24 @@ Bool CTPatchedInterp::interpolate(Int msobs, Int msfld, Int msspw, Double time, 
     // Call time interpolation calculation; resample in freq if new
     //   (fills timeResult_/timeResFlag_ implicitly)
     ip(0)=iMSElem;
-    if (tI_(ip)->interpolate(time)) {
-
-      // Resample in frequency
-      Matrix<Float> fR(freqResult_(msspw,msfld,thisobs(msobs)).xyPlane(iMSElem));
-      Matrix<Bool> fRflg(freqResFlag_(msspw,msfld,thisobs(msobs)).xyPlane(iMSElem));
-      Matrix<Float> tR(timeResult_(msspw,msfld,thisobs(msobs)).xyPlane(iMSElem));
-      Matrix<Bool> tRflg(timeResFlag_(msspw,msfld,thisobs(msobs)).xyPlane(iMSElem));
-      resampleInFreq(fR,fRflg,freq,tR,tRflg,freqIn_(spwMap_(msspw)));
-
-      // Calibration is new
+    if (!tI_(ip)) {
+      //      cout << "Flagging: " << ip << endl;
       newcal=True;
+    }
+    else {
+
+      if (tI_(ip)->interpolate(time)) {
+	
+	// Resample in frequency
+	Matrix<Float> fR(freqResult_(msspw,msfld,thisobs(msobs)).xyPlane(iMSElem));
+	Matrix<Bool> fRflg(freqResFlag_(msspw,msfld,thisobs(msobs)).xyPlane(iMSElem));
+	Matrix<Float> tR(timeResult_(msspw,msfld,thisobs(msobs)).xyPlane(iMSElem));
+	Matrix<Bool> tRflg(timeResFlag_(msspw,msfld,thisobs(msobs)).xyPlane(iMSElem));
+	resampleInFreq(fR,fRflg,freq,tR,tRflg,freqIn_(spwMap_(msspw)));
+	
+	// Calibration is new
+	newcal=True;
+      }
     }
   }
 
@@ -752,6 +767,10 @@ void CTPatchedInterp::makeInterpolators() {
 
   if (CTPATCHEDINTERPVERB) cout << "  CTPatchedInterp::initialize()" << endl;
 
+  // cal table name for messages
+  Path pathname(ct_.tableName());
+  String tabname=pathname.baseName().before(".tempMem");
+
   // Size/initialize interpolation engines
   IPosition tIsize(4,nMSElem_,nMSSpw_,nMSFld_,nMSObs_);
   tI_.resize(tIsize);
@@ -778,17 +797,31 @@ void CTPatchedInterp::makeInterpolators() {
 	  for (Int iMSElem=0;iMSElem<nMSElem_;++iMSElem) {
 	    // Realize the mapping 
 	    IPosition ictip(4,elemMap_(iMSElem),spwMap_(iMSSpw),fldMap_(iMSFld),iMSObs);
-	    NewCalTable& ict(*ctSlices_(ictip));
-	    if (!ict.isNull()) {
-	      Matrix<Float> tR(timeResult_(iMSSpw,iMSFld,iMSObs).xyPlane(iMSElem));
-	      Matrix<Bool> tRf(timeResFlag_(iMSSpw,iMSFld,iMSObs).xyPlane(iMSElem));
-	      IPosition tIip(4,iMSElem,iMSSpw,iMSFld,iMSObs);
-	      tI_(tIip)=new CTTimeInterp1(ict,timeType_,tR,tRf);
-	      tIdel_(tIip)=True;
+	    IPosition tIip(4,iMSElem,iMSSpw,iMSFld,iMSObs);
+	    Matrix<Float> tR(timeResult_(iMSSpw,iMSFld,iMSObs).xyPlane(iMSElem));
+	    Matrix<Bool> tRf(timeResFlag_(iMSSpw,iMSFld,iMSObs).xyPlane(iMSElem));
+
+	    // If the ct slice exists, set up an interpolator
+	    if (ctSlices_(ictip)) {
+	      NewCalTable& ict(*ctSlices_(ictip));
+	      if (!ict.isNull()) {
+		tI_(tIip)=new CTTimeInterp1(ict,timeType_,tR,tRf);
+		tIdel_(tIip)=True;
+	      }
 	    }
-	    else
-	      cout << "Elem,Spw="<<iMSElem<<","<<iMSSpw<<" have no calibration mapping!!" << endl; 
-	    
+	    else {
+	      // the required ct slice is empty, so arrange to flag it
+	      tI_(tIip)=NULL; 
+	      tR.set(0.0);
+	      tRf.set(True);
+	      //	      cout << tIip << "<-" << ictip << " " << "ctSlices_(ictip) = " << ctSlices_(ictip) << endl;
+	      cout << "MS obs=" << iMSObs
+		   << ",fld=" << iMSFld
+		   << ",spw=" << iMSSpw
+		   << ",ant=" << iMSElem
+		   << " cannot be calibrated by " << tabname 
+		   << " as mapped, and will be flagged in this process." << endl;
+	    }
 	  } // iMSElem
 	} // spwOK
 	else
@@ -813,7 +846,7 @@ void CTPatchedInterp::makeInterpolators() {
 
 
   if (reportBadSpw) {
-    cout << "The following MS spws have no corresponding cal spws: ";
+    cout << "The following MS spws have no corresponding cal spws in " << tabname << ": ";
     for (Int iMSSpw=0;iMSSpw<nMSSpw_;++iMSSpw)
       if (!this->spwOK(spwMap_(iMSSpw))) cout << iMSSpw << " ";
     cout << endl;
