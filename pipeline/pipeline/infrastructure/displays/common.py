@@ -48,14 +48,14 @@ class PlotcalLeaf(object):
         self._plotrange = plotrange
 
     def plot(self):
-        plots = [self._get_plot_wrapper()]
-        return [p for p in plots if p is not None]
-
-        # plotcal with time as x axis seems to leave matplotlib
-        # in an open state. Work around this by closing pyplot
-        # after each call.
-#             pyplot.clf()
-#             pyplot.close()
+        try:
+            plots = [self._get_plot_wrapper()]
+            return [p for p in plots if p is not None]
+        finally:
+            # plotcal with time as x axis seems to leave matplotlib
+            # in an open state. Work around this by closing pyplot
+            # after each call.
+            pyplot.close()
             
     def _get_figfile(self):
         fileparts = {

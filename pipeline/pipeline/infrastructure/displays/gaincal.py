@@ -428,10 +428,17 @@ class GaincalSummaryChart(common.PlotcalSpwComposite):
     Base class for executing plotcal per spw
     """
     def __init__(self, context, result, xaxis, yaxis, plotrange=[]):
+        if yaxis == 'amp':
+            calmode = 'a'
+        elif yaxis == 'phase':
+            calmode = 'p'
+        else:
+            raise ValueError('Unmapped calmode for y-axis: ' % yaxis)    
+
         # identify the phase-only solution for the target
         calapps = [c for c in result.final
-                   if 'TARGET' in c.intent
-                   and 'p' == c.origin.inputs['calmode']]
+                   if ('TARGET' in c.intent or c.intent == '') 
+                   and calmode == c.origin.inputs['calmode']]
 
         assert len(calapps) is 1, 'Target phase solutions != 1'
         calapp = calapps[0]
