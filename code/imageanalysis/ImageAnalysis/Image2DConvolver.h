@@ -136,7 +136,7 @@ private:
 	// returns the value by which pixel values will be scaled
 	static T _dealWithRestoringBeam (
 		LogIO& os, String& brightnessUnitOut, GaussianBeam& beamOut,
-		Array<T>& kernelArray, const T kernelVolume,
+		const Array<T>& kernelArray, const T kernelVolume,
 		const VectorKernel::KernelTypes kernelType,
 		const Vector<Quantity>& parameters,
 		const IPosition& axes, const CoordinateSystem& cSys,
