@@ -426,30 +426,40 @@ class DataTableImpl( object ):
         pollist = numpy.unique(polnos)
         file_list = self.getkeyword('FILENAMES').tolist()
         ant = file_list.index(os.path.basename(infile.rstrip('/')))
-        spw_atmcal = []
+        
+        spw_atmcal={}
         spw_target={}
+        step_atm={}
         for i in xrange(len(context.observing_run[0].spectral_window)):
             if context.observing_run[0].spectral_window[i].is_atmcal:
-                spw_atmcal = context.observing_run[0].spectral_window[i]
+                spw_atmcal[i]=(context.observing_run[0].spectral_window[i])
+                LOG.debug('-----------spw %s' % i)
+                LOG.debug('spw_atmcal[i].freq_min = %s' % spw_atmcal[i].freq_min)
+                LOG.debug('spw_atmcal[i].freq_max = %s' % spw_atmcal[i].freq_max)
+                step_atm[i]=(abs(spw_atmcal[i].increment))
+                LOG.debug('step_atm[i] = %s' % step_atm[i])
             elif context.observing_run[0].spectral_window[i].is_target:
                 spw_target[i] = context.observing_run[0].spectral_window[i]
+                LOG.debug('-----------spw_target %s' % i)
                 LOG.debug('spw_target[i].freq_min %s' % spw_target[i].freq_min)
         
-        LOG.debug('spw_atmcal.freq_min = %s' % spw_atmcal.freq_min)
-        step_atm = -spw_atmcal.increment
-        LOG.debug('step_atm = %s' % step_atm)
         tsys_target = {}
         atsys = []
         tsys_target_value =[]
         for ifno_from in if_from:
             for polno in pollist:
+                LOG.debug('-----------polno = %s' % polno)
+                LOG.debug('-----------ifno_from = %s' % ifno_from)
                 indices = numpy.where(numpy.logical_and(ifnos==ifno_from,polnos==polno))[0]
                 if len(indices) == 0:
                     continue
-
+                
                 for ifno_to in ifmap[ifno_from]:
-                    target_start = (spw_target[ifno_to].freq_min - spw_atmcal.freq_min)/ step_atm
-                    target_end = (spw_target[ifno_to].freq_max - spw_atmcal.freq_min)/ step_atm
+                    LOG.debug('-----------ifno_to = %s' % ifno_to)
+                    target_start = (spw_target[ifno_to].freq_min - spw_atmcal[ifno_from].freq_min)/ step_atm[ifno_from]
+                    target_end = (spw_target[ifno_to].freq_max - spw_atmcal[ifno_from].freq_min)/ step_atm[ifno_from]
+                    LOG.debug('target_start %s' % target_start)
+                    LOG.debug('target_end %s' % target_end)
                     LOG.debug('target_end - target_start = %s' % (int)(target_end - target_start))
                     LOG.debug('indices = %s' % indices)
                     for i in indices:
@@ -458,7 +468,7 @@ class DataTableImpl( object ):
                         tsys_target.update({i:tsys_target_value})
                     
                     atsys = [numpy.mean(tsys_target[i]) for i in indices]
-                    LOG.debug('atsys = %s' % atsys)
+                    LOG.debug('-----------atsys = %s' % atsys)
                     rows = self.get_row_index(ant, ifno_to, polno)
                     if len(atsys) == 1:
                         for row in rows:
