@@ -85,7 +85,7 @@ namespace casa {
 				originalMaxX = maxX[i];
 			}*/
 		}
-		adjust( topUnits, bottomUnits, autoScaleX, autoScaleY );
+		adjust( topUnits, bottomUnits, autoScaleX, autoScaleY, true );
 	}
 
 	pair<double,double> QtPlotSettings::getZoomInY( double zoomFactor ) const {
@@ -111,29 +111,38 @@ namespace casa {
 		for ( int i = 0; i < END_AXIS_INDEX; i++ ) {
 			AxisIndex axisIndex = static_cast<AxisIndex>(i);
 			double prevSpanX = spanX( axisIndex );
+
 			minX[i] = minX[i] + zoomFactor * prevSpanX;
 			maxX[i] = maxX[i] - zoomFactor * prevSpanX;
 			/*if ( axisIndex == QtPlotSettings::xBottom ) {
 				originalMinX = minX[i];
 				originalMaxX = maxX[i];
 			}*/
+
 		}
-		adjust( topUnits, bottomUnits, autoScaleX, autoScaleY );
+		adjust( topUnits, bottomUnits, autoScaleX, autoScaleY, true );
 	}
 
 
 
 	void QtPlotSettings::adjust( const QString& /*topUnits*/, const QString& /*bottomUnits*/,
-	                             bool autoScaleX, bool autoScaleY) {
+	                             bool autoScaleX, bool autoScaleY, bool zoom) {
 		if ( autoScaleX ) {
 			//Adjust the bottom axis allowing it to set the number of ticks.
 
 			pair<double,double> percentChange=adjustAxis( minX[xBottom], maxX[xBottom], numXTicks);
+
 			if ( percentChange.first > 0 ){
 				minPercentage = percentChange.first;
 			}
+			if ( zoom && percentChange.first == 0 ){
+				minPercentage = 0;
+			}
 			if ( percentChange.second > 0 ){
 				maxPercentage = percentChange.second;
+			}
+			if ( zoom && percentChange.second == 0 ){
+				maxPercentage = 0;
 			}
 
 			//Adjust the top axis using the same number of ticks.  Use a
@@ -219,6 +228,7 @@ namespace casa {
 		/*if ( index == QtPlotSettings::xBottom ) {
 			originalMinX = value;
 		}*/
+
 	}
 
 	void QtPlotSettings::setMaxX( AxisIndex index, double value ) {
@@ -226,6 +236,7 @@ namespace casa {
 		/*if ( index == QtPlotSettings::xBottom ) {
 			originalMaxX = value;
 		}*/
+
 	}
 
 	void QtPlotSettings::setMinY( double value ) {

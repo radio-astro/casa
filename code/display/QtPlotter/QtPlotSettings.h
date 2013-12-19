@@ -37,7 +37,8 @@ namespace casa {
 	class QtPlotSettings {
 	public:
 		QtPlotSettings();
-		void adjust( const QString& topUnits, const QString& bottomUnits, bool autoScaleX, bool autoScaleY );
+		void adjust( const QString& topUnits, const QString& bottomUnits,
+				bool autoScaleX, bool autoScaleY, bool zoom = false );
 		void zoomOut( double zoomFactor, const QString& topUnits, const QString& bottomUnits,
 		              bool autoScaleX, bool autoScaleY );
 		void zoomIn( double zoomFactor, const QString& topUnits, const QString& bottomUnits,
