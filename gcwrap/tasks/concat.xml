@@ -72,7 +72,8 @@ A field position in one data set that is within a specified direction tolerance
 of another field position in any other data set will be combined into one
 field.  The field names need not be the same---only their position is used.
 
-Each appended dataset is assigned a new observation id.
+Each appended dataset is assigned a new observation id (provided the entries
+in the observation table are indeed different).
 
 Keyword arguments:
 vis -- Name of input visibility files to be combined
