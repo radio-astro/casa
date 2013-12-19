@@ -50,6 +50,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     	<value type="string"/>
     </param>
 
+    <param type="bool" name="commonbeam" subparam="yes">
+        <description>If gaussian kernel and the input image has multiple beams, use the smallest beam that encloses all beams in the input image.</description>
+        <value>False</value>
+    </param>
     <param type="bool" name="targetres" subparam="yes">
         <description>If gaussian kernel, specified parameters are to be resolution of output image (True) or parameters of gaussian to convolve with input image (False).</description>
         <!--
@@ -124,6 +128,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     but it has to be False for backwards compatibility
                 -->
 		        <default param="targetres"><value type="bool">False</value></default>
+                <default param="commonbeam"><value type="bool">False</value></default>
 	        </equals>
 	    </when>
         <when param="mask">
@@ -167,6 +172,9 @@ pa           Position angle to use for gaussian kernel, unused for boxcar.
 beam         Record specifying Gaussian beam parameters. Do not specify any of
              major, minor, or pa if you choose to specify this parameter.
              Example: {"major": "5arcsec", "minor": "2arcsec", "pa": "20deg"}
+commonbeam   If gaussian kernel and the input image has multiple beams, use the smallest beam that
+             encloses all beams in the input image. If True do not specify any of major/minor/pa or
+             beam.
 targetres    Boolean used only for gaussian kernels. If True, kernel parameters (major/minor/pa
              or beam) are the resolution of the output image. If false, a gaussian
              with these parameters is convolved with the input image to produce
@@ -205,6 +213,10 @@ beam = {"major": "5arcsec", "minor": "2arcsec", "pa": "20deg"}
 
 If both beam and any of major, minor, and/or pa is specified for a Gaussian kernel,
 an exception will be thrown.    
+
+Alternatively, if the input image has multiple beams, setting commonbeam=True will result in the
+smallest beam that encloses all beams in the image to be used as the convolving beam. If commonbeam=True,
+specifying any of major/minor/pa or beam will result in an exception being thrown.
 
 In addition, the targetres parameter indicates if the specified Gaussian is to be the
 resolution of the final image (True) or if it is to be used to convolve the input image.

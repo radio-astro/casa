@@ -1191,8 +1191,7 @@ class imsmooth_test(unittest.TestCase):
                         outfile=outfile
                     )
                 )        
- 
-    
+
     def test_overwrite(self):
         """ test overwrite parameter """
         myia = self.ia
@@ -1284,6 +1283,105 @@ class imsmooth_test(unittest.TestCase):
         mycl.fromrecord(zz['results'])
         got = mycl.getfluxvalue(0)
         self.assertTrue(abs(got[0]/expected[0] - 1) < 2e-8)
+        
+    def test_commonbeam(self):
+        #"""Test commonbeam input parameter in imsmooth"""
+        myia = self.ia
+        imagename = "cb1.im"
+        myia.fromshape(imagename, [100, 100, 5])
+        csys = myia.coordsys()
+        csys.setunits(["arcsec", "arcsec", "Hz"])
+        csys.setincrement([-1, 1, 1e6])
+        myia.setcoordsys(csys.torecord())
+        myia.setbrightnessunit("Jy/beam")
+        myia.done()
+        outfile = "cbout1.im"
+        self.assertFalse(
+            imsmooth(
+                imagename=imagename, major="10arcsec",
+                commonbeam=True, outfile=outfile
+            )           
+        )
+        self.assertFalse(
+            imsmooth(
+                imagename=imagename, commonbeam=True, outfile=outfile
+            )           
+        )
+        
+        myia.open(imagename)
+        myia.setrestoringbeam(major="6arcsec", minor="3arcsec", pa="0deg")
+        myia.done()
+        self.assertTrue(
+            imsmooth(
+                imagename=imagename, commonbeam=True, outfile=outfile,
+                targetres=False
+            )           
+        )
+        myia.open(outfile)
+        beam = myia.restoringbeam()
+        myia.done()
+        root2 = math.sqrt(2)
+        self.assertTrue(abs(qa.getvalue(beam['major']) - 6*root2) < 1e-6)
+        self.assertTrue(abs(qa.getvalue(beam['minor']) - 3*root2) < 1e-6)
+        self.assertTrue(abs(qa.getvalue(beam['positionangle'])) < 1e-5)
+        
+        outfile = "cbout2.im"
+        self.assertTrue(
+            imsmooth(
+                imagename=imagename, commonbeam=True, outfile=outfile,
+                targetres=True
+            )           
+        )
+        myia.open(outfile)
+        beam = myia.restoringbeam()
+        myia.done()
+        self.assertTrue(abs(qa.getvalue(beam['major']) - 6) < 1e-5)
+        self.assertTrue(abs(qa.getvalue(beam['minor']) - 3) < 1e-5)
+        self.assertTrue(abs(qa.getvalue(beam['positionangle'])) < 1e-5)
+        
+        myia.open(imagename)
+        myia.setrestoringbeam(remove=True)
+        myia.setrestoringbeam(major="6arcsec", minor="3arcsec", pa="0deg", channel=0)
+
+        myia.setrestoringbeam(major="8arcsec", minor="4arcsec", pa="0deg", channel=1)
+        myia.done()
+        outfile = "cbout3.im"
+        self.assertTrue(
+            imsmooth(
+                imagename=imagename, commonbeam=True, outfile=outfile,
+                targetres=False
+            )           
+        )
+        myia.open(outfile)
+        for i in range(5):
+            beam = myia.restoringbeam(channel=i)
+            if i == 1:
+                emajor = root2*8
+                eminor = root2*4
+            else:
+                emajor = 10
+                eminor = 5
+            self.assertTrue(abs(qa.getvalue(beam['major']) - emajor) < 1e-6)
+            self.assertTrue(abs(qa.getvalue(beam['minor']) - eminor) < 1e-6)
+            self.assertTrue(abs(qa.getvalue(beam['positionangle'])) < 1e-5)
+        myia.done()
+        
+        outfile = "cbout4.im"
+        self.assertTrue(
+            imsmooth(
+                imagename=imagename, commonbeam=True, outfile=outfile,
+                targetres=True
+            )           
+        )
+        myia.open(outfile)
+        for i in range(5):
+            beam = myia.restoringbeam(channel=i)
+            self.assertTrue(abs(qa.getvalue(beam['major']) - 8) < 1e-6)
+            self.assertTrue(abs(qa.getvalue(beam['minor']) - 4) < 1e-6)
+            self.assertTrue(abs(qa.getvalue(beam['positionangle'])) < 1e-5)
+        myia.done()
+        
+
         
 def suite():
     return [imsmooth_test]    
