@@ -612,11 +612,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		datamax = datmax;
 	}
 
-	Double PrincipalAxesDD::getDataMin() {
+	Double PrincipalAxesDD::getDataMin() const {
 		return datamin;
 	}
 
-	Double PrincipalAxesDD::getDataMax() {
+	Double PrincipalAxesDD::getDataMax() const {
 		return datamax;
 	}
 
@@ -2074,8 +2074,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	};
 
 
-	Record PrincipalAxesDD::getOptions() {
-		Record rec = DisplayData::getOptions();
+	Record PrincipalAxesDD::getOptions( bool scrub ) const {
+		Record rec = DisplayData::getOptions(scrub);
 //
 
 		const uInt nPixelAxes = itsCoordSys.nPixelAxes();
@@ -2146,13 +2146,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 //
 		if (itsUsesAxisLabels) {
-			Record labelrec = getLabellerOptions();
+			Record labelrec = getLabellerOptions(scrub);
 			rec.merge(labelrec);
 		}
 		return rec;
 	}
 
-	Record PrincipalAxesDD::getLabellerOptions() {
+	Record PrincipalAxesDD::getLabellerOptions( bool /*scrub*/ ) const {
 
 		Record rec;
 //

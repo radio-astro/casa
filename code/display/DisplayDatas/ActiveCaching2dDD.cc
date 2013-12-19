@@ -179,8 +179,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return ret;
 	}
 
-	Record ActiveCaching2dDD::getOptions() {
-		Record rec = CachingDisplayData::getOptions();
+	Record ActiveCaching2dDD::getOptions( bool scrub ) const {
+		Record rec = CachingDisplayData::getOptions(scrub);
 //
 		Record aspect;
 		aspect.define("dlformat", "aspect");

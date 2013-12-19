@@ -128,7 +128,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual Bool setOptions(Record &rec, Record &recOut);
 
 		// Retrieve the current and default options and parameter types.
-		virtual Record getOptions();
+		virtual Record getOptions( bool scrub=false ) const;
 
 		// Refresh event handler which is called indirectly by the
 		// WorldCanvas, via the WorldCanvasHolder.  This function will take

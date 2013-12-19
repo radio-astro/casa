@@ -389,6 +389,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		pSz.setWidth(int(xs * ratio));
 		pSz.setHeight(int(ys * ratio));
 
+		pDP->pushCurrentDrawingState( );
+		pDP->setLabelLineWidth(pDP->getLabelLineWidth( ) * ratio);
+		pDP->setTickLength(pDP->getTickLength( ) * ratio);
 		QPixmap pmp(pSz);
 		QApplication::setOverrideCursor(Qt::WaitCursor);
 		pDP->setAllowBackToFront(false);
@@ -401,6 +404,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		painter.drawPixmap(0,0,pmp);
 		pDP->endLabelAndAxisCaching( painter );
 		painter.end();
+		pDP->popCurrentDrawingState( );
 		pDP->setBackgroundPS(backColor, foreColor);
 		pDP->setAllowBackToFront(true);
 		pDP->resize(sz);

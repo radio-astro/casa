@@ -170,8 +170,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return (ret || localchange);
 	}
 
-	Record AxesDisplayData::getOptions() {
-		Record rec = PassiveCachingDD::getOptions();
+	Record AxesDisplayData::getOptions( bool scrub ) const {
+		Record rec = PassiveCachingDD::getOptions(scrub);
 
 		// "Basic" context
 		itsParamTitleText->toRecord(rec);

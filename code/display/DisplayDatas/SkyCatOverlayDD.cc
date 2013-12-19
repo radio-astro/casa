@@ -114,8 +114,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return ret;
 	}
 
-	Record SkyCatOverlayDD::getOptions() {
-		Record rec = PassiveTableDD::getOptions();
+	Record SkyCatOverlayDD::getOptions( bool scrub ) const {
+		Record rec = PassiveTableDD::getOptions(scrub);
 
 		itsParamNameColumn->toRecord(rec);
 

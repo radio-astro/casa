@@ -101,7 +101,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual Bool setOptions(Record &rec, Record &recOut);
 
 		// retrieve the current and default options and parameter types.
-		virtual Record getOptions();
+		virtual Record getOptions( bool scrub=false ) const;
 
 		// apply returns True if the array in was converted to the array out
 		// successfully the last parameter sets the output range
