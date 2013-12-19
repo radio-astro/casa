@@ -316,6 +316,8 @@ Tester::doTests (int nArgs, char * args [])
 
         doTest<BasicChannelSelection> ();
 
+        doTest<BasicCorrelationSelection> ();
+
         doTest<BasicMutation> ();
 
         doTest<FrequencyChannelSelection> ();
@@ -574,6 +576,7 @@ BasicChannelSelection::nextSubchunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * 
 
     Int spectralWindow = vb->spectralWindows()(0);
     Int nRows = vb->nRows();
+    Int nCorrelations = vb->nCorrelations();
 
     VisBuffer2 * vb2 = VisBuffer2::factory (VbPlain, VbRekeyable);
     vb2->copyCoordinateInfo(vb, false, true);
@@ -595,7 +598,7 @@ BasicChannelSelection::nextSubchunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * 
 
     // Check visibility shapes
 
-    IPosition expectedShape = IPosition (3, 4, nChannels, nRows);
+    IPosition expectedShape = IPosition (3, nCorrelations, nChannels, nRows);
     TestErrorIf (! visibility.shape().isEqual (expectedShape),
                  String::format("Bad visibility shape; expected %s, got %s; "
                                 "at spw=%d, msRow=%d",
@@ -628,10 +631,19 @@ BasicChannelSelection::nextSubchunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * 
                          spectralWindow,
                          rowIds (0)));
 
+    TestErrorIf (! vb->weight().shape().isEqual (IPosition (2, nCorrelations, nRows)),
+                 String::format("Bad visibility shape; expected %s, got %s; "
+                                "at spw=%d, msRow=%d",
+                                expectedShape.toString().c_str(),
+                                visibility.shape().toString().c_str(),
+                                spectralWindow,
+                                rowIds (0)));
+
+
 
     // Test flag cube shapes
 
-    IPosition expectedShape2 (IPosition (4, 4, nChannels, nFlagCategories_p, nRows));
+    IPosition expectedShape2 (IPosition (4, nCorrelations, nChannels, nFlagCategories_p, nRows));
     TestErrorIf (! vb->flagCategory().shape ().isEqual (expectedShape2),
                  String::format("Bad flag category shape; expected %s, got %s; "
                                 "spw=%d, msRow=%d",
@@ -648,7 +660,7 @@ BasicChannelSelection::nextSubchunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * 
 
         for (Int channel = 0; channel < nChannels; channel ++){
 
-            for (Int correlation = 0; correlation < 4; correlation ++){
+            for (Int correlation = 0; correlation < nCorrelations; correlation ++){
 
                 // Test to see if the default fill pattern for the three types of
                 // visibility cubes.
@@ -696,13 +708,14 @@ BasicChannelSelection::checkFlagCategory (Int rowId, Int spectralWindow, Int row
 
     // Now check out the flag categories array [nC, nF, nCat, nR]
 
+    Int correlationSelected = getUnderlyingCorrelation (spectralWindow, correlation);
     Int expectedChannelNumber = channel * channelIncrement + channelOffset;
 
     for (int category = 0; category < nFlagCategories_p; category ++){
 
         Bool expected;// = (rowId % 2) ^ (channel % 2) ^ (correlation % 2) ^ (category % 2);
 
-        switch (correlation){
+        switch (correlationSelected){
 
         case 0:
 
@@ -790,9 +803,12 @@ BasicChannelSelection::checkVisCube (Int rowId, Int spectralWindow, Int row, Int
 {
     Float real = 10 * rowId + spectralWindow;
     Int expectedChannelNumber = channel * channelIncrement + channelOffset;
-    Float imag = 100 * (expectedChannelNumber) + correlation * 10 + cubeDelta;
+    Int correlationSelected = getUnderlyingCorrelation (spectralWindow, correlation);
+
+    Float imag = 100 * (expectedChannelNumber) + correlationSelected * 10 + cubeDelta;
     Complex z0 (real, imag);
     z0 *= factor_p;
+
     Complex z = cube (correlation, channel, row);
 
     TestErrorIf (z != z0,
@@ -805,7 +821,7 @@ BasicChannelSelection::checkVisCube (Int rowId, Int spectralWindow, Int row, Int
                          row,
                          rowId,
                          channel,
-                         correlation));
+                         correlationSelected));
 
 }
 
@@ -815,7 +831,9 @@ BasicChannelSelection::checkFlagCube (Int rowId, Int spectralWindow, Int row, In
 {
     Int expectedChannelNumber = channel * channelIncrement + channelOffset;
 
-    Bool expectedValue = (expectedChannelNumber % 2 == 0) == (correlation % 2 == 0);
+    Int correlationSelected = getUnderlyingCorrelation (spectralWindow, correlation);
+
+    Bool expectedValue = (expectedChannelNumber % 2 == 0) == (correlationSelected % 2 == 0);
     if (factor_p != 1){
         expectedValue = ! expectedValue;
     }
@@ -831,7 +849,7 @@ BasicChannelSelection::checkFlagCube (Int rowId, Int spectralWindow, Int row, In
                          row,
                          rowId,
                          channel,
-                         correlation));
+                         correlationSelected));
 }
 
 void
@@ -841,7 +859,10 @@ BasicChannelSelection::checkWeightSpectrum (Int rowId, Int spectralWindow, Int r
 {
     Int expectedChannelNumber = channel * channelIncrement + channelOffset;
 
-    Float expectedValue = rowId * 1000 + spectralWindow * 100 + expectedChannelNumber * 10 + correlation + 1;
+    Int correlationSelected = getUnderlyingCorrelation (spectralWindow, correlation);
+
+    Float expectedValue = rowId * 1000 + spectralWindow * 100 + expectedChannelNumber * 10 +
+                          correlationSelected + 1;
     expectedValue *= factor_p;
 
     Float actualValue = vb->weightSpectrum() (correlation, channel, row);
@@ -850,12 +871,39 @@ BasicChannelSelection::checkWeightSpectrum (Int rowId, Int spectralWindow, Int r
                  String::format ("Expected %f for weight spectrum (%d,%d,%d); got %f "
                                  "spw=%d, msRow=%d",
                                  expectedValue,
-                                 correlation,
+                                 correlationSelected,
                                  channel,
                                  row,
                                  actualValue,
                                  spectralWindow,
                                  rowId));
+}
+
+
+int
+BasicChannelSelection::getUnderlyingCorrelation (Int spectralWindow, Int correlation) {
+
+    if (correlationSlices_p.empty()){
+        return correlation;
+    }
+
+    Vector<Slice> vs = correlationSlices_p (spectralWindow);
+
+    Assert (vs.nelements() == 1);
+
+    uInt n = 0;
+
+
+    for (Int j = vs(0).start(); n < vs(0).length (); j += vs(0).inc()){
+
+        if ((int) n == correlation){
+            return j;
+        }
+        n ++;
+    }
+
+    Throw ("Bugcheck: Failed to find correlation defined in spectral window");
+
 }
 
 Bool
@@ -871,6 +919,13 @@ BasicChannelSelection::noMoreData (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*
 }
 
 void
+BasicChannelSelection::setCorrelationSlices (const Vector <Vector <Slice> > & slices)
+{
+    correlationSlices_p = slices;
+}
+
+
+void
 BasicChannelSelection::startOfData (VisibilityIterator2 & vi, VisBuffer2 * /*vb*/)
 {
     // Apply channel selections
@@ -881,8 +936,41 @@ BasicChannelSelection::startOfData (VisibilityIterator2 & vi, VisBuffer2 * /*vb*
     selection.add (2, 3, 6);
     selection.add (3, 0, 5, 2);
 
+    if (! correlationSlices_p.empty()){
+
+        selection.addCorrelationSlices (correlationSlices_p);
+    }
+
+
     vi.setFrequencySelection (selection);
+
 }
+
+BasicCorrelationSelection::BasicCorrelationSelection ()
+: BasicChannelSelection ()
+{
+    Vector<Slice> aSlice (1);
+    Vector <Vector <Slice> > slices (4);
+
+    aSlice(0) = Slice(0,2);
+    slices (0) = aSlice;
+
+    aSlice(0) = Slice (0,2,2);
+    slices (1) = aSlice;
+
+    aSlice(0) = Slice (0,2,3);
+    slices (2) = aSlice;
+
+    aSlice(0) = Slice (1,2,2);
+    slices (3) = aSlice;
+
+    setCorrelationSlices (slices);
+}
+
+BasicCorrelationSelection::~BasicCorrelationSelection ()
+{
+}
+
 
 BasicMutation::BasicMutation ()
 : BasicChannelSelection (),
