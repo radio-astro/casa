@@ -235,7 +235,7 @@ void doConversions()
 // Convert to pixel
 
       Vector<Double> pPars;
-      ImageUtilities::worldWidthsToPixel (os, pPars, wPars, cSys, pixelAxes);
+      ImageUtilities::worldWidthsToPixel (pPars, wPars, cSys, pixelAxes);
 
 // Back to world
 
@@ -246,7 +246,7 @@ void doConversions()
          pPars2(i+2) = pPars(i);
       }
       GaussianBeam wPars2;
-      ImageUtilities::pixelWidthsToWorld (os, wPars2, pPars2, cSys, pixelAxes);     
+      ImageUtilities::pixelWidthsToWorld (wPars2, pPars2, cSys, pixelAxes);     
 //
       listWorld(wPars);
       listPixel(pPars);

@@ -3041,7 +3041,7 @@ anchor="images:image.done.function">done</link> function) this
 temporary image is deleted.
 
 The user specifies which 2 pixel axes of the image are to be convolved
-via the {\stfaf axes} argument.
+via the {\stfaf axes} argument. The pixels must be square or an error will result.
 
 The user specifies the type of convolution kernel with {\stfaf type} (minimum
 match is supported); currently only {\cf 'gaussian'}  is available.

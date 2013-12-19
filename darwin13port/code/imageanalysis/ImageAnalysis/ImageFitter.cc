@@ -559,8 +559,8 @@ String ImageFitter::_resultsHeader() const {
 	summary << "       --- channel:             " << chansoss.str() << endl;
 	summary << "       --- stokes:              " << _getStokes() << endl;
 	summary << "       --- mask:                " << _getMask() << endl;
-	summary << "       --- include pixel ragne: " << _includePixelRange << endl;
-	summary << "       --- exclude pixel ragne: " << _excludePixelRange << endl;
+	summary << "       --- include pixel range: " << _includePixelRange << endl;
+	summary << "       --- exclude pixel range: " << _excludePixelRange << endl;
 	if (! _estimatesString.empty()) {
 		summary << "       --- initial estimates:   Peak, X, Y, a, b, PA" << endl;
 		summary << "                                " << _estimatesString << endl;
@@ -1488,7 +1488,7 @@ void ImageFitter::_fitsky(
 
             try {
                 _encodeSkyComponentError(
-				    *_getLog(), result(j), facToJy, allAxesSubImage,
+				    result(j), facToJy, allAxesSubImage,
 				    solution, errors, stokes, xIsLong
 			    );
             }
@@ -1593,8 +1593,7 @@ void ImageFitter::_fitskyExtractBeam(
 	Bool doRef = True;
 	Vector<Double> dParameters;
 	ImageUtilities::worldWidthsToPixel(
-		*_getLog(), dParameters,
-		wParameters, cSys, pixelAxes, doRef
+		dParameters, wParameters, cSys, pixelAxes, doRef
 	);
 	parameters.resize(6, True);
 	parameters(3) = dParameters(0);
@@ -1603,8 +1602,7 @@ void ImageFitter::_fitskyExtractBeam(
 }
 
 void ImageFitter::_encodeSkyComponentError(
-		LogIO& os, SkyComponent& sky,
-		Double facToJy, const ImageInterface<Float>& subIm,
+		SkyComponent& sky, Double facToJy, const ImageInterface<Float>& subIm,
 		const Vector<Double>& parameters, const Vector<Double>& errors,
 		Stokes::StokesTypes stokes, Bool xIsLong) const
 // Input
@@ -1676,8 +1674,10 @@ void ImageFitter::_encodeSkyComponentError(
 			dParameters(4) = parameters(5);
 			// If flipped, it means pixel major axis morphed into world minor
 			// Put back any zero errors as well.
-			Bool flipped = ImageUtilities::pixelWidthsToWorld(os, wParameters,
-					dParameters, cSys, pixelAxes, False);
+			Bool flipped = ImageUtilities::pixelWidthsToWorld(
+				wParameters,
+				dParameters, cSys, pixelAxes, False
+			);
 			Quantum<Double> paErr(errors(5), Unit(String("rad")));
 			if (flipped) {
 				pS->setErrors(
@@ -1703,7 +1703,7 @@ void ImageFitter::_encodeSkyComponentError(
 	dParameters(3) = errors(2) == 0 ? 1e-8 : errors(2);
 	dParameters(4) = 0.0; // Pixel errors are in X/Y directions not along major axis
 	Bool flipped = ImageUtilities::pixelWidthsToWorld(
-			os, wParameters, dParameters,
+			wParameters, dParameters,
 			cSys, pixelAxes, False
 		);
 	// TSS::setRefDirErr interface has lat first

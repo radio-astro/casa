@@ -129,11 +129,12 @@ private:
 
 
 	static void _checkKernelParameters(
-		LogIO& os, VectorKernel::KernelTypes kernelType,
-		const Vector<Quantum<Double> >& parameters
+		VectorKernel::KernelTypes kernelType,
+		const Vector<Quantity>& parameters
 	);
 
-	static void _dealWithRestoringBeam (
+	// returns the value by which pixel values will be scaled
+	static T _dealWithRestoringBeam (
 		LogIO& os, String& brightnessUnitOut, GaussianBeam& beamOut,
 		Array<T>& kernelArray, const T kernelVolume,
 		const VectorKernel::KernelTypes kernelType,
@@ -151,27 +152,27 @@ private:
 		const Vector<Double>& parameters
 	);
 
-	static void fillGaussian(
+	static void _fillGaussian(
 		T& maxVal, T& volume, Matrix<T>& pixels,
 		T height, T xCentre, T yCentre,
 		T majorAxis, T ratio, T positionAngle
 	);
 
 	static T _makeKernel(
-		LogIO& os, Array<T>& kernel,
+		Array<T>& kernel,
 		VectorKernel::KernelTypes kernelType,
 		const Vector<Quantity>& parameters,
 		const IPosition& axes,
 		const ImageInterface<T>& inImage
 	);
 
-	static IPosition shapeOfKernel(
+	static IPosition _shapeOfKernel(
 		const VectorKernel::KernelTypes kernelType,
 		const Vector<Double>& parameters,
 		const uInt ndim, const IPosition& axes
 	);
 
-	static uInt sizeOfGaussian(const Double width, const Double nSigma);
+	static uInt _sizeOfGaussian(const Double width, const Double nSigma);
 
 	static Vector<Quantity> _getConvolvingBeamForTargetResolution(
 		LogIO& os, const Vector<Quantity>& targetBeamParms,
