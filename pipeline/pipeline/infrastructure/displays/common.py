@@ -51,6 +51,12 @@ class PlotcalLeaf(object):
         plots = [self._get_plot_wrapper()]
         return [p for p in plots if p is not None]
 
+        # plotcal with time as x axis seems to leave matplotlib
+        # in an open state. Work around this by closing pyplot
+        # after each call.
+#             pyplot.clf()
+#             pyplot.close()
+            
     def _get_figfile(self):
         fileparts = {
             'caltable' : os.path.basename(self._calapp.gaintable),
@@ -104,10 +110,6 @@ class PlotcalLeaf(object):
         task = casa_tasks.plotcal(**task_args)
         task.execute(dry_run=False)
 
-        # plotcal with time as x axis seems to leave matplotlib
-        # in an open state. Work around this by closing pyplot
-        # after each call.
-        pyplot.close()
 
 class PlotbandpassLeaf(object):
     """
