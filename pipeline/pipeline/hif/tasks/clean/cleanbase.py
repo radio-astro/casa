@@ -8,7 +8,9 @@ import types
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.utils as utils
 from pipeline.infrastructure import casa_tasks
+
 from .resultobjects import CleanResult
 from pipeline.hif.heuristics import makecleanlist
 
@@ -22,8 +24,9 @@ class CleanBaseInputs(basetask.StandardInputs):
         intent=None, field=None, spw=None, uvrange=None, mode=None,
         imagermode=None, outframe=None, imsize=None, cell=None,
         phasecenter=None, nchan=None, start=None, width=None, stokes=None,
-	weighting=None, robust=None, noise=None, npixels=None, restoringbeam=None, 
-        iter=None, mask=None, niter=None, threshold=None, result=None):
+	weighting=None, robust=None, noise=None, npixels=None,
+	restoringbeam=None, iter=None, mask=None, niter=None, threshold=None,
+	result=None):
 
         self._init_properties(vars())
 
@@ -339,17 +342,25 @@ class CleanBase(basetask.StandardTaskTemplate):
         re_field = re_field.replace('+', '\+')
 
         # Use scanids to select data with the specified intent
-	#    We should not have to do this.
+	# Not CASA clean now supports intent selectin but leave
+	# this logic in place and use it to eliminate vis that
+	# don't contain the requested data.
+	#
         scanidlist = []
+	vislist = []
         for vis in inputs.vis:
             ms = inputs.context.observing_run.get_ms(name=vis)
             scanids = [scan.id for scan in ms.scans if
                 intent in scan.intents and
                 re.search(pattern=re_field, string=str(scan.fields))]
+	    if not scanids:
+	        continue
             scanids = str(scanids)
             scanids = scanids.replace('[', '')
             scanids = scanids.replace(']', '')
             scanidlist.append(scanids)
+	    vislist.append(vis)
+	inputs.vis=vislist
 
         # If imsize not set then use heuristic code to calculate the
         # centers for each field  / spw
@@ -421,7 +432,9 @@ class CleanBase(basetask.StandardTaskTemplate):
 	# Call CASA clean. Clean this up at some point.
         job = casa_tasks.clean(vis=inputs.vis, imagename='%s.iter%s' %
 	    (inputs.imagename, iter), field=inputs.field, spw=inputs.spw,
-	    selectdata=True, scan=scanidlist, mode=inputs.mode, niter=inputs.niter,
+	    selectdata=True, intent=utils.to_CASA_intent(inputs.ms[0],
+	    inputs.intent), scan=scanidlist,
+	    mode=inputs.mode, niter=inputs.niter,
             threshold=inputs.threshold, imagermode=inputs.imagermode,
 	    interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
             start=inputs.start, width=inputs.width, imsize=inputs.imsize,
@@ -478,8 +491,6 @@ class CleanBase(basetask.StandardTaskTemplate):
         # Occasionally an old file confuses the clean so that clean starts
 	# in a corrupted state. This is not understood. For now, delete all
 	# <imagename>.iter* files.
-        #     Replace with os independent code at some point.
-        #os.system('rm -rf %s.iter*' % inputs.imagename)
 	try:
 	    shutil.rmtree('%s.iter*' * inputs.imagenmae)
 	except:
@@ -488,8 +499,9 @@ class CleanBase(basetask.StandardTaskTemplate):
 	# Set up dirty image job.
         job = casa_tasks.clean(vis=inputs.vis,
             imagename='%s.iter%s' % (inputs.imagename, iter),
-            field=inputs.field, spw=inputs.spw, selectdata=True, scan=scanidlist,
-            mode=inputs.mode, niter=0, threshold='0.0mJy',
+            field=inputs.field, spw=inputs.spw, selectdata=True,
+	    scan=scanidlist, intent=utils.to_CASA_intent(inputs.ms[0],
+	    inputs.intent), mode=inputs.mode, niter=0, threshold='0.0mJy',
             imagermode=inputs.imagermode, interactive=False,
             outframe=inputs.outframe, nchan=inputs.nchan, start=inputs.start,
             width=inputs.width, imsize=inputs.imsize, cell=inputs.cell,
