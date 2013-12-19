@@ -1854,6 +1854,7 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 	else
 	{
 		numOfCombInputChanMap_p[spwId] = originalCHAN_FREQ.size();
+		numOfCombInterChanMap_p[spwId] = originalCHAN_FREQ.size();
 		inputCHAN_FREQ = originalCHAN_FREQ;
 		inputCHAN_WIDTH = originalCHAN_WIDTH;
 	}
@@ -2355,6 +2356,7 @@ void MSTransformManager::dropNonUniformWidthChannels()
 // -----------------------------------------------------------------------
 void MSTransformManager::getOutputNumberOfChannels()
 {
+	/*
 	if (refFrameTransformation_p or combinespws_p)
 	{
 		map<Int,Int>::iterator iter;
@@ -2365,6 +2367,7 @@ void MSTransformManager::getOutputNumberOfChannels()
 				// When doing only re-gridding, maybe not all SPWs require pre-averaging
 				if (not combinespws_p)
 				{
+					// jagonzal: This is the line of code which cannot be remove from here
 					freqbinMap_p[iter->first] = 1;
 				}
 				// When combining SPWs all of them get the same freqbin
@@ -2379,6 +2382,7 @@ void MSTransformManager::getOutputNumberOfChannels()
 		}
 	}
 	else
+	*/
 	{
 		// Access spectral window sub-table
 		MSSpectralWindow spwTable = outputMs_p->spectralWindow();
@@ -2402,6 +2406,28 @@ void MSTransformManager::getOutputNumberOfChannels()
 
 	    	numOfOutChanMap_p[spwId] = numChanCol(spw_idx);
 	    }
+	}
+
+	// Fill the missing chanbins (in case we are re-gridding SPWs
+	// separately and only some of them require pre-channel average
+
+	map<Int,Int>::iterator iter;
+	for(iter = numOfSelChanMap_p.begin(); iter != numOfSelChanMap_p.end(); iter++)
+	{
+		if (freqbinMap_p.find(iter->first) == freqbinMap_p.end())
+		{
+			// When doing only re-gridding, maybe not all SPWs require pre-averaging
+			if (not combinespws_p)
+			{
+				// jagonzal: This is the line of code which cannot be remove from here
+				freqbinMap_p[iter->first] = 1;
+			}
+			// When combining SPWs all of them get the same freqbin
+			else
+			{
+				freqbinMap_p[iter->first] = freqbinMap_p[0];
+			}
+		}
 	}
 
 

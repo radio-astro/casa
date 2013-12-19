@@ -151,6 +151,15 @@ class test_base(unittest.TestCase):
             
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform)     
+        
+    def setUp_CAS_4983(self):
+
+        self.vis = 'CAS-4983.ms'
+        if os.path.exists(self.vis):
+           self.cleanup()
+            
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
+        default(mstransform)         
                
     def cleanup(self):
         os.system('rm -rf '+ self.vis)
@@ -1061,6 +1070,20 @@ class test_SeparateSPWs(test_base):
         self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
         self.assertEqual(dd_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
         self.assertEqual(dd_col['r4'][0], 3,'Error re-indexing DATA_DESCRIPTION table')
+        
+    def test_slicing_problem(self):
+        '''mstransform: Separate SPWs after re-gridding one single SPW'''
+        self.outputms = "test_slicing_problem.ms"
+        mstransform(vis=self.vis, outputvis=self.outputms,regridms=True,nspw=3,nchan=10,spw='0:0~49')
+        self.assertTrue(os.path.exists(self.outputms))
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/SPECTRAL_WINDOW')
+        numChan = mytb.getcol('NUM_CHAN')      
+        mytb.close()            
+        check_eq(numChan[0], 10)
+        check_eq(numChan[1], 10)
+        check_eq(numChan[2], 10)
 
          
 class test_MMS(test_base):
@@ -1715,7 +1738,34 @@ class test_regridms_single_spw(test_base_compare):
         
         self.generate_tolerance_map()
 
-        self.post_process()          
+        self.post_process()     
+        
+class test_regridms_spw_with_different_number_of_channels(test_base):
+    '''Tests for regridms w/o combining SPWS'''
+       
+    def setUp(self):
+        self.setUp_CAS_4983()
+        self.outvis = 'test_regridms_spw_with_different_number_of_channels.ms'
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outvis)
+        
+    def test_regridms_spw_with_different_number_of_channels_separately(self):
+        '''mstransform: Regrid SPWs separately, applying pre-channel averaging to only some of them''' 
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn='data',field='J0102-7546',regridms=True,
+                    mode='frequency',width='29297.28kHz',outframe='lsrk',veltype='radio')  
+        
+        # DDI subtable should have 4 rows with the proper indices     
+        mytb = tbtool()
+        mytb.open(self.outvis + '/SPECTRAL_WINDOW')
+        numChan = mytb.getcol('NUM_CHAN')      
+        mytb.close()          
+        check_eq(numChan[0], 32)
+        check_eq(numChan[1], 2)
+        check_eq(numChan[2], 68)
+        check_eq(numChan[3], 2)
 
 
 class test_spw_poln(test_base):
@@ -2093,4 +2143,5 @@ def suite():
             test_regridms_single_spw,
             test_float_column,
             test_spw_poln,
+            test_regridms_spw_with_different_number_of_channels,
             Cleanup]
