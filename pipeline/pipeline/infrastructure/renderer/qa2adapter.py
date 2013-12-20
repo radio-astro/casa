@@ -11,7 +11,8 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.hif.tasks.bandpass as bandpass
 import pipeline.hif.tasks.gaincal as gaincal
-import pipeline.hif.tasks.wvrgcal as wvrgcal
+#import pipeline.hifa.tasks.wvrgcal as wvrgcal
+import pipeline.hifa.tasks.wvrgcalflag as wvrgcalflag
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -72,7 +73,7 @@ class CalibrationQA2Section(QA2Section):
     result_descriptions = {
 #        bandpass.common.BandpassResults         : 'Bandpass',
 #        gaincal.common.GaincalResults           : 'Gain',
-        wvrgcal.resultobjects.WvrgcalflagResult : 'WVR Calibration'
+        wvrgcalflag.resultobjects.WvrgcalflagResult : 'WVR Calibration'
     }
     
     def __init__(self, results):
@@ -100,7 +101,7 @@ class FlaggingQA2Section(QA2Section):
     url = 't2-3-3m.html'
 
     result_descriptions = {
-        wvrgcal.resultobjects.WvrgcalflagResult : 'WVR Flagging',
+        wvrgcalflag.resultobjects.WvrgcalflagResult : 'WVR Flagging',
     }
 
     def __init__(self, results):

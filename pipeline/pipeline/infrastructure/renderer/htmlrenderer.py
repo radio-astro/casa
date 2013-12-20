@@ -144,10 +144,10 @@ def get_task_description(result_obj):
     if task_cls is hifa.tasks.Tsysflagchans:
         return 'Flag channels of Tsys calibration'
 
-    if task_cls is hif.tasks.Wvrgcal:
+    if task_cls is hifa.tasks.Wvrgcal:
         return 'Calculate wvr calibration'
 
-    if task_cls is hif.tasks.Wvrgcalflag:
+    if task_cls is hifa.tasks.Wvrgcalflag:
         return 'Calculate and flag wvr calibration'
 
     if task_cls is hsd.tasks.SDInspectData:
@@ -3008,7 +3008,7 @@ def get_bandpass_qa2_scores(ms, qa2, plots, score_types, rootdir):
 # each task type.
 renderer_map = {
     T2_3MDetailsRenderer : {
-        hif.tasks.Wvrgcalflag    : T2_3MDetailsWvrgcalflagRenderer(),
+        hifa.tasks.Wvrgcalflag    : T2_3MDetailsWvrgcalflagRenderer(),
         # hif.tasks.Bandpass       : T2_3MDetailsBandpassRenderer(),
     },
     T2_4MDetailsRenderer : {
@@ -3034,8 +3034,8 @@ renderer_map = {
         hifa.tasks.Tsyscal       : T2_4MDetailsTsyscalRenderer(),
         hifa.tasks.Tsysflag      : T2_4MDetailsTsyscalFlagRenderer(),
         hifa.tasks.Tsysflagchans : T2_4MDetailsTsyscalFlagRenderer('t2-4m_details-hif_tsysflagchans.html'),
-        hif.tasks.Wvrgcal        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_wvrgcal.html'),
-        hif.tasks.Wvrgcalflag    : T2_4MDetailsWvrgcalflagRenderer(),
+        hifa.tasks.Wvrgcal        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_wvrgcal.html'),
+        hifa.tasks.Wvrgcalflag    : T2_4MDetailsWvrgcalflagRenderer(),
         hsd.tasks.SDReduction    : T2_4MDetailsDefaultRenderer('t2-4-singledish.html'),
         hsd.tasks.SDInspectData  : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_inspectdata.html'),
         hsd.tasks.SDCalTsys      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_caltsys.html'),
