@@ -526,6 +526,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    dh = oldSize.height() - scaledSize.height();
 				scaledSize.scale(width, height, Qt::KeepAspectRatio);
 
+				float factor = ( (scaledSize.width() + dw)/oldSize.width() +
+				                 (scaledSize.height() + dh)/oldSize.height() ) / 2.0;
+
+				pDP->pushCurrentDrawingState( );
+				float new_width = pDP->getLabelLineWidth( ) * factor;
+				if ( new_width < 1 ) new_width = 1;
+				pDP->setLabelLineWidth(new_width);
+				float new_length = pDP->getTickLength( ) * factor;
+				if ( new_length < 1 ) new_length = 1;
+				pDP->setTickLength( new_length );
 				//pDP->setAllowBackToFront(false); <-- for back buffer
 				// have to add pixels for the border that the QtDisplayPanel adds
 				// around the QtPixelCanvas
@@ -533,6 +543,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				// (Prevent display widget flashing during temporary resize.)
 				pDP->resize(scaledSize.width() + dw, scaledSize.height() + dh);
 				QPixmap* mp = pDP->contents();
+				pDP->popCurrentDrawingState( );
 				pDP->setUpdateAllowed(True);
 				pDP->resize(oldSize);
 				QCoreApplication::processEvents();
