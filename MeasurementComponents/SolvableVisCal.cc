@@ -5048,6 +5048,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
 				 const Vector<Int>& tranFieldIn,
 				 const Vector<Int>& inRefSpwMap,
 				 const Vector<String>& fldNames,
+                                 //const Float& threshold,
 				 fluxScaleStruct& oFluxScaleStruct,
 				 const String& oListFile,
                                  const Bool& incremental,
@@ -5265,29 +5266,34 @@ void SolvableVisJones::fluxscale(const String& outfile,
     NewCalTable selct(*ct_);
     CTInterface cti(*ct_);
     MSSelection mss;
-    Vector<Float> medianGains(nFld); //keeps median (amplitude) gains for each field
+    Vector<Float> medianGains(nFld,0.0); //keeps median (amplitude) gains for each field
     for (Int iFld=0; iFld<nFld; iFld++) {
       //
       mss.setFieldExpr(String::toString(iFld));     
       TableExprNode ten=mss.toTableExprNode(&cti);
 
-      getSelectedTable(selct,*ct_,ten,"");
+      try {
+        getSelectedTable(selct,*ct_,ten,"");
       
-      ROCTMainColumns ctmc(selct);
-      Array<Float> outparams;
-      ctmc.fparamArray(outparams);
-      IPosition arshp = outparams.shape();
-      //cerr<<"outparams(0,0,0)="<<outparams(IPosition(3,0,0,0))<<endl;
-      //cerr<<"outparams(1,0,n)="<<outparams(IPosition(3,1,0,arshp(arshp.nelements()-1)-1))<<endl;
-      // take out amplitude only
-      IPosition start(3,0,0,0);
-      Int pinc = 2;
-      if (nPar()==1) pinc = 1; 
-      IPosition length(3,Int(arshp(0)/pinc),1,arshp(arshp.nelements()-1));
-      IPosition stride(3,pinc,1,1);
-      Slicer slicer(start,length,stride);
-      Array<Float> subarr=outparams(slicer);
-      medianGains(iFld)=median(subarr);
+        ROCTMainColumns ctmc(selct);
+        Array<Float> outparams;
+        ctmc.fparamArray(outparams);
+        IPosition arshp = outparams.shape();
+        //cerr<<"arshp="<<arshp<<endl;
+        //cerr<<"outparams(1,0,n)="<<outparams(IPosition(3,1,0,arshp(arshp.nelements()-1)-1))<<endl;
+
+        // take out amplitude only
+        IPosition start(3,0,0,0);
+        Int pinc = 2;
+        if (nPar()==1) pinc = 1; 
+        IPosition length(3,Int(arshp(0)/pinc),1,arshp(arshp.nelements()-1));
+        IPosition stride(3,pinc,1,1);
+        Slicer slicer(start,length,stride);
+        Array<Float> subarr=outparams(slicer);
+        medianGains(iFld)=median(subarr);
+      } catch (AipsError x) {
+        // no selection for current field ID so ignore to continue
+      }
     }
     while (!ctiter.pastEnd()) {
       Int iSpw(ctiter.thisSpw());
