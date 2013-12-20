@@ -279,9 +279,7 @@ class sdtask_template(sdtask_interface):
         # CAS-5496 selection by timerange
         if hasattr(self, 'timerange') and len(self.timerange) > 0:
             # base scantable
-            if scantb:
-                base_table = scantb
-            elif hasattr(self, 'infile'):
+            if hasattr(self, 'infile'):
                 base_table = self.infile
             elif hasattr(self, 'infiles'):
                 base_table = self.infiles[0]
