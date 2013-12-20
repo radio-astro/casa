@@ -4,7 +4,6 @@ import os
 import matplotlib
 import matplotlib.pyplot as pyplot
 
-import pipeline.domain.measures as measures
 import pipeline.extern.ordereddict as ordereddict
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
