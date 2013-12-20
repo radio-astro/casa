@@ -82,6 +82,7 @@ void FeatherPlot::initAxes(){
 		axisBlanks.append( new ExternalAxis() );
 		axisWidgets.append( NULL );
 		axisLabels.append( "" );
+		axisTitles.append( "" );
 		setAxisScaleDraw( i, axisBlanks[i] );
 	}
 }
@@ -125,19 +126,14 @@ void FeatherPlot::setAxisLabels(){
 		axisLabels[QwtPlot::yRight] = "Weight "+AMPLITUDE;
 	}
 
+	updateAxes();
 
-
-	if ( axisWidgets[QwtPlot::xBottom] != NULL ){
-		axisWidgets[QwtPlot::xBottom]->setAxisLabel(axisLabels[QwtPlot::xBottom]);
-	}
-	if ( axisWidgets[QwtPlot::yLeft] != NULL ){
-		axisWidgets[QwtPlot::yLeft]->setAxisLabel(axisLabels[QwtPlot::yLeft]);
-	}
-	if ( axisWidgets[QwtPlot::yRight] != NULL ){
-		axisWidgets[QwtPlot::yRight]->setAxisLabel(axisLabels[QwtPlot::yRight]);
-	}
 }
 
+void FeatherPlot::addAxisTitle( QwtPlot::Axis axis, const QString& title ){
+	axisTitles[axis] = title;
+	updateAxes();
+}
 
 FeatherPlot::~FeatherPlot() {
 	for ( int i = 0; i < axisWidgets.size(); i++ ){
@@ -166,7 +162,7 @@ QWidget* FeatherPlot::getExternalAxisWidget( QwtPlot::Axis position ){
 				axisWidgets[position] = new ExternalAxisWidgetRight( NULL );
 			}
 			axisWidgets[position]->setPlot( this );
-			axisWidgets[position]->setAxisLabel( axisLabels[position] );
+			updateAxis( position );
 		}
 		axisWidget = axisWidgets[position];
 	}
@@ -176,13 +172,22 @@ QWidget* FeatherPlot::getExternalAxisWidget( QwtPlot::Axis position ){
 	return axisWidget;
 }
 
+void FeatherPlot::updateAxis( int index ){
+	if ( 0 <= index && index < axisWidgets.size()){
+		if ( axisWidgets[index] != NULL ){
+			QString prefix;
+			if ( axisTitles[index].size() > 0 ){
+				prefix = axisTitles[index]+ ", ";
+			}
+			axisWidgets[index]->setAxisLabel( prefix + axisLabels[index] );
+			axisWidgets[index]->update();
+		}
+	}
+}
 
 void FeatherPlot::updateAxes(){
 	for ( int i = 0; i < AXIS_COUNT; i++ ){
-		if ( axisWidgets[i] != NULL ){
-			axisWidgets[i]->setAxisLabel( axisLabels[i] );
-			axisWidgets[i]->update();
-		}
+		updateAxis( i );
 	}
 }
 

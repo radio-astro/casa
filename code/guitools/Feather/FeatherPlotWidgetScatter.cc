@@ -168,15 +168,16 @@ QVector<double> FeatherPlotWidgetScatter::populateVector(
 	return values;
 }
 
-void FeatherPlotWidgetScatter::setScatterCurves( CurveType xScatterCurve, const QList<CurveType>& yScatterList ){
+void FeatherPlotWidgetScatter::setScatterCurves( const QString& title,
+		CurveType xScatterCurve, const QList<CurveType>& yScatterList ){
 	xScatter = xScatterCurve;
 	yScatters.clear();
 	int yScatterCount = yScatterList.size();
 	for ( int i = 0; i < yScatterCount; i++ ){
 		yScatters.append( yScatterList[i] );
 	}
+	plot->addAxisTitle( QwtPlot::xBottom, title );
 }
-
 
 
 pair<QVector<double>, QVector<double> > FeatherPlotWidgetScatter::restrictData( const QVector<double>& sourceX,
