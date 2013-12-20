@@ -1,6 +1,7 @@
 import os
 import sys
 import shutil
+import inspect
 from __main__ import default
 from tasks import *
 from taskinit import *
@@ -12,7 +13,7 @@ import numpy
 from tsdsave import tsdsave
 import asap as sd
 
-# Unit test of sdsave task.
+# Unit test of tsdsave task.
 # 
 # Currently, the test only examine if supported types of data can be
 # read, and if supporeted types of data can be written.
@@ -22,12 +23,12 @@ import asap as sd
 ###
 # Base class for all testing classes
 ###
-class sdsave_unittest_base:
+class tsdsave_unittest_base:
     """
     Base class for testing classes.
     Implements several methods to compare the results.
     """
-    taskname='sdsave'
+    taskname='tsdsave'
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdsave/'
     basefile='OrionS_rawACSmod_cal2123.asap'
     summaryStr = None
@@ -112,13 +113,13 @@ class sdsave_unittest_base:
 ###
 # Test on bad parameter settings, data selection, data averaging, ...
 ###
-class sdsave_test0(unittest.TestCase,sdsave_unittest_base):
+class tsdsave_test0(unittest.TestCase,tsdsave_unittest_base):
     """
     Test on data selection, data averaging...
     """
     # Input and output names
     infile='OrionS_rawACSmod_cal2123.asap'
-    prefix=sdsave_unittest_base.taskname+'Test0'
+    prefix=tsdsave_unittest_base.taskname+'Test0'
     outfile=prefix+'.asap'
 
     def setUp(self):
@@ -143,13 +144,13 @@ class sdsave_test0(unittest.TestCase,sdsave_unittest_base):
 ###
 # Test to read scantable and write various types of format
 ###
-class sdsave_test1(unittest.TestCase,sdsave_unittest_base):
+class tsdsave_test1(unittest.TestCase,tsdsave_unittest_base):
     """
     Read scantable data, write various types of format.
     """
     # Input and output names
     infile='OrionS_rawACSmod_cal2123.asap'
-    prefix=sdsave_unittest_base.taskname+'Test1'
+    prefix=tsdsave_unittest_base.taskname+'Test1'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
     outfile2=prefix+'.fits'
@@ -200,13 +201,13 @@ class sdsave_test1(unittest.TestCase,sdsave_unittest_base):
 ###
 # Test to read MS and write various types of format
 ###
-class sdsave_test2(unittest.TestCase,sdsave_unittest_base):
+class tsdsave_test2(unittest.TestCase,tsdsave_unittest_base):
     """
     Read MS data, write various types of format.
     """
     # Input and output names
     infile='OrionS_rawACSmod_cal2123.ms'
-    prefix=sdsave_unittest_base.taskname+'Test2'
+    prefix=tsdsave_unittest_base.taskname+'Test2'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
     outfile2=prefix+'.fits'
@@ -306,13 +307,13 @@ class sdsave_test2(unittest.TestCase,sdsave_unittest_base):
 ###
 # Test to read ATNF SDFITS and write various types of format
 ###
-class sdsave_test3(unittest.TestCase,sdsave_unittest_base):
+class tsdsave_test3(unittest.TestCase,tsdsave_unittest_base):
     """
     Read ATNF SDFITS data, write various types of format.
     """
     # Input and output names
     infile='OrionS_rawACSmod_cal2123.fits'
-    prefix=sdsave_unittest_base.taskname+'Test3'
+    prefix=tsdsave_unittest_base.taskname+'Test3'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
     outfile2=prefix+'.fits'
@@ -364,13 +365,13 @@ class sdsave_test3(unittest.TestCase,sdsave_unittest_base):
 ###
 # Test to read GBT SDFITS and write various types of format
 ###
-class sdsave_test4(unittest.TestCase,sdsave_unittest_base):
+class tsdsave_test4(unittest.TestCase,tsdsave_unittest_base):
     """
     Read GBT SDFITS data, write various types of format.
     """
     # Input and output names
     infile='AGBT06A_sliced.fits'
-    prefix=sdsave_unittest_base.taskname+'Test4'
+    prefix=tsdsave_unittest_base.taskname+'Test4'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
     outfile2=prefix+'.fits'
@@ -434,13 +435,13 @@ class sdsave_test4(unittest.TestCase,sdsave_unittest_base):
 ###
 # Test to read NROFITS and write various types of format
 ###
-class sdsave_test5(unittest.TestCase,sdsave_unittest_base):
+class tsdsave_test5(unittest.TestCase,tsdsave_unittest_base):
     """
     Read NROFITS data, write various types of format.
     """
     # Input and output names
     infile='B68test.nro'
-    prefix=sdsave_unittest_base.taskname+'Test5'
+    prefix=tsdsave_unittest_base.taskname+'Test5'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
     outfile2=prefix+'.fits'
@@ -503,7 +504,7 @@ class sdsave_test5(unittest.TestCase,sdsave_unittest_base):
 ###
 # Test getpt parameter
 ###
-class sdsave_test6( unittest.TestCase, sdsave_unittest_base ):
+class tsdsave_test6( unittest.TestCase, tsdsave_unittest_base ):
     """
     Test getpt parameter
 
@@ -519,7 +520,7 @@ class sdsave_test6( unittest.TestCase, sdsave_unittest_base ):
     """
     # Input and output names
     infile='OrionS_rawACSmod_cal2123.ms'
-    prefix=sdsave_unittest_base.taskname+'Test6'
+    prefix=tsdsave_unittest_base.taskname+'Test6'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
 
@@ -589,9 +590,9 @@ class sdsave_test6( unittest.TestCase, sdsave_unittest_base ):
 ###
 # Test rest frequency
 ###
-class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
+class tsdsave_test7( tsdsave_unittest_base, unittest.TestCase ):
     """
-    Unit tests for task sdsave. Test scantable available restfreq
+    Unit tests for task tsdsave. Test scantable available restfreq
 
     The list of tests:
     test701-704  --- a value (float, int, quantity w/ and w/o a unit)
@@ -603,7 +604,7 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
     """
     # Input and output names
     infile = 'OrionS_rawACSmod_cal2123.asap'
-    outname = sdsave_unittest_base.taskname+'_test'
+    outname = tsdsave_unittest_base.taskname+'_test'
     iflist = [1,2]
     spw = '1~2'
     frf = [45.301e9,44.075e9]
@@ -957,9 +958,9 @@ class sdsave_test7( sdsave_unittest_base, unittest.TestCase ):
 ###
 # Test combinations of scantable.storage='disk'/'memory' and insitu=T/F
 ###
-class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
+class tsdsave_storageTest( tsdsave_unittest_base, unittest.TestCase ):
     """
-    Unit tests for task sdsave. Test scantable sotrage and insitu
+    Unit tests for task tsdsave. Test scantable sotrage and insitu
     parameters
 
     The list of tests:
@@ -978,7 +979,7 @@ class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
     """
     # Input and output names
     infile = 'OrionS_rawACSmod_cal2123.asap'
-    outname = sdsave_unittest_base.taskname+'_test'
+    outname = tsdsave_unittest_base.taskname+'_test'
     pollist = [1]
     pol = '1'
     iflist = [2]
@@ -1065,7 +1066,7 @@ class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
 
     # Actual tests
     def testMT( self ):
-        """Storage Test MT: sdsave on storage='memory' and insitu=T"""
+        """Storage Test MT: tsdsave on storage='memory' and insitu=T"""
         tid = "MT"
         infile = self.infile
         outfile = self.outname+tid
@@ -1093,7 +1094,7 @@ class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
 
 
     def testMF( self ):
-        """Storage Test MF: sdsave on storage='memory' and insitu=F"""
+        """Storage Test MF: tsdsave on storage='memory' and insitu=F"""
         tid = "MF"
         infile = self.infile
         outfile = self.outname+tid
@@ -1121,7 +1122,7 @@ class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
 
 
     def testDT( self ):
-        """Storage Test DT: sdsave on storage='disk' and insitu=T"""
+        """Storage Test DT: tsdsave on storage='disk' and insitu=T"""
         tid = "DT"
         infile = self.infile
         outfile = self.outname+tid
@@ -1149,7 +1150,7 @@ class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
 
 
     def testDF( self ):
-        """Storage Test DF: sdsave on storage='disk' and insitu=F"""
+        """Storage Test DF: tsdsave on storage='disk' and insitu=F"""
         tid = "DF"
         infile = self.infile
         outfile = self.outname+tid
@@ -1178,13 +1179,13 @@ class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
 ###
 # Test for frequency labeling
 ###
-class sdsave_freq_labeling(unittest.TestCase,sdsave_unittest_base):
+class tsdsave_freq_labeling(unittest.TestCase,tsdsave_unittest_base):
     """
     Read MS data, write various types of format.
     """
     # Input and output names
     infile='OrionS_rawACSmod_cal2123.ms'
-    prefix=sdsave_unittest_base.taskname+'Test2'
+    prefix=tsdsave_unittest_base.taskname+'Test2'
     outfile=prefix+'.ms'
 
     def setUp(self):
@@ -1235,13 +1236,13 @@ class sdsave_freq_labeling(unittest.TestCase,sdsave_unittest_base):
 ###
 # Test for handling flags in MSWriter
 ###
-class sdsave_flagging(unittest.TestCase,sdsave_unittest_base):
+class tsdsave_flagging(unittest.TestCase,tsdsave_unittest_base):
     """
     Read Scantable data, modify flags in various ways, and write as MS.
     """
     # Input and output names
     infile='OrionS_rawACSmod_cal2123.asap'
-    prefix=sdsave_unittest_base.taskname+'Test2'
+    prefix=tsdsave_unittest_base.taskname+'Test2'
     outfile=prefix+'.ms'
 
     def setUp(self):
@@ -1358,14 +1359,14 @@ class sdsave_flagging(unittest.TestCase,sdsave_unittest_base):
 ###
 # Test for scan number (CAS-5841)
 ###
-class sdsave_scan_number(unittest.TestCase,sdsave_unittest_base):
+class tsdsave_scan_number(unittest.TestCase,tsdsave_unittest_base):
     """
     Check scan number
     """
     # Input and output names
     infile='OrionS_rawACSmod_cal2123.asap'
     vis='OrionS_rawACSmod_cal2123.ms'
-    prefix=sdsave_unittest_base.taskname+'Test2'
+    prefix=tsdsave_unittest_base.taskname+'Test2'
     outfile=prefix+'.asap'
     outvis=prefix+'.ms'
 
@@ -1424,13 +1425,13 @@ class sdsave_scan_number(unittest.TestCase,sdsave_unittest_base):
 ###
 # Test for splitant (CAS-5842)
 ###
-class sdsave_test_splitant(unittest.TestCase,sdsave_unittest_base):
+class tsdsave_test_splitant(unittest.TestCase,tsdsave_unittest_base):
     """
     Read MS data, write various types of format.
     """
     # Input and output names
     infile='uid___A002_X6321c5_X3a7.ms'
-    prefix=sdsave_unittest_base.taskname+'TestSplitant'
+    prefix=tsdsave_unittest_base.taskname+'TestSplitant'
     outfile=prefix+'.asap'
 
     def setUp(self):
@@ -1470,11 +1471,477 @@ class sdsave_test_splitant(unittest.TestCase,sdsave_unittest_base):
                 self.assertEqual(s0sp0[i], s1sp0[i])
             
             del s0, s1, s2
-        
 
+###
+# Test data selection
+###
+class tsdsave_data_selection(tsdsave_unittest_base, unittest.TestCase):
+    infile = 'data_selection.asap'
+    prefix = 'selected.asap'
+    
+    def setUp(self):
+        if (not os.path.exists(self.infile)):
+            shutil.copytree(self.datapath+self.infile, self.infile)
+        default(tsdsave)
+
+    def tearDown(self):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def __exec_simple_test(self, param, expr, value_list, column, expected_nrow):
+        test_name = inspect.stack()[2][3]
+        outfile = '.'.join([self.prefix, test_name])
+        #print 'outfile=%s'%(outfile)
+        casalog.post('%s: %s = \'%s\''%(test_name, param, expr))
+        kwargs = {'infile': self.infile,
+                  'outfile': outfile,
+                  param: expr,
+                  'overwrite': True}
+        tsdsave(**kwargs)
+
+        tb.open(outfile)
+        col = tb.getcol(column)
+        nrow = tb.nrows()
+        tb.close()
+        casalog.post('expected nrow = %s, actual nrow = %s'%(expected_nrow, nrow))
+        self.assertEqual(expected_nrow, nrow)
+        casalog.post('expected values = %s, actual values = %s'%(set(value_list), set(col)))
+        self.assertTrue(set(value_list) == set(col))
+
+    def exec_spw_test(self, iflist, spw, expected_nrow):
+        self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow) 
+
+    def exec_scan_test(self, scanlist, scan, expected_nrow):
+        self.__exec_simple_test('scan', scan, scanlist, 'SCANNO', expected_nrow)
+
+    def exec_pol_test(self, pollist, pol, expected_nrow):
+        self.__exec_simple_test('pol', pol, pollist, 'POLNO', expected_nrow)
+                
+    def exec_beam_test(self, beamlist, beam, expected_nrow):
+        self.__exec_simple_test('beam', beam, beamlist, 'BEAMNO', expected_nrow)
+
+    def exec_field_test(self, fieldlist, field, expected_nrow):
+        self.__exec_simple_test('field', field, fieldlist, 'FIELDNAME', expected_nrow)
+
+    def exec_timerange_test(self, timelist, timerange, expected_nrow):
+        self.__exec_simple_test('timerange', timerange, timelist, 'TIME', expected_nrow)
+                
+    def test_spw0(self):
+        """test_spw0: Test spw selection by syntax 'N'"""
+        iflist = [1]
+        spw = '%s'%(iflist[0])
+        expected_nrow = 16
+        
+        self.exec_spw_test(iflist, spw, expected_nrow)
+        
+    def test_spw1(self):
+        """test_spw1: Test spw selection by syntax 'N~M'"""
+        iflist = [0,1,2]
+        spw = '%s~%s'%(min(iflist),max(iflist))
+        expected_nrow = 48
+
+        self.exec_spw_test(iflist, spw, expected_nrow)
+
+    def test_spw2(self):
+        """test_spw2: Test spw selection by syntax '<N'"""
+        iflist = [0,1]
+        spw = '<%s'%(max(iflist)+1)
+        expected_nrow = 32
+
+        self.exec_spw_test(iflist, spw, expected_nrow)
+
+    def test_spw3(self):
+        """test_spw3: Test spw selection by syntax '>N'"""
+        iflist = [2,3]
+        spw = '>%s'%(min(iflist)-1)
+        expected_nrow = 32
+
+        self.exec_spw_test(iflist, spw, expected_nrow)
+
+    def test_spw4(self):
+        """test_spw4: Test spw selection by syntax '<=N'"""
+        iflist = [0,1]
+        spw = '<=%s'%(max(iflist))
+        expected_nrow = 32
+
+        self.exec_spw_test(iflist, spw, expected_nrow)
+
+    def test_spw5(self):
+        """test_spw5: Test spw selection by syntax '>=N'"""
+        iflist = [2,3]
+        spw = '>=%s'%(min(iflist))
+        expected_nrow = 32
+
+        self.exec_spw_test(iflist, spw, expected_nrow)
+        
+    def test_spw6(self):
+        """test_spw6: Test spw selection by syntax 'N,M'"""
+        iflist = [1,2,3]
+        spw = ','.join(map(str,iflist))
+        expected_nrow = 48
+
+        self.exec_spw_test(iflist, spw, expected_nrow)
+
+    #def test_spw7(self):
+    #    """test_spw7: Test spw selection by syntax 'N;M'"""
+    #    iflist = [1,2,3]
+    #    spw = ';'.join(map(str,iflist))
+    #    expected_nrow = 48
+
+    #    self.exec_spw_test(iflist, spw, expected_nrow)
+
+    def test_spw8(self):
+        """test_spw8: Test spw selection by syntax 'EXP0,EXP1'"""
+        iflist = [0,2,3]
+        spw='0,2~3'
+        expected_nrow = 48
+
+        self.exec_spw_test(iflist, spw, expected_nrow)
+
+    def test_scan0(self):
+        """test_scan0: Test scan selection by syntax 'N'"""
+        scanlist = [1]
+        scan = '%s'%(scanlist[0])
+        expected_nrow = 16
+        
+        self.exec_scan_test(scanlist, scan, expected_nrow)
+        
+    def test_scan1(self):
+        """test_scan1: Test scan selection by syntax 'N~M'"""
+        scanlist = [0,1,2]
+        scan = '%s~%s'%(min(scanlist),max(scanlist))
+        expected_nrow = 48
+
+        self.exec_scan_test(scanlist, scan, expected_nrow)
+
+    def test_scan2(self):
+        """test_scan2: Test scan selection by syntax '<N'"""
+        scanlist = [0,1]
+        scan = '<%s'%(max(scanlist)+1)
+        expected_nrow = 32
+
+        self.exec_scan_test(scanlist, scan, expected_nrow)
+
+    def test_scan3(self):
+        """test_scan3: Test scan selection by syntax '>N'"""
+        scanlist = [2,3]
+        scan = '>%s'%(min(scanlist)-1)
+        expected_nrow = 32
+
+        self.exec_scan_test(scanlist, scan, expected_nrow)
+
+    def test_scan4(self):
+        """test_scan4: Test scan selection by syntax '<=N'"""
+        scanlist = [0,1]
+        scan = '<=%s'%(max(scanlist))
+        expected_nrow = 32
+
+        self.exec_scan_test(scanlist, scan, expected_nrow)
+
+    def test_scan5(self):
+        """test_scan5: Test scan selection by syntax '>=N'"""
+        scanlist = [2,3]
+        scan = '>=%s'%(min(scanlist))
+        expected_nrow = 32
+
+        self.exec_scan_test(scanlist, scan, expected_nrow)
+        
+    def test_scan6(self):
+        """test_scan6: Test scan selection by syntax 'N,M'"""
+        scanlist = [1,2,3]
+        scan = ','.join(map(str,scanlist))
+        expected_nrow = 48
+
+        self.exec_scan_test(scanlist, scan, expected_nrow)
+
+    def test_scan7(self):
+        """test_scan7: Test scan selection by syntax 'EXP0,EXP1'"""
+        scanlist = [0,2,3]
+        scan='0,2~3'
+        expected_nrow = 48
+
+        self.exec_scan_test(scanlist, scan, expected_nrow)
+
+    def test_pol0(self):
+        """test_pol0: Test pol selection by syntax 'N'"""
+        pollist = [1]
+        pol = '%s'%(pollist[0])
+        expected_nrow = 16
+        
+        self.exec_pol_test(pollist, pol, expected_nrow)
+        
+    def test_pol1(self):
+        """test_pol1: Test pol selection by syntax 'N~M'"""
+        pollist = [0,1,2]
+        pol = '%s~%s'%(min(pollist),max(pollist))
+        expected_nrow = 48
+
+        self.exec_pol_test(pollist, pol, expected_nrow)
+
+    def test_pol2(self):
+        """test_pol2: Test pol selection by syntax '<N'"""
+        pollist = [0,1]
+        pol = '<%s'%(max(pollist)+1)
+        expected_nrow = 32
+
+        self.exec_pol_test(pollist, pol, expected_nrow)
+
+    def test_pol3(self):
+        """test_pol3: Test pol selection by syntax '>N'"""
+        pollist = [2,3]
+        pol = '>%s'%(min(pollist)-1)
+        expected_nrow = 32
+
+        self.exec_pol_test(pollist, pol, expected_nrow)
+
+    def test_pol4(self):
+        """test_pol4: Test pol selection by syntax '<=N'"""
+        pollist = [0,1]
+        pol = '<=%s'%(max(pollist))
+        expected_nrow = 32
+
+        self.exec_pol_test(pollist, pol, expected_nrow)
+
+    def test_pol5(self):
+        """test_pol5: Test pol selection by syntax '>=N'"""
+        pollist = [2,3]
+        pol = '>=%s'%(min(pollist))
+        expected_nrow = 32
+
+        self.exec_pol_test(pollist, pol, expected_nrow)
+        
+    def test_pol6(self):
+        """test_pol6: Test pol selection by syntax 'N,M'"""
+        pollist = [1,2,3]
+        pol = ','.join(map(str,pollist))
+        expected_nrow = 48
+
+        self.exec_pol_test(pollist, pol, expected_nrow)
+
+    def test_pol7(self):
+        """test_pol7: Test pol selection by syntax 'EXP0,EXP1'"""
+        pollist = [0,2,3]
+        pol='0,2~3'
+        expected_nrow = 48
+
+    def test_beam0(self):
+        """test_beam0: Test beam selection by syntax 'N'"""
+        beamlist = [1]
+        beam = '%s'%(beamlist[0])
+        expected_nrow = 16
+        
+        self.exec_beam_test(beamlist, beam, expected_nrow)
+        
+    def test_beam1(self):
+        """test_beam1: Test beam selection by syntax 'N~M'"""
+        beamlist = [0,1,2]
+        beam = '%s~%s'%(min(beamlist),max(beamlist))
+        expected_nrow = 48
+
+        self.exec_beam_test(beamlist, beam, expected_nrow)
+
+    def test_beam2(self):
+        """test_beam2: Test beam selection by syntax '<N'"""
+        beamlist = [0,1]
+        beam = '<%s'%(max(beamlist)+1)
+        expected_nrow = 32
+
+        self.exec_beam_test(beamlist, beam, expected_nrow)
+
+    def test_beam3(self):
+        """test_beam3: Test beam selection by syntax '>N'"""
+        beamlist = [2,3]
+        beam = '>%s'%(min(beamlist)-1)
+        expected_nrow = 32
+
+        self.exec_beam_test(beamlist, beam, expected_nrow)
+
+    def test_beam4(self):
+        """test_beam4: Test beam selection by syntax '<=N'"""
+        beamlist = [0,1]
+        beam = '<=%s'%(max(beamlist))
+        expected_nrow = 32
+
+        self.exec_beam_test(beamlist, beam, expected_nrow)
+
+    def test_beam5(self):
+        """test_beam5: Test beam selection by syntax '>=N'"""
+        beamlist = [2,3]
+        beam = '>=%s'%(min(beamlist))
+        expected_nrow = 32
+
+        self.exec_beam_test(beamlist, beam, expected_nrow)
+        
+    def test_beam6(self):
+        """test_beam6: Test beam selection by syntax 'N,M'"""
+        beamlist = [1,2,3]
+        beam = ','.join(map(str,beamlist))
+        expected_nrow = 48
+
+        self.exec_beam_test(beamlist, beam, expected_nrow)
+
+    def test_beam7(self):
+        """test_beam7: Test beam selection by syntax 'EXP0,EXP1'"""
+        beamlist = [0,2,3]
+        beam='0,2~3'
+        expected_nrow = 48
+
+        self.exec_beam_test(beamlist, beam, expected_nrow)
+
+    def test_field0(self):
+        """test_field0: Test field selection by name"""
+        field = 'M100'
+        expected_nrow = 48
+        fieldlist = ['M100__0', 'M100__1']
+
+        self.exec_field_test(fieldlist, field, expected_nrow)
+
+    def test_field1(self):
+        """test_field1: Test field selection by wildcard"""
+        field = 'M*'
+        expected_nrow = 64
+        fieldlist = ['M100__0', 'M100__1', 'M42__2']
+
+        self.exec_field_test(fieldlist, field, expected_nrow)
+
+    def test_field2(self):
+        """test_field2: Test field selection by id ('N')"""
+        field = '1'
+        expected_nrow = 16
+        fieldlist = ['M100__1']
+
+        self.exec_field_test(fieldlist, field, expected_nrow)
+
+    def test_field3(self):
+        """test_field3: Test field selection by id ('N~M')"""
+        field = '1~2'
+        expected_nrow = 32
+        fieldlist = ['M100__1', 'M42__2']
+
+        self.exec_field_test(fieldlist, field, expected_nrow)
+
+    def test_field4(self):
+        """test_field4: Test field selection by id ('<N')"""
+        field = '<1'
+        expected_nrow = 32
+        fieldlist = ['M100__0']
+
+        self.exec_field_test(fieldlist, field, expected_nrow)
+
+    def test_field5(self):
+        """test_field5: Test field selection by id ('>N')"""
+        field = '>1'
+        expected_nrow = 16
+        fieldlist = ['M42__2']
+
+        self.exec_field_test(fieldlist, field, expected_nrow)
+
+    def test_field6(self):
+        """test_field6: Test field selection by id ('<=N')"""
+        field = '<=0'
+        expected_nrow = 32
+        fieldlist = ['M100__0']
+
+        self.exec_field_test(fieldlist, field, expected_nrow)
+
+    def test_field7(self):
+        """test_field7: Test field selection by id ('>=N')"""
+        field = '>=2'
+        expected_nrow = 16
+        fieldlist = ['M42__2']
+
+        self.exec_field_test(fieldlist, field, expected_nrow)
+
+    def test_field8(self):
+        """test_field8: Test field selection by id ('N,M')"""
+        field = '0,2'
+        expected_nrow = 48
+        fieldlist = ['M100__0', 'M42__2']
+
+        self.exec_field_test(fieldlist, field, expected_nrow)
+
+    def test_field9(self):
+        """test_field3: Test field selection by id ('EXP0,EXP1')"""
+        field = '0,>=2'
+        expected_nrow = 48
+        fieldlist = ['M100__0', 'M42__2']
+
+        self.exec_field_test(fieldlist, field, expected_nrow)
+
+    def test_field10(self):
+        """test_field3: Test field selection by name and id"""
+        field = '0,M4*'
+        expected_nrow = 48
+        fieldlist = ['M100__0', 'M42__2']
+
+        self.exec_field_test(fieldlist, field, expected_nrow)
+
+    def test_timerange0(self):
+        """test_timerange0: Test timerange selection by syntax 'T0~T1'"""
+        timerange = '2010/04/24/23:13:00~2010/04/24/23:43:49'
+        expected_nrow = 32
+        timelist = [55310.967928148144, 55310.988761481472]
+
+        self.exec_timerange_test(timelist, timerange, expected_nrow)
+        
+    def test_timerange1(self):
+        """test_timerange1: Test timerange selection by syntax 'T0'"""
+        timerange = '2010/04/24/23:43:48.5'
+        expected_nrow = 16
+        timelist = [55310.988761481472]
+
+        self.exec_timerange_test(timelist, timerange, expected_nrow)
+ 
+    def test_timerange2(self):
+        """test_timerange2: Test timerange selection by syntax 'T0+dT'"""
+        timerange = '2010/04/24/22:43:30+0:0:30'
+        expected_nrow = 16
+        timelist = [55310.947094814808]
+
+        self.exec_timerange_test(timelist, timerange, expected_nrow)
+
+    def test_timerange3(self):
+        """test_timerange3: Test timerange selection by syntax '>T0'"""
+        timerange = '>2010/04/24/23:14:00'
+        expected_nrow = 32
+        timelist = [55310.988761481472, 55311.009594814808]
+
+        self.exec_timerange_test(timelist, timerange, expected_nrow)
+
+    def test_timerange4(self):
+        """test_timerange4: Test timerange selection by syntax '<T0'"""
+        timerange = '<2010/04/24/23:13:00'
+        expected_nrow = 16
+        timelist = [55310.947094814808]
+        
+        self.exec_timerange_test(timelist, timerange, expected_nrow)
+
+    def test_simultaneous0(self):
+        """test_simultaneous0: Test simultaneous selection (spw and scan)"""
+        self.assertTrue(True)
+
+    def test_simultaneous1(self):
+        """test_simultaneous1: Test simultaneous selection (spw and field)"""
+        self.assertTrue(True)
+
+    def test_simultaneous2(self):
+        """test_simultaneous2: Test simultaneous selection (spw and timerange)"""
+        self.assertTrue(True)
+
+    def test_simultaneous3(self):
+        """test_simultaneous3: Test simultaneous selection (field and timerange)"""
+        self.assertTrue(True)
+
+    def test_simultaneous4(self):
+        """test_simultaneous4: Test simultaneous selection (spw, field and timerange)"""
+        self.assertTrue(True)
+
+        
 def suite():
-    return [sdsave_test0,sdsave_test1,sdsave_test2,
-            sdsave_test3,sdsave_test4,sdsave_test5,
-            sdsave_test6,sdsave_test7,sdsave_storageTest,
-            sdsave_freq_labeling,sdsave_flagging,
-            sdsave_scan_number, sdsave_test_splitant]
+    return [tsdsave_test0,tsdsave_test1,tsdsave_test2,
+            tsdsave_test3,tsdsave_test4,tsdsave_test5,
+            tsdsave_test6,tsdsave_test7,tsdsave_storageTest,
+            tsdsave_freq_labeling,tsdsave_flagging,
+            tsdsave_scan_number, tsdsave_test_splitant,
+            tsdsave_data_selection]
