@@ -22,7 +22,7 @@ class PlotcalLeaf(object):
     exactly one plot. 
     """
     def __init__(self, context, result, calapp, xaxis, yaxis, spw='', ant='',
-                 plotrange=[]):
+                 pol='', plotrange=[]):
         self._context = context
         self._result = result
 
@@ -118,7 +118,7 @@ class PlotbandpassLeaf(object):
     than one plot may be created though not necessarily returned, as 
     plotbandpass may create many plots depending on the input arguments. 
     """
-    def __init__(self, context, result, calapp, xaxis, yaxis, spw='', ant='',
+    def __init__(self, context, result, calapp, xaxis, yaxis, spw='', ant='', pol='',
                  overlay='', showatm=True):
         self._context = context
         self._result = result
@@ -126,6 +126,7 @@ class PlotbandpassLeaf(object):
         self._calapp = calapp
         self._caltable = calapp.gaintable   
         self._vis = calapp.vis
+        ms = self._context.observing_run.get_ms(self._vis)
 
         self._xaxis = xaxis
         self._yaxis = yaxis
@@ -135,11 +136,16 @@ class PlotbandpassLeaf(object):
 
         # use antenna name rather than ID if possible
         if ant != '':
-            ms = self._context.observing_run.get_ms(self._vis)
             domain_antennas = ms.get_antenna(ant)
             idents = [a.name if a.name else a.id for a in domain_antennas]
             ant = ','.join(idents)
         self._ant = ant
+
+        # convert pol ID from integer to string, eg. 0 to XX
+        if pol != '':
+            dd = ms.get_data_description(spw=int(spw))
+            pol = dd.get_polarization_label(pol)
+        self._pol = pol
 
         self._figfile = self._get_figfile()
 
@@ -172,9 +178,10 @@ class PlotbandpassLeaf(object):
             'y'        : self._yaxis,
             'spw'      : '' if self._spw == '' else 'spw%s-' % self._spw,
             'ant'      : '' if self._ant == '' else 'ant%s-' % self._ant.replace(',','_'),
-            'intent'   : '' if self._intent == '' else '%s-' % self._intent.replace(',','_')
+            'intent'   : '' if self._intent == '' else '%s-' % self._intent.replace(',','_'),
+            'pol'      : '' if self._pol == '' else '%s-' % self._pol
         }
-        png = '{caltable}-{spw}{ant}{intent}{y}_vs_{x}.png'.format(**fileparts)
+        png = '{caltable}-{spw}{pol}{ant}{intent}{y}_vs_{x}.png'.format(**fileparts)
 
         return os.path.join(self._context.report_dir, 
                             'stage%s' % self._result.stage_number,
@@ -193,7 +200,7 @@ class PlotbandpassLeaf(object):
         parameters={'vis'      : self._vis,
                     'caltable' : self._caltable}        
 
-        for attr in ['spw', 'ant', 'intent']:
+        for attr in ['spw', 'ant', 'intent', 'pol']:
             val = getattr(self, '_%s' % attr)
             if val != '':
                 parameters[attr] = val 
@@ -212,6 +219,7 @@ class PlotbandpassLeaf(object):
                      'yaxis'       : self._yaxis,
                      'antenna'     : self._ant,
                      'spw'         : self._spw,
+                     'poln'        : self._pol,
                      'overlay'     : self._overlay,
                      'figfile'     : self._figfile,
                      'showatm'     : self._showatm,
@@ -236,24 +244,47 @@ class LeafComposite(object):
             plots.extend(child.plot())        
         return [p for p in plots if p is not None]
 
-    
-class SpwComposite(LeafComposite):
-    
-    """
-    Create a PlotLeaf for each spw in the caltable.
-    """
 
+class PolComposite(LeafComposite):
+    """
+    Create a PlotLeaf for each polarization in the caltable.
+    """
     # reference to the PlotLeaf class to call
     leaf_class = None
     
-    def __init__(self, context, result, calapp, xaxis, yaxis, ant='', 
+    def __init__(self, context, result, calapp, xaxis, yaxis, ant='', spw='',
+                 **kwargs):
+        with casatools.TableReader(calapp.gaintable) as tb:
+            col = tb.getvarcol('CPARAM')
+
+        # get the number of pols stored in the caltable, checking that this
+        # is consistent across all rows            
+        pols_per_row = set([len(v) for _, v in col.items()])  
+        assert len(pols_per_row) is 1
+        num_pols = pols_per_row.pop()
+
+        caltable_pols = range(num_pols)
+        children = [self.leaf_class(context, result, calapp, xaxis, yaxis,
+                                    spw=spw, ant=ant, pol=pol, **kwargs)
+                                    for pol in caltable_pols]
+        super(PolComposite, self).__init__(children)
+
+    
+class SpwComposite(LeafComposite):
+    """
+    Create a PlotLeaf for each spw in the caltable.
+    """
+    # reference to the PlotLeaf class to call
+    leaf_class = None
+    
+    def __init__(self, context, result, calapp, xaxis, yaxis, ant='', pol='',
                  **kwargs):
         with casatools.TableReader(calapp.gaintable) as tb:
             table_spws = set(tb.getcol('SPECTRAL_WINDOW_ID'))
         
         caltable_spws = [int(spw) for spw in table_spws]
         children = [self.leaf_class(context, result, calapp, xaxis, yaxis,
-                                    spw=spw, ant=ant, **kwargs)
+                                    spw=spw, ant=ant, pol=pol, **kwargs)
                                     for spw in caltable_spws]
         super(SpwComposite, self).__init__(children)
 
@@ -265,14 +296,14 @@ class AntComposite(LeafComposite):
     # reference to the PlotLeaf class to call
     leaf_class = None
 
-    def __init__(self, context, result, calapp, xaxis, yaxis, spw='',
+    def __init__(self, context, result, calapp, xaxis, yaxis, spw='', pol='',
                  **kwargs):
         with casatools.TableReader(calapp.gaintable) as tb:
             table_ants = set(tb.getcol('ANTENNA1'))
         
         caltable_antennas = [int(ant) for ant in table_ants]
         children = [self.leaf_class(context, result, calapp, xaxis, yaxis,
-                                    ant=ant, spw=spw, **kwargs)
+                                    ant=ant, spw=spw, pol=pol, **kwargs)
                                     for ant in caltable_antennas]
         super(AntComposite, self).__init__(children)
 
@@ -283,15 +314,49 @@ class AntSpwComposite(LeafComposite):
     """
     leaf_class = None
 
+    def __init__(self, context, result, calapp, xaxis, yaxis, pol='', **kwargs):
+        with casatools.TableReader(calapp.gaintable) as tb:
+            table_ants = set(tb.getcol('ANTENNA1'))
+        
+        caltable_antennas = [int(ant) for ant in table_ants]
+        children = [self.leaf_class(context, result, calapp, xaxis, yaxis,
+                                    ant=ant, pol=pol, **kwargs)
+                                    for ant in caltable_antennas]
+        super(AntSpwComposite, self).__init__(children)
+
+
+class SpwPolComposite(LeafComposite):
+    """
+    Create a PlotLeaf for each spw and polarization in the caltable.
+    """
+    leaf_class = None
+
+    def __init__(self, context, result, calapp, xaxis, yaxis, ant='', **kwargs):
+        with casatools.TableReader(calapp.gaintable) as tb:
+            table_spws = set(tb.getcol('SPECTRAL_WINDOW_ID'))
+        
+        caltable_spws = [int(spw) for spw in table_spws]
+        children = [self.leaf_class(context, result, calapp, xaxis, yaxis,
+                                    spw=spw, ant=ant, **kwargs)
+                                    for spw in caltable_spws]
+        super(SpwPolComposite, self).__init__(children)
+
+
+class AntSpwPolComposite(LeafComposite):
+    """
+    Create a PlotLeaf for each antenna, spw and polarization in the caltable.
+    """
+    leaf_class = None
+
     def __init__(self, context, result, calapp, xaxis, yaxis, **kwargs):
         with casatools.TableReader(calapp.gaintable) as tb:
             table_ants = set(tb.getcol('ANTENNA1'))
         
-        caltable_antennas = [int(spw) for spw in table_ants]
+        caltable_antennas = [int(ant) for ant in table_ants]
         children = [self.leaf_class(context, result, calapp, xaxis, yaxis,
                                     ant=ant, **kwargs)
                                     for ant in caltable_antennas]
-        super(AntSpwComposite, self).__init__(children)
+        super(AntSpwPolComposite, self).__init__(children)
 
 
 class PlotcalAntComposite(AntComposite):
@@ -314,8 +379,20 @@ class PlotbandpassSpwComposite(SpwComposite):
     leaf_class = PlotbandpassLeaf
 
 
+class PlotbandpassPolComposite(PolComposite):
+    leaf_class = PlotbandpassLeaf
+    
+
 class PlotbandpassAntSpwComposite(AntSpwComposite):
     leaf_class = PlotbandpassSpwComposite
+
+
+class PlotbandpassSpwPolComposite(SpwPolComposite):
+    leaf_class = PlotbandpassPolComposite
+
+
+class PlotbandpassAntSpwPolComposite(AntSpwPolComposite):
+    leaf_class = PlotbandpassSpwPolComposite
 
 
 class CaltableWrapper(object):

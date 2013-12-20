@@ -18,7 +18,7 @@ class NullScoreFinder(object):
         return None
 
 
-class BandpassDetailChart(common.PlotbandpassAntSpwComposite):
+class BandpassDetailChart(common.PlotbandpassAntSpwPolComposite):
     """
     Base class for executing plotbandpass per spw and antenna
     """
