@@ -2964,9 +2964,6 @@ def get_bandpass_phase_qa2_scores(ms, qa2, plots, rootdir):
 
 
 def get_bandpass_qa2_scores(ms, qa2, plots, score_types, rootdir):
-    if 'QA2SCORES' not in qa2:
-        return {}
-    
     scores = {}
     for plot in plots:
         spw = ms.get_spectral_window(plot.parameters['spw'])
@@ -2997,7 +2994,10 @@ def get_bandpass_qa2_scores(ms, qa2, plots, score_types, rootdir):
         qa2_str = str(qa2_id)
 
         for score_type in score_types:
-            score = qa2['QA2SCORES'][score_type][spw_str][qa2_str]
+            if 'QA2SCORES' in qa2:
+                score = qa2['QA2SCORES'][score_type][spw_str][qa2_str]
+            else:
+                score = 1.0
             png_scores[score_type] = score
         
     return scores
