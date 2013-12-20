@@ -1869,7 +1869,7 @@ namespace casa {
 		for (int m = 0; m < j; m++) {
 			ts << data[2 * m] << " " << scaleFactor*data[2 * m + 1];
 			if ( errorDataSize > 0 ){
-				ts << " " << scaleFactor * errorData[2 * m + 1];
+				ts << " " << scaleFactor * errorData[m];
 			}
 			ts << "\n";
 		}
