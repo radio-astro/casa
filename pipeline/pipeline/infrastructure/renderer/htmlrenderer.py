@@ -1820,23 +1820,23 @@ class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
             for_refant = [p for p in summaries 
                           if p.parameters['ant'] == ms_refant]
             phase_refant[vis] = for_refant[0] if for_refant else None
-
+            
             non_refants = [p for p in summaries
                            if p.parameters['ant'] != ms_refant]
             phase_mode[vis] = non_refants[0] if non_refants else None
 
             # make phase vs freq plots for all data 
             plotter = bandpass.BandpassPhaseVsFreqDetailChart(context, result)
-            phase_details[vis] = plotter.plot()            
-            renderer = BandpassPhaseVsTimePlotRenderer(context, result, 
+            phase_details[vis] = plotter.plot()
+            renderer = BandpassPhaseVsFreqPlotRenderer(context, result, 
                                                        phase_details[vis])            
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())    
                 phase_vs_time_subpages[ms.basename] = renderer.filename
-                            
+
             plotter = bandpass.BandpassAmpVsFreqDetailChart(context, result)
             amp_details[vis] = plotter.plot()            
-            renderer = BandpassAmpVsTimePlotRenderer(context, result, 
+            renderer = BandpassAmpVsFreqPlotRenderer(context, result, 
                                                      amp_details[vis])            
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())    
@@ -1980,30 +1980,80 @@ class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
         return applications
 
 
+class BaseJsonPlotRenderer(object):
+    template = None
 
+    def __init__(self, context, result, plots, scores):
+        self.context = context
+        self.result = result
+        self.plots = plots
+        self.vis = os.path.basename(self.result.inputs['vis']) 
+        self.json = json.dumps(scores)
+         
+    def _get_display_context(self):
+        return {'pcontext'   : self.context,
+                'result'     : self.result,
+                'plots'      : self.plots,
+                'dirname'    : self.dirname,
+                'vis'        : self.vis,
+                'json'       : self.json}
 
-class BandpassAmpVsTimePlotRenderer(GenericPlotsRenderer):
+    @property
+    def dirname(self):
+        stage = 'stage%s' % self.result.stage_number
+        return os.path.join(self.context.report_dir, stage)
+    
     @property
     def filename(self):        
-        filename = filenamer.sanitize('amp_vs_time-%s.html' % self.ms)
-        return filename
+        raise NotImplementedError
+    
+    @property
+    def path(self):
+        return os.path.join(self.dirname, self.filename)
+    
+    def get_file(self, hardcopy=True):
+        if hardcopy and not os.path.exists(self.dirname):
+            os.makedirs(self.dirname)
+            
+        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
+        return contextlib.closing(file_obj)
+    
+    def render(self):
+        display_context = self._get_display_context()
+        t = TemplateFinder.get_template(self.template)
+        return t.render(**display_context)
 
-    def _get_display_context(self):
-        d = super(BandpassAmpVsTimePlotRenderer, self)._get_display_context()
-        d['plot_title'] = 'Amplitude vs time for %s' % self.ms
-        return d
 
+class BandpassAmpVsFreqPlotRenderer(BaseJsonPlotRenderer):
+    template = 't2-4m_details-bandpass-amp_vs_freq_plots.html'
 
-class BandpassPhaseVsTimePlotRenderer(GenericPlotsRenderer):
+    def __init__(self, context, result, plots):
+        vis = os.path.basename(result.inputs['vis']) 
+        ms = context.observing_run.get_ms(vis)
+        scores = get_bandpass_amp_qa2_scores(ms, result.qa2, plots,
+                                             context.report_dir)
+        super(BandpassAmpVsFreqPlotRenderer, self).__init__(context, result, plots, scores) 
+         
     @property
     def filename(self):        
-        filename = filenamer.sanitize('phase_vs_time-%s.html' % self.ms)
+        filename = filenamer.sanitize('amp_vs_freq-%s.html' % self.vis)
         return filename
 
-    def _get_display_context(self):
-        d = super(BandpassPhaseVsTimePlotRenderer, self)._get_display_context()
-        d['plot_title'] = 'Phase vs time for %s' % self.ms
-        return d
+
+class BandpassPhaseVsFreqPlotRenderer(BaseJsonPlotRenderer):
+    template = 't2-4m_details-bandpass-phase_vs_freq_plots.html'
+
+    def __init__(self, context, result, plots):
+        vis = os.path.basename(result.inputs['vis']) 
+        ms = context.observing_run.get_ms(vis)
+        scores = get_bandpass_phase_qa2_scores(ms, result.qa2, plots,
+                                             context.report_dir)
+        super(BandpassPhaseVsFreqPlotRenderer, self).__init__(context, result, plots, scores) 
+
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('phase_vs_freq-%s.html' % self.vis)
+        return filename
 
 
 class T2_4MDetailsBandpassFlagRenderer(T2_4MDetailsDefaultRenderer):
@@ -2897,7 +2947,61 @@ class LogCopier(object):
 #                break
 #
 #        return rows[start_idx:end_idx]
-            
+          
+          
+          def get_bandpass_amp_qa2_scores(ms, qa2, plots, rootdir):
+    score_types = ['AMPLITUDE_SCORE_DD',
+                   'AMPLITUDE_SCORE_FN',
+                   'AMPLITUDE_SCORE_SNR']
+    return get_bandpass_qa2_scores(ms, qa2, plots, score_types, rootdir)
+
+
+def get_bandpass_phase_qa2_scores(ms, qa2, plots, rootdir):
+    score_types = ['PHASE_SCORE_DD',
+                   'PHASE_SCORE_FN',
+                   'PHASE_SCORE_RMS']
+    return get_bandpass_qa2_scores(ms, qa2, plots, score_types, rootdir)    
+
+
+def get_bandpass_qa2_scores(ms, qa2, plots, score_types, rootdir):
+    if 'QA2SCORES' not in qa2:
+        return {}
+    
+    scores = {}
+    for plot in plots:
+        spw = ms.get_spectral_window(plot.parameters['spw'])
+        spw_str = str(spw.id)        
+        dd = ms.get_data_description(spw=spw)
+        if dd is None:
+            continue
+
+        antennas = ms.get_antenna(plot.parameters['ant'])
+        assert len(antennas) is 1, 'plot antennas != 1'
+        antenna = antennas[0]
+
+        pol = plot.parameters['pol']
+        pol_id = dd.get_polarization_id(pol)
+        
+        png = os.path.relpath(plot.abspath, rootdir)
+        thumbnail = os.path.relpath(plot.thumbnail, rootdir)
+        
+        png_scores = {'antenna'   : antenna.name,
+                      'spw'       : spw.id,
+                      'pol'       : pol,
+                      'thumbnail' : thumbnail}
+        scores[png] = png_scores
+
+        # QA2 dictionary keys are peculiar, in that their index is a
+        # function of both antenna and feed.
+        qa2_id = int(antenna.id) * dd.num_polarizations + pol_id
+        qa2_str = str(qa2_id)
+
+        for score_type in score_types:
+            score = qa2['QA2SCORES'][score_type][spw_str][qa2_str]
+            png_scores[score_type] = score
+        
+    return scores
+
 
 # renderer_map holds the mapping of tasks to result renderers for
 # task-dependent weblog sections. This lets us write customised output for

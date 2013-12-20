@@ -330,6 +330,9 @@ PLOTS = function () {
         },
         "unknown": function (xAxisLabel) {
             xAxisLabel.text("N/A");
+        },
+        "qa2": function (xAxisLabel) {
+            xAxisLabel.text("QA2 Score");
         }
     };
 
