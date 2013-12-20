@@ -15,11 +15,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <description>
 Task sdaverage performs averaging in time/polarization and smoothing
 of the single-dish spectra. When scanaverage=True, spectra within
-each scan number are averaged. Spectra are averaged over scan numbers when
-timeaverage=True and scanaverage=False. When polaverage=True, spectra are
-averaged in polarization and time (Note time averaging with polaverage=True
-would be discarded in future). When kernel is specified (!=\'\'), each
-spectrum is smoothed by convolving kernel after averaging of spectra.
+each scan number are averaged. Spectra are averaged in time over scan
+numbers when timeaverage=True and scanaverage=False.
+When polaverage=True, spectra are averaged in polarization and time
+(Note time averaging with polaverage=True would be discarded in future).
+When kernel is specified (!=\'\'), each spectrum is smoothed by
+convolving the kernel after averaging of spectra.
 
 If you give multiple IFs (spectral windows) in spw, then your scantable
 will have multiple IFs by default. Averaging of multi-resolution
