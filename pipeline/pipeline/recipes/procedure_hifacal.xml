@@ -129,7 +129,7 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_wvrgcalflag</Command>
+        <Command xmlns="">hifa_wvrgcalflag</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
