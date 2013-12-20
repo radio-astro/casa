@@ -27,8 +27,8 @@ from .setmodel import Setjy
 from .setmodel import SetModel
 #from .tsyscal import Tsyscal
 #from .tsysflag import Tsysflag, Tsysflagchans
-from .wvrgcal import Wvrgcal
-from .wvrgcal import Wvrgcalflag
+#from .wvrgcal import Wvrgcal
+#from .wvrgcal import Wvrgcalflag
 
 # set default tasks for tasks with several implementations to our desired
 # specific implementation

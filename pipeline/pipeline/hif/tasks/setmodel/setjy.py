@@ -257,10 +257,11 @@ class SetjyInputs(basetask.StandardInputs):
 	    if ignore in d:
 		del d[ignore]
 
-	# Enable intent selection in CASA. Convert to CASA intent if
-	# necessary. Not required here.
-	# d['intent'] = utils.to_CASA_intent (self.ms, d['intent'])
+	# Enable intent selection in CASA.
 	d['selectdata'] = True
+
+	# Force usescratch to True for now
+	d['usescratch'] = True
 
 	return d
 
