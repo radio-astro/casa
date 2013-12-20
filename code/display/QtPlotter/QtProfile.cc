@@ -290,7 +290,7 @@ namespace casa {
 		if (pref_ctype.size()>0) {
 			// change to the preferred ctype
 			updateAxisUnitCombo( pref_ctype, bottomAxisCType );
-			updateAxisUnitCombo( pref_ctype, topAxisCType );
+			updateAxisUnitCombo( CHANNEL, topAxisCType );
 		}
 
 		ctypeUnit = String(bottomAxisCType->currentText().toStdString());
@@ -732,8 +732,8 @@ namespace casa {
 		if (pref_ctype.size()>0) {
 			// change to the preferred ctype
 			updateAxisUnitCombo( pref_ctype, bottomAxisCType );
-			updateAxisUnitCombo( pref_ctype, topAxisCType );
 		}
+		updateAxisUnitCombo( CHANNEL, topAxisCType );
 
 		initializeSpectralProperties();
 		initializeSolidAngle();
@@ -2799,6 +2799,10 @@ namespace casa {
 					topAxisCType->addItem( xUnitsList[i]);
 				}
 			}
+		}
+		int channelIndex = topAxisCType->findText( CHANNEL);
+		if ( channelIndex != -1 ){
+			topAxisCType->setCurrentIndex( channelIndex );
 		}
 	}
 
