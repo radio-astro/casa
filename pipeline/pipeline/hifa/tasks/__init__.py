@@ -8,3 +8,6 @@ from .fluxcalflag import FluxcalFlag
 from .fluxscale import GcorFluxscale
 from .tsyscal import Tsyscal
 from .tsysflag import Tsysflag, Tsysflagchans
+from .wvrgcal import Wvrgcal
+from .wvrgcalflag import Wvrgcalflag
+
