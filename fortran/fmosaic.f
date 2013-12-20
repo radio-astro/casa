@@ -1670,13 +1670,13 @@ C            end if
       
       integer, intent(out) :: msuppx, msuppy, psuppx, psuppy
       integer :: loc1sub, loc1plus, loc2sub, loc2plus 
-      msuppx=merge(-support, -nx0+loc(1), loc(1)-support > nx0)
-      msuppy=merge(-support, -ny0+loc(2), loc(2)-support > ny0)
+      msuppx=merge(-support, nx0-loc(1), loc(1)-support >= nx0)
+      msuppy=merge(-support, ny0-loc(2), loc(2)-support >= ny0)
       psuppx=merge(support, nx0+nxsub-loc(1)-1 , (loc(1)+support) 
      $ < (nx0+nxsub))
       psuppy=merge(support, ny0+nysub-loc(2)-1 , (loc(2)+support) 
      $ < (ny0+nysub))
-C      write(*,*) 'ny0,nysub,loc(2), psuppy',ny0,nysub,loc(2), psuppy,
+C      write(*,*) 'ny0,nysub,loc(2), msuppy',ny0,nysub,loc(2), msuppy,
 C     $ support, ((loc(2)+support) < (ny0+nysub))
       loc1sub=loc(1)-support
       loc1plus=loc(1)+support

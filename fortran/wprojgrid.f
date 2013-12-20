@@ -646,8 +646,8 @@ C      pos(3)=(scale(3)*uvw(3)*freq/c)+offset(3)+1.0;
      $     support
       integer, intent(out) :: msuppx, msuppy, psuppx, psuppy
       integer :: loc1sub, loc1plus, loc2sub, loc2plus
-      msuppx=merge(-support, -nx0+loc(1), loc(1)-support > nx0)
-      msuppy=merge(-support, -ny0+loc(2), loc(2)-support > ny0)
+      msuppx=merge(-support, nx0-loc(1), loc(1)-support >= nx0)
+      msuppy=merge(-support, ny0-loc(2), loc(2)-support >= ny0)
       msuppx=merge(support, nx0+nxsub-loc(1)-1 , (loc(1)+support) 
      $ < (nx0+nxsub))
       msuppy=merge(support, ny0+nysub-loc(2)-1 , (loc(2)+support) 
