@@ -4891,23 +4891,40 @@ def imagetest(which=None, size=[32,32,8]):
         if not myim2: stop('convolve2d 4 failed')
         if not myim2.done(): stop ('done 4 failed')
         if not myim.done(): stop('done 5 failed')
+        """ 
+        I have no idea why anyone would want to do this, this is nonsensical and
+        even though convolve2d() used to complete with these parameters, the resulting
+        image had no meaning. convolve2d() does not work correctly for non-square pixels,
+        and certainly does not give a proper result when the axes represent different
+        domains, since there is no proper result in that case for a gaussian kernel (the only
+        kernel supported at this time). I've added exception throwing for those cases, so ia.convolve2d()
+        now fails. Tests should reflect real
+        world use cases, not picking parameters randomly from parameter space just to show
+        that a method completes for that nonsensical case. That's a bug, not a feature, and
+        the method should fail.
         #
         # Now try a mixed axis convolution
         #
         mycs = cs.newcoordsys(direction=T, linear=1)
         nz = 32
         imshape = [nx,ny,nz]
+        print "*** ea"
         centre = [imshape[0]/2,imshape[1]/2,imshape[2]/2]
         myim = ia.newimagefromshape(shape=imshape, csys=mycs.torecord())
         if not myim: stop('ia.fromshape constructor 2 failed')
+        print "*** fa"
         if not mycs.done(): stop ('done 6 failed')
         #
         #myim2 = myim.convolve2d (major=20, minor=10, axes=[1,3])
         note('EXPECT WARNING MESSAGE HERE')
+        print "*** fb"
         myim2 = myim.convolve2d (major='20pix', minor='10pix', axes=[0,2])
+        print "*** fc"
+        print "*** ba"
         if not myim2: stop('convolve2d 5 failed')
         if not myim2.done(): stop ('done 7 failed')
         if not myim.done(): stop('done 8 failed')
+        """
         #
         # Now do some non autoscaling
         #
@@ -4944,6 +4961,7 @@ def imagetest(which=None, size=[32,32,8]):
         #
         # Now some forced errors
         #
+        nz = 32
         imshape = [nx,ny,nz]
         centre = [imshape[0]/2,imshape[1]/2,imshape[2]/2]
         myim = ia.newimagefromshape(shape=imshape)
