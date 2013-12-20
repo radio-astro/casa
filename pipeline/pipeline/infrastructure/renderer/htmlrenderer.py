@@ -180,11 +180,59 @@ def get_task_description(result_obj):
     if task_cls is hsd.tasks.SDPlotFlagBaseline:
         return 'Plot whole spectra with baseline fit and flag result'
     
-    #if task_cls in hifv.tasks.FlagDeterVLA:
+    #if task_cls is hifv.tasks.importdata.importdata.VLAImportData:
+    #    names = []
+    #    for result in result_obj:
+    #        names.extend([ms.basename for ms in result.mses])
+    #    return 'VLA Import Data: Register %s with pipeline' % utils.commafy(names)
+    
+    #if task_cls in hifv.tasks.flagging.flagdetervla.FlagDeterVLA:
     #    return 'VLA deterministic flagging'
     
-    if task_cls is hifv.tasks.Targetflag:
+    if task_cls is hifv.tasks.setmodel.SetModel:
+        return 'Set model: Prepare for calibrations'
+    
+    if task_cls is hifv.tasks.priorcals.priorcals.Priorcals:
+        return 'Priorcals (gaincurves, opacities, and rq gains)'
+    
+    if task_cls is hifv.tasks.testBPdcals:
+        return 'Initial test calibrations'
+        
+    if task_cls is hifv.tasks.flagging.flagbaddeformatters.FlagBadDeformatters:
+        return 'Flag bad deformatters'
+        
+    if task_cls is hifv.tasks.flagging.uncalspw.Uncalspw:
+        return 'Flag spws that have no calibration'
+        
+    if task_cls is hifv.tasks.flagging.checkflag.Checkflag:
+        return 'Flag possible RFI on BP calibrator using rflag'
+    
+    if task_cls is hifv.tasks.semiFinalBPdcals:
+        return 'Semi-final delay and bandpass calibrations'
+        
+    if task_cls is hifv.tasks.fluxscale.solint.Solint:
+        return 'Determine solint'
+    
+    if task_cls is hifv.tasks.fluxscale.testgains.Testgains:
+        return 'Test gain calibrations'
+        
+    if task_cls is hifv.tasks.setmodel.fluxgains.Fluxgains:
+        return 'Flux density bootstrapping'
+    
+    if task_cls is hifv.tasks.fluxscale.fluxboot.Fluxboot:
+        return 'Fit spectral index'
+        
+    if task_cls is hifv.tasks.Finalcals:
+        return 'Final calibration tables'
+    
+    if task_cls is hifv.tasks.Applycals:
+        return 'Apply all calibrations'
+    
+    if task_cls is hifv.tasks.flagging.targetflag.Targetflag:
         return 'Targetflag (all data through rflag)'
+    
+    if task_cls is hifv.tasks.Statwt:
+        return 'Reweight visibilities'
 
     if LOG.isEnabledFor(LOG.todo):
         LOG.todo('No task description for \'%s\'' % task_cls.__name__)
@@ -3046,7 +3094,22 @@ renderer_map = {
         hsd.tasks.SDImaging2     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html'),
         hsd.tasks.SDFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagbaseline.html'),
         hsd.tasks.SDPlotFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_plotflagbaseline.html'),
-        hifv.tasks.Targetflag    : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_targetflag.html')
+        hifv.tasks.setmodel.SetModel : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_setmodel.html', always_rerender=True),
+        hifv.tasks.priorcals.priorcals.Priorcals : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_priorcals.html', always_rerender=True),
+        hifv.tasks.testBPdcals                   : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_testbpdcals.html', always_rerender=True),
+        hifv.tasks.flagging.flagbaddeformatters.FlagBadDeformatters : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_flagbaddef.html', always_rerender=True),
+        hifv.tasks.flagging.uncalspw.Uncalspw    : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_uncalspw.html', always_rerender=True),
+        hifv.tasks.flagging.checkflag.Checkflag  : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_checkflag.html', always_rerender=True),
+        hifv.tasks.semiFinalBPdcals              : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_semifinalbpdcals.html', always_rerender=True),
+        hifv.tasks.fluxscale.solint.Solint       : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_solint.html', always_rerender=True),
+        hifv.tasks.fluxscale.testgains.Testgains : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_testgains.html', always_rerender=True),
+        hifv.tasks.setmodel.fluxgains.Fluxgains  : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_fluxgains.html', always_rerender=True),
+        hifv.tasks.fluxscale.fluxboot.Fluxboot   : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_fluxboot.html', always_rerender=True),
+        hifv.tasks.Finalcals                     : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_finalcals.html', always_rerender=True),
+        hifv.tasks.Applycals                     : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_applycals.html', always_rerender=True),
+        hifv.tasks.flagging.targetflag.Targetflag : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_targetflag.html', always_rerender=True),
+        hifv.tasks.Statwt                         : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_statwt.html', always_rerender=True)
+
     }
 }
 
