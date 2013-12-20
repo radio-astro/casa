@@ -2949,7 +2949,7 @@ class LogCopier(object):
 #        return rows[start_idx:end_idx]
           
           
-          def get_bandpass_amp_qa2_scores(ms, qa2, plots, rootdir):
+def get_bandpass_amp_qa2_scores(ms, qa2, plots, rootdir):
     score_types = ['AMPLITUDE_SCORE_DD',
                    'AMPLITUDE_SCORE_FN',
                    'AMPLITUDE_SCORE_SNR']
