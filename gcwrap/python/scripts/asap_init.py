@@ -41,6 +41,7 @@ def asap_init():
     from sdstat_cli import sdstat_cli as sdstat
     from sdtpimaging_cli import sdtpimaging_cli as sdtpimaging
     from tsdcal_cli import tsdcal_cli as tsdcal
+    from tsdsave_cli import tsdsave_cli as tsdsave
     myf['sd']=sd
     myf['sdbaseline']=sdbaseline
     myf['sdcal']=sdcal
@@ -63,3 +64,4 @@ def asap_init():
     myf['sdstat']=sdstat
     myf['sdtpimaging']=sdtpimaging
     myf['tsdcal']=tsdcal
+    myf['tsdsave']=tsdsave
