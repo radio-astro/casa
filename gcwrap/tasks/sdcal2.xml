@@ -243,7 +243,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                   than 1.0 (e.g. 0.15).
                                   'auto' is available only for 'otfraster'. 
                  noff -- Edge marking parameter for 'otfraster'.
-                         It is used to specify a number of OFF scans near 
+                         It is used to specify a number of OFF spectra near 
                          edge directly. Value of noff comes before setting 
                          by fraction. Note that n_off from both sides will 
                          be marked as OFF so that twice of specified noff 
@@ -332,25 +332,25 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         for each mode is as follows:
 
             'ps': position switch (including OTF) with explicit
-                  reference (OFF) scans
+                  reference (OFF) spectra
             'otf': non-raster OTF scan without explicit OFFs
                    (e.g. Lissajous, double circle, etc.)
                    intends to calibrate fast scan data
             'otfraster': raster OTF scan without explicit OFFs
 
-        So, if the data contains explicit reference scans, 'ps' should
+        So, if the data contains explicit reference spectra, 'ps' should
         be used. Otherwise, 'otfraster' and 'otf' are appropriate for
         raster OTF and non-raster OTF, respectively. In 'otf' and
         'otfraster' modes, the task first try to find several integrations 
-        near edge as OFF scans, then the data are calibrated using those 
+        near edge as OFF spectra, then the data are calibrated using those 
         OFFs. If the observing pattern is raster, you 
         should use the 'otfraster' mode to calibrate data. Otherwise, the 
         'otf' mode should be used. For detail about edge marking, see 
         inline help of sd.edgemarker module and its methods.
         Those modes are designed for OTF observations without 
-        explicit OFF scans. However, these modes should work even if
-        explicit reference scans exist. In this case, explicit reference
-        scans will be ignored and scans near edges detected by edge
+        explicit OFF spectra. However, these modes should work even if
+        explicit reference spectrta exist. In this case, these spectra
+        will be ignored and spectra near edges detected by edge
         marker will be used as reference.
 
         Except for how to choose OFFs, the procedure to derive calibrated
@@ -359,7 +359,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         separated by its continuity in time domain, averaged in
         each segment, then interpolated to timestamps for ON integrations.
         Effectively, it means that OFF integrations are averaged by each
-        OFF scans for 'ps' mode, averaged by either ends of each raster
+        OFF spectrum for 'ps' mode, averaged by either ends of each raster
         row for 'otfraster' mode, averaged by each temporal segments of
         detected edges for 'otf' mode. The formula for calibrated spectrum
         is
