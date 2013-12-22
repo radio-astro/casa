@@ -65,7 +65,7 @@ public:
 
     //Preferences
     void setPlotColors( const QMap<CurveType,CurveDisplay>& colorMap);
-    virtual void setScatterCurves( CurveType /*xScatter*/, const QList<CurveType>& /*yScatters*/ ){};
+    virtual void setScatterCurves( const QString& /*title*/, CurveType /*xScatter*/, const QList<CurveType>& /*yScatters*/ ){};
     void setLineThickness( int thickness );
     void setLegendVisibility( bool v );
     void setDotSize( int size );

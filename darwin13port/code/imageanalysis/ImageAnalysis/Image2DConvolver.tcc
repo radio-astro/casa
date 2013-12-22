@@ -288,7 +288,7 @@ template <class T> void Image2DConvolver<T>::convolve(
 				}
 				ImageConvolver<T> aic;
 				aic.convolve(
-					os, subImageOut, subImage, kernel,
+					os, subImageOut, subImage, scaleFactor*kernel,
 					ImageConvolver<T>::NONE, 1.0, copyMiscellaneous
 				);
 			}
@@ -357,7 +357,7 @@ template <class T> void Image2DConvolver<T>::convolve(
 		// trickery cleverer than what ImageConvolver can do) so no more scaling
 		ImageConvolver<T> aic;
 		aic.convolve(
-			os, imageOut, imageIn, kernel, ImageConvolver<T>::NONE,
+			os, imageOut, imageIn, scaleFactor*kernel, ImageConvolver<T>::NONE,
 			1.0, copyMiscellaneous
 		);
 		// Overwrite some bits and pieces in the output image to do with the
@@ -422,7 +422,7 @@ template <class T> T Image2DConvolver<T>::_makeKernel(
 
 // Create kernel array. We will fill the n-Dim array (shape non-unity
 // only for pixelAxes) through its 2D Matrix incarnation. Aren't we clever.
-      
+   kernelArray = 0;
    kernelArray.resize(kernelShape);
    Array<T> kernelArray2 = kernelArray.nonDegenerate (pixelAxes);
    Matrix<T> kernelMatrix = static_cast<Matrix<T> >(kernelArray2);
@@ -434,7 +434,7 @@ template <class T> T Image2DConvolver<T>::_makeKernel(
 
 template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 	LogIO& os, String& brightnessUnitOut,
-	GaussianBeam& beamOut, Array<T>& kernelArray,
+	GaussianBeam& beamOut, const Array<T>& kernelArray,
 	const T kernelVolume, const VectorKernel::KernelTypes,
 	const Vector<Quantity>& parameters,
 	const IPosition& pixelAxes, const CoordinateSystem& cSys,
@@ -481,7 +481,6 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 		// Input p.a. is positive N->E
 		if (!autoScale) {
 			scaleFactor = static_cast<T>(scale);
-			//kernelArray *= t;
 			os << LogIO::WARN << "Autoscaling is recommended for Jy/pixel convolution"
 				<< LogIO::POST;
 		}
@@ -529,8 +528,8 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 			Matrix<T> kernelMatrix = static_cast<Matrix<T> >(kernelArray2);
 			// Convolve input restoring beam array by convolution kernel array
 			Matrix<T> beamMatrixOut;
-			Convolver<T> conv(beamMatrixIn, kernelMatrix.shape());   // matrixIn     = input restoring beam
 
+			Convolver<T> conv(beamMatrixIn, kernelMatrix.shape());
 			conv.linearConv(beamMatrixOut, kernelMatrix);
 
 			// Scale kernel
@@ -581,9 +580,11 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 			}
 		}
 	}
+	/*
 	if (scaleFactor != 1) {
 		kernelArray *= scaleFactor;
 	}
+	*/
 	// Put beam position angle into range +/- 180 in case it has eluded us so far
 	if (! beamOut.isNull()) {
 		MVAngle pa(beamOut.getPA(True).getValue(Unit("rad")));

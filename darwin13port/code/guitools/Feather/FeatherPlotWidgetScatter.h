@@ -37,7 +37,7 @@ namespace casa {
 class FeatherPlotWidgetScatter : public FeatherPlotWidget {
 public:
 	FeatherPlotWidgetScatter(const QString& title, FeatherPlot::PlotType plotType, QWidget *parent = 0);
-	  virtual void setScatterCurves( CurveType xScatter, const QList<CurveType>& yScatters );
+	  virtual void setScatterCurves( const QString& title, CurveType xScatter, const QList<CurveType>& yScatters );
 	virtual ~FeatherPlotWidgetScatter();
 protected:
 	virtual void resetColors();

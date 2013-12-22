@@ -61,6 +61,11 @@
 #include <casa/iomanip.h>
 #include <casa/Containers/RecordField.h>
 
+#include <casadbus/plotserver/PlotServerProxy.h>
+#include <casadbus/utilities/BusAccess.h>
+#include <casadbus/session/DBusSession.h>
+
+
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/System/Aipsrc.h>
@@ -5043,6 +5048,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
 				 const Vector<Int>& tranFieldIn,
 				 const Vector<Int>& inRefSpwMap,
 				 const Vector<String>& fldNames,
+                                 //const Float& threshold,
 				 fluxScaleStruct& oFluxScaleStruct,
 				 const String& oListFile,
                                  const Bool& incremental,
@@ -5055,6 +5061,13 @@ void SolvableVisJones::fluxscale(const String& outfile,
   // turn on incremental caltable mode
   //Bool incremental = True;
   //Bool fitperchan = True;
+
+  // threshold for gain (amplitude) to be used in 
+  // fluxscale determination
+  // -1: no threshold
+  Float threshold=-1; 
+  // plot histogram of gain ratio
+  Bool report_p=False;
 
   if (incremental) {
     logSink() << LogIO::NORMAL
@@ -5248,6 +5261,40 @@ void SolvableVisJones::fluxscale(const String& outfile,
     Int prevFld(-1);
 
     Int lastFld(-1);
+
+    // pre-determine median gain solutions for each field
+    NewCalTable selct(*ct_);
+    CTInterface cti(*ct_);
+    MSSelection mss;
+    Vector<Float> medianGains(nFld,0.0); //keeps median (amplitude) gains for each field
+    for (Int iFld=0; iFld<nFld; iFld++) {
+      //
+      mss.setFieldExpr(String::toString(iFld));     
+      TableExprNode ten=mss.toTableExprNode(&cti);
+
+      try {
+        getSelectedTable(selct,*ct_,ten,"");
+      
+        ROCTMainColumns ctmc(selct);
+        Array<Float> outparams;
+        ctmc.fparamArray(outparams);
+        IPosition arshp = outparams.shape();
+        //cerr<<"arshp="<<arshp<<endl;
+        //cerr<<"outparams(1,0,n)="<<outparams(IPosition(3,1,0,arshp(arshp.nelements()-1)-1))<<endl;
+
+        // take out amplitude only
+        IPosition start(3,0,0,0);
+        Int pinc = 2;
+        if (nPar()==1) pinc = 1; 
+        IPosition length(3,Int(arshp(0)/pinc),1,arshp(arshp.nelements()-1));
+        IPosition stride(3,pinc,1,1);
+        Slicer slicer(start,length,stride);
+        Array<Float> subarr=outparams(slicer);
+        medianGains(iFld)=median(subarr);
+      } catch (AipsError x) {
+        // no selection for current field ID so ignore to continue
+      }
+    }
     while (!ctiter.pastEnd()) {
       Int iSpw(ctiter.thisSpw());
       Int iFld(ctiter.thisField());
@@ -5297,11 +5344,16 @@ void SolvableVisJones::fluxscale(const String& outfile,
       for (Int ipar=0; ipar<nPar(); ipar++) {
 	if (!fl(ipar)) {
 	  Double gn=amp(ipar); // converts to Double
-	  mgok(ipar,iAnt,iSpw)=True;
-	  mg(ipar,iAnt,iSpw) += (wt*gn);
-	  mg2(ipar,iAnt,iSpw)+= (wt*gn*gn);
-	  mgn(ipar,iAnt,iSpw)++;
-	  mgwt(ipar,iAnt,iSpw)+=wt;
+          // evaluate input gain to be within the threshold
+          if (threshold < 0 || 
+              (gn >= (1.0 - threshold) * medianGains(iFld) and 
+               gn <= (1.0 + threshold) * medianGains(iFld)))  {
+	    mgok(ipar,iAnt,iSpw)=True;
+	    mg(ipar,iAnt,iSpw) += (wt*gn);
+	    mg2(ipar,iAnt,iSpw)+= (wt*gn*gn);
+	    mgn(ipar,iAnt,iSpw)++;
+	    mgwt(ipar,iAnt,iSpw)+=wt;
+          }
 	}
       }
       lastFld=iFld;
@@ -5500,11 +5552,29 @@ void SolvableVisJones::fluxscale(const String& outfile,
 	// Form the mean gain ratio
 	Matrix<Double> mgTspw(mgT.xyPlane(ispw));
 	Matrix<Bool> mgokTspw(mgokT.xyPlane(ispw));
-
 	cout.precision(6);
 	cout.setf(ios::fixed,ios::floatfield);
 	Int nPA=ntrue(mgokTspw);
 	if (nPA>0) {
+
+          // for plotting
+          if (report_p) {
+            PlotServerProxy *plotter = dbus::launch<PlotServerProxy>( );
+            String hlab = "fluxscale- Fld:"+String::toString(tranidx)+" Spw:"+String::toString(ispw);
+	    dbus::variant panel_id = plotter->panel( hlab, "ratio", "N", "Fluxscale"+hlab,
+                                               std::vector<int>( ), "right");
+            Vector<Double> tempvec;
+            tempvec=mgTspw(mgokTspw).getCompressedArray();
+            // determine nbins by Scott's rule
+            Double minv, maxv;
+            minMax(minv,maxv,tempvec);
+            Double binw = 3.49*stddev(tempvec)/pow(Double (tempvec.nelements()), 1./3.);
+            Int inNbins = Int (ceil ((maxv-minv)/binw));
+            plotter->histogram(dbus::af(tempvec),inNbins, "blue",hlab,panel_id.getInt( ));
+            //plotter->scatter(dbus::af(tempvec),dbus::af(tempvec), "blue","","hexagon", 6, -1, panel_id.getInt( ));
+            plotter->release( panel_id.getInt( ) );
+          }
+
 	  //	  cout << "mgTspw = " << mgTspw << endl;
 	  scaleOK(ispw,tranidx)=True;
 	  //mgratio(ispw,tranidx)=mean(mgTspw(mgokTspw));

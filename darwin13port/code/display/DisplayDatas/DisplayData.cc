@@ -584,7 +584,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return False;
 	}
 
-	Record DisplayData::getOptions() {
+	Record DisplayData::getOptions( bool /*scrub*/ ) const {
 		// nothing yet
 		Record rec;
 		return rec;

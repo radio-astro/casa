@@ -481,8 +481,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	template <class T>
-	Record LatticeAsContour<T>::getOptions() {
-		Record rec = LatticePADisplayData<T>::getOptions();
+	Record LatticeAsContour<T>::getOptions( bool scrub ) const {
+		Record rec = LatticePADisplayData<T>::getOptions(scrub);
 
 		Record levels;
 		levels.define("dlformat", "rellevels");

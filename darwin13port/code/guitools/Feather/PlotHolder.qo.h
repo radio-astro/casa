@@ -64,7 +64,7 @@ public:
     void setDisplayXGraphs( bool visible );
     void setXAxisUV( bool xAxisUV );
     void setColors( const QMap<PreferencesColor::CurveType,CurveDisplay>& colorMap);
-    void setScatterCurves( FeatherCurveType::CurveType xScatter, const QList<FeatherCurveType::CurveType>& yScatters );
+    void setScatterCurves( const QString& title, FeatherCurveType::CurveType xScatter, const QList<FeatherCurveType::CurveType>& yScatters );
     void setLogScale( bool uvScale, bool logScale );
     void refreshPlots();
     void layoutPlotWidgets();

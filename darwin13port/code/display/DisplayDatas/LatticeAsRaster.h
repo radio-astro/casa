@@ -209,7 +209,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// information can be used to generate form-type graphical user
 		// interfaces or command-line interfaces to set the options with
 		// prompts.
-		virtual Record getOptions();
+		virtual Record getOptions( bool scrub=false ) const;
 		//static Record getGlobalOption();
 
 		// Return the DisplayData type; used by the WorldCanvasHolder to
@@ -219,7 +219,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// class name
-		virtual String className() {
+		virtual String className() const {
 			return String("LatticeAsRaster");
 		}
 		const static String HISTOGRAM_RANGE;

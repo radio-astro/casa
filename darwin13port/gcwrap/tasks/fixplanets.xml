@@ -36,6 +36,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                        date_incr='0.1 d', get_axis_orientation=False, get_axis_ang_orientation=True,
                        get_sub_long=True, use_apparent=False, get_sep=False,
                        return_address='YOUR_EMAIL_ADDESS', mailserver='YOUR_MAIL_SERVER_ADDRESS')
+                  Note: some mail clients may not save the JPL mail properly.
+                        Confirmed to work is firefox.
 
                   default= '' (use pointing table)
                   

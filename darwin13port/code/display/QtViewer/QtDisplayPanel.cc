@@ -1869,6 +1869,53 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
+	void QtDisplayPanel::pushCurrentDrawingState( ) {
+		QtDisplayData *dd = getControllingDD( );
+		if ( dd ) drawing_state.push(new Record(dd->dd()->getOptions(true)));
+	}
+	void QtDisplayPanel::popCurrentDrawingState( ) {
+		if ( ! drawing_state.empty( ) ) {
+			Record *state = drawing_state.top( );
+			drawing_state.pop( );
+			QtDisplayData *dd = getControllingDD( );
+			Record chgd;
+			if ( dd ) dd->dd()->setOptions( *state, chgd );
+			delete state;
+		}
+	}
+
+	float QtDisplayPanel::getLabelLineWidth( ) {
+		QtDisplayData *dd = getControllingDD( );
+		try {
+			return dd->getOptions( ).subRecord("labellinewidth").asFloat("value");
+		} catch(...) {
+			throw AipsError("failed to retrieve line width");
+		}
+	}
+
+	void QtDisplayPanel::setLabelLineWidth( float value ) {
+		 QtDisplayData *dd = getControllingDD( );
+		 Record lw, chgd;
+		 lw.define("labellinewidth", value);
+		 dd->dd()->setOptions(lw, chgd);
+	}
+
+	float QtDisplayPanel::getTickLength( ) {
+		QtDisplayData *dd = getControllingDD( );
+		try {
+			return dd->getOptions( ).subRecord("ticklength").asFloat("value");
+		} catch(...) {
+			throw AipsError("failed to retrieve tick mark length");
+		}
+	}
+
+	void QtDisplayPanel::setTickLength( float value ) {
+		 QtDisplayData *dd = getControllingDD( );
+		 Record lw, chgd;
+		 lw.define("ticklength", value);
+		 dd->dd()->setOptions(lw, chgd);
+	}
+
 	void QtDisplayPanel::setMarginSize( ) {
 		//Try to set appropriate plot margins based on the number of
 		//plots that are displaying

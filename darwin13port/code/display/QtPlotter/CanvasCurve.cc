@@ -317,7 +317,7 @@ namespace casa {
 			toolTipStr.append( "(" );
 			toolTipStr.append(QString::number( curveData[2*selectedIndex] ));
 			toolTipStr.append( " " +xUnit +", " );
-			toolTipStr.append(QString::number( curveData[2*selectedIndex+1] ));
+			toolTipStr.append(QString::number( curveData[2*selectedIndex+1],'g',4 ));
 			toolTipStr.append( " " + yUnit+ ")");
 		}
 		return toolTipStr;

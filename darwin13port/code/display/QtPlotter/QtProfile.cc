@@ -90,6 +90,9 @@ namespace casa {
 	const QString QtProfile::OPTICAL = "optical";
 	const QString QtProfile::AIR = "air";
 	const QString QtProfile::FRAME_REST = "REST";
+	const QString QtProfile::PERSIST_FREQUENCY_BOTTOM = ".freqcoord.type";
+	const QString QtProfile::PERSIST_FREQUENCY_TOP = ".freqcoordTop.type";
+	bool QtProfile::topAxisDefaultSet = false;
 	const QString QtProfile::IMAGE_MISSING_ERROR = "No profile available for the given data.";
 	const QString QtProfile::MISSING_REGION_ERROR = "Assign a mouse button to\n"
 		                        "'crosshair' or 'rectangle' or 'polygon';\n"
@@ -252,6 +255,7 @@ namespace casa {
 				analysis  = new ImageAnalysis(img);
 				momentSettingsWidget->reset();
 				specFitSettingsWidget->reset();
+				setUnitsText( xaxisUnit );
 
 			} catch (AipsError x) {
 				String message = "Error when starting the profiler:\n" + x.getMesg();
@@ -279,10 +283,25 @@ namespace casa {
 	}
 
 	void QtProfile::setXAxisUnits(){
-		QString pref_ctype = read( ".freqcoord.type");
+
+		//Default top axis value when it initially comes up should be
+		//channels.  However, for some unknown reason, if the profile is
+		//hidden, it is deleted.  This can happen when all images are
+		//unregistered then reregistered.  In such a case, CAS-5926, wants
+		//us to retain the previous setting.  Thus, the default is to read
+		//the last top axis setting.  However, when the profiler is started
+		//for the very first time, our static variable, topAxisDefault, will
+		//be false, which allows us to make the initial settings channels.
+		QString prefTop_ctype = read( PERSIST_FREQUENCY_TOP );
+		if ( ! topAxisDefaultSet ){
+			prefTop_ctype = CHANNEL;
+			persistTopAxis( prefTop_ctype );
+			topAxisDefaultSet = true;
+		}
 
 		//We can't use velocity with a tabular axis because the
 		//rest frequency is zero.
+		QString pref_ctype = read( PERSIST_FREQUENCY_BOTTOM );
 		if ( !isSpectralAxis() && pref_ctype.indexOf(VELOCITY) >= 0){
 			pref_ctype="frequency [Hz]";
 		}
@@ -292,6 +311,7 @@ namespace casa {
 			updateAxisUnitCombo( pref_ctype, bottomAxisCType );
 			updateAxisUnitCombo( pref_ctype, topAxisCType );
 		}
+		updateAxisUnitCombo( prefTop_ctype, topAxisCType );
 
 		ctypeUnit = String(bottomAxisCType->currentText().toStdString());
 		getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
@@ -326,10 +346,6 @@ namespace casa {
 		lineOverlaysHolder->setInitialReferenceFrame( spcRef->currentText() );
 	}
 
-
-
-
-
 	void QtProfile::setUnitsText( String unitStr ) {
 		QString unitLabel("<font color='black'>["+QString(unitStr.c_str())+"]</font>");
 		specFitSettingsWidget->setUnits( unitLabel );
@@ -350,6 +366,7 @@ namespace casa {
 			                          "Sorry, could not find a spectral axis for this image...",
 			                          QMessageBox::Ok);
 				}
+				return MFrequency::DEFAULT;
 			}
 
 			SpectralCoordinate specCoor=cSys.spectralCoordinate(specAx);
@@ -670,7 +687,7 @@ namespace casa {
 		updateXAxisLabel( text, QtPlotSettings::xBottom );
 
 		//cout << "put to rc.viewer: " << text.toStdString() << endl;
-		persist( ".freqcoord.type", text);
+		persist( PERSIST_FREQUENCY_BOTTOM, text);
 		if(lastPX.nelements() > 0) {
 			// update display with new coord type
 			wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY, UNKNPROF );
@@ -728,12 +745,13 @@ namespace casa {
 		fillPlotTypes(img);
 
 		// read the preferred ctype from casarc
-		QString pref_ctype = read( ".freqcoord.type");
+		QString pref_ctype = read( PERSIST_FREQUENCY_BOTTOM);
 		if (pref_ctype.size()>0) {
 			// change to the preferred ctype
 			updateAxisUnitCombo( pref_ctype, bottomAxisCType );
-			updateAxisUnitCombo( pref_ctype, topAxisCType );
 		}
+		QString prefTop_ctype = readTopAxis();
+		updateAxisUnitCombo( prefTop_ctype, topAxisCType );
 
 		initializeSpectralProperties();
 		initializeSolidAngle();
@@ -1200,6 +1218,7 @@ namespace casa {
 			Vector<Float> xValues (lastWX.size());
 			Vector<Float> yValues (lastWY.size());
 			QString text = topAxisCType ->currentText();
+			persistTopAxis( topAxisCType->currentText());
 			updateXAxisLabel( text, QtPlotSettings::xTop );
 			String xUnits = String(text.toStdString());
 			String coordinateType;
@@ -1869,7 +1888,7 @@ namespace casa {
 		for (int m = 0; m < j; m++) {
 			ts << data[2 * m] << " " << scaleFactor*data[2 * m + 1];
 			if ( errorDataSize > 0 ){
-				ts << " " << scaleFactor * errorData[2 * m + 1];
+				ts << " " << scaleFactor * errorData[m];
 			}
 			ts << "\n";
 		}
@@ -2753,6 +2772,7 @@ namespace casa {
 
 	void QtProfile::restrictTopAxisOptions( bool restrictOptions, const QString& bottomUnits,
 			bool allowFrequency, bool allowVelocity ){
+		QString currentSelection = topAxisCType->currentText();
 		topAxisCType->clear();
 
 		for ( int i = 0; i < xUnitsList.size(); i++ ){
@@ -2799,6 +2819,11 @@ namespace casa {
 					topAxisCType->addItem( xUnitsList[i]);
 				}
 			}
+		}
+		QString prefTop_ctype = readTopAxis();
+		int selectionIndex = topAxisCType->findText( prefTop_ctype );
+		if ( selectionIndex != -1 ){
+			topAxisCType->setCurrentIndex( selectionIndex );
 		}
 	}
 
@@ -2951,6 +2976,23 @@ namespace casa {
 	QString QtProfile::read( const QString & key ) const {
 		QString valueStr( rc.get("viewer." + rcid() + key.toStdString()).c_str());
 		return valueStr;
+	}
+
+	QString QtProfile::readTopAxis() const {
+		QSettings settings( Util::ORGANIZATION, Util::APPLICATION );
+		QString topUnits = settings.value( PERSIST_FREQUENCY_TOP, CHANNEL).toString();
+		return topUnits;
+	}
+
+	void QtProfile::persistTopAxis( const QString& units ){
+		//If we clear the combo box, and then start adding items back in,
+		//the first item will be automatically selected and this method
+		//called.  We avoid persisting a non-user selection by making
+		//sure that the combo box has been populated before persisting.
+		if ( units.size() > 0 && topAxisCType->count() > 1){
+			QSettings settings( Util::ORGANIZATION, Util::APPLICATION );
+			settings.setValue( PERSIST_FREQUENCY_TOP, units );
+		}
 	}
 
 	void QtProfile::imageCollapsed(String path, String dataType, String displayType, Bool autoRegister,

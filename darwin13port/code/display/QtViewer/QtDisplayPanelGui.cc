@@ -2353,6 +2353,10 @@ void QtDisplayPanelGui::showImageProfile() {
 									profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
 							disconnect( profileDD_, SIGNAL(spectrumChanged(String, String, String )),
 									profile_, SLOT(changeSpectrum(String, String, String )));
+							//pdd->checkAxis( false );
+						}
+						else {
+							pdd->checkAxis( true );
 						}
 						profileDD_ = pdd;
 						connect( profileDD_, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
@@ -2361,7 +2365,7 @@ void QtDisplayPanelGui::showImageProfile() {
 									profile_, SLOT(changeSpectrum(String, String, String )));
 					}
 					channelDDFound = true;
-					pdd->checkAxis();
+					pdd->checkAxis( false );
 				}
 				else {
 					OverplotInterface overlap( pdd->name().c_str(), img );

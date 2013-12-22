@@ -72,7 +72,7 @@ import numpy
 from taskinit import *
 
 def imsmooth(
-    imagename, kernel, major, minor, pa, targetres, region,
+    imagename, kernel, major, minor, pa, commonbeam, targetres, region,
     box, chans, stokes, mask, outfile, stretch, overwrite, beam
 ):
     casalog.origin( 'imsmooth' )
@@ -120,6 +120,21 @@ def imsmooth(
         
     try:       
         if ( kernel.startswith( "gaus" ) ):
+            _myia.open(imagename)
+            if commonbeam:
+                if beam or major or minor or pa:
+                    raise Exception, "You may not specify any of beam, major, minor, or pa when commonbeam=True"
+                if not _myia.restoringbeam():
+                    raise Exception, "Input image " + imagename + " has no beams, so a common beam cannot be determined."
+
+                beam = _myia.commonbeam()
+                if targetres:
+                    # add a small epsilon to avoid convolving with a null beam to reach
+                    # a target resolution that already exists
+                    beam['major'] = qa.mul(beam['major'], 1 + 1e-10)
+                    beam['minor'] = qa.mul(beam['minor'], 1 + 1e-10)
+                else:
+                    casalog.post("Convolving with common beam " + str(beam), 'NORMAL')
             if (beam and (major or minor or pa)):
                 raise Exception, "You may specify only beam or the set of major/minor/pa"
             if not beam:
@@ -129,10 +144,7 @@ def imsmooth(
                     raise Exception, "Minor axis must be specified"
                 if not pa:
                     raise Exception, "Position angle must be specified"
-
-            # GAUSSIAN KERNEL
-            casalog.post( "Calling convolve2d with Gaussian kernel", 'NORMAL3' )
-            _myia.open( imagename )
+       
             retia = _myia.convolve2d(
                 axes=[0,1], region=reg, major=major,
                 minor=minor, pa=pa, outfile=outfile,
