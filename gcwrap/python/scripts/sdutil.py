@@ -229,7 +229,7 @@ class sdtask_template(sdtask_interface):
             casalog.post('taql: \'%s\''%(selector.get_query()), priority='DEBUG')
 
         return selector
-                
+
 
     def get_selector(self, scantb=None):
         """
@@ -260,8 +260,7 @@ class sdtask_template(sdtask_interface):
         self.scanlist = scantb.parse_idx_selection("SCAN",self.scanno)
         self.iflist = []
         if self.spw != "":
-            ifno_str = str(',').join(scantb.parse_maskexpr(self.spw).keys())
-            self.iflist = scantb.parse_idx_selection("IF",ifno_str)
+            self.iflist = scantb.parse_spw_selection(self.spw).keys()
         self.pollist = scantb.parse_idx_selection("POL",self.polno)
         self.beamlist = scantb.parse_idx_selection("BEAM",self.beamno)
         
