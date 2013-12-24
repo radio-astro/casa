@@ -984,7 +984,7 @@ class tsdsave_storageTest( tsdsave_unittest_base, unittest.TestCase ):
     pollist = [1]
     pol = '1'
     iflist = [2]
-    spw = '2'
+    spw = '2:100~200'
     restfreq = [44.075e9]
     # Reference data of output scantable
     refout = {"nRow": 8, "SCANNOS": [21,23], "POLNOS": pollist,\
@@ -1516,10 +1516,11 @@ class tsdsave_data_selection(tsdsave_unittest_base, unittest.TestCase):
         for i in xrange(num_param):
             casalog.post('expected values = %s, actual values = %s'%(set(values[i]), set(cols[i])))
             self.assertTrue(set(values[i]) == set(cols[i]))
+        return outfile
         
     def __exec_simple_test(self, param, expr, value_list, column, expected_nrow):
-        self.__exec_complex_test([param], [expr], [value_list], [column],
-                                 expected_nrow)
+        return self.__exec_complex_test([param], [expr], [value_list], [column],
+                                        expected_nrow)
         
     def exec_spw_test(self, iflist, spw, expected_nrow):
         self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow)
@@ -1538,7 +1539,31 @@ class tsdsave_data_selection(tsdsave_unittest_base, unittest.TestCase):
 
     def exec_timerange_test(self, timelist, timerange, expected_nrow):
         self.__exec_simple_test('timerange', timerange, timelist, 'TIME', expected_nrow)
-                
+
+    def exec_channelrange_test(self, iflist, channelrange, spw, expected_nrow):
+        outfile = self.__exec_simple_test('spw', spw, iflist, 'IFNO',
+                                          expected_nrow)
+        s_org = sd.scantable(self.infile, average=True)
+        s = sd.scantable(outfile, average=False)
+        expected_nchan = channelrange[1] - channelrange[0] + 1
+        self.assertEqual(expected_nchan, s.nchan(iflist[0]))
+        u_org_org = s_org.get_unit()
+        u_org = s.get_unit()
+        s_org.set_unit('GHz')
+        s.set_unit('GHz')
+        sel = sd.selector()
+        sel.set_ifs(iflist)
+        s_org.set_selection(sel)
+        f_org = s_org._getabcissa(0)
+        f = s._getabcissa(0)
+        s_org.set_selection()
+        s_org.set_unit(u_org_org)
+        s.set_unit(u_org)
+        casalog.post('left edge expected: %s, actual: %s'%(f_org[channelrange[0]],f[0]))
+        casalog.post('right edge expected: %s, actual: %s'%(f_org[channelrange[1]],f[-1]))
+        self.assertEqual(f_org[channelrange[0]], f[0])
+        self.assertEqual(f_org[channelrange[1]], f[-1])
+        
     def test_spw0(self):
         """test_spw0: Test spw selection by syntax 'N'"""
         iflist = [1]
@@ -1571,21 +1596,21 @@ class tsdsave_data_selection(tsdsave_unittest_base, unittest.TestCase):
 
         self.exec_spw_test(iflist, spw, expected_nrow)
 
-    def test_spw4(self):
-        """test_spw4: Test spw selection by syntax '<=N'"""
-        iflist = [0,1]
-        spw = '<=%s'%(max(iflist))
-        expected_nrow = 32
+    #def test_spw4(self):
+    #    """test_spw4: Test spw selection by syntax '<=N'"""
+    #    iflist = [0,1]
+    #    spw = '<=%s'%(max(iflist))
+    #    expected_nrow = 32
 
-        self.exec_spw_test(iflist, spw, expected_nrow)
+    #    self.exec_spw_test(iflist, spw, expected_nrow)
 
-    def test_spw5(self):
-        """test_spw5: Test spw selection by syntax '>=N'"""
-        iflist = [2,3]
-        spw = '>=%s'%(min(iflist))
-        expected_nrow = 32
+    #def test_spw5(self):
+    #    """test_spw5: Test spw selection by syntax '>=N'"""
+    #    iflist = [2,3]
+    #    spw = '>=%s'%(min(iflist))
+    #    expected_nrow = 32
 
-        self.exec_spw_test(iflist, spw, expected_nrow)
+    #    self.exec_spw_test(iflist, spw, expected_nrow)
         
     def test_spw6(self):
         """test_spw6: Test spw selection by syntax 'N,M'"""
@@ -1994,6 +2019,50 @@ class tsdsave_data_selection(tsdsave_unittest_base, unittest.TestCase):
                                  [iflist, fieldlist, timelist],
                                  ['IFNO', 'FIELDNAME', 'TIME'],
                                  expected_nrow)
+
+    def test_channelrange0(self):
+        """test_channelrange0: Test channel range selection '0~N'"""
+        iflist = [2]
+        channelrange = [0,100]
+        spw = '2:0~100'
+        expected_nrow = 16
+
+        self.exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+
+    def test_channelrange1(self):
+        """test_channelrange1: Test channel range selection 'N~M'"""
+        iflist = [2]
+        channelrange = [200,400]
+        spw = '2:200~400'
+        expected_nrow = 16
+
+        self.exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+
+    def test_channelrange2(self):
+        """test_channelrange2: Test channel range selection by frequency 'X~YGHz'"""
+        iflist = [2]
+        channelrange = [200,400]
+        spw = '2:114.5802~114.6290GHz'
+        expected_nrow = 16
+
+        self.exec_channelrange_test(iflist, channelrange, spw, expected_nrow)
+
+    def test_channelrange3(self):
+        """test_channelrange3: Test multiple channel range for one spw (causes error)"""
+        test_name = inspect.stack()[0][3]
+        outfile = '.'.join([self.prefix, test_name])
+        spw = '2:0~100;200~400'
+
+        try:
+            tsdsave(infile=self.infile, spw=spw, outfile=outfile, overwrite=True)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, e:
+            self.assertTrue(isinstance(e, SyntaxError),
+                            msg='Unexpected exception was thrown: %s'%(str(e)))
+            pos = str(e).find('tsdsave doesn\'t support multiple channel range selection for spw.')
+            self.assertNotEqual(pos, -1,
+                                msg='Unexpected exception was thrown: %s'%(str(e)))
 
         
 def suite():
