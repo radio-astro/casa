@@ -2,6 +2,7 @@ import os
 import sys
 import shutil
 import inspect
+import re
 from __main__ import default
 from tasks import *
 from taskinit import *
@@ -1489,28 +1490,39 @@ class tsdsave_data_selection(tsdsave_unittest_base, unittest.TestCase):
             shutil.rmtree(self.infile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def __exec_simple_test(self, param, expr, value_list, column, expected_nrow):
-        test_name = inspect.stack()[2][3]
+    def __exec_complex_test(self, params, exprs, values, columns, expected_nrow):
+        num_param = len(params)
+        stack = inspect.stack()
+        x = 0
+        while re.match('^test_.*[0-9]$',stack[x][3]) is None and x < len(stack):
+            x += 1
+        test_name = inspect.stack()[x][3]
         outfile = '.'.join([self.prefix, test_name])
         #print 'outfile=%s'%(outfile)
-        casalog.post('%s: %s = \'%s\''%(test_name, param, expr))
+        casalog.post('%s: %s'%(test_name, ','.join(['%s = \'%s\''%(params[i],exprs[i]) for i in xrange(num_param)])))
         kwargs = {'infile': self.infile,
                   'outfile': outfile,
-                  param: expr,
                   'overwrite': True}
+        for i in xrange(num_param):
+            kwargs[params[i]] = exprs[i]
         tsdsave(**kwargs)
 
         tb.open(outfile)
-        col = tb.getcol(column)
+        cols = [tb.getcol(columns[i]) for i in xrange(num_param)]
         nrow = tb.nrows()
         tb.close()
         casalog.post('expected nrow = %s, actual nrow = %s'%(expected_nrow, nrow))
         self.assertEqual(expected_nrow, nrow)
-        casalog.post('expected values = %s, actual values = %s'%(set(value_list), set(col)))
-        self.assertTrue(set(value_list) == set(col))
-
+        for i in xrange(num_param):
+            casalog.post('expected values = %s, actual values = %s'%(set(values[i]), set(cols[i])))
+            self.assertTrue(set(values[i]) == set(cols[i]))
+        
+    def __exec_simple_test(self, param, expr, value_list, column, expected_nrow):
+        self.__exec_complex_test([param], [expr], [value_list], [column],
+                                 expected_nrow)
+        
     def exec_spw_test(self, iflist, spw, expected_nrow):
-        self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow) 
+        self.__exec_simple_test('spw', spw, iflist, 'IFNO', expected_nrow)
 
     def exec_scan_test(self, scanlist, scan, expected_nrow):
         self.__exec_simple_test('scan', scan, scanlist, 'SCANNO', expected_nrow)
@@ -1919,23 +1931,69 @@ class tsdsave_data_selection(tsdsave_unittest_base, unittest.TestCase):
 
     def test_simultaneous0(self):
         """test_simultaneous0: Test simultaneous selection (spw and scan)"""
-        self.assertTrue(True)
+        iflist = [1]
+        spw = '%s'%(iflist[0])
+        scanlist = [0,2]
+        scan = '0,2'
+        expected_nrow = 8
+
+        self.__exec_complex_test(['spw', 'scan'], [spw, scan],
+                                 [iflist, scanlist], ['IFNO', 'SCANNO'],
+                                 expected_nrow)
 
     def test_simultaneous1(self):
         """test_simultaneous1: Test simultaneous selection (spw and field)"""
-        self.assertTrue(True)
+        iflist = [1,2]
+        spw = '1~2'
+        fieldlist = ['M100__0', 'M42__2']
+        field = '0,2'
+        expected_nrow = 24
+
+        self.__exec_complex_test(['spw', 'field'], [spw, field],
+                                 [iflist, fieldlist], ['IFNO', 'FIELDNAME'],
+                                 expected_nrow)
 
     def test_simultaneous2(self):
         """test_simultaneous2: Test simultaneous selection (spw and timerange)"""
-        self.assertTrue(True)
+        iflist = [1,2]
+        spw = '1~2'
+        timelist = [55310.967928148144, 55310.988761481472]
+        timerange = '2010/04/24/23:13:00~2010/04/24/23:43:49'
+        expected_nrow = 16
+
+        self.__exec_complex_test(['spw', 'timerange'], [spw, timerange],
+                                 [iflist, timelist], ['IFNO', 'TIME'],
+                                 expected_nrow)
+
 
     def test_simultaneous3(self):
         """test_simultaneous3: Test simultaneous selection (field and timerange)"""
-        self.assertTrue(True)
+        fieldlist = ['M100__0']
+        field = '<1'
+        timelist = [55310.947094814808]
+        timerange = '<2010/04/24/23:00:00'
+        expected_nrow = 16
+
+        self.__exec_complex_test(['field', 'timerange'], [field, timerange],
+                                 [fieldlist, timelist], ['FIELDNAME', 'TIME'],
+                                 expected_nrow)
+        
 
     def test_simultaneous4(self):
         """test_simultaneous4: Test simultaneous selection (spw, field and timerange)"""
-        self.assertTrue(True)
+        iflist = [1,3]
+        spw = '1,>2'
+        fieldlist = ['M100__0']
+        field = '<1'
+        timelist = [55310.947094814808]
+        timerange = '<2010/04/24/23:00:00'
+        expected_nrow = 8
+
+        self.__exec_complex_test(['spw', 'field', 'timerange'],
+                                 [spw, field, timerange],
+                                 [iflist, fieldlist, timelist],
+                                 ['IFNO', 'FIELDNAME', 'TIME'],
+                                 expected_nrow)
 
         
 def suite():
