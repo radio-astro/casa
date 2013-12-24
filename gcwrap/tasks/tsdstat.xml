@@ -89,6 +89,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value></value>
     </param>
 
+    <param type="string" name="timerange">
+            <shortdescription>Select data by timerange (e.g. \'09:14:0~09:54:0\')</shortdescription>
+	    <description>Select data by timerange</description>
+            <value></value>
+    </param>
+
     <param type="string" name="scan">
 	    <shortdescription>Select data by scan numbers (e.g. \'21~23\')</shortdescription>
             <description>Select data by scan numbers</description>
@@ -98,6 +104,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="string" name="pol">
             <shortdescription>Select data by polarization ids (e.g.\'0,1\')</shortdescription>
             <description>Select data by polarization ids</description>
+            <value></value>
+    </param>
+
+    <param type="string" name="beam">
+            <shortdescription>Select data by beam ids (e.g.\'0,1\')</shortdescription>
+            <description>Select data by beam ids</description>
             <value></value>
     </param>
 
