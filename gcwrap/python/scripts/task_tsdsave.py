@@ -137,18 +137,19 @@ class sdsave_worker(sdutil.sdtask_template):
             self.original_scan._setmolidcol_list(self.molids)
 
     def __dochannelrange(self, scantab):
-        sel_org = scantab.get_selection()
-        channelrange_dic = scantab.parse_spw_selection(self.spw)
-        for (k,v) in channelrange_dic.items():
-            if len(v) > 1:
-                raise SyntaxError('tsdsave doesn\'t support multiple channel range selection for spw.')
-            nchan = scantab.nchan(k)
-            full_range = [0.0, float(nchan-1)]
-            if v[0] != full_range:
-                sel = sd.selector()
-                sel.set_ifs(k)
-                scantab.set_selection(sel)
-                sdutil.dochannelrange(scantab, v[0])
-                scantab.set_selection()
-        scantab.set_selection(sel_org)
-                    
+        if len(self.spw) > 0:
+            sel_org = scantab.get_selection()
+            channelrange_dic = scantab.parse_spw_selection(self.spw)
+            for (k,v) in channelrange_dic.items():
+                if len(v) > 1:
+                    raise SyntaxError('tsdsave doesn\'t support multiple channel range selection for spw.')
+                nchan = scantab.nchan(k)
+                full_range = [0.0, float(nchan-1)]
+                if v[0] != full_range:
+                    sel = sd.selector()
+                    sel.set_ifs(k)
+                    scantab.set_selection(sel)
+                    sdutil.dochannelrange(scantab, v[0])
+                    scantab.set_selection()
+            scantab.set_selection(sel_org)
+
