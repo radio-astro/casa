@@ -105,6 +105,7 @@ sdstat.xml
 sdtpimaging.xml
 tsdaverage.xml
 tsdcal.xml
+tsdfit.xml
 tsdsave.xml
 tsdstat.xml
 setjy.xml
