@@ -45,6 +45,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value type='string'/>
     </param>
 
+<!--
     <param type="string" name="specunit">
             <description>units for spectral axis (channel,km/s,GHz)</description>
             <value></value>
@@ -58,29 +59,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>Hz</value>
     </allowed>
     </param>
-
-    <param type="any" name="restfreq" subparam="true">
-            <description>rest frequency (default unit: Hz)</description>
-            <any type="variant" limittype="string double int string doubleArray intArray stringArray dictArray"/>
-            <value type="string"/>
-    </param>
-
-    <param type="string" name="frame">
-            <description>frequency reference frame, e.g. LSRK (''=current)</description>
-            <value></value>
-    </param>
-
-    <param type="string" name="doppler">
-            <description>doppler convention, e.g. RADIO (''=current)</description>
-            <value></value>
-    </param>
-
-
-    <param type="string" name="scan">
-	    <shortdescription>Select data by scan numbers (e.g. \'21~23\')</shortdescription>
-            <description>Select data by scan numbers</description>
-            <value></value>
-    </param>
+-->
 
     <param type="string" name="field">
             <shortdescription>Select field by ID(s) or name(s) (e.g. \'3C2*\')</shortdescription>
@@ -91,6 +70,28 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="string" name="spw">
             <shortdescription>Select data by IF ids (spectral window) (e.g. \'3,5,7\')</shortdescription>
 	    <description>Select data by IF ids (spectral window)</description>
+            <value></value>
+    </param>
+
+    <param type="any" name="restfreq" subparam="true">
+            <description>rest frequency (default unit: Hz)</description>
+            <any type="variant" limittype="string double int string doubleArray intArray stringArray dictArray"/>
+            <value type="string"/>
+    </param>
+
+    <param type="string" name="frame" subparam="true">
+            <description>frequency reference frame, e.g. LSRK (''=current)</description>
+            <value></value>
+    </param>
+
+    <param type="string" name="doppler" subparam="true">
+            <description>doppler convention, e.g. RADIO (''=current)</description>
+            <value></value>
+    </param>
+
+    <param type="string" name="scan">
+	    <shortdescription>Select data by scan numbers (e.g. \'21~23\')</shortdescription>
+            <description>Select data by scan numbers</description>
             <value></value>
     </param>
 
@@ -138,6 +139,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             </allowed>
     </param>
 
+<!--
     <param type="intArray" name="masklist">
             <description>list of mask regions to INCLUDE in stats</description>
             <value></value>
@@ -147,6 +149,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>invert mask (EXCLUDE masklist instead)</description>
             <value>False</value>
     </param>
+-->
 
     <param type="bool" name="interactive">
             <description>determines interactive masking</description>
@@ -184,6 +187,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         <default param="telescopeparam"><value type='string'></value></default>
                 </equals>
             </when>
+	    <when param="spw">
+		<notequals type="string" value="">
+                       <default param="restfreq"><value type='string'></value></default>
+                       <default param="frame"><value type='string'></value></default>
+                       <default param="doppler"><value type='string'></value></default>
+                </notequals>
+            </when>
+<!--
 	    <when param="specunit">
 		<equals value=""/>
 	        <equals value="channel"/>
@@ -195,6 +206,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	        <equals value="kHz"/>
 	        <equals value="Hz"/>
 	    </when>
+-->
 	    <when param="timeaverage">
 		<equals type="bool" value="False"/>
 		<equals type="bool" value="True">
