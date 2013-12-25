@@ -260,7 +260,10 @@ class sdtask_template(sdtask_interface):
         self.scanlist = scantb.parse_idx_selection("SCAN",self.scanno)
         self.iflist = []
         if self.spw != "":
-            self.iflist = scantb.parse_spw_selection(self.spw).keys()
+            masklist = scantb.parse_spw_selection(self.spw)
+            if len(masklist) == 0:
+                raise ValueError, "Invalid spectral window selection. Selection contains no data."
+            self.iflist = masklist.keys()
         self.pollist = scantb.parse_idx_selection("POL",self.polno)
         self.beamlist = scantb.parse_idx_selection("BEAM",self.beamno)
         
