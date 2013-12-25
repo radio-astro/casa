@@ -181,7 +181,7 @@ class sdflag2_test(unittest.TestCase):
         try:
             result = tsdflag2(infile=infile, mode=mode, spw=spw)
         except Exception, e:
-            pos = str(e).find('Selection contains no data. Not applying it.')
+            pos = str(e).find('No valid spw')
             self.assertNotEqual(pos, -1, msg='Unexpected exception was thrown: %s'%(str(e)))
 
 class sdflag2_test_timerange(unittest.TestCase):
