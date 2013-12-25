@@ -360,7 +360,7 @@ class tsdfit_test_exceptions(unittest.TestCase):
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
-            pos=str(e).find('Selection contains no data. Not applying it.')
+            pos=str(e).find('Invalid spectral window selection. Selection contains no data.')
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 
