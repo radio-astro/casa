@@ -43,6 +43,7 @@ def asap_init():
     from tsdaverage_cli import tsdaverage_cli as tsdaverage
     from tsdcal_cli import tsdcal_cli as tsdcal
     from tsdsave_cli import tsdsave_cli as tsdsave
+    from tsdfit_cli import tsdfit_cli as tsdfit
     myf['sd']=sd
     myf['sdbaseline']=sdbaseline
     myf['sdcal']=sdcal
@@ -67,3 +68,4 @@ def asap_init():
     myf['tsdaverage']=tsdaverage
     myf['tsdcal']=tsdcal
     myf['tsdsave']=tsdsave
+    myf['tsdfit']=tsdfit

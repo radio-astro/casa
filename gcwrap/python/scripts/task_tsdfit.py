@@ -19,7 +19,7 @@ class sdfit_worker(sdutil.sdtask_template):
         super(sdfit_worker,self).__init__(**kwargs)
 
     def parameter_check(self):
-        self.doguess = not ((self.fitmode.lower()=='list') and (self.invertmask))
+        self.doguess = True
 
     def initialize_scan(self):
         # load the data  without averaging
@@ -29,20 +29,19 @@ class sdfit_worker(sdutil.sdtask_template):
         self.restorer = sdutil.scantable_restore_factory(sorg,
                                                          self.infile,
                                                          self.fluxunit,
-                                                         self.specunit,
+                                                         sorg.get_unit(),
                                                          self.frame,
                                                          self.doppler,
                                                          self.restfreq)
 
         # Select scan and field
-        #sorg.set_selection(self.get_selector())
-        sorg.set_selection(self.get_selector_by_list())
+        sorg.set_selection(self.get_selector(sorg))
 
         # this is bit tricky
         # set fluxunit here instead of self.set_to_scan
         # and remove fluxunit attribute to disable additional
         # call of set_fluxunit in self.set_to_scan
-        self.scan = sdutil.set_fluxunit(sorg, self.fluxunit, self.telescopeparm, False)
+        self.scan = sdutil.set_fluxunit(sorg, self.fluxunit, self.telescopeparam, False)
         self.fluxunit_saved = self.fluxunit
         del self.fluxunit
 
@@ -57,14 +56,32 @@ class sdfit_worker(sdutil.sdtask_template):
     def execute(self):
         self.set_to_scan()
 
+        # average data
+        self.scan = sdutil.doaverage(self.scan, self.scanaverage, self.timeaverage, self.tweight, self.polaverage, self.pweight)
+
         # restore fluxunit
         self.fluxunit = self.fluxunit_saved
         del self.fluxunit_saved
 
-        self.__set_linelist()
-
-        self.__fit()
-
+        self.result = dict.fromkeys(['nfit','peak','cent','fwhm'],[])
+        self.fitparams = []
+        
+        if self.assert_no_channel_selection_in_spw(mode='result'):
+            maskline_dict = self.scan.parse_spw_selection(self.spw)
+            sel_org = self.scan.get_selection()
+            for (spw,maskline) in maskline_dict.items():
+                sel = sd.selector(sel_org)
+                sel.set_ifs(spw)
+                self.scan.set_selection(sel)
+                self.maskline = maskline
+                self.__set_linelist()
+                self.__fit()
+            self.scan.set_selection(sel_org)
+        else:
+            self.maskline = []
+            self.__set_linelist()
+            self.__fit()
+                
     def save(self):
         # Store fit
         if ( self.outfile != '' ):
@@ -78,8 +95,6 @@ class sdfit_worker(sdutil.sdtask_template):
     def __fit(self):
         # initialize fitter
         self.fitter = sd.fitter()
-        self.result = dict.fromkeys(['nfit','peak','cent','fwhm'],[])
-        self.fitparams = []
         if abs(self.plotlevel) > 0:
             self.__init_plot()
 
@@ -223,29 +238,20 @@ class sdfit_worker(sdutil.sdtask_template):
         # e.g. maskline=[[3900,4300]] for a single line
         if ( len(self.maskline) > 0 ):
             # There is a user-supplied channel mask for lines
-            if ( not self.invertmask ):
-                # Make sure this is a list-of-lists (e.g. [[1,10],[20,30]])
-                self.linelist = self.maskline if isinstance(self.maskline[0],list) \
-                                else to_list_of_list(self.maskline)
-                self.nlines = len(self.linelist)
-            self.defaultmask = self.scan.create_mask(self.maskline,invert=self.invertmask)
-        else:
-            # Use whole region
-            if self.invertmask:
-                msg='No channel is selected because invertmask=True. Exit without fittinging.'
-                raise Exception(msg)
+            # Make sure this is a list-of-lists (e.g. [[1,10],[20,30]])
+            self.linelist = self.maskline if isinstance(self.maskline[0],list) \
+                else to_list_of_list(self.maskline)
+            self.nlines = len(self.linelist)
+            self.defaultmask = self.scan.create_mask(self.maskline,invert=False)
 
         casalog.post( "Identified %d regions for fitting" % (self.nlines) )
-        if ( self.invertmask ):
-            casalog.post("No starting guesses available")
-        else:
-            casalog.post("Will use these as starting guesses")
+        casalog.post("Will use these as starting guesses")
 
     def _set_linelist_interact(self):
         # Interactive masking
         new_mask = sdutil.init_interactive_mask(self.scan,
                                                 self.maskline,
-                                                self.invertmask)
+                                                False)
         self.defaultmask = sdutil.get_interactive_mask(new_mask,
                                                        purpose='to fit lines')
         self.linelist=self.scan.get_masklist(self.defaultmask)
@@ -274,7 +280,7 @@ class sdfit_worker(sdutil.sdtask_template):
         if ( len(self.maskline) > 0 ):
             # There is a user-supplied channel mask for lines
             self.defaultmask=self.scan.create_mask(self.maskline,
-                                                   invert=self.invertmask)
+                                                   invert=False)
             
         # Use linefinder to find lines
         casalog.post( "Using linefinder" )
