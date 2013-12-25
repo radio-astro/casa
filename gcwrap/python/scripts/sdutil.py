@@ -260,7 +260,11 @@ class sdtask_template(sdtask_interface):
         self.scanlist = scantb.parse_idx_selection("SCAN",self.scanno)
         self.iflist = []
         if self.spw != "":
-            masklist = scantb.parse_spw_selection(self.spw)
+            rfreq = None if not hasattr(self, 'restfreq') else self.restfreq
+            frame = None if (not hasattr(self, 'frame') or self.frame == '') else self.frame
+            doppler = None if (not hasattr(self, 'doppler') or self.doppler == '') else self.doppler
+            masklist = scantb.parse_spw_selection(self.spw, restfreq=rfreq,
+                                                  frame=frame, doppler=doppler)
             if len(masklist) == 0:
                 raise ValueError, "Invalid spectral window selection. Selection contains no data."
             self.iflist = masklist.keys()
@@ -341,6 +345,12 @@ class sdtask_template(sdtask_interface):
                         fval = normalise_restfreq(self.restfreq)
                         casalog.post( 'Set rest frequency to %s Hz' % str(fval) )
                         self.scan.set_restfreqs(freqs=fval)
+        #elif hasattr(self, 'spw') and self.spw != '' and \
+        #         hasattr(self,'restfreq'):
+        #    if self.restfreq not in ['',[]]:
+        #        fval = normalise_restfreq(self.restfreq)
+        #        casalog.post( 'Set rest frequency to %s Hz' % str(fval) )
+        #        self.scan.set_restfreqs(freqs=fval)
 
 class sdtask_template_imaging(sdtask_interface):
     """
