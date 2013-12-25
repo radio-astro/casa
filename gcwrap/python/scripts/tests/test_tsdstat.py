@@ -59,6 +59,39 @@ class sdstat_unittest_base:
             vallist.append([chanval[schan],chanval[echan]])
         return vallist
 
+    def _convert_to_spw_string( self, chanlist, unit='', ifno=-1 ):
+        """
+        Convert a masklist and ifno to spw selection string.
+            chanlist : masklist
+            unit     : an output unit of masklist
+            ifno     : spectral window ID (-1 = all)
+        """
+        if unit.upper().startswith('CHAN'): unit = ''
+        selstring = '*'
+        if ifno > -1:
+            selstring = str(int(ifno))
+        chanrange = ''
+        if type(chanlist) not in (list, tuple, numpy.ndarray):
+            # a plain number
+            chanlist = [ [chanlist] ]
+
+        for loc_range in chanlist:
+            locstring = ''
+            if type(loc_range) not in (list, tuple, numpy.ndarray):
+                locstring = str(loc_range) + unit
+            elif len(loc_range) == 1:
+                locstring = str(loc_range[0]) + unit
+            elif len(loc_range) > 1:
+                locstring = '%s~%s' % (str(loc_range[0]), str(loc_range[1]))
+            
+            if len(locstring) > 0:
+                if len(chanrange) > 0: chanrange += ';'
+                chanrange += locstring + unit
+
+        if len(chanrange) > 0:
+            selstring += ':' + chanrange
+        return selstring
+
     def _isInAllowedRange( self, testval, refval, allowdiff=1.e-5 ):
         """
         Check if a test value is within permissive relative difference from refval.
@@ -199,8 +232,8 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
 
     #compVstats = ['max','min','mean','sum','rms','median','stddev']
     # Line channels
-    linechan0 = [[3999,4144]]
-    linechan2 = [[2951,3088]]
+    linechan0 = "3999~4144"
+    linechan2 = "2951~3088"
     #### Reference data (from ASAP r2084 + CASA r14498, Mar. 31, 2011)
     # Reference statistic values (masklist=[], invertmask=False)
     ref_allK = {'rms': [4.1249432563781738, 4.0882534980773926, 4.4454779624938965, 4.1502971649169922],
@@ -222,14 +255,14 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
     minmaxchan_all = {'max_abscissa': {'value': array([   21.,  8177.,  8186.,  8159.]), 'unit': 'channel'},
                       'min_abscissa': {'value': array([   18.,     0.,  8187.,     0.]), 'unit': 'channel'}}
 
-    minmaxfreq_all = {'max_abscissa': {'value': array([ 45.46447881,  45.32569678,  44.09989566,  44.19101657]),
-                                       'unit': 'GHz'},
-                      'min_abscissa': {'value': array([ 45.4644605 ,  45.27578247,  44.09990176,  44.14121213]),
-                                       'unit': 'GHz'}}
-    minmaxvelo_all = {'max_abscissa': {'value': array([  169.89144245,  1084.50062449,  9162.84415004,  8562.33397937]),
-                                       'unit': 'km/s'},
-                      'min_abscissa': {'value': array([  170.01212783,  1413.44873913,  9162.80392158,  8890.55798174]),
-                                       'unit': 'km/s'}}
+#     minmaxfreq_all = {'max_abscissa': {'value': array([ 45.46447881,  45.32569678,  44.09989566,  44.19101657]),
+#                                        'unit': 'GHz'},
+#                       'min_abscissa': {'value': array([ 45.4644605 ,  45.27578247,  44.09990176,  44.14121213]),
+#                                        'unit': 'GHz'}}
+#     minmaxvelo_all = {'max_abscissa': {'value': array([  169.89144245,  1084.50062449,  9162.84415004,  8562.33397937]),
+#                                        'unit': 'km/s'},
+#                       'min_abscissa': {'value': array([  170.01212783,  1413.44873913,  9162.80392158,  8890.55798174]),
+#                                        'unit': 'km/s'}}
 
     # Reference line statistic values (masklist=linechan2, invertmask=False)
     ref_line2 = {'rms': 5.0687642097473145, 'min': 3.9442729949951172,
@@ -316,64 +349,13 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
 
 
     def test04( self ):
-        """Test 4: specunit='channel' """
+        """Test 4: statistics of line """
         tid="04"
-        specunit = 'channel'
         outfile = self.outroot+tid+self.outsuff
+        spw = '2:'+ self.linechan2
 
-        currstat = tsdstat(infile=self.infile,specunit=specunit,outfile=outfile)
-        # print "Statistics out of the current run:\n",currstat
-
-        # Task sdstat returns a dictionary of statistic values
-        self.assertTrue(isinstance(currstat,dict),
-                         msg="The returned statistics are not a dictionary")
-        self._compareStats(currstat,self.ref_allK)
-        self._compareStats(currstat,self.minmaxchan_all)
-
-
-    def test05( self ):
-        """Test 5: specunit='GHz' """
-        tid="05"
-        specunit = 'GHz'
-        outfile = self.outroot+tid+self.outsuff
-
-        currstat = tsdstat(infile=self.infile,specunit=specunit,outfile=outfile)
-        # print "Statistics out of the current run:\n",currstat
-
-        # Task sdstat returns a dictionary of statistic values
-        self.assertTrue(isinstance(currstat,dict),
-                         msg="The returned statistics are not a dictionary")
-        self._compareStats(currstat,self.ref_allK)
-        self._compareStats(currstat,self.minmaxfreq_all)
-
-
-    def test06( self ):
-        """Test 6: specunit='km/s' """
-        tid="06"
-        specunit = 'km/s'
-        outfile = self.outroot+tid+self.outsuff
-
-        currstat = tsdstat(infile=self.infile,specunit=specunit,outfile=outfile)
-        # print "Statistics out of the current run:\n",currstat
-
-        # Task sdstat returns a dictionary of statistic values
-        self.assertTrue(isinstance(currstat,dict),
-                         msg="The returned statistics are not a dictionary")
-        self._compareStats(currstat,self.ref_allK)
-        self._compareStats(currstat,self.minmaxvelo_all)
-
-
-    def test07( self ):
-        """Test 7: maskllist (line) in specunit='channel' """
-        tid="07"
-        outfile = self.outroot+tid+self.outsuff
-        spw = '2'
-        specunit = 'channel'
-
-        masklist = self.linechan2
-
-        currstat = tsdstat(infile=self.infile,specunit=specunit,outfile=outfile,
-                          spw=spw,masklist=masklist)
+        currstat = tsdstat(infile=self.infile,outfile=outfile,
+                          spw=spw)
         # print "Statistics out of the current run:\n",currstat
 
         # Task sdstat returns a dictionary of statistic values
@@ -382,73 +364,15 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
         self._compareStats(currstat,self.ref_line2)
         self._compareStats(currstat,self.minmaxchan_line2)
 
-
-    def test08( self ):
-        """Test 8: maskllist (line) in specunit='GHz' """
-        tid="08"
-        outfile = self.outroot+tid+self.outsuff
-        spw = '2'
-        specunit = 'GHz'
-
-        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=int(spw))
-        currstat = tsdstat(infile=self.infile,specunit=specunit,outfile=outfile,
-                          spw=spw,masklist=masklist)
-        # print "Statistics out of the current run:\n",currstat
-
-        # Task sdstat returns a dictionary of statistic values
-        self.assertTrue(isinstance(currstat,dict),
-                         msg="The returned statistics are not a dictionary")
-        self._compareStats(currstat,self.ref_line2)
-
-
-    def test09( self ):
-        """Test 9: maskllist (line) in specunit='km/s' """
-        tid="09"
-        outfile = self.outroot+tid+self.outsuff
-        spw = '2'
-        specunit = 'km/s'
-
-        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=int(spw))
-        currstat = tsdstat(infile=self.infile,specunit=specunit,outfile=outfile,
-                          spw=spw,masklist=masklist)
-        # print "Statistics out of the current run:\n",currstat
-
-        # Task sdstat returns a dictionary of statistic values
-        self.assertTrue(isinstance(currstat,dict),
-                         msg="The returned statistics are not a dictionary")
-        self._compareStats(currstat,self.ref_line2)
-
-
-    def test10( self ):
-        """Test 10: invert = True"""
-        tid="10"
-        outfile = self.outroot+tid+self.outsuff
-        spw = '0'
-        specunit = 'channel'
-
-        masklist = self.linechan0
-        invert = True
-
-        currstat = tsdstat(infile=self.infile,specunit=specunit,outfile=outfile,
-                          spw=spw,masklist=masklist,invertmask=invert)
-        # print "Statistics out of the current run:\n",currstat
-
-        # Task sdstat returns a dictionary of statistic values
-        self.assertTrue(isinstance(currstat,dict),
-                         msg="The returned statistics are not a dictionary")
-        self._compareStats(currstat,self.ref_bl0)
-        self._compareStats(currstat,self.minmaxchan_bl0)
-
-    def test11( self ):
-        """Test1: specify format """
-        tid="11"
-        reference = self.datapath+"refstat"+tid
+    def test05( self ):
+        """Test 5: specify format """
+        tid="05"
+        reference = self.datapath+"refstat11"
         
-        specunit = 'channel'
         outfile = self.outroot+tid+self.outsuff
         format = '3.5f'
 
-        currstat = tsdstat(infile=self.infile,specunit=specunit,format=format,outfile=outfile)
+        currstat = tsdstat(infile=self.infile,format=format,outfile=outfile)
         # print "Statistics out of the current run:\n",currstat
 
         # Task sdstat returns a dictionary of statistic values
@@ -458,223 +382,223 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
         #self._compareStats(currstat,self.ref_allK)
         #self._compareStats(currstat,self.minmaxchan_all)
 
-class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
-    """
-    Unit tests for task sdstat. Test variations of restfreq parameter.
+# class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
+#     """
+#     Unit tests for task sdstat. Test variations of restfreq parameter.
 
-    The list of tests:
-    testRF01 - testRF02 --- a value (float, quantity w/ unit)
-    testRF11 - testRF13 --- single element list (int, quantity w/o unit, dictionary)
-    testRF21 - testRF23 --- single element list (float/int, quantity, dictionary)
-    """
-    spw = '0,2'
-    frf = [45.490e9, 44.075e9]
-    irf = [45490000000, 44075000000]
-    qurf = ['45490.MHz','44.075GHz']
-    qrf = [str(frf[0]), str(irf[1])]
-    drf = [{'name': "IF0 Rest", 'value': frf[0]}, \
-           {'name': "IF2 Rest", 'value': qurf[1]}]
-    badq = ['45490.km','44.075bad']
+#     The list of tests:
+#     testRF01 - testRF02 --- a value (float, quantity w/ unit)
+#     testRF11 - testRF13 --- single element list (int, quantity w/o unit, dictionary)
+#     testRF21 - testRF23 --- single element list (float/int, quantity, dictionary)
+#     """
+#     spw = '0,2'
+#     frf = [45.490e9, 44.075e9]
+#     irf = [45490000000, 44075000000]
+#     qurf = ['45490.MHz','44.075GHz']
+#     qrf = [str(frf[0]), str(irf[1])]
+#     drf = [{'name': "IF0 Rest", 'value': frf[0]}, \
+#            {'name': "IF2 Rest", 'value': qurf[1]}]
+#     badq = ['45490.km','44.075bad']
     
-    #compVstats = ['max','min','mean','sum','rms','median','stddev']
+#     #compVstats = ['max','min','mean','sum','rms','median','stddev']
 
-    # Reference line statistic values (masklist=linechan2, invertmask=False)
-    ref_allK02 = {'rms': [4.1249432563781738, 4.4454779624938965],
-                'min': [-6.5844717025756836, -92.782661437988281],
-                'max': [12.278024673461914, 60.68634033203125],
-                'median': [4.1043367385864258, 4.1507611274719238],
-                'stddev': [0.2636776864528656, 1.5120075941085815],
-                'sum': [33722.40234375, 34246.4453125],
-                'mean': [4.1165041923522949, 4.1804742813110352]}
+#     # Reference line statistic values (masklist=linechan2, invertmask=False)
+#     ref_allK02 = {'rms': [4.1249432563781738, 4.4454779624938965],
+#                 'min': [-6.5844717025756836, -92.782661437988281],
+#                 'max': [12.278024673461914, 60.68634033203125],
+#                 'median': [4.1043367385864258, 4.1507611274719238],
+#                 'stddev': [0.2636776864528656, 1.5120075941085815],
+#                 'sum': [33722.40234375, 34246.4453125],
+#                 'mean': [4.1165041923522949, 4.1804742813110352]}
 
-    minmaxvrf0_all0 = {'max_abscissa': {'value': 168.19211024624954, 'unit': 'km/s'}, 
-                        'min_abscissa': {'value': 168.3127963097034, 'unit': 'km/s'}}
-    minmaxvrf2_all0 = {'max_abscissa': {'value': -9451.0554503663261, 'unit': 'km/s'}, 
-                        'min_abscissa': {'value': -9450.9308897531319, 'unit': 'km/s'}}
-    minmaxvrf2_all2 = {'max_abscissa': {'value': -169.33704197623328, 'unit': 'km/s'}, 
-                        'min_abscissa': {'value': -169.37856218060918, 'unit': 'km/s'}}
-    #minmaxchan_all = {'max_abscissa': {'value': array([   21.,  8186.]), 'unit': 'channel'},
-    #                  'min_abscissa': {'value': array([   18.,  8187.]), 'unit': 'channel'}}    
-    ### Actual test scripts ###
-    def setUp( self ):
-        if os.path.exists(self.infile):
-            shutil.rmtree(self.infile)
-        shutil.copytree(self.datapath+self.infile, self.infile)
+#     minmaxvrf0_all0 = {'max_abscissa': {'value': 168.19211024624954, 'unit': 'km/s'}, 
+#                         'min_abscissa': {'value': 168.3127963097034, 'unit': 'km/s'}}
+#     minmaxvrf2_all0 = {'max_abscissa': {'value': -9451.0554503663261, 'unit': 'km/s'}, 
+#                         'min_abscissa': {'value': -9450.9308897531319, 'unit': 'km/s'}}
+#     minmaxvrf2_all2 = {'max_abscissa': {'value': -169.33704197623328, 'unit': 'km/s'}, 
+#                         'min_abscissa': {'value': -169.37856218060918, 'unit': 'km/s'}}
+#     #minmaxchan_all = {'max_abscissa': {'value': array([   21.,  8186.]), 'unit': 'channel'},
+#     #                  'min_abscissa': {'value': array([   18.,  8187.]), 'unit': 'channel'}}    
+#     ### Actual test scripts ###
+#     def setUp( self ):
+#         if os.path.exists(self.infile):
+#             shutil.rmtree(self.infile)
+#         shutil.copytree(self.datapath+self.infile, self.infile)
 
-        default(tsdstat)
+#         default(tsdstat)
 
-    def tearDown( self ):
-        if (os.path.exists(self.infile)):
-            shutil.rmtree(self.infile)
+#     def tearDown( self ):
+#         if (os.path.exists(self.infile)):
+#             shutil.rmtree(self.infile)
 
-    # Tests
-    def testRF01( self ):
-        """Test RF01: restfreq (a float value)"""
-        tid = "RF01"
-        infile = self.infile
-        outfile = self.outroot+tid+self.outsuff
-        spw = self.spw
-        specunit = 'km/s'
-        restfreq = self.frf[1]
+#     # Tests
+#     def testRF01( self ):
+#         """Test RF01: restfreq (a float value)"""
+#         tid = "RF01"
+#         infile = self.infile
+#         outfile = self.outroot+tid+self.outsuff
+#         spw = self.spw
+#         specunit = 'km/s'
+#         restfreq = self.frf[1]
         
-        print "Setting restfreq = %s" % (str(restfreq))
-        currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
-                          specunit=specunit,restfreq=restfreq)
+#         print "Setting restfreq = %s" % (str(restfreq))
+#         currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
+#                           specunit=specunit,restfreq=restfreq)
 
-        # Task sdstat returns a dictionary of statistic values
-        self.assertTrue(isinstance(currstat,dict),
-                         msg="The returned statistics are not a dictionary")
-        self._compareStats(currstat,self.ref_allK02)
-        # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
-        self._compareStats(self.minmaxvrf2_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
-        self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
+#         # Task sdstat returns a dictionary of statistic values
+#         self.assertTrue(isinstance(currstat,dict),
+#                          msg="The returned statistics are not a dictionary")
+#         self._compareStats(currstat,self.ref_allK02)
+#         # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
+#         self._compareStats(self.minmaxvrf2_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
+#         self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
 
-    def testRF02( self ):
-        """Test RF02: restfreq (a quantity w/ unit)"""
-        tid = "RF02"
-        infile = self.infile
-        outfile = self.outroot+tid+self.outsuff
-        spw = self.spw
-        specunit = 'km/s'
-        restfreq = self.qurf[1]
+#     def testRF02( self ):
+#         """Test RF02: restfreq (a quantity w/ unit)"""
+#         tid = "RF02"
+#         infile = self.infile
+#         outfile = self.outroot+tid+self.outsuff
+#         spw = self.spw
+#         specunit = 'km/s'
+#         restfreq = self.qurf[1]
 
-        print "Setting restfreq = %s" % (str(restfreq))
-        currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
-                          specunit=specunit,restfreq=restfreq)
+#         print "Setting restfreq = %s" % (str(restfreq))
+#         currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
+#                           specunit=specunit,restfreq=restfreq)
 
-        # Task sdstat returns a dictionary of statistic values
-        self.assertTrue(isinstance(currstat,dict),
-                         msg="The returned statistics are not a dictionary")
-        self._compareStats(currstat,self.ref_allK02)
-        # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
-        self._compareStats(self.minmaxvrf2_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
-        self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
+#         # Task sdstat returns a dictionary of statistic values
+#         self.assertTrue(isinstance(currstat,dict),
+#                          msg="The returned statistics are not a dictionary")
+#         self._compareStats(currstat,self.ref_allK02)
+#         # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
+#         self._compareStats(self.minmaxvrf2_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
+#         self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
 
-    def testRF11( self ):
-        """Test RF11: restfreq (single element list of int)"""
-        tid = "RF11"
-        infile = self.infile
-        outfile = self.outroot+tid+self.outsuff
-        spw = self.spw
-        specunit = 'km/s'
-        restfreq = [ self.irf[1] ]
+#     def testRF11( self ):
+#         """Test RF11: restfreq (single element list of int)"""
+#         tid = "RF11"
+#         infile = self.infile
+#         outfile = self.outroot+tid+self.outsuff
+#         spw = self.spw
+#         specunit = 'km/s'
+#         restfreq = [ self.irf[1] ]
 
-        print "Setting restfreq = %s" % (str(restfreq))
-        currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
-                          specunit=specunit,restfreq=restfreq)
+#         print "Setting restfreq = %s" % (str(restfreq))
+#         currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
+#                           specunit=specunit,restfreq=restfreq)
 
-        # Task sdstat returns a dictionary of statistic values
-        self.assertTrue(isinstance(currstat,dict),
-                         msg="The returned statistics are not a dictionary")
-        self._compareStats(currstat,self.ref_allK02)
-        # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
-        self._compareStats(self.minmaxvrf2_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
-        self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
+#         # Task sdstat returns a dictionary of statistic values
+#         self.assertTrue(isinstance(currstat,dict),
+#                          msg="The returned statistics are not a dictionary")
+#         self._compareStats(currstat,self.ref_allK02)
+#         # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
+#         self._compareStats(self.minmaxvrf2_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
+#         self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
 
-    def testRF12( self ):
-        """Test RF12: restfreq (single element list of quantity w/o unit)"""
-        tid = "RF12"
-        infile = self.infile
-        outfile = self.outroot+tid+self.outsuff
-        spw = self.spw
-        specunit = 'km/s'
-        restfreq = [ self.qrf[1] ]
+#     def testRF12( self ):
+#         """Test RF12: restfreq (single element list of quantity w/o unit)"""
+#         tid = "RF12"
+#         infile = self.infile
+#         outfile = self.outroot+tid+self.outsuff
+#         spw = self.spw
+#         specunit = 'km/s'
+#         restfreq = [ self.qrf[1] ]
 
-        print "Setting restfreq = %s" % (str(restfreq))
-        currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
-                          specunit=specunit,restfreq=restfreq)
+#         print "Setting restfreq = %s" % (str(restfreq))
+#         currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
+#                           specunit=specunit,restfreq=restfreq)
 
-        # Task sdstat returns a dictionary of statistic values
-        self.assertTrue(isinstance(currstat,dict),
-                         msg="The returned statistics are not a dictionary")
-        self._compareStats(currstat,self.ref_allK02)
-        # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
-        self._compareStats(self.minmaxvrf2_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
-        self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
+#         # Task sdstat returns a dictionary of statistic values
+#         self.assertTrue(isinstance(currstat,dict),
+#                          msg="The returned statistics are not a dictionary")
+#         self._compareStats(currstat,self.ref_allK02)
+#         # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
+#         self._compareStats(self.minmaxvrf2_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
+#         self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
 
-    def testRF13( self ):
-        """Test RF13: restfreq (single element list of dictionary)"""
-        tid = "RF13"
-        infile = self.infile
-        outfile = self.outroot+tid+self.outsuff
-        spw = self.spw
-        specunit = 'km/s'
-        restfreq = [ self.drf[1] ]
+#     def testRF13( self ):
+#         """Test RF13: restfreq (single element list of dictionary)"""
+#         tid = "RF13"
+#         infile = self.infile
+#         outfile = self.outroot+tid+self.outsuff
+#         spw = self.spw
+#         specunit = 'km/s'
+#         restfreq = [ self.drf[1] ]
 
-        print "Setting restfreq = %s" % (str(restfreq))
-        currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
-                          specunit=specunit,restfreq=restfreq)
+#         print "Setting restfreq = %s" % (str(restfreq))
+#         currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
+#                           specunit=specunit,restfreq=restfreq)
 
-        # Task sdstat returns a dictionary of statistic values
-        self.assertTrue(isinstance(currstat,dict),
-                         msg="The returned statistics are not a dictionary")
-        self._compareStats(currstat,self.ref_allK02)
-        # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
-        self._compareStats(self.minmaxvrf2_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
-        self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
+#         # Task sdstat returns a dictionary of statistic values
+#         self.assertTrue(isinstance(currstat,dict),
+#                          msg="The returned statistics are not a dictionary")
+#         self._compareStats(currstat,self.ref_allK02)
+#         # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
+#         self._compareStats(self.minmaxvrf2_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
+#         self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
 
-    def testRF21( self ):
-        """Test RF21: restfreq (a list of float & int)"""
-        tid = "RF21"
-        infile = self.infile
-        outfile = self.outroot+tid+self.outsuff
-        spw = self.spw
-        specunit = 'km/s'
-        restfreq = [ self.frf[0], self.irf[1] ]
+#     def testRF21( self ):
+#         """Test RF21: restfreq (a list of float & int)"""
+#         tid = "RF21"
+#         infile = self.infile
+#         outfile = self.outroot+tid+self.outsuff
+#         spw = self.spw
+#         specunit = 'km/s'
+#         restfreq = [ self.frf[0], self.irf[1] ]
 
-        print "Setting restfreq = %s" % (str(restfreq))
-        currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
-                          specunit=specunit,restfreq=restfreq)
+#         print "Setting restfreq = %s" % (str(restfreq))
+#         currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
+#                           specunit=specunit,restfreq=restfreq)
 
-        # Task sdstat returns a dictionary of statistic values
-        self.assertTrue(isinstance(currstat,dict),
-                         msg="The returned statistics are not a dictionary")
-        self._compareStats(currstat,self.ref_allK02)
-        # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
-        self._compareStats(self.minmaxvrf0_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
-        self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
+#         # Task sdstat returns a dictionary of statistic values
+#         self.assertTrue(isinstance(currstat,dict),
+#                          msg="The returned statistics are not a dictionary")
+#         self._compareStats(currstat,self.ref_allK02)
+#         # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
+#         self._compareStats(self.minmaxvrf0_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
+#         self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
 
-    def testRF22( self ):
-        """Test RF22: restfreq (a list of quantity w/ and w/o unit)"""
-        tid = "RF22"
-        infile = self.infile
-        outfile = self.outroot+tid+self.outsuff
-        spw = self.spw
-        specunit = 'km/s'
-        restfreq = [ self.qurf[0], self.qrf[1] ]
+#     def testRF22( self ):
+#         """Test RF22: restfreq (a list of quantity w/ and w/o unit)"""
+#         tid = "RF22"
+#         infile = self.infile
+#         outfile = self.outroot+tid+self.outsuff
+#         spw = self.spw
+#         specunit = 'km/s'
+#         restfreq = [ self.qurf[0], self.qrf[1] ]
 
-        print "Setting restfreq = %s" % (str(restfreq))
-        currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
-                          specunit=specunit,restfreq=restfreq)
+#         print "Setting restfreq = %s" % (str(restfreq))
+#         currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
+#                           specunit=specunit,restfreq=restfreq)
 
-        # Task sdstat returns a dictionary of statistic values
-        self.assertTrue(isinstance(currstat,dict),
-                         msg="The returned statistics are not a dictionary")
-        self._compareStats(currstat,self.ref_allK02)
-        # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
-        self._compareStats(self.minmaxvrf0_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
-        self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
+#         # Task sdstat returns a dictionary of statistic values
+#         self.assertTrue(isinstance(currstat,dict),
+#                          msg="The returned statistics are not a dictionary")
+#         self._compareStats(currstat,self.ref_allK02)
+#         # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
+#         self._compareStats(self.minmaxvrf0_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
+#         self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
 
-    def testRF23( self ):
-        """Test RF23: restfreq (a list of dictionary)"""
-        tid = "RF23"
-        infile = self.infile
-        outfile = self.outroot+tid+self.outsuff
-        spw = self.spw
-        specunit = 'km/s'
-        restfreq = [ self.drf[1], self.drf[0] ]
+#     def testRF23( self ):
+#         """Test RF23: restfreq (a list of dictionary)"""
+#         tid = "RF23"
+#         infile = self.infile
+#         outfile = self.outroot+tid+self.outsuff
+#         spw = self.spw
+#         specunit = 'km/s'
+#         restfreq = [ self.drf[1], self.drf[0] ]
 
-        print "Setting restfreq = %s" % (str(restfreq))
-        currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
-                          specunit=specunit,restfreq=restfreq)
+#         print "Setting restfreq = %s" % (str(restfreq))
+#         currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
+#                           specunit=specunit,restfreq=restfreq)
 
-        # Task sdstat returns a dictionary of statistic values
-        self.assertTrue(isinstance(currstat,dict),
-                         msg="The returned statistics are not a dictionary")
-        self._compareStats(currstat,self.ref_allK02)
-        # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
-        self._compareStats(self.minmaxvrf2_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
-        self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
+#         # Task sdstat returns a dictionary of statistic values
+#         self.assertTrue(isinstance(currstat,dict),
+#                          msg="The returned statistics are not a dictionary")
+#         self._compareStats(currstat,self.ref_allK02)
+#         # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
+#         self._compareStats(self.minmaxvrf2_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
+#         self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
 
 
 
@@ -693,7 +617,7 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
     Note on handlings of disk storage:
        Task script restores unit and frame information.
     """
-    linechan2 = [[2951,3088]]
+    linechan2 = [ [2951,3088] ]
     # Reference line statistic values (masklist=linechan2, invertmask=False)
     ref_line2 = {'rms': 5.0687642097473145, 'min': 3.9442729949951172,
                  'max': 6.1298322677612305, 'median': 4.9097409248352051,
@@ -725,28 +649,31 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         """Storage Test MT: storage='memory' and insitu=T"""
         tid="MT"
         outfile = self.outroot+tid+self.outsuff
-        spw = '2'
-        #specunit = 'GHz'
-        specunit = 'km/s'
+        ifno = 2
+        specunit = 'GHz'
+        #specunit = 'km/s'
         restfreq = [44.075e9]
 
         sd.rcParams['scantable.storage'] = 'memory'
-        initstat = tsdstat(infile=self.infile,specunit='',outfile=outfile+'.init',
-                          spw=spw,masklist=self.linechan2)
-        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=int(spw),
-                                          restfreq=restfreq[0])
+        spw = self._convert_to_spw_string(self.linechan2,unit='',ifno=ifno)
+        initstat = tsdstat(infile=self.infile,outfile=outfile+'.init',
+                          spw=spw)
+        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,
+                                          spw=ifno,restfreq=restfreq[0])
         sd.rcParams['scantable.storage'] = 'memory'
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
-        currstat = tsdstat(infile=self.infile,specunit=specunit,outfile=outfile,
-                          spw=spw,masklist=masklist,restfreq=restfreq)
+        spw = self._convert_to_spw_string(masklist,unit=specunit,ifno=ifno)
+        currstat = tsdstat(infile=self.infile,outfile=outfile,
+                          spw=spw,restfreq=restfreq)
         # print "Statistics out of the current run:\n",currstat
         
         sd.rcParams['scantable.storage'] = 'memory'
-        newinstat = tsdstat(infile=self.infile,specunit='',outfile=outfile+'.newin',
-                          spw=spw,masklist=self.linechan2)
+        spw = self._convert_to_spw_string(self.linechan2, unit='',ifno=ifno)
+        newinstat = tsdstat(infile=self.infile,outfile=outfile+'.newin',
+                          spw=spw)
 
         # Test input data
         compstats = self.ref_line2.keys()
@@ -760,35 +687,38 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         print "Testing OUTPUT statistics"
         self._compareStats(currstat,self.ref_line2)
         print "Testing OUTPUT Quantums"
-        self._compareStats(currstat,self.minmaxvrf_line2)
+        self._compareStats(currstat,self.minmaxchan_line2)
 
     def testMF( self ):
         """Storage Test MF: storage='memory' and insitu=F"""
         tid="MF"
         outfile = self.outroot+tid+self.outsuff
-        spw = '2'
-        #specunit = 'GHz'
-        specunit = 'km/s'
+        ifno = 2
+        specunit = 'GHz'
+        #specunit = 'km/s'
         restfreq = [44.075e9]
 
         sd.rcParams['scantable.storage'] = 'memory'
-        initstat = tsdstat(infile=self.infile,specunit='',outfile=outfile+'.init',
-                          spw=spw,masklist=self.linechan2)
-        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=int(spw),
-                                          restfreq=restfreq[0])
+        spw = self._convert_to_spw_string(self.linechan2,unit='',ifno=ifno)
+        initstat = tsdstat(infile=self.infile,outfile=outfile+'.init',
+                          spw=spw)
+        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,
+                                          spw=ifno,restfreq=restfreq[0])
         
         sd.rcParams['scantable.storage'] = 'memory'
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
-        currstat = tsdstat(infile=self.infile,specunit=specunit,outfile=outfile,
-                          spw=spw,masklist=masklist,restfreq=restfreq)
+        spw = self._convert_to_spw_string(masklist,unit=specunit,ifno=ifno)
+        currstat = tsdstat(infile=self.infile,outfile=outfile,
+                          spw=spw,restfreq=restfreq)
         # print "Statistics out of the current run:\n",currstat
         
         sd.rcParams['scantable.storage'] = 'memory'
-        newinstat = tsdstat(infile=self.infile,specunit='',outfile=outfile+'.newin',
-                          spw=spw,masklist=self.linechan2)
+        spw = self._convert_to_spw_string(self.linechan2,unit='',ifno=ifno)
+        newinstat = tsdstat(infile=self.infile,outfile=outfile+'.newin',
+                          spw=spw)
 
         # Test input data
         compstats = self.ref_line2.keys()
@@ -802,35 +732,38 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         print "Testing OUTPUT statistics"
         self._compareStats(currstat,self.ref_line2)
         print "Testing OUTPUT Quantums"
-        self._compareStats(currstat,self.minmaxvrf_line2)
+        self._compareStats(currstat,self.minmaxchan_line2)
 
     def testDT( self ):
         """Storage Test DT: storage='disk' and insitu=T"""
         tid="DT"
         outfile = self.outroot+tid+self.outsuff
-        spw = '2'
-        #specunit = 'GHz'
-        specunit = 'km/s'
+        ifno = 2
+        specunit = 'GHz'
+        #specunit = 'km/s'
         restfreq = [44.075e9]
 
         sd.rcParams['scantable.storage'] = 'memory'
-        initstat = tsdstat(infile=self.infile,specunit='',outfile=outfile+'.init',
-                          spw=spw,masklist=self.linechan2)
-        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=int(spw),
-                                          restfreq=restfreq[0])
+        spw = self._convert_to_spw_string(self.linechan2,unit='',ifno=ifno)
+        initstat = tsdstat(infile=self.infile,outfile=outfile+'.init',
+                          spw=spw)
+        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,
+                                          spw=ifno,restfreq=restfreq[0])
         
         sd.rcParams['scantable.storage'] = 'disk'
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
-        currstat = tsdstat(infile=self.infile,specunit=specunit,outfile=outfile,
-                          spw=spw,masklist=masklist,restfreq=restfreq)
+        spw = self._convert_to_spw_string(masklist,unit=specunit,ifno=ifno)
+        currstat = tsdstat(infile=self.infile,outfile=outfile,
+                          spw=spw,restfreq=restfreq)
         # print "Statistics out of the current run:\n",currstat
         
         sd.rcParams['scantable.storage'] = 'memory'
-        newinstat = tsdstat(infile=self.infile,specunit='',outfile=outfile+'.newin',
-                          spw=spw,masklist=self.linechan2)
+        spw = self._convert_to_spw_string(self.linechan2,unit='',ifno=ifno)
+        newinstat = tsdstat(infile=self.infile,outfile=outfile+'.newin',
+                          spw=spw)
 
         # Test input data
         compstats = self.ref_line2.keys()
@@ -844,35 +777,37 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         print "Testing OUTPUT statistics"
         self._compareStats(currstat,self.ref_line2)
         print "Testing OUTPUT Quantums"
-        self._compareStats(currstat,self.minmaxvrf_line2)
+        self._compareStats(currstat,self.minmaxchan_line2)
 
     def testDF( self ):
         """Storage Test DF: storage='disk' and insitu=F"""
         tid="DF"
         outfile = self.outroot+tid+self.outsuff
-        spw = '2'
-        #specunit = 'GHz'
-        specunit = 'km/s'
+        ifno = 2
+        specunit = 'GHz'
+        #specunit = 'km/s'
         restfreq = [44.075e9]
 
         sd.rcParams['scantable.storage'] = 'memory'
-        initstat = tsdstat(infile=self.infile,specunit='',outfile=outfile+'.init',
-                          spw=spw,masklist=self.linechan2)
-        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,spw=int(spw),
-                                          restfreq=restfreq[0])
+        spw = self._convert_to_spw_string(self.linechan2,unit='',ifno=ifno)
+        initstat = tsdstat(infile=self.infile,outfile=outfile+'.init',
+                          spw=spw)
+        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,
+                                          spw=ifno,restfreq=restfreq[0])
         
         sd.rcParams['scantable.storage'] = 'disk'
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-
-        currstat = tsdstat(infile=self.infile,specunit=specunit,outfile=outfile,
-                          spw=spw,masklist=masklist,restfreq=restfreq)
+        spw = self._convert_to_spw_string(masklist,unit=specunit,ifno=ifno)
+        currstat = tsdstat(infile=self.infile,outfile=outfile,
+                          spw=spw,restfreq=restfreq)
         # print "Statistics out of the current run:\n",currstat
         
         sd.rcParams['scantable.storage'] = 'memory'
-        newinstat = tsdstat(infile=self.infile,specunit='',outfile=outfile+'.newin',
-                          spw=spw,masklist=self.linechan2)
+        spw = self._convert_to_spw_string(self.linechan2,unit='',ifno=ifno)
+        newinstat = tsdstat(infile=self.infile,outfile=outfile+'.newin',
+                          spw=spw)
 
         # Test input data
         compstats = self.ref_line2.keys()
@@ -886,7 +821,7 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         print "Testing OUTPUT statistics"
         self._compareStats(currstat,self.ref_line2)
         print "Testing OUTPUT Quantums"
-        self._compareStats(currstat,self.minmaxvrf_line2)
+        self._compareStats(currstat,self.minmaxchan_line2)
 
 class sdstat_exceptions( sdstat_unittest_base, unittest.TestCase ):
     """
@@ -917,10 +852,10 @@ class sdstat_exceptions( sdstat_unittest_base, unittest.TestCase ):
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
-            pos=str(e).find('Selection contains no data. Not applying it.')
+            pos=str(e).find('No valid spw')
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 
 def suite():
-    return [sdstat_basicTest, sdstat_restfreqTest, sdstat_storageTest,
+    return [sdstat_basicTest, sdstat_storageTest, #sdstat_restfreqTest, 
             sdstat_exceptions]

@@ -80,12 +80,25 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="frame" subparam="true">
-            <description>frequency reference frame, e.g. LSRK (''=current)</description>
+            <shortdescription>frequency reference frame [\'lsrk\'|\'lsrd\'|\'bary\'|\'geo\'|\'topo\'|\'galacto\'|\'lgroup\'|\'cmb\'] (\'\'=current frame) </shortdescription>
+            <description>frequency reference frame (\'\'=current)</description>
             <value></value>
+            <allowed kind="enum">
+                    <value>lsrk</value>
+                    <value>lsrd</value>
+                    <value>bary</value>
+                    <value>geo</value>
+                    <value>topo</value>
+                    <value>galacto</value>
+                    <value>lgroup</value>
+                    <value>cmb</value>
+                    <value></value>
+           </allowed>
     </param>
 
     <param type="string" name="doppler" subparam="true">
-            <description>doppler convention, e.g. RADIO (''=current)</description>
+	    <shortdescription>doppler convention [\'radio\'|\'optical\'|\'z\'|\'beta\'|\'gamma\'](\'\'=current)</shortdescription>
+	    <description>doppler convention (\'\'=current)</description>
             <value></value>
     </param>
 

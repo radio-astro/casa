@@ -46,7 +46,7 @@ def asap_init():
     from tsdfit_cli import tsdfit_cli as tsdfit
     from tsdflag2_cli import tsdflag2_cli as tsdflag2
     from tsdsave_cli import tsdsave_cli as tsdsave
-#    from tsdstat_cli import tsdstat_cli as tsdstat
+    from tsdstat_cli import tsdstat_cli as tsdstat
     myf['sd']=sd
     myf['sdbaseline']=sdbaseline
     myf['sdcal']=sdcal
@@ -74,4 +74,4 @@ def asap_init():
     myf['tsdfit']=tsdfit
     myf['tsdflag2']=tsdflag2
     myf['tsdsave']=tsdsave
-#    myf['tsdstat']=tsdstat
+    myf['tsdstat']=tsdstat

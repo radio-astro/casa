@@ -35,9 +35,6 @@ class sdstat_worker(sdutil.sdtask_template):
         #load the data without averaging
         sorg = sd.scantable(self.infile,average=self.scanaverage,antenna=self.antenna)
 
-        # scantable selection
-        sorg.set_selection(self.get_selector(sorg))
-
         # collect data to restore
         self.restorer = sdutil.scantable_restore_factory(sorg,
                                                          self.infile,
@@ -47,6 +44,9 @@ class sdstat_worker(sdutil.sdtask_template):
                                                          self.doppler,
                                                          self.restfreq)
         
+        # scantable selection
+        sorg.set_selection(self.get_selector(sorg))
+
         # this is bit tricky
         # set fluxunit here instead of self.set_to_scan
         # and remove fluxunit attribute to disable additional
@@ -86,6 +86,10 @@ class sdstat_worker(sdutil.sdtask_template):
 #             casalog.post( 'Note the same mask(s) are applied to all IFs based on CHANNELS.', priority='WARN' )
 #             casalog.post( 'Baseline ranges may be incorrect for all but IF=%d.\n' % (self.scan.getif(0)), priority='WARN' )
 
+        # backup spec unit
+        unit_org = self.scan.get_unit()
+        self.scan.set_unit('channel')
+        
         basesel = self.scan.get_selection()
         maskdict = {-1: []}
         if self.spw != '' and self.spw.strip() != '*':
@@ -117,6 +121,8 @@ class sdstat_worker(sdutil.sdtask_template):
             # reset selection
             if ifno > -1: self.scan.set_selection(basesel)
 
+        # restore spec unit
+        self.scan.set_unit(unit_org)
         # reshape statsdict for return
         for k in ['min','max']:
             self.result['%s_abscissa'%(k)] = qa.quantity(self.result.pop('%s_abc'%(k)),self.xunit)
