@@ -281,7 +281,8 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
         try:
             result = tsdbaseline(infile=infile, outfile=outfile, spw=spw, maskmode=mode)
         except Exception, e:
-            pos = str(e).find('Invalid spectral window selection. Selection contains no data.')
+            #pos = str(e).find('Invalid spectral window selection. Selection contains no data.')
+            pos = str(e).find('No valid spw.')
             self.assertNotEqual(pos, -1, msg='Unexpected exception was thrown: %s'%(str(e)))
 
 
