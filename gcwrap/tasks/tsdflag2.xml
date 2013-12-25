@@ -16,12 +16,51 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <description>
 ASAP SD spectral/row flagging task (based on the ALMATST5 recommendations):
 
-This task keeps all records in input dataset. Data selection parameters
-are used for selecting data to modify flag information.
+Task sdflag2 performs either interactive or non-interactive channel/row 
+based flagging on spectra. 
+Currently, there are three ways of non-interactive flagging available: 
+(1) channel or row based flagging by selecting spectra by field,
+    lists of scan numbers, IF numbers, and polarization idices in
+    mode='manual',
+(2) channel based flagging by specifying a range of spectral values in
+    mode='clip', and 
+(3) row based flagging by specifying a list of row numbers in 
+    mode='rowid'. Note this is an EXPERT mode since it might not be
+    straight forward for general users to select data by row IDs in
+    scantable.
+
+In mode='manual', the channel based flagging are invoked when spw
+parameter contains channel range selection. Otherwise, the whole
+channels are flagged for the selected spectra. Note channel range
+selection by spw parameter has effect only in mode='manual'.
+
+Interactive flagging is available when mode='interactive'. 
+The available ways of interactive flagging include: 
+(1) row based flagging by selecting 'panel' and (2) channel
+based flagging by selecting 'region's of channels on Flag plotter. 
+See the cookbook for details of how to select channel regions and spectra
+on the plotter.
+
+NOTE the task sdflag2 only modifies flag information, FLAGROW and FLAGTRA, 
+in the input scantable. This task keeps all records in input dataset. 
+Data selection parameters are used for selecting data to modify flag
+information.
 This behavior differs from the traditional flagging task, sdflag, in which
 selection parameters are interpreted as filtering parameters of which data
 to output.
 
+If plotlevel&gt;=1, the task asks you if you really apply the 
+flags before it is actually written to the data with a plot 
+indicating flagged regions.
+
+WARNING for overwrite option:
+Be sure 'outform' is the same as data format of input file when you
+overwrite it. The default value of the option 'overwrite'
+is True in this task, thereby the current dataset (infile) is 
+overwritten unless a different file name is set to outfile. 
+There is a known issue in overwriting infile. If 'outform' differs to the
+data format of infile, the data is overwritten with the new data format 
+(specified by 'outform') and the data in the original format will be lost.
 
 </description>
 
@@ -37,60 +76,6 @@ to output.
             <any type="variant" limittype="string int"/>
             <value type="int">0</value>
     </param> 
-
-<!--
-    <param type="string" name="specunit">
-	<shortdescription>units for spectral axis [\'channel\'|\'km/s\'|\'GHz\'] (\'\'=channel)</shortdescription>
-        <description>units for spectral axis</description>
-	<value></value>
-	<allowed kind="enum">
-	    <value></value>
-	    <value>channel</value>
-	    <value>km/s</value>
-	    <value>GHz</value>
-	    <value>MHz</value>
-	    <value>kHz</value>
-	    <value>Hz</value>
-        </allowed>
-    </param>
--->
-
-    <param type="any" name="restfreq">
-        <description>rest frequency (default unit: Hz)</description>
-        <any type="variant" limittype="double int string doubleArray intArray stringArray dictArray" />
-        <value type="string"></value>
-    </param>
-
-    <param type="string" name="frame">
-            <shortdescription>frequency reference frame [\'lsrk\'|\'lsrd\'|\'bary\'|\'geo\'|\'topo\'|\'galacto\'|\'lgroup\'|\'cmb\'] (\'\'=current frame) </shortdescription>
-	    <description>frequency reference frame (\'\'=current)</description>
-	    <value></value>
-            <allowed kind="enum">
-                    <value>lsrk</value>
-                    <value>lsrd</value>
-                    <value>bary</value>
-                    <value>geo</value>
-                    <value>topo</value>
-                    <value>galacto</value>
-                    <value>lgroup</value>
-                    <value>cmb</value>
-                    <value></value>
-           </allowed>
-    </param>
-
-    <param type="string" name="doppler">
-	    <shortdescription>doppler convention [\'radio\'|\'optical\'|\'z\'|\'beta\'|\'gamma\'](\'\'=current)</shortdescription>
-	    <description>doppler convention (\'\'=current)</description>
-	    <value></value>
-            <allowed kind="enum">
-                    <value>radio</value>
-                    <value>optical</value>
-                    <value>z</value>
-                    <value>beta</value>
-                    <value>gamma</value>
-                    <value></value>
-           </allowed>
-    </param>
 
     <param type="string" name="mode">
 	    <shortdescription>mode of data selection and flag operation [\'manual\'|\'clip\'|\'interactive\'|\'rowid\'(expert)]</shortdescription>
@@ -114,38 +99,77 @@ to output.
 <!-- Common sub-parameters for ALL modes but 'rowid'-->
 
     <param type="string" name="field" subparam="true">
-	    <description>selection string for selecting by source name (e.g., \'FLS3a*\')</description>
+            <description>Select field by ID(s) or name(s) (e.g. \'3C2*\')</description>
 	    <value></value>
     </param>
 
     <param type="string" name="spw" subparam="true">
-	    <shortdescription>list of IF id numbers to select (e.g. [0,1])</shortdescription>
+            <shortdescription>Select data by IF ids (spectral window) (e.g. \'3,5,7\'). Note channel range selection by spw is supported only in mode=\'manual\'</shortdescription>
+	    <description>Select data by IF ids (spectral windows) (\'\' = all). Note channel range selection by spw is supported only in mode=\'manual\'</description>
 	    <value></value>
     </param>
 
     <param type="string" name="timerange" subparam="true">
-	    <description>Time range: \'\' ==> all,timerange=\'09:14:0~09:54:0\'</description>
+            <shortdescription>Select data by timerange (e.g.\'09:14:0~09:54:0\')</shortdescription>
+	    <description>Select data by timerange (\'\' = all)</description>
 	    <value></value>
     </param>
 
     <param type="string" name="scan" subparam="true">
-	    <description>list of scan numbers to process (e.g. [1,2,3,4])</description>
+	    <shortdescription>Select data by scan numbers (e.g. \'21~23\')</shortdescription>
+            <description>Select data by scan numbers (\'\' = all)</description>
 	    <value></value>
     </param>
 
     <param type="string" name="pol" subparam="true">
-	    <description>list of polarization by ids or names to select (e.g. [0,1])</description>
-            <any type="variant" limittype="intArray stringArray"/>
-	    <value type="intArray"></value>
+            <shortdescription>Select data by polarization ids (e.g.\'0,1\')</shortdescription>
+            <description>Select data by polarization ids (\'\' = all)</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="beam" subparam="true">
+            <shortdescription>Select data by beam ids (e.g.\'0,1\')</shortdescription>
+            <description>Select data by beam ids (\'\' = all)</description>
+            <value></value>
     </param>
 
 <!-- For mode='manual' -->
-<!--
-    <param type="intArray" name="maskflag" subparam="true">
-            <description>list of mask regions to flag/unflag (e.g., [[0,500],[1000,1500]])</description>
-            <value></value>
+    <param type="any" name="restfreq" subparam="true">
+        <description>rest frequency (default unit: Hz). Effective only when spw selection is in velocity unit.</description>
+        <any type="variant" limittype="double int string doubleArray intArray stringArray dictArray" />
+        <value type="string"></value>
     </param>
--->
+
+    <param type="string" name="frame" subparam="true">
+            <shortdescription>frequency reference frame [\'lsrk\'|\'lsrd\'|\'bary\'|\'geo\'|\'topo\'|\'galacto\'|\'lgroup\'|\'cmb\'] (\'\'=current frame)  Effective only when spw selection is in velocity unit.</shortdescription>
+	    <description>frequency reference frame (\'\'=current) Effective only when spw selection is in velocity or frequency unit.</description>
+	    <value></value>
+            <allowed kind="enum">
+                    <value>lsrk</value>
+                    <value>lsrd</value>
+                    <value>bary</value>
+                    <value>geo</value>
+                    <value>topo</value>
+                    <value>galacto</value>
+                    <value>lgroup</value>
+                    <value>cmb</value>
+                    <value></value>
+           </allowed>
+    </param>
+
+    <param type="string" name="doppler" subparam="true">
+	    <shortdescription>doppler convention [\'radio\'|\'optical\'|\'z\'|\'beta\'|\'gamma\'] (\'\'=current).  Effective only when spw selection is in velocity unit.</shortdescription>
+	    <description>doppler convention (\'\'=current). Effective only when spw selection is in velocity unit.</description>
+	    <value></value>
+            <allowed kind="enum">
+                    <value>radio</value>
+                    <value>optical</value>
+                    <value>z</value>
+                    <value>beta</value>
+                    <value>gamma</value>
+                    <value></value>
+           </allowed>
+    </param>
 
 <!-- For mode='clip' -->
     <param type="any" name="clipminmax" subparam="true">
@@ -169,7 +193,7 @@ to output.
 
 <!-- For mode='rowid' -->
     <param type="string" name="row" subparam="true">
-            <description>list of row IDs to apply row-based flagging/unflagging (e.g., [0,3,5])</description>
+            <description>Select data by row IDs to apply row-based flagging/unflagging (e.g., \'0,3,5\')</description>
             <value></value>
     </param>
 
@@ -209,49 +233,41 @@ to output.
     </param>
 
     <constraints>
-<!--
-	    <when param="specunit">
-		<equals value=""/>
-		<equals value="channel"/>
-		<equals value="GHz"/>
-		<equals value="MHz"/>
-		<equals value="kHz"/>
-		<equals value="Hz"/>
-		<equals value="km/s">
-			<default param="restfreq"><value type='string'></value></default>
-                </equals>
-	    </when>
--->
             <when param="mode">
                     <equals value="manual">
-                             <default param="field"><value type="string"></value></default>
-                             <default param="spw"><value type="string"></value></default>
-                             <default param="timerange"><value type="string"></value></default>
+                            <default param="field"><value type="string"></value></default>
+                            <default param="spw"><value type="string"></value></default>
+                            <default param="timerange"><value type="string"></value></default>
                             <default param="scan"><value type="string"></value></default>
-                             <default param="pol"><value type="string"></value></default>
-                           <default param="maskflag"><value type="intArray"></value></default>
+                            <default param="pol"><value type="string"></value></default>
+                            <default param="beam"><value type="string"></value></default>
                             <default param="unflag"><value type="bool">False</value></default>
+                            <default param="restfreq"><value type="string"></value></default>
+                            <default param="frame"><value type="string"></value></default>
+                            <default param="doppler"><value type="string"></value></default>
                     </equals>
                     <equals value="clip">
-                             <default param="field"><value type="string"></value></default>
-                             <default param="spw"><value type="string"></value></default>
-                             <default param="timerange"><value type="string"></value></default>
+                            <default param="field"><value type="string"></value></default>
+                            <default param="spw"><value type="string"></value></default>
+                            <default param="timerange"><value type="string"></value></default>
                             <default param="scan"><value type="string"></value></default>
-                             <default param="pol"><value type="string"></value></default>
+                            <default param="pol"><value type="string"></value></default>
+                            <default param="beam"><value type="string"></value></default>
                             <default param="clipminmax"><value type="doubleArray"></value></default>
                             <default param="clipoutside"><value type="bool">True</value></default>
                             <default param="unflag"><value type="bool">False</value></default>
                     </equals>
                     <equals value="interactive">
-                             <default param="field"><value type="string"></value></default>
-                             <default param="spw"><value type="string"></value></default>
-                             <default param="timerange"><value type="string"></value></default>
+                            <default param="field"><value type="string"></value></default>
+                            <default param="spw"><value type="string"></value></default>
+                            <default param="timerange"><value type="string"></value></default>
                             <default param="scan"><value type="string"></value></default>
-                             <default param="pol"><value type="string"></value></default>
+                            <default param="pol"><value type="string"></value></default>
+                            <default param="beam"><value type="string"></value></default>
                             <default param="showflagged"><value type="bool">False</value></default>
                     </equals>
                     <equals value="rowid">
-                            <default param="rowid"><value type="string"></value></default>
+                            <default param="row"><value type="string"></value></default>
                             <default param="unflag"><value type="bool">False</value></default>
                     </equals>
             </when>
@@ -265,52 +281,21 @@ to output.
         Keyword arguments:
         infile -- name of input SD dataset
         antenna -- antenna name or id (only effective for MS input). 
-        specunit -- units for spectral axis
-                options: (str) 'channel','km/s','GHz','MHz','kHz','Hz',''
-                default: '' (=current)
-                example: this will be the units for maskflag
-            &gt;&gt;&gt; specunit expandable parameters
-                 restfreq -- rest frequency
-                         available type includes float, int, string, list of float, 
-                         list of int, list of string, and list of dictionary. the 
-                         default unit of restfreq in case of float, int, or string 
-                         without unit is Hz. string input can be a value only 
-                         (treated as Hz) or a value followed by unit for which 'GHz',
-                         'MHz','kHz',and 'Hz' are available. 
-                         a list can be used to set different rest frequencies for 
-                         each IF. the length of list input must be nIF. dictionary 
-                         input should be a pair of molecule name and frequency with 
-                         keys of 'name' and 'value', respectively. values in the 
-                         dictionary input follows the same manner as for single 
-                         float or string input. 
-                         example: 345.796
-                                  '1420MHz'
-                                  [345.8, 347.0, 356.7]
-                                  ['345.8MHz', '347.0MHz', '356.7MHz']
-                                  [{'name':'CO','value':345}]
-        frame -- frequency frame for spectral axis
-                options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
-                         'GEO','GALACTO','LGROUP','CMB'
-                default: currently set frame in scantable
-                WARNING: frame='REST' not yet implemented
-        doppler -- doppler mode
-                options: (str) 'RADIO','OPTICAL','Z','BETA','GAMMA'
-                default: currently set doppler in scantable
         mode -- type of flag operation
                 options: (str) 'manual', 'clip', 'interactive', 'rowid'
                 default: 'manual'
 
              >>> common data selection parameters for all modes except mode='rowid'
-                scans -- list of scan numbers to process
-                        default: [] (use all scans)
-                        example: [21,22,23,24]
-                        this selection is in addition to field, timerange,
-                        ifs and pols
-                field -- selection string for selecting scans by name
-                        default: '' (no name selection)
+                field -- Select data by field ID(s) or name(s)
+                        default: '' (use all fields)
                         example: 'FLS3a*'
-                        this selection is in addition to scans, timerange,
-                        ifs, and pols
+                        this selection is in addition to spw, timerange,
+                        scan, pol, and beam
+                spw -- Select data by IF ids (spwctral window) and channel range
+                        default: '' (use all IFs and channels)
+                        example: '15'
+                        this selection is in addition to field, timerange,
+                        scan, pol, and beam
                 timerange -- Select data based on time range:
                     default = '' (all); example,
                     timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
@@ -319,24 +304,49 @@ to output.
                     timerange='09:44:00' # data within one integration of time
                     timerange='&gt;10:24:00' # data after this time
                     timerange='09:44:00+00:13:00' #data 13 minutes after time
-                ifs -- list of IF id numbers to select
-                        default: [] (use all IFs)
-                        example: [15]
-                        this selection is in addition to scans, field,
-                        timerange, ifs, and pols
-                pols -- list of polarization id numbers to select
-                        default: [] (use all polarizations)
-                        example: [1]
-                        this selection is in addition to scans, field,
-                        timerange, and ifs
+                scan -- Select data by scan number range
+                        default: '' (use all scans)
+                        example: '21~24'
+                        this selection is in addition to field, spw,
+                        timerange, pol, and beam
+                pol -- Select data by polarization ids
+                        default: '' (use all polarizations)
+                        example: '1'
+                        this selection is in addition to field, spw,
+                        timerange, scan, and beam
+                beam -- Select data by beam ids
+                        default: '' (use all beams)
+                        example: '0~3'
+                        this selection is in addition to field, spw,
+                        timerange, pol, and scan
 
              >>> mode='manual' expandable parameters
-                maskflag -- list of mask regions to apply flag/unflag 
-                            Note, this parameter is ignored if one or more rows are 
-                            given in flagrow, or clip=True.
-                        default: [] (entire spectrum)
-                        example: [[1000,3000],[5000,7000]]
-
+                restfreq -- rest frequency
+                            available type includes float, int, string, list of float, 
+                            list of int, list of string, and list of dictionary. the 
+                            default unit of restfreq in case of float, int, or string 
+                            without unit is Hz. string input can be a value only 
+                            (treated as Hz) or a value followed by unit for which 'GHz',
+                            'MHz','kHz',and 'Hz' are available. 
+                            a list can be used to set different rest frequencies for 
+                            each IF. the length of list input must be nIF. dictionary 
+                            input should be a pair of molecule name and frequency with 
+                            keys of 'name' and 'value', respectively. values in the 
+                            dictionary input follows the same manner as for single 
+                            float or string input. 
+                            example: 345.796
+                                     '1420MHz'
+                                     [345.8, 347.0, 356.7]
+                                     ['345.8MHz', '347.0MHz', '356.7MHz']
+                                     [{'name':'CO','value':345}]
+                frame -- frequency frame for spectral axis
+                        options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
+                                 'GEO','GALACTO','LGROUP','CMB'
+                        default: currently set frame in scantable
+                        WARNING: frame='REST' not yet implemented
+                doppler -- doppler mode
+                        options: (str) 'RADIO','OPTICAL','Z','BETA','GAMMA'
+                        default: currently set doppler in scantable
              >>> mode='clip' expandable parameters
                 clipminmax -- range of data that will NOT be flagged
                         default: [] (means no clip operation)
@@ -385,56 +395,6 @@ to output.
                          &lt;outfile&gt;_flag.eps)
                 WARNING: be careful plotting in fsotf mode!
 
-        -------------------------------------------------------------------
-
-        DESCRIPTION:
-
-        Task sdflag2 performs either interactive or non-interactive channel/row 
-        based flagging on spectra. 
-        Currently, there are three ways of non-interactive flagging available: 
-        (1) channel or row based flagging by selecting spectra by field,
-        lists of scan numbers, IF numbers, and polarization idices in mode='manual',
-        (2) channel based flagging by specifying a range of spectral values in
-        mode='clip', and 
-        (3) row based flagging by specifying a list of row numbers in 
-        mode='rowid'. Note this is an EXPERT mode.
-
-        In mode='manual', the channel based flagging are invoked when regions
-        in channel, frequency, or velocity are specified to maskflag parameter. 
-        Otherwise, the whole channels are flagged for the selected spectra.
-        Note the mode='rowid' is an EXPERT mode since it might not be straight
-        forward for general users to select data by row IDs in scantable.
-
-        Interactive flagging is available when mode='interactive'. 
-        The available ways of interactive flagging include: 
-        (1) row based flagging by selecting 'panel' and (2) channel
-        based flagging by selecting 'region's of channels on Flag plotter. 
-        See the cookbook for details of how to select channel regions and spectra
-        on the plotter.
-
-        NOTE the task sdflag2 only modifies flag information, FLAGROW and FLAGTRA, 
-        in the input scantable, and does not filter rows in the dataset unlike
-        sdflag task.
-
-        If plotlevel&gt;=1, the task asks you if you really apply the 
-        flags before it is actually written to the data with a plot 
-        indicating flagged regions.
-        Please note that this task is still experimental.
-
-        WARNING for overwrite option:
-        Be sure 'outform' is the same as data format of input file when you
-        overwrite it. The default value of the option 'overwrite'
-        is True in this task, thereby the current dataset (infile) is 
-        overwritten unless a different file name is set to outfile. 
-        There is a known issue in overwriting infile. If 'outform' differs to the
-        data format of infile, the data is overwritten with the new data format 
-        (specified by 'outform') and the data in the original format will be lost.
-
-        WARNING for the GBT raw SDFITS format data as input:
-        SDtasks are able to handle GBT raw SDFITS format data since the 
-        data filler is available. However, the functionality is not well 
-        tested yet, so that there may be unknown bugs.  
- 
   </example>
 
 </task>
