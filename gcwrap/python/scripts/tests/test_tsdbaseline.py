@@ -712,7 +712,7 @@ class tsdbaseline_maskTest( tsdbaseline_unittest_base, unittest.TestCase ):
         print "masklist =", masklist
 
         pol = '0'
-        spw = ','.join(map(lambda x: x + specunit, masklist.split(',')))
+        spw = ','.join([';'.join(map(lambda x: x + specunit, m.split(';'))) for m in masklist.split(',')])
         print "spw = ", spw
 
         result = tsdbaseline(infile=infile,maskmode=mode,
