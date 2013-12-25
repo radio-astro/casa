@@ -173,6 +173,7 @@ scripts/task_sdsmooth.py
 scripts/task_sdstat.py
 scripts/task_sdtpimaging.py
 scripts/task_tsdaverage.py
+scripts/task_tsdbaseline.py
 scripts/task_tsdcal.py
 scripts/task_tsdfit.py
 scripts/task_tsdsave.py

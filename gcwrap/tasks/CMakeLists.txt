@@ -104,6 +104,7 @@ sdsmooth.xml
 sdstat.xml
 sdtpimaging.xml
 tsdaverage.xml
+tsdbaseline.xml
 tsdcal.xml
 tsdfit.xml
 tsdsave.xml
