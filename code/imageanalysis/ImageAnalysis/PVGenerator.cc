@@ -62,20 +62,26 @@ void PVGenerator::setEndpoints(
 	const Double startx, const Double starty,
 	const Double endx, const Double endy
 ) {
-	if (startx == endx && starty == endy) {
-		*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
-		*_getLog() << "Start and end pixels must be different."
-			<< LogIO::EXCEPTION;
-	}
-	if (startx < 2 || endx < 2 || starty < 2 || endy < 2) {
-		*_getLog() << "Pixel positions must be contained in the image and be farther than two pixels from image BLC" << LogIO::EXCEPTION;
-	}
+	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
+
+	ThrowIf(
+		startx == endx && starty == endy,
+		"Start and end pixels must be different."
+	);
+	ThrowIf(
+		startx < 2 || endx < 2 || starty < 2 || endy < 2,
+		"Pixel positions must be contained in the image and be "
+		"farther than two pixels from image BLC"
+	);
 	Vector<Int> dirAxes = _getImage()->coordinates().directionAxesNumbers();
 	Int xShape = _getImage()->shape()[dirAxes[0]];
 	Int yShape = _getImage()->shape()[dirAxes[1]];
-	if (startx > xShape-3 || endx > xShape-3 || starty > yShape-3 || endy > yShape-3) {
-		*_getLog() << "pixel positions must be contained in the image and must fall farther than two pixels from the image TRC" << LogIO::EXCEPTION;
-	}
+	ThrowIf(
+		startx > xShape-3 || endx > xShape-3
+		|| starty > yShape-3 || endy > yShape-3,
+		"Pixel positions must be contained in the image and must fall "
+		"farther than two pixels from the image TRC"
+	);
 
 	_start.reset(new vector<Double>(2));
 	_end.reset(new vector<Double>(2));
@@ -85,11 +91,25 @@ void PVGenerator::setEndpoints(
 	(*_end)[1] = endy;
 }
 
+void PVGenerator::setEndpoints(
+	const MVDirection& start, const MVDirection& end
+) {
+	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
+
+	const DirectionCoordinate dc = _getImage()->coordinates().directionCoordinate();
+	Vector<String> units = dc.worldAxisUnits();
+	Vector<Double> sPixel = dc.toPixel(start);
+	Vector<Double> ePixel = dc.toPixel(end);
+	*_getLog() << LogIO::NORMAL << "Setting pixel end points "
+		<< sPixel << ", " << ePixel << LogIO::POST;
+	setEndpoints(sPixel[0], sPixel[1], ePixel[0], ePixel[1]);
+}
+
 void PVGenerator::setWidth(uInt width) {
-	if (width % 2 == 0) {
-		*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE)
-			<< "width must be odd." << LogIO::EXCEPTION;
-	}
+	ThrowIf(
+		width % 2 == 0,
+		"Width must be odd."
+	);
 	_width = width;
 }
 
@@ -98,9 +118,10 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 ) const {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 
-	if (_start.get() == 0 || _end.get() == 0) {
-		*_getLog() << "Start and/or end points have not been set" << LogIO::EXCEPTION;
-	}
+	ThrowIf(
+		_start.get() == 0 || _end.get() == 0,
+		"Start and/or end points have not been set"
+	);
 
 	std::auto_ptr<ImageInterface<Float> > myClone(_getImage()->cloneII());
 	std::tr1::shared_ptr<SubImage<Float> > subImage(
@@ -115,13 +136,12 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 	Int yAxis = dirAxes[1];
 	IPosition subShape = subImage->shape();
 	IPosition origShape = _getImage()->shape();
-	if (
+	ThrowIf(
 		subShape[xAxis] != origShape[xAxis]
-		|| subShape[yAxis] != origShape[yAxis]
-	) {
-		*_getLog() << "You are not permitted to make a region selection "
-			<< "in the direction coordinate" << LogIO::EXCEPTION;
-	}
+		|| subShape[yAxis] != origShape[yAxis],
+		"You are not permitted to make a region selection "
+		"in the direction coordinate"
+	);
 	_checkWidth(subShape[xAxis], subShape[yAxis]);
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 	// get the PA of the end points
@@ -149,14 +169,13 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
         ys[1] = start[1] + halfy;
         ys[2] = end[1] - halfy;
         ys[3] = end[1] + halfy;
-        if (
+        ThrowIf(
             min(xs) < 2 || max(xs) > subImage->shape()[xAxis] - 3
-            || min(ys) < 2 || max(ys) > subImage->shape()[yAxis] - 3
-        ) {
-            *_getLog() << "Error: specified end points and half width are such "
-                << "that chosen directional region falls outside or within "
-                << "two pixels of the edge of the image." << LogIO::EXCEPTION;
-        }
+            || min(ys) < 2 || max(ys) > subImage->shape()[yAxis] - 3,
+            "Error: specified end points and half width are such "
+            "that chosen directional region falls outside or within "
+            "two pixels of the edge of the image."
+        );
     }
     // rotation occurs about the reference pixel, so move the reference pixel to be
     // the midpoint of the requested line segment
@@ -170,8 +189,6 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
     subCoords.setReferencePixel(newRefPix2);
     subCoords.setReferenceValue(newRefVal);
     subImage->setCoordinateInfo(subCoords);
-    cout << "refpix " << newRefPix2 << endl;
-    cout << "refval " << newRefVal << endl;
 
 	// rotate the image through this angle, in the opposite direction.
 	*_getLog() << LogIO::NORMAL << "Rotating image by "
@@ -389,8 +406,6 @@ void PVGenerator::setOffsetUnit(const String& s) {
 	}
 	_unit = s;
 }
-
-
 
 String PVGenerator::getClass() const {
 	return _class;
