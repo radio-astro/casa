@@ -142,9 +142,7 @@ class sdstat_unittest_base:
         if (max(elems) > len(fulllist) - 1) or (min(elems) < 0):
             raise Exception("Indices out of range: %s\nShould be in 0 - %d" % \
                             (str(elems), len(fulllist) - 1))
-        sellist = []
-        for id in elems:
-            sellist.append(fulllist[id])
+        sellist = [ fulllist[id] for id in elems ]
         return sellist
 
     def _compareStats( self, currstat, refstat, icomp=None, allowdiff=1.e-5, compstats=None ):
@@ -971,6 +969,446 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         print "Testing OUTPUT Quantums"
         self._compareStats(currstat,self.minmaxchan_line2)
 
+class sdstat_test_idx_selection( sdstat_unittest_base, unittest.TestCase ):
+    """
+    Test meta-data data selection in sdstat.
+
+    test0* - field selection
+    test1* - spw id selection
+    test2* - timerange selection
+    test3* - scan id selection
+    test4* - pol id selection
+    test5* - beam of selection
+    test6* - combination of selection
+    """
+    infile = 'data_selection.asap'
+    refstat_file = 'refstat_sel'
+    field_prefix01 = 'M100__'
+    field_prefix23 = 'M42__'
+    
+    def setUp( self ):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+        self.refstats = read_stats(self.datapath+self.refstat_file)
+
+        default(tsdstat)
+
+    def tearDown( self ):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+
+    def _get_rowidx_selected( self, name, tbsel={} ):
+        """
+        Returns a list of row idx selected in table.
+        
+        name  : the name of scantable
+        tbsel : a dictionary of table selection information.
+                The key should be column name and the value should be
+                a list of column values to select.
+        """
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='file %s does not exist'%(name))        
+        tb.open(name)
+        if len(tbsel) == 0:
+            idx=range(tb.nrows())
+        else:
+            command = ''
+            for key, val in tbsel.items():
+                if len(command) > 0:
+                    command += ' AND '
+                command += ('%s in %s' % (key, str(val)))
+            newtb = tb.query(command)
+            idx=newtb.rownumbers()
+            newtb.close()
+
+        tb.close()
+        return idx
+
+    ##### Actual Test Methods #####
+    def testSel001(self):
+        """ test field selection (field='1')"""
+        field = '1'
+        currstats=tsdstat(infile=self.infile,field=field)
+        tbsel = {'FIELDNAME': [self.field_prefix01+field]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel002(self):
+        """ test field selection (field='1,2')"""
+        field = '1,2'
+        currstats=tsdstat(infile=self.infile,field=field)
+        tbsel = {'FIELDNAME': [self.field_prefix01+'1', self.field_prefix23+'2']}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel003(self):
+        """ test field selection (field='<2')"""
+        field = '<2'
+        currstats=tsdstat(infile=self.infile,field=field)
+        tbsel = {'FIELDNAME': [ self.field_prefix01+str(idx) for idx in [0,1] ]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel004(self):
+        """ test field selection (field='>1')"""
+        field = '>1'
+        currstats=tsdstat(infile=self.infile,field=field)
+        tbsel = {'FIELDNAME': [ self.field_prefix23+str(idx) for idx in [2,3] ]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel005(self):
+        """ test field selection (field='1~2')"""
+        field = '1~2'
+        currstats=tsdstat(infile=self.infile,field=field)
+        tbsel = {'FIELDNAME': [self.field_prefix01+'1', self.field_prefix23+'2']}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel006(self):
+        """ test field selection (field='M100')"""
+        field = 'M100'
+        currstats=tsdstat(infile=self.infile,field=field)
+        tbsel = {'SRCNAME': [field]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel007(self):
+        """ test field selection (field='M4*')"""
+        field = 'M4*'
+        currstats=tsdstat(infile=self.infile,field=field)
+        tbsel = {'SRCNAME': ['M42']}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel008(self):
+        """ test field selection (field='M4*,0')"""
+        field = 'M4*,0'
+        currstats=tsdstat(infile=self.infile,field=field)
+        tbsel = {'FIELDNAME': [self.field_prefix01+'0', self.field_prefix23+'2', self.field_prefix23+'3']}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel101(self):
+        """ test spw idx selection w/o channel range (spw='1')"""
+        spw = '1'
+        currstats=tsdstat(infile=self.infile,spw=spw)
+        tbsel = {'IFNO': [1]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel102(self):
+        """ test spw idx selection w/o channel range (spw='1,2')"""
+        spw = '1,2'
+        currstats=tsdstat(infile=self.infile,spw=spw)
+        tbsel = {'IFNO': [1, 2]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel103(self):
+        """ test spw idx selection w/o channel range (spw='<2')"""
+        spw = '<2'
+        currstats=tsdstat(infile=self.infile,spw=spw)
+        tbsel = {'IFNO': [0, 1]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel104(self):
+        """ test spw idx selection w/o channel range (spw='>1')"""
+        spw = '>1'
+        currstats=tsdstat(infile=self.infile,spw=spw)
+        tbsel = {'IFNO': [2, 3]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel105(self):
+        """ test spw idx selection w/o channel range (spw='1~2')"""
+        spw = '1~2'
+        currstats=tsdstat(infile=self.infile,spw=spw)
+        tbsel = {'IFNO': [1, 2]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel106(self):
+        """ test spw idx selection w/o channel range (spw='0 , >2')"""
+        spw = '0 , >2'
+        currstats=tsdstat(infile=self.infile,spw=spw)
+        tbsel = {'IFNO': [0,3]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel201(self):
+        """ test timerange selection (timerange='2010/04/24/23:13:49.0')"""
+        timerange = '2010/04/24/23:13:49.0'
+        currstats=tsdstat(infile=self.infile,timerange=timerange)
+        tbsel = {'SCANNO': [1]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel202(self):
+        """ test timerange selection (timerange='2010/04/24/23:13:48.0+00:30:01')"""
+        timerange = '2010/04/24/23:13:48.0+00:30:01'
+        currstats=tsdstat(infile=self.infile,timerange=timerange)
+        tbsel = {'SCANNO': [1, 2]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel203(self):
+        """ test timerange selection (timerange='<2010/04/24/23:43:48.0')"""
+        timerange = '<2010/04/24/23:43:48.0'
+        currstats=tsdstat(infile=self.infile,timerange=timerange)
+        tbsel = {'SCANNO': [0, 1]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel204(self):
+        """ test timerange selection (timerange='>2010/04/24/23:13:50.0')"""
+        timerange = '>2010/04/24/23:13:50.0'
+        currstats=tsdstat(infile=self.infile,timerange=timerange)
+        tbsel = {'SCANNO': [2, 3]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel205(self):
+        """ test timerange selection (timerange='2010/04/24/23:13:48.0~2010/04/24/23:43:50.0')"""
+        timerange = '2010/04/24/23:13:48.0~2010/04/24/23:43:50.0'
+        currstats=tsdstat(infile=self.infile,timerange=timerange)
+        tbsel = {'SCANNO': [1, 2]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel301(self):
+        """ test scanno selection (scan='1')"""
+        scan = '1'
+        currstats=tsdstat(infile=self.infile,scan=scan)
+        tbsel = {'SCANNO': [1]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel302(self):
+        """ test scanno selection (scan='1,2')"""
+        scan = '1,2'
+        currstats=tsdstat(infile=self.infile,scan=scan)
+        tbsel = {'SCANNO': [1, 2]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel303(self):
+        """ test scanno selection (scan='<2')"""
+        scan = '<2'
+        currstats=tsdstat(infile=self.infile,scan=scan)
+        tbsel = {'SCANNO': [0, 1]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel304(self):
+        """ test scanno selection (scan='>1')"""
+        scan = '>1'
+        currstats=tsdstat(infile=self.infile,scan=scan)
+        tbsel = {'SCANNO': [2, 3]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel305(self):
+        """ test scanno selection (scan='1~2')"""
+        scan = '1~2'
+        currstats=tsdstat(infile=self.infile,scan=scan)
+        tbsel = {'SCANNO': [1, 2]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel306(self):
+        """ test scanno selection (scan='0 , >2')"""
+        scan = '0 , >2'
+        currstats=tsdstat(infile=self.infile,scan=scan)
+        tbsel = {'SCANNO': [0,3]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+    def testSel401(self):
+        """ test polno selection (pol='1')"""
+        pol = '1'
+        currstats=tsdstat(infile=self.infile,pol=pol)
+        tbsel = {'POLNO': [1]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel402(self):
+        """ test polno selection (pol='1,2')"""
+        pol = '1,2'
+        currstats=tsdstat(infile=self.infile,pol=pol)
+        tbsel = {'POLNO': [1, 2]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel403(self):
+        """ test polno selection (pol='<2')"""
+        pol = '<2'
+        currstats=tsdstat(infile=self.infile,pol=pol)
+        tbsel = {'POLNO': [0, 1]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel404(self):
+        """ test polno selection (pol='>1')"""
+        pol = '>1'
+        currstats=tsdstat(infile=self.infile,pol=pol)
+        tbsel = {'POLNO': [2, 3]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel405(self):
+        """ test polno selection (pol='1~2')"""
+        pol = '1~2'
+        currstats=tsdstat(infile=self.infile,pol=pol)
+        tbsel = {'POLNO': [1, 2]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel406(self):
+        """ test polno selection (pol='0 , >2')"""
+        pol = '0 , >2'
+        currstats=tsdstat(infile=self.infile,pol=pol)
+        tbsel = {'POLNO': [0,3]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel501(self):
+        """ test beamno selection (beam='1')"""
+        beam = '1'
+        currstats=tsdstat(infile=self.infile,beam=beam)
+        tbsel = {'BEAMNO': [1]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel502(self):
+        """ test beamno selection (beam='1,2')"""
+        beam = '1,2'
+        currstats=tsdstat(infile=self.infile,beam=beam)
+        tbsel = {'BEAMNO': [1, 2]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel503(self):
+        """ test beamno selection (beam='<2')"""
+        beam = '<2'
+        currstats=tsdstat(infile=self.infile,beam=beam)
+        tbsel = {'BEAMNO': [0, 1]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel504(self):
+        """ test beamno selection (beam='>1')"""
+        beam = '>1'
+        currstats=tsdstat(infile=self.infile,beam=beam)
+        tbsel = {'BEAMNO': [2, 3]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel505(self):
+        """ test beamno selection (beam='1~2')"""
+        beam = '1~2'
+        currstats=tsdstat(infile=self.infile,beam=beam)
+        tbsel = {'BEAMNO': [1, 2]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel506(self):
+        """ test beamno selection (beam='0 , >2')"""
+        beam = '0 , >2'
+        currstats=tsdstat(infile=self.infile,beam=beam)
+        tbsel = {'POLNO': [0,3]}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+    def testSel601(self):
+        """ test combination of field = M4*, spw = '1~2', timerange = '>2010/04/24/23:13:50.0'"""
+        field = 'M4*'
+        spw = '1~2'
+        timerange = '>2010/04/24/23:13:50.0'
+        currstats=tsdstat(infile=self.infile,field=field,spw=spw,timerange=timerange)
+        tbsel = {'SCANNO': [2, 3], 'IFNO': [1, 2], 'SRCNAME': ['M42']}
+
+        liststats = [ key for key in currstats.keys() if type(currstats[key])!= dict ]
+        sel_idx = self. _get_rowidx_selected(self.infile, tbsel)
+        self._compareStats(currstats,self.refstats,icomp=sel_idx,compstats=liststats)
+
+
 class sdstat_exceptions( sdstat_unittest_base, unittest.TestCase ):
     """
     Test the case when the task throws exception.
@@ -1006,4 +1444,54 @@ class sdstat_exceptions( sdstat_unittest_base, unittest.TestCase ):
 
 def suite():
     return [sdstat_basicTest, sdstat_averageTest, sdstat_restfreqTest,
-            sdstat_storageTest, sdstat_exceptions]
+            sdstat_storageTest, sdstat_test_idx_selection, sdstat_exceptions]
+
+def write_stats(stats, name):
+    fff = open(name, 'w')
+    keys = stats.keys()
+    nrow = len(stats[keys[0]])
+    comma = ','
+    mystr = '#' + comma.join(keys)+'\n'
+    fff.write(mystr)
+    for irow in range(nrow):
+        stat_list = []
+        for k in keys:
+            if type(stats[k]) == dict:
+                stat_list.append(str(stats[k]['value'][irow]))
+            else:
+                stat_list.append(str(stats[k][irow]))
+        mystr = comma.join(stat_list)+'\n'
+        fff.write(mystr)
+    fff.close()
+
+def read_stats(name):
+    fff = open(name, 'r')
+    stats = {}
+    comma = ','
+    # search for keys
+    line = fff.readline()
+    while line:
+        if line.startswith('#'):
+            line = line.lstrip('#')
+            line = line.rstrip('\n')
+            keys = line.replace(' ', '').split(comma)
+            if len(keys) > 0:
+                break
+        line = fff.readline()
+    for k in keys:
+        stats[k] = []
+    nkeys = len(keys)
+    # read statistics
+    line = fff.readline()
+    while line:
+        if not line.startswith('#'):
+            line = line.rstrip('\n')
+            svals = line.split(comma)
+            if len(svals) == nkeys:
+                for ik in range(nkeys):
+                    stats[keys[ik]].append(float(svals[ik]))
+            else:
+                raise RuntimeError, "The number of data != keys"
+        line = fff.readline()
+    fff.close()
+    return stats
