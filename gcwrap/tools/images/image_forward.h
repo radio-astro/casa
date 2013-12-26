@@ -19,7 +19,8 @@ namespace casa
 	class ImageRegion;
 	class LatticeExprNode;
 	template<class T> class PtrHolder;
-        class String;
+    class String;
 	class SkyComponent;
 	class DirectionCoordinate;
+
 }

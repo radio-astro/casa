@@ -22,14 +22,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>Output image name. If empty, no image is written.</description>
             <value/>
         </param>
-        <param type="doubleArray" name="start">
+        <param type="any" name="start">
+            <any type="variant"/>
             <description>The starting pixel in the direction plane (array of two values).</description>
-            <value/>
+            <value type="string"/>
             <example>[20, 5]</example>
         </param>
-        <param type="doubleArray" name="end">
+        <param type="any" name="end">
+            <any type="variant"/>
             <description>The ending pixel in the direction plane (array of two values).</description>
-            <value/>
+            <value type="string"/>
             <example>[200,300]</example>
         </param>
         <param type="int" name="width">
@@ -96,7 +98,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 PARAMETER SUMMARY
 imagename        Name of the input (CASA, FITS, MIRIAD) image
 outfile          Name of output CASA image. Must be specified.
-start            The starting pixel in the direction plane (array of two values), such as [20, 5].
+start            The starting pixel in the direction plane (array of two values), such as [20, 5] or ["14h20m20.5s","-30d45m25.4s"].
 end              The ending pixel in the direction plane (array of two values), such as [200, 300].
 width            Width, in pixels, for averaging pixels perpendicular to the slice.
                  This value is determined after rotating the image so the slice lies horizontally.
@@ -120,7 +122,11 @@ stretch          Stretch the input mask if necessary and possible. Only used if 
 Create a position-velocity image by specifying two pixels between which a slice is taken in the direction
 coordinate. The spectral extent of the resulting image will be that provided by the region specification
 or the entire spectral range of the input image if no region is specified. One may not specify a region
-in direction space; that is accomplished by specifying the start and end points of the slice.
+in direction space; that is accomplished by specifying the start and end points of the slice. The parameters
+start and end may be specified as two element arrays of numerical values, in which case these values will be
+interpreted as pixel locations in the input image. Alternatively, they may be expressed as arrays of two strings
+each representing the direction. These strings can either represent quantities (eg ["40.5deg", "0.5rad") or be sexigesimal
+format (eg ["14h20m20.5s","-30d45m25.4s"], ["14:20:20.5s","-30.45.25.4"]).
         
 The start and end values represent direction pixel coordinates. They both must fail within the input
 image, and they both must be at least 2 pixels from the edge of the input image to facilite rotation (see below).

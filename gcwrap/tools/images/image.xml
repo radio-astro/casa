@@ -10412,12 +10412,14 @@ used to create a 2D temporary image.
             <description>Output image name. If empty, no image is written. Default ""</description>
             <value/>
         </param>
-        <param type="doubleArray" name="start">
+        <param type="any" name="start">
             <description>The starting pixel in the direction plane (array of two values)</description>
+            <any type="variant"/>
             <value/>
         </param>
-        <param type="doubleArray" name="end">
+        <param type="any" name="end">
             <description>The ending pixel in the direction plane (array of two values)</description>
+            <any type="variant"/>
             <value/>
         </param>
         <param type="int" name="width">
@@ -10461,10 +10463,14 @@ used to create a 2D temporary image.
     </input>
     <returns type="image"/>
     <description>
-        Create a position-velocity image by specifying two pixels between which a slice is taken in the direction
+        Create a position-velocity image by specifying two locations between which a slice is taken in the direction
         coordinate. The spectral extent of the resulting image will be that provided by the region specification
         or the entire spectral range of the input image if no region is specified. One may not specify a region
-        in direction space; that is accomplished by specifying the start and end points of the slice.
+        in direction space; that is accomplished by specifying the start and end points of the slice. The parameters
+        start and end may be specified as two element arrays of numerical values, in which case these values will be
+        interpreted as pixel locations in the input image. Alternatively, they may be expressed as arrays of two strings
+        each representing the direction. These strings can either represent quantities (eg ["40.5deg", "0.5rad") or be sexigesimal
+        format (eg ["14h20m20.5s","-30d45m25.4s"], ["14:20:20.5s","-30.45.25.4"]).
         
         One may specify a width (must be an odd integer >= 1), which is the number of pixels centered along and perpendicular
         to the direction slice that are used for averaging along the slice. The default value of 1 represents no averaging).

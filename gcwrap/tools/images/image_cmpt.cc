@@ -844,9 +844,9 @@ image* image::convolve2d(
 			}
 		}
 		else {
-			majorKernel = casaQuantityFromVar(major);
-			minorKernel = casaQuantityFromVar(minor);
-			paKernel = casaQuantityFromVar(pa);
+			majorKernel = _casaQuantityFromVar(major);
+			minorKernel = _casaQuantityFromVar(minor);
+			paKernel = _casaQuantityFromVar(pa);
 		}
 		_log << _ORIGIN;
 
@@ -2603,8 +2603,8 @@ bool image::putregion(const ::casac::variant& v_pixels,
 }
 
 image* image::pv(
-	const string& outfile, const vector<double>& start,
-	const vector<double>& end, const int width, const string& unit,
+	const string& outfile, const variant& start,
+	const variant& end, const int width, const string& unit,
 	const bool overwrite, const variant& region, const string& chans,
 	const string& stokes, const string& mask, const bool stretch,
 	const bool wantreturn
@@ -2614,12 +2614,51 @@ image* image::pv(
 	}
 	try {
 		_log << _ORIGIN;
-		if (start.size() != 2) {
-			_log << "start must have exactly two elements" << LogIO::EXCEPTION;
+		MVDirection startMVD, endMVD;
+		Vector<Double> startPix, endPix;
+		try {
+			startPix = Vector<Double>(_toDoubleVec(start));
 		}
-		if (end.size() != 2) {
-			_log << "end must have exactly two elements" << LogIO::EXCEPTION;
+		catch (const AipsError& x) {
+			ThrowIf(start.type() != variant::STRINGVEC,
+				"Unsupported type for start"
+			);
+			vector<string> x = start.toStringVec();
+			ThrowIf(
+				x.size() != 2,
+				"Start array must have exactly 2 elements"
+			);
+			casa::Quantity q0 = _casaQuantityFromVar(variant(x[0]));
+			casa::Quantity q1 = _casaQuantityFromVar(variant(x[1]));
+			startMVD = MVDirection(q0, q1);
 		}
+
+		try {
+			endPix = Vector<Double>(_toDoubleVec(end));
+			ThrowIf(
+				startPix.size() == 0,
+				"start is a string array, so end must be too"
+			);
+		}
+		catch (const AipsError& x) {
+			ThrowIf(end.type() != variant::STRINGVEC,
+				"Unsupported type for end"
+			);
+			vector<string> x = end.toStringVec();
+			ThrowIf(
+				x.size() != 2,
+				"End array must have exactly 2 elements"
+			);
+			ThrowIf(
+				startPix.size() == 2,
+				"start is a numeric array, so end must be too"
+			);
+			casa::Quantity q0 = _casaQuantityFromVar(variant(x[0]));
+			casa::Quantity q1 = _casaQuantityFromVar(variant(x[1]));
+			endMVD = MVDirection(q0, q1);
+		}
+		_log << _ORIGIN;
+
 		if (width % 2 == 0) {
 			_log << "width must be an odd integer >= 1." << LogIO::EXCEPTION;
 		}
@@ -2632,7 +2671,12 @@ image* image::pv(
 			_image->getImage(), regionPtr.get(),
 			chans, stokes, mask, outfile, overwrite
 		);
-		pv.setEndpoints(start[0], start[1], end[0], end[1]);
+		if (startPix.size() == 2) {
+			pv.setEndpoints(startPix[0], startPix[1], endPix[0], endPix[1]);
+		}
+		else {
+			pv.setEndpoints(startMVD, endMVD);
+		}
 		pv.setStretch(stretch);
 		pv.setWidth(width);
 		pv.setOffsetUnit(unit);
@@ -2770,7 +2814,7 @@ image* image::regrid(
 			return 0;
 		}
 		Vector<Int> shape(inshape);
-		Quantum<Double> pa(casaQuantityFromVar(inpa));
+		Quantum<Double> pa(_casaQuantityFromVar(inpa));
 		std::auto_ptr<Record> Region(toRecord(region));
 		String mask = vmask.toString();
 		if (mask == "[]") {
@@ -3090,8 +3134,8 @@ bool image::setrestoringbeam(
 		std::auto_ptr<Record> rec(toRecord(beam));
 		if (
 			_image->setrestoringbeam(
-				casaQuantityFromVar(major), casaQuantityFromVar(minor),
-				casaQuantityFromVar(pa), *rec, deleteIt,
+				_casaQuantityFromVar(major), _casaQuantityFromVar(minor),
+				_casaQuantityFromVar(pa), *rec, deleteIt,
 				log, channel, polarization
 			)
 		) {
@@ -3386,7 +3430,7 @@ image::topixel(const ::casac::variant& value) {
 	//  std::vector<double> rstat;
 	::casac::record *rstat = 0;
 	try {
-		_log << LogOrigin("image", "topixel");
+		_log << LogOrigin("image", __FUNCTION__);
 		if (detached())
 			return rstat;
 
@@ -3398,7 +3442,7 @@ image::topixel(const ::casac::variant& value) {
 		mycoords.setcoordsys(cSys);
 		rstat = mycoords.topixel(value);
 
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -3410,7 +3454,7 @@ image::topixel(const ::casac::variant& value) {
 image::toworld(const ::casac::variant& value, const std::string& format) {
 	::casac::record *rstat = 0;
 	try {
-		_log << LogOrigin("image", "toworld");
+		_log << LogOrigin("image", __FUNCTION__);
 		if (detached())
 			return rstat;
 
@@ -3460,7 +3504,7 @@ bool image::unlock() {
 			return rstat;
 
 		rstat = _image->unlock();
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -3807,32 +3851,33 @@ image::recordFromQuantity(const Quantum<Vector<Double> >& q) {
 	return r;
 }
 
-casa::Quantity image::casaQuantityFromVar(const ::casac::variant& theVar) {
+casa::Quantity image::_casaQuantityFromVar(const ::casac::variant& theVar) {
 	casa::Quantity retval;
 	try {
-		_log << LogOrigin("image", __FUNCTION__);
+		_log << _ORIGIN;
 		casa::QuantumHolder qh;
 		String error;
-		if (theVar.type() == ::casac::variant::STRING || theVar.type()
-				== ::casac::variant::STRINGVEC) {
-			if (!qh.fromString(error, theVar.toString())) {
-				_log << LogIO::SEVERE << "Error " << error
-						<< " in converting quantity " << LogIO::POST;
-			}
-			retval = qh.asQuantity();
+		if (
+			theVar.type() == ::casac::variant::STRING
+			|| theVar.type() == ::casac::variant::STRINGVEC
+		) {
+			ThrowIf(
+				!qh.fromString(error, theVar.toString()),
+				"Error " + error + " in converting quantity "
+			);
 		}
-		if (theVar.type() == ::casac::variant::RECORD) {
+		else if (theVar.type() == ::casac::variant::RECORD) {
 			//NOW the record has to be compatible with QuantumHolder::toRecord
 			::casac::variant localvar(theVar); //cause its const
-			Record * ptrRec = toRecord(localvar.asRecord());
-			if (!qh.fromRecord(error, *ptrRec)) {
-				_log << LogIO::SEVERE << "Error " << error
-						<< " in converting quantity " << LogIO::POST;
-			}
-			delete ptrRec;
-			retval = qh.asQuantity();
+			auto_ptr<Record> ptrRec(toRecord(localvar.asRecord()));
+			ThrowIf(
+				!qh.fromRecord(error, *ptrRec),
+				"Error " + error + " in converting quantity "
+			);
 		}
-	} catch (const AipsError& x) {
+		return qh.asQuantity();
+	}
+	catch (const AipsError& x) {
 		_log << LogOrigin("image", __FUNCTION__);
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
@@ -3914,6 +3959,26 @@ std::auto_ptr<Record> image::_getRegion(
 		return (std::auto_ptr<Record>(0));
 	}
 }
+
+vector<double> image::_toDoubleVec(const variant& v) {
+	variant::TYPE type = v.type();
+	ThrowIf(
+		type != variant::INTVEC && type != variant::LONGVEC
+		&& type != variant::DOUBLEVEC,
+		"variant is not a numeric array"
+	);
+	vector<double> output;
+	if (type == variant::INTVEC || type == variant::LONGVEC) {
+		Vector<Int> x = v.toIntVec();
+		std::copy(x.begin(), x.end(), std::back_inserter(output));
+	}
+	if (type == variant::DOUBLEVEC) {
+		Vector<Double> x = v.toDoubleVec();
+		std::copy(x.begin(), x.end(), std::back_inserter(output));
+	}
+	return output;
+}
+
 
 
 } // casac namespace
