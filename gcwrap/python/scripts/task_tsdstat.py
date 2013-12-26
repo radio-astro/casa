@@ -1,6 +1,7 @@
 import os
 import string
 from get_user import get_user
+from numpy import argsort as npargsort
 
 from taskinit import casalog, qatool
 
@@ -15,7 +16,7 @@ def tsdstat(infile, antenna, fluxunit, telescopeparam, field, spw, restfreq, fra
         worker.execute()
         worker.finalize()
         
-        return worker.result
+        return worker.returnstats
         
 
 class sdstat_worker(sdutil.sdtask_template):
@@ -79,6 +80,9 @@ class sdstat_worker(sdutil.sdtask_template):
     def calc_statistics(self):
         # CAS-5410 Use private tools inside task scripts
         qa = qatool()
+        self.savestats = ''
+        self.returnstats = {}
+        rootidx = []
 
 #         # Warning for multi-IF data
 #         if len(self.scan.getifnos()) > 1:
@@ -92,7 +96,7 @@ class sdstat_worker(sdutil.sdtask_template):
         
         basesel = self.scan.get_selection()
         maskdict = {-1: []}
-        if self.spw != '' and self.spw.strip() != '*':
+        if self.spw.strip() not in ['', '*']:
             maskdict = self.scan.parse_spw_selection(self.spw)
         for ifno, masklist in maskdict.items():
             self.masklist = masklist
@@ -100,6 +104,7 @@ class sdstat_worker(sdutil.sdtask_template):
                 sel = sd.selector(basesel)
                 sel.set_ifs([ifno])
                 self.scan.set_selection(sel)
+                rootidx += list(self.scan._get_root_row_idx())
                 del sel
                 msg = "Working on IF%s" % (ifno)
                 if (self.interactive): print "===%s===" % (msg)
@@ -117,24 +122,31 @@ class sdstat_worker(sdutil.sdtask_template):
             # calculate statistics
             #statsdict = get_stats(s, msk, formstr)
             self.__calc_stats()
+            self.__merge_stats()
 
             # reset selection
             if ifno > -1: self.scan.set_selection(basesel)
 
         # restore spec unit
         self.scan.set_unit(unit_org)
+        # sort return values in order of root table row idx
+        if len(rootidx) > 0:
+            self.__sort_stats_order(rootidx)
+        # return values instead of lists if nrow = 1.
+        if len(self.returnstats[ self.returnstats.keys()[0] ]) == 1:
+            self.__stats_list_to_val()
         # reshape statsdict for return
         for k in ['min','max']:
-            self.result['%s_abscissa'%(k)] = qa.quantity(self.result.pop('%s_abc'%(k)),self.xunit)
+            self.returnstats['%s_abscissa'%(k)] = qa.quantity(self.returnstats.pop('%s_abc'%(k)),self.xunit)
         for (k,u) in [('eqw',self.xunit),('totint',self.intunit)]:
-            self.result[k] = qa.quantity(self.result[k],u)
+            self.returnstats[k] = qa.quantity(self.returnstats[k],u)
 
     def save(self):
         if ( len(self.outfile) > 0 ):
             if ( not os.path.exists(sdutil.get_abspath(self.outfile)) \
                  or self.overwrite ):
                 f=open(self.outfile,'w')
-                f.write(self.resultstats)
+                f.write(self.savestats)
                 f.close()
             else:
                 casalog.post( 'File '+self.outfile+' already exists.\nStatistics results are not written into the file.', priority = 'WARN' )
@@ -147,10 +159,22 @@ class sdstat_worker(sdutil.sdtask_template):
         if hasattr(self,'restorer') and self.restorer is not None:
             self.restorer.restore()
 
+    def __stats_list_to_val(self):
+        for key, val in self.returnstats.items():
+            if type(val)==list and len(val)==1:
+                self.returnstats[key] = val[0]
+    
+    def __sort_stats_order(self, order):
+        if len(self.returnstats[self.returnstats.keys()[0]]) != len(order):
+            raise ValueError, "Length of sort order list != statistics list."
+        idx = npargsort(order)
+        for key, val in self.returnstats.items():
+            self.returnstats[key] = [val[i] for i in idx ]
+                
+
     def __calc_stats(self):
         usr = get_user()
         tmpfile = '/tmp/tmp_'+usr+'_casapy_asap_scantable_stats'
-        self.resultstats = ''
         self.result = {}
 
         # calculate regular statistics
@@ -159,9 +183,9 @@ class sdstat_worker(sdutil.sdtask_template):
                      'stddev']
         for name in statsname:
             v = self.scan.stats(name,self.msk,self.format_string)
-            self.result[name] = list(v) if len(v) > 1 else v[0]
+            self.result[name] = list(v) # if len(v) > 1 else v[0]
             if sd.rcParams['verbose']:
-                self.resultstats += get_text_from_file(tmpfile)
+                self.savestats += get_text_from_file(tmpfile)
 
         # calculate additional statistics (eqw and integrated intensity)
         self.__calc_eqw_and_integf()
@@ -169,11 +193,11 @@ class sdstat_worker(sdutil.sdtask_template):
         if sd.rcParams['verbose']:
             # Print equivalent width
             out = self.__get_statstext('eqw', self.abclbl, 'eqw')
-            self.resultstats += out
+            self.savestats += out
 
             # Print integrated flux
             outp = self.__get_statstext('Integrated intensity', self.intlbl, 'totint')
-            self.resultstats += outp
+            self.savestats += outp
 
             # to logger
             casalog.post(out[:-2]+outp)
@@ -212,6 +236,17 @@ class sdstat_worker(sdutil.sdtask_template):
             integratef = get_integf(self.result['sum'], dabc)
         self.result['eqw'] = eqw
         self.result['totint'] = integratef
+
+    def __merge_stats(self):
+        """ merge self.result to self.returnstat """
+        if len(self.result) == 0:
+            return
+        for key, val in self.result.items():
+            if self.returnstats.has_key(key):
+                self.returnstats[key] += list(val)
+            else:
+                self.returnstats[key] = list(val)
+        
 
     def __set_mask(self):
         self.msk = None
