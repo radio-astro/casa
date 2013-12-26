@@ -59,7 +59,7 @@ class sdstat_unittest_base:
             vallist.append([chanval[schan],chanval[echan]])
         return vallist
 
-    def _convert_to_spw_string( self, chanlist, unit='', ifno=-1 ):
+    def _masklist_to_spw_string( self, chanlist, unit='', ifno=-1 ):
         """
         Convert a masklist and ifno to spw selection string.
             chanlist : masklist
@@ -220,7 +220,7 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
     Note: input data is generated from a single dish regression data,
     'OrionS_rawACSmod', as follows:
       default(sdcal)
-      sdcal(infile='OrionS_rawACSmod',scanlist=[20,21,22,23],
+      sdcal(infile='OrionS_rawACSmod',scanlist=[21,22,23,24],
                 calmode='ps',tau=0.09,outfile='temp.asap')
       default(sdcal)
       sdcal(infile='temp.asap',timeaverage=True,tweight='tintsys',
@@ -230,10 +230,9 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
     ### - need checking for flag application
     ### - comparison with simple spectral
 
-    #compVstats = ['max','min','mean','sum','rms','median','stddev']
     # Line channels
-    linechan0 = "3999~4144"
-    linechan2 = "2951~3088"
+    linechan0 = [[3999,4144]]
+    linechan2 = [[2951,3088]]
     #### Reference data (from ASAP r2084 + CASA r14498, Mar. 31, 2011)
     # Reference statistic values (masklist=[], invertmask=False)
     ref_allK = {'rms': [4.1249432563781738, 4.0882534980773926, 4.4454779624938965, 4.1502971649169922],
@@ -352,7 +351,8 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
         """Test 4: statistics of line """
         tid="04"
         outfile = self.outroot+tid+self.outsuff
-        spw = '2:'+ self.linechan2
+        ifno = 2
+        spw = self._masklist_to_spw_string(self.linechan2,unit='',ifno=ifno)
 
         currstat = tsdstat(infile=self.infile,outfile=outfile,
                           spw=spw)
@@ -382,76 +382,225 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
         #self._compareStats(currstat,self.ref_allK)
         #self._compareStats(currstat,self.minmaxchan_all)
 
-# class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
-#     """
-#     Unit tests for task sdstat. Test variations of restfreq parameter.
+class sdstat_averageTest( sdstat_unittest_base, unittest.TestCase ):
+    """
+    Unit tests for task sdstat. Test averaging.
 
-#     The list of tests:
-#     testRF01 - testRF02 --- a value (float, quantity w/ unit)
-#     testRF11 - testRF13 --- single element list (int, quantity w/o unit, dictionary)
-#     testRF21 - testRF23 --- single element list (float/int, quantity, dictionary)
-#     """
-#     spw = '0,2'
-#     frf = [45.490e9, 44.075e9]
-#     irf = [45490000000, 44075000000]
-#     qurf = ['45490.MHz','44.075GHz']
-#     qrf = [str(frf[0]), str(irf[1])]
-#     drf = [{'name': "IF0 Rest", 'value': frf[0]}, \
-#            {'name': "IF2 Rest", 'value': qurf[1]}]
-#     badq = ['45490.km','44.075bad']
-    
-#     #compVstats = ['max','min','mean','sum','rms','median','stddev']
+    testAve01 --- scanaverage = True
+    testAve02 --- timeaverage = True, scanaverage=False
+    testAve03 --- polaverage = True (this averages all time now)
+    #testAve04 --- scanaverage = True, polaverage=True
+    #testAve05 --- timeaverage = True, polaverage=True, scanaverage=False
+    Note: input data is generated from a single dish regression data,
+    'OrionS_rawACSmod', as follows:
+      default(sdcal)
+      sdcal(infile='OrionS_rawACSmod',iflist=[2],
+                calmode='ps',tau=0.09,outfile=self.infile)
+    """
+    infile = 'OrionS_rawACSmod_if2_cal.asap'
+    ### Actual test scripts ###
+    def setUp( self ):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
 
-#     # Reference line statistic values (masklist=linechan2, invertmask=False)
-#     ref_allK02 = {'rms': [4.1249432563781738, 4.4454779624938965],
-#                 'min': [-6.5844717025756836, -92.782661437988281],
-#                 'max': [12.278024673461914, 60.68634033203125],
-#                 'median': [4.1043367385864258, 4.1507611274719238],
-#                 'stddev': [0.2636776864528656, 1.5120075941085815],
-#                 'sum': [33722.40234375, 34246.4453125],
-#                 'mean': [4.1165041923522949, 4.1804742813110352]}
+        default(tsdstat)
 
-#     minmaxvrf0_all0 = {'max_abscissa': {'value': 168.19211024624954, 'unit': 'km/s'}, 
-#                         'min_abscissa': {'value': 168.3127963097034, 'unit': 'km/s'}}
-#     minmaxvrf2_all0 = {'max_abscissa': {'value': -9451.0554503663261, 'unit': 'km/s'}, 
-#                         'min_abscissa': {'value': -9450.9308897531319, 'unit': 'km/s'}}
-#     minmaxvrf2_all2 = {'max_abscissa': {'value': -169.33704197623328, 'unit': 'km/s'}, 
-#                         'min_abscissa': {'value': -169.37856218060918, 'unit': 'km/s'}}
-#     #minmaxchan_all = {'max_abscissa': {'value': array([   21.,  8186.]), 'unit': 'channel'},
-#     #                  'min_abscissa': {'value': array([   18.,  8187.]), 'unit': 'channel'}}    
-#     ### Actual test scripts ###
-#     def setUp( self ):
-#         if os.path.exists(self.infile):
-#             shutil.rmtree(self.infile)
-#         shutil.copytree(self.datapath+self.infile, self.infile)
+    def tearDown( self ):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
 
-#         default(tsdstat)
-
-#     def tearDown( self ):
-#         if (os.path.exists(self.infile)):
-#             shutil.rmtree(self.infile)
-
-#     # Tests
-#     def testRF01( self ):
-#         """Test RF01: restfreq (a float value)"""
-#         tid = "RF01"
-#         infile = self.infile
-#         outfile = self.outroot+tid+self.outsuff
-#         spw = self.spw
-#         specunit = 'km/s'
-#         restfreq = self.frf[1]
+    def testAve01(self):
+        """Test Ave01: scanaverage = True"""
+        tid = "Ave01"
+        infile = self.infile
+        outfile = self.outroot+tid+self.outsuff
+        pol = '0'
+        scanaverage=True
+        timeaverage=False
+        tweight = 'tintsys'
+        polaverage=False
+        pweight = 'tsys'
         
-#         print "Setting restfreq = %s" % (str(restfreq))
-#         currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
-#                           specunit=specunit,restfreq=restfreq)
+        currstat = tsdstat(infile=self.infile,outfile=outfile,pol=pol,
+                           scanaverage=scanaverage,
+                           timeaverage=timeaverage,tweight=tweight,
+                           polaverage=polaverage,pweight=pweight)
 
-#         # Task sdstat returns a dictionary of statistic values
-#         self.assertTrue(isinstance(currstat,dict),
-#                          msg="The returned statistics are not a dictionary")
-#         self._compareStats(currstat,self.ref_allK02)
-#         # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
-#         self._compareStats(self.minmaxvrf2_all0,currstat,icomp=0,compstats=self.minmaxvrf2_all0.keys())
-#         self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
+        ref_all = {'max': [4.048968315124512, 4.800313472747803],
+                  'mean': [2.80355167388916, 3.015622854232788],
+                  'median': [2.796175479888916, 3.0042002201080322],
+                  'min': [0.7381619215011597, 1.2696106433868408],
+                  'rms': [2.807967185974121, 3.020477533340454],
+                  'stddev': [0.15738283097743988, 0.1712489128112793],
+                  'sum': [22966.6953125, 24703.982421875]}
+        
+        minmaxchan_all = {'max_abscissa': {'unit': 'channel', 'value': array([ 3044.,  8191.])},
+                          'min_abscissa': {'unit': 'channel', 'value': array([ 0.,  0.])}}
+
+        # Task sdstat returns a dictionary of statistic values
+        self.assertTrue(isinstance(currstat,dict),
+                         msg="The returned statistics are not a dictionary")
+        self._compareStats(currstat,ref_all)
+        # Comparing min/max pos
+        self._compareStats(minmaxchan_all, currstat,compstats=minmaxchan_all.keys())
+
+    def testAve02(self):
+        """Test Ave02: timeaverage = True, scanaverage=False """
+        tid = "Ave02"
+        infile = self.infile
+        outfile = self.outroot+tid+self.outsuff
+        pol = '0'
+        scanaverage=False
+        timeaverage=True
+        tweight = 'tintsys'
+        polaverage=False
+        pweight = 'tsys'
+        
+        currstat = tsdstat(infile=self.infile,outfile=outfile,pol=pol,
+                           scanaverage=scanaverage,
+                           timeaverage=timeaverage,tweight=tweight,
+                           polaverage=polaverage,pweight=pweight)
+
+        ref_all = {'max': 4.2652106285095215,
+                   'mean': 2.9061439037323,
+                   'median': 2.8958709239959717,
+                   'min': 1.0018081665039062,
+                   'rms': 2.9092276096343994,
+                   'stddev': 0.13401487469673157,
+                   'sum': 23807.130859375}
+        
+        minmaxchan_all = {'max_abscissa': {'unit': 'channel', 'value': 3045.0},
+                          'min_abscissa': {'unit': 'channel', 'value': 0.0}}
+
+        # Task sdstat returns a dictionary of statistic values
+        self.assertTrue(isinstance(currstat,dict),
+                         msg="The returned statistics are not a dictionary")
+        self._compareStats(currstat,ref_all)
+        # Comparing min/max pos
+        self._compareStats(minmaxchan_all, currstat,compstats=minmaxchan_all.keys())
+
+    def testAve03(self):
+        """Test Ave03: polaverage = True (this averages all time)"""
+        tid = "Ave03"
+        infile = self.infile
+        outfile = self.outroot+tid+self.outsuff
+        scanaverage=False
+        timeaverage=False
+        tweight = 'tintsys'
+        polaverage=True
+        pweight = 'tsys'
+        
+        currstat = tsdstat(infile=self.infile,outfile=outfile,
+                           scanaverage=scanaverage,
+                           timeaverage=timeaverage,tweight=tweight,
+                           polaverage=polaverage,pweight=pweight)
+
+        ref_all = {'max': 40.940006256103516,
+                   'mean': 2.8243205547332764,
+                   'median': 2.8042635917663574,
+                   'min': -62.5710563659668,
+                   'rms': 3.0028061866760254,
+                   'stddev': 1.0198956727981567,
+                   'sum': 23136.833984375}
+        
+        minmaxchan_all = {'max_abscissa': {'unit': 'channel', 'value': 8186.0},
+                          'min_abscissa': {'unit': 'channel', 'value': 8187.0}}
+
+        # Task sdstat returns a dictionary of statistic values
+        self.assertTrue(isinstance(currstat,dict),
+                         msg="The returned statistics are not a dictionary")
+        self._compareStats(currstat,ref_all)
+        # Comparing min/max pos
+        self._compareStats(minmaxchan_all, currstat,compstats=minmaxchan_all.keys())
+
+
+class sdstat_restfreqTest( sdstat_unittest_base, unittest.TestCase ):
+    """
+    Unit tests for task sdstat. Test variations of restfreq parameter.
+
+    The list of tests:
+    testRF01 - testRF02 --- a value (float, quantity w/ unit)
+    testRF11 - testRF13 --- single element list (int, quantity w/o unit, dictionary)
+    testRF21 - testRF23 --- single element list (float/int, quantity, dictionary)
+    """
+    ifno = 2
+    linechan2 = [[2951,3088]]
+    # Reference frequencies
+    #float
+    frf = [45.490e9, 44.075e9]
+    #integer
+    irf = [45490000000, 44075000000]
+    #quantity string
+    qurf = ['45490.MHz','44.075GHz']
+    #float string
+    qrf = [str(frf[0]), str(irf[1])]
+    #with name
+    drf = [{'name': "IF0 Rest", 'value': frf[0]}, \
+           {'name': "IF2 Rest", 'value': qurf[1]}]
+    #invalid quantities
+    badq = ['45490.km','44.075bad']
+    
+    # Reference line statistic values (masklist=linechan2, invertmask=False)
+    ref_line2 = {'rms': 5.0687642097473145, 'min': 3.9442729949951172,
+                 'max': 6.1298322677612305, 'median': 4.9097409248352051,
+                 'stddev': 0.57094955444335938, 'sum': 695.0701904296875,
+                 'mean': 5.0367403030395508}
+    minmaxchan_line2 = {'max_abscissa': {'value': 3048.0, 'unit': 'channel'}, 
+                        'min_abscissa': {'value': 2951.0, 'unit': 'channel'}}
+    # Reference line statistic values (masklist=linechan2, invertmask=False)
+    ref_allK02 = {'rms': [4.1249432563781738, 4.4454779624938965],
+                  'min': [-6.5844717025756836, -92.782661437988281],
+                  'max': [12.278024673461914, 60.68634033203125],
+                  'median': [4.1043367385864258, 4.1507611274719238],
+                  'stddev': [0.2636776864528656, 1.5120075941085815],
+                  'sum': [33722.40234375, 34246.4453125],
+                  'mean': [4.1165041923522949, 4.1804742813110352]}
+
+    #minmaxvrf0_all0 = {'max_abscissa': {'value': 168.19211024624954, 'unit': 'km/s'}, 
+    #                    'min_abscissa': {'value': 168.3127963097034, 'unit': 'km/s'}}
+    #minmaxvrf2_all0 = {'max_abscissa': {'value': -9451.0554503663261, 'unit': 'km/s'}, 
+    #                    'min_abscissa': {'value': -9450.9308897531319, 'unit': 'km/s'}}
+    #minmaxvrf2_all2 = {'max_abscissa': {'value': -169.33704197623328, 'unit': 'km/s'}, 
+    #                    'min_abscissa': {'value': -169.37856218060918, 'unit': 'km/s'}}
+    minmaxchan_all = {'max_abscissa': {'value': array([   21.,  8186.]), 'unit': 'channel'},
+                      'min_abscissa': {'value': array([   18.,  8187.]), 'unit': 'channel'}}    
+    ### Actual test scripts ###
+    def setUp( self ):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+
+        default(tsdstat)
+
+    def tearDown( self ):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+
+    # Tests
+    def testRF01( self ):
+        """Test RF01: restfreq (a float value)"""
+        tid = "RF01"
+        infile = self.infile
+        outfile = self.outroot+tid+self.outsuff
+        specunit = 'km/s'
+        restfreq = self.frf[1]
+
+        masklist = self._convert_masklist(self.linechan2,specunit,self.infile,
+                                          spw=self.ifno,restfreq=restfreq)
+        print "Setting restfreq = %s" % (str(restfreq))
+        spw = self._masklist_to_spw_string(masklist,unit=specunit,ifno=self.ifno)
+        print "Using spw = %s" % (spw)
+
+        currstat = tsdstat(infile=self.infile,outfile=outfile,spw=spw,\
+                          restfreq=restfreq)
+
+        # Task sdstat returns a dictionary of statistic values
+        self.assertTrue(isinstance(currstat,dict),
+                         msg="The returned statistics are not a dictionary")
+        self._compareStats(currstat,self.ref_line2)
+        # Comparing min/max pos (Need to invert order of ref/test vals for icomp)
+        self._compareStats(self.minmaxchan_line2,currstat,compstats=self.minmaxchan_line2.keys())
 
 #     def testRF02( self ):
 #         """Test RF02: restfreq (a quantity w/ unit)"""
@@ -601,7 +750,6 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
 #         self._compareStats(self.minmaxvrf2_all2,currstat,icomp=1,compstats=self.minmaxvrf2_all2.keys())
 
 
-
         
 class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
     """
@@ -655,7 +803,7 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         restfreq = [44.075e9]
 
         sd.rcParams['scantable.storage'] = 'memory'
-        spw = self._convert_to_spw_string(self.linechan2,unit='',ifno=ifno)
+        spw = self._masklist_to_spw_string(self.linechan2,unit='',ifno=ifno)
         initstat = tsdstat(infile=self.infile,outfile=outfile+'.init',
                           spw=spw)
         masklist = self._convert_masklist(self.linechan2,specunit,self.infile,
@@ -665,13 +813,13 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
-        spw = self._convert_to_spw_string(masklist,unit=specunit,ifno=ifno)
+        spw = self._masklist_to_spw_string(masklist,unit=specunit,ifno=ifno)
         currstat = tsdstat(infile=self.infile,outfile=outfile,
                           spw=spw,restfreq=restfreq)
         # print "Statistics out of the current run:\n",currstat
         
         sd.rcParams['scantable.storage'] = 'memory'
-        spw = self._convert_to_spw_string(self.linechan2, unit='',ifno=ifno)
+        spw = self._masklist_to_spw_string(self.linechan2, unit='',ifno=ifno)
         newinstat = tsdstat(infile=self.infile,outfile=outfile+'.newin',
                           spw=spw)
 
@@ -699,7 +847,7 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         restfreq = [44.075e9]
 
         sd.rcParams['scantable.storage'] = 'memory'
-        spw = self._convert_to_spw_string(self.linechan2,unit='',ifno=ifno)
+        spw = self._masklist_to_spw_string(self.linechan2,unit='',ifno=ifno)
         initstat = tsdstat(infile=self.infile,outfile=outfile+'.init',
                           spw=spw)
         masklist = self._convert_masklist(self.linechan2,specunit,self.infile,
@@ -710,13 +858,13 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
-        spw = self._convert_to_spw_string(masklist,unit=specunit,ifno=ifno)
+        spw = self._masklist_to_spw_string(masklist,unit=specunit,ifno=ifno)
         currstat = tsdstat(infile=self.infile,outfile=outfile,
                           spw=spw,restfreq=restfreq)
         # print "Statistics out of the current run:\n",currstat
         
         sd.rcParams['scantable.storage'] = 'memory'
-        spw = self._convert_to_spw_string(self.linechan2,unit='',ifno=ifno)
+        spw = self._masklist_to_spw_string(self.linechan2,unit='',ifno=ifno)
         newinstat = tsdstat(infile=self.infile,outfile=outfile+'.newin',
                           spw=spw)
 
@@ -744,7 +892,7 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         restfreq = [44.075e9]
 
         sd.rcParams['scantable.storage'] = 'memory'
-        spw = self._convert_to_spw_string(self.linechan2,unit='',ifno=ifno)
+        spw = self._masklist_to_spw_string(self.linechan2,unit='',ifno=ifno)
         initstat = tsdstat(infile=self.infile,outfile=outfile+'.init',
                           spw=spw)
         masklist = self._convert_masklist(self.linechan2,specunit,self.infile,
@@ -755,13 +903,13 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
 
-        spw = self._convert_to_spw_string(masklist,unit=specunit,ifno=ifno)
+        spw = self._masklist_to_spw_string(masklist,unit=specunit,ifno=ifno)
         currstat = tsdstat(infile=self.infile,outfile=outfile,
                           spw=spw,restfreq=restfreq)
         # print "Statistics out of the current run:\n",currstat
         
         sd.rcParams['scantable.storage'] = 'memory'
-        spw = self._convert_to_spw_string(self.linechan2,unit='',ifno=ifno)
+        spw = self._masklist_to_spw_string(self.linechan2,unit='',ifno=ifno)
         newinstat = tsdstat(infile=self.infile,outfile=outfile+'.newin',
                           spw=spw)
 
@@ -789,7 +937,7 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         restfreq = [44.075e9]
 
         sd.rcParams['scantable.storage'] = 'memory'
-        spw = self._convert_to_spw_string(self.linechan2,unit='',ifno=ifno)
+        spw = self._masklist_to_spw_string(self.linechan2,unit='',ifno=ifno)
         initstat = tsdstat(infile=self.infile,outfile=outfile+'.init',
                           spw=spw)
         masklist = self._convert_masklist(self.linechan2,specunit,self.infile,
@@ -799,13 +947,13 @@ class sdstat_storageTest( sdstat_unittest_base, unittest.TestCase ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        spw = self._convert_to_spw_string(masklist,unit=specunit,ifno=ifno)
+        spw = self._masklist_to_spw_string(masklist,unit=specunit,ifno=ifno)
         currstat = tsdstat(infile=self.infile,outfile=outfile,
                           spw=spw,restfreq=restfreq)
         # print "Statistics out of the current run:\n",currstat
         
         sd.rcParams['scantable.storage'] = 'memory'
-        spw = self._convert_to_spw_string(self.linechan2,unit='',ifno=ifno)
+        spw = self._masklist_to_spw_string(self.linechan2,unit='',ifno=ifno)
         newinstat = tsdstat(infile=self.infile,outfile=outfile+'.newin',
                           spw=spw)
 
@@ -857,5 +1005,5 @@ class sdstat_exceptions( sdstat_unittest_base, unittest.TestCase ):
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 
 def suite():
-    return [sdstat_basicTest, sdstat_storageTest, #sdstat_restfreqTest, 
-            sdstat_exceptions]
+    return [sdstat_basicTest, sdstat_averageTest, sdstat_restfreqTest,
+            sdstat_storageTest, sdstat_exceptions]
