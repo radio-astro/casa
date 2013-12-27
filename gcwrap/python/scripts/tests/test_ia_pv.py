@@ -173,24 +173,33 @@ class ia_pv_test(unittest.TestCase):
             
             
             # width > 1
-            outfile = "test_pv_1_" + str(code)
-            xx = code(
-                imagename=imagename, outfile=outfile, start=[2, 5],
-                end=[7, 5], width=3
-            )
-            if (type(xx) == type(ia)):
-                xx.done()
-            pv.open(outfile)
-            expec = [6, 10]
-            got = pv.shape()
-            self.assertTrue((got == expec).all())
-            expec = numpy.zeros(got)
-            for i in range(10):
-                expec[:,i] = range(3,9)
-            got = pv.getchunk()
-            self.assertTrue((got == expec).all())
-            self.assertTrue(pv.getchunk(getmask=T).all())
-            pv.done()
+            for i in range(4):
+                outfile = "test_pv_1_" + str(code) + str(i)
+                if i == 0:
+                    width = 3;
+                elif i == 1:
+                    width = "3arcmin"
+                elif i == 2:
+                    width = "1.1arcmin"
+                elif i == 3:
+                    width = qa.quantity("1.2arcmin")
+                xx = code(
+                    imagename=imagename, outfile=outfile, start=[2, 5],
+                    end=[7, 5], width=width
+                )
+                if (type(xx) == type(ia)):
+                    xx.done()
+                pv.open(outfile)
+                expec = [6, 10]
+                got = pv.shape()
+                self.assertTrue((got == expec).all())
+                expec = numpy.zeros(got)
+                for i in range(10):
+                    expec[:,i] = range(3,9)
+                got = pv.getchunk()
+                self.assertTrue((got == expec).all())
+                self.assertTrue(pv.getchunk(getmask=T).all())
+                pv.done()
         
     def test_stretch(self):
         """ia.pv(): Test stretch parameter"""

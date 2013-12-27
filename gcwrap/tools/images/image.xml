@@ -10422,9 +10422,10 @@ used to create a 2D temporary image.
             <any type="variant"/>
             <value/>
         </param>
-        <param type="int" name="width">
-            <description>Width in pixels for averaging pixels perpendicular to the slice. Must be an odd integer >= 1 (1 means only use the pixels along the slice).</description>
-            <value>1</value>
+        <param type="any" name="width">       
+            <description>Width in pixels for averaging pixels perpendicular to the slice. Must be an odd integer >= 1 (1 means only use the pixels along the slice), or a quantity which will be rounded up if necessary so it corresponds to the next highest odd number of pixels.</description>
+            <any type="variant"/>
+            <value type="int">1</value>
         </param>
         <param type="string" name="unit">
             <description>Unit for the offset axis in the resulting image. Must be a unit of angular measure.</description>
@@ -10472,8 +10473,12 @@ used to create a 2D temporary image.
         each representing the direction. These strings can either represent quantities (eg ["40.5deg", "0.5rad") or be sexigesimal
         format (eg ["14h20m20.5s","-30d45m25.4s"], ["14:20:20.5s","-30.45.25.4"]).
         
-        One may specify a width (must be an odd integer >= 1), which is the number of pixels centered along and perpendicular
-        to the direction slice that are used for averaging along the slice. The default value of 1 represents no averaging).
+        One may specify a width, which is the number of pixels centered along and perpendicular
+        to the direction slice that are used for averaging along the slice. The width may be specified as an integer, in which
+        case it must be positive and odd. Alternatively, it may be specified as a valid quantity string (eg, "4arcsec") or
+        quantity record (eg qa.quantity("4arcsec"). In this case, units must be conformant to the direction axes units (usually
+        angular units) and the specified quantity will be rounded up, if necessary, to the next highest equivalent odd integer number
+        of pixels. The default value of 1 represents no averaging.
         A value of 3 means average one pixel on each side of the slice and the pixel on the slice. 
         Note that this width is applied to pixels in the image after it has been rotated (see below for a description
         of the algorithm used).

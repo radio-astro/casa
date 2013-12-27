@@ -2604,7 +2604,7 @@ bool image::putregion(const ::casac::variant& v_pixels,
 
 image* image::pv(
 	const string& outfile, const variant& start,
-	const variant& end, const int width, const string& unit,
+	const variant& end, const variant& width, const string& unit,
 	const bool overwrite, const variant& region, const string& chans,
 	const string& stokes, const string& mask, const bool stretch,
 	const bool wantreturn
@@ -2659,8 +2659,23 @@ image* image::pv(
 		}
 		_log << _ORIGIN;
 
-		if (width % 2 == 0) {
-			_log << "width must be an odd integer >= 1." << LogIO::EXCEPTION;
+		uInt intWidth = 0;
+		casa::Quantity qWidth;
+		if (width.type() == variant::INT) {
+			intWidth = width.toInt();
+			ThrowIf(
+				intWidth % 2 == 0 || intWidth < 1,
+				"width must be an odd integer >= 1"
+			);
+		}
+		else if (width.type() == variant::STRING || width.type() == variant::RECORD) {
+			qWidth = _casaQuantityFromVar(width);
+		}
+		else if (width.type() == variant::BOOLVEC) {
+			intWidth = 1;
+		}
+		else {
+			ThrowCc("Unsupported type for width " + width.typeString());
 		}
 		if (outfile.empty() && ! wantreturn) {
 			_log << LogIO::WARN << "outfile was not specified and wantreturn is false. "
@@ -2677,8 +2692,13 @@ image* image::pv(
 		else {
 			pv.setEndpoints(startMVD, endMVD);
 		}
+		if (intWidth == 0) {
+			pv.setWidth(qWidth);
+		}
+		else {
+			pv.setWidth(intWidth);
+		}
 		pv.setStretch(stretch);
-		pv.setWidth(width);
 		pv.setOffsetUnit(unit);
 		tr1::shared_ptr<ImageInterface<Float> > resImage(pv.generate(wantreturn));
 		image *ret = wantreturn ? new image(resImage) : 0;
