@@ -76,7 +76,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="interp" subparam="true">
-        <description>Interpolation type in time[,freq]. Valid options are "nearest", "linear", "cspline", or any numeric string that indicates an order of polynomial interporation. You can specify interpolation type for time and frequency separately by joining two of the above options by comma (e.g., "linear,cspline").</description>
+        <description>Interpolation type in time[,freq]. Valid options are "nearest", "linear", "cspline", or any numeric string that indicates an order of polynomial interpolation. You can specify interpolation type for time and frequency separately by joining two of the above options by comma (e.g., "linear,cspline").</description>
         <value></value>
     </param>
 
@@ -197,7 +197,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    So far, sky calibration has three types, 'ps', 'otf',
                    and 'otfraster'. If observation is configured to 
                    observe reference position, calmode must be 'ps'. 
-                   Otherwise, 'otf' or 'otfraster' shoule be used
+                   Otherwise, 'otf' or 'otfraster' should be used
                    depending on observing pattern. If observing pattern
                    is raster scan, calmode must be 'otfraster' while 
                    'otf' must be used when observing pattern is non-
@@ -257,7 +257,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          default: 0.5
                          options: float value
                  elongated -- Edge marking parameter for 'otf'.
-                              Set True only if observed area is elongeted 
+                              Set True only if observed area is elongated 
                               in one direction.
                          default: False
                  tsysiflist -- List of IFNOs for Tsys calibration. It does 
@@ -349,7 +349,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         inline help of sd.edgemarker module and its methods.
         Those modes are designed for OTF observations without 
         explicit OFF spectra. However, these modes should work even if
-        explicit reference spectrta exist. In this case, these spectra
+        explicit reference spectra exist. In this case, these spectra
         will be ignored and spectra near edges detected by edge
         marker will be used as reference.
 
