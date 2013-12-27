@@ -19,6 +19,7 @@ tPointComponent
 tPointShape
 tSkyCompRep
 tSpectralIndex
+tTabularSpectrum
 )
 
 foreach (test ${tests})
