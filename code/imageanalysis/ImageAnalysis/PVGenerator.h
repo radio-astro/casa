@@ -106,6 +106,8 @@ public:
 	// pixel lying on the slice.
 	// Note this average is done after the image has been rotated.
 	void setWidth(uInt width);
+	// This will set the width by rounding <src>q</src> up so that the width is an odd number of pixels.
+	void setWidth(const Quantity& q);
 
 	String getClass() const;
 
@@ -124,6 +126,9 @@ protected:
 		v.push_back(Coordinate::DIRECTION);
 		return v;
  	}
+
+    virtual Bool _mustHaveSquareDirectionPixels() const {return True;}
+
 
 private:
 	std::auto_ptr<vector<Double> > _start, _end;

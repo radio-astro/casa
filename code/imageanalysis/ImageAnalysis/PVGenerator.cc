@@ -27,17 +27,18 @@
 
 #include <imageanalysis/ImageAnalysis/PVGenerator.h>
 
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
-#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
-#include <measures/Measures/MDirection.h>
 
+#include <casa/Quanta/Quantum.h>
+#include <measures/Measures/MDirection.h>
+#include <tables/Tables/PlainTable.h>
+
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <imageanalysis/ImageAnalysis/ImageMetaData.h>
 #include <imageanalysis/ImageAnalysis/ImagePadder.h>
+#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 
 #include <iomanip>
-
-#include <tables/Tables/PlainTable.h>
 
 namespace casa {
 
@@ -95,7 +96,6 @@ void PVGenerator::setEndpoints(
 	const MVDirection& start, const MVDirection& end
 ) {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
-
 	const DirectionCoordinate dc = _getImage()->coordinates().directionCoordinate();
 	Vector<String> units = dc.worldAxisUnits();
 	Vector<Double> sPixel = dc.toPixel(start);
@@ -113,6 +113,35 @@ void PVGenerator::setWidth(uInt width) {
 	_width = width;
 }
 
+void PVGenerator::setWidth(const Quantity& q) {
+	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
+	const DirectionCoordinate dc = _getImage()->coordinates().directionCoordinate();
+	Quantity inc(fabs(dc.increment()[0]), dc.worldAxisUnits()[0]);
+	ThrowIf(
+		! q.isConform(inc),
+		"Nonconformant units specified for quantity"
+	);
+	Double nPixels = (q/inc).getValue();
+	if (nPixels < 1) {
+		nPixels = 1;
+		*_getLog() << LogIO::NORMAL << "Using a width of 1 pixel or "
+			<< inc.getValue() << inc.getUnit() << LogIO::POST;
+	}
+	else if (near(fmod(nPixels, 2), 1.0)) {
+		nPixels = floor(nPixels + 0.5);
+	}
+	else {
+		nPixels = ceil(nPixels);
+		if (near(fmod(nPixels, 2), 0.0)) {
+			nPixels += 1;
+		}
+		Quantity qq = nPixels*inc;
+		*_getLog() << LogIO::NORMAL << "Rounding width up to next odd number of pixels ("
+			<< nPixels << "), or " << qq.getValue() << qq.getUnit() << LogIO::POST;
+	}
+	setWidth((uInt)nPixels);
+}
+
 std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 	const Bool wantReturn
 ) const {
@@ -122,13 +151,15 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 		_start.get() == 0 || _end.get() == 0,
 		"Start and/or end points have not been set"
 	);
-
 	std::auto_ptr<ImageInterface<Float> > myClone(_getImage()->cloneII());
 	std::tr1::shared_ptr<SubImage<Float> > subImage(
-		new SubImage<Float>(SubImageFactory<Float>::createSubImage(
-		*myClone, *_getRegion(), _getMask(),
-		_getLog().get(), False, AxesSpecifier(), _getStretch(), True
-	)));
+		new SubImage<Float>(
+			SubImageFactory<Float>::createSubImage(
+				*myClone, *_getRegion(), _getMask(), _getLog().get(),
+				False, AxesSpecifier(), _getStretch(), True
+			)
+		)
+	);
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 	CoordinateSystem subCoords = subImage->coordinates();
 	Vector<Int> dirAxes = subCoords.directionAxesNumbers();

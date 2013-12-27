@@ -178,6 +178,8 @@ protected:
 
     Bool _getOverwrite() const { return _overwrite; }
 
+    virtual Bool _mustHaveSquareDirectionPixels() const {return False;}
+
 private:
     const shCImFloat _image;
     std::tr1::shared_ptr<LogIO> _log;
