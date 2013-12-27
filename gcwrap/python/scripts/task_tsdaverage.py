@@ -6,7 +6,7 @@ from asap.scantable import is_scantable
 import sdutil
 
 @sdutil.sdtask_decorator
-def tsdaverage(infile, antenna, field, spw, scan, pol, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, kernel, kwidth, chanwidth, verify, outfile, outform, overwrite, plotlevel):
+def tsdaverage(infile, antenna, field, spw, scan, pol, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, kernel, kwidth, chanwidth, verify, plotlevel, outfile, outform, overwrite):
     with sdutil.sdtask_manager(sdaverage_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -27,6 +27,7 @@ class sdaverage_worker(sdutil.sdtask_template):
         #sel = self.get_selector()
         sel = self.get_selector(sorg)
         sorg.set_selection(sel)
+        self.assert_no_channel_selection_in_spw('warn')
 
         # Copy scantable when usign disk storage not to modify
         # the original table.

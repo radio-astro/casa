@@ -140,9 +140,14 @@ and/or polarization.
 	    <value>5</value>
     </param>
 
-    <param type="bool" name="verify">
+    <param type="bool" name="verify" subparam="true">
             <description>interactively verify the results of smoothing for each spectrum. [not available for kernel="regrid"]</description>
             <value>False</value>
+    </param>
+
+    <param type="int" name="plotlevel" subparam="true">
+	    <description>plot results (0=none,1+=some,&lt;0=hardcopy)</description>
+	    <value>0</value>
     </param>
 
     <param type="string" name="outfile">
@@ -172,11 +177,6 @@ and/or polarization.
             <value>False</value>
     </param>
 
-    <param type="int" name="plotlevel">
-	    <description>plot results (0=none,1+=some,&lt;0=hardcopy)</description>
-	    <value>0</value>
-    </param>
-
     <constraints>
 	    <when param="timeaverage">
 		<equals type="bool" value="False"/>
@@ -193,15 +193,26 @@ and/or polarization.
             </when>
 	    <when param="kernel">
 		<equals value=""/>
-		<equals value="hanning"/>
+		<equals value="hanning">
+			<default param="verify"><value>False</value></default>
+			<default param="plotlevel"><value>0</value></default>
+		</equals>
 		<equals value="gaussian">
 			<default param="kwidth"><value>5</value></default>
+			<default param="verify"><value>False</value></default>
+			<default param="plotlevel"><value>0</value></default>
 		</equals>
 		<equals value="boxcar">
 			<default param="kwidth"><value>5</value></default>
+			<default param="verify"><value>False</value></default>
+			<default param="plotlevel"><value>0</value></default>
 		</equals>
 		<equals value="regrid">
 			<default param="chanwidth"><value type="string">5</value></default>
+<!--
+			<default param="verify"><value>False</value></default>
+-->
+			<default param="plotlevel"><value>0</value></default>
 		</equals>
 	    </when>
     </constraints>
