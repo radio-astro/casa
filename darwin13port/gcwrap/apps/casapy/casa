@@ -22,7 +22,7 @@ if [ $OSTYPE = "Darwin" ]; then
 	casa3party="/opt/casa/darwin12"
     fi
     if [ $OSVERS -eq "13" ]; then
-	casa3party="/opt/casa/darwin12"
+	casa3party="/opt/casa/darwin13"
     fi
     p_root=${casa3party}/Library/Frameworks/Python.framework/Versions/2.7
 else 

@@ -417,6 +417,11 @@ public:
     Bool toPixel(Vector<Double> &pixel, const MDirection &world) const;
     Bool toWorld(MVDirection &world, const Vector<Double> &pixel) const;
     Bool toPixel(Vector<Double> &pixel, const MVDirection &world) const;
+
+    // This one throws an exception rather than returning False, because that's
+    // what exceptions are for.
+    Vector<Double> toPixel(const MVDirection &world) const;
+
      //</group>
 
     // Batch up a lot of transformations. The first (most rapidly varying) axis

@@ -219,8 +219,8 @@ if( APPLE )
                     set ( casa_packages /opt/casa/darwin12 )
                     set( PYTHON_ROOT_DIR /opt/casa/darwin12 )
 	            elseif(CMAKE_SYSTEM MATCHES ^Darwin-13)
-                    set ( casa_packages /opt/casa/darwin12 )
-                    set( PYTHON_ROOT_DIR /opt/casa/darwin12 )
+                    set ( casa_packages /opt/casa/darwin13 )
+                    set( PYTHON_ROOT_DIR /opt/casa/darwin13 )
 	            else()
                     set ( casa_packages /opt/casa/darwin10-64b )
                     set( PYTHON_ROOT_DIR /opt/casa/darwin10-64b )
@@ -811,6 +811,7 @@ casa_find( PYTHON
      ${python_prefix}/lib/python${PYTHONV}/site-packages/numpy/core
      ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}
      ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core
+     ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core/include
      ${python_prefix} # Support the ALMA ACS special case.
   LIBS ${python_library}
   CPP_VERSION PY_VERSION )
@@ -1013,6 +1014,7 @@ casa_find( QWT
     ${casa_packages}/qwt-5.2.0
     ${casa_packages}/qwt-5.2.1-svn
     ${casa_packages}/qwt-5.2.3-svn
+    ${casa_packages}/qwt-5.2.4-svn
   LIBS qwt
   CPP_VERSION QWT_VERSION_STR
   DEPENDS QT4 )

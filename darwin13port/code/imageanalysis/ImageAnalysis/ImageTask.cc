@@ -85,6 +85,14 @@ void ImageTask::_construct(Bool verbose) {
 	vector<Coordinate::Type> *coordsPtr = necCoords.size() > 0
 		? &necCoords
 		: 0;
+	ThrowIf(
+		_mustHaveSquareDirectionPixels()
+		&& _image->coordinates().hasDirectionCoordinate()
+		&& ! _image->coordinates().directionCoordinate().hasSquarePixels(),
+		"This application requires that the input image must have square"
+		"direction pixels, but the input image does not. Please regrid it"
+		"so it does and rerun on the regridded image"
+	);
 	ImageInputProcessor inputProcessor;
 	inputProcessor.process(
 		_regionRecord, diagnostics, outputPtr,

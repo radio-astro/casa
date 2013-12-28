@@ -68,6 +68,10 @@ class sdsave_worker(sdutil.sdtask_template):
 #                work_scan = sdutil.doaverage(self.original_scan, self.scanaverage,
                  #                            self.timeaverage, self.tweight,
                  #                            self.polaverage, self.pweight)
+
+                # channel range selection
+                self.__dochannelrange(work_scan)
+                
                 # set rest frequency
                 casalog.post('restore=%s'%(self.restore))
                 if self.rfset:
@@ -81,12 +85,18 @@ class sdsave_worker(sdutil.sdtask_template):
  #                                        self.polaverage, self.pweight)
             self.original_scan = self.scan
 
+            if is_scantable(self.infile) and self.is_disk_storage:
+                self.scan = self.original_scan.copy()
+
             if self.original_scan == self.scan and self.rfset \
                    and is_scantable(self.infile) \
                    and self.is_disk_storage:
                 self.molids = self.original_scan._getmolidcol_list()
                 self.restore = True
-        
+
+            # channel range selection
+            self.__dochannelrange(self.scan)
+                    
             # set rest frequency
             casalog.post('restore=%s'%(self.restore))
             if self.rfset:
@@ -125,3 +135,21 @@ class sdsave_worker(sdutil.sdtask_template):
         if hasattr(self,'restore') and self.restore:
             casalog.post( "Restoring MOLECULE_ID column in %s "%self.infile )
             self.original_scan._setmolidcol_list(self.molids)
+
+    def __dochannelrange(self, scantab):
+        if len(self.spw) > 0:
+            sel_org = scantab.get_selection()
+            channelrange_dic = scantab.parse_spw_selection(self.spw)
+            for (k,v) in channelrange_dic.items():
+                if len(v) > 1:
+                    raise SyntaxError('tsdsave doesn\'t support multiple channel range selection for spw.')
+                nchan = scantab.nchan(k)
+                full_range = [0.0, float(nchan-1)]
+                if v[0] != full_range:
+                    sel = sd.selector()
+                    sel.set_ifs(k)
+                    scantab.set_selection(sel)
+                    sdutil.dochannelrange(scantab, v[0])
+                    scantab.set_selection()
+            scantab.set_selection(sel_org)
+

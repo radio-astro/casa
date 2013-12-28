@@ -76,7 +76,7 @@ public:
 	// and <src>stokes</src>="", and <src>chanInp</src>="", that implies you want to use all
 	// spectral channels and all polarization planes in the input image.
 	PVGenerator(
-			const ImageTask::shCImFloat image,
+		const ImageTask::shCImFloat image,
 		const Record *const &regionRec, const String& chanInp,
 		const String& stokes, const String& maskInp,
 		const String& outname, const Bool overwrite
@@ -89,11 +89,15 @@ public:
 	// collapsed image.
 	std::tr1::shared_ptr<ImageInterface<Float> > generate(const Bool wantReturn) const;
 
-	// set the endpoints of the slice in direction space. Input values represent pixel
-	// locations.
+	// set the end points of the slice in direction space. Input values represent pixel
+	// coordinates in the input image.
 	void setEndpoints(
 		const Double startx, const Double starty,
 		const Double endx, const Double endy
+	);
+
+	void setEndpoints(
+		const MVDirection& start, const MVDirection& end
 	);
 
 	// Set the number of pixels perpendicular to the slice for which averaging
@@ -102,6 +106,8 @@ public:
 	// pixel lying on the slice.
 	// Note this average is done after the image has been rotated.
 	void setWidth(uInt width);
+	// This will set the width by rounding <src>q</src> up so that the width is an odd number of pixels.
+	void setWidth(const Quantity& q);
 
 	String getClass() const;
 
@@ -120,6 +126,9 @@ protected:
 		v.push_back(Coordinate::DIRECTION);
 		return v;
  	}
+
+    virtual Bool _mustHaveSquareDirectionPixels() const {return True;}
+
 
 private:
 	std::auto_ptr<vector<Double> > _start, _end;

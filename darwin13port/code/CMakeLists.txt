@@ -733,7 +733,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.228
+           VERSION 1.0.229
            PREFIX_HINTS ${CASACORE_ROOT_DIR} ${Boost_INCLUDE_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
@@ -936,6 +936,7 @@ casa_find( QWT
     ${casa_packages}/qwt-5.2.0
     ${casa_packages}/qwt-5.2.1-svn
     ${casa_packages}/qwt-5.2.3-svn
+    ${casa_packages}/qwt-5.2.4-svn
   LIBS qwt
   CPP_VERSION QWT_VERSION_STR
   DEPENDS QT4 )

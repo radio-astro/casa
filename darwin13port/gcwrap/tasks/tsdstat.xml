@@ -10,15 +10,24 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="tsdstat" startup="false" category="single dish" visibility="experimental">
 
-  <shortdescription>list statistics of spectral region</shortdescription>
+  <shortdescription>list statistics of spectral</shortdescription>
 
   <description>
-        Task sdstat computes basic statistics (rms,mean,median,sum)
-        for single-dish spectra.  It assumes that the spectra have
-        been calibrated.
+Task sdstat computes basic statistics for each of single-dish spectrum.
+This task returns a Python dictionary of statistics. The return value
+contains the maximum and minimum intensity and their channels ('max',
+'max_abscissa', 'min', and 'min_abscissa'), RMS ('rms'), mean ('mean'),
+sum ('sum'), median ('median'), standard deviation ('stddev'), total
+intensity ('totint'), and equivalent width ('eqw').
+If you do have multiple scantable rows, then the return values will
+be lists.
 
-        WARNING: If you do have multiple scantable rows, then the returning 
-        values will be lists.
+It is possible to select channel regions to calculate spectra either
+non-interactively by spw parameter or interactively on a plotter by
+setting interactive=True.
+
+If one of averaging parameters is set True, the spectra are averaged
+before calculating the statistics.
 </description>
 
   <input>
@@ -45,43 +54,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value type='string'/>
     </param>
 
-    <param type="string" name="specunit">
-            <description>units for spectral axis (channel,km/s,GHz)</description>
-            <value></value>
-            <allowed kind="enum">
-            <value></value>
-            <value>channel</value>
-            <value>km/s</value>
-            <value>GHz</value>
-            <value>MHz</value>
-            <value>kHz</value>
-            <value>Hz</value>
-    </allowed>
-    </param>
-
-    <param type="any" name="restfreq" subparam="true">
-            <description>rest frequency (default unit: Hz)</description>
-            <any type="variant" limittype="string double int string doubleArray intArray stringArray dictArray"/>
-            <value type="string"/>
-    </param>
-
-    <param type="string" name="frame">
-            <description>frequency reference frame, e.g. LSRK (''=current)</description>
-            <value></value>
-    </param>
-
-    <param type="string" name="doppler">
-            <description>doppler convention, e.g. RADIO (''=current)</description>
-            <value></value>
-    </param>
-
-
-    <param type="string" name="scan">
-	    <shortdescription>Select data by scan numbers (e.g. \'21~23\')</shortdescription>
-            <description>Select data by scan numbers</description>
-            <value></value>
-    </param>
-
     <param type="string" name="field">
             <shortdescription>Select field by ID(s) or name(s) (e.g. \'3C2*\')</shortdescription>
 	    <description>Select field by ID(s) or name(s)</description>
@@ -90,13 +62,60 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="spw">
             <shortdescription>Select data by IF ids (spectral window) (e.g. \'3,5,7\')</shortdescription>
-	    <description>Select data by IF ids (spectral window)</description>
+	    <description>Select data by IF ids (spectral window) (\'\'=all)</description>
+            <value></value>
+    </param>
+
+    <param type="any" name="restfreq" subparam="true">
+            <description>rest frequency (default unit: Hz)</description>
+            <any type="variant" limittype="string double int string doubleArray intArray stringArray dictArray"/>
+            <value type="string"/>
+    </param>
+
+    <param type="string" name="frame" subparam="true">
+            <shortdescription>frequency reference frame [\'lsrk\'|\'lsrd\'|\'bary\'|\'geo\'|\'topo\'|\'galacto\'|\'lgroup\'|\'cmb\'] (\'\'=current frame) </shortdescription>
+            <description>frequency reference frame (\'\'=current)</description>
+            <value></value>
+            <allowed kind="enum">
+                    <value>lsrk</value>
+                    <value>lsrd</value>
+                    <value>bary</value>
+                    <value>geo</value>
+                    <value>topo</value>
+                    <value>galacto</value>
+                    <value>lgroup</value>
+                    <value>cmb</value>
+                    <value></value>
+           </allowed>
+    </param>
+
+    <param type="string" name="doppler" subparam="true">
+	    <shortdescription>doppler convention [\'radio\'|\'optical\'|\'z\'|\'beta\'|\'gamma\'](\'\'=current)</shortdescription>
+	    <description>doppler convention (\'\'=current)</description>
+            <value></value>
+    </param>
+
+    <param type="string" name="timerange">
+            <shortdescription>Select data by timerange (e.g. \'09:14:0~09:54:0\')</shortdescription>
+	    <description>Select data by timerange (\'\'=all)</description>
+            <value></value>
+    </param>
+
+    <param type="string" name="scan">
+	    <shortdescription>Select data by scan numbers (e.g. \'21~23\')</shortdescription>
+            <description>Select data by scan numbers (\'\'=all)</description>
             <value></value>
     </param>
 
     <param type="string" name="pol">
             <shortdescription>Select data by polarization ids (e.g.\'0,1\')</shortdescription>
-            <description>Select data by polarization ids</description>
+            <description>Select data by polarization ids (\'\'=all)</description>
+            <value></value>
+    </param>
+
+    <param type="string" name="beam">
+            <shortdescription>Select data by beam ids (e.g.\'0,1\')</shortdescription>
+            <description>Select data by beam ids (\'\'=all)</description>
             <value></value>
     </param>
 
@@ -138,15 +157,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             </allowed>
     </param>
 
-    <param type="intArray" name="masklist">
-            <description>list of mask regions to INCLUDE in stats</description>
-            <value></value>
-    </param>
-
-    <param type="bool" name="invertmask">
-            <description>invert mask (EXCLUDE masklist instead)</description>
-            <value>False</value>
-    </param>
 
     <param type="bool" name="interactive">
             <description>determines interactive masking</description>
@@ -184,17 +194,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         <default param="telescopeparam"><value type='string'></value></default>
                 </equals>
             </when>
-	    <when param="specunit">
-		<equals value=""/>
-	        <equals value="channel"/>
-	        <equals value="km/s">
+	    <when param="spw">
+		<notequals type="string" value="">
                        <default param="restfreq"><value type='string'></value></default>
-                </equals>
-	        <equals value="GHz"/>
-	        <equals value="MHz"/>
-	        <equals value="kHz"/>
-	        <equals value="Hz"/>
-	    </when>
+                       <default param="frame"><value type='string'></value></default>
+                       <default param="doppler"><value type='string'></value></default>
+                </notequals>
+            </when>
 	    <when param="timeaverage">
 		<equals type="bool" value="False"/>
 		<equals type="bool" value="True">
@@ -223,7 +229,26 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <!-- <returns type="variant"/> -->
 
   <example>
-        Keyword arguments:
+------------------------
+How to use return values
+------------------------
+xstat=sdstat();
+print "rms = ",xstat['rms']
+
+these can be used for testing in scripts or for regression
+
+'max_abscissa' and 'min_abscissa' refer to the channel of max and min
+intensity.
+'totint' is the integrated intensity (sum*channel).
+'eqw' is equivalent width (totint/mag) where mag is either max or min
+depending on which has greater magnitude. 
+Note that 'max_abscissa', 'min_abscissa', 'totint' and 'eqw' are
+quantities (python dictionaries with keys, 'unit' and 'value').
+
+
+------------------
+Keyword arguments
+------------------
         infile -- name of input SD dataset
                 default: none - must input file name
                 example: 'mysd.asap'
@@ -249,48 +274,41 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                  telescopeparam='FIX' to change default fluxunit
                                  see description below
 
-        specunit -- units for spectral axis
-                options: (str) 'channel','km/s','GHz','MHz','kHz','Hz',''
-                default: '' (=current)
-            &gt;&gt;&gt; specunit expandable parameter
+        field -- Select data by field ID(s) or name(s)
+                default: '' (no name selection)
+                example: 'FLS3a*'
+                this selection is in addition to spw, scan, pol, and beam
+        spw -- Select data by IF ids (spwctral window)
+                default: '' (use all IFs)
+                example: '15'
+                this selection is in addition to field, spw, pol, and beam
+            &gt;&gt;&gt; spw expandable parameter
                  restfreq -- rest frequency
                          default: '' (use current setting)
                          example: 4.6e10 (float value in Hz),
                                   '46GHz' (string with unit),
                                   ['345.8GHz', 347.0e9, 356.7e9] (for each IF)
                                   [{'name':'CO','value':345e9}] (a value with name)
-        frame -- frequency frame for spectral axis
-                options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
-                         'GEO','GALACTO','LGROUP','CMB'
-                default: currently set frame in scantable
-                WARNING: frame='REST' not yet implemented
-        doppler -- doppler mode
-                options: (str) 'RADIO','OPTICAL','Z','BETA','GAMMA'
-                default: currently set doppler in scantable
-        scanlist -- list of scan numbers to process
-                default: [] (use all scans)
-                example: [21,22,23,24]
-                this selection is in addition to field, iflist, and pollist
-        field -- selection string for selecting scans by name
-                default: '' (no name selection)
-                example: 'FLS3a*'
-                this selection is in addition to scanlist, iflist, and pollist
-        iflist -- list of IF id numbers to select
-                default: [] (use all IFs)
-                example: [15]
-                this selection is in addition to field, scanlist, and pollist
-        pollist -- list of polarization id numbers to select
-                default: [] (use all pols)
-                example: [1]
-                this selection is in addition to field, scanlist, and iflist
-        masklist -- list of mask regions to INCLUDE in stats
-                default: [] (whole spectrum)
-                example: [4000,4500] for one region
-                         [[1000,3000],[5000,7000]]
-                         these must be pairs of [lo,hi] boundaries
-        invertmask -- invert mask (EXCLUDE masklist instead)
-                options: (bool) True,False
-                default: false
+                frame -- frequency frame for spectral axis
+                        options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
+                                 'GEO','GALACTO','LGROUP','CMB'
+                        default: currently set frame in scantable
+                        WARNING: frame='REST' not yet implemented
+                doppler -- doppler mode
+                        options: (str) 'RADIO','OPTICAL','Z','BETA','GAMMA'
+                        default: currently set doppler in scantable
+        scan -- Select data by scan number range
+                default: '' (use all scans)
+                example: '21~24'
+                this selection is in addition to field, spw, pol, and beam
+        pol -- Select data by polarization ids
+                default: '' (use all pols)
+                example: '1'
+                this selection is in addition to field, spw, scan, and beam
+        beam -- Select data by beam ids
+                default: '' (use all beams)
+                example: '0~25'
+                this selection is in addition to field, spw, scan, and pol
         interactive -- determines interactive masking
                 options: (bool) True,False
                 default: False
@@ -311,24 +329,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 Returns: a Python dictionary of line statistics
                    keys: 'rms','stddev','max','min','max_abscissa',
                          'min_abscissa','sum','median','mean','totint','eqw'
-                example: xstat=sdstat(); print "rms = ",xstat['rms']
-                         these can be used for testing in scripts or
-                         for regression
-
-                         'max_abscissa' and 'min_abscissa' refer to the abscissa
-                         (channel/frequency/velocity) of max and min intensity.
-                         'totint' is the integrated intensity (sum*dx)
-                         where dx is the abscissa interval in 'specunit'.
-                         'eqw' is equivalent width (totint/mag) where mag
-                         is either max or min depending on which has
-                         greater magnitude. 
-                         Note that 'max_abscissa', 'min_abscissa', 'totint' 
-                         and 'eqw' are quantities (python dictionaries with
-                         keys, 'unit' and 'value').
-
-
-       DESCRIPTION:
-
+-----------
+DESCRIPTION
+-----------
         ASAP recognizes the data of the "AT" telescopes, but currently
         does not know about the GBT or any other telescope. This task
         does know about GBT. Telescope name is obtained from the data.

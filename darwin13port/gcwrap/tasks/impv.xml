@@ -22,19 +22,22 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>Output image name. If empty, no image is written.</description>
             <value/>
         </param>
-        <param type="doubleArray" name="start">
+        <param type="any" name="start">
+            <any type="variant"/>
             <description>The starting pixel in the direction plane (array of two values).</description>
-            <value/>
+            <value type="string"/>
             <example>[20, 5]</example>
         </param>
-        <param type="doubleArray" name="end">
+        <param type="any" name="end">
+            <any type="variant"/>
             <description>The ending pixel in the direction plane (array of two values).</description>
-            <value/>
+            <value type="string"/>
             <example>[200,300]</example>
         </param>
-        <param type="int" name="width">
-            <description>Width in pixels for averaging pixels perpendicular to the slice. Must be an odd integer &gt;= 1 (1 means only use the pixels along the slice).</description>
-            <value>1</value>
+        <param type="any" name="width">
+            <any type="variant"/>
+            <description>Width in pixels for averaging pixels perpendicular to the slice. Must be an odd integer &gt;= 1 (1 means only use the pixels along the slice), or a quantity which will be rounded up if necessary so it corresponds to the next highest odd number of pixels.</description>
+            <value type="int">1</value>
         </param>
         <param type="string" name="unit">
             <description>Unit for the offset axis in the resulting image. Must be a unit of angular measure.</description>
@@ -96,13 +99,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 PARAMETER SUMMARY
 imagename        Name of the input (CASA, FITS, MIRIAD) image
 outfile          Name of output CASA image. Must be specified.
-start            The starting pixel in the direction plane (array of two values), such as [20, 5].
+start            The starting pixel in the direction plane (array of two values), such as [20, 5] or ["14h20m20.5s","-30d45m25.4s"].
 end              The ending pixel in the direction plane (array of two values), such as [200, 300].
 width            Width, in pixels, for averaging pixels perpendicular to the slice.
                  This value is determined after rotating the image so the slice lies horizontally.
                  A value of one means no averaging. A value of 3 means average one pixel on each
                  side of the slice and the pixel on the slice. A value of 5 means average 2 pixels
-                 on each side of the slice and the pixel on the slice, etc. Must be an odd integer >= 1.
+                 on each side of the slice and the pixel on the slice, etc. Must be either an odd integer >= 1 or
+                 a valid quantity (eg. "4arcsec", qa.quantity("4arcsec")). If a quantity, the value will be adjusted
+                 upwards, if necessary, such that the next highest odd integer number of pixels is used.
 unit             Allows the user to set the unit for the angular offset axis. Must be a unit of angular
                  measure.
 overwrite        If output file is specified, this parameter controls if an already existing file by the
@@ -120,13 +125,21 @@ stretch          Stretch the input mask if necessary and possible. Only used if 
 Create a position-velocity image by specifying two pixels between which a slice is taken in the direction
 coordinate. The spectral extent of the resulting image will be that provided by the region specification
 or the entire spectral range of the input image if no region is specified. One may not specify a region
-in direction space; that is accomplished by specifying the start and end points of the slice.
+in direction space; that is accomplished by specifying the start and end points of the slice. The parameters
+start and end may be specified as two element arrays of numerical values, in which case these values will be
+interpreted as pixel locations in the input image. Alternatively, they may be expressed as arrays of two strings
+each representing the direction. These strings can either represent quantities (eg ["40.5deg", "0.5rad") or be sexigesimal
+format (eg ["14h20m20.5s","-30d45m25.4s"], ["14:20:20.5s","-30.45.25.4"]).
         
 The start and end values represent direction pixel coordinates. They both must fail within the input
 image, and they both must be at least 2 pixels from the edge of the input image to facilite rotation (see below).
 
-One may specify a width (must be an odd integer >= 1), which is the number of pixels centered along and perpendicular
-to the direction slice that are used for averaging along the slice. The default value of 1 represents no averaging).
+One may specify a width, which is the number of pixels centered along and perpendicular
+to the direction slice that are used for averaging along the slice. The width may be specified as an integer, in which
+case it must be positive and odd. Alternatively, it may be specified as a valid quantity string (eg, "4arcsec") or
+quantity record (eg qa.quantity("4arcsec"). In this case, units must be conformant to the direction axes units (usually
+angular units) and the specified quantity will be rounded up, if necessary, to the next highest equivalent odd integer number
+of pixels. The default value of 1 represents no averaging.
 A value of 3 means average one pixel on each side of the slice and the pixel on the slice. 
 Note that this width is applied to pixels in the image after it has been rotated (see below for a description
 of the algorithm used).

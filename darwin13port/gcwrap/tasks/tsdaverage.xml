@@ -51,25 +51,25 @@ and/or polarization.
 
     <param type="string" name="field">
 	    <shortdescription>Select data by field ID(s) or names(s) </shortdescription>
-	    <description>Select field by ID(s) or name(s)</description>
+	    <description>Select field by ID(s) or name(s) ('' = all)</description>
 	    <value></value>
     </param>
 
     <param type="string" name="spw">
 	    <shortdescription>Select data by IF ids (spectral window) (e.g. \'3,5,7\'). Note this task only supports IF selction and ignores channel selection.</shortdescription>
-	    <description>Select data by IF ids (spectral window). Note this task only supports IF selction and ignores channel selection.</description>
+	    <description>Select data by IF ids (spectral window) ('' = all). Note this task only supports IF selction and ignores channel selection.</description>
 	    <value></value>
     </param>
 
     <param type="string" name="scan">
 	    <shortdescription>Select data by scan numbers (e.g. \'21~23\')</shortdescription>
-	    <description>Select data by scan numbers</description>
+	    <description>Select data by scan numbers ('' = all)</description>
 	    <value></value>
     </param>
 
     <param type="string" name="pol">
             <shortdescription>Select polarization ids (e.g.\'0,1\')</shortdescription>
-            <description>Select data by polarization ids</description>
+            <description>Select data by polarization ids ('' = all)</description>
 	    <value></value>
     </param>
 
@@ -140,9 +140,14 @@ and/or polarization.
 	    <value>5</value>
     </param>
 
-    <param type="bool" name="verify">
+    <param type="bool" name="verify" subparam="true">
             <description>interactively verify the results of smoothing for each spectrum. [not available for kernel="regrid"]</description>
             <value>False</value>
+    </param>
+
+    <param type="int" name="plotlevel" subparam="true">
+	    <description>plot results (0=none,1+=some,&lt;0=hardcopy)</description>
+	    <value>0</value>
     </param>
 
     <param type="string" name="outfile">
@@ -172,11 +177,6 @@ and/or polarization.
             <value>False</value>
     </param>
 
-    <param type="int" name="plotlevel">
-	    <description>plot results (0=none,1+=some,&lt;0=hardcopy)</description>
-	    <value>0</value>
-    </param>
-
     <constraints>
 	    <when param="timeaverage">
 		<equals type="bool" value="False"/>
@@ -193,15 +193,26 @@ and/or polarization.
             </when>
 	    <when param="kernel">
 		<equals value=""/>
-		<equals value="hanning"/>
+		<equals value="hanning">
+			<default param="verify"><value>False</value></default>
+			<default param="plotlevel"><value>0</value></default>
+		</equals>
 		<equals value="gaussian">
 			<default param="kwidth"><value>5</value></default>
+			<default param="verify"><value>False</value></default>
+			<default param="plotlevel"><value>0</value></default>
 		</equals>
 		<equals value="boxcar">
 			<default param="kwidth"><value>5</value></default>
+			<default param="verify"><value>False</value></default>
+			<default param="plotlevel"><value>0</value></default>
 		</equals>
 		<equals value="regrid">
 			<default param="chanwidth"><value type="string">5</value></default>
+<!--
+			<default param="verify"><value>False</value></default>
+-->
+			<default param="plotlevel"><value>0</value></default>
 		</equals>
 	    </when>
     </constraints>
