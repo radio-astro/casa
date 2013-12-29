@@ -3872,7 +3872,6 @@ image::recordFromQuantity(const Quantum<Vector<Double> >& q) {
 }
 
 casa::Quantity image::_casaQuantityFromVar(const ::casac::variant& theVar) {
-	casa::Quantity retval;
 	try {
 		_log << _ORIGIN;
 		casa::QuantumHolder qh;
@@ -3895,6 +3894,9 @@ casa::Quantity image::_casaQuantityFromVar(const ::casac::variant& theVar) {
 				"Error " + error + " in converting quantity "
 			);
 		}
+        else if (theVar.type() == variant::BOOLVEC) {
+            return casa::Quantity();
+        }
 		return qh.asQuantity();
 	}
 	catch (const AipsError& x) {
@@ -3903,7 +3905,6 @@ casa::Quantity image::_casaQuantityFromVar(const ::casac::variant& theVar) {
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return retval;
 }
 
 bool image::isconform(const string& other) {
