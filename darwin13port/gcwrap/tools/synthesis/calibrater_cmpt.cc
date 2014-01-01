@@ -839,9 +839,9 @@ casac::record* calibrater::fluxscale(
 	//oSubRecord.define( "numSol", Vector<Int>(oFluxD.numSol(oStart,oEnd)));
 	oSubRecord.define( "spidx", Vector<Double>(oFluxD.spidx.row(t)));
 	oSubRecord.define( "spidxerr", Vector<Double>(oFluxD.spidxerr.row(t)));
-	oSubRecord.define( "fitFluxd", oFluxD.fitfd);
-	oSubRecord.define( "fitFluxdErr", oFluxD.fitfderr);
-	oSubRecord.define( "fitRefFreq", oFluxD.fitreffreq);
+	oSubRecord.define( "fitFluxd", oFluxD.fitfd(t));
+	oSubRecord.define( "fitFluxdErr", oFluxD.fitfderr(t));
+	oSubRecord.define( "fitRefFreq", oFluxD.fitreffreq(t));
 	
 	oRecord.defineRecord( String::toString<Int>(t), oSubRecord );
       }

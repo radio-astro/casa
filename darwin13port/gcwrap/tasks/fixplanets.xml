@@ -37,7 +37,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                        get_sub_long=True, use_apparent=False, get_sep=False,
                        return_address='YOUR_EMAIL_ADDESS', mailserver='YOUR_MAIL_SERVER_ADDRESS')
                   Note: some mail clients may not save the JPL mail properly.
-                        Confirmed to work is firefox.
+                        Confirmed to work is Thunderbird.
 
                   default= '' (use pointing table)
                   
