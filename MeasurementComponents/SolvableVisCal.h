@@ -75,9 +75,9 @@ public:
     Vector<Double> freq;
     Matrix<Double> spidx;
     Matrix<Double> spidxerr;
-    Double fitfd;
-    Double fitfderr;
-    Double fitreffreq;
+    Vector<Double> fitfd;
+    Vector<Double> fitfderr;
+    Vector<Double> fitreffreq;
   } fluxScaleStruct;
 
 
