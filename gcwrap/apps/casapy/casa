@@ -21,7 +21,7 @@ if [ $OSTYPE = "Darwin" ]; then
     if [ $OSVERS -eq "12" ]; then
 	casa3party="/opt/casa/darwin12"
     fi
-    p_root=${casa3party}/Library/Frameworks/Python.framework/Versions/2.6
+    p_root=${casa3party}/Library/Frameworks/Python.framework/Versions/2.7
 else 
     isapple="F"
     casa3party="/usr/lib/casapy"

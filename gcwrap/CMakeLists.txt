@@ -292,7 +292,7 @@ if( APPLE )
         endif( )
     endif( )
 
-    set( python_version 2.6 )
+    set( python_version 2.7 )
 
 elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
 
