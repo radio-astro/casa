@@ -79,11 +79,13 @@ namespace casa {
 
 		//ImageManipulation
 		void closeImages();
+		void addDisplayDataLayout( QtDisplayData* displayData, int dropIndex);
 		void addImageView( QtDisplayData* displayData, bool registered,
 				ImageView::ColorCombinationMode mode,
 				int dropIndex = -1, bool masterCoordinate = false,
 				bool masterSaturation = false, bool masterHue = false,
 				QColor rgbColor= QColor("#D3D3D3"));
+		void removeDisplayDataLayout( QtDisplayData* displayData );
 		void removeImageView( QtDisplayData* displayData );
 		virtual ~ImageScroll();
 
@@ -96,8 +98,8 @@ namespace casa {
 		void displayTypeChanged( ImageView* displayData );
 		//Image was moved by the user
 		void imageOrderingChanged( QtDisplayData* imageData, int dropIndex,
-				bool registered, bool masterCoordinate, bool masterSaturation,
-				bool masterHue, QColor rgbColor );
+				bool registered, bool masterCoordinate/*, bool masterSaturation,
+				bool masterHue, QColor rgbColor */);
 		//The new display data became in charge of setting the coordinate system.
 		void masterCoordinateImageChanged( QtDisplayData* imageData );
 		//Show the display options for this data.
@@ -135,8 +137,10 @@ namespace casa {
 		//Coordinate system master image
 		void resetMasterCoordinate( ImageView* newMaster );
 
-		//Adds an image at a particular place in the layout
+		//Adding/removing images from the layout.
 		void addImage( ImageView* imageView, int dropIndex = -1 );
+		void removeImageViewLayout( ImageView* imageView );
+		void addImageViewLayout( ImageView* viewerImage, int dropIndex);
 
 		//Returns the index of a particular image.
 		int findImageView( QString name, bool exactMatch = true );

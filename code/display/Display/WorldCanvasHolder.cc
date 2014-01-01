@@ -95,8 +95,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			                 "null pointer passed"));
 		}
 		worldCanvas()->hold();
-		// Notify DisplayData
-		dData->notifyRegister(this);
+
 
 		if ( position == -1 ){
 			// and add the new displayData
@@ -112,6 +111,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsDisplayList.insert(iter,dData);
 		}
 
+		// Notify DisplayData
+		dData->notifyRegister(this);
 		//Block below was taken out, because we now have a mode where there
 		//can be NO CSMaster.
 		/*if(worldCanvas()->csMaster()==0) {

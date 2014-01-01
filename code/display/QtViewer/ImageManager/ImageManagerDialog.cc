@@ -83,8 +83,8 @@ namespace casa {
 		         this, SLOT(displayTypeChanged(ImageView*)) );
 		connect( imageScroll, SIGNAL(displayDataRemoved( QtDisplayData*, bool)),
 			     this, SLOT( closeImage( QtDisplayData*, bool)));
-		connect( imageScroll, SIGNAL(imageOrderingChanged( QtDisplayData*, int, bool,bool,bool,bool,QColor)),
-				 this, SLOT( reorderDisplayImages(QtDisplayData*, int, bool,bool,bool,bool,QColor)));
+		connect( imageScroll, SIGNAL(imageOrderingChanged( QtDisplayData*, int, bool,bool)),
+				 this, SLOT( reorderDisplayImages(QtDisplayData*, int, bool,bool)));
 		connect( imageScroll, SIGNAL(masterCoordinateImageChanged( QtDisplayData*)),
 				 this, SLOT( masterImageChanged(QtDisplayData*)));
 		connect( imageScroll, SIGNAL(showDataDisplayOptions( QtDisplayData*)),
@@ -128,24 +128,26 @@ namespace casa {
 //                Reordering Images
 //----------------------------------------------------------------
 	void ImageManagerDialog::reorderDisplayImages( QtDisplayData* displayData,
-			int dropIndex, bool registered, bool masterCoordinate,
-			bool masterSaturation, bool masterHue, QColor rgbColor ){
+			int dropIndex, bool registered, bool masterCoordinate){
 		if ( displayedImages == NULL || allImages == NULL ){
 			return;
 		}
+
 		//First remove it from the registered images, it it is preset.
 		if ( registered ){
 			displayedImages->discardDD( displayData );
+		}
+
+		if ( masterCoordinate ){
+			displayedImages->setDDControlling( NULL );
 		}
 		//Now remove it from all the images.
 		allImages->discardDD( displayData);
 
 		//We handle adding it to the scroll first, because by the time
 		//we get the callbacks, the insert order is lost.
-		imageScroll->removeImageView( displayData );
-
-		imageScroll->addImageView( displayData, registered, getColorCombinationMode(), dropIndex,
-				masterCoordinate, masterSaturation, masterHue, rgbColor );
+		imageScroll->removeDisplayDataLayout( displayData );
+		imageScroll->addDisplayDataLayout( displayData, dropIndex);
 
 		//Now insert it at the correct position in all the images.
 		allImages->insertDD( displayData, dropIndex, registered );
@@ -157,6 +159,10 @@ namespace casa {
 			displayedImages->insertDD( displayData, registeredIndex,
 					registered );
 			displayedImages->registrationOrderChanged();
+		}
+
+		if ( masterCoordinate ){
+			displayedImages->setDDControlling( displayData );
 		}
 
 

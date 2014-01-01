@@ -1103,6 +1103,15 @@ void QtDisplayPanelGui::showCleanTool( ) {
 	if ( clean_tool ) clean_tool->show( );
 }
 
+void QtDisplayPanelGui::ddRegChange_() {
+	//A segfault can be generated if we try to add a track box when
+	//it is not visible.
+	if ( trkgDockWidget_ != NULL && trkgDockWidget_->isVisible()){
+		arrangeTrackBoxes_();
+	}
+	updateFrameInformation();
+}
+
 void QtDisplayPanelGui::addSkyComponentOverlay( String path, const QString& colorName ) {
 	QtDisplayData* dd = createDD( path, "sky cat", "skycatalog" );
 	Record opts = dd->getOptions();

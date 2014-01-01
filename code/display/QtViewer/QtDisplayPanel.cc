@@ -3138,12 +3138,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void QtDisplayPanel::registrationOrderChanged(){
+		pd_->hold();
 		pd_->removeDisplayDatas();
 		for ( DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
 				iter != displayDataHolder->endDD(); iter++ ){
 			DisplayData* displayData = (*iter)->dd();
 			pd_->addDisplayData( *displayData, -1);
 		}
+		pd_->refresh();
+		pd_->release();
+
 	}
 
 

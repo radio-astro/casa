@@ -33,7 +33,6 @@
 
 #include <QUuid>
 #include <QDrag>
-#include <QMenu>
 #include <QColorDialog>
 #include <QMouseEvent>
 #include <QPainter>
@@ -60,6 +59,7 @@ namespace casa {
 		  VIEWED_BORDER_SIZE(5), NOT_VIEWED_BORDER_SIZE(2){
 
 		ui.setupUi(this);
+
 		initDisplayLabels();
 		minimumSize = SIZE_COLLAPSED;
 		spacerFirst = new QSpacerItem( 1, 1, QSizePolicy::MinimumExpanding );
@@ -148,17 +148,17 @@ namespace casa {
 	}
 
 	void ImageView::initDisplayLabel( QWidget* holder, DisplayLabel* label ){
-		QVBoxLayout* verticalLayout = new QVBoxLayout();
+		QVBoxLayout* verticalLayout = new QVBoxLayout(holder);
 		verticalLayout->setContentsMargins( 0, 0, 0, 3 );
 		verticalLayout->addWidget( label, Qt::AlignTop | Qt::AlignCenter );
 		holder->setLayout( verticalLayout );
 	}
 
 	void ImageView::initDisplayLabels(){
-		displayTypeLabel = new DisplayLabel( 1, this );
+		displayTypeLabel = new DisplayLabel( 1, NULL );
 		initDisplayLabel( ui.displayTypeHolder, displayTypeLabel );
 
-		coordinateMasterLabel = new DisplayLabel( 2, this );
+		coordinateMasterLabel = new DisplayLabel( 2, NULL );
 		initDisplayLabel( ui.coordinateMasterHolder, coordinateMasterLabel );
 
 		/*hueMasterLabel = new DisplayLabel( 1, this );
@@ -276,6 +276,8 @@ namespace casa {
 
 	QString ImageView::getName() const {
 		QString nameStr = ui.imageNameLabel->text();
+		nameStr = nameStr.replace( "<b>", "");
+		nameStr = nameStr.replace( "</b>", "");
 		return nameStr;
 	}
 
@@ -488,10 +490,12 @@ namespace casa {
 	}
 
 	void ImageView::setData( QtDisplayData* other ){
-		empty = false;
-		imageData = other;
-		setTitle();
-		restoreSnapshot();
+		if ( empty && other != NULL ){
+			empty = false;
+			imageData = other;
+			setTitle();
+			restoreSnapshot();
+		}
 	}
 
 
@@ -503,7 +507,7 @@ namespace casa {
 
 		//Set-up the context
 		QPoint showLocation = mapToGlobal( location );
-		QMenu contextMenu;
+		contextMenu.clear();
 		bool masterCoordinateImage = isMasterCoordinate();
 		if ( !masterCoordinateImage && isControlEligible() ){
 			contextMenu.addAction( &masterCoordinateSystemAction );
@@ -883,20 +887,11 @@ namespace casa {
 	}
 
 	ImageView::~ImageView() {
-		delete ui.colorGroupBox;
-		delete ui.hueMasterHolder;
-		delete ui.saturationMasterHolder;
-		delete ui.colorLabel;
-
 		//If we are minimized, we have to delete the orphaned
 		//widgets ourselves.
 		if ( minimumSize == SIZE_COLLAPSED ){
-			delete ui.displayGroupBox;
-			delete ui.restGroupBox;
-			delete ui.dataOptionsButton;
 			delete spacerFirst;
 			delete spacerLast;
 		}
-
 	}
 }

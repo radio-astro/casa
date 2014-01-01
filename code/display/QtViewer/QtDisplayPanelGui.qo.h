@@ -435,12 +435,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//# Protected, connected by this object itself.
 
 		// Respond to QDP::registrationChange() signal
-		virtual void ddRegChange_() {
-			//hideImageMenus();
-			//updateDDMenus_();
-			arrangeTrackBoxes_();
-			updateFrameInformation();
-		}
+		virtual void ddRegChange_();
 
 		// Respond to registration/close menu clicks.
 		//<group>
