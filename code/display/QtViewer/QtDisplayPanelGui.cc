@@ -1553,8 +1553,9 @@ void QtDisplayPanelGui::movieStop() {
 }
 
 void QtDisplayPanelGui::removeAllDDs() {
-	if ( qdp_ != NULL ){
 
+	displayDataHolder->setDDControlling( NULL );
+	if ( qdp_ != NULL ){
 		qdp_->setControllingDD( NULL );
 		qdp_->unregisterAll();
 	}
