@@ -582,7 +582,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		 */
 		void construct_( QtDisplayPanel *newpanel, const std::list<std::string> &args );
 
-		void animationModeChanged( bool modeZ);
+		void animationModeChanged( bool modeZ, bool channelCubes);
 
 		bool use_new_regions;
 
@@ -664,8 +664,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		static std::string idGen( );
 
 	private slots:
-		void to_image_mode( ) { animationModeChanged(true); }
-		void to_channel_mode( ) { animationModeChanged(false); }
+		void to_image_mode( bool channelCubes );
+		void to_channel_mode( );
 		void loadRegions( const QString &path, const QString &type );
 		void incrementMovieChannel();
 		void clear_status_bar( );

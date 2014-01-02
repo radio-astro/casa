@@ -328,19 +328,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				// at this stage.  But setting itsCSmaster here also puts the
 				// dd in charge, at least temporarily, of any WC coordinate
 				// conversions it needs to do during sizeControl execution).
+
 			}
+
 			bool ddSizeControl=(*iter)->sizeControl(*this, sizeControlAtts);
 			if ( ddSizeControl ) {
 				masterFound=True;
 			}
 			// CS master confirmed.
 		}
-
+		// Store the WC state attributes produced by sizeControl[s].
 		if (masterFound){
 			wCanvas->setAttributes(sizeControlAtts);
 		}
-
-		// Store the WC state attributes produced by sizeControl[s].
 		else {
 			clearCSMasterSettings( wCanvas );
 		}
@@ -440,6 +440,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// retrieve the world and pixel canvases
 		WorldCanvas *wc = ev.worldCanvas();
+
 		PixelCanvas *pc = wc->pixelCanvas();
 
 		pc->disable(Display::ClipWindow);
@@ -454,7 +455,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		pc->enable(Display::ClipWindow);
 		wc->clear();
 
-		// If there are no DisplayDatas, or if noone has set WC coordinate state,
+		// If there are no DisplayDatas, or if noon has set WC coordinate state,
 		// do not draw.
 		if (nDisplayDatas() == 0 || csMaster()==0) {
 			// disable the clip window
@@ -481,9 +482,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Vector<Bool> conforms = getConformance();
 		clearSubstituteTitles();
 		setControllingTitle( conforms );
-		//We have to redo the conforms vector here because we may have changed
-		//the world canvas controlling dd.
-		//conforms = getConformance();
 
 		// iteration one - do  rasters:
 		dd = 0;
@@ -503,9 +501,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		dd = 0;
 		for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
 		        iter != itsDisplayList.end(); ++iter, ++dd ) {
-			if ( conforms[dd] ) {
-				if ( (*iter)->classType() == Display::Vector )
+			if ( (*iter)->classType() == Display::Vector ){
+				if ( /*conforms[dd]*/(*iter)->isDisplayable() && (*iter)->conformsToCS(*wc) ) {
 					(*iter)->refreshEH(ev);
+				}
 			}
 		}
 
@@ -676,6 +675,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void WorldCanvasHolder::setControllingTitle( const Vector<Bool>& conforms ){
 		if ( controllingDD != NULL ) {
 			if ( controllingDD->isDisplayable()) {
+
 				String titleDDName = getTitleDDName( conforms );
 				controllingDD->setSubstituteTitleText( titleDDName );
 			}
@@ -691,11 +691,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 
 			if ( titleDD != NULL ){
-				clearCSMasterSettings(this->worldCanvas(), false);
-				worldCanvas()->csMaster() = titleDD;
-				//Preserve the zoom when there is no CS Master
-				itsLastCSmaster=titleDD;
-				executeSizeControl(worldCanvas() );
+				DisplayData* previousCSMaster = worldCanvas()->csMaster();
+				if ( titleDD != previousCSMaster ){
+					clearCSMasterSettings(this->worldCanvas(), false);
+					worldCanvas()->csMaster() = titleDD;
+					itsLastCSmaster=previousCSMaster;
+					executeSizeControl(worldCanvas() );
+				}
 			}
 		}
 	}

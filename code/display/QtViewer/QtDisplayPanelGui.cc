@@ -781,7 +781,7 @@ void QtDisplayPanelGui::initAnimationHolder() {
 		connect(animationHolder, SIGNAL(fwdPlayChannelMovie()), SLOT(fwdPlayChannelMovie_()));
 		connect(animationHolder, SIGNAL(fwdPlayImageMovie()), SLOT(fwdPlayImageMovie_()));
 		connect(animationHolder, SIGNAL(setChannelMode( )), this, SLOT(to_channel_mode( )));
-		connect(animationHolder, SIGNAL(setImageMode( )), this, SLOT(to_image_mode( )));
+		connect(animationHolder, SIGNAL(setImageMode( bool)), this, SLOT(to_image_mode(bool )));
 		connect(animationHolder, SIGNAL(selectChannel(int)), this, SLOT(doSelectChannel(int)));
 		connect(animationHolder, SIGNAL(channelMovieState(int,bool,int,int,int)), this, SLOT(movieChannels(int,bool,int,int,int)));
 		connect(animationHolder, SIGNAL(stopImageMovie()), this, SLOT(movieStop()));
@@ -793,8 +793,16 @@ void QtDisplayPanelGui::initAnimationHolder() {
 	}
 }
 
-void QtDisplayPanelGui::animationModeChanged( bool modeZ){
-	qdp_->setMode( modeZ );
+void QtDisplayPanelGui::to_image_mode( bool channelCubes ) {
+	animationModeChanged(false, channelCubes );
+}
+
+void QtDisplayPanelGui::to_channel_mode( ) {
+	animationModeChanged(true, false);
+}
+
+void QtDisplayPanelGui::animationModeChanged( bool modeZ, bool channelCubes ){
+	qdp_->setMode( modeZ, channelCubes );
 	updateFrameInformationChannel();
 }
 
@@ -1459,8 +1467,6 @@ void QtDisplayPanelGui::doSelectChannel( int channelNumber ) {
 	//Make sure the channel number is not outside the min/max bounds
 	//of the animator.
 	int boundedChannel = getBoundedChannel( channelNumber );
-	qdp_->goTo( boundedChannel, true );
-
 	qdp_->goTo( boundedChannel, true );
 	int frameCount = qdp_->nFrames();
 	animationHolder->setFrameInformation( AnimatorHolder::NORMAL_MODE, channelNumber, frameCount );
