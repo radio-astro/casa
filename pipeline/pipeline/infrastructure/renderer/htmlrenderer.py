@@ -180,11 +180,11 @@ def get_task_description(result_obj):
     if task_cls is hsd.tasks.SDPlotFlagBaseline:
         return 'Plot whole spectra with baseline fit and flag result'
     
-    #if task_cls is hifv.tasks.importdata.importdata.VLAImportData:
-    #    names = []
-    #    for result in result_obj:
-    #        names.extend([ms.basename for ms in result.mses])
-    #    return 'VLA Import Data: Register %s with pipeline' % utils.commafy(names)
+    if task_cls is hifv.tasks.importdata.importdata.VLAImportData:
+        names = []
+        for result in result_obj:
+            names.extend([ms.basename for ms in result.mses])
+        return 'VLA Import Data: Register %s with pipeline' % utils.commafy(names)
     
     #if task_cls in hifv.tasks.flagging.flagdetervla.FlagDeterVLA:
     #    return 'VLA deterministic flagging'
@@ -2176,6 +2176,32 @@ class T2_4MDetailsImportDataRenderer(T2_4MDetailsDefaultRenderer):
 
         return ctx
 
+class T2_4MDetailsVLAImportDataRenderer(T2_4MDetailsDefaultRenderer):
+    def __init__(self, template='t2-4m_details-hifv_importdata.html', 
+                 always_rerender=True):
+        super(T2_4MDetailsVLAImportDataRenderer, self).__init__(template,
+                                                             always_rerender)
+        
+    def get_display_context(self, context, result):
+        super_cls = super(T2_4MDetailsVLAImportDataRenderer, self)        
+        ctx = super_cls.get_display_context(context, result)
+
+        setjy_results = []
+        for r in result:
+            setjy_results.extend(r.setjy_results)
+
+        measurements = []        
+        for r in setjy_results:
+            measurements.extend(r.measurements)
+
+        num_mses = reduce(operator.add, [len(r.mses) for r in result])
+
+        ctx.update({'flux_imported' : True if measurements else False,
+                    'setjy_results' : setjy_results,
+                    'num_mses'      : num_mses})
+
+        return ctx
+
 
 class T2_4MDetailsLowgainFlagRenderer(T2_4MDetailsDefaultRenderer):
     '''
@@ -2658,6 +2684,9 @@ class T2_4MDetailsAgentFlaggerRenderer(T2_4MDetailsDefaultRenderer):
         return total 
 
 
+
+
+
 class T2_4MDetailsRenderer(object):
     # the filename component of the output file. While this is the same for
     # all results, the directory is stage-specific, so there's no risk of
@@ -3094,6 +3123,7 @@ renderer_map = {
         hsd.tasks.SDImaging2     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html'),
         hsd.tasks.SDFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagbaseline.html'),
         hsd.tasks.SDPlotFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_plotflagbaseline.html'),
+        hifv.tasks.importdata.VLAImportData : T2_4MDetailsVLAImportDataRenderer(),
         hifv.tasks.setmodel.SetModel : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_setmodel.html', always_rerender=True),
         hifv.tasks.priorcals.priorcals.Priorcals : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_priorcals.html', always_rerender=True),
         hifv.tasks.testBPdcals                   : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_testbpdcals.html', always_rerender=True),
