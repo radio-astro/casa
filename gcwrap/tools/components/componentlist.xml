@@ -1003,6 +1003,10 @@ and available in Glish as mycl.
     \item[spectrumtype, index] See the 
       <link anchor="componentmodels:componentlist.setspectrum.function">setspectrum</link> 
       function.
+      
+OR
+
+      <link anchor="componentmodels:componentlist.setstokesspectrum.function">setspectrum</link> 
     \item[label] See the 
       <link anchor="componentmodels:componentlist.setlabel.function">setlabel</link> 
       function.
@@ -2360,6 +2364,137 @@ An integer between 0 and one less than the list length, inclusively</description
 </method>
 
  
+ <method type="function" name="setstokesspectrum">
+   <shortdescription>Change the spectrum of the component</shortdescription>
+   
+  <keyword>setstokesspectrum</keyword>
+  <description>
+    The setstokesspectrum function changes the spectrum of the specified components
+    to the user specified spectrum. This is different from <link anchor="componentmodels:componentlist.setspectrum.function">setspectrum</link> as it provides ways to control variation of all 4 Stokes parameters with frequency. If only I variation is needed please use <link anchor="componentmodels:componentlist.setspectrum.function">setspectrum</link>
+
+    The type argument defines what the sort of new spectrum to use. This
+    can be either 'constant' or 'spectral index' or 'tabular'. The parsing of this
+    string is case insensitive.
+
+    If the spectrum type is 'constant' then the remaining arguments in
+    this function are ignored. There are no other parameters needed to
+    specify a constant spectrum.
+
+    But if the spectrum is 'spectral index', the {\tt index} argument is
+    needed. It is a 4 element vector. 
+ 
+   The first element ($\alpha_0$) is the spectral index of stokes I ($ I(\nu)=I(\nu_0)({{\nu}\over{\nu_0}})^{\alpha_0} $)
+
+    The second element ($\alpha_1$) is a spectral index for the fractional linear polarization ( $\sqrt{{{(Q(\nu)^2+U(\nu)^2)}\over{I(\nu)^2}}} =   \sqrt{{{(Q(\nu_0)^2+U(\nu_0)^2)}\over{I(\nu_0)^2}}}({{\nu}\over{\nu_0}})^{\alpha_1}$). $\alpha_1=0$ implies constant fractional linear polarization w.r.t frequency.
+ 
+    The third element is a "Rotation Measure" factor, i.e angle of rotation $\theta= \alpha_2 (\lambda^2 - \lambda_0^2)$ of the linear polarization at frequency $\nu$ w.r.t  frequency $\nu_0$.   
+
+    The fourth element  is a spectral index for the fractional spectral polarization ( $ {{V(\nu)}\over{I(\nu)}} =   {{V(\nu_0)}\over{I(\nu_0)}}({{\nu}\over{\nu_0}})^{\alpha_3}$
+
+    If the spectrum is 'tabular', then {\tt index} is ignored but the six parameters 
+    {\tt tabularfreqs, tabulari, tabularq, tabularu, tabularv and tabularframe} are considered. {\tt tabularfreqs} and {\tt tabulari, tabularq, tabularu, tabularv} have to be list of same lengths and larger than 2. You need at least 2 samples to interpolate the spectral value in between. 
+    The Stokes parameters  of the source is interpolated from these values. Extrappolation outside the range given in {\tt tabularfreqs} is not done.
+    {\tt tabularfreqs} should be float values in 'Hz'
+    {\tt tabulari, tabularq, tabularu, tabularv} should be float values in 'Jy'
+
+
+    You should ensure that the reference
+    frequency is set to the value you desire, using the
+    <link anchor="componentmodels:componentlist.setfreq.function">setfreq</link>
+    function if you change to the spectral index shape.
+
+  </description>
+  <input>
+    
+     <param type="int" name="which">
+     <description>The index specifying the component to modify.
+     A value between 0 and one less than the list length, inclusively</description>
+     </param>
+    
+     <param type="string" name="type">
+     <description>The new spectrum type.
+     A string that is either 'constant or 'spectral index' or 'tabular'</description>
+     <value>spectral index</value>
+     <allowed kind="enum">
+       <value>spectral index</value>
+       <value>constant</value>
+       <value>tabular</value>
+     </allowed>
+     </param>
+     
+     <param type="doubleArray" name="index"> 
+     <description>The spectral index.</description>
+     A 4-element vector of real numbers 
+     <value type="vector"><value>0.0</value></value>
+     </param>
+
+     <param type="doubleArray" name="tabularfreqs">
+       <description>The frequencies of for the tabular values, in Hz</description>
+       <value type="vector">
+	 <value>1.0e11</value>
+       </value>
+     </param>
+
+     <param type="doubleArray" name="tabulari">
+       <description> tabular Stokes I  values, in Jy (same length as tabularfreqs)</description>
+       <value type="vector">
+	 <value>1.0</value>
+       </value>
+     </param>
+     <param type="doubleArray" name="tabularq">
+       <description> tabular Stokes Q values, in Jy (same length as tabularfreqs)</description>
+       <value type="vector">
+	 <value>0.0</value>
+       </value>
+     </param>
+     <param type="doubleArray" name="tabularu">
+       <description> tabular Stokes U values, in Jy (same length as tabularfreqs)</description>
+       <value type="vector">
+	 <value>0.0</value>
+       </value>
+     </param>
+     <param type="doubleArray" name="tabularv">
+       <description> tabular Stokes V values, in Jy (same length as tabularfreqs)</description>
+       <value type="vector">
+	 <value>0.0</value>
+       </value>
+     </param>
+     
+    <param type="any" name="reffreq">
+     <description> The reference frequency  for spectral index
+     </description>
+     <value>1.4GHz</value>
+     </param>
+
+     <param type="string" name="frame">
+       <description> The frame for which the frequencies given are in</description>
+       <value>LSRK</value>
+     </param>
+  </input>
+  <returns type="bool"/>
+  <example>
+    
+      
+     
+
+      This example add a point source model and revises the model point source spectral variation  changing the spectral index  and setting the reference flux to be at 2GHz.
+     I is assigned a spectral index of 1. fractional linear pol is assigned a spectral index of 0.4 and similarly for fraction circular pol and the linear pol angle is kept fixed with frequency.
+
+    cl.addcomponent(shape='point', flux=[10.0, 0.4, -0.2, 0.1], dir='J2000 19h00m00 -20d00m00')
+    cl.setstokesspectrum(which=0, type='spectral index', index=[1.0, 0.4, 0, 0.4], reffreq='2.0GHz')
+    cl.rename('my19hcomp.cl')
+    cl.done()
+    
+
+   In this example a component is created from scratch as a point source
+   The spectrum is set to, say, measured values at 3 frequencies (1GHz, 1.1GHz and 1.4GHz) to 1.0Jy, 0.9Jy, 0.75Jy respectively.
+    Any frequency in between the range 1 to 1.4 GHz the flux will be estimated by interpolation.
+
+
+  </example>
+</method>
+
+
    <method type="function" name="setspectrum">
    <shortdescription>Change the spectrum of the component</shortdescription>
    
