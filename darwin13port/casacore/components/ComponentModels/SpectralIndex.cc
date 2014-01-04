@@ -335,6 +335,15 @@ Bool SpectralIndex::fromRecord(String& errorMessage,
      }
      setIndex(indexVal);
   }
+  if(record.isDefined("stokesindex")){
+    Vector<Double> tempstokes=record.asArrayDouble("stokesindex");
+    if(tempstokes.nelements() != 4){
+      errorMessage += "Stokes indices is not of length 4\n";
+      return False;
+    }
+    itsStokesIndex.resize();
+    itsStokesIndex=tempstokes;
+  }
 //
   {
       Vector<Double> errorVals(1, 0.0);
@@ -369,6 +378,8 @@ Bool SpectralIndex::toRecord(String& errorMessage,
   DebugAssert(ok(), AipsError);
   if (!SpectralModel::toRecord(errorMessage, record)) return False;
   record.define("index", index());
+  if(itsStokesIndex.nelements() != 0)
+    record.define("stokesindex", itsStokesIndex);
   record.define("error", errors()(0));
   return True;
 }
