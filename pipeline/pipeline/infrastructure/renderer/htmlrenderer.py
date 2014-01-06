@@ -186,8 +186,8 @@ def get_task_description(result_obj):
             names.extend([ms.basename for ms in result.mses])
         return 'VLA Import Data: Register %s with pipeline' % utils.commafy(names)
     
-    #if task_cls in hifv.tasks.flagging.flagdetervla.FlagDeterVLA:
-    #    return 'VLA deterministic flagging'
+    if task_cls is hifv.tasks.flagging.flagdetervla.FlagDeterVLA:
+        return 'VLA deterministic flagging'
     
     if task_cls is hifv.tasks.setmodel.SetModel:
         return 'Set model: Prepare for calibrations'
@@ -3124,6 +3124,7 @@ renderer_map = {
         hsd.tasks.SDFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagbaseline.html'),
         hsd.tasks.SDPlotFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_plotflagbaseline.html'),
         hifv.tasks.importdata.VLAImportData : T2_4MDetailsVLAImportDataRenderer(),
+        hifv.tasks.flagging.FlagDeterVLA : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_flagdata.html', always_rerender=True),
         hifv.tasks.setmodel.SetModel : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_setmodel.html', always_rerender=True),
         hifv.tasks.priorcals.priorcals.Priorcals : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_priorcals.html', always_rerender=True),
         hifv.tasks.testBPdcals                   : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_testbpdcals.html', always_rerender=True),
