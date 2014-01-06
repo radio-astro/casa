@@ -23,9 +23,9 @@ class WvrgcalflagInputs(wvrgcal.WvrgcalInputs):
       caltable=None, hm_toffset=None, toffset=None, segsource=None, 
       hm_tie=None, tie=None, sourceflag=None, nsol=None,
       disperse=None, wvrflag=None, hm_smooth=None, smooth=None,
-      scale=None, maxdistm=None, minnumants=None, flag_intent=None,
-      qa2_intent=None, qa2_bandpass_intent=None, accept_threshold=None,
-      flag_hi=None, fhi_limit=None, fhi_minsample=None):
+      scale=None, maxdistm=None, minnumants=None, mingoodfrac=None,
+      flag_intent=None, qa2_intent=None, qa2_bandpass_intent=None,
+      accept_threshold=None, flag_hi=None, fhi_limit=None, fhi_minsample=None):
 	self._init_properties(vars())
 
     # qa2_intent setter/getter overrides version in WvrgcalInputs with a 
@@ -127,8 +127,8 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
           disperse=inputs.disperse, wvrflag=inputs.wvrflag, 
           hm_smooth=inputs.hm_smooth, smooth=inputs.smooth,
           scale=inputs.scale, maxdistm=inputs.maxdistm,
-          minnumants=inputs.minnumants, flag_intent=inputs.flag_intent,
-          qa2_intent=inputs.qa2_intent,
+          minnumants=inputs.minnumants, mingoodfrac=inputs.mingoodfrac,
+	  flag_intent=inputs.flag_intent, qa2_intent=inputs.qa2_intent,
           qa2_bandpass_intent=inputs.qa2_bandpass_intent)
         datatask = WvrgcalflagWorker(datainputs)
 
@@ -186,8 +186,8 @@ class WvrgcalflagWorkerInputs(basetask.StandardInputs):
       caltable=None, hm_toffset=None, toffset=None, segsource=None, 
       hm_tie=None, tie=None, sourceflag=None, nsol=None,
       disperse=None, wvrflag=None, hm_smooth=None, smooth=None,
-      scale=None, maxdistm=None, minnumants=None, flag_intent=None,
-      qa2_intent=None, qa2_bandpass_intent=None):
+      scale=None, maxdistm=None, minnumants=None, mingoodfrac=None,
+      flag_intent=None, qa2_intent=None, qa2_bandpass_intent=None):
         self._init_properties(vars())
 
 
@@ -216,7 +216,7 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
           disperse=inputs.disperse, wvrflag=inputs.wvrflag,
           hm_smooth=inputs.hm_smooth, smooth=inputs.smooth, scale=inputs.scale,
           maxdistm=inputs.maxdistm, minnumants=inputs.minnumants,
-          qa2_intent=inputs.qa2_intent,
+	  mingoodfrac=inputs.mingoodfrac, qa2_intent=inputs.qa2_intent,
           qa2_bandpass_intent=inputs.qa2_bandpass_intent,
           accept_threshold=0.0,
           bandpass_result=self.result.bandpass_result,

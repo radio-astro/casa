@@ -111,6 +111,10 @@ Generate a gain table based on Water Vapour Radiometer data, interpolating over 
         </allowed>
       </param>
 
+      <param type="double" name="mingoodfrac">
+        <description>Minimum fraction of good data per antenna antenna</description>
+        <value>0.8</value>
+      </param>
 
     <param type="string" name="flag_intent">
         <description>Data intents to use in detecting and flagging bad wvr antennas</description>

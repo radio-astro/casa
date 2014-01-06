@@ -6,12 +6,12 @@ import pipeline.h.cli.utils as utils
 
 
 def hifa_wvrgcalflag(vis=None, caltable=None, hm_toffset=None, toffset=None,
-  segsource=None,
-  sourceflag=None, hm_tie=None, tie=None, nsol=None, disperse=None,
+  segsource=None, sourceflag=None, hm_tie=None, tie=None, nsol=None, disperse=None,
   wvrflag=None, hm_smooth=None, smooth=None, scale=None, maxdistm=None,
-  minnumants=None, flag_intent=None, qa2_intent=None, qa2_bandpass_intent=None,
-  accept_threshold=None, flag_hi=None, fhi_limit=None, fhi_minsample=None,
-  pipelinemode=None, dryrun=None, acceptresults=None):
+  minnumants=None, mingoodfrac=None, flag_intent=None, qa2_intent=None,
+  qa2_bandpass_intent=None, accept_threshold=None, flag_hi=None,
+  fhi_limit=None, fhi_minsample=None, pipelinemode=None, dryrun=None,
+  acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor

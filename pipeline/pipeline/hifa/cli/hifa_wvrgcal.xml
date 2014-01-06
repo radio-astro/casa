@@ -112,6 +112,11 @@ a QA2 score based on its effect on the interferometric data.
         </allowed>
       </param>
 
+      <param type="double" name="mingoodfrac">
+        <description>Minimum fraction of good data per antenna</description>
+        <value>0.8</value>
+      </param>
+
     <param type="string" name="qa2_intent">
         <description>Data intents to use in estimating the effectiveness of the wvr correction</description>
         <value></value>

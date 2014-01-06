@@ -31,9 +31,10 @@ class WvrgcalInputs(basetask.StandardInputs):
                  hm_toffset=None, toffset=None, segsource=None, hm_tie=None,
                  tie=None, sourceflag=None, nsol=None, disperse=None, 
                  wvrflag=None, hm_smooth=None, smooth=None, scale=None, 
-                 maxdistm=None, minnumants=None, qa2_intent=None, 
-                 qa2_bandpass_intent=None, accept_threshold=None,
-                 bandpass_result=None, nowvr_result=None):
+                 maxdistm=None, minnumants=None, mingoodfrac=None,
+		 qa2_intent=None, qa2_bandpass_intent=None,
+		 accept_threshold=None, bandpass_result=None,
+		 nowvr_result=None):
         self._init_properties(vars())
 
     @property
@@ -105,6 +106,16 @@ class WvrgcalInputs(basetask.StandardInputs):
         if value is None:
             value = 2
         self._minnumants = value
+
+    @property
+    def mingoodfrac(self):
+        return self._mingoodfrac
+
+    @mingoodfrac.setter
+    def mingoodfrac(self, value):
+        if value is None:
+            value = 0.8
+        self._mingoodfrac = value
 
     @property
     def nsol(self):
@@ -278,6 +289,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         scale = inputs.scale
         maxdistm = inputs.maxdistm
         minnumants = inputs.minnumants
+        mingoodfrac = inputs.mingoodfrac
 
         # smooth may vary with spectral window so need to ensure we calculate
         # results that can cover them all
@@ -309,7 +321,8 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                                           nsol=nsol,disperse=disperse, 
                                           wvrflag=wvrflag, smooth=smooth,
                                           scale=scale, maxdistm=maxdistm,
-                                          minnumants=minnumants)
+                                          minnumants=minnumants,
+					  mingoodfrac=mingoodfrac)
                 jobs.append(task)
 
                 smooths_done.add(smooth)
