@@ -54,7 +54,7 @@ namespace casa {
 		                           const QString& chemicalName, const QString& resolvedQNs, const QString& frequencyUnits );
 		SpecFitGaussian getEstimate();
 		void setEstimate( const SpecFitGaussian& estimate );
-		void unitsChanged( const QString& oldUnits, const QString& newUnits);
+		void unitsChanged( const QString& oldUnits, const QString& newUnits, SpectralCoordinate& coord);
 		void setSliderValueFWHM( float value );
 		void updateUIBasedOnEstimate();
 		void clearMolecularLines();

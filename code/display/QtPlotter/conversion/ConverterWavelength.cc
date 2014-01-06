@@ -33,7 +33,7 @@ namespace casa {
 
 	}
 
-	double ConverterWavelength::toPixel( double value ) {
+	double ConverterWavelength::toPixel( double value, SpectralCoordinate spectralCoordinate) {
 		spectralCoordinate.setWavelengthUnit( oldUnits.toStdString() );
 		Vector<Double> frequencyVector(1);
 		Vector<Double> wavelengthVector(1);
@@ -44,18 +44,19 @@ namespace casa {
 		return pixelValue;
 	}
 
-	Vector<double> ConverterWavelength::convert( const Vector<double>& oldValues ) {
+	Vector<double> ConverterWavelength::convert( const Vector<double>& oldValues,
+			SpectralCoordinate spectralCoordinate) {
 		Vector<double> resultValues( oldValues.size() );
 		resultValues = oldValues;
-		convertWavelength( resultValues, oldUnits, newUnits );
+		convertWavelength( resultValues, oldUnits, newUnits, spectralCoordinate );
 		return resultValues;
 	}
 
 	void ConverterWavelength::convertWavelength( Vector<double> &resultValues,
-	        QString& sourceUnits, QString& destUnits) {
+	        QString& sourceUnits, QString& destUnits, SpectralCoordinate& coord) {
 		int sourceIndex = Converter::WAVELENGTH_UNITS.indexOf( sourceUnits );
 		int destIndex = Converter::WAVELENGTH_UNITS.indexOf( destUnits );
-		Converter::convert( resultValues, sourceIndex, destIndex );
+		Converter::convert( resultValues, sourceIndex, destIndex, coord );
 	}
 
 

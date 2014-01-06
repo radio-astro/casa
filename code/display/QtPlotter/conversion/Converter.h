@@ -39,21 +39,13 @@ namespace casa {
 		//Factory for producing the appropriate converter.
 		//Note:  user is responsible for deleting the converter.
 		static Converter* getConverter( const QString& oldUnits,const QString& newUnits );
-		static void setSpectralCoordinate( SpectralCoordinate coordinate );
-		static void setRestFrequency( double restFrequency );
-		static void convert( Vector<double> &resultValues, int sourceIndex, int destIndex);
-
-		bool setVelocityUnits( const QString& units );
-		bool setWavelengthUnits( const QString& units );
+		static void convert( Vector<double> &resultValues, int sourceIndex, int destIndex, SpectralCoordinate coordinate);
 		QString getNewUnits() const;
 
-
-
 		//Abstract methods to be implemented by subclasses.
-		//virtual float convert( float oldValue ) const = 0;
-		virtual double toPixel( double value ) = 0;
-		virtual Vector<double> convert( const Vector<double>& oldValues ) = 0;
-		virtual double convert ( double oldValue );
+		virtual double toPixel( double value, SpectralCoordinate coordinate ) = 0;
+		virtual Vector<double> convert( const Vector<double>& oldValues, SpectralCoordinate coordinate) = 0;
+		virtual double convert ( double oldValue, SpectralCoordinate coordinate);
 		virtual ~Converter();
 
 	protected:
@@ -63,7 +55,6 @@ namespace casa {
 
 		QString oldUnits;
 		QString newUnits;
-		static SpectralCoordinate spectralCoordinate;
 		typedef enum {FREQUENCY_UNIT, VELOCITY_UNIT, WAVELENGTH_UNIT, CHANNEL_UNIT, UNRECOGNIZED } UnitType;
 
 	private:

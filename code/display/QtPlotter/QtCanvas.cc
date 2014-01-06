@@ -293,8 +293,10 @@ namespace casa {
 		return duplicateCurve;
 	}
 
-	void QtCanvas::setCurveData(int id, const CurveData &data, const ErrorData &error,
-	                            const QString& lbl, ColorCategory level ) {
+	void QtCanvas::setCurveData(int id, const CurveData &data,
+			double beamAngle, double beamArea,
+			SpectralCoordinate coord, const ErrorData &error,
+	        const QString& lbl, ColorCategory level ) {
 		QString curveLabel = lbl;
 
 		//If the curve is already there we will replace it (curve may have
@@ -305,7 +307,7 @@ namespace casa {
 		}
 
 		QColor curveColor = getDiscreteColor( level, id );
-		CanvasCurve curve( data, error, curveLabel, curveColor, level );
+		CanvasCurve curve( data, error, curveLabel, curveColor, level, beamAngle, beamArea, coord);
 		//Make sure the curve is in the same units as the canvas is using.
 		if ( yUnitDisplay != yUnitImage ) {
 			curve.scaleYValues( yUnitImage, yUnitDisplay, getUnits() );
@@ -1393,6 +1395,8 @@ namespace casa {
 
 	void QtCanvas::addPolyLine(const Vector<Float> &x,
 	                           const Vector<Float> &y,
+	                           double beamAngle, double beamArea,
+	                           SpectralCoordinate coord,
 	                           const QString& lb, ColorCategory colorCategory) {
 		Int xl, yl;
 		x.shape(xl);
@@ -1404,7 +1408,7 @@ namespace casa {
 		}
 
 		int j = curveMap.size();
-		setCurveData(j, data, ErrorData(), lb, colorCategory );
+		setCurveData(j, data, beamAngle, beamArea, coord, ErrorData(), lb, colorCategory );
 
 		setDataRange();
 
@@ -1438,12 +1442,12 @@ namespace casa {
 							pointCount++;
 						}
 						if (in.atEnd() && pointCount > 0) {
-							setCurveData(lineCount, data);
+							setCurveData(lineCount, data, 0, 0, SpectralCoordinate());
 						}
 					}
 				} else {
 					if (pointCount > 0) {
-						setCurveData(lineCount, data);
+						setCurveData(lineCount, data, 0, 0, SpectralCoordinate());
 						pointCount = 0;
 						lineCount++;
 						data.clear();
@@ -1457,7 +1461,8 @@ namespace casa {
 		return;
 	}
 	void QtCanvas::plotPolyLine(const Vector<Float> &x, const Vector<Float> &y, const Vector<Float> &e,
-	                            const QString& lb) {
+	                            double beamAngle, double beamArea,
+	                            SpectralCoordinate coord, const QString& lb) {
 		//for (int i=0; i< x.nelements(); i++)
 		//cout << x(i) << " " << y(i) << endl;
 		Int xl, yl, el;
@@ -1474,14 +1479,15 @@ namespace casa {
 		for (uInt i = 0; i < (uint)el; i++)
 			error.push_back(e[i]);
 
-		setCurveData(0, data, error, lb);
+		setCurveData(0, data, beamAngle, beamArea, coord, error, lb);
 
 		setDataRange();
 		return;
 	}
 
 
-	template<class T> void QtCanvas::plotPolyLine(const Vector<T> &x, const Vector<T>&y) {
+	template<class T> void QtCanvas::plotPolyLine(const Vector<T> &x, const Vector<T>&y,
+			double beamAngle, double beamArea, SpectralCoordinate coord) {
 
 		Int xl, yl;
 		x.shape(xl);
@@ -1491,13 +1497,14 @@ namespace casa {
 			data.push_back(x[i]);
 			data.push_back(y[i]);
 		}
-		setCurveData(0, data);
+		setCurveData(0, data, beamAngle, beamArea, coord);
 
 		setDataRange();
 		return;
 	}
 
-	template<class T> void QtCanvas::plotPolyLine(const Matrix<T> &x) {
+	template<class T> void QtCanvas::plotPolyLine(const Matrix<T> &x,
+			double beamAngle, double beamArea, SpectralCoordinate coord, double restValue ) {
 
 		Int xl, yl;
 		x.shape(xl, yl);
@@ -1513,7 +1520,7 @@ namespace casa {
 						data[i].push_back(x(uInt(j), uInt(2 * i)));
 						data[i].push_back(x(uInt(j), uInt(2 * i + 1)));
 					}
-					setCurveData(i, data[i]);
+					setCurveData(i, data[i], beamAngle, beamArea, coord);
 				}
 			} else {
 				for (int i = 0; i < n; i++) {
@@ -1521,7 +1528,7 @@ namespace casa {
 						data[i].push_back(x(2 * i, j));
 						data[i].push_back(x(2 * i + 1, j));
 					}
-					setCurveData(i, data[i]);
+					setCurveData(i, data[i], beamAngle, beamArea, coord);
 				}
 			}
 			//delete [] data;

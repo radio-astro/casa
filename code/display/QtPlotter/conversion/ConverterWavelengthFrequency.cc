@@ -33,9 +33,10 @@ namespace casa {
 		ConverterWavelength( oldUnits, newUnits ) {
 	}
 
-	Vector<double> ConverterWavelengthFrequency::convert( const Vector<double>& oldValues ) {
+	Vector<double> ConverterWavelengthFrequency::convert( const Vector<double>& oldValues,
+			SpectralCoordinate spectralCoordinate ) {
 		Vector<double> resultValues( oldValues.size());
-		bool wavelengthRecognized = setWavelengthUnits( oldUnits );
+		bool wavelengthRecognized = spectralCoordinate.setWavelengthUnit( oldUnits.toStdString() );
 		bool successfulConversion = false;
 		if ( wavelengthRecognized ) {
 			successfulConversion = spectralCoordinate.wavelengthToFrequency( resultValues, oldValues );
@@ -44,7 +45,7 @@ namespace casa {
 				assert ( coordUnits.size() == 1 );
 				String coordUnit = coordUnits[0];
 				QString coordUnitStr( coordUnit.c_str());
-				ConverterFrequency::convertFrequency( resultValues, coordUnitStr, newUnits );
+				ConverterFrequency::convertFrequency( resultValues, coordUnitStr, newUnits, spectralCoordinate );
 			}
 		}
 		if ( !successfulConversion ) {

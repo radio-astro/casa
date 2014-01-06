@@ -130,7 +130,7 @@ namespace casa {
 
 		//Now Convert it to the same units the pixel canvas is using.
 		if ( converter != NULL ) {
-			shiftedCenter = converter->convert( shiftedCenter );
+			shiftedCenter = converter->convert( shiftedCenter, spectralCoordinate);
 		}
 
 		//Add the line to the pixel canvas.
@@ -184,7 +184,11 @@ namespace casa {
 		pixelCanvas->clearMolecularLines( true );
 	}
 
-
+	void LineOverlaysTab::setSpectralCoordinate( SpectralCoordinate coord ){
+		searchWidget->setSpectralCoordinate( coord );
+		searchRedshiftDialog.setSpectralCoordinate( coord );
+		spectralCoordinate = coord;
+	}
 
 	void LineOverlaysTab::findRedshift( double center, double /*peak*/ ) {
 		QString unitStr = pixelCanvas->getUnits();

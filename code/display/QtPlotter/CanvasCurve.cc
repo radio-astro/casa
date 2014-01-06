@@ -41,12 +41,16 @@ namespace casa {
 
 
 	CanvasCurve::CanvasCurve( CurveData cData, ErrorData eData,
-	                          QString legendTitle, QColor cColor, int curveLevel ) {
+	                          QString legendTitle, QColor cColor, int curveLevel,
+	                          double beamAngle, double beamArea, SpectralCoordinate coord) {
 		curveData = cData;
 		errorData = eData;
 		legend = legendTitle;
 		curveColor = cColor;
 		curveType = curveLevel;
+		this->beamAngle = beamAngle;
+		this->beamArea = beamArea;
+		spectralCoordinate = coord;
 	}
 
 
@@ -94,6 +98,8 @@ namespace casa {
 		return yValues;
 	}
 
+
+
 	pair<double,double> CanvasCurve::getRangeFor(double xMin, double xMax, Bool& exists ) {
 		pair<double,double> yRange;
 		exists = false;
@@ -138,14 +144,15 @@ namespace casa {
 
 
 	double CanvasCurve::convertValue( double value, double freqValue, const QString& oldDisplayUnits,
-	                                  const QString& yUnitDisplay, const QString& xUnits) {
+	                                  const QString& yUnitDisplay, const QString& xUnits,
+	                                  SpectralCoordinate& coord) {
 
 		//Frequency value must be in Hertz
 		const QString HERTZ = "Hz";
 		double freqHertz = freqValue;
 		if ( xUnits != HERTZ ) {
 			Converter* converter = Converter::getConverter( xUnits, HERTZ );
-			freqHertz = converter->convert( freqValue );
+			freqHertz = converter->convert( freqValue, coord);
 			delete converter;
 		}
 		//Convert the y values
@@ -154,7 +161,7 @@ namespace casa {
 		yValues[0] = value;
 		xValues[0] = freqHertz;
 		ConverterIntensity::convert( yValues, xValues, oldDisplayUnits, yUnitDisplay,
-		                             maxValue, maxUnits );
+		                             maxValue, maxUnits, beamAngle, beamArea, coord );
 		return yValues[0];
 	}
 
@@ -174,7 +181,7 @@ namespace casa {
 		if ( xUnits != HERTZ ) {
 			Converter* converter = Converter::getConverter( xUnits, HERTZ );
 			for ( int i = 0; i < static_cast<int>(xValues.size()); i++ ) {
-				xValues[i] = converter->convert( xValues[i] );
+				xValues[i] = converter->convert( xValues[i], spectralCoordinate);
 			}
 			delete converter;
 		}
@@ -182,12 +189,13 @@ namespace casa {
 		//Convert the y values
 		Vector<float> yValues = getYValues();
 		ConverterIntensity::convert( yValues, xValues, oldDisplayUnits, yUnitDisplay,
-		                             maxValue, maxUnits );
+		                             maxValue, maxUnits, beamAngle, beamArea, spectralCoordinate );
 
 		//Convert the error values
 		Vector<float> errorValues = getErrorValues();
 		ConverterIntensity::convert( errorValues, xValues,
-		                             oldDisplayUnits, yUnitDisplay, maxErrorValue, maxUnits  );
+		                             oldDisplayUnits, yUnitDisplay,
+		                             maxErrorValue, maxUnits, beamAngle, beamArea, spectralCoordinate );
 
 		//Copy the yvalues and error values back.
 		setYValues( yValues );
