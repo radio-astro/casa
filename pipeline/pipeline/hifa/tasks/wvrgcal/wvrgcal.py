@@ -251,8 +251,10 @@ class Wvrgcal(basetask.StandardTaskTemplate):
 
         # return an empty results object if no WVR data available
         if not wvrheuristics.wvr_available():
-            LOG.warning('WVR data not available for %s'
-                        '' % os.path.basename(inputs.vis))
+            # only 12m antennas are expected to have WVRs fitted
+            if any([a for a in inputs.ms.antennas if a.diameter == 12.0]):
+                LOG.error('WVR data expected but not found in %s'
+                          '' % os.path.basename(inputs.vis))
             return result
 
         if inputs.hm_toffset == 'automatic':
@@ -322,7 +324,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                                           wvrflag=wvrflag, smooth=smooth,
                                           scale=scale, maxdistm=maxdistm,
                                           minnumants=minnumants,
-					  mingoodfrac=mingoodfrac)
+					                      mingoodfrac=mingoodfrac)
                 jobs.append(task)
 
                 smooths_done.add(smooth)
@@ -385,7 +387,6 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         
         # calculate the qa2 results if required
         if not result.final:
-            LOG.error('No WVR data available. Cannot calculate QA2 results')
             return result
 
         # do a bandpass calibration

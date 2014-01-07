@@ -10,7 +10,6 @@ from ..wvrgcal import wvrgcal
 from . import resultobjects
 from . import wvrgcalflagsetter
 
-from pipeline.hif.tasks.common import calibrationtableaccess
 from pipeline.hif.tasks.common import commonhelpermethods
 from pipeline.hif.tasks.common import viewflaggers
 
@@ -26,7 +25,7 @@ class WvrgcalflagInputs(wvrgcal.WvrgcalInputs):
       scale=None, maxdistm=None, minnumants=None, mingoodfrac=None,
       flag_intent=None, qa2_intent=None, qa2_bandpass_intent=None,
       accept_threshold=None, flag_hi=None, fhi_limit=None, fhi_minsample=None):
-	self._init_properties(vars())
+        self._init_properties(vars())
 
     # qa2_intent setter/getter overrides version in WvrgcalInputs with a 
     # different default 

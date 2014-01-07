@@ -490,11 +490,14 @@ class T1_4MRenderer(RendererBase):
     output_file = 't1-4.html'
     # TODO get template at run-time
     template = 't1-4m.html'
+
+    scores = {}
     
     @staticmethod
     def get_display_context(context):
         return {'pcontext' : context,
-                'results'  : context.results}
+                'results'  : context.results,
+                'scores'   : T1_4MRenderer.scores}
         
 
 class T2_1Renderer(RendererBase):
@@ -1307,13 +1310,17 @@ class T2_4MDetailsWvrgcalflagRenderer(T2_4MDetailsDefaultRenderer):
         phase_offset_summary_plots = {}
         baseline_summary_plots = {}
         wvrinfos = {}
+        ms_non12 = []
         for result in results:
-            # if there's no WVR data, the pool will be empty
-            if not result.pool:
-                continue
-
             vis = os.path.basename(result.inputs['vis'])
             ms = context.observing_run.get_ms(vis)
+
+            # if there's no WVR data, the pool will be empty
+            if not result.pool:
+                # check if this MS is all 7m data. 
+                if all([a for a in ms.antennas if a.diameter != 12.0]):
+                    ms_non12.append(os.path.basename(vis))
+                continue
 
             applications.extend(self.get_wvr_applications(result))
             try:
@@ -1374,6 +1381,14 @@ class T2_4MDetailsWvrgcalflagRenderer(T2_4MDetailsDefaultRenderer):
                     'phase_offset_summary_plots' : phase_offset_summary_plots,
                     'baseline_summary_plots' : baseline_summary_plots,
                     'dirname' : weblog_dir})
+
+        # tell the user not to panic for non-12m dishes missing WVR 
+        if ms_non12:
+            msg = ('WVR data are not expected for %s, which %s not observed '
+                   'using 12m antennas.'
+                   '' % (utils.commafy(ms_non12, quotes=False, conjunction='or'),
+                         'was' if len(ms_non12) is 1 else 'were'))
+            ctx['alerts_info'] = [msg,]
 
         return ctx
 
@@ -2080,6 +2095,8 @@ class BandpassAmpVsFreqPlotRenderer(BaseJsonPlotRenderer):
         ms = context.observing_run.get_ms(vis)
         scores = get_bandpass_amp_qa2_scores(ms, result.qa2, plots,
                                              context.report_dir)
+        assign_aggregate_score(result, scores)
+                
         super(BandpassAmpVsFreqPlotRenderer, self).__init__(context, result, plots, scores) 
          
     @property
@@ -2096,6 +2113,8 @@ class BandpassPhaseVsFreqPlotRenderer(BaseJsonPlotRenderer):
         ms = context.observing_run.get_ms(vis)
         scores = get_bandpass_phase_qa2_scores(ms, result.qa2, plots,
                                              context.report_dir)
+        assign_aggregate_score(result, scores)
+
         super(BandpassPhaseVsFreqPlotRenderer, self).__init__(context, result, plots, scores) 
 
     @property
@@ -2103,6 +2122,26 @@ class BandpassPhaseVsFreqPlotRenderer(BaseJsonPlotRenderer):
         filename = filenamer.sanitize('phase_vs_freq-%s.html' % self.vis)
         return filename
 
+
+def assign_aggregate_score(result, scores):
+    score_types = ['AMPLITUDE_SCORE_DD',
+                   'AMPLITUDE_SCORE_FN',
+                   'AMPLITUDE_SCORE_SNR',
+                   'PHASE_SCORE_DD',
+                   'PHASE_SCORE_FN',
+                   'PHASE_SCORE_RMS']
+    
+    min_score = 1.0
+    for score_type in score_types:
+        for _, png_scores in scores.items():
+            if score_type not in png_scores:
+                continue
+            if png_scores[score_type] < min_score:
+                min_score = png_scores[score_type]
+
+    if min_score < T1_4MRenderer.scores.get(result.stage_number, 1.0):
+        T1_4MRenderer.scores[result.stage_number] = min_score            
+        
 
 class T2_4MDetailsBandpassFlagRenderer(T2_4MDetailsDefaultRenderer):
     '''
@@ -2684,9 +2723,6 @@ class T2_4MDetailsAgentFlaggerRenderer(T2_4MDetailsDefaultRenderer):
         return total 
 
 
-
-
-
 class T2_4MDetailsRenderer(object):
     # the filename component of the output file. While this is the same for
     # all results, the directory is stage-specific, so there's no risk of
@@ -2812,7 +2848,6 @@ class WebLogGenerator(object):
     renderers = [T1_1Renderer,         # OUS splash page
                  T1_2Renderer,         # observation summary
                  T1_3MRenderer,        # QA2 summary
-                 T1_4MRenderer,        # task summary
                  T2_1Renderer,         # session tree
                  T2_1DetailsRenderer,  # session details
                  T2_2_1Renderer,       # spatial setup
@@ -2827,7 +2862,9 @@ class WebLogGenerator(object):
                  T2_3_4MRenderer,      # QA2 imaging
                  T2_3MDetailsRenderer, # QA2 details pages
                  T2_4MRenderer,        # task tree
-                 T2_4MDetailsRenderer] # task details
+                 T2_4MDetailsRenderer, # task details
+                 # some summary renderers are placed last for access to scores
+                 T1_4MRenderer]        # task summary
 
     @staticmethod
     def copy_resources(context):

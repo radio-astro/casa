@@ -35,6 +35,20 @@ def get_logrecords(result, loglevel):
 		<strong>Warning!</strong> ${logrecord.msg}
 	</li>
 	% endfor
+	% if alerts_info is not UNDEFINED:
+	% for msg in alerts_info:
+	<li class="alert alert-info">
+		${msg}
+	</li>
+	% endfor
+	% endif
+	% if alerts_success is not UNDEFINED:
+	% for msg in alerts_success:
+	<li class="alert alert-success">
+		${msg}
+	</li>
+	% endfor
+	% endif
 %endfor	
 </ul>
 

@@ -43,7 +43,7 @@ class WvrgcalResult(basetask.Results):
 
     def merge_with_context(self, context):
         if not self.final:
-            LOG.warning('No results to merge')
+            LOG.info('No results to merge')
             return
 
         for calapp in self.final:
