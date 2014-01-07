@@ -248,7 +248,7 @@ def calculate_phase_rms(context, gaintable):
             return phase_rms_results
         
     finally:
-        np.seterr(olderr)
+        np.seterr(**olderr)
 
 def findchunks(times, gap_time):
     """Return a list of arrays, each containing the indices of a chunk
