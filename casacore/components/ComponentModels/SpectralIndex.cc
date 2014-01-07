@@ -337,8 +337,8 @@ Bool SpectralIndex::fromRecord(String& errorMessage,
   }
   if(record.isDefined("stokesindex")){
     Vector<Double> tempstokes=record.asArrayDouble("stokesindex");
-    if(tempstokes.nelements() != 4){
-      errorMessage += "Stokes indices is not of length 4\n";
+    if((tempstokes.nelements() != 4) && (tempstokes.nelements() != 1) ){
+      errorMessage += "Stokes indices is not of length 1 or 4\n";
       return False;
     }
     itsStokesIndex.resize();
