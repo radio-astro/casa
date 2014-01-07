@@ -1559,6 +1559,10 @@ def MAD(a, c=0.6745, axis=None):
 
     """
 
+    # Avoid underflow exceptions
+    under_orig = scipy.geterr()['under']
+    scipy.seterr(under='warn')
+
     a = ma.masked_where(a!=a, a)
     if a.ndim == 1:
         d = ma.median(a)
@@ -1571,6 +1575,8 @@ def MAD(a, c=0.6745, axis=None):
         else:
             aswp = a
         m = ma.median(ma.fabs(aswp - d) / c, axis=0)
+
+    scipy.seterr(under=under_orig)
 
     return m
 
