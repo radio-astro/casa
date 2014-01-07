@@ -105,7 +105,7 @@ namespace casa {
 		//--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 		// animation for images
 		//--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-		void setImageMode( );
+		void setImageMode( bool channelCubes );
 /*goTo*///displayPanel
 		void goToImage( int image );
 /*frameNumberEdited*/

@@ -89,6 +89,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		((DisplayMethod *)DDelement[itemNum])->addRestrictions(at);
 	}
 
+	Bool DisplayData::conformsToRstrs(const WorldCanvas& wc) {
+			rstrsConformed_ = wc.matchesRestrictions(restrictions);
+			if ( !rstrsConformed_ ){
+				if ( classType( ) != Display::Raster ) {
+					//If it isn't a raster, we don't really care about
+					//the bIndex;
+					rstrsConformed_ = true;
+				}
+			}
+			return rstrsConformed_;
+		}
+
 // add a restriction to an element
 	void DisplayData::addElementRestriction(const uInt itemNum,
 	                                        Attribute &at,
