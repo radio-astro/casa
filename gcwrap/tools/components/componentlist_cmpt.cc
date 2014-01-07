@@ -854,14 +854,15 @@ bool componentlist::setflux(
 		newFlux.setUnit(fluxUnit);
 		//Deal with the value...complex for nothing for now
 		Vector<Complex> value;
-		if( (varvalue.type()== ::casac::variant::INTVEC) ||
-				(varvalue.type()==::casac::variant::INT) ||
-				(varvalue.type()== ::casac::variant::DOUBLEVEC) ||
-				(varvalue.type()==::casac::variant::DOUBLE) ||
-				(varvalue.type()== ::casac::variant::COMPLEXVEC) ||
-				(varvalue.type()==::casac::variant::COMPLEX)
-		) {
-			Vector<DComplex> tmpintvec(varvalue.toComplexVec());
+		if( String(varvalue.toString()) == String("[]") ||
+		    (varvalue.type()== ::casac::variant::INTVEC) ||
+		    (varvalue.type()==::casac::variant::INT) ||
+		    (varvalue.type()== ::casac::variant::DOUBLEVEC) ||
+		    (varvalue.type()==::casac::variant::DOUBLE) ||
+		    (varvalue.type()== ::casac::variant::COMPLEXVEC) ||
+		    (varvalue.type()==::casac::variant::COMPLEX)
+		) {  
+		  Vector<DComplex> tmpintvec= varvalue.toComplexVec().size() > 0 ? Vector<DComplex>(varvalue.toComplexVec()): Vector<DComplex>(4, 0.0);
 			value.resize(tmpintvec.size());
 			convertArray(value, tmpintvec);
 		}
