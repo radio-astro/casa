@@ -5604,9 +5604,9 @@ void SolvableVisJones::fluxscale(const String& outfile,
     Matrix<Double> spidx(nFld,3,0.0);
     Matrix<Double> spidxerr(nFld,3,0.0);
     Matrix<Double> covar;
-    Double fitFluxD(0.0);
-    Double fitFluxDErr(0.0);
-    Double fitRefFreq(0.0); 
+    Vector<Double> fitFluxD(nFld,0.0);
+    Vector<Double> fitFluxDErr(nFld,0.0);
+    Vector<Double> fitRefFreq(nFld,0.0); 
     //Vector<Double> refFreq(nFld,0.0);
 
     for (Int iTran=0; iTran<nTran; iTran++) {
@@ -5685,13 +5685,13 @@ void SolvableVisJones::fluxscale(const String& outfile,
 	oFitMsg += fldNames(tranidx);
         oFitMsg += " with fitorder="+String::toString<Int>(myfitorder)+": ";
 //	oFitMsg += "Flux density = "+String::toString<Double>(pow(10.0,(soln(0))));
-	oFitMsg += "Flux density = "+String::toString<Double>(fitFluxD);
+	oFitMsg += "Flux density = "+String::toString<Double>(fitFluxD(tranidx));
 //	Double ferr=(errs(0)>0.0 ? exp10(errs(0)) : 0.0);
 //      Double ferr=(errs(0)>0.0 ? pow(10.0,(errs(0))) : 0.0);
-	oFitMsg += " +/- "+String::toString<Double>(fitFluxDErr); 
+	oFitMsg += " +/- "+String::toString<Double>(fitFluxDErr(tranidx)); 
 //	oFitMsg += " (freq="+String::toString<Double>(refFreq(tranidx)/1.0e9)+" GHz)";
 //	oFitMsg += " (freq="+String::toString<Double>(pow(10.0,meanLogFreq)/1.0e9)+" GHz)";
-	oFitMsg += " (freq="+String::toString<Double>(fitRefFreq/1.0e9)+" GHz)";
+	oFitMsg += " (freq="+String::toString<Double>(fitRefFreq(tranidx)/1.0e9)+" GHz)";
         for (uInt j=1; j<soln.nelements();j++) {
           if (j==1) {
             oFitMsg += " spidx="+String::toString<Double>(soln(1)); 
@@ -5735,9 +5735,9 @@ void SolvableVisJones::fluxscale(const String& outfile,
     oFluxScaleStruct.freq = solFreq.copy();
     oFluxScaleStruct.spidx  = spidx.copy();
     oFluxScaleStruct.spidxerr  = spidxerr.copy();
-    oFluxScaleStruct.fitfd = fitFluxD;
-    oFluxScaleStruct.fitfderr = fitFluxDErr;
-    oFluxScaleStruct.fitreffreq = fitRefFreq;
+    oFluxScaleStruct.fitfd = fitFluxD.copy();
+    oFluxScaleStruct.fitfderr = fitFluxDErr.copy();
+    oFluxScaleStruct.fitreffreq = fitRefFreq.copy();
     // quit if no scale factors found
     if (ntrue(scaleOK) == 0) throw(AipsError("No scale factors determined!"));
 
