@@ -108,6 +108,7 @@ tsdbaseline.xml
 tsdcal.xml
 tsdfit.xml
 tsdflag2.xml
+tsdimaging.xml
 tsdsave.xml
 tsdstat.xml
 setjy.xml
