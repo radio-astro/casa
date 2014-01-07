@@ -171,9 +171,9 @@ def readJPLephem(fmfile,version=''):
     # for once.  The matching quantity will go in retdict[label].  Only a
     # single quantity (group) will be retrieved per line.
     headers = {
-        'NAME': {'pat': r'^Target body name:\s+\d*\s*(\w+)'},   # object name, w.o. number
+        'NAME': {'pat': r'^[>\s]*Target body name:\s+\d*\s*(\w+)'},   # object name, w.o. number
         'ephtype': {'pat': r'\?s_type=1#top>\]\s*:\s+\*(\w+)'}, # e.g. OBSERVER
-        'obsloc': {'pat': r'^Center-site name:\s+(\w+)'},        # e.g. GEOCENTRIC
+        'obsloc': {'pat': r'^[>\s]*Center-site name:\s+(\w+)'},        # e.g. GEOCENTRIC
         # Catch either an explicit mean radius or a solitary target radius.
         'meanrad': {'pat': r'(?:Mean radius \(km\)\s*=|^Target radii\s*:)\s*([0-9.]+)(?:\s*km)?\s*$',
                     'unit': 'km'},
@@ -189,11 +189,11 @@ def readJPLephem(fmfile,version=''):
         'orb_per': {'pat': r'Orbital period((, days)?\s*=\s*[-0-9.]+\s*[dhr](\s*\(?R\)?)?)'},
 
         # MeasComet does not read units for these! E-lon(deg),  Lat(deg),     Alt(km)
-        'GeoLong': {'pat': r'^Center geodetic\s*: ([-+0-9.]+,\s*[-+0-9.]+,\s*[-+0-9.]+)'},
-        'dMJD':    {'pat': r'^Step-size\s*:\s*(.+)'},
+        'GeoLong': {'pat': r'^[>\s]*Center geodetic\s*: ([-+0-9.]+,\s*[-+0-9.]+,\s*[-+0-9.]+)'},
+        'dMJD':    {'pat': r'^[>\s]*Step-size\s*:\s*(.+)'},
 
         #                     request method v  wday mth   mday  hh  mm  ss   yyyy
-        'VS_CREATE': {'pat': r'^Ephemeris / \w+ \w+ (\w+\s+\d+\s+\d+:\d+:\d+\s+\d+)'}
+        'VS_CREATE': {'pat': r'^[>\s]*Ephemeris / \w+ \w+ (\w+\s+\d+\s+\d+:\d+:\d+\s+\d+)'}
         }
     for hk in headers:
         headers[hk]['pat'] = re.compile(headers[hk]['pat'])
@@ -203,9 +203,9 @@ def readJPLephem(fmfile,version=''):
     # need date, r (heliocentric distance), delta (geocentric distance), and phang (phase angle).
     # (Could use the "dot" time derivatives for Doppler shifting, but it's
     # likely unnecessary.)
-    datapat = r'^\s*'
+    datapat = r'^[>\s]*'
 
-    stoppat = r'\$\$EOE$'  # Signifies the end of data.
+    stoppat = r'[>\s]*\$\$EOE$'  # Signifies the end of data.
 
     # Read fmfile into retdict.
     num_cols = 0
@@ -224,7 +224,7 @@ def readJPLephem(fmfile,version=''):
                 for col in gdict:
                     if gdict[col]=='n.a.':
                         gdict[col]=invalid
-                    ##print "cols.key=",cols.keys()
+                #    print "cols.key=",cols.keys()
  
                     if not cols[col].get('unwanted'):
                         retdict['data'][col]['data'].append(gdict[col])
@@ -238,14 +238,14 @@ def readJPLephem(fmfile,version=''):
                 print_datapat = True
                 # Chomp trailing whitespace.
                 comp_mismatches.append(re.sub(r'\s*$', '', line))
-        elif re.match(r'^\s*' + cols['MJD']['header'] + r'\s+'
+        elif re.match(r'^[>\s]*' + cols['MJD']['header'] + r'\s+'
                       + cols['RA']['header'], line):
             # See what columns are present, and finish setting up datapat and
             # retdict.
             havecols = []
             # extract coordinate ref info
 
-            m=re.match(r'(^\s*)(\S+)(\s+)('+cols['RA']['header']+')', line)
+            m=re.match(r'(^[>\s]*)(\S+)(\s+)('+cols['RA']['header']+')', line)
             coordref=m.group(4).split('(')[-1]
             cols['RA']['comment']+='('+coordref+')'
             cols['DEC']['comment']+='('+coordref+')'
@@ -261,11 +261,11 @@ def readJPLephem(fmfile,version=''):
                 #print "myline = '%s'" % myline
                 #print "remaining_cols =", ', '.join(remaining_cols)
                 for col in remaining_cols:
-                    if re.match(r'^\s*' + cols[col]['header'], myline):
+                    if re.match(r'^[>\s]*' + cols[col]['header'], myline):
                         #print "Found", col
                         havecols.append(col)
                         remaining_cols.remove(col)
-                        myline = re.sub(r'^\s*' + cols[col]['header'],
+                        myline = re.sub(r'^[>\s]*' + cols[col]['header'],
                                         '', myline)
                         found_col = True
                         break
@@ -279,7 +279,8 @@ def readJPLephem(fmfile,version=''):
                     retdict['data'][col] = {'comment': cols[col]['comment'],
                                             'data':    []}
             num_cols = len(retdict['data'])
-        elif re.match(r'^\$\$SOE\s*$', line):  # Start of ephemeris
+        #elif re.match(r'^\$\$SOE\s*$', line):  # Start of ephemeris
+        elif re.match(r'^[>\s]*\$\$SOE\s*$', line):  # Start of ephemeris
             casalog.post("Starting to read data.", priority='INFO2')
             in_data = True
         else:
@@ -458,6 +459,7 @@ def readJPLephem(fmfile,version=''):
     retdict['VS_DATE'] = time.strftime('%Y/%m/%d/%H:%M', time.gmtime())
 
     if retdict['data'].has_key('MJD'):
+        #casalog.post("retdict.keys=%s" % retdict.keys())
         retdict['MJD0'] = retdict['data']['MJD']['value'][0] - retdict['dMJD']
     else:
         print "The table will not be usable with me.framecomet because it lacks MJD."
