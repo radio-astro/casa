@@ -62,37 +62,6 @@ function display_startup_time_warning {
 }
 
 
-function ensure_dbus_is_running {
-#
-# We let the user's desktop manage dbus on Linux.
-# TODO: What about servers?
-# TODO: Capture standard out from launchctl, only display it if errors occur.
-    if [ "$OS_TYPE" = "Darwin" ]; then
-        # echo "TBD: ensure_dbus_is_running"
-        local _checkdbus=$(launchctl list | grep freedesktop | wc -l | tr -d ' ')
-        if [ "${_checkdbus}" -eq "1" ]; then
-            # If only one of the two required dbus services are running, stop it.
-            local _dbusctl=$(launchctl list | grep freedesktop | awk '{print $3}')
-            launchctl remove ${_dbusctl}
-        fi
-        launchctl load ${CASA_3RD_PARTY_DIRECTORY}/Library/LaunchDaemons/org.freedesktop.dbus-system.plist
-        launchctl load ${CASA_3RD_PARTY_DIRECTORY}/Library/LaunchAgents/org.freedesktop.dbus-session.plist
-
-        if (( ${#casapy_wdir} > 0 )); then
-            mkdir -p "$casapy_wdir"
-            cd "$casapy_wdir" && echo "=== cd: "$(pwd)" ==="
-            echo "==="
-        else
-            cd $STARTUP_DIRECTORY
-        fi
-        #
-        # TODO: these do not appear to be used.  What are they for?
-        casapy_opts=$(defaults read edu.nrao.casa.macosx.casapy casapy.opts        2>/dev/null)
-        casapy_wdir=$(defaults read edu.nrao.casa.macosx.casapy casapy.working.dir 2>/dev/null)
-    fi
-}
-
-
 function ensure_directory_exists {
     # $1 : path to directory
     # $2 : name to use in messages
@@ -494,7 +463,6 @@ if [ "$DEBUG_CASA" = "T" ]; then
 fi
 set_CASA_COMMAND_LINE
 
-ensure_dbus_is_running
 display_startup_time_warning
 
 display_debugging_message "Remaining command line options: $*"
