@@ -1896,7 +1896,7 @@ class cleanhelper:
         if not (cubeshape[3] > (chan+inimshape[3]-1)):
             return False
         rg0=ia.setboxregion(blc=blc,trc=trc)
-        if inimshape[0:3]!=cubeshape[0:3]: 
+        if any(inimshape[0:3]!=cubeshape[0:3]): 
             return False
         #ia.putchunk(pixels=imdata,blc=blc)
         ia.putregion(pixels=imdata,pixelmask=immask, region=rg0)

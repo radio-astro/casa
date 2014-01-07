@@ -29,6 +29,7 @@
 #include <QString>
 #include <QList>
 #include <casa/Arrays/Vector.h>
+#include <coordinates/Coordinates/SpectralCoordinate.h>
 
 namespace casa {
 
@@ -53,19 +54,18 @@ namespace casa {
 		//corresponding maximum units must be passed in.
 		static void convert( Vector<float>& values, const Vector<float> hertzValues,
 		                     const QString& oldUnits, const QString& newUnits,
-		                     double maxValue, const QString& maxUnits );
-
-		//A solid angle in sr units is needed in order to do Kelvin conversions.
-		static void setSolidAngle( double angle );
-
-		//Beam area in "sr".  Needed for Jy/beam <-> Jy/arcsec^2 and Jy/sr conversions.
-		static void setBeamArea( double beamArea );
+		                     double maxValue, const QString& maxUnits,
+		                     double beamAngle, double beamArea, SpectralCoordinate coord );
 
 		//Converts between Jy/Beam units.  For example, MJy/Beam <-> Jy/Beam
-		static double convertJyBeams( const QString& sourceUnits, const QString& destUnits, double value );
-		static double convertJY( const QString& oldUnits, const QString& newUnits, double value );
-		static double convertJYSR( const QString& oldUnits,const QString& newUnits, double value );
-		static double convertKelvin( const QString& oldUnits,const QString& newUnits, double value );
+		static double convertJyBeams( const QString& sourceUnits, const QString& destUnits,
+				double value, SpectralCoordinate& coord );
+		static double convertJY( const QString& oldUnits, const QString& newUnits,
+				double value, SpectralCoordinate& coord );
+		static double convertJYSR( const QString& oldUnits,const QString& newUnits,
+				double value, SpectralCoordinate& coord );
+		static double convertKelvin( const QString& oldUnits,const QString& newUnits,
+				double value, SpectralCoordinate& coord );
 		virtual ~ConverterIntensity();
 
 	private:
@@ -73,31 +73,30 @@ namespace casa {
 		static double percentToValue( double yValue, double maxValue );
 		static double valueToPercent( double yValue, double maxValue );
 		static double convertQuantity( double yValue, double frequencyValue,
-		                               const QString& oldUnits, const QString& newUnits );
+		                               const QString& oldUnits, const QString& newUnits,
+		                               double beamSolidAngle, double beamArea );
 		static void convertJansky( Vector<float>& values, const QString& oldUnits,
-		                           const QString& newUnits );
+		                           const QString& newUnits, SpectralCoordinate& coord );
 		static void convertKelvin( Vector<float>& values, const QString& oldUnits,
-		                           const QString& newUnits );
+		                           const QString& newUnits, SpectralCoordinate& coord );
 		static bool isJansky( const QString& units );
 		static bool isKelvin( const QString& units );
-		static double convertNonKelvinUnits( double yValue,
-		                                     const QString& oldUnits, const QString& newUnits );
+		static double convertNonKelvinUnits( double yValue, const QString& oldUnits,
+				const QString& newUnits, double beamArea );
 		static QString getJanskyBaseUnits( const QString& units );
 		static QString getKelvinBaseUnits( const QString& units );
 		static QString stripPixels( const QString& units );
-		static double beamToArcseconds( double yValue );
-		static double arcsecondsToBeam( double yValue );
+		static double beamToArcseconds( double yValue, double beamArea );
+		static double arcsecondsToBeam( double yValue, double beamArea );
 		static double srToArcseconds( double yValue );
 		static double arcsecondsToSr( double yValue );
 		static const QList<QString> BEAM_UNITS;
 		static const QList<QString> JY_UNITS;
 		static const QList<QString> JY_SR_UNITS;
 		static const QList<QString> KELVIN_UNITS;
-		static double beamSolidAngle;
 		static const double SPEED_LIGHT_FACTOR;
 		static const double FREQUENCY_FACTOR;
 		static const double ARCSECONDS_PER_STERADIAN;
-		static double beamArea;
 	};
 
 } /* namespace casa */

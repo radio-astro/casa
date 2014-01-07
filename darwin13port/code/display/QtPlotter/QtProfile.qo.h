@@ -155,6 +155,7 @@ namespace casa {
 		QString getFileName() const;
 		QString getImagePath() const;
 		std::tr1::shared_ptr<const ImageInterface<Float> > getImage( const QString& imageName="") const;
+		virtual bool getBeamInfo( const QString& curveName, Double& beamAngle, Double& beamArea ) const;
 		const void getPixelBounds(Vector<double>& pixelX, Vector<double>& pixelY) const;
 		void persist( const QString& key, const QString& value );
 		QString read( const QString & key ) const;
@@ -256,13 +257,16 @@ namespace casa {
 		void resetYUnits( const QString& units);
 		void outputCurve( int k, QTextStream& ts, Float scaleFactor );
 		int getFreqProfileTabularIndex(ImageAnalysis* analysis );
-		void resetTabularConversion();
+		SpectralCoordinate resetTabularConversion(std::tr1::shared_ptr< const ImageInterface<Float> > imagePtr, Bool& valid);
 		bool isSpectralAxis() const;
 		void initializeSpectralProperties();
+		SpectralCoordinate getSpectralAxis( std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr, Bool& valid );
 		void resetXUnits( bool spectralAxis);
 		void updateSpectralReferenceFrame();
 		String getRegionShape();
 		int computeCB( const String& xa, const String& ya, const String& za );
+		void getBeamInfo( std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr, Double& beamArea, Double& beamSolidAngle) const;
+		SpectralCoordinate getSpectralCoordinate( std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr, Bool& valid );
 
 		/**
 		 * Returns false if first vector value is greater than the last
@@ -301,7 +305,8 @@ namespace casa {
 		void storeCoordinates( const Vector<double> pxv, const Vector<double> pyv,
 		                       const Vector<double> wxv, const Vector<double> wyv );
 		void addCanvasMainCurve( const Vector<Float>& xVals, const Vector<Float>& yVals,
-		                         const QString& label );
+		                         const QString& label, double beamAngle, double beamArea,
+		                         SpectralCoordinate coord);
 		void adjustTopAxisSettings();
 		void initializeXAxisUnits();
 		void setXAxisUnits();
@@ -335,6 +340,8 @@ namespace casa {
 		double getUnitsPerChannel( ImageAnalysis* analysis, bool* ok, const QString& matchUnits );
 		QString readTopAxis() const;
 		void persistTopAxis( const QString& units );
+		void addOverplotToCanvas( ImageAnalysis* ana, const Vector<Float>& xVals, const
+					Vector<Float>& yVals, const QString& ky );
 		QList<OverplotAnalysis> *over;
 		const String WORLD_COORDINATES;
 		String coordinate;

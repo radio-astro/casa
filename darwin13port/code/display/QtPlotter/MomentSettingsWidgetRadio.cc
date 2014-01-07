@@ -529,13 +529,13 @@ namespace casa {
 
 	void MomentSettingsWidgetRadio::convertChannelValue( const QString& channelStr,
 	        const QString& channelIdentifier, Converter* converter, int row, int col,
-	        bool toPixels ) {
+	        bool toPixels, SpectralCoordinate& coord ) {
 		if ( isValidChannelRangeValue( channelStr, channelIdentifier )) {
 			float chanVal = channelStr.toFloat();
 			if ( ! toPixels ) {
-				chanVal = converter->convert( chanVal );
+				chanVal = converter->convert( chanVal, coord );
 			} else {
-				chanVal = converter->toPixel( chanVal );
+				chanVal = converter->toPixel( chanVal, coord );
 			}
 			setTableValue( row, col, chanVal );
 		}
@@ -548,12 +548,17 @@ namespace casa {
 			toPixels = true;
 		}
 		Converter* converter = Converter::getConverter( oldUnits, newUnits );
-		for ( int i = 0; i < channelIntervalCount; i++ ) {
-			QString startStr;
-			QString endStr;
-			getChannelMinMax( i, startStr, endStr );
-			convertChannelValue( startStr, "Start", converter, i, 0, toPixels );
-			convertChannelValue( endStr, "End", converter, i, 1, toPixels );
+		if ( imageAnalysis != NULL ){
+			std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr = imageAnalysis->getImage();
+			Bool validCoord;
+			SpectralCoordinate coord = taskMonitor->getSpectralCoordinate(imagePtr, validCoord );
+			for ( int i = 0; i < channelIntervalCount; i++ ) {
+				QString startStr;
+				QString endStr;
+				getChannelMinMax( i, startStr, endStr );
+				convertChannelValue( startStr, "Start", converter, i, 0, toPixels, coord );
+				convertChannelValue( endStr, "End", converter, i, 1, toPixels, coord );
+			}
 		}
 		delete converter;
 	}

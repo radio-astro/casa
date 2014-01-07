@@ -55,6 +55,7 @@ namespace casa {
 		void setCurveColor( QColor color );
 		SpecFitGaussian getEstimate(int index );
 		void setEstimates( QList<SpecFitGaussian>& estimates );
+		void setSpectralCoordinate( SpectralCoordinate& coord );
 
 	private slots:
 		void unitsChanged( int index );
@@ -80,6 +81,7 @@ namespace casa {
 		bool plotsCoordinated;
 
 		QWidget* plotHolderWidget;
+		SpectralCoordinate spectralCoordinate;
 	};
 }
 #endif // GAUSSIANESTIMATEDIALOG_QO_H

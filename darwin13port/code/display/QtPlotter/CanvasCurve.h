@@ -27,6 +27,7 @@
 
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
+#include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <vector>
 #include <utility>			/***for std::pair***/
 #include <QColor>
@@ -45,7 +46,8 @@ namespace casa {
 	public:
 		CanvasCurve();
 		CanvasCurve( CurveData curveData, ErrorData errorData,
-		             QString legend, QColor curveColor, int curveType );
+		             QString legend, QColor curveColor, int curveType,
+		             double beamAngle, double beamArea, SpectralCoordinate coord);
 		QColor getColor() const;
 		void setColor( QColor color );
 		QString getLegend() const;
@@ -56,12 +58,14 @@ namespace casa {
 		Vector<float> getYValues() const;
 		CurveData getErrorData();
 
+
 		QString getToolTip( double x, double y , const QString& xUnit, const QString& yUnit ) const;
 		void getMinMax(Double& xmin, Double& xmax, Double& ymin,
 		               Double& ymax, bool plotError ) const;
 		std::pair<double,double> getRangeFor(double xMin, double xMax, Bool& exists );
 		void scaleYValues( const QString& oldDisplayUnits, const QString& yUnitDisplay, const QString& xUnits );
-		double convertValue( double value, double freqValue, const QString& oldDisplayUnits, const QString& yUnitDisplay, const QString& xUnits);
+		double convertValue( double value, double freqValue, const QString& oldDisplayUnits, const QString& yUnitDisplay,
+				const QString& xUnits, SpectralCoordinate& coord);
 		virtual ~CanvasCurve();
 
 	private:
@@ -80,7 +84,11 @@ namespace casa {
 		QString maxUnits;
 		double maxValue;
 		double maxErrorValue;
+		double beamAngle;
+		double beamArea;
 		int curveType;
+		SpectralCoordinate spectralCoordinate;
+
 	};
 
 } /* namespace casa */

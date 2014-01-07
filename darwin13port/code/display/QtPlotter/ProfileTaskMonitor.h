@@ -28,6 +28,7 @@
 #include <QString>
 #include <casa/BasicSL/String.h>
 #include <casa/Arrays/Vector.h>
+#include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <measures/Measures/MFrequency.h>
 
 #include <tr1/memory.hpp>
@@ -46,6 +47,8 @@ namespace casa {
 		};
 		virtual QString getFileName() const = 0;
 		virtual QString getImagePath() const =0;
+		virtual bool getBeamInfo( const QString& curveName, Double& beamAngle, Double& beamArea ) const = 0;
+		virtual SpectralCoordinate getSpectralCoordinate(std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr, Bool& validCoord ) = 0;
 		virtual Vector<Float> getXValues() const = 0;
 		virtual Vector<Float> getYValues() const = 0;
 		virtual Vector<Float>getZValues() const = 0;

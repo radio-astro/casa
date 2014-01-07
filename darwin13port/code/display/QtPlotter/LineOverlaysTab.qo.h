@@ -30,6 +30,7 @@
 #include <display/QtPlotter/LineOverlaysSearchResultsDialog.qo.h>
 #include <display/QtPlotter/SearchRedshiftDialog.qo.h>
 #include <casa/BasicSL/String.h>
+#include <coordinates/Coordinates/SpectralCoordinate.h>
 
 
 namespace casa {
@@ -45,6 +46,7 @@ namespace casa {
 		LineOverlaysTab(QWidget *parent = 0);
 		void setRange( double min, double max, String units );
 		void setInitialReferenceFrame( QString referenceStr );
+		void setSpectralCoordinate( SpectralCoordinate coord );
 		void setCanvas( QtCanvas* canvas );
 		~LineOverlaysTab();
 
@@ -66,6 +68,8 @@ namespace casa {
 		QtCanvas* pixelCanvas;
 		LineOverlaysSearchResultsDialog searchResults;
 		SearchRedshiftDialog searchRedshiftDialog;
+		SpectralCoordinate spectralCoordinate;
+
 	};
 }
 #endif // LINEOVERLAYSTAB_QO_H

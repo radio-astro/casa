@@ -29,6 +29,7 @@
 #include <QProgressDialog>
 #include <casa/BasicSL/String.h>
 #include <display/QtPlotter/SearchRedshiftDialog.ui.h>
+#include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <measures/Measures/MRadialVelocity.h>
 #include <measures/Measures/MFrequency.h>
 #include <measures/Measures/MDoppler.h>
@@ -49,6 +50,7 @@ namespace casa {
 		void setFrequencyType( MRadialVelocity::Types mType );
 		void setDopplerType( MDoppler::Types type );
 		void setIdentifiedLines( const QList<QString>& lineNames );
+		void setSpectralCoordinate( SpectralCoordinate coord );
 		~SearchRedshiftDialog();
 
 	public slots:
@@ -68,6 +70,7 @@ namespace casa {
 		QProgressDialog progressBar;
 		MFrequency::Types frequencyType;
 		MRadialVelocity::Types radialVelocityType;
+		SpectralCoordinate spectralCoordinate;
 		MDoppler::Types dopplerType;
 	};
 }

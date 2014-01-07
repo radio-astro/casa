@@ -41,11 +41,7 @@ namespace casa {
 	const double ConverterIntensity::SPEED_LIGHT_FACTOR = 0.0000000009;
 	const double ConverterIntensity::FREQUENCY_FACTOR = 2 * 0.0000000000000000000000138;
 	const double ConverterIntensity::ARCSECONDS_PER_STERADIAN = 206.265 * 206.265;
-	double ConverterIntensity::beamSolidAngle = 0;
-
-	double ConverterIntensity::beamArea = 0;
-
-
+	
 	const QList<QString> ConverterIntensity::BEAM_UNITS =
 	    QList<QString>() << "pJy/beam" <<"10pJy/beam"<<"100pJy/beam"<<
 	    "nJy/beam"<<"10nJy/beam"<<"100nJy/beam"<<
@@ -90,15 +86,6 @@ namespace casa {
 	ConverterIntensity::ConverterIntensity() {
 	}
 
-	void ConverterIntensity::setSolidAngle( double angleMeasure ) {
-		beamSolidAngle = angleMeasure;
-	}
-
-	void ConverterIntensity::setBeamArea( double area ) {
-		beamArea = area;
-	}
-
-
 	bool ConverterIntensity::isSupportedUnits( const QString& yUnit ) {
 		bool acceptable = false;
 		if ( yUnit.contains( JY ) || yUnit.contains( KELVIN ) ||
@@ -119,7 +106,8 @@ namespace casa {
 
 	void ConverterIntensity::convert( Vector<float>& values, const Vector<float> hertzValues,
 	                                  const QString& oldUnits, const QString& newUnits,
-	                                  double maxValue, const QString& maxUnits ) {
+	                                  double maxValue, const QString& maxUnits,
+	                                  double beamAngle, double beamArea, SpectralCoordinate coord ) {
 
 		bool supportedUnits = isSupportedUnits( oldUnits );
 		if ( supportedUnits ) {
@@ -162,10 +150,10 @@ namespace casa {
 			QString strippedBase = baseConvertUnits;
 			if ( isJansky( baseConvertUnits ) ) {
 				strippedBase = getJanskyBaseUnits( baseConvertUnits );
-				convertJansky( values, baseConvertUnits, strippedBase );
+				convertJansky( values, baseConvertUnits, strippedBase, coord );
 			} else if ( isKelvin( baseConvertUnits )) {
 				strippedBase = getKelvinBaseUnits( baseConvertUnits );
-				convertKelvin( values, baseConvertUnits, strippedBase );
+				convertKelvin( values, baseConvertUnits, strippedBase, coord );
 			}
 
 			QString strippedNew = newUnitsBase;
@@ -178,14 +166,15 @@ namespace casa {
 			//Do the conversion using the base units without the prefix.
 			for ( int i = 0; i < maxPoints; i++ ) {
 				values[ i ] = convertQuantity( values[i], hertzValues[i],
-				                               strippedBase, strippedNew );
+				                               strippedBase, strippedNew,
+				                               beamAngle, beamArea );
 			}
 
 			//Add any additional prefix back in.
 			if ( isJansky( newUnitsBase ) ) {
-				convertJansky( values, strippedNew, newUnitsBase );
+				convertJansky( values, strippedNew, newUnitsBase, coord );
 			} else if ( isKelvin( newUnitsBase )) {
-				convertKelvin( values, strippedNew, newUnitsBase );
+				convertKelvin( values, strippedNew, newUnitsBase, coord );
 			}
 		}
 	}
@@ -230,29 +219,29 @@ namespace casa {
 	}
 
 	void ConverterIntensity::convertJansky( Vector<float>& values, const QString& oldUnits,
-	                                        const QString& newUnits ) {
+	                                        const QString& newUnits, SpectralCoordinate& coord ) {
 		if ( oldUnits.indexOf( JY_BEAM) >= 0 && newUnits.indexOf( JY_BEAM) >= 0 ) {
 			for ( int i = 0; i < static_cast<int>(values.size()); i++ ) {
-				values[i] = convertJyBeams( oldUnits, newUnits, values[i]);
+				values[i] = convertJyBeams( oldUnits, newUnits, values[i], coord);
 			}
 		}
 
 		else if ( oldUnits.indexOf( JY_SR) >= 0 && newUnits.indexOf( JY_SR) >= 0) {
 			for ( int i = 0; i < static_cast<int>(values.size()); i++ ) {
-				values[i] = convertJYSR( oldUnits, newUnits, values[i]);
+				values[i] = convertJYSR( oldUnits, newUnits, values[i], coord);
 			}
 		} else {
 			for ( int i = 0; i < static_cast<int>(values.size()); i++ ) {
-				values[i] = convertJY( oldUnits, newUnits, values[i]);
+				values[i] = convertJY( oldUnits, newUnits, values[i], coord);
 			}
 		}
 	}
 
 	void ConverterIntensity::convertKelvin( Vector<float>& values, const QString& oldUnits,
-	                                        const QString& newUnits ) {
+	                                        const QString& newUnits, SpectralCoordinate& coord ) {
 		for ( int i = 0; i < static_cast<int>(values.size()); i++ ) {
 			if ( oldUnits.indexOf( KELVIN) >= 0 && newUnits.indexOf( KELVIN) >= 0 ) {
-				values[i] = convertKelvin( oldUnits, newUnits, values[i]);
+				values[i] = convertKelvin( oldUnits, newUnits, values[i], coord);
 			}
 		}
 	}
@@ -268,7 +257,7 @@ namespace casa {
 		return convertedYValue;
 	}
 
-	double ConverterIntensity::beamToArcseconds( double yValue ) {
+	double ConverterIntensity::beamToArcseconds( double yValue, double beamArea ) {
 		double convertedValue = yValue;
 		if ( beamArea != 0 ) {
 			convertedValue = yValue / beamArea;
@@ -276,7 +265,7 @@ namespace casa {
 		return convertedValue;
 	}
 
-	double ConverterIntensity::arcsecondsToBeam( double yValue ) {
+	double ConverterIntensity::arcsecondsToBeam( double yValue, double beamArea ) {
 		double convertedValue = yValue;
 		if ( beamArea != 0 ) {
 			convertedValue = yValue * beamArea;
@@ -295,11 +284,11 @@ namespace casa {
 	}
 
 	double ConverterIntensity::convertNonKelvinUnits( double value,
-	        const QString& oldUnits, const QString& newUnits ) {
+	        const QString& oldUnits, const QString& newUnits, double beamArea ) {
 		double convertedValue = value;
 		if ( oldUnits == JY_BEAM ) {
 			if ( newUnits != JY_BEAM ) {
-				convertedValue = beamToArcseconds( value );
+				convertedValue = beamToArcseconds( value, beamArea );
 				if ( newUnits == JY_SR ) {
 					convertedValue = arcsecondsToSr( convertedValue );
 				}
@@ -308,7 +297,7 @@ namespace casa {
 			if ( newUnits != JY_SR ) {
 				convertedValue = srToArcseconds( value );
 				if ( newUnits == JY_BEAM ) {
-					convertedValue = arcsecondsToBeam( convertedValue );
+					convertedValue = arcsecondsToBeam( convertedValue, beamArea );
 				}
 			}
 		} else if ( oldUnits == JY_ARCSEC ) {
@@ -316,7 +305,7 @@ namespace casa {
 				if ( newUnits == JY_SR ) {
 					convertedValue = arcsecondsToSr( value );
 				} else if ( newUnits == JY_BEAM ) {
-					convertedValue = arcsecondsToBeam( value );
+					convertedValue = arcsecondsToBeam( value, beamArea );
 				} else {
 					qDebug()<<"Unsupported units: "<<newUnits;
 				}
@@ -330,14 +319,15 @@ namespace casa {
 
 
 	double ConverterIntensity::convertQuantity( double yValue, double frequencyValue,
-	        const QString& oldUnits, const QString& newUnits ) {
+	        const QString& oldUnits, const QString& newUnits, double beamSolidAngle,
+	        double beamArea ) {
 
 		String oldUnitStr = oldUnits.toStdString();
 		String newUnitStr = newUnits.toStdString();
 
 		double convertedYValue = yValue;
 		if ( oldUnits != KELVIN && newUnits != KELVIN ) {
-			convertedYValue = convertNonKelvinUnits( yValue, oldUnits, newUnits );
+			convertedYValue = convertNonKelvinUnits( yValue, oldUnits, newUnits, beamArea );
 		} else if ( oldUnits == KELVIN && newUnits != KELVIN ) {
 			if ( beamSolidAngle > 0 ) {
 				//kelvin * solidAngle * 2 * 1.38 x 10^-23 * freq^2 / (10^-32 x (3 x 10^8)^2)
@@ -350,7 +340,7 @@ namespace casa {
 				Quantity quantityJyBeam( jyBeamValue, strUnit );
 				quantityJyBeam.convert( newUnitStr );
 				convertedYValue = quantityJyBeam.getValue();*/
-				convertedYValue = convertNonKelvinUnits( jyBeamValue, JY_BEAM, newUnits );
+				convertedYValue = convertNonKelvinUnits( jyBeamValue, JY_BEAM, newUnits, beamArea );
 			} else {
 				qDebug() << "Could not convert from Kelvin because the beam solid angle was 0";
 			}
@@ -362,7 +352,7 @@ namespace casa {
 				Quantity quantity( yValue, oldUnitStr );
 				quantity.convert( jyBeamUnits );
 				double valueBeam = quantity.getValue();*/
-				double valueBeam = convertNonKelvinUnits( yValue, oldUnits, JY_BEAM);
+				double valueBeam = convertNonKelvinUnits( yValue, oldUnits, JY_BEAM, beamArea);
 
 				//Temperature in Kelvin is now:
 				//Jy/beam x 10^(-32) x (3 x 10^8)^2 / ( solidAngle x 2 x 1.38 x 10^-23 x (xvalueinHz)^2 ).
@@ -376,43 +366,43 @@ namespace casa {
 		return convertedYValue;
 	}
 
-	double ConverterIntensity::convertJY( const QString& oldUnits,
-	                                      const QString& newUnits, double value ) {
+	double ConverterIntensity::convertJY( const QString& oldUnits, const QString& newUnits,
+			double value, SpectralCoordinate& coord ) {
 		int sourceIndex = JY_UNITS.indexOf( oldUnits );
 		int destIndex = JY_UNITS.indexOf( newUnits );
 		Vector<double> resultValues(1);
 		resultValues[0] = value;
-		Converter::convert( resultValues, sourceIndex, destIndex );
+		Converter::convert( resultValues, sourceIndex, destIndex, coord );
 		return resultValues[0];
 	}
 
 	double ConverterIntensity::convertJYSR( const QString& oldUnits,
-	                                        const QString& newUnits, double value ) {
+	                                        const QString& newUnits, double value, SpectralCoordinate& coord ) {
 		int sourceIndex = JY_SR_UNITS.indexOf( oldUnits );
 		int destIndex = JY_SR_UNITS.indexOf( newUnits );
 		Vector<double> resultValues(1);
 		resultValues[0] = value;
-		Converter::convert( resultValues, sourceIndex, destIndex );
+		Converter::convert( resultValues, sourceIndex, destIndex, coord );
 		return resultValues[0];
 	}
 
 	double ConverterIntensity::convertJyBeams( const QString& oldUnits,
-	        const QString& newUnits, double value ) {
+	        const QString& newUnits, double value, SpectralCoordinate& coord ) {
 		int sourceIndex = BEAM_UNITS.indexOf( oldUnits );
 		int destIndex = BEAM_UNITS.indexOf( newUnits );
 		Vector<double> resultValues(1);
 		resultValues[0] = value;
-		Converter::convert( resultValues, sourceIndex, destIndex );
+		Converter::convert( resultValues, sourceIndex, destIndex, coord );
 		return resultValues[0];
 	}
 
 	double ConverterIntensity::convertKelvin( const QString& oldUnits,
-	        const QString& newUnits, double value ) {
+	        const QString& newUnits, double value, SpectralCoordinate& coord ) {
 		int sourceIndex = KELVIN_UNITS.indexOf( oldUnits );
 		int destIndex = KELVIN_UNITS.indexOf( newUnits );
 		Vector<double> resultValues(1);
 		resultValues[0] = value;
-		Converter::convert( resultValues, sourceIndex, destIndex );
+		Converter::convert( resultValues, sourceIndex, destIndex, coord );
 		return resultValues[0];
 	}
 

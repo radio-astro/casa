@@ -31,7 +31,7 @@ namespace casa {
 		Converter( oldUnits, newUnits ) {
 	}
 
-	double ConverterFrequency::toPixel( double value ) {
+	double ConverterFrequency::toPixel( double value, SpectralCoordinate spectralCoordinate) {
 		Double pixelValue;
 		Vector<String> spectralUnits = spectralCoordinate.worldAxisUnits();
 		String spectralUnit = spectralUnits[0];
@@ -39,25 +39,25 @@ namespace casa {
 		if ( spectralUnitStr != oldUnits ) {
 			Vector<double> freqValues(1);
 			freqValues[0] = value;
-			convertFrequency( freqValues, oldUnits, spectralUnitStr );
+			convertFrequency( freqValues, oldUnits, spectralUnitStr, spectralCoordinate );
 			value = freqValues[0];
 		}
 		spectralCoordinate.toPixel( pixelValue, value );
 		return pixelValue;
 	}
 
-	Vector<double> ConverterFrequency::convert( const Vector<double>& oldValues ) {
+	Vector<double> ConverterFrequency::convert( const Vector<double>& oldValues, SpectralCoordinate spectralCoordinate) {
 		Vector<double> resultValues( oldValues.size() );
 		resultValues = oldValues;
-		convertFrequency( resultValues, oldUnits, newUnits );
+		convertFrequency( resultValues, oldUnits, newUnits, spectralCoordinate );
 		return resultValues;
 	}
 
 	void ConverterFrequency::convertFrequency( Vector<double> &resultValues,
-	        QString& frequencySourceUnits, QString& frequencyDestUnits) {
+	        QString& frequencySourceUnits, QString& frequencyDestUnits, SpectralCoordinate& coord ) {
 		int sourceIndex = Converter::FREQUENCY_UNITS.indexOf( frequencySourceUnits );
 		int destIndex = Converter::FREQUENCY_UNITS.indexOf( frequencyDestUnits );
-		Converter::convert( resultValues, sourceIndex, destIndex );
+		Converter::convert( resultValues, sourceIndex, destIndex, coord );
 	}
 
 	ConverterFrequency::~ConverterFrequency() {

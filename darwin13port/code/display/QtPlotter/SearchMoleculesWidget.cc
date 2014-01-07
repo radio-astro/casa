@@ -161,10 +161,14 @@ namespace casa {
 	        QLineEdit* lineEdit ) {
 		if ( unitStr != units ) {
 			Converter* converter = Converter::getConverter( units, unitStr );
-			value = converter->convert( value );
+			value = converter->convert( value, coord);
 			delete converter;
 		}
 		lineEdit->setText( QString::number( value, 'f', 6 ));
+	}
+
+	void SearchMoleculesWidget::setSpectralCoordinate(SpectralCoordinate coord ){
+		this->coord = coord;
 	}
 
 	void SearchMoleculesWidget::setResultDisplay( SearchMoleculesResultDisplayer* resultDisplay ) {
@@ -194,7 +198,7 @@ namespace casa {
 		if ( editText != NULL && !editText.isEmpty()) {
 			if ( converter != NULL ) {
 				double val = editText.toDouble();
-				val = converter->convert( val );
+				val = converter->convert( val, coord);
 				lineEdit->setText( QString::number( val ));
 			}
 		}
@@ -269,7 +273,7 @@ namespace casa {
 				double dopplerVal = dopplerStr.toDouble();
 
 				Converter* converter = Converter::getConverter( dopplerVelocityUnitStr, currentUnits );
-				dopplerVal = converter->convert( dopplerVal );
+				dopplerVal = converter->convert( dopplerVal, coord );
 				ui.dopplerLineEdit->setText( QString::number( dopplerVal ));
 				delete converter;
 			}
@@ -290,7 +294,7 @@ namespace casa {
 			//Convert the range value to Splatalogue Units
 			if ( unitStr != SPLATALOGUE_UNITS ) {
 				Converter* converter = Converter::getConverter(unitStr, SPLATALOGUE_UNITS);
-				value = converter->convert( value );
+				value = converter->convert( value, coord );
 				delete converter;
 			}
 
