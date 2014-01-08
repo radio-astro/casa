@@ -159,33 +159,63 @@ namespace casa {
 		}
 	}
 
+	void ImageScroll::removeImageView( QtDisplayData* displayData ){
+		int index = findImageView( displayData->name().c_str());
+		if ( index >= 0 ){
+			this->closeImage( images[index], true );
+		}
+	}
+
 	void ImageScroll::closeImage( ImageView* imageView, bool deleteImage ) {
+		int viewIndex = images.indexOf( imageView );
+		if ( viewIndex >= 0 ){
+			images.removeAt ( viewIndex );
+			removeImageViewLayout( imageView );
+			imageView->disconnect();
+			QtDisplayData* dd = imageView->getData();
+			bool masterCoordinate = imageView->isMasterCoordinate();
+			emit displayDataRemoved( dd, masterCoordinate );
+			if ( deleteImage ) {
+				delete imageView;
+			}
+			else {
+				imageView->setParent( NULL );
+			}
+		}
+	}
+
+	void ImageScroll::removeDisplayDataLayout( QtDisplayData* displayData ){
+		int index = findImageView( displayData->name().c_str());
+		if ( index >= 0 ){
+			removeImageViewLayout( images[index]);
+		}
+	}
+
+	void ImageScroll::removeImageViewLayout( ImageView* imageView ){
 		QLayout* scrollLayout = scrollWidget->layout();
 		scrollLayout->removeWidget( imageView );
-		imageView->setParent( NULL );
-		bool masterCoordinate = imageView->isMasterCoordinate();
-		images.removeOne( imageView );
-		disconnect( imageView, SIGNAL(displayTypeChanged(ImageView*)),
-			this, SIGNAL(displayTypeChanged(ImageView*)));
-		disconnect( imageView, SIGNAL( close(ImageView*)),
-			this, SLOT( closeImage(ImageView*)));
-		disconnect( imageView, SIGNAL( masterCoordinateImageSelected( ImageView*)),
-			this, SLOT( coordinateSystemChanged( ImageView*)));
-		disconnect( imageView, SIGNAL( masterCoordinateImageClear()),
-			this, SLOT( masterCoordinateClear()));
-		disconnect( imageView, SIGNAL( masterHueImageSelected( ImageView*)),
-			this, SLOT( hueImageChanged( ImageView*)));
-		disconnect( imageView, SIGNAL( masterSaturationImageSelected( ImageView*)),
-			this, SLOT( saturationImageChanged( ImageView*)));
-		disconnect( imageView, SIGNAL( showDataDisplayOptions( QtDisplayData*)),
-			this, SIGNAL( showDataDisplayOptions( QtDisplayData*)));
-		disconnect( imageView, SIGNAL( viewImage( ImageView*)),
-				this, SLOT( viewImage(ImageView*)));
-		QtDisplayData* dd = imageView->getData();
-		emit displayDataRemoved( dd, masterCoordinate );
-		if ( deleteImage ) {
-			delete imageView;
+	}
+
+	void ImageScroll::addDisplayDataLayout( QtDisplayData* displayData, int dropIndex){
+		int index = findImageView( displayData->name().c_str());
+		if ( index >= 0 ){
+			addImageViewLayout( images[index], dropIndex);
 		}
+	}
+
+	void ImageScroll::addImageViewLayout( ImageView* viewerImage, int dropIndex){
+		//Add to GUI
+		QLayout* scrollLayout = scrollWidget->layout();
+		if ( dropIndex == -1 || dropIndex >= images.size() ){
+			scrollLayout->removeItem( spacer );
+			scrollLayout->addWidget( viewerImage );
+		}
+		else {
+			scrollLayout->removeItem( spacer );
+			QVBoxLayout* boxLayout = dynamic_cast<QVBoxLayout*>(scrollLayout);
+			boxLayout->insertWidget( dropIndex, viewerImage );
+		}
+		scrollLayout->addItem( spacer );
 	}
 
 	void ImageScroll::addImageView( QtDisplayData* data, bool registered,
@@ -217,12 +247,7 @@ namespace casa {
 		}
 	}
 
-	void ImageScroll::removeImageView( QtDisplayData* displayData ){
-		int index = findImageView( displayData->name().c_str());
-		if ( index >= 0 ){
-			this->closeImage( images[index], true );
-		}
-	}
+
 
 	void ImageScroll::addImage( ImageView* viewerImage, int dropIndex ) {
 		QString newName = viewerImage->getName();
@@ -246,20 +271,13 @@ namespace casa {
 					this, SIGNAL(registrationChange(ImageView*)));
 			connect( viewerImage, SIGNAL( viewImage(ImageView*)),
 					this, SLOT( viewImage(ImageView*)));
-
-			//Add to GUI
-			QLayout* scrollLayout = scrollWidget->layout();
-			scrollLayout->removeItem( spacer );
-			if ( dropIndex == -1 ){
+			if ( dropIndex == -1 || dropIndex >= images.size() ){
 				images.append( viewerImage );
-				scrollLayout->addWidget( viewerImage );
 			}
 			else {
-				QVBoxLayout* boxLayout = dynamic_cast<QVBoxLayout*>(scrollLayout);
-				boxLayout->insertWidget( dropIndex, viewerImage );
 				images.insert( dropIndex, viewerImage );
 			}
-			scrollLayout->addItem( spacer );
+			addImageViewLayout( viewerImage, dropIndex );
 		}
 	}
 
@@ -399,42 +417,47 @@ namespace casa {
 			}
 		}
 		return dropIndex;
-
 	}
-
 
 	void ImageScroll::dropEvent( QDropEvent* dropEvent ) {
 		//Use the position to estimate where int the list the imageView
 		//should be placed.
-
 		QPoint dropPosition = dropEvent->pos();
 		int dropY = dropPosition.y();
 		int dropIndex = getDropIndex( dropY );
-		removeDragMarker();
-
 		if ( dropIndex >= 0 ) {
 			const QMimeData* dropData = dropEvent->mimeData();
 			ImageView* droppedView = getMimeImageView( dropData );
 			if ( droppedView != NULL ) {
 				int droppedImageIndex = images.indexOf( droppedView );
-
 				//The image we are moving will be deleted from the list.
 				//The list will be one item shorter when we insert it again.
-				if ( droppedImageIndex < dropIndex && dropIndex != 0 && droppedImageIndex != images.size() -1) {
+				int lastImageIndex = images.size() - 1;
+				if ( droppedImageIndex < dropIndex && dropIndex != 0 && droppedImageIndex != lastImageIndex) {
+					dropIndex = dropIndex - 1;
+				}
+				//Its the last image and we are putting it back in the last position
+				else if ( droppedImageIndex == lastImageIndex && dropIndex >= lastImageIndex ){
 					dropIndex = dropIndex - 1;
 				}
 
 				//Update the order of the data holder list
-				QtDisplayData* displayData = droppedView->getData();
-				bool registered = droppedView->isRegistered();
-				bool masterCoordinate = droppedView->isMasterCoordinate();
-				bool masterSaturation = droppedView->isMasterSaturation();
-				bool masterHue = droppedView->isMasterHue();
-				QColor rgbColor = droppedView->getDisplayedColor();
-				emit imageOrderingChanged( displayData, dropIndex, registered,
-						masterCoordinate, masterSaturation, masterHue, rgbColor);
+				if (droppedImageIndex >= 0){
+					QtDisplayData* displayData = droppedView->getData();
+					bool registered = droppedView->isRegistered();
+					bool masterCoordinate = droppedView->isMasterCoordinate();
+					//bool masterSaturation = droppedView->isMasterSaturation();
+					//bool masterHue = droppedView->isMasterHue();
+					//QColor rgbColor = droppedView->getDisplayedColor();
+					emit imageOrderingChanged( displayData, dropIndex, registered,
+							masterCoordinate/*, masterSaturation, masterHue, rgbColor*/);
+				}
+				else{
+					qDebug () << "Drop of nonexistent data in ImageScroll::dropEvent";
+				}
 			}
 		}
+		removeDragMarker();
 	}
 
 
@@ -456,6 +479,7 @@ namespace casa {
 		if ( iLayout != NULL && iLayout->indexOf( dropMarker) >= 0 ){
 			QVBoxLayout* scrollLayout = dynamic_cast<QVBoxLayout*>(iLayout);
 			scrollLayout->removeWidget( dropMarker );
+
 			dropMarker->setParent( NULL );
 		}
 	}

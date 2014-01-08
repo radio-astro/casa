@@ -122,7 +122,7 @@ if( NOT arch AND EXISTS ${casaroot}/aipshosts )
     endif()
 endif()
 
-set( CMAKE_CXX_FLAGS_PROFILE "-g -O2 -pg -fprofile-arcs" )
+set( CMAKE_CXX_FLAGS_PROFILE "-g -Ofast -pg -fprofile-arcs" )
 
 # On Linux x86_64 add the (gcc specific) -fno-omit-frame-pointer
 # flag to debug builds
@@ -143,9 +143,9 @@ dump( CMAKE_SYSTEM
 
 set( BUILD_SHARED_LIBS ON )
 
-set( DEFAULT_CXX_FLAGS "-pipe -Wall -Wextra -Wno-non-template-friend -Wcast-align -Wno-comment" )
+set( DEFAULT_CXX_FLAGS "-pipe -Ofast -Wall -Wextra -Wno-non-template-friend -Wcast-align -Wno-comment" )
 
-set( DEFAULT_C_FLAGS "-pipe -Wall -Wextra -Wcast-align -Wno-comment" )
+set( DEFAULT_C_FLAGS "-pipe -Ofast -Wall -Wextra -Wcast-align -Wno-comment" )
 
 # OpenMP
 find_package( OpenMP )
@@ -262,7 +262,7 @@ if( APPLE )
             set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse" )
         else()
 #            set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse -fasm-blocks" )
-            set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse" )
+            set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -Ofast -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse" )
         endif()
     endif()
 
@@ -1075,7 +1075,7 @@ file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
   CFITSIOLIBD = ${cfitsiolibd}\n
   CFITSIOINCD =  ${CFITSIO_INCLUDE_DIRS}\n
   eval_vars :\n
-  \t@\ echo\ \"$(foreach\ V,$(VARS),$V=\\\"$($V)\\\")\ \;\ export\ $(VARS)\"\n
+  \t@\ echo\ \"$(foreach\ V,$(VARS),$V=\\\"$($V) \\\") \ \;\ export\ $(VARS)\"\n
 )
 
 add_subdirectory( doc/userman )

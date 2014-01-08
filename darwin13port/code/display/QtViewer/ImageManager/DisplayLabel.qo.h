@@ -59,7 +59,7 @@ public:
      */
     QString getText() const;
 
-    ~DisplayLabel();
+    virtual ~DisplayLabel();
 
 private:
     void setBackgroundColor( );

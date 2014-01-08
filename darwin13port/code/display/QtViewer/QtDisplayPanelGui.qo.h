@@ -436,12 +436,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//# Protected, connected by this object itself.
 
 		// Respond to QDP::registrationChange() signal
-		virtual void ddRegChange_() {
-			//hideImageMenus();
-			//updateDDMenus_();
-			arrangeTrackBoxes_();
-			updateFrameInformation();
-		}
+		virtual void ddRegChange_();
 
 		// Respond to registration/close menu clicks.
 		//<group>
@@ -588,7 +583,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		 */
 		void construct_( QtDisplayPanel *newpanel, const std::list<std::string> &args );
 
-		void animationModeChanged( bool modeZ);
+		void animationModeChanged( bool modeZ, bool channelCubes);
 
 		bool use_new_regions;
 
@@ -670,8 +665,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		static std::string idGen( );
 
 	private slots:
-		void to_image_mode( ) { animationModeChanged(true); }
-		void to_channel_mode( ) { animationModeChanged(false); }
+		void to_image_mode( bool channelCubes );
+		void to_channel_mode( );
 		void loadRegions( const QString &path, const QString &type );
 		void incrementMovieChannel();
 		void clear_status_bar( );

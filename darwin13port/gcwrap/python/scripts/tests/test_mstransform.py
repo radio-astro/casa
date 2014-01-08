@@ -1407,13 +1407,23 @@ class test_float_column(test_base):
         mstransform(vis=self.vis,outputvis=self.outputms,datacolumn='FLOAT_DATA',
                     regridms=True,outframe='LSRK',spw='0')
 
+	print "Check column and keywords"
         mytb = tbtool()
         mytb.open(self.outputms+'/SPECTRAL_WINDOW')
         refnum = mytb.getcell('MEAS_FREQ_REF',0)
         mytb.close()
         self.assertEqual(refnum, 1)
-
-
+        
+        # CAS-5900. Check the keywords in FLOAT_DATA are the same
+        mytb.open(self.outputms)
+        okeys = mytb.getcolkeywords('FLOAT_DATA')
+        mytb.close()
+        mytb.open(self.vis)
+        ikeys = mytb.getcolkeywords('FLOAT_DATA')
+        mytb.close()
+        self.assertDictEqual(ikeys, okeys, 'Keywords from FLOAT_DATA are different')
+        
+        
 class test_timeaverage(test_base_compare):
 
     def setUp(self):

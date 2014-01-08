@@ -277,6 +277,7 @@ void TabularSpectrum::sample(Vector<Double>& scale,
   const uInt nSamples = frequencies.nelements();
   DebugAssert(scale.nelements() == nSamples, AipsError);
   retvals.resize(nSamples);
+
   for (uInt i = 0; i < nSamples; i++){ 
     retvals(i).resize(4);
     retvals(i).set(0.0);
@@ -385,7 +386,6 @@ if (!record.isDefined(String("tabFreqVal"))) {
     vval_p=record.isDefined(String("vval")) ? Vector<Double> (record.asArrayDouble("vval")) : Vector<Double>(ival_p.nelements(), 0.0);
   }
 
- cerr << "ival " << ival_p << "  tabFreq " << tabFreqVal_p << endl;
 //referenceFreq
  if (!record.isDefined(String("referenceFreq"))) {
    errorMessage += "The 'TabularSpectrum' record must have an 'referenceFreq' field\n";

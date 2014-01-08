@@ -119,7 +119,7 @@ namespace casa {
 
 		//The user has reordered the images in the display.
 		void reorderDisplayImages( QtDisplayData* displayData, int dropIndex, bool registered,
-				bool masterCoordinate, bool masterSaturation, bool masterHue, QColor rgbColor );
+				bool masterCoordinate/*, bool masterSaturation, bool masterHue, QColor rgbColor*/ );
 
 
 	private:

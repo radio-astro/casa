@@ -27,6 +27,7 @@
 #define IMAGEVIEW_QO_H
 
 #include <QtGui/QFrame>
+#include <QMenu>
 #include <casa/BasicSL/String.h>
 #include <casa/Containers/Record.h>
 #include <measures/Measures/MDoppler.h>
@@ -82,7 +83,7 @@ namespace casa {
 		virtual QSize minimumSizeHint() const;
 
 		static const QString DROP_ID;
-		~ImageView();
+		virtual ~ImageView();
 
 	signals:
 		//Register/unregister has changed.
@@ -189,6 +190,7 @@ namespace casa {
 		QAction masterSaturationAction;
 		QAction rasterAction;
 		QAction contourAction;
+		QMenu contextMenu;
 
 		//Regular background or master coordinate image background
 		QColor normalColor;

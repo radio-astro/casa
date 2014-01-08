@@ -123,7 +123,7 @@ if( NOT arch AND EXISTS ${casaroot}/aipshosts )
   endif()
 endif()
 
-set( CMAKE_CXX_FLAGS_PROFILE "-g -O2 -pg -fprofile-arcs" )
+set( CMAKE_CXX_FLAGS_PROFILE "-g -Ofast -pg -fprofile-arcs" )
 
 # On Linux x86_64 add the (gcc specific) -fno-omit-frame-pointer
 # flag to debug builds
@@ -146,11 +146,11 @@ dump( CMAKE_SYSTEM
 set( BUILD_SHARED_LIBS ON )
 
 set( DEFAULT_CXX_FLAGS 
-     "-pipe -Wall -Wextra -Wno-non-template-friend -Wcast-align -Wno-comment"
+     "-pipe -Ofast -Wall -Wextra -Wno-non-template-friend -Wcast-align -Wno-comment"
      )
 
 set( DEFAULT_C_FLAGS 
-     "-pipe -Wall -Wextra -Wcast-align -Wno-comment"
+     "-pipe -Ofast -Wall -Wextra -Wcast-align -Wno-comment"
      )
 
 # OpenMP

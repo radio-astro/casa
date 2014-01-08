@@ -653,10 +653,10 @@ namespace casa {
 				frame = animatorChannel->getFrame();
 				channelMode = BLINK_MODE;
 			}
-			if ( channelMode )
+			/*if ( channelMode )
 				emit setChannelMode( );
 			else
-				emit setImageMode( );
+				emit setImageMode( );*/
 			emit setChannelMovieRate( rate );
 			emit goToChannel( frame );
 			previousMode = mode;
@@ -749,6 +749,18 @@ namespace casa {
             setMinimumHeight( height );
             setMaximumHeight( height );
             updateGeometry( );
+        }
+
+        bool imageActive = imageGroupBox->isChecked();
+        bool channelActive = channelGroupBox->isChecked();
+        if ( imageActive && channelActive ){
+        	emit setImageMode( true );
+        }
+        else if ( imageActive ){
+        	emit setImageMode( false );
+        }
+        else if ( channelActive ){
+        	emit setChannelMode();
         }
     }
 

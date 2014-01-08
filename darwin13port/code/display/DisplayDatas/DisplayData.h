@@ -445,10 +445,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// on the given WCH.  (Note: this will include blink index, if any,
 		// but _not_ zIndex.  zIndex is an individual DM restriction, not an
 		// overall DD restriction).
-		virtual Bool conformsToRstrs(const WorldCanvas& wc) {
-			rstrsConformed_ = wc.matchesRestrictions(restrictions);
-			return rstrsConformed_;
-		}
+		virtual Bool conformsToRstrs(const WorldCanvas& wc) ;
 
 		// Determine whether DD is compatible with the WC[H]'s current
 		// world coordinates.  Derived DDs can override according to their
