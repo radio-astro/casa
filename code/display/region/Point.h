@@ -58,7 +58,9 @@ namespace casa {
 
 			// carry over from QtRegion... hopefully, removed soon...
 			Point( QtRegionSourceKernel *factory, WorldCanvas *wc, double x, double y, bool hold_signals=false, QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_DOT ) :
-				Rectangle( "point", wc, factory->dock( ), x, y, x, y, hold_signals, sym ), marker_(sym) {
+				Rectangle( "point", wc, factory->dock( ), x, y, x, y,
+				           hold_signals, new QtPointState( QString("point"), sym ), sym ), marker_(sym) {
+				mystate->setRegion(this);
 				/***updateStatistics***/
 			}
 

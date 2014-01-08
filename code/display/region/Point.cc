@@ -319,7 +319,7 @@ namespace casa {
 			return new std::list<std::tr1::shared_ptr<RegionInfo> >( );
 		}
 
-		bool Point::output_region( ds9writer &out, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) const {
+		bool Point::output_region( ds9writer &out, WorldCanvas *, const std::vector<std::pair<double,double> > &pts ) const {
 			return out.point(wc_,pts);
 		}
 

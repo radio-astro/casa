@@ -1161,6 +1161,7 @@ namespace casa {
 		QtPVLineState::QtPVLineState( const QString &name,
 		                              QtMouseToolNames::PointRegionSymbols sym, Region *region, QWidget *parent ) :
 			QtRegionState(name,sym,region,parent) {
+			categories->removeTab(categories->indexOf(imfit_tab));
 			QString old_label = QtRegionState::STATISTICS_MODE( );
 			QString new_label = STATISTICS_MODE( );
 			for ( int i=0; i < categories->count( ); ++i )
@@ -1174,6 +1175,7 @@ namespace casa {
 		QtSliceCutState::QtSliceCutState( const QString &name,
 		                                  QtMouseToolNames::PointRegionSymbols sym, Region *region, QWidget *parent ) :
 			QtRegionState(name,sym,region,parent) {
+			categories->removeTab(categories->indexOf(imfit_tab));
 			QString old_label = QtRegionState::STATISTICS_MODE( );
 			QString new_label = STATISTICS_MODE( );
 			for ( int i=0; i < categories->count( ); ++i )
@@ -1184,6 +1186,10 @@ namespace casa {
 				}
 		}
 
+		QtPointState::QtPointState( const QString &name, QtMouseToolNames::PointRegionSymbols sym,
+			                        Region *region, QWidget *parent ) : QtRegionState(name,sym,region,parent) {
+			categories->removeTab(categories->indexOf(imfit_tab));
+		}
 
 	}
 }
