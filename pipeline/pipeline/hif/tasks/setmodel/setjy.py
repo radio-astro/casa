@@ -321,7 +321,7 @@ class Setjy(basetask.StandardTaskTemplate):
             fields = inputs.ms.get_fields(field_name)
             field_is_unique = True if len(fields) is 1 else False
             for field in fields:
-                field_identifier = field.name if field_is_unique else field.id
+                field_identifier = field.name if field_is_unique else str(field.id)
                 # we're specifying field PLUS intent, so we're unlikely to
                 # have duplicate data selections. We ensure no duplicate
                 # selections by using field ID at the expense of losing some 
