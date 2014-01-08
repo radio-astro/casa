@@ -117,6 +117,16 @@ namespace casa {
 		return refString;
 	}
 
+	const ComponentShape* ComponentListWrapper::getShape( int i ) const {
+		const ComponentShape* shape = NULL;
+		if ( i >= 0 && i < getSize() ){
+			shape = skyList.getShape(i);
+		}
+		return shape;
+	}
+
+
+
 	Quantum< Vector<double> > ComponentListWrapper::getLatLong( int i ) const {
 		assert( i >= 0 && i < getSize() );
 		MDirection mDirection = skyList.getRefDirection( i );
@@ -196,7 +206,7 @@ namespace casa {
 		while ( rotatedValue  < 0.0 ) {
 			rotatedValue += 180.0;
 		}
-		while (rotatedValue > 180.0) {
+		while (rotatedValue >= 180.0) {
 			rotatedValue -= 180.0;
 		}
 		return rotatedValue;
@@ -345,18 +355,34 @@ namespace casa {
 				Vector<double> pixelCoordinates( worldAxisCount );
 				coordSystem.toPixel( pixelCoordinates, worldCoordinates );
 
-				Quantity majorAxisValue = getMajorAxis( index );
-				Quantity minorAxisValue = getMinorAxis( index );
-				Quantity posValue = getAngle( index );
+				const ComponentShape* shape = getShape( index );
+				if ( shape != NULL ){
+					//The convolved fit must be graphed because it is scaled
+					//to match the image.
+					if ( coordSystem.hasDirectionCoordinate()){
+						int dirInd = coordSystem.findCoordinate(Coordinate::DIRECTION);
+						const DirectionCoordinate& dirCoord = coordSystem.directionCoordinate(dirInd);
+						Vector<double> axes = shape->toPixel( dirCoord );
+						Quantity posValue = getAngle( index );
 
-				//The convolved fit must be graphed because it is scaled
-				//to match the image.
-				double angleValue = rotateAngle( posValue.getValue());
-				if ( majorAxisValue.getValue() > 0 && minorAxisValue.getValue() > 0 ) {
-					RSEllipse* ellipse = new RSEllipse( pixelCoordinates[0], pixelCoordinates[1],
-					                                    majorAxisValue.getValue(), minorAxisValue.getValue(), angleValue );
-					ellipse->setLineColor( colorName.toStdString() );
-					fitList.append( ellipse );
+						double angleValue = rotateAngle( posValue.getValue());
+						Vector<Int> dirAxes = coordSystem.directionAxesNumbers();
+						int axesCount = axes.size();
+						if( axesCount >= 4 ){
+							double majorAxisValue = axes[2] / 2;
+							double minorAxisValue = axes[3] / 2;
+							if ( angleValue > 90 ){
+								majorAxisValue = axes[3] / 2;
+								minorAxisValue = axes[2] / 2;
+							}
+							if ( majorAxisValue > 0 && minorAxisValue > 0 ){
+								RSEllipse* ellipse = new RSEllipse( pixelCoordinates[0], pixelCoordinates[1],
+									majorAxisValue, minorAxisValue, angleValue );
+								ellipse->setLineColor( colorName.toStdString() );
+								fitList.append( ellipse );
+							}
+						}
+					}
 				}
 			}
 		}
