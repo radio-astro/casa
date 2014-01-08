@@ -309,47 +309,58 @@ class Setjy(basetask.StandardTaskTemplate):
 
         # loop over fields so that we can use Setjy for sources with different
         # standards
-	#userintents = inputs.intent
-        for field in utils.safe_split(inputs.field):
-            inputs.field = field
-
-	    # Check that the field ids and intents match
-	    #inputs.intent = ','.join([fintent for fintent in inputs.ms.get_fields(inputs.field)[0].intents \
-	       #if fintent in userintents])
-
+        for field_name in utils.safe_split(inputs.field):
             jobs = []
-            for spw in spws:                
-                inputs.spw = spw.id
 
-                orig_intent = inputs.intent
-                try:                
-                    # the field may not have all intents, which leads to its
-                    # deselection in the setjy data selection. Only list
-                    # the target intents that are present in the field.
-                    input_intents = set(inputs.intent.split(',')) 
-                    fields = inputs.ms.get_fields(field)
-                    assert len(fields) is 1, 'Num fields != 1 with field=%s' % field
-                    targeted_intents = fields[0].intents.intersection(input_intents) 
-                    inputs.intent = ','.join(targeted_intents)
+            # intent is now passed through to setjy, where the intents are 
+            # ANDed to form the data selection. This causes problems when a 
+            # field name resolves to two field IDs with disjoint intents: 
+            # no data is selected. So, create our own OR data selection by 
+            # looping over the individual fields, specifying just those 
+            # intents present in the field.
+            fields = inputs.ms.get_fields(field_name)
+            field_is_unique = True if len(fields) is 1 else False
+            for field in fields:
+                field_identifier = field.name if field_is_unique else field.id
+                # we're specifying field PLUS intent, so we're unlikely to
+                # have duplicate data selections. We ensure no duplicate
+                # selections by using field ID at the expense of losing some 
+                # readability in the log. Also, this helps if the amplitude
+                # is time dependent.
+                inputs.field = field_identifier
 
-                    task_args = inputs.to_casa_args()
-                    jobs.append(casa_tasks.setjy(**task_args))
-                finally:
-                    inputs.intent = orig_intent
-                
-                # Flux densities coming from a non-lookup are added to the
-                # results so that user-provided calibrator fluxes are
-                # committed back to the domain objects
-                if inputs.fluxdensity is not -1:
-#                    l = inputs.field.split(',')
-#                     field_idx = l.index(field)                                    
-                    try:
-                        (I,Q,U,V) = inputs.fluxdensity
-                        flux = domain.FluxMeasurement(spw_id=spw.id, I=I, Q=Q, U=U, V=V)
-                    except:
-                        I = inputs.fluxdensity
-                        flux = domain.FluxMeasurement(spw_id=spw.id, I=I)
-                    result.measurements[field].append(flux)
+                for spw in spws:  
+                    inputs.spw = spw.id
+    
+                    orig_intent = inputs.intent
+                    try:                
+                        # the field may not have all intents, which leads to its
+                        # deselection in the setjy data selection. Only list
+                        # the target intents that are present in the field.
+                        input_intents = set(inputs.intent.split(',')) 
+                        targeted_intents = field.intents.intersection(input_intents)
+                        if not targeted_intents:
+                            continue 
+                        inputs.intent = ','.join(targeted_intents)
+    
+                        task_args = inputs.to_casa_args()
+                        jobs.append(casa_tasks.setjy(**task_args))
+                    finally:
+                        inputs.intent = orig_intent
+                    
+                    # Flux densities coming from a non-lookup are added to the
+                    # results so that user-provided calibrator fluxes are
+                    # committed back to the domain objects
+                    if inputs.fluxdensity is not -1:
+    #                    l = inputs.field.split(',')
+    #                     field_idx = l.index(field)                                    
+                        try:
+                            (I,Q,U,V) = inputs.fluxdensity
+                            flux = domain.FluxMeasurement(spw_id=spw.id, I=I, Q=Q, U=U, V=V)
+                        except:
+                            I = inputs.fluxdensity
+                            flux = domain.FluxMeasurement(spw_id=spw.id, I=I)
+                        result.measurements[field_identifier].append(flux)
 
             # merge identical jobs into one job with a multi-spw argument
             # be careful - that comma after spw is required for ignore to
