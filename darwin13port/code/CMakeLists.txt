@@ -253,6 +253,8 @@ if( APPLE )
             set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS}" )
         endif()
 
+    elseif( CMAKE_SYSTEM MATCHES ^Darwin-1 )
+	message( STATUS "Mac OXS: ${CMAKE_SYSTEM}" )
     else()
         message( WARNING "Unsupported Mac: ${CMAKE_SYSTEM}" )
     endif()

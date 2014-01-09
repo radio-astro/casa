@@ -317,7 +317,10 @@ namespace casa {
 				return mystate->markCenter( );
 			}
 
-			virtual bool skyComponent( ) const DISPLAY_PURE_VIRTUAL(Region::skyComponent,true);
+			virtual bool skyComponent( ) const {
+				return mystate->skyComponent();
+				//const DISPLAY_PURE_VIRTUAL(Region::skyComponent,true);
+			}
 
 			virtual void output( ds9writer &out ) const = 0;
 

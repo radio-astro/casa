@@ -46,6 +46,7 @@ namespace casa {
 		string getRA( int i ) const;
 		string getDEC( int i ) const;
 		string getType( int i ) const;
+		const ComponentShape* getShape( int i ) const;
 		Quantity getMajorAxis( int i ) const;
 		Quantity getMinorAxis( int i ) const;
 		Quantity getAngle( int i ) const;
