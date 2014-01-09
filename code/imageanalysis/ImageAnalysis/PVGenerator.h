@@ -92,8 +92,31 @@ public:
 	// set the end points of the slice in direction space. Input values represent pixel
 	// coordinates in the input image.
 	void setEndpoints(
-		const Double startx, const Double starty,
-		const Double endx, const Double endy
+		const std::pair<Double, Double>& start,
+		const std::pair<Double, Double>& end
+	);
+
+	// set end points given center in pixels, length of segment in pixels, and position angle
+	// taken in the normal astronomical sense, measured from north through east.
+	void setEndpoints(
+		const std::pair<Double, Double>& center, Double length,
+		const Quantity& pa
+	);
+
+	void setEndpoints(
+		const std::pair<Double, Double>& center, const Quantity& length,
+		const Quantity& pa
+	);
+
+	void setEndpoints(
+		const MVDirection& center, const Quantity& length,
+		const Quantity& pa
+	);
+
+	// <src>length in pixels</src>
+	void setEndpoints(
+		const MVDirection& center, Double length,
+		const Quantity& pa
 	);
 
 	void setEndpoints(
@@ -114,6 +137,7 @@ public:
 	// set the unit to be used for the offset axis in the resulting image (from calling
 	// generate()). Must conform to angular units
 	void setOffsetUnit(const String& s);
+
 
 protected:
 	inline  CasacRegionManager::StokesControl _getStokesControl() const {
@@ -141,6 +165,8 @@ private:
 	PVGenerator();
 
 	void _checkWidth(const Int64 xShape, const Int64 yShape) const;
+
+	Quantity _increment() const;
 
 
 };
