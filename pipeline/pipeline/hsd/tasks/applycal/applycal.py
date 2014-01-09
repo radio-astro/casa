@@ -106,7 +106,7 @@ class SDApplyCalResults(common.SingleDishResults):
                 tsystable = _calfrom.gaintable
                 spwmap = _calfrom.spwmap
                 datatable = context.observing_run.datatable_instance
-                datatable._update_tsys(filename, tsystable, spwmap)
+                datatable._update_tsys(context, filename, tsystable, spwmap)
 
                 # here, full export is necessary
                 datatable.exportdata(minimal=False)
