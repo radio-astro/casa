@@ -10,7 +10,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="spxfit" category="analysis" visibility="experimental">
 
-<shortdescription>Fit a 1-dimensional model to an image or image region for determination of spectral index.</shortdescription>
+<shortdescription>Fit a 1-dimensional model(s) to an image(s) or region for determination of spectral index.</shortdescription>
 
 <description>
 </description>
@@ -165,7 +165,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <example>
     
-This task simultaneously fits one or more gaussian singlets lorentzian singlets, gaussian multiplets, and/or a polynomial to one dimensional profiles.
+This task fits a power logarithmic polynomial or a logarithmic tranformed polynomial to one dimensional profiles for determination of spectral indices.
 
 ARAMETER SUMMARY
 imagename       Name of the input image(s). More than one image name can be given as an
@@ -207,7 +207,7 @@ sigma           Standard deviation numerical array, image name (string), or stri
                 concatenated to create the sigma image that is used by the fitter.
 outsigma        Name of output image used for standard deviation. Ignored if sigma is empty.
 
-This application fits a power logarithmic polynomial or a logarithmic tranformed polynomial to pixel values along a specified
+This application performs least squares fits of either a power logarithmic polynomial or a logarithmic tranformed polynomial to pixel values along a specified
 axis of an image or images. These functions are most often used for fitting the spectral index and
 higher order terms of a spectrum. A power logarithmic polynomial has the form
 
@@ -287,8 +287,6 @@ converged: a boolean array indicating which fits converged. False if the fit was
 valid:     a boolean array indicating which solutions fall within the specified valid ranges of parameter space. Any solution for
            which a value or error is NaN is automatically marked as invalid.
 niter:     an int array indicating the number of iterations for each profile, &lt;0 if the fit did not converge
-ncomps:    the number of components (gaussian singlets + lorentzian singlets + gaussian multiplets + polynomial) fit for the profile,
-           &lt;0 if the fit did not converge
 direction: a string array containing the world direction coordinate for each profile
 
 There is a "type" array having number of dimensions equal to the number of dimensions in the above arrays plus one. The shape of
