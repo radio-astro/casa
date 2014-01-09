@@ -355,46 +355,6 @@ protected:
 		String name;
 	};
 
-	static std::map<Int, uInt> _getDataDescIDToSpwMap(const MeasurementSet& ms);
-
-	static std::map<Int, uInt> _getDataDescIDToPolIDMap(const MeasurementSet& ms);
-
-	// The first member of the pair is spwID, the second is polID.
-	static std::map<std::pair<uInt, uInt>, Int> _getSpwIDPolIDToDataDescIDMap(
-		const std::map<Int, uInt>& dataDescIDToSpwMap,
-		const std::map<Int, uInt>& dataDescIDToPolIDMap
-	);
-
-	static Vector<Int> _getFieldIDs(const MeasurementSet& ms);
-
-	static vector<String> _getFieldNames(const MeasurementSet& ms);
-
-	static void _checkTolerance(const Double tol);
-
-	static Quantum<Vector<Double> > _getExposures(const MeasurementSet& ms);
-
-	static Vector<Double> _getTimes(const MeasurementSet& ms);
-
-	static Vector<Double> _getTimeCentroids(const MeasurementSet& ms);
-
-	static Vector<Double> _getIntervals(const MeasurementSet& ms);
-
-	//static Vector<Bool> _getFlagRows(const MeasurementSet& ms);
-
-	static ArrayColumn<Bool>* _getFlags(const MeasurementSet& ms);
-
-	static std::map<Int, std::set<Double> > _getScanToTimesMap(
-		const Vector<Int>& scans, const Vector<Double>& times
-	);
-
-	static vector<MPosition> _getObservatoryPositions(
-		vector<String>& names, const MeasurementSet& ms
-	);
-
-	static vector<String> _getAntennaNames(
-		std::map<String, uInt>& namesToIDs, const MeasurementSet& ms
-	);
-
 	// get all antenna positions. A vector of antenna names is also returned.
 	static vector<MPosition> _getAntennaPositions(
 		vector<String>& antennaNames, const MeasurementSet& ms
