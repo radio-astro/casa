@@ -10405,7 +10405,7 @@ used to create a 2D temporary image.
   
 <method type="function" name="pv">
     <shortdescription>
-        Construct a position-velocity image by choosing two points in the direction plane.
+        Construct a position-velocity image between two points in the direction plane.
     </shortdescription>
     <input>
         <param type="string"  name="outfile">
@@ -10413,12 +10413,27 @@ used to create a 2D temporary image.
             <value/>
         </param>
         <param type="any" name="start">
-            <description>The starting pixel in the direction plane (array of two values)</description>
+            <description>The starting point in the direction plane (array of two values). If specified, end must also be specified and none of center, pa, nor length may be specified.</description>
             <any type="variant"/>
             <value/>
         </param>
         <param type="any" name="end">
-            <description>The ending pixel in the direction plane (array of two values)</description>
+            <description>The ending point in the direction plane (array of two values). If specified, start must also be specified and none of center, pa, nor length may be specified.</description>
+            <any type="variant"/>
+            <value/>
+        </param>
+        <param type="any" name="center">
+            <description>The center point in the direction plane (array of two values). If specified, length and pa must also be specified and neither of start nor end may be specified.</description>
+            <any type="variant"/>
+            <value/>
+        </param>
+        <param type="any" name="length">
+            <description>The length of the segmaent in the direction plane. If specified, center and pa must also be specified and neither of start nor end may be specified.</description>
+            <any type="variant"/>
+            <value/>
+        </param>
+        <param type="any" name="pa">
+            <description>The position angle of the segmaent in the direction plane, measured from north through east. If specified, center and length must also be specified and neither of start nor end may be specified.</description>
             <any type="variant"/>
             <value/>
         </param>
@@ -10464,15 +10479,23 @@ used to create a 2D temporary image.
     </input>
     <returns type="image"/>
     <description>
-        Create a position-velocity image by specifying two locations between which a slice is taken in the direction
-        coordinate. The spectral extent of the resulting image will be that provided by the region specification
-        or the entire spectral range of the input image if no region is specified. One may not specify a region
-        in direction space; that is accomplished by specifying the start and end points of the slice. The parameters
+        Create a position-velocity image by specifying either two points between which a slice is taken in the direction
+        coordinate or a center, position angle, and length describing the slice. The spectral extent of the resulting image
+        will be that provided by the region specification or the entire spectral range of the input image if no region is
+        specified. One may not specify a region in direction space; that is accomplished by specifying the start and end
+        points or the center, length, and position angle of the slice. The parameters
         start and end may be specified as two element arrays of numerical values, in which case these values will be
         interpreted as pixel locations in the input image. Alternatively, they may be expressed as arrays of two strings
         each representing the direction. These strings can either represent quantities (eg ["40.5deg", "0.5rad") or be sexigesimal
-        format (eg ["14h20m20.5s","-30d45m25.4s"], ["14:20:20.5s","-30.45.25.4"]).
-        
+        format (eg ["14h20m20.5s","-30d45m25.4s"], ["14:20:20.5s","-30.45.25.4"]). The center parameter is specified in the same way.
+        The length parameter may be specified as a single numerical value, in which case it is interpreted as the length in pixels, or
+        a valid quantity, in which case it must have units conformant with the direction axes units. The pa (position angle) parameter
+        must be specified as a valid quantity with angular units. The position angle is interpreted in the usual astronomical sense; ie
+        measured from north through east. Either start/end or center/pa/length must be specified; if a parameter from one of
+        these sets is specified, a parameter from the other set may not be specified. In either case, the end points of the
+        segment must fail within the input image, and they both must be at least 2 pixels from the edge of the input image to facilite
+        rotation (see below).
+
         One may specify a width, which is the number of pixels centered along and perpendicular
         to the direction slice that are used for averaging along the slice. The width may be specified as an integer, in which
         case it must be positive and odd. Alternatively, it may be specified as a valid quantity string (eg, "4arcsec") or
@@ -10481,17 +10504,15 @@ used to create a 2D temporary image.
         of pixels. The default value of 1 represents no averaging.
         A value of 3 means average one pixel on each side of the slice and the pixel on the slice. 
         Note that this width is applied to pixels in the image after it has been rotated (see below for a description
-        of the algorithm used).
+        of the algorithm used). The end points of the specified segment must fail within the input
+        image, and they both must be at least 2 pixels from the edge of the input image to facilite rotation (see below).
         
         One may specify the unit for the angular offset axis.
         
         A true value for the wantreturn parameter indicates that an image analysis tool attached to the created
         image should be returned. Nothing is returned if wantreturn is false, but then outfile should be specified
         (unless perhaps you are debugging).
-        
-        The start and end values represent direction pixel coordinates. They both must fail within the input
-        image, and they both must be at least 2 pixels from the edge of the input image to facilite rotation (see below).
-        
+                
         Internally, the image is first rotated, padding first if necessary to include relevant pixels that would otherwise
         be excluded by the rotation operation, so that the slice is horizontal, with the starting pixel left of the
         ending pixel. Then, the pixels within the specified width of the slice are averaged and the resulting image is

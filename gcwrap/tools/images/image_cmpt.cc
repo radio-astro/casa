@@ -2604,7 +2604,8 @@ bool image::putregion(const ::casac::variant& v_pixels,
 
 image* image::pv(
 	const string& outfile, const variant& start,
-	const variant& end, const variant& width, const string& unit,
+	const variant& end, const variant& center, const variant& length,
+	const variant& pa, const variant& width, const string& unit,
 	const bool overwrite, const variant& region, const string& chans,
 	const string& stokes, const string& mask, const bool stretch,
 	const bool wantreturn
@@ -2614,48 +2615,57 @@ image* image::pv(
 	}
 	try {
 		_log << _ORIGIN;
-		MVDirection startMVD, endMVD;
-		Vector<Double> startPix, endPix;
-		try {
-			startPix = Vector<Double>(_toDoubleVec(start));
+		std::tr1::shared_ptr<MVDirection> startMVD, endMVD, centerMVD;
+		Vector<Double> startPix, endPix, centerPix;
+		std::tr1::shared_ptr<casa::Quantity> lengthQ;
+		Double lengthD = 0;
+		if (start.size() > 0 && end.size() > 0) {
+			ThrowIf(
+				center.size() > 0 || length.size() > 0
+				|| pa.size() > 0,
+				"None of center, length, nor pa may be specified if start and end are specified"
+			);
+			ThrowIf(
+				start.type() != end.type(),
+				"start and end must be the same data type"
+			);
+			MVDirection dir;
+			_processDirection(startPix, dir, start, "start");
+			if (startPix.size() == 0) {
+				startMVD.reset(new MVDirection(dir));
+			}
+			_processDirection(endPix, dir, end, "end");
+			if (endPix.size() == 0) {
+				endMVD.reset(new MVDirection(dir));
+			}
 		}
-		catch (const AipsError& x) {
-			ThrowIf(start.type() != variant::STRINGVEC,
-				"Unsupported type for start"
-			);
-			vector<string> x = start.toStringVec();
+		else if (
+			center.size() > 0 && width.size() > 0
+			&& pa.size() > 0
+		) {
 			ThrowIf(
-				x.size() != 2,
-				"Start array must have exactly 2 elements"
+				start.size() > 0 || end.size() > 0,
+				"Neither start nor end may be specified if center, length, and pa are specified"
 			);
-			casa::Quantity q0 = _casaQuantityFromVar(variant(x[0]));
-			casa::Quantity q1 = _casaQuantityFromVar(variant(x[1]));
-			startMVD = MVDirection(q0, q1);
+			MVDirection dir;
+			_processDirection(centerPix, dir, center, "center");
+			if (centerPix.size() == 0) {
+				centerMVD.reset(new MVDirection(dir));
+			}
+			if (length.type() == variant::INT || length.type() == variant::DOUBLE) {
+				lengthD = length.toDouble();
+			}
+			else {
+				lengthQ.reset(
+					new casa::Quantity(_casaQuantityFromVar(variant(length)))
+				);
+			}
 		}
-
-		try {
-			endPix = Vector<Double>(_toDoubleVec(end));
-			ThrowIf(
-				startPix.size() == 0,
-				"start is a string array, so end must be too"
+		else {
+			ThrowCc(
+				"Either both of start and end or all three of "
+				"center, width, and pa must be specified"
 			);
-		}
-		catch (const AipsError& x) {
-			ThrowIf(end.type() != variant::STRINGVEC,
-				"Unsupported type for end"
-			);
-			vector<string> x = end.toStringVec();
-			ThrowIf(
-				x.size() != 2,
-				"End array must have exactly 2 elements"
-			);
-			ThrowIf(
-				startPix.size() == 2,
-				"start is a numeric array, so end must be too"
-			);
-			casa::Quantity q0 = _casaQuantityFromVar(variant(x[0]));
-			casa::Quantity q1 = _casaQuantityFromVar(variant(x[1]));
-			endMVD = MVDirection(q0, q1);
 		}
 		_log << _ORIGIN;
 
@@ -2671,7 +2681,7 @@ image* image::pv(
 		else if (width.type() == variant::STRING || width.type() == variant::RECORD) {
 			qWidth = _casaQuantityFromVar(width);
 		}
-		else if (width.type() == variant::BOOLVEC) {
+		else if (width.size() == 0) {
 			intWidth = 1;
 		}
 		else {
@@ -2687,10 +2697,39 @@ image* image::pv(
 			chans, stokes, mask, outfile, overwrite
 		);
 		if (startPix.size() == 2) {
-			pv.setEndpoints(startPix[0], startPix[1], endPix[0], endPix[1]);
+			pv.setEndpoints(
+				make_pair(startPix[0], startPix[1]),
+				make_pair(endPix[0], endPix[1])
+			);
+		}
+		else if (startMVD) {
+			pv.setEndpoints(*startMVD, *endMVD);
+		}
+		else if (centerMVD) {
+			if (lengthQ) {
+				pv.setEndpoints(
+					*centerMVD, *lengthQ, _casaQuantityFromVar(variant(pa))
+				);
+			}
+			else {
+				pv.setEndpoints(
+					*centerMVD, lengthD, _casaQuantityFromVar(variant(pa))
+				);
+			}
 		}
 		else {
-			pv.setEndpoints(startMVD, endMVD);
+			if (lengthQ) {
+				pv.setEndpoints(
+					make_pair(centerPix[0], centerPix[1]),
+					*lengthQ, _casaQuantityFromVar(variant(pa))
+				);
+			}
+			else {
+				pv.setEndpoints(
+						make_pair(centerPix[0], centerPix[1]),
+					lengthD, _casaQuantityFromVar(variant(pa))
+				);
+			}
 		}
 		if (intWidth == 0) {
 			pv.setWidth(qWidth);
@@ -2711,6 +2750,30 @@ image* image::pv(
 	}
 }
 
+void image::_processDirection(
+	Vector<Double>& pixel, MVDirection& dir, const variant& inputDirection,
+	const String& paramName
+) {
+	pixel.resize(0);
+	ThrowIf(
+		inputDirection.size() != 2,
+		paramName + " must have exactly two elements"
+	);
+	variant::TYPE myType = inputDirection.type();
+	if (myType == variant::INTVEC || myType == variant::DOUBLEVEC) {
+		pixel = Vector<Double>(_toDoubleVec(inputDirection));
+	}
+	else if(myType == variant::STRINGVEC) {
+		vector<string> x = inputDirection.toStringVec();
+		casa::Quantity q0 = _casaQuantityFromVar(variant(x[0]));
+		casa::Quantity q1 = _casaQuantityFromVar(variant(x[1]));
+		dir = MVDirection(q0, q1);
+	}
+	else {
+		ThrowCc("Unsupported type for " + paramName);
+	}
+
+}
 
 image* image::rebin(
 	const std::string& outfile, const std::vector<int>& bin,
