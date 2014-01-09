@@ -78,14 +78,16 @@ namespace casa {
 		QtProfilePrefs(QWidget *parent = 0);
 		QtProfilePrefs(QWidget *parent, bool stateAutoX, bool stateAutoY, int showGrid,
 		               int stateMProf, int stateRel, bool showToolTips, bool showTopAxis,
-		               bool displayStepFunction, bool opticalFitter, bool channelLine);
+		               bool displayStepFunction, bool opticalFitter,
+		               bool channelLine, bool singleChannelImage );
 		~QtProfilePrefs();
 		void syncUserPreferences();
 
 	signals:
 		void currentPrefs(bool stateAutoX, bool stateAutoY, int showGrid, int stateMProf,
 		                  int stateRel, bool showToolTips, bool showTopAxis,
-		                  bool displayStepFunction, bool opticalFitter, bool channelLine);
+		                  bool displayStepFunction, bool opticalFitter,
+		                  bool channelLine, bool singleChannelImage );
 
 	private slots:
 		void accepted();
@@ -109,6 +111,7 @@ namespace casa {
 		static const QString STEP_FUNCTION;
 		static const QString OPTICAL;
 		static const QString CHANNEL_LINE;
+		static const QString SINGLE_CHANNEL_IMAGE;
 
 		bool xAutoScaleDefault;
 		bool yAutoScaleDefault;
@@ -120,6 +123,7 @@ namespace casa {
 		bool stepFunctionDefault;
 		bool opticalDefault;
 		bool channelLineDefault;
+		bool singleChannelImageDefault;
 	};
 
 }

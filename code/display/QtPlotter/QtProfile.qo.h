@@ -185,7 +185,8 @@ namespace casa {
 		void frameChanged( int );
 		void setPreferences(bool stateAutoX, bool stateAutoY, int showGrid,
 		                    int stateMProf, int stateRel, bool showToolTips, bool showTopAxis,
-		                    bool displayStepFunction, bool opticalFitter, bool showChannelLine );
+		                    bool displayStepFunction, bool opticalFitter,
+		                    bool showChannelLine, bool singleChannelImage );
 		void curveColorPreferences();
 		void legendPreferences();
 		void togglePalette( int modeIndex );
@@ -226,6 +227,11 @@ namespace casa {
 		                   const QList<int> &pixel_x, const QList<int> &pixel_y );
 		void pixelsChanged(int, int );
 		void clearPaletteModes();
+		/**
+		 * Returns whether or not the image can be profiled.
+		*/
+		bool isImageSupported(std::tr1::shared_ptr<const ImageInterface<float> > img );
+
 
 	signals:
 		void hideProfile();
@@ -235,6 +241,7 @@ namespace casa {
 		void channelSelect( int channelIndex );
 		void adjustPosition( double tlcx, double tlcy, double brcx, double brcy );
 		void movieChannel( int startChannel, int endChannel );
+		void reloadImages();
 
 	private:
 		void stringToPlotType(const QString &text,  QtProfile::PlotType &pType);
@@ -255,6 +262,8 @@ namespace casa {
 		void resetXUnits( bool spectralAxis);
 		void updateSpectralReferenceFrame();
 		String getRegionShape();
+		int computeCB( const String& xa, const String& ya, const String& za );
+
 
 		/**
 		 * Returns false if first vector value is greater than the last
@@ -320,12 +329,15 @@ namespace casa {
 		bool isFrequencyMatch();
 		bool isVelocityMatch();
 		int getChannelCount( ImageAnalysis* analysis );
+		int getChannelCount( std::tr1::shared_ptr<const ImageInterface<float> >& img);
+
 		ImageAnalysis* findImageWithMaximumChannels();
 		void restrictTopAxisOptions( bool restrictOptions, const QString& bottomUnits, bool allowFrequency = true,
 				bool allowVelocity=true );
 		double getUnitsPerChannel( ImageAnalysis* analysis, bool* ok, const QString& matchUnits );
 		QString readTopAxis() const;
 		void persistTopAxis( const QString& units );
+		void assignProfileType( const String& shape, int regionPointCount );
 		QList<OverplotAnalysis> *over;
 		const String WORLD_COORDINATES;
 		String coordinate;
@@ -374,6 +386,7 @@ namespace casa {
 		Int ordersOfM_;
 		Bool newCollapseVals;
 		bool showTopAxis;
+		bool showSingleChannelImage;
 		static bool topAxisDefaultSet;
 
 		static const QString PLOT_TYPE_FLUX;
@@ -389,6 +402,17 @@ namespace casa {
 		static const QString FRAME_REST;
 		static const QString PERSIST_FREQUENCY_BOTTOM;
 		static const QString PERSIST_FREQUENCY_TOP;
+		static const QString IMAGE_MISSING_ERROR;
+		static const QString MISSING_REGION_ERROR;
+		static const QString NO_PROFILE_ERROR;
+		static const QString REGION_ELLIPSE;
+		static const QString REGION_RECTANGLE;
+		static const QString REGION_POINT;
+		static const QString REGION_POLY;
+		static const String SHAPE_ELLIPSE;
+		static const String SHAPE_RECTANGLE;
+		static const String SHAPE_POINT;
+		static const String SHAPE_POLY;
 
 		class spectra_info {
 		public:
@@ -404,6 +428,7 @@ namespace casa {
 			}
 		private:
 			QString shape_;
+			ProfileType profileType;
 		};
 
 
@@ -411,6 +436,7 @@ namespace casa {
 		const int NO_REGION_ID;
 		int current_region_id;
 		SpectraInfoMap spectra_info_map;
+		ProfileType profileType;
 
 
 		ColorSummaryWidget* colorSummaryWidget;

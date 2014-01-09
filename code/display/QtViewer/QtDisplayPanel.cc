@@ -3137,6 +3137,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return displayDataHolder->getChannelDD( index );
 	}
 
+	QtDisplayData* QtDisplayPanel::getRegistered( int index ) {
+		return displayDataHolder->getDD( index );
+	}
+
+
 	void QtDisplayPanel::registrationOrderChanged(){
 		pd_->hold();
 		pd_->removeDisplayDatas();

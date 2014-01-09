@@ -79,6 +79,7 @@ namespace casa {
 		// retrieve a DD with given name (0 if none).
 		QtDisplayData* getDD(const std::string& name) const;
 		QtDisplayData *getDD( const DisplayData *dd ) const;
+		QtDisplayData* getDD( int index );
 
 		// Check that a given DD is on the list.
 		bool exists(QtDisplayData* qdd) const;

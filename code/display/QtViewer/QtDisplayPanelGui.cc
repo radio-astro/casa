@@ -2303,7 +2303,41 @@ void QtDisplayPanelGui::hideMakeRegionPanel() {
 	setUseRegion(False);
 }
 
+void QtDisplayPanelGui::initializeProfile( ){
+	if (profile_ == NULL) {
+		std::tr1::shared_ptr<ImageInterface<float> > emptyImg;
+		profile_ = new QtProfile(emptyImg, "");
+		profile_->setPath( "" );
+		connect( profile_, SIGNAL(hideProfile()), SLOT(hideImageProfile()));
+		connect( qdp_, SIGNAL(registrationChange()), SLOT(refreshImageProfile()));
+		connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool, std::tr1::shared_ptr<ImageInterface<Float> > )),
+				this, SLOT(addDDSlot(String, String, String, Bool, Bool, std::tr1::shared_ptr<ImageInterface<Float> >)));
+		connect(profile_, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
+		connect( this, SIGNAL(frameChanged(int)), profile_, SLOT(frameChanged(int)));
+		connect( profile_, SIGNAL(movieChannel(int,int)), this, SLOT(movieChannels(int, int)));
+		connect( profile_, SIGNAL(reloadImages()), this, SLOT(resetImageProfile()));
+		connect( this, SIGNAL(overlay(QList<OverplotInterface>)),
+						profile_, SLOT(overplot(QList<OverplotInterface>)));
+		PanelDisplay* ppd = qdp_->panelDisplay();
+		connectRegionSignals(ppd);
+		profileDD_ = NULL;
+	}
+}
+
+void QtDisplayPanelGui::resetImageProfile(){
+	if ( profileDD_ != NULL ){
+		disconnect( profileDD_, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
+									profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
+		disconnect( profileDD_, SIGNAL(spectrumChanged(String, String, String )),
+									profile_, SLOT(changeSpectrum(String, String, String )));
+	}
+	profileDD_ = NULL;
+	showImageProfile();
+}
+
+
 void QtDisplayPanelGui::showImageProfile() {
+	initializeProfile();
 
 	QList<OverplotInterface> overlays;
 	bool profileVisible = false;
@@ -2313,98 +2347,69 @@ void QtDisplayPanelGui::showImageProfile() {
 
 	//The image that will be channeled is the last registered one in the list.
 	//This is the one that should be sent to the profiler.
-	int i = 0;
-	int lastRegistered = qdp_->getRegisteredCount() - 1;
 	bool profiledDDChange = false;
-	for ( DisplayDataHolder::DisplayDataIterator iter = qdp_->beginRegistered();
-			iter != qdp_->endRegistered(); iter++ ){
-		QtDisplayData* pdd = (*iter);
+	bool channelDDFound = false;
+	int registeredCount = qdp_->getRegisteredCount();
+	for ( int i = registeredCount - 1; i >= 0; i-- ){
+		QtDisplayData* pdd = qdp_->getRegistered(i);
 		if(pdd != 0 && pdd->isImage()) {
 
 			std::tr1::shared_ptr<ImageInterface<float> > img = pdd->imageInterface();
 			PanelDisplay* ppd = qdp_->panelDisplay();
-			if (ppd != 0 && img ) {
+			if (ppd != 0 && img.get() != NULL ) {
+				bool displayDataSupported = profile_->isImageSupported( img );
+				if ( !displayDataSupported ){
+					continue;
+				}
 
-				if (/*ppd->isCSmaster(pdd->dd())*/ i == lastRegistered ) {
-					// pdd is a suitable QDD for profiling.
-					if (!profile_) {
-						// Set up profiler for first time.
-
-						profile_ = new QtProfile(img, pdd->name().c_str());
-						profile_->setPath(QString(pdd->path().c_str()) );
-						connect( profile_, SIGNAL(hideProfile()), SLOT(hideImageProfile()));
-						connect( qdp_, SIGNAL(registrationChange()), SLOT(refreshImageProfile()));
-						connect( pdd, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
-								profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
-						connect( pdd, SIGNAL(spectrumChanged(String, String, String )),
-								profile_, SLOT(changeSpectrum(String, String, String )));
-						connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool, std::tr1::shared_ptr<ImageInterface<Float> > )),
-								this, SLOT(addDDSlot(String, String, String, Bool, Bool, std::tr1::shared_ptr<ImageInterface<Float> >)));
-						connect(profile_, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
-						connect( this, SIGNAL(frameChanged(int)), profile_, SLOT(frameChanged(int)));
-						connect( profile_, SIGNAL(movieChannel(int,int)), this, SLOT(movieChannels(int, int)));
-						connectRegionSignals(ppd);
-					} else {
-						if (profileDD_ != pdd) {
-							profiledDDChange = true;
-							// [Re-]orient pre-existing profiler to pdd
-							profile_->resetProfile(img, pdd->name().c_str());
+				if (!channelDDFound ) {
+					if (profileDD_ != pdd) {
+						profiledDDChange = true;
+						// [Re-]orient pre-existing profiler to pdd
+						profile_->resetProfile(img, pdd->name().c_str());
+						if ( profileDD_ != NULL ){
 							disconnect( profileDD_, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
 									profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
 							disconnect( profileDD_, SIGNAL(spectrumChanged(String, String, String )),
 									profile_, SLOT(changeSpectrum(String, String, String )));
-							profileDD_ = pdd;
-							connect( profileDD_, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
-									profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
-							connect( profileDD_, SIGNAL(spectrumChanged(String, String, String )),
-									profile_, SLOT(changeSpectrum(String, String, String )));
-						} else {
-							//pdd->checkAxis();
 						}
-					}
-					if (pdd->getAxisIndex(String("Spectral")) == -1 &&
-						Util::getTabularFrequencyAxisIndex( img) == -1 ) {
-					//if (pdd->getAxisIndex(String("Spectral")) == -1) {
-						profileDD_ = 0;
-						hideImageProfile();
-						QMessageBox::warning( this, "Channel Image Problem", "The z-axis of the channel image is not frequency.");
-					} else {
+						else {
+							pdd->checkAxis( true );
+						}
 						profileDD_ = pdd;
-						profile_->showNormal();
-						profile_->raise();
-						pdd->checkAxis( false );
+						connect( profileDD_, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
+									profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
+						connect( profileDD_, SIGNAL(spectrumChanged(String, String, String )),
+									profile_, SLOT(changeSpectrum(String, String, String )));
 					}
+					channelDDFound = true;
+					pdd->checkAxis( false );
 				} else {
-					if (pdd->getAxisIndex(String("Spectral")) != -1 ||
-							pdd->getAxisIndex(String("Tabular")) != -1){
-						OverplotInterface overlap( pdd->name().c_str(), img );
-						overlays.append( overlap );
-					}
+					OverplotInterface overlap( pdd->name().c_str(), img );
+					overlays.append( overlap );
 				}
-				i++;
 			}
 		}
 	}
+	if ( !profileVisible ){
+			profile_->showNormal();
+			profile_->raise();
+	}
 
 
-	if (profile_) {
-
-		connect( this, SIGNAL(overlay(QList<OverplotInterface>)),
-				profile_, SLOT(overplot(QList<OverplotInterface>)));
+	if ( channelDDFound ){
 		emit overlay(overlays);
-	}
 
-	PanelDisplay* ppd = qdp_->panelDisplay();
-	std::tr1::shared_ptr<QtRectTool> rect = std::tr1::dynamic_pointer_cast<QtRectTool>(ppd->getTool(QtMouseToolNames::RECTANGLE));
-	if ( (rect.get( ) != 0 && ! profileVisible) ||
-			(profiledDDChange && profileVisible) ) {
-		// this is the *new* region implementation... all events come from region source...
-		std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(rect->getRegionSource( )->kernel( ));
-		qrs->generateExistingRegionUpdates( );
-	}
+		PanelDisplay* ppd = qdp_->panelDisplay();
+		std::tr1::shared_ptr<QtRectTool> rect = std::tr1::dynamic_pointer_cast<QtRectTool>(ppd->getTool(QtMouseToolNames::RECTANGLE));
+		if ( (rect.get( ) != 0 && ! profileVisible) ||
+					(profiledDDChange && profileVisible) ) {
+			// this is the *new* region implementation... all events come from region source...
+			std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(rect->getRegionSource( )->kernel( ));
+			qrs->generateExistingRegionUpdates( );
+		}
 
-	//Let the profiler know about the current frame.
-	if ( profile_ ) {
+		//Let the profiler know about the current frame.
 		int frameIndex = qdp_->frame();
 		profile_->frameChanged( frameIndex );
 	}

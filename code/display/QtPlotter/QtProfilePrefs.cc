@@ -41,6 +41,8 @@ namespace casa {
 	const QString QtProfilePrefs::STEP_FUNCTION = "Step Function";
 	const QString QtProfilePrefs::OPTICAL = "Optical";
 	const QString QtProfilePrefs::CHANNEL_LINE = "Channel Line";
+	const QString QtProfilePrefs::SINGLE_CHANNEL_IMAGE = "Single Channel Image";
+
 
 	QtProfilePrefs::~QtProfilePrefs() {
 	}
@@ -53,7 +55,8 @@ namespace casa {
 
 	QtProfilePrefs::QtProfilePrefs(QWidget *parent, bool stateAutoX, bool stateAutoY,
 	                               int stateGrid, int stateMProf, int stateRel, bool showToolTips,
-	                               bool showTopAxis, bool displayAsStepFunction, bool opticalFit, bool channelLine )
+	                               bool showTopAxis, bool displayAsStepFunction,
+	                               bool opticalFit, bool channelLine, bool singleChannelImage )
 		:QDialog(parent) {
 		// paint the GUI
 		setupUi(this);
@@ -97,6 +100,10 @@ namespace casa {
 		channelLineDefault = settings.value( CHANNEL_LINE, channelLine ).toBool();
 		channelLineCheckBox->setChecked( channelLineDefault );
 
+		singleChannelImageDefault = settings.value( SINGLE_CHANNEL_IMAGE, singleChannelImage ).toBool();
+		singlePlaneCheckBox->setChecked( singleChannelImageDefault );
+
+
 		initializeConnections();
 	}
 
@@ -105,7 +112,9 @@ namespace casa {
 		emit currentPrefs(autoScaleX->checkState(), autoScaleY->checkState(), (int)showGrid->checkState(),
 		                  (int)multiProf->checkState(), (int)relative->checkState(), toolTipsCheckBox->checkState(),
 		                  topAxisCheckBox->checkState(), stepFunctionCheckBox->checkState(),
-		                  opticalSpecFitCheckBox->checkState(), channelLineCheckBox->checkState() ) ;
+		                  opticalSpecFitCheckBox->checkState(),
+		                  channelLineCheckBox->checkState(),
+		                  singlePlaneCheckBox->checkState()) ;
 	}
 
 	void QtProfilePrefs::initializeConnections() {
@@ -135,6 +144,7 @@ namespace casa {
 		relative->setChecked( relativeDefault );
 		relative->setEnabled( overlayDefault );
 		channelLineCheckBox->setChecked( channelLineDefault );
+		singlePlaneCheckBox->setChecked( singleChannelImageDefault );
 	}
 
 	void QtProfilePrefs::persist() {
@@ -178,7 +188,9 @@ namespace casa {
 		emit currentPrefs(autoScaleX->checkState(), autoScaleY->checkState(), (int)showGrid->checkState(),
 		                  (int)multiProf->checkState(), (int)relative->checkState(), toolTipsCheckBox->checkState(),
 		                  topAxisCheckBox->checkState(), stepFunctionCheckBox->checkState(),
-		                  opticalSpecFitCheckBox->checkState(), channelLineCheckBox->checkState() ) ;
+		                  opticalSpecFitCheckBox->checkState(),
+		                  channelLineCheckBox->checkState(),
+		                  singlePlaneCheckBox->checkState()) ;
 		close();
 	}
 
