@@ -44,6 +44,7 @@ class SDFlagDataInputs(common.SingleDishInputs):
                        'flag_pofre', 'flag_prfr', 'flag_pofr',
                        'flag_prfrm', 'flag_pofrm', 'flag_user',
                        'plotflag'])
+        if self.iteration is None: self.iteration = 5
         ### Default Flag rule
         #import SDFlagRule
         from . import SDFlagRule
