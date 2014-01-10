@@ -4551,13 +4551,13 @@ namespace casa {
 	receiverSideband = ReceiverSidebandMod::SSB; 
 	rval = 1;
       }
-      if(67.<=theFreqGHz &&  theFreqGHz<90.){
+      else if(67.<=theFreqGHz &&  theFreqGHz<90.){
 	repFreq = (67.+90.)/2.*1E9;
 	frequencyBand = ReceiverBandMod::ALMA_RB_02;
 	receiverSideband = ReceiverSidebandMod::SSB; 
 	rval = 2;
       }
-      if(84.<=theFreqGHz &&  theFreqGHz<116.){
+      else if(84.<=theFreqGHz &&  theFreqGHz<116.){
 	repFreq = (84.+116.)/2.*1E9;
 	frequencyBand = ReceiverBandMod::ALMA_RB_03;
 	receiverSideband = ReceiverSidebandMod::TSB; 
@@ -4605,10 +4605,90 @@ namespace casa {
 	receiverSideband = ReceiverSidebandMod::DSB; 
 	rval = 10;
       }
+      else{
+	repFreq = theFreqGHz*1E9;
+	frequencyBand = ReceiverBandMod::UNSPECIFIED;
+	receiverSideband = ReceiverSidebandMod::TSB; 
+	rval = 0;
+      }
+	
       Quantity tempQ2(repFreq, "Hz");
       repFreq =  tempQ2.getValue(unitASDMFreq());
       return rval;
     }
+    else if(telName_p == "VLA" || telName_p == "EVLA" || telName_p == "JVLA"){
+      // EVLA freq band implementation!!
+      if( 0.033 <=theFreqGHz &&  theFreqGHz<0.081 ){
+	repFreq = (0.033/0.081)/2.*1E9;
+	frequencyBand = ReceiverBandMod::EVLA_4;
+	receiverSideband = ReceiverSidebandMod::NOSB; 
+	rval = 1;
+      }
+      else if(0.298<=theFreqGHz &&  theFreqGHz< 0.345){
+	repFreq = (0.298+0.345)/2.*1E9;
+	frequencyBand = ReceiverBandMod::EVLA_P;
+	receiverSideband = ReceiverSidebandMod::NOSB; 
+	rval = 2;
+      }
+      else if(1.0 <=theFreqGHz &&  theFreqGHz< 2.0){
+	repFreq = (1.+2.)/2.*1E9;
+	frequencyBand = ReceiverBandMod::EVLA_L;
+	receiverSideband = ReceiverSidebandMod::NOSB; 
+	rval = 3;
+      }
+      else if(2.0 <=theFreqGHz &&  theFreqGHz< 4.0){
+	repFreq = (2.+4.)/2.*1E9;
+	frequencyBand = ReceiverBandMod::EVLA_S;
+	receiverSideband = ReceiverSidebandMod::NOSB; 
+	rval = 4;
+      }	  
+      else if(4.0 <=theFreqGHz &&  theFreqGHz< 8.0){
+	repFreq = (4.+8.)/2.*1E9;
+	frequencyBand = ReceiverBandMod::EVLA_C;
+	receiverSideband = ReceiverSidebandMod::NOSB; 
+	rval = 5;
+      }	  
+      else if(8.0 <=theFreqGHz &&  theFreqGHz< 12.0){
+	repFreq = (8.+12.)/2.*1E9;
+	frequencyBand = ReceiverBandMod::EVLA_X;
+	receiverSideband = ReceiverSidebandMod::NOSB; 
+	rval = 6;
+      }	  
+      else if(12. <=theFreqGHz &&  theFreqGHz< 18.){ 
+	repFreq = (12.+18.)/2.*1E9;
+	frequencyBand = ReceiverBandMod::EVLA_Ku; // a.k.a. U
+	receiverSideband = ReceiverSidebandMod::NOSB; 
+	rval = 7;
+      }	  
+      else if(18.0 <=theFreqGHz &&  theFreqGHz< 26.5){
+	repFreq = (18.+26.5)/2.*1E9;
+	frequencyBand = ReceiverBandMod::EVLA_K;
+	receiverSideband = ReceiverSidebandMod::NOSB; 
+	rval = 8;
+      }	  
+      else if(26.5 <=theFreqGHz &&  theFreqGHz< 40.){
+	repFreq = (26.5+40.)/2.*1E9;
+	frequencyBand = ReceiverBandMod::EVLA_Ka;
+	receiverSideband = ReceiverSidebandMod::NOSB; 
+	rval = 9;
+      }	  
+      else if(40. <=theFreqGHz &&  theFreqGHz< 50.){
+	repFreq = (40.+50.)/2.*1E9;
+	frequencyBand = ReceiverBandMod::EVLA_Q;
+	receiverSideband = ReceiverSidebandMod::NOSB; 
+	rval = 10;
+      }
+      else{
+	repFreq = theFreqGHz*1E9;
+	frequencyBand = ReceiverBandMod::UNSPECIFIED;
+	receiverSideband = ReceiverSidebandMod::NOSB; 
+	rval = 0;
+      }
+      Quantity tempQ2(repFreq, "Hz");
+      repFreq =  tempQ2.getValue(unitASDMFreq());
+      return rval;
+    }
+
     return 0; // unknown observatory
   }  
 
