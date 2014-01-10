@@ -49,7 +49,7 @@
 #include <ms/MeasurementSets.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <ms/MeasurementSets/MSMetaDataOnDemand.h>
+#include <ms/MeasurementSets/MSMetaData.h>
 #include <ms/MeasurementSets/MSSummary.h>
 #include <ms/MeasurementSets/MSRange.h>
 #include <ms/MeasurementSets/MSSelector.h>
@@ -65,7 +65,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // will get rubbish.  Also sets string to separate subtable output.
 //
 MSSummary::MSSummary (const MeasurementSet& ms)
-: pMS(&ms), _msmd(new MSMetaDataOnDemand(&ms, 50.0)),
+: pMS(&ms), _msmd(new MSMetaData(&ms, 50.0)),
   dashlin1(replicate("-",80)),
   dashlin2(replicate("=",80)),
   _listUnflaggedRowCount(False),
@@ -73,7 +73,7 @@ MSSummary::MSSummary (const MeasurementSet& ms)
 {}
 
 MSSummary::MSSummary (const MeasurementSet* ms)
-: pMS(ms), _msmd(new MSMetaDataOnDemand(ms, 50.0)),
+: pMS(ms), _msmd(new MSMetaData(ms, 50.0)),
   dashlin1(replicate("-",80)),
   dashlin2(replicate("=",80)),
   _listUnflaggedRowCount(False),
@@ -81,7 +81,7 @@ MSSummary::MSSummary (const MeasurementSet* ms)
 {}
 
 MSSummary::MSSummary (const MeasurementSet* ms, const String msname)
-: pMS(ms), _msmd(new MSMetaDataOnDemand(ms, 50)),
+: pMS(ms), _msmd(new MSMetaData(ms, 50)),
   dashlin1(replicate("-",80)),
   dashlin2(replicate("=",80)),
   msname_p(msname),
@@ -127,7 +127,7 @@ Bool MSSummary::setMS (const MeasurementSet& ms)
 		return False;
 	} else {
 		pMS = pTemp;
-		_msmd.reset(new MSMetaDataOnDemand(&ms, _cacheSizeMB));
+		_msmd.reset(new MSMetaData(&ms, _cacheSizeMB));
 		return True;
 	}
 }
@@ -1131,7 +1131,7 @@ void MSSummary::listAntenna (LogIO& os, Bool verbose) const
 
 		vector<MPosition> antPos = _msmd->getAntennaPositions();
 		Bool posIsITRF = antPos[0].type() != MPosition::ITRF;
-		vector<Quantum<Vector<Double> > > offsets = _msmd->getAntennaOffsets(antPos);
+		vector<Quantum<Vector<Double> > > offsets = _msmd->getAntennaOffsets();
 
 		// For each ant
 		for (Int i=0; i<nAnt; i++) {
@@ -1838,7 +1838,7 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 		os.output().width(widthFreq);	os << " ChanWid(kHz) ";
 		os.output().width(widthFreq);	os << " TotBW(kHz)";
 		//		os.output().width(widthFreq);	os << "Ref(MHz)";
-		Bool hasBBCNo = MSMetaData::hasBBCNo(*pMS);
+		Bool hasBBCNo = _msmd->hasBBCNo();
 		if (hasBBCNo) {
 			os.output().width(widthBBCNo);
 			os << "BBC Num ";
