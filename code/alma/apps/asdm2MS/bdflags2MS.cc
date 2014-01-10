@@ -907,14 +907,14 @@ int main (int argC, char * argV[]) {
   // Open the MS MAIN table of the measurement set in Update mode.
   
   Table mainTable;
-  ArrayColumn<Complex>	data;
+  // ArrayColumn<Complex>	data;
   ArrayColumn<Bool>	flag;
   ScalarColumn<Bool>	flagRow;
   
 
   try {
     mainTable = Table (msName, Table::Update);
-    data.attach(mainTable, "DATA");
+    // data.attach(mainTable, "DATA");
     flag.attach(mainTable, "FLAG");
     flagRow.attach(mainTable, "FLAG_ROW");
   }
