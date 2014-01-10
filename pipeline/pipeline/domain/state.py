@@ -220,7 +220,7 @@ class StateFactory(object):
         elif (observatory == 'VLA' or observatory =='EVLA'):
             self._constructor = StateVLA
         elif (observatory == 'APEX'):
-            self._construcor = StateAPEX
+            self._constructor = StateAPEX
         else:
             raise KeyError('%s has no matching State class' % observatory)
 
