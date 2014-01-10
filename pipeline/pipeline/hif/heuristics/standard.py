@@ -11,8 +11,7 @@ class Standard(api.Heuristic):
         field = set(utils.safe_split(field))
         if field.issubset(self.ephemeris_fields):
             return 'Butler-JPL-Horizons 2012'
-            #return 'Butler-JPL-Horizons 2010'
         elif field.isdisjoint(self.ephemeris_fields):
-            return 'Perley-Butler 2010'
+            return 'manual'
         else:
             raise Exception, 'not all fields in same standard'
