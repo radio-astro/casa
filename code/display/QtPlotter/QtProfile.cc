@@ -931,7 +931,11 @@ namespace casa {
 		if (cubeZero) {
 			return;
 		}
-		profileType = ptype;
+
+		if ( ptype != UNKNPROF ){
+			profileType = ptype;
+		}
+
 		copyToLastEvent( c,px,py,wx,wy );
 
 		setPlotType( wx.size() );
@@ -1442,7 +1446,7 @@ namespace casa {
 
 		//Get Profile Flux density v/s coordinateType
 		bool ok = assignFrequencyProfile( wxv,wyv, coordinateType,
-				xaxisUnit,z_xval, z_yval, shape.toStdString() );
+				xaxisUnit,z_xval, z_yval, getRegionShape());
 		if ( !ok ) {
 			return;
 		}
@@ -1609,7 +1613,7 @@ namespace casa {
 
 		//Get Profile Flux density v/s coordinateType
 		bool ok = assignFrequencyProfile( wxv,wyv, coordinateType, xaxisUnit,
-				z_xval,z_yval, shape.toStdString());
+				z_xval,z_yval, getRegionShape());
 
 		if ( !ok ) {
 			return;
@@ -2156,7 +2160,9 @@ namespace casa {
 
 	void QtProfile::setTitle(const ProfileType ptype){
 		QString smoothDescription = smoothWidget->toString();
-		profileType = ptype;
+		if ( ptype != UNKNPROF ){
+			profileType = ptype;
+		}
 		switch (ptype) {
 			case SINGPROF:
 				pixelCanvas->setTitle("Single Point Profile"+smoothDescription);
@@ -2765,13 +2771,6 @@ namespace casa {
 	}
 
 	String QtProfile::getRegionShape(){
-		/*String shapeStr( " ");
-		std::map<int,spectra_info>::iterator iter = spectra_info_map.find( current_region_id );
-		if ( iter != spectra_info_map.end() ){
-			QString shapeString = spectra_info_map[current_region_id].shape();
-			shapeStr = shapeString.toStdString();
-		}
-		return shapeStr;*/
 		String shape( "");
 		if ( profileType == RECTPROF ){
 			shape = SHAPE_RECTANGLE;
