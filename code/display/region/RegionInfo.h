@@ -36,7 +36,11 @@
 
 namespace casa {
 
+
 	namespace viewer {
+
+		class Polyline;
+
 
 		class RegionInfo {
 		public:
@@ -90,8 +94,14 @@ namespace casa {
 
 		class SliceRegionInfo : public RegionInfo {
 		public:
-			SliceRegionInfo( const std::string &label, const std::string &desc, stats_t *si ) : RegionInfo(label,desc,si,SliceInfoType) { }
+			SliceRegionInfo( const std::string &label, const std::string &desc, stats_t *si, Polyline* polyline ) :
+				RegionInfo(label,desc,si,SliceInfoType), region(polyline) { }
+			Polyline* getRegion(){
+				return region;
+			}
 			~SliceRegionInfo( ) { }
+		private:
+			Polyline* region;
 		};
 
 		class PVLineRegionInfo : public RegionInfo {

@@ -823,7 +823,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	private:
-
+		WorldCanvasHolder* oldWCHolder;
 
 		// is this data currently being displayed?
 		DisplayState displaystate;

@@ -812,6 +812,7 @@ void QtDisplayPanelGui::animationImageChanged( int index ){
 	if ( regionDock_ != NULL ){
 		regionDock_->updateStackOrder( animationImageIndex );
 	}
+	resetListenerImage();
 }
 
 void QtDisplayPanelGui::globalColorSettingsChanged( bool global ) {
@@ -853,12 +854,17 @@ void QtDisplayPanelGui::updateColorHistogram( const QString& ddName ) {
 void QtDisplayPanelGui::showHistogram() {
 	if ( histogrammer == NULL ) {
 		this->initHistogramHolder();
-	}
-	//Send it the latest image
-	resetListenerImage();
 
+	}
 	//Image updates
 	connect( qdp_, SIGNAL(registrationChange()), this, SLOT(resetListenerImage()), Qt::UniqueConnection );
+	//Send it the latest image
+	resetListenerImage();
+	histogrammer->showNormal();	// (Magic formula to bring a window up,
+	histogrammer->raise();
+}
+
+void QtDisplayPanelGui::generateHistogramRegionUpdates(){
 	//Region updates
 	PanelDisplay* panelDisplay = qdp_->panelDisplay();
 	std::tr1::shared_ptr<QtCrossTool> pos = std::tr1::dynamic_pointer_cast<QtCrossTool>(panelDisplay->getTool(QtMouseToolNames::POINT));
@@ -873,8 +879,7 @@ void QtDisplayPanelGui::showHistogram() {
 		}
 	}
 
-	histogrammer->showNormal();	// (Magic formula to bring a window up,
-	histogrammer->raise();
+
 }
 
 void QtDisplayPanelGui::hideHistogram() {
@@ -899,31 +904,35 @@ void QtDisplayPanelGui::disconnectHistogram() {
 }
 
 void QtDisplayPanelGui::resetListenerImage() {
-	QtDisplayData* controllingDD = dd();
-	if ( controllingDD != NULL ) {
-		std::tr1::shared_ptr<ImageInterface<float> > img = /*pdd*/controllingDD->imageInterface();
-		if ( sliceTool != NULL ) {
-			sliceTool->setImage( img );
-		}
+	if ( qdp_ != NULL ){
+		QtDisplayData* mainImage = qdp_->getChannelDD( animationImageIndex );
+		if ( mainImage != NULL ) {
 
-		if ( histogrammer != NULL ) {
-			histogrammer->setImage( img );
-			const viewer::ImageProperties & imgProperties = /*pdd*/controllingDD->imageProperties( );
-			if ( imgProperties.hasSpectralAxis() ) {
-				int spectralAxisNum = imgProperties.spectralAxisNumber();
-				const Vector<int> imgShape = imgProperties.shape();
-				int channelCount = imgShape[spectralAxisNum];
-				histogrammer->setChannelCount( channelCount );
-			} else {
-				histogrammer->setChannelCount( 1 );
+			std::tr1::shared_ptr<ImageInterface<float> > img = mainImage->imageInterface();
+			if ( sliceTool != NULL ) {
+				sliceTool->setImage( img );
+				generateSliceRegionUpdates();
+			}
+
+			if ( histogrammer != NULL ) {
+				histogrammer->setImage( img );
+				const viewer::ImageProperties & imgProperties = mainImage->imageProperties( );
+				if ( imgProperties.hasSpectralAxis() ) {
+					int spectralAxisNum = imgProperties.spectralAxisNumber();
+					const Vector<int> imgShape = imgProperties.shape();
+					int channelCount = imgShape[spectralAxisNum];
+					histogrammer->setChannelCount( channelCount );
+				} else {
+					histogrammer->setChannelCount( 1 );
+				}
+				generateHistogramRegionUpdates();
+			}
+
+		} else {
+			if ( histogrammer != NULL ) {
+				histogrammer->setImage( std::tr1::shared_ptr<ImageInterface<Float> >() );
 			}
 		}
-
-	} else {
-		if ( histogrammer != NULL ) {
-			histogrammer->setImage( std::tr1::shared_ptr<ImageInterface<Float> >() );
-		}
-
 	}
 }
 
@@ -3183,12 +3192,17 @@ void QtDisplayPanelGui::showSlicer() {
 
 		//Image updates
 		connect( qdp_, SIGNAL(registrationChange()), this, SLOT(resetListenerImage()), Qt::UniqueConnection );
-		resetListenerImage();
 
 		//Update the polyline with the new slice position
 		connect(sliceTool, SIGNAL(markerPositionChanged(int,int,float)), this, SLOT(sliceMarkerPositionChanged(int,int,float)));;
 		connect(sliceTool, SIGNAL(markerVisibilityChanged(int,bool)), this, SLOT(sliceMarkerVisibilityChanged(int,bool)));
+		resetListenerImage();
+	}
+	sliceTool->show();
+}
 
+void QtDisplayPanelGui::generateSliceRegionUpdates(){
+	if ( qdp_ != NULL ){
 		//Region updates
 		PanelDisplay* panelDisplay = qdp_->panelDisplay();
 		std::tr1::shared_ptr<QtPolylineTool> pos = std::tr1::dynamic_pointer_cast<QtPolylineTool>(panelDisplay->getTool(QtMouseToolNames::POLYLINE));
@@ -3211,10 +3225,8 @@ void QtDisplayPanelGui::showSlicer() {
 
 			}
 		}
-
-
 	}
-	sliceTool->show();
+
 }
 
 void QtDisplayPanelGui::updateDDMenus_(Bool /*doCloseMenu*/) {

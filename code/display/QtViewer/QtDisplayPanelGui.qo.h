@@ -600,6 +600,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		int getBoundedChannel( int channelNumber ) const;
 		void updateViewedImage();
 		void profiledImageChange();
+		void generateSliceRegionUpdates();
+		void generateHistogramRegionUpdates();
 		void clearTools();
 		unsigned int showdataoptionspanel_enter_count;
 		QtDisplayPanelGui() : rc(viewer::getrc()), linkedCursorHandler(0) {  }		// (not intended for use)
