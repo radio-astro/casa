@@ -210,6 +210,15 @@ class StateAPEX(State):
     def __init__(self, state_id, obs_mode):
         super(StateAPEX, self).__init__(state_id, obs_mode)
 
+class StateSMT(State):
+    # dictionary to map from STATE table obs_mode to pipeline intent
+    obs_mode_mapping = {
+        'OBSERVE_TARGET#ON_SOURCE': 'TARGET'
+    }
+    
+    def __init__(self, state_id, obs_mode):
+        super(StateSMT, self).__init__(state_id, obs_mode)
+
 class StateFactory(object):
     def __init__(self, observatory, start=None):
         if observatory == 'ALMA':
