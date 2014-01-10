@@ -37,7 +37,7 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hifv_solint/Command>
+        <Command xmlns="">hifv_solint</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
