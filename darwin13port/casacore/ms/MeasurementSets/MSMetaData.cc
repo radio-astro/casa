@@ -75,12 +75,6 @@ std::set<Int> MSMetaData::getScansForField(const String& field) {
 	return scans;
 }
 
-vector<String> MSMetaData::_getFieldNames(const MeasurementSet& ms) {
-	String fieldNameColName = MSField::columnName(MSFieldEnums::NAME);
-	ROScalarColumn<String> nameCol(ms.field(), fieldNameColName);
-	return nameCol.getColumn().tovector();
-}
-
 vector<MPosition> MSMetaData::_getAntennaPositions(
 	vector<String>& antennaNames, const MeasurementSet& ms
 ) {
@@ -163,23 +157,6 @@ vector<String> MSMetaData::_getAntennaStationNames(
 	).getColumn().tovector();
 }
 
-vector<String> MSMetaData::_getAntennaNames(
-	map<String, uInt>& namesToIDs, const MeasurementSet& ms
-) {
-	String antNameColName = MSAntenna::columnName(MSAntennaEnums::NAME);
-	ROScalarColumn<String> nameCol(ms.antenna(), antNameColName);
-	Vector<String> names = nameCol.getColumn();
-	Vector<String>::const_iterator end = names.end();
-	uInt i = 0;
-	for (
-		Vector<String>::const_iterator name=names.begin();
-		name!=end; name++, i++
-	) {
-		namesToIDs[*name] = i;
-	}
-	return names.tovector();
-}
-
 Quantum<Vector<Double> > MSMetaData::_getAntennaDiameters(
 	const MeasurementSet& ms
 ) {
@@ -190,109 +167,8 @@ Quantum<Vector<Double> > MSMetaData::_getAntennaDiameters(
 	return Quantum<Vector<Double> >(diams, unit);
 }
 
-std::map<Int, uInt> MSMetaData::_getDataDescIDToSpwMap(const MeasurementSet& ms) {
-	String spwColName = MSDataDescription::columnName(MSDataDescriptionEnums::SPECTRAL_WINDOW_ID);
-	ROScalarColumn<Int> spwCol(ms.dataDescription(), spwColName);
-	return _toUIntMap(spwCol.getColumn());
-}
-
-std::map<Int, uInt> MSMetaData::_getDataDescIDToPolIDMap(const MeasurementSet& ms) {
-	String spwColName = MSDataDescription::columnName(MSDataDescriptionEnums::POLARIZATION_ID);
-	ROScalarColumn<Int> spwCol(ms.dataDescription(), spwColName);
-	return _toUIntMap(spwCol.getColumn());
-}
-
-std::map<std::pair<uInt, uInt>, Int> MSMetaData::_getSpwIDPolIDToDataDescIDMap(
-	const std::map<Int, uInt>& dataDescIDToSpwMap,
-	const std::map<Int, uInt>& dataDescIDToPolIDMap
-) {
-	std::map<Int, uInt>::const_iterator i1 = dataDescIDToSpwMap.begin();
-	std::map<Int, uInt>::const_iterator end = dataDescIDToSpwMap.end();
-	std::map<std::pair<uInt, uInt>, Int> ret;
-	while (i1 != end) {
-		Int dataDesc = i1->first;
-		uInt spw = i1->second;
-		uInt polID = dataDescIDToPolIDMap.at(dataDesc);
-		ret[std::make_pair(spw, polID)] = dataDesc;
-		i1++;
-	}
-	return ret;
-}
-
-Vector<Int> MSMetaData::_getFieldIDs(const MeasurementSet& ms) {
-	String fieldIdColName = MeasurementSet::columnName(MSMainEnums::FIELD_ID);
-	return ROScalarColumn<Int>(ms, fieldIdColName).getColumn();
-}
-
-std::map<Int, std::set<Double> > MSMetaData::_getScanToTimesMap(
-	const Vector<Int>& scans, const Vector<Double>& times
-) {
-	Vector<Int>::const_iterator curScan = scans.begin();
-	Vector<Int>::const_iterator lastScan = scans.end();
-	Vector<Double>::const_iterator curTime = times.begin();
-	std::map<Int, std::set<Double> > scanToTimesMap;
-	while (curScan != lastScan) {
-		scanToTimesMap[*curScan].insert(*curTime);
-		curScan++;
-		curTime++;
-	}
-	return scanToTimesMap;
-}
-
-Vector<Double> MSMetaData::_getTimes(const MeasurementSet& ms) {
-	String timeColName = MeasurementSet::columnName(MSMainEnums::TIME);
-	return ScalarColumn<Double>(ms, timeColName).getColumn();
-}
-
-
-Quantum<Vector<Double> > MSMetaData::_getExposures(const MeasurementSet& ms) {
-	String colName = MeasurementSet::columnName(MSMainEnums::EXPOSURE);
-	ScalarColumn<Double> exposure (ms, colName);
-	String unit = *exposure.keywordSet().asArrayString("QuantumUnits").begin();
-	return Quantum<Vector<Double> >(exposure.getColumn(), unit);
-}
-
-Vector<Double> MSMetaData::_getTimeCentroids(const MeasurementSet& ms) {
-	String timeCentroidColName = MeasurementSet::columnName(MSMainEnums::TIME_CENTROID);
-	return ScalarColumn<Double>(ms, timeCentroidColName).getColumn();
-}
-
-Vector<Double> MSMetaData::_getIntervals(const MeasurementSet& ms) {
-	String intervalColName = MeasurementSet::columnName(MSMainEnums::INTERVAL);
-	return ScalarColumn<Double>(ms, intervalColName).getColumn();
-}
-
-ArrayColumn<Bool>* MSMetaData::_getFlags(const MeasurementSet& ms) {
-	String flagColName = MeasurementSet::columnName(MSMainEnums::FLAG);
-	return new ArrayColumn<Bool>(ms, flagColName);
-}
-
 Bool MSMetaData::hasBBCNo(const MeasurementSet& ms) {
 	return ms.spectralWindow().isColumn(MSSpectralWindowEnums::BBC_NO);
-}
-
-vector<MPosition> MSMetaData::_getObservatoryPositions(
-	vector<String>& names, const MeasurementSet& ms
-) {
-	String tnameColName = MSObservation::columnName(MSObservationEnums::TELESCOPE_NAME);
-	ROScalarColumn<String> telescopeNameCol(ms.observation(), tnameColName);
-	names = telescopeNameCol.getColumn().tovector();
-	vector<MPosition> observatoryPositions(names.size());
-	for (uInt i=0; i<observatoryPositions.size(); i++) {
-		if (names[i].length() == 0) {
-			throw AipsError(
-				_ORIGIN
-				+ "The name of the telescope is not stored in the measurement set."
-			);
-		}
-		if (! MeasTable::Observatory(observatoryPositions[i], names[i])) {
-			throw AipsError(
-				_ORIGIN
-				+ "The name of the telescope is not stored in the measurement set."
-			);
-		}
-	}
-	return observatoryPositions;
 }
 
 std::map<Double, Double> MSMetaData::_getTimeToAggregateExposureMap(
@@ -772,15 +648,6 @@ std::map<Int, uInt> MSMetaData::_toUIntMap(const Vector<Int>& v) {
 		m[count] = *iter;
 	}
 	return m;
-}
-
-void MSMetaData::_checkTolerance(const Double tol) {
-	if (tol < 0) {
-		throw AipsError(
-			"MSMetaData::" + String(__FUNCTION__)
-			+ " : Tolerance cannot be less than zero"
-		);
-	}
 }
 
 }

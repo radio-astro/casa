@@ -60,11 +60,14 @@ PVGenerator::PVGenerator(
 PVGenerator::~PVGenerator() {}
 
 void PVGenerator::setEndpoints(
-	const Double startx, const Double starty,
-	const Double endx, const Double endy
+	const std::pair<Double, Double>& start,
+	const std::pair<Double, Double>& end
 ) {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
-
+	Double startx = start.first;
+	Double starty = start.second;
+	Double endx = end.first;
+	Double endy = end.second;
 	ThrowIf(
 		startx == endx && starty == endy,
 		"Start and end pixels must be different."
@@ -93,6 +96,71 @@ void PVGenerator::setEndpoints(
 }
 
 void PVGenerator::setEndpoints(
+	const std::pair<Double, Double>& center, Double length,
+	const Quantity& pa
+) {
+	ThrowIf(
+		length <= 0,
+		"Length must be positive"
+	);
+	const CoordinateSystem csys = _getImage()->coordinates();
+	Bool xIsLong = csys.isDirectionAbscissaLongitude();
+	Vector<Double> inc = csys.directionCoordinate().increment();
+	Double xoff = sign(inc[0])*length/2;
+	xoff = xIsLong ? xoff*sin(pa.getValue("rad")) : xoff*cos(pa.getValue("rad"));
+	Double yoff = sign(inc[1])*length/2;
+	yoff = xIsLong ? yoff*cos(pa.getValue("rad")) : yoff*sin(pa.getValue("rad"));
+	setEndpoints(
+		std::make_pair(center.first - xoff, center.second - yoff),
+		std::make_pair(center.first + xoff, center.second + yoff)
+	);
+}
+
+void PVGenerator::setEndpoints(
+	const std::pair<Double, Double>& center, const Quantity& length,
+	const Quantity& pa
+) {
+	ThrowIf(
+		! pa.isConform("rad"),
+		"Position angle must have angular units"
+	);
+	Quantity inc = _increment();
+	ThrowIf(
+		! length.isConform(inc),
+		"Units of length are not conformant with direction axes units"
+	);
+	setEndpoints(
+		center, (length/inc).getValue(), pa
+	);
+}
+
+void PVGenerator::setEndpoints(
+	const MVDirection& center, const Quantity& length,
+	const Quantity& pa
+) {
+	MVDirection start = center;
+	start.shiftAngle(length/2, pa - Quantity(180, "deg"));
+	MVDirection end = center;
+	end.shiftAngle(length/2, pa);
+	setEndpoints(start, end);
+}
+
+void PVGenerator::setEndpoints(
+	const MVDirection& center, Double length,
+	const Quantity& pa
+) {
+	setEndpoints(center, length*_increment(), pa);
+}
+
+Quantity PVGenerator::_increment() const {
+	const DirectionCoordinate dc = _getImage()->coordinates().directionCoordinate();
+	return Quantity(
+		fabs(dc.increment()[0]),
+		dc.worldAxisUnits()[0]
+	);
+}
+
+void PVGenerator::setEndpoints(
 	const MVDirection& start, const MVDirection& end
 ) {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
@@ -102,7 +170,10 @@ void PVGenerator::setEndpoints(
 	Vector<Double> ePixel = dc.toPixel(end);
 	*_getLog() << LogIO::NORMAL << "Setting pixel end points "
 		<< sPixel << ", " << ePixel << LogIO::POST;
-	setEndpoints(sPixel[0], sPixel[1], ePixel[0], ePixel[1]);
+	setEndpoints(
+		make_pair(sPixel[0], sPixel[1]),
+		make_pair(ePixel[0], ePixel[1])
+	);
 }
 
 void PVGenerator::setWidth(uInt width) {

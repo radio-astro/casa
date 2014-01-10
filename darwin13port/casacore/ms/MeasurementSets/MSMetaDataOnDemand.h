@@ -529,6 +529,14 @@ private:
 		std::set<uInt>& wvrSpw, std::set<uInt>& sqldSpw
 	);
 
+	static void _checkTolerance(const Double tol);
+
+	vector<MPosition> _getObservatoryPositions();
+
+	vector<String> _getAntennaNames(
+		std::map<String, uInt>& namesToIDsMap
+	);
+
 };
 }
 

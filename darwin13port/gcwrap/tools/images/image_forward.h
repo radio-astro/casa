@@ -22,5 +22,4 @@ namespace casa
     class String;
 	class SkyComponent;
 	class DirectionCoordinate;
-
 }

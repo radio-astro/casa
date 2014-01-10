@@ -27,6 +27,7 @@
 #include <ms/MeasurementSets/MSMetaDataOnDemand.h>
 
 #include <casa/OS/File.h>
+#include <measures/Measures/MeasTable.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ScalarColumn.h>
@@ -129,13 +130,6 @@ void MSMetaDataOnDemand::_getStateToIntentsMap(
 		*sIter = std::set <String>(intents.begin(), intents.end());
 		uniqueIntents.insert(intents.begin(), intents.end());
 	}
-
-	/*
-	_getStateToIntentsMap2(
-		stateToIntentsMap,
-		uniqueIntents
-	);
-	*/
 
 	std::set<String>::const_iterator lastIntent = uniqueIntents.end();
 	uInt mysize = 0;
@@ -469,8 +463,9 @@ std::tr1::shared_ptr<Vector<Int> > MSMetaDataOnDemand::_getFieldIDs() {
 	if (_fieldIDs && _fieldIDs->size() > 0) {
 		return _fieldIDs;
 	}
+	String fieldIdColName = MeasurementSet::columnName(MSMainEnums::FIELD_ID);
 	std::tr1::shared_ptr<Vector<Int> > fields(
-		new Vector<Int>(MSMetaData::_getFieldIDs(*_ms))
+		new Vector<Int>(ROScalarColumn<Int>(*_ms, fieldIdColName).getColumn())
 	);
 	if (_cacheUpdated(sizeof(Int)*fields->size())) {
 		_fieldIDs = fields;
@@ -919,7 +914,10 @@ vector<String> MSMetaDataOnDemand::_getFieldNames() {
 	if (! _fieldNames.empty()) {
 		return _fieldNames;
 	}
-	vector<String> fieldNames = MSMetaData::_getFieldNames(*_ms);
+
+	String fieldNameColName = MSField::columnName(MSFieldEnums::NAME);
+	ROScalarColumn<String> nameCol(_ms->field(), fieldNameColName);
+	vector<String> fieldNames = nameCol.getColumn().tovector();
 	uInt mysize = 0;
 	vector<String>::const_iterator end = fieldNames.end();
 	for (
@@ -1070,65 +1068,67 @@ uInt MSMetaDataOnDemand::nDataDescriptions() {
 	return _nDataDescIDs;
 }
 
+vector<String> MSMetaDataOnDemand::_getAntennaNames(
+	std::map<String, uInt>& namesToIDsMap
+) {
+	if (! _antennaNames.empty()) {
+		namesToIDsMap = _antennaNameToIDMap;
+		return _antennaNames;
+	}
+	namesToIDsMap.clear();
+	std::map<String, uInt> mymap;
+	String antNameColName = MSAntenna::columnName(MSAntennaEnums::NAME);
+	ROScalarColumn<String> nameCol(_ms->antenna(), antNameColName);
+	Vector<String> names = nameCol.getColumn();
+	Vector<String>::const_iterator end = names.end();
+	uInt i = 0;
+	for (
+		Vector<String>::const_iterator name=names.begin();
+		name!=end; name++, i++
+	) {
+		namesToIDsMap[*name] = i;
+	}
+
+	uInt mysize = names.size()*sizeof(uInt);
+	for (
+		Vector<String>::const_iterator name=names.begin();
+		name!=end; name++
+	) {
+		mysize += 2*name->size();
+	}
+	if (_cacheUpdated(mysize)) {
+		_antennaNames = names.tovector();
+		_antennaNameToIDMap = namesToIDsMap;
+	}
+	return names.tovector();
+}
+
 vector<String> MSMetaDataOnDemand::getAntennaNames(
 	std::map<String, uInt>& namesToIDsMap,
 	const vector<uInt>& antennaIDs
 ) {
 	uInt nAnts = nAntennas();
-	vector<String> names, myAnts;
+	std::map<String, uInt> allMap;
+	vector<String> allNames = _getAntennaNames(allMap);
 	if (antennaIDs.empty()) {
-		if (_antennaNames.empty()) {
-			std::map<String, uInt> mymap;
-			names = _getAntennaNames(namesToIDsMap, *_ms);
-			myAnts = names;
-		}
-		else {
-			namesToIDsMap = _antennaNameToIDMap;
-			return _antennaNames;
-		}
+		namesToIDsMap = allMap;
+		return allNames;
 	}
-	else {
-		uInt mymax = max(Vector<uInt>(antennaIDs));
-		if (mymax >= nAnts) {
-			throw AipsError(
-				_ORIGIN + "Antenna ID " + String::toString(mymax)
-			+ " out of range."
-			);
-		}
-		if (! _antennaNames.empty()) {
-			vector<uInt>::const_iterator end = antennaIDs.end();
-			for (
-				vector<uInt>::const_iterator id=antennaIDs.begin();
-				id!=end; id++
-			) {
-				names.push_back(_antennaNames[*id]);
-			}
-			namesToIDsMap = _antennaNameToIDMap;
-			return names;
-		}
-		else {
-			std::map<String, uInt> mymap;
-			myAnts = _getAntennaNames(namesToIDsMap, *_ms);
-			vector<uInt>::const_iterator end = antennaIDs.end();
-			for (
-				vector<uInt>::const_iterator id=antennaIDs.begin();
-				id!=end; id++
-			) {
-				names.push_back(myAnts[*id]);
-			}
-		}
-	}
-	vector<String>::const_iterator end1 = myAnts.end();
-	uInt mysize = nAnts*sizeof(uInt);
+	uInt mymax = max(Vector<uInt>(antennaIDs));
+	ThrowIf(
+		mymax >= nAnts,
+		"Antenna ID " + String::toString(mymax)
+		+ " out of range."
+	);
+	vector<String> names;
+	vector<uInt>::const_iterator end = antennaIDs.end();
 	for (
-		vector<String>::const_iterator name=myAnts.begin();
-		name!=end1; name++
+		vector<uInt>::const_iterator id=antennaIDs.begin();
+		id!=end; id++
 	) {
-		mysize += 2*name->size();
-	}
-	if (_cacheUpdated(mysize)) {
-		_antennaNames = myAnts;
-		_antennaNameToIDMap = namesToIDsMap;
+		String antName = allNames[*id];
+		names.push_back(antName);
+		namesToIDsMap[antName] = *id;
 	}
 	return names;
 }
@@ -1474,13 +1474,20 @@ std::tr1::shared_ptr<std::map<Int, std::set<Double> > > MSMetaDataOnDemand::_get
 	if (_scanToTimesMap && ! _scanToTimesMap->empty()) {
 		return _scanToTimesMap;
 	}
+	Vector<Int> scans = *_getScans();
+	Vector<Int>::const_iterator curScan = scans.begin();
+	Vector<Int>::const_iterator lastScan = scans.end();
+	Vector<Double> times = *_getTimes();
+	Vector<Double>::const_iterator curTime = times.begin();
+
 	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > scanToTimesMap(
-		new std::map<Int, std::set<Double> >(
-			MSMetaData::_getScanToTimesMap(
-				*_getScans(), *_getTimes()
-			)
-		)
+		new std::map<Int, std::set<Double> >()
 	);
+	while (curScan != lastScan) {
+		(*scanToTimesMap)[*curScan].insert(*curTime);
+		curScan++;
+		curTime++;
+	}
 	uInt mysize = 0;
 	std::map<Int, std::set<Double> >::const_iterator end = scanToTimesMap->end();
 	for (
@@ -1501,8 +1508,9 @@ std::tr1::shared_ptr<Vector<Double> > MSMetaDataOnDemand::_getTimes() {
 	if (_times && ! _times->empty()) {
 		return _times;
 	}
+	String timeColName = MeasurementSet::columnName(MSMainEnums::TIME);
 	std::tr1::shared_ptr<Vector<Double> > times(
-		new Vector<Double>(MSMetaData::_getTimes(*_ms))
+		new Vector<Double>(	 ScalarColumn<Double>(*_ms, timeColName).getColumn())
 	);
 	if (_cacheUpdated(sizeof(Double)*times->size())) {
 		_times = times;
@@ -1514,8 +1522,11 @@ std::tr1::shared_ptr<Quantum<Vector<Double> > > MSMetaDataOnDemand::_getExposure
 	if (_exposures && ! _exposures->getValue().empty()) {
 		return _exposures;
 	}
+	String colName = MeasurementSet::columnName(MSMainEnums::EXPOSURE);
+	ScalarColumn<Double> exposure (*_ms, colName);
+	String unit = *exposure.keywordSet().asArrayString("QuantumUnits").begin();
 	std::tr1::shared_ptr<Quantum<Vector<Double> > > ex(
-		new Quantum<Vector<Double> >(MSMetaData::_getExposures(*_ms))
+		new Quantum<Vector<Double> >(exposure.getColumn(), unit)
 	);
 	if (_cacheUpdated((20 + sizeof(Double))*ex->getValue().size())) {
 		_exposures = ex;
@@ -1525,19 +1536,20 @@ std::tr1::shared_ptr<Quantum<Vector<Double> > > MSMetaDataOnDemand::_getExposure
 
 std::tr1::shared_ptr<ArrayColumn<Bool> > MSMetaDataOnDemand::_getFlags() {
 	if (_flagsColumn && ! _flagsColumn->nrow() > 0) {
-			return _flagsColumn;
-		}
-		std::tr1::shared_ptr<ArrayColumn<Bool> > flagsColumn(
-			MSMetaData::_getFlags(*_ms)
-		);
-		uInt mysize = 0;
-		for (uInt i=0; i<flagsColumn->nrow(); i++) {
-			mysize += flagsColumn->get(i).size();
-		}
-		if (_cacheUpdated(sizeof(Bool)*mysize)) {
-			_flagsColumn = flagsColumn;
-		}
-		return flagsColumn;
+		return _flagsColumn;
+	}
+	String flagColName = MeasurementSet::columnName(MSMainEnums::FLAG);
+	std::tr1::shared_ptr<ArrayColumn<Bool> > flagsColumn(
+		new ArrayColumn<Bool>(*_ms, flagColName)
+	);
+	uInt mysize = 0;
+	for (uInt i=0; i<flagsColumn->nrow(); i++) {
+		mysize += flagsColumn->get(i).size();
+	}
+	if (_cacheUpdated(sizeof(Bool)*mysize)) {
+		_flagsColumn = flagsColumn;
+	}
+	return flagsColumn;
 }
 
 
@@ -1565,9 +1577,17 @@ void MSMetaDataOnDemand::_getTimesAndInvervals(
 	std::map<Int, std::map<uInt, Double> >& scanSpwToIntervalMap
 ) {
 
+	String timeCentroidColName = MeasurementSet::columnName(
+		MSMainEnums::TIME_CENTROID
+	);
+	Vector<Double> timeCentroids = ScalarColumn<Double>(
+		*_ms, timeCentroidColName
+	).getColumn();
+
+	String intervalColName = MeasurementSet::columnName(MSMainEnums::INTERVAL);
+	Vector<Double> intervals = ScalarColumn<Double>(*_ms, intervalColName).getColumn();
 	scanToTimeRangeMap = MSMetaData::_getScanToTimeRangeMap(
-		scanSpwToIntervalMap,
-		*_getScans(), MSMetaData::_getTimeCentroids(*_ms), _getIntervals(*_ms),
+		scanSpwToIntervalMap, *_getScans(), timeCentroids, intervals,
 		*_getDataDescIDs(), _getDataDescIDToSpwMap(), getScanNumbers()
 	);
 	uInt mysize = scanToTimeRangeMap.size()*(sizeof(Int)+2*sizeof(Double));
@@ -1827,6 +1847,13 @@ std::set<Int> MSMetaDataOnDemand::getFieldsForTimes(
 	return fields;
 }
 
+void MSMetaDataOnDemand::_checkTolerance(const Double tol) {
+	ThrowIf(
+		tol < 0,
+		"Tolerance cannot be less than zero"
+	);
+}
+
 void MSMetaDataOnDemand::_getFieldsAndTimesMaps(
 		std::tr1::shared_ptr<std::map<Int, std::set<Double> > >& fieldToTimesMap,
 		std::tr1::shared_ptr<std::map<Double, std::set<Int> > >& timeToFieldsMap
@@ -1901,13 +1928,24 @@ MPosition MSMetaDataOnDemand::getObservatoryPosition(uInt which) {
 	if (! _observatoryPositions.empty()) {
 		return _observatoryPositions[which];
 	}
-
-	vector<String> names;
-	vector<MPosition> positions = _getObservatoryPositions(names, *_ms);
-	if (_cacheUpdated(30*positions.size())) {
-		_observatoryPositions = positions;
+	String tnameColName = MSObservation::columnName(MSObservationEnums::TELESCOPE_NAME);
+	ROScalarColumn<String> telescopeNameCol(_ms->observation(), tnameColName);
+	vector<String> names = telescopeNameCol.getColumn().tovector();
+	vector<MPosition> observatoryPositions(names.size());
+	for (uInt i=0; i<observatoryPositions.size(); i++) {
+		ThrowIf(
+			names[i].empty(),
+			"The name of the telescope is not stored in the measurement set."
+		);
+		ThrowIf(
+			! MeasTable::Observatory(observatoryPositions[i], names[i]),
+			"Telescope " + names[i] + " is not recognized by CASA"
+		);
 	}
-	return positions[which];
+	if (_cacheUpdated(30*observatoryPositions.size())) {
+		_observatoryPositions = observatoryPositions;
+	}
+	return observatoryPositions[which];
 }
 
 vector<MPosition> MSMetaDataOnDemand::getAntennaPositions(
@@ -1969,18 +2007,19 @@ vector<Quantum<Vector<Double> > > MSMetaDataOnDemand::getAntennaOffsets(
 	}
 	uInt nPos = positions.size();
 	vector<String> names;
-	vector<String> obsNames;
+	//vector<String> obsNames;
 	vector<Quantum<Vector<Double> > > offsets;
-	if (nPos > 0 && nPos != nAntennas()) {
-		throw AipsError(_ORIGIN + "Incorrect number of positions provided.");
-	}
+	ThrowIf(
+		nPos > 0 && nPos != nAntennas(),
+		"Incorrect number of positions provided."
+	);
 	offsets = (nPos > 0)
 		? _getAntennaOffsets(
-			positions, _getObservatoryPositions(obsNames, *_ms)[0]
+			positions, getObservatoryPosition(0)
 		)
 		: _getAntennaOffsets(
 			_getAntennaPositions(names, *_ms),
-			_getObservatoryPositions(obsNames, *_ms)[0]
+			getObservatoryPosition(0)
 		);
 	if (_cacheUpdated(30*offsets.size())) {
 		_antennaOffsets = offsets;
@@ -2058,11 +2097,21 @@ void MSMetaDataOnDemand::_getUnflaggedRowStats(
 	MSMetaData::_getUnflaggedRowStats(
 		nACRows, nXCRows, myFieldNACRows,
 		myFieldNXCRows, myScanNACRows, myScanNXCRows, *ant1,
-		*ant2, /*_getFlagRows(*_ms),*/ *_getDataDescIDs(),
+		*ant2, *_getDataDescIDs(),
+		_getDataDescIDToSpwMap(),
+		_getSpwInfo(a, b, c, d, e), *_getFlags(), *_getFieldIDs(),
+		*_getScans(), *_getObservationIDs(), *_getArrayIDs()
+	);
+	/*
+	MSMetaData::_getUnflaggedRowStats(
+		nACRows, nXCRows, myFieldNACRows,
+		myFieldNXCRows, myScanNACRows, myScanNXCRows, *ant1,
+		*ant2, *_getDataDescIDs(),
 		_getDataDescIDToSpwMap(),
 		_getSpwInfo(a, b, c, d, e), *MSMetaData::_getFlags(*_ms), *_getFieldIDs(),
 		*_getScans(), *_getObservationIDs(), *_getArrayIDs()
 	);
+	*/
 	fieldNACRows.reset(myFieldNACRows);
 	fieldNXCRows.reset(myFieldNXCRows);
 	scanNACRows.reset(myScanNACRows);
@@ -2239,10 +2288,18 @@ std::map<std::pair<uInt, uInt>, Int> MSMetaDataOnDemand::getSpwIDPolIDToDataDesc
 	if (! _spwPolIDToDataDescIDMap.empty()) {
 		return _spwPolIDToDataDescIDMap;
 	}
-	std::map<std::pair<uInt, uInt>, Int> spwPolIDToDataDescIDMap = MSMetaData::_getSpwIDPolIDToDataDescIDMap(
-		_getDataDescIDToSpwMap(),
-		_getDataDescIDToPolIDMap()
-	);
+	std::map<Int, uInt> dataDescIDToSpwMap = _getDataDescIDToSpwMap();
+	std::map<Int, uInt>::const_iterator i1 = dataDescIDToSpwMap.begin();
+	std::map<Int, uInt>::const_iterator end = dataDescIDToSpwMap.end();
+	std::map<std::pair<uInt, uInt>, Int> spwPolIDToDataDescIDMap;
+	std::map<Int, uInt> dataDescIDToPolIDMap = _getDataDescIDToPolIDMap();
+	while (i1 != end) {
+		Int dataDesc = i1->first;
+		uInt spw = i1->second;
+		uInt polID = dataDescIDToPolIDMap.at(dataDesc);
+		spwPolIDToDataDescIDMap[std::make_pair(spw, polID)] = dataDesc;
+		i1++;
+	}
 	uInt mysize = 2*sizeof(Int)*spwPolIDToDataDescIDMap.size();
 	if (_cacheUpdated(mysize)) {
 		_spwPolIDToDataDescIDMap = spwPolIDToDataDescIDMap;
@@ -2254,7 +2311,11 @@ std::map<Int, uInt> MSMetaDataOnDemand::_getDataDescIDToSpwMap() {
 	if (! _dataDescIDToSpwMap.empty()) {
 		return _dataDescIDToSpwMap;
 	}
-	std::map<Int, uInt> dataDescToSpwMap = MSMetaData::_getDataDescIDToSpwMap(*_ms);
+	String spwColName = MSDataDescription::columnName(MSDataDescriptionEnums::SPECTRAL_WINDOW_ID);
+	ROScalarColumn<Int> spwCol(_ms->dataDescription(), spwColName);
+	std::map<Int, uInt> dataDescToSpwMap = _toUIntMap(spwCol.getColumn());
+
+	//std::map<Int, uInt> dataDescToSpwMap = MSMetaData::_getDataDescIDToSpwMap(*_ms);
 	uInt mysize = sizeof(Int) * dataDescToSpwMap.size();
 	if (_cacheUpdated(mysize)) {
 		_dataDescIDToSpwMap = dataDescToSpwMap;
@@ -2266,7 +2327,10 @@ std::map<Int, uInt> MSMetaDataOnDemand::_getDataDescIDToPolIDMap() {
 	if (! _dataDescIDToPolIDMap.empty()) {
 		return _dataDescIDToPolIDMap;
 	}
-	std::map<Int, uInt> dataDescToPolIDMap = MSMetaData::_getDataDescIDToPolIDMap(*_ms);
+	String spwColName = MSDataDescription::columnName(MSDataDescriptionEnums::POLARIZATION_ID);
+	ROScalarColumn<Int> spwCol(_ms->dataDescription(), spwColName);
+	std::map<Int, uInt> dataDescToPolIDMap = _toUIntMap(spwCol.getColumn());
+	// std::map<Int, uInt> dataDescToPolIDMap = MSMetaData::_getDataDescIDToPolIDMap(*_ms);
 	uInt mysize = sizeof(Int) * dataDescToPolIDMap.size();
 	if (_cacheUpdated(mysize)) {
 		_dataDescIDToPolIDMap = dataDescToPolIDMap;

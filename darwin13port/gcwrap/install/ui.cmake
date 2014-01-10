@@ -217,20 +217,26 @@ macro( casa_add_tools out_swig out_sources out_py )
       COMMAND sed -e \"s/<?xml version=.*//\" ${_swigh}_tmp2 > ${_swigh}
       DEPENDS ${_xml} ${_out_xml} ${_xsl2}
       )
-    add_custom_command(
-      OUTPUT ${_swigi}
-      #COMMAND if [ -z `which dvi2tty` ] \\; then 
-      #sed -e \"s/\\\\\\\\r/r/g\" ${_out_xml} > ${_swigi}_tmp \\;
-      #else 
-      COMMAND ${CMAKE_SOURCE_DIR}/install/plaintext.sed ${_out_xml}> ${_base}.tex \\;
-      COMMAND TEXINPUTS=.:${casaroot}/code//doc/texinputs.dir//:$ENV{TEXINPUTS} latex ${_base}.tex  \\;
-      COMMAND dvi2tty -w300 -l ${_base}.dvi > ${_sed_xml} \\;
-      COMMAND sed -e \"s/\\\\\\\\r/r/g\" ${_sed_xml} > ${_swigi}_tmp \\;
-      #endif
-      COMMAND ${SAXON} ${_swigi}_tmp ${_xsl3} > ${_swigi}_tmp2
-      COMMAND sed -e \"s/<?xml version=.*//\" ${_swigi}_tmp2 > ${_swigi}
-      DEPENDS ${_xml} ${_swigh} ${_out_xml} ${_xsl3} ${_typemaps}
-      )
+    if( HAVE_DVI2TTY )
+      add_custom_command(
+        OUTPUT ${_swigi}
+        COMMAND ${CMAKE_SOURCE_DIR}/install/plaintext.sed ${_out_xml}> ${_base}.tex
+        COMMAND TEXINPUTS=.:${casaroot}/code//doc/texinputs.dir//:$ENV{TEXINPUTS} latex ${_base}.tex 
+        COMMAND dvi2tty -w300 -l ${_base}.dvi > ${_sed_xml}
+        COMMAND sed -e \"s/\\\\\\\\r/r/g\" ${_sed_xml} > ${_swigi}_tmp 
+        COMMAND ${SAXON} ${_swigi}_tmp ${_xsl3} > ${_swigi}_tmp2
+        COMMAND sed -e \"s/<?xml version=.*//\" ${_swigi}_tmp2 > ${_swigi}
+        DEPENDS ${_xml} ${_swigh} ${_out_xml} ${_xsl3} ${_typemaps}
+        )
+    else()
+      add_custom_command(
+        OUTPUT ${_swigi}
+        COMMAND sed -e \"s/\\\\\\\\r/r/g\" ${_out_xml} > ${_swigi}_tmp 
+        COMMAND ${SAXON} ${_swigi}_tmp ${_xsl3} > ${_swigi}_tmp2
+        COMMAND sed -e \"s/<?xml version=.*//\" ${_swigi}_tmp2 > ${_swigi}
+        DEPENDS ${_xml} ${_swigh} ${_out_xml} ${_xsl3} ${_typemaps}
+        )
+    endif()
     add_custom_command(
       OUTPUT ${_swigstatics}
       COMMAND ${SAXON} ${_out_xml} ${_xsl4} > ${_swigstatics}_tmp2

@@ -24,11 +24,6 @@ std::auto_ptr<casa::ImageStatsCalculator> _stats;
 
 static const casa::String _class;
 
-// Private ImageInterface constructor to make components on the fly
-
-//image(casa::ImageInterface<casa::Float>* inImage, const bool cloneInputPointer);
-
-
 // Having private version of IS and IH means that they will
 // only recreate storage images if they have to
 
@@ -43,5 +38,12 @@ std::auto_ptr<casa::Record> _getRegion(const variant& region, const bool nullIfE
 static vector<double> _toDoubleVec(const variant& v);
 
 void _reset();
+
+// the returned value of pixels will have either 0 or two elements, if 0 then the returned
+// value of dir will be set
+void _processDirection(
+	casa::Vector<casa::Double>& pixels, casa::MVDirection& dir, const variant& inputDirection,
+	const casa::String& paramName
+);
 
 

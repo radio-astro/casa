@@ -75,7 +75,8 @@ import numpy
 datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imageanalysis/ImageAnalysis/'
 
 def run_ia_pv(
-    imagename, outfile, start, end, width
+    imagename, outfile, start, end, width,
+    center=[], length=[], pa=[]
 ):
     myia = iatool()
     myia.open(imagename)
@@ -83,17 +84,19 @@ def run_ia_pv(
         myia.done()
         raise Exception
     res = myia.pv(
-        outfile=outfile, start=start, end=end, width=width
+        outfile=outfile, start=start, end=end, width=width,
+        center=center, length=length, pa=pa
     )
     myia.done()
     return res
 
 def run_impv(
-    imagename, outfile, start, end, width
+    imagename, outfile, start, end, width,
+    center=[], length=[], pa=[]
 ):
     return impv(
         imagename=imagename, outfile=outfile, start=start,
-        end=end, width=width
+        end=end, width=width, center=center, length=length, pa=pa
     )
 
 
@@ -135,7 +138,7 @@ class ia_pv_test(unittest.TestCase):
         pv = iatool()
         for code in [run_ia_pv, run_impv]:
             # no width
-            for i in range(3):
+            for i in range(7):
                 if i == 0:
                     start = [2, 5]
                     end = [7, 5]
@@ -145,11 +148,34 @@ class ia_pv_test(unittest.TestCase):
                 if i == 2:
                     start = ["0h0m12s", "0d0m0s" ]
                     end = ["23:59:52", "0.0.0"]
+                if i == 3:
+                    center = [4.5, 5]
+                    length = 5
+                    pa = "270deg"
+                if i == 4:
+                    center = ["0:0:02", "0.0.0"]
+                    length = 5
+                    pa = "270deg"
+                if i == 5:
+                    center = ["0:0:02", "0.0.0"]
+                    length = "5arcmin"
+                    pa = "270deg"
+                if i == 6:
+                    center = [4.5, 5]
+                    length = "5arcmin"
+                    pa = "270deg"
                 outfile = "test_pv_" + str(code) + str(i)
-                xx = code(
-                    imagename=imagename, outfile=outfile, start=start,
-                    end=end, width=1
-                )
+                if i <= 2:
+                    xx = code(
+                        imagename=imagename, outfile=outfile, start=start,
+                        end=end, width=1
+                    )
+                else:
+                    xx = code(
+                        imagename=imagename, outfile=outfile, start=[],
+                        end=[], width=1, center=center, length=length,
+                        pa=pa
+                    )
                 if (type(xx) == type(ia)):
                     xx.done()
                 self.assertTrue(len(tb.showcache())== 0)
