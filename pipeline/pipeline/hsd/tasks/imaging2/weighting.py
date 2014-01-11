@@ -169,6 +169,7 @@ class WeightMS(common.SingleDishTaskTemplate):
             tsel.close()
     
         # set channel flag for min/max in each channel
+        minmaxclip = False
         if minmaxclip:
             with casatools.TableReader(outfile, nomodify=False) as tb:
                 tsel = tb.query('ROWNUMBER() IN %s' % (row_map.keys()),
