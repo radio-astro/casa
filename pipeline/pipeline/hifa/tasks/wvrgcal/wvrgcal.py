@@ -463,9 +463,14 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         Create a new bandpass caltable by spawning a bandpass worker task, 
         merging the results with the context.
         """
+        # passing an empty string as intent tells bandpass to use all intents,
+        # which resolves to all fields. Convert '' to None, which will tell
+        # bandpass to use the default bandpass intents, as expected. 
+        intent = None if inputs.qa2_bandpass_intent is '' else inputs.qa2_bandpass_intent
+        
         args = {'vis'         : inputs.vis,
                 'mode'        : 'channel',
-                'intent'      : inputs.qa2_bandpass_intent,
+                'intent'      : intent,
                 'solint'      : 'inf,7.8125MHz',
                 'maxchannels' : 0,
                 'qa2_intent'  : '',
