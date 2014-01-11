@@ -38,7 +38,7 @@
 #include <casa/Quanta/QLogical.h>
 #include <measures/Measures/MeasureHolder.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSMetaDataOnDemand.h>
+#include <ms/MeasurementSets/MSMetaData.h>
 
 #include <stdcasa/cboost_foreach.h>
 #include <boost/regex.hpp>
@@ -847,7 +847,7 @@ record* msmetadata::observatoryposition(const int which) {
 }
 
 void msmetadata::_init(const casa::MeasurementSet *const &ms, const float cachesize) {
-    _msmd.reset(new MSMetaDataOnDemand(ms, cachesize));
+    _msmd.reset(new MSMetaData(ms, cachesize));
 }
 
 

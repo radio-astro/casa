@@ -28,7 +28,7 @@
 //# Includes
 #include <casa/aips.h>
 
-#include <ms/MeasurementSets/MSMetaDataOnDemand.h>
+#include <ms/MeasurementSets/MSMetaData.h>
 
 #include <casa/BasicMath/StdLogical.h>
 #include <casa/OS/Directory.h>
@@ -1301,14 +1301,14 @@ int main() {
     	testIt(md);
     	*/
     	cout << "*** test on-demand constructor" << endl;
-    	MSMetaDataOnDemand md1(&ms, 100);
+    	MSMetaData md1(&ms, 100);
 		cout << "*** cache size " << md1.getCache() << endl;
 
     	testIt(md1);
     	// test after everything is cached
     	testIt(md1);
     	// test using no cache
-    	MSMetaDataOnDemand md2(&ms, 0);
+    	MSMetaData md2(&ms, 0);
     	testIt(md2);
     	AlwaysAssert(md2.getCache() == 0, AipsError);
 
