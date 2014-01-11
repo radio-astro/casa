@@ -16,7 +16,7 @@ class SDFlagBaselineInputs(common.SingleDishInputs):
     def __init__(self, context, infiles=None, iflist=None, pollist=None,
                  linewindow=None, edge=None, broadline=None, fitorder=None,
                  fitfunc=None, output_dir=None,
-                 iteration=None, flag_tsys=None, tsys_thresh=None,
+                 iteration=None, flag_iteration=None, flag_tsys=None, tsys_thresh=None,
                  flag_weath=None, weath_thresh=None,
                  flag_prfre=None, prfre_thresh=None,
                  flag_pofre=None, pofre_thresh=None,
@@ -40,6 +40,14 @@ class SDFlagBaselineInputs(common.SingleDishInputs):
     @iteration.setter
     def iteration(self, value):
         self._iteration = value
+        
+    @property
+    def flag_iteration(self):
+        return self._flag_iteration if self._flag_iteration is not None else 5
+    
+    @flag_iteration.setter
+    def flag_iteration(self, value):
+        self._flag_iteration = value
 
     @property
     def baseline_inputs(self):
@@ -52,7 +60,7 @@ class SDFlagBaselineInputs(common.SingleDishInputs):
     @property
     def flagdata_inputs(self):
         return flagdata.SDFlagData.Inputs(self.context, output_dir=self.output_dir,
-                                          iteration=self.iteration, edge=self.edge,
+                                          iteration=self.flag_iteration, edge=self.edge,
                                           flag_tsys=self.flag_tsys, tsys_thresh=self.tsys_thresh,
                                           flag_weath=self.flag_weath, weath_thresh=self.weath_thresh,
                                           flag_prfre=self.flag_prfre, prfre_thresh=self.prfre_thresh,

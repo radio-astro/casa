@@ -4,6 +4,7 @@ import pipeline.h.cli.utils as utils
 
 def hsd_flagbaseline(iteration=None, fitfunc=None, fitorder=None,
                      linewindow=None, edge=None, broadline=None,
+                     flag_iteration=None, 
                      flag_tsys=None, tsys_thresh=None,
                      flag_weath=None, weath_thresh=None,
                      flag_prfre=None, prfre_thresh=None,

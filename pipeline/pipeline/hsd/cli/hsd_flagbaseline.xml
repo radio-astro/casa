@@ -49,6 +49,11 @@
 	<value>True</value>
     </param>
 
+    <param type="int" name="flag_iteration">
+        <description>Number of iteration for flagging</description>
+        <value>5</value>
+    </param>
+
     <param type="bool" name="flag_tsys" >
         <description>True to flag data by Tsys</description>
         <value>True</value>
@@ -349,6 +354,9 @@ edge -- number of edge channels to be dropped from baseline subtraction.
 broadline -- Try to detect broad component of spectral line if True.
    default: True
 
+flag_iteration -- 
+   default: 5
+   
 flag_tsys -- Activate (True) or deactivate (False) Tsys flag.
        default: True
 
