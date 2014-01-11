@@ -144,6 +144,7 @@ class SDImportData(basetask.StandardTaskTemplate):
     def prepare(self, **parameters):
         inputs = self.inputs
         vis = inputs.vis
+        context = inputs.context
         
         if vis is None:
             msg = 'Empty input data set list'
@@ -262,6 +263,7 @@ class SDImportData(basetask.StandardTaskTemplate):
             prefix = ms.rstrip('/')
             if re.match('.*\.(ms|MS)$',prefix):
                 prefix = prefix[:-3]
+            prefix = os.path.join(context.output_dir, prefix)
             LOG.debug('prefix: %s'%(prefix))
             scantables = sd.splitant(filename=ms,#ms.name,
                                      outprefix=prefix,

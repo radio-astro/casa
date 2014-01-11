@@ -89,6 +89,7 @@ class SDImportData(common.SingleDishTaskTemplate):
 
     def prepare(self, **parameters):
         inputs = self.inputs
+        context = inputs.context
         infiles = inputs.infiles
         vis = [v.name for v in inputs.context.observing_run.measurement_sets]
         to_import = set(vis)
@@ -125,6 +126,7 @@ class SDImportData(common.SingleDishTaskTemplate):
             prefix = ms.rstrip('/')
             if re.match('.*\.(ms|MS)$',prefix):
                 prefix = prefix[:-3]
+            prefix = os.path.join(context.output_dir, prefix)
             LOG.debug('prefix: %s'%(prefix))
             scantables = sd.splitant(filename=ms,#ms.name,
                                      outprefix=prefix,
