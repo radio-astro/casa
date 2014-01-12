@@ -242,7 +242,9 @@ class SDChannelMapDisplay(SDImageDisplay):
 
             # 2007/9/13 Change the magnification factor 1.2 to your preference (to Dirk)
             # be sure the width of one channel map is integer
-            ChanW = max(int(line_window[1] * 1.4 / self.NumChannelMap + 0.5), 1)
+            # 2014/1/12 factor 1.4 -> 1.0 since velocity structure was taken into account for the range in validation.py
+            #ChanW = max(int(line_window[1] * 1.4 / self.NumChannelMap + 0.5), 1)
+            ChanW = max(int(line_window[1] / self.NumChannelMap + 0.5), 1)
             #ChanB = int(ChanC - self.NumChannelMap / 2.0 * ChanW)
             ChanB = int(ChanC - self.NumChannelMap / 2.0 * ChanW + 0.5)
             # 2007/9/10 remedy for 'out of index' error

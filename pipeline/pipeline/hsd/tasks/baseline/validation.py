@@ -812,6 +812,11 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
 
         LOG.info('Ncluster=%s'%(Ncluster))
         
+        # for Channel Map velocity range determination 2014/1/12
+        channelmap_range = []
+        for i in range(len(lines)):
+            channelmap_range.append(lines[i][:])
+
         # Clean isolated grids
         for Nc in xrange(Ncluster):
             #print '\nNc=', Nc
@@ -1104,6 +1109,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                 FitData.append(tuple(Region2[i][:5]))
                         if len(FitData) == 0: continue
 
+                        # for Channel Map velocity range determination 2014/1/12
+                        (MaskMin, MaskMax) = (10000, 0)
                         # Calculate Fit for each position
                         for x in xrange(nra):
                             for y in xrange(ndec):
@@ -1128,6 +1135,10 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                             #Allowance = Fit1 / 2.0 * 1.5
                                             #Protect = [max(int(Fit0 - Allowance - 0.5), 0), min(int(Fit0 + Allowance + 0.5), nchan - 1)]
                                             LOG.trace('0 Allowance = %s Protect = %s' % (Allowance, Protect))
+                                            # for Channel map velocity range determination 2014/1/12
+                                            if MaskMin > Protect[0]: MaskMin = Protect[0]
+                                            if MaskMax < Protect[1]: MaskMax = Protect[1]
+
                                             if RealSignal.has_key(ID):
                                                 RealSignal[ID][2].append(Protect)
                                             else:
@@ -1178,6 +1189,10 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                         #Protect = [max(int(Fit0 - Allowance + 0.5), 0), min(int(Fit0 + Allowance + 0.5), nchan - 1)]
 
                                         LOG.trace('1 Allowance = %s Protect = %s' % (Allowance, Protect))
+                                        # for Channel map velocity range determination 2014/1/12
+                                        if MaskMin > Protect[0]: MaskMin = Protect[0]
+                                        if MaskMax < Protect[1]: MaskMax = Protect[1]
+
                                         for PID in Grid2SpectrumID[x][y]:
                                             ID = index_list[PID]
                                             if RealSignal.has_key(ID):
@@ -1188,6 +1203,9 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                     # for Plot
                     if not SingularMatrix: GridCluster[Nc] += BlurPlane
                 if ((GridCluster[Nc] > 0.5)*1).sum() < self.Questionable: lines[Nc][2] = False
+                # for Channel map velocity range determination 2014/1/12 arbitrary factor 0.8
+                channelmap_range[Nc][1] = (MaskMax - MaskMin - 10) * 0.8
+
                 for x in range(nra):
                     for y in range(ndec):
                         #if GridCluster[Nc][x][y] > 0.5: GridCluster[Nc][x][y] = 1.0
@@ -1198,7 +1216,6 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
 
         threshold = [1.5, 0.5, 0.5, 0.5]
         self.__update_cluster_flag('final', GridCluster, threshold, 1000)
-        channelmap_range = lines
         
         return (RealSignal, lines, channelmap_range)
 
