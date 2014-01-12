@@ -223,6 +223,12 @@ class DataTableImpl( object ):
         self.plaintable = absolute_path(name)
         self.__init_cols(readonly=True)
 
+    def sync(self, minimal=True):
+        """
+        Sync with DataTable on disk.
+        """
+        self.importdata(name=self.plaintable, minimal=minimal)
+
     def exportdata( self, name=None, minimal=True, overwrite=False ):
         """
         name -- name of exported DataTable
