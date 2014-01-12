@@ -499,18 +499,19 @@ class SDFlagDataWorker(object):
     def save_outtable(self, DataTable, ids, out_table_name):
         # 2012/09/01 for Table Output
         #StartTime = time.time()
-        tbTBL = gentools(['tb'])[0]
-        tbTBL.open(out_table_name, nomodify=False)
-        st_rows = list(tbTBL.getcol('Row'))
-        LOG.info('Filling flag output in table: %s' % out_table_name)
-        LOG.debug('Number of rows in output table = %d' % tbTBL.nrows())
-        LOG.debug('Number of rows to be filled = %d' % len(ids))
+#         tbTBL = gentools(['tb'])[0]
+#         tbTBL.open(out_table_name, nomodify=False)
+#         st_rows = list(tbTBL.getcol('Row'))
+#         LOG.info('Filling flag output in table: %s' % out_table_name)
+#         LOG.debug('Number of rows in output table = %d' % tbTBL.nrows()
+#         LOG.info('Filling flag output in DataTable')
+#         LOG.debug('Number of rows to be filled = %d' % len(ids))
         for ID in ids:
-            strow = DataTable.getcell('ROW', ID)
-            try:
-                row = st_rows.index(strow)
-            except ValueError:
-                raise ValueError, "Index search failed for column Row = %d in BL table, %s (Corresponding DataTable ID=%d)" % (strow, out_table_name, ID)
+#             strow = DataTable.getcell('ROW', ID)
+#             try:
+#                 row = st_rows.index(strow)
+#             except ValueError:
+#                 raise ValueError, "Index search failed for column Row = %d in BL table, %s (Corresponding DataTable ID=%d)" % (strow, out_table_name, ID)
             #LOG.debug('filling %d-th data to ROW=%d' % (ID, row))
             tflaglist = DataTable.getcell('FLAG',ID)[1:7]
             tpflaglist = DataTable.getcell('FLAG_PERMANENT',ID)[:3]
@@ -523,11 +524,11 @@ class SDFlagDataWorker(object):
             for i in range(6):
                 statisticslist.append([tstatisticslist[i]])
 
-            tbTBL.putcol('StatisticsFlags',flaglist,row,1,1)
-            tbTBL.putcol('PermanentFlags',pflaglist,row,1,1)
-            tbTBL.putcol('Statistics',statisticslist,row,1,1)
-            tbTBL.putcol('SummaryFlag',bool(DataTable.getcell('FLAG_SUMMARY',ID)),row,1,1)
-        tbTBL.close()
+#             tbTBL.putcol('StatisticsFlags',flaglist,row,1,1)
+#             tbTBL.putcol('PermanentFlags',pflaglist,row,1,1)
+#             tbTBL.putcol('Statistics',statisticslist,row,1,1)
+#             tbTBL.putcol('SummaryFlag',bool(DataTable.getcell('FLAG_SUMMARY',ID)),row,1,1)
+#         tbTBL.close()
 
 #     def plot_flag(self, DataTable, ids, PosGap, TimeGap, threshold, FlagRule, FigFileDir, FigFileRoot):
 #         # Plot statistics
