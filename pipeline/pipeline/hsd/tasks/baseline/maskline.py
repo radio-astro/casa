@@ -128,6 +128,10 @@ class MaskLine(common.SingleDishTaskTemplate):
         LOG.trace('len(index_list)=%s'%(len(index_list)))
         validation_result = self._executor.execute(line_validator, merge=True)
         lines = validation_result.outcome['lines']
+        if validation_result.has_key('channelmap_range'):
+            channelmap_range = validation_result.outcome['channelmap_range']
+        else:
+            channelmap_range = validation_result.outcome['lines']
         cluster_info = validation_result.outcome['cluster_info']
         t1 = time.time()
 
@@ -140,6 +144,7 @@ class MaskLine(common.SingleDishTaskTemplate):
         LOG.debug('PROFILE execute: elapsed time is %s sec'%(end_time-start_time))
 
         outcome = {'detected_lines': lines,
+                   'channelmap_range': channelmap_range,
                    'cluster_info': cluster_info}
         result = MaskLineResults(task=self.__class__,
                                   success=True,

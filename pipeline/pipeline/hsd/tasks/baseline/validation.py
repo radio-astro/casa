@@ -425,7 +425,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         ProcStartTime = time.time()
         LOG.info('Clustering: Final Stage Start')
 
-        (RealSignal, lines) = self.final_stage(GridCluster, GridMember, Region, Region2, lines, category, grid_ra, grid_dec, broad_component, xorder, yorder, x0, y0, nsigma, nchan, Grid2SpectrumID, index_list, PosList)
+        (RealSignal, lines, channelmap_range) = self.final_stage(GridCluster, GridMember, Region, Region2, lines, category, grid_ra, grid_dec, broad_component, xorder, yorder, x0, y0, nsigma, nchan, Grid2SpectrumID, index_list, PosList)
 
         ProcEndTime = time.time()
         LOG.info('Clustering: Final Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
@@ -482,6 +482,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         LOG.info('Clustering: Merging End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
         
         outcome = {'lines': lines,
+                   'channelmap_range': channelmap_range,
                    'cluster_info': self.cluster_info,
                    'datatable': self.datatable}
         result = ValidateLineResults(task=self.__class__,
@@ -1197,8 +1198,9 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
 
         threshold = [1.5, 0.5, 0.5, 0.5]
         self.__update_cluster_flag('final', GridCluster, threshold, 1000)
+        channelmap_range = lines
         
-        return (RealSignal, lines)
+        return (RealSignal, lines, channelmap_range)
 
     def __merge_lines(self, lines, nchan):
         nlines = len(lines)
