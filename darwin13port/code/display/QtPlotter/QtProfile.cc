@@ -1874,9 +1874,10 @@ namespace casa {
 		ts << "]\n";
 		ts << "#coordinate: " << QString(coordinate.chars()) << "\n";
 		ts << "#xLabel: " << QString(ctypeUnit.chars()) << "\n";
-		ts << "#yLabel: " << "[" << yUnit << "] "<< plotMode->currentText() << "\n";
+		QString displayYUnits =  pixelCanvas->getDisplayYUnits();
+		ts << "#yLabel: " << "[" << displayYUnits << "] "<< plotMode->currentText() << "\n";
 		if (z_eval.size() > 0){
-			ts << "#eLabel: " << "[" << yUnit << "] " << errorMode->currentText() << "\n";
+			ts << "#eLabel: " << "[" << displayYUnits << "] " << errorMode->currentText() << "\n";
 		}
 
 
@@ -3142,7 +3143,7 @@ namespace casa {
 		double halfPowerWidthSquared = (majorQuantity.getValue() * minorQuantity.getValue() );
 		const double ARCSEC2_SR_CONVERSION = 0.0000000000235045;
 		const double PI = 3.1415926535;
-		double solidAngle = PI + halfPowerWidthSquared * ARCSEC2_SR_CONVERSION / (4 * log(2));
+		double solidAngle = PI * halfPowerWidthSquared * ARCSEC2_SR_CONVERSION / (4 * log(2));
 		if ( solidAngle > 0 ){
 			beamAngle = solidAngle;
 		}
