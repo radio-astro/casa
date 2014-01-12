@@ -1840,7 +1840,7 @@ void QtDisplayPanelGui::updateViewedImage(){
 
 	//Update the title to the 'Channel' Animator if the axis changes type.
 	int lookUpIndex = -1;
-	if ( qdp_ != NULL && !qdp_->modeZ() ){
+	if ( qdp_ != NULL  ){
 		lookUpIndex = animationImageIndex;
 	}
 
