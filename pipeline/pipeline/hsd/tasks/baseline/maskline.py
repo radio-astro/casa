@@ -128,7 +128,7 @@ class MaskLine(common.SingleDishTaskTemplate):
         LOG.trace('len(index_list)=%s'%(len(index_list)))
         validation_result = self._executor.execute(line_validator, merge=True)
         lines = validation_result.outcome['lines']
-        if validation_result.has_key('channelmap_range'):
+        if validation_result.outcome.has_key('channelmap_range'):
             channelmap_range = validation_result.outcome['channelmap_range']
         else:
             channelmap_range = validation_result.outcome['lines']
