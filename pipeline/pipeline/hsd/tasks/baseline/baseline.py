@@ -42,12 +42,9 @@ class SDBaselineResults(common.SingleDishResults):
     def merge_with_context(self, context):
         super(SDBaselineResults, self).merge_with_context(context)
 
-        # replace and export datatable to merge updated data with context
-        datatable = self.outcome.pop('datatable')
-        datatable.exportdata(minimal=True)
+        # manually sync with datatable on disk
+        context.observing_run.datatable_instance.sync()
 
-        context.observing_run.datatable_instance = datatable
-        
         # increment iteration counter
         # register detected lines to reduction group member
         reduction_group = context.observing_run.reduction_group
@@ -165,8 +162,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
                               'clusters': cluster_info})
             LOG.debug('cluster_info=%s'%(cluster_info))
 
-        outcome = {'datatable': datatable,
-                   'baselined': baselined,
+        outcome = {'baselined': baselined,
                    'edge': edge}
         results = SDBaselineResults(task=self.__class__,
                                     success=True,
