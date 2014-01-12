@@ -53,6 +53,7 @@ class SDBaselineResults(common.SingleDishResults):
             antenna = b['index']
             pols = b['pols']
             lines = b['lines']
+            channelmap_range = b['channelmap_range']
             for _ant in antenna:
                 group_id = -1
                 for (idx,desc) in reduction_group.items():
@@ -61,7 +62,8 @@ class SDBaselineResults(common.SingleDishResults):
                         break
                 if group_id >= 0:
                     reduction_group[group_id].iter_countup(_ant, spw, pols)
-                    reduction_group[group_id].add_linelist(lines, _ant, spw, pols)
+                    reduction_group[group_id].add_linelist(lines, _ant, spw, pols, 
+                                                           channelmap_range=channelmap_range)
                 st = context.observing_run[_ant]
                 st.work_data = st.baselined_name
 
@@ -159,6 +161,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
             baselined.append({'name': name_list, 'index': list(_file_index),
                               'spw': spwid, 'pols': pols,
                               'lines': detected_lines,
+                              'channelmap_range': detected_lines,
                               'clusters': cluster_info})
             LOG.debug('cluster_info=%s'%(cluster_info))
 

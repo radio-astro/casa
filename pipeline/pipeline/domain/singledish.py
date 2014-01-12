@@ -354,6 +354,7 @@ class ReductionGroupMember(object):
         self.pols = pols
         self.iteration = [0 for p in xrange(self.npol)]
         self.linelist = [[] for p in xrange(self.npol)]
+        self.channelmap_range = [[] for p in xrange(self.npol)]
 
     @property
     def npol(self):
@@ -366,9 +367,13 @@ class ReductionGroupMember(object):
     def iter_reset(self):
         self.iteration = [0 for p in self.pols]
 
-    def add_linelist(self, linelist, pols=None):
+    def add_linelist(self, linelist, pols=None, channelmap_range=None):
         for i in self.__gen_pols(pols):
             self.linelist[i] = linelist
+            if channelmap_range is not None:
+                self.channelmap_range[i] = channelmap_range
+            else:
+                self.channelmap_range[i] = linelist
 
     def __gen_pols(self, pols):
         if pols is None:
@@ -407,9 +412,9 @@ class ReductionGroupDesc(list):
         member = self[self.__search_member(antenna, spw)]
         member.iter_countup(pols)
 
-    def add_linelist(self, linelist, antenna, spw, pols=None):
+    def add_linelist(self, linelist, antenna, spw, pols=None, channelmap_range=None):
         member = self[self.__search_member(antenna, spw)]
-        member.add_linelist(linelist, pols)
+        member.add_linelist(linelist, pols, channelmap_range=channelmap_range)
 
     def __search_member(self, antenna, spw):
         for indx in xrange(len(self)):

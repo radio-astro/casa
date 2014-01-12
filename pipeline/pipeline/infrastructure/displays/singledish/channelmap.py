@@ -157,7 +157,7 @@ class SDChannelMapDisplay(SDImageDisplay):
         line_list = []
         for g in mygroup:
             if g.antenna in ant_index:
-                for ll_p in g.linelist:
+                for ll_p in g.channelmap_range:
                     for ll in ll_p:
                         if not ll in line_list and ll[2] is True:
                             line_list.append(ll)
