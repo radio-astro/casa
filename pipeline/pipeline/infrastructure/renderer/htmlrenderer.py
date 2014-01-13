@@ -1165,8 +1165,6 @@ class T2_4MDetailsDefaultRenderer(object):
         self.always_rerender = always_rerender
 
     def get_display_context(self, context, result):
-        print result.__class__.__name__
-
         return {'pcontext' : context,
                 'result'   : result,
                 'stagelog' : self._get_stagelog(context, result),
