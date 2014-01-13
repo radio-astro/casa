@@ -34,7 +34,7 @@ IMPORT_ONLY = ''
 def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True):
 
     echo_to_screen = interactive
-    casatools.post_to_log ("Beginning pipeline run ...")
+    casatools.post_to_log ("Beginning VLA pipeline run ...")
 
     try:
 	# Initialize the pipeline
@@ -118,7 +118,7 @@ def hifv_plot (vislist, importonly=False, pipelinemode='automatic', interactive=
     from pipeline.recipes.hifv_plotting import finalcals_plots, fluxboot_plots, semifinalBPdcals_plots1, semifinalBPdcals_plots1, semifinalBPdcals_plots2, targetflag_plots, testBPdcals_plots, testgains_plots
 
     echo_to_screen = interactive
-    casatools.post_to_log ("Beginning pipeline run ...")
+    casatools.post_to_log ("Beginning VLA pipeline run with scripted plotting ...")
 
     try:
 	# Initialize the pipeline

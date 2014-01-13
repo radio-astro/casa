@@ -12,7 +12,7 @@ from pipeline.hif.tasks.common import commonfluxresults
 import pipeline.infrastructure.casatools as casatools
 import pipeline.domain as domain
 import pipeline.domain.measures as measures
-from pipeline.hif.heuristics import standard as standard
+from pipeline.hifv.heuristics import standard as standard
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure

@@ -442,21 +442,25 @@ class Finalcals(basetask.StandardTaskTemplate):
     
     def _do_setjy(self, calMs, field, spw, model_image, fluxdensity):
         
-        task_args = {'vis'            : calMs,
-                     'field'          : field,
-                     'spw'            : spw,
-                     'selectdata'     : False,
-                     'modimage'       : model_image,
-                     'listmodels'     : False,
-                     'scalebychan'    : True,
-                     'fluxdensity'    : -1,
-                     'standard'       : 'Perley-Butler 2010',
-                     'usescratch'     : False,
-                     'async'          : False}
+        try:
+            task_args = {'vis'            : calMs,
+                         'field'          : field,
+                         'spw'            : spw,
+                         'selectdata'     : False,
+                         'modimage'       : model_image,
+                         'listmodels'     : False,
+                         'scalebychan'    : True,
+                         'fluxdensity'    : -1,
+                         'standard'       : 'Perley-Butler 2010',
+                         'usescratch'     : False,
+                         'async'          : False}
         
-        job = casa_tasks.setjy(**task_args)
+            job = casa_tasks.setjy(**task_args)
             
-        return self._executor.execute(job)
+            return self._executor.execute(job)
+        except Exception, e:
+            print(e)
+            return None
     
     def _do_powerfit(self):
         
@@ -563,24 +567,27 @@ class Finalcals(basetask.StandardTaskTemplate):
         for result in results:
             for spw_i in result[1]:
                 
-                LOG.info('Running setjy on spw '+str(spw_i))
-                task_args = {'vis'            : calMs,
-                             'field'          : str(result[0]),
-                             'spw'            : str(spw_i),
-                             'selectdata'     : False,
-                             'modimage'       : '',
-                             'listmodels' : False,
-                             'scalebychan'    : True,
-                             'fluxdensity'    : [ result[2], 0, 0, 0 ],
-                             'spix'           : result[3],
-                             'reffreq'        : str(result[4])+'GHz',
-                             'standard'       : 'Perley-Butler 2010',
-                             'usescratch'     : False,
-                             'async'          : False}
+                try:
+                    LOG.info('Running setjy on spw '+str(spw_i))
+                    task_args = {'vis'            : calMs,
+                                 'field'          : str(result[0]),
+                                 'spw'            : str(spw_i),
+                                 'selectdata'     : False,
+                                 'modimage'       : '',
+                                 'listmodels' : False,
+                                 'scalebychan'    : True,
+                                 'fluxdensity'    : [ result[2], 0, 0, 0 ],
+                                 'spix'           : result[3],
+                                 'reffreq'        : str(result[4])+'GHz',
+                                 'standard'       : 'Perley-Butler 2010',
+                                 'usescratch'     : False,
+                                 'async'          : False}
         
-                job = casa_tasks.setjy(**task_args)
+                    job = casa_tasks.setjy(**task_args)
             
-                self._executor.execute(job)
+                    self._executor.execute(job)
+                except Exception, e:
+                    print(e)
                 
         return True
             

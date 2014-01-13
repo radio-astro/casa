@@ -195,6 +195,9 @@ def get_task_description(result_obj):
     if task_cls is hifv.tasks.priorcals.priorcals.Priorcals:
         return 'Priorcals (gaincurves, opacities, and rq gains)'
     
+    if task_cls is hifv.tasks.flagging.hflag.Heuristicflag:
+        return 'VLA heuristic flagging'
+    
     if task_cls is hifv.tasks.testBPdcals:
         return 'Initial test calibrations'
         
@@ -3144,6 +3147,7 @@ renderer_map = {
         hifv.tasks.flagging.FlagDeterVLA : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_flagdata.html', always_rerender=True),
         hifv.tasks.setmodel.SetModel : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_setmodel.html', always_rerender=True),
         hifv.tasks.priorcals.priorcals.Priorcals : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_priorcals.html', always_rerender=True),
+        hifv.tasks.flagging.hflag.Heuristicflag : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_hflag.html', always_rerender=True),
         hifv.tasks.testBPdcals                   : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_testbpdcals.html', always_rerender=True),
         hifv.tasks.flagging.flagbaddeformatters.FlagBadDeformatters : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_flagbaddef.html', always_rerender=True),
         hifv.tasks.flagging.uncalspw.Uncalspw    : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_uncalspw.html', always_rerender=True),

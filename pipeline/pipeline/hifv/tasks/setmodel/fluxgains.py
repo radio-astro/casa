@@ -47,8 +47,8 @@ class FluxgainsResults(basetask.Results):
         self.error = set()
 
         
-    def merge_with_context(self, context):    
-        m = context.observing_run.measurement_sets[0]
+    #def merge_with_context(self, context):    
+    #    m = context.observing_run.measurement_sets[0]
 
 
 class Fluxgains(basetask.StandardTaskTemplate):
@@ -129,21 +129,26 @@ class Fluxgains(basetask.StandardTaskTemplate):
     
     def _do_setjy(self, calMs, field, spw, modimage, fluxdensity):
         
-        task_args = {'vis'            : calMs,
-                     'field'          : field,
-                     'spw'            : spw,
-                     'selectdata'     : False,
-                     'modimage'       : modimage,
-                     'listmodels'     : False,
-                     'scalebychan'    : True,
-                     'fluxdensity'    : -1,
-                     'standard'       : 'Perley-Butler 2010',
-                     'usescratch'     : False,
-                     'async'          : False}
         
-        job = casa_tasks.setjy(**task_args)
+        try:
+            task_args = {'vis'            : calMs,
+                         'field'          : field,
+                         'spw'            : spw,
+                         'selectdata'     : False,
+                         'modimage'       : modimage,
+                         'listmodels'     : False,
+                         'scalebychan'    : True,
+                         'fluxdensity'    : -1,
+                         'standard'       : 'Perley-Butler 2010',
+                         'usescratch'     : False,
+                         'async'          : False}
+        
+            job = casa_tasks.setjy(**task_args)
             
-        return self._executor.execute(job)
+            return self._executor.execute(job)
+        except Exception, e:
+            print(e)
+            return None
     
     
     def _do_gaincal(self, context, calMs, caltable, calmode, gaintablelist, solint='int', minsnr=3.0, refAnt=None):
