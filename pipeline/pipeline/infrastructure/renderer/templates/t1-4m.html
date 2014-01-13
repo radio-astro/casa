@@ -1,6 +1,44 @@
 <%!
 navbar_active='By Task'
 import pipeline.infrastructure.renderer.htmlrenderer as hr
+
+def get_bar_class(scores, result):
+	qascore = scores[result.stage_number]
+	score = qascore.score
+	if score in (None, '', 'N/A'):
+		return ''
+	elif score <= 0.1:
+		return ' bar-danger'
+	elif score <= 0.5:
+		return ' bar-warning'
+	else:
+		return ' bar-success'
+
+def get_badge_class(scores, result):
+	qascore = scores[result.stage_number]
+	score = qascore.score
+	if score in (None, '', 'N/A'):
+		return ''
+	elif score <= 0.1:
+		return ' badge-important'
+	elif score <= 0.5:
+		return ' badge-warning'
+	else:
+		return ' badge-success'
+
+def get_bar_width(scores, result):
+	qascore = scores[result.stage_number]
+	if qascore.score in (None, '', 'N/A'):
+		return 0
+	else:
+		return 100.0 * qascore.score
+
+def format_score(scores, result):
+	qascore = scores[result.stage_number]
+	if qascore.score in (None, '', 'N/A'):
+		return 'N/A'
+	return '%0.2f' % qascore.score
+
 %>
 <%inherit file="base.html"/>
 
@@ -22,26 +60,11 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 		<tbody>
 			% for result in results:
 			<tr>
-				<td><a href="t2-4m.html?stage=${result.stage_number}">${hr.get_task_description(result)}</a></td>
-				<td><div class="progress" style="margin-bottom:0px;"><div class="bar" style="width:0%;"><span class="text-center"></span></div></div></td>
-				<td><span class="badge">N/A</span></td>
+				<td><a href="t2-4m.html?stage=${result.stage_number}">${hr.get_task_description(result)}</a><span class="pull-right">${scores[result.stage_number].shortmsg}</span></td>
+				<td><div class="progress" style="margin-bottom:0px;"><div class="bar${get_bar_class(scores, result)}" style="width:${get_bar_width(scores, result)}%;"><span class="text-center"></span></div></div></td>
+				<td><span class="badge${get_badge_class(scores, result)}">${format_score(scores, result)}</span></td>
 			</tr>
 			% endfor
-			<tr>
-				<td class="muted">Example task with bad score</td>
-				<td><div class="progress" style="margin-bottom:0px;"><div class="bar bar-danger" style="width:10%;"></div></div></td>
-				<td><span class="badge badge-important">0.1</span></td>
-			</tr>
-			<tr>
-				<td class="muted">Example task with warning score</td>
-				<td><div class="progress" style="margin-bottom:0px;"><div class="bar bar-warning" style="width:50%;"></div></div></td>
-				<td><span class="badge badge-warning">0.5</span></td>
-			</tr>
-			<tr>
-				<td class="muted">Example task with good score</td>
-				<td><div class="progress" style="margin-bottom:0px;"><div class="bar bar-success" style="width:90%;"></div></div></td>
-				<td><span class="badge badge-success">0.9</span></td>
-			</tr>
 		</tbody>
 	</table>
 </div>

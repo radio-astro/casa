@@ -22,9 +22,9 @@ import types
 
 import pipeline.extern.pyparsing as pyparsing
 import pipeline.extern.ps_mem as ps_mem
-
 from . import casatools
 from . import logging
+from . import pipelineqa
 
 LOG = logging.get_logger(__name__)
 
@@ -457,3 +457,14 @@ def collect_properties(instance, ignore=[]):
         except:
             LOG.debug('Could not get input property %s' % dd_name)
     return properties
+
+def flatten(l):
+    """
+    Flatten a list of lists into a single list  
+    """    
+    for el in l:
+        if isinstance(el, collections.Iterable) and not isinstance(el, (basestring, pipelineqa.QAScore)):
+            for sub in flatten(el):
+                yield sub
+        else:
+            yield el

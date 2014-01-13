@@ -4,6 +4,7 @@ import collections
 import numpy as np 
 import re
 
+from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
@@ -313,9 +314,14 @@ class Tsysflag(basetask.StandardTaskTemplate):
           rules=rules, niter=inputs.niter)
         flaggertask = viewflaggers.MatrixFlagger(matrixflaggerinputs)
 
-	# Execute it to flag the data view
+        # Execute it to flag the data view
+        summary_job = casa_tasks.flagdata(vis=inputs.caltable, mode='summary')
+        stats_before = self._executor.execute(summary_job)
         result = self._executor.execute(flaggertask)
-
+        summary_job = casa_tasks.flagdata(vis=inputs.caltable, mode='summary')
+        stats_after = self._executor.execute(summary_job)
+        
+        result.summaries = [stats_before, stats_after]
         return result
 
     def analyse(self, result):

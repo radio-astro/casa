@@ -80,17 +80,11 @@ class PhcorBandpass(bandpassworker.BandpassWorker):
         return self._executor.execute(phaseup_task, merge=True)
 
     def _do_bandpass(self):
-        orig_run_qa2 = self.inputs.run_qa2
-        try:
-            self.inputs.run_qa2 = False
-            bandpass_task = bandpassmode.BandpassMode(self.inputs)
-            return self._executor.execute(bandpass_task)
-        finally:
-            self.inputs.run_qa2 = orig_run_qa2
+        bandpass_task = bandpassmode.BandpassMode(self.inputs)
+        return self._executor.execute(bandpass_task)
 
     def _do_fixed_bandpass(self):
 	orig_solint = self.inputs.solint
-        orig_run_qa2 = self.inputs.run_qa2
         try:
 	    # Determine the minimum resolution required to get at
 	    # least 240 channels for all spws
@@ -115,21 +109,17 @@ class PhcorBandpass(bandpassworker.BandpassWorker):
 		chanreslist.append(chanres)
 	    min_chanres = min(chanreslist)
 
-	    # Run bandpass with that value.
-            self.inputs.run_qa2 = False
 	    self.inputs.solint=orig_solint + ',' + str(min_chanres) + 'MHz'
             bandpass_task = bandpassmode.BandpassMode(self.inputs)
             return self._executor.execute(bandpass_task)
 
         finally:
 	    self.inputs.solint = orig_solint
-            self.inputs.run_qa2 = orig_run_qa2
 
     def _do_smoothed_bandpass(self):
 
 	# Store original values of some parameters.
         orig_spw = self.inputs.spw
-        orig_run_qa2 = self.inputs.run_qa2
 	orig_solint = self.inputs.solint
 	orig_append = self.inputs.append
 
@@ -137,7 +127,6 @@ class PhcorBandpass(bandpassworker.BandpassWorker):
 	    # initialize the caltable and list of spws
 	    self.inputs.caltable = self.inputs.caltable
 	    spwlist = self.inputs.ms.get_spectral_windows(orig_spw)
-            self.inputs.run_qa2 = False
 
 	    # Loop through the spw appending the results of each spw
 	    # to the results of the previous one.
@@ -179,7 +168,6 @@ class PhcorBandpass(bandpassworker.BandpassWorker):
 
         finally:
             self.inputs.spw = orig_spw
-            self.inputs.run_qa2 = orig_run_qa2
             self.inputs.solint = orig_solint
             self.inputs.append = orig_append
 

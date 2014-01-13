@@ -491,13 +491,15 @@ class T1_4MRenderer(RendererBase):
     # TODO get template at run-time
     template = 't1-4m.html'
 
-    scores = {}
-    
     @staticmethod
     def get_display_context(context):
+        scores = {}
+        for result in context.results:
+            scores[result.stage_number] = result.qa.representative
+                
         return {'pcontext' : context,
                 'results'  : context.results,
-                'scores'   : T1_4MRenderer.scores}
+                'scores'   : scores}
         
 
 class T2_1Renderer(RendererBase):
@@ -2093,9 +2095,8 @@ class BandpassAmpVsFreqPlotRenderer(BaseJsonPlotRenderer):
     def __init__(self, context, result, plots):
         vis = os.path.basename(result.inputs['vis']) 
         ms = context.observing_run.get_ms(vis)
-        scores = get_bandpass_amp_qa2_scores(ms, result.qa2, plots,
+        scores = get_bandpass_amp_qa2_scores(ms, result.qa.rawdata, plots,
                                              context.report_dir)
-        assign_aggregate_score(result, scores)
                 
         super(BandpassAmpVsFreqPlotRenderer, self).__init__(context, result, plots, scores) 
          
@@ -2111,9 +2112,8 @@ class BandpassPhaseVsFreqPlotRenderer(BaseJsonPlotRenderer):
     def __init__(self, context, result, plots):
         vis = os.path.basename(result.inputs['vis']) 
         ms = context.observing_run.get_ms(vis)
-        scores = get_bandpass_phase_qa2_scores(ms, result.qa2, plots,
-                                             context.report_dir)
-        assign_aggregate_score(result, scores)
+        scores = get_bandpass_phase_qa2_scores(ms, result.qa.rawdata, plots,
+                                               context.report_dir)
 
         super(BandpassPhaseVsFreqPlotRenderer, self).__init__(context, result, plots, scores) 
 
@@ -2121,26 +2121,6 @@ class BandpassPhaseVsFreqPlotRenderer(BaseJsonPlotRenderer):
     def filename(self):        
         filename = filenamer.sanitize('phase_vs_freq-%s.html' % self.vis)
         return filename
-
-
-def assign_aggregate_score(result, scores):
-    score_types = ['AMPLITUDE_SCORE_DD',
-                   'AMPLITUDE_SCORE_FN',
-                   'AMPLITUDE_SCORE_SNR',
-                   'PHASE_SCORE_DD',
-                   'PHASE_SCORE_FN',
-                   'PHASE_SCORE_RMS']
-    
-    min_score = 1.0
-    for score_type in score_types:
-        for _, png_scores in scores.items():
-            if score_type not in png_scores:
-                continue
-            if png_scores[score_type] < min_score:
-                min_score = png_scores[score_type]
-
-    if min_score < T1_4MRenderer.scores.get(result.stage_number, 1.0):
-        T1_4MRenderer.scores[result.stage_number] = min_score            
         
 
 class T2_4MDetailsBandpassFlagRenderer(T2_4MDetailsDefaultRenderer):
@@ -2217,7 +2197,7 @@ class T2_4MDetailsImportDataRenderer(T2_4MDetailsDefaultRenderer):
 
 class T2_4MDetailsVLAImportDataRenderer(T2_4MDetailsDefaultRenderer):
     def __init__(self, template='t2-4m_details-hifv_importdata.html', 
-                 always_rerender=True):
+                 always_rerender=False):
         super(T2_4MDetailsVLAImportDataRenderer, self).__init__(template,
                                                              always_rerender)
         
@@ -3063,21 +3043,21 @@ class LogCopier(object):
 #        return rows[start_idx:end_idx]
           
           
-def get_bandpass_amp_qa2_scores(ms, qa2, plots, rootdir):
+def get_bandpass_amp_qa2_scores(ms, qa_data, plots, rootdir):
     score_types = ['AMPLITUDE_SCORE_DD',
                    'AMPLITUDE_SCORE_FN',
                    'AMPLITUDE_SCORE_SNR']
-    return get_bandpass_qa2_scores(ms, qa2, plots, score_types, rootdir)
+    return get_bandpass_qa2_scores(ms, qa_data, plots, score_types, rootdir)
 
 
-def get_bandpass_phase_qa2_scores(ms, qa2, plots, rootdir):
+def get_bandpass_phase_qa2_scores(ms, qa_data, plots, rootdir):
     score_types = ['PHASE_SCORE_DD',
                    'PHASE_SCORE_FN',
                    'PHASE_SCORE_RMS']
-    return get_bandpass_qa2_scores(ms, qa2, plots, score_types, rootdir)    
+    return get_bandpass_qa2_scores(ms, qa_data, plots, score_types, rootdir)    
 
 
-def get_bandpass_qa2_scores(ms, qa2, plots, score_types, rootdir):
+def get_bandpass_qa2_scores(ms, qa_data, plots, score_types, rootdir):
     scores = {}
     for plot in plots:
         spw = ms.get_spectral_window(plot.parameters['spw'])
@@ -3108,8 +3088,8 @@ def get_bandpass_qa2_scores(ms, qa2, plots, score_types, rootdir):
         qa2_str = str(qa2_id)
 
         for score_type in score_types:
-            if 'QA2SCORES' in qa2:
-                score = qa2['QA2SCORES'][score_type][spw_str][qa2_str]
+            if 'QA2SCORES' in qa_data:
+                score = qa_data['QA2SCORES'][score_type][spw_str][qa2_str]
             else:
                 score = 1.0
             png_scores[score_type] = score

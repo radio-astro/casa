@@ -22,7 +22,7 @@ class PhaseUpBandpassInputs(channelbandpass.ChannelBandpassInputs):
     but does not extend - ChannelBandpassInputs.
 
     """
-    def __init__(self, context, output_dir=None, run_qa2=None,
+    def __init__(self, context, output_dir=None,
                  #
                  vis=None, caltable=None, 
                  # data selection arguments

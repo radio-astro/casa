@@ -128,122 +128,143 @@ The third plot shows phase vs frequency for the typical antenna.
 see detailed plots per spectral window and antenna.</p> 
 
 % for ms in amp_refant:		
-    <h4>
-		<a class="replace"
-           href="${os.path.relpath(os.path.join(dirname, amp_subpages[ms]), pcontext.report_dir)}">
-            ${ms}
-        </a>
-	</h4>
-    <ul class="thumbnails">
-        % if amp_refant[ms]:
-        	<% 
-        		plot = amp_refant[ms]
-        	%>
-            % if os.path.exists(plot.thumbnail):
-            <li class="span4">
-                <div class="thumbnail">
-                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                       class="fancybox"
-                       rel="plots-${ms}">
-                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                             title="Click to show amplitude vs time plot"
-                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-                        </img>
-                    </a>
+<h4>${ms}</h4>
+	% if amp_refant[ms] or amp_mode[ms]:
+	<ul class="thumbnails">
+		<li class="span8">
+			<div class="thumbnail">
+				<div class="caption">
+					<h4>Amplitude vs frequency 
+						(<a class="replace"
+				           href="${os.path.relpath(os.path.join(dirname, amp_subpages[ms]), pcontext.report_dir)}">
+            			show all
+        				</a>)
+					</h4>
+					<p>The plots below show amplitude vs frequency for the
+					bandpass correction, overlayed for all spectral windows
+	                and correlations. Click on the link above to show
+	                show detailed plots for all antennas, or on the links
+	                below to show plots with specific antennas preselected.  
+					</p>
+				</div>		
+				<div class="row-fluid">
+			        <% 
+			        	plot = amp_refant[ms]
+			        %>
+			        % if os.path.exists(plot.thumbnail):
+					<div class="span6">
+						<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+		                   class="fancybox"
+		                   rel="plots-${ms}">
+							<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+		                         title="Click to show amplitude vs time plot"
+		                         data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+		                   </img>
+						</a>
+						<div class="caption">
+							<h5>
+				                Reference antenna (${plot.parameters['ant']})
+			                    (<a href="${os.path.relpath(os.path.join(dirname, amp_subpages[ms]), pcontext.report_dir)}"
+			                       class="replace"
+			                       data-ant="${plot.parameters['ant']}">
+			                       show ${plot.parameters['ant']}
+			                    </a>)
+							</h5>
+							
+	                        <p>Amplitude vs frequency for the reference antenna 
+	                        (${plot.parameters['ant']}). Click the link above to show 
+	                        detailed plots for ${plot.parameters['ant']}.</p>
+						</div>
+					</div>
+					% endif
 
-                    <div class="caption">
-						<h4>
-		                    <a href="${os.path.relpath(os.path.join(dirname, amp_subpages[ms]), pcontext.report_dir)}"
-		                       class="replace"
-		                       data-ant="${plot.parameters['ant']}">
-			                   Reference antenna: amplitude vs frequency
-		                    </a>
-						</h4>
-						
-                        <p>Amplitude vs frequency for the reference antenna 
-                        (${plot.parameters['ant']}), all spectral windows
-                        and correlations.
-                        </p>
-                    </div>
-                </div>
-            </li>
-            % endif
-        % endif
-
-        % if amp_mode[ms]:
-        	<% 
-        		plot = amp_mode[ms]
-        	%>
-            % if os.path.exists(plot.thumbnail):
-            <li class="span4">
-                <div class="thumbnail">
-                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                       class="fancybox"
-                       rel="plots-${ms}">
-                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                             title="Click to show amplitude vs time plot"
-                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-                        </img>
-                    </a>
-
-                    <div class="caption">
-						<h4>
-		                    <a href="${os.path.relpath(os.path.join(dirname, amp_subpages[ms]), pcontext.report_dir)}"
-		                       class="replace"
-		                       data-ant="${plot.parameters['ant']}">
-			                   Typical antenna: amplitude vs frequency
-		                    </a>
-						</h4>
-						
-                        <p>Amplitude vs frequency for a typical antenna 
-                        (${plot.parameters['ant']}), all spectral windows
-                        and correlations.</p>
-                        <p>NB. random antenna until scores are working
-                        </p>
-                    </div>
-                </div>
-            </li>
-            % endif
-        % endif
+			        <% 
+			        	plot = amp_mode[ms]
+			        %>
+			        % if os.path.exists(plot.thumbnail):
+					<div class="span6">
+						<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+		                   class="fancybox"
+		                   rel="plots-${ms}">
+							<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+		                         title="Click to show amplitude vs time plot"
+		                         data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+		                   </img>
+						</a>
+						<div class="caption">
+							<h5>
+				                Typical antenna (${plot.parameters['ant']})
+			                    (<a href="${os.path.relpath(os.path.join(dirname, amp_subpages[ms]), pcontext.report_dir)}"
+			                       class="replace"
+			                       data-ant="${plot.parameters['ant']}">
+			                       show ${plot.parameters['ant']}
+			                    </a>)
+							</h5>
+							
+	                        <p>Amplitude vs frequency for a typical antenna 
+	                        (${plot.parameters['ant']}). Click the link above to show
+	                        detailed plots for ${plot.parameters['ant']}.</p>
+	                        <p>NB. random antenna until scores are working</p>
+						</div>
+					</div>
+					% endif
+				</div>
+			</div>
+		</li>
 
         % if phase_mode[ms]:
-        	<% 
-        		plot = phase_mode[ms]
-        	%>
-            % if os.path.exists(plot.thumbnail):
-            <li class="span4">
-                <div class="thumbnail">
-                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                       class="fancybox"
-                       rel="plots-${ms}">
-                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                             title="Click to show phase vs time plot"
-                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-                        </img>
-                    </a>
-
-                    <div class="caption">
-						<h4>
-		                    <a href="${os.path.relpath(os.path.join(dirname, phase_subpages[ms]), pcontext.report_dir)}"
-		                       class="replace"
-		                       data-ant="${plot.parameters['ant']}">
-			                   Typical antenna: phase vs frequency
-		                    </a>
-						</h4>
-						
-                        <p>Phase vs frequency for a typical antenna 
-                        (${plot.parameters['ant']}), all spectral windows
-                        and correlations.</p>
-                        <p>NB. random antenna until scores are working
-                        </p>
-                    </div>
-                </div>
-            </li>
-            % endif
-        % endif
-
-    </ul>
-
-%endfor
+		<li class="span4">
+			<div class="thumbnail">
+				<div class="caption">
+					<h4>Phase vs frequency 
+						(<a class="replace"
+				           href="${os.path.relpath(os.path.join(dirname, phase_subpages[ms]), pcontext.report_dir)}">
+            			show all
+        				</a>)
+					</h4>
+					<p>The plot below shows phase vs frequency for the
+					bandpass correction, overlayed for all spectral windows
+	                and correlations. Click on the link above to show
+	                show phase vs frequency plots for all antennas, or on the
+	                link for just the reference antenna.
+					</p>
+				</div>		
+				<div class="row-fluid">
+			        <% 
+			        	plot = phase_refant[ms]
+			        %>
+			        % if os.path.exists(plot.thumbnail):
+					<div class="span12">
+						<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+		                   class="fancybox"
+		                   rel="plots-${ms}">
+							<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+		                         title="Click to show phase vs frequency plot"
+		                         data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+		                   </img>
+						</a>
+						<div class="caption">
+							<h5>
+				                Reference antenna (${plot.parameters['ant']})
+			                    (<a href="${os.path.relpath(os.path.join(dirname, phase_subpages[ms]), pcontext.report_dir)}"
+			                       class="replace"
+			                       data-ant="${plot.parameters['ant']}">
+			                       show ${plot.parameters['ant']}
+			                    </a>)
+							</h5>
+							
+	                        <p>Phase vs frequency for the reference antenna 
+	                        (${plot.parameters['ant']}). Click the link above to show
+	                        detailed plots for ${plot.parameters['ant']}.</p>
+						</div>
+					</div>
+					% endif
+				</div>
+			</div>
+		</li>
+		% endif
+	</ul>			
+	% endif
+% endfor		
 
 %endif

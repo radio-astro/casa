@@ -2,7 +2,6 @@ from __future__ import absolute_import
 import collections
 import contextlib
 import csv
-import datetime
 import itertools
 import operator
 import os
@@ -17,8 +16,8 @@ import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.tablereader as tablereader
-import pipeline.infrastructure.utils as utils
-from pipeline.infrastructure import casa_tasks, casatools
+from pipeline.infrastructure import casa_tasks
+
 from ..common import commonfluxresults
 
 LOG = infrastructure.get_logger(__name__)
@@ -264,162 +263,8 @@ class ImportData(basetask.StandardTaskTemplate):
         
         return results
     
-    def analyse(self, results):
-        self._check_intents(results.mses)
-        self._check_flagged_calibrator_data(results.mses)
-        self._check_model_data_column(results.mses)
-        self._check_history_column(results.mses)
-        
-        # I'm keeping _check_contiguous as a module-level function as we may
-        # need to use it when considering cross-task imports
-        LOG.todo('How long can MSes be separated and still be considered ' 
-                 'contiguous?')
-        _check_contiguous(results.mses, datetime.timedelta(hours=1))
-
-        LOG.todo('ImportData QA2: missing source.xml and calibrator unknown to ' 
-                 'CASA')
-        LOG.todo('ImportData QA2: missing BDFs')
-
-        return results
-
-    def _check_model_data_column(self, mses):
-        '''
-        Check whether any of the measurement sets contain a MODEL_DATA column,
-        complaining if it is present.
-        '''
-        bad_mses = []
-
-        for ms in mses:
-            with casatools.TableReader(ms.name) as table:
-                if 'MODEL_DATA' in table.colnames():
-                    bad_mses.append(ms)
-
-        if bad_mses:
-            # log a message like 'No model columns found in a.ms, b.ms or c.ms'
-            basenames = [ms.basename for ms in bad_mses]
-            s = utils.commafy(basenames)
-            LOG.warning('Model data column found in %s' % s)
-        else:
-            # log a message like 'Model data column was found in a.ms and b.ms'
-            basenames = [ms.basename for ms in mses]
-            s = utils.commafy(basenames).replace(' and ', ' or ')
-            LOG.info('No model data column found in %s' % s)            
-
-    def _check_history_column(self, mses):
-        '''
-        Check whether any of the measurement sets has entries in the history
-        column, potentially signifying a non-pristine data set.
-        '''
-        bad_mses = []
-
-        for ms in mses:
-            history_table = os.path.join(ms.name, 'HISTORY')
-            with casatools.TableReader(history_table) as table:
-                if table.nrows() != 0:
-                    bad_mses.append(ms)
-
-        if bad_mses:
-            # log a message like 'Entries were found in the HISTORY table for 
-            # a.ms and b.ms'
-            basenames = utils.commafy([ms.basename for ms in bad_mses])
-            if len(bad_mses) is 1:
-                LOG.warning('Entries were found in the HISTORY table of %s. '
-                            'This measurement set may already be processed.'
-                            '' % basenames)
-            else:
-                LOG.warning('Entries were found in the HISTORY tables of %s. '
-                            'These measurement sets may already be processed.'
-                            '' % basenames)                
-        else:
-            # log a message like 'No history entries were found in a.ms or b.ms'
-            basenames = [ms.basename for ms in mses]
-            s = utils.commafy(basenames).replace(' and ', ' or ')
-            LOG.info('No HISTORY entries found in %s' % s)            
-
-    def _check_flagged_calibrator_data(self, mses):
-        '''
-        Check how much calibrator data has been flagged in the given measurement
-        sets, complaining if the fraction of flagged data exceeds a threshold. 
-        '''
-        LOG.todo('What fraction of flagged calibrator data should result in a '
-                 'warning?')
-        threshold = 0.10
-
-        # which intents should be checked for flagged data
-        calibrator_intents = set(['AMPLITUDE', 'BANDPASS', 'PHASE'])
-        
-        # flag for whether to print 'all scans ok' message at end
-        all_ok = True
-        
-        for ms in mses:
-            bad_scans = collections.defaultdict(list)
-            
-            # inspect each MS with flagdata, capturing the dictionary 
-            # describing the number of flagged rows 
-            flagdata_task = casa_tasks.flagdata(vis=ms.name, mode='summary')
-            flagdata_result = self._executor.execute(flagdata_task)
-
-            if not flagdata_result:
-                # no dictionary returned when operating in dry-run mode
-                continue
-
-            for intent in calibrator_intents:
-                # collect scans with the calibrator intent
-                calscans = [scan for scan in ms.scans if intent in scan.intents]
-                for scan in calscans:
-                    scan_id = str(scan.id)
-                    # read the number of flagged/total integrations from the
-                    # flagdata results dictionary
-                    flagged = flagdata_result['scan'][scan_id]['flagged']
-                    total = flagdata_result['scan'][scan_id]['total']
-                    if flagged / total >= threshold:
-                        bad_scans[intent].append(scan)
-                        all_ok = False
-
-            for intent in bad_scans:
-                scan_ids = [scan.id for scan in bad_scans[intent]]
-                multi = False if len(scan_ids) is 1 else True
-                # log something like 'More than 12% of PHASE scans 1, 2, and 7 
-                # in vla.ms are flagged'
-                LOG.warning('More than %s%% of %s scan%s %s in %s %s flagged'
-                            '' % (threshold * 100.0,
-                                  intent,
-                                  's' if multi else '',
-                                  utils.commafy(scan_ids, quotes=False),
-                                  ms.basename,
-                                  'are' if multi else 'is'))
-
-        if all_ok:
-            LOG.info('All %s scans in %s have less than %s%% flagged '
-                     'data' % (utils.commafy(calibrator_intents, False),
-                               utils.commafy([ms.basename for ms in mses]),
-                               threshold * 100.0))
-
-    def _check_intents(self, mses):
-        '''
-        Check each measurement set in the list for a set of required intents.
-        
-        TODO Should we terminate execution on missing intents?        
-        '''
-        # Required calibration intents. Warnings will be raised for any 
-        # measurement sets missing these intents 
-        required = set(['AMPLITUDE', 'BANDPASS', 'PHASE'])
-
-        all_ok = True
-
-        # analyse each MS
-        for ms in mses:
-            # do we have the necessary calibrators?
-            if not required.issubset(ms.intents):
-                missing = required.difference(ms.intents)
-                LOG.warning('%s is missing calibration intents %s'
-                            '' % (ms.basename, utils.commafy(missing)))
-                all_ok = False
-                
-        if all_ok:
-            LOG.info('All required calibration intents found in '
-                     '%s' % utils.commafy([ms.basename for ms in mses]))
-        
+    def analyse(self, result):
+        return result
 
     def _analyse_filenames(self, filenames, vis):
         to_import = set()
@@ -772,40 +617,3 @@ def import_flux(output_dir, observing_run, filename=None):
                     result.measurements[field.name].append(flux)
             results.append(result)
         return results
-
-
-def _check_contiguous(mses, tolerance=datetime.timedelta(hours=1)):
-    '''
-    Check whether observations are contiguous. 
-    '''
-    # only need to check when given multiple measurement sets
-    if len(mses) < 2:
-        return
-
-    # reorder MSes by start time
-    by_start = sorted(mses, 
-                      key=lambda m : utils.get_epoch_as_datetime(m.start_time)) 
-
-    # create an interval for each one, including our tolerance    
-    intervals = []    
-    for ms in by_start:
-        start = utils.get_epoch_as_datetime(ms.start_time)
-        end = utils.get_epoch_as_datetime(ms.end_time)
-        interval = measures.TimeInterval(start - tolerance, end + tolerance)
-        intervals.append(interval)
-
-    # check whether the intervals overlap
-    bad_mses = []
-    for i, (interval1, interval2) in enumerate(zip(intervals[0:-1], 
-                                                   intervals[1:])):
-        if not interval1.overlaps(interval2):
-            bad_mses.append(utils.commafy([by_start[i].basename,
-                                           by_start[i+1].basename]))
-
-    if bad_mses:
-        basenames = utils.commafy(bad_mses, False)
-        LOG.warning('Measurement sets %s are not contiguous. They may be '
-                    'miscalibrated as a result.' % basenames)
-    else:
-        basenames = utils.commafy([ms.basename for ms in mses])
-        LOG.info('Measurement sets %s are contiguous.' % basenames)

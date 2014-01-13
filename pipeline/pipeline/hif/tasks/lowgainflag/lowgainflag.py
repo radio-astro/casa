@@ -168,7 +168,7 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
         bpcal_inputs = bandpass.PhcorBandpass.Inputs(
           context=inputs.context, vis=inputs.vis,
           intent=inputs.intent, spw=inputs.spw, 
-          refant=inputs.refant, run_qa2=False)
+          refant=inputs.refant)
         bpcal_task = bandpass.PhcorBandpass(bpcal_inputs)
         bpcal = self._executor.execute(bpcal_task, merge=True)
 

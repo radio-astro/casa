@@ -156,6 +156,11 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
     def prepare(self):
         inputs = self.inputs
 
+        # TODO there's so much mixed tab/tabspace formatting in this file I
+        # can't read the identation. Once fixed, summaries should be moved
+        # closer to the creation of the results
+        summaries = []
+
         # Return if the MS has no data with the required intent.
         flux_fields = inputs.ms.get_fields(inputs.field, intent=inputs.intent)
         if not flux_fields:
@@ -252,15 +257,25 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
 	        LOG.info('    %s' % cmd)
 	    if inputs.applyflags:
 	        LOG.info('Applying flags')
+            # TODO don't check for dry run! The executor handles dry run
+            # and should be invoked regardless of whether dry_run is True
+            # or False
 	        if not self._executor._dry_run:
 		    task = casa_tasks.flagdata(vis=inputs.vis, mode='list',
 		        action='apply', inpfile=flagcmds, savepars=False,
 			flagbackup=False)
-		    self._executor.execute(task)
+		    
+            summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary')
+            stats_before = self._executor.execute(summary_job)
+            self._executor.execute(task)
+            summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary')
+            stats_after = self._executor.execute(summary_job)
+            summaries = [stats_before, stats_after]
 
         result = FluxcalFlagResults(inputs.vis,
 	    fluxcal_linelist=fluxcal_lines, fluxcal_flagcmds=flagcmds,
 	        refspwmap=refspwmap) 
+        result.summaries = summaries
 
         return result
 

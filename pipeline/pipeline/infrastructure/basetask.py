@@ -4,6 +4,7 @@ import collections
 import datetime
 import inspect
 import itertools
+import operator
 import os
 try:
     import cPickle as pickle
@@ -27,6 +28,7 @@ from . import filenamer
 from . import jobrequest
 from . import launcher
 from . import logging
+from . import pipelineqa
 from . import utils
 import pipeline.extern.ordereddict as ordereddict
 
@@ -284,9 +286,9 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
         """
         # get the signature of this Inputs class. We want to return a 
         # of dictionary of all kw argument names except self, the 
-        # pipeline-specific arguments (context, output_dir, run_qa2 etc.) and
+        # pipeline-specific arguments (context, output_dir, etc.) and
         # caltable.
-        skip = ['self', 'context', 'output_dir', 'run_qa2', 'ms', 
+        skip = ['self', 'context', 'output_dir', 'ms', 
                 'to_field', 'to_intent', 'calto', 'calstate']
         skip.extend(ignore)
         kw_names = [a for a in inspect.getargspec(self.__init__).args
@@ -590,6 +592,7 @@ class Results(api.Results):
         # be used to determine whether this results has already been merged 
         # with the context 
         self._uuid = uuid.uuid4()
+        self.qa = pipelineqa.QAScorePool()
 
     @property
     def uuid(self):
@@ -633,6 +636,10 @@ class Results(api.Results):
         # execute our template function
         self.merge_with_context(context, **other_parameters)
 
+        # perform QA if accepting this result from a top-level task
+        if context.subtask_counter is 0:
+            pipelineqa.registry.do_qa(context, self)
+
         if context.subtask_counter is 0:
             # If accept() is called at the end of a task as signified by the
             # subtask counter, we should create a proxy for this result and
@@ -648,6 +655,7 @@ class Results(api.Results):
         # results object to the results list
         context.results.append(result)
 
+        # generate weblog if accepting a result from a top-level task
         if context.subtask_counter is 0 and not DISABLE_WEBLOG:
             # cannot import at initial import time due to cyclic dependency
             import pipeline.infrastructure.renderer.htmlrenderer as htmlrenderer
