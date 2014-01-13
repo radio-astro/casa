@@ -333,3 +333,15 @@ def score_wvrgcal(ms_name, wvr_score):
     longmsg = 'RMS improvement was %0.2f for %s' % (wvr_score, ms_name)
     shortmsg = '%0.2fx improvement' % wvr_score
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
+@log_qa2
+def score_sdtotal_data_flagged(vis, frac_flagged):
+    if frac_flagged > 0.5:
+        score = 0
+    else:
+        score = linear_score(frac_flagged, 0.5, 0.0, 0.0, 1.0)
+    
+    percent = 100.0 * frac_flagged
+    longmsg = '%0.2f%% of data in %s was newly flagged' % (percent, vis)
+    shortmsg = '%0.2f%% data flagged' % percent
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
