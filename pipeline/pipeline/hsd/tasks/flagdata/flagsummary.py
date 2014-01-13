@@ -14,6 +14,7 @@ import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.casatools as casatools
 
 from . import SDFlagPlotter as SDP
+from .. import common
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -66,6 +67,8 @@ class SDFlagSummary(object):
         for idx in file_index:
             st = self.context.observing_run[idx]
             filename_in = st.name
+            ant_name = st.antenna.name
+            asdm = common.asdm_name(st)
             LOG.info("*** Summarizing table: %s ***" % (os.path.basename(filename_in)))
             for pol in pollist:
                 time_table = datatable.get_timetable(idx, spwid, pol)               
@@ -88,10 +91,11 @@ class SDFlagSummary(object):
                         thresholds.pop(i)
                         break
                 t0 = time.time()
-                htmlName = self.plot_flag(datatable, dt_idx, time_gap[0], time_gap[1], final_thres, flagRule, FigFileDir, FigFileRoot)
+                htmlName, nflags = self.plot_flag(datatable, dt_idx, time_gap[0], time_gap[1], final_thres, flagRule, FigFileDir, FigFileRoot)
                 t1 = time.time()
                 LOG.info('Plot flags End: Elapsed time = %.1f sec' % (t1 - t0) )
-                flagSummary.append({'name': htmlName, 'index': idx, 'spw': spwid, 'pol': pol})
+                flagSummary.append({'html': htmlName, 'name': asdm, 'antenna': ant_name, 'spw': spwid, 'pol': pol,
+                                    'nrow': len(dt_idx), 'nflags': nflags})
 
         end_time = time.time()
         LOG.info('PROFILE execute: elapsed time is %s sec'%(end_time-start_time))
@@ -289,8 +293,9 @@ class SDFlagSummary(object):
             ID = ids[0]
             ant_id = DataTable.getcell('ANTENNA',ID)
             st_row = DataTable.getcell('ROW',ID)
-            st_name = DataTable.getkeyword('FILENAMES')[ant_id]
+            #st_name = DataTable.getkeyword('FILENAMES')[ant_id]
             st = self.context.observing_run[ant_id]
+            asdm = common.asdm_name(st)
             ant_name = st.antenna.name
             pol = DataTable.getcell('POL',ID)
             spw = DataTable.getcell('IF',ID)
@@ -306,7 +311,7 @@ class SDFlagSummary(object):
             print >> Out, '<p class="ttl">Data Summary</p>'
             # A table of data summary
             print >> Out, '<table border="0"  cellpadding="3">'
-            print >> Out, '<tr align="left" class="stp"><th>%s</th><th>:</th><th>%s</th></tr>' % ('Name', st_name)
+            print >> Out, '<tr align="left" class="stp"><th>%s</th><th>:</th><th>%s</th></tr>' % ('Name', asdm)
             print >> Out, '<tr align="left" class="stp"><th>%s</th><th>:</th><th>%s</th></tr>' % ('Antenna', ant_name)
             print >> Out, '<tr align="left" class="stp"><th>%s</th><th>:</th><th>%s</th></tr>' % ('Spw ID', spw)
             print >> Out, '<tr align="left" class="stp"><th>%s</th><th>:</th><th>%s</th></tr>' % ('Pol', pol)
@@ -378,5 +383,7 @@ class SDFlagSummary(object):
         if len(FlaggedRows) > 0:
             LOG.debug('Final Flagged rows by all active categories =%s ' % FlaggedRows)
 
+        flag_nums = [len(FlaggedRows)] + [len(frows) for frows in FlaggedRowsCategory]
+
         del threshold, NPpdata, NPpflag, NPprows, PlotData, FlaggedRows, FlaggedRowsCategory
-        return os.path.basename(Filename)
+        return os.path.basename(Filename), flag_nums
