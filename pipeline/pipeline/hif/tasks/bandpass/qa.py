@@ -14,10 +14,10 @@ LOG = logging.get_logger(__name__)
 
 class BandpassQAPool(pqa.QAScorePool):
     score_types = {'AMPLITUDE_SCORE_DD'  : 'amplitude derivative',
-                   'AMPLITUDE_SCORE_FN'  : 'amplitude Weiner function',
+                   'AMPLITUDE_SCORE_FN'  : 'amplitude Wiener function',
                    'AMPLITUDE_SCORE_SNR' : 'amplitude SNR',
                    'PHASE_SCORE_DD'      : 'phase derivative',
-                   'PHASE_SCORE_FN'      : 'phase Weiner function',
+                   'PHASE_SCORE_FN'      : 'phase Wiener function',
                    'PHASE_SCORE_RMS'     : 'phase RMS'}
 
     short_msg = {'AMPLITUDE_SCORE_DD'  : 'Amp derivative',
