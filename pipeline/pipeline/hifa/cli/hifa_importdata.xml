@@ -31,7 +31,7 @@
 
     <param type="string" name="asis" subparam="true">
 	<description>ASDM to convert as is</description>
-	<value>Antenna Station Receiver CalAtmosphere</value>
+	<value>Antenna Station Receiver Source CalAtmosphere CalWVR</value>
     </param>
 
     <param type="bool" name="process_caldevice" subparam="true">
@@ -59,14 +59,14 @@
 	    <equals type="string" value="automatic">
 	    </equals>
 	    <equals type="string" value="interactive">
-		<default param="asis"><value type="string">Antenna Station Receiver CalAtmosphere</value></default>
+		<default param="asis"><value type="string">Antenna Station Receiver Source CalAtmosphere CalWVR</value></default>
 		<default param="process_caldevice"><value type="bool">False</value></default>
 		<default param="overwrite"><value type="bool">False</value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
-		<default param="asis"><value type="string">Antenna Station Receiver CalAtmosphere</value></default>
+		<default param="asis"><value type="string">Antenna Station Receiver Source CalAtmosphere CalWVR</value></default>
 		<default param="process_caldevice"><value type="bool">False</value></default>
 		<default param="overwrite"><value type="bool">False</value></default>
 	    </equals>
@@ -117,7 +117,7 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 'interactive mode'
 
 asis -- ASDM tables to convert as is
-   default: 'Antenna Station Receiver CalAtmosphere'
+   default: 'Antenna Station Receiver Source CalAtmosphere CalWVR'
    example: 'Receiver', ''
 
 process_caldevice -- Ingest the ASDM caldevice table
