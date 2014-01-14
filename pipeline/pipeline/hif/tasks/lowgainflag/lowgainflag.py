@@ -1,15 +1,13 @@
 from __future__ import absolute_import
 
-import collections
 import numpy as np 
 import os
-import re
 import types
 
+from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
 from pipeline.hif.tasks.common import commoncalinputs
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.callibrary as callibrary
 from pipeline.hif.tasks.flagging.flagdatasetter import FlagdataSetter
 
 from .resultobjects import LowgainflagResults
@@ -128,8 +126,14 @@ class Lowgainflag(basetask.StandardTaskTemplate):
           extendfields=['field', 'timerange'])
         flaggertask = viewflaggers.MatrixFlagger(matrixflaggerinputs)
 
-	# Execute it to flag the data view
+        # Execute it to flag the data view
+        summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary')
+        stats_before = self._executor.execute(summary_job)
         result = self._executor.execute(flaggertask)
+        summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary')
+        stats_after = self._executor.execute(summary_job)
+        
+        result.summaries = [stats_before, stats_after]
 
         return result
 
