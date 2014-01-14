@@ -149,6 +149,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
             maskline_task = maskline.MaskLine(maskline_inputs)
             maskline_result = self._executor.execute(maskline_task, merge=True)
             detected_lines = maskline_result.outcome['detected_lines']
+            channelmap_range = maskline_result.outcome['channelmap_range']
             cluster_info = maskline_result.outcome['cluster_info']
 
             #LOG.info('detected_lines=%s'%(detected_lines))
@@ -177,6 +178,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
             baselined.append({'name': name_list, 'index': list(_file_index),
                               'spw': spwid, 'pols': pols,
                               'lines': detected_lines,
+                              'channelmap_range': channelmap_range,
                               'clusters': cluster_info})
             LOG.debug('cluster_info=%s'%(cluster_info))
 
