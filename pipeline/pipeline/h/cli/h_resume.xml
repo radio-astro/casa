@@ -5,34 +5,34 @@
 	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="h_resume" category="pipeline">
-<shortdescription>Restore a save pipeline context from disk</shortdescription>
+<shortdescription>Restore a save pipeline state from disk</shortdescription>
 <description>
-h_resume restores a name pipeline context from disk allowing a suspended 
+h_resume restores a name pipeline state from disk allowing a suspended 
 pipeline reduction session to be resumed.
 </description>
 <input>
-    <param type="string" name="contextname">
-	<description>Name of saved context to be restored</description>
+    <param type="string" name="filename">
+	<description>Filename of saved state to be restored</description>
 	<value>last</value>
     </param>
 </input>
 <example>
 
-h_resume restores a name pipeline context from disk allowing a suspended 
+h_resume restores a name pipeline state from disk allowing a suspended 
 pipeline reduction session to be resumed.
 
 Keyword parameters:
 
-contextname -- Name of the saved pipeline context. Setting contextname to
-    'last' restores the most recently saved pipeline context state whose
+filename -- Name of the saved pipeline state. Setting filename to
+    'last' restores the most recently saved pipeline state whose
     name begins with 'context*'.
     default: 'last'
-    example: context='context.s3.2012-02-13T10:49:11'
-	     context='last' 
+    example: filename='context.s3.2012-02-13T10:49:11'
+	     filename='last' 
 
 Description
 
-h_resume restores a name pipeline context from disk allowing a suspended 
+h_resume restores a name pipeline state from disk allowing a suspended 
 pipeline reduction session to be resumed.
 
 Issues
@@ -45,7 +45,7 @@ Examples
 
 2. Resume the named saved session
 
-    h_resume(contexname='context.s3.2012-02-13T10:49:11')
+    h_resume(filename='context.s3.2012-02-13T10:49:11')
 
 </example>
 </task>
