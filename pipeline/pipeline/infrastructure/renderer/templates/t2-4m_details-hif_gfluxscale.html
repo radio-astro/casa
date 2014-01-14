@@ -18,13 +18,13 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 	        <th scope="col" rowspan="2">Measurement Set</th>
 	        <th scope="col" rowspan="2">Field</th>
 	        <th scope="col" rowspan="2">SpW</th>
-	        <th scope="col" colspan="8">Flux Density</th>
+	        <th scope="col" colspan="4">Flux Density</th>
 		</tr>
 		<tr>
-	        <th scope="col" colspan="2">I</th>
-	        <th scope="col" colspan="2">Q</th>
-	        <th scope="col" colspan="2">U</th>
-	        <th scope="col" colspan="2">V</th>
+	        <th scope="col">I</th>
+	        <th scope="col">Q</th>
+	        <th scope="col">U</th>
+	        <th scope="col">V</th>
 	    </tr>
 	</thead>
 	<tbody>
@@ -36,13 +36,9 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 			<td>${field}</td>
 			<td>${flux.spw_id}</td>
 			<td>${str(flux.I)}</td>
-			<td>${str(flux.dI)}</td>
 			<td>${str(flux.Q)}</td>
-			<td>${str(flux.dQ)}</td>
 			<td>${str(flux.U)}</td>
-			<td>${str(flux.dU)}</td>
 			<td>${str(flux.V)}</td>
-			<td>${str(flux.dV)}</td>
 		</tr>
 		%endfor
 	%endfor
