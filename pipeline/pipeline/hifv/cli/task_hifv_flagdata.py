@@ -16,7 +16,7 @@ def hifv_flagdata(vis=None, autocorr=None, shadow=None, scan=None,
     all_inputs = vars()
 
     # set the name of the pipeline task to execute 
-    task_name = 'FlagDeterVLA'
+    task_name = 'VLAAgentFlagger'
 
     ##########################################################################
     #                                                                        #

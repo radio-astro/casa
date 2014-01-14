@@ -189,7 +189,7 @@ def get_task_description(result_obj):
             names.extend([ms.basename for ms in result.mses])
         return 'VLA Import Data: Register %s with pipeline' % utils.commafy(names)
     
-    if task_cls is hifv.tasks.flagging.flagdetervla.FlagDeterVLA:
+    if task_cls is hifv.tasks.flagging.vlaagentflagger.VLAAgentFlagger:
         return 'VLA deterministic flagging'
     
     if task_cls is hifv.tasks.setmodel.SetModel:
@@ -2779,7 +2779,11 @@ class T2_4MDetailsAgentFlaggerRenderer(T2_4MDetailsDefaultRenderer):
                 
             previous_summary = summary
                 
-        return total 
+        return total
+        
+
+
+
 
 
 class T2_4MDetailsRenderer(object):
@@ -3221,7 +3225,7 @@ renderer_map = {
         hsd.tasks.SDPlotFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_plotflagbaseline.html'),
         hsd.tasks.SDImportData2  : T2_4MDetailsImportDataRenderer(),
         hifv.tasks.importdata.VLAImportData : T2_4MDetailsVLAImportDataRenderer(),
-        hifv.tasks.flagging.FlagDeterVLA : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_flagdata.html', always_rerender=True),
+        hifv.tasks.flagging.vlaagentflagger.VLAAgentFlagger : T2_4MDetailsAgentFlaggerRenderer(template='t2-4m_details-hifv_flagdata.html', always_rerender=True),
         hifv.tasks.setmodel.SetModel : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_setmodel.html', always_rerender=True),
         hifv.tasks.priorcals.priorcals.Priorcals : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_priorcals.html', always_rerender=True),
         hifv.tasks.flagging.hflag.Heuristicflag : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_hflag.html', always_rerender=True),

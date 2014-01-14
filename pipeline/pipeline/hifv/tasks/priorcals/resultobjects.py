@@ -61,7 +61,7 @@ class PriorcalsResults(basetask.Results):
 
     def __repr__(self):
 
-	# Format the Tsyscal results.
+	# Format the Priorcal results.
         s = 'Priorcal Results:\n'
         for calapplication in self.final:
             s += '\tBest caltable for spw #{spw} in {vis} is {name}\n'.format(
