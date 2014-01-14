@@ -9,7 +9,7 @@ class ALMAImportDataInputs(importdata.ImportDataInputs):
     # These are ALMA specific settings and override the defaults in
     # the base class
     process_caldevice  = basetask.property_with_default('process_caldevice', False)
-    asis = basetask.property_with_default('asis', 'Antenna Station Receiver CalAtmosphere CalWVR')
+    asis = basetask.property_with_default('asis', 'Antenna Station Receiver Source CalAtmosphere CalWVR')
 
     def __init__(self, context, vis=None, output_dir=None, asis=None,
                  process_caldevice=None, session=None, overwrite=None,
