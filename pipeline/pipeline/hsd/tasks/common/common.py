@@ -125,7 +125,30 @@ class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
         super(SingleDishTaskTemplate,self).__init__(inputs)
         self._setup_datatable()
         self._inspect_casa_version()
+    
+    @basetask.timestamp
+    @basetask.capture_log
+    def execute(self, dry_run=True, **parameters):
+        aresult = super(SingleDishTaskTemplate,self).execute(dry_run=dry_run, **parameters)
+        # Don't convert results to ResultsList if it is not
+        # the top-level task.
+        if self.inputs.context.subtask_counter > 0:
+            return aresult
         
+        if type(aresult) is basetask.ResultsList:
+            results = aresult
+        else:
+            results = basetask.ResultsList()
+            results.append(aresult)
+
+        # Delete the capture log for subtasks as the log will be attached to the
+        # outer ResultList.
+        for r in results:
+            if hasattr(r, 'casalog'):
+                del r.casalog
+        return results
+
+
     @property
     def context(self):
         return self.inputs.context

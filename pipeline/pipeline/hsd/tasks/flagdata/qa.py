@@ -14,13 +14,21 @@ class SDFlagDataQAHandler(pqa.QAResultHandler):
     child_cls = None
 
     def handle(self, context, result):
-        vis = result.inputs['vis']
+        #vis = result.inputs['vis']
         #ms = context.observing_run.get_ms(vis)
-        
+        summaries = result.outcome['summary']
+        scores = []
+        for summary in summaries:
+            name = summary['name']
+            ant = summary['antenna']
+            spw = summary['spw']
+            pol = summary['pol']
+            frac_flagged = summary['nflags'][0] / float(summary['nrow'])
+            scores.append(qa2calc.score_sdtotal_data_flagged(name, ant, spw, pol, frac_flagged))
 #         frac_flagged = result.rows_flagged / result.num_rows
-        frac_flagged = 0.25
-        
-        scores = [qa2calc.score_sdtotal_data_flagged(vis, frac_flagged)]
+#         frac_flagged = 0.25
+
+#         scores = [qa2calc.score_sdtotal_data_flagged(name, frac_flagged)]
         result.qa.pool[:] = scores
 
 
