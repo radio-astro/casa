@@ -124,6 +124,9 @@ def get_task_description(result_obj):
         for result in result_obj:
             names.extend([ms.basename for ms in result.mses])
         return 'Register %s with pipeline' % utils.commafy(names)
+    
+    if task_cls is hsd.tasks.SDConvertData:
+        return 'Convert Data'
 
     if task_cls is hsd.tasks.SDReduction:
         return 'Single-dish end-to-end reduction'
