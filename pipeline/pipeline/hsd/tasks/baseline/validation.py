@@ -1137,8 +1137,11 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                             #Protect = [max(int(Fit0 - Allowance - 0.5), 0), min(int(Fit0 + Allowance + 0.5), nchan - 1)]
                                             LOG.trace('0 Allowance = %s Protect = %s' % (Allowance, Protect))
                                             # for Channel map velocity range determination 2014/1/12
-                                            if MaskMin > Protect[0]: MaskMin = Protect[0]
-                                            if MaskMax < Protect[1]: MaskMax = Protect[1]
+                                            MaskCen = (Protect[0] + Protect[1]) / 2.0
+                                            if MaskMin > MaskCen: MaskMin = MaskCen
+                                            elif MaskMax < MaskCen: MaskMax = MaskCen
+                                            #if MaskMin > Protect[0]: MaskMin = Protect[0]
+                                            #if MaskMax < Protect[1]: MaskMax = Protect[1]
 
                                             if RealSignal.has_key(ID):
                                                 RealSignal[ID][2].append(Protect)
@@ -1209,7 +1212,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                     channelmap_range[Nc][2] = False
                 # for Channel map velocity range determination 2014/1/12 arbitrary factor 0.8
                 #channelmap_range[Nc][1] = (MaskMax - MaskMin - 10) * 0.8
-                channelmap_range[Nc][1] = ((MaskMax - MaskMin - 10) + lines[Nc][1]) / 2.0
+                channelmap_range[Nc][1] = MaskMax - MaskMin + lines[Nc][1] / 2.0
 
                 for x in range(nra):
                     for y in range(ndec):
