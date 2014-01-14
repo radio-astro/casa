@@ -2284,9 +2284,53 @@ class T2_4MDetailsTsyscalFlagchansRenderer(T2_4MDetailsDefaultRenderer):
         super_cls = super(T2_4MDetailsTsyscalFlagchansRenderer, self)
         ctx = super_cls.get_display_context(context, results)
 
-        htmlreports = self.get_html_reports(context, results)
+        weblog_dir = os.path.join(context.report_dir,
+                                  'stage%s' % results.stage_number)
 
-        ctx.update({'htmlreports' : htmlreports})
+        htmlreports = self.get_html_reports(context, results)
+        plot_groups = self.get_plots(context, results)
+
+        summary_plots = {}
+        subpages = {}
+        slplots = []
+        for result in results:
+            if result.view:
+                plotter = slicedisplay.SliceDisplay()
+                slplots.append(plotter.plot(context, result, weblog_dir, 
+                                            plotbad=False,
+                                            plot_only_flagged=True))
+            
+            if result.flagged() is False:
+                continue
+
+            plotter = tsys.TsysSummaryChart(context, result)
+            plots = plotter.plot()
+            ms = os.path.basename(result.inputs['vis'])
+            summary_plots[ms] = plots
+
+            # generate the per-antenna charts and JSON file
+            plotter = tsys.ScoringTsysPerAntennaChart(context, result)
+            plots = plotter.plot() 
+            json_path = plotter.json_filename
+
+            # write the html for each MS to disk
+            renderer = TsyscalPlotRenderer(context, result, plots, json_path)
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+                # the filename is sanitised - the MS name is not. We need to
+                # map MS to sanitised filename for link construction.
+                subpages[ms] = renderer.filename
+
+
+        # add the PlotGroups to the Mako context. The Mako template will parse
+        # these objects in order to create links to the thumbnail pages we
+        # just created
+        ctx.update({'plot_groups'     : plot_groups,
+                    'summary_plots'   : summary_plots,
+                    'summary_subpage' : subpages,
+                    'dirname'         : weblog_dir,
+                    'htmlreports'     : htmlreports})
+
         return ctx
 
     def get_plots(self, context, results):
@@ -2297,10 +2341,6 @@ class T2_4MDetailsTsyscalFlagchansRenderer(T2_4MDetailsDefaultRenderer):
         plots = []
         for result in results:
             if result.view:
-                # display the view first
-                # plot() returns the list of Plots it has generated
-                LOG.info('Plotting')
-
                 plots.append(slicedisplay.SliceDisplay().plot(
                     context=context, results=result, reportdir=weblog_dir,
                     plotbad=False, plot_only_flagged=True))
@@ -2310,10 +2350,12 @@ class T2_4MDetailsTsyscalFlagchansRenderer(T2_4MDetailsDefaultRenderer):
         plot_groups = logger.PlotGroup.create_plot_groups(plots)
         # Write the thumbnail pages for each plot grouping to disk
         for plot_group in plot_groups:
-            renderer = hr.PlotGroupRenderer(context, results, plot_group)
+            renderer = PlotGroupRenderer(context, results, plot_group)
             plot_group.filename = renderer.filename
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
+                
+        return plot_groups
 
 
     def get_html_reports(self, context, results):
@@ -2371,9 +2413,40 @@ class T2_4MDetailsTsyscalFlagRenderer(T2_4MDetailsDefaultRenderer):
         super_cls = super(T2_4MDetailsTsyscalFlagRenderer, self)
         ctx = super_cls.get_display_context(context, results)
 
+        weblog_dir = os.path.join(context.report_dir,
+                                  'stage%s' % results.stage_number)
+
         htmlreports = self.get_htmlreports(context, results)
         
-        ctx.update({'htmlreports' : htmlreports})
+        summary_plots = {}
+        subpages = {}
+        for result in results:
+            if result.flagged() is False:
+                continue
+            
+            plotter = tsys.TsysSummaryChart(context, result)
+            plots = plotter.plot()
+            ms = os.path.basename(result.inputs['vis'])
+            summary_plots[ms] = plots
+
+            # generate the per-antenna charts and JSON file
+            plotter = tsys.ScoringTsysPerAntennaChart(context, result)
+            plots = plotter.plot() 
+            json_path = plotter.json_filename
+
+            # write the html for each MS to disk
+            renderer = TsyscalPlotRenderer(context, result, plots, json_path)
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+                # the filename is sanitised - the MS name is not. We need to
+                # map MS to sanitised filename for link construction.
+                subpages[ms] = renderer.filename
+
+        ctx.update({'summary_plots'   : summary_plots,
+                    'summary_subpage' : subpages,
+                    'dirname'         : weblog_dir,
+                    'htmlreports'     : htmlreports})
+
         return ctx
 
     def get_htmlreports(self, context, results):
@@ -3130,7 +3203,7 @@ renderer_map = {
         hifa.tasks.TimeGaincal   : T2_4MDetailsGaincalRenderer(),
         hifa.tasks.Tsyscal       : T2_4MDetailsTsyscalRenderer(),
         hifa.tasks.Tsysflag      : T2_4MDetailsTsyscalFlagRenderer(),
-        hifa.tasks.Tsysflagchans : T2_4MDetailsTsyscalFlagRenderer('t2-4m_details-hif_tsysflagchans.html'),
+        hifa.tasks.Tsysflagchans : T2_4MDetailsTsyscalFlagchansRenderer(),
         hifa.tasks.Wvrgcal        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_wvrgcal.html'),
         hifa.tasks.Wvrgcalflag    : T2_4MDetailsWvrgcalflagRenderer(),
         hsd.tasks.SDReduction    : T2_4MDetailsDefaultRenderer('t2-4-singledish.html'),
