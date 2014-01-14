@@ -171,7 +171,7 @@ def score_ms_history_entries_present(all_mses, mses_with_history):
 
 
 @log_qa2
-def score_missing_intents(mses):
+def score_missing_intents(mses, array_type='ALMA_12m'):
     """
     Score a MeasurementSet object based on the presence of certain
     observing intents.
@@ -179,9 +179,12 @@ def score_missing_intents(mses):
     # Required calibration intents. Warnings will be raised for any 
     # measurement sets missing these intents 
     score = 1.0
-    score_map = {'PHASE'     : -1.0,
-                 'BANDPASS'  : -0.1,
-                 'AMPLITUDE' : -0.1}
+    if array_type == 'ALMA_TP':
+        score_map = {'ATMOSPHERE' : -1.0}
+    else:
+        score_map = {'PHASE'     : -1.0,
+                     'BANDPASS'  : -0.1,
+                     'AMPLITUDE' : -0.1}
 
     required = set(score_map.keys())
 

@@ -15,7 +15,7 @@ import asap as sd
 LOG = infrastructure.get_logger(__name__)
 
 
-class SDImportDataInputs(common.SingleDishInputs):
+class SDConvertDataInputs(common.SingleDishInputs):
     def __init__(self, context=None, infiles=None, output_dir=None, 
                  session=None, overwrite=None):
         self._init_properties(vars())
@@ -46,9 +46,9 @@ class SDImportDataInputs(common.SingleDishInputs):
         else:
             self._infiles = value
 
-class SDImportDataResults(common.SingleDishResults):
+class SDConvertDataResults(common.SingleDishResults):
     def __init__(self, mses=[], scantables=[]):
-        super(SDImportDataResults, self).__init__()
+        super(SDConvertDataResults, self).__init__()
         self.mses = mses
         self.scantables = scantables
         
@@ -65,13 +65,13 @@ class SDImportDataResults(common.SingleDishResults):
             target.add_scantable(st)
             
     def __repr__(self):
-        return 'SDImportDataResults:\n\t{0}\n\t{1}'.format(
+        return 'SDConvertDataResults:\n\t{0}\n\t{1}'.format(
             '\n\t'.join([ms.name for ms in self.mses]),
             '\n\t'.join([st.name for st in self.scantables]))
 
 
-class SDImportData(common.SingleDishTaskTemplate):
-    Inputs = SDImportDataInputs
+class SDConvertData(common.SingleDishTaskTemplate):
+    Inputs = SDConvertDataInputs
 
     def _ms_directories(self, names):
         """
@@ -113,7 +113,7 @@ class SDImportData(common.SingleDishTaskTemplate):
             to_import_sd = map(os.path.abspath, to_import_sd)
 
         if self._executor._dry_run:
-            return SDImportDataResults()
+            return SDConvertDataResults()
 
         ms_reader = sdtablereader.ObservingRunReader
 
@@ -167,7 +167,7 @@ class SDImportData(common.SingleDishTaskTemplate):
                                                         ms.basename))
             ms.session = inputs.session
 
-        results = SDImportDataResults(observing_run_sd.measurement_sets,
+        results = SDConvertDataResults(observing_run_sd.measurement_sets,
                                       observing_run_sd)
         return results
     
