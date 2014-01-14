@@ -69,8 +69,8 @@ class SDApplyFlag(common.SingleDishTaskTemplate):
                 bltable_name = namer.get_filename()
                 filename = data.name
                 srctype = data.calibration_strategy['srctype']
-                self._apply_baseline_flags(filename, bltable_name)
-                #self._apply_baseline_flag2(filename, index, spwid, srctype)
+                #self._apply_baseline_flags(filename, bltable_name)
+                self._apply_baseline_flags2(filename, index, spwid, srctype)
 
             
         result = SDApplyFlagResults(task=self.__class__,
@@ -103,12 +103,12 @@ class SDApplyFlag(common.SingleDishTaskTemplate):
         job = casa_tasks.sdflag2(**args)
         self._executor.execute(job, merge=False)
 
-    def _apply_apriori_flags2(self, filename, antenna, spwid, on_source):
+    def _apply_baseline_flags2(self, filename, antenna, spwid, on_source):
         context = self.inputs.context
         datatable = context.observing_run.datatable_instance
         datatable_name = datatable.plaintable
         tb = datatable.tb1
-        taqlstring = 'USING STYLE PYTHON SELECT RO.ROW FROM "%s" RO, "%s" RW WHERE ANTENNA==%s && IF==%s && SRCTYPE==%s && FLAG_SUMMARY==0'\
+        taqlstring = 'USING STYLE PYTHON SELECT RO.ROW FROM "%s" RO, "%s" RW WHERE ANTENNA==%s && IF==%s && SRCTYPE==%s && RW.FLAG_SUMMARY==0'\
             % (os.path.join(datatable_name, 'RO'), os.path.join(datatable_name, 'RW'), antenna, spwid, on_source)
         tx = tb.taql(taqlstring)
         rows = tx.getcol('ROW')
