@@ -119,7 +119,7 @@ def get_task_description(result_obj):
     if task_cls is hif.tasks.Setjy:
         return 'Set calibrator model visibilities'
 
-    if task_cls is hsd.tasks.SDImportData:
+    if task_cls in (hsd.tasks.SDImportData, hsd.tasks.SDImportData2):
         names = []
         for result in result_obj:
             names.extend([ms.basename for ms in result.mses])
@@ -162,10 +162,7 @@ def get_task_description(result_obj):
     if task_cls is hsd.tasks.SDApplyCal:
         return 'Apply calibration tables'
 
-    if task_cls is hsd.tasks.SDImaging:
-        return 'Image single dish data'
-
-    if task_cls is hsd.tasks.SDImaging2:
+    if task_cls in (hsd.tasks.SDImaging, hsd.tasks.SDImaging2):
         return 'Image single dish data'
 
     if task_cls is hsd.tasks.SDBaseline:
@@ -179,6 +176,9 @@ def get_task_description(result_obj):
 
     if task_cls is hsd.tasks.SDPlotFlagBaseline:
         return 'Plot whole spectra with baseline fit and flag result'
+
+    if task_cls is hsd.tasks.SDConvertData:
+        return 'Convert MSs into Scantables'
     
     if task_cls is hifv.tasks.importdata.importdata.VLAImportData:
         names = []
@@ -3216,6 +3216,7 @@ renderer_map = {
         hsd.tasks.SDImaging2     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html'),
         hsd.tasks.SDFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagbaseline.html'),
         hsd.tasks.SDPlotFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_plotflagbaseline.html'),
+        hsd.tasks.SDImportData2  : T2_4MDetailsImportDataRenderer(),
         hifv.tasks.importdata.VLAImportData : T2_4MDetailsVLAImportDataRenderer(),
         hifv.tasks.flagging.FlagDeterVLA : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_flagdata.html', always_rerender=True),
         hifv.tasks.setmodel.SetModel : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_setmodel.html', always_rerender=True),
