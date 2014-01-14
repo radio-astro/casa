@@ -319,7 +319,11 @@ class Setjy(basetask.StandardTaskTemplate):
             # looping over the individual fields, specifying just those 
             # intents present in the field.
             fields = inputs.ms.get_fields(field_name)
-            field_is_unique = True if len(fields) is 1 else False
+            if field_name.isdigit():
+                field_is_unique = False
+            else: 
+                field_is_unique = True if len(fields) is 1 else False
+                        
             for field in fields:
                 field_identifier = field.name if field_is_unique else str(field.id)
                 # we're specifying field PLUS intent, so we're unlikely to
