@@ -47,7 +47,7 @@ macro( casa_add_tasks module _target )
 
   foreach( _x ${_xmls} )
     
-    get_filename_component( _base ${_x} NAME_WE )
+	  get_filename_component( _base ${_x} NAME_WE )
     get_filename_component( _xml ${_x} ABSOLUTE )
 
     list( APPEND _all_tasks ${_base} )
@@ -63,7 +63,7 @@ macro( casa_add_tasks module _target )
       OUTPUT ${_cli}
       COMMAND mergeparams ${CMAKE_SOURCE_DIR}/xml/params.xml ${_xml} | sed -e 's/<iparam/<param/g' | sed -e 's^</iparam^</param^g' |sed -e 's/xmlns=""//g'> ${_mxml}
       COMMAND ${SAXON} -o ${_cli} ${_mxml} ${_xsl} 
-      DEPENDS ${_xml} ${_xsl} )
+      DEPENDS ${_xml} ${_mxml} ${_xsl} )
 
     # Create _pg.py
     set( _xsl ${CMAKE_SOURCE_DIR}/install/casa2pypg.xsl )
@@ -71,7 +71,7 @@ macro( casa_add_tasks module _target )
       OUTPUT ${_pg}
       COMMAND mergeparams ${CMAKE_SOURCE_DIR}/xml/params.xml ${_xml} | sed -e 's/<iparam/<param/g' | sed -e 's^</iparam^</param^g' |sed -e 's/xmlns=""//g'> ${_mxml}
       COMMAND ${SAXON} -o ${_pg} ${_mxml} ${_xsl} 
-      DEPENDS ${_xml} ${_xsl} )
+      DEPENDS ${_xml} ${_mxml} ${_xsl} )
 
     # Create .py
     set( _xsl ${CMAKE_SOURCE_DIR}/install/casa2pyimp.xsl )
@@ -79,7 +79,7 @@ macro( casa_add_tasks module _target )
       OUTPUT ${_py}
       COMMAND mergeparams ${CMAKE_SOURCE_DIR}/xml/params.xml ${_xml} | sed -e 's/<iparam/<param/g' | sed -e 's^</iparam^</param^g' |sed -e 's/xmlns=""//g'> ${_mxml}
       COMMAND ${SAXON} -o ${_py} ${_mxml} ${_xsl}
-      DEPENDS ${_xml} ${_xsl} )
+      DEPENDS ${_xml} ${_mxml} ${_xsl} )
 
     # Create intermediate file for the generation of tasks.py and tasksinfo.py
     set( _xsl ${CMAKE_SOURCE_DIR}/install/casa2tsum2.xsl )
