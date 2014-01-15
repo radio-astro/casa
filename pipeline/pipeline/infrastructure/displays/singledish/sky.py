@@ -83,6 +83,8 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
     def _plot_sky(self, result, stage_dir):
         context = self.inputs.context
         caltable = result.outcome.applytable
+        infile = result.outcome.infile
+        vis = result.outcome.calto.vis
         frequencies = os.path.join(caltable, 'FREQUENCIES')
         calto = result.outcome.calto
         calfrom = result.outcome.calfrom[0]
@@ -236,7 +238,8 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
                                           'ant': calto.antenna,
                                           'type': 'sd',
                                           'intent': 'SKYCAL',
-                                          'file': os.path.basename(caltable)}
+                                          'file': infile,
+                                          'vis': vis}
                             plot = logger.Plot(plotfile,
                                                x_axis='Frequency',
                                                y_axis='Sky Level',

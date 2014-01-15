@@ -27,12 +27,14 @@ except Exception, e:
 	<li>Initial display: most important details</li>
 	<ul>
 		<li>Heuristics parameters</li>
-		<li>Plots</li>
-		<ul>
-            <li>
-                <a class="replace" href="${os.path.join(dirname, test)}">Sky Level Plot vs Frequency</a>
-            </li>
-		</ul>
+		<li>Sky Level vs Frequency</li>
+		% for (title, filename) in plot_list.items():
+    		<ul>
+                <li>
+                    <a class="replace" href="${os.path.join(dirname, filename)}">${title}</a>
+                </li>
+		    </ul>
+		% endfor
 		<li>Images</li>
 		<li>Tables</li>
 	</ul>

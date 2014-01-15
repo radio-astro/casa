@@ -2804,27 +2804,40 @@ class T2_4MDetailsSingleDishCalSkyRenderer(T2_4MDetailsDefaultRenderer):
         inputs = sddisplay.SDSkyDisplay.Inputs(context,results)
         task = sddisplay.SDSkyDisplay(inputs)
         plots = task.plot()
-        flattened = [p for _p in plots for p in _p]
-        renderer = SingleDishCalSkyPlotsRenderer(context, results, flattened)
-        with renderer.get_file() as fileobj:
-            fileobj.write(renderer.render())
-        plot_groups = logger.PlotGroup.create_plot_groups(plots)
+        plot_group = self._group_by_vis(plots)
+        #flattened = [p for _p in plots for p in _p]
+        plot_list = {}
+        for (name, _plots) in plot_group.items():
+            renderer = SingleDishCalSkyPlotsRenderer(context, results, name, _plots)
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+            plot_list[name] = renderer.filename
                 
-        ctx.update({'plot_groups': plot_groups,
-                    'test': renderer.filename})
+        ctx.update({'plot_list': plot_list})
         
         return ctx
+    
+    def _group_by_vis(self, plots):
+        plot_group = {}
+        for p in [p for _p in plots for p in _p]:
+            key = p.parameters['vis']
+            if plot_group.has_key(key):
+                plot_group[key].append(p)
+            else:
+                plot_group[key] = [p]
+        return plot_group
+                
     
 class SingleDishCalSkyPlotsRenderer(object):
     # take a look at WvrgcalflagPhaseOffsetVsBaselinePlotRenderer when we have
     # scores and histograms to generate. there should be a common base class. 
     template = 'generic_x_vs_y_detail_plots.html'
 
-    def __init__(self, context, result, plots):
+    def __init__(self, context, result, scantable_name, plots):
         self.context = context
         self.result = result
         self.plots = plots
-        self.ms = 'test'#os.path.basename(self.result.inputs['vis'])
+        self.ms = scantable_name
 
         # all values set on this dictionary will be written to the JSON file
         d = {}
@@ -2865,7 +2878,7 @@ class SingleDishCalSkyPlotsRenderer(object):
     
     @property
     def filename(self):        
-        filename = filenamer.sanitize('phase_vs_time-%s.html' % self.ms)
+        filename = filenamer.sanitize('sky_vs_freq-%s.html' % self.ms)
         return filename
     
     @property
