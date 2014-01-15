@@ -239,15 +239,15 @@ for atmospheric optical depth correction.
                 default: '' (use all fields)
                 example: 'FLS3a*'
                 this selection is in addition to scan, spw, and pol
-        spw -- Select data by IF ids (spwctral window)
+        spw -- Select data by IF ids (spectral window)
                 default: '' (use all IFs)
                 example: '15'
                 NOTE this task only supports IF id selction and ignores channel
                 selection.
-                this selection is in addition to scanlist, field, and pollist
+                this selection is in addition to scan, field, and pol
         scan -- Select data by scan number range
                 default: '' (use all scans)
-                example: '21~24
+                example: '21~24'
                 this selection is in addition to field, spw, and pol
         pol -- Select data by polarization ids
                 default: '' (use all polarizations)

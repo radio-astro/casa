@@ -107,8 +107,10 @@ sdtpimaging.xml
 tsdaverage.xml
 tsdbaseline.xml
 tsdcal.xml
+tsdcal2.xml
 tsdfit.xml
 tsdflag2.xml
+tsdgrid.xml
 tsdimaging.xml
 tsdsave.xml
 tsdstat.xml
