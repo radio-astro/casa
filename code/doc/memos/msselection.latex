@@ -28,6 +28,7 @@
 \renewcommand{\familydefault}{\sfdefault}
 
 
+\newcommand{\MSS} {{\tt MSSelection}}
 \newcommand{\MSSelection}    {\htmladdnormallinkfoot{{\tt MSSelection}}{http://casa.nrao.edu/active/docs/doxygen/html/classcasa\_1\_1MSSelection.html}}
 \newcommand{\MSSelectionError} {\htmladdnormallinkfoot{{\tt MSSelectionError}}{http://casa.nrao.edu/active/docs/doxygen/html/classcasa\_1\_1MSSelectionError.html}}
 \newcommand{\MSSelectionErrorHandler} {\htmladdnormallinkfoot{{\tt MSSelectionErrorHandler}}{http://casa.nrao.edu/active/docs/doxygen/html/classcasa\_1\_1MSSelectionErrorHandler.html}}
@@ -59,7 +60,7 @@
   supplied expressions, are also provided as part of this module.
 
   Error handling is done via the C++ exception handling mechanism.
-  The exceptions thrown by the {\tt MSSelection} module are of type
+  The exceptions thrown by the \MSS\ module are of type
   \MSSelectionError\ which is derived from {\tt AipsError} class.  The
   exceptions generated from each individual expression parser are
   further specializations of the {\tt MSSeletionError} class.
@@ -70,10 +71,10 @@
   of the exceptional states that may be reached during the parsing
   cycle.
 
-  The {\tt MSSelection} module now can also be used for other tables
+  The \MSS\ module now can also be used for other tables
   that follow the general data base design of the {\tt
     MeasurementSet}.  The CASA \CalTables\ is an example which also
-  uses the {\tt MSSelection} module for data selection.
+  uses the \MSS\ module for data selection.
 \end{abstract}
 \newpage
 \tableofcontents
@@ -81,7 +82,7 @@
 
 \section{General Syntax}
 \label{Sec:GENERALSYNTAX}
-A MSSelection expression consists of a comma separated list of
+A \MSS\ expression consists of a comma separated list of
 specifications.  Specifications are typically strings or numbers.
 Strings and numbers can be mixed to form a single list.  Elements of
 the list which can be converted to integers are treated as integer
@@ -172,7 +173,7 @@ Strings can include any character except the following:
 \begin{verbatim}
    ','   ';' '"'  '/'  ':' and NEWLINE
 \end{verbatim}
-(these are reserved characters for MSSelection expression syntax).
+(these are reserved characters for \MSS\ expression syntax).
 Strings that do not contain any of the characters used to construct
 regular expressions or patterns are used for exact matches.  Although
 it is highly discouraged to have name in the database containing the
@@ -183,7 +184,7 @@ are super-set of literal strings. I.e. literal string is a valid
 regular expression also).  This leaves the list '"', '*', '?', '{' and
   '}' as the list of printable character that cannot be part of a name
 (i.e., a name containing this character can never be matched in a
-MSSelection expression).  If a need is felt to include these as well,
+\MSS\ expression).  If a need is felt to include these as well,
 an escape mechanism can be included later (but I would prefer to
 enforce that {\bf at least} these characters not be part of any
 name!).  Following are some examples of strings/regular
@@ -686,7 +687,7 @@ E.g.
 
 \subsection{Channel Selection Syntax}
 
-Channel specification\footnote{\it MSSelection module is currently
+Channel specification\footnote{\it The \MSS\ module is currently
   used to only parse the channel selection expression to produce the
   START,STOP,STEP tuples.  No channel based selection is actually
   applied to the data.  The list of tuples per SPW is passed to the
@@ -863,7 +864,7 @@ row number of the {\tt "STATE"} sub-table appropriate for each row in
 the main table.  The {\tt "OBS\_MODE"} column of the {\tt STATE}
 sub-table contains strings describing the observational intent.
 These intents are referred to as "scan intents" and the scan-intent
-expressions in the MSSelection module can be used for data selection
+expressions in the \MSS\ module can be used for data selection
 based on these intents.
 
 \subsection{Syntax}
@@ -1016,7 +1017,7 @@ specifications.  E.g.
 \appendix{}
 \section{Appendix: General Error Handling}
 
-The MSSelection sub-system reports errors via the C++ exception
+The \MSS\ sub-system reports errors via the C++ exception
 mechanism.  The objects thrown have the following inheritance
 hierarchy:
 
@@ -1046,11 +1047,11 @@ errors (e.g. illegal \hyperref{range}{range (see Section
 by throwing an exception of type {\tt MSSelection\{Time, Spw, Field,
   UvDist, Antenna, Scan, Subarray,Poln,State\}Error}.
 
-Hence, to catch all errors thrown from the MSSelection sub-system,
+Hence, to catch all errors thrown from the \MSS\ sub-system,
 catch the \MSSelectionError\ object.  For more specific exception
 handling, catch the more qualified MSSelection*Error objects.  For
 catching only parsing errors, catch the MSSelection*ParseError object.
-As is obvious, any un-caught exception from the MSSelection sub-system
+As is obvious, any un-caught exception from the \MSS\ sub-system
 will be caught in the AipsError catch block.
 
 The exceptional error message consists of a human understandable
@@ -1067,11 +1068,11 @@ when an error is encountered during parsing cycle or in the
 rule-resolution code.  However there are cases where instead of
 throwing an exception, the errors must be collected as they occur and
 resolution of the error done at the end of the parsing cycle.  In the
-MSSelection module, this is achieved by installing an error handler
+\MSS\ module, this is achieved by installing an error handler
 object of type \MSSelectionErrorHandler\footnote{This is also the
   base-class from which all specializations of the error handlers must
-  be derived.} in the instance of the MSSelection object.  This is the
-object that is used internally to handle errors in the MSSelection
+  be derived.} in the instance of the \MSS\ object.  This is the
+object that is used internally to handle errors in the \MSS\
 module.  The default error handler that comes pre-installed simply
 throws an exception of the appropriate kind when an error is
 encountered, recreating the normal behaviour of the C++ excpetion
