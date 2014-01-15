@@ -23,11 +23,10 @@ except Exception, e:
    print 'hsd_calsky html template exception:', e
 %>
 
+This task generates a sky calibration table, a collection of OFF spectra for single dish data calibration.
+
 <ul>
-	<li>Initial display: most important details</li>
-	<ul>
-		<li>Heuristics parameters</li>
-		<li>Sky Level vs Frequency</li>
+	<li>Sky Level vs Frequency</li>
 		% for (title, filename) in plot_list.items():
     		<ul>
                 <li>
@@ -35,9 +34,5 @@ except Exception, e:
                 </li>
 		    </ul>
 		% endfor
-		<li>Images</li>
-		<li>Tables</li>
-	</ul>
-	<li>Display maximum detail in this panel, similar to previous incarnation of pipeline; use different background colour; back button will go back to initial display</li>
 </ul>
 

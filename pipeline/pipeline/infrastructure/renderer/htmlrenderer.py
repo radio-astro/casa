@@ -2805,7 +2805,6 @@ class T2_4MDetailsSingleDishCalSkyRenderer(T2_4MDetailsDefaultRenderer):
         task = sddisplay.SDSkyDisplay(inputs)
         plots = task.plot()
         plot_group = self._group_by_vis(plots)
-        #flattened = [p for _p in plots for p in _p]
         plot_list = {}
         for (name, _plots) in plot_group.items():
             renderer = SingleDishCalSkyPlotsRenderer(context, results, name, _plots)
@@ -2831,7 +2830,7 @@ class T2_4MDetailsSingleDishCalSkyRenderer(T2_4MDetailsDefaultRenderer):
 class SingleDishCalSkyPlotsRenderer(object):
     # take a look at WvrgcalflagPhaseOffsetVsBaselinePlotRenderer when we have
     # scores and histograms to generate. there should be a common base class. 
-    template = 'generic_x_vs_y_detail_plots.html'
+    template = 'sd_calsky_plots.html'
 
     def __init__(self, context, result, scantable_name, plots):
         self.context = context
@@ -2849,6 +2848,7 @@ class SingleDishCalSkyPlotsRenderer(object):
                                             self.context.report_dir)
             spw_id = plot.parameters['spw']
             ant_id = plot.parameters['ant']
+            pol_id = plot.parameters['pol']
 
             # Javascript JSON parser doesn't like Javascript floating point 
             # constants (NaN, Infinity etc.), so convert them to null. We  
@@ -2859,6 +2859,7 @@ class SingleDishCalSkyPlotsRenderer(object):
 
             d[image_relpath] = {'spw'       : str(spw_id),
                                 'ant'       : ant_id,
+                                'pol'       : pol_id,
                                 'thumbnail' : thumbnail_relpath}
 
         self.json = json.dumps(d)

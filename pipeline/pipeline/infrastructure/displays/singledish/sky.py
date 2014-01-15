@@ -157,6 +157,7 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
         # generate plots
         plots = []
         qa = casatools.quanta
+        polmap = {0: 'XX', 1: 'YY', 2: 'XY', 3: 'YX'}
         with utils.open_table(caltable) as tb:
             for spw in spwlist:
                 beam_size = scantable.beam_size[spw]
@@ -234,7 +235,7 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
                             LOG.debug('created %s'%(plotfile))
                             plotfile = os.path.join(stage_dir, plotfile)
                             parameters = {'spw': '%s'%(spw),
-                                          'pol': '%s'%(pol),
+                                          'pol': '%s'%(polmap[pol]),
                                           'ant': calto.antenna,
                                           'type': 'sd',
                                           'intent': 'SKYCAL',
