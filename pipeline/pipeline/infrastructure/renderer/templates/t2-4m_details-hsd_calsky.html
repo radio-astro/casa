@@ -11,9 +11,7 @@ import pipeline.infrastructure.displays as displays
 
 <%block name="header" />
 
-<%block name="title">Stage ${hr.get_stage_number(result)} Task Details</%block>
-
-<h1>Stage ${hr.get_stage_number(result)}: ${hr.get_task_description(result)}</h1>
+<%block name="title">Stage ${hr.get_stage_number(result)} ${hr.get_task_description(result)}</%block>
 
 <%
 try:
@@ -25,14 +23,12 @@ except Exception, e:
 
 This task generates a sky calibration table, a collection of OFF spectra for single dish data calibration.
 
-<ul>
-	<li>Sky Level vs Frequency</li>
-		% for (title, filename) in plot_list.items():
-    		<ul>
-                <li>
-                    <a class="replace" href="${os.path.join(dirname, filename)}">${title}</a>
-                </li>
-		    </ul>
-		% endfor
-</ul>
+<h3>Sky Level vs Frequency</h3>
+	% for (title, filename) in plot_list.items():
+	<ul>
+        <li>
+            <a class="replace" href="${os.path.join(dirname, filename)}">${title}</a>
+        </li>
+    </ul>
+    % endfor
 
