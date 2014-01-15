@@ -67,19 +67,25 @@ class sdgrid_worker(sdutil.sdtask_interface):
         if isinstance(self.infile, str):
             self.infile = [self.infile]
 
+        # scantable for temporary use
+        tmpst = sd.scantable(self.infile[0], False)
+
         # scanlist
         #self.scans = sdutil._to_list(self.scanlist, int)
-        self.scans = self.infile[0].parse_idx_selection("SCAN", self.scanno)
+        self.scans = tmpst.parse_idx_selection("SCAN", self.scanno)
 
         # pollist
         #self.pols = sdutil._to_list(self.pollist, int)
-        self.pols = self.infile[0].parse_idx_selection("POL", self.polno)
+        self.pols = tmpst.parse_idx_selection("POL", self.polno)
 
         # spw
-        masklist = self.infile[0].parse_spw_selection(self.spw)
-        if len(masklist) == 0:
-            raise ValueError, "Invalid spectral window selection. Selection contains no data."
-        self.ifno = masklist.keys()[0]
+        if int(self.spw.strip()) == -1:
+            self.ifno = tmpst.getif(0)
+        else:
+            masklist = tmpst.parse_spw_selection(self.spw)
+            if len(masklist) == 0:
+                raise ValueError, "Invalid spectral window selection. Selection contains no data."
+            self.ifno = masklist.keys()[0]
         
         # outfile
         self.outname = sdutil.get_default_outfile_name(self.infile[0],
@@ -98,9 +104,11 @@ class sdgrid_worker(sdutil.sdtask_interface):
         # map center
         self.mapcenter = sdutil.get_map_center(self.center)
 
+        del tmpst
+
     def __summarize_raw_inputs(self):
-        params = ['infile', 'antenna', 'scan', 'spw',
-                  'pol', 'gridfunction', 'convsupport',
+        params = ['infile', 'antenna', 'scanno', 'spw',
+                  'polno', 'gridfunction', 'convsupport',
                   'truncate', 'gwidth', 'jwidth', 'weight',
                   'clipminmax', 'outfile', 'overwrite',
                   'npix', 'cell', 'center', 'plot']
