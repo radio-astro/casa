@@ -30,7 +30,7 @@ class FittingFactory(object):
         
 class FittingInputs(common.SingleDishInputs):
     def __init__(self, context, antennaid, spwid, pollist, iteration, 
-                 fit_order=None, edge=None, outfile_suffix="_temp"):
+                 fit_order=None, edge=None, outfile=None):
         self._init_properties(vars())
         self._bltable = None
         
@@ -58,10 +58,10 @@ class FittingInputs(common.SingleDishInputs):
     def infile(self):
         return self.data_object.name
     
-    @property
-    def outfile(self):
-        return self.data_object.name + self.outfile_suffix
-#         return self.data_object.baselined_name
+#     @property
+#     def outfile(self):
+#         return self.data_object.name + self.outfile_suffix
+# #         return self.data_object.baselined_name
     
     @property
     def bltable(self):
@@ -129,10 +129,16 @@ class FittingBase(common.SingleDishTaskTemplate):
 #         if iteration == 0:
 #             utils.createExportTable(bltable_name)
             
-        if iteration == 0 or not os.path.exists(filename_out):
-            with casatools.TableReader(filename_in) as tb:
-                copied = tb.copy(filename_out, deep=True, valuecopy=True, returnobject=True)
-                copied.close()    
+        if not filename_out or len(filename_out) == 0:
+            self.outfile = self.data_object.baselined_name
+            LOG.debug("Using default output scantable name, %s" % self.outfile)
+        
+        if not os.path.exists(filename_out):
+            raise RuntimeError, "Output scantable '%s' does not exist. It should be exist before you run this method." % filename_out
+#         if iteration == 0 or not os.path.exists(filename_out):
+#             with casatools.TableReader(filename_in) as tb:
+#                 copied = tb.copy(filename_out, deep=True, valuecopy=True, returnobject=True)
+#                 copied.close()    
 
         #time_table = self.time_table
         #index_list = self.index_list

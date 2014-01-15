@@ -7,6 +7,7 @@ import numpy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.sdfilenamer as filenamer
+import pipeline.infrastructure.casatools as casatools
 
 from .. import common
 from . import maskline
@@ -99,11 +100,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
         
         dummy_suffix = "_temp"
         # Clear-up old temporary scantables (but they really shouldn't exist)
-        remove_list = glob.glob("*"+dummy_suffix)
-        for dummy in remove_list:
-            LOG.debug("Removing old temprary file '%s'" % dummy)
-            shutil.rmtree(dummy)
-        del remove_list
+        self._clearup_dummy()
         
         baselined = []
 
@@ -111,6 +108,9 @@ class SDBaseline(common.SingleDishTaskTemplate):
         polnos = numpy.array(datatable.getcol('POL'))
         srctypes = numpy.array(datatable.getcol('SRCTYPE'))
         antennas = numpy.array(datatable.getcol('ANTENNA'))
+
+        # generate storage for baselined data
+        self._generate_storage_for_baselined(context, reduction_group)
 
         # loop over reduction group
         files = set()
@@ -165,8 +165,9 @@ class SDBaseline(common.SingleDishTaskTemplate):
             # loop over file
             for idx in _file_index:
                 iteration = group_desc.get_iteration(idx, spwid)
+                outfile = self._get_dummy_name(context, idx)
                 fitter_inputs = fitter_cls.Inputs(context, idx, spwid, pols, iteration, 
-                                                  fitorder, edge, dummy_suffix)
+                                                  fitorder, edge, outfile)
                 fitter = fitter_cls(fitter_inputs)
                 fitter_result = self._executor.execute(fitter, merge=True)
                 # store temporal scantable name
@@ -205,5 +206,44 @@ class SDBaseline(common.SingleDishTaskTemplate):
 
     def analyse(self, result):
         return result
+
+    def _generate_storage_for_baselined(self, context, reduction_group):
+        for antenna in xrange(len(context.observing_run)):
+            reference = context.observing_run[antenna].name
+#             storage = context.observing_run[antenna].baselined_name
+            storage = self._get_dummy_name(context, antenna)
+            if not os.path.exists(storage):
+                # generate
+                self._generate_storage_from_reference(storage, reference)
+            iter_counter_list = []
+            for (id, desc) in reduction_group.items():
+                for member in desc:
+                    if member.antenna == antenna:
+                        iter_counter_list.extend(member.iteration)
+            LOG.debug('iter_counter_list=%s'%(iter_counter_list))
+            if all(numpy.array(iter_counter_list) == 0):
+                # generate
+                self._generate_storage_from_reference(storage, reference)
+
+    def _generate_storage_from_reference(self, storage, reference):
+        LOG.debug('generating %s from %s'%(os.path.basename(storage), os.path.basename(reference)))
+        with casatools.TableReader(reference) as tb:
+            copied = tb.copy(storage, deep=True, returnobject=True)
+            copied.close()
+
+    @property
+    def _dummy_suffix(self):
+        return "_temp"
+    
+    def _get_dummy_name(self, context, idx):
+        """Generate temporal scantable name."""
+        return context.observing_run[idx].name + self._dummy_suffix
+        
+    def _clearup_dummy(self):
+        remove_list = glob.glob("*"+self._dummy_suffix)
+        for dummy in remove_list:
+            LOG.debug("Removing old temprary file '%s'" % dummy)
+            shutil.rmtree(dummy)
+        del remove_list
 
 
