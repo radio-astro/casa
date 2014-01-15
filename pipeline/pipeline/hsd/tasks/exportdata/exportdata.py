@@ -18,6 +18,7 @@ results = task.execute (dry_run = False)
 """
 from __future__ import absolute_import
 import os
+import re
 import errno
 import tarfile
 import fnmatch
@@ -300,8 +301,25 @@ class SDExportData(basetask.StandardTaskTemplate):
             xx_dot_im_next = [xx_dot_im[i] for i in range(len(xx_dot_im))
                 if not (i in num_selected_im)]
             
+            # Export combined images only
+            #antenna_names = set([a.name for ms in context.observing_run.measurement_sets for a in ms.antennas])
+            antenna_names = set([st.antenna.name for st in context.observing_run])
+            #LOG.info('antenna_names=%s'%(antenna_names))
+            
+            pattern_string = '.*\.(%s)\.spw.*\.sd\.im$'%('|'.join(antenna_names))
+            #LOG.info('pattren_string=%s'%(pattern_string))
+            
+            combined_images = [image for image in xx_dot_im_next if re.match(pattern_string, image) is None]
+            #LOG.info('combined_images=%s'%(combined_images))
+            
+            # If no combined images available, export all the images detected 
+            if len(combined_images) > 0:
+                resulting_images = combined_images
+            else:
+                resulting_images = xx_dot_im_next
+            
             splitted_path = []
-            for fname in xx_dot_im_next:
+            for fname in resulting_images:
                 root, ext = os.path.splitext(fname)
                 splitted_path.append(root)
              
