@@ -111,6 +111,8 @@ tsdfit.xml
 tsdflag2.xml
 tsdgrid.xml
 tsdimaging.xml
+tsdmath.xml
+tsdplot.xml
 tsdsave.xml
 tsdstat.xml
 setjy.xml
