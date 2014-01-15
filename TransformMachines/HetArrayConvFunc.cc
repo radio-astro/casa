@@ -739,7 +739,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        rec.define("pbclass", Int(pbClass_p));
        
     }
-    catch(AipsError x) {
+    catch(AipsError& x) {
       return False;
     }
     return True;   
@@ -790,7 +790,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       pbClass_p=static_cast<PBMathInterface::PBClass>(rec.asInt("pbclass"));
       calcFluxScale_p=calcfluxscale;
     }
-    catch(AipsError x) {
+    catch(AipsError& x) {
       err=x.getMesg();
       return False;
     } 
@@ -890,8 +890,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  for (Int chan=0; chan < convFunc_p.shape()[3]; ++chan){
 	    begin[3]=chan;
 	    end[3]=chan;
-	    convFunc_p(begin, end).set(0.0);
-	    weightConvFunc_p(begin, end).set(0.0);
+	    convFunc_p(begin, end).set(Complex(0.0));
+	    weightConvFunc_p(begin, end).set(Complex(0.0));
 	  //convFunc_p.xyPlane(plane).set(0.0);
 	  //weightConvFunc_p.xyPlane(plane).set(0.0);
 	  }
@@ -997,7 +997,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    begin[3]=chan;
 	    //end[3]=chan;
 	    convPlane.resize(shape[0], shape[1]);
-	    convPlane.set(0.0);
+	    convPlane.set(Complex(0.0));
 	    convFuncLat.putSlice(convPlane, begin);
 	    weightConvFuncLat.putSlice(convPlane, begin);
 	  //convFunc_p.xyPlane(plane).set(0.0);
