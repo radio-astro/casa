@@ -171,6 +171,9 @@ def get_task_description(result_obj):
     if task_cls is hsd.tasks.SDBaseline:
         return 'Subtract spectral baseline'
 
+    if task_cls is hsd.tasks.SDBaseline2:
+        return 'Generate Baseline tables and subtract spectral baseline'
+
     if task_cls is hsd.tasks.SDFlagData:
         return 'Flag data by Tsys, weather, and statistics of spectra'
     
@@ -3218,6 +3221,7 @@ renderer_map = {
         hsd.tasks.SDCalTsys      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_caltsys.html'),
         hsd.tasks.SDCalSky       : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_calsky.html'),
         hsd.tasks.SDBaseline     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_baseline.html'),
+        hsd.tasks.SDBaseline2     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_baseline.html', always_rerender=True),
         hsd.tasks.SDFlagData     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagdata.html', always_rerender=True),
         hsd.tasks.SDImaging      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html'),
         hsd.tasks.SDImaging2     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html'),
