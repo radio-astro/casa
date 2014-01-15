@@ -33,6 +33,7 @@ import pipeline.infrastructure.displays.summary as summary
 import pipeline.infrastructure.displays.slice as slicedisplay
 import pipeline.infrastructure.displays.tsys as tsys
 import pipeline.infrastructure.displays.wvr as wvr
+import pipeline.infrastructure.displays.singledish as sddisplay
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.renderer.rendererutils as rendererutils
@@ -2788,7 +2789,102 @@ class T2_4MDetailsAgentFlaggerRenderer(T2_4MDetailsDefaultRenderer):
 
 
 
+class T2_4MDetailsSingleDishCalSkyRenderer(T2_4MDetailsDefaultRenderer):
+    def __init__(self, template='t2-4m_details-hsd_calsky.html', 
+                 always_rerender=False):
+        super(T2_4MDetailsSingleDishCalSkyRenderer, self).__init__(template,
+                                                                   always_rerender)
+    def get_display_context(self, context, results):
+        ctx = super(T2_4MDetailsSingleDishCalSkyRenderer, self).get_display_context(context, results)
+        
+        stage_dir = os.path.join(context.report_dir,'stage%d'%(results.stage_number))
+        if not os.path.exists(stage_dir):
+            os.mkdir(stage_dir)
+       
+        inputs = sddisplay.SDSkyDisplay.Inputs(context,results)
+        task = sddisplay.SDSkyDisplay(inputs)
+        plots = task.plot()
+        flattened = [p for _p in plots for p in _p]
+        renderer = SingleDishCalSkyPlotsRenderer(context, results, flattened)
+        with renderer.get_file() as fileobj:
+            fileobj.write(renderer.render())
+        plot_groups = logger.PlotGroup.create_plot_groups(plots)
+                
+        ctx.update({'plot_groups': plot_groups,
+                    'test': renderer.filename})
+        
+        return ctx
+    
+class SingleDishCalSkyPlotsRenderer(object):
+    # take a look at WvrgcalflagPhaseOffsetVsBaselinePlotRenderer when we have
+    # scores and histograms to generate. there should be a common base class. 
+    template = 'generic_x_vs_y_detail_plots.html'
 
+    def __init__(self, context, result, plots):
+        self.context = context
+        self.result = result
+        self.plots = plots
+        self.ms = 'test'#os.path.basename(self.result.inputs['vis'])
+
+        # all values set on this dictionary will be written to the JSON file
+        d = {}
+        for plot in plots:
+            # calculate the relative pathnames as seen from the browser
+            thumbnail_relpath = os.path.relpath(plot.thumbnail,
+                                                self.context.report_dir)
+            image_relpath = os.path.relpath(plot.abspath,
+                                            self.context.report_dir)
+            spw_id = plot.parameters['spw']
+            ant_id = plot.parameters['ant']
+
+            # Javascript JSON parser doesn't like Javascript floating point 
+            # constants (NaN, Infinity etc.), so convert them to null. We  
+            # do not omit the dictionary entry so that the plot is hidden
+            # by the filters.
+#             if math.isnan(ratio) or math.isinf(ratio):
+#                 ratio = 'null'
+
+            d[image_relpath] = {'spw'       : str(spw_id),
+                                'ant'       : ant_id,
+                                'thumbnail' : thumbnail_relpath}
+
+        self.json = json.dumps(d)
+         
+    def _get_display_context(self):
+        return {'pcontext'   : self.context,
+                'result'     : self.result,
+                'plots'      : self.plots,
+                'dirname'    : self.dirname,
+                'json'       : self.json,
+                'plot_title' : 'Sky Level vs Frequency for %s' % self.ms}
+
+    @property
+    def dirname(self):
+        stage = 'stage%s' % self.result.stage_number
+        return os.path.join(self.context.report_dir, stage)
+    
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('phase_vs_time-%s.html' % self.ms)
+        return filename
+    
+    @property
+    def path(self):
+        return os.path.join(self.dirname, self.filename)
+    
+    def get_file(self, hardcopy=True):
+        if hardcopy and not os.path.exists(self.dirname):
+            os.makedirs(self.dirname)
+            
+        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
+        return contextlib.closing(file_obj)
+    
+    def render(self):
+        display_context = self._get_display_context()
+        t = TemplateFinder.get_template(self.template)
+        return t.render(**display_context)
+
+    
 class T2_4MDetailsRenderer(object):
     # the filename component of the output file. While this is the same for
     # all results, the directory is stage-specific, so there's no risk of
@@ -3219,7 +3315,7 @@ renderer_map = {
         hsd.tasks.SDReduction    : T2_4MDetailsDefaultRenderer('t2-4-singledish.html'),
         hsd.tasks.SDInspectData  : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_inspectdata.html'),
         hsd.tasks.SDCalTsys      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_caltsys.html'),
-        hsd.tasks.SDCalSky       : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_calsky.html'),
+        hsd.tasks.SDCalSky       : T2_4MDetailsSingleDishCalSkyRenderer(always_rerender=True),
         hsd.tasks.SDBaseline     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_baseline.html'),
         hsd.tasks.SDBaseline2     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_baseline.html', always_rerender=True),
         hsd.tasks.SDFlagData     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagdata.html', always_rerender=True),
