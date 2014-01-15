@@ -1,9 +1,10 @@
 from __future__ import absolute_import
-
+import os
 import numpy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.sdfilenamer as filenamer
+import pipeline.infrastructure.casatools as casatools
 
 from .. import common
 from . import maskline
@@ -100,6 +101,9 @@ class SDBaseline(common.SingleDishTaskTemplate):
         srctypes = numpy.array(datatable.getcol('SRCTYPE'))
         antennas = numpy.array(datatable.getcol('ANTENNA'))
 
+        # generate storage for baselined data
+        self._generate_storage_for_baselined(context, reduction_group)
+
         # loop over reduction group
         files = set()
         for (group_id,group_desc) in reduction_group.items():            
@@ -182,4 +186,25 @@ class SDBaseline(common.SingleDishTaskTemplate):
     def analyse(self, result):
         return result
 
+    def _generate_storage_for_baselined(self, context, reduction_group):
+        for antenna in xrange(len(context.observing_run)):
+            reference = context.observing_run[antenna].name
+            storage = context.observing_run[antenna].baselined_name
+            if not os.path.exists(storage):
+                # generate
+                self._generate_storage_from_reference(storage, reference)
+            iter_counter_list = []
+            for (id, desc) in reduction_group.items():
+                for member in desc:
+                    if member.antenna == antenna:
+                        iter_counter_list.extend(member.iteration)
+            LOG.debug('iter_counter_list=%s'%(iter_counter_list))
+            if all(numpy.array(iter_counter_list) == 0):
+                # generate
+                self._generate_storage_from_reference(storage, reference)
 
+    def _generate_storage_from_reference(self, storage, reference):
+        LOG.debug('generating %s from %s'%(os.path.basename(storage), os.path.basename(reference)))
+        with casatools.TableReader(reference) as tb:
+            copied = tb.copy(storage, deep=True, returnobject=True)
+            copied.close()
