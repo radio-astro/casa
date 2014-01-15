@@ -8,6 +8,7 @@ import shutil
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.basetask as basetask
 import pipeline.domain as domain
 from pipeline.infrastructure import tablereader
 from ... import heuristics
@@ -22,8 +23,34 @@ LOG = infrastructure.get_logger(__name__)
 class SDImportData2Inputs(importdata.ImportDataInputs):
     pass
 
-class SDImportData2Results(importdata.ImportDataResults):
-    pass
+#class SDImportData2Results(importdata.ImportDataResults):
+#    pass
+class SDImportData2Results(basetask.Results):
+    '''
+    ImportDataResults holds the results of the ImportData task. It contains
+    the resulting MeasurementSet domain objects and optionally the additional 
+    SetJy results generated from flux entries in Source.xml.
+    '''
+    
+    def __init__(self, mses=None, setjy_results=None):
+        super(SDImportData2Results, self).__init__()
+        self.mses = [] if mses is None else mses
+        self.setjy_results = setjy_results
+        self.origin = {}
+        
+    def merge_with_context(self, context):
+        target = context.observing_run
+        for ms in self.mses:
+            LOG.info('Adding {0} to context'.format(ms.name))
+            target.add_measurement_set(ms)
+
+        if self.setjy_results:
+            for result in self.setjy_results:
+                result.merge_with_context(context)
+            
+    def __repr__(self):
+        return 'SDImportData2Results:\n\t{0}'.format(
+                '\n\t'.join([ms.name for ms in self.mses]))
 
 class SDImportData2(importdata.ImportData):
     Inputs = SDImportData2Inputs
