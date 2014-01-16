@@ -2,8 +2,8 @@ import sys
 
 import pipeline.h.cli.utils as utils
 
-def hsd_imaging2(reffile=None, pipelinemode=None, infiles=None, field=None,
-                 scanlist=None, iflist=None, pollist=None,
+def hsd_imaging2(pipelinemode=None, infiles=None, field=None,
+                 scanlist=None, iflist=None, pollist=None, reffile=None, 
                  dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the

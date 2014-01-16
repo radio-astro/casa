@@ -9,11 +9,6 @@
 <description>
 </description>
 <input>
-    <param type="string" name="reffile">
-    <description>Path to file with Jy/K conversion factors</description>
-    <value></value>
-    </param>
-    
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
 	<value>automatic</value>
@@ -49,6 +44,11 @@
         <value></value>
     </param>
 
+    <param type="string" name="reffile" subparam="true">
+        <description>Path to file with Jy/K conversion factors</description>
+        <value></value>
+    </param>
+    
     <param type="bool" name="dryrun" subparam="true">
 	<description>Run the task (False) or display task command (True)</description>
 	<value>False</value>
@@ -69,6 +69,7 @@
                 <default param="scanlist"><value type="intArray"></value></default>
                 <default param="iflist"><value type="intArray"></value></default>
                 <default param="pollist"><value type="intArray"></value></default>
+                <default param="reffile"><value type="string"></value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
@@ -78,6 +79,7 @@
                 <default param="scanlist"><value type="intArray"></value></default>
                 <default param="iflist"><value type="intArray"></value></default>
                 <default param="pollist"><value type="intArray"></value></default>
+                <default param="reffile"><value type="string"></value></default>
 	    </equals>
 	</when>
     </constraints>

@@ -11,6 +11,7 @@ from . import gridding
 from . import exportms
 from . import applyflag
 from . import weighting
+from . import scaling
 from . import worker
 from .. import common
 from ..baseline import baseline
@@ -75,6 +76,15 @@ class SDImaging2(common.SingleDishTaskTemplate):
         export_task = exportms.ExportMS(export_inputs)
         export_results = self._executor.execute(export_task, merge=True)
         exported_mses = export_results.outcome
+        
+        # Step 3.
+        # Intensity scaling
+        LOG.info('Step 3. Intensity scaling')
+        scaling_inputs = scaling.IntensityScaling.Inputs(context, 
+                                                         infiles=infiles, 
+                                                         reffile=reffile)
+        scaling_task = scaling.IntensityScaling(scaling_inputs)
+        scaling_results = self._executor.execute(scaling_task, merge=True)
 
         # search results and retrieve edge parameter from the most
         # recent SDBaselineResults if it exists
@@ -173,9 +183,9 @@ class SDImaging2(common.SingleDishTaskTemplate):
                 namer.polarization(polstr)
                 imagename = namer.get_filename()
                 
-                # Step 3.
+                # Step 4.
                 # Set weights
-                LOG.info('Step 3. Set weights')
+                LOG.info('Step 4. Set weights')
                 for i in xrange(len(indices)):
                     index = indices[i]
                     original_st = filenames[i]
@@ -188,9 +198,9 @@ class SDImaging2(common.SingleDishTaskTemplate):
                     weighting_task = weighting.WeightMS(weighting_inputs)
                     weighting_result = self._executor.execute(weighting_task, merge=True)
 
-                # Step 4.
+                # Step 5.
                 # Imaging
-                LOG.info('Step 4. Imaging')
+                LOG.info('Step 5. Imaging')
                 imager_inputs = worker.SDImaging2Worker.Inputs(context, infiles=infiles, 
                                                                outfile=imagename, spwid=spwid, 
                                                                onsourceid=srctype, edge=edge,
