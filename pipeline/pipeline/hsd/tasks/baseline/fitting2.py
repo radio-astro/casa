@@ -15,6 +15,8 @@ from .. import common
 from . import utils
 from .baselinetable import SplineBaselineTableGenerator
 from .baselinetable import PolynomialBaselineTableGenerator
+from .fitting import FittingResults
+from .fitting import FittingInputs as FittingInputsBase
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -28,70 +30,78 @@ class FittingFactory(object):
         else:
             return None
         
-class FittingInputs(common.SingleDishInputs):
+class FittingInputs(FittingInputsBase): #common.SingleDishInputs):
     def __init__(self, context, antennaid, spwid, pollist, iteration, 
                  fit_order=None, edge=None, outfile=None):
         self._init_properties(vars())
         self._bltable = None
-        
-    @property
-    def edge(self):
-        return (0,0) if self._edge is None else self._edge
     
-    @edge.setter
-    def edge(self, value):
-        self._edge = value
-        
     @property
-    def fit_order(self):
-        return 'automatic' if self._fit_order is None else self._fit_order
+    def outfile(self):
+        return self._outfile
     
-    @fit_order.setter
-    def fit_order(self, value):
-        self._fit_order = value
+    @outfile.setter
+    def outfile(self, value):
+        self._outfile = value
         
-    @property
-    def data_object(self):
-        return self.context.observing_run[self.antennaid]
+#     @property
+#     def edge(self):
+#         return (0,0) if self._edge is None else self._edge
+    
+#     @edge.setter
+#     def edge(self, value):
+#         self._edge = value
         
-    @property
-    def infile(self):
-        return self.data_object.name
+#     @property
+#     def fit_order(self):
+#         return 'automatic' if self._fit_order is None else self._fit_order
+    
+#     @fit_order.setter
+#     def fit_order(self, value):
+#         self._fit_order = value
+        
+#     @property
+#     def data_object(self):
+#         return self.context.observing_run[self.antennaid]
+        
+#     @property
+#     def infile(self):
+#         return self.data_object.name
+    
+# #     @property
+# #     def outfile(self):
+# #         return self.data_object.name + self.outfile_suffix
+# # #         return self.data_object.baselined_name
     
 #     @property
-#     def outfile(self):
-#         return self.data_object.name + self.outfile_suffix
-# #         return self.data_object.baselined_name
+#     def bltable(self):
+#         if self._bltable is None:
+#             namer = filenamer.BaselineSubtractedTable()
+#             namer.spectral_window(self.spwid)
+#             st = self.data_object
+#             asdm = common.asdm_name(st)
+#             namer.asdm(asdm)
+#             namer.antenna_name(st.antenna.name)
+#             self._bltable = namer.get_filename()
+#         return self._bltable
     
-    @property
-    def bltable(self):
-        if self._bltable is None:
-            namer = filenamer.BaselineSubtractedTable()
-            namer.spectral_window(self.spwid)
-            st = self.data_object
-            asdm = common.asdm_name(st)
-            namer.asdm(asdm)
-            namer.antenna_name(st.antenna.name)
-            self._bltable = namer.get_filename()
-        return self._bltable
+#     @property
+#     def srctype(self):
+#         return self.data_object.calibration_strategy['srctype']
     
-    @property
-    def srctype(self):
-        return self.data_object.calibration_strategy['srctype']
-    
-    @property
-    def nchan(self):
-        return self.data_object.spectral_window[self.spwid].nchan
+#     @property
+#     def nchan(self):
+#         return self.data_object.spectral_window[self.spwid].nchan
                 
-class FittingResults(common.SingleDishResults):
-    def __init__(self, task=None, success=None, outcome=None):
-        super(FittingResults, self).__init__(task, success, outcome)
+# class FittingResults(common.SingleDishResults):
+#     def __init__(self, task=None, success=None, outcome=None):
+#         super(FittingResults, self).__init__(task, success, outcome)
 
-    def merge_with_context(self, context):
-        super(FittingResults, self).merge_with_context(context)
+#     def merge_with_context(self, context):
+#         super(FittingResults, self).merge_with_context(context)
         
-    def _outcome_name(self):
-        return self.outcome
+#     def _outcome_name(self):
+#         return self.outcome
 
 
 class FittingBase(common.SingleDishTaskTemplate):
@@ -138,7 +148,7 @@ class FittingBase(common.SingleDishTaskTemplate):
 #         if iteration == 0 or not os.path.exists(filename_out):
 #             with casatools.TableReader(filename_in) as tb:
 #                 copied = tb.copy(filename_out, deep=True, valuecopy=True, returnobject=True)
-#                 copied.close()    
+#                 copied.close()
 
         #time_table = self.time_table
         #index_list = self.index_list
