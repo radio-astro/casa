@@ -2581,15 +2581,20 @@ std::vector<std::string> Scantable::subBaseline(const std::vector<std::string>& 
     throw(AipsError("Cannot overwrite bltable. Set overwrite=True."));
   }
 
-  STBaselineTable bt = STBaselineTable(*this);
+  STBaselineTable* btp;
   ROScalarColumn<Double> tcol = ROScalarColumn<Double>(table_, "TIME");
   Vector<Double> timeSecCol = tcol.getColumn();
 
-  if (outBaselineTable && !outbltableexists) {
-    for (int i = 0; i < nRowSt; ++i) {
-      bt.appendbasedata(getScan(i), getCycle(i), getBeam(i), getIF(i), getPol(i), 
-			 0, timeSecCol[i]);
-      bt.setApply(i, false);
+  if (outBaselineTable) {
+    if (outbltableexists) {
+      btp = new STBaselineTable((String)outbltable);
+    } else {
+      btp = new STBaselineTable(*this);
+      for (int i = 0; i < nRowSt; ++i) {
+        btp->appendbasedata(getScan(i), getCycle(i), getBeam(i), getIF(i), getPol(i), 
+			   0, timeSecCol[i]);
+        btp->setApply(i, false);
+      }
     }
   }
 
@@ -2625,7 +2630,7 @@ std::vector<std::string> Scantable::subBaseline(const std::vector<std::string>& 
 	  fparam[j] = (Int)fpar[j];
 	}
 
-	bt.setdata(uInt(irow), 
+	btp->setdata(uInt(irow), 
 		    uInt(getScan(irow)), uInt(getCycle(irow)), 
 		    uInt(getBeam(irow)), uInt(getIF(irow)), uInt(getPol(irow)), 
 		    uInt(0), timeSecCol[irow], Bool(true), ftype, fparam, 
@@ -2638,9 +2643,10 @@ std::vector<std::string> Scantable::subBaseline(const std::vector<std::string>& 
   }
 
   if (outBaselineTable) {
-    bt.save(outbltable);
+    btp->save(outbltable);
   }
 
+  delete btp;
   return res;
 }
 
@@ -2755,6 +2761,7 @@ void Scantable::parseBlInfo(const std::string& blInfo, int& irow, STBaselineFunc
   ss << res[3];
   ss >> masklist0;
   mask = getMaskFromMaskList(nchan(getIF(irow)), splitToIntList(masklist0, ','));
+  ss.clear(); ss.str("");
 
   ss << res[4];
   ss >> thresClip;

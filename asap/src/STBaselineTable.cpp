@@ -112,7 +112,10 @@ void STBaselineTable::setdata(uInt irow, uInt scanno, uInt cycleno,
 			      Vector<uInt> lfedge)
 {
   if (irow >= (uInt)nrow()) {
-    throw AipsError("row index out of range");
+    //throw AipsError("row index out of range");
+    stringstream ss;
+    ss << "row index out of range[irow=" << irow << "][nrow=" << nrow() << "]";
+    throw AipsError(ss.str());
   }
 
   if (!sel_.empty()) {
