@@ -189,19 +189,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         scan -- Select data by scan number range
                 default: '' (use all scans)
                 example: '21~24'
-                this selection is in addition to field, spw, and pol
+                this selection is in addition to spw and pol
         spw -- Select data by IF ids (spectral window)
                 default: '-1' (only process IFNO in the first row)
                 example: '15'
                 NOTE this task only supports IF id selction and ignores channel
                 selection.
-                this selection is in addition to scan, field, and pol
+                this selection is in addition to scan and pol
         pol -- Select data by polarization ids
                 default: '' (use all polarizations)
                 example: '1'
                 NOTE selection by the name of correlation (e.g, 'XX') is NOT
                 supported in this task.
-                this selection is in addition to scan, field, and spw
+                this selection is in addition to scan and spw
         gridfunction -- gridding function 
                 options: 'BOX' (Box-car), 'SF' (Spheroidal), 
                          'GAUSS' (Gaussian), 'PB' (Primary-beam)

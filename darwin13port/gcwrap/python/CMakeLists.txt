@@ -181,6 +181,8 @@ scripts/task_tsdfit.py
 scripts/task_tsdflag2.py
 scripts/task_tsdgrid.py
 scripts/task_tsdimaging.py
+scripts/task_tsdmath.py
+scripts/task_tsdplot.py
 scripts/task_tsdsave.py
 scripts/task_tsdstat.py
 scripts/task_setjy.py
