@@ -1,0 +1,185 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% STM 2007-04-13  split from previous version
+% STM 2007-10-10  update to tasks in beta
+% JO  2011-10-05  Release 3.3 updates
+
+\chapter[Appendix: CASA Dictionaries]{CASA Dictionaries}
+\label{chapter:dict}
+
+{BETA ALERT:} These tend to become out of date as we add new tasks
+or change names.
+
+\section{AIPS -- CASA dictionary}
+\label{section:dict.aips}
+
+In Table\,\ref{table:aips} we provide a comparison of CASA and AIPS
+commands. The data reduction recipes and break-down of jobs in
+individual tasks, however, is not the same in both
+packages. Nevertheless, the table may give AIPS users a good start if
+they search for functionality in CASA. 
+
+\vspace{5mm}
+\begin{table}[ht]
+\caption[AIPS -- CASA dictionary]
+        {\label{table:aips}AIPS -- CASA dictionary}
+\begin{center}
+\begin{tabular}{|c|c|c|} \hline
+{\bf AIPS Task} &  {\bf CASA task/tool}     &  {\bf Description}   \\
+APROPOS  & taskhelp 	 & List tasks with a short description of their purposes\\
+BLCAL 	 & blcal   	 & Calculate a baseline-based gain calibration solution\\
+BLCHN 	 & blcal   	 & Calculate a baseline-based bandpass calibration solution\\
+BPASS 	 & bandpass 	 & Calibrate bandpasses\\
+CALIB 	 & gaincal 	 & Calibrate gains (amplitudes and phases)\\
+CLCAL 	 & applycal 	 & Apply calibration to data\\
+COMB 	 & immath  	 & Combine images\\
+CPASS 	 & bandpass   	 & Calibrate bandpasses by polynomial fitting\\
+DBCON 	 & concat 	         & Concatenate u-v datasets\\
+DEFAULT	 & default 	 & Load a task with default parameters\\
+FILLM 	 & importvla 	 & Import old-format VLA data\\
+FITLD 	 & importuvfits 	 & Import a u-v dataset which is in FITS format\\
+FITLD 	 & importfits 	 & Import an image which is in FITS format\\
+FITTP 	 & exportuvfits 	 & Write a u-v dataset to FITS format\\
+FITTP 	 & exportfits 	 & Write an image to FITS format\\
+FRING 	 & ---     	 & Calibrate group delays and phase rates.\\
+GETJY 	 & fluxscale 	 & Determine flux densities for other cals\\
+GO 	 & go      	 & Run a task\\
+HELP 	 & help 	         & Display the help page for a task\\
+IMAGR 	 & clean 	         & Image and deconvolve\\
+IMFIT 	 & imfit    	 & Fit gaussian components to an image\\
+IMHEAD 	 & vishead 	 & View header for u-v data\\
+IMHEAD 	 & imhead 	         & View header for an image\\
+IMLIN 	 & imcontsub 	 & Subtract continuum in image plane\\
+IMLOD 	 & importfits 	 & Import a FITS image\\
+IMSTAT 	 & imstat   	 & Measure statistics on an image\\
+INP 	 & inp     	 & View task parameters\\
+JMFIT 	 & imfit    	 & Fit gaussian components to an image\\
+LISTR 	 & listobs 	 & Print basic data\\
+MCAT 	 & ls 	         & List image data files\\
+MOMNT 	 & immoments 	 & Compute moments from an image\\
+OHGEO 	 & imregrid 	 & Regrids an image onto another image's geometry\\
+PBCOR 	 & immath   	 & Correct an image for the primary beam\\
+PCAL 	 & polcal 	         & Calibrate polarization\\
+POSSM 	 & plotcal 	 & Plot bandpass calibration tables\\
+POSSM 	 & plotms    	 & Plot spectra\\
+PRTAN 	 & listobs 	 & Print antenna locations\\
+PRTAN 	 & plotants 	 & Plot antenna locations\\
+QUACK 	 & flagdata 	 & Remove first integrations from scans\\
+RENAME 	 & mv 	         & Rename an image or dataset\\
+SETJY 	 & setjy 	         & Set flux densities for flux cals\\
+SMOTH 	 & imsmooth 	 & Smooth an image\\
+SNPLT 	 & plotcal 	 & Plot gain calibration tables\\
+SPFLG 	 & viewer   	 & Flag raster image of time v. channel\\
+SPLIT 	 & split    	 & Write out u-v files for individual sources\\
+TASK 	 & inp     	 & Load a task with current parameters\\
+TGET 	 & tget    	 & Load a task with parameters last used for that task\\
+TVALL 	 & viewer  	 & Display image\\
+TVFLG 	 & viewer 	         & Flag raster image of time v. baseline\\
+UCAT 	 & ls      	 & List u-v data files\\
+UVFIX 	 & fixvis  	 & Compute u, v, and w coordinates\\
+UVFLG 	 & flagdata 	 & Flag data\\
+UVLIN 	 & uvcontsub 	 & Subtract continuum from u-v data\\
+UVLSF 	 & uvcontsub 	 & Subtract continuum from u-v data\\
+UVPLT 	 & plotms  	 & Plot u-v data\\
+UVSUB 	 & uvsub    	 & Subtracts model u-v data from corrected u-v data\\
+WIPER 	 & plotms 	         & Plot and flag u-v data\\
+ZAP 	 & rmtables 	 & Delete data files \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{MIRIAD -- CASA dictionary}
+\label{section:dict.miriad}
+
+Table~\ref{table:miriad} provides a list of common Miriad tasks, and their
+equivalent CASA tool or tool function names. The two packages differ
+in both their architecture and calibration and imaging models, and
+there is often not a direct correspondence. However, this index does
+provide a scientific user of CASA who is familiar with MIRIAD, with
+a simple translation table to map their existing data reduction
+knowledge to the new package.
+
+\vspace{5mm}
+\begin{table}[ht]
+\caption[MIRIAD -- CASA dictionary]
+        {\label{table:miriad}MIRIAD -- CASA dictionary}
+\begin{center}
+\begin{tabular}{|c|c|c|} \hline
+{\bf MIRIAD Task} &  {\bf Description}     &  {\bf CASA task/tool}   \\
+%  atlod   &  load ATCA data                &  atcafiller tool \\
+  blflag  &  Interactive baseline based editor/flagger  &  mp raster displays\\
+  cgcurs  &  Interactive image analysis    &  viewer \\ 
+  cgdisp  &  Image display, overlays       &  viewer  \\
+  clean   &  Clean an image                &  clean   \\
+  fits    &  FITS image filler             &  importfits, exportfits,
+  importuvfits, exportuvfits \\  
+  gpboot  &  Set flux density scale        &  fluxscale  \\
+  gpcal   &  Polarization leakage and gain calibration  &  gaincal  \\
+  gpcopy  &  copy calibration tables       &  {\it not needed} \\
+  gpplt   &  Plot calibration solutions    &  plotcal  \\
+  imcomb  &  Image combination             &  immaths   \\
+  imfit   &  Image-plane component fitter  & imfit  \\
+  impol   &  Create polarization images    &  clean   \\
+  imstat  &  Image statistics              &  imstats  \\
+  imsub   &  Extract sub-image             &  ia.subimage   \\
+  invert  &  Synthesis imaging             &  clean  \\
+  linmos  &  linear mosaic combination of images  &  clean  \\
+  maths   &  Calculations involving images  &   immath \\ 
+  mfcal   &  Bandpass and gain calibration  &  bandpass \\
+  prthd   &  Print header of image or uvdata  &  imhead, listobs, vishead  \\
+  restor  &  Restore a clean component model  &  clean \\
+  selfcal &  selfcalibration of visibility data  & clean, gaincal, etc. \\
+  tvclip  &  automated flagging based on clip levels  & flagdata, msview \\
+  tvdisp  &  Load image to TV display      &  msview  \\
+  tvflag  &  Interactive TB data editing   &  msview  \\
+  uvaver  &  Average/select data, apply calibration  &  applycal, split  \\
+  uvfit   &  uv-plane component fitter     &  uvmodelfit  \\
+  uvflag  &  Command-based flagging        &  flagdata  \\
+  uvgen   &  Simulator                     &  simobserve, simanalyze \\
+  uvlist  &  List uv-data                  &  listvis  \\
+  uvmodel &  Source model computation      &  ft \\
+  uvplt   &  uv-data plotting              &  plotms\\
+  uvsplit &  split uv file in sources and spectral windows &  split  \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{CLIC -- CASA dictionary}
+\label{section:dict.clic}
+
+Table~\ref{table:clic} provides a list of common CLIC tasks, and their
+equivalent CASA tool or tool function names. The two packages are
+very similar since the CASA software to reduce IRAM data is based
+on the CLIC reduction procedures.
+
+\vspace{5mm}
+\begin{table}[hb]
+\caption[CLIC--CASA dictionary]
+        {\label{table:clic} CLIC--CASA dictionary}
+\begin{center}
+\begin{tabular}{|c|c|c|} \hline
+{\bf CLIC Function}  & {\bf Description}           &   {\bf CASA task/tool}  \\
+  load              & Load data                    &  importfits,
+  importasdm, importuvfits \\
+  print             & Print text summary of data   &  listobs \\ 
+  flag              & Flag data                    &  plotms, flagdata, viewer \\
+  phcor             & Atmospheric phase correction &  gaincal \\  
+  rf                & Radio frequency bandpass     &  bandpass \\
+  phase             & Phase calibration            &  gaincal \\
+  flux              & Absolute flux calibration    &  setjy, fluxscale \\
+  ampl              & Amplitude calibration        &  gaincal \\
+  table             & Split out calibrated data (uv table)  &   split \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

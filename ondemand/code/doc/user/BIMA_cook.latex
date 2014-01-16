@@ -1,0 +1,1314 @@
+\documentclass{report}
+\usepackage{html,epsfig,color}
+
+\textheight 9in
+\textwidth 6.5in
+\topmargin -0.5in
+\oddsidemargin 0in
+\evensidemargin 0in
+
+%
+% Fonts definitions:
+%  type	typewritter		environment variables, object or method names
+%  ttin darkBlue,typewritter	user input
+%  ttout ForestGreen,typewrite	output
+%  file	maroon,italic		file names
+%  mn slant,bold		Aipsview menu names
+%  wn bold			Aipsview windoe names
+%
+% Use the commented definitions for \type and \file to go back to B&W.
+%
+%\newcommand{\type}[1]{{\texttt{#1}}}
+%\newcommand{\file}[1]{{\textit{#1}}}
+\newcommand{\type}[1]{\texttt{#1}}
+\newcommand{\file}[1]{\textcolor{\filecolor}{\textit{#1}}}
+\newcommand{\ttin}[1]{\color{\incolor}{\texttt{#1}}}
+\newcommand{\ttout}[1]{\color{\outcolor}{\texttt{#1}}}
+\newcommand{\mn}[1]{\slshape\textbf{#1}}
+\newcommand{\wn}[1]{\bf #1}
+%
+% Color aliases
+%
+\newcommand{\outcolor}{ForestGreen}
+\newcommand{\incolor}{darkBlue}
+\newcommand{\filecolor}{maroon}
+%
+% Color definitions:
+%
+\definecolor{maroon}{rgb}{0.69,0.19,0.38}
+\definecolor{darkBlue}{rgb}{0.00,0.00,0.55}
+\definecolor{DarkGreen}{rgb}{0.00,0.39,0.55}
+\definecolor{lightGreen}{rgb}{0.56,0.93,0.56}
+\definecolor{DarkOliveGreen}{rgb}{0.33,0.42,0.18}
+\definecolor{ForestGreen}{rgb}{0.13,0.55,0.14}
+%
+% Define command to put link to miriad manual page in HTML doc.
+%
+\newcommand{\mirprog}[1]{\htmladdnormallink{{\tt
+  {#1}}}{http://bima.astro.umd.edu/bima/miriad/ref/{#1}.1}}
+%
+% Define hyperlink URLs:
+%
+\newcommand{\bimafillerURL}
+  {http://www.astro.umd.edu/~teuben/aips++/bimafiller.html}
+\newcommand{\searchURL}
+  {http://aips2.nrao.edu/aips++/docs/html/aips2search.html}
+\newcommand{\specsURL}
+  {http://aips2.nrao.edu/aips++/docs/specs/specs.html}
+\newcommand{\aipsviewURL}
+  {http://aips2.nrao.edu/aips++/docs/user/Aipsview/Aipsview.html}
+\newcommand{\aipsviewGlishURL}
+  {http://aips2.nrao.edu/aips++/docs/user/Aipsview/node21.html}
+\newcommand{\tableURL}
+  {http://aips2.nrao.edu/aips++/docs/aips/implement/Tables.html}
+\newcommand{\GlishmanualURL}
+  {http://aips2.nrao.edu/aips++/docs/reference/Glish/Glish.html}
+\newcommand{\GlishtutorialURL}
+  {http://aips2.nrao.edu/aips++/docs/notes/195/195.html}
+\newcommand{\synthesisURL}
+  {http://aips2.nrao.edu/aips++/docs/user/synthesis/synthesis.html}
+\newcommand{\gaintableURL}
+  {http://aips2.nrao.edu/aips++/docs/user/synthesis/node10.html}
+\newcommand{\vissetURL}
+  {http://aips2.nrao.edu/aips++/docs/user/synthesis/node8.html}
+\newcommand{\userrefmanualURL}
+  {http://aips2.nrao.edu/aips++/docs/user/Refman/Refman.html}
+\newcommand{\gettingstartedURL}
+  {http://aips2.nrao.edu/aips++/docs/user/gettingstarted/gettingstarted.html}
+\newcommand{\msdefinitionURL}
+  {http://aips2.nrao.edu/aips++/docs/notes/191/191.html}
+\newcommand{\briggsURL}
+  {http://www.aoc.nrao.edu/ftp/dissertations/dbriggs/diss.html}
+%
+%  Page formatting for Postscript output
+%
+\parskip 0.05in
+\parindent 0in
+
+\title{Processing\\BIMA Data in AIPS++}
+\author{Doug Roberts\\
+National Center for Supercomputing Applications\\
+University of Illinois\\
+405 North Mathews Ave.\\
+Urbana, IL 61801, USA\\
+dougr@ncsa.uiuc.edu}
+\date{Text last updated: \today}
+
+\makeindex
+
+\begin{document}
+
+%
+% Title page formatting for latex output.
+%
+\begin{latexonly}
+\title{Processing BIMA Data in AIPS++}
+\maketitle
+\end{latexonly}
+
+%
+% Title page formatting for HTML output.
+%
+\begin{rawhtml}
+<TABLE BORDER=0 CELLPADDING=2 WIDTH="100%"> 
+<TR VALIGN=TOP> 
+<TD><FONT COLOR="maroon"><H1>Processing BIMA Data in
+AIPS++</H1></FONT><BR></TD>
+<TD>Doug Roberts<BR>
+National Center for Supercomputing Applications<BR>
+University of Illinois<BR>
+405 North Mathews Ave.<BR>
+Urbana, IL 61801, USA<BR>
+<A HREF="mailto:Doug Roberts
+<dougr@ncsa.uiuc.edu>">dougr@ncsa.uiuc.edu</A></TD>
+</TR>
+<TD>This document is available as a <A HREF="../BIMA_cook.ps">
+PostScript file</A> and a <A HREF="../BIMA_cook.ps.gz">gzipped
+PostScript file.</A>
+<BR></TD>
+<TD>HTML updated: August 14, 1997</TD> 
+</TR> 
+</TABLE>
+<HR> 
+<FONT COLOR="red">N.B. This document uses HTML 3 Tables, and
+in-line images to display mathematical expressions.  Turn <EM>Image
+Loading</EM> <STRONG>ON</STRONG>, and set your font size in the range
+12pt to 14pt for optimal browsing.</FONT>
+\end{rawhtml}
+
+\pagenumbering{roman}
+\tableofcontents
+%\listoffigures
+\pagenumbering{arabic}
+
+\pagebreak
+
+\chapter{Introduction\label{introduction}}
+
+\section{Manual Description}
+
+This document describes how to process BIMA data through the
+\htmladdnormallink{AIPS++}
+{http://aips2.nrao.edu/aips++/docs/html/aips++.html} system.  It is
+assumed that you are familiar with the MIRIAD package; the processing
+of BIMA data in AIPS++ will be explained with frequent references to
+analogous tasks in MIRIAD.  If you need additional help with MIRIAD,
+you can consult the MIRIAD User Guide maintained by
+\htmladdnormallinkfoot{BIMA}
+{http://bima.astro.umd.edu/bima/miriad/uguide/uguide\_toc.html} or the
+more current one maintained by the \htmladdnormallinkfoot{ATNF}
+{http://www.atnf.csiro.au/Software/Analysis/miriad/}.
+
+To best use this manual, first read Chapter \ref{introduction}
+carefully.  This chapter will provide in introduction to the
+differences between the AIPS++ and MIRIAD and will explain glish, the
+interface to AIPS++.  After you have read and understand the material
+in the Introduction, you can read Chapter \ref{guideToBIMA} to see of
+how to carry out simple processing of BIMA data processing that you
+would normally have done in MIRIAD.
+
+Throughout the document, different fonts will be used to represent
+different kinds of information.  Note that if you are viewing a color
+version of this document ({\em e.g.}, html or color PostScript), in
+addition to fonts, colors will be used as well.  An {\file{emphasized
+font}} will be used to show filenames ({\em e.g.}, {\file{imager.g}}).
+A {\type{typewriter font}} is used when text represents environment
+variables, or object and method names, see Section
+\ref{objectsMethods}, ({\em e.g.}, {\type{defaultimager}}).  This font
+will also be used to show what one would type in a Unix shell or
+glish, as well as the output of the shell or glish {\em e.g.},
+{\ttin{include 'imager.g'}}.  Color versions of this document further
+differentiate input as {\ttin{Dark Blue}} and output as {\ttout{Forest
+Green}}.
+
+AIPS++ currently can be used to carry out a wide variety of
+processing.  Below is an abbreviated list of the type of data
+processing that can be done in AIPS++ and the corresponding MIRIAD
+task(s).
+
+\begin{tabular}{ll} 
+\textbf{Functionality} & \textbf{Analogous MIRIAD Task(s)} \\ 
+$\bullet$ Antenna-based self calibration &
+ \mirprog{gmake}, \mirprog{selfcal}, \mirprog{mfcal} \\
+$\bullet$ Display and manipulation of complex gain solutions &
+ \mirprog{gfiddle}, \mirprog{gpplt}, \mirprog{gpedit} \\
+$\bullet$ Application of calibration solutions &
+\mirprog{gapply}, \mirprog{gpcopy} \\
+$\bullet$ Imaging &
+ \mirprog{invert} \\
+$\bullet$ Deconvolution &
+\mirprog{clean} \\
+$\bullet$  Visualization & 
+\mirprog{mxv}, \mirprog{xmtv}/\mirprog{tvdisp} \\
+$\bullet$ Publication-quality graphics output & 
+\mirprog{cgdisp}, \mirprog{cgspec}, {\htmladdnormallink{\tt wip}
+{http://bima.astro.umd.edu/bima/wip/manual/wip.html}} \\
+\end{tabular}
+
+\section{What You Need to Know About AIPS++}
+
+The major goal of AIPS++ is to provide a system for calibration,
+editing, image formation, image enhancement, and analysis of images
+and other data streams.  If you are interested in the specific goals
+of the AIPS++ system, you can consult the
+\htmladdnormallinkfoot{AIPS++ User Specifications}{\specsURL}.
+
+This document describes only a small subset of all the features of
+AIPS++.  Users wishing to find out more about the AIPS++ system can
+begin by reviewing the \htmladdnormallinkfoot{Getting Started in
+AIPS++}{\gettingstartedURL} document.  More information is available
+in the rather large \htmladdnormallinkfoot{AIPS++ User Reference
+Manual}{\userrefmanualURL} and the \htmladdnormallinkfoot{AIPS++
+Search Page}{\searchURL} can be used to search the available AIPS++
+documentation.  Broadly-speaking, AIPS++ has been designed to provide
+three different things:
+
+\begin{description}
+
+\item[Data] AIPS++ stores {\em all} data in a very flexible and
+powerful \htmladdnormallink{table}{\tableURL} format.
+
+\item[Tools] AIPS++ has a large number of general-purpose tools for
+manipulating the data.
+
+\item[Tasks] AIPS++ has applications that collect the general-purpose
+tools into tasks to perform specific operations such as calibration
+and imaging.
+
+\end{description}
+
+In practice, the distinction between tools and tasks is in the eye of
+the beholder, since both are implemented in the same way.  However,
+distinguishing between general-purpose, low-level tools specific and
+high-level tasks is useful when trying to comprehend the {\em big
+picture} of AIPS++.
+
+\subsection{Differences Between AIPS++ and MIRIAD}
+
+The major difference between AIPS++ and MIRIAD (and all other radio
+astronomy data reduction packages for that matter) is that AIPS++ is
+object-oriented.  In MIRIAD, the lowest level of functionality that
+the user has available to them is a task ({\em e.g.},
+\mirprog{invert}) which has keywords ({\em e.g}, {\type{vis=}}) that
+can be set.  In AIPS++, the user has access to general-purpose,
+low-level tools (in C++ or glish).  The AIPS++ system has collected
+some of the general tools into tasks designed to carry out specific
+operations.  The main AIPS++ task that will discussed here is
+{\type{imager}}, which be used to calibrate, image, and deconvolve
+visibility data.  The power of AIPS++ is that if a predefined task,
+such as {\type{imager}}, is insufficient for the purposes of a user,
+they can easily customize the task or design their own, without having
+to know how the details of {\em how} the component tools operate on
+the data.  In MIRIAD, you would have to write your own program, which
+would require you to know how to use the MIRIAD subroutine libraries
+to perform low-level manipulation of the data, a {\em much} more
+time-consuming task.
+
+Another difference between AIPS++ and MIRIAD is the scope of what a
+task does.  In MIRIAD, a task is predefined to do a specific action,
+such as imaging for \mirprog{invert}, or calibration for
+\mirprog{selfcal}, etc.  However, in AIPS++ a task like
+{\type{imager}} can be used to do a single operation, such as
+calibration, or a sequence of many operations, such as calibration,
+followed by imaging followed by CLEANing.  To carry out the same
+sequence of operations in MIRIAD would require the execution of a
+series of tasks ({\em e.g.}, \mirprog{selfcal}, \mirprog{invert},
+\mirprog{clean}, and \mirprog{restor}).
+
+\subsection{The AIPS++ Table System}
+
+All AIPS++ data, including images, visibility data bases, and even
+logs files, are stored as tables.  AIPS++ provides a variety of tools
+to inspect and manipulate to data stored as tables as well as the
+structure of the tables themselves.  Tools can be used to manipulate
+tables in a general way, without assumption of the underlying data
+contained.  There are also modules customized to interact with tables
+of a particular format, ({\em e.g.}, the \htmladdnormallinkfoot{{\tt
+visset} module}{\vissetURL} is designed to interact with visibility
+data).  An excellent description of the AIPS++ table system is given
+in the \htmladdnormallinkfoot{Tables Module document}{\tableURL}.
+
+\section{Glish: The Interface to AIPS++}
+
+To provide some of the tools, and also to act as the prime user
+interface, AIPS++ utilizes a very capable Command Line Interpreter
+called glish that allows high-level operations on vectors and arrays.
+For more information on glish, consult the
+\htmladdnormallinkfoot{Glish Tutorial}{\GlishtutorialURL} or for
+extensive information on glish check the \htmladdnormallinkfoot{Glish
+Reference Manual}{\GlishmanualURL}.  The novice user can think of
+glish simply as an interface, similar to that of the \mirprog{miriad}
+shell.  Glish provides a means to access the various packages and
+modules of AIPS++, which includes the ability to save, recall
+commands, and review inputs analogous to {\type{tput}}, {\type{tget}},
+and {\type{inp}} in MIRIAD, (see the example for {\type{imager}} in
+Section \ref{imagerInputs}).  Also, glish provides command line
+editing; editing commands are summarized in Appendix
+\ref{editlineTable}.
+
+\subsection{The Basics of Tasks, Objects, and Methods\label{objectsMethods}\label{TasksObjects}}
+
+To use a predefined AIPS++ task in glish, a glish script (usually
+having a name \file{taskname.g}) is executed, {\em e.g.},
+
+{\ttout{-}} {\ttin{include 'imager.g'}} \\
+{\ttout{T}}
+
+Note that the glish prompt is {\ttout{-}} (the prompt can also be
+{\ttout{+}}).  Note that glish scripts can reside in the current
+directory or the standard AIPS++ scripts directory, which is defined
+upon starting AIPS++.  The {\ttout{T}} ({\em i.e.} Boolean True) on
+the next line is the return value from the {\type{include}} command.
+If there was some error, such as the file was not found, a warning
+would be printed.  The script ({\em e.g.}, {\file{imager.g}}) contains
+glish commands that do three primary operations.  First a default
+glish object is constructed.  The name of the object is usually the
+the word {\type{default}} followed by the name of the task ({\em
+e.g.}, the script {\file{imager.g}} will construct the default object
+{\type{defaultimager}}).  You can refer to the object by the entire
+name ({\em e.g.} {\type{defaultimager}}) or a two letter abbreviation,
+which is usually {\type{d}}, for {\type{default}}, followed by the
+first letter of the task name, ({\em e.g.}, for imager the
+abbreviation is {\type{di}}).
+
+Secondly, methods of the object are defined by binding glish commands
+to the underlying AIPS++ system.  For example, including the
+{\file{imager.g}} glish script constructs the {\type{defaultimager}}
+(or {\type{di}}) object and defines methods, such as
+{\type{solve\_cal}} to determine the calibration and
+{\type{solve\_dirty}} to make a dirty image.
+
+Finally, any servers necessary for the task are started.  Servers are
+programs that carry out specific operations on data, which can even be
+running on another host.  Glish handles data communication to and from
+servers.
+
+Some tasks, such as {\type{imager}}, have the ability to display an
+input list of glish variables that are used by the task, see the
+example for {\type{imager}} in Section \ref{imagerInputs}.  The AIPS++
+documentation can be consulted for more information on how objects are
+used in the AIPS++ system.
+
+Because AIPS++ has the functionality to process data from very
+different instruments, tasks are further organized into packages.  A
+package includes all the component tasks that will be needed to
+analyze a particular type of data.  In the case of BIMA data analysis,
+we can use {\type{synthesis}} package to carry out all the processing
+common to synthesis data, {\em i.e.},
+
+{\ttout{-}} {\ttin{include 'synthesis.g'}} \\
+{\ttout{T}}
+
+The {\file{synthesis.g}} script includes other glish scripts, such as
+{\file{imager.g}}, necessary for synthesis data processing.
+Basically, packages are used as a short-hand way to construct all the
+necessary glish objects that will likely be used in one step.  Note,
+that throughout this manual, the example of how to use any method will
+start with the glish command to include the script that constructs the
+corresponding object, unless it is a continuation of a long example.
+In actual practice, you may have already included a package which
+constructed the object; executing the include command a second time
+does not have any effect (good or ill).
+
+\subsection{Arguments in Glish \label{GlishArguments}}
+
+In glish, certain methods to manipulate glish objects require
+arguments.  The arguments are given at the end of a method enclosed in
+parentheses.  If the arguments are strings ({\em e.g.}, file names),
+they must be surrounded by single or double quotes.  For example, to
+display an image {\type{restored}} in the directory {\type{BLLAC}} you
+would type:
+
+{\ttout{-}} {\ttin{include 'display.g'}} \\
+{\ttout{T}} \\
+{\ttout{-}} {\ttin{dd.image('BLLAC/restored')}}
+
+The first command executes the commands in the glish script named
+{\file{display.g}}.  Initially, this constructs the glish object
+called {\type{defaultdisplay}}, which can be abbreviated {\type{dd}}.
+The script also binds the low-level AIPS++ commands that will be used
+for displaying images to the {\type{defaultdisplay}} glish object.
+
+The second command invokes the {\type{image}} method of the
+{\type{defaultdisplay}} object with the file name
+{\file{BLLAC/restored}} as the argument.  The {\type{image}} method
+starts up the \htmladdnormallinkfoot{aipsview}{\aipsviewURL}
+visualization program (see Section \ref{aipsvis}) and displays the
+image (from the AIPS++ file {\file{BLLAC.clean}}).
+
+This choice of syntax for arguments also means that if there are no
+arguments to the method you are invoking that you must give an empty
+list {\type{()}}.  For example, to make a dirty image using
+{\type{imager}}, which requires no arguments, you would type:
+
+{\ttout{-}} {\ttin{include 'imager.g'}} \\
+{\ttout{T}} \\
+{\ttout{-}} {\ttin{di.solve\_dirty()}}
+
+This will first construct the {\type{defaultimager}} or {\type{di}}
+glish object, start any necessary servers, and then invoke the
+{\type{solve\_dirty}} method of the {\type{defaultimager}} object.  If
+you were to forget the empty argument list {\type{()}}, you would get
+the error:
+
+{\ttout{-}} {\ttin{include 'imager.g'}} \\
+{\ttout{T}} \\
+{\ttout{-}} {\ttin{di.solve\_dirty}} \\
+{\ttout{function () \{ \\
+\{ \\
+if is\_fail(public.init\_image()) fail ; \\
+if is\_fail(public.solve\_residual()) fail ;\} \\
+\\
+return T}}
+
+Also, it should be noted that the execution of any method should
+return some sort of information.  Some of the time, the return value
+will be a Boolean ({\em i.e.}, {\type{T}} or {\type{F}}), although if
+you invoke a method like {\type{list}} from the
+{\type{defaultcatalog}} you will get:
+
+{\ttout{-}} {\ttin{include 'catalog.g'}} \\
+{\ttout{T}} \\
+{\ttout{-}} {\ttin{dc.list()}} \\
+{\ttout{[count=7, names=.. BLLAC BLLAC.mir gcal imager.g imager.inputs.g \\
+tcal, istables=[F F F T F F T] , types=Directory Directory Directory \\
+Calibration Glish Glish Calibration, subtypes= G Jones T Jones]}}
+
+\subsection{Setting Glish Variables \label{GlishVariables}}
+
+Setting a glish variable to a value is similar to MIRIAD, except that
+the equivalence operator in glish is {\type{:=}} rather than
+{\type{=}} for MIRIAD.  Thus, to set the number of polarizations to 2,
+({\em i.e}, setting the variable {\type{npol}} to 2), you would
+type:
+
+{\ttout{-}} {\ttin{di.npol:=2}}
+
+If you mistakenly typed {\type{=}} in stead of {\type{:=}}, glish
+would not be able to parse the statement would give you the error:
+
+{\ttout{-}} {\ttin{di.npol=2}} \\
+{\ttout{error, parse error at or near '=' \\
+2}}
+
+As for variables passed as arguments to functions, remember that
+strings must be inclosed in single of double quotes, {\em e.g.}, to
+set the data file for the {\type{defaultimager}} object to
+{\file{BLLAC.UVFITS}} type:
+
+{\ttout{-}} {\ttin{di.data.file:='BLLAC.UVFITS'}}
+
+Array variables must be enclosed in square brackets and separated by
+commas, {\em i.e.}, to set the cell size for the {\type{defaultimager}}
+object to 2 by 2 arcseconds type:
+
+{\ttout{-}} {\ttin{di.cell:=[2,2]}}
+
+For some tasks, such as {\type{imager}}, glish variables are saved in
+a glish script (similar to {\file{taskname.def}} files in MIRIAD).
+The saved glish script can be edited and reread into glish; see
+Section \ref{imagerInputs} for an example of how to save the inputs of
+the {\type{imager}} task.
+
+\chapter{Guide to BIMA Data Processing\label{guideToBIMA}}
+
+\section{Starting AIPS++}
+
+Like MIRIAD, before starting AIPS++ you should change into the
+directory where your data files reside.  You will need to find out the
+root AIPS++ directory on your system (we will call it
+{\type{\$AIPSROOT}}).  If you are using {\type{csh}} or {\type{tcsh}}
+you can set the AIPS++ environment by typing:
+
+{\ttout{\%}} {\ttin{source \$AIPSROOT/aipsinit.csh}}
+
+or if you are using {\type{sh}} or {\type{ksh}} you can type:
+
+{\ttout{\$}} {\ttin{. \$AIPSROOT/aipsinit.sh}}
+
+Note, that many of the modules in AIPS++ will attempt to bring up
+Graphical User Interfaces (GUI's) and graphical output for image and
+vector plot displays.  If you wish to display these graphics, you must
+use an X-Windows system and you must have the environment variable
+{\type{\$DISPLAY}} set, {\em{i.e.}}, under {\type{csh}} or
+{\type{tcsh}} type:
+
+{\ttout{\%}} {\ttin{setenv DISPLAY myterm:0}}
+
+or if you are using {\type{sh}} or {\type{ksh}} you can type: 
+
+{\ttout{\$}} {\ttin{DISPLAY=myterm:0}} \\
+{\ttout{\$}} {\ttin{export DISPLAY}}
+
+If the {\type{\$DISPLAY}} environment variable is not set, you can still
+use most of AIPS++, but graphics output will not be available.  Then
+to start up AIPS++, type:
+
+{\ttout{\%}} {\ttin{aips++}}
+
+Upon starting AIPS++, the following message (or something like it)
+will be written to the screen where AIPS++ was started:
+
+{\color{\outcolor}
+\begin{verbatim}
+*********************** Welcome to AIPS++ ***************************
+Copyright (C) 1997,2000 Associated Universities, Inc. Washington DC, USA.
+             AIPS++ comes with ABSOLUTELY NO WARRANTY
+                    for details, type about()
+
+AIPS++ packages available and ready for use: aips
+help() for help
+Glish version 2.5.1. 
+-
+\end{verbatim}
+}
+
+Note, the glish prompt is either {\ttout{-}} or {\ttout{+}}.  If you
+are using an X-Windows display and the {\type{\$DISPLAY}} environment
+variable is set, a separate logger window will be displayed, if not
+the output will be displayed on the screen where AIPS++ was started.
+Upon starting AIPS++, several packages and their constituent modules
+are automatically included.  AIPS++ will report in the logger window
+which packages have been included; here the {\type{aips}} package is
+initially included.  Initially, the following will be printed in the
+logger window:
+
+{\color{\outcolor}
+\begin{verbatim}
+defaultutility (du) ready
+defaultlogger (dl) ready
+Server started: misc (AIPS++ version: 0.8 (build #330))
+Created file aips++.log
+defaultservers ready
+dowait variable is  F
+defaultplotter (dp) ready
+table system ready
+defaultdisplay (dd) ready
+defaultgcatalog (dg) ready
+Server started: measures (AIPS++ version: 0.8 (build #330))
+defaultmeasures (dm) ready
+defaultcatalog (dc) ready
+\end{verbatim}
+}
+
+The {\type{aips}} package sets up the default glish objects:
+{\type{defaultutility}}, {\type{defaultlogger}},
+{\type{defaultplotter}}, {\type{defaultdisplay}},
+{\type{defaultgcatalog}}, {\type{defaultmeasures}}, and
+{\type{defaultcatalog}}; the glish objects can be referenced by their
+full name ({\em e.g.}, {\type{defaultcatalog}}) or by their two-letter
+abbreviation, which is displayed in parentheses ({\em e.g.},
+{\type{dc}}).  The {\type{misc}} and {\type{measures}} servers are
+started.  Additional packages and modules in AIPS++ can be made
+available by including the corresponding glish script file, (see
+Section \ref{TasksObjects}).
+
+There are three things you absolutely must know:
+
+\begin{description}
+
+\item[exit] To exit from AIPS++, just type {\ttin{exit}}.
+{\ttin{Control-C}} will abort glish, (unless a task is running, in
+which case it will abort the task and return you to the glish prompt).
+{\ttin{Control-Z}} will suspend glish ({\em n.b.}, type {\ttin{fg}} to
+return to glish from the shell).
+
+\item[help] You can get command line help on many things by typing
+{\ttin{help()}}.  This gives a few lines of information on something.
+To get more detailed information, use the command {\ttin{web()}} to
+drive your browser to more extensive information.  You can use
+wildcards, {\em e.g.} {\ttin{help('*plot')}}. In addition, the help
+menu button on most GUI windows has some useful Help options: one can
+either drive a browser to show information for the relevant object,
+drive the browser to the Reference manual, or pop up an About AIPS++
+window.
+
+\item[bug] You can report bugs or request enhancements by typing
+{\ttin{bug()}}.
+
+\end{description}
+
+\section{Browsing Files and Directories}
+
+Most of the tools to browse directories and catalogs are found in the
+catalog module, which is accessed by including the {\file{catalog.g}}
+script.  A simple method to list the files and file types in the
+current directory is {\type{list()}}.
+
+{\ttout{-}} {\ttin{include 'catalog.g'}} \\
+{\ttout{T}} \\
+{\ttout{-}} {\ttin{dc.list()}} \\
+{\ttout{[count=7, names=.. BLLAC BLLAC.mir gcal imager.g imager.inputs.g \\
+tcal, istables=[F F F T F F T] , types=Directory Directory Directory \\
+Calibration Glish Glish Calibration, subtypes= G Jones T Jones]}}
+
+The returned information lists the number of files {\type{count}}, the
+file names {\type{names}}, an array of Booleans noting whether the
+files are AIPS++ tables {\type{istable}}, the type of files
+{\type{types}} ({em n.b.}, {\type{Directory}} is a directory that is
+not a recognized AIPS++ table, {\type{Calibration}} is an AIPS++ table
+containing calibration solutions, {\type{Glish}} is a glish script),
+and the {\type{subtypes}} shows the types of the two AIPS++ tables
+({\em i.e.}, the first contains solutions for the {\type{G}} terms and
+the second has solutions for the {\type{T}} terms).
+
+To list the files in another directory you would provide the directory
+name as an argument to the {\type{list}} method,{\em e.g.},
+
+{\ttout{-}} {\ttin{dc.list('BLLAC')}} \\
+{\ttout{[count=6, names=BLLAC/.. BLLAC/MS BLLAC/model BLLAC/psf \\
+BLLAC/residual BLLAC/restored, istables=[F T T T T T] , \\
+types=Directory Measurement Set Image Image Image Image, subtypes= \\
+model point spread function residual restored]}}
+
+Note that the types of the files in the {\file{BLLAC}} directory
+include {\type{Measurement Set}} (see \ref{MS}) and {\type{Image}}.
+The {\type{subtypes}} show what the images represent ({\em e.g.},
+{\type{model}}, {\type{point spread function}}, etc.).
+
+To browse your directory in order to obtain the same information as
+the {\type{list}} method with an interactive graphical interface, you
+would use the {\type{gui}} method of the {\type{defaultcatalog}}
+object:
+
+{\ttout{-}} {\ttin{dc.gui()}} \\
+{\ttout{T}}
+
+In the catalog GUI you can view the files and types in the current
+directory or another specified directory.
+
+To list a summary of the all the properties of the AIPS++ file in the
+logger window ({\em e.g.}, {\type{BLLAC.MS}}) you would invoke the
+{\type{summary}} method of the {\type{defaultcatalog}} object:
+
+{\ttout{-}} {\ttin{include 'catalog.g'}} \\
+{\ttout{T}} \\
+{\ttout{-}} {\ttin{dc.summary('BLLAC.MS')}} \\
+{\ttout{T}}
+
+For an AIPS++ table, the {\type{summary}} method prints a detailed
+list of the table structure ({\em e.g.}, its dimensionality, column
+names, units, etc.) into the logger window:
+
+{\color{\outcolor}
+\begin{verbatim}
+successful readonly open of table  BLLAC/MS :  25 columns, 825 rows
+Table summary: BLLAC/MS
+Shape: 25 columns by 825 rows
+Info: [type=Measurement Set, subType=, readme=This is a MeasurementSet
+Table holding measurements from a Telescope]
+Table keywords: [ANTENNA=BLLAC/MS/ANTENNA, ARRAY=BLLAC/MS/ARRAY,
+FEED=BLLAC/MS/FEED, FIELD=BLLAC/MS/FIELD,
+OBSERVATION=BLLAC/MS/OBSERVATION, OBS_LOG=BLLAC/MS/OBS_LOG,
+SOURCE=BLLAC/MS/SOURCE, SPECTRAL_WINDOW=BLLAC/MS/SPECTRAL_WINDOW,
+SYSCAL=BLLAC/MS/SYSCAL, WEATHER=BLLAC/MS/WEATHER]
+Columns: UVW ANTENNA1 ANTENNA2 ARRAY_ID CORRELATOR_ID EXPOSURE FEED1
+FEED2 FIELD_ID FLAG_ROW INTERVAL OBSERVATION_ID PULSAR_BIN PULSAR_ID
+SCAN_NUMBER SPECTRAL_WINDOW_ID TIME WEIGHT DATA SIGMA WEIGHT_SPECTRUM
+FLAG MODEL_DATA CORRECTED_DATA IMAGING_WEIGHT
+UVW keywords: [UNIT=m, MEASURE_TYPE=UVW, MEASURE_REFERENCE=]
+ANTENNA1 keywords: [UNIT=, MEASURE_TYPE=]
+ANTENNA2 keywords: [UNIT=, MEASURE_TYPE=]
+ARRAY_ID keywords: [UNIT=, MEASURE_TYPE=]
+CORRELATOR_ID keywords: [UNIT=, MEASURE_TYPE=]
+EXPOSURE keywords: [UNIT=s, MEASURE_TYPE=]
+FEED1 keywords: [UNIT=, MEASURE_TYPE=]
+FEED2 keywords: [UNIT=, MEASURE_TYPE=]
+FIELD_ID keywords: [UNIT=, MEASURE_TYPE=]
+FLAG_ROW keywords: [UNIT=, MEASURE_TYPE=]
+INTERVAL keywords: [UNIT=s, MEASURE_TYPE=]
+OBSERVATION_ID keywords: [UNIT=, MEASURE_TYPE=]
+PULSAR_BIN keywords: [UNIT=, MEASURE_TYPE=]
+PULSAR_ID keywords: [UNIT=, MEASURE_TYPE=]
+SCAN_NUMBER keywords: [UNIT=, MEASURE_TYPE=]
+SPECTRAL_WINDOW_ID keywords: [UNIT=, MEASURE_TYPE=]
+TIME keywords: [UNIT=s, MEASURE_TYPE=EPOCH, MEASURE_REFERENCE=TAI]
+WEIGHT keywords: [UNIT=, MEASURE_TYPE=]
+DATA keywords: [UNIT=, MEASURE_TYPE=]
+SIGMA keywords: [UNIT=, MEASURE_TYPE=]
+WEIGHT_SPECTRUM keywords: [UNIT=, MEASURE_TYPE=]
+FLAG keywords: [UNIT=, MEASURE_TYPE=]
+MODEL_DATA keywords: [CHANNEL_SELECTION=[[1:2,]
+    0
+    30]]
+\end{verbatim}
+}
+
+Remember to enclose strings arguments, like {\type{BLLAC/MS}}, in
+single or double quotes, see Section \ref{GlishArguments}.  
+
+\section{Calibrating, Imaging, and Deconvolution}
+
+Most of the functionality that BIMA observers will use is in the
+\htmladdnormallinkfoot{{\tt synthesis}}{\synthesisURL} package; the
+corresponding glish file is {\type{synthesis.g}}.  To include the
+package, issue the command:
+
+{\ttout{-}} {\ttin{include 'synthesis.g'}}
+
+The logger window will show the commands that you have typed
+(prepended with a {\type{$>$}}) as well as the following informational
+output:
+
+{\color{\outcolor}
+\begin{verbatim}
+Server started: measures (AIPS++ version: 0.8 (build #361))
+defaultmeasures (dm) ready
+defaultimager (di) ready
+Starting executable : imager
+DO server for imager
+\end{verbatim}
+}
+
+The most useful task in the {\type{synthesis}} package is
+{\type{imager}}.  After loading the {\type{synthesis}} package, you
+have access to the {\type{imager}} task via the {\type{defaultimager}}
+object, (abbreviated {\type{di}}).
+
+\subsection{Viewing, Saving, and Recalling Inputs to Imager\label{imagerInputs}}
+
+To view the inputs to {\type{imager}}, you would type:
+
+{\ttout{-}} {\ttin{di.inputs()}}
+
+which will result in the following being displaying on your screen:
+
+{\color{\outcolor}
+\begin{verbatim}
+data := [format='uvfits', file='FITS']
+out := [format='uvfits', file='MS.UVFITS']
+MS := 'MS'
+images := [model='model', derivedmodel='model', restored='restored', 
+residual='residual', psf='']
+cell := [ 0, 0 ]
+npix := [ 128, 128 ]
+npol := 1
+line := [mode='wide', nchan=1, start=1, step=1]
+wt := [type='uniform', rmode='norm', robust=0, noise=1]
+clean := [algorithm='hogbom', niter=1000, threshold=0, gain=0.1,
+mask='', choose=F]
+nnls := [niter=0, tolerance=1e-06, fluxmask='', datamask='']
+beam := [ 0, 0, 0 ]
+model := [zero=[ F, F, F, T ], constrain=F, threshold=0, mask='']
+mask := [interactive=F, threshold=0]
+flags := [threshold=0]
+T := [t=0, solve=F, phaseonly=T, table='tcal', initialtable='']
+G := [t=0, solve=F, phaseonly=F, table='gcal', initialtable='']
+D := [t=0, solve=F, phaseonly=F, table='dcal', initialtable='']
+B := [t=0, solve=F, phaseonly=F, table='bcal', initialtable='']
+P := [t=0]
+M := [t=0, solve=F, initialtable='', table='mcal']
+cache := 2097152
+tile := 16
+\end{verbatim}
+}
+
+Each of the character strings on the left-hand side of the {\type{:=}}
+are glish variables.  Initially, the variables are set to their
+default values (shown above).  See Section \ref{GlishVariables} for
+details on how to set variables.
+
+Note, that any time you execute a method in {\type{imager}}, the
+current inputs are saved to a file; the default name is
+{\file{imager.inputs.g}} ({\em n.b.}, this is similar to the inputs to
+MIRIAD tasks being saved to {\file{taskname.def}} when a task is
+executed).  The inputs can be saved to a user-specified file anytime
+using the {\type{save}} method (analogous to {\type{tput}} in the
+\mirprog{miriad} shell).  If no argument is given, {\em i.e.},
+
+{\ttout{-}} {\ttin{di.save()}}
+
+the inputs will be saved to the default file name
+{\file{imager.inputs.g}}.  Input files are actually glish scripts and
+they can be edited outside of AIPS++ and reread into the system.  For
+example, to save the inputs of {\type{imager}} to a file called
+{\file{imager.inputs.bllac.g}} you would type:
+
+{\ttout{-}} {\ttin{di.save('imager.inputs.bllac.g')}}
+
+The same is true for recalling inputs.  They can be recalled from a
+file by the {\type{get}} method (analogous to {\type{tget}} in the
+\mirprog{miriad} shell.  If no argument is given, the inputs will be
+recalled from the default file {\file{imager.inputs.g}}.  To get the
+inputs from a file named {\file{imager.inputs.bllac.g}}, you would
+type:
+
+{\ttout{-}} {\ttin{di.get('imager.inputs.bllac.g')}}
+
+\subsection{Setting up Imager to Determine Gain Solutions\label{calibrate}}
+
+We begin the use of {\type{imager}} by first solving for the
+antenna-based gain terms for our complex gain calibrator BLLAC.  This
+is analogous to the \mirprog{gmake}, \mirprog{selfcal}, and
+\mirprog{mfcal} tasks in MIRIAD.
+
+First, you should specify the name and type of the input files to
+those of your complex gain calibrator.  This is done by setting the
+variables {\type{data.format}} and {\type{data.file}}.  
+
+If the data files are in MIRIAD format, you need to specify the input
+file name and file type:
+
+{\ttout{-}} {\ttin{di.data.file:='BLLAC.mir'}} \\
+{\ttout{-}} {\ttin{di.data.format:='miriad'}}
+
+Otherwise, if the input data format is UVFITS, which is the default,
+you would only need to specify the input file name:
+
+{\ttout{-}} {\ttin{di.data.file:='BLLAC.UVFITS'}}
+
+The output files are the output visibility files after editing and
+calibration.  Since we are going to be carrying out everything in
+AIPS++, we will not save the output files to another format like
+UVFITS.
+
+The next variable that can be set is {\type{MS}}.\label{MS} This
+specifies the name of the AIPS++ MeasurementSet containing the
+visibility data for BLLAC.  A MeasurementSet (MS) is a special form of
+an AIPS++ table containing data from a telescope.  Telescopes all
+record data in their own way, the MeasurementSet layout describes how
+these measurements are to be stored within the AIPS++ system.  For
+more information on MeasuremeSets consult the
+\htmladdnormallinkfoot{Definition of
+MeasurementSet}{\msdefinitionURL}.  For our purposes, we will give the
+MeasurementSet the name {\type{BLLAC/MS}}.  
+
+{\ttout{-}} {\ttin{di.MS:='BLLAC/MS'}}
+
+Note, that if the input is a MIRIAD data set, the output MS should be
+in a directory that already exists, (in this example, the directory
+{\file{BLLAC}} must exist before this is run.  Next we will specify
+the different output images.  Below is a list of the output images
+along with a short description.
+
+\begin{description}
+
+\item[{\type{di.images.model}}] the image model created by CLEANing or
+a point source model.  This is the same as the model image output by
+\mirprog{clean} in MIRIAD.  The units are Jy/pixel.
+
+\item[{\type{di.images.derivedmodel}}] the image that will be Fourier
+transformed into the visibility plane for self-calibration.  It is the
+{\type{di.images.model}} with the constraints that are normally
+imposed in the self-calibration process, ({\em e.g.}, the model is
+positive).  Note that in MIRIAD there is only a single model and the
+constraints are given as inputs to the self-calibration task, ({\em
+e.g.}, {\type{clip=}} keyword in \mirprog{selfcal}).
+
+\item[{\type{di.images.restored}}] the restored, deconvolved image
+analogous to the output of \mirprog{clean} and \mirprog{restor} in
+MIRIAD.
+
+\item[{\type{di.images.residual}}] the residual image after the
+{\type{di.images.model}} has been convolved with the dirty beam has
+been removed ({\em i.e.}, analogous to the output of \mirprog{restor}
+{\type{op=residual}} in MIRIAD).  If no deconvolution has been done
+this is the dirty image.
+
+\item[{\type{di.images.psf}}] is the name of the {\em dirty beam} or
+{\em point spread function} image.
+
+\end{description}
+
+For all these output images, we will specify their names to be the
+glish variable name in the directory {\file{BLLAC}}, {\em i.e.},
+
+{\ttout{-}} {\ttin{di.images.model:='BLLAC/model'}} \\
+{\ttout{-}} {\ttin{di.images.derivedmodel:='BLLAC/model'}} \\
+{\ttout{-}} {\ttin{di.images.restored:='BLLAC/restored'}} \\
+{\ttout{-}} {\ttin{di.images.residual:='BLLAC/residual'}} \\
+{\ttout{-}} {\ttin{di.images.psf:='BLLAC/psf'}}
+
+Next we have to set the cell and image size, analogous to
+{\type{cell=}} and {\type{imsize=}} keywords in \mirprog{invert}.
+Here we need to set the {\type{cell}} (in arcseconds) and
+{\type{npix}} (in pixels) array variables, see Section
+\ref{GlishVariables}:
+
+{\ttout{-}} {\ttin{di.cell:=[2,2]}} \\
+{\ttout{-}} {\ttin{di.npix:=[256,256]}}
+
+Since BIMA data now only handles a single polarization, the default
+{\type{npol}} of 1 is fine.
+
+The line type to be imaged is specified by the {\type{line}} variable.
+The variables {\type{line.mode}}, {\type{line.nchan}},
+{\type{line.start}}, and {\type{line.step}} are analogous to the
+{\type{line]=linetype, nchan, start, width, step}} keyword in
+\mirprog{invert}.  For the complex gain calibrator, we initially want
+to solve for the gains with the wideband data.  Thus, if in
+\mirprog{invert} in MIRIAD you would have typed:
+
+{\ttout{invert\%}} {\ttin{line=wide,1}}
+
+in glish you would type:
+
+{\ttout{-}} {\ttin{di.line.mode:='wide'}} \\
+{\ttout{-}} {\ttin{di.line.nchan:=1}}.
+
+In this example, we will keep the default values for the weighting
+variables ({\em i.e.}, {\type{wt}}) for now.  The default values for
+the {\type{clean}} variables are probably fine for the initial
+calibration.  The {\type{nnls}} variables control the Non-Negative
+Least Squares algorithm, developed by Dan Briggs, which is useful for
+making high dynamic-range images of compact sources (for more
+information on the NNLS algorithm, consult \htmladdnormallinkfoot{Dan
+Briggs' Thesis}{\briggsURL}).  Because most BIMA images do not have
+large dynamic ranges, this technique will not usually be necessary.
+
+If you want to set the attributes of the restored beam size (as you
+would by specifying {\type{fwhm}} and {\type{pa}} in
+\mirprog{restor}), the {\type{beam}} variables can be set; we will
+leave them to be fitted by {\type{imager}} ({\em n.b.}, the default
+values, {\type{[ 0, 0, 0 ]}}, tell {\type{imager}} to fit the dirty
+beam).  The {\type{model}} variables are used to constrain the model
+(in order to create the {\type{derivedmodel}}).  For initial
+calibration, we will leave this at the defaults.
+
+The next variables {\type{T, G, D, B, P,}} and {\type{M}} designate
+the possible terms in the calibration solution.
+
+The terms allowed in the gain solution are:
+
+\begin{description}
+
+\item[{\type{P}}] Non-solvable feed position angle. This includes both
+feed position angle (especially for linear polarization arrays such as
+WSRT), and parallactic angle.
+
+\item[{\type{T}}] Solvable atmospheric gain and phase. Eventually this
+will become atmospheric gain and delay but for the moment, we
+recommend that you use this for phase changing atmospheric phases. It
+is the same for both polarizations.
+
+\item[{\type{G}}] Solvable electrical path gain and phase. These terms
+are different for each polarization. These usually vary more slowly
+than the T terms.
+
+\item[{\type{D}}] Solvable polarized radiation leakage. These describe
+the leakage of each hand of polarization into the other. The Jones
+matrices are therefore non-diagonal. These usually vary slowly, on the
+time scale of hours, if at all.
+
+\item[{\type{M}}] Solvable interferometer-based errors. These describe
+the lack of closure of a correlator. The timescale for this should be
+kept as long as possible, usually the entire observing time.
+
+\end{description}
+
+For more information on the various gain terms, you can look at
+\htmladdnormallinkfoot{documentation on the synthesis
+package}{\synthesisURL}.  For this BIMA data, we will initially want
+to derive the atmospheric gain (phase only) and the electrical path
+gain and phase ({\em i.e.}, the {\type{T}} and {\type{G}} terms).  In
+order to solve for the desired gain terms, {\type{solve}} must set to
+{\type{T}} and an averaging time must be specified.  Since the
+time-constants of various gain terms are different, you may wish to
+use different averaging times for different types of gains.  We will
+specify 60 seconds for the atmospheric gain and 5 minutes (300
+seconds) for the electrical gain terms.
+
+{\ttout{-}} {\ttin{di.T.t:=60}} \\
+{\ttout{-}} {\ttin{di.T.solve:=T}} \\
+{\ttout{-}} {\ttin{di.G.t:=300}} \\
+{\ttout{-}} {\ttin{di.G.solve:=T}}
+
+We will solve for the calibration requested calibrations by invoking
+the {\type{solve\_cal}} and apply the calibration to the calibrator
+with the {\type{apply\_cal}} method:
+
+{\ttout{-}} {\ttin{di.solve\_cal()}} \\
+{\ttout{-}} {\ttin{di.apply\_cal()}}
+
+This will create AIPS++ tables {\file{tcal}} and {\file{gcal}} which
+are then applied to the calibrator data.
+
+\subsection{Inspecting and Editing Gain Tables}
+
+Usually, in the calibration stage, you want to at least look at the
+derived calibration tables.  Some MIRIAD tasks like \mirprog{gfiddle}
+allow easy flagging of the tables and interactive control of the
+interpolation in a PGPLOT window.  In AIPS++, this functionality is
+contained in the {\type{gaintable}} module.  For more information,
+consult the chapter on \htmladdnormallinkfoot{Using the Gaintable
+Module}{\gaintableURL} of the \htmladdnormallinkfoot{Guide to
+Synthesis Processing in AIPS++}{\synthesisURL}.
+
+First the {\type{gaintable}} module is loaded.  The next step is to
+load the {\file{tcal}} (electrical path, {\type{T}} terms) and
+{\file{gcal}} (atmospheric phase, {\type{G}} terms) tables to
+respective glish gaintable objects, called {\type{gt\_tcal}} and
+{\type{gt\_gcal}}:
+
+{\ttout{-}} {\ttin{include 'gaintable.g'}} \\
+{\ttout{T}} \\
+{\ttout{-}} {\ttin{gt\_gcal:=gaintable('gcal')}} \\
+{\ttout{-}} {\ttin{gt\_tcal:=gaintable('tcal')}}
+
+To fit a polynomial to the gains you would use the {\type{fit}}
+method:
+
+{\ttout{-}} {\ttin{gt\_gcal.fit()}} \\
+{\ttout{-}} {\ttin{gt\_tcal.fit()}}
+
+and to plot values of the various gain terms as a function of time,
+you would use the {\type{plot}} method:
+
+{\ttout{-}} {\ttin{gt\_gcal.plot()}} \\
+{\ttout{-}} {\ttin{gt\_tcal.plot()}}
+
+\subsection{Applying Calibration, Imaging, and Deconvolving Target Source}
+
+The calibration information stored in the {\file{tcal}} and
+{\file{gcal}} tables is automatically applied to the calibrator; in
+this example, the source is {\type{BLLAC}}.  This is similar to the
+way MIRIAD puts a {\file{gains}} table file into the MIRIAD directory
+containing the {\file{visdata}}.  In order to apply the solutions that
+were determined from the self-calibration of the calibrator to the
+source, you would use {\type{imager}} task, as we did in Section
+\ref{calibrate}.  However, you have to set up {\type{imager}} to use
+the previously-determined calibration table without solving for any
+new terms.  This requires changing the inputs to {\type{imager}},
+starting with the name of the input visibility file and the name of
+the MeasurementSet:
+
+{\ttout{-}} {\ttin{di.data.file:='S106.mir'}} \\
+{\ttout{-}} {\ttin{di.MS:='S106/MS'}}
+
+Next, we change the names of the output images to put them in a
+directory {\file{S106}}:
+
+{\ttout{-}} {\ttin{di.images.model:='S106/model'}} \\
+{\ttout{-}} {\ttin{di.images.derivedmodel:='S106/model'}} \\
+{\ttout{-}} {\ttin{di.images.restored:='S106/restored'}} \\
+{\ttout{-}} {\ttin{di.images.residual:='S106/residual'}} \\
+{\ttout{-}} {\ttin{di.images.psf:='S106/psf'}}
+
+For the target source we want to set the line mode ({\em n.b.}, same
+as line type of MIRIAD) to be {\type{channel}}, selecting 30 channels
+starting at channel 50.
+
+{\ttout{-}} {\ttin{di.line.mode:='channel'}} \\
+{\ttout{-}} {\ttin{di.line.nchan:=30}} \\
+{\ttout{-}} {\ttin{di.line.start:=50}} \\
+
+Next we want to set up the parameters for CLEAN.  Assuming we know
+before hand what rms noise of the final images are expected to be, we
+can set the threshold to about three times that value (analogous to
+setting the {\type{flux=}} keyword of the \mirprog{clean} task).  In
+this example, the rms noise is about 0.1 Jy/beam, so the cutoff will
+be 0.3 Jy/beam.
+
+{\ttout{-}} {\ttin{di.clean.threshold:=0.3}}
+
+Next we must tell {\type{imager}} to use the existing tables and not
+to solve for the gain terms again and finish by reviewing the inputs
+to {\type{imager}}:
+
+{\ttout{-}} {\ttin{di.T.solve:=F}} \\
+{\ttout{-}} {\ttin{di.G.solve:=F}}
+{\ttout{-}} {\ttin{di.inputs()}}
+
+The following inputs are printed:
+
+{\color{\outcolor}
+\begin{verbatim}
+# Inputs:
+data := [format='miriad', file='S106.mir']
+out := [format='uvfits', file='MS.UVFITS']
+MS := 'S106/MS'
+images := [model='S106/model', derivedmodel='S106/model',
+restored='S106/restored', residual='S106/residual', psf='S106/psf']
+cell := [ 2, 2 ]
+npix := [ 128, 128 ]
+npol := 1
+line := [mode='channel', nchan=30, start=50, step=1]
+wt := [type='uniform', rmode='norm', robust=0, noise=1]
+clean := [algorithm='hogbom', niter=1000, threshold=0.3, gain=0.1,
+mask='', choose=F]
+nnls := [niter=0, tolerance=1e-06, fluxmask='', datamask='']
+beam := [ 0, 0, 0 ]
+model := [zero=[ F, F, F, T ], constrain=F, threshold=0, mask='']
+mask := [interactive=F, threshold=0]
+flags := [threshold=0]
+T := [t=0, solve=F, phaseonly=F, table='tcal', initialtable='']
+G := [t=0, solve=F, phaseonly=F, table='gcal', initialtable='']
+D := [t=0, solve=F, phaseonly=F, table='dcal', initialtable='']
+B := [t=0, solve=F, phaseonly=F, table='bcal', initialtable='']
+P := [t=0]
+M := [t=0, solve=F, initialtable='', table='mcal']
+cache := 4194304
+tile := 16
+T 
+\end{verbatim}
+}
+
+Finally, we tell {\type{imager}} to image and clean the target source.
+
+{\ttout{-}} {\ttin{di.solve\_clean()}}
+
+\section{Visualization and Publication-Quality Output\label{aipsvis}}
+
+Any AIPS++ or FITS image can be displayed in the AIPS++ visualization
+tool, called aipsview.  The description of aipsview here will be
+rather brief; for more information consult the
+\htmladdnormallinkfoot{Aipsview User's Guide}{\aipsviewURL}.  Below is
+a list of the major features of aipsview.
+
+\begin{itemize}
+
+\item Easy to use, intuitive graphical user interface (Motif based).
+
+\item Simultaneous display of images from multiple data sets.
+
+\item Display of any orthogonal 2D slice from a 3D image cube ({\em
+e.g.}, display of RA vs. DEC for a given velocity, display of RA
+vs. VELO for a fixed DEC, etc.).
+
+\item Zooming.
+
+\item Interactive display of data values, pixel values, and world
+coordinate values ({\em e.g.}, RA, DEC) as pointer is moved around
+image.
+
+\item Subregion selection, with subregions being rectangular areas
+defined by mouse selection of opposite corners.
+
+\item Interactive vector (line drawing) plots of data value vs.
+coordinate value ({\em e.g.}, for line profile plots or intensity
+vs. spatial position plots).
+
+\item Display of contours, both alone and overlaid on raster images.
+Users have control of the appearance of contours.
+
+\item Optional display of axes around images with coordinate
+annotation.  Users have control of the content and placement of labels
+and overlaid markers for publication-quality PostScript output.
+
+\item PostScript printing (grayscale or color) of raster images and
+vector (line drawing) plots.
+
+\item Movie or animation function for time-sequence display of third
+dimension of 3D images.
+
+\item Time synchronized movies of two (or more) data cubes of the same
+area of sky ({\em i.e.}, the same velocity of each data cube is
+displayed as the two movies are run).
+
+\item Blink function for animation display of two (or more) single
+planes of different images.
+
+\item Synchronized picking, for simultaneous display of intensity
+values, profiles, or subregions in multiple images based on selection
+of positions in a single image.
+
+\item Complete colormap editor for manipulation of color look-up
+tables and creation of new tables.  Interactive manipulation
+of zero point and contrast of color look-up table, using the mouse.
+
+\item The ability of AIPS++ to control aipsview via glish.  This
+includes the ability to obtain some information such as region
+selection from aipsview into glish, see the
+\htmladdnormallink{Appendix on Glish}{\aipsviewGlishURL} of the
+Aipsview User's Guide.
+
+\end{itemize}
+
+In order to access the visualization and display functionality of
+AIPS++, we must first include the display module and then load the
+image:
+
+{\ttout{-}} {\ttin{include 'display.g'}} \\
+{\ttout{T}} \\
+{\ttout{-}} {\ttin{dd.image('S106/restored')}}
+{\ttout{1}}
+
+The {\ttout{1}} returned by glish is the ID number of the data set.
+This number can be used in other methods in the
+{\type{defaultdisplay}} object.  Note that when AIPS++ is used to
+create an image, the output file has the axes ordered Right Ascension,
+Declination, Stokes, and Velocity (or Frequency).  Aipsview initially
+maps the X, Y, and Z axes to the first three axes of the image file.
+Since Stokes (which for BIMA data is only one element deep) is the
+third axis, aipsview will not display the image initially with
+velocity along an axis.  To display the data in the usual RA-DEC-VELO
+orientation, you must first map the third axis of aipsview to the
+velocity axis of the data set.
+
+After loading the image, the main aipsview window shows information
+about the data set.  In the center of the panel, there is a region
+labeled {\mn{Slice:}} which has a series of buttons, {\mn{RA}},
+{\mn{DEC}}, {\mn{STOKES}}, and several buttons {\mn{Set Map}}.  You
+should click on one of these {\mn{Set Map}} buttons, which brings up a
+{\wn Slice Button Setup} window that can be used to configure the view
+and change the button label from {\mn{Set Map}} to one specified by
+the user.
+
+The main part of the {\wn Slice Button Setup} window consists of one
+row of toggles and sliders for each axis in the data set.  In order to
+select the velocity axis as the Z dimension, click on {\mn{Z}} in
+the row of buttons labeled {\mn{VELO}} (or {\mn{FREQ}} if the
+channels represent frequency rather than velocity).  Then you can
+click on {\mn{Autodisplay}} followed by {\mn{Done}}.  This will
+bring up the RA-DEC-VELO representation immediately.  If you didn't
+press {\mn{Autodisplay}}, then after the window disappears you need
+to click on {\mn{VELO}} (this should be the forth button) to bring
+up the RA-DEC-VELO display of the data.
+
+After the data is shown in the expected orientation ({\em i.e.}, with
+velocity as the Z axis) you can use aipsview to display and analyze
+the image and produce publication-quality output for profiles,
+contour, and grayscale and color images.  One of the most useful
+features of aipsview is that it provides an interactive means to
+create the customized output.  You will probably need the refer to the
+\htmladdnormallink{Aipsview User's Guide}{\aipsviewURL} for more
+information about any particular functionality.
+
+To return a summary of the names and ID numbers of the files currently
+displayed in aipsview, you can use the {\type{summary}} method of the
+{\type{defaultdisplay}} glish object:
+
+{\ttout{-} \ttin{dd.summary()}} \\
+{\ttout{[count=1, ids=1, names=restored]}}
+
+\appendix 
+
+\chapter{Appendices}
+
+%\section{Examples}
+
+\section{Command Line Editing Commands\label{editlineTable}}
+
+\begin{table}[tbh]
+\begin{tabular}{|l|p{4.5in}|}
+\hline
+\textbf{Command} & \textbf{Action} \\
+\hline
+\hline
+{\tt C-p} {\em or} {\tt\em UP-ARROW}       &
+  get the previous command \\ \hline
+{\tt C-n} {\em or} {\tt\em DOWN-ARROW}     & 
+  get the next command \\ \hline
+{\tt C-a}       & 
+  go to beginning of line \\ \hline
+{\tt C-e}       & 
+  go to end of line \\ \hline
+{\tt C-b} {\em or} {\tt\em LEFT-ARROW}     & 
+  move back (to the left) one character \\ \hline
+{\tt C-f} {\em or} {\tt\em RIGHT-ARROW}    & 
+  move forward (to the right) one character \\ \hline
+{\tt C-d}       & 
+  delete the current character. {\em Note} {\tt C-d} on an empty line
+  exits glish.\\ \hline
+{\tt C-h} {\em or} {\tt\em BACKSPACE} {\em or} {\tt\em DELETE} & 
+  delete the previous (to the left) character \\ \hline
+{\tt C-k}       &
+  {\em kill} from the current character to the end of the line \\
+  \hline 
+{\tt C-y}       &
+  {\em yank} back any previously {\em kill}ed character before the
+  current character \\ \hline 
+{\tt C-l}       & 
+  redisplay the current line \\ \hline
+{\tt C-]{\em \verb-<CHAR>-}}    & 
+  move to the single character {\tt{\em \verb-<CHAR>-}} \\ \hline
+{\tt C-t}       & 
+  transpose current and previous character \\ \hline
+{\tt C-r}       &
+  search for a string. Enter the string followed by {\em RETURN} when
+  prompted with {\tt Search:}.  Just pressing return when prompted
+  uses the last search string.\\ \hline
+{\tt M-b}       & 
+  move back (to the left) one word \\ \hline
+{\tt M-f}       & 
+  move forward (to the right) one word \\ \hline
+{\tt M-d}       & 
+  delete from the current position to the end of the word \\ \hline
+{\tt M-l}       &
+  toggle to lower case from the current position to the end of the
+  current word \\ \hline 
+{\tt M-u}       & 
+  toggle to upper case from the current position to the end of the
+  current word \\ \hline 
+{\tt M-\verb-<-}        &
+  get the first history line \\ \hline
+{\tt M-\verb->-}        & 
+  get the last history line. This is often used to restart a search.\\
+  \hline 
+{\tt M-C-h} {\em or} {\tt M-{\em BACKSPACE}} {\em or} {\tt M-{\em DELETE}}, & 
+  delete from the current position to the beginning of the current
+  word \\ \hline
+{\tt M-w}       &
+  copy from the current position to the beginning of the line to the
+  {\em kill} buffer for a later {\em yank} \\ \hline
+\end{tabular}
+\caption{ Command Line Editing Commands }
+\end{table}
+
+\end{document}
+
+% Both Tools and Tasks are written as clients that are controlled from
+% and communicate with Glish. All data in AIPS++ can be retrieved into
+% Glish from the Table system, manipulated and placed back. This
+% transparency ultimately allows the user to bypass any canned data
+% procedures.

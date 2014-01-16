@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="exportfits" category="import/export">
+<shortdescription>Convert a CASA image to a FITS file</shortdescription>
+<description>
+	CASA-produced images can be exported as FITS files for transporting
+	to other software packages or publication.  
+        No subimaging of the fits image can be made with this task.
+        The spectral reference frame can be changed prior to export
+        using the task imreframe.
+
+</description>
+<input>
+	<param type="string" name="imagename" mustexist="true">
+		<description>Name of input CASA image</description>
+		<value></value>
+	</param>
+
+	<param type="string" name="fitsimage">
+		<description>Name of output image FITS file</description>
+		<value></value>
+	</param>
+
+	<param type="bool" name="velocity">
+		<description>Use velocity (rather than frequency) as spectral axis</description>
+		<value>False</value>
+	</param>
+
+	<param type="bool" name="optical">
+		<description>Use the optical (rather than radio) velocity convention</description>
+		<value>False</value>
+	</param>
+
+	<param type="int" name="bitpix">
+		<description>Bits per pixel</description>
+		<value>-32</value>
+		<allowed kind="enum">
+			<value>-32</value>
+			<value>16</value>
+		</allowed>
+	</param>
+
+	<param type="any" name="minpix">
+		<description>Minimum pixel value (if minpix &gt; maxpix, value is automatically determined)</description>
+		<any type="variant" limittypes="int double"/>
+		<value type="int">0</value>
+	</param>
+
+	<param type="any" name="maxpix">
+		<any type="variant" limittypes="int double"/>
+		<description>Maximum pixel value (if minpix &gt; maxpix, value is automatically determined)</description>
+		<value type="int">-1</value>
+	</param>
+
+	<param type="bool" name="overwrite" >
+		<description>Overwrite pre-existing imagename</description>
+		<value>False</value>
+	</param>
+
+	<param type="bool" name="dropstokes" >
+		<description>Drop the Stokes axis?</description>
+		<value>False</value>
+	</param>
+
+	<param type="bool" name="stokeslast" >
+		<description>Put Stokes axis last in header?</description>
+		<value>True</value>
+	</param>
+	<param type="bool" name="history" >
+		<description>Write history to the FITS image?</description>
+		<value>True</value>
+	</param>
+
+	<param type="bool" name="dropdeg" >
+		<description>Drop all degenerate axes (e.g. Stokes and/or Frequency)?</description>
+		<value>False</value>
+	</param>
+
+</input>
+<example>
+  exportfits(imagename='NGC3256-continuum.image', fitsimage='NGC3256cont.fits', history=False)
+</example> 
+
+</task>
+</casaxml>

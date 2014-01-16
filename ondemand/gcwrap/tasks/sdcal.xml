@@ -1,0 +1,597 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the param set for sdcal -->
+
+<task type="function" name="sdcal" startup="false" category="single dish">
+
+  <shortdescription>ASAP SD task: do data selection, calibration, and averaging</shortdescription>
+
+  <description>ASAP SD calibration task (based on the ALMATST5 recommendations):
+        Do data selection, calibration, and averaging
+
+        Task Version 2007-10-25 TT
+        split and modified from Task Version 2007-03-04 STM
+</description>
+
+  <input>
+
+    <param type="string" name="infile"  mustexist="true">
+    <description>name of input SD dataset</description>
+    <value></value>
+    </param>
+
+    <param type="any" name="antenna">
+            <description>antenna name or id (only effective for MS input)</description>
+            <any type="variant" limittype="string int"/>
+            <value type="int">0</value>
+    </param> 
+
+    <param type="string" name="fluxunit">
+	    <description>units for line flux (K,Jy) (''=current)</description>
+	    <value></value>
+    </param>
+
+    <param type="any" name="telescopeparm" subparam='true'>
+	    <description>param of telescope for flux conversion</description>
+            <any type='variant' limittype='string doubleArray'/>
+	    <value type='string'/>
+    </param>
+
+    <param type="string" name="specunit">
+	    <description>units for spectral axis (channel,km/s,GHz,''=current)</description>
+	    <value></value>
+	    <allowed kind="enum">
+	    <value></value>
+	    <value>channel</value>
+	    <value>km/s</value>
+	    <value>GHz</value>
+	    <value>MHz</value>
+	    <value>kHz</value>
+	    <value>Hz</value>
+    </allowed>
+    </param>
+
+    <param type="string" name="frame">
+	    <description>frequency reference frame, e.g. LSRK (''=current)</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="doppler">
+	    <description>doppler convention, e.g. RADIO (''=current)</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="calmode">
+	    <description>SD calibration mode (ps,nod,otf,otfraster,fs,fsotf,quotient,none)</description>
+	    <value>none</value>
+	    <allowed kind="enum">
+	    <value>ps</value>
+	    <value>nod</value>
+	    <value>fs</value>
+	    <value>fsotf</value>
+            <value>quotient</value>
+            <value>otf</value>
+            <value>otfraster</value>
+	    <value>none</value>
+    </allowed>
+    </param>
+
+    <param type="any" name="fraction" subparam="true">
+	    <description>fraction of the OFF data to mark</description>
+            <any type="variant" limittype="string double"/>
+            <value type="string">10%</value>
+    </param>
+
+    <param type="int" name="noff" subparam="true">
+	    <description>number of the OFF data to mark</description>
+            <value>-1</value>
+    </param>
+
+    <param type="double" name="width" subparam="true">
+	    <description>width of the pixel for edge detection</description>
+            <value>0.5</value>
+    </param>
+
+    <param type="bool" name="elongated" subparam="true">
+	    <description>whether observed area is elongated in one direction or not</description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="markonly" subparam="true">
+	    <description>do calibration (False) or just mark OFF (True)</description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="plotpointings" subparam="true">
+            <description>plot pointing direction for ON and OFF</description>
+            <value>False</value>
+    </param>
+
+    <param type="intArray" name="scanlist">
+	    <description>list of scans to use (e.g. [1,2,3,4])</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="field">
+	    <description>string for selection by source name</description>
+	    <value></value>
+    </param>
+
+    <param type="intArray" name="iflist">
+	    <description>list of IF ids to select (e.g. [0,1])</description>
+	    <value></value>
+    </param>
+
+    <param type="intArray" name="pollist">
+            <description>list of polarization ids to select (e.g. [0,1])</description>
+            <value></value>
+    </param>
+
+    <param type="intArray" name="channelrange">
+            <description>channel range selection (e.g. [0,5000])</description>
+            <value></value>
+    </param>
+
+    <param type="bool" name="scanaverage">
+            <description>average integs within scans (True,False) </description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="timeaverage">
+            <description>average scans over time (True,False)</description>
+            <value>False</value>
+    </param>
+
+    <param type="string" name="tweight" subparam="true">
+            <description>weighting for time averaging</description>
+            <value>none</value>
+	    <allowed kind="enum">
+	    <value>none</value>
+	    <value>var</value>
+	    <value>tsys</value>
+	    <value>tint</value>
+	    <value>tintsys</value>
+	    <value>median</value>
+            </allowed>
+    </param>
+
+    <param type="bool" name="averageall" subparam="true">
+            <description>set True only when averaging spectra with different spectral resolutions</description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="polaverage">
+            <description>average over polarizations (True,False)</description>
+            <value>False</value>
+    </param>
+
+    <param type="string" name="pweight" subparam="true">
+            <description>weighting for polarization averaging</description>
+            <value>none</value>
+	    <allowed kind="enum">
+	    <value>none</value>
+	    <value>var</value>
+	    <value>tsys</value>
+            </allowed>
+    </param>
+
+    <param type="double" name="tau">
+            <description>atmospheric optical depth for correction</description>
+            <value>0.0</value>
+    </param>
+
+    <param type="bool" name="verify">
+            <description>interactively verify the results of calibration</description>
+            <value>False</value>
+    </param>
+
+    <param type="string" name="outfile">
+	    <description>output file name</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="outform">
+	    <description>output file format (ASCII,MS,SDFITS,ASAP)</description>
+	    <value>ASAP</value>
+	    <allowed kind="enum">
+	    <value>ASCII</value>
+	    <value>ascii</value>
+	    <value>MS</value>
+	    <value>ms</value>
+	    <value>MS2</value>
+	    <value>ms2</value>
+	    <value>SDFITS</value>
+	    <value>sdfits</value>
+	    <value>ASAP</value>
+	    <value>asap</value>
+	    </allowed>
+    </param>
+
+    <param type="bool" name="overwrite">
+            <description>overwrite the output file if already exists</description>
+            <value>False</value>
+    </param>
+
+
+    <param type="int" name="plotlevel">
+	    <description>plot results (0=none,1+=some,&lt;0=hardcopy)</description>
+	    <value>0</value>
+    </param>
+
+    <constraints>
+	    <when param="fluxunit">
+		<equals value=""/>
+		<equals value="K">
+			<default param="telescopeparm"><value type='string'></value></default>
+		</equals>
+	        <equals value="k">
+			<default param="telescopeparm"><value type='string'></value></default>
+	        </equals>
+	        <equals value="Jy">
+			<default param="telescopeparm"><value type='string'></value></default>
+	        </equals>
+	        <equals value="jy">
+			<default param="telescopeparm"><value type='string'></value></default>
+	        </equals>
+	    </when>
+	    <when param="timeaverage">
+		<equals type="bool" value="False"/>
+		<equals type="bool" value="True">
+			<default param="tweight"><value type='string'>none</value></default>
+                        <default param="averageall"><value type='bool'>False</value></default>
+                </equals>
+            </when>
+	    <when param="polaverage">
+		<equals type="bool" value="False"/>
+		<equals type="bool" value="True">
+			<default param="pweight"><value type='string'>none</value></default>
+                </equals>
+            </when>
+            <when param="calmode">
+                <equals type="string" value="none"/>
+                <equals type="string" value="ps"/>
+                <equals type="string" value="nod"/>
+                <equals type="string" value="fs"/>
+                <equals type="string" value="fsotf"/>
+                <equals type="string" value="quotient"/>
+                <equals type="string" value="otf">
+                    <default param="fraction"><value type="string">10%</value></default>
+                    <default param="width"><value type="double">0.5</value></default>
+                    <default param="elongated"><value type="bool">False</value></default>
+                    <default param="markonly"><value type="bool">False</value></default>
+                    <default param="plotpointings"><value type="bool">False</value></default>
+                </equals>
+                <equals type="string" value="otfraster">
+                    <default param="fraction"><value type="string">10%</value></default>
+                    <default param="noff"><value type="int">-1</value></default>
+                    <default param="markonly"><value type="bool">False</value></default>
+                    <default param="plotpointings"><value type="bool">False</value></default>
+                </equals>
+            </when>
+    </constraints>
+
+    </input>
+
+  <returns type="void"/>
+
+  <example>
+  Keyword arguments:
+        infile -- name of input SD dataset
+        antenna -- antenna name or id (only effective for MS input). 
+        fluxunit -- units for line flux
+                options: 'K','Jy',''
+                default: '' (keep current fluxunit)
+                WARNING: For GBT data, see description below.
+
+            &gt;&gt;&gt; fluxunit expandable parameter
+                 telescopeparm -- the telescope characteristics
+                         options: (str) name or (list) list of gain info
+                         default: '' (none set)
+                         example: if telescopeparm='', it tries to get the telescope
+                                  name from the data.
+                                  Full antenna parameters (diameter,ap.eff.) known
+                                  to ASAP are
+                                  'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43',
+                                  'CEDUNA','HOBART'. For GBT, it fixes default fluxunit
+                                  to 'K' first then convert to a new fluxunit.
+                                  telescopeparm=[104.9,0.43] diameter(m), ap.eff.
+                                  telescopeparm=[0.743] gain in Jy/K
+                                  telescopeparm='FIX' to change default fluxunit
+                                  see description below
+
+        specunit -- units for spectral axis
+                options: (str) 'channel','km/s','GHz','MHz','kHz','Hz'
+                default: '' (=current)
+                example: this will be the units for masklist
+        frame -- frequency frame for spectral axis
+                options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
+                         'GEO','GALACTO','LGROUP','CMB'
+                default: currently set frame in scantable
+                WARNING: frame='REST' not yet implemented
+        doppler -- doppler mode
+                options: (str) 'RADIO','OPTICAL','Z','BETA','GAMMA'
+                default: currently set doppler in scantable
+        calmode -- calibration mode
+                options: 'ps','nod','otf','otfraster',
+                         'fs','fsotf','quotient','none'
+                default: 'none'
+                example: choose mode 'none' if you have
+                         already calibrated and want to
+                         try averaging
+                WARNING: 'fsotf' is not implemented yet
+            &gt;&gt;&gt; calmode expandable parameter
+                 fraction -- Edge marker parameter of 'otf' and 'otfraster'.
+                             Specify a number of OFF integrations (at each
+                             side of the raster rows in 'otfraster' mode)
+                             as a fraction of total number of integrations.
+                             In 'otfraster' mode, number of integrations 
+                             to be marked as OFF, n_off, is determined by 
+                             the following formula,
+
+                                n_off = floor(fraction * n),
+
+                             where n is number of integrations per raster 
+                             row. Note that n_off from both sides will be  
+                             marked as OFF so that twice of specified 
+                             fraction will be marked at most. For example, 
+                             if you specify fraction='10%', resultant 
+                             fraction of OFF integrations will be 20% at 
+                             most.
+                             In 'otf' mode, n_off is given by,
+
+                                n_off = floor(fraction * n),
+
+                             where n is number of total integrations.
+                             n_off is used as criterion of iterative marking
+                             process. Therefore, resulting total number of 
+                             OFFs will be larger than n_off. In practice,
+                             fraction is a geometrical fraction of edge
+                             region. Thus, if integrations are concentrated
+                             on edge region (e.g. some of Lissajous
+                             patterns), then resulting n_off may be 
+                             unexpectedly large.
+                         default: '10%'
+                         options: '20%' in string style or float value less 
+                                  than 1.0 (e.g. 0.15).
+                                  'auto' is available only for 'otfraster'. 
+                 noff -- Edge marking parameter for 'otfraster'.
+                         It is used to specify a number of OFF spectra near 
+                         edge directly. Value of noff comes before setting 
+                         by fraction. Note that n_off from both sides will 
+                         be marked as OFF so that twice of specified noff 
+                         will be marked at most.
+                         default: -1 (use fraction)
+                         options: any positive integer
+                 width -- Edge marking parameter for 'otf'.
+                          Pixel width with respect to a median spatial 
+                          separation between neighboring two data in time.
+                          Default will be fine in most cases.
+                         default: 0.5
+                         options: float value
+                 elongated -- Edge marking parameter for 'otf'.
+                              Set True only if observed area is elongated 
+                              in one direction.
+                         default: False
+                 markonly -- Set True if you want to save data just after 
+                             edge marking (i.e. uncalibrated data) to see 
+                             how OFF spectra are defined.
+                         default: False
+        scanlist -- list of scan numbers to process
+                default: [] (use all scans)
+                example: [21,22,23,24]
+                this selection is in addition to field, iflist, and pollist
+        field -- selection string for selecting scans by name
+                default: '' (no name selection)
+                example: 'FLS3a*'
+                this selection is in addition to scanlist, iflist, and pollist
+        iflist -- list of IF id numbers to select
+                default: [] (use all IFs)
+                example: [15]
+                this selection is in addition to scanlist, field, and pollist
+        pollist -- list of polarization id numbers to select
+                default: [] (use all polarizations)
+                example: [1]
+                this selection is in addition to scanlist, field, and iflist
+        channelrange -- channel range selection
+                default: [] (use all channel)
+                example: [0,5000]
+                Note that specified values are recognized as 'channel'
+                regardless of the value of specunit 
+        scanaverage -- average integrations within scans
+                options: (bool) True,False
+                default: False
+        timeaverage -- average times for multiple scan cycles
+                options: (bool) True,False
+                default: False
+                example: if True, this happens after calibration
+
+            &gt;&gt;&gt;timeaverage expandable parameter
+                 tweight -- weighting for time average
+                         options: 'none' 
+                                  'var'   (1/var(spec) weighted)
+                                  'tsys'  (1/Tsys**2 weighted)
+                                  'tint'  (integration time weighted)
+                                  'tintsys'  (Tint/Tsys**2)
+                                  'median'  ( median averaging)
+                         default: 'none'
+
+                 averageall -- average multi-resolution spectra
+                               spectra are averaged by referring 
+                               their frequency coverage
+                         default: False
+
+        polaverage -- average polarizations
+                options: (bool) True,False
+                default: False
+
+            &gt;&gt;&gt;polaverage expandable parameter
+                 pweight -- weighting for polarization average
+                         options: 'none'
+                                  'var'  (1/var(spec) weighted)
+                                  'tsys' (1/Tsys**2 weighted)
+                         default: 'none'
+
+        tau -- atmospheric optical depth
+                default: 0.0 (no correction)
+        verify -- interactively verify the results of calibration. Only
+                  effective if calmode = 'ps' (but not for ALMA data),
+                  'otf', and 'nod'.
+                  When verify = True, spectra before and after calibration
+                  are displayed in a plot for six spectra in scantable.
+                  At the prompt there are two choices of action:
+                  'Y' (accept the calibration) and 'N' (reject the calibration).
+                  Note that when calibration is rejected by 'N', no
+                  calibration is done to the whole scantable.
+                options: (bool) True,False
+                default: False
+        outfile -- Name of output file
+                default: '' (&lt;infile&gt;_cal)
+        outform -- format of output file
+                options: 'ASCII','SDFITS','MS','ASAP'
+                default: 'ASAP'
+                example: the ASAP format is easiest for further sd
+                         processing; use MS for CASA imaging.
+                         If ASCII, then will append some stuff to
+                         the outfile name
+        overwrite -- overwrite the output file if already exists
+                options: (bool) True,False
+                default: False
+                WARNING: if outform='ASCII', this parameter is ignored
+        plotlevel -- control for plotting of results
+                options: (int) 0=none, 1=some, 2=more, &lt;0=hardcopy
+                default: 0 (no plotting)
+                example: plotlevel&lt;0 as abs(plotlevel), e.g.
+                         -1 =&gt; hardcopy of final plot (will be named
+                         &lt;outfile&gt;_calspec.eps)
+                WARNING: be careful plotting in fsotf mode!
+
+
+        DESCRIPTION:
+
+        --------
+        OVERVIEW
+        --------
+        Task sdcal performs data selection, calibration for single-dish
+        spectra.  By setting calmode='none', one can run sdcal on already 
+        calibrated data, for further selection , averaging and atmospheric 
+        optical depth correction. To save the output spectra in a certain
+        range of channels, you set the range in channelrange.
+
+        If you give multiple IFs in iflist, then your scantable will have
+        multiple IFs by default. Averaging of multi-resolution (multi-IFs)
+        spectra can be achieved by setting a sub-parameter in timeaverage, 
+        averageall, to True. It handles multi-IFs by selecting overlaps in 
+        frequency coverage and assigning new IFs in the output spectra.
+
+        --------------------
+        FLUX UNIT CONVERSION
+        --------------------
+        The task is able to convert flux unit between K and Jy. To do that,
+        fluxunit and its subparameter telescopeparm must be properly set.
+        The fluxunit should be 'Jy' or 'K' depending on what unit input
+        data is and what unit you want to convert. If given fluxunit is
+        different from the unit of input data, unit conversion is performed.
+        The telescopeparm is used to specify conversion factor. There are
+        three ways to specify telescopeparm: 1) set Jy/K conversion factor,
+        2) set telescope diameter, D, and aperture efficiency, eta,
+        separately, and 3) 'FIX' mode (only change the unit without
+        converting spectral data). If you give telescopeparm as a list,
+        then if the list has a single float it is assumed to be the gain
+        in Jy/K (case 1), if two or more elements they are assumed to be
+        telescope diameter (m) and aperture efficiency respectively
+        (case 2).
+        See the above parameter description as well as note on 'FIX' mode
+        below for details.
+  
+        There are two special cases that don't need telescopeparm for unit
+        conversion. Telescope name is obtained from the data.
+        1) ASAP (sd tool) recognizes the conversion factor (actually D and
+           eta) for the "AT" telescopes, namely ATNF MOPRA telescope, until
+           2004.
+        2) The task does know D and eta for GBT telescope.
+        If you wish to change the fluxunit, by leaving the sub-parameter
+        telescopeparm unset (telescopeparm=''), it will use internal
+        telescope parameters for flux conversion for the data from AT
+        telescopes and it will use an approximate aperture efficiency
+        conversion for the GBT data.
+
+        Note that sdcal assumes that the fluxunit is set correctly in
+        the data already. If not, then set telescopeparm='FIX' and it
+        will set the default units to fluxunit without conversion.
+        Note also that, if the data in infile is an ms from GBT and the
+        default flux unit is missing, this task automatically fixes the
+        default fluxunit to 'K' before the conversion.
+
+        ---------------------
+        HOW TO CHOOSE CALMODE
+        ---------------------
+        For position switching calibration, the user should choose
+        appropriate calibration mode depending on the data. Use case
+        for each mode is as follows:
+
+            'ps': position switch (including OTF) with explicit
+                  reference (OFF) spectra
+            'otf': non-raster OTF scan without explicit OFFs
+                   (e.g. Lissajous, double circle, etc.)
+                   intends to calibrate fast scan data
+            'otfraster': raster OTF scan without explicit OFFs
+
+        So, if the data contains explicit reference spectra, 'ps' should
+        be used. Otherwise, 'otfraster' and 'otf' are appropriate for
+        raster OTF and non-raster OTF, respectively. In 'otf' and
+        'otfraster' modes, the task first try to find several integrations 
+        near edge as OFF integrations, then the data are calibrated using
+        those OFFs. If the observing pattern is raster, you 
+        should use the 'otfraster' mode to calibrate data. Otherwise, the 
+        'otf' mode should be used. For detail about edge marking, see 
+        inline help of sd.edgemarker module and its methods.
+        Those modes are designed for OTF observations without 
+        explicit OFF integrations. However, these modes should work even 
+        explicit reference spectra exist. In this case, those spectra
+        will be ignored and integrations near edges detected by edge
+        marker will be used as reference.
+
+        Except for how to choose OFFs, the procedure to derive calibrated
+        spectra is common for the
+        above three modes. Selected (or preset) OFF integrations are
+        separated by its continuity in time domain, averaged in
+        each segment, then interpolated to timestamps for ON integrations.
+        Effectively, it means that OFF integrations are averaged by each
+        OFF spectrum for 'ps' mode, averaged by either ends of each raster
+        row for 'otfraster' mode, averaged by each temporal segments of
+        detected edges for 'otf' mode. The formula for calibrated spectrum
+        is
+
+            Tsys * (ON - OFF) / OFF. 
+        
+        The 'fs' mode is for frequency switch calibration. Currently,
+        only GBT frequency switch data is supported.
+
+        The 'quotient' mode is special mode for "AT" telescopes, namely
+        ANNF MOPRA. It assumes that observing sequence looks like
+        "target, reference, target, reference,..." and it derives
+        calibrated spectrum as
+
+            Tsys * ON / OFF,
+
+        slightly different from position switch modes.
+  
+        -------
+        WARNING
+        -------
+        For the GBT raw SDFITS format data as input:
+        SDtasks are able to handle GBT raw SDFITS format data since the 
+        data filler is available. However, the functionality is not well 
+        tested yet, so that there may be unknown bugs. 
+
+  </example>
+
+</task>
+
+</casaxml>

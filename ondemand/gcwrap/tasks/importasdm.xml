@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<task type="function" name="importasdm" category="import/export" >
+
+  <shortdescription>Convert an ALMA Science Data Model observation into a CASA visibility file (MS) or single-dish data format (Scantable)</shortdescription>
+
+  <input>
+
+    <param type="string" name="asdm" kind="asdm" mustexist="true">
+          <description>Name of input asdm directory (on disk)</description>
+          <value></value>
+    </param>
+
+    <param type="string" name="vis" kind="ms">
+          <description>Root name of the ms to be created. Note the .ms is NOT added </description>
+          <value></value>
+    </param>
+
+    <param type="bool" name="singledish">
+          <description>Set true to output single-dish data format </description>
+          <value>False</value>
+    </param>
+
+    <param type="any" name="antenna" subparam="true">
+            <description>antenna name or id</description>
+            <any type="variant" limittype="string int"/>
+            <value type="int">0</value>
+    </param> 
+
+    <param type="string" name="corr_mode" >
+	    <description>specifies the correlation mode to be considered on input. A quoted string containing a sequence of ao, co, ac,or all separated by whitespaces is expected</description>
+	    <value>all</value>
+    </param>
+
+    <param type="string" name="srt" >
+	    <description>specifies the spectral resolution type to be considered on input. A quoted string containing a sequence of fr, ca, bw, or all separated by whitespaces is expected</description>
+	    <value>all</value>
+    </param>
+
+    <param type="string" name="time_sampling" >
+	    <description>specifies the time sampling (INTEGRATION and/or SUBINTEGRATION)  to be considered on input. A quoted string containing a sequence of i, si, or all separated by whitespaces is expected</description>
+	    <value>all</value>
+    </param>
+
+    <param type="string" name="ocorr_mode" >
+	    <description>output data for correlation mode AUTO_ONLY (ao) or CROSS_ONLY (co) or CROSS_AND_AUTO (ca)</description>
+	    <value>ca</value>
+	    <allowed kind="enum">
+	       <value>co</value>
+	       <value>ao</value>
+	       <value>ca</value>
+	    </allowed>
+    </param>
+
+    <param type="bool" name="compression">
+	    <description>Flag for turning on data compression</description>
+	    <value>False</value>
+    </param>
+
+    <param type="bool" name="lazy">
+	    <description>Make the MS DATA column read the ASDM Binary data directly (faster import, smaller MS)</description>
+	    <value>False</value>
+    </param>
+
+    <param type="string" name="asis">
+	    <description>Creates verbatim copies of the ASDMtables in the ouput measurement set.  Value given must be a string of table names separated by spaces; A * wildcard is allowed.</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="wvr_corrected_data">
+	    <description>Specifies which values are considerd in the SDM binary data to fill the DATA column in the MAIN table of the MS. Expected values for this option are: no, for uncorrected data (default), yes, for the corrected data, and both, for for corrected and uncorrected data. Note if both is selected two measurement sets are created, one with uncorrected data and the other with corrected data.  </description>
+	    <value>no</value>
+	    <allowed>
+	    <value>no</value>
+	    <value>yes</value>
+	    <value>both</value>
+	    </allowed>
+    </param>
+    <param type="string" name="scans">
+	    <description>processes only the specified scans. This value is a semicolon separated list of scan specifications. A scan specification consists in an exec bock index followed by the : character;  followed by a comma separated list of scan indexes or scan index ranges. A scan index is relative to the exec block it belongs to. Scan indexes are 1-based while exec blocks are 0-based. "0:1" or "2:2~6" or "0:1,1:2~6,8;2:,3:24~30" "1,2" are valid values for the option. "3:" alone will be interpreted as, all the scans of the exec block#3.  An scan index or a scan index range not preceded by an exec block index will be interpreted as, all the scans with such indexes in all the exec blocks.  By default all the scans are considered. </description>
+	    <value></value>
+    </param>
+
+    <param type="bool" name="ignore_time">
+      <description>All the rows of the tables Feed, History, Pointing, Source, SysCal, CalDevice, SysPower, and Weather are processed independently of the time range of the selected exec block / scan.</description>
+      <value>False</value>
+    </param>
+    
+    <param type="bool" name="process_syspower">
+      <description> The SysPower table is processed if and only if this parameter is set to true.</description>
+      <value>True</value>
+    </param>
+
+    <param type="bool" name="process_caldevice">
+      <description>The CalDevice table is processed if and only if this parameter is set to true.</description>
+      <value>True</value>
+    </param>
+
+    <param type="bool" name="process_pointing">
+      <description>The Pointing table is processed if and only if this parameter is set to true.</description>
+      <value>True</value>
+    </param>
+
+    <param type="bool" name="process_flags">
+      <description>Create online flags in the FLAG_CMD sub-table.</description>
+      <value>True</value>
+    </param>
+
+    <param type="double" name="tbuff" subparam="true">
+            <description> Time padding buffer (seconds)</description>
+            <value>0.0</value>
+    </param> 
+
+    <param type="bool" name="applyflags" subparam="true">
+      <description>Apply the flags to the MS.</description>
+      <value>False</value>
+    </param>
+
+    <param type="bool" name="savecmds" subparam="true">
+        <description>Save flag commands to an ASCII file</description>
+        <value>True</value>
+    </param>
+
+    <param type="string" name="outfile" subparam="true">
+        <description>Name of ASCII file to save flag commands</description>
+        <value></value>
+    </param>
+
+    <param type="bool" name="flagbackup">
+      <description>Back up flag column before applying flags.</description>
+      <value>True</value>
+    </param>
+
+    <param type="bool" name="verbose">
+	    <description>Output lots of information while the filler is working</description>
+	    <value>False</value>
+    </param>
+
+    <param type="bool" name="overwrite">
+	    <description>Over write an existing MS</description>
+	    <value>False</value>
+    </param>
+
+    <param type="bool" name="showversion">
+	    <description>Report the version of asdm2MS being used</description>
+	    <value>False</value>
+    </param>
+
+    <constraints>
+            <when param="singledish">
+                <equals type="bool" value="False"/>
+                <equals type="bool" value="True">
+                    <default param="antenna"><value type="int">0</value></default>
+                </equals>
+            </when>
+            
+            <when param="process_flags">
+                 <equals type="bool" value="True">
+                      <default param="tbuff"><value type="float">0.0</value></default>
+                      <default param="applyflags"><value type="bool">False</value></default>
+                      <default param="savecmds"><value type="bool">False</value></default>
+                      <default param="outfile"><value type="string"></value></default>
+                 </equals>
+                 <equals type="bool" value="False"/>
+            </when>
+
+    </constraints>
+
+    <param type="string" name="useversion" >
+	    <description>Version of asdm2MS to be used (\'v3\' (default, should work for all data))</description>
+	    <value>v3</value>
+	    <allowed kind="enum">
+	      <value>v3</value>
+	      <value></value>
+	    </allowed>
+    </param>
+
+
+    </input>
+
+  <returns type="void"/>
+
+  <example>		          
+Keyword arguments:
+asdm -- Name of input ASDM file (directory)
+        default: none; example: asdm='ExecBlock3'
+
+vis       -- Root ms or scantable name, note a prefix (.ms or .asap) is NOT appended to this name
+             default: none
+
+singledish   -- Set True to write data as single-dish format (Scantable)
+                default: False
+
+            &gt;&gt;&gt; singledish expandable parameter
+                 antenna -- antenna name or id.
+ 
+corr_mode -- correlation mode to be considered on input. Could
+	     be one or more of the following, ao, co, ac, or all
+	     default: 'all'
+
+srt       -- spectral resolution type. Could be one or more of
+	     the following, fr, ca, bw, or all
+	     default: 'all'
+
+time_sampling -- specifies the time sampling, INTEGRATION and/or
+                 SUBINTEGRAION. could be one or more of the following
+                 i, si, or all.
+		 default: 'all'
+
+ocorr_mode    -- output data for correlation mode AUTO_ONLY 
+                 (ao) or CROSS_ONLY (co) or CROSS_AND_AUTO (ca)
+		 default: 'ca'
+		 
+compression  -- produces comrpressed columns in the resulting measurement set.
+                default: False
+
+lazy         -- Make the MS DATA column read the ASDM Binary data directly
+                (faster import, smaller MS)
+                default: False
+
+asis         --  creates verbatim copies of the ASDM tables in 
+                 the output measurement set. The value given to
+		 this option must be a list of table names separated
+		 by space characters; the wildcard character '*' is 
+                 allowed in table names.
+                default: none
+
+wvr_corrected_data -- specifies wich values are considered in the 
+                      ASDM binary data to fill the DATA column in 
+                      the MAIN table of the MS. Expected values for 
+                      this option are 'no' for the uncorrected data 
+                      (this is the default), 'yes' for the corrected
+                      data and 'both' for corrected and uncorrected 
+                      data. In the latter case, two measurement sets
+                      are created, one containing the uncorrected 
+                      data and the other one, whose name is suffixed
+                      by '-wvr-corrected', containing the corrected 
+                      data.
+                  default: 'no'
+
+scans --	  processes only the scans specified in the option's value. This value is a semicolon 
+                  separated list of scan specifications. A scan specification consists in an exec bock index 
+                  followed by the character ':' followed by a comma separated list of scan indexes or scan 
+                  index ranges. A scan index is relative to the exec block it belongs to. Scan indexes are 
+                  1-based while exec blocks's are 0-based. '0:1' or '2:2~6' or '0:1,1:2~6,8;2:,3:24~30' '1,2' 
+                  are valid values for the option. '3:' alone will be interpreted as 'all the scans of the 
+                  exec block#3'. An scan index or a scan index range not preceded by an exec block index will
+                  be interpreted as 'all the scans with such indexes in all the exec blocks'.  By default 
+                  all the scans are considered.
+                    default: none (all scans)
+
+ignore_time -- All the rows of the tables Feed, History, Pointing, Source, SysCal, CalDevice, SysPower,
+               and Weather are processed independently of the time range of the selected exec block / scan.
+                    default: False
+
+process_syspower -- The SysPower table is processed if and only if this parameter is set to True.
+                    default: True
+
+process_caldevice -- The CalDevice table is processed if and only if this parameter is set to True.
+                    default: True
+
+process_pointing -- The Pointing table is processed if and only if this parameter is set to True.
+                    default: True
+
+process_flags    -- Create online flags based on the Flag.xml, Antenna.xml and SpectralWindow.xml files
+                    and copy them to the FLAG_CMD sub-table of the MS. The flags will NOT be applied unless 
+                    the parameter applyflags is set to True. Optionally, the flags can also be saved to
+                    an external ASCII file if savecmds is set to True.
+                    default: True
+                    
+            &gt;&gt;&gt; process_flags expandable parameter
+                 tbuff   -- Time padding buffer (in seconds)
+                    default: 0.0
+
+                 NOTE: this time is in seconds. You should currently
+                 set the value of tbuff to be 1.5x the correlator
+                 integration time if greater than 1 second.  For
+                 example, if the SDM has integrations of 3 seconds,
+                 set tbuff=4.5.  Likewise, set tbuff=15.0 for 10-sec
+                 integrations.
+
+                 applyflags -- Apply the online flags to the MS.
+                 default: False
+
+
+                savecmds -- Save the flag commands to an ASCII file given by the parameter outfile. 
+                default: False
+                    
+                outfile -- Filename where to save the flag commands.
+                default: ' ' --> by default it will save on a filename composed from the MS name.
+                    Example: vis='uid_A02.ms', the outfile will be 'uid_A02_cmd.txt'. 
+                    
+                    NOTE: The file is open to save in append mode.
+
+flagbackup   -- Backup original flags in &gt;ms&lt;.flagversions 
+                default: True
+  
+verbose     -- produce log output as asdm2MS is being run
+                    default: False
+
+showversion -- report the version of the asdm2MS being used.
+                    default: False
+
+useversion -- Selects the version of asdm2MS to be used (\'v3\' (default, should work for all data))
+              default: v3
+
+  </example>
+
+</task>
+
+</casaxml>

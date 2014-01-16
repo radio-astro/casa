@@ -1,0 +1,26 @@
+AATM ToDo List
+==============
+
+* BUGS
+
+** Copy behaviour
+
+*** std::vector<> parameters should be taken as const & , _not coppied_
+
+*** std::vector<> types should not be returned as copies
+
+** Const correctness 
+   
+- class SpectralGrid has no const memebers -- many of the assers at
+  least should be const
+
+** Features
+
+*** RefractiveIndexProfile should be constructable without spectral windows
+** Namespace issues
+*** There must not be "using namespace std" at top level in header files
+*** Must not include a file at level other than top-level
+
+    e.g.: ATMAtmosphereType.h line 22
+
+   

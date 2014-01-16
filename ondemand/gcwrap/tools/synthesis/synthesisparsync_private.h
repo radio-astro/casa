@@ -1,0 +1,3 @@
+
+casa::SynthesisParSync *itsParSync;
+

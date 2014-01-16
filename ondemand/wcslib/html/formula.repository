@@ -1,0 +1,75 @@
+\form#0:$(x,y)$
+\form#1:$(\alpha,\delta)$
+\form#2:$(\phi,\theta)$
+\form#3:$\phi_0$
+\form#4:$\theta_0$
+\form#5:$\phi_{\mathrm p}$
+\form#6:$\theta_{\mathrm p}$
+\form#7:$\delta_{\mathrm p}$
+\form#8:$\pm$
+\form#9:$Z$
+\form#10:$X$
+\form#11:$Z'$
+\form#12:$n \times n$
+\form#13:$i n + j$
+\form#14:$i$
+\form#15:$j$
+\form#16:$90^\circ$
+\form#17:$ (x,y) = f(\phi) g(\theta) $
+\form#18:$ \theta $
+\form#19:$ g(\theta) $
+\form#20:$1^\circ$
+\form#21:$10^{-10}$
+\form#22:$5^\circ$
+\form#23:$-90^\circ$
+\form#24:$\phi$
+\form#25:$\theta$
+\form#26:$[-180^\circ,180^\circ]$
+\form#27:$[-90^\circ,90^\circ]$
+\form#28:$0^\circ.0000000001$
+\form#29:$180^\circ/\pi$
+\form#30:$x$
+\form#31:$y$
+\form#32:$S$
+\form#33:$P$
+\form#34:$dX/dS$
+\form#35:$dS/dX$
+\form#36:$G$
+\form#37:$m$
+\form#38:$\alpha$
+\form#39:$n_r$
+\form#40:$\lambda_r$
+\form#41:$n'_r$
+\form#42:$dn/d\lambda$
+\form#43:$\epsilon$
+\form#44:$X\leadsto P\rightarrow S$
+\form#45:$S\rightarrow P\leadsto X$
+\form#46:$cos$
+\form#47:$sin$
+\form#48:$(\alpha_0,+90^\circ-\epsilon)$
+\form#49:$(\alpha_0,-90^\circ+\epsilon)$
+\form#50:$180^\circ$
+\form#51:$0^\circ$
+\form#52:$\beta = v/c$
+\form#53:$= 1 / 2 \pi$
+\form#54:$= 2 \pi$
+\form#55:$= 1/h$
+\form#56:$= h$
+\form#57:$= c$
+\form#58:$= 1/c$
+\form#59:$(K_1, K_2,... K_M)$
+\form#60:$\leq$
+\form#61:$K_1 K_2 \ldots K_M$
+\form#62:$\Upsilon_m$
+\form#63:$K_1$
+\form#64:$\le$
+\form#65:$\pi/180^\circ$
+\form#66:$\sqrt{2}$
+\form#67:$1/\sqrt{2}$
+\form#68:$\beta$
+\form#69:$(\rho,\beta)$
+\form#70:$\arg(x,y)$
+\form#71:$v$
+\form#72:$1 < |v| < 1 + WCSTRIG\_TOL$
+\form#73:$|v| == 1$
+\form#74:$10^6$

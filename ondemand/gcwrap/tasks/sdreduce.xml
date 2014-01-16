@@ -1,0 +1,859 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the param set for (new) sdreduce -->
+
+<task type="function" name="sdreduce" startup="false" category="single dish">
+
+  <shortdescription>ASAP SD task: do sdcal, sdsmooth, and sdbaseline in one task</shortdescription>
+
+  <description>ASAP SD calibration task (based on the ALMATST5 recommendations):
+        
+        Combine sdcal, sdsmooth, and sdbaseline to do standard single dish
+        calibration in a single task. 
+
+        Task Version 2008-01-28 TT
+        split and modified from Task Version 2007-03-04 STM
+</description>
+
+  <input>
+
+    <param type="string" name="infile"  mustexist="true">
+    <description>name of input SD dataset</description>
+    <value></value>
+    </param>
+
+    <param type="any" name="antenna">
+            <description>antenna name or id (only effective for MS input)</description>
+            <any type="variant" limittype="string int"/>
+            <value type="int">0</value>
+    </param> 
+
+    <param type="string" name="fluxunit">
+	    <description>units for line flux (K,Jy) (''=current)</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="telescopeparm" subparam='true'>
+	    <description>param of telescope for flux conversion</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="specunit">
+	    <description>units for spectral axis (channel,km/s,GHz)</description>
+	    <value></value>
+	    <allowed kind="enum">
+	    <value></value>
+	    <value>channel</value>
+	    <value>km/s</value>
+	    <value>GHz</value>
+	    <value>MHz</value>
+	    <value>kHz</value>
+	    <value>Hz</value>
+    </allowed>
+    </param>
+
+    <param type="any" name="restfreq" subparam="true">
+        <description>rest frequency (default unit: Hz)</description>
+        <any type="variant" limittype="double int string doubleArray intArray stringArray dictArray" />
+        <value type="string"></value>
+    </param>
+
+    <param type="string" name="frame">
+	    <description>frequency reference frame, e.g. LSRK (''=current)</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="doppler">
+	    <description>doppler convention, e.g. RADIO (''=current)</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="calmode">
+	    <description>SD calibration mode (ps,nod,otf,otfraster,fs,fsotf,none)</description>
+	    <value>none</value>
+	    <allowed kind="enum">
+	    <value>ps</value>
+	    <value>nod</value>
+	    <value>fs</value>
+	    <value>fsotf</value>
+	    <value>quotient</value>
+            <value>otf</value>
+            <value>otfraster</value>
+	    <value>none</value>
+    </allowed>
+    </param>
+
+    <param type="any" name="fraction" subparam="true">
+	    <description>fraction of the OFF data to mark</description>
+            <any type="variant" limittype="string double"/>
+            <value type="string">10%</value>
+    </param>
+
+    <param type="int" name="noff" subparam="true">
+	    <description>number of the OFF data to mark</description>
+            <value>-1</value>
+    </param>
+
+    <param type="double" name="width" subparam="true">
+	    <description>width of the pixel for edge detection</description>
+            <value>0.5</value>
+    </param>
+
+    <param type="bool" name="elongated" subparam="true">
+	    <description>whether observed area is elongated in one direction or not</description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="markonly" subparam="true">
+	    <description>do calibration (False) or just mark OFF (True)</description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="plotpointings" subparam="true">
+            <description>plot pointing direction for ON and OFF</description>
+            <value>False</value>
+    </param>
+
+    <param type="intArray" name="scanlist">
+	    <description>list of scans to use (e.g. [1,2,3,4])</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="field">
+	    <description>string for selection by source name</description>
+	    <value></value>
+    </param>
+
+    <param type="intArray" name="iflist">
+	    <description>list of IF ids to select (e.g. [0,1])</description>
+	    <value></value>
+    </param>
+
+    <param type="intArray" name="pollist">
+            <description>list of polarization ids to select (e.g. [0,1])</description>
+            <value></value>
+    </param>
+
+    <param type="intArray" name="channelrange">
+            <description>channel range selection (e.g. [0,5000])</description>
+            <value></value>
+    </param>
+
+    <param type="bool" name="average">
+            <description>data averaging (True,False) </description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="scanaverage" subparam="true">
+            <description>average integs within scans (True,False) </description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="timeaverage" subparam="true">
+            <description>average scans over time (True,False)</description>
+            <value>False</value>
+    </param>
+
+    <param type="string" name="tweight" subparam="true">
+            <description>weighting for time averaging</description>
+            <value>none</value>
+            <allowed kind="enum">
+            <value>none</value>
+            <value>var</value>
+            <value>tsys</value>
+            <value>tint</value>
+            <value>tintsys</value>
+            <value>median</value>
+            </allowed>
+    </param>
+
+    <param type="bool" name="averageall" subparam="true">
+            <description>set True only when averaging spectra with different spectral resolutions</description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="polaverage" subparam="true">
+            <description>average over polarizations (True,False)</description>
+            <value>False</value>
+    </param>
+
+    <param type="string" name="pweight" subparam="true">
+            <value>none</value>
+            <allowed kind="enum">
+            <value>none</value>
+            <value>var</value>
+            <value>tsys</value>
+            </allowed>
+    </param>
+
+
+    <param type="double" name="tau">
+            <description>atmospheric optical depth for correction</description>
+            <value>0.0</value>
+    </param>
+
+    <param type="string" name="kernel">
+            <description>type of spectral smoothing</description>
+            <value>none</value>
+            <allowed kind="enum">
+            <value>none</value>
+            <value>hanning</value>
+            <value>gaussian</value>
+            <value>boxcar</value>
+	    <value>regrid</value>
+            </allowed>
+    </param>
+
+    <param type="int" name="kwidth" subparam="true">
+            <description>width of spectral kernel in channels</description>
+            <value>5</value>
+    </param>
+
+    <param type="string" name="chanwidth" subparam="true">
+	    <description>width of regridded channels</description>
+	    <value>5</value>
+    </param>
+
+    <param type="any" name="masklist">
+            <description>list or string of mask regions to INCLUDE in BASELINE fit</description>
+            <any type="variant" limittype="string  doubleArray"/>
+            <value type="doubleArray"></value>
+    </param>
+
+    <param type="string" name="maskmode">
+            <description>mode of setting additional channel masks for baselining</description>
+            <value>auto</value>
+            <allowed kind="enum">
+            <value>auto</value>
+            <value>list</value>
+	    <value>interact</value>
+            </allowed>
+    </param>
+
+    <param type="double" name="thresh" subparam='true'>
+            <description>S/N threshold for linefinder</description>
+            <value>5.0</value>
+    </param>
+
+    <param type="int" name="avg_limit" subparam='true'>
+            <description>channel averaging for broad lines</description>
+            <value>4</value>
+    </param>
+
+    <param type="intArray" name="edge" subparam='true'>
+            <description>channels to drop at beginning and end of spectrum</description>
+            <value type='vector'><value>0</value></value>
+    </param>
+
+    <param type="string" name="blfunc">
+	    <description>baseline model function</description>
+            <value>none</value>
+	    <allowed kind="enum">
+                <value>none</value>
+	        <value>poly</value>
+                <value>chebyshev</value>
+	        <value>cspline</value>
+	        <value>sinusoid</value>
+	    </allowed>
+    </param>
+
+    <param type="int" name="order" subparam="true">
+            <description>order of baseline polynomial</description>
+            <value>5</value>
+    </param>
+
+    <param type="int" name="npiece" subparam="true">
+            <description>number of element polynomials of spline</description>
+            <value>2</value>
+    </param>
+
+    <param type="bool" name="applyfft" subparam="true">
+            <description>automatically set wave numbers of sinusoids</description>
+            <value>True</value>
+    </param>
+
+    <param type="string" name="fftmethod" subparam="true">
+            <description>method for automatically set wave numbers of sinusoids</description>
+            <value>fft</value>
+    </param>
+
+    <param type="any" name="fftthresh" subparam="true">
+            <description>threshold to select wave numbers of sinusoids</description>
+	    <value type='double'>3.0</value>
+    </param>
+
+    <param type="any" name="addwn" subparam="true">
+            <description>additional wave numbers to use</description>
+	    <value type='vector'><value></value></value>
+    </param>
+
+    <param type="any" name="rejwn" subparam="true">
+            <description>wave numbers NOT to use</description>
+	    <value type='vector'><value></value></value>
+    </param>
+
+    <param type="double" name="clipthresh" subparam="true">
+            <description>clipping threshold for iterative fitting</description>
+            <value>3.0</value>
+    </param>
+
+    <param type="int" name="clipniter" subparam="true">
+            <description>maximum iteration number</description>
+            <value>0</value>
+    </param>
+
+    <param type="bool" name="verifycal">
+            <description>interactively verify the results of calibration</description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="verifysm">
+            <description>interactively verify the results of smoothing for each spectrum. [not available for kernel="regrid"]</description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="verifybl">
+            <description>interactively verify the results of baseline fitting for each spectrum. (only for blfunc="poly")</description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="verbosebl">
+            <description>output fitting results to logger</description>
+            <value>True</value>
+    </param>
+
+    <param type="bool" name="bloutput">
+            <description>output fitting results to a text file</description>
+            <value>True</value>
+    </param>
+
+    <param type="string" name="blformat">
+            <description>format of the text file specified with bloutput</description>
+            <value></value>
+    </param>
+
+    <param type="bool" name="showprogress">
+            <description>show progress status for large data</description>
+            <value>True</value>
+    </param>
+
+    <param type="int" name="minnrow" subparam="true">
+            <description>minimum number of input spectra to show progress status</description>
+            <value>1000</value>
+    </param>
+
+    <param type="string" name="outfile">
+	    <description>output file name</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="outform">
+	    <description>output file format (ASCII,MS,SDFITS,ASAP)</description>
+	    <value>ASAP</value>
+	    <allowed kind="enum">
+	    <value>ASCII</value>
+	    <value>ascii</value>
+	    <value>MS</value>
+	    <value>ms</value>
+	    <value>MS2</value>
+	    <value>ms2</value>
+	    <value>SDFITS</value>
+	    <value>sdfits</value>
+	    <value>ASAP</value>
+	    <value>asap</value>
+	    </allowed>
+    </param>
+
+    <param type="bool" name="overwrite">
+            <description>overwrite the output file if already exists</description>
+            <value>False</value>
+    </param>
+
+    <param type="int" name="plotlevel">
+	    <description>plot results (0=none,1+=some,&lt;0=hardcopy)</description>
+	    <value>0</value>
+    </param>
+
+    <constraints>
+	    <when param="fluxunit">
+		<equals value=""/>
+		<equals value="K">
+			<default param="telescopeparm"><value>""</value></default>
+		</equals>
+	        <equals value="k">
+			<default param="telescopeparm"><value>""</value></default>
+	        </equals>
+	        <equals value="Jy">
+			<default param="telescopeparm"><value>""</value></default>
+	        </equals>
+	        <equals value="jy">
+			<default param="telescopeparm"><value>""</value></default>
+	        </equals>
+	    </when>
+	    <when param="specunit">
+		<equals value=""/>
+		<equals value="channel"/>
+		<equals value="GHz"/>
+		<equals value="MHz"/>
+		<equals value="kHz"/>
+		<equals value="Hz"/>
+		<equals value="km/s">
+			<default param="restfreq"><value type='string'></value></default>
+                </equals>
+	    </when>
+            <when param="average">
+                <equals type="bool" value="False"/>
+                <equals type="bool" value="True">
+                        <default param="scanaverage"><value type="bool">False</value></default>
+                        <default param="timeaverage"><value type="bool">False</value></default>
+                        <default param="tweight"><value type="string">none</value></default>
+                        <default param="averageall"><value type='bool'>False</value></default>
+                        <default param="polaverage"><value type="bool">False</value></default>
+                        <default param="pweight"><value type="string">none</value></default>
+                </equals>
+            </when>
+            <when param="kernel">
+                <equals value="none"/>
+                <equals value="hanning"/>
+                <equals value="gaussian">
+                        <default param="kwidth"><value>5</value></default>
+                </equals>
+                <equals value="boxcar">
+                        <default param="kwidth"><value>5</value></default>
+                </equals>
+		<equals value="regrid">
+			<default param="chanwidth"><value type="string">5</value></default>
+		</equals>
+            </when>
+            <when param="maskmode">
+                <equals value="auto">
+                        <default param="thresh"><value>5.0</value></default>
+                        <default param="avg_limit"><value>4</value></default>
+                        <default param="edge"><value type='vector'><value>0</value></value></default>
+                </equals>
+                <equals value="list"/>
+                <equals value="interact"/>
+            </when>
+	    <when param="blfunc">
+                <equals value="none"/>
+		<equals value="poly">
+			<default param="order"><value>5</value></default>
+	        </equals>
+		<equals value="chebyshev">
+			<default param="order"><value>5</value></default>
+			<default param="clipthresh"><value>3.0</value></default>
+			<default param="clipniter"><value>0</value></default>
+	        </equals>
+                <equals value="cspline">
+			<default param="npiece"><value>2</value></default>
+			<default param="clipthresh"><value>3.0</value></default>
+			<default param="clipniter"><value>0</value></default>
+	        </equals>
+                <equals value="sinusoid">
+			<default param="applyfft"><value>True</value></default>
+			<default param="fftmethod"><value type="string">fft</value></default>
+			<default param="fftthresh"><value type="double">3.0</value></default>
+			<default param="addwn"><value type="vector"><value>0</value></value></default>
+			<default param="rejwn"><value type="vector"><value></value></value></default>
+			<default param="clipthresh"><value>3.0</value></default>
+			<default param="clipniter"><value>0</value></default>
+	        </equals>
+	    </when>
+	    <when param="showprogress">
+		<equals type="bool" value="True">
+			<default param="minnrow"><value>1000</value></default>
+	        </equals>
+	    </when>
+            <when param="calmode">
+                <equals type="string" value="none"/>
+                <equals type="string" value="ps"/>
+                <equals type="string" value="nod"/>
+                <equals type="string" value="fs"/>
+                <equals type="string" value="fsotf"/>
+                <equals type="string" value="quotient"/>
+                <equals type="string" value="otf">
+                    <default param="fraction"><value type="string">10%</value></default>
+                    <default param="width"><value type="double">0.5</value></default>
+                    <default param="elongated"><value type="bool">False</value></default>
+                    <default param="markonly"><value type="bool">False</value></default>
+                    <default param="plotpointings"><value type="bool">False</value></default>
+                </equals>
+                <equals type="string" value="otfraster">
+                    <default param="fraction"><value type="string">10%</value></default>
+                    <default param="noff"><value type="int">-1</value></default>
+                    <default param="markonly"><value type="bool">False</value></default>
+                    <default param="plotpointings"><value type="bool">False</value></default>
+                </equals>
+            </when>
+    </constraints>
+
+    </input>
+
+  <returns type="void"/>
+
+  <example>
+  Keyword arguments:
+        infile -- name of input SD dataset
+        antenna -- antenna name or id (only effective for MS input). 
+        fluxunit -- units for line flux
+                options: 'K','Jy',''
+                default: '' (keep current fluxunit)
+                WARNING: For GBT data, see description below.
+            &gt;&gt;&gt; fluxunit expandable parameter
+                 telescopeparm -- the telescope characteristics
+                        options: (str) name or (list) list of gain info
+                        default: '' (none set)
+                        example: if telescopeparm='', it tries to get the telescope
+                                 name from the data.
+                                 Full antenna parameters (diameter,ap.eff.) known
+                                 to ASAP are
+                                 'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43',
+                                 'CEDUNA','HOBART'. For GBT, it fixes default fluxunit
+                                 to 'K' first then convert to a new fluxunit.
+                                 telescopeparm=[104.9,0.43] diameter(m), ap.eff.
+                                 telescopeparm=[0.743] gain in Jy/K
+                                 telescopeparm='FIX' to change default fluxunit
+                                 see description below
+
+        specunit -- units for spectral axis
+                options: (str) 'channel','km/s','GHz','MHz','kHz','Hz',''
+                default: '' (=current)
+                example: this will be the units for masklist
+            &gt;&gt;&gt; specunit expandable parameters
+                 restfreq -- rest frequency
+                         available type includes float, int, string, list of float, 
+                         list of int, list of string, and list of dictionary. the 
+                         default unit of restfreq in case of float, int, or string 
+                         without unit is Hz. string input can be a value only 
+                         (treated as Hz) or a value followed by unit for which 'GHz',
+                         'MHz','kHz',and 'Hz' are available. 
+                         a list can be used to set different rest frequencies for 
+                         each IF. the length of list input must be nIF. dictionary 
+                         input should be a pair of molecule name and frequency with 
+                         keys of 'name' and 'value', respectively. values in the 
+                         dictionary input follows the same manner as for single 
+                         float or string input. 
+                         example: 345.796
+                                  '1420MHz'
+                                  [345.8, 347.0, 356.7]
+                                  ['345.8MHz', '347.0MHz', '356.7MHz']
+                                  [{'name':'CO','value':345}]
+        frame -- frequency frame for spectral axis
+                options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
+                         'GEO','GALACTO','LGROUP','CMB'
+                default: currently set frame in scantable
+                WARNING: frame='REST' not yet implemented
+        doppler -- doppler mode
+                options: (str) 'RADIO','OPTICAL','Z','BETA','GAMMA'
+                default: currently set doppler in scantable
+        calmode -- calibration mode
+                options: 'ps','nod','fs','fsotf','quotient','none'
+                default: 'none'
+                example: choose mode 'none' if you have
+                         already calibrated and want to
+                         try baselines or averaging
+            &gt;&gt;&gt; calmode expandable parameter
+                 fraction -- Edge marking parameter for 'otf' and 'otfraster'.
+                             specify a number of OFF scans as a fraction of 
+                             total number of data points. 
+                         default: '10%'
+                         options: '20%' in string style or float value less 
+                                  than 1.0 (e.g. 0.15).
+                                  'auto' is available only for 'otfraster'. 
+                 noff -- Edge marking parameter for 'otfraster'.
+                         It is used to specify a number of OFF scans near 
+                         edge directly. Value of noff comes before setting 
+                         by fraction.
+                         default: -1 (use fraction)
+                         options: any positive integer
+                 width -- Edge marking parameter for 'otf'.
+                          Pixel width with respect to a median spatial 
+                          separation between neighboring two data in time.
+                          Default will be fine in most cases.
+                         default: 0.5
+                         options: float value
+                 elongated -- Edge marking parameter for 'otf'.
+                              Set True only if observed area is elongeted 
+                              in one direction.
+                         default: False
+                 markonly -- Set True if you want to save data just after 
+                             edge marking (i.e. uncalibrated data) to see 
+                             how OFF scans are defined.
+                         default: False
+        scanlist -- list of scan numbers to process
+                default: [] (use all scans)
+                example: [21,22,23,24]
+                this selection is in addition to field, iflist, and pollist
+        field -- selection string for selecting scans by name
+                default: '' (no name selection)
+                example: 'FLS3a*'
+                this selection is in addition to scanlist, iflist, and pollist
+        iflist -- list of IF id numbers to select
+                default: [] (use all IFs)
+                example: [15]
+                this selection is in addition to scanlist, field, and pollist
+        pollist -- list of polarization id numbers to select
+                default: [] (use all polarizations)
+                example: [1]
+                this selection is in addition to scanlist, field, and iflist
+        channelrange -- channel range selection
+                default: [] (use all channel)
+                example: [0,5000]
+                Note that specified values are recognized as 'channel' 
+                regardless of the value of specunit 
+        average -- averaging on spectral data 
+                options: (bool) True,False
+                default: False
+
+            &gt;&gt;&gt;average expandable parameter
+                 scanaverage -- average integrations within scans
+                         options: (bool) True,False
+                         default: False
+                         example: if True, this happens in read-in
+                         For GBT, set False!
+                 timeaverage -- average times for multiple scan cycles
+                         options: (bool) True,False
+                         default: False
+                         example: if True, this happens after calibration
+                 tweight -- weighting for time average
+                         options: 'none'
+                                  'var'   (1/var(spec) weighted)
+                                  'tsys'  (1/Tsys**2 weighted)
+                                  'tint'  (integration time weighted)
+                                  'tintsys'  (Tint/Tsys**2)
+                                  'median'  ( median averaging)
+                         default: 'none'
+                 averageall -- average multi-resolution spectra
+                               spectra are averaged by referring 
+                               their frequency coverage
+                         default: False
+                 polaverage -- average polarizations
+                         options: (bool) True,False
+                         default: False
+                 pweight -- weighting for polarization average
+                         options: 'none'
+                                  'var'  (1/var(spec) weighted)
+                                  'tsys' (1/Tsys**2 weighted)
+
+        tau -- atmospheric optical depth
+                default: 0.0 (no correction)
+        kernel -- type of spectral smoothing
+                options: 'none','hanning','gaussian','boxcar','regrid'
+                default: 'none' (no smoothing)
+
+            &gt;&gt;&gt;kernel expandable parameter
+                 kwidth -- width of spectral smoothing kernel
+                         options: (int) in channels
+                         default: 5
+                         example: 5 or 10 seem to be popular for boxcar
+                                  ignored for hanning (fixed at 5 chans)
+                                  (0 will turn off gaussian or boxcar)
+                 chanwidth -- channel width of regridded spectra
+	                 default: '5' (in channels)
+		         example: '500MHz', '0.2km/s'
+        masklist -- list or string of mask regions to INCLUDE in BASELINE fit
+                    a string masklist allows per IF selection of channels.
+                default: [] (entire spectrum)
+                example: [[1000,3000],[5000,7000]]
+                         '0:1000~3000;5000~7000, 1:200~350;450~600'
+                         when maskmode is 'auto' or 'interact', this mask 
+                         will be applied first before fitting as base mask
+        maskmode -- mode of setting additional channel masks for baselining
+                options: (str) 'auto','list','interact'
+                default: 'auto'
+                example: maskmode='auto' runs linefinder to detect line regions 
+                         to be excluded from fitting. this mode requires three 
+                         expandable parameters: thresh, avg_limit, and edge.
+                         USE WITH CARE! May need to tweak the expandable parameters.
+                         maskmode='list' uses the given masklist only: 
+                         no additional masks applied.
+                         maskmode='interact' allows users to manually modify the 
+                         mask regions by dragging mouse on the spectrum plotter GUI.
+                         use LEFT or RIGHT button to add or delete regions, 
+                         respectively.
+
+            &gt;&gt;&gt; maskmode expandable parameters
+                 thresh -- S/N threshold for linefinder
+                         default: 5
+                         example: a single channel S/N ratio above which the channel is
+                                  considered to be a detection
+                 avg_limit -- channel averaging for broad lines
+                         default: 4
+                         example: a number of consecutive channels not greater than
+                                  this parameter can be averaged to search for broad lines
+                 edge -- channels to drop at beginning and end of spectrum
+                         default: 0
+                         example: [1000] drops 1000 channels at beginning AND end
+                                  [1000,500] drops 1000 from beginning and 500 from end
+
+                 Note: For bad baselines threshold should be increased,
+                 and avg_limit decreased (or even switched off completely by
+                 setting this parameter to 1) to avoid detecting baseline
+                 undulations instead of real lines.
+
+        blfunc -- baseline model function
+                options: (str) 'none','poly','chebyshev','cspline','sinusoid'
+                default: 'none' (no baselining)
+                example: blfunc='poly' uses a single polynomial line of 
+                         any order which should be given as an expandable 
+                         parameter 'order' to fit baseline. 
+                         blfunc='chebyshev' uses Chebyshev polynomials. 
+                         blfunc='cspline' uses a cubic spline function, a piecewise 
+                         cubic polynomial having C2-continuity (i.e., the second 
+                         derivative is continuous at the joining points).
+                         blfunc='sinusoid' uses a combination of sinusoidal curves. 
+            &gt;&gt;&gt; blfunc expandable parameters
+                 order -- order of baseline polynomial
+                         options: (int) (&lt;0 turns off baseline fitting)
+                         default: 5
+                         example: typically in range 2-9 (higher values
+                                  seem to be needed for GBT)
+                 npiece -- number of the element polynomials of cubic spline curve
+                         options: (int) (&lt;0 turns off baseline fitting)
+                         default: 2
+                 applyfft -- automatically set wave numbers of sinusoidal functions
+                         for fitting by applying some method like FFT.
+                         options: (bool) True, False
+                         default: True
+                 fftmethod -- method to be used when applyfft=True. Now only
+                         'fft' is available and it is the default.
+                 fftthresh -- threshold to select wave numbers to be used for
+                         sinusoidal fitting. both (float) and (str) accepted.
+                         given a float value, the unit is set to sigma.
+                         for string values, allowed formats include:
+                             'xsigma' or 'x' (= x-sigma level. e.g., '3sigma'), or
+                             'topx' (= the x strongest ones, e.g. 'top5').
+                         default is 3.0 (unit: sigma).
+                 addwn -- additional wave number(s) of sinusoids to be used
+                         for fitting.
+                         (list) and (int) are accepted to specify every
+                         wave numbers. also (str) can be used in case
+                         you need to specify wave numbers in a certain range,
+                         e.g., 'a-b' (= a, a+1, a+2, ..., b-1, b),
+                               '&lt;a'  (= 0,1,...,a-2,a-1),
+                               '&gt;=a' (= a, a+1, ... up to the maximum wave
+                                      number corresponding to the Nyquist
+                                      frequency for the case of FFT).
+                         default: []
+                 rejwn -- wave number(s) of sinusoid NOT to be used for fitting.
+                         can be set just as addwn but has higher priority:
+                         wave numbers which are specified both in addwn
+                         and rejwn will NOT be used.
+                         default: []
+                 clipthresh -- clipping threshold for iterative fitting
+                         default: 3
+                 clipniter -- maximum iteration number
+                         default: 0 (no iteration, i.e., no clipping)
+
+        verifycal -- interactively verify the results of calibration
+                  See description of verify parameter in the task, sdcal,
+                  for details.
+                options: (bool) True,False
+                default: False
+        verifysm -- interactively verify the results of smoothing for each
+                    spectrum.
+                  See description of verify parameter in the task, sdsmooth,
+                  for details.
+                options: (bool) True,False
+                default: False
+                Note: verification is not yet available for kernel='regrid'
+        verifybl -- interactively verify the results of baseline fitting for
+                    each spectrum.
+                  See description of verify parameter in the task, sdbaseline,
+                  for details.
+                options: (bool) True,False
+                default: False
+                NOTE: Currently available only when blfunc='poly'
+        verbosebl -- output fitting results to logger
+                default: True
+                example: If False, the fitting results including coefficients, 
+                         residual rms, etc., are not output to the CASA logger, 
+                         while the processing speed gets faster
+        bloutput -- output fitting results to a text file
+                default: True
+                example: If False, the fitting results including coefficients, 
+                         residual rms, etc., are not output to a text file 
+                         (&lt;outfile&gt;_blparam.txt), while the processing 
+                         speed gets faster
+        blformat -- format of the logger output and text file specified with bloutput
+                options: '', 'csv'
+                default: '' (same as in the past, easy to read but huge)
+        showprogress -- show progress status for large data
+                default: True
+        minnrow -- minimum number of input spectra to show progress status
+                default: 1000
+        outfile -- Name of output file
+                default: '' (&lt;infile&gt;_cal)
+        outform -- format of output file
+                options: 'ASCII','SDFITS','MS','ASAP'
+                default: 'ASAP'
+                example: the ASAP format is easiest for further sd
+                         processing; use MS for CASA imaging.
+                         If ASCII, then will append some stuff to
+                         the outfile name
+        overwrite -- overwrite the output file if already exists
+                options: (bool) True,False
+                default: False
+                WARNING: if outform='ASCII', this parameter is ignored
+        plotlevel -- control for plotting of results
+                options: (int) 0=none, 1=some, 2=more, &lt;0=hardcopy
+                default: 0 (no plotting)
+                example: plotlevel&lt;0 as abs(plotlevel), e.g.
+                         -1 =&gt; hardcopy of final plot (will be named
+                         &lt;outfile&gt;_calspec.eps)
+                WARNING: be careful plotting in fsotf mode!
+
+
+        DESCRIPTION:
+
+        Task sdreduce performs data selection, calibration, and/or spectral
+        baseline fitting for single-dish spectra. This task internally calls the
+        tasks, sdcal, sdsmooth, and sdbaseline and it can be used to run all the
+        three steps in one task execution.
+        By setting calmode='none', one can run sdreduce on already calibrated data,
+        for further selection, averaging and atmospheric optical depth correction.
+        To save the output spectra in a certain range of channels, you set the 
+        range in channelrange.
+
+        If you give multiple IFs in iflist, then your scantable will have
+        multiple IFs by default. Averaging of multi-resolution (multi-IFs)
+        spectra can be achieved by setting a sub-parameter of average, 
+        averageall, to True. It handles multi-IFs by selecting overlaps in 
+        frequency coverages and assigning new IFs in the output spectra.
+
+        ASAP recognizes the data of the "AT" telescopes, but currently
+        does not know about the GBT or any other telescope. This task
+        does know about GBT. Telescope name is obtained from the data.
+        If you wish to change the fluxunit (see below), by leaving
+        the sub-parameter telescopeparm unset (telescopeparm=''),
+        it will use internal telescope parameters for
+        flux conversion for the data from AT telescopes and it will use an
+        approximate aperture efficiency conversion for the GBT data.
+        If you give telescopeparm a list, then if the list has a single float it
+        is assumed to be the gain in Jy/K, if two or more elements they are assumed
+        to be telescope diameter (m) and aperture efficiency
+        respectively.
+
+        Note that sdreduce assumes that the fluxunit is set correctly in
+        the data already.  If not, then set telescopeparm='FIX' and it
+        will set the default units to fluxunit without conversion.
+        NOTE: If the data in infile is an ms from GBT and the default flux
+        unit is missing and this task automatically fixes the default fluxunit
+        to 'K' before the conversion.
+
+        WARNING for the GBT raw SDFITS format data as input:
+        SDtasks are able to handle GBT raw SDFITS format data since the 
+        data filler is available. However, the functionality is not well 
+        tested yet, so that there may be unknown bugs.  
+
+  </example>
+
+</task>
+
+</casaxml>

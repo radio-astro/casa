@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the param set for sdstat -->
+
+<task type="function" name="tsdstat" startup="false" category="single dish" visibility="experimental">
+
+  <shortdescription>list statistics of spectral</shortdescription>
+
+  <description>
+Task sdstat computes basic statistics for each of single-dish spectrum.
+This task returns a Python dictionary of statistics. The return value
+contains the maximum and minimum intensity and their channels ('max',
+'max_abscissa', 'min', and 'min_abscissa'), RMS ('rms'), mean ('mean'),
+sum ('sum'), median ('median'), standard deviation ('stddev'), total
+intensity ('totint'), and equivalent width ('eqw').
+If you do have multiple scantable rows, then the return values will
+be lists.
+
+It is possible to select channel regions to calculate spectra either
+non-interactively by spw parameter or interactively on a plotter by
+setting interactive=True.
+
+If one of averaging parameters is set True, the spectra are averaged
+before calculating the statistics.
+</description>
+
+  <input>
+
+    <param type="string" name="infile"  mustexist="true">
+    <description>name of input SD dataset</description>
+    <value></value>
+    </param>
+
+    <param type="any" name="antenna">
+            <description>antenna name or id (only effective for MS input)</description>
+            <any type="variant" limittype="string int"/>
+            <value type="int">0</value>
+    </param> 
+
+    <param type="string" name="fluxunit">
+            <description>units for line flux (K,Jy) (''=current)</description>
+            <value></value>
+    </param>
+
+    <param type="any" name="telescopeparam" subparam='true'>
+            <description>param of telescope for flux conversion</description>
+            <any type='variant' limittype='string doubleArray'/>
+            <value type='string'/>
+    </param>
+
+    <param type="string" name="field">
+            <shortdescription>Select field by ID(s) or name(s) (e.g. \'3C2*\')</shortdescription>
+	    <description>Select field by ID(s) or name(s)</description>
+            <value></value>
+    </param>
+
+    <param type="string" name="spw">
+            <shortdescription>Select data by IF ids (spectral window) (e.g. \'3,5,7\')</shortdescription>
+	    <description>Select data by IF ids (spectral window) (\'\'=all)</description>
+            <value></value>
+    </param>
+
+    <param type="any" name="restfreq" subparam="true">
+            <description>rest frequency (default unit: Hz)</description>
+            <any type="variant" limittype="string double int string doubleArray intArray stringArray dictArray"/>
+            <value type="string"/>
+    </param>
+
+    <param type="string" name="frame" subparam="true">
+            <shortdescription>frequency reference frame [\'lsrk\'|\'lsrd\'|\'bary\'|\'geo\'|\'topo\'|\'galacto\'|\'lgroup\'|\'cmb\'] (\'\'=current frame) </shortdescription>
+            <description>frequency reference frame (\'\'=current)</description>
+            <value></value>
+            <allowed kind="enum">
+                    <value>lsrk</value>
+                    <value>lsrd</value>
+                    <value>bary</value>
+                    <value>geo</value>
+                    <value>topo</value>
+                    <value>galacto</value>
+                    <value>lgroup</value>
+                    <value>cmb</value>
+                    <value></value>
+           </allowed>
+    </param>
+
+    <param type="string" name="doppler" subparam="true">
+	    <shortdescription>doppler convention [\'radio\'|\'optical\'|\'z\'|\'beta\'|\'gamma\'](\'\'=current)</shortdescription>
+	    <description>doppler convention (\'\'=current)</description>
+            <value></value>
+    </param>
+
+    <param type="string" name="timerange">
+            <shortdescription>Select data by timerange (e.g. \'09:14:0~09:54:0\')</shortdescription>
+	    <description>Select data by timerange (\'\'=all)</description>
+            <value></value>
+    </param>
+
+    <param type="string" name="scan">
+	    <shortdescription>Select data by scan numbers (e.g. \'21~23\')</shortdescription>
+            <description>Select data by scan numbers (\'\'=all)</description>
+            <value></value>
+    </param>
+
+    <param type="string" name="pol">
+            <shortdescription>Select data by polarization ids (e.g.\'0,1\')</shortdescription>
+            <description>Select data by polarization ids (\'\'=all)</description>
+            <value></value>
+    </param>
+
+    <param type="string" name="beam">
+            <shortdescription>Select data by beam ids (e.g.\'0,1\')</shortdescription>
+            <description>Select data by beam ids (\'\'=all)</description>
+            <value></value>
+    </param>
+
+    <param type="bool" name="scanaverage">
+            <description>average integrations within scans (True,False) </description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="timeaverage">
+            <description>average scans over time (True,False)</description>
+            <value>False</value>
+    </param>
+
+    <param type="string" name="tweight" subparam="true">
+            <shortdescription>weighting for time averaging [\'var\' | \'tsys\' | \'tint\' | \'tintsys\' | \'median\']</shortdescription>
+            <description>weighting for time averaging</description>
+            <value>tintsys</value>
+	    <allowed kind="enum">
+	    <value>var</value>
+	    <value>tsys</value>
+	    <value>tint</value>
+	    <value>tintsys</value>
+	    <value>median</value>
+            </allowed>
+    </param>
+
+    <param type="bool" name="polaverage">
+            <description>average over polarizations (True,False)</description>
+            <value>False</value>
+    </param>
+
+    <param type="string" name="pweight" subparam="true">
+            <shortdescription>weighting for polarization averaging [\'var\' | \'tsys\']</shortdescription>
+            <description>weighting for polarization averaging</description>
+            <value>tsys</value>
+	    <allowed kind="enum">
+	    <value>var</value>
+	    <value>tsys</value>
+            </allowed>
+    </param>
+
+
+    <param type="bool" name="interactive">
+            <description>determines interactive masking</description>
+            <value>False</value>
+    </param>
+
+    <param type="string" name="outfile">
+            <description>name of output file for line statistics</description>
+            <value></value>
+    </param>
+
+    <param type="string" name="format">
+            <description>format string to print statistic values</description>
+            <value>3.3f</value>
+    </param>
+
+    <param type="bool" name="overwrite">
+            <description>overwrite the statistics file if already exists</description>
+            <value>False</value>
+    </param>
+
+    <constraints>
+            <when param="fluxunit">
+                <equals value=""/>
+                <equals value="K">
+                        <default param="telescopeparam"><value type='string'></value></default>
+                </equals>
+                <equals value="k">
+                        <default param="telescopeparam"><value type='string'></value></default>
+                </equals>
+                <equals value="Jy">
+                        <default param="telescopeparam"><value type='string'></value></default>
+                </equals>
+                <equals value="jy">
+                        <default param="telescopeparam"><value type='string'></value></default>
+                </equals>
+            </when>
+	    <when param="spw">
+		<notequals type="string" value="">
+                       <default param="restfreq"><value type='string'></value></default>
+                       <default param="frame"><value type='string'></value></default>
+                       <default param="doppler"><value type='string'></value></default>
+                </notequals>
+            </when>
+	    <when param="timeaverage">
+		<equals type="bool" value="False"/>
+		<equals type="bool" value="True">
+			<default param="tweight"><value type='string'>tintsys</value></default>
+                </equals>
+            </when>
+	    <when param="polaverage">
+		<equals type="bool" value="False"/>
+		<equals type="bool" value="True">
+			<default param="pweight"><value type='string'>tsys</value></default>
+                </equals>
+            </when>
+
+    </constraints>
+
+    </input>
+    <output>
+    <param type="any" name="xstat">
+            <description>RETURN ONLY: a Python dictionary of line statistics</description>
+            <any type='variant'/>
+            <value>{}</value>
+    </param>
+    </output>
+
+  <returns type="void"/>
+  <!-- <returns type="variant"/> -->
+
+  <example>
+------------------------
+How to use return values
+------------------------
+xstat=sdstat();
+print "rms = ",xstat['rms']
+
+these can be used for testing in scripts or for regression
+
+'max_abscissa' and 'min_abscissa' refer to the channel of max and min
+intensity.
+'totint' is the integrated intensity (sum*channel).
+'eqw' is equivalent width (totint/mag) where mag is either max or min
+depending on which has greater magnitude. 
+Note that 'max_abscissa', 'min_abscissa', 'totint' and 'eqw' are
+quantities (python dictionaries with keys, 'unit' and 'value').
+
+
+------------------
+Keyword arguments
+------------------
+        infile -- name of input SD dataset
+                default: none - must input file name
+                example: 'mysd.asap'
+                         See sdcal for allowed formats.
+        antenna -- antenna name or id (only effective for MS input). 
+        fluxunit -- units for line flux
+                options: (str) 'K','Jy',''
+                default: '' (keep current fluxunit)
+                WARNING: For GBT data, see description below.
+            &gt;&gt;&gt; fluxunit expandable parameter
+                 telescopeparam -- the telescope characteristics
+                        options: (str) name or (list) list of gain info
+                        default: '' (none set)
+                        example: if telescopeparam='', it tries to get the telescope
+                                 name from the data.
+                                 Full antenna parameters (diameter,ap.eff.) known
+                                 to ASAP are
+                                 'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43',
+                                 'CEDUNA','HOBART'. For GBT, it fixes default fluxunit
+                                 to 'K' first then convert to a new fluxunit.
+                                 telescopeparam=[104.9,0.43] diameter(m), ap.eff.
+                                 telescopeparam=[0.743] gain in Jy/K
+                                 telescopeparam='FIX' to change default fluxunit
+                                 see description below
+
+        field -- Select data by field ID(s) or name(s)
+                default: '' (no name selection)
+                example: 'FLS3a*'
+                this selection is in addition to spw, scan, pol, and beam
+        spw -- Select data by IF ids (spwctral window)
+                default: '' (use all IFs)
+                example: '15'
+                this selection is in addition to field, spw, pol, and beam
+            &gt;&gt;&gt; spw expandable parameter
+                 restfreq -- rest frequency
+                         default: '' (use current setting)
+                         example: 4.6e10 (float value in Hz),
+                                  '46GHz' (string with unit),
+                                  ['345.8GHz', 347.0e9, 356.7e9] (for each IF)
+                                  [{'name':'CO','value':345e9}] (a value with name)
+                frame -- frequency frame for spectral axis
+                        options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
+                                 'GEO','GALACTO','LGROUP','CMB'
+                        default: currently set frame in scantable
+                        WARNING: frame='REST' not yet implemented
+                doppler -- doppler mode
+                        options: (str) 'RADIO','OPTICAL','Z','BETA','GAMMA'
+                        default: currently set doppler in scantable
+        scan -- Select data by scan number range
+                default: '' (use all scans)
+                example: '21~24'
+                this selection is in addition to field, spw, pol, and beam
+        pol -- Select data by polarization ids
+                default: '' (use all pols)
+                example: '1'
+                this selection is in addition to field, spw, scan, and beam
+        beam -- Select data by beam ids
+                default: '' (use all beams)
+                example: '0~25'
+                this selection is in addition to field, spw, scan, and pol
+        interactive -- determines interactive masking
+                options: (bool) True,False
+                default: False
+                example: interactive=True allows adding and deleting mask 
+                         regions by drawing rectangles on the plot with mouse. 
+                         Draw a rectangle with LEFT-mouse to ADD the region to 
+                         the mask and with RIGHT-mouse to DELETE the region. 
+        outfile -- name of output file for line statistics
+                default: '' (no output statistics file)
+                example: 'stat.txt'
+        format -- format string to print statistic values
+                default: '3.3f'
+        overwrite -- overwrite the statistics file if already exists 
+                options: (bool) True,False
+                default: False
+
+        -------------------------------------------------------------------
+                Returns: a Python dictionary of line statistics
+                   keys: 'rms','stddev','max','min','max_abscissa',
+                         'min_abscissa','sum','median','mean','totint','eqw'
+-----------
+DESCRIPTION
+-----------
+        ASAP recognizes the data of the "AT" telescopes, but currently
+        does not know about the GBT or any other telescope. This task
+        does know about GBT. Telescope name is obtained from the data.
+        If you wish to change the fluxunit (see below), and telescopeparam='',
+        for the AT telescopes it will use internal telescope parameters for
+        flux conversion. For GBT, it will use an approximate aperture
+        efficiency conversion.  If you give telescopeparam a list, then
+        if the list has a single float it is assumed to be the gain in Jy/K,
+        if two or more elements they are assumed to be telescope diameter (m)
+        and aperture efficiency respectively.
+
+        WARNING for the GBT raw SDFITS format data as input:
+        SDtasks are able to handle GBT raw SDFITS format data since the 
+        data filler is available. However, the functionality is not well 
+        tested yet, so that there may be unknown bugs.  
+
+  </example>
+
+</task>
+
+</casaxml>

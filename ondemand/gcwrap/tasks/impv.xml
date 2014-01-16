@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the task interface for impv        -->
+<!--                                                          -->
+
+<task type="function" name="impv" category="analysis">
+
+    <shortdescription>Construct a position-velocity image by choosing two points in the direction plane.</shortdescription>
+    <input>
+        <param type="string" name="imagename" mustexist="true">
+            <description>Name of the input image</description>
+            <value/>
+        </param>
+        <param type="string" name="outfile">
+            <description>Output image name. If empty, no image is written.</description>
+            <value/>
+        </param>
+        <param type="any" name="start">
+            <any type="variant"/>
+            <description>The starting pixel in the direction plane (array of two values).</description>
+            <value type="vector"/>
+            <example>[20, 5]</example>
+        </param>
+        <param type="any" name="end">
+            <any type="variant"/>
+            <description>The ending pixel in the direction plane (array of two values).</description>
+            <value type="vector"/>
+            <example>[200,300]</example>
+        </param>
+        <param type="any" name="center" subparam="true">
+            <description>The center point in the direction plane (array of two values). If specified, length and pa must also be specified and neither of start nor end may be specified.</description>
+            <any type="variant"/>
+            <value type="vector"/>
+        </param>
+        <param type="any" name="length" subparam="true">
+            <description>The length of the segmaent in the direction plane. If specified, center and pa must also be specified and neither of start nor end may be specified.</description>
+            <any type="variant"/>
+            <value type="vector"/>
+        </param>
+        <param type="any" name="pa" subparam="true">
+            <description>The position angle of the segmaent in the direction plane, measured from north through east. If specified, center and length must also be specified and neither of start nor end may be specified.</description>
+            <any type="variant"/>
+            <value type="vector"/>
+        </param>
+        <param type="any" name="width">
+            <any type="variant"/>
+            <description>Width in pixels for averaging pixels perpendicular to the slice. Must be an odd integer &gt;= 1 (1 means only use the pixels along the slice), or a quantity which will be rounded up if necessary so it corresponds to the next highest odd number of pixels.</description>
+            <value type="int">1</value>
+        </param>
+        <param type="string" name="unit">
+            <description>Unit for the offset axis in the resulting image. Must be a unit of angular measure.</description>
+            <value>arcsec</value>
+        </param>
+        <param type="bool"  name="overwrite" subparam="true">
+            <description>Overwrite the output if it exists?</description>
+            <value>False</value>
+        </param>
+        <param type="any"  name="region" subparam="true">
+            <any type="variant"/>
+            <description>Region selection. Default is entire image. No selection is permitted in the direction plane. See help par.region.</description>
+            <value>""</value>
+        </param>
+        <param type="string"  name="chans">
+            <description>Channels to use. See "help par.chans" for examples. Channels must be contiguous. Default is to use all channels.</description>
+            <value/>
+        </param>
+        <param type="string"  name="stokes">
+            <description>Stokes planes to use. Planes must be contiguous. Default is to use all stokes.</description>
+            <value/>
+        </param>
+        <param type="string"  name="mask">
+            <any type="variant"/>
+            <description>Mask to use. See help par.mask. Default is none.</description>
+            <value type="string"/>
+        </param>
+        <param type="bool"  name="stretch" subparam="true">
+            <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
+            <value>False</value>
+        </param>
+        <constraints>
+            <when param="outfile">
+                <notequals type="string" value="">
+                    <default param="overwrite">
+                        <value>False</value>
+                    </default>
+                </notequals>
+            </when>
+            <when param="mask">
+                <notequals type="string" value="">
+                    <default param="stretch">
+                        <value>False</value>
+                    </default>
+                </notequals>
+            </when>
+            <when param="chans">
+                <equals type="string" value="">
+                    <default param="region">
+                        <value>""</value>
+                    </default>
+                </equals>
+            </when>
+            <when param="start">
+                <equals type="vector" value="[]">
+                    <default param="center">
+                        <value type="vector"/>
+                    </default>
+                    <default param="length">
+                        <value  type="vector"/>
+                    </default>
+                    <default param="pa">
+                        <value type="vector"/>
+                    </default>
+                </equals>
+            </when>
+        </constraints>
+    </input>
+    <returns type="image"/>
+
+    <example>
+PARAMETER SUMMARY
+imagename        Name of the input (CASA, FITS, MIRIAD) image
+outfile          Name of output CASA image. Must be specified.
+start            The starting pixel in the direction plane (array of two values), such as [20, 5] or ["14h20m20.5s","-30d45m25.4s"].
+                 If specified, end must also be specified and none of center, length, nor pa may be specified.
+end              The ending pixel in the direction plane (array of two values), such as [200, 300].
+                 If specified, start must also be specified and none of center, length, nor pa may be specified
+center           The center of the slice in the direction plane (array of two values), such as [20, 5] or ["14h20m20.5s","-30d45m25.4s"]. 
+                 If specified, length and pa must also be specified and neither start nor end may be specified.
+length           The length of the slice in the direction plane. May be specified as a single numerical value, in which
+                 case it is interpreted as the number of pixels, or as a valid quantity which must be conformant with
+                 the direction axes units (eg "40arcsec", {"value": 40, "unit": "arcsec"}).
+                 If specified, center and pa must also be specified and neither start nor end may be specified.
+pa               Position angle of the slice, measured from north through east. Must be expressed as a valid angular
+                 quantity (eg "40deg", {"value": 40, "unit": "deg"}).
+                 If specified, center and length must also be specified and neither start nor end may be specified.
+width            Width, in pixels, for averaging pixels perpendicular to the slice.
+                 This value is determined after rotating the image so the slice lies horizontally.
+                 A value of one means no averaging. A value of 3 means average one pixel on each
+                 side of the slice and the pixel on the slice. A value of 5 means average 2 pixels
+                 on each side of the slice and the pixel on the slice, etc. Must be either an odd integer >= 1 or
+                 a valid quantity (eg. "4arcsec", qa.quantity("4arcsec")). If a quantity, the value will be adjusted
+                 upwards, if necessary, such that the next highest odd integer number of pixels is used.
+unit             Allows the user to set the unit for the angular offset axis. Must be a unit of angular
+                 measure.
+overwrite        If output file is specified, this parameter controls if an already existing file by the
+                 same name can be overwritten. If true, the user is not prompted, the file
+                 if it exists is automatically overwritten.
+region           Region specification. See help par.region. Default is to not use a region. If specified,
+                 the entire direction plane must be specified. If specified do not specify chans or stokes.
+chans            Optional contiguous frequency channel number specification. Default is all channels.
+                 If specified, do not specify region. See "help par.chans" for examples. 
+stokes           Contiguous stokes planes specification. If specified, do not specify region.
+mask             Mask to use. See help par.mask. Default is none.
+stretch          Stretch the input mask if necessary and possible. Only used if a mask is specified.
+                 See help par.stretch.
+
+Create a position-velocity image by specifying either two points between which a slice is taken in the direction
+coordinate or a center, position angle, and length describing the slice. The spectral extent of the resulting image
+will be that provided by the region specification or the entire spectral range of the input image if no region is
+specified. One may not specify a region in direction space; that is accomplished by specifying the start and end
+points or the center, length, and position angle of the slice. The parameters
+start and end may be specified as two element arrays of numerical values, in which case these values will be
+interpreted as pixel locations in the input image. Alternatively, they may be expressed as arrays of two strings
+each representing the direction. These strings can either represent quantities (eg ["40.5deg", "0.5rad") or be sexigesimal
+format (eg ["14h20m20.5s","-30d45m25.4s"], ["14:20:20.5s","-30.45.25.4"]). The center parameter is specified in the same way.
+The length parameter may be specified as a single numerical value, in which case it is interpreted as the length in pixels, or
+a valid quantity, in which case it must have units conformant with the direction axes units. The pa (position angle) parameter
+must be specified as a valid quantity with angular units. The position angle is interpreted in the usual astronomical sense; ie
+measured from north through east. Either start/end or center/pa/length must be specified; if a parameter from one of
+these sets is specified, a parameter from the other set may not be specified. In either case, the end points of the
+segment must fail within the input image, and they both must be at least 2 pixels from the edge of the input image to facilite
+rotation (see below).
+
+One may specify a width, which is the number of pixels centered along and perpendicular
+to the direction slice that are used for averaging along the slice. The width may be specified as an integer, in which
+case it must be positive and odd. Alternatively, it may be specified as a valid quantity string (eg, "4arcsec") or
+quantity record (eg qa.quantity("4arcsec"). In this case, units must be conformant to the direction axes units (usually
+angular units) and the specified quantity will be rounded up, if necessary, to the next highest equivalent odd integer number
+of pixels. The default value of 1 represents no averaging.
+A value of 3 means average one pixel on each side of the slice and the pixel on the slice. 
+Note that this width is applied to pixels in the image after it has been rotated (see below for a description
+of the algorithm used).
+ 
+One may specify the unit for the angular offset axis.
+        
+Internally, the image is first rotated, padding if necessary to include relevant pixels that would otherwise
+be excluded by the rotation operation, so that the slice is horizontal, with the starting pixel left of the
+ending pixel. Then, the pixels within the specified width of the slice are averaged and the resulting image is
+written and/or returned. The output image has a linear coordinate in place of the direction coordinate of the
+input image, and the corresponding axis represents angular offset with the center pixel having a value of 0.
+        
+The equivalent coordinate system, with a (usually) rotated direction coordinate (eg, RA and Dec) is written
+to the output image as a table record. It can be retrieved using the table tool as shown in the example below.
+        
+# create a pv image with the position axis running from ra, dec pixel positions of [45, 50] to [100, 120]
+# in the input image
+impv(imagename="my_spectral_cube.im", outfile="mypv.im", start=[45,50], end=[100,120])
+# analyze the pv image, such as get statistics
+pvstats = imstat("mypv.im")
+#
+# get the alternate coordinate system information
+tb.open("mypv.im")
+alternate_csys_record = tb.getkeyword("misc")["secondary_coordinates"]
+tb.done()
+    </example>
+</task>
+</casaxml>

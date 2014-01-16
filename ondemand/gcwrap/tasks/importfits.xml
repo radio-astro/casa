@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+      <task type="function" name="importfits" category="import/export">
+	<shortdescription>Convert an image FITS file into a CASA image</shortdescription>
+	<description>
+        Convert an image FITS file into a CASA image
+
+	Keyword arguments:
+	fitsimage -- Name of input image FITS file
+		default: none; example='3C273XC1.fits'
+	imagename -- Name of output CASA image
+		default: none; example: imagename='3C273XC1.image'
+	whichrep -- If fits image has multiple coordinate reps, choose one.
+		default: 0 means first; example: whichrep=1
+	whichhdu -- If fits file contains multiple images, choose this one
+		default=0 meaning first; example: whichhdu=1
+	zeroblanks -- Set blanked pixels to zero (not NaN)
+		default=True; example: zeroblanks=True
+	overwrite -- Overwrite pre-existing imagename
+		default=False; example: overwrite=True
+	defaultaxes -- Add the default 4D coordinate axes where they are missing
+	        default=False, example: defaultaxes=True
+	defaultaxesvalues -- List of values to assign to added degenerate axes when defaultaxes==True (ra,dec,freq,stokes)
+	        default = [], example: defaultaxesvalues=['13.5h', '-2.5deg', '88.5GHz', 'Q'] 
+	beam -- List of values to be used to define the synthesized beam [BMAJ,BMIN,BPA] (as in the FITS keywords)
+	        default = [] (i.e.take from FITS file), example: beam=['0.35arcsec', '0.24arcsec', '25deg']
+
+
+	</description>
+	<input>
+		<param type="string" mustexist="true" name="fitsimage">
+			<description>Name of input image FITS file</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="imagename">
+			<description>Name of output CASA image</description>
+			<value></value>
+		</param>
+
+		<param type="int" name="whichrep">
+			<description>If fits image has multiple coordinate reps, choose one.</description>
+			<value>0</value>
+		</param>
+
+		<param type="int" name="whichhdu">
+			<description>If its file contains multiple images,, choose one.</description>
+			<value>0</value>
+		</param>
+
+		<param type="bool" name="zeroblanks">
+			<description>Set blanked pixels to zero (not NaN)</description>
+			<value>True</value>
+		</param>
+
+		<param type="bool" name="overwrite">
+			<description>Overwrite pre-existing imagename</description>
+			<value>False</value>
+		</param>
+
+		<param type="bool" name="defaultaxes">
+			<description>Add the default 4D coordinate axes where they are missing</description>
+			<value>False</value>
+		</param>
+
+		<param type="variant" name="defaultaxesvalues">
+			<description>List of values to assign to added degenerate axes when defaultaxes==True (ra,dec,freq,stokes)</description>
+			<value>[]</value>
+		</param>
+
+		<param type="variant" name="beam">
+			<description>List of values to be used to define the synthesized beam [BMAJ,BMIN,BPA] (as in the FITS keywords)</description>
+			<value>[]</value>
+		</param>
+	</input>
+
+<example>
+
+   importfits(fitsimage='ngc3256.fits', imagename='ngc3256.im', overwrite=True) 
+
+ </example>
+ </task>
+ </casaxml>

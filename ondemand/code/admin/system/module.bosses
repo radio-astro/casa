@@ -1,0 +1,43 @@
+Current Module bosses 
+===============================
+                        
+----------------------------------------------------------------------
+AIPS PACKAGE (Jun 99)
+----------------------------------------------------------------------
+LIBRARY:
+Arrays:			Ger		gvd@nfra.nl
+Containers:		Darrell		drs@nrao.edu
+Deconvolution:		Ralph		rmarson@nrao.edu
+Exceptions:		Darrell	
+FITS:			Bob		bgarwood@nrao.edu
+Functionals:		Ralph		
+Glish:			Darrell	
+Graphics:		
+Guiutils:		Bob
+IO:			Ger		
+Images:			Neil		
+Inputs:			Ger		
+Lattices:		Ger
+Logging:		Ger
+Mathematics:		Ralph
+MeasurementSets:	MarkW		mwiering@atnf.csiro.au
+Measures:		Wim		Wim.Brouw@csiro.au
+OS:			Ger
+Quanta:			Wim
+RTTI:			Darrell	
+Tables:			Ger		
+Tasking:		Darrell		
+Utilities:		Ger		
+
+APPS:
+gtable			Ger
+
+----------------------------------------------------------------------
+TRIAL PACKAGE (Jun 99)
+
+Module bosses are NOT allocated for the trial package. Instead the
+authors of the code are responsible for the code. If the author cannot
+support the code eg., because they have left the project, then the
+code is unsupported. Unsupported code may be deleted if it is not
+widely used. Otherwise a foster parent will have to be found.
+----------------------------------------------------------------------
