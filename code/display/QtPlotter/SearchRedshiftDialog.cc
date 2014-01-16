@@ -94,6 +94,10 @@ namespace casa {
 		}
 	}
 
+	void SearchRedshiftDialog::setSpectralCoordinate( SpectralCoordinate coord ){
+		spectralCoordinate = coord;
+	}
+
 	void SearchRedshiftDialog::show() {
 		setResultsVisible( false );
 		QDialog::show();
@@ -187,7 +191,7 @@ namespace casa {
 		QString unitStr = Util::stripFont(ui.unitLabel->text());
 		if ( unitStr != SearchMoleculesWidget::SPLATALOGUE_UNITS ) {
 			Converter* converter = Converter::getConverter( unitStr, SearchMoleculesWidget::SPLATALOGUE_UNITS );
-			centerVal = converter->convert( centerVal );
+			centerVal = converter->convert( centerVal, spectralCoordinate );
 			delete converter;
 		}
 		return centerVal;

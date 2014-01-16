@@ -24,11 +24,13 @@
 //#
 #include "SpecFitSettingsWidgetOptical.qo.h"
 #include <imageanalysis/ImageAnalysis/SpectralFitter.h>
+#include <display/QtPlotter/ProfileTaskMonitor.h>
 #include <display/QtPlotter/QtCanvas.qo.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogOrigin.h>
 #include <QWidget>
 #include <QtGlobal>
+
 namespace casa {
 
 	SpecFitSettingsWidgetOptical::SpecFitSettingsWidgetOptical(QWidget *parent)
@@ -50,7 +52,6 @@ namespace casa {
 		connect(ui.clean, SIGNAL(clicked()), this, SLOT(clean()));
 
 		reset();
-
 	}
 
 	void SpecFitSettingsWidgetOptical::clear() {
@@ -165,7 +166,15 @@ namespace casa {
 				// overplot the fit values
 				QString fileName = getFileName();
 				QString fitName = fileName + "FIT" + startStr + "-" + endStr + QString(xaxisUnit.c_str());
-				pixelCanvas->addPolyLine(z_xfit, z_yfit, fitName, QtCanvas::CURVE_TRADITIONAL );
+				Double beamAngle;
+				Double beamArea;
+				taskMonitor->getBeamInfo( fileName, beamAngle, beamArea );
+				std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr = taskMonitor->getImage( fileName );
+				Bool validSpec;
+				SpectralCoordinate coord = taskMonitor->getSpectralCoordinate( imagePtr, validSpec );
+				if ( validSpec ){
+					pixelCanvas->addPolyLine(z_xfit, z_yfit, beamAngle, beamArea, coord, fitName, QtCanvas::CURVE_TRADITIONAL );
+				}
 			}
 			postStatus((fitter->report(*logger, xaxisUnit, String(yUnit.toLatin1().data()), String(yUnitPrefix.toLatin1().data()))).c_str(), true);
 		}

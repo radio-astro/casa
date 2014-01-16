@@ -33,10 +33,10 @@ namespace casa {
 	class ConverterVelocity : public Converter {
 	public:
 		ConverterVelocity(const QString& oldUnits,const QString& newUnits);
-		virtual double toPixel( double value );
+		virtual double toPixel( double value, SpectralCoordinate spectralCoordinate);
 		static void convertVelocity( Vector<double> &resultValues,
-		                             QString& sourceUnits, QString& destUnits);
-		virtual Vector<double> convert( const Vector<double>& oldValues );
+		                             QString& sourceUnits, QString& destUnits, SpectralCoordinate& coord);
+		virtual Vector<double> convert( const Vector<double>& oldValues, SpectralCoordinate spectralCoordinate );
 		virtual ~ConverterVelocity();
 	};
 

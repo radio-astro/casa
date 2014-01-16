@@ -33,25 +33,25 @@ namespace casa {
 
 	}
 
-	double ConverterVelocity::toPixel( double value ) {
+	double ConverterVelocity::toPixel( double value, SpectralCoordinate spectralCoordinate ) {
 		Double pixelVal;
 		spectralCoordinate.setVelocity( oldUnits.toStdString() );
 		spectralCoordinate.velocityToPixel( pixelVal, value );
 		return pixelVal;
 	}
 
-	Vector<double> ConverterVelocity::convert( const Vector<double>& oldValues ) {
+	Vector<double> ConverterVelocity::convert( const Vector<double>& oldValues, SpectralCoordinate spectralCoordinate ) {
 		Vector<double> resultValues( oldValues.size() );
 		resultValues = oldValues;
-		convertVelocity( resultValues, oldUnits, newUnits );
+		convertVelocity( resultValues, oldUnits, newUnits, spectralCoordinate );
 		return resultValues;
 	}
 
 	void ConverterVelocity::convertVelocity( Vector<double> &resultValues,
-	        QString& sourceUnits, QString& destUnits) {
+	        QString& sourceUnits, QString& destUnits, SpectralCoordinate& coord ) {
 		int sourceIndex = Converter::VELOCITY_UNITS.indexOf( sourceUnits );
 		int destIndex = Converter::VELOCITY_UNITS.indexOf( destUnits );
-		Converter::convert( resultValues, sourceIndex, destIndex );
+		Converter::convert( resultValues, sourceIndex, destIndex, coord );
 	}
 
 

@@ -36,7 +36,8 @@ namespace casa {
 
 
 
-	Vector<double> ConverterFrequencyVelocity::convert( const Vector<double>& oldValues ) {
+	Vector<double> ConverterFrequencyVelocity::convert( const Vector<double>& oldValues,
+			SpectralCoordinate spectralCoordinate ) {
 		Vector<double> frequencyValues(oldValues.size());
 		frequencyValues = oldValues;
 
@@ -47,10 +48,9 @@ namespace casa {
 		String spectralUnit = spectralUnits[0];
 		QString spectralUnitStr( spectralUnit.c_str() );
 		if ( spectralUnitStr != oldUnits ) {
-			ConverterFrequency::convertFrequency( frequencyValues, oldUnits, spectralUnitStr );
+			ConverterFrequency::convertFrequency( frequencyValues, oldUnits, spectralUnitStr, spectralCoordinate );
 		}
-
-		bool unitsUnderstood = setVelocityUnits( newUnits );
+		bool unitsUnderstood = spectralCoordinate.setVelocity( newUnits.toStdString() );
 		bool successfulConversion = false;
 		Vector<double> resultValues( oldValues.size());
 		if ( unitsUnderstood ) {

@@ -36,13 +36,13 @@ namespace casa {
 	}
 
 
-	double ConverterChannel::toPixel( double value ) {
+	double ConverterChannel::toPixel( double value, SpectralCoordinate spectralCoordinate ) {
 		Double pixelValue;
 		spectralCoordinate.toPixel( pixelValue, value );
 		return pixelValue;
 	}
 
-	Vector<double> ConverterChannel::convert( const Vector<double>& oldValues ) {
+	Vector<double> ConverterChannel::convert( const Vector<double>& oldValues, SpectralCoordinate spectralCoordinate ) {
 		Vector<double> resultValues( oldValues.size());
 		for ( int i = 0; i < static_cast<int>(resultValues.size()); i++ ) {
 			Double result;
@@ -54,7 +54,7 @@ namespace casa {
 					resultValues[i] = result;
 				} else {
 					Converter* helper = Converter::getConverter( worldUnit, newUnits);
-					resultValues[i] = helper->convert( result );
+					resultValues[i] = helper->convert( result, spectralCoordinate );
 					delete helper;
 				}
 			} else {
@@ -64,10 +64,10 @@ namespace casa {
 		return resultValues;
 	}
 
-	double ConverterChannel::convert ( double oldValue ) {
+	double ConverterChannel::convert ( double oldValue, SpectralCoordinate spectralCoordinate ) {
 		Vector<double> oldValues(1);
 		oldValues[0] = oldValue;
-		Vector<double> newValues = convert( oldValues );
+		Vector<double> newValues = convert( oldValues, spectralCoordinate );
 		return newValues[0];
 	}
 

@@ -425,6 +425,10 @@ namespace casa {
 		if ( nGauss > 0 ) {
 			int potentialEstimateCount = ui.estimateTable->rowCount();
 			if ( nGauss == potentialEstimateCount ) {
+				QString fitCurveName = ui.curveComboBox->currentText();
+				std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr = taskMonitor->getImage( fitCurveName );
+				Bool validSpec;
+				SpectralCoordinate coord = taskMonitor->getSpectralCoordinate( imagePtr, validSpec );
 				for ( int i = 0; i < potentialEstimateCount; i++ ) {
 					QString peakStr;
 					QString centerStr;
@@ -442,18 +446,20 @@ namespace casa {
 							double fwhmVal = fwhmStr.toDouble();
 
 							//Gaussian Estimate must be in pixels.
-							double centerValPix = toPixels( centerVal );
-							double fwhmValPtPix = toPixels( centerVal - fwhmVal );
+							double centerValPix = toPixels( centerVal, coord );
+							double fwhmValPtPix = toPixels( centerVal - fwhmVal, coord );
 							double fwhmValPix = fabs(centerValPix - fwhmValPtPix);
 
 							//Peak values must be in the same units as the image.
-							Unit imageUnit = this->getImage()->units();
+							Unit imageUnit = this->getImage(fitCurveName)->units();
 							const String newUnits = imageUnit.getName();
 							QString newUnitStr( newUnits.c_str() );
-							QString fitCurveName = ui.curveComboBox->currentText();
 							CanvasCurve curve = pixelCanvas->getCurve( fitCurveName );
 							QString xUnits = pixelCanvas->getUnits();
-							peakVal = curve.convertValue( peakVal, centerVal, displayYUnits, newUnitStr, xUnits );
+							std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr = taskMonitor->getImage( fitCurveName );
+							Bool validSpec;
+							SpectralCoordinate coord = taskMonitor->getSpectralCoordinate( imagePtr, validSpec );
+							peakVal = curve.convertValue( peakVal, centerVal, displayYUnits, newUnitStr, xUnits, coord );
 
 							GaussianSpectralElement* estimate = new GaussianSpectralElement( peakVal, centerValPix, fwhmValPix);
 							estimate->fixByString( fixedStr.toStdString());
@@ -471,15 +477,9 @@ namespace casa {
 		return spectralList;
 	}
 
-	SpectralCoordinate SpecFitSettingsWidgetRadio::getSpectralCoordinate() const {
-		std::tr1::shared_ptr<const ImageInterface<Float> > img = this->getImage();
-		DisplayCoordinateSystem cSys = img->coordinates();
-		SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
-		return spectralCoordinate;
-	}
 
 
-	double SpecFitSettingsWidgetRadio::toPixels( Double val) const {
+	double SpecFitSettingsWidgetRadio::toPixels( Double val, SpectralCoordinate& coord ) const {
 		String xAxisUnit = getXAxisUnit();
 		double pixelValue = val;
 		//We are not already in pixels = channels
@@ -487,7 +487,7 @@ namespace casa {
 		if ( xAxisUnit.length() > 0 ) {
 			QString unitStr( xAxisUnit.c_str());
 			Converter* converter = Converter::getConverter( unitStr, unitStr );
-			pixelValue = converter->toPixel( val );
+			pixelValue = converter->toPixel( val, coord );
 			delete converter;
 		}
 		return pixelValue;
@@ -652,17 +652,20 @@ namespace casa {
 				int includeCount = (endChannelIndex - startChannelIndex)*fitRatio + 1;
 				Vector<Float> xValues(includeCount);
 				Vector<Float> xValuesPix(includeCount);
+				std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr = taskMonitor->getImage( curveName );
+				Bool validSpec;
+				SpectralCoordinate coord = taskMonitor->getSpectralCoordinate( imagePtr, validSpec );
 				for ( int i = startChannelIndex; i <= endChannelIndex; i++ ) {
 					int startBaseIndex = (i - startChannelIndex) * fitRatio;
 					xValues[startBaseIndex] = curveXValues[i];
-					xValuesPix[startBaseIndex] = toPixels( curveXValues[i] );
+					xValuesPix[startBaseIndex] = toPixels( curveXValues[i], coord );
 
 					//Cut the interval into pieces to get a higher resolution fit
 					if ( i < endChannelIndex && fitRatio > 1 ) {
 						float startX = xValues[startBaseIndex];
 						float endX = curveXValues[i+1];
-						float startXPixel = toPixels( startX);
-						float endXPixel = toPixels(endX);
+						float startXPixel = toPixels( startX, coord);
+						float endXPixel = toPixels(endX, coord);
 						float intervalWidth = abs( endX - startX ) / fitRatio;
 						float intervalWidthPixels = abs( endXPixel - startXPixel ) / fitRatio;
 						for ( int j = 1; j < fitRatio; j++ ) {
@@ -772,6 +775,10 @@ namespace casa {
 					Vector<Float> xValues = curves[0]->getXValues();
 					Vector<Float> yCumValues(xValues.size(), 0);
 					bool curveAdded = false;
+					QString fitCurveName = ui.curveComboBox->currentText();
+					Double beamArea;
+					Double beamAngle;
+					taskMonitor->getBeamInfo( fitCurveName, beamAngle, beamArea );
 					for ( int i = 0; i < curves.size(); i++ ) {
 
 						if ( !ui.multiFitCheckBox->isChecked() ||
@@ -779,9 +786,12 @@ namespace casa {
 							curves[i]->evaluate( xValues );
 							Vector<Float> yValues = curves[i]->getYValues();
 							QString curveName = curves[i]->getCurveName();
-
+							std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr = taskMonitor->getImage( fitCurveName );
+							Bool validSpec;
+							SpectralCoordinate coord = taskMonitor->getSpectralCoordinate( imagePtr, validSpec );
 							//Send the curve to the canvas for plotting.
-							pixelCanvas->addPolyLine( xValues, yValues, curveName, QtCanvas::CURVE_COLOR_PRIMARY);
+							pixelCanvas->addPolyLine( xValues, yValues, beamAngle, beamArea, coord,
+									curveName, QtCanvas::CURVE_COLOR_PRIMARY);
 							for ( int j = 0; j < count; j++ ) {
 								yCumValues[j] = yCumValues[j]+yValues[j];
 							}
@@ -792,7 +802,11 @@ namespace casa {
 					//Add a curve that represents the sum of all the individual fits
 					if ( curves.size() > 1 && curveAdded ) {
 						QString curveName = taskMonitor->getFileName() +"_Sum_FIT";
-						pixelCanvas->addPolyLine( xValues, yCumValues, curveName, QtCanvas::CURVE_COLOR_SECONDARY);
+						std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr = taskMonitor->getImage( curveName );
+						Bool validSpec;
+						SpectralCoordinate coord = taskMonitor->getSpectralCoordinate( imagePtr, validSpec );
+						pixelCanvas->addPolyLine( xValues, yCumValues, beamAngle, beamArea, coord,
+								curveName, QtCanvas::CURVE_COLOR_SECONDARY);
 					}
 				}
 			}
@@ -888,11 +902,19 @@ namespace casa {
 
 		//The coefficients must be in the same units used by the canvas.
 		QString canvasUnits=this->pixelCanvas->getDisplayYUnits();
-		Unit imageUnit = this->getImage()->units();
+		QString fitCurveName = ui.curveComboBox->currentText();
+		std::tr1::shared_ptr<const ImageInterface<Float> > img = getImage( fitCurveName );
+		Unit imageUnit = img->units();
 		const String imageUnits = imageUnit.getName();
 		QString imageUnitStr( imageUnits.c_str() );
 		Vector<float> hertzValues(coefficientCount, 0);
-		ConverterIntensity::convert( coeffs, hertzValues, imageUnitStr, canvasUnits, -1, "" );
+		Double beamAngle;
+		Double beamArea;
+		taskMonitor->getBeamInfo( fitCurveName, beamAngle, beamArea );
+		Bool validSpec;
+		SpectralCoordinate coord = taskMonitor->getSpectralCoordinate( img, validSpec );
+		ConverterIntensity::convert( coeffs, hertzValues, imageUnitStr, canvasUnits, -1, "",
+				beamAngle, beamArea, coord );
 		Vector<double> convertedCoeffs( coefficientCount );
 		for ( int i = 0; i < coefficientCount; i++ ){
 			convertedCoeffs[i] = coeffs[i];
@@ -925,8 +947,8 @@ namespace casa {
 		//Convert the center and fwhm from pixels to whatever units the canvas is
 		//using.
 		QString xAxisUnit = pixelCanvas->getUnits();
-
-		std::tr1::shared_ptr<const casa::ImageInterface<float> > img = /*const_cast<ImageInterface<float>* >(*/taskMonitor->getImage()/*.get())*/;
+		QString fitCurveName = ui.curveComboBox->currentText();
+		std::tr1::shared_ptr<const casa::ImageInterface<float> > img = taskMonitor->getImage(fitCurveName);
 		DisplayCoordinateSystem cSys = img->coordinates();
 		int axisCount = cSys.nPixelAxes();
 		IPosition imPos(axisCount);
@@ -947,10 +969,12 @@ namespace casa {
 		//Note::This converts to standard units.  In the case of frequency, this is "Hz". May
 		//need to add prefix.
 		if ( !velocityUnits && !wavelengthUnits ){
+			Bool validSpec;
+			SpectralCoordinate coord = taskMonitor->getSpectralCoordinate( img, validSpec );
 			QString oldUnits = "Hz";
 			Converter* converter = Converter::getConverter( oldUnits, xAxisUnit );
-			fwhmValX = converter->convert( fwhmValX );
-			centerVal = converter->convert( centerVal );
+			fwhmValX = converter->convert( fwhmValX, coord );
+			centerVal = converter->convert( centerVal, coord );
 		}
 		float fwhmVal = 2 * abs(fwhmValX - centerVal);
 		if ( isnan( centerVal ) || isnan( fwhmVal) || isinf(fwhmVal) || isinf(centerVal) ) {
@@ -961,14 +985,17 @@ namespace casa {
 		//fit image is using.  We need to convert it to the image units that the canvas
 		//knows about (which may not be the same thing if we are fitting a different
 		//image than the canvas is using for the main display.
-		const Unit imageUnit = this->getImage()->units();
+		const Unit imageUnit = img->units();
 		String imageUnits = imageUnit.getName();
 		QString imageUnitsStr( imageUnits.c_str());
 		QString canvasUnits = pixelCanvas->getDisplayYUnits();
 		if ( imageUnitsStr != canvasUnits ) {
 			QString fitCurveName = ui.curveComboBox->currentText();
 			CanvasCurve fitCurve = pixelCanvas->getCurve( fitCurveName );
-			double convertedPeakVal = fitCurve.convertValue( peakVal, centerVal, imageUnitsStr, /*imageYUnits*/canvasUnits, xAxisUnit );
+			Bool validSpec;
+			SpectralCoordinate coord = taskMonitor->getSpectralCoordinate( img, validSpec );
+			double convertedPeakVal = fitCurve.convertValue( peakVal, centerVal,
+					imageUnitsStr, canvasUnits, xAxisUnit, coord );
 			peakVal = convertedPeakVal;
 		}
 
@@ -1144,7 +1171,8 @@ namespace casa {
 
 		//Get the yvalues from the curve so they are already in the
 		//correct units.
-		CanvasCurve curve = pixelCanvas->getCurve( ui.curveComboBox->currentText());
+		QString curveName = ui.curveComboBox->currentText();
+		CanvasCurve curve = pixelCanvas->getCurve( curveName );
 		Vector<float> yValues = curve.getYValues();
 
 		gaussEstimateDialog.setCurveData( getXValues(), yValues );
@@ -1172,6 +1200,12 @@ namespace casa {
 			}
 		}
 		gaussEstimateDialog.setEstimates( estimates );
+
+		//Put in a correct spectral coordinate in case we have to do conversions.
+		std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr = taskMonitor->getImage( curveName );
+		Bool validSpec;
+		SpectralCoordinate coord = taskMonitor->getSpectralCoordinate( imagePtr, validSpec );
+		gaussEstimateDialog.setSpectralCoordinate( coord );
 		gaussEstimateDialog.show();
 	}
 
@@ -1185,6 +1219,9 @@ namespace casa {
 		//we need to convert.
 		QString estimateDisplayYUnits = gaussEstimateDialog.getDisplayYUnits();
 		QString fitCurveName = ui.curveComboBox->currentText();
+		std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr = taskMonitor->getImage( fitCurveName );
+		Bool validSpec;
+		SpectralCoordinate coord = taskMonitor->getSpectralCoordinate( imagePtr, validSpec );
 		CanvasCurve curve = pixelCanvas->getCurve( fitCurveName );
 		for ( int i = 0; i < count; i++ ) {
 			SpecFitGaussian estimate = gaussEstimateDialog.getEstimate( i );
@@ -1193,18 +1230,19 @@ namespace casa {
 			float fwhmVal = estimate.getFWHM();
 			float fwhmPt = centerVal - fwhmVal;
 			if ( xAxisUnit.length() > 0 ) {
-				centerVal = converter->convert( centerVal );
-				fwhmPt = converter->convert( fwhmPt );
+				centerVal = converter->convert( centerVal, coord );
+				fwhmPt = converter->convert( fwhmPt, coord );
 			} else {
-				centerVal = converter->toPixel( centerVal );
-				fwhmPt = converter->toPixel( fwhmPt );
+				centerVal = converter->toPixel( centerVal, coord );
+				fwhmPt = converter->toPixel( fwhmPt, coord );
 			}
 			fwhmVal = qAbs(centerVal - fwhmPt);
 
 			//If our display y-values don't match those of the gaussian estimate dialog,
 			//we need to convert.
 			if ( displayYUnits != estimateDisplayYUnits ) {
-				peakVal = curve.convertValue( peakVal, centerVal, estimateDisplayYUnits, displayYUnits,xAxisUnit );
+				peakVal = curve.convertValue( peakVal, centerVal, estimateDisplayYUnits,
+						displayYUnits, xAxisUnit, coord );
 			}
 
 			setEstimateValue( i, PEAK, peakVal );
@@ -1243,6 +1281,9 @@ namespace casa {
 		if ( units != displayYUnits && displayYUnits.length() > 0 ) {
 			int estimateCount = ui.estimateTable->rowCount();
 			QString fitCurveName = ui.curveComboBox->currentText();
+			std::tr1::shared_ptr<const ImageInterface<Float> > img = taskMonitor->getImage( fitCurveName );
+			Bool validSpec;
+			SpectralCoordinate coord = taskMonitor->getSpectralCoordinate( img, validSpec );
 			CanvasCurve curve = pixelCanvas->getCurve( fitCurveName );
 			Vector<float> xValues = curve.getXValues();
 			if ( xValues.size() > 0 ) {
@@ -1252,7 +1293,7 @@ namespace casa {
 					if ( peakItem != NULL ) {
 						QString peakStr = peakItem->text();
 						float peakVal = peakStr.toFloat();
-						peakVal = curve.convertValue( peakVal,xValues[0], displayYUnits, units,xUnits );
+						peakVal = curve.convertValue( peakVal,xValues[0], displayYUnits, units, xUnits, coord );
 						setEstimateValue( i, PEAK, peakVal );
 					}
 				}

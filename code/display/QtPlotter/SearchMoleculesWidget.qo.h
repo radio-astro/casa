@@ -33,6 +33,7 @@
 #include <display/QtPlotter/SearchMoleculesWidget.ui.h>
 #include <measures/Measures/MRadialVelocity.h>
 #include <measures/Measures/MDoppler.h>
+#include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <display/QtPlotter/conversion/Converter.h>
 #include <spectrallines/Splatalogue/Searcher.h>
 #include <spectrallines/Splatalogue/SearcherFactory.h>
@@ -112,6 +113,7 @@ namespace casa {
 		bool isLocal() const;
 
 		void setRange( double min, double max, QString units );
+		void setSpectralCoordinate(SpectralCoordinate coord );
 		void updateReferenceFrame();
 		static void setInitialReferenceFrame( QString initialReferenceStr );
 		void setResultDisplay( SearchMoleculesResultDisplayer* resultDisplay );
@@ -172,6 +174,8 @@ namespace casa {
 		QtCanvas* canvas;
 		QProgressDialog progressBar;
 
+		//For conversion
+		SpectralCoordinate coord;
 
 		//Scrolling support
 		int searchResultCount;

@@ -380,7 +380,10 @@ namespace casa {
 				double newValue = oldValue;
 				Converter* converter = Converter::getConverter( restUnits, newUnits );
 				if ( converter != NULL ){
-					newValue = converter->convert( oldValue );
+					//Because we are withen a category, we can use a bogus spectral coordinate
+					//for the conversion.
+					SpectralCoordinate coord;
+					newValue = converter->convert( oldValue, coord );
 				}
 				delete converter;
 				if ( newValue != oldValue && ! isnan( newValue )){
@@ -880,7 +883,9 @@ namespace casa {
 		Converter* converter = Converter::getConverter( oldUnits, newUnits );
 		double result = value;
 		if ( converter != NULL ){
-			result = converter->convert( value );
+			//We should not need a spectral coordinate in this case.
+			SpectralCoordinate coord;
+			result = converter->convert( value, coord );
 		}
 		delete converter;
 		return result;

@@ -41,6 +41,7 @@ namespace casa {
 		~SpecFitSettingsWidgetOptical();
 		void setRange(double start, double end );
 		void setUnits( QString units );
+
 		void reset();
 		void clear();
 
@@ -51,6 +52,7 @@ namespace casa {
 	private:
 		Ui::SpecFitSettingsWidgetOptical ui;
 		SpectralFitter* fitter;
+
 	};
 
 }

@@ -35,9 +35,9 @@ namespace casa {
 	public:
 		ConverterChannel( const QString& oldUnits, const QString& newUnits );
 
-		virtual double toPixel( double value );
-		virtual Vector<double> convert( const Vector<double>& oldValues );
-		virtual double convert ( double oldValue );
+		virtual double toPixel( double value, SpectralCoordinate spectralCoordinate );
+		virtual Vector<double> convert( const Vector<double>& oldValues, SpectralCoordinate spectralCoordinate );
+		virtual double convert ( double oldValue, SpectralCoordinate spectralCoordinate );
 		virtual ~ConverterChannel();
 	};
 

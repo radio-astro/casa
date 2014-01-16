@@ -119,18 +119,20 @@ namespace casa {
 
 		//Plotting curves
 		void plotPolyLines(QString);
-		template<class T> void plotPolyLine(const Vector<T>&, const Vector<T>&);
+		template<class T> void plotPolyLine(const Vector<T>&, const Vector<T>&,
+				double beamAngle, double beamArea, SpectralCoordinate coord);
 		void plotPolyLine(const Vector<Float> &x, const Vector<Float> &y, const Vector<Float> &e,
-		                  const QString& lb="");
+		                  double beamAngle, double beamArea, SpectralCoordinate coord, const QString& lb="");
 		enum ColorCategory { TITLE_COLOR, CURVE_COLOR, CURVE_COLOR_PRIMARY,
-		                     CURVE_COLOR_SECONDARY, WARNING_COLOR, CURVE_TRADITIONAL
-		                   };
+		                     CURVE_COLOR_SECONDARY, WARNING_COLOR, CURVE_TRADITIONAL};
 		void addPolyLine(const Vector<Float> &x, const Vector<Float> &y,
+				double beamAngle, double beamArea, SpectralCoordinate coord,
 		                 const QString& lb="", ColorCategory colorCategory=CURVE_COLOR );
 		void addMolecularLine(MolecularLine* molecularLine );
 		QList<QString> getMolecularLineNames() const;
 
-		template<class T> void plotPolyLine(const Matrix<T> &verts);
+		template<class T> void plotPolyLine(const Matrix<T> &verts, double beamAngle,
+				double beamArea, SpectralCoordinate coord, double restValue );
 
 		QSize minimumSizeHint() const;
 		QSize sizeHint() const;
@@ -302,8 +304,9 @@ namespace casa {
 		 * @param colorCategory an indication of the type of curve this is (main curve,
 		 * 		secondary spectral fitting curve, etc).
 		 */
-		void setCurveData(int id, const CurveData &data, const ErrorData &error=ErrorData(),
-		                  const QString& lb="", ColorCategory colorCategory = CURVE_COLOR);
+		void setCurveData(int id, const CurveData &data, double beamAngle, double beamArea,
+				SpectralCoordinate coord, const ErrorData &error=ErrorData(),
+		        const QString& lb="", ColorCategory colorCategory = CURVE_COLOR);
 		void refreshPixmap();
 
 		/**
