@@ -306,10 +306,12 @@ class SDExportData(basetask.StandardTaskTemplate):
             antenna_names = set([st.antenna.name for st in context.observing_run])
             #LOG.info('antenna_names=%s'%(antenna_names))
             
-            pattern_string = '.*\.(%s)\.spw.*\.sd\.im$'%('|'.join(antenna_names))
-            #LOG.info('pattren_string=%s'%(pattern_string))
+            pattern_nomatch = '.*\.(%s)\.spw.*\.sd\.im$'%('|'.join(antenna_names))
+            pattern_match = '.*\.spw.*\.sd\.im$'
+            #LOG.info('pattren_string=%s'%(pattern_nomatch))
             
-            combined_images = [image for image in xx_dot_im_next if re.match(pattern_string, image) is None]
+            combined_images = [image for image in xx_dot_im_next 
+                               if (re.match(pattern_nomatch, image) is None) and re.match(pattern_match, image)]
             #LOG.info('combined_images=%s'%(combined_images))
             
             # If no combined images available, export all the images detected 
