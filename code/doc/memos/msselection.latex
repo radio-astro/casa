@@ -1,4 +1,4 @@
-\documentclass[12pt]{article}
+\documentclass[12pt, twoside]{article}
 %\documentstyle[12pt,amsmath]{article}
 \usepackage{html}
 \usepackage{epsf}
@@ -10,11 +10,14 @@
 %\usepackage{MnSymbol,wasysym}
 \usepackage{marvosym}
 
+\markboth{S. Bhatnagar}{MeasurementSet Selection Syntax}
+\pagestyle{myheadings}
+
 \setlength{\textheight}{23.0cm}
-\setlength{\textwidth}{15.00cm}
+\setlength{\textwidth}{17.00cm}
 \setlength{\topmargin}{-1.0cm}
-\setlength{\oddsidemargin}{0.75cm}
-\setlength{\evensidemargin}{0.5cm}
+\setlength{\oddsidemargin}{0.1cm}
+\setlength{\evensidemargin}{0.1cm}
 %\setlength{\parskip}{5pt}
 %\setlength{\parindent}{20pt}
 
@@ -35,7 +38,6 @@
 \newcommand{\CalTables} {\htmladdnormallinkfoot{{\tt CalTables}}{http://casa.nrao.edu/active/docs/doxygen/html/classcasa\_1\_1CalTable.html}}
 \newcommand{\PDFVersion} {\htmladdnormallinkfoot{PDF Version}{http://www.aoc.nrao.edu/~sbhatnag/misc/msselection.pdf}}
 
-\pagestyle{myheadings}
 
 \begin{document}
 \title{MeasurementSet Selection Syntax}
@@ -43,7 +45,6 @@
 \date{June 15, 2007\\{\small (Updated: Nov. 24, 2013)}}
 \maketitle
 \normalsize
-\markboth{S. Bhatnagar}{MeasurementSet Selection Syntax}
 \begin{center}
   \PDFVersion
 \end{center}
@@ -897,6 +898,14 @@ selected.  E.g. {\tt scanintent=*CAL* \& *BAND*} will select only
 those scans the intent strings of which contain the strings {\tt
   "CAL"} {\it and} {\tt "BAND"}.  See
 Section~\ref{Sec:SCANINTENTEXAMPLES} for more examples.
+
+\subsection{Examples}
+\label{Sec:SCANINTENTEXAMPLES}
+Table~\ref{Tab:SCANINTENT} shows an example-table of scan-intents.
+Table~\ref{Tab:SCANINTENTEXPR} shows a list of some scan-intent
+selection expressions and the corresponding list of selected scan
+numbers from Table~\ref{Tab:SCANINTENTEXPR}.
+
 \begin{table}[ht!]
 \caption{Example scan-intent table}
 \begin{center}
@@ -913,14 +922,8 @@ Section~\ref{Sec:SCANINTENTEXAMPLES} for more examples.
 \end{center}
 \label{Tab:SCANINTENT}
 \end{table}
-\subsection{Examples}
-\label{Sec:SCANINTENTEXAMPLES}
-Table~\ref{Tab:SCANINTENT} shows an example-table of scan-intents.
-Table~\ref{Tab:SCANINTENTEXPR} shows a list of some scan-intent
-selection expressions and the corresponding list of selected scan
-numbers from Table~\ref{Tab:SCANINTENTEXPR}.
 
-\begin{table}[ht!]
+\begin{table}[h!]
 \caption{Examples of scan-intent selection expressions for intents
 shown in Table~\ref{Tab:SCANINTENT}}
 \begin{center}
