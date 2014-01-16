@@ -30,7 +30,7 @@ class FittingFactory(object):
         else:
             return None
         
-class FittingInputs(FittingInputsBase): #common.SingleDishInputs):
+class FittingInputs(FittingInputsBase):
     def __init__(self, context, antennaid, spwid, pollist, iteration, 
                  fit_order=None, edge=None, outfile=None):
         self._init_properties(vars())
@@ -43,66 +43,6 @@ class FittingInputs(FittingInputsBase): #common.SingleDishInputs):
     @outfile.setter
     def outfile(self, value):
         self._outfile = value
-        
-#     @property
-#     def edge(self):
-#         return (0,0) if self._edge is None else self._edge
-    
-#     @edge.setter
-#     def edge(self, value):
-#         self._edge = value
-        
-#     @property
-#     def fit_order(self):
-#         return 'automatic' if self._fit_order is None else self._fit_order
-    
-#     @fit_order.setter
-#     def fit_order(self, value):
-#         self._fit_order = value
-        
-#     @property
-#     def data_object(self):
-#         return self.context.observing_run[self.antennaid]
-        
-#     @property
-#     def infile(self):
-#         return self.data_object.name
-    
-# #     @property
-# #     def outfile(self):
-# #         return self.data_object.name + self.outfile_suffix
-# # #         return self.data_object.baselined_name
-    
-#     @property
-#     def bltable(self):
-#         if self._bltable is None:
-#             namer = filenamer.BaselineSubtractedTable()
-#             namer.spectral_window(self.spwid)
-#             st = self.data_object
-#             asdm = common.asdm_name(st)
-#             namer.asdm(asdm)
-#             namer.antenna_name(st.antenna.name)
-#             self._bltable = namer.get_filename()
-#         return self._bltable
-    
-#     @property
-#     def srctype(self):
-#         return self.data_object.calibration_strategy['srctype']
-    
-#     @property
-#     def nchan(self):
-#         return self.data_object.spectral_window[self.spwid].nchan
-                
-# class FittingResults(common.SingleDishResults):
-#     def __init__(self, task=None, success=None, outcome=None):
-#         super(FittingResults, self).__init__(task, success, outcome)
-
-#     def merge_with_context(self, context):
-#         super(FittingResults, self).merge_with_context(context)
-        
-#     def _outcome_name(self):
-#         return self.outcome
-
 
 class FittingBase(common.SingleDishTaskTemplate):
     Inputs = FittingInputs
