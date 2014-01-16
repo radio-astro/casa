@@ -18,67 +18,6 @@ from .baseline import SDBaselineResults
 
 LOG = infrastructure.get_logger(__name__)
 
-# class SDBaselineInputs(common.SingleDishInputs):
-#     """
-#     Inputs for imaging
-#     """
-#     def __init__(self, context, infiles=None, iflist=None, pollist=None,
-#                  linewindow=None, edge=None, broadline=None, fitorder=None,
-#                  fitfunc=None):
-#         self._init_properties(vars())
-#         self._to_list(['infiles', 'iflist', 'pollist', 'edge', 'linewindow'])
-#         self._to_bool('broadline')
-#         self._to_numeric('fitorder')
-#         if isinstance(self.fitorder, float):
-#             self.fitorder = int(self.fitorder)
-
-#     @property
-#     def antennalist(self):
-#         if type(self.infiles) == list:
-#             antennas = [self.context.observing_run.get_scantable(f).antenna.name 
-#                         for f in self.infiles]
-#             return list(set(antennas))
-#         else:
-#             return [self.context.observing_run.get_scantable(self.infiles).antenna.name]
-
-# class SDBaselineResults(common.SingleDishResults):
-#     def __init__(self, task=None, success=None, outcome=None):
-#         super(SDBaselineResults, self).__init__(task, success, outcome)
-
-#     def merge_with_context(self, context):
-#         super(SDBaselineResults, self).merge_with_context(context)
-
-#         # replace and export datatable to merge updated data with context
-#         datatable = self.outcome.pop('datatable')
-#         datatable.exportdata(minimal=True)
-
-#         context.observing_run.datatable_instance = datatable
-        
-#         # increment iteration counter
-#         # register detected lines to reduction group member
-#         reduction_group = context.observing_run.reduction_group
-#         for b in self.outcome['baselined']:
-#             spw = b['spw']
-#             antenna = b['index']
-#             pols = b['pols']
-#             lines = b['lines']
-#             for _ant in antenna:
-#                 group_id = -1
-#                 for (idx,desc) in reduction_group.items():
-#                     if desc[0].spw == spw:
-#                         group_id = idx
-#                         break
-#                 if group_id >= 0:
-#                     reduction_group[group_id].iter_countup(_ant, spw, pols)
-#                     reduction_group[group_id].add_linelist(lines, _ant, spw, pols)
-#                 st = context.observing_run[_ant]
-#                 st.work_data = st.baselined_name
-
-#     def _outcome_name(self):
-#         return ['%s: %s (spw=%s, pol=%s)'%(idx, name, b['spw'], b['pols'])
-#                 for b in self.outcome['baselined']
-#                 for (idx,name) in zip(b['index'], b['name'])]
-
 class SDBaseline(common.SingleDishTaskTemplate):
     Inputs = SDBaselineInputs
 
@@ -192,8 +131,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 shutil.rmtree(blname)
             shutil.move(temp_name, blname)
 
-        outcome = {#'datatable': datatable,
-                   'baselined': baselined,
+        outcome = {'baselined': baselined,
                    'edge': edge}
         results = SDBaselineResults(task=self.__class__,
                                     success=True,
