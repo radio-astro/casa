@@ -21,7 +21,7 @@ class SDImaging2Inputs(common.SingleDishInputs):
     """
     Inputs for imaging
     """
-    def __init__(self, context, infiles=None, iflist=None, pollist=None):
+    def __init__(self, context, reffile=None, infiles=None, iflist=None, pollist=None):
         self._init_properties(vars())
         self._to_list(['infiles', 'iflist', 'pollist'])
 
@@ -57,7 +57,8 @@ class SDImaging2(common.SingleDishTaskTemplate):
         antennalist = self.inputs.antennalist
         pollist = self.inputs.pollist
         st_names = context.observing_run.st_names
-
+        reffile = self.inputs.reffile
+        
         # Step 1.
         # Apply flags to working scantable (antenna_files):
         #     - Apply SummaryFlag in Baseline Table to FLAGROW and FLAGTRA

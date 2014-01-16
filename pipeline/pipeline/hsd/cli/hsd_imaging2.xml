@@ -9,6 +9,11 @@
 <description>
 </description>
 <input>
+    <param type="string" name="reffile">
+    <description>Path to file with Jy/K conversion factors</description>
+    <value></value>
+    </param>
+    
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
 	<value>automatic</value>
