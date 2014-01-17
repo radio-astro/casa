@@ -20,6 +20,7 @@ from __future__ import absolute_import
 import os
 import re
 import errno
+import StringIO
 import tarfile
 import fnmatch
 import shutil
@@ -183,6 +184,22 @@ class SDExportData(basetask.StandardTaskTemplate):
         inputs = self.inputs
          
         if os.path.exists(inputs.products_dir):
+            # Loop over the measurements sets in the working directory and 
+            # save the final flags using the flag manager. 
+            vislist = self._generate_vislist()
+            flag_version_name = 'Pipeline_Final'
+            for visfile in vislist:
+                self._save_final_flagversion (visfile, flag_version_name)
+        
+            # Copy the final flag versions to the data products directory
+            # and tar them up.
+            flag_version_list = []
+            for visfile in vislist:
+                flag_version_file = self._export_final_flagversion ( \
+                    inputs.context, visfile, flag_version_name, \
+                inputs.products_dir)
+                flag_version_list.append(flag_version_file)
+            
             # Create fits files from CASA images
             fitsfiles = self._export_images (inputs.context, inputs.products_dir, inputs.targetimages)
             # Export a tar file of skycal , tsyscal and bl-subtracted which is created by asap
@@ -503,3 +520,74 @@ class SDExportData(basetask.StandardTaskTemplate):
                                 output_txt = " %s \n" % os.path.basename(ln)
                                 f.write(output_txt)
             f.close()
+            
+    def _save_final_flagversion(self, vis, flag_version_name):
+        """
+        Save the final flags to a final flag version.
+        """
+        LOG.info('Saving final flags for %s in flag version %s' % \
+                 (os.path.basename(vis), flag_version_name))
+        if not self._executor._dry_run:
+            task = casa_tasks.flagmanager (vis=vis,
+                                           mode='save', versionname=flag_version_name)
+            self._executor.execute (task)
+
+    def _export_final_flagversion(self, context, vis, flag_version_name,
+                                  products_dir):
+        """
+        Save the final flags version to a compressed tarfile in products.
+        """
+        # Save the current working directory and move to the pipeline
+        # working directory. This is required for tarfile IO
+        cwd = os.getcwd()
+        #os.chdir (os.path.dirname(vis))
+        os.chdir(context.output_dir)
+    
+        # Define the name of the output tarfile
+        visname = os.path.basename(vis)
+        tarfilename = visname + '.flagversions.tar.gz'
+        LOG.info('Storing final flags for %s in %s' % (visname, tarfilename))
+    
+        # Define the directory to be saved
+        flagsname = os.path.join (visname + '.flagversions',
+                                  'flags.' + flag_version_name) 
+        LOG.info('Saving flag version %s' % (flag_version_name))
+    
+        # Define the versions list file to be saved
+        flag_version_list = os.path.join (visname + '.flagversions',
+                                          'FLAG_VERSION_LIST')
+        ti = tarfile.TarInfo(flag_version_list)
+        #line = "Pipeline_Final : Final pipeline flags\n"
+        line = "%s : Final pipeline flags\n" % flag_version_name
+        ti.size = len (line)
+        LOG.info('Saving flag version list')
+    
+        # Create the tar file
+        if not self._executor._dry_run:
+            tar = tarfile.open (os.path.join(products_dir, tarfilename), "w:gz")
+            tar.add (flagsname)
+            tar.addfile (ti, StringIO.StringIO(line))
+            tar.close()
+    
+        # Restore the original current working directory
+        os.chdir(cwd)
+    
+        return tarfilename
+    
+    def _generate_vislist(self):
+        return list(self.__generate_vislist())
+    
+    def __generate_vislist(self):
+        context = self.inputs.context
+        
+        # input_vislist is a list of MSs that are registered to pipeline
+        input_vislist = context.observing_run.measurement_sets
+        for vis in input_vislist:
+            if os.path.exists(vis.name):
+                yield vis.name
+                
+        # imager_vislist is a list of MSs that are generated for sd imaging
+        for st in context.observing_run:
+            if hasattr(st, 'exported_ms') and st.exported_ms is not None:
+                if os.path.exists(st.exported_ms):
+                    yield st.exported_ms
