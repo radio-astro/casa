@@ -82,7 +82,7 @@ class VLAAgentFlagger(agentflagger.AgentFlagger):
         
         if (flag_cmds[-1]== '') : flag_cmds=flag_cmds[0:-1]
             
-        print flag_cmds
+        #print flag_cmds
         
         return flag_cmds
     

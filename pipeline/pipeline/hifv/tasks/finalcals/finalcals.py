@@ -397,6 +397,8 @@ class Finalcals(basetask.StandardTaskTemplate):
         context = self.inputs.context
         m = context.observing_run.measurement_sets[0]
         field_spws = context.evla['msinfo'][m.name].field_spws
+        spw2band = context.evla['msinfo'][m.name].spw2band
+        bands = spw2band.values()
         
         standard_source_names, standard_source_fields = standard_sources(calMs)
 
@@ -418,7 +420,11 @@ class Finalcals(basetask.StandardTaskTemplate):
                 #spws = [1,2,3]
                 for myspw in spws:
                     reference_frequency = center_frequencies[myspw]
-                    EVLA_band = vlautils.find_EVLA_band(reference_frequency)
+                    try:
+                        EVLA_band = spw2band[myspw]
+                    except:
+                        LOG.info('Unable to get band from spw id - using reference frequency instead')
+                        EVLA_band = vlautils.find_EVLA_band(reference_frequency)
                     
                     LOG.info("Center freq for spw "+str(myspw)+" = "+str(reference_frequency)+", observing band = "+EVLA_band)
                     
@@ -474,6 +480,8 @@ class Finalcals(basetask.StandardTaskTemplate):
         sources = context.evla['msinfo'][m.name].fluxscale_sources
         flux_densities = context.evla['msinfo'][m.name].fluxscale_flux_densities
         spws = context.evla['msinfo'][m.name].fluxscale_spws
+        spw2band = context.evla['msinfo'][m.name].spw2band
+        bands = spw2band.values()
 
         #Look in spectral window domain object as this information already exists!
         with casatools.TableReader(self.inputs.vis+'/SPECTRAL_WINDOW') as table:
@@ -518,21 +526,34 @@ class Finalcals(basetask.StandardTaskTemplate):
 	    for ii in range(len(sources)):
 		if (sources[ii] == source):
 		    indices.append(ii)
-	    bands = []
-	    for ii in range(len(indices)):
-		bands.append(vlautils.find_EVLA_band(center_frequencies[spws[indices[ii]]]))
+	    if bands == []:
+                for ii in range(len(indices)):
+                    bands.append(vlautils.find_EVLA_band(center_frequencies[spws[indices[ii]]]))
 	    unique_bands = list(np.unique(bands))
 	    for band in unique_bands:
 		lfreqs = []
 		lfds = []
 		lerrs = []
 		uspws = []
-		for ii in range(len(indices)):
-		    if vlautils.find_EVLA_band(center_frequencies[spws[indices[ii]]]) == band:
-			lfreqs.append(math.log10(center_frequencies[spws[indices[ii]]]))
-			lfds.append(math.log10(flux_densities[indices[ii]][0]))
-			lerrs.append((flux_densities[indices[ii]][1])/(flux_densities[indices[ii]][0])/2.303)
-			uspws.append(spws[indices[ii]])
+		
+		#Use spw id to band mappings
+		if spw2band.values() != []:
+		    for ii in range(len(indices)):
+		        if spw2band[spws[indices[ii]]] == band:
+			    lfreqs.append(math.log10(center_frequencies[spws[indices[ii]]]))
+			    lfds.append(math.log10(flux_densities[indices[ii]][0]))
+			    lerrs.append((flux_densities[indices[ii]][1])/(flux_densities[indices[ii]][0])/2.303)
+			    uspws.append(spws[indices[ii]])
+	        
+	        #Use frequencies for band mappings
+	        if spw2band.values() == []:
+	            for ii in range(len(indices)):
+		        if vlautils.find_EVLA_band(center_frequencies[spws[indices[ii]]]) == band:
+			    lfreqs.append(math.log10(center_frequencies[spws[indices[ii]]]))
+			    lfds.append(math.log10(flux_densities[indices[ii]][0]))
+			    lerrs.append((flux_densities[indices[ii]][1])/(flux_densities[indices[ii]][0])/2.303)
+			    uspws.append(spws[indices[ii]])
+		
 
 		if len(lfds) < 2:
 		    pfinal = [lfds[0], 0.0]

@@ -199,6 +199,8 @@ class SetModel(basetask.StandardTaskTemplate):
         context = self.inputs.context
         m = context.observing_run.measurement_sets[0]
         field_spws = context.evla['msinfo'][m.name].field_spws
+        spw2band = context.evla['msinfo'][m.name].spw2band
+        bands = spw2band.values()
 
         #Look in spectral window domain object as this information already exists!
         with casatools.TableReader(self.inputs.vis+'/SPECTRAL_WINDOW') as table:
@@ -221,7 +223,12 @@ class SetModel(basetask.StandardTaskTemplate):
                 
                 for myspw in spws:
                     reference_frequency = center_frequencies[myspw]
-                    EVLA_band = vlautils.find_EVLA_band(reference_frequency)
+                    try:
+                        EVLA_band = spw2band[myspw]
+                    except:
+                        LOG.info('Unable to get band from spw id - using reference frequency instead')
+                        EVLA_band = vlautils.find_EVLA_band(reference_frequency)
+                    
                     LOG.info("Center freq for spw "+str(myspw)+" = "+str(reference_frequency)+", observing band = "+EVLA_band)
                     model_image = standard_source_names[i] + '_' + EVLA_band + '.im'
 

@@ -121,6 +121,8 @@ class Fluxboot(basetask.StandardTaskTemplate):
         
         m = context.observing_run.measurement_sets[0]
         field_spws = context.evla['msinfo'][m.name].field_spws
+        spw2band = context.evla['msinfo'][m.name].spw2band
+        bands = spw2band.values()
 
         #Look in spectral window domain object as this information already exists!
         with casatools.TableReader(self.inputs.vis+'/SPECTRAL_WINDOW') as table:
@@ -199,9 +201,9 @@ class Fluxboot(basetask.StandardTaskTemplate):
             for ii in range(len(sources)):
                 if (sources[ii] == source):
                     indices.append(ii)
-            bands = []
-            for ii in range(len(indices)):
-                bands.append(vlautils.find_EVLA_band(center_frequencies[spws[indices[ii]]]))
+            if bands == []:
+                for ii in range(len(indices)):
+                    bands.append(vlautils.find_EVLA_band(center_frequencies[spws[indices[ii]]]))
             unique_bands = list(np.unique(bands))
             for band in unique_bands:
                 lfreqs = []

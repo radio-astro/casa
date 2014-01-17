@@ -447,6 +447,18 @@ class VLAUtils(basetask.StandardTaskTemplate):
         i = bisect_left(bandlimits, frequency)
 
         return BBAND[i]
+        
+    def convertspw2band(self):
+        """match spw number to EVLA band identifier
+        """
+        
+        spw2band = {}
+        
+        for spw in self.scandict['DataDescription']:
+	    strelems =  list(self.scandict['DataDescription'][spw]['spwname'])
+            spw2band[spw] = strelems[5]
+        
+        return spw2band
 
         
     def spwsforfield(self,field):
@@ -465,6 +477,17 @@ class VLAUtils(basetask.StandardTaskTemplate):
 
     def identifyspw(self):
         """Indentify spw information"""
+        
+        casatools.ms.open(self.inputs.vis)
+        self.scan_summary = casatools.ms.getscansummary()
+        self.ms_summary = casatools.ms.summary()
+        casatools.ms.close()
+        
+        self.scandict = buildscans(self.inputs.vis, self.scan_summary)
+        
+        #Create dictionary of band names from spw ids
+        self.spw2band = self.convertspw2band()
+        
         casatools.table.open(self.inputs.vis+'/SPECTRAL_WINDOW')
         channels = casatools.table.getcol('NUM_CHAN')
         
@@ -477,7 +500,13 @@ class VLAUtils(basetask.StandardTaskTemplate):
         
         center_frequencies = map(lambda rf, spwbw: rf + spwbw/2,self.reference_frequencies, self.spw_bandwidths)
         
-        bands = map(self.find_EVLA_band,center_frequencies)
+        bands = self.spw2band.values()
+        
+        print bands
+        
+        if (bands == []):
+            bands = map(self.find_EVLA_band,center_frequencies)
+        
         
         unique_bands = list(numpy.unique(bands))
         
@@ -565,10 +594,7 @@ class VLAUtils(basetask.StandardTaskTemplate):
         
         """Figure out integration time used"""
         
-        casatools.ms.open(self.inputs.vis)
-        self.scan_summary = casatools.ms.getscansummary()
-        self.ms_summary = casatools.ms.summary()
-        casatools.ms.close()
+        
         self.startdate=float(self.ms_summary['BeginTime'])
     
         integ_scan_list = []
@@ -1034,7 +1060,7 @@ class VLAUtils(basetask.StandardTaskTemplate):
         Prep string listing of correlations from dictionary created by method buildscans
         For now, only use the parallel hands.  Cross hands will be implemented later.
         """
-        self.scandict = buildscans(self.inputs.vis, self.scan_summary)
+        
         self.corrstring_list = self.scandict['DataDescription'][0]['corrdesc']
         self.removal_list = ['RL', 'LR', 'XY', 'YX']
         self.corrstring_list = list(set(self.corrstring_list).difference(set(self.removal_list)))

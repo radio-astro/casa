@@ -11,19 +11,18 @@ from . import resultobjects
 import pipeline.infrastructure.casatools as casatools
 from bisect import bisect_left
 import numpy
+from pipeline.hifv.tasks.vlautils import VLAUtils
 
 LOG = infrastructure.get_logger(__name__)
 
 
-def _find_EVLA_band(frequency, bandlimits=[0.0e6, 150.0e6, 700.0e6, 2.0e9, 4.0e9, 8.0e9, 12.0e9, 18.0e9, 26.5e9, 40.0e9, 56.0e9], BBAND='?4PLSCXUKAQ?'):
-    i = bisect_left(bandlimits, frequency)
-    return BBAND[i]
 
-
-
-def _find_spw(vis):
+def _find_spw(vis, bands, context):
     """Identify spw information
     """
+    
+    vlainputs = VLAUtils.Inputs(context)
+    vlautils = VLAUtils(vlainputs)
 
     with casatools.TableReader(vis+'/SPECTRAL_WINDOW') as table:
         channels = table.getcol('NUM_CHAN')
@@ -33,7 +32,8 @@ def _find_spw(vis):
     
     center_frequencies = map(lambda rf, spwbw: rf + spwbw/2,reference_frequencies, spw_bandwidths)
     
-    bands = map(_find_EVLA_band,center_frequencies)
+    if (bands == []):
+        bands = map(self.find_EVLA_band,center_frequencies)
     
     unique_bands = list(numpy.unique(bands))
     
@@ -116,6 +116,12 @@ class Opcal(basetask.StandardTaskTemplate):
     def prepare(self):
         inputs = self.inputs
         
+        context = self.inputs.context
+        
+        m = context.observing_run.measurement_sets[0]
+        spw2band = context.evla['msinfo'][m.name].spw2band
+        bands = spw2band.values()
+        
         with casatools.MSReader(inputs.vis) as ms:
             ms_summary = ms.summary()
         
@@ -134,7 +140,7 @@ class Opcal(basetask.StandardTaskTemplate):
  
         inputs.parameter = output
         
-        inputs.spw = _find_spw(inputs.vis)
+        inputs.spw = _find_spw(inputs.vis, bands, context)
 
         gencal_args = inputs.to_casa_args()
         gencal_job = casa_tasks.gencal(**gencal_args)
