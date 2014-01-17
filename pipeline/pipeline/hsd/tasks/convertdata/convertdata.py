@@ -4,6 +4,7 @@ import re
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
+from pipeline.infrastructure import casa_tasks
 import pipeline.domain as domain
 from pipeline.infrastructure import sdtablereader
 from ... import heuristics
@@ -112,6 +113,13 @@ class SDConvertData(common.SingleDishTaskTemplate):
 
             to_import_sd = map(os.path.abspath, to_import_sd)
 
+        LOG.debug('to_import=%s'%(to_import))
+            
+        # execute applycal to apply flags in Tsys caltable
+        jobs = self._applycal_list(to_import)
+        for job in jobs:
+            self._executor.execute(job)
+            
         if self._executor._dry_run:
             return SDConvertDataResults()
 
@@ -183,3 +191,32 @@ class SDConvertData(common.SingleDishTaskTemplate):
     def _any_data_to_scantable_name(self, name):
         return '{0}.asap'.format(os.path.join(self.inputs.output_dir,
                                               os.path.basename(name.rstrip('/'))))
+
+    def _applycal_list(self, vislist):
+        context = self.inputs.context
+        if hasattr(context, 'callibrary'):
+            callib = context.callibrary
+            for vis in vislist:
+                if vis not in callib.applied.keys():
+                    msobj = context.observing_run.get_measurement_sets(vis)[0]
+                    spwlist = [spw.id for spw in msobj.spectral_windows 
+                               if spw.num_channels != 4]
+                    spw = ','.join(map(str,spwlist))
+                    mycalto = callibrary.CalTo(vis, spw=spw)
+                    calstate = callib.get_calstate(mycalto)
+                    merged = calstate.merged()
+                    for (calto, calfroms) in merged.items():
+                        args = {'vis': vis,
+                                'spw': spw}
+                        calapp = callibrary.CalApplication(calto, calfroms)
+                        args['gaintable'] = calapp.gaintable
+                        args['gainfield'] = calapp.gainfield
+                        args['spwmap']    = calapp.spwmap
+                        args['interp']    = calapp.interp
+                        args['calwt']     = calapp.calwt
+                        #args['applymode'] = 'flagonly'
+                        if not self._executor._dry_run:
+                            for calfrom in calfroms:
+                                callib.mark_as_applied(calto, calfrom)
+                        yield casa_tasks.applycal(**args) 
+                            
