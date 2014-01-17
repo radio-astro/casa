@@ -60,6 +60,9 @@ class SDImaging2(common.SingleDishTaskTemplate):
         st_names = context.observing_run.st_names
         reffile = self.inputs.reffile
         
+        # task returns ResultsList
+        results = basetask.ResultsList()
+
         # Step 1.
         # Apply flags to working scantable (antenna_files):
         #     - Apply SummaryFlag in Baseline Table to FLAGROW and FLAGTRA
@@ -77,6 +80,9 @@ class SDImaging2(common.SingleDishTaskTemplate):
         export_results = self._executor.execute(export_task, merge=True)
         exported_mses = export_results.outcome
         
+        # to register exported_ms to each scantable instance
+        results.append(export_results)
+        
         # Step 3.
         # Intensity scaling
         LOG.info('Step 3. Intensity scaling')
@@ -89,21 +95,18 @@ class SDImaging2(common.SingleDishTaskTemplate):
         # search results and retrieve edge parameter from the most
         # recent SDBaselineResults if it exists
         getresult = lambda r : r.read() if hasattr(r, 'read') else r
-        results = [getresult(r) for r in context.results]
+        registered_results = [getresult(r) for r in context.results]
         baseline_stage = -1
-        for stage in xrange(len(results) - 1, -1, -1):
-            if isinstance(results[stage], baseline.SDBaselineResults):
+        for stage in xrange(len(registered_results) - 1, -1, -1):
+            if isinstance(registered_results[stage], baseline.SDBaselineResults):
                 baseline_stage = stage
         if baseline_stage > 0:
-            edge = list(results[baseline_stage].outcome['edge'])
+            edge = list(registered_results[baseline_stage].outcome['edge'])
             LOG.info('Retrieved edge information from SDBaselineResults: %s' % (edge))
         else:
             LOG.info('No SDBaselineResults available. Set edge as [0,0]')
             edge = [0, 0]
         
-        # task returns ResultsList
-        results = basetask.ResultsList()
-
         # loop over reduction group
         for (group_id, group_desc) in reduction_group.items():
             # assume all members have same spw and pollist
