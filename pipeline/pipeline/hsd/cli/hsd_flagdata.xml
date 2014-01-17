@@ -11,18 +11,18 @@
 </description>
 <input>
     <param type="int" name="iteration">
-        <description>Number of iteration</description>
+        <description>Number of iteration to perform sigma clipping to calculate threshold</description>
         <value>5</value>
     </param>
 
     <param type="intArray" name="edge">
-        <description>Number of channels to be excluded from statistic calculation to flag data</description>
+        <description>Number of edge channels to be excluded from statistic calculation to flag data</description>
         <value>0,0</value>
     </param>
 
 
     <param type="bool" name="flag_tsys" >
-        <description>True to flag data by Tsys</description>
+        <description>Flag data by Tsys value</description>
         <value>True</value>
     </param>
         
@@ -32,7 +32,7 @@
     </param>
         
     <param type="bool" name="flag_weath">
-        <description>True to flag data by weather (not implemented yet)</description>
+        <description>Flag data by weather (not implemented yet)</description>
         <value>False</value>
     </param>
 
@@ -42,47 +42,47 @@
     </param>
 
     <param type="bool" name="flag_prfre" >
-        <description>True to flag data by expected rms of pre-fit spectra</description>
+        <description>Flag data by EXPECTED RMS of pre-fit spectra</description>
         <value>True</value>
     </param>
 
     <param type="double" name="prfre_thresh" subparam="true">
-        <description>Threshold for expected rms of pre-fit spetra flag</description>
+        <description>Threshold for EXPECTED RMS of pre-fit spetra flag</description>
         <value>3.0</value>
     </param>
 
     <param type="bool" name="flag_pofre" >
-        <description>True to flag data by expected rms of post-fit spectra</description>
+        <description>Flag data by EXPECTED RMS of post-fit spectra</description>
         <value>True</value>
     </param>
 
     <param type="double" name="pofre_thresh"  subparam="true">
-        <description>Threshold for expected rms of post-fit spectra flag</description>
+        <description>Threshold for EXPECTED RMS of post-fit spectra flag</description>
         <value>1.3333</value>
     </param>
 
     <param type="bool" name="flag_prfr" >
-        <description>True to flag data by rms of pre-fit spectra</description>
+        <description>Flag data by RMS of pre-fit spectra</description>
         <value>True</value>
     </param>
 
     <param type="double" name="prfr_thresh"  subparam="true">
-        <description>Threshold for rms of pre-fit flag</description>
+        <description>Threshold for RMS of pre-fit flag</description>
         <value>4.5</value>
     </param>
 
     <param type="bool" name="flag_pofr" >
-        <description>True to flag data by rms of post-fit spectra</description>
+        <description>Flag data by RMS of post-fit spectra</description>
         <value>True</value>
     </param>
 
     <param type="double" name="pofr_thresh" subparam="true">
-        <description>Threshold for rms of post-fit spectra flag</description>
+        <description>Threshold for RMS of post-fit spectra flag</description>
         <value>4.0</value>
     </param>
 
     <param type="bool" name="flag_prfrm" >
-        <description>True to flag data by running mean of pre-fit spectra</description>
+        <description>Flag data by running mean of pre-fit spectra</description>
         <value>True</value>
     </param>
 
@@ -97,7 +97,7 @@
     </param>
 
     <param type="bool" name="flag_pofrm" >
-        <description>True to flag data by running mean of post-fit spectra</description>
+        <description>Flag data by running mean of post-fit spectra</description>
         <value>True</value>
     </param>
 
@@ -112,7 +112,7 @@
     </param>
 
     <param type="bool" name="flag_user">
-        <description>True to flag data by user flag (not implemented yet)</description>
+        <description>Flag data by user flag (not implemented yet)</description>
         <value>False</value>
     </param>
 
@@ -287,15 +287,11 @@
 
 <example>
 
-The hsd_flagdata is ......................
-
-
 Keyword arguments:
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
-iteration -- Number of iterations to improve baseline quality for spectral 
-       line data. Usually, two or three iterations are enough to get 
-       nice baseline. 
+iteration -- Number of iterations to perform sigma clipping to calculate
+       threshold value of flagging.
        default: 5
 
 edge -- Number of channels to be dropped from the edge.
@@ -421,17 +417,6 @@ Output:
 results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
        the results object for the pipeline task is returned.
 
-
-Description
-
-The hsd_flag
-6. Flagging 
-Data are flagged based on several flagging rules. Available rules are: 
-expected rms, calculated rms, and running mean of both pre-fit and 
-post-fit spectra. Tsys flagging is also available. 
-
-In addition, the heuristics script creates many plots for each stage. 
-                
 
 Description
 
