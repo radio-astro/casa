@@ -465,7 +465,11 @@ class DataTableImpl( object ):
                     LOG.debug('indices = %s' % indices)
                     #atsys = [numpy.mean(tsys_target[i]) for i in indices]
                     for i in indices:
-                        atsys= [calculate_average_tsys(spw_atmcal[ifno_from].freq_min,spw_atmcal[ifno_from].freq_max ,spw_target[ifno_to].freq_min,spw_target[ifno_to].freq_max ,step_atm[ifno_from],*tsys[i])]
+                        atsys.append(calculate_average_tsys(spw_atmcal[ifno_from].freq_min,
+                                                            spw_atmcal[ifno_from].freq_max,
+                                                            spw_target[ifno_to].freq_min,
+                                                            spw_target[ifno_to].freq_max,
+                                                            step_atm[ifno_from],*tsys[i]))
                     LOG.debug('-----------atsys = %s' % atsys)
                     rows = self.get_row_index(ant, ifno_to, polno)
                     if len(atsys) == 1:
