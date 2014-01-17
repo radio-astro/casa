@@ -362,18 +362,18 @@ protected:
 
 	template <class T> void mapVector(const Vector<T> &inputVector, Vector<T> &outputVector);
 	template <class T> void mapMatrix(const Matrix<T> &inputMatrix, Matrix<T> &outputMatrix);
-	template <class T> void mapAndAverageVector(	const Vector<T> &inputVector,
-													Vector<T> &outputVector,
-													Bool convolveFlags=False,
-													vi::VisBuffer2 *vb=NULL);
+	void mapAndAverageVector(	const Vector<Double> &inputVector,
+								Vector<Double> &outputVector);
+	void mapAndAverageVector(	const Vector<Bool> &inputVector,
+								Vector<Bool> &outputVector);
 	template <class T> void mapAndAverageMatrix(	const Matrix<T> &inputMatrix,
 													Matrix<T> &outputMatrix,
 													Bool convolveFlags=False,
 													vi::VisBuffer2 *vb=NULL);
-	template <class T> void mapScaleAndAverageMatrix(	const Matrix<T> &inputMatrix,
-														Matrix<T> &outputMatrix,
-														map<Int,T> scaleMap,
-														Vector<Int> spws);
+	template <class T> void mapAndScaleMatrix(	const Matrix<T> &inputMatrix,
+												Matrix<T> &outputMatrix,
+												map<Int,T> scaleMap,
+												Vector<Int> spws);
 
 	template <class T> void writeVector(	const Vector<T> &inputVector,
 											ScalarColumn<T> &outputCol,
@@ -930,7 +930,6 @@ protected:
 	MPosition observatoryPosition_p;
 	MEpoch referenceTime_p;
 	MDirection phaseCenter_p;
-	Bool userPhaseCenter_p;
 	MFrequency::Convert freqTransEngine_p;
 	MFrequency::Convert refTimeFreqTransEngine_p;
     FFTServer<Float, Complex> fFFTServer_p;

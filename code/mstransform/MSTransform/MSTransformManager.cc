@@ -150,7 +150,6 @@ void MSTransformManager::initialize()
 	weightmode_p = MSTransformations::flags;
 	interpolationMethodPar_p = String("linear");	// Options are: nearest, linear, cubic, spline, fftshift
 	phaseCenterPar_p = new casac::variant("");
-	userPhaseCenter_p = False;
 	restFrequency_p = String("");
 	outputReferenceFramePar_p = String("");			// Options are: LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO
 
@@ -837,7 +836,8 @@ void MSTransformManager::parseTimeAvgParams(Record &configuration)
 			}
 		}
 
-/*		exists = configuration.fieldNumber ("minbaselines");
+		/*
+		exists = configuration.fieldNumber ("minbaselines");
 		if (exists >= 0)
 		{
 			configuration.get (exists, minbaselines_p);
@@ -1099,16 +1099,13 @@ void MSTransformManager::setup()
 	// Set Regridding kernel
 	if (fftShiftEnabled_p)
 	{
-		if (combinespws_p)
-		{
-			regridCoreComplex_p = &MSTransformManager::interpol1Dfftshift;
-			regridCoreFloat_p = &MSTransformManager::interpol1Dfftshift;
-		}
-		else
-		{
-			regridCoreComplex_p = &MSTransformManager::fftshift;
-			regridCoreFloat_p = &MSTransformManager::fftshift;
-		}
+		// CAS-5172 (jagonzal): Is better to always do interpolation before fftshift,
+		// because the requirement is that the number of input channels to fftshift
+		// must be equal to the number of output channels from fftshit, and since the
+		// input/output grids generally have different number of channels (unless we
+		// are doing a pure ref.frame transformation) is a good generalization.
+		regridCoreComplex_p = &MSTransformManager::interpol1Dfftshift;
+		regridCoreFloat_p = &MSTransformManager::interpol1Dfftshift;
 	}
 	else
 	{
@@ -1518,15 +1515,13 @@ void MSTransformManager::initRefFrameTransParams()
     	if (fieldIdForPhaseCenter >= (Int)fieldTable.nrow() || fieldIdForPhaseCenter < 0)
     	{
     		logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
-    				<< "Selected FIELD_ID to determine phase center does not exists " << LogIO::POST;
+    				<< "Selected FIELD_ID to determine phase center does not exist " << LogIO::POST;
     	}
     	else
     	{
     		MSFieldColumns fieldCols(fieldTable);
     		phaseCenter_p = fieldCols.phaseDirMeasCol()(fieldIdForPhaseCenter)(IPosition(1,0));
     	}
-
-    	userPhaseCenter_p = True;
     }
     else
     {
@@ -1538,8 +1533,6 @@ void MSTransformManager::initRefFrameTransParams()
     		MSField fieldTable = outputMs_p->field();
     		MSFieldColumns fieldCols(fieldTable);
     		phaseCenter_p = fieldCols.phaseDirMeasCol()(0)(IPosition(1,0));
-
-    		userPhaseCenter_p = False;
     	}
     	// Parse phase center
     	else
@@ -1550,8 +1543,6 @@ void MSTransformManager::initRefFrameTransParams()
         				<< "Cannot interpret phase center " << phaseCenter << LogIO::POST;
         		return;
         	}
-
-        	userPhaseCenter_p = True;
     	}
     }
 
@@ -2356,7 +2347,8 @@ void MSTransformManager::dropNonUniformWidthChannels()
 // -----------------------------------------------------------------------
 void MSTransformManager::getOutputNumberOfChannels()
 {
-	/*
+	// Fill the missing chanbins (in case we are re-gridding SPWs
+	// separately and only some of them require pre-channel average
 	if (refFrameTransformation_p or combinespws_p)
 	{
 		map<Int,Int>::iterator iter;
@@ -2376,21 +2368,28 @@ void MSTransformManager::getOutputNumberOfChannels()
 					freqbinMap_p[iter->first] = freqbinMap_p[0];
 				}
 			}
+		}
+	}
 
+
+	// Access spectral window sub-table
+	MSSpectralWindow spwTable = outputMs_p->spectralWindow();
+    uInt nInputSpws = spwTable.nrow();
+    MSSpWindowColumns spwCols(spwTable);
+    ScalarColumn<Int> numChanCol = spwCols.numChan();
+    ArrayColumn<Double> chanFreqCol = spwCols.chanFreq();
+
+    if (combinespws_p)
+    {
+		map<Int,Int>::iterator iter;
+		for(iter = numOfSelChanMap_p.begin(); iter != numOfSelChanMap_p.end(); iter++)
+		{
 			// Note: This will truncate the result, but it is ok because we are dropping the last channel
 			numOfOutChanMap_p[iter->first] = numOfSelChanMap_p[iter->first] / freqbinMap_p[iter->first];
 		}
-	}
-	else
-	*/
-	{
-		// Access spectral window sub-table
-		MSSpectralWindow spwTable = outputMs_p->spectralWindow();
-	    uInt nInputSpws = spwTable.nrow();
-	    MSSpWindowColumns spwCols(spwTable);
-	    ScalarColumn<Int> numChanCol = spwCols.numChan();
-	    ArrayColumn<Double> chanFreqCol = spwCols.chanFreq();
-
+    }
+    else
+    {
 	    // Get number of output channels per input spw
 	    Int spwId;
 	    for(uInt spw_idx=0; spw_idx<nInputSpws; spw_idx++)
@@ -2406,30 +2405,7 @@ void MSTransformManager::getOutputNumberOfChannels()
 
 	    	numOfOutChanMap_p[spwId] = numChanCol(spw_idx);
 	    }
-	}
-
-	// Fill the missing chanbins (in case we are re-gridding SPWs
-	// separately and only some of them require pre-channel average
-
-	map<Int,Int>::iterator iter;
-	for(iter = numOfSelChanMap_p.begin(); iter != numOfSelChanMap_p.end(); iter++)
-	{
-		if (freqbinMap_p.find(iter->first) == freqbinMap_p.end())
-		{
-			// When doing only re-gridding, maybe not all SPWs require pre-averaging
-			if (not combinespws_p)
-			{
-				// jagonzal: This is the line of code which cannot be remove from here
-				freqbinMap_p[iter->first] = 1;
-			}
-			// When combining SPWs all of them get the same freqbin
-			else
-			{
-				freqbinMap_p[iter->first] = freqbinMap_p[0];
-			}
-		}
-	}
-
+    }
 
 	return;
 }
@@ -2479,16 +2455,6 @@ void MSTransformManager::checkFillWeightSpectrum()
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 				<< "Optional column WEIGHT_SPECTRUM found in input MS will be written to output MS" << LogIO::POST;
 	}
-
-	// jagonzal: I don't want to spend so much resources transforming and writing synthetic WEIGHT_SPECTRUM
-	/*
-	else
-	{
-    	logger_p 	<< LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
-    				<< "WEIGHT_SPECTRUM column not present." << endl
-    				<< " Will fill output WEIGHT_SPECTRUM column using input WEIGHT column" << LogIO::POST;
-	}
-	*/
 
 	return;
 }
@@ -2604,7 +2570,6 @@ void MSTransformManager::checkDataColumnsToFill()
 								"Adding DATA column to output MS "<< LogIO::POST;
 
 			timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::AverageObserved);
-			// timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::ObservedUseNoWeights);
 		}
 		else
 		{
@@ -2668,7 +2633,6 @@ void MSTransformManager::checkDataColumnsToFill()
 								"Adding DATA column to output MS "<< LogIO::POST;
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
-			// timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::ObservedUseNoWeights);
 		}
 		else
 		{
@@ -2732,7 +2696,6 @@ void MSTransformManager::checkDataColumnsToFill()
 								"Adding DATA column to output MS "<< LogIO::POST;
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
-			// timeAvgOptions_p |= vi::AveragingOptions::ObservedUseNoWeights;
 		}
 		else
 		{
@@ -2972,40 +2935,15 @@ void MSTransformManager::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 													MeasFrame(vb->phaseCenter(), observatoryPosition_p, currentRowTime));
 
 	MFrequency::Ref outputFrameRef;
-	if (userPhaseCenter_p)
-	{
-		outputFrameRef = MFrequency::Ref(outputReferenceFrame_p,
-				MeasFrame(phaseCenter_p, observatoryPosition_p, currentRowTime));
-	}
-	else
-	{
-		outputFrameRef = MFrequency::Ref(outputReferenceFrame_p,
-				MeasFrame(vb->phaseCenter(), observatoryPosition_p, currentRowTime));
-	}
-
-	/*
-	ostringstream oss;
-	oss.precision(20);
-	oss <<  "inputReferenceFrame_p=" << inputFrameRef << endl;
-	oss <<  "outputReferenceFrame_p=" << outputFrameRef << endl;
-	logger_p << LogIO::NORMAL << oss.str() << LogIO::POST;
-	*/
-
+	outputFrameRef = MFrequency::Ref(outputReferenceFrame_p,MeasFrame(phaseCenter_p, observatoryPosition_p, currentRowTime));
 
 	freqTransEngine_p = MFrequency::Convert(MSTransformations::Hz, inputFrameRef, outputFrameRef);
 
 	Int spwIndex = 0;
 	if (not combinespws_p)
 	{
-		// jagonzal : This is actually not necessary because we
+		// jagonzal : It is not necessary to map spwIndex because we
 		// pass the original SPWId down to the interpol1D method
-		/*
-		if (inputOutputSPWIndexMap_p.size())
-		{
-			Int originalSPWid = vb->spectralWindows()(0);
-			spwIndex = inputOutputSPWIndexMap_p[originalSPWid];
-		}
-		*/
 		spwIndex = vb->spectralWindows()(0);
 	}
 
@@ -3025,26 +2963,6 @@ void MSTransformManager::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 		bandwidth += chanWidth;
 
 		fftShift_p = - absoluteShift / bandwidth;
-
-		/*
-		ostringstream oss;
-		oss.precision(20);
-		oss <<  "centralChan=" << centralChan << endl;
-		oss <<  "oldCentralFrequencyBeforeRegridding=" << oldCentralFrequencyBeforeRegridding << endl;
-		oss <<  "newCentralFrequencyBeforeRegriddingAtCurrentTime=" << newCentralFrequencyBeforeRegriddingAtCurrentTime << endl;
-		oss <<  "newCentralFrequencyBeforeRegriddingAtReferenceTime=" << newCentralFrequencyBeforeRegriddingAtReferenceTime << endl;
-		oss <<  "absoluteShift=" << absoluteShift << endl;
-		oss <<  "xout[iDone][0]=" << inputOutputSpwMap_p[spwIndex].second.CHAN_FREQ[0] << endl;
-		oss <<  "xout[iDone][1]=" << inputOutputSpwMap_p[spwIndex].second.CHAN_FREQ[1] << endl;
-		oss <<  "chanWidth=" << chanWidth<< endl;
-		oss <<  "xout[iDone][endChan]=" << inputOutputSpwMap_p[spwIndex].second.CHAN_FREQ[inputOutputSpwMap_p[spwIndex].second.NUM_CHAN-1] << endl;
-		oss <<  "bandwidth (xout[iDone][endChan] - xout[iDone][0] + chanWidth)" << bandwidth << endl;
-		oss <<  "chanwidth-spwInfo " << inputOutputSpwMap_p[spwIndex].second.CHAN_WIDTH[0] << endl;
-		oss <<  "bandwidth-spwInfo " << inputOutputSpwMap_p[spwIndex].second.TOTAL_BANDWIDTH << endl;
-		oss <<  "fftShift_p=" << fftShift_p << endl;
-		logger_p << LogIO::NORMAL << oss.str() << LogIO::POST;
-		*/
-
 	}
 	else
 	{
@@ -3139,18 +3057,18 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 			writeVector(tmpVectorDouble,outputMsCols_p->exposure(),rowRef,nspws_p);
 		}
 
+		// jagonzal: According to dpetry we have to copy weights from the first SPW
+		// This is justified since the rows to be combined _must_ be from the
+		// same baseline and therefore have the same UVW coordinates in the MS (in meters).
+		// They could therefore be regarded to also have the same WEIGHT, at least to
+		// a good approximation.
 		if (channelAverage_p)
 		{
-			mapScaleAndAverageMatrix(vb->weight(),tmpMatrixFloat,weightFactorMap_p,vb->spectralWindows());
+			mapAndScaleMatrix(vb->weight(),tmpMatrixFloat,weightFactorMap_p,vb->spectralWindows());
 			writeMatrix(tmpMatrixFloat,outputMsCols_p->weight(),rowRef,nspws_p);
 		}
 		else
 		{
-			// jagonzal: According to dpetry we have to copy weights from the first SPW
-			// This is justified since the rows to be combined _must_ be from the
-			// same baseline and therefore have the same UVW coordinates in the MS (in meters).
-			// They could therefore be regarded to also have the same WEIGHT, at least to
-			// a good approximation.
 			mapMatrix(vb->weight(),tmpMatrixFloat);
 			writeMatrix(tmpMatrixFloat,outputMsCols_p->weight(),rowRef,nspws_p);
 		}
@@ -3165,19 +3083,19 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		}
 		else
 		{
+			// jagonzal: According to dpetry we have to copy weights from the first SPW
+			// This is justified since the rows to be combined _must_ be from the
+			// same baseline and therefore have the same UVW coordinates in the MS (in meters).
+			// They could therefore be regarded to also have the same WEIGHT, at least to
+			// a good approximation.
 			if (channelAverage_p)
 			{
-				mapScaleAndAverageMatrix(vb->sigma(),tmpMatrixFloat,sigmaFactorMap_p,vb->spectralWindows());
+				mapAndScaleMatrix(vb->sigma(),tmpMatrixFloat,sigmaFactorMap_p,vb->spectralWindows());
 				outputMsCols_p->sigma().putColumnCells(rowRef, tmpMatrixFloat);
 				writeMatrix(tmpMatrixFloat,outputMsCols_p->sigma(),rowRef,nspws_p);
 			}
 			else
 			{
-				// jagonzal: According to dpetry we have to copy weights from the first SPW
-				// This is justified since the rows to be combined _must_ be from the
-				// same baseline and therefore have the same UVW coordinates in the MS (in meters).
-				// They could therefore be regarded to also have the same WEIGHT, at least to
-				// a good approximation.
 				mapMatrix(vb->sigma(),tmpMatrixFloat);
 				writeMatrix(tmpMatrixFloat,outputMsCols_p->sigma(),rowRef,nspws_p);
 			}
@@ -3218,18 +3136,7 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 			writeVector(vb->fieldId(),outputMsCols_p->fieldId(),rowRef,nspws_p);
 		}
 
-		// Scan -> SCAN is not re-indexed in old split
-		/*
-		if (inputOutputScanIndexMap_p.size())
-		{
-			reindexVector(vb->scan(),tmpVectorInt,inputOutputScanIndexMap_p,!timespan_p.contains("scan"));
-			outputMsCols_p->scanNumber().putColumnCells(rowRef,tmpVectorInt);
-		}
-		else
-		{
-			outputMsCols_p->scanNumber().putColumnCells(rowRef,vb->scan());
-		}
-		*/
+		// NOTE: Scan -> SCAN is not re-indexed in old split
 
 		// State
 		if (inputOutputScanIntentIndexMap_p.size())
@@ -3428,14 +3335,12 @@ template <class T> void MSTransformManager::mapMatrix(	const Matrix<T> &inputMat
 	return;
 }
 
-// -----------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------
 // Fill the data from an input vector with shape [nBaselinesxnSPWs] into an
 // output vector with shape [nBaselines] averaging the values from all SPWS
-// -----------------------------------------------------------------------------------
-template <class T> void MSTransformManager::mapAndAverageVector(const Vector<T> &inputVector,
-																	Vector<T> &outputVector,
-																	Bool convolveFlags,
-																	vi::VisBuffer2 *vb)
+// ------------------------------------------------------------------------------------
+void MSTransformManager::mapAndAverageVector(	const Vector<Double> &inputVector,
+												Vector<Double> &outputVector)
 {
 	uInt row;
 	uInt baseline_index = 0;
@@ -3462,6 +3367,46 @@ template <class T> void MSTransformManager::mapAndAverageVector(const Vector<T> 
 
 	return;
 }
+
+// ------------------------------------------------------------------------------------
+// Fill the data from an input vector with shape [nBaselinesxnSPWs] into an
+// output vector with shape [nBaselines] averaging the values from all SPWS
+// ------------------------------------------------------------------------------------
+void MSTransformManager::mapAndAverageVector(	const Vector<Bool> &inputVector,
+												Vector<Bool> &outputVector)
+{
+	uInt row;
+	uInt baseline_index = 0;
+	vector<uInt> baselineRows;
+	Bool initialize = True;
+	for (baselineMap::iterator iter = baselineMap_p.begin(); iter != baselineMap_p.end(); iter++)
+	{
+		// Get baseline rows vector
+		baselineRows = iter->second;
+
+		// Compute combined value from each SPW
+		for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
+		{
+			row = *iter;
+
+			if (initialize)
+			{
+				outputVector(baseline_index) = inputVector(row);
+				initialize = False;
+			}
+			else
+			{
+				// We have to use or to propagate True
+				outputVector(baseline_index) |= inputVector(row);
+			}
+		}
+
+		baseline_index += 1;
+	}
+
+	return;
+}
+
 
 // -----------------------------------------------------------------------------------
 // Fill the data from an input matrix with shape [nCol,nBaselinesxnSPWs] into an
@@ -3532,7 +3477,7 @@ template <class T> void MSTransformManager::mapAndAverageMatrix(	const Matrix<T>
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template <class T> void MSTransformManager::mapScaleAndAverageMatrix(	const Matrix<T> &inputMatrix,
+template <class T> void MSTransformManager::mapAndScaleMatrix(	const Matrix<T> &inputMatrix,
 																		Matrix<T> &outputMatrix,
 																		map<Int,T> scaleMap,
 																		Vector<Int> spws)
@@ -3557,40 +3502,22 @@ template <class T> void MSTransformManager::mapScaleAndAverageMatrix(	const Matr
 		// Reset normalizing factor
 		normalizingFactor = 0;
 
-		// Compute combined value from each SPW
-		for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
+		// Get value from first SPW (this is for Weight and Sigma and cvel is doing it so)
+		row = baselineRows.at(0);
+		spw = spws(row);
+		if (scaleMap.find(spw) != scaleMap.end())
 		{
-			row = *iter;
-			spw = spws(row);
-			if (scaleMap.find(spw) != scaleMap.end())
-			{
-				contributionFactor = scaleMap[spw];
-			}
-			else
-			{
-				contributionFactor = 1;
-			}
-
-
-			for (uInt col = 0; col < nCols; col++)
-			{
-				outputMatrix(col,baseline_index) += contributionFactor*inputMatrix(col,row);
-			}
-
-			// normalizingFactor += contributionFactor;
-			normalizingFactor += 1;
+			contributionFactor = scaleMap[spw];
+		}
+		else
+		{
+			contributionFactor = 1;
 		}
 
-
-		// Normalize accumulated value
-		if (normalizingFactor>0)
+		for (uInt col = 0; col < nCols; col++)
 		{
-			for (uInt col = 0; col < nCols; col++)
-			{
-				outputMatrix(col,baseline_index) /= normalizingFactor;
-			}
+			outputMatrix(col,baseline_index) = contributionFactor*inputMatrix(col,row);
 		}
-
 
 		baseline_index += 1;
 	}
@@ -4128,18 +4055,6 @@ template <class T> void MSTransformManager::combineCubeOfData(	vi::VisBuffer2 *v
 							inputPlaneData(pol,outputChannel) += weight*inputDataCube(pol,inputChannel,row);
 							normalizingFactorPlane(pol,outputChannel) += weight;
 							(*this.*fillWeightsPlane_p)(pol,inputChannel,outputChannel,row,inputWeightsCubeLocal,inputPlaneWeights,weight);
-
-							/*
-							cout 	<< "outChan=" << outputChannel
-									<< " inpChan=" << inputChannel
-									<< " spw=" << spw
-									<< " fraction count=" << spwFractionCountsMap[spw]
-									<< " unity contributors=" << unityContributors
-									<< " weight=" << weight
-									<< " value=" << inputDataCube(pol,inputChannel,row)
-									<< " flag=" << inputFlagCube(pol,inputChannel,row)
-									<< " OK" << endl;
-							*/
 						}
 					}
 				}
@@ -4946,18 +4861,6 @@ template <class T> void MSTransformManager::regrid(	Int inputSpw,
 				outputDataStripe,
 				outputFlagsStripe);
 
-    /*
-	ostringstream oss;
-	oss.precision(20);
-	oss << "inputDataStripe= " << inputDataStripe << endl;
-	oss << "inputFlagsStripe= " << inputFlagsStripe << endl;
-	oss << "inputFreq= " << inputOutputSpwMap_p[inputSpw].first.CHAN_FREQ_aux << endl;
-	oss << "outputFreq= " << inputOutputSpwMap_p[inputSpw].second.CHAN_FREQ << endl;
-	oss << "outputDataStripe= " << outputDataStripe << endl;
-	oss << "outputFlagsStripe= " << outputFlagsStripe << endl;
-	logger_p << LogIO::NORMAL << oss.str() << LogIO::POST;
-	*/
-
 	return;
 }
 
@@ -5051,6 +4954,7 @@ template <class T> void MSTransformManager::interpol1D(	Int inputSpw,
 															Vector<T> &outputDataStripe,
 															Vector<Bool> &outputFlagsStripe)
 {
+
 	InterpolateArray1D<Double,T>::interpolate(	outputDataStripe, // Output data
 	    										outputFlagsStripe, // Output flags
 	    										inputOutputSpwMap_p[inputSpw].second.CHAN_FREQ, // Out chan freq
@@ -5061,6 +4965,7 @@ template <class T> void MSTransformManager::interpol1D(	Int inputSpw,
 	    										False, // A good data point has its flag set to False
 	    										False // If False extrapolated data points are set flagged
 							    				);
+
 	return;
 }
 
