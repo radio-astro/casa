@@ -175,15 +175,23 @@ def read_scaling_factor(reffile):
     factor_list = []
     with open(reffile, 'r') as f:
         reader = csv.reader(f)
+        # Check if first line is header or not
+        line = reader.next()
+        if line[0].strip() == 'MS':
+            # must be a header
+            pass
+        elif len(line) == 5:
+            # may be a data record
+            factor_list.append(line)
+        else:
+            LOG.error('%s is invalid format'%(reffile))
         for line in reader:
             if len(line) == 0:
-                continue
-            elif line[0].lstrip()[0] == '#':
                 continue
             elif len(line) == 5:
                 factor_list.append(line)
             else:
-                LOG.error('%s is invalid format')
+                LOG.error('%s is invalid format'%(reffile))
     return factor_list
 
 def rearrange_factors_list(factors_list):
