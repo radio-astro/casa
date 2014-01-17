@@ -35,7 +35,7 @@
 namespace casa {
 
 // <summary>
-// A top level class defining the data handling interface for the flagging module
+// A top level class defining the data handling interface for the MSTransform module
 // </summary>
 //
 // <use visibility=export>
