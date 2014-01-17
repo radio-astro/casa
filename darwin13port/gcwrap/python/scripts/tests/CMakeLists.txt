@@ -160,6 +160,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_tsdflag2.py
   test_tsdgrid.py
   test_tsdmath.py
+  test_tsdplot.py
   test_tsdsave.py
   test_tsdstat.py
   test_setjy.py

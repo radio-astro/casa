@@ -157,15 +157,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   */
 
-  void SDAlgorithmTest::restore(CountedPtr<SIImageStore> imagestore )
+  /*
+  void SDAlgorithmTest::restorePlane( )
   {
 
     LogIO os( LogOrigin("SDAlgorithmTest","restore",WHERE) );
     
-    os << "Smooth model and add residuals for " << imagestore->getName() 
+    os << "Smooth model and add residuals "
        << ". Optionally, PB-correct too." << LogIO::POST;
 
+
   }
+  */
 
   // Use this decide how to partition
   // the image for separate calls to 'deconvolve'.

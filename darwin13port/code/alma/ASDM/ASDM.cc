@@ -1197,11 +1197,15 @@ namespace asdm {
 		s = xml.getElement("<startTimeDurationInXML","/>");
 		if (s.length() != 0) 
 			ArrayTimeInterval::readStartTimeDurationInXML(true);
+		else 
+			ArrayTimeInterval::readStartTimeDurationInXML(false);
 			
 		// Do we have an element startTimeDurationInBin
 		s = xml.getElement("<startTimeDurationInBin","/>");
 		if (s.length() != 0) 
-			ArrayTimeInterval::readStartTimeDurationInBin(true);			 		 
+			ArrayTimeInterval::readStartTimeDurationInBin(true);
+		else 
+			ArrayTimeInterval::readStartTimeDurationInBin(false);			 		 
 
 		// Get each table in the dataset.
 		s = xml.getElementContent("<Table>","</Table>");
@@ -4326,8 +4330,8 @@ namespace asdm {
     			throw ConversionException("I cannot read this dataset with version='UNKNOWN' and origin='UNKNOWN'", "ASDM");
  		
     		string xsltPath;
- 			bool proceed = (origin == ASDMUtils::EVLA)   // For the time being an EVLA dataset can be ONLY in version 2 so we must convert it
-    						|| ((version.compare("3")) && ( origin == ASDMUtils::ALMA)); // If it's an ALMA then we must check its version.
+ 			bool proceed = (version.compare("3") && (origin == ASDMUtils::EVLA))  
+    				    || (version.compare("3") && ( origin == ASDMUtils::ALMA)); // If it's an ALMA then we must check its version.
 			string xmlDoc;
  			try {
  				if (proceed) {
@@ -4343,7 +4347,7 @@ namespace asdm {
 					//cout << "An XSL transformation will be done on this dataset using '" << xsltPath << "'." << endl;
 				}
 				else {
-				  //cout << "No transformation will be applied on this dataset." << endl;
+					//cout << "No transformation will be applied on this dataset." << endl;
 				}
 				 
 				xmlDoc = getXSLTransformer()(fileName);

@@ -31,7 +31,7 @@
 
 //# Includes
 #include <images/Images/ImageInterface.h>
-#include <tr1/memory.hpp>
+#include <boost/tr1/memory.hpp>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

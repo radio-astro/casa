@@ -126,7 +126,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Bool dirDep= (ejgrid_p != NULL);
       //The Matrix Weight is not needed or is needed when we do not need the weight Image full
       Matrix<Float> wgt;
-      ift_p->stokesToCorrelation(*(itsImages->model()), *(itsImages->backwardGrid()));
+      ift_p->stokesToCorrelation(*(itsImages->weight()), *(itsImages->backwardGrid()));
       ift_p->initializeToSky(*(itsImages->backwardGrid()), wgt,
       				   vi::VisBuffer2Adapter(&vb));
       dirDep= dirDep || ((ift_p->name()) == "MosaicFT");
@@ -150,7 +150,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        Bool dirDep= (ejgrid_p != NULL);
        //The Matrix Weight is not needed or is needed when we do not need the weight Image full
        Matrix<Float> wgt;
-       ift_p->stokesToCorrelation(*(itsImages->model()), *(itsImages->backwardGrid()));
+       ift_p->stokesToCorrelation(*(itsImages->weight()), *(itsImages->backwardGrid()));
        ift_p->initializeToSky(*(itsImages->backwardGrid()), wgt,
        				   vb);
        dirDep= dirDep || ((ift_p->name()) == "MosaicFT");
