@@ -42,6 +42,9 @@ class SDImaging2Results(common.SingleDishResults):
     def merge_with_context(self, context):
         super(SDImaging2Results, self).merge_with_context(context)
         LOG.todo('need to decide what is done in SDImaging2Results.merge_with_context')
+        
+        if self.outcome.has_key('export_results'):
+            self.outcome['export_results'].merge_with_context(context)
 
     def _outcome_name(self):
         # return [image.imagename for image in self.outcome]
@@ -81,7 +84,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
         exported_mses = export_results.outcome
         
         # to register exported_ms to each scantable instance
-        results.append(export_results)
+        #results.append(export_results)
         
         # Step 3.
         # Intensity scaling
@@ -305,6 +308,9 @@ class SDImaging2(common.SingleDishTaskTemplate):
                 outcome['validsp'] = numpy.array(validsps)
                 outcome['rms'] = numpy.array(rmss)
                 outcome['edge'] = edge
+                
+                # to register exported_ms to each scantable instance
+                outcome['export_results'] = export_results
                 result = SDImaging2Results(task=self.__class__,
                                           success=True,
                                           outcome=outcome)
@@ -316,8 +322,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                     result.stage_number = self.inputs.context.task_counter 
 
                 results.append(result)
-            
-
+                    
         LOG.todo('logrecords for SDImaging2Results must be handled properly')
         for r in results:
             r.logrecords = []
