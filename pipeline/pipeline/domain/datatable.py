@@ -24,7 +24,7 @@
 #
 import os
 import time
-import numpy
+import numpy,math
 
 from taskinit import gentools
 
@@ -442,7 +442,7 @@ class DataTableImpl( object ):
                 LOG.debug('-----------spw %s' % i)
                 LOG.debug('spw_atmcal[i].freq_min = %s' % spw_atmcal[i].freq_min)
                 LOG.debug('spw_atmcal[i].freq_max = %s' % spw_atmcal[i].freq_max)
-                step_atm[i]=(abs(spw_atmcal[i].increment))
+                step_atm[i]=spw_atmcal[i].increment
                 LOG.debug('step_atm[i] = %s' % step_atm[i])
             elif context.observing_run[0].spectral_window[i].is_target:
                 spw_target[i] = context.observing_run[0].spectral_window[i]
@@ -462,18 +462,10 @@ class DataTableImpl( object ):
                 
                 for ifno_to in ifmap[ifno_from]:
                     LOG.debug('-----------ifno_to = %s' % ifno_to)
-                    target_start = (spw_target[ifno_to].freq_min - spw_atmcal[ifno_from].freq_min)/ step_atm[ifno_from]
-                    target_end = (spw_target[ifno_to].freq_max - spw_atmcal[ifno_from].freq_min)/ step_atm[ifno_from]
-                    LOG.debug('target_start %s' % target_start)
-                    LOG.debug('target_end %s' % target_end)
-                    LOG.debug('target_end - target_start = %s' % (int)(target_end - target_start))
                     LOG.debug('indices = %s' % indices)
+                    #atsys = [numpy.mean(tsys_target[i]) for i in indices]
                     for i in indices:
-                        for j in xrange((int)(target_end - target_start)):
-                            tsys_target_value.append(tsys[i][(int)( target_start + j)])
-                        tsys_target.update({i:tsys_target_value})
-                    
-                    atsys = [numpy.mean(tsys_target[i]) for i in indices]
+                        atsys= [calculate_average_tsys(spw_atmcal[ifno_from].freq_min,spw_atmcal[ifno_from].freq_max ,spw_target[ifno_to].freq_min,spw_target[ifno_to].freq_max ,step_atm[ifno_from],*tsys[i])]
                     LOG.debug('-----------atsys = %s' % atsys)
                     rows = self.get_row_index(ant, ifno_to, polno)
                     if len(atsys) == 1:
@@ -485,6 +477,44 @@ class DataTableImpl( object ):
                             tref = self.tb1.getcell('TIME', row)
                             itsys = _interpolate(atsys, tsys_time, tref)
                             self.tb1.putcell('TSYS', row, itsys)                
+        
+def calculate_average_tsys(atm_freq_min,atm_freq_max,target_freq_min,target_freq_max,atm_increment,*tsyslist) :
+        if(atm_increment < 0): # LSB
+            LOG.debug('--- LSB ----')
+            if(atm_freq_min < target_freq_min and target_freq_max < atm_freq_max):
+                # start_atmchan
+                start_atmchan = (atm_freq_max - target_freq_max)/abs(atm_increment)
+                floor_start_atmchan = math.floor(start_atmchan + 0.5)
+                start_atmchan = floor_start_atmchan
+                LOG.debug('calculate_average_tsys:   satrt_atmchan == %d' % start_atmchan)
+                
+                # end_atmchan
+                end_atmchan = (atm_freq_max - target_freq_min)/abs(atm_increment)
+                floor_end_atmchan = math.floor(end_atmchan - 0.5)
+                end_atmchan = floor_end_atmchan
+                LOG.debug('calculate_average_tsys:   end_atmchan == %d' % end_atmchan)
+        
+        elif(atm_increment > 0): # USB)
+            LOG.debug('--- USB ----')
+            if(atm_freq_min < target_freq_min and target_freq_max < atm_freq_max):
+                # start_atmchan
+                start_atmchan = (target_freq_min - atm_freq_min)/abs(atm_increment)
+                floor_start_atmchan = math.floor(start_atmchan + 0.5)
+                start_atmchan = floor_start_atmchan
+                LOG.debug('calculate_average_tsys:   satrt_atmchan == %d' % start_atmchan)
+                
+                # end_atmchan
+                end_atmchan = (target_freq_max - atm_freq_min)/abs(atm_increment)
+                floor_end_atmchan = math.floor(end_atmchan - 0.5)
+                end_atmchan = floor_end_atmchan
+                LOG.debug('calculate_average_tsys:   end_atmchan == %d' % end_atmchan)
+        
+        LOG.debug('calculate_average_tsys:   end_atmchan - start_atmchan = %d ' % (end_atmchan - start_atmchan))
+        #print ' tsys[0][20] == %d ' % tsyslist[20]
+        averaged_tsys = numpy.mean(tsyslist[(int)(start_atmchan):(int)(end_atmchan + 1)])
+        LOG.debug('calculate_average_tsys:  averaged_tsys  = %s ' % averaged_tsys)
+        return averaged_tsys
+
 
 class RODataTableColumn( object ):
     def __init__( self, table, name, dtype ):
