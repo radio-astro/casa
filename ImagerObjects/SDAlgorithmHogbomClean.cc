@@ -260,7 +260,39 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     itsModel.put( itsMatModel );
   }
 
+  /*
+  void SDAlgorithmHogbomClean::restorePlane()
+  {
 
+    LogIO os( LogOrigin("SDAlgorithmHogbomClean","restorePlane",WHERE) );
+    
+    //     << ". Optionally, PB-correct too." << LogIO::POST;
+
+    try
+      {
+	// Fit a Gaussian to the PSF.
+	GaussianBeam beam = getPSFGaussian();
+
+	os << "Smooth model with and add residuals. beam(" << beam.getMajor(Unit("arcmin")) << "," << beam.getMinor(Unit("arcmin"))<< "," << beam.getPA(Unit("deg")) << ")" << LogIO::POST; 
+	
+	// Initialize restored image
+	itsImage.set(0.0);
+	// Copy model into it
+	itsImage.copyData( LatticeExpr<Float>(itsModel )  );
+	// Smooth model by beam
+	StokesImageUtil::Convolve( itsImage, beam);
+	// Add residual image
+	itsImage.copyData( LatticeExpr<Float>( itsImage + itsResidual ) );
+      }
+    catch(AipsError &x)
+      {
+	throw( AipsError("Restoration Error " + x.getMesg() ) );
+      }
+
+  }
+*/
+
+  /*
     void SDAlgorithmHogbomClean::restore(CountedPtr<SIImageStore> imagestore )
   {
 
@@ -269,7 +301,23 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     os << "Smooth model and add residuals for " << imagestore->getName() 
        << ". Optionally, PB-correct too." << LogIO::POST;
 
+    // Fit a Gaussian to the PSF.
+    GaussianBeam beam = getPSFGaussian();
+
+    //    imagestore->allocateRestoredImage();
+
+    // Initialize restored image
+    imagestore->image()->set(0.0);
+    // Copy model into it
+    imagestore->image()->copyData( LatticeExpr<Float>(* (imagestore->model()) )  );
+    // Smooth model by beam
+    StokesImageUtil::Convolve(*(imagestore->image()), beam);
+    // Add residual image
+    imagestore->image()->copyData( LatticeExpr<Float>( *(imagestore->image()) + *(imagestore->residual())) );
+    
+
   }
+*/
 
   // Use this decide how to partition
   // the image for separate calls to 'deconvolve'.

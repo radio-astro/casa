@@ -238,7 +238,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if(freqBeg==""){
     	  vi::FrequencySelectionUsingChannels channelSelector;
     	  //////////This is not implemented
-    	  channelSelector.add(thisSelection);
+    	  //channelSelector.add(thisSelection);
     	  /////So this gymnastic is needed
     	  for(uInt k=0; k < nSelections; ++k)
     	  {
@@ -733,18 +733,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
          ROMSColumns msc(*mss_p[0]);
          Record info;
          String objectName=msc.field().name()(msc.fieldId()(0));
-         ImageInfo iinfo=(imstor->model())->imageInfo();
-         iinfo.setObjectName(objectName);
-         (imstor->model())->setImageInfo(iinfo);
+         //ImageInfo iinfo=(imstor->model())->imageInfo();
+         //iinfo.setObjectName(objectName);
+         //(imstor->model())->setImageInfo(iinfo);
          String telescop=msc.observation().telescopeName()(0);
          info.define("OBJECT", objectName);
          info.define("TELESCOP", telescop);
          info.define("INSTRUME", telescop);
          info.define("distance", distance.get("m").getValue());
-         (imstor->model())->setMiscInfo(info);
-         //((imstor->model())->table()).tableInfo().setSubType("GENERIC");
-         (imstor->model())->setUnits(Unit("Jy/pixel"));
-         (imstor->image())->setUnits(Unit("Jy/beam"));
+	 ////////////// Send misc info into ImageStore. 
+	 imstor->setImageInfo( info );
+	 /////////////
+         //(imstor->model())->setMiscInfo(info);
+         ////((imstor->model())->table()).tableInfo().setSubType("GENERIC");
+         //(imstor->model())->setUnits(Unit("Jy/pixel"));
+         //(imstor->image())->setUnits(Unit("Jy/beam"));
        CountedPtr<SIMapperBase> thismap=new SIMapper(imstor, ftm, iftm, id);
        itsMappers.addMapper(thismap);
      }

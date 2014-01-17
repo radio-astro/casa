@@ -73,7 +73,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsIsModelUpdated = False;
     itsMapperId = mapperid;
 
-    initImages();
+    //    initImages();
 
   }
   
@@ -93,6 +93,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMapperBase::initImages()
   {
     LogIO os( LogOrigin("SIMapperBase","initImages",WHERE) );
+
+    /*
 
     // Initialize all these images.
     //////////////////////////////////// ONLY FOR TESTING //////////////////////////////////
@@ -119,6 +121,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //////////////////////////////////// ONLY FOR TESTING /////////////////////////////////
 
     /// If there is a starting model, set itsIsModelUpdated = True !!
+
+    */
 
   }
 
@@ -153,7 +157,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //   -- This will ensure that normalizations are identical for the single-node and parallel major cycles. 
 
     // For TESTING
-    itsImages->residual()->put( itsOriginalResidual - itsImages->model()->get() );
+    //itsImages->residual()->put( itsOriginalResidual - itsImages->model()->get() );
 
     //    itsImages->residual()->put( itsOriginalResidual - max(itsImages->model()->get())*itsImages->psf()->get() );
 

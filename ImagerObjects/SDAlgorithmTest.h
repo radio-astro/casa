@@ -55,7 +55,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     SDAlgorithmTest();
     virtual  ~SDAlgorithmTest();
     
-    virtual void restore( CountedPtr<SIImageStore> imagestore );
     
   protected:
     
@@ -64,6 +63,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void initializeDeconvolver( Float &peakresidual, Float &modelflux );
     virtual void finalizeDeconvolver();
     virtual void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
+    //virtual void restorePlane();
     
     // ....
 

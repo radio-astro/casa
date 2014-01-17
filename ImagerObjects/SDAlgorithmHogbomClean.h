@@ -55,8 +55,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     SDAlgorithmHogbomClean();
     virtual  ~SDAlgorithmHogbomClean();
     
-    virtual void restore( CountedPtr<SIImageStore> imagestore );
-    
   protected:
     
     // Local functions to be overloaded by various algorithm deconvolvers.
@@ -64,7 +62,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void initializeDeconvolver( Float &peakresidual, Float &modelflux );
     virtual void finalizeDeconvolver();
     virtual void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
-    
+    //    virtual void restorePlane();
 
     /*
     void findNextComponent( Float loopgain );
