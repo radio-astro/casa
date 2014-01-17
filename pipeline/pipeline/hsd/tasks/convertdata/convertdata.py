@@ -214,7 +214,7 @@ class SDConvertData(common.SingleDishTaskTemplate):
                         args['spwmap']    = calapp.spwmap
                         args['interp']    = calapp.interp
                         args['calwt']     = calapp.calwt
-                        #args['applymode'] = 'flagonly'
+                        args['applymode'] = 'flagonly'
                         if not self._executor._dry_run:
                             for calfrom in calfroms:
                                 callib.mark_as_applied(calto, calfrom)
