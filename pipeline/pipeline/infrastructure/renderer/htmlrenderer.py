@@ -2897,13 +2897,42 @@ class SingleDishCalSkyPlotsRenderer(object):
         display_context = self._get_display_context()
         t = TemplateFinder.get_template(self.template)
         return t.render(**display_context)
-    
+
+
 class T2_4MDetailsSingleDishImagingRenderer(T2_4MDetailsDefaultRenderer):
     def __init__(self, template='t2-4m_details-hsd_imaging.html', 
                  always_rerender=False):
         super(T2_4MDetailsSingleDishImagingRenderer, self).__init__(template,
                                                                     always_rerender)
+        
+    def get_display_context(self, context, results):
+        ctx = super(T2_4MDetailsSingleDishImagingRenderer, self).get_display_context(context, results)
+        
+        stage_dir = os.path.join(context.report_dir,'stage%d'%(results.stage_number))
+        if not os.path.exists(stage_dir):
+            os.mkdir(stage_dir)
+            
+        plots = []
+        #for image_item in result.outcome:
+        for r in results:
+            image_item = r.outcome['image']
+            spwid = image_item.spwlist
+            spw_type = context.observing_run[0].spectral_window[spwid].type
+            task_cls = sddisplay.SDImageDisplayFactory(spw_type)
+            inputs = task_cls.Inputs(context,result=r)
+            task = task_cls(inputs)
+            plots.append(task.plot())
 
+        plot_groups = logger.PlotGroup.create_plot_groups(plots)
+        for plot_group in plot_groups:
+            renderer = PlotGroupRenderer(context, results, plot_group)
+            plot_group.filename = renderer.filename
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+
+        ctx.update({'plot_groups': plot_groups})
+
+        return ctx
     
 class T2_4MDetailsRenderer(object):
     # the filename component of the output file. While this is the same for
