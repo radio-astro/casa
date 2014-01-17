@@ -207,29 +207,33 @@ class SDSpectralMapDisplay(SDImageDisplay):
                     
                 _x = row / self.ny
                 _y = row % self.ny
+                
+                prefix = self.inputs.imagename+'.pol%s_Result'%(pol)
+                plotfile = os.path.join(self.stage_dir, prefix+'_%s.png'%(Npanel))
 
-                if 0 <= _x < self.nx and 0 <= _y < self.ny:
-                    a = axes_list[NSp]
-                    a.set_axis_on()
-                    pl.gcf().sca(a)
-                    world_x = xrv + (_x - xrp) * xic
-                    world_y = yrv + (_y - yrp) * yic
-                    title = '(IF, POL, X, Y) = (%s, %s, %s, %s)\n%s %s' % (self.spw, pol, _x, _y, HHMMSSss(world_x, 0), DDMMSSs(world_y, 0))
-                    if self.num_valid_spectrum[_x][_y][pol] > 0:
-                        plot_objects.extend(
-                            pl.plot(self.frequency, data[_x][_y], Mark, markersize=2, markeredgecolor='b', markerfacecolor='b')
-                            )
+                if not os.path.exists(plotfile):
+                    if 0 <= _x < self.nx and 0 <= _y < self.ny:
+                        a = axes_list[NSp]
+                        a.set_axis_on()
+                        pl.gcf().sca(a)
+                        world_x = xrv + (_x - xrp) * xic
+                        world_y = yrv + (_y - yrp) * yic
+                        title = '(IF, POL, X, Y) = (%s, %s, %s, %s)\n%s %s' % (self.spw, pol, _x, _y, HHMMSSss(world_x, 0), DDMMSSs(world_y, 0))
+                        if self.num_valid_spectrum[_x][_y][pol] > 0:
+                            plot_objects.extend(
+                                pl.plot(self.frequency, data[_x][_y], Mark, markersize=2, markeredgecolor='b', markerfacecolor='b')
+                                )
+                        else:
+                            plot_objects.append(
+                                pl.text((xmin+xmax)/2.0, (ymin+ymax)/2.0, 'NO DATA', horizontalalignment='center', verticalalignment='center', size=TickSize)
+                                )
+                        a.title.set_text(title)
+                        pl.axis([xmin, xmax, ymin, ymax])
                     else:
-                        plot_objects.append(
-                            pl.text((xmin+xmax)/2.0, (ymin+ymax)/2.0, 'NO DATA', horizontalalignment='center', verticalalignment='center', size=TickSize)
-                            )
-                    a.title.set_text(title)
-                    pl.axis([xmin, xmax, ymin, ymax])
-                else:
-                    a = axes_list[NSp]
-                    a.set_axis_off()
-                    a.title.set_text('')
-                    
+                        a = axes_list[NSp]
+                        a.set_axis_off()
+                        a.title.set_text('')
+                        
                 NSp += 1
                 if NSp >= (NhPanel * NvPanel) or (irow == len(ROWS)-1 and mode.upper() != 'RASTER'):
                     NSp = 0
@@ -238,7 +242,11 @@ class SDSpectralMapDisplay(SDImageDisplay):
 
                     prefix = self.inputs.imagename+'.pol%s_Result'%(pol)
                     plotfile = os.path.join(self.stage_dir, prefix+'_%s.png'%(Npanel))
-                    pl.savefig(plotfile, format='png', dpi=DPIDetail)
+                    if not os.path.exists(plotfile):
+                        LOG.debug('Regenerate plot: %s'%(plotfile))
+                        pl.savefig(plotfile, format='png', dpi=DPIDetail)
+                    else:
+                        LOG.debug('Use existing plot: %s'%(plotfile))
 
                     for obj in plot_objects:
                         obj.remove()
