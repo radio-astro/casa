@@ -792,7 +792,7 @@ class VLAUtils(basetask.StandardTaskTemplate):
                     #logprint ("WARNING: only the first field.", logfileout='logs/msinfo.log')
                     self.bandpass_field_select_string = str(self.bandpass_field_list[0])
         
-            if (len(delay_state_IDs) == 0):
+            if (len(self.delay_state_IDs) == 0):
                 #logprint ("No delay calibration scans defined, using bandpass calibrator")
                 self.delay_scan_select_string=self.bandpass_scan_select_string
                 #logprint ("Delay calibrator(s) scans are "+delay_scan_select_string, logfileout='logs/msinfo.log')
@@ -835,7 +835,7 @@ class VLAUtils(basetask.StandardTaskTemplate):
                 self.polarization_field_select_string = ','.join(["%s" % ii for ii in self.polarization_field_list])
                 #logprint ("Polarization calibrator(s) are fields "+polarization_field_select_string, logfileout='logs/msinfo.log'
         
-            if (len(phase_state_IDs) == 0):
+            if (len(self.phase_state_IDs) == 0):
                 #QA2_msinfo='Fail'
                 #logprint("ERROR: No gain calibration scans found", logfileout='logs/msinfo.log')
                 raise Exception("No gain calibration scans found")
