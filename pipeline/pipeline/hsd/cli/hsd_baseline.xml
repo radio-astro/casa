@@ -135,11 +135,23 @@ fitorder -- Fitting order for polynomial. For cubic spline, it is used
    to determine the order automatically.
    default: -1 (auto determination)
 
-linewindow -- Pre-defined line window. If this is set, line detection and
-   validation is skipped and specified line windows are used for baseline
-   subtraction.
+linewindow -- Pre-defined line window. If this is set, specified line 
+   windows are used as a line mask for baseline subtraction instead to 
+   determine masks based on line detection and validation stage. Two 
+   types of format are acceptable. One is channel-based specification, 
+   
+      [min_chan,max_chan] 
+
+   and the other is specification by central frequency in GHz plus 
+   line range as velocity in km/s, 
+   
+      [center_freq, min_vel, max_vel]
+
+   You can set multiple line windows by using nested list. However, 
+   the above notation must not be mixed in the list for multiple line 
+   windows.
    default: [] (do line detection and validation)
-   example:
+   example: [100.0,200.0], [115.0,-10.0,10.0]
 
 edge -- number of edge channels to be dropped from baseline subtraction.
    the value must be a list with length of 2, whose values specifies
