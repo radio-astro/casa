@@ -2897,6 +2897,12 @@ class SingleDishCalSkyPlotsRenderer(object):
         display_context = self._get_display_context()
         t = TemplateFinder.get_template(self.template)
         return t.render(**display_context)
+    
+class T2_4MDetailsSingleDishImagingRenderer(T2_4MDetailsDefaultRenderer):
+    def __init__(self, template='t2-4m_details-hsd_imaging.html', 
+                 always_rerender=False):
+        super(T2_4MDetailsSingleDishImagingRenderer, self).__init__(template,
+                                                                    always_rerender)
 
     
 class T2_4MDetailsRenderer(object):
@@ -3333,8 +3339,8 @@ renderer_map = {
         hsd.tasks.SDBaseline     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_baseline.html'),
         hsd.tasks.SDBaseline2     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_baseline.html', always_rerender=True),
         hsd.tasks.SDFlagData     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagdata.html', always_rerender=True),
-        hsd.tasks.SDImaging      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html'),
-        hsd.tasks.SDImaging2     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html'),
+        hsd.tasks.SDImaging      : T2_4MDetailsSingleDishImagingRenderer(always_rerender=True),#T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html'),
+        hsd.tasks.SDImaging2     : T2_4MDetailsSingleDishImagingRenderer(always_rerender=True),#T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html'),
         hsd.tasks.SDFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagbaseline.html'),
         hsd.tasks.SDPlotFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_plotflagbaseline.html'),
         hsd.tasks.SDImportData2  : T2_4MDetailsImportDataRenderer(),
