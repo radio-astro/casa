@@ -366,7 +366,8 @@ edge -- number of edge channels to be dropped from baseline subtraction.
 broadline -- Try to detect broad component of spectral line if True.
    default: True
 
-flag_iteration -- 
+flag_iteration -- Number of iterations to perform sigma clipping to calculate
+   threshold value of flagging.
    default: 5
    
 flag_tsys -- Activate (True) or deactivate (False) Tsys flag.
