@@ -8,31 +8,14 @@ import commands
 def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=False):
 
      # Iteration parameters - common to all tests below
-     niter=100
-     cycleniter=20
+     niter=200
+     cycleniter=40
      threshold=0.001
      loopgain=0.1
 
      # Interaction ON or OFF
      interactive=False
 
-     if(testnum==7):  ## 2 image-fields, mfs --- Real Imaging.
-          
-          write_file('out7.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=19:58:40.895 +40.55.58.543')
-          paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',\
-                                       field='0',spw='0',\
-                                       usescratch=True,readonly=True,\
-                                       outlierfile='out7.txt',\
-                                       imagename='mytest0', nchan=1, freqstart='1.0GHz', freqstep='4.0GHz',\
-                                       imsize=[100,100],\
-                                       cellsize=['8.0arcsec','8.0arcsec'], 
-                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='test',\
-                                       niter=niter,cycleniter=cycleniter,\
-                                       threshold=threshold,loopgain=loopgain,\
-                                       interactive=interactive)
-     
 
      if(testnum==6):  ## 1 image-field, mfs, multiple input MSs --- Real Imaging.
           
@@ -44,25 +27,11 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
                                        ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='test',\
+                                       algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
 
-
-     if(testnum==5):  ## 1 image-field, mfs --- Real Imaging.
-          
-          paramList = ImagerParameters(msname='DataTest/point_twospws.ms', field='0',spw='0',\
-                                       usescratch=True,readonly=True,\
-                                       imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
-                                       imsize=[100,100],\
-                                       cellsize=['8.0arcsec','8.0arcsec'],\
-                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='test',\
-                                       niter=niter,cycleniter=cycleniter,\
-                                       threshold=threshold,loopgain=loopgain,\
-                                       interactive=interactive)
 
      if(testnum==4):  ## 2 image-fields, one cube, one mfs --- Real Imaging.
           
@@ -80,8 +49,27 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
+
+
+     if(testnum==3):  ## 2 image-fields, mfs --- Real Imaging.
+          
+          write_file('out3.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=19:58:40.895 +40.55.58.543')
+          paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',\
+                                       field='0',spw='0',\
+                                       usescratch=True,readonly=True,\
+                                       outlierfile='out3.txt',\
+                                       imagename='mytest0', nchan=1, freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       imsize=[100,100],\
+                                       cellsize=['8.0arcsec','8.0arcsec'], 
+                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
+                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       algo='hogbom',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
      
-     if(testnum==3):  ## 1 image-field, cube --- Real Imaging.
+     
+     if(testnum==2):  ## 1 image-field, cube --- Real Imaging.
           
           paramList = ImagerParameters(msname='DataTest/point_twospws.ms', field='0',spw='0',\
                                        usescratch=True,readonly=True,\
@@ -90,11 +78,27 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
                                        ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='test',\
+                                       algo='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        interactive=interactive)
      
+
+     if(testnum==1):  ## 1 image-field, mfs --- Real Imaging.
+          
+          paramList = ImagerParameters(msname='DataTest/point_twospws.ms',field='0',spw='0',\
+                                       usescratch=True,readonly=True,\
+                                       imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       imsize=[100,100],\
+                                       cellsize=['8.0arcsec','8.0arcsec'],\
+                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
+                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       algo='hogbom',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
+
+
 
      ### Make a cluster def file if a parallel test is to run.
      if parallelmajor==True or parallelminor==True or parallelcube==True:
@@ -165,7 +169,7 @@ def doClean( params = [None,"",False,False,False] , doplot=True ):
 ########################################
 #  Run only Major Cycle
 ########################################
-def doMajor( params = [None,"",False,False,False] , doplot=True ):
+def doMajor( params = [None,"",False,False,False] , doplot=True , tomake='both'):
 
     os.system('rm -rf mytest*')
 
@@ -188,8 +192,10 @@ def doMajor( params = [None,"",False,False,False] , doplot=True ):
     imager.initializeParallelSync()
 
     ### Run it.
-    imager.makePSF()
-    imager.runMajorCycle()
+    if tomake=='both' or tomake=='psf':
+         imager.makePSF()
+    if tomake=='both' or tomake=='residual':
+         imager.runMajorCycle()
 
     imager.deleteTools()
 
@@ -222,6 +228,31 @@ def doMinor( params = [None,"",False,False,False] , doplot=True ):
          imager.getSummary();
 
     imager.deleteTools()
+########################################
+
+########################################
+#
+#   Predict Model only (for use by setjy too)
+#
+########################################
+########################################
+#
+#   Restore model image, Inputs : model, residual, psf.
+#
+########################################
+def doRestore( params = [None,"",False,False,False] ):
+
+    pminor=params[3]
+    
+    imager = PySynthesisImager(params[0]) 
+
+    imager.initializeDeconvolvers()
+
+    imager.restoreImages()
+
+    imager.deleteTools()
+
+
 ########################################
 
 def write_file(filename,str_text):

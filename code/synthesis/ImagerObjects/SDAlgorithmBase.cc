@@ -60,7 +60,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SDAlgorithmBase::SDAlgorithmBase():
     itsAlgorithmName("Test"),
     tmpPos_p( IPosition() ),
-    itsImages( NULL ),
     itsDecSlices (),
     itsResidual(), itsPsf(), itsModel(),
     itsComp(0.0)
@@ -83,16 +82,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SDAlgorithmBase","deconvolve",WHERE) );
 
-    itsImages = imagestore;  // TODOO : This is a private store of all full images that all functions here can use.
-
     // Make a list of Slicers.
-    partitionImages();
+    partitionImages( imagestore );
 
     os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
 
 
     os << "Run " << itsAlgorithmName << " minor-cycle on " << itsDecSlices.nelements() 
-       << " slices of [" << deconvolverid << "]:" << itsImages->getName()
+       << " slices of [" << deconvolverid << "]:" << imagestore->getName()
        << " [ CycleThreshold=" << loopcontrols.getCycleThreshold()
        << ", CycleNiter=" << loopcontrols.getCycleNiter() 
        << ", Gain=" << loopcontrols.getLoopGain()
@@ -102,7 +99,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for( uInt subimageid=0; subimageid<itsDecSlices.nelements(); subimageid++)
       {
 	// Assign current subimages.
-	initializeSubImages( subimageid );
+	initializeSubImages( imagestore, subimageid );
 
 	Int startiteration = loopcontrols.getIterDone();
 	Float peakresidual=0.0;
@@ -155,13 +152,59 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return loopcontrols.majorCycleRequired(currentresidual);
   }
 
+  
    void SDAlgorithmBase::restore(CountedPtr<SIImageStore> imagestore )
   {
 
     LogIO os( LogOrigin("SDAlgorithmBase","restore",WHERE) );
-    
-    os << "Smooth model and add residuals for " << imagestore->getName() 
-       << ". Optionally, PB-correct too." << LogIO::POST;
+
+    // Make a list of Slicers if it doesn't already exist. This is to allow standalone restoration
+    if(itsDecSlices.nelements()==0)
+      {
+	partitionImages( imagestore );
+      }
+
+    os << "Restore all planes for " << imagestore->getName() << LogIO::POST;
+
+    for( uInt subimageid=0; subimageid<itsDecSlices.nelements(); subimageid++)
+      {
+	// Assign current subimages.
+	initializeSubImages( imagestore, subimageid );
+	itsImage = SubImage<Float>( *(imagestore->image()), itsDecSlices[subimageid], True );
+
+	restorePlane();
+
+      }
+
+  }
+  
+
+  void SDAlgorithmBase::restorePlane()
+  {
+
+    LogIO os( LogOrigin("SDAlgorithmBase","restorePlane",WHERE) );
+    //     << ". Optionally, PB-correct too." << LogIO::POST;
+
+    try
+      {
+	// Fit a Gaussian to the PSF.
+	GaussianBeam beam = getPSFGaussian();
+
+	os << "Restore with beam : " << beam.getMajor(Unit("arcmin")) << " arcmin, " << beam.getMinor(Unit("arcmin"))<< " arcmin, " << beam.getPA(Unit("deg")) << " deg)" << LogIO::POST; 
+	
+	// Initialize restored image
+	itsImage.set(0.0);
+	// Copy model into it
+	itsImage.copyData( LatticeExpr<Float>(itsModel )  );
+	// Smooth model by beam
+	StokesImageUtil::Convolve( itsImage, beam);
+	// Add residual image
+	itsImage.copyData( LatticeExpr<Float>( itsImage + itsResidual ) );
+      }
+    catch(AipsError &x)
+      {
+	throw( AipsError("Restoration Error " + x.getMesg() ) );
+      }
 
   }
 
@@ -187,11 +230,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ///    - stokes cube clean
   ///    - partitioned-image clean (facets ?)
   ///    - 3D deconvolver
-  void SDAlgorithmBase::partitionImages()
+  void SDAlgorithmBase::partitionImages( CountedPtr<SIImageStore> &imagestore )
   {
     LogIO os( LogOrigin("SDAlgorithmBase","partitionImages",WHERE) );
 
-    IPosition imshape = itsImages->getShape();
+    IPosition imshape = imagestore->getShape();
 
 
     // TODO : Check which axes is which first !!!
@@ -231,11 +274,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }// end of partitionImages
 
 
-  void SDAlgorithmBase::initializeSubImages(uInt subim)
+  void SDAlgorithmBase::initializeSubImages( CountedPtr<SIImageStore> &imagestore, uInt subim)
   {
-    itsResidual = SubImage<Float>( *(itsImages->residual()), itsDecSlices[subim], True );
-    itsPsf = SubImage<Float>( *(itsImages->psf()), itsDecSlices[subim], True );
-    itsModel = SubImage<Float>( *(itsImages->model()), itsDecSlices[subim], True );
+    itsResidual = SubImage<Float>( *(imagestore->residual()), itsDecSlices[subim], True );
+    itsPsf = SubImage<Float>( *(imagestore->psf()), itsDecSlices[subim], True );
+    itsModel = SubImage<Float>( *(imagestore->model()), itsDecSlices[subim], True );
   }
 
 
@@ -260,7 +303,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return True;
   }
   
-  
+
+  GaussianBeam SDAlgorithmBase::getPSFGaussian()
+  {
+
+    GaussianBeam beam;
+    try
+      {
+	if( itsPsf.ndim() > 0 )
+	  {
+	    StokesImageUtil::FitGaussianPSF( itsPsf, beam );
+	  }
+      }
+    catch(AipsError &x)
+      {
+	LogIO os( LogOrigin("SDAlgorithmBase","getPSFGaussian",WHERE) );
+	os << "Error in fitting a Gaussian to the PSF : " << x.getMesg() << LogIO::POST;
+	throw( AipsError("Error in fitting a Gaussian to the PSF" + x.getMesg()) );
+      }
+
+    return beam;
+  }
   
 } //# NAMESPACE CASA - END
 

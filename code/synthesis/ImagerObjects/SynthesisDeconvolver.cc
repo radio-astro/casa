@@ -207,6 +207,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return returnRecord;
   }
 
+  // Restore Image.
+  void SynthesisDeconvolver::restore()
+  {
+    LogIO os( LogOrigin("SynthesisDeconvolver","restoreImage",WHERE) );
+
+    if( itsImages.null() )
+      {
+	itsImages = new SIImageStore( itsImageName );
+      }
+
+    itsDeconvolver->restore(itsImages);
+
+  }
+
+
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ////    Internal Functions start here.  These are not visible to the tool layer.
@@ -282,15 +297,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
     return psfsidelobe;
-  }
-
-  // Restore Image.
-  void SynthesisDeconvolver::restore()
-  {
-    LogIO os( LogOrigin("SynthesisDeconvolver","restoreImage",WHERE) );
-
-    itsDeconvolver->restore(itsImages);
-
   }
 
 
