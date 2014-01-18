@@ -94,6 +94,7 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MeasurementSets/MSSelectionTools.h>
 #include <ms/MeasurementSets/MSDataDescIndex.h>
 #include <ms/MeasurementSets/MSDopplerUtil.h>
 #include <ms/MeasurementSets/MSSourceIndex.h>
@@ -4686,10 +4687,40 @@ Record Imager::setjy(const Vector<Int>& /*fieldid*/,
     Bool precompute = fluxdens[0] < 0.0;
 
     // Figure out which fields/spws to treat
-    Record selrec = ms_p->msseltoindex(spwstring, fieldnames);
-    Vector<Int> fldids(selrec.asArrayInt("field"));
-    Vector<Int> selToRawSpwIds(selrec.asArrayInt("spw"));
-
+    // including intent info 
+    MSSelection mssel;
+    mssel.setFieldExpr(fieldnames);
+    mssel.setSpwExpr(spwstring);
+    mssel.setStateExpr(intentstr);
+    TableExprNode exprNode = mssel.toTableExprNode(&(*ms_p));
+    //Vector<Int> fldids;
+    Vector<Int> fldids(mssel.getFieldList());
+    Vector<Int> selToRawSpwIds(mssel.getSpwList());
+    // if intent is given try to do AND with fieldIds
+    if (intentstr!="") {
+      mssel_p = new MeasurementSet((*ms_p)(exprNode), &(*ms_p));
+      ROMSColumns tmpmsc(*mssel_p);
+      Vector<Int> fldidv=tmpmsc.fieldId().getColumn();
+      std::set<Int> ufldids(fldidv.begin(),fldidv.end());
+      std::vector<Int> tmpv(ufldids.begin(), ufldids.end());
+      fldids.resize(tmpv.size());
+      uInt count=0;
+      for (std::vector<int>::const_iterator it=tmpv.begin();it != tmpv.end(); it++)
+      {
+         fldids(count) = *it;
+      }
+    }
+    //else {
+    //  fldids(mssel.getFieldList());
+    //}
+    //cerr<<"fldids.nelements()="<<fldids.nelements()<<endl;
+    //for (uInt i = 0; i < fldids.nelements(); i++) {
+    //    cerr<<"fldids="<<fldids(i)<<endl;
+    //}
+    //Record selrec = ms_p->msseltoindex(spwstring, fieldnames);
+    //Vector<Int> fldids(selrec.asArrayInt("field"));
+    //Vector<Int> selToRawSpwIds(selrec.asArrayInt("spw"));
+ 
     expand_blank_sel(selToRawSpwIds, ms_p->spectralWindow().nrow());
     expand_blank_sel(fldids, ms_p->field().nrow());
 
@@ -4744,6 +4775,7 @@ Record Imager::setjy(const Vector<Int>& /*fieldid*/,
     if (fluxScaleEnum==FluxStandard::PERLEY_BUTLER_2013) {
       fluxStd.setInterpMethod(interpolation);
     }
+    //ROMSColumns msc2(*ms_p);
 
     // Setup the frequency, Flux, and ComponentList arrays.
     uInt nspws = selToRawSpwIds.nelements();
@@ -4770,13 +4802,17 @@ Record Imager::setjy(const Vector<Int>& /*fieldid*/,
       //revalperField.define("field",fieldName);
  
       fluxUsed = fluxdens;
-      if(precompute){
+      //if(precompute){
         // Pre-compute flux density for standard sources if not specified
         // using the specified flux scale standard or catalog.
         //
         // The flux densities are calculated for all spws at once to avoid
         // repeatedly digging up the flux model (and possibly the ephemeris).
         //
+        // TT: moving this outside of if(precompute) since selected ms (mssel_p)
+        // will be needed for other cases to clear the model using 
+        // VisModelData::ClearModel()
+        
         Vector<Int> selectField(1);
         selectField[0] = fldid;
         Vector<Int> numDeChan(1);
@@ -4790,8 +4826,23 @@ Record Imager::setjy(const Vector<Int>& /*fieldid*/,
                 MRadialVelocity(),
                 selToRawSpwIds, selectField, msSelectString, timerange, "",
                 Vector<Int>(), "", "", "", scanstr, intentstr, obsidstr, True, true);
+        if(nullSelect_p){
+          os << ((timerange == "" && scanstr == ""
+                  && obsidstr == "") ? LogIO::WARN : LogIO::NORMAL)
+             << "No data was selected for field " << fldid << "."
+             << LogIO::POST;
+          continue;
+        }
+      if(precompute){
+        // Pre-compute flux density for standard sources if not specified
+        // using the specified flux scale standard or catalog.
+        //
+        // The flux densities are calculated for all spws at once to avoid
+        // repeatedly digging up the flux model (and possibly the ephemeris).
+        //
         ROMSColumns msselc(*mssel_p);
-        if(nullSelect_p || msselc.nrow() < 1){
+        //if(nullSelect_p || msselc.nrow() < 1){
+        if(!nullSelect_p and  msselc.nrow() < 1){
           os << ((timerange == "" && scanstr == ""
                   && obsidstr == "") ? LogIO::WARN : LogIO::NORMAL)
              << "No data was selected for field " << fldid << "."

@@ -120,7 +120,10 @@ class ss_setjy_helper:
 
  
           validfids.append(fid)
+          # apply field selection to get time specific to the field
+          myms.msselect({'field':str(fid)})
 	  trange=myms.range('time')
+          myms.reset()
 	  if not inparams.has_key(srcnames[fid]):
             inparams[srcnames[fid]]={}
 

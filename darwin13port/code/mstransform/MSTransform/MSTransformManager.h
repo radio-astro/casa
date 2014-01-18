@@ -1142,7 +1142,6 @@ protected:
 	MPosition observatoryPosition_p;
 	MEpoch referenceTime_p;
 	MDirection phaseCenter_p;
-	Bool userPhaseCenter_p;
 	MFrequency::Convert freqTransEngine_p;
 	MFrequency::Convert refTimeFreqTransEngine_p;
     FFTServer<Float, Complex> fFFTServer_p;
