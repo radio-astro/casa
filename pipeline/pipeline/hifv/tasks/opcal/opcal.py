@@ -33,7 +33,7 @@ def _find_spw(vis, bands, context):
     center_frequencies = map(lambda rf, spwbw: rf + spwbw/2,reference_frequencies, spw_bandwidths)
     
     if (bands == []):
-        bands = map(self.find_EVLA_band,center_frequencies)
+        bands = map(vlautils.find_EVLA_band,center_frequencies)
     
     unique_bands = list(numpy.unique(bands))
     
