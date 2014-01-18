@@ -456,8 +456,9 @@ class VLAUtils(basetask.StandardTaskTemplate):
         
         for spw in self.scandict['DataDescription']:
 	    strelems =  list(self.scandict['DataDescription'][spw]['spwname'])
-            spw2band[spw] = strelems[5]
-        
+            bandname = strelems[5]
+            if bandname in '4PLSCXUKAQ':
+                spw2band[spw] = strelems[5]        
         return spw2band
 
         
@@ -506,7 +507,8 @@ class VLAUtils(basetask.StandardTaskTemplate):
         
         if (bands == []):
             bands = map(self.find_EVLA_band,center_frequencies)
-        
+
+        print bands        
         
         unique_bands = list(numpy.unique(bands))
         
