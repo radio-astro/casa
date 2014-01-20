@@ -93,7 +93,8 @@ def _get_revision():
         # get SVN branch using svn info
         args = ['svn','info','.']
         p = subprocess.Popen(args, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, shell=True)
+                stderr=subprocess.PIPE, shell=True,
+                cwd=os.path.dirname(__file__))
         (stdout, _) = p.communicate()
         
         if p.returncode is not 0:
