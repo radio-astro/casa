@@ -35,53 +35,6 @@ class SummaryDisplayInputs(basetask.StandardInputs):
         return os.path.join(self.context.report_dir, session_part, ms_part)
         
 
-class PlotXY(object):
-    Inputs = SummaryDisplayInputs
-
-    def __init__(self, inputs):
-        self.inputs = inputs
-
-    def plot(self):
-        plots = [self._plotxy(ms)
-                 for ms in self.inputs.context.observing_run.measurement_sets]
-        results = []
-        map(results.extend, plots) 
-        return results
-    
-    def _plotxy(self, ms):
-        inputs = self.inputs
-        plots = []
-        stage = inputs.context.stage
-        report_dir = inputs.context.report_dir
-        
-        for field in ms.fields:
-            title = ('Field ID:{id} Name:{name} Intents:{intents} - U,V '
-                     'Coverage'.format(id=field.id, name=field.name,
-                                       intents=','.join(field.intents)))
-            png = '{vis}.field{field}.plotxy.s{stage}.png'.format(
-                vis=ms.basename, stage=stage, field=field.id)
-            figfile = os.path.join(report_dir, png)
-            
-            plotxy_args = {'vis'        : ms.name,
-                           'xaxis'      : 'u',
-                           'yaxis'      : 'v',
-                           'field'      : str(field.id),
-                           'selectplot' : True,
-                           'figfile'    : figfile,
-                           'title'      : title         }
-            
-            casa_tasks.plotxy(**plotxy_args).execute()
-
-            plot = logger.Plot(figfile,
-                               x_axis='U',
-                               y_axis='V',
-                               parameters={'vis'   : ms.basename,
-                                           'field' : field.identifier})
-            plots.append(plot)
-
-        return plots
-
-
 class PlotAntsChart(object):
     def __init__(self, context, ms):
         self.context = context

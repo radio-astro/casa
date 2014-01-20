@@ -90,7 +90,6 @@ if 1 :
     from plotcal import plotcal
     from split import split
     from setjy import setjy
-    from plotxy import plotxy
     from fixvis import fixvis
     from fixplanets import fixplanets
     from xmlrpclib import ServerProxy
@@ -12526,7 +12525,6 @@ class stuffForScienceDataReduction():
           return "J2000 %02dh%02dm%05.2fs -%02dd%02dm%05.2fs" %(fieldRAh,fieldRAm,fieldRAs,fieldDecd,fieldDecm,fieldDecs)
 
     def searchForLines_old(self, msName, dataCol='', chanWid=1, angScale=0, cutOff=0.2, minLineWid=3, chanPadding=1):
-
         vm = ValueMapping(msName)
 
         tb.open(msName)
