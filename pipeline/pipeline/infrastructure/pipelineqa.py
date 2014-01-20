@@ -84,7 +84,7 @@ class QAHandler(object):
         self.__handlers = []
 
     def add_handler(self, handler):
-        LOG.info('Registering %s as new pipeline QA handler' % handler.__class__.__name__)
+        LOG.debug('Registering %s as new pipeline QA handler' % handler.__class__.__name__)
         self.__handlers.append(handler)
 
     def do_qa(self, context, result):
@@ -98,8 +98,8 @@ class QAHandler(object):
         # or process as a group
         for handler in self.__handlers:
             if handler.is_handler_for(result):
-                LOG.info('%s handling QA analysis for %s' % (handler.__class__.__name__,
-                                                             result.__class__.__name__))
+                LOG.debug('%s handling QA analysis for %s' % (handler.__class__.__name__,
+                                                              result.__class__.__name__))
                 handler.handle(context, result)
 
 
