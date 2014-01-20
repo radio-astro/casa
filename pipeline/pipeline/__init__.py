@@ -77,15 +77,42 @@ def initcli() :
 # find pipeline revision using svnversion
 def _get_revision():
     try:
+        # get SVN revision using svnversion as it gives information when the
+        # directory has been modified
         args = ['svnversion', '.']
         p = subprocess.Popen(args, stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE, shell=True,
                 cwd=os.path.dirname(__file__))
         (stdout, _) = p.communicate()
-        if p.returncode is 0:
-            return string.strip(stdout)
-        else:
+
+        if p.returncode is not 0:
             return 'Unknown'
+
+        revision = string.strip(stdout)
+
+        # get SVN branch using svn info
+        args = ['svn','info','.']
+        p = subprocess.Popen(args, stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE, shell=True)
+        (stdout, _) = p.communicate()
+        
+        if p.returncode is not 0:
+            return revision
+        
+        kv = [s.split(':', 1) for s in stdout.splitlines()]
+        # subindex kv as last item in splitlines is []
+        d = {k:v.strip() for (k, v) in kv[0:-1]}
+
+        url = d['URL']
+        # pipeline trunk and branches live within this common directory
+        common_svn_prefix = '/branches/project/'
+        root = d['Repository Root'] + common_svn_prefix
+
+        branch = os.path.relpath(url, root)
+        if branch == 'pipeline':
+            branch = 'trunk'
+
+        return '%s (%s)' % (revision, branch)
     except:
         return 'Unknown'
 
