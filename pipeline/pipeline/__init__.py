@@ -91,12 +91,12 @@ def _get_revision():
         revision = string.strip(stdout)
 
         # get SVN branch using svn info
-        args = ['svn','info','.']
+        args = ['svn info .']
         p = subprocess.Popen(args, stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE, shell=True,
                 cwd=os.path.dirname(__file__))
         (stdout, _) = p.communicate()
-        
+
         if p.returncode is not 0:
             return revision
         
@@ -109,7 +109,7 @@ def _get_revision():
         common_svn_prefix = '/branches/project/'
         root = d['Repository Root'] + common_svn_prefix
 
-        branch = os.path.relpath(url, root)
+        branch = os.path.basename(os.path.relpath(url, root))
         if branch == 'pipeline':
             branch = 'trunk'
 
