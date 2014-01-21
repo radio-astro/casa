@@ -219,8 +219,8 @@ name character are included as part of the name.  Hence
 
 \begin{itemize}
 \item field={\tt A , B , C} is same as field={\tt A,B,C}
-\item field={\tt A , BB BB , C} is same as field={\tt A,BB BB,C}
-  (first name is "A", second name is "BB BB" and the third name is
+\item field={\tt A , BB~BB , C} is same as field={\tt A,BB~BB,C}
+  (first name is "A", second name is "BB~BB" and the third name is
   "C")
 \item baseline={\tt 1 , 2 , 3 \& 4 , 5 , 6 ; 10 $\sim$ 11 \& 20 $\sim$
   30} is same as\\ baseline={\tt 1,2,3\&4,5,6;10$\sim$11\&20$\sim$30}
