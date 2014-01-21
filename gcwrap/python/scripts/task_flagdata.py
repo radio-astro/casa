@@ -338,15 +338,17 @@ def flagdata(vis,
                     if os.path.isfile(inpfile[0]):
                         flaglist = []
                         for ifile in inpfile:
-                            casalog.post('Will read commands from the file '+ifile)                    
-                            flaglist = flaglist + fh.readFile(ifile)
-                        
-                        flagcmd = fh.parseDictionary(flaglist, reason)
-                    
+                            templist = fh.readFile(ifile)
+                            nlines = len(templist)
+                            casalog.post('Read %s command(s) from file %s'%(nlines, ifile))      
+                            flaglist = flaglist + templist
+                                            
                     # It is a list of strings with flag commands
                     else:
-                        casalog.post('Will read commands from a Python list')
-                        flagcmd = fh.parseDictionary(inpfile, reason)
+#                        casalog.post('Will read commands from a Python list')
+                        flaglist = inpfile
+                        nlines = len(flaglist)
+                        casalog.post('Read %s command(s) from a Python list of strings'%nlines)    
                     
                 # Input commands are given in a file
                 elif isinstance(inpfile, str):
@@ -354,15 +356,17 @@ def flagdata(vis,
                     if inpfile == '':
                          casalog.post('Input file is empty', 'ERROR')
                          
-                    casalog.post('Will read commands from the file '+inpfile)
+#                    casalog.post('Will read commands from the file '+inpfile)
                     flaglist = fh.readFile(inpfile)
+                    nlines = len(flaglist)
+                    casalog.post('Read %s command(s) from file %s'%(nlines, inpfile))                              
                     casalog.post('%s'%flaglist,'DEBUG')
-                    
-                    flagcmd = fh.parseDictionary(flaglist, reason)
-                
+                                    
                 else:
                     casalog.post('Input type is not supported', 'ERROR')
                     
+                # Parse the list(s) to a dictionary
+                flagcmd = fh.parseDictionary(flaglist, reason)
                 casalog.post('%s'%flagcmd,'DEBUG1')
                                                                     
                 # List of flag commands in dictionary
@@ -372,8 +376,8 @@ def flagdata(vis,
                 casalog.post('%s'%instance,'ERROR')
                 raise Exception, 'Error reading the input list '
             
-            casalog.post('Read ' + str(vrows.__len__())
-                         + ' lines from input list ')
+            casalog.post('Selected ' + str(vrows.__len__())
+                         + ' commands from combined input list(s) ')
                              
         elif mode == 'manual':
             agent_pars['autocorr'] = autocorr
