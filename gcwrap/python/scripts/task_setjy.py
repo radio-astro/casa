@@ -243,6 +243,7 @@ def setjy_core(vis=None, field=None, spw=None,
                         # for im.setjy to run with both the stanadard and fluxdensity specified.
                         if userFluxDensity:
                             influxdensity=-1
+                            raise Exception, "Use standard=\"manual\" to set the specified fluxdensity."
 
                     if spix==[]: # handle the default 
                         spix=0.0
