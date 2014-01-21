@@ -2785,10 +2785,6 @@ class T2_4MDetailsAgentFlaggerRenderer(T2_4MDetailsDefaultRenderer):
                 
         return total
         
-
-
-
-
 class T2_4MDetailsSingleDishCalSkyRenderer(T2_4MDetailsDefaultRenderer):
     def __init__(self, template='t2-4m_details-hsd_calsky.html', 
                  always_rerender=False):
@@ -2800,11 +2796,19 @@ class T2_4MDetailsSingleDishCalSkyRenderer(T2_4MDetailsDefaultRenderer):
         stage_dir = os.path.join(context.report_dir,'stage%d'%(results.stage_number))
         if not os.path.exists(stage_dir):
             os.mkdir(stage_dir)
-       
+              
         inputs = sddisplay.SDSkyDisplay.Inputs(context,results)
         task = sddisplay.SDSkyDisplay(inputs)
+        # plots is list-of-list of plot instances
         plots = task.plot()
+        
+        # plot_group is a dictionary of (MS names, associating plots) 
         plot_group = self._group_by_vis(plots)
+        
+        # summary_plots is a dictionary of (MS names, list of typical plots for each spw) 
+        # at the moment typical plot is a first plot of each spectral window
+        summary_plots = self._summary_plots(plot_group)
+        
         plot_list = {}
         for (name, _plots) in plot_group.items():
             renderer = SingleDishCalSkyPlotsRenderer(context, results, name, _plots)
@@ -2812,7 +2816,10 @@ class T2_4MDetailsSingleDishCalSkyRenderer(T2_4MDetailsDefaultRenderer):
                 fileobj.write(renderer.render())
             plot_list[name] = renderer.filename
                 
-        ctx.update({'plot_list': plot_list})
+        # default dirname is relative path so replacing it with absolute path 
+        ctx.update({'summary_subpage': plot_list,
+                    'summary_plots': summary_plots,
+                    'dirname': stage_dir})
         
         return ctx
     
@@ -2826,6 +2833,18 @@ class T2_4MDetailsSingleDishCalSkyRenderer(T2_4MDetailsDefaultRenderer):
                 plot_group[key] = [p]
         return plot_group
                 
+    def _summary_plots(self, plot_group):
+        summary_plots = {}
+        for (vis, plots) in plot_group.items():
+            spw_list = set()
+            summary_plots[vis]= []
+            for plot in plots:
+                spw = plot.parameters['spw']
+                if spw not in spw_list:
+                    spw_list.add(spw)
+                    summary_plots[vis].append(plot)
+        return summary_plots
+            
     
 class SingleDishCalSkyPlotsRenderer(object):
     # take a look at WvrgcalflagPhaseOffsetVsBaselinePlotRenderer when we have
@@ -3368,8 +3387,8 @@ renderer_map = {
         hsd.tasks.SDBaseline     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_baseline.html'),
         hsd.tasks.SDBaseline2     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_baseline.html', always_rerender=True),
         hsd.tasks.SDFlagData     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagdata.html', always_rerender=True),
-        hsd.tasks.SDImaging      : T2_4MDetailsSingleDishImagingRenderer(always_rerender=True),#T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html'),
-        hsd.tasks.SDImaging2     : T2_4MDetailsSingleDishImagingRenderer(always_rerender=True),#T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html'),
+        hsd.tasks.SDImaging      : T2_4MDetailsSingleDishImagingRenderer(always_rerender=True),
+        hsd.tasks.SDImaging2     : T2_4MDetailsSingleDishImagingRenderer(always_rerender=True),
         hsd.tasks.SDFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagbaseline.html'),
         hsd.tasks.SDPlotFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_plotflagbaseline.html'),
         hsd.tasks.SDImportData2  : T2_4MDetailsImportDataRenderer(),
