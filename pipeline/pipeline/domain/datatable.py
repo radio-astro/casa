@@ -449,28 +449,28 @@ class DataTableImpl( object ):
                 LOG.debug('-----------spw_target %s' % i)
                 LOG.debug('spw_target[i].freq_min %s' % spw_target[i].freq_min)
         
-        tsys_target = {}
-        atsys = []
-        tsys_target_value =[]
         for ifno_from in if_from:
             for polno in pollist:
-                LOG.debug('-----------polno = %s' % polno)
-                LOG.debug('-----------ifno_from = %s' % ifno_from)
+                LOG.info('--polno = %s' % polno)
+                LOG.info('--ifno_from = %s' % ifno_from)
+                LOG.info('--ifnos = %s' % ifnos)
+                LOG.info('--polnos = %s' % polnos)
                 indices = numpy.where(numpy.logical_and(ifnos==ifno_from,polnos==polno))[0]
+                LOG.info('--indices = %s' % indices)
                 if len(indices) == 0:
                     continue
                 
+                LOG.info('--ifmap = %s' % ifmap[ifno_from])
                 for ifno_to in ifmap[ifno_from]:
-                    LOG.debug('-----------ifno_to = %s' % ifno_to)
-                    LOG.debug('indices = %s' % indices)
-                    #atsys = [numpy.mean(tsys_target[i]) for i in indices]
-                    for i in indices:
-                        atsys.append(calculate_average_tsys(spw_atmcal[ifno_from].freq_min,
-                                                            spw_atmcal[ifno_from].freq_max,
-                                                            spw_target[ifno_to].freq_min,
-                                                            spw_target[ifno_to].freq_max,
-                                                            step_atm[ifno_from],*tsys[i]))
-                    LOG.debug('-----------atsys = %s' % atsys)
+                    LOG.info('-----------ifno_to = %s' % ifno_to)
+                    LOG.info('indices = %s' % indices)
+                    #atsys = [numpy.mean(tsys[i]) for i in indices]
+                    atsys = [calculate_average_tsys(spw_atmcal[ifno_from].freq_min,
+                                                    spw_atmcal[ifno_from].freq_max,
+                                                    spw_target[ifno_to].freq_min,
+                                                    spw_target[ifno_to].freq_max,
+                                                    step_atm[ifno_from],*tsys[i]) for i in indices]
+                    LOG.info('-----------atsys = %s' % atsys)
                     rows = self.get_row_index(ant, ifno_to, polno)
                     if len(atsys) == 1:
                         for row in rows:
