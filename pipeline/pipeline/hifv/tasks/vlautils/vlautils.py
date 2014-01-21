@@ -455,10 +455,12 @@ class VLAUtils(basetask.StandardTaskTemplate):
         spw2band = {}
         
         for spw in self.scandict['DataDescription']:
-	    strelems =  list(self.scandict['DataDescription'][spw]['spwname'])
+
+            strelems =  list(self.scandict['DataDescription'][spw]['spwname'])
             bandname = strelems[5]
             if bandname in '4PLSCXUKAQ':
-                spw2band[spw] = strelems[5]        
+                spw2band[spw] = strelems[5]
+
         return spw2band
 
         
@@ -510,6 +512,7 @@ class VLAUtils(basetask.StandardTaskTemplate):
 
         print bands        
         
+
         unique_bands = list(numpy.unique(bands))
         
         numSpws = len(channels)
