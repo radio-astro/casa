@@ -2941,16 +2941,137 @@ class T2_4MDetailsSingleDishImagingRenderer(T2_4MDetailsDefaultRenderer):
             inputs = task_cls.Inputs(context,result=r)
             task = task_cls(inputs)
             plots.append(task.plot())
-
-        plot_groups = logger.PlotGroup.create_plot_groups(plots)
-        for plot_group in plot_groups:
-            renderer = PlotGroupRenderer(context, results, plot_group)
-            plot_group.filename = renderer.filename
+            
+        profilemap_plots = self._summary_plots_with_filter(plots, 'sd_spectral_map')
+        sparsemap_plots = self._summary_plots_with_filter(plots, 'sd_sparse_map')
+        profilemap_summary_plots = self._channelmap_summary_plots(sparsemap_plots)
+        profilemap_plot_list = {}
+        for (name, _plots) in profilemap_plots.items():
+            renderer = SingleDishProfileMapRenderer(context, results, name, _plots)
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
+            profilemap_plot_list[name] = renderer.filename
+            
+        channelmap_plots = self._summary_plots_with_filter(plots, 'channel_map')
+        channelmap_summary_plots = self._channelmap_summary_plots(channelmap_plots)
 
-        ctx.update({'plot_groups': plot_groups})
+        channelmap_plot_list = {}
+        for (name, _plots) in channelmap_plots.items():
+            renderer = SingleDishChannelMapRenderer(context, results, name, _plots)
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+            channelmap_plot_list[name] = renderer.filename
+            
+        tpmap_plots = self._summary_plots_with_filter(plots, 'sd_channel-averaged')
+        tpmap_summary_plots = self._channelmap_summary_plots(tpmap_plots)
 
+        tpmap_plot_list = {}
+        for (name, _plots) in tpmap_plots.items():
+            renderer = SingleDishChannelAveragedMapRenderer(context, results, name, _plots)
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+            tpmap_plot_list[name] = renderer.filename
+            
+        rmsmap_plots = self._summary_plots_with_filter(plots, 'rms_map')
+        rmsmap_summary_plots = self._channelmap_summary_plots(rmsmap_plots)
+
+        rmsmap_plot_list = {}
+        for (name, _plots) in rmsmap_plots.items():
+            renderer = SingleDishBaselineRmsMapRenderer(context, results, name, _plots)
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+            rmsmap_plot_list[name] = renderer.filename
+
+        ctx.update({'profilemap_summary_subpage': profilemap_plot_list,
+                    'profilemap_summary_plots': profilemap_summary_plots,
+                    'channelmap_summary_subpage': channelmap_plot_list,
+                    'channelmap_summary_plots': channelmap_summary_plots,
+                    'tpmap_summary_subpage': tpmap_plot_list,
+                    'tpmap_summary_plots': tpmap_summary_plots,
+                    'rmsmap_summary_subpage': rmsmap_plot_list,
+                    'rmsmap_summary_plots': rmsmap_summary_plots,
+                    'dirname': stage_dir})
+
+        return ctx
+    
+    def _summary_plots_with_filter(self, plots, type_string):
+        plot_group = {}
+        for p in [p for _p in plots for p in _p]:
+            if p.parameters['type'] == type_string:
+                key = p.field
+                if plot_group.has_key(key):
+                    plot_group[key].append(p)
+                else:
+                    plot_group[key] = [p]
+        return plot_group
+        
+    def _channelmap_summary_plots(self, plot_group):
+        summary_plots = {}
+        for (field_name, plots) in plot_group.items():
+            spw_list = set()
+            summary_plots[field_name]= []
+            for plot in plots:
+                if plot.parameters['ant'] == 'COMBINED':
+                    spw = plot.parameters['spw']
+                    if spw not in spw_list:
+                        spw_list.add(spw)
+                        summary_plots[field_name].append(plot)
+        return summary_plots
+
+class SingleDishProfileMapRenderer(SingleDishCalSkyPlotsRenderer):
+    def __init__(self, context, result, field_name, plots):
+        super(SingleDishProfileMapRenderer, self).__init__(context, result, field_name, plots)
+        
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('profilemap-%s.html' % self.ms)
+        return filename
+
+    def _get_display_context(self):
+        ctx = super(SingleDishProfileMapRenderer, self)._get_display_context()
+        ctx.update({'plot_title': 'Detailed profile map for %s'%(self.ms)})
+        return ctx
+
+class SingleDishChannelMapRenderer(SingleDishCalSkyPlotsRenderer):
+    def __init__(self, context, result, field_name, plots):
+        super(SingleDishChannelMapRenderer, self).__init__(context, result, field_name, plots)
+        
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('channelmap-%s.html' % self.ms)
+        return filename
+
+    def _get_display_context(self):
+        ctx = super(SingleDishChannelMapRenderer, self)._get_display_context()
+        ctx.update({'plot_title': 'Channel map for %s'%(self.ms)})
+        return ctx
+  
+class SingleDishChannelAveragedMapRenderer(SingleDishCalSkyPlotsRenderer):
+    def __init__(self, context, result, field_name, plots):
+        super(SingleDishChannelAveragedMapRenderer, self).__init__(context, result, field_name, plots)
+        
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('tpmap-%s.html' % self.ms)
+        return filename
+
+    def _get_display_context(self):
+        ctx = super(SingleDishChannelAveragedMapRenderer, self)._get_display_context()
+        ctx.update({'plot_title': 'Integrated map for %s'%(self.ms)})
+        return ctx
+
+class SingleDishBaselineRmsMapRenderer(SingleDishCalSkyPlotsRenderer):
+    def __init__(self, context, result, field_name, plots):
+        super(SingleDishBaselineRmsMapRenderer, self).__init__(context, result, field_name, plots)
+        
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('rmsmap-%s.html' % self.ms)
+        return filename
+
+    def _get_display_context(self):
+        ctx = super(SingleDishBaselineRmsMapRenderer, self)._get_display_context()
+        ctx.update({'plot_title': 'Baseline rms map for %s'%(self.ms)})
         return ctx
     
 class T2_4MDetailsRenderer(object):

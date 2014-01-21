@@ -54,7 +54,7 @@ $(document).ready(function() {
 This task generates a sky calibration table, a collection of OFF spectra for single dish data calibration.
 
 <h3>Sky Level vs Frequency</h3>
-% for ms in summary_plots:
+% for ms in summary_plots.keys():
     <h4><a class="replace"
            href="${os.path.relpath(os.path.join(dirname, summary_subpage[ms]), pcontext.report_dir)}">${ms}</a>
     </h4>
