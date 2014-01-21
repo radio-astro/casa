@@ -14,13 +14,14 @@ class FluxCalibrationResults(basetask.Results):
     TODO: refactor this results structure. We're falling into the dictionaries
     of dictionaries trap again.. 
     """
-    def __init__(self, vis, measurements=None):
+    def __init__(self, vis, resantenna=None, measurements=None):
         super(FluxCalibrationResults, self).__init__()
 
         if measurements is None:
             measurements = collections.defaultdict(list)
 
         self.vis = vis
+	self.resantenna=resantenna
         self.measurements = measurements
 
     def merge_with_context(self, context):
