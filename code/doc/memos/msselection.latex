@@ -388,42 +388,48 @@ Possible forms of baseline specifications are tabulated in
 Table~\ref{BASELINE:TAB}.
 \begin{table}[h!]
   \caption{Baseline specification syntax: ANT, ANT1 and ANT2 in the
-    table below represent a comma-separated list of antennas.} 
+    table below represent a comma-separated list of antennas names or
+    {\tt ANT@STATION} where {\tt ANT} and {\tt STATION} can themsevles
+    be comma-separated lists enclosed in braces.} 
 \begin{center}
 \begin{tabular}{|l|l|}
 \hline
 {\bf Specification} & {\bf Meaning}\\
 \hline
 {\tt ANT}    & Select only cross-correlation baselines between all the\\
-       & antennas in {\tt ANT} and {\it all} other available antennas\\
+             & antennas in {\tt ANT} and {\it all} other available antennas\\
 \hline
 {\tt ANT\&}  & Select only cross-correlation baselines between antennas\\
-       & in {\tt ANT} only\\
+             & in {\tt ANT} only\\
 \hline
-{\tt ANT1 \& ANT2} & Select only cross-correlation baselines between\\
-       & antennas in {\tt ANT1} and {\tt ANT2}\\
+{\tt ANT1 \& ANT2} & Select only cross-correlation baselines between antennas\\
+                   & in {\tt ANT1} and {\tt ANT2}\\
 \hline
-{\tt ANT\&\&} & Select cross- {\it and} auto-correlation baselines\\
-       &between all the antennas in {\tt ANT} only\\
+{\tt ANT\&\&} & Select cross- {\it and} auto-correlation baselines between all\\
+              & the antennas in {\tt ANT} only\\
 \hline
-{\tt ANT\&\&*} & Select cross- {\it and} auto-correlation baselines\\
-       &between all the antennas in {\tt ANT} and {\it all} other\\
-       &available antennas\\
+{\tt ANT\&\&*} & Select cross- {\it and} auto-correlation baselines between all\\
+               & the antennas in {\tt ANT} and {\it all} other available antennas\\
 \hline
-{\tt ANT1 \&\& ANT2} & Select cross- {\it and} auto-correlation baselines\\
-       & between antennas in {\tt ANT1} and {\tt ANT2}\\
+{\tt ANT1 \&\& ANT2} & Select cross- {\it and} auto-correlation baselines between\\  
+                     & antennas in {\tt ANT1} and {\tt ANT2}\\
 \hline
-{\tt ANT\&\&\&}  & Select {\it only} auto-correlation baselines for\\
-       &antennas in {\tt ANT}\\
+{\tt ANT\&\&\&}  & Select {\it only} auto-correlation baselines for antennas in {\tt ANT}\\
 \hline
-{\tt !ANT}  & Excludes all baselines involving antennas in {\tt ANT}.\\
-      & {\tt ANT} can be any of the above expressions\\
+{\tt !ANT}  & Excludes all baselines involving antennas in {\tt ANT}. {\tt ANT} can be\\ 
+            & any of the above expressions\\
 \hline
-{\tt ANT1 ; !ANT2} & {\tt ANT1} and {\tt ANT2} can be any of the above expressions.\\
-             & This selects only cross-correlation baselines\\
-             & between all the antennas in {\tt ANT1} and {\it all}\\
-             & other available antennas {\bf except} those involving\\ 
-             & antennas in {\tt ANT2}.\\ 
+{\tt ANT1 ; !ANT2} & {\tt ANT1} and {\tt ANT2} can be any of the above
+expressions. This \\
+                   & selects only cross-correlation baselines between all the\\
+                   & antennas in {\tt ANT1} and {\it all} other available antennas {\bf except} \\
+                   & those involving antennas in {\tt ANT2}.\\ 
+\hline
+\hline
+{\tt A1@S1}        & Select baselines with antenna {\tt A1} on station {\tt S1} only\\
+\hline
+{\tt (A1,A2)@(S1,S2)}  & Select baselines with antenna {\tt A1} on station {\tt S1} or {\tt S2} and \\
+                       & antenna {\tt A2} on station {\tt S1} or {\tt S2}\\
 \hline
 \end{tabular}
 \end{center}
