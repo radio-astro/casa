@@ -15,7 +15,7 @@ calibrater = casac.calibrater()
 calanalysis = casac.calanalysis()
 msplot = casac.msplot()
 calplot = casac.calplot()
-flagger = casac.flagger()
+#flagger = casac.flagger()
 agentflagger = casac.agentflagger()
 image = casac.image()
 imagepol = casac.imagepol()
@@ -157,10 +157,11 @@ MSReader = createContextManager(ms)
 # C extensions cannot be pickled, so ignore the CASA logger on pickle and
 # replace with it with the current CASA logger on unpickle
 __tools = ['imager', 'measures', 'quanta', 'table', 'ms', 'tableplot', 
-           'calibrater', 'msplot', 'calplot', 'flagger', 'agentflagger',
+           'calibrater', 'msplot', 'calplot', 'agentflagger',
            'image', 'imagepol', 'simulator', 'componentlist', 'coordsys',
            'regionmanager', 'spectralline', 'utils', 'deconvolver',
            'vpmanager', 'vlafillertask', 'atmosphere', 'log', 'utils']
+#           'calibrater', 'msplot', 'calplot', 'flagger', 'agentflagger',
 
 for tool in __tools:
     tool_type = type(globals()[tool])
