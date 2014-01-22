@@ -25,7 +25,7 @@
 using namespace ScanIntentMod;
 
 template<>
- struct enum_set_traits<ScanIntentMod::ScanIntent> : public enum_set_traiter<ScanIntentMod::ScanIntent,21,ScanIntentMod::UNSPECIFIED> {};
+ struct enum_set_traits<ScanIntentMod::ScanIntent> : public enum_set_traiter<ScanIntentMod::ScanIntent,28,ScanIntentMod::CALIBRATE_APPPHASE_PASSIVE> {};
 
 template<>
 class enum_map_traits<ScanIntentMod::ScanIntent,void> : public enum_map_traiter<ScanIntentMod::ScanIntent,void> {
@@ -79,6 +79,20 @@ public:
      (ScanIntentMod::TEST,ep((int)ScanIntentMod::TEST,"TEST","un-documented")));
     m_.insert(pair<ScanIntentMod::ScanIntent,EnumPar<void> >
      (ScanIntentMod::UNSPECIFIED,ep((int)ScanIntentMod::UNSPECIFIED,"UNSPECIFIED","un-documented")));
+    m_.insert(pair<ScanIntentMod::ScanIntent,EnumPar<void> >
+     (ScanIntentMod::CALIBRATE_ANTENNA_POSITION,ep((int)ScanIntentMod::CALIBRATE_ANTENNA_POSITION,"CALIBRATE_ANTENNA_POSITION","un-documented")));
+    m_.insert(pair<ScanIntentMod::ScanIntent,EnumPar<void> >
+     (ScanIntentMod::CALIBRATE_ANTENNA_PHASE,ep((int)ScanIntentMod::CALIBRATE_ANTENNA_PHASE,"CALIBRATE_ANTENNA_PHASE","un-documented")));
+    m_.insert(pair<ScanIntentMod::ScanIntent,EnumPar<void> >
+     (ScanIntentMod::MEASURE_RFI,ep((int)ScanIntentMod::MEASURE_RFI,"MEASURE_RFI","un-documented")));
+    m_.insert(pair<ScanIntentMod::ScanIntent,EnumPar<void> >
+     (ScanIntentMod::CALIBRATE_ANTENNA_POINTING_MODEL,ep((int)ScanIntentMod::CALIBRATE_ANTENNA_POINTING_MODEL,"CALIBRATE_ANTENNA_POINTING_MODEL","un-documented")));
+    m_.insert(pair<ScanIntentMod::ScanIntent,EnumPar<void> >
+     (ScanIntentMod::SYSTEM_CONFIGURATION,ep((int)ScanIntentMod::SYSTEM_CONFIGURATION,"SYSTEM_CONFIGURATION","un-documented")));
+    m_.insert(pair<ScanIntentMod::ScanIntent,EnumPar<void> >
+     (ScanIntentMod::CALIBRATE_APPPHASE_ACTIVE,ep((int)ScanIntentMod::CALIBRATE_APPPHASE_ACTIVE,"CALIBRATE_APPPHASE_ACTIVE","un-documented")));
+    m_.insert(pair<ScanIntentMod::ScanIntent,EnumPar<void> >
+     (ScanIntentMod::CALIBRATE_APPPHASE_PASSIVE,ep((int)ScanIntentMod::CALIBRATE_APPPHASE_PASSIVE,"CALIBRATE_APPPHASE_PASSIVE","un-documented")));
     return true;
   }
   static map<ScanIntentMod::ScanIntent,EnumPar<void> > m_;
