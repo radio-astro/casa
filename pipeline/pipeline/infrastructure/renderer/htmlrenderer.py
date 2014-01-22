@@ -2849,7 +2849,7 @@ class T2_4MDetailsSingleDishCalSkyRenderer(T2_4MDetailsDefaultRenderer):
 class SingleDishCalSkyPlotsRenderer(object):
     # take a look at WvrgcalflagPhaseOffsetVsBaselinePlotRenderer when we have
     # scores and histograms to generate. there should be a common base class. 
-    template = 'sd_calsky_plots.html'
+    template = 'sd_generic_plots.html'
 
     def __init__(self, context, result, scantable_name, plots):
         self.context = context
@@ -2995,14 +2995,16 @@ class T2_4MDetailsSingleDishImagingRenderer(T2_4MDetailsDefaultRenderer):
     def _summary_plots(self, plot_group):
         summary_plots = {}
         for (field_name, plots) in plot_group.items():
-            spw_list = set()
+            spw_list = []
             summary_plots[field_name]= []
             for plot in plots:
+                spw = plot.parameters['spw']
+                if spw not in spw_list:
+                    spw_list.append(spw)
+                    summary_plots[field_name].append(plot)
                 if plot.parameters['ant'] == 'COMBINED':
-                    spw = plot.parameters['spw']
-                    if spw not in spw_list:
-                        spw_list.add(spw)
-                        summary_plots[field_name].append(plot)
+                    idx = spw_list.index(spw)
+                    summary_plots[field_name][idx] = plot
         return summary_plots
 
 class SingleDishSparseMapRenderer(SingleDishCalSkyPlotsRenderer):
