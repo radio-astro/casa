@@ -184,11 +184,11 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     peakresidual = itsPeakResidual;
     modelflux = itsModelFlux;
 
-    cout << "HOG: Set mask to 1" << endl;
+    //cout << "HOG: Set mask to 1" << endl;
     itsMatMask.resize( itsMatPsf.shape() );
     itsMatMask.set(1.0);
 
-    cout << "Image Shapes : " << itsMatResidual.shape() << endl;
+    //cout << "Image Shapes : " << itsMatResidual.shape() << endl;
 
   }
 

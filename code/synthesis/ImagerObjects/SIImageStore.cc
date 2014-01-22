@@ -175,7 +175,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	if(Table::isWritable( imagenamefull ))
 	  {
-	    cerr << "Trying to open "<< imagenamefull << endl;
+	    //cerr << "Trying to open "<< imagenamefull << endl;
 	    try{
 	      imPtr=new PagedImage<Float>( imagenamefull );
 	    }
@@ -286,8 +286,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIImageStore","setModelImage",WHERE) );
 
-    os << LogIO::WARN << "TODO : Need to check shapes with the store and regrid if needed." << LogIO::POST;
-    
     Directory immodel( modelname+String(".model") );
     if( !immodel.exists() ) 
       {
@@ -295,10 +293,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	return;
       }
 
-    CountedPtr<PagedImage<Float> > model = new PagedImage<Float>( modelname+String(".model") );
+    CountedPtr<PagedImage<Float> > newmodel = new PagedImage<Float>( modelname+String(".model") );
     // Check shapes, coordsys with those of other images.  If different, try to re-grid here.
 
-    if( model->shape() != itsModel->shape() )
+    if( newmodel->shape() != model()->shape() )
       {
 	// For now, throw an exception.
 	throw( AipsError( "Input model image "+modelname+".model is not the same shape as that defined for output in "+ itsImageName + ".model" ) );
@@ -307,7 +305,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << "Setting " << modelname << " as model " << LogIO::POST;
     // Then, add its contents to itsModel.
     //itsModel->put( itsModel->get() + model->get() );
-    itsModel->put( model->get() );
+    itsModel->put( newmodel->get() );
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////

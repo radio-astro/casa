@@ -41,9 +41,9 @@ synthesisimager::~synthesisimager()
 bool
 synthesisimager::selectdata(const std::string& msname, 
 			    const std::string& spw,
-			    const std::string& freqbeg, 
-			    const std::string& freqend, 
-			    const std::string& freqframe,
+			    const std::string& freqbeg, // ? why here ?
+			    const std::string& freqend, // ? why here ?
+			    const std::string& freqframe, // ? why here ?
 			    const std::string& field, 
 			    const std::string& antenna,
 			    const std::string& timestr,
@@ -157,27 +157,12 @@ synthesisimager::defineimage(const std::string& imagename,
       }
 
 
-      // Convert freqstart, freqstep, restfreq - whatever units.
-      casa::Quantity freqStart, freqStep, refFreq;
-      freqStart = casaQuantity(freqstart);
-      freqStep = casaQuantity(freqstep);
-      refFreq = casaQuantity(reffreq);
-      
-      casa::Vector<casa::Quantity> restFreq;
-      toCasaVectorQuantity( restfreq, restFreq );
-
-
       // Convert projection.
       casa::String projectionStr = toCasaString( projection );
       casa::Projection imageprojection = Projection::type( projectionStr );
 
       // Convert distance
       casa::Quantity cdistance = casaQuantity( distance );
-
-      // Convert freqframe
-      casa::MFrequency::Types freqframetype;
-      if( !casa::MFrequency::getType(freqframetype, freqframe) )
-	throw(AipsError("cmpt : Invalid Frequency Frame " + freqframe));
 
       // Convert trackDir
       casa::MDirection  trackDir;
@@ -186,6 +171,32 @@ synthesisimager::defineimage(const std::string& imagename,
 	    throw(AipsError("cmpt : Could not interprete trackdir parameter"));
 	  }
 	}
+
+      //----------------------------------------------------------------------------------------------------------------
+      //------------------------------- Frequency Frame Setup : Start ----------------------------------
+      //----------------------------------------------------------------------------------------------------------------
+      //------ Convert all inputs into LSRK start, step and reference -------------------------
+      //----------------------------------------------------------------------------------------------------------------
+
+      // Convert freqstart, freqstep, restfreq - whatever units.
+      casa::Quantity freqStart, freqStep, refFreq;
+      freqStart = casaQuantity(freqstart);
+      freqStep = casaQuantity(freqstep);
+      refFreq = casaQuantity(reffreq);
+
+      // Convert rest-freq
+      casa::Vector<casa::Quantity> restFreq;
+      toCasaVectorQuantity( restfreq, restFreq );
+
+      // Convert freqframe
+      casa::MFrequency::Types freqframetype;
+      if( !casa::MFrequency::getType(freqframetype, freqframe) )
+	throw(AipsError("cmpt : Invalid Frequency Frame " + freqframe));
+
+      //----------------------------------------------------------------------------------------------------------------
+      //------------------------------- Frequency Frame Setup : End ------------------------------------
+      //----------------------------------------------------------------------------------------------------------------
+
 
       itsImager->defineImage( imagename, nX, nY, cellX, cellY, stokes, phaseCenter,
 			      nchan, freqStart, freqStep, restFreq, facets, ftmachine, 

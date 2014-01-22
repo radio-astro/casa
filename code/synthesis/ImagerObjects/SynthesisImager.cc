@@ -1035,7 +1035,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     			itsMappers.grid(*vb, dopsf);
     		}
     	}
-    	cerr << "IN SYNTHE_IMA" << endl;
+    	//cerr << "IN SYNTHE_IMA" << endl;
     	VisModelData::listModel(rvi_p->getMeasurementSet());
     	if(!dopsf) itsMappers.finalizeDegrid(*vb);
     	itsMappers.finalizeGrid(*vb, dopsf);
