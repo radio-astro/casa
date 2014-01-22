@@ -24,7 +24,7 @@ $(document).ready(function () {
     // create a new filter pipeline, and tell it to filter based on the scores
     // in the scores_dict JSON dictionary that is set in the template.
     var filterPipeline = new FILTERS.FilterPipeline();
-    // filterPipeline.setScores(scores_dict);
+    filterPipeline.setScores(scores_dict);
 
     // create filters that listen for events on the .select2 input fields we just
     // created, and add them to the filter pipeline, filtering on the appropriate
@@ -84,7 +84,7 @@ $(document).ready(function () {
 
 <div class="column-fluid">
 	<ul class="thumbnails">
-	% for plot in sorted(plots, key=lambda p: p.parameters['ant']):
+	% for plot in sorted(plots, key=lambda p: p.parameters['spw']):
 		<li class="span2">
 			<div class="thumbnail">
 				<a class="fancybox"
