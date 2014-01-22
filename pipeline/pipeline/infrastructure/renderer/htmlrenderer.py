@@ -3028,15 +3028,25 @@ class T2_4MDetailsSingleDishBaselineRenderer(T2_4MDetailsDefaultRenderer):
             plots.append(task.plot())
 
         plot_group = self._group_by_axes(plots)
-        plot_list = {}
+        plot_detail = [] # keys are 'title', 'html', 'summary_plots'
+        plot_summary = [] # keys are 'title', 'summary_plots'
         # Render stage details pages
+        details_title = ["R.A. vs Dec."]
         for (name, _plots) in plot_group.items():
-            renderer = SingleDishClusterPlotsRenderer(context, results, name, _plots)
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
-            plot_list[name] = renderer.filename
+            group_desc = {'title': name}
+            if name in details_title:
+                renderer = SingleDishClusterPlotsRenderer(context, results, name, _plots)
+                with renderer.get_file() as fileobj:
+                    fileobj.write(renderer.render())
+                group_desc['html'] = renderer.filename
+                group_desc['summary_plots'] = self._get_a_plot_per_spw(_plots)
+                plot_detail.append(group_desc)
+            else:
+                group_desc['summary_plots'] = _plots
+                plot_summary.append(group_desc)
                 
-        ctx.update({'plot_list': plot_list})
+        ctx.update({'detail': plot_detail,
+                    'overview': plot_summary})
         
         return ctx
     
@@ -3046,8 +3056,16 @@ class T2_4MDetailsSingleDishBaselineRenderer(T2_4MDetailsDefaultRenderer):
             key = "%s vs %s" % (p.x_axis, p.y_axis)
             if plot_group.has_key(key): plot_group[key].append(p)
             else: plot_group[key] = [p]
-
         return plot_group
+    
+    def _get_a_plot_per_spw(self, plots):
+        known_spw = []
+        plot_list = []
+        for p in plots:
+            if p.parameters['spw'] not in known_spw:
+                known_spw.append(p.parameters['spw'])
+                plot_list.append(p)
+        return plot_list
     
 class SingleDishClusterPlotsRenderer(object):
     # take a look at WvrgcalflagPhaseOffsetVsBaselinePlotRenderer when we have
@@ -3058,10 +3076,10 @@ class SingleDishClusterPlotsRenderer(object):
         self.context = context
         self.result = result
         self.plots = plots
-        self.xy_title = xytitle
-        self.json = self._generate_json_dictionary(plots)
+        self.xy_title = "Clustering: %s" % xytitle
+        self.json = json.dumps(self._get_plot_info(plots))
 
-    def _generate_json_dictionary(self, plots): 
+    def _get_plot_info(self, plots): 
         d = {}
         for plot in plots:
             # calculate the relative pathnames as seen from the browser
@@ -3072,7 +3090,7 @@ class SingleDishClusterPlotsRenderer(object):
             d[image_relpath] = {'thumbnail': thumbnail_relpath}
             for key, val in plot.parameters.items():
                 d[image_relpath][key] = val
-        return json.dumps(d)
+        return d
 
     def _get_display_context(self):
         return {'pcontext'   : self.context,
