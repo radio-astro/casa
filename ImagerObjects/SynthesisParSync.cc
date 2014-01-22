@@ -252,7 +252,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
 
-
     // Make sure all images exist and are consistent with each other. At the end, itsImages should be valid
     if( foundPartImages == True ) // Partial Images exist. Check that 'full' exists, and do the gather. 
       {
@@ -278,7 +277,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    os << "Only partial images exist. Need to make full images" << LogIO::POST;
 
 	    AlwaysAssert( itsPartImages.nelements() > 0, AipsError );
-	    PagedImage<Float> temppart( itsPartImageNames[0]+".residual" );
+
+	    // Find an image to open and pick csys,shape from.
+	    String imopen = itsPartImageNames[0]+".residual";
+	    Directory imdir( imopen );
+	    if( ! imdir.exists() )
+	      {
+		imopen = itsPartImageNames[0]+".psf";
+		Directory imdir2( imopen );
+		if( ! imdir2.exists() )
+		  throw(AipsError("Cannot find partial image psf or residual for  " + itsPartImageNames[0]));
+	      }
+
+	    PagedImage<Float> temppart( imopen );
 	    IPosition tempshape = temppart.shape();
 	    CoordinateSystem tempcsys = temppart.coordinates();
 
