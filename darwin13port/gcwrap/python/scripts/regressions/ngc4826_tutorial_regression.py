@@ -557,7 +557,7 @@ print "Completed pre-calibration flagging"
 print '--Setjy (3C273)--'
 default('setjy')
 
-setjy(vis='ngc4826.tutorial.ms',field='0',fluxdensity=[23.0,0.,0.,0.],spw='0~3', scalebychan=False, usescratch=False)
+setjy(vis='ngc4826.tutorial.ms',field='0',standard='manual',fluxdensity=[23.0,0.,0.,0.],spw='0~3', scalebychan=False, usescratch=False)
 #
 # Not really necessary to set spw but you get lots of warning messages if
 # you don't

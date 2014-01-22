@@ -222,7 +222,9 @@ def readFile(inputfile):
         for line in ff:
             cmd = line.rstrip()
             if cmd == '':    
-                continue  
+                continue
+            if cmd.startswith('#'):
+                continue
             uppercmd = cmd.replace('true','True')
             cmd = uppercmd.replace('false','False')      
                             

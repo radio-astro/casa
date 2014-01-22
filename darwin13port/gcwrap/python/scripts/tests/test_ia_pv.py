@@ -352,6 +352,14 @@ class ia_pv_test(unittest.TestCase):
         myia.setcoordsys(csys.torecord())
         pv = myia.pv(start=[5,5], end=[10,10])
 
+    def test_machine_precision_fix(self):
+        """Test fix for finite machine precision issue, CAS-6043"""
+        self.assertTrue(
+            impv(
+                imagename=datapath + 'CAS-6043.im', outfile="CAS-6043.out.im",
+                start=[187,348], end=[228,383]
+            )
+        ) 
         
     
 def suite():

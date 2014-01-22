@@ -1422,12 +1422,14 @@ class test_list_file(test_base):
         # creat first input file
         myinput = "scan='1'\n"\
                 "scan='2'\n"\
+                "# a comment line\n"\
                 "scan='3'"
         filename1 = 'list7a.txt'
         create_input(myinput, filename1)
         
         # Create second input file
         myinput = "scan='5'\n"\
+                  " \n"\
                 "scan='6'\n"\
                 "scan='7'"        
         filename2 = 'list7b.txt'
