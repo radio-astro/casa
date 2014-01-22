@@ -65,7 +65,7 @@ except Exception, e:
 <!-- Link to details page -->
 % for plots in detail:
     <h3><a class="replace"
-    	href="${os.path.join(dirname, plots['html'])}">${plots['title']}
+    href="${os.path.join(dirname, plots['html'])}">${plots['title']}
 <!--		href="${os.path.relpath(os.path.join(dirname, plots['html']), pcontext.report_dir)}">${plots['title']}-->
     </h3>
     <ul class="thumbnails">
@@ -76,10 +76,10 @@ except Exception, e:
                         <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
                            class="fancybox"
                            rel="thumbs">
-                            <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+                           <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
                                  title="${plots['title']} for Spectral Window ${plot.parameters['spw']}"
                                  data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-                            </img>
+                           </img>
                         </a>
     
                         <div class="caption">
@@ -113,10 +113,10 @@ except Exception, e:
                         <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
                            class="fancybox"
                            rel="thumbs">
-                            <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+                           <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
                                  title="${plots['title']} for Spectral Window ${plot.parameters['spw']}"
                                  data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-                            </img>
+                           </img>
                         </a>
     
                         <div class="caption">
@@ -129,6 +129,6 @@ except Exception, e:
                 </li>
             % endif
         % endfor
-        </ul>
+    </ul>
 % endfor
 
