@@ -346,5 +346,5 @@ def score_sdtotal_data_flagged(name, ant, spw, pol, frac_flagged):
     
     percent = 100.0 * frac_flagged
     longmsg = '%0.2f%% of data in %s (Ant=%s, SPW=%d, Pol=%d) was flagged' % (percent, name, ant, spw, pol)
-    shortmsg = '%0.2f%% data flagged' % percent
+    shortmsg = '%0.2f%% data flagged (This is tentative score.)' % percent
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
