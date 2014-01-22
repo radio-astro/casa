@@ -3073,7 +3073,108 @@ class SingleDishBaselineRmsMapRenderer(SingleDishCalSkyPlotsRenderer):
         ctx = super(SingleDishBaselineRmsMapRenderer, self)._get_display_context()
         ctx.update({'plot_title': 'Baseline rms map for %s'%(self.ms)})
         return ctx
+
+class T2_4MDetailsSingleDishBaselineRenderer(T2_4MDetailsDefaultRenderer):
+    # Renderer class for stage summary
+    def __init__(self, template='t2-4m_details-hsd_baseline.html',
+                 always_rerender=False):
+        super(T2_4MDetailsSingleDishBaselineRenderer, self).__init__(template,
+                                                                   always_rerender)
+        
+    def get_display_context(self, context, results):
+        ctx = super(T2_4MDetailsSingleDishBaselineRenderer, self).get_display_context(context, results)
+        
+        stage_dir = os.path.join(context.report_dir,'stage%d'%(results.stage_number))
+        if not os.path.exists(stage_dir):
+            os.mkdir(stage_dir)
+        plots = []
+        for r in results:
+            inputs = sddisplay.ClusterDisplay.Inputs(context,result=r)
+            task = sddisplay.ClusterDisplay(inputs)
+            plots.append(task.plot())
+
+        plot_group = self._group_by_axes(plots)
+        plot_list = {}
+        # Render stage details pages
+        for (name, _plots) in plot_group.items():
+            renderer = SingleDishClusterPlotsRenderer(context, results, name, _plots)
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+            plot_list[name] = renderer.filename
+                
+        ctx.update({'plot_list': plot_list})
+        
+        return ctx
     
+    def _group_by_axes(self, plots):
+        plot_group = {}
+        for p in [p for _p in plots for p in _p]:
+            key = "%s vs %s" % (p.x_axis, p.y_axis)
+            if plot_group.has_key(key): plot_group[key].append(p)
+            else: plot_group[key] = [p]
+
+        return plot_group
+    
+class SingleDishClusterPlotsRenderer(object):
+    # take a look at WvrgcalflagPhaseOffsetVsBaselinePlotRenderer when we have
+    # scores and histograms to generate. there should be a common base class. 
+    template = 'sd_cluster_plots.html'
+    
+    def __init__(self, context, result, xytitle, plots):
+        self.context = context
+        self.result = result
+        self.plots = plots
+        self.xy_title = "Clustering: %s" % xytitle
+        self.json = self._generate_json_dictionary(plots)
+
+    def _generate_json_dictionary(self, plots): 
+        d = {}
+        for plot in plots:
+            # calculate the relative pathnames as seen from the browser
+            thumbnail_relpath = os.path.relpath(plot.thumbnail,
+                                                self.context.report_dir)
+            image_relpath = os.path.relpath(plot.abspath,
+                                            self.context.report_dir)
+            d[image_relpath] = {'thumbnail': thumbnail_relpath}
+            for key, val in plot.parameters.items():
+                d[image_relpath][key] = val
+        return json.dumps(d)
+
+    def _get_display_context(self):
+        return {'pcontext'   : self.context,
+                'result'     : self.result,
+                'plots'      : self.plots,
+                'dirname'    : self.dirname,
+                'json'       : self.json,
+                'plot_title' : self.xy_title}
+
+    @property
+    def dirname(self):
+        stage = 'stage%s' % self.result.stage_number
+        return os.path.join(self.context.report_dir, stage)
+    
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('%s.html' % (self.xy_title.lower().replace(" ", "_")))
+        return filename
+    
+    @property
+    def path(self):
+        return os.path.join(self.dirname, self.filename)
+    
+    def get_file(self, hardcopy=True):
+        if hardcopy and not os.path.exists(self.dirname):
+            os.makedirs(self.dirname)
+            
+        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
+        return contextlib.closing(file_obj)
+    
+    def render(self):
+        display_context = self._get_display_context()
+        t = TemplateFinder.get_template(self.template)
+        return t.render(**display_context)
+
+
 class T2_4MDetailsRenderer(object):
     # the filename component of the output file. While this is the same for
     # all results, the directory is stage-specific, so there's no risk of
@@ -3506,7 +3607,8 @@ renderer_map = {
         hsd.tasks.SDCalTsys      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_caltsys.html'),
         hsd.tasks.SDCalSky       : T2_4MDetailsSingleDishCalSkyRenderer(always_rerender=True),
         hsd.tasks.SDBaseline     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_baseline.html'),
-        hsd.tasks.SDBaseline2     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_baseline.html', always_rerender=True),
+#         hsd.tasks.SDBaseline2     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_baseline.html', always_rerender=True),
+        hsd.tasks.SDBaseline2     : T2_4MDetailsSingleDishBaselineRenderer(always_rerender=True),
         hsd.tasks.SDFlagData     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagdata.html', always_rerender=True),
         hsd.tasks.SDImaging      : T2_4MDetailsSingleDishImagingRenderer(always_rerender=True),
         hsd.tasks.SDImaging2     : T2_4MDetailsSingleDishImagingRenderer(always_rerender=True),

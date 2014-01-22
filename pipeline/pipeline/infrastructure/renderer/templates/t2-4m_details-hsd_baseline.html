@@ -17,45 +17,16 @@ import pipeline.infrastructure.displays as displays
 try:
    stage_number = hr.get_stage_number(result)
    stage_dir = os.path.join(pcontext.report_dir,'stage%d'%(stage_number))
-   if not os.path.exists(stage_dir):
-       os.mkdir(stage_dir)
-
-   plots = []
-   for r in result:
-       inputs = displays.ClusterDisplay.Inputs(pcontext,result=r)
-       task = displays.ClusterDisplay(inputs)
-       plots.append(task.plot())
-
-   plot_groups = logger.PlotGroup.create_plot_groups(plots)
-   for plot_group in plot_groups:
-       renderer = hr.PlotGroupRenderer(pcontext, result, plot_group)
-       plot_group.filename = renderer.filename
-       with renderer.get_file() as fileobj:
-           fileobj.write(renderer.render())
-
 except Exception, e:
    print 'hsd_baseline html template exception:', e
    raise e
 %>
 
-<ul>
-	<li>Initial display: most important details</li>
+<h3>Line Detection by Clustering Analysis</h3>
+	% for (title, filename) in plot_list.items():
 	<ul>
-		<li>Heuristics parameters</li>
-		% if plot_groups:
-		<li>Plots</li>
-		<ul>
-			% for plot_group in plot_groups:
-				<li>
-					<a class="replace" href="${os.path.join(dirname, plot_group.filename)}">${plot_group.title}</a>
-				</li>
-			% endfor
-		</ul>
-                % else:
-                No Images
-		% endif
-		<li>Images</li>
-		<li>Tables</li>
-	</ul>
-	<li>Display maximum detail in this panel, similar to previous incarnation of pipeline; use different background colour; back button will go back to initial display</li>
-</ul>
+        <li>
+            <a class="replace" href="${os.path.join(dirname, filename)}">${title}</a>
+        </li>
+    </ul>
+    % endfor
