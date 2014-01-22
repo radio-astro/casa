@@ -141,30 +141,30 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
             if not refspwmap:
                 refspwmap = [-1]
                    
-	# This needs improvement if users start specifying the input antennas.
+        # This needs improvement if users start specifying the input antennas.
         hm_resolvedcals = inputs.hm_resolvedcals
         allantenna = inputs.antenna
         if hm_resolvedcals == 'automatic':
             nant = len(ms.antennas)
-	    result.resantenna = ''
+            result.resantenna = ''
             # get the antennas to be used in the gaincals, limiting
             # the range if the reference calibrator is resolved.
             resantenna = heuristics.fluxscale.antenna(ms=ms,
               refsource=inputs.reference, refant=refant,
               peak_frac=inputs.peak_fraction)
-	    # Store the resolved antenna list for use in web page
+            # Store the resolved antenna list for use in web page
             if resantenna == '':
                 minblperant = None
             else:
                 nresant = len(resantenna.split(',')) 
                 if nresant < nant:
                     minblperant = 2
-		    result.resantenna = resantenna
+                    result.resantenna = resantenna
                 else:
                     minblperant = None
         else:
             resantenna = allantenna
-	    result.resantenna = resantenna
+            result.resantenna = resantenna
             minblperant = None
 
         # do a phase-only gaincal on the flux calibrator using a restricted
