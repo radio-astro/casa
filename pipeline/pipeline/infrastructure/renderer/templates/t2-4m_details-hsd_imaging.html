@@ -80,28 +80,28 @@ $(document).ready(function() {
 </script>
 
 <%
-channelmap = {'title': 'Channel Map',
-              'subpage': channelmap_subpage,
-              'plot': channelmap_plots}
-tpmap = {'title': 'Integrated Map (from channel avearged spw)',
-         'subpage': tpmap_subpage,
-         'plot': tpmap_plots}
-rmsmap = {'title': 'Baseline Rms Map',
-          'subpage': rmsmap_subpage,
-          'plot': rmsmap_plots}
-plots_list = [channelmap, tpmap, rmsmap]
+plots_list = [{'title': 'Channel Map',
+               'subpage': channelmap_subpage,
+               'plot': channelmap_plots},
+              {'title': 'Integrated Intensity Map',
+               'note': 'from channel averaged spw',
+               'subpage': tpmap_subpage,
+               'plot': tpmap_plots},
+              {'title': 'Baseline Rms Map',
+               'subpage': rmsmap_subpage,
+               'plot': rmsmap_plots}]
 %>
 
 This task generates single dish images per source per spectral window. 
 It generates an image combined spectral data from whole antenna as well as images per antenna.
 
 <h3>Profile Map</h3>
-% for field in profilemap_subpage.keys():
+% for field in sparsemap_subpage.keys():
     <h4><a class="replace"
-           href="${os.path.relpath(os.path.join(dirname, profilemap_subpage[field]), pcontext.report_dir)}">${field}</a>
+           href="${os.path.relpath(os.path.join(dirname, sparsemap_subpage[field]), pcontext.report_dir)}">${field}</a>
     </h4>
     <ul class="thumbnails">
-        % for plot in profilemap_plots[field]:
+        % for plot in sparsemap_plots[field]:
             % if os.path.exists(plot.thumbnail):
             <li class="span3">
                 <div class="thumbnail">
@@ -128,20 +128,23 @@ It generates an image combined spectral data from whole antenna as well as image
                             window ${plot.parameters['spw']}.
                         </p>
                         
-                        <h4>Link to detailed profile map</h4>
-                        <table width="100%">
+                        <h4>Detailed profile map</h4>
+                        <table border width="100%">
+                        <tr><th>ANTENNA</th><th colspan="${len(profilemap_entries[field].values()[0])}">POL</th></tr>
                         % for (ant, pols) in profilemap_entries[field].items():
+                            <tr><td>${ant}</td>
                             % for pol in pols:
-                                <tr><td>
+                                <td align="center">
                                 <a href="${os.path.relpath(os.path.join(dirname, profilemap_subpage[field]), pcontext.report_dir)}"
                                    class="replace"
                                    data-spw="${plot.parameters['spw']}"
                                    data-ant="${ant}"
                                    data-pol="${pol}">
-                                ${ant} Pol="${pol}"
+                                ${pol}
                                 </a>
-                                </td></tr>
+                                </td>
                             % endfor
+                            </tr>
                         % endfor
                         </table>
                     </div>
@@ -153,7 +156,11 @@ It generates an image combined spectral data from whole antenna as well as image
 %endfor
 
 % for plots in plots_list:
-    <h3>${plots['title']}</h3>
+    % if plots.has_key('note'):
+        <h3> ${plots['title']} (${plots['note']})</h3>
+    % else:
+        <h3>${plots['title']}</h3>
+    % endif
     % for field in plots['subpage'].keys():
         <h4><a class="replace"
                href="${os.path.relpath(os.path.join(dirname, plots['subpage'][field]), pcontext.report_dir)}">${field}</a>
@@ -182,7 +189,7 @@ It generates an image combined spectral data from whole antenna as well as image
                                 </a>
                             </h4>
     
-                            <p>Plot of sky level for spectral
+                            <p>${plots['title']} for spectral
                                 window ${plot.parameters['spw']}.
                             </p>
                         </div>

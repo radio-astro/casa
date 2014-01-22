@@ -2942,94 +2942,42 @@ class T2_4MDetailsSingleDishImagingRenderer(T2_4MDetailsDefaultRenderer):
             task = task_cls(inputs)
             plots.append(task.plot())
             
-        #map_types = {'sparsemap': {'type': 'sd_sparse_map',
-        #                           'renderer': SingleDishSparseMapRenderer},
-        #             'profilemap': {'type': 'sd_spectral_map',
-        #                            'renderer': SingleDishProfileMapRenderer},
-        #             'channelmap': {'type': 'channel_map',
-        #                            'renderer': SingleDishChannelMapRenderer},
-        #             'tpmap': {'type': 'sd_channel-averaged',
-        #                       'renderer': SingleDishChannelAveragedMapRenderer},
-        #             'rmsmap': {'type': 'rms_map',
-        #                        'renderer': SingleDishBaselineRmsMapRenderer}}
-        #for (key, value) in map_types.items():
-        #    plot_list = self._plots_per_field_with_type(plots, value['type'])
-        #    summary = self._summary_plots(plot_list)
-        #    for (name, _plots) in plot_list.items():
-                
-            
-        subpages = {}
-        summaries = {}
-        profilemap_plots = self._plots_per_field_with_type(plots, 'sd_spectral_map')
-        sparsemap_plots = self._plots_per_field_with_type(plots, 'sd_sparse_map')
-        summaries['sparse'] = self._summary_plots(sparsemap_plots)
-        subpages['sparse'] = {}
-        for (name, _plots) in sparsemap_plots.items():
-            renderer = SingleDishSparseMapRenderer(context, results, name, _plots)
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
-            subpages['sparse'][name] = renderer.filename
-        profilemap_entries = {}
-        for (field, _plots) in sparsemap_plots.items():
-            _ap = {}
-            for p in _plots:
-                ant = p.parameters['ant']
-                pol = p.parameters['pol']
-                if not _ap.has_key(ant):
-                    _ap[ant] = [pol]
-                elif pol not in _ap[ant]:
-                    _ap[ant].append(pol)
-            profilemap_entries[field] = _ap
-        summaries['profile'] = self._summary_plots(sparsemap_plots)
-        subpages['profile'] = {}
-        for (name, _plots) in profilemap_plots.items():
-            renderer = SingleDishProfileMapRenderer(context, results, name, _plots)
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
-            subpages['profile'][name] = renderer.filename
-            
-        channelmap_plots = self._plots_per_field_with_type(plots, 'channel_map')
-        summaries['channel'] = self._summary_plots(channelmap_plots)
+        map_types = {'sparsemap': {'type': 'sd_sparse_map',
+                                   'renderer': SingleDishSparseMapRenderer},
+                     'profilemap': {'type': 'sd_spectral_map',
+                                    'renderer': SingleDishProfileMapRenderer},
+                     'channelmap': {'type': 'channel_map',
+                                    'renderer': SingleDishChannelMapRenderer},
+                     'tpmap': {'type': 'sd_channel-averaged',
+                               'renderer': SingleDishChannelAveragedMapRenderer},
+                     'rmsmap': {'type': 'rms_map',
+                                'renderer': SingleDishBaselineRmsMapRenderer}}
+        for (key, value) in map_types.items():
+            plot_list = self._plots_per_field_with_type(plots, value['type'])
+            summary = self._summary_plots(plot_list)
+            subpage = {}
+            for (name, _plots) in plot_list.items():
+                renderer = value['renderer'](context, results, name, _plots)
+                with renderer.get_file() as fileobj:
+                    fileobj.write(renderer.render())
+                subpage[name] = renderer.filename
+            ctx.update({'%s_subpage'%(key): subpage,
+                        '%s_plots'%(key): summary})
+            if key == 'sparsemap':
+                profilemap_entries = {}
+                for (field, _plots) in plot_list.items():
+                    _ap = {}
+                    for p in _plots:
+                        ant = p.parameters['ant']
+                        pol = p.parameters['pol']
+                        if not _ap.has_key(ant):
+                            _ap[ant] = [pol]
+                        elif pol not in _ap[ant]:
+                            _ap[ant].append(pol)
+                    profilemap_entries[field] = _ap
+                ctx.update({'profilemap_entries': profilemap_entries})
 
-        subpages['channel'] = {}
-        for (name, _plots) in channelmap_plots.items():
-            renderer = SingleDishChannelMapRenderer(context, results, name, _plots)
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
-            subpages['channel'][name] = renderer.filename
-            
-        tpmap_plots = self._plots_per_field_with_type(plots, 'sd_channel-averaged')
-        summaries['tp'] = self._summary_plots(tpmap_plots)
-
-        subpages['tp'] = {}
-        for (name, _plots) in tpmap_plots.items():
-            renderer = SingleDishChannelAveragedMapRenderer(context, results, name, _plots)
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
-            subpages['tp'][name] = renderer.filename
-            
-        rmsmap_plots = self._plots_per_field_with_type(plots, 'rms_map')
-        summaries['rms'] = self._summary_plots(rmsmap_plots)
-
-        subpages['rms'] = {}
-        for (name, _plots) in rmsmap_plots.items():
-            renderer = SingleDishBaselineRmsMapRenderer(context, results, name, _plots)
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
-            subpages['rms'][name] = renderer.filename
-
-        ctx.update({'profilemap_subpage': subpages['profile'],
-                    'profilemap_plots': summaries['profile'],
-                    'sparsemap_subpage': subpages['sparse'],
-                    'sparsemap_plots': summaries['sparse'],
-                    'channelmap_subpage': subpages['channel'],
-                    'channelmap_plots': summaries['channel'],
-                    'tpmap_subpage': subpages['tp'],
-                    'tpmap_plots': summaries['tp'],
-                    'rmsmap_subpage': subpages['rms'],
-                    'rmsmap_plots': summaries['rms'],
-                    'profilemap_entries': profilemap_entries,
-                    'dirname': stage_dir})
+        ctx.update({'dirname': stage_dir})
 
         return ctx
     
