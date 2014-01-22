@@ -896,6 +896,9 @@ void MSTransformManager::open()
 
 	dataHandler_p = new MSTransformDataHandler(inpMsName_p,Table::Old);
 
+	// CAS-5348 (jagonzal): Check if model parameters are defined.
+	realmodelcol_p = dataHandler_p->getRealModelColParam();
+
 	// WARNING: Input MS is re-set at the end of a successful MSTransformDataHandler::makeMSBasicStructure,
 	// call therefore we have to use the selected MS always
 	inputMs_p = dataHandler_p->getInputMS();
@@ -2688,11 +2691,6 @@ void MSTransformManager::checkDataColumnsToFill()
 					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 										"Adding MODEL_DATA column to output MS "<< LogIO::POST;
 				}
-				else
-				{
-					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-										"MODEL_DATA column present in input MS will be available from MSTransformBuffer "<< LogIO::POST;
-				}
 			}
 			else
 			{
@@ -2700,11 +2698,6 @@ void MSTransformManager::checkDataColumnsToFill()
 				{
 					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 										"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column "<< LogIO::POST;
-				}
-				else
-				{
-					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-										"MODEL_DATA column present in input MS will be available from MSTransformBuffer "<< LogIO::POST;
 				}
 			}
 
@@ -2932,11 +2925,6 @@ void MSTransformManager::checkDataColumnsToFill()
 				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 									"Adding MODEL_DATA column to output MS as DATA "<< LogIO::POST;
 			}
-			else
-			{
-				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-							"Adding MODEL_DATA column to output MS as DATA from input virtual MODEL_DATA column"<< LogIO::POST;
-			}
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageModel;
 		}
@@ -2956,8 +2944,6 @@ void MSTransformManager::checkDataColumnsToFill()
 	if ((realmodelcol_p) and (!modelDataChecked))
 	{
 		dataColMap_p[MS::MODEL_DATA] = MS::MODEL_DATA;
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-					"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column"<< LogIO::POST;
 		datacolumn_p += String(",MODEL");
 	}
 
