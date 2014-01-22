@@ -10,6 +10,7 @@ import pylab as pl
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
 from .utils import DDMMSSs, HHMMSSss
+from .utils import sd_polmap as polmap
 from .common import DPIDetail, SDImageDisplay, ShowPlot
 
 LOG = infrastructure.get_logger(__name__)
@@ -223,7 +224,7 @@ class SDSparseMapDisplay(SDImageDisplay):
             parameters = {}
             parameters['intent'] = 'TARGET'
             parameters['spw'] = self.inputs.spw
-            parameters['pol'] = pol
+            parameters['pol'] = polmap[pol]
             parameters['ant'] = self.inputs.antenna
             parameters['type'] = 'sd_sparse_map'
             parameters['file'] = self.inputs.imagename

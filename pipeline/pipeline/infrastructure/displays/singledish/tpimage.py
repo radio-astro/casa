@@ -11,6 +11,7 @@ import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
 from .utils import RADEClabel, RArotation, DECrotation
+from .utils import sd_polmap as polmap
 from .common import DPISummary, DPIDetail, SDImageDisplay, ShowPlot, draw_beam
 
 LOG = infrastructure.get_logger(__name__)
@@ -141,7 +142,7 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
             parameters = {}
             parameters['intent'] = 'TARGET'
             parameters['spw'] = self.inputs.spw
-            parameters['pol'] = pol
+            parameters['pol'] = polmap[pol]
             parameters['ant'] = self.inputs.antenna
             parameters['type'] = 'sd_channel-averaged'
             parameters['file'] = self.inputs.imagename

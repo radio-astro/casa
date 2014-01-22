@@ -9,6 +9,8 @@ from matplotlib.ticker import FuncFormatter, MultipleLocator
 
 import pipeline.infrastructure.casatools as casatools
 
+sd_polmap = {0: 'XX', 1: 'YY', 2: 'XY', 3: 'YX'}
+
 dsyb = '$^\circ$'
 hsyb = ':'
 msyb = ':'

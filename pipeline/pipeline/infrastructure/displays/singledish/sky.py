@@ -9,6 +9,7 @@ import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
 from . import common
+from .utils import sd_polmap as polmap
 
 LOG = logging.get_logger(__name__)
 
@@ -157,7 +158,7 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
         # generate plots
         plots = []
         qa = casatools.quanta
-        polmap = {0: 'XX', 1: 'YY', 2: 'XY', 3: 'YX'}
+        #polmap = {0: 'XX', 1: 'YY', 2: 'XY', 3: 'YX'}
         with utils.open_table(caltable) as tb:
             for spw in spwlist:
                 beam_size = scantable.beam_size[spw]

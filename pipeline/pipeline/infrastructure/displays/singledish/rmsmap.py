@@ -13,6 +13,7 @@ import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
 from .utils import RADEClabel, RArotation, DECrotation, DDMMSSs, HHMMSSss
+from .utils import sd_polmap as polmap
 from .common import DPISummary, DPIDetail, SDImageDisplay, ShowPlot, draw_beam
 from . import tpimage
 
@@ -130,7 +131,7 @@ class SDRmsMapDisplay(SDImageDisplay):
             parameters = {}
             parameters['intent'] = 'TARGET'
             parameters['spw'] = self.spw
-            parameters['pol'] = pol
+            parameters['pol'] = polmap[pol]
             parameters['ant'] = self.antenna
             parameters['file'] = self.inputs.imagename
             parameters['type'] = 'rms_map'

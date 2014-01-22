@@ -11,6 +11,7 @@ from matplotlib.ticker import MultipleLocator
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
 from .utils import RADEClabel, RArotation, DECrotation, DDMMSSs, HHMMSSss
+from .utils import sd_polmap as polmap
 from .common import DPIDetail, SDImageDisplay, ShowPlot, draw_beam
 from . import tpimage
 
@@ -423,7 +424,7 @@ class SDChannelMapDisplay(SDImageDisplay):
                 parameters = {}
                 parameters['intent'] = 'TARGET'
                 parameters['spw'] = self.spw
-                parameters['pol'] = pol
+                parameters['pol'] = polmap[pol]
                 parameters['ant'] = self.antenna
                 parameters['type'] = 'channel_map'
                 parameters['file'] = self.inputs.imagename

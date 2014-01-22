@@ -25,12 +25,40 @@ $(document).ready(function() {
         };
     };
 
+    // return a function that sets the Antenna text field to the given spw
+    var createAntennaSetter = function(ant) {
+        return function() {
+            // trigger a change event, otherwise the filters are not changed
+            $("#select-ant").select2("val", [ant]).trigger("change");
+        };
+    };
+
+    // return a function that sets the Polarization text field to the given spw
+    var createPolarizationSetter = function(pol) {
+        return function() {
+            // trigger a change event, otherwise the filters are not changed
+            $("#select-pol").select2("val", [pol]).trigger("change");
+        };
+    };
+
+    // 
+    var createMixedSetter = function(spw, ant, pol) {
+        return function() {
+            // trigger a change event, otherwise the filters are not changed
+            $("#select-spw").select2("val", [spw]).trigger("change");
+            $("#select-ant").select2("val", [ant]).trigger("change");
+            $("#select-pol").select2("val", [pol]).trigger("change");
+        };
+    };    
+
     // create a callback function for each overview plot that will select the
     // appropriate spw once the page has loaded
     $(".thumbnail a").each(function (i, v) {
         var o = $(v);
         var spw = o.data("spw");
-        o.data("callback", createSpwSetter(spw));
+        var ant = o.data("ant");
+        var pol = o.data("pol");
+        o.data("callback", createMixedSetter(spw, ant, pol));
     });
 
     $(".fancybox").fancybox({
@@ -51,16 +79,29 @@ $(document).ready(function() {
 });
 </script>
 
+<%
+channelmap = {'title': 'Channel Map',
+              'subpage': channelmap_subpage,
+              'plot': channelmap_plots}
+tpmap = {'title': 'Integrated Map (from channel avearged spw)',
+         'subpage': tpmap_subpage,
+         'plot': tpmap_plots}
+rmsmap = {'title': 'Baseline Rms Map',
+          'subpage': rmsmap_subpage,
+          'plot': rmsmap_plots}
+plots_list = [channelmap, tpmap, rmsmap]
+%>
+
 This task generates single dish images per source per spectral window. 
 It generates an image combined spectral data from whole antenna as well as images per antenna.
 
 <h3>Profile Map</h3>
-% for field in profilemap_summary_subpage.keys():
+% for field in profilemap_subpage.keys():
     <h4><a class="replace"
-           href="${os.path.relpath(os.path.join(dirname, profilemap_summary_subpage[field]), pcontext.report_dir)}">${field}</a>
+           href="${os.path.relpath(os.path.join(dirname, profilemap_subpage[field]), pcontext.report_dir)}">${field}</a>
     </h4>
     <ul class="thumbnails">
-        % for plot in profilemap_summary_plots[field]:
+        % for plot in profilemap_plots[field]:
             % if os.path.exists(plot.thumbnail):
             <li class="span3">
                 <div class="thumbnail">
@@ -68,23 +109,41 @@ It generates an image combined spectral data from whole antenna as well as image
                        class="fancybox"
                        rel="thumbs">
                         <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                             title="Sky level summary for Spectral Window ${plot.parameters['spw']}"
+                             title="Profile map summary for Spectral Window ${plot.parameters['spw']}"
                              data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
                         </img>
                     </a>
 
                     <div class="caption">
                         <h4>
-                            <a href="${os.path.relpath(os.path.join(dirname, profilemap_summary_subpage[field]), pcontext.report_dir)}"
+                            <a href="${os.path.relpath(os.path.join(dirname, sparsemap_subpage[field]), pcontext.report_dir)}"
                                class="replace"
-                               data-spw="${plot.parameters['spw']}">
+                               data-spw="${plot.parameters['spw']}"
+                               data-ant="${plot.parameters['ant']}">
                                Spectral Window ${plot.parameters['spw']}
                             </a>
                         </h4>
 
-                        <p>Plot of sky level for spectral
+                        <p>Profile map for spectral
                             window ${plot.parameters['spw']}.
                         </p>
+                        
+                        <h4>Link to detailed profile map</h4>
+                        <table width="100%">
+                        % for (ant, pols) in profilemap_entries[field].items():
+                            % for pol in pols:
+                                <tr><td>
+                                <a href="${os.path.relpath(os.path.join(dirname, profilemap_subpage[field]), pcontext.report_dir)}"
+                                   class="replace"
+                                   data-spw="${plot.parameters['spw']}"
+                                   data-ant="${ant}"
+                                   data-pol="${pol}">
+                                ${ant} Pol="${pol}"
+                                </a>
+                                </td></tr>
+                            % endfor
+                        % endfor
+                        </table>
                     </div>
                 </div>
             </li>
@@ -93,121 +152,45 @@ It generates an image combined spectral data from whole antenna as well as image
     </ul>
 %endfor
 
-
-<h3>Channel Map</h3>
-% for field in channelmap_summary_subpage.keys():
-    <h4><a class="replace"
-           href="${os.path.relpath(os.path.join(dirname, channelmap_summary_subpage[field]), pcontext.report_dir)}">${field}</a>
-    </h4>
-    <ul class="thumbnails">
-        % for plot in channelmap_summary_plots[field]:
-            % if os.path.exists(plot.thumbnail):
-            <li class="span3">
-                <div class="thumbnail">
-                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                       class="fancybox"
-                       rel="thumbs">
-                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                             title="Sky level summary for Spectral Window ${plot.parameters['spw']}"
-                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-                        </img>
-                    </a>
-
-                    <div class="caption">
-                        <h4>
-                            <a href="${os.path.relpath(os.path.join(dirname, channelmap_summary_subpage[field]), pcontext.report_dir)}"
-                               class="replace"
-                               data-spw="${plot.parameters['spw']}">
-                               Spectral Window ${plot.parameters['spw']}
-                            </a>
-                        </h4>
-
-                        <p>Plot of sky level for spectral
-                            window ${plot.parameters['spw']}.
-                        </p>
+% for plots in plots_list:
+    <h3>${plots['title']}</h3>
+    % for field in plots['subpage'].keys():
+        <h4><a class="replace"
+               href="${os.path.relpath(os.path.join(dirname, plots['subpage'][field]), pcontext.report_dir)}">${field}</a>
+        </h4>
+        <ul class="thumbnails">
+            % for plot in plots['plot'][field]:
+                % if os.path.exists(plot.thumbnail):
+                <li class="span3">
+                    <div class="thumbnail">
+                        <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+                           class="fancybox"
+                           rel="thumbs">
+                            <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+                                 title="${plots['title']} for Spectral Window ${plot.parameters['spw']}"
+                                 data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+                            </img>
+                        </a>
+    
+                        <div class="caption">
+                            <h4>
+                                <a href="${os.path.relpath(os.path.join(dirname, plots['subpage'][field]), pcontext.report_dir)}"
+                                   class="replace"
+                                   data-spw="${plot.parameters['spw']}"
+                                   data-ant="${plot.parameters['ant']}">
+                                   Spectral Window ${plot.parameters['spw']}
+                                </a>
+                            </h4>
+    
+                            <p>Plot of sky level for spectral
+                                window ${plot.parameters['spw']}.
+                            </p>
+                        </div>
                     </div>
-                </div>
-            </li>
-            % endif
-        % endfor
-    </ul>
-%endfor
-
-<h3>Integrated Map (from channel avearged spw)</h3>
-% for field in tpmap_summary_subpage.keys():
-    <h4><a class="replace"
-           href="${os.path.relpath(os.path.join(dirname, tpmap_summary_subpage[field]), pcontext.report_dir)}">${field}</a>
-    </h4>
-    <ul class="thumbnails">
-        % for plot in tpmap_summary_plots[field]:
-            % if os.path.exists(plot.thumbnail):
-            <li class="span3">
-                <div class="thumbnail">
-                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                       class="fancybox"
-                       rel="thumbs">
-                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                             title="Sky level summary for Spectral Window ${plot.parameters['spw']}"
-                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-                        </img>
-                    </a>
-
-                    <div class="caption">
-                        <h4>
-                            <a href="${os.path.relpath(os.path.join(dirname, tpmap_summary_subpage[field]), pcontext.report_dir)}"
-                               class="replace"
-                               data-spw="${plot.parameters['spw']}">
-                               Spectral Window ${plot.parameters['spw']}
-                            </a>
-                        </h4>
-
-                        <p>Plot of sky level for spectral
-                            window ${plot.parameters['spw']}.
-                        </p>
-                    </div>
-                </div>
-            </li>
-            % endif
-        % endfor
-    </ul>
-%endfor
-
-<h3>Baseline Rms Map</h3>
-% for field in rmsmap_summary_subpage.keys():
-    <h4><a class="replace"
-           href="${os.path.relpath(os.path.join(dirname, rmsmap_summary_subpage[field]), pcontext.report_dir)}">${field}</a>
-    </h4>
-    <ul class="thumbnails">
-        % for plot in rmsmap_summary_plots[field]:
-            % if os.path.exists(plot.thumbnail):
-            <li class="span3">
-                <div class="thumbnail">
-                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                       class="fancybox"
-                       rel="thumbs">
-                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                             title="Sky level summary for Spectral Window ${plot.parameters['spw']}"
-                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-                        </img>
-                    </a>
-
-                    <div class="caption">
-                        <h4>
-                            <a href="${os.path.relpath(os.path.join(dirname, rmsmap_summary_subpage[field]), pcontext.report_dir)}"
-                               class="replace"
-                               data-spw="${plot.parameters['spw']}">
-                               Spectral Window ${plot.parameters['spw']}
-                            </a>
-                        </h4>
-
-                        <p>Plot of sky level for spectral
-                            window ${plot.parameters['spw']}.
-                        </p>
-                    </div>
-                </div>
-            </li>
-            % endif
-        % endfor
-    </ul>
-%endfor
+                </li>
+                % endif
+            % endfor
+        </ul>
+    % endfor
+% endfor
 
