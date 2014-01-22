@@ -439,38 +439,23 @@ class DataTableImpl( object ):
         for i in xrange(len(context.observing_run[0].spectral_window)):
             if context.observing_run[0].spectral_window[i].is_atmcal:
                 spw_atmcal[i]=(context.observing_run[0].spectral_window[i])
-                LOG.debug('-----------spw %s' % i)
-                LOG.debug('spw_atmcal[i].freq_min = %s' % spw_atmcal[i].freq_min)
-                LOG.debug('spw_atmcal[i].freq_max = %s' % spw_atmcal[i].freq_max)
                 step_atm[i]=spw_atmcal[i].increment
-                LOG.debug('step_atm[i] = %s' % step_atm[i])
             elif context.observing_run[0].spectral_window[i].is_target:
                 spw_target[i] = context.observing_run[0].spectral_window[i]
-                LOG.debug('-----------spw_target %s' % i)
-                LOG.debug('spw_target[i].freq_min %s' % spw_target[i].freq_min)
         
         for ifno_from in if_from:
             for polno in pollist:
-                LOG.info('--polno = %s' % polno)
-                LOG.info('--ifno_from = %s' % ifno_from)
-                LOG.info('--ifnos = %s' % ifnos)
-                LOG.info('--polnos = %s' % polnos)
                 indices = numpy.where(numpy.logical_and(ifnos==ifno_from,polnos==polno))[0]
-                LOG.info('--indices = %s' % indices)
                 if len(indices) == 0:
                     continue
                 
-                LOG.info('--ifmap = %s' % ifmap[ifno_from])
                 for ifno_to in ifmap[ifno_from]:
-                    LOG.info('-----------ifno_to = %s' % ifno_to)
-                    LOG.info('indices = %s' % indices)
-                    #atsys = [numpy.mean(tsys[i]) for i in indices]
                     atsys = [calculate_average_tsys(spw_atmcal[ifno_from].freq_min,
                                                     spw_atmcal[ifno_from].freq_max,
                                                     spw_target[ifno_to].freq_min,
                                                     spw_target[ifno_to].freq_max,
-                                                    step_atm[ifno_from],*tsys[i]) for i in indices]
-                    LOG.info('-----------atsys = %s' % atsys)
+                                                    step_atm[ifno_from],tsys[i]) for i in indices]
+                    LOG.debug('atsys = %s' % atsys)
                     rows = self.get_row_index(ant, ifno_to, polno)
                     if len(atsys) == 1:
                         for row in rows:
@@ -482,7 +467,7 @@ class DataTableImpl( object ):
                             itsys = _interpolate(atsys, tsys_time, tref)
                             self.tb1.putcell('TSYS', row, itsys)                
         
-def calculate_average_tsys(atm_freq_min,atm_freq_max,target_freq_min,target_freq_max,atm_increment,*tsyslist) :
+def calculate_average_tsys(atm_freq_min,atm_freq_max,target_freq_min,target_freq_max,atm_increment,tsyslist) :
         if(atm_increment < 0): # LSB
             LOG.debug('--- LSB ----')
             if(atm_freq_min < target_freq_min and target_freq_max < atm_freq_max):
@@ -514,9 +499,7 @@ def calculate_average_tsys(atm_freq_min,atm_freq_max,target_freq_min,target_freq
                 LOG.debug('calculate_average_tsys:   end_atmchan == %d' % end_atmchan)
         
         LOG.debug('calculate_average_tsys:   end_atmchan - start_atmchan = %d ' % (end_atmchan - start_atmchan))
-        #print ' tsys[0][20] == %d ' % tsyslist[20]
         averaged_tsys = numpy.mean(tsyslist[(int)(start_atmchan):(int)(end_atmchan + 1)])
-        LOG.debug('calculate_average_tsys:  averaged_tsys  = %s ' % averaged_tsys)
         return averaged_tsys
 
 
