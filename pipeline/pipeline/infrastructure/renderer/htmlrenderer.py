@@ -2811,7 +2811,9 @@ class T2_4MDetailsSingleDishCalSkyRenderer(T2_4MDetailsDefaultRenderer):
         
         plot_list = {}
         for (name, _plots) in plot_group.items():
-            renderer = SingleDishCalSkyPlotsRenderer(context, results, name, _plots)
+            #renderer = SingleDishCalSkyPlotsRenderer(context, results, name, _plots)
+            renderer = SingleDishGenericPlotsRenderer(context, results, name, _plots,
+                                                      'Sky Level vs Frequency')
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
             plot_list[name] = renderer.filename
@@ -2844,79 +2846,6 @@ class T2_4MDetailsSingleDishCalSkyRenderer(T2_4MDetailsDefaultRenderer):
                     spw_list.add(spw)
                     summary_plots[vis].append(plot)
         return summary_plots
-            
-    
-class SingleDishCalSkyPlotsRenderer(object):
-    # take a look at WvrgcalflagPhaseOffsetVsBaselinePlotRenderer when we have
-    # scores and histograms to generate. there should be a common base class. 
-    template = 'sd_generic_plots.html'
-
-    def __init__(self, context, result, scantable_name, plots):
-        self.context = context
-        self.result = result
-        self.plots = plots
-        self.ms = scantable_name
-
-        # all values set on this dictionary will be written to the JSON file
-        d = {}
-        for plot in plots:
-            # calculate the relative pathnames as seen from the browser
-            thumbnail_relpath = os.path.relpath(plot.thumbnail,
-                                                self.context.report_dir)
-            image_relpath = os.path.relpath(plot.abspath,
-                                            self.context.report_dir)
-            spw_id = plot.parameters['spw']
-            ant_id = plot.parameters['ant']
-            pol_id = plot.parameters['pol']
-
-            # Javascript JSON parser doesn't like Javascript floating point 
-            # constants (NaN, Infinity etc.), so convert them to null. We  
-            # do not omit the dictionary entry so that the plot is hidden
-            # by the filters.
-#             if math.isnan(ratio) or math.isinf(ratio):
-#                 ratio = 'null'
-
-            d[image_relpath] = {'spw'       : str(spw_id),
-                                'ant'       : ant_id,
-                                'pol'       : pol_id,
-                                'thumbnail' : thumbnail_relpath}
-
-        self.json = json.dumps(d)
-         
-    def _get_display_context(self):
-        return {'pcontext'   : self.context,
-                'result'     : self.result,
-                'plots'      : self.plots,
-                'dirname'    : self.dirname,
-                'json'       : self.json,
-                'plot_title' : 'Sky Level vs Frequency for %s' % self.ms}
-
-    @property
-    def dirname(self):
-        stage = 'stage%s' % self.result.stage_number
-        return os.path.join(self.context.report_dir, stage)
-    
-    @property
-    def filename(self):        
-        filename = filenamer.sanitize('sky_vs_freq-%s.html' % self.ms)
-        return filename
-    
-    @property
-    def path(self):
-        return os.path.join(self.dirname, self.filename)
-    
-    def get_file(self, hardcopy=True):
-        if hardcopy and not os.path.exists(self.dirname):
-            os.makedirs(self.dirname)
-            
-        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
-        return contextlib.closing(file_obj)
-    
-    def render(self):
-        display_context = self._get_display_context()
-        t = TemplateFinder.get_template(self.template)
-        return t.render(**display_context)
-
 
 class T2_4MDetailsSingleDishImagingRenderer(T2_4MDetailsDefaultRenderer):
     def __init__(self, template='t2-4m_details-hsd_imaging.html', 
@@ -2943,21 +2872,23 @@ class T2_4MDetailsSingleDishImagingRenderer(T2_4MDetailsDefaultRenderer):
             plots.append(task.plot())
             
         map_types = {'sparsemap': {'type': 'sd_sparse_map',
-                                   'renderer': SingleDishSparseMapRenderer},
+                                   'plot_title': 'Sparse Profile Map'},
                      'profilemap': {'type': 'sd_spectral_map',
-                                    'renderer': SingleDishProfileMapRenderer},
+                                    'plot_title': 'Detailed Profile Map'},
                      'channelmap': {'type': 'channel_map',
-                                    'renderer': SingleDishChannelMapRenderer},
+                                    'plot_title': 'Channel Map'},
                      'tpmap': {'type': 'sd_channel-averaged',
-                               'renderer': SingleDishChannelAveragedMapRenderer},
+                               'plot_title': 'Integrated Intensity Map'},
                      'rmsmap': {'type': 'rms_map',
-                                'renderer': SingleDishBaselineRmsMapRenderer}}
+                                'plot_title': 'Baseline RMS Map'}}
         for (key, value) in map_types.items():
             plot_list = self._plots_per_field_with_type(plots, value['type'])
             summary = self._summary_plots(plot_list)
             subpage = {}
             for (name, _plots) in plot_list.items():
-                renderer = value['renderer'](context, results, name, _plots)
+                #renderer = value['renderer'](context, results, name, _plots)
+                renderer = SingleDishGenericPlotsRenderer(context, results, name, _plots, 
+                                                          value['plot_title'])
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())
                 subpage[name] = renderer.filename
@@ -3007,76 +2938,76 @@ class T2_4MDetailsSingleDishImagingRenderer(T2_4MDetailsDefaultRenderer):
                     summary_plots[field_name][idx] = plot
         return summary_plots
 
-class SingleDishSparseMapRenderer(SingleDishCalSkyPlotsRenderer):
-    def __init__(self, context, result, field_name, plots):
-        super(SingleDishSparseMapRenderer, self).__init__(context, result, field_name, plots)
-        
+class SingleDishGenericPlotsRenderer(object):
+    template = 'sd_generic_plots.html'
+
+    def __init__(self, context, result, name, plots, plot_title):
+        self.context = context
+        self.result = result
+        self.plots = plots
+        self.name = name
+        self.plot_title = str(plot_title)
+
+        # all values set on this dictionary will be written to the JSON file
+        d = {}
+        for plot in plots:
+            # calculate the relative pathnames as seen from the browser
+            thumbnail_relpath = os.path.relpath(plot.thumbnail,
+                                                self.context.report_dir)
+            image_relpath = os.path.relpath(plot.abspath,
+                                            self.context.report_dir)
+            spw_id = plot.parameters['spw']
+            ant_id = plot.parameters['ant']
+            pol_id = plot.parameters['pol']
+
+            # Javascript JSON parser doesn't like Javascript floating point 
+            # constants (NaN, Infinity etc.), so convert them to null. We  
+            # do not omit the dictionary entry so that the plot is hidden
+            # by the filters.
+#             if math.isnan(ratio) or math.isinf(ratio):
+#                 ratio = 'null'
+
+            d[image_relpath] = {'spw'       : str(spw_id),
+                                'ant'       : ant_id,
+                                'pol'       : pol_id,
+                                'thumbnail' : thumbnail_relpath}
+
+        self.json = json.dumps(d)
+         
+    def _get_display_context(self):
+        return {'pcontext'   : self.context,
+                'result'     : self.result,
+                'plots'      : self.plots,
+                'dirname'    : self.dirname,
+                'json'       : self.json,
+                'plot_title' : '%s for %s' % (self.plot_title, self.name)}
+
+    @property
+    def dirname(self):
+        stage = 'stage%s' % self.result.stage_number
+        return os.path.join(self.context.report_dir, stage)
+    
     @property
     def filename(self):        
-        filename = filenamer.sanitize('sparsemap-%s.html' % self.ms)
+        filename = filenamer.sanitize('%s-%s.html' % (self.plot_title.lower(), self.name))
         return filename
-
-    def _get_display_context(self):
-        ctx = super(SingleDishSparseMapRenderer, self)._get_display_context()
-        ctx.update({'plot_title': 'Sparse profile map for %s'%(self.ms)})
-        return ctx
-
-class SingleDishProfileMapRenderer(SingleDishCalSkyPlotsRenderer):
-    def __init__(self, context, result, field_name, plots):
-        super(SingleDishProfileMapRenderer, self).__init__(context, result, field_name, plots)
-        
+    
     @property
-    def filename(self):        
-        filename = filenamer.sanitize('profilemap-%s.html' % self.ms)
-        return filename
-
-    def _get_display_context(self):
-        ctx = super(SingleDishProfileMapRenderer, self)._get_display_context()
-        ctx.update({'plot_title': 'Detailed profile map for %s'%(self.ms)})
-        return ctx
-
-class SingleDishChannelMapRenderer(SingleDishCalSkyPlotsRenderer):
-    def __init__(self, context, result, field_name, plots):
-        super(SingleDishChannelMapRenderer, self).__init__(context, result, field_name, plots)
-        
-    @property
-    def filename(self):        
-        filename = filenamer.sanitize('channelmap-%s.html' % self.ms)
-        return filename
-
-    def _get_display_context(self):
-        ctx = super(SingleDishChannelMapRenderer, self)._get_display_context()
-        ctx.update({'plot_title': 'Channel map for %s'%(self.ms)})
-        return ctx
-  
-class SingleDishChannelAveragedMapRenderer(SingleDishCalSkyPlotsRenderer):
-    def __init__(self, context, result, field_name, plots):
-        super(SingleDishChannelAveragedMapRenderer, self).__init__(context, result, field_name, plots)
-        
-    @property
-    def filename(self):        
-        filename = filenamer.sanitize('tpmap-%s.html' % self.ms)
-        return filename
-
-    def _get_display_context(self):
-        ctx = super(SingleDishChannelAveragedMapRenderer, self)._get_display_context()
-        ctx.update({'plot_title': 'Integrated map for %s'%(self.ms)})
-        return ctx
-
-class SingleDishBaselineRmsMapRenderer(SingleDishCalSkyPlotsRenderer):
-    def __init__(self, context, result, field_name, plots):
-        super(SingleDishBaselineRmsMapRenderer, self).__init__(context, result, field_name, plots)
-        
-    @property
-    def filename(self):        
-        filename = filenamer.sanitize('rmsmap-%s.html' % self.ms)
-        return filename
-
-    def _get_display_context(self):
-        ctx = super(SingleDishBaselineRmsMapRenderer, self)._get_display_context()
-        ctx.update({'plot_title': 'Baseline rms map for %s'%(self.ms)})
-        return ctx
-
+    def path(self):
+        return os.path.join(self.dirname, self.filename)
+    
+    def get_file(self, hardcopy=True):
+        if hardcopy and not os.path.exists(self.dirname):
+            os.makedirs(self.dirname)
+            
+        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
+        return contextlib.closing(file_obj)
+    
+    def render(self):
+        display_context = self._get_display_context()
+        t = TemplateFinder.get_template(self.template)
+        return t.render(**display_context)
+    
 class T2_4MDetailsSingleDishBaselineRenderer(T2_4MDetailsDefaultRenderer):
     # Renderer class for stage summary
     def __init__(self, template='t2-4m_details-hsd_baseline.html',
