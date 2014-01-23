@@ -171,7 +171,7 @@
                 <value type="doubleArray"></value>
             </param>
             <param type="any" name="datacolumn" subparam="true">
-                <description>Data column on which to operate (data,corrected,model,residual,etc.)</description>
+                <description>Data column on which to operate (data,corrected,model,weight,etc.)</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string">DATA</value>
             </param>

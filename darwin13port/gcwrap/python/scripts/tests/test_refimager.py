@@ -17,7 +17,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
      interactive=False
 
 
-     if(testnum==6):  ## 1 image-field, mfs, multiple input MSs --- Real Imaging.
+     if(testnum==5):  ## 1 image-field, mfs, multiple input MSs --- Real Imaging.
           
           paramList = ImagerParameters(msname=['DataTest/point_onespw0.ms','DataTest/point_onespw1.ms'],\
                                        field='0',spw=['0','0'],\
@@ -285,8 +285,6 @@ def toolTestMajorCycle( testnum=1 ):
      PStool.scattermodel()
      SItool.makepsf()
      SItool.executemajorcycle()
-#     istore = SItool.getimstore(0)
-#     PStool.setimstore(istore)
 
      PStool.gatherpsfweight( )
      PStool.gatherresidual( )
@@ -353,27 +351,27 @@ def toolTestMajorCycle2( testnum=1 ):
 def checkDataPartitioningCode():
 
      ## Make parameter lists.
-     #paramList = ImagerParameters(casalog=casalog, msname=['x1.ms','x2.ms'], field='0',spw=['0','2'], usescratch=True)
+     #paramList = ImagerParameters(msname=['x1.ms','x2.ms'], field='0',spw=['0','2'], usescratch=True)
      ## Sync input lists to the same size.
      #paramList.checkParameters()
 
      params = getparams( testnum=5 ,parallelmajor=True )
-
      paramList = params[0]
+     clusterdeffile = params[1]
 
-     # Selection parameters
      selpars = paramList.getSelPars()
+     impars = paramList.getImagePars()
+
+     ppar = PyParallelImagerHelper(clusterdef=clusterdeffile)
 
      print 'Selpars : ', selpars
-     
-     # For parallel runs, make this from a config file.
-     ppar = PyParallelImagerHelper(clusterdef=params[1])
-     
-     # This is the function that does the data partitioning and put the selpars
-     # into a dictionary indexed by node 'id'.
-     newselpars = ppar.partitionDataSelection( selpars )
+     newselpars = ppar.partitionCubeDataSelection( selpars )
 
-     print 'NewSelPars : ', newselpars
+     print 'Impars : ', impars
+     newimpars = ppar.partitionCubeDeconvolution( impars )
+
+     ppar.takedownCluster()
+
 
      # The output dictionary should be indexed as follows ( for 2 nodes, and 2 MSs )
      #{ '0' : { 'ms0' : { 'msname':xxx1, 'spw':yyy1 } ,

@@ -71,6 +71,8 @@ class PySynthesisImager:
         nimpars = copy.deepcopy(self.allimpars)
         for fld in range(0,self.NF):
             self.SItool.defineimage( **( nimpars[str(fld)]  ) )
+        #for fld in range(0,self.NF):
+        #    self.SItool.defineimage( **( self.allimpars[str(fld)]  ) )
 
         ## Set weighting parameters, and all pars common to all fields.
         self.SItool.setweighting( **(self.weightpars) )
@@ -286,7 +288,7 @@ class PyParallelContSynthesisImager(PySynthesisImager):
 
          self.PH = PyParallelImagerHelper( clusterdef )
          self.NN = self.PH.NN
-         self.allselpars = self.PH.partitionDataSelection(self.allselpars)
+         self.allselpars = self.PH.partitionContDataSelection(self.allselpars)
 
 #############################################
 #############################################
@@ -374,7 +376,7 @@ class PyParallelCubeSynthesisImager():
         self.PH = PyParallelImagerHelper( clusterdef )
         self.NN = self.PH.NN
         ## Partition both data and image coords the same way.
-        self.allselpars = self.PH.partitionDataSelection(allselpars)
+        self.allselpars = self.PH.partitionCubeDataSelection(allselpars)
         self.allimpars = self.PH.partitionCubeDeconvolution(allimagepars)
 
         joblist=[]
@@ -544,7 +546,34 @@ class PyParallelImagerHelper():
 
 #############################################
 ## Very rudimentary partitioning - only for tests. The actual code needs to go here.
-    def partitionDataSelection(self,oneselpars={}):
+    def partitionContDataSelection(self,oneselpars={}):
+        allselpars = {}
+        print oneselpars
+        for node in range(0,self.NN):
+            ## Replicate the Selection pars for all nodes, before modifying them.
+            allselpars[str(node)]  = copy.deepcopy(oneselpars) 
+
+            ######## WARNING : Very special case for SPW 0 of points_2spw.ms
+            if allselpars[str(node)]['ms0']['msname'] == "DataTest/point_twospws.ms":
+                if node==0:
+                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':0~9'
+                else:
+                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':10~19'
+
+            ######## WARNING : Very special case for twopoints_twochan.ms
+            if allselpars[str(node)]['ms0']['msname'] == "DataTest/twopoints_twochan.ms":
+                if node==0:
+                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':0'
+                else:
+                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':1'
+
+
+        print 'Partitioned Selection : ', allselpars
+        return allselpars
+
+#############################################
+## Very rudimentary partitioning - only for tests. The actual code needs to go here.
+    def partitionCubeDataSelection(self,oneselpars={}):
         allselpars = {}
         print oneselpars
         for node in range(0,self.NN):

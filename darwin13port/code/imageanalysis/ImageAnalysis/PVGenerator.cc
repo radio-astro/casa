@@ -277,22 +277,31 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
             "two pixels of the edge of the image."
         );
     }
-    // rotation occurs about the reference pixel, so move the reference pixel to be
-    // the midpoint of the requested line segment
-    vector<Double> midpoint = (end + start)/2.0;
-    Vector<Double> newRefPix2 = subCoords.referencePixel();
-    newRefPix2[dirAxes[0]] = midpoint[0];
-    newRefPix2[dirAxes[1]] = midpoint[1];
-    Vector<Double> newRefVal;
-    subCoords.toWorld(newRefVal, newRefPix2);
-    subCoords.setReferencePixel(newRefPix2);
-    subCoords.setReferenceValue(newRefVal);
-    subImage->setCoordinateInfo(subCoords);
 
-	// rotate the image through this angle, in the opposite direction.
-	*_getLog() << LogIO::NORMAL << "Rotating image by "
-		<< (paInRad*180/C::pi)
-		<< " degrees to align specified slice with the x axis" << LogIO::POST;
+    {
+    	// rotation occurs about the reference pixel, so move the reference pixel to be
+    	// on the segment, near the midpoint so that the y value is an integer.
+    	vector<Double> midpoint = (end + start)/2.0;
+    	Double targety = int(midpoint[1]);
+    	Double targetx = targety == midpoint[1]
+    	    ? midpoint[0]
+    	    : (
+    	    	start[0]*(end[1] - targety) + end[0]*(targety - start[1])
+    	    )/(end[1] - start[1]);
+    	Vector<Double> newRefPix = subCoords.referencePixel();
+    	newRefPix[dirAxes[0]] = targetx;
+    	newRefPix[dirAxes[1]] = targety;
+    	Vector<Double> newRefVal;
+    	subCoords.toWorld(newRefVal, newRefPix);
+    	subCoords.setReferencePixel(newRefPix);
+    	subCoords.setReferenceValue(newRefVal);
+    	subImage->setCoordinateInfo(subCoords);
+
+    	// rotate the image through this angle, in the opposite direction.
+    	*_getLog() << LogIO::NORMAL << "Rotating image by " << (paInRad*180/C::pi)
+    		<< " degrees about direction coordinate pixel (" << targetx << ", " << targety
+    		<< ") to align specified slice with the x axis" << LogIO::POST;
+    }
 	Vector<Double> worldStart, worldEnd;
 	const DirectionCoordinate& dc1 = subCoords.directionCoordinate();
 	dc1.toWorld(worldStart, Vector<Double>(start));
@@ -409,7 +418,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 	);
 	// CAS-6043, because it's possible for the above conditions to be true but the y values to still be
 	// just a little different and on either side of the 0.5 pixel mark
-	rotPixEnd[yAxis] = rotPixStart[yAxis];
+	//rotPixEnd[yAxis] = rotPixStart[yAxis];
 	// We have rotated so the position of the starting pixel x is smaller than
 	// the ending pixel x.
 	AlwaysAssert(rotPixStart[xAxis] < rotPixEnd[xAxis], AipsError);

@@ -25,7 +25,7 @@
 using namespace CalTypeMod;
 
 template<>
- struct enum_set_traits<CalTypeMod::CalType> : public enum_set_traiter<CalTypeMod::CalType,17,CalTypeMod::CAL_WVR> {};
+ struct enum_set_traits<CalTypeMod::CalType> : public enum_set_traiter<CalTypeMod::CalType,18,CalTypeMod::CAL_APPPHASE> {};
 
 template<>
 class enum_map_traits<CalTypeMod::CalType,void> : public enum_map_traiter<CalTypeMod::CalType,void> {
@@ -71,6 +71,8 @@ public:
      (CalTypeMod::CAL_SEEING,ep((int)CalTypeMod::CAL_SEEING,"CAL_SEEING","un-documented")));
     m_.insert(pair<CalTypeMod::CalType,EnumPar<void> >
      (CalTypeMod::CAL_WVR,ep((int)CalTypeMod::CAL_WVR,"CAL_WVR","un-documented")));
+    m_.insert(pair<CalTypeMod::CalType,EnumPar<void> >
+     (CalTypeMod::CAL_APPPHASE,ep((int)CalTypeMod::CAL_APPPHASE,"CAL_APPPHASE","un-documented")));
     return true;
   }
   static map<CalTypeMod::CalType,EnumPar<void> > m_;
