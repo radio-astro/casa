@@ -82,3 +82,8 @@ svg {
     fill-opacity: .125;
     shape-rendering: crispEdges;
 }
+
+.gaintable_popover {
+	max-width: 1000px;
+	width: auto;
+}

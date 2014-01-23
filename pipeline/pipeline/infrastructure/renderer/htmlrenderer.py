@@ -2231,6 +2231,119 @@ class T2_4MDetailsVLAImportDataRenderer(T2_4MDetailsDefaultRenderer):
 
         return ctx
 
+    
+class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
+    FlagTotal = collections.namedtuple('FlagSummary', 'flagged total')
+
+    def __init__(self, template='t2-4m_details-hif_applycal.html', 
+                 always_rerender=True):
+        super(T2_4MDetailsApplycalRenderer, self).__init__(template,
+                                                           always_rerender)
+
+    def get_display_context(self, context, result):
+        super_cls = super(T2_4MDetailsApplycalRenderer, self)
+        ctx = super_cls.get_display_context(context, result)
+
+        weblog_dir = os.path.join(context.report_dir,
+                                  'stage%s' % result.stage_number)
+
+        flag_totals = {}
+        for r in result:
+            flag_totals = utils.dict_merge(flag_totals, 
+                                           self.flags_for_result(r, context))
+
+        calapps = {}
+        for r in result:
+            calapps = utils.dict_merge(calapps,
+                                       self.calapps_for_result(r))
+
+        # return all agents so we get ticks and crosses against each one
+        agents = ['before', 'applycal']
+
+        ctx.update({'flags'     : flag_totals,
+                    'calapps'   : calapps,
+                    'agents'    : agents,
+                    'dirname'   : weblog_dir})
+        return ctx
+
+    def calapps_for_result(self, result):
+        calapps = collections.defaultdict(list)
+        for calapp in result.applied:
+            vis = os.path.basename(calapp.vis)
+            calapps[vis].append(calapp)
+        return calapps
+
+    def flags_for_result(self, result, context):
+        ms = context.observing_run.get_ms(result.inputs['vis'])
+        summaries = result.summaries
+
+        by_intent = self.flags_by_intent(ms, summaries)
+        by_spw = self.flags_by_science_spws(ms, summaries)
+
+        return {ms.basename : utils.dict_merge(by_intent, by_spw)}
+
+    def flags_by_intent(self, ms, summaries):
+        # create a dictionary of scans per observing intent, eg. 'PHASE':[1,2,7]
+        intent_scans = {}
+        for intent in ('BANDPASS', 'PHASE', 'AMPLITUDE', 'TARGET'):
+            # convert IDs to strings as they're used as summary dictionary keys
+            intent_scans[intent] = [str(s.id) for s in ms.scans
+                                    if intent in s.intents]
+
+        # while we're looping, get the total flagged by looking in all scans 
+        intent_scans['TOTAL'] = [str(s.id) for s in ms.scans]
+
+        total = collections.defaultdict(dict)
+
+        previous_summary = None
+        for summary in summaries:
+
+            for intent, scan_ids in intent_scans.items():
+                flagcount = 0
+                totalcount = 0
+    
+                for i in scan_ids:
+                    flagcount += int(summary['scan'][i]['flagged'])
+                    totalcount += int(summary['scan'][i]['total'])
+        
+                    if previous_summary:
+                        flagcount -= int(previous_summary['scan'][i]['flagged'])
+    
+                ft = T2_4MDetailsApplycalRenderer.FlagTotal(flagcount, 
+                                                                totalcount)
+                total[summary['name']][intent] = ft
+                
+            previous_summary = summary
+                
+        return total 
+    
+    def flags_by_science_spws(self, ms, summaries):
+        science_spws = ms.get_spectral_windows(science_windows_only=True)
+    
+        total = collections.defaultdict(dict)
+    
+        previous_summary = None
+        for summary in summaries:
+    
+            flagcount = 0
+            totalcount = 0
+    
+            for spw in science_spws:
+                spw_id = str(spw.id)
+                flagcount += int(summary['spw'][spw_id]['flagged'])
+                totalcount += int(summary['spw'][spw_id]['total'])
+        
+                if previous_summary:
+                    flagcount -= int(previous_summary['spw'][spw_id]['flagged'])
+
+            ft = T2_4MDetailsApplycalRenderer.FlagTotal(flagcount, 
+                                                            totalcount)
+            total[summary['name']]['SCIENCE SPWS'] = ft
+                
+            previous_summary = summary
+                
+        return total
+
 
 class T2_4MDetailsLowgainFlagRenderer(T2_4MDetailsDefaultRenderer):
     '''
@@ -2889,7 +3002,7 @@ class T2_4MDetailsSingleDishCalSkyRenderer(T2_4MDetailsDefaultRenderer):
         ctx.update({'summary_subpage': plot_list,
                     'summary_plots': summary_plots,
                     'dirname': stage_dir})
-        
+            
         return ctx
     
     def _group_by_vis(self, plots):
@@ -3660,6 +3773,7 @@ renderer_map = {
         # hif.tasks.Bandpass       : T2_3MDetailsBandpassRenderer(),
     },
     T2_4MDetailsRenderer : {
+        hif.tasks.Applycal       : T2_4MDetailsApplycalRenderer(),                        
         hif.tasks.AgentFlagger   : T2_4MDetailsAgentFlaggerRenderer(),
         hifa.tasks.ALMAAgentFlagger : T2_4MDetailsAgentFlaggerRenderer(),
         hif.tasks.Atmflag        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_atmflag.html'),

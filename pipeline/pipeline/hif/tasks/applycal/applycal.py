@@ -201,6 +201,11 @@ class Applycal(basetask.StandardTaskTemplate):
         # dictionary of CalTo:CalFroms gives us which calibrations should be
         # applied and how.
         merged = inputs.calstate.merged()
+
+        # run a flagdata job to find the flagged state before applycal 
+        flagdata_summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary')
+        stats_before = self._executor.execute(flagdata_summary_job)
+        stats_before['name'] = 'before'
         
         jobs = []
         for calto, calfroms in merged.items():
@@ -227,10 +232,16 @@ class Applycal(basetask.StandardTaskTemplate):
         for job in jobs:
             self._executor.execute(job)
 
+        # run a final flagdata job to get the flagging statistics after
+        # application of the potentially flagged caltables 
+        stats_after = self._executor.execute(flagdata_summary_job)
+        stats_after['name'] = 'applycal'
+
         applied = [callibrary.CalApplication(calto, calfroms) 
                    for calto, calfroms in merged.items()]
 
         result = ApplycalResults(applied)
+        result.summaries = [stats_before, stats_after]
 
         return result
 
