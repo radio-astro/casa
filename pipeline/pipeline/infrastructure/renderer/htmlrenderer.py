@@ -2236,7 +2236,7 @@ class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
     FlagTotal = collections.namedtuple('FlagSummary', 'flagged total')
 
     def __init__(self, template='t2-4m_details-hif_applycal.html', 
-                 always_rerender=True):
+                 always_rerender=False):
         super(T2_4MDetailsApplycalRenderer, self).__init__(template,
                                                            always_rerender)
 
