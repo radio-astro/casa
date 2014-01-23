@@ -3688,8 +3688,6 @@ renderer_map = {
         hsd.tasks.SDInspectData  : T2_4MDetailsSingleDishInspectDataRenderer(always_rerender=True),
         hsd.tasks.SDCalTsys      : T2_4MDetailsSingleDishCalTsysRenderer(always_rerender=True),
         hsd.tasks.SDCalSky       : T2_4MDetailsSingleDishCalSkyRenderer(always_rerender=True),
-#         hsd.tasks.SDBaseline     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_baseline.html'),
-#         hsd.tasks.SDBaseline2     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_baseline.html', always_rerender=True),
         hsd.tasks.SDBaseline     : T2_4MDetailsSingleDishBaselineRenderer(always_rerender=True),
         hsd.tasks.SDBaseline2     : T2_4MDetailsSingleDishBaselineRenderer(always_rerender=True),
         hsd.tasks.SDFlagData     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagdata.html', always_rerender=True),

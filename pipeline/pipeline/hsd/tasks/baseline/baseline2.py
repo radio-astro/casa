@@ -93,13 +93,6 @@ class SDBaseline(common.SingleDishTaskTemplate):
             channelmap_range = maskline_result.outcome['channelmap_range']
             cluster_info = maskline_result.outcome['cluster_info']
 
-            #LOG.info('detected_lines=%s'%(detected_lines))
-            #LOG.info('cluster_info=%s'%(cluster_info))
-
-#             # filenamer
-#             namer = filenamer.BaselineSubtractedTable()
-#             namer.spectral_window(spwid)
-
             # fit order determination and fitting
             fitter_cls = fitting.FittingFactory.get_fitting_class(fitfunc)
 

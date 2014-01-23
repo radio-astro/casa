@@ -47,7 +47,6 @@ class FittingInputs(FittingInputsBase):
 class FittingBase(common.SingleDishTaskTemplate):
     Inputs = FittingInputs
 
-#class FittingBase(object):
     ApplicableDuration = 'raster' # 'raster' | 'subscan'
     MaxPolynomialOrder = 'none' # 'none', 0, 1, 2,...
     PolynomialOrder = 'automatic' # 'automatic', 0, 1, 2, ...
@@ -76,8 +75,6 @@ class FittingBase(common.SingleDishTaskTemplate):
         filename_out = self.inputs.outfile
         iteration = self.inputs.iteration
         bltable_name = self.inputs.bltable
-#         if iteration == 0:
-#             utils.createExportTable(bltable_name)
             
         if not filename_out or len(filename_out) == 0:
             self.outfile = self.data_object.baselined_name
@@ -85,13 +82,7 @@ class FittingBase(common.SingleDishTaskTemplate):
         
         if not os.path.exists(filename_out):
             raise RuntimeError, "Output scantable '%s' does not exist. It should be exist before you run this method." % filename_out
-#         if iteration == 0 or not os.path.exists(filename_out):
-#             with casatools.TableReader(filename_in) as tb:
-#                 copied = tb.copy(filename_out, deep=True, valuecopy=True, returnobject=True)
-#                 copied.close()
 
-        #time_table = self.time_table
-        #index_list = self.index_list
         antennaid = self.inputs.antennaid
         spwid = self.inputs.spwid
         pollist = self.inputs.pollist
@@ -112,12 +103,6 @@ class FittingBase(common.SingleDishTaskTemplate):
         
         rows_to_process = numpy.where(numpy.logical_and(antennas == antennaid, 
                                                    numpy.logical_and(ifnos == spwid, srctypes==srctype)))[0]
-
-#         blfile = filename_in.rstrip('/')+'.baseline.table'
-#         os.system('rm -rf %s'%(blfile))
-
-        # dummy scantable for baseline subtraction
-#         dummy_scan = utils.create_dummy_scan(filename_in, datatable, rows_to_process)
         
         _polnos = polnos.take(rows_to_process)
         index_list_total = []
@@ -133,9 +118,6 @@ class FittingBase(common.SingleDishTaskTemplate):
             # working with spectral data in scantable
             nrow_total = len(index_list_per_pol)
                 
-#             # Create progress timer
-#             Timer = common.ProgressTimer(80, nrow_total, LOG.level)
-    
             LOG.info('Calculating Baseline Fitting Parameter...')
             LOG.info('Baseline Fit: background subtraction...')
             LOG.info('Processing %d spectra...'%(nrow_total))
@@ -147,7 +129,7 @@ class FittingBase(common.SingleDishTaskTemplate):
             for y in xrange(len(member_list)):
                 rows = member_list[y][0]
                 idxs = member_list[y][1]
-                #LOG.debug('rows=%s'%(rows))
+
                 with casatools.TableReader(filename_in) as tb:
                     spectra = numpy.array([tb.getcell('SPECTRA',row)
                                            for row in rows])
@@ -168,7 +150,6 @@ class FittingBase(common.SingleDishTaskTemplate):
                 nrow = len(rows)
                 LOG.debug('nrow = %s'%(nrow))
                 LOG.debug('len(idxs) = %s'%(len(idxs)))
-#                 updated = []
                 
                 index_list = []
                 row_list = []
@@ -179,17 +160,9 @@ class FittingBase(common.SingleDishTaskTemplate):
                     LOG.trace('===== Processing at row = %s ====='%(row))
                     nochange = datatable.tb2.getcell('NOCHANGE',idx)
                     LOG.trace('row = %s, Flag = %s'%(row, nochange))
-    
-#                     # skip if no update on line window
-#                     if nochange > 0:
-#                         continue
-    
-                    # data to be fitted
-#                     sp = spectra[i]
-    
+        
                     # mask lines
                     maxwidth = 1
-                    #masklist = datatable.getcell('MASKLIST',idx)
                     _masklist = masklist[i] 
                     for [chan0, chan1] in _masklist:
                         if chan1 - chan0 >= maxwidth:
@@ -214,6 +187,10 @@ class FittingBase(common.SingleDishTaskTemplate):
                 index_list_total.extend(index_list)
                 row_list_total.extend(row_list)
 
+#         f = open(bltable_name+'.in.txt', 'w')
+#         f.write("row_idx = %s\n" % str(row_list_total))
+#         f.write("blinfo = %s" % str(blinfo))
+#         f.close()
         # subtract baseline
         LOG.info('Baseline Fit: background subtraction...')
         LOG.info('Processing %d spectra...'%(len(row_list_total)))
@@ -222,7 +199,6 @@ class FittingBase(common.SingleDishTaskTemplate):
         LOG.info('number of rows in scantable = %d' % st_out.nrow())
         st_out.set_selection(rows=row_list_total)
         LOG.info('number of rows in selected = %d' % st_out.nrow())
-        LOG.info('BLINFO=%s' % (str(blinfo)))
         st_out.sub_baseline(insitu=True, retfitres=False, blinfo=blinfo, bltable=bltable_name, overwrite=True)
         st_out.set_selection()
         st_out.save(filename_out, format='ASAP', overwrite=True)
@@ -255,22 +231,13 @@ class FittingBase(common.SingleDishTaskTemplate):
         return result
 
     def _calc_baseline_param(self, row_idx, polyorder, nchan, modification, edge, masklist, win_polyorder, fragment, nwindow, mask):
-        # set edge mask
-        #data[:edge[0]] = 0.0
-        #data[nchan-edge[1]:] = 0.0
-        
         # Create mask for line protection
         nchan_without_edge = nchan - sum(edge)
-        #mask = numpy.ones(nchan, dtype=int)
         if type(masklist) == list or type(masklist) == numpy.ndarray:
             for [m0, m1] in masklist:
                 mask[m0:m1] = 0
         else:
             LOG.critical('Invalid masklist')
-        #if edge[1] > 0:
-        #    nmask = int(nchan_without_edge - numpy.sum(mask[edge[0]:-edge[1]] * 1.0))
-        #else:
-        #    nmask = int(nchan_without_edge - numpy.sum(mask[edge[0]:] * 1.0))
         num_mask = int(nchan_without_edge - numpy.sum(mask[edge[0]:nchan-edge[1]] * 1.0))
         masklist_all = self._mask_to_masklist(mask)
 
@@ -368,7 +335,6 @@ class FittingSummary(object):
                 LOG.info('%7d|%9.1f%%'%(0, 0))
                 LOG.info('       ~')
                 LOG.info('       ~')
-            #for ichan in xrange(len(histogram)):
             for i in xrange(len(merged_start_chan)):
                 for j in xrange(max(0,merged_start_chan[i]-1), min(nchan,merged_end_chan[i]+2)):
                     LOG.info('%7d|%9.1f%%'%(j, histogram[j]/nrow*100.0))
@@ -391,8 +357,6 @@ class FittingSummary(object):
         # number of segments for cspline_baseline
         with casatools.TableReader(tablename) as tb:
             nrow = tb.nrows()
-#             num_segments = [tb.getcell('Sections', irow).shape[0] \
-#                             for irow in xrange(nrow)]
             num_segments = [( len(tb.getcell('FUNC_PARAM', irow)) - 1 ) \
                             for irow in xrange(nrow)]
         unique_values = numpy.unique(num_segments)
@@ -401,7 +365,6 @@ class FittingSummary(object):
         LOG.info('')
         LOG.info('# of segments|frequency')
         LOG.info('-------------|---------')
-        #for val in unique_values:
         for val in xrange(1, max_segments):
             count = num_segments.count(val)
             LOG.info('%13d|%9d'%(val, count))
