@@ -3098,8 +3098,8 @@ class T2_4MDetailsSingleDishBaselineRenderer(T2_4MDetailsDefaultRenderer):
             plots.append(task.plot())
 
         plot_group = self._group_by_axes(plots)
-        plot_detail = [] # keys are 'title', 'html', 'summary_plots'
-        plot_summary = [] # keys are 'title', 'summary_plots'
+        plot_detail = [] # keys are 'title', 'html', 'cover_plots'
+        plot_cover = [] # keys are 'title', 'cover_plots'
         # Render stage details pages
         details_title = ["R.A. vs Dec."]
         for (name, _plots) in plot_group.items():
@@ -3109,14 +3109,14 @@ class T2_4MDetailsSingleDishBaselineRenderer(T2_4MDetailsDefaultRenderer):
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())
                 group_desc['html'] = renderer.filename
-                group_desc['summary_plots'] = self._get_a_plot_per_spw(_plots)
+                group_desc['cover_plots'] = self._get_a_plot_per_spw(_plots)
                 plot_detail.append(group_desc)
             else:
-                group_desc['summary_plots'] = _plots
-                plot_summary.append(group_desc)
+                group_desc['cover_plots'] = _plots
+                plot_cover.append(group_desc)
                 
         ctx.update({'detail': plot_detail,
-                    'overview': plot_summary})
+                    'cover_only': plot_cover})
         
         return ctx
     
@@ -3132,7 +3132,7 @@ class T2_4MDetailsSingleDishBaselineRenderer(T2_4MDetailsDefaultRenderer):
         known_spw = []
         plot_list = []
         for p in plots:
-            if p.parameters['spw'] not in known_spw:
+            if p.parameters['type'] == 'clustering_final' and p.parameters['spw'] not in known_spw:
                 known_spw.append(p.parameters['spw'])
                 plot_list.append(p)
         return plot_list

@@ -69,7 +69,7 @@ except Exception, e:
 <!--		href="${os.path.relpath(os.path.join(dirname, plots['html']), pcontext.report_dir)}">${plots['title']}-->
     </h3>
     <ul class="thumbnails">
-        % for plot in plots['summary_plots']:
+        % for plot in plots['cover_plots']:
             % if os.path.exists(plot.thumbnail):
                 <li class="span3">
                     <div class="thumbnail">
@@ -103,10 +103,10 @@ except Exception, e:
 % endfor
 
 <!-- No details -->
-% for plots in overview:
+% for plots in cover_only:
     <h3>${plots['title']}</h3>
     <ul class="thumbnails">
-        % for plot in plots['summary_plots']:
+        % for plot in plots['cover_plots']:
             % if os.path.exists(plot.thumbnail):
                 <li class="span3">
                     <div class="thumbnail">
