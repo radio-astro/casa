@@ -1085,11 +1085,11 @@ the space character, but they may be empty strings if they are not numerical val
 \item[anttype] - name of the antenna type, e.g. "DV"
 \item[rectype] - name of the receiver type, e.g. ""
 \item[azmin, aznom, azmax] - numerical value (degrees) of the minimal, the nominal, and 
-  the maximal Azimuth where this response is valid, e.g. "-10.5_0._10.5"
+  the maximal Azimuth where this response is valid, e.g. "-10.5\_0.\_10.5"
 \item[elmin, elnom, elmax] - numerical value (degrees) of the minimal, the nominal, and 
-  the maximal Elevation where this response is valid, e.g. "10._45._80."
+  the maximal Elevation where this response is valid, e.g. "10.\_45.\_80."
 \item[freqmin, freqnom, freqmax] - numerical value (degrees) of the minimal, the nominal, and 
-  the maximal Frequency (in units of frequnit) where this response is valid, e.g. "84._100._116."
+  the maximal Frequency (in units of frequnit) where this response is valid, e.g. "84.\_100.\_116."
 \item[frequnit] - the unit of the previous three frequencies, e.g. "GHz"
 \item[comment] - any string containing only characters permitted in file names and not empty space
 \item[functype] - the type of the image as defined above ("VP", "AIF", or "EFP")

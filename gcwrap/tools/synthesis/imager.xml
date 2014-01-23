@@ -105,7 +105,7 @@ the removal of sidelobes will be accurate. The number of facets
 returned is the second, usually smaller, number. The formula used
 is:
 \begin{equation}
-N_{facets} = N_{pixels} \sqrt{{{\Delta \theta}\over{\sqrt{8 \delta A}}}{w_{rms}}\over{uv_{rms}}}
+N\_{facets} = N\_{pixels} \sqrt{{{\Delta \theta}\over{\sqrt{8 \delta A}}}{w\_{rms}}\over{uv\_{rms}}}
 \end{equation}
 where $\Delta \theta$ is the cellsize in radians, and $\delta A$ is
 the amplitude loss. This formula can be derived from (a) the peeling
@@ -169,7 +169,7 @@ for the beam size both in the plane of the sky and along the $w$ axis.
   if the parameter msname is used then the MSs associated associated with
   this tool (that have been either 'open'ed or 'selectvis'ed) are ignored
   In this mode it is a helper function to the general world ...no need to
-  open or selectvis. You need to specify the field_id for which this calculation is 
+  open or selectvis. You need to specify the field\_id for which this calculation is 
   being done for in the helper mode. 
   If you have already set MS's and selected data and msname="" then 
   the calulation is done for the field(s) selected in selectvis.
@@ -953,14 +953,14 @@ the source is at the first time observed in the selected data.
 
 
      <param type="any" name="restfreq">
-     <description>rest frequency to use; default => use the one available in ms
+     <description>rest frequency to use; default =\&amp; use the one available in ms
      </description>
      <any type="variant"/>
      <value></value>
      </param>
 
      <param type="string" name="outframe">
-     <description>frequency frame of output image (default LSRK, "" =&gt; as input ms or LSRK in case of multiple ms's), options are LSRK, LSRD, BARY, GALACTO, LGROUP, CMB
+     <description>frequency frame of output image (default LSRK, "" =\&gt; as input ms or LSRK in case of multiple ms's), options are LSRK, LSRD, BARY, GALACTO, LGROUP, CMB
      </description>
      <value>LSRK</value>
      <allowed kind="enum">
@@ -1461,7 +1461,7 @@ Or if one wants to generate a psf from the uv coverage and use that subsequently
      \begin{itemize}
        \item changing the phase tracking center(s),
        \item correcting for differential aberration,  (Not yet implemented)
-       \item changing the equinox (i.e. B1950_VLA to J2000 or APP, etc.) of the UVW coordinates,
+       \item changing the equinox (i.e. B1950\_VLA to J2000 or APP, etc.) of the UVW coordinates,
        \item changing the projection, as in (-)NCP to SIN.  (Not yet implemented),
        \item refocusing.
      \end{itemize}
@@ -1501,7 +1501,7 @@ Or if one wants to generate a psf from the uv coverage and use that subsequently
      </param>	
      <param type="string" direction="in" name="datacolumn">
        <description>
-         Which of DATA, MODEL_DATA, and/or CORRECTED_DATA to operate on.
+         Which of DATA, MODEL\_DATA, and/or CORRECTED\_DATA to operate on.
          Default: "all".
        </description>
        <value>all</value>
@@ -2188,7 +2188,7 @@ may be acceptable.
      </param>
 
      <param type="stringArray" name="mask">
-     <description>Names of mask images (0=&gt;no emission, 1=&gt;emission permitted</description>
+     <description>Names of mask images (0=\&gt;no emission, 1=\&gt;emission permitted</description>
      <value></value>
      </param>
 
@@ -2227,7 +2227,7 @@ NNLS algorithm</shortdescription>
 
 Solve for the model brightness using the Briggs' Non-Negative Least
 Squares algorithm. Since NNLS works only on the $I$ image, the $I$
-pixels in the current image is set to zero where the fluxmask is $&gt; 0.0$,
+pixels in the current image is set to zero where the fluxmask is $\&gt; 0.0$,
 then NNLS is used to estimate the $I$-pixels for that region.
 The deconvolution is performed on the residual image calculated from
 the visibility data currently selected. Hence the first step performed
@@ -2959,7 +2959,7 @@ hence this is kept separate for now).
 
 The sensitivity calculations require Tsys and collecting area of
 the antenna. These quantities are not known from the MS.  The
-sensitivity is there returned in units of Jy m^2/K.  Multiplying the
+sensitivity is there returned in units of Jy m\^2/K.  Multiplying the
 second elements with the ration of the Tsys and effective antenna
 collecting area will give the sensitivity in Jy/beam units.
 
@@ -2972,7 +2972,7 @@ Hz), the sum of weights and the absolute spectral window IDs used.
 </description>
 <output>
      <param type="record" name="pointsource">
-     <description>Calculated point source sensitivity (Jy m^2 / (K beam))</description>
+     <description>Calculated point source sensitivity (Jy m\^2 / (K beam))</description>
      </param>
 
      <param type="double" name="relative">
@@ -3106,7 +3106,7 @@ are the start and step velocities as strings.
 
 
 im.defineimage(mode='velocity', nchan=64, start='20 km/s', step='-100m/s');
-im.selectvis(spwid=[-1]); ###selecting all data spectral windows
+im.selectvis(spwid=[-1]); \#\#\#selecting all data spectral windows
 im.clean(...);
 
 
@@ -3126,12 +3126,12 @@ blank channels image are made. The example below will result in the
 having the first 6 (0-5) channels in the image to be blank.
 
 
-im.selectvis(nchan=50, start=6, step=1) #selected chan 6-55
+im.selectvis(nchan=50, start=6, step=1) \#selected chan 6-55
 im.defineimage(mode='channel', nchan=50, start=0, step=1); 
 
- # will try to image channel 1-50. But as previously only channel 6-55 
- # was selected only channel 6-50 will have data; images of channels
- # 1-5 are blank 
+ \# will try to image channel 1-50. But as previously only channel 6-55 
+ \# was selected only channel 6-50 will have data; images of channels
+ \# 1-5 are blank 
 im.clean(....)
 
 
@@ -3239,7 +3239,7 @@ im.defineimage(mode='velocity', nchan=200, mstart='20km/s',
      </param>
 
      <param type="bool" name="usescratch">
-     <description>If True: imager will use CORRECTED_DATA column and will make scratch columns and store Model visibilities
+     <description>If True: imager will use CORRECTED\_DATA column and will make scratch columns and store Model visibilities
       after deconvolution </description>
      <value>false</value>
      </param>
@@ -3477,7 +3477,7 @@ Valid values are between 0.0 and 1.0.
 <input>
 
      <param type="double" name="cyclefactor">
-     <description>Cycle threshold = max_resid * min(cyclemaxpsffraction,  this * max_sidelobe) </description>
+     <description>Cycle threshold = max\_resid * min(cyclemaxpsffraction,  this * max\_sidelobe) </description>
      <value>1.5</value>
      </param>
 
@@ -3487,7 +3487,7 @@ Valid values are between 0.0 and 1.0.
      </param>
 
      <param type="double" name="cyclemaxpsffraction">
-     <description>Cycle threshold = max_resid * min(this,  cyclefactor * max_sidelobe) </description>
+     <description>Cycle threshold = max\_resid * min(this,  cyclefactor * max\_sidelobe) </description>
      <value>0.8</value>
      </param>
 
@@ -3636,7 +3636,7 @@ especially in wide-field cleaning.
      </param>
 
      <param type="double" name="padding">
-     <description>Padding factor in image plane (&gt;=1.0)</description>
+     <description>Padding factor in image plane (\&gt;=1.0)</description>
      <value>1.0</value>
      </param>
      <param type="string" name="freqinterp">
@@ -3820,7 +3820,7 @@ of scales used (using the nscales method), or to directly control the
 sizes of the scales in pixels (using the uservector method).  When using the
 nscales method, the scales are calculated using the following formula:
 \begin{equation}
-\theta_{minor}  10.0 ^{(i- N_{scales}/2)/2.0}
+\theta_{minor}  10.0 ^{(i- N\_{scales}/2)/2.0}
 \end{equation}
 where $\theta_{min}$ is the fitted minor axis of the clean beam. The
 first value is zero.
@@ -3944,13 +3944,13 @@ Various less-often-used options for single dish processing can be set.
 factor.
 \item[weight] The weight given to the single dish data in the imaging
 is multiplied by this factor.
-\end{description}
 \item[convsupport] This parameter can be used to change the support used in gridding single dish data in imaging. If 'PB' or 'pb' is used as the 'convtype' in 
  <link anchor="imager:imager.setoptions.function">setoptions</link> this parameter is ignored as the support is defined by the primary beam. The deafult of -1 mans 1 as convsupport is used for 'box' convolution function and 3 is used for 'SF' convolution function.
-\item[pointingcolumntouse] This parameter is NOT to be changed under normal circumstances. This is to be used by those who know what they are doing and want to try to use different columns in the POINTING table especially if they believe their dish direction is wrong. And if any of the {\tt _OFFSET} columns is used do not expect to be able to use a different frame in the image setup in <link anchor="imager:imager.defineimage.function">defineimage</link>. Possible values are {\tt DIRECTION, TARGET, ENCODER, POINTING_OFFSET, SOURCE_OFFSET} 
+\item[pointingcolumntouse] This parameter is NOT to be changed under normal circumstances. This is to be used by those who know what they are doing and want to try to use different columns in the POINTING table especially if they believe their dish direction is wrong. And if any of the {\tt \_OFFSET} columns is used do not expect to be able to use a different frame in the image setup in <link anchor="imager:imager.defineimage.function">defineimage</link>. Possible values are {\tt DIRECTION, TARGET, ENCODER, POINTING\_OFFSET, SOURCE\_OFFSET} 
 \item[truncate] The truncation radius as a quantity or a float value. This parameter is effective only when 'GAUSS' or 'GJINC' is used as the 'convtype' in <link anchor="imager:imager.setoptions.function">setoptions</link>. You can use an unit 'pixel' to specify truncation radius as pixel value. If float value is set, or quantity without unit is set, its unit will be 'pixel'.
 \item[gwidth] The width of the gaussian beam as a radius of half maximum. This parameter is effective only when 'GAUSS' or 'GJINC' is used as the 'convtype' in <link anchor="imager:imager.setoptions.function">setoptions</link>. You can use an unit 'pixel' to specify truncation radius as pixel value. If float value is set, or quantity without unit is set, its unit will be 'pixel'. Note that, when 'GJINC' is used as the 'convtype', gwidth doesn't directry specify width of the convolution function.
-\item[jwidth] The witdh of the jinc beam as a parameter c, where jinc = J_1(pi*x/c)/(pi*x/c). This parameter is effective only when 'GJINC' is used as the 'convtype' in <link anchor="imager:imager.setoptions.function">setoptions</link>. You can use an unit 'pixel' to specify truncation radius as pixel value. If float value is set, or quantity without unit is set, its unit will be 'pixel'. Note that jwidth doesn't directly specify width of the convolution function. 
+\item[jwidth] The witdh of the jinc beam as a parameter c, where jinc = J\_1(pi*x/c)/(pi*x/c). This parameter is effective only when 'GJINC' is used as the 'convtype' in <link anchor="imager:imager.setoptions.function">setoptions</link>. You can use an unit 'pixel' to specify truncation radius as pixel value. If float value is set, or quantity without unit is set, its unit will be 'pixel'. Note that jwidth doesn't directly specify width of the convolution function. 
+\end{description}
 </description>
 
 <input>
@@ -3977,8 +3977,8 @@ is multiplied by this factor.
 	    <value>DIRECTION</value>
 	    <value>TARGET</value>
 	    <value>ENCODER</value>
-	    <value>POINTING_OFFSET</value>
-	    <value>SOURCE_OFFSET</value>
+	    <value>POINTING\_OFFSET</value>
+	    <value>SOURCE\_OFFSET</value>
      </allowed>
 
      </param>
@@ -4003,7 +4003,7 @@ is multiplied by this factor.
 
      <param type="double" name="minweight">
      <description>Minimum weight level to use for weight correction and weight based masking.</description>
-     <range min="&gt;=0."/>
+     <range min="\&gt;=0."/>
      <value>0.</value>
      </param>
 
@@ -4287,36 +4287,36 @@ follows. Then:
 \item[natural]: minimizes the noise in the dirty image. The weight of
 the $i$-th sample is set to the inverse variance:
 \begin{equation}
-w_i={1\over{\sigma_i^2}}
+w\_i={1\over{\sigma\_i^2}}
 \end{equation}
 where $\sigma_i$ is the noise of the $i$'th sample.
 \item[radial]: approximately minimizes rms sidelobes for an east-west synthesis
 array. The weight of the $i$-th sample is multiplied
 by the radial distance from the center of the $u,v$ plane:
 \begin{equation}
-w_i=w_i \sqrt{u_i^2+v_i^2}
+w\_i=w\_i \sqrt{u\_i^2+v\_i^2}
 \end{equation}
 \item[uniform]: For Briggs and uniform weighting, we first grid the inverse
-variance $w_i$ for all selected data onto a grid of size given by the
+variance $w\_i$ for all selected data onto a grid of size given by the
 argument npixels (default to nx) and u,v cell-size given by
 $2/$fieldofview where fieldofview is the specified field of view
 (defaults to the image field of view).  This forms the gridded weights
-$W_k$. The weight of the $i$-th sample is then changed:
+$W\_k$. The weight of the $i$-th sample is then changed:
 \begin{equation}
-w_i={w_i\over{W_k}}
+w\_i={w\_i\over{W\_k}}
 \end{equation}
-where $W_k$ is the gridded weight of the relevant cell.
+where $W\_k$ is the gridded weight of the relevant cell.
 It may be shown that this minimizes rms sidelobes over
 the field of view. By changing the field of view, one may suppress
 the sidelobes over a region different (usually smaller) than the
 image size.
 \item[briggs: rmode='norm']: The weights are changed:
 \begin{equation}
-w_i={w_i\over{1 + W_k f^2}}
+w\_i={w\_i\over{1 + W\_k f^2}}
 \end{equation}
 where:
 \begin{equation}
-f^2={{(5*10^{-R})^2}\over{{\sum_k W_k^2}\over{\sum_i w_i}}}
+f^2={{(5*10^{-R})^2}\over{{\sum_k W\_k^2}\over{\sum\_i w\_i}}}
 \end{equation}
 and $R$ is the robust parameter. The scaling of $R$ is such that
 $R=0$ gives a good tradeoff between resolution and sensitivity.
@@ -4324,7 +4324,7 @@ $R$ takes value between -2.0 (close to uniform weighting) to 2.0
 (close to natural).
 \item[briggs: rmode='abs']: The weights are changed:
 \begin{equation}
-w_i={w_i\over{W_k*R^2+2*\sigma_R^2}}
+w\_i={w\_i\over{W\_k*R^2+2*\sigma_R^2}}
 \end{equation}
 where $R$ is the robust parameter and $\sigma_R$ is the noise
 parameter. 
@@ -4365,7 +4365,7 @@ calculated from the specified weight (function of noise; usually $1/\sigma^2$) p
 
      <param type="double" name="robust">
      <description>Parameter in briggs weighting</description>
-     <range min="&gt;=2.0" max="&lt;=2.0"/>
+     <range min="\&gt;=2.0" max="&lt;=2.0"/>
      <value>0.0</value>
      </param>
 

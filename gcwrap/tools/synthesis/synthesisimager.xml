@@ -216,7 +216,7 @@ Define the image coordinate systems and shapes.
      </param>
 
      <param type="any" name="restfreq">
-     <description>rest frequency to use; default => use the one available in ms
+     <description>rest frequency to use; default =\&gt; use the one available in ms
      </description>
      <any type="variant"/>
      <value></value>
