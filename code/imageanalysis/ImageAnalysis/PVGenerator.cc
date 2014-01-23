@@ -1,4 +1,3 @@
-//# tsubImage->cc: Test program for class SubImage
 //# Copyright (C) 1998,1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -29,6 +28,7 @@
 
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
+#include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
 
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
@@ -164,7 +164,6 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
     Vector<Double> newRefPix2 = subCoords.referencePixel();
     newRefPix2[dirAxes[0]] = midpoint[0];
     newRefPix2[dirAxes[1]] = midpoint[1];
-
     Vector<Double> newRefVal;
     subCoords.toWorld(newRefVal, newRefPix2);
     subCoords.setReferencePixel(newRefPix2);
@@ -253,6 +252,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 			)
 		);
 	}
+
 	// done with this pointer
 	imageToRotate.reset();
 	Vector<Double> origStartPixel = Vector<Double>(subShape.size(), 0);
@@ -290,6 +290,9 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 			- sqrt(xdiff*xdiff + ydiff*ydiff)
 		) < 1e-6, AipsError
 	);
+	// CAS-6043, because it's possible for the above conditions to be true but the y values to still be
+	// just a little different and on either side of the 0.5 pixel mark
+	rotPixEnd[yAxis] = rotPixStart[yAxis];
 	// We have rotated so the position of the starting pixel x is smaller than
 	// the ending pixel x.
 	AlwaysAssert(rotPixStart[xAxis] < rotPixEnd[xAxis], AipsError);
@@ -307,6 +310,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 		"mean", rotated, "", &lcbox,
 		"", "", "", "", axes, "", False
 	);
+
 	std::auto_ptr<ImageInterface<Float> > collapsed(collapser.collapse(True));
 	Vector<Double > newRefPix = rotCoords.referencePixel();
 	newRefPix[xAxis] = rotPixStart[xAxis] - blc[xAxis];
