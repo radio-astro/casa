@@ -563,7 +563,10 @@ class PhaseVsBaselineData(object):
         rads = numpy.deg2rad(self.data_for_corr)
         unwrapped_rads = numpy.unwrap(rads)
         unwrapped_degs = numpy.rad2deg(unwrapped_rads)
-        return unwrapped_degs
+        # the operation above removed the mask, so add it back.
+        remasked = numpy.ma.MaskedArray((unwrapped_degs), 
+                                        mask=self.data_for_corr.mask)
+        return remasked
         
     @property
     @utils.memoized
