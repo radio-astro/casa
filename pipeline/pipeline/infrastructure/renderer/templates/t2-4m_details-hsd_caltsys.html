@@ -13,42 +13,77 @@ import pipeline.infrastructure.displays as displays
 
 <%block name="title">Stage ${hr.get_stage_number(result)}: ${hr.get_task_description(result)}</%block>
 
-<%
-try:
-   stage_dir = os.path.join(pcontext.report_dir,'stage%d'%(result.stage_number))
-   if not os.path.exists(stage_dir):
-       os.mkdir(stage_dir)
-   
-   inputs = displays.SDTsysDisplay.Inputs(pcontext,result)
-   task = displays.SDTsysDisplay(inputs)
-   plots = task.plot()
-   plot_groups = logger.PlotGroup.create_plot_groups(plots)
-   for plot_group in plot_groups:
-       renderer = hr.PlotGroupRenderer(pcontext, result, plot_group)
-       plot_group.filename = renderer.filename
-       with renderer.get_file() as fileobj:
-           fileobj.write(renderer.render())
+<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 
-except Exception, e:
-   print 'hsd_caltsys html template exception:', e
-%>
+<script>
+$(document).ready(function() {
+    // return a function that sets the SPW text field to the given spw
+    var createSpwSetter = function(spw) {
+        return function() {
+            // trigger a change event, otherwise the filters are not changed
+            $("#select-spw").select2("val", [spw]).trigger("change");
+        };
+    };
 
-<ul>
-	<li>Initial display: most important details</li>
-	<ul>
-		<li>Heuristics parameters</li>
-		% if plot_groups:
-		<li>Plots</li>
-		<ul>
-			% for plot_group in plot_groups:
-				<li>
-					<a class="replace" href="${os.path.join(dirname, plot_group.filename)}">${plot_group.title}</a>
-				</li>
-			% endfor
-		</ul>
-		% endif
-		<li>Images</li>
-		<li>Tables</li>
-	</ul>
-	<li>Display maximum detail in this panel, similar to previous incarnation of pipeline; use different background colour; back button will go back to initial display</li>
-</ul>
+    // create a callback function for each overview plot that will select the
+    // appropriate spw once the page has loaded
+    $(".thumbnail a").each(function (i, v) {
+        var o = $(v);
+        var spw = o.data("spw");
+        o.data("callback", createSpwSetter(spw));
+    });
+
+    $(".fancybox").fancybox({
+        type: 'image',
+        prevEffect: 'none',
+        nextEffect: 'none',
+        loop: false,
+        helpers: {
+            title: {
+                type: 'outside'
+            },
+            thumbs: {
+                width: 50,
+                height: 50,
+            }
+        }
+    });
+});
+</script>
+
+This task generates a Tsys calibration table.
+
+% for ms in summary.keys():
+    <h4><a class="replace"
+           href="${os.path.relpath(os.path.join(dirname, subpage[ms][0]), pcontext.report_dir)}">${ms}</a>
+    </h4>
+    
+    <ul class="thumbnails">
+        % for _summary, _subpage, _x in zip(summary[ms], subpage[ms], ['Frequency', 'Time']):
+            % if os.path.exists(_summary.thumbnail):
+            <li class="span3">
+                <div class="thumbnail">
+                    <a href="${os.path.relpath(_summary.abspath, pcontext.report_dir)}"
+                       class="fancybox"
+                       rel="thumbs">
+                        <img src="${os.path.relpath(_summary.thumbnail, pcontext.report_dir)}"
+                             title="Tsys vs ${_x}"
+                             data-thumbnail="${os.path.relpath(_summary.thumbnail, pcontext.report_dir)}">
+                        </img>
+                    </a>
+
+                    <div class="caption">
+                        <h4>
+                            <a href="${os.path.relpath(os.path.join(dirname, _subpage), pcontext.report_dir)}"
+                               class="replace">
+                               Tsys vs ${_x}
+                            </a>
+                        </h4>
+                    </div>
+                </div>
+            </li>
+            % endif
+        % endfor
+    </ul>
+%endfor
+

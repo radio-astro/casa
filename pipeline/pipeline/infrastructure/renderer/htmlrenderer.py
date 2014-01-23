@@ -2914,6 +2914,66 @@ class T2_4MDetailsSingleDishCalSkyRenderer(T2_4MDetailsDefaultRenderer):
                     summary_plots[vis].append(plot)
         return summary_plots
 
+
+class T2_4MDetailsSingleDishCalTsysRenderer(T2_4MDetailsDefaultRenderer):
+    def __init__(self, template='t2-4m_details-hsd_caltsys.html', 
+                 always_rerender=False):
+        super(T2_4MDetailsSingleDishCalTsysRenderer, self).__init__(template,
+                                                                    always_rerender)
+        
+    def get_display_context(self, context, results):
+        ctx = super(T2_4MDetailsSingleDishCalTsysRenderer, self).get_display_context(context, results)
+        
+        stage_dir = os.path.join(context.report_dir,'stage%d'%(results.stage_number))
+        if not os.path.exists(stage_dir):
+            os.mkdir(stage_dir)
+
+        xaxis_types = ['Frequency', 'Time']
+
+        inputs = sddisplay.SDTsysDisplay.Inputs(context,results)
+        task = sddisplay.SDTsysDisplay(inputs)
+        plots = task.plot()
+        plots_per_type = self._plots_per_type(plots, xaxis_types)
+        summary_plots = {}
+        plot_list = {}
+        for (x, _plots) in zip(xaxis_types, plots_per_type):
+            plot_group = self._group_by_vis(_plots)
+            for (name, _plots) in plot_group.items():
+                renderer = SingleDishInspectDataPlotsRenderer(context, results, name, _plots,
+                                                              'Tsys vs %s'%(x))
+                with renderer.get_file() as fileobj:
+                    fileobj.write(renderer.render())
+                if not plot_list.has_key(name):
+                    plot_list[name] = []
+                plot_list[name].append(renderer.filename)
+                if not summary_plots.has_key(name):
+                    summary_plots[name] = []
+                summary_plots[name].append(_plots[0])
+
+        ctx.update({'subpage': plot_list,
+                    'summary': summary_plots,
+                    'dirname': stage_dir})
+
+        return ctx
+
+    def _group_by_vis(self, plots):
+        plot_group = {}
+        for p in plots:
+            key = p.parameters['vis']
+            if plot_group.has_key(key):
+                plot_group[key].append(p)
+            else:
+                plot_group[key] = [p]
+        return plot_group
+    
+    def _plots_per_type(self, plots, xaxis_list):
+        plot_group = [[] for x in xaxis_list]
+        for _plots in plots:
+            for p in _plots:
+                index = xaxis_list.index(p.x_axis)
+                plot_group[index].append(p)
+        return plot_group
+
 class T2_4MDetailsSingleDishImagingRenderer(T2_4MDetailsDefaultRenderer):
     def __init__(self, template='t2-4m_details-hsd_imaging.html', 
                  always_rerender=False):
@@ -3626,15 +3686,15 @@ renderer_map = {
         hifa.tasks.Wvrgcalflag    : T2_4MDetailsWvrgcalflagRenderer(),
         hsd.tasks.SDReduction    : T2_4MDetailsDefaultRenderer('t2-4-singledish.html'),
         hsd.tasks.SDInspectData  : T2_4MDetailsSingleDishInspectDataRenderer(always_rerender=True),
-        hsd.tasks.SDCalTsys      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_caltsys.html'),
+        hsd.tasks.SDCalTsys      : T2_4MDetailsSingleDishCalTsysRenderer(always_rerender=True),
         hsd.tasks.SDCalSky       : T2_4MDetailsSingleDishCalSkyRenderer(always_rerender=True),
 #         hsd.tasks.SDBaseline     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_baseline.html'),
 #         hsd.tasks.SDBaseline2     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_baseline.html', always_rerender=True),
         hsd.tasks.SDBaseline     : T2_4MDetailsSingleDishBaselineRenderer(always_rerender=True),
         hsd.tasks.SDBaseline2     : T2_4MDetailsSingleDishBaselineRenderer(always_rerender=True),
         hsd.tasks.SDFlagData     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagdata.html', always_rerender=True),
-        hsd.tasks.SDImaging      : T2_4MDetailsSingleDishImagingRenderer(always_rerender=True),
-        hsd.tasks.SDImaging2     : T2_4MDetailsSingleDishImagingRenderer(always_rerender=True),
+        hsd.tasks.SDImaging      : T2_4MDetailsSingleDishImagingRenderer(always_rerender=False),
+        hsd.tasks.SDImaging2     : T2_4MDetailsSingleDishImagingRenderer(always_rerender=False),
         hsd.tasks.SDFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagbaseline.html'),
         hsd.tasks.SDPlotFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_plotflagbaseline.html'),
         hsd.tasks.SDImportData2  : T2_4MDetailsImportDataRenderer(),

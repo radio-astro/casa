@@ -177,6 +177,7 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
         parameters['ant'] = antenna_name
         parameters['type'] = 'sd'
         parameters['file'] = os.path.basename(table)
+        parameters['vis'] = calto.vis
         with casatools.TableReader(table) as tb:
             tsel = tb.query('',sortlist='TIME')
             nrow = tsel.nrows()
@@ -237,6 +238,7 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
         parameters_base['pol'] = ''
         parameters_base['ant'] = antenna_name
         parameters_base['file'] = os.path.basename(table)
+        parameters_base['vis'] = calto.vis
 
         # setup axes
         axes_manager = TsysTimeAxesManager()
