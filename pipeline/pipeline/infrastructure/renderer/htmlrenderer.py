@@ -2784,6 +2784,73 @@ class T2_4MDetailsAgentFlaggerRenderer(T2_4MDetailsDefaultRenderer):
             previous_summary = summary
                 
         return total
+      
+class T2_4MDetailsSingleDishInspectDataRenderer(T2_4MDetailsDefaultRenderer):
+    def __init__(self, template='t2-4m_details-hsd_inspectdata.html',
+                 always_rerender=False):
+        super(T2_4MDetailsSingleDishInspectDataRenderer, self).__init__(template, 
+                                                                       always_rerender)
+        
+    def get_display_context(self, context, results):
+        ctx = super(T2_4MDetailsSingleDishInspectDataRenderer, self).get_display_context(context, results)
+        
+        stage_dir = os.path.join(context.report_dir,'stage%d'%(results[0].stage_number))
+        if not os.path.exists(stage_dir):
+            os.mkdir(stage_dir)
+   
+        plot_types = [{'type': 'pointing',
+                       'renderer': sddisplay.SDPointingDisplay,
+                       'plot_title': 'Telescope Pointing on the Sky'},
+                      {'type': 'azel',
+                       'renderer': sddisplay.SDAzElDisplay,
+                       'plot_title': 'Azimuth/Elevation vs Time'},
+                      {'type': 'weather',
+                       'renderer': sddisplay.SDWeatherDisplay,
+                       'plot_title': 'Weather vs Time'},
+                      {'type': 'wvr',
+                       'renderer': sddisplay.SDWvrDisplay,
+                       'plot_title': 'WVR Reading vs Time'}]
+        
+        summary_plots = {} 
+        subpages = {}
+        for _types in plot_types:
+            renderer_cls = _types['renderer']
+            inputs = renderer_cls.Inputs(context, results[0])
+            task = renderer_cls(inputs)
+            plots = task.plot()
+            plot_group = self._group_by_vis(plots)
+            for vis in plot_group.keys():
+                if not summary_plots.has_key(vis):
+                    summary_plots[vis] = dict([(p['type'], None) for p in plot_types])
+                summary_plots[vis][_types['type']] = plot_group[vis][0]
+            
+            plot_list = {}
+            for (name, _plots) in plot_group.items():
+                renderer = SingleDishInspectDataPlotsRenderer(context, results, name, _plots,
+                                                              _types['plot_title'])
+                with renderer.get_file() as fileobj:
+                    fileobj.write(renderer.render())
+                plot_list[name] = renderer.filename
+                if not subpages.has_key(name):
+                    subpages[name] = {}
+                subpages[name][_types['type']] = renderer.filename
+   
+        ctx.update({'subplot': subpages,
+                    'summary': summary_plots,
+                    'dirname': stage_dir})
+        
+        return ctx
+    
+    def _group_by_vis(self, plots):
+        plot_group = {}
+        for p in [p for _p in plots for p in _p]:
+            key = p.parameters['vis']
+            if plot_group.has_key(key):
+                plot_group[key].append(p)
+            else:
+                plot_group[key] = [p]
+        return plot_group
+    
         
 class T2_4MDetailsSingleDishCalSkyRenderer(T2_4MDetailsDefaultRenderer):
     def __init__(self, template='t2-4m_details-hsd_calsky.html', 
@@ -3007,6 +3074,9 @@ class SingleDishGenericPlotsRenderer(object):
         display_context = self._get_display_context()
         t = TemplateFinder.get_template(self.template)
         return t.render(**display_context)
+    
+class SingleDishInspectDataPlotsRenderer(SingleDishGenericPlotsRenderer):
+     template = 'sd_inspectdata_plots.html'   
     
 class T2_4MDetailsSingleDishBaselineRenderer(T2_4MDetailsDefaultRenderer):
     # Renderer class for stage summary
@@ -3555,7 +3625,7 @@ renderer_map = {
         hifa.tasks.Wvrgcal        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_wvrgcal.html'),
         hifa.tasks.Wvrgcalflag    : T2_4MDetailsWvrgcalflagRenderer(),
         hsd.tasks.SDReduction    : T2_4MDetailsDefaultRenderer('t2-4-singledish.html'),
-        hsd.tasks.SDInspectData  : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_inspectdata.html'),
+        hsd.tasks.SDInspectData  : T2_4MDetailsSingleDishInspectDataRenderer(always_rerender=True),
         hsd.tasks.SDCalTsys      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_caltsys.html'),
         hsd.tasks.SDCalSky       : T2_4MDetailsSingleDishCalSkyRenderer(always_rerender=True),
 #         hsd.tasks.SDBaseline     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_baseline.html'),

@@ -123,6 +123,7 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
     def doplot(self, idx, stage_dir):
         st = self.context.observing_run[idx]
         parent_ms = st.ms
+        vis = parent_ms.basename
         spws = parent_ms.get_spectral_windows(science_windows_only=True)
         spwid = spws[0].id
         rows = self.datatable.get_row_index(idx, spwid, 0)
@@ -136,6 +137,7 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
         parameters['ant'] = st.antenna.name
         parameters['type'] = 'sd'
         parameters['file'] = st.basename
+        parameters['vis'] = vis
         plot = logger.Plot(plotfile,
           x_axis='Time', y_axis='Weather',
           field=parent_ms.fields[0].name,

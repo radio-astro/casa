@@ -54,6 +54,7 @@ class SDPointingDisplay(common.SDInspectionDisplay):
     def doplot(self, idx, stage_dir):
         st = self.context.observing_run[idx]
         parent_ms = st.ms
+        vis = parent_ms.basename
         spws = parent_ms.get_spectral_windows(science_windows_only=True)
         spwid = spws[0].id
         beam_size = casatools.quanta.convert(self.context.observing_run[idx].beam_size[spwid], 'deg')
@@ -68,6 +69,7 @@ class SDPointingDisplay(common.SDInspectionDisplay):
         parameters['ant'] = st.antenna.name
         parameters['type'] = 'sd'
         parameters['file'] = st.basename
+        parameters['vis'] = vis
         plot = logger.Plot(plotfile,
           x_axis='R.A.', y_axis='Dec.',
           field=parent_ms.fields[0].name,

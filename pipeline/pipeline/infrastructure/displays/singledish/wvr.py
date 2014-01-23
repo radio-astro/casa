@@ -53,6 +53,7 @@ class SDWvrDisplay(common.SDInspectionDisplay):
     def doplot(self, idx, stage_dir):
         st = self.context.observing_run[idx]
         parent_ms = st.ms
+        vis = parent_ms.basename
         spws = self.context.observing_run.get_spw_for_wvr(st.basename)
         plotfile = os.path.join(stage_dir, 'wvr_%s.png'%(st.basename))
         wvr_data = self.get_wvr_data(st.name, spws)
@@ -67,6 +68,7 @@ class SDWvrDisplay(common.SDInspectionDisplay):
         parameters['ant'] = st.antenna.name
         parameters['type'] = 'sd'
         parameters['file'] = st.basename
+        parameters['vis'] = vis
         plot = logger.Plot(plotfile,
           x_axis='Time', y_axis='WVR Reading',
           field=parent_ms.fields[0].name,
