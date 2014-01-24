@@ -233,10 +233,11 @@ def remove_handler(handler):
        
        
 class CapturingHandler(logging.Handler):
-    '''
+    """
     A handler class which buffers logging records above a certain threshold
     in memory.
-    '''
+    """
+    
     def __init__(self, level=WARNING):
         '''
         Initialize the handler.
@@ -250,6 +251,13 @@ class CapturingHandler(logging.Handler):
 
         Append the record to the buffer.
         '''
+        # The Traceback object attached to the LogRecord exception tuple is
+        # not serializable. Replace it with a substitute wrapper object that 
+        # is.
+        if record.exc_info is not None:
+            exc_type, exc_value, tb = record.exc_info
+            record.exc_info = (exc_type, exc_value, Traceback(tb))
+        
         self.buffer.append(record)
 
     def flush(self):
@@ -268,3 +276,28 @@ class CapturingHandler(logging.Handler):
         '''
         self.flush()
         logging.Handler.close(self)
+
+
+# Code, Frame and Traceback are serializable substitutes for the Traceback
+# logged with exceptions
+class Code(object):
+    def __init__(self, code):
+        self.co_filename = code.co_filename
+        self.co_name = code.co_name
+
+class Frame(object):
+    def __init__(self, frame):
+        self.f_globals = {"__file__": frame.f_globals["__file__"]}
+        self.f_code = Code(frame.f_code)
+
+class Traceback(object):
+    def __init__(self, tb):
+        self.tb_frame = Frame(tb.tb_frame)
+        self.tb_lineno = tb.tb_lineno
+        if tb.tb_next is None:
+            self.tb_next = None
+        else:
+            self.tb_next = Traceback(tb.tb_next)
+
+
+LOG = get_logger(__name__)
