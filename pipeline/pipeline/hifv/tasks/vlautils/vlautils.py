@@ -460,6 +460,9 @@ class VLAUtils(basetask.StandardTaskTemplate):
             bandname = strelems[5]
             if bandname in '4PLSCXUKAQ':
                 spw2band[spw] = strelems[5]
+            #Check for U / KU
+            if strelems[5:7] == 'KU':
+                spw2band[spw] = 'U'
 
         return spw2band
 

@@ -152,7 +152,7 @@ Examples
         mytmp['flagbackup'] = flagbackup
         mytmp['dryrun'] = dryrun
         mytmp['acceptresults'] = acceptresults
-	pathname="file:///export/home/skye/pipecode/casa/pipeline/pipeline/hifa/cli/"
+	pathname="file:///export/data_1/evlapipeline/pipeline/pipeline/hifa/cli/"
         trec = casac.utils().torecord(pathname+'hifa_flagdata.xml')
 
         casalog.origin('hifa_flagdata')
