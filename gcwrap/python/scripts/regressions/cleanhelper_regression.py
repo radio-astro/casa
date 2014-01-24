@@ -168,7 +168,7 @@ tests=[
 #    {'name':'cha4', 'mode':'channel',  'shift':wid_ms/3,               'desc':'chan start=%5.3fkHz' % (wid_ms/3)},
     {'name':'chfr', 'mode':'channel',  'wid':2.5,                      'desc':'chan wid=2.5'},
 #    {'name':'chfm', 'mode':'channel',  'wid':-1,                       'desc':'chan wid=-1'},   # segfaults
-    {'name':'frch', 'mode':'frequency','wid':2.5,                      'desc':'freq wid=2.5'},
+#    {'name':'frch', 'mode':'frequency','wid':2.5,                      'desc':'freq wid=2.5'},  # freq mode must have wid in freq
     {'name':'frm',  'mode':'frequency','wid':"-%fkHz" % wid_ms,'sta':'%fkHz' % chn_ms, 'desc':'freq wid=-%6.1fKHz' % wid_ms},
     {'name':'freq', 'mode':'frequency',                                'desc':'freq default'},
     {'name':'fr.3', 'mode':'frequency','shift':wid_ms/3,               'desc':'freq start=%5.3fkHz' % (wid_ms/3)},
@@ -233,11 +233,9 @@ for te in tests:
 #        if te['mode']=='channel':
 #            sta=0
 
-
     if pyonly:
         try:
-            print te['mode'],spw,"",nchan,sta,wid,outframe,vtype,str(reffreq_ms)+'kHz'
-            st = imset.setChannelization(te['mode'],spw,"",nchan,sta,wid,outframe,vtype,str(reffreq_ms)+'kHz')        
+            st = imset.setChannelizeDefault(te['mode'],spw,"",nchan,sta,wid,outframe,vtype,"",str(reffreq_ms)+'kHz')        
             # (localnchan, localstart, localwidth)=imset.setChannelization(mode,spw,field,nchan,start,width,outframe,veltype,restfreq)
         except:
             st = (-1,"","")
@@ -279,7 +277,6 @@ for te in tests:
             st=(reffreq_ms,0,0,0,-1,reffreq_ms,reffreq_ms)
     stats.append(st)
     sname.append(te['desc'])
-
 
 
 
