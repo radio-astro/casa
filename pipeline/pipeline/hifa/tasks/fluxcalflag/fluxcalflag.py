@@ -3,6 +3,7 @@ import string
 import types
 import sys
 import os
+import numpy as np
 
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.basetask as basetask
@@ -182,10 +183,11 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
 
 	# Read in user defined lines and append them to the builtin
 	# lines dictionary.
+	UserSolarSystemLineList = SolarSystemLineList.copy()
 	if inputs.appendlines:
             LOG.info('Appending user line list %s to builtin dictionary' % \
 	        inputs.linesfile)
-	    self._append_linesfile (SolarSystemLineList, inputs.linesfile)
+	    self._append_linesfile (UserSolarSystemLineList, inputs.linesfile)
 
 	# Get the pipeline to CASA intents mapping to be used  in the CASA
 	# flagging commands. Should be handled transparently by framework
@@ -201,7 +203,7 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
         for field in flux_fields:
 
 	    # Skip if field not in solar system object line list
-	    if field.name not in SolarSystemLineList:
+	    if field.name not in UserSolarSystemLineList:
 	        continue
             LOG.info('Searching field %s for spectral lines' % (field.name)) 
 
@@ -210,7 +212,7 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
 	    for spw in science_spws:
 
 	        # Loop over the target solar system object lines
-	        for molecule in SolarSystemLineList[field.name]:
+	        for molecule in UserSolarSystemLineList[field.name]:
 	            species = molecule[0]; lines = molecule[1]
 
 		    # Loop over the lines for each molecule
@@ -239,7 +241,9 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
 	# field and spw.
 	# Note: Assumes that if multiple lines are detected
 	# that there are no line overlaps
-	flagstats = self._flagstats (fluxcal_lines)
+	#flagstats = self._flagstats (fluxcal_lines)
+	# Note: Replaced with a routine which can deal with overlaps.
+	flagstats = self._newflagstats (fluxcal_lines)
 
 	# Compute the reference spw map
 	flagall, refspwmap = self._refspwmap(all_spws, science_spws, flagstats,
@@ -310,7 +314,7 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
                     linedict[source] = [(species, [region])]
 		# Existing source
                 else:
-		    # New moelcular species
+		    # New melcular species
 		    #    If not append line to species list
 		    #    If not create new species list
 		    newspecies = True
@@ -343,6 +347,50 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
 	    prev_spwid = line.spwid
 
         return flagstats
+
+    # Generate channel flagging statistics per field and spw allowing
+    # for line region overlaps. For each field, spwid combination create
+    # a mask array of zeros equal to the size of the spw. Populate the
+    # mask corresponding to line regions with 1's. When appropriate
+    # compute the fraction of the array containing 1's by summing the
+    # array and dividing by the total number of channels.
+    def _newflagstats (self, fluxcal_lines):
+
+        flagstats = {}; maskarrays = {}
+	prev_fieldname = None; prev_spwid = None
+	for line in fluxcal_lines:
+	    if line.fieldname != prev_fieldname:
+	        flagstats[line.fieldname] = {}
+	        maskarrays[line.fieldname] = {}
+	        spwmask = np.zeros (line.nchan, dtype=np.int32)
+	        spwmask[line.chanrange[0]:line.chanrange[1]:1] = 1 
+	        flagstats[line.fieldname][line.spwid] = \
+		    np.sum(spwmask) / float(line.nchan) 
+	        maskarrays[line.fieldname][line.spwid] = spwmask
+	    elif line.spwid != prev_spwid:
+	        spwmask = np.zeros (line.nchan, dtype=np.int32)
+	        spwmask[line.chanrange[0]:line.chanrange[1]:1] = 1 
+	        flagstats[line.fieldname][line.spwid] = \
+		    np.sum(spwmask) / float(line.nchan) 
+	        maskarrays[line.fieldname][line.spwid] = spwmask
+	    else:
+	        spwmask = maskarrays[line.fieldname][line.spwid]
+	        spwmask[line.chanrange[0]:line.chanrange[1]:1] = 1 
+	        flagstats[line.fieldname][line.spwid] = \
+		    np.sum(spwmask) / float(line.nchan) 
+
+	    prev_fieldname = line.fieldname
+	    prev_spwid = line.spwid
+
+	# Delete the mask arrays
+	for key1 in maskarrays.keys():
+	    for key2 in maskarrays[key1].keys():
+	        del(maskarrays[key1][key2])
+	    maskarrays[key1].clear()
+
+	# return flagging statistic
+	return flagstats
+      
 
     # Compute the reference spwmap
     def _refspwmap (self, allspws, scispws, flagstats, threshold):
