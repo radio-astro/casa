@@ -463,6 +463,8 @@ class VLAUtils(basetask.StandardTaskTemplate):
             #Check for U / KU
             if strelems[5:7] == 'KU':
                 spw2band[spw] = 'U'
+            if strelems[5:7] == 'KA':
+                spw2band[spw] = 'A'
 
         return spw2band
 
