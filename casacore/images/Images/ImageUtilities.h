@@ -100,14 +100,14 @@ public:
 	// of legal image type.   For aips++ images, the default mask is
 	// applied.
 	//  <group>
-	static void openImage(
-		std::auto_ptr<ImageInterface<Float> >& image,
-		const String& fileName, LogIO& os
+	template <typename T> static void openImage(
+		std::auto_ptr<ImageInterface<T> >& image,
+		const String& fileName
 	);
 
-	static void openImage(
-		ImageInterface<Float>*& image,
-		const String& fileName, LogIO& os
+	template <typename T> static void openImage(
+		ImageInterface<T>*& image,
+		const String& fileName
 	);
 //  </group>
 

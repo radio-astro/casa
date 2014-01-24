@@ -69,39 +69,6 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-void ImageUtilities::openImage(
-	ImageInterface<Float>*& pImage,
-	const String& fileName, LogIO& os
-) {
-   if (fileName.empty()) {
-      os << "The image filename is empty" << LogIO::EXCEPTION;   
-   }
-   File file(fileName);
-   if (!file.exists()) {
-      os << "File '" << fileName << "' does not exist" << LogIO::EXCEPTION;
-   }
-   LatticeBase* lattPtr = ImageOpener::openImage (fileName);
-   if (lattPtr == 0) {
-     os << "Image " << fileName << " cannot be opened; its type is unknown"
-	<< LogIO::EXCEPTION;
-   } 
-   pImage = dynamic_cast<ImageInterface<Float>*>(lattPtr);
-   if (pImage == 0) {
-      os << "Unrecognized image data type, "
-	    "presently only Float images are supported" 
-         << LogIO::EXCEPTION;
-   }
-}
-
-void ImageUtilities::openImage(
-	std::auto_ptr<ImageInterface<Float> >& image,
-	const String& fileName, LogIO& os
-) {
-   ImageInterface<Float>* p = 0;
-   ImageUtilities::openImage(p, fileName, os);
-   image.reset(p);
-}
-
 Bool ImageUtilities::pixToWorld (
 	Vector<String>& sWorld,	CoordinateSystem& cSysIn,
 	const Int& pixelAxis, const Vector<Int>& cursorAxes,
