@@ -38,7 +38,7 @@ flag_color = {'edges':'lightblue',
               'sharps':'green',
               'sharps2':'green',
               'diffmad': 'red',
-              'tmf': 'brown'}
+              'tmf': 'aqua'}
 
 class SliceDisplay(object):
 
@@ -146,19 +146,19 @@ class SliceDisplay(object):
                 # overplot key
                 overplot_datatype = overplot_spectrum.datatype
 
-                plt.plot([xoff], [yoff], marker='o', markersize=10,
+                plt.plot([xoff], [yoff], marker='o', markersize=5,
                   markerfacecolor='lightblue', markeredgecolor='lightblue')
                 yoff = self.plottext(xoff+0.05, yoff, overplot_datatype, 35,
                   ny_subplot=nsubplots, mult=1.6)
 
             # flagging
             plt.plot([xoff], [yoff], marker='o', markerfacecolor='indigo',
-              markeredgecolor='indigo', markersize=10, clip_on=False)
+              markeredgecolor='indigo', markersize=5, clip_on=False)
             yoff = self.plottext(xoff+0.05, yoff, 'no data', 35,
               ny_subplot=nsubplots, mult=1.6)
 
             plt.plot([xoff], [yoff], marker='o', markerfacecolor='blue',
-              markeredgecolor='blue', markersize=10, clip_on=False)
+              markeredgecolor='blue', markersize=5, clip_on=False)
             yoff = self.plottext(xoff+0.05, yoff, 'already flagged', 35,
               ny_subplot=nsubplots, mult=1.6)
 
@@ -175,7 +175,7 @@ class SliceDisplay(object):
                       flag_color[flagcmd.rulename]) not in rulesplotted:
 
                         plt.plot([xoff], [yoff], linestyle='None', marker='o',
-                          markersize=10,
+                          markersize=5, alpha=0.5,
                           markerfacecolor=flag_color[flagcmd.rulename],
                           markeredgecolor=flag_color[flagcmd.rulename],
                           clip_on=False)
@@ -251,10 +251,10 @@ class SliceDisplay(object):
 
         # set the font sizes etc.
         if layout == 'landscape':
-            plt.rc('axes', titlesize=15)
-            plt.rc('axes', labelsize=12)
-            plt.rc('xtick', labelsize=12)
-            plt.rc('ytick', labelsize=12)
+            plt.rc('axes', titlesize=12)
+            plt.rc('axes', labelsize=10)
+            plt.rc('xtick', labelsize=10)
+            plt.rc('ytick', labelsize=10)
             plt.subplots_adjust(hspace=0.35)
 
         # set the plot layout
@@ -409,7 +409,8 @@ class SliceDisplay(object):
                     bad_data[:] = yflag 
                 bad_x = xaxis[flagcmd.flagchannels]
                 plt.errorbar(bad_x, bad_data, linestyle='None', marker='o',
-                  markersize=5, markerfacecolor=flag_color[flagcmd.rulename],
+                  markersize=5, alpha=0.5, 
+                  markerfacecolor=flag_color[flagcmd.rulename],
                   markeredgecolor=flag_color[flagcmd.rulename])
 
         # overplot points with no data in indigo
@@ -488,12 +489,12 @@ class SliceDisplay(object):
             words_in_line += 1
             if len(temp) > maxchars:
                 if words_in_line == 1:
-                    ax.text(xoff, yoff, temp, va='center', fontsize=mult*8,
+                    ax.text(xoff, yoff, temp, va='center', fontsize=mult*6,
                       transform=ax.transAxes, clip_on=False)
                     yoff -= 0.02 * ny_subplot * mult
                     words_in_line = 0
                 else:
-                    ax.text(xoff, yoff, line, va='center', fontsize=mult*8,
+                    ax.text(xoff, yoff, line, va='center', fontsize=mult*6,
                       transform=ax.transAxes, clip_on=False)
                     yoff -= 0.02 * ny_subplot * mult
                     line = words[i] + ' '
@@ -501,7 +502,7 @@ class SliceDisplay(object):
             else:
                 line = temp
         if len(line) > 0:
-            ax.text(xoff, yoff, line, va='center', fontsize=mult*8,
+            ax.text(xoff, yoff, line, va='center', fontsize=mult*6,
               transform=ax.transAxes, clip_on=False)
             yoff -= 0.02 * ny_subplot * mult
         yoff -= 0.01 * ny_subplot * mult
@@ -538,7 +539,7 @@ class SliceDisplay(object):
                              'plotsymbol' : plotsymbol,
                              'plotcolor'  : plotcolor,
                              'markersize' : 5.0, 
-                             'fontsize'   : 15,
+                             'fontsize'   : 10,
                              'showgui'    : False                     }
     
             casa_tasks.plotcal(**plotcal_args).execute()
