@@ -32,6 +32,7 @@
 
 #include <casa/aips.h>
 #include <images/Images/MaskSpecifier.h>
+#include <casa/Utilities/DataType.h>
 #include <casa/Containers/SimOrdMap.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -116,6 +117,10 @@ public:
   // Open an HDF5 paged image of any data type.
   static LatticeBase* openHDF5Image (const String& fileName,
 				     const MaskSpecifier& = MaskSpecifier());
+
+  // return the paged image data type. If not a paged image, an
+  // exception is thrown.
+  static DataType pagedImageDataType(const String& fileName);
 
 private:
   // The default openImage function for an unknown image type.
