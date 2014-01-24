@@ -457,13 +457,14 @@ class VLAUtils(basetask.StandardTaskTemplate):
         for spw in self.scandict['DataDescription']:
 
             strelems =  list(self.scandict['DataDescription'][spw]['spwname'])
+            print strelems
             bandname = strelems[5]
             if bandname in '4PLSCXUKAQ':
                 spw2band[spw] = strelems[5]
             #Check for U / KU
-            if strelems[5:7] == 'KU':
+            if strelems[5] == 'K' and strelems[6] == 'U':
                 spw2band[spw] = 'U'
-            if strelems[5:7] == 'KA':
+            if strelems[5] == 'K' and strelems[6] == 'A':
                 spw2band[spw] = 'A'
 
         return spw2band
