@@ -796,7 +796,7 @@ Bool MSTransformDataHandler::makeMSBasicStructure(	String& msname,
 	}
 
 	// Watch out!  This throws an AipsError if ms_p doesn't have the requested columns.
-	const Vector<MS::PredefinedColumns> colNamesTok = parseColumnNames(colname,ms_p);
+	const Vector<MS::PredefinedColumns> colNamesTok = parseColumnNames(colname,ms_p,realmodelcol_p);
 
 	if (!makeSelection())
 	{

@@ -894,7 +894,7 @@ void MSTransformManager::open()
 	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 			<< "Select data" << LogIO::POST;
 
-	dataHandler_p = new MSTransformDataHandler(inpMsName_p,Table::Old);
+	dataHandler_p = new MSTransformDataHandler(inpMsName_p,Table::Old,realmodelcol_p);
 
 	// CAS-5348 (jagonzal): Check if model parameters are defined.
 	realmodelcol_p = dataHandler_p->getRealModelColParam();
