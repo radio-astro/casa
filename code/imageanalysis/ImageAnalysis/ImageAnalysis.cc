@@ -620,7 +620,6 @@ Bool ImageAnalysis::imagefromfits(
 	const Int whichrep, const Int whichhdu,
 	const Bool zeroBlanks, const Bool overwrite
 ) {
-	_onlyFloat(__FUNCTION__);
 	Bool rstat = False;
 	try {
 		*_log << LogOrigin(className(), __FUNCTION__);
