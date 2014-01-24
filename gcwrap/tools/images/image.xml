@@ -1998,12 +1998,18 @@ of the image, and all pixels of other axes.
      <description>Write image creation messages to logger</description>
      <value>true</value>
      </param>
+     
+     <param type="string"  name="type">
+        <description>Type of image. 'f' means Float, 'c' means complex.</description>
+        <value>f</value>
+     </param>
 </input>
 <returns type="bool"/>
 <description>
 
 This function creates a \casa\ \imagefile\ with the specified shape.  All
-the pixel values in the image are set to 0.  
+the pixel values in the image are set to 0. One may create either an image
+with float valued pixels (type='f') or a complex valued image (type='c').
 
 If {\stfaf outfile} is given, the image is written to the specified disk
 file.  If {\stfaf outfile} is unset, the Image \tool\ is associated with
@@ -4982,10 +4988,10 @@ ia.fromrecord(rec, "testimage")
 <description>
 
 This function returns the pixels (or optionally the pixel mask) from the
-\imagefile\ between {\stfaf blc} and {\stfaf trc} inclusively.  An
-increment may be specified with {\stfaf inc}.  Note that if you retrieve
-too many pixels, you might cause swapping since the pixels are kept in
-memory. 
+\imagefile\ between {\stfaf blc} and {\stfaf trc} inclusively. Both float
+and complex valued images are supported. An increment may be specified
+with {\stfaf inc}. Note that if you retrieve too many pixels, you might
+cause swapping since the pixels are kept in memory. 
 
 Any illegal {\stfaf blc} values are set to zero.  Any illegal {\stfaf
 trc} values are set to the end of the image.  If any {\stfaf trc $&lt;$
@@ -6764,12 +6770,8 @@ the new \imagefile.
 
 The input image file may be in native \casa, \fits, or Miriad  
 format.  Look \htmlref{here}{IMAGES:FOREIGNIMAGES}  for more
-information on foreign images.
-
-<!--
-You could, of course, also create a new \imagetool\ and associate that
-with the new \imagefile, but this saves you the \tool\ creation. 
--->
+information on foreign images. In the case of \casa images, both
+Float and Complex valued images are supported.
 
 </description>
 
@@ -8635,7 +8637,8 @@ ia.close()
 The shape of an image is a vector holding the length of each axis of
 the image.  Although this information is also available in the <link
 anchor="images:image.summary.function">summary</link> function, it is
-so useful that it can be obtained directly.
+so useful that it can be obtained directly. Both Float and Complex valued
+images are supported.
 
 </description>
 <example>

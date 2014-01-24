@@ -80,6 +80,8 @@
 #include <memory>
 #include <tr1/memory>
 
+#include <stdcasa/cboost_foreach.h>
+
 using namespace std;
 
 #define _ORIGIN LogOrigin(_class, __FUNCTION__, WHERE)
@@ -217,6 +219,10 @@ image * image::collapse(
 		return 0;
 	}
 	try {
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		IPosition myAxes;
 		if (axes.type() == variant::INT) {
 			myAxes = IPosition(1, axes.toInt());
@@ -476,21 +482,17 @@ bool image::fromimage(const string& outfile, const string& infile,
 bool image::fromshape(
 	const string& outfile, const vector<int>& shape,
 	const record& csys, const bool linear, const bool overwrite,
-	const bool log
+	const bool log, const string& type
 ) {
 	try {
 		_log << _ORIGIN;
 		_reset();
 		auto_ptr<Record> coordinates(toRecord(csys));
-		if (
-			_image->imagefromshape(
-				outfile, Vector<Int> (shape),
-				*coordinates, linear, overwrite, log
-			)
-		) {
-			return True;
-		}
-		throw AipsError("Error creating image from shape");
+		_image->imagefromshape(
+			outfile, Vector<Int> (shape), *coordinates,
+			linear, overwrite, log, type
+		);
+		return True;
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -510,6 +512,10 @@ image::adddegaxes(
 		if (detached()) {
 			return 0;
 		}
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		PtrHolder<ImageInterface<Float> > outimage;
         std::tr1::shared_ptr<const ImageInterface<Float> > x = _image->getImage();
         ImageUtilities::addDegenerateAxes(
@@ -732,6 +738,10 @@ record* image::convertflux(
 		if (detached()) {
 			return 0;
 		}
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		casa::Quantity value = casaQuantity(qvalue);
 		casa::Quantity majorAxis = casaQuantity(major);
 		casa::Quantity minorAxis = casaQuantity(minor);
@@ -1132,6 +1142,10 @@ record* image::commonbeam() {
 		if (detached()) {
 			return 0;
 		}
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		ImageInfo myInfo = _image->getImage()->imageInfo();
 		if (! myInfo.hasBeam()) {
 			throw AipsError("This image has no beam(s).");
@@ -1338,15 +1352,19 @@ record* image::fitprofile(const string& box, const variant& region,
 	if (detached()) {
 		return 0;
 	}
-	String regionName;
-	std::auto_ptr<Record> regionPtr = _getRegion(region, True);
-	if (ngauss < 0) {
-		_log << LogIO::WARN
-			<< "ngauss < 0 is meaningless. Setting ngauss = 0 "
-			<< LogIO::POST;
-		ngauss = 0;
-	}
 	try {
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
+		String regionName;
+		std::auto_ptr<Record> regionPtr = _getRegion(region, True);
+		if (ngauss < 0) {
+			_log << LogIO::WARN
+				<< "ngauss < 0 is meaningless. Setting ngauss = 0 "
+				<< LogIO::POST;
+			ngauss = 0;
+		}
 		vector<double> mygoodamps = toVectorDouble(goodamprange, "goodamprange");
 		if (mygoodamps.size() > 2) {
 			_log << "Too many elements in goodamprange" << LogIO::EXCEPTION;
@@ -1517,10 +1535,15 @@ image* image::transpose(
 ) {
 	try {
 		_log << LogOrigin("image", __FUNCTION__);
+
 		if (detached()) {
 			throw AipsError("No image specified to transpose");
 			return 0;
 		}
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		std::auto_ptr<ImageTransposer> transposer(0);
 		switch(order.type()) {
 		case variant::INT:
@@ -1583,24 +1606,30 @@ image* image::transpose(
 	if (detached()) {
 		return 0;
 	}
-	int num = in_includepix.size();
-	Vector<Float> includepix(num);
-	num = in_excludepix.size();
-	Vector<Float> excludepix(num);
-	convertArray(includepix, Vector<Double> (in_includepix));
-	convertArray(excludepix, Vector<Double> (in_excludepix));
-	if (includepix.size() == 1 && includepix[0] == -1) {
-		includepix.resize();
-	}
-	if (excludepix.size() == 1 && excludepix[0] == -1) {
-		excludepix.resize();
-	}
 	_log << LogOrigin(_class, __FUNCTION__);
-	String mask = vmask.toString();
-	if (mask == "[]") {
-		mask = "";
-	}
+
 	try {
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
+
+		int num = in_includepix.size();
+		Vector<Float> includepix(num);
+		num = in_excludepix.size();
+		Vector<Float> excludepix(num);
+		convertArray(includepix, Vector<Double> (in_includepix));
+		convertArray(excludepix, Vector<Double> (in_excludepix));
+		if (includepix.size() == 1 && includepix[0] == -1) {
+			includepix.resize();
+		}
+		if (excludepix.size() == 1 && excludepix[0] == -1) {
+			excludepix.resize();
+		}
+		String mask = vmask.toString();
+		if (mask == "[]") {
+			mask = "";
+		}
 		std::auto_ptr<ImageFitter> fitter;
         ImageTask::shCImFloat image = _image->getImage();
 		ImageFitter::CompListWriteControl writeControl =
@@ -1680,7 +1709,7 @@ image* image::transpose(
 variant* image::getchunk(
 	const std::vector<int>& blc, const std::vector<int>& trc,
 	const std::vector<int>& inc, const std::vector<int>& axes,
-	const bool list, const bool dropdeg, const bool getmask
+	bool list, bool dropdeg, bool getmask
 ) {
 	try {
 
@@ -1688,43 +1717,59 @@ variant* image::getchunk(
 		if (detached()) {
 			return 0;
 		}
-		Array<Float> pixels;
-		Array<Bool> pixelMask;
-		Vector<Int> iaxes(axes);
-		// if default value change it to empty vector
-		if (iaxes.size() == 1 && iaxes[0] < 0) {
-			iaxes.resize();
-		}
-		_image->getchunk(
-			pixels, pixelMask, Vector<Int>(blc), Vector<Int>(trc),
-			Vector<Int>(inc), iaxes, list, dropdeg, getmask
-		);
-
-		if (getmask) {
-			std::vector<bool> s_pixelmask;
-			std::vector<int> s_shape;
-			pixelMask.tovector(s_pixelmask);
-			pixels.shape().asVector().tovector(s_shape);
-			return new variant(s_pixelmask, s_shape);
+		if (_image->isFloat()) {
+			Float f;
+			double d;
+			return _getchunk(
+				f, d, blc, trc, inc, axes, list, dropdeg, getmask
+			);
 		}
 		else {
-			std::vector<int> s_shape;
-			pixels.shape().asVector().tovector(s_shape);
-			std::vector<double> d_pixels(pixels.nelements());
-			int i(0);
-			for (
-				Array<Float>::iterator iter = pixels.begin();
-				iter!=pixels.end(); iter++
-			) {
-				d_pixels[i++] = *iter;
-			}
-			return new variant(d_pixels, s_shape);
+			Complex c;
+			std::complex<double> dc;
+			return _getchunk(
+				c, dc, blc, trc, inc, axes, list, dropdeg, getmask
+			);
 		}
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
+	}
+}
+
+template<class T, class U> casac::variant* image::_getchunk(
+	T inputArrayType, U outputArrayType,
+	const std::vector<int>& blc, const std::vector<int>& trc,
+	const std::vector<int>& inc, const std::vector<int>& axes,
+	const bool list, const bool dropdeg, const bool getmask
+) {
+	Array<T> pixels;
+	Array<Bool> pixelMask;
+	Vector<Int> iaxes(axes);
+	// if default value change it to empty vector
+	if (iaxes.size() == 1 && iaxes[0] < 0) {
+		iaxes.resize();
+	}
+	_image->getchunk(
+		pixels, pixelMask, Vector<Int>(blc), Vector<Int>(trc),
+		Vector<Int>(inc), iaxes, list, dropdeg, getmask
+	);
+	std::vector<int> s_shape;
+	if (getmask) {
+		std::vector<bool> s_pixelmask;
+		pixelMask.tovector(s_pixelmask);
+		pixelMask.shape().asVector().tovector(s_shape);
+		return new variant(s_pixelmask, s_shape);
+	}
+	else {
+		pixels.shape().asVector().tovector(s_shape);
+		std::vector<U> d_pixels;
+		foreach_(U v, pixels) {
+			d_pixels.push_back(v);
+		}
+		return new variant(d_pixels, s_shape);
 	}
 }
 
@@ -1742,6 +1787,10 @@ image* image::pbcor(
 	}
 	try {
 		_log << _ORIGIN;
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		Array<Float> pbPixels;
         ImageTask::shCImFloat pb_ptr;
 		if (pbimage.type() == variant::DOUBLEVEC) {
@@ -1752,7 +1801,7 @@ image* image::pbcor(
 		}
 		else if (pbimage.type() == variant::STRING) {
             ImageInterface<Float>* pb;
-            ImageUtilities::openImage(pb, pbimage.getString(), _log);
+            ImageUtilities::openImage(pb, pbimage.getString());
 			if (pb == 0) {
 				_log << "Unable to open primary beam image " << pbimage.getString()
 					<< LogIO::EXCEPTION;
@@ -1884,10 +1933,14 @@ image::getslice(const std::vector<double>& x, const std::vector<double>& y,
 		const int npts, const std::string& method) {
 	::casac::record *rstat = 0;
 	try {
-		_log << LogOrigin("image", "getslice");
-		if (detached())
+		_log << _ORIGIN;
+		if (detached()) {
 			return rstat;
-
+		}
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		// handle default coord
 		std::vector<int> ncoord(coord);
 		if (ncoord.size() == 1 && ncoord[0] == -1) {
@@ -2352,28 +2405,13 @@ bool image::open(const std::string& infile) {
 		_log << _ORIGIN;
         return _image->open(infile);
 
-	} catch (AipsError x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-}
-/*
-bool image::open(const shImFloat& inImage) {
-	try {
-		if (_log.get() == 0) {
-			_log.reset(new LogIO());
-		}
-		_log << _ORIGIN;
-		_image.reset(new ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Float> >(inImage)));
-		return True;
 	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
 }
-*/
+
 image* image::pad(
 	const string& outfile, int npixels, double value, bool padmask,
 	bool overwrite, const variant& region, const string& box,
@@ -2385,6 +2423,10 @@ image* image::pad(
 		if (detached()) {
 			return 0;
 		}
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		if (npixels <= 0) {
 			_log << "Value of npixels must be greater than zero" << LogIO::EXCEPTION;
 		}
@@ -2421,6 +2463,10 @@ image* image::crop(
 		if (detached()) {
 			return 0;
 		}
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
         if (axes.size() > 0) {
             std::set<int> saxes(axes.begin(), axes.end());
 	    	if (*saxes.begin() < 0) {
@@ -2469,50 +2515,135 @@ image::pixelvalue(const std::vector<int>& pixel) {
 	return rstat;
 }
 
-bool image::putchunk(const ::casac::variant& pixels,
-		const std::vector<int>& blc, const std::vector<int>& inc,
-		const bool list, const bool locking, const bool replicate) {
+bool image::putchunk(
+	const variant& pixels,
+	const vector<int>& blc, const vector<int>& inc,
+	const bool list, const bool locking, const bool replicate
+) {
 	try {
 		_log << _ORIGIN;
 		if (detached()) {
 			return false;
 		}
-		Array<Float> pixelsArray;
-
-		if (pixels.type() == ::casac::variant::DOUBLEVEC) {
-			std::vector<double> pixelVector = pixels.getDoubleVec();
-			Vector<Int> shape = pixels.arrayshape();
-			pixelsArray.resize(IPosition(shape));
-			Vector<Double> localpix(pixelVector);
-			casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
-		} else if (pixels.type() == ::casac::variant::INTVEC) {
-			std::vector<int> pixelVector = pixels.getIntVec();
-			Vector<Int> shape = pixels.arrayshape();
-			pixelsArray.resize(IPosition(shape));
-			Vector<Int> localpix(pixelVector);
-			casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
-		} else {
-			_log << LogIO::SEVERE
-					<< "pixels is not understood, try using an array "
-					<< LogIO::POST;
-			return False;
+		if (_image->isFloat()) {
+			Float f;
+			return _putchunk(
+				f, pixels, blc, inc, list, locking, replicate
+			);
 		}
+		else {
+			if (
+				pixels.type() == variant::COMPLEXVEC
+			) {
+				Array<Complex> pixelsArray;
+				std::vector<std::complex<double> > pixelVector = pixels.getComplexVec();
+				Vector<Int> shape = pixels.arrayshape();
+				pixelsArray.resize(IPosition(shape));
+				Vector<std::complex<double> > localpix(pixelVector);
+				casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
+				if (
+					_image->putchunk(
+						pixelsArray, Vector<Int> (blc), Vector<Int> (inc),
+						list, locking, replicate
+					)
+				) {
+					_stats.reset(0);
+					return True;
+				}
+				ThrowCc("Error putting chunk");
+			}
+			else {
+				Complex c;
+				return _putchunk(
+					c, pixels, blc, inc, list, locking, replicate
+				);
+			}
+		}
+		/*
+		if (_image->isFloat()) {
+			Array<Float> pixelsArray;
+			if (pixels.type() == ::casac::variant::DOUBLEVEC) {
+				std::vector<double> pixelVector = pixels.getDoubleVec();
+				Vector<Int> shape = pixels.arrayshape();
+				pixelsArray.resize(IPosition(shape));
+				Vector<Double> localpix(pixelVector);
+				casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
+			}
+			else if (pixels.type() == ::casac::variant::INTVEC) {
+				std::vector<int> pixelVector = pixels.getIntVec();
+				Vector<Int> shape = pixels.arrayshape();
+				pixelsArray.resize(IPosition(shape));
+				Vector<Int> localpix(pixelVector);
+				casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
+			}
+			else {
+				ThrowCc(
+					"Unsupported type for pixels parameter. It "
+					"must be either a vector of doubles or ints"
+				);
+			}
+			if (
+				_image->putchunk(
+					pixelsArray, Vector<Int> (blc), Vector<Int> (inc),
+					list, locking, replicate
+				)
+			) {
+				_stats.reset(0);
+				return True;
+			}
+		}
+		else {
 
-		if (
-			_image->putchunk(
-				pixelsArray, Vector<Int> (blc), Vector<Int> (inc),
-				list, locking, replicate
-			)
-		) {
-			_stats.reset(0);
-			return True;
 		}
 		throw AipsError("Error putting chunk.");
+		*/
 	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+}
+
+template<class T> bool image::_putchunk(
+	T imageType, const variant& pixels,
+	const vector<int>& blc, const vector<int>& inc,
+	const bool list, const bool locking, const bool replicate
+) {
+	Array<T> pixelsArray;
+	Vector<Int> shape = pixels.arrayshape();
+
+	if (pixels.type() == variant::DOUBLEVEC) {
+		std::vector<double> pixelVector = pixels.getDoubleVec();
+		pixelsArray.resize(IPosition(shape));
+		Vector<Double> localpix(pixelVector);
+		casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
+	}
+	else if (pixels.type() == variant::INTVEC) {
+		std::vector<int> pixelVector = pixels.getIntVec();
+		pixelsArray.resize(IPosition(shape));
+		Vector<Int> localpix(pixelVector);
+		casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
+	}
+
+	else {
+		String types = casa::whatType(&imageType) == TpFloat
+			? "doubles or ints"
+			: "complexes, doubles, or ints";
+		ThrowCc(
+			"Unsupported type for pixels parameter. It "
+			"must be either a vector of " + types
+		);
+	}
+	if (
+		_image->putchunk(
+			pixelsArray, Vector<Int> (blc), Vector<Int> (inc),
+			list, locking, replicate
+		)
+	) {
+		_stats.reset(0);
+		return True;
+	}
+	ThrowCc("Error putting chunk");
 }
 
 bool image::putregion(const ::casac::variant& v_pixels,
@@ -2615,6 +2746,10 @@ image* image::pv(
 	}
 	try {
 		_log << _ORIGIN;
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		std::tr1::shared_ptr<MVDirection> startMVD, endMVD, centerMVD;
 		Vector<Double> startPix, endPix, centerPix;
 		std::tr1::shared_ptr<casa::Quantity> lengthQ;
@@ -2825,6 +2960,10 @@ image* image::regrid(
 		        throw AipsError("Unable to create image");
 			return 0;
 		}
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		auto_ptr<Record> csysRec(toRecord(csys));
 		auto_ptr<CoordinateSystem> coordinates(CoordinateSystem::restore(*csysRec, ""));
 		ThrowIf (
@@ -2978,6 +3117,10 @@ image::restoringbeam(int channel, int polarization) {
 		if (detached()) {
 			return 0;
 		}
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		return fromRecord(
 			_image->getImage()->imageInfo().beamToRecord(
 				channel, polarization
@@ -3188,12 +3331,14 @@ bool image::setmiscinfo(const ::casac::record& info) {
 
 std::vector<int> image::shape() {
 	std::vector<int> rstat(0);
-	_log << LogOrigin("image", __FUNCTION__);
+	_log << _ORIGIN;
 	if (detached()) {
 		return rstat;
 	}
 	try {
-		_image->getImage()->shape().asVector().tovector(rstat);
+		rstat = _image->isFloat()
+			? _image->getImage()->shape().asVector().tovector()
+			: _image->getComplexImage()->shape().asVector().tovector();
 		return rstat;
 	}
 	catch (const AipsError& x) {
@@ -3251,6 +3396,10 @@ record* image::statistics(
 		return 0;
 	}
 	try {
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		std::auto_ptr<Record> regionRec(
 			region.empty() ? 0 : toRecord(region)
 		);
@@ -3373,6 +3522,10 @@ bool image::twopointcorrelation(
 		if (detached()) {
 			throw AipsError("Unable to create image");
 		}
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		std::auto_ptr<Record> regionRec = _getRegion(region, False);
 		String regionStr = region.type() == variant::STRING
 			? region.toString()
@@ -3817,13 +3970,10 @@ image* image::newimagefromshape(
 				linear, overwrite, log
 			)
 		);
-		if (outIm.get() != 0) {
-			rstat =  new image(outIm);
-		} else {
-			rstat =  new image();
-		}
-		if(!rstat)
-			throw AipsError("Unable to create image");
+        rstat = outIm.get() ? new image(outIm) : new image(outIm);
+		ThrowIf(
+			rstat == 0, "Unable to create image"
+		);
 		return rstat;
 	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -3971,15 +4121,18 @@ casa::Quantity image::_casaQuantityFromVar(const ::casac::variant& theVar) {
 }
 
 bool image::isconform(const string& other) {
-	_log << LogOrigin("image", __FUNCTION__);
+	_log << _ORIGIN;
 
 	if (detached()) {
 		return False;
 	}
 	try {
-
+		ThrowIf(
+			! _image->isFloat(),
+			"This method only supports Float valued images"
+		);
 		ImageInterface<Float> *oth = 0;
-		ImageUtilities::openImage(oth, String(other), _log);
+		ImageUtilities::openImage(oth, String(other));
 		if (oth == 0) {
 			throw AipsError("Unable to open image " + other);
 		}
@@ -4010,6 +4163,10 @@ bool image::isconform(const string& other) {
 std::auto_ptr<Record> image::_getRegion(
 	const variant& region, const bool nullIfEmpty
 ) const {
+	ThrowIf(
+		! _image->isFloat(),
+		"Method" + String(__FUNCTION__) + " only supports Float valued images"
+	);
 	switch (region.type()) {
 	case variant::BOOLVEC:
 		return std::auto_ptr<Record>(nullIfEmpty ? 0 : new Record());
