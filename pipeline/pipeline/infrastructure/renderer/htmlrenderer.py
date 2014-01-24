@@ -1320,6 +1320,7 @@ class T2_4MDetailsWvrgcalflagRenderer(T2_4MDetailsDefaultRenderer):
 
         applications = []
         flag_plots = {}
+        metric_plots = {}
         phase_offset_summary_plots = {}
         baseline_summary_plots = {}
         wvrinfos = {}
@@ -1340,7 +1341,21 @@ class T2_4MDetailsWvrgcalflagRenderer(T2_4MDetailsDefaultRenderer):
                 wvrinfos[vis] = result.wvr_infos
             except:
                 pass
-            
+
+            # collect flagging metric plots from result
+            if result.qa2.view:
+                plotter = image.ImageDisplay()
+                plots = plotter.plot(context, result.qa2, reportdir=plots_dir, 
+                                     prefix='qa2', change='WVR')
+                plots = sorted(plots, key=lambda p: int(p.parameters['spw']))
+                
+                # render flagging metric plots to their own HTML page
+                renderer = WvrcalflagMetricPlotsRenderer(context, result, plots)
+                with renderer.get_file() as fileobj:
+                    fileobj.write(renderer.render())        
+    
+                metric_plots[vis] = plots[0]
+
             if result.view:
                 flag_plotter = image.ImageDisplay()
                 plots = flag_plotter.plot(context, result, reportdir=plots_dir, 
@@ -1391,6 +1406,7 @@ class T2_4MDetailsWvrgcalflagRenderer(T2_4MDetailsDefaultRenderer):
         ctx.update({'applications' : applications,
                     'wvrinfos'     : wvrinfos,
                     'flag_plots' : flag_plots,
+                    'metric_plots' : metric_plots,
                     'phase_offset_summary_plots' : phase_offset_summary_plots,
                     'baseline_summary_plots' : baseline_summary_plots,
                     'dirname' : weblog_dir})
@@ -1437,6 +1453,77 @@ class T2_4MDetailsWvrgcalflagRenderer(T2_4MDetailsDefaultRenderer):
         collect(result.pool, False)
 
         return applications
+
+
+class WvrcalflagMetricPlotsRenderer(object):
+    # take a look at WvrgcalflagPhaseOffsetVsBaselinePlotRenderer when we have
+    # scores and histograms to generate. there should be a common base class. 
+    template = 't2-4m_details-hif_wvrgcalflag-metric_view.html'
+
+    def __init__(self, context, result, plots):
+        self.context = context
+        self.result = result
+        self.plots = plots
+        self.ms = os.path.basename(self.result.inputs['vis'])
+
+        # all values set on this dictionary will be written to the JSON file
+        d = {}
+        for plot in plots:
+            # calculate the relative pathnames as seen from the browser
+            thumbnail_relpath = os.path.relpath(plot.thumbnail,
+                                                self.context.report_dir)
+            image_relpath = os.path.relpath(plot.abspath,
+                                            self.context.report_dir)
+            spw_id = plot.parameters['spw']
+            field = plot.parameters['field']
+
+            # Javascript JSON parser doesn't like Javascript floating point 
+            # constants (NaN, Infinity etc.), so convert them to null. We  
+            # do not omit the dictionary entry so that the plot is hidden
+            # by the filters.
+#             if math.isnan(ratio) or math.isinf(ratio):
+#                 ratio = 'null'
+
+            d[image_relpath] = {'spw'       : str(spw_id),
+                                'field'     : field,
+                                'thumbnail' : thumbnail_relpath}
+
+        # Javascript parser requires \" -> \\" conversion 
+        self.json = json.dumps(d).replace('\"', '\\"')
+         
+    def _get_display_context(self):
+        return {'pcontext'   : self.context,
+                'result'     : self.result,
+                'plots'      : self.plots,
+                'dirname'    : self.dirname,
+                'json'       : self.json,
+                'plot_title' : 'WVR flagging metric view for %s' % self.ms}
+
+    @property
+    def dirname(self):
+        stage = 'stage%s' % self.result.stage_number
+        return os.path.join(self.context.report_dir, stage)
+    
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('flagging_metric-%s.html' % self.ms)
+        return filename
+    
+    @property
+    def path(self):
+        return os.path.join(self.dirname, self.filename)
+    
+    def get_file(self, hardcopy=True):
+        if hardcopy and not os.path.exists(self.dirname):
+            os.makedirs(self.dirname)
+            
+        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
+        return contextlib.closing(file_obj)
+    
+    def render(self):
+        display_context = self._get_display_context()
+        t = TemplateFinder.get_template(self.template)
+        return t.render(**display_context)
 
 
 class WvrgcalflagPhaseOffsetPlotRenderer(object):
