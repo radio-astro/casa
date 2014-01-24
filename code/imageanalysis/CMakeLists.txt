@@ -103,6 +103,7 @@ install (FILES
 	ImageAnalysis/Image2DConvolver.h
 	ImageAnalysis/Image2DConvolver.tcc
 	ImageAnalysis/ImageAnalysis.h
+	ImageAnalysis/ImageAnalysis2.tcc
 	ImageAnalysis/ImageCollapser.h
 	ImageAnalysis/ImageConvolver.h
 	ImageAnalysis/ImageConvolver.tcc

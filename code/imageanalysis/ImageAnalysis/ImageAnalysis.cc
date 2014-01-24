@@ -139,7 +139,7 @@ using namespace std;
 namespace casa { //# name space casa begins
 
 ImageAnalysis::ImageAnalysis() :
-	_image(), _histograms(0),
+	_imageFloat(), _imageComplex(), _histograms(0),
 			pOldHistRegionRegion_p(0), pOldHistMaskRegion_p(0),
 			imageMomentsProgressMonitor(0){
 
@@ -152,28 +152,32 @@ ImageAnalysis::ImageAnalysis() :
 }
 
 ImageAnalysis::ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Float> > image) :
-	_image(image), _log(new LogIO()), _histograms(0),
+	_imageFloat(image),_imageComplex(), _log(new LogIO()), _histograms(0),
 				pOldHistRegionRegion_p(0), pOldHistMaskRegion_p(0),
 				imageMomentsProgressMonitor(0) {}
 
+
+ImageAnalysis::ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Complex> > image) :
+	_imageFloat(),_imageComplex(image), _log(new LogIO()), _histograms(0),
+				pOldHistRegionRegion_p(0), pOldHistMaskRegion_p(0),
+				imageMomentsProgressMonitor(0) {}
+
+
 ImageAnalysis::~ImageAnalysis() {
-	if (_image.get() != 0) {
-		if((_image->isPersistent()) && ((_image->imageType()) == "PagedImage")){
-			ImageOpener::ImageTypes type = ImageOpener::imageType(_image->name());
-			if (type == ImageOpener::AIPSPP) {
-				Table::relinquishAutoLocks(True);
-				(static_cast<PagedImage<Float> *>(_image.get()))->table().unlock();
-			}
-		}
+	if (_imageFloat) {
+		_destruct(*_imageFloat);
+	}
+	if (_imageComplex) {
+		_destruct(*_imageComplex);
 	}
 	deleteHist();
 }
 
 Bool ImageAnalysis::toRecord(RecordInterface& rec) {
-
-	if (_image.get() != 0) {
+	_onlyFloat(__FUNCTION__);
+	if (_imageFloat.get() != 0) {
 		String err;
-		return _image->toRecord(err, rec);
+		return _imageFloat->toRecord(err, rec);
 
 	}
 
@@ -181,7 +185,7 @@ Bool ImageAnalysis::toRecord(RecordInterface& rec) {
 }
 
 Bool ImageAnalysis::fromRecord(const RecordInterface& rec, const String& name) {
-
+	_onlyFloat(__FUNCTION__);
 	Bool retval = False;
 	String err;
 	if (name != "") {
@@ -199,14 +203,14 @@ Bool ImageAnalysis::fromRecord(const RecordInterface& rec, const String& name) {
 	} else {
 		if (_log.get() == 0)
 			_log.reset(new LogIO());
-		if (_image.get() != 0) {
+		if (_imageFloat.get() != 0) {
 			*_log << LogOrigin("ImageAnalysis", "fromRecord");
 			*_log << LogIO::WARN
 					<< "Image is already open, disconnecting first"
 					<< LogIO::POST;
 		}
-		_image.reset(new TempImage<Float> ());
-		retval = _image->fromRecord(err, rec);
+		_imageFloat.reset(new TempImage<Float> ());
+		retval = _imageFloat->fromRecord(err, rec);
 
 	}
 
@@ -215,7 +219,6 @@ Bool ImageAnalysis::fromRecord(const RecordInterface& rec, const String& name) {
 }
 
 Bool ImageAnalysis::open(const String& infile) {
-	Bool rstat = True;
 	if (_log.get() == 0) {
 		_log.reset(new LogIO());
 	}
@@ -223,44 +226,50 @@ Bool ImageAnalysis::open(const String& infile) {
 	// Check whether infile exists
 	if (infile.empty()) {
 		*_log << LogIO::WARN << "File string is empty" << LogIO::POST;
-		return false;
+		return False;
 	}
 	File thefile(infile);
 	if (!thefile.exists()) {
 		*_log << LogIO::WARN << "File [" << infile << "] does not exist."
 				<< LogIO::POST;
-		return false;
+		return False;
 	}
 	// Generally used if the image is already closed !b
-	if (_image.get() != 0) {
-		*_log << LogIO::WARN << "Image is already open, closing first"
+	if (_imageFloat || _imageComplex) {
+		*_log << LogIO::WARN << "Another image is already open, closing first"
 				<< LogIO::POST;
 		// The pointer does explicitly need to be reset for proper destruction
 		// of the image esp if the image trying to be opened is the same
 		// as the image stored in the pre-existing pointer.
-		_image.reset();
+		_imageFloat.reset();
+		_imageComplex.reset();
 	}
 
-	// Open input image.  We don't handle an Image tool because
-	// we would get a bit confused as to who owns the pointer
-
-	ImageInterface<Float> *image = 0;
-	ImageUtilities::openImage(image, infile, *_log);
-	_image.reset(image);
+	if (
+		ImageOpener::imageType(infile) == ImageOpener::AIPSPP
+		&& ImageOpener::pagedImageDataType(infile) == TpComplex
+	) {
+		ImageInterface<Complex> *image = 0;
+		ImageUtilities::openImage(image, infile);
+		_imageComplex.reset(image);
+	}
+	else {
+		ImageInterface<Float> *image = 0;
+		ImageUtilities::openImage(image, infile);
+		_imageFloat.reset(image);
+	}
 	// Ensure that we reconstruct the statistics and histograms objects
 	deleteHist();
-	return rstat;
+	return True;
 }
 
 Bool ImageAnalysis::detached() {
-	if (_image.get() == 0)
-		return True;
-	return False;
-
+	return _imageFloat.get() == 0 && _imageComplex.get() == 0;
 }
 
 Bool ImageAnalysis::addnoise(const String& type, const Vector<Double>& pars,
 		Record& region, const Bool zeroIt) {
+	_onlyFloat(__FUNCTION__);
 	bool rstat(False);
 	*_log << LogOrigin("ImageAnalysis", "addnoise");
 
@@ -269,7 +278,7 @@ Bool ImageAnalysis::addnoise(const String& type, const Vector<Double>& pars,
 	// Make SubImage
 	String mask;
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_image,
+		*_imageFloat,
 		//*(ImageRegion::tweakedRegionRecord(pRegion)),
 		*pRegion,
 		mask, _log.get(), True
@@ -346,8 +355,8 @@ ImageAnalysis::imagecalc(const String& outfile, const String& expr,
 
 	// Construct output image - an ImageExpr or a PagedImage
 	if (outfile.empty()) {
-		_image.reset(new ImageExpr<Float> (latEx, exprName));
-		if (_image.get() == 0) {
+		_imageFloat.reset(new ImageExpr<Float> (latEx, exprName));
+		if (_imageFloat.get() == 0) {
 			*_log << "Failed to create ImageExpr" << LogIO::EXCEPTION;
 		}
 	}
@@ -355,7 +364,7 @@ ImageAnalysis::imagecalc(const String& outfile, const String& expr,
 		*_log << LogIO::NORMAL << "Creating image `" << outfile
 			<< "' of shape " << shapeOut << LogIO::POST;
 		try {
-			_image.reset(new PagedImage<Float> (shapeOut, cSysOut, outfile));
+			_imageFloat.reset(new PagedImage<Float> (shapeOut, cSysOut, outfile));
 		}
 		catch (TableError te) {
 			if (overwrite) {
@@ -366,44 +375,44 @@ ImageAnalysis::imagecalc(const String& outfile, const String& expr,
 				RETHROW(te);
 			}
 		}
-		if (_image.get() == 0) {
+		if (_imageFloat.get() == 0) {
 			*_log << "Failed to create PagedImage" << LogIO::EXCEPTION;
 		}
 
 		// Make mask if needed, and copy data and mask
 		if (latEx.isMasked()) {
 			String maskName("");
-			ImageMaskAttacher<Float>::makeMask(*_image, maskName, False, True, *_log, True);
+			ImageMaskAttacher<Float>::makeMask(*_imageFloat, maskName, False, True, *_log, True);
 		}
-		LatticeUtilities::copyDataAndMask(*_log, *_image, latEx);
+		LatticeUtilities::copyDataAndMask(*_log, *_imageFloat, latEx);
 	}
 
 	// Copy miscellaneous stuff over
-	_image->setMiscInfo(imCoord->miscInfo());
-	_image->setImageInfo(imCoord->imageInfo());
+	_imageFloat->setMiscInfo(imCoord->miscInfo());
+	_imageFloat->setImageInfo(imCoord->imageInfo());
 	if (expr.contains("spectralindex")) {
-		_image->setUnits("");
+		_imageFloat->setUnits("");
 	}
 	else if (expr.contains(Regex("pa\\(*"))) {
-		_image->setUnits("deg");
+		_imageFloat->setUnits("deg");
 		Vector<Int> newstokes(1);
 		newstokes = Stokes::Pangle;
 		StokesCoordinate scOut(newstokes);
-		CoordinateSystem cSys = _image->coordinates();
+		CoordinateSystem cSys = _imageFloat->coordinates();
 		Int iStokes = cSys.findCoordinate(Coordinate::STOKES, -1);
 		cSys.replaceCoordinate(scOut, iStokes);
-		_image->setCoordinateInfo(cSys);
+		_imageFloat->setCoordinateInfo(cSys);
 	}
 	else {
-		_image->setUnits(imCoord->unit());
+		_imageFloat->setUnits(imCoord->unit());
 	}
 
 	// Logger not yet available
-	//    _image->appendLog(imCoord->logger());
+	//    _imageFloat->appendLog(imCoord->logger());
 
 	// Delete the ImageRegions (by using an empty GlishRecord).
 	makeRegionBlock(tempRegs, Record(), *_log);
-	return _image;
+	return _imageFloat;
 
 }
 
@@ -435,7 +444,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::imageconcat(
 
 	// Find spectral axis of first image
 	std::auto_ptr<ImageInterface<Float> > im;
-	ImageUtilities::openImage(im, expInNames(0), *_log);
+	ImageUtilities::openImage(im, expInNames(0));
 
 	CoordinateSystem cSys = im->coordinates();
 	Int iAxis = axis;
@@ -462,7 +471,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::imageconcat(
 		Bool doneOpen = False;
 		try {
 			std::auto_ptr<ImageInterface<Float> > im2;
-			ImageUtilities::openImage(im2, expInNames(i), *_log);
+			ImageUtilities::openImage(im2, expInNames(i));
 			doneOpen = True;
 			pConcat->setImage(*im2, relax);
 		}
@@ -484,37 +493,36 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::imageconcat(
 	//
 	if (!outFile.empty()) {
 		// Construct output image and give it a mask if needed
-		_image.reset(
+		_imageFloat.reset(
 			new PagedImage<Float> (
 				pConcat->shape(),
 				pConcat->coordinates(), outFile
 			)
 		);
-		if (! _image.get()) {
+		if (! _imageFloat.get()) {
 			*_log << "Failed to create PagedImage" << LogIO::EXCEPTION;
 		}
 		*_log << LogIO::NORMAL << "Creating image '" << outfile
-				<< "' of shape " << _image->shape() << LogIO::POST;
+				<< "' of shape " << _imageFloat->shape() << LogIO::POST;
 		//
 		if (pConcat->isMasked()) {
 			String maskName("");
-			ImageMaskAttacher<Float>::makeMask(*_image, maskName, False, True, *_log, True);
+			ImageMaskAttacher<Float>::makeMask(*_imageFloat, maskName, False, True, *_log, True);
 		}
 
 		// Copy to output
-		LatticeUtilities::copyDataAndMask(*_log, *_image, *pConcat);
-		ImageUtilities::copyMiscellaneous(*_image, *pConcat);
+		LatticeUtilities::copyDataAndMask(*_log, *_imageFloat, *pConcat);
+		ImageUtilities::copyMiscellaneous(*_imageFloat, *pConcat);
 	}
 	else {
-		_image.reset(pConcat->cloneII());
+		_imageFloat.reset(pConcat->cloneII());
 	}
-	return _image;
+	return _imageFloat;
 }
 
 Bool ImageAnalysis::imagefromarray(const String& outfile,
 		Array<Float> & pixelsArray, const Record& csys, const Bool linear,
 		const Bool overwrite, const Bool log) {
-
 	Bool rstat = False;
 	try {
 		*_log << LogOrigin("ImageAnalysis", "imagefromarray");
@@ -524,23 +532,23 @@ Bool ImageAnalysis::imagefromarray(const String& outfile,
 			PtrHolder<CoordinateSystem> cSys(makeCoordinateSystem(csys,
 					pixelsArray.shape()));
 			CoordinateSystem* pCS = cSys.ptr();
-			if (!make_image(error, outfile, *pCS, pixelsArray.shape(), *_log,
-					log, overwrite)) {
-				*_log << error << LogIO::EXCEPTION;
-			}
+			_make_image(
+				outfile, *pCS, pixelsArray.shape(),
+				log, overwrite
+			);
 		} else {
 			// Make default CoordinateSystem
 			CoordinateSystem cSys = CoordinateUtil::makeCoordinateSystem(
 					pixelsArray.shape(), linear);
 			centreRefPix(cSys, pixelsArray.shape());
-			if (!make_image(error, outfile, cSys, pixelsArray.shape(), *_log,
-					log, overwrite)) {
-				*_log << error << LogIO::EXCEPTION;
-			}
+			_make_image(
+				outfile, cSys, pixelsArray.shape(),
+				log, overwrite
+			);
 		}
 
 		// Fill image
-		_image->putSlice(pixelsArray, IPosition(pixelsArray.ndim(), 0),
+		_imageFloat->putSlice(pixelsArray, IPosition(pixelsArray.ndim(), 0),
 				IPosition(pixelsArray.ndim(), 1));
 		rstat = True;
 	} catch (AipsError x) {
@@ -553,7 +561,6 @@ Bool ImageAnalysis::imagefromarray(const String& outfile,
 Bool ImageAnalysis::imagefromascii(const String& outfile, const String& infile,
 		const Vector<Int>& shape, const String& sep, const Record& csys,
 		const Bool linear, const Bool overwrite) {
-	// The glish code ignored sep (assumed to be ' ') so will we to
 	Bool rstat = False;
 
 	try {
@@ -613,6 +620,7 @@ Bool ImageAnalysis::imagefromfits(
 	const Int whichrep, const Int whichhdu,
 	const Bool zeroBlanks, const Bool overwrite
 ) {
+	_onlyFloat(__FUNCTION__);
 	Bool rstat = False;
 	try {
 		*_log << LogOrigin(className(), __FUNCTION__);
@@ -640,7 +648,7 @@ Bool ImageAnalysis::imagefromfits(
 		if (pOut == 0) {
 			*_log << error << LogIO::EXCEPTION;
 		}
-		_image.reset(pOut);
+		_imageFloat.reset(pOut);
 		rstat = True;
 	}
 	catch (const AipsError& x) {
@@ -655,11 +663,11 @@ Bool ImageAnalysis::imagefromimage(const String& outfile, const String& infile,
 		const bool overwrite) {
 	Bool rstat = False;
 	try {
-		*_log << LogOrigin("ImageAnalysis", "imagefromimage");
+		*_log << LogOrigin(className(), __FUNCTION__);
 
 		// Open
 		std::auto_ptr<ImageInterface<Float> > inImage;
-		ImageUtilities::openImage(inImage, infile, *_log);
+		ImageUtilities::openImage(inImage, infile);
 		//
 		// Convert region from Glish record to ImageRegion.
 		// Convert mask to ImageRegion and make SubImage.
@@ -675,7 +683,7 @@ Bool ImageAnalysis::imagefromimage(const String& outfile, const String& infile,
 		);
 
 		if (outfile.empty()) {
-			_image.reset(new SubImage<Float> (subImage));
+			_imageFloat.reset(new SubImage<Float> (subImage));
 			rstat = True;
 		}
 		else {
@@ -688,21 +696,21 @@ Bool ImageAnalysis::imagefromimage(const String& outfile, const String& infile,
 			}
 			*_log << LogIO::NORMAL << "Creating image '" << outfile
 					<< "' of shape " << subImage.shape() << LogIO::POST;
-			_image.reset(new PagedImage<Float> (subImage.shape(),
+			_imageFloat.reset(new PagedImage<Float> (subImage.shape(),
 					subImage.coordinates(), outfile));
-			if (_image.get() == 0) {
+			if (_imageFloat.get() == 0) {
 				*_log << "Failed to create PagedImage" << LogIO::EXCEPTION;
 			}
-			ImageUtilities::copyMiscellaneous(*_image, *inImage);
+			ImageUtilities::copyMiscellaneous(*_imageFloat, *inImage);
 
 			// Make output mask if required
 
 			if (subImage.isMasked()) {
 				String maskName("");
-				ImageMaskAttacher<Float>::makeMask(*_image, maskName, False, True, *_log, True);
+				ImageMaskAttacher<Float>::makeMask(*_imageFloat, maskName, False, True, *_log, True);
 			}
 
-			LatticeUtilities::copyDataAndMask(*_log, *_image, subImage);
+			LatticeUtilities::copyDataAndMask(*_log, *_imageFloat, subImage);
 			rstat = True;
 		}
 	}
@@ -713,49 +721,52 @@ Bool ImageAnalysis::imagefromimage(const String& outfile, const String& infile,
 	return rstat;
 }
 
-Bool ImageAnalysis::imagefromshape(const String& outfile,
-		const Vector<Int>& shapeV, const Record& coordinates,
-		const Bool linear, const Bool overwrite, const Bool log) {
-	Bool rstat = False;
-	try {
-		*_log << LogOrigin(className(), __FUNCTION__);
+void ImageAnalysis::imagefromshape(
+	const String& outfile, const Vector<Int>& shapeV,
+	const Record& coordinates, const Bool linear,
+	const Bool overwrite, const Bool log,
+	const String& type
+) {
+	*_log << LogOrigin(className(), __FUNCTION__);
 
-		// Some protection
-		if (shapeV.nelements() == 0) {
-			*_log << "The shape is invalid" << LogIO::EXCEPTION;
-		}
-		for (uInt i = 0; i < shapeV.nelements(); i++) {
-			if (shapeV(i) <= 0) {
-				*_log << "The shape is invalid" << LogIO::EXCEPTION;
-			}
-		}
+	ThrowIf(
+		shapeV.nelements() == 0,
+		"The shape must have more than zero elements"
+	);
+	ThrowIf(
+		anyTrue(shapeV <= 0),
+		"All elements of shape must be positive"
+	);
 
-		// Make with supplied CoordinateSystem if record not empty
-		String error;
-		if (! coordinates.empty()) {
-			PtrHolder<CoordinateSystem> pCS(makeCoordinateSystem(coordinates,
-					shapeV));
-			if (!make_image(error, outfile, *(pCS.ptr()), shapeV, *_log, log,
-					overwrite)) {
-				*_log << error << LogIO::EXCEPTION;
-			}
-		} else {
-			// Make default CoordinateSystem
-			CoordinateSystem cSys = CoordinateUtil::makeCoordinateSystem(
-					shapeV, linear);
-			centreRefPix(cSys, shapeV);
-			if (!make_image(error, outfile, cSys, shapeV, *_log, log,
-					overwrite)) {
-				*_log << error << LogIO::EXCEPTION;
-			}
-		}
-		_image->set(0.0);
-		rstat = True;
-	} catch (AipsError x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+	CoordinateSystem mycsys;
+	std::auto_ptr<CoordinateSystem> csysPtr;
+
+	if (coordinates.empty()) {
+		mycsys = CoordinateUtil::makeCoordinateSystem(
+			shapeV, linear
+		);
+		centreRefPix(mycsys, shapeV);
 	}
-	return rstat;
+	else {
+		csysPtr.reset(
+			makeCoordinateSystem(
+				coordinates, shapeV
+			)
+		);
+		mycsys = *csysPtr;
+	}
+
+	String error;
+	_make_image(
+		outfile, mycsys, shapeV, log,
+		overwrite, type
+	);
+	if (_imageFloat.get()) {
+		_imageFloat->set(0.0);
+	}
+	else {
+		_imageComplex->set(Complex(0.0, 0.0));
+	}
 }
 
 ImageInterface<Float> *
@@ -764,7 +775,7 @@ ImageAnalysis::convolve(
 	const String& kernelFileName, const Double in_scale, Record& region,
 	String& mask, const Bool overwrite, const Bool, const Bool stretch
 ) {
-
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	//Need to deal with the string part
@@ -793,7 +804,7 @@ ImageAnalysis::convolve(
 	}
 
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_image,
+		*_imageFloat,
 		//*(ImageRegion::tweakedRegionRecord(&region)),
 		region,
 		mask, _log.get(), False, AxesSpecifier(), stretch
@@ -851,16 +862,17 @@ ImageAnalysis::convolve(
 
 Record*
 ImageAnalysis::boundingbox(const Record& Region) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", "boundingbox");
 	// Find the bounding box of this region
 	Record tmpR(Region);
 	const ImageRegion* pRegion = ImageRegion::fromRecord(
-		0, _image->coordinates(), _image->shape(),
+		0, _imageFloat->coordinates(), _imageFloat->shape(),
 		//*ImageRegion::tweakedRegionRecord(&tmpR)
 		Region
 	);
-	LatticeRegion latRegion = pRegion->toLatticeRegion(_image->coordinates(),
-			_image->shape());
+	LatticeRegion latRegion = pRegion->toLatticeRegion(_imageFloat->coordinates(),
+			_imageFloat->shape());
 	//
 	Slicer sl = latRegion.slicer();
 	IPosition blc(sl.start()); // 1-rel for Glish
@@ -882,23 +894,24 @@ ImageAnalysis::boundingbox(const Record& Region) {
 	outRec->define("inc", inc.asVector());
 	outRec->define("bbShape", (trc - blc + 1).asVector());
 	outRec->define("regionShape", length.asVector());
-	outRec->define("imageShape", _image->shape().asVector());
+	outRec->define("imageShape", _imageFloat->shape().asVector());
 	//
-	CoordinateSystem cSys(_image->coordinates());
+	CoordinateSystem cSys(_imageFloat->coordinates());
 	outRec->define("blcf", CoordinateUtil::formatCoordinate(blc, cSys)); // 0-rel for use in C++
 	outRec->define("trcf", CoordinateUtil::formatCoordinate(trc, cSys));
 	return outRec;
 }
 
 String ImageAnalysis::brightnessunit() {
+	_onlyFloat(__FUNCTION__);
 	String rstat;
 	*_log << LogOrigin("ImageAnalysis", "brightnessunit");
-	rstat = _image->units().getName();
+	rstat = _imageFloat->units().getName();
 	return rstat;
 }
 
 Bool ImageAnalysis::calc(const String& expr) {
-
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", "calc");
 	Record regions;
 
@@ -925,12 +938,12 @@ Bool ImageAnalysis::calc(const String& expr) {
 	// of the output image
 	if (!node.isScalar()) {
 		const IPosition shapeOut = node.shape();
-		if (!_image->shape().isEqual(shapeOut)) {
+		if (!_imageFloat->shape().isEqual(shapeOut)) {
 			*_log << LogIO::SEVERE
 					<< "The shape of the expression does not conform " << endl;
 			*_log << "with the shape of the output image" << LogIO::POST;
 			*_log << "Expression shape = " << shapeOut << endl;
-			*_log << "Image shape      = " << _image->shape()
+			*_log << "Image shape      = " << _imageFloat->shape()
 					<< LogIO::EXCEPTION;
 		}
 	}
@@ -951,7 +964,7 @@ Bool ImageAnalysis::calc(const String& expr) {
 					dynamic_cast<const LELImageCoord*> (lattCoord);
 			AlwaysAssert (imCoord != 0, AipsError);
 			const CoordinateSystem& cSysOut = imCoord->coordinates();
-			if (!_image->coordinates().near(cSysOut)) {
+			if (!_imageFloat->coordinates().near(cSysOut)) {
 				// Since the output image has coordinates, and the shapes
 				// have conformed, just issue a warning
 				*_log << LogIO::WARN
@@ -966,10 +979,10 @@ Bool ImageAnalysis::calc(const String& expr) {
 	// Make a LatticeExpr and see if it is masked
 	Bool exprIsMasked = node.isMasked();
 	if (exprIsMasked) {
-		if (!_image->isMasked()) {
+		if (!_imageFloat->isMasked()) {
 			// The image does not have a default mask set.  So try and make it one.
 			String maskName("");
-			ImageMaskAttacher<Float>::makeMask(*_image, maskName, True, True, *_log, True);
+			ImageMaskAttacher<Float>::makeMask(*_imageFloat, maskName, True, True, *_log, True);
 		}
 	}
 	// Evaluate the expression and fill the output image and mask
@@ -979,27 +992,27 @@ Bool ImageAnalysis::calc(const String& expr) {
 		// to do.
 		if (!exprIsMasked) {
 			Float value = node2.getFloat();
-			if (_image->isMasked()) {
+			if (_imageFloat->isMasked()) {
 				// We implement with a LEL expression of the form
 				// iif(mask(image)", value, image)
-				LatticeExprNode node3 = iif(mask(*_image), node2, *_image);
-				_image->copyData(LatticeExpr<Float> (node3));
+				LatticeExprNode node3 = iif(mask(*_imageFloat), node2, *_imageFloat);
+				_imageFloat->copyData(LatticeExpr<Float> (node3));
 			} else {
 				// Just set all values to the scalar. There is no mask to
 				// worry about.
-				_image->set(value);
+				_imageFloat->set(value);
 			}
 		}
 	} else {
-		if (_image->isMasked()) {
+		if (_imageFloat->isMasked()) {
 			// We implement with a LEL expression of the form
 			// iif(mask(image)", expr, image)
-			LatticeExprNode node3 = iif(mask(*_image), node, *_image);
-			_image->copyData(LatticeExpr<Float> (node3));
+			LatticeExprNode node3 = iif(mask(*_imageFloat), node, *_imageFloat);
+			_imageFloat->copyData(LatticeExpr<Float> (node3));
 		} else {
 			// Just copy the pixels from the expression to the output.
 			// There is no mask to worry about.
-			_image->copyData(LatticeExpr<Float> (node));
+			_imageFloat->copyData(LatticeExpr<Float> (node));
 		}
 	}
 	// Ensure that we reconstruct the statistics and histograms objects
@@ -1011,7 +1024,7 @@ Bool ImageAnalysis::calc(const String& expr) {
 
 Bool ImageAnalysis::calcmask(const String& mask, Record& regions,
 		const String& maskName, const Bool makeDefault) {
-
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", "calcmask");
 
 	String expr = mask;
@@ -1046,12 +1059,12 @@ Bool ImageAnalysis::calcmask(const String& mask, Record& regions,
 	// match as that would be an un-necessary restriction.
 	if (!node.isScalar()) {
 		const IPosition shapeOut = node.shape();
-		if (!_image->shape().isEqual(shapeOut)) {
+		if (!_imageFloat->shape().isEqual(shapeOut)) {
 			*_log << LogIO::SEVERE
 					<< "The shape of the expression does not conform " << endl;
 			*_log << "with the shape of the output image" << LogIO::POST;
 			*_log << "Expression shape = " << shapeOut << endl;
-			*_log << "Image shape      = " << _image->shape()
+			*_log << "Image shape      = " << _imageFloat->shape()
 					<< LogIO::EXCEPTION;
 		}
 	}
@@ -1060,18 +1073,18 @@ Bool ImageAnalysis::calcmask(const String& mask, Record& regions,
 	// be default because of other problems.  Cannot use the usual ImageMaskAttacher<Float>::makeMask
 	// function because I cant attach/make it default until the expression
 	// has been evaluated
-	if (_image->canDefineRegion()) {
+	if (_imageFloat->canDefineRegion()) {
 		// Generate mask name if not given
 		String maskName2 = maskName;
 		if (maskName.empty())
-			maskName2 = _image->makeUniqueRegionName(String("mask"), 0);
+			maskName2 = _imageFloat->makeUniqueRegionName(String("mask"), 0);
 		// Make the mask if it does not exist
-		if (!_image->hasRegion(maskName2, RegionHandler::Masks)) {
-			_image->makeMask(maskName2, True, False);
+		if (!_imageFloat->hasRegion(maskName2, RegionHandler::Masks)) {
+			_imageFloat->makeMask(maskName2, True, False);
 			*_log << LogIO::NORMAL << "Created mask `" << maskName2 << "'"
 					<< LogIO::POST;
 			//
-			ImageRegion iR = _image->getRegion(maskName2,
+			ImageRegion iR = _imageFloat->getRegion(maskName2,
 					RegionHandler::Masks);
 			LCRegion& mask = iR.asMask();
 			if (node.isScalar()) {
@@ -1082,7 +1095,7 @@ Bool ImageAnalysis::calcmask(const String& mask, Record& regions,
 			}
 		} else {
 			// Access pre-existing mask.
-			ImageRegion iR = _image->getRegion(maskName2,
+			ImageRegion iR = _imageFloat->getRegion(maskName2,
 					RegionHandler::Masks);
 			LCRegion& mask2 = iR.asMask();
 			if (node.isScalar()) {
@@ -1093,7 +1106,7 @@ Bool ImageAnalysis::calcmask(const String& mask, Record& regions,
 			}
 		}
 		if (makeDefault) {
-			_image->setDefaultMask(maskName2);
+			_imageFloat->setDefaultMask(maskName2);
 		}
 	}
 	else {
@@ -1109,6 +1122,7 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::continuumsub(
 	Record& region, const Vector<Int>& channels, const String& pol,
 	const Int in_fitorder, const Bool overwrite
 ) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin(className(), __FUNCTION__);
 	if (in_fitorder < 0) {
 		*_log << LogIO::SEVERE << "Fit order must be non-negative"
@@ -1123,7 +1137,7 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::continuumsub(
 	Bool lelist = False;
 	std::tr1::shared_ptr<ImageInterface<Float> > subim(
 		SubImageFactory<Float>::createImage(
-			*_image, leoutfile, region, lemask,
+			*_imageFloat, leoutfile, region, lemask,
 			ledropdeg, leoverwrite, lelist, False
 		)
 	);
@@ -1147,7 +1161,7 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::continuumsub(
 	Record fitregion;
 	if (pol.size() != 0) {
 		Record myRegion;
-		const CoordinateSystem& cSys = _image->coordinates();
+		const CoordinateSystem& cSys = _imageFloat->coordinates();
 		if (! cSys.hasPolarizationCoordinate()) {
 			*_log << "No Stokes axis in this image"
 				<< LogIO::EXCEPTION;
@@ -1226,6 +1240,7 @@ ImageInterface<Float>* ImageAnalysis::convolve2d(
 	Record& Region, const String& mask, const Bool overwrite,
 	const Bool stretch, const Bool targetres
 ) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin(className(), __FUNCTION__);
     if (majorKernel < minorKernel) {
     	*_log << "Major axis is less than minor axis"
@@ -1245,7 +1260,7 @@ ImageInterface<Float>* ImageAnalysis::convolve2d(
 	}
 
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_image, Region, mask, _log.get(), False,
+		*_imageFloat, Region, mask, _log.get(), False,
 		AxesSpecifier(), stretch
 	);
 
@@ -1291,12 +1306,13 @@ ImageInterface<Float>* ImageAnalysis::convolve2d(
 }
 
 CoordinateSystem ImageAnalysis::coordsys(const Vector<Int>& pixelAxes) {
+	_onlyFloat(__FUNCTION__);
 
 	*_log << LogOrigin("ImageAnalysis", "coordsys");
 
 	// Recover CoordinateSytem into a Record
 	Record rec;
-	CoordinateSystem cSys = _image->coordinates();
+	CoordinateSystem cSys = _imageFloat->coordinates();
 	CoordinateSystem cSys2;
 
 	// Fish out the coordinate of the desired axes
@@ -1372,7 +1388,7 @@ CoordinateSystem ImageAnalysis::coordsys(const Vector<Int>& pixelAxes) {
 }
 
 CoordinateSystem ImageAnalysis::csys(const Vector<Int>& axes) {
-
+	_onlyFloat(__FUNCTION__);
 	//No clue why this was done...just keeping it
 	return coordsys(axes);
 
@@ -1381,11 +1397,12 @@ CoordinateSystem ImageAnalysis::csys(const Vector<Int>& axes) {
 Record *
 ImageAnalysis::coordmeasures(Quantity& intensity, Record& direction,
 		Record& frequency, Record& velocity, const Vector<Double>& pixel) {
+	_onlyFloat(__FUNCTION__);
 	Record *r = 0;
 
 	*_log << LogOrigin("ImageAnalysis", "coordmeasures");
 
-	CoordinateSystem cSys = _image->coordinates();
+	CoordinateSystem cSys = _imageFloat->coordinates();
 
 	Vector<Double> vpixel(pixel);
 	if (pixel.size() == 0) {
@@ -1428,6 +1445,7 @@ Matrix<Float> ImageAnalysis::decompose(Record& Region, const String& mask,
 		const Int minRange, const Int nAxis, const Bool fit,
 		const Double maxrms, const Int maxRetry, const Int maxIter,
 		const Double convCriteria) {
+	_onlyFloat(__FUNCTION__);
 
   Matrix<Int> blcs;
   Matrix<Int> trcs;
@@ -1441,7 +1459,7 @@ Matrix<Float> ImageAnalysis::decompose(
 	const Double maxrms, const Int maxRetry, const Int maxIter,
 	const Double convCriteria, const Bool stretch
 ) {
-
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	if (Threshold < 0) {
@@ -1452,7 +1470,7 @@ Matrix<Float> ImageAnalysis::decompose(
 
 	AxesSpecifier axesSpec(False);
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_image, //*(ImageRegion::tweakedRegionRecord(&Region)),
+		*_imageFloat, //*(ImageRegion::tweakedRegionRecord(&Region)),
 		Region, mask,
 		_log.get(), False, axesSpec, stretch
 	);
@@ -1498,7 +1516,7 @@ Matrix<Float> ImageAnalysis::decompose(
 Record ImageAnalysis::deconvolvecomponentlist(
 	const Record& compList, const Int channel, const Int polarization
 ) {
-
+	_onlyFloat(__FUNCTION__);
 	Record retval;
 	*_log << LogOrigin(className(), __FUNCTION__);
 
@@ -1517,12 +1535,12 @@ Record ImageAnalysis::deconvolvecomponentlist(
 	}
 
 	// Do we have a beam ?
-	GaussianBeam beam = _image->imageInfo().restoringBeam(channel, polarization);
+	GaussianBeam beam = _imageFloat->imageInfo().restoringBeam(channel, polarization);
 	if (beam.isNull()) {
 		*_log << "This image does not have a restoring beam"
 				<< LogIO::EXCEPTION;
 	}
-	const CoordinateSystem cSys = _image->coordinates();
+	const CoordinateSystem cSys = _imageFloat->coordinates();
 	Int dirCoordinate = cSys.findCoordinate(Coordinate::DIRECTION);
 	if (dirCoordinate == -1) {
 		*_log
@@ -1546,19 +1564,20 @@ Record ImageAnalysis::deconvolvecomponentlist(
 
 Bool ImageAnalysis::remove(Bool verbose)
 {
+	_onlyFloat(__FUNCTION__);
   *_log << LogOrigin(className(), __FUNCTION__);
   Bool rstat(False);
 
   // Let's see if it exists.  If it doesn't, then the user has
   // deleted it, or its a readonly expression
-  if (!_image->isPersistent()) {
+  if (!_imageFloat->isPersistent()) {
     *_log << LogIO::WARN
             << "This image tool is not associated with a persistent disk file. It cannot be deleted"
             << LogIO::POST;
     return False;
   }
   Bool strippath(False);
-  String fileName = _image->name(strippath);
+  String fileName = _imageFloat->name(strippath);
   if (fileName.empty()) {
     *_log << LogIO::WARN << "Filename is empty or does not exist."
             << LogIO::POST;
@@ -1574,11 +1593,11 @@ Bool ImageAnalysis::remove(Bool verbose)
   // the temporary persistent image as well, if any and destroys
   // the DDs associated with this image (they reference the image
   // and will prevent us from deleting it)
-  if (_image.get() != 0) {
+  if (_imageFloat.get() != 0) {
     *_log << (verbose ? LogIO::NORMAL : LogIO::DEBUG1)
             << "Detaching from image" << LogIO::POST;
   }
-  _image.reset();
+  _imageFloat.reset();
   deleteHist();
 
   // Now try and blow it away.  If it's open, tabledelete won't delete it.
@@ -1606,6 +1625,7 @@ Bool ImageAnalysis::fft(
 	const String& ampOut, const String& phaseOut, const Vector<Int>& axes,
 	Record& Region, const String& mask, const Bool stretch
 ) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	// Validate outfiles
@@ -1646,7 +1666,7 @@ Bool ImageAnalysis::fft(
 	}
 
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_image, //*(ImageRegion::tweakedRegionRecord(&Region)),
+		*_imageFloat, //*(ImageRegion::tweakedRegionRecord(&Region)),
 		Region,
 		mask, _log.get(), False, AxesSpecifier(), stretch
 	);
@@ -1711,12 +1731,12 @@ Bool ImageAnalysis::fft(
 Record ImageAnalysis::findsources(const int nMax, const double cutoff,
 		Record& Region, const String& mask, const Bool point, const Int width,
 		const Bool absFind) {
-
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", "findsources");
 
 	AxesSpecifier axesSpec(False);
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_image, //*(ImageRegion::tweakedRegionRecord(&Region)),
+		*_imageFloat, //*(ImageRegion::tweakedRegionRecord(&Region)),
 		Region,
 		mask, _log.get(), False, axesSpec
 	);
@@ -1757,7 +1777,7 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::_fitpolynomial(
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		pRegionRegion, pMaskRegion,
-		*_image,// *(ImageRegion::tweakedRegionRecord(&Region)),
+		*_imageFloat,// *(ImageRegion::tweakedRegionRecord(&Region)),
 		Region,
 		mask, 0, False
 	);
@@ -1769,7 +1789,7 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::_fitpolynomial(
 	std::tr1::shared_ptr<SubImage<Float> > pSubSigmaImage;
 	if (!sigmaFile.empty()) {
 		PagedImage<Float> sigmaImage(sigmaFile);
-		if (!sigmaImage.shape().conform(_image->shape())) {
+		if (!sigmaImage.shape().conform(_imageFloat->shape())) {
 			*_log << "image and sigma images must have same shape"
 				<< LogIO::EXCEPTION;
 		}
@@ -1845,8 +1865,8 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::_fitpolynomial(
 	// but should not be copied to the output
 	std::tr1::shared_ptr<SubImage<Float> > pSubImage2(
 		region.get() != 0
-		? new SubImage<Float> (*_image, *region, True)
-		: new SubImage<Float> (*_image, True)
+		? new SubImage<Float> (*_imageFloat, *region, True)
+		: new SubImage<Float> (*_imageFloat, True)
 	);
 	if (pSubImage2->hasPixelMask()) {
 		Lattice<Bool>& pixelMaskIn = pSubImage2->pixelMask();
@@ -1869,47 +1889,64 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::_fitpolynomial(
 	return pResid;
 }
 
-Bool ImageAnalysis::getchunk(Array<Float>& pixels, Array<Bool>& pixelMask,
-		const Vector<Int>& blc, const Vector<Int>& trc, const Vector<Int>& inc,
-		const Vector<Int>& axes, const Bool list, const Bool dropdeg,
-		const Bool getmask) {
+Bool ImageAnalysis::getchunk(
+	Array<Float>& pixels, Array<Bool>& pixelMask,
+	const Vector<Int>& blc, const Vector<Int>& trc, const Vector<Int>& inc,
+	const Vector<Int>& axes, const Bool list, const Bool dropdeg,
+	const Bool getmask
+) {
+	ThrowIf(
+		! _imageFloat,
+		"The array passed has Float values, but the "
+		"associated image is not Float valued"
+	);
+	return _getchunk(
+		pixels, pixelMask, *_imageFloat, blc, trc,
+		inc, axes, list, dropdeg, getmask
+	);
+}
 
-	// Recover some pixels from the image from a simple strided box
-	*_log << LogOrigin("ImageAnalysis", "getchunk");
+Bool ImageAnalysis::getchunk(
+	Array<Complex>& pixels, Array<Bool>& pixelMask,
+	const Vector<Int>& blc, const Vector<Int>& trc, const Vector<Int>& inc,
+	const Vector<Int>& axes, const Bool list, const Bool dropdeg,
+	const Bool getmask
+) {
+	ThrowIf(
+		! _imageComplex,
+			"The array passed has Complex values, but the "
+			"associated image is not Complex valued"
+		);
+	return _getchunk(
+		pixels, pixelMask, *_imageComplex, blc, trc,
+		inc, axes, list, dropdeg, getmask
+	);
+}
 
-	IPosition iblc = IPosition(Vector<Int> (blc));
-	IPosition itrc = IPosition(Vector<Int> (trc));
-	IPosition imshape = _image->shape();
-
-	// Verify region.
-	IPosition iinc = IPosition(inc.size());
-	for (uInt i = 0; i < inc.size(); i++) {
-		iinc(i) = inc[i];
-	}
-	LCBox::verify(iblc, itrc, iinc, imshape);
-	if (list) {
-		*_log << LogIO::NORMAL << "Selected bounding box " << iblc << " to "
-				<< itrc << LogIO::POST;
-	}
-
-	// Get the chunk.  The mask is not returned. Leave that to getRegion
-	IPosition curshape = (itrc - iblc + iinc) / iinc;
-	Slicer sl(iblc, itrc, iinc, Slicer::endIsLast);
-	SubImage<Float> subImage(*_image, sl);
-	//
-	IPosition iAxes = IPosition(Vector<Int> (axes));
-	if (getmask) {
-		LatticeUtilities::collapse(pixels, pixelMask, iAxes, subImage, dropdeg);
-		return True;
-	} else {
-		LatticeUtilities::collapse(pixels, iAxes, subImage, dropdeg);
-		return True;
-	}
-
+std::tr1::shared_ptr<const ImageInterface<Complex> > ImageAnalysis::getComplexImage() const {
+	ThrowIf(
+		_imageFloat,
+		"This object currently holds a Float valued image. Use "
+		"getImage instead"
+	);
+	ThrowIf(
+		! _imageComplex,
+		"This image does not hold a valid Complex valued image"
+	);
+	return _imageComplex;
 }
 
 std::tr1::shared_ptr<const ImageInterface<Float> > ImageAnalysis::getImage() const {
-	return _image;
+	ThrowIf(
+		_imageComplex,
+		"This object currently holds a Complex valued image. Use "
+		"getComplexImage instead"
+	);
+	ThrowIf(
+		! _imageFloat,
+		"This image does not hold a valid Float valued image"
+	);
+	return _imageFloat;
 }
 
 
@@ -1919,6 +1956,7 @@ Bool ImageAnalysis::getregion(
 	const Bool list, const Bool dropdeg, const Bool getmask,
 	const bool extendMask
 ) {
+	_onlyFloat(__FUNCTION__);
 	// Recover some pixels and their mask from a region in the image
 	*_log << LogOrigin("ImageAnalysis", "getregion");
 
@@ -1930,7 +1968,7 @@ Bool ImageAnalysis::getregion(
 	IPosition iAxes = IPosition(Vector<Int> (axes));
 
     SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_image, //*(ImageRegion::tweakedRegionRecord(&Region)),
+		*_imageFloat, //*(ImageRegion::tweakedRegionRecord(&Region)),
 		Region,
 		Mask, (list ? _log.get() : 0), False, AxesSpecifier(),
 		extendMask
@@ -1947,6 +1985,7 @@ Record*
 ImageAnalysis::getslice(const Vector<Double>& x, const Vector<Double>& y,
 		const Vector<Int>& axes, const Vector<Int>& coord, const Int npts,
 		const String& method) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", "getslice");
 
 	Vector<Float> xPos;
@@ -1965,7 +2004,7 @@ ImageAnalysis::getslice(const Vector<Double>& x, const Vector<Double>& y,
 	// Get the Slice
 	LatticeSlice1D<Float>::Method method2 =
 			LatticeSlice1D<Float>::stringToMethod(method);
-	LatticeSlice1D<Float> slicer(*_image, method2);
+	LatticeSlice1D<Float> slicer(*_imageFloat, method2);
 	slicer.getSlice(pixels, pixelMask, curve, iAxes(0), iAxes(1), iCoord);
 
 	// Get slice locations
@@ -1994,6 +2033,7 @@ ImageInterface<Float>* ImageAnalysis::hanning(
 	const String& mask, const Int axis, const Bool drop,
 	const Bool overwrite, const Bool extendMask
 ) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin(className(), __FUNCTION__);
 
 	// Validate outfile
@@ -2008,22 +2048,22 @@ ImageInterface<Float>* ImageAnalysis::hanning(
 	// Deal with axis
 	Int iAxis = axis;
 	if (iAxis < 0) {
-		iAxis = CoordinateUtil::findSpectralAxis(_image->coordinates());
+		iAxis = CoordinateUtil::findSpectralAxis(_imageFloat->coordinates());
 		if (iAxis < 0) {
 			*_log << "Could not find a spectral axis in input image"
 					<< LogIO::EXCEPTION;
 		}
 	}
-	else if (iAxis > Int(_image->ndim()) - 1) {
+	else if (iAxis > Int(_imageFloat->ndim()) - 1) {
 		*_log << "Specified axis of " << iAxis + 1
 			<< "is greater than input image dimension of "
-			<< _image->ndim() << LogIO::EXCEPTION;
+			<< _imageFloat->ndim() << LogIO::EXCEPTION;
 	}
 	else if (
-		_image->coordinates().hasDirectionCoordinate()
-		&& _image->imageInfo().hasMultipleBeams()
+		_imageFloat->coordinates().hasDirectionCoordinate()
+		&& _imageFloat->imageInfo().hasMultipleBeams()
 	) {
-		Vector<Int> dirAxes = _image->coordinates().directionAxesNumbers();
+		Vector<Int> dirAxes = _imageFloat->coordinates().directionAxesNumbers();
 		for (uInt i=0; i<dirAxes.size(); i++) {
 			if (axis == dirAxes[i]) {
 				*_log << LogIO::WARN << "Specified axis " << axis
@@ -2037,14 +2077,14 @@ ImageInterface<Float>* ImageAnalysis::hanning(
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		pRegionRegion, pMaskRegion,
-		*_image, //*(ImageRegion::tweakedRegionRecord(&Region)),
+		*_imageFloat, //*(ImageRegion::tweakedRegionRecord(&Region)),
 		Region, mask,
 		_log.get(), False, AxesSpecifier(), extendMask
 	);
 	IPosition blc(subImage.ndim(), 0);
 	if (pRegionRegion) {
 		LatticeRegion latRegion = pRegionRegion->toLatticeRegion(
-			_image->coordinates(), _image->shape()
+			_imageFloat->coordinates(), _imageFloat->shape()
 		);
 		blc = latRegion.slicer().start();
 	}
@@ -2066,7 +2106,7 @@ ImageInterface<Float>* ImageAnalysis::hanning(
 	// Create output image coordinates.  Account for region selection and if
 	// we drop every other point, the first output point is centred on
 	// the second input pixel.
-	Vector<Float> cInc(_image->ndim(), 1.0);
+	Vector<Float> cInc(_imageFloat->ndim(), 1.0);
 	Vector<Float> cBlc(blc.nelements());
 	for (uInt i = 0; i < cBlc.nelements(); i++)
 		cBlc(i) = Float(blc(i));
@@ -2074,7 +2114,7 @@ ImageInterface<Float>* ImageAnalysis::hanning(
 		cInc(iAxis) = 2.0;
 		cBlc(iAxis) += 1.0;
 	}
-	CoordinateSystem cSys = _image->coordinates().subImage(
+	CoordinateSystem cSys = _imageFloat->coordinates().subImage(
 		cBlc, cInc, outShape.asVector()
 	);
 
@@ -2144,19 +2184,20 @@ ImageInterface<Float>* ImageAnalysis::hanning(
 		// meterValue += 1.0;
 		// clock.update(meterValue);
 	}
-	ImageUtilities::copyMiscellaneous(*pImOut, *_image);
+	ImageUtilities::copyMiscellaneous(*pImOut, *_imageFloat);
 
 	// Return handle to new file
 	return pImOut;
 }
 
 Vector<Bool> ImageAnalysis::haslock() {
+	_onlyFloat(__FUNCTION__);
 	Vector<Bool> rstat;
 	*_log << LogOrigin("ImageAnalysis", "haslock");
 
 	rstat.resize(2);
-	rstat[0] = _image->hasLock(FileLocker::Read);
-	rstat[1] = _image->hasLock(FileLocker::Write);
+	rstat[0] = _imageFloat->hasLock(FileLocker::Read);
+	rstat[1] = _imageFloat->hasLock(FileLocker::Write);
 	return rstat;
 }
 
@@ -2182,12 +2223,13 @@ Record ImageAnalysis::histograms(
 	const Bool force,
 	const Bool disk, const Bool extendMask
 ) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin(className(), __FUNCTION__);
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, *_image,
+		pRegionRegion, pMaskRegion, *_imageFloat,
 		//*(ImageRegion::tweakedRegionRecord(&regionRec)),
 		regionRec,
 		sMask, _log.get(), False, AxesSpecifier(), extendMask
@@ -2250,10 +2292,10 @@ Record ImageAnalysis::histograms(
 		*_log << _histograms->errorMessage() << LogIO::EXCEPTION;
 	}
 	if(
-		_image->coordinates().hasDirectionCoordinate()
-		&& _image->imageInfo().hasMultipleBeams()
+		_imageFloat->coordinates().hasDirectionCoordinate()
+		&& _imageFloat->imageInfo().hasMultipleBeams()
 	) {
-		Vector<Int> dirAxes = _image->coordinates().directionAxesNumbers();
+		Vector<Int> dirAxes = _imageFloat->coordinates().directionAxesNumbers();
 		for (uInt i=0; i<dirAxes.size(); i++) {
 			for (uInt j=0; j<tmpaxes.size(); j++) {
 				if (tmpaxes[j] == dirAxes[i]) {
@@ -2305,6 +2347,7 @@ Record ImageAnalysis::histograms(
 }
 
 Vector<String> ImageAnalysis::history(const Bool list, const Bool browse) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", "history");
 
 	//
@@ -2312,7 +2355,7 @@ Vector<String> ImageAnalysis::history(const Bool list, const Bool browse) {
 		*_log << "Table browsing is not implemented yet!" << LogIO::POST;
 	}
 	Vector<String> t;
-	LoggerHolder& logger = _image->logger();
+	LoggerHolder& logger = _imageFloat->logger();
 	//
 	uInt i = 1;
 	for (LoggerHolder::const_iterator iter = logger.begin(); iter
@@ -2344,6 +2387,7 @@ Bool ImageAnalysis::insert(
 	const String& infile, Record& Region,
 	const Vector<double>& locatePixel, Bool verbose
 ) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin(className(), __FUNCTION__);
 	Bool doRef;
 	if (locatePixel.size() == 0) {
@@ -2355,7 +2399,7 @@ Bool ImageAnalysis::insert(
 	Int dbg = 0;
 
 	ImageInterface<Float>* pInImage = 0;
-	ImageUtilities::openImage(pInImage, infile, *_log);
+	ImageUtilities::openImage(pInImage, infile);
 	std::auto_ptr<ImageInterface<Float> > inImage(pInImage);
 	// Create region and subImage for image to be inserted
 	std::auto_ptr<const ImageRegion> pRegion(
@@ -2367,8 +2411,8 @@ Bool ImageAnalysis::insert(
 	SubImage<Float> inSub(*pInImage, *pRegion);
 	// Generate output pixel location
 	const IPosition inShape = inSub.shape();
-	const IPosition outShape = _image->shape();
-	const uInt nDim = _image->ndim();
+	const IPosition outShape = _imageFloat->shape();
+	const uInt nDim = _imageFloat->ndim();
 	Vector<Double> outPix(nDim);
 	const uInt nDim2 = locatePixel.nelements();
 	//
@@ -2389,7 +2433,7 @@ Bool ImageAnalysis::insert(
 	// Insert
 	ImageRegrid<Float> ir;
 	ir.showDebugInfo(dbg);
-	ir.insert(*_image, outPix, inSub);
+	ir.insert(*_imageFloat, outPix, inSub);
 
 	// Make sure hist and stats are redone
 	deleteHist();
@@ -2398,26 +2442,27 @@ Bool ImageAnalysis::insert(
 
 
 Bool ImageAnalysis::ispersistent() {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", "ispersistent");
 
-	return _image->isPersistent();
+	return _imageFloat->isPersistent();
 
 }
 
 Bool ImageAnalysis::lock(const Bool writelock, const Int nattempts) {
-
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", "lock");
 
 	FileLocker::LockType locker = FileLocker::Read;
 	if (writelock)
 		locker = FileLocker::Write;
 	uInt n = max(0, nattempts);
-	return _image->lock(locker, n);
+	return _imageFloat->lock(locker, n);
 }
 
 Bool ImageAnalysis::makecomplex(const String& outFile, const String& imagFile,
 		Record& Region, const Bool overwrite) {
-
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", "makecomplex");
 
 	// Check output file
@@ -2432,13 +2477,13 @@ Bool ImageAnalysis::makecomplex(const String& outFile, const String& imagFile,
 	// Open images and check consistency
 	PagedImage<Float> imagImage(imagFile);
 	//
-	const IPosition realShape = _image->shape();
+	const IPosition realShape = _imageFloat->shape();
 	const IPosition imagShape = imagImage.shape();
 	if (!realShape.isEqual(imagShape)) {
 		*_log << "Image shapes are not identical" << LogIO::EXCEPTION;
 	}
 	//
-	CoordinateSystem cSysReal = _image->coordinates();
+	CoordinateSystem cSysReal = _imageFloat->coordinates();
 	CoordinateSystem cSysImag = imagImage.coordinates();
 	if (!cSysReal.near(cSysImag)) {
 		*_log << "Image Coordinate systems are not conformant" << LogIO::POST;
@@ -2446,7 +2491,7 @@ Bool ImageAnalysis::makecomplex(const String& outFile, const String& imagFile,
 
 	String mask;
 	SubImage<Float> subRealImage = SubImageFactory<Float>::createSubImage(
-		*_image,
+		*_imageFloat,
 		//*(ImageRegion::tweakedRegionRecord(&Region)),
 		Region,
 		mask, _log.get(), False
@@ -2464,12 +2509,13 @@ Bool ImageAnalysis::makecomplex(const String& outFile, const String& imagFile,
 	//
 	PagedImage<Complex> outImage(realShape, cSysReal, outFile);
 	outImage.copyData(expr);
-	ImageUtilities::copyMiscellaneous(outImage, *_image);
+	ImageUtilities::copyMiscellaneous(outImage, *_imageFloat);
 	return True;
 }
 
 Vector<String> ImageAnalysis::maskhandler(const String& op,
 		const Vector<String>& namesIn) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin(className(), __FUNCTION__);
 
 	Vector<String> namesOut;
@@ -2484,14 +2530,14 @@ Vector<String> ImageAnalysis::maskhandler(const String& op,
 	if (OP.contains(String("SET"))) {
 		// Set new default mask.  Empty means unset default mask
 		if (n == 0) {
-			_image->setDefaultMask(String(""));
+			_imageFloat->setDefaultMask(String(""));
 		} else {
-			_image->setDefaultMask(namesIn(0));
+			_imageFloat->setDefaultMask(namesIn(0));
 		}
 	} else if (OP.contains(String("DEF"))) {
 		// Return default mask
 		namesOut.resize(1);
-		namesOut(0) = _image->getDefaultMask();
+		namesOut(0) = _imageFloat->getDefaultMask();
 		hasOutput = True;
 	} else if (OP.contains(String("DEL"))) {
 		// Delete mask(s)
@@ -2500,19 +2546,19 @@ Vector<String> ImageAnalysis::maskhandler(const String& op,
 					<< LogIO::EXCEPTION;
 		}
 		for (uInt i = 0; i < n; i++) {
-			_image->removeRegion(namesIn(i), RegionHandler::Masks, False);
+			_imageFloat->removeRegion(namesIn(i), RegionHandler::Masks, False);
 		}
 	} else if (OP.contains(String("REN"))) {
 		// Rename masks
 		if (n != 2) {
 			*_log << "You must give two mask names" << LogIO::EXCEPTION;
 		}
-		_image->renameRegion(namesIn(1), namesIn(0), RegionHandler::Masks,
+		_imageFloat->renameRegion(namesIn(1), namesIn(0), RegionHandler::Masks,
 				False);
 	} else if (OP.contains(String("GET"))) {
 		// Get names of all masks
 		namesOut.resize(0);
-		namesOut = _image->regionNames(RegionHandler::Masks);
+		namesOut = _imageFloat->regionNames(RegionHandler::Masks);
 		hasOutput = True;
 	} else if (OP.contains(String("COP"))) {
 		// Copy mask;  maskIn maskOut  or imageIn:maskIn maskOut
@@ -2536,27 +2582,27 @@ Vector<String> ImageAnalysis::maskhandler(const String& op,
 			*_log << "Illegal number of mask names" << LogIO::EXCEPTION;
 		}
 		//
-		if (_image->hasRegion(maskOut, RegionHandler::Any)) {
+		if (_imageFloat->hasRegion(maskOut, RegionHandler::Any)) {
 			*_log << "The mask " << maskOut << " already exists in image "
-					<< _image->name() << LogIO::EXCEPTION;
+					<< _imageFloat->name() << LogIO::EXCEPTION;
 		}
 
 		// Create new mask in output
-		_image->makeMask(maskOut, True, False);
+		_imageFloat->makeMask(maskOut, True, False);
 
 		// Copy masks
 		ImageInterface<Float>* pImIn = 0;
 		if (external) {
 			pImIn = new PagedImage<Float> (nameIn);
-			if (pImIn->shape() != _image->shape()) {
+			if (pImIn->shape() != _imageFloat->shape()) {
 				*_log << "Images have different shapes" << LogIO::EXCEPTION;
 			}
 		} else {
-			pImIn = _image.get();
+			pImIn = _imageFloat.get();
 		}
 		//
 		AxesSpecifier axesSpecifier;
-		ImageUtilities::copyMask(*_image, *pImIn, maskOut, maskIn,
+		ImageUtilities::copyMask(*_imageFloat, *pImIn, maskOut, maskIn,
 				axesSpecifier);
 		//
 		if (external) {
@@ -2576,15 +2622,17 @@ Vector<String> ImageAnalysis::maskhandler(const String& op,
 }
 
 Record ImageAnalysis::miscinfo() {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", "miscinfo");
 
-	Record tmp = _image->miscInfo();
+	Record tmp = _imageFloat->miscInfo();
 	return tmp;
 }
 
 Bool ImageAnalysis::modify(
 	Record& Model, Record& Region, const String& mask,
 	const Bool subtract, const Bool list, const Bool extendMask) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin(className(), __FUNCTION__);
 
 	String error;
@@ -2608,7 +2656,7 @@ Bool ImageAnalysis::modify(
 	}
 
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_image,
+		*_imageFloat,
 		//*(ImageRegion::tweakedRegionRecord(&Region)),
 		Region,
 		mask,  (list ? _log.get() : 0), True, AxesSpecifier(), extendMask
@@ -2635,7 +2683,7 @@ Bool ImageAnalysis::modify(
 
 Record ImageAnalysis::maxfit(Record& Region, const Bool doPoint,
 		const Int width, const Bool absFind, const Bool list) {
-
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", "maxfit");
 
 	SkyComponent sky; // Output
@@ -2647,7 +2695,7 @@ Record ImageAnalysis::maxfit(Record& Region, const Bool doPoint,
 	AxesSpecifier axesSpec(False); // drop degenerate
 	String mask;
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, *_image,
+		pRegionRegion, pMaskRegion, *_imageFloat,
 		//*(ImageRegion::tweakedRegionRecord(&Region)),
 		Region,
 		mask, _log.get(), False, axesSpec
@@ -2717,6 +2765,7 @@ ImageInterface<Float> * ImageAnalysis::moments(
 	const Int ny, const Bool yind, const Bool overwrite,
 	const Bool removeAxis, const Bool stretchMask
 ) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin(className(), __FUNCTION__);
 	// check that we can write to smoothout if specified
 	if (!smoothout.empty() and !overwrite) {
@@ -2735,14 +2784,14 @@ ImageInterface<Float> * ImageAnalysis::moments(
 	std::auto_ptr<ImageInterface<Float> > pIm;
 	try {
 		tr1::shared_ptr<ImageInterface<Float> > x;
-		if (_image->imageType() != PagedImage<Float>::className()) {
+		if (_imageFloat->imageType() != PagedImage<Float>::className()) {
             Path tmpImage = File::newUniqueName (".", "moments.scratch.image");
             tmpImageName = tmpImage.baseName();
 			*_log << LogIO::NORMAL << "Calculating moments of non-paged images can be notoriously slow, "
 					<< "so converting to a CASA temporary paged image named "
 					<< tmpImageName  << " first which will be written to the current directory" << LogIO::POST;
             x = SubImageFactory<Float>::createImage(
-            	*_image, tmpImageName, r, "", False,
+            	*_imageFloat, tmpImageName, r, "", False,
             	False, True, False
             );
             x.reset(
@@ -2755,7 +2804,7 @@ ImageInterface<Float> * ImageAnalysis::moments(
 		else {
 			x.reset(
 				SubImageFactory<Float>::createSubImage(
-					*_image, Region,
+					*_imageFloat, Region,
 					mask, _log.get(), False, AxesSpecifier(), stretchMask
 				).cloneII()
 			);
@@ -2885,16 +2934,19 @@ ImageInterface<Float> * ImageAnalysis::moments(
 }
 
 void ImageAnalysis::setMomentsProgressMonitor( ImageMomentsProgressMonitor* progressMonitor ){
+	_onlyFloat(__FUNCTION__);
 	imageMomentsProgressMonitor = progressMonitor;
 }
 
 String ImageAnalysis::name(const Bool strippath) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", "name");
-	return _image->name(strippath);
+	return _imageFloat->name(strippath);
 }
 
 Record*
 ImageAnalysis::pixelvalue(const Vector<Int>& pixel) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", "pixelvalue");
 
 	//
@@ -2927,10 +2979,10 @@ ImageAnalysis::pixelvalue(const Vector<Int>& pixel) {
 
 void ImageAnalysis::pixelValue(Bool& offImage, Quantum<Double>& value,
 		Bool& mask, Vector<Int>& pos) const {
-	//
-	const IPosition imShape = _image->shape();
-	const Vector<Double> refPix = _image->coordinates().referencePixel();
-	const uInt nDim = _image->ndim();
+	_onlyFloat(__FUNCTION__);
+	const IPosition imShape = _imageFloat->shape();
+	const Vector<Double> refPix = _imageFloat->coordinates().referencePixel();
+	const uInt nDim = _imageFloat->ndim();
 	//
 	if (pos.size() == 1 && pos[0] == -1) { // check for default input parameter
 		pos.resize(nDim);
@@ -2956,10 +3008,10 @@ void ImageAnalysis::pixelValue(Bool& offImage, Quantum<Double>& value,
 	if (offImage)
 		return;
 	//
-	IPosition shp(_image->ndim(), 1);
-	Array<Float> pixels = _image->getSlice(iPos, shp);
-	Array<Bool> maskPixels = _image->getMaskSlice(iPos, shp);
-	Unit units = _image->units();
+	IPosition shp(_imageFloat->ndim(), 1);
+	Array<Float> pixels = _imageFloat->getSlice(iPos, shp);
+	Array<Bool> maskPixels = _imageFloat->getMaskSlice(iPos, shp);
+	Unit units = _imageFloat->units();
 	//
 
 	if (pos.nelements() != iPos.nelements()) {
@@ -2973,87 +3025,47 @@ void ImageAnalysis::pixelValue(Bool& offImage, Quantum<Double>& value,
 	mask = maskPixels(shp - 1);
 }
 
-Bool ImageAnalysis::putchunk(const Array<Float>& pixelsArray,
-		const Vector<Int>& blc, const Vector<Int>& inc, const Bool list,
-		const Bool locking, const Bool replicate) {
-	*_log << LogOrigin(className(), __FUNCTION__);
 
-	//
-	IPosition imageShape = _image->shape();
-	uInt ndim = imageShape.nelements();
-	if (pixelsArray.ndim() > ndim) {
-		*_log << "Pixels array has more axes than the image!"
-				<< LogIO::EXCEPTION;
-	}
+Bool ImageAnalysis::putchunk(
+	const Array<Complex>& pixelsArray,
+	const Vector<Int>& blc, const Vector<Int>& inc, const Bool list,
+	const Bool locking, const Bool replicate
+) {
+	ThrowIf(
+		! _imageComplex,
+		"The array has Complex values, but the "
+		"associated image is not Complex valued"
+	);
+	return _putchunk(
+		*_imageComplex, pixelsArray, blc, inc, list,
+		locking, replicate
+	);
+}
 
-	// Verify blc value. Fill in values for blc and inc.  trc set to shape-1
-	IPosition iblc = IPosition(Vector<Int> (blc));
-	IPosition itrc;
-	IPosition iinc(inc.size());
-	for (uInt i = 0; i < inc.size(); i++)
-		iinc(i) = inc[i];
-	LCBox::verify(iblc, itrc, iinc, imageShape);
-
-	// Create two slicers; one describing the region defined by blc + shape-1
-	// with extra axes given length 1. The other we extend with the shape
-	IPosition len = pixelsArray.shape();
-	len.resize(ndim, True);
-	for (uInt i = pixelsArray.shape().nelements(); i < ndim; i++) {
-		len(i) = 1;
-		itrc(i) = imageShape(i) - 1;
-	}
-	Slicer sl(iblc, len, iinc, Slicer::endIsLength);
-	if (sl.end() + 1 > imageShape) {
-		*_log << "Pixels array, including inc, extends beyond edge of image."
-				<< LogIO::EXCEPTION;
-	}
-	Slicer sl2(iblc, itrc, iinc, Slicer::endIsLast);
-
-	//
-	if (list) {
-		*_log << LogIO::NORMAL << "Selected bounding box " << sl.start()
-				<< " to " << sl.end() << LogIO::POST;
-	}
-
-	// Put the pixels
-	if (pixelsArray.ndim() == ndim) {
-		set_cache(pixelsArray.shape());
-		if (replicate) {
-			LatticeUtilities::replicate(*_image, sl2, pixelsArray);
-		} else {
-			_image->putSlice(pixelsArray, iblc, iinc);
-		}
-	} else {
-		// Pad with extra degenerate axes if necessary (since it is somewhat
-		// costly).
-		Array<Float> pixelsref(pixelsArray.addDegenerate(ndim
-				- pixelsArray.ndim()));
-		set_cache(pixelsref.shape());
-		if (replicate) {
-			LatticeUtilities::replicate(*_image, sl2, pixelsref);
-		} else {
-			_image->putSlice(pixelsref, iblc, iinc);
-		}
-	}
-	// Ensure that we reconstruct the  histograms objects
-	// now that the data have changed
-	deleteHist();
-
-	Bool rstat = True;
-
-	if (locking) {
-		rstat = unlock();
-	}
-	return rstat;
+Bool ImageAnalysis::putchunk(
+	const Array<Float>& pixelsArray,
+	const Vector<Int>& blc, const Vector<Int>& inc, const Bool list,
+	const Bool locking, const Bool replicate
+) {
+	ThrowIf(
+		! _imageFloat,
+		"The array has Float values, but the "
+		"associated image is not Float valued"
+	);
+	return _putchunk(
+		*_imageFloat, pixelsArray, blc, inc, list,
+		locking, replicate
+	);
 }
 
 Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 		const Array<Bool>& mask, Record& region, const Bool list,
 		const Bool usemask, const Bool, const Bool replicateArray) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin(className(), __FUNCTION__);
 
 	// used to verify array dimension
-	uInt img_ndim = _image->shape().asVector().nelements();
+	uInt img_ndim = _imageFloat->shape().asVector().nelements();
 
 	// Checks on pixels dimensions
 	Vector<Int> p_shape = pixels.shape().asVector();
@@ -3128,12 +3140,12 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 	// truncated here.
 
 	const ImageRegion* pRegion = ImageRegion::fromRecord(
-		(list ? _log.get() : 0), _image->coordinates(), _image->shape(),
+		(list ? _log.get() : 0), _imageFloat->coordinates(), _imageFloat->shape(),
 		//*ImageRegion::tweakedRegionRecord(&region)
 		region
 	);
-	LatticeRegion latRegion = pRegion->toLatticeRegion(_image->coordinates(),
-			_image->shape());
+	LatticeRegion latRegion = pRegion->toLatticeRegion(_imageFloat->coordinates(),
+			_imageFloat->shape());
 	// The pixels array must be same shape as the bounding box of the
 	// region for as many axes as there are in the pixels array.  We
 	// pad with degenerate axes for missing axes. If the region
@@ -3156,18 +3168,18 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 
 	// If our image doesn't have a mask, try and make it one.
 	if (maskElements > 0) {
-		if (!_image->hasPixelMask()) {
+		if (!_imageFloat->hasPixelMask()) {
 			String maskName("");
-			ImageMaskAttacher<Float>::makeMask(*_image, maskName, True, True, *_log, list);
+			ImageMaskAttacher<Float>::makeMask(*_imageFloat, maskName, True, True, *_log, list);
 		}
 	}
 	Bool useMask2 = usemask;
-	if (!_image->isMasked())
+	if (!_imageFloat->isMasked())
 		useMask2 = False;
 
 	// Put the mask first
-	if (maskElements > 0 && _image->hasPixelMask()) {
-		Lattice<Bool>& maskOut = _image->pixelMask();
+	if (maskElements > 0 && _imageFloat->hasPixelMask()) {
+		Lattice<Bool>& maskOut = _imageFloat->pixelMask();
 		if (maskOut.isWritable()) {
 			if (dataDim == img_ndim) {
 				if (replicateArray) {
@@ -3207,9 +3219,9 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 		if (pixels.ndim() != img_ndim) {
 			pixelsShape.append(IPosition(img_ndim - pixels.ndim(), 1));
 		}
-		oldData = _image->getSlice(latRegion.slicer().start(), pixelsShape,
+		oldData = _imageFloat->getSlice(latRegion.slicer().start(), pixelsShape,
 				False);
-		oldMask = _image->getMaskSlice(latRegion.slicer().start(),
+		oldMask = _imageFloat->getMaskSlice(latRegion.slicer().start(),
 				pixelsShape, False);
 		pOldData = oldData.getStorage(deleteOldData); // From disk
 		pOldMask = oldMask.getStorage(deleteOldMask); // From disk
@@ -3230,17 +3242,17 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 				}
 				pixels2.putStorage(pNewData2, deleteNewData2);
 				if (replicateArray) {
-					LatticeUtilities::replicate(*_image, latRegion.slicer(),
+					LatticeUtilities::replicate(*_imageFloat, latRegion.slicer(),
 							pixels2);
 				} else {
-					_image->putSlice(pixels2, latRegion.slicer().start());
+					_imageFloat->putSlice(pixels2, latRegion.slicer().start());
 				}
 			} else {
 				if (replicateArray) {
-					LatticeUtilities::replicate(*_image, latRegion.slicer(),
+					LatticeUtilities::replicate(*_imageFloat, latRegion.slicer(),
 							pixels);
 				} else {
-					_image->putSlice(pixels, latRegion.slicer().start());
+					_imageFloat->putSlice(pixels, latRegion.slicer().start());
 				}
 			}
 		}
@@ -3261,19 +3273,19 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 				}
 				pixels2.putStorage(pNewData2, deleteNewData2);
 				if (replicateArray) {
-					LatticeUtilities::replicate(*_image, latRegion.slicer(),
+					LatticeUtilities::replicate(*_imageFloat, latRegion.slicer(),
 							pixels2);
 				} else {
-					_image->putSlice(pixels2, latRegion.slicer().start());
+					_imageFloat->putSlice(pixels2, latRegion.slicer().start());
 				}
 			} else {
 				Array<Float> pixelsref(pixels.addDegenerate(img_ndim
 						- pixels.ndim()));
 				if (replicateArray) {
-					LatticeUtilities::replicate(*_image, latRegion.slicer(),
+					LatticeUtilities::replicate(*_imageFloat, latRegion.slicer(),
 							pixelsref);
 				} else {
-					_image->putSlice(pixelsref, latRegion.slicer().start());
+					_imageFloat->putSlice(pixelsref, latRegion.slicer().start());
 				}
 			}
 		}
@@ -3300,7 +3312,7 @@ ImageInterface<Float>* ImageAnalysis::rebin(
 	Record& Region, const String& mask, const Bool dropdeg,
 	const Bool overwrite, const Bool extendMask
 ) {
-
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin(className(), __FUNCTION__);
 
 	// Validate outfile
@@ -3320,7 +3332,7 @@ ImageInterface<Float>* ImageAnalysis::rebin(
 	if (dropdeg)
 		axesSpecifier = AxesSpecifier(False);
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_image,
+		*_imageFloat,
 		//*(ImageRegion::tweakedRegionRecord(&Region)),
 		Region,
 		mask, _log.get(), False, axesSpecifier, extendMask
@@ -3368,6 +3380,7 @@ ImageInterface<Float>* ImageAnalysis::rotate(
 	const Bool replicate, const Bool dropdeg,
 	const Bool overwrite, const Bool extendMask
 ) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	Int dbg = 0;
@@ -3384,7 +3397,7 @@ ImageInterface<Float>* ImageAnalysis::rotate(
 	Vector<Int> tmpShape;
 	Vector<Int> tmpShape2;
 	if (shape.size() == 1 && shape[0] == -1) {
-		tmpShape = _image->shape().asVector();
+		tmpShape = _imageFloat->shape().asVector();
 		tmpShape2.resize(tmpShape.size());
 		if (dropdeg) {
 			int j = 0;
@@ -3412,7 +3425,7 @@ ImageInterface<Float>* ImageAnalysis::rotate(
 	// to ImageRegion and make SubImage.
 	AxesSpecifier axesSpecifier;
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_image,
+		*_imageFloat,
 		//*(ImageRegion::tweakedRegionRecord(&Region)),
 		Region,
 		mask, _log.get(), False, axesSpecifier, extendMask
@@ -3527,7 +3540,7 @@ ImageInterface<Float>* ImageAnalysis::rotate(
 }
 
 Bool ImageAnalysis::rename(const String& name, const Bool overwrite) {
-
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin(className(), __FUNCTION__);
 
 	if (!ispersistent()) {
@@ -3581,9 +3594,9 @@ Bool ImageAnalysis::rename(const String& name, const Bool overwrite) {
 	}
 
 	// OK we passed the tests.  Close deletes temporary persistent image
-	if (_image.get() != 0) {
+	if (_imageFloat.get() != 0) {
 		*_log << LogIO::NORMAL << "Detaching from image" << LogIO::POST;
-		_image.reset();
+		_imageFloat.reset();
 
 	}
 	deleteHist();
@@ -3619,19 +3632,20 @@ Bool ImageAnalysis::replacemaskedpixels(
 	const String& maskRegion, const Bool updateMask,
 	const Bool list, const Bool extendMask
 ) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin(className(), __FUNCTION__);
 	if (pixels.empty()) {
 		*_log << "You must specify an expression" << LogIO::EXCEPTION
 				<< LogIO::POST;
 	}
 	// Whine about no mask if appropriate.
-	if (maskRegion.empty() && !_image->isMasked()) {
+	if (maskRegion.empty() && !_imageFloat->isMasked()) {
 		*_log << "This image does not have a mask - no action taken"
 				<< LogIO::WARN << LogIO::POST;
 		return False;
 	}
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_image,
+		*_imageFloat,
 		//*(ImageRegion::tweakedRegionRecord(&pRegion)),
 		pRegion,
 		maskRegion, (list ? _log.get() : 0), True,
@@ -3683,6 +3697,7 @@ ImageInterface<Float>* ImageAnalysis::sepconvolve(
 	const Vector<Quantity>& kernelwidths, Double scale, Record& pRegion,
 	const String& mask, const Bool overwrite, const Bool extendMask
 ) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	Bool autoScale(False);
@@ -3703,7 +3718,7 @@ ImageInterface<Float>* ImageAnalysis::sepconvolve(
 	}
 
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_image,
+		*_imageFloat,
 		//*(ImageRegion::tweakedRegionRecord(&pRegion)),
 		pRegion,
 		mask, _log.get(), False, AxesSpecifier(), extendMask
@@ -3751,7 +3766,7 @@ ImageInterface<Float>* ImageAnalysis::sepconvolve(
 		);
 	}
 	ImageInterface<Float>* pImOut = imOut.ptr()->cloneII();
-	ImageUtilities::copyMiscellaneous(*pImOut, *_image);
+	ImageUtilities::copyMiscellaneous(*pImOut, *_imageFloat);
 
 	sic.convolve(*pImOut);
 
@@ -3760,7 +3775,7 @@ ImageInterface<Float>* ImageAnalysis::sepconvolve(
 
 Bool ImageAnalysis::set(const String& lespixels, const Int pixelmask,
 		Record& p_Region, const Bool list) {
-
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin(className(), __FUNCTION__);
 	String pixels(lespixels);
 	Bool setPixels(True);
@@ -3782,20 +3797,20 @@ Bool ImageAnalysis::set(const String& lespixels, const Int pixelmask,
 	}
 
 	// Try and make a mask if we need one.
-	if (setMask && !_image->isMasked()) {
+	if (setMask && !_imageFloat->isMasked()) {
 		String maskName("");
-		ImageMaskAttacher<Float>::makeMask(*_image, maskName, True, True, *_log, list);
+		ImageMaskAttacher<Float>::makeMask(*_imageFloat, maskName, True, True, *_log, list);
 	}
 
 	// Make region and subimage
 	Record *tmpRegion = new Record(p_Region);
 	const ImageRegion* pRegion = ImageRegion::fromRecord(
-		(list ? _log.get() : 0), _image->coordinates(), _image->shape(),
+		(list ? _log.get() : 0), _imageFloat->coordinates(), _imageFloat->shape(),
 		//*(ImageRegion::tweakedRegionRecord(tmpRegion))
 		*tmpRegion
 	);
 	delete tmpRegion;
-	SubImage<Float> subImage(*_image, *pRegion, True);
+	SubImage<Float> subImage(*_imageFloat, *pRegion, True);
 
 	// Set the pixels
 	if (setPixels) {
@@ -3849,19 +3864,21 @@ Bool ImageAnalysis::set(const String& lespixels, const Int pixelmask,
 }
 
 Bool ImageAnalysis::setbrightnessunit(const String& unit) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin(className(), __FUNCTION__);
-	return _image->setUnits(Unit(unit));
+	return _imageFloat->setUnits(Unit(unit));
 }
 
 Bool ImageAnalysis::setcoordsys(const Record& coordinates) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", "setcoordsys");
 	if (coordinates.nfields() == 0) {
 		*_log << "CoordinateSystem is empty" << LogIO::EXCEPTION;
 		return False;
 	}
 	PtrHolder<CoordinateSystem> cSys(makeCoordinateSystem(coordinates,
-			_image->shape()));
-	Bool ok = _image->setCoordinateInfo(*(cSys.ptr()));
+			_imageFloat->shape()));
+	Bool ok = _imageFloat->setCoordinateInfo(*(cSys.ptr()));
 	if (!ok) {
 		*_log << "Failed to set CoordinateSystem" << LogIO::EXCEPTION;
 	}
@@ -3870,6 +3887,7 @@ Bool ImageAnalysis::setcoordsys(const Record& coordinates) {
 
 Bool ImageAnalysis::sethistory(const String& origin,
 		const Vector<String>& History) {
+	_onlyFloat(__FUNCTION__);
 	LogOrigin lor;
 	if (origin.empty()) {
 		lor = LogOrigin("ImageAnalysis", "sethistory");
@@ -3878,7 +3896,7 @@ Bool ImageAnalysis::sethistory(const String& origin,
 	}
 	*_log << lor << LogIO::POST;
 
-	LoggerHolder& log = _image->logger();
+	LoggerHolder& log = _imageFloat->logger();
 	// 
 	// Make sure we can write into the history table if needed
 	//
@@ -3894,9 +3912,10 @@ Bool ImageAnalysis::sethistory(const String& origin,
 }
 
 Bool ImageAnalysis::setmiscinfo(const Record& info) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", "setmiscinfo");
 
-	return _image->setMiscInfo(info);
+	return _imageFloat->setMiscInfo(info);
 }
 
 Bool ImageAnalysis::setrestoringbeam(
@@ -3905,8 +3924,9 @@ Bool ImageAnalysis::setrestoringbeam(
 	const bool deleteIt, const bool log,
     Int channel, Int polarization
 ) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin(className(), __FUNCTION__);
-	ImageInfo ii = _image->imageInfo();
+	ImageInfo ii = _imageFloat->imageInfo();
 	if (deleteIt) {
 		if (log) {
 			if (ii.hasMultipleBeams() && (channel >= 0 || polarization >= 0)) {
@@ -3918,7 +3938,7 @@ Bool ImageAnalysis::setrestoringbeam(
 				<< LogIO::POST;
 		}
 		ii.removeRestoringBeam();
-		if (! _image->setImageInfo(ii)) {
+		if (! _imageFloat->setImageInfo(ii)) {
 			*_log << LogIO::POST << "Failed to remove restoring beam" << LogIO::POST;
 			return False;
 		}
@@ -3972,7 +3992,7 @@ Bool ImageAnalysis::setrestoringbeam(
 					<< "but no plane (channel/polarization) was specified. All beams will be set "
 					<< "equal to the specified beam." << LogIO::POST;
 			}
-			ImageMetaData<Float> md(_image.get());
+			ImageMetaData<Float> md(_imageFloat.get());
 			ii.setAllBeams(
 				md.nChannels(), md.nStokes(),
 				GaussianBeam(bmajor, bminor, bpa)
@@ -3990,7 +4010,7 @@ Bool ImageAnalysis::setrestoringbeam(
 					<< "a set of per plane beams, each equal to the specified beam, "
 					<< "will be created." << LogIO::POST;
 			}
-			ImageMetaData<Float> md(_image.get());
+			ImageMetaData<Float> md(_imageFloat.get());
 			ii.setAllBeams(
 				md.nChannels(), md.nStokes(),
 				GaussianBeam(bmajor, bminor, bpa)
@@ -4014,7 +4034,7 @@ Bool ImageAnalysis::setrestoringbeam(
 		}
 		ii.setRestoringBeam(GaussianBeam(bmajor, bminor, bpa));
 	}
-	if (! _image->setImageInfo(ii)) {
+	if (! _imageFloat->setImageInfo(ii)) {
 		*_log << LogIO::POST << "Failed to set restoring beam" << LogIO::POST;
 		return False;
 	}
@@ -4035,7 +4055,7 @@ Bool ImageAnalysis::twopointcorrelation(
 	Record& theRegion, const String& mask, const Vector<Int>& axes1,
 	const String& method, const Bool overwrite, const Bool stretch
 ) {
-
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	// Validate outfile
@@ -4049,7 +4069,7 @@ Bool ImageAnalysis::twopointcorrelation(
 
 	AxesSpecifier axesSpecifier;
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_image,
+		*_imageFloat,
 		//*(ImageRegion::tweakedRegionRecord(&theRegion)),
 		theRegion,
 		mask, _log.get(), False, axesSpecifier, stretch
@@ -4092,10 +4112,11 @@ Record ImageAnalysis::summary(
 	const String& doppler, const Bool list,
 	const Bool pixelorder, const Bool verbose
 ) {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin(className(), __FUNCTION__);
 	Vector<String> messages;
 	Record retval;
-	ImageSummary<Float> s(*_image);
+	ImageSummary<Float> s(*_imageFloat);
 	MDoppler::Types velType;
 	if (!MDoppler::getType(velType, doppler)) {
 		*_log << LogIO::WARN << "Illegal velocity type, using RADIO"
@@ -4134,7 +4155,7 @@ Record ImageAnalysis::summary(
 	retval.define("masks", s.maskNames());
 	retval.define("imagetype", s.imageType());
 
-	ImageInfo info = _image->imageInfo();
+	ImageInfo info = _imageFloat->imageInfo();
 	Record iRec;
 	String error;
 	Bool ok = info.toRecord(error, iRec);
@@ -4162,7 +4183,7 @@ Bool ImageAnalysis::tofits(
 	const Bool airWavelength, const String& origin, const Bool stretch,
 	const Bool history
 ) {
-
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin(className(), __FUNCTION__);
 	String error;
 	// Check output file
@@ -4175,14 +4196,14 @@ Bool ImageAnalysis::tofits(
 	}
 	// The SubImage that goes to the FITSCOnverter no longer will know
 	// the name of the parent mask, so spit it out here
-	if (_image->isMasked()) {
+	if (_imageFloat->isMasked()) {
 		*_log << LogIO::NORMAL << "Applying mask of name '"
-				<< _image->getDefaultMask() << "'" << LogIO::POST;
+				<< _imageFloat->getDefaultMask() << "'" << LogIO::POST;
 	}
 	IPosition keepAxes;
 	if (!dropDeg) {
 		if (dropStokes) {
-			CoordinateSystem cSys = _image->coordinates();
+			CoordinateSystem cSys = _imageFloat->coordinates();
 			if (cSys.findCoordinate(Coordinate::STOKES) >= 0
 					&& cSys.nCoordinates() > 1) {
 				// Stokes axis exists and its not the only one
@@ -4207,7 +4228,7 @@ Bool ImageAnalysis::tofits(
 		axesSpecifier = AxesSpecifier(keepAxes);
 	}
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_image,
+		*_imageFloat,
 		//*(ImageRegion::tweakedRegionRecord(&pRegion)),
 		pRegion,
 		mask, _log.get(), False, axesSpecifier, stretch
@@ -4237,6 +4258,7 @@ Bool ImageAnalysis::toASCII(
 	const String& format, const Double maskvalue,
 	const Bool overwrite, const Bool extendMask
 ) {
+	_onlyFloat(__FUNCTION__);
 	// sep is hard-wired as ' ' which is what imagefromascii expects
 	*_log << LogOrigin("ImageAnalysis", "toASCII");
 
@@ -4245,7 +4267,7 @@ Bool ImageAnalysis::toASCII(
 
 	if (outFileStr.empty()) {
 		Bool strippath(true);
-		outFileStr = _image->name(strippath);
+		outFileStr = _imageFloat->name(strippath);
 		outFileStr = outFileStr + ".ascii";
 	}
 
@@ -4313,7 +4335,7 @@ Bool ImageAnalysis::toASCII(
 }
 
 Vector<Double> ImageAnalysis::topixel(Record&) {
-
+	_onlyFloat(__FUNCTION__);
 	//getting bored now....
 	//This need to be implemented when coordsys::topixel is
 	//refactored into the casa
@@ -4328,7 +4350,7 @@ Vector<Double> ImageAnalysis::topixel(Record&) {
 }
 
 Record ImageAnalysis::toworld(const Vector<Double>& value, const String& format) {
-
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", "toworld");
 	Record bla(toWorldRecord(value, format));
 	return bla;
@@ -4337,8 +4359,12 @@ Record ImageAnalysis::toworld(const Vector<Double>& value, const String& format)
 
 Bool ImageAnalysis::unlock() {
 	*_log << LogOrigin("ImageAnalysis", "unlock");
-
-	_image->unlock();
+	if (_imageFloat) {
+		_imageFloat->unlock();
+	}
+	if (_imageComplex) {
+		_imageComplex->unlock();
+	}
 	return True;
 }
 
@@ -4382,54 +4408,74 @@ void ImageAnalysis::makeRegionBlock(PtrBlock<const ImageRegion*>& regions,
 	}
 }
 
-Bool ImageAnalysis::make_image(String &error, const String& outfile,
-		const CoordinateSystem& cSys, const IPosition& shape, LogIO& os,
-		Bool log, Bool overwrite) {
+void ImageAnalysis::_make_image(
+	const String& outfile,
+	const CoordinateSystem& cSys, const IPosition& shape,
+	Bool log, Bool overwrite, const String& type
+) {
+	String myType = type;
+	myType.downcase();
+	ThrowIf(
+		myType != "c" && myType != "f",
+		"type must be either 'c' (complex) or 'f' (float)"
+	);
+	myType.downcase();
 	// Verify outfile
 	if (!overwrite && !outfile.empty()) {
 		NewFile validfile;
 		String errmsg;
-		if (!validfile.valueOK(outfile, errmsg)) {
-			error = errmsg;
-			return False;
-		}
+		ThrowIf(
+			!validfile.valueOK(outfile, errmsg),
+			errmsg
+		);
 	}
-	//
-	error = "";
-	_image.reset();
+	_imageFloat.reset();
+	_imageComplex.reset();
 
 	// This function is generally only called for creating new images,
 	// but you never know, so add histograms protection
 	deleteHist();
 
-	uInt ndim = shape.nelements();
-	if (ndim != cSys.nPixelAxes()) {
-		error = "Supplied CoordinateSystem and image shape are inconsistent";
-		return False;
-	}
-	//
+	ThrowIf(
+		shape.nelements() != cSys.nPixelAxes(),
+		"Supplied CoordinateSystem and image shape are inconsistent"
+	);
+	*_log << LogOrigin(className(), __FUNCTION__);
 	if (outfile.empty()) {
-		_image.reset(new TempImage<Float> (shape, cSys));
-		if (_image.get() == 0) {
-			error = "Failed to create TempImage";
-			return False;
+		if (myType == "f") {
+			_imageFloat.reset(new TempImage<Float> (shape, cSys));
 		}
+		else {
+			_imageComplex.reset(new TempImage<Complex> (shape, cSys));
+		}
+		ThrowIf(
+			! _imageFloat && ! _imageComplex,
+			"Failed to create TempImage"
+		);
 		if (log) {
-			os << LogIO::NORMAL << "Creating (temp)image of shape "
-					<< _image->shape() << LogIO::POST;
-		}
-	} else {
-		_image.reset(new PagedImage<Float> (shape, cSys, outfile));
-		if (_image.get() == 0) {
-			error = "Failed to create PagedImage";
-			return False;
-		}
-		if (log) {
-			os << LogIO::NORMAL << "Creating image '" << outfile
-					<< "' of shape " << _image->shape() << LogIO::POST;
+			*_log << LogIO::NORMAL << "Creating (temp)image of shape "
+				<< shape << " with " << (_imageFloat ? "Float " : "Complex ")
+				<< "valued pixels" << LogIO::POST;
 		}
 	}
-	return True;
+	else {
+		if (myType == "f") {
+			_imageFloat.reset(new PagedImage<Float> (shape, cSys, outfile));
+		}
+		else {
+			_imageComplex.reset(new PagedImage<Complex> (shape, cSys, outfile));
+		}
+		ThrowIf(
+			! _imageFloat && ! _imageComplex,
+			"Failed to create PagedImage"
+		);
+		if (log) {
+			*_log << LogIO::NORMAL << "Creating image '" << outfile
+				<< "' of shape " << shape << " with "
+				<< (_imageFloat ? "Float " : "Complex ")
+				<< "valued pixels"<< LogIO::POST;
+		}
+	}
 }
 
 tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::makeExternalImage(
@@ -4517,7 +4563,7 @@ void ImageAnalysis::centreRefPix(CoordinateSystem& cSys, const IPosition& shape)
 }
 
 void ImageAnalysis::set_cache(const IPosition &chunk_shape) const {
-	if (_image.get() == 0) {
+	if (_imageFloat.get() == 0) {
 		return;
 	}
 	if (chunk_shape.nelements() != last_chunk_shape_p.nelements()
@@ -4528,14 +4574,14 @@ void ImageAnalysis::set_cache(const IPosition &chunk_shape) const {
 
 		// Assume that we will keep getting similar sized chunks filling up
 		// the whole image.
-		IPosition shape(_image->shape());
+		IPosition shape(_imageFloat->shape());
 		IPosition blc(shape.nelements());
 		blc = 0;
 		IPosition axisPath(shape.nelements());
 		for (uInt i = 0; i < axisPath.nelements(); i++) {
 			axisPath(i) = i;
 		}
-		_image->setCacheSizeFromPath(chunk_shape, blc, shape, axisPath);
+		_imageFloat->setCacheSizeFromPath(chunk_shape, blc, shape, axisPath);
 	}
 }
 
@@ -4622,6 +4668,7 @@ void ImageAnalysis::hanning_smooth(Array<Float>& out, Array<Bool>& maskOut,
 
 Record ImageAnalysis::setregion(const Vector<Int>& blc, const Vector<Int>& trc,
 		const String& infile) {
+	_onlyFloat(__FUNCTION__);
 	Vector<Double> Blc(blc.size());
 	Vector<Double> Trc(trc.size());
 	for (uInt i = 0; i < blc.size(); i++)
@@ -4633,7 +4680,8 @@ Record ImageAnalysis::setregion(const Vector<Int>& blc, const Vector<Int>& trc,
 
 Record ImageAnalysis::setboxregion(const Vector<Double>& blc, const Vector<
 		Double>& trc, const Bool frac, const String& infile) {
-	*_log << LogOrigin("ImageAnalysis", "setboxregion");
+	_onlyFloat(__FUNCTION__);
+	*_log << LogOrigin(className(), __FUNCTION__);
 
 	// create Region
 	Record rec;
@@ -4643,11 +4691,11 @@ Record ImageAnalysis::setboxregion(const Vector<Double>& blc, const Vector<
 
 	Vector<Int> latticeShapeVec;
 	if (infile != "") { // get region shape from infile
-		ImageInterface<Float>* _image_tmp;
-		ImageUtilities::openImage(_image_tmp, infile, *_log);
-		latticeShapeVec = _image_tmp->shape().asVector();
+		ImageInterface<Float>* _imageFloat_tmp;
+		ImageUtilities::openImage(_imageFloat_tmp, infile);
+		latticeShapeVec = _imageFloat_tmp->shape().asVector();
 	} else {
-		latticeShapeVec = _image->shape().asVector();
+		latticeShapeVec = _imageFloat->shape().asVector();
 	}
 	rec.define("shape", latticeShapeVec);
 
@@ -4702,6 +4750,7 @@ Record ImageAnalysis::setboxregion(const Vector<Double>& blc, const Vector<
 
 bool ImageAnalysis::maketestimage(const String& outfile, const Bool overwrite,
 		const String& imagetype) {
+	_onlyFloat(__FUNCTION__);
 	bool rstat(false);
 	*_log << LogOrigin("ImageAnalysis", "maketestimage");
 	String var = EnvironmentVariable::get("CASAPATH");
@@ -4714,7 +4763,7 @@ bool ImageAnalysis::maketestimage(const String& outfile, const Bool overwrite,
 			String fitsfile;
 			if (num >= 1) {
 				if (imagetype.contains("cube"))
-					fitsfile = fields[0] + "/data/demo/Images/test_image.fits";
+					fitsfile = fields[0] + "/data/demo/Images/test_imageFloat.fits";
 				else if (imagetype.contains("2d"))
 					fitsfile = fields[0]
 							+ "/data/demo/Images/imagetestimage.fits";
@@ -4740,19 +4789,17 @@ ImageAnalysis::newimage(const String& infile, const String& outfile,
 		Record& region, const String& Mask, const bool dropdeg,
 		const bool overwrite) {
 	ImageInterface<Float>* outImage = 0;
-		*_log << LogOrigin("ImageAnalysis", "newimage");
+		*_log << LogOrigin(className(), __FUNCTION__);
 
 		// Open
 		std::auto_ptr<ImageInterface<Float> > inImage;
-		ImageUtilities::openImage(inImage, infile, *_log);
+		ImageUtilities::openImage(inImage, infile);
 
 		AxesSpecifier axesSpecifier;
 		if (dropdeg)
 			axesSpecifier = AxesSpecifier(False);
 		SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-			*inImage,
-			//*(ImageRegion::tweakedRegionRecord(&region)),
-			region,
+			*inImage, region,
 			Mask, _log.get(), True, axesSpecifier
 		);
 
@@ -4798,7 +4845,7 @@ ImageAnalysis::newimagefromfile(const String& fileName) {
 		_log.reset(new LogIO());
 	}
 
-		*_log << LogOrigin("ImageAnalysis", "newimagefromfile");
+		*_log << LogOrigin(className(), __FUNCTION__);
 
 		// Check whether infile exists
 		if (fileName.empty()) {
@@ -4814,7 +4861,7 @@ ImageAnalysis::newimagefromfile(const String& fileName) {
 
 		// Open
 		std::auto_ptr<ImageInterface<Float> > inImage;
-		ImageUtilities::openImage(inImage, fileName, *_log);
+		ImageUtilities::openImage(inImage, fileName);
 		outImage = inImage->cloneII();
 		if (outImage == 0) {
 			*_log << "Failed to create image tool" << LogIO::EXCEPTION;
@@ -4912,7 +4959,6 @@ ImageAnalysis::newimagefromshape(const String& outfile,
 
 	try {
 		*_log << LogOrigin("ImageAnalysis", "newimagefromshape");
-
 		// Verify outfile
 		if (!overwrite && !outfile.empty()) {
 			NewFile validfile;
@@ -4931,7 +4977,6 @@ ImageAnalysis::newimagefromshape(const String& outfile,
 				*_log << "The shape is invalid" << LogIO::EXCEPTION;
 			}
 		}
-
 		CoordinateSystem cSys;
 		if (coordinates.nfields() > 0) {
 			// Make with supplied CoordinateSystem if record not empty
@@ -4943,7 +4988,6 @@ ImageAnalysis::newimagefromshape(const String& outfile,
 			cSys = CoordinateUtil::makeCoordinateSystem(shapeV, linear);
 			centreRefPix(cSys, shapeV);
 		}
-
 		uInt ndim = shapeV.nelements();
 		if (ndim != cSys.nPixelAxes()) {
 			*_log << LogIO::SEVERE
@@ -5178,10 +5222,10 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 	Vector<Double> xypix(2);
 	xypix = 0.0;
 	whatXY.downcase();
-	CoordinateSystem cSys = _image->coordinates();
+	CoordinateSystem cSys = _imageFloat->coordinates();
 	Int which = cSys.findCoordinate(Coordinate::DIRECTION);
 	if (which < 0){
-		*_log << LogIO::WARN << "Image: " << _image->name()
+		*_log << LogIO::WARN << "Image: " << _imageFloat->name()
 				<< " does not have a DIRECTION coordinate system!" << LogIO::POST;
 		return False;
 	}
@@ -5200,8 +5244,8 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 	}
 	
 	// create container to define the corners
-	IPosition blc(_image->ndim(), 0);
-	IPosition trc(_image->ndim(), 0);
+	IPosition blc(_imageFloat->ndim(), 0);
+	IPosition trc(_imageFloat->ndim(), 0);
 
 	// set the right index in the quality-coordinate
 	Int qualAx = cSys.findCoordinate(Coordinate::QUALITY);
@@ -5219,8 +5263,8 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 	trc[dirPixelAxis(1)] = Int(xypix(1) + 0.5);
 
 	// make sure the pixel is inside the image
-	if ((xypix(0) < 0) || (xypix(0) > _image->shape()(0)) || blc[dirPixelAxis(0)] < 0 || blc[dirPixelAxis(0)] >= _image->shape()(dirPixelAxis(0))
-		|| blc[dirPixelAxis(1)] < 0 || blc[dirPixelAxis(1)] >= _image->shape()(dirPixelAxis(1)))
+	if ((xypix(0) < 0) || (xypix(0) > _imageFloat->shape()(0)) || blc[dirPixelAxis(0)] < 0 || blc[dirPixelAxis(0)] >= _imageFloat->shape()(dirPixelAxis(0))
+		|| blc[dirPixelAxis(1)] < 0 || blc[dirPixelAxis(1)] >= _imageFloat->shape()(dirPixelAxis(1)))
 	{
 		return False;
 	}
@@ -5231,12 +5275,12 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 		specAx = cSys.findCoordinate( Coordinate::TABULAR );
 	}
 	Vector<Bool> zyaxismask;
-	trc[cSys.pixelAxes(specAx)[0]] = _image->shape()(cSys.pixelAxes(specAx)[0]) - 1;
+	trc[cSys.pixelAxes(specAx)[0]] = _imageFloat->shape()(cSys.pixelAxes(specAx)[0]) - 1;
 
 	// extract the data and the mask
 	zyaxisval.resize();
-	zyaxisval = _image->getSlice(blc, trc - blc + 1, True);
-	zyaxismask = _image->getMaskSlice(blc, trc - blc + 1, True);
+	zyaxisval = _imageFloat->getSlice(blc, trc - blc + 1, True);
+	zyaxismask = _imageFloat->getMaskSlice(blc, trc - blc + 1, True);
 
 	// apply the mask
 	// FIXME: I dont think it makes
@@ -5264,9 +5308,6 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame, restValue, whichTabular);
 }
 
-
-
-
 Bool ImageAnalysis::getFreqProfile(
 		const Vector<Double>& x, const Vector<Double>& y,
 		Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
@@ -5277,6 +5318,7 @@ Bool ImageAnalysis::getFreqProfile(
 		const Int& whichQuality, const String& restValue,
 		Int beamChannel, const String& shape)
 {
+	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin("ImageAnalysis", __FUNCTION__);
 	Vector<Double> xy(2);
 	xy[0] = 0;
@@ -5284,7 +5326,7 @@ Bool ImageAnalysis::getFreqProfile(
 	Int n = x.nelements();
 	RegionManager regMan;
 	ImageRegion* imagreg = 0;
-	CoordinateSystem cSys = _image->coordinates();
+	CoordinateSystem cSys = _imageFloat->coordinates();
 	Array<Float> dataArr;
 	Array<Bool>  maskArr;
 
@@ -5298,12 +5340,12 @@ Bool ImageAnalysis::getFreqProfile(
 	if(combineType==7 || combineType==8){ // flux or eflux
 
 	    // determine number of pixels in synth beam
-	    const Unit& brightnessUnit = _image->units();
+	    const Unit& brightnessUnit = _imageFloat->units();
 	    String bUName = brightnessUnit.getName();
 	    bUName.downcase();
 	    if(bUName.contains("/beam")){
 		
-		const CoordinateSystem csys = _image->coordinates();
+		const CoordinateSystem csys = _imageFloat->coordinates();
 		if(!csys.hasDirectionCoordinate()){
 		    *_log << LogIO::WARN << "No DirectionCoordinate - cannot convert flux density"
 			  << LogIO::POST;
@@ -5311,14 +5353,14 @@ Bool ImageAnalysis::getFreqProfile(
 		}
 		Quantity pixArea = csys.directionCoordinate().getPixelArea();
 		Double beamArea;
-		if (_image->imageInfo().hasBeam()) {
+		if (_imageFloat->imageInfo().hasBeam()) {
 
 		    GaussianBeam beam;
 		    if ( beamChannel == - 1 ){
-        		beam = _image->imageInfo().restoringBeam(0,0);
+        		beam = _imageFloat->imageInfo().restoringBeam(0,0);
 		    }
 		    else {
-        		beam = _image->imageInfo().restoringBeam( beamChannel, 0 );
+        		beam = _imageFloat->imageInfo().restoringBeam( beamChannel, 0 );
 		    }
 		    beamArea = beam.getArea(pixArea.getUnit());
 
@@ -5363,22 +5405,22 @@ Bool ImageAnalysis::getFreqProfile(
 	//We prefer the tabular axis if one has been specified.
 	if ( whichTabular >= 0  ){
 		pixSpecAx = cSys.pixelAxes(whichTabular)[0];
-		nchan = _image->shape()(pixSpecAx);
+		nchan = _imageFloat->shape()(pixSpecAx);
 	}
 	//We default to a spectral axis if one is available.
 	else if ( specAx >= 0 ){
 		pixSpecAx = cSys.pixelAxes(specAx)[0];
-		nchan = _image->shape()(pixSpecAx);
+		nchan = _imageFloat->shape()(pixSpecAx);
 	}
 
 	if ( nchan < 0 ){
-		*_log << LogIO::WARN << "Image: " << _image->name()
+		*_log << LogIO::WARN << "Image: " << _imageFloat->name()
 			<< " does not have a FREQUENCY axis!" << LogIO::POST;
 		return False;
 	}
 	Int which = cSys.findCoordinate(Coordinate::DIRECTION);
 	if (which < 0){
-		*_log << LogIO::WARN << "Image: " << _image->name()
+		*_log << LogIO::WARN << "Image: " << _imageFloat->name()
 				<< " does not have a DIRECTION coordinate system!" << LogIO::POST;
 		return False;
 	}
@@ -5468,7 +5510,7 @@ Bool ImageAnalysis::getFreqProfile(
 	// and the corresponding mask
 	if (imagreg != 0) {
 		try{
-			SubImage<Float> subim(*_image, *imagreg, False);
+			SubImage<Float> subim(*_imageFloat, *imagreg, False);
 			maskArr = subim.getMask();
 			dataArr = subim.get();
 		} catch (AipsError x) {
@@ -5641,7 +5683,7 @@ Record ImageAnalysis::toWorldRecord(const Vector<Double>& pixel,
 	//
 	Vector<Double> pixel2 = pixel.copy();
 	//   if (pixel2.nelements()>0) pixel2 -= 1.0;        // 0-rel
-	CoordinateSystem itsCSys = _image->coordinates();
+	CoordinateSystem itsCSys = _imageFloat->coordinates();
 	trim(pixel2, itsCSys.referencePixel());
 
 	// Convert to world
@@ -5669,7 +5711,7 @@ Record ImageAnalysis::worldVectorToRecord(const Vector<Double>& world, Int c,
 	*_log << LogOrigin("ImageAnalysis", "worldVectorToRecord");
 	String ct = upcase(format);
 	Vector<String> units;
-	CoordinateSystem itsCSys = _image->coordinates();
+	CoordinateSystem itsCSys = _imageFloat->coordinates();
 	if (c < 0) {
 		units = itsCSys.worldAxisUnits();
 	} else {
@@ -5747,7 +5789,7 @@ Record ImageAnalysis::worldVectorToMeasures(const Vector<Double>& world, Int c,
 	directionCount = spectralCount = linearCount = stokesCount = tabularCount
 			= 0;
 
-	CoordinateSystem itsCSys = _image->coordinates();
+	CoordinateSystem itsCSys = _imageFloat->coordinates();
 
 	// Loop over desired Coordinates
 
@@ -5990,6 +6032,10 @@ void ImageAnalysis::trim(Vector<Double>& inout, const Vector<Double>& replace) c
 	}
 	inout.resize(nOut);
 	inout = out;
+}
+
+void ImageAnalysis::_onlyFloat(const String& method) const {
+	ThrowIf(! _imageFloat, "Method " + method + " only supports Float valued images");
 }
 
 /// When CoordSys is refactored the above should be removed cleanly
