@@ -26,6 +26,7 @@ import plotbandpass_cli
 import plotcal_cli
 import plotms_cli
 import plotweather_cli
+import polcal_cli
 import setjy_cli
 import split_cli
 import statwt_cli
@@ -340,6 +341,9 @@ class CASATaskJobGenerator(object):
 
     def plotweather(self, *v, **k):
         return self._get_job(plotweather_cli.plotweather_cli, *v, **k)
+
+    def polcal(self, *v, **k):
+        return self._get_job(polcal_cli.polcal_cli, *v, **k)
 
     def setjy(self, *v, **k):
         return self._get_job(setjy_cli.setjy_cli, *v, **k)
