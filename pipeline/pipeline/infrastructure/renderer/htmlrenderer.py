@@ -22,6 +22,7 @@ import mako.lookup as lookup
 import pipeline as pipeline
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
+from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.casataskdict as casataskdict
 import pipeline.infrastructure.displays.bandpass as bandpass
@@ -2257,13 +2258,19 @@ class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
             calapps = utils.dict_merge(calapps,
                                        self.calapps_for_result(r))
 
+        caltypes = {}
+        for r in result:
+            caltypes = utils.dict_merge(caltypes,
+                                        self.caltypes_for_result(r))
+
         # return all agents so we get ticks and crosses against each one
         agents = ['before', 'applycal']
 
-        ctx.update({'flags'     : flag_totals,
-                    'calapps'   : calapps,
-                    'agents'    : agents,
-                    'dirname'   : weblog_dir})
+        ctx.update({'flags'    : flag_totals,
+                    'calapps'  : calapps,
+                    'caltypes' : caltypes,
+                    'agents'   : agents,
+                    'dirname'  : weblog_dir})
         return ctx
 
     def calapps_for_result(self, result):
@@ -2272,6 +2279,59 @@ class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
             vis = os.path.basename(calapp.vis)
             calapps[vis].append(calapp)
         return calapps
+
+    def caltypes_for_result(self, result):
+        type_map = {
+            'bandpass' : 'Bandpass',
+            'gaincal'  : 'Gain',
+            'tsys'     : 'T<sub>sys</sub>',
+            'wvr'      : 'WVR',
+        }
+        
+        d = {}
+        for calapp in result.applied:
+            for calfrom in calapp.calfrom:
+                caltype = type_map.get(calfrom.caltype, calfrom.caltype)
+
+                if calfrom.caltype == 'gaincal':
+                    # try heuristics to detect phase-only and amp-only 
+                    # solutions 
+                    caltype += self.get_gain_solution_type(calfrom.gaintable)
+                    
+                d[calfrom.gaintable] = caltype
+
+        return d
+                
+    def get_gain_solution_type(self, gaintable):
+        # get stats on amp solution of gaintable 
+        calstat_job = casa_tasks.calstat(caltable=gaintable, axis='amp', 
+                                         datacolumn='CPARAM', useflags=True)
+        calstat_result = calstat_job.execute(dry_run=False)        
+        stats = calstat_result['CPARAM']
+
+        # amp solutions of unity imply phase-only was requested
+        tol = 1e-3
+        no_amp_soln = all([utils.approx_equal(stats['sum'], stats['npts'], tol),
+                           utils.approx_equal(stats['min'], 1, tol),
+                           utils.approx_equal(stats['max'], 1, tol)])
+
+        # same again for phase solution
+        calstat_job = casa_tasks.calstat(caltable=gaintable, axis='phase', 
+                                         datacolumn='CPARAM', useflags=True)
+        calstat_result = calstat_job.execute(dry_run=False)        
+        stats = calstat_result['CPARAM']
+
+        # phase solutions ~ 0 implies amp-only solution
+        tol = 1e-5
+        no_phase_soln = all([utils.approx_equal(stats['sum'], 0, tol),
+                             utils.approx_equal(stats['min'], 0, tol),
+                             utils.approx_equal(stats['max'], 0, tol)])
+
+        if no_phase_soln and not no_amp_soln:
+            return ' (phase only)'
+        if no_amp_soln and not no_phase_soln:
+            return ' (amplitude only)'
+        return ''
 
     def flags_for_result(self, result, context):
         ms = context.observing_run.get_ms(result.inputs['vis'])

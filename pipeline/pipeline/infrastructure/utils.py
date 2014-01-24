@@ -468,3 +468,12 @@ def flatten(l):
                 yield sub
         else:
             yield el
+
+def approx_equal(x, y, tol=1e-15):
+    """
+    Return True if two numbers are equal within the given tolerance.
+    """
+    lo = min(x, y)    
+    hi = max(x, y)
+    return (lo+0.5*tol) >= (hi-0.5*tol)
+

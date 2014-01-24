@@ -6,6 +6,7 @@ import types
 
 import applycal_cli
 import bandpass_cli
+import calstat_cli
 import clean_cli
 import clearcal_cli
 import exportfits_cli
@@ -279,6 +280,9 @@ class CASATaskJobGenerator(object):
 
     def bandpass(self, *v, **k):
         return self._get_job(bandpass_cli.bandpass_cli, *v, **k)
+
+    def calstat(self, *v, **k):
+        return self._get_job(calstat_cli.calstat_cli, *v, **k)
 
     def clean(self, *v, **k):
         return self._get_job(clean_cli.clean_cli, *v, **k)

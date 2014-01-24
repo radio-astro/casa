@@ -20,13 +20,6 @@ total_keys = {
 	'TARGET'       : 'Target'
 }
 
-type_map = {
-	'bandpass' : 'Bandpass',
-	'gaincal'  : 'Gain',
-	'tsys'     : 'T<sub>sys</sub>',
-	'wvr'      : 'WVR',
-}
-
 def template_agent_header1(agent):
 	span = 'col' if agent in ('online','template') else 'row'
 	return '<th %sspan=2>%s</th>' % (span, agent_description[agent])
@@ -129,7 +122,7 @@ def space_comma(s):
 			<td rowspan="${ca_rowspan}">${space_comma(calapp.calto.spw)}</td>
 			<td rowspan="${ca_rowspan}">${space_comma(calapp.calto.antenna)}</td>
 		% for calfrom in calapp.calfrom:
-			<td>${type_map.get(calfrom.caltype, calfrom.caltype)}</td>
+			<td>${caltypes[calfrom.gaintable]}</td>
 			<td>${', '.join([str(i) for i in calfrom.spwmap])}</td>
 			<td>${space_comma(calfrom.gainfield)}</td>
 			<td>${space_comma(calfrom.interp)}</td>
