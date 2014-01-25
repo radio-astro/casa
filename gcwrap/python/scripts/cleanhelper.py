@@ -2327,7 +2327,8 @@ class cleanhelper:
           if mode=="frequency":
             retstart=str(newfreqs[0])+'Hz'
           elif mode=="velocity":
-            startfreq=str(newfreqs[-1])+'Hz'
+            #startfreq=str(newfreqs[-1])+'Hz'
+            startfreq=(str(max(newfreqs))+'Hz') if(start=="") else  (str(newfreqs[-1])+'Hz')
             retstart=self.convertvf(startfreq,frame,field,restf,veltype)
           elif mode=="channel":
             # default start case, use channel selection from spw
@@ -2361,7 +2362,11 @@ class cleanhelper:
             ##v0 = self.convertvf(str(newfreqs[-2])+'Hz',frame,field,restf,veltype=veltype)
             #v1 = self.convertvf(str(newfreqs[1])+'Hz',frame,field,restf,veltype=veltype)
             #v0 = self.convertvf(str(newfreqs[0])+'Hz',frame,field,restf,veltype=veltype)
-            retwidth = str(qa.quantity(qa.sub(qa.quantity(v0),qa.quantity(v1)))['value'])+'m/s'
+            if(qa.lt(v0, v1) and start==""):
+                ###user used "" as start make sure step is +ve in vel as start is min vel possible for freqs selected
+                retwidth=qa.tos(qa.sub(v1, v0))
+            else:
+                retwidth = qa.tos(qa.sub(v0, v1))
           else:
             retwidth=1
           if debug: print "setChan retwidth=",retwidth
