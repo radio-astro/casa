@@ -184,7 +184,6 @@ int main(int argc, char **argv)
 	  			  subImgr.selectData(msname, /*spw=*/"0", freqBeg, freqEnd, MFrequency::LSRK, /*field=*/"0",  /*antenna=*/"",  /*timestr*/"", /*scan*/"", /*obs*/"", /*state*/"",/*uvdist*/"", 
 						     /*taql*/"", /*usescratch*/False, /*readonly*/False, /*incrmodel*/True);
 
-				  CountedPtr<FTMachine> ftm, iftm;
 	  			  subImgr.defineImage(subImStor, "GridFT");
 	  			  subImgr.weight("natural");
 	  			  Record rec;
