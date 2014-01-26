@@ -108,7 +108,7 @@ namespace casa { //# name space casa begins
     itsImPol=0;
     //
     ImageInterface<Float>* imagePointer = 0;
-    ImageUtilities::openImage (imagePointer, infile, *itsLog);
+    ImageUtilities::openImage (imagePointer, infile);
 
     //
     try {
@@ -205,7 +205,7 @@ namespace casa { //# name space casa begins
     }
     const ImageInterface<Float> *im1=itsImPol->imageInterface();
     std::auto_ptr<ImageInterface<Float> > im2;
-    ImageUtilities::openImage(im2, infile, *itsLog);
+    ImageUtilities::openImage(im2, infile);
     ImageExpr<Float> tmpim=itsImPol->depolarizationRatio(*im1, *im2, 
 							 debias, 
 							 Float(clip),
@@ -628,7 +628,7 @@ namespace casa { //# name space casa begins
     const ImageInterface<Float>* imagePointer1 = itsImPol->imageInterface();
     //
     ImageInterface<Float>* imagePointer2 = 0;
-    ImageUtilities::openImage (imagePointer2, infile, *itsLog);
+    ImageUtilities::openImage (imagePointer2, infile);
     //
     ImageExpr<Float> expr =
       ImagePolarimetry::depolarizationRatio(*imagePointer1, *imagePointer2,
@@ -659,7 +659,7 @@ namespace casa { //# name space casa begins
     const ImageInterface<Float>* imagePointer1 = itsImPol->imageInterface();
     //
     ImageInterface<Float>* imagePointer2 = 0;
-    ImageUtilities::openImage(imagePointer2, infile, *itsLog);
+    ImageUtilities::openImage(imagePointer2, infile);
     //
     ImageExpr<Float> expr =
       ImagePolarimetry::sigmaDepolarizationRatio(*imagePointer1,

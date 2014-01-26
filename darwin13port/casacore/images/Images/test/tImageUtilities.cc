@@ -81,7 +81,7 @@ void doOpens()
 
       {
          std::auto_ptr<ImageInterface<Float> > im;
-         ImageUtilities::openImage(im, name1, os);
+         ImageUtilities::openImage(im, name1);
       }
       {
          PtrHolder<ImageInterface<Float> > im;

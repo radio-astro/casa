@@ -57,7 +57,7 @@ Int main(Int argc, char *argv[]) {
 	Bool overwrite = input.getBool("overwrite");
 	ImageInterface<Float> *myim = 0;
 	LogIO mylog;
-	ImageUtilities::openImage(myim, imagename, mylog);
+	ImageUtilities::openImage(myim, imagename);
 	if (myim == 0) {
 		mylog << "Unable to open image " << imagename << LogIO::EXCEPTION;
 	}

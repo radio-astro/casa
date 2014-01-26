@@ -2839,7 +2839,7 @@ Bool LatticeStatistics<T>::someGoodPoints ()
          // this needs to be Int64, not Int as it was, to support > 2.1 Gpixel images
          // of course it will still fail for > 9.1 Epixel images, but hopefully we
          // won't have to worry about those for a few more Moore timescales.
-         someGoodPointsValue_p = Int64(stats(pos)+0.1) > 0;
+         someGoodPointsValue_p = ((stats(pos)+0.1) > 0);
          return someGoodPointsValue_p;
       } else {
 
@@ -2864,7 +2864,7 @@ Bool LatticeStatistics<T>::someGoodPoints ()
 
          for (pixelIterator.reset(); !pixelIterator.atEnd(); pixelIterator++) {
             for (Int i=0; i<n1; i++) {
-               if (Int(pixelIterator.matrixCursor()(i,NPTS)+0.1) > 0) {
+               if ((pixelIterator.matrixCursor()(i,NPTS)+0.1) > 0) {
                   someGoodPointsValue_p = True;
                   return someGoodPointsValue_p;
                }

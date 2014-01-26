@@ -46,4 +46,16 @@ void _processDirection(
 	const casa::String& paramName
 );
 
+template<class T, class U> casac::variant* _getchunk(
+	T inputArrayType, U outputArrayType,
+	const std::vector<int>& blc, const std::vector<int>& trc,
+	const std::vector<int>& inc, const std::vector<int>& axes,
+	const bool list, const bool dropdeg, const bool getmask
+);
 
+template<class T> bool _putchunk(
+	T imageType,
+	const casac::variant& pixels,
+	const vector<int>& blc, const vector<int>& inc,
+	const bool list, const bool locking, const bool replicate
+);

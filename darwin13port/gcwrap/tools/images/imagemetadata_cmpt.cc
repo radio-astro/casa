@@ -83,7 +83,7 @@ bool imagemetadata::open(const std::string& infile) {
 			_log.reset(new LogIO());
 		}
 		ImageInterface<Float> *x;
-		ImageUtilities::openImage(x, infile, *_log);
+		ImageUtilities::openImage(x, infile);
 		_image.reset(x);
 		_header.reset(new ImageMetaDataRW<Float>(x));
 		return True;

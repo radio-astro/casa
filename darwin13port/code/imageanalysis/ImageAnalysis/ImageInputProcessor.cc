@@ -67,7 +67,7 @@ void ImageInputProcessor::process(
     FITSImage::registerOpenFunction();
     MIRIADImage::registerOpenFunction();
     image = 0;
-    ImageUtilities::openImage(image, imagename, *_log);
+    ImageUtilities::openImage(image, imagename);
     if (image == 0) {
     	*_log << origin;
     	*_log << "Unable to open image " << imagename << LogIO::EXCEPTION;

@@ -36,6 +36,7 @@
 #include <casa/Exceptions/Error.h>
 #include <images/Images/ImageInfo.h>
 #include <images/Images/ImageInterface.h>
+#include <images/Images/ImageOpener.h>
 #include <images/Images/TempImage.h>
 #include <images/Images/RebinImage.h>
 #include <lattices/Lattices/TiledShape.h>
@@ -137,6 +138,42 @@ void ImageUtilities::bin (MaskedArray<T>& out, Coordinate& coordOut,
       cOut = cIn;
    }
 }
+
+template <typename T> void ImageUtilities::openImage(
+	ImageInterface<T>*& pImage,
+	const String& fileName
+) {
+	ThrowIf(
+		fileName.empty(),
+		"The image filename is empty"
+	);
+	File file(fileName);
+	ThrowIf(
+		! file.exists(),
+		"File '" + fileName + "' does not exist"
+	);
+	LatticeBase* lattPtr = ImageOpener::openImage (fileName);
+	ThrowIf(
+		lattPtr == 0,
+		"Image " + fileName + " cannot be opened; its type is unknown"
+	);
+	pImage = dynamic_cast<ImageInterface<T> *>(lattPtr);
+	ThrowIf(
+		pImage == 0,
+		"Unrecognized image data type, "
+	    "presently only Float and Complex images are supported"
+	);
+}
+
+template <typename T> void ImageUtilities::openImage(
+	std::auto_ptr<ImageInterface<T> >& image,
+	const String& fileName
+) {
+   ImageInterface<T>* p = 0;
+   ImageUtilities::openImage(p, fileName);
+   image.reset(p);
+}
+
 
 } //# NAMESPACE CASA - END
 

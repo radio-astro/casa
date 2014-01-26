@@ -58,6 +58,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_ia_deconvolvecomponentlist.py
   test_ia_deconvolvefrombeam.py
   test_ia_fft.py
+  test_ia_fromshape.py
   test_ia_getregion.py
   test_ia_hanning.py
   test_ia_histograms.py
@@ -65,6 +66,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_ia_insert.py
   test_ia_isconform.py
   test_ia_pad.py
+  test_ia_putchunk.py
   test_ia_pv.py
   test_ia_modify.py
   test_ia_rebin.py

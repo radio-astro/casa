@@ -65,7 +65,7 @@ imagepol::open(const variant& image){
 		}
 		else if(image.type()== variant::STRING) {
 			std::auto_ptr<ImageInterface<Float> > im;
-			ImageUtilities::openImage(im, toCasaString(image), *itsLog);
+			ImageUtilities::openImage(im, toCasaString(image));
 			itsImPol= new ImagePol(*im);
 			/*
 			if(casa::Table::isReadable(toCasaString(image))){

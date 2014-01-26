@@ -42,6 +42,7 @@ test_ia_decompose               dmehring@nrao.edu
 test_ia_deconvolvecomponentlist dmehring@nrao.edu
 test_ia_deconvolvefrombeam      dmehring@nrao.edu
 test_ia_fft                     dmehring@nrao.edu
+test_ia_fromshape               dmehring@nrao.edu
 test_ia_getregion               dmehring@nrao.edu
 test_ia_hanning                 dmehring@nrao.edu
 test_ia_histograms              dmehring@nrao.edu
@@ -50,6 +51,7 @@ test_ia_insert                  dmehring@nrao.edu
 test_ia_isconform               dmehring@nrao.edu
 test_ia_modify                  dmehring@nrao.edu
 test_ia_pad                     dmehring@nrao.edu
+test_ia_putchunk                dmehring@nrao.edu
 test_ia_pv                      dmehring@nrao.edu
 test_ia_rebin                   dmehring@nrao.edu
 test_ia_replacemaskedpixels     dmehring@nrao.edu
