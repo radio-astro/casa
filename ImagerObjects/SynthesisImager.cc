@@ -326,66 +326,100 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    const Bool /*trackSource*/, 
 				    const MDirection& /*trackDir*/, 
 				    const Bool overwrite,
-				     const Float padding, 
-				     const Bool useAutocorr, 
-				     const Bool useDoublePrec, 
-				     const Int wprojplanes, 
-				     const String convFunc, 
-				    const String /*startmodel*/)
+				    const Float padding, 
+				    const Bool useAutocorr, 
+				    const Bool useDoublePrec, 
+				    const Int wprojplanes, 
+				    const String convFunc, 
+				    const String /*startmodel*/,
+				    // The extra params for WB-AWP
+				    const Bool aTermOn,//    = True,
+				    const Bool psTermOn,//   = True,
+				    const Bool mTermOn,//    = False,
+				    const Bool wbAWP,//      = True,
+				    const String cfCache,//  = "",
+				    const Bool doPointing,// = False,
+				    const Bool doPBCorr,//   = True,
+				    const Bool conjBeams,//  = True,
+				    const Quantity computePAStep//=Quantity(360.0,"deg")
+				    )
 {
     LogIO os( LogOrigin("SynthesisImager","defineImage",WHERE) );
     if(mss_p.nelements() ==0)
-      throw(AipsError("SelectData has to be run before defineImage"));
+      os << "SelectData has to be run before defineImage" << LogIO::EXCEPTION;
 
     CoordinateSystem csys;
 
     try
       {
-
-	os << "Adding " << imagename << " (nchan : " << nchan << ", freqstart:" << freqStart.getValue() << freqStart.getUnit() <<  ", nx:" << nx << ",ny:" << ny << ", cellx:" << cellx.getValue() << cellx.getUnit() << ", celly:" << celly.getValue() << celly.getUnit() << " ) to imager list " << LogIO::POST;
+	os << "Adding " << imagename << " (nchan : " << nchan << ", freqstart:" << freqStart.getValue() << freqStart.getUnit() 
+	   <<  ", nx:" << nx << ",ny:" << ny << ", cellx:" << cellx.getValue() << cellx.getUnit() 
+	   << ", celly:" << celly.getValue() << celly.getUnit() << " ) to imager list " 
+	   << LogIO::POST;
 
 	csys=buildCoordSys(phaseCenter, cellx, celly, nx, ny, stokes, projection, nchan,freqStart, freqStep, restFreq, freqFrame);
-	
       }
     catch(AipsError &x)
       {
-	throw( AipsError("Error in building Coordinate System() : "+x.getMesg()) );
+	os << "Error in building Coordinate System() : " << x.getMesg() << LogIO::EXCEPTION;
       }
 
 
     try
       {
 
-    /// Accumulate FTM parameters, to get used in createFTMachine..... 
-    ftmParams_p.define("ftmachine",ftmachine);
-    ftmParams_p.define("wprojplanes", wprojplanes);
-    ftmParams_p.define("padding", padding );
-    ftmParams_p.define("useautocorr", useAutocorr);
-    ftmParams_p.define("usedoubleprec", useDoublePrec);
-    ftmParams_p.define("gridfunc", convFunc);
+	/// Accumulate FTM parameters, to get used in createFTMachine..... 
+	ftmParams_p.define("ftmachine",ftmachine);
+	ftmParams_p.define("wprojplanes", wprojplanes);
+	ftmParams_p.define("padding", padding );
+	ftmParams_p.define("useautocorr", useAutocorr);
+	ftmParams_p.define("usedoubleprec", useDoublePrec);
+	ftmParams_p.define("gridfunc", convFunc);
 
-    // NOTE to Kumar : If possible, can 'createFTMachine()' be called directly from here, 
-    //                      with a full list of parameters, instead of passing them through appendToMapperList ? 
-    // The other defineimage() already does this...... and can be augmented with the full FTM parameter list too.
-
+	// ftmParams_p.define("atermon",
+	// 				    const Bool aTermOn    = True,
+	// 				    const Bool psTermOn   = True,
+	// 				    const Bool mTermOn    = False,
+	// 				    const Bool wbAWP      = True,
+	// 				    const String cfCache  = "",
+	// 				    const Bool doPointing = False,
+	// 				    const Bool doPBCorr   = True,
+	// 				    const Bool conjBeams  = True,
+	// 				    const Quantity computePAStep=Quantity(360.0,"deg")
+	// NOTE to Kumar : If possible, can 'createFTMachine()' be called directly from here, 
+	//                      with a full list of parameters, instead of passing them through appendToMapperList ? 
+	// The other defineimage() already does this...... and can be augmented with the full FTM parameter list too.
       }
     catch(AipsError &x)
       {
-	throw( AipsError("Error in setting up FTMachine() : "+x.getMesg()) );
+	os << "Error in setting up FTMachine() : " << x.getMesg() << LogIO::EXCEPTION;
       }
 
     try
       {
+	Int facets_l=facets;
+	if(facets_l <1) facets_l=1; // When & why is facets<1?  Going by
+				// the existance of this line of code,
+				// facets<1 does not seem to server
+				// any purpose (SB, 26Jan2014)
 
-	appendToMapperList(imagename,  csys,  ftmParams_p.asString("ftmachine"), distance, facets, overwrite);
+	CountedPtr<FTMachine> ftm, iftm;
+	// Int wprojplane=ftmParams_p.asInt("wprojplanes");
+	// Float padding=ftmParams_p.asFloat("padding");
+	// Bool useAutocorr=ftmParams_p.asBool("useautocorr");
+	// Bool useDoublePrec=ftmParams_p.asBool("usedoubleprec");
+	// String convFunc=ftmParams_p.asString("gridfunc");
+	createFTMachine(ftm, iftm, ftmachine, facets_l, wprojplanes,padding,useAutocorr,useDoublePrec,convFunc);
+
+	appendToMapperList(imagename,  csys,  
+			   ftmParams_p.asString("ftmachine"), ftm, iftm,
+			   distance, facets_l, overwrite);
 	imageDefined_p=True;
-	
       }
     catch(AipsError &x)
       {
-	throw( AipsError("Error in adding Mapper : "+x.getMesg()) );
+	os << "Error in adding Mapper : "+x.getMesg() << LogIO::EXCEPTION;
       }
-
 
     // Set the model image for prediction -- Call an SIImageStore function that does the REGRIDDING.
     /*
@@ -395,32 +429,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       itsCurrentImages->setModelImage( startmodel );
       }
     */
- 
-
-    
     return True;
   }
  
-  Bool SynthesisImager::defineImage(CountedPtr<SIImageStore> imstor, const String& ftmachine){
+  Bool SynthesisImager::defineImage(CountedPtr<SIImageStore> imstor, 
+				    const String& ftmachine)
+  {
+    CountedPtr<FTMachine> ftm, iftm;
 
+    // The following call to createFTMachine() uses the
+    // following defaults
+    //
+    // facets=1, wprojplane=1, padding=1.0, useAutocorr=False, 
+    // useDoublePrec=True, gridFunction=String("SF")
+    //
+    createFTMachine(ftm, iftm, ftmachine);
+    
+    Int id=itsMappers.nMappers();
+    itsCurrentCoordSys=imstor->residual()->coordinates();
+    itsCurrentShape=imstor->residual()->shape();
+    Int nx=itsCurrentShape[0], ny=itsCurrentShape[1];
+    if( (id==0) || (nx*ny > itsMaxShape[0]*itsMaxShape[1]))
+      {
+	itsMaxShape=itsCurrentShape;
+	itsMaxCoordSys=itsCurrentCoordSys;
+      }
 
-	  CountedPtr<FTMachine> ftm;
-	  CountedPtr<FTMachine> iftm;
-	  createFTMachine(ftm, iftm, ftmachine);
-	  Int id=itsMappers.nMappers();
-	  itsCurrentCoordSys=imstor->residual()->coordinates();
-	  itsCurrentShape=imstor->residual()->shape();
-	  Int nx=itsCurrentShape[0]; Int ny=itsCurrentShape[1];
-	  if( (id==0) || (nx*ny > itsMaxShape[0]*itsMaxShape[1]))
-	  {
-		  itsMaxShape=itsCurrentShape;
-		  itsMaxCoordSys=itsCurrentCoordSys;
-	  }
-
-	  CountedPtr<SIMapperBase> thismap=new SIMapper(imstor, ftm, iftm, id);
-	  itsMappers.addMapper(thismap);
-
-	 return True;
+    CountedPtr<SIMapperBase> thismap=new SIMapper(imstor, ftm, iftm, id);
+    itsMappers.addMapper(thismap);
+    
+    return True;
   }
 
    ///////////////////////////////////////////////////////////////////////////////////////////
@@ -700,60 +738,118 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////
   ////////////This should be called  at each defineimage
+  void SynthesisImager::createIMStore(const String imageName, const CoordinateSystem& cSys,
+				      const Quantity& distance, Int facets, const Bool overwrite)
+  {
+
+  }
+
+    void SynthesisImager::appendToMapperList(String imagename,  CoordinateSystem& csys, 
+					     String ftmachine, 
+					     CountedPtr<FTMachine>& ftm,
+					     CountedPtr<FTMachine>& iftm,
+					     Quantity distance, 
+					     Int facets, const Bool overwrite
+					     )
+    {
+      LogIO log_l(LogOrigin("SynthesisImager", "appendToMapperList(ftm)"));
+
+      if(facets > 1 && itsMappers.nMappers() > 0)
+	log_l << "Facetted image has to be first of multifields" << LogIO::EXCEPTION;
+      if(facets <1) facets=1;
+      Int nIm=facets*facets;
+
+      CountedPtr<SIImageStore> imstor;
+    
+
+      if (nIm < 2)
+	imstor=new SIImageStore(imagename, csys, itsCurrentShape, overwrite);
+      else
+	{
+	  if(!unFacettedImStore_p.null())
+	    log_l << "A facetted Image has already been set" << LogIO::EXCEPTION;
+	  unFacettedImStore_p=new SIImageStore(imagename, csys, itsCurrentShape, overwrite);
+	  facetsStore_p=facets;
+	}
+
+      for (Int facet=0; facet< nIm; ++facet){
+	if(nIm > 1) imstor=unFacettedImStore_p->getFacetImageStore(facet, nIm);
+	Int id=itsMappers.nMappers();
+	// Fill in miscellaneous information needed by FITS
+	ROMSColumns msc(*mss_p[0]);
+	Record info;
+	String objectName=msc.field().name()(msc.fieldId()(0));
+	//ImageInfo iinfo=(imstor->model())->imageInfo();
+	//iinfo.setObjectName(objectName);
+	//(imstor->model())->setImageInfo(iinfo);
+	String telescop=msc.observation().telescopeName()(0);
+	info.define("OBJECT", objectName);
+	info.define("TELESCOP", telescop);
+	info.define("INSTRUME", telescop);
+	info.define("distance", distance.get("m").getValue());
+	////////////// Send misc info into ImageStore. 
+	imstor->setImageInfo( info );
+	/////////////
+	//(imstor->model())->setMiscInfo(info);
+	////((imstor->model())->table()).tableInfo().setSubType("GENERIC");
+	//(imstor->model())->setUnits(Unit("Jy/pixel"));
+	//(imstor->image())->setUnits(Unit("Jy/beam"));
+	CountedPtr<SIMapperBase> thismap=new SIMapper(imstor, ftm, iftm, id);
+	itsMappers.addMapper(thismap);
+      }
+    }
+
     void SynthesisImager::appendToMapperList(String imagename,  CoordinateSystem& csys, String ftmachine,
     		Quantity distance, Int facets, const Bool overwrite)
     {
-    	if(facets > 1 && itsMappers.nMappers() > 0)
-    		throw(AipsError("Facetted image has to be first of multifields"));
-    	if(facets <1)
-    		facets=1;
-    	Int nIm=facets*facets;
+      LogIO log_l(LogOrigin("SynthesisImager", "appendToMapperList"));
 
-    CountedPtr<SIImageStore> imstor;
+      if(facets > 1 && itsMappers.nMappers() > 0)
+	log_l << "Facetted image has to be first of multifields" << LogIO::EXCEPTION;
+      if(facets <1) facets=1;
+      Int nIm=facets*facets;
+
+      CountedPtr<SIImageStore> imstor;
     
+      if (nIm < 2){
+	imstor=new SIImageStore(imagename, csys, itsCurrentShape, overwrite);
+      }
+      else{
+	if(!unFacettedImStore_p.null())
+	  log_l << "A facetted Image has already been set" << LogIO::EXCEPTION;
+	unFacettedImStore_p=new SIImageStore(imagename, csys, itsCurrentShape, overwrite);
+	facetsStore_p=facets;
+      }
 
-    if (nIm < 2){
-      imstor=new SIImageStore(imagename, csys, itsCurrentShape, overwrite);
-    }
-    else{
-      if(!unFacettedImStore_p.null())
-    	  throw(AipsError("A facetted Image has already been set"));
-      unFacettedImStore_p=new SIImageStore(imagename, csys, itsCurrentShape, overwrite);
-      facetsStore_p=facets;
-    }
+    // CountedPtr<FTMachine> ftm, iftm;
+    // createFTMachine(ftm, iftm, ftmachine, facets);
 
-     for (Int facet=0; facet< nIm; ++facet){
-       if(nIm > 1)
-    	   imstor=unFacettedImStore_p->getFacetImageStore(facet, nIm);
-       CountedPtr<FTMachine> ftm, iftm;
-
-       createFTMachine(ftm, iftm, ftmachine, facets);
-       Int id=itsMappers.nMappers();
-       // Fill in miscellaneous information needed by FITS
-         ROMSColumns msc(*mss_p[0]);
-         Record info;
-         String objectName=msc.field().name()(msc.fieldId()(0));
-         //ImageInfo iinfo=(imstor->model())->imageInfo();
-         //iinfo.setObjectName(objectName);
-         //(imstor->model())->setImageInfo(iinfo);
-         String telescop=msc.observation().telescopeName()(0);
-         info.define("OBJECT", objectName);
-         info.define("TELESCOP", telescop);
-         info.define("INSTRUME", telescop);
-         info.define("distance", distance.get("m").getValue());
-	 ////////////// Send misc info into ImageStore. 
-	 imstor->setImageInfo( info );
-	 /////////////
-         //(imstor->model())->setMiscInfo(info);
-         ////((imstor->model())->table()).tableInfo().setSubType("GENERIC");
-         //(imstor->model())->setUnits(Unit("Jy/pixel"));
-         //(imstor->image())->setUnits(Unit("Jy/beam"));
-       CountedPtr<SIMapperBase> thismap=new SIMapper(imstor, ftm, iftm, id);
-       itsMappers.addMapper(thismap);
-     }
-
-   
-    
+    //  for (Int facet=0; facet< nIm; ++facet){
+    //    if(nIm > 1)
+    // 	   imstor=unFacettedImStore_p->getFacetImageStore(facet, nIm);
+    //    Int id=itsMappers.nMappers();
+    //    // Fill in miscellaneous information needed by FITS
+    //      ROMSColumns msc(*mss_p[0]);
+    //      Record info;
+    //      String objectName=msc.field().name()(msc.fieldId()(0));
+    //      //ImageInfo iinfo=(imstor->model())->imageInfo();
+    //      //iinfo.setObjectName(objectName);
+    //      //(imstor->model())->setImageInfo(iinfo);
+    //      String telescop=msc.observation().telescopeName()(0);
+    //      info.define("OBJECT", objectName);
+    //      info.define("TELESCOP", telescop);
+    //      info.define("INSTRUME", telescop);
+    //      info.define("distance", distance.get("m").getValue());
+    // 	 ////////////// Send misc info into ImageStore. 
+    // 	 imstor->setImageInfo( info );
+    // 	 /////////////
+    //      //(imstor->model())->setMiscInfo(info);
+    //      ////((imstor->model())->table()).tableInfo().setSubType("GENERIC");
+    //      //(imstor->model())->setUnits(Unit("Jy/pixel"));
+    //      //(imstor->image())->setUnits(Unit("Jy/beam"));
+    //    CountedPtr<SIMapperBase> thismap=new SIMapper(imstor, ftm, iftm, id);
+    //    itsMappers.addMapper(thismap);
+    //  }
   }
 
   /////////////////////////
@@ -892,21 +988,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   // Make the FT-Machine and related objects (cfcache, etc.)
   void SynthesisImager::createFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT, const String& ftname,
-		  const Int facets)
+					const Int facets,            //=1
+					//------------------------------
+					const Int wprojplane,        //=1,
+					const Float padding,         //=1.0,
+					const Bool useAutocorr,      //=False,
+					const Bool useDoublePrec,    //=True,
+					const String gridFunction,   //=String("SF"),
+					//------------------------------
+					const Bool aTermOn,          //= True,
+					const Bool psTermOn,         //= True,
+					const Bool mTermOn,          //= False,
+					const Bool wbAWP,            //= True,
+					const String cfCache,        //= "",
+					const Bool doPointing,       //= False,
+					const Bool doPBCorr,         //= True,
+					const Bool conjBeams,        //= True,
+					const Quantity computePAStep,//=Quantity(360.0,"deg"),
+					const Int cache,             //=1000000000,
+					const Int tile               //=16
+					)
+
   {
-
-
-
-	Int cache=1000000000;
-	Int tile=16;
     LogIO os( LogOrigin("SynthesisImager","createFTMachine",WHERE));
+
     ////////////these has to be defined by setupImaging it seems and passed here
 
-    Int wprojplane=ftmParams_p.asInt("wprojplanes");
-    Float padding=ftmParams_p.asFloat("padding");
-    Bool useAutocorr=ftmParams_p.asBool("useautocorr");
-    Bool useDoublePrec=ftmParams_p.asBool("usedoubleprec");
-    String gridFunction=ftmParams_p.asString("gridfunc");
+    // Int wprojplane=ftmParams_p.asInt("wprojplanes");
+    // Float padding=ftmParams_p.asFloat("padding");
+    // Bool useAutocorr=ftmParams_p.asBool("useautocorr");
+    // Bool useDoublePrec=ftmParams_p.asBool("usedoubleprec");
+    // String gridFunction=ftmParams_p.asString("gridfunc");
            //////////////////////////////////////////////
     if(ftname=="GridFT"){
       if(facets >1){
