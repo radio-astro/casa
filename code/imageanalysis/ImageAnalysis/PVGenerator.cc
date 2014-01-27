@@ -437,7 +437,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 		"", "", "", "", axes, "", False
 	);
 
-	std::auto_ptr<ImageInterface<Float> > collapsed(collapser.collapse(True));
+	std::tr1::shared_ptr<ImageInterface<Float> > collapsed(collapser.collapse(True));
 	Vector<Double > newRefPix = rotCoords.referencePixel();
 	newRefPix[xAxis] = rotPixStart[xAxis] - blc[xAxis];
 	newRefPix[yAxis] = rotPixStart[yAxis] - blc[yAxis];
@@ -445,7 +445,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 
 	// to determine the pixel increment of the angular offset axis, get the
 	// distance between the end points
-	ImageMetaData<Float> md(collapsed.get());
+	ImageMetaData<Float> md(collapsed);
 	Vector<Int> dirShape = md.directionShape();
 	AlwaysAssert(dirShape[1] == 1, AipsError);
 	const DirectionCoordinate& dc = collCoords.directionCoordinate();

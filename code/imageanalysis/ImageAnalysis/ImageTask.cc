@@ -96,7 +96,7 @@ void ImageTask::_construct(Bool verbose) {
 	ImageInputProcessor inputProcessor;
 	inputProcessor.process(
 		_regionRecord, diagnostics, outputPtr,
-    	_stokesString, _image.get(), _regionPtr,
+    	_stokesString, _image, _regionPtr,
     	_region, _box, _chan,
     	_getStokesControl(), _supportsMultipleRegions(),
     	coordsPtr, verbose

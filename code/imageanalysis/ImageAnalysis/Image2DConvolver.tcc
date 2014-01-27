@@ -115,7 +115,7 @@ Image2DConvolver<T> &Image2DConvolver<T>::operator=(const Image2DConvolver<T> &o
 }
 
 template <class T> void Image2DConvolver<T>::convolve(
-	LogIO& os, ImageInterface<T>& imageOut,
+	LogIO& os, std::tr1::shared_ptr<ImageInterface<T> > imageOut,
 	const ImageInterface<T>& imageIn, const VectorKernel::KernelTypes kernelType,
 	const IPosition& pixelAxes, const Vector<Quantity>& parameters,
 	const Bool autoScale, const Double scale, const Bool copyMiscellaneous,
@@ -147,7 +147,7 @@ template <class T> void Image2DConvolver<T>::convolve(
 		"Pixels must be square, please regrid your image so that they are"
 	);
 	const IPosition& inShape = imageIn.shape();
-	const IPosition& outShape = imageOut.shape();
+	const IPosition& outShape = imageOut->shape();
 	ThrowIf(
 		!inShape.isEqual(outShape),
 		"Input and output images must have the same shape"
@@ -176,9 +176,10 @@ template <class T> void Image2DConvolver<T>::convolve(
 	const ImageInfo& imageInfo = imageIn.imageInfo();
 	const Unit& brightnessUnit = imageIn.units();
 	String brightnessUnitOut;
-	ImageInfo iiOut = imageOut.imageInfo();
+	ImageInfo iiOut = imageOut->imageInfo();
 	if (imageInfo.hasMultipleBeams()) {
-		ImageMetaData<T> md(&imageOut);
+		// std::tr1::shared_ptr<const ImageInterface<T> > imageOutConst(imageOut);
+		ImageMetaData<T> md(imageOut);
 		uInt nChan = md.nChannels();
 		uInt nPol = md.nStokes();
 		// initialize all beams to be null
@@ -298,10 +299,10 @@ template <class T> void Image2DConvolver<T>::convolve(
 				subImageOut.put(subImage.get());
 			}
 			{
-				Bool doMask = imageOut.isMasked() && imageOut.hasPixelMask();
+				Bool doMask = imageOut->isMasked() && imageOut->hasPixelMask();
 				Lattice<Bool>* pMaskOut = 0;
 				if (doMask) {
-					pMaskOut = &imageOut.pixelMask();
+					pMaskOut = &imageOut->pixelMask();
 					if (! pMaskOut->isWritable()) {
 						doMask = False;
 					}
@@ -314,7 +315,7 @@ template <class T> void Image2DConvolver<T>::convolve(
 				RO_MaskedLatticeIterator<T> iter(subImageOut, stepper);
 				for (iter.reset(); !iter.atEnd(); iter++) {
 					IPosition cursorShape = iter.cursorShape();
-					imageOut.putSlice(iter.cursor(), outPos);
+					imageOut->putSlice(iter.cursor(), outPos);
 					if (doMask) {
 						pMaskOut->putSlice(iter.getMask(), outPos);
 					}
@@ -357,7 +358,7 @@ template <class T> void Image2DConvolver<T>::convolve(
 		// trickery cleverer than what ImageConvolver can do) so no more scaling
 		ImageConvolver<T> aic;
 		aic.convolve(
-			os, imageOut, imageIn, scaleFactor*kernel, ImageConvolver<T>::NONE,
+			os, *imageOut, imageIn, scaleFactor*kernel, ImageConvolver<T>::NONE,
 			1.0, copyMiscellaneous
 		);
 		// Overwrite some bits and pieces in the output image to do with the
@@ -377,8 +378,8 @@ template <class T> void Image2DConvolver<T>::convolve(
 			}
 		}
 	}
-	imageOut.setUnits(brightnessUnitOut);
-	imageOut.setImageInfo(iiOut);
+	imageOut->setUnits(brightnessUnitOut);
+	imageOut->setImageInfo(iiOut);
 }
 
 // Private functions

@@ -148,8 +148,8 @@ private:
 	std::tr1::shared_ptr<ImageInterface<Float> > _regridByVelocity() const;
 
 	static Bool _doImagesOverlap(
-		const ImageInterface<Float>& image0,
-		const ImageInterface<Float>& image1
+		std::tr1::shared_ptr<const ImageInterface<Float> > image0,
+		std::tr1::shared_ptr<const ImageInterface<Float> > image1
 	);
 
 	static Vector<std::pair<Double, Double> > _getDirectionCorners(

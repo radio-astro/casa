@@ -46,7 +46,7 @@
 namespace casa {
 
 template<class T> ImageMetaData<T>::ImageMetaData(
-	const ImageInterface<T> *const &image
+	std::tr1::shared_ptr<const ImageInterface<T> > image
 ) : ImageMetaDataBase<T>(), _image(image), _info(image->imageInfo()),
 	_csys(image->coordinates()) {}
 

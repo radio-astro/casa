@@ -31,6 +31,8 @@
 #include <images/Images/ImageInterface.h>
 #include <casa/aips.h>
 
+#include <tr1/memory>
+
 namespace casac {
 class variant;
 }
@@ -122,7 +124,7 @@ protected:
 		_MINPOS, _OBJECT, _OBSDATE, _OBSERVER, _PROJECTION,
 		_RESTFREQ, _REFFREQTYPE, _SHAPE, _TELESCOPE;
 
-	virtual const ImageInterface<T> * const _getImage() const = 0;
+	virtual std::tr1::shared_ptr<const ImageInterface<T> > _getImage() const = 0;
 
 	ImageMetaDataBase() : _log() {}
 

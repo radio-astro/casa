@@ -29,8 +29,11 @@
 #define IMAGES_IMAGEMETADATA_H
 
 #include <imageanalysis/ImageAnalysis/ImageMetaDataBase.h>
+
 #include <images/Images/ImageInterface.h>
 #include <casa/aips.h>
+
+#include <tr1/memory>
 
 namespace casac {
 class variant;
@@ -81,7 +84,7 @@ template <class T> class ImageMetaData : public ImageMetaDataBase<T> {
 
 public:
 
-	ImageMetaData(const ImageInterface<T> *const &image);
+	ImageMetaData(std::tr1::shared_ptr<const ImageInterface<T> > image);
 
 	~ImageMetaData() {}
 
@@ -90,7 +93,7 @@ public:
 
 protected:
 
-	const ImageInterface<T> * const _getImage() const { return _image; }
+	std::tr1::shared_ptr<const ImageInterface<T> > _getImage() const { return _image; }
 
 	ImageMetaData() : ImageMetaDataBase<T>(), _image(0) {}
 
@@ -136,11 +139,7 @@ protected:
 
 private:
 
-	// I really would like this to be a shared pointer, but that
-	// currently causes some major issues for classes that depend on
-	// this. If I can move ImageAnalysis::setRestoringBeam() into a class
-	// of its own that will mitigate some difficulties
-	const ImageInterface<T> * const _image;
+	std::tr1::shared_ptr<const ImageInterface<T> > _image;
 	const ImageInfo _info;
 	const CoordinateSystem _csys;
 

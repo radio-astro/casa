@@ -32,6 +32,8 @@
 
 #include <casa/aips.h>
 
+#include <tr1/memory>
+
 class casac::variant;
 
 namespace casa {
@@ -79,7 +81,7 @@ template <class T> class ImageMetaDataRW : public ImageMetaDataBase<T> {
 
 public:
 
-	ImageMetaDataRW(ImageInterface<Float> *const &image);
+	ImageMetaDataRW(std::tr1::shared_ptr<ImageInterface<T> > image);
 
 	// remove, if possible, the specified parameter. Returns True if removal
 	// was successful.
@@ -101,9 +103,9 @@ public:
 
 protected:
 
-	const ImageInterface<T> * const _getImage() const {return _image;}
+	std::tr1::shared_ptr<const ImageInterface<T> > _getImage() const {return _image;}
 
-	ImageInterface<T> * const _getImage() {return _image;}
+	std::tr1::shared_ptr<ImageInterface<T> > _getImage() {return _image;}
 
 	const ImageInfo& _getInfo() const { return _image->imageInfo(); }
 
@@ -147,7 +149,7 @@ protected:
 
 private:
 
-	ImageInterface<Float> * const _image;
+	std::tr1::shared_ptr<ImageInterface<Float> > _image;
 
 	// These are mutable because they are only to be set once and
 	// then cached. If this contract is broken, and they are set elsewhere

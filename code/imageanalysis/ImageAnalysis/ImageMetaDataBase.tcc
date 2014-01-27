@@ -646,11 +646,11 @@ template <class T> Bool ImageMetaDataBase<T>::areChannelAndStokesValid(
 
 template<class T> Record ImageMetaDataBase<T>::_calcStats() const {
 	ImageStatistics<T> stats(*_getImage());
-	Array<Double> min;
+	Array<typename NumericTraits<T>::PrecisionType> min;
 	stats.getStatistic(min, LatticeStatsBase::MIN);
 	Record x;
 	x.define(ImageMetaDataBase<T>::_DATAMIN, min(IPosition(min.ndim(), 0)));
-	Array<Double> max;
+	Array<typename NumericTraits<T>::PrecisionType> max;
 	stats.getStatistic(max, LatticeStatsBase::MAX);
 	x.define(ImageMetaDataBase<T>::_DATAMAX, max(IPosition(max.ndim(), 0)));
 	IPosition minPixPos, maxPixPos;

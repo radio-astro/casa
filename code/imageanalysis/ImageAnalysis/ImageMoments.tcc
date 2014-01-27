@@ -94,7 +94,7 @@ ImageMoments<T>::ImageMoments (ImageInterface<T>& image,
                                Bool overWriteOutput,
                                Bool showProgressU)
 : MomentsBase<T>( os, overWriteOutput, showProgressU ),
-  _image(0), progressMonitor(0)
+  _image(), progressMonitor(0)
 {
 //
    if (setNewImage(image)) {
@@ -239,21 +239,21 @@ void ImageMoments<T>::setMomentAxis(const Int momentAxisU) {
 		os_p << LogIO::NORMAL << "The input image has multiple beams so each "
 			<< "plane will be convolved to the largest beam size " << maxBeam
 			<< " prior to calculating moments" << LogIO::POST;
-		std::auto_ptr<TempImage<T> > imageCopy(
+		std::tr1::shared_ptr<TempImage<T> > imageCopy(
 			new TempImage<Float>(
 				TiledShape(_image->shape()), _image->coordinates()
 			)
 		);
 		imageCopy->set(0);
 		Image2DConvolver<T>::convolve(
-			os_p, *imageCopy, *_image, VectorKernel::GAUSSIAN,
+			os_p, imageCopy, *_image, VectorKernel::GAUSSIAN,
 			_image->coordinates().directionAxesNumbers(),
 			maxBeam.toVector(), True, -1.0, True, True
 		);
 		// replace the input image pointer with the convolved image pointer
 		// and proceed using the convolved image as if it were the input
 		// image
-		_image.reset(imageCopy.release());
+		_image = imageCopy;
 	}
 	worldMomentAxis_p = _image->coordinates().pixelAxisToWorldAxis(momentAxis_p);
 }

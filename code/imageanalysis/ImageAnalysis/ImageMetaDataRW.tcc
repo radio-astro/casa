@@ -39,7 +39,7 @@
 namespace casa {
 
 template<class T> ImageMetaDataRW<T>::ImageMetaDataRW(
-	ImageInterface<Float> *const &image
+	std::tr1::shared_ptr<ImageInterface<T> > image
 ) : ImageMetaDataBase<T>(), _image(image) {}
 
 
@@ -343,7 +343,6 @@ template<class T> Bool ImageMetaDataRW<T>::remove(const String& key) {
 }
 
 template<class T> Bool ImageMetaDataRW<T>::removeMask(const String& maskName) {
-	ImageInterface<T> *image = _getImage();
 	LogIO log = this->_getLog();
 	log << _ORIGINA;
 	if (maskName.empty()) {
@@ -368,12 +367,12 @@ template<class T> Bool ImageMetaDataRW<T>::removeMask(const String& maskName) {
 	}
 	else {
 		ThrowIf(
-			! image->hasRegion(maskName, RegionHandler::Masks),
+			! _image->hasRegion(maskName, RegionHandler::Masks),
 			"No mask named " + maskName + " found"
 		);
-		image->removeRegion(maskName, RegionHandler::Masks);
+		_image->removeRegion(maskName, RegionHandler::Masks);
 		ThrowIf(
-			image->hasRegion(maskName, RegionHandler::Masks),
+			_image->hasRegion(maskName, RegionHandler::Masks),
 			"Unable to remove mask " + maskName
 		);
 		_masks.resize(0);

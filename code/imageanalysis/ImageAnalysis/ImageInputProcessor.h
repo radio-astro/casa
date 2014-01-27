@@ -33,6 +33,8 @@
 
 #include <casa/namespace.h>
 
+#include <tr1/memory>
+
 namespace casa {
 
 class ImageInputProcessor {
@@ -88,7 +90,7 @@ public:
 	// be set to false if the caller can only deal with a single n-dimensional
 	// rectangular region.
     void process(
-    	ImageInterface<Float>*& image, Record& regionRecord,
+    	std::tr1::shared_ptr<ImageInterface<Float> > image, Record& regionRecord,
     	String& diagnostics,
     	std::vector<OutputDestinationChecker::OutputStruct> *const outputStruct,
     	String& stokes,	const String& imagename,
@@ -116,7 +118,7 @@ public:
     	Record& regionRecord,
     	String& diagnostics, std::vector<OutputDestinationChecker::OutputStruct> *const outputStruct,
     	String& stokes,
-    	const ImageInterface<Float> *const &image,
+    	std::tr1::shared_ptr<const ImageInterface<Float> > image,
     	const Record* regionPtr,
     	const String& regionName, const String& box,
     	const String& chans,
@@ -138,7 +140,7 @@ private:
     void _process(
     	Record& regionRecord, String& diagnostics,
     	std::vector<OutputDestinationChecker::OutputStruct>* outputStruct,
-    	String& stokes, const ImageInterface<Float> *const &image,
+    	String& stokes, std::tr1::shared_ptr<const ImageInterface<Float> > image,
     	const Record *const &regionPtr,
     	const String& regionName, const String& box,
     	const String& chans, const CasacRegionManager::StokesControl& stokesControl,
