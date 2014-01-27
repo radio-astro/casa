@@ -62,6 +62,8 @@ except Exception, e:
 
 <h2>Line Detection by Clustering Analysis</h2>
 
+% if len(detail) > 0 or len(cover_only) > 0:
+
 <!-- Link to details page -->
 % for plots in detail:
     <h3><a class="replace"
@@ -131,4 +133,8 @@ except Exception, e:
         % endfor
     </ul>
 % endfor
+
+% else:
+<p>No Line detected</p>
+% endif
 
