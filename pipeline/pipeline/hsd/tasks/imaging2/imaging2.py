@@ -4,6 +4,7 @@ import os
 import numpy
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.basetask as basetask
@@ -218,6 +219,12 @@ class SDImaging2(common.SingleDishTaskTemplate):
                 # Make grid_table and put rms and valid spectral number array 
                 # to the outcome
                 LOG.info('Additional Step. Make grid_table')
+                with casatools.ImageReader(imager_result.outcome) as ia:
+                    cs = ia.coordsys()
+                    dircoords = [i for i in xrange(cs.naxes())
+                                 if cs.axiscoordinatetypes()[i] == 'Direction']
+                    nx = ia.shape()[dircoords[0]]
+                    ny = ia.shape()[dircoords[1]]
                 validsps = []
                 rmss = []
                 observing_pattern = st.pattern[spwid].values()[0]
@@ -225,7 +232,8 @@ class SDImaging2(common.SingleDishTaskTemplate):
                 grid_tables = []
                 for pol in pols:
                     gridding_inputs = grid_task_class.Inputs(context, antennaid=indices, 
-                                                             spwid=spwid, polid=pol)
+                                                             spwid=spwid, polid=pol,
+                                                             nx=nx, ny=ny)
                     gridding_task = grid_task_class(gridding_inputs)
                     gridding_result = self._executor.execute(gridding_task, merge=True)
                     grid_tables.append(gridding_result.outcome)
@@ -282,6 +290,12 @@ class SDImaging2(common.SingleDishTaskTemplate):
             # Make grid_table and put rms and valid spectral number array 
             # to the outcome
             LOG.info('Additional Step. Make grid_table')
+            with casatools.ImageReader(imager_result.outcome) as ia:
+                cs = ia.coordsys()
+                dircoords = [i for i in xrange(cs.naxes())
+                             if cs.axiscoordinatetypes()[i] == 'Direction']
+                nx = ia.shape()[dircoords[0]]
+                ny = ia.shape()[dircoords[1]]
             validsps = []
             rmss = []
             observing_pattern = st.pattern[spwid].values()[0]
@@ -289,7 +303,8 @@ class SDImaging2(common.SingleDishTaskTemplate):
             grid_tables = []
             for pol in pols:
                 gridding_inputs = grid_task_class.Inputs(context, antennaid=combined_indices, 
-                                                         spwid=spwid, polid=pol)
+                                                         spwid=spwid, polid=pol,
+                                                         nx=nx, ny=ny)
                 gridding_task = grid_task_class(gridding_inputs)
                 gridding_result = self._executor.execute(gridding_task, merge=True)
                 grid_tables.append(gridding_result.outcome)

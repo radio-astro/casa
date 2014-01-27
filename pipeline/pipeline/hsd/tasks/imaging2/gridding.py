@@ -25,7 +25,7 @@ def gridding_factory(observing_pattern):
         raise ValueError('observing_pattern \'%s\' is invalid.'%(observing_pattern))
 
 class GriddingInputs(common.SingleDishInputs):
-    def __init__(self, context, antennaid, spwid, polid):
+    def __init__(self, context, antennaid, spwid, polid, nx=None, ny=None):
         self._init_properties(vars())
         
 class GriddingResults(common.SingleDishResults):
@@ -258,16 +258,24 @@ class RasterGridding(GriddingBase):
             MinRA = ras.min()
             MaxRA = ras.max()
         # (RAcenter, DECcenter) to be the center of the grid
-        NGridRA = int((MaxRA - MinRA) / (GridSpacing * DecCorrection)) + 1
-        NGridDEC = int((MaxDEC - MinDEC) / GridSpacing) + 1
-        if NGridRA % 2 == 0:
-            NGridRA += 2
+        nx = self.inputs.nx
+        ny = self.inputs.ny
+        if nx is None:
+            NGridRA = int((MaxRA - MinRA) / (GridSpacing * DecCorrection)) + 1
+            if NGridRA % 2 == 0:
+                NGridRA += 2
+            else:
+                NGridRA += 1
         else:
-            NGridRA += 1
-        if NGridDEC % 2 == 0:
-            NGridDEC += 2
+            NGridRA = nx
+        if ny is None:
+            NGridDEC = int((MaxDEC - MinDEC) / GridSpacing) + 1
+            if NGridDEC % 2 == 0:
+                NGridDEC += 2
+            else:
+                NGridDEC += 1
         else:
-            NGridDEC += 1
+            NGridDEC = ny
         MinRA = (MinRA + MaxRA) / 2.0 - (NGridRA - 1) / 2.0 * GridSpacing * DecCorrection
         MinDEC = (MinDEC + MaxDEC) / 2.0 - (NGridDEC - 1) / 2.0 * GridSpacing
 
