@@ -4749,7 +4749,6 @@ Record ImageAnalysis::setboxregion(const Vector<Double>& blc, const Vector<
 
 bool ImageAnalysis::maketestimage(const String& outfile, const Bool overwrite,
 		const String& imagetype) {
-	_onlyFloat(__FUNCTION__);
 	bool rstat(false);
 	*_log << LogOrigin("ImageAnalysis", "maketestimage");
 	String var = EnvironmentVariable::get("CASAPATH");
