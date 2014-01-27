@@ -107,7 +107,18 @@ class SynthesisImager
 			   const bool useDoublePrec=True, 
 			   const Int wprojplanes=1, 
 			   const String convFunc="SF", 
-			   const String startmodel="");
+			   const String startmodel="",
+			   // The extra params for WB-AWP
+			   const Bool aTermOn    = True,
+			   const Bool psTermOn   = True,
+			   const Bool mTermOn    = False,
+			   const Bool wbAWP      = True,
+			   const String cfCache  = "",
+			   const Bool doPointing = False,
+			   const Bool doPBCorr   = True,
+			   const Bool conjBeams  = True,
+			   const Quantity computePAStep=Quantity(360.0,"deg")
+			   );
   //Define image via a predefine SIImageStore object
   virtual Bool defineImage(CountedPtr<SIImageStore> imstor, 
 			   const String& ftmachine);
@@ -161,7 +172,27 @@ protected:
   void createFTMachine(CountedPtr<FTMachine>& theFT, 
 		       CountedPtr<FTMachine>& theIFT,  
 		       const String& ftname,
-		       const Int facets=1);
+		       const Int facets=1,
+		       //------------------------------
+		       const Int wprojplane=1,
+		       const Float padding=1.0,
+		       const Bool useAutocorr=False,
+		       const Bool useDoublePrec=True,
+		       const String gridFunction=String("SF"),
+		       //------------------------------
+		       const Bool aTermOn    = True,
+		       const Bool psTermOn   = True,
+		       const Bool mTermOn    = False,
+		       const Bool wbAWP      = True,
+		       const String cfCache  = "",
+		       const Bool doPointing = False,
+		       const Bool doPBCorr   = True,
+		       const Bool conjBeams  = True,
+		       const Quantity computePAStep=Quantity(360.0,"deg"),
+		       const Int cache=1000000000,
+		       const Int tile=16);
+  void createIMStore(const String imageName, const CoordinateSystem& cSys,
+		     const Quantity& distance, Int facets, const Bool overwrite);
   void createVisSet(const Bool writeaccess=False);
   
   void runMajorCycle(const Bool dopsf=False, const Bool useViVb2=False);
@@ -172,6 +203,11 @@ protected:
   //// Only one facetted image allowed
   void appendToMapperList(String imagename, CoordinateSystem& csys, String ftmachine,
 		  	  Quantity distance=Quantity(0.0, "m"), Int facets=1, const Bool overwrite=False);
+  void appendToMapperList(String imagename, CoordinateSystem& csys, String ftmachine,
+			  CountedPtr<FTMachine>& ftm,
+			  CountedPtr<FTMachine>& iftm,
+		  	  Quantity distance=Quantity(0.0, "m"), Int facets=1, 
+			  const Bool overwrite=False);
   /////////////// Member Objects
 
   SIMapperCollection itsMappers;

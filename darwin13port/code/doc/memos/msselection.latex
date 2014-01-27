@@ -389,8 +389,9 @@ Table~\ref{BASELINE:TAB}.
 \begin{table}[h!]
   \caption{Baseline specification syntax: ANT, ANT1 and ANT2 in the
     table below represent a comma-separated list of antennas names or
-    {\tt ANT@STATION} where {\tt ANT} and {\tt STATION} can themsevles
-    be comma-separated lists enclosed in braces.} 
+    a list of {\tt ANT@STATION} specifications.  {\tt ANT} and {\tt
+      STATION} in {\tt ANT@STATION} can themsevles be comma-separated
+    lists enclosed in braces.}
 \begin{center}
 \begin{tabular}{|l|l|}
 \hline
@@ -940,39 +941,39 @@ shown in Table~\ref{Tab:SCANINTENT}}
 {\bf selection expression}&{\bf scans}& \\
 \hline
 \hline
-{\tt CALI*}   & 0,1,2 & \\
+{\small \tt CALI*}   & 0,1,2 & \\
 \hline
-{\tt *PHASE}   & 0,2   & Matches \\
-               &       & {\tt CALIBRATE\_PHASE} but \\
-               &       & not {\tt PHASE\_UNSPECIFIED} \\
+{\small \tt *PHASE}   & 0,2   & Matches \\
+               &       & {\small \tt CALIBRATE\_PHASE} but \\
+               &       & not {\small \tt PHASE\_UNSPECIFIED} \\
 \hline
-{\tt *UNSPEC*} & 3     & \\
+{\small \tt *UNSPEC*} & 3     & \\
 \hline
-{\tt *AMPLI, *PHASE} & 1,2 & {\tt *AMPLI} matches \\
-                     &     & {\tt CALIBRATE\_AMPLI}; \\
-                     &     & {\tt *PHASE} matches \\
-                     &     & {\tt CALIBRATE\_PHASE} \\
+{\small \tt *AMPLI, *PHASE} & 1,2 & {\small \tt *AMPLI} matches \\
+                     &     & {\small \tt CALIBRATE\_AMPLI}; \\
+                     &     & {\small \tt *PHASE} matches \\
+                     &     & {\small \tt CALIBRATE\_PHASE} \\
 \hline
-{\tt *AMP*} & 1,2,3 & {\tt *AMP*} matches \\
-            &       & {\tt CALIBRATE\_AMPLI} and \\
-            &       & {\tt AMPLI\_UNSPECIFIED} \\
+{\small \tt *AMP*} & 1,2,3 & {\small \tt *AMP*} matches \\
+            &       & {\small \tt CALIBRATE\_AMPLI} and \\
+            &       & {\small \tt AMPLI\_UNSPECIFIED} \\
 \hline
-{\tt *BAND \& *PHASE} & 0,2 & {\tt *BAND} and {\tt *PHASE} are \\
+{\small \tt *BAND \& *PHASE} & 0,2 & {\small \tt *BAND} and {\small \tt *PHASE} are \\
                       &     & simultaneous present \\
                       &     & for scans 0 and 2 only \\
 \hline
-{\tt AMP* \& *PHASE*} & 3 & {\tt *PHASE*} matches scans \\
-                      &   & 0,2,3. {\tt AMP*} matches \\
+{\small \tt AMP* \& *PHASE*} & 3 & {\small \tt *PHASE*} matches scans \\
+                      &   & 0,2,3. {\small \tt AMP*} matches \\
                       &   & only scan 3. \\
 \hline
-{\tt *BAND \& *PHASE* \& *AMP*} & 2 & Only scan that matches \\
-                                &   & {\tt *BAND} {\it and} \\
-                                &   & {\tt *PHASE*} {\it and} {\tt *AMP*} is \\
+{\small \tt *BAND \& *PHASE* \& *AMP*} & 2 & Only scan that matches \\
+                                &   & {\small \tt *BAND} {\it and} \\
+                                &   & {\small \tt *PHASE*} {\it and} {\small \tt *AMP*} is \\
                                 &   & scan 2 \\
 \hline
-{\tt *BAND \& *PHASE*, AMPLI*} & 0,2,3 & {\tt *BAND \& *PHASE} \\
+{\small \tt *BAND \& *PHASE*, AMPLI*} & 0,2,3 & {\small \tt *BAND \& *PHASE} \\
                                &       & selects scans 0,2. \\
-                               &       & {\tt AMPLI*} selects scan 3 \\
+                               &       & {\small \tt AMPLI*} selects scan 3 \\
 \hline
 \end{tabular}
 \end{center}
