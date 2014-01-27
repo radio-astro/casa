@@ -36,7 +36,7 @@ class IntensityScaling(common.SingleDishTaskTemplate):
         reffile = self.inputs.reffile
         
         if reffile is None or not os.path.exists(reffile):
-            LOG.info('No scaling factors available. Use 1.0 for all antennas.')
+            LOG.warn('No scaling factors available. Use 1.0 for all antennas.')
         else:
             # do scaling
             # read scaling factor list
@@ -84,12 +84,12 @@ class IntensityScaling(common.SingleDishTaskTemplate):
                                     factors_per_pol = factors[vis][ant][spwid]
                                     self._do_scaling(st, spwid, factors_per_pol)
                                 else:
-                                    LOG.info('Scaling factor for (%s,%s,%s) is missing. Use 1.0' % \
+                                    LOG.warn('Scaling factor for (%s,%s,%s) is missing. Use 1.0' % \
                                              (vis,ant,spwid))
                     else:
-                        LOG.info('Scaling factor for (%s,%s) is missing. Use 1.0.'%(vis,ant))
+                        LOG.warn('Scaling factor for (%s,%s) is missing. Use 1.0.'%(vis,ant))
                 else:
-                    LOG.info('Scaling factor for %s is missing. Use 1.0'%(vis))
+                    LOG.warn('Scaling factor for %s is missing. Use 1.0'%(vis))
         
     def _do_scaling(self, st, spwid, factors):
         vis = st.ms.basename
