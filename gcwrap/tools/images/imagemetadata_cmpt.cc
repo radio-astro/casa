@@ -88,7 +88,8 @@ bool imagemetadata::open(const std::string& infile) {
 		_header.reset(new ImageMetaDataRW<Float>(x));
 		return True;
 
-	} catch (const AipsError& x) {
+	}
+	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: "
 			<< x.getMesg() << LogIO::POST;
 		RETHROW(x);
@@ -98,7 +99,7 @@ bool imagemetadata::open(const std::string& infile) {
 bool imagemetadata::remove(const string& key, const variant& value) {
 	try {
 		_exceptIfDetached();
-		if (String(key) == ImageMetaData<Float>::MASKS) {
+		if (String(key) == ImageMetaDataBase<Float>::MASKS) {
 			return _header->removeMask(value.toString());
 		}
 		else {
