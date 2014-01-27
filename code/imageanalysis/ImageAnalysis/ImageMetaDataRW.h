@@ -28,7 +28,8 @@
 #ifndef IMAGES_IMAGEMETADATARW_H
 #define IMAGES_IMAGEMETADATARW_H
 
-#include <imageanalysis/ImageAnalysis/ImageMetaData.h>
+#include <imageanalysis/ImageAnalysis/ImageMetaDataBase.h>
+
 #include <casa/aips.h>
 
 class casac::variant;
@@ -74,7 +75,7 @@ namespace casa {
 // classes with these methods.
 // </motivation>
 
-template <class T> class ImageMetaDataRW: public ImageMetaData<T> {
+template <class T> class ImageMetaDataRW : public ImageMetaDataBase<T> {
 
 public:
 
@@ -89,7 +90,7 @@ public:
 	// mask does not exist.
 	Bool removeMask(const String& maskName);
 
-	virtual Record toRecord(Bool verbose) const;
+	Record toRecord(Bool verbose) const;
 
 	// add a key-value pair
 	Bool add(const String& key, const casac::variant& value);
@@ -142,6 +143,8 @@ protected:
 
 	String _getTelescope() const;
 
+	Record _getStatistics() const;
+
 private:
 
 	ImageInterface<Float> * const _image;
@@ -158,7 +161,7 @@ private:
 	mutable Vector<String> _axisNames, _axisUnits;
 	mutable Vector<Double> _refPixel;
 	mutable vector<Quantity> _refVal, _increment;
-	mutable Record _header;
+	mutable Record _header, _stats;
 
 	ImageMetaDataRW() : _image(0) {}
 
