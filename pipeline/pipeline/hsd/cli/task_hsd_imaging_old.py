@@ -2,15 +2,15 @@ import sys
 
 import pipeline.h.cli.utils as utils
 
-def hsd_imaging2(pipelinemode=None, infiles=None, field=None,
-                 scanlist=None, iflist=None, pollist=None, reffile=None, 
-                 dryrun=None, acceptresults=None):
+def hsd_imaging_old(pipelinemode=None, infiles=None, field=None,
+                    scanlist=None, iflist=None, pollist=None,
+                    dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
     all_inputs = vars()
 
-    task_name = 'SDImaging2'
+    task_name = 'SDImagingOld'
     
     ##########################################################################
     #                                                                        #

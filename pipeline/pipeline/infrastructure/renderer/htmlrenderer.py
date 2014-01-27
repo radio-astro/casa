@@ -167,7 +167,7 @@ def get_task_description(result_obj):
     if task_cls is hsd.tasks.SDApplyCal:
         return 'Apply calibration tables'
 
-    if task_cls in (hsd.tasks.SDImaging, hsd.tasks.SDImaging2):
+    if task_cls in (hsd.tasks.SDImaging, hsd.tasks.SDImagingOld):
         return 'Image single dish data'
 
     if task_cls is hsd.tasks.SDBaselineOld:
@@ -3952,8 +3952,8 @@ renderer_map = {
         hsd.tasks.SDBaselineOld  : T2_4MDetailsSingleDishBaselineRenderer(always_rerender=True),
         hsd.tasks.SDBaseline     : T2_4MDetailsSingleDishBaselineRenderer(always_rerender=True),
         hsd.tasks.SDFlagData     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagdata.html', always_rerender=True),
-        hsd.tasks.SDImaging      : T2_4MDetailsSingleDishImagingRenderer(always_rerender=False),
-        hsd.tasks.SDImaging2     : T2_4MDetailsSingleDishImagingRenderer(always_rerender=False),
+        hsd.tasks.SDImaging      : T2_4MDetailsSingleDishImagingRenderer(always_rerender=True),
+        hsd.tasks.SDImagingOld   : T2_4MDetailsSingleDishImagingRenderer(always_rerender=True),
         hsd.tasks.SDFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagbaseline.html'),
         hsd.tasks.SDPlotFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_plotflagbaseline.html'),
         hsd.tasks.SDImportData2  : T2_4MDetailsImportDataRenderer(),

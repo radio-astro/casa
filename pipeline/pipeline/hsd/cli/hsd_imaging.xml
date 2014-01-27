@@ -44,6 +44,11 @@
         <value></value>
     </param>
 
+    <param type="string" name="reffile" subparam="true">
+        <description>Path to file with Jy/K conversion factors</description>
+        <value></value>
+    </param>
+    
     <param type="bool" name="dryrun" subparam="true">
 	<description>Run the task (False) or display task command (True)</description>
 	<value>False</value>
@@ -64,6 +69,7 @@
                 <default param="scanlist"><value type="intArray"></value></default>
                 <default param="iflist"><value type="intArray"></value></default>
                 <default param="pollist"><value type="intArray"></value></default>
+                <default param="reffile"><value type="string"></value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
@@ -73,6 +79,7 @@
                 <default param="scanlist"><value type="intArray"></value></default>
                 <default param="iflist"><value type="intArray"></value></default>
                 <default param="pollist"><value type="intArray"></value></default>
+                <default param="reffile"><value type="string"></value></default>
 	    </equals>
 	</when>
     </constraints>
@@ -90,12 +97,12 @@
 
 
 <example>
-The hsd_imaging task generates single dish images per antenna.
-Image configuration (grid size, number of pixels, etc.) is automatically
+The hsd_imaging task generates single dish images per antenna as well as 
+combined image over whole antennas for each field and spectral window. 
+Image configuration (grid size, number of pixels, etc.) is automatically 
 determined based on meta data such as antenna diameter, map extent, etc.
 
-Note that this task doesn't use imager tool or any single dish imaging
-tasks inside, but uses image analysis tool to generate images. 
+Note that generated images are always in LSRK frame.
   
 Keyword arguments:
 
@@ -119,15 +126,37 @@ infiles -- List of data files. These must be a name of Scantables that
 
 field -- Data selection by field name.
    default: '' (all fields)
+   
 scanlist -- Data selection by scan number.
    default: [] (all scans)
    example: [22,23] (use scan 22 and 23 for calibration)
+   
 iflist -- Data selection by spw.
    default: [] (all spws)
    example: [3,4] (generate caltable for spw 3 and 4)
+   
 pollist -- Data selection by pol.
    default: [] (all polarizations)
    example: [0] (generate caltable for pol 0)
+
+reffile -- Path to a file containing Jy/K factors for science data, which 
+    must be provided by associating calibrator reduction or the observatory 
+    measurements. Jy/K factor must take into account all efficiencies, i.e.,
+    it must be a direct conversion factor from Ta* to Jy. The file must be 
+    in CSV format with five fields: MS name, antenna name, spectral window 
+    id, polarization string, and Jy/K conversion factor. Example for the 
+    file is as follows:
+    
+        MS,Antenna,Spwid,Polarization,Factor
+        uid___A002_X316307_X6f.ms,CM03,5,XX,10.0
+        uid___A002_X316307_X6f.ms,CM03,5,YY,12.0
+        uid___A002_X316307_X6f.ms,PM04,5,XX,2.0
+        uid___A002_X316307_X6f.ms,PM04,5,YY,5.0
+        
+    The first line in the above example is a header which may or may not 
+    exist. By default all Jy/K factors are set to 1.0. 
+    default: ''
+    example: '', 'working/jyperk.csv'
 
 --- pipeline task execution modes
 
