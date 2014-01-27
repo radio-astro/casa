@@ -27,7 +27,7 @@ imagemetadata::~imagemetadata() {}
 bool imagemetadata::close() {
 	try {
 		_header.reset(0);
-		_image.reset(0);
+		// _image.reset(0);
 		return True;
 	}
 	catch (const AipsError& x) {
@@ -84,8 +84,12 @@ bool imagemetadata::open(const std::string& infile) {
 		}
 		ImageInterface<Float> *x;
 		ImageUtilities::openImage(x, infile);
-		_image.reset(x);
-		_header.reset(new ImageMetaDataRW<Float>(x));
+		//_image.reset(x);
+		_header.reset(
+			new ImageMetaDataRW<Float>(
+				std::tr1::shared_ptr<ImageInterface<Float> >(x)
+			)
+		);
 		return True;
 
 	}
