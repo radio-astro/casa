@@ -94,7 +94,8 @@ def _get_revision():
         args = ['svn info .']
         p = subprocess.Popen(args, stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE, shell=True,
-                cwd=os.path.dirname(__file__))
+                cwd=os.path.dirname(__file__),
+                env={'LC_MESSAGES': 'en_US.UTF-8'})
         (stdout, _) = p.communicate()
 
         if p.returncode is not 0:
