@@ -220,8 +220,7 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
             
         # post imaging process
         # set brightness unit to K
-        with casatools.ImageReader(imagename) as ia:
-            ia.setbrightnessunit('K')
-             
+        #with casatools.ImageReader(imagename) as ia:
+            #ia.setbrightnessunit('K')
             
                 
