@@ -61,7 +61,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       itsImages(CountedPtr<SIImageStore>()),
 				       itsPartImages(Vector<CountedPtr<SIImageStore> >()),
                                        itsImageName(""),
-                                       itsPartImageNames(Vector<String>(0))
+                                       itsPartImageNames(Vector<String>(0)),
+				       itsWeightLimit(0.1)
   {
     
   }
@@ -89,6 +90,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	{ syncpars.get( RecordFieldId("partimagenames") , itsPartImageNames ); }
       else
 	{ itsPartImageNames.resize(0); }
+
+      if( syncpars.isDefined("weightlimit") )
+	{
+	  syncpars.get( RecordFieldId("weightlimit") , itsWeightLimit );
+	}
+      else
+	{ itsWeightLimit = 0.1; }
 
       }
     catch(AipsError &x)
@@ -153,7 +161,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisParSync", "divideResidualByWeight",WHERE) );
 
-    itsImages->divideResidualByWeight(/* weightlimit */);
+    itsImages->divideResidualByWeight( itsWeightLimit );
 
   }
 
@@ -161,7 +169,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisParSync", "dividePSFByWeight",WHERE) );
 
-    itsImages->dividePSFByWeight(/* weightlimit */);
+    itsImages->dividePSFByWeight( itsWeightLimit );
 
   }
 
@@ -169,11 +177,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisParSync", "divideModelByWeight",WHERE) );
 
-    // If Weight image is not specified, treat it as though it were filled with ones. 
-    // ( i.e.  itsWeight = NULL )
-
     /// This is a no-op here.... Need a way to activate this only for A-Projection.
-    ///    itsImages->divideModelByWeight( 0.1 );
+    ///    itsImages->divideModelByWeight( itsWeightLimit );
 
   }
 

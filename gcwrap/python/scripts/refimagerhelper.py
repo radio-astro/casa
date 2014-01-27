@@ -547,74 +547,89 @@ class PyParallelImagerHelper():
 #############################################
 ## Very rudimentary partitioning - only for tests. The actual code needs to go here.
     def partitionContDataSelection(self,oneselpars={}):
-        allselpars = {}
-        print oneselpars
-        for node in range(0,self.NN):
-            ## Replicate the Selection pars for all nodes, before modifying them.
-            allselpars[str(node)]  = copy.deepcopy(oneselpars) 
 
-            ######## WARNING : Very special case for SPW 0 of points_2spw.ms
-            if allselpars[str(node)]['ms0']['msname'] == "DataTest/point_twospws.ms":
-                if node==0:
-                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':0~9'
-                else:
-                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':10~19'
+        synu = casac.synthesisutils()
+        allselpars =  synu.contdatapartition( oneselpars , self.NN )
+        synu.done()
 
-            ######## WARNING : Very special case for twopoints_twochan.ms
-            if allselpars[str(node)]['ms0']['msname'] == "DataTest/twopoints_twochan.ms":
-                if node==0:
-                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':0'
-                else:
-                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':1'
-
-
+#        allselpars = {}
+#        print oneselpars
+#        for node in range(0,self.NN):
+#            ## Replicate the Selection pars for all nodes, before modifying them.
+#            allselpars[str(node)]  = copy.deepcopy(oneselpars) 
+#
+#            ######## WARNING : Very special case for SPW 0 of points_2spw.ms
+#            if allselpars[str(node)]['ms0']['msname'] == "DataTest/point_twospws.ms":
+#                if node==0:
+#                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':0~9'
+#                else:
+#                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':10~19'
+#
+#            ######## WARNING : Very special case for twopoints_twochan.ms
+#            if allselpars[str(node)]['ms0']['msname'] == "DataTest/twopoints_twochan.ms":
+#                if node==0:
+#                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':0'
+#                else:
+#                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':1'
+#
+#
         print 'Partitioned Selection : ', allselpars
         return allselpars
 
 #############################################
 ## Very rudimentary partitioning - only for tests. The actual code needs to go here.
     def partitionCubeDataSelection(self,oneselpars={}):
-        allselpars = {}
-        print oneselpars
-        for node in range(0,self.NN):
-            ## Replicate the Selection pars for all nodes, before modifying them.
-            allselpars[str(node)]  = copy.deepcopy(oneselpars) 
 
-            ######## WARNING : Very special case for SPW 0 of points_2spw.ms
-            if allselpars[str(node)]['ms0']['msname'] == "DataTest/point_twospws.ms":
-                if node==0:
-                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':0~9'
-                else:
-                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':10~19'
+        synu = casac.synthesisutils()
+        allselpars =  synu.cubedatapartition( oneselpars , self.NN )
+        synu.done()
 
-            ######## WARNING : Very special case for twopoints_twochan.ms
-            if allselpars[str(node)]['ms0']['msname'] == "DataTest/twopoints_twochan.ms":
-                if node==0:
-                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':0'
-                else:
-                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':1'
-
+#        allselpars = {}
+#        print oneselpars
+#        for node in range(0,self.NN):
+#            ## Replicate the Selection pars for all nodes, before modifying them.
+#            allselpars[str(node)]  = copy.deepcopy(oneselpars) 
+#
+#            ######## WARNING : Very special case for SPW 0 of points_2spw.ms
+#            if allselpars[str(node)]['ms0']['msname'] == "DataTest/point_twospws.ms":
+#                if node==0:
+#                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':0~9'
+#                else:
+#                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':10~19'
+#
+#            ######## WARNING : Very special case for twopoints_twochan.ms
+#            if allselpars[str(node)]['ms0']['msname'] == "DataTest/twopoints_twochan.ms":
+#                if node==0:
+#                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':0'
+#                else:
+#                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':1'
+#
 
         print 'Partitioned Selection : ', allselpars
         return allselpars
 
 #############################################
     def partitionCubeDeconvolution(self,impars={}):
-        allimpars={}
-        for node in range(0,self.NN):
-            allimpars[str(node)]  = copy.deepcopy(impars) 
-            for field in allimpars[str(node)].keys():
-                 print allimpars[str(node)][field]
-                 if not allimpars[str(node)][field].has_key('nchan'):
-                      allimpars[str(node)][field]['nchan']=1
-                 else:
-                     allimpars[str(node)][field]['nchan'] = int( ( allimpars[str(node)][field]['nchan'])/self.NN )
-                     ############# WARNING : Very special case for points_2spw.ms
-                     if node==0:
-                         allimpars[str(node)][field]['freqstart'] = '1.0GHz'
-                     else:
-                         allimpars[str(node)][field]['freqstart'] = '1.2GHz'
-                 allimpars[str(node)][field]['imagename'] = allimpars[str(node)][field]['imagename']+'.n'+str(node)
+
+        synu = casac.synthesisutils()
+        allimpars =  synu.cubeimagepartition( impars , self.NN )
+        synu.done()
+
+#        allimpars={}
+#        for node in range(0,self.NN):
+#            allimpars[str(node)]  = copy.deepcopy(impars) 
+#            for field in allimpars[str(node)].keys():
+#                 print allimpars[str(node)][field]
+#                 if not allimpars[str(node)][field].has_key('nchan'):
+#                      allimpars[str(node)][field]['nchan']=1
+#                 else:
+#                     allimpars[str(node)][field]['nchan'] = int( ( allimpars[str(node)][field]['nchan'])/self.NN )
+#                     ############# WARNING : Very special case for points_2spw.ms
+#                     if node==0:
+#                         allimpars[str(node)][field]['freqstart'] = '1.0GHz'
+#                     else:
+#                         allimpars[str(node)][field]['freqstart'] = '1.2GHz'
+#                 allimpars[str(node)][field]['imagename'] = allimpars[str(node)][field]['imagename']+'.n'+str(node)
         print 'ImSplit : ', allimpars
         return allimpars
 
