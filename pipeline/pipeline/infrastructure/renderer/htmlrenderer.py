@@ -170,10 +170,10 @@ def get_task_description(result_obj):
     if task_cls in (hsd.tasks.SDImaging, hsd.tasks.SDImaging2):
         return 'Image single dish data'
 
-    if task_cls is hsd.tasks.SDBaseline:
+    if task_cls is hsd.tasks.SDBaselineOld:
         return 'Subtract spectral baseline'
 
-    if task_cls is hsd.tasks.SDBaseline2:
+    if task_cls is hsd.tasks.SDBaseline:
         return 'Generate Baseline tables and subtract spectral baseline'
 
     if task_cls is hsd.tasks.SDFlagData:
@@ -3949,8 +3949,8 @@ renderer_map = {
         hsd.tasks.SDInspectData  : T2_4MDetailsSingleDishInspectDataRenderer(always_rerender=True),
         hsd.tasks.SDCalTsys      : T2_4MDetailsSingleDishCalTsysRenderer(always_rerender=True),
         hsd.tasks.SDCalSky       : T2_4MDetailsSingleDishCalSkyRenderer(always_rerender=True),
+        hsd.tasks.SDBaselineOld  : T2_4MDetailsSingleDishBaselineRenderer(always_rerender=True),
         hsd.tasks.SDBaseline     : T2_4MDetailsSingleDishBaselineRenderer(always_rerender=True),
-        hsd.tasks.SDBaseline2     : T2_4MDetailsSingleDishBaselineRenderer(always_rerender=True),
         hsd.tasks.SDFlagData     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagdata.html', always_rerender=True),
         hsd.tasks.SDImaging      : T2_4MDetailsSingleDishImagingRenderer(always_rerender=False),
         hsd.tasks.SDImaging2     : T2_4MDetailsSingleDishImagingRenderer(always_rerender=False),
