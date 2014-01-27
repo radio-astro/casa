@@ -800,6 +800,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
 
     def final_stage(self, GridCluster, GridMember, Region, Region2, lines, category, grid_ra, grid_dec, broad_component, xorder, yorder, x0, y0, nsigma, nchan, Grid2SpectrumID, index_list, PosList):
                 
+        (MaskMin, MaskMax) = (10000, 0)
+
         (Ncluster, nra, ndec) = GridCluster.shape
         xorder0 = xorder
         yorder0 = yorder
