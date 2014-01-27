@@ -390,7 +390,7 @@ Table~\ref{BASELINE:TAB}.
   \caption{Baseline specification syntax: ANT, ANT1 and ANT2 in the
     table below represent a comma-separated list of antennas names or
     a list of {\tt ANT@STATION} specifications.  {\tt ANT} and {\tt
-      STATION} in {\tt ANT@STATION} can themsevles be comma-separated
+      STATION} in {\tt ANT@STATION} can themselves be comma-separated
     lists enclosed in braces.}
 \begin{center}
 \begin{tabular}{|l|l|}
