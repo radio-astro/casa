@@ -209,7 +209,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
             
             bands2 = []
             for ii in range(len(indices)):
-                bands2.append(find_EVLA_band(center_frequencies[spws[indices[ii]]]))
+                bands2.append(vlautils.find_EVLA_band(center_frequencies[spws[indices[ii]]]))
             
             print "Bands2:",bands2
             
