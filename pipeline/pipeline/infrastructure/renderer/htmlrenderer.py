@@ -2415,9 +2415,9 @@ class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
                              utils.approx_equal(stats['max'], 0, tol)])
 
         if no_phase_soln and not no_amp_soln:
-            return ' (phase only)'
-        if no_amp_soln and not no_phase_soln:
             return ' (amplitude only)'
+        if no_amp_soln and not no_phase_soln:
+            return ' (phase only)'
         return ''
 
     def flags_for_result(self, result, context):
