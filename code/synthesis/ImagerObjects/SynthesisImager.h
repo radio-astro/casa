@@ -39,6 +39,8 @@
 #include <synthesis/MSVis/VisBuffer2.h>
 #include<synthesis/ImagerObjects/SIMapperCollection.h>
 
+#include <synthesis/TransformMachines/ATerm.h>
+
 #include <boost/scoped_ptr.hpp>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -117,7 +119,8 @@ class SynthesisImager
 			   const Bool doPointing = False,
 			   const Bool doPBCorr   = True,
 			   const Bool conjBeams  = True,
-			   const Quantity computePAStep=Quantity(360.0,"deg")
+			   const Float computePAStep=360.0,
+			   const Float rotatePAStep=5.0
 			   );
   //Define image via a predefine SIImageStore object
   virtual Bool defineImage(CountedPtr<SIImageStore> imstor, 
@@ -168,6 +171,7 @@ protected:
 				 const Quantity& freqStep, 
 				 const Vector<Quantity>& restFreq, 
 				 const MFrequency::Types freqFrame);
+  Vector<Int> decideNPolPlanes(const String& stokes);
 
   void createFTMachine(CountedPtr<FTMachine>& theFT, 
 		       CountedPtr<FTMachine>& theIFT,  
@@ -188,15 +192,40 @@ protected:
 		       const Bool doPointing = False,
 		       const Bool doPBCorr   = True,
 		       const Bool conjBeams  = True,
-		       const Quantity computePAStep=Quantity(360.0,"deg"),
+		       const Float computePAStep   = 360.0,
+		       const Float rotatePAStep    = 5.0,
 		       const Int cache=1000000000,
 		       const Int tile=16);
   void createIMStore(const String imageName, const CoordinateSystem& cSys,
 		     const Quantity& distance, Int facets, const Bool overwrite);
   void createVisSet(const Bool writeaccess=False);
   
+  void createAWPFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT, 
+			  const String& ftmName,
+			  const Int facets,          
+			  //----------------------------
+			  const Int wprojPlane,     
+			  const Float padding,      
+			  const Bool useAutocorr,   
+			  const Bool useDoublePrec, 
+			  const String gridFunction,
+			  //---------------------------
+			  const Bool aTermOn,      
+			  const Bool psTermOn,     
+			  const Bool mTermOn,      
+			  const Bool wbAWP,        
+			  const String cfCache,    
+			  const Bool doPointing,   
+			  const Bool doPBCorr,     
+			  const Bool conjBeams,    
+			  const Float computePAStep,
+			  const Float rotatePAStep, 
+			  const Int cache,          
+			  const Int tile);
+  ATerm* createTelescopeATerm(const MeasurementSet& ms, const Bool& isATermOn);
+
   void runMajorCycle(const Bool dopsf=False, const Bool useViVb2=False);
-  Vector<Int> decideNPolPlanes(const String& stokes);
+
   /////This function should be called at every define image
   /////It associated the ftmachine with a given field
   ////For facetted image distinct  ft machines will associated with each facets and 
