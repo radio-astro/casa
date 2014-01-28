@@ -1643,9 +1643,12 @@ Bool QtDisplayPanelGui::removeDD(QtDisplayData*& qdd) {
 	// remove data from display data holder
 	bool removed = displayDataHolder->removeDD( qdd );
 	// remove data as controlling dd from all world canvases
-	ConstListIter<WorldCanvas*>& wcs = *(displayPanel( )->panelDisplay( )->myWCLI);
-	for ( wcs.toStart( ); ! wcs.atEnd( ); ++wcs )
-		wcs.getRight( )->removeDD(qdd->dd());
+	if ( displayPanel( ) ) {
+		// upon destruction (called via dtor( )), display panel is already gone...
+		ConstListIter<WorldCanvas*>& wcs = *(displayPanel( )->panelDisplay( )->myWCLI);
+		for ( wcs.toStart( ); ! wcs.atEnd( ); ++wcs )
+			wcs.getRight( )->removeDD(qdd->dd());
+	}
 	
 	//In case we are removing the coordinate master.
 	if ( displayDataHolder->isCoordinateMaster( qdd) && qdp_!= NULL ){
