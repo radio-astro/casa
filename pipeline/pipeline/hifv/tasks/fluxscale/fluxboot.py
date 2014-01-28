@@ -210,6 +210,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
                 for ii in range(len(indices)):
                     bands.append(vlautils.find_EVLA_band(center_frequencies[spws[indices[ii]]]))
             unique_bands = list(np.unique(bands))
+            print unique_bands
             for band in unique_bands:
                 lfreqs = []
                 lfds = []
