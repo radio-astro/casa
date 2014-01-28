@@ -209,7 +209,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
             
             bands2 = []
             for ii in range(len(indices)):
-                bands2.append(spw2band[spws[indices[ii]]]))
+                bands2.append(spw2band[spws[indices[ii]]])
             
             print "Bands2:",bands2
             
