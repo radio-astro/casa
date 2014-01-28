@@ -217,6 +217,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
                 lerrs = []
                 uspws = []
                 for ii in range(len(indices)):
+                    print 'VLA Band: ', vlautils.find_EVLA_band(center_frequencies[spws[indices[ii]]])
                     if vlautils.find_EVLA_band(center_frequencies[spws[indices[ii]]]) == band:
                         lfreqs.append(math.log10(center_frequencies[spws[indices[ii]]]))
                         lfds.append(math.log10(flux_densities[indices[ii]][0]))
