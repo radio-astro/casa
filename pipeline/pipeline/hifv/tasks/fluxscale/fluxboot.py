@@ -207,15 +207,17 @@ class Fluxboot(basetask.StandardTaskTemplate):
                 if (sources[ii] == source):
                     indices.append(ii)
             
-            bands2 = []
-            for ii in range(len(indices)):
-                bands2.append(spw2band[spws[indices[ii]]])
             
-            print "Bands2:",bands2
+            bands_from_spw = []
             
             if bands == []:
                 for ii in range(len(indices)):
                     bands.append(vlautils.find_EVLA_band(center_frequencies[spws[indices[ii]]]))
+            else:
+                for ii in range(len(indices)):
+                    bands_from_spw.append(spw2band[spws[indices[ii]]])
+                bands = bands_from_spw
+                
             unique_bands = list(np.unique(bands))
             print unique_bands
             for band in unique_bands:
@@ -225,11 +227,18 @@ class Fluxboot(basetask.StandardTaskTemplate):
                 uspws = []
                 for ii in range(len(indices)):
                     print 'VLA Band:', vlautils.find_EVLA_band(center_frequencies[spws[indices[ii]]]),',',band
-                    if vlautils.find_EVLA_band(center_frequencies[spws[indices[ii]]]) == band:
-                        lfreqs.append(math.log10(center_frequencies[spws[indices[ii]]]))
-                        lfds.append(math.log10(flux_densities[indices[ii]][0]))
-                        lerrs.append(math.log10(math.e) * flux_densities[indices[ii]][1]/flux_densities[indices[ii]][0])
-                        uspws.append(spws[indices[ii]])
+                    if spw2band.values() == []:
+                        if vlautils.find_EVLA_band(center_frequencies[spws[indices[ii]]]) == band:
+                            lfreqs.append(math.log10(center_frequencies[spws[indices[ii]]]))
+                            lfds.append(math.log10(flux_densities[indices[ii]][0]))
+                            lerrs.append(math.log10(math.e) * flux_densities[indices[ii]][1]/flux_densities[indices[ii]][0])
+                            uspws.append(spws[indices[ii]])
+                    else:
+                        if spw2band[spws[indices[ii]]] == band:
+                            lfreqs.append(math.log10(center_frequencies[spws[indices[ii]]]))
+                            lfds.append(math.log10(flux_densities[indices[ii]][0]))
+                            lerrs.append(math.log10(math.e) * flux_densities[indices[ii]][1]/flux_densities[indices[ii]][0])
+                            uspws.append(spws[indices[ii]])
         
                 # if we didn't care about the errors on the data or the fit coefficients, just:
                 #       coefficients = np.polyfit(lfreqs, lfds, 1)
