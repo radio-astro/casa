@@ -36,6 +36,8 @@
 #include <scimath/Mathematics/VectorKernel.h>
 #include <casa/Quanta/Quantum.h>
 
+#include <tr1/memory.hpp>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
@@ -90,7 +92,6 @@ class GaussianBeam;
 // <todo asof="2001/08/28">
 //   <li> 
 // </todo>
- 
 
 template <class T> class Image2DConvolver
 {
@@ -101,7 +102,7 @@ public:
 	// units and logger will be copied from the input to the output
 	// unless you indicate not to (copyMiscellaneous).
 	static void convolve(
-		LogIO& os, ImageInterface<T>& imageOut,
+		LogIO& os, std::tr1::shared_ptr<ImageInterface<T> > imageOut,
 		const ImageInterface<T>& imageIn,
 		const VectorKernel::KernelTypes kernelType,
 		const IPosition& pixelAxes,

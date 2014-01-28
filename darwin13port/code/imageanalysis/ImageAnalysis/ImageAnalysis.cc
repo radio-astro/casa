@@ -43,7 +43,6 @@
 #include <casa/Containers/Record.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/fstream.h>
-#include <casa/Logging/LogFilter.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/OS/Directory.h>
@@ -80,7 +79,6 @@
 #include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
 #include <images/Images/ImageConcat.h>
 #include <imageanalysis/ImageAnalysis/ImageConvolver.h>
-#include <imageanalysis/ImageAnalysis/ImageMetaData.h>
 #include <images/Images/ImageExpr.h>
 #include <images/Images/ImageExprParse.h>
 #include <imageanalysis/ImageAnalysis/ImageFFT.h>
@@ -92,7 +90,6 @@
 #include <images/Regions/ImageRegion.h>
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/ImageStatistics.h>
-#include <images/Images/ImageSummary.h>
 #include <imageanalysis/ImageAnalysis/ImageTwoPtCorr.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/LELImageCoord.h>
@@ -185,7 +182,6 @@ Bool ImageAnalysis::toRecord(RecordInterface& rec) {
 }
 
 Bool ImageAnalysis::fromRecord(const RecordInterface& rec, const String& name) {
-	_onlyFloat(__FUNCTION__);
 	Bool retval = False;
 	String err;
 	if (name != "") {
@@ -1231,7 +1227,7 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::continuumsub(
 	return rstat;
 }
 
-ImageInterface<Float>* ImageAnalysis::convolve2d(
+std::tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::convolve2d(
 	const String& outFile, const Vector<Int>& axes,
 	const String& kernel, const Quantity& majorKernel,
 	const Quantity& minorKernel,
@@ -1275,7 +1271,7 @@ ImageInterface<Float>* ImageAnalysis::convolve2d(
 
 	// Create output image and mask
 	IPosition outShape = subImage.shape();
-	std::auto_ptr<ImageInterface<Float> > pImOut;
+	std::tr1::shared_ptr<ImageInterface<Float> > pImOut;
 	if (outFile.empty()) {
 		*_log << LogIO::NORMAL << "Creating (temp)image of shape "
 				<< outShape << LogIO::POST;
@@ -1292,7 +1288,7 @@ ImageInterface<Float>* ImageAnalysis::convolve2d(
 	}
 	try {
 		Image2DConvolver<Float>::convolve(
-			*_log, *pImOut, subImage, kernelType, IPosition(axes),
+			*_log, pImOut, subImage, kernelType, IPosition(axes),
 			parameters, autoScale, scale, True, targetres
 		);
 	}
@@ -1301,7 +1297,7 @@ ImageInterface<Float>* ImageAnalysis::convolve2d(
 		throw e;
 	}
 	// Return image
-	return pImOut.release();
+	return pImOut;
 }
 
 CoordinateSystem ImageAnalysis::coordsys(const Vector<Int>& pixelAxes) {
@@ -3923,6 +3919,27 @@ Bool ImageAnalysis::setrestoringbeam(
 	const bool deleteIt, const bool log,
     Int channel, Int polarization
 ) {
+	if (_imageFloat) {
+		return _setrestoringbeam(
+			_imageFloat, major, minor, pa, rec,
+			deleteIt, log, channel, polarization
+		);
+	}
+	else {
+		return _setrestoringbeam(
+			_imageComplex, major, minor, pa, rec,
+			deleteIt, log, channel, polarization
+		);
+	}
+}
+
+/*
+Bool ImageAnalysis::setrestoringbeam(
+	const Quantity& major, const Quantity& minor,
+	const Quantity& pa, const Record& rec,
+	const bool deleteIt, const bool log,
+    Int channel, Int polarization
+) {
 	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin(className(), __FUNCTION__);
 	ImageInfo ii = _imageFloat->imageInfo();
@@ -4047,6 +4064,7 @@ Bool ImageAnalysis::setrestoringbeam(
 	deleteHist();
 	return True;
 }
+*/
 
 
 Bool ImageAnalysis::twopointcorrelation(
@@ -4107,6 +4125,23 @@ Bool ImageAnalysis::twopointcorrelation(
 	return True;
 }
 
+Record ImageAnalysis::summary(
+	const String& doppler, const Bool list,
+	const Bool pixelorder, const Bool verbose
+) {
+	if (_imageFloat) {
+		return _summary(
+			*_imageFloat, doppler, list, pixelorder, verbose
+		);
+	}
+	else {
+		return _summary(
+			*_imageComplex, doppler, list, pixelorder, verbose
+		);
+	}
+}
+
+/*
 Record ImageAnalysis::summary(
 	const String& doppler, const Bool list,
 	const Bool pixelorder, const Bool verbose
@@ -4172,6 +4207,7 @@ Record ImageAnalysis::summary(
 	}
 	return retval;
 }
+*/
 
 Bool ImageAnalysis::tofits(
 	const String& fitsfile, const Bool velocity,
@@ -4749,7 +4785,6 @@ Record ImageAnalysis::setboxregion(const Vector<Double>& blc, const Vector<
 
 bool ImageAnalysis::maketestimage(const String& outfile, const Bool overwrite,
 		const String& imagetype) {
-	_onlyFloat(__FUNCTION__);
 	bool rstat(false);
 	*_log << LogOrigin("ImageAnalysis", "maketestimage");
 	String var = EnvironmentVariable::get("CASAPATH");

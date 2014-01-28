@@ -3113,19 +3113,24 @@ bool image::replacemaskedpixels(
 record*
 image::restoringbeam(int channel, int polarization) {
 	try {
-		_log << LogOrigin(_class, __FUNCTION__);
+		_log << _ORIGIN;
 		if (detached()) {
 			return 0;
 		}
-		ThrowIf(
-			! _image->isFloat(),
-			"This method only supports Float valued images"
-		);
-		return fromRecord(
-			_image->getImage()->imageInfo().beamToRecord(
-				channel, polarization
-			)
-		);
+		if (_image->isFloat()) {
+			return fromRecord(
+				_image->getImage()->imageInfo().beamToRecord(
+					channel, polarization
+				)
+			);
+		}
+		else {
+			return fromRecord(
+				_image->getComplexImage()->imageInfo().beamToRecord(
+					channel, polarization
+				)
+			);
+		}
 	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;

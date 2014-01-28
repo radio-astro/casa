@@ -27,7 +27,7 @@ imagemetadata::~imagemetadata() {}
 bool imagemetadata::close() {
 	try {
 		_header.reset(0);
-		_image.reset(0);
+		// _image.reset(0);
 		return True;
 	}
 	catch (const AipsError& x) {
@@ -84,11 +84,16 @@ bool imagemetadata::open(const std::string& infile) {
 		}
 		ImageInterface<Float> *x;
 		ImageUtilities::openImage(x, infile);
-		_image.reset(x);
-		_header.reset(new ImageMetaDataRW<Float>(x));
+		//_image.reset(x);
+		_header.reset(
+			new ImageMetaDataRW<Float>(
+				std::tr1::shared_ptr<ImageInterface<Float> >(x)
+			)
+		);
 		return True;
 
-	} catch (const AipsError& x) {
+	}
+	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: "
 			<< x.getMesg() << LogIO::POST;
 		RETHROW(x);
@@ -98,7 +103,7 @@ bool imagemetadata::open(const std::string& infile) {
 bool imagemetadata::remove(const string& key, const variant& value) {
 	try {
 		_exceptIfDetached();
-		if (String(key) == ImageMetaData<Float>::MASKS) {
+		if (String(key) == ImageMetaDataBase<Float>::MASKS) {
 			return _header->removeMask(value.toString());
 		}
 		else {

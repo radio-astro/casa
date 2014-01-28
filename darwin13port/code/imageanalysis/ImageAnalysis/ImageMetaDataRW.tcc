@@ -39,8 +39,8 @@
 namespace casa {
 
 template<class T> ImageMetaDataRW<T>::ImageMetaDataRW(
-	ImageInterface<Float> *const &image
-) : ImageMetaData<T>(), _image(image) {}
+	std::tr1::shared_ptr<ImageInterface<T> > image
+) : ImageMetaDataBase<T>(), _image(image) {}
 
 
 template<class T> Record ImageMetaDataRW<T>::toRecord(Bool verbose) const {
@@ -57,64 +57,64 @@ template<class T> Bool ImageMetaDataRW<T>::add(const String& key, const casac::v
 	String c = key;
 	c.downcase();
 	ThrowIf(
-		c.startsWith(ImageMetaData<T>::_CDELT)
-		|| c.startsWith(ImageMetaData<T>::_CRPIX)
-		|| c.startsWith(ImageMetaData<T>::_CRVAL)
-		||  c.startsWith(ImageMetaData<T>::_CTYPE)
-		||  c.startsWith(ImageMetaData<T>::_CUNIT),
+		c.startsWith(ImageMetaDataBase<T>::_CDELT)
+		|| c.startsWith(ImageMetaDataBase<T>::_CRPIX)
+		|| c.startsWith(ImageMetaDataBase<T>::_CRVAL)
+		||  c.startsWith(ImageMetaDataBase<T>::_CTYPE)
+		||  c.startsWith(ImageMetaDataBase<T>::_CUNIT),
 		key + " pertains to a "
 		+ "coordinate system axis attribute. It may be "
 		+ "modified if it exists, but it may not be added."
 	);
 	ThrowIf(
-		c == ImageMetaData<T>::_EQUINOX,
+		c == ImageMetaDataBase<T>::_EQUINOX,
 		"The direction reference frame ("
 		+ key + "=" + _getEquinox()
 		+") already exists. It may be modified but not added."
 	);
 	ThrowIf(
-		c == ImageMetaData<T>::MASKS,
+		c == ImageMetaDataBase<T>::MASKS,
 		"This application does not support adding masks."
 	);
 	ThrowIf(
-		c == ImageMetaData<T>::_OBSDATE || c == ImageMetaData<T>::_EPOCH,
+		c == ImageMetaDataBase<T>::_OBSDATE || c == ImageMetaDataBase<T>::_EPOCH,
 		"The epoch (" + key + "=" + this->_getEpochString()
 		+ ") already exists. It may be modified but not added."
 	);
 	ThrowIf(
-		c == ImageMetaData<T>::_PROJECTION,
+		c == ImageMetaDataBase<T>::_PROJECTION,
 		"The projection ("
 		+ key + "=" + _getProjection()
 		+") already exists. It may be modified but not added."
 	);
 	ThrowIf(
-		c == ImageMetaData<T>::_REFFREQTYPE,
+		c == ImageMetaDataBase<T>::_REFFREQTYPE,
 		"The velocity reference frame ("
 		+ key + "=" + _getProjection()
 		+") already exists. It may be modified but not added."
 	);
 	ThrowIf(
-		c == ImageMetaData<T>::_SHAPE,
+		c == ImageMetaDataBase<T>::_SHAPE,
 		"The shape is intrinsic to the image and may "
 		"not be added."
 	);
 	ThrowIf(
-		c == ImageMetaData<T>::_BEAMPA || c == ImageMetaData<T>::_BPA,
+		c == ImageMetaDataBase<T>::_BEAMPA || c == ImageMetaDataBase<T>::_BPA,
 		"Cannot add a beam position "
 		"angle. Add the major or minor axis and then "
 		"modify the other and the position angle."
 	);
 	ThrowIf(
-		c == ImageMetaData<T>::_DATAMIN
-		|| c == ImageMetaData<T>::_DATAMAX
-		|| c == ImageMetaData<T>::_MINPIXPOS
-		|| c == ImageMetaData<T>::_MAXPIXPOS
-		|| c == ImageMetaData<T>::_MINPOS
-		|| c == ImageMetaData<T>::_MAXPOS,
+		c == ImageMetaDataBase<T>::_DATAMIN
+		|| c == ImageMetaDataBase<T>::_DATAMAX
+		|| c == ImageMetaDataBase<T>::_MINPIXPOS
+		|| c == ImageMetaDataBase<T>::_MAXPIXPOS
+		|| c == ImageMetaDataBase<T>::_MINPOS
+		|| c == ImageMetaDataBase<T>::_MAXPOS,
 		key + " is is a statistic of the image and may "
 		"not be added."
 	);
-	if (c == ImageMetaData<T>::_BUNIT) {
+	if (c == ImageMetaDataBase<T>::_BUNIT) {
 		ThrowIf(
 			! _getBrightnessUnit().empty(),
 			key + " is already present and has value "
@@ -127,7 +127,7 @@ template<class T> Bool ImageMetaDataRW<T>::add(const String& key, const casac::v
 		);
 		_bunit = v;
 	}
-	else if (c == ImageMetaData<T>::_IMTYPE) {
+	else if (c == ImageMetaDataBase<T>::_IMTYPE) {
 		String imtype = _getImType();
 		ThrowIf(
 			! imtype.empty(),
@@ -137,7 +137,7 @@ template<class T> Bool ImageMetaDataRW<T>::add(const String& key, const casac::v
 		);
 		set(c, value);
 	}
-	else if (c == ImageMetaData<T>::_OBJECT) {
+	else if (c == ImageMetaDataBase<T>::_OBJECT) {
 		String object = _getObject();
 		ThrowIf(
 			! object.empty(),
@@ -146,7 +146,7 @@ template<class T> Bool ImageMetaDataRW<T>::add(const String& key, const casac::v
 		);
 		set(c, value);
 	}
-	else if (c == ImageMetaData<T>::_OBSERVER) {
+	else if (c == ImageMetaDataBase<T>::_OBSERVER) {
 		String observer = _getObserver();
 		ThrowIf(
 			! observer.empty(),
@@ -155,7 +155,7 @@ template<class T> Bool ImageMetaDataRW<T>::add(const String& key, const casac::v
 		);
 		set(c, value);
 	}
-	else if (c == ImageMetaData<T>::_RESTFREQ) {
+	else if (c == ImageMetaDataBase<T>::_RESTFREQ) {
 		ThrowIf(
 			_getRestFrequency().getValue() > 0,
 			"The rest frequency ("
@@ -167,7 +167,7 @@ template<class T> Bool ImageMetaDataRW<T>::add(const String& key, const casac::v
 		);
 		set(c, value);
 	}
-	else if (c == ImageMetaData<T>::_TELESCOPE) {
+	else if (c == ImageMetaDataBase<T>::_TELESCOPE) {
 		String telescope = _getTelescope();
 		ThrowIf(
 			! telescope.empty(),
@@ -177,10 +177,10 @@ template<class T> Bool ImageMetaDataRW<T>::add(const String& key, const casac::v
 		set(c, value);
 	}
 	else if (
-		c == ImageMetaData<T>::_BEAMMAJOR
-		|| c == ImageMetaData<T>::_BEAMMINOR
-		|| c == ImageMetaData<T>::_BMAJ
-		|| c == ImageMetaData<T>::_BMIN
+		c == ImageMetaDataBase<T>::_BEAMMAJOR
+		|| c == ImageMetaDataBase<T>::_BEAMMINOR
+		|| c == ImageMetaDataBase<T>::_BMAJ
+		|| c == ImageMetaDataBase<T>::_BMIN
 	) {
 		ImageInfo info = _getInfo();
 		ThrowIf(
@@ -205,65 +205,65 @@ template<class T> Bool ImageMetaDataRW<T>::remove(const String& key) {
 	log << _ORIGINA;
 	c.downcase();
 	ThrowIf(
-		c.startsWith(ImageMetaData<T>::_CDELT)
-		|| c.startsWith(ImageMetaData<T>::_CRPIX)
-		|| c.startsWith(ImageMetaData<T>::_CRVAL)
-		||  c.startsWith(ImageMetaData<T>::_CTYPE)
-		||  c.startsWith(ImageMetaData<T>::_CUNIT),
+		c.startsWith(ImageMetaDataBase<T>::_CDELT)
+		|| c.startsWith(ImageMetaDataBase<T>::_CRPIX)
+		|| c.startsWith(ImageMetaDataBase<T>::_CRVAL)
+		||  c.startsWith(ImageMetaDataBase<T>::_CTYPE)
+		||  c.startsWith(ImageMetaDataBase<T>::_CUNIT),
 		key + " pertains to a "
 		"coordinate system axis attribute. It may be "
 		"modified, but it may not be removed."
 	);
 	ThrowIf(
-		c == ImageMetaData<T>::_EQUINOX,
+		c == ImageMetaDataBase<T>::_EQUINOX,
 		"Although the direction reference frame ("
 		+ key + ") may be modified, it may not be removed."
 	);
 	ThrowIf(
-		c == ImageMetaData<T>::_IMTYPE,
+		c == ImageMetaDataBase<T>::_IMTYPE,
 		"Although the image type ("
 		+ key + ") may be modified, it may not be removed."
 	);
 	ThrowIf(
-		c == ImageMetaData<T>::MASKS,
+		c == ImageMetaDataBase<T>::MASKS,
 		"Logic Error: removeMask() should be called instead"
 	);
 	ThrowIf(
-		c == ImageMetaData<T>::_OBSDATE || c == ImageMetaData<T>::_EPOCH,
+		c == ImageMetaDataBase<T>::_OBSDATE || c == ImageMetaDataBase<T>::_EPOCH,
 		"Although the epoch (" + key
 		+ ") may be modified, it cannot be removed."
 	);
 	ThrowIf(
-		c == ImageMetaData<T>::_PROJECTION,
+		c == ImageMetaDataBase<T>::_PROJECTION,
 		"Although the projection (" + key
 		+ ") may be modified, it cannot be removed."
 	);
 	ThrowIf(
-		c == ImageMetaData<T>::_REFFREQTYPE,
+		c == ImageMetaDataBase<T>::_REFFREQTYPE,
 		"Although the velocity reference frame (" + key
 		+ ") may be modified, it cannot be removed."
 	);
 	ThrowIf(
-		c == ImageMetaData<T>::_RESTFREQ,
+		c == ImageMetaDataBase<T>::_RESTFREQ,
 		"Although the rest frequency (" + key
 		+ ") may be modified, it cannot be removed."
 	);
 	ThrowIf(
-		c == ImageMetaData<T>::_SHAPE,
+		c == ImageMetaDataBase<T>::_SHAPE,
 		"The shape is intrinsic to the image and may "
 		"not be modified nor removed."
 	);
 	ThrowIf(
-		c == ImageMetaData<T>::_DATAMIN
-		|| c == ImageMetaData<T>::_DATAMAX
-		|| c == ImageMetaData<T>::_MINPIXPOS
-		|| c == ImageMetaData<T>::_MAXPIXPOS
-		|| c == ImageMetaData<T>::_MINPOS
-		|| c == ImageMetaData<T>::_MAXPOS,
+		c == ImageMetaDataBase<T>::_DATAMIN
+		|| c == ImageMetaDataBase<T>::_DATAMAX
+		|| c == ImageMetaDataBase<T>::_MINPIXPOS
+		|| c == ImageMetaDataBase<T>::_MAXPIXPOS
+		|| c == ImageMetaDataBase<T>::_MINPOS
+		|| c == ImageMetaDataBase<T>::_MAXPOS,
 		key + " is is a statistic of the image and may "
 		+ "not be modified nor removed by this application."
 	);
-	if (c == ImageMetaData<T>::_BUNIT) {
+	if (c == ImageMetaDataBase<T>::_BUNIT) {
 		ThrowIf(
 			! _getImage()->setUnits(Unit("")),
 			"Unable to clear " + key
@@ -271,14 +271,14 @@ template<class T> Bool ImageMetaDataRW<T>::remove(const String& key) {
 		_bunit = "";
 		log << LogIO::NORMAL << "Setting " << key << " to empty string" << LogIO::POST;
 	}
-	else if (c == ImageMetaData<T>::_OBJECT) {
+	else if (c == ImageMetaDataBase<T>::_OBJECT) {
 		ImageInfo info = _getInfo();
 		info.setObjectName("");
 		_image->setImageInfo(info);
 		log << LogIO::NORMAL << "Setting " << key << " to empty string" << LogIO::POST;
 		_object = "";
 	}
-	else if (c == ImageMetaData<T>::_OBSERVER) {
+	else if (c == ImageMetaDataBase<T>::_OBSERVER) {
 		CoordinateSystem csys = _getCoords();
 		ObsInfo info = csys.obsInfo();
 		info.setObserver("");
@@ -287,7 +287,7 @@ template<class T> Bool ImageMetaDataRW<T>::remove(const String& key) {
 		log << LogIO::NORMAL << "Setting " << key << " to empty string" << LogIO::POST;
 		_observer = "";
 	}
-	else if (c == ImageMetaData<T>::_TELESCOPE) {
+	else if (c == ImageMetaDataBase<T>::_TELESCOPE) {
 		CoordinateSystem csys = _getCoords();
 		ObsInfo info = csys.obsInfo();
 		info.setTelescope("");
@@ -297,12 +297,12 @@ template<class T> Bool ImageMetaDataRW<T>::remove(const String& key) {
 		_telescope = "";
 	}
 	else if (
-		c == ImageMetaData<T>::_BEAMMAJOR
-		|| c == ImageMetaData<T>::_BEAMMINOR
-		|| c == ImageMetaData<T>::_BEAMPA
-		|| c == ImageMetaData<T>::_BMAJ
-		|| c == ImageMetaData<T>::_BMIN
-		|| c == ImageMetaData<T>::_BPA
+		c == ImageMetaDataBase<T>::_BEAMMAJOR
+		|| c == ImageMetaDataBase<T>::_BEAMMINOR
+		|| c == ImageMetaDataBase<T>::_BEAMPA
+		|| c == ImageMetaDataBase<T>::_BMAJ
+		|| c == ImageMetaDataBase<T>::_BMIN
+		|| c == ImageMetaDataBase<T>::_BPA
 	) {
 		ImageInfo info = _getInfo();
 		if (info.hasBeam()) {
@@ -343,7 +343,6 @@ template<class T> Bool ImageMetaDataRW<T>::remove(const String& key) {
 }
 
 template<class T> Bool ImageMetaDataRW<T>::removeMask(const String& maskName) {
-	ImageInterface<T> *image = _getImage();
 	LogIO log = this->_getLog();
 	log << _ORIGINA;
 	if (maskName.empty()) {
@@ -368,12 +367,12 @@ template<class T> Bool ImageMetaDataRW<T>::removeMask(const String& maskName) {
 	}
 	else {
 		ThrowIf(
-			! image->hasRegion(maskName, RegionHandler::Masks),
+			! _image->hasRegion(maskName, RegionHandler::Masks),
 			"No mask named " + maskName + " found"
 		);
-		image->removeRegion(maskName, RegionHandler::Masks);
+		_image->removeRegion(maskName, RegionHandler::Masks);
 		ThrowIf(
-			image->hasRegion(maskName, RegionHandler::Masks),
+			_image->hasRegion(maskName, RegionHandler::Masks),
 			"Unable to remove mask " + maskName
 		);
 		_masks.resize(0);
@@ -388,7 +387,7 @@ template<class T> Bool ImageMetaDataRW<T>::set(
 ) {
 	String c = key;
 	c.downcase();
-	if (c == ImageMetaData<T>::_BUNIT) {
+	if (c == ImageMetaDataBase<T>::_BUNIT) {
 		_checkString(key, value);
 		String v = value.toString();
 		if (_getImage()->setUnits(Unit(v))) {
@@ -399,13 +398,13 @@ template<class T> Bool ImageMetaDataRW<T>::set(
 		}
 	}
 	else if (
-		c.startsWith(ImageMetaData<T>::_CDELT) || c.startsWith(ImageMetaData<T>::_CRPIX)
-		|| c.startsWith(ImageMetaData<T>::_CRVAL) ||  c.startsWith(ImageMetaData<T>::_CTYPE)
-		||  c.startsWith(ImageMetaData<T>::_CUNIT)
+		c.startsWith(ImageMetaDataBase<T>::_CDELT) || c.startsWith(ImageMetaDataBase<T>::_CRPIX)
+		|| c.startsWith(ImageMetaDataBase<T>::_CRVAL) ||  c.startsWith(ImageMetaDataBase<T>::_CTYPE)
+		||  c.startsWith(ImageMetaDataBase<T>::_CUNIT)
 	) {
 		_setCoordinateValue(c, value);
 	}
-	else if (c == ImageMetaData<T>::_EQUINOX) {
+	else if (c == ImageMetaDataBase<T>::_EQUINOX) {
 		ThrowIf(
 			! _getCoords().hasDirectionCoordinate(),
 			"This image does not have a direction "
@@ -430,7 +429,7 @@ template<class T> Bool ImageMetaDataRW<T>::set(
 		_getImage()->setCoordinateInfo(csys);
 		_equinox = v;
 	}
-	else if (c == ImageMetaData<T>::_IMTYPE) {
+	else if (c == ImageMetaDataBase<T>::_IMTYPE) {
 		_checkString(key, value);
 		String imtype = _getImType();
 		ImageInfo info = _getImage()->imageInfo();
@@ -440,10 +439,10 @@ template<class T> Bool ImageMetaDataRW<T>::set(
 		String newType = ImageInfo::imageType(info.imageType());
 		_imtype = newType;
 	}
-	else if (c == ImageMetaData<T>::MASKS) {
+	else if (c == ImageMetaDataBase<T>::MASKS) {
 		ThrowCc("This application does not support modifying masks.");
 	}
-	else if (c == ImageMetaData<T>::_OBJECT) {
+	else if (c == ImageMetaDataBase<T>::_OBJECT) {
 		_checkString(key, value);
 		String object = _getObject();
 		ImageInfo info = _getInfo();
@@ -452,7 +451,7 @@ template<class T> Bool ImageMetaDataRW<T>::set(
 		_getImage()->setImageInfo(info);
 		_object = v;
 	}
-	else if (c == ImageMetaData<T>::_OBSDATE || c == ImageMetaData<T>::_EPOCH) {
+	else if (c == ImageMetaDataBase<T>::_OBSDATE || c == ImageMetaDataBase<T>::_EPOCH) {
 		ThrowIf(
 			value.type() == casac::variant::STRING && value.toString().empty(),
 			key + " value not specified"
@@ -474,7 +473,7 @@ template<class T> Bool ImageMetaDataRW<T>::set(
 		_getImage()->setCoordinateInfo(csys);
 		_obsdate = epoch;
 	}
-	else if (c == ImageMetaData<T>::_OBSERVER) {
+	else if (c == ImageMetaDataBase<T>::_OBSERVER) {
 		_checkString(key, value);
 		CoordinateSystem csys = _getCoords();
 		ObsInfo info = csys.obsInfo();
@@ -484,7 +483,7 @@ template<class T> Bool ImageMetaDataRW<T>::set(
 		_getImage()->setCoordinateInfo(csys);
 		_observer = v;
 	}
-	else if (c == ImageMetaData<T>::_PROJECTION) {
+	else if (c == ImageMetaDataBase<T>::_PROJECTION) {
 		_checkString(key, value);
 		ThrowIf(
 			! _getCoords().hasDirectionCoordinate(),
@@ -512,7 +511,7 @@ template<class T> Bool ImageMetaDataRW<T>::set(
 		_getImage()->setCoordinateInfo(csys);
 		_projection = Projection::name(ptype);
 	}
-	else if (c == ImageMetaData<T>::_REFFREQTYPE) {
+	else if (c == ImageMetaDataBase<T>::_REFFREQTYPE) {
 		_checkString(key, value);
 		ThrowIf(
 			! _getCoords().hasSpectralAxis(),
@@ -537,7 +536,7 @@ template<class T> Bool ImageMetaDataRW<T>::set(
 		_getImage()->setCoordinateInfo(csys);
 		_reffreqtype = v;
 	}
-	else if (c == ImageMetaData<T>::_RESTFREQ) {
+	else if (c == ImageMetaDataBase<T>::_RESTFREQ) {
 		ThrowIf(
 			! _getCoords().hasSpectralAxis(),
 			"This image does not have a spectral coordinate"
@@ -572,13 +571,13 @@ template<class T> Bool ImageMetaDataRW<T>::set(
 		_getImage()->setCoordinateInfo(csys);
 		_restFreq = rf;
 	}
-	else if (c == ImageMetaData<T>::_SHAPE) {
+	else if (c == ImageMetaDataBase<T>::_SHAPE) {
 		ThrowCc(
 			"The shape is intrinsic to the image and may "
 			"not be modified."
 		);
 	}
-	else if (c == ImageMetaData<T>::_TELESCOPE) {
+	else if (c == ImageMetaDataBase<T>::_TELESCOPE) {
 		_checkString(key, value);
 		CoordinateSystem csys = _getCoords();
 		ObsInfo info = csys.obsInfo();
@@ -589,12 +588,12 @@ template<class T> Bool ImageMetaDataRW<T>::set(
 		_telescope = v;
 	}
 	else if (
-		c == ImageMetaData<T>::_BEAMMAJOR
-		|| c == ImageMetaData<T>::_BEAMMINOR
-		|| c == ImageMetaData<T>::_BEAMPA
-		|| c == ImageMetaData<T>::_BMAJ
-		|| c == ImageMetaData<T>::_BMIN
-		|| c == ImageMetaData<T>::_BPA
+		c == ImageMetaDataBase<T>::_BEAMMAJOR
+		|| c == ImageMetaDataBase<T>::_BEAMMINOR
+		|| c == ImageMetaDataBase<T>::_BEAMPA
+		|| c == ImageMetaDataBase<T>::_BMAJ
+		|| c == ImageMetaDataBase<T>::_BMIN
+		|| c == ImageMetaDataBase<T>::_BPA
 	) {
 		ImageInfo info = _getInfo();
 		ThrowIf(
@@ -604,7 +603,7 @@ template<class T> Bool ImageMetaDataRW<T>::set(
 		)
 		Quantity v = casaQuantity(value);
 		GaussianBeam beam;
-		if (c == ImageMetaData<T>::_BEAMPA || c == ImageMetaData<T>::_BPA) {
+		if (c == ImageMetaDataBase<T>::_BEAMPA || c == ImageMetaDataBase<T>::_BPA) {
 			ThrowIf(
 				! info.hasBeam(),
 				"This image has no beam. This application annot add a beam position "
@@ -617,8 +616,8 @@ template<class T> Bool ImageMetaDataRW<T>::set(
 		else if (info.hasBeam()) {
 			beam = info.getBeamSet()(0, 0);
 			if (
-				c == ImageMetaData<T>::_BEAMMAJOR
-				|| c == ImageMetaData<T>::_BMAJ
+				c == ImageMetaDataBase<T>::_BEAMMAJOR
+				|| c == ImageMetaDataBase<T>::_BMAJ
 			) {
 				beam.setMajorMinor(v, beam.getMinor());
 			}
@@ -636,12 +635,12 @@ template<class T> Bool ImageMetaDataRW<T>::set(
 			<< " in image." << LogIO::POST;
 	}
 	else if (
-		c == ImageMetaData<T>::_DATAMIN
-		|| c == ImageMetaData<T>::_DATAMAX
-		|| c == ImageMetaData<T>::_MINPIXPOS
-        || c == ImageMetaData<T>::_MAXPIXPOS
-        || c == ImageMetaData<T>::_MINPOS
-        || c == ImageMetaData<T>::_MAXPOS
+		c == ImageMetaDataBase<T>::_DATAMIN
+		|| c == ImageMetaDataBase<T>::_DATAMAX
+		|| c == ImageMetaDataBase<T>::_MINPIXPOS
+        || c == ImageMetaDataBase<T>::_MAXPIXPOS
+        || c == ImageMetaDataBase<T>::_MINPOS
+        || c == ImageMetaDataBase<T>::_MAXPOS
     ) {
 		ThrowCc(
 			key + " is is a statistic of the image and may "
@@ -726,7 +725,7 @@ template<class T> void ImageMetaDataRW<T>::_setCoordinateValue(
 	String prefix = key.substr(0, 5);
 	CoordinateSystem csys = _getCoords();
 	uInt n = this->_getAxisNumber(key);
-	if (prefix == ImageMetaData<T>::_CDELT) {
+	if (prefix == ImageMetaDataBase<T>::_CDELT) {
 		Quantity qinc = casaQuantity(value);
 		Vector<Double> increments = csys.increment();
 		if (qinc.getFullUnit().empty()) {
@@ -738,7 +737,7 @@ template<class T> void ImageMetaDataRW<T>::_setCoordinateValue(
 			_increment[n-1] = qinc;
 		}
 	}
-	else if (prefix == ImageMetaData<T>::_CRPIX) {
+	else if (prefix == ImageMetaDataBase<T>::_CRPIX) {
 		casac::variant::TYPE t = value.type();
 		Bool stringIsDouble = False;
 		if (t == casac::variant::STRING) {
@@ -761,7 +760,7 @@ template<class T> void ImageMetaDataRW<T>::_setCoordinateValue(
 			ThrowCc("For crpix, value must be numeric");
 		}
 	}
-	else if (prefix == ImageMetaData<T>::_CRVAL) {
+	else if (prefix == ImageMetaDataBase<T>::_CRVAL) {
 		ThrowIf(
 			value.type() == casac::variant::STRING && value.toString().empty(),
 			key + " value not specified"
@@ -777,7 +776,7 @@ template<class T> void ImageMetaDataRW<T>::_setCoordinateValue(
 			_refVal[n-1] = qval;
 		}
 	}
-	else if (prefix == ImageMetaData<T>::_CTYPE) {
+	else if (prefix == ImageMetaDataBase<T>::_CTYPE) {
 		_checkString(key, value);
 		Vector<String> names = _getAxisNames();
 		names[n-1] = value.toString();
@@ -786,7 +785,7 @@ template<class T> void ImageMetaDataRW<T>::_setCoordinateValue(
 			_axisNames[n-1] = names[n-1];
 		}
 	}
-	else if (prefix == ImageMetaData<T>::_CUNIT) {
+	else if (prefix == ImageMetaDataBase<T>::_CUNIT) {
 		_checkString(key, value);
 		String u = value.toString();
 		// Test to see if CASA supports this string as a Unit
@@ -799,6 +798,7 @@ template<class T> void ImageMetaDataRW<T>::_setCoordinateValue(
 		}
 	}
 	_getImage()->setCoordinateInfo(csys);
+	_stats = Record();
 }
 
 
@@ -960,6 +960,13 @@ template<class T> String ImageMetaDataRW<T>::_getTelescope() const {
 		_telescope = _getCoords().obsInfo().telescope();
 	}
 	return _telescope;
+}
+
+template<class T> Record ImageMetaDataRW<T>::_getStatistics() const {
+	if (_stats.nfields() == 0) {
+		_stats = this->_calcStats();
+	}
+	return _stats;
 }
 
 

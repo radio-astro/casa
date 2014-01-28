@@ -162,7 +162,7 @@ class ImageAnalysis
                                          const Int fitorder = 0, 
                                          const Bool overwrite = false);
 
-    ImageInterface<Float>* convolve2d(
+    std::tr1::shared_ptr<ImageInterface<Float> > convolve2d(
     		const String& outfile, const Vector<Int>& axes,
             const String& type, const Quantity& major,
             const Quantity& minor, const Quantity& pa,
@@ -401,8 +401,6 @@ class ImageAnalysis
         const Bool remove = False, const Bool log = True,
         Int channel=-1, Int polarization=-1
     );
-
-
 
     bool twopointcorrelation(
     	const String& outfile, Record& region,
@@ -684,6 +682,20 @@ class ImageAnalysis
     );
 
     template<class T> static void _destruct(ImageInterface<T>& image);
+
+    template<class T> Bool _setrestoringbeam(
+    	std::tr1::shared_ptr<ImageInterface<T> > image,
+    	const Quantity& major, const Quantity& minor,
+    	const Quantity& pa, const Record& rec,
+    	const bool deleteIt, const bool log,
+        Int channel, Int polarization
+    );
+
+    template<class T> Record _summary(
+    	const ImageInterface<T>& image,
+    	const String& doppler, const Bool list,
+    	const Bool pixelorder, const Bool verbose
+    );
 
 };
 

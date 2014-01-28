@@ -51,14 +51,14 @@
 
 \begin{abstract}
   This note describes the syntax for the various expressions for
-  selecting data from the Measurement Set.  This is the syntax that is
-  implemented in the \MSSelection\ module of CASACore.  All
-  expressions consist of a comma or semi-colon separated list of
-  specifications.  Except channel selection, the final product of
-  parsing the expressions is a Table Expression Node (TEN) which can
-  be used to construct a table with only the selected rows.  Higher
-  level global methods to return a selected table, given the user
-  supplied expressions, are also provided as part of this module.
+  selecting data from the Measurement Set, implemented in the
+  \MSSelection\ module of CASACore.  All expressions consist of a
+  comma or semi-colon separated list of specifications.  Except
+  channel selection, the final product of parsing the expressions is a
+  Table Expression Node (TEN) which can be used to construct a table
+  with only the selected rows.  Higher level global methods to return
+  a selected table, given the user supplied expressions, are also
+  provided as part of this module.
 
   Error handling is done via the C++ exception handling mechanism.
   The exceptions thrown by the \MSS\ module are of type
@@ -390,7 +390,7 @@ Table~\ref{BASELINE:TAB}.
   \caption{Baseline specification syntax: ANT, ANT1 and ANT2 in the
     table below represent a comma-separated list of antennas names or
     a list of {\tt ANT@STATION} specifications.  {\tt ANT} and {\tt
-      STATION} in {\tt ANT@STATION} can themsevles be comma-separated
+      STATION} in {\tt ANT@STATION} can themselves be comma-separated
     lists enclosed in braces.}
 \begin{center}
 \begin{tabular}{|l|l|}
@@ -516,12 +516,12 @@ something that does reflect that its a name and not get confused with
 integer indexes), for now, to accommodate the VLA tradition, the
 following logic is used:
 
-\begin{description}
-\item[] Just for antenna selection, a user supplied integer (or
-  integer list) is converted to a string and matched against the
-  antenna name.  If that fails, the normal logic of using an integer
-  as an integer and matching it with antenna index is done.
-\end{description}
+\begin{quote}
+{\it  Just for antenna selection, a user supplied integer (or integer
+  list) is converted to a string and matched against the antenna name.
+  If that fails, the normal logic of using an integer as an integer
+  and matching it with antenna index is done.}
+\end{quote}
 For example, if the antenna with index 17 is named "21", the string
 {\tt "21,VLA22"} will expand into an antenna index list of 17,22
 (assuming that the antenna named VLA22 has index 22).

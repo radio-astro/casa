@@ -355,23 +355,32 @@ def checkDataPartitioningCode():
      ## Sync input lists to the same size.
      #paramList.checkParameters()
 
-     params = getparams( testnum=5 ,parallelmajor=True )
+     params = getparams( testnum=3 ,parallelmajor=True )
      paramList = params[0]
      clusterdeffile = params[1]
 
      selpars = paramList.getSelPars()
      impars = paramList.getImagePars()
 
-     ppar = PyParallelImagerHelper(clusterdef=clusterdeffile)
+     synu = casac.synthesisutils()
+     print synu.contdatapartition( selpars , 2)
 
-     print 'Selpars : ', selpars
-     newselpars = ppar.partitionCubeDataSelection( selpars )
+     print synu.cubedatapartition( selpars, 2)
+     
+     print synu.cubeimagepartition( impars, 2)
 
-     print 'Impars : ', impars
-     newimpars = ppar.partitionCubeDeconvolution( impars )
+     synu.done()
 
-     ppar.takedownCluster()
-
+#     ppar = PyParallelImagerHelper(clusterdef=clusterdeffile)
+#
+#     print 'Selpars : ', selpars
+#     newselpars = ppar.partitionCubeDataSelection( selpars )
+#
+#     print 'Impars : ', impars
+#     newimpars = ppar.partitionCubeDeconvolution( impars )
+#
+#     ppar.takedownCluster()
+#
 
      # The output dictionary should be indexed as follows ( for 2 nodes, and 2 MSs )
      #{ '0' : { 'ms0' : { 'msname':xxx1, 'spw':yyy1 } ,

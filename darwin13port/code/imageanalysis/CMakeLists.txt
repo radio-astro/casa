@@ -122,6 +122,8 @@ install (FILES
     ImageAnalysis/ImageMaskAttacher.tcc
 	ImageAnalysis/ImageMetaData.h
     ImageAnalysis/ImageMetaData.tcc
+    ImageAnalysis/ImageMetaDataBase.h
+    ImageAnalysis/ImageMetaDataBase.tcc
     ImageAnalysis/ImageMetaDataRW.h
     ImageAnalysis/ImageMetaDataRW.tcc
 	ImageAnalysis/ImageMoments.h

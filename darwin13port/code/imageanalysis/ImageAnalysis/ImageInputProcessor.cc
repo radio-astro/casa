@@ -50,7 +50,7 @@ ImageInputProcessor::~ImageInputProcessor() {
 }
 
 void ImageInputProcessor::process(
-	ImageInterface<Float>*& image, Record& regionRecord,
+	std::tr1::shared_ptr<ImageInterface<Float> > image, Record& regionRecord,
 	String& diagnostics, vector<OutputDestinationChecker::OutputStruct> *outputStruct,
 	String& stokes, const String& imagename, const Record* regionPtr,
 	const String& regionName, const String& box,
@@ -66,12 +66,13 @@ void ImageInputProcessor::process(
     // Register the functions to create a FITSImage or MIRIADImage object.
     FITSImage::registerOpenFunction();
     MIRIADImage::registerOpenFunction();
-    image = 0;
-    ImageUtilities::openImage(image, imagename);
-    if (image == 0) {
+    ImageInterface<Float> *imagePtr = 0;
+    ImageUtilities::openImage(imagePtr, imagename);
+    if (imagePtr == 0) {
     	*_log << origin;
     	*_log << "Unable to open image " << imagename << LogIO::EXCEPTION;
     }
+    image.reset(imagePtr);
 	_process(
 		regionRecord, diagnostics, outputStruct, stokes,
 		image, regionPtr, regionName, box, chans, stokesControl,
@@ -82,7 +83,7 @@ void ImageInputProcessor::process(
 void ImageInputProcessor::process(
 	Record& regionRecord, String& diagnostics,
 	vector<OutputDestinationChecker::OutputStruct> * const outputStruct, String& stokes,
-	const ImageInterface<Float> *const &image,
+	std::tr1::shared_ptr<const ImageInterface<Float> > image,
 	const Record* regionPtr, const String& regionName,
 	const String& box, const String& chans,
 	const CasacRegionManager::StokesControl& stokesControl, const Bool& allowMultipleBoxes,
@@ -98,7 +99,7 @@ void ImageInputProcessor::process(
 void ImageInputProcessor::_process(
     Record& regionRecord,
     String& diagnostics, vector<OutputDestinationChecker::OutputStruct> * const outputStruct,
-    String& stokes, const ImageInterface<Float> *const &image,
+    String& stokes, std::tr1::shared_ptr<const ImageInterface<Float> > image,
     const Record *const &regionPtr,
     const String& regionName, const String& box,
     const String& chans, const CasacRegionManager::StokesControl& stokesControl,

@@ -87,7 +87,7 @@ class ia_putchunk_test(unittest.TestCase):
         fval = 2.7
         cval = 8.6-5.4j
         
-        # complex values
+        # complex valued image
         myia.fromshape("", shape, type='c')
         bb = myia.getchunk()
         bb[:] = cval
@@ -97,6 +97,7 @@ class ia_putchunk_test(unittest.TestCase):
         myia.putchunk(bb)
         self.assertTrue((abs(abs(myia.getchunk()) - abs(fval)) < 1e-6).all())
 
+        # float valued image
         myia.fromshape("", shape, type='f')
         cc = myia.getchunk()
         cc[:] = fval

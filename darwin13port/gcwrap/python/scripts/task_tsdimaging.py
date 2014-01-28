@@ -38,7 +38,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         for name in ['start', 'step']:
             param = getattr(self, name)
             new_param = self.__format_quantum_unit(param, myunit)
-            if new_param == False:
+            if new_param == None:
                 raise ValueError, "Invalid unit for %s in mode %s: %s" % \
                       (name, self.mode, param)
             setattr(self, name, new_param)
@@ -49,6 +49,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         # check length of selection parameters
         if type(self.infiles) == str:
             nfile = 1
+            self.infiles = [ self.infiles ]
         else:
             nfile = len(self.infiles)
 
@@ -65,12 +66,12 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         unit is added to the return value if no unit is in data.
         """
         my_qa = qatool()
-        if data == '' or my_qa.compare(qval, unit):
+        if data == '' or my_qa.compare(data, unit):
             return data
         if my_qa.getunit(data) == '':
             casalog.post("No unit specified. Using '%s'" % unit)
             return '%f%s' % (data, unit)
-        return False
+        return None
 
     def __check_selection_length(self, data, nfile):
         """
@@ -96,24 +97,36 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         else:
             return param[fileid]
 
-    def get_selection_idx_for_ms(self, fileid):
-        if fileid < len(self.infiles) and fileid > -1:
-            vis = self.infiles[fileid]
-            field = self.get_selection_param_for_ms(fileid, self.field)
-            spw = self.get_selection_param_for_ms(fileid, self.spw)
-            antenna = self.get_selection_param_for_ms(fileid, self.antenna)
+    def get_selection_idx_for_ms(self, file_idx):
+        if file_idx < len(self.infiles) and file_idx > -1:
+            vis = self.infiles[file_idx]
+            field = self.get_selection_param_for_ms(file_idx, self.field)
+            spw = self.get_selection_param_for_ms(file_idx, self.spw)
+            antenna = self.get_selection_param_for_ms(file_idx, self.antenna)
             if antenna == -1: antenna = ''
-            scan = self.get_selection_param_for_ms(fileid, self.scanno)
+            scan = self.get_selection_param_for_ms(file_idx, self.scanno)
             my_ms = gentools(['ms'])[0]
             sel_ids = my_ms.msseltoindex(vis=vis, spw=spw, field=field,
                                          baseline=antenna, scan=scan)
             fieldid = list(sel_ids['field']) if len(sel_ids['field']) > 0 else -1
-            spwid = list(sel_ids['spw']) if len(sel_ids['spw']) > 0 else -1
             baseline = self.format_ac_baseline(sel_ids['antenna1'])
-            scanid = list(sel_ids['scan']) if len(sel_ids['scan']) > 0 else -1
-            return {'field': fieldid, 'spw': spwid, 'baseline': baseline, 'scan': scanid}
+            scanid = list(sel_ids['scan']) if len(sel_ids['scan']) > 0 else ""
+            # SPW (need to get a list of valid spws instead of -1)
+            if len(sel_ids['spw']) > 0:
+                spwid = list(sel_ids['spw'])
+            elif spw=="": # No spw selection
+                my_ms.open(vis)
+                try: spwinfo =  my_ms.getspectralwindowinfo()
+                except: raise
+                finally: my_ms.close()
+                
+                spwid = [int(idx) for idx in spwinfo.keys()]
+            else:
+                raise RuntimeError("Invalid spw selction, %s ,for MS %d" (str(spw), file_idx))
+            
+            return {'field': fieldid, 'spw': spwid, 'baseline': baseline, 'scan': scanid, 'antenna1': sel_ids['antenna1']}
         else:
-            raise ValueError, ("Invalid file index, %d" % fileid)
+            raise ValueError, ("Invalid file index, %d" % file_idx)
 
     def format_ac_baseline(self, in_antenna):
         """ format auto-correlation baseline string from antenna idx list """
@@ -165,10 +178,12 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
 #             else:
 #                 msg = 'field id %s does not exist in the first MS' % (self.field)
 #                 raise ValueError, msg
-        if self.fied == '':
+        if self.field == '' or self.fieldid ==-1:
             self.sourceid = source_ids[0]
-        elif self.fieldid > 0 and self.fieldid < len(source_ids):
+        elif self.fieldid >= 0 and self.fieldid < len(source_ids):
             self.sourceid = source_ids[self.fieldid]
+        else:
+            raise ValueError, "No valid field in the first MS."
 
         # restfreq
         if self.restfreq=='' and self.source_table != '':
@@ -194,7 +209,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         # -1 means all spw are selected.
         self.open_table(self.spw_table)
         if spwid_ref < 0:
-            for id in self.table.nrows():
+            for id in range(self.table.nrows()):
                 if self.table.getcell('NUM_CHAN',id) > 0:
                     spwid_ref = id
                     break
@@ -202,7 +217,9 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
                 self.close_table()
                 msg='No valid spw id exists in the first table'
                 raise ValueError, msg
-        self.allchannels=self.table.getcell('NUM_CHAN',spwid_ref)
+        self.allchannels = self.table.getcell('NUM_CHAN',spwid_ref)
+        freq_chan0 = self.table.getcell('CHAN_FREQ',spwid_ref)[0]
+        freq_inc0 = self.table.getcell('CHAN_WIDTH',spwid_ref)[0]
         self.close_table()
         self.imager_param['spw'] = -1 #spwid_ref
 
@@ -260,8 +277,8 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         if cell == '' or cell[0] == '':
             # Calc PB
             grid_factor = 3.
-            casalog.post("The cell size will be calculated using PB size")
-            qPB = self._calc_PB(in_antenna)
+            casalog.post("The cell size will be calculated using PB size of antennas in the first MS")
+            qPB = self._calc_PB(selection_ids['antenna1'])
             cell = '%f%s' % (qPB['value']/grid_factor, qPB['unit'])
             casalog.post("Using cell size = PB/%4.2F = %s" % (grid_factor, cell))
 
@@ -300,27 +317,23 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.imager_param['movingsource'] = self.ephemsrcname
 
         # channel map
-        # start
+        # start and step
         if self.mode == 'velocity':
-            #startval = ['LSRK', '%s%s'%(self.start,self.specunit)]
-            if self.start == '':
-                spwid_ref
-            startval = [self.imager_param['outframe'], '%s%s'%(self.start,self.specunit)]
-        elif self.mode == 'frequency':
-            #startval = '%s%s'%(self.start,self.specunit)
-            startval = [self.imager_param['outframe'], '%s%s'%(self.start,self.specunit)]
-        else: #channel
-            startval = self.start
-
-        # step
-        if mode in ['velocity', 'frequency']:
-            stepval = '%s%s'%(self.step,self.specunit)
-        else:
+            startval = [self.imager_param['outframe'], self.start]
             stepval = self.step
+        elif self.mode == 'frequency':
+            chan0 = "%fHz" % (freq_chan0)
+            startval = [self.imager_param['outframe'], self.start if self.start!='' else chan0]
+            step0 = "%fHz" % (freq_inc0)
+            stepval = self.step if self.step!='' else step0
+        else: #self.mode==channel
+            startval = int(self.start) if self.start!='' else 0
+            stepval = int(self.step) if self.step!='' else 1
 
         #startval = 0
         #stepval = self.allchannels
         #self.nchan = 1
+        if self.nchan < 0: self.nchan = self.allchannels
         self.imager_param['start'] = startval
         self.imager_param['step'] = stepval
         self.imager_param['nchan'] = self.nchan
@@ -333,6 +346,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         if len(self.infiles) == 1:
             self.open_imager(self.infiles[0])
             selection_ids = self.get_selection_idx_for_ms(0)
+            ### TODO: channel selection based on spw
             self.imager.selectvis(field=selection_ids['field'],\
                                   spw=selection_ids['spw'],\
                                   nchan=-1, start=0, step=1,\
@@ -343,6 +357,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             for idx in (len(self.infiles)):
                 name = self.infiles[idx]
                 selection_ids = self.get_selection_idx_for_ms(idx)
+                ### TODO: channel selection based on spw
                 self.imager.selectvis(vis=name, field=selection_ids['field'],\
                                       spw=selection_ids['spw'],\
                                       nchan=-1, start=0, step=1,\
@@ -404,8 +419,11 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
 
     def _calc_PB(self, antenna):
         """
-        Calculate the primary beam size of antenna,
-        using dish diamenter and rest frequency
+        Calculate the primary beam size of antenna, using dish diamenter
+        and rest frequency
+        Average antenna diamter and reference frequency are adopted for
+        calculation.
+        The input argument should be a list of antenna IDs.
         """
         casalog.post("Calculating Pirimary beam size:")
         # CAS-5410 Use private tools inside task scripts
@@ -424,23 +442,30 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             raise Exception, msg
         # Antenna diameter
         self.open_table(self.antenna_table)
-        antid = -1
+#         antid = -1
         try:
-            if type(antenna) == int and antenna < self.table.nrows():
-                antid = antenna
-            elif type(antenna) == str and len(antenna) > 0:
-                for idx in range(self.table.nrows()):
-                    if (antenna.upper() == self.table.getcell('NAME', idx)):
-                        antid = idx
-                        break
+#             if type(antenna) == int and antenna < self.table.nrows():
+#                 antid = antenna
+#             elif type(antenna) == str and len(antenna) > 0:
+#                 for idx in range(self.table.nrows()):
+#                     if (antenna.upper() == self.table.getcell('NAME', idx)):
+#                         antid = idx
+#                         break
             antdiam_unit = self.table.getcolkeyword('DISH_DIAMETER', 'QuantumUnits')[0]
-            if antid > 0:
-                antdiam_ave = my_qa.quantity(self.table.getcell('DISH_DIAMETER'),antdiam_unit)
-            else:
-                diams = self.table.getcol('DISH_DIAMETER')
-                antdiam_ave = my_qa.quantity(diams.mean(), antdiam_unit)
+            diams = self.table.getcol('DISH_DIAMETER')
+#             if antid > 0:
+#                 antdiam_ave = my_qa.quantity(self.table.getcell('DISH_DIAMETER', antid),antdiam_unit)
+#             else:
+#                 diams = self.table.getcol('DISH_DIAMETER')
+#                 antdiam_ave = my_qa.quantity(diams.mean(), antdiam_unit)
         finally:
             self.close_table()
+
+        if len(antenna) == 0:
+            antdiam_ave = my_qa.quantity(diams.mean(), antdiam_unit)
+        else:
+            d_ave = sum([diams[idx] for idx in antenna])/float(len(antenna))
+            antdiam_ave = my_qa.quantity(d_ave, antdiam_unit)
         # Calculate PB
         wave_length = 0.2997924 / my_qa.convert(my_qa.quantity(ref_freq),'GHz')['value']
         D_m = my_qa.convert(antdiam_ave, 'm')['value']

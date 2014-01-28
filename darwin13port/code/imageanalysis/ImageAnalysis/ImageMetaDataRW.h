@@ -28,8 +28,11 @@
 #ifndef IMAGES_IMAGEMETADATARW_H
 #define IMAGES_IMAGEMETADATARW_H
 
-#include <imageanalysis/ImageAnalysis/ImageMetaData.h>
+#include <imageanalysis/ImageAnalysis/ImageMetaDataBase.h>
+
 #include <casa/aips.h>
+
+#include <tr1/memory.hpp>
 
 class casac::variant;
 
@@ -74,11 +77,11 @@ namespace casa {
 // classes with these methods.
 // </motivation>
 
-template <class T> class ImageMetaDataRW: public ImageMetaData<T> {
+template <class T> class ImageMetaDataRW : public ImageMetaDataBase<T> {
 
 public:
 
-	ImageMetaDataRW(ImageInterface<Float> *const &image);
+	ImageMetaDataRW(std::tr1::shared_ptr<ImageInterface<T> > image);
 
 	// remove, if possible, the specified parameter. Returns True if removal
 	// was successful.
@@ -89,7 +92,7 @@ public:
 	// mask does not exist.
 	Bool removeMask(const String& maskName);
 
-	virtual Record toRecord(Bool verbose) const;
+	Record toRecord(Bool verbose) const;
 
 	// add a key-value pair
 	Bool add(const String& key, const casac::variant& value);
@@ -100,9 +103,9 @@ public:
 
 protected:
 
-	const ImageInterface<T> * const _getImage() const {return _image;}
+	std::tr1::shared_ptr<const ImageInterface<T> > _getImage() const {return _image;}
 
-	ImageInterface<T> * const _getImage() {return _image;}
+	std::tr1::shared_ptr<ImageInterface<T> > _getImage() {return _image;}
 
 	const ImageInfo& _getInfo() const { return _image->imageInfo(); }
 
@@ -142,9 +145,11 @@ protected:
 
 	String _getTelescope() const;
 
+	Record _getStatistics() const;
+
 private:
 
-	ImageInterface<Float> * const _image;
+	std::tr1::shared_ptr<ImageInterface<Float> > _image;
 
 	// These are mutable because they are only to be set once and
 	// then cached. If this contract is broken, and they are set elsewhere
@@ -158,9 +163,9 @@ private:
 	mutable Vector<String> _axisNames, _axisUnits;
 	mutable Vector<Double> _refPixel;
 	mutable vector<Quantity> _refVal, _increment;
-	mutable Record _header;
+	mutable Record _header, _stats;
 
-	ImageMetaDataRW() : _image(0) {}
+	ImageMetaDataRW() : _image((void *)0) {}
 
 	void _setCoordinateValue(const String& key, const casac::variant& value);
 
