@@ -64,7 +64,7 @@
 #include <synthesis/TransformMachines/WProjectFT.h>
 
 #include <synthesis/TransformMachines/AWProjectFT.h>
-#include <synthesis/TransformMachines/ProtoVR.h>
+//#include <synthesis/TransformMachines/ProtoVR.h>
 #include <synthesis/TransformMachines/AWProjectWBFT.h>
 #include <synthesis/TransformMachines/MultiTermFT.h>
 #include <synthesis/TransformMachines/NewMultiTermFT.h>
@@ -759,7 +759,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
     void SynthesisImager::appendToMapperList(String imagename,  CoordinateSystem& csys, 
-					     String ftmachine, 
+					     String,// ftmachine, 
 					     CountedPtr<FTMachine>& ftm,
 					     CountedPtr<FTMachine>& iftm,
 					     Quantity distance, 
@@ -813,8 +813,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     }
 
-    void SynthesisImager::appendToMapperList(String imagename,  CoordinateSystem& csys, String ftmachine,
-    		Quantity distance, Int facets, const Bool overwrite)
+  void SynthesisImager::appendToMapperList(String imagename,  CoordinateSystem& csys, 
+					   String,// ftmachine,
+					   Quantity,// distance, 
+					   Int facets, 
+					   const Bool overwrite)
     {
       LogIO log_l(LogOrigin("SynthesisImager", "appendToMapperList"));
 
@@ -1073,13 +1076,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void SynthesisImager::createAWPFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT, 
 					   const String& ftmName,
-					   const Int facets,            //=1
+					   const Int,// facets,            //=1
 					   //------------------------------
 					   const Int wprojPlane,        //=1,
-					   const Float padding,         //=1.0,
-					   const Bool useAutocorr,      //=False,
+					   const Float,// padding,         //=1.0,
+					   const Bool,// useAutocorr,      //=False,
 					   const Bool useDoublePrec,    //=True,
-					   const String gridFunction,   //=String("SF"),
+					   const String,// gridFunction,   //=String("SF"),
 					   //------------------------------
 					   const Bool aTermOn,          //= True,
 					   const Bool psTermOn,         //= True,
@@ -1137,8 +1140,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Construct the appropriate re-sampler.
     //
     CountedPtr<VisibilityResamplerBase> visResampler;
-    if (ftmName=="protoft") visResampler = new ProtoVR();
-    else visResampler = new AWVisResampler();
+    //    if (ftmName=="protoft") visResampler = new ProtoVR();
+    //elsef
+      visResampler = new AWVisResampler();
     //    CountedPtr<VisibilityResamplerBase> visResampler = new VisibilityResampler();
 
     //
