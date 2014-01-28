@@ -16,9 +16,28 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
      # Interaction ON or OFF
      interactive=False
 
+     if(testnum==6):  ## 1 image-field, mfs --- WB AWP
+          casalog.post("==================================");
+          casalog.post("Test 6 image-field, mfs --- WB AWP");
+          casalog.post("==================================");
+          paramList = ImagerParameters(msname='DataTest/point_twospws.ms',field='0',spw='*',\
+                                       usescratch=True,readonly=True,\
+                                       imagename='mytest0', nchan=1,freqstart='1.0GHz', freqstep='4.0GHz',\
+                                       imsize=[100,100],\
+                                       cellsize=['8.0arcsec','8.0arcsec'],\
+                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
+                                       ftmachine='awprojectft', startmodel='', weighting='natural',\
+                                       aterm=True, psterm=True, mterm=False, wbawp = True, cfcache = "deleteme.cf",\
+                                       dopointing = False, dopbcorr = True, conjbeams = True, computepastep =360.0, rotatepastep =5.0,\
+                                       algo='hogbom',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       interactive=interactive)
 
      if(testnum==5):  ## 1 image-field, mfs, multiple input MSs --- Real Imaging.
-          
+          casalog.post("==================================");
+          casalog.post("Test 5 image-field, mfs, multiple input MSs --- Real Imaging.");
+          casalog.post("==================================");
           paramList = ImagerParameters(msname=['DataTest/point_onespw0.ms','DataTest/point_onespw1.ms'],\
                                        field='0',spw=['0','0'],\
                                        usescratch=True,readonly=True,\
@@ -34,6 +53,9 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
 
 
      if(testnum==4):  ## 2 image-fields, one cube, one mfs --- Real Imaging.
+          casalog.post("==================================");
+          casalog.post("Test 4 image-fields, one cube, one mfs --- Real Imaging.");
+          casalog.post("==================================");
           
           write_file('out4.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=19:58:40.895 +40.55.58.543\nfreqstep=4.0GHz')
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',\
@@ -52,6 +74,9 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
 
 
      if(testnum==3):  ## 2 image-fields, mfs --- Real Imaging.
+          casalog.post("==================================");
+          casalog.post("Test 3 image-fields, mfs --- Real Imaging.");
+          casalog.post("==================================");
           
           write_file('out3.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=19:58:40.895 +40.55.58.543')
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',\
@@ -70,6 +95,9 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
      
      
      if(testnum==2):  ## 1 image-field, cube --- Real Imaging.
+          casalog.post("==================================");
+          casalog.post("Test 2 image-field, cube --- Real Imaging.");
+          casalog.post("==================================");
           
           paramList = ImagerParameters(msname='DataTest/point_twospws.ms', field='0',spw='0',\
                                        usescratch=True,readonly=True,\
@@ -85,6 +113,9 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False,parallelcube=Fal
      
 
      if(testnum==1):  ## 1 image-field, mfs --- Real Imaging.
+          casalog.post("==================================");
+          casalog.post("Test 1 image-field, mfs --- Real Imaging.");
+          casalog.post("==================================");
           
           paramList = ImagerParameters(msname='DataTest/point_twospws.ms',field='0',spw='0',\
                                        usescratch=True,readonly=True,\

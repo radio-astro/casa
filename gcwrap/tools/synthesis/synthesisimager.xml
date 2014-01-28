@@ -305,6 +305,56 @@ Define the image coordinate systems and shapes.
      <value></value>
      </param>
 
+     <param type="bool" name="aterm">
+     <description>Double Precision gridding or not</description>
+     <value>true</value>
+     </param>
+
+     <param type="bool" name="psterm">
+     <description>Double Precision gridding or not</description>
+     <value>true</value>
+     </param>
+
+     <param type="bool" name="mterm">
+     <description>Double Precision gridding or not</description>
+     <value>false</value>
+     </param>
+
+     <param type="bool" name="wbawp">
+     <description>Double Precision gridding or not</description>
+     <value>true</value>
+     </param>
+
+     <param type="string" name="cfcache">
+     <description>Name of convolution function</description>
+     <value></value>
+     </param>
+
+     <param type="bool" name="dopointing">
+     <description>Double Precision gridding or not</description>
+     <value>false</value>
+     </param>
+
+     <param type="bool" name="dopbcorr">
+     <description>Double Precision gridding or not</description>
+     <value>true</value>
+     </param>
+
+     <param type="bool" name="conjbeams">
+     <description>Double Precision gridding or not</description>
+     <value>true</value>
+     </param>
+
+     <param type="float" name="computepastep">
+     <description>Double Precision gridding or not</description>
+     <value>360.0</value>
+     </param>
+
+     <param type="float" name="rotatepastep">
+     <description>Double Precision gridding or not</description>
+     <value>5.0</value>
+     </param>
+
 
 </input>
 <returns type="bool"/>

@@ -106,7 +106,19 @@ synthesisimager::defineimage(const std::string& imagename,
 			     const bool usedoubleprec,
 			     const int wprojplanes,
 			     const std::string& convfunc,
-			     const std::string& startmodel)
+			     const std::string& startmodel,
+
+			     const bool aterm,//    = True,
+			     const bool psterm,//   = True,
+			     const bool mterm,//    = False,
+			     const bool wbawp,//      = True,
+			     const std::string& cfcache,//  = "",
+			     const bool dopointing,// = False,
+			     const bool dopbcorr,//   = True,
+			     const bool conjbeams,//  = True,
+			     const float computepastep,         //=360.0
+			     const float rotatepastep          //=5.0
+			     )
 {
   Bool rstat(False);
 
@@ -202,8 +214,8 @@ synthesisimager::defineimage(const std::string& imagename,
 			      nchan, freqStart, freqStep, restFreq, facets, ftmachine, 
 			      ntaylorterms, refFreq, 
 			      imageprojection, cdistance, freqframetype, tracksource, trackDir, overwrite,
-			      padding, useautocorr, usedoubleprec, 
-			       wprojplanes, convfunc, startmodel);
+			      padding, useautocorr, usedoubleprec, wprojplanes, convfunc, startmodel, aterm,
+			      psterm, mterm,wbawp, cfcache,dopointing,dopbcorr,conjbeams,computepastep,rotatepastep);
     } 
   catch  (AipsError x) 
     {

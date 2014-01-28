@@ -784,6 +784,18 @@ class ImagerParameters():
                  imagename='', nchan=1, freqstart='1.0GHz', freqstep='1.0GHz',
                  imsize=[1,1], cellsize=[10.0,10.0],phasecenter='19:59:28.500 +40.44.01.50',
                  ftmachine='ft', startmodel='', weighting='natural',
+
+                 aterm=True,
+                 psterm=True,
+                 mterm=False,
+                 wbawp = True,
+                 cfcache = "",
+                 dopointing = False,
+                 dopbcorr = True,
+                 conjbeams = True,
+                 computepastep =360.0,
+                 rotatepastep =5.0,
+
                  algo='test',
                  niter=0, cycleniter=0, cyclefactor=1.0,
                  minpsffraction=0.1,maxpsffraction=0.8,
@@ -800,7 +812,13 @@ class ImagerParameters():
         ## The outlier '1', '2', ....  parameters come from the outlier file
         self.outlierfile = outlierfile
         ## Initialize the parameter lists with the 'main' or '0' field's parameters
-        self.allimpars = { '0' :{'imagename':imagename, 'nchan':nchan, 'imsize':imsize, 'cellsize':cellsize, 'phasecenter':phasecenter, 'freqstart':freqstart, 'freqstep':freqstep, 'ftmachine':ftmachine, 'startmodel':startmodel} }
+        self.allimpars = { '0' :{'imagename':imagename, 'nchan':nchan, 'imsize':imsize, 'cellsize':cellsize, 'phasecenter':phasecenter, 
+                                 'freqstart':freqstart, 'freqstep':freqstep, 'ftmachine':ftmachine, 'startmodel':startmodel,
+                                 'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 'cfcache': cfcache,
+                                 'dopointing':dopointing, 'dopbcorr':dopbcorr, 'conjbeams':conjbeams, 'computepastep':computepastep,
+                                 'rotatepastep':rotatepastep
+                                 } 
+                           }
         self.weightpars = {'type':weighting } 
         self.alldecpars = { '0' : { 'id':0, 'algo':algo } }
 
