@@ -196,6 +196,11 @@ class Fluxboot(basetask.StandardTaskTemplate):
         ii = 0
         unique_sources = list(np.unique(sources))
         results = []
+        
+        print 'fluxscale result: ', fluxscale_result
+        print 'unique_sources: ', unique_sources
+        
+        
         for source in unique_sources:
             indices = []
             for ii in range(len(sources)):
@@ -237,6 +242,8 @@ class Fluxboot(basetask.StandardTaskTemplate):
                 # proper errors), or once we get a modern enough version of scipy, moving
                 # to curve_fit, is better.
                 #
+                
+                print lfds
                 
                 if len(lfds) < 2:
                     aa = lfds[0]
@@ -303,7 +310,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
                              'spw'            : str(spw_i),
                              'selectdata'     : False,
                              'modimage'       : '',
-                             'listmodels' : False,
+                             'listmodels'     : False,
                              'scalebychan'    : True,
                              'fluxdensity'    : [ result[2], 0, 0, 0 ],
                              'spix'           : result[3],
