@@ -225,21 +225,23 @@ class Fluxboot(basetask.StandardTaskTemplate):
                 lfds = []
                 lerrs = []
                 uspws = []
-                for ii in range(len(indices)):
-                    print 'VLA Band:', vlautils.find_EVLA_band(center_frequencies[spws[indices[ii]]]),',',band
-                    if spw2band.values() == []:
-                        if vlautils.find_EVLA_band(center_frequencies[spws[indices[ii]]]) == band:
-                            lfreqs.append(math.log10(center_frequencies[spws[indices[ii]]]))
-                            lfds.append(math.log10(flux_densities[indices[ii]][0]))
-                            lerrs.append(math.log10(math.e) * flux_densities[indices[ii]][1]/flux_densities[indices[ii]][0])
-                            uspws.append(spws[indices[ii]])
-                    else:
-                        if spw2band[spws[indices[ii]]] == band:
-                            lfreqs.append(math.log10(center_frequencies[spws[indices[ii]]]))
-                            lfds.append(math.log10(flux_densities[indices[ii]][0]))
-                            lerrs.append(math.log10(math.e) * flux_densities[indices[ii]][1]/flux_densities[indices[ii]][0])
-                            uspws.append(spws[indices[ii]])
-        
+                		#Use spw id to band mappings
+		if spw2band.values() != []:
+		    for ii in range(len(indices)):
+		        if spw2band[spws[indices[ii]]] == band:
+			    lfreqs.append(math.log10(center_frequencies[spws[indices[ii]]]))
+			    lfds.append(math.log10(flux_densities[indices[ii]][0]))
+			    lerrs.append((flux_densities[indices[ii]][1])/(flux_densities[indices[ii]][0])/2.303)
+			    uspws.append(spws[indices[ii]])
+	        
+	        #Use frequencies for band mappings
+	        if spw2band.values() == []:
+	            for ii in range(len(indices)):
+		        if vlautils.find_EVLA_band(center_frequencies[spws[indices[ii]]]) == band:
+			    lfreqs.append(math.log10(center_frequencies[spws[indices[ii]]]))
+			    lfds.append(math.log10(flux_densities[indices[ii]][0]))
+			    lerrs.append((flux_densities[indices[ii]][1])/(flux_densities[indices[ii]][0])/2.303)
+			    uspws.append(spws[indices[ii]])
                 # if we didn't care about the errors on the data or the fit coefficients, just:
                 #       coefficients = np.polyfit(lfreqs, lfds, 1)
                 # or, if we ever get to numpy 1.7.x, for weighted fit, and returning

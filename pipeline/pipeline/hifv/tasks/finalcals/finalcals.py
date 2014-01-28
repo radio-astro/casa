@@ -526,9 +526,18 @@ class Finalcals(basetask.StandardTaskTemplate):
 	    for ii in range(len(sources)):
 		if (sources[ii] == source):
 		    indices.append(ii)
-	    if bands == []:
+		    
+            bands_from_spw = []
+            
+            if bands == []:
                 for ii in range(len(indices)):
                     bands.append(vlautils.find_EVLA_band(center_frequencies[spws[indices[ii]]]))
+            else:
+                for ii in range(len(indices)):
+                    bands_from_spw.append(spw2band[spws[indices[ii]]])
+                bands = bands_from_spw
+		    
+
 	    unique_bands = list(np.unique(bands))
 	    for band in unique_bands:
 		lfreqs = []
