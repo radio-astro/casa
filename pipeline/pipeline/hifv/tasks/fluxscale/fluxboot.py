@@ -206,6 +206,13 @@ class Fluxboot(basetask.StandardTaskTemplate):
             for ii in range(len(sources)):
                 if (sources[ii] == source):
                     indices.append(ii)
+            
+            bands2 = []
+            for ii in range(len(indices)):
+                bands2.append(find_EVLA_band(center_frequencies[spws[indices[ii]]]))
+            
+            print "Bands2:",bands2
+            
             if bands == []:
                 for ii in range(len(indices)):
                     bands.append(vlautils.find_EVLA_band(center_frequencies[spws[indices[ii]]]))
