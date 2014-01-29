@@ -99,7 +99,7 @@ class SDFlagBaselineResults(common.SingleDishResults):
     def _outcome_name(self):
         baseline_result = self.baseline_result
         flagdata_result = self.flagdata_result
-        baseline_name = baseline_result._outcome_name() if baseline_result is not None else ''
+        baseline_name = ','.join(baseline_result._outcome_name()) if baseline_result is not None else ''
         flagdata_name = flagdata_result._outcome_name() if flagdata_result is not None else ''
         return '\n'.join([baseline_name, flagdata_name])
 
