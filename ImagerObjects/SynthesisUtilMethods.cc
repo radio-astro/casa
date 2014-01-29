@@ -1,4 +1,4 @@
-//# SynthesisUtils.cc: Implementation of Imager.h
+//# SynthesisUtilMethods.cc: Implementation of Imager.h
 //# Copyright (C) 1997-2008
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -49,7 +49,7 @@
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
 
-#include <synthesis/ImagerObjects/SynthesisUtils.h>
+#include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -57,23 +57,23 @@ using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  SynthesisUtils::SynthesisUtils()
+  SynthesisUtilMethods::SynthesisUtilMethods()
   {
     
   }
   
-  SynthesisUtils::~SynthesisUtils() 
+  SynthesisUtilMethods::~SynthesisUtilMethods() 
   {
-    LogIO os( LogOrigin("SynthesisUtils","destructor",WHERE) );
-    os << "SynthesisUtils destroyed" << LogIO::POST;
+    LogIO os( LogOrigin("SynthesisUtilMethods","destructor",WHERE) );
+    os << "SynthesisUtilMethods destroyed" << LogIO::POST;
   }
   
 
   // Data partitioning rules for CONTINUUM imaging
   //  ALL members are strings ONLY.
-  Record SynthesisUtils::continuumDataPartition(Record &selpars, const Int npart)
+  Record SynthesisUtilMethods::continuumDataPartition(Record &selpars, const Int npart)
   {
-    LogIO os( LogOrigin("SynthesisUtils","continuumDataPartition",WHERE) );
+    LogIO os( LogOrigin("SynthesisUtilMethods","continuumDataPartition",WHERE) );
 
     Record onepart, allparts;
 
@@ -111,18 +111,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   // Data partitioning rules for CUBE imaging
-  Record SynthesisUtils::cubeDataPartition(Record &selpars, Int npart)
+  Record SynthesisUtilMethods::cubeDataPartition(Record &selpars, Int npart)
   {
-    LogIO os( LogOrigin("SynthesisUtils","cubeDataPartition",WHERE) );
+    LogIO os( LogOrigin("SynthesisUtilMethods","cubeDataPartition",WHERE) );
     // Temporary special-case code. Please replace with actual rules.
     return continuumDataPartition( selpars, npart );
 
   }
 
   // Image cube partitioning rules for CUBE imaging
-  Record SynthesisUtils::cubeImagePartition(Record &impars, Int npart)
+  Record SynthesisUtilMethods::cubeImagePartition(Record &impars, Int npart)
   {
-    LogIO os( LogOrigin("SynthesisUtils","cubeImagePartition",WHERE) );
+    LogIO os( LogOrigin("SynthesisUtilMethods","cubeImagePartition",WHERE) );
 
     Record onepart, allparts;
 

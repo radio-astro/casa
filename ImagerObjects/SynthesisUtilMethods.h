@@ -1,4 +1,4 @@
-//# SynthesisUtils.h: Imager functionality sits here; 
+//# SynthesisUtilMethods.h: Imager functionality sits here; 
 //# Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -38,13 +38,13 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class SynthesisUtils 
+class SynthesisUtilMethods
 {
  public:
   // Default constructor
 
-  SynthesisUtils();
-  ~SynthesisUtils();
+  SynthesisUtilMethods();
+  ~SynthesisUtilMethods();
 
   // All functions here are stand-alone, self-contained methods.
 
