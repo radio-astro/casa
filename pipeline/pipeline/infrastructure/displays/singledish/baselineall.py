@@ -212,6 +212,8 @@ class SDBaselineAllDisplay(object):
         # Set edge mask region (not used?)
         EdgeL, EdgeR = edge
 
+        vis = self.context.observing_run[ant].ms.basename
+        antenna_name = self.context.observing_run[ant].antenna.name
         spwobj = self.context.observing_run[ant].spectral_window[spw]
         startval = (spwobj.refval - spwobj.refpix * spwobj.increment) * 1.0e-9
         increment = spwobj.increment * 1.0e-9
@@ -387,7 +389,8 @@ class SDBaselineAllDisplay(object):
                 parameters = {'intent': 'TARGET',
                               'spw': spw,
                               'pol': [0,1],
-                              'ant': ant}
+                              'ant': antenna_name,
+                              'vis': vis}
                 plot_obj = logger.Plot(plotfile,
                                        x_axis='Frequency',
                                        y_axis='Intensity',
