@@ -3583,6 +3583,7 @@ class T2_4MDetailsSingleDishFlagBaselineRenderer(T2_4MDetailsDefaultRenderer):
                  always_rerender=False):
         super(T2_4MDetailsSingleDishFlagBaselineRenderer, self).__init__(template,
                                                                          always_rerender)
+        self.baseline_renderer = T2_4MDetailsSingleDishBaselineRenderer(always_rerender=False)        
         
     def get_display_context(self, context, results):
         ctx = super(T2_4MDetailsSingleDishFlagBaselineRenderer, self).get_display_context(context, 
@@ -3620,10 +3621,18 @@ class T2_4MDetailsSingleDishFlagBaselineRenderer(T2_4MDetailsDefaultRenderer):
             for summary in summaries:
                 html_names.append(summary['html'])
                 flag_html_list.append(html_names)
+                
+        baseline_context = []
+        for r in results:
+            baseline_results = basetask.ResultsList()
+            baseline_results.append(r.outcome['baseline'])
+            baseline_results.stage_number = results.stage_number
+            baseline_context.append(self.baseline_renderer.get_display_context(context, baseline_results))
     
         ctx.update({'dirname': stage_dir,
                     'plot_groups_list': plot_groups_list,
-                    'flag_html_list': flag_html_list})
+                    'flag_html_list': flag_html_list,
+                    'baseline_context': baseline_context})
     
         return ctx
 
