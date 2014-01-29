@@ -89,7 +89,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.open_table(self.spw_table)
         nrows=self.table.nrows()
         for id in self.spw:
-            if id < nrows:
+            if id < nrows and self.table.getcell('NUM_CHAN',id) > 0:
                 spwid_ref=id
                 break
         if spwid_ref < 0:
@@ -98,7 +98,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             raise ValueError, msg
         self.allchannels=self.table.getcell('NUM_CHAN',spwid_ref)
         self.close_table()
-        self.imager_param['spw'] = -1 #spwid_ref
+        self.imager_param['spw'] = self.spw #spwid_ref
 
         # outframe (force using the current frame)
         #self.imager_param['outframe'] = ''

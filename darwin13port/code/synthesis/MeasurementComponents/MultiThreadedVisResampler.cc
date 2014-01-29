@@ -60,7 +60,7 @@ namespace casa{
     vbsVec_p(), threadClerk_p(),threadStarted_p(False), visResamplerCtor_p(visResampler), 
     whoLoadedVB_p(MThWorkID::NOONE), currentVBS_p(0)
     {
-      if (n < 0) nelements_p = SynUtils::getenv(FTMachineNumThreadsEnvVar, n);
+      if (n < 0) nelements_p = SynthesisUtils::getenv(FTMachineNumThreadsEnvVar, n);
       if (nelements_p < 0) nelements_p = 1;
       init(doublePrecision);
       // t4G_p=Timers::getTime();
@@ -75,7 +75,7 @@ namespace casa{
     vbsVec_p(), threadClerk_p(),threadStarted_p(False), visResamplerCtor_p(), 
     whoLoadedVB_p(MThWorkID::NOONE),currentVBS_p(0)
     {
-      if (n < 0) nelements_p = SynUtils::getenv(FTMachineNumThreadsEnvVar, n);
+      if (n < 0) nelements_p = SynthesisUtils::getenv(FTMachineNumThreadsEnvVar, n);
       if (nelements_p < 0) nelements_p = 1;
       init(doublePrecision);
       // t4G_p=Timers::getTime();

@@ -39,15 +39,15 @@ namespace casa{
   //
   void VisibilityResamplerBase::copy(const VisibilityResamplerBase& other)
   {
-    SynUtils::SETVEC(uvwScale_p, other.uvwScale_p);
-    SynUtils::SETVEC(offset_p, other.offset_p);
-    SynUtils::SETVEC(dphase_p, other.dphase_p);
-    SynUtils::SETVEC(chanMap_p, other.chanMap_p);
-    SynUtils::SETVEC(polMap_p, other.polMap_p);
-    SynUtils::SETVEC(spwChanFreq_p, other.spwChanFreq_p);
-    SynUtils::SETVEC(spwChanConjFreq_p, other.spwChanConjFreq_p);
-    SynUtils::SETVEC(cfMap_p, other.cfMap_p);
-    SynUtils::SETVEC(conjCFMap_p, other.conjCFMap_p);
+    SynthesisUtils::SETVEC(uvwScale_p, other.uvwScale_p);
+    SynthesisUtils::SETVEC(offset_p, other.offset_p);
+    SynthesisUtils::SETVEC(dphase_p, other.dphase_p);
+    SynthesisUtils::SETVEC(chanMap_p, other.chanMap_p);
+    SynthesisUtils::SETVEC(polMap_p, other.polMap_p);
+    SynthesisUtils::SETVEC(spwChanFreq_p, other.spwChanFreq_p);
+    SynthesisUtils::SETVEC(spwChanConjFreq_p, other.spwChanConjFreq_p);
+    SynthesisUtils::SETVEC(cfMap_p, other.cfMap_p);
+    SynthesisUtils::SETVEC(conjCFMap_p, other.conjCFMap_p);
     //    vbRow2CFMap_p.assign(other.vbRow2CFMap_p);
     convFuncStore_p = other.convFuncStore_p;
   }

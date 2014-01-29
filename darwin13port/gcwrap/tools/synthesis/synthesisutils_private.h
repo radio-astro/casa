@@ -1,3 +1,3 @@
 
-class casa::SynthesisUtils *itsUtils;
+casa::SynthesisUtilMethods *itsUtils;
 

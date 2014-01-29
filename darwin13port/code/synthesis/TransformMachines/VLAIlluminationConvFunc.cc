@@ -307,7 +307,7 @@ namespace casa{
     Float pa = vb.feed_pa(timeValue)(0);
     
     IPosition imsize(skyShape);
-    CoordinateSystem uvCoords = SynUtils::makeUVCoords(skyCoords,imsize);
+    CoordinateSystem uvCoords = SynthesisUtils::makeUVCoords(skyCoords,imsize);
     CoordinateSystem appCoords(convFunc_p.coordinates());
     index=uvCoords.findCoordinate(Coordinate::LINEAR);
     LinearCoordinate uvLC=uvCoords.linearCoordinate(index);

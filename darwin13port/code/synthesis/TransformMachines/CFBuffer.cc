@@ -340,7 +340,7 @@ namespace casa{
 			   const Vector<Double>& /*valList*/,
 			   const Double& incr)
   {
-    return SynUtils::nint(incr*val);
+    return SynthesisUtils::nint(incr*val);
 
     // Int n=valList.nelements();
     // if (n==1) return 0;
@@ -385,7 +385,7 @@ namespace casa{
   Int CFBuffer::nearestFreqNdx(const Double& freqVal) 
   {
     Int index;
-    SynUtils::nearestValue(freqValues_p, freqVal, index);
+    SynthesisUtils::nearestValue(freqValues_p, freqVal, index);
     return index;
     // // The algorithm below has a N*log(N) cost.
     // Vector<Double> diff = fabs(freqValues_p - freqVal);
@@ -567,7 +567,7 @@ namespace casa{
 		    // ftRef(0)=cfWtBuf.shape()(0)/2.0;
 		    // ftRef(1)=cfWtBuf.shape()(1)/2.0;
 		    CoordinateSystem ftCoords;//=cs_l;
-		    // SynUtils::makeFTCoordSys(cs_l, cfWtBuf.shape()(0), ftRef, ftCoords);
+		    // SynthesisUtils::makeFTCoordSys(cs_l, cfWtBuf.shape()(0), ftRef, ftCoords);
 
 		    // cfb.setParams(inu,iw,imx,imy,//muellerElements(imx)(imy),
 		    // 		  ftCoords, sampling, xSupport, ySupport,

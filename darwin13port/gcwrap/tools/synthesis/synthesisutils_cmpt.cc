@@ -14,7 +14,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Logging/LogIO.h>
 
-#include <synthesis/ImagerObjects/SynthesisUtils.h>
+#include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
 
 #include <synthesisutils_cmpt.h>
 
@@ -26,7 +26,7 @@ namespace casac {
 
 synthesisutils::synthesisutils() 
 {
-  itsUtils = new SynthesisUtils();
+  itsUtils = new SynthesisUtilMethods();
 }
 
 synthesisutils::~synthesisutils()

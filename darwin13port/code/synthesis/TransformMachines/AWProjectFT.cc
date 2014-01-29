@@ -921,9 +921,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     //    Array<Int> stokesForAllIFs = vb.msColumns().polarization().corrType().getColumn();
     cerr << "############....temp code!!!!!!!!!! "
-	 << SynUtils::mapSpwIDToPolID(vb,selectedSpw_p(0))
+	 << SynthesisUtils::mapSpwIDToPolID(vb,selectedSpw_p(0))
 	 <<endl;
-    Vector<Int> polIDs=SynUtils::mapSpwIDToPolID(vb,selectedSpw_p(0));
+    Vector<Int> polIDs=SynthesisUtils::mapSpwIDToPolID(vb,selectedSpw_p(0));
     if (polIDs.nelements()==0)
       log_l << "Internal Error: Selected SPW did not map to any pol!" << LogIO::EXCEPTION;
     //
@@ -1050,7 +1050,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			  // convolver.setPsf(*cfc_l);
 			  // convolver.linearConv(*result_l, *conjCFC_l);
-			  SynUtils::libreConvolver(*result_l,*conjCFC_l);
+			  SynthesisUtils::libreConvolver(*result_l,*conjCFC_l);
 
 
 			  // {
@@ -2214,8 +2214,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::makeThGridCoords(VBStore& vbs, const Vector<Int>& gridShape)
   {
     Float dNx=(gridShape(0)/8.0), dNy=(gridShape(1)/8.0);
-    Int GNx=SynUtils::nint(gridShape(0)/dNx),
-      GNy=SynUtils::nint(gridShape(1)/dNy);
+    Int GNx=SynthesisUtils::nint(gridShape(0)/dNx),
+      GNy=SynthesisUtils::nint(gridShape(1)/dNy);
 
     vbs.BLCXi.resize(GNx,GNy);    
     vbs.BLCYi.resize(GNx,GNy);    
@@ -2226,10 +2226,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for (Int i=0;i<GNx;i++)
       for (Int j=0;j<GNy;j++)
 	{
-	  vbs.BLCXi(i,j)=max(0,SynUtils::nint(i*dNx));
-	  vbs.BLCYi(i,j)=max(0,SynUtils::nint(j*dNy));
-	  vbs.TRCXi(i,j)=min(gridShape(0), SynUtils::nint((i+1)*dNx-1.0));
-	  vbs.TRCYi(i,j)=min(gridShape(1), SynUtils::nint((j+1)*dNy-1.0));
+	  vbs.BLCXi(i,j)=max(0,SynthesisUtils::nint(i*dNx));
+	  vbs.BLCYi(i,j)=max(0,SynthesisUtils::nint(j*dNy));
+	  vbs.TRCXi(i,j)=min(gridShape(0), SynthesisUtils::nint((i+1)*dNx-1.0));
+	  vbs.TRCYi(i,j)=min(gridShape(1), SynthesisUtils::nint((j+1)*dNy-1.0));
 	}
     // for (Int i=0;i<GNx;i++)
     //   for (Int j=0;j<GNy;j++)

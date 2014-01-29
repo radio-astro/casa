@@ -373,7 +373,7 @@ namespace casa{
 	if(pA1 != pA2){ // rotate individual factors before multiplication
 
 	  // rotate factor 1
-	  SynUtils::rotateComplexArray(os, respByPol(0)(fact1Index), dCoord, fact1, 
+	  SynthesisUtils::rotateComplexArray(os, respByPol(0)(fact1Index), dCoord, fact1, 
 					     pA1, "LINEAR", 
 					     False); // don't modify dCoord
 	  // if necessary rotate factor 2 
@@ -381,7 +381,7 @@ namespace casa{
 	    fact2.assign(fact1);
 	  }
 	  else{
-	    SynUtils::rotateComplexArray(os, respByPol(nAntTypes-1)(fact2Index), dCoord, fact2, 
+	    SynthesisUtils::rotateComplexArray(os, respByPol(nAntTypes-1)(fact2Index), dCoord, fact2, 
 					       pA2, "LINEAR", 
 					       False); // don't modify dCoord
 	  }
@@ -408,7 +408,7 @@ namespace casa{
 	if(pA1 == pA2){ // still need to rotate pB by PA
 
 	  Array<Complex> pBrot( pB.shape() );
-	  SynUtils::rotateComplexArray(os, pB, dCoord, pBrot, 
+	  SynthesisUtils::rotateComplexArray(os, pB, dCoord, pBrot, 
 					     pA1, "LINEAR", 
 					     False); // don't modify dCoord
 	  nearFinal.putSlice(pBrot, pos);  

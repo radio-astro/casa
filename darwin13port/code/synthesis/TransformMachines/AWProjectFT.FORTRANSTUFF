@@ -184,11 +184,11 @@
     for(Int i=0;i<N;i++) CFMap[i] = polMap[N-i-1];
     
     Array<Complex> rotatedConvFunc;
-//     SynUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+//     SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
 // 				       rotatedConvFunc,(currentCFPA-actualPA),"CUBIC");
-    // SynUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+    // SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
     // 				       rotatedConvFunc,0.0,"LINEAR");
-    SynUtils::rotateComplexArray(log_l, *(cfs_p.data), /*convFunc_p,*/ cfs_p.coordSys,
+    SynthesisUtils::rotateComplexArray(log_l, *(cfs_p.data), /*convFunc_p,*/ cfs_p.coordSys,
     				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
 
     ConjCFMap = polMap;
@@ -340,11 +340,11 @@
     makeConjPolMap(vb,CFMap,ConjCFMap);
 
     Array<Complex> rotatedConvFunc;
-//     SynUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+//     SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
 //  				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
-    SynUtils::rotateComplexArray(log_l, *(cfs_p.data) /*convFunc_p*/, cfs_p.coordSys,
+    SynthesisUtils::rotateComplexArray(log_l, *(cfs_p.data) /*convFunc_p*/, cfs_p.coordSys,
     				       rotatedConvFunc,0.0);
-    // SynUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+    // SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
     // 				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
 
     ConjCFMap_p     = ConjCFMap.getStorage(deleteThem(CONJCFMAP));
@@ -499,9 +499,9 @@
     ConjCFMap = polMap;
 
     Array<Complex> rotatedConvFunc;
-//    SynUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+//    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
 //				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
-    SynUtils::rotateComplexArray(log_l, *(cfs_p.data) /*convFunc_p*/, cfs_p.coordSys,
+    SynthesisUtils::rotateComplexArray(log_l, *(cfs_p.data) /*convFunc_p*/, cfs_p.coordSys,
  				       rotatedConvFunc,0.0,"LINEAR");
 
     /*

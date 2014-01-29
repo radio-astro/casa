@@ -15,6 +15,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <description>
         ASAP SD listing task: list summary of the single dish data
 
+        Modified 2014-01-29 SK
         Modified 2011-06-29 WK
         Modified 2008-02-01 TT
         Task Version 2007-03-04 STM
@@ -34,11 +35,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value type="int">0</value>
     </param> 
 
-    <param type="bool" name="scanaverage">
-            <description>average integs within scans (True,False) </description>
-            <value>False</value>
-    </param>
-
     <param type="string" name="outfile">
 	    <description>Name of output file for summary list</description>
 	    <value></value>
@@ -57,11 +53,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         Keyword arguments:
         infile -- name of input SD dataset
         antenna -- antenna name or id (only effective for MS input). 
-        scanaverage -- average integrations within scans
-                options: (bool) True,False
-                default: False
-                example: if True, this happens in read-in
-                For GBT, set False!
         outfile -- Name of output file for summary list
                 default: '' (no output file)
                 example: 'mysd_summary.txt'
@@ -75,14 +66,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         Task sdlist lists the scan summary of the dataset after importing
         as a scantable into ASAP.  It will optionally output this summary
         as file.
-
-        Note that if your PAGER environment variable is set to 'less' and
-        you have set the 'verbose' ASAP environment variable to True
-        (the default), then the screen version of the summary will page.
-        You can disable this for sdlist by setting
-        sd.rcParams['verbose']=False
-        before running sdlist.  Set it back afterwards if you want lots
-        of information.
 
         WARNING for the GBT raw SDFITS format data as input:
         SDtasks are able to handle GBT raw SDFITS format data since the 

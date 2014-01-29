@@ -1684,14 +1684,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//   Vector<Float> maxVal(twoDPB.shape()(2));
 	//   Vector<IPosition> posMax(twoDPB.shape()(2));
 	  
-	//   SynUtils::findLatticeMax(twoDPB,maxVal,posMax); 
+	//   SynthesisUtils::findLatticeMax(twoDPB,maxVal,posMax); 
 	//   posMax(0)(0)+=1;
 	//   posMax(0)(1)+=1;
 	//   posMax(1)(0)+=1;
 	//   posMax(1)(1)+=1;
 	//   //	  applyAntiAliasingOp(twoDPB,posMax,1);
 
-	//   SynUtils::findLatticeMax(twoDPBSq,maxVal,posMax); 
+	//   SynthesisUtils::findLatticeMax(twoDPBSq,maxVal,posMax); 
 	//   posMax(0)(0)+=1;
 	//   posMax(0)(1)+=1;
 	//   posMax(1)(0)+=1;
@@ -1959,7 +1959,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	  Vector<Float> maxVal(convWeights.shape()(2));
 	  Vector<IPosition> posMax(convWeights.shape()(2));
-	  SynUtils::findLatticeMax(convWeights,maxVal,posMax); 
+	  SynthesisUtils::findLatticeMax(convWeights,maxVal,posMax); 
 	  //	  cout << "convWeights: " << maxVal << " " << posMax << endl;
 	}
 
@@ -2436,11 +2436,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(Int i=0;i<N;i++) CFMap[i] = polMap[N-i-1];
     
     Array<Complex> rotatedConvFunc;
-//     SynUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+//     SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
 // 				       rotatedConvFunc,(currentCFPA-actualPA),"CUBIC");
-    SynUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+    SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
     				       rotatedConvFunc,0.0,"LINEAR");
-    // SynUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+    // SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
     // 				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
 
     ConjCFMap = polMap;
@@ -2590,11 +2590,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     makeConjPolMap(vb,CFMap,ConjCFMap);
 
     Array<Complex> rotatedConvFunc;
-//     SynUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+//     SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
 //  				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
-    SynUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+    SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
     				       rotatedConvFunc,0.0);
-    // SynUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+    // SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
     // 				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
 
     ConjCFMap_p     = ConjCFMap.getStorage(deleteThem(CONJCFMAP));
@@ -2745,9 +2745,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ConjCFMap = polMap;
 
     Array<Complex> rotatedConvFunc;
-//    SynUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+//    SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
 //				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
-     SynUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+     SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
  				       rotatedConvFunc,0.0,"LINEAR");
 
     /*

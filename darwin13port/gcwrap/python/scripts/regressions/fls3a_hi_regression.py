@@ -99,7 +99,7 @@ spw=0,field=0)							# step=1,nchan=901,fieldid=1,spwid=1)
 dir='J2000 17:18:29 +59.31.23'		#set map center			# dir=dm.direction('17h18m29s','+59d31m23s')
 im.defineimage(nx=150,cellx='1.5arcmin',#define image parameters	# myim.setimage(150,150,cellx='1.5arcmin',
 phasecenter=dir,mode='channel',start=30, 				# celly='1.5arcmin',mode='channel',nchan=901,
-nchan=901,step=1)							# start=30,step=1,phasecenter=dir,doshift=T,
+nchan=901,step=1,spw=0)							# start=30,step=1,phasecenter=dir,doshift=T,
 									# spwid=1)
 # choose SD gridding, gridding cache size
 im.setoptions(ftmachine='sd',cache=1000000000) 				# myim.setoptions(ftmachine='sd',gridfunction='SF')

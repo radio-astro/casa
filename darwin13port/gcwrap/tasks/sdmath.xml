@@ -10,10 +10,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="sdmath" startup="false" category="single dish">
 
-  <shortdescription>ASAP SD task: do simple arithmatic (subtraction, addition, multiplication, and division) for spectra</shortdescription>
+  <shortdescription>ASAP SD task: do simple arithmetic (subtraction, addition, multiplication, and division) for spectra</shortdescription>
 
   <description>ASAP SD task:
-        Do simple arithmatic (subtraction, addition, multiplication, and division) for spectra
+        Do simple arithmetic (subtraction, addition, multiplication, and division) for spectra
 
         Task Version 2009-02-04 TT
 </description>

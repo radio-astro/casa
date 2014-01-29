@@ -1601,7 +1601,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void FTMachine::setSpwFreqSelection(const Matrix<Double>& spwFreqs) 
   {
     spwFreqSel_p.assign(spwFreqs);
-    SynUtils::expandFreqSelection(spwFreqs,expandedSpwFreqSel_p, expandedSpwConjFreqSel_p);
+    SynthesisUtils::expandFreqSelection(spwFreqs,expandedSpwFreqSel_p, expandedSpwConjFreqSel_p);
   }
 
   void FTMachine::setSpectralFlag(const VisBuffer& vb, Cube<Bool>& modflagcube){

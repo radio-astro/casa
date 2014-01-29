@@ -713,7 +713,7 @@ namespace casa{
 	  
 	  Vector<Float> maxVal(convWeights_l.shape()(2));
 	  Vector<IPosition> posMax(convWeights_l.shape()(2));
-	  SynUtils::findLatticeMax(convWeights_l,maxVal,posMax); 
+	  SynthesisUtils::findLatticeMax(convWeights_l,maxVal,posMax); 
 	}
     
     Int index=coords.findCoordinate(Coordinate::SPECTRAL);

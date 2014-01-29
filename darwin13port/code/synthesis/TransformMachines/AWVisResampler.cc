@@ -557,11 +557,11 @@ namespace casa{
 		      cfb.getParams(cfRefFreq, s, support(0), support(1),cfFreqNdx,wndx,0);
 		      runTimeG4_p += timer_p.real();
 
-		      sampling(0) = sampling(1) = SynUtils::nint(s);
-		      // sampling[0] = SynUtils::nint(sampling[0]*cfScale);
-		      // sampling[1] = SynUtils::nint(sampling[1]*cfScale);
-		      // support[0]  = SynUtils::nint(support[0]/cfScale);
-		      // support[1]  = SynUtils::nint(support[1]/cfScale);
+		      sampling(0) = sampling(1) = SynthesisUtils::nint(s);
+		      // sampling[0] = SynthesisUtils::nint(sampling[0]*cfScale);
+		      // sampling[1] = SynthesisUtils::nint(sampling[1]*cfScale);
+		      // support[0]  = SynthesisUtils::nint(support[0]/cfScale);
+		      // support[1]  = SynthesisUtils::nint(support[1]/cfScale);
 
 		      timer_p.mark();
 		      sgrid(pos,loc,off, phasor, irow, vbs.uvw_p, dphase_p[irow], freq[ichan], 
@@ -735,20 +735,20 @@ runTimeG7_p += timer_p.real();
 	    
 	    //	    cerr << "Grid: " << ichan << " " << freq[ichan] << " " << fndx << endl;
 	    
-	    // if (nw > 1) wndx=SynUtils::nint((dataWVal*freq[ichan]/C::c)/wIncr-1);
-	    // if (nCFFreq > 0) fndx = SynUtils::nint((freq[ichan])/fIncr-1);
+	    // if (nw > 1) wndx=SynthesisUtils::nint((dataWVal*freq[ichan]/C::c)/wIncr-1);
+	    // if (nCFFreq > 0) fndx = SynthesisUtils::nint((freq[ichan])/fIncr-1);
 	    Float s;
 	    // CoordinateSystem cs; 
 	    // cfb.getParams(cs,s,support(0),support(1),0,wndx,0);
 	    cfb.getParams(cfRefFreq,s,support(0),support(1),fndx,wndx,0);
-	    sampling(0) = sampling(1) = SynUtils::nint(s);
+	    sampling(0) = sampling(1) = SynthesisUtils::nint(s);
 	    
 	    //cfScale = cfRefFreq/freq[ichan];
 	    
-	    // sampling[0] = SynUtils::nint(sampling[0]*cfScale);
-	    // sampling[1] = SynUtils::nint(sampling[1]*cfScale);
-	    // support[0]  = SynUtils::nint(support[0]/cfScale);
-	    // support[1]  = SynUtils::nint(support[1]/cfScale);
+	    // sampling[0] = SynthesisUtils::nint(sampling[0]*cfScale);
+	    // sampling[1] = SynthesisUtils::nint(sampling[1]*cfScale);
+	    // support[0]  = SynthesisUtils::nint(support[0]/cfScale);
+	    // support[1]  = SynthesisUtils::nint(support[1]/cfScale);
 	    
 	    sgrid(pos,loc,off,phasor,irow,uvw,dphase_p[irow],freq[ichan],
 		  uvwScale_p,offset_p,sampling);
@@ -880,15 +880,15 @@ void AWVisResampler::sgrid(Vector<Double>& pos, Vector<Int>& loc,
   if (uvw.nelements() > 0) for(Int i=0;i<3;i++) uvw_l[i]=uvw(i,irow);
   
   pos(2)=sqrt(abs(scale[2]*uvw_l(2)*freq/C::c))+offset[2];
-  loc(2)=SynUtils::nint(pos[2]);
+  loc(2)=SynthesisUtils::nint(pos[2]);
   off(2)=0;
   
   for(Int idim=0;idim<2;idim++)
     {
       pos[idim]=scale[idim]*uvw_l(idim)*freq/C::c+(offset[idim]);
-      loc[idim]=SynUtils::nint(pos[idim]);
-      //	off[idim]=SynUtils::nint((loc[idim]-pos[idim])*sampling[idim]+1);
-      off[idim]=SynUtils::nint((loc[idim]-pos[idim])*sampling[idim]);
+      loc[idim]=SynthesisUtils::nint(pos[idim]);
+      //	off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]+1);
+      off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]);
     }
   
   if (dphase != 0.0)
@@ -916,8 +916,8 @@ Bool AWVisResampler::reindex(const Vector<Int>& in, Vector<Int>& out,
   Int ix=in[0], iy=in[1];
   if (sinDPA != 0.0)
     {
-      ix = SynUtils::nint(cosDPA*in[0] + sinDPA*in[1]);
-      iy = SynUtils::nint(-sinDPA*in[0] + cosDPA*in[1]);
+      ix = SynthesisUtils::nint(cosDPA*in[0] + sinDPA*in[1]);
+      iy = SynthesisUtils::nint(-sinDPA*in[0] + cosDPA*in[1]);
     }
   out[0]=ix+Origin[0];
   out[1]=iy+Origin[1];
