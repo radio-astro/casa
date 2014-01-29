@@ -80,11 +80,24 @@ class DetectLine(common.SingleDishTaskTemplate):
             LOG.info('Skip line detection since line window is set.')
             tRA = self.datatable.getcol('RA')
             tDEC = self.datatable.getcol('DEC')
+            predefined_window = self._get_predefined_window(window)
             for row in xrange(nrow):
-                detect_signal[row] = [tRA[row], tDEC[row], window]
+                detect_signal[row] = [tRA[row], tDEC[row], predefined_window]
                 for row in range(len(self.datatable)):
-                    self.datatable.putcell('MASKLIST', row, window)
-            return detect_signal
+                    self.datatable.putcell('MASKLIST', row, predefined_window)
+                    
+            result = DetectLineResults(task=self.__class__,
+                                       success=True,
+                                       outcome=detect_signal)
+
+            result.task = self.__class__
+
+            if self.context.subtask_counter is 0: 
+                result.stage_number = self.context.task_counter - 1
+            else:
+                result.stage_number = self.context.task_counter 
+
+            return result
 
         LOG.info('Search regions for protection against the background subtraction...')
         LOG.info('DetectLine: Processing %d spectra...' % nrow)
@@ -96,8 +109,9 @@ class DetectLine(common.SingleDishTaskTemplate):
         LOG.info('EdgeL, EdgeR=%s, %s'%(EdgeL, EdgeR))
         LOG.info('Nedge=%s'%(Nedge))
         if Nedge >= nchan:
-            LOG.error('Error: Edge masked region too large...')
-            return False
+            message = 'Error: Edge masked region too large...'
+            LOG.error(message)
+            raise RuntimeError(message)
 
         #2010/6/9 Max FWHM found to be too large!
         #if rules.LineFinderRule['MaxFWHM'] > ((nchan-Nedge)/2):
@@ -309,6 +323,15 @@ class DetectLine(common.SingleDishTaskTemplate):
                         else: flag = True
         return protected
 
+    def _get_predefined_window(self, window):
+         if len(window) == 0:
+             return []
+         else:
+             if hasattr(window[0], '__iter__'):
+                 return window
+             else:
+                 return [window]
+    
 def SpBinning(data, Bin):
     if Bin == 1: 
         return data
