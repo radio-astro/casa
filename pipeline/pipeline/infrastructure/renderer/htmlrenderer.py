@@ -3578,6 +3578,54 @@ class SingleDishClusterPlotsRenderer(object):
         t = TemplateFinder.get_template(self.template)
         return t.render(**display_context)
 
+class T2_4MDetailsSingleDishFlagBaselineRenderer(T2_4MDetailsDefaultRenderer):
+    def __init__(self, template='t2-4m_details-hsd_flagbaseline.html',
+                 always_rerender=False):
+        super(T2_4MDetailsSingleDishFlagBaselineRenderer, self).__init__(template,
+                                                                         always_rerender)
+        
+    def get_display_context(self, context, results):
+        ctx = super(T2_4MDetailsSingleDishFlagBaselineRenderer, self).get_display_context(context, 
+                                                                                          results)
+        
+        stage_number = get_stage_number(results)
+        stage_dir = os.path.join(context.report_dir,'stage%d'%(stage_number))
+        if not os.path.exists(stage_dir):
+            os.mkdir(stage_dir)
+   
+        plot_groups_list = []
+        flag_html_list = []
+        for r in results:
+
+            baseline_result = r.outcome['baseline']
+            flagdata_result = r.outcome['flagdata']
+           
+            plots = []
+            inputs = sddisplay.ClusterDisplay.Inputs(context,result=baseline_result)
+            task = sddisplay.ClusterDisplay(inputs)
+            plots.append(task.plot())
+    
+            plot_groups = logger.PlotGroup.create_plot_groups(plots)
+            for plot_group in plot_groups:
+                renderer = PlotGroupRenderer(context, results, plot_group)
+                plot_group.filename = renderer.filename
+                with renderer.get_file() as fileobj:
+                    fileobj.write(renderer.render())
+            plot_groups_list.append(plot_groups)
+        
+            rel_path = os.path.basename(stage_dir)   ### stage#
+
+            html_names = []
+            summaries = flagdata_result.outcome['summary']
+            for summary in summaries:
+                html_names.append(summary['html'])
+                flag_html_list.append(html_names)
+    
+        ctx.update({'dirname': stage_dir,
+                    'plot_groups_list': plot_groups_list,
+                    'flag_html_list': flag_html_list})
+    
+        return ctx
 
 class T2_4MDetailsRenderer(object):
     # the filename component of the output file. While this is the same for
@@ -4014,9 +4062,9 @@ renderer_map = {
         hsd.tasks.SDBaselineOld  : T2_4MDetailsSingleDishBaselineRenderer(always_rerender=True),
         hsd.tasks.SDBaseline     : T2_4MDetailsSingleDishBaselineRenderer(always_rerender=True),
         hsd.tasks.SDFlagData     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagdata.html', always_rerender=True),
-        hsd.tasks.SDImaging      : T2_4MDetailsSingleDishImagingRenderer(always_rerender=False),
-        hsd.tasks.SDImagingOld   : T2_4MDetailsSingleDishImagingRenderer(always_rerender=False),
-        hsd.tasks.SDFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagbaseline.html'),
+        hsd.tasks.SDImaging      : T2_4MDetailsSingleDishImagingRenderer(always_rerender=True),
+        hsd.tasks.SDImagingOld   : T2_4MDetailsSingleDishImagingRenderer(always_rerender=True),
+        hsd.tasks.SDFlagBaseline : T2_4MDetailsSingleDishFlagBaselineRenderer(always_rerender=True),
         hsd.tasks.SDPlotFlagBaseline : T2_4MDetailsSingleDishPlotFlagBaselineRenderer(always_rerender=True),
         hsd.tasks.SDImportData2  : T2_4MDetailsImportDataRenderer(),
         hifv.tasks.importdata.VLAImportData : T2_4MDetailsVLAImportDataRenderer(),

@@ -13,45 +13,6 @@ import pipeline.infrastructure.displays as displays
 
 <%block name="title">Stage ${hr.get_stage_number(result)}: ${hr.get_task_description(result)}</%block>
 
-<%
-try:
-    stage_number = hr.get_stage_number(result)
-    stage_dir = os.path.join(pcontext.report_dir,'stage%d'%(stage_number))
-    if not os.path.exists(stage_dir):
-        os.mkdir(stage_dir)
-   
-    plot_groups_list = []
-    flag_html_list = []
-    for r in result:
-
-        baseline_result = r.outcome['baseline']
-        flagdata_result = r.outcome['flagdata']
-           
-        plots = []
-        inputs = displays.ClusterDisplay.Inputs(pcontext,result=baseline_result)
-        task = displays.ClusterDisplay(inputs)
-        plots.append(task.plot())
-    
-        plot_groups = logger.PlotGroup.create_plot_groups(plots)
-        for plot_group in plot_groups:
-            renderer = hr.PlotGroupRenderer(pcontext, result, plot_group)
-            plot_group.filename = renderer.filename
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
-        plot_groups_list.append(plot_groups)
-        
-        rel_path = os.path.basename(stage_dir)   ### stage#
-
-        html_names = []
-        summaries = flagdata_result.outcome['summary']
-        for summary in summaries:
-            html_names.append(summary['name'])
-        flag_html_list.append(html_names)
-    
-except Exception, e:
-    print 'hsd_flagbaseline html template exception:', e
-    raise e
-%>
 
 <ul>
 	<li>Initial display: most important details</li>
@@ -65,7 +26,7 @@ except Exception, e:
 		    <ul>
 			% for plot_group in plot_groups_list[i]:
 				<li>
-					<a class="replace" href="${os.path.join(dirname, plot_group.filename)}">${plot_group.title}</a>
+					<a class="replace" href="${os.path.relpath(os.path.join(dirname, plot_group.filename), pcontext.report_dir)}">${plot_group.title}</a>
 				</li>
 			% endfor
 			</ul>
@@ -73,7 +34,7 @@ except Exception, e:
 			<ul>
             % for name in flag_html_list[i]:
                 <li>
-                    <a class="replace" href="${os.path.join(rel_path, name)}">${name}</a>
+                    <a class="replace" href="${os.path.relpath(os.path.join(dirname, name), pcontext.report_dir)}">${name}</a>
                 </li>
             % endfor
             </ul>
