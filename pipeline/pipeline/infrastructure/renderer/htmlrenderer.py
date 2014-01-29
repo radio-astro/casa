@@ -2193,7 +2193,7 @@ class BandpassAmpVsFreqPlotRenderer(BaseJsonPlotRenderer):
     def __init__(self, context, result, plots):
         vis = os.path.basename(result.inputs['vis']) 
         ms = context.observing_run.get_ms(vis)
-        scores = get_bandpass_amp_qa2_scores(ms, result.qa.rawdata, plots,
+        scores = get_bandpass_amp_qa2_scores(ms, result, plots,
                                              context.report_dir)
                 
         super(BandpassAmpVsFreqPlotRenderer, self).__init__(context, result, plots, scores) 
@@ -2210,7 +2210,7 @@ class BandpassPhaseVsFreqPlotRenderer(BaseJsonPlotRenderer):
     def __init__(self, context, result, plots):
         vis = os.path.basename(result.inputs['vis']) 
         ms = context.observing_run.get_ms(vis)
-        scores = get_bandpass_phase_qa2_scores(ms, result.qa.rawdata, plots,
+        scores = get_bandpass_phase_qa2_scores(ms, result, plots,
                                                context.report_dir)
 
         super(BandpassPhaseVsFreqPlotRenderer, self).__init__(context, result, plots, scores) 
@@ -3976,21 +3976,32 @@ class LogCopier(object):
 #        return rows[start_idx:end_idx]
           
           
-def get_bandpass_amp_qa2_scores(ms, qa_data, plots, rootdir):
+def get_bandpass_amp_qa2_scores(ms, result, plots, rootdir):
+    # .. and because the caltable name is a heuristic and resolved at child 
+    # taske execution time, the stage number doesn't map to the input! 
+    #caltable = result.inputs['caltable']
+    caltable = result.final[0].gaintable
+    num_pols = utils.get_num_caltable_polarizations(caltable)
     score_types = ['AMPLITUDE_SCORE_DD',
                    'AMPLITUDE_SCORE_FN',
                    'AMPLITUDE_SCORE_SNR']
-    return get_bandpass_qa2_scores(ms, qa_data, plots, score_types, rootdir)
+    return get_bandpass_qa2_scores(ms, result, plots, score_types, rootdir, num_pols)
 
 
-def get_bandpass_phase_qa2_scores(ms, qa_data, plots, rootdir):
+def get_bandpass_phase_qa2_scores(ms, result, plots, rootdir):
+    # .. and because the caltable name is a heuristic and resolved at child 
+    # taske execution time, the stage number doesn't map to the input! 
+    #caltable = result.inputs['caltable']
+    caltable = result.final[0].gaintable
+    num_pols = utils.get_num_caltable_polarizations(caltable)
     score_types = ['PHASE_SCORE_DD',
                    'PHASE_SCORE_FN',
                    'PHASE_SCORE_RMS']
-    return get_bandpass_qa2_scores(ms, qa_data, plots, score_types, rootdir)    
+    return get_bandpass_qa2_scores(ms, result, plots, score_types, rootdir, num_pols)    
 
-
-def get_bandpass_qa2_scores(ms, qa_data, plots, score_types, rootdir):
+def get_bandpass_qa2_scores(ms, result, plots, score_types, rootdir, num_polarizations):
+    qa_data = result.qa.rawdata
+    
     scores = {}
     for plot in plots:
         spw = ms.get_spectral_window(plot.parameters['spw'])
@@ -4005,7 +4016,7 @@ def get_bandpass_qa2_scores(ms, qa_data, plots, score_types, rootdir):
 
         pol = plot.parameters['pol']
         pol_id = dd.get_polarization_id(pol)
-        
+
         png = os.path.relpath(plot.abspath, rootdir)
         thumbnail = os.path.relpath(plot.thumbnail, rootdir)
         
@@ -4017,12 +4028,16 @@ def get_bandpass_qa2_scores(ms, qa_data, plots, score_types, rootdir):
 
         # QA2 dictionary keys are peculiar, in that their index is a
         # function of both antenna and feed.
-        qa2_id = int(antenna.id) * dd.num_polarizations + pol_id
+        qa2_id = int(antenna.id) * num_polarizations + pol_id
         qa2_str = str(qa2_id)
 
-        for score_type in score_types:
+        for score_type in score_types:            
             if 'QA2SCORES' in qa_data:
-                score = qa_data['QA2SCORES'][score_type][spw_str][qa2_str]
+                try:
+                    score = qa_data['QA2SCORES'][score_type][spw_str][qa2_str]
+                except KeyError:
+                    LOG.error('Could not get %s score for %s (%s) spw %s pol %s (id=%s)' % (score_type, antenna.name, antenna.id, spw_str, pol, qa2_str))
+                    score = None 
             else:
                 score = 1.0
             png_scores[score_type] = score

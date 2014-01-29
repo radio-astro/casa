@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import re
 import os
 
 import matplotlib
@@ -13,6 +14,8 @@ import pipeline.infrastructure.renderer.logger as logger
 from pipeline.infrastructure import casa_tasks
 
 LOG = infrastructure.get_logger(__name__)
+
+COLSHAPE_FORMAT = re.compile(r'\[(?P<num_pols>\d+), (?P<num_rows>\d+)\]')
 
 
 class PlotcalLeaf(object):
@@ -254,19 +257,24 @@ class PolComposite(LeafComposite):
     
     def __init__(self, context, result, calapp, xaxis, yaxis, ant='', spw='',
                  **kwargs):
-        with casatools.TableReader(calapp.gaintable) as tb:
-            col = tb.getvarcol('CPARAM')
+        # the number of polarisations for a spw may not be equal to the number
+        # of shape of the column. For example, X403 has XX,YY for some spws 
+        # but XX for the science data. If we're given a spw argument we can
+        # bypass the calls for the missing polarisation.
+        if spw != '':
+            vis = calapp.vis
+            ms = context.observing_run.get_ms(vis)
 
-        # get the number of pols stored in the caltable, checking that this
-        # is consistent across all rows            
-        pols_per_row = set([len(v) for _, v in col.items()])  
-        assert len(pols_per_row) is 1
-        num_pols = pols_per_row.pop()
+            dd = ms.get_data_description(spw=int(spw))
+            num_pols = dd.num_polarizations
 
-        caltable_pols = range(num_pols)
+        else:
+            num_pols = utils.get_num_caltable_polarizations(calapp.gaintable)
+        
+        pol_range = range(num_pols)
         children = [self.leaf_class(context, result, calapp, xaxis, yaxis,
                                     spw=spw, ant=ant, pol=pol, **kwargs)
-                                    for pol in caltable_pols]
+                                    for pol in pol_range]
         super(PolComposite, self).__init__(children)
 
     
