@@ -333,6 +333,9 @@ PLOTS = function () {
         },
         "qa2": function (xAxisLabel) {
             xAxisLabel.text("QA2 Score");
+        },
+        "K": function (xAxisLabel) {
+            xAxisLabel.text("K");
         }
     };
 
