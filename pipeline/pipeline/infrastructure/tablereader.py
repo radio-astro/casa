@@ -241,8 +241,8 @@ class MeasurementSetReader(object):
         ms.frequency_groups = SpectralWindowTable.get_frequency_groups(ms)
         ms.data_descriptions = DataDescriptionTable.get_descriptions(ms)
         ms.polarizations = PolarizationTable.get_polarizations(ms)
-        for dd in ms.data_descriptions:
-            with utils.open_ms(ms.name) as openms:
+        with utils.open_ms(ms.name) as openms:
+            for dd in ms.data_descriptions:
                 openms.selectinit(dd.id)
                 ms_info = openms.getdata(['axis_info','time'])
                 dd.obs_time = numpy.mean(ms_info['time'])                
