@@ -34,6 +34,7 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
+#include <measures/Measures/MFrequency.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -69,7 +70,33 @@ class SynthesisUtils
   // Image cube partitioning rules for CUBE imaging
   Record cubeImagePartition(Record &impars, Int npart);
 
+  /////////////////////// Parameter verification - start
+
+  // Make/Check Selection Parameter Lists
+  Record verifySelectionParams(Record &selpars);
+
+
+  /*
+
+  // Make/Check Imaging Parameter Lists
+  Record verifyImageParams(Record &impars, String outlierfile="");
+  // Default Imaging Parameters
+  Record getDefaultImageParams();
   // Parse outlier-field specification file
+  Record parseOutlierFile(String outlierfile);
+
+
+  // Make/Check Iteration Parameters
+  Record verifyIterationParams(Record &iterpars);
+  
+  // Make/Check Deconvolution Parameters
+  Record verifyDeconvolutionParams(Record &decpars);
+
+  // Check Gather/Normalization parameters.
+  Record verifyNormalizationParameters(Record &impars, const Int npart);
+  */
+  /////////////////////// Parameter verification - end
+
 
   // Generate Coordinate System ( spectral definition, especially )
   //  Input : all specs.  Output : LSRK freqs.
@@ -77,6 +104,36 @@ class SynthesisUtils
 
 
 protected:
+
+
+
+};
+
+
+
+class SynthesisParamsSelect
+{
+public:
+
+  SynthesisParamsSelect();
+  ~SynthesisParamsSelect();
+
+  void setValues(const String inmsname, const String inspw="", 
+			const String infreqbeg="", const String infreqend="", const String infreqframe="", 
+			const String infield="", const String inantenna="", const String intimestr="", 
+			const String inscan="", const String inobs="", const String instate="", 
+			const String inuvdist="", const String intaql="", const Bool inusescratch=True, 
+			const Bool inreadonly=False, const Bool inincrmodel=False);
+
+  void setValues(Record &inrec);
+  void setDefaults();
+
+  Record toRecord();
+
+  String msname, spw, freqbeg, freqend;
+  MFrequency::Types freqframe;
+  String field, antenna, timestr, scan, obs, state, uvdist,taql;
+  Bool usescratch,readonly,incrmodel;
 
 };
 

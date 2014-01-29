@@ -17,6 +17,7 @@
 #include <casa/Logging/LogIO.h>
 
 #include <synthesis/ImagerObjects/SynthesisImager.h>
+#include <synthesis/ImagerObjects/SynthesisUtils.h>
 
 #include <synthesisimager_cmpt.h>
 
@@ -63,13 +64,21 @@ synthesisimager::selectdata(const std::string& msname,
 
       if( ! itsImager ) itsImager = new SynthesisImager();
 
-      casa::MFrequency::Types freqframetype;
-      if( !casa::MFrequency::getType(freqframetype, freqframe) )
-	throw(AipsError("Invalid Frequency Frame " + freqframe));
+      //      casa::MFrequency::Types freqframetype;
+      //      if( !casa::MFrequency::getType(freqframetype, freqframe) )
+      //	throw(AipsError("Invalid Frequency Frame " + freqframe));
 
-      itsImager->selectData( msname, spw, freqbeg, freqend, freqframetype,
-			     field, antenna, timestr, scan, obs, state, uvdist, taql,
-			     usescratch, readonly, incrmodel );
+      SynthesisParamsSelect pars;
+      pars.setValues(msname,spw,freqbeg,freqend, freqframe,
+		     field, antenna, timestr, scan, obs, state, uvdist, taql,
+		     usescratch, readonly, incrmodel);
+      
+
+      itsImager->selectData( pars.msname, pars.spw, 
+			     pars.freqbeg, pars.freqend, pars.freqframe,
+			     pars.field, pars.antenna, pars.timestr, pars.scan, 
+			     pars.obs, pars.state, pars.uvdist, pars.taql,
+			     pars.usescratch, pars.readonly, pars.incrmodel );
     } 
   catch  (AipsError x) 
     {

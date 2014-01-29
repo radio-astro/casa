@@ -4,6 +4,7 @@
 namespace casa
 {
   class SynthesisUtils;
+  class SynthesisParamsSelect;
   class LogIO;
 };
 

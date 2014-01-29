@@ -422,3 +422,20 @@ def checkDataPartitioningCode():
      #        }
      # }
      #
+
+
+def checkPars():
+
+     params = getparams( testnum=1 )
+     paramList = params[0]
+
+     selpars = paramList.getSelPars()
+     impars = paramList.getImagePars()
+
+     print selpars
+
+     synu = casac.synthesisutils()
+     fixrec = synu.checkselectionparams( selpars )
+     print fixrec
+     print synu.checkselectionparams( fixrec )
+     synu.done()
