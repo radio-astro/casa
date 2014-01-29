@@ -239,7 +239,7 @@ class Linpolcal(basetask.StandardTaskTemplate):
         # kcrs
         calapp = kcrs_result.final[0]
         print 'kcrs table', kcrs_result.final[0].calfrom[0].gaintable
-        newcalfrom = callibrary.CalFrom(calapp.calfrom[0].table,
+        newcalfrom = callibrary.CalFrom(calapp.calfrom[0].gaintable,
                                         caltype='unknown',
                                         gainfield='',
                                         interp='nearest')
