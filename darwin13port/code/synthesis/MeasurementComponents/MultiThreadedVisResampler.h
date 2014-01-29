@@ -54,7 +54,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       sumwt_p(), gridderWorklets_p(), vbsVec_p(), visResamplerCtor_p(), 
       whoLoadedVB_p(MThWorkID::NOONE), currentVBS_p(0)
     {
-      nelements_p = SynthesisUtils::getenv(FTMachineNumThreadsEnvVar, 1);
+      nelements_p = SynUtils::getenv(FTMachineNumThreadsEnvVar, 1);
       if (nelements_p < 0) nelements_p = 1;
       //      nelements_p=DEFAULTNOOFCORES;
     };

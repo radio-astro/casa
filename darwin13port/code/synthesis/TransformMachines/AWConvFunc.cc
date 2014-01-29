@@ -171,9 +171,9 @@ namespace casa{
 		//
 		// Cache the A-Term for this polarization and frequency
 		//
-		Double conjFreq=SynthesisUtils::conjFreq(freqValues(inu),imRefFreq_p);
+		Double conjFreq=SynUtils::conjFreq(freqValues(inu),imRefFreq_p);
 		Int conjFreqIndex;
-		conjFreq=SynthesisUtils::nearestValue(freqValues, conjFreq, conjFreqIndex);
+		conjFreq=SynUtils::nearestValue(freqValues, conjFreq, conjFreqIndex);
 
 		// USEFUL DEBUG MESSAGE
 		// cerr << "Freq. values: " 
@@ -390,7 +390,7 @@ namespace casa{
 		    ftRef(0)=cfWtBuf.shape()(0)/2.0;
 		    ftRef(1)=cfWtBuf.shape()(1)/2.0;
 		    CoordinateSystem ftCoords=cs_l;
-		    SynthesisUtils::makeFTCoordSys(cs_l, cfWtBuf.shape()(0), ftRef, ftCoords);
+		    SynUtils::makeFTCoordSys(cs_l, cfWtBuf.shape()(0), ftRef, ftCoords);
 
 		    cfWtb.setParams(inu,iw,imx,imy,//muellerElements(imx)(imy),
 				    ftCoords, samplingWt, xSupportWt, ySupportWt,
@@ -439,7 +439,7 @@ namespace casa{
 
 		    //tim.mark();
 		    ftCoords=cs_l;
-		    SynthesisUtils::makeFTCoordSys(cs_l, cfBuf.shape()(0), ftRef, ftCoords);
+		    SynUtils::makeFTCoordSys(cs_l, cfBuf.shape()(0), ftRef, ftCoords);
 
 		    cfb.setParams(inu,iw,imx,imy,//muellerElements(imx)(imy),
 				  ftCoords, sampling, xSupport, ySupport,
@@ -826,7 +826,7 @@ namespace casa{
 	//"standard" Prolate Spheroidal function implementaion.  This
 	//however should be replaced with a simpler access, direct
 	//access the PS function implementation (in Utils.h
-	//SynthesisUtils::libreSpheroidal() - but this needs more
+	//SynUtils::libreSpheroidal() - but this needs more
 	//testing).
 	Int inner=convSize/(convSampling);
 	// Float psScale= (image.coordinates().increment()(0)*nx) /
@@ -834,7 +834,7 @@ namespace casa{
 
 	Float psScale = (2*coords.increment()(0))/(nx*image.coordinates().increment()(0)),
 	  innerQuaterFraction=1.0;
-	// psScale when using SynthesisUtils::libreSpheroidal() is
+	// psScale when using SynUtils::libreSpheroidal() is
 	// 2.0/nSupport.  nSupport is in pixels and the 2.0 is due to
 	// the center being at Nx/2.  Here the nSupport is determined
 

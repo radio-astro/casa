@@ -787,11 +787,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //     // Rotate the convolution function using Image rotation and
 //     // disable rotation in the gridder
-//     SynthesisUtils::rotateComplexArray(log_l, *cfs_p.data,/*convFunc_p*/ cfs_p.coordSys,
+//     SynUtils::rotateComplexArray(log_l, *cfs_p.data,/*convFunc_p*/ cfs_p.coordSys,
 // 				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
 //     actualPA = currentCFPA; 
 
-//     // SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+//     // SynUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
 //     // 				       rotatedConvFunc,0.0);
 
 //     ConjCFMap = polMap;
@@ -941,11 +941,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //     Array<Complex> rotatedConvFunc;
 //     // Rotate the convolution function using Image rotation and
 //     // disable rotation in the gridder
-//     SynthesisUtils::rotateComplexArray(log_l, *(cfs_p.data) /*convFunc_p*/, cfs_p.coordSys,
+//     SynUtils::rotateComplexArray(log_l, *(cfs_p.data) /*convFunc_p*/, cfs_p.coordSys,
 // 				       rotatedConvFunc,(currentCFPA-actualPA));
 //     actualPA = currentCFPA; 
 
-//     // SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+//     // SynUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
 //     // 				       rotatedConvFunc,0.0);
 
 //     ConjCFMap_p     = ConjCFMap.getStorage(deleteThem(CONJCFMAP));
@@ -1106,18 +1106,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //     // Rotate the convolution function using Image rotation and
 //     // disable rotation in the gridder
-//     SynthesisUtils::rotateComplexArray(log_l, *(cfs_p.data)/*convFunc_p*/, cfs_p.coordSys,
+//     SynUtils::rotateComplexArray(log_l, *(cfs_p.data)/*convFunc_p*/, cfs_p.coordSys,
 //         			       rotatedConvFunc_l,(currentCFPA-actualPA));
 //     if (!avgPBReady_p)
-//       SynthesisUtils::rotateComplexArray(log_l, *(cfwts_p.data), /*convWeights_p,*/ cfwts_p.coordSys,
+//       SynUtils::rotateComplexArray(log_l, *(cfwts_p.data), /*convWeights_p,*/ cfwts_p.coordSys,
 //     					 rotatedConvWeights_l,(currentCFPA-actualPA));
 //     // Disable rotation in the gridder
 //     actualPA = currentCFPA; 
 
-//     // SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+//     // SynUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
 //     //     			       rotatedConvFunc_l,0.0);
 //     // if (!avgPBReady_p)
-//     //   SynthesisUtils::rotateComplexArray(log_l, convWeights_p, cfwts_p.coordSys,
+//     //   SynUtils::rotateComplexArray(log_l, convWeights_p, cfwts_p.coordSys,
 //     // 					 rotatedConvWeights_l,0.0);
 
 

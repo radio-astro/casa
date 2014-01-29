@@ -85,6 +85,30 @@ synthesisutils::~synthesisutils()
   return rstat;
 }
 
+
+  casac::record* synthesisutils::checkselectionparams(const casac::record& selpars)
+{
+  casac::record* rstat(0);
+
+  try 
+    {
+      casa::Record recpars = *toRecord( selpars );
+      SynthesisParamsSelect pars;
+      pars.setValues( recpars );
+      rstat = fromRecord(  pars.toRecord()  );
+    } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+
+  return rstat;
+}
+
+
+
+
+
 bool
 synthesisutils::done()
 {

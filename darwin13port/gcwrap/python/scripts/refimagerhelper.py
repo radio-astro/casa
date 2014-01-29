@@ -552,27 +552,6 @@ class PyParallelImagerHelper():
         allselpars =  synu.contdatapartition( oneselpars , self.NN )
         synu.done()
 
-#        allselpars = {}
-#        print oneselpars
-#        for node in range(0,self.NN):
-#            ## Replicate the Selection pars for all nodes, before modifying them.
-#            allselpars[str(node)]  = copy.deepcopy(oneselpars) 
-#
-#            ######## WARNING : Very special case for SPW 0 of points_2spw.ms
-#            if allselpars[str(node)]['ms0']['msname'] == "DataTest/point_twospws.ms":
-#                if node==0:
-#                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':0~9'
-#                else:
-#                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':10~19'
-#
-#            ######## WARNING : Very special case for twopoints_twochan.ms
-#            if allselpars[str(node)]['ms0']['msname'] == "DataTest/twopoints_twochan.ms":
-#                if node==0:
-#                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':0'
-#                else:
-#                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':1'
-#
-#
         print 'Partitioned Selection : ', allselpars
         return allselpars
 
@@ -584,27 +563,6 @@ class PyParallelImagerHelper():
         allselpars =  synu.cubedatapartition( oneselpars , self.NN )
         synu.done()
 
-#        allselpars = {}
-#        print oneselpars
-#        for node in range(0,self.NN):
-#            ## Replicate the Selection pars for all nodes, before modifying them.
-#            allselpars[str(node)]  = copy.deepcopy(oneselpars) 
-#
-#            ######## WARNING : Very special case for SPW 0 of points_2spw.ms
-#            if allselpars[str(node)]['ms0']['msname'] == "DataTest/point_twospws.ms":
-#                if node==0:
-#                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':0~9'
-#                else:
-#                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':10~19'
-#
-#            ######## WARNING : Very special case for twopoints_twochan.ms
-#            if allselpars[str(node)]['ms0']['msname'] == "DataTest/twopoints_twochan.ms":
-#                if node==0:
-#                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':0'
-#                else:
-#                    allselpars[str(node)]['ms0']['spw'] = allselpars[str(node)]['ms0']['spw'] + ':1'
-#
-
         print 'Partitioned Selection : ', allselpars
         return allselpars
 
@@ -615,21 +573,6 @@ class PyParallelImagerHelper():
         allimpars =  synu.cubeimagepartition( impars , self.NN )
         synu.done()
 
-#        allimpars={}
-#        for node in range(0,self.NN):
-#            allimpars[str(node)]  = copy.deepcopy(impars) 
-#            for field in allimpars[str(node)].keys():
-#                 print allimpars[str(node)][field]
-#                 if not allimpars[str(node)][field].has_key('nchan'):
-#                      allimpars[str(node)][field]['nchan']=1
-#                 else:
-#                     allimpars[str(node)][field]['nchan'] = int( ( allimpars[str(node)][field]['nchan'])/self.NN )
-#                     ############# WARNING : Very special case for points_2spw.ms
-#                     if node==0:
-#                         allimpars[str(node)][field]['freqstart'] = '1.0GHz'
-#                     else:
-#                         allimpars[str(node)][field]['freqstart'] = '1.2GHz'
-#                 allimpars[str(node)][field]['imagename'] = allimpars[str(node)][field]['imagename']+'.n'+str(node)
         print 'ImSplit : ', allimpars
         return allimpars
 
@@ -706,70 +649,7 @@ class PyParallelImagerHelper():
 
 ##########################################################################################
 
-    def OLD_calculateImages(self):
-        # If any of the input images is a cube, all fields must be cubes
-        # with the same LSRK output channelization
 
-        # Do Cube Image if:
-        # 1) All output images have the same LSRK channelization
-        # 2) Total Pixel * nchan (memory footprint) is greater than some
-        #    threshold (like 2 core's worth)
-
-        # Information from the cluster
-        numNodes = 1
-        numCorePerNode = 4
-        memoryPerNode = 24
-
-        cubeImage = False
-        totalPixels = 0
-        for imdef in imageParameters:
-            totalPixels += 1
-            
-            if imdef.nchan > 1:
-                cubeImage = True
-                break
-
-        if cubeImage:
-            # Partition on output channel and time
-
-            # If we partition only based on memory how many chunks do we need
-            numChunks = math.ceil(totalPixels * imageParameters[0].nchan
-                                  / (float(memoryPerNode)/numCorePerNode))
-
-            # Match numChunks to an integral number * the number of cores
-            numChunks = math.ceil(numChunks/(numCorePerNode * numNodes)) * \
-                        numCorePerNode * numNodes
-            
-            # All fields have numChunk deconvoler subimages specified
-            # by range of output channel.
-            
-            
-
-        else:
-            # Continuum case partition on input channel and time
-            # could still be multiple channels here (particularly if we
-            # are in the case of small images w/ different LSRK channels
-
-            # See how many engines we can get per node
-            enginesPerNode = numCorePerNode
-            while totalPixels > memoryPerNode/enginesPerNode:
-                enginesPerNode -= 1
-
-            numChunks = enginesPerNode * numNodes
-
-            # Here all deconvolvers see all fields the data selection can
-            # be in time or data channel (or both)
-
-
-
-        imagingPlan = {'imagingSet':[], 'imageCombination':{}}
-
-        imageSet = {'deconvolverField':[imageParameters],
-                    'dataselection':[dataselection]}
-
-        imagingPlan['imagingSet'].append(imageSet)
-
-        return imagingPlan
 
 ######################################################
 ######################################################
@@ -784,6 +664,18 @@ class ImagerParameters():
                  imagename='', nchan=1, freqstart='1.0GHz', freqstep='1.0GHz',
                  imsize=[1,1], cellsize=[10.0,10.0],phasecenter='19:59:28.500 +40.44.01.50',
                  ftmachine='ft', startmodel='', weighting='natural',
+
+                 aterm=True,
+                 psterm=True,
+                 mterm=False,
+                 wbawp = True,
+                 cfcache = "",
+                 dopointing = False,
+                 dopbcorr = True,
+                 conjbeams = True,
+                 computepastep =360.0,
+                 rotatepastep =5.0,
+
                  algo='test',
                  niter=0, cycleniter=0, cyclefactor=1.0,
                  minpsffraction=0.1,maxpsffraction=0.8,
@@ -800,7 +692,13 @@ class ImagerParameters():
         ## The outlier '1', '2', ....  parameters come from the outlier file
         self.outlierfile = outlierfile
         ## Initialize the parameter lists with the 'main' or '0' field's parameters
-        self.allimpars = { '0' :{'imagename':imagename, 'nchan':nchan, 'imsize':imsize, 'cellsize':cellsize, 'phasecenter':phasecenter, 'freqstart':freqstart, 'freqstep':freqstep, 'ftmachine':ftmachine, 'startmodel':startmodel} }
+        self.allimpars = { '0' :{'imagename':imagename, 'nchan':nchan, 'imsize':imsize, 'cellsize':cellsize, 'phasecenter':phasecenter, 
+                                 'freqstart':freqstart, 'freqstep':freqstep, 'ftmachine':ftmachine, 'startmodel':startmodel,
+                                 'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 'cfcache': cfcache,
+                                 'dopointing':dopointing, 'dopbcorr':dopbcorr, 'conjbeams':conjbeams, 'computepastep':computepastep,
+                                 'rotatepastep':rotatepastep
+                                 } 
+                           }
         self.weightpars = {'type':weighting } 
         self.alldecpars = { '0' : { 'id':0, 'algo':algo } }
 
@@ -914,6 +812,10 @@ class ImagerParameters():
                 selparlist[ 'ms'+str(ms) ] = {}
                 for par in selkeys:
                     selparlist[ 'ms'+str(ms) ][ par ] = self.allselpars[par][ms]
+
+                synu = casac.synthesisutils()
+                selparlist[ 'ms'+str(ms) ] = synu.checkselectionparams( selparlist[ 'ms'+str(ms)] )
+                synu.done()
 
 #            print selparlist
 

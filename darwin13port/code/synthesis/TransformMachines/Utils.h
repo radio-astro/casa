@@ -57,7 +57,7 @@ namespace casa
   void storeArrayAsImage(String fileName, const CoordinateSystem& coords, const Array<Float>& cf);
 			 
   Bool isVBNaN(const VisBuffer& vb, String& mesg);
-  namespace SynthesisUtils
+  namespace SynUtils
   {
     void rotateComplexArray(LogIO& logIO, Array<Complex>& inArray, 
 			    CoordinateSystem& inCS,

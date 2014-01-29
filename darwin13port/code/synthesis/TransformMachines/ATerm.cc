@@ -42,7 +42,7 @@ namespace casa{
     Int userValue;
 
     cachedOverSampling_p=OVERSAMPLING;
-    userValue = SynthesisUtils::getenv("ATerm.OVERSAMPLING",OVERSAMPLING);
+    userValue = SynUtils::getenv("ATerm.OVERSAMPLING",OVERSAMPLING);
     if (userValue != cachedOverSampling_p)
       {
 	cachedOverSampling_p = userValue;
@@ -51,7 +51,7 @@ namespace casa{
 
 
     cachedConvSize_p=CONVSIZE;
-    userValue = SynthesisUtils::getenv("ATerm.CONVSIZE",CONVSIZE);
+    userValue = SynUtils::getenv("ATerm.CONVSIZE",CONVSIZE);
     if (userValue != cachedConvSize_p)
       {
 	cachedConvSize_p = userValue;
@@ -125,7 +125,7 @@ namespace casa{
   {
     return cachedConvSize_p;
     // Int defaultConvSize=CONVSIZE, userValue;
-    // userValue = SynthesisUtils::getenv("ATerm.CONVSIZE",CONVSIZE);
+    // userValue = SynUtils::getenv("ATerm.CONVSIZE",CONVSIZE);
     // if (userValue != defaultConvSize)
     //   {
     // 	defaultConvSize = userValue;
@@ -138,7 +138,7 @@ namespace casa{
   {
     return cachedOverSampling_p;
     // Int defaultOversampling=OVERSAMPLING, userValue;
-    // userValue = SynthesisUtils::getenv("ATerm.OVERSAMPLING",OVERSAMPLING);
+    // userValue = SynUtils::getenv("ATerm.OVERSAMPLING",OVERSAMPLING);
     // if (userValue != defaultOversampling)
     //   {
     // 	defaultOversampling = userValue;

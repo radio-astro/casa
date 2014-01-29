@@ -88,8 +88,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      {
 		Float ypart;
 		ypart = sqrt(xpart + square(j-convOrig))*psScale_local;
-		if (multiply)  screen(i, j) *= SynthesisUtils::libreSpheroidal(ypart);
-		else           screen(i, j)  = SynthesisUtils::libreSpheroidal(ypart);
+		if (multiply)  screen(i, j) *= SynUtils::libreSpheroidal(ypart);
+		else           screen(i, j)  = SynUtils::libreSpheroidal(ypart);
 	      }
     }
 	  }

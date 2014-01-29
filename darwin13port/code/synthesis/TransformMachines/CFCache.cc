@@ -270,7 +270,7 @@ namespace casa{
 		getCFParams(fileNames[i], pixBuf, coordSys,  sampling, paVal, 
 			    xSupport, ySupport, fVal, wVal, mVal);
 
-		Int ipos; SynthesisUtils::stdNearestValue(paList_p, (Float)paVal,ipos);
+		Int ipos; SynUtils::stdNearestValue(paList_p, (Float)paVal,ipos);
 		uInt paPos=ipos;
 		  
 		if (paPos < paList_p.size())
@@ -305,9 +305,9 @@ namespace casa{
 		sort( fList.begin(), fList.end() );
 		sort( wList.begin(), wList.end() );
 		sort( mList.begin(), mList.end() );
-		fList.erase(SynthesisUtils::Unique(fList.begin(), fList.end()), fList.end());
-		wList.erase(SynthesisUtils::Unique(wList.begin(), wList.end()), wList.end());
-		mList.erase(SynthesisUtils::Unique(mList.begin(), mList.end()), mList.end());
+		fList.erase(SynUtils::Unique(fList.begin(), fList.end()), fList.end());
+		wList.erase(SynUtils::Unique(wList.begin(), wList.end()), wList.end());
+		mList.erase(SynUtils::Unique(mList.begin(), mList.end()), mList.end());
 		PolMapType muellerElements;
 		Int npol=mList.size();
 		muellerElements.resize(npol);
@@ -349,9 +349,9 @@ namespace casa{
 
 		    //cfb->addCF(&cfBuf,coordSys,fsampling,xSupport,ySupport,fVal,wVal,mVal);
 		    Int fndx,wndx, mndx;
-		    SynthesisUtils::stdNearestValue(fList, fVal, fndx);
-		    SynthesisUtils::stdNearestValue(wList, wVal, wndx);
-		    SynthesisUtils::stdNearestValue(mList, mVal, mndx);
+		    SynUtils::stdNearestValue(fList, fVal, fndx);
+		    SynUtils::stdNearestValue(wList, wVal, wndx);
+		    SynUtils::stdNearestValue(mList, mVal, mndx);
 		    Float fsampling=sampling;
 		    //
 		    // The coordSys, sampling, xSupport, ySuport

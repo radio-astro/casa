@@ -48,7 +48,7 @@ namespace casa{
 	  // cerr << "dPA = " << actualPA << " " << currentCFPA << " " 
 	  //      << actualPA - currentCFPA << " " << &(*cfc.getStorage()) << endl;
 	  
-	  SynthesisUtils::rotateComplexArray(log_l, inData, cfc.coordSys_p,
+	  SynUtils::rotateComplexArray(log_l, inData, cfc.coordSys_p,
 					     *cfc.getStorage(),
 					     dPA);//,"LINEAR");
 					     // currentCFPA-actualPA);//,"LINEAR");

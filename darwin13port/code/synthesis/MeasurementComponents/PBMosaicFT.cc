@@ -733,9 +733,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(Int i=0;i<N;i++) CFMap[i] = polMap[N-i-1];
     
     Array<Complex> rotatedConvFunc;
-//     SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+//     SynUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
 // 				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
-    SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+    SynUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
 				       rotatedConvFunc,0.0);
 
     ConjCFMap = polMap;
@@ -881,9 +881,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     makeConjPolMap(vb,CFMap,ConjCFMap);
 
     Array<Complex> rotatedConvFunc;
-//     SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+//     SynUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
 // 				       rotatedConvFunc,(currentCFPA-actualPA));
-    SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+    SynUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
 				       rotatedConvFunc,0.0);
 
     ConjCFMap_p     = ConjCFMap.getStorage(deleteThem(CONJCFMAP));
@@ -1033,9 +1033,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     makeConjPolMap(vb,CFMap,ConjCFMap);
 
     Array<Complex> rotatedConvFunc;
-//     SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+//     SynUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
 // 				       rotatedConvFunc,(currentCFPA-actualPA));
-    SynthesisUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
+    SynUtils::rotateComplexArray(logIO(), convFunc, convFuncCS_p, 
 				       rotatedConvFunc,0.0);
 
 

@@ -113,6 +113,24 @@ This is used to construct {\tt synthesisutils} tool.
 <!-- ===================================== -->
 <!-- ===================================== -->
 
+   <method type="function" name="checkselectionparams">
+   <shortdescription>Check and Fix Selection Parameters for one MS</shortdescription>
+
+<description>
+</description>
+<input>
+     <param type="record" name="selpars">
+     <description>All selection parameters for one MS</description>
+     <value type="record"></value>
+     </param>
+
+</input>
+<returns type="record"/>
+</method>
+
+<!-- ===================================== -->
+<!-- ===================================== -->
+
    <method type="function" name="done">
    <shortdescription>Close the tool</shortdescription>
 

@@ -63,6 +63,14 @@
 #include <synthesis/TransformMachines/WPConvFunc.h>
 #include <synthesis/TransformMachines/WProjectFT.h>
 
+#include <synthesis/TransformMachines/AWProjectFT.h>
+//#include <synthesis/TransformMachines/ProtoVR.h>
+#include <synthesis/TransformMachines/AWProjectWBFT.h>
+#include <synthesis/TransformMachines/MultiTermFT.h>
+#include <synthesis/TransformMachines/NewMultiTermFT.h>
+#include <synthesis/TransformMachines/AWConvFunc.h>
+#include <synthesis/TransformMachines/AWConvFuncEPJones.h>
+#include <synthesis/TransformMachines/NoOpATerm.h>
 
 #include <casadbus/viewer/ViewerProxy.h>
 #include <casadbus/plotserver/PlotServerProxy.h>
@@ -341,7 +349,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    const Bool doPointing,// = False,
 				    const Bool doPBCorr,//   = True,
 				    const Bool conjBeams,//  = True,
-				    const Quantity computePAStep//=Quantity(360.0,"deg")
+				    const Float computePAStep,         //=360.0
+				    const Float rotatePAStep          //=5.0
 				    )
 {
     LogIO os( LogOrigin("SynthesisImager","defineImage",WHERE) );
@@ -409,7 +418,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Bool useAutocorr=ftmParams_p.asBool("useautocorr");
 	// Bool useDoublePrec=ftmParams_p.asBool("usedoubleprec");
 	// String convFunc=ftmParams_p.asString("gridfunc");
-	createFTMachine(ftm, iftm, ftmachine, facets_l, wprojplanes,padding,useAutocorr,useDoublePrec,convFunc);
+	createFTMachine(ftm, iftm, ftmachine, facets_l, wprojplanes,padding,useAutocorr,useDoublePrec,convFunc,
+			aTermOn,psTermOn, mTermOn,wbAWP,cfCache,doPointing,doPBCorr,conjBeams,computePAStep,rotatePAStep);
 
 	appendToMapperList(imagename,  csys,  
 			   ftmParams_p.asString("ftmachine"), ftm, iftm,
@@ -738,14 +748,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////
   ////////////This should be called  at each defineimage
-  void SynthesisImager::createIMStore(const String imageName, const CoordinateSystem& cSys,
-				      const Quantity& distance, Int facets, const Bool overwrite)
+  void SynthesisImager::createIMStore(const String,// imageName, 
+				      const CoordinateSystem&,// cSys,
+				      const Quantity&,// distance, 
+				      Int,// facets, 
+				      const Bool// overwrite
+				      )
   {
 
   }
 
     void SynthesisImager::appendToMapperList(String imagename,  CoordinateSystem& csys, 
-					     String ftmachine, 
+					     String,// ftmachine, 
 					     CountedPtr<FTMachine>& ftm,
 					     CountedPtr<FTMachine>& iftm,
 					     Quantity distance, 
@@ -799,8 +813,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     }
 
-    void SynthesisImager::appendToMapperList(String imagename,  CoordinateSystem& csys, String ftmachine,
-    		Quantity distance, Int facets, const Bool overwrite)
+  void SynthesisImager::appendToMapperList(String imagename,  CoordinateSystem& csys, 
+					   String,// ftmachine,
+					   Quantity,// distance, 
+					   Int facets, 
+					   const Bool overwrite)
     {
       LogIO log_l(LogOrigin("SynthesisImager", "appendToMapperList"));
 
@@ -910,7 +927,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      xform,
 	      refPixel(0), refPixel(1));
 
-    SpectralCoordinate mySpectral(freqFrameValid ? MFrequency::LSRK : freqFrame, freqStart, freqStep, 0, restFreq.nelements() >0 ? restFreq[0]: Quantity(0.0, "Hz"));
+    SpectralCoordinate mySpectral(freqFrameValid ? MFrequency::LSRK : freqFrame, 
+				  freqStart, freqStep, 0, 
+				  restFreq.nelements() >0 ? restFreq[0]: Quantity(0.0, "Hz"));
     for (uInt k=1 ; k < restFreq.nelements(); ++k)
       mySpectral.setRestFrequency(restFreq[k].getValue("Hz"));
     
@@ -953,7 +972,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       whichStokes(0)=Stokes::type(stokes);
     }
     else if(stokes=="IV" || stokes=="IQ" || 
-              stokes=="RRLL" || stokes=="XXYY" ||
+	    stokes=="RRLL" || stokes=="XXYY" ||
 	    stokes=="QU" || stokes=="UV"){
       whichStokes.resize(2);
       
@@ -1004,7 +1023,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					const Bool doPointing,       //= False,
 					const Bool doPBCorr,         //= True,
 					const Bool conjBeams,        //= True,
-					const Quantity computePAStep,//=Quantity(360.0,"deg"),
+					const Float computePAStep,         //=360.0
+					const Float rotatePAStep,          //=5.0
 					const Int cache,             //=1000000000,
 					const Int tile               //=16
 					)
@@ -1039,12 +1059,153 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       CountedPtr<WPConvFunc> sharedconvFunc= new WPConvFunc();
       static_cast<WProjectFT &>(*theFT).setConvFunc(sharedconvFunc);
       static_cast<WProjectFT &>(*theFT).setConvFunc(sharedconvFunc);
-      
     }
+    else if ((ftname == "awprojectft") || (ftname== "mawprojectft") || (ftname == "protoft"))
+      createAWPFTMachine(theFT, theIFT, ftname, facets, wprojplane, padding, useAutocorr, useDoublePrec, gridFunction,
+			 aTermOn, psTermOn, mTermOn, wbAWP, cfCache, doPointing, doPBCorr, conjBeams, computePAStep,
+			 rotatePAStep, cache,tile);
+
     /* else if(ftname== "MosaicFT"){
 
        }*/
     
+  }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  void SynthesisImager::createAWPFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT, 
+					   const String& ftmName,
+					   const Int,// facets,            //=1
+					   //------------------------------
+					   const Int wprojPlane,        //=1,
+					   const Float,// padding,         //=1.0,
+					   const Bool,// useAutocorr,      //=False,
+					   const Bool useDoublePrec,    //=True,
+					   const String,// gridFunction,   //=String("SF"),
+					   //------------------------------
+					   const Bool aTermOn,          //= True,
+					   const Bool psTermOn,         //= True,
+					   const Bool mTermOn,          //= False,
+					   const Bool wbAWP,            //= True,
+					   const String cfCache,        //= "",
+					   const Bool doPointing,       //= False,
+					   const Bool doPBCorr,         //= True,
+					   const Bool conjBeams,        //= True,
+					   const Float computePAStep,   //=360.0
+					   const Float rotatePAStep,    //=5.0
+					   const Int cache,             //=1000000000,
+					   const Int tile               //=16
+					)
+
+  {
+    LogIO os( LogOrigin("SynthesisImager","createAWPFTMachine",WHERE));
+
+    if (wprojPlane<=1)
+      {
+	os << LogIO::NORMAL
+	   << "You are using wprojplanes=1. Doing co-planar imaging (no w-projection needed)" 
+	   << LogIO::POST;
+	os << LogIO::NORMAL << "Performing WBA-Projection" << LogIO::POST; // Loglevel PROGRESS
+      }
+    if((wprojPlane>1)&&(wprojPlane<64)) 
+      {
+	os << LogIO::WARN
+	   << "No. of w-planes set too low for W projection - recommend at least 128"
+	   << LogIO::POST;
+	os << LogIO::NORMAL << "Performing WBAW-Projection" << LogIO::POST; // Loglevel PROGRESS
+      }
+
+    CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*mss_p[0], aTermOn);
+    CountedPtr<PSTerm> psTerm = new PSTerm();
+    CountedPtr<WTerm> wTerm = new WTerm();
+    
+    //
+    // Selectively switch off CFTerms.
+    //
+    if (aTermOn == False) {apertureFunction->setOpCode(CFTerms::NOOP);}
+    if (psTermOn == False) psTerm->setOpCode(CFTerms::NOOP);
+
+    //
+    // Construct the CF object with appropriate CFTerms.
+    //
+    CountedPtr<ConvolutionFunction> awConvFunc;
+    //    awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm, !wbAWP);
+    if ((ftmName=="mawprojectft") || (mTermOn))
+      awConvFunc = new AWConvFuncEPJones(apertureFunction,psTerm,wTerm,wbAWP);
+    else
+      awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm,wbAWP);
+
+    //
+    // Construct the appropriate re-sampler.
+    //
+    CountedPtr<VisibilityResamplerBase> visResampler;
+    //    if (ftmName=="protoft") visResampler = new ProtoVR();
+    //elsef
+      visResampler = new AWVisResampler();
+    //    CountedPtr<VisibilityResamplerBase> visResampler = new VisibilityResampler();
+
+    //
+    // Construct and initialize the CF cache object.
+    //
+    CountedPtr<CFCache> cfCacheObj = new CFCache();
+    cfCacheObj->setCacheDir(cfCache.data());
+    cfCacheObj->initCache2();
+
+    //
+    // Finally construct the FTMachine with the CFCache, ConvFunc and
+    // Re-sampler objects.  
+    //
+    Float pbLimit_l=1e-3;
+    theFT = new AWProjectWBFT(wprojPlane, cache/2, 
+			      cfCacheObj, awConvFunc, 
+			      visResampler,
+			      /*True */doPointing, doPBCorr, 
+			      tile, computePAStep, pbLimit_l, True,conjBeams,
+			      useDoublePrec);
+
+    Quantity rotateOTF(rotatePAStep,"deg");
+    static_cast<AWProjectWBFT &>(*theFT).setObservatoryLocation(mLocation_p);
+    static_cast<AWProjectWBFT &>(*theFT).setPAIncrement(Quantity(computePAStep,"deg"),rotateOTF);
+
+    // theIFT = new AWProjectWBFT(wprojPlane, cache/2, 
+    // 			       cfCacheObj, awConvFunc, 
+    // 			       visResampler,
+    // 			       /*True */doPointing, doPBCorr, 
+    // 			       tile, computePAStep, pbLimit_l, True,conjBeams,
+    // 			       useDoublePrec);
+
+    // static_cast<AWProjectWBFT &>(*theIFT).setObservatoryLocation(mLocation_p);
+    // static_cast<AWProjectWBFT &>(*theIFT).setPAIncrement(Quantity(computePAStep,"deg"),rotateOTF);
+
+    theIFT = new AWProjectWBFT(static_cast<AWProjectWBFT &>(*theFT));
+
+    //    vi_p->getFreqInSpwRange(
+    os << "No frequency selection information has reached the AWP FTM yet" << LogIO::WARN;
+
+  }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  ATerm* SynthesisImager::createTelescopeATerm(const MeasurementSet& ms, const Bool& isATermOn)
+  {
+    LogIO os(LogOrigin("SynthesisImager", "createTelescopeATerm",WHERE));
+    
+    if (!isATermOn) return new NoOpATerm();
+    
+    ROMSObservationColumns msoc(ms.observation());
+    String ObsName=msoc.telescopeName()(0);
+    if ((ObsName == "EVLA") || (ObsName == "VLA"))
+      return new EVLAAperture();
+    else
+      {
+	os << "Telescope name ('"+
+	  ObsName+"') in the MS not recognized to create the telescope specific ATerm" 
+	   << LogIO::WARN;
+      }
+    
+    return NULL;
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

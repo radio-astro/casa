@@ -516,14 +516,14 @@ namespace casa{
   //ImageRegrid object, about the pixel given by (N+1)/2 where N is
   //the number of pixels along the axis.
   //
-  void SynthesisUtils::rotateComplexArray(LogIO& logio, Array<Complex>& inArray, 
+  void SynUtils::rotateComplexArray(LogIO& logio, Array<Complex>& inArray, 
 					  CoordinateSystem& inCS,
 					  Array<Complex>& outArray,
 					  Double dAngleRad,
 					  String interpMethod,
 					  Bool modifyInCS)
   {
-//     logio << LogOrigin("SynthesisUtils", "rotateComplexArray")
+//     logio << LogOrigin("SynUtils", "rotateComplexArray")
 // 	  << "Rotating CF using " << interpMethod << " interpolation." 
 // 	  << LogIO::POST;
     (void)logio;
@@ -632,7 +632,7 @@ namespace casa{
   //
   //---------------------------------------------------------------
   //
-  void SynthesisUtils::findLatticeMax(const ImageInterface<Complex>& lattice,
+  void SynUtils::findLatticeMax(const ImageInterface<Complex>& lattice,
 				      Vector<Float>& maxAbs,
 				      Vector<IPosition>& posMaxAbs) 
   {
@@ -666,7 +666,7 @@ namespace casa{
   //
   //---------------------------------------------------------------
   //
-  void SynthesisUtils::findLatticeMax(const Array<Complex>& lattice,
+  void SynUtils::findLatticeMax(const Array<Complex>& lattice,
 				      Vector<Float>& maxAbs,
 				      Vector<IPosition>& posMaxAbs) 
   {
@@ -700,7 +700,7 @@ namespace casa{
   //
   //---------------------------------------------------------------
   //
-  void SynthesisUtils::findLatticeMax(const ImageInterface<Float>& lattice,
+  void SynUtils::findLatticeMax(const ImageInterface<Float>& lattice,
 				      Vector<Float>& maxAbs,
 				      Vector<IPosition>& posMaxAbs) 
   {
@@ -737,7 +737,7 @@ namespace casa{
   // or from a env. variable (in this precidence order).
   //
   template <class T>
-  T SynthesisUtils::getenv(const char *name,const T defaultVal)
+  T SynUtils::getenv(const char *name,const T defaultVal)
   {
     stringstream defaultStr;
     defaultStr << defaultVal;
@@ -760,9 +760,9 @@ namespace casa{
     return val;
   }
   template 
-  Int SynthesisUtils::getenv(const char *name, const Int defaultVal);
+  Int SynUtils::getenv(const char *name, const Int defaultVal);
 
-  Float SynthesisUtils::libreSpheroidal(Float nu) 
+  Float SynUtils::libreSpheroidal(Float nu) 
   {
     Double top, bot, nuend, delnusq;
     uInt part;
@@ -820,10 +820,10 @@ namespace casa{
 	}
   }
 
-  Double SynthesisUtils::getRefFreq(const VisBuffer& vb)
+  Double SynUtils::getRefFreq(const VisBuffer& vb)
   {return max(vb.msColumns().spectralWindow().chanFreq().getColumn());}
   
-  void SynthesisUtils::makeFTCoordSys(const CoordinateSystem& coords,
+  void SynUtils::makeFTCoordSys(const CoordinateSystem& coords,
 				      const Int& convSize,
 				      const Vector<Double>& ftRef,
 				      CoordinateSystem& ftCoords)
@@ -869,7 +869,7 @@ namespace casa{
   // of MSSelection), expand the list to a list of channel freqs. and
   // conjugate freqs. per SPW.
   //
-  void SynthesisUtils::expandFreqSelection(const Matrix<Double>& freqSelection, 
+  void SynUtils::expandFreqSelection(const Matrix<Double>& freqSelection, 
 					   Matrix<Double>& expandedFreqList,
 					   Matrix<Double>& expandedConjFreqList)
   {
@@ -877,7 +877,7 @@ namespace casa{
     Double freq;
 
     for (Int s=0;s<nSpw;s++)
-	maxSlots=max(maxSlots,SynthesisUtils::nint((freqSelection(s,2)-freqSelection(s,1))/freqSelection(s,3))+1);
+	maxSlots=max(maxSlots,SynUtils::nint((freqSelection(s,2)-freqSelection(s,1))/freqSelection(s,3))+1);
 
     expandedFreqList.resize(nSpw,maxSlots);
     expandedConjFreqList.resize(nSpw,maxSlots);
@@ -896,11 +896,11 @@ namespace casa{
   // The result will be in-place in c1
   //
   template
-  void SynthesisUtils::libreConvolver(Array<Complex>& c1, const Array<Complex>& c2);
+  void SynUtils::libreConvolver(Array<Complex>& c1, const Array<Complex>& c2);
   
 
   template <class T>
-  void SynthesisUtils::libreConvolver(Array<T>& c1, const Array<T>& c2)
+  void SynUtils::libreConvolver(Array<T>& c1, const Array<T>& c2)
   {
     Array<T> c2tmp;
     c2tmp.assign(c2);
@@ -923,7 +923,7 @@ namespace casa{
   }
 
 
-  Double SynthesisUtils::nearestValue(const Vector<Double>& list, const Double& val, Int& index)
+  Double SynUtils::nearestValue(const Vector<Double>& list, const Double& val, Int& index)
   {
     Vector<Double> diff = fabs(list - val);
     Double minVal=1e20; 
@@ -949,12 +949,12 @@ namespace casa{
 
     // Works only for regularly samplied list
     //
-    // Int ndx=min(freqValues_p.nelements()-1,max(0,SynthesisUtils::nint((freqVal-freqValues_p[0])/freqValIncr_p)));
+    // Int ndx=min(freqValues_p.nelements()-1,max(0,SynUtils::nint((freqVal-freqValues_p[0])/freqValIncr_p)));
     // return ndx;
   }
 
   template <class T>
-  T SynthesisUtils::stdNearestValue(const vector<T>& list, const T& val, Int& index)
+  T SynUtils::stdNearestValue(const vector<T>& list, const T& val, Int& index)
   {
     vector<T> diff=list;
     for (uInt i=0;i<list.size();i++)
@@ -969,7 +969,7 @@ namespace casa{
     return list[index];
   }
 
-  CoordinateSystem SynthesisUtils::makeUVCoords(CoordinateSystem& imageCoordSys,
+  CoordinateSystem SynUtils::makeUVCoords(CoordinateSystem& imageCoordSys,
 						IPosition& shape)
   {
     CoordinateSystem FTCoords = imageCoordSys;
@@ -985,7 +985,7 @@ namespace casa{
     return FTCoords;
   }
 
-  Vector<Int> SynthesisUtils::mapSpwIDToDDID(const VisBuffer& vb, const Int& spwID)
+  Vector<Int> SynUtils::mapSpwIDToDDID(const VisBuffer& vb, const Int& spwID)
   {
     Vector<Int> ddidList;
     Int nDDRows = vb.msColumns().dataDescription().nrow();
@@ -1001,10 +1001,10 @@ namespace casa{
     return ddidList;
   }
 
-  Vector<Int> SynthesisUtils::mapSpwIDToPolID(const VisBuffer& vb, const Int& spwID)
+  Vector<Int> SynUtils::mapSpwIDToPolID(const VisBuffer& vb, const Int& spwID)
   {
     Vector<Int> polIDList, ddIDList;
-    ddIDList = SynthesisUtils::mapSpwIDToDDID(vb, spwID);
+    ddIDList = SynUtils::mapSpwIDToDDID(vb, spwID);
     Int n=ddIDList.nelements();
     polIDList.resize(n);
     for (Int i=0; i<n; i++)
@@ -1017,7 +1017,7 @@ namespace casa{
   // 
   // Calcualte the BLC, TRC of the intersection of two rectangles (courtesy U.Rau)
   //
-  void SynthesisUtils::calcIntersection(const Int blc1[2], const Int trc1[2], 
+  void SynUtils::calcIntersection(const Int blc1[2], const Int trc1[2], 
 					const Float blc2[2], const Float trc2[2],
 					Float blc[2], Float trc[2])
   {
@@ -1053,7 +1053,7 @@ namespace casa{
   //
   // Check if the two rectangles interset (courtesy U.Rau).
   //
-  Bool SynthesisUtils::checkIntersection(const Int blc1[2], const Int trc1[2], const Float blc2[2], const Float trc2[2])
+  Bool SynUtils::checkIntersection(const Int blc1[2], const Int trc1[2], const Float blc2[2], const Float trc2[2])
   {
     // blc1[2] = {xmin1, ymin1}; 
     // blc2[2] = {xmin2, ymin2};
@@ -1072,7 +1072,7 @@ namespace casa{
   }
 
   // template<class Iterator>
-  // Iterator SynthesisUtils::Unique(Iterator first, Iterator last)
+  // Iterator SynUtils::Unique(Iterator first, Iterator last)
   // {
   //   while (first != last)
   //     {
@@ -1086,7 +1086,7 @@ namespace casa{
 
 
   template <class Iterator>
-  Iterator SynthesisUtils::Unique(Iterator first, Iterator last)
+  Iterator SynUtils::Unique(Iterator first, Iterator last)
   {
     while (first != last)
       {
@@ -1100,18 +1100,18 @@ namespace casa{
 
 
   template
-  std::vector<Double>::iterator SynthesisUtils::Unique(std::vector<Double>::iterator first, std::vector<Double>::iterator last);
+  std::vector<Double>::iterator SynUtils::Unique(std::vector<Double>::iterator first, std::vector<Double>::iterator last);
   template
-  std::vector<Float>::iterator SynthesisUtils::Unique(std::vector<Float>::iterator first, std::vector<Float>::iterator last);
+  std::vector<Float>::iterator SynUtils::Unique(std::vector<Float>::iterator first, std::vector<Float>::iterator last);
   template
-  std::vector<Int>::iterator SynthesisUtils::Unique(std::vector<Int>::iterator first, std::vector<Int>::iterator last);
+  std::vector<Int>::iterator SynUtils::Unique(std::vector<Int>::iterator first, std::vector<Int>::iterator last);
 
   template 
-  Double SynthesisUtils::stdNearestValue(const vector<Double>& list, const Double& val, Int& index);
+  Double SynUtils::stdNearestValue(const vector<Double>& list, const Double& val, Int& index);
   template 
-  Float SynthesisUtils::stdNearestValue(const vector<Float>& list, const Float& val, Int& index);
+  Float SynUtils::stdNearestValue(const vector<Float>& list, const Float& val, Int& index);
   template 
-  Int SynthesisUtils::stdNearestValue(const vector<Int>& list, const Int& val, Int& index);
+  Int SynUtils::stdNearestValue(const vector<Int>& list, const Int& val, Int& index);
 
 
 } // namespace casa

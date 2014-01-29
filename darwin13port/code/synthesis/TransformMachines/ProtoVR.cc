@@ -526,7 +526,7 @@ void ProtoVR::DataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
 		    support[0]=vbs.cfBSt_p.CFBStorage->xSupport;
 		    support[1]=vbs.cfBSt_p.CFBStorage->ySupport;
 		    
-		    sampling[0] = sampling[1] = SynthesisUtils::nint(s);
+		    sampling[0] = sampling[1] = SynUtils::nint(s);
 		    
 		    const Double *uvw_ptr=vbs.uvw_p.getStorage(Dummy),
 		      *uvwScale_ptr=uvwScale_p.getStorage(Dummy),
@@ -630,15 +630,15 @@ void ProtoVR::sgrid(Double pos[2], Int loc[3],
   if (uvw.nelements() > 0) for(Int i=0;i<3;i++) uvw_l[i]=uvw(i,irow);
   
   pos[2]=sqrt(abs(scale[2]*uvw_l(2)*freq/C::c))+offset[2];
-  loc[2]=SynthesisUtils::nint(pos[2]);
+  loc[2]=SynUtils::nint(pos[2]);
   off[2]=0;
   
   for(Int idim=0;idim<2;idim++)
     {
       pos[idim]=scale[idim]*uvw_l(idim)*freq/C::c+(offset[idim]);
-      loc[idim]=SynthesisUtils::nint(pos[idim]);
-      //	off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]+1);
-      off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]);
+      loc[idim]=SynUtils::nint(pos[idim]);
+      //	off[idim]=SynUtils::nint((loc[idim]-pos[idim])*sampling[idim]+1);
+      off[idim]=SynUtils::nint((loc[idim]-pos[idim])*sampling[idim]);
     }
   
   if (dphase != 0.0)
@@ -666,8 +666,8 @@ Bool ProtoVR::reindex(const Vector<Int>& in, Vector<Int>& out,
   Int ix=in[0], iy=in[1];
   if (sinDPA != 0.0)
     {
-      ix = SynthesisUtils::nint(cosDPA*in[0] + sinDPA*in[1]);
-      iy = SynthesisUtils::nint(-sinDPA*in[0] + cosDPA*in[1]);
+      ix = SynUtils::nint(cosDPA*in[0] + sinDPA*in[1]);
+      iy = SynUtils::nint(-sinDPA*in[0] + cosDPA*in[1]);
     }
   out[0]=ix+Origin[0];
   out[1]=iy+Origin[1];

@@ -161,6 +161,159 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////    Parameter Containers     ///////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /////////////////////// Selection Parameters
+
+  SynthesisParamsSelect::SynthesisParamsSelect()
+  {
+    setDefaults();
+  }
+
+  SynthesisParamsSelect::~SynthesisParamsSelect()
+  {
+  }
+
+
+  void SynthesisParamsSelect::setValues(const String inmsname, const String inspw, 
+					       const String infreqbeg, const String infreqend, const String infreqframe,
+					       const String infield, const String inantenna, const String intimestr, 
+					       const String inscan, const String inobs, const String instate, 
+					       const String inuvdist, const String intaql, const Bool inusescratch, 
+					       const Bool inreadonly, const Bool inincrmodel)
+  {
+
+    Record selpar;
+    selpar.define("msname",inmsname);
+    selpar.define("spw",inspw);
+    selpar.define("freqbeg",infreqbeg);
+    selpar.define("freqend",infreqend);
+    selpar.define("freqframe",infreqframe);
+    selpar.define("field",infield);
+    selpar.define("antenna",inantenna);
+    selpar.define("timestr",intimestr);
+    selpar.define("scan",inscan);
+    selpar.define("obs",inobs);
+    selpar.define("state",instate);
+    selpar.define("uvdist",inuvdist);
+    selpar.define("taql",intaql);
+    selpar.define("usescratch",inusescratch);
+    selpar.define("readonly",inreadonly);
+    selpar.define("incrmodel",inincrmodel);
+
+    setValues( selpar );
+
+  }
+
+  void SynthesisParamsSelect::setValues(Record &inrec)
+  {
+    setDefaults();
+
+    String err("");
+
+    try
+      {
+	
+	if( inrec.isDefined("msname") ) { inrec.get("msname",msname); }
+	if( inrec.isDefined("readonly") ) { inrec.get("readonly",readonly); }
+	if( inrec.isDefined("usescratch") ) { inrec.get("usescratch",usescratch); }
+	if( inrec.isDefined("incrmodel") ) { inrec.get("incrmodel",incrmodel); }
+	
+	// Does the MS exist on disk.
+	Directory thems( msname );
+	if( thems.exists() )
+	  {
+	    // Is it readable ? 
+	    if( ! thems.isReadable() )
+	      { err += "MS " + msname + " is not readable.\n"; }
+	    // Depending on 'readonly', is the MS writable ? 
+	    if( readonly==False && ! thems.isWritable() ) 
+	      { err += "MS " + msname + " is not writable.\n"; }
+	  }
+	else 
+	  { err += "MS does not exist : " + msname + "\n"; }
+	
+	
+	if( inrec.isDefined("spw") ) { inrec.get("spw",spw); }
+
+	if( inrec.isDefined("freqbeg") ) { inrec.get("freqbeg",freqbeg); }
+	if( inrec.isDefined("freqend") ) { inrec.get("freqend",freqend); }
+
+	String freqframestr( MFrequency::showType(freqframe) );
+	if( inrec.isDefined("freqframe") ) { inrec.get("freqframe",freqframestr); }
+	if( ! MFrequency::getType(freqframe, freqframestr) )
+	  { err += "Invalid Frequency Frame " + freqframestr ; }
+	
+	
+	if( inrec.isDefined("field") ) { inrec.get("field",field); }
+	if( inrec.isDefined("antenna") ) { inrec.get("antenna",antenna); }
+	if( inrec.isDefined("timestr") ) { inrec.get("timestr",timestr); }
+	if( inrec.isDefined("scan") ) { inrec.get("scan",scan); }
+	if( inrec.isDefined("obs") ) { inrec.get("obs",obs); }
+	if( inrec.isDefined("state") ) { inrec.get("state",state); }
+	if( inrec.isDefined("uvdist") ) { inrec.get("uvdist",uvdist); }
+	if( inrec.isDefined("taql") ) { inrec.get("taql",taql); }
+
+	
+      }
+    catch(AipsError &x)
+      {
+	err = err + x.getMesg() + "\n";
+      }
+      
+      if( err.length()>0 ) throw(AipsError("Invalid Selection Parameter set : " + err));
+      
+  }
+  
+  void SynthesisParamsSelect::setDefaults()
+  {
+    msname="";
+    spw="";
+    freqbeg="";
+    freqend="";
+    MFrequency::getType(freqframe,"LSRK");
+    field="";
+    antenna="";
+    timestr="";
+    scan="";
+    obs="";
+    state="";
+    uvdist="";
+    taql="";
+    usescratch=True;
+    readonly=False;
+    incrmodel=False;
+  }
+
+  Record SynthesisParamsSelect::toRecord()
+  {
+    Record selpar;
+    selpar.define("msname",msname);
+    selpar.define("spw",spw);
+    selpar.define("freqbeg",freqbeg);
+    selpar.define("freqend",freqend);
+    selpar.define("freqframe", MFrequency::showType(freqframe)); // Convert MFrequency::Types to String
+    selpar.define("field",field);
+    selpar.define("antenna",antenna);
+    selpar.define("timestr",timestr);
+    selpar.define("scan",scan);
+    selpar.define("obs",obs);
+    selpar.define("state",state);
+    selpar.define("uvdist",uvdist);
+    selpar.define("taql",taql);
+    selpar.define("usescratch",usescratch);
+    selpar.define("readonly",readonly);
+    selpar.define("incrmodel",incrmodel);
+
+    return selpar;
+  }
+
+
+
 
 } //# NAMESPACE CASA - END
 

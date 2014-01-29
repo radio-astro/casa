@@ -17,6 +17,7 @@
 #include <casa/Logging/LogIO.h>
 
 #include <synthesis/ImagerObjects/SynthesisImager.h>
+#include <synthesis/ImagerObjects/SynthesisUtils.h>
 
 #include <synthesisimager_cmpt.h>
 
@@ -63,13 +64,21 @@ synthesisimager::selectdata(const std::string& msname,
 
       if( ! itsImager ) itsImager = new SynthesisImager();
 
-      casa::MFrequency::Types freqframetype;
-      if( !casa::MFrequency::getType(freqframetype, freqframe) )
-	throw(AipsError("Invalid Frequency Frame " + freqframe));
+      //      casa::MFrequency::Types freqframetype;
+      //      if( !casa::MFrequency::getType(freqframetype, freqframe) )
+      //	throw(AipsError("Invalid Frequency Frame " + freqframe));
 
-      itsImager->selectData( msname, spw, freqbeg, freqend, freqframetype,
-			     field, antenna, timestr, scan, obs, state, uvdist, taql,
-			     usescratch, readonly, incrmodel );
+      SynthesisParamsSelect pars;
+      pars.setValues(msname,spw,freqbeg,freqend, freqframe,
+		     field, antenna, timestr, scan, obs, state, uvdist, taql,
+		     usescratch, readonly, incrmodel);
+      
+
+      itsImager->selectData( pars.msname, pars.spw, 
+			     pars.freqbeg, pars.freqend, pars.freqframe,
+			     pars.field, pars.antenna, pars.timestr, pars.scan, 
+			     pars.obs, pars.state, pars.uvdist, pars.taql,
+			     pars.usescratch, pars.readonly, pars.incrmodel );
     } 
   catch  (AipsError x) 
     {
@@ -106,7 +115,19 @@ synthesisimager::defineimage(const std::string& imagename,
 			     const bool usedoubleprec,
 			     const int wprojplanes,
 			     const std::string& convfunc,
-			     const std::string& startmodel)
+			     const std::string& startmodel,
+
+			     const bool aterm,//    = True,
+			     const bool psterm,//   = True,
+			     const bool mterm,//    = False,
+			     const bool wbawp,//      = True,
+			     const std::string& cfcache,//  = "",
+			     const bool dopointing,// = False,
+			     const bool dopbcorr,//   = True,
+			     const bool conjbeams,//  = True,
+			     const float computepastep,         //=360.0
+			     const float rotatepastep          //=5.0
+			     )
 {
   Bool rstat(False);
 
@@ -202,8 +223,8 @@ synthesisimager::defineimage(const std::string& imagename,
 			      nchan, freqStart, freqStep, restFreq, facets, ftmachine, 
 			      ntaylorterms, refFreq, 
 			      imageprojection, cdistance, freqframetype, tracksource, trackDir, overwrite,
-			      padding, useautocorr, usedoubleprec, 
-			       wprojplanes, convfunc, startmodel);
+			      padding, useautocorr, usedoubleprec, wprojplanes, convfunc, startmodel, aterm,
+			      psterm, mterm,wbawp, cfcache,dopointing,dopbcorr,conjbeams,computepastep,rotatepastep);
     } 
   catch  (AipsError x) 
     {
