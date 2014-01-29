@@ -6,6 +6,7 @@ import numpy
 import time
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.casatools as casatools
 from .. import common
@@ -51,6 +52,8 @@ class SDPlotFlagBaseline(common.SingleDishTaskTemplate):
         results = [r.read() for r in context.results]
         infiles = inputs.infiles
         scantable_names = context.observing_run.st_names
+        asdm_names = [common.asdm_name(st) for st in context.observing_run]
+        antenna_names = [st.antenna.name for st in context.observing_run]
         index_list = [scantable_names.index(os.path.basename(infile)) for infile in infiles]
         iflist = inputs.iflist
         antennalist = inputs.antennalist
@@ -63,6 +66,11 @@ class SDPlotFlagBaseline(common.SingleDishTaskTemplate):
                 baseline_result_id = i
             elif isinstance(results[i], flagdata.SDFlagDataResults):
                 flag_result_id = i
+            elif isinstance(results[i], basetask.ResultsList):
+                if isinstance(results[i][0], baseline.SDBaselineResults):
+                    baseline_result_id = i
+                elif isinstance(results[i][0], flagdata.SDFlagDataResults):
+                    flag_result_id = i
 
             if baseline_result_id > 0 and flag_result_id > 0:
                 break
@@ -75,8 +83,10 @@ class SDPlotFlagBaseline(common.SingleDishTaskTemplate):
             msg = 'No baseline results exist. You have to execute baseline subtraction task first!'
             LOG.error(msg)
             raise RuntimeError(msg)
-                
+
         baseline_result = results[baseline_result_id]
+        if isinstance(baseline_result, basetask.ResultsList):
+            baseline_result = baseline_result[0]
 
         baseline_processed = [[v['index'], v['spw'], v['pols']] for v in baseline_result.outcome['baselined']]
         spwlist_baseline = [entry[1] for entry in baseline_processed]
@@ -107,6 +117,8 @@ class SDPlotFlagBaseline(common.SingleDishTaskTemplate):
 
         else:
             flag_result = results[flag_result_id]
+            if isinstance(flag_result, basetask.ResultsList):
+                flag_result = flag_result[0]
 
             LOG.info('baseline result: from stage %s'%(baseline_result.stage_number))
             LOG.info('flag result: from stage %s'%(flag_result.stage_number))
@@ -114,11 +126,20 @@ class SDPlotFlagBaseline(common.SingleDishTaskTemplate):
             if flag_result.stage_number < baseline_result.stage_number:
                 LOG.warn('Flagging has not been done after baseline subtraction. Flag results may not be correct.')
 
-            flag_processed = [[v['index'], v['spw'], v['pol']] for v in flag_result.outcome['summary']]
+            flag_processed = [[v['antenna'], v['spw'], v['pol'], v['name']] for v in flag_result.outcome['summary']]
             for entry in flag_processed:
-                antenna = entry[0]
+                antenna_name = entry[0]
                 spw = entry[1]
                 pol = entry[2]
+                asdm = entry[3]
+                st_list = [i for i in xrange(len(asdm_names))
+                           if asdm_names[i] == asdm]
+                antenna_list = [i for i in st_list
+                                if antenna_names[i] == antenna_name]
+                LOG.debug('antenna_list=%s'%(antenna_list))
+                if len(antenna_list) == 0:
+                    continue
+                antenna = antenna_list[0]
                 if iflist is not None and spw not in iflist:
                     continue
                 try:
@@ -128,13 +149,16 @@ class SDPlotFlagBaseline(common.SingleDishTaskTemplate):
                         net_index_list = list(set(index_list) & set(baseline_entry[0]))
                     else:
                         net_index_list = baseline_entry[0]
+                    LOG.debug('net_index_list=%s'%(net_index_list))
                     if pollist is not None:
                         net_pollist = list(set(pollist) & set(baseline_entry[2]))
                     else:
                         net_pollist = baseline_entry[2]
+                    LOG.debug('net_pollist=%s'%(net_pollist))
                     if antenna in net_index_list \
                        and pol in net_pollist:
-                        net_processed.append(entry)
+                        #net_processed.append(entry)
+                        net_processed.append([antenna, spw, pol])
                 except:
                     pass
 
@@ -155,89 +179,6 @@ class SDPlotFlagBaseline(common.SingleDishTaskTemplate):
             entry['name'] = [context.observing_run[index].baselined_name \
                              for index in entry['index']]
             outcome['baselined'].append(entry)
-        results = SDPlotFlagBaselineResults(task=self.__class__,
-                                    success=True,
-                                    outcome=outcome)
-                
-        if self.inputs.context.subtask_counter is 0: 
-            results.stage_number = self.inputs.context.task_counter - 1
-        else:
-            results.stage_number = self.inputs.context.task_counter 
-                
-        return results
-
-        datatable = context.observing_run.datatable_instance
-        st_names = context.observing_run.st_names
-        file_index = [st_names.index(infile) for infile in infiles]
-        
-        baselined = []
-
-        ifnos = numpy.array(datatable.getcol('IF'))
-        polnos = numpy.array(datatable.getcol('POL'))
-        srctypes = numpy.array(datatable.getcol('SRCTYPE'))
-        antennas = numpy.array(datatable.getcol('ANTENNA'))
-
-        # loop over reduction group
-        files = set()
-        for (group_id,group_desc) in reduction_group.items():            
-            # assume all members have same spw and pollist
-            first_member = group_desc[0]
-            spwid = first_member.spw
-            LOG.debug('spwid=%s'%(spwid))
-            pols = first_member.pols
-            iteration = first_member.iteration[0]
-            if pollist is not None:
-                pols = list(set(pollist) & set(pols))
-
-            # skip spw not included in iflist
-            if iflist is not None and spwid not in iflist:
-                LOG.debug('Skip spw %s'%(spwid))
-                continue
-
-            # reference data is first scantable 
-            st = context.observing_run[first_member.antenna]
-
-            # skip channel averaged spw
-            nchan = group_desc.nchan
-            if nchan == 1:
-                LOG.info('Skip channel averaged spw %s.'%(spwid))
-                continue
-
-                
-            beam_size = st.beam_size[spwid]
-            srctype = st.calibration_strategy['srctype']
-            _file_index = set(file_index) & set([m.antenna for m in group_desc])
-            files = files | _file_index
-            pattern = st.pattern[spwid][pols[0]]
-            index_list = numpy.where(numpy.logical_and(ifnos == spwid, srctypes==srctype))[0]
-
-            # loop over file
-            for idx in _file_index:
-                st = context.observing_run[idx]
-                filename_in = st.name
-                filename_out = st.baselined_name
-                iteration = group_desc.get_iteration(idx, spwid)
-                LOG.debug('iteration (antenna %s, spw %s): %s'%(idx,spwid,iteration))
-                if iteration == 0:
-                    utils.createExportTable(bltable_name)
-                for pol in pols:
-                    pass
-                # output summary of baseline fitting
-                BaselineSummary.summary(bltable_name, st.basename, spwid, iteration, edge, datatable, ant_indices, nchan)
-
-
-            #for f in _file_index:
-            #    name = context.observing_run[f].baselined_name
-            name_list = [context.observing_run[f].baselined_name
-                         for f in _file_index]
-            baselined.append({'name': name_list, 'index': list(_file_index),
-                              'spw': spwid, 'pols': pols,
-                              'lines': detected_lines,
-                              'clusters': cluster_info})
-
-        outcome = {'datatable': datatable,
-                   'baselined': baselined,
-                   'edge': edge}
         results = SDPlotFlagBaselineResults(task=self.__class__,
                                     success=True,
                                     outcome=outcome)
