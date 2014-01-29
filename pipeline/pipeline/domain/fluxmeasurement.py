@@ -26,7 +26,11 @@ class FluxMeasurement():
             # shared between instances 
             return measures.FluxDensity(arg.value, arg.units)
         
-        return measures.FluxDensity(arg, measures.FluxDensityUnits.JANSKY)
+        try:
+            return measures.FluxDensity(arg, measures.FluxDensityUnits.JANSKY)
+        except:
+            LOG.error("Could not convert %s to fluxdensity" % arg)
+            raise
     
     @property
     def casa_flux_density(self):

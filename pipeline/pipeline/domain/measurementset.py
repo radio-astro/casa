@@ -270,7 +270,7 @@ class MeasurementSet(object):
                    % (','.join([str(i) for i in missing_ids]), 
                       self.basename, search_term))
             LOG.error(msg)
-            raise ValueError()
+            raise ValueError(msg)
         return [a for a in self.antennas if a.id in requested_ids]
 
     def get_state(self, state_id=None):
