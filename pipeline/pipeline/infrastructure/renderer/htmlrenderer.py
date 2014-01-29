@@ -3325,6 +3325,14 @@ class T2_4MDetailsSingleDishImagingRenderer(T2_4MDetailsDefaultRenderer):
                     summary_plots[field_name][idx] = plot
         return summary_plots
 
+class T2_4MDetailsSingleDishPlotFlagBaselineRenderer(T2_4MDetailsDefaultRenderer):
+    def __init__(self, template='t2-4m_details-hsd_plotflagbaseline.html',
+                 always_rerender=False):
+        super(T2_4MDetailsSingleDishPlotFlagBaselineRenderer, self).__init__(template,
+                                                                             always_rerender)
+    
+    
+    
 class SingleDishGenericPlotsRenderer(object):
     template = 'sd_generic_plots.html'
 
@@ -3955,7 +3963,7 @@ renderer_map = {
         hsd.tasks.SDImaging      : T2_4MDetailsSingleDishImagingRenderer(always_rerender=True),
         hsd.tasks.SDImagingOld   : T2_4MDetailsSingleDishImagingRenderer(always_rerender=True),
         hsd.tasks.SDFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagbaseline.html'),
-        hsd.tasks.SDPlotFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_plotflagbaseline.html'),
+        hsd.tasks.SDPlotFlagBaseline : T2_4MDetailsSingleDishPlotFlagBaselineRenderer(always_rerender=True),
         hsd.tasks.SDImportData2  : T2_4MDetailsImportDataRenderer(),
         hifv.tasks.importdata.VLAImportData : T2_4MDetailsVLAImportDataRenderer(),
         hifv.tasks.flagging.vlaagentflagger.VLAAgentFlagger : T2_4MDetailsAgentFlaggerRenderer(template='t2-4m_details-hifv_flagdata.html', always_rerender=True),
