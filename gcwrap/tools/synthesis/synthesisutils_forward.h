@@ -3,7 +3,7 @@
 #include <stdcasa/StdCasa/CasacSupport.h>
 namespace casa
 {
-  class SynthesisUtils;
+  class SynthesisUtilMethods;
   class SynthesisParamsSelect;
   class LogIO;
 };

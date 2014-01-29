@@ -17,7 +17,7 @@
 #include <casa/Logging/LogIO.h>
 
 #include <synthesis/ImagerObjects/SynthesisImager.h>
-#include <synthesis/ImagerObjects/SynthesisUtils.h>
+#include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
 
 #include <synthesisimager_cmpt.h>
 
