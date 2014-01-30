@@ -600,6 +600,10 @@ class CalLibrary(object):
         self._active = CalState()
         self._applied = CalState()
 
+    def clear(self):
+        self._active = CalState()
+        self._applied = CalState()
+        
     def _add(self, calto, calfroms, calstate):
         if type(calfroms) is not types.ListType:
             calfroms = [calfroms]
