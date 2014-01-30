@@ -52,16 +52,6 @@ class BandpassflagchansInputs(basetask.StandardInputs):
     def caltable(self, value):
         self._caltable = value
 
-#    @property
-#    def flagcmdfile(self):
-#        if self._flagcmdfile is None:
-#            return '%s_flagcmds.txt' % self.caltable
-#        return self._flagcmdfilefile
-
-#    @flagcmdfile.setter
-#    def flagcmdfile(self, value):
-#        self._flagcmdfile = value
-
     @property
     def flag_edges(self):
         if self._flag_edges is None:
@@ -135,7 +125,7 @@ class BandpassflagchansInputs(basetask.StandardInputs):
     @property
     def diffmad_limit(self):
         if self._diffmad_limit is None:
-            return 7
+            return 14
         return self._diffmad_limit
 
     @diffmad_limit.setter
@@ -145,7 +135,7 @@ class BandpassflagchansInputs(basetask.StandardInputs):
     @property
     def diffmad_nchan_limit(self):
         if self._diffmad_nchan_limit is None:
-            return 4
+            return 10000
         return self._diffmad_nchan_limit
 
     @diffmad_nchan_limit.setter
@@ -210,7 +200,6 @@ class Bandpassflagchans(basetask.StandardTaskTemplate):
         # underlying data.
         flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context,
           vis=inputs.vis, table=inputs.caltable, inpfile=[])
-#          table=inputs.caltable, inpfile=inputs.flagcmdfile)
         flagsettertask = FlagdataSetter(flagsetterinputs)
 
         # Translate the input flagging parameters to a more compact
