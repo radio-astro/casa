@@ -201,7 +201,8 @@ else:
    # 29 Jan 2014 (SB): Added Stokes-V testing 
    # Test 1
    correct_cs_intensity = 0.6710
-   correct_cs_intensity_v = -0.0007073
+   #correct_cs_intensity_v = -0.0007073
+   correct_cs_intensity_v = -0.0020248
    correct_cs_avgpb = 0.4830
    # Test 2
    correct_mtmfs_intensity = 0.6803
