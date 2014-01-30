@@ -324,13 +324,16 @@ class DetectLine(common.SingleDishTaskTemplate):
         return protected
 
     def _get_predefined_window(self, window):
-         if len(window) == 0:
-             return []
-         else:
-             if hasattr(window[0], '__iter__'):
-                 return window
-             else:
-                 return [window]
+        if len(window) == 0:
+            return []
+        else:
+            if hasattr(window[0], '__iter__'):
+                return map(self._get_linerange, window)
+            else:
+                return [self._get_linerange(window)]
+            
+    def _get_linerange(self, window):
+        return window
     
 def SpBinning(data, Bin):
     if Bin == 1: 
@@ -350,3 +353,4 @@ def getWidenLineList(nChan, mChan, pChan, Lines):
     if Out[0] < 0: Out[0] = 0
     if Out[-1] > nChan - 2: Out[-1] = nChan - 1
     return Out
+

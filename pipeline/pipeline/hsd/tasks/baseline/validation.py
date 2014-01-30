@@ -112,7 +112,9 @@ class ValidateLineSinglePointing(common.SingleDishTaskTemplate):
         # for Pre-Defined Spectrum Window
         if len(window) != 0:
             LOG.info('Skip clustering analysis since predefined line window is set.')
-            outcome = {'lines': [],
+            lines = _to_validated_lines(self.inputs.detect_signal)
+            outcome = {'lines': lines,
+                       'channelmap_range': lines,
                        'cluster_info': {},
                        'datatable': self.datatable}
             result = ValidateLineResults(task=self.__class__,
@@ -165,6 +167,7 @@ class ValidateLineSinglePointing(common.SingleDishTaskTemplate):
                     self.datatable.putcell('MASKLIST',row,detect_signal[0][2])
                     self.datatable.putcell('NOCHANGE',row,False)
         outcome = {'lines': lines,
+                   'channelmap_range': lines,
                    'cluster_info': {},
                    'datatable': self.datatable}
         result = ValidateLineResults(task=self.__class__,
@@ -215,7 +218,9 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         # for Pre-Defined Spectrum Window
         if len(window) != 0:
             LOG.info('Skip clustering analysis since predefined line window is set.')
-            outcome = {'lines': [],
+            lines = _to_validated_lines(self.inputs.detect_signal)
+            outcome = {'lines': lines,
+                       'channelmap_range': lines,
                        'cluster_info': {},
                        'datatable': self.datatable}
             result = ValidateLineResults(task=self.__class__,
@@ -307,6 +312,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         if Npos == 0: 
             #return lines, {}
             outcome = {'lines': [],
+                       'channelmap_range': [],
                        'cluster_info': {},
                        'datatable': self.datatable}
             result = ValidateLineResults(task=self.__class__,
@@ -1326,3 +1332,13 @@ def _eval_poly(xorder, yorder, x, y, xcoeff, ycoeff):
             idx += 1
         yk *= y
     return (xpoly, ypoly)
+
+def _to_validated_lines(detect_lines):
+    # conversion from [chmin, chmax] to [center, width, T/F]
+    lines = []
+    for line_prop in detect_lines.values():
+        for line in line_prop[2]:
+            if line not in lines:
+                lines.append(line)
+    lines_withflag = map(lambda x: [0.5*sum(x), x[1]-x[0], True], lines)
+    return lines_withflag
