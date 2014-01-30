@@ -595,7 +595,7 @@ class PhaseVsBaselineData(object):
         saved_handler = None
         saved_err = None
         try:
-            return numpy.ma.std(self.offsets_from_median)
+            return numpy.ma.sqrt(numpy.ma.mean(self.offsets_from_median**2))
         except FloatingPointError:
             def err_handler(t, flag):
                 ant = set(self.data.antenna).pop()
@@ -605,7 +605,7 @@ class PhaseVsBaselineData(object):
                          ' Scan %s Spw %s Ant %s.' % (t, scan, spw, ant))
             saved_handler = numpy.seterrcall(err_handler)
             saved_err = numpy.seterr(all='call')
-            return numpy.ma.std(self.offsets_from_median)
+            return numpy.ma.sqrt(numpy.ma.mean(self.offsets_from_median**2))
         finally:
             if saved_handler:
                 numpy.seterrcall(saved_handler)
@@ -617,7 +617,7 @@ class PhaseVsBaselineData(object):
         saved_handler = None
         saved_err = None
         try:
-            return numpy.ma.std(self.unwrapped_data)
+            return numpy.ma.sqrt(numpy.ma.mean(self.unwrapped_data**2))
         except FloatingPointError:
             def err_handler(t, flag):
                 ant = set(self.data.antenna).pop()
@@ -627,7 +627,7 @@ class PhaseVsBaselineData(object):
                          ' Scan %s Spw %s Ant %s.' % (t, scan, spw, ant))
             saved_handler = numpy.seterrcall(err_handler)
             saved_err = numpy.seterr(all='call')
-            return numpy.ma.std(self.unwrapped_data)
+            return numpy.ma.sqrt(numpy.ma.mean(self.unwrapped_data**2))
         finally:
             if saved_handler:
                 numpy.seterrcall(saved_handler)
