@@ -102,8 +102,11 @@ class BandpassWorker(basetask.StandardTaskTemplate):
 
         # create the calfrom object describing which data should be selected
         # from this caltable when applied to other data. Just set the table
-        # name, leaving spwmap, interp, etc. at their default values.
-        calfrom = callibrary.CalFrom(inputs.caltable, caltype='bandpass')
+        # name, leaving spwmap, etc. at their default values. interp is set
+        # to nearestperobs to handle situation where vis is a concat of
+        # 2 or more measurement sets.
+        calfrom = callibrary.CalFrom(inputs.caltable, caltype='bandpass',
+          interp='linearperobs,linear')
 
         calapp = callibrary.CalApplication(calto, calfrom, origin)
 
