@@ -53,12 +53,12 @@ Flag deviant channels in bandpass calibration.
 
     <param type="double" name="diffmad_limit" subparam="true">
         <description>Flag channels that bracket differences > diffmad_limit * MAD of difference spectrum</description>
-        <value>7</value>
+        <value>14</value>
     </param>
 
     <param type="double" name="diffmad_nchan_limit" subparam="true">
         <description>Flag all channels if number flagged by diffmad_limit exceeds diffmad_nchan_limit</description>
-        <value>4</value>
+        <value>10000</value>
     </param>
 
     <param type="bool" name="flag_tmf">
@@ -139,8 +139,8 @@ Flag deviant channels in bandpass calibration.
 
         <when param="flag_diffmad">
             <equals type="bool" value="True">
-                <default param="diffmad_limit"><value>7</value></default>
-                <default param="diffmad_nchan_limit"><value>4</value></default>
+                <default param="diffmad_limit"><value>14</value></default>
+                <default param="diffmad_nchan_limit"><value>10000</value></default>
             </equals>
             <equals type="bool" value="False">
             </equals>
@@ -191,12 +191,12 @@ flag_diffmad -- True to flag channels whose difference is greater than
 diffmad_limit -- If flag_diffmad is True then channel pairs will be
                  flagged whose difference is greater than  
                  diffmad_limit * the MAD of the difference spectrum.
-    default: 7
+    default: 14
 
 diffmad_nchan_limit -- If flag_diffmad is True and the number of channels
                        flagged by diffmad_limit exceeds diffmad_nchan_limit
                        then flag all channels.
-    default: 4
+    default: 10000
 
 flag_tmf -- True to flag all channels if the proportion of channels 
             already flagged is greater than tmf_frac_limit or if the
