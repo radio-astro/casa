@@ -32,7 +32,7 @@
 
 #include <casa/aips.h>
 #include <casa/Arrays/Array.h>
-#include <synthesis/MSVis/StokesVector.h>
+#include <msvis/MSVis/StokesVector.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

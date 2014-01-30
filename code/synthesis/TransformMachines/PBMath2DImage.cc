@@ -37,7 +37,7 @@
 #include <images/Images/TempImage.h>
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/ImageSummary.h>
-#include <synthesis/MSVis/StokesVector.h>
+#include <msvis/MSVis/StokesVector.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <lattices/Lattices/LatticeStepper.h>
 #include <lattices/Lattices/LatticeIterator.h>

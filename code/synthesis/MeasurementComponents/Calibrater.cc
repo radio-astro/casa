@@ -47,8 +47,8 @@
 #include <synthesis/CalTables/CLPatchPanel.h>
 #include <synthesis/MeasurementComponents/VisCalSolver.h>
 #include <synthesis/MeasurementComponents/UVMod.h>
-#include <synthesis/MSVis/VisSetUtil.h>
-#include <synthesis/MSVis/VisBuffAccumulator.h>
+#include <msvis/MSVis/VisSetUtil.h>
+#include <msvis/MSVis/VisBuffAccumulator.h>
 #include <casa/Quanta/MVTime.h>
 
 #include <casa/Logging/LogMessage.h>
@@ -58,7 +58,7 @@
 #include <tables/Tables/SetupNewTab.h>
 #include <vector>
 using std::vector;
-#include <synthesis/MSVis/UtilJ.h>
+#include <msvis/MSVis/UtilJ.h>
 
 using namespace casa::utilj;
 

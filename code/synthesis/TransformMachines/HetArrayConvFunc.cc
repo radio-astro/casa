@@ -62,8 +62,8 @@
 
 #include <ms/MeasurementSets/MSColumns.h>
 
-#include <synthesis/MSVis/VisBuffer.h>
-#include <synthesis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisibilityIterator.h>
 
 #include <synthesis/TransformMachines/Utils.h>
 #include <synthesis/TransformMachines/PBMath1DAiry.h>

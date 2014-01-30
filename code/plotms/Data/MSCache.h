@@ -40,9 +40,9 @@
 #include <casa/aips.h>
 #include <casa/Arrays.h>
 #include <casa/Containers/Block.h>
-#include <synthesis/MSVis/VisIterator.h>
-#include <synthesis/MSVis/VisBuffer.h>
-#include <synthesis/MSVis/VisBufferUtil.h>
+#include <msvis/MSVis/VisIterator.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBufferUtil.h>
 
 namespace casa {
 

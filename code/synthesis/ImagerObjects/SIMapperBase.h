@@ -34,9 +34,10 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
-#include <synthesis/MSVis/VisibilityIterator2.h>
-#include <synthesis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/VisBuffer2.h>
 #include <synthesis/TransformMachines/FTMachine.h>
+#include <synthesis/TransformMachines/ComponentFTMachine.h>
 #include <synthesis/ImagerObjects/SIImageStore.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN

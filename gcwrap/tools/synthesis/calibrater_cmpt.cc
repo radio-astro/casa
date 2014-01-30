@@ -30,6 +30,7 @@
 #include <ms/MeasurementSets/MSRange.h>
 #include <ms/MeasurementSets/MSField.h>
 #include <ms/MeasurementSets/MSSpectralWindow.h>
+#include <synthesis/TransformMachines/VisModelData.h>
 
 #include <measures/Measures/MeasTable.h>
 #include <iostream>
@@ -502,8 +503,9 @@ calibrater::initcalset(const int calset)
   try {
     
     //remove the model from the header
-    if(calset==1)
+    if(calset==1){
       VisModelData::clearModel(*itsMS);
+    }
     // Set up history logging infrastructure
     logSink_p.clearLocally();
     LogIO os(LogOrigin("calibrater", "initcalset"), logSink_p);
@@ -535,8 +537,9 @@ calibrater::delmod(const bool otf, const ::casac::variant& field,
     LogIO os(LogOrigin("calibrater", "delmod"), logSink_p);
     os << "Beginning delmod------------------------" << LogIO::POST;
     
-    if (!otf && !scr)
+    if (!otf && !scr){
       VisModelData::listModel(*itsMS);
+    }
 
     //remove the model from the header
     if (otf) {

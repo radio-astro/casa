@@ -28,7 +28,7 @@
 
 #include <casa/BasicMath/Math.h>
 #include <synthesis/MeasurementComponents/SimACoh.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

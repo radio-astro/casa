@@ -34,7 +34,7 @@
 #include <casa/Arrays/LogiArray.h>
 #include <casa/Containers/Record.h>
 #include <ms/MeasurementSets/MSSelection.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <synthesis/CalTables/CalMainBuffer.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN

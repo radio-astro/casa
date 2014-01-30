@@ -127,6 +127,7 @@ macro( casa_add_assay module source )
   string( REGEX REPLACE " ([a-zA-Z_0-9]+[.]cc)" " ${path}/\\1" result " ${ARGN}")
   string( REGEX REPLACE "^ " "" result ${result})
 
+  message (STATUS "add_executable( ${_tname} EXCLUDE_FROM_ALL ${source} ${result} )")
   add_executable( ${_tname} EXCLUDE_FROM_ALL ${source} ${result} )
   target_link_libraries( ${_tname} lib${module} )
   add_test( ${_tname} ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/${_tname} )

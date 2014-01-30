@@ -37,9 +37,9 @@
 #include <synthesis/MeasurementComponents/Jones.h>
 #include <synthesis/CalTables/VisCalEnum.h>
 #include <synthesis/MeasurementComponents/VisVector.h>
-#include <synthesis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisSet.h>
 
-#include <synthesis/MSVis/VisBuffGroupAcc.h>
+#include <msvis/MSVis/VisBuffGroupAcc.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

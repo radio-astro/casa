@@ -55,8 +55,8 @@
 #include <lattices/Lattices/LatticeCache.h>
 #include <lattices/Lattices/LatticeFFT.h>
 #include <scimath/Mathematics/ConvolveGridder.h>
-#include <synthesis/MSVis/VisBuffer.h>
-#include <synthesis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisibilityIterator.h>
 
 
 #include <synthesis/TransformMachines/WPConvFunc.h>

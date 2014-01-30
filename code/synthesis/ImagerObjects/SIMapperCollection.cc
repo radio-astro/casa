@@ -49,7 +49,8 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 
 #include <synthesis/ImagerObjects/SIMapperCollection.h>
-#include <synthesis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/VisibilityIterator2.h>
+#include <synthesis/TransformMachines/VisModelData.h>
 
 #include <sys/types.h>
 #include <unistd.h>

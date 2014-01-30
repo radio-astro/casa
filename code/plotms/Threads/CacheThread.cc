@@ -26,7 +26,7 @@
 #include "CacheThread.h"
 #include <plotms/Data/PlotMSCacheBase.h>
 #include <plotms/Threads/ThreadCommunication.h>
-#include <synthesis/MSVis/UtilJ.h>
+#include <msvis/MSVis/UtilJ.h>
 #include <QDebug>
 
 namespace casa {

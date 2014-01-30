@@ -40,7 +40,7 @@
 #include <synthesis/TransformMachines/Utils.h>
 
 #include <scimath/Mathematics/FFTServer.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 
 #include <casa/Containers/Block.h>
 #include <casa/Arrays/Array.h>

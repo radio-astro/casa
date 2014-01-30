@@ -42,7 +42,7 @@
 #include <display/Display/DParameterString.h>
 #include <display/Display/DParameterButton.h>
 #include <display/DisplayCanvas/WCPowerScaleHandler.h>
-#include <synthesis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisibilityIterator.h>
 #include <display/DisplayDatas/WorldAxesDD.h>
 #include <display/Display/DisplayEnums.h>
 #include <display/Display/WorldCanvasHolder.h>

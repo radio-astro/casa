@@ -57,11 +57,12 @@
 #include <synthesis/ImagerObjects/SynthesisImager.h>
 #include <synthesis/ImagerObjects/SIMapper.h>
 #include <synthesis/MeasurementEquations/ImagerMultiMS.h>
-#include <synthesis/MSVis/VisSetUtil.h>
-#include <synthesis/MSVis/VisImagingWeight.h>
+#include <msvis/MSVis/VisSetUtil.h>
+#include <msvis/MSVis/VisImagingWeight.h>
 #include <synthesis/TransformMachines/GridFT.h>
 #include <synthesis/TransformMachines/WPConvFunc.h>
 #include <synthesis/TransformMachines/WProjectFT.h>
+#include <synthesis/TransformMachines/VisModelData.h>
 
 
 #include <casadbus/viewer/ViewerProxy.h>

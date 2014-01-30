@@ -46,7 +46,7 @@
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogIO.h>
 
-#include <synthesis/MSVis/StokesVector.h>
+#include <msvis/MSVis/StokesVector.h>
 #include <synthesis/MeasurementEquations/LatConvEquation.h>
 #include <synthesis/MeasurementEquations/ClarkCleanLatModel.h>
 #include <lattices/Lattices/SubLattice.h>

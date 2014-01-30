@@ -39,7 +39,7 @@
 #include <casa/Containers/OrderedMap.h>
 #include <casa/Utilities/CountedPtr.h>
 #include <images/Images/ImageInterface.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
   using namespace CFDefs;
   typedef Cube<CountedPtr<CFCell > > VBRow2CFMapType;

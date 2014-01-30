@@ -48,8 +48,8 @@
 #include <ms/MeasurementSets/MSHistoryHandler.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 
-#include <synthesis/MSVis/VisBuffer2.h>
-#include <synthesis/MSVis/VisBuffer2Adapter.h>
+#include <msvis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/VisBuffer2Adapter.h>
 #include <synthesis/TransformMachines/BeamSkyJones.h>
 #include <synthesis/TransformMachines/SkyJones.h>
 #include <synthesis/TransformMachines/SimpleComponentFTMachine.h>
