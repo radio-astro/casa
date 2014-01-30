@@ -251,21 +251,18 @@ class Fluxscale(basetask.StandardTaskTemplate):
             flux_for_spws = [(spw, flux_for_field[spw]['fluxd'])
                              for spw in flux_for_field 
                              if spw.isdigit()]
-            err_for_spws = [(spw, flux_for_field[spw]['fluxdErr'])
-                            for spw in flux_for_field 
-                            if spw.isdigit()]
 
             # filter out the [-1,-1,-1,-1] results
             spw_flux = filter(no_result_fn, flux_for_spws)
-            spw_err = filter(no_result_fn, err_for_spws)
 
             for (spw_id, [i, q, u, v]) in spw_flux:
                 flux = domain.FluxMeasurement(spw_id=spw_id, I=i, Q=q, U=u, V=v)
-                result.measurements[field_id].append(flux)
 
-            for (spw_id, [i, q, u, v]) in spw_err:
-                err = domain.FluxMeasurement(spw_id=spw_id, I=i, Q=q, U=u, V=v)
-                result.uncertainties[field_id].append(err)
+                uI, uQ, uU, uV = flux_for_field[spw_id]['fluxdErr']
+                unc = domain.FluxMeasurement(spw_id=spw_id, I=uI, Q=uQ, U=uU, V=uV)
+                flux.uncertainty = unc
+                
+                result.measurements[field_id].append(flux)
 
         return result
 

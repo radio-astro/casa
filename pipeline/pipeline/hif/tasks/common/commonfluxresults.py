@@ -23,7 +23,6 @@ class FluxCalibrationResults(basetask.Results):
         self.vis = vis
         self.resantenna=resantenna
         self.measurements = measurements
-        self.uncertainties = collections.defaultdict(list)
 
     def merge_with_context(self, context):
         ms = context.observing_run.get_ms(self.vis)

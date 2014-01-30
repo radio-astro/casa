@@ -1,6 +1,7 @@
 <%!
 rsc_path = ""
 import os
+import pipeline.domain.measures as measures
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 <%inherit file="t2-4m_details-base.html"/>
@@ -53,29 +54,37 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 	</thead>
 	<tbody>
 % for single_result in result:
+		<tr>
+			<td rowspan="${reduce(lambda x, y: x + len(y), single_result.measurements.values(), 0)}">${os.path.basename(single_result.vis)}</td>
 	% for field in single_result.measurements:
+		<%
+			ms = pcontext.observing_run.get_ms(single_result.vis)
+			f = ms.get_fields(field)[0]
+			field_name = f.name
+			field_id = f.id
+		%>
+			<td rowspan="${len(single_result.measurements[field])}">${'%s (#%s)'%(field_name, field_id)}</td>
 		% for flux in sorted(single_result.measurements[field], key=lambda m: m.spw_id):
 <% 
 try:
-	unc = [m for m in single_result.uncertainties[field] if int(m.spw_id) == int(flux.spw_id)]
-	if len(unc) is not 1:
-		raise ValueError()
 	u = {}
-	u['I'] = ' &#177; %s' % str(unc[0].I)	
-	u['Q'] = ' &#177; %s' % str(unc[0].Q)	
-	u['U'] = ' &#177; %s' % str(unc[0].U)	
-	u['V'] = ' &#177; %s' % str(unc[0].V)	
+	for stokes in ['I', 'Q', 'U', 'V']:
+		flux_jy = getattr(flux, stokes).to_units(measures.FluxDensityUnits.JANSKY)
+		unc = getattr(flux.uncertainty, stokes)
+		unc_jy = unc.to_units(measures.FluxDensityUnits.JANSKY)
+
+		if flux_jy != 0 and unc_jy != 0:
+			u[stokes] = ' &#177; %s (%0.1f%%)' % (str(unc), unc_jy/flux_jy)	
+		else:
+			u[stokes] = ''
 except:
+	raise
 	u = {}
 	u['I'] = ''
 	u['Q'] = ''
 	u['U'] = ''
 	u['V'] = ''	
 %>
-
-		<tr>
-			<td>${os.path.basename(single_result.vis)}</td>
-			<td>${field}</td>
 			<td>${flux.spw_id}</td>
 			<td>${str(flux.I) + u['I']}</td>
 			<td>${str(flux.Q) + u['Q']}</td>
