@@ -103,6 +103,9 @@ def get_task_description(result_obj):
             names.extend([ms.basename for ms in result.mses])
         return 'Register %s with pipeline' % utils.commafy(names)
 
+    if task_cls is hifa.tasks.Linpolcal:
+        return 'Linear polarization calibration'
+
     if task_cls is hif.tasks.Lowgainflag:
         return 'Flag antennas with low gain'
 
