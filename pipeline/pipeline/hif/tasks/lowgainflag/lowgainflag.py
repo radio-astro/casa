@@ -261,9 +261,9 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
               data=times)]
 
             viewresult = commonresultobjects.ImageResult(filename=
-              os.path.basename(table), data=data, flag=flag,
+              os.path.basename(table), intent=self.inputs.intent,
+              data=data, flag=flag,
               axes=axes, datatype='gain amplitude', spw=spwid)
-#              intent=intent)
           
             # add the view results and their children results to the
             # class result structure
