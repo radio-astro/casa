@@ -16,12 +16,12 @@
 #
 #
 
-# jfl additions
+# jfl additions to define variables when run by pipeline
 import matplotlib.pylab as pl
-import pipeline.infrastructure.casatools as casatools
+from pipeline.infrastructure.casatools import table as tb
+from pipeline.infrastructure.casatools import measures as me
 from math import *
 import os
-
 # end of jfl additions
 
 import glob as glob
@@ -64,35 +64,32 @@ def bandpa(name):
 
 def qufromgain(caltable,badspw=[],paoffset=0.0):
 
-    ctb = casatools.table
-    cme = casatools.measures
-
-    ctb.open(caltable+'/ANTENNA')
-    pos=ctb.getcol('POSITION')
+    tb.open(caltable+'/ANTENNA')
+    pos=tb.getcol('POSITION')
     meanpos=pl.mean(pos,1)
-    frame=ctb.getcolkeyword('POSITION','MEASINFO')['Ref']
-    units=ctb.getcolkeyword('POSITION','QuantumUnits')
-    mpos=cme.position(frame,
+    frame=tb.getcolkeyword('POSITION','MEASINFO')['Ref']
+    units=tb.getcolkeyword('POSITION','QuantumUnits')
+    mpos=me.position(frame,
                      str(meanpos[0])+units[0],
                      str(meanpos[1])+units[1],
                      str(meanpos[2])+units[2])
-    cme.doframe(mpos)
+    me.doframe(mpos)
 
     # _geodetic_ latitude
-    latr=cme.measure(mpos,'WGS84')['m1']['value']
+    latr=me.measure(mpos,'WGS84')['m1']['value']
 
     print 'Latitude = ',latr*180/pi
 
-    ctb.open(caltable+'/FIELD')
-    nfld=ctb.nrows()
-    dirs=ctb.getcol('DELAY_DIR')[:,0,:]
-    ctb.close()
+    tb.open(caltable+'/FIELD')
+    nfld=tb.nrows()
+    dirs=tb.getcol('DELAY_DIR')[:,0,:]
+    tb.close()
     print 'Found as many as '+str(nfld)+' fields.'
 
-    ctb.open(caltable+'/SPECTRAL_WINDOW')
-    nspw=ctb.nrows()
-    bandnames=[x.split('#')[0].split('_')[-1] for x in ctb.getcol('NAME')]
-    ctb.close()
+    tb.open(caltable+'/SPECTRAL_WINDOW')
+    nspw=tb.nrows()
+    bandnames=[x.split('#')[0].split('_')[-1] for x in tb.getcol('NAME')]
+    tb.close()
     print 'Found as many as '+str(nspw)+' spws.'
 
     R=pl.zeros((nspw,nfld))
@@ -104,10 +101,10 @@ def qufromgain(caltable,badspw=[],paoffset=0.0):
         mask[badspw,:]=False
 
     QU={}
-    ctb.open(caltable)
+    tb.open(caltable)
     for ifld in range(nfld):
         for ispw in range(nspw):
-            st=ctb.query('FIELD_ID=='+str(ifld)+' && SPECTRAL_WINDOW_ID=='+str(ispw))
+            st=tb.query('FIELD_ID=='+str(ifld)+' && SPECTRAL_WINDOW_ID=='+str(ispw))
             nrows=st.nrows()
             if nrows > 0:
 
@@ -135,8 +132,8 @@ def qufromgain(caltable,badspw=[],paoffset=0.0):
                 parang=pl.zeros(len(times))
                 
                 for itim in range(len(times)):
-                    tm=cme.epoch('UTC',str(times[itim])+'s')
-                    last=cme.measure(tm,'LAST')['m0']['value']
+                    tm=me.epoch('UTC',str(times[itim])+'s')
+                    last=me.measure(tm,'LAST')['m0']['value']
                     last-=floor(last)  # days
                     last*=24.0  # hours
                     ha=last-rah  # hours
@@ -186,15 +183,12 @@ def qufromgain(caltable,badspw=[],paoffset=0.0):
             Xm=0.5*atan2(Um,Qm)*180/pi
             print 'Spw mean: Fld=', ifld,'Q=',Qm,'U=',Um,'(rms=',Qe,Ue,')','P=',Pm,'X=',Xm
 
-    ctb.close()
+    tb.close()
 
     return QU
 
 
 def xyamb(xytab,qu,xyout=''):
-
-    ctb = casatools.table
-    cme = casatools.measures
 
     if not isinstance(qu,tuple):
         raise Exception,'qu must be a tuple: (Q,U)'
@@ -207,14 +201,14 @@ def xyamb(xytab,qu,xyout=''):
     QUexp=complex(qu[0],qu[1])
     print 'Expected QU = ',qu   # , '  (',pl.angle(QUexp)*180/pi,')'
 
-    ctb.open(xyout,nomodify=False)
+    tb.open(xyout,nomodify=False)
 
-    QU=ctb.getkeyword('QU')['QU']
+    QU=tb.getkeyword('QU')['QU']
     P=pl.sqrt(QU[0,:]**2+QU[1,:]**2)
 
     nspw=P.shape[0]
     for ispw in range(nspw):
-        st=ctb.query('SPECTRAL_WINDOW_ID=='+str(ispw))
+        st=tb.query('SPECTRAL_WINDOW_ID=='+str(ispw))
         if (st.nrows()>0):
             q=QU[0,ispw]
             u=QU[1,ispw]
@@ -236,8 +230,8 @@ def xyamb(xytab,qu,xyout=''):
             st.close()
     QUr={}
     QUr['QU']=QU
-    ctb.putkeyword('QU',QUr)
-    ctb.close()
+    tb.putkeyword('QU',QUr)
+    tb.close()
     QUm=pl.mean(QU[:,P>0],1)
     QUe=pl.std(QU[:,P>0],1)
     Pm=pl.sqrt(QUm[0]**2+QUm[1]**2)
@@ -286,26 +280,23 @@ def dxy(dtab,xytab,dout):
 
 def Dgen(dtab,dout):
 
-    ctb = casatools.table
-    cme = casatools.measures
-
     os.system('cp -r '+dtab+' '+dout)
 
-    ctb.open(dout,nomodify=False)
+    tb.open(dout,nomodify=False)
 
-    irec=ctb.info()
+    irec=tb.info()
     st=irec['subType']
     if st.count('Df')>0:
         irec['subType']='Dfgen Jones'
     elif st.count('D')>0:
         irec['subType']='Dgen Jones'
     else:
-        ctb.close()
+        tb.close()
         raise Exception, 'Not a D?'
 
-    ctb.putinfo(irec)
-    ctb.putkeyword('VisCal',irec['subType'])
-    ctb.close()
+    tb.putinfo(irec)
+    tb.putkeyword('VisCal',irec['subType'])
+    tb.close()
 
 
 def fixfeedpa(vis,defband='',forceband=''):

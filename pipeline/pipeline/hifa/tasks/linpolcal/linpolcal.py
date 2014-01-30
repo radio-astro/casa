@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 import types
 
-from .almapolhelpers import *
+from .almapolhelperscopy import *
 
 from pipeline.hif.tasks.common import commoncalinputs
 from pipeline.hif.heuristics import caltable as hcaltable
