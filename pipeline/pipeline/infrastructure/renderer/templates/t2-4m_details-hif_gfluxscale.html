@@ -13,7 +13,6 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <p>The following antennas were used for flux scaling, entries for unresolved flux calibrators are blank</p>
 
-<div class="row-fluid">
 <table class="table table-bordered table-striped" summary="Flux Scaling Antennas">
 	<caption>Antennas for Flux Calibration</caption>
         <thead>
@@ -36,7 +35,6 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <p>The following flux densities were set in the measurement set model column and recorded in the pipeline context:</p>
 
-<div class="row-fluid">
 <table class="table table-bordered table-striped" summary="Flux density results">
 	<caption>Phased-up Fluxscale Results</caption>
     <thead>
@@ -54,21 +52,38 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 	    </tr>
 	</thead>
 	<tbody>
-%for single_result in result:
-	%for field in single_result.measurements:
-		%for flux in sorted(single_result.measurements[field], key=lambda m: m.spw_id):
+% for single_result in result:
+	% for field in single_result.measurements:
+		% for flux in sorted(single_result.measurements[field], key=lambda m: m.spw_id):
+<% 
+try:
+	unc = [m for m in single_result.uncertainties[field] if int(m.spw_id) == int(flux.spw_id)]
+	if len(unc) is not 1:
+		raise ValueError()
+	u = {}
+	u['I'] = ' &#177; %s' % str(unc[0].I)	
+	u['Q'] = ' &#177; %s' % str(unc[0].Q)	
+	u['U'] = ' &#177; %s' % str(unc[0].U)	
+	u['V'] = ' &#177; %s' % str(unc[0].V)	
+except:
+	u = {}
+	u['I'] = ''
+	u['Q'] = ''
+	u['U'] = ''
+	u['V'] = ''	
+%>
+
 		<tr>
 			<td>${os.path.basename(single_result.vis)}</td>
 			<td>${field}</td>
 			<td>${flux.spw_id}</td>
-			<td>${str(flux.I)}</td>
-			<td>${str(flux.Q)}</td>
-			<td>${str(flux.U)}</td>
-			<td>${str(flux.V)}</td>
+			<td>${str(flux.I) + u['I']}</td>
+			<td>${str(flux.Q) + u['Q']}</td>
+			<td>${str(flux.U) + u['U']}</td>
+			<td>${str(flux.V) + u['V']}</td>
 		</tr>
 		%endfor
 	%endfor
 %endfor
 	</tbody>
 </table>
-</div>

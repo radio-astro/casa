@@ -223,6 +223,10 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
                 # to the main result
                 setjy_result = self._do_setjy(reffile=reffile)
                 result.measurements.update(setjy_result.measurements)
+                
+                for f in setjy_result.measurements:
+                    field = ms.get_fields(f)[0]
+                    result.uncertainties[f][:] = fluxscale_result.uncertainties[str(field.id)]
 
             except Exception, e:
                 # something has gone wrong, return an empty result
