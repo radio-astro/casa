@@ -210,7 +210,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regrid() const {
 void ImageRegridder::_decimateStokes(
 	std::tr1::shared_ptr<ImageInterface<Float> >& workIm
 ) const {
-	ImageMetaData<Float> md(workIm);
+	ImageMetaData md(workIm);
 	if (_outputStokes.size() < md.nStokes()) {
 		CasacRegionManager rm(workIm->coordinates());
 		String diagnostics;
@@ -520,7 +520,7 @@ void ImageRegridder::_finishConstruction() {
 				);
 				// This is a kludge to fool the underlying ImageRegrid constructor that the shape
 				// is acceptable to it. We copy just the stokes we from the output of ImageRegrid.
-				ImageMetaData<Float> md(_getImage());
+				ImageMetaData md(_getImage());
 				_kludgedShape[csysFrom.polarizationAxisNumber(False)] = md.nStokes();
 			}
 		}
@@ -564,8 +564,8 @@ Bool ImageRegridder::_doImagesOverlap(
 	const CoordinateSystem csys1 = image1->coordinates();
 	IPosition shape0 = image0->shape();
 	IPosition shape1 = image1->shape();
-	ImageMetaData<Float> md0(image0);
-	ImageMetaData<Float> md1(image1);
+	ImageMetaData md0(image0);
+	ImageMetaData md1(image1);
 	Bool overlap = False;
 	if (
 		csys0.hasDirectionCoordinate()

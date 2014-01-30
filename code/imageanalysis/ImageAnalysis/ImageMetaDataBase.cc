@@ -29,56 +29,54 @@
 
 #include <casa/aips.h>
 
+#include <casa/Containers/ValueHolder.h>
 #include <casa/Quanta/QuantumHolder.h>
+#include <casa/Utilities/DataType.h>
 #include <images/Images/ImageSummary.h>
 #include <images/Images/ImageStatistics.h>
 #include <measures/Measures/MeasureHolder.h>
-#include <casa/Utilities/DataType.h>
-
-#include <stdcasa/StdCasa/CasacSupport.h>
-#include <stdcasa/variant.h>
 
 #include <iostream>
 #include <iomanip>
 
 #include <boost/regex.hpp>
 
-#define _ORIGINB LogOrigin("ImageMetaDataBase<T>", __FUNCTION__, WHERE)
+#define _ORIGINB LogOrigin("ImageMetaDataBase", __FUNCTION__, WHERE)
 
 namespace casa {
 
-template<class T> const String ImageMetaDataBase<T>::_BEAMMAJOR = "beammajor";
-template<class T> const String ImageMetaDataBase<T>::_BEAMMINOR = "beamminor";
-template<class T> const String ImageMetaDataBase<T>::_BEAMPA = "beampa";
-template<class T> const String ImageMetaDataBase<T>::_BMAJ = "bmaj";
-template<class T> const String ImageMetaDataBase<T>::_BMIN = "bmin";
-template<class T> const String ImageMetaDataBase<T>::_BPA = "bpa";
-template<class T> const String ImageMetaDataBase<T>::_BUNIT = "bunit";
-template<class T> const String ImageMetaDataBase<T>::_CDELT = "cdelt";
-template<class T> const String ImageMetaDataBase<T>::_CRPIX = "crpix";
-template<class T> const String ImageMetaDataBase<T>::_CRVAL = "crval";
-template<class T> const String ImageMetaDataBase<T>::_CTYPE = "ctype";
-template<class T> const String ImageMetaDataBase<T>::_CUNIT = "cunit";
-template<class T> const String ImageMetaDataBase<T>::_DATAMAX = "datamax";
-template<class T> const String ImageMetaDataBase<T>::_DATAMIN = "datamin";
-template<class T> const String ImageMetaDataBase<T>::_EPOCH = "epoch";
-template<class T> const String ImageMetaDataBase<T>::_EQUINOX = "equinox";
-template<class T> const String ImageMetaDataBase<T>::_IMTYPE = "imtype";
-template<class T> const String ImageMetaDataBase<T>::MASKS = "masks";
-template<class T> const String ImageMetaDataBase<T>::_MAXPIXPOS = "maxpixpos";
-template<class T> const String ImageMetaDataBase<T>::_MAXPOS = "maxpos";
-template<class T> const String ImageMetaDataBase<T>::_MINPIXPOS = "minpixpos";
-template<class T> const String ImageMetaDataBase<T>::_MINPOS = "minpos";
-template<class T> const String ImageMetaDataBase<T>::_OBJECT = "object";
-template<class T> const String ImageMetaDataBase<T>::_OBSDATE = "date-obs";
-template<class T> const String ImageMetaDataBase<T>::_OBSERVER = "observer";
-template<class T> const String ImageMetaDataBase<T>::_PROJECTION = "projection";
-template<class T> const String ImageMetaDataBase<T>::_RESTFREQ = "restfreq";
-template<class T> const String ImageMetaDataBase<T>::_REFFREQTYPE = "reffreqtype";
-template<class T> const String ImageMetaDataBase<T>::_SHAPE = "shape";
-template<class T> const String ImageMetaDataBase<T>::_TELESCOPE = "telescope";
+const String ImageMetaDataBase::_BEAMMAJOR = "beammajor";
+const String ImageMetaDataBase::_BEAMMINOR = "beamminor";
+const String ImageMetaDataBase::_BEAMPA = "beampa";
+const String ImageMetaDataBase::_BMAJ = "bmaj";
+const String ImageMetaDataBase::_BMIN = "bmin";
+const String ImageMetaDataBase::_BPA = "bpa";
+const String ImageMetaDataBase::_BUNIT = "bunit";
+const String ImageMetaDataBase::_CDELT = "cdelt";
+const String ImageMetaDataBase::_CRPIX = "crpix";
+const String ImageMetaDataBase::_CRVAL = "crval";
+const String ImageMetaDataBase::_CTYPE = "ctype";
+const String ImageMetaDataBase::_CUNIT = "cunit";
+const String ImageMetaDataBase::_DATAMAX = "datamax";
+const String ImageMetaDataBase::_DATAMIN = "datamin";
+const String ImageMetaDataBase::_EPOCH = "epoch";
+const String ImageMetaDataBase::_EQUINOX = "equinox";
+const String ImageMetaDataBase::_IMTYPE = "imtype";
+const String ImageMetaDataBase::MASKS = "masks";
+const String ImageMetaDataBase::_MAXPIXPOS = "maxpixpos";
+const String ImageMetaDataBase::_MAXPOS = "maxpos";
+const String ImageMetaDataBase::_MINPIXPOS = "minpixpos";
+const String ImageMetaDataBase::_MINPOS = "minpos";
+const String ImageMetaDataBase::_OBJECT = "object";
+const String ImageMetaDataBase::_OBSDATE = "date-obs";
+const String ImageMetaDataBase::_OBSERVER = "observer";
+const String ImageMetaDataBase::_PROJECTION = "projection";
+const String ImageMetaDataBase::_RESTFREQ = "restfreq";
+const String ImageMetaDataBase::_REFFREQTYPE = "reffreqtype";
+const String ImageMetaDataBase::_SHAPE = "shape";
+const String ImageMetaDataBase::_TELESCOPE = "telescope";
 
-template<class T> Record ImageMetaDataBase<T>::_makeHeader() const {
+Record ImageMetaDataBase::_makeHeader() const {
 	Record header;
 	header.define(_IMTYPE, _getImType());
 	header.define(_OBJECT, _getObject());
@@ -99,7 +97,6 @@ template<class T> Record ImageMetaDataBase<T>::_makeHeader() const {
 	header.define(_SHAPE, _getShape().asVector());
 	header.define(_TELESCOPE, _getTelescope());
 	header.define(_BUNIT, _getBrightnessUnit());
-
 	if (csys.hasSpectralAxis()) {
 		const SpectralCoordinate& sc = csys.spectralCoordinate();
 		header.define(_RESTFREQ, sc.restFrequencies());
@@ -138,7 +135,6 @@ template<class T> Record ImageMetaDataBase<T>::_makeHeader() const {
 	Vector<Quantity> crval = _getRefValue();
 	Vector<String> types = _getAxisNames();
 	header.merge(_getStatistics());
-
 	for (uInt i=0; i<cdelt.size(); i++) {
 		String iString = String::toString(i + 1);
 		String delt = _CDELT + iString;
@@ -155,150 +151,169 @@ template<class T> Record ImageMetaDataBase<T>::_makeHeader() const {
 	return header;
 }
 
+const TableRecord ImageMetaDataBase::_miscInfo() const {
+	std::tr1::shared_ptr<const ImageInterface<Float> > imf = _getFloatImage();
+	std::tr1::shared_ptr<const ImageInterface<Complex> > imc = _getComplexImage();
+	const TableRecord misc = imf ? imf->miscInfo() : imc->miscInfo();
+	return misc;
+}
 
-template<class T> casac::variant ImageMetaDataBase<T>::getFITSValue(const String& key) const {
+ValueHolder ImageMetaDataBase::getFITSValue(const String& key) const {
 	String c = key;
 	c.downcase();
+	const TableRecord info = _miscInfo();
 	if (c == _BUNIT) {
-		return _getBrightnessUnit();
+		return ValueHolder(_getBrightnessUnit());
 	}
 	else if (
 		c.startsWith(_CDELT) || c.startsWith(_CRPIX)
-		|| c.startsWith(_CRVAL) ||  c.startsWith(_CTYPE)
-		||  c.startsWith(_CUNIT)
+		|| c.startsWith(_CRVAL) || c.startsWith(_CTYPE)
+		|| c.startsWith(_CUNIT)
 	) {
 		String prefix = c.substr(0, 5);
 		uInt n = _getAxisNumber(c);
 		if (prefix == _CDELT) {
-			return casac::variant(
-				fromRecord(
-					QuantumHolder(_getIncrements()[n-1]).toRecord()
-				)
+			return ValueHolder(
+				QuantumHolder(
+					_getIncrements()[n-1]
+			    ).toRecord()
 			);
 		}
 		else if (prefix == _CRPIX) {
-			return _getRefPixel()[n-1];
+			return ValueHolder(_getRefPixel()[n-1]);
 		}
 		else if (prefix == _CRVAL) {
-			return casac::variant(
-				fromRecord(
-					QuantumHolder(_getRefValue()[n-1]).toRecord()
-				)
+			return ValueHolder(
+				QuantumHolder(_getRefValue()[n-1]).toRecord()
 			);
 		}
 		else if (prefix == _CTYPE) {
-			return _getAxisNames()[n-1];
+			return ValueHolder(_getAxisNames()[n-1]);
 		}
 		else if (prefix == _CUNIT) {
-			return _getAxisUnits()[n-1];
+			return ValueHolder(_getAxisUnits()[n-1]);
 		}
 	}
 	else if (c == _EQUINOX) {
-		return _getEquinox();
+		return ValueHolder(_getEquinox());
 	}
 	else if (c == _IMTYPE) {
-		return casac::variant(_getImType());
+		return ValueHolder(_getImType());
 	}
 	else if (c == MASKS) {
-		Vector<String>  masks = _getMasks().tovector();
-		vector<string> v(masks.size());
-		for (uInt i=0; i<masks.size(); i++) {
-			v[i] = std::string(masks[i].c_str());
-		}
-		return casac::variant(v);
+		return ValueHolder(_getMasks());
 	}
 	else if (c == _OBJECT) {
-		return _getObject();
+		return ValueHolder(_getObject());
 	}
 	else if (c == _OBSDATE || c == _EPOCH) {
-		return _getEpochString();
+		return ValueHolder(_getEpochString());
 	}
 	else if (c == _OBSERVER) {
-		return _getObserver();
+		return ValueHolder(_getObserver());
 	}
 	else if (c == _PROJECTION) {
-		return _getProjection();
+		return ValueHolder(_getProjection());
 	}
 	else if (c == _REFFREQTYPE) {
-		return _getRefFreqType();
+		return ValueHolder(_getRefFreqType());
 	}
 	else if (c == _RESTFREQ) {
-		QuantumHolder qh(_getRestFrequency());
-		casac::record *rec = fromRecord(qh.toRecord());
-		return casac::variant(rec);
+		return ValueHolder(
+			QuantumHolder(_getRestFrequency()).toRecord()
+		);
 	}
 	else if (c == _SHAPE) {
-		return casac::variant(_getShape().asVector().tovector());
+		return ValueHolder(_getShape().asVector());
 	}
 	else if (c == _TELESCOPE) {
-		return _getTelescope();
+		return ValueHolder(_getTelescope());
 	}
 	else if (
 		c == _BEAMMAJOR || c == _BEAMMINOR || c == _BEAMPA
 		|| c == _BMAJ || c == _BMIN || c == _BPA
 	) {
 		GaussianBeam beam = _getBeam();
-		casac::record *rec;
 		if (c == _BEAMMAJOR || c == _BMAJ) {
-			rec = fromRecord(QuantumHolder(beam.getMajor()).toRecord());
+			return ValueHolder(QuantumHolder(beam.getMajor()).toRecord());
 		}
 		else if (c == _BEAMMINOR || c == _BMIN) {
-			rec = fromRecord(QuantumHolder(beam.getMinor()).toRecord());
+			return ValueHolder(QuantumHolder(beam.getMinor()).toRecord());
 		}
 		else {
-			rec = fromRecord(QuantumHolder(beam.getPA()).toRecord());
+			return ValueHolder(QuantumHolder(beam.getPA()).toRecord());
 		}
-		return casac::variant(rec);
 	}
 	else if (
-		c==_DATAMIN || c == _DATAMAX || c == _MINPIXPOS
+		c == _DATAMIN || c == _DATAMAX || c == _MINPIXPOS
         || c == _MINPOS || c == _MAXPIXPOS || c == _MAXPOS
     ) {
 		Record x = _getStatistics();
 		if (c == _DATAMIN || c == _DATAMAX) {
-			T val;
-			x.get(c, val);
-			return val;
+			if (_getFloatImage()) {
+				Float val;
+				x.get(c, val);
+				return ValueHolder(val);
+			}
+			else {
+				Complex val;
+				x.get(c, val);
+				return ValueHolder(val);
+			}
 		}
 		else if (c == _MINPOS || c == _MAXPOS) {
-			return x.asString(c);
+			return ValueHolder(x.asString(c));
 		}
 		else if (c == _MINPIXPOS || c == _MAXPIXPOS) {
-			return casac::variant(x.asArrayInt(c).tovector());
+			return ValueHolder(x.asArrayInt(c));
 		}
 	}
 	else if (
-		_getImage()->miscInfo().isDefined(key)
-		|| _getImage()->miscInfo().isDefined(c)
+		info.isDefined(key)	|| info.isDefined(c)
 	) {
-		TableRecord info = _getImage()->miscInfo();
 		String x = info.isDefined(key) ? key : c;
 		switch (info.type(info.fieldNumber(x))) {
 		case TpString:
-			return casac::variant(info.asString(x));
+			return ValueHolder(info.asString(x));
+			break;
 		case TpInt:
-			return casac::variant(info.asInt(x));
+			return ValueHolder(info.asInt(x));
+			break;
 		case TpDouble:
-			return casac::variant(info.asDouble(x));
+			return ValueHolder(info.asDouble(x));
+			break;
 		case TpRecord:
 			// allow fall through
 		case TpQuantity: {
-			std::auto_ptr<casac::record> rec(fromRecord(info.asRecord(x)));
-			return casac::variant(*rec);
-		}
-		default:
-			_log << _ORIGINB << "Unhandled data type "
-				<< info.type(info.fieldNumber(x)) << " for "
-				<< "user defined type. Send us a bug report."
-				<< LogIO::EXCEPTION;
+			return ValueHolder(info.asRecord(x));
 			break;
 		}
+		default:
+			ostringstream os;
+			os << info.type(info.fieldNumber(x));
+			ThrowCc(
+				"Unhandled data type "
+				+ os.str()
+				+ " for user defined type. Send us a bug report"
+			);
+		}
 	}
-	_log << _ORIGINB << "Unknown keyword " << c << LogIO::EXCEPTION;
-	return casac::variant();
+	ThrowCc(
+		"Unknown keyword " + c
+	);
+	return ValueHolder();
 }
 
-template<class T> uInt ImageMetaDataBase<T>::_getAxisNumber(
+
+uInt ImageMetaDataBase::_ndim() const {
+	std::tr1::shared_ptr<const ImageInterface<Float> > imf = _getFloatImage();
+	std::tr1::shared_ptr<const ImageInterface<Complex> > imc = _getComplexImage();
+	uInt ndim = imf ? imf->ndim() : imc->ndim();
+	return ndim;
+}
+
+
+uInt ImageMetaDataBase::_getAxisNumber(
 	const String& key
 ) const {
 	uInt n = 0;
@@ -307,14 +322,14 @@ template<class T> uInt ImageMetaDataBase<T>::_getAxisNumber(
 	re.assign(sre, boost::regex_constants::icase);
 	if (boost::regex_match(key, re)) {
 		n = String::toInt(key.substr(5));
-		uInt naxes = _getImage()->ndim();
+		uInt ndim = _ndim();
 		if (n == 0) {
 			_log << _ORIGINB << "The FITS convention is that axes "
 				<< "are 1-based. Therefore, " << key << " is not a valid "
 				<< "FITS keyword specification" << LogIO::EXCEPTION;
 		}
-		else if (n > naxes) {
-			_log << _ORIGINB << "This image only has " << naxes
+		else if (n > ndim) {
+			_log << _ORIGINB << "This image only has " << ndim
 				<< " axes." << LogIO::EXCEPTION;
 		}
 	}
@@ -324,20 +339,22 @@ template<class T> uInt ImageMetaDataBase<T>::_getAxisNumber(
 	return n;
 }
 
-template<class T> String ImageMetaDataBase<T>::_getEpochString() const {
+String ImageMetaDataBase::_getEpochString() const {
 	return MVTime(_getObsDate().getValue()).string(MVTime::YMD);
 }
 
 
-template<class T> IPosition ImageMetaDataBase<T>::_getShape() const {
+IPosition ImageMetaDataBase::_getShape() const {
 	if (_shape.empty()) {
-		_shape = _getImage()->shape();
+		std::tr1::shared_ptr<const ImageInterface<Float> > imf = _getFloatImage();
+		std::tr1::shared_ptr<const ImageInterface<Complex> > imc = _getComplexImage();
+		_shape = imf ? imf->shape() : imc->shape();
 	}
 	return _shape;
 }
 
 
-template<class T> void ImageMetaDataBase<T>::_fieldToLog(
+void ImageMetaDataBase::_fieldToLog(
 	const Record& header,const String& field, Int precision
 ) const {
 	_log << "        -- " << field << ": ";
@@ -395,7 +412,7 @@ template<class T> void ImageMetaDataBase<T>::_fieldToLog(
 	_log << LogIO::POST;
 }
 
-template<class T> void ImageMetaDataBase<T>::_toLog(const Record& header) const {
+void ImageMetaDataBase::_toLog(const Record& header) const {
 	_log << _ORIGINB << "General --" << LogIO::POST;
 	_fieldToLog(header, _IMTYPE);
 	_fieldToLog(header, _OBJECT);
@@ -531,7 +548,7 @@ template<class T> void ImageMetaDataBase<T>::_toLog(const Record& header) const 
 
 }
 
-template <class T>  String ImageMetaDataBase<T>::_doStandardFormat(
+String ImageMetaDataBase::_doStandardFormat(
 	Double value, const String& unit
 ) const {
 	String valunit;
@@ -553,15 +570,15 @@ template <class T>  String ImageMetaDataBase<T>::_doStandardFormat(
 }
 
 
-template <class T> uInt ImageMetaDataBase<T>::nChannels() const {
+uInt ImageMetaDataBase::nChannels() const {
 	const CoordinateSystem csys = _getCoords();
 	if (! csys.hasSpectralAxis()) {
 		return 0;
 	}
-	return _getImage()->shape()[csys.spectralAxisNumber()];
+	return _getShape()[csys.spectralAxisNumber()];
 }
 
-template <class T> Bool ImageMetaDataBase<T>::isChannelNumberValid(
+Bool ImageMetaDataBase::isChannelNumberValid(
 	const uInt chan
 ) const {
 	if (! _getCoords().hasSpectralAxis()) {
@@ -570,16 +587,16 @@ template <class T> Bool ImageMetaDataBase<T>::isChannelNumberValid(
 	return (chan < nChannels());
 }
 
-template <class T> uInt ImageMetaDataBase<T>::nStokes() const {
+uInt ImageMetaDataBase::nStokes() const {
 	const CoordinateSystem& csys = _getCoords();
 
 	if (! csys.hasPolarizationCoordinate()) {
 		return 0;
     }
-	return _getImage()->shape()[csys.polarizationAxisNumber()];
+	return _getShape()[csys.polarizationAxisNumber()];
 }
 
-template <class T> Int ImageMetaDataBase<T>::stokesPixelNumber(
+Int ImageMetaDataBase::stokesPixelNumber(
 	const String& stokesString) const {
 	Int pixNum = _getCoords().stokesPixelNumber(stokesString);
 	if (pixNum >= (Int)nStokes()) {
@@ -588,7 +605,7 @@ template <class T> Int ImageMetaDataBase<T>::stokesPixelNumber(
 	return pixNum;
 }
 
-template <class T> String ImageMetaDataBase<T>::stokesAtPixel(
+String ImageMetaDataBase::stokesAtPixel(
 	const uInt pixel
 ) const {
 	const CoordinateSystem& csys = _getCoords();
@@ -598,7 +615,7 @@ template <class T> String ImageMetaDataBase<T>::stokesAtPixel(
 	return csys.stokesAtPixel(pixel);
 }
 
-template <class T> Bool ImageMetaDataBase<T>::isStokesValid(
+Bool ImageMetaDataBase::isStokesValid(
 	const String& stokesString
 ) const {
 	if (! _getCoords().hasPolarizationCoordinate()) {
@@ -608,7 +625,7 @@ template <class T> Bool ImageMetaDataBase<T>::isStokesValid(
 	return stokesPixNum >= 0 && stokesPixNum < (Int)nStokes();
 }
 
-template <class T> Vector<Int> ImageMetaDataBase<T>::directionShape() const {
+Vector<Int> ImageMetaDataBase::directionShape() const {
 	Vector<Int> dirAxesNums = _getCoords().directionAxesNumbers();
 	if (dirAxesNums.nelements() == 0) {
 		return Vector<Int>();
@@ -620,7 +637,7 @@ template <class T> Vector<Int> ImageMetaDataBase<T>::directionShape() const {
 	return dirShape;
 }
 
-template <class T> Bool ImageMetaDataBase<T>::areChannelAndStokesValid(
+Bool ImageMetaDataBase::areChannelAndStokesValid(
 	String& message, const uInt chan, const String& stokesString
 ) const {
 	ostringstream os;
@@ -643,26 +660,46 @@ template <class T> Bool ImageMetaDataBase<T>::areChannelAndStokesValid(
 	return areValid;
 }
 
+Record ImageMetaDataBase::_calcStats() const {
+	std::tr1::shared_ptr<const ImageInterface<Float> > imf = _getFloatImage();
+	std::tr1::shared_ptr<const ImageInterface<Complex> > imc = _getComplexImage();
+	if (imf) {
+		return _calcStatsT(imf);
+	}
+	else {
+		return _calcStatsT(imc);
+	}
+}
 
-template<class T> Record ImageMetaDataBase<T>::_calcStats() const {
-	ImageStatistics<T> stats(*_getImage());
+template <class T> Record ImageMetaDataBase::_calcStatsT(
+	std::tr1::shared_ptr<const ImageInterface<T> > image
+) const {
+	if ( _getComplexImage()) {
+		// the min and max and associated positions
+		// cannot be calculated for complex images
+		return Record();
+	}
+	ImageStatistics<T> stats(*image);
 	Array<typename NumericTraits<T>::PrecisionType> min;
 	stats.getStatistic(min, LatticeStatsBase::MIN);
 	Record x;
-	x.define(ImageMetaDataBase<T>::_DATAMIN, min(IPosition(min.ndim(), 0)));
+	x.define(ImageMetaDataBase::_DATAMIN, min(IPosition(min.ndim(), 0)));
 	Array<typename NumericTraits<T>::PrecisionType> max;
 	stats.getStatistic(max, LatticeStatsBase::MAX);
-	x.define(ImageMetaDataBase<T>::_DATAMAX, max(IPosition(max.ndim(), 0)));
+	x.define(ImageMetaDataBase::_DATAMAX, max(IPosition(max.ndim(), 0)));
 	IPosition minPixPos, maxPixPos;
 	stats.getMinMaxPos(minPixPos, maxPixPos);
-	x.define(ImageMetaDataBase<T>::_MINPIXPOS, minPixPos.asVector());
-	x.define(ImageMetaDataBase<T>::_MAXPIXPOS, maxPixPos.asVector());
+	x.define(ImageMetaDataBase::_MINPIXPOS, minPixPos.asVector());
+	x.define(ImageMetaDataBase::_MAXPIXPOS, maxPixPos.asVector());
+
 	const CoordinateSystem& csys = _getCoords();
 	Vector<Double> minPos = csys.toWorld(minPixPos);
 	Vector<Double> maxPos = csys.toWorld(maxPixPos);
+
 	String minFormat, maxFormat;
 	uInt ndim = csys.nPixelAxes();
 	Int spAxis = csys.spectralAxisNumber();
+
 	for (uInt i=0; i<ndim; i++) {
 		Int worldAxis = csys.pixelAxisToWorldAxis(i);
 		String foundUnit;
@@ -683,11 +720,10 @@ template<class T> Record ImageMetaDataBase<T>::_calcStats() const {
 			maxFormat += " ";
 		}
 	}
-	x.define(ImageMetaDataBase<T>::_MINPOS, minFormat);
-	x.define(ImageMetaDataBase<T>::_MAXPOS, maxFormat);
+	x.define(ImageMetaDataBase::_MINPOS, minFormat);
+	x.define(ImageMetaDataBase::_MAXPOS, maxFormat);
 	return x;
 }
-
 
 } //# NAMESPACE CASA - END
 

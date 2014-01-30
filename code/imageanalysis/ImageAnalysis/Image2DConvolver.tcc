@@ -179,7 +179,7 @@ template <class T> void Image2DConvolver<T>::convolve(
 	ImageInfo iiOut = imageOut->imageInfo();
 	if (imageInfo.hasMultipleBeams()) {
 		// std::tr1::shared_ptr<const ImageInterface<T> > imageOutConst(imageOut);
-		ImageMetaData<T> md(imageOut);
+		ImageMetaData md(imageOut);
 		uInt nChan = md.nChannels();
 		uInt nPol = md.nStokes();
 		// initialize all beams to be null

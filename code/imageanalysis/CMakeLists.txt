@@ -41,6 +41,9 @@ ImageAnalysis/ImageCollapser.cc
 ImageAnalysis/ImageFFT.cc
 ImageAnalysis/ImageFitter.cc
 ImageAnalysis/ImageInputProcessor.cc
+ImageAnalysis/ImageMetaData.cc
+ImageAnalysis/ImageMetaDataBase.cc
+ImageAnalysis/ImageMetaDataRW.cc
 ImageAnalysis/ImageMomentsProgress.cc
 ImageAnalysis/ImageMomentsProgressMonitor.cc
 ImageAnalysis/ImagePadder.cc
@@ -121,11 +124,8 @@ install (FILES
 	ImageAnalysis/ImageMaskAttacher.h
     ImageAnalysis/ImageMaskAttacher.tcc
 	ImageAnalysis/ImageMetaData.h
-    ImageAnalysis/ImageMetaData.tcc
     ImageAnalysis/ImageMetaDataBase.h
-    ImageAnalysis/ImageMetaDataBase.tcc
     ImageAnalysis/ImageMetaDataRW.h
-    ImageAnalysis/ImageMetaDataRW.tcc
 	ImageAnalysis/ImageMoments.h
 	ImageAnalysis/ImageMoments.tcc
     ImageAnalysis/ImageMomentsProgress.h

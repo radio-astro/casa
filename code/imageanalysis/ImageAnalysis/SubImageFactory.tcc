@@ -184,9 +184,9 @@ template<class T> std::tr1::shared_ptr<ImageInterface<T> > SubImageFactory<T>::c
 		}
 	}
 	AxesSpecifier axesSpecifier(! dropDegenerateAxes);
-	std::tr1::shared_ptr<SubImage<Float> > subImage(
-		new SubImage<Float>(
-			SubImageFactory<Float>::createSubImage(
+	std::tr1::shared_ptr<SubImage<T> > subImage(
+		new SubImage<T>(
+			SubImageFactory<T>::createSubImage(
 				image,
 			//	*(ImageRegion::tweakedRegionRecord(&Region)),
 				region,
@@ -202,7 +202,7 @@ template<class T> std::tr1::shared_ptr<ImageInterface<T> > SubImageFactory<T>::c
 		log << LogIO::NORMAL << "Creating image '" << outfile
 			<< "' of shape " << subImage->shape() << LogIO::POST;
 	}
-	PagedImage<Float> outImage(
+	PagedImage<T> outImage(
 			subImage->shape(),
 			subImage->coordinates(), outfile
 	);

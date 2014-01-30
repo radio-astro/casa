@@ -35,10 +35,6 @@
 
 #include <tr1/memory>
 
-namespace casac {
-class variant;
-}
-
 namespace casa {
 
 // <summary>
@@ -80,11 +76,15 @@ namespace casa {
 // Merge ImageInfo class into this class.
 // </todo>
 
-template <class T> class ImageMetaData : public ImageMetaDataBase<T> {
+class ImageMetaData : public ImageMetaDataBase {
 
 public:
 
-	ImageMetaData(std::tr1::shared_ptr<const ImageInterface<T> > image);
+	ImageMetaData(std::tr1::shared_ptr<const ImageInterface<Float> > imagef);
+	ImageMetaData(std::tr1::shared_ptr<ImageInterface<Float> > imagef);
+
+	ImageMetaData(std::tr1::shared_ptr<const ImageInterface<Complex> > imagec);
+	ImageMetaData(std::tr1::shared_ptr<ImageInterface<Complex> > imagec);
 
 	~ImageMetaData() {}
 
@@ -93,9 +93,11 @@ public:
 
 protected:
 
-	std::tr1::shared_ptr<const ImageInterface<T> > _getImage() const { return _image; }
+	std::tr1::shared_ptr<const ImageInterface<Float> > _getFloatImage() const { return _floatImage; }
 
-	ImageMetaData() : ImageMetaDataBase<T>(), _image(0) {}
+	std::tr1::shared_ptr<const ImageInterface<Complex> > _getComplexImage() const { return _complexImage; }
+
+	ImageMetaData() : ImageMetaDataBase(), _floatImage(), _complexImage() {}
 
 	const ImageInfo& _getInfo() const { return _info; }
 
@@ -139,7 +141,8 @@ protected:
 
 private:
 
-	std::tr1::shared_ptr<const ImageInterface<T> > _image;
+	std::tr1::shared_ptr<const ImageInterface<Float> > _floatImage;
+	std::tr1::shared_ptr<const ImageInterface<Complex> > _complexImage;
 	const ImageInfo _info;
 	const CoordinateSystem _csys;
 
@@ -157,16 +160,8 @@ private:
 	mutable Vector<Double> _refPixel;
 	mutable vector<Quantity> _refVal, _increment;
 	mutable Record _stats;
-
-
 };
 
-
-
 } //# NAMESPACE CASA - END
-
-#ifndef AIPS_NO_TEMPLATE_SRC
-#include <imageanalysis/ImageAnalysis/ImageMetaData.tcc>
-#endif //# AIPS_NO_TEMPLATE_SRC
 
 #endif

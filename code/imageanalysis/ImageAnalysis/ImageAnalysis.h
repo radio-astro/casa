@@ -95,9 +95,12 @@ class ImageAnalysis
     Bool addnoise(const String& type, const Vector<Double>& pars,
                   Record& region, const Bool zero = False);
 
-    std::tr1::shared_ptr<ImageInterface<Float> > imagecalc(const String& outfile, 
-                                      const String& pixels, 
-                                      const Bool overwrite = False);
+    // The current object is replaced by the result of the calculation
+    void imagecalc(
+    	const String& outfile,
+    	const String& pixels,
+    	const Bool overwrite = False
+    );
 
     std::tr1::shared_ptr<ImageInterface<Float> > imageconcat(const String& outfile, 
                                         const Vector<String>& infiles, 
@@ -695,6 +698,13 @@ class ImageAnalysis
     	const ImageInterface<T>& image,
     	const String& doppler, const Bool list,
     	const Bool pixelorder, const Bool verbose
+    );
+
+    template<class T> std::tr1::shared_ptr<ImageInterface<T> > _imagecalc(
+    	const LatticeExprNode& node, const IPosition& shape,
+    	const CoordinateSystem& csys, const LELImageCoord* const imCoord,
+    	const String& outfile,
+    	Bool overwrite, const String& expr
     );
 
 };
