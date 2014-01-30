@@ -627,6 +627,10 @@ class MosaicImage(Image):
 #        self._associations.flag_marks(flag_marks)
         return self
 
+class AntposCalibrationTable(CalibrationTable):
+    def __init__(self, other=None):
+        super(AntposCalibrationTable, self).__init__(other)
+        self.antpos_cal()
 
 class BandpassCalibrationTable(CalibrationTable):
     def __init__(self, other=None):
