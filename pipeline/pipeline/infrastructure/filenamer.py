@@ -400,6 +400,11 @@ class CalibrationTable(NamingTemplate):
         ''' 
         return self.extension('dcal')
 
+    def instrumentpol_cal(self):
+        '''Set the filename extension as appropriate for a instrument pol calibration.
+        ''' 
+        return self.extension('pcal')
+
     def flux_cal(self):
         '''Set the filename extension as appropriate for a flux calibration.
         ''' 
@@ -462,6 +467,11 @@ class CalibrationTable(NamingTemplate):
         '''Set the filename extension as appropriate for a wvr calibration.
         ''' 
         return self.extension('wvrcal')
+
+    def xyf0_cal(self):
+        '''Set the filename extension as appropriate for a wvr calibration.
+        ''' 
+        return self.extension('xyf0cal')
 
     #- fit type convenience methods --------------------------------------------
     
@@ -628,6 +638,11 @@ class DelayCalibrationTable(CalibrationTable):
         super(DelayCalibrationTable, self).__init__(other)
         self.delay_cal()
 
+class InstrumentPolCalibrationTable(CalibrationTable):
+    def __init__(self, other=None):
+        super(InstrumentPolCalibrationTable, self).__init__(other)
+        self.instrumentpol_cal()
+
 class FluxCalibrationTable(CalibrationTable):
     def __init__(self, other=None):
         super(FluxCalibrationTable, self).__init__(other)
@@ -643,10 +658,10 @@ class GainCalibrationTable(CalibrationTable):
         super(GainCalibrationTable, self).__init__(other)
         self.gain_cal()
 
-class AntposCalibrationTable(CalibrationTable):
+class XYf0CalibrationTable(CalibrationTable):
     def __init__(self, other=None):
-        super(AntposCalibrationTable, self).__init__(other)
-        self.antpos_cal()
+        super(XYf0CalibrationTable, self).__init__(other)
+        self.xyf0_cal()
 
 class TsysCalibrationTable(CalibrationTable):
     def __init__(self, other=None):
@@ -677,7 +692,13 @@ class WvrgCalibrationTable(CalibrationTable):
     def __init__(self, other=None):
         super(WvrgCalibrationTable, self).__init__(other)
         self.wvrg_cal()
-    
+
+
+class XYf0CalibrationTable(CalibrationTable):
+    def __init__(self, other=None):
+        super(XYf0CalibrationTable, self).__init__(other)
+        self.xyf0_cal()
+
     
 if __name__ == '__main__':
     l = CASALog()
