@@ -6,6 +6,7 @@ from .flagging import ALMAAgentFlagger
 from .gaincal import TimeGaincal
 from .fluxcalflag import FluxcalFlag
 from .fluxscale import GcorFluxscale
+from .linpolcal import Linpolcal
 from .tsyscal import Tsyscal
 from .tsysflag import Tsysflag, Tsysflagchans
 from .wvrgcal import Wvrgcal
