@@ -1115,7 +1115,8 @@ fitsimage.done()
 <description> 
 
 This method is used to evaluate a mathematical expression involving
-existing images.  The syntax of the expression supplied via the pixels
+existing images. It fully supports both float and complex valued images.
+The syntax of the expression supplied via the pixels
 parameter (in what is called the Lattice Expression Language, or LEL) is
 explained in detail in \htmladdnormallink{note
 223}{http://aips2.nrao.edu/docs/notes/223/223.html}. This is a rich 
@@ -2534,7 +2535,8 @@ the increment.
 <returns type="string"/>
 <description>
 
-This function <!-- (short-hand name {\stff bu}) --> gets the image brightness unit.
+This function gets the image brightness unit. Both float and complex
+valued images are supported.
 
 </description>
 
@@ -3189,8 +3191,8 @@ ia.close()
 <returns type="coordsys"/>
 <description>
 
-This function stores the Coordinate System of an image in a {\stf
-Coordsys} tool.  
+This function returns the Coordinate System of an image in a {\stf
+Coordsys} tool. Both float and complex valued images are supported.
 
 By default, the Coordinate System describes all of the axes in the
 image.  If you desire, you can select a subset of the axes, thus
@@ -8459,7 +8461,8 @@ ia.close()
 <returns type="bool">T or fail</returns>
 <description>
 
-This function <!-- (short-hand name {\stff sbu}) --> sets the image brightness unit.
+This function sets the image brightness unit. Both float and complex
+valued images are supported.
 You can get the brightness unit with function
 <link anchor="images:image.brightnessunit.function">brightnessunit</link>.
 
@@ -9300,10 +9303,9 @@ ia.twopointcorrelation()   # Output image is virtual
 
 <description>
 
-This function <!-- (short-hand name {\stff subim}) --> copies all or
-part of the image to another on-the-fly Image tool.
-<!-- (there is also a
-\htmlref{subimage}{images:image.subimage.constructor} constructor). -->
+This function copies all or
+part of the image to another on-the-fly Image tool. Both float and complex
+valued images are supported.
 
 If {\stfaf outfile} is given, the subimage is written to the specified
 disk file.  If {\stfaf outfile} is unset, the returned Image \tool\ actually

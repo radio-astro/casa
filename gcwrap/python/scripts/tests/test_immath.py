@@ -1498,8 +1498,23 @@ class immath_test3(unittest.TestCase):
         # Note that im.4 has been moved into im.1.
         ok = global_iet_im1.done()
       
-
-
+    def test_complex(self):
+        """Test creating and manipulating complex images"""
+        myia = iatool()
+        floatim = "float.im"
+        myia.fromshape(floatim, [2,2], type='f')
+        self.assertTrue(type(myia.getchunk()[0,0]) == numpy.float64)
+        myia.done()
+        complexim = "complex.im"
+        zz = myia.imagecalc(complexim, "complex(" + floatim + ")")
+        self.assertTrue(type(zz.getchunk()[0,0]) == numpy.complex128)
+        complexim2 = "complex2.im"
+        yy = zz.subimage(complexim2)
+        zz.done()
+        yy.done()
+        zz = myia.imagecalc("", complexim + "+" + complexim2)
+        self.assertTrue(type(zz.getchunk()[0,0]) == numpy.complex128)
+        zz.done()
 
 def suite():
     return [immath_test1, immath_test2, immath_test3]

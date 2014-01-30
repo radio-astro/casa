@@ -108,6 +108,8 @@ import unittest
 # Input file names
 input_file = 'ngc5921.clean.image'
 input_file_copy = 'ngc5921.clean.image.copy'
+datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imhead/'
+complexim = 'complex.im'
 
 def deep_equality(a, b): 
     if (type(a) != type(b)):
@@ -150,14 +152,15 @@ def deep_equality(a, b):
 class imhead_test(unittest.TestCase):
     
     def setUp(self):
-        if(os.path.exists(input_file)):
-            os.system('rm -rf ' +input_file)
-
-        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/ngc5921redux/reference/ngc5921_regression/'
-        os.system('cp -r ' +datapath + input_file +' ' + input_file)
+        for f in [input_file, complexim]:
+            if(os.path.exists(f)):
+                os.system('rm -rf ' + f)
+            os.system('cp -r ' +datapath + f +' ' + f)
 
     def tearDown(self):
-        os.system('rm -rf ' +input_file)
+        for f in [input_file, complexim]:
+            if(os.path.exists(f)):
+                os.system('rm -rf ' + f)
         self.assertTrue(len(tb.showcache()) == 0)
 
     def test_mode(self):
@@ -920,555 +923,595 @@ class imhead_test(unittest.TestCase):
 
     def test_list(self):
         '''Imhead: CAS-3300 Test the printing of some keywords in list mode'''
-        logfile = 'imhead.log'
-        open(logfile,'w').close
-        casalog.setlogfile(logfile)
-        res = imhead(imagename=input_file, mode='list', verbose=True)
-        # restore logfile
-        casalog.setlogfile('casapy.log')
+        imf = input_file
+        imc = complexim
         
-        cmd = 'grep cdelt1 imhead.log'
-        out = commands.getoutput(cmd)
-        self.assertNotEqual(out,'','The keyword cdelt1 is not listed')
-        cmd = 'grep crval1 imhead.log'
-        out = commands.getoutput(cmd)
-        self.assertNotEqual(out,'','The keyword crval1 is not listed')
-        cmd = 'grep ctype1 imhead.log'
-        out = commands.getoutput(cmd)
-        self.assertNotEqual(out,'','The keyword ctype1 is not listed')
-        cmd = 'grep cunit1 imhead.log'
-        out = commands.getoutput(cmd)
-        self.assertNotEqual(out,'','The keyword cunit1 is not listed')
-        cmd = 'grep shape imhead.log'
-        out = commands.getoutput(cmd)
-        self.assertNotEqual(out,'','The keyword shape is not listed')
-        
-        myimd = imdtool()
-        myimd.open(input_file)
-        res2 = myimd.list()
-        myimd.done()
-        self.assertTrue(type(res2) == dict)
-        self.assertTrue(deep_equality(res, res2))
+        for image in [imf, imc]:
+            logfile = image + ".log"
+            open(logfile,'w').close
+            casalog.setlogfile(logfile)
+            res = imhead(imagename=image, mode='list', verbose=True)
+            self.assertTrue(res)
+            # restore logfile
+            casalog.setlogfile('casapy.log')
+            
+            cmd = 'grep cdelt1 ' + logfile
+            out = commands.getoutput(cmd)
+            self.assertNotEqual(out,'','The keyword cdelt1 is not listed')
+            cmd = 'grep crval1 ' + logfile
+            out = commands.getoutput(cmd)
+            self.assertNotEqual(out,'','The keyword crval1 is not listed')
+            cmd = 'grep ctype1 ' + logfile
+            out = commands.getoutput(cmd)
+            self.assertNotEqual(out,'','The keyword ctype1 is not listed')
+            cmd = 'grep cunit1 ' + logfile
+            out = commands.getoutput(cmd)
+            self.assertNotEqual(out,'','The keyword cunit1 is not listed')
+            cmd = 'grep shape ' + logfile
+            out = commands.getoutput(cmd)
+            self.assertNotEqual(out,'','The keyword shape is not listed')
+            
+            myimd = imdtool()
+            myimd.open(image)
+            res2 = myimd.list()
+            myimd.done()
+            self.assertTrue(type(res2) == dict)
+            self.assertTrue(deep_equality(res, res2))
         
     def test_get(self):
         """Test the get method"""
         myia = iatool()
-        imagename = "xx1d.im"
-        shape = [1, 1, 6]
-        myia.fromshape(imagename, shape)
-        major = {'value': 4, 'unit': "arcsec"}
-        minor = {'value': 2, 'unit': "arcsec"}
-        pa = {'value': 30, 'unit': "deg"}
-        myia.setrestoringbeam(major=major, minor=minor, pa=pa)
-        bunit = "Jy/beam"
-        myia.setbrightnessunit(bunit)
-        myia.addnoise()
-        myia.calcmask(imagename + "<= 0")
-        stats = myia.statistics()
-        myia.done()
-        got = imhead(imagename=imagename, mode="get", hdkey="imtype")
-        self.assertTrue(got == "Intensity")
-        object = "sgrb2n"
-        mytb = tbtool()
-        mytb.open(imagename, nomodify=False)
-        info = mytb.getkeyword("imageinfo")
-        info['objectname'] = object
-        mytb.putkeyword("imageinfo", info)
-        mytb.done()
-        imhead(imagename=imagename, mode="put", hdkey="object", hdvalue=object)
-        got = imhead(imagename=imagename, mode="get", hdkey="object")
-        self.assertTrue(got == object)
-        got = imhead(imagename=imagename, mode="get", hdkey="equinox")
-        self.assertTrue(got == "J2000")
-        got = imhead(imagename=imagename, mode="get", hdkey="date-obs")
-        self.assertTrue(got == "2000/01/01/00:00:00")
-        got = imhead(imagename=imagename, mode="get", hdkey="epoch")
-        self.assertTrue(got == "2000/01/01/00:00:00")
-        got = imhead(imagename=imagename, mode="get", hdkey="observer")
-        self.assertTrue(got == "Karl Jansky")
-        got = imhead(imagename=imagename, mode="get", hdkey="projection")
-        self.assertTrue(got == "SIN")
-        got = imhead(imagename=imagename, mode="get", hdkey="restfreq")
-        self.assertTrue(abs(got['value']/1420405751.7860003 - 1) < 1e-6)
-        self.assertTrue(got['unit'] == 'Hz')
-        got = imhead(imagename=imagename, mode="get", hdkey="reffreqtype")
-        self.assertTrue(got == "LSRK")
-        got = imhead(imagename=imagename, mode="get", hdkey="telescope")
-        self.assertTrue(got == "ALMA")
-        myia.open("xx1d.im")
-        myia.setrestoringbeam(remove=True)
-        myia.done()
-        self.assertFalse(
-            imhead(imagename=imagename, mode="get", hdkey="beammajor")
-        )
-        myia.open("xx1d.im")
-        myia.setrestoringbeam(major=major, minor=minor, pa=pa)
-        myia.done()
-        got = imhead(imagename=imagename, mode="get", hdkey="beammajor")
-        self.assertTrue(got == major)
-        got = imhead(imagename=imagename, mode="get", hdkey="beamminor")
-        self.assertTrue(got == minor)
-        got = imhead(imagename=imagename, mode="get", hdkey="beampa")
-        self.assertTrue(got == pa)
-        got = imhead(imagename=imagename, mode="get", hdkey="bunit")
-        self.assertTrue(got == bunit)
-        got = imhead(imagename=imagename, mode="get", hdkey="masks")
-        self.assertTrue(got == ["mask0"])
-        got = imhead(imagename=imagename, mode="get", hdkey="shape")
-        self.assertTrue((got == shape).all())
-        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="ctype6"))
-        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="ctype0"))
-        got = imhead(imagename=imagename, mode="get", hdkey="ctype1")
-        self.assertTrue(got == "Right Ascension")
-        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="crpix6"))
-        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="crpix0"))
-        got = imhead(imagename=imagename, mode="get", hdkey="crpix1")
-        self.assertTrue(got == 0)
-        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="crval6"))
-        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="crval0"))
-        got = imhead(imagename=imagename, mode="get", hdkey="crval3")
-        self.assertTrue(got == qa.quantity("1.415e9Hz"))
-        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="cdelt6"))
-        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="cdelt0"))
-        got = imhead(imagename=imagename, mode="get", hdkey="cdelt3")
-        self.assertTrue(got == qa.quantity("1000Hz"))
-        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="cunit6"))
-        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="cunit0"))
-        got = imhead(imagename=imagename, mode="get", hdkey="cunit3")
-        self.assertTrue(got == "Hz")
-        got = imhead(imagename=imagename, mode="get", hdkey="datamin")
-        self.assertTrue(got == stats['min'])
-        got = imhead(imagename=imagename, mode="get", hdkey="datamax")
-        self.assertTrue(got == stats['max'])
-        got = imhead(imagename=imagename, mode="get", hdkey="minpos")
-        self.assertTrue(got == stats['minposf'].translate(None, ","))
-        got = imhead(imagename=imagename, mode="get", hdkey="maxpos")
-        self.assertTrue(got == stats['maxposf'].translate(None, ","))
-        got = imhead(imagename=imagename, mode="get", hdkey="minpixpos")
-        self.assertTrue((got == stats['minpos']).all())
-        got = imhead(imagename=imagename, mode="get", hdkey="maxpixpos")
-        self.assertTrue((got == stats['maxpos']).all())
-        
-        value = "fred"   
-        key = "userkey"     
-        imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=value)
-        got = imhead(imagename=imagename, mode="get", hdkey=key)
-        self.assertTrue(got == value)
+        for xx in ['f', 'c']:
+            imagename = "xx1d.im_" + xx
+            shape = [1, 1, 6]
+            myia.fromshape(imagename, shape, type=xx)
+            major = {'value': 4, 'unit': "arcsec"}
+            minor = {'value': 2, 'unit': "arcsec"}
+            pa = {'value': 30, 'unit': "deg"}
+            myia.setrestoringbeam(major=major, minor=minor, pa=pa)
+            bunit = "Jy/beam"
+            myia.setbrightnessunit(bunit)
+            if xx == 'f':
+                myia.addnoise()
+                myia.calcmask(imagename + "<= 0")
+            
+            myia.done()
+            got = imhead(imagename=imagename, mode="get", hdkey="imtype")
+            self.assertTrue(got == "Intensity")
+            object = "sgrb2n"
+            mytb = tbtool()
+            mytb.open(imagename, nomodify=False)
+            info = mytb.getkeyword("imageinfo")
+            info['objectname'] = object
+            mytb.putkeyword("imageinfo", info)
+            mytb.done()
+            imhead(imagename=imagename, mode="put", hdkey="object", hdvalue=object)
+            got = imhead(imagename=imagename, mode="get", hdkey="object")
+            self.assertTrue(got == object)
+            got = imhead(imagename=imagename, mode="get", hdkey="equinox")
+            self.assertTrue(got == "J2000")
+            got = imhead(imagename=imagename, mode="get", hdkey="date-obs")
+            self.assertTrue(got == "2000/01/01/00:00:00")
+            got = imhead(imagename=imagename, mode="get", hdkey="epoch")
+            self.assertTrue(got == "2000/01/01/00:00:00")
+            got = imhead(imagename=imagename, mode="get", hdkey="observer")
+            self.assertTrue(got == "Karl Jansky")
+            got = imhead(imagename=imagename, mode="get", hdkey="projection")
+            self.assertTrue(got == "SIN")
+            got = imhead(imagename=imagename, mode="get", hdkey="restfreq")
+            self.assertTrue(abs(got['value']/1420405751.7860003 - 1) < 1e-6)
+            self.assertTrue(got['unit'] == 'Hz')
+            got = imhead(imagename=imagename, mode="get", hdkey="reffreqtype")
+            self.assertTrue(got == "LSRK")
+            got = imhead(imagename=imagename, mode="get", hdkey="telescope")
+            self.assertTrue(got == "ALMA")
+            myia.open(imagename)
+            myia.setrestoringbeam(remove=True)
+            myia.done()
+            self.assertFalse(
+                imhead(imagename=imagename, mode="get", hdkey="beammajor")
+            )
+            myia.open(imagename)
+            myia.setrestoringbeam(major=major, minor=minor, pa=pa)
+            myia.done()
+            got = imhead(imagename=imagename, mode="get", hdkey="beammajor")
+            self.assertTrue(got == major)
+            got = imhead(imagename=imagename, mode="get", hdkey="beamminor")
+            self.assertTrue(got == minor)
+            got = imhead(imagename=imagename, mode="get", hdkey="beampa")
+            self.assertTrue(got == pa)
+            got = imhead(imagename=imagename, mode="get", hdkey="bunit")
+            self.assertTrue(got == bunit)
+            got = imhead(imagename=imagename, mode="get", hdkey="masks")
+            if xx == 'f':
+                self.assertTrue(got == ["mask0"])
+            else:
+                self.assertTrue(len(got) == 0)
+            got = imhead(imagename=imagename, mode="get", hdkey="shape")
+            self.assertTrue((got == shape).all())
+            self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="ctype6"))
+            self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="ctype0"))
+            got = imhead(imagename=imagename, mode="get", hdkey="ctype1")
+            self.assertTrue(got == "Right Ascension")
+            self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="crpix6"))
+            self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="crpix0"))
+            got = imhead(imagename=imagename, mode="get", hdkey="crpix1")
+            self.assertTrue(got == 0)
+            self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="crval6"))
+            self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="crval0"))
+            got = imhead(imagename=imagename, mode="get", hdkey="crval3")
+            self.assertTrue(got == qa.quantity("1.415e9Hz"))
+            self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="cdelt6"))
+            self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="cdelt0"))
+            got = imhead(imagename=imagename, mode="get", hdkey="cdelt3")
+            self.assertTrue(got == qa.quantity("1000Hz"))
+            self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="cunit6"))
+            self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="cunit0"))
+            got = imhead(imagename=imagename, mode="get", hdkey="cunit3")
+            self.assertTrue(got == "Hz")
+            if xx == 'f':
+                myia.open(imagename)
+                stats = myia.statistics()
+                myia.done()
+            got = imhead(imagename=imagename, mode="get", hdkey="datamin")
+            if xx == 'f':
+                self.assertTrue(got == stats['min'])
+            else:
+                self.assertTrue(got == None)
+            got = imhead(imagename=imagename, mode="get", hdkey="datamax")
+            if xx == 'f':
+                self.assertTrue(got == stats['max'])
+            else:
+                self.assertTrue(got == None)
+            got = imhead(imagename=imagename, mode="get", hdkey="minpos")
+            if xx == 'f':
+                self.assertTrue(got == stats['minposf'].translate(None, ","))
+            else:
+                self.assertTrue(got == None)
+            got = imhead(imagename=imagename, mode="get", hdkey="maxpos")
+            if xx == 'f':
+                self.assertTrue(got == stats['maxposf'].translate(None, ","))
+            else:
+                self.assertTrue(got == None)
+            got = imhead(imagename=imagename, mode="get", hdkey="minpixpos")
+            if xx == 'f':
+                self.assertTrue((got == stats['minpos']).all())
+            else:
+                self.assertTrue(got == None)
+            got = imhead(imagename=imagename, mode="get", hdkey="maxpixpos")
+            if xx == 'f':
+                self.assertTrue((got == stats['maxpos']).all())
+            else:
+                self.assertTrue(got == None)
+            value = "fred"   
+            key = "userkey"     
+            imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=value)
+            got = imhead(imagename=imagename, mode="get", hdkey=key)
+            self.assertTrue(got == value)
 
     def test_del(self):
         """Test deletion/clearing of keys"""
         myia = iatool()
-        imagename = "xx1d_del.im"
-        shape = [1, 1, 6]
-        myia.fromshape(imagename, shape)
-        major = {'value': 4, 'unit': "arcsec"}
-        minor = {'value': 2, 'unit': "arcsec"}
-        pa = {'value': 30, 'unit': "deg"}
-        myia.setrestoringbeam(major=major, minor=minor, pa=pa)
-        bunit = "Jy/beam"
-        myia.setbrightnessunit(bunit)
-        myia.addnoise()
-        myia.calcmask(imagename + "<= 0")
-        stats = myia.statistics()
-        myia.done()
-        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="bunit"))
-        got = imhead(imagename=imagename, mode="get", hdkey="bunit")
-        self.assertTrue(got == "")
-        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="cdelt1"))
-        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="crpix1"))
-        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="crval1"))
-        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="cunit1"))
-        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="ctype1"))
-        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="equinox"))
-        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="imtype"))
-        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="masks", hdvalue="blue"))
-        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="masks", hdvalue=""))
-        self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="masks")) == 0)
-        myia.open(imagename)
-        myia.calcmask(imagename + "<= 0")
-        myia.done()
-        self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="masks")) == 1)
-        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="masks", hdvalue="mask0"))
-        self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="masks")) == 0)
-        
-        mytb = tbtool()
-        mytb.open(imagename, nomodify=False)
-        info = mytb.getkeyword("imageinfo")
-        info['objectname'] = "xyz"
-        mytb.putkeyword("imageinfo", info)
-        mytb.done()
-        
-        self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="object")) > 0)
-        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="object"))
-        self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="object")) == 0)
-        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="epoch"))
-        
-        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="epoch"))
-        
-        self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="observer")) > 0)
-        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="observer"))
-        self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="observer")) == 0)
-
-        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="projection"))
-        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="reffreqtype"))
-        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="restfreq"))
-        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="shape"))
-
-        self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="telescope")) > 0)
-        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="telescope"))
-        self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="telescope")) == 0)
-
-        self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="bmaj")) > 0)
-        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="bmaj"))
-        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey="bmaj") == None)
-        
-        for x in ['datamin', 'minpos', 'minpixpos', 'datamax', 'maxpos', 'maxpixpos']:
-            self.assertFalse(imhead(imagename=imagename, mode="del", hdkey=x))
+        for t in ['f', 'c']:
+            imagename = "xx1d_del.im_" + t
+            shape = [1, 1, 6]
+            myia.fromshape(imagename, shape, type=t)
+            major = {'value': 4, 'unit': "arcsec"}
+            minor = {'value': 2, 'unit': "arcsec"}
+            pa = {'value': 30, 'unit': "deg"}
+            myia.setrestoringbeam(major=major, minor=minor, pa=pa)
+            bunit = "Jy/beam"
+            myia.setbrightnessunit(bunit)
+            if t == 'f':
+                myia.addnoise()
+                myia.calcmask(imagename + "<= 0")
+                stats = myia.statistics()
+            myia.done()
+            self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="bunit"))
+            got = imhead(imagename=imagename, mode="get", hdkey="bunit")
+            self.assertTrue(got == "")
+            self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="cdelt1"))
+            self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="crpix1"))
+            self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="crval1"))
+            self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="cunit1"))
+            self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="ctype1"))
+            self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="equinox"))
+            self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="imtype"))
+            self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="masks", hdvalue="blue"))
+            got = imhead(imagename=imagename, mode="del", hdkey="masks", hdvalue="")
+            self.assertTrue(got)
+            self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="masks")) == 0)
+            if t == 'f':
+                myia.open(imagename)
+                myia.calcmask(imagename + "<= 0")
+                myia.done()
+                self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="masks")) == 1)
+                self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="masks", hdvalue="mask0"))
+                self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="masks")) == 0)
             
-        val = "afdasdf"
-        imhead(imagename=imagename, mode="put", hdkey="jj", hdvalue=val)
-        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey="jj") == val)
-        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="jj"))
-        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="jj"))
+            mytb = tbtool()
+            mytb.open(imagename, nomodify=False)
+            info = mytb.getkeyword("imageinfo")
+            info['objectname'] = "xyz"
+            mytb.putkeyword("imageinfo", info)
+            mytb.done()
+            
+            self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="object")) > 0)
+            self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="object"))
+            self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="object")) == 0)
+            self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="epoch"))
+            
+            self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="epoch"))
+            
+            self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="observer")) > 0)
+            self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="observer"))
+            self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="observer")) == 0)
+    
+            self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="projection"))
+            self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="reffreqtype"))
+            self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="restfreq"))
+            self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="shape"))
+    
+            self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="telescope")) > 0)
+            self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="telescope"))
+            self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="telescope")) == 0)
+    
+            self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="bmaj")) > 0)
+            self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="bmaj"))
+            self.assertTrue(imhead(imagename=imagename, mode="get", hdkey="bmaj") == None)
+            
+            for x in ['datamin', 'minpos', 'minpixpos', 'datamax', 'maxpos', 'maxpixpos']:
+                self.assertFalse(imhead(imagename=imagename, mode="del", hdkey=x))
+                
+            val = "afdasdf"
+            imhead(imagename=imagename, mode="put", hdkey="jj", hdvalue=val)
+            self.assertTrue(imhead(imagename=imagename, mode="get", hdkey="jj") == val)
+            self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="jj"))
+            self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="jj"))
 
     def test_add(self):
         myia = iatool()
-        imagename = "xx1d_add.im"
-        shape = [1, 1, 6]
-        myia.fromshape(imagename, shape)
-        major = {'value': 4, 'unit': "arcsec"}
-        minor = {'value': 2, 'unit': "arcsec"}
-        pa = {'value': 30, 'unit': "deg"}
-        myia.setrestoringbeam(major=major, minor=minor, pa=pa)
-        bunit = "Jy/beam"
-        myia.setbrightnessunit(bunit)
-        myia.addnoise()
-        myia.calcmask(imagename + "<= 0")
-        stats = myia.statistics()
-        myia.done()
-        
-        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="bunit", hdvalue="K"))
-        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="bunit"))
-        self.assertTrue(imhead(imagename=imagename, mode="add", hdkey="bunit", hdvalue="K"))
-        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey="bunit") == "K")
-
-        for key in ['cdelt1', 'crpix1', 'crval1', 'cunit1', 'ctype1']:
-            self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=0.5))
-    
-        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="equinox", hdvalue='b1900'))
-
-        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="imtype", hdvalue='rm'))
-
-        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="masks", hdvalue="xx"))
-
-        key = "object"
-        value = "sgrb2"
-        self.assertTrue(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
-        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == value)
-        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
-
-        epoch = imhead(imagename=imagename, mode="get", hdkey="epoch")
-        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="epoch", hdvalue=epoch))
-
-        key = "observer"
-        value = "Edwin Hubble"
-        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
-        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey=key))
-        self.assertTrue(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
-        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == value)
-        
-        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="projection", hdvalue='sin'))
-
-        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="reffreqtype", hdvalue='lsrk'))
-        
-        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="restfreq", hdvalue='10GHz'))
-
-        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="shape", hdvalue='10GHz'))
-
-        key = "telescope"
-        value = "bima"
-        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
-        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey=key))
-        self.assertTrue(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
-        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == value)
-
-        key = "bmaj"
-        value = 4
-        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
-        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey=key))
-        key = "bpa"
-        value = 4
-        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
-        key = "bmaj"
-        value = 4
-        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
-        value = "4m"
-        self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
-        value = "4arcmin"
-        self.assertTrue(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
-        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == qa.quantity(value))
-        key = "bmin"
-        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == qa.quantity(value))
-        key = "bpa"
-        value = "0deg"
-        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == qa.quantity(value))
-
-        for key in [
-            "datamin", "datamax", "maxpos", "minpos",
-            "maxpixpos", "minpixpos"
-        ]: 
-            self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=4))
+        for t in ['f', 'c']:
+            imagename = "xx1d_add.im_" + t
+            shape = [1, 1, 6]
+            myia.fromshape(imagename, shape, type=t)
+            major = {'value': 4, 'unit': "arcsec"}
+            minor = {'value': 2, 'unit': "arcsec"}
+            pa = {'value': 30, 'unit': "deg"}
+            myia.setrestoringbeam(major=major, minor=minor, pa=pa)
+            bunit = "Jy/beam"
+            myia.setbrightnessunit(bunit)
+            if t == 'f':
+                myia.addnoise()
+                myia.calcmask(imagename + "<= 0")
+                stats = myia.statistics()
+            myia.done()
             
+            self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="bunit", hdvalue="K"))
+            self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="bunit"))
+            self.assertTrue(imhead(imagename=imagename, mode="add", hdkey="bunit", hdvalue="K"))
+            self.assertTrue(imhead(imagename=imagename, mode="get", hdkey="bunit") == "K")
+    
+            for key in ['cdelt1', 'crpix1', 'crval1', 'cunit1', 'ctype1']:
+                self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=0.5))
         
-        key = "user-specified"
-        for value in ["test-val", 6, qa.quantity("4km/s")]:
+            self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="equinox", hdvalue='b1900'))
+    
+            self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="imtype", hdvalue='rm'))
+    
+            self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="masks", hdvalue="xx"))
+    
+            key = "object"
+            value = "sgrb2"
             self.assertTrue(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
             self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == value)
             self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
-            self.assertTrue(imhead(imagename=imagename, mode="del", hdkey=key, hdvalue=value))
-
+    
+            epoch = imhead(imagename=imagename, mode="get", hdkey="epoch")
+            self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="epoch", hdvalue=epoch))
+    
+            key = "observer"
+            value = "Edwin Hubble"
+            self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+            self.assertTrue(imhead(imagename=imagename, mode="del", hdkey=key))
+            self.assertTrue(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+            self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == value)
+            
+            self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="projection", hdvalue='sin'))
+    
+            self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="reffreqtype", hdvalue='lsrk'))
+            
+            self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="restfreq", hdvalue='10GHz'))
+    
+            self.assertFalse(imhead(imagename=imagename, mode="add", hdkey="shape", hdvalue='10GHz'))
+    
+            key = "telescope"
+            value = "bima"
+            self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+            self.assertTrue(imhead(imagename=imagename, mode="del", hdkey=key))
+            self.assertTrue(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+            self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == value)
+    
+            key = "bmaj"
+            value = 4
+            self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+            self.assertTrue(imhead(imagename=imagename, mode="del", hdkey=key))
+            key = "bpa"
+            value = 4
+            self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+            key = "bmaj"
+            value = 4
+            self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+            value = "4m"
+            self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+            value = "4arcmin"
+            self.assertTrue(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+            self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == qa.quantity(value))
+            key = "bmin"
+            self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == qa.quantity(value))
+            key = "bpa"
+            value = "0deg"
+            self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == qa.quantity(value))
+    
+            for key in [
+                "datamin", "datamax", "maxpos", "minpos",
+                "maxpixpos", "minpixpos"
+            ]: 
+                self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=4))
+                
+            
+            key = "user-specified"
+            for value in ["test-val", 6, qa.quantity("4km/s")]:
+                self.assertTrue(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+                self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == value)
+                self.assertFalse(imhead(imagename=imagename, mode="add", hdkey=key, hdvalue=value))
+                self.assertTrue(imhead(imagename=imagename, mode="del", hdkey=key, hdvalue=value))
+    
 
     def test_put(self):
         myia = iatool()
-        imagename = "xx1d_put.im"
-        shape = [1, 1, 6]
-        myia.fromshape(imagename, shape)
-        major = {'value': 4, 'unit': "arcsec"}
-        minor = {'value': 2, 'unit': "arcsec"}
-        pa = {'value': 30, 'unit': "deg"}
-        myia.setrestoringbeam(major=major, minor=minor, pa=pa)
-        bunit = "Jy/beam"
-        myia.setbrightnessunit(bunit)
-        myia.addnoise()
-        myia.calcmask(imagename + "<= 0")
-        units = myia.coordsys().units()
-        stats = myia.statistics()
-        myia.done()
-        
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey="bunit", hdvalue="K"))
-        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey="bunit") == "K")
-
-        key = "cdelt1"
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="3arcsec"))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-        exp = qa.quantity("0.05'")
-        self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("3arcsec")))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-        self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("0.05")))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-        self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity(0.05)))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-        self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
-        self.assertFalse(
-            imhead(
-                imagename=imagename, mode="put",
-                hdkey=key, hdvalue="3bogus"
+        for t in ['f', 'c']:
+            imagename = "xx1d_put.im" + t
+            shape = [1, 1, 6]
+            myia.fromshape(imagename, shape, type=t)
+            major = {'value': 4, 'unit': "arcsec"}
+            minor = {'value': 2, 'unit': "arcsec"}
+            pa = {'value': 30, 'unit': "deg"}
+            myia.setrestoringbeam(major=major, minor=minor, pa=pa)
+            bunit = "Jy/beam"
+            self.assertTrue(myia.setbrightnessunit(bunit))
+            if type == 'f':
+                # addnoise currently only supports float images
+                myia.addnoise()
+                myia.calcmask(imagename + "<= 0")
+                stats = myia.statistics()
+            units = myia.coordsys().units()
+            myia.done()
+            
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey="bunit", hdvalue="K"))
+            self.assertTrue(imhead(imagename=imagename, mode="get", hdkey="bunit") == "K")
+    
+            key = "cdelt1"
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="3arcsec"))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+            exp = qa.quantity("0.05'")
+            self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("3arcsec")))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+            self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("0.05")))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+            self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity(0.05)))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+            self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
+            self.assertFalse(
+                imhead(
+                    imagename=imagename, mode="put",
+                    hdkey=key, hdvalue="3bogus"
+                )
             )
-        )
-        
-        key = "crpix1"
-        exp = 4.5
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-        self.assertTrue(got == exp)
-        exp = -8.6
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=str(exp)))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-        self.assertTrue(got == exp)
-        self.assertFalse(
-            imhead(
-                imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("3arcsec")
+            
+            key = "crpix1"
+            exp = 4.5
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+            self.assertTrue(got == exp)
+            exp = -8.6
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=str(exp)))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+            self.assertTrue(got == exp)
+            self.assertFalse(
+                imhead(
+                    imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("3arcsec")
+                )
             )
-        )
-        
-        key = "crval1"
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="3arcsec"))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-        exp = qa.quantity("0.05'")
-        self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("3arcsec")))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-        self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("0.05")))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-        self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity(0.05)))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-
-        self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
-        self.assertFalse(
-            imhead(
-                imagename=imagename, mode="put",
-                hdkey=key, hdvalue="3bogus"
+            
+            key = "crval1"
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="3arcsec"))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+            exp = qa.quantity("0.05'")
+            self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("3arcsec")))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+            self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("0.05")))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+            self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity(0.05)))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+    
+            self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
+            self.assertFalse(
+                imhead(
+                    imagename=imagename, mode="put",
+                    hdkey=key, hdvalue="3bogus"
+                )
             )
-        )
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="3:00:00"))
-        got = imhead(imagename=imagename, mode="get", hdkey=key)
-        exp = qa.quantity("45deg")
-        self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
-
-        key = "ctype1"
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=4.5))
-        exp = "universe Number"
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-        self.assertTrue(got == exp)
-        
-        key = "cunit1"
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=4.5))
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="bogus"))
-        exp = "K"
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
-        exp = "deg"
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-        self.assertTrue(got == exp)
-        
-        key = "equinox"
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=4.5))
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="bogus"))
-        exp = "GALACTIC"
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-        self.assertTrue(got == exp)
-        
-        
-        key = "imtype"
-        exp = "Rotation Measure"
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
-        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == exp)
-        exp = "Jack"
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
-        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == "Intensity")
-
-        key = "masks"
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="x"))
-        
-        key = "object"
-        exp = "Restaraunt at the end of the universe"
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
-        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == exp)
-        exp = 4
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
-        
-        key = "epoch"
-        exp = "2009/05/30/05:21:45"
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
-        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == exp)
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="5km"))
-
-        key = "observer"
-        exp = "Observer at the end of the universe"
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
-        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == exp)
-        exp = 4
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
-        
-        key = "projection"
-        exp = "TAN"
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
-        got = imhead(imagename=imagename, mode="get", hdkey=key)
-        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == exp)
-        exp = "blah"
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
-        exp = 4
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
-        
-        key = "reffreqtype"
-        exp = "CMB"
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
-        got = imhead(imagename=imagename, mode="get", hdkey=key)
-        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == exp)
-        exp = "blah"
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
-        exp = 4
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
-        
-        key = "restfreq"
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="45GHz"))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-        exp = qa.quantity("45GHz")
-        self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("45GHz")))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-        self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("4.5e10")))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-        self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity(4.5e10)))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-        self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
-        self.assertFalse(
-            imhead(
-                imagename=imagename, mode="put",
-                hdkey=key, hdvalue="3bogus"
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="3:00:00"))
+            got = imhead(imagename=imagename, mode="get", hdkey=key)
+            exp = qa.quantity("45deg")
+            self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
+    
+            key = "ctype1"
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=4.5))
+            exp = "universe Number"
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+            self.assertTrue(got == exp)
+            
+            key = "cunit1"
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=4.5))
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="bogus"))
+            exp = "K"
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
+            exp = "deg"
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+            self.assertTrue(got == exp)
+            
+            key = "equinox"
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=4.5))
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="bogus"))
+            exp = "GALACTIC"
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+            self.assertTrue(got == exp)
+            
+            
+            key = "imtype"
+            exp = "Rotation Measure"
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
+            self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == exp)
+            exp = "Jack"
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
+            self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == "Intensity")
+    
+            key = "masks"
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="x"))
+            
+            key = "object"
+            exp = "Restaraunt at the end of the universe"
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
+            self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == exp)
+            exp = 4
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
+            
+            key = "epoch"
+            exp = "2009/05/30/05:21:45"
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
+            self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == exp)
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="5km"))
+    
+            key = "observer"
+            exp = "Observer at the end of the universe"
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
+            self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == exp)
+            exp = 4
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
+            
+            key = "projection"
+            exp = "TAN"
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
+            got = imhead(imagename=imagename, mode="get", hdkey=key)
+            self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == exp)
+            exp = "blah"
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
+            exp = 4
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
+            
+            key = "reffreqtype"
+            exp = "CMB"
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
+            got = imhead(imagename=imagename, mode="get", hdkey=key)
+            self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == exp)
+            exp = "blah"
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
+            exp = 4
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
+            
+            key = "restfreq"
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="45GHz"))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+            exp = qa.quantity("45GHz")
+            self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("45GHz")))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+            self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("4.5e10")))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+            self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity(4.5e10)))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+            self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
+            self.assertFalse(
+                imhead(
+                    imagename=imagename, mode="put",
+                    hdkey=key, hdvalue="3bogus"
+                )
             )
-        )
-        
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey="shape", hdvalue=[5,5,5]))
-
-        key = "telescope"
-        exp = "Telescope at the end of the universe"
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
-        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == exp)
-        exp = 4
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
-        
-        key = "bpa"
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="45deg"))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-        exp = qa.quantity("45deg")
-        self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("45deg")))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-        self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("45")))
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity(45)))
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="3bogus"))
-        
-        key = "bmaj"
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="5arcsec"))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-        exp = qa.quantity("5arcsec")
-        self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("5arcsec")))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-        self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("5")))
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity(5)))
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="3bogus"))
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="1arcsec"))
-
-        key = "bmin"
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="1arcsec"))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-        exp = qa.quantity("1arcsec")
-        self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
-        self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("1arcsec")))
-        got = imhead(imagename=imagename, mode="get", hdkey=key) 
-        self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("1")))
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity(1)))
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="3bogus"))
-        self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="10arcsec"))
-
-        for key in [
-            "datamin", "datamax", "maxpos", "minpos",
-            "maxpixpos", "minpixpos"
-        ]: 
-            self.assertFalse(imhead(imagename=imagename, mode="set", hdkey=key, hdvalue=4))
-           
-        key = "user-specified"
-        for value in ["test-val", 6, qa.quantity("4km/s")]:
-            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=value))
-            self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == value)
-            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=value))
-            self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == value)
-            self.assertTrue(imhead(imagename=imagename, mode="del", hdkey=key, hdvalue=value))
-        
+            
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey="shape", hdvalue=[5,5,5]))
+    
+            key = "telescope"
+            exp = "Telescope at the end of the universe"
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
+            self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == exp)
+            exp = 4
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=exp))
+            
+            key = "bpa"
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="45deg"))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+            exp = qa.quantity("45deg")
+            self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("45deg")))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+            self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("45")))
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity(45)))
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="3bogus"))
+            
+            key = "bmaj"
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="5arcsec"))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+            exp = qa.quantity("5arcsec")
+            self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("5arcsec")))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+            self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("5")))
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity(5)))
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="3bogus"))
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="1arcsec"))
+    
+            key = "bmin"
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="1arcsec"))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+            exp = qa.quantity("1arcsec")
+            self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
+            self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("1arcsec")))
+            got = imhead(imagename=imagename, mode="get", hdkey=key) 
+            self.assertTrue(abs(qa.sub(got, exp)['value']) < 1e-8)
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity("1")))
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=qa.quantity(1)))
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="3bogus"))
+            self.assertFalse(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue="10arcsec"))
+    
+            for key in [
+                "datamin", "datamax", "maxpos", "minpos",
+                "maxpixpos", "minpixpos"
+            ]: 
+                self.assertFalse(imhead(imagename=imagename, mode="set", hdkey=key, hdvalue=4))
+               
+            key = "user-specified"
+            for value in ["test-val", 6, qa.quantity("4km/s")]:
+                self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=value))
+                self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == value)
+                self.assertTrue(imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=value))
+                self.assertTrue(imhead(imagename=imagename, mode="get", hdkey=key) == value)
+                self.assertTrue(imhead(imagename=imagename, mode="del", hdkey=key, hdvalue=value))
+            
     def test_CAS4355(self):
         """ verify puthead can take sesigimal values where appropriate (CAS-4355)"""
         myia = iatool()

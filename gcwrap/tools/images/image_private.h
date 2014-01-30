@@ -7,19 +7,21 @@ image(casa::ImageInterface<casa::Float> * inImage);
 
 image(std::tr1::shared_ptr<casa::ImageInterface<casa::Float> > inImage);
 
+image(std::tr1::shared_ptr<casa::ImageAnalysis> ia);
+
 private:
 
 mutable casa::LogIO _log;
 
 // This class needs to be templated. For now, we maintain two pointers.
 // At least one of which will be zero for a valid object state.
-std::tr1::shared_ptr<casa::ImageInterface<casa::Float> > _imageFloat;
-std::tr1::shared_ptr<casa::ImageInterface<casa::Complex> > _imageComplex;
+// std::tr1::shared_ptr<casa::ImageInterface<casa::Float> > _imageFloat;
+// std::tr1::shared_ptr<casa::ImageInterface<casa::Complex> > _imageComplex;
 
 
 // the image analysis object needs to be removed after decimation of that
 // class is complete
-std::auto_ptr<casa::ImageAnalysis> _image;
+std::tr1::shared_ptr<casa::ImageAnalysis> _image;
 std::auto_ptr<casa::ImageStatsCalculator> _stats;
 
 static const casa::String _class;
@@ -58,4 +60,11 @@ template<class T> bool _putchunk(
 	const casac::variant& pixels,
 	const vector<int>& blc, const vector<int>& inc,
 	const bool list, const bool locking, const bool replicate
+);
+
+template<class T> tr1::shared_ptr<casa::ImageInterface<T> > _subimage(
+	std::tr1::shared_ptr<casa::ImageInterface<T> > clone,
+	const casa::String& outfile, const casa::Record& region,
+	const casa::String& mask, bool dropDegenerateAxes,
+	bool overwrite, bool list, bool stretch
 );
