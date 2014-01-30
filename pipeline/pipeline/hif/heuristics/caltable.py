@@ -76,6 +76,16 @@ class BandpassCaltable(CaltableNamer):
             namer.method(task_args['method'])
 
 
+class DelayCaltable(CaltableNamer):
+    def get_namer(self):
+        return filenamer.DelayCalibrationTable()
+
+
+class PolCaltable(CaltableNamer):
+    def get_namer(self):
+        return filenamer.InstrumentPolCalibrationTable()
+
+
 class FluxCaltable(CaltableNamer):
     def get_namer(self):
         return filenamer.FluxCalibrationTable()
@@ -135,3 +145,8 @@ class WvrgCaltable(CaltableNamer):
 
     def customise(self, namer, task_args):
         namer.smooth(task_args.get('smooth', None))
+
+
+class XYf0Caltable(CaltableNamer):
+    def get_namer(self):
+        return filenamer.XYf0CalibrationTable()
