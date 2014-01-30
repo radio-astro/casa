@@ -17,6 +17,10 @@ class DetectLineInputs(common.SingleDishInputs):
         self._init_properties(vars())
         
     @property
+    def spw(self):
+        return self.grid_table[0][0] if len(self.grid_table) > 0 else -1
+    
+    @property
     def window(self):
         return [] if self._window is None else self._window
     
@@ -333,7 +337,22 @@ class DetectLine(common.SingleDishTaskTemplate):
                 return [self._get_linerange(window)]
             
     def _get_linerange(self, window):
-        return window
+        if len(window) == 2:
+            # [chmin, chmax] form
+            return window
+        elif len(window) == 3:
+            # [center_freq, velmin, velmax] form
+            spwid = self.inputs.spw
+            spw = self.inputs.context.observing_run[0].spectral_window[spwid]
+            center_freq = window[0] * 1.0e9 # GHz -> Hz
+            restfreq = spw.refval if len(spw.rest_frequencies) == 0 else spw.rest_frequencies[0]
+            dfreq = map(lambda x: restfreq * abs(x) / 299792.458, window[1:])
+            freq_range = [center_freq + dfreq[0], center_freq - dfreq[1]]
+            window = map(lambda x: spw.refpix + (x - spw.refval) / spw.increment, freq_range)
+            window.sort()
+            return window
+        else:
+            raise RuntimeError('Invalid linewindow format')
     
 def SpBinning(data, Bin):
     if Bin == 1: 
