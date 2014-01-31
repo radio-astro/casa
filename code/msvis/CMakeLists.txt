@@ -145,18 +145,18 @@ install (FILES
         MSVis/VisBufferComponents2.h
         MSVis/VisBufferImpl2.h
         MSVis/VisBufferImplAsync2.h
-        MSVis/VisModelDataI.cc
+        MSVis/VisModelDataI.h
         MSVis/VisibilityIterator2.h
         MSVis/VisibilityIteratorImpl2.h
         MSVis/VisibilityIteratorImplAsync2.h
-	DESTINATION include/casacode/synthesis/MSVis
+	DESTINATION include/casacode/msvis/MSVis
 	)
 
-casa_add_assay( synthesis MSVis/test/tHanningSmooth.cc )
-casa_add_assay( synthesis MSVis/test/tMSCalEnums.cc )
-casa_add_assay( synthesis MSVis/test/tUVSub.cc )
-casa_add_assay( synthesis MSVis/test/tVisibilityIterator.cc )
-casa_add_assay( synthesis MSVis/test/tVisibilityIteratorAsync.cc )
-casa_add_assay( synthesis MSVis/test/AveragingTvi2_Test.cc MSVis/test/MsFactory.cc )
-casa_add_assay( synthesis MSVis/test/VisibilityIterator_Test.cc MSVis/test/MsFactory.cc )
-casa_add_assay( synthesis MSVis/test/tVisIter.cc )
+casa_add_assay( msvis MSVis/test/tHanningSmooth.cc )
+casa_add_assay( msvis MSVis/test/tMSCalEnums.cc )
+casa_add_assay( msvis MSVis/test/tUVSub.cc )
+casa_add_assay( msvis MSVis/test/tVisibilityIterator.cc )
+casa_add_assay( msvis MSVis/test/tVisibilityIteratorAsync.cc )
+casa_add_assay( msvis MSVis/test/AveragingTvi2_Test.cc MSVis/test/MsFactory.cc )
+casa_add_assay( msvis MSVis/test/VisibilityIterator_Test.cc MSVis/test/MsFactory.cc )
+casa_add_assay( msvis MSVis/test/tVisIter.cc )
