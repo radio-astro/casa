@@ -296,11 +296,13 @@ void ImageAnalysis::imagecalc(
 	const String& outfile, const String& expr,
 	const Bool overwrite
 ) {
-
 	*_log << LogOrigin(className(), __FUNCTION__);
-
+	if (_imageFloat || _imageComplex) {
+		*_log << LogIO::WARN
+			<< "This method will overwrite the currently attached image"
+			<< LogIO::POST;
+	}
 	Record regions;
-
 	// Check output file name
 	if (!outfile.empty() && !overwrite) {
 		NewFile validfile;
@@ -804,46 +806,38 @@ ImageAnalysis::convolve(
 	return pImOut;
 }
 
-Record*
-ImageAnalysis::boundingbox(const Record& Region) {
-	_onlyFloat(__FUNCTION__);
-	*_log << LogOrigin("ImageAnalysis", "boundingbox");
+Record* ImageAnalysis::boundingbox(
+	const Record& region
+) const {
+	*_log << LogOrigin(className(), __FUNCTION__);
+	const CoordinateSystem csys = _imageFloat
+		? _imageFloat->coordinates()
+		: _imageComplex->coordinates();
+	const IPosition shape = _imageFloat
+		? _imageFloat->shape()
+		: _imageComplex->shape();
 	// Find the bounding box of this region
-	Record tmpR(Region);
 	const ImageRegion* pRegion = ImageRegion::fromRecord(
-		0, _imageFloat->coordinates(), _imageFloat->shape(),
-		//*ImageRegion::tweakedRegionRecord(&tmpR)
-		Region
+		0, csys, shape, region
 	);
-	LatticeRegion latRegion = pRegion->toLatticeRegion(_imageFloat->coordinates(),
-			_imageFloat->shape());
-	//
+	LatticeRegion latRegion = pRegion->toLatticeRegion(
+		csys, shape
+	);
 	Slicer sl = latRegion.slicer();
-	IPosition blc(sl.start()); // 1-rel for Glish
+	IPosition blc(sl.start());
 	IPosition trc(sl.end());
 	IPosition inc(sl.stride());
 	IPosition length(sl.length());
-	RecordDesc outRecDesc;
-	outRecDesc.addField("blc", TpArrayInt);
-	outRecDesc.addField("trc", TpArrayInt);
-	outRecDesc.addField("inc", TpArrayInt);
-	outRecDesc.addField("bbShape", TpArrayInt);
-	outRecDesc.addField("regionShape", TpArrayInt);
-	outRecDesc.addField("imageShape", TpArrayInt);
-	outRecDesc.addField("blcf", TpString);
-	outRecDesc.addField("trcf", TpString);
-	Record *outRec = new Record(outRecDesc);
+	std::auto_ptr<Record> outRec(new Record());
 	outRec->define("blc", blc.asVector());
 	outRec->define("trc", trc.asVector());
 	outRec->define("inc", inc.asVector());
 	outRec->define("bbShape", (trc - blc + 1).asVector());
 	outRec->define("regionShape", length.asVector());
-	outRec->define("imageShape", _imageFloat->shape().asVector());
-	//
-	CoordinateSystem cSys(_imageFloat->coordinates());
-	outRec->define("blcf", CoordinateUtil::formatCoordinate(blc, cSys)); // 0-rel for use in C++
-	outRec->define("trcf", CoordinateUtil::formatCoordinate(trc, cSys));
-	return outRec;
+	outRec->define("imageShape", shape.asVector());
+	outRec->define("blcf", CoordinateUtil::formatCoordinate(blc, csys)); // 0-rel for use in C++
+	outRec->define("trcf", CoordinateUtil::formatCoordinate(trc, csys));
+	return outRec.release();
 }
 
 String ImageAnalysis::brightnessunit() {
@@ -855,122 +849,61 @@ String ImageAnalysis::brightnessunit() {
 	return rstat;
 }
 
-Bool ImageAnalysis::calc(const String& expr) {
-	_onlyFloat(__FUNCTION__);
-	*_log << LogOrigin("ImageAnalysis", "calc");
+void ImageAnalysis::calc(const String& expr) {
+	*_log << LogOrigin(className(), __FUNCTION__);
+	*_log << LogIO::WARN
+		<< "This method will overwrite the currently attached image"
+		<< LogIO::POST;
+
 	Record regions;
-
-	// Get LatticeExprNode (tree) from parser
-	// Convert the GlishRecord containing regions to a
-	// PtrBlock<const ImageRegion*>.
 	if (expr.empty()) {
-		*_log << "You must specify an expression" << LogIO::EXCEPTION;
-		return False;
+		throw AipsError(
+			"You must specify an expression"
+		);
 	}
-
 	Block<LatticeExprNode> temps;
-	//  String exprName;
-	//  String newexpr = substituteOID (temps, exprName, expr);
 	String newexpr = expr;
 	PtrBlock<const ImageRegion*> tempRegs;
 	makeRegionBlock(tempRegs, regions, *_log);
 	LatticeExprNode node = ImageExprParse::command(newexpr, temps, tempRegs);
+	DataType type = node.dataType();
+	Bool isReal = casa::isReal(type);
+	ostringstream os;
+	os << type;
+	ThrowIf(
+		! isReal && ! isComplex(type),
+		"Unsupported node data type " + os.str()
+	);
 
+	ThrowIf(
+		_imageComplex && isReal,
+		"Resulting image is real valued but"
+		"the attached image is complex valued"
+	);
+	ThrowIf(
+		_imageFloat && isComplex(type),
+		"Resulting image is complex valued but"
+		"the attached image is real valued"
+	);
 	// Delete the ImageRegions (by using an empty GlishRecord)
 	makeRegionBlock(tempRegs, Record(), *_log);
 
-	// Get the shape of the expression and check it matches that
-	// of the output image
-	if (!node.isScalar()) {
-		const IPosition shapeOut = node.shape();
-		if (!_imageFloat->shape().isEqual(shapeOut)) {
-			*_log << LogIO::SEVERE
-					<< "The shape of the expression does not conform " << endl;
-			*_log << "with the shape of the output image" << LogIO::POST;
-			*_log << "Expression shape = " << shapeOut << endl;
-			*_log << "Image shape      = " << _imageFloat->shape()
-					<< LogIO::EXCEPTION;
-		}
+	if (_imageFloat) {
+		_calc(_imageFloat, node);
+	}
+	else {
+		_calc(_imageComplex, node);
 	}
 
-	// Get the CoordinateSystem of the expression and check it matches
-	// that of the output image
-	if (!node.isScalar()) {
-		const LELAttribute attr = node.getAttribute();
-		const LELLattCoordBase* lattCoord = &(attr.coordinates().coordinates());
-		if (!lattCoord->hasCoordinates() || lattCoord->classname()
-				!= "LELImageCoord") {
-			// We assume here that the output coordinates are ok
-			*_log << LogIO::WARN
-					<< "Images in expression have no coordinates"
-					<< LogIO::POST;
-		} else {
-			const LELImageCoord* imCoord =
-					dynamic_cast<const LELImageCoord*> (lattCoord);
-			AlwaysAssert (imCoord != 0, AipsError);
-			const CoordinateSystem& cSysOut = imCoord->coordinates();
-			if (!_imageFloat->coordinates().near(cSysOut)) {
-				// Since the output image has coordinates, and the shapes
-				// have conformed, just issue a warning
-				*_log << LogIO::WARN
-						<< "The coordinates of the expression do not conform "
-						<< endl;
-				*_log << "with the coordinates of the output image" << endl;
-				*_log << "Proceeding with output image coordinates"
-						<< LogIO::POST;
-			}
-		}
-	}
-	// Make a LatticeExpr and see if it is masked
-	Bool exprIsMasked = node.isMasked();
-	if (exprIsMasked) {
-		if (!_imageFloat->isMasked()) {
-			// The image does not have a default mask set.  So try and make it one.
-			String maskName("");
-			ImageMaskAttacher<Float>::makeMask(*_imageFloat, maskName, True, True, *_log, True);
-		}
-	}
-	// Evaluate the expression and fill the output image and mask
-	if (node.isScalar()) {
-		LatticeExprNode node2 = toFloat(node);
-		// If the scalar value is masked, there is nothing
-		// to do.
-		if (!exprIsMasked) {
-			Float value = node2.getFloat();
-			if (_imageFloat->isMasked()) {
-				// We implement with a LEL expression of the form
-				// iif(mask(image)", value, image)
-				LatticeExprNode node3 = iif(mask(*_imageFloat), node2, *_imageFloat);
-				_imageFloat->copyData(LatticeExpr<Float> (node3));
-			} else {
-				// Just set all values to the scalar. There is no mask to
-				// worry about.
-				_imageFloat->set(value);
-			}
-		}
-	} else {
-		if (_imageFloat->isMasked()) {
-			// We implement with a LEL expression of the form
-			// iif(mask(image)", expr, image)
-			LatticeExprNode node3 = iif(mask(*_imageFloat), node, *_imageFloat);
-			_imageFloat->copyData(LatticeExpr<Float> (node3));
-		} else {
-			// Just copy the pixels from the expression to the output.
-			// There is no mask to worry about.
-			_imageFloat->copyData(LatticeExpr<Float> (node));
-		}
-	}
 	// Ensure that we reconstruct the statistics and histograms objects
 	// now that the data have changed
 	deleteHist();
-	//
-	return True;
 }
 
 Bool ImageAnalysis::calcmask(const String& mask, Record& regions,
 		const String& maskName, const Bool makeDefault) {
 	_onlyFloat(__FUNCTION__);
-	*_log << LogOrigin("ImageAnalysis", "calcmask");
+	*_log << LogOrigin(className(), __FUNCTION__);
 
 	String expr = mask;
 
