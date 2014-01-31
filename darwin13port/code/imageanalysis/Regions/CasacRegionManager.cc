@@ -906,7 +906,7 @@ vector<uInt> CasacRegionManager::_spectralRangeFromRegionRecord(
 	const CoordinateSystem& csys = getcoordsys();
 	TempImage<Float> x(imShape, csys);
 	x.set(0);
-	std::tr1::shared_ptr<SubImage<Float> >subimage(
+	std::tr1::shared_ptr<const SubImage<Float> >subimage(
 		new SubImage<Float>(
 			SubImageFactory<Float>::createSubImage(
 				x, *regionRec, "", _getLog(), False,
@@ -914,7 +914,9 @@ vector<uInt> CasacRegionManager::_spectralRangeFromRegionRecord(
 			)
 		)
 	);
-	ImageMetaData<Float> md(subimage);
+	ImageMetaData md(
+		std::tr1::dynamic_pointer_cast<const ImageInterface<Float> >(subimage)
+	);
 	uInt nChan = md.nChannels();
 	const SpectralCoordinate& subsp = subimage->coordinates().spectralCoordinate();
 	Double subworld;

@@ -31,7 +31,9 @@
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 
 #include <casa/Logging/LogFilter.h>
+#include <imageanalysis/ImageAnalysis/ImageMaskAttacher.h>
 #include <imageanalysis/ImageAnalysis/ImageMetaData.h>
+#include <images/Images/ImageExpr.h>
 #include <images/Images/ImageOpener.h>
 #include <images/Images/ImageSummary.h>
 #include <images/Images/PagedImage.h>
@@ -86,6 +88,78 @@ template<class T> Bool ImageAnalysis::_getchunk(
 		return True;
 	}
 }
+
+
+template<class T> std::tr1::shared_ptr<ImageInterface<T> > ImageAnalysis::_imagecalc(
+	const LatticeExprNode& node, const IPosition& shape,
+	const CoordinateSystem& csys, const LELImageCoord* const imCoord,
+	const String& outfile,
+	const Bool overwrite, const String& expr
+) {
+	*_log << LogOrigin(className(), __FUNCTION__);
+
+	// Create LatticeExpr create mask if needed
+	LatticeExpr<T> latEx(node);
+	std::tr1::shared_ptr<ImageInterface<T> > image;
+	String exprName;
+	// Construct output image - an ImageExpr or a PagedImage
+	if (outfile.empty()) {
+		image.reset(new ImageExpr<T> (latEx, exprName));
+		ThrowIf(
+			! image,
+			"Failed to create ImageExpr"
+		);
+	}
+	else {
+		*_log << LogIO::NORMAL << "Creating image `" << outfile
+			<< "' of shape " << shape << LogIO::POST;
+		try {
+			image.reset(new PagedImage<T> (shape, csys, outfile));
+		}
+		catch (const TableError& te) {
+			if (overwrite) {
+				*_log << LogIO::SEVERE << "Caught TableError. This often means "
+					<< "the table you are trying to overwrite has been opened by "
+					<< "another method and so cannot be overwritten at this time. "
+					<< "Try closing it and rerunning" << LogIO::POST;
+				RETHROW(te);
+			}
+		}
+		ThrowIf(
+			! image,
+			"Failed to create PagedImage"
+		);
+
+		// Make mask if needed, and copy data and mask
+		if (latEx.isMasked()) {
+			String maskName("");
+			ImageMaskAttacher<T>::makeMask(*image, maskName, False, True, *_log, True);
+		}
+		LatticeUtilities::copyDataAndMask(*_log, *image, latEx);
+	}
+
+	// Copy miscellaneous stuff over
+	image->setMiscInfo(imCoord->miscInfo());
+	image->setImageInfo(imCoord->imageInfo());
+	if (expr.contains("spectralindex")) {
+		image->setUnits("");
+	}
+	else if (expr.contains(Regex("pa\\(*"))) {
+		image->setUnits("deg");
+		Vector<Int> newstokes(1);
+		newstokes = Stokes::Pangle;
+		StokesCoordinate scOut(newstokes);
+		CoordinateSystem cSys = image->coordinates();
+		Int iStokes = cSys.findCoordinate(Coordinate::STOKES, -1);
+		cSys.replaceCoordinate(scOut, iStokes);
+		image->setCoordinateInfo(cSys);
+	}
+	else {
+		image->setUnits(imCoord->unit());
+	}
+	return image;
+}
+
 
 template<class T> Bool ImageAnalysis::_putchunk(
 	ImageInterface<T>& image,
@@ -242,7 +316,7 @@ template<class T> Bool ImageAnalysis::_setrestoringbeam(
 					<< "but no plane (channel/polarization) was specified. All beams will be set "
 					<< "equal to the specified beam." << LogIO::POST;
 			}
-			ImageMetaData<T> md(image);
+			ImageMetaData md(image);
 			ii.setAllBeams(
 				md.nChannels(), md.nStokes(),
 				GaussianBeam(bmajor, bminor, bpa)
@@ -260,7 +334,7 @@ template<class T> Bool ImageAnalysis::_setrestoringbeam(
 					<< "a set of per plane beams, each equal to the specified beam, "
 					<< "will be created." << LogIO::POST;
 			}
-			ImageMetaData<T> md(image);
+			ImageMetaData md(image);
 			ii.setAllBeams(
 				md.nChannels(), md.nStokes(),
 				GaussianBeam(bmajor, bminor, bpa)

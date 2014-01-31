@@ -374,7 +374,6 @@ means that you don't need to (and can't !) reorder images.
 \bigskip
 Here are some simple examples using image tools.
 
-\begin{verbatim}
 """
 #
 print "\t----\t Intro Ex 1 \t----"
@@ -393,7 +392,6 @@ im2.done()      # Release tool resources - disk file unaffected
 ia.close()      # DO NOT DONE DEFAULT IMAGE TOOL ia!!!
 #
 """
-\end{verbatim}
 
 <!--#ia.view()                           # Display image-->
 </example>
@@ -408,7 +406,6 @@ that you don't have to convert  the file to native \casa\ format
 in order to access the image.   For example:
 
 <example> 
-\begin{verbatim}
 
 """
 #
@@ -436,7 +433,6 @@ ia.close()                      # close (not done) default image analysis tool
 """
 
 Each of these Image tools has access to all the same \toolfunctions.
-\end{verbatim}
 </example>
 
 Where ever you see an argument in an Image \tool\ function which is
@@ -531,7 +527,6 @@ anchor="images:image.calc.function">calc</link> \tool\ functions.
 Here are some examples.
 
 <example> 
-\begin{verbatim}
 
 """
 #
@@ -541,7 +536,6 @@ ia.calc('zz + min(zz)')                # Make the minimum value zero
 ia.close()
 #
 """
-\end{verbatim}
 
 <!--
 #myim = ia.maketestimage()         # Make virtual test image
@@ -564,7 +558,6 @@ expression.
 
 \bigskip
 <example> 
-\begin{verbatim}
 Note that for image file names with special characters in them (like a
 dash for example), you should (double) escape those characters or put
 the file name in double quotes. E.g.
@@ -582,7 +575,6 @@ ia.close()
 #
 """
 
-\end{verbatim}
 </example>
           
 
@@ -700,32 +692,29 @@ might then make the \pixelmask\ persistent with the
 
 <example> 
 
-\begin{verbatim}
 """
 #
 print "\t----\t Intro Ex 6 \t----"
 #myim = ia.newimagefromimage('rm')
-#myim.statistics(mask='rmerr&lt;10')
-#myim.calcmask (mask='rmerr&lt;20')     # Make persistent mask
+#myim.statistics(mask='rmerr\&lt;10')
+#myim.calcmask (mask='rmerr\&lt;20')     # Make persistent mask
 #
 """
 
-<!-- #myim.view(mask='rmerr&lt;20')-->
-\end{verbatim}
+<!-- #myim.view(mask='rmerr\&lt;20')-->
 </example>
 
 \medskip
 Finally, a subtlety that is worth explaining.
 
 <example> 
-\begin{verbatim}
 
 """
 #
 print "\t----\t Intro Ex 7 \t----"
 ia.maketestimage('zz', overwrite=true)
 ia.statistics(mask='zz>0')                 # Mask of zz ignored
-ia.statistics(mask='mask(zz) &amp;&amp; zz>0')     # Mask of zz used
+ia.statistics(mask='mask(zz) \&amp;\&amp; zz>0')     # Mask of zz used
 ia.close()
 #
 """
@@ -737,7 +726,6 @@ example, the mask of {\sff zz} is also taken into account via the LEL
 {\cf mask} function. That is, the transient output mask is T (good) only when
 the mask of {\sff zz} is T and the expression {\cf zz\&gt;0} is T.
 
-\end{verbatim}
 </example>
 
 
@@ -751,7 +739,6 @@ than image values.  For example
 
 \goodbreak
 
-\begin{verbatim}
 """
 #
 print "\t----\t Intro Ex 8 \t----"
@@ -762,7 +749,6 @@ print ia.getregion(mask='indexin(0, [4:9, 14, 18:19])',getmask=true)
 ia.close()
 #
 """
-\end{verbatim}
 
 
 You can see the mask is good (T) for the specified indices along the
@@ -771,7 +757,6 @@ specification if you like, viz.
 
 \goodbreak
 
-\begin{verbatim}
 """
 #
 print "\t----\t Intro Ex 9 \t----"
@@ -784,7 +769,6 @@ print ia.getregion(mask='indexin('+axis+','+sel+')',getmask=true)
 ia.close()
 #
 """
-\end{verbatim}
 
 
 This capability is useful for fitting functions.
@@ -827,7 +811,6 @@ is applied equally to the image and the {\stfaf mask} expression.
 For example
 
 <example> 
-\begin{verbatim}
 
 """
 #
@@ -839,11 +822,10 @@ print "\t----\t Intro Ex 10 \t----"
 #rm2.shape()
 #[128 128]
 #r = rg.box([10,10], [50,50])
-#rm1.statistics(region=r, mask='rmerr&lt;10') # region applied to
+#rm1.statistics(region=r, mask='rmerr\&lt;10') # region applied to
                                               # 'rmerr' and 'rm'
 #
 """
-\end{verbatim}
 
 </example>
 
@@ -1115,7 +1097,8 @@ fitsimage.done()
 <description> 
 
 This method is used to evaluate a mathematical expression involving
-existing images.  The syntax of the expression supplied via the pixels
+existing images. It fully supports both float and complex valued images.
+The syntax of the expression supplied via the pixels
 parameter (in what is called the Lattice Expression Language, or LEL) is
 explained in detail in \htmladdnormallink{note
 223}{http://aips2.nrao.edu/docs/notes/223/223.html}. This is a rich 
@@ -2534,7 +2517,8 @@ the increment.
 <returns type="string"/>
 <description>
 
-This function <!-- (short-hand name {\stff bu}) --> gets the image brightness unit.
+This function gets the image brightness unit. Both float and complex
+valued images are supported.
 
 </description>
 
@@ -2687,10 +2671,10 @@ print "\t----\t calcmask Ex 1 \t----"
 ia.maketestimage('zz', overwrite=true)
 subim = ia.subimage()                # Make "another" image
 ia.calcmask('T')                     # Specify 'True' mask as a string
-ia.calcmask('zz&gt;0')                  # Mask of zz ignored
-ia.calcmask('mask(zz) &amp;&amp; zz&gt;0')      # Mask of zz included
-ia.calcmask(subim.name(true)+'&gt;min('+subim.name(true)+')') # Use tool names
-ia.calcmask('zz&gt;min(zz:nomask)')  # Mask of zz not used in scalar function
+ia.calcmask('zz\&gt;0')                  # Mask of zz ignored
+ia.calcmask('mask(zz) \&amp;\&amp; zz\&gt;0')      # Mask of zz included
+ia.calcmask(subim.name(true)+'\&gt;min('+subim.name(true)+')') # Use tool names
+ia.calcmask('zz\&gt;min(zz:nomask)')  # Mask of zz not used in scalar function
 subim.done()
 ia.close()
 #
@@ -3189,8 +3173,8 @@ ia.close()
 <returns type="coordsys"/>
 <description>
 
-This function stores the Coordinate System of an image in a {\stf
-Coordsys} tool.  
+This function returns the Coordinate System of an image in a {\stf
+Coordsys} tool. Both float and complex valued images are supported.
 
 By default, the Coordinate System describes all of the axes in the
 image.  If you desire, you can select a subset of the axes, thus
@@ -4202,7 +4186,7 @@ We use the Componentlist GUI to look at the strongest component.
             <value type="string"/>
         </param>
         <param type="string" direction="in" name="spxtype">
-            <description>Type of function to fit. "plp" $=\&gt;$ power logarithmic polynomial, "ltp" $=\&gt;$ logarithmic transformed polynomial.</description>
+            <description>Type of function to fit. "plp" =\&gt; power logarithmic polynomial, "ltp" =\&gt; logarithmic transformed polynomial.</description>
             <value/>
         </param>
         <param type="doubleArray" name="spxest">
@@ -4210,12 +4194,12 @@ We use the Componentlist GUI to look at the strongest component.
             <value/>
         </param>
         <param type="boolArray" name="spxfix">
-            <description>Fix the corresponding spectral index function coefficients during the fit. True$=\&gt;$hold fixed.</description>
+            <description>Fix the corresponding spectral index function coefficients during the fit. True=\&gt;hold fixed.</description>
             <value/>
         </param>
         <param type="any" name="div">
             <any type="variant"/>
-            <description>Divisor (numerical value or quantity) to use in the logarithmic terms of the plp or ltp function. 0 $=\&gt;$ calculate a useful value on the fly.</description>
+            <description>Divisor (numerical value or quantity) to use in the logarithmic terms of the plp or ltp function. 0 =\&gt; calculate a useful value on the fly.</description>
             <value>0</value>
         </param>
         <param type="string" name="spxsol">
@@ -4240,15 +4224,15 @@ We use the Componentlist GUI to look at the strongest component.
             <value type="string"/>
         </param>
         <param type="doubleArray"  name="goodamprange">
-            <description>Acceptable amplitude solution range. [0.0] $=\&gt;$ all amplitude solutions are acceptable.</description>
+            <description>Acceptable amplitude solution range. [0.0] =\&gt; all amplitude solutions are acceptable.</description>
             <value>0.0</value>
         </param>
         <param type="doubleArray"  name="goodcenterrange">
-            <description>Acceptable center solution range in pixels relative to region start. [0.0] $=\&gt;$ all center solutions are acceptable.</description>
+            <description>Acceptable center solution range in pixels relative to region start. [0.0] =\&gt; all center solutions are acceptable.</description>
             <value>0.0</value>
         </param>
         <param type="doubleArray"  name="goodfwhmrange">
-            <description>Acceptable FWHM solution range in pixels. [0.0] $=\&gt;$ all FWHM solutions are acceptable.</description>
+            <description>Acceptable FWHM solution range in pixels. [0.0] =\&gt; all FWHM solutions are acceptable.</description>
             <value>0.0</value>
         </param>
         <param type="any"  name="sigma">
@@ -5213,7 +5197,7 @@ Suppose that we have a 2-dimensional image. Then:
 #
 print "\t----\t getslice Ex 1 \t----"
 ia.maketestimage();
-rec = ia.getslice (x=[1,20], y=[2,30])     # SLice from [1,2] -&gt; [20,30]
+rec = ia.getslice (x=[1,20], y=[2,30])     # SLice from [1,2] -\&gt; [20,30]
 print rec.keys()
 #['distance', 'xpos', 'axes', 'mask', 'ypos', 'pixel']
 rec = ia.getslice (x=[1,20,25,11], y=[2,30,32,40]) # Polyline slice
@@ -6808,7 +6792,7 @@ The {\stff open} function first closes the old \imagefile.
             <value>0</value>
         </param>
         <param type="bool" name="padmask">
-            <description>Value of the mask for the padding pixels. True$=\&gt;$good (unmasked), False$=\&gt;$bad (masked).</description>
+            <description>Value of the mask for the padding pixels. True=\&gt;good (unmasked), False=\&gt;bad (masked).</description>
             <value>false</value>
         </param>
         <param type="bool"  name="overwrite">
@@ -7082,7 +7066,7 @@ See also the functions <link anchor="images:image.set.function">set</link> and
 
 <example>
 
-We can clip all pixels to be {\tt &lt;= } 5 as follows.
+We can clip all pixels to be {\tt \&lt;= } 5 as follows.
 
 """
 #
@@ -7100,7 +7084,7 @@ pix2 = ia.getchunk()          # get all pixels into an array (again)
 for i in range(len(pix2)):
   pix2[i] = list(pix2[i])     # convert tuple to list so it can be modified
   for j in range(len(pix2[i])):
-    if pix2[i][j] &gt; 5:
+    if pix2[i][j] \&gt; 5:
       pix2[i][j] = 5          # clip values to 5
   pix2[i] = tuple(pix2[i])    # convert list back to tuple
 ia.putchunk(pix2)             # put array back into image
@@ -7704,7 +7688,7 @@ ia.close()
         </param>
         <param type="any"  name="order">
             <any type="variant"/>
-            <description>Zero-based order of axes in output image (eg "120" $=\&gt;$ input$-\&gt;$ output 0-$\&gt;$2, 1-$\&gt;$0, 2-$\&gt;$1))</description>
+            <description>Zero-based order of axes in output image (eg "120" =\&gt; input-\&gt;output 0-\&gt;2, 1-\&gt;0, 2-\&gt;1))</description>
             <value/>
         </param>
     </input>
@@ -8048,7 +8032,7 @@ it as well (see examples).
 #
 print "\t----\t replacemaskedpixels Ex 1 \t----"
 ia.maketestimage('zz1',overwrite=true)
-ia.calcmask('zz1&lt;0')
+ia.calcmask('zz1\&lt;0')
 ia.replacemaskedpixels(0.0)
 ia.replacemaskedpixels('min(zz1)')
 ia.close()
@@ -8071,8 +8055,8 @@ print "\t----\t replacemaskedpixels Ex 2 \t----"
 ia.maketestimage('zz2',overwrite=true)
 ia.close()
 ia.maketestimage('zz1',overwrite=true)  
-#ia.calcmask('zz1&lt;0')
-ia.replacemaskedpixels(0.0, mask='zz2&gt;0')
+#ia.calcmask('zz1\&lt;0')
+ia.replacemaskedpixels(0.0, mask='zz2\&gt;0')
 ia.close()
 #
 """
@@ -8093,12 +8077,12 @@ would be logically ORed).
 #
 print "\t----\t replacemaskedpixels Ex 3 \t----"
 ia.maketestimage('zz1',overwrite=true)  
-ia.calcmask('zz1&lt;0')
+ia.calcmask('zz1\&lt;0')
 im2 = ia.subimage(outfile='zz2',overwrite=true)
 # r = rg.quarter()
 r=ia.setboxregion([0.25,0.25],[0.75,0.75],frac=true)
-ia.replacemaskedpixels(0.0, region=r, mask=im2.name(strippath=T)+'&gt;0')
-# same as ia.replacemaskedpixels(0.0, region=r, mask='zz2&gt;0')
+ia.replacemaskedpixels(0.0, region=r, mask=im2.name(strippath=T)+'\&gt;0')
+# same as ia.replacemaskedpixels(0.0, region=r, mask='zz2\&gt;0')
 im2.done()
 ia.close()
 #
@@ -8124,7 +8108,7 @@ print "\----\t replacemaskedpixels Ex 4 \t----"
 ia.maketestimage('zz3',overwrite=true)
 ia.maketestimage('zz2',overwrite=true)
 ia.maketestimage('zz1',overwrite=true)
-ia.calcmask('zz1&lt;0')
+ia.calcmask('zz1\&lt;0')
 ia.replacemaskedpixels('zz2+zz3')
 ia.close()
 #
@@ -8459,7 +8443,8 @@ ia.close()
 <returns type="bool">T or fail</returns>
 <description>
 
-This function <!-- (short-hand name {\stff sbu}) --> sets the image brightness unit.
+This function sets the image brightness unit. Both float and complex
+valued images are supported.
 You can get the brightness unit with function
 <link anchor="images:image.brightnessunit.function">brightnessunit</link>.
 
@@ -9300,10 +9285,9 @@ ia.twopointcorrelation()   # Output image is virtual
 
 <description>
 
-This function <!-- (short-hand name {\stff subim}) --> copies all or
-part of the image to another on-the-fly Image tool.
-<!-- (there is also a
-\htmlref{subimage}{images:image.subimage.constructor} constructor). -->
+This function copies all or
+part of the image to another on-the-fly Image tool. Both float and complex
+valued images are supported.
 
 If {\stfaf outfile} is given, the subimage is written to the specified
 disk file.  If {\stfaf outfile} is unset, the returned Image \tool\ actually
@@ -10441,7 +10425,7 @@ used to create a 2D temporary image.
             <value/>
         </param>
         <param type="any" name="width">       
-            <description>Width in pixels for averaging pixels perpendicular to the slice. Must be an odd integer $\&gt;= 1$ (1 means only use the pixels along the slice), or a quantity which will be rounded up if necessary so it corresponds to the next highest odd number of pixels.</description>
+            <description>Width in pixels for averaging pixels perpendicular to the slice. Must be an odd integer \&gt;= 1 (1 means only use the pixels along the slice), or a quantity which will be rounded up if necessary so it corresponds to the next highest odd number of pixels.</description>
             <any type="variant"/>
             <value type="int">1</value>
         </param>

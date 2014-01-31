@@ -41,7 +41,8 @@ An imagemetadata tool provides access to \casa\ image metadata.
 \medskip
 \noindent{\bf General}
 
-An imagemetadata tool provides access to an image's metadata.
+An imagemetadata tool provides access to an image's metadata. This tool
+fully supports float and complex valued images.
 
 <example> 
 

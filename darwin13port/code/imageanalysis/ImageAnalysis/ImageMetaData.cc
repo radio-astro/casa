@@ -35,9 +35,6 @@
 #include <measures/Measures/MeasureHolder.h>
 #include <casa/Utilities/DataType.h>
 
-#include <stdcasa/StdCasa/CasacSupport.h>
-#include <stdcasa/variant.h>
-
 #include <iostream>
 #include <iomanip>
 
@@ -45,12 +42,27 @@
 
 namespace casa {
 
-template<class T> ImageMetaData<T>::ImageMetaData(
-	std::tr1::shared_ptr<const ImageInterface<T> > image
-) : ImageMetaDataBase<T>(), _image(image), _info(image->imageInfo()),
-	_csys(image->coordinates()) {}
+ImageMetaData::ImageMetaData(
+	std::tr1::shared_ptr<const ImageInterface<Float> > imagef
+) : ImageMetaDataBase(), _floatImage(imagef), _complexImage(), _info(imagef->imageInfo()),
+	_csys(imagef->coordinates()) {}
 
-template<class T> Record ImageMetaData<T>::toRecord(Bool verbose) const {
+ImageMetaData::ImageMetaData(
+	std::tr1::shared_ptr<ImageInterface<Float> > imagef
+) : ImageMetaDataBase(), _floatImage(imagef), _complexImage(), _info(imagef->imageInfo()),
+	_csys(imagef->coordinates()) {}
+
+ImageMetaData::ImageMetaData(
+	std::tr1::shared_ptr<const ImageInterface<Complex> > imagec
+) : ImageMetaDataBase(), _floatImage(), _complexImage(imagec), _info(imagec->imageInfo()),
+	_csys(imagec->coordinates()) {}
+
+ImageMetaData::ImageMetaData(
+	std::tr1::shared_ptr<ImageInterface<Complex> > imagec
+) : ImageMetaDataBase(), _floatImage(), _complexImage(imagec), _info(imagec->imageInfo()),
+	_csys(imagec->coordinates()) {}
+
+Record ImageMetaData::toRecord(Bool verbose) const {
 	if (_header.empty()) {
 		_header = this->_makeHeader();
 	}
@@ -60,21 +72,21 @@ template<class T> Record ImageMetaData<T>::toRecord(Bool verbose) const {
 	return _header;
 }
 
-template<class T> Vector<String> ImageMetaData<T>::_getAxisNames() const {
+Vector<String> ImageMetaData::_getAxisNames() const {
 	if (_axisNames.size() == 0) {
 		_axisNames = _getCoords().worldAxisNames();
 	}
 	return _axisNames;
 }
 
-template<class T> Vector<String> ImageMetaData<T>::_getAxisUnits() const {
+Vector<String> ImageMetaData::_getAxisUnits() const {
 	if (_axisUnits.size() == 0) {
 		_axisUnits = _getCoords().worldAxisUnits();
 	}
 	return _axisUnits;
 }
 
-template<class T> GaussianBeam ImageMetaData<T>::_getBeam() const {
+GaussianBeam ImageMetaData::_getBeam() const {
 	const ImageInfo& info = _getInfo();
 	if (info.hasSingleBeam()) {
 		if (_beam == GaussianBeam::NULL_BEAM) {
@@ -90,14 +102,16 @@ template<class T> GaussianBeam ImageMetaData<T>::_getBeam() const {
 	}
 }
 
-template<class T> String ImageMetaData<T>::_getBrightnessUnit() const {
+String ImageMetaData::_getBrightnessUnit() const {
 	if (_bunit.empty()) {
-		_bunit = _getImage()->units().getName();
+		std::tr1::shared_ptr<const ImageInterface<Float> > imf = _getFloatImage();
+		std::tr1::shared_ptr<const ImageInterface<Complex> > imc = _getComplexImage();
+		_bunit = imf ? imf->units().getName() : imc->units().getName();
 	}
 	return _bunit;
 }
 
-template<class T> String ImageMetaData<T>::_getEquinox() const {
+String ImageMetaData::_getEquinox() const {
 	if (_equinox.empty()) {
 		if (_getCoords().hasDirectionCoordinate()) {
 			_equinox = MDirection::showType(
@@ -108,14 +122,14 @@ template<class T> String ImageMetaData<T>::_getEquinox() const {
 	return _equinox;
 }
 
-template<class T> String ImageMetaData<T>::_getImType() const {
+String ImageMetaData::_getImType() const {
 	if (_imtype.empty()) {
 		_imtype = ImageInfo::imageType(_getInfo().imageType());
 	}
 	return _imtype;
 }
 
-template<class T> vector<Quantity> ImageMetaData<T>::_getIncrements() const {
+vector<Quantity> ImageMetaData::_getIncrements() const {
 	if (_increment.size() == 0) {
 		Vector<Double> incs = _getCoords().increment();
 		Vector<String> units = _getAxisUnits();
@@ -126,49 +140,53 @@ template<class T> vector<Quantity> ImageMetaData<T>::_getIncrements() const {
 	return _increment;
 }
 
-template<class T> String ImageMetaData<T>::_getObject() const {
+String ImageMetaData::_getObject() const {
 	if (_object.empty()) {
 		_object = _getInfo().objectName();
 	}
 	return _object;
 }
 
-template<class T> Vector<String> ImageMetaData<T>::_getMasks() const {
+Vector<String> ImageMetaData::_getMasks() const {
 	if (_masks.empty()) {
-		_masks = _getImage()->regionNames(RegionHandler::Masks);
+		std::tr1::shared_ptr<const ImageInterface<Float> > imf = _getFloatImage();
+		std::tr1::shared_ptr<const ImageInterface<Complex> > imc = _getComplexImage();
+		_masks = imf
+			? imf->regionNames(RegionHandler::Masks)
+			: imc->regionNames(RegionHandler::Masks);
 	}
 	return _masks;
 }
 
-template<class T> MEpoch ImageMetaData<T>::_getObsDate() const {
+MEpoch ImageMetaData::_getObsDate() const {
 	if (_obsdate.get("s") == 0) {
 		_obsdate = _getCoords().obsInfo().obsDate();
 	}
 	return _obsdate;
 }
 
-template<class T> String ImageMetaData<T>::_getObserver() const {
+String ImageMetaData::_getObserver() const {
 	if (_observer.empty()) {
 		_observer = _getCoords().obsInfo().observer();
 	}
 	return _observer;
 }
 
-template<class T> String ImageMetaData<T>::_getProjection() const {
+String ImageMetaData::_getProjection() const {
 	if (_projection.empty() && _getCoords().hasDirectionCoordinate()) {
 		_projection = _getCoords().directionCoordinate().projection().name();
 	}
 	return _projection;
 }
 
-template<class T> Vector<Double> ImageMetaData<T>::_getRefPixel() const {
+Vector<Double> ImageMetaData::_getRefPixel() const {
 	if (_refPixel.size() == 0) {
 		_refPixel = _getCoords().referencePixel();
 	}
 	return _refPixel;
 }
 
-template<class T> Vector<Quantity> ImageMetaData<T>::_getRefValue() const {
+Vector<Quantity> ImageMetaData::_getRefValue() const {
 	if (_refVal.size() == 0) {
 		Vector<Double> vals = _getCoords().referenceValue();
 		Vector<String> units = _getAxisUnits();
@@ -179,7 +197,7 @@ template<class T> Vector<Quantity> ImageMetaData<T>::_getRefValue() const {
 	return _refVal;
 }
 
-template<class T> String ImageMetaData<T>::_getRefFreqType() const {
+String ImageMetaData::_getRefFreqType() const {
 	if (_reffreqtype.empty() && _getCoords().hasSpectralAxis()) {
 		_reffreqtype = MFrequency::showType(
 			_getCoords().spectralCoordinate().frequencySystem(False)
@@ -188,7 +206,7 @@ template<class T> String ImageMetaData<T>::_getRefFreqType() const {
 	return _reffreqtype;
 }
 
-template<class T> Quantity ImageMetaData<T>::_getRestFrequency() const {
+Quantity ImageMetaData::_getRestFrequency() const {
 	const CoordinateSystem& csys = _getCoords();
 	if (_restFreq.getValue() == 0 && csys.hasSpectralAxis()) {
 		_restFreq = Quantity(
@@ -199,15 +217,15 @@ template<class T> Quantity ImageMetaData<T>::_getRestFrequency() const {
 	return _restFreq;
 }
 
-template<class T> Record ImageMetaData<T>::_getStatistics() const {
-	if (_stats.nfields() == 0) {
+Record ImageMetaData::_getStatistics() const {
+	if (_stats.nfields() == 0 && ! _complexImage) {
 		_stats = this->_calcStats();
 	}
 	return _stats;
 }
 
 
-template<class T> String ImageMetaData<T>::_getTelescope() const {
+String ImageMetaData::_getTelescope() const {
 	if (_telescope.empty()) {
 		_telescope = _getCoords().obsInfo().telescope();
 	}

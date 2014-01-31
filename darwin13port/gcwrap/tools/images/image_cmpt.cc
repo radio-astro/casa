@@ -96,12 +96,14 @@ _log(), _image(new ImageAnalysis()) {}
 // private ImageInterface constructor for on the fly components
 // The constructed object will take over management of the provided pointer
 // using a shared_ptr
+
 image::image(casa::ImageInterface<casa::Float> *inImage) :
 	_log(), _image(new ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Float> >(inImage))) {
 	try {
 		_log << _ORIGIN;
 
-	} catch (AipsError x) {
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -113,29 +115,28 @@ image::image(std::tr1::shared_ptr<casa::ImageInterface<casa::Float> > inImage) :
 	try {
 		_log << _ORIGIN;
 
-	} catch (AipsError x) {
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
 }
 
-/*
-// private ImageInterface constructor for on the fly components
-image::image(casa::ImageInterface<casa::Float>* inImage,
-		const bool cloneInputPointer) :
-	_log(new LogIO()), _image(new ImageAnalysis(inImage, cloneInputPointer)) {
+
+image::image(std::tr1::shared_ptr<ImageAnalysis> ia) :
+	_log(), _image(ia) {
 	try {
-		_log << LogOrigin("image", "image");
-	} catch (AipsError x) {
+		_log << _ORIGIN;
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
 }
-*/
-image::~image() {
-}
+
+image::~image() {}
 
 Bool isunset(const ::casac::variant &theVar) {
 	Bool rstat(False);
@@ -273,7 +274,7 @@ image * image::collapse(
 		);
 		collapser.setStretch(stretch);
 		return new image(collapser.collapse(True));
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -285,9 +286,9 @@ image* image::imagecalc(
 	const bool overwrite
 ) {
 	try {
-		ImageAnalysis ia;
-        tr1::shared_ptr<ImageInterface<Float> > out(ia.imagecalc(outfile, pixels, overwrite));
-        return  new image(out);
+		std::tr1::shared_ptr<ImageAnalysis> ia(new ImageAnalysis());
+        ia->imagecalc(outfile, pixels, overwrite);
+        return  new image(ia);
 	}
 	catch (const AipsError& x) {
 		RETHROW(x);
@@ -381,7 +382,8 @@ bool image::fromarray(const std::string& outfile,
 			return True;
 		}
 		throw AipsError("Error creating image from array");
-	} catch (const AipsError& x) {
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -390,8 +392,8 @@ bool image::fromarray(const std::string& outfile,
 
 void image::_reset() {
 	_image.reset(new ImageAnalysis());
-	_imageFloat.reset();
-	_imageComplex.reset();
+	//_imageFloat.reset();
+	//_imageComplex.reset();
 	_stats.reset(0);
 }
 
@@ -3524,12 +3526,9 @@ bool image::twopointcorrelation(
 ) {
 	try {
 		_log << _ORIGIN;
-		if (detached()) {
-			throw AipsError("Unable to create image");
-		}
 		ThrowIf(
-			! _image->isFloat(),
-			"This method only supports Float valued images"
+			detached(),
+			"Unable to create image"
 		);
 		std::auto_ptr<Record> regionRec = _getRegion(region, False);
 		String regionStr = region.type() == variant::STRING
@@ -3543,14 +3542,35 @@ bool image::twopointcorrelation(
 			_log << LogIO::WARN << "outfile was not specified and wantreturn is false. "
 				<< "The resulting image will be inaccessible" << LogIO::POST;
 		}
-        tr1::shared_ptr<ImageInterface<Float> > clone(_image->getImage()->cloneII());
-		tr1::shared_ptr<ImageInterface<Float> > tmpIm(
-			SubImageFactory<Float>::createImage(
-				*clone, outfile, *regionRec,
-				mask, dropDegenerateAxes, overwrite, list, stretch
-			)
-		);
-		image *res = wantreturn ? new image(tmpIm) : 0;
+
+		tr1::shared_ptr<ImageAnalysis> ia;
+		if (_image->isFloat()) {
+			ia.reset(
+				new ImageAnalysis(
+					_subimage<Float>(
+						std::tr1::shared_ptr<ImageInterface<Float> >(
+							_image->getImage()->cloneII()
+						),
+						outfile, *regionRec, mask, dropDegenerateAxes,
+						overwrite, list, stretch
+					)
+				)
+			);
+		}
+		else {
+			ia.reset(
+				new ImageAnalysis(
+					_subimage<Complex>(
+						std::tr1::shared_ptr<ImageInterface<Complex> >(
+							_image->getComplexImage()->cloneII()
+						),
+						outfile, *regionRec, mask, dropDegenerateAxes,
+						overwrite, list, stretch
+					)
+				)
+			);
+		}
+		image *res = wantreturn ? new image(ia) : 0;
 		return res;
 	}
 	catch (const AipsError& x) {
@@ -3558,6 +3578,20 @@ bool image::twopointcorrelation(
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+}
+
+template<class T> tr1::shared_ptr<ImageInterface<T> > image::_subimage(
+	std::tr1::shared_ptr<ImageInterface<T> > clone,
+	const String& outfile, const Record& region,
+	const String& mask, bool dropDegenerateAxes,
+	bool overwrite, bool list, bool stretch
+) {
+	return tr1::shared_ptr<ImageInterface<T> >(
+		SubImageFactory<T>::createImage(
+			*clone, outfile, region,
+			mask, dropDegenerateAxes, overwrite, list, stretch
+		)
+	);
 }
 
 record* image::summary(
@@ -4168,10 +4202,12 @@ bool image::isconform(const string& other) {
 std::auto_ptr<Record> image::_getRegion(
 	const variant& region, const bool nullIfEmpty
 ) const {
+	/*
 	ThrowIf(
 		! _image->isFloat(),
 		"Method" + String(__FUNCTION__) + " only supports Float valued images"
 	);
+	*/
 	switch (region.type()) {
 	case variant::BOOLVEC:
 		return std::auto_ptr<Record>(nullIfEmpty ? 0 : new Record());

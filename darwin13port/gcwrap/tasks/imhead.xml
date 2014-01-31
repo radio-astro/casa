@@ -137,8 +137,8 @@ hdkey       Keyword to use with get, put, add, or del. example: hdkey='telescope
 hdvalue     keyword value used for modes "put" and "add". Also used for mode="del" when
             hdvalue="masks. example: hdvalue='VLA'
         
-This task allows the user to manipulate metadata associated with an
-image.  The supported mode values are:
+This task allows the user to manipulate metadata associated with a CASA
+image. Both float and complex valued images are fully supported.  The supported mode values are:
 
 add       Add a new metadata value to the image.
 del       Delete a key or reset its value to a fidicual value if possible.

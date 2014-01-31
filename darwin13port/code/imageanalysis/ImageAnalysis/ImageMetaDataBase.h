@@ -33,10 +33,6 @@
 
 #include <tr1/memory.hpp>
 
-namespace casac {
-class variant;
-}
-
 namespace casa {
 
 // <summary>
@@ -66,7 +62,7 @@ namespace casa {
 // </motivation>
 
 
-template <class T> class ImageMetaDataBase {
+class ImageMetaDataBase {
 
 public:
 
@@ -115,7 +111,7 @@ public:
 	virtual Record toRecord(Bool verbose) const = 0;
 
 	// get the value of the datum corresponding to the given FITS keyword.
-	casac::variant getFITSValue(const String& key) const;
+	ValueHolder getFITSValue(const String& key) const;
 
 protected:
 	const static String _BEAMMAJOR, _BEAMMINOR, _BEAMPA, _BMAJ, _BMIN, _BPA,
@@ -124,7 +120,9 @@ protected:
 		_MINPOS, _OBJECT, _OBSDATE, _OBSERVER, _PROJECTION,
 		_RESTFREQ, _REFFREQTYPE, _SHAPE, _TELESCOPE;
 
-	virtual std::tr1::shared_ptr<const ImageInterface<T> > _getImage() const = 0;
+	virtual std::tr1::shared_ptr<const ImageInterface<Float> > _getFloatImage() const = 0;
+
+	virtual std::tr1::shared_ptr<const ImageInterface<Complex> > _getComplexImage() const = 0;
 
 	ImageMetaDataBase() : _log() {}
 
@@ -182,26 +180,29 @@ protected:
 
 	Record _calcStats() const;
 
+	const TableRecord _miscInfo() const;
+
+	uInt _ndim() const;
+
 private:
 
 	mutable LogIO _log;
 
 	mutable IPosition _shape;
 
-
 	// precision < 0 => use default precision when printing numbers
 	void _fieldToLog(const Record& header, const String& field, Int precision=-1) const;
 
 	String _doStandardFormat(Double value, const String& unit) const;
+
+	template <class T> Record _calcStatsT(
+		std::tr1::shared_ptr<const ImageInterface<T> > image
+	) const;
 
 };
 
 
 
 } //# NAMESPACE CASA - END
-
-#ifndef AIPS_NO_TEMPLATE_SRC
-#include <imageanalysis/ImageAnalysis/ImageMetaDataBase.tcc>
-#endif //# AIPS_NO_TEMPLATE_SRC
 
 #endif

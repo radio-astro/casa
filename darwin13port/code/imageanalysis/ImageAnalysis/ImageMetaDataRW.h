@@ -34,8 +34,6 @@
 
 #include <tr1/memory.hpp>
 
-class casac::variant;
-
 namespace casa {
 
 // <summary>
@@ -77,11 +75,12 @@ namespace casa {
 // classes with these methods.
 // </motivation>
 
-template <class T> class ImageMetaDataRW : public ImageMetaDataBase<T> {
+class ImageMetaDataRW : public ImageMetaDataBase {
 
 public:
 
-	ImageMetaDataRW(std::tr1::shared_ptr<ImageInterface<T> > image);
+	ImageMetaDataRW(std::tr1::shared_ptr<ImageInterface<Float> > image);
+	ImageMetaDataRW(std::tr1::shared_ptr<ImageInterface<Complex> > image);
 
 	// remove, if possible, the specified parameter. Returns True if removal
 	// was successful.
@@ -95,21 +94,20 @@ public:
 	Record toRecord(Bool verbose) const;
 
 	// add a key-value pair
-	Bool add(const String& key, const casac::variant& value);
+	Bool add(const String& key, const ValueHolder& value);
 
 	// set (update) the value associated with the key.
-	Bool set(const String& key, const casac::variant& value);
-
+	Bool set(const String& key, const ValueHolder& value);
 
 protected:
 
-	std::tr1::shared_ptr<const ImageInterface<T> > _getImage() const {return _image;}
+	std::tr1::shared_ptr<const ImageInterface<Float> > _getFloatImage() const {return _floatImage;}
 
-	std::tr1::shared_ptr<ImageInterface<T> > _getImage() {return _image;}
+	std::tr1::shared_ptr<const ImageInterface<Complex> > _getComplexImage() const {return _complexImage;}
 
-	const ImageInfo& _getInfo() const { return _image->imageInfo(); }
+	const ImageInfo& _getInfo() const;
 
-	const CoordinateSystem& _getCoords() const { return _image->coordinates(); }
+	const CoordinateSystem& _getCoords() const;
 
 	Vector<String> _getAxisNames() const;
 
@@ -148,8 +146,8 @@ protected:
 	Record _getStatistics() const;
 
 private:
-
-	std::tr1::shared_ptr<ImageInterface<Float> > _image;
+	std::tr1::shared_ptr<ImageInterface<Float> > _floatImage;
+	std::tr1::shared_ptr<ImageInterface<Complex> > _complexImage;
 
 	// These are mutable because they are only to be set once and
 	// then cached. If this contract is broken, and they are set elsewhere
@@ -165,22 +163,29 @@ private:
 	mutable vector<Quantity> _refVal, _increment;
 	mutable Record _header, _stats;
 
-	ImageMetaDataRW() : _image((void *)0) {}
+	ImageMetaDataRW() {}
 
-	void _setCoordinateValue(const String& key, const casac::variant& value);
+	void _setCoordinateValue(const String& key, const ValueHolder& value);
 
-	void  _checkString(const String& key, const casac::variant& v) const;
+	String  _getString(const String& key, const ValueHolder& value) const;
 
-	void _setUserDefined(const String& key, const casac::variant& v);
+	void _setUserDefined(const String& key, const ValueHolder& v);
 
+	Bool _setUnit(const String& unit);
+
+	Bool _setCsys(const CoordinateSystem& csys);
+
+	Bool _setImageInfo(const ImageInfo& info);
+
+	const TableRecord _miscInfo() const;
+
+	void _setMiscInfo(const TableRecord& rec);
+
+	Bool _hasRegion(const String& maskName) const;
+
+	static Quantity _getQuantity(const ValueHolder& v);
 };
 
-
-
 } //# NAMESPACE CASA - END
-
-#ifndef AIPS_NO_TEMPLATE_SRC
-#include <imageanalysis/ImageAnalysis/ImageMetaDataRW.tcc>
-#endif //# AIPS_NO_TEMPLATE_SRC
 
 #endif

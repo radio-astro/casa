@@ -445,7 +445,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 
 	// to determine the pixel increment of the angular offset axis, get the
 	// distance between the end points
-	ImageMetaData<Float> md(collapsed);
+	ImageMetaData md(collapsed);
 	Vector<Int> dirShape = md.directionShape();
 	AlwaysAssert(dirShape[1] == 1, AipsError);
 	const DirectionCoordinate& dc = collCoords.directionCoordinate();

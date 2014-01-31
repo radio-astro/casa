@@ -79,7 +79,6 @@
 #include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
 #include <images/Images/ImageConcat.h>
 #include <imageanalysis/ImageAnalysis/ImageConvolver.h>
-#include <images/Images/ImageExpr.h>
 #include <images/Images/ImageExprParse.h>
 #include <imageanalysis/ImageAnalysis/ImageFFT.h>
 #include <images/Images/ImageFITSConverter.h>
@@ -267,16 +266,14 @@ Bool ImageAnalysis::addnoise(const String& type, const Vector<Double>& pars,
 		Record& region, const Bool zeroIt) {
 	_onlyFloat(__FUNCTION__);
 	bool rstat(False);
-	*_log << LogOrigin("ImageAnalysis", "addnoise");
+	*_log << LogOrigin(className(), __FUNCTION__);
 
 	Record *pRegion = &region;
 
 	// Make SubImage
 	String mask;
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_imageFloat,
-		//*(ImageRegion::tweakedRegionRecord(pRegion)),
-		*pRegion,
+		*_imageFloat, *pRegion,
 		mask, _log.get(), True
 	);
 
@@ -295,11 +292,12 @@ Bool ImageAnalysis::addnoise(const String& type, const Vector<Double>& pars,
 	return rstat;
 }
 
-std::tr1::shared_ptr<ImageInterface<Float> >
-ImageAnalysis::imagecalc(const String& outfile, const String& expr,
-		const Bool overwrite) {
+void ImageAnalysis::imagecalc(
+	const String& outfile, const String& expr,
+	const Bool overwrite
+) {
 
-	*_log << LogOrigin("ImageAnalysis", __FUNCTION__);
+	*_log << LogOrigin(className(), __FUNCTION__);
 
 	Record regions;
 
@@ -322,94 +320,45 @@ ImageAnalysis::imagecalc(const String& outfile, const String& expr,
 
 	Block<LatticeExprNode> temps;
 	String exprName;
-	// String newexpr = substituteOID (temps, exprName, expr);
-	String newexpr = expr;
 	PtrBlock<const ImageRegion*> tempRegs;
 	makeRegionBlock(tempRegs, regions, *_log);
-	LatticeExprNode node = ImageExprParse::command(newexpr, temps, tempRegs);
+	LatticeExprNode node = ImageExprParse::command(expr, temps, tempRegs);
 
 	// Get the shape of the expression
-	const IPosition shapeOut = node.shape();
+	const IPosition shape = node.shape();
 
 	// Get the CoordinateSystem of the expression
 	const LELAttribute attr = node.getAttribute();
 	const LELLattCoordBase* lattCoord = &(attr.coordinates().coordinates());
-	if (
+	ThrowIf(
 		!lattCoord->hasCoordinates()
-		|| lattCoord->classname() != "LELImageCoord"
-	) {
-		*_log << "Images in expression have no coordinates"
-			<< LogIO::EXCEPTION;
-	}
+		|| lattCoord->classname() != "LELImageCoord",
+		"Images in expression have no coordinates"
+	);
 	const LELImageCoord* imCoord =
 			dynamic_cast<const LELImageCoord*> (lattCoord);
 	AlwaysAssert (imCoord != 0, AipsError);
-	CoordinateSystem cSysOut = imCoord->coordinates();
-
-	// Create LatticeExpr create mask if needed
-	LatticeExpr<Float> latEx(node);
-
-	// Construct output image - an ImageExpr or a PagedImage
-	if (outfile.empty()) {
-		_imageFloat.reset(new ImageExpr<Float> (latEx, exprName));
-		if (_imageFloat.get() == 0) {
-			*_log << "Failed to create ImageExpr" << LogIO::EXCEPTION;
-		}
+	CoordinateSystem csys = imCoord->coordinates();
+	DataType type = node.dataType();
+	if (type == TpComplex || type == TpDComplex) {
+		_imageComplex = _imagecalc<Complex>(
+			node, shape,
+			csys, imCoord,
+			outfile,
+			overwrite, expr
+		);
 	}
 	else {
-		*_log << LogIO::NORMAL << "Creating image `" << outfile
-			<< "' of shape " << shapeOut << LogIO::POST;
-		try {
-			_imageFloat.reset(new PagedImage<Float> (shapeOut, cSysOut, outfile));
-		}
-		catch (TableError te) {
-			if (overwrite) {
-				*_log << LogIO::SEVERE << "Caught TableError. This often means "
-					<< "the table you are trying to overwrite has been opened by "
-					<< "another method and so cannot be overwritten at this time. "
-					<< "Try closing it and rerunning" << LogIO::POST;
-				RETHROW(te);
-			}
-		}
-		if (_imageFloat.get() == 0) {
-			*_log << "Failed to create PagedImage" << LogIO::EXCEPTION;
-		}
-
-		// Make mask if needed, and copy data and mask
-		if (latEx.isMasked()) {
-			String maskName("");
-			ImageMaskAttacher<Float>::makeMask(*_imageFloat, maskName, False, True, *_log, True);
-		}
-		LatticeUtilities::copyDataAndMask(*_log, *_imageFloat, latEx);
+		_imageFloat = _imagecalc<Float>(
+			node, shape,
+			csys, imCoord,
+			outfile,
+			overwrite, expr
+		);
 	}
 
-	// Copy miscellaneous stuff over
-	_imageFloat->setMiscInfo(imCoord->miscInfo());
-	_imageFloat->setImageInfo(imCoord->imageInfo());
-	if (expr.contains("spectralindex")) {
-		_imageFloat->setUnits("");
-	}
-	else if (expr.contains(Regex("pa\\(*"))) {
-		_imageFloat->setUnits("deg");
-		Vector<Int> newstokes(1);
-		newstokes = Stokes::Pangle;
-		StokesCoordinate scOut(newstokes);
-		CoordinateSystem cSys = _imageFloat->coordinates();
-		Int iStokes = cSys.findCoordinate(Coordinate::STOKES, -1);
-		cSys.replaceCoordinate(scOut, iStokes);
-		_imageFloat->setCoordinateInfo(cSys);
-	}
-	else {
-		_imageFloat->setUnits(imCoord->unit());
-	}
-
-	// Logger not yet available
-	//    _imageFloat->appendLog(imCoord->logger());
-
-	// Delete the ImageRegions (by using an empty GlishRecord).
+	// Delete the ImageRegions (by using an empty Record).
 	makeRegionBlock(tempRegs, Record(), *_log);
-	return _imageFloat;
-
 }
 
 std::tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::imageconcat(
@@ -898,10 +847,11 @@ ImageAnalysis::boundingbox(const Record& Region) {
 }
 
 String ImageAnalysis::brightnessunit() {
-	_onlyFloat(__FUNCTION__);
 	String rstat;
-	*_log << LogOrigin("ImageAnalysis", "brightnessunit");
-	rstat = _imageFloat->units().getName();
+	*_log << LogOrigin(className(), __FUNCTION__);
+	rstat = _imageFloat
+		? _imageFloat->units().getName()
+		: _imageComplex->units().getName();
 	return rstat;
 }
 
@@ -1301,13 +1251,13 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::convolve2d(
 }
 
 CoordinateSystem ImageAnalysis::coordsys(const Vector<Int>& pixelAxes) {
-	_onlyFloat(__FUNCTION__);
-
-	*_log << LogOrigin("ImageAnalysis", "coordsys");
+	*_log << LogOrigin(className(), __FUNCTION__);
 
 	// Recover CoordinateSytem into a Record
 	Record rec;
-	CoordinateSystem cSys = _imageFloat->coordinates();
+	CoordinateSystem cSys = _imageFloat
+		? _imageFloat->coordinates()
+		: _imageComplex->coordinates();
 	CoordinateSystem cSys2;
 
 	// Fish out the coordinate of the desired axes
@@ -1953,7 +1903,7 @@ Bool ImageAnalysis::getregion(
 ) {
 	_onlyFloat(__FUNCTION__);
 	// Recover some pixels and their mask from a region in the image
-	*_log << LogOrigin("ImageAnalysis", "getregion");
+	*_log << LogOrigin(className(), __FUNCTION__);
 
 	// Get the region
 	pixels.resize(IPosition(0, 0));
@@ -1963,10 +1913,8 @@ Bool ImageAnalysis::getregion(
 	IPosition iAxes = IPosition(Vector<Int> (axes));
 
     SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_imageFloat, //*(ImageRegion::tweakedRegionRecord(&Region)),
-		Region,
-		Mask, (list ? _log.get() : 0), False, AxesSpecifier(),
-		extendMask
+		*_imageFloat, Region, Mask, (list ? _log.get() : 0),
+		False, AxesSpecifier(), extendMask
 	);
 	if (getmask) {
         LatticeUtilities::collapse(pixels, pixelmask, iAxes, subImage, dropdeg);
@@ -3859,9 +3807,11 @@ Bool ImageAnalysis::set(const String& lespixels, const Int pixelmask,
 }
 
 Bool ImageAnalysis::setbrightnessunit(const String& unit) {
-	_onlyFloat(__FUNCTION__);
 	*_log << LogOrigin(className(), __FUNCTION__);
-	return _imageFloat->setUnits(Unit(unit));
+	Bool res = _imageFloat
+		? _imageFloat->setUnits(Unit(unit))
+		: _imageComplex->setUnits(Unit(unit));
+	return res;
 }
 
 Bool ImageAnalysis::setcoordsys(const Record& coordinates) {
@@ -3885,7 +3835,7 @@ Bool ImageAnalysis::sethistory(const String& origin,
 	_onlyFloat(__FUNCTION__);
 	LogOrigin lor;
 	if (origin.empty()) {
-		lor = LogOrigin("ImageAnalysis", "sethistory");
+		lor = LogOrigin(className(), __FUNCTION__);
 	} else {
 		lor = LogOrigin(origin);
 	}
@@ -3932,140 +3882,6 @@ Bool ImageAnalysis::setrestoringbeam(
 		);
 	}
 }
-
-/*
-Bool ImageAnalysis::setrestoringbeam(
-	const Quantity& major, const Quantity& minor,
-	const Quantity& pa, const Record& rec,
-	const bool deleteIt, const bool log,
-    Int channel, Int polarization
-) {
-	_onlyFloat(__FUNCTION__);
-	*_log << LogOrigin(className(), __FUNCTION__);
-	ImageInfo ii = _imageFloat->imageInfo();
-	if (deleteIt) {
-		if (log) {
-			if (ii.hasMultipleBeams() && (channel >= 0 || polarization >= 0)) {
-				*_log << LogIO::WARN
-					<< "Delete ignores any channel and/or polarization specification "
-					<< "All per plane beams are being deleted" << LogIO::POST;
-			}
-			*_log << LogIO::NORMAL << "Deleting restoring beam(s)"
-				<< LogIO::POST;
-		}
-		ii.removeRestoringBeam();
-		if (! _imageFloat->setImageInfo(ii)) {
-			*_log << LogIO::POST << "Failed to remove restoring beam" << LogIO::POST;
-			return False;
-		}
-		deleteHist();
-		return True;
-	}
-	Quantity bmajor, bminor, bpa;
-	if (rec.nfields() != 0) {
-		String error;
-		// instantiating this object will do implicit consistency checks
-		// on the passed-in record
-		GaussianBeam beam = GaussianBeam::fromRecord(rec);
-
-		bmajor = beam.getMajor();
-		bminor = beam.getMinor();
-		bpa = beam.getPA(True);
-	}
-	else {
-		bmajor = major;
-		bminor = minor;
-		bpa = pa;
-	}
-	if (bmajor.getValue() == 0 || bminor.getValue() == 0) {
-		GaussianBeam currentBeam = ii.restoringBeam(channel, polarization);
-		if (! currentBeam.isNull()) {
-			bmajor = major.getValue() == 0 ? currentBeam.getMajor() : major;
-			bminor = minor.getValue() == 0 ? currentBeam.getMinor() : minor;
-			bpa = pa.isConform("rad") ? pa : Quantity(0, "deg");
-		}
-		else {
-			if (ii.hasMultipleBeams()) {
-				*_log
-					<< "This image does not have a corresponding per plane "
-					<< "restoring beam that can be "
-					<< "used to set missing input parameters"
-					<< LogIO::POST;
-			}
-			else {
-				*_log
-					<< "This image does not have a restoring beam that can be "
-					<< "used to set missing input parameters"
-					<< LogIO::POST;
-			}
-			return False;
-		}
-	}
-	if (ii.hasMultipleBeams()) {
-		if (channel < 0 && polarization < 0) {
-			if (log) {
-				*_log << LogIO::WARN << "This image has per plane beams"
-					<< "but no plane (channel/polarization) was specified. All beams will be set "
-					<< "equal to the specified beam." << LogIO::POST;
-			}
-			ImageMetaData<Float> md(_imageFloat.get());
-			ii.setAllBeams(
-				md.nChannels(), md.nStokes(),
-				GaussianBeam(bmajor, bminor, bpa)
-			);
-		}
-		else {
-			ii.setBeam(channel, polarization, bmajor, bminor, bpa);
-		}
-	}
-	else if (channel >= 0 || polarization >= 0) {
-		if (ii.restoringBeam().isNull()) {
-			if (log) {
-				*_log << LogIO::NORMAL << "This iamge currently has no beams of any kind. "
-					<< "Since channel and/or polarization were specified, "
-					<< "a set of per plane beams, each equal to the specified beam, "
-					<< "will be created." << LogIO::POST;
-			}
-			ImageMetaData<Float> md(_imageFloat.get());
-			ii.setAllBeams(
-				md.nChannels(), md.nStokes(),
-				GaussianBeam(bmajor, bminor, bpa)
-			);
-		}
-		else {
-			if (log) {
-				*_log << LogIO::WARN << "Channel and/or polarization has "
-					<< "been specified, but this image has a single (global restoring "
-					<< "beam. This beam will not be altered. If you really want to modify "
-					<< "the global beam, rerun setting both channel and "
-					<< "polarization less than zero" << LogIO::POST;
-			}
-			return False;
-		}
-	}
-	else {
-		if (log) {
-			*_log << LogIO::NORMAL
-				<< "Setting (global) restoring beam." << LogIO::POST;
-		}
-		ii.setRestoringBeam(GaussianBeam(bmajor, bminor, bpa));
-	}
-	if (! _imageFloat->setImageInfo(ii)) {
-		*_log << LogIO::POST << "Failed to set restoring beam" << LogIO::POST;
-		return False;
-	}
-	if (log) {
-		*_log << LogIO::NORMAL << "Beam parameters:"
-			<< "  Major          : " << bmajor.getValue() << " " << bmajor.getUnit() << endl
-			<< "  Minor          : " << bminor.getValue() << " " << bminor.getUnit() << endl
-			<< "  Position Angle : " << bpa.getValue() << " " << bpa.getUnit() << endl
-			<< LogIO::POST;
-	}
-	deleteHist();
-	return True;
-}
-*/
-
 
 Bool ImageAnalysis::twopointcorrelation(
 	const String& outFile,
