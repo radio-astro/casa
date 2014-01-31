@@ -3,6 +3,7 @@ import os
 
 import matplotlib
 import matplotlib.pyplot as pyplot
+import numpy
 
 import pipeline.extern.ordereddict as ordereddict
 import pipeline.infrastructure as infrastructure
@@ -38,27 +39,21 @@ class WVRScoreFinder(object):
 
         return scores_for_antenna[0]
 
+    
+class WVRPhaseVsBaselineChart(object):
+    class WvrChartHelper(object):
+        def __init__(self, antennas):
+            self._antennas = antennas
 
-    
-class WVRPlotBase(object):
-    def get_symbol_and_colour(self, pol, state='BEFORE'):
-        """
-        Get the plot symbol and colour for this polarization and bandtype.
-        """
-        d = {'BEFORE' : {'L' : ('-', 'orange', 0.6),
-                         'R' : ('--', 'sandybrown', 0.6),
-                         'X' : ('-', 'lightslategray', 0.6),
-                         'Y' : ('--', 'lightslategray', 0.6),
-                         'XX' : ('-', 'lightslategray', 0.6),
-                         'YY' : ('--', 'lightslategray', 0.6)},
-             'AFTER' : {'L' : ('-', 'green', 0.6),
-                        'R' : ('-', 'red', 0.6),
-                        'X' : ('-', 'green', 0.6),
-                        'Y' : ('-', 'red', 0.6),
-                        'XX' : ('-', 'green', 0.6),
-                        'YY' : ('-', 'red', 0.6)}}
-    
-        return d.get(state, {}).get(pol, ('x', 'grey'))
+        def get_antennas(self):
+            return self._antennas[:]
+                        
+        def label_antenna(self, axes):
+            pyplot.title('All Antennas', size=10)
+
+        @property
+        def antenna_filename_component(self):
+            return ''
 
     def _load_caltables(self):
         if self._caltables_loaded:
@@ -78,30 +73,13 @@ class WVRPlotBase(object):
         self._data_after = data_after
         self._caltables_loaded = True
 
-    def _get_qa2_intents(self):
+    def _get_plot_intents(self):
         return set(self.result.inputs['qa2_intent'].split(','))
     
-    def _get_qa2_scans(self):
-        qa2_intents = self._get_qa2_intents()
+    def _get_plot_scans(self):
+        plot_intents = self._get_plot_intents()
         return [scan for scan in self.ms.scans 
-                if not qa2_intents.isdisjoint(scan.intents)]
-    
-
-
-class WVRPhaseVsBaselineChart(WVRPlotBase):
-    class WvrChartHelper(object):
-        def __init__(self, antennas):
-            self._antennas = antennas
-
-        def get_antennas(self):
-            return self._antennas[:]
-                        
-        def label_antenna(self, axes):
-            pyplot.title('All Antennas', size=10)
-
-        @property
-        def antenna_filename_component(self):
-            return ''
+                if not plot_intents.isdisjoint(scan.intents)]
 
     def get_symbol_and_colour(self, pol, state='BEFORE'):
         """
@@ -148,8 +126,8 @@ class WVRPhaseVsBaselineChart(WVRPlotBase):
         self._refant = self.ms.get_antenna(refant_name)[0]        
 
     def get_data_object(self, data, corr_id):
-        delegate =  common.PhaseVsBaselineData(data, self.ms, corr_id, 
-                                               self._refant.id)
+        delegate = common.PhaseVsBaselineData(data, self.ms, corr_id, 
+                                              self._refant.id)
         return common.XYData(delegate, 'distance_to_refant', 'median_offset')
 
     def plot(self):
@@ -161,14 +139,14 @@ class WVRPhaseVsBaselineChart(WVRPlotBase):
         spw_ids = set(data_before.spw).intersection(set(data_after.spw))
         spws = [spw for spw in self.ms.spectral_windows if spw.id in spw_ids]
 
-        qa2_scans = self._get_qa2_scans()
+        plot_scans = self._get_plot_scans()
 
         # phase offsets are plotted per corr, spw and scan. We cannot index
         # the phase arrays with multiple corr/spw/scans as the unwrapped
         # phases would be for the whole data, not for the corr/spw/scan 
         # combination we want to plot
         LOG.debug('Finding maximum phase offset over all scans/spws/corrs/antennas')
-        for scan in qa2_scans:
+        for scan in plot_scans:
             for spw in spws:
                 # find the data description for this scan. Just one dd expected.
                 dd = [dd for dd in scan.data_descriptions 
@@ -178,7 +156,12 @@ class WVRPhaseVsBaselineChart(WVRPlotBase):
                 # can enumerate over the correlations in the MS scan.  
                 for corr_id, _ in enumerate(dd.corr_axis):
                     for antenna in self.ms.antennas:
-
+                        # we don't want the phase RMS for the reference antenna as it
+                        # doesn't make any sense, plus it often 'spikes' the scale with
+                        # an extreme value
+                        if antenna.id is self._refant.id:
+                            continue
+                        
                         try:                        
                             caltable = data_before.filename
                             selection_before = data_before.filter(scan=[scan.id], 
@@ -219,9 +202,14 @@ class WVRPhaseVsBaselineChart(WVRPlotBase):
                                                         self._max_phase_offset))
 
         ratios = [w.y for w in self._wrappers]
+        ratios = [r for r in ratios if r is not None]
         self._max_ratio = max(ratios)
+        self._min_ratio = min(ratios)
+        self._median_ratio = numpy.ma.median(ratios)
         LOG.trace('Maximum phase ratio for %s = %s' % (self.ms.basename, 
                                                        self._max_ratio))
+        LOG.trace('Minimum phase ratio for %s = %s' % (self.ms.basename, 
+                                                       self._min_ratio))
 
         distances = [w.x for w in self._wrappers]
         self._max_distance = max(distances)
@@ -232,8 +220,8 @@ class WVRPhaseVsBaselineChart(WVRPlotBase):
         for spw in spws:
             # plot scans individually as plotting multiple scans on one plot 
             # creates an unintelligible mess. 
-            for scan in qa2_scans:
-#                 if spw.id == 9 and scan.id == 4:
+            for scan in plot_scans:
+#                if spw.id == 17 and scan.id == 4:
                     plots.append(self.get_plot_wrapper(spw, [scan,], 
                                                        self.ms.antennas))
 
@@ -276,8 +264,19 @@ class WVRPhaseVsBaselineChart(WVRPlotBase):
         # create the figure: 2 rows x 1 column, sharing the X axis (baseline 
         # length) 
         fig, ((ax1, ax2)) = common.subplots(2, 1, sharex=True)
+        ax1.set_yscale('log')
         pyplot.subplots_adjust(hspace=0.0)        
 
+        trans1 = matplotlib.transforms.blended_transform_factory(ax1.transAxes, 
+                                                                 ax1.transData)
+        ax1.axhspan(self._min_ratio, 1, facecolor='k', linewidth=0.0, alpha=0.04)
+        ax1.text(0.012, numpy.log10((10**1 - 10**self._min_ratio)/2.0), 'No Improvement', 
+                 transform=trans1, color='k', ha='left', va='top', size=8, alpha=0.4)
+
+        ax1.axhline(y=self._median_ratio, color='k', ls='dotted', alpha=0.4)
+        ax1.text(0.012, self._median_ratio, 'Median', transform=trans1,
+                 color='k', ha='left', va='baseline', size=8, alpha=0.4)
+  
         # create bottom plot: phase offset vs baseline
         legend = []
         plots = []
@@ -311,7 +310,7 @@ class WVRPhaseVsBaselineChart(WVRPlotBase):
                 legend.append('%s %s' % (corr_axis, 'after'))
         
         ax1.set_xlim(0, self._max_distance)
-        ax1.set_ylim(0, self._max_ratio)
+        ax1.set_ylim(self._min_ratio, self._max_ratio)
         ax2.set_ylim(0, self._max_phase_offset)
     
         # shrink the y height slightly to make room for the legend
