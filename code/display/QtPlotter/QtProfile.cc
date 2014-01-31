@@ -100,6 +100,15 @@ namespace casa {
 		                        "the image to get a spectral profile.";
 	const QString QtProfile::NO_PROFILE_ERROR = "No profile available for the "
 			                        "display axes orientation";
+	const QString QtProfile::REGION_ELLIPSE = "Ellipse";
+	const QString QtProfile::REGION_RECTANGLE = "Rectangle";
+	const QString QtProfile::REGION_POINT = "Point";
+	const QString QtProfile::REGION_POLY = "Polygon";
+	const String QtProfile::SHAPE_ELLIPSE = "ellipse";
+	const String QtProfile::SHAPE_RECTANGLE = "rectangle";
+	const String QtProfile::SHAPE_POINT = "point";
+	const String QtProfile::SHAPE_POLY = "polygon";
+
 
 	QtProfile::~QtProfile() {
 	}
@@ -583,11 +592,7 @@ namespace casa {
 		if ((lastPX.nelements() > 0) && ((inMProf!=stateMProf) || (inRel!=stateRel))){
 			update=true;
 		}
-		if ( showSingleChannelImage != singleChannelImage  ){
-			showSingleChannelImage = singleChannelImage;
-			pixelCanvas->clearCurve();
-			emit reloadImages();
-		}
+
 		pixelCanvas->setAutoScaleX(inAutoX);
 		pixelCanvas->setAutoScaleY(inAutoY);
 		pixelCanvas->setShowGrid(showGrid);
@@ -604,7 +609,7 @@ namespace casa {
 		adjustTopAxisSettings();
 		changeTopAxis();
 
-		stateMProf=inMProf;
+
 		stateRel  = inRel;
 
 		bool oldOpticalFitter = specFitSettingsWidget->isOptical();
@@ -617,6 +622,12 @@ namespace casa {
 				showTopAxis = false;
 			}
 		}
+
+		if ( showSingleChannelImage != singleChannelImage || (stateMProf !=inMProf) ){
+					showSingleChannelImage = singleChannelImage;
+					stateMProf=inMProf;
+					emit reloadImages();
+				}
 
 		if (update) {
 			wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY, UNKNPROF);
@@ -801,7 +812,7 @@ namespace casa {
 		lastWY.resize(0);
 		position = QString("");
 		profileStatus->showMessage(position);
-		pixelCanvas->clearCurve();
+		//pixelCanvas->clearCurve();
 	}
 
 	SpectralCoordinate QtProfile::getSpectralAxis( std::tr1::shared_ptr< const ImageInterface<Float> > imagePtr, Bool& valid ){
@@ -925,6 +936,10 @@ namespace casa {
 		bool cubeZero = checkCube();
 		if (cubeZero) {
 			return;
+		}
+
+		if ( ptype != UNKNPROF ){
+			profileType = ptype;
 		}
 
 		copyToLastEvent( c,px,py,wx,wy );
@@ -1352,14 +1367,16 @@ namespace casa {
 			over = 0;
 		}
 
-		over = new QList<OverplotAnalysis>();
-		QListIterator<OverplotInterface> i(hash);
-		while (i.hasNext()) {
-			OverplotInterface overplot = i.next();
-			QString ky = overplot.first;
-			ImageAnalysis* ana = new ImageAnalysis(overplot.second);
-			OverplotAnalysis overlay( ky, ana );
-			(*over).append( overlay );
+		if ( stateMProf ){
+			over = new QList<OverplotAnalysis>();
+			QListIterator<OverplotInterface> i(hash);
+			while (i.hasNext()) {
+				OverplotInterface overplot = i.next();
+				QString ky = overplot.first;
+				ImageAnalysis* ana = new ImageAnalysis(overplot.second);
+				OverplotAnalysis overlay( ky, ana );
+				(*over).append( overlay );
+			}
 		}
 		newOverplots = true;
 	}
@@ -1421,6 +1438,7 @@ namespace casa {
 		}
 
 		current_region_id = id_;
+		assignProfileType( shape.toStdString(), wx.size());
 
 		copyToLastEvent( c, px, py, wx, wy );
 
@@ -1448,7 +1466,7 @@ namespace casa {
 
 		//Get Profile Flux density v/s coordinateType
 		bool ok = assignFrequencyProfile( wxv,wyv, coordinateType,
-				xaxisUnit,z_xval, z_yval, shape.toStdString() );
+				xaxisUnit,z_xval, z_yval, getRegionShape() );
 		if ( !ok ) {
 			return;
 		}
@@ -1481,6 +1499,40 @@ namespace casa {
 			yAxisCombo->setCurrentIndex( unitIndex );
 		}
 	}
+
+	void QtProfile::assignProfileType( const String& shape, int regionPointCount ){
+			if ( shape == SHAPE_ELLIPSE ){
+				profileType = ELLPROF;
+			}
+			else if ( shape == SHAPE_POINT ){
+				profileType = SINGPROF;
+			}
+			else if ( shape == SHAPE_RECTANGLE ){
+				profileType = RECTPROF;
+			}
+			else if ( shape == SHAPE_POLY ){
+				profileType = POLYPROF;
+			}
+			else {
+				//The shape is unknown so we assign the profile type based on the
+				//number of points in the region that was passed in.  In the case of
+				//two points, we choose rectangle over ellipse.
+				if ( regionPointCount == 1 ){
+					profileType = SINGPROF;
+				}
+				else if ( regionPointCount == 2 ){
+					profileType = RECTPROF;
+				}
+				else if ( regionPointCount > 2 ){
+					profileType = POLYPROF;
+				}
+				else {
+					profileType = UNKNPROF;
+				}
+			}
+		}
+
+
 
 	void QtProfile::updateRegion( int id_, viewer::region::RegionChanges type, const QList<double> &world_x, const QList<double> &world_y,
 	                              const QList<int> &pixel_x, const QList<int> &pixel_y ) {
@@ -1532,7 +1584,7 @@ namespace casa {
 		SpectraInfoMap::iterator it = spectra_info_map.find(id_);
 		if ( it == spectra_info_map.end( ) ) return;
 		QString shape = it->second.shape( );
-
+		assignProfileType( shape.toStdString(), world_x.size());
 		String c(WORLD_COORDINATES);
 
 		Vector<Double> px(pixel_x.size());
@@ -1581,7 +1633,7 @@ namespace casa {
 
 		//Get Profile Flux density v/s coordinateType
 		bool ok = assignFrequencyProfile( wxv,wyv, coordinateType, xaxisUnit,
-				z_xval,z_yval, shape.toStdString());
+				z_xval,z_yval, getRegionShape());
 
 		if ( !ok ) {
 			return;
@@ -2135,22 +2187,25 @@ namespace casa {
 
 	void QtProfile::setTitle(const ProfileType ptype){
 		QString smoothDescription = smoothWidget->toString();
+		if ( ptype != UNKNPROF ){
+			profileType = ptype;
+		}
 		switch (ptype) {
 			case SINGPROF:
 				pixelCanvas->setTitle("Single Point Profile"+smoothDescription);
-				region = "Point";
+				region = REGION_POINT;
 				break;
 			case RECTPROF:
 				pixelCanvas->setTitle("Rectangle Region Profile"+smoothDescription);
-				region = "Rect";
+				region = REGION_RECTANGLE;
 				break;
 			case ELLPROF:
 				pixelCanvas->setTitle("Elliptical Region Profile"+smoothDescription);
-				region = "Ellipse";
+				region = REGION_ELLIPSE;
 				break;
 			case POLYPROF:
 				pixelCanvas->setTitle("Polygon Region Profile"+smoothDescription);
-				region = "Poly";
+				region = REGION_POLY;
 				break;
 			case UNKNPROF:
 			{
@@ -2175,19 +2230,21 @@ namespace casa {
 
 	void QtProfile::setTitle( const QString& shape ) {
 		QString smoothDescription = smoothWidget->toString();
-		if ( shape == "point" ) {
+		String shapeStr( shape.toStdString());
+		if ( shapeStr == SHAPE_POINT ) {
 			pixelCanvas->setTitle("Single Point Profile"+smoothDescription);
-			region = "Point";
-		} else if ( shape == "rectangle" ) {
+			region = REGION_POINT;
+		} else if ( shapeStr == SHAPE_RECTANGLE ) {
 			pixelCanvas->setTitle("Rectangle Region Profile"+smoothDescription);
-			region = "Rect";
-		} else if ( shape == "ellipse" ) {
+			region = REGION_RECTANGLE;
+		} else if ( shapeStr == SHAPE_ELLIPSE ) {
 			pixelCanvas->setTitle("Elliptical Region Profile"+smoothDescription);
-			region = "Ellipse";
-		} else if ( shape == "polygon" ) {
+			region = REGION_ELLIPSE;
+		} else if ( shapeStr == SHAPE_POLY ) {
 			pixelCanvas->setTitle("Polygon Region Profile"+smoothDescription);
-			region = "Poly";
-		} else {
+			region = REGION_POLY;
+		}
+		else {
 			pixelCanvas->setTitle("");
 			region = "";
 		}
@@ -2746,14 +2803,21 @@ namespace casa {
 	}
 
 	String QtProfile::getRegionShape(){
-		String shapeStr( " ");
-		std::map<int,spectra_info>::iterator iter = spectra_info_map.find( current_region_id );
-		if ( iter != spectra_info_map.end() ){
-			QString shapeString = spectra_info_map[current_region_id].shape();
-			shapeStr = shapeString.toStdString();
+			String shape( "");
+			if ( profileType == RECTPROF ){
+				shape = SHAPE_RECTANGLE;
+			}
+			else if ( profileType == ELLPROF ){
+				shape = SHAPE_ELLIPSE;
+			}
+			else if ( profileType == POLYPROF ){
+				shape = SHAPE_POLY;
+			}
+			else if ( profileType == SINGPROF ){
+				shape = SHAPE_POINT;
+			}
+			return shape;
 		}
-		return shapeStr;
-	}
 
 	bool QtProfile::isFrequencyMatch(){
 		return isXUnitsMatch( FREQUENCY );
