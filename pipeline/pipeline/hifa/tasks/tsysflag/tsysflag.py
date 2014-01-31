@@ -998,7 +998,8 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
             viewresult = commonresultobjects.ImageResult(
               filename=tsystable.name, data=data,
               flag=flag, axes=axes, datatype='100 * MAD of normalised derivative',
-              spw=spwid, intent=intent, pol=pol)
+              spw=spwid, intent=intent, pol=corr_type[pol][0])
+
             # store the spectra contributing to this view as 'children'
             viewresult.children['tsysmedians'] = tsysmedians
             viewresult.children['tsysspectra'] = tsysspectra[pol]
