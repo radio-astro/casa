@@ -3802,7 +3802,11 @@ int main(int argc, char *argv[]) {
       string dummyMSName = vm["ms-directory-prefix"].as< string >();
       dummyMSName = lrtrim(dummyMSName);
       if (boost::algorithm::ends_with(dummyMSName, "/")) dummyMSName.erase(dummyMSName.size()-1);
+#if (BOOST_FILESYSTEM_VERSION == 3)
+      boost::filesystem::path msPath(lrtrim(dummyMSName));
+#else
       boost::filesystem::path msPath(lrtrim(dummyMSName),&boost::filesystem::no_check);
+#endif
       string msDirectory = msPath.branch_path().string();
       msDirectory = lrtrim(msDirectory);
       if (msDirectory.size() == 0) msDirectory = ".";
