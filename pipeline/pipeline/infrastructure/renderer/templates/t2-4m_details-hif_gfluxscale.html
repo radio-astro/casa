@@ -65,7 +65,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 			field_id = f.id
 		%>
 			<td rowspan="${len(single_result.measurements[field])}">${'%s (#%s)'%(field_name, field_id)}</td>
-		% for flux in sorted(single_result.measurements[field], key=lambda m: m.spw_id):
+		% for flux in sorted(single_result.measurements[field], key=lambda m: int(m.spw_id)):
 <% 
 try:
 	u = {}
