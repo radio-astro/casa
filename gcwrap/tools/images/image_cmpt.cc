@@ -610,19 +610,18 @@ image::adddegaxes(
 
 ::casac::record*
 image::boundingbox(const record& region) {
-	::casac::record *rstat = 0;
 	try {
 		_log << _ORIGIN;
-		if (detached())
-			return rstat;
+		if (detached()) {
+			return 0;
+		}
 		Record *Region = toRecord(region);
-		rstat = fromRecord(*_image->boundingbox(*Region));
-	} catch (AipsError x) {
+		return fromRecord(*_image->boundingbox(*Region));
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 std::string image::brightnessunit() {
@@ -634,7 +633,7 @@ std::string image::brightnessunit() {
 		} else {
 			rstat = "";
 		}
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -648,13 +647,11 @@ bool image::calc(const std::string& expr) {
 		if (detached()) {
 			return False;
 		}
-
-		if (_image->calc(expr)) {
-			_stats.reset(0);
-			return True;
-		}
-		throw AipsError("Error calculating " + expr);
-	} catch (const AipsError& x) {
+		_image->calc(expr);
+		_stats.reset(0);
+		return True;
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
@@ -1108,19 +1105,18 @@ record* image::beamforconvolvedsize(
 		GaussianBeam neededBeam;
 		try {
 			if (mySource.deconvolve(neededBeam, myConvolved)) {
-				// result is a point source which is non-physical in this
-				// case, so throw an exception
-				_log << "Unable to reach target resolution of "
-					<< myConvolved << " Input source "
-					<< mySource << " is probably too large."
-					<< LogIO::EXCEPTION;
+				// throw without a message here, it will be caught
+				// in the associated catch block and a new error will
+				// be thrown with the appropriate message.
+				throw AipsError();
 			}
 		}
 		catch (const AipsError& x) {
-			_log << "Unable to reach target resolution of "
+			ostringstream os;
+			os << "Unable to reach target resolution of "
 				<< myConvolved << " Input source "
-				<< mySource << " is probably too large."
-				<< LogIO::EXCEPTION;
+				<< mySource << " is probably too large.";
+			throw AipsError(os.str());
 		}
 		Record ret;
 		QuantumHolder qh(neededBeam.getMajor());
@@ -1133,7 +1129,7 @@ record* image::beamforconvolvedsize(
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
 }

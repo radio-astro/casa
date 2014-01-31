@@ -2459,7 +2459,8 @@ im3.done()
 <description>
 
 This function finds the bounding box of a
-region of interest when it is applied to a particular image.  It is
+region of interest when it is applied to a particular image. Both
+float and complex valued images are supported. It is
 returned in a record which has fields {\cf `blc', `trc', `inc',
 `bbShape', `regionShape', `imageShape', `blcf'} and {\cf `trcf'}
 containing the bottom-left corner, the top-right corner (in absolute
@@ -2571,7 +2572,11 @@ ia.close()
 
 This function is used to evaluate a mathematical expression involving
 \casa\ images, assigning the result to the current (already existing) 
-image.  It complements the <link anchor="images:image.imagecalc.constructor">imagecalc</link>
+image. Both float and complex valued images are supported, although the
+image which results from the calculation must have the same type of pixel
+values as the image already attached to the tool. That is, one cannot
+create a complex valued image using this method if the associated ia tool
+is currently attached to a float valued image.  It complements the <link anchor="images:image.imagecalc.constructor">imagecalc</link>
 function which returns a newly constructed on-the-fly image tool.  See \htmladdnormallink{note 223}{../../notes/223/223.html}
 which describes the the syntax and functionality in detail.
 
@@ -3645,9 +3650,6 @@ print 'pa=',recout['fit']['pa']
 <method type="function" name="beamforconvolvedsize">
    <shortdescription>Determine the size of the beam necessary to convolve with the given source to reach the given convolved (source+beam) size</shortdescription>
 
-<description>
-    Determine the size of the beam necessary to convolve with the given source to reach the given convolved (source+beam) size.
-</description>
 
 <input>
   <param type="any"  name="source">
@@ -3665,6 +3667,14 @@ print 'pa=',recout['fit']['pa']
   <description> record containing the necessary beam Gaussian parameters</description>
 </returns>
 
+
+
+<description>
+    Determine the size of the beam necessary to convolve with the given source to reach the
+    given convolved (source+beam) size. Because the problem is completely specified by the
+    input parameters, no image needs to be attached to the associated tool; eg ia.open() need
+    not be called prior to calling this method.
+</description>
 <example>
 
 # get the beam necessary to convolve the specified source with to achieve the target convolved source size (source convolved with beam).
