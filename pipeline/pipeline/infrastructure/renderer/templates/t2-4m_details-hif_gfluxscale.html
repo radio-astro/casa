@@ -1,5 +1,6 @@
 <%!
 rsc_path = ""
+import decimal
 import os
 import pipeline.domain.measures as measures
 import pipeline.infrastructure.renderer.htmlrenderer as hr
@@ -74,7 +75,7 @@ try:
 		unc_jy = unc.to_units(measures.FluxDensityUnits.JANSKY)
 
 		if flux_jy != 0 and unc_jy != 0:
-			u[stokes] = ' &#177; %s (%0.1f%%)' % (str(unc), unc_jy/flux_jy)	
+			u[stokes] = ' &#177; %s (%0.1f%%)' % (str(unc), decimal.Decimal('100')*(unc_jy/flux_jy))	
 		else:
 			u[stokes] = ''
 except:
