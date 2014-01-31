@@ -374,18 +374,17 @@ namespace casa {
 			        displaytype == "vector"	||
 			        displaytype == "marker" ) {
 				QtDisplayData *result = 0;
+				viewer::DisplayDataOptions ddo;
 
-				dpg->autoDDOptionsShow = False;
-				result = dpg->createDD(to_string(path), datatype, to_string(displaytype), false);
-				dpg->displayPanel()->registerDD(result);
 				if ( scaling != 0.0 ) {
-					Record rec;
-					rec.define( "powercycles", scaling );
-					result->setOptions(rec,true);
+					char buf[1024];
+					sprintf( buf, "%f", scaling );
+					ddo.insert( "powercycles", buf );
 				}
-				dpg->autoDDOptionsShow = True;
 
-				dpg->addedData( displaytype, result );
+				result = dpg->createDD( to_string(path), datatype, to_string(displaytype), true,
+										-1, false, false, false, ddo );
+
 				return QDBusVariant(QVariant(get_id( dpg, result, path, displaytype )));
 			}
 		}
