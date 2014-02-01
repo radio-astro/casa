@@ -83,9 +83,10 @@ namespace casa {
 
 
 		Polyline::Polyline( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, bool hold_signals) :
-			Region( "polyline", wc, rs->dock( ), new QtSliceCutState(QString("polyline")), hold_signals ),
+			Region( "polyline", wc, rs->dock( ), hold_signals, new QtSliceCutState(QString("polyline")) ),
 			_ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
 			_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1) {
+			mystate->setRegion(this);
 			_ref_points_.push_back(pt(x1,y1));
 			_drawing_points_.push_back(pt(x1,y1));
 			initPlot();

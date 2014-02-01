@@ -4708,6 +4708,7 @@ Record Imager::setjy(const Vector<Int>& /*fieldid*/,
       for (std::vector<int>::const_iterator it=tmpv.begin();it != tmpv.end(); it++)
       {
          fldids(count) = *it;
+         count++;
       }
     }
     //else {

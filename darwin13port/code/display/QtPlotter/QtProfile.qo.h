@@ -340,6 +340,7 @@ namespace casa {
 		double getUnitsPerChannel( ImageAnalysis* analysis, bool* ok, const QString& matchUnits );
 		QString readTopAxis() const;
 		void persistTopAxis( const QString& units );
+		void assignProfileType( const String& shape, int regionPointCount );
 		void addOverplotToCanvas( ImageAnalysis* ana, const Vector<Float>& xVals, const
 					Vector<Float>& yVals, const QString& ky );
 		QList<OverplotAnalysis> *over;
@@ -409,6 +410,14 @@ namespace casa {
 		static const QString IMAGE_MISSING_ERROR;
 		static const QString MISSING_REGION_ERROR;
 		static const QString NO_PROFILE_ERROR;
+		static const QString REGION_ELLIPSE;
+		static const QString REGION_RECTANGLE;
+		static const QString REGION_POINT;
+		static const QString REGION_POLY;
+		static const String SHAPE_ELLIPSE;
+		static const String SHAPE_RECTANGLE;
+		static const String SHAPE_POINT;
+		static const String SHAPE_POLY;
 
 		class spectra_info {
 		public:
@@ -431,7 +440,7 @@ namespace casa {
 		const int NO_REGION_ID;
 		int current_region_id;
 		SpectraInfoMap spectra_info_map;
-
+		ProfileType profileType;
 
 		ColorSummaryWidget* colorSummaryWidget;
 		LegendPreferences* legendPreferencesDialog;

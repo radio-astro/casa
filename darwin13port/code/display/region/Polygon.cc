@@ -46,7 +46,7 @@ namespace casa {
 	namespace viewer {
 
 		Polygon::Polygon( WorldCanvas *wc, QtRegionDock *d, double x1, double y1 ) :
-			Region( "polygon", wc, d ),
+			Region( "polygon", wc, d, 0 ),
 			_ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
 			_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1) {
 			_ref_points_.push_back(pt(x1,y1));
@@ -65,7 +65,7 @@ namespace casa {
 
 
 		Polygon::Polygon( WorldCanvas *wc, QtRegionDock *d, const std::vector<std::pair<double,double> > &pts) :
-			Region( "polygon", wc, d ), _ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
+			Region( "polygon", wc, d, 0 ), _ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
 			_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1) {
 			for ( size_t i=0; i < pts.size(); ++i ) {
 				_ref_points_.push_back(pt(pts[i].first,pts[i].second));

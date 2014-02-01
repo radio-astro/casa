@@ -58,8 +58,8 @@ namespace casa {
 	namespace viewer {
 
 		PVLine::PVLine( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2,
-		                bool hold_signals ) :	Region( "p/v line", wc, d,
-			                        new QtPVLineState(QString("p/v line")),hold_signals ),
+		                bool hold_signals ) :	Region( "p/v line", wc, d, hold_signals,
+			                                            new QtPVLineState(QString("p/v line")) ),
 			pt1_x(x1), pt1_y(y1), pt2_x(x2), pt2_y(y2), display_width(0),
 			sub_dpg(0), draw_cursor_point(false) {
 			// center_x = linear_average(pt1_x,pt2_x);
@@ -71,9 +71,11 @@ namespace casa {
 
 		// carry over from QtRegion... hopefully, removed soon...
 		PVLine::PVLine( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, double x2, double y2,
-		                bool hold_signals) : Region( "p/v line", wc, rs->dock( ), new QtPVLineState(QString("p/v line")), hold_signals ),
+		                bool hold_signals) : Region( "p/v line", wc, rs->dock( ), hold_signals,
+			                                         new QtPVLineState(QString("p/v line")) ),
 			pt1_x(x1), pt1_y(y1),
 			pt2_x(x2), pt2_y(y2), display_width(0), sub_dpg(0), draw_cursor_point(false) {
+			mystate->setRegion(this);
 			// center_x = linear_average(pt1_x,pt2_x);
 			// center_y = linear_average(pt1_y,pt2_y);
 			initHistogram();
@@ -85,8 +87,7 @@ namespace casa {
 		PVLine::PVLine( const std::string &name, WorldCanvas *wc, QtRegionDock *d, double x1,
 		                double y1, double x2, double y2, bool hold_signals,
 		                QtMouseToolNames::PointRegionSymbols sym ) :
-			Region( name, wc, d, new QtPVLineState(QString("p/v line"), sym ),
-			        hold_signals ), pt1_x(x1),
+			Region( name, wc, d, hold_signals, new QtPVLineState(QString("p/v line"), sym ) ), pt1_x(x1),
 			pt1_y(y1), pt2_x(x2), pt2_y(y2), display_width(0), sub_dpg(0), draw_cursor_point(false) {
 			complete = true;
 			refresh_state_gui( );	/*** update position info ***/

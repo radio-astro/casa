@@ -812,6 +812,7 @@ void QtDisplayPanelGui::animationImageChanged( int index ){
 	if ( regionDock_ != NULL ){
 		regionDock_->updateStackOrder( animationImageIndex );
 	}
+	resetListenerImage();
 }
 
 void QtDisplayPanelGui::globalColorSettingsChanged( bool global ) {
@@ -854,11 +855,17 @@ void QtDisplayPanelGui::showHistogram() {
 	if ( histogrammer == NULL ) {
 		this->initHistogramHolder();
 	}
-	//Send it the latest image
-	resetListenerImage();
 
 	//Image updates
 	connect( qdp_, SIGNAL(registrationChange()), this, SLOT(resetListenerImage()), Qt::UniqueConnection );
+
+	//Send it the latest image
+	resetListenerImage();
+	histogrammer->showNormal();
+	histogrammer->raise();
+}
+
+void QtDisplayPanelGui::generateHistogramRegionUpdates(){
 	//Region updates
 	PanelDisplay* panelDisplay = qdp_->panelDisplay();
 	std::tr1::shared_ptr<QtCrossTool> pos = std::tr1::dynamic_pointer_cast<QtCrossTool>(panelDisplay->getTool(QtMouseToolNames::POINT));
@@ -899,31 +906,35 @@ void QtDisplayPanelGui::disconnectHistogram() {
 }
 
 void QtDisplayPanelGui::resetListenerImage() {
-	QtDisplayData* controllingDD = dd();
-	if ( controllingDD != NULL ) {
-		std::tr1::shared_ptr<ImageInterface<float> > img = /*pdd*/controllingDD->imageInterface();
-		if ( sliceTool != NULL ) {
-			sliceTool->setImage( img );
-		}
-
-		if ( histogrammer != NULL ) {
-			histogrammer->setImage( img );
-			const viewer::ImageProperties & imgProperties = /*pdd*/controllingDD->imageProperties( );
-			if ( imgProperties.hasSpectralAxis() ) {
-				int spectralAxisNum = imgProperties.spectralAxisNumber();
-				const Vector<int> imgShape = imgProperties.shape();
-				int channelCount = imgShape[spectralAxisNum];
-				histogrammer->setChannelCount( channelCount );
-			} else {
-				histogrammer->setChannelCount( 1 );
+	if (qdp_ != NULL ){
+		QtDisplayData* mainImage = qdp_->getChannelDD( animationImageIndex );
+		if ( mainImage != NULL ) {
+			std::tr1::shared_ptr<ImageInterface<float> > img = mainImage->imageInterface();
+			if ( sliceTool != NULL ) {
+				sliceTool->setImage( img );
+				generateSliceRegionUpdates();
 			}
-		}
 
-	} else {
-		if ( histogrammer != NULL ) {
-			histogrammer->setImage( std::tr1::shared_ptr<ImageInterface<Float> >() );
-		}
+			if ( histogrammer != NULL ) {
+				histogrammer->setImage( img );
+				const viewer::ImageProperties & imgProperties = mainImage->imageProperties( );
+				if ( imgProperties.hasSpectralAxis() ) {
+					int spectralAxisNum = imgProperties.spectralAxisNumber();
+					const Vector<int> imgShape = imgProperties.shape();
+					int channelCount = imgShape[spectralAxisNum];
+					histogrammer->setChannelCount( channelCount );
+				} else {
+					histogrammer->setChannelCount( 1 );
+				}
+				generateHistogramRegionUpdates();
+			}
 
+		} else {
+			if ( histogrammer != NULL ) {
+				histogrammer->setImage( std::tr1::shared_ptr<ImageInterface<Float> >() );
+			}
+
+		}
 	}
 }
 
@@ -1112,9 +1123,8 @@ void QtDisplayPanelGui::showCleanTool( ) {
 }
 
 void QtDisplayPanelGui::ddRegChange_() {
-	//A segfault can be generated if we try to add a track box when
-	//it is not visible.
-	if ( trkgDockWidget_ != NULL && trkgDockWidget_->isVisible()){
+
+	if ( trkgDockWidget_ != NULL ){
 		arrangeTrackBoxes_();
 	}
 	updateFrameInformation();
@@ -1632,6 +1642,7 @@ void QtDisplayPanelGui::notifyDDRemoval( QtDisplayData* qdd ){
 
 Bool QtDisplayPanelGui::removeDD(QtDisplayData*& qdd) {
 	bool removed = displayDataHolder->removeDD( qdd );
+
 	//In case we are removing the coordinate master.
 	if ( displayDataHolder->isCoordinateMaster( qdd) && qdp_!= NULL ){
 		qdp_->setControllingDD( NULL );
@@ -2316,6 +2327,9 @@ void QtDisplayPanelGui::initializeProfile( ){
 		connect( this, SIGNAL(frameChanged(int)), profile_, SLOT(frameChanged(int)));
 		connect( profile_, SIGNAL(movieChannel(int,int)), this, SLOT(movieChannels(int, int)));
 		connect( profile_, SIGNAL(reloadImages()), this, SLOT(resetImageProfile()));
+		connect( this, SIGNAL(overlay(QList<OverplotInterface>)),
+								profile_, SLOT(overplot(QList<OverplotInterface>)));
+
 		PanelDisplay* ppd = qdp_->panelDisplay();
 		connectRegionSignals(ppd);
 		profileDD_ = NULL;
@@ -2397,8 +2411,7 @@ void QtDisplayPanelGui::showImageProfile() {
 	}
 
 	if ( channelDDFound ){
-		connect( this, SIGNAL(overlay(QList<OverplotInterface>)),
-				profile_, SLOT(overplot(QList<OverplotInterface>)));
+
 		emit overlay(overlays);
 
 		PanelDisplay* ppd = qdp_->panelDisplay();
@@ -3182,12 +3195,18 @@ void QtDisplayPanelGui::showSlicer() {
 
 		//Image updates
 		connect( qdp_, SIGNAL(registrationChange()), this, SLOT(resetListenerImage()), Qt::UniqueConnection );
-		resetListenerImage();
+
 
 		//Update the polyline with the new slice position
 		connect(sliceTool, SIGNAL(markerPositionChanged(int,int,float)), this, SLOT(sliceMarkerPositionChanged(int,int,float)));;
 		connect(sliceTool, SIGNAL(markerVisibilityChanged(int,bool)), this, SLOT(sliceMarkerVisibilityChanged(int,bool)));
+		resetListenerImage();
+	}
+	sliceTool->show();
+}
 
+void QtDisplayPanelGui::generateSliceRegionUpdates(){
+	if ( qdp_ != NULL ){
 		//Region updates
 		PanelDisplay* panelDisplay = qdp_->panelDisplay();
 		std::tr1::shared_ptr<QtPolylineTool> pos = std::tr1::dynamic_pointer_cast<QtPolylineTool>(panelDisplay->getTool(QtMouseToolNames::POLYLINE));
@@ -3213,7 +3232,6 @@ void QtDisplayPanelGui::showSlicer() {
 
 
 	}
-	sliceTool->show();
 }
 
 void QtDisplayPanelGui::updateDDMenus_(Bool /*doCloseMenu*/) {

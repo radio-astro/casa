@@ -383,7 +383,11 @@ template <class	T, class R, class RFilter>
 	    std::ostringstream oss;
 	    oss.str("");
 	    oss << "Appended " << filteredRows.size() << " rows to the MS SYSPOWER table." << endl;
-	    LogSink::postGlobally(LogMessage(oss.str(), LogOrigin((boost::filesystem::path(getexepath())).string(), WHERE),
+#if (BOOST_FILESYSTEM_VERSION == 3)
+	    LogSink::postGlobally(LogMessage(oss.str(), LogOrigin((boost::filesystem::path(getexepath())).filename().string(), WHERE),
+#else
+	    LogSink::postGlobally(LogMessage(oss.str(), LogOrigin((boost::filesystem::path(getexepath())).filename(), WHERE),
+#endif
 					     LogMessage::NORMAL
 					     )
 				  );	
@@ -431,7 +435,11 @@ template <class	T, class R, class RFilter>
 	    std::ostringstream oss;
 	    oss.str("");
 	    oss << "Appended " << filteredRows.size() << " rows to the MS SYSPOWER table." << endl;
-	    LogSink::postGlobally(LogMessage(oss.str(), LogOrigin((boost::filesystem::path(getexepath())).string(), WHERE),
+#if (BOOST_FILESYSTEM_VERSION == 3)
+	    LogSink::postGlobally(LogMessage(oss.str(), LogOrigin((boost::filesystem::path(getexepath())).filename().string(), WHERE),
+#else
+	    LogSink::postGlobally(LogMessage(oss.str(), LogOrigin((boost::filesystem::path(getexepath())).filename(), WHERE),
+#endif
 					     LogMessage::NORMAL
 					     )
 				  );	

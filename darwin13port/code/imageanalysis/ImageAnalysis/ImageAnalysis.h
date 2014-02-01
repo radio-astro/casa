@@ -146,11 +146,11 @@ class ImageAnalysis
         const Bool stretch=False
     );
 
-    Record* boundingbox(const Record& region);
+    Record* boundingbox(const Record& region) const;
 
     String brightnessunit();
 
-    Bool calc(const String& pixels);
+    void calc(const String& pixels);
 
     // regions should be a Record of Records having different regions
 
@@ -705,6 +705,11 @@ class ImageAnalysis
     	const CoordinateSystem& csys, const LELImageCoord* const imCoord,
     	const String& outfile,
     	Bool overwrite, const String& expr
+    );
+
+    template<class T> void _calc(
+    	std::tr1::shared_ptr<ImageInterface<T> > image,
+    	const LatticeExprNode& node
     );
 
 };

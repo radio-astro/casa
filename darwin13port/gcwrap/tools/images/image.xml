@@ -373,6 +373,7 @@ means that you don't need to (and can't !) reorder images.
 <example> 
 \bigskip
 Here are some simple examples using image tools.
+\begin{verbatim}
 
 """
 #
@@ -392,6 +393,7 @@ im2.done()      # Release tool resources - disk file unaffected
 ia.close()      # DO NOT DONE DEFAULT IMAGE TOOL ia!!!
 #
 """
+\end{verbatim}
 
 <!--#ia.view()                           # Display image-->
 </example>
@@ -406,7 +408,7 @@ that you don't have to convert  the file to native \casa\ format
 in order to access the image.   For example:
 
 <example> 
-
+\begin{verbatim}
 """
 #
 print "\t----\t Intro Ex 2 \t----"
@@ -431,6 +433,7 @@ subim.done()                    # done on-the-fly image tool
 ia.close()                      # close (not done) default image analysis tool
 #
 """
+\end{verbatim}
 
 Each of these Image tools has access to all the same \toolfunctions.
 </example>
@@ -527,7 +530,7 @@ anchor="images:image.calc.function">calc</link> \tool\ functions.
 Here are some examples.
 
 <example> 
-
+	\begin{verbatim}
 """
 #
 print "\t----\t Intro Ex 3 \t----"
@@ -536,6 +539,7 @@ ia.calc('zz + min(zz)')                # Make the minimum value zero
 ia.close()
 #
 """
+\end{verbatim}
 
 <!--
 #myim = ia.maketestimage()         # Make virtual test image
@@ -562,7 +566,7 @@ Note that for image file names with special characters in them (like a
 dash for example), you should (double) escape those characters or put
 the file name in double quotes. E.g.
 
-
+\begin{verbatim}
 """
 #
 print "\t----\t Intro Ex 4 \t----"
@@ -574,7 +578,7 @@ im2.done()
 ia.close()
 #
 """
-
+\end{verbatim}
 </example>
           
 
@@ -691,7 +695,7 @@ might then make the \pixelmask\ persistent with the
 <link anchor="images:image.calcmask.function">calcmask</link> function. 
 
 <example> 
-
+	\begin{verbatim}
 """
 #
 print "\t----\t Intro Ex 6 \t----"
@@ -700,7 +704,7 @@ print "\t----\t Intro Ex 6 \t----"
 #myim.calcmask (mask='rmerr\&lt;20')     # Make persistent mask
 #
 """
-
+\end{verbatim}
 <!-- #myim.view(mask='rmerr\&lt;20')-->
 </example>
 
@@ -708,7 +712,7 @@ print "\t----\t Intro Ex 6 \t----"
 Finally, a subtlety that is worth explaining.
 
 <example> 
-
+	\begin{verbatim}
 """
 #
 print "\t----\t Intro Ex 7 \t----"
@@ -718,13 +722,13 @@ ia.statistics(mask='mask(zz) \&amp;\&amp; zz>0')     # Mask of zz used
 ia.close()
 #
 """
-
+\end{verbatim}
 
 In the first example, any default mask associated with the image {\sff
 zz} is ignored.  Only the pixel values are looked at.  In the second
 example, the mask of {\sff zz} is also taken into account via the LEL
 {\cf mask} function. That is, the transient output mask is T (good) only when
-the mask of {\sff zz} is T and the expression {\cf zz\&gt;0} is T.
+the mask of {\sff zz} is T and the expression {\cf zz$\&gt;$0} is T.
 
 </example>
 
@@ -738,7 +742,7 @@ upon selected pixel coordinates or indices (specified 0-rel) rather
 than image values.  For example
 
 \goodbreak
-
+\begin{verbatim}
 """
 #
 print "\t----\t Intro Ex 8 \t----"
@@ -749,14 +753,14 @@ print ia.getregion(mask='indexin(0, [4:9, 14, 18:19])',getmask=true)
 ia.close()
 #
 """
-
+\end{verbatim}
 
 You can see the mask is good (T) for the specified indices along the
 specified axis.  You can also pass in a premade variable for the
 specification if you like, viz.
 
 \goodbreak
-
+\begin{verbatim}
 """
 #
 print "\t----\t Intro Ex 9 \t----"
@@ -769,6 +773,7 @@ print ia.getregion(mask='indexin('+axis+','+sel+')',getmask=true)
 ia.close()
 #
 """
+\end{verbatim}
 
 
 This capability is useful for fitting functions.
@@ -811,7 +816,7 @@ is applied equally to the image and the {\stfaf mask} expression.
 For example
 
 <example> 
-
+	\begin{verbatim}
 """
 #
 print "\t----\t Intro Ex 10 \t----"
@@ -826,7 +831,7 @@ print "\t----\t Intro Ex 10 \t----"
                                               # 'rmerr' and 'rm'
 #
 """
-
+\end{verbatim}
 </example>
 
 <!--
@@ -2441,7 +2446,8 @@ im3.done()
 <description>
 
 This function finds the bounding box of a
-region of interest when it is applied to a particular image.  It is
+region of interest when it is applied to a particular image. Both
+float and complex valued images are supported. It is
 returned in a record which has fields {\cf `blc', `trc', `inc',
 `bbShape', `regionShape', `imageShape', `blcf'} and {\cf `trcf'}
 containing the bottom-left corner, the top-right corner (in absolute
@@ -2553,7 +2559,11 @@ ia.close()
 
 This function is used to evaluate a mathematical expression involving
 \casa\ images, assigning the result to the current (already existing) 
-image.  It complements the <link anchor="images:image.imagecalc.constructor">imagecalc</link>
+image. Both float and complex valued images are supported, although the
+image which results from the calculation must have the same type of pixel
+values as the image already attached to the tool. That is, one cannot
+create a complex valued image using this method if the associated ia tool
+is currently attached to a float valued image.  It complements the <link anchor="images:image.imagecalc.constructor">imagecalc</link>
 function which returns a newly constructed on-the-fly image tool.  See \htmladdnormallink{note 223}{../../notes/223/223.html}
 which describes the the syntax and functionality in detail.
 
@@ -3394,12 +3404,12 @@ at a particular location at a particular time.
      </param>
   
      <param type="int"  name="ncontour">
-     <description>Number of contours to use in deblending (\&gt;= 2)</description>
+     <description>Number of contours to use in deblending $(\&gt;= 2)$</description>
      <value>11</value>
      </param>
   
      <param type="int"  name="minrange">
-     <description>Minimum number of closed contours in a component (\&gt; 0)</description>
+     <description>Minimum number of closed contours in a component $(\&gt; 0)$</description>
      <value>1</value>
      </param>
   
@@ -3414,22 +3424,22 @@ at a particular location at a particular time.
      </param>
   
      <param type="double"  name="maxrms">
-     <description>Maximum RMS of fit residuals to not retry fit (\&gt; 0).  Default is unset.</description>
+     <description>Maximum RMS of fit residuals to not retry fit $(\&gt; 0)$.  Default is unset.</description>
      <value>-1</value>
      </param>
   
      <param type="int"  name="maxretry">
-     <description>Maximum number of times to retry the fit (\&gt;= 0).  Default is unset.</description>
+     <description>Maximum number of times to retry the fit $(\&gt;= 0)$.  Default is unset.</description>
      <value>-1</value>
      </param>
   
      <param type="int"  name="maxiter">
-     <description>Maximum number of iterations allowed in a single fit (\&gt; 0)</description>
+     <description>Maximum number of iterations allowed in a single fit $(\&gt; 0)$</description>
      <value>256</value>
      </param>
   
      <param type="double"  name="convcriteria">
-     <description>Criterion to establish convergence (\&gt;=0)</description>
+     <description>Criterion to establish convergence $(\&gt;=0)$</description>
      <value>0.0001</value>
      </param>
      <param type="bool"  name="stretch">
@@ -3627,9 +3637,6 @@ print 'pa=',recout['fit']['pa']
 <method type="function" name="beamforconvolvedsize">
    <shortdescription>Determine the size of the beam necessary to convolve with the given source to reach the given convolved (source+beam) size</shortdescription>
 
-<description>
-    Determine the size of the beam necessary to convolve with the given source to reach the given convolved (source+beam) size.
-</description>
 
 <input>
   <param type="any"  name="source">
@@ -3647,6 +3654,14 @@ print 'pa=',recout['fit']['pa']
   <description> record containing the necessary beam Gaussian parameters</description>
 </returns>
 
+
+
+<description>
+    Determine the size of the beam necessary to convolve with the given source to reach the
+    given convolved (source+beam) size. Because the problem is completely specified by the
+    input parameters, no image needs to be attached to the associated tool; eg ia.open() need
+    not be called prior to calling this method.
+</description>
 <example>
 
 # get the beam necessary to convolve the specified source with to achieve the target convolved source size (source convolved with beam).
@@ -3941,7 +3956,7 @@ ia.removefile('p.im')
 <input>
   
      <param type="int"  name="nmax">
-	     <description>Maximum number of sources to find, \&gt; 0</description>
+	     <description>Maximum number of sources to find, $\&gt; 0$</description>
      <value>20</value>
      </param>
   
@@ -4052,7 +4067,7 @@ We use the Componentlist GUI to look at the strongest component.
             <value></value>
         </param>
         <param type="int"  name="axis">
-            <description>The profile axis. Default: use the spectral axis if one exists, axis 0 otherwise (\&lt;0).</description>
+            <description>The profile axis. Default: use the spectral axis if one exists, axis 0 otherwise $(\&lt;0)$.</description>
             <value>-1</value>
         </param>
         <param type="any"  name="mask">
@@ -4065,7 +4080,7 @@ We use the Componentlist GUI to look at the strongest component.
             <value>1</value>
         </param>
         <param type="int"  name="poly">
-            <description>Order of polynomial element.  Default: do not fit a polynomial (\&lt;0).</description>
+            <description>Order of polynomial element.  Default: do not fit a polynomial $(\&lt;0)$.</description>
             <value>-1</value>
         </param>
         <param type="string"  name="estimates">
@@ -4194,12 +4209,12 @@ We use the Componentlist GUI to look at the strongest component.
             <value/>
         </param>
         <param type="boolArray" name="spxfix">
-            <description>Fix the corresponding spectral index function coefficients during the fit. True=\&gt;hold fixed.</description>
+            <description>Fix the corresponding spectral index function coefficients during the fit. True=$\&gt;$hold fixed.</description>
             <value/>
         </param>
         <param type="any" name="div">
             <any type="variant"/>
-            <description>Divisor (numerical value or quantity) to use in the logarithmic terms of the plp or ltp function. 0 =\&gt; calculate a useful value on the fly.</description>
+            <description>Divisor (numerical value or quantity) to use in the logarithmic terms of the plp or ltp function. 0 $=\&gt;$ calculate a useful value on the fly.</description>
             <value>0</value>
         </param>
         <param type="string" name="spxsol">
@@ -4224,15 +4239,15 @@ We use the Componentlist GUI to look at the strongest component.
             <value type="string"/>
         </param>
         <param type="doubleArray"  name="goodamprange">
-            <description>Acceptable amplitude solution range. [0.0] =\&gt; all amplitude solutions are acceptable.</description>
+            <description>Acceptable amplitude solution range. [0.0] $=\&gt;$ all amplitude solutions are acceptable.</description>
             <value>0.0</value>
         </param>
         <param type="doubleArray"  name="goodcenterrange">
-            <description>Acceptable center solution range in pixels relative to region start. [0.0] =\&gt; all center solutions are acceptable.</description>
+            <description>Acceptable center solution range in pixels relative to region start. [0.0] $=\&gt;$ all center solutions are acceptable.</description>
             <value>0.0</value>
         </param>
         <param type="doubleArray"  name="goodfwhmrange">
-            <description>Acceptable FWHM solution range in pixels. [0.0] =\&gt; all FWHM solutions are acceptable.</description>
+            <description>Acceptable FWHM solution range in pixels. [0.0] $=\&gt;$ all FWHM solutions are acceptable.</description>
             <value>0.0</value>
         </param>
         <param type="any"  name="sigma">
@@ -4290,7 +4305,7 @@ initial estimatE for the new fit. This process should be repeated until the solu
 The convergent solution is very likely the best solution.
 
 AXIS
-The axis parameter indicates on which axis profiles should be fit; a value \&lt;0 indicates the spectral axis should be used, or if one does not exist,
+The axis parameter indicates on which axis profiles should be fit; a value $\&lt;0$ indicates the spectral axis should be used, or if one does not exist,
 that the zeroth axis should be used.
 
 MINIMUM NUMBER OF PIXELS
@@ -4302,7 +4317,7 @@ The multifit parameter indicates if profiles should be fit at each pixel in the 
 averaged and the fit done to that average profile (false).
 
 POLYNOMIAL FITTING
-The order of the polynomial to fit is specified only via the poly parameter. If poly\&lt;0, no polynomial will be fit. No initial estimates of
+The order of the polynomial to fit is specified only via the poly parameter. If poly$\&lt;0$, no polynomial will be fit. No initial estimates of
 coefficients can be specified; these are determined automatically.
 
 GAUSSIAN SINGLET FITTING
@@ -4310,7 +4325,7 @@ In the absence of an estimates file and no estimates being specified by the p*es
 indicates the maximum number of gaussian singlets that should be fit. The initial estimates of the parameters for these gaussians will be attempted
 automatically in this case. If it deems appropriate, the fitter will fit fewer than this number. In the case where an estimates file is supplied,
 ngauss is ignored (see below). ngauss is also ignored if the p*est parameters are specified or if gmncomps is not an empty array or, if an integer,
-is greater than zero. If estimates is not specified or the p*est parameters are not specified and ngauss=0, gmncomps is empty or 0, and poly\&lt;0,
+is greater than zero. If estimates is not specified or the p*est parameters are not specified and ngauss=0, gmncomps is empty or 0, and poly$\&lt;0$,
 an error will occur as this indicates there is nothing to fit.
 
 One can specify initial estimates of gaussian singlet parameters via an estimates file or the pampest, pcenterest, pfwhmest, and optionally, the
@@ -4377,8 +4392,8 @@ GAUSSIAN MULTIPLET FITTING
 Any number of gaussian multiplets, each containing any number of two or more components, can be simultaneously fit, optionally with a
 polynomial and/or any number of gaussian and/or lorentzian singlets, the only caveat being that the number of parameters to be fit should be
 significantly less than the number of data points. The gmncomps parameter indicates the number of multiplets to fit and the number of
-components in each multiplet. In the case of a single multiplet, an integer (\&gt;1) can be specified. For example, mgncomps=4 means fit a
-single quadruplet of gaussians. In the case of 2 or more multiplets, and array of integers (all \&gt;1) must be specified. For example,
+components in each multiplet. In the case of a single multiplet, an integer $(\&gt;1)$ can be specified. For example, mgncomps=4 means fit a
+single quadruplet of gaussians. In the case of 2 or more multiplets, and array of integers $(all \&gt;1)$ must be specified. For example,
 gmncomps=[2, 4, 3] means 3 seperate multiples are to be fit, the zeroth being a doublet, the first being a quadruplet, and the second
 being a triplet.
 
@@ -4520,7 +4535,7 @@ attempted: a boolean array indicating which fits were attempted (eg if too few u
 converged: a boolean array indicating which fits converged. False if the fit was not attempted.
 valid:     a boolean array indicating which solutions fall within the specified valid ranges of parameter space (see
            section LIMITING RANGES FOR SOLUTION PARAMETERS for details).
-niter:     an int array indicating the number of iterations for each profile, \&lt;0 if the fit did not converge
+niter:     an int array indicating the number of iterations for each profile, $\&lt;0$ if the fit did not converge
 ncomps:    the number of components (gaussian singlets + lorentzian singlets + gaussian multiplets + polynomial) fit for the profile,
            \&lt;0 if the fit did not converge
 direction: a string array containing the world direction coordinate for each profile
@@ -4765,7 +4780,7 @@ MASK SPECIFICATION
 
 Mask specification can be done using an LEL expression. For example
 
-mask = '"myimage"\&gt;5' will use only pixels with values greater than 5.
+mask = '"myimage"$\&gt;5$' will use only pixels with values greater than 5.
 
 INCLUDING AND EXCLUDING PIXELS
 
@@ -5390,7 +5405,7 @@ and acquires just a read lock.
      </param>
   
      <param type="int"  name="nbins">
-     <description>Number of bins in histograms, \&gt; 0</description>
+     <description>Number of bins in histograms, $\&gt; 0$</description>
      <value>25</value>
      </param>
   
@@ -5768,7 +5783,7 @@ ia.close(remove=true)
      </param>
   
      <param type="int"  name="nattempts">
-	     <description>Number of attempts, \&gt; 0.  Default is unlimiited.</description>
+	     <description>Number of attempts, $\&gt; 0$.  Default is unlimiited.</description>
      <value>0</value>
      </param>
 </input>
@@ -7688,7 +7703,7 @@ ia.close()
         </param>
         <param type="any"  name="order">
             <any type="variant"/>
-            <description>Zero-based order of axes in output image (eg "120" =\&gt; input-\&gt;output 0-\&gt;2, 1-\&gt;0, 2-\&gt;1))</description>
+            <description>Zero-based order of axes in output image $(eg "120" =\&gt; input-\&gt;output 0-\&gt;2, 1-\&gt;0, 2-\&gt;1))$</description>
             <value/>
         </param>
     </input>
@@ -8871,12 +8886,12 @@ ib.done()
      </param>
   
      <param type="int"  name="nx">
-     <description>The number of subplots per page in the x direction, \&gt; 0</description>
+     <description>The number of subplots per page in the x direction, $\&gt; 0$</description>
      <value>1</value>
      </param>
   
      <param type="int"  name="ny">
-     <description>The number of subplots per page in the y direction, \&gt; 0</description>
+     <description>The number of subplots per page in the y direction, $\&gt; 0$</description>
      <value>1</value>
      </param>
   
@@ -9505,13 +9520,13 @@ listed in square brackets.
   
      <param type="double"  name="minpix">
      <description>Minimum pixel value for BITPIX=16,
-     Default is to autoscale if minpix \&gt; maxpix.</description>
+     Default is to autoscale if minpix $\&gt;$ maxpix.</description>
      <value>1</value>
      </param>
   
      <param type="double"  name="maxpix">
      <description>Maximum pixel value for BITPIX=16, Default
-     is to autoscale if maxpix \&lt; minpix.</description>
+     is to autoscale if maxpix $\&lt;$ minpix.</description>
      <value>-1</value>
      </param>
   
@@ -10425,7 +10440,7 @@ used to create a 2D temporary image.
             <value/>
         </param>
         <param type="any" name="width">       
-            <description>Width in pixels for averaging pixels perpendicular to the slice. Must be an odd integer \&gt;= 1 (1 means only use the pixels along the slice), or a quantity which will be rounded up if necessary so it corresponds to the next highest odd number of pixels.</description>
+            <description>Width in pixels for averaging pixels perpendicular to the slice. Must be an odd integer $\&gt;= 1$ (1 means only use the pixels along the slice), or a quantity which will be rounded up if necessary so it corresponds to the next highest odd number of pixels.</description>
             <any type="variant"/>
             <value type="int">1</value>
         </param>
