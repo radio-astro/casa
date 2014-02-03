@@ -81,6 +81,18 @@ namespace casa {
 				connect( sliceToolButton, SIGNAL(clicked()), this, SIGNAL(show1DSliceTool()));
 			}
 
+			bool SliceStats::updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::RegionInfo> info ) {
+				try {
+					std::tr1::shared_ptr<SliceRegionInfo> sliceInfo = std::tr1::dynamic_pointer_cast<SliceRegionInfo>(info);
+					Polyline* polylineRegion = sliceInfo->getRegion();
+					polylineRegion->addPlot( this->getPlotHolder(), sliceInfo->label());
+				}
+				catch(...){
+					qDebug()<<"Got exception from slice stats updateStatisticsInfo";
+				}
+				return true;
+			}
+
 			pvline_stats_t::pvline_stats_t( QWidget *parent ) : stats_t(parent) {
 				setupUi(this);
 				// coord_box->hide( );
@@ -129,7 +141,7 @@ namespace casa {
 		QtRegionStats::~QtRegionStats( ) { }
 
 		void QtRegionStats::updateStatistics( std::tr1::shared_ptr<casa::viewer::RegionInfo> stats, Region* region ) {
-
+			
 			new_stats_box(stats->type(), region, stats->label() )->setLabels( stats->label( ), stats->description( ) );
 
 			qt::statfield_list_t::iterator fiter = fields.begin( );

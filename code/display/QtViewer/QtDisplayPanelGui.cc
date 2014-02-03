@@ -879,9 +879,6 @@ void QtDisplayPanelGui::generateHistogramRegionUpdates(){
 			histogramRegionChange( -1, viewer::region::RegionChangeUpdate );
 		}
 	}
-
-	histogrammer->showNormal();	// (Magic formula to bring a window up,
-	histogrammer->raise();
 }
 
 void QtDisplayPanelGui::hideHistogram() {

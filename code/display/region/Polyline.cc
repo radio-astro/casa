@@ -54,6 +54,7 @@ namespace casa {
 				_ref_points_.push_back(pt(pts[i].first,pts[i].second));
 				_drawing_points_.push_back(pt(pts[i].first,pts[i].second));
 			}
+			mystate->setRegion( this );
 			initPlot();
 			complete = true;
 		}
@@ -76,6 +77,7 @@ namespace casa {
 			Region( "polyline", wc, d, new QtSliceCutState(QString("polyline"))),
 			_ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
 			_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1) {
+			mystate->setRegion( this );
 			_ref_points_.push_back(pt(x1,y1));
 			_drawing_points_.push_back(pt(x1,y1));
 			initPlot();
@@ -105,7 +107,7 @@ namespace casa {
 					setPlotLineColor( slicePlot );
 					slicePlots.insert( key , slicePlot );
 				}
-				sliceRegion = new SliceRegionInfo( image->name(true), image->name(false), dd_stats );
+				sliceRegion = new SliceRegionInfo( image->name(true), image->name(false), dd_stats, this );
 			}
 			return sliceRegion;
 		}
@@ -140,6 +142,7 @@ namespace casa {
 					}
 				}
 			}
+
 			slicePlots.insert( imageName, slicePlot );
 			setPlotLineColor( slicePlot );
 			connect( this, SIGNAL(regionUpdate( int, viewer::region::RegionChanges, const QList<double> &,
@@ -156,13 +159,21 @@ namespace casa {
 		void Polyline::addPlot(QWidget* parent, string label) {
 			QString imageLabel( label.c_str());
 			SlicePlot* slicePlot = NULL;
-			if ( slicePlots.contains( imageLabel )) {
+			if ( slicePlots.contains( imageLabel)) {
 				slicePlot = slicePlots[imageLabel];
-
+				
 				slicePlot->setParent( parent );
-				QLayout* layout = new QHBoxLayout();
+				QLayout* layout = parent->layout();
+				if ( layout == NULL ){
+					layout = new QHBoxLayout();
+					parent->setLayout( layout );
+				}
+				else {
+					while( !layout->isEmpty()){
+						layout->takeAt(0);
+					}
+				}
 				layout->addWidget( slicePlot );
-				parent->setLayout( layout );
 
 				QList<int> pixelX;
 				QList<int> pixelY;
@@ -173,7 +184,7 @@ namespace casa {
 				polyLineRegionUpdate( type, viewer::region::RegionChangeCreate,
 				                      worldX, worldY, pixelX, pixelY);
 			}
-
+			
 		}
 
 
@@ -1218,7 +1229,7 @@ namespace casa {
 					processed.insert(std::map<String,bool>::value_type(description,true));
 
 					RegionInfo::center_t *layercenter = new RegionInfo::center_t( );
-					region_centers->push_back(std::tr1::shared_ptr<RegionInfo>(new SliceRegionInfo(name,description,layercenter)));
+					region_centers->push_back(std::tr1::shared_ptr<RegionInfo>(new SliceRegionInfo(name,description,layercenter, this)));
 				} catch (const casa::AipsError& err) {
 					errMsg_ = err.getMesg();
 					fprintf( stderr, "Polyline::generate_dds_centers( ): %s\n", errMsg_.c_str() );
@@ -1241,7 +1252,7 @@ namespace casa {
 			}
 		}
 
-		ImageRegion *Polyline::get_image_region( DisplayData */*dd*/ ) const {
+		ImageRegion *Polyline::get_image_region( DisplayData * /*dd*/ ) const {
 
 			return NULL;
 		}
