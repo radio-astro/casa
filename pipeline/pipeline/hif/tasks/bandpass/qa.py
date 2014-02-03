@@ -68,13 +68,11 @@ class BandpassQAPool(pqa.QAScorePool):
         return (min_score, min_spw, min_id)
 
     def _get_identifier_from_qa_id(self, ms, spw_str, qa_id):
-        spw = ms.get_spectral_window(spw_str)
-        dd = ms.get_data_description(spw=spw)
-        if dd is None:
-            return 'unknown origin'
+        num_pols = [dd.num_polarizations for dd in ms.data_descriptions]
+        max_num_pols = max(num_pols)
 
-        ant_id = int(qa_id) / dd.num_polarizations
-        feed_id = int(qa_id) % dd.num_polarizations
+        ant_id = int(qa_id) / max_num_pols
+        feed_id = int(qa_id) % max_num_pols
                 
         polarization = dd.get_polarization_label(feed_id)
         antenna = ms.get_antenna(ant_id)[0]
