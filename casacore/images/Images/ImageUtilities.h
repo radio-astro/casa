@@ -120,19 +120,21 @@ public:
    );
 
 // Copy a mask from one image to another
-   static void copyMask (ImageInterface<Float>& out,
-                         const ImageInterface<Float>& in,
-                         const String& maskOut, const String& maskIn,
-                         AxesSpecifier axesSpecifier);
+    template <typename T, typename U> static void copyMask (
+    	ImageInterface<T>& out,
+    	const ImageInterface<U>& in,
+    	const String& maskOut, const String& maskIn,
+    	AxesSpecifier axesSpecifier
+    );
 
 // Add one degenerate axis for each of the specified coordinate types.
 // If the outfile string is given the new image is a PagedImage.
 // If the outfile string is empty, the new image is a TempImage.
 // If silent==True, existing axes are silently ignored.
-   static void addDegenerateAxes (
+   template <typename T> static void addDegenerateAxes (
 		   LogIO& os,
-		   PtrHolder<ImageInterface<Float> >& outImage,
-		   const ImageInterface<Float>& inImage,
+		   PtrHolder<ImageInterface<T> >& outImage,
+		   const ImageInterface<T>& inImage,
 		   const String& outFile, Bool direction,
 		   Bool spectral, const String& stokes,
 		   Bool linear, Bool tabular, Bool overwrite,
