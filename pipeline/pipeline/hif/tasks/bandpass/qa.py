@@ -27,11 +27,12 @@ class BandpassQAPool(pqa.QAScorePool):
                  'PHASE_SCORE_FN'      : 'Phase flatness',
                  'PHASE_SCORE_RMS'     : 'Phase RMS'}
 
-    def __init__(self, rawdata):
+    def __init__(self, rawdata, caltable):
         super(BandpassQAPool, self).__init__()
         # rawdata will hold the dictionary output by the CA QA task
         self.rawdata = rawdata
-
+        self._num_pols = utils.get_num_caltable_polarizations(caltable)
+        
     def update_scores(self, ms):
         """
         MeasurementSet is needed to convert from integer identifier stored in
@@ -73,8 +74,8 @@ class BandpassQAPool(pqa.QAScorePool):
         if dd is None:
             return 'unknown origin'
 
-        ant_id = int(qa_id) / dd.num_polarizations
-        feed_id = int(qa_id) % dd.num_polarizations
+        ant_id = int(qa_id) / self._num_pols
+        feed_id = int(qa_id) % self._num_pols
                 
         polarization = dd.get_polarization_label(feed_id)
         antenna = ms.get_antenna(ant_id)[0]
@@ -110,7 +111,7 @@ class BandpassQAHandler(pqa.QAResultHandler):
 
             try:
                 qa2_results = bpcal.bpcal(calapp.gaintable, qa2_dir)
-                result.qa = BandpassQAPool(qa2_results)
+                result.qa = BandpassQAPool(qa2_results, calapp.gaintable)
                 result.qa.update_scores(ms)
             except Exception as e:
                 LOG.error('Problem occurred running QA2 analysis. QA2 '
