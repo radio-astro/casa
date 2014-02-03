@@ -110,6 +110,19 @@ image::image(casa::ImageInterface<casa::Float> *inImage) :
 	}
 }
 
+image::image(ImageInterface<Complex> *inImage) :
+	_log(), _image(new ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Complex> >(inImage))) {
+	try {
+		_log << _ORIGIN;
+
+	}
+	catch (const AipsError& x) {
+		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+				<< LogIO::POST;
+		RETHROW(x);
+	}
+}
+
 image::image(std::tr1::shared_ptr<casa::ImageInterface<casa::Float> > inImage) :
 	_log(), _image(new ImageAnalysis(inImage)) {
 	try {
@@ -505,31 +518,71 @@ bool image::fromshape(
 
 ::casac::image *
 image::adddegaxes(
-	const std::string& outfile, const bool direction,
-	const bool spectral, const std::string& stokes, const bool linear,
-	const bool tabular, const bool overwrite, const bool silent
+	const std::string& outfile, bool direction,
+	bool spectral, const std::string& stokes, bool linear,
+	bool tabular, bool overwrite, bool silent
 ) {
 	try {
         _log << _ORIGIN;
 		if (detached()) {
 			return 0;
 		}
-		ThrowIf(
-			! _image->isFloat(),
-			"This method only supports Float valued images"
-		);
-		PtrHolder<ImageInterface<Float> > outimage;
-        std::tr1::shared_ptr<const ImageInterface<Float> > x = _image->getImage();
-        ImageUtilities::addDegenerateAxes(
-			_log, outimage, *_image->getImage(), outfile,
-			direction, spectral, stokes, linear, tabular, overwrite, silent
-		);
-		return new image(outimage.ptr()->cloneII());
-	} catch (AipsError x) {
+		if (_image->isFloat()) {
+			PtrHolder<ImageInterface<Float> > outimage;
+			return _adddegaxes(
+				outimage, _image->getImage(),
+				outfile, direction, spectral, stokes, linear,
+				tabular, overwrite, silent
+			);
+			/*
+			ImageUtilities::addDegenerateAxes(
+				_log, outimage, *_image->getImage(), outfile,
+				direction, spectral, stokes, linear, tabular, overwrite, silent
+			);
+			ImageInterface<Float> *outPtr = outimage.ptr();
+			outimage.clear(False);
+			return new image(outPtr);
+			*/
+		}
+		else {
+			PtrHolder<ImageInterface<Complex> > outimage;
+			return _adddegaxes(
+				outimage, _image->getComplexImage(),
+				outfile, direction, spectral, stokes,
+				linear, tabular, overwrite, silent
+			);
+/*
+			ImageUtilities::addDegenerateAxes(
+				_log, outimage, *_image->getComplexImage(), outfile,
+				direction, spectral, stokes, linear, tabular, overwrite, silent
+			);
+			ImageInterface<Complex> *outPtr = outimage.ptr();
+			outimage.clear(False);
+			return new image(outPtr);
+			*/
+		}
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
 	}
+}
+
+template<class T> image* image::_adddegaxes(
+	PtrHolder<ImageInterface<T> >& outimage,
+	std::tr1::shared_ptr<const ImageInterface<T> > inImage,
+	const std::string& outfile, bool direction,
+		bool spectral, const std::string& stokes, bool linear,
+		bool tabular, bool overwrite, bool silent
+) {
+	_log << _ORIGIN;
+	ImageUtilities::addDegenerateAxes(
+		_log, outimage, *inImage, outfile,
+		direction, spectral, stokes, linear, tabular, overwrite, silent
+	);
+	ImageInterface<T> *outPtr = outimage.ptr();
+	outimage.clear(False);
+	return new image(outPtr);
 }
 
 ::casac::image* image::convolve(
