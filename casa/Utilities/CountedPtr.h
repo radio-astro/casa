@@ -46,6 +46,7 @@
 ////#define USE_SHARED_PTR
 ////#define CASA_THREAD_NEUTRAL
 
+#define USE_SHARED_PTR
 #if ! defined (USE_SHARED_PTR)
 
 //====================================================================
@@ -588,7 +589,8 @@ public:
 #else // when defined (USE_SHARED_PTR) is true
 
 
-#include <boost/shared_ptr.hpp>
+// #include <boost/shared_ptr.hpp>
+#include <tr1/memory>
 
 namespace casa { //#Begin casa namespace
 
@@ -653,6 +655,8 @@ protected:
     private:
         Bool reallyDeleteIt_p;
     };
+
+    typedef std::tr1::shared_ptr<t> PointerRep;
 
 public:
 
@@ -796,7 +800,7 @@ public:
 
 protected:
 
-    typedef boost::shared_ptr<t> PointerRep;
+    // typedef boost::shared_ptr<t> PointerRep;
 
     PointerRep pointerRep_p;
 
