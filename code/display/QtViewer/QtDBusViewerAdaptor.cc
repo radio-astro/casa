@@ -384,6 +384,7 @@ namespace casa {
 
 				result = dpg->createDD( to_string(path), datatype, to_string(displaytype), true,
 										-1, false, false, false, ddo );
+				dpg->addedData( displaytype, result );
 
 				return QDBusVariant(QVariant(get_id( dpg, result, path, displaytype )));
 			}

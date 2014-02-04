@@ -212,8 +212,6 @@ namespace casa {
 		return rotatedValue;
 	}
 
-
-
 	bool ComponentListWrapper::toEstimateFile( QTextStream& stream,
 	        const ImageInterface<Float>*const image, QString& errorMsg,
 	        bool screenEstimates, RegionBox* screenBox ) const {
@@ -364,17 +362,12 @@ namespace casa {
 						const DirectionCoordinate& dirCoord = coordSystem.directionCoordinate(dirInd);
 						Vector<double> axes = shape->toPixel( dirCoord );
 						Quantity posValue = getAngle( index );
-
 						double angleValue = rotateAngle( posValue.getValue());
 						Vector<Int> dirAxes = coordSystem.directionAxesNumbers();
 						int axesCount = axes.size();
 						if( axesCount >= 4 ){
 							double majorAxisValue = axes[2] / 2;
 							double minorAxisValue = axes[3] / 2;
-							if ( angleValue > 90 ){
-								majorAxisValue = axes[3] / 2;
-								minorAxisValue = axes[2] / 2;
-							}
 							if ( majorAxisValue > 0 && minorAxisValue > 0 ){
 								RSEllipse* ellipse = new RSEllipse( pixelCoordinates[0], pixelCoordinates[1],
 									majorAxisValue, minorAxisValue, angleValue );

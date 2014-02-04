@@ -50,11 +50,6 @@ namespace casa {
 		initChannel();
 		initImage();
 
-		//Initially there are no images so we should not show
-		//the animator.
-		removeImageGroupBox();
-		removeChannelGroupBox();
-
 		previousMode = CHANNEL_MODE;
 
         connect( this, SIGNAL(lowerBoundAnimatorChannelChanged(int)), panel_->displayPanel( ), SLOT(lowerBoundAnimatorChannelChanged(int)));
@@ -111,96 +106,17 @@ namespace casa {
 
 	int AnimatorHolder::getAnimationCount() const {
 		int count = 0;
-		QLayout* layoutBase = layout();
-		int channelIndex = layoutBase->indexOf( channelGroupBox );
-		int imageIndex = layoutBase->indexOf( imageGroupBox );
-		if ( channelIndex >= 0 ) {
+		bool channelEnabled = channelGroupBox->isChecked();
+		bool imageEnabled = imageGroupBox ->isChecked();
+		if ( channelEnabled ){
 			count++;
 		}
-		if ( imageIndex >= 0 ) {
+		if ( imageEnabled ){
 			count++;
 		}
 		return count;
 	}
 
-	void AnimatorHolder::setHeightFixed() {
-#if 0
-		int boxCount = getAnimationCount();
-		const int BASE_HEIGHT = 83;
-		int height = 20 + BASE_HEIGHT * boxCount;
-		setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
-		setFixedHeight( height );
-#endif
-	}
-
-	bool AnimatorHolder::addChannelGroupBox() {
-#if 0
-		QLayout* layout = container->layout();
-		int channelGroupIndex = layout->indexOf( channelGroupBox );
-		bool channelAdded = false;
-		if ( channelGroupIndex == -1 ) {
-			channelGroupBox->setParent( this );
-			// channelGroupBox->setVisible( true );
-			//We want the channel group box to always be first
-			//so we may need to remove the image group box and put it
-			//in later if it is there.
-			bool removedImage = removeImageGroupBox();
-			layout->addWidget( channelGroupBox );
-			if ( removedImage ) {
-				addImageGroupBox();
-			}
-			setHeightFixed();
-			channelAdded = true;
-		}
-		return channelAdded;
-#else
-        return false;
-#endif
-	}
-
-	void AnimatorHolder::addImageGroupBox() {
-#if 0
-		QLayout* layout = container->layout();
-		int imageGroupIndex = layout->indexOf( imageGroupBox );
-		if ( imageGroupIndex == -1 ) {
-			imageGroupBox->setParent( this );
-			//imageGroupBox->setVisible( true );
-			layout->addWidget( imageGroupBox );
-			setHeightFixed();
-		}
-#endif
-	}
-
-	void AnimatorHolder::removeChannelGroupBox() {
-#if 0
-		QLayout* layout = container->layout();
-		int channelGroupIndex = layout->indexOf( channelGroupBox );
-		if ( channelGroupIndex >= 0 ) {
-			layout->removeWidget( channelGroupBox );
-			//channelGroupBox->setVisible( false );
-			channelGroupBox->setParent( NULL );
-			setHeightFixed();
-		}
-#endif
-	}
-
-	bool AnimatorHolder::removeImageGroupBox() {
-#if 0
-		QLayout* layout = container->layout();
-		int imageGroupIndex = layout->indexOf( imageGroupBox );
-		bool removed = false;
-		if ( imageGroupIndex >= 0 ) {
-			layout->removeWidget( imageGroupBox );
-			imageGroupBox->setParent( NULL );
-			//imageGroupBox->setVisible( false );
-			setHeightFixed();
-			removed = true;
-		}
-		return removed;
-#else
-        return false;
-#endif
-	}
 	int AnimatorHolder::getLowerBoundChannel() const {
 		return animatorChannel->getFrameStart();
 	}
@@ -280,25 +196,13 @@ namespace casa {
 //                    Setters
 //-----------------------------------------------------------------------
 
-	void AnimatorHolder::setChannelModeEnabled( int frameCount, bool select) {
+	void AnimatorHolder::setChannelModeEnabled( int frameCount, bool /*select*/) {
 		//This method was added because if the case where two images were
 		//initially loaded, each with one channel, the animator comes up
 		//with only the "image animator" showing in image mode.
 		//If you then unregister the single channel images and load
 		//at least one image with multiple channels, the channel
 		//animator won't come up because it is stuck in image mode.
-		bool channelAdded=addChannelGroupBox();
-		if ( channelAdded ) {
-			channelGroupBox->setCheckable(true);
-			animatorChannel->setEnabled(true);
-			if ( frameCount > 1 && select ){
-				channelGroupBox->setChecked( true );
-			}
-			else {
-				channelGroupBox->setChecked( false );
-			}
-		}
-
 		int oldFrameCount = animatorChannel->getFrameCount();
 		if ( oldFrameCount != frameCount ) {
 			animatorChannel->setFrameInformation(0, frameCount );
@@ -322,8 +226,6 @@ namespace casa {
 		if ( imageCount <= 0 ) {
 			if ( animationCount != 0 ) {
 				modeChanged = true;
-				removeImageGroupBox();
-				removeChannelGroupBox();
 				animatorImage->setModeEnabled( false );
 				animatorChannel->setModeEnabled( false );
 			}
@@ -331,12 +233,10 @@ namespace casa {
 			bool imageEnabled = imageGroupBox->isCheckable();
 			if ( imageEnabled ) {
 				modeChanged = true;
-				removeImageGroupBox();
 			}
 			addRemoveChannelAnimatorBasedOnFrameCount();
 			//More than one image
 		} else {
-			addImageGroupBox();
 			bool imageEnabled = imageGroupBox->isCheckable();
 			//Image mode is coming up after having been unavailable
 			if ( !imageEnabled ) {
@@ -369,7 +269,6 @@ namespace casa {
 
 	void AnimatorHolder::addRemoveChannelAnimatorBasedOnFrameCount() {
 		if ( animatorChannel->getFrameCount() > 1 ) {
-			addChannelGroupBox();
 			animatorChannel->setModeEnabled( true );
 			if ( !channelGroupBox->isCheckable() ){
 				channelGroupBox->setCheckable( true );
@@ -377,7 +276,7 @@ namespace casa {
 			}
 			changePalette( channelGroupBox, selectedColor );
 		} else {
-			removeChannelGroupBox();
+			channelGroupBox->setChecked( false );
 		}
 	}
 
@@ -770,5 +669,19 @@ namespace casa {
 			panel_->putrc( "visible.animator", "true" );
 		}
 	}
+
+	void AnimatorHolder::foldChannel( ) {
+		channelGroupBox->setChecked(false);
+	}
+	void AnimatorHolder::unfoldChannel( ) {
+		channelGroupBox->setChecked(true);
+	}
+	void AnimatorHolder::foldImage( ) {
+		imageGroupBox->setChecked(false);
+	}
+	void AnimatorHolder::unfoldImage( ) {
+		imageGroupBox->setChecked(true);
+	}
+
 
 }
