@@ -274,11 +274,12 @@ class SliceDisplay(object):
             plot_data_mad = overplot_data_mad[not_noisy]
             plot_flag = overplot_flag[not_noisy]
             plot_axis = xaxis[not_noisy]
-            plt.errorbar(plot_axis[np.logical_not(plot_flag)],
-              plot_data[np.logical_not(plot_flag)],
-              plot_data_mad[np.logical_not(plot_flag)],
-              linestyle='None',
-              marker='o', markersize=5, color='lightblue') 
+            if len(plot_axis[np.logical_not(plot_flag)]) > 0:
+                plt.errorbar(plot_axis[np.logical_not(plot_flag)],
+                  plot_data[np.logical_not(plot_flag)],
+                  plot_data_mad[np.logical_not(plot_flag)],
+                  linestyle='None',
+                  marker='o', markersize=5, color='lightblue') 
 
         datemin = None
         datemax = None
@@ -288,7 +289,6 @@ class SliceDisplay(object):
         plot_data_mad = data_mad[not_noisy]
         plot_flag = flag[not_noisy]
         plot_axis = xaxis[not_noisy]
-
         
         good_data = plot_data[np.logical_not(plot_flag)]
         good_data_mad = plot_data_mad[np.logical_not(plot_flag)]
