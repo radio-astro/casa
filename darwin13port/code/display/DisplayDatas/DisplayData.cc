@@ -65,10 +65,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		rstrsConformed_(False), csConformed_(False), zIndexConformed_(False),
 		displaystate(LIMBO),itsColormap(0), itsColormapWeight(-1.0),
 		uiBase_(1) {
+		oldWCHolder = NULL;
 	};
 
 	DisplayData::~DisplayData()
-	{};
+	{	
+		oldWCHolder = NULL;
+	};
 
 // Add restrictions from an AttributeBuffer
 	void DisplayData::addRestrictions(AttributeBuffer& otherBuf) {
@@ -532,7 +535,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Bool removed = False;
 		// loop
 		while (!it.atEnd() && !removed) {
-			if ( &wcHolder == it.getRight() ) {
+			WorldCanvasHolder* holder = it.getRight();
+			if ( &wcHolder == holder ) {
 				// if this is the one
 
 				WorldCanvas* wc = wcHolder.worldCanvas();
@@ -544,7 +548,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					wc->unregisterColormap(itsColormap);
 				}
 				// remove WorldCanvasHolder from list
+				oldWCHolder = holder;
 				it.removeRight();
+
 				removed = True;
 			} else {
 				it++;
@@ -596,7 +602,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return False;
 	}
 
-	Record DisplayData::getOptions( bool /*scrub*/ ) const {
+	Record DisplayData::getOptions( bool ) const {
 		// nothing yet
 		Record rec;
 		return rec;
@@ -702,6 +708,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				it++;
 			}
 		}
+		if ( tholder == NULL && wCanvas->csMaster() == this ){
+			tholder = oldWCHolder;
+		}
 		return tholder;
 	}
 
@@ -715,6 +724,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				tholder = 0;
 				it++;
 			}
+		}
+		if ( tholder == NULL && wCanvas->csMaster() == this ){
+			tholder = oldWCHolder;
 		}
 		return tholder;
 	}
@@ -783,9 +795,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	DisplayData::DisplayData(const DisplayData &other) :
 		DisplayOptions(other), DisplayEH(), DlTarget() {
 		displaystate = LIMBO;
+		oldWCHolder = other.oldWCHolder;
 	}
 
-	void DisplayData::operator=(const DisplayData &) {
+	void DisplayData::operator=(const DisplayData & other) {
+		oldWCHolder = other.oldWCHolder;
 	}
 
 } //# NAMESPACE CASA - END

@@ -5,6 +5,8 @@ public:
 // shared_ptr
 image(casa::ImageInterface<casa::Float> * inImage);
 
+image(casa::ImageInterface<casa::Complex> * inImage);
+
 image(std::tr1::shared_ptr<casa::ImageInterface<casa::Float> > inImage);
 
 image(std::tr1::shared_ptr<casa::ImageAnalysis> ia);
@@ -67,4 +69,12 @@ template<class T> tr1::shared_ptr<casa::ImageInterface<T> > _subimage(
 	const casa::String& outfile, const casa::Record& region,
 	const casa::String& mask, bool dropDegenerateAxes,
 	bool overwrite, bool list, bool stretch
+);
+
+template<class T> image* _adddegaxes(
+	casa::PtrHolder<casa::ImageInterface<T> >& outimage,
+	tr1::shared_ptr<const casa::ImageInterface<T> > inImage,
+	const std::string& outfile, bool direction,
+	bool spectral, const std::string& stokes, bool linear,
+	bool tabular, bool overwrite, bool silent
 );
