@@ -2,8 +2,6 @@ from __future__ import absolute_import
 
 import types
 
-from .almapolhelperscopy import *
-
 from pipeline.hif.tasks.common import commoncalinputs
 from pipeline.hif.heuristics import caltable as hcaltable
 import pipeline.infrastructure as infrastructure
@@ -12,6 +10,9 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.hif.tasks.gaincal as gaincal
 from .resultobjects import LinpolcalResult
+
+from .almapolhelperscopy import *
+from .almapolhelpersfuture import *
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -153,21 +154,26 @@ class Linpolcal(basetask.StandardTaskTemplate):
 
         # Compute time-dependent gain over whole timerange
         g0_result = self._do_gaincal(caltable=inputs.g0table)
-        print 'g0_result', g0_result
 
         # estimate source polarization Q,U from gains
         gqu = qufromgain(caltable=inputs.g0table)
-        print 'gqu', gqu
+        result.gqu = gqu
 
         # calibrate cross-hand delay. A significant delay between
         # X and Y will add a slope to the X-Y phase calibration
         # that is done next and will complicate resolution of
-        # the X-Y phase ambiguity - need to check this is correct
-        # explanation with George.
+        # the X-Y phase ambiguity.
 
         # Need a heuristic to specify best scan to use
-        kcrs_result = self._do_delaycal(caltable=inputs.delaytable)
-        print 'kcrs_result', kcrs_result
+        best_scan = minparallelresponse(caltable=inputs.g0table, gqu=gqu)
+        print 'best scan', best_scan
+        result.best_delay_scan = best_scan
+        # best_scan dict is indexed by field id
+        ms = inputs.context.observing_run.get_ms(inputs.vis)
+        fields = ms.get_fields()
+        field_id = [field.id for field in fields if field.name==inputs.field]
+        kcrs_result = self._do_delaycal(caltable=inputs.delaytable,
+          scan=best_scan[field_id[0]])
 
         # need to reorder cal application from ..., B, G, K to ..., B, K, G.
         calstate = inputs.context.callibrary.get_calstate(inputs.calto)
@@ -190,10 +196,9 @@ class Linpolcal(basetask.StandardTaskTemplate):
         # resolve the ambiguity in X-Y phase - do nothing with the returned
         # table at present as we only seem to be interested in the Stokes
         # vector
-        print '	HEURISTIC FOR FIELD ID IN GQU'
-        stokes = xyamb(xytab=ambxyf0table, qu=gqu[2],
+        # qu dict is indexed by field id
+        result.stokes = xyamb(xytab=ambxyf0table, qu=gqu[field_id[0]],
           xyout=inputs.xyf0table)
-        print 'stokes', stokes
 
         # revise the gain calibration now that we know the source polarization.
         # Again we need to modify the calstate, removing the last 2 cals: K, G.
@@ -206,12 +211,10 @@ class Linpolcal(basetask.StandardTaskTemplate):
         inputs.context.callibrary.add(calto, calfroms)
 
         g1_result = self._do_gaincal(caltable=inputs.g1table,
-          smodel=stokes, parang=True)
-        print 'g1_result', g1_result.final
+          smodel=result.stokes, parang=True)
 
         # estimate source polarization Q,U from gains
         gqu = qufromgain(caltable=inputs.g1table)
-        print 'gqu', gqu
 
         # finally, calculate the instrumental polarization
         # Again we need to modify the calstate, to ...,B, K, G1, XYf0.
@@ -230,7 +233,7 @@ class Linpolcal(basetask.StandardTaskTemplate):
           os.path.join(os.path.dirname(inputs.df0table),
           'interim.%s' % os.path.basename(inputs.df0table))
         polcal_result = self._do_df0cal(caltable=interim_df0table,
-          smodel=stokes)
+          smodel=result.stokes)
 
         # make D-table general so that it corrects parallel hands also
         Dgen(dtab=interim_df0table, dout=inputs.df0table)
@@ -238,7 +241,6 @@ class Linpolcal(basetask.StandardTaskTemplate):
         # modify/contsruct calapplications to match George's example
         # kcrs
         calapp = kcrs_result.final[0]
-        print 'kcrs table', kcrs_result.final[0].calfrom[0].gaintable
         newcalfrom = callibrary.CalFrom(calapp.calfrom[0].gaintable,
                                         caltype='unknown',
                                         gainfield='',
@@ -265,7 +267,6 @@ class Linpolcal(basetask.StandardTaskTemplate):
         # construct result.final to hold the CalApplications to be applied
         result.pool = [kcrscalapp,
           g1_result.final[0], xyf0calapp, df0calapp]
-        print result.pool
 
         return result
 
@@ -286,17 +287,16 @@ class Linpolcal(basetask.StandardTaskTemplate):
 
         return result
     
-    def _do_delaycal(self, caltable):
+    def _do_delaycal(self, caltable, scan):
         inputs = self.inputs
 
-        print 'DELAYCAL USING SCAN 17'
         task_inputs = gaincal.GTypeGaincal.Inputs(inputs.context,
           output_dir=inputs.output_dir,
           vis=inputs.vis,
           caltable=caltable,
           field=inputs.field,
           intent=inputs.intent,
-          scan='17',
+          scan=str(scan),
           spw=inputs.spw,
           solint='inf',
           gaintype='KCROSS',
