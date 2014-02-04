@@ -454,7 +454,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::imageconcat(
 		//
 		if (pConcat->isMasked()) {
 			String maskName("");
-			ImageMaskAttacher<Float>::makeMask(*_imageFloat, maskName, False, True, *_log, True);
+			ImageMaskAttacher::makeMask(*_imageFloat, maskName, False, True, *_log, True);
 		}
 
 		// Copy to output
@@ -653,7 +653,7 @@ Bool ImageAnalysis::imagefromimage(const String& outfile, const String& infile,
 
 			if (subImage.isMasked()) {
 				String maskName("");
-				ImageMaskAttacher<Float>::makeMask(*_imageFloat, maskName, False, True, *_log, True);
+				ImageMaskAttacher::makeMask(*_imageFloat, maskName, False, True, *_log, True);
 			}
 
 			LatticeUtilities::copyDataAndMask(*_log, *_imageFloat, subImage);
@@ -900,99 +900,42 @@ void ImageAnalysis::calc(const String& expr) {
 	deleteHist();
 }
 
-Bool ImageAnalysis::calcmask(const String& mask, Record& regions,
-		const String& maskName, const Bool makeDefault) {
-	_onlyFloat(__FUNCTION__);
+Bool ImageAnalysis::calcmask(
+	const String& mask, Record& regions,
+	const String& maskName, const Bool makeDefault
+) {
 	*_log << LogOrigin(className(), __FUNCTION__);
-
-	String expr = mask;
 
 	// Get LatticeExprNode (tree) from parser
 	// Convert the GlishRecord containing regions to a
 	// PtrBlock<const ImageRegion*>.
-	if (expr.empty()) {
-		*_log << "You must specify an expression" << LogIO::EXCEPTION;
-		return False;
-	}
+	ThrowIf(
+		mask.empty(),
+		"You must specify an expression"
+	);
 	Block<LatticeExprNode> temps;
-	//String exprName;
-	//can't use $this in expression; so be it
-	//String newexpr = substituteOID (temps, exprName, expr);
-	String newexpr = expr;
 	PtrBlock<const ImageRegion*> tempRegs;
 	makeRegionBlock(tempRegs, regions, *_log);
-	LatticeExprNode node = ImageExprParse::command(newexpr, temps, tempRegs);
+	LatticeExprNode node = ImageExprParse::command(mask, temps, tempRegs);
 
-	// Delete the ImageRegions (by using an empty GlishRecord).
+	// Delete the ImageRegions
 	makeRegionBlock(tempRegs, Record(), *_log);
 
 	// Make sure the expression is Boolean
 	DataType type = node.dataType();
-	if (type != TpBool) {
-		*_log << "The expression type must be Boolean" << LogIO::EXCEPTION;
-	}
+	ThrowIf(
+		type != TpBool,
+		"The expression type must be Boolean"
+	);
 
-	// Get the shape of the expression and check it matches that
-	// of the output image.  We don't check that the Coordinates
-	// match as that would be an un-necessary restriction.
-	if (!node.isScalar()) {
-		const IPosition shapeOut = node.shape();
-		if (!_imageFloat->shape().isEqual(shapeOut)) {
-			*_log << LogIO::SEVERE
-					<< "The shape of the expression does not conform " << endl;
-			*_log << "with the shape of the output image" << LogIO::POST;
-			*_log << "Expression shape = " << shapeOut << endl;
-			*_log << "Image shape      = " << _imageFloat->shape()
-					<< LogIO::EXCEPTION;
-		}
-	}
-
-	// Make mask and get hold of its name.   Currently new mask is forced to
-	// be default because of other problems.  Cannot use the usual ImageMaskAttacher<Float>::makeMask
-	// function because I cant attach/make it default until the expression
-	// has been evaluated
-	if (_imageFloat->canDefineRegion()) {
-		// Generate mask name if not given
-		String maskName2 = maskName;
-		if (maskName.empty())
-			maskName2 = _imageFloat->makeUniqueRegionName(String("mask"), 0);
-		// Make the mask if it does not exist
-		if (!_imageFloat->hasRegion(maskName2, RegionHandler::Masks)) {
-			_imageFloat->makeMask(maskName2, True, False);
-			*_log << LogIO::NORMAL << "Created mask `" << maskName2 << "'"
-					<< LogIO::POST;
-			//
-			ImageRegion iR = _imageFloat->getRegion(maskName2,
-					RegionHandler::Masks);
-			LCRegion& mask = iR.asMask();
-			if (node.isScalar()) {
-				Bool value = node.getBool();
-				mask.set(value);
-			} else {
-				mask.copyData(LatticeExpr<Bool> (node));
-			}
-		} else {
-			// Access pre-existing mask.
-			ImageRegion iR = _imageFloat->getRegion(maskName2,
-					RegionHandler::Masks);
-			LCRegion& mask2 = iR.asMask();
-			if (node.isScalar()) {
-				Bool value = node.getBool();
-				mask2.set(value);
-			} else {
-				mask2.copyData(LatticeExpr<Bool> (node));
-			}
-		}
-		if (makeDefault) {
-			_imageFloat->setDefaultMask(maskName2);
-		}
-	}
-	else {
-		*_log << "Cannot make requested mask for this type of image" << endl;
-		*_log << "It is probably an ImageExpr or SubImage"
-				<< LogIO::EXCEPTION;
-	}
-	return True;
+	Bool res = _imageFloat
+		? _calcmask(
+			_imageFloat, node, maskName, makeDefault
+		)
+		: _calcmask(
+			_imageComplex, node, maskName, makeDefault
+		);
+	return res;
 }
 
 tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::continuumsub(
@@ -1573,7 +1516,7 @@ Bool ImageAnalysis::fft(
 		PagedImage<Float> realOutIm(subImage.shape(), subImage.coordinates(),
 				realOut);
 		if (subImage.isMasked())
-			ImageMaskAttacher<Float>::makeMask(realOutIm, maskName, False, True, *_log, True);
+			ImageMaskAttacher::makeMask(realOutIm, maskName, False, True, *_log, True);
 		fft.getReal(realOutIm);
 	}
 	if (!imagOut.empty()) {
@@ -1582,7 +1525,7 @@ Bool ImageAnalysis::fft(
 		PagedImage<Float> imagOutIm(subImage.shape(), subImage.coordinates(),
 				imagOut);
 		if (subImage.isMasked())
-			ImageMaskAttacher<Float>::makeMask(imagOutIm, maskName, False, True, *_log, True);
+			ImageMaskAttacher::makeMask(imagOutIm, maskName, False, True, *_log, True);
 		fft.getImaginary(imagOutIm);
 	}
 	if (!ampOut.empty()) {
@@ -1591,7 +1534,7 @@ Bool ImageAnalysis::fft(
 		PagedImage<Float> ampOutIm(subImage.shape(), subImage.coordinates(),
 				ampOut);
 		if (subImage.isMasked())
-			ImageMaskAttacher<Float>::makeMask(ampOutIm, maskName, False, True, *_log, True);
+			ImageMaskAttacher::makeMask(ampOutIm, maskName, False, True, *_log, True);
 		fft.getAmplitude(ampOutIm);
 	}
 	if (!phaseOut.empty()) {
@@ -1600,7 +1543,7 @@ Bool ImageAnalysis::fft(
 		PagedImage<Float> phaseOutIm(subImage.shape(), subImage.coordinates(),
 				phaseOut);
 		if (subImage.isMasked())
-			ImageMaskAttacher<Float>::makeMask(phaseOutIm, maskName, False, True, *_log, True);
+			ImageMaskAttacher::makeMask(phaseOutIm, maskName, False, True, *_log, True);
 		fft.getPhase(phaseOutIm);
 	}
 	return True;
@@ -1749,14 +1692,14 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::_fitpolynomial(
 	if (pSubImage2->hasPixelMask()) {
 		Lattice<Bool>& pixelMaskIn = pSubImage2->pixelMask();
 		String maskNameResid;
-		ImageMaskAttacher<Float>::makeMask(*pResid, maskNameResid, False, True, *_log, True);
+		ImageMaskAttacher::makeMask(*pResid, maskNameResid, False, True, *_log, True);
 		{
 			Lattice<Bool>& pixelMaskOut = pResid->pixelMask();
 			pixelMaskOut.copyData(pixelMaskIn);
 		}
 		if (pFit) {
 			String maskNameFit;
-			ImageMaskAttacher<Float>::makeMask(*pFit, maskNameFit, False, True, *_log, True);
+			ImageMaskAttacher::makeMask(*pFit, maskNameFit, False, True, *_log, True);
 			{
 				Lattice<Bool>& pixelMaskOut = pFit->pixelMask();
 				pixelMaskOut.copyData(pixelMaskIn);
@@ -2009,7 +1952,7 @@ ImageInterface<Float>* ImageAnalysis::hanning(
 	ImageInterface<Float>* pImOut = imOut.ptr()->cloneII();
 	if (subImage.isMasked()) {
 		String maskName("");
-		isMasked = ImageMaskAttacher<Float>::makeMask(*pImOut, maskName, False, True, *_log, True);
+		isMasked = ImageMaskAttacher::makeMask(*pImOut, maskName, False, True, *_log, True);
 	}
 
 	// Create input image iterator
@@ -3046,7 +2989,7 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 	if (maskElements > 0) {
 		if (!_imageFloat->hasPixelMask()) {
 			String maskName("");
-			ImageMaskAttacher<Float>::makeMask(*_imageFloat, maskName, True, True, *_log, list);
+			ImageMaskAttacher::makeMask(*_imageFloat, maskName, True, True, *_log, list);
 		}
 	}
 	Bool useMask2 = usemask;
@@ -3237,7 +3180,7 @@ ImageInterface<Float>* ImageAnalysis::rebin(
 		pImOut.reset(new PagedImage<Float> (outShape, cSysOut, outFile));
 	}
 	String maskName("");
-	ImageMaskAttacher<Float>::makeMask(*pImOut, maskName, True, True, *_log, True);
+	ImageMaskAttacher::makeMask(*pImOut, maskName, True, True, *_log, True);
 
 	// Do the work
 	LatticeUtilities::copyDataAndMask(*_log, *pImOut, binIm);
@@ -3398,7 +3341,7 @@ ImageInterface<Float>* ImageAnalysis::rotate(
 	pImOut->set(0.0);
 	ImageUtilities::copyMiscellaneous(*pImOut, subImage);
 	String maskName("");
-	ImageMaskAttacher<Float>::makeMask(*pImOut, maskName, True, True, *_log, True);
+	ImageMaskAttacher::makeMask(*pImOut, maskName, True, True, *_log, True);
 	//
 	Interpolate2D::Method method = Interpolate2D::stringToMethod(methodU);
 	IPosition dummy;
@@ -3675,7 +3618,7 @@ Bool ImageAnalysis::set(const String& lespixels, const Int pixelmask,
 	// Try and make a mask if we need one.
 	if (setMask && !_imageFloat->isMasked()) {
 		String maskName("");
-		ImageMaskAttacher<Float>::makeMask(*_imageFloat, maskName, True, True, *_log, list);
+		ImageMaskAttacher::makeMask(*_imageFloat, maskName, True, True, *_log, list);
 	}
 
 	// Make region and subimage
@@ -3861,7 +3804,7 @@ Bool ImageAnalysis::twopointcorrelation(
 	}
 	ImageInterface<Float>* pImOut = imOut.ptr();
 	String maskName("");
-	ImageMaskAttacher<Float>::makeMask(*pImOut, maskName, True, True, *_log, True);
+	ImageMaskAttacher::makeMask(*pImOut, maskName, True, True, *_log, True);
 
 	// Do the work.  The Miscellaneous items and units are dealt with
 	// by function ImageTwoPtCorr::autoCorrelation
@@ -4294,7 +4237,7 @@ tr1::shared_ptr<ImageInterface<Float> > ImageAnalysis::makeExternalImage(
 	ImageUtilities::copyMiscellaneous(*image, inImage);
 	if (copyMask && inImage.isMasked()) {
 		String maskName("");
-		ImageMaskAttacher<Float>::makeMask(*image, maskName, False, True, os, True);
+		ImageMaskAttacher::makeMask(*image, maskName, False, True, os, True);
 		Lattice<Bool>& pixelMaskOut = image->pixelMask();
 		// The input image may be a subimage with a pixel mask and
 		// a region mask, so use getMaskSlice to get its mask
@@ -4611,7 +4554,7 @@ ImageAnalysis::newimage(const String& infile, const String& outfile,
 			// Make output mask if required
 			if (subImage.isMasked()) {
 				String maskName("");
-				ImageMaskAttacher<Float>::makeMask(*outImage, maskName, False, True, *_log, True);
+				ImageMaskAttacher::makeMask(*outImage, maskName, False, True, *_log, True);
 			}
 
 			// Copy data and mask

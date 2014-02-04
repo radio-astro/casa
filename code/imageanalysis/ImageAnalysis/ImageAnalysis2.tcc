@@ -95,7 +95,7 @@ template<class T> void ImageAnalysis::_calc(
 		if (! image->isMasked()) {
 			// The image does not have a default mask set.  So try and make it one.
 			String maskName("");
-			ImageMaskAttacher<T>::makeMask(*image, maskName, True, True, *_log, True);
+			ImageMaskAttacher::makeMask(*image, maskName, True, True, *_log, True);
 		}
 	}
 
@@ -145,6 +145,81 @@ template<class T> void ImageAnalysis::_calc(
 			image->copyData(LatticeExpr<T> (node));
 		}
 	}
+}
+
+template<class T> Bool ImageAnalysis::_calcmask(
+    std::tr1::shared_ptr<ImageInterface<T> > image,
+    const LatticeExprNode& node,
+    const String& maskName, const Bool makeDefault
+) {
+	*_log << LogOrigin(className(), __FUNCTION__);
+	// Get the shape of the expression and check it matches that
+	// of the output image.  We don't check that the Coordinates
+	// match as that would be an un-necessary restriction.
+	if (
+		!node.isScalar()
+		&& ! image->shape().isEqual(node.shape())
+	) {
+		ostringstream os;
+		os << "The shape of the expression does not conform "
+			<< "with the shape of the output image"
+			<< "Expression shape = " << node.shape()
+			<< "Image shape      = " << image->shape();
+		ThrowCc(os.str());
+	}
+
+	ThrowIf (
+		! image->canDefineRegion(),
+		"Cannot make requested mask for this type of image"
+		"It is of type" + image->imageType()
+	);
+	// Make mask and get hold of its name.   Currently new mask is forced to
+	// be default because of other problems.  Cannot use the usual ImageMaskAttacher<Float>::makeMask
+	// function because I cant attach/make it default until the expression
+	// has been evaluated
+	// Generate mask name if not given
+	String maskName2 = maskName;
+	if (maskName.empty()) {
+		maskName2 = image->makeUniqueRegionName(
+			String("mask"), 0
+		);
+	}
+	// Make the mask if it does not exist
+	if (!image->hasRegion(maskName2, RegionHandler::Masks)) {
+		image->makeMask(maskName2, True, False);
+		*_log << LogIO::NORMAL << "Created mask `" << maskName2 << "'"
+			<< LogIO::POST;
+		ImageRegion iR = image->getRegion(
+			maskName2, RegionHandler::Masks
+		);
+		LCRegion& mask = iR.asMask();
+		if (node.isScalar()) {
+			Bool value = node.getBool();
+			mask.set(value);
+		}
+		else {
+			mask.copyData(LatticeExpr<Bool> (node));
+		}
+	}
+	else {
+		// Access pre-existing mask.
+		ImageRegion iR = image->getRegion(
+			maskName2,
+			RegionHandler::Masks
+		);
+		LCRegion& mask2 = iR.asMask();
+		if (node.isScalar()) {
+			Bool value = node.getBool();
+			mask2.set(value);
+		}
+		else {
+			mask2.copyData(LatticeExpr<Bool> (node));
+		}
+	}
+	if (makeDefault) {
+		image->setDefaultMask(maskName2);
+	}
+	return True;
 }
 
 template<class T> void ImageAnalysis::_destruct(ImageInterface<T>& image) {
@@ -239,7 +314,7 @@ template<class T> std::tr1::shared_ptr<ImageInterface<T> > ImageAnalysis::_image
 		// Make mask if needed, and copy data and mask
 		if (latEx.isMasked()) {
 			String maskName("");
-			ImageMaskAttacher<T>::makeMask(*image, maskName, False, True, *_log, True);
+			ImageMaskAttacher::makeMask(*image, maskName, False, True, *_log, True);
 		}
 		LatticeUtilities::copyDataAndMask(*_log, *image, latEx);
 	}

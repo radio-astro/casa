@@ -30,8 +30,6 @@
 #include <utility>
 #include <QDialog>
 
-#include <imageanalysis/ImageAnalysis/ImageTask.h>
-
 #include <tr1/memory>
 
 using namespace std;
@@ -49,7 +47,7 @@ namespace casa {
 
 	public:
 		PixelRangeDialog(QWidget *parent = 0);
-		void setImage( const ImageTask::shCImFloat img );
+		void setImage( const std::tr1::shared_ptr<const ImageInterface<Float> > img );
 		void setInterval( double minValue, double maxValue );
 		//void setRangeMaxEnabled( bool enabled );
 		pair<double,double> getInterval() const;

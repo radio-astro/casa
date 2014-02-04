@@ -38,7 +38,7 @@ class MDirection;
 
 namespace casa {
 
-class ImagePadder : public ImageTask {
+class ImagePadder : public ImageTask<Float> {
 	// <summary>
 	// Top level interface for padding an image in direction space.
 	// </summary>
@@ -68,7 +68,7 @@ public:
 	// <group>
 
 	ImagePadder(
-			const ImageTask::shCImFloat  image,
+			const SPCIIF  image,
 		const Record *const regionRec=0,
 		const String& box="", const String& chanInp="",
 		const String& stokes="", const String& maskInp="",

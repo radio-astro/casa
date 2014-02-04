@@ -27,10 +27,7 @@
 
 namespace casa {
 
-template<class T> ImageMaskAttacher<T>::ImageMaskAttacher() {}
-
-
-template<class T> Bool ImageMaskAttacher<T>::makeMask(
+template<class T> Bool ImageMaskAttacher::makeMask(
 	ImageInterface<T>& out, String& maskName,
 	Bool init, Bool makeDefault, LogIO& os, Bool list
 ) {
@@ -55,13 +52,14 @@ template<class T> Bool ImageMaskAttacher<T>::makeMask(
 			}
 		}
 		return True;
-	} else {
+	}
+	else {
 		os << LogIO::WARN
-				<< "Cannot make requested mask for this type of image" << endl;
+			<< "Cannot make requested mask for this type of image"
+				<< LogIO::POST;
 		return False;
 	}
 }
-
 
 } //# NAMESPACE CASA - END
 

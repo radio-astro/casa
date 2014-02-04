@@ -210,7 +210,7 @@ template<class T> std::tr1::shared_ptr<ImageInterface<T> > SubImageFactory<T>::c
 	// Make output mask if required
 	if (subImage->isMasked()) {
 		String maskName("");
-		ImageMaskAttacher<T>::makeMask(outImage, maskName, False, True, log, list);
+		ImageMaskAttacher::makeMask(outImage, maskName, False, True, log, list);
 	}
 	LatticeUtilities::copyDataAndMask(log, outImage, *subImage);
 	return std::tr1::shared_ptr<PagedImage<T> >(new PagedImage<T>(outImage));

@@ -47,13 +47,13 @@ namespace casa {
 const String ImageProfileFitter::_class = "ImageProfileFitter";
 
 ImageProfileFitter::ImageProfileFitter(
-		const ImageTask::shCImFloat image, const String& region,
+		const SPCIIF image, const String& region,
 	const Record *const &regionPtr,	const String& box,
 	const String& chans, const String& stokes,
 	const String& mask, const Int axis,
 	const uInt ngauss, const String& estimatesFilename,
 	const SpectralList& spectralList
-) : ImageTask(
+) : ImageTask<Float>(
 		image, region, regionPtr, box, chans, stokes,
 		mask, "", False
 	),
@@ -208,13 +208,11 @@ Record ImageProfileFitter::fit() {
     *_getLog() << logOrigin;
 	try {
 		if (! _multiFit) {
-			ImageCollapser collapser(
+			ImageCollapser<Float> collapser(
 				_subImage, IPosition(1, _fitAxis), True,
-				ImageCollapser::MEAN, "", True
+				ImageCollapserData::MEAN, "", True
 			);
-			std::auto_ptr<ImageInterface<Float> > x(
-				collapser.collapse(True)
-			);
+			SPIIF x = collapser.collapse(True);
 			// _subImage needs to be a SubImage<Float> object
 			_subImage.reset(new SubImage<Float>(SubImageFactory<Float>::createSubImage(
 				*x, Record(), "", _getLog().get(),
@@ -231,13 +229,13 @@ Record ImageProfileFitter::fit() {
 					}
 					_sigma->pixelMask().put(sigmaMask);
 				}
-				ImageCollapser collapsedSigma(
+				ImageCollapser<Float> collapsedSigma(
 					_sigma, IPosition(1, _fitAxis), True,
-					ImageCollapser::MEAN, "", True
+					ImageCollapserData::MEAN, "", True
 				);
 				_sigma.reset(
 					dynamic_cast<TempImage<Float> *>(
-						collapsedSigma.collapse(True)
+						collapsedSigma.collapse(True).get()
 					)
 				);
 			}

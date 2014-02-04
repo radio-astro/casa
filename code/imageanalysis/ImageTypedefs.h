@@ -1,4 +1,5 @@
-//# Copyright (C) 2005
+//# ImageTypedefs.h
+//# Copyright (C) 1998,1999,2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -22,53 +23,24 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#ifndef THRESHOLDINGBINPLOTDIALOG_QO_H_1
-#define THRESHOLDINGBINPLOTDIALOG_QO_H_1
 
-#include <display/QtPlotter/ThresholdingBinPlotDialog.ui.h>
-#include <casa/aips.h>
-#include <utility>
-#include <QMainWindow>
+#ifndef IMAGETYPEDEFS_H_
+#define IMAGETYPEDEFS_H_
 
+#include <casa/aipstype.h>
+#include <casa/BasicSL/Complexfwd.h>
 #include <tr1/memory>
 
-using namespace std;
+#define SPIIT std::tr1::shared_ptr<ImageInterface<T> >
+#define SPCIIT std::tr1::shared_ptr<const ImageInterface<T> >
 
 namespace casa {
+	template<class T> class ImageInterface;
 
-	template <class T> class ImageInterface;
-	class BinPlotWidget;
-
-//This dialog displays a histogram that allows the user
-//to set a minimum/maximum moment collapse threshold graphically.
-//Intensity is displayed on the x-axis.  The y-axis is a count of
-//the number of pixels at each intensity.
-
-	class ThresholdingBinPlotDialog : public QMainWindow {
-		Q_OBJECT
-
-	public:
-		ThresholdingBinPlotDialog(QString yAxisUnits, QWidget *parent = 0);
-		void setImage( const std::tr1::shared_ptr<const ImageInterface<Float> >  img );
-		void setInterval( double minValue, double maxValue );
-		pair<double,double> getInterval() const;
-		~ThresholdingBinPlotDialog();
-
-	signals:
-		void accepted();
-
-	private slots:
-		void accept();
-		void postStatusMessage( const QString& warning );
-
-	private:
-		Ui::ThresholdingBinPlotDialogClass ui;
-		BinPlotWidget* plotWidget;
-
-	};
-
-
-
-
+	typedef std::tr1::shared_ptr<const ImageInterface<Float> > SPCIIF;
+	typedef std::tr1::shared_ptr<ImageInterface<Float> > SPIIF;
+	typedef std::tr1::shared_ptr<const ImageInterface<Complex> > SPCIIC;
+	typedef std::tr1::shared_ptr<ImageInterface<Complex> > SPIIC;
 }
-#endif // THRESHOLDINGBINPLOTDIALOG_H
+
+#endif /* IMAGETYPEDEFS_H_ */

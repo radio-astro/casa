@@ -154,9 +154,10 @@ class ImageAnalysis
 
     // regions should be a Record of Records having different regions
 
-    Bool calcmask(const String& mask, Record& regions, const String& name, 
-                  const Bool asdefault = True);
-
+    Bool calcmask(
+    	const String& mask, Record& regions,
+    	const String& name, const Bool asdefault = True
+    );
 
     tr1::shared_ptr<ImageInterface<Float> > continuumsub(const String& outline,
                                          const String& outcont, Record& region,
@@ -710,6 +711,12 @@ class ImageAnalysis
     template<class T> void _calc(
     	std::tr1::shared_ptr<ImageInterface<T> > image,
     	const LatticeExprNode& node
+    );
+
+    template<class T> Bool _calcmask(
+    	std::tr1::shared_ptr<ImageInterface<T> > image,
+    	const LatticeExprNode& node,
+    	const String& name, const Bool makedefault
     );
 
 };

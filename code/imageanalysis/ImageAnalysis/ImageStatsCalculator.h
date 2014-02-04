@@ -39,7 +39,7 @@
 
 namespace casa {
 
-class ImageStatsCalculator: public ImageTask {
+class ImageStatsCalculator: public ImageTask<Float> {
     // <summary>
     // Top level class used for statistics calculations
     // </summary>
@@ -61,7 +61,7 @@ class ImageStatsCalculator: public ImageTask {
 public:
 
    	ImageStatsCalculator(
-   		const ImageTask::shCImFloat image,
+   		const SPCIIF image,
     	const Record *const &regionPtr,
     	const String& maskInp, Bool beVerboseDuringConstruction
     );
