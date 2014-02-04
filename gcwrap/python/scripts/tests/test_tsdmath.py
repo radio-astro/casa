@@ -192,11 +192,11 @@ class tsdmath_test0(unittest.TestCase,tsdmath_unittest_base):
                                 msg='Unexpected exception was thrown: %s'%(str(e)))        
 
     def test001(self):
-        """Test 001: Empty varlist"""
+        """Test 001: Empty varnames"""
         ex='V0+V1'
         v={}
         try:
-            res=tsdmath(expr=ex,varlist=v,outfile=self.outfile)
+            res=tsdmath(expr=ex,varnames=v,outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -205,11 +205,11 @@ class tsdmath_test0(unittest.TestCase,tsdmath_unittest_base):
                                 msg='Unexpected exception was thrown: %s'%(str(e)))        
 
     def test002(self):
-        """Test 002: Lack of some variables in varlist"""
+        """Test 002: Lack of some variables in varnames"""
         ex='V0+V1'
         v={'V0': self.rawfile}
         try:
-            res=tsdmath(expr=ex,varlist=v,outfile=self.outfile)
+            res=tsdmath(expr=ex,varnames=v,outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -225,7 +225,7 @@ class tsdmath_test0(unittest.TestCase,tsdmath_unittest_base):
         v={'V0': self.rawfile,
            'V1': factor}
         try:
-            res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=False)
+            res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=False)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -240,7 +240,7 @@ class tsdmath_test0(unittest.TestCase,tsdmath_unittest_base):
         v={'V0': factor,
            'V1': self.rawfile}
         try:
-            res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+            res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -256,7 +256,7 @@ class tsdmath_test0(unittest.TestCase,tsdmath_unittest_base):
         v={'V0': factor,
            'V1': factor}
         try:
-            res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+            res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -271,7 +271,7 @@ class tsdmath_test0(unittest.TestCase,tsdmath_unittest_base):
         v={'V0': self.rawfile,
            'V1': factor}
         try:
-            res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+            res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -287,7 +287,7 @@ class tsdmath_test0(unittest.TestCase,tsdmath_unittest_base):
         v={'V0': self.rawfile,
            'V1': infile2}
         try:
-            res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+            res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -304,7 +304,7 @@ class tsdmath_test0(unittest.TestCase,tsdmath_unittest_base):
         v={'V0': self.rawfile,
            'V1': datafile}
         try:
-            res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+            res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -353,7 +353,7 @@ class tsdmath_test1(unittest.TestCase,tsdmath_unittest_base):
         factor=1.0
         v={'V0': self.rawfile,
            'V1': factor}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -365,7 +365,7 @@ class tsdmath_test1(unittest.TestCase,tsdmath_unittest_base):
         factor=1.0
         v={'V0': self.rawfile,
            'V1': factor}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -377,7 +377,7 @@ class tsdmath_test1(unittest.TestCase,tsdmath_unittest_base):
         factor=2.0
         v={'V0': self.rawfile,
            'V1': factor}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -389,7 +389,7 @@ class tsdmath_test1(unittest.TestCase,tsdmath_unittest_base):
         factor=2.0
         v={'V0': self.rawfile,
            'V1': factor}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -401,7 +401,7 @@ class tsdmath_test1(unittest.TestCase,tsdmath_unittest_base):
         factor=[0.1,0.2,0.3,0.4]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -413,7 +413,7 @@ class tsdmath_test1(unittest.TestCase,tsdmath_unittest_base):
         factor=[0.1,0.2,0.3,0.4]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -425,7 +425,7 @@ class tsdmath_test1(unittest.TestCase,tsdmath_unittest_base):
         factor=[0.1,0.2,0.3,0.4]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -437,7 +437,7 @@ class tsdmath_test1(unittest.TestCase,tsdmath_unittest_base):
         factor=[0.1,0.2,0.3,0.4]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -449,7 +449,7 @@ class tsdmath_test1(unittest.TestCase,tsdmath_unittest_base):
         factor=[[0.1],[0.2]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -461,7 +461,7 @@ class tsdmath_test1(unittest.TestCase,tsdmath_unittest_base):
         factor=[[0.1],[0.2]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -473,7 +473,7 @@ class tsdmath_test1(unittest.TestCase,tsdmath_unittest_base):
         factor=[[0.1],[0.2]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -485,7 +485,7 @@ class tsdmath_test1(unittest.TestCase,tsdmath_unittest_base):
         factor=[[0.1],[0.2]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -497,7 +497,7 @@ class tsdmath_test1(unittest.TestCase,tsdmath_unittest_base):
         factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -509,7 +509,7 @@ class tsdmath_test1(unittest.TestCase,tsdmath_unittest_base):
         factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -521,7 +521,7 @@ class tsdmath_test1(unittest.TestCase,tsdmath_unittest_base):
         factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]] 
         v={'V0': self.rawfile,
            'V1': factor}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -533,7 +533,7 @@ class tsdmath_test1(unittest.TestCase,tsdmath_unittest_base):
         factor=[[0.1,0.3,0.5,0.7],[0.2,0.4,0.6,0.8]]
         v={'V0': self.rawfile,
            'V1': factor}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,factor,op)
@@ -580,7 +580,7 @@ class tsdmath_test2(unittest.TestCase,tsdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile,
            'V1': self.datafile}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,self.factor,op)
@@ -591,7 +591,7 @@ class tsdmath_test2(unittest.TestCase,tsdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile,
            'V1': self.datafile}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,self.factor,op)
@@ -602,7 +602,7 @@ class tsdmath_test2(unittest.TestCase,tsdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile,
            'V1': self.datafile}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,self.factor,op)
@@ -613,7 +613,7 @@ class tsdmath_test2(unittest.TestCase,tsdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile,
            'V1': self.datafile}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._compare(self.outfile,self.rawfile,self.factor,op)
@@ -668,7 +668,7 @@ class tsdmath_test3(unittest.TestCase,tsdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile0,
            'V1': self.rawfile1}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
@@ -679,7 +679,7 @@ class tsdmath_test3(unittest.TestCase,tsdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile0,
            'V1': self.rawfile1}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
@@ -690,7 +690,7 @@ class tsdmath_test3(unittest.TestCase,tsdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile0,
            'V1': self.rawfile1}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
@@ -701,7 +701,7 @@ class tsdmath_test3(unittest.TestCase,tsdmath_unittest_base):
         ex='V0'+op+'V1'
         v={'V0': self.rawfile0,
            'V1': self.rawfile1}
-        res=tsdmath(expr=ex,varlist=v,outfile=self.outfile,overwrite=True)
+        res=tsdmath(expr=ex,varnames=v,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during task execution')
         self._checkresult(self.outfile,self.rawfile0,self.rawfile1,op)
@@ -898,7 +898,7 @@ class tsdmath_storageTest( unittest.TestCase, tsdmath_unittest_base ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = tsdmath(expr=ex,varlist=v,outfile=outfile,\
+        res = tsdmath(expr=ex,varnames=v,outfile=outfile,\
                      fluxunit=self.out_uc['flunit'])
 
         self.assertEqual(res,None,
@@ -928,7 +928,7 @@ class tsdmath_storageTest( unittest.TestCase, tsdmath_unittest_base ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = tsdmath(expr=ex,varlist=v,outfile=outfile,\
+        res = tsdmath(expr=ex,varnames=v,outfile=outfile,\
                      fluxunit=self.out_uc['flunit'],\
                      telescopeparam='FIX')
 
@@ -959,7 +959,7 @@ class tsdmath_storageTest( unittest.TestCase, tsdmath_unittest_base ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = tsdmath(expr=ex,varlist=v,outfile=outfile,\
+        res = tsdmath(expr=ex,varnames=v,outfile=outfile,\
                      fluxunit=self.out_uc['flunit'])
 
         self.assertEqual(res,None,
@@ -989,7 +989,7 @@ class tsdmath_storageTest( unittest.TestCase, tsdmath_unittest_base ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = tsdmath(expr=ex,varlist=v,outfile=outfile,\
+        res = tsdmath(expr=ex,varnames=v,outfile=outfile,\
                      fluxunit=self.out_uc['flunit'],\
                      telescopeparam='FIX')
 
@@ -1020,7 +1020,7 @@ class tsdmath_storageTest( unittest.TestCase, tsdmath_unittest_base ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = tsdmath(expr=ex,varlist=v,outfile=outfile,\
+        res = tsdmath(expr=ex,varnames=v,outfile=outfile,\
                      fluxunit=self.out_uc['flunit'])
 
         self.assertEqual(res,None,
@@ -1050,7 +1050,7 @@ class tsdmath_storageTest( unittest.TestCase, tsdmath_unittest_base ):
         sd.rcParams['insitu'] = True
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = tsdmath(expr=ex,varlist=v,outfile=outfile,\
+        res = tsdmath(expr=ex,varnames=v,outfile=outfile,\
                      fluxunit=self.out_uc['flunit'],\
                      telescopeparam='FIX')
 
@@ -1080,7 +1080,7 @@ class tsdmath_storageTest( unittest.TestCase, tsdmath_unittest_base ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = tsdmath(expr=ex,varlist=v,outfile=outfile,\
+        res = tsdmath(expr=ex,varnames=v,outfile=outfile,\
                      fluxunit=self.out_uc['flunit'])
 
         self.assertEqual(res,None,
@@ -1108,7 +1108,7 @@ class tsdmath_storageTest( unittest.TestCase, tsdmath_unittest_base ):
         sd.rcParams['insitu'] = False
         print "Running test with storage='%s' and insitu=%s" % \
               (sd.rcParams['scantable.storage'], str(sd.rcParams['insitu']))
-        res = tsdmath(expr=ex,varlist=v,outfile=outfile,\
+        res = tsdmath(expr=ex,varnames=v,outfile=outfile,\
                      fluxunit=self.out_uc['flunit'],\
                      telescopeparam='FIX')
 

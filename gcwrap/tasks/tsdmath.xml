@@ -20,12 +20,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <input>
 
+    <param type="stringArray" name="infiles">
+	    <description>List of input file names</description>
+	    <value></value>
+    </param>
+
     <param type="string" name="expr">
         <description>Mathematical expression using spectra</description>
         <value></value>
     </param>
 
-    <param type="any" name="varlist">
+    <param type="any" name="varnames">
         <description>Dictionary of variables and their values used in expr.</description>
         <any type="variant" limmittype="dict"/>
         <value type="dict">{}</value>
@@ -124,10 +129,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <example>
   Keyword arguments:
+        infiles -- List of input file names
+                The file names will automatically replace the phrases 
+                IN0, IN1, ... in expr parameter.
         expr -- Mathematical expression using scantables 
-        varlist -- Dictionary of variables in expr and their values.
-                   Keys must be coincide with variables used in expr.
-                   Values are substituted in each value in expr.
+        varnames -- Dictionary of variables in expr and their values.
+                Keys must be coincide with variables used in expr.
+                Values are substituted in each value in expr.
         antenna -- antenna name or id (only effective for MS input). 
         fluxunit -- units for line flux
                 options: 'K','Jy',''
@@ -189,17 +197,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         Task sdmath execute a mathematical expression for single dish spectra.
         The spectral data file can be any of the formats supported by
         ASAP (scantable, MS, rpfits, and SDFITS). In the expression, 
-        these file names should be put inside of sigle or double quotes.
+        these file names should be put inside of single or double quotes.
 
         You can use variables in the expression. If you want to use, you 
-        must define varlist dictionary. Name of variables should be simple, 
-        e.g. V0, V1, etc., to avoid unexpected error. Keys of varlist must 
+        must define varnames dictionary. Name of variables should be simple, 
+        e.g. V0, V1, etc., to avoid unexpected error. Keys of varnames must 
         be name of variables that you used in the expression, and their 
         values will be substituted for variables in the expression. Allowed 
         type for the value is numerical values, one- or two-dimensional lists 
         (Python list or numpy.ndarray), and filename strings that indicate 
         spectral data or ASCII text, which is space-separated list of 
-        numerical values consisting of adequate number of rows and columns.  
+        numerical values consisting of adequate number of rows and columns. 
+        In case you give a list of file names in infiles, they are 
+        automatically referred to as IN0, IN1, etc. in expr and you can not 
+        use IN0, IN1, etc. as variable names in varnames.
 
         The fluxunit can be set, otherwise, the current settings of the first 
         spectral data in the expression are used.  
@@ -216,17 +227,23 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         # do on-off/off calculation
         expr='("orion_on_data.asap"-"orion_off_data.asap")/"orion_off_data.asap"
         outfile='orion_cal.asap'
-        sdmath()
+        tsdmath()
 
-        # do on-off/off calculation using varlist
-        expr='V0/V1-V2'
-        varlist['V0']="orion_on_data.asap"
-        varlist['V1']="orion_off_data.asap"
-        varlist['V2']=1.0
+        # do on-off/off calculation (using infiles)
+        infiles = ["orion_on_data.asap", "orion_off_data.asap"]
+        expr='(IN0-IN1)/IN1'
         outfile='orion_cal.asap'
-        sdmath()
+        tsdmath()
 
-        # interpretation of ASCII file value for varlist
+        # do on-off/off calculation using varnames
+        expr='V0/V1-V2'
+        varnames['V0']="orion_on_data.asap"
+        varnames['V1']="orion_off_data.asap"
+        varnames['V2']=1.0
+        outfile='orion_cal.asap'
+        tsdmath()
+
+        # interpretation of ASCII file value for varnames
         If the contents of input ASCII file is shown as, 
 
            0.5 0.3 0.2
