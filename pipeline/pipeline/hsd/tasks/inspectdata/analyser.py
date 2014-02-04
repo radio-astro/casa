@@ -196,6 +196,7 @@ class DataTableAnalyser(object):
         for (ant,vant) in self.by_antenna.items():
             pattern_dict = {}
             st = self.scantablelist[ant]
+            observatory = st.ms.antenna_array.name
             _beam_size = self.beam_size[ant]
             for i in (0,1):
                 self.timegap[i][ant] = {}
@@ -234,8 +235,13 @@ class DataTableAnalyser(object):
                         last_dec = dec_sel
 
                         ### ObsPatternAnalysis ###
-                        pattern = obs_heuristic2(pos_dict)
-                        
+                        # 2014/02/04 TN
+                        # Temporary workaround for TP acceptance data issue
+                        # Observing pattern is always 'RASTER' for ALMA
+                        if observatory == 'ALMA':
+                            pattern = 'RASTER'
+                        else:
+                            pattern = obs_heuristic2(pos_dict)
                     
                     ### prepare for Self.Datatable ###
                     self.posgrp_list[ant][spw][pol] = []
