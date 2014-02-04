@@ -160,10 +160,22 @@ void plotms::setCachedImageSizeToScreenResolution() {
 }
 int plotms::getCachedImageWidth() {
     launchApp();
-    GETSINGLEINT(GETPLOTMSPARAMS, WIDTH) }
+    GETSINGLEINT(GETPLOTMSPARAMS, WIDTH)
+}
 int plotms::getCachedImageHeight() {
     launchApp();
-    GETSINGLEINT(GETPLOTMSPARAMS, HEIGHT) }
+    GETSINGLEINT(GETPLOTMSPARAMS, HEIGHT)
+}
+
+void plotms::setGridSize( int rowCount, int colCount ){
+	launchApp();
+    Record params;
+	params.define(PlotMSDBusApp::PARAM_GRIDROWS, rowCount);
+    params.define(PlotMSDBusApp::PARAM_GRIDCOLS, colCount );
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
+	            PlotMSDBusApp::METHOD_SETPLOTMSPARAMS, params, /*true*/asyncCall);
+}
+
 
 
 void plotms::setPlotMSFilename(
@@ -269,7 +281,7 @@ void plotms::setPlotMSTransformations(const std::string& freqframe,
 }
 
 void plotms::setPlotMSIterate(const std::string& iteraxis,
-				  const int iterRowCount, const int iterColCount,
+				  const int rowIndex, const int colIndex,
 			      const bool xselfscale, const bool yselfscale,
 			      const bool commonAxisX, const bool commonAxisY,
 			      const bool updateImmediately, 
@@ -277,17 +289,15 @@ void plotms::setPlotMSIterate(const std::string& iteraxis,
 
     PlotMSIterParam iter;
     iter.setIterAxis(iteraxis);
+    iter.setGridRow( rowIndex );
+    iter.setGridCol( colIndex );
     if (iteraxis=="") {
-      iter.setNx( 1 );
-      iter.setNy( 1 );
       iter.setGlobalScaleX( False);
       iter.setGlobalScaleY( False);
       iter.setCommonAxisX( False );
       iter.setCommonAxisY( False );
     }
     else {
-    	iter.setNx( iterRowCount );
-    	iter.setNy( iterColCount );
     	iter.setGlobalScaleX( xselfscale);
     	iter.setGlobalScaleY( yselfscale);
     	iter.setCommonAxisX( commonAxisX );
@@ -423,7 +433,7 @@ void plotms::setExportRange(const string& range )
     Record params;
     params.define(PlotMSDBusApp::PARAM_EXPORT_RANGE,  range);
     QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
-            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, asyncCall);
+            PlotMSDBusApp::METHOD_SETEXPORTPARAMS, params, asyncCall);
 }
 
 void plotms::setYAxisLabel(const string& text,  const bool updateImmediately,
@@ -646,14 +656,13 @@ void plotms::setShowGui( bool showGui ){
 
 
 bool plotms::save(const string& filename, const string& format,
-		const bool highres, const bool interactive) {
+		const bool highres) {
 	 launchApp();
     Record params;
     bool retValue;
     params.define(PlotMSDBusApp::PARAM_EXPORT_FILENAME, filename);
     params.define(PlotMSDBusApp::PARAM_EXPORT_FORMAT, format);
     params.define(PlotMSDBusApp::PARAM_EXPORT_HIGHRES, highres);
-    params.define(PlotMSDBusApp::PARAM_EXPORT_INTERACTIVE, interactive);
     params.define(PlotMSDBusApp::PARAM_EXPORT_ASYNC, false);
     QtDBusXmlApp::dbusXmlCall(
     	dbus::FROM_NAME, app.dbusName( ),

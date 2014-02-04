@@ -2,7 +2,8 @@ import os
 import time
 from taskinit import *
 
-def plotms(vis=None, 
+def plotms(vis=None, plotindex=None,
+           gridrows=None, gridcols=None,
            xaxis=None, xdatacolumn=None, 
            yaxis=None, ydatacolumn=None,
            selectdata=None, field=None, spw=None,
@@ -15,7 +16,7 @@ def plotms(vis=None,
            freqframe=None,restfreq=None,veldef=None,shift=None,
            extendflag=None,
            extcorr=None, extchannel=None,
-           iteraxis=None,iternx=None,iterny=None,xselfscale=None,yselfscale=None,
+           iteraxis=None,rowindex=None,colindex=None,xselfscale=None,yselfscale=None,
            xsharedaxis=None, ysharedaxis=None,
            customsymbol=None, symbolshape=None, symbolsize=None,
            symbolcolor=None, symbolfill=None, symboloutline=None,
@@ -28,7 +29,7 @@ def plotms(vis=None,
            showmajorgrid=None, majorwidth=None, majorstyle=None,  majorcolor=None,    
            showminorgrid=None, minorwidth=None, minorstyle=None,  minorcolor=None,    
            plotfile=None, expformat=None, exprange=None,
-           highres=None, interactive=None, overwrite=None, 
+           highres=None, overwrite=None, 
            showgui=None
 ):
 
@@ -52,6 +53,8 @@ def plotms(vis=None,
     Keyword arguments:
     vis -- input visibility dataset
            default: ''
+    plotindex -- specific plot identifier in cases of multiple plots (zero-based).
+            default: 0
     xaxis, yaxis -- what to plot on the two axes
                     default: '' (uses PlotMS defaults/current set).
         &gt;&gt;&gt; xaxis, yaxis expandable parameters
@@ -60,10 +63,10 @@ def plotms(vis=None,
                        default: '' (uses PlotMS default/current set).
     iteraxis -- what axis to iterate on when doing iteration plots
                 default: ''
-              &gt;&gt;&gt; iternx, iterny, xsharedaxis, ysharedaxis, xselfscale, yselfscale expandable parameters
-        iternx -- the number of rows in one page of an iteration plot
+              &gt;&gt;&gt; rowindex, colindex, xsharedaxis, ysharedaxis, xselfscale, yselfscale expandable parameters
+        rowindex -- the row location for this plot in the case of multiple plots per page.
                     default: 1.
-        iterny -- the number of cols in one page of an iteration plot.
+        colindex -- the column location for this ploat in the case of multiple plots per page.
                     default: 1.
         xselfscale -- use a common scale for the x-axis.
                        default: False.
@@ -204,20 +207,28 @@ def plotms(vis=None,
         #else:
          #   tp.setgui( False )    
         vis = os.path.abspath(vis.strip())
+        if not plotindex:
+            plotindex = 0
     
         #Determine whether this is going to be a scripting client or a full GUI supporting
         #user interaction.  This must be done before other properties are set because it affects
         #the constructor of plotms.
         pm.setShowGui( showgui )
-        pm.setPlotMSFilename(vis, False)
-        pm.setPlotAxes(xaxis, yaxis, xdatacolumn, ydatacolumn, False)
+        if gridrows or gridcols:
+            if not gridrows:
+                gridrows = 1
+            if not gridcols:
+                gridcols = 1
+            pm.setGridSize( gridrows, gridcols )
+        pm.setPlotMSFilename(vis, False, plotindex )
+        pm.setPlotAxes(xaxis, yaxis, xdatacolumn, ydatacolumn, False, plotindex)
         
         # Set selection
         if (selectdata and os.path.exists(vis)):
             pm.setPlotMSSelection(field, spw, timerange, uvrange, antenna, scan,
-                                  correlation, array, str(observation), msselect, False)
+                                  correlation, array, str(observation), msselect, False, plotindex)
         else:
-            pm.setPlotMSSelection('', '', '', '', '', '', '', '', '', '', False)
+            pm.setPlotMSSelection('', '', '', '', '', '', '', '', '', '', False, plotindex)
        
         # Set averaging
         if not averagedata:
@@ -226,7 +237,8 @@ def plotms(vis=None,
            
             scalar = False
             
-        pm.setPlotMSAveraging(avgchannel, avgtime, avgscan, avgfield, avgbaseline, avgantenna, avgspw, scalar, False)
+        pm.setPlotMSAveraging(avgchannel, avgtime, avgscan, avgfield, avgbaseline, 
+                              avgantenna, avgspw, scalar, False, plotindex)
         # Set transformations
         if not transform:
             freqframe=''
@@ -234,7 +246,8 @@ def plotms(vis=None,
             veldef='RADIO'
             shift=[0.0,0.0]
         
-        pm.setPlotMSTransformations(freqframe,veldef,restfreq,shift[0],shift[1],False)
+        pm.setPlotMSTransformations(freqframe,veldef,restfreq,shift[0],shift[1],
+                                    False, plotindex)
         
         # Set flag extension
         # for now, some options here are not available:
@@ -256,12 +269,12 @@ def plotms(vis=None,
             iternx = iterny=1
             xselfscale=yselfscale=False
             xsharedaxis = ysharedaxis = False
-        pm.setPlotMSIterate(iteraxis,iternx,iterny,
+        pm.setPlotMSIterate(iteraxis,rowindex,colindex,
                             xselfscale,yselfscale,
-                            xsharedaxis,ysharedaxis,False);
+                            xsharedaxis,ysharedaxis,False,plotindex);
         
         # (Colorization)
-        pm.setColorAxis(coloraxis,False)
+        pm.setColorAxis(coloraxis,False,plotindex)
 
         # Set custom symbol
         symbolshape = symbolshape or 'autoscaling'
@@ -270,7 +283,7 @@ def plotms(vis=None,
         symbolfill = symbolfill or 'fill'
         symboloutline = symboloutline or False
         pm.setSymbol(symbolshape, symbolsize, symbolcolor,
-                     symbolfill, symboloutline, False)
+                     symbolfill, symboloutline, False,plotindex)
         
         # Set custom flagged symbol
         flaggedsymbolshape = flaggedsymbolshape or 'nosymbol'
@@ -280,14 +293,14 @@ def plotms(vis=None,
         flaggedsymboloutline = flaggedsymboloutline or False
         pm.setFlaggedSymbol(flaggedsymbolshape, flaggedsymbolsize,
                             flaggedsymbolcolor, flaggedsymbolfill,
-                            flaggedsymboloutline, False)
+                            flaggedsymboloutline, False, plotindex)
         
         # Set various user-directed appearance parameters
-        pm.setTitle(title,False)
-        pm.setXAxisLabel(xlabel,False)
-        pm.setYAxisLabel(ylabel,False)
+        pm.setTitle(title,False,plotindex)
+        pm.setXAxisLabel(xlabel,False,plotindex)
+        pm.setYAxisLabel(ylabel,False,plotindex)
         pm.setGridParams(showmajorgrid, majorwidth, majorstyle, majorcolor,
-                         showminorgrid, minorwidth, minorstyle, minorcolor, False)
+                         showminorgrid, minorwidth, minorstyle, minorcolor, False, plotindex)
 
         if (len(plotrange)!=4):
             if (len(plotrange)==0):
@@ -298,8 +311,8 @@ def plotms(vis=None,
         xrange=plotrange[1]-plotrange[0]
         yrange=plotrange[3]-plotrange[2]
 
-        pm.setXRange((xrange<=0.), plotrange[0],plotrange[1], False)
-        pm.setYRange((yrange<=0.), plotrange[2],plotrange[3], False)
+        pm.setXRange((xrange<=0.), plotrange[0],plotrange[1], False, plotindex)
+        pm.setYRange((yrange<=0.), plotrange[2],plotrange[3], False, plotindex)
         
         # Update
         plotUpdated = pm.update()
@@ -316,7 +329,7 @@ def plotms(vis=None,
                         time.sleep(0.5)
                 casalog.post("Exporting the plot.",'NORMAL')
                 casalog.post("Calling pm.save,", 'NORMAL')
-                plotUpdated = pm.save( plotfile, expformat, highres, interactive)
+                plotUpdated = pm.save( plotfile, expformat, highres)
     
     except Exception, instance:
         plotUpdated = False
