@@ -28,6 +28,7 @@
 #define PLOTMS_H_
 
 #include <plotms/PlotMS/PlotMSParameters.h>
+#include <plotms/PlotMS/PlotMSExportParam.h>
 #include <plotms/Plots/PlotMSPlotManager.h>
 #include <plotms/PlotMS/PlotMSFlagging.h>
 #include <plotms/PlotMS/PlotEngine.h>
@@ -53,7 +54,7 @@ public:
     // Default constructor that uses default options.  If connectToDBus is
     // true, then the application registers itself with CASA's DBus server
     // using the PlotMSDBusApp::dbusName() with the current process ID.
-    PlotMSApp(bool connectToDBus = false, bool userGui = true );
+    PlotMSApp(bool connectToDBus = false, bool userGui = true);
     
     // Constructor which takes the given parameters.  If connectToDBus is true,
     // then the application registers itself with CASA's DBus server using the
@@ -108,6 +109,14 @@ public:
     void setParameters(const PlotMSParameters& params);
     // </group>
     
+    // Gets/Sets the export parameters for this PlotMS.
+    // <group>
+    virtual PlotMSExportParam& getExportParameters();
+    void setExportParameters(const PlotMSExportParam& params);
+    PlotExportFormat getExportFormat();
+    void setExportFormat( const PlotExportFormat format );
+    // </group>
+
     // Implements PlotMSParametersWatcher::parametersHaveChanged().
     void parametersHaveChanged(const PlotMSWatchedParameters& params,
                 int updateFlag);
@@ -137,8 +146,8 @@ public:
     void setOperationCompleted( bool completed );
 
 
-    // save plot  to file using specified format. If interactive, pop up confirm window, if not, no confirm windowl
-    bool save(const PlotExportFormat& format, const bool interactive);
+    // save plot  to file using specified format.
+    bool save(const PlotExportFormat& format);
 
     /**
      * PlotEngine methods
@@ -168,6 +177,9 @@ public:
 	void setAxisLocation( PlotAxis locationX, PlotAxis locationY );
 	PlotAxis getAxisLocationX() const;
 	PlotAxis getAxisLocationY() const;
+	vector<String> getFiles() const;
+
+
 private:
     // Plotter GUI.
     //PlotMSPlotter* itsPlotter_;
@@ -175,6 +187,8 @@ private:
 
     // Current parameters.
     PlotMSParameters itsParameters_;
+    PlotMSExportParam itsExportParameters_;
+    PlotExportFormat itsExportFormat;
     
     // Logger.
     PlotLoggerPtr itsLogger_;

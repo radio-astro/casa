@@ -49,52 +49,29 @@ public:
 	virtual bool isActionEnabled( PlotMSAction::Type type ) const;
 
 	//Return the current client plot.
-	virtual PlotMSPlot* getCurrentPlot() const;
-
+	virtual vector<PlotMSPlot*> getCurrentPlots() const;
 
 	//Retrieve the plot load axes the user has specified.
-	virtual vector<PMS::Axis> getSelectedLoadAxes() const {
-		vector<PMS::Axis> loadAxes;
-		return loadAxes;
-	}
+	virtual vector<vector<PMS::Axis> > getSelectedLoadAxes() const;
 
 	//Retrieve the release axes the user has specified.
-	virtual vector<PMS::Axis> getSelectedReleaseAxes() const {
-		vector<PMS::Axis> releaseAxes;
-		return releaseAxes;
-	}
-
-	//Retrieve information specified by the user for saving (exporting)
-	//the plot to a variety of formats.
-	virtual PlotExportFormat getPlotExportFormat() const {
-		PlotExportFormat format(PlotExportFormat::JPG, "");
-		return format;
-	}
+	virtual vector<vector<PMS::Axis> > getSelectedReleaseAxes() const;
 
 	//Retrieve flagging information specified by the client.
 	virtual PlotMSFlagging getFlagging() const;
 	virtual void setFlagging(PlotMSFlagging flag);
 
-	virtual PlotMSPlotParameters getPlotParameters() const {
-		//Seems to be used by Action Summary to determine if a file
-		//has been set.
-		PlotMSPlotParameters params(itsFactory_);
-		return params;
-	}
+	
 
 	//Return whether the client is interactive (a GUI) or noninteractive
 	//(a script)
 	virtual bool isInteractive() const;
 
-	//Return whether the client would like a verbose summary.
-	virtual bool isMSSummaryVerbose() const;
-	//Return the type of summary.
-	virtual PMS::SummaryType getMSSummaryType() const;
+	
 
 
 	//Save the current plot to a file.
-	virtual bool exportPlot(const PlotExportFormat& format,
-			const bool interactive, const bool async);
+	virtual bool exportPlot(const PlotExportFormat& format, const bool async);
 
 
 	//Display an error in a client dependent way.  For a GUI, this may
@@ -127,7 +104,9 @@ public:
 	//of threaded operation.  Examples include caching, exporting a plot, and
 	//drawing.
 	virtual ThreadController* getThreadController( PlotMSAction::Type type,
-			PMSPTMethod postThreadMethod = NULL, PMSPTObject postThreadObject = NULL );
+			PMSPTMethod postThreadMethod = NULL,
+			PlotMSPlot* postThreadObject = NULL,
+			int index = 0);
 
 	virtual void plot();
 	virtual void showGUI( bool show = true);
@@ -153,8 +132,7 @@ private:
 	void initialize( Plotter::Implementation impl );
 	PlotMSApp* plotController;
 	PlotMSFlagging flagging;
-	PlotMSPlot* currentPlot;
-	//bool taskRunning;
+	vector<PlotMSPlot*> currentPlots;
 
 	const String SCRIPT_CLIENT;
 };

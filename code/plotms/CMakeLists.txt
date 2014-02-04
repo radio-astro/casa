@@ -28,12 +28,15 @@ qt4_wrap_cpp( outfiles_qoh
   Gui/PlotMSLoggerWidget.qo.h
   Gui/PlotMSPlotter.qo.h
   Gui/PlotMSSelectionWidget.qo.h
+  Gui/PlotMSSummaryDialog.qo.h
   Gui/PlotMSTransformationsWidget.qo.h
   Gui/PlotRangeWidget.qo.h
   GuiTabs/PlotMSAnnotatorTab.qo.h
   GuiTabs/PlotMSAxesTab.qo.h
   GuiTabs/PlotMSCacheTab.qo.h
   GuiTabs/PlotMSCanvasTab.qo.h
+  GuiTabs/PlotMSDataCollapsible.qo.h
+  GuiTabs/PlotMSDataSummaryTab.qo.h
   GuiTabs/PlotMSDataTab.qo.h
   GuiTabs/PlotMSDisplayTab.qo.h
   GuiTabs/PlotMSIterateTab.qo.h
@@ -56,6 +59,7 @@ casa_qt4_wrap_ui( outfiles_ui
   Gui/PlotMSAxisWidget.ui
   Gui/PlotMSFlaggingWidget.ui
   Gui/PlotMSPlotter.ui
+  Gui/PlotMSSummaryDialog.ui
   Gui/PlotMSTransformationsWidget.ui
   Gui/PlotRangeWidget.ui
   GuiTabs/PlotMSAnnotatorTab.ui
@@ -63,6 +67,8 @@ casa_qt4_wrap_ui( outfiles_ui
   GuiTabs/PlotMSCacheTab.ui
   GuiTabs/PlotMSCanvasTab.ui
   GuiTabs/PlotMSDataTab.ui
+  GuiTabs/PlotMSDataCollapsible.ui
+  GuiTabs/PlotMSDataSummaryTab.ui
   GuiTabs/PlotMSDisplayTab.ui
   GuiTabs/PlotMSIterateTab.ui
   GuiTabs/PlotMSExportTab.ui
@@ -90,6 +96,7 @@ casa_add_library( plotms
   Actions/ActionClearPlotter.cc
   Actions/ActionClearRegions.cc
   Actions/ActionExport.cc
+  Actions/ActionExportDialog.cc
   Actions/ActionFactory.cc
   Actions/ActionHoldReleaseDrawing.cc
   Actions/ActionInformation.cc
@@ -111,6 +118,7 @@ casa_add_library( plotms
   Actions/ActionStackForward.cc
   Actions/ActionSubtractRegions.cc
   Actions/ActionSummary.cc
+  Actions/ActionSummaryDialog.cc
   Actions/ActionTool.cc
   Actions/ActionTracker.cc
   Actions/ActionTrackerDisplay.cc
@@ -141,12 +149,15 @@ casa_add_library( plotms
   Gui/PlotMSLoggerWidget.cc
   Gui/PlotMSPlotter.cc
   Gui/PlotMSSelectionWidget.cc
+  Gui/PlotMSSummaryDialog.cc
   Gui/PlotMSTransformationsWidget.cc
   Gui/PlotRangeWidget.cc
   GuiTabs/PlotMSAnnotatorTab.cc
   GuiTabs/PlotMSAxesTab.cc
   GuiTabs/PlotMSCacheTab.cc
   GuiTabs/PlotMSCanvasTab.cc
+  GuiTabs/PlotMSDataCollapsible.cc
+  GuiTabs/PlotMSDataSummaryTab.cc
   GuiTabs/PlotMSDataTab.cc
   GuiTabs/PlotMSDisplayTab.cc
   GuiTabs/PlotMSIterateTab.cc
@@ -203,6 +214,7 @@ INSTALL (FILES
         Gui/PlotMSLoggerWidget.qo.h
         Gui/PlotMSPlotter.qo.h
         Gui/PlotMSSelectionWidget.qo.h
+        Gui/PlotMSSummaryDialog.qo.h
         Gui/PlotMSTransformationsWidget.qo.h
         Gui/PlotRangeWidget.qo.h
 	DESTINATION include/casacode/plotms/Gui )
@@ -212,6 +224,8 @@ INSTALL (FILES
         GuiTabs/PlotMSAxesTab.qo.h
         GuiTabs/PlotMSCacheTab.qo.h
         GuiTabs/PlotMSCanvasTab.qo.h
+        GuiTabs/PlotMSDataCollapsible.qo.h
+        GuiTabs/PlotMSDataSummaryTab.qo.h
         GuiTabs/PlotMSDataTab.qo.h
         GuiTabs/PlotMSDisplayTab.qo.h
         GuiTabs/PlotMSExportTab.qo.h
@@ -259,3 +273,6 @@ casa_add_executable( plotms tExportPlot test/tExportPlot.cc )
 casa_add_executable( plotms tDataSelection test/tDataSelection.cc )
 casa_add_executable( plotms tSymbol test/tSymbol.cc )
 casa_add_executable( plotms tExportRange test/tExportRange.cc )
+casa_add_executable( plotms tGridPlacement test/tGridPlacement.cc )
+casa_add_executable( plotms tGridPlacementMultiplePlots test/tGridPlacementMultiplePlots.cc )
+casa_add_executable( plotms tGridPlacementMultipleRuns test/tGridPlacementMultipleRuns.cc )

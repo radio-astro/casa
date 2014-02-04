@@ -22,32 +22,51 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: $
 
-#ifndef PLOTINFORMATIONMANAGER_H_
-#define PLOTINFORMATIONMANAGER_H_
+#include "ActionExportDialog.h"
+#include <plotms/Actions/ActionExport.h>
+#include <plotms/Actions/ActionFactory.h>
+#include <plotms/Client/Client.h>
+#include <plotms/PlotMS/PlotMS.h>
+#include <plotms/GuiTabs/PlotMSExportTab.qo.h>
+#include <QDebug>
 
 namespace casa {
 
-/**
- * Abstracts directions to the PlotMSPlotTab for GUI implementation
- * independence.
- */
-
-class PlotInformationManager {
-public:
-	 virtual void insertData( int insertIndex ) = 0;
-	 virtual void insertAxes( int insertIndex ) = 0;
-	 virtual void insertIterate( int insertIndex ) = 0;
-	 virtual void insertTransformations( int insertIndex ) = 0;
-	 virtual void insertDisplay( int insertIndex ) = 0;
-	 virtual void insertCanvas( int insertIndex ) = 0;
-	 virtual void insertExport( int insertIndex ) = 0;
-	 virtual void clearAfter( int startClearIndex) = 0;
-protected:
-	 PlotInformationManager(){};
-	 virtual ~PlotInformationManager(){};
-};
+ActionExportDialog::ActionExportDialog(Client* client)
+	: PlotMSAction( client ){
+	itsType_=EXPORT_DIALOG;
+	setUseThreading( false );
+	exportDialog = NULL;
 
 }
 
-#endif /* PLOTINFORMATIONMANAGER_H_ */
+bool ActionExportDialog::doActionSpecific( PlotMSApp* plotms){
+	if ( exportDialog == NULL ){
+		exportDialog = new PlotMSExportTab();
+	}
+
+	int result = exportDialog->exec();
+	bool success = true;
+	//Perform an export.
+	if ( result == 1 ){
+		ActionExport exportAction( client );
+		PlotExportFormat format = exportDialog->currentlySetExportFormat();
+		exportAction.setExportFormat( format );
+		PlotMSExportParam exportParams = exportDialog->getExportParams();
+		plotms->setExportParameters( exportParams );
+		plotms->setExportFormat( format );
+		success = exportAction.doAction( plotms );
+		if ( !success ){
+			itsDoActionResult_ = exportAction.doActionResult();
+		}
+	}
+	return success;
+}
+
+ActionExportDialog::~ActionExportDialog() {
+	delete exportDialog;
+}
+
+} /* namespace casa */

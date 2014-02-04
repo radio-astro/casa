@@ -59,11 +59,26 @@ public:
     unsigned int canvasCols() const;
     // </group>
 
-    
+    //Erase all trace of this plot
+    void disown( PlotMSPlot* plot );
+
     // Copy operator.
     PlotMSPage& operator=(const PlotMSPage& copy);
-    
+
+    // Returns true if the canvas at (rowIndex, colIndex) does not yet have
+    // a plot or if it already has the plot passed in; return false otherwise.
+    bool isSpot( int rowIndex, int colIndex, PlotMSPlot* plot ) const;
+
+    //  Returns the <rowIndex,colIndex> of the first available canvas that does
+    //  not yet have a plot.  Returns <-1,-1> if there are no canvases without
+    //  plots.
+    pair<int,int> findEmptySpot() const;
+
+
 private:
+    // Resizes the grid to the given number of rows and columns.
+    void resize(unsigned int nrows, unsigned int ncols);
+
     // Parent.
     PlotMSPages* itsParent_;
 
@@ -78,8 +93,7 @@ private:
     PlotMSPage(PlotMSPages& parent);
     
     
-    // Resizes the grid to the given number of rows and columns.
-    void resize(unsigned int nrows, unsigned int ncols);
+
     
     // Returns the canvas at the given row and column, or NULL if invalid.
     PlotCanvasPtr canvas(unsigned int row, unsigned int col);

@@ -38,7 +38,6 @@ namespace casa {
 
 //# Forward declarations.
 class PlotSymbolWidget;
-class QtIndexChooser;
 class QtLabelWidget;
 
 
@@ -71,18 +70,9 @@ public:
     // Implements PlotMSPlotSubtab::update().  WARNING: for now, only works
     // with PlotMSSinglePlotParameters.
     void update(const PlotMSPlot& plot);
-    
-    
-    // Hides the index chooser at the top.
-    void hideIndex();
-    
-    // Uses the index chooser at the top, with the given number of rows and
-    // columns, to manage multi-plot display parameters.
-    void setIndexRowsCols(unsigned int nRows, unsigned int nCols);
+ 
     
 private:
-    // Index chooser.
-    QtIndexChooser* itsIndexChooser_;
     
     // Label widget for title.
     QtLabelWidget* itsTitleWidget_;
@@ -93,9 +83,7 @@ private:
     // Display parameters.
     PMS_PP_Display itsPDisplay_;
     
-private slots:
-    // Slot for when the index changes.
-    void indexChanged(unsigned int index);
+
 };
 
 }

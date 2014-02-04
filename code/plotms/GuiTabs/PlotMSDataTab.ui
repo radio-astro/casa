@@ -1,7 +1,8 @@
-<ui version="4.0" >
- <class>MSDataTab</class>
- <widget class="QWidget" name="MSDataTab" >
-  <property name="geometry" >
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PlotMSDataTabClass</class>
+ <widget class="QWidget" name="PlotMSDataTabClass">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
@@ -9,154 +10,167 @@
     <height>400</height>
    </rect>
   </property>
-  <property name="maximumSize" >
+  <property name="maximumSize">
    <size>
-    <width>275</width>
+    <width>300</width>
     <height>16777215</height>
    </size>
   </property>
-  <property name="windowTitle" >
+  <property name="windowTitle">
    <string>PlotMS MS Data Tab</string>
   </property>
-  <layout class="QVBoxLayout" >
-   <property name="spacing" >
-    <number>3</number>
-   </property>
-   <property name="leftMargin" >
-    <number>3</number>
-   </property>
-   <property name="topMargin" >
-    <number>3</number>
-   </property>
-   <property name="rightMargin" >
-    <number>3</number>
-   </property>
-   <property name="bottomMargin" >
-    <number>3</number>
-   </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QLabel" name="locationLabel" >
-     <property name="text" >
-      <string>File Location</string>
+    <widget class="QLabel" name="locationLabel">
+     <property name="text">
+      <string>File</string>
      </property>
-     <property name="textFormat" >
+     <property name="textFormat">
       <enum>Qt::RichText</enum>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QFrame" name="locationFrame" >
-     <property name="frameShape" >
+    <widget class="QFrame" name="locationFrame">
+     <property name="frameShape">
       <enum>QFrame::NoFrame</enum>
      </property>
-     <property name="frameShadow" >
+     <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="Line" name="line" >
-     <property name="orientation" >
+    <widget class="Line" name="line_3">
+     <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="selectionLabel" >
-     <property name="text" >
-      <string>Selection</string>
-     </property>
-     <property name="textFormat" >
-      <enum>Qt::RichText</enum>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="selectionLabel">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Selection</string>
+       </property>
+       <property name="textFormat">
+        <enum>Qt::RichText</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="Line" name="line">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
    </item>
    <item>
-    <widget class="QFrame" name="selectionFrame" >
-     <property name="sizePolicy" >
-      <sizepolicy vsizetype="MinimumExpanding" hsizetype="Preferred" >
+    <widget class="QFrame" name="selectionFrame">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
-     <property name="frameShape" >
+     <property name="frameShape">
       <enum>QFrame::NoFrame</enum>
      </property>
-     <property name="frameShadow" >
+     <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="Line" name="line_2" >
-     <property name="orientation" >
+    <widget class="Line" name="line_2">
+     <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="averagingLabel" >
-     <property name="text" >
-      <string>Averaging</string>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <property name="spacing">
+      <number>0</number>
      </property>
-     <property name="textFormat" >
-      <enum>Qt::RichText</enum>
-     </property>
-    </widget>
+     <item>
+      <widget class="QLabel" name="averagingLabel">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Averaging</string>
+       </property>
+       <property name="textFormat">
+        <enum>Qt::RichText</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_4">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>6</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
    </item>
    <item>
-    <widget class="QFrame" name="averagingFrame" >
-     <property name="frameShape" >
+    <widget class="QFrame" name="averagingFrame">
+     <property name="frameShape">
       <enum>QFrame::NoFrame</enum>
      </property>
-     <property name="frameShadow" >
+     <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
     </widget>
    </item>
    <item>
     <spacer>
-     <property name="orientation" >
+     <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
-     <property name="sizeHint" >
+     <property name="sizeType">
+      <enum>QSizePolicy::Preferred</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
       <size>
        <width>235</width>
-       <height>331</height>
+       <height>10</height>
       </size>
      </property>
     </spacer>
-   </item>
-   <item>
-    <widget class="Line" name="line_3" >
-     <property name="orientation" >
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" >
-     <property name="spacing" >
-      <number>3</number>
-     </property>
-     <item>
-      <widget class="QComboBox" name="summaryType" />
-     </item>
-     <item>
-      <widget class="QCheckBox" name="summaryVerbose" >
-       <property name="text" >
-        <string>Verbose</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="summaryButton" >
-       <property name="text" >
-        <string>Summary</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
    </item>
   </layout>
  </widget>

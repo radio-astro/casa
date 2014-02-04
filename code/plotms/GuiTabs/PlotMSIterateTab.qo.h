@@ -37,7 +37,6 @@
 namespace casa {
 
 //# Forward declarations.
-class QtIndexChooser;
 class QtLabelWidget;
 
 
@@ -48,7 +47,6 @@ class PlotMSIterateTab : public PlotMSPlotSubtab, Ui::IterateTab {
     
 public:
 
-
     // Constructor which takes the parent tab and plotter.
     PlotMSIterateTab(PlotMSPlotTab* plotTab, PlotMSPlotter* parent);
     
@@ -57,7 +55,7 @@ public:
     
     
     // Implements PlotMSTab::tabName().
-    QString tabName() const { return "Iter"; }
+    QString tabName() const { return "Page"; }
     
     // Implements PlotMSPlotSubtab::getValue().
     void getValue(PlotMSPlotParameters& params) const;
@@ -67,19 +65,28 @@ public:
     
     // Implements PlotMSPlotSubtab::update().
     void update(const PlotMSPlot& plot);
-    
-    
-    
-private:
-	
-    
+
+    // Uses the index chooser at the top, with the given number of rows and
+    // columns, to manage multi-plot display parameters.
+    bool setGridSize(unsigned int nRows,unsigned int nCols);
 
 private slots:
-	//The number of rows or columns in the grid has changed
-	void gridChanged();
 	//Whether to use a single global axis has changed.
 	void globalChanged();
+
+
+private:
+	void hideGridLocation( bool hide );
+	void setGridIndices( int rowIndex, int colIndex );
+	//The number of rows or columns in the grid has changed
+	void gridChanged( int rowCount, int colCount);
 };
+    
+    
+
+    
+
+
 
 
 }

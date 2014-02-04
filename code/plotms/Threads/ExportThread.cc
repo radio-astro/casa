@@ -29,25 +29,35 @@
 namespace casa {
 
 ExportThread::ExportThread()
-	: format( PlotExportFormat::JPG, "" ) {
-	exportPlot = NULL;
+: format( PlotExportFormat::JPG, "" ) {
 }
 
 void ExportThread::setExportFormat(PlotExportFormat exportFormat ){
 	format = exportFormat;
 }
 
-void ExportThread::setPlot( PlotMSPlot* plot ){
-	exportPlot = plot;
+void ExportThread::setPlots( vector<PlotMSPlot*> plots ){
+	exportPlots = plots;
 }
 
 bool ExportThread::doWork(){
-	bool result = exportPlot->exportToFormat( format );
+	bool result = true;
+	int count = exportPlots.size();
+	//for ( int i = 0; i < count; i++ ){
+	if ( count > 0 ){
+		result = exportPlots[0]->exportToFormat( format );
+	}
+	//}
 	return result;
 }
 
 void ExportThread::cancelWork(){
-	exportPlot->exportToFormatCancel();
+	int count = exportPlots.size();
+	//for ( int i = 0; i < count; i++ ){
+	if ( count > 0 ){
+		exportPlots[0]->exportToFormatCancel();
+	}
+	//}
 }
 
 ExportThread::~ExportThread() {

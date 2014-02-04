@@ -30,6 +30,7 @@
 #include <plotms/Gui/PlotMSLoggerWidget.qo.h>
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
+#include <QDebug>
 
 namespace casa {
 
@@ -62,6 +63,8 @@ PlotMSOptionsTab::PlotMSOptionsTab(PlotMSPlotter* parent) : PlotMSTab(parent),
             SLOT(cachedImageSizeScreenResolution()));
     connect(histLimitSpinner, SIGNAL(valueChanged(int)),
             SLOT(historyLimitChanged()));
+    connect(rowSpin, SIGNAL(valueChanged(int)), SLOT(gridChanged()));
+    connect(colSpin, SIGNAL(valueChanged(int)), SLOT(gridChanged()));
 }
 
 PlotMSOptionsTab::~PlotMSOptionsTab() { }
@@ -88,6 +91,8 @@ void PlotMSOptionsTab::parametersHaveChanged(const PlotMSWatchedParameters& p,
         cacheSizeHeight->setValue(size.second);
         
         histLimitSpinner->setValue(itsParameters_.chooserHistoryLimit());
+        rowSpin->setValue( itsParameters_.getRowCount());
+        colSpin->setValue( itsParameters_.getColCount());
 
         itsChangeFlag_ = oldChange;
     }
@@ -114,6 +119,8 @@ void PlotMSOptionsTab::toolButtonStyleChanged(int newIndex) {
     else if(newIndex == 3) style = Qt::ToolButtonTextUnderIcon;
     itsPlotter_->setToolButtonStyle(style);
 }
+
+
 
 void PlotMSOptionsTab::logChanged() {
     if(!itsChangeFlag_ || itsLoggerWidget_ == NULL) return;
@@ -170,6 +177,34 @@ void PlotMSOptionsTab::historyLimitChanged() {
     
     itsParameters_.releaseNotification();
     itsChangeFlag_ = true;
+}
+
+void PlotMSOptionsTab::gridChanged(){
+	if(!itsChangeFlag_){
+		return;
+	}
+
+	int oldRowCount = itsParameters_.getRowCount();
+	int oldColCount = itsParameters_.getColCount();
+	int rowCount = rowSpin->value();
+	int colCount = colSpin->value();
+
+	bool changed = false;
+	if ( oldRowCount != rowCount || oldColCount != colCount ){
+		changed = true;
+	}
+
+	if ( changed ){
+		itsChangeFlag_ = false;
+		itsParameters_.holdNotification(this);
+
+
+		itsParameters_.setRowCount(rowCount);
+		itsParameters_.setColCount(colCount);
+
+		itsParameters_.releaseNotification();
+		itsChangeFlag_ = true;
+	}
 }
 
 }

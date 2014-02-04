@@ -34,6 +34,8 @@
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 
+#include <QDebug>
+
 namespace casa {
 
 ///////////////////////////////
@@ -43,39 +45,48 @@ namespace casa {
 // Constructors/Destructors//
 
 PlotMSDataTab::PlotMSDataTab(PlotMSPlotTab* plotTab, PlotMSPlotter* parent) :
-        PlotMSPlotSubtab(plotTab, parent) {
-    setupUi(this);
-    
+    		PlotMSPlotSubtab(plotTab, parent) {
+    ui.setupUi(this);
+
     // Setup widgets
     itsFileWidget_ = new QtFileWidget(true, false);
-    QtUtilities::putInFrame(locationFrame, itsFileWidget_);
-    
+    QtUtilities::putInFrame(ui.locationFrame, itsFileWidget_);
+
     itsSelectionWidget_ = new PlotMSSelectionWidget();
-    QtUtilities::putInFrame(selectionFrame, itsSelectionWidget_);
-    QtUtilities::putInScrollArea(selectionFrame);
-    
+    QtUtilities::putInFrame(ui.selectionFrame, itsSelectionWidget_);
+    QtUtilities::putInScrollArea(ui.selectionFrame);
+
     itsAveragingWidget_ = new PlotMSAveragingWidget();
-    QtUtilities::putInFrame(averagingFrame, itsAveragingWidget_);
+    QtUtilities::putInFrame(ui.averagingFrame, itsAveragingWidget_);
     
-    // Set up summary choices
-    const vector<String>& types = PMS::summaryTypeStrings();
-    for(unsigned int i = 0; i < types.size(); i++)
-        MSDataTab::summaryType->addItem(types[i].c_str());
-    
-    itsLabelDefaults_.insert(locationLabel, locationLabel->text());
-    itsLabelDefaults_.insert(selectionLabel, selectionLabel->text());
-    itsLabelDefaults_.insert(averagingLabel, averagingLabel->text());
-    
+    itsLabelDefaults_.insert(ui.locationLabel, ui.locationLabel->text());
+    itsLabelDefaults_.insert(ui.selectionLabel, ui.selectionLabel->text());
+    itsLabelDefaults_.insert(ui.averagingLabel, ui.averagingLabel->text());
+
     // Connect widgets
     connect(itsFileWidget_, SIGNAL(changed()), SIGNAL(changed()));
     connect(itsSelectionWidget_, SIGNAL(changed()), SIGNAL(changed()));
     connect(itsAveragingWidget_, SIGNAL(changed()), SIGNAL(changed()));
-    
-    // Synchronize summary button.
-    itsPlotter_->synchronizeAction(PlotMSAction::MS_SUMMARY, summaryButton);
+
 }
 
+
+
 PlotMSDataTab::~PlotMSDataTab() { }
+
+String PlotMSDataTab::getFileName() const {
+	return itsFileWidget_->getFile();
+}
+
+String PlotMSDataTab::getSelection() const {
+	PlotMSSelection selection = itsSelectionWidget_->getValue();
+	return selection.toStringShort();
+}
+
+String PlotMSDataTab::getAveraging() const {
+	PlotMSAveraging averaging = itsAveragingWidget_->getValue();
+	return averaging.toStringShort();
+}
 
 
 // Public Methods //
@@ -86,17 +97,18 @@ void PlotMSDataTab::getValue(PlotMSPlotParameters& params) const {
         params.setGroup<PMS_PP_MSData>();
         d = params.typedGroup<PMS_PP_MSData>();
     }
-    
     d->setFilename(itsFileWidget_->getFile());
     d->setSelection(itsSelectionWidget_->getValue());
     d->setAveraging(itsAveragingWidget_->getValue());
 }
 
+
+
 void PlotMSDataTab::setValue(const PlotMSPlotParameters& params) {
     const PMS_PP_MSData* d = params.typedGroup<PMS_PP_MSData>();
     if(d == NULL) return;
-    
     itsFileWidget_->setFile(d->filename());
+
     itsSelectionWidget_->setValue(d->selection());
     itsAveragingWidget_->setValue(d->averaging());
 }
@@ -104,22 +116,12 @@ void PlotMSDataTab::setValue(const PlotMSPlotParameters& params) {
 void PlotMSDataTab::update(const PlotMSPlot& plot) {
     const PMS_PP_MSData* d = plot.parameters().typedGroup<PMS_PP_MSData>();
     if(d == NULL) return;
-    
-    highlightWidgetText(locationLabel, itsFileWidget_->getFile() != d->filename());
-    highlightWidgetText(selectionLabel,
+    highlightWidgetText(ui.locationLabel, itsFileWidget_->getFile() != d->filename());
+    highlightWidgetText(ui.selectionLabel,
 	    itsSelectionWidget_->getValue().fieldsNotEqual(d->selection()));
-    highlightWidgetText(averagingLabel,
+    highlightWidgetText(ui.averagingLabel,
             itsAveragingWidget_->getValue() != d->averaging());
 }
 
-bool PlotMSDataTab::summaryVerbose() const {
-    return MSDataTab::summaryVerbose->isChecked(); }
-PMS::SummaryType PlotMSDataTab::summaryType() const {
-    bool ok;
-    PMS::SummaryType t = PMS::summaryType(
-            MSDataTab::summaryType->currentText().toStdString(), &ok);
-    if(!ok) t = PMS::S_ALL;
-    return t;
-}
 
 }

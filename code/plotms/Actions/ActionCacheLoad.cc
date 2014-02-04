@@ -28,6 +28,7 @@
 #include <plotms/Threads/CacheThread.h>
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
+#include <QDebug>
 
 namespace casa {
 
@@ -37,12 +38,16 @@ ActionCacheLoad::ActionCacheLoad( Client* client )
 
 }
 
-ActionCacheLoad::ActionCacheLoad( Client* client, PlotMSPlot* plot,
+ActionCacheLoad::ActionCacheLoad( Client* client, vector<PlotMSPlot*> plots,
 		PMSPTMethod postThreadMethod )
-	: ActionCache( client, plot, postThreadMethod){
+	: ActionCache( client, plots, postThreadMethod){
 	initialize();
-	axes = plot->getCachedAxes();
-	cachedData = plot->getCachedData();
+	int plotCount = plots.size();
+	for ( int i = 0; i < plotCount; i++ ){
+		vector<PMS::Axis> plotAxes = plots[i]->getCachedAxes();
+		axes.push_back( plots[i]->getCachedAxes() );
+		cachedData.push_back(plots[i]->getCachedData() );
+	}
 }
 
 void ActionCacheLoad::initialize(){
@@ -55,7 +60,7 @@ void ActionCacheLoad::setSetupPlot( bool setUp ){
 }
 
 
-bool ActionCacheLoad::isAxesValid( vector<pair<PMS::Axis,unsigned int > > /*cacheAxes*/, int /*axisIndex*/ ) const {
+bool ActionCacheLoad::isAxesValid( vector<pair<PMS::Axis,unsigned int > > /*cacheAxes*/, int /*plotIndex*/, int /*axisIndex*/ ) const {
 	bool valid = true;
 	/*if ( cacheAxes.size() > 0 ){
 		for(unsigned int j = 0; j < cacheAxes.size(); j++){
@@ -68,23 +73,18 @@ bool ActionCacheLoad::isAxesValid( vector<pair<PMS::Axis,unsigned int > > /*cach
 	return valid;
 }
 
-void ActionCacheLoad::setUpWorkParameters(CacheThread* cacheThread, vector<PMS::Axis>& axes){
-	/*ct = new PlotMSCacheThread(plot, &plot->cache(), a,
-			vector<PMS::DataColumn>(a.size(), PMS::DEFAULT_DATACOLUMN),
-			paramsData->filename(),paramsData->selection(),
-			paramsData->averaging(), paramsData->transformations(),
-			false,
-			&PMS_PP_Cache::notifyWatchers, paramsCache);*/
-	PlotMSPlotParameters& params = plot->parameters();
-	 PMS_PP_MSData* paramsData = params.typedGroup<PMS_PP_MSData>();
+void ActionCacheLoad::setUpWorkParameters(CacheThread* cacheThread, int plotIndex, vector<PMS::Axis>& axes){
+
+	PlotMSPlotParameters& params = plots[plotIndex]->parameters();
+	PMS_PP_MSData* paramsData = params.typedGroup<PMS_PP_MSData>();
 	if ( cacheThread != NULL ){
 		cacheThread->setLoad(true);
-		cacheThread->setCacheBase(&plot->cache());
+		cacheThread->setCacheBase(&plots[plotIndex]->cache());
 		if ( cachedData.size() == 0 ){
 			cacheThread->setAxesData( axes.size() );
 		}
 		else {
-			cacheThread->setAxesData( cachedData );
+			cacheThread->setAxesData( cachedData[plotIndex] );
 		}
 
 		cacheThread->setName( paramsData->filename() );
@@ -92,7 +92,6 @@ void ActionCacheLoad::setUpWorkParameters(CacheThread* cacheThread, vector<PMS::
 		cacheThread->setAveraging( paramsData->averaging() );
 		cacheThread->setTransformations(paramsData->transformations());
 		cacheThread->setSetupPlot( setupPlot );
-
 	}
 }
 
@@ -109,7 +108,10 @@ bool ActionCacheLoad::loadAxes() {
 		}
 		//We also need to get the data-column,model,corrected,
 		if ( this->cachedData.size() == 0 ){
-			cachedData = plot->getCachedData();
+			int plotCount = plots.size();
+			for ( int i = 0; i < plotCount; i++ ){
+				cachedData.push_back(plots[i]->getCachedData());
+			}
 		}
 	}
 	return axesLoaded;

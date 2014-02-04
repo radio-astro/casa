@@ -126,7 +126,6 @@ public:
     // Overrides QwtScaleDraw::label().
     QwtText label(double value) const;
     
-    void setInvisible( bool invisible );
     virtual void draw(QPainter* painter, const QPalette& palette) const;
     virtual int extent( const QPen& pen, const QFont& font ) const;
 
@@ -151,8 +150,6 @@ private:
 	bool m_referenceSet;
 	double m_referenceValue;
 	// </group>
-
-	bool invisible;
 };
 
 

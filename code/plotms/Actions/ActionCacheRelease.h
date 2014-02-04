@@ -34,12 +34,12 @@ class ActionCacheRelease  : public ActionCache {
 public:
 	ActionCacheRelease( Client* client );
 
-	virtual void checkFeasibility(PlotMSApp* plotms, vector<PMS::Axis>& a ) const;
+	virtual void checkFeasibility(PlotMSApp* plotms, int plotIndex, vector<PMS::Axis>& a ) const;
 	virtual ~ActionCacheRelease();
 protected:
 	virtual bool loadAxes();
-	virtual bool isAxesValid( vector<pair<PMS::Axis,unsigned int > > cacheAxes, int axisIndex ) const;
-	virtual void setUpWorkParameters( CacheThread* cacheThread, vector<PMS::Axis>& axes );
+	virtual bool isAxesValid( vector<pair<PMS::Axis,unsigned int > > cacheAxes, int vectorIndex, int axisIndex ) const;
+	virtual void setUpWorkParameters( CacheThread* cacheThread, int plotIndex, vector<PMS::Axis>& axes );
 };
 
 } /* namespace casa */

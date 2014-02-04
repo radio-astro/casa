@@ -69,6 +69,8 @@ public:
     static const String PARAM_AVERAGING; // Record (see PlotMSAveraging)
     static const String PARAM_AXIS_X; // String
     static const String PARAM_AXIS_Y; // String
+    static const String PARAM_GRIDROWS; //int
+    static const String PARAM_GRIDCOLS; //int
     static const String PARAM_CLEARSELECTIONS; // bool
     static const String PARAM_DATACOLUMN_X; // String
     static const String PARAM_DATACOLUMN_Y; // String
@@ -171,6 +173,11 @@ public:
     // RETURNS: none.
     static const String METHOD_SETPLOTPARAMS;
     
+    //Sets the export parameters.
+    // PARAMETERS: value (Record).
+    // RETURNS: none.
+    static const String METHOD_SETEXPORTPARAMS;
+
     // DBus method name for getting the flag extension parameters
     // (PARAM_FLAGGING).
     // PARAMETERS: none.

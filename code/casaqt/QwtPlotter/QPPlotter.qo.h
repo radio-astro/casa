@@ -82,10 +82,14 @@ public:
     ~QPPlotter();
     
     
+
     // Plotter Methods //
-    
+   
     // Implements Plotter::showGUI().
     void showGUI(bool showGUI = true);
+    
+    //Kludge for updating the plot when we are in Non-GUI mode.
+    void updateScriptGui();
     
     // Implements Plotter::size().
     pair<int, int> size() const;
@@ -219,6 +223,9 @@ public:
     
     virtual bool exportPlot(const PlotExportFormat& format );
 
+	//Return the number of rows and columns in the current grid.
+    int getRowCount();
+    int getColCount();
 protected:
     // For catching resize events.
     void resizeEvent(QResizeEvent* event);
@@ -263,7 +270,7 @@ private:
     
     void clearExternalAxes();
     void emptyLayout();
-    
+
     // Static //
     
     // Used to initialize GLOBAL_COLORS.

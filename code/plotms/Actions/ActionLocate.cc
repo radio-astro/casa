@@ -25,7 +25,7 @@
 
 #include "ActionLocate.h"
 #include <plotms/Plots/PlotMSPlot.h>
-#include <plotms/Data/PlotMSIndexer.h>
+//#include <plotms/Data/PlotMSIndexer.h>
 
 namespace casa {
 
@@ -40,11 +40,15 @@ void ActionLocate::redrawPlots(PlotMSPlot* /*plot*/){
 
 void ActionLocate::addRedrawPlot( PlotMSPlot* /*plot*/ ){
 }
+
 PlotLogMessage* ActionLocate::doFlagOperation( PlotMSPlot* plot,
 		int canvasIndex, vector<PlotRegion>& regions,
 		bool showUnflagged, bool showFlagged){
-	PlotLogMessage* m = plot->cache().indexer(plot->iter()+canvasIndex).locateRange(
+	PlotLogMessage* m = NULL;
+	if ( plot != NULL ){
+		m = plot->locateRange(canvasIndex,
 					Vector<PlotRegion>(regions),showUnflagged,showFlagged);
+	}
 
 	return m;
 }

@@ -62,6 +62,8 @@ void PlotMSSelection::fromRecord(const RecordInterface& record) {
       setForceNew(record.asInt("forceNew"));
 }
 
+
+
 Record PlotMSSelection::toRecord() const {
     Record record(Record::Variable);
     
@@ -71,6 +73,42 @@ Record PlotMSSelection::toRecord() const {
     record.define("forceNew",forceNew());
     
     return record;
+}
+
+bool PlotMSSelection::isEmpty() const {
+	bool emptySelection = true;
+	const vector<Field>& f = fields();
+	for(unsigned int i = 0; i < f.size(); i++){
+		String fieldValue = getValue( f[i] );
+		if ( fieldValue.length() > 0 ){
+			emptySelection = false;
+			break;
+		}
+	}
+	return emptySelection;
+}
+
+String PlotMSSelection::toStringShort() const {
+	stringstream ss;
+	ss.precision(6);
+	 if ( !isEmpty() ){
+		 ss << " Sel: ";
+		 const vector<Field>& f = fields();
+		 bool valueWritten = false;
+		 for(unsigned int i = 0; i < f.size(); i++){
+			 String fieldValue = getValue( f[i] );
+			 if ( fieldValue.length() > 0 ){
+				 if ( valueWritten ){
+					 ss << ", ";
+				 }
+				 else {
+					 valueWritten = true;
+				 }
+				 ss << f[i] << ": "<<fieldValue;
+			 }
+		 }
+	 }
+	 return ss.str();
 }
 
 void PlotMSSelection::apply(MeasurementSet& ms, MeasurementSet& selMS,

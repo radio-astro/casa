@@ -65,8 +65,8 @@ public:
   Bool isCommonAxisY() const {return commonAxisY_; };
   Bool isGlobalAxisX() const { return globalScaleX_; };
   Bool isGlobalAxisY() const { return globalScaleY_; };
-  Int Nx() const { return Nx_;};
-  Int Ny() const { return Ny_;};
+  Int getGridRow() const { return gridRow;};
+  Int getGridCol() const { return gridCol;};
 
   // </group>
   
@@ -79,8 +79,9 @@ public:
   void setCommonAxisY(Bool commonAxisY ){commonAxisY_ = commonAxisY; };
   void setGlobalScaleX(Bool globalAxisX ){globalScaleX_ = globalAxisX; };
   void setGlobalScaleY(Bool globalAxisY ){globalScaleY_ = globalAxisY; };
-  void setNx(Int nx) { Nx_ = max(nx,1); };
-  void setNy(Int ny) { Ny_ = max(ny,1); };
+  void setGridRow(Int nx) { gridRow = max(nx,0); };
+  void setGridCol(Int ny) { gridCol = max(ny,0); };
+  bool isIteration() const;
   // </group>
   
   
@@ -115,10 +116,11 @@ private:
   static const String COMMON_AXIS_Y;
 
 
-  // The number of plots in X and Y
-  Int Nx_,Ny_;
-  static const String ROW_COUNT;
-  static const String COL_COUNT;
+  // The location of the plot in rows and columns
+  Int gridRow;
+  Int gridCol;
+  static const String ROW_INDEX;
+  static const String COL_INDEX;
 
 
     

@@ -37,22 +37,15 @@ namespace casa {
 //////////////////////////////////
 
 // Static //
+const int DummyClass::dummyDraw = PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("REDRAW");
+const int DummyClass::dummyData = PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("MSDATA");
+const int DummyClass::dummyCache = PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("CACHE");
+const int DummyClass::dummyAxes = PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("AXES");
+const int DummyClass::dummyCanvas = PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("CANVAS");
+const int DummyClass::dummyDisplay = PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("DISPLAY");
+const int DummyClass::dummyIter = PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("ITERATION");
 
 
-const int dum_a =
-    PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("REDRAW");
-const int dum_b =
-    PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("MSDATA");
-const int dum_c =
-    PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("CACHE");
-const int dum_d =
-    PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("AXES");
-const int dum_e =
-    PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("CANVAS");
-const int dum_f =
-    PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("DISPLAY");
-const int dum_g =
-    PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("ITERATION");
 const int PlotMSParameters::UPDATE_LOG =
     PlotMSWatchedParameters::REGISTER_UPDATE_FLAG("LOG");
 const int PlotMSParameters::UPDATE_PLOTMS_OPTIONS =
@@ -68,12 +61,14 @@ void PlotMSParameters::setChooserListoryLimit(int histLimit) {
 
 PlotMSParameters::PlotMSParameters(const String& logFilename, int logEvents,
         LogMessage::Priority logPriority, bool clearSelections,
-        int cachedImageWidth, int cachedImageHeight) :
+        int cachedImageWidth, int cachedImageHeight, int rows, int cols) :
         itsLogFilename_(logFilename), itsLogEvents_(logEvents),
         itsLogPriority_(logPriority),
         itsClearSelectionsOnAxesChange_(clearSelections),
         itsCachedImageWidth_(cachedImageWidth),
         itsCachedImageHeight_(cachedImageHeight) {
+	rowCount = rows;
+	colCount = cols;
 }
 
 PlotMSParameters::PlotMSParameters(const PlotMSParameters& copy)
@@ -130,6 +125,32 @@ void PlotMSParameters::setCachedImageSizeToResolution() {
     setCachedImageSize(res.width(), res.height());
 }
 
+
+void PlotMSParameters::setRowCount(int newRowCount ){
+	if ( rowCount != newRowCount ){
+		rowCount = newRowCount;
+		updateFlag(UPDATE_PLOTMS_OPTIONS);
+	}
+}
+
+
+int PlotMSParameters::getRowCount() const {
+	return rowCount;
+}
+
+
+void PlotMSParameters::setColCount( int newColCount ){
+	if ( colCount != newColCount ){
+		colCount = newColCount;
+		updateFlag(UPDATE_PLOTMS_OPTIONS);
+	}
+}
+
+
+int PlotMSParameters::getColCount() const {
+	return colCount;
+}
+
 PlotMSParameters& PlotMSParameters::operator=(const PlotMSParameters& copy) {
     int update = currentUpdateFlag();
     
@@ -144,29 +165,41 @@ PlotMSParameters& PlotMSParameters::operator=(const PlotMSParameters& copy) {
         itsClearSelectionsOnAxesChange_ = copy.itsClearSelectionsOnAxesChange_;
         itsCachedImageWidth_ = copy.itsCachedImageWidth_;
         itsCachedImageHeight_ = copy.itsCachedImageHeight_;
+        rowCount = copy.rowCount;
+        colCount = copy.colCount;
         update |= UPDATE_PLOTMS_OPTIONS;
     }
-    
+
     updateFlags(update);
     return *this;
 }
 
-bool PlotMSParameters::equals(const PlotMSWatchedParameters& other,
-        int updateFlags) const {
+bool PlotMSParameters::equals(const PlotMSWatchedParameters& other, int updateFlags) const {
+	bool equalParams = true;
     const PlotMSParameters* o = dynamic_cast<const PlotMSParameters*>(&other);
-    if(o == NULL) return false;
+    if(o == NULL){
+    	equalParams = false;
+    }
     
-    if(updateFlags & UPDATE_LOG)
+    if(updateFlags & UPDATE_LOG){
         if(itsLogFilename_ != o->itsLogFilename_ ||
            itsLogEvents_ != o->itsLogEvents_ ||
-           itsLogPriority_ != o->itsLogPriority_) return false;
+           itsLogPriority_ != o->itsLogPriority_){
+        	equalParams = false;
+        }
+    }
     
-    if(updateFlags & UPDATE_PLOTMS_OPTIONS)
+    if(updateFlags & UPDATE_PLOTMS_OPTIONS){
         if(itsClearSelectionsOnAxesChange_!= o->itsClearSelectionsOnAxesChange_
            || itsCachedImageWidth_ != o->itsCachedImageWidth_ ||
-           itsCachedImageHeight_ != o->itsCachedImageHeight_) return false;
+           itsCachedImageHeight_ != o->itsCachedImageHeight_ ||
+           rowCount != o->rowCount || colCount != o->colCount){
+        	equalParams = false;
+        }
+    }
 
-    return true;
+
+    return equalParams;
 }
 
 }

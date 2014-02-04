@@ -134,6 +134,9 @@ public:
     // Refreshes the plotter GUI.
     virtual void refresh() = 0;
     
+    //Forces the script client to refresh.
+    virtual void updateScriptGui() = 0;
+
     // Closes the plotter window.
     virtual void close() = 0;
    
@@ -209,7 +212,7 @@ public:
     
     // Clears all plot panels from the plotter.
     virtual void clearPanels() = 0;
-    
+
     // Removes the given plot panel from the plotter.
     virtual void removePanel(PlotPanelPtr panel) = 0;
     

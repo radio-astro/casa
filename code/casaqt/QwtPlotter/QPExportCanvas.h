@@ -42,7 +42,8 @@ public:
 	virtual ~QPExportCanvas(){}
 	virtual bool print( QPrinter& printer ) = 0;
 	virtual bool print(  QPainter* painter, PlotAreaFillPtr paf, double widthRatio,
-			double heightRatio, QRect imageRect ) = 0;
+			double heightRatio, int externalAxisWidth, int externalAxisHeight,
+			int rowIndex, int colIndex, QRect imageRect ) = 0;
 	virtual QImage  grabImageFromCanvas(const PlotExportFormat& format ) = 0;
 	virtual PlotLoggerPtr logger() const = 0;
 	virtual int canvasWidth() const = 0;
@@ -50,6 +51,12 @@ public:
 	virtual const QPalette& palette() const = 0;
 	virtual QPalette::ColorRole backgroundRole() const = 0;
 	virtual PlotFactory* implementationFactory() const = 0;
+	virtual bool isAxis() const {
+		return false;
+	}
+	virtual bool isVertical() const {
+		return false;
+	}
 };
 
 }

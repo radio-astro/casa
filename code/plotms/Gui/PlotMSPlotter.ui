@@ -26,7 +26,7 @@
    <string>PlotMS</string>
   </property>
   <property name="windowIcon">
-   <iconset>
+   <iconset resource="PlotMSPlotter.qrc">
     <normaloff>:/images/images/plotms.png</normaloff>:/images/images/plotms.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
@@ -52,6 +52,7 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
+    <addaction name="actionClose"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuView">
@@ -75,7 +76,10 @@
     <addaction name="actionAbout"/>
     <addaction name="actionAboutQt"/>
    </widget>
+   
    <addaction name="menuFile"/>
+   <addaction name="menuExport"/>
+   <addaction name="menuSummary"/>
    <addaction name="menuView"/>
    <addaction name="menuHelp"/>
   </widget>
@@ -133,16 +137,21 @@
   </widget>
   <action name="actionQuit">
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/actions/images/quit.png</normaloff>:/actions/images/quit.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Quit</string>
    </property>
   </action>
+  <action name="actionClose">
+   <property name="text">
+    <string>&amp;Close...</string>
+   </property>
+  </action>
   <action name="actionClearRegions">
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/actions/images/clear.png</normaloff>:/actions/images/clear.png</iconset>
    </property>
    <property name="text">
@@ -151,7 +160,7 @@
   </action>
   <action name="actionFlag">
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/actions/images/flag.png</normaloff>:/actions/images/flag.png</iconset>
    </property>
    <property name="text">
@@ -160,7 +169,7 @@
   </action>
   <action name="actionUnflag">
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/actions/images/unflag.png</normaloff>:/actions/images/unflag.png</iconset>
    </property>
    <property name="text">
@@ -169,7 +178,7 @@
   </action>
   <action name="actionLocate">
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/actions/images/locate.png</normaloff>:/actions/images/locate.png</iconset>
    </property>
    <property name="text">
@@ -181,7 +190,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/actions/images/next.png</normaloff>:/actions/images/next.png</iconset>
    </property>
    <property name="text">
@@ -193,7 +202,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/actions/images/prev.png</normaloff>:/actions/images/prev.png</iconset>
    </property>
    <property name="text">
@@ -208,7 +217,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/menu/images/tools_toolbar.png</normaloff>:/menu/images/tools_toolbar.png</iconset>
    </property>
    <property name="text">
@@ -217,7 +226,7 @@
   </action>
   <action name="actionAbout">
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/menu/images/about.png</normaloff>:/menu/images/about.png</iconset>
    </property>
    <property name="text">
@@ -226,7 +235,7 @@
   </action>
   <action name="actionAboutQt">
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/menu/images/about_qt.png</normaloff>:/menu/images/about_qt.png</iconset>
    </property>
    <property name="text">
@@ -238,11 +247,27 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/actions/images/mark.png</normaloff>:/actions/images/mark.png</iconset>
    </property>
    <property name="text">
     <string>Mark Regions</string>
+   </property>
+  </action>
+  <action name="menuSummary">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Summary</string>
+   </property>
+  </action>
+  <action name="menuExport">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Export</string>
    </property>
   </action>
   <action name="actionZoom">
@@ -250,7 +275,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/actions/images/zoom.png</normaloff>:/actions/images/zoom.png</iconset>
    </property>
    <property name="text">
@@ -262,7 +287,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/actions/images/pan.png</normaloff>:/actions/images/pan.png</iconset>
    </property>
    <property name="text">
@@ -271,7 +296,7 @@
   </action>
   <action name="actionStackBase">
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/actions/images/stack_base.png</normaloff>:/actions/images/stack_base.png</iconset>
    </property>
    <property name="text">
@@ -280,7 +305,7 @@
   </action>
   <action name="actionStackBack">
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/actions/images/stack_back.png</normaloff>:/actions/images/stack_back.png</iconset>
    </property>
    <property name="text">
@@ -289,7 +314,7 @@
   </action>
   <action name="actionStackForward">
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/actions/images/stack_forward.png</normaloff>:/actions/images/stack_forward.png</iconset>
    </property>
    <property name="text">
@@ -298,7 +323,7 @@
   </action>
   <action name="actionClearPlots">
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/actions/images/clear_plot.png</normaloff>:/actions/images/clear_plot.png</iconset>
    </property>
    <property name="text">
@@ -313,7 +338,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/menu/images/iteration_toolbar.png</normaloff>:/menu/images/iteration_toolbar.png</iconset>
    </property>
    <property name="text">
@@ -325,7 +350,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/actions/images/first.png</normaloff>:/actions/images/first.png</iconset>
    </property>
    <property name="text">
@@ -337,7 +362,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/actions/images/last.png</normaloff>:/actions/images/last.png</iconset>
    </property>
    <property name="text">
@@ -360,7 +385,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/menu/images/display_toolbar.png</normaloff>:/menu/images/display_toolbar.png</iconset>
    </property>
    <property name="text">
@@ -414,7 +439,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/actions/images/annotate_text.png</normaloff>:/actions/images/annotate_text.png</iconset>
    </property>
    <property name="text">
@@ -426,7 +451,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/actions/images/annotate_rectangle.png</normaloff>:/actions/images/annotate_rectangle.png</iconset>
    </property>
    <property name="text">
@@ -451,7 +476,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="PlotMSPlotter.qrc">
      <normaloff>:/actions/images/minus-bv.png</normaloff>:/actions/images/minus-bv.png</iconset>
    </property>
    <property name="text">

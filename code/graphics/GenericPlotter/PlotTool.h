@@ -113,6 +113,8 @@ public:
     // adding/deleting items, etc.) and would thus invalidate tool states.
     virtual void reset() { }
     
+
+
 protected:
     // Attached canvas (or NULL for none).
     PlotCanvas* m_canvas;
@@ -294,6 +296,7 @@ public:
     virtual vector<PlotRegion> getSelectedRects(
                 PlotCoordinate::System system = PlotCoordinate::WORLD)  const;
     virtual void clearSelectedRects();
+    virtual int getSelectedRectCount();
     // </group>
     
     // Overrides PlotTool::setActive().
@@ -566,6 +569,9 @@ public:
     // Implements PlotMouseTool::handleMouseEvent().
     virtual void handleMouseEvent(const PlotEvent& event);
     
+    int getSelectedRectCount() const;
+    vector<PlotRegion> getSelectedRects() const;
+
 protected:
     // Notifiers.
     vector<PlotTrackerToolNotifier*> m_notifiers;
@@ -829,6 +835,10 @@ public:
     bool trackerDrawsText() const;
     // </group>
     
+    int getSelectedRectCount();
+    vector<PlotRegion> getSelectedRects();
+    void clearSelectedRects();
+
     // Provides access to the individual tools.  Note: this should be avoided
     // if possible.
     // <group>
