@@ -123,7 +123,7 @@ image::image(ImageInterface<Complex> *inImage) :
 	}
 }
 
-image::image(std::tr1::shared_ptr<casa::ImageInterface<casa::Float> > inImage) :
+image::image(SPIIF inImage) :
 	_log(), _image(new ImageAnalysis(inImage)) {
 	try {
 		_log << _ORIGIN;
@@ -136,6 +136,18 @@ image::image(std::tr1::shared_ptr<casa::ImageInterface<casa::Float> > inImage) :
 	}
 }
 
+image::image(SPIIC inImage) :
+	_log(), _image(new ImageAnalysis(inImage)) {
+	try {
+		_log << _ORIGIN;
+
+	}
+	catch (const AipsError& x) {
+		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+				<< LogIO::POST;
+		RETHROW(x);
+	}
+}
 
 image::image(std::tr1::shared_ptr<ImageAnalysis> ia) :
 	_log(), _image(ia) {
@@ -233,10 +245,6 @@ image * image::collapse(
 		return 0;
 	}
 	try {
-		ThrowIf(
-			! _image->isFloat(),
-			"This method only supports Float valued images"
-		);
 		IPosition myAxes;
 		if (axes.type() == variant::INT) {
 			myAxes = IPosition(1, axes.toInt());
@@ -252,7 +260,11 @@ image * image::collapse(
 				? Vector<String> (1, axes.getString())
 				: toVectorString(axes.toStringVec());
 			myAxes = IPosition(
-				_image->getImage()->coordinates().getWorldAxesOrder(
+				_image->isFloat()
+				? _image->getImage()->coordinates().getWorldAxesOrder(
+					axVec, False
+				)
+				: _image->getComplexImage()->coordinates().getWorldAxesOrder(
 					axVec, False
 				)
 			);
@@ -260,14 +272,14 @@ image * image::collapse(
 				IPosition::iterator iter = myAxes.begin();
 				iter != myAxes.end(); iter++
 			) {
-				if (*iter < 0) {
-					_log << "At least one specified axis does not exist"
-						<< LogIO::EXCEPTION;
-				}
+				ThrowIf(
+					*iter < 0,
+					"At least one specified axis does not exist"
+				);
 			}
 		}
 		else {
-			_log << "Unsupported type for parameter axes" << LogIO::EXCEPTION;
+			ThrowCc("Unsupported type for parameter axes");
 		}
 		String regStr = region.type() == variant::STRING ? region.toString() : "";
 		std::auto_ptr<Record> regRec(
@@ -281,15 +293,26 @@ image * image::collapse(
 			_log << "avdev currently not supported. Let us know if you have a need for it"
 				<< LogIO::EXCEPTION;
 		}
-		ImageCollapser collapser(
-			aggString, _image->getImage(), regStr, regRec.get(), box,
-			chans, stokes, mask, myAxes, outfile, overwrite
-		);
-		collapser.setStretch(stretch);
-		return new image(collapser.collapse(True));
-	} catch (const AipsError& x) {
+		if (_image->isFloat()) {
+			ImageCollapser<Float> collapser(
+				aggString, _image->getImage(), regStr, regRec.get(), box,
+				chans, stokes, mask, myAxes, outfile, overwrite
+			);
+			collapser.setStretch(stretch);
+			return new image(collapser.collapse(True));
+		}
+		else {
+			ImageCollapser<casa::Complex> collapser(
+				aggString, _image->getComplexImage(), regStr, regRec.get(), box,
+				chans, stokes, mask, myAxes, outfile, overwrite
+			);
+			collapser.setStretch(stretch);
+			return new image(collapser.collapse(True));
+		}
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -711,23 +734,20 @@ bool image::calc(const std::string& expr) {
 	}
 }
 
-bool image::calcmask(const std::string& mask, const std::string& maskName,
-		const bool makeDefault) {
+bool image::calcmask(
+	const string& mask, const string& maskName, bool makeDefault
+) {
 	bool rstat(false);
 	try {
 		_log << _ORIGIN;
-		if (detached())
+		if (detached()) {
 			return rstat;
-
-		//For now not passing the Regions record...when this is done then
-		//replace this temporary Record  here... it should be a Record of Records..
-		//each element a given region
-		Record regions;
-
-		rstat = _image->calcmask(mask, regions, maskName, makeDefault);
-	} catch (AipsError x) {
+		}
+		Record region;
+		rstat = _image->calcmask(mask, region, maskName, makeDefault);
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
 	return rstat;
@@ -1682,7 +1702,7 @@ image* image::transpose(
 			mask = "";
 		}
 		std::auto_ptr<ImageFitter> fitter;
-        ImageTask::shCImFloat image = _image->getImage();
+        SPCIIF image = _image->getImage();
 		ImageFitter::CompListWriteControl writeControl =
 			complist.empty()
 			? ImageFitter::NO_WRITE
@@ -1843,7 +1863,7 @@ image* image::pbcor(
 			"This method only supports Float valued images"
 		);
 		Array<Float> pbPixels;
-        ImageTask::shCImFloat pb_ptr;
+        SPCIIF pb_ptr;
 		if (pbimage.type() == variant::DOUBLEVEC) {
 			Vector<Int> shape = pbimage.arrayshape();
 			pbPixels.resize(IPosition(shape));
@@ -1886,7 +1906,7 @@ image* image::pbcor(
 			? ImagePrimaryBeamCorrector::DIVIDE
 			: ImagePrimaryBeamCorrector::MULTIPLY;
 		Bool useCutoff = cutoff >= 0.0;
-        ImageTask::shCImFloat shImage = _image->getImage();
+        SPCIIF shImage = _image->getImage();
         std::auto_ptr<ImagePrimaryBeamCorrector> pbcor(
 			(!pb_ptr)
 			? new ImagePrimaryBeamCorrector(
@@ -1903,7 +1923,7 @@ image* image::pbcor(
 		pbcor->setStretch(stretch);
         std::tr1::shared_ptr<ImageInterface<Float> > corrected(pbcor->correct(True));
 		return new image(corrected);
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
@@ -3463,14 +3483,12 @@ record* image::statistics(
 		if (mtmp == "false" || mtmp == "[]") {
 			mtmp = "";
 		}
-
 		Vector<String> plotStats = toVectorString(plotstats);
 		if (plotStats.size() == 0) {
 			plotStats.resize(2);
 			plotStats[0] = "mean";
 			plotStats[1] = "sigma";
 		}
-
 		Vector<Int> tmpaxes(axes);
 		if (tmpaxes.size() == 1 && tmpaxes[0] == -1) {
 			tmpaxes.resize(0);
@@ -3513,7 +3531,6 @@ record* image::statistics(
 		}
 		_stats->setPlotStats(plotStats);
 		_stats->setAxes(tmpaxes);
-
 		_stats->setIncludePix(tmpinclude);
 		_stats->setPlotter(plotter);
 		_stats->setExcludePix(tmpexclude);

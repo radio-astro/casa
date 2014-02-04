@@ -72,6 +72,7 @@ from tasks import *
 from taskinit import *
 from __main__ import *
 import unittest
+import numpy
 
 good_image = "collapse_in.fits"
 masked_image = "im_w_mask.im"
@@ -496,7 +497,32 @@ class imcollapse_test(unittest.TestCase):
         myia.done()
         collapsed.done()
 
+    def test_complex(self):
+        """Test support for complex valued images"""
+        myia = iatool()
+        
+        myia.fromshape("", [2, 2, 2], type='c')
+        bb = myia.getchunk()
+        counter = 0
+        for i in [0, 1]:
+            for j in [0, 1]:
+                for k in [0, 1]:
+                    bb[i, j, k] = counter*(1-1j)
+                    counter += 1
+        myia.putchunk(bb)
+        col = myia.collapse("min", [2])
+        got = col.subimage(dropdeg=T).getchunk()
+        exp = numpy.min(bb, 2)
+        self.assertTrue((got == exp).all())
+        
+        col = myia.collapse("mean", [2])
+        got = col.subimage(dropdeg=T).getchunk()
+        exp = numpy.average(bb, 2)
+        self.assertTrue((got == exp).all())
 
-
+        myia.done()
+        col.done()
+        
+        
 def suite():
     return [imcollapse_test]

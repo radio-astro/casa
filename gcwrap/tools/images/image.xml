@@ -1292,7 +1292,8 @@ myim.done()
     <description>
 
 This method collapses an image along a specified axis or set of axes of length N pixels to a single pixel on each
-specified axis. It computes a user-specified aggregate function for pixel values along the specified axes,
+specified axis. Both float valued and complex valued images are supported. It computes a user-specified aggregate
+function for pixel values along the specified axes,
 and places those values in the single remaining plane of those axes in the output image. The method returns
 an image analysis tool containing the newly-created collapsed image. Valid choices of aggregate functions are:
 'max', 'mean', 'median', 'min', 'rms', 'stdev', 'sum' and 'variance'. Minimal unique matching is supported
@@ -2155,11 +2156,12 @@ ia.close()             # close to unlock disk image
 
 <description>
 
-This function <!-- (short-hand name {\stff ada}) --> adds degenerate axes (i.e.
+This method adds degenerate axes (i.e.
 axes of length 1) of the specified type.  Sometimes this can be useful
 although you will generally need to modify the coordinate system of the
 added axis to give it the coordinate you want (do this with the
-<link anchor="images:coordsys">Coordsys</link> \tool).
+<link anchor="images:coordsys">Coordsys</link> \tool). This method supports
+both float and complex valued images.
 
 You specify which type of axes you want to add.  You can't add
 an axis type that already exists in the image.  For the Stokes axis,
@@ -2663,10 +2665,11 @@ This shows a mixed type expression.  The real part of the complex image
 
 <description> 
 
-This function is used to create a new \pixelmask\ via a Boolean LEL expression.
+This method is used to create a new \pixelmask\ via a Boolean LEL expression.
 This gives you much more scope than the simple
 <link anchor="images:image.set.function">set</link> and
-<link anchor="images:image.putregion.function">putregion</link> functions. 
+<link anchor="images:image.putregion.function">putregion</link> functions.
+Both float and complex valued images are supported.
 
 See \htmladdnormallink{note 223}{../../notes/223/223.html}
 which describes the the syntax and functionality of LEL in detail. 
