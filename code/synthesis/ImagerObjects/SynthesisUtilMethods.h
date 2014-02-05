@@ -84,7 +84,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // Generate Coordinate System 
     CoordinateSystem buildCoordinateSystem(const SynthesisParamsImage& impars,
-					   MeasurementSet& msobj=MeasurementSet());
+					   MeasurementSet msobj=MeasurementSet());
     
   protected:
 
