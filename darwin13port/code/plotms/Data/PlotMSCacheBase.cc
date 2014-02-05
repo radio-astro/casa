@@ -43,6 +43,7 @@
 #include <plotms/Data/PlotMSVBAverager.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <tables/Tables/Table.h>
+#include <QDebug>
 
 namespace casa {
 
@@ -135,6 +136,38 @@ vector<pair<PMS::Axis, unsigned int> > PlotMSCacheBase::loadedAxes() const {
 	return v;
 }
 
+Record PlotMSCacheBase::locateInfo(int plotIterIndex, const Vector<PlotRegion>& regions,
+    		bool showUnflagged, bool showFlagged, bool selectAll ){
+	Record record;
+	int indexCount = indexer_.size();
+	if ( 0 <= plotIterIndex && plotIterIndex < indexCount){
+		record = indexer_[plotIterIndex]->locateInfo(regions, showUnflagged,
+							showFlagged, selectAll);
+	}
+	return record;
+}
+
+PlotLogMessage* PlotMSCacheBase::locateRange( int plotIterIndex, const Vector<PlotRegion> & regions,
+     		bool showUnflagged, bool showFlagged){
+	PlotLogMessage* mesg = NULL;
+	int indexCount = indexer_.size();
+	if ( 0 <= plotIterIndex && plotIterIndex < indexCount){
+		mesg = indexer_[plotIterIndex]->locateRange( regions, showUnflagged, showFlagged );
+	}
+	return mesg;
+}
+
+PlotLogMessage* PlotMSCacheBase::flagRange( int plotIterIndex, casa::PlotMSFlagging& flagging,
+     		const Vector<PlotRegion>& regions, bool showFlagged){
+	PlotLogMessage* mesg = NULL;
+	int indexCount = indexer_.size();
+	if ( 0 <= plotIterIndex && plotIterIndex < indexCount){
+		mesg = indexer_[plotIterIndex]->flagRange( flagging, regions, showFlagged );
+	}
+	return mesg;
+}
+
+
 void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 		const vector<PMS::DataColumn>& data,
 		const String& filename,
@@ -142,7 +175,6 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 		const PlotMSAveraging& averaging,
 		const PlotMSTransformations& transformations,
 		ThreadCommunication* thread) {
-
 
 	// TBD:
 	// o Should we have ONE PtrBlock to a list of Records, each of which
@@ -221,16 +253,17 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 
 	// TBD:  move down to where we are surer something good will happen?
 	stringstream ss;
-	ss << "Caching for the new plot: "
-			<< PMS::axis(currentY_) << "(" << currentY_ << ") vs. "
-			<< PMS::axis(currentX_) << "(" << currentX_ << ")...\n";
+	ss << "Caching for the new plot: ";
+	ss << PMS::axis(currentY_) << "(" << currentY_ << ") vs. ";
+	ss << PMS::axis(currentX_) << "(" << currentX_ << ")...\n";
 	logLoad(ss.str());
 
 	// Calculate which axes need to be loaded; those that have already been
 	// loaded do NOT need to be reloaded (assuming that the rest of PlotMS has
 	// done its job and cleared the cache if the underlying MS/selection has
 	// changed).
-	vector<PMS::Axis> loadAxes; vector<PMS::DataColumn> loadData;
+	vector<PMS::Axis> loadAxes;
+	vector<PMS::DataColumn> loadData;
 
 	// A map that keeps track of all pending loaded axes
 	//  this is a list of all axes that will be loaded, if everything
@@ -492,7 +525,7 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange, Bool g
 	logLoad("Setting up iteration indexing (if necessary), and calculating plot ranges.");
 
 
-	// cout << "############ PlotMSCacheBase::setUpIndexer: " << PMS::axis(iteraxis)
+	//cout << "############ PlotMSCacheBase::setUpIndexer: " << PMS::axis(iteraxis)
 	//     << " cacheReady() = " << boolalpha << cacheReady() << endl;
 	Int nIter=0;
 	Vector<Int> iterValues;

@@ -79,7 +79,7 @@ Int main(Int argc, char *argv[]) {
 	}
 	ImageInterface<Float> *image;
 	ImageUtilities::openImage(image, imagename);
-	ImageTask::shCImFloat sImage(image);
+	SPCIIF sImage(image);
 	ImageFitter imFitter(
 		sImage, region, 0, box, chans, stokes, mask, includePixelRange,
 		excludePixelRange, residual, model, estimatesFilename,

@@ -39,8 +39,7 @@ namespace casa {
 //# Forward declarations
 class PlotMSApp;
 class PlotMSPages;
-//class PlotMSPlotTab;
-class PlotInformationManager;
+
 
 // Abstract class for a single "plot" concept.  Generally speaking this one
 // plot handles one data source across potentially many scatter plots and
@@ -71,7 +70,8 @@ public:
     
     
     // ABSTRACT METHODS //
-    
+    virtual void resize(PlotMSPages&, uInt rows, uInt cols) = 0;
+
     // Returns a human-readable name for this plot.  Does not have to be
     // unique.
     virtual String name() const = 0;
@@ -85,9 +85,6 @@ public:
     // Returns the canvases that have been assigned to this plot.
     virtual vector<PlotCanvasPtr> canvases() const = 0;
     
-    // Sets up subtabs for the given plot tab, using the add/insert subtab
-    // methods.
-    virtual void setupPlotSubtabs(/*PlotMSPlotTab*/PlotInformationManager& tab) const = 0;
     
     // Attaches/Detaches internal plot objects to their assigned canvases.
     // <group>
@@ -95,10 +92,9 @@ public:
     virtual void detachFromCanvases() = 0;
     // </group>
     
-    // Called when the GUI settings in the plot tab have changed.
-    //virtual void plotTabHasChanged(PlotMSPlotTab& tab) = 0;
     
     
+
     // IMPLEMENTED METHODS //
     
     // Returns a reference to the plot's parameters.
@@ -124,13 +120,14 @@ public:
     // method, then calls parametersUpdated() to properly set the plot.
     // Drawing is held before these operations, and then released afterwards.
     // Returns true if all operations succeeded; false if at least one failed.
-    virtual bool initializePlot(PlotMSPages& pages);
+    bool initializePlot(PlotMSPages& pages);
     
     // Gets the plot's data source.
     // <group>
     virtual PlotMSCacheBase& cache() { return *itsCache_; };
     virtual const PlotMSCacheBase& cache() const { return *itsCache_; };
     virtual Int iter() { return 0; };
+    virtual Int nIter() { return 1; };
     // </group>
     
     // Gets the plot's parent.
@@ -163,15 +160,25 @@ public:
     virtual void canvasWasDisowned(PlotCanvasPtr canvas);
     vector<PMS::Axis> getCachedAxes();
     vector<PMS::DataColumn> getCachedData();
+
+    Record locateInfo(int plotIterIndex, const Vector<PlotRegion>& regions,
+    		bool showUnflagged, bool showFlagged, bool selectAll ) const ;
+
+    PlotLogMessage* locateRange( int plotIterIndex, const Vector<PlotRegion> & regions,
+    		bool showUnflagged, bool showFlagged);
+
+    PlotLogMessage* flagRange( int canvasIndex, casa::PlotMSFlagging& flagging,
+    		const Vector<PlotRegion>& regions, bool showFlagged);
+
+    // Generates and assigns canvases that this plot will be using, with the
+      // given PlotMSPages object.  This is called when the plot is first
+      // created, and can be called by the plot itself if its canvas layout
+      // has changed (in which case this method should check for the canvases
+      // that have already been assigned to it in the page).
+      virtual bool assignCanvases(PlotMSPages& pages) = 0;
+      virtual void updateLocation() = 0;
 protected:
     // ABSTRACT METHODS //
-    
-    // Generates and assigns canvases that this plot will be using, with the
-    // given PlotMSPages object.  This is called when the plot is first
-    // created, and can be called by the plot itself if its canvas layout
-    // has changed (in which case this method should check for the canvases
-    // that have already been assigned to it in the page).
-    virtual bool assignCanvases(PlotMSPages& pages) = 0;
     
     // Initializes any internal plot objects, but does NOT set parameters or
     // attach to canvases.  Will only be called ONCE, before assignCanvases and

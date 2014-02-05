@@ -38,7 +38,7 @@
 
 namespace casa {
 
-class ImagePrimaryBeamCorrector : public ImageTask {
+class ImagePrimaryBeamCorrector : public ImageTask<Float> {
 	// <summary>
 	// Top level interface for primary beam correction.
 	// </summary>
@@ -78,8 +78,8 @@ public:
 	// <group>
 
 	ImagePrimaryBeamCorrector(
-			const ImageTask::shCImFloat image,
-			const ImageTask::shCImFloat pbImage,
+			const SPCIIF image,
+			const SPCIIF pbImage,
 		const Record * const &regionPtr,
 		const String& region, const String& box,
 		const String& chanInp, const String& stokes,
@@ -89,7 +89,7 @@ public:
 	);
 
 	ImagePrimaryBeamCorrector(
-			const ImageTask::shCImFloat image,
+			const SPCIIF image,
 		const Array<Float>& pbArray,
 		const Record * const &regionPtr,
 		const String& region, const String& box,

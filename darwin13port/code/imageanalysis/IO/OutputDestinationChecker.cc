@@ -28,6 +28,8 @@
 
 #include <casa/OS/File.h>
 
+#include <stdcasa/cboost_foreach.h>
+
 namespace casa {
 
 OutputDestinationChecker::OutputDestinationChecker() {}
@@ -77,12 +79,10 @@ void OutputDestinationChecker::checkOutput(OutputStruct& output, LogIO& log) {
 void OutputDestinationChecker::checkOutputs(
 	std::vector<OutputStruct> * const output, LogIO& log
 ) {
-	for (
-		std::vector<OutputStruct>::iterator iter = output->begin();
-		iter != output->end();
-		iter++
-	) {
-		checkOutput(*iter, log);
-    }
+	if (output) {
+		foreach_(OutputStruct elem, *output) {
+			checkOutput(elem, log);
+		}
+	}
 }
 } 

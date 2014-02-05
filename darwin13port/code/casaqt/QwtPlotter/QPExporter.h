@@ -65,6 +65,7 @@ private:
 			const PlotExportFormat& format,
 			vector<QPExportCanvas*> &qcanvases,
 			int width, int height,
+			int rowIndex, int columnIndex,
 			bool &wasCanceled);
 
 	static bool  exportToImageFile(
@@ -72,7 +73,9 @@ private:
 			vector<QPExportCanvas*> &qcanvases,
 			QPExportCanvas* grabCanvas,
 			QPPlotter* grabPlotter);
-
+	static int findAxisHeight( vector<QPExportCanvas*> &qcanvases );
+	static int findAxisWidth( vector<QPExportCanvas*> &qcanvases );
+	static int getCanvasCount( vector<QPExportCanvas*> &qcanvases );
 	static const String CLASS_NAME;
 	static const String EXPORT_NAME;
 };

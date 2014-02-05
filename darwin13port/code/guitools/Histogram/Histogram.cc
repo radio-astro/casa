@@ -38,7 +38,7 @@ Histogram::Histogram( HeightSource* heightSource ):
 	histogramMaker(NULL), region(NULL),
 	ALL_CHANNELS(-1),
 	ALL_INTENSITIES( -1),
-	image(ImageTask::shCImFloat()),
+	image(),
 	channelMin( ALL_CHANNELS ),
 	channelMax( ALL_CHANNELS ),
 	intensityMin( ALL_INTENSITIES ),
@@ -111,7 +111,7 @@ bool Histogram::compute( ){
 	return success;
 }
 
-ImageHistograms<Float>* Histogram::filterByChannels( const ImageTask::shCImFloat image ){
+ImageHistograms<Float>* Histogram::filterByChannels( const std::tr1::shared_ptr<const ImageInterface<Float> > image ){
 	ImageHistograms<Float>* imageHistogram = NULL;
 	if ( channelMin != ALL_CHANNELS && channelMax != ALL_CHANNELS ){
 
@@ -139,7 +139,7 @@ ImageHistograms<Float>* Histogram::filterByChannels( const ImageTask::shCImFloat
 	return imageHistogram;
 }
 
-void Histogram::setImage(const ImageTask::shCImFloat img ){
+void Histogram::setImage(const std::tr1::shared_ptr<const ImageInterface<Float> > img ){
 	image = img;
 }
 

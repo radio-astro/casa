@@ -34,7 +34,7 @@
 #include <tr1/memory.hpp>
 
 namespace casa {
-class ImageTransposer : public ImageTask {
+class ImageTransposer : public ImageTask<Float> {
     // <summary>
       // Top level interface for transposing image axes
       // </summary>
@@ -63,19 +63,19 @@ public:
 	// This constructor only allows transposing of axes, it does
 	// not allow inverting.
 	ImageTransposer(
-			const ImageTask::shCImFloat image,
+			const SPCIIF image,
 		uInt order, const String& outputImage
 	);
 
 	// This constructor allows both transposing and inverting of axes
 	ImageTransposer(
-			const ImageTask::shCImFloat image,
+			const SPCIIF image,
 		const String& order, const String& outputImage
 	);
 
 	// This constructor allows both transposing and inverting of axes
 	ImageTransposer(
-			const ImageTask::shCImFloat image,
+			const SPCIIF image,
 		const Vector<String> order, const String& outputImage
 	);
 	// destructor

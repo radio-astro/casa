@@ -122,7 +122,7 @@ public:
     }
 
     virtual void hide(){
-    	QFrame::show();
+    	QFrame::setVisible( false );
     }
 
     // Implements PlotCanvas::title().
@@ -541,8 +541,9 @@ private:
     
 
     virtual bool print( QPrinter& printer );
-    virtual bool print(  QPainter* painter, PlotAreaFillPtr paf, double widthRatio,
-    		double heightRatio, QRect imageRect );
+    virtual bool print(  QPainter* painter, PlotAreaFillPtr paf, double widthWidth,
+    		double widgetHeight, int externalAxisWidth, int externalAxisHeight,
+    		int rowIndex, int colIndex, QRect imageRect );
     virtual int canvasWidth() const{
     	return width();
     }

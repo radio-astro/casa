@@ -52,7 +52,7 @@ public:
     ~PlotMSTransformationsTab();
     
     // Implements PlotMSTab::tabName().
-    QString tabName() const { return "Trans"; }
+    QString tabName() const { return "Transform"; }
 
     // Implements PlotMSPlotSubtab::getValue().
     void getValue(PlotMSPlotParameters& params) const;

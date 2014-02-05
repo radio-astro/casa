@@ -151,50 +151,77 @@ bool PlotMSAveraging::operator==(const PlotMSAveraging& other) const {
 
 
 String PlotMSAveraging::summary() const {
-
   stringstream ss;
   ss.precision(6);
-
   Bool anyAveraging=channel()||time()||baseline()||antenna()||spw();
-
   ss << "Data Averaging: ";
-
   ss << boolalpha;
-
   if (anyAveraging) {
-
     ss << endl;
-
     ss << " Using" << (scalarAve() ? " SCALAR " : " VECTOR ") << "averaging." 
        << endl;
-
     if (channel()) {
       ss << " Channel: ";
       Double val = channelValue();
-      if (val <=0)
-	ss << "None.";
-      else
-	ss << val << (val > 1 ? " channels" : " (fraction of spw)");
+      if (val <=0){
+    	  ss << "None.";
+      }
+      else {
+    	  ss << val << (val > 1 ? " channels" : " (fraction of spw)");
+      }
       ss << endl;
     }
     if (time()) {
       ss << " Time: " << timeValue() << " seconds. ";
       ss << " Scan: " << scan() << ";  Field: " << field() << endl;
     }
-    if (baseline()) 
+    if (baseline()){
       ss << " All Baselines: " << baseline() << endl;
-    if (antenna()) 
+    }
+    if (antenna()) {
       ss << " Per Antenna: " << antenna() << endl;
-    if (spw())
+    }
+    if (spw()){
       ss << " All Spectral Windows: " << spw() << endl;
-
+    }
   }
-  else
+  else {
     ss << "None." << endl;
-
+  }
   return ss.str();
+}
 
-	
+
+String PlotMSAveraging::toStringShort() const {
+	stringstream ss;
+	ss.precision(6);
+	Bool anyAveraging=channel()||time()||baseline()||antenna()||spw();
+	if (anyAveraging) {
+		ss << "Avg: ";
+		ss << boolalpha;
+		ss << (scalarAve() ? " SCALAR " : " VECTOR ");
+		if (channel()) {
+			ss << " Chan: ";
+			Double val = channelValue();
+			if ( val > 0 ){
+				ss << val;
+			}
+		}
+		if (time()) {
+			ss << " Time: " << timeValue() << " secs. ";
+			ss << " Scan: " << scan() << ";  Field: " << field();
+		}
+		if (baseline()){
+			ss << " Baseline: " << baseline();
+		}
+		if (antenna()) {
+			ss << " /Ant: " << antenna();
+		}
+		if (spw()){
+			ss << " SPW: " << spw();
+		}
+	}
+	return ss.str();
 }
 
 

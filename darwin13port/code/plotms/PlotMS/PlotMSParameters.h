@@ -66,7 +66,9 @@ public:
             LogMessage::Priority logPriority = PMS::DEFAULT_LOG_PRIORITY,
             bool clearSelections = PMS::DEFAULT_CLEAR_SELECTIONS,
             int cachedImageWidth = PMS::DEFAULT_CACHED_IMAGE_WIDTH,
-            int cachedImageHeight = PMS::DEFAULT_CACHED_IMAGE_HEIGHT);
+            int cachedImageHeight = PMS::DEFAULT_CACHED_IMAGE_HEIGHT,
+            int rowCount = PMS::DEFAULT_GRID_ROWS,
+            int colCount = PMS::DEFAULT_GRID_COLS);
     
     // Copy constructor.  See operator=().
     PlotMSParameters(const PlotMSParameters& copy);
@@ -107,6 +109,15 @@ public:
     // Sets the cached image size to the current screen resolution.
     void setCachedImageSizeToResolution();
     
+
+
+    //<group>
+    void setRowCount(int rowCount );
+    int getRowCount() const;
+    void setColCount( int colCount );
+    int getColCount() const;
+    //</group>
+
     // Copy operator.
     PlotMSParameters& operator=(const PlotMSParameters& copy);
     
@@ -130,6 +141,23 @@ private:
     
     // Cached image sizes.
     int itsCachedImageWidth_, itsCachedImageHeight_;
+
+    int rowCount;
+    int colCount;
+
+
+};
+
+//Removal of compile warnings for unused variables.
+class DummyClass {
+private:
+	static const int dummyDraw;
+	static const int dummyData;
+	static const int dummyCache;
+	static const int dummyAxes;
+	static const int dummyCanvas;
+	static const int dummyDisplay;
+	static const int dummyIter;
 };
 
 }

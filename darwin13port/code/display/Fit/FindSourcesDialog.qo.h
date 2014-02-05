@@ -34,8 +34,6 @@
 #include <display/Fit/PixelRangeDialog.qo.h>
 #include <display/region/QtRegionSource.qo.h>
 
-#include <imageanalysis/ImageAnalysis/ImageTask.h>
-
 #include <tr1/memory.hpp>
 class QFileSystemModel;
 
@@ -55,7 +53,7 @@ namespace casa {
 
 	public:
 		FindSourcesDialog(QWidget *parent = 0, bool displayModeFunctionality = true);
-		void setImage( ImageTask::shCImFloat image );
+		void setImage( std::tr1::shared_ptr<const ImageInterface<Float> > image );
 		void setChannel( int channel );
 		void clearImage();
 
@@ -122,7 +120,7 @@ namespace casa {
 		enum SourceColumns { ID_COL, RA_COL, DEC_COL, FLUX_COL,
 		                     MAJOR_AXIS_COL, MINOR_AXIS_COL, ANGLE_COL/*, FIXED_COL*/
 		                   };
-		ImageTask::shCImFloat image;
+        std::tr1::shared_ptr<const ImageInterface<Float> > image;
 		String pixelBox;
 		QString skyPath;
 		QString overlayColorName;

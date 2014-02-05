@@ -163,6 +163,9 @@ public:
     // Print out a summary of the averaging state:
     String summary() const;
 
+    //Print out an abbreviated summary of the averaging state.
+    String toStringShort() const;
+
 private:
     // Averaging field flags.
     map<Field, bool> itsFlags_;

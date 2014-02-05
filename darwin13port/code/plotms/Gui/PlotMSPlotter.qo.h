@@ -50,8 +50,11 @@ class PlotMSAnnotatorTab;
 class PlotMSFlaggingTab;
 class PlotMSOptionsTab;
 class PlotMSPlotTab;
+class PlotMSExportTab;
 class PlotMSThread;
 class PlotMSToolsTab;
+class PlotMSDataSummaryTab;
+
 
 // High(ish)-level plotter class that manages the GUI (semi-) transparently to
 // the rest of PlotMS.
@@ -63,16 +66,13 @@ public:
 
     //Methods from the client interface
     virtual bool isActionEnabled( PlotMSAction::Type type ) const;
-    virtual bool isMSSummaryVerbose() const;
-    virtual PMS::SummaryType getMSSummaryType() const;
-    virtual PlotMSPlot* getCurrentPlot() const;
+
+    virtual vector<PlotMSPlot*> getCurrentPlots() const;
     virtual void plot();
-    virtual vector<PMS::Axis> getSelectedLoadAxes() const;
-    virtual vector<PMS::Axis> getSelectedReleaseAxes() const;
-    virtual PlotExportFormat getPlotExportFormat() const;
+    virtual vector<vector<PMS::Axis> > getSelectedLoadAxes() const;
+    virtual vector<vector<PMS::Axis> > getSelectedReleaseAxes() const;
     virtual PlotMSFlagging getFlagging() const;
     virtual bool isInteractive() const;
-	virtual PlotMSPlotParameters getPlotParameters() const;
 	virtual void canvasAdded( PlotCanvasPtr& canvas );
 	virtual void setAnnotationModeActive( PlotMSAction::Type type, bool active );
     // Static //
@@ -131,7 +131,8 @@ public:
     bool canvasDrawBeginning(PlotOperationPtr drawOperation,
                 bool drawingIsThreaded, int drawnLayersFlag);
     virtual ThreadController* getThreadController( PlotMSAction::Type type,
-    		PMSPTMethod postThreadMethod = NULL, PMSPTObject postThreadObject = NULL );
+    		PMSPTMethod postThreadMethod = NULL, PlotMSPlot* plot = NULL,
+    		int index = -1 );
     
     // GUI Methods //
     
@@ -189,8 +190,10 @@ public:
     // </group>
     
     // export a plot to a file
-    virtual bool exportPlot(const PlotExportFormat& format, const bool interactive, const bool async);
+    virtual bool exportPlot(const PlotExportFormat& format, const bool async);
     virtual void setFlagging(PlotMSFlagging flag);
+    virtual void gridSizeChanged( int rowCount, int colCount );
+
 public slots:
     // Shows the given error/warning message in a GUI window.
     virtual void showError(const String& message, const String& title, bool isWarning);
@@ -217,6 +220,8 @@ protected:
     // execution loop).
     void closeEvent(QCloseEvent* event);
     
+
+
 private:
     // PlotMSApp parent.
     PlotMSApp* itsParent_;
@@ -233,9 +238,9 @@ private:
     // Widgets to be enabled/disabled during threading.
     QList<QWidget*> itsEnableWidgets_;
     
-    // Plot tab.
-    PlotMSPlotTab* itsPlotTab_;
-    
+    //Plot tab
+    PlotMSDataSummaryTab* itsPlotTab_;
+
     // Flagging tab (on the plot tab).
     PlotMSFlaggingTab* itsFlaggingTab_;
     
@@ -248,12 +253,14 @@ private:
     // Options tab.
     PlotMSOptionsTab* itsOptionsTab_;
     
+
+
     // Tool buttons on the tabs.
     QList<QToolButton*> itsToolButtons_;
     
     // Widget for displaying thread progress.
     QtProgressWidget* itsThreadProgress_;
-    
+
     // Current thread (or NULL for none).
     PlotMSThread* itsCurrentThread_;
     
@@ -289,6 +296,12 @@ private slots:
     // Slot for when the currently running thread is finished.  Performs
     // cleanup and starts next waiting thread if applicable.
     void currentThreadFinished();
+
+    //Summarize an MS
+	void summarize();
+
+	//Export the current plots
+	void exportPlots();
 };
 typedef CountedPtr<PlotMSPlotter> PlotMSPlotterPtr;
 

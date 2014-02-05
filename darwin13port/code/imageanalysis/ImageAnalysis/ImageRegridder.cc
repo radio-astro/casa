@@ -40,12 +40,12 @@ namespace casa {
 const String ImageRegridder::_class = "ImageRegridder";
 
 ImageRegridder::ImageRegridder(
-	const ImageTask::shCImFloat image,
+	const SPCIIF image,
 	const Record *const regionRec,
 	const String& maskInp, const String& outname, Bool overwrite,
 	const CoordinateSystem& csysTo, const IPosition& axes,
 	const IPosition& shape, Bool dropdeg
-) : ImageTask(
+) : ImageTask<Float>(
 		image, "", regionRec, "", "", "",
 		maskInp, outname, overwrite
 	),
@@ -59,11 +59,11 @@ ImageRegridder::ImageRegridder(
 }
 
 ImageRegridder::ImageRegridder(
-	const ImageTask::shCImFloat image, const String& outname,
-	const ImageTask::shCImFloat templateIm, const IPosition& axes,
+	const SPCIIF image, const String& outname,
+	const SPCIIF templateIm, const IPosition& axes,
 	const Record *const regionRec, const String& maskInp,
 	Bool overwrite, Bool dropdeg, const IPosition& shape
-)  : ImageTask(
+)  : ImageTask<Float>(
 		image, "", regionRec, "", "", "",
 		maskInp, outname, overwrite
 	),
@@ -149,7 +149,7 @@ std::tr1::shared_ptr<ImageInterface<Float> > ImageRegridder::_regrid() const {
 	workIm->set(0.0);
 	ImageUtilities::copyMiscellaneous(*workIm, *subImage);
 	String maskName("");
-	ImageMaskAttacher<Float>::makeMask(*workIm, maskName, True, True, *_getLog(), True);
+	ImageMaskAttacher::makeMask(*workIm, maskName, True, True, *_getLog(), True);
 	ThrowIf (
 		! _doImagesOverlap(subImage, workIm),
 		"There is no overlap between the (region chosen in) the input image"

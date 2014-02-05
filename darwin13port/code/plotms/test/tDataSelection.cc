@@ -65,8 +65,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     PlotExportFormat::Type type = PlotExportFormat::JPG;
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
-	bool interactive = false;
-	bool ok = app.save(format, interactive );
+	bool ok = app.save(format);
 	cout << "tDataSelection - result of save="<<ok<<endl;
     
 	bool okOutput = tUtil::checkFile( outFile, 70000, 80000, -1 );

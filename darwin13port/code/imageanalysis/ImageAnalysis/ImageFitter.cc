@@ -71,7 +71,7 @@ namespace casa {
 const String ImageFitter::_class = "ImageFitter";
 
 ImageFitter::ImageFitter(
-		const ImageTask::shCImFloat image, const String& region,
+		const SPCIIF image, const String& region,
 	const Record *const regionRec,
 	const String& box,
 	const String& chanInp, const String& stokes,
@@ -80,7 +80,7 @@ ImageFitter::ImageFitter(
 	const String& modelInp, const String& estimatesFilename,
 	const String& newEstimatesInp, const String& compListName,
 	const CompListWriteControl writeControl
-) : ImageTask(
+) : ImageTask<Float>(
 		image, region, regionRec, box,
 		chanInp, stokes,
 		maskInp, "", False
@@ -655,7 +655,7 @@ void ImageFitter::_setFluxes() {
 		}
 	}
     PeakIntensityFluxDensityConverter converter(_getImage());
-    converter.setVerbosity(ImageTask::NORMAL);
+    converter.setVerbosity(ImageTask<Float>::NORMAL);
     converter.setShape(ComponentType::GAUSSIAN);
 	uInt polNum = 0;
 	for(uInt i=0; i<ncomps; i++) {

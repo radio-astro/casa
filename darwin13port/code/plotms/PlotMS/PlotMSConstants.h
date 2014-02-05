@@ -262,6 +262,8 @@ public:
     static const bool DEFAULT_CLEAR_SELECTIONS;
     static const int DEFAULT_CACHED_IMAGE_WIDTH;
     static const int DEFAULT_CACHED_IMAGE_HEIGHT;
+    static const int DEFAULT_GRID_ROWS;
+    static const int DEFAULT_GRID_COLS;
     // </group>
     
     // Default values for PMS_PP_Cache.

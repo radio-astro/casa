@@ -1170,7 +1170,7 @@ std::vector<float> BinPlotWidget::getXValues() const {
 	return values;
 }
 
-bool BinPlotWidget::setImage( const ImageTask::shCImFloat img ){
+bool BinPlotWidget::setImage( const std::tr1::shared_ptr<const ImageInterface<Float> > img ){
 	bool success = true;
 	if ( image != img && img.get() != NULL ){
 		image = img;

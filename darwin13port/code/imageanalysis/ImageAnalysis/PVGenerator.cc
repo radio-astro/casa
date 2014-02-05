@@ -43,12 +43,12 @@ namespace casa {
 const String PVGenerator::_class = "PVGenerator";
 
 PVGenerator::PVGenerator(
-		const ImageTask::shCImFloat image,
+		const SPCIIF image,
 	const Record *const &regionRec,
 	const String& chanInp, const String& stokes,
 	const String& maskInp, const String& outname,
 	const Bool overwrite
-) : ImageTask(
+) : ImageTask<Float>(
 		image, "", regionRec, "", chanInp, stokes,
 		maskInp, outname, overwrite
 	), _start(0), _end(0), _width(1), _unit("arcsec") {
@@ -432,12 +432,12 @@ std::tr1::shared_ptr<ImageInterface<Float> > PVGenerator::generate(
 
 	lcbox = LCBox(blc, trc, rotated->shape()).toRecord("");
 	IPosition axes(1, yAxis);
-	ImageCollapser collapser(
+	ImageCollapser<Float> collapser(
 		"mean", rotated, "", &lcbox,
 		"", "", "", "", axes, "", False
 	);
 
-	std::tr1::shared_ptr<ImageInterface<Float> > collapsed(collapser.collapse(True));
+	std::tr1::shared_ptr<ImageInterface<Float> > collapsed = collapser.collapse(True);
 	Vector<Double > newRefPix = rotCoords.referencePixel();
 	newRefPix[xAxis] = rotPixStart[xAxis] - blc[xAxis];
 	newRefPix[yAxis] = rotPixStart[yAxis] - blc[yAxis];

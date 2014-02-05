@@ -41,7 +41,7 @@
 
 namespace casa {
 
-class ImageFitter : public ImageTask {
+class ImageFitter : public ImageTask<Float> {
 	// <summary>
 	// Top level interface to ImageAnalysis::fitsky to handle inputs, bookkeeping etc and
 	// ultimately call fitsky to do fitting
@@ -102,7 +102,7 @@ public:
 	// use these constructors when you already have a pointer to a valid ImageInterface object
 
 	ImageFitter(
-			const ImageTask::shCImFloat image, const String& region,
+			const SPCIIF image, const String& region,
 		const Record *const regionRec,
 		const String& box="",
 		const String& chanInp="", const String& stokes="",

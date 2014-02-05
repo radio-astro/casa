@@ -58,7 +58,7 @@ namespace casa {
 	}
 
 
-	void PixelRangeDialog::setImage( const ImageTask::shCImFloat img ) {
+	void PixelRangeDialog::setImage( const std::tr1::shared_ptr<const ImageInterface<Float> > img ) {
 		plotWidget->setImage( img );
 	}
 

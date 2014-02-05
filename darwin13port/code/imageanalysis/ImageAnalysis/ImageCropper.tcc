@@ -36,16 +36,16 @@ const String ImageCropper<T>::_class = "ImageCropper";
 
 template <class T>
 ImageCropper<T>::ImageCropper(
-	const ImageTask::shCImFloat image,
+	const std::tr1::shared_ptr<const ImageInterface<T> > image,
 	const Record *const &regionRec, const String& box,
 	const String& chanInp, const String& stokes,
 	const String& maskInp, const String& outname,
 	const Bool overwrite
-) : ImageTask(
+) : ImageTask<T>(
 		image, "", regionRec, box, chanInp, stokes,
 		maskInp, outname, overwrite
 	), _axes(std::set<uInt>()) {
-	_construct();
+	this->_construct();
 }
 
 
@@ -54,7 +54,7 @@ ImageCropper<T>::~ImageCropper() {}
 
 template <class T>
 void ImageCropper<T>::setAxes(const std::set<uInt>& axes) {
-	uInt ndim = _getImage()->ndim();
+	uInt ndim = this->_getImage()->ndim();
 
 	if (axes.size() == 0) {
 		for (uInt i=0; i< ndim; i++) {
@@ -69,7 +69,7 @@ void ImageCropper<T>::setAxes(const std::set<uInt>& axes) {
 		) {
 			if (*i >= ndim) {
 				LogOrigin(_class, __FUNCTION__);
-				*_getLog() << "Illegal axis number " << *i
+				*this->_getLog() << "Illegal axis number " << *i
 					<< ". Image has only " << ndim << " dimensions"
 					<< LogIO::EXCEPTION;
 			}
@@ -82,17 +82,17 @@ template <class T>
 std::tr1::shared_ptr<ImageInterface<T> > ImageCropper<T>::crop(
 	const Bool wantReturn
 ) const {
-	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
+	*this->_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 
-	std::auto_ptr<ImageInterface<T> > myClone(_getImage()->cloneII());
+	std::auto_ptr<ImageInterface<T> > myClone(this->_getImage()->cloneII());
 	SubImage<T> subImage = SubImageFactory<T>::createSubImage(
-		*myClone, *_getRegion(), _getMask(),
-		_getLog().get(), False, AxesSpecifier(), _getStretch(), True
+		*myClone, *this->_getRegion(), this->_getMask(),
+		this->_getLog().get(), False, AxesSpecifier(), this->_getStretch(), True
 	);
-	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
+	*this->_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 	Array<Bool> mask = subImage.getMask();
 	if (! anyTrue(mask)) {
-		*_getLog() << "(Sub)image is completely masked." << LogIO::EXCEPTION;
+		*this->_getLog() << "(Sub)image is completely masked." << LogIO::EXCEPTION;
 	}
 	std::set<uInt>::const_iterator end = _axes.end();
 	IPosition shape = mask.shape();
@@ -134,9 +134,9 @@ std::tr1::shared_ptr<ImageInterface<T> > ImageCropper<T>::crop(
 	LCBox lcbox(blc, trc, shape);
 	SubImage<T> cropped = SubImageFactory<T>::createSubImage(
 		subImage, lcbox.toRecord(""), "",
-		_getLog().get(), False, AxesSpecifier(), False, True
+		this->_getLog().get(), False, AxesSpecifier(), False, True
 	);
-	std::tr1::shared_ptr<ImageInterface<T> > outImage = _prepareOutputImage(cropped);
+	std::tr1::shared_ptr<ImageInterface<T> > outImage = this->_prepareOutputImage(cropped);
 	if (! wantReturn) {
 		outImage.reset();
 	}

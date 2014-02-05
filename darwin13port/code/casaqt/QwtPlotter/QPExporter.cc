@@ -120,7 +120,6 @@ bool QPExporter::exportCanvases  ( vector<QPExportCanvas*>& canvases,
         	qcanvases.push_back(canv);
         }
     }
-
     if(qcanvases.size() == 0) return false;
 
     // Compile vector of unique, non-null loggers for export event.
@@ -177,9 +176,27 @@ bool QPExporter::exportToImageFile(
         QPPlotter* grabPlotter){
 
     QImage image;
+    int width = 0;
+    if ( grabPlotter != NULL ){
+    	width = grabPlotter->width();
+    }
+    else if( grabCanvas != NULL ){
+    	width = grabCanvas->canvasWidth();
+    }
 
-    int width  = grabCanvas != NULL ? grabCanvas->canvasWidth()  : grabPlotter->width();
-    int height = grabCanvas != NULL ? grabCanvas->canvasHeight() : grabPlotter->height();
+    int height = 0;
+    if ( grabPlotter != NULL ){
+    	height = grabPlotter->height();
+    }
+    if (grabCanvas != NULL ){
+    	height = grabCanvas->canvasHeight();
+    }
+    int gridRows = 1;
+    int gridCols = 1;
+    if ( grabPlotter != NULL ){
+    	gridRows = grabPlotter->getRowCount();
+    	gridCols = grabPlotter->getColCount();
+    }
 
     // Remember the current background color, used for on-screen GUI
     // We want to temporarily change this to white for making the image file.
@@ -197,7 +214,7 @@ bool QPExporter::exportToImageFile(
     }
     else {
         // High resolution, or format size larger than widget.
-        image=produceHighResImage(format, qcanvases, width, height,  wasCanceled);
+        image=produceHighResImage(format, qcanvases, width, height, gridRows, gridCols, wasCanceled);
     }
 
     // Set DPI.
@@ -244,18 +261,74 @@ bool QPExporter::exportToImageFile(
 }
 
 /* static */
+
+int QPExporter::findAxisWidth( vector<QPExportCanvas*> &qcanvases ){
+	int canvasCount = qcanvases.size();
+	int width = 0;
+	for ( int i = 0; i < canvasCount; i++ ){
+		if ( qcanvases[i]->isAxis()){
+			if ( qcanvases[i]->isVertical()){
+				width = qcanvases[i]->canvasWidth();
+				break;
+			}
+		}
+	}
+	return width;
+}
+
+int QPExporter::findAxisHeight( vector<QPExportCanvas*> &qcanvases ){
+	int canvasCount = qcanvases.size();
+	int height = 0;
+	for ( int i = 0; i < canvasCount; i++ ){
+		if ( qcanvases[i]->isAxis()){
+			if ( !qcanvases[i]->isVertical()){
+				height = qcanvases[i]->canvasHeight();
+				break;
+			}
+		}
+	}
+	return height;
+}
+
+int QPExporter::getCanvasCount( vector<QPExportCanvas*> &qcanvases ){
+	int canvasCount = 0;
+	int canvasSize = qcanvases.size();
+	for ( int i = 0; i < canvasSize; i++ ){
+		if ( !qcanvases[i]->isAxis() ){
+			canvasCount++;
+		}
+	}
+	return canvasCount;
+}
+
 QImage QPExporter::produceHighResImage(
         const PlotExportFormat& format,
         vector<QPExportCanvas*> &qcanvases,
-        int width,
-        int height,
+        int width, int height,
+        int rowCount, int colCount,
         bool &wasCanceled ){
 
     // make sure both width and height are set
-    int widgetWidth  = width,
-        widgetHeight = height;
-    if (format.width > 0)  width  = format.width;
-    if (format.height > 0) height = format.height;
+    if (format.width > 0){
+    	width  = format.width;
+    }
+    if (format.height > 0) {
+    	height = format.height;
+    }
+
+    int widgetWidth  = width/colCount;
+    int widgetHeight = height/rowCount;
+    int externalAxisHeight = 0;
+    int externalAxisWidth = 0;
+    int canvasSize = qcanvases.size();
+    if ( rowCount * colCount < canvasSize){
+    	//We are using external axes. Subtract off the size of the external axes
+    	//before computing the widget width;
+    	externalAxisWidth = findAxisWidth( qcanvases );
+    	widgetWidth = (width - externalAxisWidth )/ colCount;
+    	externalAxisHeight = findAxisHeight( qcanvases );
+    	widgetHeight = (height - externalAxisHeight)/rowCount;
+    }
     QImage image = QImage(width, height, QImage::Format_ARGB32);
 
     // Fill with background color.
@@ -271,12 +344,24 @@ QImage QPExporter::produceHighResImage(
 
     // Print each canvas.
     QPainter painter(&image);
-    double widthRatio  = ((double)width)  / widgetWidth,
-           heightRatio = ((double)height) / widgetHeight;
-    QRect imageRect(0, 0, width, height);
 
-    for (unsigned int i = 0; i < qcanvases.size(); i++) {
-        wasCanceled = qcanvases[i]->print(  &painter, paf, widthRatio, heightRatio, imageRect );
+    QRect imageRect(0, 0, width, height);
+    int canvasCount = getCanvasCount( qcanvases );
+    int rowDivisor = canvasCount / rowCount;
+    int colDivisor = colCount;
+    if ( externalAxisWidth > 0 ){
+    	colDivisor = colCount+1;
+    }
+
+    int canvasIndex = 0;
+    for (int i = 0; i < canvasSize; i++) {
+
+    	int rowIndex = canvasIndex / rowDivisor;
+    	if ( !qcanvases[i]->isAxis()){
+    	    canvasIndex++;
+    	}
+    	int colIndex = i % colDivisor;
+        wasCanceled = qcanvases[i]->print(  &painter, paf, widgetWidth, widgetHeight, externalAxisWidth, externalAxisHeight, rowIndex, colIndex, imageRect );
         if ( wasCanceled ){
         	break;
         }

@@ -203,6 +203,14 @@ public:
   // These support generic non-complex calibration
   inline Double getPar(Int chnk,Int irel)  { return *(par_[chnk]->data()+irel); };
 
+  Record locateInfo(int plotIterIndex, const Vector<PlotRegion>& regions,
+      		bool showUnflagged, bool showFlagged, bool selectAll );
+
+  PlotLogMessage* locateRange( int plotIterIndex, const Vector<PlotRegion> & regions,
+     		bool showUnflagged, bool showFlagged);
+
+  PlotLogMessage* flagRange( int plotIterIndex, casa::PlotMSFlagging& flagging,
+     		const Vector<PlotRegion>& regions, bool showFlagged);
 
 protected:
     

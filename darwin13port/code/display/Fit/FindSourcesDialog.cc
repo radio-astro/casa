@@ -668,7 +668,7 @@ namespace casa {
 		pixelBox = pixelBoxStr.toStdString();
 	}
 
-	void FindSourcesDialog::setImage( ImageTask::shCImFloat img ) {
+	void FindSourcesDialog::setImage( std::tr1::shared_ptr<const ImageInterface<Float> > img ) {
 		image = img;
 		if ( image != NULL ) {
 			const DisplayCoordinateSystem cSys = image->coordinates();

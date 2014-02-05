@@ -94,6 +94,9 @@ private slots:
     
     // When the user changes the file chooser history limit.
     void historyLimitChanged();
+
+    //When the grid size changes.
+    void gridChanged();
 };
 
 }

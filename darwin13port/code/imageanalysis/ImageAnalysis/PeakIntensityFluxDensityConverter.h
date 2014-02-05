@@ -39,7 +39,7 @@
 
 namespace casa {
 
-class PeakIntensityFluxDensityConverter : public ImageTask {
+class PeakIntensityFluxDensityConverter : public ImageTask<Float> {
 	// <summary>
 	// Class for converting between peak intensity and flux density of a source
 	// of specified shape.
@@ -67,7 +67,7 @@ public:
 
 	// Specify image to get beam and coordinate info from
 	PeakIntensityFluxDensityConverter(
-		const ImageTask::shCImFloat image
+		const SPCIIF image
 	);
 
 	// destructor

@@ -50,6 +50,7 @@ void PlotMSPlot::makeParameters(PlotMSPlotParameters& params, PlotMSApp* /*plotm
     if(params.typedGroup<PMS_PP_MSData>() == NULL)
         params.setGroup<PMS_PP_MSData>();
 }
+
 const uInt PlotMSPlot::PIXEL_THRESHOLD = 1000000;
 const uInt PlotMSPlot::MEDIUM_THRESHOLD = 10000;
 const uInt PlotMSPlot::LARGE_THRESHOLD = 1000;
@@ -116,11 +117,16 @@ vector<PMS::DataColumn> PlotMSPlot::getCachedData(){
 
 vector<PMS::Axis> PlotMSPlot::getCachedAxes() {
 	PMS_PP_Cache* c = itsParams_.typedGroup<PMS_PP_Cache>();
-	vector<PMS::Axis> axes(c->numXAxes() + c->numYAxes());
-	for(unsigned int i = 0; i < c->numXAxes(); i++)
+	int xAxisCount = c->numXAxes();
+	int yAxisCount = c->numYAxes();
+	vector<PMS::Axis> axes(xAxisCount + yAxisCount);
+	for(unsigned int i = 0; i < c->numXAxes(); i++){
 		axes[i] = c->xAxis(i);
-	for(unsigned int i = c->numXAxes(); i < axes.size(); i++)
-	    axes[i] = c->yAxis(i - c->numXAxes());
+	}
+	for(unsigned int i = c->numXAxes(); i < axes.size(); i++){
+		uInt yIndex = i - xAxisCount;
+	    axes[i] = c->yAxis(yIndex);
+	}
 	/*vector<PMS::Axis> axes(2);
 	axes[0] = c->xAxis();
 	axes[1] = c->yAxis();*/
@@ -148,12 +154,35 @@ vector<PlotCanvasPtr> PlotMSPlot::visibleCanvases() const {
     return v;
 }
 
+Record PlotMSPlot::locateInfo(int plotIterIndex, const Vector<PlotRegion>& regions,
+  		bool showUnflagged, bool showFlagged, bool selectAll ) const {
+	Record resultRecord = itsCache_->locateInfo( plotIterIndex, regions,
+			showUnflagged, showFlagged, selectAll );
+	return resultRecord;
+}
+
+PlotLogMessage* PlotMSPlot::locateRange( int canvasIndex, const Vector<PlotRegion> & regions,
+   		bool showUnflagged, bool showFlagged){
+	int iterIndex = iter() + canvasIndex;
+	PlotLogMessage* m = itsCache_->locateRange(iterIndex, regions,showUnflagged,showFlagged);
+	return m;
+}
+
+PlotLogMessage* PlotMSPlot::flagRange( int canvasIndex, casa::PlotMSFlagging& flagging,
+   		const Vector<PlotRegion>& regions, bool showFlagged){
+	int iterIndex = iter() + canvasIndex;
+	PlotLogMessage* m = itsCache_->flagRange(iterIndex, flagging, regions,showFlagged);
+	return m;
+}
+
+
+
 PlotMSRegions PlotMSPlot::selectedRegions() const {
     return selectedRegions(canvases()); }
 PlotMSRegions PlotMSPlot::visibleSelectedRegions() const {
     return selectedRegions(visibleCanvases()); }
 
-bool PlotMSPlot::initializePlot(PlotMSPages& pages) {    
+bool PlotMSPlot::initializePlot(PlotMSPages& pages) {
 
     bool hold = allDrawingHeld();
     if(!hold) holdDrawing();
@@ -163,7 +192,7 @@ bool PlotMSPlot::initializePlot(PlotMSPages& pages) {
         if(!hold) releaseDrawing();
         return false;
     }
-    
+
     // Set up page.
     pages.setupCurrentPage();
     
@@ -181,24 +210,17 @@ bool PlotMSPlot::initializePlot(PlotMSPages& pages) {
     return true;
 }
 
-/*
-void PlotMSPlot::attachToCanvases() {
-    for(unsigned int i = 0; i < itsPlots_.size(); i++)
-        itsCanvasMap_[&*itsPlots_[i]]->plotItem(itsPlots_[i]);
-}
 
-void PlotMSPlot::detachFromCanvases() {
-    for(unsigned int i = 0; i < itsPlots_.size(); i++)
-        itsCanvasMap_[&*itsPlots_[i]]->removePlotItem(itsPlots_[i]);
-}
-*/
+
 
 void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
         int updateFlag) {
 
     // Make sure it's this plot's parameters.
     if(&p != &parameters()) return;
-    
+    if ( ! itsParent_->getPlotManager().isPlottable( this ) ){
+    	return;
+    }
     vector<String> updates =
         PlotMSWatchedParameters::UPDATE_FLAG_NAMES(updateFlag);
     if(updates.size() == 0) return;
@@ -262,8 +284,11 @@ void PlotMSPlot::plotDataChanged() {
     if(!hold) holdDrawing();
     
     vector<MaskedScatterPlotPtr> p = plots();
-    for(unsigned int i = 0; i < p.size(); i++)
-        if(!p[i].null()) p[i]->dataChanged();
+    for(unsigned int i = 0; i < p.size(); i++){
+        if(!p[i].null()){
+        	p[i]->dataChanged();
+        }
+    }
     
     if(!hold) releaseDrawing();
 }
@@ -274,14 +299,12 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
 
     //Determine how many pages we need to print.
     int pageCount = 1;
-    PMS_PP_Export* exportParams = itsParams_.typedGroup<PMS_PP_Export>();
-    if ( exportParams != NULL ){
-    	PMS::ExportRange range = exportParams->getExportRange();
-    	if ( range == PMS::PAGE_ALL ){
-    	    pageCount = itsCache_->nIter();
-    	    float divResult = (pageCount * 1.0f) / canv.size();
-    	    pageCount = static_cast<int>(ceil( divResult ));
-    	}
+    PlotMSExportParam& exportParams = itsParent_->getExportParameters();
+    PMS::ExportRange range = exportParams.getExportRange();
+    if ( range == PMS::PAGE_ALL ){
+    	pageCount = itsCache_->nIter();
+    	float divResult = (pageCount * 1.0f) / canv.size();
+    	pageCount = static_cast<int>(ceil( divResult ));
     }
 
     //Store the current page.
@@ -298,24 +321,31 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
     	baseFileName = baseFileName.substr(0, periodIndex );
     }
 
+    PlotMSParameters params = itsParent_->getParameters();
+    int rowCount = params.getRowCount();
+    int colCount = params.getColCount();
+    int gridSize = rowCount * colCount;
     for ( int i = 0; i < pageCount; i++ ){
-    	int canvasCount = canv.size();
     	if ( i > 0 ){
     		//Remove the last '.' from the storage location.
     		String pageStr = String::toString( i+1 );
     		exportFormat.location = baseFileName + pageStr + suffix;
     	}
-    	if(canvasCount == 1){
+    	if( gridSize == 1 ){
     		exportSuccess = canv[0]->exportToFile(exportFormat);
+    		break;
     	}
-    	else if ( canvasCount > 1){
+    	else if ( gridSize > 1){
     		exportSuccess = itsParent_->exportToFormat( exportFormat );
     	}
+
     	nextIter();
+
     }
 
     //Restore the current page
     setIter( currentIter );
+
     return exportSuccess;
 }
 
@@ -360,7 +390,7 @@ bool PlotMSPlot::allDrawingHeld() {
 }
 
 void PlotMSPlot::holdDrawing() {
-    vector<PlotCanvasPtr> canv = canvases();
+   vector<PlotCanvasPtr> canv = canvases();
     for(unsigned int i = 0; i < canv.size(); i++) canv[i]->holdDrawing();
 }
 

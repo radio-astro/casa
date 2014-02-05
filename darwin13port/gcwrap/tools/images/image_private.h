@@ -9,6 +9,8 @@ image(casa::ImageInterface<casa::Complex> * inImage);
 
 image(std::tr1::shared_ptr<casa::ImageInterface<casa::Float> > inImage);
 
+image(std::tr1::shared_ptr<casa::ImageInterface<casa::Complex> > inImage);
+
 image(std::tr1::shared_ptr<casa::ImageAnalysis> ia);
 
 private:

@@ -29,10 +29,10 @@
 
 #include <casa/Containers/Record.h>
 #include <graphics/GenericPlotter/PlotFactory.h>
-//#include <plotms/Threads/PlotMSThread.qo.h>
 #include <plotms/PlotMS/PlotMSWatchedParameters.h>
 
 #include <casa/namespace.h>
+#include <QDebug>
 
 namespace casa {
 
@@ -182,8 +182,9 @@ public:
     template <class T>
     T* typedGroup() {
         T* g = NULL;
-        for(unsigned int i = 0; i < itsGroups_.size(); i++)
+        for(unsigned int i = 0; i < itsGroups_.size(); i++){
             if((g = dynamic_cast<T*>(itsGroups_[i])) != NULL) return g;
+        }
         return NULL;
     }
     // </group>

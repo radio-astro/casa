@@ -31,6 +31,7 @@ test_gencal                     ttsutsum@nrao.edu
 test_getchunk                   dmehring@nrao.edu
 test_hanningsmooth              scastro@eso.org
 test_ia_adddegaxes              dmehring@nrao.edu
+test_ia_calcmask                dmehring@nrao.edu
 test_ia_constructors            dmehring@nrao.edu
 test_ia_continuumsub            dmehring@nrao.edu
 test_ia_convertflux             dmehring@nrao.edu

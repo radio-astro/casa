@@ -36,7 +36,7 @@ class MDirection;
 
 namespace casa {
 
-class PVGenerator : public ImageTask {
+class PVGenerator : public ImageTask<Float> {
 	// <summary>
 	// Top level interface for generating position-velocity images
 	// </summary>
@@ -76,7 +76,7 @@ public:
 	// and <src>stokes</src>="", and <src>chanInp</src>="", that implies you want to use all
 	// spectral channels and all polarization planes in the input image.
 	PVGenerator(
-		const ImageTask::shCImFloat image,
+		const SPCIIF image,
 		const Record *const &regionRec, const String& chanInp,
 		const String& stokes, const String& maskInp,
 		const String& outname, const Bool overwrite

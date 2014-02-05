@@ -40,7 +40,7 @@ namespace casa {
 template <class T> class SubImage;
 template <class T> class TempImage;
 
-class ImageRegridder : public ImageTask {
+class ImageRegridder : public ImageTask<Float> {
 	// <summary>
 	// Top level interface which regrids an image to a specified coordinate system
 	// </summary>
@@ -74,7 +74,7 @@ public:
 	// <group>
 
 	ImageRegridder(
-		const ImageTask::shCImFloat image,
+		const SPCIIF image,
 		const Record *const regionRec,
 		const String& maskInp, const String& outname, Bool overwrite,
 		const CoordinateSystem& csysTo, const IPosition& axes,
@@ -82,8 +82,8 @@ public:
 	);
 
 	ImageRegridder(
-		const ImageTask::shCImFloat image, const String& outname,
-		const ImageTask::shCImFloat templateIm, const IPosition& axes=IPosition(),
+		const SPCIIF image, const String& outname,
+		const SPCIIF templateIm, const IPosition& axes=IPosition(),
 		const Record *const regionRec=0,
 		const String& maskInp="", Bool overwrite=False,
 		 Bool dropdeg=False, const IPosition& shape=IPosition()
