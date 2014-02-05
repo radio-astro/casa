@@ -104,22 +104,30 @@ class ia_fft_test(unittest.TestCase):
     def test_delta(self):
         """Test fft of delta function"""
         myia = iatool()
-        myia.fromshape("", [100, 100])
-        bb = myia.getchunk()
-        bb[50, 50] = 1
-        myia.putchunk(bb)
-        real = "real.im"
-        imag = "imag.im"
-        amp = "amp.im"
-        phase = "phase.im"
-        myia.fft(real=real, imag=imag, amp=amp, phase=phase)
-        for im in [real, imag, amp, phase]:
-            expec = 1
-            if im == imag or im == phase:
-                expec = 0
-            myia.open(im)
-            self.assertTrue((myia.getchunk() == expec).all())
-        myia.done()
+        for t in ['f', 'c']:
+            myia.fromshape("", [100, 100], type=t)
+            bb = myia.getchunk()
+            bb[50, 50] = 1
+            myia.putchunk(bb)
+            real = "real.im" + t
+            imag = "imag.im" + t
+            amp = "amp.im" + t
+            phase = "phase.im" + t
+            complex = "complex.im" + t
+            myia.fft(
+                real=real, imag=imag, amp=amp,
+                phase=phase, complex=complex
+            )
+            for im in [real, imag, amp, phase, complex]:
+                expec = 1
+                if im == imag or im == phase:
+                    expec = 0
+                elif im == complex:
+                    expec = 1 + 0j
+                myia.open(im)
+                got = myia.getchunk()
+                myia.done()
+                self.assertTrue((got == expec).all())
         
 def suite():
     return [ia_fft_test]

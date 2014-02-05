@@ -3898,21 +3898,24 @@ ia.close()
         <description>Stretch the mask if it is necessary and possible. See "help par.stretch" for more details. </description>
         <value>false</value>
      </param>
+     <param type="string"  name="complex">
+        <description>Output complex valued image file name. </description>
+         <value/>
+     </param>
 </input>
 <returns type="bool"/>
 
 <description>
 
 This function fast Fourier Transforms the supplied image to the Fourier plane.
+Both float valued and complex valued images are supported.
 If the {\stfaf axes} parameter is left unset, then the sky plane of the image (if
 there is one) is transformed.  Otherwise, the user can specify which axes are
 to be transformed.  Note that if a sky axis is to be transformed, both of them
 must be specified.
 
 The user specifies which form is desired in the result by specifying the
-desired output image file name(s).  At some point, an output complex
-image will also be allowed (when the Image \tool\ can deal with it). These
-are not yet supported.
+desired output image file name(s).
 
 Before the FFT is performed, any masked pixels are set to values of zero.
 The output mask is the combination (logical OR) of the default input

@@ -61,8 +61,9 @@
 #include <components/SpectralComponents/SpectralListFactory.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
-#include <imageanalysis/ImageAnalysis/ImageFitter.h>
 #include <imageanalysis/ImageAnalysis/ImageCropper.h>
+#include <imageanalysis/ImageAnalysis/ImageFFTer.h>
+#include <imageanalysis/ImageAnalysis/ImageFitter.h>
 #include <imageanalysis/ImageAnalysis/ImagePadder.h>
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
 #include <imageanalysis/ImageAnalysis/ImagePrimaryBeamCorrector.h>
@@ -1321,13 +1322,8 @@ bool image::done(const bool remove, const bool verbose) {
 		}
 		_image.reset();
 		return True;
-
-		/*
-		 Don't delete _log! bad things happen if you do, because the component is
-		 not released from memory...i.e done == close
-		 */
-
-	} catch (const AipsError& x) {
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -1337,8 +1333,9 @@ bool image::done(const bool remove, const bool verbose) {
 bool image::fft(
 	const string& realOut, const string& imagOut,
 	const string& ampOut, const string& phaseOut,
-	const std::vector<int>& axes, const ::casac::record& region,
-	const ::casac::variant& vmask, const bool stretch
+	const std::vector<int>& axes, const record& region,
+	const variant& vmask, const bool stretch,
+	const string& complexOut
 ) {
 	try {
 		_log << LogOrigin(_class, __FUNCTION__);
@@ -1346,24 +1343,46 @@ bool image::fft(
 			return false;
 		}
 
-		Record *Region = toRecord(region);
+		std::tr1::shared_ptr<Record> myregion(toRecord(region));
 		String mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
 		}
 
 		// if default value change it to empty vector
-		Vector<Int> leAxes(axes);
+		IPosition leAxes(axes);
 		if (leAxes.size() == 1 && leAxes[0] == -1) {
-			leAxes.resize();
+			leAxes.resize(0);
 		}
-
-		return _image->fft(
-			realOut, imagOut, ampOut, phaseOut,
-			leAxes, *Region, mask, stretch
-		);
-
-	} catch (AipsError x) {
+		if (_image->isFloat()) {
+			ImageFFTer<Float> ffter(
+				_image->getImage(),
+				myregion.get(), mask, leAxes
+			);
+			ffter.setStretch(stretch);
+			ffter.setReal(realOut);
+			ffter.setImag(imagOut);
+			ffter.setAmp(ampOut);
+			ffter.setPhase(phaseOut);
+			ffter.setComplex(complexOut);
+			ffter.fft();
+		}
+		else {
+			ImageFFTer<Complex> ffter(
+				_image->getComplexImage(),
+				myregion.get(), mask, leAxes
+			);
+			ffter.setStretch(stretch);
+			ffter.setReal(realOut);
+			ffter.setImag(imagOut);
+			ffter.setAmp(ampOut);
+			ffter.setPhase(phaseOut);
+			ffter.setComplex(complexOut);
+			ffter.fft();
+		}
+		return True;
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
