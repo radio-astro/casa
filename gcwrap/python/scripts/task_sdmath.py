@@ -7,7 +7,7 @@ import asap as sd
 import sdutil
 
 @sdutil.sdtask_decorator
-def sdmath(infiles, expr, varnames, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, outfile, outform, overwrite):
+def sdmath(expr, varlist, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, outfile, outform, overwrite):
     with sdutil.sdtask_manager(sdmath_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -39,19 +39,15 @@ class sdmath_worker(sdutil.sdtask_template):
             sd.rcParams['insitu'] = False
 
     def execute(self):
-        # insert varnames into expr
-        varnames = self.varnames
+        # insert varlist into expr
+        varlist = self.varlist
 
-        for i in range(len(self.infiles)):
-            infile_key = 'IN' + str(i)
-            varnames[infile_key] = self.infiles[i]
-        
-        for key in varnames.keys():
+        for key in varlist.keys():
             regex = re.compile( key )
-            if isinstance( varnames[key], str ):
-                self.expr = regex.sub( '\"%s\"' % varnames[key], self.expr )
+            if isinstance( varlist[key], str ):
+                self.expr = regex.sub( '\"%s\"' % varlist[key], self.expr )
             else:
-                self.expr = regex.sub( "varnames['%s']" % key, self.expr )
+                self.expr = regex.sub( "varlist['%s']" % key, self.expr )
 
         # default flux unit
         fluxunit_now = self.fluxunit
@@ -117,11 +113,6 @@ class sdmath_worker(sdutil.sdtask_template):
 
         self.scan = tmpout
         
-        # clean up varnames
-        for i in range(len(self.infiles)):
-            infile_key = 'IN' + str(i)
-            del varnames[infile_key]
-        
     def save(self):
         # avoid to call set_fluxunit
         del self.fluxunit
@@ -139,7 +130,7 @@ class sdmath_worker(sdutil.sdtask_template):
         self.filenames=[]
         #p=re.compile(r'[\',\"]\w+[\',\"]')
         #p=re.compile(r'[\',\"]\w+[\.,\-,\w+]*[\',\"]')
-        p=re.compile(r'(?!varnames\[)[\',\"]\w+[\.,\-,/,\w+]*[\',\"](?!\])')
+        p=re.compile(r'(?!varlist\[)[\',\"]\w+[\.,\-,/,\w+]*[\',\"](?!\])')
         fnames=p.findall(self.expr)
         p=re.compile('[\',\"]')
         for fname in fnames:
