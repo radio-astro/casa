@@ -57,11 +57,7 @@ def hsd_cal (vislist, importonly=False, pipelinemode='automatic', interactive=Tr
         hsd_caltsys (pipelinemode=pipelinemode)
 
         # Compute the sky calibration
-        if pipelinemode == 'automatic':
-            pipelinemode_local = 'interactive'
-        else:
-            pipelinemode_local = pipelinemode
-        hsd_calsky (pipelinemode=pipelinemode_local, calmode='otfraster')
+        hsd_calsky (pipelinemode=pipelinemode, calmode='otfraster')
         
         # Apply the calibrations
         hsd_applycal (pipelinemode=pipelinemode)
